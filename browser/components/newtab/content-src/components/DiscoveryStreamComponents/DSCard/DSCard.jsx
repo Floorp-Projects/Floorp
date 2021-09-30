@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { actionCreators as ac } from "common/Actions.jsm";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
 import { DSImage } from "../DSImage/DSImage.jsx";
 import { DSLinkMenu } from "../DSLinkMenu/DSLinkMenu";
 import { ImpressionStats } from "../../DiscoveryStreamImpressionStats/ImpressionStats";
@@ -11,6 +11,7 @@ import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
 import {
   DSContextFooter,
   SponsorLabel,
+  DSMessageFooter,
 } from "../DSContextFooter/DSContextFooter.jsx";
 import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
 import { connect } from "react-redux";
@@ -82,6 +83,7 @@ export const DefaultMeta = ({
   cta_variant,
   sponsor,
   sponsored_by_override,
+  saveToPocketCard,
 }) => (
   <div className="meta">
     <div className="info-wrap">
@@ -112,6 +114,19 @@ export const DefaultMeta = ({
         display_engagement_labels={display_engagement_labels}
         engagement={engagement}
       />
+    )}
+    {/* Sponsored label is normally in the way of any message.
+        Compact cards sponsored label is moved to just under the thumbnail,
+        so we can display both, so we specifically don't pass in context. */}
+    {compact && !saveToPocketCard && (
+      <div className="story-footer">
+        <DSMessageFooter
+          context_type={context_type}
+          context={null}
+          display_engagement_labels={display_engagement_labels}
+          engagement={engagement}
+        />
+      </div>
     )}
   </div>
 );
@@ -166,6 +181,13 @@ export class _DSCard extends React.PureComponent {
     super(props);
 
     this.onLinkClick = this.onLinkClick.bind(this);
+    this.onSaveClick = this.onSaveClick.bind(this);
+    this.onMenuUpdate = this.onMenuUpdate.bind(this);
+    this.onMenuShow = this.onMenuShow.bind(this);
+
+    this.setContextMenuButtonHostRef = element => {
+      this.contextMenuButtonHostElement = element;
+    };
     this.setPlaceholderRef = element => {
       this.placeholderElement = element;
     };
@@ -239,6 +261,64 @@ export class _DSCard extends React.PureComponent {
           ],
         })
       );
+    }
+  }
+
+  onSaveClick(event) {
+    if (this.props.dispatch) {
+      this.props.dispatch(
+        ac.AlsoToMain({
+          type: at.SAVE_TO_POCKET,
+          data: { site: { url: this.props.url, title: this.props.title } },
+        })
+      );
+
+      this.props.dispatch(
+        ac.UserEvent({
+          event: "SAVE_TO_POCKET",
+          source: "CARDGRID_HOVER",
+          action_position: this.props.pos,
+        })
+      );
+
+      this.props.dispatch(
+        ac.ImpressionStats({
+          source: "CARDGRID_HOVER",
+          pocket: 0,
+          tiles: [
+            {
+              id: this.props.id,
+              pos: this.props.pos,
+              ...(this.props.shim && this.props.shim.save
+                ? { shim: this.props.shim.save }
+                : {}),
+            },
+          ],
+        })
+      );
+    }
+  }
+
+  onMenuUpdate(showContextMenu) {
+    if (!showContextMenu) {
+      const dsLinkMenuHostDiv = this.contextMenuButtonHostElement;
+      if (dsLinkMenuHostDiv) {
+        dsLinkMenuHostDiv.classList.remove("active", "last-item");
+      }
+    }
+  }
+
+  async onMenuShow() {
+    const dsLinkMenuHostDiv = this.contextMenuButtonHostElement;
+    if (dsLinkMenuHostDiv) {
+      // Force translation so we can be sure it's ready before measuring.
+      await this.props.windowObj.document.l10n.translateFragment(
+        dsLinkMenuHostDiv
+      );
+      if (this.props.windowObj.scrollMaxX > 0) {
+        dsLinkMenuHostDiv.classList.add("last-item");
+      }
+      dsLinkMenuHostDiv.classList.add("active");
     }
   }
 
@@ -327,6 +407,7 @@ export class _DSCard extends React.PureComponent {
     }
     const isButtonCTA = this.props.cta_variant === "button";
     const includeDescriptions = this.props.include_descriptions;
+    const { saveToPocketCard } = this.props;
     const baseClass = `ds-card ${this.props.is_video ? `video-card` : ``}`;
     const excerpt = includeDescriptions ? this.props.excerpt : "";
 
@@ -334,7 +415,7 @@ export class _DSCard extends React.PureComponent {
       this.props.time_to_read || readTimeFromWordCount(this.props.word_count);
 
     return (
-      <div className={baseClass}>
+      <div className={baseClass} ref={this.setContextMenuButtonHostRef}>
         <SafeAnchor
           className="ds-card-link"
           dispatch={this.props.dispatch}
@@ -384,6 +465,7 @@ export class _DSCard extends React.PureComponent {
               cta_variant={this.props.cta_variant}
               sponsor={this.props.sponsor}
               sponsored_by_override={this.props.sponsored_by_override}
+              saveToPocketCard={saveToPocketCard}
             />
           )}
           <ImpressionStats
@@ -401,20 +483,65 @@ export class _DSCard extends React.PureComponent {
             source={this.props.is_video ? "CARDGRID_VIDEO" : this.props.type}
           />
         </SafeAnchor>
-        <DSLinkMenu
-          id={this.props.id}
-          index={this.props.pos}
-          dispatch={this.props.dispatch}
-          url={this.props.url}
-          title={this.props.title}
-          source={this.props.source}
-          type={this.props.type}
-          pocket_id={this.props.pocket_id}
-          shim={this.props.shim}
-          bookmarkGuid={this.props.bookmarkGuid}
-          flightId={!this.props.is_collection ? this.props.flightId : undefined}
-          showPrivacyInfo={!!this.props.flightId}
-        />
+        {saveToPocketCard && (
+          <div className="card-stp-button-hover-background">
+            <div className="card-stp-button-position-wrapper">
+              <button className="card-stp-button" onClick={this.onSaveClick}>
+                {this.props.context_type === "pocket" ? (
+                  <>
+                    <span className="story-badge-icon icon icon-pocket" />
+                    <span data-l10n-id="newtab-pocket-saved-to-pocket" />
+                  </>
+                ) : (
+                  <>
+                    <span className="story-badge-icon icon icon-pocket-save" />
+                    <span data-l10n-id="newtab-pocket-save-to-pocket" />
+                  </>
+                )}
+              </button>
+              <DSLinkMenu
+                id={this.props.id}
+                index={this.props.pos}
+                dispatch={this.props.dispatch}
+                url={this.props.url}
+                title={this.props.title}
+                source={this.props.source}
+                type={this.props.type}
+                pocket_id={this.props.pocket_id}
+                shim={this.props.shim}
+                bookmarkGuid={this.props.bookmarkGuid}
+                flightId={
+                  !this.props.is_collection ? this.props.flightId : undefined
+                }
+                showPrivacyInfo={!!this.props.flightId}
+                onMenuUpdate={this.onMenuUpdate}
+                onMenuShow={this.onMenuShow}
+                saveToPocketCard={saveToPocketCard}
+              />
+            </div>
+          </div>
+        )}
+        {!saveToPocketCard && (
+          <DSLinkMenu
+            id={this.props.id}
+            index={this.props.pos}
+            dispatch={this.props.dispatch}
+            url={this.props.url}
+            title={this.props.title}
+            source={this.props.source}
+            type={this.props.type}
+            pocket_id={this.props.pocket_id}
+            shim={this.props.shim}
+            bookmarkGuid={this.props.bookmarkGuid}
+            flightId={
+              !this.props.is_collection ? this.props.flightId : undefined
+            }
+            showPrivacyInfo={!!this.props.flightId}
+            hostRef={this.contextMenuButtonHostRef}
+            onMenuUpdate={this.onMenuUpdate}
+            onMenuShow={this.onMenuShow}
+          />
+        )}
       </div>
     );
   }

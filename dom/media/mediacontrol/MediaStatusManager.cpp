@@ -256,8 +256,9 @@ nsString MediaStatusManager::GetDefaultFaviconURL() const {
     return u""_ns;
   }
   return NS_ConvertUTF8toUTF16(spec);
-#endif
+#else
   return u""_ns;
+#endif
 }
 
 void MediaStatusManager::SetDeclaredPlaybackState(

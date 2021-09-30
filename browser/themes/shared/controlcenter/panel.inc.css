@@ -1008,13 +1008,13 @@ description#identity-popup-content-verifier,
 .protections-popup-category:hover,
 .protections-popup-footer-button:hover,
 #protections-popup-show-report-stack:hover > .protections-popup-footer-button {
-  background-color: var(--button-hover-bgcolor);
+  background-color: var(--panel-item-hover-bgcolor);
 }
 
 .protections-popup-category:hover:active,
 .protections-popup-footer-button:hover:active,
 #protections-popup-show-report-stack:hover:active > .protections-popup-footer-button {
-  background-color: var(--button-active-bgcolor);
+  background-color: var(--panel-item-active-bgcolor);
 }
 
 .protections-popup-category:focus-visible,

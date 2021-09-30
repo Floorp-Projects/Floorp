@@ -53,6 +53,105 @@ $excerpt-line-height: 20;
     position: relative;
   }
 
+  .card-stp-button-hover-background {
+    opacity: 0;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    height: 0;
+    transition: opacity;
+    transition-duration: 0s;
+    padding-top: 50%;
+    pointer-events: none;
+    background: $black-40;
+    border-radius: 8px;
+
+    .card-stp-button-position-wrapper {
+      position: absolute;
+      margin-top: -16px;
+      left: 0;
+      right: 0;
+      top: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .icon-pocket-save,
+    .icon-pocket {
+      margin-inline-end: 4px;
+      height: 14px;
+      width: 14px;
+      background-size: 14px;
+    }
+
+    .icon-pocket {
+      fill: $pocket-icon-fill;
+    }
+
+    .context-menu-button {
+      position: static;
+      transition: none;
+    }
+
+    .context-menu-position-container {
+      position: relative;
+    }
+
+    .context-menu {
+      margin-inline-start: 18.5px;
+      inset-inline-start: auto;
+      position: absolute;
+      top: 20.25px;
+    }
+
+    .card-stp-button {
+      display: flex;
+      margin-inline-end: 12px;
+      font-weight: 400;
+      font-size: 13px;
+      line-height: 16px;
+      background-color: var(--newtab-background-color-secondary);
+      border: 0;
+      border-radius: 4px;
+      padding: 8px;
+      white-space: nowrap;
+
+      &:hover {
+        .icon-pocket-save {
+          fill: $pocket-icon-fill;
+        }
+      }
+    }
+
+    button,
+    .context-menu {
+      pointer-events: auto;
+    }
+
+    button {
+      cursor: pointer;
+    }
+  }
+
+  &.last-item {
+    .card-stp-button-hover-background {
+      .context-menu {
+        margin-inline-start: auto;
+        margin-inline-end: 18.5px;
+      }
+    }
+  }
+
+  &:hover,
+  &.active {
+    .card-stp-button-hover-background {
+      display: block;
+      opacity: 1;
+      transition-duration: 0.3s;
+    }
+  }
+
   .img {
     height: 0;
     padding-top: 50%; // 2:1 aspect ratio

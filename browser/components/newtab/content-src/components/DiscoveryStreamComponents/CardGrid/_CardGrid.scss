@@ -173,9 +173,14 @@ $col4-header-font-size: 14;
       .meta {
         padding: 12px 0 0;
 
+        .story-footer {
+          margin-top: 2px;
+        }
+
         .source,
         .ds-last-card-desc,
-        .story-sponsored-label {
+        .story-sponsored-label,
+        .status-message {
           font-size: 13px;
           color: var(--newtab-text-secondary-color);
           -webkit-line-clamp: 2;

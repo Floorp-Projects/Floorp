@@ -235,7 +235,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       color = GetColorFromNSColor(NSColor.controlColor);
       break;
     case ColorID::Buttonhighlight:
-      color = NS_RGB(0xFF, 0xFF, 0xFF);
+      color = GetColorFromNSColor(NSColor.selectedControlColor);
       break;
     case ColorID::Buttonshadow:
       color = NS_RGB(0xDC, 0xDC, 0xDC);

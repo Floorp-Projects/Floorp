@@ -77,8 +77,6 @@ static LogModule* GetCspOriginLogLog() {
 #define CSPORIGINLOGENABLED() \
   MOZ_LOG_TEST(GetCspOriginLogLog(), mozilla::LogLevel::Debug)
 
-static const uint32_t CSP_CACHE_URI_CUTOFF_SIZE = 512;
-
 #ifdef DEBUG
 /**
  * This function is only used for verification purposes within

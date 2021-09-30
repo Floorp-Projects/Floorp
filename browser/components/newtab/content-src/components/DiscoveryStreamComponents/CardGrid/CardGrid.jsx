@@ -31,8 +31,7 @@ export class CardGrid extends React.PureComponent {
 
   renderCards() {
     let { items } = this.props;
-    const { loadMoreEnabled } = this.props;
-    const { lastCardMessageEnabled } = this.props;
+    const { loadMoreEnabled, lastCardMessageEnabled } = this.props;
     let showLastCardMessage = lastCardMessageEnabled;
     if (loadMoreEnabled && !this.state.moreLoaded) {
       items = 12;
@@ -75,6 +74,7 @@ export class CardGrid extends React.PureComponent {
             engagement={rec.engagement}
             display_engagement_labels={this.props.display_engagement_labels}
             include_descriptions={this.props.include_descriptions}
+            saveToPocketCard={this.props.saveToPocketCard}
             cta={rec.cta}
             cta_variant={this.props.cta_variant}
             is_video={this.props.enable_video_playheads && rec.is_video}
@@ -167,4 +167,5 @@ CardGrid.defaultProps = {
   items: 4, // Number of stories to display
   enable_video_playheads: false,
   lastCardMessageEnabled: false,
+  saveToPocketCard: false,
 };
