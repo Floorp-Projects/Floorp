@@ -4,6 +4,7 @@
 
 import React from "react";
 import { Localized } from "./MSLocalized";
+import { Colorways } from "./Colorways";
 import { Themes } from "./Themes";
 import { SecondaryCTA, StepsIndicator } from "./MultiStageAboutWelcome";
 
@@ -55,7 +56,7 @@ export class MultiStageProtonScreen extends React.PureComponent {
           <div className={`noodle outline-L`} />
           <div className={`noodle yellow-circle`} />
           <div className="main-content">
-            <div className="brand-logo" />
+            <div className={`brand-logo ${content.hideLogo ? "hide" : ""}`} />
             <div className="main-content-inner">
               <div className="welcome-text">
                 <Localized text={content.title}>
@@ -72,6 +73,15 @@ export class MultiStageProtonScreen extends React.PureComponent {
                   </Localized>
                 ) : null}
               </div>
+              {content.tiles &&
+              content.tiles.type === "colorway" &&
+              content.tiles.colorways ? (
+                <Colorways
+                  content={content}
+                  activeTheme={this.props.activeTheme}
+                  handleAction={this.props.handleAction}
+                />
+              ) : null}
               {content.tiles &&
               content.tiles.type === "theme" &&
               content.tiles.data ? (

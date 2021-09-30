@@ -170,18 +170,35 @@ describe("MultiStageAboutWelcome module", () => {
     });
 
     describe("theme screen", () => {
-      const themeScreen = DEFAULT_WELCOME_CONTENT.screens.find(screen => {
-        return screen.id === "AW_CHOOSE_THEME";
-      });
-
       const THEME_SCREEN_PROPS = {
-        id: themeScreen.id,
+        id: "test-theme-screen",
         totalNumberofScreens: 1,
-        order: themeScreen.order,
-        content: themeScreen.content,
+        order: 0,
+        content: {
+          title: "test title",
+          subtitle: "test subtitle",
+          tiles: {
+            type: "theme",
+            action: {
+              theme: "<event>",
+            },
+            data: [
+              {
+                theme: "automatic",
+                label: "test-label",
+                tooltip: "test-tooltip",
+                description: "test-description",
+              },
+            ],
+          },
+          primary_button: {
+            action: {},
+            label: "test button",
+          },
+        },
         navigate: null,
         topSites: [],
-        messageId: `${DEFAULT_PROPS.message_id}_${themeScreen.id}`,
+        messageId: `${DEFAULT_PROPS.message_id}_"test-theme-screen"`,
         UTMTerm: DEFAULT_PROPS.utm_term,
         flowParams: null,
         activeTheme: "automatic",

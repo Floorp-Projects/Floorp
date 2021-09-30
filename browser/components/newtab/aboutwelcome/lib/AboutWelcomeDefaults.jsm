@@ -130,25 +130,28 @@ const DEFAULT_WELCOME_CONTENT = {
       },
     },
     {
-      id: "AW_CHOOSE_THEME",
+      id: "AW_CHOOSE_COLORWAY",
       order: 3,
       content: {
         title: {
-          string_id: "mr1-onboarding-theme-header",
+          string_id: "mr2-onboarding-colorway-header",
         },
         subtitle: {
-          string_id: "mr1-onboarding-theme-subtitle",
+          string_id: "mr2-onboarding-colorway-subtitle",
         },
+        hideLogo: true,
         tiles: {
-          type: "theme",
+          type: "colorway",
           action: {
             theme: "<event>",
           },
-          data: [
+          defaultVariationId: "soft",
+          systemDefaultVariationId: "automatic",
+          systemVariations: [
             {
-              theme: "automatic",
+              id: "automatic",
               label: {
-                string_id: "mr1-onboarding-theme-label-system",
+                string_id: "mr2-onboarding-theme-label-auto",
               },
               tooltip: {
                 string_id: "mr1-onboarding-theme-tooltip-system",
@@ -158,7 +161,7 @@ const DEFAULT_WELCOME_CONTENT = {
               },
             },
             {
-              theme: "light",
+              id: "light",
               label: {
                 string_id: "mr1-onboarding-theme-label-light",
               },
@@ -170,7 +173,7 @@ const DEFAULT_WELCOME_CONTENT = {
               },
             },
             {
-              theme: "dark",
+              id: "dark",
               label: {
                 string_id: "mr1-onboarding-theme-label-dark",
               },
@@ -181,23 +184,117 @@ const DEFAULT_WELCOME_CONTENT = {
                 string_id: "mr1-onboarding-theme-description-dark",
               },
             },
+          ],
+          variations: [
             {
-              theme: "alpenglow",
-              label: {
-                string_id: "mr1-onboarding-theme-label-alpenglow",
-              },
+              id: "soft",
+              label: "Soft",
               tooltip: {
-                string_id: "mr1-onboarding-theme-tooltip-alpenglow",
+                string_id: "mr2-onboarding-theme-tooltip",
               },
               description: {
-                string_id: "mr1-onboarding-theme-description-alpenglow",
+                string_id: "mr2-onboarding-theme-description",
+              },
+            },
+            {
+              id: "balanced",
+              label: "Balanced",
+              tooltip: {
+                string_id: "mr2-onboarding-theme-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-theme-description",
+              },
+            },
+            {
+              id: "bold",
+              label: "Bold",
+              tooltip: {
+                string_id: "mr2-onboarding-theme-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-theme-description",
+              },
+            },
+          ],
+          colorways: [
+            {
+              id: "default",
+              label: {
+                string_id: "mr2-onboarding-theme-label-default",
+              },
+              tooltip: {
+                string_id: "mr2-onboarding-default-theme-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-default-theme-description",
+              },
+            },
+            {
+              id: "abstract",
+              label: "Abstract",
+              tooltip: {
+                string_id: "mr2-onboarding-colorway-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-colorway-description",
+              },
+            },
+            {
+              id: "cheers",
+              label: "Cheers",
+              tooltip: {
+                string_id: "mr2-onboarding-colorway-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-colorway-description",
+              },
+            },
+            {
+              id: "foto",
+              label: "Foto",
+              tooltip: {
+                string_id: "mr2-onboarding-colorway-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-colorway-description",
+              },
+            },
+            {
+              id: "lush",
+              label: "Lush",
+              tooltip: {
+                string_id: "mr2-onboarding-colorway-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-colorway-description",
+              },
+            },
+            {
+              id: "graffiti",
+              label: "Graffiti",
+              tooltip: {
+                string_id: "mr2-onboarding-colorway-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-colorway-description",
+              },
+            },
+            {
+              id: "elemental",
+              label: "Elemental",
+              tooltip: {
+                string_id: "mr2-onboarding-colorway-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-colorway-description",
               },
             },
           ],
         },
         primary_button: {
           label: {
-            string_id: "mr1-onboarding-theme-primary-button-label",
+            string_id: "mr2-onboarding-colorway-primary-button-label",
           },
           action: {
             navigate: true,
@@ -205,7 +302,7 @@ const DEFAULT_WELCOME_CONTENT = {
         },
         secondary_button: {
           label: {
-            string_id: "mr1-onboarding-theme-secondary-button-label",
+            string_id: "mr2-onboarding-colorway-secondary-button-label",
           },
           action: {
             theme: "automatic",
@@ -321,7 +418,9 @@ async function prepareContentForReact(content) {
 
   // Change content for Windows 7 because non-light themes aren't quite right.
   if (AppConstants.isPlatformAndVersionAtMost("win", "6.1")) {
-    removeScreens(screen => screen.content?.tiles?.type === "theme");
+    removeScreens(screen =>
+      ["theme", "colorway"].includes(screen.content?.tiles?.type)
+    );
   }
 
   // Set the primary import button source based on attribution.

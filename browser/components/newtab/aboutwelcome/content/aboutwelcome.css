@@ -122,6 +122,11 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .brand-logo.cta-top {
   margin-top: 25px;
 }
+.onboardingContainer .brand-logo.hide {
+  visibility: hidden;
+  padding: unset;
+  margin-top: 50px;
+}
 .onboardingContainer .welcome-text {
   display: flex;
   flex-direction: column;
@@ -175,7 +180,13 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://activity-stream/content/data/content/assets/long-zap.svg");
 }
 .onboardingContainer .tiles-theme-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin: 10px auto;
+}
+.onboardingContainer .tiles-theme-container.colorway {
+  flex-direction: column-reverse;
 }
 .onboardingContainer .sr-only {
   opacity: 0;
@@ -185,6 +196,65 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .sr-only.input {
   height: 1px;
   width: 1px;
+}
+.onboardingContainer .colorway-variations {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 190px;
+  height: 190px;
+  border-radius: 190px;
+  color: #FFF;
+  padding-top: 50px;
+  margin-bottom: 10px;
+}
+.onboardingContainer .colorway-variations.default {
+  background: linear-gradient(180deg, #4B4B4B 0%, #4B4B4B 100%);
+}
+.onboardingContainer .colorway-variations.abstract {
+  background: linear-gradient(180deg, #CD5F3A 0%, #A54727 100%);
+}
+.onboardingContainer .colorway-variations.cheers {
+  background: linear-gradient(180deg, #FBB900 0%, #CE9800 100%);
+}
+.onboardingContainer .colorway-variations.elemental {
+  background: linear-gradient(180deg, #8F8E89 0%, #6B675E 100%);
+}
+.onboardingContainer .colorway-variations.foto {
+  background: linear-gradient(180deg, #F2BDC5 0%, #C47985 100%);
+}
+.onboardingContainer .colorway-variations.graffiti {
+  background: linear-gradient(180deg, #B27ECA 0%, #844D9E 100%);
+}
+.onboardingContainer .colorway-variations.lush {
+  background: linear-gradient(180deg, #5F9B78 0%, #4E6A5A 100%);
+}
+.onboardingContainer .colorway-variations:active, .onboardingContainer .colorway-variations:focus-within {
+  outline: 2px var(--in-content-primary-button-background) solid;
+}
+.onboardingContainer .colorway-variations .colorway-text {
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 24px;
+  margin-bottom: 15px;
+}
+.onboardingContainer .colorway-variations .variation-button {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 12px;
+  padding: 6px 12px;
+  width: auto;
+  height: 24px;
+  min-height: 24px;
+  margin: 0;
+}
+.onboardingContainer .colorway-variations .variation-button:hover {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+.onboardingContainer .colorway-variations .variation-button.selected, .onboardingContainer .colorway-variations .variation-button:active {
+  background: rgba(0, 0, 0, 0.64);
+  border-radius: 2px;
 }
 .onboardingContainer .tiles-theme-section {
   border: 0;
@@ -214,6 +284,9 @@ body[lwt-newtab-brighttext] {
   cursor: pointer;
   z-index: 0;
 }
+.onboardingContainer .tiles-theme-section .theme.colorway {
+  width: auto;
+}
 .onboardingContainer .tiles-theme-section .theme:focus, .onboardingContainer .tiles-theme-section .theme:active {
   outline: initial;
   outline-offset: initial;
@@ -226,6 +299,10 @@ body[lwt-newtab-brighttext] {
   outline: 1px solid var(--in-content-border-color);
   outline-offset: -0.5px;
   z-index: -1;
+}
+.onboardingContainer .tiles-theme-section .theme .icon.colorway {
+  width: 20px;
+  height: 20px;
 }
 .onboardingContainer .tiles-theme-section .theme .icon:dir(rtl) {
   transform: scaleX(-1);
@@ -242,8 +319,26 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .tiles-theme-section .theme .icon.alpenglow {
   background-image: url("resource://builtin-themes/alpenglow/icon.svg");
 }
-.onboardingContainer .tiles-theme-section .theme .icon.automatic {
+.onboardingContainer .tiles-theme-section .theme .icon.default, .onboardingContainer .tiles-theme-section .theme .icon.automatic {
   background-image: url("resource://default-theme/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.abstract {
+  background-image: url("resource://builtin-themes/monochromatic/abstract/balanced/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.cheers {
+  background-image: url("resource://builtin-themes/monochromatic/cheers/balanced/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.elemental {
+  background-image: url("resource://builtin-themes/monochromatic/elemental/balanced/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.foto {
+  background-image: url("resource://builtin-themes/monochromatic/foto/balanced/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.graffiti {
+  background-image: url("resource://builtin-themes/monochromatic/graffiti/balanced/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.lush {
+  background-image: url("resource://builtin-themes/monochromatic/lush/balanced/icon.svg");
 }
 .onboardingContainer .tiles-theme-section .theme .text {
   display: flex;
