@@ -2895,8 +2895,6 @@ uint32_t Console::WebIDLLogLevelToInteger(ConsoleLogLevel aLevel) const {
           "ConsoleLogLevel is out of sync with the Console implementation!");
       return 0;
   }
-
-  return 0;
 }
 
 uint32_t Console::InternalLogLevelToInteger(MethodName aName) const {
@@ -2951,8 +2949,6 @@ uint32_t Console::InternalLogLevelToInteger(MethodName aName) const {
       MOZ_CRASH("MethodName is out of sync with the Console implementation!");
       return 0;
   }
-
-  return 0;
 }
 
 bool Console::ArgumentData::Initialize(JSContext* aCx,

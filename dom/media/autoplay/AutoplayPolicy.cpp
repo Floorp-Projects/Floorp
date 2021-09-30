@@ -35,7 +35,7 @@ mozilla::LazyLogModule gAutoplayPermissionLog("Autoplay");
 namespace mozilla::dom {
 
 static const uint32_t sPOLICY_STICKY_ACTIVATION = 0;
-static const uint32_t sPOLICY_TRANSIENT_ACTIVATION = 1;
+// static const uint32_t sPOLICY_TRANSIENT_ACTIVATION = 1;
 static const uint32_t sPOLICY_USER_INPUT_DEPTH = 2;
 
 static bool IsActivelyCapturingOrHasAPermission(nsPIDOMWindowInner* aWindow) {

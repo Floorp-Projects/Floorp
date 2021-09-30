@@ -35,6 +35,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.jsm",
   Corroborate: "resource://gre/modules/Corroborate.jsm",
@@ -1375,145 +1376,7 @@ BrowserGlue.prototype = {
 
     SessionStore.init();
 
-    AddonManager.maybeInstallBuiltinAddon(
-      "firefox-compact-light@mozilla.org",
-      "1.2",
-      "resource://builtin-themes/light/"
-    );
-    AddonManager.maybeInstallBuiltinAddon(
-      "firefox-compact-dark@mozilla.org",
-      "1.2",
-      "resource://builtin-themes/dark/"
-    );
-
-    AddonManager.maybeInstallBuiltinAddon(
-      "firefox-alpenglow@mozilla.org",
-      "1.4",
-      "resource://builtin-themes/alpenglow/"
-    );
-
-    if (
-      AppConstants.NIGHTLY_BUILD &&
-      Services.prefs.getBoolPref(
-        "browser.theme.temporary.monochromatic.enabled",
-        false
-      )
-    ) {
-      // List of monochromatic themes. The themes are represented by objects
-      // containing their id, current version, and path relative to
-      // resource://builtin-themes/monochromatic/.
-      const kMonochromaticThemeList = [
-        {
-          id: "lush-soft-colorway@mozilla.org",
-          version: "1.0",
-          path: "lush/soft/",
-        },
-        {
-          id: "lush-balanced-colorway@mozilla.org",
-          version: "1.0",
-          path: "lush/balanced/",
-        },
-        {
-          id: "lush-bold-colorway@mozilla.org",
-          version: "1.0",
-          path: "lush/bold/",
-        },
-        {
-          id: "abstract-soft-colorway@mozilla.org",
-          version: "1.0",
-          path: "abstract/soft/",
-        },
-        {
-          id: "abstract-balanced-colorway@mozilla.org",
-          version: "1.0",
-          path: "abstract/balanced/",
-        },
-        {
-          id: "abstract-bold-colorway@mozilla.org",
-          version: "1.0",
-          path: "abstract/bold/",
-        },
-        {
-          id: "elemental-soft-colorway@mozilla.org",
-          version: "1.0",
-          path: "elemental/soft/",
-        },
-        {
-          id: "elemental-balanced-colorway@mozilla.org",
-          version: "1.0",
-          path: "elemental/balanced/",
-        },
-        {
-          id: "elemental-bold-colorway@mozilla.org",
-          version: "1.0",
-          path: "elemental/bold/",
-        },
-        {
-          id: "cheers-soft-colorway@mozilla.org",
-          version: "1.0",
-          path: "cheers/soft/",
-        },
-        {
-          id: "cheers-balanced-colorway@mozilla.org",
-          version: "1.0",
-          path: "cheers/balanced/",
-        },
-        {
-          id: "cheers-bold-colorway@mozilla.org",
-          version: "1.0",
-          path: "cheers/bold/",
-        },
-        {
-          id: "graffiti-soft-colorway@mozilla.org",
-          version: "1.0",
-          path: "graffiti/soft/",
-        },
-        {
-          id: "graffiti-balanced-colorway@mozilla.org",
-          version: "1.0",
-          path: "graffiti/balanced/",
-        },
-        {
-          id: "graffiti-bold-colorway@mozilla.org",
-          version: "1.0",
-          path: "graffiti/bold/",
-        },
-        {
-          id: "foto-soft-colorway@mozilla.org",
-          version: "1.0",
-          path: "foto/soft/",
-        },
-        {
-          id: "foto-balanced-colorway@mozilla.org",
-          version: "1.0",
-          path: "foto/balanced/",
-        },
-        {
-          id: "foto-bold-colorway@mozilla.org",
-          version: "1.0",
-          path: "foto/bold/",
-        },
-      ];
-      for (let { id, version, path } of kMonochromaticThemeList) {
-        AddonManager.maybeInstallBuiltinAddon(
-          id,
-          version,
-          `resource://builtin-themes/monochromatic/${path}`
-        );
-
-        AsyncShutdown.profileChangeTeardown.addBlocker(
-          "Uninstall Monochromatic Theme",
-          async () => {
-            try {
-              let addon = await AddonManager.getAddonByID(id);
-              await addon.uninstall();
-            } catch (e) {
-              Cu.reportError(`Failed to uninstall ${id} on shutdown`);
-            }
-          }
-        );
-      }
-    }
+    BuiltInThemes.maybeInstallActiveBuiltInTheme();
 
     if (AppConstants.MOZ_NORMANDY) {
       Normandy.init();
@@ -2553,6 +2416,14 @@ BrowserGlue.prototype = {
             "os.environment.launch_method",
             classification
           );
+        },
+      },
+
+      // Install built-in themes. We already installed the active built-in
+      // theme, if any, before UI startup.
+      {
+        task: async () => {
+          await BuiltInThemes.ensureBuiltInThemes();
         },
       },
 

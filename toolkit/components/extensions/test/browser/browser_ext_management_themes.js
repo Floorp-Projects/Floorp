@@ -5,11 +5,16 @@
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
+const { BuiltInThemes } = ChromeUtils.import(
+  "resource:///modules/BuiltInThemes.jsm"
+);
 PromiseTestUtils.allowMatchingRejectionsGlobally(
   /Message manager disconnected/
 );
 
 add_task(async function test_management_themes() {
+  await BuiltInThemes.ensureBuiltInThemes();
+
   const TEST_ID = "test_management_themes@tests.mozilla.com";
 
   let theme = ExtensionTestUtils.loadExtension({
@@ -57,16 +62,23 @@ add_task(async function test_management_themes() {
     async function getAddon(type) {
       let addons = await browser.management.getAll();
       let themes = addons.filter(addon => addon.type === "theme");
-      // We get the 4 built-in themes plus the lwt and our addon.
-      browser.test.assertEq(5, themes.length, "got expected addons");
-      // We should also get our test extension.
-      let testExtension = addons.find(addon => {
-        return addon.id === TEST_ID;
-      });
-      browser.test.assertTrue(
-        !!testExtension,
-        `The extension with id ${TEST_ID} was returned by getAll.`
-      );
+      const STANDARD_BUILTIN_THEME_IDS = [
+        "default-theme@mozilla.org",
+        "firefox-compact-light@mozilla.org",
+        "firefox-compact-dark@mozilla.org",
+        "firefox-alpenglow@mozilla.org",
+      ];
+      // Check that management.getAll returns the built-in themes and our test
+      // extension.
+      for (let id of [...STANDARD_BUILTIN_THEME_IDS, TEST_ID]) {
+        let builtInExtension = addons.find(addon => {
+          return addon.id === id;
+        });
+        browser.test.assertTrue(
+          !!builtInExtension,
+          `The extension with id ${id} was returned by getAll.`
+        );
+      }
       let found;
       for (let addon of themes) {
         browser.test.assertEq(addon.type, "theme", "addon is theme");

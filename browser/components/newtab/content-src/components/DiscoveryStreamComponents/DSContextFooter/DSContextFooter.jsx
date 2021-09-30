@@ -10,6 +10,34 @@ import React from "react";
 // Animation time is mirrored in DSContextFooter.scss
 const ANIMATION_DURATION = 3000;
 
+export const DSMessageFooter = props => {
+  const {
+    context,
+    context_type,
+    display_engagement_labels,
+    engagement,
+  } = props;
+  const { icon, fluentID } = cardContextTypes[context_type] || {};
+
+  return (
+    <TransitionGroup component={null}>
+      {!context && (context_type || (display_engagement_labels && engagement)) && (
+        <CSSTransition
+          key={fluentID}
+          timeout={ANIMATION_DURATION}
+          classNames="story-animate"
+        >
+          {engagement && !context_type ? (
+            <div className="story-view-count">{engagement}</div>
+          ) : (
+            <StatusMessage icon={icon} fluentID={fluentID} />
+          )}
+        </CSSTransition>
+      )}
+    </TransitionGroup>
+  );
+};
+
 export const StatusMessage = ({ icon, fluentID }) => (
   <div className="status-message">
     <span
@@ -58,27 +86,16 @@ export class DSContextFooter extends React.PureComponent {
       sponsor,
       sponsored_by_override,
     } = this.props;
-    const { icon, fluentID } = cardContextTypes[context_type] || {};
 
     return (
       <div className="story-footer">
         {SponsorLabel({ sponsored_by_override, sponsor, context })}
-        <TransitionGroup component={null}>
-          {!context &&
-            (context_type || (display_engagement_labels && engagement)) && (
-              <CSSTransition
-                key={fluentID}
-                timeout={ANIMATION_DURATION}
-                classNames="story-animate"
-              >
-                {engagement && !context_type ? (
-                  <div className="story-view-count">{engagement}</div>
-                ) : (
-                  <StatusMessage icon={icon} fluentID={fluentID} />
-                )}
-              </CSSTransition>
-            )}
-        </TransitionGroup>
+        {DSMessageFooter({
+          context,
+          context_type,
+          display_engagement_labels,
+          engagement,
+        })}
       </div>
     );
   }

@@ -45,8 +45,10 @@
 #include "nsIRequestContext.h"
 #include "nsISeekableStream.h"
 #include "nsISSLSocketControl.h"
+#include "nsITransportSecurityInfo.h"
 #include "nsIThrottledInputChannel.h"
 #include "nsITransport.h"
+#include "nsIX509Cert.h"
 #include "nsMultiplexInputStream.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -753,6 +755,7 @@ nsresult nsHttpTransaction::ReadSegments(nsAHttpSegmentReader* reader,
     MutexAutoLock lock(mLock);
     mSecurityInfo = info;
   }
+  CheckCert();
 
   mDeferredSendProgress = false;
   mReader = reader;
@@ -2071,11 +2074,31 @@ nsresult nsHttpTransaction::ParseHead(char* buf, uint32_t count,
   return NS_OK;
 }
 
+void nsHttpTransaction::CheckCert() {
+#if defined(NIGHTLY_BUILD)
+  MutexAutoLock lock(mLock);
+  if (nsCOMPtr<nsITransportSecurityInfo> secInfo =
+          do_QueryInterface(mSecurityInfo)) {
+    PRErrorCode error = 0;
+    secInfo->GetErrorCode(&error);
+    if (error == 0) {
+      nsCOMPtr<nsIX509Cert> cert;
+      nsresult rv = secInfo->GetServerCert(getter_AddRefs(cert));
+      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+      MOZ_DIAGNOSTIC_ASSERT(cert);
+    }
+  }
+#endif
+}
+
 nsresult nsHttpTransaction::HandleContentStart() {
   LOG(("nsHttpTransaction::HandleContentStart [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   if (mResponseHead) {
+    CheckCert();
+    MOZ_DIAGNOSTIC_ASSERT(!m0RTTInProgress);
+
     if (mEarlyDataDisposition == EARLY_ACCEPTED) {
       if (mResponseHead->Status() == 425) {
         // We will report this state when the final responce arrives.
@@ -2879,6 +2902,7 @@ nsresult nsHttpTransaction::Finish0RTT(bool aRestart,
     MutexAutoLock lock(mLock);
     mSecurityInfo = info;
   }
+  CheckCert();
   return NS_OK;
 }
 

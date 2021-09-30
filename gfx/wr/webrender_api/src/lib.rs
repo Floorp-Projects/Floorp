@@ -610,15 +610,6 @@ pub enum PrimitiveKeyKind {
 }
 
 ///
-#[derive(Clone)]
-pub struct ScrollNodeState {
-    ///
-    pub id: ExternalScrollId,
-    ///
-    pub scroll_offset: LayoutVector2D,
-}
-
-///
 #[derive(Clone, Copy, Debug)]
 pub enum ScrollLocation {
     /// Scroll by a certain amount.

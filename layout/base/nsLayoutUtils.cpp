@@ -2804,8 +2804,8 @@ FrameMetrics nsLayoutUtils::CalculateBasicFrameMetrics(
   LayerToParentLayerScale layerToParentLayerScale(1.0f);
   metrics.SetDevPixelsPerCSSPixel(deviceScale);
   metrics.SetPresShellResolution(resolution);
-  metrics.SetTransformToAncestorScale(
-      Scale2D(nsLayoutUtils::GetTransformToAncestorScale(frame)));
+  metrics.SetTransformToAncestorScale(ParentLayerToScreenScale2D(
+      nsLayoutUtils::GetTransformToAncestorScale(frame)));
   metrics.SetCumulativeResolution(cumulativeResolution);
   metrics.SetZoom(deviceScale * cumulativeResolution * layerToParentLayerScale);
 
@@ -3380,7 +3380,8 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
 
   const double geckoDLBuildTime =
       (TimeStamp::Now() - startBuildDisplayList).ToMilliseconds();
-  mozilla::glean::paint::build_displaylist_time.StopAndAccumulate(std::move(dlTimerId));
+  mozilla::glean::paint::build_displaylist_time.StopAndAccumulate(
+      std::move(dlTimerId));
 
   bool consoleNeedsDisplayList =
       (gfxUtils::DumpDisplayList() || gfxEnv::DumpPaint()) &&
@@ -8766,7 +8767,8 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
   gfxSize transformToAncestorScale = nsLayoutUtils::GetTransformToAncestorScale(
       aScrollFrame ? aScrollFrame : aForFrame);
 
-  metrics.SetTransformToAncestorScale(Scale2D(transformToAncestorScale));
+  metrics.SetTransformToAncestorScale(
+      ParentLayerToScreenScale2D(transformToAncestorScale));
 
   metrics.SetDevPixelsPerCSSPixel(presContext->CSSToDevPixelScale());
 
