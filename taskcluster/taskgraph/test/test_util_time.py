@@ -46,8 +46,8 @@ class FromNowTest(unittest.TestCase):
 
     def test_json_from_now(self):
         now = datetime(2014, 1, 1)
-        self.assertEqual(json_time_from_now("1 years", now), "2015-01-01T00:00:00Z")
-        self.assertEqual(json_time_from_now("6 days", now), "2014-01-07T00:00:00Z")
+        self.assertEqual(json_time_from_now("1 years", now), "2015-01-01T00:00:00.000Z")
+        self.assertEqual(json_time_from_now("6 days", now), "2014-01-07T00:00:00.000Z")
 
 
 if __name__ == "__main__":
