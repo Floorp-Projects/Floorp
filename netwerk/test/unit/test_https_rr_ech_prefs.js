@@ -28,6 +28,8 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.use_https_rr_as_altsvc");
   Services.prefs.clearUserPref("network.dns.echconfig.enabled");
   Services.prefs.clearUserPref("network.dns.http3_echconfig.enabled");
+  Services.prefs.clearUserPref("network.http.http3.enabled");
+  Services.prefs.clearUserPref("network.http.spdy.enabled");
   if (trrServer) {
     await trrServer.stop();
   }
@@ -440,6 +442,94 @@ add_task(async function testOneRecordsHasEchConfig() {
     expectedName: "test.foo_h2.com",
     expectedAlpn: "h2",
   });
+  checkResult(inRecord, true, false, {
+    expectedPriority: 1,
+    expectedName: "test.foo_h3.com",
+    expectedAlpn: "h3",
+  });
+  checkResult(inRecord, true, true);
+
+  await trrServer.stop();
+  trrServer = null;
+});
+
+// Test the case that "network.http.http3.enabled" and
+// "network.http.spdy.enabled" are true/false.
+add_task(async function testHttp3AndHttp2Pref() {
+  dns.clearCache(true);
+
+  let trrServer = new TRRServer();
+  await trrServer.start();
+
+  Services.prefs.setBoolPref("network.http.http3.enabled", false);
+  Services.prefs.setBoolPref("network.dns.echconfig.enabled", false);
+  Services.prefs.setBoolPref("network.dns.http3_echconfig.enabled", false);
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${trrServer.port}/dns-query`
+  );
+
+  await trrServer.registerDoHAnswers("test.foo.com", "HTTPS", {
+    answers: [
+      {
+        name: "test.foo.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "test.foo_h3.com",
+          values: [
+            { key: "alpn", value: ["h3", "h2"] },
+            { key: "echconfig", value: "456..." },
+          ],
+        },
+      },
+      {
+        name: "test.foo.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 2,
+          name: "test.foo_h2.com",
+          values: [
+            { key: "alpn", value: ["h2"] },
+            { key: "echconfig", value: "456..." },
+          ],
+        },
+      },
+    ],
+  });
+
+  let [, inRecord] = await new TRRDNSListener("test.foo.com", {
+    type: dns.RESOLVE_TYPE_HTTPSSVC,
+  });
+
+  checkResult(inRecord, false, false, {
+    expectedPriority: 1,
+    expectedName: "test.foo_h3.com",
+    expectedAlpn: "h2",
+  });
+  checkResult(inRecord, false, true, {
+    expectedPriority: 1,
+    expectedName: "test.foo_h3.com",
+    expectedAlpn: "h2",
+  });
+  checkResult(inRecord, true, false);
+  checkResult(inRecord, true, true);
+
+  Services.prefs.setBoolPref("network.http.spdy.enabled", false);
+  checkResult(inRecord, false, false);
+
+  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  checkResult(inRecord, false, false, {
+    expectedPriority: 1,
+    expectedName: "test.foo_h3.com",
+    expectedAlpn: "h3",
+  });
+  checkResult(inRecord, false, true);
   checkResult(inRecord, true, false, {
     expectedPriority: 1,
     expectedName: "test.foo_h3.com",
