@@ -52,7 +52,7 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_bookmarks">Gemt for nylig</string>
+    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">Gemt for nylig</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">Bogmærker gemt for nylig</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -121,7 +121,11 @@
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header">Tidligere udforsket</string>
+    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">Tidligere udforsket</string>
+
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Besøgt for nylig</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -386,6 +390,11 @@
     <string name="customize_addon_collection_user_hint">Samlingens ejer (Bruger-id)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Tilføjelses-samling ændret. Afslutter applikationen for at anvende ændringerne…</string>
+
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Gemt for nylig</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Besøgt for nylig</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -753,15 +762,15 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Ryd</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">Kopier</string>
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">Kopier</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">Del</string>
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">Del</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">Åbn i nyt faneblad</string>
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Åbn i nyt faneblad</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">Åbn i privat faneblad</string>
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Åbn i privat faneblad</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">Slet</string>
+    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">Slet</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d valgt</string>
@@ -1026,7 +1035,7 @@
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
     <string name="share_link_all_apps_subheader">Alle handlinger</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
-    <string name="share_link_recent_apps_subheader">Brugt for nyligt</string>
+    <string name="share_link_recent_apps_subheader">Brugt for nylig</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Log ind for at synkronisere</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1231,12 +1240,12 @@
     <string name="onboarding_fxa_section_header">Har du allerede en konto?</string>
 
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">Se nyhederne</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">Se nyhederne</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">Har du spørgsmål om den nye version af %s? Vil du vide, hvad der er ændret?</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">Har du spørgsmål om den nye version af %s? Vil du vide, hvad der er ændret?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">Få svar her</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">Få svar her</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Synkroniser Firefox mellem enheder</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1276,14 +1285,14 @@
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">Placer værktøjslinjen indenfor rækkevidde. Behold den nederst, eller flyt den til toppen.</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">Privat browsing</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">Privat browsing</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">Åbn et privat faneblad én gang - klik på %s-ikonet.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">Åbn et privat faneblad én gang - klik på %s-ikonet.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">Åbn private faneblad hver gang: Opdater dine indstillinger for privat browsing.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">Åbn private faneblad hver gang: Opdater dine indstillinger for privat browsing.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">Åbn indstillinger</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">Åbn indstillinger</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Bedre beskyttelse af dit privatliv</string>
     <!-- text for the privacy notice onboarding card description
@@ -1743,9 +1752,9 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Slå <b>%1$s</b> TIL]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">Sikker forbindelse</string>
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Sikker forbindelse</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">Usikker forbindelse</string>
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Usikker forbindelse</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Er du sikker på, at du vil rydde alle tilladelser for alle websteder?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1785,7 +1794,7 @@
     <string name="discard_changes">Fortryd ændringer</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Rediger</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Adgangskode påkrævet</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Stemme-søgning</string>
@@ -1820,7 +1829,7 @@
     <string name="top_sites_max_limit_confirmation_button">Ok, forstået</string>
 
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Vis mest besøgte websteder</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Vis mest besøgte websteder</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Navn</string>

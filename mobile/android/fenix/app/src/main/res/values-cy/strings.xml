@@ -778,7 +778,7 @@
     <string name="tab_tray_save_to_collection">Cadw</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title">Arall</string>
+    <string name="tab_tray_header_title">Eraill</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -1745,7 +1745,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="search_engine_delete">Dileu</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Arall</string>
+    <string name="search_add_custom_engine_label_other">Eraill</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Enw</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->

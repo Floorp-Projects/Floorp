@@ -68,7 +68,7 @@
     <string name="private_browsing_title">Ви у приватному сеансі</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s стирає вашу історію пошуку та перегляду для приватних вкладок, коли ви закриваєте їх чи виходите з програми. Це не робить вас анонімними для вебсайтів чи вашого провайдера, але дозволяє приховати вашу діяльність в Інтернеті від будь-кого іншого, хто використовує цей пристрій.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s стирає вашу історію пошуку та перегляду для приватних вкладок, коли ви закриваєте їх чи виходите з програми. Це не робить вас анонімними для вебсайтів чи вашого провайдера, але дозволяє приховати вашу діяльність в інтернеті від будь-кого іншого, хто використовує цей пристрій.</string>
     <string name="private_browsing_common_myths">
        Поширені міфи про приватний перегляд
     </string>

@@ -409,6 +409,9 @@
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Add-oncollectie aangepast. Toepassing wordt afgesloten om wijzigingen toe te passen…</string>
 
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Terugspringen</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Onlangs opgeslagen</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
