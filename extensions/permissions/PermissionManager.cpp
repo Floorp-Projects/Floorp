@@ -2463,13 +2463,17 @@ nsresult PermissionManager::GetStripPermsForPrincipal(
   aResult.Clear();
   aResult.SetCapacity(kStripOAPermissions.size());
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunreachable-code-return"
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wunreachable-code-return"
+#endif
   // No special strip permissions
   if (kStripOAPermissions.empty()) {
     return NS_OK;
   }
-#pragma clang diagnostic pop
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#endif
 
   nsresult rv;
   // Create a key for the principal, but strip any origin attributes
