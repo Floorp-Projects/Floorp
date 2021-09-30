@@ -302,6 +302,20 @@ function prompt(
     video && typeof video != "boolean" && video.mediaSource != "camera";
   let sharingAudio =
     audio && typeof audio != "boolean" && audio.mediaSource != "microphone";
+
+  const hasInherentConstraints = ({ facingMode, groupId, deviceId }) => {
+    const id = [deviceId].flat()[0];
+    return facingMode || groupId || (id && id != "default"); // flock workaround
+  };
+  let hasInherentAudioConstraints =
+    audio &&
+    !sharingAudio &&
+    [audio, ...(audio.advanced || [])].some(hasInherentConstraints);
+  let hasInherentVideoConstraints =
+    video &&
+    !sharingScreen &&
+    [video, ...(video.advanced || [])].some(hasInherentConstraints);
+
   for (let device of aDevices) {
     device = device.QueryInterface(Ci.nsIMediaDevice);
     let deviceObject = {
@@ -407,6 +421,8 @@ function prompt(
     audioInputDevices,
     videoInputDevices,
     audioOutputDevices,
+    hasInherentAudioConstraints,
+    hasInherentVideoConstraints,
   };
 
   let actor = getActorForWindow(aContentWindow);
