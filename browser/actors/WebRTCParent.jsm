@@ -412,9 +412,16 @@ class WebRTCParent extends JSWindowActorParent {
       aRequest.secondOrigin;
 
     let set = webrtcUI.activePerms.get(this.manager.outerWindowId);
-    let { callID, windowID } = aRequest;
+    let {
+      callID,
+      windowID,
+      audioInputDevices,
+      videoInputDevices,
+      hasInherentAudioConstraints,
+      hasInherentVideoConstraints,
+    } = aRequest;
 
-    // We consider a camera active if it is active or was active within a
+    // We consider a camera or mic active if it is active or was active within a
     // grace period of milliseconds ago.
     const isAllowed = ({ mediaSource, id }, permissionID) =>
       set?.has(windowID + mediaSource + id) ||
@@ -427,18 +434,46 @@ class WebRTCParent extends JSWindowActorParent {
             this.getBrowser()
           ).state == SitePermissions.ALLOW));
 
-    let {
-      audioInputDevices: [microphone],
-      videoInputDevices: [camera],
-    } = aRequest;
-
-    if (microphone && !isAllowed(microphone, "microphone")) {
-      return false;
+    let microphone;
+    if (audioInputDevices.length) {
+      for (let device of audioInputDevices) {
+        if (isAllowed(device, "microphone")) {
+          microphone = device;
+          break;
+        }
+        if (hasInherentAudioConstraints) {
+          // Inherent constraints suggest site is looking for a specific mic
+          break;
+        }
+        // Some sites don't look too hard at what they get, and spam gUM without
+        // adjusting what they ask for to match what they got last time. To keep
+        // users in charge and reduce prompts, ignore other constraints by
+        // returning the most-fit microphone a site already has access to.
+      }
+      if (!microphone) {
+        return false;
+      }
     }
-    if (camera && !isAllowed(camera, "camera")) {
-      return false;
+    let camera;
+    if (videoInputDevices.length) {
+      for (let device of videoInputDevices) {
+        if (isAllowed(device, "camera")) {
+          camera = device;
+          break;
+        }
+        if (hasInherentVideoConstraints) {
+          // Inherent constraints suggest site is looking for a specific camera
+          break;
+        }
+        // Some sites don't look too hard at what they get, and spam gUM without
+        // adjusting what they ask for to match what they got last time. To keep
+        // users in charge and reduce prompts, ignore other constraints by
+        // returning the most-fit camera a site already has access to.
+      }
+      if (!camera) {
+        return false;
+      }
     }
-
     let devices = [];
     if (camera) {
       perms.addFromPrincipal(
