@@ -11,7 +11,7 @@
  */
 
 
-typedef (DOMString or DocumentFragment or Document) SanitizerInput;
+typedef (DocumentFragment or Document) SanitizerInput;
 typedef record<DOMString, sequence<DOMString>> AttributeMatchList;
 
 [Exposed=Window, SecureContext, Pref="dom.security.sanitizer.enabled"]
@@ -31,4 +31,5 @@ dictionary SanitizerConfig {
   AttributeMatchList allowAttributes;
   AttributeMatchList dropAttributes;
   boolean allowCustomElements;
+  boolean allowComments;
 };
