@@ -235,6 +235,15 @@ class Talos(
                     "help": "Set a browser preference. May be used multiple times.",
                 },
             ],
+            [
+                ["--skip-preflight"],
+                {
+                    "action": "store_true",
+                    "dest": "skip_preflight",
+                    "default": False,
+                    "help": "skip preflight commands to prepare machine.",
+                },
+            ],
         ]
         + testing_config_options
         + copy.deepcopy(code_coverage_config_options)

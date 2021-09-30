@@ -196,7 +196,6 @@ windows10-aarch64-qr/opt:
 windows10-64-ref-hw-2017-qr/opt:
     build-platform: win64-shippable/opt
     test-sets:
-        - browsertime
         - talos-ref-hw
 
 windows10-64-shippable-qr/opt:
