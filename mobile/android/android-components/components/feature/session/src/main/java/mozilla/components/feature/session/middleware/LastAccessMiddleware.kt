@@ -57,15 +57,6 @@ class LastAccessMiddleware : Middleware<BrowserState, BrowserAction> {
                     context.dispatchUpdateActionForId(action.tab.id)
                 }
             }
-            is TabListAction.RestoreAction -> {
-                // If the session is restored from a collection or undo, we fire this action.
-                // For restoration from disk, we use a different use case that does not invoke this action, so we
-                // do not need to consider the case of updating lastAccess even if they have not been recently accessed
-                // by the user.
-                action.tabs.forEach { tab ->
-                    context.dispatchUpdateActionForId(tab.id)
-                }
-            }
             is ContentAction.UpdateUrlAction -> {
                 if (action.sessionId == context.state.selectedTabId) {
                     context.dispatchUpdateActionForId(action.sessionId)
