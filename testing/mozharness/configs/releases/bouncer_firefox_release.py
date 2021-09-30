@@ -72,6 +72,22 @@ config = {
                 "win64",
             ],
         },
+        "msix": {
+            "product-name": "Firefox-%(version)s-msix-SSL",
+            "check_uptake": True,
+            "platforms": [
+                "win",
+                "win64",
+            ],
+        },
+        "msix-latest": {
+            "product-name": "Firefox-msix-latest-SSL",
+            "check_uptake": True,
+            "platforms": [
+                "win",
+                "win64",
+            ],
+        },
         "stub-installer": {
             "product-name": "Firefox-%(version)s-stub",
             "check_uptake": True,

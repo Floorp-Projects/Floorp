@@ -104,6 +104,30 @@ config = {
                 "win64",
             ],
         },
+        "msix": {
+            "product-name": "Firefox-%(version)s-msix-SSL",
+            "check_uptake": True,
+            "platforms": [
+                "win",
+                "win64",
+            ],
+        },
+        "msix-latest": {
+            "product-name": "Firefox-esr-msix-latest-SSL",
+            "check_uptake": True,
+            "platforms": [
+                "win",
+                "win64",
+            ],
+        },
+        "msix-next-latest": {
+            "product-name": "Firefox-esr-next-msix-latest-SSL",
+            "check_uptake": True,
+            "platforms": [
+                "win",
+                "win64",
+            ],
+        },
         "complete-mar": {
             "product-name": "Firefox-%(version)s-Complete",
             "check_uptake": True,
