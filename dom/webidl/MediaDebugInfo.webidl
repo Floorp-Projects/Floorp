@@ -229,7 +229,7 @@ dictionary EMEDebugInfo {
 };
 
 dictionary HTMLMediaElementDebugInfo {
-  long compositorDroppedFrames = 0;
+  unsigned long compositorDroppedFrames = 0;
   EMEDebugInfo EMEInfo = {};
   MediaDecoderDebugInfo decoder = {};
 };
