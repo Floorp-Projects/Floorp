@@ -28,7 +28,7 @@ typedef PermissionDelegateHandler::PermissionDelegateInfo DelegateInfo;
 // Particular type of permissions to care about. We decide cases by case and
 // give various types of controls over each of these.
 static const DelegateInfo sPermissionsMap[] = {
-    // Permissions API map
+    // Permissions API map. All permission names have to be in lowercase.
     {"geo", u"geolocation", DelegatePolicy::eDelegateUseFeaturePolicy},
     // The same with geo, but we support both to save some conversions between
     // "geo" and "geolocation"
