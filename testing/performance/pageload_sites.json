@@ -275,7 +275,8 @@
     {
       "login": false,
       "name": "reddit",
-      "test_url": "https://www.reddit.com/r/technology/comments/9sqwyh/we_posed_as_100_senators_to_run_ads_on_facebook/"
+      "test_url": "https://www.reddit.com/r/technology/comments/9sqwyh/we_posed_as_100_senators_to_run_ads_on_facebook/",
+      "secondary_url": "https://www.reddit.com/r/technology/"
     },
     {
       "login": true,
