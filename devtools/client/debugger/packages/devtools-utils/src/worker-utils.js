@@ -116,7 +116,7 @@ function workerHandler(publicInterface) {
         }
       })
     ).then(results => {
-      self.postMessage({ id, results });
+      globalThis.postMessage({ id, results });
     });
   };
 }

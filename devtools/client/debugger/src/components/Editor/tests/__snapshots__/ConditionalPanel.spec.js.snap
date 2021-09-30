@@ -43,7 +43,7 @@ exports[`ConditionalPanel it should render at location of selected breakpoint 1`
           ],
           "results": Array [
             Object {
-              "isThrow": false,
+              "type": "return",
               "value": Object {
                 "focus": [MockFunction] {
                   "calls": Array [
@@ -51,7 +51,7 @@ exports[`ConditionalPanel it should render at location of selected breakpoint 1`
                   ],
                   "results": Array [
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": undefined,
                     },
                   ],
@@ -62,7 +62,7 @@ exports[`ConditionalPanel it should render at location of selected breakpoint 1`
                   ],
                   "results": Array [
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": Object {
                         "addEventListener": [MockFunction] {
                           "calls": Array [
@@ -73,7 +73,7 @@ exports[`ConditionalPanel it should render at location of selected breakpoint 1`
                           ],
                           "results": Array [
                             Object {
-                              "isThrow": false,
+                              "type": "return",
                               "value": undefined,
                             },
                           ],
@@ -88,7 +88,7 @@ exports[`ConditionalPanel it should render at location of selected breakpoint 1`
                   ],
                   "results": Array [
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": undefined,
                     },
                   ],
@@ -106,11 +106,11 @@ exports[`ConditionalPanel it should render at location of selected breakpoint 1`
                   ],
                   "results": Array [
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": undefined,
                     },
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": undefined,
                     },
                   ],
@@ -124,7 +124,7 @@ exports[`ConditionalPanel it should render at location of selected breakpoint 1`
                   ],
                   "results": Array [
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": undefined,
                     },
                   ],
@@ -159,7 +159,7 @@ exports[`ConditionalPanel it should render at location of selected breakpoint 1`
           ],
           "results": Array [
             Object {
-              "isThrow": false,
+              "type": "return",
               "value": undefined,
             },
           ],
@@ -238,7 +238,7 @@ exports[`ConditionalPanel it should render with condition at selected breakpoint
           ],
           "results": Array [
             Object {
-              "isThrow": false,
+              "type": "return",
               "value": Object {
                 "focus": [MockFunction] {
                   "calls": Array [
@@ -246,7 +246,7 @@ exports[`ConditionalPanel it should render with condition at selected breakpoint
                   ],
                   "results": Array [
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": undefined,
                     },
                   ],
@@ -257,7 +257,7 @@ exports[`ConditionalPanel it should render with condition at selected breakpoint
                   ],
                   "results": Array [
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": Object {
                         "addEventListener": [MockFunction] {
                           "calls": Array [
@@ -268,7 +268,7 @@ exports[`ConditionalPanel it should render with condition at selected breakpoint
                           ],
                           "results": Array [
                             Object {
-                              "isThrow": false,
+                              "type": "return",
                               "value": undefined,
                             },
                           ],
@@ -283,7 +283,7 @@ exports[`ConditionalPanel it should render with condition at selected breakpoint
                   ],
                   "results": Array [
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": undefined,
                     },
                   ],
@@ -301,11 +301,11 @@ exports[`ConditionalPanel it should render with condition at selected breakpoint
                   ],
                   "results": Array [
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": undefined,
                     },
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": undefined,
                     },
                   ],
@@ -319,7 +319,7 @@ exports[`ConditionalPanel it should render with condition at selected breakpoint
                   ],
                   "results": Array [
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": undefined,
                     },
                   ],
@@ -356,7 +356,7 @@ exports[`ConditionalPanel it should render with condition at selected breakpoint
           ],
           "results": Array [
             Object {
-              "isThrow": false,
+              "type": "return",
               "value": undefined,
             },
           ],
@@ -435,7 +435,7 @@ exports[`ConditionalPanel it should render with logpoint at selected breakpoint 
           ],
           "results": Array [
             Object {
-              "isThrow": false,
+              "type": "return",
               "value": Object {
                 "focus": [MockFunction] {
                   "calls": Array [
@@ -443,7 +443,7 @@ exports[`ConditionalPanel it should render with logpoint at selected breakpoint 
                   ],
                   "results": Array [
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": undefined,
                     },
                   ],
@@ -454,7 +454,7 @@ exports[`ConditionalPanel it should render with logpoint at selected breakpoint 
                   ],
                   "results": Array [
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": Object {
                         "addEventListener": [MockFunction] {
                           "calls": Array [
@@ -465,7 +465,7 @@ exports[`ConditionalPanel it should render with logpoint at selected breakpoint 
                           ],
                           "results": Array [
                             Object {
-                              "isThrow": false,
+                              "type": "return",
                               "value": undefined,
                             },
                           ],
@@ -480,7 +480,7 @@ exports[`ConditionalPanel it should render with logpoint at selected breakpoint 
                   ],
                   "results": Array [
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": undefined,
                     },
                   ],
@@ -498,11 +498,11 @@ exports[`ConditionalPanel it should render with logpoint at selected breakpoint 
                   ],
                   "results": Array [
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": undefined,
                     },
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": undefined,
                     },
                   ],
@@ -516,7 +516,7 @@ exports[`ConditionalPanel it should render with logpoint at selected breakpoint 
                   ],
                   "results": Array [
                     Object {
-                      "isThrow": false,
+                      "type": "return",
                       "value": undefined,
                     },
                   ],
@@ -553,7 +553,7 @@ exports[`ConditionalPanel it should render with logpoint at selected breakpoint 
           ],
           "results": Array [
             Object {
-              "isThrow": false,
+              "type": "return",
               "value": undefined,
             },
           ],

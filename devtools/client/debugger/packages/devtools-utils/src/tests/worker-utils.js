@@ -10,7 +10,7 @@ describe("worker utils", () => {
     global.Worker = jest.fn(function() {
       this.addEventListener = jest.fn();
     });
-    dispatcher.start("foo");
+    dispatcher.start("foo", globalThis);
     expect(dispatcher.worker).toEqual(global.Worker.mock.instances[0]);
   });
 
@@ -24,7 +24,7 @@ describe("worker utils", () => {
       terminate: terminateMock,
     }));
 
-    dispatcher.start();
+    dispatcher.start("", globalThis);
     dispatcher.stop();
 
     expect(dispatcher.worker).toEqual(null);
@@ -43,7 +43,7 @@ describe("worker utils", () => {
       };
     });
 
-    dispatcher.start();
+    dispatcher.start("", globalThis);
     const task = dispatcher.task("foo");
     task("bar");
 
@@ -74,7 +74,7 @@ describe("worker utils", () => {
       };
     });
 
-    dispatcher.start();
+    dispatcher.start("", globalThis);
     const task = dispatcher.task("foo", { queue: true });
     task("bar");
     task("baz");
@@ -100,7 +100,7 @@ describe("worker utils", () => {
       postMessageMock = jest.fn(resolve);
     });
 
-    self.postMessage = postMessageMock;
+    globalThis.postMessage = postMessageMock;
 
     const callee = {
       doSomething: () => {
