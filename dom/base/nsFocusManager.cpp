@@ -2925,8 +2925,8 @@ void nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow,
     nsCOMPtr<nsPIDOMWindowOuter> window(aWindow);
     RefPtr<nsFocusManager> self(this);
     NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-        "nsFocusManager::RaiseWindow", [self, window, aActionId]() -> void {
-          self->WindowRaised(window, aActionId);
+        "nsFocusManager::RaiseWindow", [self, window]() -> void {
+          self->WindowRaised(window, GenerateFocusActionId());
         }));
     return;
   }
