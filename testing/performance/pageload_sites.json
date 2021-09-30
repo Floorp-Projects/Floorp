@@ -240,7 +240,8 @@
     {
       "login": false,
       "name": "microsoft",
-      "test_url": "https://www.microsoft.com/en-us/"
+      "test_url": "https://www.microsoft.com/en-us/",
+      "secondary_url": "https://support.microsoft.com/en-us"
     },
     {
       "login": true,
