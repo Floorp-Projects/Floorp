@@ -4,8 +4,6 @@
 
 "use strict";
 
-const promise = require("promise");
-
 loader.lazyRequireGetter(
   this,
   "KeyCodes",
@@ -192,7 +190,7 @@ function getSelectorFromGrip(grip) {
  */
 function promiseWarn(error) {
   console.error(error);
-  return promise.reject(error);
+  return Promise.reject(error);
 }
 
 /**
