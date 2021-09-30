@@ -238,8 +238,9 @@ class APZInputBridge {
                                      uint64_t* aOutFocusSequenceNumber,
                                      LayersId* aOutLayersId) = 0;
 
-  virtual void UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
-                                      EventMessage aEventMessage) = 0;
+  virtual void UpdateWheelTransaction(
+      LayoutDeviceIntPoint aRefPoint, EventMessage aEventMessage,
+      const Maybe<ScrollableLayerGuid>& aTargetGuid) = 0;
 
   virtual ~APZInputBridge() = default;
 };

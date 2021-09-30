@@ -104,6 +104,26 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
     rootApzc = ApzcOf(root);
   }
 
+  // Creates a layer tree with a parent layer that is not scrollable, and a
+  // child layer that is only scrollable vertically.
+  void CreateScrollHandoffLayerTree5() {
+    const char* treeShape = "x(x)";
+    nsIntRegion layerVisibleRegion[] = {
+        nsIntRegion(IntRect(0, 0, 100, 100)),  // scrolling parent
+        nsIntRegion(IntRect(0, 50, 100, 50))   // scrolling child
+    };
+    CreateScrollData(treeShape, layerVisibleRegion);
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
+                              CSSRect(0, 0, 100, 100));
+    SetScrollableFrameMetrics(layers[1],
+                              ScrollableLayerGuid::START_SCROLL_ID + 1,
+                              CSSRect(0, 0, 100, 200));
+    SetScrollHandoff(layers[1], root);
+    registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
+    UpdateHitTestingTree();
+    rootApzc = ApzcOf(root);
+  }
+
   void CreateScrollgrabLayerTree(bool makeParentScrollable = true) {
     const char* treeShape = "x(x)";
     nsIntRegion layerVisibleRegion[] = {
@@ -694,4 +714,38 @@ TEST_F(APZScrollHandoffTesterInternal, WheelHandoffAfterDirectionReversal) {
   }
   EXPECT_EQ(childScrollRange.YMost(), childMetrics.GetVisualScrollOffset().y);
   EXPECT_GT(rootMetrics.GetVisualScrollOffset().y, 0);
+}
+
+TEST_F(APZScrollHandoffTesterInternal, WheelHandoffNonscrollable) {
+  // Set up a basic scroll layer tree.
+  CreateScrollHandoffLayerTree5();
+
+  RefPtr<TestAsyncPanZoomController> childApzc = ApzcOf(layers[1]);
+  FrameMetrics& childMetrics = childApzc->GetFrameMetrics();
+
+  EXPECT_EQ(0, childMetrics.GetVisualScrollOffset().y);
+
+  ScreenPoint downwardDelta(0, 10);
+  // Positioned to hit the nonscrollable parent frame
+  ScreenIntPoint nonscrollableLocation(40, 10);
+  // Positioned to hit the scrollable subframe
+  ScreenIntPoint scrollableLocation(40, 60);
+
+  // Start the wheel transaction on a nonscrollable parent frame.
+  Wheel(manager, nonscrollableLocation, downwardDelta, mcc->Time());
+  EXPECT_EQ(0, childMetrics.GetVisualScrollOffset().y);
+
+  // Mouse moves to a scrollable subframe. This should end the transaction.
+  mcc->AdvanceByMillis(100);
+  MouseInput mouseInput(MouseInput::MOUSE_MOVE,
+                        MouseInput::ButtonType::PRIMARY_BUTTON, 0, 0,
+                        scrollableLocation,
+                        MillisecondsSinceStartup(mcc->Time()), mcc->Time(), 0);
+  WidgetMouseEvent mouseEvent = mouseInput.ToWidgetEvent(nullptr);
+  ((APZInputBridge*)manager.get())->ReceiveInputEvent(mouseEvent);
+
+  // Wheel downward should scroll the subframe.
+  mcc->AdvanceByMillis(100);
+  Wheel(manager, scrollableLocation, downwardDelta, mcc->Time());
+  EXPECT_GT(childMetrics.GetVisualScrollOffset().y, 0);
 }

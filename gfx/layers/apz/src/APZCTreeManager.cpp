@@ -2272,8 +2272,9 @@ void APZCTreeManager::SynthesizePinchGestureFromMouseWheel(
   mInputQueue->ReceiveInputEvent(aTarget, confFlags, pinchEnd);
 }
 
-void APZCTreeManager::UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
-                                             EventMessage aEventMessage) {
+void APZCTreeManager::UpdateWheelTransaction(
+    LayoutDeviceIntPoint aRefPoint, EventMessage aEventMessage,
+    const Maybe<ScrollableLayerGuid>& aTargetGuid) {
   APZThreadUtils::AssertOnControllerThread();
 
   WheelBlockState* txn = mInputQueue->GetActiveWheelTransaction();
@@ -2294,7 +2295,7 @@ void APZCTreeManager::UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
           aRefPoint,
           PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
 
-      txn->OnMouseMove(point);
+      txn->OnMouseMove(point, aTargetGuid);
 
       return;
     }

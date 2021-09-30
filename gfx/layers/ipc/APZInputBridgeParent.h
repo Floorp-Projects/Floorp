@@ -49,7 +49,8 @@ class APZInputBridgeParent : public PAPZInputBridgeParent {
       KeyboardInput* aOutEvent);
 
   mozilla::ipc::IPCResult RecvUpdateWheelTransaction(
-      const LayoutDeviceIntPoint& aRefPoint, const EventMessage& aEventMessage);
+      const LayoutDeviceIntPoint& aRefPoint, const EventMessage& aEventMessage,
+      const Maybe<ScrollableLayerGuid>& aTargetGuid);
 
   mozilla::ipc::IPCResult RecvProcessUnhandledEvent(
       const LayoutDeviceIntPoint& aRefPoint, LayoutDeviceIntPoint* aOutRefPoint,
