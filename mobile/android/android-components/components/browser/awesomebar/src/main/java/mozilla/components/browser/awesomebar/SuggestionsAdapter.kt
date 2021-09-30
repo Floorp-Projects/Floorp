@@ -20,6 +20,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
  * [RecyclerView.Adapter] for displaying [AwesomeBar.Suggestion] in [BrowserAwesomeBar].
  */
 internal class SuggestionsAdapter(
+    @Suppress("DEPRECATION")
     private val awesomeBar: BrowserAwesomeBar
 ) : RecyclerView.Adapter<ViewHolderWrapper>() {
     internal var layout: SuggestionLayout = DefaultSuggestionLayout()

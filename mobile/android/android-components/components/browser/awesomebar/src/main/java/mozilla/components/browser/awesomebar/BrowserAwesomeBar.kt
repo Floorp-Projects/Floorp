@@ -34,6 +34,7 @@ internal const val INITIAL_NUMBER_OF_PROVIDERS = 5
  * A customizable [AwesomeBar] implementation.
  */
 @Suppress("LargeClass")
+@Deprecated("Use the AwesomeBar composable from the compose-awesomebar component instead")
 class BrowserAwesomeBar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,

@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("DEPRECATION")
+
 package mozilla.components.browser.awesomebar.layout
 
 import android.content.res.ColorStateList
@@ -104,6 +106,7 @@ internal sealed class DefaultSuggestionViewHolder {
      * View holder for suggestions that contain chips.
      */
     internal class Chips(
+        @Suppress("DEPRECATION")
         private val awesomeBar: BrowserAwesomeBar,
         view: View
     ) : SuggestionViewHolder(view) {
