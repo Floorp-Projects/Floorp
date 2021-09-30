@@ -7429,6 +7429,10 @@ static void RelaxedFmsF64x2(MacroAssembler& masm, RegV128 rs1, RegV128 rs2,
   masm.fmsFloat64x2(rs1, rs2, rsd);
 }
 
+static void RelaxedSwizzle(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.swizzleInt8x16Relaxed(rs, rsd);
+}
+
 static void RelaxedMinF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
   masm.minFloat32x4Relaxed(rs, rsd);
 }
@@ -9123,6 +9127,11 @@ bool BaseCompiler::emitBody() {
               return iter_.unrecognizedOpcode(&op);
             }
             CHECK_NEXT(dispatchVectorUnary(RelaxedConvertF64x2ToUI32x4));
+          case uint32_t(SimdOp::V8x16RelaxedSwizzle):
+            if (!moduleEnv_.v128RelaxedEnabled()) {
+              return iter_.unrecognizedOpcode(&op);
+            }
+            CHECK_NEXT(dispatchVectorBinary(RelaxedSwizzle));
 #  endif
           default:
             break;

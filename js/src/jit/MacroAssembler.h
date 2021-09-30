@@ -2334,6 +2334,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void swizzleInt8x16(FloatRegister lhs, FloatRegister rhs,
                              FloatRegister dest) DEFINED_ON(arm64);
 
+  inline void swizzleInt8x16Relaxed(FloatRegister rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared, arm64);
+
+  inline void swizzleInt8x16Relaxed(FloatRegister lhs, FloatRegister rhs,
+                                    FloatRegister dest) DEFINED_ON(arm64);
+
   // Integer Add
 
   inline void addInt8x16(FloatRegister rhs, FloatRegister lhsDest)

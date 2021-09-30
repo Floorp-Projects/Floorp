@@ -145,6 +145,7 @@ const I32x4RelaxedTruncSSatF32x4 = 0xa5;
 const I32x4RelaxedTruncUSatF32x4 = 0xa6;
 const I32x4RelaxedTruncSatF64x2SZero = 0xc5;
 const I32x4RelaxedTruncSatF64x2UZero = 0xc6;
+const I8x16RelaxedSwizzle = 0xa2;
 
 // SIMD wormhole opcodes.
 const WORMHOLE_SELFTEST = 0;
