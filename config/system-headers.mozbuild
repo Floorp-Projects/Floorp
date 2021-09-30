@@ -1029,7 +1029,6 @@ if CONFIG['MOZ_X11']:
         'X11/extensions/Xdamage.h',
         'X11/extensions/Xfixes.h',
         'X11/extensions/Xrandr.h',
-        'X11/extensions/Xrender.h',
         'X11/extensions/XShm.h',
         'X11/ImUtil.h',
         'X11/Intrinsic.h',
