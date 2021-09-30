@@ -33,7 +33,7 @@ job-defaults:
 jobs:
     devedition:
         bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64', 'win64-aarch64']
-        bouncer-products: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer', 'msi']
+        bouncer-products: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer', 'msi', 'msix']
         shipping-product: devedition
         treeherder:
             platform: devedition-release/opt
@@ -42,7 +42,7 @@ jobs:
         bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64', 'win64-aarch64']
         bouncer-products:
             by-release-type:
-                default: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer', 'msi', 'pkg']
+                default: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer', 'msi', 'msix', 'pkg']
                 esr78: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'msi', 'pkg']
                 esr91: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'msi', 'pkg']
         shipping-product: firefox

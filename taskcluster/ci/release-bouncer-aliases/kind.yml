@@ -39,6 +39,7 @@ jobs:
             firefox-devedition-latest: installer
             firefox-devedition-stub: stub-installer
             firefox-devedition-msi-latest-ssl: msi
+            firefox-devedition-msix-latest-ssl: msix
         shipping-product: devedition
         treeherder:
             platform: devedition-release/opt
@@ -51,12 +52,14 @@ jobs:
                     firefox-beta-latest: installer
                     firefox-beta-stub: stub-installer
                     firefox-beta-msi-latest-ssl: msi
+                    firefox-beta-msix-latest-ssl: msix
                     firefox-beta-pkg-latest-ssl: pkg
                 mozilla-release:
                     firefox-latest-ssl: installer-ssl
                     firefox-latest: installer
                     firefox-stub: stub-installer
                     firefox-msi-latest-ssl: msi
+                    firefox-msix-latest-ssl: msix
                     firefox-pkg-latest-ssl: pkg
                 mozilla-esr78:
                     # when there is one ESR branch both sets of aliases work
