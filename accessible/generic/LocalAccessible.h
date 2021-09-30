@@ -877,12 +877,6 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   void Announce(const nsAString& aAnnouncement, uint16_t aPriority);
 
-  /**
-   * Fire a focusable state change event if the previous state
-   * was different.
-   */
-  void MaybeFireFocusableStateChange(bool aPreviouslyFocusable);
-
   virtual bool IsRemote() const override { return false; }
 
   already_AddRefed<AccAttributes> BundleFieldsForCache(
