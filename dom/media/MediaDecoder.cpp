@@ -1093,7 +1093,7 @@ bool MediaDecoder::HasSuspendTaint() const {
 }
 
 void MediaDecoder::SetSecondaryVideoContainer(
-    RefPtr<VideoFrameContainer> aSecondaryVideoContainer) {
+    const RefPtr<VideoFrameContainer>& aSecondaryVideoContainer) {
   MOZ_ASSERT(NS_IsMainThread());
   if (mSecondaryVideoContainer.Ref() == aSecondaryVideoContainer) {
     return;

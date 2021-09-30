@@ -318,7 +318,7 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   void UpdateVideoDecodeMode();
 
   void SetSecondaryVideoContainer(
-      RefPtr<VideoFrameContainer> aSecondaryVideoContainer);
+      const RefPtr<VideoFrameContainer>& aSecondaryVideoContainer);
 
   void SetIsBackgroundVideoDecodingAllowed(bool aAllowed);
 
