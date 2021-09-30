@@ -16,7 +16,6 @@ namespace mozilla {
 namespace layers {
 
 class ContainerLayer;
-class ReadbackLayer;
 class PaintedLayer;
 
 class ReadbackProcessor {
@@ -37,10 +36,6 @@ class ReadbackProcessor {
 
   struct Update {
     /**
-     * The layer a PaintedLayer should send its contents to.
-     */
-    ReadbackLayer* mLayer;
-    /**
      * The rectangle of content that it should send, in the PaintedLayer's
      * coordinate system. This rectangle is guaranteed to be in the
      * PaintedLayer's visible region. Translate it to mLayer's coordinate system
@@ -52,24 +47,10 @@ class ReadbackProcessor {
      */
     uint64_t mSequenceCounter;
   };
-  /**
-   * Appends any ReadbackLayers that need to be updated, and the rects that
-   * need to be updated, to aUpdates. Only need to call this for PaintedLayers
-   * that have been marked UsedForReadback().
-   * Each Update's mLayer's mBackgroundLayer will have been set to aLayer.
-   * If a PaintedLayer doesn't call GetPaintedLayerUpdates, then all the
-   * ReadbackLayers that needed data from that PaintedLayer will be marked
-   * as having unknown backgrounds.
-   * @param aUpdateRegion if non-null, this region is set to the union
-   * of the mUpdateRects.
-   */
-  void GetPaintedLayerUpdates(PaintedLayer* aLayer, nsTArray<Update>* aUpdates,
-                              nsIntRegion* aUpdateRegion = nullptr);
 
   ~ReadbackProcessor();
 
  protected:
-  void BuildUpdatesForLayer(ReadbackLayer* aLayer);
 
   nsTArray<Update> mAllUpdates;
 };

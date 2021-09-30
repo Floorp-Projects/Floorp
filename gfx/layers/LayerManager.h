@@ -62,7 +62,6 @@ class PaintedLayer;
 class ContainerLayer;
 class ColorLayer;
 class CompositorBridgeChild;
-class ReadbackLayer;
 class ReadbackProcessor;
 class RefLayer;
 class HostLayer;
@@ -298,13 +297,6 @@ class LayerManager : public WindowRenderer {
    * Create a ColorLayer for this manager's layer tree.
    */
   virtual already_AddRefed<ColorLayer> CreateColorLayer() = 0;
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Create a ReadbackLayer for this manager's layer tree.
-   */
-  virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer() {
-    return nullptr;
-  }
   /**
    * CONSTRUCTION PHASE ONLY
    * Create a RefLayer for this manager's layer tree.
