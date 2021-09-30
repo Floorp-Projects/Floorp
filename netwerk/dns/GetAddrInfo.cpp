@@ -237,10 +237,13 @@ _GetAddrInfo_Portable(const nsACString& aCanonHost, uint16_t aAddressFamily,
   }
 #endif
 
+  LOG("Resolving %s using PR_GetAddrInfoByName", aCanonHost.BeginReading());
   PRAddrInfo* prai =
       PR_GetAddrInfoByName(aCanonHost.BeginReading(), aAddressFamily, prFlags);
 
   if (!prai) {
+    LOG("PR_GetAddrInfoByName returned null PR_GetError:%d PR_GetOSErrpr:%d",
+        PR_GetError(), PR_GetOSError());
     return NS_ERROR_UNKNOWN_HOST;
   }
 
@@ -255,11 +258,13 @@ _GetAddrInfo_Portable(const nsACString& aCanonHost, uint16_t aAddressFamily,
                                    filterNameCollision, canonName));
   PR_FreeAddrInfo(prai);
   if (ai->Addresses().IsEmpty()) {
+    LOG("PR_GetAddrInfoByName returned empty address list");
     return NS_ERROR_UNKNOWN_HOST;
   }
 
   ai.forget(aAddrInfo);
 
+  LOG("PR_GetAddrInfoByName resolved successfully");
   return NS_OK;
 }
 
@@ -347,6 +352,7 @@ nsresult GetAddrInfo(const nsACString& aHost, uint16_t aAddressFamily,
   // If there is an override for this host, then we synthetize a result.
   if (gOverrideService &&
       FindAddrOverride(aHost, aAddressFamily, aFlags, aAddrInfo)) {
+    LOG("Returning IP address from NativeDNSResolverOverride");
     return (*aAddrInfo)->Addresses().Length() ? NS_OK : NS_ERROR_UNKNOWN_HOST;
   }
 
