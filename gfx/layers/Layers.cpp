@@ -600,9 +600,6 @@ void ContainerLayer::RemoveAllChildren() {
   // NotifyRemoved prior to removing any layers.
   while (current) {
     Layer* next = current->GetNextSibling();
-    if (current->GetType() == TYPE_READBACK) {
-      static_cast<ReadbackLayer*>(current)->NotifyRemoved();
-    }
     current = next;
   }
 
@@ -1004,23 +1001,9 @@ void ContainerLayer::ComputeEffectiveTransformsForChildren(
 // consider whether the matching changes need to be made to
 // ContainerLayer::RemoveAllChildren
 void ContainerLayer::DidRemoveChild(Layer* aLayer) {
-  PaintedLayer* tl = aLayer->AsPaintedLayer();
-  if (tl && tl->UsedForReadback()) {
-    for (Layer* l = mFirstChild; l; l = l->GetNextSibling()) {
-      if (l->GetType() == TYPE_READBACK) {
-        static_cast<ReadbackLayer*>(l)->NotifyPaintedLayerRemoved(tl);
-      }
-    }
-  }
-  if (aLayer->GetType() == TYPE_READBACK) {
-    static_cast<ReadbackLayer*>(aLayer)->NotifyRemoved();
-  }
 }
 
 void ContainerLayer::DidInsertChild(Layer* aLayer) {
-  if (aLayer->GetType() == TYPE_READBACK) {
-    mMayHaveReadbackChild = true;
-  }
 }
 
 #ifdef MOZ_DUMP_PAINTING
@@ -1287,20 +1270,6 @@ void RefLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   }
   if (mEventRegionsOverride & EventRegionsOverride::ForceEmptyHitRegion) {
     aStream << " [force-ehr]";
-  }
-}
-
-void ReadbackLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
-  Layer::PrintInfo(aStream, aPrefix);
-  aStream << " [size=" << mSize << "]";
-  if (mBackgroundLayer) {
-    aStream << " [backgroundLayer="
-            << nsPrintfCString("%p", mBackgroundLayer).get() << "]";
-    aStream << " [backgroundOffset=" << mBackgroundLayerOffset << "]";
-  } else if (mBackgroundColor.a == 1.f) {
-    aStream << " [backgroundColor=" << mBackgroundColor << "]";
-  } else {
-    aStream << " [nobackground]";
   }
 }
 
