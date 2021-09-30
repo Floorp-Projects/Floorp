@@ -10,7 +10,7 @@ import platform
 import subprocess
 from subprocess import CalledProcessError
 
-from mach.virtualenv import VirtualenvHelper
+from mozbuild.virtualenv import VirtualenvHelper
 from mozfile import which
 
 
