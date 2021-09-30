@@ -41,3 +41,8 @@ BROWSER_CHROME_MANIFESTS += [
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "Disability Access APIs")
+
+SPHINX_TREES["/accessible"] = "docs"
+
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]

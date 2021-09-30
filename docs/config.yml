@@ -25,6 +25,7 @@ categories:
         - services
         - uriloader
         - widget/cocoa
+        - accessible
         - code-quality
         - writing-rust-code
         - tools/profiler
