@@ -1530,7 +1530,7 @@ class HTMLMediaElement::AudioChannelAgentCallback final
 
   float GetEffectiveVolume() const {
     MOZ_ASSERT(!mIsShutDown);
-    return mOwner->Volume() * mAudioChannelVolume;
+    return static_cast<float>(mOwner->Volume()) * mAudioChannelVolume;
   }
 
  private:
