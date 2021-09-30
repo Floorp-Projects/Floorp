@@ -1,5 +1,5 @@
-commit 9b32a927730a1725b8398e5c4e14a6e08354af13
-Author: Hugo van der Merwe <17109322+hugovdm@users.noreply.github.com>
-Date:   Wed Mar 24 18:52:51 2021 +0100
+commit 2d8fe2edd38b6287429a3a66225920aa4c210e56
+Author: yumaoka <y.umaoka@gmail.com>
+Date:   Tue Sep 28 11:51:02 2021 -0400
 
-    ICU-21508 Rename 'master' to 'main' in dev/tool/tzu/SourceModel.java (#20)
+    ICU-21767 Adding tzdata2021a1 including 2021b changes (except pre-1970 changes) based on 2021a
