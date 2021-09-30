@@ -6019,10 +6019,11 @@ nsresult nsHttpChannel::BeginConnect() {
   RefPtr<nsHttpConnectionInfo> connInfo = new nsHttpConnectionInfo(
       host, port, ""_ns, mUsername, proxyInfo, originAttributes, isHttps);
   bool http2Allowed = !gHttpHandler->IsHttp2Excluded(connInfo);
-  if (!LoadAllowHttp3()) {
+
+  bool http3Allowed = Http3Allowed();
+  if (!http3Allowed) {
     mCaps |= NS_HTTP_DISALLOW_HTTP3;
   }
-  bool http3Allowed = Http3Allowed();
 
   RefPtr<AltSvcMapping> mapping;
   if (!mConnectionInfo && LoadAllowAltSvc() &&  // per channel
