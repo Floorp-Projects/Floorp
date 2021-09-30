@@ -125,12 +125,6 @@ APZEventResult APZInputBridge::ReceiveInputEvent(WidgetInputEvent& aEvent) {
     case eMouseEventClass:
     case eDragEventClass: {
       WidgetMouseEvent& mouseEvent = *aEvent.AsMouseEvent();
-
-      // Note, we call this before having transformed the reference point.
-      if (mouseEvent.IsReal()) {
-        UpdateWheelTransaction(mouseEvent.mRefPoint, mouseEvent.mMessage);
-      }
-
       if (WillHandleMouseEvent(mouseEvent)) {
         MouseInput input(mouseEvent);
         input.mOrigin =
@@ -160,7 +154,18 @@ APZEventResult APZInputBridge::ReceiveInputEvent(WidgetInputEvent& aEvent) {
                       mouseEvent.mMessage == eMouseDown ||
                           mouseEvent.mMessage == eMouseUp);
         aEvent.mLayersId = input.mLayersId;
+
+        if (mouseEvent.IsReal()) {
+          UpdateWheelTransaction(mouseEvent.mRefPoint, mouseEvent.mMessage,
+                                 Some(result.mTargetGuid));
+        }
+
         return result;
+      }
+
+      if (mouseEvent.IsReal()) {
+        UpdateWheelTransaction(mouseEvent.mRefPoint, mouseEvent.mMessage,
+                               Nothing());
       }
 
       ProcessUnhandledEvent(&mouseEvent.mRefPoint, &result.mTargetGuid,
@@ -247,7 +252,7 @@ APZEventResult APZInputBridge::ReceiveInputEvent(WidgetInputEvent& aEvent) {
         }
       }
 
-      UpdateWheelTransaction(aEvent.mRefPoint, aEvent.mMessage);
+      UpdateWheelTransaction(aEvent.mRefPoint, aEvent.mMessage, Nothing());
       ProcessUnhandledEvent(&aEvent.mRefPoint, &result.mTargetGuid,
                             &aEvent.mFocusSequenceNumber, &aEvent.mLayersId);
       MOZ_ASSERT(result.GetStatus() == nsEventStatus_eIgnore);
@@ -265,7 +270,7 @@ APZEventResult APZInputBridge::ReceiveInputEvent(WidgetInputEvent& aEvent) {
       return result;
     }
     default: {
-      UpdateWheelTransaction(aEvent.mRefPoint, aEvent.mMessage);
+      UpdateWheelTransaction(aEvent.mRefPoint, aEvent.mMessage, Nothing());
       ProcessUnhandledEvent(&aEvent.mRefPoint, &result.mTargetGuid,
                             &aEvent.mFocusSequenceNumber, &aEvent.mLayersId);
       return result;

@@ -115,9 +115,10 @@ void APZInputBridgeChild::ProcessUnhandledEvent(
                             aOutFocusSequenceNumber, aOutLayersId);
 }
 
-void APZInputBridgeChild::UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
-                                                 EventMessage aEventMessage) {
-  SendUpdateWheelTransaction(aRefPoint, aEventMessage);
+void APZInputBridgeChild::UpdateWheelTransaction(
+    LayoutDeviceIntPoint aRefPoint, EventMessage aEventMessage,
+    const Maybe<ScrollableLayerGuid>& aTargetGuid) {
+  SendUpdateWheelTransaction(aRefPoint, aEventMessage, aTargetGuid);
 }
 
 }  // namespace layers

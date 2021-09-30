@@ -28,8 +28,9 @@ class APZInputBridgeChild : public PAPZInputBridgeChild, public APZInputBridge {
                              uint64_t* aOutFocusSequenceNumber,
                              LayersId* aOutLayersId) override;
 
-  void UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
-                              EventMessage aEventMessage) override;
+  void UpdateWheelTransaction(
+      LayoutDeviceIntPoint aRefPoint, EventMessage aEventMessage,
+      const Maybe<ScrollableLayerGuid>& aTargetGuid) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   virtual ~APZInputBridgeChild();

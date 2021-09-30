@@ -425,10 +425,16 @@ bool WheelBlockState::MaybeTimeout(const TimeStamp& aTimeStamp) {
   return true;
 }
 
-void WheelBlockState::OnMouseMove(const ScreenIntPoint& aPoint) {
+void WheelBlockState::OnMouseMove(
+    const ScreenIntPoint& aPoint,
+    const Maybe<ScrollableLayerGuid>& aTargetGuid) {
   MOZ_ASSERT(InTransaction());
 
-  if (!GetTargetApzc()->Contains(aPoint)) {
+  if (!GetTargetApzc()->Contains(aPoint) ||
+      // If the mouse moved over to a different APZC, `mIsScrollable`
+      // may no longer be false and needs to be recomputed.
+      (!mIsScrollable && aTargetGuid.isSome() &&
+       aTargetGuid.value() != GetTargetApzc()->GetGuid())) {
     EndTransaction();
     return;
   }
