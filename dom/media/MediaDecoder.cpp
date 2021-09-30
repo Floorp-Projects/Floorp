@@ -579,7 +579,9 @@ void MediaDecoder::Play() {
   if (IsEnded()) {
     Seek(0, SeekTarget::PrevSyncPoint);
     return;
-  } else if (mPlayState == PLAY_STATE_LOADING) {
+  }
+
+  if (mPlayState == PLAY_STATE_LOADING) {
     mNextState = PLAY_STATE_PLAYING;
     return;
   }
