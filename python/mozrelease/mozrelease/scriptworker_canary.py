@@ -19,7 +19,7 @@ from appdirs import user_config_dir
 import taskcluster
 
 from mach.base import FailedCommandError
-from taskgraph import GECKO
+from gecko_taskgraph import GECKO
 
 logger = logging.getLogger(__name__)
 

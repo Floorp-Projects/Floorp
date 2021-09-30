@@ -65,7 +65,7 @@ def run_perfdocs(config, logger=None, paths=None, generate=True):
 
     decision_task_id = os.environ.get("DECISION_TASK_ID", None)
     if decision_task_id:
-        from taskgraph.util.taskcluster import get_artifact
+        from gecko_taskgraph.util.taskcluster import get_artifact
 
         task_graph = get_artifact(decision_task_id, "public/full-task-graph.json")
     else:

@@ -53,7 +53,11 @@ import six.moves.urllib_parse as urlparse
 import zipfile
 
 import pylru
-from taskgraph.util.taskcluster import find_task_id, get_artifact_url, list_artifacts
+from gecko_taskgraph.util.taskcluster import (
+    find_task_id,
+    get_artifact_url,
+    list_artifacts,
+)
 
 from mach.util import UserError
 

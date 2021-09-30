@@ -2,16 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: taskgraph.loader.transform:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 kind-dependencies:
     - post-beetmover-dummy
 
 transforms:
-    - taskgraph.transforms.bouncer_locations:transforms
-    - taskgraph.transforms.release:run_on_releases
-    - taskgraph.transforms.release_deps:transforms
-    - taskgraph.transforms.task:transforms
+    - gecko_taskgraph.transforms.bouncer_locations:transforms
+    - gecko_taskgraph.transforms.release:run_on_releases
+    - gecko_taskgraph.transforms.release_deps:transforms
+    - gecko_taskgraph.transforms.task:transforms
 
 job-defaults:
     description: nightly bouncer locations job

@@ -47,7 +47,7 @@ Project names are the repositories.  They can be:
 * `mozilla-release`
 * `mozilla-esr78`
 * `mozilla-esr91`
-* ... A partial list can be found in taskcluster/taskgraph/util/attributes.py
+* ... A partial list can be found in taskcluster/gecko_taskgraph/util/attributes.py
 
 For try, this attribute applies only if ``-p all`` is specified.  All jobs can
 be specified by name regardless of ``run_on_projects``.

@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.single_dep:loader
 
 transforms:
-    - taskgraph.transforms.release_generate_checksums_beetmover:transforms
-    - taskgraph.transforms.task:transforms
+    - gecko_taskgraph.transforms.release_generate_checksums_beetmover:transforms
+    - gecko_taskgraph.transforms.task:transforms
 
 kind-dependencies:
     - release-generate-checksums-signing
@@ -14,4 +14,4 @@ kind-dependencies:
 job-template:
     shipping-phase: promote
     attributes:
-        artifact_map: taskcluster/taskgraph/manifests/release_checksums.yml
+        artifact_map: taskcluster/gecko_taskgraph/manifests/release_checksums.yml

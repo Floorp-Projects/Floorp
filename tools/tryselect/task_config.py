@@ -472,8 +472,8 @@ class WorkerOverrides(TryConfig):
     ]
 
     def try_config(self, worker_overrides, worker_suffixes, **kwargs):
-        from taskgraph.config import load_graph_config
-        from taskgraph.util.workertypes import get_worker_type
+        from gecko_taskgraph.config import load_graph_config
+        from gecko_taskgraph.util.workertypes import get_worker_type
 
         overrides = {}
         if worker_overrides:
