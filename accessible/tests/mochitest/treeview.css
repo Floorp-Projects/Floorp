@@ -3,13 +3,13 @@ treechildren::-moz-tree-checkbox(checked) {
 }
 
 treechildren::-moz-tree-image(cyclerState1) {
-  list-style-image: url("chrome://global/skin/console/bullet-question.png");
+  list-style-type: disc;
 }
 
 treechildren::-moz-tree-image(cyclerState2) {
-  list-style-image: url("chrome://global/skin/console/bullet-warning.png");
+  list-style-type: circle;
 }
 
 treechildren::-moz-tree-image(cyclerState3) {
-  list-style-image: url("chrome://global/skin/console/bullet-error.png");
+  list-style-type: square;
 }
