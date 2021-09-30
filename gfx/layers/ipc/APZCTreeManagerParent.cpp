@@ -86,7 +86,7 @@ mozilla::ipc::IPCResult APZCTreeManagerParent::RecvSetTargetAPZC(
 
 mozilla::ipc::IPCResult APZCTreeManagerParent::RecvUpdateZoomConstraints(
     const ScrollableLayerGuid& aGuid,
-    const MaybeZoomConstraints& aConstraints) {
+    const Maybe<ZoomConstraints>& aConstraints) {
   if (!IsGuidValid(aGuid)) {
     return IPC_FAIL_NO_REASON(this);
   }
