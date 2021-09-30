@@ -338,14 +338,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         pass
 
     def parse_browsertime_json(
-        self,
-        raw_btresults,
-        page_cycles,
-        cold,
-        browser_cycles,
-        measure,
-        page_count,
-        test_name,
+        self, raw_btresults, page_cycles, cold, browser_cycles, measure
     ):
         """
         Receive a json blob that contains the results direct from the browsertime tool. Parse
@@ -510,7 +503,6 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 )
 
         # now parse out the values
-        page_counter = 0
         for raw_result in raw_btresults:
             if not raw_result["browserScripts"]:
                 raise MissingResultsError("Browsertime cycle produced no measurements.")
@@ -521,20 +513,11 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
             # Desktop chrome doesn't have `browser` scripts data available for now
             bt_browser = raw_result["browserScripts"][0].get("browser", None)
             bt_ver = raw_result["info"]["browsertime"]["version"]
-
-            # when doing actions, we append a .X for each additional pageload in a scenario
-            extra = ""
-            if len(page_count) > 0:
-                extra = ".%s" % page_count[page_counter % len(page_count)]
-            url_parts = raw_result["info"]["url"].split("/")
-            page_counter += 1
-
-            bt_url = "%s%s/%s," % ("/".join(url_parts[:-1]), extra, url_parts[-1])
+            bt_url = (raw_result["info"]["url"],)
             bt_result = {
                 "bt_ver": bt_ver,
                 "browser": bt_browser,
                 "url": bt_url,
-                "name": "%s%s" % (test_name, extra),
                 "measurements": {},
                 "statistics": {},
             }
@@ -565,7 +548,6 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     "bt_ver": bt_ver,
                     "browser": bt_browser,
                     "url": bt_url,
-                    "name": "%s%s" % (test_name, extra),
                     "measurements": {},
                     "statistics": {},
                 }
@@ -769,8 +751,6 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 test["cold"],
                 test["browser_cycles"],
                 test.get("measure"),
-                test_config.get("page_count", []),
-                test["name"],
             ):
 
                 def _new_standard_result(new_result, subtest_unit="ms"):

@@ -23,7 +23,7 @@ module.exports = async function(context, commands) {
       context.log.info("Navigating to secondary url:" + secondary_url);
       await commands.navigate(secondary_url);
     } else {
-      context.log.info("Navigating to about:blank, count: " + count);
+      context.log.info("Navigating to about:blank");
       await commands.navigate("about:blank");
     }
 
@@ -34,7 +34,6 @@ module.exports = async function(context, commands) {
     context.log.info("Cycle %d, starting the measure", count);
     await commands.measure.start(test_url);
   }
-
   context.log.info("Browsertime pageload ended.");
   return true;
 };
