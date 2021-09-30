@@ -166,7 +166,7 @@ Landing docker registry images takes a little more care.
 Begin by bumping the ``VERSION``.  Once the new version of the image has been
 built and tested locally, push it to the docker registry and make note of the
 resulting repo digest.  Put this value in the ``HASH`` file for the
-``decision`` image and in ``taskcluster/taskgraph/transforms/docker_image.py``
+``decision`` image and in ``taskcluster/gecko_taskgraph/transforms/docker_image.py``
 for the ``image_builder`` image.
 
 The change is now safe to use in Try pushes.
@@ -174,7 +174,7 @@ The change is now safe to use in Try pushes.
 Note that ``image_builder`` change can be tested directly in try pushes without
 using a registry, as the in-registry ``image_builder`` image is used to build a
 task image which is then used to build other images.  It is referenced by hash
-in ``taskcluster/taskgraph/transforms/docker_image.py``.
+in ``taskcluster/gecko_taskgraph/transforms/docker_image.py``.
 
 Special Dockerfile Syntax
 -------------------------

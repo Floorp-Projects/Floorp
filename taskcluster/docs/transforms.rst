@@ -106,7 +106,7 @@ invocation on different platforms leaves a lot of specific behavior in the test
 description, divided by ``by-test-platform``.
 
 Test descriptions are validated to conform to the schema in
-``taskcluster/taskgraph/transforms/tests.py``.  This schema is extensively
+``taskcluster/gecko_taskgraph/transforms/tests.py``.  This schema is extensively
 documented and is a the primary reference for anyone modifying tests.
 
 The output of ``tests.py`` is a task description.  Test dependencies are
@@ -130,7 +130,7 @@ implementations. Any other task-description information is passed along
 verbatim, although it is augmented by the run-using implementation.
 
 The run-using implementations are all located in
-``taskcluster/taskgraph/transforms/job``, along with the schemas for their
+``taskcluster/gecko_taskgraph/transforms/job``, along with the schemas for their
 implementations.  Those well-commented source files are the canonical
 documentation for what constitutes a job description, and should be considered
 part of the documentation.
@@ -159,7 +159,7 @@ common.  They all run on one of a small set of worker implementations, each
 with their own idiosyncrasies.  And they all report to TreeHerder in a similar
 way.
 
-The transforms in ``taskcluster/taskgraph/transforms/task.py`` implement
+The transforms in ``taskcluster/gecko_taskgraph/transforms/task.py`` implement
 this common functionality.  They expect a "task description", and produce a
 task definition.  The schema for a task description is defined at the top of
 ``task.py``, with copious comments.  Go forth and read it now!
@@ -198,7 +198,7 @@ Signing Descriptions
 Signing kinds are passed a single dependent job (from its kind dependency) to act
 on.
 
-The transforms in ``taskcluster/taskgraph/transforms/signing.py`` implement
+The transforms in ``taskcluster/gecko_taskgraph/transforms/signing.py`` implement
 this common functionality.  They expect a "signing description", and produce a
 task definition.  The schema for a signing description is defined at the top of
 ``signing.py``, with copious comments.
@@ -213,4 +213,4 @@ More Detail
 
 The source files provide lots of additional detail, both in the code itself and
 in the comments and docstrings.  For the next level of detail beyond this file,
-consult the transform source under ``taskcluster/taskgraph/transforms``.
+consult the transform source under ``taskcluster/gecko_taskgraph/transforms``.

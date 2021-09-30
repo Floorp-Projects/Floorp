@@ -86,7 +86,7 @@ platform.  For example:
             default: 8
 
 The full set of available properties is in
-``taskcluster/taskgraph/transforms/tests.py``.  Some other
+``taskcluster/gecko_taskgraph/transforms/tests.py``.  Some other
 commonly-modified properties are ``max-run-time`` (useful if tests are being
 killed for exceeding maxRunTime) and ``treeherder-symbol``.
 
@@ -104,7 +104,7 @@ for that suite, and which kind it fits into (consult :doc:`kinds`).
 Add a new stanza to ``taskcluster/ci/<kind>/tests.yml``, copying from the other
 stanzas in that file.  The meanings should be clear, but authoritative
 documentation is in
-``taskcluster/taskgraph/transforms/tests.py`` should you need
+``taskcluster/gecko_taskgraph/transforms/tests.py`` should you need
 it.  The stanza name is the name by which the test will be referenced in try
 syntax.
 
@@ -186,7 +186,7 @@ loader to read a list of jobs from the ``jobs`` key, and applies the standard
        - ..your job description here..
 
 Job descriptions are defined and documented in
-``taskcluster/taskgraph/transforms/job/__init__.py``.
+``taskcluster/gecko_taskgraph/transforms/job/__init__.py``.
 
 Custom Kind Loader
 ``````````````````
@@ -194,7 +194,7 @@ Custom Kind Loader
 If your task depends on other tasks, then the decision of which tasks to create
 may require some code.  For example, the ``test`` kind iterates over
 the builds in the graph, generating a full set of test tasks for each one.  This specific
-post-build behavior is implemented as a loader defined in ``taskcluster/taskgraph/loader/test.py``.
+post-build behavior is implemented as a loader defined in ``taskcluster/gecko_taskgraph/loader/test.py``.
 
 A custom loader is useful when the set of tasks you want to create is not
 static but based on something else (such as the available builds) or when the
@@ -235,7 +235,7 @@ mozharness invocation), you can add a new implementation of the job
 description's "run" section.  Before you do this, consider that it might be a
 better investment to modify your task to support invocation via mozharness or
 mach, instead.  If this is not possible, then adding a new file in
-``taskcluster/taskgraph/transforms/jobs`` with a structure similar to its peers
+``taskcluster/gecko_taskgraph/transforms/jobs`` with a structure similar to its peers
 will make the new run-using option available for job descriptions.
 
 Something Else?

@@ -23,7 +23,7 @@ from ..util.manage_estimates import (
     make_trimmed_taskgraph_cache,
 )
 
-from taskgraph.target_tasks import filter_by_uncommon_try_tasks
+from gecko_taskgraph.target_tasks import filter_by_uncommon_try_tasks
 
 terminal = Terminal()
 

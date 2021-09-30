@@ -21,7 +21,7 @@
 #   }
 #
 # - action tasks - See:
-#   * taskcluster/taskgraph/actions/registry.py,
+#   * taskcluster/gecko_taskgraph/actions/registry.py,
 #   * https://docs.taskcluster.net/docs/manual/using/actions/spec
 #   * ci-admin:ciadmin/generate/in_tree_actions.py
 #

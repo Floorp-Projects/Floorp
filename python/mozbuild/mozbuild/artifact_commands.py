@@ -268,7 +268,7 @@ def artifact_toolchain(
     import requests
     import time
 
-    from taskgraph.util.taskcluster import get_artifact_url
+    from gecko_taskgraph.util.taskcluster import get_artifact_url
 
     start = time.time()
     command_context._set_log_level(verbose)
@@ -374,7 +374,7 @@ def artifact_toolchain(
                 "should be determined in the decision task.",
             )
             return 1
-        from taskgraph.optimize.strategies import IndexSearch
+        from gecko_taskgraph.optimize.strategies import IndexSearch
         from mozbuild.toolchains import toolchain_task_definitions
 
         tasks = toolchain_task_definitions()
