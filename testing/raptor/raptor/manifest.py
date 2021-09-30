@@ -563,18 +563,15 @@ def get_raptor_test_list(args, oskey):
                 # remove the 'hero =' line since no longer measuring hero
                 del next_test["hero"]
 
-        if next_test.get("lower_is_better") is not None:
-            next_test["lower_is_better"] = bool_from_str(
-                next_test.get("lower_is_better")
-            )
-        if next_test.get("subtest_lower_is_better") is not None:
-            next_test["subtest_lower_is_better"] = bool_from_str(
-                next_test.get("subtest_lower_is_better")
-            )
-        if next_test.get("accept_zero_vismet", None) is not None:
-            next_test["accept_zero_vismet"] = bool_from_str(
-                next_test.get("accept_zero_vismet")
-            )
+        bool_settings = [
+            "lower_is_better",
+            "subtest_lower_is_better",
+            "accept_zero_vismet",
+            "interactive",
+        ]
+        for setting in bool_settings:
+            if next_test.get(setting, None) is not None:
+                next_test[setting] = bool_from_str(next_test.get(setting))
 
     # write out .json test setting files for the control server to read and send to web ext
     if len(tests_to_run) != 0:
