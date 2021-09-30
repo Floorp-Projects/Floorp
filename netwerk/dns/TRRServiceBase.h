@@ -41,7 +41,6 @@ class TRRServiceBase {
 
   nsCString mPrivateURI;
   // Pref caches should only be used on the main thread.
-  bool mURIPrefHasUserValue = false;
   nsCString mURIPref;
   nsCString mRolloutURIPref;
   nsCString mDefaultURIPref;

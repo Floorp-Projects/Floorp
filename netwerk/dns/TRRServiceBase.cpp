@@ -74,7 +74,7 @@ void TRRServiceBase::CheckURIPrefs() {
   mURISetByDetection = false;
 
   // The user has set a custom URI so it takes precedence.
-  if (mURIPrefHasUserValue) {
+  if (!mURIPref.IsEmpty()) {
     MaybeSetPrivateURI(mURIPref);
     return;
   }
@@ -142,7 +142,6 @@ void TRRServiceBase::OnTRRModeChange() {
 }
 
 void TRRServiceBase::OnTRRURIChange() {
-  mURIPrefHasUserValue = Preferences::HasUserValue("network.trr.uri");
   Preferences::GetCString("network.trr.uri", mURIPref);
   Preferences::GetCString(kRolloutURIPref, mRolloutURIPref);
   Preferences::GetCString("network.trr.default_provider_uri", mDefaultURIPref);

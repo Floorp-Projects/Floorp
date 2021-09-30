@@ -106,15 +106,15 @@ bool TRRServiceParent::MaybeSetPrivateURI(const nsACString& aURI) {
 }
 
 void TRRServiceParent::SetDetectedTrrURI(const nsACString& aURI) {
-  if (mURIPrefHasUserValue) {
+  if (!mURIPref.IsEmpty()) {
     return;
   }
 
   mURISetByDetection = MaybeSetPrivateURI(aURI);
-  RefPtr<TRRServiceParent> self = this;
-  nsCString uri(aURI);
   gIOService->CallOrWaitForSocketProcess(
-      [self, uri]() { Unused << self->SendSetDetectedTrrURI(uri); });
+      [self = RefPtr{this}, uri = nsAutoCString(aURI)]() {
+        Unused << self->SendSetDetectedTrrURI(uri);
+      });
 }
 
 void TRRServiceParent::GetTrrURI(nsACString& aURI) { aURI = mPrivateURI; }
