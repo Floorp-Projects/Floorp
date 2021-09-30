@@ -83,6 +83,8 @@ const intermittently_loaded_scripts = {
     "resource://webcompat/AboutCompat.jsm",
 
     // Test related
+    "chrome://remote/content/marionette/actors/MarionetteEventsChild.jsm",
+    "chrome://remote/content/shared/Log.jsm",
     "resource://testing-common/BrowserTestUtilsChild.jsm",
     "resource://testing-common/ContentEventListenerChild.jsm",
     "resource://specialpowers/AppTestDelegateChild.jsm",
