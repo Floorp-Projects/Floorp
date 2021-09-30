@@ -320,12 +320,9 @@ def main(log, args):
         for site in browsertime_json:
             for video in site["files"]["video"]:
                 count += 1
-                name = job["test_name"]
-                if "alias" in site["info"] and site["info"]["alias"].strip() != "":
-                    name = "%s.%s" % (name, site["info"]["alias"])
                 jobs.append(
                     Job(
-                        test_name=name,
+                        test_name=job["test_name"],
                         extra_options=len(job["extra_options"]) > 0
                         and job["extra_options"]
                         or jobs_json["extra_options"],
