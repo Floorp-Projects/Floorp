@@ -230,9 +230,6 @@ class SettingsPrivacyTest {
             verifySaveLoginPromptIsShown()
             // Don't save the login, add to exceptions
             saveLoginFromPrompt("Never save")
-        }.openTabDrawer {
-        }.openNewTab {
-        }.dismissSearchBar {
         }.openThreeDotMenu {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {

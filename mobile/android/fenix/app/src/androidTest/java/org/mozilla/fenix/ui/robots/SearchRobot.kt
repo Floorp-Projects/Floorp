@@ -43,6 +43,7 @@ import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.waitForObjects
 import org.mozilla.fenix.helpers.click
@@ -185,6 +186,13 @@ class SearchRobot {
             mDevice.waitForIdle()
             closeSoftKeyboard()
             mDevice.pressBack()
+            try {
+                assertTrue(searchWrapper().waitUntilGone(waitingTimeShort))
+            } catch (e: AssertionError) {
+                mDevice.pressBack()
+                assertTrue(searchWrapper().waitUntilGone(waitingTimeShort))
+            }
+
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
         }
@@ -244,7 +252,7 @@ private fun scanButton(): ViewInteraction {
 private fun clearButton() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_clear_view"))
 
-private fun searchWrapper() = onView(withId(R.id.search_wrapper))
+private fun searchWrapper() = mDevice.findObject(UiSelector().resourceId("$packageName:id/search_wrapper"))
 
 private fun assertSearchEngineURL(searchEngineName: String) {
     mDevice.waitNotNull(

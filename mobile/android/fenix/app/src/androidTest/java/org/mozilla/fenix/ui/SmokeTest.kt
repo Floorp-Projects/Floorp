@@ -322,9 +322,7 @@ class SmokeTest {
             expandMenu()
         }.addToFirefoxHome {
             verifySnackBarText("Added to top sites!")
-        }.openTabDrawer {
-        }.openNewTab {
-        }.dismissSearchBar {
+        }.goToHomescreen {
             verifyExistingTopSitesTabs(defaultWebPage.title)
         }
     }
