@@ -8,7 +8,6 @@
 
 #include "gfxASurface.h"
 
-#include <X11/extensions/Xrender.h>
 #include <X11/Xlib.h>
 #include "X11UndefineNone.h"
 
@@ -34,11 +33,6 @@ class gfxXlibSurface final : public gfxASurface {
                  const mozilla::gfx::IntSize& size);
   gfxXlibSurface(const std::shared_ptr<mozilla::gfx::XlibDisplay>& dpy,
                  Drawable drawable, Visual* visual,
-                 const mozilla::gfx::IntSize& size);
-
-  // construct a wrapper around the specified drawable with dpy/format,
-  // and known width/height.
-  gfxXlibSurface(::Screen* screen, Drawable drawable, XRenderPictFormat* format,
                  const mozilla::gfx::IntSize& size);
 
   explicit gfxXlibSurface(cairo_surface_t* csurf);
@@ -67,12 +61,9 @@ class gfxXlibSurface final : public gfxASurface {
   Display* XDisplay() { return *mDisplay; }
   ::Screen* XScreen();
   Drawable XDrawable() { return mDrawable; }
-  XRenderPictFormat* XRenderFormat();
 
   static int DepthOfVisual(const ::Screen* screen, const Visual* visual);
   static Visual* FindVisual(::Screen* screen, gfxImageFormat format);
-  static XRenderPictFormat* FindRenderFormat(Display* dpy,
-                                             gfxImageFormat format);
   static bool GetColormapAndVisual(cairo_surface_t* aXlibSurface,
                                    Colormap* colormap, Visual** visual);
 

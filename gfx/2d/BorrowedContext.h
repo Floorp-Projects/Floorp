@@ -10,7 +10,6 @@
 #include "2D.h"
 
 #ifdef MOZ_X11
-#  include <X11/extensions/Xrender.h>
 #  include <X11/Xlib.h>
 #  include "X11UndefineNone.h"
 #endif
@@ -33,16 +32,14 @@ class BorrowedXlibDrawable {
         mDisplay(nullptr),
         mDrawable(X11None),
         mScreen(nullptr),
-        mVisual(nullptr),
-        mXRenderFormat(nullptr) {}
+        mVisual(nullptr) {}
 
   explicit BorrowedXlibDrawable(DrawTarget* aDT)
       : mDT(nullptr),
         mDisplay(nullptr),
         mDrawable(X11None),
         mScreen(nullptr),
-        mVisual(nullptr),
-        mXRenderFormat(nullptr) {
+        mVisual(nullptr) {
     Init(aDT);
   }
 
@@ -67,15 +64,12 @@ class BorrowedXlibDrawable {
   IntSize GetSize() const { return mSize; }
   Point GetOffset() const { return mOffset; }
 
-  XRenderPictFormat* GetXRenderFormat() const { return mXRenderFormat; }
-
  private:
   DrawTarget* mDT;
   Display* mDisplay;
   Drawable mDrawable;
   Screen* mScreen;
   Visual* mVisual;
-  XRenderPictFormat* mXRenderFormat;
   IntSize mSize;
   Point mOffset;
 };
