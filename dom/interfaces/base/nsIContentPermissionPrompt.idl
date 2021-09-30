@@ -85,8 +85,8 @@ interface nsIContentPermissionRequest : nsISupports {
 };
 
 /**
- * Interface provides a way for the application to handle
- * the UI prompts associated with geo position.
+ * Allows to show permission prompts via the UI for different types of requests,
+ * e.g. geolocation.
  */
 [scriptable, function, uuid(F72DE90D-E954-4E69-9A61-917303029301)]
 interface nsIContentPermissionPrompt : nsISupports {
