@@ -48,9 +48,9 @@ addRDMTask(
     await testTouchEventsOverride(ui, false);
 
     info("Select a device");
-    const { onPageLoaded } = await waitForViewportLoad(ui);
+    const waitForReload = await watchForDevToolsReload(ui.getViewportBrowser());
     await selectDevice(ui, TEST_DEVICE.name);
-    await onPageLoaded;
+    await waitForReload();
     await waitForViewportResizeTo(ui, TEST_DEVICE.width, TEST_DEVICE.height);
 
     info("Checking the RDM device state.");
@@ -64,12 +64,20 @@ addRDMTask(
   { waitForDeviceList: true }
 );
 
-addRDMTask(
+addRDMTaskWithPreAndPost(
   TEST_URL,
-  async function({ ui }) {
-    const { store } = ui.toolWindow;
-
+  function rdmPreTask({ browser }) {
     reloadOnUAChange(true);
+  },
+  async function({ ui }) {
+    // Note: This code might be racy. Call watchForDevToolsReload as early as
+    // possible to catch the reload that will happen on RDM startup.
+    // We cannot easily call watchForDevToolsReload in the preTask because it
+    // needs RDM to be already started. Otherwise it will not find any devtools
+    // UI to wait for.
+    const waitForReload = await watchForDevToolsReload(ui.getViewportBrowser());
+
+    const { store } = ui.toolWindow;
 
     info(
       "Reopening RDM and checking that the previous device state is restored."
@@ -84,7 +92,7 @@ addRDMTask(
         state.devices.listState == Types.loadableState.LOADED
     );
     await waitForViewportResizeTo(ui, TEST_DEVICE.width, TEST_DEVICE.height);
-    await (await waitForViewportLoad(ui)).onPageLoaded;
+    await waitForReload();
 
     info("Checking the restored RDM state.");
     testViewportDeviceMenuLabel(ui, TEST_DEVICE.name);
@@ -98,6 +106,7 @@ addRDMTask(
 
     reloadOnUAChange(false);
   },
+  function rdmPostTask({ browser }) {},
   { waitForDeviceList: true }
 );
 
@@ -121,7 +130,8 @@ addRDMTask(
         state.devices.listState == Types.loadableState.LOADED
     );
     await waitForViewportResizeTo(ui, TEST_DEVICE.height, TEST_DEVICE.width);
-    await (await waitForViewportLoad(ui)).onPageLoaded;
+    const waitForReload = await watchForDevToolsReload(ui.getViewportBrowser());
+    await waitForReload();
 
     info("Checking the restored RDM state.");
     testViewportDeviceMenuLabel(ui, TEST_DEVICE.name);
