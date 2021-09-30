@@ -67,6 +67,13 @@ def main():
         type="string",
         help="Specifies the path to the configuration file.",
     )
+    parser.add_option(
+        "--platform",
+        dest="platform",
+        type="string",
+        default="win7",
+        help="Specifies the platform to coose inside the configuratoin-file.",
+    )
     (options, args) = parser.parse_args()
 
     if options.configuration_url == None and options.configuration_file == None:
@@ -76,13 +83,13 @@ def main():
     if options.configuration_file:
         with open(options.configuration_file) as f:
             conf_dict = json.load(f)
-        new_screen_resolution = conf_dict["win7"]["screen_resolution"]
-        new_mouse_position = conf_dict["win7"]["mouse_position"]
+        new_screen_resolution = conf_dict[options.platform]["screen_resolution"]
+        new_mouse_position = conf_dict[options.platform]["mouse_position"]
     else:
         try:
             conf_dict = json.loads(wfetch(options.configuration_url))
-            new_screen_resolution = conf_dict["win7"]["screen_resolution"]
-            new_mouse_position = conf_dict["win7"]["mouse_position"]
+            new_screen_resolution = conf_dict[options.platform]["screen_resolution"]
+            new_mouse_position = conf_dict[options.platform]["mouse_position"]
         except HTTPError as e:
             print(
                 "This branch does not seem to have the configuration file %s" % str(e)

@@ -495,6 +495,15 @@ class Raptor(
                 },
             ],
             [
+                ["--skip-preflight"],
+                {
+                    "action": "store_true",
+                    "dest": "skip_preflight",
+                    "default": False,
+                    "help": "skip preflight commands to prepare machine.",
+                },
+            ],
+            [
                 ["--cold"],
                 {
                     "action": "store_true",

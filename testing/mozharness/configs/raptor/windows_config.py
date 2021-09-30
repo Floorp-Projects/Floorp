@@ -55,4 +55,31 @@ config = {
         # python3 requires C runtime, found in firefox installation; see bug 1361732
         "PATH": "%(PATH)s;c:\\slave\\test\\build\\application\\firefox;"
     },
+    "run_cmd_checks_enabled": True,
+    "preflight_run_cmd_suites": [
+        {
+            "name": "run mouse & screen adjustment script",
+            "cmd": [
+                sys.executable,
+                os.path.join(
+                    os.getcwd(),
+                    "mozharness",
+                    "external_tools",
+                    "mouse_and_screen_resolution.py",
+                ),
+                "--configuration-file",
+                os.path.join(
+                    os.getcwd(),
+                    "mozharness",
+                    "external_tools",
+                    "machine-configuration.json",
+                ),
+                "--platform",
+                "win10-hw",
+            ],
+            "architectures": ["32bit", "64bit"],
+            "halt_on_failure": True,
+            "enabled": True,
+        }
+    ],
 }

@@ -78,7 +78,6 @@ talos-profiling:
     - talos-webgl-profiling
 
 talos-ref-hw:
-    - talos-g4
     - talos-webgl
 
 browsertime:
