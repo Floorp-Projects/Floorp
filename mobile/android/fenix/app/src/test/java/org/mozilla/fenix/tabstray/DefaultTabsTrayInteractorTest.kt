@@ -42,4 +42,11 @@ class DefaultTabsTrayInteractorTest {
 
         verifySequence { controller.handleMultipleTabsDeletion(tabsToDelete) }
     }
+
+    @Test
+    fun `GIVEN user selecting delete all inactive tabs WHEN onDeleteTabs is called THEN the Interactor delegates the controller`() {
+        trayInteractor.onDeleteInactiveTabs()
+
+        verifySequence { controller.handleDeleteAllInactiveTabs() }
+    }
 }

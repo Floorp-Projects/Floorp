@@ -34,6 +34,11 @@ interface TabsTrayInteractor {
      * Called when clicking the debug menu option for inactive tabs.
      */
     fun onInactiveDebugClicked(tabs: Collection<Tab>)
+
+    /**
+     * Deletes all inactive tabs.
+     */
+    fun onDeleteInactiveTabs()
 }
 
 /**
@@ -62,5 +67,9 @@ class DefaultTabsTrayInteractor(
 
     override fun onInactiveDebugClicked(tabs: Collection<Tab>) {
         controller.forceTabsAsInactive(tabs)
+    }
+
+    override fun onDeleteInactiveTabs() {
+        controller.handleDeleteAllInactiveTabs()
     }
 }

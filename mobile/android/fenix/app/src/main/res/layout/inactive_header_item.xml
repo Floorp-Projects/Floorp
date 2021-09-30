@@ -25,8 +25,7 @@
         android:clipToPadding="false"
         android:focusable="true"
         android:foreground="?android:attr/selectableItemBackground"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp">
+        android:paddingStart="16dp">
 
         <TextView
             android:id="@+id/inactive_title"
@@ -45,14 +44,28 @@
 
         <ImageView
             android:id="@+id/chevron"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:contentDescription="@string/tab_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
             android:rotation="180"
+            android:contentDescription="@string/tab_menu"
+            app:layout_constraintBottom_toBottomOf="@id/inactive_title"
+            app:layout_constraintStart_toEndOf="@id/inactive_title"
+            app:layout_constraintTop_toTopOf="@id/inactive_title"
+            app:srcCompat="@drawable/ic_chevron" />
+
+        <ImageView
+            android:id="@+id/delete"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="12dp"
+            android:contentDescription="@string/inactive_tabs_delete_all"
+            android:foreground="?android:attr/selectableItemBackground"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_chevron" />
+            app:srcCompat="@drawable/ic_delete" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

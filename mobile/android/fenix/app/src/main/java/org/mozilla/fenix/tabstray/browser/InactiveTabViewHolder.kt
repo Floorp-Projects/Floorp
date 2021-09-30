@@ -19,6 +19,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.dpToPx
+import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.browser.AutoCloseInterval.Manual
 import org.mozilla.fenix.tabstray.browser.AutoCloseInterval.OneDay
 import org.mozilla.fenix.tabstray.browser.AutoCloseInterval.OneMonth
@@ -28,7 +29,8 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
 
     class HeaderHolder(
         itemView: View,
-        interactor: InactiveTabsInteractor
+        inactiveTabsInteractor: InactiveTabsInteractor,
+        tabsTrayInteractor: TabsTrayInteractor,
     ) : InactiveTabViewHolder(itemView) {
 
         private val binding = InactiveHeaderItemBinding.bind(itemView)
@@ -40,7 +42,7 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
                 setOnClickListener {
                     val newState = !it.isActivated
 
-                    interactor.onHeaderClicked(newState)
+                    inactiveTabsInteractor.onHeaderClicked(newState)
 
                     it.isActivated = newState
                     binding.chevron.rotation = ROTATION_DEGREE
@@ -49,6 +51,10 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
                     binding.inactiveHeaderBorder.updatePadding(
                         bottom = binding.root.context.dpToPx(if (it.isActivated) 0f else 1f)
                     )
+                }
+
+                binding.delete.setOnClickListener {
+                    tabsTrayInteractor.onDeleteInactiveTabs()
                 }
             }
         }

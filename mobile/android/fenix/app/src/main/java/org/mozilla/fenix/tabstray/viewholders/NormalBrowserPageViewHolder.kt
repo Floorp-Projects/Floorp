@@ -14,20 +14,21 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.tabstray.Tab
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
-import org.mozilla.fenix.tabstray.browser.InactiveTabsState
 import org.mozilla.fenix.tabstray.browser.containsTabId
+import org.mozilla.fenix.tabstray.browser.InactiveTabsState
 import org.mozilla.fenix.tabstray.browser.maxActiveTime
 import org.mozilla.fenix.tabstray.ext.browserAdapter
 import org.mozilla.fenix.tabstray.ext.defaultBrowserLayoutColumns
+import org.mozilla.fenix.tabstray.ext.getNormalTrayTabs
 import org.mozilla.fenix.tabstray.ext.inactiveTabs
 import org.mozilla.fenix.tabstray.ext.titleHeaderAdapter
 import org.mozilla.fenix.tabstray.ext.inactiveTabsAdapter
-import org.mozilla.fenix.tabstray.ext.isNormalTabInactive
 import org.mozilla.fenix.tabstray.ext.isNormalTabActiveWithSearchTerm
-import org.mozilla.fenix.tabstray.ext.normalTrayTabs
+import org.mozilla.fenix.tabstray.ext.isNormalTabInactive
 import org.mozilla.fenix.tabstray.ext.observeFirstInsert
 import org.mozilla.fenix.tabstray.ext.tabGroupAdapter
 
@@ -60,7 +61,6 @@ class NormalBrowserPageViewHolder(
         val browserAdapter = concatAdapter.browserAdapter
         val tabGroupAdapter = concatAdapter.tabGroupAdapter
         val manager = setupLayoutManager(containerView.context, concatAdapter)
-
         browserAdapter.selectionHolder = this
         tabGroupAdapter.selectionHolder = this
 
@@ -79,11 +79,12 @@ class NormalBrowserPageViewHolder(
         val browserAdapter = concatAdapter.browserAdapter
         val inactiveTabAdapter = concatAdapter.inactiveTabsAdapter
         val tabGroupAdapter = concatAdapter.tabGroupAdapter
+        val inactiveTabsAreEnabled = containerView.context.settings().inactiveTabsAreEnabled
 
         val selectedTab = browserStore.state.selectedNormalTab ?: return
 
         // Update tabs into the inactive adapter.
-        if (FeatureFlags.inactiveTabs && selectedTab.isNormalTabInactive(maxActiveTime)) {
+        if (inactiveTabsAreEnabled && selectedTab.isNormalTabInactive(maxActiveTime)) {
             val inactiveTabsList = browserStore.state.inactiveTabs
             // We want to expand the inactive section first before we want to fire our scroll observer.
             InactiveTabsState.isExpanded = true
@@ -126,7 +127,7 @@ class NormalBrowserPageViewHolder(
 
         // Updates tabs into the normal browser tabs adapter.
         browserAdapter.observeFirstInsert {
-            val activeTabsList = browserStore.state.normalTrayTabs
+            val activeTabsList = browserStore.state.getNormalTrayTabs(inactiveTabsAreEnabled)
             activeTabsList.forEachIndexed { tabIndex, trayTab ->
                 if (trayTab.id == selectedTab.id) {
 

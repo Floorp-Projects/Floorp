@@ -12,6 +12,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.HeaderHolder
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -20,7 +21,8 @@ class InactiveTabViewHolderTest {
     fun `HeaderHolder - WHEN clicked THEN notify the interactor`() {
         val view = LayoutInflater.from(testContext).inflate(HeaderHolder.LAYOUT_ID, null)
         val interactor: InactiveTabsInteractor = mockk(relaxed = true)
-        val viewHolder = HeaderHolder(view, interactor)
+        val tabsTrayInteractor: TabsTrayInteractor = mockk(relaxed = true)
+        val viewHolder = HeaderHolder(view, interactor, tabsTrayInteractor)
 
         val initialActivatedState = view.isActivated
 

@@ -668,6 +668,14 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Close after one month</string>
 
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">Inactive tabs on tab tray</string>
+    <!-- Title for inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">Make tabs inactive after 14 days</string>
+    <!-- Summary of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_summary">To improve speed, tabs will be moved into the inactive tabs section on your tab tray</string>
+
     <!-- Studies -->
     <!-- Title of the remove studies button -->
     <string name="studies_remove">Remove</string>
@@ -1889,6 +1897,8 @@
     <!-- In-activate tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
     <string name="inactive_tabs_title">Inactive tabs</string>
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">Close all inactive tabs</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
     <string name="inactive_tabs_description">Tabs are available here for %s. After that time, tabs will be automatically closed.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->

@@ -8,12 +8,14 @@ import android.os.Bundle
 import android.view.View
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SwitchPreference
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.Event.TabViewSettingChanged
 import org.mozilla.fenix.components.metrics.Event.TabViewSettingChanged.Type
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.utils.view.addToRadioGroup
 
@@ -30,6 +32,8 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
     private lateinit var startOnHomeRadioFourHours: RadioButtonPreference
     private lateinit var startOnHomeRadioAlways: RadioButtonPreference
     private lateinit var startOnHomeRadioNever: RadioButtonPreference
+    private lateinit var inactiveTabsCategory: PreferenceCategory
+    private lateinit var inactiveTabs: SwitchPreference
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.tabs_preferences, rootKey)
@@ -67,8 +71,23 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
         requirePreference<PreferenceCategory>(R.string.pref_key_start_on_home_category).isVisible =
             FeatureFlags.showStartOnHomeSettings
 
+        inactiveTabs = requirePreference<SwitchPreference>(R.string.pref_key_inactive_tabs).also {
+            it.isChecked = it.context.settings().inactiveTabsAreEnabled
+            it.onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
+        inactiveTabsCategory = requirePreference<PreferenceCategory>(R.string.pref_key_inactive_tabs_category).also {
+            it.isVisible = FeatureFlags.inactiveTabs
+            it.isEnabled = !(it.context.settings().closeTabsAfterOneDay || it.context.settings().closeTabsAfterOneWeek)
+        }
+
         listRadioButton.onClickListener(::sendTabViewTelemetry)
         gridRadioButton.onClickListener(::sendTabViewTelemetry)
+
+        radioManual.onClickListener(::enableInactiveTabsSetting)
+        radioOneDay.onClickListener(::disableInactiveTabsSetting)
+        radioOneWeek.onClickListener(::disableInactiveTabsSetting)
+        radioOneMonth.onClickListener(::enableInactiveTabsSetting)
 
         setupRadioGroups()
     }
@@ -100,6 +119,20 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
             metrics.track(TabViewSettingChanged(Type.LIST))
         } else {
             metrics.track(TabViewSettingChanged(Type.GRID))
+        }
+    }
+
+    private fun enableInactiveTabsSetting() {
+        inactiveTabsCategory.apply {
+            isEnabled = true
+        }
+    }
+
+    private fun disableInactiveTabsSetting() {
+        inactiveTabsCategory.apply {
+            isEnabled = false
+            inactiveTabs.isChecked = false
+            context.settings().inactiveTabsAreEnabled = false
         }
     }
 }

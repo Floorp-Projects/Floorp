@@ -14,6 +14,7 @@ import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.ObserverRegistry
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.FooterHolder
 import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.HeaderHolder
 import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.RecentlyClosedHolder
@@ -42,6 +43,7 @@ private typealias Observable = ComponentObservable<TabsTray.Observer>
 class InactiveTabsAdapter(
     private val context: Context,
     private val browserTrayInteractor: BrowserTrayInteractor,
+    private val tabsTrayInteractor: TabsTrayInteractor,
     private val featureName: String,
     delegate: Observable = ObserverRegistry()
 ) : Adapter(DiffCallback), TabsTray, Observable by delegate {
@@ -53,7 +55,7 @@ class InactiveTabsAdapter(
             .inflate(viewType, parent, false)
 
         return when (viewType) {
-            HeaderHolder.LAYOUT_ID -> HeaderHolder(view, inactiveTabsInteractor)
+            HeaderHolder.LAYOUT_ID -> HeaderHolder(view, inactiveTabsInteractor, tabsTrayInteractor)
             TabViewHolder.LAYOUT_ID -> TabViewHolder(view, browserTrayInteractor, featureName)
             FooterHolder.LAYOUT_ID -> FooterHolder(view)
             RecentlyClosedHolder.LAYOUT_ID -> RecentlyClosedHolder(view, browserTrayInteractor)

@@ -12,7 +12,8 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
-import org.mozilla.fenix.tabstray.ext.normalTrayTabs
+import org.mozilla.fenix.tabstray.ext.getNormalTrayTabs
+import org.mozilla.fenix.utils.Settings
 
 /**
  * A binding class to notify an observer to show a title if there is at least one tab available.
@@ -20,10 +21,11 @@ import org.mozilla.fenix.tabstray.ext.normalTrayTabs
 @OptIn(ExperimentalCoroutinesApi::class)
 class TitleHeaderBinding(
     store: BrowserStore,
+    private val settings: Settings,
     private val showHeader: (Boolean) -> Unit
 ) : AbstractBinding<BrowserState>(store) {
     override suspend fun onState(flow: Flow<BrowserState>) {
-        flow.map { it.normalTrayTabs }
+        flow.map { it.getNormalTrayTabs(settings.inactiveTabsAreEnabled) }
             .ifChanged { it.size }
             .collect {
                 if (it.isEmpty()) {

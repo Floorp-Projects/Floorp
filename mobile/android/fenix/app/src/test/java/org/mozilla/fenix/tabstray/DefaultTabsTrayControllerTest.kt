@@ -34,6 +34,8 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.home.HomeFragment
+import org.mozilla.fenix.tabstray.browser.maxActiveTime
+import org.mozilla.fenix.tabstray.ext.inactiveTabs
 
 class DefaultTabsTrayControllerTest {
     @MockK(relaxed = true)
@@ -379,7 +381,7 @@ class DefaultTabsTrayControllerTest {
     }
 
     @Test
-    fun `WHEN dismissTabsTrayAndNavigateHome is called with a spefic tab id THEN tray is dismissed and navigates home is opened to delete that tab`() {
+    fun `WHEN dismissTabsTrayAndNavigateHome is called with a specific tab id THEN tray is dismissed and navigates home is opened to delete that tab`() {
         var dismissTrayInvoked = false
         var navigateToHomeAndDeleteSessionInvoked = false
         createController(
@@ -394,6 +396,39 @@ class DefaultTabsTrayControllerTest {
 
         assertTrue(dismissTrayInvoked)
         assertTrue(navigateToHomeAndDeleteSessionInvoked)
+    }
+
+    @ExperimentalCoroutinesApi
+    @Test
+    fun `WHEN deleteAllInactiveTabs is called THEN that it uses tabsUseCases#removeTabs and shows an undo snackbar`() {
+        var showUndoSnackbarForTabInvoked = false
+        val controller = spyk(
+            createController(
+                showUndoSnackbarForTab = {
+                    showUndoSnackbarForTabInvoked = true
+                }
+            )
+        )
+        val inactiveTab: TabSessionState = mockk {
+            every { lastAccess } returns maxActiveTime
+            every { createdAt } returns 0
+            every { id } returns "24"
+            every { content } returns mockk {
+                every { private } returns false
+            }
+        }
+        every { browserStore.state } returns mockk()
+        try {
+            mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
+            every { browserStore.state.inactiveTabs } returns listOf(inactiveTab)
+
+            controller.handleDeleteAllInactiveTabs()
+
+            verify { tabsUseCases.removeTabs(listOf("24")) }
+            assertTrue(showUndoSnackbarForTabInvoked)
+        } finally {
+            unmockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
+        }
     }
 
     private fun createController(

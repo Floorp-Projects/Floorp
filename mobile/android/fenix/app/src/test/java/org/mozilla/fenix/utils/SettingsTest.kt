@@ -746,4 +746,11 @@ class SettingsTest {
         localSetting.defaultBrowserNotificationDisplayed = true
         assertFalse(localSetting.shouldShowDefaultBrowserNotification())
     }
+
+    @Test
+    fun inactiveTabsAreEnabled() {
+        // When just created
+        // Then
+        assertTrue(settings.inactiveTabsAreEnabled)
+    }
 }

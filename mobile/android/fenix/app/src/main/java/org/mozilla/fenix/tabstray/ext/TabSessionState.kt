@@ -49,6 +49,13 @@ internal fun TabSessionState.isNormalTabWithSearchTerm(): Boolean {
 }
 
 /**
+ * Returns true if the [TabSessionState] has a search term but may or may not be active.
+ */
+internal fun TabSessionState.isNormalTabWithoutSearchTerm(): Boolean {
+    return !hasSearchTerm() && !content.private
+}
+
+/**
  * Returns true if the [TabSessionState] is considered active based on the [maxActiveTime].
  */
 internal fun TabSessionState.isNormalTabInactive(maxActiveTime: Long): Boolean {

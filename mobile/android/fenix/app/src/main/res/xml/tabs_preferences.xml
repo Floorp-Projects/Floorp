@@ -69,4 +69,18 @@
             android:key="@string/pref_key_start_on_home_never"
             android:title="@string/start_on_home_never" />
     </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_cat_style"
+        android:title="@string/preferences_inactive_tabs"
+        android:key="@string/pref_key_inactive_tabs_category"
+        app:allowDividerAbove="true"
+        app:iconSpaceReserved="false"
+        app:isPreferenceVisible="false">
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="@string/pref_key_inactive_tabs"
+            android:title="@string/preferences_inactive_tabs_title"
+            android:summary="@string/preferences_inactive_tabs_summary"/>
+    </androidx.preference.PreferenceCategory>
 </androidx.preference.PreferenceScreen>

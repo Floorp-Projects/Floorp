@@ -13,17 +13,19 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.state.store.BrowserStore
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.TabTrayTitleHeaderItemBinding
+import org.mozilla.fenix.utils.Settings
 
 /**
  * A [RecyclerView.Adapter] for tab header.
  */
 class TitleHeaderAdapter(
-    browserStore: BrowserStore
+    browserStore: BrowserStore,
+    settings: Settings
 ) : ListAdapter<TitleHeaderAdapter.Header, TitleHeaderAdapter.HeaderViewHolder>(DiffCallback) {
 
     class Header
 
-    private val normalTabsHeaderBinding = TitleHeaderBinding(browserStore, ::handleListChanges)
+    private val normalTabsHeaderBinding = TitleHeaderBinding(browserStore, settings, ::handleListChanges)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HeaderViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
