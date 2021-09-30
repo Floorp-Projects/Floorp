@@ -2370,12 +2370,18 @@ impl Renderer {
     }
 
     fn check_gl_errors(&mut self) {
-        let err = self.device.gl().get_error();
-        if err == gl::OUT_OF_MEMORY {
-            self.renderer_errors.push(RendererError::OutOfMemory);
-        }
+        loop {
+            let err = self.device.gl().get_error();
+            if err == gl::NO_ERROR {
+                break;
+            }
 
-        // Probably should check for other errors?
+            if err == gl::OUT_OF_MEMORY {
+                self.renderer_errors.push(RendererError::OutOfMemory);
+            }
+
+            // Probably should check for other errors?
+        }
     }
 
     fn bind_textures(&mut self, textures: &BatchTextures) {
