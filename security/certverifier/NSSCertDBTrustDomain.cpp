@@ -1548,8 +1548,7 @@ void NSSCertDBTrustDomain::NoteAuxiliaryExtension(AuxiliaryExtension extension,
 }
 
 SECStatus InitializeNSS(const nsACString& dir, NSSDBConfig nssDbConfig,
-                        PKCS11DBConfig pkcs11DbConfig,
-                        const char* nssDBPrefix) {
+                        PKCS11DBConfig pkcs11DbConfig) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // The NSS_INIT_NOROOTINIT flag turns off the loading of the root certs
@@ -1569,8 +1568,8 @@ SECStatus InitializeNSS(const nsACString& dir, NSSDBConfig nssDbConfig,
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
           ("InitializeNSS(%s, %d, %d)", dbTypeAndDirectory.get(),
            (int)nssDbConfig, (int)pkcs11DbConfig));
-  SECStatus srv = NSS_Initialize(dbTypeAndDirectory.get(), nssDBPrefix,
-                                 nssDBPrefix, SECMOD_DB, flags);
+  SECStatus srv =
+      NSS_Initialize(dbTypeAndDirectory.get(), "", "", SECMOD_DB, flags);
   if (srv != SECSuccess) {
     return srv;
   }
