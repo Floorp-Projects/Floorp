@@ -60,9 +60,9 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
         gridRadioButton = requirePreference(R.string.pref_key_tab_view_grid)
 
         radioManual = requirePreference(R.string.pref_key_close_tabs_manually)
-        radioOneDay = requirePreference(R.string.pref_key_close_tabs_after_one_day)
-        radioOneWeek = requirePreference(R.string.pref_key_close_tabs_after_one_week)
         radioOneMonth = requirePreference(R.string.pref_key_close_tabs_after_one_month)
+        radioOneWeek = requirePreference(R.string.pref_key_close_tabs_after_one_week)
+        radioOneDay = requirePreference(R.string.pref_key_close_tabs_after_one_day)
 
         startOnHomeRadioFourHours = requirePreference(R.string.pref_key_start_on_home_after_four_hours)
         startOnHomeRadioAlways = requirePreference(R.string.pref_key_start_on_home_always)

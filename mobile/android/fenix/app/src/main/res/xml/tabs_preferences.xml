@@ -80,7 +80,6 @@
         <SwitchPreference
             android:defaultValue="true"
             android:key="@string/pref_key_inactive_tabs"
-            android:title="@string/preferences_inactive_tabs_title"
-            android:summary="@string/preferences_inactive_tabs_summary"/>
+            android:title="@string/preferences_inactive_tabs_title"/>
     </androidx.preference.PreferenceCategory>
 </androidx.preference.PreferenceScreen>

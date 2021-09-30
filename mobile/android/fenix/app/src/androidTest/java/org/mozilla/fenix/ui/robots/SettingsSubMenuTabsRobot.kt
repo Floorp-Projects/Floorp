@@ -56,8 +56,6 @@ private fun assertTabViewOptions() {
 private fun assertCloseTabsOptions() {
     closeTabsHeading()
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    manuallyToggle()
-        .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     afterOneDayToggle()
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     afterOneWeekToggle()
@@ -72,8 +70,6 @@ private fun assertStartOnHomeOptions() {
     afterFourHoursToggle()
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     alwaysStartOnHomeToggle()
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    neverStartOnHomeToggle()
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
