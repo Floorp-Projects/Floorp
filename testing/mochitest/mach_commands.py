@@ -160,11 +160,6 @@ class MochitestRunner(MozbuildObject):
             imp.load_module("runtestsremote", fh, path, (".py", "r", imp.PY_SOURCE))
         import runtestsremote
 
-        from mozrunner.devices.android_device import get_adb_path
-
-        if not kwargs["adbPath"]:
-            kwargs["adbPath"] = get_adb_path(command_context)
-
         options = Namespace(**kwargs)
 
         from manifestparser import TestManifest
@@ -457,6 +452,7 @@ def run_mochitest_general(
 
     if buildapp == "android":
         from mozrunner.devices.android_device import (
+            get_adb_path,
             verify_android_device,
             InstallIntent,
         )
@@ -476,6 +472,10 @@ def run_mochitest_general(
             app=app,
             device_serial=device_serial,
         )
+
+        if not kwargs["adbPath"]:
+            kwargs["adbPath"] = get_adb_path(command_context)
+
         run_mochitest = mochitest.run_android_test
     else:
         run_mochitest = mochitest.run_desktop_test
