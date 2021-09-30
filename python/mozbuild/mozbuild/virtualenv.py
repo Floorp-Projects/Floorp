@@ -56,10 +56,6 @@ class MozVirtualenvMetadata:
         )
 
     @classmethod
-    def from_runtime(cls):
-        return cls.from_path(os.path.join(sys.prefix, METADATA_FILENAME))
-
-    @classmethod
     def from_path(cls, path):
         try:
             with open(path, "r") as file:
@@ -108,6 +104,7 @@ class VirtualenvManager(VirtualenvHelper):
         virtualenvs_dir,
         virtualenv_name,
         *,
+        populate_local_paths=True,
         log_handle=sys.stdout,
         base_python=sys.executable,
         manifest_path=None,
@@ -133,6 +130,7 @@ class VirtualenvManager(VirtualenvHelper):
         self.exe_info_path = os.path.join(self.virtualenv_root, "python_exe.txt")
 
         self.log_handle = log_handle
+        self.populate_local_paths = populate_local_paths
         self._virtualenv_name = virtualenv_name
         self._manifest_path = manifest_path or os.path.join(
             topsrcdir, "build", f"{virtualenv_name}_virtualenv_packages.txt"
@@ -207,7 +205,9 @@ class VirtualenvManager(VirtualenvHelper):
         if existing_metadata != self._metadata:
             return False
 
-        if env_requirements.pth_requirements or env_requirements.vendored_requirements:
+        if (
+            env_requirements.pth_requirements or env_requirements.vendored_requirements
+        ) and self.populate_local_paths:
             try:
                 with open(
                     os.path.join(self._site_packages_dir(), PTH_FILENAME)
@@ -350,18 +350,19 @@ class VirtualenvManager(VirtualenvHelper):
                 del os.environ[k]
 
             env_requirements = self._requirements()
-            python_lib = distutils.sysconfig.get_python_lib()
-            with open(os.path.join(python_lib, PTH_FILENAME), "a") as f:
-                for pth_requirement in (
-                    env_requirements.pth_requirements
-                    + env_requirements.vendored_requirements
-                ):
-                    path = os.path.join(self.topsrcdir, pth_requirement.path)
-                    # This path is relative to the .pth file.  Using a
-                    # relative path allows the srcdir/objdir combination
-                    # to be moved around (as long as the paths relative to
-                    # each other remain the same).
-                    f.write("{}\n".format(os.path.relpath(path, python_lib)))
+            if self.populate_local_paths:
+                python_lib = distutils.sysconfig.get_python_lib()
+                with open(os.path.join(python_lib, PTH_FILENAME), "a") as f:
+                    for pth_requirement in (
+                        env_requirements.pth_requirements
+                        + env_requirements.vendored_requirements
+                    ):
+                        path = os.path.join(self.topsrcdir, pth_requirement.path)
+                        # This path is relative to the .pth file.  Using a
+                        # relative path allows the srcdir/objdir combination
+                        # to be moved around (as long as the paths relative to
+                        # each other remain the same).
+                        f.write("{}\n".format(os.path.relpath(path, python_lib)))
 
             for pypi_requirement in env_requirements.pypi_requirements:
                 self.install_pip_package(str(pypi_requirement.requirement))
@@ -406,6 +407,8 @@ class VirtualenvManager(VirtualenvHelper):
             self._virtualenv_name,
             self._manifest_path,
         ]
+        if self.populate_local_paths:
+            args.append("--populate-local-paths")
 
         result = self._log_process_output(args, cwd=self.topsrcdir)
 
@@ -603,6 +606,7 @@ if __name__ == "__main__":
         opts.topsrcdir,
         opts.virtualenvs_dir,
         opts.virtualenv_name,
+        populate_local_paths=opts.populate_local_paths,
         manifest_path=opts.manifest_path,
     )
 
