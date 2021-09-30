@@ -1002,15 +1002,18 @@ nsresult HttpProxyResponseToErrorCode(uint32_t aStatusCode) {
 }
 
 SupportedAlpnType IsAlpnSupported(const nsACString& aAlpn) {
-  if (gHttpHandler->IsHttp3VersionSupported(aAlpn)) {
+  if (gHttpHandler->IsHttp3Enabled() &&
+      gHttpHandler->IsHttp3VersionSupported(aAlpn)) {
     return SupportedAlpnType::HTTP_3;
   }
 
-  uint32_t spdyIndex;
-  SpdyInformation* spdyInfo = gHttpHandler->SpdyInfo();
-  if (NS_SUCCEEDED(spdyInfo->GetNPNIndex(aAlpn, &spdyIndex)) &&
-      spdyInfo->ProtocolEnabled(spdyIndex)) {
-    return SupportedAlpnType::HTTP_2;
+  if (gHttpHandler->IsSpdyEnabled()) {
+    uint32_t spdyIndex;
+    SpdyInformation* spdyInfo = gHttpHandler->SpdyInfo();
+    if (NS_SUCCEEDED(spdyInfo->GetNPNIndex(aAlpn, &spdyIndex)) &&
+        spdyInfo->ProtocolEnabled(spdyIndex)) {
+      return SupportedAlpnType::HTTP_2;
+    }
   }
 
   if (aAlpn.LowerCaseEqualsASCII("http/1.1")) {
