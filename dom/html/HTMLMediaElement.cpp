@@ -559,7 +559,7 @@ class HTMLMediaElement::MediaControlKeyListener final
   RefPtr<ContentMediaAgent> mControlAgent;
   bool mIsPictureInPictureEnabled = false;
   bool mIsOwnerAudible = false;
-  uint64_t mOwnerBrowsingContextId;
+  MOZ_INIT_OUTSIDE_CTOR uint64_t mOwnerBrowsingContextId;
 };
 
 class HTMLMediaElement::MediaStreamTrackListener
