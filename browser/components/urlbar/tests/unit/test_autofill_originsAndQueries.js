@@ -2405,3 +2405,29 @@ add_autofill_task(
     await cleanup();
   }
 );
+
+// When the heuristic is hidden, "ex" should autofill http://example.com/, and
+// there should be an additional http://example.com/ non-autofill result.
+add_autofill_task(async function hideHeuristic() {
+  UrlbarPrefs.set("experimental.hideHeuristic", true);
+  await PlacesTestUtils.addVisits("http://" + url);
+  let context = createContext(search, { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: url,
+    completed: "http://" + url,
+    matches: [
+      makeVisitResult(context, {
+        uri: "http://" + url,
+        title,
+        heuristic: true,
+      }),
+      makeVisitResult(context, {
+        uri: "http://" + url,
+        title: "test visit for http://" + url,
+      }),
+    ],
+  });
+  await cleanup();
+  UrlbarPrefs.set("experimental.hideHeuristic", false);
+});

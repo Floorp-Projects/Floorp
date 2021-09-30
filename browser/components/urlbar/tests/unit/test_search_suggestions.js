@@ -1604,11 +1604,12 @@ add_task(async function formHistory() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
 
-  // Setting maxHistoricalSearchSuggestions = 0 is special and indicates that
-  // the user has opted out of form history, so we should include form history
-  // neither before the expected remote results nor after, unlike the other
-  // checks below, where remaining form history is included after the expected
-  // remote results.
+  // `maxHistoricalSearchSuggestions` is no longer treated as a max count but as
+  // a boolean: If it's zero, then the user has opted out of form history so we
+  // shouldn't include any at all; if it's non-zero, then we include form
+  // history according to the limits specified in the muxer's result groups.
+
+  // zero => no form history
   Services.prefs.setIntPref(MAX_FORM_HISTORY_PREF, 0);
   let context = createContext(SEARCH_STRING, { isPrivate: false });
   await check_results({
@@ -1622,6 +1623,7 @@ add_task(async function formHistory() {
     ],
   });
 
+  // non-zero => allow form history
   Services.prefs.setIntPref(MAX_FORM_HISTORY_PREF, 1);
   context = createContext(SEARCH_STRING, { isPrivate: false });
   await check_results({
@@ -1636,6 +1638,7 @@ add_task(async function formHistory() {
     ],
   });
 
+  // non-zero => allow form history
   Services.prefs.setIntPref(MAX_FORM_HISTORY_PREF, 2);
   context = createContext(SEARCH_STRING, { isPrivate: false });
   await check_results({
@@ -1869,4 +1872,204 @@ add_task(async function formHistory() {
 
   await cleanUpSuggestions();
   await PlacesUtils.history.clear();
+});
+
+// When the heuristic is hidden, search results that match the heuristic should
+// be included and not deduped.
+add_task(async function hideHeuristic() {
+  UrlbarPrefs.set("experimental.hideHeuristic", true);
+  UrlbarPrefs.set("browser.search.suggest.enabled", true);
+  UrlbarPrefs.set("suggest.searches", true);
+  let context = createContext(SEARCH_STRING, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
+      ...makeFormHistoryResults(context, MAX_RESULTS - 3),
+      makeSearchResult(context, {
+        query: SEARCH_STRING,
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        suggestion: SEARCH_STRING,
+      }),
+      ...makeRemoteSuggestionResults(context),
+    ],
+  });
+  await cleanUpSuggestions();
+  UrlbarPrefs.clear("experimental.hideHeuristic");
+});
+
+// When the heuristic is hidden, form history results that match the heuristic
+// should be included and not deduped.
+add_task(async function hideHeuristic_formHistory() {
+  UrlbarPrefs.set("experimental.hideHeuristic", true);
+  UrlbarPrefs.set("browser.search.suggest.enabled", true);
+  UrlbarPrefs.set("suggest.searches", true);
+
+  // Search for exactly the suggestion of the first form history result.
+  // Expected results:
+  //
+  // * First form history should be included even though it dupes the heuristic
+  // * Other form history should not be included because they don't match the
+  //   search string
+  // * The first remote suggestion that just echoes the search string should not
+  //   be included because it dupes the first form history
+  // * The remaining remote suggestions should be included because they don't
+  //   dupe anything
+  let context = createContext(SEARCH_STRING, { isPrivate: false });
+  let firstFormHistory = makeFormHistoryResults(context, 1)[0];
+  context = createContext(firstFormHistory.payload.suggestion, {
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
+      firstFormHistory,
+      ...makeRemoteSuggestionResults(context, {
+        suggestionPrefix: firstFormHistory.payload.suggestion,
+      }),
+    ],
+  });
+
+  // Add these form history strings to use below.
+  let formHistoryStrings = ["foo", "FOO ", "foobar", "fooquux"];
+  await UrlbarTestUtils.formHistory.add(formHistoryStrings);
+
+  // Search for "foo". Expected results:
+  //
+  // * "foo" form history should be included even though it dupes the heuristic
+  // * "FOO " form history should not be included because it dupes the "foo"
+  //   form history
+  // * "foobar" and "fooqux" form history should be included because they don't
+  //   dupe anything
+  // * "foo" remote suggestion should not be included because it dupes the "foo"
+  //   form history
+  // * "foo foo" and "foo bar" remote suggestions should be included because
+  //   they don't dupe anything
+  context = createContext("foo", { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
+      makeFormHistoryResult(context, {
+        suggestion: "foo",
+        engineName: SUGGESTIONS_ENGINE_NAME,
+      }),
+      makeFormHistoryResult(context, {
+        suggestion: "foobar",
+        engineName: SUGGESTIONS_ENGINE_NAME,
+      }),
+      makeFormHistoryResult(context, {
+        suggestion: "fooquux",
+        engineName: SUGGESTIONS_ENGINE_NAME,
+      }),
+      ...makeRemoteSuggestionResults(context, {
+        suggestionPrefix: "foo",
+      }),
+    ],
+  });
+
+  // Add SERPs for "foo" and "food", and search for "foo". Expected results:
+  //
+  // * "foo" form history should be included even though it dupes the heuristic
+  // * "foobar" and "fooqux" form history should be included because they don't
+  //   dupe anything
+  // * "foo" SERP depends on `showSearchSuggestionsFirst`, see below
+  // * "food" SERP should be include because it doesn't dupe anything
+  // * "foo" remote suggestion should not be included because it dupes the "foo"
+  //   form history
+  // * "foo foo" and "foo bar" remote suggestions should be included because
+  //   they don't dupe anything
+  let engine = await Services.search.getDefault();
+  let serpURLs = ["foo", "food"].map(
+    term => UrlbarUtils.getSearchQueryUrl(engine, term)[0]
+  );
+  await PlacesTestUtils.addVisits(serpURLs);
+
+  // With `showSearchSuggestionsFirst = false` so that general results appear
+  // before suggestions, the muxer visits the "foo" (and "food") SERPs before
+  // visiting the "foo" form history, and so it doesn't see that the "foo" SERP
+  // dupes the form history. The SERP is therefore included.
+  UrlbarPrefs.set("showSearchSuggestionsFirst", false);
+  context = createContext("foo", { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
+      makeVisitResult(context, {
+        uri: `http://localhost:${port}/search?q=food`,
+        title: `test visit for http://localhost:${port}/search?q=food`,
+      }),
+      makeVisitResult(context, {
+        uri: `http://localhost:${port}/search?q=foo`,
+        title: `test visit for http://localhost:${port}/search?q=foo`,
+      }),
+      makeFormHistoryResult(context, {
+        suggestion: "foo",
+        engineName: SUGGESTIONS_ENGINE_NAME,
+      }),
+      makeFormHistoryResult(context, {
+        suggestion: "foobar",
+        engineName: SUGGESTIONS_ENGINE_NAME,
+      }),
+      makeFormHistoryResult(context, {
+        suggestion: "fooquux",
+        engineName: SUGGESTIONS_ENGINE_NAME,
+      }),
+      ...makeRemoteSuggestionResults(context, {
+        suggestionPrefix: "foo",
+      }),
+    ],
+  });
+
+  // Now clear `showSearchSuggestionsFirst` so that suggestions appear before
+  // general results. Now the muxer will see that the "foo" SERP dupes the "foo"
+  // form history, so it will exclude it.
+  UrlbarPrefs.clear("showSearchSuggestionsFirst");
+  context = createContext("foo", { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
+      makeFormHistoryResult(context, {
+        suggestion: "foo",
+        engineName: SUGGESTIONS_ENGINE_NAME,
+      }),
+      makeFormHistoryResult(context, {
+        suggestion: "foobar",
+        engineName: SUGGESTIONS_ENGINE_NAME,
+      }),
+      makeFormHistoryResult(context, {
+        suggestion: "fooquux",
+        engineName: SUGGESTIONS_ENGINE_NAME,
+      }),
+      ...makeRemoteSuggestionResults(context, {
+        suggestionPrefix: "foo",
+      }),
+      makeVisitResult(context, {
+        uri: `http://localhost:${port}/search?q=food`,
+        title: `test visit for http://localhost:${port}/search?q=food`,
+      }),
+    ],
+  });
+
+  await UrlbarTestUtils.formHistory.remove(formHistoryStrings);
+
+  await cleanUpSuggestions();
+  UrlbarPrefs.clear("experimental.hideHeuristic");
 });

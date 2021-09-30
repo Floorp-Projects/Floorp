@@ -210,6 +210,7 @@ add_task(async function bookmarkKeyword() {
       await synthesizeEnterAndAwaitLoad(heuristicURL);
 
       await PlacesUtils.bookmarks.eraseEverything();
+      await UrlbarTestUtils.formHistory.clear(window);
     });
   });
 });
@@ -291,6 +292,8 @@ add_task(async function fallback_searchRestrictionToken() {
 
         // Press enter to verify the heuristic result is loaded.
         await synthesizeEnterAndAwaitLoad("https://example.com/?q=foo");
+
+        await UrlbarTestUtils.formHistory.clear(window);
       });
     });
   });
@@ -324,6 +327,8 @@ add_task(async function fallback_search() {
 
         // Press enter to verify the heuristic result is loaded.
         await synthesizeEnterAndAwaitLoad("https://example.com/?q=foo");
+
+        await UrlbarTestUtils.formHistory.clear(window);
       });
     });
   });
