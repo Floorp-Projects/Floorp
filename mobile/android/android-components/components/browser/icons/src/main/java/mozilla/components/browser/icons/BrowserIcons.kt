@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.icons
 
+import android.annotation.SuppressLint
 import android.content.ComponentCallbacks2
 import android.content.Context
 import android.graphics.Bitmap
@@ -124,19 +125,33 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
      * Asynchronously loads an [Icon] for the given [IconRequest].
      */
     fun loadIcon(request: IconRequest): Deferred<Icon> = scope.async {
-        loadIconInternal(request).also { loadedIcon ->
+        loadIconInternalAsync(request).await().also { loadedIcon ->
             logger.debug("Loaded icon (source = ${loadedIcon.source}): ${request.url}")
         }
     }
 
+    /**
+     * Synchronously loads an [Icon] for the given [IconRequest] using an in-memory loader.
+     */
+    private fun loadIconMemoryOnly(initialRequest: IconRequest, desiredSize: DesiredSize): Icon? {
+        val preparers = listOf(MemoryIconPreparer(sharedMemoryCache))
+        val loaders = listOf(MemoryIconLoader(sharedMemoryCache))
+        val request = prepare(context, preparers, initialRequest)
+
+        load(context, request, loaders, decoders, desiredSize)?.let {
+            return it.first
+        }
+
+        return null
+    }
+
     @WorkerThread
-    private fun loadIconInternal(initialRequest: IconRequest): Icon {
-        val desiredSize = DesiredSize(
-            targetSize = context.resources.getDimensionPixelSize(initialRequest.size.dimen),
-            minSize = minimumSize,
-            maxSize = maximumSize,
-            maxScaleFactor = MAXIMUM_SCALE_FACTOR
-        )
+    @VisibleForTesting
+    internal fun loadIconInternalAsync(
+        initialRequest: IconRequest,
+        size: DesiredSize? = null
+    ): Deferred<Icon> = scope.async {
+        val desiredSize = size ?: desiredSizeForRequest(initialRequest)
 
         // (1) First prepare the request.
         val request = prepare(context, preparers, initialRequest)
@@ -155,7 +170,7 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
             ?: generator.generate(context, request) to null
 
         // (4) Finally process the icon.
-        return process(context, processors, request, resource, icon, desiredSize)
+        process(context, processors, request, resource, icon, desiredSize)
             ?: generator.generate(context, request)
     }
 
@@ -178,7 +193,8 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
     }
 
     /**
-     * Loads an icon asynchronously using [BrowserIcons] and then displays it in the [ImageView].
+     * Loads an icon using [BrowserIcons] and then displays it in the [ImageView]. Synchronous loading
+     * via an in-memory cache is attempted first, followed by an asynchronous load as a fallback.
      * If the view is detached from the window before loading is completed, then loading is cancelled.
      *
      * @param view [ImageView] to load icon into.
@@ -191,41 +207,58 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
         request: IconRequest,
         placeholder: Drawable? = null,
         error: Drawable? = null
-    ) = scope.launch(Dispatchers.Main) {
-        loadIntoViewInternal(WeakReference(view), request, placeholder, error)
+    ): Job {
+        return loadIntoViewInternal(WeakReference(view), request, placeholder, error)
     }
 
     @MainThread
-    private suspend fun loadIntoViewInternal(
+    private fun loadIntoViewInternal(
         view: WeakReference<ImageView>,
         request: IconRequest,
         placeholder: Drawable?,
         error: Drawable?
-    ) {
+    ): Job {
         // If we previously started loading into the view, cancel the job.
         val existingJob = view.get()?.getTag(R.id.mozac_browser_icons_tag_job) as? Job
         existingJob?.cancel()
 
         view.get()?.setImageDrawable(placeholder)
 
-        // Create a loading job
-        val deferredIcon = loadIcon(request)
+        // Happy path: try to load icon synchronously from an in-memory cache.
+        val desiredSize = desiredSizeForRequest(request)
+        val inMemoryIcon = loadIconMemoryOnly(request, desiredSize)
+        if (inMemoryIcon != null) {
+            view.get()?.setImageBitmap(inMemoryIcon.bitmap)
+            return Job().also { it.complete() }
+        }
 
+        // Unhappy path: if the in-memory load didn't succeed, try the expensive IO loaders.
+        @SuppressLint("WrongThread")
+        val deferredIcon = loadIconInternalAsync(request, desiredSize)
         view.get()?.setTag(R.id.mozac_browser_icons_tag_job, deferredIcon)
         val onAttachStateChangeListener = CancelOnDetach(deferredIcon).also {
             view.get()?.addOnAttachStateChangeListener(it)
         }
 
-        try {
-            val icon = deferredIcon.await()
-            view.get()?.setImageBitmap(icon.bitmap)
-        } catch (e: CancellationException) {
-            view.get()?.setImageDrawable(error)
-        } finally {
-            view.get()?.removeOnAttachStateChangeListener(onAttachStateChangeListener)
-            view.get()?.setTag(R.id.mozac_browser_icons_tag_job, null)
+        return scope.launch(Dispatchers.Main) {
+            try {
+                val icon = deferredIcon.await()
+                view.get()?.setImageBitmap(icon.bitmap)
+            } catch (e: CancellationException) {
+                view.get()?.setImageDrawable(error)
+            } finally {
+                view.get()?.removeOnAttachStateChangeListener(onAttachStateChangeListener)
+                view.get()?.setTag(R.id.mozac_browser_icons_tag_job, null)
+            }
         }
     }
+
+    private fun desiredSizeForRequest(request: IconRequest) = DesiredSize(
+        targetSize = context.resources.getDimensionPixelSize(request.size.dimen),
+        minSize = minimumSize,
+        maxSize = maximumSize,
+        maxScaleFactor = MAXIMUM_SCALE_FACTOR
+    )
 
     /**
      * The device is running low on memory. This component should trim its memory usage.

@@ -213,7 +213,7 @@ class BrowserIconsTest {
         val request = IconRequest(url = "https://www.mozilla.org")
 
         doReturn(mockedBitmap).`when`(mockedIcon).bitmap
-        doReturn(result).`when`(icons).loadIcon(request)
+        doReturn(result).`when`(icons).loadIconInternalAsync(eq(request), any())
 
         val job = icons.loadIntoView(view, request)
 
@@ -240,7 +240,7 @@ class BrowserIconsTest {
 
         val request = IconRequest(url = "https://www.mozilla.org")
 
-        doReturn(result).`when`(icons).loadIcon(request)
+        doReturn(result).`when`(icons).loadIconInternalAsync(eq(request), any())
 
         val job = icons.loadIntoView(view, request, placeholder = placeholder, error = error)
 
@@ -264,7 +264,7 @@ class BrowserIconsTest {
         val request = IconRequest(url = "https://www.mozilla.org")
 
         doReturn(previousJob).`when`(view).getTag(R.id.mozac_browser_icons_tag_job)
-        doReturn(result).`when`(icons).loadIcon(request)
+        doReturn(result).`when`(icons).loadIconInternalAsync(eq(request), any())
 
         icons.loadIntoView(view, request)
 
