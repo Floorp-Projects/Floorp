@@ -383,7 +383,7 @@ class RecentTabsListFeatureTest {
 
     @Test
     fun `GIVEN a selected tab group WHEN the feature starts THEN dispatch the selected tab group as a recent tab list`() {
-        val tab = createTab(
+        val tab1 = createTab(
             url = "https://www.mozilla.org",
             id = "1",
             historyMetadata = HistoryMetadataKey(
@@ -392,7 +392,17 @@ class RecentTabsListFeatureTest {
                 referrerUrl = "https://www.mozilla.org"
             )
         )
-        val tabs = listOf(tab)
+
+        val tab2 = createTab(
+            url = "https://www.mozilla.org",
+            id = "2",
+            historyMetadata = HistoryMetadataKey(
+                url = "https://www.mozilla.org",
+                searchTerm = "test search term",
+                referrerUrl = "https://www.mozilla.org"
+            )
+        )
+        val tabs = listOf(tab1, tab2)
         val browserStore = BrowserStore(
             BrowserState(
                 tabs = tabs,
@@ -415,11 +425,11 @@ class RecentTabsListFeatureTest {
         assertEquals(searchGroup.tabId, "1")
         assertEquals(searchGroup.url, "https://www.mozilla.org")
         assertEquals(searchGroup.thumbnail, null)
-        assertEquals(searchGroup.count, 1)
+        assertEquals(searchGroup.count, 2)
     }
 
     @Test
-    fun `GIVEN a selected tab group and a selected tab WHEN the feature starts THEN dispatch both the selected tab and the selected tab group as a recent tab list`() {
+    fun `GIVEN a tab group with one tab and a selected tab WHEN the feature starts THEN dispatch selected tab as a recent tab list`() {
         val tab1 = createTab(
             url = "https://www.mozilla.org",
             id = "1"
@@ -449,6 +459,52 @@ class RecentTabsListFeatureTest {
 
         homeStore.waitUntilIdle()
 
+        assertEquals(1, homeStore.state.recentTabs.size)
+        assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
+        assertEquals(tab1, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
+    }
+
+    @Test
+    fun `GIVEN a tab group with two tabs and a selected tab WHEN the feature starts THEN dispatch both the selected tab and the selected tab group as a recent tab list`() {
+        val tab1 = createTab(
+            url = "https://www.mozilla.org",
+            id = "1"
+        )
+        val tab2 = createTab(
+            url = "https://www.mozilla.org",
+            id = "2",
+            historyMetadata = HistoryMetadataKey(
+                url = "https://www.mozilla.org",
+                searchTerm = "test search term",
+                referrerUrl = "https://www.mozilla.org"
+            )
+        )
+
+        val tab3 = createTab(
+            url = "https://www.mozilla.org",
+            id = "3",
+            historyMetadata = HistoryMetadataKey(
+                url = "https://www.mozilla.org",
+                searchTerm = "test search term",
+                referrerUrl = "https://www.mozilla.org"
+            )
+        )
+        val tabs = listOf(tab1, tab2, tab3)
+        val browserStore = BrowserStore(
+            BrowserState(
+                tabs = tabs,
+                selectedTabId = "1"
+            )
+        )
+        val feature = RecentTabsListFeature(
+            browserStore = browserStore,
+            homeStore = homeStore
+        )
+
+        feature.start()
+
+        homeStore.waitUntilIdle()
+
         assertEquals(2, homeStore.state.recentTabs.size)
         assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
         assertEquals(tab1, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
@@ -457,7 +513,7 @@ class RecentTabsListFeatureTest {
         assertEquals(searchGroup.tabId, "2")
         assertEquals(searchGroup.url, "https://www.mozilla.org")
         assertEquals(searchGroup.thumbnail, null)
-        assertEquals(searchGroup.count, 1)
+        assertEquals(searchGroup.count, 2)
     }
 
     @Test
@@ -520,15 +576,21 @@ class RecentTabsListFeatureTest {
             referrerUrl = "https://www.mozilla.org"
         )
         val thumbnail = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
-        val searchTermTab = createTab(
+        val searchTermTab1 = createTab(
             url = "https://www.mozilla.org",
             id = "44",
             thumbnail = thumbnail,
             historyMetadata = historyMetadataKey
         )
+        val searchTermTab2 = createTab(
+            url = "https://www.mozilla.org",
+            id = "45",
+            thumbnail = thumbnail,
+            historyMetadata = historyMetadataKey
+        )
         val browserStore = BrowserStore(
             BrowserState(
-                tabs = listOf(mediaTab, selectedTab, searchTermTab),
+                tabs = listOf(mediaTab, selectedTab, searchTermTab1, searchTermTab2),
                 selectedTabId = "43"
             )
         )
@@ -550,6 +612,6 @@ class RecentTabsListFeatureTest {
         assertEquals(searchGroup.tabId, "44")
         assertEquals(searchGroup.url, "https://www.mozilla.org")
         assertEquals(searchGroup.thumbnail, thumbnail)
-        assertEquals(searchGroup.count, 1)
+        assertEquals(searchGroup.count, 2)
     }
 }

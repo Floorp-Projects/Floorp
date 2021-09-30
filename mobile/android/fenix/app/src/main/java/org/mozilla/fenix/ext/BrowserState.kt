@@ -67,7 +67,7 @@ val BrowserState.inProgressMediaTab: TabSessionState?
  */
 val BrowserState.lastSearchGroup: RecentTab.SearchGroup?
     get() {
-        val tabGroup = normalTabs.toSearchGroup().lastOrNull() ?: return null
+        val tabGroup = normalTabs.toSearchGroup().lastOrNull { it.tabs.count() > 1 } ?: return null
         val firstTab = tabGroup.tabs.firstOrNull() ?: return null
 
         return RecentTab.SearchGroup(

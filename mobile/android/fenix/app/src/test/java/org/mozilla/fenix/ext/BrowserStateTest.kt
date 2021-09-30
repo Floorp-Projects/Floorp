@@ -135,7 +135,7 @@ class BrowserStateTest {
     }
 
     @Test
-    fun `GIVEN a tab group exists WHEN recentTabs is called THEN return a tab group`() {
+    fun `GIVEN a tab group with one tab WHEN recentTabs is called THEN return a tab group`() {
         val searchGroupTab = createTab(
             url = "https://www.mozilla.org",
             id = "1",
@@ -152,6 +152,28 @@ class BrowserStateTest {
 
         val result = browserState.asRecentTabs()
 
+        assertEquals(1, result.size)
+        assertEquals(searchGroupTab, (result[0] as RecentTab.Tab).state)
+    }
+
+    @Test
+    fun `GIVEN a tab group exists WHEN recentTabs is called THEN return a tab group`() {
+        val searchGroupTab = createTab(
+            url = "https://www.mozilla.org",
+            id = "1",
+            historyMetadata = HistoryMetadataKey(
+                url = "https://www.mozilla.org",
+                searchTerm = "Test",
+                referrerUrl = "https://www.mozilla.org"
+            )
+        )
+        val browserState = BrowserState(
+            tabs = listOf(searchGroupTab, searchGroupTab),
+            selectedTabId = searchGroupTab.id
+        )
+
+        val result = browserState.asRecentTabs()
+
         assertEquals(2, result.size)
         assertEquals(searchGroupTab, (result[0] as RecentTab.Tab).state)
         assert(result[1] is RecentTab.SearchGroup)
@@ -159,11 +181,11 @@ class BrowserStateTest {
         assertEquals(searchGroupTab.id, (result[1] as RecentTab.SearchGroup).tabId)
         assertEquals(searchGroupTab.content.url, (result[1] as RecentTab.SearchGroup).url)
         assertEquals(searchGroupTab.content.thumbnail, (result[1] as RecentTab.SearchGroup).thumbnail)
-        assertEquals(1, (result[1] as RecentTab.SearchGroup).count)
+        assertEquals(2, (result[1] as RecentTab.SearchGroup).count)
     }
 
     @Test
-    fun `GIVEN the selected tab is a normal tab and tab group exists WHEN asRecentTabs is called THEN return a list of these tabs`() {
+    fun `GIVEN the selected tab is a normal tab and tab group with one tab exists WHEN asRecentTabs is called THEN return only the normal tab`() {
         val selectedTab = createTab(url = "url", id = "3")
         val searchGroupTab = createTab(
             url = "https://www.mozilla.org",
@@ -181,6 +203,29 @@ class BrowserStateTest {
 
         val result = browserState.asRecentTabs()
 
+        assertEquals(2, result.size)
+        assertEquals(selectedTab, (result[0] as RecentTab.Tab).state)
+    }
+
+    @Test
+    fun `GIVEN the selected tab is a normal tab and tab group with two tabs exists WHEN asRecentTabs is called THEN return a list of these tabs`() {
+        val selectedTab = createTab(url = "url", id = "3")
+        val searchGroupTab = createTab(
+            url = "https://www.mozilla.org",
+            id = "4",
+            historyMetadata = HistoryMetadataKey(
+                url = "https://www.mozilla.org",
+                searchTerm = "Test",
+                referrerUrl = "https://www.mozilla.org"
+            )
+        )
+        val browserState = BrowserState(
+            tabs = listOf(mockk(relaxed = true), selectedTab, searchGroupTab, searchGroupTab),
+            selectedTabId = selectedTab.id
+        )
+
+        val result = browserState.asRecentTabs()
+
         assertEquals(3, result.size)
         assertEquals(selectedTab, (result[0] as RecentTab.Tab).state)
         assert(result[2] is RecentTab.SearchGroup)
@@ -188,7 +233,7 @@ class BrowserStateTest {
         assertEquals(searchGroupTab.id, (result[2] as RecentTab.SearchGroup).tabId)
         assertEquals(searchGroupTab.content.url, (result[2] as RecentTab.SearchGroup).url)
         assertEquals(searchGroupTab.content.thumbnail, (result[2] as RecentTab.SearchGroup).thumbnail)
-        assertEquals(1, (result[2] as RecentTab.SearchGroup).count)
+        assertEquals(2, (result[2] as RecentTab.SearchGroup).count)
     }
 
     @Test
