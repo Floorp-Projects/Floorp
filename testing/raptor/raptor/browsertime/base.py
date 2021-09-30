@@ -15,6 +15,7 @@ import six
 import sys
 
 import mozprocess
+from manifestparser.util import evaluate_list_from_string
 from benchmark import Benchmark
 from logger.logger import RaptorLogger
 from perftest import Perftest
@@ -41,6 +42,8 @@ class Browsertime(Perftest):
     def __init__(self, app, binary, process_handler=None, **kwargs):
         self.browsertime = True
         self.browsertime_failure = ""
+        self.page_count = []
+
         self.process_handler = process_handler or mozprocess.ProcessHandler
         for key in list(kwargs):
             if key.startswith("browsertime_"):
@@ -200,15 +203,26 @@ class Browsertime(Perftest):
             ]
         else:
             # Custom scripts are treated as pageload tests for now
-            browsertime_script = [
-                os.path.join(
-                    os.path.dirname(__file__),
-                    "..",
-                    "..",
-                    "browsertime",
-                    test.get("test_script", "browsertime_pageload.js"),
-                )
-            ]
+            if test.get("interactive", False):
+                browsertime_script = [
+                    os.path.join(
+                        os.path.dirname(__file__),
+                        "..",
+                        "..",
+                        "browsertime",
+                        "browsertime_interactive.js",
+                    )
+                ]
+            else:
+                browsertime_script = [
+                    os.path.join(
+                        os.path.dirname(__file__),
+                        "..",
+                        "..",
+                        "browsertime",
+                        test.get("test_script", "browsertime_pageload.js"),
+                    )
+                ]
 
         btime_args = self.browsertime_args
         if self.config["app"] in ("chrome", "chromium", "chrome-m"):
@@ -268,6 +282,11 @@ class Browsertime(Perftest):
 
         for var, val in self.config.get("environment", {}).items():
             browsertime_options.extend(["--firefox.env", "{}={}".format(var, val)])
+
+        # Parse the test commands (if any) from the test manifest
+        cmds = evaluate_list_from_string(test.get("test_cmds", "[]"))
+        parsed_cmds = [":::".join([str(i) for i in item]) for item in cmds if item]
+        browsertime_options.extend(["--browsertime.commands", ";;;".join(parsed_cmds)])
 
         if self.verbose:
             browsertime_options.append("-vvv")
@@ -474,6 +493,9 @@ class Browsertime(Perftest):
                     proc.kill()
                 elif "warning" in level:
                     LOG.warning(msg)
+                elif "metrics" in level:
+                    vals = msg.split(":")[-1].strip()
+                    self.page_count = vals.split(",")
                 else:
                     LOG.info(msg)
 
