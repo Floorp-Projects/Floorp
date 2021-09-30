@@ -71,11 +71,13 @@ class nsContentPermissionUtils {
                                         const nsTArray<nsString>& aOptions,
                                         nsIArray** aTypesArray);
 
+  // @param aIsRequestDelegatedToUnsafeThirdParty see
+  // ContentPermissionRequestParent.
   static PContentPermissionRequestParent* CreateContentPermissionRequestParent(
       const nsTArray<PermissionRequest>& aRequests, Element* aElement,
       nsIPrincipal* aPrincipal, nsIPrincipal* aTopLevelPrincipal,
       const bool aIsHandlingUserInput,
-      const bool aMaybeUnsafePermissionDelegate, const TabId& aTabId);
+      const bool aIsRequestDelegatedToUnsafeThirdParty, const TabId& aTabId);
 
   static nsresult AskPermission(nsIContentPermissionRequest* aRequest,
                                 nsPIDOMWindowInner* aWindow);
@@ -111,8 +113,8 @@ class ContentPermissionRequestBase : public nsIContentPermissionRequest {
   NS_IMETHOD GetWindow(mozIDOMWindow** aWindow) override;
   NS_IMETHOD GetElement(mozilla::dom::Element** aElement) override;
   NS_IMETHOD GetIsHandlingUserInput(bool* aIsHandlingUserInput) override;
-  NS_IMETHOD GetMaybeUnsafePermissionDelegate(
-      bool* aMaybeUnsafePermissionDelegate) override;
+  NS_IMETHOD GetIsRequestDelegatedToUnsafeThirdParty(
+      bool* aIsRequestDelegatedToUnsafeThirdParty) override;
   // Overrides for Allow() and Cancel() aren't provided by this class.
   // That is the responsibility of the subclasses.
 
@@ -161,7 +163,9 @@ class ContentPermissionRequestBase : public nsIContentPermissionRequest {
   const nsCString mType;
 
   bool mIsHandlingUserInput;
-  bool mMaybeUnsafePermissionDelegate;
+
+  // See nsIPermissionDelegateHandler.maybeUnsafePermissionDelegate`.
+  bool mIsRequestDelegatedToUnsafeThirdParty;
 };
 
 }  // namespace dom

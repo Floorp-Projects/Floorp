@@ -61,7 +61,10 @@ interface nsIContentPermissionRequest : nsISupports {
 
   readonly attribute boolean isHandlingUserInput;
 
-  readonly attribute boolean maybeUnsafePermissionDelegate;
+  /**
+   * See nsIPermissionDelegateHandler.maybeUnsafePermissionDelegate.
+   */
+  readonly attribute boolean isRequestDelegatedToUnsafeThirdParty;
 
   /*
    * Get delegate principal of the permission request. This will return nullptr,
