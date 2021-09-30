@@ -806,15 +806,10 @@ void ContentParent::ReleaseCachedProcesses() {
   }
 
 #ifdef DEBUG
-  int num = 0;
-  for (const auto& contentParents : sBrowserContentParents->Values()) {
-    num += contentParents->Length();
-    for (auto* cp : *contentParents) {
-      MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-              ("%s: %zu processes", cp->mRemoteType.get(),
-               contentParents->Length()));
-      break;
-    }
+  for (const auto& cps : *sBrowserContentParents) {
+    MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
+            ("%s: %zu processes", PromiseFlatCString(cps.GetKey()).get(),
+             cps.GetData()->Length()));
   }
 #endif
   // We process the toRelease array outside of the iteration to avoid modifying
