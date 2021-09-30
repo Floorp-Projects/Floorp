@@ -151,6 +151,13 @@ add_task(async function setup_head() {
       // Ignore errors handled by the error message dialog.
       return;
     }
+    if (
+      msg.errorMessage ==
+      "NotFoundError: No such JSWindowActor 'MarionetteEvents'"
+    ) {
+      // Ignore MarionetteEvents error (Bug 1730837, Bug 1710079).
+      return;
+    }
     ok(false, msg.message || msg.errorMessage);
   });
 
