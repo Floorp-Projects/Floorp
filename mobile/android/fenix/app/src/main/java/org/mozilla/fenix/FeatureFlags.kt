@@ -85,9 +85,4 @@ object FeatureFlags {
         return Config.channel.isNightlyOrDebug &&
             "en-US" == LocaleManager.getCurrentLocale(context)?.toLanguageTag() ?: getSystemDefault().toLanguageTag()
     }
-
-    /**
-     * Enables showing the homescreen onboarding card.
-     */
-    val showHomeOnboarding = Config.channel.isDebug
 }

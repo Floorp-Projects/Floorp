@@ -258,21 +258,21 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_title">What’s new in Firefox!</string>
+    <string name="onboarding_home_screen_title_2">What’s new in Firefox</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description">It’s now easier to pick up where you left off so you can stay in the flow.</string>
+    <string name="onboarding_home_screen_description_2">It’s now easier to pick back up where you left off.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_section_home_title">Personalized Firefox home</string>
+    <string name="onboarding_home_screen_section_home_title_2">Personalized Firefox homepage</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description">Access your open tabs, bookmarks, and history directly from your home screen.</string>
+    <string name="onboarding_home_screen_section_home_description_2">Jump to your open tabs, bookmarks, and browsing history.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title">Cleaner tab tray</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description">Firefox helps you to manage your tabs and quickly find what you’re looking for.</string>
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Clean, organized tabs</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Clear away tab clutter with improved layout and auto-closing tabs. </string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title">Useful history</string>
+    <string name="onboarding_home_screen_section_useful_history_title_2">Recent searches</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description">Get a better overview of your browsing history.</string>
+    <string name="onboarding_home_screen_section_useful_history_description_2">Revisit your latest searches from your homepage and tabs.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
