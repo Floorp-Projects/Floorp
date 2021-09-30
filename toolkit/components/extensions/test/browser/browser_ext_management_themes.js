@@ -139,14 +139,14 @@ add_task(async function test_management_themes() {
   );
   is(
     await extension.awaitMessage("onDisabled"),
-    "System theme",
+    "System theme — auto",
     "default disabled"
   );
 
   extension.sendMessage("test");
   is(
     await extension.awaitMessage("onEnabled"),
-    "System theme",
+    "System theme — auto",
     "default enabled"
   );
   is(
@@ -161,7 +161,7 @@ add_task(async function test_management_themes() {
   );
   is(
     await extension.awaitMessage("onDisabled"),
-    "System theme",
+    "System theme — auto",
     "default disabled"
   );
   await extension.awaitMessage("done");
@@ -170,7 +170,7 @@ add_task(async function test_management_themes() {
 
   is(
     await extension.awaitMessage("onEnabled"),
-    "System theme",
+    "System theme — auto",
     "default enabled"
   );
   await extension.unload();

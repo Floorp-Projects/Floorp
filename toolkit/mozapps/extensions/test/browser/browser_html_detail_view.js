@@ -718,7 +718,7 @@ add_task(async function testDefaultTheme() {
   // Version.
   let version = rows.shift();
   checkLabel(version, "version");
-  is(version.lastChild.textContent, "1.2", "It's always version 1.2");
+  is(version.lastChild.textContent, "1.3", "It's always version 1.3");
 
   // Last updated.
   let lastUpdated = rows.shift();
