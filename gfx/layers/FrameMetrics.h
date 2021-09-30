@@ -149,23 +149,19 @@ struct FrameMetrics {
   }
 
   CSSToScreenScale2D DisplayportPixelsPerCSSPixel() const {
-    // Note: use 'mZoom * ParentLayerToLayerScale(1.0f)' as the CSS-to-Layer
-    // scale instead of LayersPixelsPerCSSPixel(), because displayport
-    // calculations are done in the context of a repaint request, where we ask
-    // Layout to repaint at a new resolution that includes any async zoom. Until
-    // this repaint request is processed, LayersPixelsPerCSSPixel() does not yet
-    // include the async zoom, but it will when the displayport is interpreted
-    // for the repaint.
-    // Note 2: we include the transform to ancestor scale because this function
-    // (as the name implies) is used only in various displayport calculation
-    // related places, and those calculations want the transform to ancestor
-    // scale to be included becaese they want to reason about pixels which are
-    // the same size as screen pixels (so displayport sizes are e.g. limited to
-    // a multiple of the screen size). Whereas mZoom and mCumulativeResolution
-    // do not include it because of expectations of the code where they are
-    // used.
-    return mZoom * ParentLayerToLayerScale(1.0f) *
-           ViewAs<LayerToScreenScale2D>(mTransformToAncestorScale);
+    // Note: mZoom includes the async zoom. We want to include the async zoom
+    // even though the size of the pixels of our *current* displayport does not
+    // yet reflect it, because this function is used in the context of a repaint
+    // request where we'll be asking for a *new* displayport which does reflect
+    // the async zoom. Note 2: we include the transform to ancestor scale
+    // because this function (as the name implies) is used only in various
+    // displayport calculation related places, and those calculations want the
+    // transform to ancestor scale to be included becaese they want to reason
+    // about pixels which are the same size as screen pixels (so displayport
+    // sizes are e.g. limited to a multiple of the screen size). Whereas mZoom
+    // and mCumulativeResolution do not include it because of expectations of
+    // the code where they are used.
+    return mZoom * mTransformToAncestorScale;
   }
 
   CSSToLayerScale2D LayersPixelsPerCSSPixel() const {
@@ -399,11 +395,12 @@ struct FrameMetrics {
                    CalculateCompositedSizeInCssPixels());
   }
 
-  void SetTransformToAncestorScale(const Scale2D& aTransformToAncestorScale) {
+  void SetTransformToAncestorScale(
+      const ParentLayerToScreenScale2D& aTransformToAncestorScale) {
     mTransformToAncestorScale = aTransformToAncestorScale;
   }
 
-  const Scale2D& GetTransformToAncestorScale() const {
+  const ParentLayerToScreenScale2D& GetTransformToAncestorScale() const {
     return mTransformToAncestorScale;
   }
 
@@ -636,7 +633,7 @@ struct FrameMetrics {
   CSSRect mLayoutViewport;
 
   // The scale on this scroll frame induced by enclosing CSS transforms.
-  Scale2D mTransformToAncestorScale;
+  ParentLayerToScreenScale2D mTransformToAncestorScale;
 
   // The time at which the APZC last requested a repaint for this scroll frame.
   TimeStamp mPaintRequestTime;
