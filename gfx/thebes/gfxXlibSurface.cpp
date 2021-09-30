@@ -7,7 +7,6 @@
 
 #include "cairo.h"
 #include "cairo-xlib.h"
-#include "cairo-xlib-xrender.h"
 #include <X11/Xlibint.h> /* For XESetCloseDisplay */
 #undef max               // Xlibint.h defines this and it breaks std::max
 #undef min               // Xlibint.h defines this and it breaks std::min
@@ -46,20 +45,6 @@ gfxXlibSurface::gfxXlibSurface(const std::shared_ptr<XlibDisplay>& dpy,
 
   cairo_surface_t* surf = cairo_xlib_surface_create(*dpy, drawable, visual,
                                                     size.width, size.height);
-  Init(surf);
-}
-
-gfxXlibSurface::gfxXlibSurface(Screen* screen, Drawable drawable,
-                               XRenderPictFormat* format,
-                               const gfx::IntSize& size)
-    : mPixmapTaken(false),
-      mDisplay(XlibDisplay::Borrow(DisplayOfScreen(screen))),
-      mDrawable(drawable) {
-  NS_ASSERTION(Factory::CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT),
-               "Bad Size");
-
-  cairo_surface_t* surf = cairo_xlib_surface_create_with_xrender_format(
-      *mDisplay, drawable, screen, format, size.width, size.height);
   Init(surf);
 }
 
@@ -213,16 +198,14 @@ const gfx::IntSize gfxXlibSurface::DoSizeQuery() {
 
 class DisplayTable {
  public:
-  static bool GetColormapAndVisual(Screen* screen, XRenderPictFormat* format,
-                                   Visual* visual, Colormap* colormap,
+  static bool GetColormapAndVisual(Screen* screen, Visual* visual,
+                                   Colormap* colormap,
                                    Visual** visualForColormap);
 
  private:
   struct ColormapEntry {
-    XRenderPictFormat* mFormat;
     // The Screen is needed here because colormaps (and their visuals) may
-    // only be used on one Screen, but XRenderPictFormats are not unique
-    // to any one Screen.
+    // only be used on one Screen
     Screen* mScreen;
     Visual* mVisual;
     Colormap mColormap;
@@ -275,9 +258,8 @@ DisplayTable* DisplayTable::sDisplayTable;
 // should only be used with their visual.
 
 /* static */
-bool DisplayTable::GetColormapAndVisual(Screen* aScreen,
-                                        XRenderPictFormat* aFormat,
-                                        Visual* aVisual, Colormap* aColormap,
+bool DisplayTable::GetColormapAndVisual(Screen* aScreen, Visual* aVisual,
+                                        Colormap* aColormap,
                                         Visual** aVisualForColormap)
 
 {
@@ -285,8 +267,7 @@ bool DisplayTable::GetColormapAndVisual(Screen* aScreen,
 
   // Use the default colormap if the default visual matches.
   Visual* defaultVisual = DefaultVisualOfScreen(aScreen);
-  if (aVisual == defaultVisual ||
-      (aFormat && aFormat == XRenderFindVisualFormat(display, defaultVisual))) {
+  if (aVisual == defaultVisual) {
     *aColormap = DefaultColormapOfScreen(aScreen);
     *aVisualForColormap = defaultVisual;
     return true;
@@ -320,11 +301,7 @@ bool DisplayTable::GetColormapAndVisual(Screen* aScreen,
   // simple linear search.
   for (uint32_t i = 0; i < entries->Length(); ++i) {
     const ColormapEntry& entry = entries->ElementAt(i);
-    // Only the format and screen need to match.  (The visual may differ.)
-    // If there is no format (e.g. no RENDER extension) then just compare
-    // the visual.
-    if ((aFormat && entry.mFormat == aFormat && entry.mScreen == aScreen) ||
-        aVisual == entry.mVisual) {
+    if (aVisual == entry.mVisual) {
       *aColormap = entry.mColormap;
       *aVisualForColormap = entry.mVisual;
       return true;
@@ -335,7 +312,6 @@ bool DisplayTable::GetColormapAndVisual(Screen* aScreen,
   Colormap colormap =
       XCreateColormap(display, RootWindowOfScreen(aScreen), aVisual, AllocNone);
   ColormapEntry* newEntry = entries->AppendElement();
-  newEntry->mFormat = aFormat;
   newEntry->mScreen = aScreen;
   newEntry->mVisual = aVisual;
   newEntry->mColormap = colormap;
@@ -361,13 +337,10 @@ int DisplayTable::DisplayClosing(Display* display, XExtCodes* codes) {
 bool gfxXlibSurface::GetColormapAndVisual(cairo_surface_t* aXlibSurface,
                                           Colormap* aColormap,
                                           Visual** aVisual) {
-  XRenderPictFormat* format =
-      cairo_xlib_surface_get_xrender_format(aXlibSurface);
   Screen* screen = cairo_xlib_surface_get_screen(aXlibSurface);
   Visual* visual = cairo_xlib_surface_get_visual(aXlibSurface);
 
-  return DisplayTable::GetColormapAndVisual(screen, format, visual, aColormap,
-                                            aVisual);
+  return DisplayTable::GetColormapAndVisual(screen, visual, aColormap, aVisual);
 }
 
 bool gfxXlibSurface::GetColormapAndVisual(Colormap* aColormap,
@@ -434,35 +407,6 @@ Visual* gfxXlibSurface::FindVisual(Screen* screen, gfxImageFormat format) {
   return nullptr;
 }
 
-/* static */
-XRenderPictFormat* gfxXlibSurface::FindRenderFormat(Display* dpy,
-                                                    gfxImageFormat format) {
-  switch (format) {
-    case gfx::SurfaceFormat::A8R8G8B8_UINT32:
-      return XRenderFindStandardFormat(dpy, PictStandardARGB32);
-    case gfx::SurfaceFormat::X8R8G8B8_UINT32:
-      return XRenderFindStandardFormat(dpy, PictStandardRGB24);
-    case gfx::SurfaceFormat::R5G6B5_UINT16: {
-      // PictStandardRGB16_565 is not standard Xrender format
-      // we should try to find related visual
-      // and find xrender format by visual
-      Visual* visual = FindVisual(DefaultScreenOfDisplay(dpy), format);
-      if (!visual) return nullptr;
-      return XRenderFindVisualFormat(dpy, visual);
-    }
-    case gfx::SurfaceFormat::A8:
-      return XRenderFindStandardFormat(dpy, PictStandardA8);
-    default:
-      break;
-  }
-
-  return nullptr;
-}
-
 Screen* gfxXlibSurface::XScreen() {
   return cairo_xlib_surface_get_screen(CairoSurface());
-}
-
-XRenderPictFormat* gfxXlibSurface::XRenderFormat() {
-  return cairo_xlib_surface_get_xrender_format(CairoSurface());
 }

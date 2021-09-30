@@ -1183,7 +1183,6 @@ def x11_libs(webrtc):
         "x11-xcb",
         "xext",
         "xrandr >= 1.4.0",
-        "xrender",
     ]
     if webrtc:
         # third_party/libwebrtc/webrtc/webrtc_gn/moz.build adds those

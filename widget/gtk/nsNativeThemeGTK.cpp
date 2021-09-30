@@ -49,9 +49,6 @@
 #  ifdef CAIRO_HAS_XLIB_SURFACE
 #    include "cairo-xlib.h"
 #  endif
-#  ifdef CAIRO_HAS_XLIB_XRENDER_SURFACE
-#    include "cairo-xlib-xrender.h"
-#  endif
 #endif
 
 #include <algorithm>
@@ -847,21 +844,9 @@ static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
     BorrowedXlibDrawable borrow(aDrawTarget);
     if (borrow.GetDrawable()) {
       nsIntSize size = borrow.GetSize();
-      cairo_surface_t* surf = nullptr;
-      // Check if the surface is using XRender.
-#  ifdef CAIRO_HAS_XLIB_XRENDER_SURFACE
-      if (borrow.GetXRenderFormat()) {
-        surf = cairo_xlib_surface_create_with_xrender_format(
-            borrow.GetDisplay(), borrow.GetDrawable(), borrow.GetScreen(),
-            borrow.GetXRenderFormat(), size.width, size.height);
-      } else {
-#  else
-      if (!borrow.GetXRenderFormat()) {
-#  endif
-        surf = cairo_xlib_surface_create(
-            borrow.GetDisplay(), borrow.GetDrawable(), borrow.GetVisual(),
-            size.width, size.height);
-      }
+      cairo_surface_t* surf = cairo_xlib_surface_create(
+          borrow.GetDisplay(), borrow.GetDrawable(), borrow.GetVisual(),
+          size.width, size.height);
       if (!NS_WARN_IF(!surf)) {
         Point offset = borrow.GetOffset();
         if (offset != Point()) {
