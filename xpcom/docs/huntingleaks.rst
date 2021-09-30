@@ -5,34 +5,18 @@ Hunting Leaks
     :local:
     :depth: 2
 
-Bloatview
----------
+Different tools and technics are used to hunt leaks:
 
-.. note::
+.. list-table::
+   :header-rows: 1
 
-    To be migrated from https://developer.mozilla.org/en-US/docs/Mozilla/Performance/BloatView
-
-Refcount Logging
-----------------
-
-.. note::
-
-    To be migrated from https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Refcount_tracing_and_balancing
-
-
-GC and CC Logging
------------------
-
-.. note::
-
-    To be migrated from https://developer.mozilla.org/en-US/docs/Mozilla/Performance/GC_and_CC_logs
-
-
-DMD Heap Scan Mode
-------------------
-
-Heap scan mode is a mode of the :ref:`Dark Matter Detector (DMD)`.
-
-.. note::
-
-    To be migrated from https://developer.mozilla.org/en-US/docs/Mozilla/Performance/DMD/Heap_Scan_Mode
+   * - Tools
+     - Description
+   * - :ref:`Bloatview`
+     - BloatView is a tool that shows information about cumulative memory usage and leaks.
+   * - :ref:`Refcount Tracing and Balancing`
+     - Refcount tracing and balancing are advanced techniques for tracking down leak of refcounted objects found with BloatView.
+   * - `GC and CC logs </performance/memory/gc_and_cc_logs.html>`_
+     - Garbage collector (GC) and cycle collector (CC) logs give information about why various JS and C++ objects are alive in the heap.
+   * - :ref:`DMD Heap Scan Mode`
+     - Heap profiler within Firefox
