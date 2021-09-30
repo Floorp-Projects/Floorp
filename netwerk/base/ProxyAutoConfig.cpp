@@ -517,8 +517,17 @@ static bool PACDnsResolve(JSContext* cx, unsigned int argc, JS::Value* vp) {
 
   if (!args.requireAtLeast(cx, "dnsResolve", 1)) return false;
 
-  JS::Rooted<JSString*> arg1(cx, JS::ToString(cx, args[0]));
-  if (!arg1) return false;
+  // Previously we didn't check the type of the argument, so just converted it
+  // to string. A badly written PAC file oculd pass null or undefined here
+  // which could lead to odd results if there are any hosts called "null"
+  // on the network. See bug 1724345 comment 6.
+  if (!args[0].isString()) {
+    args.rval().setNull();
+    return true;
+  }
+
+  JS::RootedString arg1(cx);
+  arg1 = args[0].toString();
 
   nsAutoJSString hostName;
   nsAutoCString dottedDecimal;
