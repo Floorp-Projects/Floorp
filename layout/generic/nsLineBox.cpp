@@ -559,13 +559,46 @@ void nsLineBox::SetOverflowAreas(const OverflowAreas& aOverflowAreas) {
 
 //----------------------------------------------------------------------
 
+static nsLineBox* gDummyLines[1];
+
+nsLineIterator::nsLineIterator(nsLineList& aLines, bool aRightToLeft)
+    : mIndex(0), mNumLines(aLines.size()), mRightToLeft(aRightToLeft) {
+  if (0 == mNumLines) {
+    // Use gDummyLines so that we don't need null pointer checks in
+    // the accessor methods
+    mLines = gDummyLines;
+    return;
+  }
+
+  // Make a linear array of the lines
+  mLines = new nsLineBox*[mNumLines];
+  nsLineBox** lp = mLines;
+  for (nsLineList::iterator line = aLines.begin(), line_end = aLines.end();
+       line != line_end; ++line) {
+    *lp++ = line;
+  }
+}
+
+nsLineIterator::~nsLineIterator() {
+  if (mLines != gDummyLines) {
+    delete[] mLines;
+  }
+}
+
+/* virtual */
+void nsLineIterator::DisposeLineIterator() { delete this; }
+
+int32_t nsLineIterator::GetNumLines() const { return mNumLines; }
+
+bool nsLineIterator::GetDirection() { return mRightToLeft; }
+
 Result<nsILineIterator::LineInfo, nsresult> nsLineIterator::GetLine(
-    int32_t aLineNumber) {
-  const nsLineBox* line = GetLineAt(aLineNumber);
-  if (!line) {
+    int32_t aLineNumber) const {
+  if ((aLineNumber < 0) || (aLineNumber >= mNumLines)) {
     return Err(NS_ERROR_FAILURE);
   }
   LineInfo structure;
+  nsLineBox* line = mLines[aLineNumber];
   structure.mFirstFrameOnLine = line->mFirstChild;
   structure.mNumFramesOnLine = line->GetChildCount();
   structure.mLineBounds = line->GetPhysicalBounds();
@@ -575,13 +608,14 @@ Result<nsILineIterator::LineInfo, nsresult> nsLineIterator::GetLine(
 
 int32_t nsLineIterator::FindLineContaining(nsIFrame* aFrame,
                                            int32_t aStartLine) {
-  const nsLineBox* line = GetLineAt(aStartLine);
-  MOZ_ASSERT(line, "aStartLine out of range");
-  while (line) {
+  MOZ_ASSERT(aStartLine <= mNumLines, "Bogus line numbers");
+  int32_t lineNumber = aStartLine;
+  while (lineNumber != mNumLines) {
+    nsLineBox* line = mLines[lineNumber];
     if (line->Contains(aFrame)) {
-      return mIndex;
+      return lineNumber;
     }
-    line = NextLine();
+    ++lineNumber;
   }
   return -1;
 }
@@ -590,10 +624,10 @@ NS_IMETHODIMP
 nsLineIterator::CheckLineOrder(int32_t aLine, bool* aIsReordered,
                                nsIFrame** aFirstVisual,
                                nsIFrame** aLastVisual) {
-  const nsLineBox* line = GetLineAt(aLine);
-  MOZ_ASSERT(line, "aLine out of range!");
+  NS_ASSERTION(aLine >= 0 && aLine < mNumLines, "aLine out of range!");
+  nsLineBox* line = mLines[aLine];
 
-  if (!line || !line->mFirstChild) {  // empty line
+  if (!line->mFirstChild) {  // empty line
     *aIsReordered = false;
     *aFirstVisual = nullptr;
     *aLastVisual = nullptr;
@@ -617,15 +651,18 @@ NS_IMETHODIMP
 nsLineIterator::FindFrameAt(int32_t aLineNumber, nsPoint aPos,
                             nsIFrame** aFrameFound,
                             bool* aPosIsBeforeFirstFrame,
-                            bool* aPosIsAfterLastFrame) {
+                            bool* aPosIsAfterLastFrame) const {
   MOZ_ASSERT(aFrameFound && aPosIsBeforeFirstFrame && aPosIsAfterLastFrame,
              "null OUT ptr");
 
   if (!aFrameFound || !aPosIsBeforeFirstFrame || !aPosIsAfterLastFrame) {
     return NS_ERROR_NULL_POINTER;
   }
+  if ((aLineNumber < 0) || (aLineNumber >= mNumLines)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
-  const nsLineBox* line = GetLineAt(aLineNumber);
+  nsLineBox* line = mLines[aLineNumber];
   if (!line) {
     *aFrameFound = nullptr;
     *aPosIsBeforeFirstFrame = true;
