@@ -96,7 +96,7 @@ class MediaMemoryTracker : public nsIMemoryReporter {
     return sUniqueInstance;
   }
 
-  typedef nsTArray<MediaDecoder*> DecodersArray;
+  using DecodersArray = nsTArray<MediaDecoder*>;
   static DecodersArray& Decoders() { return UniqueInstance()->mDecoders; }
 
   DecodersArray mDecoders;
