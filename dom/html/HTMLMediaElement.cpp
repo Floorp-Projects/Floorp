@@ -2139,7 +2139,6 @@ void HTMLMediaElement::SetDecodeError(const nsAString& aError,
     }
   }
   aRv.Throw(NS_ERROR_FAILURE);
-  return;
 }
 
 void HTMLMediaElement::SetAudioSinkFailedStartup() {
