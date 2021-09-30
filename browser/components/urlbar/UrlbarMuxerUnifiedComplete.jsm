@@ -643,7 +643,8 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       state.context.heuristicResult.autofill &&
       !result.autofill &&
       state.context.heuristicResult.payload?.url == result.payload.url &&
-      state.context.heuristicResult.type == result.type
+      state.context.heuristicResult.type == result.type &&
+      !UrlbarPrefs.get("experimental.hideHeuristic")
     ) {
       return false;
     }
@@ -862,7 +863,8 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     if (
       (result.type == UrlbarUtils.RESULT_TYPE.URL ||
         result.type == UrlbarUtils.RESULT_TYPE.KEYWORD) &&
-      result.payload.url
+      result.payload.url &&
+      (!result.heuristic || !UrlbarPrefs.get("experimental.hideHeuristic"))
     ) {
       let [strippedUrl, prefix] = UrlbarUtils.stripPrefixAndTrim(
         result.payload.url,
@@ -939,7 +941,8 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       state.context.heuristicResult = result;
       if (
         result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
-        result.payload.query
+        result.payload.query &&
+        !UrlbarPrefs.get("experimental.hideHeuristic")
       ) {
         let query = result.payload.query.trim().toLocaleLowerCase();
         if (query) {

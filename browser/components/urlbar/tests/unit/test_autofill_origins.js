@@ -635,3 +635,123 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
 
   await cleanup();
 });
+
+// When the autofilled URL is `example.com/`, a visit for `example.com/?` should
+// not be included in the results since it dupes the autofill result.
+add_task(async function searchParams() {
+  await PlacesTestUtils.addVisits([
+    "http://example.com/",
+    "http://example.com/?",
+    "http://example.com/?foo",
+  ]);
+
+  // First, do a search with autofill disabled to make sure the visits were
+  // properly added. `example.com/?foo` has the highest frecency because it was
+  // added last; `example.com/?` has the next highest. `example.com/` dupes
+  // `example.com/?`, so it should not appear.
+  UrlbarPrefs.set("autoFill", false);
+  let context = createContext("ex", { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
+        heuristic: true,
+      }),
+      makeVisitResult(context, {
+        uri: "http://example.com/?foo",
+        title: "test visit for http://example.com/?foo",
+      }),
+      makeVisitResult(context, {
+        uri: "http://example.com/?",
+        title: "test visit for http://example.com/?",
+      }),
+    ],
+  });
+
+  // Now do a search with autofill enabled. This time `example.com/` will be
+  // autofilled, and since `example.com/?` dupes it, `example.com/?` should not
+  // appear.
+  UrlbarPrefs.clear("autoFill");
+  context = createContext("ex", { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: "example.com/",
+    completed: "http://example.com/",
+    matches: [
+      makeVisitResult(context, {
+        uri: "http://example.com/",
+        title: "example.com",
+        heuristic: true,
+      }),
+      makeVisitResult(context, {
+        uri: "http://example.com/?foo",
+        title: "test visit for http://example.com/?foo",
+      }),
+    ],
+  });
+
+  await cleanup();
+});
+
+// When the autofilled URL is `example.com/`, a visit for `example.com/?` should
+// not be included in the results since it dupes the autofill result. (Same as
+// the previous task but with https URLs instead of http. There shouldn't be any
+// substantive difference.)
+add_task(async function searchParams_https() {
+  await PlacesTestUtils.addVisits([
+    "https://example.com/",
+    "https://example.com/?",
+    "https://example.com/?foo",
+  ]);
+
+  // First, do a search with autofill disabled to make sure the visits were
+  // properly added. `example.com/?foo` has the highest frecency because it was
+  // added last; `example.com/?` has the next highest. `example.com/` dupes
+  // `example.com/?`, so it should not appear.
+  UrlbarPrefs.set("autoFill", false);
+  let context = createContext("ex", { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
+        heuristic: true,
+      }),
+      makeVisitResult(context, {
+        uri: "https://example.com/?foo",
+        title: "test visit for https://example.com/?foo",
+      }),
+      makeVisitResult(context, {
+        uri: "https://example.com/?",
+        title: "test visit for https://example.com/?",
+      }),
+    ],
+  });
+
+  // Now do a search with autofill enabled. This time `example.com/` will be
+  // autofilled, and since `example.com/?` dupes it, `example.com/?` should not
+  // appear.
+  UrlbarPrefs.clear("autoFill");
+  context = createContext("ex", { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: "example.com/",
+    completed: "https://example.com/",
+    matches: [
+      makeVisitResult(context, {
+        uri: "https://example.com/",
+        title: "https://example.com",
+        heuristic: true,
+      }),
+      makeVisitResult(context, {
+        uri: "https://example.com/?foo",
+        title: "test visit for https://example.com/?foo",
+      }),
+    ],
+  });
+
+  await cleanup();
+});
