@@ -48,7 +48,7 @@
                 android:layout_height="match_parent" />
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-        <mozilla.components.browser.awesomebar.BrowserAwesomeBar
+        <org.mozilla.samples.browser.awesomebar.AwesomeBarWrapper
             android:id="@+id/awesomeBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

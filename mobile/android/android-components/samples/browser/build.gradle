@@ -50,6 +50,11 @@ android {
 
     buildFeatures {
         viewBinding true
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = Versions.compose_version
     }
 }
 
@@ -76,7 +81,8 @@ dependencies {
     implementation project(':concept-storage')
     implementation project(':concept-base')
 
-    implementation project(':browser-awesomebar')
+    implementation project(':compose-awesomebar')
+
     implementation project(':browser-engine-system')
     implementation project(':browser-domains')
     implementation project(':browser-icons')
@@ -137,6 +143,9 @@ dependencies {
     implementation Dependencies.kotlin_stdlib
 
     implementation Dependencies.androidx_appcompat
+    implementation Dependencies.androidx_compose_ui_tooling
+    implementation Dependencies.androidx_compose_foundation
+    implementation Dependencies.androidx_compose_material
     implementation Dependencies.androidx_core_ktx
     implementation Dependencies.androidx_constraintlayout
     implementation Dependencies.androidx_swiperefreshlayout
