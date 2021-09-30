@@ -8,7 +8,9 @@
 #include "nsDirIndexParser.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/StaticPtr.h"
 #include "prprf.h"
 #include "nsCRT.h"
 #include "nsDirIndex.h"
@@ -25,6 +27,8 @@ struct EncodingProp {
   const char* const mKey;
   NotNull<const Encoding*> mValue;
 };
+
+static StaticRefPtr<nsITextToSubURI> gTextToSubURI;
 
 static const EncodingProp localesFallbacks[] = {
     {"ar", WINDOWS_1256_ENCODING}, {"ba", WINDOWS_1251_ENCODING},
@@ -90,22 +94,17 @@ nsresult nsDirIndexParser::Init() {
   auto encoding = GetFTPFallbackEncodingDoNotAddNewCallersToThisFunction();
   encoding->Name(mEncoding);
 
-  nsresult rv;
-  // XXX not threadsafe
-  if (gRefCntParser++ == 0) {
-    rv = CallGetService(NS_ITEXTTOSUBURI_CONTRACTID, &gTextToSubURI);
-  } else {
-    rv = NS_OK;
+  nsresult rv = NS_OK;
+  if (!gTextToSubURI) {
+    nsCOMPtr<nsITextToSubURI> service =
+        do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      gTextToSubURI = service;
+      ClearOnShutdown(&gTextToSubURI);
+    }
   }
 
   return rv;
-}
-
-nsDirIndexParser::~nsDirIndexParser() {
-  // XXX not threadsafe
-  if (--gRefCntParser == 0) {
-    NS_IF_RELEASE(gTextToSubURI);
-  }
 }
 
 NS_IMETHODIMP
@@ -165,9 +164,6 @@ nsDirIndexParser::Field nsDirIndexParser::gFieldTable[] = {
     {"Content-Type", FIELD_CONTENTTYPE},
     {"File-Type", FIELD_FILETYPE},
     {nullptr, FIELD_UNKNOWN}};
-
-nsrefcnt nsDirIndexParser::gRefCntParser = 0;
-nsITextToSubURI* nsDirIndexParser::gTextToSubURI = nullptr;
 
 void nsDirIndexParser::ParseFormat(const char* aFormatStr) {
   // Parse a "200" format line, and remember the fields and their
@@ -281,10 +277,10 @@ void nsDirIndexParser::ParseData(nsIDirIndex* aIdx, char* aDataStr,
 
         nsAutoString entryuri;
 
-        if (gTextToSubURI) {
+        if (RefPtr<nsITextToSubURI> textToSub = gTextToSubURI) {
           nsAutoString result;
-          if (NS_SUCCEEDED(gTextToSubURI->UnEscapeAndConvert(
-                  mEncoding, filename, result))) {
+          if (NS_SUCCEEDED(
+                  textToSub->UnEscapeAndConvert(mEncoding, filename, result))) {
             if (!result.IsEmpty()) {
               aIdx->SetLocation(filename);
               if (!mHasDescription) aIdx->SetDescription(result);
