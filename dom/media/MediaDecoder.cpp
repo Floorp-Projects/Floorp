@@ -373,7 +373,7 @@ void MediaDecoder::NotifyXPCOMShutdown() {
   // NotifyXPCOMShutdown will clear its reference to mDecoder. So we must ensure
   // that this MediaDecoder stays alive until completion.
   RefPtr<MediaDecoder> kungFuDeathGrip = this;
-  if (auto owner = GetOwner()) {
+  if (auto* owner = GetOwner()) {
     owner->NotifyXPCOMShutdown();
   } else if (!IsShutdown()) {
     Shutdown();
