@@ -891,7 +891,8 @@ bool nsBaseWidget::IsSmallPopup() const {
 
 bool nsBaseWidget::ComputeShouldAccelerate() {
   return gfx::gfxConfig::IsEnabled(gfx::Feature::HW_COMPOSITING) &&
-         WidgetTypeSupportsAcceleration();
+         (WidgetTypeSupportsAcceleration() ||
+          StaticPrefs::gfx_webrender_unaccelerated_widget_force());
 }
 
 bool nsBaseWidget::UseAPZ() {
