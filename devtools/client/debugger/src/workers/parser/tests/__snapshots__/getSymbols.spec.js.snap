@@ -208,16 +208,20 @@ framework: undefined"
 
 exports[`Parser.getSymbols class 1`] = `
 "functions:
-[(2, 2), (4, 3)]  constructor() Test
-[(6, 2), (8, 3)]  bar(a) Test
-[(10, 8), (12, 3)]  baz(b) Test
+[(5, 2), (7, 3)]  hello() Test
+[(12, 2), (15, 3)]  constructor() Test
+[(17, 2), (19, 3)]  bar(a) Test
+[(21, 8), (23, 3)]  baz(b) Test
 
 callExpressions:
-[(7, 12), (7, 15)]  log   bar
+[(18, 12), (18, 15)]  log   bar
 
 memberExpressions:
-[(3, 9), (3, 12)] this.foo foo
-[(7, 12), (7, 15)] console.log log
+[(6, 27), (6, 35)] this.myStatic myStatic
+[(9, 19), (9, 27)] this.myStatic myStatic
+[(13, 9), (13, 23)] this.publicProperty publicProperty
+[(14, 9), (14, 25)] this.#privateProperty #privateProperty
+[(18, 12), (18, 15)] console.log log
 
 objectProperties:
 
@@ -227,23 +231,35 @@ comments:
 
 identifiers:
 [(1, 6), (1, 10)] Test Test
-[(3, 4), (3, 8)] this this
-[(3, 9), (3, 12)] foo foo
-[(6, 6), (6, 7)] a a
-[(7, 4), (7, 11)] console console
-[(7, 12), (7, 15)] log log
-[(7, 23), (7, 24)] a a
-[(10, 2), (10, 5)] b => {
+[(2, 2), (2, 16)]  publicProperty
+[(3, 3), (3, 18)] privateProperty privateProperty
+[(3, 21), (3, 30)] \\"default\\" default
+[(4, 9), (4, 17)] \\"static\\" myStatic
+[(4, 20), (4, 28)] \\"static\\" static
+[(6, 22), (6, 26)] this this
+[(6, 27), (6, 35)] myStatic myStatic
+[(9, 10), (9, 11)] x x
+[(9, 14), (9, 18)] this this
+[(9, 19), (9, 27)] myStatic myStatic
+[(13, 4), (13, 8)] this this
+[(13, 9), (13, 23)] publicProperty publicProperty
+[(14, 4), (14, 8)] this this
+[(14, 10), (14, 25)] privateProperty privateProperty
+[(17, 6), (17, 7)] a a
+[(18, 4), (18, 11)] console console
+[(18, 12), (18, 15)] log log
+[(18, 23), (18, 24)] a a
+[(21, 2), (21, 5)] b => {
   return b * 2;
 } baz
-[(10, 8), (10, 9)] b b
-[(11, 11), (11, 12)] b b
-[(15, 6), (15, 11)] Test2 Test2
-[(17, 4), (17, 19)] expressiveClass expressiveClass
+[(21, 8), (21, 9)] b b
+[(22, 11), (22, 12)] b b
+[(26, 6), (26, 11)] Test2 Test2
+[(28, 4), (28, 19)] expressiveClass expressiveClass
 
 classes:
-[(1, 0), (13, 1)]  Test
-[(15, 0), (15, 14)]  Test2
+[(1, 0), (24, 1)]  Test
+[(26, 0), (26, 14)]  Test2
 
 imports:
 

@@ -22,6 +22,7 @@ const sourceOptions = {
     sourceType: "unambiguous",
     tokens: true,
     plugins: [
+      "classStaticBlock",
       "classPrivateProperties",
       "classPrivateMethods",
       "classProperties",
@@ -42,6 +43,7 @@ const sourceOptions = {
       "nullishCoalescingOperator",
       "decorators-legacy",
       "objectRestSpread",
+      "classStaticBlock",
       "classPrivateProperties",
       "classPrivateMethods",
       "classProperties",
@@ -112,6 +114,7 @@ export function parseConsoleScript(text, opts) {
   try {
     return _parse(text, {
       plugins: [
+        "classStaticBlock",
         "classPrivateProperties",
         "classPrivateMethods",
         "objectRestSpread",
