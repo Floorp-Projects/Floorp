@@ -171,12 +171,6 @@ nsAppStartup::nsAppStartup()
 
   // Make sure to clear this in case we restart again non-silently.
   PR_SetEnv("MOZ_APP_SILENT_START=");
-
-#ifdef XP_WIN
-  char* mozAppAllowWindowless = PR_GetEnv("MOZ_APP_ALLOW_WINDOWLESS");
-  mAllowWindowless =
-      mozAppAllowWindowless && (strcmp(mozAppAllowWindowless, "") != 0);
-#endif
 }
 
 nsresult nsAppStartup::Init() {
@@ -285,7 +279,7 @@ nsAppStartup::Run(void) {
 #ifdef XP_MACOSX
     EnterLastWindowClosingSurvivalArea();
 #else
-    if (mAllowWindowless) {
+    if (mWasSilentlyStarted) {
       EnterLastWindowClosingSurvivalArea();
     }
 #endif
@@ -426,7 +420,7 @@ nsAppStartup::Quit(uint32_t aMode, int aExitCode, bool* aUserAllowedQuit) {
       // now even the Mac wants to quit when the last window is closed
       ExitLastWindowClosingSurvivalArea();
 #else
-      if (mAllowWindowless) {
+      if (mWasSilentlyStarted) {
         ExitLastWindowClosingSurvivalArea();
       }
 #endif
