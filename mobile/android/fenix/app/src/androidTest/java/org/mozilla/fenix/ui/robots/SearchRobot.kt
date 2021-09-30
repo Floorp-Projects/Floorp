@@ -75,7 +75,7 @@ class SearchRobot {
     }
     fun verifyDefaultSearchEngine(expectedText: String) = assertDefaultSearchEngine(expectedText)
 
-    fun verifyEnginesListShortcutContains(rule: ComposeTestRule, searchEngineName: String) = rule.assertEngineListShortcutContains(searchEngineName)
+    fun verifyEnginesListShortcutContains(rule: ComposeTestRule, searchEngineName: String) = assertEngineListShortcutContains(rule, searchEngineName)
 
     fun changeDefaultSearchEngine(rule: ComposeTestRule, searchEngineName: String) =
         rule.selectDefaultSearchEngine(searchEngineName)
@@ -378,17 +378,19 @@ private fun ComposeTestRule.assertSearchEngineList() {
 }
 
 @OptIn(ExperimentalTestApi::class)
-private fun ComposeTestRule.assertEngineListShortcutContains(searchEngineName: String) {
-    mDevice.findObject(UiSelector().resourceId("$packageName:id/awesome_bar"))
-        .waitForExists(waitingTime)
+private fun assertEngineListShortcutContains(rule: ComposeTestRule, searchEngineName: String) {
+    rule.waitForIdle()
 
-    mDevice.findObject(UiSelector().text("Google"))
-        .waitForExists(waitingTime)
+    mDevice.waitForObjects(
+        mDevice.findObject(
+            UiSelector().textContains("Google")
+        )
+    )
 
-    onNodeWithTag("mozac.awesomebar.suggestions")
+    rule.onNodeWithTag("mozac.awesomebar.suggestions")
         .performScrollToIndex(5)
 
-    onNodeWithText(searchEngineName)
+    rule.onNodeWithText(searchEngineName)
         .assertExists()
         .assertIsDisplayed()
         .assertHasClickAction()
