@@ -376,6 +376,13 @@ class TestNavigate(BaseNavigationTestCase):
         )
         self.assertTrue(self.is_remote_tab)
 
+    def test_navigate_after_deleting_session(self):
+        self.marionette.delete_session()
+        self.marionette.start_session()
+
+        self.marionette.navigate(self.test_page_remote)
+        self.assertEqual(self.test_page_remote, self.marionette.get_url())
+
 
 class TestBackForwardNavigation(BaseNavigationTestCase):
     def run_bfcache_test(self, test_pages):
