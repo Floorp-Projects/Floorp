@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -37,6 +38,7 @@ import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ClickableSubstringLink
+import org.mozilla.fenix.compose.EagerFlingBehavior
 import org.mozilla.fenix.compose.FakeClient
 import org.mozilla.fenix.compose.ListItemTabLarge
 import org.mozilla.fenix.compose.ListItemTabLargePlaceholder
@@ -96,8 +98,10 @@ fun PocketStories(
 ) {
     // Show stories in a 3 by 3 grid
     val gridLength = 3
+    val listState = rememberLazyListState()
+    val flingBehavior = EagerFlingBehavior(lazyRowState = listState)
 
-    LazyRow {
+    LazyRow(state = listState, flingBehavior = flingBehavior) {
         itemsIndexed(stories.chunked(gridLength)) { rowIndex, columnItems ->
             Column(Modifier.padding(end = if (rowIndex < gridLength - 1) 8.dp else 0.dp)) {
                 for (index in 0 until gridLength) {
