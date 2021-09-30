@@ -64,15 +64,20 @@ class CacheIRHealth {
   Happiness spewStubHealth(AutoStructuredSpewer& spew, ICCacheIRStub* stub);
   // If there is more than just a fallback stub in an IC Entry, then additional
   // information about the IC entry.
-  bool spewNonFallbackICInformation(AutoStructuredSpewer& spew,
+  bool spewNonFallbackICInformation(AutoStructuredSpewer& spew, JSContext* cx,
                                     ICStub* firstStub,
                                     Happiness* entryHappiness);
   // Health of all the stubs in an individual CacheIR Entry.
-  bool spewICEntryHealth(AutoStructuredSpewer& spew, HandleScript script,
-                         ICEntry* entry, ICFallbackStub* fallback,
-                         jsbytecode* pc, JSOp op, Happiness* entryHappiness);
-  // Spews information about shapes in an ICStub.
-  void spewShapeInformation(AutoStructuredSpewer& spew, ICStub* stub);
+  bool spewICEntryHealth(AutoStructuredSpewer& spew, JSContext* cx,
+                         HandleScript script, ICEntry* entry,
+                         ICFallbackStub* fallback, jsbytecode* pc, JSOp op,
+                         Happiness* entryHappiness);
+  // Spews first and last property name for each shape checked by
+  // GuardShape in the stub.
+  void spewShapeInformation(AutoStructuredSpewer& spew, JSContext* cx,
+                            ICStub* stub);
+  // Returns the BaseScript of a Shape if available.
+  BaseScript* maybeExtractBaseScript(JSContext* cx, Shape* shape);
 
  public:
   // Spews the final hit count for scripts where we care about its final hit
