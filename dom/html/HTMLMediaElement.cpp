@@ -5643,7 +5643,7 @@ void HTMLMediaElement::CheckProgress(bool aHaveNewProgress) {
 
 /* static */
 void HTMLMediaElement::ProgressTimerCallback(nsITimer* aTimer, void* aClosure) {
-  auto decoder = static_cast<HTMLMediaElement*>(aClosure);
+  auto* decoder = static_cast<HTMLMediaElement*>(aClosure);
   decoder->CheckProgress(false);
 }
 
