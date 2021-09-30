@@ -122,6 +122,13 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Эчтәлекне кодлау хатаcы</string>
 
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Күрәсегез килгән сәхифәне күрсәтеп булмый, чөнки ул кулланган компрессия ысулы я хаталы, я браузер аны танымый.</p>
+      <ul>
+        <li>Зинһар сайт ияләре белән элемтәгә кереп, аларга бу проблема турында сөйләгез.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Адрес табылмады</string>
 

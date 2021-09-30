@@ -44,6 +44,8 @@
     <string name="mozac_feature_addons_permissions_geolocation_description">Урнашкан урыныгызга ирешү</string>
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">Гизү тарихына ирешү</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">Киңәйтүләр кулланышын контрольдә тоту һәм темалар белән идарә итү</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">Сезгә искәртүләр күрсәтү</string>
     <!-- Description for pkcs11 permission. -->
@@ -144,6 +146,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Аларны %1$s программасына өстәү</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Кушымчаны йөкләп алу һәм тикшерү…</string>
+    <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
+    <string name="mozac_feature_addons_failed_to_query_add_ons">Кушымчаларны сорап алып булмады!</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_installed">%1$s уңышлы урнаштырылды</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
@@ -182,6 +186,8 @@
     <string name="mozac_feature_addons_updater_dialog_last_attempt">Соңгы омтылыш:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">Статус:</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_title">%2$s прораммасына %1$s кушымчасы өстәлде</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_installed_dialog_description">Менюда ачу</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
