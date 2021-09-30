@@ -122,6 +122,43 @@ for ( let [opcode, as, xs, ys, operator] of [[F32x4RelaxedFmaCode, fas, fxs, fys
 }
 
 
+// Relaxed swizzle, https://github.com/WebAssembly/relaxed-simd/issues/22
+
+var ins = wasmValidateAndEval(moduleWithSections([
+    sigSection([v2vSig]),
+    declSection([0]),
+    memorySection(1),
+    exportSection([{funcIndex: 0, name: "run"},
+                   {memIndex: 0, name: "mem"}]),
+    bodySection([
+        funcBody({locals:[],
+                  body: [...V128StoreExpr(0, [...V128Load(16),
+                                              ...V128Load(32),
+                                              SimdPrefix, varU32(I8x16RelaxedSwizzle)])]})])]));
+var mem = new Uint8Array(ins.exports.mem.buffer);
+var test = [1, 4, 3, 7, 123, 0, 8, 222];
+set(mem, 16, test);
+for (let [i, s] of [[0, 0], [0, 1], [1,1], [1, 3], [7,5]]) {
+    var ans = new Uint8Array(16);
+    for (let j = 0; j < 16; j++) {
+        mem[32 + j] = (j * s + i) & 15;
+        ans[j] = test[(j * s + i) & 15];
+    }
+    ins.exports.run();
+    var result = get(mem, 0, 16);
+    assertSame(result, ans);
+}
+
+assertEq(false, WebAssembly.validate(moduleWithSections([
+    sigSection([v2vSig]),
+    declSection([0]),
+    memorySection(1),
+    bodySection([
+        funcBody({locals:[],
+            body: [...V128StoreExpr(0, [...V128Load(16),
+                                        SimdPrefix, varU32(I8x16RelaxedSwizzle)])]})])])));
+
+
 // Relaxed MIN/MAX, https://github.com/WebAssembly/relaxed-simd/issues/33
 
 const Neg0 = -1/Infinity;

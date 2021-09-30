@@ -2456,6 +2456,9 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
     case wasm::SimdOp::V8x16Swizzle:
       masm.swizzleInt8x16(rhs, lhsDest);
       break;
+    case wasm::SimdOp::V8x16RelaxedSwizzle:
+      masm.swizzleInt8x16Relaxed(rhs, lhsDest);
+      break;
     case wasm::SimdOp::I8x16NarrowSI16x8:
       masm.narrowInt16x8(rhs, lhsDest);
       break;
