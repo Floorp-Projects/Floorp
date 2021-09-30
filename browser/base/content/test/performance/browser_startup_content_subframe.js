@@ -70,6 +70,8 @@ const intermittently_loaded_scripts = {
     "resource://gre/modules/nsAsyncShutdown.jsm",
 
     // Test related
+    "chrome://remote/content/marionette/actors/MarionetteEventsChild.jsm",
+    "chrome://remote/content/shared/Log.jsm",
     "resource://testing-common/BrowserTestUtilsChild.jsm",
     "resource://testing-common/ContentEventListenerChild.jsm",
     "resource://specialpowers/SpecialPowersChild.jsm",
