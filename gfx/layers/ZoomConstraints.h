@@ -60,8 +60,6 @@ struct ZoomConstraints {
                                   const ZoomConstraints& z);
 };
 
-typedef Maybe<ZoomConstraints> MaybeZoomConstraints;
-
 }  // namespace layers
 }  // namespace mozilla
 
