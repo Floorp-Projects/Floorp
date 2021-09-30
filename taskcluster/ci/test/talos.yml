@@ -568,7 +568,12 @@ talos-webgl:
     max-run-time: 2100
     mozharness:
         extra-options:
-            - --suite=webgl
+            by-test-platform:
+                windows10-64-ref-hw.*:
+                    - --suite=webgl
+                    - --skip-preflight
+                default:
+                    - --suite=webgl
 
 talos-webgl-profiling:
     description: Talos WebGL with gecko profiling

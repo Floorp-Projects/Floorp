@@ -742,6 +742,10 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?"""
     def preflight_run_tests(self):
         """preflight commands for all tests"""
         c = self.config
+        if c.get("skip_preflight"):
+            self.info("skipping preflight")
+            return
+
         if c.get("run_cmd_checks_enabled"):
             self._run_cmd_checks(c.get("preflight_run_cmd_suites", []))
         elif c.get("preflight_run_cmd_suites"):

@@ -8,5 +8,15 @@
             "x": 1010,
             "y": 10
         }
+    },
+    "win10-hw": {
+        "screen_resolution": {
+            "x": 1920,
+            "y": 1080
+        },
+        "mouse_position": {
+            "x": 1010,
+            "y": 10
+        }
     }
 }
