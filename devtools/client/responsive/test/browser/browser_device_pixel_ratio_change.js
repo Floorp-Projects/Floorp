@@ -79,14 +79,15 @@ async function testChangingDevice(ui) {
 async function testResetWhenResizingViewport(ui) {
   info("Test reset when resizing the viewport");
 
-  const deviceRemoved = once(ui, "device-association-removed");
   await testViewportResize(
     ui,
     ".viewport-vertical-resize-handle",
     [-10, -10],
-    [0, -10]
+    [0, -10],
+    {
+      hasDevice: true,
+    }
   );
-  await deviceRemoved;
 
   const dppx = await waitForDevicePixelRatio(ui, DEFAULT_DPPX);
   is(dppx, DEFAULT_DPPX, "Content has expected devicePixelRatio");

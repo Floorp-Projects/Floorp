@@ -390,7 +390,40 @@ function dragElementBy(selector, x, y, ui) {
   return rect;
 }
 
-async function testViewportResize(ui, selector, moveBy, expectedHandleMove) {
+/**
+ * Resize the viewport and check that the resize happened as expected.
+ *
+ * @param {ResponsiveUI} ui
+ *        The ResponsiveUI instance.
+ * @param {String} selector
+ *        The css selector of the resize handler, eg .viewport-horizontal-resize-handle.
+ * @param {Array<number>} moveBy
+ *        Array of 2 integers representing the x,y distance of the resize action.
+ * @param {Array<number>} moveBy
+ *        Array of 2 integers representing the actual resize performed.
+ * @param {Object} options
+ * @param {Boolean} options.hasDevice
+ *        Whether a device is currently set and will be overridden by the resize
+ */
+async function testViewportResize(
+  ui,
+  selector,
+  moveBy,
+  expectedHandleMove,
+  { hasDevice } = {}
+) {
+  let deviceRemoved;
+  let waitForDevToolsReload;
+  if (hasDevice) {
+    // If a device was defined, a reload will be triggered by the resize,
+    // wait for devtools to reload completely.
+    waitForDevToolsReload = await watchForDevToolsReload(
+      ui.getViewportBrowser()
+    );
+    // and wait for the device-associaton-removed event.
+    deviceRemoved = once(ui, "device-association-removed");
+  }
+
   const resized = ui.once("viewport-resize-dragend");
   const startRect = dragElementBy(selector, ...moveBy, ui);
   await resized;
@@ -406,6 +439,13 @@ async function testViewportResize(ui, selector, moveBy, expectedHandleMove) {
     expectedHandleMove[1],
     `The y move of ${selector} is as expected`
   );
+
+  if (hasDevice) {
+    const { reloadNeeded } = await deviceRemoved;
+    if (reloadNeeded) {
+      await waitForDevToolsReload();
+    }
+  }
 }
 
 async function openDeviceModal(ui) {
@@ -503,11 +543,17 @@ async function testMenuItems(toolWindow, button, testFn) {
   });
 }
 
-const selectDevice = (ui, value) =>
-  Promise.all([
-    once(ui, "device-changed"),
-    selectMenuItem(ui, "#device-selector", value),
-  ]);
+const selectDevice = async (ui, value) => {
+  const browser = ui.getViewportBrowser();
+  const waitForDevToolsReload = await watchForDevToolsReload(browser);
+
+  const onDeviceChanged = once(ui, "device-changed");
+  await selectMenuItem(ui, "#device-selector", value);
+  const { reloadNeeded } = await onDeviceChanged;
+  if (reloadNeeded) {
+    await waitForDevToolsReload();
+  }
+};
 
 const selectDevicePixelRatio = (ui, value) =>
   selectMenuItem(ui, "#device-pixel-ratio-menu", `DPR: ${value}`);

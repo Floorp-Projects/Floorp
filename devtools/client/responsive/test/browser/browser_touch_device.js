@@ -69,23 +69,18 @@ async function testChangingDevice(ui) {
   testViewportDeviceMenuLabel(ui, testDevice.name);
 }
 
-async function testResizingViewport(ui, device, touch) {
-  info(`Test resizing the viewport, device ${device}, touch ${touch}`);
+async function testResizingViewport(ui, hasDevice, touch) {
+  info(`Test resizing the viewport, device ${hasDevice}, touch ${touch}`);
 
-  let deviceRemoved;
-  if (device) {
-    deviceRemoved = once(ui, "device-association-removed");
-  }
   await testViewportResize(
     ui,
     ".viewport-vertical-resize-handle",
     [-10, -10],
     [0, -10],
-    ui
+    {
+      hasDevice,
+    }
   );
-  if (device) {
-    await deviceRemoved;
-  }
   await testTouchEventsOverride(ui, touch);
   testViewportDeviceMenuLabel(ui, "Responsive");
 }
