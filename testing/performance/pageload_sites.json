@@ -250,7 +250,8 @@
     {
       "login": false,
       "name": "nytimes",
-      "test_url": "https://www.nytimes.com/2020/02/19/opinion/surprise-medical-bill.html"
+      "test_url": "https://www.nytimes.com/2020/02/19/opinion/surprise-medical-bill.html",
+      "secondary_url": "https://www.nytimes.com/section/opinion/columnists"
     },
     {
       "login": true,
