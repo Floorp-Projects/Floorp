@@ -18,7 +18,7 @@ class nsITextToSubURI;
 
 class nsDirIndexParser : public nsIDirIndexParser {
  private:
-  virtual ~nsDirIndexParser();
+  virtual ~nsDirIndexParser() = default;
 
   nsDirIndexParser() = default;
   nsresult Init();
@@ -67,9 +67,6 @@ class nsDirIndexParser : public nsIDirIndexParser {
   };
 
   static Field gFieldTable[];
-
-  static nsrefcnt gRefCntParser;
-  static nsITextToSubURI* gTextToSubURI;
 };
 
 #endif
