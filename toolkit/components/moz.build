@@ -127,7 +127,10 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     ]
 
 if CONFIG["MOZ_BUILD_APP"] == "browser":
-    DIRS += ["normandy", "nimbus", "messaging-system"]
+    DIRS += ["normandy", "messaging-system"]
+
+if CONFIG["MOZ_BUILD_APP"] in ["browser", "comm/mail"]:
+    DIRS += ["nimbus"]
 
 if CONFIG["MOZ_BACKGROUNDTASKS"]:
     DIRS += ["backgroundtasks"]
