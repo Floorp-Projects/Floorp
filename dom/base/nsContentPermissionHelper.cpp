@@ -40,11 +40,13 @@ namespace mozilla::dom {
 
 class ContentPermissionRequestParent : public PContentPermissionRequestParent {
  public:
-  ContentPermissionRequestParent(const nsTArray<PermissionRequest>& aRequests,
-                                 Element* aElement, nsIPrincipal* aPrincipal,
-                                 nsIPrincipal* aTopLevelPrincipal,
-                                 const bool aIsHandlingUserInput,
-                                 const bool aMaybeUnsafePermissionDelegate);
+  // @param aIsRequestDelegatedToUnsafeThirdParty see
+  // mIsRequestDelegatedToUnsafeThirdParty.
+  ContentPermissionRequestParent(
+      const nsTArray<PermissionRequest>& aRequests, Element* aElement,
+      nsIPrincipal* aPrincipal, nsIPrincipal* aTopLevelPrincipal,
+      const bool aIsHandlingUserInput,
+      const bool aIsRequestDelegatedToUnsafeThirdParty);
   virtual ~ContentPermissionRequestParent();
 
   bool IsBeingDestroyed();
@@ -53,7 +55,10 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent {
   nsCOMPtr<nsIPrincipal> mTopLevelPrincipal;
   nsCOMPtr<Element> mElement;
   bool mIsHandlingUserInput;
-  bool mMaybeUnsafePermissionDelegate;
+
+  // See nsIPermissionDelegateHandler.maybeUnsafePermissionDelegate.
+  bool mIsRequestDelegatedToUnsafeThirdParty;
+
   RefPtr<nsContentPermissionRequestProxy> mProxy;
   nsTArray<PermissionRequest> mRequests;
 
@@ -69,7 +74,7 @@ ContentPermissionRequestParent::ContentPermissionRequestParent(
     const nsTArray<PermissionRequest>& aRequests, Element* aElement,
     nsIPrincipal* aPrincipal, nsIPrincipal* aTopLevelPrincipal,
     const bool aIsHandlingUserInput,
-    const bool aMaybeUnsafePermissionDelegate) {
+    const bool aIsRequestDelegatedToUnsafeThirdParty) {
   MOZ_COUNT_CTOR(ContentPermissionRequestParent);
 
   mPrincipal = aPrincipal;
@@ -77,7 +82,7 @@ ContentPermissionRequestParent::ContentPermissionRequestParent(
   mElement = aElement;
   mRequests = aRequests.Clone();
   mIsHandlingUserInput = aIsHandlingUserInput;
-  mMaybeUnsafePermissionDelegate = aMaybeUnsafePermissionDelegate;
+  mIsRequestDelegatedToUnsafeThirdParty = aIsRequestDelegatedToUnsafeThirdParty;
 }
 
 ContentPermissionRequestParent::~ContentPermissionRequestParent() {
@@ -234,11 +239,11 @@ PContentPermissionRequestParent*
 nsContentPermissionUtils::CreateContentPermissionRequestParent(
     const nsTArray<PermissionRequest>& aRequests, Element* aElement,
     nsIPrincipal* aPrincipal, nsIPrincipal* aTopLevelPrincipal,
-    const bool aIsHandlingUserInput, const bool aMaybeUnsafePermissionDelegate,
-    const TabId& aTabId) {
+    const bool aIsHandlingUserInput,
+    const bool aIsRequestDelegatedToUnsafeThirdParty, const TabId& aTabId) {
   PContentPermissionRequestParent* parent = new ContentPermissionRequestParent(
       aRequests, aElement, aPrincipal, aTopLevelPrincipal, aIsHandlingUserInput,
-      aMaybeUnsafePermissionDelegate);
+      aIsRequestDelegatedToUnsafeThirdParty);
   ContentPermissionRequestParentMap()[parent] = aTabId;
 
   return parent;
@@ -278,9 +283,9 @@ nsresult nsContentPermissionUtils::AskPermission(
     rv = aRequest->GetIsHandlingUserInput(&isHandlingUserInput);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    bool maybeUnsafePermissionDelegate;
-    rv = aRequest->GetMaybeUnsafePermissionDelegate(
-        &maybeUnsafePermissionDelegate);
+    bool isRequestDelegatedToUnsafeThirdParty;
+    rv = aRequest->GetIsRequestDelegatedToUnsafeThirdParty(
+        &isRequestDelegatedToUnsafeThirdParty);
     NS_ENSURE_SUCCESS(rv, rv);
 
     ContentChild::GetSingleton()->SetEventTargetForActor(
@@ -290,7 +295,7 @@ nsresult nsContentPermissionUtils::AskPermission(
     ContentChild::GetSingleton()->SendPContentPermissionRequestConstructor(
         req, permArray, IPC::Principal(principal),
         IPC::Principal(topLevelPrincipal), isHandlingUserInput,
-        maybeUnsafePermissionDelegate, child->GetTabId());
+        isRequestDelegatedToUnsafeThirdParty, child->GetTabId());
     ContentPermissionRequestChildMap()[req.get()] = child->GetTabId();
 
     req->Sendprompt();
@@ -393,7 +398,7 @@ ContentPermissionRequestBase::ContentPermissionRequestBase(
       mPrefName(aPrefName),
       mType(aType),
       mIsHandlingUserInput(false),
-      mMaybeUnsafePermissionDelegate(false) {
+      mIsRequestDelegatedToUnsafeThirdParty(false) {
   if (!aWindow) {
     return;
   }
@@ -410,7 +415,7 @@ ContentPermissionRequestBase::ContentPermissionRequestBase(
     nsTArray<nsCString> types;
     types.AppendElement(mType);
     mPermissionHandler->MaybeUnsafePermissionDelegate(
-        types, &mMaybeUnsafePermissionDelegate);
+        types, &mIsRequestDelegatedToUnsafeThirdParty);
   }
 }
 
@@ -429,9 +434,10 @@ ContentPermissionRequestBase::GetDelegatePrincipal(
 }
 
 NS_IMETHODIMP
-ContentPermissionRequestBase::GetMaybeUnsafePermissionDelegate(
-    bool* aMaybeUnsafePermissionDelegate) {
-  *aMaybeUnsafePermissionDelegate = mMaybeUnsafePermissionDelegate;
+ContentPermissionRequestBase::GetIsRequestDelegatedToUnsafeThirdParty(
+    bool* aIsRequestDelegatedToUnsafeThirdParty) {
+  *aIsRequestDelegatedToUnsafeThirdParty =
+      mIsRequestDelegatedToUnsafeThirdParty;
   return NS_OK;
 }
 
@@ -740,13 +746,14 @@ nsContentPermissionRequestProxy::GetIsHandlingUserInput(
 }
 
 NS_IMETHODIMP
-nsContentPermissionRequestProxy::GetMaybeUnsafePermissionDelegate(
-    bool* aMaybeUnsafePermissionDelegate) {
-  NS_ENSURE_ARG_POINTER(aMaybeUnsafePermissionDelegate);
+nsContentPermissionRequestProxy::GetIsRequestDelegatedToUnsafeThirdParty(
+    bool* aIsRequestDelegatedToUnsafeThirdParty) {
+  NS_ENSURE_ARG_POINTER(aIsRequestDelegatedToUnsafeThirdParty);
   if (mParent == nullptr) {
     return NS_ERROR_FAILURE;
   }
-  *aMaybeUnsafePermissionDelegate = mParent->mMaybeUnsafePermissionDelegate;
+  *aIsRequestDelegatedToUnsafeThirdParty =
+      mParent->mIsRequestDelegatedToUnsafeThirdParty;
   return NS_OK;
 }
 
