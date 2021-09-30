@@ -13,8 +13,10 @@
 
 namespace mozilla::dom::quota {
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunreachable-code-loop-increment"
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wunreachable-code-loop-increment"
+#endif
 TEST(Flatten, FlatEmpty)
 {
   for (const auto& item : Flatten<int>(nsTArray<int>{})) {
@@ -39,7 +41,9 @@ TEST(Flatten, NestedInnerEmpty)
     FAIL();
   }
 }
-#pragma clang diagnostic pop
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#endif
 
 TEST(Flatten, NestedInnerSingular)
 {
