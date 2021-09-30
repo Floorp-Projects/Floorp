@@ -3370,15 +3370,15 @@ void HTMLMediaElement::SetVolume(double aVolume, ErrorResult& aRv) {
   PauseIfShouldNotBePlaying();
 }
 
-void HTMLMediaElement::MozGetMetadata(JSContext* cx,
-                                      JS::MutableHandle<JSObject*> aRetval,
+void HTMLMediaElement::MozGetMetadata(JSContext* aCx,
+                                      JS::MutableHandle<JSObject*> aResult,
                                       ErrorResult& aRv) {
   if (mReadyState < HAVE_METADATA) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
-  JS::Rooted<JSObject*> tags(cx, JS_NewPlainObject(cx));
+  JS::Rooted<JSObject*> tags(aCx, JS_NewPlainObject(aCx));
   if (!tags) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -3387,10 +3387,10 @@ void HTMLMediaElement::MozGetMetadata(JSContext* cx,
     for (const auto& entry : *mTags) {
       nsString wideValue;
       CopyUTF8toUTF16(entry.GetData(), wideValue);
-      JS::Rooted<JSString*> string(cx,
-                                   JS_NewUCStringCopyZ(cx, wideValue.Data()));
-      if (!string || !JS_DefineProperty(cx, tags, entry.GetKey().Data(), string,
-                                        JSPROP_ENUMERATE)) {
+      JS::Rooted<JSString*> string(aCx,
+                                   JS_NewUCStringCopyZ(aCx, wideValue.Data()));
+      if (!string || !JS_DefineProperty(aCx, tags, entry.GetKey().Data(),
+                                        string, JSPROP_ENUMERATE)) {
         NS_WARNING("couldn't create metadata object!");
         aRv.Throw(NS_ERROR_FAILURE);
         return;
@@ -3398,7 +3398,7 @@ void HTMLMediaElement::MozGetMetadata(JSContext* cx,
     }
   }
 
-  aRetval.set(tags);
+  aResult.set(tags);
 }
 
 void HTMLMediaElement::SetMutedInternal(uint32_t aMuted) {
