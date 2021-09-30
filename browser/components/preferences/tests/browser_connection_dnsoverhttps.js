@@ -6,6 +6,9 @@
 requestLongerTimeout(2);
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { EnterprisePolicyTesting, PoliciesPrefTracker } = ChromeUtils.import(
+  "resource://testing-common/EnterprisePolicyTesting.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -575,4 +578,220 @@ add_task(async function testRemoteSettingsEnable() {
   for (let action of ["cancel", "accept"]) {
     await doTest(action);
   }
+});
+
+add_task(async function testEnterprisePolicy() {
+  async function closeDialog(dialog) {
+    let dialogClosingPromise = BrowserTestUtils.waitForEvent(
+      dialog,
+      "dialogclosing"
+    );
+
+    dialog.cancelDialog();
+    await dialogClosingPromise;
+  }
+
+  async function withPolicy(policy, fn, preFn = () => {}) {
+    await resetPrefs();
+    PoliciesPrefTracker.start();
+    await EnterprisePolicyTesting.setupPolicyEngineWithJson(policy);
+
+    await preFn();
+
+    let dialog = await openConnectionsSubDialog();
+    await dialog.uiReady;
+
+    let doc = dialog.document;
+
+    let dialogElement = doc.getElementById("ConnectionsDialog");
+    let modeCheckbox = doc.querySelector(modeCheckboxSelector);
+    let resolverMenulist = doc.querySelector(resolverMenulistSelector);
+    let uriTextbox = doc.querySelector(uriTextboxSelector);
+
+    await fn({
+      dialog,
+      dialogElement,
+      modeCheckbox,
+      resolverMenulist,
+      doc,
+      uriTextbox,
+    });
+
+    await closeDialog(dialogElement);
+    EnterprisePolicyTesting.resetRunOnceState();
+    PoliciesPrefTracker.stop();
+  }
+
+  info("Check that a locked policy does not allow any changes in the UI");
+  await withPolicy(
+    {
+      policies: {
+        DNSOverHTTPS: {
+          Enabled: true,
+          ProviderURL: "https://examplelocked.com/provider",
+          ExcludedDomains: ["examplelocked.com", "example.org"],
+          Locked: true,
+        },
+      },
+    },
+    async res => {
+      ok(res.modeCheckbox.checked, "The mode checkbox should be checked.");
+      is(res.modeCheckbox.disabled, true, "The checkbox should be locked.");
+
+      is(res.resolverMenulist.value, "custom", "Resolver list shows custom");
+      is(
+        res.resolverMenulist.disabled,
+        true,
+        "The resolver list should be locked."
+      );
+
+      is(res.uriTextbox.disabled, true, "The custom URI should be locked.");
+    }
+  );
+
+  info("Check that an unlocked policy has editable fields in the dialog");
+  await withPolicy(
+    {
+      policies: {
+        DNSOverHTTPS: {
+          Enabled: true,
+          ProviderURL: "https://example.com/provider",
+          ExcludedDomains: ["example.com", "example.org"],
+        },
+      },
+    },
+    async res => {
+      ok(res.modeCheckbox.checked, "The mode checkbox should be checked.");
+      is(
+        res.modeCheckbox.disabled,
+        false,
+        "The checkbox should not be locked."
+      );
+
+      is(res.resolverMenulist.value, "custom", "Resolver list shows custom");
+      is(
+        res.resolverMenulist.disabled,
+        false,
+        "The resolver list should not be locked."
+      );
+
+      is(
+        res.uriTextbox.value,
+        "https://example.com/provider",
+        "Expected custom resolver"
+      );
+      is(
+        res.uriTextbox.disabled,
+        false,
+        "The custom URI should not be locked."
+      );
+    }
+  );
+
+  info("Check that a locked disabled policy disables the buttons");
+  await withPolicy(
+    {
+      policies: {
+        DNSOverHTTPS: {
+          Enabled: false,
+          ProviderURL: "https://example.com/provider",
+          ExcludedDomains: ["example.com", "example.org"],
+          Locked: true,
+        },
+      },
+    },
+    async res => {
+      ok(!res.modeCheckbox.checked, "The mode checkbox should be unchecked.");
+      is(res.modeCheckbox.disabled, true, "The checkbox should be locked.");
+
+      is(res.resolverMenulist.value, "custom", "Resolver list shows custom");
+      is(
+        res.resolverMenulist.disabled,
+        true,
+        "The resolver list should be locked."
+      );
+
+      is(res.uriTextbox.disabled, true, "The custom URI should be locked.");
+    }
+  );
+
+  info("Check that an unlocked disabled policy has editable fields");
+  await withPolicy(
+    {
+      policies: {
+        DNSOverHTTPS: {
+          Enabled: false,
+          ProviderURL: "https://example.com/provider",
+          ExcludedDomains: ["example.com", "example.org"],
+        },
+      },
+    },
+    async res => {
+      ok(!res.modeCheckbox.checked, "The mode checkbox should be unchecked.");
+      is(
+        res.modeCheckbox.disabled,
+        false,
+        "The checkbox should not be locked."
+      );
+
+      is(res.resolverMenulist.value, "custom", "Resolver list shows custom");
+      is(
+        res.resolverMenulist.disabled,
+        true,
+        "The resolver list should be locked."
+      );
+
+      is(res.uriTextbox.disabled, true, "The custom URI should be locked.");
+    }
+  );
+
+  info("Check that the remote settings config doesn't override the policy");
+  await withPolicy(
+    {
+      policies: {
+        DNSOverHTTPS: {
+          Enabled: true,
+          ProviderURL: "https://example.com/provider",
+          ExcludedDomains: ["example.com", "example.org"],
+        },
+      },
+    },
+    async res => {
+      ok(res.modeCheckbox.checked, "The mode checkbox should be checked.");
+      is(
+        res.modeCheckbox.disabled,
+        false,
+        "The checkbox should not be locked."
+      );
+
+      is(res.resolverMenulist.value, "custom", "Resolver list shows custom");
+      is(
+        res.resolverMenulist.disabled,
+        false,
+        "The resolver list should not be locked."
+      );
+
+      is(
+        res.uriTextbox.value,
+        "https://example.com/provider",
+        "Expected custom resolver"
+      );
+      is(
+        res.uriTextbox.disabled,
+        false,
+        "The custom URI should not be locked."
+      );
+    },
+    async function runAfterSettingPolicy() {
+      await DoHTestUtils.loadRemoteSettingsConfig({
+        providers: "example-1, example-2",
+        rolloutEnabled: true,
+        steeringEnabled: false,
+        steeringProviders: "",
+        autoDefaultEnabled: false,
+        autoDefaultProviders: "",
+        id: "global",
+      });
+    }
+  );
 });
