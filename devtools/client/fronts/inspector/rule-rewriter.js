@@ -12,7 +12,6 @@
 
 "use strict";
 
-const promise = require("promise");
 const { getCSSLexer } = require("devtools/shared/css/lexer");
 const {
   COMMENT_PARSING_HEURISTIC_BYPASS_CHAR,
@@ -716,7 +715,7 @@ RuleRewriter.prototype = {
    *         are complete.
    */
   apply: function() {
-    return promise.resolve(this.editPromise).then(() => {
+    return Promise.resolve(this.editPromise).then(() => {
       return this.rule.setRuleText(this.result, this.modifications);
     });
   },
