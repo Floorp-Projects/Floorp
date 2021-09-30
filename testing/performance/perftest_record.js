@@ -4,7 +4,7 @@
 /* eslint-env node */
 "use strict";
 
-async function test(context, commands) {
+async function pageload_test(context, commands) {
   let testUrl = context.options.browsertime.url;
   let secondaryUrl = context.options.browsertime.secondary_url;
   let testName = context.options.browsertime.testName;
@@ -25,6 +25,83 @@ async function test(context, commands) {
 
   // Wait for browser to settle
   await commands.wait.byTime(1000);
+}
+
+async function get_command_function(cmd, commands) {
+  /*
+  Converts a string such as `measure.start` into the actual
+  function that is found in the `commands` module.
+
+  XXX: Find a way to share this function between
+  perftest_record.js and browsertime_interactive.js
+  */
+  if (cmd == "") {
+    throw new Error("A blank command was given.");
+  } else if (cmd.endsWith(".")) {
+    throw new Error(
+      "An extra `.` was found at the end of this command: " + cmd
+    );
+  }
+
+  // `func` will hold the actual method that needs to be called,
+  // and the `parent_mod` is the context required to run the `func`
+  // method. Without that context, `this` becomes undefined in the browsertime
+  // classes.
+  let func = null;
+  let parent_mod = null;
+  for (let func_part of cmd.split(".")) {
+    if (func_part == "") {
+      throw new Error(
+        "An empty function part was found in the command: " + cmd
+      );
+    }
+
+    if (func === null) {
+      parent_mod = commands;
+      func = commands[func_part];
+    } else if (func !== undefined) {
+      parent_mod = func;
+      func = func[func_part];
+    } else {
+      break;
+    }
+  }
+
+  if (func == undefined) {
+    throw new Error(
+      "The given command could not be found as a function: " + cmd
+    );
+  }
+
+  return [func, parent_mod];
+}
+
+async function interactive_test(input_cmds, context, commands) {
+  let cmds = input_cmds.split(";;;");
+
+  await commands.navigate("about:blank");
+
+  for (let cmdstr of cmds) {
+    let [cmd, ...args] = cmdstr.split(":::");
+    let [func, parent_mod] = await get_command_function(cmd, commands);
+
+    try {
+      await func.call(parent_mod, ...args);
+    } catch (e) {
+      context.log.info(
+        `Exception found while running \`commands.${cmd}(${args})\`: ` + e
+      );
+    }
+  }
+}
+
+async function test(context, commands) {
+  let input_cmds = context.options.browsertime.commands;
+  if (input_cmds !== undefined) {
+    await interactive_test(input_cmds, context, commands);
+  } else {
+    await pageload_test(context, commands);
+  }
   return true;
 }
 
