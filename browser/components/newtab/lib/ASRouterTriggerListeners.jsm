@@ -651,6 +651,54 @@ this.ASRouterTriggerListeners = new Map([
       },
     },
   ],
+
+  [
+    "preferenceObserver",
+    {
+      id: "preferenceObserver",
+      _initialized: false,
+      _triggerHandler: null,
+      _observedPrefs: [],
+
+      init(triggerHandler, prefs) {
+        if (!this._initialized) {
+          this._triggerHandler = triggerHandler;
+          this._initialized = true;
+        }
+        prefs.forEach(pref => {
+          this._observedPrefs.push(pref);
+          Services.prefs.addObserver(pref, this);
+        });
+      },
+
+      observe(aSubject, aTopic, aData) {
+        switch (aTopic) {
+          case "nsPref:changed":
+            const browser = Services.wm.getMostRecentBrowserWindow();
+            if (browser && this._observedPrefs.includes(aData)) {
+              this._triggerHandler(browser.gBrowser.selectedBrowser, {
+                id: this.id,
+                param: {
+                  type: aData,
+                },
+              });
+            }
+            break;
+        }
+      },
+
+      uninit() {
+        if (this._initialized) {
+          this._observedPrefs.forEach(pref =>
+            Services.prefs.removeObserver(pref, this)
+          );
+          this._initialized = false;
+          this._triggerHandler = null;
+          this._observedPrefs = [];
+        }
+      },
+    },
+  ],
 ]);
 
 const EXPORTED_SYMBOLS = ["ASRouterTriggerListeners"];

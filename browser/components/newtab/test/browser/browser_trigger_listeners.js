@@ -82,3 +82,35 @@ add_task(async function test_captivePortalLogin() {
 
   Assert.equal(stub.callCount, 1, "Not called after uninit");
 });
+
+add_task(async function test_preferenceObserver() {
+  const stub = sinon.stub();
+  const poTrigger = ASRouterTriggerListeners.get("preferenceObserver");
+
+  poTrigger.uninit();
+
+  poTrigger.init(stub, ["foo.bar", "bar.foo"]);
+
+  Services.prefs.setStringPref("foo.bar", "foo.bar");
+
+  Assert.ok(stub.calledOnce, "Called for pref foo.bar");
+  Assert.deepEqual(
+    stub.firstCall.args[1],
+    {
+      id: "preferenceObserver",
+      param: { type: "foo.bar" },
+    },
+    "Called with expected arguments"
+  );
+
+  Services.prefs.setStringPref("bar.foo", "bar.foo");
+  Assert.ok(stub.calledTwice, "Called again for second pref.");
+  Services.prefs.clearUserPref("foo.bar");
+  Assert.ok(stub.calledThrice, "Called when clearing the pref as well.");
+
+  stub.resetHistory();
+  poTrigger.uninit();
+
+  Services.prefs.clearUserPref("bar.foo");
+  Assert.ok(stub.notCalled, "Not called after uninit");
+});

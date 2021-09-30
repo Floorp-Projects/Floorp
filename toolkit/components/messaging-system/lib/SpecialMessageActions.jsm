@@ -308,6 +308,12 @@ const SpecialMessageActions = {
           topWindow.BrowserHome();
         }
         break;
+      case "ENABLE_TOTAL_COOKIE_PROTECTION":
+        Services.prefs.setBoolPref(
+          "privacy.restrict3rdpartystorage.rollout.enabledByDefault",
+          true
+        );
+        break;
       default:
         throw new Error(
           `Special message action with type ${action.type} is unsupported.`

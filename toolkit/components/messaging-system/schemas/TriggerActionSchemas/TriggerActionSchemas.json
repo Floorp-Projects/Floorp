@@ -197,6 +197,25 @@
           "additionalProperties": false,
           "required": ["id"],
           "description": "Happens when the user successfully goes through a captive portal authentication flow."
+        },
+        {
+          "description": "Notify when a preference is added, removed or modified",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "enum": ["preferenceObserver"]
+            },
+            "params": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Preference names to observe."
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": ["id", "params"]
         }
       ]
     }

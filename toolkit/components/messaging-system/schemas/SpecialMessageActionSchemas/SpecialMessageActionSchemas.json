@@ -348,6 +348,18 @@
         {
           "type": "object",
           "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["ENABLE_TOTAL_COOKIE_PROTECTION"]
+            }
+          },
+          "required": ["type"],
+          "additionalProperties": false,
+          "description": "Turn on the Total Cookie Protection feature."
+        },
+        {
+          "type": "object",
+          "properties": {
             "data": {
               "type": "object",
               "properties": {
