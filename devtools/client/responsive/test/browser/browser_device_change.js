@@ -39,9 +39,7 @@ addRDMTask(
     testViewportDeviceMenuLabel(ui, "Responsive");
 
     // Test device with custom properties
-    let waitForReload = await watchForDevToolsReload(ui.getViewportBrowser());
     await selectDevice(ui, "Fake Phone RDM Test");
-    await waitForReload();
     await waitForViewportResizeTo(ui, testDevice.width, testDevice.height);
     info("Should have device UA now that device is applied");
     await testUserAgent(ui, testDevice.userAgent);
@@ -49,17 +47,16 @@ addRDMTask(
     await testTouchEventsOverride(ui, true);
 
     // Test resetting device when resizing viewport
-    const deviceRemoved = once(ui, "device-association-removed");
-    waitForReload = await watchForDevToolsReload(ui.getViewportBrowser());
-
     await testViewportResize(
       ui,
       ".viewport-vertical-resize-handle",
       [-10, -10],
-      [0, -10]
+      [0, -10],
+      {
+        hasDevice: true,
+      }
     );
 
-    await Promise.all([deviceRemoved, waitForReload()]);
     info("Should have default UA after resizing viewport");
     await testUserAgent(ui, DEFAULT_UA);
     await testDevicePixelRatio(ui, DEFAULT_DPPX);
