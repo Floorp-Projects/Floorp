@@ -10,6 +10,13 @@
     android:orientation="vertical"
     tools:context="org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment">
 
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="vertical"
+        android:fadeScrollbars="false">
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/enable_search_suggestions_container"
         android:layout_width="match_parent"
@@ -76,6 +83,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/no_suggestions_container"
