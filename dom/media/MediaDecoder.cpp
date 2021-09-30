@@ -1121,15 +1121,16 @@ media::TimeIntervals MediaDecoder::GetSeekable() {
   // server supports range requests, etc.) or in cue-less WebMs
   if (mMediaSeekableOnlyInBufferedRanges) {
     return GetBuffered();
-  } else if (!IsMediaSeekable()) {
-    return media::TimeIntervals();
-  } else if (!IsTransportSeekable()) {
-    return GetBuffered();
-  } else {
-    return media::TimeIntervals(media::TimeInterval(
-        TimeUnit::Zero(), IsInfinite() ? TimeUnit::FromInfinity()
-                                       : TimeUnit::FromSeconds(GetDuration())));
   }
+  if (!IsMediaSeekable()) {
+    return media::TimeIntervals();
+  }
+  if (!IsTransportSeekable()) {
+    return GetBuffered();
+  }
+  return media::TimeIntervals(media::TimeInterval(
+      TimeUnit::Zero(), IsInfinite() ? TimeUnit::FromInfinity()
+                                     : TimeUnit::FromSeconds(GetDuration())));
 }
 
 void MediaDecoder::SetFragmentEndTime(double aTime) {
