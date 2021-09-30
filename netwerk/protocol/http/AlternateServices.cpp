@@ -1043,6 +1043,17 @@ void AltSvcCache::UpdateAltServiceMapping(
     return;
   }
 
+  if (map->IsHttp3()) {
+    bool isDirectOrNoProxy = pi ? pi->IsDirect() : true;
+    if (!isDirectOrNoProxy) {
+      LOG(
+          ("AltSvcCache::UpdateAltServiceMapping %p map %p ignored h3 because "
+           "proxy is in use %p\n",
+           this, map, existing.get()));
+      return;
+    }
+  }
+
   // start new validation, but don't overwrite a valid existing mapping unless
   // this completes successfully
   MOZ_ASSERT(!map->Validated());
