@@ -42,10 +42,18 @@ const Spotlight = {
       params,
     ]);
 
-    // If dismissed or no button is pressed then report telemetry and exit
-    if (params.secondaryBtn || !params.primaryBtn) {
+    // If dismissed report telemetry and exit
+    if (!params.secondaryBtn && !params.primaryBtn) {
       this.sendUserEventTelemetry("DISMISS", message, dispatchCFRAction);
       return true;
+    }
+
+    if (params.secondaryBtn) {
+      this.sendUserEventTelemetry("DISMISS", message, dispatchCFRAction);
+      SpecialMessageActions.handleAction(
+        message.content.body.secondary.action,
+        browser
+      );
     }
 
     if (params.primaryBtn) {

@@ -119,5 +119,44 @@ add_task(async function test_primaryButton() {
     "Should be called with button action"
   );
 
+  Assert.equal(
+    dispatchStub.lastCall.args[0].data.event,
+    "CLICK",
+    "Should send dismiss telemetry"
+  );
+
+  specialActionStub.restore();
+});
+
+add_task(async function test_secondaryButton() {
+  let message = (await PanelTestProvider.getMessages()).find(
+    m => m.id === "SPOTLIGHT_MESSAGE_93"
+  );
+
+  let dispatchStub = sinon.stub();
+  let browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+  let specialActionStub = sinon.stub(SpecialMessageActions, "handleAction");
+
+  await showAndWaitForDialog({ message, browser, dispatchStub }, async win => {
+    win.document.getElementById("secondary").click();
+  });
+
+  Assert.equal(
+    specialActionStub.callCount,
+    1,
+    "Should be called by primary action"
+  );
+  Assert.deepEqual(
+    specialActionStub.firstCall.args[0],
+    message.content.body.secondary.action,
+    "Should be called with secondary action"
+  );
+
+  Assert.equal(
+    dispatchStub.lastCall.args[0].data.event,
+    "DISMISS",
+    "Should send dismiss telemetry"
+  );
+
   specialActionStub.restore();
 });
