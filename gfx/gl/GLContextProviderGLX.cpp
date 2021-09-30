@@ -597,6 +597,11 @@ already_AddRefed<GLContext> CreateForWidget(Display* aXDisplay, Window aXWindow,
     return nullptr;
   }
 
+  if (!aXWindow) {
+    NS_ERROR("X window required for GLX Context provider");
+    return nullptr;
+  }
+
   int xscreen = DefaultScreen(aXDisplay);
 
   ScopedXFree<GLXFBConfig> cfgs;
