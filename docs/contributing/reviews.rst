@@ -34,6 +34,9 @@ Review groups
    * - Name
      - Owns
      - Members
+   * - #anti-tracking or #anti-tracking-reviewers
+     - `Anti-Tracking <https://wiki.mozilla.org/Modules/All#Anti-Tracking>`__
+     - `Member list <https://phabricator.services.mozilla.com/project/members/157/>`__
    * - #build or #firefox-build-system-reviewers
      - The configure & build system
      - `Member list <https://phabricator.services.mozilla.com/project/members/20/>`__
@@ -82,6 +85,9 @@ Review groups
    * - #perftest-reviewers
      - Perf Tests
      - `Member list <https://phabricator.services.mozilla.com/project/members/102/>`__
+   * - #permissions or #permissions-reviewers
+     - `Permissions <https://wiki.mozilla.org/Modules/All#Permissions>`__
+     - `Member list <https://phabricator.services.mozilla.com/project/members/158/>`__
    * - #platform-i18n-reviewers
      - Platform Internationalization
      - `Member list <https://phabricator.services.mozilla.com/project/members/150/>`__
