@@ -6255,11 +6255,11 @@ bool HTMLMediaElement::IsPlaybackEnded() const {
   //   resource. See bug 449157.
   if (mDecoder) {
     return mReadyState >= HAVE_METADATA && mDecoder->IsEnded();
-  } else if (mSrcStream) {
-    return mReadyState >= HAVE_METADATA && mSrcStreamPlaybackEnded;
-  } else {
-    return false;
   }
+  if (mSrcStream) {
+    return mReadyState >= HAVE_METADATA && mSrcStreamPlaybackEnded;
+  }
+  return false;
 }
 
 already_AddRefed<nsIPrincipal> HTMLMediaElement::GetCurrentPrincipal() {
