@@ -53,14 +53,6 @@ struct ScaleFactors2D {
     return ScaleFactor<src, dst>(xScale);
   }
 
-  /**
-   * Convert between typed and untyped ScaleFactors2D.
-   */
-  static ScaleFactors2D FromUnknownScaleFactors2D(
-      const ScaleFactors2D<UnknownUnits, UnknownUnits>& aUnknown) {
-    return ScaleFactors2D{aUnknown.xScale, aUnknown.yScale};
-  }
-
   ScaleFactors2D<src, dst>& operator=(const ScaleFactors2D<src, dst>&) =
       default;
 
