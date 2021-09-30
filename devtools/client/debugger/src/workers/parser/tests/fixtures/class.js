@@ -1,6 +1,17 @@
 class Test {
+  publicProperty;
+  #privateProperty = "default";
+  static myStatic = "static";
+  static hello() {
+    return "Hello " + this.myStatic
+  }
+  static {
+    const x = this.myStatic;
+  }
+
   constructor() {
-    this.foo = "foo";
+    this.publicProperty = "foo";
+    this.#privateProperty = "bar";
   }
 
   bar(a) {
