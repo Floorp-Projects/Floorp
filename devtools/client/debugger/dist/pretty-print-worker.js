@@ -690,7 +690,7 @@ function workerHandler(publicInterface) {
         return asErrorMessage(error);
       }
     })).then(results => {
-      self.postMessage({
+      globalThis.postMessage({
         id,
         results
       });

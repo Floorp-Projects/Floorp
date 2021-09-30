@@ -28,7 +28,7 @@ const rootPath = path.join(__dirname, "../../");
 
 Enzyme.configure({ adapter: new Adapter() });
 
-global.jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+jest.setTimeout(20000);
 
 function formatException(reason, p) {
   console && console.log("Unhandled Rejection at:", p, "reason:", reason);
