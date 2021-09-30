@@ -17,8 +17,10 @@ static_assert(std::is_same_v<OkOrErr, Result<Ok, QMResult>>);
 uint64_t gBaseStackId;
 
 class DOM_Quota_QMResult : public testing::Test {
+#ifdef QM_ERROR_STACKS_ENABLED
  public:
   static void SetUpTestCase() { gBaseStackId = QMResult().StackId(); }
+#endif
 };
 
 #ifdef QM_ERROR_STACKS_ENABLED
