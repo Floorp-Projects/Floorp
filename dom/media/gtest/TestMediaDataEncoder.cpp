@@ -401,8 +401,8 @@ TEST_F(MediaDataEncoderTest, VP8Encodes) {
     MediaDataEncoder::EncodedData output = Encode(e, 1UL, mData);
     EXPECT_EQ(output.Length(), 1UL);
     VPXDecoder::VPXStreamInfo info;
-    EXPECT_TRUE(VPXDecoder::GetStreamInfo(*output[0], info,
-                                          VPXDecoder::Codec::VP8));
+    EXPECT_TRUE(
+        VPXDecoder::GetStreamInfo(*output[0], info, VPXDecoder::Codec::VP8));
     EXPECT_EQ(info.mKeyFrame, output[0]->mKeyframe);
     if (info.mKeyFrame) {
       EXPECT_EQ(info.mImage, kImageSize);
@@ -416,8 +416,8 @@ TEST_F(MediaDataEncoderTest, VP8Encodes) {
     EXPECT_EQ(output.Length(), NUM_FRAMES);
     for (auto frame : output) {
       VPXDecoder::VPXStreamInfo info;
-      EXPECT_TRUE(VPXDecoder::GetStreamInfo(*frame, info,
-                                            VPXDecoder::Codec::VP8));
+      EXPECT_TRUE(
+          VPXDecoder::GetStreamInfo(*frame, info, VPXDecoder::Codec::VP8));
       EXPECT_EQ(info.mKeyFrame, frame->mKeyframe);
       if (info.mKeyFrame) {
         EXPECT_EQ(info.mImage, kImageSize);
@@ -458,8 +458,8 @@ TEST_F(MediaDataEncoderTest, VP9Encodes) {
     MediaDataEncoder::EncodedData output = Encode(e, 1UL, mData);
     EXPECT_EQ(output.Length(), 1UL);
     VPXDecoder::VPXStreamInfo info;
-    EXPECT_TRUE(VPXDecoder::GetStreamInfo(*output[0], info,
-                                          VPXDecoder::Codec::VP9));
+    EXPECT_TRUE(
+        VPXDecoder::GetStreamInfo(*output[0], info, VPXDecoder::Codec::VP9));
     EXPECT_EQ(info.mKeyFrame, output[0]->mKeyframe);
     if (info.mKeyFrame) {
       EXPECT_EQ(info.mImage, kImageSize);
@@ -472,8 +472,8 @@ TEST_F(MediaDataEncoderTest, VP9Encodes) {
     EXPECT_EQ(output.Length(), NUM_FRAMES);
     for (auto frame : output) {
       VPXDecoder::VPXStreamInfo info;
-      EXPECT_TRUE(VPXDecoder::GetStreamInfo(*frame, info,
-                                            VPXDecoder::Codec::VP9));
+      EXPECT_TRUE(
+          VPXDecoder::GetStreamInfo(*frame, info, VPXDecoder::Codec::VP9));
       EXPECT_EQ(info.mKeyFrame, frame->mKeyframe);
       if (info.mKeyFrame) {
         EXPECT_EQ(info.mImage, kImageSize);
