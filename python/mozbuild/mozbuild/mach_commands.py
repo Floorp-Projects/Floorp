@@ -2446,7 +2446,7 @@ def package_l10n(command_context, verbose=False, locales=[]):
 def create_mach_environment(command_context, force=False):
     """Create the mach virtualenv."""
     from mozboot.util import get_mach_virtualenv_root
-    from mach.virtualenv import VirtualenvManager
+    from mozbuild.virtualenv import VirtualenvManager
 
     virtualenv_path = get_mach_virtualenv_root()
     if sys.executable.startswith(virtualenv_path):
@@ -2461,6 +2461,7 @@ def create_mach_environment(command_context, force=False):
         command_context.topsrcdir,
         os.path.dirname(virtualenv_path),
         "mach",
+        populate_local_paths=False,
     )
 
     if manager.up_to_date() and not force:
