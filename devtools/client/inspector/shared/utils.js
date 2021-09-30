@@ -127,15 +127,16 @@ function createChild(parent, tagName, attributes = {}) {
  *         promise expected to resolve a LongStringActor instance
  * @return {Promise} promise resolving with the retrieved string as argument
  */
-function getLongString(longStringActorPromise) {
-  return longStringActorPromise
-    .then(longStringActor => {
-      return longStringActor.string().then(string => {
-        longStringActor.release().catch(console.error);
-        return string;
-      });
-    })
-    .catch(console.error);
+async function getLongString(longStringActorPromise) {
+  try {
+    const longStringActor = await longStringActorPromise;
+    const string = await longStringActor.string();
+    longStringActor.release().catch(console.error);
+    return string;
+  } catch (e) {
+    console.error(e);
+    return undefined;
+  }
 }
 
 /**

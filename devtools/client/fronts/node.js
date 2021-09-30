@@ -4,7 +4,6 @@
 
 "use strict";
 
-const promise = require("promise");
 const {
   FrontClassWithSpec,
   types,
@@ -430,7 +429,7 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     }
 
     const str = this._form.nodeValue || "";
-    return promise.resolve(new SimpleStringFront(str));
+    return Promise.resolve(new SimpleStringFront(str));
   }
 
   /**
