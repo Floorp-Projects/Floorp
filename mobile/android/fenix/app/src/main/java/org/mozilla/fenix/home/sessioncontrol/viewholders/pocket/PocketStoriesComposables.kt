@@ -51,6 +51,13 @@ import kotlin.math.roundToInt
 import kotlin.random.Random
 
 /**
+ * Placeholder [PocketRecommendedStory] allowing to combine other items in the same list that shows stories.
+ * It uses empty values for it's properties ensuring that no conflict is possible since real stories have
+ * mandatory values.
+ */
+private val placeholderStory = PocketRecommendedStory("", "", "", "", "", 0, 0)
+
+/**
  * Displays a single [PocketRecommendedStory].
  *
  * @param story The [PocketRecommendedStory] to be displayed.
@@ -96,25 +103,28 @@ fun PocketStories(
     client: Client,
     onExternalLinkClicked: (String) -> Unit
 ) {
-    // Show stories in a 3 by 3 grid
-    val gridLength = 3
+    // Show stories in at most 3 rows but on any number of columns depending on the data received.
+    val maxRowsNo = 3
+    val storiesToShow = (stories + placeholderStory).chunked(maxRowsNo)
+
     val listState = rememberLazyListState()
     val flingBehavior = EagerFlingBehavior(lazyRowState = listState)
 
     LazyRow(state = listState, flingBehavior = flingBehavior) {
-        itemsIndexed(stories.chunked(gridLength)) { rowIndex, columnItems ->
-            Column(Modifier.padding(end = if (rowIndex < gridLength - 1) 8.dp else 0.dp)) {
-                for (index in 0 until gridLength) {
-                    columnItems.getOrNull(index)?.let { story ->
+        itemsIndexed(storiesToShow) { columnIndex, columnItems ->
+            Column(Modifier.padding(end = if (columnIndex < storiesToShow.size - 1) 8.dp else 0.dp)) {
+                columnItems.forEachIndexed { rowIndex, story ->
+                    if (story == placeholderStory) {
+                        ListItemTabLargePlaceholder(stringResource(R.string.pocket_stories_placeholder_text)) {
+                            onExternalLinkClicked("http://getpocket.com/explore")
+                        }
+                    } else {
                         PocketStory(story, client) {
                             onExternalLinkClicked(story.url)
                         }
-                    } ?: ListItemTabLargePlaceholder(stringResource(R.string.pocket_stories_placeholder_text)) {
-                        onExternalLinkClicked("http://getpocket.com/explore")
                     }
 
-                    // Add padding between all rows. Not also after the last.
-                    if (index < gridLength - 1) {
+                    if (rowIndex < maxRowsNo - 1) {
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
@@ -137,7 +147,7 @@ fun PocketStoriesCategories(
     StaggeredHorizontalGrid(
         horizontalItemsSpacing = 16.dp
     ) {
-        categories.forEach { category ->
+        categories.filter { it.name != POCKET_STORIES_DEFAULT_CATEGORY_NAME }.forEach { category ->
             SelectableChip(category.name, category.isSelected) {
                 onCategoryClick(category)
             }

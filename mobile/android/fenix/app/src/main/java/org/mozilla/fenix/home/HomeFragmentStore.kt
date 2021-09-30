@@ -149,7 +149,7 @@ private fun homeFragmentStateReducer(
             val updatedCategoriesState = state.copy(
                 pocketStoriesCategories = state.pocketStoriesCategories.map {
                     when (it.name == action.categoryName) {
-                        true -> it.copy(isSelected = true)
+                        true -> it.copy(isSelected = true, lastInteractedWithTimestamp = System.currentTimeMillis())
                         false -> it
                     }
                 }
@@ -163,7 +163,7 @@ private fun homeFragmentStateReducer(
                 // Deselecting a category means the stories to be displayed needs to also be changed.
                 pocketStoriesCategories = state.pocketStoriesCategories.map {
                     when (it.name == action.categoryName) {
-                        true -> it.copy(isSelected = false)
+                        true -> it.copy(isSelected = false, lastInteractedWithTimestamp = System.currentTimeMillis())
                         false -> it
                     }
                 }

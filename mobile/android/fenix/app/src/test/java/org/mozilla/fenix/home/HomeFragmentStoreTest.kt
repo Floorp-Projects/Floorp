@@ -208,10 +208,9 @@ class HomeFragmentStoreTest {
             verify { any<HomeFragmentState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
         }
 
-        assertTrue(
-            listOf(otherStoriesCategory.copy(isSelected = true))
-                .containsAll(homeFragmentStore.state.pocketStoriesCategories.filter { it.isSelected })
-        )
+        val selectedCategories = homeFragmentStore.state.pocketStoriesCategories.filter { it.isSelected }
+        assertEquals(1, selectedCategories.size)
+        assertTrue(otherStoriesCategory.name === selectedCategories[0].name)
         assertSame(filteredStories, homeFragmentStore.state.pocketStories)
     }
 
