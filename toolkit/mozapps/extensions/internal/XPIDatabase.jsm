@@ -1429,21 +1429,45 @@ const updatedAddonFluentIds = new Map([
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
 
+    let formattedMessage;
     // We want to make sure that all built-in themes that are localizable can
     // actually localized, particularly those for thunderbird and desktop.
     if (
       (aProp === "name" || aProp === "description") &&
       addon.location.name === KEY_APP_BUILTINS &&
-      // Temporary workaround until bug 1731652 lands.
-      !addon.id.endsWith("colorway@mozilla.org") &&
       addon.type === "theme"
     ) {
       // Built-in themes are localized with Fluent instead of the WebExtension API.
       let addonIdPrefix = addon.id.replace("@mozilla.org", "");
-      let defaultFluentId = `extension-${addonIdPrefix}-${aProp}`;
-      let fluentId =
-        updatedAddonFluentIds.get(defaultFluentId) || defaultFluentId;
-      let [formattedMessage] = l10n.formatMessagesSync([{ id: fluentId }]);
+      if (addonIdPrefix.endsWith("colorway")) {
+        // Colorway themes combine an unlocalized color name with a localized
+        // variant name. Their ids have the format
+        // {colorName}-{variantName}-colorway@mozilla.org.
+        if (aProp == "description") {
+          // Colorway themes do not have a description.
+          return null;
+        }
+        let [colorName, variantName] = addonIdPrefix.split("-", 2);
+        // We're not using toLocaleUpperCase because these color names are
+        // always in English.
+        colorName = colorName[0].toUpperCase() + colorName.slice(1);
+        let defaultFluentId = `extension-colorways-${variantName}-name`;
+        let fluentId =
+          updatedAddonFluentIds.get(defaultFluentId) || defaultFluentId;
+        [formattedMessage] = l10n.formatMessagesSync([
+          {
+            id: fluentId,
+            args: {
+              "colorway-name": colorName,
+            },
+          },
+        ]);
+      } else {
+        let defaultFluentId = `extension-${addonIdPrefix}-${aProp}`;
+        let fluentId =
+          updatedAddonFluentIds.get(defaultFluentId) || defaultFluentId;
+        [formattedMessage] = l10n.formatMessagesSync([{ id: fluentId }]);
+      }
 
       return formattedMessage.value;
     }
