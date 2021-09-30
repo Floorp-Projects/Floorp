@@ -8549,12 +8549,12 @@ const sourceOptions = {
   generated: {
     sourceType: "unambiguous",
     tokens: true,
-    plugins: ["classPrivateProperties", "classPrivateMethods", "classProperties", "objectRestSpread", "optionalChaining", "privateIn", "nullishCoalescingOperator"]
+    plugins: ["classStaticBlock", "classPrivateProperties", "classPrivateMethods", "classProperties", "objectRestSpread", "optionalChaining", "privateIn", "nullishCoalescingOperator"]
   },
   original: {
     sourceType: "unambiguous",
     tokens: true,
-    plugins: ["jsx", "flow", "doExpressions", "optionalChaining", "nullishCoalescingOperator", "decorators-legacy", "objectRestSpread", "classPrivateProperties", "classPrivateMethods", "classProperties", "exportDefaultFrom", "exportNamespaceFrom", "asyncGenerators", "functionBind", "functionSent", "dynamicImport", "react-jsx"]
+    plugins: ["jsx", "flow", "doExpressions", "optionalChaining", "nullishCoalescingOperator", "decorators-legacy", "objectRestSpread", "classStaticBlock", "classPrivateProperties", "classPrivateMethods", "classProperties", "exportDefaultFrom", "exportNamespaceFrom", "asyncGenerators", "functionBind", "functionSent", "dynamicImport", "react-jsx"]
   }
 };
 
@@ -8626,7 +8626,7 @@ function parseVueScript(code) {
 function parseConsoleScript(text, opts) {
   try {
     return _parse(text, {
-      plugins: ["classPrivateProperties", "classPrivateMethods", "objectRestSpread", "dynamicImport", "nullishCoalescingOperator", "optionalChaining"],
+      plugins: ["classStaticBlock", "classPrivateProperties", "classPrivateMethods", "objectRestSpread", "dynamicImport", "nullishCoalescingOperator", "optionalChaining"],
       ...opts,
       allowAwaitOutsideFunction: true
     });
