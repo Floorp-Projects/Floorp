@@ -760,7 +760,7 @@ popupnotificationcontent {
   list-style-image: url("chrome://global/skin/media/audio.svg");
 }
 
-.popup-notification-body :is(description, label, checkbox, input) {
+.popup-notification-body :is(description, label:not(.learnMore), checkbox, input) {
   margin-inline: 0;
 }
 
