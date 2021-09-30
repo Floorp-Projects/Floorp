@@ -395,7 +395,7 @@ var PermissionPromptPrototype = {
 
       if (
         state == SitePermissions.ALLOW &&
-        !this.request.maybeUnsafePermissionDelegate
+        !this.request.isRequestDelegatedToUnsafeThirdParty
       ) {
         this.allow();
         return;
@@ -710,7 +710,7 @@ GeolocationPermissionPrompt.prototype = {
       };
     }
 
-    if (this.request.maybeUnsafePermissionDelegate) {
+    if (this.request.isRequestDelegatedToUnsafeThirdParty) {
       // Second name should be the third party origin
       options.secondName = this.getPrincipalName(this.request.principal);
       options.checkbox = { show: false };
@@ -738,7 +738,7 @@ GeolocationPermissionPrompt.prototype = {
       return gBrowserBundle.GetStringFromName("geolocation.shareWithFile4");
     }
 
-    if (this.request.maybeUnsafePermissionDelegate) {
+    if (this.request.isRequestDelegatedToUnsafeThirdParty) {
       return gBrowserBundle.formatStringFromName(
         "geolocation.shareWithSiteUnsafeDelegation2",
         ["<>", "{}"]
