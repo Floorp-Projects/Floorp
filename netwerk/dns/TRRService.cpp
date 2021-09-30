@@ -231,9 +231,9 @@ bool TRRService::GetParentalControlEnabledInternal() {
 void TRRService::SetDetectedTrrURI(const nsACString& aURI) {
   LOG(("SetDetectedTrrURI(%s", nsPromiseFlatCString(aURI).get()));
   // If the user has set a custom URI then we don't want to override that.
-  // If the URI is set via doh-rollout.uri, mURIPrefHasUserValue will be false
+  // If the URI is set via doh-rollout.uri, mURIPref will be empty
   // (see TRRServiceBase::OnTRRURIChange)
-  if (mURIPrefHasUserValue) {
+  if (!mURIPref.IsEmpty()) {
     LOG(("Already has user value. Not setting URI"));
     return;
   }
