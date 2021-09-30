@@ -24,6 +24,7 @@ kind-dependencies:
     - partials
     - partials-signing
     - repackage-signing-msi
+    - repackage-signing-shippable-l10n-msix
     - mar-signing
     - mar-signing-l10n
 
