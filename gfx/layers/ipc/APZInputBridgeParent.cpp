@@ -102,8 +102,10 @@ mozilla::ipc::IPCResult APZInputBridgeParent::RecvReceiveKeyboardInputEvent(
 }
 
 mozilla::ipc::IPCResult APZInputBridgeParent::RecvUpdateWheelTransaction(
-    const LayoutDeviceIntPoint& aRefPoint, const EventMessage& aEventMessage) {
-  mTreeManager->InputBridge()->UpdateWheelTransaction(aRefPoint, aEventMessage);
+    const LayoutDeviceIntPoint& aRefPoint, const EventMessage& aEventMessage,
+    const Maybe<ScrollableLayerGuid>& aTargetGuid) {
+  mTreeManager->InputBridge()->UpdateWheelTransaction(aRefPoint, aEventMessage,
+                                                      aTargetGuid);
   return IPC_OK();
 }
 

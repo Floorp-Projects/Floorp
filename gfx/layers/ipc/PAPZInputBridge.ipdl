@@ -67,7 +67,9 @@ parent:
     returns (APZEventResult aOutResult,
              KeyboardInput  aOutEvent);
 
-  async UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint, EventMessage aEventMessage);
+  async UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
+                               EventMessage aEventMessage,
+                               ScrollableLayerGuid? aTargetGuid);
 
   sync ProcessUnhandledEvent(LayoutDeviceIntPoint aRefPoint)
     returns (LayoutDeviceIntPoint   aOutRefPoint,
