@@ -493,7 +493,7 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   void OnNextFrameStatus(MediaDecoderOwner::NextFrameStatus);
 
   void OnSecondaryVideoContainerInstalled(
-      const RefPtr<VideoFrameContainer>& aSecondaryContainer);
+      const RefPtr<VideoFrameContainer>& aSecondaryVideoContainer);
 
   void OnStoreDecoderBenchmark(const VideoInfo& aInfo);
 
