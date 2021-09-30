@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ExternalScrollId, PropertyBinding, ReferenceFrameKind, TransformStyle, PropertyBindingId};
-use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollSensitivity, SpatialTreeItemKey};
+use api::{PipelineId, ScrollClamping, ScrollSensitivity, SpatialTreeItemKey};
 use api::units::*;
 use euclid::Transform3D;
 use crate::gpu_types::TransformPalette;
@@ -723,19 +723,6 @@ impl SpatialTree {
     /// The root reference frame, which is the true root of the SpatialTree.
     pub fn root_reference_frame_index(&self) -> SpatialNodeIndex {
         self.root_reference_frame_index
-    }
-
-    pub fn get_scroll_node_state(&self) -> Vec<ScrollNodeState> {
-        let mut result = vec![];
-        for node in &self.spatial_nodes {
-            if let SpatialNodeType::ScrollFrame(info) = node.node_type {
-                result.push(ScrollNodeState {
-                    id: info.external_id,
-                    scroll_offset: info.offset - info.external_scroll_offset,
-                })
-            }
-        }
-        result
     }
 
     pub fn drain(&mut self) -> ScrollStates {
