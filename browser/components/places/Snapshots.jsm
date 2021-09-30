@@ -119,6 +119,20 @@ const Snapshots = new (class Snapshots {
     // PageDataService.on("page-data", this.#onPageData);
   }
 
+  /**
+   * Only certain urls can be added as Snapshots, either manually or
+   * automatically.
+   * @returns {Map} A Map keyed by protocol, for each protocol an object may
+   *          define stricter requirements, like extension.
+   */
+  get urlRequirements() {
+    return new Map([
+      ["http:", {}],
+      ["https:", {}],
+      ["file:", { extension: "pdf" }],
+    ]);
+  }
+
   #notify(topic, urls) {
     Services.obs.notifyObservers(null, topic, JSON.stringify(urls));
   }
@@ -177,6 +191,31 @@ const Snapshots = new (class Snapshots {
   }
 
   /**
+   * Whether a given URL can be added to snapshots.
+   * The rules are defined in this.urlRequirements.
+   * @param {string|URL|nsIURI} url The URL to check.
+   * @returns {boolean} whether the url can be added to snapshots.
+   */
+  canSnapshotUrl(url) {
+    let protocol, pathname;
+    if (typeof url == "string") {
+      url = new URL(url);
+    }
+    if (url instanceof Ci.nsIURI) {
+      protocol = url.scheme + ":";
+      pathname = url.filePath;
+    } else {
+      protocol = url.protocol;
+      pathname = url.pathname;
+    }
+    let requirements = this.urlRequirements.get(protocol);
+    return (
+      requirements &&
+      (!requirements.extension || pathname.endsWith(requirements.extension))
+    );
+  }
+
+  /**
    * Adds a new snapshot.
    *
    * If the snapshot already exists, and this is a user-persisted addition,
@@ -193,6 +232,9 @@ const Snapshots = new (class Snapshots {
   async add({ url, userPersisted = false }) {
     if (!url) {
       throw new Error("Missing url parameter to Snapshots.add()");
+    }
+    if (!this.canSnapshotUrl(url)) {
+      throw new Error("This url cannot be added to snapshots");
     }
 
     let placeId = await PlacesUtils.withConnectionWrapper(
@@ -359,7 +401,7 @@ const Snapshots = new (class Snapshots {
       SELECT h.url AS url, h.title AS title, created_at, removed_at,
              document_type, first_interaction_at, last_interaction_at,
              user_persisted, group_concat(e.data, ",") AS page_data
-             FROM moz_places_metadata_snapshots s
+      FROM moz_places_metadata_snapshots s
       JOIN moz_places h ON h.id = s.place_id
       LEFT JOIN moz_places_metadata_snapshots_extra e ON e.place_id = s.place_id
       ${whereStatement}
@@ -498,16 +540,35 @@ const Snapshots = new (class Snapshots {
         let bindings = {};
 
         let urlFilter = "";
-        if (urls !== undefined) {
+        if (urls == undefined) {
+          // TODO: checking .pdf file extension in SQL is more complex than we'd
+          // like, since the manually adding API is already checking it, this is
+          // basically only allowing file:// urls added automatically, and it's
+          // likely in the future these picking rules will be replaced by some
+          // ML machinery. Thus it seems not worth the added complexity.
+          let filters = [];
+          for (let protocol of this.urlRequirements.keys()) {
+            filters.push(
+              `(url_hash BETWEEN hash('${protocol}', 'prefix_lo') AND hash('${protocol}', 'prefix_hi'))`
+            );
+          }
+          urlFilter = " WHERE " + filters.join(" OR ");
+        } else {
           let urlMatches = [];
-
           urls.forEach((url, idx) => {
+            if (!this.canSnapshotUrl(url)) {
+              logConsole.debug(`Url can't be added to snapshots: ${url}`);
+              return;
+            }
             bindings[`url${idx}`] = url;
             urlMatches.push(
               `(url_hash = hash(:url${idx}) AND url = :url${idx})`
             );
           });
-
+          if (!urlMatches.length) {
+            // All the urls were discarded.
+            return [];
+          }
           urlFilter = `WHERE ${urlMatches.join(" OR ")}`;
         }
 
@@ -550,7 +611,8 @@ const Snapshots = new (class Snapshots {
                 moz_places_metadata.*,
                 row_number() OVER (PARTITION BY place_id ORDER BY created_at DESC) AS row,
                 first_value(document_type) OVER (PARTITION BY place_id ORDER BY created_at DESC) AS doc_type
-              FROM moz_places_metadata JOIN moz_places ON moz_places_metadata.place_id = moz_places.id
+              FROM moz_places_metadata
+              JOIN moz_places h ON moz_places_metadata.place_id = h.id
               ${urlFilter}
           )
           INSERT OR IGNORE INTO moz_places_metadata_snapshots
@@ -565,6 +627,8 @@ const Snapshots = new (class Snapshots {
           ...bindings,
           createdAt: now,
         });
+
+        logConsole.debug(`Inserted ${results.length} snapshots`);
 
         let newUrls = [];
         for (let row of results) {
