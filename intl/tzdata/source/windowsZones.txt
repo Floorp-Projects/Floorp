@@ -304,6 +304,7 @@ windowsZones:table(nofallback){
             BF{"Africa/Ouagadougou"}
             CI{"Africa/Abidjan"}
             GH{"Africa/Accra"}
+            GL{"America/Danmarkshavn"}
             GM{"Africa/Banjul"}
             GN{"Africa/Conakry"}
             GW{"Africa/Bissau"}
@@ -609,12 +610,15 @@ windowsZones:table(nofallback){
             MW{"Africa/Blantyre"}
             MZ{"Africa/Maputo"}
             RW{"Africa/Kigali"}
-            SS{"Africa/Juba"}
             SZ{"Africa/Mbabane"}
             ZA{"Africa/Johannesburg"}
             ZM{"Africa/Lusaka"}
             ZW{"Africa/Harare"}
             ZZ{"Etc/GMT-2"}
+        }
+        "South Sudan Standard Time"{
+            001{"Africa/Juba"}
+            SS{"Africa/Juba"}
         }
         "Sri Lanka Standard Time"{
             001{"Asia/Colombo"}
@@ -674,14 +678,14 @@ windowsZones:table(nofallback){
         }
         "US Mountain Standard Time"{
             001{"America/Phoenix"}
+            CA{"America/Creston America/Dawson_Creek America/Fort_Nelson"}
             MX{"America/Hermosillo"}
             US{"America/Phoenix"}
             ZZ{"Etc/GMT+7"}
         }
         "UTC"{
-            001{"Etc/GMT"}
-            GL{"America/Danmarkshavn"}
-            ZZ{"Etc/GMT Etc/UTC"}
+            001{"Etc/UTC"}
+            ZZ{"Etc/UTC Etc/GMT"}
         }
         "UTC+12"{
             001{"Etc/GMT-12"}
@@ -812,10 +816,7 @@ windowsZones:table(nofallback){
         }
         "Yukon Standard Time"{
             001{"America/Whitehorse"}
-            CA{
-                "America/Whitehorse America/Creston America/Dawson America/Dawson_Cre"
-                "ek America/Fort_Nelson"
-            }
+            CA{"America/Whitehorse America/Dawson"}
         }
     }
 }

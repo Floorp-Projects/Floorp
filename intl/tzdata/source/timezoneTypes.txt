@@ -8,6 +8,7 @@ timezoneTypes:table(nofallback){
             cnckg{"cnsha"}
             cnhrb{"cnsha"}
             cnkhg{"cnurc"}
+            gaza{"gazastrp"}
             usnavajo{"usden"}
         }
     }
@@ -387,7 +388,7 @@ timezoneTypes:table(nofallback){
             "Asia:Dubai"{"aedxb"}
             "Asia:Dushanbe"{"tjdyu"}
             "Asia:Famagusta"{"cyfmg"}
-            "Asia:Gaza"{"gaza"}
+            "Asia:Gaza"{"gazastrp"}
             "Asia:Hebron"{"hebron"}
             "Asia:Hong_Kong"{"hkhkg"}
             "Asia:Hovd"{"mnhvd"}
