@@ -1035,6 +1035,12 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             }
             CHECK(iter.readUnary(ValType::V128, &nothing));
           }
+          case uint32_t(SimdOp::V8x16RelaxedSwizzle): {
+            if (!env.v128RelaxedEnabled()) {
+              return iter.unrecognizedOpcode(&op);
+            }
+            CHECK(iter.readBinary(ValType::V128, &nothing, &nothing));
+          }
 #  endif
 
           default:

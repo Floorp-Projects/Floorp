@@ -500,6 +500,7 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::F32x4RelaxedMax:
         case SimdOp::F64x2RelaxedMin:
         case SimdOp::F64x2RelaxedMax:
+        case SimdOp::V8x16RelaxedSwizzle:
           WASM_SIMD_OP(OpKind::Binary);
         case SimdOp::I8x16Neg:
         case SimdOp::I16x8Neg:

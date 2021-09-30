@@ -5481,6 +5481,13 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             }
             CHECK(EmitUnarySimd128(f, SimdOp(op.b1)));
           }
+          case uint32_t(SimdOp::V8x16RelaxedSwizzle): {
+            if (!f.moduleEnv().v128RelaxedEnabled()) {
+              return f.iter().unrecognizedOpcode(&op);
+            }
+            CHECK(
+                EmitBinarySimd128(f, /* commutative= */ false, SimdOp(op.b1)));
+          }
 #  endif
 
           default:
