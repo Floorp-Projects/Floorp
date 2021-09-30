@@ -1312,7 +1312,8 @@ MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
       AbstractThread::MainThread(), __func__,
       [handleReport, data](size_t size) {
         handleReport->Callback(
-            ""_ns, "explicit/media/resources"_ns, KIND_HEAP, UNITS_BYTES, size,
+            ""_ns, "explicit/media/resources"_ns, KIND_HEAP, UNITS_BYTES,
+            static_cast<int64_t>(size),
             nsLiteralCString("Memory used by media resources including "
                              "streaming buffers, caches, etc."),
             data);
@@ -1331,8 +1332,8 @@ MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
   DecodersArray& decoders = Decoders();
   for (size_t i = 0; i < decoders.Length(); ++i) {
     MediaDecoder* decoder = decoders[i];
-    video += decoder->SizeOfVideoQueue();
-    audio += decoder->SizeOfAudioQueue();
+    video += static_cast<int64_t>(decoder->SizeOfVideoQueue());
+    audio += static_cast<int64_t>(decoder->SizeOfAudioQueue());
     decoder->AddSizeOfResources(resourceSizes);
   }
 
