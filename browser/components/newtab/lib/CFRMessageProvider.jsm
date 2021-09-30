@@ -785,6 +785,26 @@ const CFR_MESSAGES = [
     },
     trigger: { id: "defaultBrowserCheck" },
   },
+  {
+    id: "PREF_OBSERVER_MESSAGE_94",
+    targeting: "true",
+    template: "infobar",
+    content: {
+      type: "global",
+      text: "This is a message triggered when a pref value changes",
+      buttons: [
+        {
+          label: "OK",
+          primary: true,
+          accessKey: "O",
+          action: {
+            type: "CANCEL",
+          },
+        },
+      ],
+    },
+    trigger: { id: "preferenceObserver", params: ["foo.bar"] },
+  },
 ];
 
 const CFRMessageProvider = {
