@@ -1419,12 +1419,6 @@ defineAddonWrapperProperty("signedDate", function() {
   });
 });
 
-// Add to this Map if you need to change an addon's Fluent ID. Keep it in sync
-// with the list in browser_verify_l10n_strings.js
-const updatedAddonFluentIds = new Map([
-  ["extension-default-theme-name", "extension-default-theme-name-auto"],
-]);
-
 ["name", "description", "creator", "homepageURL"].forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
@@ -1440,10 +1434,9 @@ const updatedAddonFluentIds = new Map([
     ) {
       // Built-in themes are localized with Fluent instead of the WebExtension API.
       let addonIdPrefix = addon.id.replace("@mozilla.org", "");
-      let defaultFluentId = `extension-${addonIdPrefix}-${aProp}`;
-      let fluentId =
-        updatedAddonFluentIds.get(defaultFluentId) || defaultFluentId;
-      let [formattedMessage] = l10n.formatMessagesSync([{ id: fluentId }]);
+      let [formattedMessage] = l10n.formatMessagesSync([
+        { id: `extension-${addonIdPrefix}-${aProp}` },
+      ]);
 
       return formattedMessage.value;
     }
