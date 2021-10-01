@@ -1168,6 +1168,7 @@ struct StyleAnimation {
   dom::FillMode mFillMode;
   StyleAnimationPlayState mPlayState;
   float mIterationCount;  // mozilla::PositiveInfinity<float>() means infinite
+  StyleAnimationTimeline mTimeline;
 };
 
 }  // namespace mozilla
@@ -1203,6 +1204,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   uint32_t mAnimationFillModeCount;
   uint32_t mAnimationPlayStateCount;
   uint32_t mAnimationIterationCountCount;
+  uint32_t mAnimationTimelineCount;
 
   mozilla::StyleWillChange mWillChange;
   mozilla::StyleDisplay mDisplay;

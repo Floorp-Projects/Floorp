@@ -2828,6 +2828,7 @@ exports.CSS_PROPERTIES = {
       "animation-play-state",
       "animation-fill-mode",
       "animation-delay",
+      "animation-timeline",
       "transform",
       "rotate",
       "scale",
@@ -11030,6 +11031,10 @@ exports.PREFERENCES = [
   [
     "align-tracks",
     "layout.css.grid-template-masonry-value.enabled"
+  ],
+  [
+    "animation-timeline",
+    "layout.css.scroll-linked-animations.enabled"
   ],
   [
     "backdrop-filter",

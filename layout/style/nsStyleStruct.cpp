@@ -2156,6 +2156,7 @@ void StyleAnimation::SetInitialValues() {
   mFillMode = dom::FillMode::None;
   mPlayState = StyleAnimationPlayState::Running;
   mIterationCount = 1.0f;
+  mTimeline = StyleAnimationTimeline::Auto();
 }
 
 bool StyleAnimation::operator==(const StyleAnimation& aOther) const {
@@ -2163,7 +2164,8 @@ bool StyleAnimation::operator==(const StyleAnimation& aOther) const {
          mDuration == aOther.mDuration && mDelay == aOther.mDelay &&
          mName == aOther.mName && mDirection == aOther.mDirection &&
          mFillMode == aOther.mFillMode && mPlayState == aOther.mPlayState &&
-         mIterationCount == aOther.mIterationCount;
+         mIterationCount == aOther.mIterationCount &&
+         mTimeline == aOther.mTimeline;
 }
 
 // --------------------
@@ -2186,6 +2188,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mAnimationFillModeCount(1),
       mAnimationPlayStateCount(1),
       mAnimationIterationCountCount(1),
+      mAnimationTimelineCount(1),
       mWillChange{{}, {0}},
       mDisplay(StyleDisplay::Inline),
       mOriginalDisplay(StyleDisplay::Inline),
@@ -2256,6 +2259,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mAnimationFillModeCount(aSource.mAnimationFillModeCount),
       mAnimationPlayStateCount(aSource.mAnimationPlayStateCount),
       mAnimationIterationCountCount(aSource.mAnimationIterationCountCount),
+      mAnimationTimelineCount(aSource.mAnimationTimelineCount),
       mWillChange(aSource.mWillChange),
       mDisplay(aSource.mDisplay),
       mOriginalDisplay(aSource.mOriginalDisplay),
@@ -2679,6 +2683,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(
                 mAnimationPlayStateCount != aNewData.mAnimationPlayStateCount ||
                 mAnimationIterationCountCount !=
                     aNewData.mAnimationIterationCountCount ||
+                mAnimationTimelineCount != aNewData.mAnimationTimelineCount ||
                 mWillChange != aNewData.mWillChange ||
                 mOverflowAnchor != aNewData.mOverflowAnchor)) {
     hint |= nsChangeHint_NeutralChange;
