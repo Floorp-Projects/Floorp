@@ -1,7 +1,7 @@
 @use 'sass:math';
 
 .context-menu {
-  background: var(--newtab-background-color);
+  background: var(--newtab-background-color-secondary);
   border-radius: $context-menu-border-radius;
   box-shadow: $context-menu-shadow;
   display: block;
@@ -40,11 +40,11 @@
         white-space: nowrap;
 
         &:is(:focus, :hover) {
-          background: var(--newtab-element-hover-color);
+          background: var(--newtab-element-secondary-hover-color);
         }
 
         &:active {
-          background: var(--newtab-element-active-color);
+          background: var(--newtab-element-secondary-active-color);
         }
 
         &.disabled {
