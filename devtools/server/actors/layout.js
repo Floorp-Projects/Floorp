@@ -506,6 +506,10 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
     const gridElements = node.getElementsWithGrid();
     let gridActors = gridElements.map(n => new GridActor(this, n));
 
+    if (this.targetActor.ignoreSubFrames) {
+      return gridActors;
+    }
+
     const frames = node.querySelectorAll("iframe, frame");
     for (const frame of frames) {
       gridActors = gridActors.concat(this.getGrids(frame.contentDocument));
