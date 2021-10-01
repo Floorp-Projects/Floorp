@@ -540,33 +540,41 @@ var AddonRepository = {
    * @return Promise{null} Resolves when the metadata update is complete.
    */
   async backgroundUpdateCheck() {
-    let allAddons = await AddonManager.getAllAddons();
+    let shutter = (async () => {
+      let allAddons = await AddonManager.getAllAddons();
 
-    // Completely remove cache if caching is not enabled
-    if (!this.cacheEnabled) {
-      logger.debug("Clearing cache because it is disabled");
-      await this._clearCache();
-      return;
-    }
+      // Completely remove cache if caching is not enabled
+      if (!this.cacheEnabled) {
+        logger.debug("Clearing cache because it is disabled");
+        await this._clearCache();
+        return;
+      }
 
-    let ids = allAddons.map(a => a.id);
-    logger.debug("Repopulate add-on cache with " + ids.toSource());
+      let ids = allAddons.map(a => a.id);
+      logger.debug("Repopulate add-on cache with " + ids.toSource());
 
-    let addonsToCache = await getAddonsToCache(ids);
+      let addonsToCache = await getAddonsToCache(ids);
 
-    // Completely remove cache if there are no add-ons to cache
-    if (!addonsToCache.length) {
-      logger.debug("Clearing cache because 0 add-ons were requested");
-      await this._clearCache();
-      return;
-    }
+      // Completely remove cache if there are no add-ons to cache
+      if (!addonsToCache.length) {
+        logger.debug("Clearing cache because 0 add-ons were requested");
+        await this._clearCache();
+        return;
+      }
 
-    let addons = await this._getFullData(addonsToCache);
+      let addons = await this._getFullData(addonsToCache);
 
-    AddonDatabase.repopulate(addons);
+      AddonDatabase.repopulate(addons);
 
-    // Always call AddonManager updateAddonRepositoryData after we refill the cache
-    await AddonManagerPrivate.updateAddonRepositoryData();
+      // Always call AddonManager updateAddonRepositoryData after we refill the cache
+      await AddonManagerPrivate.updateAddonRepositoryData();
+    })();
+    AddonManager.beforeShutdown.addBlocker(
+      "AddonRepository Background Updater",
+      shutter
+    );
+    await shutter;
+    AddonManager.beforeShutdown.removeBlocker(shutter);
   },
 
   /*
