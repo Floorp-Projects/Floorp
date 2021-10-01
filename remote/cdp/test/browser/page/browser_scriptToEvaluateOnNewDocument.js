@@ -121,8 +121,8 @@ function recordContextCreated(Runtime, expectedCount) {
     const unsubscribe = Runtime.executionContextCreated(payload => {
       ctx.push(payload.context);
       info(
-        `Runtime.executionContextCreated: ${payload.context.auxData.type}` +
-          `\n\turl ${payload.context.origin}`
+        `Runtime.executionContextCreated: ${payload.context.auxData.type} ` +
+          `(${payload.context.origin})`
       );
       if (ctx.length > expectedCount) {
         unsubscribe();
