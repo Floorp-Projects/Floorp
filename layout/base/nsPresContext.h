@@ -232,13 +232,13 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   /**
    * Returns the root widget for this.
    */
-  nsIWidget* GetRootWidget() const;
+  already_AddRefed<nsIWidget> GetRootWidget() const;
 
   /**
    * Returns the widget which may have native focus and handles text input
    * like keyboard input, IME, etc.
    */
-  nsIWidget* GetTextInputHandlingWidget() const {
+  already_AddRefed<nsIWidget> GetTextInputHandlingWidget() const {
     // Currently, root widget for each PresContext handles text input.
     return GetRootWidget();
   }
@@ -1100,6 +1100,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   void UpdateCharSet(NotNull<const Encoding*> aCharSet);
 
   void DoForceReflowForFontInfoUpdateFromStyle();
+
  public:
   // Used by the PresShell to force a reflow when some aspect of font info
   // has been updated, potentially affecting font selection and layout.

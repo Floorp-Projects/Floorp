@@ -242,8 +242,11 @@ bool TouchEvent::PrefEnabled(nsIDocShell* aDocShell) {
         // APZ might be disabled on this particular widget, in which case
         // TouchEvent support will also be disabled. Try to detect that.
         RefPtr<nsPresContext> pc = aDocShell->GetPresContext();
-        if (pc && pc->GetRootWidget()) {
-          enabled &= pc->GetRootWidget()->AsyncPanZoomEnabled();
+        if (pc) {
+          nsCOMPtr<nsIWidget> widget = pc->GetRootWidget();
+          if (widget) {
+            enabled &= widget->AsyncPanZoomEnabled();
+          }
         }
       }
 #endif
