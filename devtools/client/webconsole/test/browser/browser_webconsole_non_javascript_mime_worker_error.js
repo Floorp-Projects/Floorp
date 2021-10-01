@@ -9,12 +9,12 @@
 "use strict";
 
 const TEST_URI =
-  "http://example.com/browser/devtools/client/webconsole/" +
+  "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/" +
   "test-non-javascript-mime-worker.html";
 
 const JS_URI =
-  "http://example.com/browser/devtools/client/webconsole/test/browser/test-non-javascript-mime.js";
+  "https://example.com/browser/devtools/client/webconsole/test/browser/test-non-javascript-mime.js";
 const MIME_ERROR_MSG1 = `Loading Worker from “${JS_URI}” was blocked because of a disallowed MIME type (“text/plain”).`;
 const MIME_ERROR_MSG2 = `Loading script from “${JS_URI}” with importScripts() was blocked because of a disallowed MIME type (“text/plain”).`;
 

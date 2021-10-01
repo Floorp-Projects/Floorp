@@ -9,10 +9,10 @@
       "use strict";
 
       // Test new Worker
-      new Worker("http://example.com/browser/devtools/client/webconsole/test/browser/test-non-javascript-mime.js");
+      new Worker("https://example.com/browser/devtools/client/webconsole/test/browser/test-non-javascript-mime.js");
 
       // Test importScripts
-      const source = `importScripts("http://example.com/browser/devtools/client/webconsole/" +
+      const source = `importScripts("https://example.com/browser/devtools/client/webconsole/" +
                                       "test/browser/" +
                                       "test-non-javascript-mime.js");`;
       const url = URL.createObjectURL(new Blob([source], {type: "application/javascript"}));

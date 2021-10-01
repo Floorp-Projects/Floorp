@@ -7,11 +7,11 @@
 "use strict";
 
 const TEST_URI =
-  "http://example.com/browser/devtools/client/webconsole/" +
+  "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/" +
   "test-non-javascript-mime.html";
 const MIME_WARNING_MSG =
-  "The script from “http://example.com/browser/devtools/client/webconsole/test/browser/test-non-javascript-mime.js” was loaded even though its MIME type (“text/plain”) is not a valid JavaScript MIME type";
+  "The script from “https://example.com/browser/devtools/client/webconsole/test/browser/test-non-javascript-mime.js” was loaded even though its MIME type (“text/plain”) is not a valid JavaScript MIME type";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

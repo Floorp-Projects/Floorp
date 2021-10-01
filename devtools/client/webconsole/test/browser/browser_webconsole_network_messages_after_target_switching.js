@@ -8,7 +8,7 @@
 
 const TEST_FILE = "test-network-request.html";
 const TEST_PATH =
-  "http://example.com/browser/devtools/client/webconsole/test/browser/";
+  "https://example.com/browser/devtools/client/webconsole/test/browser/";
 
 const TEST_URI = TEST_PATH + TEST_FILE;
 
