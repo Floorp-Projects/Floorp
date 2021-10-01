@@ -119,11 +119,12 @@ def format_taskgraph(options, parameters, logfile=None):
     if options["fast"]:
         taskgraph.fast = True
 
-    parameters = parameters_loader(
-        parameters,
-        overrides={"target-kind": options.get("target_kind")},
-        strict=False,
-    )
+    if isinstance(parameters, str):
+        parameters = parameters_loader(
+            parameters,
+            overrides={"target-kind": options.get("target_kind")},
+            strict=False,
+        )
 
     tgg = get_taskgraph_generator(options.get("root"), parameters)
 
@@ -349,22 +350,23 @@ def show_taskgraph(options):
         )
         print(f"Generating {options['graph_attr']} @ {cur_ref}", file=sys.stderr)
 
-    parameters: List[Any[str, None]] = options.pop("parameters")
+    parameters: List[Any[str, Parameters]] = options.pop("parameters")
     if not parameters:
-        parameters = [None]  # will use default values
+        kwargs = {
+            "target-kind": options.get("target_kind"),
+        }
+        parameters = [Parameters(strict=False, **kwargs)]  # will use default values
 
     for param in parameters[:]:
-        if param is None or not os.path.isdir(param):
-            continue
-
-        parameters.remove(param)
-        parameters.extend(
-            [
-                p.as_posix()
-                for p in Path(param).iterdir()
-                if p.suffix in (".yml", ".json")
-            ]
-        )
+        if isinstance(param, str) and os.path.isdir(param):
+            parameters.remove(param)
+            parameters.extend(
+                [
+                    p.as_posix()
+                    for p in Path(param).iterdir()
+                    if p.suffix in (".yml", ".json")
+                ]
+            )
 
     logdir = None
     if len(parameters) > 1:
