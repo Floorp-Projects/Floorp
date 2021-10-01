@@ -251,30 +251,27 @@ add_task(async function update_bookmark_title() {
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: new URL("http://title.example.com/"),
   });
-  let observer = expectNotifications();
+  const observer = expectPlacesObserverNotifications([
+    "bookmark-title-changed",
+  ]);
   bm = await PlacesUtils.bookmarks.update({
     guid: bm.guid,
     title: "new title",
   });
   let itemId = await PlacesUtils.promiseItemId(bm.guid);
-  let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
 
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        itemId,
-        "title",
-        false,
-        bm.title,
-        PlacesUtils.toPRTime(bm.lastModified),
-        bm.type,
-        parentId,
-        bm.guid,
-        bm.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-title-changed",
+      id: itemId,
+      itemType: bm.type,
+      url: bm.url,
+      title: bm.title,
+      guid: bm.guid,
+      parentGuid: bm.parentGuid,
+      lastModified: bm.lastModified,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
 });
@@ -958,7 +955,9 @@ add_task(async function update_notitle_notification() {
   });
   let menuFolderId = await PlacesUtils.promiseItemId(menuFolder.guid);
 
-  let observer = expectNotifications();
+  const observer = expectPlacesObserverNotifications([
+    "bookmark-title-changed",
+  ]);
 
   PlacesUtils.bookmarks.setItemTitle(toolbarBmId, null);
   strictEqual(
@@ -980,36 +979,28 @@ add_task(async function update_notitle_notification() {
   let toolbarBmModified = await PlacesUtils.bookmarks.fetch(toolbarBmGuid);
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        toolbarBmId,
-        "title",
-        false,
-        "",
-        PlacesUtils.toPRTime(toolbarBmModified.lastModified),
-        PlacesUtils.bookmarks.TYPE_BOOKMARK,
-        PlacesUtils.toolbarFolderId,
-        toolbarBmGuid,
-        PlacesUtils.bookmarks.toolbarGuid,
-        "",
-        PlacesUtils.bookmarks.SOURCES.DEFAULT,
-      ],
+      type: "bookmark-title-changed",
+      id: toolbarBmId,
+      itemType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      url: toolbarBmURI.spec,
+      title: "",
+      guid: toolbarBmGuid,
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      lastModified: toolbarBmModified.lastModified,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
     {
-      name: "onItemChanged",
-      arguments: [
-        menuFolderId,
-        "title",
-        false,
-        "",
-        PlacesUtils.toPRTime(updatedMenuBm.lastModified),
-        PlacesUtils.bookmarks.TYPE_FOLDER,
-        PlacesUtils.bookmarksMenuFolderId,
-        menuFolder.guid,
-        PlacesUtils.bookmarks.menuGuid,
-        "",
-        PlacesUtils.bookmarks.SOURCES.DEFAULT,
-      ],
+      type: "bookmark-title-changed",
+      id: menuFolderId,
+      itemType: PlacesUtils.bookmarks.TYPE_FOLDER,
+      url: "",
+      title: "",
+      guid: menuFolder.guid,
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      lastModified: updatedMenuBm.lastModified,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
 });

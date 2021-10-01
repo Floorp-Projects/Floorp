@@ -27,6 +27,7 @@ var observer = {
     this.itemsRemoved = new Map();
     this.itemsChanged = new Map();
     this.itemsMoved = new Map();
+    this.itemsTitleChanged = new Map();
   },
 
   handlePlacesEvents(events) {
@@ -66,6 +67,16 @@ var observer = {
             newParentGuid: event.parentGuid,
             newIndex: event.index,
             itemType: event.itemType,
+          });
+          break;
+        case "bookmark-title-changed":
+          if (this.tagRelatedGuids.has(event.guid)) {
+            return;
+          }
+
+          this.itemsTitleChanged.set(event.guid, {
+            title: event.title,
+            parentGuid: event.parentGuid,
           });
           break;
       }
@@ -110,13 +121,23 @@ function run_test() {
   bmsvc.addObserver(observer);
   observer.handlePlacesEvents = observer.handlePlacesEvents.bind(observer);
   obsvc.addListener(
-    ["bookmark-added", "bookmark-removed", "bookmark-moved"],
+    [
+      "bookmark-added",
+      "bookmark-removed",
+      "bookmark-moved",
+      "bookmark-title-changed",
+    ],
     observer.handlePlacesEvents
   );
   registerCleanupFunction(function() {
     bmsvc.removeObserver(observer);
     obsvc.removeListener(
-      ["bookmark-added", "bookmark-removed", "bookmark-moved"],
+      [
+        "bookmark-added",
+        "bookmark-removed",
+        "bookmark-moved",
+        "bookmark-title-changed",
+      ],
       observer.handlePlacesEvents
     );
   });
@@ -294,6 +315,27 @@ function ensureItemsMoved(...items) {
       info.newIndex,
       item.newIndex,
       "Should have the correct new index"
+    );
+  }
+}
+
+function ensureItemsTitleChanged(...items) {
+  Assert.equal(
+    observer.itemsTitleChanged.size,
+    items.length,
+    "Should have received the correct number of bookmark-title-changed notifications"
+  );
+  for (const item of items) {
+    Assert.ok(
+      observer.itemsTitleChanged.has(item.guid),
+      `Observer should have a title changed for ${item.guid}`
+    );
+    const info = observer.itemsTitleChanged.get(item.guid);
+    Assert.equal(info.title, item.title, "Should have the correct title");
+    Assert.equal(
+      info.parentGuid,
+      item.parentGuid,
+      "Should have the correct parent guid"
     );
   }
 }
@@ -1333,10 +1375,10 @@ add_task(async function test_edit_title() {
   };
 
   function ensureTitleChange(aCurrentTitle) {
-    ensureItemsChanged({
+    ensureItemsTitleChanged({
       guid: bm_info.guid,
-      property: "title",
-      newValue: aCurrentTitle,
+      title: aCurrentTitle,
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     });
   }
 

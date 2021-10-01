@@ -22,6 +22,7 @@
 #include "mozilla/dom/PlacesVisitRemoved.h"
 #include "mozilla/dom/PlacesVisitTitle.h"
 #include "mozilla/dom/PlacesBookmarkMoved.h"
+#include "mozilla/dom/PlacesBookmarkTitle.h"
 
 #include "nsCycleCollectionParticipant.h"
 
@@ -3157,6 +3158,27 @@ nsresult nsNavHistoryFolderResultNode::OnItemRemoved(
   return RemoveChildAt(index);
 }
 
+nsresult nsNavHistoryResultNode::OnItemTitleChanged(int64_t aItemId,
+                                                    const nsACString& aGUID,
+                                                    const nsACString& aTitle,
+                                                    PRTime aLastModified) {
+  if (aItemId != mItemId) {
+    return NS_OK;
+  }
+
+  mTitle = aTitle;
+  mLastModified = aLastModified;
+
+  bool shouldNotify = !mParent || mParent->AreChildrenVisible();
+  if (shouldNotify) {
+    nsNavHistoryResult* result = GetResult();
+    NS_ENSURE_STATE(result);
+    NOTIFY_RESULT_OBSERVERS(result, NodeTitleChanged(this, mTitle));
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsNavHistoryResultNode::OnItemChanged(
     int64_t aItemId, const nsACString& aProperty, bool aIsAnnotationProperty,
@@ -3174,12 +3196,7 @@ nsNavHistoryResultNode::OnItemChanged(
 
   bool shouldNotify = !mParent || mParent->AreChildrenVisible();
 
-  if (aProperty.EqualsLiteral("title")) {
-    // XXX: what should we do if the new title is void?
-    mTitle = aNewValue;
-    if (shouldNotify)
-      NOTIFY_RESULT_OBSERVERS(result, NodeTitleChanged(this, mTitle));
-  } else if (aProperty.EqualsLiteral("uri")) {
+  if (aProperty.EqualsLiteral("uri")) {
     // clear the tags string as well
     mTags.SetIsVoid(true);
     nsCString oldURI(mURI);
@@ -3482,7 +3499,7 @@ nsNavHistoryResult::~nsNavHistoryResult() {
 }
 
 void nsNavHistoryResult::StopObserving() {
-  AutoTArray<PlacesEventType, 7> events;
+  AutoTArray<PlacesEventType, 8> events;
   events.AppendElement(PlacesEventType::Favicon_changed);
   if (mIsBookmarksObserver) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
@@ -3493,6 +3510,7 @@ void nsNavHistoryResult::StopObserving() {
     events.AppendElement(PlacesEventType::Bookmark_added);
     events.AppendElement(PlacesEventType::Bookmark_removed);
     events.AppendElement(PlacesEventType::Bookmark_moved);
+    events.AppendElement(PlacesEventType::Bookmark_title_changed);
   }
   if (mIsMobilePrefObserver) {
     Preferences::UnregisterCallback(OnMobilePrefChangedCallback,
@@ -3613,10 +3631,11 @@ void nsNavHistoryResult::EnsureIsObservingBookmarks() {
     return;
   }
   bookmarks->AddObserver(this, true);
-  AutoTArray<PlacesEventType, 4> events;
+  AutoTArray<PlacesEventType, 5> events;
   events.AppendElement(PlacesEventType::Bookmark_added);
   events.AppendElement(PlacesEventType::Bookmark_removed);
   events.AppendElement(PlacesEventType::Bookmark_moved);
+  events.AppendElement(PlacesEventType::Bookmark_title_changed);
   // If we're not observing visits yet, also add a page-visited observer to
   // serve onItemVisited.
   if (!mIsHistoryObserver && !mIsHistoryDetailsObserver) {
@@ -3856,6 +3875,35 @@ void nsNavHistoryResult::requestRefresh(
   ENUMERATE_QUERY_OBSERVERS(_functionCall, mHistoryObservers, IsQuery())
 #define ENUMERATE_MOBILE_PREF_OBSERVERS(_functionCall) \
   ENUMERATE_QUERY_OBSERVERS(_functionCall, mMobilePrefObservers, IsQuery())
+#define ENUMERATE_BOOKMARK_CHANGED_OBSERVERS(_folderGUID, _targetId,        \
+                                             _functionCall)                 \
+  PR_BEGIN_MACRO                                                            \
+  ENUMERATE_ALL_BOOKMARKS_OBSERVERS(_functionCall);                         \
+  FolderObserverList* _fol =                                                \
+      BookmarkFolderObserversForGUID(_folderGUID, false);                   \
+                                                                            \
+  /*                                                                        \
+   * Note: folder-nodes set their own bookmark observer only once they're   \
+   * opened, meaning we cannot optimize this code path for changes done to  \
+   * folder-nodes.                                                          \
+   */                                                                       \
+                                                                            \
+  for (uint32_t _fol_i = 0; _fol && _fol_i < _fol->Length(); ++_fol_i) {    \
+    RefPtr<nsNavHistoryFolderResultNode> _folder = _fol->ElementAt(_fol_i); \
+    if (_folder) {                                                          \
+      uint32_t _nodeIndex;                                                  \
+      RefPtr<nsNavHistoryResultNode> _node =                                \
+          _folder->FindChildById(_targetId, &_nodeIndex);                   \
+      bool _excludeItems = _folder->mOptions->ExcludeItems();               \
+      if (_node &&                                                          \
+          (!_excludeItems || !(_node->IsURI() || _node->IsSeparator())) &&  \
+          _folder->StartIncrementalUpdate()) {                              \
+        _node->_functionCall;                                               \
+      }                                                                     \
+    }                                                                       \
+  }                                                                         \
+                                                                            \
+  PR_END_MACRO
 
 #define NOTIFY_REFRESH_PARTICIPANTS()                            \
   PR_BEGIN_MACRO                                                 \
@@ -3908,38 +3956,11 @@ nsNavHistoryResult::OnItemChanged(
     const nsACString& aNewValue, PRTime aLastModified, uint16_t aItemType,
     int64_t aParentId, const nsACString& aGUID, const nsACString& aParentGUID,
     const nsACString& aOldValue, uint16_t aSource) {
-  ENUMERATE_ALL_BOOKMARKS_OBSERVERS(OnItemChanged(
-      aItemId, aProperty, aIsAnnotationProperty, aNewValue, aLastModified,
-      aItemType, aParentId, aGUID, aParentGUID, aOldValue, aSource));
-
-  // Note: folder-nodes set their own bookmark observer only once they're
-  // opened, meaning we cannot optimize this code path for changes done to
-  // folder-nodes.
-
-  FolderObserverList* list = BookmarkFolderObserversForGUID(aParentGUID, false);
-  if (!list) return NS_OK;
-
-  for (uint32_t i = 0; i < list->Length(); ++i) {
-    RefPtr<nsNavHistoryFolderResultNode> folder = list->ElementAt(i);
-    if (folder) {
-      uint32_t nodeIndex;
-      RefPtr<nsNavHistoryResultNode> node =
-          folder->FindChildById(aItemId, &nodeIndex);
-      // if ExcludeItems is true we don't update non visible items
-      bool excludeItems = folder->mOptions->ExcludeItems();
-      if (node && (!excludeItems || !(node->IsURI() || node->IsSeparator())) &&
-          folder->StartIncrementalUpdate()) {
-        node->OnItemChanged(aItemId, aProperty, aIsAnnotationProperty,
-                            aNewValue, aLastModified, aItemType, aParentId,
-                            aGUID, aParentGUID, aOldValue, aSource);
-      }
-    }
-  }
-
-  // Note: we do NOT call history observers in this case.  This notification is
-  // the same as other history notification, except that here we know the item
-  // is a bookmark.  History observers will handle the history notification
-  // instead.
+  ENUMERATE_BOOKMARK_CHANGED_OBSERVERS(
+      aParentGUID, aItemId,
+      OnItemChanged(aItemId, aProperty, aIsAnnotationProperty, aNewValue,
+                    aLastModified, aItemType, aParentId, aGUID, aParentGUID,
+                    aOldValue, aSource));
   return NS_OK;
 }
 
@@ -4180,6 +4201,20 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
             OnItemMoved(item->mId, item->mOldIndex, item->mIndex,
                         item->mItemType, item->mGuid, item->mOldParentGuid,
                         item->mParentGuid, item->mSource, url));
+        break;
+      }
+      case PlacesEventType::Bookmark_title_changed: {
+        const dom::PlacesBookmarkTitle* titleEvent =
+            event->AsPlacesBookmarkTitle();
+        if (NS_WARN_IF(!titleEvent)) {
+          continue;
+        }
+
+        NS_ConvertUTF16toUTF8 title(titleEvent->mTitle);
+        ENUMERATE_BOOKMARK_CHANGED_OBSERVERS(
+            titleEvent->mParentGuid, titleEvent->mId,
+            OnItemTitleChanged(titleEvent->mId, titleEvent->mGuid, title,
+                               titleEvent->mLastModified * 1000));
         break;
       }
       case PlacesEventType::Page_title_changed: {

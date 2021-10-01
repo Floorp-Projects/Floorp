@@ -74,8 +74,9 @@ add_task(async function test_newFolder() {
   );
 
   let renameObserver = PlacesTestUtils.waitForNotification(
-    "onItemChanged",
-    (id, property, isAnno, aNewValue) => property == "title" && aNewValue == "f"
+    "bookmark-title-changed",
+    events => events.some(e => e.title === "f"),
+    "places"
   );
 
   // Enter a new name.

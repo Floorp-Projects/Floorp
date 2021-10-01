@@ -62,16 +62,18 @@ add_task(async function test_change_title_from_BookmarkStar() {
   await shownPromise;
 
   let bookmarkPanelTitle = document.getElementById("editBookmarkPanelTitle");
-  Assert.equal(
-    bookmarkPanelTitle.textContent,
-    gFluentStrings.formatValueSync("bookmarks-edit-bookmark"),
-    "Bookmark title is correct"
+  await BrowserTestUtils.waitForCondition(
+    () =>
+      bookmarkPanelTitle.textContent ===
+      gFluentStrings.formatValueSync("bookmarks-edit-bookmark"),
+    "Wait until the bookmark panel title will be changed expectedly."
   );
+  Assert.ok(true, "Bookmark title is correct");
 
   let promiseNotification = PlacesTestUtils.waitForNotification(
-    "onItemChanged",
-    (id, property, isAnno, val) =>
-      property == "title" && val == titleAfterFirstUpdate
+    "bookmark-title-changed",
+    events => events.some(e => e.title === titleAfterFirstUpdate),
+    "places"
   );
 
   // Update the bookmark's title.
@@ -146,8 +148,9 @@ add_task(async function test_change_title_from_Toolbar() {
       );
 
       let promiseTitleChange = PlacesTestUtils.waitForNotification(
-        "onItemChanged",
-        (id, prop, isAnno, val) => prop == "title" && val == "Toolbar title"
+        "bookmark-title-changed",
+        events => events.some(e => e.title === "Toolbar title"),
+        "places"
       );
 
       // Update the bookmark's title.
@@ -197,8 +200,9 @@ add_task(async function test_change_title_from_Sidebar() {
         );
 
         let promiseTitleChange = PlacesTestUtils.waitForNotification(
-          "onItemChanged",
-          (id, prop, isAnno, val) => prop == "title" && val == "Sidebar Title"
+          "bookmark-title-changed",
+          events => events.some(e => e.title === "Sidebar Title"),
+          "places"
         );
 
         // Update the bookmark's title.

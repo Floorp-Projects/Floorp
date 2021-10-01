@@ -903,25 +903,6 @@ var Bookmarks = Object.freeze({
               isTagging = parent.parentGuid === Bookmarks.tagsGuid;
             }
 
-            notify(
-              observers,
-              "onItemChanged",
-              [
-                updatedItem._id,
-                "title",
-                false,
-                updatedItem.title,
-                PlacesUtils.toPRTime(updatedItem.lastModified),
-                updatedItem.type,
-                updatedItem._parentId,
-                updatedItem.guid,
-                updatedItem.parentGuid,
-                "",
-                updatedItem.source,
-              ],
-              { isTagging }
-            );
-
             notifications.push(
               new PlacesBookmarkTitle({
                 id: updatedItem._id,

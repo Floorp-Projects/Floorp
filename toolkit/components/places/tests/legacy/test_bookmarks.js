@@ -39,6 +39,11 @@ var bookmarksObserver = {
         bookmarksObserver._itemRemovedId = event.id;
         bookmarksObserver._itemRemovedFolder = event.parentId;
         bookmarksObserver._itemRemovedIndex = event.index;
+        break;
+      case "bookmark-title-changed":
+        bookmarksObserver._itemTitleChangedId = event.id;
+        bookmarksObserver._itemTitleChangedTitle = event.title;
+        break;
     }
   },
 
@@ -70,7 +75,7 @@ var bmStartIndex = 0;
 add_task(async function test_bookmarks() {
   bs.addObserver(bookmarksObserver);
   os.addListener(
-    ["bookmark-added", "bookmark-removed"],
+    ["bookmark-added", "bookmark-removed", "bookmark-title-changed"],
     bookmarksObserver.handlePlacesEvents
   );
 
@@ -147,9 +152,8 @@ add_task(async function test_bookmarks() {
 
   // set bookmark title
   bs.setItemTitle(newId, "Google");
-  Assert.equal(bookmarksObserver._itemChangedId, newId);
-  Assert.equal(bookmarksObserver._itemChangedProperty, "title");
-  Assert.equal(bookmarksObserver._itemChangedValue, "Google");
+  Assert.equal(bookmarksObserver._itemTitleChangedId, newId);
+  Assert.equal(bookmarksObserver._itemTitleChangedTitle, "Google");
 
   // check lastModified after we set the title
   let lastModified2 = PlacesUtils.toPRTime(
@@ -203,7 +207,8 @@ add_task(async function test_bookmarks() {
 
   // change item
   bs.setItemTitle(newId2, "DevMo");
-  Assert.equal(bookmarksObserver._itemChangedProperty, "title");
+  Assert.equal(bookmarksObserver._itemTitleChangedId, newId2);
+  Assert.equal(bookmarksObserver._itemTitleChangedTitle, "DevMo");
 
   // insert item into subfolder
   let newId3 = bs.insertBookmark(
@@ -218,7 +223,8 @@ add_task(async function test_bookmarks() {
 
   // change item
   bs.setItemTitle(newId3, "MSDN");
-  Assert.equal(bookmarksObserver._itemChangedProperty, "title");
+  Assert.equal(bookmarksObserver._itemTitleChangedId, newId3);
+  Assert.equal(bookmarksObserver._itemTitleChangedTitle, "MSDN");
 
   // remove item
   bs.removeItem(newId2);
@@ -256,8 +262,8 @@ add_task(async function test_bookmarks() {
 
   // change item
   bs.setItemTitle(newId5, "ESPN");
-  Assert.equal(bookmarksObserver._itemChangedId, newId5);
-  Assert.equal(bookmarksObserver._itemChangedProperty, "title");
+  Assert.equal(bookmarksObserver._itemTitleChangedId, newId5);
+  Assert.equal(bookmarksObserver._itemTitleChangedTitle, "ESPN");
 
   // insert query item
   let uri6 = uri(
@@ -270,7 +276,8 @@ add_task(async function test_bookmarks() {
 
   // change item
   bs.setItemTitle(newId6, "Google Sites");
-  Assert.equal(bookmarksObserver._itemChangedProperty, "title");
+  Assert.equal(bookmarksObserver._itemTitleChangedId, newId6);
+  Assert.equal(bookmarksObserver._itemTitleChangedTitle, "Google Sites");
 
   // test bookmark id in query output
   try {
@@ -358,9 +365,8 @@ add_task(async function test_bookmarks() {
 
   // set bookmark title
   bs.setItemTitle(newId13, "ZZZXXXYYY");
-  Assert.equal(bookmarksObserver._itemChangedId, newId13);
-  Assert.equal(bookmarksObserver._itemChangedProperty, "title");
-  Assert.equal(bookmarksObserver._itemChangedValue, "ZZZXXXYYY");
+  Assert.equal(bookmarksObserver._itemTitleChangedId, newId13);
+  Assert.equal(bookmarksObserver._itemTitleChangedTitle, "ZZZXXXYYY");
 
   // test search on bookmark title ZZZXXXYYY
   try {
@@ -473,9 +479,8 @@ add_task(async function test_bookmarks() {
   // test title length after updates
   bs.setItemTitle(newId15, title15 + " updated");
   Assert.equal(bs.getItemTitle(newId15).length, title15expected.length);
-  Assert.equal(bookmarksObserver._itemChangedId, newId15);
-  Assert.equal(bookmarksObserver._itemChangedProperty, "title");
-  Assert.equal(bookmarksObserver._itemChangedValue, title15expected);
+  Assert.equal(bookmarksObserver._itemTitleChangedId, newId15);
+  Assert.equal(bookmarksObserver._itemTitleChangedTitle, title15expected);
 
   await testSimpleFolderResult();
 });
@@ -541,10 +546,9 @@ async function testSimpleFolderResult() {
 
   // update with another long title
   bs.setItemTitle(folderLongName, longName + " updated");
-  Assert.equal(bookmarksObserver._itemChangedId, folderLongName);
-  Assert.equal(bookmarksObserver._itemChangedProperty, "title");
+  Assert.equal(bookmarksObserver._itemTitleChangedId, folderLongName);
   Assert.equal(
-    bookmarksObserver._itemChangedValue,
+    bookmarksObserver._itemTitleChangedTitle,
     longName.substring(0, TITLE_LENGTH_MAX)
   );
 

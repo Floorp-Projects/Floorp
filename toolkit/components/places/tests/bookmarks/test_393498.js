@@ -8,10 +8,21 @@ var observer = {
   __proto__: NavBookmarkObserver.prototype,
 
   handlePlacesEvents(events) {
-    Assert.equal(events.length, 1, "Should only be 1 event.");
-    this._itemAddedId = events[0].id;
-    this._itemAddedParent = events[0].parentId;
-    this._itemAddedIndex = events[0].index;
+    for (const event of events) {
+      switch (event.type) {
+        case "bookmark-added": {
+          this._itemAddedId = event.id;
+          this._itemAddedParent = event.parentId;
+          this._itemAddedIndex = event.index;
+          break;
+        }
+        case "bookmark-title-changed": {
+          this._itemTitleChangedId = event.id;
+          this._itemTitleChangedTitle = event.title;
+          break;
+        }
+      }
+    }
   },
   onItemChanged(id, property, isAnnotationProperty, value) {
     this._itemChangedId = id;
@@ -23,14 +34,14 @@ var observer = {
 PlacesUtils.bookmarks.addObserver(observer);
 observer.handlePlacesEvents = observer.handlePlacesEvents.bind(observer);
 PlacesUtils.observers.addListener(
-  ["bookmark-added"],
+  ["bookmark-added", "bookmark-title-changed"],
   observer.handlePlacesEvents
 );
 
 registerCleanupFunction(function() {
   PlacesUtils.bookmarks.removeObserver(observer);
   PlacesUtils.observers.removeListener(
-    ["bookmark-added"],
+    ["bookmark-added", "bookmark-title-changed"],
     observer.handlePlacesEvents
   );
 });
@@ -99,11 +110,10 @@ add_task(async function test_bookmark_update_notifications() {
 
   // Test notifications.
   Assert.equal(
-    observer._itemChangedId,
+    observer._itemTitleChangedId,
     await PlacesUtils.promiseItemId(bookmark.guid)
   );
-  Assert.equal(observer._itemChangedProperty, "title");
-  Assert.equal(observer._itemChangedValue, "Google");
+  Assert.equal(observer._itemTitleChangedTitle, "Google");
 
   // Check lastModified has been updated.
   Assert.ok(is_time_ordered(PAST_DATE, updatedBookmark.lastModified.getTime()));

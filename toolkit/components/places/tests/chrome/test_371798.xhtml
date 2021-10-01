@@ -18,23 +18,9 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+const {PlacesTestUtils} = ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
 
 const TEST_URI = NetUtil.newURI("http://foo.com");
-
-function promiseOnItemChanged() {
-  return new Promise(resolve => {
-    PlacesUtils.bookmarks.addObserver({
-      onItemRemoved() {},
-
-      onItemChanged() {
-        PlacesUtils.bookmarks.removeObserver(this);
-        resolve();
-      },
-
-      QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"])
-    });
-  });
-}
 
 (async function() {
   // add 2 bookmarks to the toolbar, same URI, different titles (set later)
@@ -52,7 +38,11 @@ function promiseOnItemChanged() {
   let rootNode = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid).root;
 
   // set up observer
-  let promiseObserved = promiseOnItemChanged();
+  const promiseObserved = PlacesTestUtils.waitForNotification(
+    "bookmark-title-changed",
+    () => true,
+    "places"
+  );
 
   // modify the bookmark's title
   await PlacesUtils.bookmarks.update({

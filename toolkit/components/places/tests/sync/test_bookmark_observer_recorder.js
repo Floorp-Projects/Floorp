@@ -536,18 +536,12 @@ add_task(async function test_apply_then_revert() {
       },
     },
     {
-      name: "onItemChanged",
+      name: "bookmark-title-changed",
       params: {
         itemId: localItemIds.get("folderAAAAAA"),
-        property: "title",
-        isAnnoProperty: false,
-        newValue: "A (remote)",
-        type: PlacesUtils.bookmarks.TYPE_FOLDER,
-        parentId: PlacesUtils.toolbarFolderId,
+        title: "A (remote)",
         guid: "folderAAAAAA",
         parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-        oldValue: "A",
-        source: PlacesUtils.bookmarks.SOURCES.SYNC,
       },
     },
     {
