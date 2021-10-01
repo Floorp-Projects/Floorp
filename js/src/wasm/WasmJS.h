@@ -506,10 +506,11 @@ class WasmTagObject : public NativeObject {
   static const JSFunctionSpec static_methods[];
   static bool construct(JSContext*, unsigned, Value*);
 
-  static WasmTagObject* create(JSContext* cx, const wasm::ValTypeVector& type,
+  static WasmTagObject* create(JSContext* cx, const wasm::TagType& tagType,
                                HandleObject proto);
   bool isNewborn() const;
 
+  wasm::TagType& tagType() const;
   wasm::ValTypeVector& valueTypes() const;
   wasm::ResultType resultType() const;
   wasm::ExceptionTag& tag() const;

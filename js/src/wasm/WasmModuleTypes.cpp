@@ -181,7 +181,7 @@ size_t GlobalDesc::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-bool TagDesc::computeLayout() {
+bool TagType::computeLayout() {
   StructLayout layout;
   int32_t refCount = 0;
   for (const ValType argType : argTypes) {
