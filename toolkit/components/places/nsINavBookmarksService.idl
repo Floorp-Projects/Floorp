@@ -263,6 +263,7 @@ interface nsINavBookmarksService : nsISupports
    *
    *  @note  aTitle will be truncated to TITLE_LENGTH_MAX.
    */
+  [can_run_script]
   void setItemTitle(in long long aItemId, in AUTF8String aTitle,
                     [optional] in unsigned short aSource);
 

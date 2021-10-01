@@ -21,6 +21,10 @@ enum PlacesEventType {
    */
   "bookmark-moved",
   /**
+   * data: PlacesBookmarkTitle. Fired whenever a bookmark title changes.
+   */
+  "bookmark-title-changed",
+  /**
    * data: PlacesFavicon. Fired whenever a favicon changes.
    */
   "favicon-changed",
@@ -256,6 +260,33 @@ interface PlacesBookmarkMoved : PlacesBookmark {
    * The item's old index in the folder.
    */
   readonly attribute long oldIndex;
+};
+
+dictionary PlacesBookmarkTitleInit {
+  required long long id;
+  required unsigned short itemType;
+  DOMString? url = null;
+  required ByteString guid;
+  required ByteString parentGuid;
+  required DOMString title;
+  required long long lastModified;
+  required unsigned short source;
+  required boolean isTagging;
+};
+
+[ChromeOnly, Exposed=Window]
+interface PlacesBookmarkTitle : PlacesBookmark {
+  constructor(PlacesBookmarkTitleInit initDict);
+
+  /**
+   * The title of the changed bookmark.
+   */
+  readonly attribute DOMString title;
+
+  /**
+   * The updated last modified value in milliseconds.
+   */
+  readonly attribute long long lastModified;
 };
 
 dictionary PlacesFaviconInit {
