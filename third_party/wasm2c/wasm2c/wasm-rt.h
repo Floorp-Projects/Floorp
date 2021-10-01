@@ -17,6 +17,7 @@
 #ifndef WASM_RT_H_
 #define WASM_RT_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <setjmp.h>
@@ -231,7 +232,7 @@ void wasm_rt_cleanup_func_types(wasm_func_type_t** p_func_type_structs,
  *    // 1 initial page (65536 bytes), and a maximum of 2 pages.
  *    wasm_rt_allocate_memory(&my_memory, 1, 2);
  *  ``` */
-extern void wasm_rt_allocate_memory(wasm_rt_memory_t*,
+extern bool wasm_rt_allocate_memory(wasm_rt_memory_t*,
                                     uint32_t initial_pages,
                                     uint32_t max_pages);
 
