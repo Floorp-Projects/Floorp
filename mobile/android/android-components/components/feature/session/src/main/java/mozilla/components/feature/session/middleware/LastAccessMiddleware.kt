@@ -57,6 +57,11 @@ class LastAccessMiddleware : Middleware<BrowserState, BrowserAction> {
                     context.dispatchUpdateActionForId(action.tab.id)
                 }
             }
+            is TabListAction.RestoreAction -> {
+                action.selectedTabId?.let {
+                    context.dispatchUpdateActionForId(it)
+                }
+            }
             is ContentAction.UpdateUrlAction -> {
                 if (action.sessionId == context.state.selectedTabId) {
                     context.dispatchUpdateActionForId(action.sessionId)

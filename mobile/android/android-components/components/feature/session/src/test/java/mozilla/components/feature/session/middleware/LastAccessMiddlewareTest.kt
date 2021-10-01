@@ -12,12 +12,14 @@ import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -286,6 +288,42 @@ class LastAccessMiddlewareTest {
         assertNotNull(selectedTab)
         assertEquals(selectedTab!!.id, store.state.selectedTabId)
         assertEquals(0L, selectedTab.lastAccess)
+    }
+
+    @Test
+    fun `UpdateLastAction is invoked for selected tab from RestoreAction`() {
+        val recentTime = System.currentTimeMillis()
+        val lastAccess = 3735928559
+        val store = BrowserStore(
+            middleware = listOf(LastAccessMiddleware())
+        )
+        val recoverableTabs = listOf(
+            RecoverableTab(url = "https://firefox.com", id = "1", lastAccess = lastAccess),
+            RecoverableTab(url = "https://mozilla.org", id = "2", lastAccess = lastAccess)
+        )
+
+        store.dispatch(
+            TabListAction.RestoreAction(
+                recoverableTabs,
+                "2",
+                TabListAction.RestoreAction.RestoreLocation.BEGINNING
+            )
+        ).joinBlocking()
+
+        assertTrue(store.state.tabs.size == 2)
+
+        val restoredTab1 = store.state.findTab("1")
+        val restoredTab2 = store.state.findTab("2")
+        assertNotNull(restoredTab1)
+        assertNotNull(restoredTab2)
+
+        assertNotEquals(restoredTab2!!.lastAccess, lastAccess)
+        assertTrue(restoredTab2.lastAccess > lastAccess)
+        assertTrue(restoredTab2.lastAccess > recentTime)
+
+        assertEquals(restoredTab1!!.lastAccess, lastAccess)
+        assertFalse(restoredTab1.lastAccess > lastAccess)
+        assertFalse(restoredTab1.lastAccess > recentTime)
     }
 
     @Test
