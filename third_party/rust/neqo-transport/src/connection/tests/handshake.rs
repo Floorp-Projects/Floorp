@@ -488,7 +488,7 @@ fn reorder_handshake() {
     // It can only send another Initial packet.
     now += RTT / 2;
     let dgram = client.process(s_hs, now).dgram();
-    assertions::assert_initial(&dgram.as_ref().unwrap(), false);
+    assertions::assert_initial(dgram.as_ref().unwrap(), false);
     assert_eq!(client.stats().saved_datagrams, 1);
     assert_eq!(client.stats().packets_rx, 1);
 
@@ -665,7 +665,7 @@ fn extra_initial_hs() {
     // another Initial packet.
     for _ in 0..=super::super::EXTRA_INITIALS {
         let c_init = client.process(undecryptable.clone(), now).dgram();
-        assertions::assert_initial(&c_init.as_ref().unwrap(), false);
+        assertions::assert_initial(c_init.as_ref().unwrap(), false);
         now += DEFAULT_RTT / 10;
     }
 

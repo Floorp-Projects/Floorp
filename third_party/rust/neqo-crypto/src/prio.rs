@@ -4,12 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![allow(
-    unknown_lints,
-    renamed_and_removed_lints,
-    clippy::unknown_clippy_lints,
-    clippy::upper_case_acronyms
-)] // Until we require rust 1.51.
+#![allow(clippy::upper_case_acronyms)]
 #![allow(unknown_lints, deref_nullptr)] // Until we require rust 1.53 or bindgen#1651 is fixed.
 #![allow(
     dead_code,

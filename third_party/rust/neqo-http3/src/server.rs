@@ -74,7 +74,7 @@ impl Http3Server {
     }
 
     pub fn set_qlog_dir(&mut self, dir: Option<PathBuf>) {
-        self.server.set_qlog_dir(dir)
+        self.server.set_qlog_dir(dir);
     }
 
     pub fn set_validation(&mut self, v: ValidateAddress) {
@@ -133,7 +133,7 @@ impl Http3Server {
             .http3_handlers
             .iter()
             .filter_map(|(conn, handler)| {
-                if handler.borrow_mut().should_be_processed() && !active_conns.contains(&conn) {
+                if handler.borrow_mut().should_be_processed() && !active_conns.contains(conn) {
                     Some(conn)
                 } else {
                     None
@@ -177,7 +177,7 @@ impl Http3Server {
                                 stream_id,
                                 &mut handler_borrowed,
                                 &mut conn,
-                                &handler,
+                                handler,
                                 now,
                                 &mut self.events,
                             );
@@ -302,12 +302,6 @@ mod tests {
         create_server(DEFAULT_SETTINGS)
     }
 
-    #[allow(
-        unknown_lints,
-        renamed_and_removed_lints,
-        clippy::unknown_clippy_lints,
-        clippy::unnested_or_patterns
-    )] // Until we require rust 1.53 we can't use or_patterns.
     fn assert_closed(hconn: &mut Http3Server, expected: &Error) {
         let err = ConnectionError::Application(expected.code());
         let closed = |e| {
@@ -876,8 +870,7 @@ mod tests {
                         .unwrap();
                     data_received += 1;
                 }
-                Http3ServerEvent::StateChange { .. } => {}
-                Http3ServerEvent::PriorityUpdate { .. } => {}
+                Http3ServerEvent::StateChange { .. } | Http3ServerEvent::PriorityUpdate { .. } => {}
             }
         }
         assert_eq!(headers_frames, 1);
@@ -925,8 +918,7 @@ mod tests {
                 Http3ServerEvent::Data { .. } => {
                     panic!("We should not have a Data event");
                 }
-                Http3ServerEvent::StateChange { .. } => {}
-                Http3ServerEvent::PriorityUpdate { .. } => {}
+                Http3ServerEvent::StateChange { .. } | Http3ServerEvent::PriorityUpdate { .. } => {}
             }
         }
         let out = hconn.process(None, now());
@@ -948,8 +940,7 @@ mod tests {
                 Http3ServerEvent::Data { .. } => {
                     panic!("We should not have a Data event");
                 }
-                Http3ServerEvent::StateChange { .. } => {}
-                Http3ServerEvent::PriorityUpdate { .. } => {}
+                Http3ServerEvent::StateChange { .. } | Http3ServerEvent::PriorityUpdate { .. } => {}
             }
         }
         assert_eq!(headers_frames, 1);
@@ -988,8 +979,7 @@ mod tests {
                 Http3ServerEvent::Data { .. } => {
                     panic!("We should not have a Data event");
                 }
-                Http3ServerEvent::StateChange { .. } => {}
-                Http3ServerEvent::PriorityUpdate { .. } => {}
+                Http3ServerEvent::StateChange { .. } | Http3ServerEvent::PriorityUpdate { .. } => {}
             }
         }
         let out = hconn.process(None, now());
@@ -1191,13 +1181,13 @@ mod tests {
         let request_stream_id_1 = peer_conn.stream_create(StreamType::BiDi).unwrap();
         // Send only request headers for now.
         peer_conn
-            .stream_send(request_stream_id_1, &REQUEST_WITH_BODY)
+            .stream_send(request_stream_id_1, REQUEST_WITH_BODY)
             .unwrap();
 
         let request_stream_id_2 = peer_conn.stream_create(StreamType::BiDi).unwrap();
         // Send only request headers for now.
         peer_conn
-            .stream_send(request_stream_id_2, &REQUEST_WITH_BODY)
+            .stream_send(request_stream_id_2, REQUEST_WITH_BODY)
             .unwrap();
 
         let out = peer_conn.process(None, now());
@@ -1213,8 +1203,7 @@ mod tests {
                 Http3ServerEvent::Data { request, .. } => {
                     assert!(requests.get(&request).is_some());
                 }
-                Http3ServerEvent::StateChange { .. } => {}
-                Http3ServerEvent::PriorityUpdate { .. } => {}
+                Http3ServerEvent::StateChange { .. } | Http3ServerEvent::PriorityUpdate { .. } => {}
             }
         }
         assert_eq!(requests.len(), 2);

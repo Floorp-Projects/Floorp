@@ -381,7 +381,6 @@ pub struct CryptoDxState {
 }
 
 impl CryptoDxState {
-    #[allow(unknown_lints, renamed_and_removed_lints, clippy::unknown_clippy_lints)] // Until we require rust 1.45.
     #[allow(clippy::reversed_empty_ranges)] // To initialize an empty range.
     pub fn new(
         direction: CryptoDxDirection,
@@ -432,14 +431,8 @@ impl CryptoDxState {
         let initial_secret = hkdf::extract(
             TLS_VERSION_1_3,
             cipher,
-            Some(
-                hkdf::import_key(TLS_VERSION_1_3, cipher, salt)
-                    .as_ref()
-                    .unwrap(),
-            ),
-            hkdf::import_key(TLS_VERSION_1_3, cipher, dcid)
-                .as_ref()
-                .unwrap(),
+            Some(hkdf::import_key(TLS_VERSION_1_3, salt).as_ref().unwrap()),
+            hkdf::import_key(TLS_VERSION_1_3, dcid).as_ref().unwrap(),
         )
         .unwrap();
 
@@ -1125,8 +1118,7 @@ impl CryptoStates {
         let app_read = |epoch| CryptoDxAppData {
             dx: read(epoch),
             cipher: TLS_AES_128_GCM_SHA256,
-            next_secret: hkdf::import_key(TLS_VERSION_1_3, TLS_AES_128_GCM_SHA256, &[0xaa; 32])
-                .unwrap(),
+            next_secret: hkdf::import_key(TLS_VERSION_1_3, &[0xaa; 32]).unwrap(),
         };
         Self {
             initial: Some(CryptoState {
@@ -1151,8 +1143,7 @@ impl CryptoStates {
             0x00, 0xa1, 0x54, 0x43, 0xf1, 0x82, 0x03, 0xa0, 0x7d, 0x60, 0x60, 0xf6, 0x88, 0xf3,
             0x0f, 0x21, 0x63, 0x2b,
         ];
-        let secret =
-            hkdf::import_key(TLS_VERSION_1_3, TLS_CHACHA20_POLY1305_SHA256, SECRET).unwrap();
+        let secret = hkdf::import_key(TLS_VERSION_1_3, SECRET).unwrap();
         let app_read = |epoch| CryptoDxAppData {
             dx: CryptoDxState {
                 direction: CryptoDxDirection::Read,

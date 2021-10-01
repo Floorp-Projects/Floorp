@@ -28,7 +28,7 @@ fn make_aead(secret: &[u8]) -> Aead {
     #[cfg(debug_assertions)]
     ::neqo_crypto::assert_initialized();
 
-    let secret = hkdf::import_key(TLS_VERSION_1_3, TLS_AES_128_GCM_SHA256, secret).unwrap();
+    let secret = hkdf::import_key(TLS_VERSION_1_3, secret).unwrap();
     Aead::new(TLS_VERSION_1_3, TLS_AES_128_GCM_SHA256, &secret, "quic ").unwrap()
 }
 thread_local!(static RETRY_AEAD_29: RefCell<Aead> = RefCell::new(make_aead(RETRY_SECRET_29)));

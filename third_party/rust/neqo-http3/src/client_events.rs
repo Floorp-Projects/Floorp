@@ -198,7 +198,7 @@ impl Http3ClientEvents {
     where
         F: Fn(&Http3ClientEvent) -> bool,
     {
-        self.events.borrow_mut().retain(|evt| !f(evt))
+        self.events.borrow_mut().retain(|evt| !f(evt));
     }
 
     /// Add a new `StateChange` event.

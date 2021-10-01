@@ -147,7 +147,7 @@ impl<'a> std::ops::Deref for ConnectionIdRef<'a> {
     type Target = [u8];
 
     fn deref(&self) -> &Self::Target {
-        &self.cid
+        self.cid
     }
 }
 

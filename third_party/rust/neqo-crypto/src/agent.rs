@@ -71,12 +71,6 @@ impl HandshakeState {
     }
 }
 
-#[allow(
-    unknown_lints,
-    renamed_and_removed_lints,
-    clippy::unknown_clippy_lints,
-    clippy::unnested_or_patterns
-)] // Until we require rust 1.53 we can't use or_patterns.
 fn get_alpn(fd: *mut ssl::PRFileDesc, pre: bool) -> Res<Option<String>> {
     let mut alpn_state = ssl::SSLNextProtoState::SSL_NEXT_PROTO_NO_SUPPORT;
     let mut chosen = vec![0_u8; 255];

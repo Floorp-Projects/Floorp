@@ -102,7 +102,7 @@ impl RecvStreams {
         let mut removed_bidi = 0;
         let mut removed_uni = 0;
         for id in &recv_to_remove {
-            self.streams.remove(&id);
+            self.streams.remove(id);
             if id.is_remote_initiated(role) {
                 if id.is_bidi() {
                     removed_bidi += 1;

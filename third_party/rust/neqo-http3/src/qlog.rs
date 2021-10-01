@@ -20,7 +20,7 @@ pub fn h3_data_moved_up(qlog: &mut NeqoQlog, stream_id: u64, amount: usize) {
             Some(H3DataRecipient::Application),
             None,
         ))
-    })
+    });
 }
 
 pub fn h3_data_moved_down(qlog: &mut NeqoQlog, stream_id: u64, amount: usize) {
@@ -33,5 +33,5 @@ pub fn h3_data_moved_down(qlog: &mut NeqoQlog, stream_id: u64, amount: usize) {
             Some(H3DataRecipient::Transport),
             None,
         ))
-    })
+    });
 }

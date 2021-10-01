@@ -95,7 +95,7 @@ impl fmt::Debug for NeqoQlogShared {
 impl Drop for NeqoQlogShared {
     fn drop(&mut self) {
         if let Err(e) = self.streamer.finish_log() {
-            crate::do_log!(::log::Level::Error, "Error dropping NeqoQlog: {}", e)
+            crate::do_log!(::log::Level::Error, "Error dropping NeqoQlog: {}", e);
         }
     }
 }

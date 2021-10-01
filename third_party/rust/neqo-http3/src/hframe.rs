@@ -722,7 +722,7 @@ mod tests {
     ) {
         let mut fr = HFrameReaderTest::new();
 
-        fr.conn_s.stream_send(fr.stream_id, &buf).unwrap();
+        fr.conn_s.stream_send(fr.stream_id, buf).unwrap();
         if let FrameReadingTestSend::DataWithFin = test_to_send {
             fr.conn_s.stream_close_send(fr.stream_id).unwrap();
         }

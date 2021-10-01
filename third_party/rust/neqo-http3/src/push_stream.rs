@@ -77,13 +77,11 @@ impl Display for PushStream {
 
 impl RecvStream for PushStream {
     fn receive(&mut self, conn: &mut Connection) -> Res<ReceiveOutput> {
-        loop {
-            self.response.receive(conn)?;
-            if self.response.done() {
-                self.push_handler.borrow_mut().close(self.push_id);
-            }
-            return Ok(ReceiveOutput::NoOutput);
+        self.response.receive(conn)?;
+        if self.response.done() {
+            self.push_handler.borrow_mut().close(self.push_id);
         }
+        Ok(ReceiveOutput::NoOutput)
     }
 
     fn done(&self) -> bool {

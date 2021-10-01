@@ -59,7 +59,6 @@ const ERROR_APPLICATION_CLOSE: TransportError = 12;
 const ERROR_AEAD_LIMIT_REACHED: TransportError = 15;
 
 #[derive(Clone, Debug, PartialEq, PartialOrd, Ord, Eq)]
-#[allow(clippy::pub_enum_variant_names)]
 pub enum Error {
     NoError,
     // Each time tihe error is return a different parameter is supply.

@@ -176,6 +176,6 @@ impl Http3ServerEvents {
         self.insert(Http3ServerEvent::PriorityUpdate {
             stream_id,
             priority,
-        })
+        });
     }
 }

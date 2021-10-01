@@ -111,9 +111,7 @@ fn priority_update() {
         .fetch(
             Instant::now(),
             "GET",
-            "https",
-            "something.com",
-            "/",
+            &("https", "something.com", "/"),
             &[],
             Priority::new(4, true),
         )
@@ -142,7 +140,7 @@ fn priority_update() {
                 Header::new("priority", "u=4,i"),
             ];
             assert_eq!(headers, expected_headers);
-            assert_eq!(fin, false);
+            assert!(!fin);
         }
         other => panic!("unexpected server event: {:?}", other),
     }
@@ -177,9 +175,7 @@ fn priority_update_dont_send_for_cancelled_stream() {
         .fetch(
             Instant::now(),
             "GET",
-            "https",
-            "something.com",
-            "/",
+            &("https", "something.com", "/"),
             &[],
             Priority::new(5, false),
         )

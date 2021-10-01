@@ -234,7 +234,7 @@ impl Streams {
 
     pub fn lost(&mut self, token: &StreamRecoveryToken) {
         match token {
-            StreamRecoveryToken::Stream(st) => self.send.lost(&st),
+            StreamRecoveryToken::Stream(st) => self.send.lost(st),
             StreamRecoveryToken::ResetStream { stream_id } => self.send.reset_lost(*stream_id),
             StreamRecoveryToken::StreamDataBlocked { stream_id, limit } => {
                 self.send.blocked_lost(*stream_id, *limit)

@@ -177,7 +177,7 @@ impl EncoderInstructionReader {
                 }
             }
             DecodedEncoderInstruction::NoInstruction => {
-                unreachable!("We must have instruction at this point.")
+                unreachable!("We must have instruction at this point.");
             }
         }
         Ok(())
@@ -195,7 +195,7 @@ impl EncoderInstructionReader {
         loop {
             match &mut self.state {
                 EncoderInstructionReaderState::ReadInstruction => {
-                    self.decode_instruction_type(recv)?
+                    self.decode_instruction_type(recv)?;
                 }
                 EncoderInstructionReaderState::ReadFirstInt { reader } => {
                     let val = reader.read(recv)?;

@@ -288,7 +288,9 @@ impl<'a> HeaderDecoder<'a> {
             }
             self.req_insert_cnt - base_delta - 1
         } else {
-            self.req_insert_cnt + base_delta
+            self.req_insert_cnt
+                .checked_add(base_delta)
+                .ok_or(Error::DecompressionFailed)?
         };
         qtrace!(
             [self],
@@ -418,6 +420,7 @@ impl<'a> HeaderDecoder<'a> {
 mod tests {
 
     use super::{HeaderDecoder, HeaderDecoderResult, HeaderEncoder, HeaderTable};
+    use crate::Error;
 
     const INDEX_STATIC_TEST: &[(u64, &[u8], &str, &str)] = &[
         (0, &[0x0, 0x0, 0xc0], ":authority", ""),
@@ -896,5 +899,35 @@ mod tests {
                 panic!("No headers");
             }
         }
+    }
+
+    /// If the base calculation goes negative, that is an error.
+    #[test]
+    fn negative_base() {
+        let mut table = HeaderTable::new(false);
+        fill_table(&mut table);
+        let mut decoder_h = HeaderDecoder::new(&[0x0, 0x87, 0x01, 0x02, 0x03]);
+        assert_eq!(
+            Error::DecompressionFailed,
+            decoder_h.decode_header_block(&table, 1000, 0).unwrap_err()
+        );
+    }
+
+    /// If the base calculation overflows the largest value we support (`u64::MAX`),
+    /// then that is an error.
+    #[test]
+    fn overflow_base() {
+        let mut table = HeaderTable::new(false);
+        fill_table(&mut table);
+        // A small required insert count is necessary, but we can set the
+        // base delta to u64::MAX.
+        let mut decoder_h = HeaderDecoder::new(&[
+            0xff, 0x01, 0x7f, 0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x02,
+            0x03,
+        ]);
+        assert_eq!(
+            Error::DecompressionFailed,
+            decoder_h.decode_header_block(&table, 1000, 0).unwrap_err()
+        );
     }
 }

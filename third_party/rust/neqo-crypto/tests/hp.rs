@@ -9,7 +9,7 @@ use neqo_crypto::hp::HpKey;
 use test_fixture::fixture_init;
 
 fn make_hp(cipher: Cipher) -> HpKey {
-    let ikm = hkdf::import_key(TLS_VERSION_1_3, cipher, &[0; 16]).expect("import IKM");
+    let ikm = hkdf::import_key(TLS_VERSION_1_3, &[0; 16]).expect("import IKM");
     let prk = hkdf::extract(TLS_VERSION_1_3, cipher, None, &ikm).expect("extract works");
     HpKey::extract(TLS_VERSION_1_3, cipher, &prk, "hp").expect("extract label works")
 }

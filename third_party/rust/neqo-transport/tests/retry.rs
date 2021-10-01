@@ -34,7 +34,7 @@ fn retry_basic() {
     let dgram = server.process(dgram, now()).dgram(); // Retry
     assert!(dgram.is_some());
 
-    assertions::assert_retry(&dgram.as_ref().unwrap());
+    assertions::assert_retry(dgram.as_ref().unwrap());
 
     let dgram = client.process(dgram, now()).dgram(); // Initial w/token
     assert!(dgram.is_some());
@@ -62,7 +62,7 @@ fn retry_expired() {
     let dgram = server.process(dgram, now).dgram(); // Retry
     assert!(dgram.is_some());
 
-    assertions::assert_retry(&dgram.as_ref().unwrap());
+    assertions::assert_retry(dgram.as_ref().unwrap());
 
     let dgram = client.process(dgram, now).dgram(); // Initial w/token
     assert!(dgram.is_some());
@@ -121,7 +121,7 @@ fn retry_different_ip() {
     let dgram = server.process(dgram, now()).dgram(); // Retry
     assert!(dgram.is_some());
 
-    assertions::assert_retry(&dgram.as_ref().unwrap());
+    assertions::assert_retry(dgram.as_ref().unwrap());
 
     let dgram = client.process(dgram, now()).dgram(); // Initial w/token
     assert!(dgram.is_some());
@@ -202,7 +202,7 @@ fn retry_after_initial() {
 
     let retry = retry_server.process(cinit, now()).dgram(); // Retry!
     assert!(retry.is_some());
-    assertions::assert_retry(&retry.as_ref().unwrap());
+    assertions::assert_retry(retry.as_ref().unwrap());
 
     // The client should ignore the retry.
     let junk = client.process(retry, now()).dgram();
@@ -288,7 +288,7 @@ fn retry_after_pto() {
     assert_ne!(cb, Duration::new(0, 0));
 
     let retry = server.process(ci, now).dgram();
-    assertions::assert_retry(&retry.as_ref().unwrap());
+    assertions::assert_retry(retry.as_ref().unwrap());
 
     let ci2 = client.process(retry, now).dgram();
     assert!(ci2.unwrap().len() >= 1200);
@@ -305,7 +305,7 @@ fn vn_after_retry() {
     let dgram = server.process(dgram, now()).dgram(); // Retry
     assert!(dgram.is_some());
 
-    assertions::assert_retry(&dgram.as_ref().unwrap());
+    assertions::assert_retry(dgram.as_ref().unwrap());
 
     let dgram = client.process(dgram, now()).dgram(); // Initial w/token
     assert!(dgram.is_some());
@@ -356,7 +356,7 @@ fn mitm_retry() {
     let (protected_header, d_cid, s_cid, payload) = decode_initial_header(&client_initial2);
 
     // Now we have enough information to make keys.
-    let (aead, hp) = client_initial_aead_and_hp(&d_cid);
+    let (aead, hp) = client_initial_aead_and_hp(d_cid);
     let (header, pn) = remove_header_protection(&hp, protected_header, payload);
     let pn_len = header.len() - protected_header.len();
 

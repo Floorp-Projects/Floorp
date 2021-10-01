@@ -33,7 +33,7 @@ impl NewStreamType {
     /// # Error
     /// Push streams received by the server are not allowed and this function will return
     /// `HttpStreamCreation` error.
-    fn final_stream_type(stream_type: u64, role: &Role) -> Res<Option<NewStreamType>> {
+    fn final_stream_type(stream_type: u64, role: Role) -> Res<Option<NewStreamType>> {
         match (stream_type, role) {
             (HTTP3_UNI_STREAM_TYPE_CONTROL, _) => Ok(Some(NewStreamType::Control)),
             (QPACK_UNI_STREAM_TYPE_ENCODER, _) => Ok(Some(NewStreamType::Decoder)),
@@ -50,8 +50,8 @@ impl NewStreamType {
 ///  - streams identified by the single type (varint encoded). Most streams belong to
 ///    this category. The `NewStreamHeadReader` will switch from `ReadType`to `Done` state.
 ///  - streams identified by the type and the ID (both varint encoded). For example, a
-///    push stream is identified by the type and PushId. After reading the type in
-///    the `ReadType` state, `NewStreamHeadReader` changes to ReadId state and from there
+///    push stream is identified by the type and `PushId`. After reading the type in
+///    the `ReadType` state, `NewStreamHeadReader` changes to `ReadId` state and from there
 ///    to `Done` state
 #[derive(Debug)]
 pub enum NewStreamHeadReader {
@@ -125,7 +125,7 @@ impl NewStreamHeadReader {
                     //  - None - if a stream is not identified by the type only, but it needs
                     //    additional data from the header to produce the final type, e.g.
                     //    a push stream needs pushId as well.
-                    let final_type = NewStreamType::final_stream_type(output, role);
+                    let final_type = NewStreamType::final_stream_type(output, *role);
                     match (&final_type, fin) {
                         (Err(_), _) => {
                             *self = NewStreamHeadReader::Done;
@@ -133,7 +133,7 @@ impl NewStreamHeadReader {
                         }
                         (Ok(t), true) => {
                             *self = NewStreamHeadReader::Done;
-                            return self.map_stream_fin(*t);
+                            return Self::map_stream_fin(*t);
                         }
                         (Ok(Some(t)), false) => {
                             qtrace!("Decoded stream type {:?}", *t);
@@ -158,13 +158,13 @@ impl NewStreamHeadReader {
                     return Ok(Some(NewStreamType::Push(output)));
                 }
                 NewStreamHeadReader::Done => {
-                    unreachable!("Cannot be in state NewStreamHeadReader::Done")
+                    unreachable!("Cannot be in state NewStreamHeadReader::Done");
                 }
             }
         }
     }
 
-    fn map_stream_fin(&self, decoded: Option<NewStreamType>) -> Res<Option<NewStreamType>> {
+    fn map_stream_fin(decoded: Option<NewStreamType>) -> Res<Option<NewStreamType>> {
         match decoded {
             Some(NewStreamType::Control)
             | Some(NewStreamType::Encoder)
@@ -187,7 +187,7 @@ impl RecvStream for NewStreamHeadReader {
     fn receive(&mut self, conn: &mut Connection) -> Res<ReceiveOutput> {
         Ok(self
             .get_type(conn)?
-            .map_or(ReceiveOutput::NoOutput, |t| ReceiveOutput::NewStream(t)))
+            .map_or(ReceiveOutput::NoOutput, ReceiveOutput::NewStream))
     }
 
     fn done(&self) -> bool {
@@ -243,7 +243,7 @@ mod tests {
             &mut self,
             enc: &[u8],
             fin: bool,
-            outcome: Res<ReceiveOutput>,
+            outcome: &Res<ReceiveOutput>,
             done: bool,
         ) {
             let len = enc.len() - 1;
@@ -267,7 +267,7 @@ mod tests {
             }
             let out = self.conn_s.process(None, now());
             mem::drop(self.conn_c.process(out.dgram(), now()));
-            assert_eq!(self.decoder.receive(&mut self.conn_c), outcome);
+            assert_eq!(&self.decoder.receive(&mut self.conn_c), outcome);
             assert_eq!(self.decoder.done(), done);
         }
 
@@ -275,7 +275,7 @@ mod tests {
             &mut self,
             to_encode: &[u64],
             fin: bool,
-            outcome: Res<ReceiveOutput>,
+            outcome: &Res<ReceiveOutput>,
             done: bool,
         ) {
             let mut enc = Encoder::default();
@@ -292,7 +292,7 @@ mod tests {
         t.decode(
             &[QPACK_UNI_STREAM_TYPE_DECODER],
             false,
-            Ok(ReceiveOutput::NewStream(NewStreamType::Encoder)),
+            &Ok(ReceiveOutput::NewStream(NewStreamType::Encoder)),
             true,
         );
     }
@@ -303,7 +303,7 @@ mod tests {
         t.decode(
             &[QPACK_UNI_STREAM_TYPE_ENCODER],
             false,
-            Ok(ReceiveOutput::NewStream(NewStreamType::Decoder)),
+            &Ok(ReceiveOutput::NewStream(NewStreamType::Decoder)),
             true,
         );
     }
@@ -314,7 +314,7 @@ mod tests {
         t.decode(
             &[HTTP3_UNI_STREAM_TYPE_CONTROL],
             false,
-            Ok(ReceiveOutput::NewStream(NewStreamType::Control)),
+            &Ok(ReceiveOutput::NewStream(NewStreamType::Control)),
             true,
         );
     }
@@ -325,7 +325,7 @@ mod tests {
         t.decode(
             &[HTTP3_UNI_STREAM_TYPE_PUSH, 0xaaaa_aaaa],
             false,
-            Ok(ReceiveOutput::NewStream(NewStreamType::Push(0xaaaa_aaaa))),
+            &Ok(ReceiveOutput::NewStream(NewStreamType::Push(0xaaaa_aaaa))),
             true,
         );
 
@@ -333,7 +333,7 @@ mod tests {
         t.decode(
             &[HTTP3_UNI_STREAM_TYPE_PUSH],
             false,
-            Err(Error::HttpStreamCreation),
+            &Err(Error::HttpStreamCreation),
             true,
         );
     }
@@ -344,7 +344,7 @@ mod tests {
         t.decode(
             &[0x3fff_ffff_ffff_ffff],
             false,
-            Ok(ReceiveOutput::NewStream(NewStreamType::Unknown)),
+            &Ok(ReceiveOutput::NewStream(NewStreamType::Unknown)),
             true,
         );
     }
@@ -355,14 +355,14 @@ mod tests {
         t.decode(
             &[0x3fff],
             false,
-            Ok(ReceiveOutput::NewStream(NewStreamType::Unknown)),
+            &Ok(ReceiveOutput::NewStream(NewStreamType::Unknown)),
             true,
         );
         // NewStreamHeadReader is done, it will not continue reading from the stream.
         t.decode(
             &[QPACK_UNI_STREAM_TYPE_DECODER],
             false,
-            Ok(ReceiveOutput::NoOutput),
+            &Ok(ReceiveOutput::NoOutput),
             true,
         );
     }
@@ -370,7 +370,7 @@ mod tests {
     #[test]
     fn decoding_truncate() {
         let mut t = Test::new(Role::Client);
-        t.decode_buffer(&[0xff], false, Ok(ReceiveOutput::NoOutput), false);
+        t.decode_buffer(&[0xff], false, &Ok(ReceiveOutput::NoOutput), false);
     }
 
     #[test]
@@ -381,7 +381,7 @@ mod tests {
         t.decode(
             &[QPACK_UNI_STREAM_TYPE_DECODER],
             false,
-            Ok(ReceiveOutput::NoOutput),
+            &Ok(ReceiveOutput::NoOutput),
             true,
         );
     }
@@ -392,7 +392,7 @@ mod tests {
         t.decode(
             &[QPACK_UNI_STREAM_TYPE_DECODER],
             true,
-            Err(Error::HttpClosedCriticalStream),
+            &Err(Error::HttpClosedCriticalStream),
             true,
         );
     }
@@ -403,7 +403,7 @@ mod tests {
         t.decode(
             &[QPACK_UNI_STREAM_TYPE_ENCODER],
             true,
-            Err(Error::HttpClosedCriticalStream),
+            &Err(Error::HttpClosedCriticalStream),
             true,
         );
     }
@@ -414,7 +414,7 @@ mod tests {
         t.decode(
             &[HTTP3_UNI_STREAM_TYPE_CONTROL],
             true,
-            Err(Error::HttpClosedCriticalStream),
+            &Err(Error::HttpClosedCriticalStream),
             true,
         );
     }
@@ -425,7 +425,7 @@ mod tests {
         t.decode(
             &[HTTP3_UNI_STREAM_TYPE_PUSH, 0xaaaa_aaaa],
             true,
-            Err(Error::HttpGeneralProtocol),
+            &Err(Error::HttpGeneralProtocol),
             true,
         );
 
@@ -433,7 +433,7 @@ mod tests {
         t.decode(
             &[HTTP3_UNI_STREAM_TYPE_PUSH],
             true,
-            Err(Error::HttpStreamCreation),
+            &Err(Error::HttpStreamCreation),
             true,
         );
     }
@@ -444,7 +444,7 @@ mod tests {
         t.decode(
             &[0x3fff_ffff_ffff_ffff],
             true,
-            Ok(ReceiveOutput::NewStream(NewStreamType::Unknown)),
+            &Ok(ReceiveOutput::NewStream(NewStreamType::Unknown)),
             true,
         );
 
@@ -452,6 +452,6 @@ mod tests {
         // A stream ID of 0x3fff_ffff_ffff_ffff is encoded into [0xff; 8].
         // For this test the stream type is truncated.
         // This should cause an error.
-        t.decode_buffer(&[0xff; 7], true, Err(Error::HttpStreamCreation), true);
+        t.decode_buffer(&[0xff; 7], true, &Err(Error::HttpStreamCreation), true);
     }
 }

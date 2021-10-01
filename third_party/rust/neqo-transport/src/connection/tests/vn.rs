@@ -105,7 +105,7 @@ fn version_negotiation_only_reserved() {
     assert_eq!(client.process(Some(dgram), now()), Output::None);
     match client.state() {
         State::Closed(err) => {
-            assert_eq!(*err, ConnectionError::Transport(Error::VersionNegotiation))
+            assert_eq!(*err, ConnectionError::Transport(Error::VersionNegotiation));
         }
         _ => panic!("Invalid client state"),
     }
@@ -167,7 +167,7 @@ fn version_negotiation_not_supported() {
     );
     match client.state() {
         State::Closed(err) => {
-            assert_eq!(*err, ConnectionError::Transport(Error::VersionNegotiation))
+            assert_eq!(*err, ConnectionError::Transport(Error::VersionNegotiation));
         }
         _ => panic!("Invalid client state"),
     }

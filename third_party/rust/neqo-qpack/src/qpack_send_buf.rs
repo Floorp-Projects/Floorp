@@ -79,7 +79,7 @@ impl QpackData {
             self.write_bytes(&encoded);
         } else {
             self.encode_prefixed_encoded_int(real_prefix, u64::try_from(value.len()).unwrap());
-            self.write_bytes(&value);
+            self.write_bytes(value);
         }
     }
 
@@ -126,6 +126,16 @@ mod tests {
         let mut d = QpackData::default();
         d.encode_prefixed_encoded_int(Prefix::new(0xC0, 2), 100_000);
         assert_eq!(d[..], [0xff, 0xe1, 0x8c, 0x06]);
+    }
+
+    #[test]
+    fn max_int() {
+        let mut d = QpackData::default();
+        d.encode_prefixed_encoded_int(Prefix::new(0x80, 1), u64::MAX);
+        assert_eq!(
+            d[..],
+            [0xff, 0x80, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01]
+        );
     }
 
     const VALUE: &[u8] = b"custom-key";

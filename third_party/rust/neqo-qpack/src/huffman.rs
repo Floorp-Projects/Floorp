@@ -96,7 +96,7 @@ fn decode_character(reader: &mut BitReader) -> Res<Option<u16>> {
             Ok(b) => {
                 i += 1;
                 if let Some(next) = &node.next[usize::from(b)] {
-                    node = &next;
+                    node = next;
                 } else {
                     reader.verify_ending(i)?;
                     return Ok(None);

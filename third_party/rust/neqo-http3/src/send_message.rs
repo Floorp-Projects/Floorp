@@ -198,7 +198,7 @@ impl SendMessage {
     fn ensure_encoded(&mut self, conn: &mut Connection, encoder: &mut QPackEncoder) -> Res<()> {
         if let SendMessageState::Initialized { headers, data, fin } = &self.state {
             qdebug!([self], "Encoding headers");
-            let header_block = encoder.encode_header_block(conn, &headers, self.stream_id)?;
+            let header_block = encoder.encode_header_block(conn, headers, self.stream_id)?;
             let hframe = HFrame::Headers {
                 header_block: header_block.to_vec(),
             };
@@ -210,7 +210,7 @@ impl SendMessage {
                     len: buf.len() as u64,
                 };
                 d_frame.encode(&mut d);
-                d.encode(&buf);
+                d.encode(buf);
             }
 
             self.state = SendMessageState::SendingInitialMessage {
@@ -239,7 +239,7 @@ impl SendMessage {
 
         if let SendMessageState::SendingInitialMessage { ref mut buf, fin } = self.state {
             let sent = Error::map_error(
-                conn.stream_send(self.stream_id, &buf),
+                conn.stream_send(self.stream_id, buf),
                 Error::HttpInternal(5),
             )?;
             qlog::h3_data_moved_down(&mut conn.qlog_mut(), self.stream_id, sent);

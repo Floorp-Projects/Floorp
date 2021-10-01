@@ -537,7 +537,7 @@ impl RecvdPackets {
                     None => return,
                 };
             }
-            cur.acknowledged(&ack);
+            cur.acknowledged(ack);
         }
     }
 

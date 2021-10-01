@@ -533,13 +533,13 @@ impl<'a> Frame<'a> {
             FRAME_TYPE_PATH_CHALLENGE => {
                 let data = d(dec.decode(8))?;
                 let mut datav: [u8; 8] = [0; 8];
-                datav.copy_from_slice(&data);
+                datav.copy_from_slice(data);
                 Ok(Self::PathChallenge { data: datav })
             }
             FRAME_TYPE_PATH_RESPONSE => {
                 let data = d(dec.decode(8))?;
                 let mut datav: [u8; 8] = [0; 8];
-                datav.copy_from_slice(&data);
+                datav.copy_from_slice(data);
                 Ok(Self::PathResponse { data: datav })
             }
             FRAME_TYPE_CONNECTION_CLOSE_TRANSPORT | FRAME_TYPE_CONNECTION_CLOSE_APPLICATION => {

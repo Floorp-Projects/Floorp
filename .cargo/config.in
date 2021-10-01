@@ -10,7 +10,7 @@ rev = "029ac0d54b237f27dc7d8d4e51bc0fb076e5e852"
 [source."https://github.com/mozilla/neqo"]
 git = "https://github.com/mozilla/neqo"
 replace-with = "vendored-sources"
-tag = "v0.5.0"
+tag = "v0.5.3"
 
 [source."https://github.com/mozilla/mp4parse-rust"]
 git = "https://github.com/mozilla/mp4parse-rust"

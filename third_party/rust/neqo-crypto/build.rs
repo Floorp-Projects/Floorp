@@ -118,7 +118,7 @@ fn nss_dir() -> PathBuf {
         }
         dir
     };
-    assert!(dir.is_dir());
+    assert!(dir.is_dir(), "NSS_DIR {:?} doesn't exist", dir);
     // Note that this returns a relative path because UNC
     // paths on windows cause certain tools to explode.
     dir

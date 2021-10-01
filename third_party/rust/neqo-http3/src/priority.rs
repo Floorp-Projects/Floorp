@@ -1,5 +1,6 @@
 use crate::{Error, HFrame, Header, Res};
 use sfv::{BareItem, Item, ListEntry, Parser};
+use std::convert::TryFrom;
 use std::fmt;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -20,6 +21,7 @@ impl Default for Priority {
 impl Priority {
     /// # Panics
     /// If an invalid urgency (>7 is given)
+    #[must_use]
     pub fn new(urgency: u8, incremental: bool) -> Priority {
         assert!(urgency < 8);
         Priority {
@@ -29,6 +31,7 @@ impl Priority {
     }
 
     /// Returns a header if required to send
+    #[must_use]
     pub fn header(self) -> Option<Header> {
         match self {
             Priority {
@@ -39,13 +42,18 @@ impl Priority {
         }
     }
 
+    /// Constructs a priority from raw bytes (either a field value of frame content).
+    /// # Errors
+    /// When the contained syntax is invalid.
+    /// # Panics
+    /// Never, but the compiler is not smart enough to work that out.
     pub fn from_bytes(bytes: &[u8]) -> Res<Priority> {
         let dict = Parser::parse_dictionary(bytes).map_err(|_| Error::HttpFrame)?;
         let urgency = match dict.get("u") {
             Some(ListEntry::Item(Item {
                 bare_item: BareItem::Integer(u),
                 ..
-            })) if (0i64..=7).contains(u) => *u as u8,
+            })) if (0..=7).contains(u) => u8::try_from(*u).unwrap(),
             _ => 3,
         };
         let incremental = match dict.get("i") {
@@ -86,6 +94,7 @@ impl fmt::Display for Priority {
 }
 
 #[derive(Debug)]
+#[allow(clippy::module_name_repetitions)]
 pub struct PriorityHandler {
     push_stream: bool,
     priority: Priority,
@@ -107,34 +116,32 @@ impl PriorityHandler {
 
     /// Returns if an priority update will be issued
     pub fn maybe_update_priority(&mut self, priority: Priority) -> bool {
-        if priority != self.priority {
+        if priority == self.priority {
+            false
+        } else {
             self.priority = priority;
             true
-        } else {
-            false
         }
     }
 
     pub fn priority_update_sent(&mut self) {
-        self.last_send_priority = self.priority
+        self.last_send_priority = self.priority;
     }
 
-    /// Returns HFrame if an priority update is outstanding
+    /// Returns `HFrame` if an priority update is outstanding
     pub fn maybe_encode_frame(&self, stream_id: u64) -> Option<HFrame> {
-        if self.priority != self.last_send_priority {
-            if self.push_stream {
-                Some(HFrame::PriorityUpdatePush {
-                    element_id: stream_id,
-                    priority: self.priority,
-                })
-            } else {
-                Some(HFrame::PriorityUpdateRequest {
-                    element_id: stream_id,
-                    priority: self.priority,
-                })
-            }
-        } else {
+        if self.priority == self.last_send_priority {
             None
+        } else if self.push_stream {
+            Some(HFrame::PriorityUpdatePush {
+                element_id: stream_id,
+                priority: self.priority,
+            })
+        } else {
+            Some(HFrame::PriorityUpdateRequest {
+                element_id: stream_id,
+                priority: self.priority,
+            })
         }
     }
 }

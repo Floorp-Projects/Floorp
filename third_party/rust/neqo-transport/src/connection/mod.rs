@@ -174,7 +174,7 @@ enum AddressValidationInfo {
 impl AddressValidationInfo {
     pub fn token(&self) -> &[u8] {
         match self {
-            Self::NewToken(token) | Self::Retry { token, .. } => &token,
+            Self::NewToken(token) | Self::Retry { token, .. } => token,
             _ => &[],
         }
     }
@@ -767,7 +767,13 @@ impl Connection {
 
     /// Get a snapshot of collected statistics.
     pub fn stats(&self) -> Stats {
-        self.stats.borrow().clone()
+        let mut v = self.stats.borrow().clone();
+        if let Some(p) = self.paths.primary_fallible() {
+            let p = p.borrow();
+            v.rtt = p.rtt().estimate();
+            v.rttvar = p.rtt().rttvar();
+        }
+        v
     }
 
     // This function wraps a call to another function and sets the connection state
@@ -944,13 +950,9 @@ impl Connection {
         let earliest = delays.into_iter().min().unwrap();
         // TODO(agrover, mt) - need to analyze and fix #47
         // rather than just clamping to zero here.
-        qdebug!(
-            [self],
-            "delay duration {:?}",
-            max(now, earliest).duration_since(now)
-        );
         debug_assert!(earliest > now);
-        let delay = max(now, earliest).duration_since(now);
+        let delay = earliest.saturating_duration_since(now);
+        qdebug!([self], "delay duration {:?}", delay);
         self.hrtime.update(delay / 4);
         delay
     }
@@ -1008,7 +1010,7 @@ impl Connection {
             self.stats.borrow_mut().pkt_dropped("Retry without a token");
             return;
         }
-        if !packet.is_valid_retry(&self.original_destination_cid.as_ref().unwrap()) {
+        if !packet.is_valid_retry(self.original_destination_cid.as_ref().unwrap()) {
             self.stats
                 .borrow_mut()
                 .pkt_dropped("Retry with bad integrity tag");
@@ -1146,7 +1148,7 @@ impl Connection {
                 self.set_state(State::WaitInitial);
                 self.crypto
                     .states
-                    .init(self.version(), self.role, &packet.dcid());
+                    .init(self.version(), self.role, packet.dcid());
 
                 // We need to make sure that we set this transport parameter.
                 // This has to happen prior to processing the packet so that
@@ -1265,7 +1267,7 @@ impl Connection {
         now: Instant,
     ) {
         if self.state == State::WaitInitial {
-            self.start_handshake(path, &packet, now);
+            self.start_handshake(path, packet, now);
         }
         if self.state.connected() {
             self.handle_migration(path, d, migrate, now);
@@ -1314,7 +1316,7 @@ impl Connection {
                         break;
                     }
                 };
-            match self.preprocess_packet(&packet, &path, dcid.as_ref(), now)? {
+            match self.preprocess_packet(&packet, path, dcid.as_ref(), now)? {
                 PreprocessResult::Continue => (),
                 PreprocessResult::Next => break,
                 PreprocessResult::End => return Ok(()),
@@ -1341,10 +1343,8 @@ impl Connection {
                         qdebug!([self], "Duplicate packet {}-{}", space, payload.pn());
                         self.stats.borrow_mut().dups_rx += 1;
                     } else {
-                        match self.process_packet(&path, &payload, now) {
-                            Ok(migrate) => {
-                                self.postprocess_packet(&path, &d, &packet, migrate, now)
-                            }
+                        match self.process_packet(path, &payload, now) {
+                            Ok(migrate) => self.postprocess_packet(path, &d, &packet, migrate, now),
                             Err(e) => {
                                 self.ensure_error_path(path, &packet, now);
                                 return Err(e);
@@ -1370,7 +1370,7 @@ impl Connection {
                     // Decryption failure, or not having keys is not fatal.
                     // If the state isn't available, or we can't decrypt the packet, drop
                     // the rest of the datagram on the floor, but don't generate an error.
-                    self.check_stateless_reset(&path, &d, dcid.is_none(), now)?;
+                    self.check_stateless_reset(path, &d, dcid.is_none(), now)?;
                     self.stats.borrow_mut().pkt_dropped("Decryption failure");
                     qlog::packet_dropped(&mut self.qlog, &packet);
                 }
@@ -1378,7 +1378,7 @@ impl Connection {
             slc = remainder;
             dcid = Some(ConnectionId::from(packet.dcid()));
         }
-        self.check_stateless_reset(&path, &d, dcid.is_none(), now)?;
+        self.check_stateless_reset(path, &d, dcid.is_none(), now)?;
         Ok(())
     }
 
@@ -1418,7 +1418,7 @@ impl Connection {
             ack_eliciting |= f.ack_eliciting();
             probing &= f.path_probing();
             let t = f.get_type();
-            if let Err(e) = self.input_frame(&path, packet.packet_type(), f, now) {
+            if let Err(e) = self.input_frame(path, packet.packet_type(), f, now) {
                 self.capture_error(Some(Rc::clone(path)), now, t, Err(e))?;
             }
         }
@@ -1436,7 +1436,7 @@ impl Connection {
     /// to setup that path.
     fn setup_handshake_path(&mut self, path: &PathRef, now: Instant) {
         self.paths.make_permanent(
-            &path,
+            path,
             Some(self.local_initial_source_cid.clone()),
             // Ideally we know what the peer wants us to use for the remote CID.
             // But we will use our own guess if necessary.
@@ -1453,7 +1453,7 @@ impl Connection {
 
     /// If the path isn't permanent, assign it a connection ID to make it so.
     fn ensure_permanent(&mut self, path: &PathRef) -> Res<()> {
-        if self.paths.is_temporary(&path) {
+        if self.paths.is_temporary(path) {
             // If there isn't a connection ID to use for this path, the packet
             // will be processed, but it won't be attributed to a path.  That means
             // no path probes or PATH_RESPONSE.  But it's not fatal.
@@ -1478,14 +1478,14 @@ impl Connection {
     /// temporary, there is no reason to do anything special here.
     fn ensure_error_path(&mut self, path: &PathRef, packet: &PublicPacket, now: Instant) {
         path.borrow_mut().set_valid(now);
-        if self.paths.is_temporary(&path) {
+        if self.paths.is_temporary(path) {
             // First try to fill in handshake details.
             if packet.packet_type() == PacketType::Initial {
                 self.remote_initial_source_cid = Some(ConnectionId::from(packet.scid()));
-                self.setup_handshake_path(&path, now);
+                self.setup_handshake_path(path, now);
             } else {
                 // Otherwise try to get a usable connection ID.
-                mem::drop(self.ensure_permanent(&path));
+                mem::drop(self.ensure_permanent(path));
             }
         }
     }
@@ -1803,17 +1803,18 @@ impl Connection {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
     ) -> Res<()> {
-        let stats = &mut self.stats.borrow_mut().frame_tx;
-
         if self.role == Role::Server {
             if let Some(t) = self.state_signaling.write_done(builder)? {
                 tokens.push(t);
-                stats.handshake_done += 1;
+                self.stats.borrow_mut().frame_tx.handshake_done += 1;
             }
         }
 
         // Check if there is a Datagram to be written
-        self.quic_datagrams.write_frames(builder, tokens, stats);
+        self.quic_datagrams
+            .write_frames(builder, tokens, &mut self.stats.borrow_mut());
+
+        let stats = &mut self.stats.borrow_mut().frame_tx;
 
         self.streams
             .write_frames(TransmissionPriority::Critical, builder, tokens, stats);
@@ -2520,7 +2521,8 @@ impl Connection {
             }
             Frame::Datagram { data, .. } => {
                 self.stats.borrow_mut().frame_rx.datagram += 1;
-                self.quic_datagrams.handle_datagram(data)?;
+                self.quic_datagrams
+                    .handle_datagram(data, &mut self.stats.borrow_mut())?;
             }
             _ => unreachable!("All other frames are for streams"),
         };
@@ -2537,7 +2539,7 @@ impl Connection {
                 qdebug!([self], "Lost: {:?}", token);
                 match token {
                     RecoveryToken::Ack(_) => {}
-                    RecoveryToken::Crypto(ct) => self.crypto.lost(&ct),
+                    RecoveryToken::Crypto(ct) => self.crypto.lost(ct),
                     RecoveryToken::HandshakeDone => self.state_signaling.handshake_done(),
                     RecoveryToken::NewToken(seqno) => self.new_token.lost(*seqno),
                     RecoveryToken::NewConnectionId(ncid) => self.cid_manager.lost(ncid),
@@ -2545,9 +2547,11 @@ impl Connection {
                     RecoveryToken::AckFrequency(rate) => self.paths.lost_ack_frequency(rate),
                     RecoveryToken::KeepAlive => self.idle_timeout.lost_keep_alive(),
                     RecoveryToken::Stream(stream_token) => self.streams.lost(stream_token),
-                    RecoveryToken::Datagram(dgram_tracker) => self
-                        .events
-                        .datagram_outcome(dgram_tracker, OutgoingDatagramOutcome::Lost),
+                    RecoveryToken::Datagram(dgram_tracker) => {
+                        self.events
+                            .datagram_outcome(dgram_tracker, OutgoingDatagramOutcome::Lost);
+                        self.stats.borrow_mut().datagram_tx.lost += 1;
+                    }
                 }
             }
         }
@@ -2885,8 +2889,10 @@ impl Connection {
     /// to check the estimated max datagram size and to use smaller datagrams.
     /// `max_datagram_size` is just a current estimate and will change over
     /// time depending on the encoded size of the packet number, ack frames, etc.
+
     pub fn send_datagram(&mut self, buf: &[u8], id: impl Into<DatagramTracking>) -> Res<()> {
-        self.quic_datagrams.add_datagram(buf, id.into())
+        self.quic_datagrams
+            .add_datagram(buf, id.into(), &mut self.stats.borrow_mut())
     }
 }
 

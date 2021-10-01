@@ -19,7 +19,6 @@ use neqo_crypto::{assert_initialized, init_db};
     clippy::unseparated_literal_suffix,
     clippy::upper_case_acronyms
 )]
-#[allow(unknown_lints, renamed_and_removed_lints, clippy::unknown_clippy_lints)] // Until we require rust 1.51.
 mod nss {
     include!(concat!(env!("OUT_DIR"), "/nss_init.rs"));
 }

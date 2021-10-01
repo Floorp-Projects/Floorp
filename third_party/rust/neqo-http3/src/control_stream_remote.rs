@@ -47,6 +47,7 @@ impl RecvStream for ControlStreamRemote {
         Err(Error::HttpClosedCriticalStream)
     }
 
+    #[allow(clippy::vec_init_then_push)] // Clippy fail.
     fn receive(&mut self, conn: &mut Connection) -> Res<ReceiveOutput> {
         let mut control_frames = Vec::new();
 
