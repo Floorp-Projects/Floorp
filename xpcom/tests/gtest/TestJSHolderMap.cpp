@@ -13,6 +13,7 @@
 
 #include "gtest/gtest.h"
 
+using mozilla::JSHolderMap;
 using mozilla::Maybe;
 using mozilla::UniquePtr;
 using mozilla::Vector;
@@ -122,7 +123,8 @@ static void TestIterate(HolderKind kind) {
   Vector<UniquePtr<MyHolder>, 0, InfallibleAllocPolicy> holders;
   bool seen[count] = {};
   for (size_t i = 1; i < count; i++) {
-    MOZ_ALWAYS_TRUE(holders.emplaceBack(MakeUnique<MyHolder>(kind, i)));
+    MOZ_ALWAYS_TRUE(
+        holders.emplaceBack(mozilla::MakeUnique<MyHolder>(kind, i)));
     map.Put(holders.back().get(), tracer, ZoneForKind(kind));
   }
   for (iter.emplace(map); !iter->Done(); iter->Next()) {
@@ -148,7 +150,7 @@ static void TestAddRemoveMany(HolderKind kind, size_t count) {
 
   Vector<UniquePtr<MyHolder>, 0, InfallibleAllocPolicy> holders;
   for (size_t i = 0; i < count; i++) {
-    MOZ_ALWAYS_TRUE(holders.emplaceBack(MakeUnique<MyHolder>(kind)));
+    MOZ_ALWAYS_TRUE(holders.emplaceBack(mozilla::MakeUnique<MyHolder>(kind)));
   }
 
   for (size_t i = 0; i < count; i++) {
