@@ -116,6 +116,12 @@ class ComputedStyle {
     return mPseudoType != PseudoStyleType::NotPseudo;
   }
 
+  // Whether there are author-specified rules for padding properties.
+  // Only returns something meaningful if the appearance property is not `none`.
+  bool HasAuthorSpecifiedPadding() const {
+    return bool(Flags() & Flag::HAS_AUTHOR_SPECIFIED_PADDING);
+  }
+
   // Whether there are author-specified rules for border or background
   // properties.
   // Only returns something meaningful if the appearance property is not `none`.

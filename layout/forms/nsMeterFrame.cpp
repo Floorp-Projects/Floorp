@@ -11,7 +11,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMeterElement.h"
 #include "nsIContent.h"
-#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
@@ -227,8 +226,11 @@ bool nsMeterFrame::ShouldUseNativeStyle() const {
   // - neither frame has author specified rules setting the border or the
   //   background.
   return StyleDisplay()->EffectiveAppearance() == StyleAppearance::Meter &&
-         !Style()->HasAuthorSpecifiedBorderOrBackground() && barFrame &&
+         !PresContext()->HasAuthorSpecifiedRules(
+             this, NS_AUTHOR_SPECIFIED_BORDER_OR_BACKGROUND) &&
+         barFrame &&
          barFrame->StyleDisplay()->EffectiveAppearance() ==
              StyleAppearance::Meterchunk &&
-         !barFrame->Style()->HasAuthorSpecifiedBorderOrBackground();
+         !PresContext()->HasAuthorSpecifiedRules(
+             barFrame, NS_AUTHOR_SPECIFIED_BORDER_OR_BACKGROUND);
 }
