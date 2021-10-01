@@ -453,20 +453,22 @@ void nsViewManager::FlushDirtyRegionToWidget(nsView* aView) {
   NS_ASSERTION(aView->GetViewManager() == this,
                "FlushDirtyRegionToWidget called on view we don't own");
 
-  if (!aView->HasNonEmptyDirtyRegion()) return;
+  if (!aView->HasNonEmptyDirtyRegion()) {
+    return;
+  }
 
-  nsRegion* dirtyRegion = aView->GetDirtyRegion();
+  nsRegion& dirtyRegion = aView->GetDirtyRegion();
   nsView* nearestViewWithWidget = aView;
   while (!nearestViewWithWidget->HasWidget() &&
          nearestViewWithWidget->GetParent()) {
     nearestViewWithWidget = nearestViewWithWidget->GetParent();
   }
   nsRegion r =
-      ConvertRegionBetweenViews(*dirtyRegion, aView, nearestViewWithWidget);
+      ConvertRegionBetweenViews(dirtyRegion, aView, nearestViewWithWidget);
 
   nsViewManager* widgetVM = nearestViewWithWidget->GetViewManager();
   widgetVM->InvalidateWidgetArea(nearestViewWithWidget, r);
-  dirtyRegion->SetEmpty();
+  dirtyRegion.SetEmpty();
 }
 
 void nsViewManager::InvalidateView(nsView* aView) {
@@ -475,11 +477,9 @@ void nsViewManager::InvalidateView(nsView* aView) {
 }
 
 static void AddDirtyRegion(nsView* aView, const nsRegion& aDamagedRegion) {
-  nsRegion* dirtyRegion = aView->GetDirtyRegion();
-  if (!dirtyRegion) return;
-
-  dirtyRegion->Or(*dirtyRegion, aDamagedRegion);
-  dirtyRegion->SimplifyOutward(8);
+  nsRegion& dirtyRegion = aView->GetDirtyRegion();
+  dirtyRegion.Or(dirtyRegion, aDamagedRegion);
+  dirtyRegion.SimplifyOutward(8);
 }
 
 void nsViewManager::PostPendingUpdate() {
