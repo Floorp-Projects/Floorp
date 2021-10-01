@@ -40,7 +40,7 @@
 .sidebar-panel[lwt-sidebar-highlight] .sidebar-placesTreechildren::-moz-tree-image(selected, focus),
 .sidebar-panel[lwt-sidebar-highlight] .sidebar-placesTreechildren::-moz-tree-twisty(selected, focus),
 .sidebar-panel[lwt-sidebar-highlight] .sidebar-placesTreechildren::-moz-tree-cell-text(selected, focus) {
-  color: var(--lwt-sidebar-highlight-text-color);
+  color: var(--lwt-sidebar-highlight-text-color, var(--lwt-sidebar-text-color, var(--sidebar-text-color)));
 }
 
 /* Sidebar tree */
