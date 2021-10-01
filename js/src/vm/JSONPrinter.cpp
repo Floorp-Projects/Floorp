@@ -99,6 +99,38 @@ void JSONPrinter::boolProperty(const char* name, bool value) {
   out_.put(value ? "true" : "false");
 }
 
+template <typename CharT>
+static void JSONString(GenericPrinter& out, const CharT* s, size_t length) {
+  const CharT* end = s + length;
+  for (const CharT* t = s; t < end; s = ++t) {
+    // This quote implementation is probably correct,
+    // but uses \u even when not strictly necessary.
+    char16_t c = *t;
+    if (c == '"' || c == '\\') {
+      out.printf("\\");
+      out.printf("%c", char(c));
+    } else if (!IsAsciiPrintable(c)) {
+      out.printf("\\u%04x", c);
+    } else {
+      out.printf("%c", char(c));
+    }
+  }
+}
+
+void JSONPrinter::property(const char* name, JSLinearString* str) {
+  JS::AutoCheckCannotGC nogc;
+  beginStringProperty(name);
+
+  // Limit the string length to reduce the JSON file size.
+  size_t length = std::min(str->length(), size_t(128));
+  if (str->hasLatin1Chars()) {
+    JSONString(out_, str->latin1Chars(nogc), length);
+  } else {
+    JSONString(out_, str->twoByteChars(nogc), length);
+  }
+  endStringProperty();
+}
+
 void JSONPrinter::property(const char* name, const char* value) {
   beginStringProperty(name);
   out_.put(value);
