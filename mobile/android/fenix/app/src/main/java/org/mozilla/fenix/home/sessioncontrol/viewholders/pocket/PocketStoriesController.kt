@@ -4,12 +4,15 @@
 
 package org.mozilla.fenix.home.sessioncontrol.viewholders.pocket
 
+import androidx.annotation.VisibleForTesting
+import androidx.navigation.NavController
 import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentStore
 import mozilla.components.lib.state.Store
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 
 /**
  * Contract for how all user interactions with the Pocket recommended stories feature are to be handled.
@@ -42,10 +45,12 @@ interface PocketStoriesController {
  *
  * @param homeActivity [HomeActivity] used to open URLs in a new tab.
  * @param homeStore [Store] from which to read the current Pocket recommendations and dispatch new actions on.
+ * @param navController [NavController] used for navigation.
  */
 internal class DefaultPocketStoriesController(
-    val homeActivity: HomeActivity,
-    val homeStore: HomeFragmentStore
+    private val homeActivity: HomeActivity,
+    private val homeStore: HomeFragmentStore,
+    private val navController: NavController
 ) : PocketStoriesController {
     override fun handleCategoryClick(categoryClicked: PocketRecommendedStoryCategory) {
         val allCategories = homeStore.state.pocketStoriesCategories
@@ -87,6 +92,14 @@ internal class DefaultPocketStoriesController(
     }
 
     override fun handleExternalLinkClick(link: String) {
+        dismissSearchDialogIfDisplayed()
         homeActivity.openToBrowserAndLoad(link, true, BrowserDirection.FromHome)
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun dismissSearchDialogIfDisplayed() {
+        if (navController.currentDestination?.id == R.id.searchDialogFragment) {
+            navController.navigateUp()
+        }
     }
 }

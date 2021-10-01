@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.home.sessioncontrol.viewholders.pocket
 
+import androidx.navigation.NavController
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
@@ -11,6 +13,7 @@ import mozilla.components.service.pocket.PocketRecommendedStory
 import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.home.HomeFragmentStore
@@ -25,7 +28,7 @@ class DefaultPocketStoriesControllerTest {
                 HomeFragmentState(pocketStoriesCategories = listOf(category1, category2))
             )
         )
-        val controller = DefaultPocketStoriesController(mockk(), store)
+        val controller = DefaultPocketStoriesController(mockk(), store, mockk())
 
         controller.handleCategoryClick(category1)
         verify(exactly = 0) { store.dispatch(HomeFragmentAction.DeselectPocketStoriesCategory(category1.name)) }
@@ -58,7 +61,7 @@ class DefaultPocketStoriesControllerTest {
                 )
             )
         )
-        val controller = DefaultPocketStoriesController(mockk(), store)
+        val controller = DefaultPocketStoriesController(mockk(), store, mockk())
 
         controller.handleCategoryClick(newSelectedCategory)
 
@@ -89,7 +92,7 @@ class DefaultPocketStoriesControllerTest {
                 )
             )
         )
-        val controller = DefaultPocketStoriesController(mockk(), store)
+        val controller = DefaultPocketStoriesController(mockk(), store, mockk())
 
         controller.handleCategoryClick(newSelectedCategory)
 
@@ -100,7 +103,7 @@ class DefaultPocketStoriesControllerTest {
     @Test
     fun `WHEN new stories are shown THEN update the State`() {
         val store = spyk(HomeFragmentStore())
-        val controller = DefaultPocketStoriesController(mockk(), store)
+        val controller = DefaultPocketStoriesController(mockk(), store, mockk())
         val storiesShown: List<PocketRecommendedStory> = mockk()
 
         controller.handleStoriesShown(storiesShown)
@@ -109,13 +112,30 @@ class DefaultPocketStoriesControllerTest {
     }
 
     @Test
-    fun `WHEN an external link is clicked then open that using HomeActivity`() {
+    fun `WHEN an external link is clicked THEN link is opened`() {
         val link = "https://www.mozilla.org/en-US/firefox/pocket/"
         val homeActivity: HomeActivity = mockk(relaxed = true)
-        val controller = DefaultPocketStoriesController(homeActivity, mockk())
+        val controller = DefaultPocketStoriesController(homeActivity, mockk(), mockk(relaxed = true))
 
         controller.handleExternalLinkClick(link)
 
         verify { homeActivity.openToBrowserAndLoad(link, true, BrowserDirection.FromHome) }
+    }
+
+    @Test
+    fun `WHEN an external link is clicked THEN link is opened and search dismissed`() {
+        val link = "https://www.mozilla.org/en-US/firefox/pocket/"
+        val homeActivity: HomeActivity = mockk(relaxed = true)
+        val navController: NavController = mockk(relaxed = true)
+
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.searchDialogFragment
+        }
+
+        val controller = DefaultPocketStoriesController(homeActivity, mockk(), navController)
+        controller.handleExternalLinkClick(link)
+
+        verify { homeActivity.openToBrowserAndLoad(link, true, BrowserDirection.FromHome) }
+        verify { navController.navigateUp() }
     }
 }
