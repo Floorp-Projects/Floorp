@@ -15,6 +15,7 @@ add_task(async function() {
   });
 
   // Init panel
+  StarUI._createPanelIfNeeded();
   ok(gEditItemOverlay, "gEditItemOverlay is in context");
   let node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm);
   gEditItemOverlay.initPanel({ node });
@@ -37,8 +38,9 @@ add_task(async function() {
   // quite complex, so we just wait for a title change until tags are
   // refactored.
   promiseNotification = PlacesTestUtils.waitForNotification(
-    "onItemChanged",
-    (id, property) => property == "title"
+    "bookmark-title-changed",
+    () => true,
+    "places"
   );
   gEditItemOverlay.onTagsFieldChange();
   await promiseNotification;

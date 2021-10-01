@@ -28,8 +28,9 @@ add_task(async function() {
     );
 
     let promiseTitleResetNotification = PlacesTestUtils.waitForNotification(
-      "onItemChanged",
-      (id, prop, anno, val) => prop == "title" && val == "folder"
+      "bookmark-title-changed",
+      events => events.some(e => e.title === "folder"),
+      "places"
     );
 
     await withBookmarksDialog(
@@ -51,8 +52,9 @@ add_task(async function() {
         Assert.ok(!namepicker.readOnly, "Name field should not be read-only");
         Assert.equal(namepicker.value, "folder", "Node title is correct");
         let promiseTitleChangeNotification = PlacesTestUtils.waitForNotification(
-          "onItemChanged",
-          (id, prop, anno, val) => prop == "title" && val == "newname"
+          "bookmark-title-changed",
+          events => events.some(e => e.title === "newname"),
+          "places"
         );
 
         fillBookmarkTextField("editBMPanel_namePicker", "newname", dialogWin);

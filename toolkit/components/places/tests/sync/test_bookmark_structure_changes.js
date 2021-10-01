@@ -179,18 +179,12 @@ add_task(async function test_value_structure_conflict() {
       },
     },
     {
-      name: "onItemChanged",
+      name: "bookmark-title-changed",
       params: {
         itemId: localItemIds.get("folderDDDDDD"),
-        property: "title",
-        isAnnoProperty: false,
-        newValue: "D (remote)",
-        type: PlacesUtils.bookmarks.TYPE_FOLDER,
-        parentId: PlacesUtils.bookmarksMenuFolderId,
+        title: "D (remote)",
         guid: "folderDDDDDD",
         parentGuid: PlacesUtils.bookmarks.menuGuid,
-        oldValue: "D",
-        source: PlacesUtils.bookmarks.SOURCES.SYNC,
       },
     },
   ]);

@@ -153,25 +153,8 @@ add_task(async function test_bookmarks() {
     }
 
     function checkOnChanged(id, url, title) {
-      // If both url and title are changed, then url is fired last.
+      // If both url and title are changed, then title (PlacesEvent) is fired last.
       let changedData = collectedEvents.pop();
-      browser.test.assertEq(
-        "onChanged",
-        changedData.event,
-        "onChanged was the last event received"
-      );
-      browser.test.assertEq(
-        id,
-        changedData.id,
-        "onChanged event received the expected id"
-      );
-      browser.test.assertEq(
-        url,
-        changedData.info.url,
-        "onChanged event received the expected url"
-      );
-      // title is fired first.
-      changedData = collectedEvents.pop();
       browser.test.assertEq(
         "onChanged",
         changedData.event,
@@ -186,6 +169,23 @@ add_task(async function test_bookmarks() {
         title,
         changedData.info.title,
         "onChanged event received the expected title"
+      );
+      // url is fired first.
+      changedData = collectedEvents.pop();
+      browser.test.assertEq(
+        "onChanged",
+        changedData.event,
+        "onChanged was the last event received"
+      );
+      browser.test.assertEq(
+        id,
+        changedData.id,
+        "onChanged event received the expected id"
+      );
+      browser.test.assertEq(
+        url,
+        changedData.info.url,
+        "onChanged event received the expected url"
       );
     }
 

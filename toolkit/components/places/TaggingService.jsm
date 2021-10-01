@@ -20,9 +20,13 @@ function TaggingService() {
   this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
 
   // Observe bookmarks changes.
-  PlacesUtils.bookmarks.addObserver(this);
   PlacesUtils.observers.addListener(
-    ["bookmark-added", "bookmark-removed", "bookmark-moved"],
+    [
+      "bookmark-added",
+      "bookmark-removed",
+      "bookmark-moved",
+      "bookmark-title-changed",
+    ],
     this.handlePlacesEvents
   );
 
@@ -325,9 +329,13 @@ TaggingService.prototype = {
   // nsIObserver
   observe: function TS_observe(aSubject, aTopic, aData) {
     if (aTopic == TOPIC_SHUTDOWN) {
-      PlacesUtils.bookmarks.removeObserver(this);
       PlacesUtils.observers.removeListener(
-        ["bookmark-added", "bookmark-removed", "bookmark-moved"],
+        [
+          "bookmark-added",
+          "bookmark-removed",
+          "bookmark-moved",
+          "bookmark-title-changed",
+        ],
         this.handlePlacesEvents
       );
       Services.obs.removeObserver(this, TOPIC_SHUTDOWN);
@@ -427,20 +435,12 @@ TaggingService.prototype = {
             delete this._tagFolders[event.id];
           }
           break;
+        case "bookmark-title-changed":
+          if (this._tagFolders[event.id]) {
+            this._tagFolders[event.id] = event.title;
+          }
+          break;
       }
-    }
-  },
-
-  onItemChanged: function TS_onItemChanged(
-    aItemId,
-    aProperty,
-    aIsAnnotationProperty,
-    aNewValue,
-    aLastModified,
-    aItemType
-  ) {
-    if (aProperty == "title" && this._tagFolders[aItemId]) {
-      this._tagFolders[aItemId] = aNewValue;
     }
   },
 
@@ -450,11 +450,7 @@ TaggingService.prototype = {
 
   _xpcom_factory: ComponentUtils.generateSingletonFactory(TaggingService),
 
-  QueryInterface: ChromeUtils.generateQI([
-    "nsITaggingService",
-    "nsINavBookmarkObserver",
-    "nsIObserver",
-  ]),
+  QueryInterface: ChromeUtils.generateQI(["nsITaggingService", "nsIObserver"]),
 };
 
 /**

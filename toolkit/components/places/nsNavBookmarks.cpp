@@ -1313,12 +1313,6 @@ nsNavBookmarks::SetItemTitle(int64_t aItemId, const nsACString& aTitle,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  NOTIFY_BOOKMARKS_OBSERVERS(
-      mCanNotify, mObservers, SKIP_TAGS(isChangingTagFolder),
-      OnItemChanged(bookmark.id, "title"_ns, false, title,
-                    bookmark.lastModified, bookmark.type, bookmark.parentId,
-                    bookmark.guid, bookmark.parentGuid, ""_ns, aSource));
-
   if (mCanNotify) {
     Sequence<OwningNonNull<PlacesEvent>> events;
     RefPtr<PlacesBookmarkTitle> titleChanged = new PlacesBookmarkTitle();

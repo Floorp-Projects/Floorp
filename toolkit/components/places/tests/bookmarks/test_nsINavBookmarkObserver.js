@@ -121,11 +121,21 @@ add_task(async function setup() {
     gBookmarkSkipObserver
   );
   PlacesUtils.observers.addListener(
-    ["bookmark-added", "bookmark-removed", "bookmark-moved"],
+    [
+      "bookmark-added",
+      "bookmark-removed",
+      "bookmark-moved",
+      "bookmark-title-changed",
+    ],
     gBookmarksObserver.handlePlacesEvents
   );
   PlacesUtils.observers.addListener(
-    ["bookmark-added", "bookmark-removed", "bookmark-moved"],
+    [
+      "bookmark-added",
+      "bookmark-removed",
+      "bookmark-moved",
+      "bookmark-title-changed",
+    ],
     gBookmarkSkipObserver.handlePlacesEvents
   );
 });
@@ -265,21 +275,14 @@ add_task(async function onItemChanged_title_bookmark() {
   });
   const title = "New title";
   let promise = Promise.all([
-    gBookmarkSkipObserver.setup(["onItemChanged"]),
+    gBookmarkSkipObserver.setup(["bookmark-title-changed"]),
     gBookmarksObserver.setup([
       {
-        name: "onItemChanged",
+        eventType: "bookmark-title-changed",
         args: [
-          { name: "itemId", check: v => typeof v == "number" && v > 0 },
-          { name: "property", check: v => v === "title" },
-          { name: "isAnno", check: v => v === false },
-          { name: "newValue", check: v => v === title },
+          { name: "id", check: v => typeof v == "number" && v > 0 },
+          { name: "title", check: v => v === title },
           { name: "lastModified", check: v => typeof v == "number" && v > 0 },
-          {
-            name: "itemType",
-            check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK,
-          },
-          { name: "parentId", check: v => v === gUnfiledFolderId },
           {
             name: "guid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
@@ -288,7 +291,6 @@ add_task(async function onItemChanged_title_bookmark() {
             name: "parentGuid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
           },
-          { name: "oldValue", check: v => typeof v == "string" },
           {
             name: "source",
             check: v =>

@@ -2347,20 +2347,6 @@ class BookmarkObserverRecorder {
 
   noteItemChanged(info) {
     if (info.oldTitle != info.newTitle) {
-      this.itemChangedArgs.push([
-        info.id,
-        "title",
-        /* isAnnotationProperty */ false,
-        info.newTitle,
-        info.lastModified,
-        info.type,
-        info.parentId,
-        info.guid,
-        info.parentGuid,
-        info.oldTitle,
-        PlacesUtils.bookmarks.SOURCES.SYNC,
-      ]);
-
       this.placesEvents.push(
         new PlacesBookmarkTitle({
           id: info.id,
