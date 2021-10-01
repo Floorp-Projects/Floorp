@@ -77,7 +77,7 @@ describe("Searching in grips", () => {
 
     it("do not match on full url", () => {
       store.dispatch(
-        actions.filterTextSet("http://example.com/browser/devtools")
+        actions.filterTextSet("https://example.com/browser/devtools")
       );
       expect(getVisibleMessages(store.getState()).length).toEqual(0);
     });
