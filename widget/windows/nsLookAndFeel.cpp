@@ -192,6 +192,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       break;
     case ColorID::Buttonface:
     case ColorID::MozButtonhoverface:
+    case ColorID::MozButtonactiveface:
       idx = COLOR_BTNFACE;
       break;
     case ColorID::Buttonhighlight:
@@ -202,6 +203,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       break;
     case ColorID::Buttontext:
     case ColorID::MozButtonhovertext:
+    case ColorID::MozButtonactivetext:
       idx = COLOR_BTNTEXT;
       break;
     case ColorID::Captiontext:
