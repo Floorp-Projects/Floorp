@@ -784,22 +784,12 @@ function getHitTestConfig() {
     var utils = SpecialPowers.getDOMWindowUtils(window);
     var isWebRender = utils.layerManagerType.startsWith("WebRender");
     var isWindows = getPlatform() == "windows";
-    let activateAllScrollFrames = false;
-    if (isWebRender) {
-      activateAllScrollFrames =
-        SpecialPowers.getBoolPref("apz.wr.activate_all_scroll_frames") ||
-        (SpecialPowers.getBoolPref(
-          "apz.wr.activate_all_scroll_frames_when_fission"
-        ) &&
-          SpecialPowers.getBoolPref("fission.autostart"));
-    } else {
-      activateAllScrollFrames =
-        SpecialPowers.getBoolPref("apz.nonwr.activate_all_scroll_frames") ||
-        (SpecialPowers.getBoolPref(
-          "apz.nonwr.activate_all_scroll_frames_when_fission"
-        ) &&
-          SpecialPowers.getBoolPref("fission.autostart"));
-    }
+    let activateAllScrollFrames =
+      SpecialPowers.getBoolPref("apz.wr.activate_all_scroll_frames") ||
+      (SpecialPowers.getBoolPref(
+        "apz.wr.activate_all_scroll_frames_when_fission"
+      ) &&
+        SpecialPowers.getBoolPref("fission.autostart"));
 
     window.hitTestConfig = {
       utils,
