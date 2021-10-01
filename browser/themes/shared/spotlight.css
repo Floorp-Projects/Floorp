@@ -57,6 +57,17 @@ body {
   font-size: 13px;
 }
 
+/*
+ * In high-contrast mode, the button border gets forced for real buttons.
+ * Since This is semantically a button, but is styled to act like a link, we
+ * need to override that so that the border stays transparent.
+ */
+@media (prefers-contrast) {
+  #secondary {
+    border: 1px solid transparent;
+  }
+}
+
 #secondary {
   /* make this look like a link rather than a button */
   background: none;
