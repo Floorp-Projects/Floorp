@@ -4325,15 +4325,9 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
 }
 
 /* static */ bool ScrollFrameHelper::ShouldActivateAllScrollFrames() {
-  if (gfxVars::UseWebRender()) {
     return (StaticPrefs::apz_wr_activate_all_scroll_frames() ||
             (StaticPrefs::apz_wr_activate_all_scroll_frames_when_fission() &&
              FissionAutostart()));
-  } else {
-    return (StaticPrefs::apz_nonwr_activate_all_scroll_frames() ||
-            (StaticPrefs::apz_nonwr_activate_all_scroll_frames_when_fission() &&
-             FissionAutostart()));
-  }
 }
 
 bool ScrollFrameHelper::DecideScrollableLayer(
