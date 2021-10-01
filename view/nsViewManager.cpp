@@ -50,7 +50,7 @@ using namespace mozilla::layers;
 #undef DEBUG_MOUSE_LOCATION
 
 // Weakly held references to all of the view managers
-nsTArray<nsViewManager*>* nsViewManager::gViewManagers = nullptr;
+StaticAutoPtr<nsTArray<nsViewManager*>> nsViewManager::gViewManagers;
 uint32_t nsViewManager::gLastUserEventTime = 0;
 
 nsViewManager::nsViewManager()
@@ -91,7 +91,6 @@ nsViewManager::~nsViewManager() {
   if (gViewManagers->IsEmpty()) {
     // There aren't any more view managers so
     // release the global array of view managers
-    delete gViewManagers;
     gViewManagers = nullptr;
   }
 
