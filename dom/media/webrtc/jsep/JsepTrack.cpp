@@ -257,7 +257,8 @@ void JsepTrack::AddToMsection(const std::vector<JsConstraints>& constraintsList,
       MOZ_ASSERT(mSsrcs.size() == mSsrcToRtxSsrc.size());
       std::vector<uint32_t> allSsrcs;
       UniquePtr<SdpSsrcGroupAttributeList> group(new SdpSsrcGroupAttributeList);
-      for (const auto& [ssrc, rtxSsrc] : mSsrcToRtxSsrc) {
+      for (const auto& ssrc : mSsrcs) {
+        const auto rtxSsrc = mSsrcToRtxSsrc[ssrc];
         allSsrcs.push_back(ssrc);
         allSsrcs.push_back(rtxSsrc);
         group->PushEntry(SdpSsrcGroupAttributeList::kFid, {ssrc, rtxSsrc});
