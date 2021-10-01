@@ -424,7 +424,7 @@ class nsViewManager final {
   // from here to public should be static and locked... MMP
 
   // list of view managers
-  static nsTArray<nsViewManager*>* gViewManagers;
+  static mozilla::StaticAutoPtr<nsTArray<nsViewManager*>> gViewManagers;
 };
 
 /**
