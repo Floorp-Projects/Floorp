@@ -6,11 +6,11 @@
 
 // Test that using the iframe picker usage + bfcache navigations don't break the toolbox
 
-const IFRAME_URL = `https://example.com/document-builder.sjs?html=<div id=in-iframe>frame</div>`;
+const IFRAME_URL = `https://example.com/document-builder.sjs?html=<meta charset=utf8><div id=in-iframe>frame</div>`;
 
 const URL =
   "https://example.com/document-builder.sjs?html=" +
-  `<iframe src='${IFRAME_URL}'></iframe><div id=top>top</div>`;
+  `<meta charset=utf8><iframe src='${IFRAME_URL}'></iframe><div id=top>top</div>`;
 
 add_task(async function() {
   await pushPref("devtools.command-button-frames.enabled", true);
@@ -34,7 +34,7 @@ add_task(async function() {
   info("Navigate to a different page to put the current page in the bfcache");
   let onMarkupLoaded = getOnInspectorReadyAfterNavigation(inspector);
   await navigateTo(
-    "https://example.org/document-builder.sjs?html=example.org page"
+    "https://example.org/document-builder.sjs?html=<meta charset=utf8>example.org page"
   );
   await onMarkupLoaded;
 
@@ -48,6 +48,9 @@ add_task(async function() {
   ok(!btn.firstChild, "The frame list button doesn't have any children");
 
   // Open frame menu and wait till it's available on the screen.
+  const frameMenu = toolbox.doc.getElementById("toolbox-frame-menu");
+  info("Wait for the frame to be populated before opening the tooltip");
+  await waitUntil(() => frameMenu.childNodes.length == 2);
   const panel = toolbox.doc.getElementById("command-button-frames-panel");
   btn.click();
   ok(panel, "popup panel has created.");
