@@ -60,22 +60,38 @@ class PerformanceResourceTiming : public PerformanceEntry {
     return mTimingData->FetchStartHighRes(mPerformance);
   }
 
-  DOMHighResTimeStamp RedirectStart(
-      Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
-    // We have to check if all the redirect URIs had the same origin (since
-    // there is no check in RedirectStartHighRes())
-    return ReportRedirectForCaller(aSubjectPrincipal)
+  DOMHighResTimeStamp RedirectStart(Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                    bool aEnsureSameOriginAndIgnoreTAO) const {
+    // We have to check if all the redirect URIs whether had the same origin or
+    // different origins with TAO headers set (since there is no check in
+    // RedirectStartHighRes())
+    return ReportRedirectForCaller(aSubjectPrincipal,
+                                   aEnsureSameOriginAndIgnoreTAO)
                ? mTimingData->RedirectStartHighRes(mPerformance)
                : 0;
   }
 
-  DOMHighResTimeStamp RedirectEnd(
+  virtual DOMHighResTimeStamp RedirectStart(
       Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
-    // We have to check if all the redirect URIs had the same origin (since
-    // there is no check in RedirectEndHighRes())
-    return ReportRedirectForCaller(aSubjectPrincipal)
+    return RedirectStart(aSubjectPrincipal,
+                         false /* aEnsureSameOriginAndIgnoreTAO */);
+  }
+
+  DOMHighResTimeStamp RedirectEnd(Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                                  bool aEnsureSameOriginAndIgnoreTAO) const {
+    // We have to check if all the redirect URIs whether had the same origin or
+    // different origins with TAO headers set (since there is no check in
+    // RedirectEndHighRes())
+    return ReportRedirectForCaller(aSubjectPrincipal,
+                                   aEnsureSameOriginAndIgnoreTAO)
                ? mTimingData->RedirectEndHighRes(mPerformance)
                : 0;
+  }
+
+  virtual DOMHighResTimeStamp RedirectEnd(
+      Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
+    return RedirectEnd(aSubjectPrincipal,
+                       false /* aEnsureSameOriginAndIgnoreTAO */);
   }
 
   DOMHighResTimeStamp DomainLookupStart(
@@ -170,7 +186,8 @@ class PerformanceResourceTiming : public PerformanceEntry {
   bool TimingAllowedForCaller(Maybe<nsIPrincipal*>& aCaller) const;
 
   // Check if cross-origin redirects should be reported to the caller.
-  bool ReportRedirectForCaller(Maybe<nsIPrincipal*>& aCaller) const;
+  bool ReportRedirectForCaller(Maybe<nsIPrincipal*>& aCaller,
+                               bool aEnsureSameOriginAndIgnoreTAO) const;
 
   nsString mInitiatorType;
   const UniquePtr<PerformanceTimingData> mTimingData;  // always non-null
