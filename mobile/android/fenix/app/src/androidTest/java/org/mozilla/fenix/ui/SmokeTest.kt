@@ -544,6 +544,7 @@ class SmokeTest {
         }
     }
 
+    @Ignore("Started failing: https://github.com/mozilla-mobile/fenix/issues/21540")
     @Test
     // Verifies setting as default a customized search engine name and URL
     fun editCustomSearchEngineTest() {
@@ -575,6 +576,7 @@ class SmokeTest {
         }
     }
 
+    @Ignore("Strated failing on Nighlty task: https://github.com/mozilla-mobile/fenix/issues/21620")
     @Test
     // Test running on beta/release builds in CI:
     // caution when making changes to it, so they don't block the builds
