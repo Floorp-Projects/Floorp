@@ -36,7 +36,6 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
       mNextSibling(nullptr),
       mFirstChild(nullptr),
       mFrame(nullptr),
-      mDirtyRegion(nullptr),
       mZIndex(0),
       mVis(aVisibility),
       mPosX(0),
@@ -104,8 +103,6 @@ nsView::~nsView() {
   DestroyWidget();
 
   MOZ_RELEASE_ASSERT(!mFrame);
-
-  delete mDirtyRegion;
 }
 
 class DestroyWidgetRunnable : public Runnable {
