@@ -406,6 +406,7 @@ opaque-types = [
 # All cbindgen-types are in mod "structs::root::mozilla".
 # FIXME(emilio): We probably want to automate this somehow...
 cbindgen-types = [
+    { gecko = "StyleAnimationTimeline", servo = "crate::values::computed::box_::AnimationTimeline" },
     { gecko = "StyleAppearance", servo = "crate::values::specified::Appearance" },
     { gecko = "StyleAspectRatio", servo = "crate::values::computed::position::AspectRatio" },
     { gecko = "StyleComputedFontStretchRange", servo = "crate::font_face::ComputedFontStretchRange" },
