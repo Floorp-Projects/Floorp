@@ -154,6 +154,7 @@ export const MultiStageAboutWelcome = props => {
               id={screen.id}
               totalNumberOfScreens={props.screens.length}
               order={order}
+              autoClose={screen.autoClose}
               content={screen.content}
               navigate={handleTransition}
               topSites={topSites}
@@ -287,6 +288,7 @@ export class WelcomeScreen extends React.PureComponent {
         content={this.props.content}
         id={this.props.id}
         order={this.props.order}
+        autoClose={this.props.autoClose}
         activeTheme={this.props.activeTheme}
         totalNumberOfScreens={this.props.totalNumberOfScreens - 1}
         handleAction={this.handleAction}

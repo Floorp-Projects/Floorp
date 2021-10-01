@@ -311,6 +311,26 @@ const DEFAULT_WELCOME_CONTENT = {
         },
       },
     },
+    {
+      id: "AW_THANKS",
+      order: 4,
+      autoClose: true,
+      content: {
+        hasFancyTitle: true,
+        title: { string_id: "mr2-onboarding-thank-you-header" },
+        subtitle: {
+          string_id: "mr2-onboarding-thank-you-text",
+        },
+        primary_button: {
+          label: {
+            string_id: "mr2-onboarding-start-browsing-button-label",
+          },
+          action: {
+            navigate: true,
+          },
+        },
+      },
+    },
   ],
 };
 
