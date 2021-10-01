@@ -489,6 +489,10 @@ bool SharedMemory::ReadOnlyCopy(SharedMemory* ro_out) {
 
 #endif  // not Android
 
+#ifndef MAP_NORESERVE
+#  define MAP_NORESERVE 0
+#endif
+
 bool SharedMemory::Map(size_t bytes, void* fixed_address) {
   if (!mapped_file_) {
     return false;
@@ -517,8 +521,8 @@ bool SharedMemory::Map(size_t bytes, void* fixed_address) {
 }
 
 void* SharedMemory::FindFreeAddressSpace(size_t size) {
-  void* memory =
-      mmap(NULL, size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  void* memory = mmap(nullptr, size, PROT_NONE,
+                      MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
   munmap(memory, size);
   return memory != MAP_FAILED ? memory : NULL;
 }
