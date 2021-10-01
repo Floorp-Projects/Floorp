@@ -4,6 +4,7 @@
 
 #include "gtest/gtest.h"
 #include "../../io/nsSegmentedBuffer.h"
+#include "nsIEventTarget.h"
 
 using namespace mozilla;
 
