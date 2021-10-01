@@ -425,7 +425,12 @@ impl TextRunPrimitive {
                 RasterSpace::Local(rounded_up / device_pixel_scale.0)
             }
         } else {
-            self.requested_raster_space
+            // Assume that if we have a RasterSpace::Local, it is frequently changing, in which
+            // case we want to undo the device-pixel scale, as we do above.
+            match self.requested_raster_space {
+                RasterSpace::Local(scale) => RasterSpace::Local(scale / device_pixel_scale.0),
+                RasterSpace::Screen => RasterSpace::Screen,
+            }
         }
     }
 
