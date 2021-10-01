@@ -189,8 +189,21 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
                                       unsigned flags,
                                       MutableHandle<PropertyKeySet> visited,
                                       MutableHandleIdVector props) {
+  // We don't need to iterate over the shape's properties if we're only
+  // interested in enumerable properties and the object is known to have no
+  // enumerable properties.
+  //
+  // Don't optimize if CheckForDuplicates is true, because non-enumerable
+  // properties still have to participate in duplicate-property checking.
+  const bool iterShapeProperties = CheckForDuplicates ||
+                                   (flags & JSITER_HIDDEN) ||
+                                   pobj->hasEnumerableProperty();
+
   bool enumerateSymbols;
   if (flags & JSITER_SYMBOLSONLY) {
+    if (!iterShapeProperties) {
+      return true;
+    }
     enumerateSymbols = true;
   } else {
     // Collect any dense elements from this object.
@@ -233,6 +246,12 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
           return false;
         }
       }
+    }
+
+    // The code below enumerates shape properties (including sparse elements) so
+    // if we can ignore those we're done.
+    if (!iterShapeProperties) {
+      return true;
     }
 
     // Collect any sparse elements from this object.
@@ -299,6 +318,8 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
   }
 
   if (enumerateSymbols) {
+    MOZ_ASSERT(iterShapeProperties);
+
     // Do a second pass to collect symbols. ES6 draft rev 25 (2014 May 22)
     // 9.1.12 requires that all symbols appear after all strings in the
     // result.
