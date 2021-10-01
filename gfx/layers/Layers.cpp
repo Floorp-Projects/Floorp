@@ -1233,14 +1233,6 @@ UniquePtr<LayerUserData> Layer::RemoveUserData(void* aKey) {
   return d;
 }
 
-void PaintedLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
-  Layer::PrintInfo(aStream, aPrefix);
-  nsIntRegion validRegion = GetValidRegion();
-  if (!validRegion.IsEmpty()) {
-    aStream << " [valid=" << validRegion << "]";
-  }
-}
-
 void ContainerLayer::PrintInfo(std::stringstream& aStream,
                                const char* aPrefix) {
   Layer::PrintInfo(aStream, aPrefix);
