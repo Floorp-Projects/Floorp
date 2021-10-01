@@ -360,7 +360,7 @@ static std::pair<sRGBColor, sRGBColor> SystemColorPair(
 auto nsNativeBasicTheme::GetDPIRatioForScrollbarPart(nsPresContext* aPc)
     -> DPIRatio {
   if (auto* rootPc = aPc->GetRootPresContext()) {
-    if (nsCOMPtr<nsIWidget> widget = rootPc->GetRootWidget()) {
+    if (auto* widget = rootPc->GetRootWidget()) {
       return widget->GetDefaultScale();
     }
   }

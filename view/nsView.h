@@ -17,7 +17,6 @@
 #include "Units.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/UniquePtr.h"
 
 class nsViewManager;
 class nsIWidget;
@@ -432,11 +431,12 @@ class nsView final : public nsIWidgetListener {
     mNextSibling = aSibling;
   }
 
-  const mozilla::UniquePtr<nsRegion>& DirtyRegion() {
+  nsRegion* GetDirtyRegion() {
     if (!mDirtyRegion) {
       NS_ASSERTION(!mParent || GetFloating(),
                    "Only display roots should have dirty regions");
-      mDirtyRegion = mozilla::MakeUnique<nsRegion>();
+      mDirtyRegion = new nsRegion();
+      NS_ASSERTION(mDirtyRegion, "Out of memory!");
     }
     return mDirtyRegion;
   }
@@ -547,7 +547,7 @@ class nsView final : public nsIWidgetListener {
   nsView* mNextSibling;
   nsView* mFirstChild;
   nsIFrame* mFrame;
-  mozilla::UniquePtr<nsRegion> mDirtyRegion;
+  nsRegion* mDirtyRegion;
   int32_t mZIndex;
   nsViewVisibility mVis;
   // position relative our parent view origin but in our appunits

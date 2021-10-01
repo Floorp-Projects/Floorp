@@ -14,7 +14,6 @@
 #include "nsDeviceContext.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/EventForwards.h"
 
 class nsIWidget;
@@ -282,7 +281,7 @@ class nsViewManager final {
    * Retrieve the widget at the root of the nearest enclosing
    * view manager whose root view has a widget.
    */
-  already_AddRefed<nsIWidget> GetRootWidget();
+  void GetRootWidget(nsIWidget** aWidget);
 
   /**
    * Indicate whether the viewmanager is currently painting
@@ -374,11 +373,8 @@ class nsViewManager final {
 
   void InvalidateView(nsView* aView, const nsRect& aRect);
 
-  nsViewManager* RootViewManager() const {
-    return mRootViewManager ? mRootViewManager.get()
-                            : const_cast<nsViewManager*>(this);
-  }
-  bool IsRootVM() const { return !mRootViewManager; }
+  nsViewManager* RootViewManager() const { return mRootViewManager; }
+  bool IsRootVM() const { return this == RootViewManager(); }
 
   // Whether synchronous painting is allowed at the moment. For example,
   // widget geometry changes can cause synchronous painting, so they need to
@@ -404,12 +400,9 @@ class nsViewManager final {
   nsSize mDelayedResize;
 
   nsView* mRootView;
-
-  // mRootViewManager is a strong reference to the root view manager, unless
-  // |this| is the root, in which case mRootViewManager is null.  Callers
-  // should use RootViewManager() (which handles that case) rather than using
-  // mRootViewManager directly.
-  RefPtr<nsViewManager> mRootViewManager;
+  // mRootViewManager is a strong ref unless it equals |this|.  It's
+  // never null (if we have no ancestors, it will be |this|).
+  nsViewManager* mRootViewManager;
 
   // The following members should not be accessed directly except by
   // the root view manager.  Some have accessor functions to enforce
@@ -424,7 +417,7 @@ class nsViewManager final {
   // from here to public should be static and locked... MMP
 
   // list of view managers
-  static mozilla::StaticAutoPtr<nsTArray<nsViewManager*>> gViewManagers;
+  static nsTArray<nsViewManager*>* gViewManagers;
 };
 
 /**
