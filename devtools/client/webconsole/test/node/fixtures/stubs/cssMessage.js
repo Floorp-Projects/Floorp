@@ -21,7 +21,7 @@ const rawPackets = new Map();
 rawPackets.set(`Unknown property ‘such-unknown-property’.  Declaration dropped.`, {
   "pageError": {
     "errorMessage": "Unknown property ‘such-unknown-property’.  Declaration dropped.",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-css-message.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-css-message.html",
     "sourceId": null,
     "lineText": "",
     "lineNumber": 3,
@@ -46,7 +46,7 @@ rawPackets.set(`Unknown property ‘such-unknown-property’.  Declaration dropp
 rawPackets.set(`Error in parsing value for ‘padding-top’.  Declaration dropped.`, {
   "pageError": {
     "errorMessage": "Error in parsing value for ‘padding-top’.  Declaration dropped.",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-css-message.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-css-message.html",
     "sourceId": null,
     "lineText": "",
     "lineNumber": 3,

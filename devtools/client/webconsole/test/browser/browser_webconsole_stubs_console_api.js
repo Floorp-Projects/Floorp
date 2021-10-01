@@ -13,7 +13,7 @@ const {
 } = require(`${CHROME_URL_ROOT}stub-generator-helpers`);
 
 const TEST_URI =
-  "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html";
+  "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html";
 const STUB_FILE = "consoleApi.js";
 
 add_task(async function() {
@@ -261,8 +261,8 @@ function getCommands() {
       code: `
   console.log(
     "%cfoo%cbar",
-    "color:blue; font-size:1.3em; background:url('http://example.com/test'); position:absolute; top:10px; ",
-    "color:red; line-height: 1.5; background:\\165rl('http://example.com/test')"
+    "color:blue; font-size:1.3em; background:url('https://example.com/test'); position:absolute; top:10px; ",
+    "color:red; line-height: 1.5; background:\\165rl('https://example.com/test')"
   );
   `,
     },
@@ -282,8 +282,8 @@ function getCommands() {
       code: `
   console.group(
     "%cfoo%cbar",
-    "color:blue;font-size:1.3em;background:url('http://example.com/test');position:absolute;top:10px",
-    "color:red;background:\\165rl('http://example.com/test')");
+    "color:blue;font-size:1.3em;background:url('https://example.com/test');position:absolute;top:10px",
+    "color:red;background:\\165rl('https://example.com/test')");
   console.groupEnd();
   `,
     },
@@ -295,8 +295,8 @@ function getCommands() {
       code: `
   console.groupCollapsed(
     "%cfoo%cbaz",
-    "color:blue;font-size:1.3em;background:url('http://example.com/test');position:absolute;top:10px",
-    "color:red;background:\\165rl('http://example.com/test')");
+    "color:blue;font-size:1.3em;background:url('https://example.com/test');position:absolute;top:10px",
+    "color:red;background:\\165rl('https://example.com/test')");
   console.groupEnd();
   `,
     },
