@@ -334,6 +334,11 @@ private:
     return nullptr;
   }
 
+  template<typename... T_Args>
+  static auto impl_create_sandbox_helper(rlbox_sandbox<T_Sbx>* this_ptr, T_Args... args) {
+    return this_ptr->impl_create_sandbox(std::forward<T_Args>(args)...);
+  }
+
 public:
   /**
    * @brief Unused member that allows the calling code to save data in a
@@ -362,7 +367,7 @@ public:
    * implementation. For the null sandbox, no arguments are necessary.
    */
   template<typename... T_Args>
-  inline auto create_sandbox(T_Args... args)
+  inline bool create_sandbox(T_Args... args)
   {
 #ifdef RLBOX_MEASURE_TRANSITION_TIMES
     // Warm up the timer. The first call is always slow (at least on the test
@@ -380,15 +385,27 @@ public:
       "create_sandbox called when sandbox already created/is being "
       "created concurrently");
 
-    return detail::return_first_result(
-      [&]() {
-        return this->impl_create_sandbox(std::forward<T_Args>(args)...);
-      },
-      [&]() {
-        sandbox_created.store(Sandbox_Status::CREATED);
-        RLBOX_ACQUIRE_UNIQUE_GUARD(lock, sandbox_list_lock);
-        sandbox_list.push_back(this);
-      });
+    using T_Result = rlbox::detail::polyfill::invoke_result_t<decltype(impl_create_sandbox_helper<T_Args...>), decltype(this), T_Args...>;
+
+    bool created = true;
+    if constexpr (std::is_same_v<T_Result, void>) {
+      this->impl_create_sandbox(std::forward<T_Args>(args)...);
+    } else if constexpr (std::is_same_v<T_Result, bool>) {
+      created = this->impl_create_sandbox(std::forward<T_Args>(args)...);
+    } else {
+      rlbox_detail_static_fail_because(
+        (!std::is_same_v<T_Result, void> && !std::is_same_v<T_Result, bool>),
+        "Expected impl_create_sandbox to return void or a boolean"
+      );
+    }
+
+    if (created) {
+      sandbox_created.store(Sandbox_Status::CREATED);
+      RLBOX_ACQUIRE_UNIQUE_GUARD(lock, sandbox_list_lock);
+      sandbox_list.push_back(this);
+    }
+
+    return created;
   }
 
   /**

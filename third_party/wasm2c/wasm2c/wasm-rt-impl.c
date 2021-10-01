@@ -52,8 +52,10 @@ uint32_t wasm_rt_register_func_type(wasm_func_type_t** p_func_type_structs,
   wasm_func_type_t func_type;
   func_type.param_count = param_count;
   func_type.params = malloc(param_count * sizeof(wasm_rt_type_t));
+  assert(func_type.params != 0);
   func_type.result_count = result_count;
   func_type.results = malloc(result_count * sizeof(wasm_rt_type_t));
+  assert(func_type.results != 0);
 
   uint32_t i;
   for (i = 0; i < param_count; ++i)
@@ -114,7 +116,7 @@ void wasm_rt_cleanup_func_types(wasm_func_type_t** p_func_type_structs, uint32_t
 # error "Unknown pointer size"
 #endif
 
-void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
+bool wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
                              uint32_t initial_pages,
                              uint32_t max_pages) {
   const uint32_t byte_length = initial_pages * WASM_PAGE_SIZE;
@@ -135,11 +137,11 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
 
   if (!addr) {
     os_print_last_error("os_mmap failed.");
-    abort();
+    return false;
   }
   int ret = os_mmap_commit(addr, byte_length, MMAP_PROT_READ | MMAP_PROT_WRITE);
   if (ret != 0) {
-    abort();
+    return false;
   }
   // This is a valid way to initialize a constant field that is not undefined behavior
   // https://stackoverflow.com/questions/9691404/how-to-initialize-const-in-a-struct-in-c-with-malloc
@@ -163,6 +165,7 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
 #if defined(WASM_CHECK_SHADOW_MEMORY)
   wasm2c_shadow_memory_create(memory);
 #endif
+  return true;
 }
 
 void wasm_rt_deallocate_memory(wasm_rt_memory_t* memory) {
