@@ -170,9 +170,9 @@ class TestArchive(unittest.TestCase):
 
             gp = os.path.join(d, "test.tar.gz")
             with open(gp, "wb") as fh:
-                create_tar_gz_from_files(fh, files, filename="foobar", compresslevel=1)
+                create_tar_gz_from_files(fh, files, filename="foobar")
 
-            self.assertEqual(file_hash(gp), "1cc8b96f0262350977c2e9d61f40a1fa76f35c52")
+            self.assertEqual(file_hash(gp), "721e00083c17d16df2edbddf40136298c06d0c49")
 
             with tarfile.open(gp, "r:gz") as tf:
                 self._verify_basic_tarfile(tf)

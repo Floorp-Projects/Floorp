@@ -11,7 +11,7 @@ job-defaults:
     worker-type:
         by-platform:
             linux1804-64.*: t-linux-xlarge-source
-            macosx1014-64.*: t-osx-1014
+            macosx1015-64.*: t-osx-1015-r8
             windows10-64.*: t-win10-64-source
     worker:
         by-platform:
@@ -52,7 +52,7 @@ fog:
     description: Python unit tests for Firefox on Glean
     platform:
         - linux1804-64/opt
-        - macosx1014-64/opt
+        - macosx1015-64/opt
         - windows10-64/opt
     python-version: [3]
     treeherder:
@@ -68,7 +68,7 @@ mach:
     description: python/mach unit tests
     platform:
         - linux1804-64/opt
-        - macosx1014-64/opt
+        - macosx1015-64/opt
         - windows10-64/opt
     python-version: [3]
     treeherder:
@@ -154,7 +154,7 @@ mozbase:
     description: testing/mozbase unit tests
     platform:
         - linux1804-64/opt
-        - macosx1014-64/opt
+        - macosx1015-64/opt
         - windows10-64/opt
     python-version: [3]
     treeherder:
@@ -184,7 +184,7 @@ mozlint:
     description: python/mozlint unit tests
     platform:
         - linux1804-64/opt
-        - macosx1014-64/opt
+        - macosx1015-64/opt
         - windows10-64/opt
     python-version: [3]
     treeherder:
@@ -197,7 +197,7 @@ mozlint:
         clang-tidy:
             by-platform:
                 linux1804-64/opt: toolchain-linux64-clang-tidy
-                macosx1014-64/opt: toolchain-macosx64-clang-tidy
+                macosx1015-64/opt: toolchain-macosx64-clang-tidy
                 windows10-64/opt: toolchain-win64-clang-tidy
     fetches:
         toolchain:
@@ -205,7 +205,7 @@ mozlint:
                 linux1804-64/opt:
                     - linux64-node
                     - linux64-rust
-                macosx1014-64/opt:
+                macosx1015-64/opt:
                     - macosx64-node
                     - macosx64-rust
                 windows10-64/opt:
@@ -262,7 +262,7 @@ raptor:
     description: testing/raptor unit tests
     platform:
         - linux1804-64/opt
-        - macosx1014-64/opt
+        - macosx1015-64/opt
         - windows10-64/opt
     python-version: [3]
     treeherder:
@@ -359,7 +359,7 @@ mozbuild:
     description: mozbuild unit tests
     platform:
         - linux1804-64/opt
-        - macosx1014-64/opt
+        - macosx1015-64/opt
         - windows10-64/opt
     python-version: [3]
     treeherder:
@@ -372,7 +372,7 @@ mozbuild:
             by-platform:
                 linux1804-64/opt:
                     - linux64-node-12
-                macosx1014-64/opt:
+                macosx1015-64/opt:
                     - macosx64-node-12
                 windows10-64/opt:
                     - win64-node-12
@@ -396,7 +396,7 @@ mozperftest:
     description: mozperftest unit tests
     platform:
         - linux1804-64/opt
-        - macosx1014-64/opt
+        - macosx1015-64/opt
         - windows10-64/opt
     treeherder:
         symbol: mpu
@@ -407,7 +407,7 @@ mozperftest:
             by-platform:
                 linux1804-64/opt:
                     - linux64-node-12
-                macosx1014-64/opt:
+                macosx1015-64/opt:
                     - macosx64-node-12
                 windows10-64/opt:
                     - win64-node-12
@@ -420,7 +420,7 @@ condprof:
     description: testing/condprofile unit tests
     platform:
         - linux1804-64/opt
-        - macosx1014-64/opt
+        - macosx1015-64/opt
         - windows10-64/opt
     python-version: [3]
     treeherder:
@@ -511,7 +511,7 @@ telemetry-python:
     description: Python unit tests for Telemetry
     platform:
         - linux1804-64/opt
-        - macosx1014-64/opt
+        - macosx1015-64/opt
         - windows10-64/opt
     python-version: [3]
     treeherder:
@@ -524,7 +524,7 @@ telemetry-python:
             by-platform:
                 linux1804-64/opt:
                     - linux64-node-12
-                macosx1014-64/opt:
+                macosx1015-64/opt:
                     - macosx64-node-12
                 windows10-64/opt:
                     - win64-node-12
