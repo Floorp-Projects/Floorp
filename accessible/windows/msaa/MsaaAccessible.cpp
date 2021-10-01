@@ -251,8 +251,7 @@ HWND MsaaAccessible::GetHWNDFor(Accessible* aAccessible) {
     nsIWidget* widget = frame->GetNearestWidget();
     if (widget && widget->IsVisible()) {
       if (nsViewManager* vm = document->PresShellPtr()->GetViewManager()) {
-        nsCOMPtr<nsIWidget> rootWidget;
-        vm->GetRootWidget(getter_AddRefs(rootWidget));
+        nsCOMPtr<nsIWidget> rootWidget = vm->GetRootWidget();
         // Make sure the accessible belongs to popup. If not then use
         // document HWND (which might be different from root widget in the
         // case of window emulation).

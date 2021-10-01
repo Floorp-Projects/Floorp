@@ -182,8 +182,7 @@ RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
     return nullptr;
   }
 
-  nsCOMPtr<nsIWidget> rootWidget;
-  vm->GetRootWidget(getter_AddRefs(rootWidget));
+  nsCOMPtr<nsIWidget> rootWidget = vm->GetRootWidget();
   // `rootWidget` can be one of several types. Here we make sure it is an
   // android nsWindow.
   if (RefPtr<nsWindow> window = nsWindow::From(rootWidget)) {

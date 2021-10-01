@@ -14,6 +14,7 @@
 #include "nsDeviceContext.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/EventForwards.h"
 
 class nsIWidget;
@@ -281,7 +282,7 @@ class nsViewManager final {
    * Retrieve the widget at the root of the nearest enclosing
    * view manager whose root view has a widget.
    */
-  void GetRootWidget(nsIWidget** aWidget);
+  already_AddRefed<nsIWidget> GetRootWidget();
 
   /**
    * Indicate whether the viewmanager is currently painting
