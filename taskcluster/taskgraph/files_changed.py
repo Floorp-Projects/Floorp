@@ -6,13 +6,15 @@
 Support for optimizing tasks based on the set of files that have changed.
 """
 
-
 import logging
+import os
+
 from mozpack.path import match as mozpackmatch, join as join_path
 from mozversioncontrol import get_repository_object, InvalidRepoPath
 from subprocess import CalledProcessError
 from mozbuild.util import memoize
 
+from taskgraph import GECKO
 from taskgraph.util.hg import get_json_automationrelevance
 
 logger = logging.getLogger(__name__)
@@ -25,11 +27,20 @@ def get_changed_files(repository, revision):
     Responses are cached, so multiple calls with the same arguments are OK.
     """
     contents = get_json_automationrelevance(repository, revision)
-    logger.debug(
-        "{} commits influencing task scheduling:".format(len(contents["changesets"]))
-    )
+    try:
+        changesets = contents["changesets"]
+    except KeyError:
+        # We shouldn't hit this error in CI.
+        if os.environ.get("MOZ_AUTOMATION"):
+            raise
+
+        # We're likely on an unpublished commit, grab changed files from
+        # version control.
+        return get_locally_changed_files(GECKO)
+
+    logger.debug("{} commits influencing task scheduling:".format(len(changesets)))
     changed_files = set()
-    for c in contents["changesets"]:
+    for c in changesets:
         desc = ""  # Support empty desc
         if c["desc"]:
             desc = c["desc"].splitlines()[0].encode("ascii", "ignore")
