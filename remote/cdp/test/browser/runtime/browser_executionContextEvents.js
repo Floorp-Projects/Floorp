@@ -95,7 +95,7 @@ add_task(async function eventsWhenNavigatingFrameSet({ client }) {
   );
   is(
     createdTopContext.origin,
-    FRAMESET_SINGLE_URL,
+    BASE_ORIGIN,
     "The execution context origin is the frameset"
   );
 
@@ -107,7 +107,7 @@ add_task(async function eventsWhenNavigatingFrameSet({ client }) {
   );
   is(
     createdFrameContext.origin,
-    PAGE_FRAME_URL,
+    BASE_ORIGIN,
     "The frame's execution context origin is the frame"
   );
 
@@ -143,7 +143,7 @@ add_task(async function eventsWhenNavigatingFrameSet({ client }) {
   );
   is(
     contextCreated.origin,
-    PAGE_FRAME_URL,
+    BASE_ORIGIN,
     "The execution context origin is not the frameset"
   );
 });
@@ -156,7 +156,7 @@ add_task(async function eventsWhenNavigatingBackWithNoFrames({ client }) {
   const previousContext = await enableRuntime(client);
 
   const executionContextCreated = Runtime.executionContextCreated();
-  await loadURL(toDataURL("other-test-page"));
+  await loadURL(PAGE_URL);
   const { context: createdContext } = await executionContextCreated;
 
   const history = recordContextEvents(Runtime, 3);

@@ -165,7 +165,7 @@ add_task(async function contextCreatedAfterNavigation({ client }) {
     "default",
     "Default context has type 'default'"
   );
-  is(defaultContext.origin, PAGE_URL, "Default context has expected origin");
+  is(defaultContext.origin, BASE_ORIGIN, "Default context has expected origin");
   checkIsolated(isolatedContext, isolatedId, WORLD_NAME_1, frameId);
   compareContexts(isolatedContext, defaultContext);
 });
