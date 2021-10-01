@@ -32,7 +32,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(
   this,
-  ["getCurrentZoom", "isWindowIncluded", "isRemoteFrame"],
+  ["getCurrentZoom", "isWindowIncluded", "isFrameWithChildTarget"],
   "devtools/shared/layout/utils",
   true
 );
@@ -880,7 +880,10 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
       // remote frame target should emit RDP events (hovered/picked/...). And
       // all other WalkerActor for intermediate iframe and top level document
       // targets should stay silent.
-      isRemoteFrame(event.originalTarget || event.target)
+      isFrameWithChildTarget(
+        this.targetActor,
+        event.originalTarget || event.target
+      )
     );
   },
 
