@@ -966,7 +966,7 @@ void nsXULPopupManager::ShowTooltipAtScreen(nsIContent* aPopup,
   // coordinates are relative to the root widget
   nsPresContext* rootPresContext = pc->GetRootPresContext();
   if (rootPresContext) {
-    nsIWidget* rootWidget = rootPresContext->GetRootWidget();
+    nsCOMPtr<nsIWidget> rootWidget = rootPresContext->GetRootWidget();
     if (rootWidget) {
       mousePoint -= rootWidget->WidgetToScreenOffset();
     }

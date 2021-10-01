@@ -68,7 +68,7 @@ static inline gint GetMonitorScaleFactor(nsPresContext* aPresContext) {
   // the real monitor scale cannot go under 1.
   double scale = StaticPrefs::layout_css_devPixelsPerPx();
   if (scale <= 0) {
-    if (nsIWidget* rootWidget = aPresContext->GetRootWidget()) {
+    if (nsCOMPtr<nsIWidget> rootWidget = aPresContext->GetRootWidget()) {
       // We need to use GetDefaultScale() despite it returns monitor scale
       // factor multiplied by font scale factor because it is the only scale
       // updated in nsPuppetWidget.
