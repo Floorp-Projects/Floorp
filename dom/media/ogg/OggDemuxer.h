@@ -48,9 +48,9 @@ class OggDemuxer : public MediaDataDemuxer,
                                     size_t aTrackNumber) const;
 
   struct nsAutoOggSyncState {
-    explicit nsAutoOggSyncState(rlbox_sandbox_ogg& aSandbox);
+    explicit nsAutoOggSyncState(rlbox_sandbox_ogg* aSandbox);
     ~nsAutoOggSyncState();
-    rlbox_sandbox_ogg& mSandbox;
+    rlbox_sandbox_ogg* mSandbox;
     tainted_opaque_ogg<ogg_sync_state*> mState;
   };
   media::TimeIntervals GetBuffered(TrackInfo::TrackType aType);
@@ -274,7 +274,7 @@ class OggDemuxer : public MediaDataDemuxer,
   // Ogg decoding state.
   struct OggStateContext {
     explicit OggStateContext(MediaResource* aResource,
-                             rlbox_sandbox_ogg& aSandbox)
+                             rlbox_sandbox_ogg* aSandbox)
         : mOggState(aSandbox), mResource(aResource), mNeedKeyframe(true) {}
     nsAutoOggSyncState mOggState;
     MediaResourceIndex mResource;
