@@ -7,7 +7,7 @@
 "use strict";
 
 const TEST_URI =
-  "http://example.com/browser/devtools/client/webconsole/" +
+  "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-iframe-parent.html";
 
 add_task(async function() {

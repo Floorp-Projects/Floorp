@@ -6,9 +6,11 @@
 "use strict";
 
 const TEST_FILE = "test-console.html";
-const TEST_COM_URI = URL_ROOT_COM + TEST_FILE;
-const TEST_ORG_URI = URL_ROOT_ORG + TEST_FILE;
-const TEST_NET_URI = URL_ROOT_NET + TEST_FILE;
+const TEST_COM_URI = URL_ROOT_COM_SSL + TEST_FILE;
+const TEST_ORG_URI = URL_ROOT_ORG_SSL + TEST_FILE;
+// TEST_MOCHI_URI uses a non standart port and hence
+// is not subject to https-first mode
+const TEST_MOCHI_URI = URL_ROOT_MOCHI_8888 + TEST_FILE;
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webconsole.persistlog");
@@ -200,10 +202,10 @@ add_task(async function() {
   );
   const onNavigatedMessage3 = waitForMessage(
     hud,
-    "Navigated to " + TEST_NET_URI
+    "Navigated to " + TEST_MOCHI_URI
   );
   timeBeforeNavigation = Date.now() - WILL_NAVIGATE_TIME_SHIFT;
-  await navigateTo(TEST_NET_URI);
+  await navigateTo(TEST_MOCHI_URI);
   await onNavigatedMessage3;
 
   ok(true, "Third navigation message appeared as expected");
@@ -213,7 +215,11 @@ add_task(async function() {
     "Messages logged before the third navigation are still visible"
   );
 
-  assertLastMessageIsNavigationMessage(hud, timeBeforeNavigation, TEST_NET_URI);
+  assertLastMessageIsNavigationMessage(
+    hud,
+    timeBeforeNavigation,
+    TEST_MOCHI_URI
+  );
 
   await closeToolbox();
 });

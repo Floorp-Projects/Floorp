@@ -10,7 +10,7 @@ const TEST_URI =
 const TEST_FILE = "test-network-request.html";
 const JSON_TEST_URL = "test-network-request.html";
 const TEST_PATH =
-  "http://example.com/browser/devtools/client/webconsole/test/browser/";
+  "https://example.com/browser/devtools/client/webconsole/test/browser/";
 
 const NET_PREF = "devtools.webconsole.filter.net";
 const XHR_PREF = "devtools.webconsole.filter.netxhr";

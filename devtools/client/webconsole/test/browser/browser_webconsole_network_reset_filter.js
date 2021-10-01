@@ -7,7 +7,7 @@
 "use strict";
 
 const TEST_PATH =
-  "http://example.com/browser/devtools/client/webconsole/" + "test/browser/";
+  "https://example.com/browser/devtools/client/webconsole/" + "test/browser/";
 const TEST_URI = "data:text/html;charset=utf8,<p>test file URI";
 
 add_task(async function() {

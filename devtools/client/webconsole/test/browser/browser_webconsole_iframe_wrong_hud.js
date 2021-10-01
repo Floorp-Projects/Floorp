@@ -6,11 +6,11 @@
 // Ensure that iframes are not associated with the wrong hud. See Bug 593003.
 
 const TEST_URI =
-  "http://example.com/browser/devtools/client/webconsole/" +
+  "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-iframe-wrong-hud.html";
 
 const TEST_IFRAME_URI =
-  "http://example.com/browser/devtools/client/webconsole/" +
+  "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-iframe-wrong-hud-iframe.html";
 
 const TEST_DUMMY_URI =
@@ -18,7 +18,6 @@ const TEST_DUMMY_URI =
   "test/browser/test-console.html";
 
 add_task(async function() {
-  await pushPref("dom.security.https_first", false);
   await pushPref("devtools.webconsole.filter.net", true);
   const tab1 = await addTab(TEST_URI);
   const hud1 = await openConsole(tab1);
