@@ -2022,21 +2022,21 @@ void Document::AccumulatePageLoadTelemetry() {
     }
   }
 
-  // First Contentful Paint
-  if (TimeStamp firstContentfulPaint =
-          GetNavigationTiming()->GetFirstContentfulPaintTimeStamp()) {
+  // First Contentful Composite
+  if (TimeStamp firstContentfulComposite =
+          GetNavigationTiming()->GetFirstContentfulCompositeTimeStamp()) {
     Telemetry::AccumulateTimeDelta(Telemetry::PERF_FIRST_CONTENTFUL_PAINT_MS,
-                                   navigationStart, firstContentfulPaint);
+                                   navigationStart, firstContentfulComposite);
 
     if (!http3Key.IsEmpty()) {
       Telemetry::AccumulateTimeDelta(
           Telemetry::HTTP3_PERF_FIRST_CONTENTFUL_PAINT_MS, http3Key,
-          navigationStart, firstContentfulPaint);
+          navigationStart, firstContentfulComposite);
     }
 
     Telemetry::AccumulateTimeDelta(
         Telemetry::PERF_FIRST_CONTENTFUL_PAINT_FROM_RESPONSESTART_MS,
-        responseStart, firstContentfulPaint);
+        responseStart, firstContentfulComposite);
   }
 
   // DOM Content Loaded event

@@ -56,7 +56,7 @@ void nsDOMNavigationTiming::Clear() {
   mDOMContentLoadedEventStart = TimeStamp();
   mDOMContentLoadedEventEnd = TimeStamp();
   mDOMComplete = TimeStamp();
-  mContentfulPaint = TimeStamp();
+  mContentfulComposite = TimeStamp();
   mNonBlankPaint = TimeStamp();
 
   mDocShellHasBeenActiveSinceNavigationStart = false;
@@ -299,20 +299,20 @@ void nsDOMNavigationTiming::TTITimeoutCallback(nsITimer* aTimer,
 void nsDOMNavigationTiming::TTITimeout(nsITimer* aTimer) {
   // Check TTI: see if it's been 5 seconds since the last Long Task
   TimeStamp now = TimeStamp::Now();
-  MOZ_RELEASE_ASSERT(!mContentfulPaint.IsNull(),
-                     "TTI timeout with no contentful-paint?");
+  MOZ_RELEASE_ASSERT(!mContentfulComposite.IsNull(),
+                     "TTI timeout with no contentful-composite?");
 
   nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
   TimeStamp lastLongTaskEnded;
   mainThread->GetLastLongNonIdleTaskEnd(&lastLongTaskEnded);
-  // Window starts at mContentfulPaint; any long task before that is ignored
-  if (lastLongTaskEnded.IsNull() || lastLongTaskEnded < mContentfulPaint) {
+  // Window starts at mContentfulComposite; any long task before that is ignored
+  if (lastLongTaskEnded.IsNull() || lastLongTaskEnded < mContentfulComposite) {
     PAGELOAD_LOG(
-        ("no longtask (last was %g ms before ContentfulPaint)",
+        ("no longtask (last was %g ms before ContentfulComposite)",
          lastLongTaskEnded.IsNull()
              ? 0
-             : (mContentfulPaint - lastLongTaskEnded).ToMilliseconds()));
-    lastLongTaskEnded = mContentfulPaint;
+             : (mContentfulComposite - lastLongTaskEnded).ToMilliseconds()));
+    lastLongTaskEnded = mContentfulComposite;
   }
   TimeDuration delta = now - lastLongTaskEnded;
   PAGELOAD_LOG(("TTI delta: %g ms", delta.ToMilliseconds()));
@@ -346,7 +346,7 @@ void nsDOMNavigationTiming::TTITimeout(nsITimer* aTimer) {
   // is >= FCP here.
 
   if (mTTFI.IsNull()) {
-    // lastLongTaskEnded is >= mContentfulPaint
+    // lastLongTaskEnded is >= mContentfulComposite
     mTTFI = (mDOMContentLoadedEventEnd.IsNull() ||
              lastLongTaskEnded > mDOMContentLoadedEventEnd)
                 ? lastLongTaskEnded
@@ -436,19 +436,19 @@ void nsDOMNavigationTiming::NotifyNonBlankPaintForRootContentDocument() {
   }
 }
 
-void nsDOMNavigationTiming::NotifyContentfulPaintForRootContentDocument(
+void nsDOMNavigationTiming::NotifyContentfulCompositeForRootContentDocument(
     const mozilla::TimeStamp& aCompositeEndTime) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mNavigationStart.IsNull());
 
-  if (!mContentfulPaint.IsNull()) {
+  if (!mContentfulComposite.IsNull()) {
     return;
   }
 
-  mContentfulPaint = aCompositeEndTime;
+  mContentfulComposite = aCompositeEndTime;
 
   if (profiler_can_accept_markers() || PAGELOAD_LOG_ENABLED()) {
-    TimeDuration elapsed = mContentfulPaint - mNavigationStart;
+    TimeDuration elapsed = mContentfulComposite - mNavigationStart;
     nsAutoCString spec;
     if (mLoadedURI) {
       mLoadedURI->GetSpec(spec);
@@ -462,9 +462,9 @@ void nsDOMNavigationTiming::NotifyContentfulPaintForRootContentDocument(
               "and first non-blank paint");
     PAGELOAD_LOG(("%s", marker.get()));
     PROFILER_MARKER_TEXT(
-        "FirstContentfulPaint", DOM,
+        "FirstContentfulComposite", DOM,
         MarkerOptions(
-            MarkerTiming::Interval(mNavigationStart, mContentfulPaint),
+            MarkerTiming::Interval(mNavigationStart, mContentfulComposite),
             MarkerInnerWindowIdFromDocShell(mDocShell)),
         marker);
   }
@@ -482,7 +482,7 @@ void nsDOMNavigationTiming::NotifyContentfulPaintForRootContentDocument(
 
   if (mDocShellHasBeenActiveSinceNavigationStart) {
     Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_FIRST_CONTENTFUL_PAINT_MS,
-                                   mNavigationStart, mContentfulPaint);
+                                   mNavigationStart, mContentfulComposite);
   }
 }
 
@@ -566,7 +566,7 @@ nsDOMNavigationTiming::nsDOMNavigationTiming(nsDocShell* aDocShell,
       mNavigationStartHighRes(aOther->mNavigationStartHighRes),
       mNavigationStart(aOther->mNavigationStart),
       mNonBlankPaint(aOther->mNonBlankPaint),
-      mContentfulPaint(aOther->mContentfulPaint),
+      mContentfulComposite(aOther->mContentfulComposite),
       mDOMContentFlushed(aOther->mDOMContentFlushed),
       mBeforeUnloadStart(aOther->mBeforeUnloadStart),
       mUnloadStart(aOther->mUnloadStart),
@@ -593,7 +593,7 @@ void mozilla::ipc::IPDLParamTraits<nsDOMNavigationTiming*>::Write(
   WriteIPDLParam(aMsg, aActor, aParam->mNavigationStartHighRes);
   WriteIPDLParam(aMsg, aActor, aParam->mNavigationStart);
   WriteIPDLParam(aMsg, aActor, aParam->mNonBlankPaint);
-  WriteIPDLParam(aMsg, aActor, aParam->mContentfulPaint);
+  WriteIPDLParam(aMsg, aActor, aParam->mContentfulComposite);
   WriteIPDLParam(aMsg, aActor, aParam->mDOMContentFlushed);
   WriteIPDLParam(aMsg, aActor, aParam->mBeforeUnloadStart);
   WriteIPDLParam(aMsg, aActor, aParam->mUnloadStart);
@@ -624,7 +624,7 @@ bool mozilla::ipc::IPDLParamTraits<nsDOMNavigationTiming*>::Read(
       !ReadIPDLParam(aMsg, aIter, aActor, &timing->mNavigationStartHighRes) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &timing->mNavigationStart) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &timing->mNonBlankPaint) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mContentfulPaint) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mContentfulComposite) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &timing->mDOMContentFlushed) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &timing->mBeforeUnloadStart) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &timing->mUnloadStart) ||

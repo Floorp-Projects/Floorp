@@ -2215,7 +2215,7 @@ void nsPresContext::NotifyDidPaintForSubtree(
       mHadContentfulPaintComposite = true;
       RefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
       if (timing && !IsPrintingOrPrintPreview()) {
-        timing->NotifyContentfulPaintForRootContentDocument(aTimeStamp);
+        timing->NotifyContentfulCompositeForRootContentDocument(aTimeStamp);
       }
     }
   }
