@@ -6,9 +6,9 @@
 // Test the resource command API around CONSOLE_MESSAGE when navigating
 // tab and inner iframes to distinct origin/processes.
 
-const TEST_URL = URL_ROOT + "doc_console.html";
-const TEST_IFRAME_URL = URL_ROOT_NET + "doc_console_iframe.html";
-const TEST_DOMAIN = "http://example.net";
+const TEST_URL = URL_ROOT_COM_SSL + "doc_console.html";
+const TEST_IFRAME_URL = URL_ROOT_ORG_SSL + "doc_console_iframe.html";
+const TEST_DOMAIN = "https://example.org";
 add_task(async function() {
   const START_URL = "data:text/html;charset=utf-8,foo";
   const tab = await addTab(START_URL);
@@ -27,7 +27,7 @@ add_task(async function() {
 
 async function testCrossProcessTabNavigation(browser, resourceCommand) {
   info(
-    "Navigate the top level document from data: URI to a http document including remote iframes"
+    "Navigate the top level document from data: URI to a https document including remote iframes"
   );
 
   let doneResolve;
@@ -68,7 +68,7 @@ async function testCrossProcessTabNavigation(browser, resourceCommand) {
 }
 
 async function testCrossProcessIframeNavigation(browser, resourceCommand) {
-  info("Navigate an inner iframe from data: URI to a http remote URL");
+  info("Navigate an inner iframe from data: URI to a https remote URL");
 
   let doneResolve;
   const messages = [];

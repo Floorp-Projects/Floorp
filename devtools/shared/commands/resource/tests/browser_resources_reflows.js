@@ -9,7 +9,7 @@ const { TYPES } = require("devtools/shared/commands/resource/resource-command");
 
 add_task(async function() {
   const tab = await addTab(
-    "http://example.com/document-builder.sjs?html=<h1>Test reflow resources</h1>"
+    "https://example.com/document-builder.sjs?html=<h1>Test reflow resources</h1>"
   );
 
   const { client, resourceCommand, targetCommand } = await initResourceCommand(
@@ -58,7 +58,7 @@ add_task(async function() {
       );
       content.document.body.appendChild(el);
       el.src =
-        "http://example.org/document-builder.sjs?html=<h2>remote iframe</h2>";
+        "https://example.org/document-builder.sjs?html=<h2>remote iframe</h2>";
       await onIframeLoaded;
       return el.browsingContext;
     }

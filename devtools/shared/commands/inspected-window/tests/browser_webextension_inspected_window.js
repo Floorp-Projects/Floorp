@@ -3,7 +3,7 @@
 
 "use strict";
 
-const TEST_RELOAD_URL = `${URL_ROOT}/inspectedwindow-reload-target.sjs`;
+const TEST_RELOAD_URL = `${URL_ROOT_SSL}/inspectedwindow-reload-target.sjs`;
 
 async function setup(pageUrl) {
   // Disable bfcache for Fission for now.
@@ -97,7 +97,7 @@ function collectEvalResults() {
 }
 
 add_task(async function test_successfull_inspectedWindowEval_result() {
-  const { commands, extension, fakeExtCallerInfo } = await setup(URL_ROOT);
+  const { commands, extension, fakeExtCallerInfo } = await setup(URL_ROOT_SSL);
 
   const result = await commands.inspectedWindowCommand.eval(
     fakeExtCallerInfo,
@@ -108,12 +108,12 @@ add_task(async function test_successfull_inspectedWindowEval_result() {
   ok(result.value, "Got a result from inspectedWindow eval");
   is(
     result.value.href,
-    URL_ROOT,
+    URL_ROOT_SSL,
     "Got the expected window.location.href property value"
   );
   is(
     result.value.protocol,
-    "http:",
+    "https:",
     "Got the expected window.location.protocol property value"
   );
 
@@ -126,7 +126,7 @@ add_task(async function test_successfull_inspectedWindowEval_resultAsGrip() {
     extension,
     fakeExtCallerInfo,
     webConsoleFront,
-  } = await setup(URL_ROOT);
+  } = await setup(URL_ROOT_SSL);
 
   let result = await commands.inspectedWindowCommand.eval(
     fakeExtCallerInfo,
@@ -197,7 +197,7 @@ add_task(async function test_successfull_inspectedWindowEval_resultAsGrip() {
 });
 
 add_task(async function test_error_inspectedWindowEval_result() {
-  const { commands, extension, fakeExtCallerInfo } = await setup(URL_ROOT);
+  const { commands, extension, fakeExtCallerInfo } = await setup(URL_ROOT_SSL);
 
   const result = await commands.inspectedWindowCommand.eval(
     fakeExtCallerInfo,
@@ -280,7 +280,7 @@ add_task(
 );
 
 add_task(async function test_exception_inspectedWindowEval_result() {
-  const { commands, extension, fakeExtCallerInfo } = await setup(URL_ROOT);
+  const { commands, extension, fakeExtCallerInfo } = await setup(URL_ROOT_SSL);
 
   const result = await commands.inspectedWindowCommand.eval(
     fakeExtCallerInfo,
