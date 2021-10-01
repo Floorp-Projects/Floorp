@@ -7,7 +7,7 @@
 #include "builtin/Object.h"
 #include "js/Object.h"  // JS::GetBuiltinClass
 
-#include "mozilla/MaybeOneOf.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Range.h"
 #include "mozilla/RangedPtr.h"
 
@@ -1402,6 +1402,9 @@ static bool HasEnumerableStringNonDataProperties(NativeObject* obj) {
   // We also check for enumerability and symbol properties, so uninteresting
   // non-data properties like |array.length| don't let us fall into the slow
   // path.
+  if (!obj->hasEnumerableProperty()) {
+    return false;
+  }
   for (ShapePropertyIter<NoGC> iter(obj->shape()); !iter.done(); iter++) {
     if (!iter->isDataProperty() && iter->enumerable() &&
         !iter->key().isSymbol()) {
@@ -1545,49 +1548,50 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
     // iterating over the shape hierarchy without worrying over accessors
     // modifying any state.
 
-    size_t elements = properties.length();
     constexpr bool onlyEnumerable = kind != EnumerableOwnPropertiesKind::Names;
-    constexpr AllowGC allowGC =
-        kind != EnumerableOwnPropertiesKind::KeysAndValues ? AllowGC::NoGC
-                                                           : AllowGC::CanGC;
-    mozilla::MaybeOneOf<ShapePropertyIter<NoGC>, ShapePropertyIter<CanGC>> m;
-    if (allowGC == AllowGC::NoGC) {
-      m.construct<ShapePropertyIter<NoGC>>(nobj->shape());
-    } else {
-      m.construct<ShapePropertyIter<CanGC>>(cx, nobj->shape());
-    }
-    for (ShapePropertyIter<allowGC>& iter = m.ref<ShapePropertyIter<allowGC>>();
-         !iter.done(); iter++) {
-      jsid id = iter->key();
-      if ((onlyEnumerable && !iter->enumerable()) || id.isSymbol()) {
-        continue;
-      }
-      MOZ_ASSERT(!JSID_IS_INT(id), "Unexpected indexed property");
-      MOZ_ASSERT_IF(kind == EnumerableOwnPropertiesKind::Values ||
-                        kind == EnumerableOwnPropertiesKind::KeysAndValues,
-                    iter->isDataProperty());
-
-      if (kind == EnumerableOwnPropertiesKind::Keys ||
-          kind == EnumerableOwnPropertiesKind::Names) {
-        value.setString(JSID_TO_STRING(id));
-      } else if (kind == EnumerableOwnPropertiesKind::Values) {
-        value.set(nobj->getSlot(iter->slot()));
+    if (!onlyEnumerable || nobj->hasEnumerableProperty()) {
+      size_t elements = properties.length();
+      constexpr AllowGC allowGC =
+          kind != EnumerableOwnPropertiesKind::KeysAndValues ? AllowGC::NoGC
+                                                             : AllowGC::CanGC;
+      mozilla::Maybe<ShapePropertyIter<allowGC>> m;
+      if constexpr (allowGC == AllowGC::NoGC) {
+        m.emplace(nobj->shape());
       } else {
-        key.setString(JSID_TO_STRING(id));
-        value.set(nobj->getSlot(iter->slot()));
-        if (!NewValuePair(cx, key, value, &value)) {
+        m.emplace(cx, nobj->shape());
+      }
+      for (auto& iter = m.ref(); !iter.done(); iter++) {
+        jsid id = iter->key();
+        if ((onlyEnumerable && !iter->enumerable()) || id.isSymbol()) {
+          continue;
+        }
+        MOZ_ASSERT(!JSID_IS_INT(id), "Unexpected indexed property");
+        MOZ_ASSERT_IF(kind == EnumerableOwnPropertiesKind::Values ||
+                          kind == EnumerableOwnPropertiesKind::KeysAndValues,
+                      iter->isDataProperty());
+
+        if constexpr (kind == EnumerableOwnPropertiesKind::Keys ||
+                      kind == EnumerableOwnPropertiesKind::Names) {
+          value.setString(JSID_TO_STRING(id));
+        } else if constexpr (kind == EnumerableOwnPropertiesKind::Values) {
+          value.set(nobj->getSlot(iter->slot()));
+        } else {
+          key.setString(JSID_TO_STRING(id));
+          value.set(nobj->getSlot(iter->slot()));
+          if (!NewValuePair(cx, key, value, &value)) {
+            return false;
+          }
+        }
+
+        if (!properties.append(value)) {
           return false;
         }
       }
 
-      if (!properties.append(value)) {
-        return false;
-      }
+      // The (non-indexed) properties were visited in reverse iteration order,
+      // call std::reverse() to ensure they appear in iteration order.
+      std::reverse(properties.begin() + elements, properties.end());
     }
-
-    // The (non-indexed) properties were visited in reverse iteration order,
-    // call std::reverse() to ensure they appear in iteration order.
-    std::reverse(properties.begin() + elements, properties.end());
   } else {
     MOZ_ASSERT(kind == EnumerableOwnPropertiesKind::Values ||
                kind == EnumerableOwnPropertiesKind::KeysAndValues);
