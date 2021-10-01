@@ -12,6 +12,7 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.history.toHistoryMetadata
 import org.mozilla.fenix.perf.runBlockingIncrement
+import kotlin.math.abs
 
 private const val BUFFER_TIME = 15000 /* 15 seconds in ms */
 
@@ -100,7 +101,7 @@ class DefaultPagedHistoryProvider(
     suspend fun getMatchingHistory(historyMetadata: History.Metadata): VisitInfo? {
         val history = historyStorage.getDetailedVisits(
             start = historyMetadata.visitedAt - BUFFER_TIME,
-            end = historyMetadata.visitedAt,
+            end = historyMetadata.visitedAt + BUFFER_TIME,
             excludeTypes = listOf(
                 VisitType.NOT_A_VISIT,
                 VisitType.DOWNLOAD,
@@ -111,7 +112,9 @@ class DefaultPagedHistoryProvider(
                 VisitType.REDIRECT_PERMANENT
             )
         )
-        return history.lastOrNull { it.url == historyMetadata.url }
+        return history
+            .filter { it.url == historyMetadata.url }
+            .minByOrNull { abs(historyMetadata.visitedAt - it.visitTime) }
     }
 
     /**
@@ -152,8 +155,8 @@ class DefaultPagedHistoryProvider(
         // items.
         val historyGroupsInOffset = if (history.isNotEmpty()) {
             historyGroups?.filter {
-                history.last().visitedAt <= it.visitedAt &&
-                    it.visitedAt <= (history.first().visitedAt + visitedAtBuffer)
+                history.last().visitedAt <= it.visitedAt - visitedAtBuffer &&
+                    it.visitedAt - visitedAtBuffer <= (history.first().visitedAt + visitedAtBuffer)
             } ?: emptyList()
         } else {
             emptyList()
@@ -171,7 +174,7 @@ class DefaultPagedHistoryProvider(
         // url, but we don't have a use case for this currently in the history view.
         result.addAll(
             historyGroupsInOffset.map { group ->
-                group.copy(items = group.items.filter { it.totalViewTime > 0 }.distinctBy { it.url })
+                group.copy(items = group.items.distinctBy { it.url })
             }
         )
 

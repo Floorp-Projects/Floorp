@@ -102,19 +102,17 @@ class HistoryMetadataMiddleware(
         // changes introduced by the action. These handlers rely on up-to-date tab state, which
         // is why they're in the "post" section.
         when (action) {
+            is TabListAction.AddTabAction -> {
+                if (!action.tab.content.private) {
+                    createHistoryMetadataIfNeeded(context, action.tab)
+                }
+            }
             // NB: sometimes this fires multiple times after the page finished loading.
             is ContentAction.UpdateHistoryStateAction -> {
                 context.state.findNormalTab(action.sessionId)?.let { tab ->
-                    // When history state is ready, we can record metadata for this page.
-                    val knownHistoryMetadata = tab.historyMetadata
-                    val metadataPresentForUrl = knownHistoryMetadata != null &&
-                        knownHistoryMetadata.url == tab.content.url
-                    // Record metadata for tab if there is no metadata present, or if url of the
-                    // tab changes since we last recorded metadata.
-                    if (!metadataPresentForUrl) {
-                        createHistoryMetadata(context, tab)
-                    }
+                    createHistoryMetadataIfNeeded(context, tab)
                 }
+
                 // Once we get a history update let's reset the flag for future loads.
                 directLoadTriggered = false
             }
@@ -127,13 +125,41 @@ class HistoryMetadataMiddleware(
         }
     }
 
+    private fun createHistoryMetadataIfNeeded(
+        context: MiddlewareContext<BrowserState, BrowserAction>,
+        tab: TabSessionState
+    ) {
+        // When history state is ready, we can record metadata for this page.
+        val knownHistoryMetadata = tab.historyMetadata
+        val metadataPresentForUrl = knownHistoryMetadata != null &&
+            knownHistoryMetadata.url == tab.content.url
+        // Record metadata for tab if there is no metadata present, or if url of the
+        // tab changes since we last recorded metadata.
+        if (!metadataPresentForUrl) {
+            createHistoryMetadata(context, tab)
+        }
+    }
+
     private fun createHistoryMetadata(context: MiddlewareContext<BrowserState, BrowserAction>, tab: TabSessionState) {
         val tabParent = tab.getParent(context.store)
         val previousUrlIndex = tab.content.history.currentIndex - 1
+        val tabMetadataHasSearchTerms = !tab.historyMetadata?.searchTerm.isNullOrBlank()
 
-        // Obtain search terms and referrer url either from tab parent, or from the history stack.
+        // Obtain search terms and referrer url either from tab parent, from the history stack, or
+        // from the tab itself.
+        // At a high level, there are two main cases here - 1) either the tab was opened as a 'new tab'
+        // via the search results page, or 2) a page was opened in the same tab as the search results page.
+        // Details about the New Tab case:
+        // - we obtain search terms via tab's parent (the search results page)
+        // - however, it's possible that parent changed (e.g. user navigated away from the search
+        // results page).
+        // - our approach below is to capture search terms from the parent within the tab.historyMetadata
+        // state on the first load of the tab, and then rely on this data for subsequent page loads on that tab.
+        // - this way, once a tab becomes part of the search group, it won't leave this search group
+        // unless a direct navigation event happens.
         val (searchTerm, referrerUrl) = when {
-            tabParent != null -> {
+            // Loading page opened in a New Tab for the first time.
+            tabParent != null && !tabMetadataHasSearchTerms -> {
                 val searchTerms = tabParent.content.searchTerms.takeUnless { it.isEmpty() }
                     ?: context.state.search.parseSearchTerms(tabParent.content.url)
                 searchTerms to tabParent.content.url
@@ -142,14 +168,31 @@ class HistoryMetadataMiddleware(
             // web content i.e., they followed a link, not if the user navigated directly via
             // toolbar.
             !directLoadTriggered && previousUrlIndex >= 0 -> {
-                val previousUrl = tab.content.history.items[previousUrlIndex].uri
-                val searchTerms = context.state.search.parseSearchTerms(previousUrl)
+                // Once a tab is within the search group, only direct navigation event can change that.
+                val (searchTerms, referrerUrl) = if (tabMetadataHasSearchTerms) {
+                    tab.historyMetadata?.searchTerm to tab.historyMetadata?.referrerUrl
+                } else {
+                    val previousUrl = tab.content.history.items[previousUrlIndex].uri
+                    context.state.search.parseSearchTerms(previousUrl) to previousUrl
+                }
+
                 if (searchTerms != null) {
-                    searchTerms to previousUrl
+                    searchTerms to referrerUrl
                 } else {
                     null to null
                 }
             }
+            // In certain redirect cases, we won't have a previous url in the history stack of the tab,
+            // but will have the search terms already set on the tab from having gone through this logic
+            // for the redirecting url.
+            // In that case, we leave this tab within the search group it's already in.
+            tabMetadataHasSearchTerms -> {
+                tab.historyMetadata?.searchTerm to tab.historyMetadata?.referrerUrl
+            }
+            // We had no search terms, no history stack, and no parent.
+            // For example, this would be a search results page itself.
+            // For now, the original search results page is not part of the search group.
+            // See https://github.com/mozilla-mobile/fenix/issues/21659.
             else -> null to null
         }
 
