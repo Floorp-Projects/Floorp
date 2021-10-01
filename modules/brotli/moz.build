@@ -32,5 +32,3 @@ AllowCompilerWarnings()
 CFLAGS += ['-DBROTLI_BUILD_PORTABLE']
 
 Library('brotli')
-
-REQUIRES_UNIFIED_BUILD = True

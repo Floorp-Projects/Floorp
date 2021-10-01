@@ -113,5 +113,3 @@ if CONFIG['GNU_AS']:
             ASFLAGS += [
                 '-no-integrated-as',
             ]
-
-REQUIRES_UNIFIED_BUILD = True

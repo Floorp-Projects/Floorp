@@ -50,5 +50,3 @@ if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
 CXXFLAGS += [
     '-Wno-implicit-fallthrough',
 ]
-
-REQUIRES_UNIFIED_BUILD = True
