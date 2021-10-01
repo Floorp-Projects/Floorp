@@ -10,6 +10,6 @@ def Library(name):
 
 Library("dummy")
 
-SOURCES += ["test1.c", "test1.S"]
+SOURCES += ["test1.c", "test2.S"]
 
 ASFLAGS += ["-no-integrated-as"]

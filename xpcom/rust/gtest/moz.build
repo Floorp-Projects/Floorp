@@ -6,11 +6,9 @@
 
 UNIFIED_SOURCES += [
     "bench-collections/Bench.cpp",
-    "moz_task/Test.cpp",
-    "nsstring/Test.cpp",
-    "xpcom/Test.cpp",
+    "moz_task/TestMozTask.cpp",
+    "nsstring/TestnsString.cpp",
+    "xpcom/TestXpcom.cpp",
 ]
 
 FINAL_LIBRARY = "xul-gtest"
-
-REQUIRES_UNIFIED_BUILD = True
