@@ -78,14 +78,14 @@ jittest:
     chunks:
         by-test-platform:
             windows.*: 1
-            windows10-64-ccov-qr/opt: 8
+            windows10-64-2004-ccov-qr/opt: 8
             macosx.*/opt: 1
             macosx.*/debug: 3
             android.*: 10
             default: 6
     max-run-time:
         by-test-platform:
-            windows10-64-ccov.*/.*: 7200
+            windows10-64-2004-ccov.*/.*: 7200
             macosx.*-ccov.*/.*: 7200
             android-hw.*: 5400
             default: 3600
