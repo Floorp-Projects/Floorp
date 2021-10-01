@@ -90,12 +90,6 @@
       "--lwt-sidebar-highlight-background-color",
       {
         lwtProperty: "sidebar_highlight",
-      },
-    ],
-    [
-      "--lwt-sidebar-highlight-text-color",
-      {
-        lwtProperty: "sidebar_highlight_text",
         processColor(rgbaChannels, element) {
           if (!rgbaChannels) {
             element.removeAttribute("lwt-sidebar-highlight");
@@ -106,6 +100,12 @@
           const { r, g, b, a } = rgbaChannels;
           return `rgba(${r}, ${g}, ${b}, ${a})`;
         },
+      },
+    ],
+    [
+      "--lwt-sidebar-highlight-text-color",
+      {
+        lwtProperty: "sidebar_highlight_text",
       },
     ],
   ];
