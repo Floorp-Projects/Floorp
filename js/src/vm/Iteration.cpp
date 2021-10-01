@@ -457,10 +457,68 @@ struct SortComparatorIds {
 
 #endif /* DEBUG */
 
+static void AssertNoEnumerableProperties(NativeObject* obj) {
+#ifdef DEBUG
+  // Verify the object has no enumerable properties if the HasEnumerable
+  // ObjectFlag is not set.
+
+  MOZ_ASSERT(!obj->hasEnumerableProperty());
+
+  static constexpr size_t MaxPropsToCheck = 5;
+
+  size_t count = 0;
+  for (ShapePropertyIter<NoGC> iter(obj->shape()); !iter.done(); iter++) {
+    MOZ_ASSERT(!iter->enumerable());
+    if (++count > MaxPropsToCheck) {
+      break;
+    }
+  }
+#endif  // DEBUG
+}
+
+// Typed arrays and classes with an enumerate hook can have extra properties not
+// included in the shape's property map or the object's dense elements.
+static bool ClassCanHaveExtraEnumeratedProperties(const JSClass* clasp) {
+  return IsTypedArrayClass(clasp) || clasp->getNewEnumerate() ||
+         clasp->getEnumerate();
+}
+
+static bool ProtoMayHaveEnumerableProperties(JSObject* obj) {
+  if (!obj->is<NativeObject>()) {
+    return true;
+  }
+
+  JSObject* proto = obj->as<NativeObject>().staticPrototype();
+  while (proto) {
+    if (!proto->is<NativeObject>()) {
+      return true;
+    }
+    NativeObject* nproto = &proto->as<NativeObject>();
+    if (nproto->hasEnumerableProperty() ||
+        nproto->getDenseInitializedLength() > 0 ||
+        ClassCanHaveExtraEnumeratedProperties(nproto->getClass())) {
+      return true;
+    }
+    AssertNoEnumerableProperties(nproto);
+    proto = nproto->staticPrototype();
+  }
+
+  return false;
+}
+
 static bool Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags,
                      MutableHandleIdVector props) {
   Rooted<PropertyKeySet> visited(cx, PropertyKeySet(cx));
   RootedObject pobj(cx, pobj_);
+
+  // If we're only interested in enumerable properties and the proto chain has
+  // no enumerable properties (the common case), we can optimize this to ignore
+  // the proto chain. This also lets us take advantage of the no-duplicate-check
+  // optimization below.
+  if (!(flags & JSITER_HIDDEN) && !(flags & JSITER_OWNONLY) &&
+      !ProtoMayHaveEnumerableProperties(pobj)) {
+    flags |= JSITER_OWNONLY;
+  }
 
   // Don't check for duplicates if we're only interested in own properties.
   // This does the right thing for most objects: native objects don't have
@@ -847,11 +905,7 @@ static bool CanStoreInIteratorCache(JSObject* obj) {
 
     // Typed arrays have indexed properties not captured by the Shape guard.
     // Enumerate hooks may add extra properties.
-    const JSClass* clasp = obj->getClass();
-    if (MOZ_UNLIKELY(IsTypedArrayClass(clasp))) {
-      return false;
-    }
-    if (MOZ_UNLIKELY(clasp->getNewEnumerate() || clasp->getEnumerate())) {
+    if (MOZ_UNLIKELY(ClassCanHaveExtraEnumeratedProperties(obj->getClass()))) {
       return false;
     }
 
