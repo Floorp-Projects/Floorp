@@ -1527,8 +1527,8 @@ nsEventStatus nsXULPopupManager::FirePopupShowingEvent(
   // coordinates are relative to the root widget
   nsPresContext* rootPresContext = aPresContext->GetRootPresContext();
   if (rootPresContext) {
-    rootPresContext->PresShell()->GetViewManager()->GetRootWidget(
-        getter_AddRefs(event.mWidget));
+    event.mWidget =
+        rootPresContext->PresShell()->GetViewManager()->GetRootWidget();
   } else {
     event.mWidget = nullptr;
   }
