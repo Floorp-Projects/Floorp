@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "PLDHashTable.h"
+#include "nsDebug.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/OperatorNewExtensions.h"
