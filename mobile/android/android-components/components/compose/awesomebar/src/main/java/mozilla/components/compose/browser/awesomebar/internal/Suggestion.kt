@@ -39,12 +39,12 @@ internal fun Suggestion(
     suggestion: AwesomeBar.Suggestion,
     colors: AwesomeBarColors,
     orientation: AwesomeBarOrientation,
-    onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
-    onAutoComplete: (AwesomeBar.Suggestion) -> Unit
+    onSuggestionClicked: () -> Unit,
+    onAutoComplete: () -> Unit
 ) {
     Row(
         modifier = Modifier
-            .clickable { onSuggestionClicked(suggestion) }
+            .clickable { onSuggestionClicked() }
             .defaultMinSize(minHeight = 56.dp)
             .testTag("mozac.awesomebar.suggestion")
             .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 8.dp)
@@ -66,7 +66,7 @@ internal fun Suggestion(
         )
         if (suggestion.editSuggestion != null) {
             AutocompleteButton(
-                onAutoComplete = { onAutoComplete(suggestion) },
+                onAutoComplete = onAutoComplete,
                 orientation = orientation,
                 colors = colors,
                 modifier = Modifier.align(Alignment.CenterVertically)

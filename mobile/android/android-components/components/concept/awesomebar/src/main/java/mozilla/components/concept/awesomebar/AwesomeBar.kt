@@ -180,4 +180,18 @@ interface AwesomeBar {
          */
         fun onInputCancelled() = Unit
     }
+
+    /**
+     * A group of [SuggestionProvider]s.
+     *
+     * @property providers The list of [SuggestionProvider]s in this group.
+     * @property title An optional title for this group. The title may be rendered by an AwesomeBar
+     * implementation.
+     * @property id A unique ID for this group (uses a generated UUID by default)
+     */
+    data class SuggestionProviderGroup(
+        val providers: List<SuggestionProvider>,
+        val title: String? = null,
+        val id: String = UUID.randomUUID().toString()
+    )
 }

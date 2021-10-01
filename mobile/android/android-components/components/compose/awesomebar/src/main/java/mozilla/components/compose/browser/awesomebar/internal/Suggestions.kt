@@ -20,11 +20,12 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 @Composable
 @Suppress("LongParameterList")
 internal fun Suggestions(
-    suggestions: List<AwesomeBar.Suggestion>,
+    groups: List<AwesomeBar.SuggestionProviderGroup>,
+    suggestions: Map<AwesomeBar.SuggestionProviderGroup, List<AwesomeBar.Suggestion>>,
     colors: AwesomeBarColors,
     orientation: AwesomeBarOrientation,
-    onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
-    onAutoComplete: (AwesomeBar.Suggestion) -> Unit,
+    onSuggestionClicked: (AwesomeBar.SuggestionProviderGroup, AwesomeBar.Suggestion) -> Unit,
+    onAutoComplete: (AwesomeBar.SuggestionProviderGroup, AwesomeBar.Suggestion) -> Unit,
     onScroll: () -> Unit
 ) {
     val state = rememberLazyListState()
@@ -35,14 +36,29 @@ internal fun Suggestions(
         state = state,
         modifier = Modifier.testTag("mozac.awesomebar.suggestions")
     ) {
-        items(suggestions) { suggestion ->
-            Suggestion(
-                suggestion,
-                colors,
-                orientation,
-                onSuggestionClicked,
-                onAutoComplete
-            )
+        groups.forEach { group ->
+            val groupSuggestions = suggestions[group] ?: emptyList()
+
+            if (groupSuggestions.isNotEmpty()) {
+                group.title?.let { title ->
+                    item(group.id) {
+                        SuggestionGroup(title, colors)
+                    }
+                }
+
+                items(
+                    items = groupSuggestions,
+                    key = { suggestion -> "${group.id}:${suggestion.provider.id}:${suggestion.id}" }
+                ) { suggestion ->
+                    Suggestion(
+                        suggestion,
+                        colors,
+                        orientation,
+                        onSuggestionClicked = { onSuggestionClicked(group, suggestion) },
+                        onAutoComplete = { onAutoComplete(group, suggestion) }
+                    )
+                }
+            }
         }
     }
 }

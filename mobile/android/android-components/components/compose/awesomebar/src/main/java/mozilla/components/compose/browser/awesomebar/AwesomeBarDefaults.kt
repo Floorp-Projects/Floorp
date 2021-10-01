@@ -27,11 +27,13 @@ object AwesomeBarDefaults {
         description: Color = MaterialTheme.colors.onBackground.copy(
             alpha = ContentAlpha.medium
         ),
-        autocompleteIcon: Color = MaterialTheme.colors.onSurface
+        autocompleteIcon: Color = MaterialTheme.colors.onSurface,
+        groupTitle: Color = MaterialTheme.colors.primary
     ) = AwesomeBarColors(
         background,
         title,
         description,
-        autocompleteIcon
+        autocompleteIcon,
+        groupTitle
     )
 }

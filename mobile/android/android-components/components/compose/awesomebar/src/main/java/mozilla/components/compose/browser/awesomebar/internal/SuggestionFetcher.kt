@@ -22,27 +22,29 @@ import java.util.concurrent.Executors
  * list of suggestions from a composable.
  */
 internal class SuggestionFetcher(
-    private val providers: List<AwesomeBar.SuggestionProvider>
+    private val groups: List<AwesomeBar.SuggestionProviderGroup>
 ) : RememberObserver {
     private val dispatcher = Executors.newFixedThreadPool(
-        providers.size,
+        groups.fold(0, { acc, group -> acc + group.providers.size }),
         NamedThreadFactory("SuggestionFetcher")
     ).asCoroutineDispatcher()
 
     /**
      * The current list of suggestions as an observable list.
      */
-    val state = mutableStateOf<List<AwesomeBar.Suggestion>>(emptyList())
+    val state = mutableStateOf<Map<AwesomeBar.SuggestionProviderGroup, List<AwesomeBar.Suggestion>>>(emptyMap())
 
     /**
-     * Fetches suggestions for [text] from all [providers] asynchronously.
+     * Fetches suggestions for [text] from all providers in all [groups] asynchronously.
      *
      * The [state] property will be updated whenever new suggestions are available.
      */
     suspend fun fetch(text: String) {
         coroutineScope {
-            providers.forEach { provider ->
-                launch(dispatcher) { fetchFrom(provider, text) }
+            groups.forEach { group ->
+                group.providers.forEach { provider ->
+                    launch(dispatcher) { fetchFrom(group, provider, text) }
+                }
             }
         }
     }
@@ -51,6 +53,7 @@ internal class SuggestionFetcher(
      * Fetches suggestions from [provider].
      */
     private suspend fun fetchFrom(
+        group: AwesomeBar.SuggestionProviderGroup,
         provider: AwesomeBar.SuggestionProvider,
         text: String
     ) {
@@ -73,7 +76,7 @@ internal class SuggestionFetcher(
         val end = SystemClock.elapsedRealtimeNanos()
         emitProviderQueryTimingFact(provider, timingNs = end - start)
 
-        processResultFrom(provider, suggestions)
+        processResultFrom(group, provider, suggestions)
     }
 
     /**
@@ -81,17 +84,22 @@ internal class SuggestionFetcher(
      */
     @Synchronized
     private fun processResultFrom(
+        group: AwesomeBar.SuggestionProviderGroup,
         provider: AwesomeBar.SuggestionProvider,
         suggestions: List<AwesomeBar.Suggestion>
     ) {
-        val updatedSuggestions = state.value
+        val suggestionMap = state.value
+
+        val updatedSuggestions = (suggestionMap[group] ?: emptyList())
             .filter { suggestion -> suggestion.provider != provider }
             .toMutableList()
 
         updatedSuggestions.addAll(suggestions)
         updatedSuggestions.sortByDescending { suggestion -> suggestion.score }
 
-        state.value = updatedSuggestions
+        val updatedSuggestionMap = suggestionMap.toMutableMap()
+        updatedSuggestionMap[group] = updatedSuggestions
+        state.value = updatedSuggestionMap
     }
 
     override fun onAbandoned() {
