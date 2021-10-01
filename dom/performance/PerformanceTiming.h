@@ -378,7 +378,7 @@ class PerformanceTiming final : public nsWrapperCache {
       return 0;
     }
     return nsRFPService::ReduceTimePrecisionAsMSecs(
-        GetDOMTiming()->GetTimeToContentfulPaint(),
+        GetDOMTiming()->GetTimeToContentfulComposite(),
         mPerformance->GetRandomTimelineSeed(),
         mPerformance->IsSystemPrincipal(), mPerformance->CrossOriginIsolated());
   }
