@@ -9,6 +9,7 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
+#include "nsLayoutUtils.h"
 #include "nsNumberControlFrame.h"
 #include "nsPresContext.h"
 #include "nsString.h"
@@ -272,8 +273,7 @@ bool nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext,
   return nsLayoutUtils::AuthorSpecifiedBorderBackgroundDisablesTheming(
              aAppearance) &&
          aFrame->GetContent()->IsHTMLElement() &&
-         aPresContext->HasAuthorSpecifiedRules(
-             aFrame, NS_AUTHOR_SPECIFIED_BORDER_OR_BACKGROUND);
+         aFrame->Style()->HasAuthorSpecifiedBorderOrBackground();
 }
 
 bool nsNativeTheme::IsDisabled(nsIFrame* aFrame, EventStates aEventStates) {

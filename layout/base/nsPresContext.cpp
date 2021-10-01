@@ -1888,24 +1888,6 @@ void nsPresContext::CountReflows(const char* aName, nsIFrame* aFrame) {
 }
 #endif
 
-bool nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
-                                            uint32_t aRuleTypeMask) const {
-  const bool padding = aRuleTypeMask & NS_AUTHOR_SPECIFIED_PADDING;
-  const bool borderBackground =
-      aRuleTypeMask & NS_AUTHOR_SPECIFIED_BORDER_OR_BACKGROUND;
-  const auto& style = *aFrame->Style();
-
-  if (padding && style.HasAuthorSpecifiedPadding()) {
-    return true;
-  }
-
-  if (borderBackground && style.HasAuthorSpecifiedBorderOrBackground()) {
-    return true;
-  }
-
-  return false;
-}
-
 gfxUserFontSet* nsPresContext::GetUserFontSet() {
   return mDocument->GetUserFontSet();
 }

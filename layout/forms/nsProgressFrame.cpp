@@ -11,6 +11,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLProgressElement.h"
 #include "nsIContent.h"
+#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
@@ -243,11 +244,9 @@ bool nsProgressFrame::ShouldUseNativeStyle() const {
   //   background.
   return StyleDisplay()->EffectiveAppearance() ==
              StyleAppearance::ProgressBar &&
-         !PresContext()->HasAuthorSpecifiedRules(
-             this, NS_AUTHOR_SPECIFIED_BORDER_OR_BACKGROUND) &&
+         !Style()->HasAuthorSpecifiedBorderOrBackground() &&
          barFrame &&
          barFrame->StyleDisplay()->EffectiveAppearance() ==
              StyleAppearance::Progresschunk &&
-         !PresContext()->HasAuthorSpecifiedRules(
-             barFrame, NS_AUTHOR_SPECIFIED_BORDER_OR_BACKGROUND);
+         !barFrame->Style()->HasAuthorSpecifiedBorderOrBackground();
 }
