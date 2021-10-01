@@ -3,19 +3,10 @@
 
 "use strict";
 
-const DOC = toDataURL("<div>foo</div>");
-const DOC_IFRAME_MULTI = toDataURL(`
-  <iframe src='data:text/html,foo'></iframe>
-  <iframe src='data:text/html,bar'></iframe>
-`);
-const DOC_IFRAME_NESTED = toDataURL(`
-  <iframe src="${DOC_IFRAME_MULTI}"></iframe>
-`);
-
 add_task(async function noEventWhenPageDomainDisabled({ client }) {
   await runFrameStartedLoadingTest(client, 0, async () => {
     info("Navigate to a page with nested iframes");
-    await loadURL(DOC_IFRAME_NESTED);
+    await loadURL(FRAMESET_NESTED_URL);
   });
 });
 
@@ -27,7 +18,7 @@ add_task(async function noEventAfterPageDomainDisabled({ client }) {
 
   await runFrameStartedLoadingTest(client, 0, async () => {
     info("Navigate to a page with nested iframes");
-    await loadURL(DOC_IFRAME_NESTED);
+    await loadURL(FRAMESET_NESTED_URL);
   });
 });
 
@@ -38,7 +29,7 @@ add_task(async function eventWhenNavigatingWithNoFrames({ client }) {
 
   await runFrameStartedLoadingTest(client, 1, async () => {
     info("Navigate to a page with no iframes");
-    await loadURL(DOC);
+    await loadURL(PAGE_URL);
   });
 });
 
@@ -49,7 +40,7 @@ add_task(async function eventsWhenNavigatingWithFrames({ client }) {
 
   await runFrameStartedLoadingTest(client, 3, async () => {
     info("Navigate to a page with iframes");
-    await loadURL(DOC_IFRAME_MULTI);
+    await loadURL(FRAMESET_MULTI_URL);
   });
 });
 
@@ -60,7 +51,7 @@ add_task(async function eventsWhenNavigatingWithNestedFrames({ client }) {
 
   await runFrameStartedLoadingTest(client, 4, async () => {
     info("Navigate to a page with nested iframes");
-    await loadURL(DOC_IFRAME_NESTED);
+    await loadURL(FRAMESET_NESTED_URL);
   });
 });
 

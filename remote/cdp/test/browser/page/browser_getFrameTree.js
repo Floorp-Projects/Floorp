@@ -3,20 +3,11 @@
 
 "use strict";
 
-const DOC = toDataURL("<div>foo</div>");
-const DOC_IFRAME_MULTI = toDataURL(`
-  <iframe src='data:text/html,foo'></iframe>
-  <iframe src='data:text/html,bar'></iframe>
-`);
-const DOC_IFRAME_NESTED = toDataURL(`
-  <iframe src="${DOC_IFRAME_MULTI}"></iframe>
-`);
-
 add_task(async function pageWithoutFrames({ client }) {
   const { Page } = client;
 
   info("Navigate to a page without a frame");
-  await loadURL(DOC);
+  await loadURL(PAGE_URL);
 
   const { frameTree } = await Page.getFrameTree();
   ok(!!frameTree.frame, "Expected frame details found");
@@ -36,7 +27,7 @@ add_task(async function PageWithFrames({ client }) {
   const { Page } = client;
 
   info("Navigate to a page with frames");
-  await loadURL(DOC_IFRAME_MULTI);
+  await loadURL(FRAMESET_MULTI_URL);
 
   const { frameTree } = await Page.getFrameTree();
   ok(!!frameTree.frame, "Expected frame details found");
@@ -70,7 +61,7 @@ add_task(async function pageWithNestedFrames({ client }) {
   const { Page } = client;
 
   info("Navigate to a page with nested frames");
-  await loadURL(DOC_IFRAME_NESTED);
+  await loadURL(FRAMESET_NESTED_URL);
 
   const { frameTree } = await Page.getFrameTree();
   ok(!!frameTree.frame, "Expected frame details found");

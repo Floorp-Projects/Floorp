@@ -6,10 +6,8 @@
 // Assert the order of Runtime.executionContextDestroyed,
 // Page.frameNavigated, and Runtime.executionContextCreated
 
-const TEST_DOC = toDataURL("default-test-page");
-
 add_task(async function testCDP({ client }) {
-  await loadURL(TEST_DOC);
+  await loadURL(PAGE_URL);
 
   const { Page, Runtime } = client;
 

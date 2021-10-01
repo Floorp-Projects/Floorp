@@ -9,3 +9,8 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/remote/cdp/test/browser/head.js",
   this
 );
+
+const BASE_PATH = "https://example.com/browser/remote/cdp/test/browser/runtime";
+const FRAMESET_SINGLE_URL = `${BASE_PATH}/doc_frameset_single.html`;
+const PAGE_FRAME_URL = `${BASE_PATH}/doc_frame.html`;
+const PAGE_URL = `${BASE_PATH}/doc_empty.html`;

@@ -5,11 +5,7 @@
 
 // Test the Page navigation events
 
-const INITIAL_DOC = toDataURL("default-test-page");
-const IFRAME_DOC = toDataURL(
-  `<iframe src="data:text/html,somecontent"></iframe>`
-);
-const RANDOM_ID_DOC = toDataURL(
+const RANDOM_ID_PAGE_URL = toDataURL(
   `<script>window.randomId = Math.random() + "-" + Date.now();</script>`
 );
 
@@ -17,7 +13,7 @@ const promises = new Set();
 const resolutions = new Map();
 
 add_task(async function pageWithoutFrame({ client }) {
-  await loadURL(INITIAL_DOC);
+  await loadURL(PAGE_URL);
 
   const { Page } = client;
 
@@ -48,7 +44,7 @@ add_task(async function pageWithoutFrame({ client }) {
   info("Test Page.navigate");
   recordPromises();
 
-  const url = RANDOM_ID_DOC;
+  const url = RANDOM_ID_PAGE_URL;
   const { frameId } = await Page.navigate({ url });
   info("A new page has been requested");
 
@@ -108,7 +104,7 @@ add_task(async function pageWithSingleFrame({ client }) {
 
   info("Navigate to a page containing an iframe");
   const onStoppedLoading = Page.frameStoppedLoading();
-  const { frameId } = await Page.navigate({ url: IFRAME_DOC });
+  const { frameId } = await Page.navigate({ url: FRAMESET_SINGLE_URL });
   await onStoppedLoading;
 
   is(frameNavigatedEvents.length, 2, "Received 2 frameNavigated events");

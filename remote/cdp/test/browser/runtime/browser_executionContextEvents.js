@@ -5,9 +5,6 @@
 
 // Test the Runtime execution context events
 
-const DOC = toDataURL("default-test-page");
-const DOC_IFRAME = toDataURL(`<iframe src='${DOC}'></iframe>`);
-
 const DESTROYED = "Runtime.executionContextDestroyed";
 const CREATED = "Runtime.executionContextCreated";
 const CLEARED = "Runtime.executionContextsCleared";
@@ -16,7 +13,7 @@ add_task(async function noEventsWhenRuntimeDomainDisabled({ client }) {
   const { Runtime } = client;
 
   const history = recordContextEvents(Runtime, 0);
-  await loadURL(DOC);
+  await loadURL(PAGE_FRAME_URL);
   await assertEventOrder({ history, expectedEvents: [] });
 });
 
@@ -27,7 +24,7 @@ add_task(async function noEventsAfterRuntimeDomainDisabled({ client }) {
   await Runtime.disable();
 
   const history = recordContextEvents(Runtime, 0);
-  await loadURL(DOC);
+  await loadURL(PAGE_FRAME_URL);
   await assertEventOrder({ history, expectedEvents: [] });
 });
 
@@ -37,7 +34,7 @@ add_task(async function eventsWhenNavigatingWithNoFrames({ client }) {
   const previousContext = await enableRuntime(client);
   const history = recordContextEvents(Runtime, 3);
 
-  const { frameId } = await Page.navigate({ url: DOC });
+  const { frameId } = await Page.navigate({ url: PAGE_FRAME_URL });
   await assertEventOrder({ history });
 
   const { executionContextId: destroyedId } = history.findEvent(
@@ -71,7 +68,7 @@ add_task(async function eventsWhenNavigatingFrameSet({ client }) {
 
   // Check navigation to a frameset
   const historyTo = recordContextEvents(Runtime, 4);
-  await loadURL(DOC_IFRAME);
+  await loadURL(FRAMESET_SINGLE_URL);
   await assertEventOrder({
     history: historyTo,
     expectedEvents: [DESTROYED, CLEARED, CREATED, CREATED],
@@ -98,7 +95,7 @@ add_task(async function eventsWhenNavigatingFrameSet({ client }) {
   );
   is(
     createdTopContext.origin,
-    DOC_IFRAME,
+    FRAMESET_SINGLE_URL,
     "The execution context origin is the frameset"
   );
 
@@ -110,13 +107,13 @@ add_task(async function eventsWhenNavigatingFrameSet({ client }) {
   );
   is(
     createdFrameContext.origin,
-    DOC,
+    PAGE_FRAME_URL,
     "The frame's execution context origin is the frame"
   );
 
   // Check navigation from a frameset
   const historyFrom = recordContextEvents(Runtime, 4);
-  await loadURL(DOC);
+  await loadURL(PAGE_FRAME_URL);
   await assertEventOrder({
     history: historyFrom,
     // Bug 1644657: The cleared event should come last but we emit destroy events
@@ -146,7 +143,7 @@ add_task(async function eventsWhenNavigatingFrameSet({ client }) {
   );
   is(
     contextCreated.origin,
-    DOC,
+    PAGE_FRAME_URL,
     "The execution context origin is not the frameset"
   );
 });
@@ -155,7 +152,7 @@ add_task(async function eventsWhenNavigatingBackWithNoFrames({ client }) {
   const { Runtime } = client;
 
   // Load an initial URL so that navigating back will work
-  await loadURL(DOC);
+  await loadURL(PAGE_FRAME_URL);
   const previousContext = await enableRuntime(client);
 
   const executionContextCreated = Runtime.executionContextCreated();
@@ -202,7 +199,7 @@ add_task(async function eventsWhenNavigatingBackWithNoFrames({ client }) {
   });
   is(
     result.value,
-    DOC,
+    PAGE_FRAME_URL,
     "Runtime.evaluate works and is against the page we just navigated to"
   );
 });
@@ -211,7 +208,7 @@ add_task(async function eventsWhenReloadingPageWithNoFrames({ client }) {
   const { Page, Runtime } = client;
 
   // Load an initial URL so that reload will work
-  await loadURL(DOC);
+  await loadURL(PAGE_FRAME_URL);
   const previousContext = await enableRuntime(client);
 
   await Page.enable();
@@ -253,7 +250,7 @@ add_task(async function eventsWhenNavigatingByLocationWithNoFrames({ client }) {
 
   await Runtime.evaluate({
     contextId: previousContext.id,
-    expression: `window.location = '${DOC}';`,
+    expression: `window.location = '${PAGE_FRAME_URL}';`,
   });
   await assertEventOrder({ history });
 
