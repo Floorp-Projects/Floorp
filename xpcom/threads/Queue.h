@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Assertions.h"
+#include "mozalloc.h"
 
 namespace mozilla {
 

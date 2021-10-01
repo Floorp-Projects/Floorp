@@ -6,6 +6,7 @@
 #include "prio.h"
 #include "prsystem.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsIFile.h"
 #include "nsILocalFileWin.h"
 #include "nsString.h"

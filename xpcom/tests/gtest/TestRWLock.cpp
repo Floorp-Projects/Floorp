@@ -11,6 +11,10 @@
 #include "nsIThread.h"
 #include "gtest/gtest.h"
 
+using mozilla::AutoReadLock;
+using mozilla::AutoTryReadLock;
+using mozilla::AutoTryWriteLock;
+using mozilla::AutoWriteLock;
 using mozilla::RWLock;
 
 static const size_t sNumThreads = 4;
@@ -89,10 +93,11 @@ static std::invoke_result_t<Function> RunOnBackgroundThread(
   nsCOMPtr<nsISerialEventTarget> thread;
   MOZ_ALWAYS_SUCCEEDS(NS_CreateBackgroundTaskQueue(
       "TestRWLock Background Thread", getter_AddRefs(thread)));
-  Maybe<Result> tryResult;
+  mozilla::Maybe<Result> tryResult;
   RefPtr<nsIRunnable> runnable =
       NS_NewRunnableFunction(__func__, [&] { tryResult.emplace(aFunction()); });
-  MOZ_ALWAYS_SUCCEEDS(SyncRunnable::DispatchToThread(thread.get(), runnable));
+  MOZ_ALWAYS_SUCCEEDS(
+      mozilla::SyncRunnable::DispatchToThread(thread.get(), runnable));
   return *tryResult;
 }
 
