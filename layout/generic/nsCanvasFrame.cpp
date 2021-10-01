@@ -554,7 +554,7 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         if (bgItem) {
           thisItemList.AppendToTop(
               nsDisplayFixedPosition::CreateForFixedBackground(
-                  aBuilder, this, nullptr, bgItem, i));
+                  aBuilder, this, nullptr, bgItem, i, asr));
         }
 
       } else {

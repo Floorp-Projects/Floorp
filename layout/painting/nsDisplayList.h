@@ -5477,11 +5477,11 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
   nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                          nsDisplayList* aList,
                          const ActiveScrolledRoot* aActiveScrolledRoot,
-                         const ActiveScrolledRoot* aContainerASR);
+                         const ActiveScrolledRoot* aScrollTargetASR);
   nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder,
                          const nsDisplayFixedPosition& aOther)
       : nsDisplayOwnLayer(aBuilder, aOther),
-        mContainerASR(aOther.mContainerASR),
+        mScrollTargetASR(aOther.mScrollTargetASR),
         mIsFixedBackground(aOther.mIsFixedBackground) {
     MOZ_COUNT_CTOR(nsDisplayFixedPosition);
   }
@@ -5489,7 +5489,7 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
   static nsDisplayFixedPosition* CreateForFixedBackground(
       nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
       nsIFrame* aSecondaryFrame, nsDisplayBackgroundImage* aImage,
-      const uint16_t aIndex);
+      const uint16_t aIndex, const ActiveScrolledRoot* aScrollTargetASR);
 
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayFixedPosition)
 
@@ -5516,10 +5516,11 @@ class nsDisplayFixedPosition : public nsDisplayOwnLayer {
  protected:
   // For background-attachment:fixed
   nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                         nsDisplayList* aList);
+                         nsDisplayList* aList,
+                         const ActiveScrolledRoot* aScrollTargetASR);
   ViewID GetScrollTargetId();
 
-  RefPtr<const ActiveScrolledRoot> mContainerASR;
+  RefPtr<const ActiveScrolledRoot> mScrollTargetASR;
   bool mIsFixedBackground;
 
  private:
@@ -5542,7 +5543,8 @@ class nsDisplayTableFixedPosition : public nsDisplayFixedPosition {
 
  protected:
   nsDisplayTableFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                              nsDisplayList* aList, nsIFrame* aAncestorFrame);
+                              nsDisplayList* aList, nsIFrame* aAncestorFrame,
+                              const ActiveScrolledRoot* aScrollTargetASR);
 
   nsDisplayTableFixedPosition(nsDisplayListBuilder* aBuilder,
                               const nsDisplayTableFixedPosition& aOther)
