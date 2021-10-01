@@ -896,6 +896,13 @@ var Bookmarks = Object.freeze({
           }
           if (updateInfo.hasOwnProperty("title")) {
             let isTagging = updatedItem.parentGuid == Bookmarks.tagsGuid;
+            if (!isTagging) {
+              if (!parent) {
+                parent = await fetchBookmark({ guid: updatedItem.parentGuid });
+              }
+              isTagging = parent.parentGuid === Bookmarks.tagsGuid;
+            }
+
             notify(
               observers,
               "onItemChanged",
@@ -914,6 +921,21 @@ var Bookmarks = Object.freeze({
               ],
               { isTagging }
             );
+
+            notifications.push(
+              new PlacesBookmarkTitle({
+                id: updatedItem._id,
+                itemType: updatedItem.type,
+                url: updatedItem.url?.href,
+                guid: updatedItem.guid,
+                parentGuid: updatedItem.parentGuid,
+                title: updatedItem.title,
+                lastModified: updatedItem.lastModified,
+                source: updatedItem.source,
+                isTagging,
+              })
+            );
+
             // If we're updating a tag, we must notify all the tagged bookmarks
             // about the change.
             if (isTagging) {
