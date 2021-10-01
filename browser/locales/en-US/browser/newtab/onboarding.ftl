@@ -212,3 +212,9 @@ mr2-onboarding-default-theme-tooltip =
 # Selector description for default themes
 mr2-onboarding-default-theme-description =
   .aria-description = Explore default themes.
+
+## Strings for Thank You page
+
+mr2-onboarding-thank-you-header = Thank you for choosing us
+mr2-onboarding-thank-you-text = { -brand-short-name } is an independent browser backed by a non-profit. Together, we’re making the web safer, healthier, and more private.
+mr2-onboarding-start-browsing-button-label = Start browsing

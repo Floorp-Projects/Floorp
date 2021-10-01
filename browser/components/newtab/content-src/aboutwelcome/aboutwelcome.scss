@@ -548,6 +548,29 @@ body {
     }
   }
 
+  .confetti {
+    display: block;
+    margin: auto;
+    background-image: url('chrome://activity-stream/content/data/content/assets/confetti.svg');
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    height: 438px;
+    width: 504px;
+    position: absolute;
+    z-index: -1;
+
+    @media (max-width: $break-point-large) {
+      height: 400px;
+      width: 450px;
+    }
+
+    @media (max-width: $break-point-medium) {
+      height: 370px;
+      width: 420px;
+    }
+  }
+
   .outline-L {
     background-image: url('chrome://activity-stream/content/data/content/assets/noodle-outline-L.svg');
   }
@@ -851,6 +874,41 @@ body {
       border-radius: 50%;
       transform: translate(160%, 130%);
       background: #E7258C;
+    }
+  }
+
+  .fancy-headings {
+    h1 {
+      font-size: 36px;
+      line-height: unset;
+      width: 410px;
+      padding-bottom: 16px;
+      position: relative;
+      text-align: center;
+      background: linear-gradient(70deg,
+        rgba(220, 171, 32, 0) 5%,
+        #2A613A 22%,
+        #D198A1 41%,
+        #844D9E 59%,
+        #E27B50 78%,
+        rgba(220, 171, 32, 0) 95%
+      ), linear-gradient(rgba(220, 171, 32, 100), rgba(220, 171, 32, 100));
+      background-size: 400% auto;
+      color: #000;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shine 50s linear infinite;
+    }
+
+    @keyframes shine {
+      to {
+        background-position: 400% center;
+      }
+    }
+
+    h2 {
+      margin: 10px 30px 0;
     }
   }
 
