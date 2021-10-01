@@ -73,5 +73,3 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
 
 FINAL_LIBRARY = 'xul-gtest'
-
-REQUIRES_UNIFIED_BUILD = True
