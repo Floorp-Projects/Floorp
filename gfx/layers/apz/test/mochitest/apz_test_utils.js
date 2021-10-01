@@ -789,7 +789,7 @@ function getHitTestConfig() {
       (SpecialPowers.getBoolPref(
         "apz.wr.activate_all_scroll_frames_when_fission"
       ) &&
-        SpecialPowers.getBoolPref("fission.autostart"));
+        SpecialPowers.Services.appinfo.fissionAutostart);
 
     window.hitTestConfig = {
       utils,
