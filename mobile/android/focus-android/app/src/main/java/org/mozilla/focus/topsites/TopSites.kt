@@ -131,7 +131,7 @@ private fun TopSiteItem(
         DropdownMenu(
             expanded = menuExpanded,
             onDismissRequest = { menuExpanded = false },
-            modifier = Modifier.background(color = PhotonColors.Ink30)
+            modifier = Modifier.background(color = PhotonColors.Ink05)
         ) {
             for (item in menuItems) {
                 DropdownMenuItem(
