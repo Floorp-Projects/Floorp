@@ -127,14 +127,13 @@ class SharedThreadPoolWebRtcTaskQueueFactory : public webrtc::TaskQueueFactory {
  public:
   SharedThreadPoolWebRtcTaskQueueFactory() {}
 
-  UniquePtr<TaskQueueWrapper> CreateTaskQueueWrapper(absl::string_view aName,
-                                                     bool aSupportTailDispatch,
-                                                     Priority aPriority) const {
+  UniquePtr<TaskQueueWrapper> CreateTaskQueueWrapper(
+      absl::string_view aName, bool aSupportTailDispatch, Priority aPriority,
+      MediaThreadType aThreadType = MediaThreadType::WEBRTC_WORKER) const {
     // XXX Do something with aPriority
     nsCString name(aName.data(), aName.size());
-    auto taskQueue = MakeRefPtr<TaskQueue>(
-        GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER), name.get(),
-        aSupportTailDispatch);
+    auto taskQueue = MakeRefPtr<TaskQueue>(GetMediaThreadPool(aThreadType),
+                                           name.get(), aSupportTailDispatch);
     return MakeUnique<TaskQueueWrapper>(std::move(taskQueue));
   }
 
