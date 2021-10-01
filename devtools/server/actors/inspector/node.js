@@ -10,6 +10,7 @@ const InspectorUtils = require("InspectorUtils");
 const protocol = require("devtools/shared/protocol");
 const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
 const { nodeSpec, nodeListSpec } = require("devtools/shared/specs/node");
+
 loader.lazyRequireGetter(
   this,
   ["getCssPath", "getXPath", "findCssSelector", "findAllCssSelectors"],
@@ -29,7 +30,7 @@ loader.lazyRequireGetter(
     "isShadowHost",
     "isShadowRoot",
     "getShadowRootMode",
-    "isRemoteFrame",
+    "isFrameWithChildTarget",
   ],
   "devtools/shared/layout/utils",
   true
@@ -212,10 +213,12 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       form.isDocumentElement = true;
     }
 
-    // Flag the remote frame and declare at least one child (the #document element) so
-    // that they can be expanded.
-    if (this.isRemoteFrame) {
-      form.remoteFrame = true;
+    // Flag the node if a different walker is needed to retrieve its children (i.e. if
+    // this is a remote frame, or if it's an iframe and we're creating targets for every iframes)
+    if (this.useChildTargetToFetchChildren) {
+      form.useChildTargetToFetchChildren = true;
+      // Declare at least one child (the #document element) so
+      // that they can be expanded.
       form.numChildren = 1;
       form.browsingContextID = this.rawNode.browsingContext.id;
     }
@@ -253,14 +256,13 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   },
 
   /**
-   * Check if the current node is representing a remote frame.
-   * In the context of the browser toolbox, a remote frame can be the <browser remote>
-   * element found inside each tab.
-   * In the context of the content toolbox, a remote frame can be a <iframe> that contains
-   * a different origin document.
+   * Check if the current node represents an element (e.g. an iframe) which has a dedicated
+   * target for its underlying document that we would need to use to fetch the child nodes.
+   * This will be the case for iframes if EFT is enabled, or if this is a remote iframe and
+   * fission is enabled.
    */
-  get isRemoteFrame() {
-    return isRemoteFrame(this.rawNode);
+  get useChildTargetToFetchChildren() {
+    return isFrameWithChildTarget(this.walker.targetActor, this.rawNode);
   },
 
   get isTopLevelDocument() {
