@@ -62,9 +62,35 @@ function promiseClickDownloadDialogButton(buttonAction) {
 }
 
 async function performCanceledDownload(tab, path) {
-  // Start waiting for the download dialog before triggering the download.
-  info("watching for download popup");
-  const cancelDownload = promiseClickDownloadDialogButton("cancel");
+  // If we're going to show a modal dialog for this download, then we should
+  // use it to cancel the download. If not, then we have to let the download
+  // start and then call into the downloads API ourselves to cancel it.
+  // We use this promise to signal the cancel being complete in either case.
+  let cancelledDownload;
+
+  if (
+    Services.prefs.getBoolPref(
+      "browser.download.improvements_to_download_panel",
+      false
+    )
+  ) {
+    let downloadView;
+    cancelledDownload = new Promise(resolve => {
+      downloadView = {
+        onDownloadAdded(aDownload) {
+          aDownload.cancel();
+          resolve();
+        },
+      };
+    });
+    const downloadList = await Downloads.getList(Downloads.ALL);
+    await downloadList.addView(downloadView);
+  } else {
+    // Start waiting for the download dialog before triggering the download.
+    cancelledDownload = promiseClickDownloadDialogButton("cancel");
+    // Wait for the cancelation to have been triggered.
+    info("waiting for download popup");
+  }
 
   // Trigger the download.
   info(`triggering download of "${path}"`);
@@ -81,10 +107,9 @@ async function performCanceledDownload(tab, path) {
   });
   /* eslint-enable no-shadow */
 
-  // Wait for the cancelation to have been triggered.
-  info("waiting for download popup");
-  await cancelDownload;
-  ok(true, "canceled download");
+  // Wait for the download to cancel.
+  await cancelledDownload;
+  info("cancelled download");
 
   // Wait for confirmation that the stream stopped.
   info(`wait for the ${path} stream to close.`);
