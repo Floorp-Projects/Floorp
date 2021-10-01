@@ -833,6 +833,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   [[nodiscard]] bool IsHttp2Excluded(const nsHttpConnectionInfo* ci);
   void ExcludeHttp3(const nsHttpConnectionInfo* ci);
   [[nodiscard]] bool IsHttp3Excluded(const nsACString& aRoutedHost);
+  void Exclude0RttTcp(const nsHttpConnectionInfo* ci);
+  [[nodiscard]] bool Is0RttTcpExcluded(const nsHttpConnectionInfo* ci);
 
   void ExcludeHTTPSRRHost(const nsACString& aHost);
   [[nodiscard]] bool IsHostExcludedForHTTPSRR(const nsACString& aHost);
@@ -840,6 +842,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
  private:
   nsTHashSet<nsCString> mExcludedHttp2Origins;
   nsTHashSet<nsCString> mExcludedHttp3Origins;
+  nsTHashSet<nsCString> mExcluded0RttTcpOrigins;
   // A set of hosts that we should not upgrade to HTTPS with HTTPS RR.
   nsTHashSet<nsCString> mExcludedHostsForHTTPSRRUpgrade;
 

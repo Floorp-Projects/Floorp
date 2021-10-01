@@ -9946,6 +9946,18 @@
   value: true
   mirror: always
 
+# Disable early data on an origin if SSL_ERROR_PROTOCOL_VERSION_ALERT is received
+- name: network.http.early_data_disable_on_error
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# Disable early data if it fails for more than this number of origins
+- name: network.http.early_data_max_error
+  type: RelaxedAtomicUint32
+  value: 5
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------

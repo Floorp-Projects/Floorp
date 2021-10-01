@@ -38,6 +38,7 @@
 #include "nsStringStream.h"
 #include "nsITransportSecurityInfo.h"
 #include "mozpkix/pkixnss.h"
+#include "sslerr.h"
 #include "sslt.h"
 #include "NSSErrorsService.h"
 #include "TunnelUtils.h"
@@ -490,6 +491,16 @@ bool nsHttpConnection::EnsureNPNComplete() {
   return false;
 }
 
+void nsHttpConnection::EarlyDataDone() {
+  if (mEarlyDataState == EarlyData::USED) {
+    mEarlyDataState = EarlyData::DONE_USED;
+  } else if (mEarlyDataState == EarlyData::CANNOT_BE_USED) {
+    mEarlyDataState = EarlyData::DONE_CANNOT_BE_USED;
+  } else if (mEarlyDataState == EarlyData::NOT_AVAILABLE) {
+    mEarlyDataState = EarlyData::DONE_NOT_AVAILABLE;
+  }
+}
+
 void nsHttpConnection::FinishNPNSetup(bool handshakeSucceeded,
                                       bool hasSecurityInfo) {
   mNPNComplete = true;
@@ -525,7 +536,8 @@ void nsHttpConnection::FinishNPNSetup(bool handshakeSucceeded,
       Reset0RttForSpdy();
     }
   }
-  mEarlyDataState = EarlyData::DONE;
+
+  EarlyDataDone();
 
   if (hasSecurityInfo) {
     // Telemetry for tls failure rate with and without esni;
@@ -863,6 +875,11 @@ void nsHttpConnection::Close(nsresult reason, bool aIsShutdown) {
         mConnInfo && !(mTransactionCaps & NS_HTTP_ERROR_SOFTLY)) {
       gHttpHandler->ClearHostMapping(mConnInfo);
     }
+    if (EarlyDataWasAvailable() &&
+        (reason ==
+         psm::GetXPCOMFromNSSError(SSL_ERROR_PROTOCOL_VERSION_ALERT))) {
+      gHttpHandler->Exclude0RttTcp(mConnInfo);
+    }
 
     if (mSocketTransport) {
       mSocketTransport->SetEventSink(nullptr, nullptr);
@@ -911,8 +928,8 @@ nsresult nsHttpConnection::InitSSLParams(bool connectingToProxy,
     return rv;
   }
 
-  // If proxy is use, don't use early-data.
-  if (mConnInfo->UsingProxy()) {
+  // If proxy is use or 0RTT is excluded for a origin, don't use early-data.
+  if (mConnInfo->UsingProxy() || gHttpHandler->Is0RttTcpExcluded(mConnInfo)) {
     ssl->DisableEarlyData();
   }
 
@@ -2618,7 +2635,7 @@ void nsHttpConnection::HandshakeDoneInternal() {
       (tlsVersion != nsISSLSocketControl::SSL_VERSION_UNKNOWN));
 
   EarlyDataTelemetry(tlsVersion, earlyDataAccepted);
-  mEarlyDataState = EarlyData::DONE;
+  EarlyDataDone();
 
   if (!earlyDataAccepted) {
     LOG(
