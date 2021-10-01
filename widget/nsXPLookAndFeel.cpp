@@ -629,19 +629,20 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
       break;
     case ColorID::Selecteditem:  // --in-content-primary-button-background /
                                  // --in-content-item-selected
-    case ColorID::Highlight:
-      // TODO(emilio): Perhaps for selection (highlight / highlighttext) we want
-      // something more subtle like Android / macOS do.
       color = NS_RGB(0, 221, 255);
       break;
     case ColorID::Field:
     case ColorID::Buttonface:        // --in-content-button-background
     case ColorID::Selecteditemtext:  // --in-content-primary-button-text-color /
                                      // --in-content-item-selected-text
-    case ColorID::Highlighttext:
       color = NS_RGB(43, 42, 51);
       break;
-
+    case ColorID::Highlight:
+      color = NS_RGBA(0, 221, 255, 153);
+      break;
+    case ColorID::Highlighttext:
+      color = NS_SAME_AS_FOREGROUND_COLOR;
+      break;
     default:
       return Nothing();
   }
