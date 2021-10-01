@@ -358,7 +358,7 @@ class Http2Session final : public ASpdySession,
   [[nodiscard]] nsresult NetworkRead(nsAHttpSegmentWriter*, char*, uint32_t,
                                      uint32_t*);
 
-  void Shutdown();
+  void Shutdown(nsresult aReason);
 
   nsresult SessionError(enum errorType);
 
