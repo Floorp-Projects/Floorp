@@ -31,5 +31,3 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
 
 if CONFIG['TARGET_ENDIANNESS'] == 'big':
     DEFINES['SNAPPY_IS_BIG_ENDIAN'] = 1
-
-REQUIRES_UNIFIED_BUILD = True
