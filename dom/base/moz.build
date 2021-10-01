@@ -224,6 +224,7 @@ EXPORTS.mozilla.dom += [
     "PlacesBookmarkAddition.h",
     "PlacesBookmarkMoved.h",
     "PlacesBookmarkRemoved.h",
+    "PlacesBookmarkTitle.h",
     "PlacesEvent.h",
     "PlacesFavicon.h",
     "PlacesHistoryCleared.h",
