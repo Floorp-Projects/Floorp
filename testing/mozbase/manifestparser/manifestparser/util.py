@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import ast
 import os
 
 
@@ -25,3 +26,23 @@ def normsep(path):
         else:
             path = path.replace(os.altsep, "/")
     return path
+
+
+def evaluate_list_from_string(list_string):
+    """
+    This is a utility function for converting a string obtained from a manifest
+    into a list. If the string is not a valid list when converted, an error will be
+    raised from `ast.eval_literal`. For example, you can convert entries like this
+    into a list:
+    ```
+        test_settings=
+            ["hello", "world"],
+            [1, 10, 100],
+        values=
+            5,
+            6,
+            7,
+            8,
+    ```
+    """
+    return ast.literal_eval("[" + "".join(list_string.strip(",").split("\n")) + "]")
