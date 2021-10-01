@@ -7,6 +7,7 @@
 #include "mozilla/SeekableStreamWrapper.h"
 
 #include "mozilla/InputStreamLengthHelper.h"
+#include "mozilla/ipc/InputStreamUtils.h"
 #include "nsStreamUtils.h"
 
 namespace mozilla {
