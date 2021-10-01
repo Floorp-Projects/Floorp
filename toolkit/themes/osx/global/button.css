@@ -14,7 +14,7 @@ button {
 }
 
 button:where(:hover:active) {
-  color: -moz-mac-buttonactivetext;
+  color: -moz-buttonactivetext;
 }
 
 /* When the window isn't focused, the default button background isn't drawn,

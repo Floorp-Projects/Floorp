@@ -25,7 +25,7 @@ label {
 
 :host([native]:not([disabled="true"]):hover:active),
 :host([native]:not([disabled="true"])[open="true"]) {
-  color: -moz-gtk-buttonactivetext;
+  color: -moz-buttonactivetext;
 }
 
 :host([native][disabled="true"]) {

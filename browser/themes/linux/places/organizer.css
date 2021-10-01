@@ -73,7 +73,7 @@
 
 #placesMenu > menu:active,
 #placesMenu > menu[open] {
-  color: -moz-gtk-buttonactivetext;
+  color: -moz-buttonactivetext;
 }
 
 #placesMenu > menu::after {

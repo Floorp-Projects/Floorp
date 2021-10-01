@@ -201,7 +201,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       // Thanks to mpt26@student.canterbury.ac.nz for the hardcoded values that form the defaults
       //  if querying the Appearance Manager fails ;)
       //
-    case ColorID::MozMacButtonactivetext:
+    case ColorID::MozButtonactivetext:
     case ColorID::MozMacDefaultbuttontext:
       color = NS_RGB(0xFF, 0xFF, 0xFF);
       break;
@@ -232,6 +232,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       break;
     case ColorID::Buttonface:
     case ColorID::MozButtonhoverface:
+    case ColorID::MozButtonactiveface:
       color = GetColorFromNSColor(NSColor.controlColor);
       break;
     case ColorID::Buttonhighlight:

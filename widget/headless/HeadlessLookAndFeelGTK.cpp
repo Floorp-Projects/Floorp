@@ -57,7 +57,7 @@ nsresult HeadlessLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::MozEventreerow:
       aColor = NS_RGB(0xff, 0xff, 0xff);
       break;
-    case ColorID::MozMacButtonactivetext:
+    case ColorID::MozButtonactivetext:
     case ColorID::MozMacDefaultbuttontext:
       aColor = NS_RGB(0xff, 0xff, 0xff);
       break;

@@ -37,7 +37,7 @@ button:where(:hover:not([checked="true"])) {
 /* .......... active state .......... */
 
 button:where(:hover:active, [open="true"]) {
-  color: -moz-gtk-buttonactivetext;
+  color: -moz-buttonactivetext;
 }
 
 /* .......... disabled state .......... */
