@@ -129,14 +129,11 @@ static uint32_t GetGTKPixelDepth() {
   return gdk_visual_get_depth(visual);
 }
 
-static bool IsGNOMECompositor() {
-  const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-  return currentDesktop && strstr(currentDesktop, "GNOME") != nullptr;
-}
-
 static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
                                               gint aMonitorNum) {
+  GdkRectangle monitor;
   GdkRectangle workarea;
+  gdk_screen_get_monitor_geometry(aScreen, aMonitorNum, &monitor);
   gdk_screen_get_monitor_workarea(aScreen, aMonitorNum, &workarea);
   gint gdkScaleFactor = ScreenHelperGTK::GetGTKMonitorScaleFactor(aMonitorNum);
 
@@ -148,15 +145,14 @@ static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
     geometryScaleFactor = gdkScaleFactor;
   }
 
-  // GNOME reports scales differently (Bug 1730476).
-  if (GdkIsWaylandDisplay() && !IsGNOMECompositor()) {
-    geometryScaleFactor = gdkScaleFactor;
-  }
-
-  LayoutDeviceIntRect rect(workarea.x * geometryScaleFactor,
-                           workarea.y * geometryScaleFactor,
-                           workarea.width * geometryScaleFactor,
-                           workarea.height * geometryScaleFactor);
+  LayoutDeviceIntRect rect(monitor.x * geometryScaleFactor,
+                           monitor.y * geometryScaleFactor,
+                           monitor.width * geometryScaleFactor,
+                           monitor.height * geometryScaleFactor);
+  LayoutDeviceIntRect availRect(workarea.x * geometryScaleFactor,
+                                workarea.y * geometryScaleFactor,
+                                workarea.width * geometryScaleFactor,
+                                workarea.height * geometryScaleFactor);
 
   uint32_t pixelDepth = GetGTKPixelDepth();
 
@@ -177,12 +173,12 @@ static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
     dpi = rect.height / (heightMM / MM_PER_INCH_FLOAT);
   }
 
-  LOG_SCREEN(
-      ("New monitor %d size [%d,%d -> %d x %d] depth %d scale %f CssScale %f  "
-       "DPI %f ]",
-       aMonitorNum, rect.x, rect.y, rect.width, rect.height, pixelDepth,
-       contentsScale.scale, defaultCssScale.scale, dpi));
-  RefPtr<Screen> screen = new Screen(rect, rect, pixelDepth, pixelDepth,
+  MOZ_LOG(sScreenLog, LogLevel::Debug,
+          ("New screen [%d %d %d %d (%d %d %d %d) %d %f %f %f]", rect.x, rect.y,
+           rect.width, rect.height, availRect.x, availRect.y, availRect.width,
+           availRect.height, pixelDepth, contentsScale.scale,
+           defaultCssScale.scale, dpi));
+  RefPtr<Screen> screen = new Screen(rect, availRect, pixelDepth, pixelDepth,
                                      contentsScale, defaultCssScale, dpi);
   return screen.forget();
 }
@@ -319,11 +315,56 @@ static bool GdkMonitorGetWorkarea(GdkMonitor* monitor, GdkRectangle* workarea) {
   return true;
 }
 
+bool ScreenGetterWayland::MonitorUsesNonIntegerScale(int aMonitor) {
+  static auto s_gdk_display_get_n_monitors =
+      (int (*)(GdkDisplay*))dlsym(RTLD_DEFAULT, "gdk_display_get_n_monitors");
+  static auto s_gdk_display_get_monitor = (GdkMonitor * (*)(GdkDisplay*, int))
+      dlsym(RTLD_DEFAULT, "gdk_display_get_monitor");
+
+  if (!s_gdk_display_get_n_monitors || !s_gdk_display_get_monitor) {
+    return false;
+  }
+
+  int monitorNum = s_gdk_display_get_n_monitors(gdk_display_get_default());
+  for (int m = 0; m < monitorNum; m++) {
+    GdkMonitor* gdkMonitor =
+        s_gdk_display_get_monitor(gdk_display_get_default(), m);
+    if (!gdkMonitor) {
+      return false;
+    }
+    GdkRectangle workArea;
+    if (!GdkMonitorGetWorkarea(gdkMonitor, &workArea)) {
+      return false;
+    }
+
+    LOG_SCREEN(("Monitor %d Gtk workarea size %d x %d", m, workArea.width,
+                workArea.height));
+    LOG_SCREEN(("Monitor %d wl_output size %d x %d", aMonitor,
+                mMonitors[aMonitor].width, mMonitors[aMonitor].height));
+
+    if (mMonitors[aMonitor].x == workArea.x &&
+        mMonitors[aMonitor].y == workArea.y) {
+      // When non-integer scale is used, wl_output reports framebuffer size
+      // but Gtk reports downscaled logical size.
+      return workArea.width < mMonitors[aMonitor].width &&
+             workArea.height < mMonitors[aMonitor].height;
+    }
+  }
+  return false;
+}
+
 already_AddRefed<Screen> ScreenGetterWayland::MakeScreenWayland(gint aMonitor) {
   MonitorConfig monitor = mMonitors[aMonitor];
 
-  // On GNOME/Mutter we use results from wl_output directly
   LayoutDeviceIntRect rect(monitor.x, monitor.y, monitor.width, monitor.height);
+
+  // Non integer scales are downscaled from upper scales so report screen sizes
+  // as bigger ones.
+  if (MonitorUsesNonIntegerScale(aMonitor)) {
+    LOG_SCREEN(("Monitor %d uses non-integer scale", aMonitor));
+    rect.width *= monitor.scale;
+    rect.height *= monitor.scale;
+  }
 
   uint32_t pixelDepth = GetGTKPixelDepth();
 
@@ -397,7 +438,7 @@ int ScreenGetterWayland::GetMonitorForWindow(nsWindow* aWindow) {
   }
 
   for (unsigned int i = 0; i < mMonitors.Length(); i++) {
-    // Although Gtk/Mutter is very creative in reporting various screens sizes
+    // Although Gtk/Mutter are very creative in reporting various screens sizes
     // we can rely on Gtk work area start position to match wl_output.
     if (mMonitors[i].x == workArea.x && mMonitors[i].y == workArea.y) {
       LOG_SCREEN((" monitor %d values %d %d -> %d x %d", i, mMonitors[i].x,
@@ -420,10 +461,27 @@ RefPtr<nsIScreen> ScreenGetterWayland::GetScreenForWindow(nsWindow* aWindow) {
   }
   return mScreenList[monitor];
 }
+
+void ScreenGetterWayland::GetScreenRectForWindow(nsWindow* aWindow,
+                                                 GdkRectangle* aRect) {
+  int monitor = GetMonitorForWindow(aWindow);
+  if (monitor < 0) {
+    // fallback to first monitor
+    monitor = 0;
+  }
+  aRect->x = aRect->y = 0;
+  aRect->width = mMonitors[monitor].width;
+  aRect->height = mMonitors[monitor].height;
+}
 #endif
 
 RefPtr<nsIScreen> ScreenHelperGTK::GetScreenForWindow(nsWindow* aWindow) {
   return gScreenGetter->GetScreenForWindow(aWindow);
+}
+
+void ScreenHelperGTK::GetScreenRectForWindow(nsWindow* aWindow,
+                                             GdkRectangle* aRect) {
+  gScreenGetter->GetScreenRectForWindow(aWindow, aRect);
 }
 
 gint ScreenHelperGTK::GetGTKMonitorScaleFactor(gint aMonitorNum) {
@@ -436,8 +494,9 @@ ScreenHelperGTK::ScreenHelperGTK() {
   // Use ScreenGetterWayland on Gnome/Mutter only. It uses additional wl_output
   // to track screen size changes (which are wrongly reported by mutter)
   // and causes issues on Sway (Bug 1730476).
-  // https://gitlab.gnome.org/GNOME/gtk/-/merge_requests/3941
-  if (GdkIsWaylandDisplay() && IsGNOMECompositor()) {
+  const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
+  if (GdkIsWaylandDisplay() && currentDesktop &&
+      strstr(currentDesktop, "GNOME")) {
     gScreenGetter = mozilla::MakeUnique<ScreenGetterWayland>();
   }
 #endif
