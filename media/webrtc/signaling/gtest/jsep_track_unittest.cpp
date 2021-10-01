@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nss.h"
+#include "ssl.h"
+
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 
@@ -13,7 +16,15 @@
 
 namespace mozilla {
 
-class JsepTrackTest : public ::testing::Test {
+class JsepTrackTestBase : public ::testing::Test {
+ public:
+  static void SetUpTestCase() {
+    NSS_NoDB_Init(nullptr);
+    NSS_SetDomesticPolicy();
+  }
+};
+
+class JsepTrackTest : public JsepTrackTestBase {
  public:
   JsepTrackTest()
       : mSendOff(SdpMediaSection::kAudio, sdp::kSend),
@@ -336,6 +347,8 @@ class JsepTrackTest : public ::testing::Test {
   UniquePtr<Sdp> mAnswer;
   SsrcGenerator mSsrcGenerator;
 };
+
+TEST_F(JsepTrackTestBase, CreateDestroy) {}
 
 TEST_F(JsepTrackTest, CreateDestroy) { Init(SdpMediaSection::kAudio); }
 
@@ -1294,6 +1307,38 @@ TEST_F(JsepTrackTest, SimulcastOfferer) {
   ASSERT_NE(std::string::npos, mOffer->ToString().find("a=rid:bar send"));
   ASSERT_NE(std::string::npos, mAnswer->ToString().find("a=rid:foo recv"));
   ASSERT_NE(std::string::npos, mAnswer->ToString().find("a=rid:bar recv"));
+}
+
+TEST_F(JsepTrackTest, SimulcastOffererWithRtx) {
+  Init(SdpMediaSection::kVideo);
+  std::vector<JsepTrack::JsConstraints> constraints;
+  constraints.push_back(MakeConstraints("foo", 40000));
+  constraints.push_back(MakeConstraints("bar", 10000));
+  constraints.push_back(MakeConstraints("pop", 5000));
+  mSendOff.SetJsConstraints(constraints);
+  mSendOff.AddToMsection(constraints, sdp::kSend, mSsrcGenerator, true,
+                         &GetOffer());
+  mRecvOff.AddToMsection(constraints, sdp::kSend, mSsrcGenerator, true,
+                         &GetOffer());
+  CreateAnswer();
+  // Add simulcast/rid to answer
+  mRecvAns.AddToMsection(constraints, sdp::kRecv, mSsrcGenerator, false,
+                         &GetAnswer());
+  Negotiate();
+
+  ASSERT_EQ(3U, mSendOff.GetSsrcs().size());
+  const auto posSsrc0 =
+      mOffer->ToString().find(std::to_string(mSendOff.GetSsrcs()[0]));
+  const auto posSsrc1 =
+      mOffer->ToString().find(std::to_string(mSendOff.GetSsrcs()[1]));
+  const auto posSsrc2 =
+      mOffer->ToString().find(std::to_string(mSendOff.GetSsrcs()[2]));
+  ASSERT_NE(std::string::npos, posSsrc0);
+  ASSERT_NE(std::string::npos, posSsrc1);
+  ASSERT_NE(std::string::npos, posSsrc2);
+  ASSERT_GT(posSsrc1, posSsrc0);
+  ASSERT_GT(posSsrc2, posSsrc0);
+  ASSERT_GT(posSsrc2, posSsrc1);
 }
 
 TEST_F(JsepTrackTest, SimulcastAnswerer) {
