@@ -24,5 +24,3 @@ FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
     "/gfx/cairo/cairo/src",
 ]
-
-REQUIRES_UNIFIED_BUILD = True
