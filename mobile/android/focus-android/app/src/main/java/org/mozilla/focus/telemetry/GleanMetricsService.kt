@@ -25,6 +25,7 @@ import org.mozilla.focus.GleanMetrics.GleanBuildInfo
 import org.mozilla.focus.GleanMetrics.LegacyIds
 import org.mozilla.focus.GleanMetrics.MozillaProducts
 import org.mozilla.focus.GleanMetrics.Pings
+import org.mozilla.focus.GleanMetrics.Preferences
 import org.mozilla.focus.GleanMetrics.Shortcuts
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.ext.components
@@ -113,6 +114,25 @@ class GleanMetricsService(context: Context) : MetricsService {
         TrackingProtection.hasAnalyticsBlocked.set(settings.hasAnalyticsBlocked())
         TrackingProtection.hasContentBlocked.set(settings.hasContentBlocked())
         TrackingProtection.hasSocialBlocked.set(settings.hasSocialBlocked())
+
+        // theme telemetry
+        val currentTheme =
+            when {
+                settings.lightThemeSelected -> {
+                    "Light"
+                }
+                settings.darkThemeSelected -> {
+                    "Dark"
+                }
+
+                settings.useDefaultThemeSelected -> {
+                    "Follow device"
+                }
+                else -> ""
+            }
+        if (currentTheme.isNotEmpty()) {
+            Preferences.userTheme.set(currentTheme)
+        }
     }
 
     private fun getDefaultSearchEngineIdentifierForTelemetry(context: Context): String {
