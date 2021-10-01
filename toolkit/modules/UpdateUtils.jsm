@@ -5,30 +5,22 @@
 
 var EXPORTED_SYMBOLS = ["UpdateUtils"];
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
-);
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-ChromeUtils.defineModuleGetter(
-  this,
-  "WindowsVersionInfo",
-  "resource://gre/modules/components-utils/WindowsVersionInfo.jsm"
-);
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]); /* globals fetch */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "WindowsRegistry",
-  "resource://gre/modules/WindowsRegistry.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  ctypes: "resource://gre/modules/ctypes.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
+  WindowsVersionInfo:
+    "resource://gre/modules/components-utils/WindowsVersionInfo.jsm",
+});
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 const PER_INSTALLATION_PREFS_PLATFORMS = ["win"];
 
