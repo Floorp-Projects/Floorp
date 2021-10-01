@@ -56,7 +56,7 @@ xpcshell:
     chunks:
         by-test-platform:
             .*-ccov.*/.*: 6
-            windows10-64-ccov-qr/opt: 6
+            windows10-64-2004-ccov-qr/opt: 6
             android-em-7.*: 2
             macosx.*-64(-shippable|-devedition|-asan)?(-qr)?/.*: 2
             linux1804-64(-qr)?/debug: 6
