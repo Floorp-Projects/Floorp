@@ -231,9 +231,13 @@ internal class ConstellationObserver(
                 push.renewRegistration()
 
                 logger.info("Incrementing verifier")
-                logger.debug("Verifier state before: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}")
+                logger.debug(
+                    "Verifier state before: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}"
+                )
                 verifier.increment()
-                logger.debug("Verifier state after: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}")
+                logger.debug(
+                    "Verifier state after: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}"
+                )
             } else {
                 logger.info("Short-circuiting onDevicesUpdate: rate-limited")
             }
