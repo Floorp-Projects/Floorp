@@ -67,6 +67,12 @@ class PerformanceNavigationTiming final : public PerformanceResourceTiming {
   DOMHighResTimeStamp DomComplete() const;
   DOMHighResTimeStamp LoadEventStart() const;
   DOMHighResTimeStamp LoadEventEnd() const;
+
+  DOMHighResTimeStamp RedirectStart(
+      Maybe<nsIPrincipal*>& aSubjectPrincipal) const override;
+  DOMHighResTimeStamp RedirectEnd(
+      Maybe<nsIPrincipal*>& aSubjectPrincipal) const override;
+
   NavigationType Type() const;
   uint16_t RedirectCount() const;
 
