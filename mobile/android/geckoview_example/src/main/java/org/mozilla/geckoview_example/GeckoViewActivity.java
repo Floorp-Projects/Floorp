@@ -421,7 +421,7 @@ public class GeckoViewActivity
     private LocationView.CommitListener mCommitListener = new LocationView.CommitListener() {
         @Override
         public void onCommit(String text) {
-            if ((text.contains(".") || text.contains(":")) && !text.contains(" ")) {
+            if (text.startsWith("data:") || ((text.contains(".") || text.contains(":")) && !text.contains(" "))) {
                 mTabSessionManager.getCurrentSession().loadUri(text);
             } else {
                 mTabSessionManager.getCurrentSession().loadUri(SEARCH_URI_BASE + text);
