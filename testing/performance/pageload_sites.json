@@ -314,6 +314,80 @@
       "login": false,
       "name": "youtube",
       "test_url": "https://www.youtube.com"
+    },
+    {
+      "login": false,
+      "name": "cnn-nav",
+      "test_url": "https://www.cnn.com/",
+      "test_cmds":  [
+        ["measure.start", "landing"],
+        ["navigate", "https://www.cnn.com"],
+        ["wait.byTime", 4000],
+        ["measure.stop", ""],
+        ["measure.start", "world"],
+        ["click.byXpathAndWait", "/html/body/div[5]/div/div/header/div/div[1]/div/div[2]/nav/ul/li[2]/a"],
+        ["wait.byTime", 1000],
+        ["measure.stop", ""]
+      ]
+    },
+    {
+      "login": false,
+      "name": "reddit-billgates-ama",
+      "test_url": "https://www.reddit.com/",
+      "test_cmds":  [
+        ["measure.start", "billg-ama"],
+        ["navigate", "https://www.reddit.com/r/IAmA/comments/m8n4vt/im_bill_gates_cochair_of_the_bill_and_melinda/"],
+        ["wait.byTime", 5000],
+        ["measure.stop", ""],
+        ["measure.start", "members"],
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div[3]/div[2]/div/div[1]/div/div[4]/div[1]/div"],
+        ["wait.byTime", 1000],
+        ["measure.stop", ""]
+      ]
+    },
+    {
+      "login": false,
+      "name": "reddit-billgates-post",
+      "test_url": "https://www.reddit.com/user/thisisbillgates/",
+      "test_cmds":  [
+        ["measure.start", "billg"],
+        ["navigate", "https://www.reddit.com/user/thisisbillgates/"],
+        ["wait.byTime", 5000],
+        ["measure.stop", ""],
+        ["measure.start", "posts"],
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[2]"],
+        ["wait.byTime", 15000],
+        ["measure.stop", ""],
+        ["measure.start", "comments"],
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[3]"],
+        ["wait.byTime", 15000],
+        ["measure.stop", ""],
+        ["measure.start", "hot"],
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[4]/div[1]/div[1]/div[2]/a[2]"],
+        ["wait.byTime", 15000],
+        ["measure.stop", ""],
+        ["measure.start", "top"],
+        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[4]/div[1]/div[1]/div[2]/a[3]"],
+        ["wait.byTime", 15000],
+        ["measure.stop", ""]
+      ]
+    },
+    {
+      "login": false,
+      "name": "facebook-nav",
+      "test_url": "https://www.facebook.com/",
+      "test_cmds":  [
+        ["navigate", "https://www.facebook.com/login"],
+        ["wait.byTime", 30000],
+        ["measure.start", "https://www.facebook.com/"],
+        ["wait.byTime", 5000],
+        ["measure.start", "https://www.facebook.com/marketplace/"],
+        ["wait.byTime", 5000],
+        ["measure.start", "https://www.facebook.com/groups/discover/"],
+        ["wait.byTime", 10000],
+        ["measure.start", "https://www.facebook.com/friends"],
+        ["wait.byTime", 10000]
+      ]
     }
   ]
 }

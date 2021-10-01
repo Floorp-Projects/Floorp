@@ -4217,6 +4217,149 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 
 
+Interactive
+-----------
+Browsertime tests that interact with the webpage. Includes responsiveness tests as they make use of this support for navigation. These form of tests allow the specification of browsertime commands through the test manifest.
+
+.. dropdown:: cnn-nav (Navigates to cnn main page, then to the world sub-page.)
+   :container: + anchor-id-cnn-nav-i
+
+   * **accept zero vismet**: true
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **browser cycles**: 10
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **interactive**: true
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm6-windows-firefox-cnn-nav.manifest
+   * **playback version**: 6.0.2
+   * **test cmds**:  ["measure.start", "landing"], ["navigate", "https://www.cnn.com"], ["wait.byTime", 4000], ["measure.stop", ""], ["measure.start", "world"], ["click.byXpathAndWait", "/html/body/div[5]/div/div/header/div/div[1]/div/div[2]/nav/ul/li[2]/a"], ["wait.byTime", 1000], ["measure.stop", ""],
+   * **test url**: `<https://www.cnn.com/>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk-qr/opt
+            * browsertime-responsiveness-firefox-cnn-nav-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-responsiveness-firefox-cnn-nav-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-cnn-nav-e10s: None
+            * browsertime-responsiveness-chromium-cnn-nav-e10s: None
+            * browsertime-responsiveness-firefox-cnn-nav-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-cnn-nav-fis-e10s: mozilla-central
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-cnn-nav-e10s: None
+            * browsertime-responsiveness-chromium-cnn-nav-e10s: None
+            * browsertime-responsiveness-firefox-cnn-nav-e10s: None
+            * browsertime-responsiveness-firefox-cnn-nav-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-cnn-nav-e10s: None
+            * browsertime-responsiveness-chromium-cnn-nav-e10s: None
+            * browsertime-responsiveness-firefox-cnn-nav-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-cnn-nav-fis-e10s: mozilla-central
+      * test-windows10-32-qr/opt
+            * browsertime-responsiveness-firefox-cnn-nav-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-responsiveness-chrome-cnn-nav-e10s: None
+            * browsertime-responsiveness-chromium-cnn-nav-e10s: None
+            * browsertime-responsiveness-firefox-cnn-nav-e10s: None
+            * browsertime-responsiveness-firefox-cnn-nav-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-responsiveness-firefox-cnn-nav-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-cnn-nav-e10s: None
+            * browsertime-responsiveness-chromium-cnn-nav-e10s: None
+            * browsertime-responsiveness-firefox-cnn-nav-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-cnn-nav-fis-e10s: mozilla-central
+
+
+.. dropdown:: facebook-nav (Navigates to facebook, then the sub-pages friends, marketplace, groups.)
+   :container: + anchor-id-facebook-nav-i
+
+   * **accept zero vismet**: true
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **interactive**: true
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 90000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm6-windows-firefox-facebook-nav.manifest
+   * **playback version**: 6.0.2
+   * **test cmds**:  ["measure.start", "landing"], ["navigate", "https://www.facebook.com/"], ["wait.byTime", 5000], ["measure.stop", ""], ["measure.start", "friends"], ["navigate", "https://www.facebook.com/friends/"], ["wait.byTime", 5000], ["measure.stop", ""], ["measure.start", "marketplace"], ["navigate", "https://www.facebook.com/marketplace"], ["wait.byTime", 5000], ["measure.stop", ""], ["measure.start", "groups"], ["navigate", "https://www.facebook.com/groups/discover/"], ["wait.byTime", 5000], ["measure.stop", ""],
+   * **test url**: `<https://www.facebook.com>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+
+
+.. dropdown:: reddit-billgates-ama (Navigates from the Bill Gates AMA to the Reddit members section.)
+   :container: + anchor-id-reddit-billgates-ama-i
+
+   * **accept zero vismet**: true
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **interactive**: true
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm6-windows-firefox-reddit-billgates-ama.manifest
+   * **playback version**: 6.0.2
+   * **test cmds**:  ["measure.start", "billg-ama"], ["navigate", "https://www.reddit.com/r/IAmA/comments/m8n4vt/im_bill_gates_cochair_of_the_bill_and_melinda/"], ["wait.byTime", 5000], ["measure.stop", ""], ["measure.start", "members"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div[3]/div[2]/div/div[1]/div/div[4]/div[1]/div"], ["wait.byTime", 1000], ["measure.stop", ""],
+   * **test url**: `<https://www.reddit.com/>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+
+
+.. dropdown:: reddit-billgates-post (Navigates the `thisisbillgates` user starting at the main user page, then to the posts, comments, hot, and top sections.)
+   :container: + anchor-id-reddit-billgates-post-i
+
+   * **accept zero vismet**: true
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **interactive**: true
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 90000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm6-windows-firefox-reddit-billgates-post.manifest
+   * **playback version**: 6.0.2
+   * **test cmds**:  ["measure.start", "billg"], ["navigate", "https://www.reddit.com/user/thisisbillgates/"], ["wait.byTime", 5000], ["measure.stop", ""], ["measure.start", "posts"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[2]"], ["wait.byTime", 15000], ["measure.stop", ""], ["measure.start", "comments"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[3]"], ["wait.byTime", 15000], ["measure.stop", ""], ["measure.start", "hot"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[4]/div[1]/div[1]/div[2]/a[2]"], ["wait.byTime", 15000], ["measure.stop", ""], ["measure.start", "top"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[4]/div[1]/div[1]/div[2]/a[3]"], ["wait.byTime", 15000], ["measure.stop", ""],
+   * **test url**: `<https://www.reddit.com/user/thisisbillgates/>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+
+
+
 Live
 ----
 A set of test pages that are run as live sites instead of recorded versions. These tests are available on all browsers, on all platforms. (WX: WebExtension, BT: Browsertime, FF: Firefox, CH: Chrome, CU: Chromium, GV: Geckoview, RB: Refbrow, FE: Fenix, CH-M: Chrome mobile)
