@@ -28,7 +28,7 @@ job-template:
                         type: signing
                     default: {}
             default: {}
-    run-on-tasks-for: [github-push, github-release]
+    run-on-tasks-for: []
     treeherder:
         job-symbol:
             by-build-type:

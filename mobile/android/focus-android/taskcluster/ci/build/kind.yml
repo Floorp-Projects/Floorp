@@ -79,7 +79,11 @@ jobs:
             symbol: release(Bkl)
 
     nightly:
-        description: 'Nightly focus build for debugging'
+        description: 'Nightly focus build'
+        attributes:
+            # any tasks that have this as a primary dependency will
+            # inherit this attribute via the multi_dep loader
+            nightly-task: true
         run-on-tasks-for: [github-pull-request]
         run:
             gradle-build-type: nightly
@@ -89,7 +93,7 @@ jobs:
             symbol: nightly(B)
 
     beta:
-        description: 'Beta focus build for debugging'
+        description: 'Beta focus build'
         run-on-tasks-for: [github-pull-request]
         run:
             gradle-build-type: beta

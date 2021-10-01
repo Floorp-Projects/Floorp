@@ -1,0 +1,39 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: focus_android_taskgraph.loader.multi_dep:loader
+
+transforms:
+    - focus_android_taskgraph.transforms.multi_dep:transforms
+    - focus_android_taskgraph.transforms.push_apk:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - signing
+
+primary-dependency: signing
+
+group-by: build-type
+
+only-for-build-types:
+    - nightly
+
+job-template:
+    description: Publish Focus
+    worker-type: push-apk
+    run-on-tasks-for: [cron]
+    worker:
+        certificate-alias: focus
+        commit: true
+        channel:
+            by-build-type:
+                nightly: nightly
+        dep:
+            by-level:
+                '3': false
+                default: true
+        product: focus-android
+    treeherder:
+        job-symbol: gp
+        kind: build

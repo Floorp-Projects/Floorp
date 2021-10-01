@@ -3,4 +3,13 @@
 # `taskcluster/docs/cron.rst`.
 ---
 
-jobs: []
+jobs:
+    - name: nightly
+      job:
+          type: decision-task
+          treeherder-symbol: Nd
+          target-tasks-method: nightly
+      when:
+          - {hour: 5, minute: 0}
+          - {hour: 17, minute: 0}
+
