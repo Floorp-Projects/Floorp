@@ -60,7 +60,7 @@ class TitleHeaderAdapter(
 
         fun bind() {
             binding.tabTrayHeaderTitle.text =
-                itemView.context.getString(R.string.tab_tray_header_title)
+                itemView.context.getString(R.string.tab_tray_header_title_1)
         }
 
         companion object {
