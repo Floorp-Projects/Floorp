@@ -162,7 +162,7 @@ html|img#editBookmarkPanelFavicon[src] {
 #editBookmarkPanel .expander-down:hover:active {
   /**
    * We override the colour here because on macOS, buttons default to
-   * having :hover:active buttons have color -moz-mac-buttonactivetext
+   * having :hover:active buttons have color -moz-buttonactivetext
    */
   color: var(--button-color);
   background-color: var(--button-active-bgcolor);

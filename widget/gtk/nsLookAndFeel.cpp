@@ -579,12 +579,13 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       aColor = mButtonDefault;
       break;
     case ColorID::MozButtonhoverface:
+    case ColorID::MozButtonactiveface:
       aColor = mButtonHoverFace;
       break;
     case ColorID::MozButtonhovertext:
       aColor = mButtonHoverText;
       break;
-    case ColorID::MozGtkButtonactivetext:
+    case ColorID::MozButtonactivetext:
       aColor = mButtonActiveText;
       break;
     case ColorID::MozMenuhover:

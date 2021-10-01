@@ -615,29 +615,16 @@ button,
 ::file-selector-button:hover,
 button:hover,
 input:is([type=reset], [type=button], [type=submit], [type=color]):hover {
-  background-color: -moz-buttonhoverface;
-}
-
-::file-selector-button:hover,
-button:hover,
-input:is([type=reset], [type=button], [type=submit]):hover {
   color: -moz-buttonhovertext;
+  background-color: -moz-buttonhoverface;
 }
 
 ::file-selector-button:active:hover,
 button:active:hover,
 input:is([type=reset], [type=button], [type=submit], [type=color]):active:hover {
   border-style: inset;
-}
-
-::file-selector-button:active:hover,
-button:active:hover,
-input:is([type=reset], [type=button], [type=submit]):active:hover {
-%ifdef MOZ_WIDGET_GTK
-  color: -moz-gtk-buttonactivetext;
-%else
-  color: ButtonText;
-%endif
+  color: -moz-buttonactivetext;
+  background-color: -moz-buttonactiveface;
 }
 
 ::-moz-focus-inner {

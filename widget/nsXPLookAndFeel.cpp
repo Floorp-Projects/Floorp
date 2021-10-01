@@ -278,8 +278,8 @@ static const char sColorPrefs[][41] = {
     "ui.-moz_menubarhovertext",
     "ui.-moz_eventreerow",
     "ui.-moz_oddtreerow",
-    "ui.-moz-gtk-buttonactivetext",
-    "ui.-moz-mac-buttonactivetext",
+    "ui.-moz-buttonactivetext",
+    "ui.-moz-buttonactiveface",
     "ui.-moz_mac_chrome_active",
     "ui.-moz_mac_chrome_inactive",
     "ui.-moz-mac-defaultbuttontext",
@@ -562,8 +562,9 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
     COLOR(Selecteditem, 0x33, 0x99, 0xFF)
     COLOR(Selecteditemtext, 0xFF, 0xFF, 0xFF)
     COLOR(MozButtonhoverface, 0xF0, 0xF0, 0xF0)
-    COLOR(MozGtkButtonactivetext, 0x00, 0x00, 0x00)
     COLOR(MozButtonhovertext, 0x00, 0x00, 0x00)
+    COLOR(MozButtonactiveface, 0xF0, 0xF0, 0xF0)
+    COLOR(MozButtonactivetext, 0x00, 0x00, 0x00)
     COLOR(MozMenuhover, 0x33, 0x99, 0xFF)
     COLOR(MozMenuhovertext, 0x00, 0x00, 0x00)
     COLOR(MozMenubartext, 0x00, 0x00, 0x00)
@@ -635,6 +636,8 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::Fieldtext:
     case ColorID::Buttontext:  // --in-content-button-text-color (via
                                // --in-content-page-color)
+    case ColorID::MozButtonhovertext:
+    case ColorID::MozButtonactivetext:
 #endif
       color = NS_RGB(251, 251, 254);
       break;
@@ -651,6 +654,12 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::Selecteditemtext:  // --in-content-primary-button-text-color /
                                      // --in-content-item-selected-text
       color = NS_RGB(43, 42, 51);
+      break;
+    case ColorID::MozButtonhoverface:  // --in-content-button-background-hover
+      color = NS_RGB(82, 82, 94);
+      break;
+    case ColorID::MozButtonactiveface:  // --in-content-button-background-active
+      color = NS_RGB(91, 91, 102);
       break;
 #endif
     case ColorID::Highlight:
@@ -994,7 +1003,8 @@ static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
     case ColorID::Buttontext:
     case ColorID::MozButtonhoverface:
     case ColorID::MozButtonhovertext:
-    case ColorID::MozGtkButtonactivetext:
+    case ColorID::MozButtonactiveface:
+    case ColorID::MozButtonactivetext:
 
     case ColorID::MozCombobox:
     case ColorID::MozComboboxtext:
