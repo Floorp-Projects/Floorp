@@ -167,7 +167,7 @@ internal class RustPushConnection(
 
     @GuardedBy("this")
     override suspend fun updateToken(token: String): Boolean = synchronized(this) {
-        val pushApi = api
+        var pushApi = api
         if (pushApi == null) {
             api = PushManager(
                 senderId = senderId,
@@ -177,7 +177,9 @@ internal class RustPushConnection(
                 registrationId = token,
                 databasePath = databasePath
             )
-            return true
+            pushApi = api!!
+            // This may be a new token, so we must tell the server about it even if this is the
+            // push being initialized for the first time in this process.
         }
         // This call will fail if we haven't 'subscribed' yet.
         return try {
@@ -185,8 +187,13 @@ internal class RustPushConnection(
         } catch (e: GeneralException) {
             val fakeChannelId = "fake".toChannelId()
             // It's possible that we have a race (on a first run) between 'subscribing' and setting a token.
+            // (Or even more likely is that we have no subscriptions, but are still trying to
+            // initialize this service with a new FCM token)
             // 'update' expects that we've called 'subscribe' (which would obtain a 'uaid' from an autopush
             // server), which we need to have in order to call 'update' on the library.
+            // Note also: this work-around means we are making 2 connections to the push server
+            // even when there are zero subscriptions actually desired, so it's wildly inefficient
+            // for the majority of users.
             // In https://github.com/mozilla/application-services/issues/2490 this will be fixed, and we
             // can clean up this work-around.
             pushApi.subscribe(fakeChannelId)

@@ -87,10 +87,11 @@ class AutoPushFeatureTest {
     fun `updateToken called if token is in prefs`() = runBlockingTest {
         preference(testContext).edit().putString(PREF_TOKEN, "token").apply()
 
-        AutoPushFeature(
+        val feature = AutoPushFeature(
             testContext, mock(), mock(), connection = connection,
             coroutineContext = coroutineContext
         )
+        feature.initialize()
 
         verify(connection).updateToken("token")
     }
@@ -120,18 +121,6 @@ class AutoPushFeatureTest {
         val pref = preference(testContext).getString(PREF_TOKEN, null)
         assertNotNull(pref)
         assertEquals("token", pref)
-    }
-
-    @Test
-    fun `onNewToken updates subscriptions if token does not already exists`() = runBlockingTest {
-        val connection: PushConnection = spy(TestPushConnection(true))
-        val feature = spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
-
-        feature.onNewToken("token")
-        verify(feature, times(1)).subscribe(anyString(), nullable(String::class.java), any(), any())
-
-        feature.onNewToken("token")
-        verify(feature, times(1)).subscribe(anyString(), nullable(String::class.java), any(), any())
     }
 
     @Test
@@ -383,11 +372,15 @@ class AutoPushFeatureTest {
                 service = mock(),
                 config = mock(),
                 coroutineContext = coroutineContext,
-                connection = mock()
+                connection = mock(),
             )
         )
 
         lastVerified = System.currentTimeMillis() - VERIFY_NOW
+
+        // We want the feature to find a token so it initializes, as that must happen before verify.
+        val prefs = testContext.getSharedPreferences("mozac_feature_push", Context.MODE_PRIVATE)
+        prefs.edit().putString(PREF_TOKEN, "test-token").apply()
 
         feature.initialize()
 
@@ -408,32 +401,41 @@ class AutoPushFeatureTest {
 
         lastVerified = System.currentTimeMillis() - SKIP_INTERVAL
 
+        // We want the feature to find a token so it initializes, as that must happen before verify.
+        // For this test, we want the token check to succeed so the ratelimiting check
+        // must also work correctly.
+        val prefs = testContext.getSharedPreferences("mozac_feature_push", Context.MODE_PRIVATE)
+        prefs.edit().putString(PREF_TOKEN, "test-token").apply()
+
         feature.initialize()
 
         verify(feature, never()).verifyActiveSubscriptions()
     }
 
     @Test
-    fun `initialize does execute verifyActiveSubscription with rate-limiting disabled`() = runBlockingTest {
+    fun `new FCM token executes verifyActiveSubscription`() = runBlockingTest {
         val feature = spy(
             AutoPushFeature(
                 context = testContext,
                 service = mock(),
-                config = PushConfig(senderId = "push-test", disableRateLimit = true),
+                config = mock(),
                 coroutineContext = coroutineContext,
                 connection = mock()
             )
         )
 
-        lastVerified = System.currentTimeMillis() - SKIP_INTERVAL
-
+        lastVerified = 0
         feature.initialize()
+        // no token yet so should not have even tried.
+        verify(feature, never()).verifyActiveSubscriptions()
 
+        // new token == "check now"
+        feature.onNewToken("test-token")
         verify(feature).verifyActiveSubscriptions()
     }
 
     @Test
-    fun `verification always happens on first attempt`() = runBlockingTest {
+    fun `verification doesn't happen until we've got the token`() = runBlockingTest {
         val feature = spy(
             AutoPushFeature(
                 context = testContext,
@@ -446,7 +448,7 @@ class AutoPushFeatureTest {
 
         feature.initialize()
 
-        verify(feature).verifyActiveSubscriptions()
+        verify(feature, never()).verifyActiveSubscriptions()
     }
 
     @Test

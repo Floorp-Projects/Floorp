@@ -17,7 +17,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.base.crash.CrashReporting
-import mozilla.components.concept.push.exceptions.SubscriptionException
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.Device
@@ -25,7 +24,6 @@ import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceConstellationObserver
 import mozilla.components.concept.sync.DevicePushSubscription
 import mozilla.components.concept.sync.OAuthAccount
-import mozilla.components.feature.accounts.push.ext.redactPartialUri
 import mozilla.components.feature.push.AutoPushFeature
 import mozilla.components.feature.push.AutoPushSubscription
 import mozilla.components.feature.push.PushScope
@@ -67,6 +65,9 @@ class FxaPushSupportFeature(
      * A unique scope for the FxA push subscription that is generated once and stored in SharedPreferences.
      *
      * This scope is randomly generated and unique to the account on that particular device.
+     * (why this uuid? Note it is *not* reset on logout!)
+     * (isn't this racey? Different observers reference it)
+     * (maybe you just want the acct uid?)
      */
     private val fxaPushScope: String by lazy {
         val prefs = preference(context)
@@ -137,26 +138,6 @@ internal class AccountObserver(
             crashReporter = crashReporter
         )
 
-        // We need a new subscription only when we have a new account.
-        // The subscription is removed when an account logs out.
-        if (authType != AuthType.Existing && authType != AuthType.Recovered) {
-            logger.debug("Subscribing for FxaPushScope ($fxaPushScope) events.")
-
-            push.subscribe(
-                scope = fxaPushScope,
-                onSubscribeError = { e ->
-                    crashReporter?.recordCrashBreadcrumb(Breadcrumb("Subscribing to FxA push failed at login."))
-                    logger.info("Subscribing to FxA push failed at login.", e)
-                },
-                onSubscribe = { subscription ->
-                    logger.info("Created a new subscription: $subscription")
-                    CoroutineScope(Dispatchers.Main).launch {
-                        account.deviceConstellation().setDevicePushSubscription(subscription.into())
-                    }
-                }
-            )
-        }
-
         // NB: can we just expose registerDeviceObserver on account manager?
         // registration could happen after onDevicesUpdate has been called, without having to tie this
         // into the account "auth lifecycle".
@@ -172,11 +153,54 @@ internal class AccountObserver(
 
         push.unsubscribe(fxaPushScope)
 
-        // Delete cached value of last verified timestamp and scope when we log out.
+        // Delete cached value of last verified timestamp when we log out.
         preference(context).edit()
             .remove(PREF_LAST_VERIFIED)
             .apply()
     }
+}
+
+/**
+ * Subscribes to the AutoPushFeature, and updates the FxA device record if necessary.
+ * Note that if the subscription already exists, then this doesn't hit any servers, so
+ * it's OK to call this somewhat frequently.
+ */
+internal fun pushSubscribe(
+    push: AutoPushFeature,
+    account: OAuthAccount,
+    scope: String,
+    crashReporter: CrashReporting?,
+    logContext: String
+) {
+    val logger = Logger("FxaPushSupportFeature")
+    val currentDevice = account.deviceConstellation().state()?.currentDevice
+    if (currentDevice == null) {
+        logger.warn("Can't subscribe to account push notifications as there's no current device")
+        return
+    }
+    logger.debug("Subscribing for FxaPushScope ($scope) events.")
+    push.subscribe(
+        scope,
+        onSubscribeError = { e ->
+            crashReporter?.recordCrashBreadcrumb(Breadcrumb("Subscribing to FxA push failed."))
+            logger.warn("Subscribing to FxA push failed: $logContext: ", e)
+        },
+        onSubscribe = { subscription ->
+            logger.info("Created a new subscription: $logContext: $subscription")
+            // Apparently `subscriptionExpired` typically means just the FCM token is wrong, so
+            // after getting a new one, our push endpoint will remain the same as it was. So here
+            // we always update the endpoint if `subscriptionExpired` is true, even when the
+            // subscription matches, just to ensure `subscriptionExpired` is reset.
+            if (currentDevice.subscriptionExpired ||
+                currentDevice.subscription?.endpoint != subscription.endpoint
+            ) {
+                logger.info("Updating account with new subscription info.")
+                CoroutineScope(Dispatchers.Main).launch {
+                    account.deviceConstellation().setDevicePushSubscription(subscription.into())
+                }
+            }
+        }
+    )
 }
 
 /**
@@ -196,83 +220,29 @@ internal class ConstellationObserver(
 
     override fun onDevicesUpdate(constellation: ConstellationState) {
         logger.info("onDevicesUpdate triggered.")
-        val updateSubscription = constellation.currentDevice?.let {
-            it.subscription == null || it.subscriptionExpired
-        } ?: false
 
-        // If our subscription has not expired, we do nothing.
-        // If our last check was recent (see: PERIODIC_INTERVAL_MILLISECONDS), we do nothing.
-        val allowedToRenew = verifier.allowedToRenew()
-        if (!updateSubscription || !allowedToRenew) {
-            logger.info(
-                "Short-circuiting onDevicesUpdate: " +
-                    "updateSubscription($updateSubscription), allowedToRenew($allowedToRenew)"
-            )
-            return
-        } else {
-            logger.info("Proceeding to renew registration")
+        val currentDevice = constellation.currentDevice ?: return
+        if (currentDevice.subscriptionExpired) {
+            if (verifier.allowedToRenew()) {
+                // This smells wrong - the fact FxaPushSupportFeature needs to detect a
+                // subscription problem implies non-FxA users will never detect this and
+                // remain broken?
+                logger.info("Our push subscription is expired; renewing FCM registration.")
+                push.renewRegistration()
+
+                logger.info("Incrementing verifier")
+                logger.debug("Verifier state before: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}")
+                verifier.increment()
+                logger.debug("Verifier state after: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}")
+            } else {
+                logger.info("Short-circuiting onDevicesUpdate: rate-limited")
+            }
         }
 
-        logger.info("Our push subscription either doesn't exist or is expired; renewing registration.")
-        push.renewRegistration()
-
-        logger.info("Incrementing verifier")
-        logger.info("Verifier state before: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}")
-        verifier.increment()
-        logger.info("Verifier state after: timestamp=${verifier.innerTimestamp}, count=${verifier.innerCount}")
-    }
-
-    internal fun onSubscribe(constellation: ConstellationState, subscription: AutoPushSubscription) {
-
-        logger.info("Created a new subscription: $subscription")
-
-        val oldEndpoint = constellation.currentDevice?.subscription?.endpoint
-        if (subscription.endpoint == oldEndpoint) {
-            val exception = SubscriptionException(
-                "New push endpoint matches existing one",
-                Throwable(
-                    "Endpoint: ${subscription.endpoint.redactPartialUri()}"
-                )
-            )
-
-            logger.warn("Push endpoints match!", exception)
-
-            crashReporter?.submitCaughtException(exception)
-        }
-
-        CoroutineScope(Dispatchers.Main).launch {
-            account.deviceConstellation().setDevicePushSubscription(subscription.into())
-        }
-    }
-
-    internal fun onSubscribeError(e: Exception) {
-        val errorMessage = "Re-subscribing failed; FxA push events will not be received."
-
-        logger.warn(errorMessage, e)
-        crashReporter?.submitCaughtException(SubscriptionException(errorMessage, e))
-    }
-
-    internal fun onUnsubscribeError(e: Exception) {
-        val errorMessage = "Un-subscribing to failed FxA push after subscriptionExpired"
-
-        logger.warn(errorMessage, e)
-        crashReporter?.recordCrashBreadcrumb(
-            Breadcrumb(
-                category = ConstellationObserver::class.java.simpleName,
-                message = errorMessage,
-                data = mapOf(
-                    "exception" to e.javaClass.name,
-                    "message" to e.message.orEmpty()
-                )
-            )
-        )
-    }
-
-    private fun onUnsubscribeResult(success: Boolean) {
-        logger.info("Un-subscribing successful: $success")
-        if (success) {
-            logger.info("Subscribe call should give you a new endpoint.")
-        }
+        // And unconditionally subscribe - if our local DB already has a subscription it will
+        // be returned without hitting the server. If some other problem meant our subscription
+        // was dropped or never made, it will hit the server and deliver a new end-point.
+        pushSubscribe(push, account, scope, crashReporter, "onDevicesUpdate")
     }
 }
 
@@ -310,18 +280,12 @@ internal class AutoPushObserver(
 
         logger.info("Our sync push scope ($scope) has expired. Re-subscribing..")
 
-        pushFeature.subscribe(fxaPushScope) { subscription ->
-            val account = accountManager.authenticatedAccount()
-
-            if (account == null) {
-                logger.info("We don't have any account to pass the push subscription to.")
-                return@subscribe
-            }
-
-            CoroutineScope(Dispatchers.Main).launch {
-                account.deviceConstellation().setDevicePushSubscription(subscription.into())
-            }
+        val account = accountManager.authenticatedAccount()
+        if (account == null) {
+            logger.info("We don't have any account to pass the push subscription to.")
+            return
         }
+        pushSubscribe(pushFeature, account, fxaPushScope, null, "onSubscriptionChanged")
     }
 }
 

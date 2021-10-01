@@ -9,6 +9,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.setMain
+import mozilla.components.concept.sync.ConstellationState
+import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.push.AutoPushFeature
@@ -76,6 +78,11 @@ class AutoPushObserverTest {
 
         `when`(manager.authenticatedAccount()).thenReturn(account)
         `when`(account.deviceConstellation()).thenReturn(constellation)
+        val state: ConstellationState = mock()
+        val device: Device = mock()
+        `when`(constellation.state()).thenReturn(state)
+        `when`(state.currentDevice).thenReturn(device)
+        `when`(device.subscriptionExpired).thenReturn(true)
 
         observer.onSubscriptionChanged("test")
 
