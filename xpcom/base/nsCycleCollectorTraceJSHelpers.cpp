@@ -6,7 +6,7 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsString.h"
-#include "nsWrapperCache.h"
+#include "nsWrapperCacheInlines.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 

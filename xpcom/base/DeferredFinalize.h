@@ -8,6 +8,7 @@
 #define mozilla_DeferredFinalize_h
 
 #include <cstdint>
+#include "mozilla/Attributes.h"
 
 class nsISupports;
 

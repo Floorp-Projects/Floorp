@@ -31,6 +31,7 @@
 
 #include "nsXULAppAPI.h"
 #ifdef XP_WIN
+#  include <io.h>
 #  include <process.h>
 #  define getpid _getpid
 #else
@@ -309,8 +310,8 @@ static BloatEntry* GetBloatEntry(const char* aTypeName,
   BloatEntry* entry = gBloatView->Get(aTypeName);
   if (!entry && aInstanceSize > 0) {
     entry = gBloatView
-                ->InsertOrUpdate(
-                    aTypeName, MakeUnique<BloatEntry>(aTypeName, aInstanceSize))
+                ->InsertOrUpdate(aTypeName, mozilla::MakeUnique<BloatEntry>(
+                                                aTypeName, aInstanceSize))
                 .get();
   } else {
     MOZ_ASSERT(
@@ -465,7 +466,7 @@ static intptr_t GetSerialNumber(void* aPtr, bool aCreate, void* aFirstFramePC) {
           "it.");
     }
 
-    auto& record = entry.Insert(MakeUnique<SerialNumberRecord>());
+    auto& record = entry.Insert(mozilla::MakeUnique<SerialNumberRecord>());
     WalkTheStackSavingLocations(record->allocationStack, aFirstFramePC);
     if (gLogJSStacks) {
       record->SaveJSStack();

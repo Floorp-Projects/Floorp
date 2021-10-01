@@ -95,6 +95,7 @@
 #include "nsJSUtils.h"
 #include "nsStringBuffer.h"
 #include "nsWrapperCache.h"
+#include "prenv.h"
 
 #if defined(XP_MACOSX)
 #  include "nsMacUtilsImpl.h"

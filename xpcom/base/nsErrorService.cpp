@@ -39,7 +39,7 @@ NS_IMETHODIMP
 nsErrorService::RegisterErrorStringBundle(int16_t aErrorModule,
                                           const char* aStringBundleURL) {
   mErrorStringBundleURLMap.InsertOrUpdate(
-      aErrorModule, MakeUnique<nsCString>(aStringBundleURL));
+      aErrorModule, mozilla::MakeUnique<nsCString>(aStringBundleURL));
   return NS_OK;
 }
 

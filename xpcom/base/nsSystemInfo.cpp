@@ -37,6 +37,7 @@
 #  include "nsDirectoryServiceUtils.h"
 #  include "nsWindowsHelpers.h"
 #  include "WinUtils.h"
+#  include "mozilla/NotNull.h"
 
 #endif
 
@@ -411,8 +412,8 @@ nsresult CollectCountryCode(nsAString& aCountryCode) {
 
 #  ifndef __MINGW32__
 
-static HRESULT EnumWSCProductList(nsAString& aOutput,
-                                  NotNull<IWSCProductList*> aProdList) {
+static HRESULT EnumWSCProductList(
+    nsAString& aOutput, mozilla::NotNull<IWSCProductList*> aProdList) {
   MOZ_ASSERT(aOutput.IsEmpty());
 
   LONG count;
@@ -481,10 +482,12 @@ static nsresult GetWindowsSecurityCenterInfo(nsAString& aAVInfo,
   // Each output must match the corresponding entry in providerTypes.
   nsAString* outputs[] = {&aAVInfo, &aAntiSpyInfo, &aFirewallInfo};
 
-  static_assert(ArrayLength(providerTypes) == ArrayLength(outputs),
-                "Length of providerTypes and outputs arrays must match");
+  static_assert(
+      mozilla::ArrayLength(providerTypes) == mozilla::ArrayLength(outputs),
+      "Length of providerTypes and outputs arrays must match");
 
-  for (uint32_t index = 0; index < ArrayLength(providerTypes); ++index) {
+  for (uint32_t index = 0; index < mozilla::ArrayLength(providerTypes);
+       ++index) {
     RefPtr<IWSCProductList> prodList;
     HRESULT hr = ::CoCreateInstance(clsid, nullptr, CLSCTX_INPROC_SERVER, iid,
                                     getter_AddRefs(prodList));
@@ -497,7 +500,8 @@ static nsresult GetWindowsSecurityCenterInfo(nsAString& aAVInfo,
       return NS_ERROR_UNEXPECTED;
     }
 
-    hr = EnumWSCProductList(*outputs[index], WrapNotNull(prodList.get()));
+    hr = EnumWSCProductList(*outputs[index],
+                            mozilla::WrapNotNull(prodList.get()));
     if (FAILED(hr)) {
       return NS_ERROR_UNEXPECTED;
     }
