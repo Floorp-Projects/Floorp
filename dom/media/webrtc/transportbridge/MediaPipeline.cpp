@@ -77,7 +77,7 @@ class AudioProxyThread {
   explicit AudioProxyThread(RefPtr<AudioSessionConduit> aConduit)
       : mConduit(std::move(aConduit)),
         mTaskQueue(new TaskQueue(
-            GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER), "AudioProxy")),
+            GetMediaThreadPool(MediaThreadType::WEBRTC_WORKER), "AudioProxy")),
         mAudioConverter(nullptr) {
     MOZ_ASSERT(mConduit);
     MOZ_COUNT_CTOR(AudioProxyThread);
@@ -1289,7 +1289,7 @@ class MediaPipelineReceiveAudio::PipelineListener
                   ? mSource->Graph()->GraphRate()
                   : WEBRTC_MAX_SAMPLE_RATE),
         mTaskQueue(
-            new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
+            new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_WORKER),
                           "AudioPipelineListener")),
         mPlayedTicks(0),
         mAudioFrame(std::make_unique<webrtc::AudioFrame>()),

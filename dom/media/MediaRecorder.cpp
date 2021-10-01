@@ -816,7 +816,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     // Create a TaskQueue to read encode media data from MediaEncoder.
     MOZ_RELEASE_ASSERT(!mEncoderThread);
     RefPtr<SharedThreadPool> pool =
-        GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER);
+        GetMediaThreadPool(MediaThreadType::WEBRTC_WORKER);
     if (!pool) {
       LOG(LogLevel::Debug, ("Session.InitEncoder %p Failed to create "
                             "MediaRecorderReadThread thread pool",

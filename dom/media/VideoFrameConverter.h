@@ -56,7 +56,7 @@ class VideoFrameConverter {
 
   VideoFrameConverter()
       : mTaskQueue(
-            new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
+            new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_WORKER),
                           "VideoFrameConverter")),
         mPacingTimer(new MediaTimer()),
         mBufferPool(false, CONVERTER_BUFFER_POOL_SIZE),
