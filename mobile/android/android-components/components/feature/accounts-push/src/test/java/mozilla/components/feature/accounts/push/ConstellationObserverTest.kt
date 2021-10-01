@@ -23,7 +23,6 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.nullable
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
