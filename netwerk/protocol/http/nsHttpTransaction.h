@@ -272,6 +272,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
     TRANSACTION_RESTART_HTTPS_RR_FAST_FALLBACK,
     TRANSACTION_RESTART_HTTP3_FAST_FALLBACK,
     TRANSACTION_RESTART_OTHERS,
+    TRANSACTION_RESTART_PROTOCOL_VERSION_ALERT,
   };
   void SetRestartReason(TRANSACTION_RESTART_REASON aReason);
 
@@ -547,6 +548,9 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   nsTHashMap<nsUint32HashKey, uint32_t> mEchRetryCounterMap;
 
   bool mSupportsHTTP3 = false;
+
+  bool mEarlyDataWasAvailable = false;
+  bool ShouldRestartOn0RttError(nsresult reason);
 };
 
 }  // namespace net

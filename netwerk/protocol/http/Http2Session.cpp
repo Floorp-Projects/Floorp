@@ -32,6 +32,7 @@
 #include "nsStandardURL.h"
 #include "nsURLHelper.h"
 #include "prnetdb.h"
+#include "sslerr.h"
 #include "sslt.h"
 #include "mozilla/Sprintf.h"
 #include "nsSocketTransportService2.h"
@@ -195,7 +196,7 @@ Http2Session::Http2Session(nsISocketTransport* aSocketTransport,
   mDecompressor.SetDumpTables(dumpHpackTables);
 }
 
-void Http2Session::Shutdown() {
+void Http2Session::Shutdown(nsresult aReason) {
   for (const auto& stream : mStreamTransactionHash.Values()) {
     // On a clean server hangup the server sets the GoAwayID to be the ID of
     // the last transaction it processed. If the ID of stream in the
@@ -212,6 +213,10 @@ void Http2Session::Shutdown() {
       CloseStream(stream, NS_ERROR_NET_INADEQUATE_SECURITY);
     } else if (!mCleanShutdown && (mGoAwayReason != NO_HTTP_ERROR)) {
       CloseStream(stream, NS_ERROR_NET_HTTP2_SENT_GOAWAY);
+    } else if (!mCleanShutdown &&
+               (aReason ==
+                psm::GetXPCOMFromNSSError(SSL_ERROR_PROTOCOL_VERSION_ALERT))) {
+      CloseStream(stream, aReason);
     } else {
       CloseStream(stream, NS_ERROR_ABORT);
     }
@@ -223,7 +228,7 @@ Http2Session::~Http2Session() {
   LOG3(("Http2Session::~Http2Session %p mDownstreamState=%X", this,
         mDownstreamState));
 
-  Shutdown();
+  Shutdown(NS_OK);
 
   if (mTrrStreams) {
     Telemetry::Accumulate(Telemetry::DNS_TRR_REQUEST_PER_CONN, mTrrStreams);
@@ -3711,7 +3716,7 @@ void Http2Session::Close(nsresult aReason) {
 
   mClosed = true;
 
-  Shutdown();
+  Shutdown(aReason);
 
   mStreamIDHash.Clear();
   mStreamTransactionHash.Clear();
