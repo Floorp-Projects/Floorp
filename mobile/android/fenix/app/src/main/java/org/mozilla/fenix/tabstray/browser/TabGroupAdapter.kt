@@ -20,7 +20,6 @@ import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
-import kotlin.math.max
 import mozilla.components.concept.tabstray.Tab as TabsTrayTab
 import mozilla.components.support.base.observer.Observable
 
@@ -102,27 +101,9 @@ class TabGroupAdapter(
     }
 
     /**
-     * Creates a grouping of data classes for how groupings will be structured.
+     * Not implemented; implementation is handled [List<Tab>.toSearchGroups]
      */
-    override fun updateTabs(tabs: Tabs) {
-        val data = tabs.list.groupBy { it.searchTerm.lowercase() }
-
-        val grouping = data.map { mapEntry ->
-            val searchTerm = mapEntry.key.replaceFirstChar(Char::uppercase)
-            val groupTabs = mapEntry.value
-            val groupMax = groupTabs.fold(0L) { acc, tab ->
-                max(tab.lastAccess, acc)
-            }
-
-            Group(
-                title = searchTerm,
-                tabs = groupTabs,
-                lastAccess = groupMax
-            )
-        }.sortedBy { it.lastAccess }
-
-        submitList(grouping)
-    }
+    override fun updateTabs(tabs: Tabs) = throw UnsupportedOperationException("Use submitList instead.")
 
     /**
      * Not implemented; handled by nested [RecyclerView].
