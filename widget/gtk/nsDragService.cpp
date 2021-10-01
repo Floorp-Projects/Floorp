@@ -293,7 +293,8 @@ static GtkWindow* GetGtkWindow(dom::Document* aDocument) {
   RefPtr<nsViewManager> vm = presShell->GetViewManager();
   if (!vm) return nullptr;
 
-  nsCOMPtr<nsIWidget> widget = vm->GetRootWidget();
+  nsCOMPtr<nsIWidget> widget;
+  vm->GetRootWidget(getter_AddRefs(widget));
   if (!widget) return nullptr;
 
   GtkWidget* gtkWidget =

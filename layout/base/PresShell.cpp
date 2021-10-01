@@ -8837,8 +8837,9 @@ bool PresShell::EventHandler::AdjustContextMenuKeyEvent(
   nsRootPresContext* rootPC = GetPresContext()->GetRootPresContext();
   aMouseEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
   if (rootPC) {
-    aMouseEvent->mWidget =
-        rootPC->PresShell()->GetViewManager()->GetRootWidget();
+    rootPC->PresShell()->GetViewManager()->GetRootWidget(
+        getter_AddRefs(aMouseEvent->mWidget));
+
     if (aMouseEvent->mWidget) {
       // default the refpoint to the topleft of our document
       nsPoint offset(0, 0);
