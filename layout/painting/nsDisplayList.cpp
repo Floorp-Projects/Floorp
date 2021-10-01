@@ -7903,7 +7903,7 @@ bool nsDisplayMasksAndClipPaths::PaintMask(nsDisplayListBuilder* aBuilder,
   imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   SVGIntegrationUtils::PaintFramesParams params(*aMaskContext, mFrame, mBounds,
-                                                borderArea, aBuilder, nullptr,
+                                                borderArea, aBuilder,
                                                 aHandleOpacity, imgParams);
   ComputeMaskGeometry(params);
   bool maskIsComplete = false;
@@ -7970,8 +7970,8 @@ void nsDisplayMasksAndClipPaths::PaintWithContentsPaintCallback(
   imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   SVGIntegrationUtils::PaintFramesParams params(
-      *aCtx, mFrame, GetPaintRect(aBuilder, aCtx), borderArea, aBuilder,
-      nullptr, false, imgParams);
+      *aCtx, mFrame, GetPaintRect(aBuilder, aCtx), borderArea, aBuilder, false,
+      imgParams);
 
   ComputeMaskGeometry(params);
 
@@ -8356,9 +8356,8 @@ void nsDisplayFilters::PaintWithContentsPaintCallback(
     const std::function<void(gfxContext* aContext)>& aPaintChildren) {
   imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  SVGIntegrationUtils::PaintFramesParams params(*aCtx, mFrame, mVisibleRect,
-                                                borderArea, aBuilder, nullptr,
-                                                false, imgParams);
+  SVGIntegrationUtils::PaintFramesParams params(
+      *aCtx, mFrame, mVisibleRect, borderArea, aBuilder, false, imgParams);
 
   gfxPoint userSpaceToFrameSpaceOffset =
       SVGIntegrationUtils::GetOffsetToUserSpaceInDevPx(mFrame, params);
