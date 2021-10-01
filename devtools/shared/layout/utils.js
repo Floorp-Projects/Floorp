@@ -827,10 +827,6 @@ function getAbsoluteScrollOffsetsForNode(node) {
 }
 exports.getAbsoluteScrollOffsetsForNode = getAbsoluteScrollOffsetsForNode;
 
-function isIframe(node) {
-  return ChromeUtils.getClassName(node) == "HTMLIFrameElement";
-}
-
 /**
  * Check if the provided node is representing a remote <browser> element.
  *
@@ -858,7 +854,7 @@ exports.isRemoteBrowserElement = isRemoteBrowserElement;
  * @return {Boolean}
  */
 function isRemoteFrame(node) {
-  if (isIframe(node)) {
+  if (ChromeUtils.getClassName(node) == "HTMLIFrameElement") {
     return node.frameLoader?.isRemoteFrame;
   }
 
@@ -869,15 +865,3 @@ function isRemoteFrame(node) {
   return false;
 }
 exports.isRemoteFrame = isRemoteFrame;
-
-/**
- * Check if the provided node is representing a frame that has its own dedicated child target.
- *
- * @param {BrowsingContextTargetActor} targetActor
- * @param {DOMNode} node
- * @returns {Boolean}
- */
-function isFrameWithChildTarget(targetActor, node) {
-  return isRemoteFrame(node) || (isIframe(node) && targetActor.ignoreSubFrames);
-}
-exports.isFrameWithChildTarget = isFrameWithChildTarget;

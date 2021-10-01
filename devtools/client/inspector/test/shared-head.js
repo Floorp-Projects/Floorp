@@ -276,26 +276,26 @@ async function getNodeFrontInFrames(selectors, inspector) {
     const url = walker.targetFront.url;
     info(`Find the frame element for selector ${frameSelector} in ${url}`);
 
-    const frameNodeFront = await walker.querySelector(rootNode, frameSelector);
+    const frameFront = await walker.querySelector(rootNode, frameSelector);
 
-    // If needed, connect to the corresponding frame target.
+    // For a remote frame, connect to the corresponding frame target.
     // Otherwise, reuse the current targetFront.
-    let frameTarget = frameNodeFront.targetFront;
-    if (frameNodeFront.useChildTargetToFetchChildren) {
-      info("Connect to frame and retrieve the targetFront");
-      frameTarget = await frameNodeFront.connectToFrame();
+    let frameTarget = frameFront.targetFront;
+    if (frameFront.remoteFrame) {
+      info("Connect to remote frame and retrieve the targetFront");
+      frameTarget = await frameFront.connectToRemoteFrame();
     }
 
     walker = (await frameTarget.getFront("inspector")).walker;
 
-    if (frameNodeFront.useChildTargetToFetchChildren) {
-      // For frames or browser elements, use the walker's rootNode.
+    if (frameFront.remoteFrame) {
+      // For remote frames or browser elements, use the walker's rootNode.
       rootNode = walker.rootNode;
     } else {
       // For same-process frames, select the document front as the root node.
       // It is a different node from the walker's rootNode.
       info("Retrieve the children of the frame to find the document node");
-      const { nodes } = await walker.children(frameNodeFront);
+      const { nodes } = await walker.children(frameFront);
       rootNode = nodes.find(n => n.nodeType === Node.DOCUMENT_NODE);
     }
   }

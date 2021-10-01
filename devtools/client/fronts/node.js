@@ -281,15 +281,12 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
   get numChildren() {
     return this._form.numChildren;
   }
-  get useChildTargetToFetchChildren() {
+  get remoteFrame() {
     if (!BROWSER_TOOLBOX_FISSION_ENABLED && this._hasParentProcessTarget) {
       return false;
     }
 
-    // @backward-compat { version 94 } useChildTargetToFetchChildren was added in 94, so
-    // we still need to check for `remoteFrame` when connecting to older server.
-    // When 94 is in release, we can check useChildTargetToFetchChildren only
-    return this._form.useChildTargetToFetchChildren || this._form.remoteFrame;
+    return this._form.remoteFrame;
   }
   get hasEventListeners() {
     return this._form.hasEventListeners;
@@ -532,23 +529,20 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     return actor.rawNode;
   }
 
-  async connectToFrame() {
-    if (!this.useChildTargetToFetchChildren) {
-      console.warn("Tried to open connection to an invalid frame.");
+  async connectToRemoteFrame() {
+    if (!this.remoteFrame) {
+      console.warn("Tried to open remote connection to an invalid frame.");
       return null;
     }
-    if (
-      this._childBrowsingContextTarget &&
-      !this._childBrowsingContextTarget.isDestroyed()
-    ) {
-      return this._childBrowsingContextTarget;
+    if (this._remoteFrameTarget && !this._remoteFrameTarget.isDestroyed()) {
+      return this._remoteFrameTarget;
     }
 
-    // Get the target for this frame element
-    this._childBrowsingContextTarget = await this.targetFront.getWindowGlobalTarget(
+    // Get the target for this remote frame element
+    this._remoteFrameTarget = await this.targetFront.getWindowGlobalTarget(
       this._form.browsingContextID
     );
-    return this._childBrowsingContextTarget;
+    return this._remoteFrameTarget;
   }
 }
 

@@ -43,14 +43,11 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
     return this.getParent();
   }
 
-  get useChildTargetToFetchChildren() {
+  get remoteFrame() {
     if (!BROWSER_TOOLBOX_FISSION_ENABLED && this.targetFront.isParentProcess) {
       return false;
     }
-    // @backward-compat { version 94 } useChildTargetToFetchChildren was added in 94, so
-    // we still need to check for `remoteFrame` when connecting to older server.
-    // When 94 is in release, we can check useChildTargetToFetchChildren only
-    return this._form.useChildTargetToFetchChildren || this._form.remoteFrame;
+    return this._form.remoteFrame;
   }
 
   get role() {
@@ -176,7 +173,7 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
   }
 
   async children() {
-    if (!this.useChildTargetToFetchChildren) {
+    if (!this.remoteFrame) {
       return super.children();
     }
 
@@ -215,7 +212,7 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
    *         Complete snapshot of current accessible front.
    */
   async _accumulateSnapshot(snapshot) {
-    const { childCount, useChildTargetToFetchChildren } = snapshot;
+    const { childCount, remoteFrame } = snapshot;
     // No children, we are done.
     if (childCount === 0) {
       return snapshot;
@@ -223,7 +220,7 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
 
     // If current accessible is not a remote frame, continue accumulating inside
     // its children.
-    if (!useChildTargetToFetchChildren) {
+    if (!remoteFrame) {
       const childSnapshots = [];
       for (const childSnapshot of snapshot.children) {
         childSnapshots.push(this._accumulateSnapshot(childSnapshot));
@@ -238,9 +235,9 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
     const frameNodeFront = await inspectorFront.getNodeActorFromContentDomReference(
       snapshot.contentDOMReference
     );
-    // Remove contentDOMReference and useChildTargetToFetchChildren properties.
+    // Remove contentDOMReference and remoteFrame properties.
     delete snapshot.contentDOMReference;
-    delete snapshot.useChildTargetToFetchChildren;
+    delete snapshot.remoteFrame;
     if (!frameNodeFront) {
       return snapshot;
     }
@@ -487,7 +484,7 @@ class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
     // If no remote frames were found, currentElm will be null.
     while (currentElm) {
       // Safety check to ensure that the currentElm is a remote frame.
-      if (currentElm.useChildTargetToFetchChildren) {
+      if (currentElm.remoteFrame) {
         const {
           walker: domWalkerFront,
         } = await currentElm.targetFront.getFront("inspector");
