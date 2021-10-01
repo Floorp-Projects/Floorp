@@ -1819,8 +1819,11 @@ impl<'a> SceneBuilder<'a> {
     ) -> StackingContextInfo {
         profile_scope!("push_stacking_context");
 
-        // Push current requested raster space on stack for prims to access
-        self.raster_space_stack.push(requested_raster_space);
+        let new_space = match self.raster_space_stack.last() {
+            Some(RasterSpace::Local(scale)) => RasterSpace::Local(*scale),
+            Some(RasterSpace::Screen) | None => requested_raster_space,
+        };
+        self.raster_space_stack.push(new_space);
 
         // Get the transform-style of the parent stacking context,
         // which determines if we *might* need to draw this on
