@@ -7,13 +7,12 @@
 //
 // TODO Bug 1601695 - Schedule script evaluation and check for correct frame id
 
-const DOC = toDataURL("default-test-page");
 const WORLD = "testWorld";
 
 add_task(async function uniqueIdForAddedScripts({ client }) {
   const { Page, Runtime } = client;
 
-  await loadURL(DOC);
+  await loadURL(PAGE_URL);
 
   const { identifier: id1 } = await Page.addScriptToEvaluateOnNewDocument({
     source: "1 + 1;",
@@ -29,15 +28,15 @@ add_task(async function uniqueIdForAddedScripts({ client }) {
 
   await Runtime.enable();
 
-  // flush event for DOC default context
+  // flush event for PAGE_URL default context
   await Runtime.executionContextCreated();
-  await checkIsolatedContextAfterLoad(client, toDataURL("<p>Hello"), []);
+  await checkIsolatedContextAfterLoad(client, PAGE_FRAME_URL, []);
 });
 
 add_task(async function addScriptAfterNavigation({ client }) {
   const { Page } = client;
 
-  await loadURL(DOC);
+  await loadURL(PAGE_URL);
 
   const { identifier: id1 } = await Page.addScriptToEvaluateOnNewDocument({
     source: "1 + 1;",
@@ -45,7 +44,7 @@ add_task(async function addScriptAfterNavigation({ client }) {
   is(typeof id1, "string", "Script id should be a string");
   ok(id1.length > 0, "Script id is non-empty");
 
-  await loadURL(toDataURL("<p>Hello"));
+  await loadURL(PAGE_FRAME_URL);
 
   const { identifier: id2 } = await Page.addScriptToEvaluateOnNewDocument({
     source: "1 + 2;",
@@ -63,7 +62,7 @@ add_task(async function addWithIsolatedWorldAndNavigate({ client }) {
   const contextsCreated = recordContextCreated(Runtime, 3);
 
   const loadEventFired = Page.loadEventFired();
-  const { frameId } = await Page.navigate({ url: DOC });
+  const { frameId } = await Page.navigate({ url: PAGE_URL });
   await loadEventFired;
 
   // flush context-created events for the steps above
@@ -80,11 +79,7 @@ add_task(async function addWithIsolatedWorldAndNavigate({ client }) {
     grantUniversalAccess: true,
   });
 
-  const contexts = await checkIsolatedContextAfterLoad(
-    client,
-    toDataURL("<p>Next")
-  );
-
+  const contexts = await checkIsolatedContextAfterLoad(client, PAGE_FRAME_URL);
   isnot(contexts[1].id, isolatedId, "The context has a new id");
 });
 
@@ -98,8 +93,8 @@ add_task(async function addWithIsolatedWorldNavigateTwice({ client }) {
     worldName: WORLD,
   });
 
-  await checkIsolatedContextAfterLoad(client, DOC);
-  await checkIsolatedContextAfterLoad(client, toDataURL("<p>Hello"));
+  await checkIsolatedContextAfterLoad(client, PAGE_URL);
+  await checkIsolatedContextAfterLoad(client, PAGE_FRAME_URL);
 });
 
 add_task(async function addTwoScriptsWithIsolatedWorld({ client }) {
@@ -117,7 +112,7 @@ add_task(async function addTwoScriptsWithIsolatedWorld({ client }) {
     worldName: names[1],
   });
 
-  await checkIsolatedContextAfterLoad(client, DOC, names);
+  await checkIsolatedContextAfterLoad(client, PAGE_URL, names);
 });
 
 function recordContextCreated(Runtime, expectedCount) {

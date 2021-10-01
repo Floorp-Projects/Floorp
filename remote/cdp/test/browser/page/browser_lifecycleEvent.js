@@ -3,22 +3,10 @@
 
 "use strict";
 
-const DOC = toDataURL("<div>foo</div>");
-const DOC_IFRAME_MULTI = toDataURL(`
-  <iframe src='data:text/html,foo'></iframe>
-  <iframe src='data:text/html,bar'></iframe>
-`);
-const DOC_IFRAME_NESTED = toDataURL(`
-  <iframe src="${DOC_IFRAME_MULTI}"></iframe>
-`);
-
-const PAGE_URL =
-  "http://example.com/browser/remote/cdp/test/browser/page/doc_empty.html";
-
 add_task(async function noEventsWhenPageDomainDisabled({ client }) {
   await runPageLifecycleTest(client, 0, async () => {
     info("Navigate to a page with nested iframes");
-    await loadURL(DOC_IFRAME_NESTED);
+    await loadURL(FRAMESET_NESTED_URL);
   });
 });
 
@@ -30,7 +18,7 @@ add_task(async function noEventAfterPageDomainDisabled({ client }) {
 
   await runPageLifecycleTest(client, 0, async () => {
     info("Navigate to a page with nested iframes");
-    await loadURL(DOC_IFRAME_NESTED);
+    await loadURL(FRAMESET_NESTED_URL);
   });
 });
 
@@ -41,7 +29,7 @@ add_task(async function noEventWhenLifeCycleDisabled({ client }) {
 
   await runPageLifecycleTest(client, 0, async () => {
     info("Navigate to a page with nested iframes");
-    await loadURL(DOC_IFRAME_NESTED);
+    await loadURL(FRAMESET_NESTED_URL);
   });
 });
 
@@ -54,7 +42,7 @@ add_task(async function noEventAfterLifeCycleDisabled({ client }) {
 
   await runPageLifecycleTest(client, 0, async () => {
     info("Navigate to a page with nested iframes");
-    await loadURL(DOC_IFRAME_NESTED);
+    await loadURL(FRAMESET_NESTED_URL);
   });
 });
 
@@ -66,7 +54,7 @@ add_task(async function eventsWhenNavigatingWithNoFrames({ client }) {
 
   await runPageLifecycleTest(client, 1, async () => {
     info("Navigate to a page with no iframes");
-    await loadURL(DOC);
+    await loadURL(PAGE_URL);
   });
 });
 
@@ -122,7 +110,7 @@ add_task(async function eventsWhenNavigatingWithFrames({ client }) {
 
   await runPageLifecycleTest(client, 3, async () => {
     info("Navigate to a page with iframes");
-    await loadURL(DOC_IFRAME_MULTI);
+    await loadURL(FRAMESET_MULTI_URL);
   });
 });
 
@@ -134,7 +122,7 @@ add_task(async function eventsWhenNavigatingWithNestedFrames({ client }) {
 
   await runPageLifecycleTest(client, 4, async () => {
     info("Navigate to a page with nested iframes");
-    await loadURL(DOC_IFRAME_NESTED);
+    await loadURL(FRAMESET_NESTED_URL);
   });
 });
 
@@ -187,17 +175,18 @@ async function runPageLifecycleTest(client, expectedEventSets, callback) {
     );
 
     // Check data as exposed by each of these events
-    let lastTimestamp = lifecycleEvents[0].payload.timestamp;
-    lifecycleEvents.forEach(({ payload }, index) => {
+    let lastTimestamp = frameEvents[0].payload.timestamp;
+    frameEvents.forEach(({ payload }, index) => {
       ok(
         payload.timestamp >= lastTimestamp,
         "timestamp succeeds the one from the former event"
       );
       lastTimestamp = payload.timestamp;
 
-      // Bug 1632007 return a loaderId for data: url
-      if (frame.url.startsWith("data:")) {
-        todo(!!payload.loaderId, "Event has a loaderId");
+      // TODO: For frames the "init" lifecycle event doesn't contain a loaderId
+      // because it's send out before the network request has been made.
+      if (frame.parentId && payload.name === "init") {
+        todo(payload.loaderId, frame.loaderId, `event has expected loaderId`);
       } else {
         is(payload.loaderId, frame.loaderId, `event has expected loaderId`);
       }
