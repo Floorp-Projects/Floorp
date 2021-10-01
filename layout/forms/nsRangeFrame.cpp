@@ -670,6 +670,9 @@ double nsRangeFrame::GetValue() const {
       .toDouble();
 }
 
+#define STYLES_DISABLING_NATIVE_THEMING \
+  NS_AUTHOR_SPECIFIED_BORDER_OR_BACKGROUND | NS_AUTHOR_SPECIFIED_PADDING
+
 bool nsRangeFrame::ShouldUseNativeStyle() const {
   nsIFrame* trackFrame = mTrackDiv->GetPrimaryFrame();
   nsIFrame* progressFrame = mProgressDiv->GetPrimaryFrame();
@@ -677,9 +680,12 @@ bool nsRangeFrame::ShouldUseNativeStyle() const {
 
   return StyleDisplay()->EffectiveAppearance() == StyleAppearance::Range &&
          trackFrame &&
-         !trackFrame->Style()->HasAuthorSpecifiedBorderOrBackground() &&
+         !PresContext()->HasAuthorSpecifiedRules(
+             trackFrame, STYLES_DISABLING_NATIVE_THEMING) &&
          progressFrame &&
-         !progressFrame->Style()->HasAuthorSpecifiedBorderOrBackground() &&
+         !PresContext()->HasAuthorSpecifiedRules(
+             progressFrame, STYLES_DISABLING_NATIVE_THEMING) &&
          thumbFrame &&
-         !thumbFrame->Style()->HasAuthorSpecifiedBorderOrBackground();
+         !PresContext()->HasAuthorSpecifiedRules(
+             thumbFrame, STYLES_DISABLING_NATIVE_THEMING);
 }
