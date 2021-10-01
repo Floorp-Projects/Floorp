@@ -128,8 +128,7 @@ fn raw() {
 
     // The client should have one certificate for the server.
     let mut certs = client.peer_certificate().unwrap();
-    let cert_vec: Vec<&[u8]> = certs.collect();
-    assert_eq!(1, cert_vec.len());
+    assert_eq!(1, certs.count());
 
     // The server shouldn't have a client certificate.
     assert!(server.peer_certificate().is_none());

@@ -91,7 +91,6 @@ impl<T> Timer<T> {
     }
 
     /// Slide forward in time by `n * self.granularity`.
-    #[allow(unknown_lints, renamed_and_removed_lints, clippy::unknown_clippy_lints)] // Until we require rust 1.45.
     #[allow(clippy::cast_possible_truncation, clippy::reversed_empty_ranges)]
     // cast_possible_truncation is ok because we have an assertion guard.
     // reversed_empty_ranges is to avoid different types on the if/else.
@@ -287,14 +286,13 @@ mod test {
         let v = 9;
         t.add(near_future, v);
         assert_eq!(near_future, t.next_time().expect("should return a value"));
-        let values: Vec<_> = t
-            .take_until(near_future - Duration::from_millis(1))
-            .collect();
-        assert!(values.is_empty());
-        let values: Vec<_> = t
+        assert_eq!(
+            t.take_until(near_future - Duration::from_millis(1)).count(),
+            0
+        );
+        assert!(t
             .take_until(near_future + Duration::from_millis(1))
-            .collect();
-        assert!(values.contains(&v));
+            .any(|x| x == v));
     }
 
     #[test]
@@ -304,8 +302,7 @@ mod test {
         let v = 9;
         t.add(future, v);
         assert_eq!(future, t.next_time().expect("should return a value"));
-        let values: Vec<_> = t.take_until(future).collect();
-        assert!(values.contains(&v));
+        assert!(t.take_until(future).any(|x| x == v));
     }
 
     #[test]
@@ -315,8 +312,7 @@ mod test {
         let v = 9;
         t.add(far_future, v);
         assert_eq!(far_future, t.next_time().expect("should return a value"));
-        let values: Vec<_> = t.take_until(far_future).collect();
-        assert!(values.contains(&v));
+        assert!(t.take_until(far_future).any(|x| x == v));
     }
 
     const TIMES: &[Duration] = &[
@@ -341,6 +337,7 @@ mod test {
     }
 
     #[test]
+    #[allow(clippy::needless_collect)] // false positive
     fn multiple_values() {
         let mut t = with_times();
         let values: Vec<_> = t.take_until(*NOW + *TIMES.iter().max().unwrap()).collect();
@@ -350,6 +347,7 @@ mod test {
     }
 
     #[test]
+    #[allow(clippy::needless_collect)] // false positive
     fn take_far_future() {
         let mut t = with_times();
         let values: Vec<_> = t.take_until(*NOW + Duration::from_secs(100)).collect();

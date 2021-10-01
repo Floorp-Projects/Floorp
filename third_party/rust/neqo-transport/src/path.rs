@@ -94,7 +94,7 @@ impl Paths {
             .unwrap_or_else(|| {
                 let mut p = Path::temporary(local, remote, cc, self.qlog.clone(), now);
                 if let Some(primary) = self.primary.as_ref() {
-                    p.prime_rtt(primary.borrow().rtt())
+                    p.prime_rtt(primary.borrow().rtt());
                 }
                 Rc::new(RefCell::new(p))
             })
@@ -176,7 +176,7 @@ impl Paths {
         local_cid: Option<ConnectionId>,
         remote_cid: RemoteConnectionIdEntry,
     ) {
-        debug_assert!(self.is_temporary(&path));
+        debug_assert!(self.is_temporary(path));
 
         // Make sure not to track too many paths.
         // This protects index 0, which contains the primary path.
@@ -200,9 +200,9 @@ impl Paths {
 
         qdebug!([path.borrow()], "Make permanent");
         path.borrow_mut().make_permanent(local_cid, remote_cid);
-        self.paths.push(Rc::clone(&path));
+        self.paths.push(Rc::clone(path));
         if self.primary.is_none() {
-            assert!(self.select_primary(&path).is_none());
+            assert!(self.select_primary(path).is_none());
         }
     }
 

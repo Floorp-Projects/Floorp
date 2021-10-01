@@ -734,7 +734,7 @@ fn migration_invalid_address() {
         assert_eq!(
             client.migrate(local, remote, true, now()).unwrap_err(),
             Error::InvalidMigration
-        )
+        );
     };
 
     // Providing neither address is pointless and therefore an error.

@@ -119,9 +119,7 @@ fn test_fetch() {
         .fetch(
             now(),
             "GET",
-            "https",
-            "something.com",
-            "/",
+            &("https", "something.com", "/"),
             &[],
             Priority::default(),
         )

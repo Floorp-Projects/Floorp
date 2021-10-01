@@ -416,7 +416,7 @@ fn frame_to_qlogframe(frame: &Frame) -> QuicFrame {
             },
             error_code.code(),
             0,
-            String::from_utf8_lossy(&reason_phrase).to_string(),
+            String::from_utf8_lossy(reason_phrase).to_string(),
             Some(frame_type.to_string()),
         ),
         Frame::HandshakeDone => QuicFrame::handshake_done(),

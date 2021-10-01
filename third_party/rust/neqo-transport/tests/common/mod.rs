@@ -121,13 +121,11 @@ pub fn client_initial_aead_and_hp(dcid: &[u8]) -> (Aead, HpKey) {
         TLS_VERSION_1_3,
         TLS_AES_128_GCM_SHA256,
         Some(
-            hkdf::import_key(TLS_VERSION_1_3, TLS_AES_128_GCM_SHA256, INITIAL_SALT)
+            hkdf::import_key(TLS_VERSION_1_3, INITIAL_SALT)
                 .as_ref()
                 .unwrap(),
         ),
-        hkdf::import_key(TLS_VERSION_1_3, TLS_AES_128_GCM_SHA256, dcid)
-            .as_ref()
-            .unwrap(),
+        hkdf::import_key(TLS_VERSION_1_3, dcid).as_ref().unwrap(),
     )
     .unwrap();
 

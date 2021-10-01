@@ -140,7 +140,7 @@ impl Http3ServerHandler {
                         .handle_new_unidi_stream(stream_id.as_u64(), Role::Server),
                 },
                 ConnectionEvent::RecvStreamReadable { stream_id } => {
-                    self.handle_stream_readable(conn, stream_id)?
+                    self.handle_stream_readable(conn, stream_id)?;
                 }
                 ConnectionEvent::RecvStreamReset {
                     stream_id,

@@ -367,9 +367,7 @@ pub extern "C" fn neqo_http3conn_fetch(
     match conn.conn.fetch(
         Instant::now(),
         method_tmp,
-        scheme_tmp,
-        host_tmp,
-        path_tmp,
+        &(scheme_tmp, host_tmp, path_tmp),
         &hdrs,
         priority,
     ) {

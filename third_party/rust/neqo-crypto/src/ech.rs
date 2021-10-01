@@ -183,7 +183,7 @@ pub fn encode_config(config: u8, public_name: &str, pk: &PublicKey) -> Res<Vec<u
             encoded.as_mut_ptr(),
             &mut encoded_len,
             c_uint::try_from(encoded.len())?,
-        )?
-    };
+        )?;
+    }
     Ok(Vec::from(&encoded[..usize::try_from(encoded_len)?]))
 }
