@@ -6640,20 +6640,6 @@
     "n_buckets" : 100,
     "description": "PLACES: Size of favicon files without a specific file type probe, loaded from the web (Bytes)"
   },
-  "PLACES_BOOKMARKS_TOOLBAR_RENDER_DELAY_MS": {
-    "alert_emails": ["gkruitbosch@mozilla.com", "esmyth@mozilla.com"],
-    "bug_numbers": [1680216],
-    "releaseChannelCollection": "opt-out",
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "expires_in_version": "95",
-    "keyed": true,
-    "kind": "exponential",
-    "low": 1,
-    "high": 60000,
-    "n_buckets": 30,
-    "description": "Number of ms between initial rendering and when we show the bookmarks toolbar items. Will record once per window opened (so may never record in a given subsession, or multiple times). Keyed by whether we waited for idle or not."
-  },
   "LINK_ICON_SIZES_ATTR_USAGE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

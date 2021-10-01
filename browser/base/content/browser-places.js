@@ -1123,19 +1123,17 @@ var PlacesToolbarHelper = {
    * show toolbars.
    */
   async init() {
-    let telemetryKey = await PlacesUIUtils.canLoadToolbarContentPromise;
-    let didCreate = this._realInit();
-    this._measureToolbarPaintDelay(telemetryKey, didCreate);
+    await PlacesUIUtils.canLoadToolbarContentPromise;
+    this._realInit();
   },
 
   /**
-   * @return whether we actually initialized the places view (and
-   * aren't collapsed).
+   * Actually initialize the places view (if needed; we might still no-op).
    */
   _realInit() {
     let viewElt = this._viewElt;
     if (!viewElt || viewElt._placesView || window.closed) {
-      return false;
+      return;
     }
 
     // CustomizableUI.addListener is idempotent, so we can safely
@@ -1160,7 +1158,7 @@ var PlacesToolbarHelper = {
       this._isCustomizing ||
       getComputedStyle(toolbar, "").display == "none"
     ) {
-      return false;
+      return;
     }
 
     if (
@@ -1172,52 +1170,6 @@ var PlacesToolbarHelper = {
     }
 
     new PlacesToolbar(`place:parent=${PlacesUtils.bookmarks.toolbarGuid}`);
-    return true;
-  },
-
-  // Only measure once per window:
-  _shouldMeasure: true,
-  _measureToolbarPaintDelay(telemetryKey, didCreate) {
-    if (!this._shouldMeasure) {
-      return;
-    }
-    this._shouldMeasure = false;
-    // If we create and show the toolbar later, we don't want to measure how
-    // long it took, so it's important this check happens after setting
-    // _shouldMeasure.
-    if (!didCreate) {
-      return;
-    }
-
-    let recordDelay = time => {
-      let entries = window.performance.getEntriesByType("paint");
-      let timeEntry = entries.find(e => e.name == "first-contentful-paint");
-      let histogram = Services.telemetry.getKeyedHistogramById(
-        "PLACES_BOOKMARKS_TOOLBAR_RENDER_DELAY_MS"
-      );
-      if (timeEntry) {
-        let delay = time - timeEntry.startTime - timeEntry.duration;
-        histogram.add(telemetryKey, Math.round(delay));
-      } else {
-        // If there is no base time, we haven't painted yet, so we rendered
-        // before paint:
-        histogram.add(telemetryKey, 0);
-      }
-    };
-    if (!window.windowUtils.isMozAfterPaintPending) {
-      recordDelay(performance.now());
-      return;
-    }
-    let removeListeners = () => {
-      window.removeEventListener("unload", removeListeners);
-      window.removeEventListener("MozAfterPaint", paintHandler);
-    };
-    let paintHandler = ev => {
-      removeListeners();
-      recordDelay(ev.paintTimeStamp);
-    };
-    window.addEventListener("MozAfterPaint", paintHandler);
-    window.addEventListener("unload", removeListeners);
   },
 
   handleEvent(event) {
