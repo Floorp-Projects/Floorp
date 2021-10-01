@@ -314,6 +314,9 @@ class nsNavHistoryResultNode : public nsINavHistoryResultNode {
 
   virtual void OnRemoving();
 
+  nsresult OnItemTitleChanged(int64_t aItemId, const nsACString& aGUID,
+                              const nsACString& aTitle, PRTime aLastModified);
+
   // Called from result's onItemChanged, see also bookmark observer declaration
   // in nsNavHistoryFolderResultNode
   NS_IMETHOD OnItemChanged(int64_t aItemId, const nsACString& aProperty,

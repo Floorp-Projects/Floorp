@@ -177,6 +177,16 @@ let observer = new (class extends EventEmitter {
             },
           });
           break;
+        case "bookmark-title-changed":
+          if (event.isTagging) {
+            continue;
+          }
+
+          this.emit("changed", {
+            guid: event.guid,
+            info: { title: event.title },
+          });
+          break;
       }
     }
   }
@@ -194,17 +204,9 @@ let observer = new (class extends EventEmitter {
     oldVal,
     source
   ) {
-    let info = {};
-    if (prop == "title") {
-      info.title = val;
-    } else if (prop == "uri") {
-      info.url = val;
-    } else {
-      // Not defined yet.
-      return;
+    if (prop === "uri") {
+      this.emit("changed", { guid, info: { url: val } });
     }
-
-    this.emit("changed", { guid, info });
   }
 })();
 
@@ -213,7 +215,12 @@ const decrementListeners = () => {
   if (!listenerCount) {
     PlacesUtils.bookmarks.removeObserver(observer);
     PlacesUtils.observers.removeListener(
-      ["bookmark-added", "bookmark-removed", "bookmark-moved"],
+      [
+        "bookmark-added",
+        "bookmark-removed",
+        "bookmark-moved",
+        "bookmark-title-changed",
+      ],
       observer.handlePlacesEvents
     );
   }
@@ -224,7 +231,12 @@ const incrementListeners = () => {
   if (listenerCount == 1) {
     PlacesUtils.bookmarks.addObserver(observer);
     PlacesUtils.observers.addListener(
-      ["bookmark-added", "bookmark-removed", "bookmark-moved"],
+      [
+        "bookmark-added",
+        "bookmark-removed",
+        "bookmark-moved",
+        "bookmark-title-changed",
+      ],
       observer.handlePlacesEvents
     );
   }

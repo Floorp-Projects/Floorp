@@ -32,9 +32,11 @@ add_task(async function() {
       Assert.equal(namepicker.value, folderName, "Name field is correct.");
 
       let promiseTitleChange = PlacesTestUtils.waitForNotification(
-        "onItemChanged",
-        (id, prop, isAnno, val) => prop == "title" && val == "folder"
+        "bookmark-title-changed",
+        events => events.some(e => e.title === "folder"),
+        "places"
       );
+
       fillBookmarkTextField("editBMPanel_namePicker", "folder", dialog);
       await promiseTitleChange;
 

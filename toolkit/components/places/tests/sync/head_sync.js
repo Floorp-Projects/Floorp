@@ -360,6 +360,16 @@ BookmarkObserver.prototype = {
           this.notifications.push({ name: "bookmark-moved", params });
           break;
         }
+        case "bookmark-title-changed": {
+          const params = {
+            itemId: event.id,
+            guid: event.guid,
+            title: event.title,
+            parentGuid: event.parentGuid,
+          };
+          this.notifications.push({ name: "bookmark-title-changed", params });
+          break;
+        }
       }
     }
   },
@@ -399,7 +409,12 @@ BookmarkObserver.prototype = {
   check(expectedNotifications) {
     PlacesUtils.bookmarks.removeObserver(this);
     PlacesUtils.observers.removeListener(
-      ["bookmark-added", "bookmark-removed", "bookmark-moved"],
+      [
+        "bookmark-added",
+        "bookmark-removed",
+        "bookmark-moved",
+        "bookmark-title-changed",
+      ],
       this.handlePlacesEvents
     );
     if (!ObjectUtils.deepEqual(this.notifications, expectedNotifications)) {
@@ -417,7 +432,12 @@ function expectBookmarkChangeNotifications(options) {
   let observer = new BookmarkObserver(options);
   PlacesUtils.bookmarks.addObserver(observer);
   PlacesUtils.observers.addListener(
-    ["bookmark-added", "bookmark-removed", "bookmark-moved"],
+    [
+      "bookmark-added",
+      "bookmark-removed",
+      "bookmark-moved",
+      "bookmark-title-changed",
+    ],
     observer.handlePlacesEvents
   );
   return observer;
