@@ -649,7 +649,7 @@ impl SendStream {
     /// the remainder of the space can be filled (or if a length field is needed).
     fn length_and_fill(data_len: usize, space: usize) -> (usize, bool) {
         if data_len >= space {
-            // Either more data than space allows, or an exact fit.
+            // More data than space allows, or an exact fit => fast path.
             qtrace!("SendStream::length_and_fill fill {}", space);
             return (space, true);
         }
@@ -658,18 +658,13 @@ impl SendStream {
         // less 1, which is the worst case.
         let length = min(space.saturating_sub(1), data_len);
         let length_len = Encoder::varint_len(u64::try_from(length).unwrap());
-        if length_len > space {
-            qtrace!(
-                "SendStream::length_and_fill no room for length of {} in {}",
-                length,
-                space
-            );
-            return (0, false);
-        }
+        debug_assert!(length_len <= space); // We don't depend on this being true, but it is true.
 
-        let length = min(data_len, space - length_len);
-        qtrace!("SendStream::length_and_fill {} in {}", length, space);
-        (length, false)
+        // From here we can always fit `data_len`, but we might as well fill
+        // if there is no space for the length field plus another frame.
+        let fill = data_len + length_len + PacketBuilder::MINIMUM_FRAME_SIZE > space;
+        qtrace!("SendStream::length_and_fill {} fill {}", data_len, fill);
+        (data_len, fill)
     }
 
     /// Maybe write a `STREAM` frame.
@@ -718,6 +713,7 @@ impl SendStream {
             }
             if fill {
                 builder.encode(&data[..length]);
+                builder.mark_full();
             } else {
                 builder.encode_vvec(&data[..length]);
             }
@@ -1517,28 +1513,24 @@ mod tests {
         // increasing to (conn:2, stream:4) will not generate an event or allow
         // sending anything.
         s.set_max_stream_data(4);
-        let evts = conn_events.events().collect::<Vec<_>>();
-        assert_eq!(evts.len(), 0);
+        assert_eq!(conn_events.events().count(), 0);
         assert_eq!(s.send(b"hello").unwrap(), 0);
 
         // Increasing conn max (conn:4, stream:4) will unblock but not emit
         // event b/c that happens in Connection::emit_frame() (tested in
         // connection.rs)
         assert!(conn_fc.borrow_mut().update(4));
-        let evts = conn_events.events().collect::<Vec<_>>();
-        assert_eq!(evts.len(), 0);
+        assert_eq!(conn_events.events().count(), 0);
         assert_eq!(s.avail(), 2);
         assert_eq!(s.send(b"hello").unwrap(), 2);
 
         // No event because still blocked by conn
         s.set_max_stream_data(1_000_000_000);
-        let evts = conn_events.events().collect::<Vec<_>>();
-        assert_eq!(evts.len(), 0);
+        assert_eq!(conn_events.events().count(), 0);
 
         // No event because happens in emit_frame()
         conn_fc.borrow_mut().update(1_000_000_000);
-        let evts = conn_events.events().collect::<Vec<_>>();
-        assert_eq!(evts.len(), 0);
+        assert_eq!(conn_events.events().count(), 0);
 
         // Unblocking both by a large amount will cause avail() to be limited by
         // tx buffer size.
@@ -1551,8 +1543,7 @@ mod tests {
 
         // No event because still blocked by tx buffer full
         s.set_max_stream_data(2_000_000_000);
-        let evts = conn_events.events().collect::<Vec<_>>();
-        assert_eq!(evts.len(), 0);
+        assert_eq!(conn_events.events().count(), 0);
         assert_eq!(s.send(b"hello").unwrap(), 0);
     }
 
@@ -1943,6 +1934,16 @@ mod tests {
 
     fn frame_sent_sid(stream: u64, offset: usize, len: usize, fin: bool, space: usize) -> bool {
         const BUF: &[u8] = &[0x42; 128];
+
+        qtrace!(
+            "frame_sent stream={} offset={} len={} fin={}, space={}",
+            stream,
+            offset,
+            len,
+            fin,
+            space
+        );
+
         let mut s = stream_with_sent(stream, offset);
 
         // Now write out the proscribed data and maybe close.
@@ -2044,100 +2045,68 @@ mod tests {
         assert!(frame_sent_sid(BIG, BIGSZ, 1, true, 100));
     }
 
-    #[test]
-    fn stream_frame_16384() {
-        const DATA16384: &[u8] = &[0x43; 16384];
+    fn stream_frame_at_boundary(data: &[u8]) {
+        fn send_with_extra_capacity(data: &[u8], extra: usize, expect_full: bool) -> Vec<u8> {
+            qtrace!("send_with_extra_capacity {} + {}", data.len(), extra);
+            let mut s = stream_with_sent(0, 0);
+            s.send(data).unwrap();
+            s.close();
 
-        // 16383/16384 is an odd boundary in STREAM frame construction.
-        // That is the boundary where a length goes from 2 bytes to 4 bytes.
-        // If the data fits in the available space, then it is simple:
-        let mut s = stream_with_sent(0, 0);
-        s.send(DATA16384).unwrap();
-        s.close();
+            let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
+            let header_len = builder.len();
+            // Add 2 for the frame type and stream ID, then add the extra.
+            builder.set_limit(header_len + data.len() + 2 + extra);
+            let mut tokens = Vec::new();
+            let mut stats = FrameStats::default();
+            s.write_stream_frame(
+                TransmissionPriority::default(),
+                &mut builder,
+                &mut tokens,
+                &mut stats,
+            );
+            assert_eq!(stats.stream, 1);
+            assert_eq!(builder.is_full(), expect_full);
+            Vec::from(Encoder::from(builder)).split_off(header_len)
+        }
 
-        let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
-        let header_len = builder.len();
-        builder.set_limit(header_len + DATA16384.len() + 2);
-        let mut tokens = Vec::new();
-        let mut stats = FrameStats::default();
-        s.write_stream_frame(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut stats,
-        );
-        assert_eq!(stats.stream, 1);
-        // Expect STREAM + FIN only.
-        assert_eq!(&builder[header_len..header_len + 2], &[0b1001, 0]);
-        assert_eq!(&builder[header_len + 2..], DATA16384);
+        // The minimum amount of extra space for getting another frame in.
+        let mut enc = Encoder::new();
+        enc.encode_varint(u64::try_from(data.len()).unwrap());
+        let len_buf = Vec::from(enc);
+        let minimum_extra = len_buf.len() + PacketBuilder::MINIMUM_FRAME_SIZE;
 
-        s.mark_as_lost(0, DATA16384.len(), true);
+        // For anything short of the minimum extra, the frame should fill the packet.
+        for i in 0..minimum_extra {
+            let frame = send_with_extra_capacity(data, i, true);
+            let (header, body) = frame.split_at(2);
+            assert_eq!(header, &[0b1001, 0]);
+            assert_eq!(body, data);
+        }
 
-        // However, if there is one extra byte of space, we will try to add a length.
-        // That length will then make the frame to be too large and the data will be
-        // truncated.  The frame could carry one more byte of data, but it's a corner
-        // case we don't want to address as it should be rare (if not impossible).
-        let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
-        let header_len = builder.len();
-        builder.set_limit(header_len + DATA16384.len() + 3);
-        s.write_stream_frame(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut stats,
-        );
-        assert_eq!(stats.stream, 2);
-        // Expect STREAM + LEN + FIN.
-        assert_eq!(
-            &builder[header_len..header_len + 4],
-            &[0b1010, 0, 0x7f, 0xfd]
-        );
-        assert_eq!(
-            &builder[header_len + 4..],
-            &DATA16384[..DATA16384.len() - 3]
-        );
+        // Once there is space for another packet AND a length field,
+        // then a length will be added.
+        let frame = send_with_extra_capacity(data, minimum_extra, false);
+        let (header, rest) = frame.split_at(2);
+        assert_eq!(header, &[0b1011, 0]);
+        let (len, body) = rest.split_at(len_buf.len());
+        assert_eq!(len, &len_buf);
+        assert_eq!(body, data);
     }
 
+    /// 16383/16384 is an odd boundary in STREAM frame construction.
+    /// That is the boundary where a length goes from 2 bytes to 4 bytes.
+    /// Test that we correctly add a length field to the frame; and test
+    /// that if we don't, then we don't allow other frames to be added.
+    #[test]
+    fn stream_frame_16384() {
+        stream_frame_at_boundary(&[4; 16383]);
+        stream_frame_at_boundary(&[4; 16384]);
+    }
+
+    /// 63/64 is the other odd boundary.
     #[test]
     fn stream_frame_64() {
-        const DATA64: &[u8] = &[0x43; 64];
-
-        // Unlike 16383/16384, the boundary at 63/64 is easy because the difference
-        // is just one byte.  We lose just the last byte when there is more space.
-        let mut s = stream_with_sent(0, 0);
-        s.send(DATA64).unwrap();
-        s.close();
-
-        let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
-        let header_len = builder.len();
-        builder.set_limit(header_len + 66);
-        let mut tokens = Vec::new();
-        let mut stats = FrameStats::default();
-        s.write_stream_frame(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut stats,
-        );
-        assert_eq!(stats.stream, 1);
-        // Expect STREAM + FIN only.
-        assert_eq!(&builder[header_len..header_len + 2], &[0b1001, 0]);
-        assert_eq!(&builder[header_len + 2..], DATA64);
-
-        s.mark_as_lost(0, DATA64.len(), true);
-
-        let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
-        let header_len = builder.len();
-        builder.set_limit(header_len + 67);
-        s.write_stream_frame(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut stats,
-        );
-        assert_eq!(stats.stream, 2);
-        // Expect STREAM + LEN, not FIN.
-        assert_eq!(&builder[header_len..header_len + 3], &[0b1010, 0, 63]);
-        assert_eq!(&builder[header_len + 3..], &DATA64[..63]);
+        stream_frame_at_boundary(&[2; 63]);
+        stream_frame_at_boundary(&[2; 64]);
     }
 }

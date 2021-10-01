@@ -34,7 +34,7 @@ fn assert_update_blocked(c: &mut Connection) {
     assert_eq!(
         c.initiate_key_update().unwrap_err(),
         Error::KeyUpdateBlocked
-    )
+    );
 }
 
 fn overwrite_invocations(n: PacketNumber) {

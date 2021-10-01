@@ -6,7 +6,6 @@
 
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![warn(clippy::pedantic)]
-#![allow(clippy::pub_enum_variant_names)]
 
 mod client_events;
 mod connection;
@@ -22,6 +21,7 @@ mod qlog;
 mod qpack_decoder_receiver;
 mod qpack_encoder_receiver;
 mod recv_message;
+pub mod request_target;
 mod send_message;
 pub mod server;
 mod server_connection_events;
@@ -50,6 +50,11 @@ pub use stream_type_reader::NewStreamType;
 type Res<T> = Result<T, Error>;
 
 #[derive(Clone, Debug, PartialEq)]
+#[allow(
+    renamed_and_removed_lints,
+    clippy::pub_enum_variant_names,
+    clippy::enum_variant_names
+)]
 pub enum Error {
     HttpNoError,
     HttpGeneralProtocol,
@@ -76,21 +81,22 @@ pub enum Error {
     AlreadyClosed,
     AlreadyInitialized,
     DecodingFrame,
+    FatalError,
     HttpGoaway,
     Internal,
+    InvalidHeader,
+    InvalidInput,
+    InvalidRequestTarget,
     InvalidResumptionToken,
-    InvalidStreamId,
     InvalidState,
+    InvalidStreamId,
     NoMoreData,
     NotEnoughData,
+    StreamLimitError,
     TransportError(TransportError),
+    TransportStreamDoesNotExist,
     Unavailable,
     Unexpected,
-    StreamLimitError,
-    TransportStreamDoesNotExist,
-    InvalidInput,
-    FatalError,
-    InvalidHeader,
 }
 
 impl Error {
@@ -122,12 +128,6 @@ impl Error {
     }
 
     #[must_use]
-    #[allow(
-        unknown_lints,
-        renamed_and_removed_lints,
-        clippy::unknown_clippy_lints,
-        clippy::unnested_or_patterns
-    )] // Until we require rust 1.53 we can't use or_patterns.
     pub fn connection_error(&self) -> bool {
         matches!(
             self,

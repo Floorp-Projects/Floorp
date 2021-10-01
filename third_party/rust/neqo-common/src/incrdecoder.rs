@@ -22,7 +22,6 @@ impl IncrementalDecoderUint {
     }
 
     /// Consume some data.
-    #[allow(unknown_lints, renamed_and_removed_lints, clippy::unknown_clippy_lints)] // Until we require rust 1.51.
     #[allow(clippy::missing_panics_doc)] // See https://github.com/rust-lang/rust-clippy/issues/6699
     pub fn consume(&mut self, dv: &mut Decoder) -> Option<u64> {
         if let Some(r) = &mut self.remaining {

@@ -177,14 +177,16 @@ impl AgentIoInput {
     fn read_input(&mut self, buf: *mut u8, count: usize) -> Res<usize> {
         let amount = min(self.available, count);
         if amount == 0 {
-            unsafe { PR_SetError(nspr::PR_WOULD_BLOCK_ERROR, 0) };
+            unsafe {
+                PR_SetError(nspr::PR_WOULD_BLOCK_ERROR, 0);
+            }
             return Err(Error::NoDataAvailable);
         }
 
         let src = unsafe { std::slice::from_raw_parts(self.input, amount) };
         qtrace!([self], "read {}", hex(src));
         let dst = unsafe { std::slice::from_raw_parts_mut(buf, amount) };
-        dst.copy_from_slice(&src);
+        dst.copy_from_slice(src);
         self.input = self.input.wrapping_add(amount);
         self.available -= amount;
         Ok(amount)

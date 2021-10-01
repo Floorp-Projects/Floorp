@@ -80,7 +80,7 @@ impl Http3ServerConnEvents {
     where
         F: Fn(&Http3ServerConnEvent) -> bool,
     {
-        self.events.borrow_mut().retain(|evt| !f(evt))
+        self.events.borrow_mut().retain(|evt| !f(evt));
     }
 
     pub fn has_events(&self) -> bool {
@@ -99,7 +99,7 @@ impl Http3ServerConnEvents {
         self.insert(Http3ServerConnEvent::PriorityUpdate {
             stream_id,
             priority,
-        })
+        });
     }
 
     pub fn remove_events_for_stream_id(&self, stream_id: u64) {

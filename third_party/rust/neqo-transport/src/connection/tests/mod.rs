@@ -13,7 +13,7 @@ use crate::cid::ConnectionIdRef;
 use crate::events::ConnectionEvent;
 use crate::path::PATH_MTU_V6;
 use crate::recovery::ACK_ONLY_SIZE_LIMIT;
-use crate::stats::MAX_PTO_COUNTS;
+use crate::stats::{FrameStats, Stats, MAX_PTO_COUNTS};
 use crate::{ConnectionIdDecoder, ConnectionIdGenerator, ConnectionParameters, Error, StreamType};
 
 use std::cell::RefCell;
@@ -23,7 +23,7 @@ use std::mem;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
-use neqo_common::{event::Provider, qdebug, qtrace, Datagram, Decoder};
+use neqo_common::{event::Provider, qdebug, qtrace, Datagram, Decoder, Role};
 use neqo_crypto::{random, AllowZeroRtt, AuthenticationStatus, ResumptionToken};
 use test_fixture::{self, addr, fixture_init, now};
 
@@ -190,12 +190,18 @@ fn connect_with_rtt(
     now: Instant,
     rtt: Duration,
 ) -> Instant {
+    fn check_rtt(stats: &Stats, rtt: Duration) {
+        assert_eq!(stats.rtt, rtt);
+        // Confirmation takes 2 round trips,
+        // so rttvar is reduced by 1/4 (from rtt/2).
+        assert_eq!(stats.rttvar, rtt * 3 / 8);
+    }
     let now = handshake(client, server, now, rtt);
     assert_eq!(*client.state(), State::Confirmed);
     assert_eq!(*server.state(), State::Confirmed);
 
-    assert_eq!(client.paths.rtt(), rtt);
-    assert_eq!(server.paths.rtt(), rtt);
+    check_rtt(&client.stats(), rtt);
+    check_rtt(&server.stats(), rtt);
     now
 }
 
@@ -521,4 +527,34 @@ fn get_tokens(client: &mut Connection) -> Vec<ResumptionToken> {
             }
         })
         .collect()
+}
+
+fn assert_default_stats(stats: &Stats) {
+    assert_eq!(stats.packets_rx, 0);
+    assert_eq!(stats.packets_tx, 0);
+    let dflt_frames = FrameStats::default();
+    assert_eq!(stats.frame_rx, dflt_frames);
+    assert_eq!(stats.frame_tx, dflt_frames);
+}
+
+#[test]
+fn create_client() {
+    let client = default_client();
+    assert_eq!(client.role(), Role::Client);
+    assert!(matches!(client.state(), State::Init));
+    let stats = client.stats();
+    assert_default_stats(&stats);
+    assert_eq!(stats.rtt, crate::rtt::INITIAL_RTT);
+    assert_eq!(stats.rttvar, crate::rtt::INITIAL_RTT / 2);
+}
+
+#[test]
+fn create_server() {
+    let server = default_server();
+    assert_eq!(server.role(), Role::Server);
+    assert!(matches!(server.state(), State::Init));
+    let stats = server.stats();
+    assert_default_stats(&stats);
+    // Server won't have a default path, so no RTT.
+    assert_eq!(stats.rtt, Duration::from_secs(0));
 }

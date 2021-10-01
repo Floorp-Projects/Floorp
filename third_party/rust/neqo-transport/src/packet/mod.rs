@@ -158,6 +158,9 @@ pub struct PacketBuilder {
 }
 
 impl PacketBuilder {
+    /// The minimum useful frame size.  If space is less than this, we will claim to be full.
+    pub const MINIMUM_FRAME_SIZE: usize = 2;
+
     fn infer_limit(encoder: &Encoder) -> usize {
         if encoder.capacity() > 64 {
             encoder.capacity()
@@ -175,7 +178,6 @@ impl PacketBuilder {
     ///
     /// If, after calling this method, `remaining()` returns 0, then call `abort()` to get
     /// the encoder back.
-    #[allow(unknown_lints, renamed_and_removed_lints, clippy::unknown_clippy_lints)] // Until we require rust 1.45.
     #[allow(clippy::reversed_empty_ranges)]
     pub fn short(mut encoder: Encoder, key_phase: bool, dcid: impl AsRef<[u8]>) -> Self {
         let mut limit = Self::infer_limit(&encoder);
@@ -208,8 +210,6 @@ impl PacketBuilder {
     /// even if the token is empty.
     ///
     /// See `short()` for more on how to handle this in cases where there is no space.
-    #[allow(unknown_lints, renamed_and_removed_lints, clippy::unknown_clippy_lints)]
-    // Until we require rust 1.45.
     #[allow(clippy::reversed_empty_ranges)] // For initializing an empty range.
     pub fn long(
         mut encoder: Encoder,
@@ -258,6 +258,8 @@ impl PacketBuilder {
         self.limit = limit;
     }
 
+    /// Get the current limit.
+    #[must_use]
     pub fn limit(&mut self) -> usize {
         self.limit
     }
@@ -272,7 +274,12 @@ impl PacketBuilder {
     #[must_use]
     pub fn is_full(&self) -> bool {
         // No useful frame is smaller than 2 bytes long.
-        self.limit < self.encoder.len() + 2
+        self.limit < self.encoder.len() + Self::MINIMUM_FRAME_SIZE
+    }
+
+    /// Adjust the limit to ensure that no more data is added.
+    pub fn mark_full(&mut self) {
+        self.limit = self.encoder.len()
     }
 
     /// Mark the packet as needing padding (or not).
@@ -935,7 +942,7 @@ mod tests {
         );
         builder.initial_token(&[]);
         builder.pn(1, 2);
-        builder.encode(&SAMPLE_INITIAL_PAYLOAD);
+        builder.encode(SAMPLE_INITIAL_PAYLOAD);
         let packet = builder.build(&mut prot).expect("build");
         assert_eq!(&packet[..], SAMPLE_INITIAL);
     }

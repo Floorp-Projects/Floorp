@@ -362,7 +362,7 @@ fn pto_handshake_frames() {
     now += Duration::from_millis(10);
     let crypto_before = server.stats().frame_rx.crypto;
     server.process_input(pkt2.unwrap(), now);
-    assert_eq!(server.stats().frame_rx.crypto, crypto_before + 1)
+    assert_eq!(server.stats().frame_rx.crypto, crypto_before + 1);
 }
 
 /// In the case that the Handshake takes too many packets, the server might

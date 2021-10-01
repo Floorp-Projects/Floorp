@@ -113,7 +113,7 @@ impl Node for ConnectionNode {
                     self.c.authenticated(AuthenticationStatus::Ok, now);
                 }
 
-                active |= self.process_goals(|goal, c| goal.handle_event(c, &e, now))
+                active |= self.process_goals(|goal, c| goal.handle_event(c, &e, now));
             }
             // Exit at this point if the connection produced a datagram.
             // We also exit if none of the goals were active, as there is

@@ -13,7 +13,7 @@ use std::rc::Rc;
 use crate::connection::State;
 use crate::quic_datagrams::DatagramTracking;
 use crate::stream_id::{StreamId, StreamType};
-use crate::AppError;
+use crate::{AppError, Stats};
 use neqo_common::event::Provider as EventProvider;
 use neqo_crypto::ResumptionToken;
 
@@ -169,7 +169,7 @@ impl ConnectionEvents {
 
     // The number of datagrams in the events queue is limited to max_queued_datagrams.
     // This function ensure this and deletes the oldest datagrams if needed.
-    fn check_datagram_queued(&self, max_queued_datagrams: usize) {
+    fn check_datagram_queued(&self, max_queued_datagrams: usize, stats: &mut Stats) {
         let mut q = self.events.borrow_mut();
         let mut remove = None;
         if q.iter()
@@ -191,11 +191,12 @@ impl ConnectionEvents {
         if let Some(r) = remove {
             q.remove(r);
             q.push_back(ConnectionEvent::IncomingDatagramDropped);
+            stats.incoming_datagram_dropped += 1;
         }
     }
 
-    pub fn add_datagram(&self, max_queued_datagrams: usize, data: &[u8]) {
-        self.check_datagram_queued(max_queued_datagrams);
+    pub fn add_datagram(&self, max_queued_datagrams: usize, data: &[u8], stats: &mut Stats) {
+        self.check_datagram_queued(max_queued_datagrams, stats);
         self.events
             .borrow_mut()
             .push_back(ConnectionEvent::Datagram(data.to_vec()));

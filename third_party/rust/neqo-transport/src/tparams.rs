@@ -362,7 +362,7 @@ impl TransportParameters {
 
         match self.params.get(&tp) {
             None => None,
-            Some(TransportParameter::Bytes(x)) => Some(&x),
+            Some(TransportParameter::Bytes(x)) => Some(x),
             _ => panic!("Internal error"),
         }
     }

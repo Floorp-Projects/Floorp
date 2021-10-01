@@ -13,10 +13,12 @@ use std::cell::RefCell;
 use std::fmt::{self, Debug};
 use std::ops::Deref;
 use std::rc::Rc;
+use std::time::Duration;
 
 pub(crate) const MAX_PTO_COUNTS: usize = 16;
 
 #[derive(Default, Clone)]
+#[cfg_attr(test, derive(PartialEq))]
 #[allow(clippy::module_name_repetitions)]
 pub struct FrameStats {
     pub all: usize,
@@ -91,6 +93,19 @@ impl Debug for FrameStats {
     }
 }
 
+/// Datagram stats
+#[derive(Default, Clone)]
+#[allow(clippy::module_name_repetitions)]
+pub struct DatagramStats {
+    /// The number of datagrams declared lost.
+    pub lost: usize,
+    /// The number of datagrams dropped due to being too large.
+    pub dropped_too_big: usize,
+    /// The number of datagrams dropped due to reaching the limit of the
+    /// outgoing queue.
+    pub dropped_queue_full: usize,
+}
+
 /// Connection statistics
 #[derive(Default, Clone)]
 #[allow(clippy::module_name_repetitions)]
@@ -119,6 +134,11 @@ pub struct Stats {
     /// Whether the connection was resumed successfully.
     pub resumed: bool,
 
+    /// The current, estimated round-trip time on the primary path.
+    pub rtt: Duration,
+    /// The current, estimated round-trip time variation on the primary path.
+    pub rttvar: Duration,
+
     /// Count PTOs. Single PTOs, 2 PTOs in a row, 3 PTOs in row, etc. are counted
     /// separately.
     pub pto_counts: [usize; MAX_PTO_COUNTS],
@@ -127,6 +147,12 @@ pub struct Stats {
     pub frame_rx: FrameStats,
     /// Count frames sent.
     pub frame_tx: FrameStats,
+
+    /// The number of incoming datagrams dropped due to reaching the limit
+    /// of the incoming queue.
+    pub incoming_datagram_dropped: usize,
+
+    pub datagram_tx: DatagramStats,
 }
 
 impl Stats {
@@ -141,7 +167,7 @@ impl Stats {
             "Dropped received packet: {}; Total: {}",
             reason.as_ref(),
             self.dropped_rx
-        )
+        );
     }
 
     /// # Panics
