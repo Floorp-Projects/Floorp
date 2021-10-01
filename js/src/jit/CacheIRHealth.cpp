@@ -117,16 +117,16 @@ void CacheIRHealth::spewShapeInformation(AutoStructuredSpewer& spew,
               if (lastKey.isInt()) {
                 spew->property("lastProperty", lastKey.toInt());
               } else if (lastKey.isString()) {
-                GenericPrinter& printer =
-                    spew->beginStringProperty("lastProperty");
-                lastKey.toString()->dumpCharsNoQuote(printer);
-                spew->endStringProperty();
+                JSString* str = lastKey.toString();
+                if (str && str->isLinear()) {
+                  spew->property("lastProperty", &str->asLinear());
+                }
               } else {
                 MOZ_ASSERT(lastKey.isSymbol());
-                GenericPrinter& printer =
-                    spew->beginStringProperty("lastProperty");
-                lastKey.toSymbol()->description()->dumpCharsNoQuote(printer);
-                spew->endStringProperty();
+                JSString* str = lastKey.toSymbol()->description();
+                if (str && str->isLinear()) {
+                  spew->property("lastProperty", &str->asLinear());
+                }
               }
             }
             spew->property("totalKeys", propMap->approximateEntryCount());
