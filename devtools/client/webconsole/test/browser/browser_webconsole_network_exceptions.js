@@ -8,7 +8,7 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 618078";
 const TEST_URI2 =
-  "http://example.com/browser/devtools/client/webconsole/" +
+  "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-network-exceptions.html";
 
 add_task(async function() {

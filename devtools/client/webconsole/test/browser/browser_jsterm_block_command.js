@@ -1,7 +1,7 @@
 "use strict";
 
 const TEST_URI =
-  "http://example.com/browser/devtools/client/webconsole/" +
+  "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-block-action.html";
 const TIMEOUT = "TIMEOUT";
 
@@ -67,7 +67,7 @@ async function tryFetching() {
   ) {
     const win = content.wrappedJSObject;
     const FETCH_URI =
-      "http://example.com/browser/devtools/client/webconsole/" +
+      "https://example.com/browser/devtools/client/webconsole/" +
       "test/browser/test-block-action-style.css";
     const timeout = new Promise(res =>
       win.setTimeout(() => res(timeoutStr), 1000)
