@@ -286,25 +286,43 @@ using GlobalDescVector = Vector<GlobalDesc, 0, SystemAllocPolicy>;
 // offset in the elements of the exception's ArrayObject.
 using TagOffsetVector = Vector<int32_t, 0, SystemAllocPolicy>;
 
-struct TagDesc {
-  TagKind kind;
+struct TagType {
   ValTypeVector argTypes;
   TagOffsetVector argOffsets;
   int32_t bufferSize;
   int32_t refCount;
-  bool isExport;
 
-  TagDesc(TagKind kind, ValTypeVector&& argTypes, TagOffsetVector&& argOffsets,
-          bool isExport = false)
-      : kind(kind),
-        argTypes(std::move(argTypes)),
+  TagType() : argTypes(), argOffsets(), bufferSize(0), refCount(0) {}
+  TagType(ValTypeVector&& argTypes, TagOffsetVector&& argOffsets)
+      : argTypes(std::move(argTypes)),
         argOffsets(std::move(argOffsets)),
         bufferSize(0),
-        refCount(0),
-        isExport(isExport) {}
+        refCount(0) {}
 
   [[nodiscard]] bool computeLayout();
-  ResultType resultType() const { return ResultType::Vector(argTypes); }
+
+  [[nodiscard]] bool clone(const TagType& src) {
+    MOZ_ASSERT(argTypes.empty());
+    MOZ_ASSERT(argOffsets.empty());
+    if (!argTypes.appendAll(src.argTypes) ||
+        !argOffsets.appendAll(src.argOffsets)) {
+      return false;
+    }
+    bufferSize = src.bufferSize;
+    refCount = src.refCount;
+    return true;
+  }
+};
+
+struct TagDesc {
+  TagKind kind;
+  TagType type;
+  bool isExport;
+
+  TagDesc(TagKind kind, TagType&& type, bool isExport = false)
+      : kind(kind), type(std::move(type)), isExport(isExport) {}
+
+  ResultType resultType() const { return ResultType::Vector(type.argTypes); }
 };
 
 using TagDescVector = Vector<TagDesc, 0, SystemAllocPolicy>;

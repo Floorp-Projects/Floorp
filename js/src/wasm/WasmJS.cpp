@@ -1463,7 +1463,7 @@ bool WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp) {
       case DefinitionKind::Tag: {
         size_t tagIndex = numTagImport++;
         const TagDesc& tag = metadata.tags[tagIndex];
-        typeObj = TagTypeToObject(cx, tag.argTypes);
+        typeObj = TagTypeToObject(cx, tag.type.argTypes);
         break;
       }
 #  endif  // ENABLE_WASM_EXCEPTIONS
@@ -1568,7 +1568,7 @@ bool WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp) {
 #  ifdef ENABLE_WASM_EXCEPTIONS
       case DefinitionKind::Tag: {
         const TagDesc& tag = metadata.tags[exp.tagIndex()];
-        typeObj = TagTypeToObject(cx, tag.argTypes);
+        typeObj = TagTypeToObject(cx, tag.type.argTypes);
         break;
       }
 #  endif  // ENABLE_WASM_EXCEPTIONS
@@ -3710,7 +3710,7 @@ void WasmTagObject::finalize(JSFreeOp* fop, JSObject* obj) {
   WasmTagObject& exnObj = obj->as<WasmTagObject>();
   if (!exnObj.isNewborn()) {
     fop->release(obj, &exnObj.tag(), MemoryUse::WasmTagTag);
-    fop->delete_(obj, &exnObj.valueTypes(), MemoryUse::WasmTagType);
+    fop->delete_(obj, &exnObj.tagType(), MemoryUse::WasmTagType);
   }
 }
 
@@ -3745,6 +3745,15 @@ bool WasmTagObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   if (!ParseValTypes(cx, paramsVal, params)) {
     return false;
   }
+  TagOffsetVector offsets;
+  if (!offsets.resize(params.length())) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  TagType tagType = TagType(std::move(params), std::move(offsets));
+  if (!tagType.computeLayout()) {
+    return false;
+  }
 
   RootedObject proto(cx);
   if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_WasmTag, &proto)) {
@@ -3754,7 +3763,7 @@ bool WasmTagObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     proto = GlobalObject::getOrCreatePrototype(cx, JSProto_WasmTag);
   }
 
-  RootedWasmTagObject tagObj(cx, WasmTagObject::create(cx, params, proto));
+  RootedWasmTagObject tagObj(cx, WasmTagObject::create(cx, tagType, proto));
   if (!tagObj) {
     return false;
   }
@@ -3764,7 +3773,8 @@ bool WasmTagObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /* static */
-WasmTagObject* WasmTagObject::create(JSContext* cx, const ValTypeVector& type,
+WasmTagObject* WasmTagObject::create(JSContext* cx,
+                                     const wasm::TagType& tagType,
                                      HandleObject proto) {
   AutoSetNewObjectMetadata metadata(cx);
   RootedWasmTagObject obj(cx,
@@ -3783,13 +3793,12 @@ WasmTagObject* WasmTagObject::create(JSContext* cx, const ValTypeVector& type,
 
   InitReservedSlot(obj, TAG_SLOT, tag.forget().take(), MemoryUse::WasmTagTag);
 
-  wasm::ValTypeVector* newValueTypes = js_new<ValTypeVector>();
-  for (auto t : type) {
-    if (!newValueTypes->append(t)) {
-      return nullptr;
-    }
+  TagType* newType = js_new<TagType>();
+  if (!newType || !newType->clone(tagType)) {
+    ReportOutOfMemory(cx);
+    return nullptr;
   }
-  InitReservedSlot(obj, TYPE_SLOT, newValueTypes, MemoryUse::WasmTagType);
+  InitReservedSlot(obj, TYPE_SLOT, newType, MemoryUse::WasmTagType);
 
   MOZ_ASSERT(!obj->isNewborn());
 
@@ -3832,8 +3841,12 @@ const JSFunctionSpec WasmTagObject::methods[] = {
 
 const JSFunctionSpec WasmTagObject::static_methods[] = {JS_FS_END};
 
+TagType& WasmTagObject::tagType() const {
+  return *(TagType*)getFixedSlot(TYPE_SLOT).toPrivate();
+};
+
 wasm::ValTypeVector& WasmTagObject::valueTypes() const {
-  return *(ValTypeVector*)getFixedSlot(TYPE_SLOT).toPrivate();
+  return tagType().argTypes;
 };
 
 wasm::ResultType WasmTagObject::resultType() const {
@@ -3923,24 +3936,23 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  wasm::ValTypeVector& params = exnTag->valueTypes();
+  const wasm::TagType& tagType = exnTag->tagType();
+  const wasm::ValTypeVector& params = tagType.argTypes;
+  const wasm::TagOffsetVector& offsets = tagType.argOffsets;
 
-  // This is pre-sizing the data buffer for the exception object.
-  size_t nbytes = 0;
-  for (const ValType param : params) {
-    if (!param.isReference()) {
-      nbytes += SizeOf(param);
-    }
-  }
-
-  RootedArrayBufferObject buf(cx, ArrayBufferObject::createZeroed(cx, nbytes));
+  RootedArrayBufferObject buf(
+      cx, ArrayBufferObject::createZeroed(cx, tagType.bufferSize));
   if (!buf) {
     return false;
   }
 
-  RootedArrayObject refs(cx, NewDenseEmptyArray(cx));
+  RootedArrayObject refs(cx, NewDenseFullyAllocatedArray(cx, tagType.refCount));
   if (!refs) {
     return false;
+  }
+  refs->setDenseInitializedLength(tagType.refCount);
+  for (int i = 0; i < tagType.refCount; i++) {
+    refs->initDenseElement(i, UndefinedValue());
   }
 
   uint8_t* bufPtr = buf->dataPointer();
@@ -3961,18 +3973,19 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     if (params[i].isReference()) {
-      RootedObject objPtr(cx);
-      if (!ToWebAssemblyValue(cx, nextArg, params[i], objPtr.address(), true)) {
+      ASSERT_ANYREF_IS_JSOBJECT;
+      RootedAnyRef anyref(cx, AnyRef::null());
+      if (!ToWebAssemblyValue(cx, nextArg, params[i],
+                              anyref.get().asJSObjectAddress(), true)) {
         return false;
       }
-      if (!NewbornArrayPush(cx, refs, ObjectValue(*objPtr))) {
-        return false;
-      }
+      refs->setDenseElement(offsets[i] / sizeof(Value),
+                            ObjectValue(*anyref.get().asJSObject()));
     } else {
-      if (!ToWebAssemblyValue(cx, nextArg, params[i], bufPtr, true)) {
+      if (!ToWebAssemblyValue(cx, nextArg, params[i], bufPtr + offsets[i],
+                              true)) {
         return false;
       }
-      bufPtr += SizeOf(params[i]);
     }
   }
 
@@ -4080,25 +4093,17 @@ bool WasmExceptionObject::getArgImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
+  uint32_t offset = exnTag->tagType().argOffsets[index];
   RootedValue result(cx);
   if (params[index].isReference()) {
-    uint32_t refIndex = 0;
-    for (size_t i = 0; i < index; i++) {
-      if (params[i].isReference()) {
-        refIndex++;
-      }
-    }
-    JSObject* ref = &exnObj->refs().getDenseElement(refIndex).toObject();
-    if (!ToJSValue(cx, &ref, params[index], &result)) {
+    ASSERT_ANYREF_IS_JSOBJECT;
+    RootedValue val(cx, exnObj->refs().getDenseElement(offset / sizeof(Value)));
+    RootedAnyRef anyref(cx, AnyRef::fromJSObject(val.toObjectOrNull()));
+    if (!ToJSValue(cx, anyref.get().asJSObjectAddress(), params[index],
+                   &result)) {
       return false;
     }
   } else {
-    uint32_t offset = 0;
-    for (size_t i = 0; i < index; i++) {
-      if (!params[i].isReference()) {
-        offset += SizeOf(params[i]);
-      }
-    }
     if (!ToJSValue(cx, exnObj->values().dataPointer() + offset, params[index],
                    &result)) {
       return false;

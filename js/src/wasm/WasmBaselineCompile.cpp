@@ -3574,9 +3574,9 @@ bool BaseCompiler::emitCatch() {
   masm.bind(&tryCatch.catchInfos.back().label);
 
   // Extract the arguments in the exception package and push them.
-  const TagDesc& tagDesc = moduleEnv_.tags[tagIndex];
-  const ValTypeVector& params = tagDesc.argTypes;
-  const TagOffsetVector& offsets = tagDesc.argOffsets;
+  const TagType& tagType = moduleEnv_.tags[tagIndex].type;
+  const ValTypeVector& params = tagType.argTypes;
+  const TagOffsetVector& offsets = tagType.argOffsets;
 
   const uint32_t dataOffset =
       NativeObject::getFixedSlotOffset(ArrayBufferObject::DATA_SLOT);
@@ -3601,7 +3601,7 @@ bool BaseCompiler::emitCatch() {
   masm.load32(Address(refs, NativeObject::offsetOfFixedElements() +
                                 ObjectElements::offsetOfLength()),
               scratch);
-  masm.branch32(Assembler::Equal, scratch, Imm32(tagDesc.refCount), &ok);
+  masm.branch32(Assembler::Equal, scratch, Imm32(tagType.refCount), &ok);
   masm.assumeUnreachable("Array length should be equal to exn ref count.");
   masm.bind(&ok);
   freeI32(scratch);
@@ -3955,11 +3955,11 @@ bool BaseCompiler::emitThrow() {
 
   const TagDesc& tagDesc = moduleEnv_.tags[exnIndex];
   const ResultType& params = tagDesc.resultType();
-  const TagOffsetVector& offsets = tagDesc.argOffsets;
+  const TagOffsetVector& offsets = tagDesc.type.argOffsets;
 
   // Create the new exception object that we will throw.
   pushI32(exnIndex);
-  pushI32(tagDesc.bufferSize);
+  pushI32(tagDesc.type.bufferSize);
   if (!emitInstanceCall(lineOrBytecode, SASigExceptionNew)) {
     return false;
   }

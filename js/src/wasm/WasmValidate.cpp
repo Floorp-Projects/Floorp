@@ -2055,14 +2055,14 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       if (!offsets.resize(tagArgs.length())) {
         return false;
       }
-      if (!env->tags.emplaceBack(tagKind, std::move(tagArgs),
-                                 std::move(offsets))) {
+      TagType type = TagType(std::move(tagArgs), std::move(offsets));
+      if (!env->tags.emplaceBack(tagKind, std::move(type))) {
         return false;
       }
       if (env->tags.length() > MaxTags) {
         return d.fail("too many tags");
       }
-      if (!env->tags.back().computeLayout()) {
+      if (!env->tags.back().type.computeLayout()) {
         return false;
       }
       break;
@@ -2286,9 +2286,9 @@ static bool DecodeTagSection(Decoder& d, ModuleEnvironment* env) {
     if (!offsets.resize(tagArgs.length())) {
       return false;
     }
-    env->tags.infallibleEmplaceBack(tagKind, std::move(tagArgs),
-                                    std::move(offsets));
-    if (!env->tags.back().computeLayout()) {
+    TagType type = TagType(std::move(tagArgs), std::move(offsets));
+    env->tags.infallibleEmplaceBack(tagKind, std::move(type));
+    if (!env->tags.back().type.computeLayout()) {
       return false;
     }
   }
@@ -2409,7 +2409,7 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env,
       }
 
 #  ifdef WASM_PRIVATE_REFTYPES
-      if (!TagIsJSCompatible(d, env->tags[tagIndex].argTypes)) {
+      if (!TagIsJSCompatible(d, env->tags[tagIndex].type.argTypes)) {
         return false;
       }
 #  endif
