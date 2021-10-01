@@ -9,29 +9,21 @@ var EXPORTED_SYMBOLS = [];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
-  "resource://gre/modules/AddonManager.jsm"
-);
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
+  AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  Log: "resource://gre/modules/Log.jsm",
+  GMPInstallManager: "resource://gre/modules/GMPInstallManager.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
+});
+
 // These symbols are, unfortunately, accessed via the module global from
 // tests, and therefore cannot be lexical definitions.
 var { GMPPrefs, GMPUtils, OPEN_H264_ID, WIDEVINE_ID } = ChromeUtils.import(
   "resource://gre/modules/GMPUtils.jsm"
-);
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "GMPInstallManager",
-  "resource://gre/modules/GMPInstallManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "setTimeout",
-  "resource://gre/modules/Timer.jsm"
 );
 
 const URI_EXTENSION_STRINGS =
