@@ -13,6 +13,7 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "nsPresContext.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/RangeBoundary.h"
@@ -75,7 +76,7 @@ class TextComposition final {
   //     error due to inaccessible Release() method.
   TextRangeArray* GetRanges() const { return mRanges; }
   // Returns the widget which is proper to call NotifyIME().
-  nsIWidget* GetWidget() const {
+  already_AddRefed<nsIWidget> GetWidget() const {
     return mPresContext ? mPresContext->GetRootWidget() : nullptr;
   }
   // Returns the tab parent which has this composition in its remote process.

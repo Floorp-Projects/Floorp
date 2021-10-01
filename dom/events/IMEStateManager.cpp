@@ -767,8 +767,12 @@ void IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
 
   nsCOMPtr<nsIWidget> widget(sWidget);
 
-  MOZ_ASSERT(!sPresContext->GetTextInputHandlingWidget() ||
-             sPresContext->GetTextInputHandlingWidget() == widget);
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIWidget> tihWidget = sPresContext->GetTextInputHandlingWidget();
+    MOZ_ASSERT(!tihWidget || tihWidget == widget);
+  }
+#endif  // DEBUG
 
   if (!aMouseEvent->IsTrusted()) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
@@ -1001,8 +1005,12 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
 
   OwningNonNull<nsIWidget> widget(*sWidget);
 
-  MOZ_ASSERT(!sPresContext->GetTextInputHandlingWidget() ||
-             sPresContext->GetTextInputHandlingWidget() == widget);
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIWidget> tihWidget = sPresContext->GetTextInputHandlingWidget();
+    MOZ_ASSERT(!tihWidget || tihWidget == widget);
+  }
+#endif  // DEBUG
 
   // TODO: Investigate if we could put off to initialize IMEContentObserver
   //       later because a lot of callers need to be marked as
@@ -1215,8 +1223,12 @@ void IMEStateManager::SetInputContextForChildProcess(
 
   nsCOMPtr<nsIWidget> widget(sWidget);
 
-  MOZ_ASSERT(!sPresContext->GetTextInputHandlingWidget() ||
-             sPresContext->GetTextInputHandlingWidget() == widget);
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIWidget> tihWidget = sPresContext->GetTextInputHandlingWidget();
+    MOZ_ASSERT(!tihWidget || tihWidget == widget);
+  }
+#endif  // DEBUG
   MOZ_ASSERT(aInputContext.mOrigin == InputContext::ORIGIN_CONTENT);
 
   sActiveChildInputContext = aInputContext;
@@ -1883,7 +1895,7 @@ nsresult IMEStateManager::NotifyIME(IMEMessage aMessage,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsIWidget* widget = aPresContext->GetTextInputHandlingWidget();
+  nsCOMPtr<nsIWidget> widget = aPresContext->GetTextInputHandlingWidget();
   if (NS_WARN_IF(!widget)) {
     MOZ_LOG(sISMLog, LogLevel::Error,
             ("  NotifyIME(), FAILED due to no widget for the "
@@ -2015,7 +2027,12 @@ void IMEStateManager::CreateIMEContentObserver(EditorBase& aEditorBase) {
     return;
   }
 
-  MOZ_ASSERT(sPresContext->GetTextInputHandlingWidget() == widget);
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIWidget> tihWidget = sPresContext->GetTextInputHandlingWidget();
+    MOZ_ASSERT(tihWidget == widget);
+  }
+#endif  // DEBUG
 
   MOZ_LOG(sISMLog, LogLevel::Debug,
           ("  CreateIMEContentObserver() is creating an "
