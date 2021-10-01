@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hit-testing of fixed background image</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+      html,
+      body {
+        height: 100vh;
+        margin: 0px;
+        padding: 0px;
+        overflow-x: hidden;
+      }
+      .bg-gradient {
+        background: linear-gradient(white, green) fixed;
+        height: 1000px;
+        width: 100%;
+      }
+  </style>
+  </head>
+  <body>
+    <div class="bg-gradient"></div>
+    <div style="height: 1000px; background-color: green;"></div>
+  </body>
+<script type="application/javascript">
+
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  var body = document.querySelector("body");
+  utils.setDisplayPortForElement(0, 0, 800, 2000, body, 1);
+  await promiseApzFlushedRepaints();
+
+  var target = document.querySelector(".bg-gradient");
+  checkHitResult(hitTest(centerOf(target)),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(body),
+                 utils.getLayersId(),
+                 "fixed bg image");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>
+</html>
