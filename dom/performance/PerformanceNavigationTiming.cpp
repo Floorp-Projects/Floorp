@@ -134,6 +134,18 @@ uint16_t PerformanceNavigationTiming::RedirectCount() const {
   return mTimingData->GetRedirectCount();
 }
 
+DOMHighResTimeStamp PerformanceNavigationTiming::RedirectStart(
+    Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
+  return PerformanceResourceTiming::RedirectStart(
+      aSubjectPrincipal, true /* aEnsureSameOriginAndIgnoreTAO */);
+}
+
+DOMHighResTimeStamp PerformanceNavigationTiming::RedirectEnd(
+    Maybe<nsIPrincipal*>& aSubjectPrincipal) const {
+  return PerformanceResourceTiming::RedirectEnd(
+      aSubjectPrincipal, true /* aEnsureSameOriginAndIgnoreTAO */);
+}
+
 void PerformanceNavigationTiming::UpdatePropertiesFromHttpChannel(
     nsIHttpChannel* aHttpChannel, nsITimedChannel* aChannel) {
   mTimingData->SetPropertiesFromHttpChannel(aHttpChannel, aChannel);

@@ -147,7 +147,12 @@ class PerformanceTimingData final {
   // If this is false the values of redirectStart/End will be 0 This is false if
   // no redirects occured, or if any of the responses failed the
   // timing-allow-origin check in HttpBaseChannel::TimingAllowCheck
-  bool ShouldReportCrossOriginRedirect() const;
+  //
+  // If aEnsureSameOriginAndIgnoreTAO is false, it checks if all redirects pass
+  // TAO. When it is true, it checks if all redirects are same-origin and
+  // ignores the result of TAO.
+  bool ShouldReportCrossOriginRedirect(
+      bool aEnsureSameOriginAndIgnoreTAO) const;
 
   // Cached result of CheckAllowedOrigin. If false, security sensitive
   // attributes of the resourceTiming object will be set to 0
@@ -200,10 +205,7 @@ class PerformanceTimingData final {
 
   bool mAllRedirectsSameOrigin = false;
 
-  // If the resourceTiming object should have non-zero redirectStart and
-  // redirectEnd attributes. It is false if there were no redirects, or if any
-  // of the responses didn't pass the timing-allow-check
-  bool mReportCrossOriginRedirect = false;
+  bool mAllRedirectsPassTAO = false;
 
   bool mSecureConnection = false;
 
@@ -448,7 +450,7 @@ struct IPDLParamTraits<mozilla::dom::PerformanceTimingData> {
     WriteIPDLParam(aMsg, aActor, aParam.mDecodedBodySize);
     WriteIPDLParam(aMsg, aActor, aParam.mRedirectCount);
     WriteIPDLParam(aMsg, aActor, aParam.mAllRedirectsSameOrigin);
-    WriteIPDLParam(aMsg, aActor, aParam.mReportCrossOriginRedirect);
+    WriteIPDLParam(aMsg, aActor, aParam.mAllRedirectsPassTAO);
     WriteIPDLParam(aMsg, aActor, aParam.mSecureConnection);
     WriteIPDLParam(aMsg, aActor, aParam.mTimingAllowed);
     WriteIPDLParam(aMsg, aActor, aParam.mInitialized);
@@ -532,8 +534,7 @@ struct IPDLParamTraits<mozilla::dom::PerformanceTimingData> {
                        &aResult->mAllRedirectsSameOrigin)) {
       return false;
     }
-    if (!ReadIPDLParam(aMsg, aIter, aActor,
-                       &aResult->mReportCrossOriginRedirect)) {
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mAllRedirectsPassTAO)) {
       return false;
     }
     if (!ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSecureConnection)) {
