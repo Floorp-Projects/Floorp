@@ -50,13 +50,14 @@ using namespace mozilla::layers;
 #undef DEBUG_MOUSE_LOCATION
 
 // Weakly held references to all of the view managers
-StaticAutoPtr<nsTArray<nsViewManager*>> nsViewManager::gViewManagers;
+nsTArray<nsViewManager*>* nsViewManager::gViewManagers = nullptr;
 uint32_t nsViewManager::gLastUserEventTime = 0;
 
 nsViewManager::nsViewManager()
     : mPresShell(nullptr),
       mDelayedResize(NSCOORD_NONE, NSCOORD_NONE),
       mRootView(nullptr),
+      mRootViewManager(this),
       mRefreshDisableCount(0),
       mPainting(false),
       mRecursiveRefreshPending(false),
@@ -76,7 +77,10 @@ nsViewManager::~nsViewManager() {
     mRootView = nullptr;
   }
 
-  mRootViewManager = nullptr;
+  if (!IsRootVM()) {
+    // We have a strong ref to mRootViewManager
+    NS_RELEASE(mRootViewManager);
+  }
 
   NS_ASSERTION(gViewManagers != nullptr, "About to use null gViewManagers");
 
@@ -91,6 +95,7 @@ nsViewManager::~nsViewManager() {
   if (gViewManagers->IsEmpty()) {
     // There aren't any more view managers so
     // release the global array of view managers
+    delete gViewManagers;
     gViewManagers = nullptr;
   }
 
@@ -455,7 +460,7 @@ void nsViewManager::FlushDirtyRegionToWidget(nsView* aView) {
 
   if (!aView->HasNonEmptyDirtyRegion()) return;
 
-  const UniquePtr<nsRegion>& dirtyRegion = aView->DirtyRegion();
+  nsRegion* dirtyRegion = aView->GetDirtyRegion();
   nsView* nearestViewWithWidget = aView;
   while (!nearestViewWithWidget->HasWidget() &&
          nearestViewWithWidget->GetParent()) {
@@ -475,7 +480,9 @@ void nsViewManager::InvalidateView(nsView* aView) {
 }
 
 static void AddDirtyRegion(nsView* aView, const nsRegion& aDamagedRegion) {
-  const UniquePtr<nsRegion>& dirtyRegion = aView->DirtyRegion();
+  nsRegion* dirtyRegion = aView->GetDirtyRegion();
+  if (!dirtyRegion) return;
+
   dirtyRegion->Or(*dirtyRegion, aDamagedRegion);
   dirtyRegion->SimplifyOutward(8);
 }
@@ -900,16 +907,21 @@ void nsViewManager::DecrementDisableRefreshCount() {
   NS_ASSERTION(mRefreshDisableCount >= 0, "Invalid refresh disable count!");
 }
 
-already_AddRefed<nsIWidget> nsViewManager::GetRootWidget() {
-  nsCOMPtr<nsIWidget> rootWidget;
-  if (mRootView) {
-    if (mRootView->HasWidget()) {
-      rootWidget = mRootView->GetWidget();
-    } else if (mRootView->GetParent()) {
-      rootWidget = mRootView->GetParent()->GetViewManager()->GetRootWidget();
-    }
+void nsViewManager::GetRootWidget(nsIWidget** aWidget) {
+  if (!mRootView) {
+    *aWidget = nullptr;
+    return;
   }
-  return rootWidget.forget();
+  if (mRootView->HasWidget()) {
+    *aWidget = mRootView->GetWidget();
+    NS_ADDREF(*aWidget);
+    return;
+  }
+  if (mRootView->GetParent()) {
+    mRootView->GetParent()->GetViewManager()->GetRootWidget(aWidget);
+    return;
+  }
+  *aWidget = nullptr;
 }
 
 LayoutDeviceIntRect nsViewManager::ViewToWidget(nsView* aView,
@@ -991,13 +1003,17 @@ void nsViewManager::GetLastUserEventTime(uint32_t& aTime) {
 
 void nsViewManager::InvalidateHierarchy() {
   if (mRootView) {
-    mRootViewManager = nullptr;
+    if (!IsRootVM()) {
+      NS_RELEASE(mRootViewManager);
+    }
     nsView* parent = mRootView->GetParent();
     if (parent) {
       mRootViewManager = parent->GetViewManager()->RootViewManager();
+      NS_ADDREF(mRootViewManager);
       NS_ASSERTION(mRootViewManager != this,
                    "Root view had a parent, but it has the same view manager");
+    } else {
+      mRootViewManager = this;
     }
-    // else, we are implicitly our own root view manager.
   }
 }

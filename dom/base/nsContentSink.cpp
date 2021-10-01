@@ -1032,7 +1032,8 @@ nsresult nsContentSink::DidProcessATokenImpl() {
       (mDeflectedCount % StaticPrefs::content_sink_event_probe_rate()) == 0) {
     nsViewManager* vm = presShell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIWidget> widget = vm->GetRootWidget();
+    nsCOMPtr<nsIWidget> widget;
+    vm->GetRootWidget(getter_AddRefs(widget));
     mHasPendingEvent = widget && widget->HasPendingInputEvent();
   }
 
