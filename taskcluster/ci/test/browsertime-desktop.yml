@@ -122,6 +122,53 @@ browsertime-tp6:
                     firefox: 2
                     default: 3
 
+browsertime-responsiveness:
+    <<: *tp6-defaults
+    raptor-subtests:
+        - cnn-nav
+    mozharness:
+        extra-options:
+            by-test-platform:
+                windows10-.*:
+                    - --cold
+                    - --browsertime
+                    - --browsertime-no-ffwindowrecorder
+                    - --conditioned-profile=settled
+                default:
+                    - --cold
+                    - --browsertime
+                    - --conditioned-profile=settled
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    windows.*-32.*: []
+                    .*clang.*: []
+                    default: [mozilla-central]
+            default:
+                by-app:
+                    firefox:
+                        by-test-platform:
+                            .*clang.*: []
+                            linux.*shippable.*: [mozilla-central]
+                            macosx1015.*shippable.*: [mozilla-central]
+                            windows10-64.*shippable.*: [mozilla-central]
+                            default: []
+                    default: []
+    variants:
+        by-app:
+            firefox:
+                by-test-platform:
+                    .*clang.*: []
+                    windows10-64.*shippable-qr/.*: [fission]
+                    (?!windows10-64).*shippable-qr/.*: [fission]
+                    default: []
+            default: []
+    tier:
+        by-app:
+            firefox: 2
+            default: 3
+
 browsertime-tp6-essential:
     <<: *tp6-defaults
     raptor-subtests:
