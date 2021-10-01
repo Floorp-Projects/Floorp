@@ -127,9 +127,8 @@ void* os_mmap_aligned(void* addr,
   }
 
   // Round up the next address that has addr % alignment = 0
-  const size_t alignment_corrected = alignment == 0? 1 : alignment;
   uintptr_t aligned_nonoffset =
-      (unaligned + (alignment_corrected - 1)) & ~(alignment_corrected - 1);
+      (unaligned + (alignment - 1)) & ~(alignment - 1);
 
   // Currently offset 0 is aligned according to alignment
   // Alignment needs to be enforced at the given offset
@@ -143,7 +142,7 @@ void* os_mmap_aligned(void* addr,
   // Sanity check
   if (aligned < unaligned ||
       (aligned + (requested_length - 1)) > (unaligned + (padded_length - 1)) ||
-      (aligned + alignment_offset) % alignment_corrected != 0) {
+      (aligned + alignment_offset) % alignment != 0) {
     VERBOSE_LOG("os_mmap_aligned: sanity check fail. aligned: %p\n", (void*) aligned);
     os_munmap((void*)unaligned, padded_length);
     return NULL;

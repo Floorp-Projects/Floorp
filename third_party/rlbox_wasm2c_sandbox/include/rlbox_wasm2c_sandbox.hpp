@@ -408,28 +408,9 @@ protected:
   using path_buf = const char*;
   #endif
 
-#define CREATE_SANDBOX_CHECK_ERR(infallible, cond, msg) \
-  if (!(cond)) {                                        \
-    if (infallible) {                                   \
-      detail::dynamic_check(cond, msg);                 \
-    } else {                                            \
-      impl_destroy_sandbox();                           \
-      return false;                                     \
-    }                                                   \
-  }
-
-  /**
-   * @brief creates the Wasm sandbox from the given shared library
-   *
-   * @param wasm2c_module_path path to shared library compiled with wasm2c
-   * @param infallible if set to true, the sandbox aborts on failure. If false, the sandbox returns creation status as a return value
-   * @param wasm_module_name optional module name used when compiling with wasm2c
-   * @return true when sandbox is successfully created
-   * @return false when infallible if set to false and sandbox was not successfully created. If infallible is set to true, this function will never return false.
-   */
-  inline bool impl_create_sandbox(path_buf wasm2c_module_path, bool infallible = true, const char* wasm_module_name = "")
+  inline void impl_create_sandbox(path_buf wasm2c_module_path, const char* wasm_module_name = "")
   {
-    CREATE_SANDBOX_CHECK_ERR(infallible, sandbox == nullptr, "Sandbox already initialized");
+    detail::dynamic_check(sandbox == nullptr, "Sandbox already initialized");
 
     #if defined(_WIN32)
     library = (void*) LoadLibraryW(wasm2c_module_path);
@@ -454,13 +435,13 @@ protected:
       #else
         error_msg += dlerror();
       #endif
-      CREATE_SANDBOX_CHECK_ERR(infallible, false, error_msg.c_str());
+      detail::dynamic_check(false, error_msg.c_str());
     }
 
     std::string info_func_name = wasm_module_name;
     info_func_name += "get_wasm2c_sandbox_info";
     auto get_info_func = reinterpret_cast<wasm2c_sandbox_funcs_t(*)()>(symbol_lookup(info_func_name));
-    CREATE_SANDBOX_CHECK_ERR(infallible, get_info_func != nullptr, "wasm2c could not find <MODULE_NAME>get_wasm2c_sandbox_info");
+    detail::dynamic_check(get_info_func != nullptr, "wasm2c could not find <MODULE_NAME>get_wasm2c_sandbox_info");
     sandbox_info = get_info_func();
 
     std::call_once(wasm2c_runtime_initialized, [&](){
@@ -468,10 +449,10 @@ protected:
     });
 
     sandbox = sandbox_info.create_wasm2c_sandbox();
-    CREATE_SANDBOX_CHECK_ERR(infallible, sandbox != nullptr, "Sandbox could not be created");
+    detail::dynamic_check(sandbox != nullptr, "Sandbox could not be created");
 
     sandbox_memory_info = (wasm_rt_memory_t*) sandbox_info.lookup_wasm2c_nonfunc_export(sandbox, "w2c_memory");
-    CREATE_SANDBOX_CHECK_ERR(infallible, sandbox_memory_info != nullptr, "Could not get wasm2c sandbox memory info");
+    detail::dynamic_check(sandbox_memory_info != nullptr, "Could not get wasm2c sandbox memory info");
 
     heap_base = reinterpret_cast<uintptr_t>(impl_get_memory_location());
 
@@ -481,7 +462,7 @@ protected:
       // impl_get_unsandboxed_pointer_no_ctx and impl_get_sandboxed_pointer_no_ctx
       // below rely on this.
       uintptr_t heap_offset_mask = std::numeric_limits<T_PointerType>::max();
-      CREATE_SANDBOX_CHECK_ERR(infallible, (heap_base & heap_offset_mask) == 0,
+      detail::dynamic_check((heap_base & heap_offset_mask) == 0,
                             "Sandbox heap not aligned to 4GB");
     }
 
@@ -489,30 +470,22 @@ protected:
     exec_env = sandbox;
     malloc_index = impl_lookup_symbol("malloc");
     free_index = impl_lookup_symbol("free");
-    return true;
   }
-
-#undef CREATE_SANDBOX_CHECK_ERR
 
   inline void impl_destroy_sandbox()
   {
     if (return_slot_size) {
       impl_free_in_sandbox(return_slot);
     }
+    sandbox_info.destroy_wasm2c_sandbox(sandbox);
+    sandbox = nullptr;
 
-    if (sandbox != nullptr) {
-      sandbox_info.destroy_wasm2c_sandbox(sandbox);
-      sandbox = nullptr;
-    }
-
-    if (library != nullptr) {
-      #if defined(_WIN32)
-        FreeLibrary((HMODULE) library);
-      #else
-        dlclose(library);
-      #endif
-      library = nullptr;
-    }
+    #if defined(_WIN32)
+      FreeLibrary((HMODULE) library);
+    #else
+      dlclose(library);
+    #endif
+    library = nullptr;
   }
 
   template<typename T>

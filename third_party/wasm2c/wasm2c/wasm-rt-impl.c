@@ -52,10 +52,8 @@ uint32_t wasm_rt_register_func_type(wasm_func_type_t** p_func_type_structs,
   wasm_func_type_t func_type;
   func_type.param_count = param_count;
   func_type.params = malloc(param_count * sizeof(wasm_rt_type_t));
-  assert(func_type.params != 0);
   func_type.result_count = result_count;
   func_type.results = malloc(result_count * sizeof(wasm_rt_type_t));
-  assert(func_type.results != 0);
 
   uint32_t i;
   for (i = 0; i < param_count; ++i)
@@ -104,19 +102,19 @@ void wasm_rt_cleanup_func_types(wasm_func_type_t** p_func_type_structs, uint32_t
 # define WASM_HEAP_RESERVE_SIZE 0x200000000ull
 # define WASM_HEAP_MAX_ALLOWED_PAGES 65536
 #elif UINTPTR_MAX == 0xffffffff
-// Reserve 16MB, unaligned, max heap is 16MB
-# define WASM_HEAP_GUARD_PAGE_ALIGNMENT 0
+// Reserve 16MB, aligned to 8MB, max heap is 8MB
+# define WASM_HEAP_GUARD_PAGE_ALIGNMENT 0x800000ul
 # define WASM_HEAP_RESERVE_SIZE 0x1000000ul
 # ifdef WASM_USE_INCREMENTAL_MOVEABLE_MEMORY_ALLOC
 #   define WASM_HEAP_MAX_ALLOWED_PAGES 65536
 # else
-#   define WASM_HEAP_MAX_ALLOWED_PAGES 256
+#   define WASM_HEAP_MAX_ALLOWED_PAGES 128
 # endif
 #else
 # error "Unknown pointer size"
 #endif
 
-bool wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
+void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
                              uint32_t initial_pages,
                              uint32_t max_pages) {
   const uint32_t byte_length = initial_pages * WASM_PAGE_SIZE;
@@ -137,11 +135,11 @@ bool wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
 
   if (!addr) {
     os_print_last_error("os_mmap failed.");
-    return false;
+    abort();
   }
   int ret = os_mmap_commit(addr, byte_length, MMAP_PROT_READ | MMAP_PROT_WRITE);
   if (ret != 0) {
-    return false;
+    abort();
   }
   // This is a valid way to initialize a constant field that is not undefined behavior
   // https://stackoverflow.com/questions/9691404/how-to-initialize-const-in-a-struct-in-c-with-malloc
@@ -165,7 +163,6 @@ bool wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
 #if defined(WASM_CHECK_SHADOW_MEMORY)
   wasm2c_shadow_memory_create(memory);
 #endif
-  return true;
 }
 
 void wasm_rt_deallocate_memory(wasm_rt_memory_t* memory) {
