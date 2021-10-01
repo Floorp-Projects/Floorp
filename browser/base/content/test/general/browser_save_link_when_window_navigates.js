@@ -6,6 +6,8 @@ MockFilePicker.init(window);
 
 const SAVE_PER_SITE_PREF = "browser.download.lastDir.savePerSite";
 const ALWAYS_DOWNLOAD_DIR_PREF = "browser.download.useDownloadDir";
+const NEW_DOWNLOADS_CHANGES_PREF =
+  "browser.download.improvements_to_download_panel";
 const UCT_URI = "chrome://mozapps/content/downloads/unknownContentType.xhtml";
 
 /* import-globals-from ../../../../../toolkit/content/tests/browser/common/mockTransfer.js */
@@ -21,6 +23,9 @@ function createTemporarySaveDirectory() {
     info("create testsavedir!");
     saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
   }
+
+  Services.prefs.setIntPref("browser.download.folderList", 2);
+  Services.prefs.setCharPref("browser.download.dir", saveDir);
   info("return from createTempSaveDir: " + saveDir.path);
   return saveDir;
 }
@@ -34,7 +39,13 @@ function triggerSave(aWindow, aCallback) {
   let testBrowser = aWindow.gBrowser.selectedBrowser;
   let testURI =
     "http://mochi.test:8888/browser/browser/base/content/test/general/navigating_window_with_download.html";
-  windowObserver.setCallback(onUCTDialog);
+
+  // Since we don't open the UTC dialog when the new downloads changes are enabled,
+  // no need to observe it.
+  if (!Services.prefs.getBoolPref(NEW_DOWNLOADS_CHANGES_PREF)) {
+    windowObserver.setCallback(onUCTDialog);
+  }
+
   BrowserTestUtils.loadURI(testBrowser, testURI);
 
   // Create the folder the link will be saved into.
@@ -162,19 +173,22 @@ function test() {
     Services.ww.unregisterNotification(windowObserver);
     Services.prefs.clearUserPref(ALWAYS_DOWNLOAD_DIR_PREF);
     Services.prefs.clearUserPref(SAVE_PER_SITE_PREF);
+    Services.prefs.clearUserPref("browser.download.folderList");
+    Services.prefs.clearUserPref("browser.download.dir");
     info("Finished running the cleanup code");
   });
 
-  Services.prefs.setBoolPref(ALWAYS_DOWNLOAD_DIR_PREF, false);
+  info(
+    `Running test with new downloads pref set to ${NEW_DOWNLOADS_CHANGES_PREF}`
+  );
   testOnWindow(undefined, function(win) {
     let windowGonePromise = BrowserTestUtils.domWindowClosed(win);
     Services.prefs.setBoolPref(SAVE_PER_SITE_PREF, true);
-    triggerSave(win, function() {
-      windowGonePromise.then(function() {
-        Services.prefs.setBoolPref(SAVE_PER_SITE_PREF, false);
-        testOnWindow(undefined, function(win2) {
-          triggerSave(win2, finish);
-        });
+    triggerSave(win, async function() {
+      await windowGonePromise;
+      Services.prefs.setBoolPref(SAVE_PER_SITE_PREF, false);
+      testOnWindow(undefined, function(win2) {
+        triggerSave(win2, finish);
       });
     });
   });
