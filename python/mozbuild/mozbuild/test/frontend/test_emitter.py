@@ -1514,6 +1514,40 @@ class TestEmitterBasic(unittest.TestCase):
             )
             self.assertFalse(sources.have_unified_mapping)
 
+    def test_object_conflicts(self):
+        """Test that object name conflicts are detected."""
+        reader = self.reader("object-conflicts/1")
+        with self.assertRaisesRegex(
+            SandboxValidationError,
+            "Test.cpp from SOURCES would have the same object name as"
+            " Test.c from SOURCES\.",
+        ):
+            self.read_topsrcdir(reader)
+
+        reader = self.reader("object-conflicts/2")
+        with self.assertRaisesRegex(
+            SandboxValidationError,
+            "Test.cpp from SOURCES would have the same object name as"
+            " subdir/Test.cpp from SOURCES\.",
+        ):
+            self.read_topsrcdir(reader)
+
+        reader = self.reader("object-conflicts/3")
+        with self.assertRaisesRegex(
+            SandboxValidationError,
+            "Test.cpp from UNIFIED_SOURCES would have the same object name as"
+            " Test.c from SOURCES in non-unified builds\.",
+        ):
+            self.read_topsrcdir(reader)
+
+        reader = self.reader("object-conflicts/4")
+        with self.assertRaisesRegex(
+            SandboxValidationError,
+            "Test.cpp from UNIFIED_SOURCES would have the same object name as"
+            " Test.c from UNIFIED_SOURCES in non-unified builds\.",
+        ):
+            self.read_topsrcdir(reader)
+
     def test_final_target_pp_files(self):
         """Test that FINAL_TARGET_PP_FILES works properly."""
         reader = self.reader("dist-files")

@@ -11,4 +11,4 @@ def Library(name):
 
 Library("dummy")
 
-SOURCES = ["bar.c", "bar.cpp", "foo.c", "foo.cpp"]
+SOURCES = ["bar.c", "baz.cpp", "foo.c", "qux.cpp"]

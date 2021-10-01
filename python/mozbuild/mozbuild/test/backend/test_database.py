@@ -42,17 +42,17 @@ class TestCompileDBBackends(BackendTester):
             },
             {
                 "directory": topobjdir,
-                "command": "clang++ -o /dev/null -c -ferror-limit=0 {}/bar.cpp".format(
+                "command": "clang++ -o /dev/null -c -ferror-limit=0 {}/baz.cpp".format(
                     topsrcdir
                 ),
-                "file": "{}/bar.cpp".format(topsrcdir),
+                "file": "{}/baz.cpp".format(topsrcdir),
             },
             {
                 "directory": topobjdir,
-                "command": "clang++ -o /dev/null -c -ferror-limit=0 {}/foo.cpp".format(
+                "command": "clang++ -o /dev/null -c -ferror-limit=0 {}/qux.cpp".format(
                     topsrcdir
                 ),
-                "file": "{}/foo.cpp".format(topsrcdir),
+                "file": "{}/qux.cpp".format(topsrcdir),
             },
         ]
 
