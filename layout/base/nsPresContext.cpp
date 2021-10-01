@@ -1081,8 +1081,14 @@ nsIWidget* nsPresContext::GetRootWidget() const {
   if (!vm) {
     return nullptr;
   }
-  nsCOMPtr<nsIWidget> widget;
-  vm->GetRootWidget(getter_AddRefs(widget));
+
+  // XXXdholbert REVIEW NOTE: It's kind of sketchy that we're returning a raw
+  // pointer to a refcounted object here, when we've got an owning reference
+  // which we release just as we return the raw pointer.  Plus, it's wasteful
+  // to be incurring an AddRef/Release operation before the object actually
+  // even gets used (and potentially AddRef'ed again) by the caller.  I'll be
+  // cleaning this up to address these issues in the next patch in this series.
+  nsCOMPtr<nsIWidget> widget = vm->GetRootWidget();
   return widget.get();
 }
 

@@ -349,10 +349,7 @@ already_AddRefed<nsPIDOMWindowOuter> BrowserParent::GetParentWindowOuter() {
 already_AddRefed<nsIWidget> BrowserParent::GetTopLevelWidget() {
   if (RefPtr<Element> element = mFrameElement) {
     if (PresShell* presShell = element->OwnerDoc()->GetPresShell()) {
-      nsViewManager* vm = presShell->GetViewManager();
-      nsCOMPtr<nsIWidget> widget;
-      vm->GetRootWidget(getter_AddRefs(widget));
-      return widget.forget();
+      return presShell->GetViewManager()->GetRootWidget();
     }
   }
   return nullptr;

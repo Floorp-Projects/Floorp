@@ -932,8 +932,7 @@ void* DocAccessible::GetNativeWindow() const {
   nsViewManager* vm = mPresShell->GetViewManager();
   if (!vm) return nullptr;
 
-  nsCOMPtr<nsIWidget> widget;
-  vm->GetRootWidget(getter_AddRefs(widget));
+  nsCOMPtr<nsIWidget> widget = vm->GetRootWidget();
   if (widget) return widget->GetNativeData(NS_NATIVE_WINDOW);
 
   return nullptr;
