@@ -1455,7 +1455,7 @@ main.has-snippet {
 }
 
 .context-menu {
-  background: var(--newtab-background-color);
+  background: var(--newtab-background-color-secondary);
   border-radius: 5px;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.2);
   display: block;
@@ -1494,11 +1494,11 @@ main.has-snippet {
 }
 .context-menu > ul > li > a:is(:focus, :hover),
 .context-menu > ul > li > button:is(:focus, :hover) {
-  background: var(--newtab-element-hover-color);
+  background: var(--newtab-element-secondary-hover-color);
 }
 .context-menu > ul > li > a:active,
 .context-menu > ul > li > button:active {
-  background: var(--newtab-element-active-color);
+  background: var(--newtab-element-secondary-active-color);
 }
 .context-menu > ul > li > a.disabled,
 .context-menu > ul > li > button.disabled {
