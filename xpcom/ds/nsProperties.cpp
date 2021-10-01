@@ -53,7 +53,7 @@ nsProperties::Has(const char* prop, bool* result) {
 
 NS_IMETHODIMP
 nsProperties::GetKeys(nsTArray<nsCString>& aKeys) {
-  AppendToArray(aKeys, this->Keys());
+  mozilla::AppendToArray(aKeys, this->Keys());
 
   return NS_OK;
 }
