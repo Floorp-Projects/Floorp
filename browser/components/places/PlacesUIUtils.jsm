@@ -1619,17 +1619,9 @@ var PlacesUIUtils = {
  * Promise used by the toolbar view browser-places to determine whether we
  * can start loading its content (which involves IO, and so is postponed
  * during startup).
- * This promise's resolution value indicates whether toolbar initialization
- * waited on sessionstore-windows-restored and then an idle task, or happened
- * immediately as the window was opened. This is used for telemetry.
  */
 PlacesUIUtils.canLoadToolbarContentPromise = new Promise(resolve => {
-  PlacesUIUtils.unblockToolbars = () => {
-    resolve("waited-for-session-idle");
-    // Overwrite the property with the new promise, as the session has
-    // now been restored:
-    PlacesUIUtils.canLoadToolbarContentPromise = Promise.resolve("immediate");
-  };
+  PlacesUIUtils.unblockToolbars = resolve;
 });
 
 // These are lazy getters to avoid importing PlacesUtils immediately.
