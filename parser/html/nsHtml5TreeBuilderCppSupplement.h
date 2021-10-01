@@ -31,7 +31,7 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5OplessBuilder* aBuilder)
       headPointer(nullptr),
       charBufferLen(0),
       quirks(false),
-      isSrcdocDocument(false),
+      forceNoQuirks(false),
       mBuilder(aBuilder),
       mViewSource(nullptr),
       mOpSink(nullptr),
@@ -70,7 +70,7 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsAHtml5TreeOpSink* aOpSink,
       headPointer(nullptr),
       charBufferLen(0),
       quirks(false),
-      isSrcdocDocument(false),
+      forceNoQuirks(false),
       mBuilder(nullptr),
       mViewSource(nullptr),
       mOpSink(aOpSink),
@@ -1365,6 +1365,7 @@ void nsHtml5TreeBuilder::StartPlainTextViewSource(const nsAutoString& aTitle) {
 
 void nsHtml5TreeBuilder::StartPlainText() {
   MOZ_ASSERT(!mBuilder, "Must not view source with builder.");
+  setForceNoQuirks(true);
   startTag(nsHtml5ElementName::ELT_LINK,
            nsHtml5PlainTextUtils::NewLinkAttributes(), false);
 
@@ -1504,13 +1505,13 @@ void nsHtml5TreeBuilder::errStrayDoctype() {
 }
 
 void nsHtml5TreeBuilder::errAlmostStandardsDoctype() {
-  if (MOZ_UNLIKELY(mViewSource) && !isSrcdocDocument) {
+  if (MOZ_UNLIKELY(mViewSource) && !forceNoQuirks) {
     mViewSource->AddErrorToCurrentRun("errAlmostStandardsDoctype");
   }
 }
 
 void nsHtml5TreeBuilder::errQuirkyDoctype() {
-  if (MOZ_UNLIKELY(mViewSource) && !isSrcdocDocument) {
+  if (MOZ_UNLIKELY(mViewSource) && !forceNoQuirks) {
     mViewSource->AddErrorToCurrentRun("errQuirkyDoctype");
   }
 }
@@ -1558,7 +1559,7 @@ void nsHtml5TreeBuilder::errFooBetweenHeadAndBody(nsAtom* aName) {
 }
 
 void nsHtml5TreeBuilder::errStartTagWithoutDoctype() {
-  if (MOZ_UNLIKELY(mViewSource) && !isSrcdocDocument) {
+  if (MOZ_UNLIKELY(mViewSource) && !forceNoQuirks) {
     mViewSource->AddErrorToCurrentRun("errStartTagWithoutDoctype");
   }
 }
@@ -1648,7 +1649,7 @@ void nsHtml5TreeBuilder::errStartTagInTableBody(nsAtom* aName) {
 }
 
 void nsHtml5TreeBuilder::errEndTagSeenWithoutDoctype() {
-  if (MOZ_UNLIKELY(mViewSource) && !isSrcdocDocument) {
+  if (MOZ_UNLIKELY(mViewSource) && !forceNoQuirks) {
     mViewSource->AddErrorToCurrentRun("errEndTagSeenWithoutDoctype");
   }
 }

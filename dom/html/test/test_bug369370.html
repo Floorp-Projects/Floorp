@@ -108,7 +108,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369370
             // Give the image document time to respond
             SimpleTest.executeSoon(function() {
               is(img.height, 600, "image height");
-              var bodyHeight = kidDoc.body.scrollHeight;
+              var bodyHeight = kidDoc.documentElement.scrollHeight;
               var imgRect = img.getBoundingClientRect();
               is(imgRect.top, bodyHeight - imgRect.bottom, "Image is vertically centered");
               test7();

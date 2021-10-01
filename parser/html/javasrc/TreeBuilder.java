@@ -434,7 +434,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private boolean quirks = false;
 
-    private boolean isSrcdocDocument = false;
+    private boolean forceNoQuirks = false;
 
     // [NOCPP[
 
@@ -4064,7 +4064,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             String systemIdentifier)
             throws SAXException {
 
-        if (isSrcdocDocument) {
+        if (forceNoQuirks) {
             // Srcdoc documents are always rendered in standards mode.
             quirks = false;
             if (documentModeHandler != null) {
@@ -5807,8 +5807,13 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         this.scriptingEnabled = scriptingEnabled;
     }
 
+    public void setForceNoQuirks(boolean forceNoQuirks) {
+        this.forceNoQuirks = forceNoQuirks;
+    }
+
+    // Redundant method retained because previously public.
     public void setIsSrcdocDocument(boolean isSrcdocDocument) {
-        this.isSrcdocDocument = isSrcdocDocument;
+        this.setForceNoQuirks(isSrcdocDocument);
     }
 
     // [NOCPP[
@@ -6304,13 +6309,13 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     private void errAlmostStandardsDoctype() throws SAXException {
-        if (!isSrcdocDocument) {
+        if (!forceNoQuirks) {
             err("Almost standards mode doctype. Expected \u201C<!DOCTYPE html>\u201D.");
         }
     }
 
     private void errQuirkyDoctype() throws SAXException {
-        if (!isSrcdocDocument) {
+        if (!forceNoQuirks) {
             err("Quirky doctype. Expected \u201C<!DOCTYPE html>\u201D.");
         }
     }
@@ -6347,7 +6352,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     private void errStartTagWithoutDoctype() throws SAXException {
-        if (!isSrcdocDocument) {
+        if (!forceNoQuirks) {
             err("Start tag seen without seeing a doctype first. Expected \u201C<!DOCTYPE html>\u201D.");
         }
     }
@@ -6424,7 +6429,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     private void errEndTagSeenWithoutDoctype() throws SAXException {
-        if (!isSrcdocDocument) {
+        if (!forceNoQuirks) {
             err("End tag seen without seeing a doctype first. Expected \u201C<!DOCTYPE html>\u201D.");
         }
     }

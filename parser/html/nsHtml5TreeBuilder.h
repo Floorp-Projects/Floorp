@@ -316,7 +316,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState {
 
  private:
   bool quirks;
-  bool isSrcdocDocument;
+  bool forceNoQuirks;
   inline nsHtml5ContentCreatorFunction htmlCreator(
       mozilla::dom::HTMLContentCreatorFunction htmlCreator) {
     nsHtml5ContentCreatorFunction creator;
@@ -555,6 +555,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState {
  public:
   bool isScriptingEnabled();
   void setScriptingEnabled(bool scriptingEnabled);
+  void setForceNoQuirks(bool forceNoQuirks);
   void setIsSrcdocDocument(bool isSrcdocDocument);
   void flushCharacters();
 
