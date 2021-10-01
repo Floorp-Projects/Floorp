@@ -46,6 +46,7 @@ import org.mozilla.fenix.compose.ListItemTabLarge
 import org.mozilla.fenix.compose.ListItemTabLargePlaceholder
 import org.mozilla.fenix.compose.SelectableChip
 import org.mozilla.fenix.compose.StaggeredHorizontalGrid
+import org.mozilla.fenix.compose.TabSubtitle
 import org.mozilla.fenix.compose.TabSubtitleWithInterdot
 import org.mozilla.fenix.compose.TabTitle
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -76,6 +77,8 @@ fun PocketStory(
         "{wh}",
         with(LocalDensity.current) { "${116.dp.toPx().roundToInt()}x${84.dp.toPx().roundToInt()}" }
     )
+    val isValidPublisher = story.publisher.isNotBlank()
+    val isValidTimeToRead = story.timeToRead >= 0
     ListItemTabLarge(
         client = client,
         imageUrl = imageUrl,
@@ -84,7 +87,13 @@ fun PocketStory(
             TabTitle(text = story.title, maxLines = 3)
         },
         subtitle = {
-            TabSubtitleWithInterdot(story.publisher, "${story.timeToRead} min")
+            if (isValidPublisher && isValidTimeToRead) {
+                TabSubtitleWithInterdot(story.publisher, "${story.timeToRead} min")
+            } else if (isValidPublisher) {
+                TabSubtitle(story.publisher)
+            } else if (isValidTimeToRead) {
+                TabSubtitle("${story.timeToRead} min")
+            }
         }
     )
 }
