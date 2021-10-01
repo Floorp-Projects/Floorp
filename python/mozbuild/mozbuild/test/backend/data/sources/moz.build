@@ -14,13 +14,13 @@ Library("dummy")
 SOURCES += ["bar.s", "foo.asm"]
 
 HOST_SOURCES += ["bar.cpp", "foo.cpp"]
-HOST_SOURCES += ["bar.c", "foo.c"]
+HOST_SOURCES += ["baz.c", "qux.c"]
 
-SOURCES += ["bar.c", "foo.c"]
+SOURCES += ["baz.c", "qux.c"]
 
-SOURCES += ["bar.mm", "foo.mm"]
+SOURCES += ["fuga.mm", "hoge.mm"]
 
-SOURCES += ["baz.S", "foo.S"]
+SOURCES += ["titi.S", "toto.S"]
 
 WASM_SOURCES += ["bar.cpp"]
-WASM_SOURCES += ["bar.c"]
+WASM_SOURCES += ["baz.c"]

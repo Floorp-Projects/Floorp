@@ -1,0 +1,4 @@
+SOURCES += [
+    "Test.c",
+    "Test.cpp",
+]

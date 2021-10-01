@@ -621,7 +621,7 @@ class TreeMetadataEmitter(LoggingMixin):
             dependencies,
             features,
             is_gkrust,
-            **static_args
+            **static_args,
         )
 
     def _handle_gn_dirs(self, context):
@@ -988,6 +988,22 @@ class TreeMetadataEmitter(LoggingMixin):
             self._linkage.append((context, lib, "USE_LIBS"))
             wasm_linkables.append(lib)
             self._wasm_compile_dirs.add(context.objdir)
+
+        seen = {}
+        for symbol in ("SOURCES", "UNIFIED_SOURCES"):
+            for src in context.get(symbol, []):
+                basename = os.path.splitext(os.path.basename(src))[0]
+                if basename in seen:
+                    other_src, where = seen[basename]
+                    extra = ""
+                    if "UNIFIED_SOURCES" in (symbol, where):
+                        extra = " in non-unified builds"
+                    raise SandboxValidationError(
+                        f"{src} from {symbol} would have the same object name "
+                        f"as {other_src} from {where}{extra}.",
+                        context,
+                    )
+                seen[basename] = (src, symbol)
 
         # Only emit sources if we have linkables defined in the same context.
         # Note the linkables are not emitted in this function, but much later,

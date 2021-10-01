@@ -1,0 +1,7 @@
+SOURCES += [
+    "Test.c",
+]
+
+UNIFIED_SOURCES += [
+    "Test.cpp",
+]

@@ -376,18 +376,18 @@ class TestRecursiveMakeBackend(BackendTester):
 
         expected = {
             "ASFILES": ["ASFILES += $(srcdir)/bar.s", "ASFILES += $(srcdir)/foo.asm"],
-            "CMMSRCS": ["CMMSRCS += $(srcdir)/bar.mm", "CMMSRCS += $(srcdir)/foo.mm"],
-            "CSRCS": ["CSRCS += $(srcdir)/bar.c", "CSRCS += $(srcdir)/foo.c"],
+            "CMMSRCS": ["CMMSRCS += $(srcdir)/fuga.mm", "CMMSRCS += $(srcdir)/hoge.mm"],
+            "CSRCS": ["CSRCS += $(srcdir)/baz.c", "CSRCS += $(srcdir)/qux.c"],
             "HOST_CPPSRCS": [
                 "HOST_CPPSRCS += $(srcdir)/bar.cpp",
                 "HOST_CPPSRCS += $(srcdir)/foo.cpp",
             ],
             "HOST_CSRCS": [
-                "HOST_CSRCS += $(srcdir)/bar.c",
-                "HOST_CSRCS += $(srcdir)/foo.c",
+                "HOST_CSRCS += $(srcdir)/baz.c",
+                "HOST_CSRCS += $(srcdir)/qux.c",
             ],
-            "SSRCS": ["SSRCS += $(srcdir)/baz.S", "SSRCS += $(srcdir)/foo.S"],
-            "WASM_CSRCS": ["WASM_CSRCS += $(srcdir)/bar.c"],
+            "SSRCS": ["SSRCS += $(srcdir)/titi.S", "SSRCS += $(srcdir)/toto.S"],
+            "WASM_CSRCS": ["WASM_CSRCS += $(srcdir)/baz.c"],
             "WASM_CPPSRCS": ["WASM_CPPSRCS += $(srcdir)/bar.cpp"],
         }
 
