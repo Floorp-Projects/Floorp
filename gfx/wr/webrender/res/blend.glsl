@@ -123,7 +123,7 @@ vec3 LinearToSrgb(vec3 color) {
 // This function has to be factored out due to the following issue:
 // https://github.com/servo/webrender/wiki/Driver-issues#bug-1532245---switch-statement-inside-control-flow-inside-switch-statement-fails-to-compile-on-some-android-phones
 // (and now the words "default: default:" so angle_shader_validation.rs passes)
-vec4 ComponentTransfer(vec4 colora, ivec4 vfuncs, int table_address) {
+vec4 ComponentTransfer(vec4 colora, int vfuncs, int table_address) {
     // We push a different amount of data to the gpu cache depending on the
     // function type.
     // Identity => 0 blocks
@@ -139,10 +139,12 @@ vec4 ComponentTransfer(vec4 colora, ivec4 vfuncs, int table_address) {
     vec4 texel;
     int k;
 
-    // Dynamically indexing a vector is buggy on some platforms, so use a temporary array
-    int[4] funcs = int[4](vfuncs.r, vfuncs.g, vfuncs.b, vfuncs.a);
     for (int i = 0; i < 4; i++) {
-        switch (funcs[i]) {
+        // Each function value is packed in to 4 bits, with the "r" function at bits 15-12
+        // and the "a" function at bits 3-0.
+        int func = (vfuncs >> (12 - (i * 4))) & 0xf;
+
+        switch (func) {
             case COMPONENT_TRANSFER_IDENTITY:
                 break;
             case COMPONENT_TRANSFER_TABLE:
@@ -186,7 +188,7 @@ void CalculateFilter(
     int table_address,
     vec4 color_offset,
     mat4 color_mat,
-    ivec4 v_funcs,
+    int v_funcs,
     out vec3 color,
     out float alpha
 ) {

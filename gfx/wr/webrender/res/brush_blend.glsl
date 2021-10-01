@@ -28,7 +28,12 @@ flat varying ivec2 v_op_table_address_vec;
 #define v_table_address v_op_table_address_vec.y
 
 flat varying mat4 v_color_mat;
-flat varying ivec4 v_funcs;
+// The function to use for each component of a component transfer filter. Using a int[4]
+// or vec4 (with each element or component containing the function for each component) has
+// ran in to bugs 1695912 and 1731758, so instead we pack each value in to 4 bits of an
+// integer. However, due to bug 1630356 we cannot simply use an int, so instead use the
+// x component of an ivec2.
+flat varying ivec2 v_funcs;
 flat varying vec4 v_color_offset;
 
 #ifdef WR_VERTEX_SHADER
@@ -62,19 +67,8 @@ void brush_vs(
     float amount = float(prim_user_data.z) / 65536.0;
 
     v_op = prim_user_data.y & 0xffff;
+    v_funcs.x = (prim_user_data.y >> 16) & 0xffff;
     v_amount = amount;
-
-    // This assignment is only used for component transfer filters but this
-    // assignment has to be done here and not in the component transfer case
-    // below because it doesn't get executed on Windows because of a suspected
-    // miscompile of this shader on Windows. See
-    // https://github.com/servo/webrender/wiki/Driver-issues#bug-1505871---assignment-to-varying-flat-arrays-inside-switch-statement-of-vertex-shader-suspected-miscompile-on-windows
-    // default: just to satisfy angle_shader_validation.rs which needs one
-    // default: for every switch, even in comments.
-    v_funcs.r = (prim_user_data.y >> 28) & 0xf; // R
-    v_funcs.g = (prim_user_data.y >> 24) & 0xf; // G
-    v_funcs.b = (prim_user_data.y >> 20) & 0xf; // B
-    v_funcs.a = (prim_user_data.y >> 16) & 0xf; // A
 
     SetupFilterParams(
         v_op,
@@ -105,7 +99,7 @@ Fragment brush_fs() {
         v_table_address,
         v_color_offset,
         v_color_mat,
-        v_funcs,
+        v_funcs.x,
         color,
         alpha
     );
