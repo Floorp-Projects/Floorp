@@ -96,7 +96,7 @@ assertErrorMessage(
   /first argument must be a WebAssembly.Tag/
 );
 
-const { tag1, tag2, tag3, tag4, tag5, tag6, tag7 } = wasmEvalText(
+const { tag1, tag2, tag3, tag4, tag5, tag6, tag7, tag8, tag9 } = wasmEvalText(
   `(module
      (tag (export "tag1") (param))
      (tag (export "tag2") (param i32))
@@ -104,7 +104,9 @@ const { tag1, tag2, tag3, tag4, tag5, tag6, tag7 } = wasmEvalText(
      (tag (export "tag4") (param i32 externref i32))
      (tag (export "tag5") (param i32 externref i32 externref))
      (tag (export "tag6") (param funcref))
-     (tag (export "tag7") (param i64)))`
+     (tag (export "tag7") (param i64))
+     (tag (export "tag8") (param i32 f64))
+     (tag (export "tag9") (param externref funcref)))`
 ).exports;
 
 new WebAssembly.Exception(tag1, []);
@@ -168,24 +170,22 @@ assertErrorMessage(
   const exn2 = new WebAssembly.Exception(tag2, [3]);
   assertEq(exn2.getArg(tag2, 0), 3);
 
-  assertEq(
-    new WebAssembly.Exception(tag2, [undefined]).getArg(tag2, 0),
-    0
-  );
+  assertEq(new WebAssembly.Exception(tag2, [undefined]).getArg(tag2, 0), 0);
 
   const exn4 = new WebAssembly.Exception(tag4, [3, "foo", 4]);
   assertEq(exn4.getArg(tag4, 0), 3);
   assertEq(exn4.getArg(tag4, 1), "foo");
   assertEq(exn4.getArg(tag4, 2), 4);
 
-  const exn5 = new WebAssembly.Exception(
-    tag5,
-    [3,
-    "foo",
-    4,
-    "bar"]
-  );
+  const exn5 = new WebAssembly.Exception(tag5, [3, "foo", 4, "bar"]);
   assertEq(exn5.getArg(tag5, 3), "bar");
+
+  const { funcref } = wasmEvalText(
+    `(module (func (export "funcref")))`
+  ).exports;
+  const exn9 = new WebAssembly.Exception(tag9, ["foo", funcref]);
+  assertEq(exn9.getArg(tag9, 0), "foo");
+  assertEq(exn9.getArg(tag9, 1), funcref);
 
   assertErrorMessage(
     () => exn2.getArg(),
@@ -260,6 +260,30 @@ assertEqArray(
 assertEqArray(
   wasmEvalText(
     `(module
+       (import "m" "exn" (tag $exn (param i32 f64)))
+       (import "m" "f" (func $f))
+       (func (export "f") (result i32 f64)
+         try (result i32 f64)
+           call $f
+           (i32.const 0)
+           (f64.const 0)
+         catch $exn
+         end))`,
+    {
+      m: {
+        exn: tag8,
+        f: () => {
+          throw new WebAssembly.Exception(tag8, [9999, 9999]);
+        },
+      },
+    }
+  ).exports.f(),
+  [9999, 9999]
+);
+
+assertEqArray(
+  wasmEvalText(
+    `(module
        (import "m" "exn" (tag $exn (param i32 externref i32)))
        (import "m" "f" (func $f))
        (func (export "f") (result i32 externref i32)
@@ -281,6 +305,61 @@ assertEqArray(
   ).exports.f(),
   [42, "foo", 42]
 );
+
+assertEqArray(
+  wasmEvalText(
+    `(module
+       (import "m" "exn" (tag $exn (param i32 externref i32 externref)))
+       (import "m" "f" (func $f))
+       (func (export "f") (result i32 externref i32 externref)
+         try (result i32 externref i32 externref)
+           call $f
+           (i32.const 0)
+           (ref.null extern)
+           (i32.const 0)
+           (ref.null extern)
+         catch $exn
+         end))`,
+    {
+      m: {
+        exn: tag5,
+        f: () => {
+          throw new WebAssembly.Exception(tag5, [42, "foo", 42, "bar"]);
+        },
+      },
+    }
+  ).exports.f(),
+  [42, "foo", 42, "bar"]
+);
+
+{
+  const { funcref } = wasmEvalText(
+    `(module (func (export "funcref")))`
+  ).exports;
+  assertEqArray(
+    wasmEvalText(
+      `(module
+         (import "m" "exn" (tag $exn (param externref funcref)))
+         (import "m" "f" (func $f))
+         (func (export "f") (result externref funcref)
+           try (result externref funcref)
+             call $f
+             (ref.null extern)
+             (ref.null func)
+           catch $exn
+           end))`,
+      {
+        m: {
+          exn: tag9,
+          f: () => {
+            throw new WebAssembly.Exception(tag9, ["foo", funcref]);
+          },
+        },
+      }
+    ).exports.f(),
+    ["foo", funcref]
+  );
+}
 
 assertEq(
   wasmEvalText(
@@ -323,7 +402,7 @@ assertEq(
            end))`,
       {
         m: {
-          exn: exn,
+          exn,
           f: () => {
             throw new WebAssembly.Exception(exn, [42]);
           },
@@ -362,3 +441,49 @@ assertEq(
     1
   );
 }
+
+// Test `getArg` on a Wasm-thrown exception.
+assertEq(
+  (() => {
+    try {
+      wasmEvalText(
+        `(module
+           (import "m" "exn" (tag $exn (param i32 f64)))
+           (func (export "f")
+             (i32.const 9999)
+             (f64.const 9999)
+             throw $exn))`,
+        { m: { exn: tag8 } }
+      ).exports.f();
+    } catch (exn) {
+      return exn.getArg(tag8, 1);
+    }
+  })(),
+  9999
+);
+
+assertEqArray(
+  (() => {
+    try {
+      wasmEvalText(
+        `(module
+           (import "m" "exn" (tag $exn (param i32 externref i32 externref)))
+           (func (export "f") (param externref externref)
+             (i32.const 1)
+             (local.get 0)
+             (i32.const 2)
+             (local.get 1)
+             throw $exn))`,
+        { m: { exn: tag5 } }
+      ).exports.f("foo", "bar");
+    } catch (exn) {
+      return [
+        exn.getArg(tag5, 0),
+        exn.getArg(tag5, 1),
+        exn.getArg(tag5, 2),
+        exn.getArg(tag5, 3),
+      ];
+    }
+  })(),
+  [1, "foo", 2, "bar"]
+);
