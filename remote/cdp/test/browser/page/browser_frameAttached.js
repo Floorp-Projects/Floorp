@@ -3,19 +3,10 @@
 
 "use strict";
 
-const DOC = toDataURL("<div>foo</div>");
-const DOC_IFRAME_MULTI = toDataURL(`
-  <iframe src='data:text/html,foo'></iframe>
-  <iframe src='data:text/html,bar'></iframe>
-`);
-const DOC_IFRAME_NESTED = toDataURL(`
-  <iframe src="${DOC_IFRAME_MULTI}"></iframe>
-`);
-
 add_task(async function noEventWhenPageDomainDisabled({ client }) {
   await runFrameAttachedTest(client, 0, async () => {
     info("Navigate to a page with nested iframes");
-    await loadURL(DOC_IFRAME_NESTED);
+    await loadURL(FRAMESET_NESTED_URL);
   });
 });
 
@@ -27,7 +18,7 @@ add_task(async function noEventAfterPageDomainDisabled({ client }) {
 
   await runFrameAttachedTest(client, 0, async () => {
     info("Navigate to a page with nested iframes");
-    await loadURL(DOC_IFRAME_NESTED);
+    await loadURL(FRAMESET_NESTED_URL);
   });
 });
 
@@ -35,13 +26,13 @@ add_task(async function noEventWhenNavigatingWithNoFrames({ client }) {
   const { Page } = client;
 
   info("Navigate to a page with iframes");
-  await loadURL(DOC_IFRAME_NESTED);
+  await loadURL(FRAMESET_NESTED_URL);
 
   await Page.enable();
 
   await runFrameAttachedTest(client, 0, async () => {
     info("Navigate to a page with no iframes");
-    await loadURL(DOC);
+    await loadURL(PAGE_URL);
   });
 });
 
@@ -52,7 +43,7 @@ add_task(async function eventWhenNavigatingWithFrames({ client }) {
 
   await runFrameAttachedTest(client, 2, async () => {
     info("Navigate to a page with iframes");
-    await loadURL(DOC_IFRAME_MULTI);
+    await loadURL(FRAMESET_MULTI_URL);
   });
 });
 
@@ -63,23 +54,29 @@ add_task(async function eventWhenNavigatingWithNestedFrames({ client }) {
 
   await runFrameAttachedTest(client, 3, async () => {
     info("Navigate to a page with nested iframes");
-    await loadURL(DOC_IFRAME_NESTED);
+    await loadURL(FRAMESET_NESTED_URL);
   });
 });
 
 add_task(async function eventWhenAttachingFrame({ client }) {
   const { Page } = client;
 
+  await loadURL(FRAMESET_NESTED_URL);
+
   await Page.enable();
 
   await runFrameAttachedTest(client, 1, async () => {
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
-      const frame = content.document.createElement("iframe");
-      frame.src = "data:text/html,frame content";
-      const loaded = new Promise(resolve => (frame.onload = resolve));
-      content.document.body.appendChild(frame);
-      await loaded;
-    });
+    await SpecialPowers.spawn(
+      gBrowser.selectedBrowser,
+      [PAGE_FRAME_URL],
+      async frameURL => {
+        const frame = content.document.createElement("iframe");
+        frame.src = frameURL;
+        const loaded = new Promise(resolve => (frame.onload = resolve));
+        content.document.body.appendChild(frame);
+        await loaded;
+      }
+    );
   });
 });
 

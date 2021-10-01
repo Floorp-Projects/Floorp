@@ -3,15 +3,6 @@
 
 "use strict";
 
-const DOC = toDataURL("<div>foo</div>");
-const DOC_IFRAME_MULTI = toDataURL(`
-  <iframe src='data:text/html,foo'></iframe>
-  <iframe src='data:text/html,bar'></iframe>
-`);
-const DOC_IFRAME_NESTED = toDataURL(`
-  <iframe src="${DOC_IFRAME_MULTI}"></iframe>
-`);
-
 // Disable bfcache to force documents to be destroyed on navigation
 Services.prefs.setIntPref("browser.sessionhistory.max_total_viewers", 0);
 registerCleanupFunction(() => {
@@ -20,11 +11,11 @@ registerCleanupFunction(() => {
 
 add_task(async function noEventWhenPageDomainDisabled({ client }) {
   info("Navigate to a page with nested iframes");
-  await loadURL(DOC_IFRAME_NESTED);
+  await loadURL(FRAMESET_NESTED_URL);
 
   await runFrameDetachedTest(client, 0, async () => {
     info("Navigate away from a page with an iframe");
-    await loadURL(DOC);
+    await loadURL(PAGE_URL);
   });
 });
 
@@ -32,14 +23,14 @@ add_task(async function noEventAfterPageDomainDisabled({ client }) {
   const { Page } = client;
 
   info("Navigate to a page with nested iframes");
-  await loadURL(DOC_IFRAME_NESTED);
+  await loadURL(FRAMESET_NESTED_URL);
 
   await Page.enable();
   await Page.disable();
 
   await runFrameDetachedTest(client, 0, async () => {
     info("Navigate away to a page with no iframes");
-    await loadURL(DOC);
+    await loadURL(PAGE_URL);
   });
 });
 
@@ -49,11 +40,11 @@ add_task(async function noEventWhenNavigatingWithNoFrames({ client }) {
   await Page.enable();
 
   info("Navigate to a page with no iframes");
-  await loadURL(DOC);
+  await loadURL(PAGE_URL);
 
   await runFrameDetachedTest(client, 0, async () => {
     info("Navigate away to a page with no iframes");
-    await loadURL(DOC);
+    await loadURL(PAGE_URL);
   });
 });
 
@@ -61,13 +52,13 @@ add_task(async function eventWhenNavigatingWithFrames({ client }) {
   const { Page } = client;
 
   info("Navigate to a page with iframes");
-  await loadURL(DOC_IFRAME_MULTI);
+  await loadURL(FRAMESET_MULTI_URL);
 
   await Page.enable();
 
   await runFrameDetachedTest(client, 2, async () => {
     info("Navigate away to a page with no iframes");
-    await loadURL(DOC);
+    await loadURL(PAGE_URL);
   });
 });
 
@@ -75,13 +66,13 @@ add_task(async function eventWhenNavigatingWithNestedFrames({ client }) {
   const { Page } = client;
 
   info("Navigate to a page with nested iframes");
-  await loadURL(DOC_IFRAME_NESTED);
+  await loadURL(FRAMESET_NESTED_URL);
 
   await Page.enable();
 
   await runFrameDetachedTest(client, 3, async () => {
     info("Navigate away to a page with no iframes");
-    await loadURL(DOC);
+    await loadURL(PAGE_URL);
   });
 });
 
@@ -89,7 +80,7 @@ add_task(async function eventWhenDetachingFrame({ client }) {
   const { Page } = client;
 
   info("Navigate to a page with iframes");
-  await loadURL(DOC_IFRAME_MULTI);
+  await loadURL(FRAMESET_MULTI_URL);
 
   await Page.enable();
 
@@ -106,7 +97,7 @@ add_task(async function eventWhenDetachingNestedFrames({ client }) {
   const { Page, Runtime } = client;
 
   info("Navigate to a page with nested iframes");
-  await loadURL(DOC_IFRAME_NESTED);
+  await loadURL(FRAMESET_NESTED_URL);
 
   await Page.enable();
   await Runtime.enable();
