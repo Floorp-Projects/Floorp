@@ -2337,8 +2337,8 @@ already_AddRefed<ComputedStyle> nsIFrame::ComputeSelectionStyle(
 template <typename SizeOrMaxSize>
 static inline bool IsIntrinsicKeyword(const SizeOrMaxSize& aSize) {
   // All keywords other than auto/none/-moz-available depend on intrinsic sizes.
-  return aSize.IsMaxContent() || aSize.IsMinContent() ||
-         aSize.IsFitContent() || aSize.IsFitContentFunction();
+  return aSize.IsMaxContent() || aSize.IsMinContent() || aSize.IsFitContent() ||
+         aSize.IsFitContentFunction();
 }
 
 bool nsIFrame::CanBeDynamicReflowRoot() const {
@@ -6973,9 +6973,8 @@ nsRect nsIFrame::GetScreenRectInAppUnits() const {
     rootScreenPos.x = NS_round(parentScale * rootPt.x);
     rootScreenPos.y = NS_round(parentScale * rootPt.y);
   } else {
-    nsCOMPtr<nsIWidget> rootWidget;
-    presContext->PresShell()->GetViewManager()->GetRootWidget(
-        getter_AddRefs(rootWidget));
+    nsCOMPtr<nsIWidget> rootWidget =
+        presContext->PresShell()->GetViewManager()->GetRootWidget();
     if (rootWidget) {
       LayoutDeviceIntPoint rootDevPx = rootWidget->WidgetToScreenOffset();
       rootScreenPos.x = presContext->DevPixelsToAppUnits(rootDevPx.x);
