@@ -357,14 +357,22 @@ class nsHttpConnection final : public HttpConnectionBase,
     NOT_AVAILABLE,
     USED,
     CANNOT_BE_USED,
-    DONE,
+    DONE_NOT_AVAILABLE,
+    DONE_USED,
+    DONE_CANNOT_BE_USED,
   };
   EarlyData mEarlyDataState{EarlyData::NOT_AVAILABLE};
   bool EarlyDataAvailable() const {
     return mEarlyDataState == EarlyData::USED ||
            mEarlyDataState == EarlyData::CANNOT_BE_USED;
   }
+  bool EarlyDataWasAvailable() const {
+    return mEarlyDataState != EarlyData::NOT_AVAILABLE &&
+           mEarlyDataState != EarlyData::DONE_NOT_AVAILABLE;
+  }
   bool EarlyDataUsed() const { return mEarlyDataState == EarlyData::USED; }
+  void EarlyDataDone();
+
   int64_t mContentBytesWritten0RTT{0};
   nsCString mEarlyNegotiatedALPN;
   bool mDid0RTTSpdy{false};
