@@ -96,6 +96,13 @@ WalkerIndex.prototype = {
     while (documentWalker.nextNode()) {
       const node = documentWalker.currentNode;
 
+      if (
+        this.walker.targetActor.ignoreSubFrames &&
+        node.ownerDocument !== this.doc
+      ) {
+        continue;
+      }
+
       if (node.nodeType === 1) {
         // For each element node, we get the tagname and all attributes names
         // and values
