@@ -375,7 +375,7 @@ describe("ConsoleAPICall component:", () => {
         ConsoleApiCall({ message, serviceContainer, open: true })
       );
       const filepath =
-        "http://example.com/browser/devtools/client/webconsole/" +
+        "https://example.com/browser/devtools/client/webconsole/" +
         "test/fixtures/stub-generators/" +
         "test-console-api.html";
 
@@ -440,7 +440,7 @@ describe("ConsoleAPICall component:", () => {
       );
 
       const filepath =
-        "http://example.com/browser/devtools/client/webconsole/" +
+        "https://example.com/browser/devtools/client/webconsole/" +
         "test/fixtures/stub-generators/test-console-api.html";
 
       expect(wrapper.find(".message-body").text()).toBe(
@@ -697,7 +697,7 @@ describe("ConsoleAPICall component:", () => {
       );
 
       expect(wrapper.find(".message-body").text()).toBe(
-        "Window http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html"
+        "Window https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html"
       );
     });
   });

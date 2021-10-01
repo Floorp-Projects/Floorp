@@ -23,7 +23,7 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
     "errorMessage": "ReferenceError: asdf is not defined",
     "errorMessageName": "JSMSG_NOT_DEFINED",
     "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn0.child1/source22",
     "lineText": "",
     "lineNumber": 3,
@@ -37,21 +37,21 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn0.child1/source22",
         "lineNumber": 3,
         "columnNumber": 5,
         "functionName": "bar"
       },
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn0.child1/source22",
         "lineNumber": 6,
         "columnNumber": 5,
         "functionName": "foo"
       },
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn0.child1/source22",
         "lineNumber": 9,
         "columnNumber": 3,
@@ -98,8 +98,8 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
           "kind": "Error",
           "name": "ReferenceError",
           "message": "asdf is not defined",
-          "stack": "bar@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:5\nfoo@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:6:5\n@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:9:3\n",
-          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "stack": "bar@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:5\nfoo@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:6:5\n@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:9:3\n",
+          "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
           "lineNumber": 3,
           "columnNumber": 5
         }
@@ -117,7 +117,7 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
     "errorMessage": "SyntaxError: redeclaration of let a",
     "errorMessageName": "JSMSG_REDECLARED_VAR",
     "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Redeclared_parameter?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "  let a, a;",
     "lineNumber": 2,
@@ -157,7 +157,7 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
       {
         "messageBody": "Previously declared at line 2, column 6",
         "frame": {
-          "source": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "source": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
           "sourceId": null,
           "line": 2,
           "column": 6
@@ -182,7 +182,7 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
           "name": "SyntaxError",
           "message": "redeclaration of let a",
           "stack": "",
-          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
           "lineNumber": 2,
           "columnNumber": 9
         }
@@ -207,7 +207,7 @@ rawPackets.set(`TypeError longString message`, {
       "actorID": "server0.conn4.windowGlobal2147483651/longstractor27"
     },
     "errorMessageName": "",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn0.child1/source23",
     "lineText": "",
     "lineNumber": 1,
@@ -221,7 +221,7 @@ rawPackets.set(`TypeError longString message`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn0.child1/source23",
         "lineNumber": 1,
         "columnNumber": 7,
@@ -276,8 +276,8 @@ rawPackets.set(`TypeError longString message`, {
             },
             "actorID": "server0.conn4.windowGlobal2147483651/longstractor29"
           },
-          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
-          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
+          "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
           "lineNumber": 1,
           "columnNumber": 7
         }
@@ -294,7 +294,7 @@ rawPackets.set(`throw string with URL`, {
   "pageError": {
     "errorMessage": "uncaught exception: “https://evil.com/?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa“ is evil and “https://not-so-evil.com/?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa“ is not good either",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn0.child2/source31",
     "lineText": "",
     "lineNumber": 1,
@@ -308,7 +308,7 @@ rawPackets.set(`throw string with URL`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn0.child2/source31",
         "lineNumber": 1,
         "columnNumber": 1,
@@ -352,7 +352,7 @@ rawPackets.set(`throw ""`, {
   "pageError": {
     "errorMessage": "uncaught exception: ",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
     "lineNumber": 1,
@@ -366,7 +366,7 @@ rawPackets.set(`throw ""`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn0.child1/source25",
         "lineNumber": 1,
         "columnNumber": 1,
@@ -410,7 +410,7 @@ rawPackets.set(`throw "tomato"`, {
   "pageError": {
     "errorMessage": "uncaught exception: tomato",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
     "lineNumber": 1,
@@ -424,7 +424,7 @@ rawPackets.set(`throw "tomato"`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn0.child1/source25",
         "lineNumber": 1,
         "columnNumber": 1,
@@ -468,7 +468,7 @@ rawPackets.set(`throw false`, {
   "pageError": {
     "errorMessage": "uncaught exception: false",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn4.child2/source31",
     "lineText": "",
     "lineNumber": 1,
@@ -482,7 +482,7 @@ rawPackets.set(`throw false`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn4.child2/source31",
         "lineNumber": 1,
         "columnNumber": 1,
@@ -526,7 +526,7 @@ rawPackets.set(`throw 0`, {
   "pageError": {
     "errorMessage": "uncaught exception: 0",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn4.child2/source31",
     "lineText": "",
     "lineNumber": 1,
@@ -540,7 +540,7 @@ rawPackets.set(`throw 0`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn4.child2/source31",
         "lineNumber": 1,
         "columnNumber": 1,
@@ -584,7 +584,7 @@ rawPackets.set(`throw null`, {
   "pageError": {
     "errorMessage": "uncaught exception: null",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn4.child2/source31",
     "lineText": "",
     "lineNumber": 1,
@@ -598,7 +598,7 @@ rawPackets.set(`throw null`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn4.child2/source31",
         "lineNumber": 1,
         "columnNumber": 1,
@@ -644,7 +644,7 @@ rawPackets.set(`throw undefined`, {
   "pageError": {
     "errorMessage": "uncaught exception: undefined",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn4.child2/source31",
     "lineText": "",
     "lineNumber": 1,
@@ -658,7 +658,7 @@ rawPackets.set(`throw undefined`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn4.child2/source31",
         "lineNumber": 1,
         "columnNumber": 1,
@@ -704,7 +704,7 @@ rawPackets.set(`throw Symbol`, {
   "pageError": {
     "errorMessage": "uncaught exception: Symbol(potato)",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn4.child2/source27",
     "lineText": "",
     "lineNumber": 1,
@@ -718,7 +718,7 @@ rawPackets.set(`throw Symbol`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn4.child2/source27",
         "lineNumber": 1,
         "columnNumber": 7,
@@ -766,7 +766,7 @@ rawPackets.set(`throw Object`, {
   "pageError": {
     "errorMessage": "uncaught exception: [object Object]",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn4.child2/source31",
     "lineText": "",
     "lineNumber": 1,
@@ -780,7 +780,7 @@ rawPackets.set(`throw Object`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn4.child2/source31",
         "lineNumber": 1,
         "columnNumber": 1,
@@ -853,7 +853,7 @@ rawPackets.set(`throw Error Object`, {
   "pageError": {
     "errorMessage": "Error: pumpkin",
     "errorMessageName": "",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn4.child2/source41",
     "lineText": "",
     "lineNumber": 1,
@@ -867,7 +867,7 @@ rawPackets.set(`throw Error Object`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn4.child2/source27",
         "lineNumber": 1,
         "columnNumber": 7,
@@ -914,8 +914,8 @@ rawPackets.set(`throw Error Object`, {
           "kind": "Error",
           "name": "Error",
           "message": "pumpkin",
-          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
-          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
+          "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
           "lineNumber": 1,
           "columnNumber": 7
         }
@@ -932,7 +932,7 @@ rawPackets.set(`throw Error Object with custom name`, {
   "pageError": {
     "errorMessage": "JuicyError: pineapple",
     "errorMessageName": "",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn4.child2/source43",
     "lineText": "",
     "lineNumber": 2,
@@ -946,7 +946,7 @@ rawPackets.set(`throw Error Object with custom name`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn4.child2/source43",
         "lineNumber": 2,
         "columnNumber": 15,
@@ -993,8 +993,8 @@ rawPackets.set(`throw Error Object with custom name`, {
           "kind": "Error",
           "name": "JuicyError",
           "message": "pineapple",
-          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:15\n",
-          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:15\n",
+          "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
           "lineNumber": 2,
           "columnNumber": 15
         }
@@ -1011,7 +1011,7 @@ rawPackets.set(`throw Error Object with error cause`, {
   "pageError": {
     "errorMessage": "Error: something went wrong",
     "errorMessageName": "",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn0.child4/source45",
     "lineText": "",
     "lineNumber": 3,
@@ -1025,7 +1025,7 @@ rawPackets.set(`throw Error Object with error cause`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn0.child4/source45",
         "lineNumber": 3,
         "columnNumber": 15,
@@ -1072,8 +1072,8 @@ rawPackets.set(`throw Error Object with error cause`, {
           "kind": "Error",
           "name": "Error",
           "message": "something went wrong",
-          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:15\n",
-          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:15\n",
+          "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
           "lineNumber": 3,
           "columnNumber": 15,
           "cause": {
@@ -1089,8 +1089,8 @@ rawPackets.set(`throw Error Object with error cause`, {
               "kind": "Error",
               "name": "SyntaxError",
               "message": "original error",
-              "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:25\n",
-              "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+              "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:25\n",
+              "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
               "lineNumber": 2,
               "columnNumber": 25
             }
@@ -1109,7 +1109,7 @@ rawPackets.set(`throw Error Object with cause chain`, {
   "pageError": {
     "errorMessage": "Error: err-d",
     "errorMessageName": "",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn0.child4/source48",
     "lineText": "",
     "lineNumber": 5,
@@ -1123,7 +1123,7 @@ rawPackets.set(`throw Error Object with cause chain`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn0.child4/source48",
         "lineNumber": 5,
         "columnNumber": 13,
@@ -1170,8 +1170,8 @@ rawPackets.set(`throw Error Object with cause chain`, {
           "kind": "Error",
           "name": "Error",
           "message": "err-d",
-          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:5:13\n",
-          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:5:13\n",
+          "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
           "lineNumber": 5,
           "columnNumber": 13,
           "cause": {
@@ -1187,8 +1187,8 @@ rawPackets.set(`throw Error Object with cause chain`, {
               "kind": "Error",
               "name": "Error",
               "message": "err-c",
-              "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:4:13\n",
-              "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+              "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:4:13\n",
+              "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
               "lineNumber": 4,
               "columnNumber": 13,
               "cause": {
@@ -1204,8 +1204,8 @@ rawPackets.set(`throw Error Object with cause chain`, {
                   "kind": "Error",
                   "name": "Error",
                   "message": "err-b",
-                  "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:13\n",
-                  "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+                  "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:13\n",
+                  "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
                   "lineNumber": 3,
                   "columnNumber": 13,
                   "cause": {
@@ -1221,8 +1221,8 @@ rawPackets.set(`throw Error Object with cause chain`, {
                       "kind": "Error",
                       "name": "Error",
                       "message": "err-a",
-                      "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:13\n",
-                      "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+                      "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:13\n",
+                      "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
                       "lineNumber": 2,
                       "columnNumber": 13
                     }
@@ -1245,7 +1245,7 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
   "pageError": {
     "errorMessage": "Error: err-b",
     "errorMessageName": "",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn0.child4/source53",
     "lineText": "",
     "lineNumber": 3,
@@ -1259,7 +1259,7 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn0.child4/source48",
         "lineNumber": 3,
         "columnNumber": 13,
@@ -1306,8 +1306,8 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
           "kind": "Error",
           "name": "Error",
           "message": "err-b",
-          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:13\n",
-          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:13\n",
+          "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
           "lineNumber": 3,
           "columnNumber": 13,
           "cause": {
@@ -1323,8 +1323,8 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
               "kind": "Error",
               "name": "Error",
               "message": "err-a",
-              "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:13\n",
-              "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+              "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:13\n",
+              "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
               "lineNumber": 2,
               "columnNumber": 13,
               "cause": {
@@ -1340,8 +1340,8 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
                   "kind": "Error",
                   "name": "Error",
                   "message": "err-b",
-                  "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:13\n",
-                  "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+                  "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:13\n",
+                  "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
                   "lineNumber": 3,
                   "columnNumber": 13,
                   "cause": {
@@ -1357,8 +1357,8 @@ rawPackets.set(`throw Error Object with cyclical cause chain`, {
                       "kind": "Error",
                       "name": "Error",
                       "message": "err-a",
-                      "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:13\n",
-                      "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+                      "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:13\n",
+                      "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
                       "lineNumber": 2,
                       "columnNumber": 13
                     }
@@ -1381,7 +1381,7 @@ rawPackets.set(`throw Error Object with falsy cause`, {
   "pageError": {
     "errorMessage": "Error: null cause",
     "errorMessageName": "",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn0.child4/source58",
     "lineText": "",
     "lineNumber": 1,
@@ -1395,7 +1395,7 @@ rawPackets.set(`throw Error Object with falsy cause`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn0.child4/source26",
         "lineNumber": 1,
         "columnNumber": 7,
@@ -1442,8 +1442,8 @@ rawPackets.set(`throw Error Object with falsy cause`, {
           "kind": "Error",
           "name": "Error",
           "message": "null cause",
-          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
-          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
+          "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
           "lineNumber": 1,
           "columnNumber": 7,
           "cause": {
@@ -1463,7 +1463,7 @@ rawPackets.set(`throw Error Object with number cause`, {
   "pageError": {
     "errorMessage": "Error: number cause",
     "errorMessageName": "",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn0.child4/source60",
     "lineText": "",
     "lineNumber": 1,
@@ -1477,7 +1477,7 @@ rawPackets.set(`throw Error Object with number cause`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn0.child4/source26",
         "lineNumber": 1,
         "columnNumber": 7,
@@ -1524,8 +1524,8 @@ rawPackets.set(`throw Error Object with number cause`, {
           "kind": "Error",
           "name": "Error",
           "message": "number cause",
-          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
-          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
+          "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
           "lineNumber": 1,
           "columnNumber": 7,
           "cause": 0
@@ -1543,7 +1543,7 @@ rawPackets.set(`throw Error Object with string cause`, {
   "pageError": {
     "errorMessage": "Error: string cause",
     "errorMessageName": "",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn0.child4/source62",
     "lineText": "",
     "lineNumber": 1,
@@ -1557,7 +1557,7 @@ rawPackets.set(`throw Error Object with string cause`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn0.child4/source26",
         "lineNumber": 1,
         "columnNumber": 7,
@@ -1604,8 +1604,8 @@ rawPackets.set(`throw Error Object with string cause`, {
           "kind": "Error",
           "name": "Error",
           "message": "string cause",
-          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
-          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
+          "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
           "lineNumber": 1,
           "columnNumber": 7,
           "cause": "cause message"
@@ -1623,7 +1623,7 @@ rawPackets.set(`throw Error Object with object cause`, {
   "pageError": {
     "errorMessage": "Error: object cause",
     "errorMessageName": "",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn0.child4/source64",
     "lineText": "",
     "lineNumber": 1,
@@ -1637,7 +1637,7 @@ rawPackets.set(`throw Error Object with object cause`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": "server0.conn0.child4/source26",
         "lineNumber": 1,
         "columnNumber": 7,
@@ -1684,8 +1684,8 @@ rawPackets.set(`throw Error Object with object cause`, {
           "kind": "Error",
           "name": "Error",
           "message": "object cause",
-          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
-          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
+          "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
           "lineNumber": 1,
           "columnNumber": 7,
           "cause": {
@@ -1712,7 +1712,7 @@ rawPackets.set(`Promise reject ""`, {
   "pageError": {
     "errorMessage": "uncaught exception: ",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
     "lineNumber": 1,
@@ -1726,7 +1726,7 @@ rawPackets.set(`Promise reject ""`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": null,
         "lineNumber": 1,
         "columnNumber": 9,
@@ -1770,7 +1770,7 @@ rawPackets.set(`Promise reject "tomato"`, {
   "pageError": {
     "errorMessage": "uncaught exception: tomato",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
     "lineNumber": 1,
@@ -1784,7 +1784,7 @@ rawPackets.set(`Promise reject "tomato"`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": null,
         "lineNumber": 1,
         "columnNumber": 9,
@@ -1828,7 +1828,7 @@ rawPackets.set(`Promise reject false`, {
   "pageError": {
     "errorMessage": "uncaught exception: false",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
     "lineNumber": 1,
@@ -1842,7 +1842,7 @@ rawPackets.set(`Promise reject false`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": null,
         "lineNumber": 1,
         "columnNumber": 9,
@@ -1886,7 +1886,7 @@ rawPackets.set(`Promise reject 0`, {
   "pageError": {
     "errorMessage": "uncaught exception: 0",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
     "lineNumber": 1,
@@ -1900,7 +1900,7 @@ rawPackets.set(`Promise reject 0`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": null,
         "lineNumber": 1,
         "columnNumber": 9,
@@ -1944,7 +1944,7 @@ rawPackets.set(`Promise reject null`, {
   "pageError": {
     "errorMessage": "uncaught exception: null",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
     "lineNumber": 1,
@@ -1958,7 +1958,7 @@ rawPackets.set(`Promise reject null`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": null,
         "lineNumber": 1,
         "columnNumber": 9,
@@ -2004,7 +2004,7 @@ rawPackets.set(`Promise reject undefined`, {
   "pageError": {
     "errorMessage": "uncaught exception: undefined",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
     "lineNumber": 1,
@@ -2018,7 +2018,7 @@ rawPackets.set(`Promise reject undefined`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": null,
         "lineNumber": 1,
         "columnNumber": 9,
@@ -2064,7 +2064,7 @@ rawPackets.set(`Promise reject Symbol`, {
   "pageError": {
     "errorMessage": "uncaught exception: Symbol(potato)",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
     "lineNumber": 1,
@@ -2078,7 +2078,7 @@ rawPackets.set(`Promise reject Symbol`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": null,
         "lineNumber": 1,
         "columnNumber": 9,
@@ -2126,7 +2126,7 @@ rawPackets.set(`Promise reject Object`, {
   "pageError": {
     "errorMessage": "uncaught exception: Object",
     "errorMessageName": "JSMSG_UNCAUGHT_EXCEPTION",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": null,
     "lineText": "",
     "lineNumber": 1,
@@ -2140,7 +2140,7 @@ rawPackets.set(`Promise reject Object`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": null,
         "lineNumber": 1,
         "columnNumber": 9,
@@ -2213,7 +2213,7 @@ rawPackets.set(`Promise reject Error Object`, {
   "pageError": {
     "errorMessage": "Error: pumpkin",
     "errorMessageName": "",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn4.child2/source55",
     "lineText": "",
     "lineNumber": 1,
@@ -2227,7 +2227,7 @@ rawPackets.set(`Promise reject Error Object`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": null,
         "lineNumber": 1,
         "columnNumber": 9,
@@ -2274,8 +2274,8 @@ rawPackets.set(`Promise reject Error Object`, {
           "kind": "Error",
           "name": "Error",
           "message": "pumpkin",
-          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:16\n",
-          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:16\n",
+          "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
           "lineNumber": 1,
           "columnNumber": 16
         }
@@ -2292,7 +2292,7 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
   "pageError": {
     "errorMessage": "JuicyError: pineapple",
     "errorMessageName": "",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn4.child2/source57",
     "lineText": "",
     "lineNumber": 2,
@@ -2306,7 +2306,7 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": null,
         "lineNumber": 5,
         "columnNumber": 13,
@@ -2353,8 +2353,8 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
           "kind": "Error",
           "name": "JuicyError",
           "message": "pineapple",
-          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:15\n",
-          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:15\n",
+          "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
           "lineNumber": 2,
           "columnNumber": 15
         }
@@ -2371,7 +2371,7 @@ rawPackets.set(`Promise reject Error Object with error cause`, {
   "pageError": {
     "errorMessage": "Error: something went wrong",
     "errorMessageName": "",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
     "sourceId": "server0.conn0.child4/source81",
     "lineText": "",
     "lineNumber": 5,
@@ -2385,14 +2385,14 @@ rawPackets.set(`Promise reject Error Object with error cause`, {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": null,
         "lineNumber": 5,
         "columnNumber": 15,
         "functionName": null
       },
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "filename": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
         "sourceId": null,
         "lineNumber": 1,
         "columnNumber": 19,
@@ -2440,8 +2440,8 @@ rawPackets.set(`Promise reject Error Object with error cause`, {
           "kind": "Error",
           "name": "Error",
           "message": "something went wrong",
-          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:5:15\npromise callback*@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:19\n",
-          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:5:15\npromise callback*@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:19\n",
+          "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
           "lineNumber": 5,
           "columnNumber": 15,
           "cause": {
@@ -2457,8 +2457,8 @@ rawPackets.set(`Promise reject Error Object with error cause`, {
               "kind": "Error",
               "name": "ReferenceError",
               "message": "unknownFunc is not defined",
-              "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:9\npromise callback*@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:19\n",
-              "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+              "stack": "@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:9\npromise callback*@https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:19\n",
+              "fileName": "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
               "lineNumber": 3,
               "columnNumber": 9
             }

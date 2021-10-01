@@ -13,7 +13,7 @@ const {
 } = require(`${CHROME_URL_ROOT}stub-generator-helpers`);
 
 const TEST_URI =
-  "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html";
+  "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html";
 const STUB_FILE = "pageError.js";
 
 add_task(async function() {
