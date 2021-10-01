@@ -2925,4 +2925,30 @@ bool nsHttpHandler::IsHostExcludedForHTTPSRR(const nsACString& aHost) {
   return mExcludedHostsForHTTPSRRUpgrade.Contains(aHost);
 }
 
+void nsHttpHandler::Exclude0RttTcp(const nsHttpConnectionInfo* ci) {
+  MOZ_ASSERT(OnSocketThread());
+
+  if (!StaticPrefs::network_http_early_data_disable_on_error() ||
+      (mExcluded0RttTcpOrigins.Count() >=
+       StaticPrefs::network_http_early_data_max_error())) {
+    return;
+  }
+
+  mExcluded0RttTcpOrigins.Insert(ci->GetOrigin());
+}
+
+bool nsHttpHandler::Is0RttTcpExcluded(const nsHttpConnectionInfo* ci) {
+  MOZ_ASSERT(OnSocketThread());
+  if (!StaticPrefs::network_http_early_data_disable_on_error()) {
+    return false;
+  }
+
+  if (mExcluded0RttTcpOrigins.Count() >=
+      StaticPrefs::network_http_early_data_max_error()) {
+    return true;
+  }
+
+  return mExcluded0RttTcpOrigins.Contains(ci->GetOrigin());
+}
+
 }  // namespace mozilla::net
