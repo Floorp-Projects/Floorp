@@ -6,6 +6,7 @@
 
 #include "InputEventStatistics.h"
 
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "nsRefreshDriver.h"
 
