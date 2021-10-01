@@ -89,7 +89,7 @@ void HitTestInfoManager::ProcessItem(
     return;
   }
 
-  HITTEST_INFO_LOG("+ [%d, %d, %d, %d]: flags: 0x%x, viewId: %llu\n", area.x,
+  HITTEST_INFO_LOG("+ [%d, %d, %d, %d]: flags: 0x%x, viewId: %lu\n", area.x,
                    area.y, area.width, area.height, flags.serialize(), viewId);
 
   CreateWebRenderCommands(aBuilder, aItem, area, flags, viewId);
@@ -106,7 +106,7 @@ bool HitTestInfoManager::Update(const nsRect& aArea,
   if (mViewId == aViewId && mFlags == aFlags && mArea.Contains(aArea) &&
       mSpaceAndClipChain == aSpaceAndClip) {
     // The previous hit testing information can be reused.
-    HITTEST_INFO_LOG("s [%d, %d, %d, %d]: flags: 0x%x, viewId: %llu\n", aArea.x,
+    HITTEST_INFO_LOG("s [%d, %d, %d, %d]: flags: 0x%x, viewId: %lu\n", aArea.x,
                      aArea.y, aArea.width, aArea.height, aFlags.serialize(),
                      aViewId);
     return false;

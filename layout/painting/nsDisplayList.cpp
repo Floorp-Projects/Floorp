@@ -3243,7 +3243,7 @@ AppendedBackgroundType nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
 
         thisItemList.AppendToTop(
             nsDisplayFixedPosition::CreateForFixedBackground(
-                aBuilder, aFrame, aSecondaryReferenceFrame, bgItem, i));
+                aBuilder, aFrame, aSecondaryReferenceFrame, bgItem, i, asr));
       }
     } else {  // bgData.shouldFixToViewport == false
       nsDisplayBackgroundImage* bgItem = CreateBackgroundImage(
@@ -5428,7 +5428,8 @@ nsRegion nsDisplaySubDocument::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 /* static */
 nsDisplayFixedPosition* nsDisplayFixedPosition::CreateForFixedBackground(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsIFrame* aSecondaryFrame,
-    nsDisplayBackgroundImage* aImage, const uint16_t aIndex) {
+    nsDisplayBackgroundImage* aImage, const uint16_t aIndex,
+    const ActiveScrolledRoot* aScrollTargetASR) {
   nsDisplayList temp;
   temp.AppendToTop(aImage);
 
@@ -5436,36 +5437,38 @@ nsDisplayFixedPosition* nsDisplayFixedPosition::CreateForFixedBackground(
     auto tableType = GetTableTypeFromFrame(aFrame);
     const uint16_t index = CalculateTablePerFrameKey(aIndex + 1, tableType);
     return MakeDisplayItemWithIndex<nsDisplayTableFixedPosition>(
-        aBuilder, aSecondaryFrame, index, &temp, aFrame);
+        aBuilder, aSecondaryFrame, index, &temp, aFrame, aScrollTargetASR);
   }
 
-  return MakeDisplayItemWithIndex<nsDisplayFixedPosition>(aBuilder, aFrame,
-                                                          aIndex + 1, &temp);
+  return MakeDisplayItemWithIndex<nsDisplayFixedPosition>(
+      aBuilder, aFrame, aIndex + 1, &temp, aScrollTargetASR);
 }
 
 nsDisplayFixedPosition::nsDisplayFixedPosition(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
     const ActiveScrolledRoot* aActiveScrolledRoot,
-    const ActiveScrolledRoot* aContainerASR)
+    const ActiveScrolledRoot* aScrollTargetASR)
     : nsDisplayOwnLayer(aBuilder, aFrame, aList, aActiveScrolledRoot),
-      mContainerASR(aContainerASR),
+      mScrollTargetASR(aScrollTargetASR),
       mIsFixedBackground(false) {
   MOZ_COUNT_CTOR(nsDisplayFixedPosition);
 }
 
-nsDisplayFixedPosition::nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder,
-                                               nsIFrame* aFrame,
-                                               nsDisplayList* aList)
+nsDisplayFixedPosition::nsDisplayFixedPosition(
+    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
+    const ActiveScrolledRoot* aScrollTargetASR)
     : nsDisplayOwnLayer(aBuilder, aFrame, aList,
                         aBuilder->CurrentActiveScrolledRoot()),
-      mContainerASR(nullptr),  // XXX maybe this should be something?
+      // For fixed backgrounds, this is the ASR for the nearest scroll frame.
+      mScrollTargetASR(aScrollTargetASR),
       mIsFixedBackground(true) {
   MOZ_COUNT_CTOR(nsDisplayFixedPosition);
 }
 
 ScrollableLayerGuid::ViewID nsDisplayFixedPosition::GetScrollTargetId() {
-  if (mContainerASR && !nsLayoutUtils::IsReallyFixedPos(mFrame)) {
-    return mContainerASR->GetViewId();
+  if (mScrollTargetASR &&
+      (mIsFixedBackground || !nsLayoutUtils::IsReallyFixedPos(mFrame))) {
+    return mScrollTargetASR->GetViewId();
   }
   return nsLayoutUtils::ScrollIdForRootScrollFrame(mFrame->PresContext());
 }
@@ -5503,9 +5506,10 @@ bool nsDisplayFixedPosition::UpdateScrollData(
 }
 
 void nsDisplayFixedPosition::WriteDebugInfo(std::stringstream& aStream) {
-  aStream << nsPrintfCString(" (containerASR %s) (scrolltarget %" PRIu64 ")",
-                             ActiveScrolledRoot::ToString(mContainerASR).get(),
-                             GetScrollTargetId())
+  aStream << nsPrintfCString(
+                 " (containerASR %s) (scrolltarget %" PRIu64 ")",
+                 ActiveScrolledRoot::ToString(mScrollTargetASR).get(),
+                 GetScrollTargetId())
                  .get();
 }
 
@@ -5540,8 +5544,8 @@ TableType GetTableTypeFromFrame(nsIFrame* aFrame) {
 
 nsDisplayTableFixedPosition::nsDisplayTableFixedPosition(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
-    nsIFrame* aAncestorFrame)
-    : nsDisplayFixedPosition(aBuilder, aFrame, aList),
+    nsIFrame* aAncestorFrame, const ActiveScrolledRoot* aScrollTargetASR)
+    : nsDisplayFixedPosition(aBuilder, aFrame, aList, aScrollTargetASR),
       mAncestorFrame(aAncestorFrame) {
   if (aBuilder->IsRetainingDisplayList()) {
     mAncestorFrame->AddDisplayItem(this);
