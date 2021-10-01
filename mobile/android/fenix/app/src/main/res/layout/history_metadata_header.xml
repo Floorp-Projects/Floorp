@@ -14,7 +14,7 @@
         style="@style/Header16TextStyle"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:text="@string/history_metadata_header_2"
+        android:text="@string/history_metadata_header_3"
         android:maxLines="2"
         android:gravity="center_vertical"
         app:layout_constraintStart_toStartOf="parent"

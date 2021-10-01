@@ -19,7 +19,7 @@
         android:background="@drawable/rounded_button_background"
         android:clickable="false"
         android:focusable="false"
-        android:text="@string/browser_menu_customize_home"
+        android:text="@string/browser_menu_customize_home_1"
         android:gravity="center"
         android:maxLines="1"
         app:layout_constraintBottom_toBottomOf="parent"
