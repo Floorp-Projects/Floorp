@@ -289,16 +289,6 @@
   value: true
   mirror: always
 
-- name: apz.nonwr.activate_all_scroll_frames
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: apz.nonwr.activate_all_scroll_frames_when_fission
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: apz.prefer_jank_minimal_displayports
   type: RelaxedAtomicBool
   value: true

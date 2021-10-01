@@ -77,8 +77,6 @@ add_task(async () => {
       ["apz.popups.enabled", true],
       ["apz.wr.activate_all_scroll_frames", false],
       ["apz.wr.activate_all_scroll_frames_when_fission", false],
-      ["apz.nonwr.activate_all_scroll_frames", false],
-      ["apz.nonwr.activate_all_scroll_frames_when_fission", false],
     ],
   });
 
