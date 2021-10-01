@@ -8,10 +8,12 @@
 #define nsSegmentedBuffer_h__
 
 #include <stddef.h>
+#include <functional>
 
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
+#include "nsTArray.h"
 #include "mozilla/DataMutex.h"
 
 class nsIEventTarget;

@@ -140,7 +140,7 @@ void nsSegmentedBuffer::FreeOMT(std::function<void()>&& aTask) {
       return;
     }
   } else {
-    mFreeOMT = MakeRefPtr<FreeOMTPointers>();
+    mFreeOMT = mozilla::MakeRefPtr<FreeOMTPointers>();
     mFreeOMT->AddTask(std::move(aTask));
   }
 

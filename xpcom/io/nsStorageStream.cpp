@@ -573,7 +573,7 @@ void nsStorageInputStream::SerializeInternal(InputStreamParams& aParams,
   *aSizeUsed = 0;
 
   uint64_t remaining = 0;
-  DebugOnly<nsresult> rv = Available(&remaining);
+  mozilla::DebugOnly<nsresult> rv = Available(&remaining);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   if (remaining >= aMaxSize) {
