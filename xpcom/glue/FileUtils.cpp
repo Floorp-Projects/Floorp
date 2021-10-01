@@ -126,8 +126,9 @@ bool mozilla::fallocate(PRFileDesc* aFD, int64_t aLength) {
 
   PR_Seek64(aFD, oldpos, PR_SEEK_SET);
   return nWrite == 1;
-#  endif
+#  else
   return false;
+#  endif
 }
 
 void mozilla::ReadAheadLib(nsIFile* aFile) {
