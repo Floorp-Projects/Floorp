@@ -133,8 +133,7 @@ StackingContextHelper::StackingContextHelper(
     : mBuilder(&aBuilder),
       mScale(1.0f, 1.0f),
       mDeferredTransformItem(aParams.mDeferredTransformItem),
-      mRasterizeLocally(aParams.mRasterizeLocally ||
-                        aParentSC.mRasterizeLocally) {
+      mRasterizeLocally(aParams.mRasterizeLocally) {
   MOZ_ASSERT(!aContainerItem || aContainerItem->CreatesStackingContextHelper());
 
   mOrigin = aParentSC.mOrigin + aBounds.TopLeft();
