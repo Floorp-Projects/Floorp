@@ -5,19 +5,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AvailableMemoryWatcher.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/Unused.h"
 #include "nsAppRunner.h"
 #include "nsExceptionHandler.h"
 #include "nsICrashReporter.h"
+#include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsISupports.h"
 #include "nsITimer.h"
 #include "nsMemoryPressure.h"
+#include "nsServiceManagerUtils.h"
 #include "nsWindowsHelpers.h"
 
 #include <memoryapi.h>
+
+extern mozilla::Atomic<uint32_t, mozilla::MemoryOrdering::Relaxed>
+    sNumLowPhysicalMemEvents;
 
 namespace mozilla {
 
