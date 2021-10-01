@@ -240,10 +240,6 @@ windows10-2004-tests:
     - test-verify-wpt
     - xpcshell
 
-windows10-64-ccov-tests:
-    - jittest
-    - xpcshell
-
 windows10-64-2004-ccov-tests:
     - crashtest
     - reftest
@@ -262,6 +258,8 @@ windows10-64-2004-ccov-tests:
     - web-platform-tests-reftest
     - web-platform-tests-print-reftest
     - web-platform-tests-wdspec
+    # - jittest  # Bug 1733505
+    # - xpcshell  # Bug 1733505
 
 windows10-64-2004-failure-tests:
     - mochitest-browser-chrome-failures

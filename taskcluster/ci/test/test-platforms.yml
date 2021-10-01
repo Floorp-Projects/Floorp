@@ -177,11 +177,6 @@ windows10-32-2004-mingwclang-qr/opt:
         - mingwclang-tests-opt
 
 # win64
-windows10-64-ccov-qr/opt:
-    build-platform: win64-ccov/opt
-    test-sets:
-        - windows10-64-ccov-tests  # For Bug 1723531 but without what has been migrated in Bug X so far
-
 windows10-64-qr/opt:
     build-platform: win64/opt
     test-sets:
