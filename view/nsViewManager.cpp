@@ -455,7 +455,7 @@ void nsViewManager::FlushDirtyRegionToWidget(nsView* aView) {
 
   if (!aView->HasNonEmptyDirtyRegion()) return;
 
-  nsRegion* dirtyRegion = aView->GetDirtyRegion();
+  const UniquePtr<nsRegion>& dirtyRegion = aView->DirtyRegion();
   nsView* nearestViewWithWidget = aView;
   while (!nearestViewWithWidget->HasWidget() &&
          nearestViewWithWidget->GetParent()) {
@@ -475,9 +475,7 @@ void nsViewManager::InvalidateView(nsView* aView) {
 }
 
 static void AddDirtyRegion(nsView* aView, const nsRegion& aDamagedRegion) {
-  nsRegion* dirtyRegion = aView->GetDirtyRegion();
-  if (!dirtyRegion) return;
-
+  const UniquePtr<nsRegion>& dirtyRegion = aView->DirtyRegion();
   dirtyRegion->Or(*dirtyRegion, aDamagedRegion);
   dirtyRegion->SimplifyOutward(8);
 }
