@@ -23,7 +23,7 @@ add_task(async function() {
 });
 
 async function testServerSentEventResources(target) {
-  const tab = await addTab(URL_ROOT + "sse_frontend.html");
+  const tab = await addTab(URL_ROOT_SSL + "sse_frontend.html");
 
   const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab

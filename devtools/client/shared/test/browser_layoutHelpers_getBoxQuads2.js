@@ -51,7 +51,7 @@
 "use strict";
 /* import-globals-from ../../../../gfx/layers/apz/test/mochitest/apz_test_utils.js */
 
-const TEST_URI = TEST_URI_ROOT + "doc_layoutHelpers_getBoxQuads2-a.html";
+const TEST_URI = TEST_URI_ROOT_SSL + "doc_layoutHelpers_getBoxQuads2-a.html";
 
 add_task(async function() {
   info("Opening a fission window.");
