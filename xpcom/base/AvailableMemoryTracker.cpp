@@ -8,6 +8,7 @@
 
 #if defined(XP_WIN)
 #  include "mozilla/WindowsVersion.h"
+#  include "nsIMemoryReporter.h"
 #endif
 
 #include "nsIObserver.h"
@@ -27,6 +28,8 @@
 
 using namespace mozilla;
 
+Atomic<uint32_t, MemoryOrdering::Relaxed> sNumLowPhysicalMemEvents;
+
 namespace {
 
 #if defined(XP_WIN)
@@ -45,8 +48,6 @@ typedef struct _HEAP_OPTIMIZE_RESOURCES_INFORMATION {
   DWORD Flags;
 } HEAP_OPTIMIZE_RESOURCES_INFORMATION, *PHEAP_OPTIMIZE_RESOURCES_INFORMATION;
 #  endif
-
-Atomic<uint32_t, MemoryOrdering::Relaxed> sNumLowPhysicalMemEvents;
 
 static int64_t LowMemoryEventsPhysicalDistinguishedAmount() {
   return sNumLowPhysicalMemEvents;
