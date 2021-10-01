@@ -7,8 +7,10 @@
 #include "nsMemoryPressure.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Services.h"
 
 #include "nsThreadUtils.h"
+#include "nsIObserverService.h"
 
 using namespace mozilla;
 

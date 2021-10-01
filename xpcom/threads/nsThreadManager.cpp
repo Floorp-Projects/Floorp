@@ -11,6 +11,7 @@
 #include "nsIClassInfoImpl.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
+#include "nsExceptionHandler.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -25,6 +26,7 @@
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/ThreadLocal.h"
 #include "TaskController.h"
+#include "ThreadEventTarget.h"
 #ifdef MOZ_CANARY
 #  include <fcntl.h>
 #  include <unistd.h>

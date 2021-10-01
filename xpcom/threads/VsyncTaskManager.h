@@ -8,6 +8,7 @@
 #define mozilla_VsyncTaskManager_h
 
 #include "TaskController.h"
+#include "mozilla/StaticPtr.h"
 
 namespace mozilla {
 class VsyncTaskManager : public TaskManager {
