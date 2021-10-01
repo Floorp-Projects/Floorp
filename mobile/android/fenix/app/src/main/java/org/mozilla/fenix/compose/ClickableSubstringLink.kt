@@ -14,8 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import mozilla.components.ui.colors.PhotonColors
 
 /**
@@ -46,7 +46,6 @@ fun ClickableSubstringLink(
 
         addStyle(
             SpanStyle(
-                textDecoration = TextDecoration.Underline,
                 color = when (isSystemInDarkTheme()) {
                     true -> PhotonColors.Violet40
                     false -> PhotonColors.Violet70
@@ -60,6 +59,12 @@ fun ClickableSubstringLink(
             SpanStyle(textColor),
             start = clickableEndIndex,
             end = text.length
+        )
+
+        addStyle(
+            SpanStyle(fontSize = 12.sp),
+            start = 0,
+            end = clickableEndIndex
         )
 
         addStringAnnotation(

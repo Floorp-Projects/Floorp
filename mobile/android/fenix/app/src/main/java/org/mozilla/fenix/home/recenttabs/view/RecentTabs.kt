@@ -29,7 +29,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
@@ -251,7 +250,7 @@ private fun RecentTabImage(
                 Box(
                     modifier = Modifier.background(
                         color = when (isSystemInDarkTheme()) {
-                            true -> Color(0xFF42414D) // DarkGrey30
+                            true -> PhotonColors.DarkGrey30
                             false -> PhotonColors.LightGrey30
                         }
                     )

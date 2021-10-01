@@ -8,13 +8,14 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.pocket
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -33,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import mozilla.components.concept.fetch.Client
 import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.ui.colors.PhotonColors
@@ -110,9 +112,14 @@ fun PocketStories(
     val listState = rememberLazyListState()
     val flingBehavior = EagerFlingBehavior(lazyRowState = listState)
 
-    LazyRow(state = listState, flingBehavior = flingBehavior) {
-        itemsIndexed(storiesToShow) { columnIndex, columnItems ->
-            Column(Modifier.padding(end = if (columnIndex < storiesToShow.size - 1) 8.dp else 0.dp)) {
+    LazyRow(
+        contentPadding = PaddingValues(start = 8.dp, end = 8.dp),
+        state = listState,
+        flingBehavior = flingBehavior,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        itemsIndexed(storiesToShow) { _, columnItems ->
+            Column {
                 columnItems.forEachIndexed { rowIndex, story ->
                     if (story == placeholderStory) {
                         ListItemTabLargePlaceholder(stringResource(R.string.pocket_stories_placeholder_text)) {
@@ -195,7 +202,12 @@ fun PoweredByPocketHeader(
             Spacer(modifier = Modifier.width(16.dp))
 
             Column {
-                Text(text = stringResource(R.string.pocket_stories_feature_title), color = color)
+                Text(
+                    text = stringResource(R.string.pocket_stories_feature_title),
+                    color = color,
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp
+                )
 
                 ClickableSubstringLink(text, color, linkStartIndex, linkEndIndex) {
                     onExternalLinkClicked("https://www.mozilla.org/en-US/firefox/pocket/")

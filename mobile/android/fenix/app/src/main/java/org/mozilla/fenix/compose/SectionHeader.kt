@@ -41,8 +41,39 @@ fun SectionHeader(
     )
 }
 
+/**
+ * Default layout for the header of a screen section.
+ *
+ * @param text [String] to be styled as header and displayed.
+ * @param modifier [Modifier] to be applied to the [Text].
+ */
+@Composable
+fun HomeSectionHeader(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        modifier = modifier,
+        text = text,
+        style = TextStyle(
+            fontFamily = FontFamily(Font(R.font.metropolis_semibold)),
+            fontSize = 16.sp,
+            lineHeight = 20.sp
+        ),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        color = FirefoxTheme.colors.textPrimary
+    )
+}
+
 @Composable
 @Preview
 private fun HeadingTextPreview() {
     SectionHeader(text = "Section title")
+}
+
+@Composable
+@Preview
+private fun HomeHeadingTextPreview() {
+    HomeSectionHeader(text = "Home section title")
 }
