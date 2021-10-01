@@ -52,7 +52,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_bookmarks">Arregistrate pocu fà</string>
+    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">Arregistrate pocu fà</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_bookmarked">Indettati pocu fà</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">Indette arregistrate pocu fà</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -126,7 +128,14 @@
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header">Esplurazioni recente</string>
+    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">Esplurazioni recente</string>
+
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Visitati pocu fà</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">Caccià</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -202,6 +211,8 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Mudificà</string>
 
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">Persunalizà l’accolta</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Screnu d’accolta</string>
@@ -286,7 +297,7 @@
     <!-- Preference linking to the your rights SUMO page -->
     <string name="preferences_your_rights">Diritti di l’utilizatore</string>
     <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">Parolle d’entrata</string>
+    <string name="preferences_passwords">Parolle d’intesa</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
     <string name="preferences_credit_cards_addresses">Carte bancarie è indirizzi</string>
     <!-- Preference for settings related to changing the default browser -->
@@ -397,6 +408,18 @@
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Cullezzione di moduli addiziunale mudificata. Chjusura di l’appiecazione per piglialla in contu…</string>
 
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Rivene in st’unghjetta</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Arregistrate pocu fà</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_bookmarked">Indettati pocu fà</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Visitati pocu fà</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">Stu modulu addiziunale ùn hè micca accettatu</string>
@@ -479,7 +502,7 @@
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Statistiche d’impiegu è dati tecnichi</string>
     <!-- Preference description for usage and technical data collection -->
-    <string name="preferences_usage_data_description">Sparte cù Mozilla i dati d’andamentu, d’impiegu, di materiale è di persunalizazione di u vostru navigatore per aiutacci à amendà %1$s</string>
+    <string name="preferences_usage_data_description">Sparte cù Mozilla i dati di perfurmenza, d’impiegu, di materiale è di persunalizazione di u vostru navigatore per aiutacci à amendà %1$s</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Dati cummerciali</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
@@ -582,6 +605,13 @@
     <string name="content_description_history_menu">Listinu di l’elementi di cronolugia</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Chjode</string>
+
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d situ</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d siti</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Unghjette chjose pocu fà</string>
@@ -756,6 +786,9 @@
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string name="tab_tray_save_to_collection">Arregistrà</string>
 
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title">Altri</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Squassà a cronolugia</string>
@@ -768,15 +801,15 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Squassà</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">Cupià</string>
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">Cupià</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">Sparte</string>
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">Sparte</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">Apre in una nova unghjetta</string>
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Apre in una nova unghjetta</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">Apre in un’unghjetta privata</string>
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Apre in un’unghjetta privata</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">Squassà</string>
+    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">Squassà</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d selezziunatu(i)</string>
@@ -1254,16 +1287,16 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Avete dighjà un contu ?</string>
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">Fighjate ciò chì hè novu</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">Fighjate ciò chì hè novu</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">Avete dumande apprupositu di u rinnovu di %s ? Vulete sapè ciò chì hà cambiatu ?</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">Avete dumande apprupositu di u rinnovu di %s ? Vulete sapè ciò chì hà cambiatu ?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">Truvate risposte quì</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">Truvate risposte quì</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Sincrunizate Firefox trà i vostri apparechji</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_description">Impurtate e vostre indette, cronolugia è parolle d’entrata in Firefox nant’à st’apparechju.</string>
+    <string name="onboarding_manual_sign_in_description">Impurtate e vostre indette, cronolugia è parolle d’intesa in Firefox nant’à st’apparechju.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1287,7 +1320,7 @@
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Classica (predefinita)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Equilibratu trà a cunfidenzialità è a prestazione. E pagine si caricanu nurmalmente.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Equilibratu trà a cunfidenzialità è a perfurmenza. E pagine si caricanu nurmalmente.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Severa (ricumandata)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
@@ -1299,14 +1332,14 @@
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">Piazzate a barra d’attrezzi à purtata di manu. Lasciatela quaghjò o dispiazzatela quassù.</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">Navigazione privata</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">Navigazione privata</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">Apre in una sola unghjetta privata : picchichjate nant’à l’icona %s.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">Apre in una sola unghjetta privata : picchichjate nant’à l’icona %s.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">Apre unghjette private ogni volta : definite e vostre preferenze di navigazione privata.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">Apre unghjette private ogni volta : definite e vostre preferenze di navigazione privata.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">Apre e preferenze</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">Apre e preferenze</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">A vostra vita privata</string>
     <!-- text for the privacy notice onboarding card description
@@ -1381,7 +1414,7 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Classica (predefinita)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Equilibratu trà a cunfidenzialità è a prestazione. E pagine si caricanu nurmalmente.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Equilibratu trà a cunfidenzialità è a perfurmenza. E pagine si caricanu nurmalmente.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ciò chì hè bluccatu da a prutezzione classica contr’à u spiunagiu</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
@@ -1471,6 +1504,12 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Squasseghja i canistrelli definiti da ridirezzione ver di siti web cunnisciuti per u spiunagiu.</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Certi perseguitatori marcati quì sottu sò stati in parte sbluccati nant’à sta pagina perchè vo avete interagite cù elli *.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Sapene di più</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Assistenza</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1520,9 +1559,9 @@
     <string name="add_to_homescreen_description_2">Hè faciule d’aghjunghje stu situ nant’à u screnu d’accolta di u vostru apparechju per accedeci direttamente è navigà più prestu cum’è s’ella fussi un’appiecazione.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Identificazioni è parolle d’entrata</string>
+    <string name="preferences_passwords_logins_and_passwords">Identificazioni è parolle d’intesa</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Arregistrà l’identificazioni è e parolle d’entrata</string>
+    <string name="preferences_passwords_save_logins">Arregistrà l’identificazioni è e parolle d’intesa</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Dumandà per arregistrà</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1533,11 +1572,14 @@
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Riempiimentu autumaticu in %1$s</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
-    <string name="preferences_passwords_autofill_description">Riimpiete è arregistrate nomi d’utilizatore è parolle d’entrata in i siti web quandu vi impiegate %1$s.</string>
+    <string name="preferences_passwords_autofill_description">Riimpiete è arregistrate nomi d’utilizatore è parolle d’intesa in i siti web quandu vi impiegate %1$s.</string>
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill">Riempiimentu autumaticu in l’altre appiecazioni</string>
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
-    <string name="preferences_android_autofill_description">Riimpiete nomi d’utilizatore è parolle d’entrata in l’altre appiecazioni nant’à u vostru apparechju.</string>
+    <string name="preferences_android_autofill_description">Riimpiete nomi d’utilizatore è parolle d’intesa in l’altre appiecazioni nant’à u vostru apparechju.</string>
+
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Aghjunghje un’identificazione di cunnessione</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincrunizà l’identificazioni</string>
@@ -1556,9 +1598,9 @@
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Eccezzioni</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">L’identificazioni è parolle d’entrata chì ùn sò micca arregistrate seranu affissate quì.</string>
+    <string name="preferences_passwords_exceptions_description_empty">L’identificazioni è parolle d’intesa chì ùn sò micca arregistrate seranu affissate quì.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">L’identificazioni è parolle d’entrata ùn seranu micca arregistrate per sti siti.</string>
+    <string name="preferences_passwords_exceptions_description">L’identificazioni è parolle d’intesa ùn seranu micca arregistrate per sti siti.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Squassà tutte l’eccezzioni</string>
     <!-- Hint for search box in logins list -->
@@ -1573,7 +1615,7 @@
     <!-- The header for the username for a login -->
     <string name="preferences_passwords_saved_logins_username">Nome d’utilizatore</string>
     <!-- The header for the password for a login -->
-    <string name="preferences_passwords_saved_logins_password">Parolla d’entrata</string>
+    <string name="preferences_passwords_saved_logins_password">Parolla d’intesa</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin">Scrivite torna u vostru codice PIN</string>
     <!-- Message displayed in security prompt to access saved logins -->
@@ -1590,33 +1632,35 @@
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
     <string name="logins_doorhanger_save_dont_save">Ùn arregistrà micca</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
-    <string name="logins_password_copied">Parolla d’entrata cupiata ver di u preme’papei</string>
+    <string name="logins_password_copied">Parolla d’intesa cupiata ver di u preme’papei</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">Nome d’utilizatore cupiatu ver di u preme’papei</string>
     <!-- Shown in snackbar to tell user that the site has been copied -->
     <string name="logins_site_copied">Situ cupiatu ver di u preme’papei</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
-    <string name="saved_logins_copy_password">Cupià a parolla d’entrata</string>
+    <string name="saved_logins_copy_password">Cupià a parolla d’intesa</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
-    <string name="saved_logins_clear_password">Squassà a parolla d’entrata</string>
+    <string name="saved_logins_clear_password">Squassà a parolla d’intesa</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Cupià u nome d’utilizatore</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">Squassà u nome d’utilizatore</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Squassà u nome d’ospite</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Cupià u situ</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
     <string name="saved_login_open_site">Apre u situ in u navigatore</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
-    <string name="saved_login_reveal_password">Affissa a parolla d’entrata</string>
+    <string name="saved_login_reveal_password">Affissa a parolla d’intesa</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
-    <string name="saved_login_hide_password">Piattà a parolla d’entrata</string>
+    <string name="saved_login_hide_password">Piattà a parolla d’intesa</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Spalancate per affissà l’identificazioni di cunnessione arregistrate</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Prutigite e vostre identificazioni di cunnessione è parolle d’entrata</string>
+    <string name="logins_warning_dialog_title">Prutigite e vostre identificazioni di cunnessione è parolle d’intesa</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Definite un dissegnu di chjusura, un codice PIN o una parolla d’entrata per prutege e vostre identificazioni di cunnessione è parolle d’entrata arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
+    <string name="logins_warning_dialog_message">Definite un dissegnu di chjusura, un codice PIN o una parolla d’intesa per prutege e vostre identificazioni di cunnessione è parolle d’intesa arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Dopu</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1692,7 +1736,7 @@
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Prutege e vostre carte bancarie</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Definite un dissegnu di chjusura, un codice PIN o una parolla d’entrata per prutege e vostre carte arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
+    <string name="credit_cards_warning_dialog_message">Definite un dissegnu di chjusura, un codice PIN o una parolla d’intesa per prutege e vostre carte arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Cunfigurà subitu</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1752,7 +1796,7 @@
     <string name="migration_title">Benvenuta in un tuttu novu %s</string>
 
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Un navigatore tuttu novu vi aspetta, cù un andamentu è funzioni più belli per aiutavvi à fà ancu più in linea.\n\nAspettate per piacè durante u rinnovu di %s cù</string>
+    <string name="migration_description">Un navigatore tuttu novu vi aspetta, cù perfurmenze è funzioni più belle per aiutavvi à fà ancu più in linea.\n\nAspettate per piacè durante u rinnovu di %s cù</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Rinnovu di %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1760,7 +1804,7 @@
     <!-- Accessibility description text for a completed migration item -->
     <string name="migration_icon_description">Migrazione compia</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">Parolle d’entrata</string>
+    <string name="migration_text_passwords">Parolle d’intesa</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Per permettelu :</string>
@@ -1773,9 +1817,13 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Attivate <b>%1$s</b>]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">Cunnessione assicurizata</string>
+    <string name="quick_settings_sheet_secure_connection_2">A cunnessione hè assicurata</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">Cunnessione micca assicurizata</string>
+    <string name="quick_settings_sheet_insecure_connection_2">A cunnessione ùn hè micca assicurata</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Cunnessione assicurizata</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Cunnessione micca assicurizata</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Site sicuru di vulè caccià tutti i permessi per tutti i siti ?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1808,15 +1856,21 @@
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">U campu di testu mudifichevule per u nome d’utilizatore di l’identificazione.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">U campu di testu mudifichevule per a parolla d’entrata di l’identificazione.</string>
+    <string name="saved_login_password_description">U campu di testu mudifichevule per a parolla d’intesa di l’identificazione.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Arregistrà i cambiamenti di l’identificazione.</string>
     <!--  The button description to discard changes to an edited login. -->
     <string name="discard_changes">Disfà i cambiamenti</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Mudificà</string>
-    <!--  The error message in edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Parolla d’entrata richiesta</string>
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Aghjunghje una nova identificazione di cunnessione</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Parolla d’intesa richiesta</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">U nome d’utilizatore hè richiestu</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">U nome d’ospite hè richiestu</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Ricerca vucale</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1824,6 +1878,15 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">L’identificazione di cunnessione cù stu nome d’utilizatore esiste dighjà</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.esempiu.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">L’indirizzu web deve cuntene « https:// » o « http:// »</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">L’indirizzu web deve cuntene « https:// » o « http:// »</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Un nome d’ospite accettevule hè richiestu</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1852,8 +1915,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Iè, aghju capitu</string>
 
+    <!-- Label for the show most visited top sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites_2">Affissà i siti principale i più visitati</string>
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Affissà i siti visitati aspessu</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Affissà i siti visitati aspessu</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nome</string>

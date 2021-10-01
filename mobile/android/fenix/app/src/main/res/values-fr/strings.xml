@@ -1526,6 +1526,9 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Efface les cookies définis par redirection vers des sites web connus pour le pistage.</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Certains traqueurs repérés ci-dessous ont été partiellement débloqués sur cette page car vous avez interagi avec eux *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">En savoir plus</string>
 

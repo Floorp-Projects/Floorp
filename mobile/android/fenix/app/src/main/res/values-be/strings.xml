@@ -51,7 +51,7 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_bookmarks">Нядаўна захаваныя</string>
+    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">Нядаўна захаваныя</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">Нядаўна захаваныя закладкі</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -383,6 +383,9 @@
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Калекцыя дадаткаў зменена. Выхад з праграмы, каб прымяніць змены…</string>
+
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -754,15 +757,15 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Ачысціць</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">Капіраваць</string>
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">Капіраваць</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">Падзяліцца</string>
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">Падзяліцца</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">Адкрыць у новай картцы</string>
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Адкрыць у новай картцы</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">Адкрыць у прыватнай картцы</string>
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Адкрыць у прыватнай картцы</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">Выдаліць</string>
+    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">Выдаліць</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">Выбрана: %1$d</string>
@@ -1246,12 +1249,12 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Ужо маеце ўліковы запіс?</string>
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">Паглядзіце, што новага</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">Паглядзіце, што новага</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">Маеце пытанні па абноўленым выглядзе %s? Хочаце ведаць, што змянілася?</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">Маеце пытанні па абноўленым выглядзе %s? Хочаце ведаць, што змянілася?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">Адказы тут</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">Адказы тут</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Сінхранізуйце Firefox паміж прыладамі</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1291,14 +1294,14 @@
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">Майце панэль інструментаў пад рукой. Пакіньце яе ўнізе або перамясціце ўверх.</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">Аглядайце прыватна</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">Аглядайце прыватна</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">Адкрыць прыватную картку адзін раз: Націсніце значок %s.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">Адкрыць прыватную картку адзін раз: Націсніце значок %s.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">Адкрываць прыватныя карткі кожны раз: Абнавіце налады прыватнага аглядання.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">Адкрываць прыватныя карткі кожны раз: Абнавіце налады прыватнага аглядання.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">Адкрыць налады</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">Адкрыць налады</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Ваша прыватнасць</string>
     <!-- text for the privacy notice onboarding card description
@@ -1527,6 +1530,9 @@
     <string name="preferences_passwords_save_logins_never_save">Ніколі не захоўваць</string>
     <!-- Preference for autofilling saved logins in Fenix -->
     <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Аўтазапаўненне</string>
+
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Дадаць лагін</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Сінхранізацыя лагінаў</string>
@@ -1766,9 +1772,9 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Пераключыце <b>%1$s</b> на УКЛ]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">Бяспечнае злучэнне</string>
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Бяспечнае злучэнне</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">Не бяспечнае злучэнне</string>
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Не бяспечнае злучэнне</string>
 
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Ці ўпэўнены Вы, што хочаце выдаліць усе дазволы на ўсіх сайтах?</string>
@@ -1810,8 +1816,12 @@
     <string name="discard_changes">Адмяніць змены</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Рэдагаванне</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Дадаць новы лагін</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Патрабуецца пароль</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Патрабуецца імя карыстальніка</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Галасавы пошук</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1819,6 +1829,9 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Лагін з такім імем карыстальніка ўжо існуе</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1847,7 +1860,7 @@
     <string name="top_sites_max_limit_confirmation_button">OK, зразумела</string>
 
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Паказваць найбольш наведаныя сайты</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Паказваць найбольш наведаныя сайты</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Назва</string>

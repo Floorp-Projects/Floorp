@@ -52,7 +52,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_bookmarks">ਤਾਜ਼ਾ ਸੰਭਾਲੇ</string>
+    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">ਤਾਜ਼ਾ ਸੰਭਾਲੇ</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_bookmarked">ਤਾਜ਼ਾ ਬੁੱਕਮਾਰਕ ਕੀਤੇ</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">ਤਾਜ਼ਾ ਸੰਭਾਲੇ ਬੁੱਕਮਾਰਕ</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -123,6 +125,17 @@
     <string name="recent_tabs_header">ਵਾਪਸ ਜਾਓ</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">ਸਭ ਵੇਖੋ</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">ਪਿਛਲੀਆਂ ਖੋਜਾਂ</string>
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">ਹਾਲ ਦੇ ਖੋਲ੍ਹੀਆਂ ਗਈਆਂ</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">ਹਟਾਓ</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -200,6 +213,8 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">ਸੋਧੋ</string>
 
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">ਘਰ ਨੂੰ ਕਸਟਮਾਈਜ਼ ਕਰੋ</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">ਮੁੱਖ ਸਕਰੀਨ</string>
@@ -395,6 +410,18 @@
     <string name="toast_customize_addon_collection_done">ਐਡ-ਆਨ ਭੰਡਾਰ ਸੋਧਿਆ ਗਿਆ। ਤਬਦੀਲੀਆਂ ਲਾਗੂ ਕਰਨ ਲਈ ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ
 ਬੰਦ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ…</string>
 
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">ਵਾਪਸ ਜਾਓ</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">ਤਾਜ਼ਾ ਸੰਭਾਲੇ</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recently_bookmarked">ਤਾਜ਼ਾ ਬੁੱਕਮਾਰਕ ਕੀਤੇ</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">ਤਾਜ਼ਾ ਖੋਲ੍ਹੇ ਗਏ</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">ਐਡ-ਆਨ ਸਹਾਇਕ ਨਹੀਂ ਹੈ</string>
@@ -585,6 +612,13 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">ਬੰਦ ਕਰੋ</string>
 
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d ਸਾਈਟ</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d ਸਾਈਟਾਂ</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">ਤਾਜ਼ਾ ਬੰਦ ਕੀਤੀਆਂ ਟੈਬਾਂ</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -642,6 +676,8 @@
     <string name="studies_remove">ਹਟਾਓ</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">ਸਰਗਰਮ</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox ਸਮੇਂ ਸਮੇਂ ਉੱਤੇ ਅਧਿਐਨ ਇੰਸਟਾਲ ਅਤੇ ਚਲਾ ਸਕਦਾ ਹੈ।</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">ਹੋਰ ਸਿੱਖੋ</string>
     <!-- Dialog message shown after removing a study -->
@@ -755,6 +791,9 @@
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string name="tab_tray_save_to_collection">ਸੰਭਾਲੋ</string>
 
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title">ਹੋਰ</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">ਅਤੀਤ ਹਟਾਓ</string>
@@ -767,15 +806,15 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">ਸਾਫ਼ ਕਰੋ</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">ਕਾਪੀ ਕਰੋ</string>
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">ਕਾਪੀ ਕਰੋ</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">ਸਾਂਝਾ ਕਰੋ</string>
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">ਸਾਂਝਾ ਕਰੋ</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">ਨਵੀਂ ਟੈਬ ‘ਚ ਖੋਲ੍ਹੋ</string>
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">ਨਵੀਂ ਟੈਬ ‘ਚ ਖੋਲ੍ਹੋ</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">ਪ੍ਰਾਈਵੇਟ ਟੈਬ ‘ਚ ਖੋਲ੍ਹੋ</string>
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">ਪ੍ਰਾਈਵੇਟ ਟੈਬ ‘ਚ ਖੋਲ੍ਹੋ</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">ਹਟਾਓ</string>
+    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">ਹਟਾਓ</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d ਚੁਣੇ</string>
@@ -1253,12 +1292,12 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ?</string>
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">ਵੇਖੋ ਕਿ ਨਵਾਂ ਕੀ ਹੈ</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">ਵੇਖੋ ਕਿ ਨਵਾਂ ਕੀ ਹੈ</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">%s ਮੁੜ-ਡਿਜ਼ਾਈਨ ਬਾਰੇ ਕੋਈ ਸਵਾਲ ਹੈ? ਲੱਭ ਰਹੇ ਕੋ ਕਿ ਕੀ ਬਦਲਿਆ ਹੈ?</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">%s ਮੁੜ-ਡਿਜ਼ਾਈਨ ਬਾਰੇ ਕੋਈ ਸਵਾਲ ਹੈ? ਲੱਭ ਰਹੇ ਕੋ ਕਿ ਕੀ ਬਦਲਿਆ ਹੈ?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">ਜਵਾਬ ਇੱਥੇ ਲਵੋ</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">ਜਵਾਬ ਇੱਥੇ ਲਵੋ</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ Firefox ਸਿੰਕ ਕਰੋ</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1299,14 +1338,14 @@
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">ਸੌਖੀ ਪਹੁੰਚ ਲਈ ਟੂਲਬਾਰ ਨੂੰ ਰੱਖੋ। ਹੇਠਾਂ ਰੱਖੋ ਜਾਂ ਇਸ ਨੂੰ ਉੱਤੇ ਰੱਖੋ।</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">ਪ੍ਰਾਈਵੇਟ ਢੰਗ ਨਾਲ ਬਰਾਊਜ਼ ਕਰੋ</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">ਪ੍ਰਾਈਵੇਟ ਢੰਗ ਨਾਲ ਬਰਾਊਜ਼ ਕਰੋ</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">ਇੱਕ ਵਾਰ ਪ੍ਰਾਈਵੇਟ ਟੈਬ ਵਿੱਚ ਖੋਲ੍ਹੋ: %s ਆਈਕਾਨ ਨੂੰ ਛੂਹੋ।</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">ਇੱਕ ਵਾਰ ਪ੍ਰਾਈਵੇਟ ਟੈਬ ਵਿੱਚ ਖੋਲ੍ਹੋ: %s ਆਈਕਾਨ ਨੂੰ ਛੂਹੋ।</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">ਹਰ ਵਾਰ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਖੋਲ੍ਹੋ: ਤੁਹਾਡੀਆਂ ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਸੈਟਿੰਗਾਂ ਨੂੰ ਅੱਪਡੇਟ ਕਰੋ।</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">ਹਰ ਵਾਰ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਖੋਲ੍ਹੋ: ਤੁਹਾਡੀਆਂ ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਸੈਟਿੰਗਾਂ ਨੂੰ ਅੱਪਡੇਟ ਕਰੋ।</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">ਸੈਟਿੰਗਾਂ ਖੋਲ੍ਹੋ</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">ਸੈਟਿੰਗਾਂ ਖੋਲ੍ਹੋ</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ</string>
     <!-- text for the privacy notice onboarding card description
@@ -1471,6 +1510,12 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">ਜਾਣੀਆਂ-ਪਛਾਣੀਆਂ ਟਰੈਕਰ ਵੈੱਬਸਾਈਟਾਂ ਲਈ ਰਿ-ਡਿਰੈਕ ਰਾਹੀਂ ਸੈੱਟ ਕਰਨ ਵਾਲੇ ਕੂਕੀਜ਼ ਸਾਫ਼ ਕਰੋ।</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">ਇਸ ਸਫ਼ੇ ਉੱਤੇ ਹੇਠ ਨਿਸ਼ਾਨ ਲਾਏ ਕੁਝ ਟਰੈਕਰਾਂ ਤੋਂ ਅਧੂਰੇ ਰੂਪ ਵਿੱਚ ਪਾਬੰਦੀ ਹਟਾਈ ਗਈ ਹੈ, ਕਿਉਂਕਿ ਤੁਸੀਂ ਉਹਨਾਂ ਨਾਲ ਸੰਪਰਕ ਕਰ ਰਹੇ ਹੋ *।</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">ਹੋਰ ਜਾਣੋ</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">ਸਹਿਯੋਗ</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1537,6 +1582,11 @@
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill">ਹੋਰ ਐਪਾਂ ਵਿੱਚ ਆਪੇ ਭਰੋ</string>
 
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">ਤੁਹਾਡੇ ਡਿਵਾਈਸ ਉੱਤੇ ਹੋਰ ਐਪਾਂ ਵਿੱਚ ਵਰਤੋਂਕਾਰ-ਨਾਂ ਅਤੇ ਪਾਸਵਰਡ ਭਰੋ।</string>
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">ਲਾਗਇਨ ਜੋੜੋ</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">ਲਾਗਇਨ ਸਿੰਕ ਕਰੋ</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1599,6 +1649,8 @@
     <string name="saved_login_copy_username">ਵਰਤੋਂਕਾਰ-ਨਾਂ ਨੂੰ ਕਾਪੀ ਕਰੋ</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">ਵਰਤੋਂਕਾਰ-ਨਾਂ ਨੂੰ ਮਟਾਓ</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">ਹੋਸਟ-ਨਾਂ ਮਿਟਾਓ</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">ਸਾਈਟ ਨੂੰ ਕਾਪੀ ਕਰੋ</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1766,9 +1818,13 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> ਨੂੰ ਚਾਲੂ ਲਈ ਬਦਲੋ]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">ਸੁਰੱਖਿਅਤ ਕਨੈਕਸ਼ਨ</string>
+    <string name="quick_settings_sheet_secure_connection_2">ਕਨੈਕਸ਼ਨ ਸੁਰੱਖਿਅਤ ਹੈ</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">ਅਸੁਰੱਖਿਅਤ ਕਨੈਕਸ਼ਨ</string>
+    <string name="quick_settings_sheet_insecure_connection_2">ਕਨੈਕਸ਼ਨ ਸੁਰੱਖਿਅਤ ਨਹੀਂ ਹੈ</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">ਸੁਰੱਖਿਅਤ ਕਨੈਕਸ਼ਨ</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">ਅਸੁਰੱਖਿਅਤ ਕਨੈਕਸ਼ਨ</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">ਕੀ ਤੁਸੀਂ ਸਾਰੀਆਂ ਸਾਈਟਾਂ ਲਈ ਸਭ ਸਹਿਮਤੀਆਂ ਨੂੰ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1809,14 +1865,29 @@
     <string name="discard_changes">ਤਬਦੀਲੀਆਂ ਅਣਡਿੱਠੀਆਂ ਕਰੋ</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">ਸੋਧੋ</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The page title for adding new login. -->
+    <string name="add_login">ਨਵਾਂ ਲਾਗਇਨ ਜੋੜੋ</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">ਪਾਸਵਰਡ ਚਾਹੀਦਾ ਹੈ</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">ਵਰਤੋਂਕਾਰ-ਨਾਂ ਚਾਹੀਦਾ ਹੈ</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">ਹੋਸਟ-ਨਾਂ ਚਾਹੀਦਾ ਹੈ</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">ਆਵਾਜ਼ ਰਾਹੀਂ ਖੋਜੋ</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">ਹੁਣੇ ਬੋਲੋ</string>
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">ਉਸ ਵਰਤੋਂਕਾਰ ਨਾਲ ਲਾਗਇਨ ਪਹਿਲਾਂ ਹੀ ਮੌਜੂਦ ਹੈ</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">ਵੈੱਬ ਸਿਰਨਾਵੇਂ ਵਿੱਚ &quot;https://&quot; ਜਾਂ &quot;http://&quot; ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">ਵੈੱਬ ਸਿਰਨਾਵੇਂ ਵਿੱਚ &quot;https://&quot; ਜਾਂ &quot;http://&quot; ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">ਵਾਜਬ ਹੋਸਟ-ਨਾਂ ਚਾਹੀਦਾ ਹੈ</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1843,8 +1914,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ਠੀਕ ਹੈ, ਸਮਝ ਗਏ</string>
 
+    <!-- Label for the show most visited top sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites_2">ਸਭ ਤੋਂ ਵੱਧ ਖੋਲ੍ਹੀਆਂ ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ ਵੇਖੋ</string>
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">ਸਭ ਤੋਂ ਵੱਧ ਖੋਲ੍ਹੀਆਂ ਸਾਈਟਾਂ ਵੇਖੋ</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">ਸਭ ਤੋਂ ਵੱਧ ਖੋਲ੍ਹੀਆਂ ਸਾਈਟਾਂ ਵੇਖੋ</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">ਨਾਂ</string>
@@ -1858,6 +1931,8 @@
     <!-- In-activate tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
     <string name="inactive_tabs_title">ਨਾ-ਸਰਗਰਮ ਟੈਬਾਂ</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string name="inactive_tabs_description">ਟੈਬਾਂ %s ਦਿਨਾਂ ਲਈ ਇੱਥੇ ਮੌਜੂਦ ਹੁੰਦੀਆਂ ਹਨ। ਉਸ ਸਮੇਂ ਬਾਅਦ, ਟੈਬਾਂ ਨੂੰ ਆਪਣੇ-ਆਪ ਬੰਦ ਕੀਤਾ ਜਾਵੇਗਾ।</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
     <string name="inactive_tabs_30_days">30 ਦਿਨ</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->

@@ -36,7 +36,7 @@
     <!-- Content description for close button while in multiselect mode in tab tray -->
     <string name="tab_tray_close_multiselect_content_description">Gadael y modd aml-ddewis</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
-    <string name="tab_tray_collection_button_multiselect_content_description">Cadw’r tabiau hyn i gasgliad</string>
+    <string name="tab_tray_collection_button_multiselect_content_description">Cadw’r tabiau hyn i Gasgliad</string>
 
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
     <string name="tab_tray_item_selected_multiselect_content_description">Wedi dewis %1$s</string>
@@ -45,7 +45,7 @@
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
     <string name="tab_tray_exit_multiselect_content_description">Wedi gadael y modd aml-ddewis</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->
-    <string name="tab_tray_enter_multiselect_content_description">Modd aml-ddewis wedi’i ddewis, dewiswch dabiau i’w cadw i gasgliad</string>
+    <string name="tab_tray_enter_multiselect_content_description">Modd aml-ddewis wedi’i ddewis, dewiswch dabiau i’w cadw i Gasgliad</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Dewiswyd</string>
 
@@ -177,7 +177,7 @@
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Tab preifat</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection_2">Cadw i gasgliad</string>
+    <string name="browser_menu_save_to_collection_2">Cadw i Gasgliad</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Rhannu</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
@@ -365,7 +365,7 @@
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">Dangos mewn sesiynau preifat</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
-    <string name="preferences_show_clipboard_suggestions">Dangos awgrymiadau clipfwrdd</string>
+    <string name="preferences_show_clipboard_suggestions">Dangos awgrymiadau o’r clipfwrdd</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
     <string name="preferences_search_browsing_history">Chwilio hanes pori</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
@@ -632,11 +632,11 @@
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
     <string name="close_tabs_manually">Â llaw</string>
     <!-- Option for auto closing tabs that will auto close tabs after one day -->
-    <string name="close_tabs_after_one_day">Ar ôl un diwrnod</string>
+    <string name="close_tabs_after_one_day">Ar ôl diwrnod</string>
     <!-- Option for auto closing tabs that will auto close tabs after one week -->
-    <string name="close_tabs_after_one_week">Ar ôl un wythnos</string>
+    <string name="close_tabs_after_one_week">Ar ôl wythnos</string>
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
-    <string name="close_tabs_after_one_month">Ar ôl un mis</string>
+    <string name="close_tabs_after_one_month">Ar ôl mis</string>
 
     <!-- Start on Home -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
@@ -650,11 +650,11 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Cau â llaw</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
-    <string name="close_tabs_after_one_day_summary">Cau ar ôl un diwrnod</string>
+    <string name="close_tabs_after_one_day_summary">Cau ar ôl diwrnod</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
-    <string name="close_tabs_after_one_week_summary">Cau ar ôl un wythnos</string>
+    <string name="close_tabs_after_one_week_summary">Cau ar ôl wythnos</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
-    <string name="close_tabs_after_one_month_summary">Cau ar ôl un mis</string>
+    <string name="close_tabs_after_one_month_summary">Cau ar ôl mis</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -696,7 +696,7 @@
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Agor Tabiau</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
-    <string name="tab_tray_menu_item_save">Cadw i gasgliad</string>
+    <string name="tab_tray_menu_item_save">Cadw i Gasgliad</string>
     <!-- Text shown in the menu for the collection selector -->
     <string name="tab_tray_menu_select">Dewis</string>
     <!-- Text shown in the menu for sharing all tabs -->
@@ -740,7 +740,7 @@
     <!-- Open tabs menu item to share all tabs -->
     <string name="tabs_menu_share_tabs">Rhannu tabiau</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection1">Cadw tabiau i gasgliad</string>
+    <string name="tabs_menu_save_to_collection1">Cadw tabiau i Gasgliad</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Dewislen tabiau</string>
     <!-- Tab menu item to share the tab -->
@@ -754,7 +754,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
     <string name="current_session_image">Delwedd sesiwn gyfredol</string>
     <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">Cadw i gasgliad</string>
+    <string name="save_to_collection">Cadw i Gasgliad</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Dileu casgliad</string>
     <!-- Text for the menu button to rename a collection -->
@@ -972,9 +972,9 @@
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Gofyn i ganiatáu</string>
     <!-- Label that indicates that a permission must be blocked -->
-    <string name="preference_option_phone_feature_blocked">Rhwystrwyd</string>
+    <string name="preference_option_phone_feature_blocked">Rhwystro</string>
     <!-- Label that indicates that a permission must be allowed -->
-    <string name="preference_option_phone_feature_allowed">Caniatawyd</string>
+    <string name="preference_option_phone_feature_allowed">Caniatáu</string>
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">Rhwystrwyd gan Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
@@ -1138,7 +1138,7 @@
     <!-- Text shown in snackbar action for viewing bookmarks -->
     <string name="snackbar_message_bookmarks_view">Golwg</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">Ychwanegwyd at fy hoff wefannau!</string>
+    <string name="snackbar_added_to_top_sites">Cadw fel Hoff wefan!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Tab preifat wedi’i gau</string>
 
@@ -1185,12 +1185,12 @@
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_2">Newid maint ffont awtomatig</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">Bydd maint y ffont yn cyd-fynd â’h gosodiadau Android. Analluogwch i reoli maint ffont yma.</string>
+    <string name="preference_accessibility_auto_size_summary">Bydd maint y ffont yn cyd-fynd â’ch gosodiadau Android. Analluogwch nhw i reoli maint y ffont yma.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Dileu data pori</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title_2">Agor tabiau</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Tabiau agored</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d tab</string>
     <!-- Title for the data and history items in Delete browsing data -->
@@ -1442,7 +1442,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Button label for navigating to the Enhanced Tracking Protection details -->
     <string name="enhanced_tracking_protection_details">Manylion</string>
     <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_blocked">Rhwystrwyd</string>
+    <string name="enhanced_tracking_protection_blocked">Rhwystro</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Caniatawyd</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
@@ -1558,11 +1558,11 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Awtolanw yn %1$s</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
-    <string name="preferences_passwords_autofill_description">Llenwch ac chadw enwau defnyddwyr a chyfrineiriau mewn gwefannau tra’n defnyddio %1$s.</string>
+    <string name="preferences_passwords_autofill_description">Llenwi ac chadw enwau defnyddwyr a chyfrineiriau mewn gwefannau tra’n defnyddio %1$s.</string>
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill">Awtolanw mewn apiau eraill</string>
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
-    <string name="preferences_android_autofill_description">Llenwch enwau defnyddwyr a chyfrineiriau mewn apiau eraill ar eich dyfais.</string>
+    <string name="preferences_android_autofill_description">Llenwi enwau defnyddwyr a chyfrineiriau mewn apiau eraill ar eich dyfais.</string>
 
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Ychwanegu mewngofnod</string>
@@ -1668,7 +1668,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Cardiau Credyd</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Cadw a awtolanw cardiau</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards">Cadw ac awtolanw cardiau</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Mae data wedi’i amgryptio</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
@@ -1791,7 +1791,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="migration_text_passwords">Cyfrineiriau</string>
 
     <!-- Heading for the instructions to allow a permission -->
-    <string name="phone_feature_blocked_intro">I ganiatáu iddo:</string>
+    <string name="phone_feature_blocked_intro">I’w ganiatáu:</string>
     <!-- First step for the allowing a permission -->
     <string name="phone_feature_blocked_step_settings">1. Ewch i Gosodiadau Android</string>
     <!-- Second step for the allowing a permission -->
@@ -1820,7 +1820,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Ydych chi’n siŵr eich bod am ddileu’r nod tudalen yma?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">I’m hoff wefannau</string>
+    <string name="browser_menu_add_to_top_sites">Cadw fel Hoff wefan</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Dilyswyd gan: %1$s</string>
@@ -1891,14 +1891,14 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">Wedi cyrraedd terfyn nifer eich hoff wefannau</string>
+    <string name="top_sites_max_limit_title">Wedi cyrraedd terfyn nifer eich Hoff wefannau</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
     <string name="top_sites_max_limit_content_2">I ychwanegu hoff wefan newydd, tynnwch un. Pwyswch a dal y wefan a dewis tynnu.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Iawn, Wedi deall!</string>
 
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">Dangos yr hoff wefannau yr ymwelwyd â nhw amlaf</string>
+    <string name="top_sites_toggle_top_frecent_sites_2">Dangos yr Hoff wefannau yr ymwelwyd â nhw amlaf</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Dangos y gwefannau yr ymwelwyd â nhw amlaf</string>
 
