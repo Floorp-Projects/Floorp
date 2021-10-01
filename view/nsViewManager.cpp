@@ -57,7 +57,6 @@ nsViewManager::nsViewManager()
     : mPresShell(nullptr),
       mDelayedResize(NSCOORD_NONE, NSCOORD_NONE),
       mRootView(nullptr),
-      mRootViewManager(this),
       mRefreshDisableCount(0),
       mPainting(false),
       mRecursiveRefreshPending(false),
@@ -77,10 +76,7 @@ nsViewManager::~nsViewManager() {
     mRootView = nullptr;
   }
 
-  if (!IsRootVM()) {
-    // We have a strong ref to mRootViewManager
-    NS_RELEASE(mRootViewManager);
-  }
+  mRootViewManager = nullptr;
 
   NS_ASSERTION(gViewManagers != nullptr, "About to use null gViewManagers");
 
@@ -1003,17 +999,13 @@ void nsViewManager::GetLastUserEventTime(uint32_t& aTime) {
 
 void nsViewManager::InvalidateHierarchy() {
   if (mRootView) {
-    if (!IsRootVM()) {
-      NS_RELEASE(mRootViewManager);
-    }
+    mRootViewManager = nullptr;
     nsView* parent = mRootView->GetParent();
     if (parent) {
       mRootViewManager = parent->GetViewManager()->RootViewManager();
-      NS_ADDREF(mRootViewManager);
       NS_ASSERTION(mRootViewManager != this,
                    "Root view had a parent, but it has the same view manager");
-    } else {
-      mRootViewManager = this;
     }
+    // else, we are implicitly our own root view manager.
   }
 }
