@@ -13,7 +13,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  ["isFrameWithChildTarget", "isWindowIncluded"],
+  ["isRemoteFrame", "isWindowIncluded"],
   "devtools/shared/layout/utils",
   true
 );
@@ -118,10 +118,7 @@ class TabbingOrderHighlighter {
     if (
       !endElm &&
       focusableElements.length > 0 &&
-      isFrameWithChildTarget(
-        this.highlighterEnv.targetActor,
-        focusableElements[focusableElements.length - 1]
-      )
+      isRemoteFrame(focusableElements[focusableElements.length - 1])
     ) {
       endElm = focusableElements[focusableElements.length - 1];
     }

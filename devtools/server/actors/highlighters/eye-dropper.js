@@ -50,7 +50,6 @@ const CLOSE_DELAY = 750;
  * showing a magnified circle and color preview while the user hover the page.
  */
 class EyeDropper {
-  #pageEventListenersAbortController;
   constructor(highlighterEnv) {
     EventEmitter.decorate(this);
 
@@ -161,15 +160,11 @@ class EyeDropper {
 
     // Start listening for user events.
     const { pageListenerTarget } = this.highlighterEnv;
-    this.#pageEventListenersAbortController = new AbortController();
-    const config = {
-      signal: this.#pageEventListenersAbortController.signal,
-    };
-    pageListenerTarget.addEventListener("mousemove", this, config);
-    pageListenerTarget.addEventListener("click", this, true, config);
-    pageListenerTarget.addEventListener("keydown", this, config);
-    pageListenerTarget.addEventListener("DOMMouseScroll", this, config);
-    pageListenerTarget.addEventListener("FullZoomChange", this, config);
+    pageListenerTarget.addEventListener("mousemove", this);
+    pageListenerTarget.addEventListener("click", this, true);
+    pageListenerTarget.addEventListener("keydown", this);
+    pageListenerTarget.addEventListener("DOMMouseScroll", this);
+    pageListenerTarget.addEventListener("FullZoomChange", this);
 
     // Show the eye-dropper.
     this.getElement("root").removeAttribute("hidden");
@@ -201,20 +196,28 @@ class EyeDropper {
    * Hide the eye-dropper highlighter.
    */
   hide() {
+    if (this.highlighterEnv.isXUL) {
+      return;
+    }
+
     this.pageImage = null;
 
-    if (this.#pageEventListenersAbortController) {
-      this.#pageEventListenersAbortController.abort();
-      this.#pageEventListenersAbortController = null;
+    const { pageListenerTarget } = this.highlighterEnv;
 
-      const rootElement = this.getElement("root");
-      rootElement.setAttribute("hidden", "true");
-      rootElement.removeAttribute("drawn");
-
-      this.emit("hidden");
-
-      this.win.document.setSuppressedEventListener(null);
+    if (pageListenerTarget) {
+      pageListenerTarget.removeEventListener("mousemove", this);
+      pageListenerTarget.removeEventListener("click", this, true);
+      pageListenerTarget.removeEventListener("keydown", this);
+      pageListenerTarget.removeEventListener("DOMMouseScroll", this);
+      pageListenerTarget.removeEventListener("FullZoomChange", this);
     }
+
+    this.getElement("root").setAttribute("hidden", "true");
+    this.getElement("root").removeAttribute("drawn");
+
+    this.emit("hidden");
+
+    this.win.document.setSuppressedEventListener(null);
   }
 
   /**

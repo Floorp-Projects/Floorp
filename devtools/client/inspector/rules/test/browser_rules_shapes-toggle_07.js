@@ -41,7 +41,7 @@ add_task(async function() {
     "Checking the CSS shapes highlighter is created and transform mode is on"
   );
   ok(
-    inspector.inspectorFront.getKnownHighlighter(HIGHLIGHTER_TYPE).actorID,
+    highlighters.highlighters[HIGHLIGHTER_TYPE],
     "CSS shapes highlighter created in the rule-view."
   );
   ok(highlighters.shapesHighlighterShown, "CSS shapes highlighter is shown.");
@@ -67,7 +67,7 @@ add_task(async function() {
     "Checking the CSS shapes highlighter is created and transform mode is off"
   );
   ok(
-    inspector.inspectorFront.getKnownHighlighter(HIGHLIGHTER_TYPE).actorID,
+    highlighters.highlighters[HIGHLIGHTER_TYPE],
     "CSS shapes highlighter created in the rule-view."
   );
   ok(highlighters.shapesHighlighterShown, "CSS shapes highlighter is shown.");
@@ -91,7 +91,7 @@ add_task(async function() {
     "Checking the CSS shapes highlighter is created and transform mode is on"
   );
   ok(
-    inspector.inspectorFront.getKnownHighlighter(HIGHLIGHTER_TYPE).actorID,
+    highlighters.highlighters[HIGHLIGHTER_TYPE],
     "CSS shapes highlighter created in the rule-view."
   );
   ok(highlighters.shapesHighlighterShown, "CSS shapes highlighter is shown.");

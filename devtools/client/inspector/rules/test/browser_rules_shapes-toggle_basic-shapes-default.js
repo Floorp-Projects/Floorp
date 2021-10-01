@@ -74,7 +74,7 @@ add_task(async function() {
       `Shapes highlighter toggle active for ${selector}`
     );
     ok(
-      inspector.inspectorFront.getKnownHighlighter(HIGHLIGHTER_TYPE).actorID,
+      highlighters.highlighters[HIGHLIGHTER_TYPE],
       `Shapes highlighter instance created for ${selector}`
     );
     ok(
