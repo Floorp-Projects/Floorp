@@ -993,7 +993,7 @@ void nsRefreshDriver::CreateVsyncRefreshTimer() {
   if (!mOwnTimer) {
     // If available, we fetch the widget-specific vsync source.
     nsPresContext* pc = GetPresContext();
-    nsIWidget* widget = pc->GetRootWidget();
+    nsCOMPtr<nsIWidget> widget = pc->GetRootWidget();
     if (widget) {
       if (RefPtr<gfx::VsyncSource> localVsyncSource =
               widget->GetVsyncSource()) {
@@ -2514,7 +2514,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
 
     // Forward our composition payloads to the layer manager.
     if (!mCompositionPayloads.IsEmpty()) {
-      nsIWidget* widget = mPresContext->GetRootWidget();
+      nsCOMPtr<nsIWidget> widget = mPresContext->GetRootWidget();
       WindowRenderer* renderer = widget ? widget->GetWindowRenderer() : nullptr;
       if (renderer && renderer->AsWebRender()) {
         renderer->AsWebRender()->RegisterPayloads(mCompositionPayloads);
