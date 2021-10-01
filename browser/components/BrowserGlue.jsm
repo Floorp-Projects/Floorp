@@ -2892,27 +2892,22 @@ BrowserGlue.prototype = {
           ? "tabs.closeWindowsButtonWin"
           : "tabs.closeWindowsButton";
       buttonLabel = gTabbrowserBundle.GetStringFromName(buttonLabel);
+    } else if (shouldWarnForShortcut) {
+      let productName = gBrandBundle.GetStringFromName("brandShorterName");
+      title = gTabbrowserBundle.formatStringFromName(
+        "tabs.closeTabsWithKeyTitle",
+        [productName]
+      );
+      buttonLabel = gTabbrowserBundle.formatStringFromName(
+        "tabs.closeTabsWithKeyButton",
+        [productName]
+      );
     } else {
       title = gTabbrowserBundle.GetStringFromName("tabs.closeTabsTitle");
       title = PluralForm.get(pagecount, title).replace("#1", pagecount);
-
-      if (shouldWarnForShortcut) {
-        let productName = gBrandBundle.GetStringFromName("brandShorterName");
-        title = gTabbrowserBundle.formatStringFromName(
-          "tabs.closeTabsWithKeyTitle",
-          [productName]
-        );
-        buttonLabel = gTabbrowserBundle.formatStringFromName(
-          "tabs.closeTabsWithKeyButton",
-          [productName]
-        );
-      } else {
-        title = gTabbrowserBundle.GetStringFromName("tabs.closeTabsTitle");
-        title = PluralForm.get(pagecount, title).replace("#1", pagecount);
-        buttonLabel = gTabbrowserBundle.GetStringFromName(
-          "tabs.closeButtonMultiple"
-        );
-      }
+      buttonLabel = gTabbrowserBundle.GetStringFromName(
+        "tabs.closeButtonMultiple"
+      );
     }
 
     // The checkbox label is different depending on whether the shortcut
