@@ -823,6 +823,10 @@ class NativeObject : public JSObject {
     return hasFlag(ObjectFlag::HasInterestingSymbol);
   }
 
+  bool hasEnumerableProperty() const {
+    return hasFlag(ObjectFlag::HasEnumerable);
+  }
+
   static bool setHadGetterSetterChange(JSContext* cx, HandleNativeObject obj) {
     return setFlag(cx, obj, ObjectFlag::HadGetterSetterChange);
   }

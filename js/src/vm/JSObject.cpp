@@ -2947,6 +2947,9 @@ void JSObject::dump(js::GenericPrinter& out) const {
     if (nobj->isIndexed()) {
       out.put(" indexed");
     }
+    if (nobj->hasEnumerableProperty()) {
+      out.put(" has_enumerable");
+    }
     if (nobj->is<PlainObject>() &&
         nobj->as<PlainObject>().hasNonWritableOrAccessorPropExclProto()) {
       out.put(" has_non_writable_or_accessor_prop_excl_proto");
