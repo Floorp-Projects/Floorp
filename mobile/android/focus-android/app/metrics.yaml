@@ -49,6 +49,24 @@ browser:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-07-01"
+  total_uri_count:
+    type: counter
+    description: |
+      Records count of URIs visited by the user in the current session,
+      including page reloads.
+      It does not include background page requests and URIs from embedded pages
+      but may be incremented without user interaction by website scripts
+      that programmatically redirect to a new location.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5518
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5523
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - mcarare@mozilla.com
+    expires: never
 
 legacy_ids:
   client_id:

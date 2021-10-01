@@ -5,13 +5,16 @@
 package org.mozilla.focus.telemetry
 
 import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
+import org.mozilla.focus.GleanMetrics.Browser
 import kotlin.collections.forEach as withEach
 
 class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
@@ -25,6 +28,14 @@ class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
         when (action) {
             is TabListAction.AddTabAction -> collectTelemetry(action.tab)
             is TabListAction.AddMultipleTabsAction -> action.tabs.withEach { collectTelemetry(it) }
+            is ContentAction.UpdateLoadingStateAction -> {
+                context.state.findTab(action.sessionId)?.let { tab ->
+                    // Record UriOpened event when a page finishes loading
+                    if (tab.content.loading && !action.loading) {
+                        Browser.totalUriCount.add()
+                    }
+                }
+            }
         }
     }
 
