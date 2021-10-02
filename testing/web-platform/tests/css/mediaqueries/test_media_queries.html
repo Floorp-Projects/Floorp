@@ -32,12 +32,9 @@ setup({ "explicit_done": true });
 
     function should_apply(q) {
       test(function() {
-        // lazily evaluate template string to avoid including device-specific data in test name
         var escaped = JSON.stringify(q);
         var evalq = eval("`" + escaped.substring(1, escaped.length - 1) + "`");
-        // Also avoid an assert message for the same reason. (Relevant for
-        // failing tests).
-        assert_true(query_applies(evalq));
+        assert_true(query_applies(evalq), evalq);
       }, `${testGroup ? testGroup + ": " : ""}should_apply: ${q}`);
     }
 
@@ -45,12 +42,9 @@ setup({ "explicit_done": true });
       if (extraName) extraName += " ";
       else extraName = "";
       test(function() {
-        // lazily evaluate template string to avoid including device-specific data in test name
         var escaped = JSON.stringify(q);
         var evalq = eval("`" + escaped.substring(1, escaped.length - 1) + "`");
-        // Also avoid an assert message for the same reason. (Relevant for
-        // failing tests).
-        assert_false(query_applies(evalq));
+        assert_false(query_applies(evalq), evalq);
       }, `${testGroup ? testGroup + ": " : ""}should_not_apply: ${q}`);
     }
 
@@ -82,9 +76,7 @@ setup({ "explicit_done": true });
         // lazily evaluate template string to avoid including device-specific data in test name
         var escaped = JSON.stringify(q);
         var evalq = eval("`" + escaped.substring(1, escaped.length - 1) + "`");
-        // Also avoid an assert message for the same reason. (Relevant for
-        // failing tests).
-        assert_true(query_is_parseable(evalq))
+        assert_true(query_is_parseable(evalq), evalq)
       }, `${testGroup ? testGroup + ": " : ""}query_should_be_parseable: ${q}`);
     }
 
@@ -93,9 +85,7 @@ setup({ "explicit_done": true });
         // lazily evaluate template string to avoid including device-specific data in test name
         var escaped = JSON.stringify(q);
         var evalq = eval("`" + escaped.substring(1, escaped.length - 1) + "`");
-        // Also avoid an assert message for the same reason. (Relevant for
-        // failing tests).
-        assert_false(query_is_parseable(evalq));
+        assert_false(query_is_parseable(evalq), evalq);
       }, `${testGroup ? testGroup + ": " : ""}query_should_not_be_parseable: ${q}`);
     }
 
@@ -112,9 +102,7 @@ setup({ "explicit_done": true });
         // lazily evaluate template string to avoid including device-specific data in test name
         var escaped = JSON.stringify(e);
         var evale = eval("`" + escaped.substring(1, escaped.length - 1) + "`");
-        // Also avoid an assert message for the same reason. (Relevant for
-        // failing tests).
-        assert_true(expression_is_parseable(evale));
+        assert_true(expression_is_parseable(evale), evale);
       }, `${testGroup ? testGroup + ": " : ""}expression_should_be_parseable: ${e}`);
     }
 
@@ -123,9 +111,7 @@ setup({ "explicit_done": true });
         // lazily evaluate template string to avoid including device-specific data in test name
         var escaped = JSON.stringify(e);
         var evale = eval("`" + escaped.substring(1, escaped.length - 1) + "`");
-        // Also avoid an assert message for the same reason. (Relevant for
-        // failing tests).
-        assert_false(expression_is_parseable(evale));
+        assert_false(expression_is_parseable(evale), evale);
       }, `${testGroup ? testGroup + ": " : ""}expression_should_not_be_parseable: ${e}`);
     }
 
