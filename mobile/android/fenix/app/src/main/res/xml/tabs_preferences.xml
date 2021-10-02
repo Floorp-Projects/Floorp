@@ -18,6 +18,13 @@
             android:defaultValue="true"
             android:key="@string/pref_key_tab_view_grid"
             android:title="@string/tab_view_grid" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="@string/pref_key_search_term_tab_groups"
+            android:title="@string/tab_view_search_term_tab_groups"
+            android:summary="@string/tab_view_search_term_tab_groups_summary"
+            app:isPreferenceVisible="false"/>
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory

@@ -421,6 +421,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         featureFlag = FeatureFlags.inactiveTabs
     )
 
+    /**
+     * Indicates if the user has enabled the search term tab groups feature.
+     */
+    var searchTermTabGroupsAreEnabled by featureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_search_term_tab_groups),
+        default = FeatureFlags.tabGroupFeature,
+        featureFlag = FeatureFlags.tabGroupFeature
+    )
+
     @VisibleForTesting
     internal fun timeNowInMillis(): Long = System.currentTimeMillis()
 

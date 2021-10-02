@@ -34,6 +34,7 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
     private lateinit var startOnHomeRadioNever: RadioButtonPreference
     private lateinit var inactiveTabsCategory: PreferenceCategory
     private lateinit var inactiveTabs: SwitchPreference
+    private lateinit var searchTermTabGroups: SwitchPreference
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.tabs_preferences, rootKey)
@@ -58,6 +59,11 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
         // pref_key_tab_view_grid and look into using the native RadioGroup in the future.
         listRadioButton = requirePreference(R.string.pref_key_tab_view_list_do_not_use)
         gridRadioButton = requirePreference(R.string.pref_key_tab_view_grid)
+        searchTermTabGroups = requirePreference<SwitchPreference>(R.string.pref_key_search_term_tab_groups).also {
+            it.isVisible = FeatureFlags.tabGroupFeature
+            it.isChecked = it.context.settings().searchTermTabGroupsAreEnabled
+            it.onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
 
         radioManual = requirePreference(R.string.pref_key_close_tabs_manually)
         radioOneMonth = requirePreference(R.string.pref_key_close_tabs_after_one_month)

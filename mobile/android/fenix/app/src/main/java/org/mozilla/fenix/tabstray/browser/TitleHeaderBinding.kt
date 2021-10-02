@@ -25,8 +25,12 @@ class TitleHeaderBinding(
     private val showHeader: (Boolean) -> Unit
 ) : AbstractBinding<BrowserState>(store) {
     override suspend fun onState(flow: Flow<BrowserState>) {
-        flow.map { it.getNormalTrayTabs(settings.inactiveTabsAreEnabled) }
-            .ifChanged { it.size }
+        flow.map {
+            it.getNormalTrayTabs(
+                settings.searchTermTabGroupsAreEnabled,
+                settings.inactiveTabsAreEnabled
+            )
+        }.ifChanged { it.size }
             .collect {
                 if (it.isEmpty()) {
                     showHeader(false)

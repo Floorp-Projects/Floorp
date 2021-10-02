@@ -16,6 +16,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers.allOf
+import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
 
 /**
@@ -29,7 +30,10 @@ class SettingsSubMenuTabsRobot {
 
     fun verifyStartOnHomeOptions() = assertStartOnHomeOptions()
 
-    fun clickAlwaysStartOnHomeToggle() = alwaysStartOnHomeToggle().click()
+    fun clickAlwaysStartOnHomeToggle() {
+        scrollToElementByText("Always")
+        alwaysStartOnHomeToggle().click()
+    }
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -51,6 +55,8 @@ private fun assertTabViewOptions() {
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     gridToggle()
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    searchTermTabGroupsToggle()
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun assertCloseTabsOptions() {
@@ -65,6 +71,8 @@ private fun assertCloseTabsOptions() {
 }
 
 private fun assertStartOnHomeOptions() {
+    // Scroll to ensure all the items are visible.
+    scrollToElementByText("Never")
     startOnHomeHeading()
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     afterFourHoursToggle()
@@ -78,6 +86,8 @@ private fun tabViewHeading() = onView(withText("Tab view"))
 private fun listToggle() = onView(withText("List"))
 
 private fun gridToggle() = onView(withText("Grid"))
+
+private fun searchTermTabGroupsToggle() = onView(withText("Search groups"))
 
 private fun closeTabsHeading() = onView(withText("Close tabs"))
 

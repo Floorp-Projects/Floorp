@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.ConcatAdapter
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.feature.tabs.tabstray.TabsFeature
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.tabstray.ext.browserAdapter
@@ -45,14 +44,15 @@ class NormalBrowserTrayList @JvmOverloads constructor(
     override val tabsFeature by lazy {
         val tabsAdapter = concatAdapter.browserAdapter
         val inactiveTabsEnabled = context.settings().inactiveTabsAreEnabled
+        val searchTermTabGroupsAreEnabled = context.settings().searchTermTabGroupsAreEnabled
         val tabFilter: (TabSessionState) -> Boolean = {
             when {
-                FeatureFlags.tabGroupFeature && inactiveTabsEnabled ->
+                searchTermTabGroupsAreEnabled && inactiveTabsEnabled ->
                     it.isNormalTabActiveWithoutSearchTerm(maxActiveTime)
 
                 inactiveTabsEnabled -> it.isNormalTabActive(maxActiveTime)
 
-                FeatureFlags.tabGroupFeature -> it.isNormalTabWithoutSearchTerm()
+                searchTermTabGroupsAreEnabled -> it.isNormalTabWithoutSearchTerm()
 
                 else -> !it.content.private
             }
@@ -71,11 +71,13 @@ class NormalBrowserTrayList @JvmOverloads constructor(
     private val searchTermFeature by lazy {
         val store = context.components.core.store
         val inactiveTabsEnabled = context.settings().inactiveTabsAreEnabled
+        val searchTermTabGroupsAreEnabled = context.settings().searchTermTabGroupsAreEnabled
         val tabFilter: (TabSessionState) -> Boolean = {
             when {
-                FeatureFlags.tabGroupFeature && inactiveTabsEnabled -> it.isNormalTabActiveWithSearchTerm(maxActiveTime)
+                searchTermTabGroupsAreEnabled && inactiveTabsEnabled ->
+                    it.isNormalTabActiveWithSearchTerm(maxActiveTime)
 
-                FeatureFlags.tabGroupFeature -> it.isNormalTabWithSearchTerm()
+                searchTermTabGroupsAreEnabled -> it.isNormalTabWithSearchTerm()
 
                 else -> false
             }
