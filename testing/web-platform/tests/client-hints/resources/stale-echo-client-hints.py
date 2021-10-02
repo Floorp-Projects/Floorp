@@ -16,6 +16,7 @@ def main(request, response):
         b"rtt",
         b"downlink",
         b"ect",
+        b"lang",
         b"sec-ch-ua",
         b"sec-ch-ua-arch",
         b"sec-ch-ua-platform",

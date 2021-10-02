@@ -11,19 +11,7 @@ partial interface Navigator {
 enum ContactProperty { "address", "email", "icon", "name", "tel" };
 
 [Exposed=Window]
-interface ContactAddress {
-  [Default] object toJSON();
-  readonly attribute DOMString city;
-  readonly attribute DOMString country;
-  readonly attribute DOMString dependentLocality;
-  readonly attribute DOMString organization;
-  readonly attribute DOMString phone;
-  readonly attribute DOMString postalCode;
-  readonly attribute DOMString recipient;
-  readonly attribute DOMString region;
-  readonly attribute DOMString sortingCode;
-  readonly attribute FrozenArray<DOMString> addressLine;
-};
+interface ContactAddress : PaymentAddress {};
 
 dictionary ContactInfo {
     sequence<ContactAddress> address;
@@ -37,7 +25,7 @@ dictionary ContactsSelectOptions {
     boolean multiple = false;
 };
 
-[Exposed=Window,SecureContext]
+[Exposed=(Window,SecureContext)]
 interface ContactsManager {
     Promise<sequence<ContactProperty>> getProperties();
     Promise<sequence<ContactInfo>> select(sequence<ContactProperty> properties, optional ContactsSelectOptions options = {});

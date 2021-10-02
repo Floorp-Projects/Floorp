@@ -86,8 +86,7 @@ typedef (ImageBitmap or
          HTMLImageElement or
          HTMLCanvasElement or
          HTMLVideoElement or
-         OffscreenCanvas or
-         VideoFrame) TexImageSource;
+         OffscreenCanvas) TexImageSource;
 
 typedef ([AllowShared] Float32Array or sequence<GLfloat>) Float32List;
 typedef ([AllowShared] Int32Array or sequence<GLint>) Int32List;
@@ -513,7 +512,8 @@ interface mixin WebGLRenderingContextBase
     const GLenum UNPACK_COLORSPACE_CONVERSION_WEBGL = 0x9243;
     const GLenum BROWSER_DEFAULT_WEBGL          = 0x9244;
 
-    readonly attribute (HTMLCanvasElement or OffscreenCanvas) canvas;
+    [Exposed=Window] readonly attribute (HTMLCanvasElement or OffscreenCanvas) canvas;
+    [Exposed=Worker] readonly attribute OffscreenCanvas canvas;
     readonly attribute GLsizei drawingBufferWidth;
     readonly attribute GLsizei drawingBufferHeight;
 

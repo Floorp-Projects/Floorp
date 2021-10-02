@@ -14,7 +14,7 @@ enum EndOfStreamError {
     "decode"
 };
 
-[Exposed=(Window,DedicatedWorker)]
+[Exposed=Window]
 interface MediaSource : EventTarget {
     constructor();
     readonly        attribute SourceBufferList    sourceBuffers;
@@ -24,7 +24,6 @@ interface MediaSource : EventTarget {
                     attribute EventHandler        onsourceopen;
                     attribute EventHandler        onsourceended;
                     attribute EventHandler        onsourceclose;
-    static readonly attribute boolean canConstructInDedicatedWorker;
     SourceBuffer   addSourceBuffer (DOMString type);
     undefined           removeSourceBuffer (SourceBuffer sourceBuffer);
     undefined           endOfStream (optional EndOfStreamError error);
@@ -38,7 +37,7 @@ enum AppendMode {
     "sequence"
 };
 
-[Exposed=(Window,DedicatedWorker)]
+[Exposed=Window]
 interface SourceBuffer : EventTarget {
                     attribute AppendMode          mode;
     readonly        attribute boolean             updating;
@@ -56,11 +55,10 @@ interface SourceBuffer : EventTarget {
                     attribute EventHandler        onabort;
     undefined appendBuffer (BufferSource data);
     undefined abort ();
-    undefined changeType (DOMString type);
     undefined remove (double start, unrestricted double end);
 };
 
-[Exposed=(Window,DedicatedWorker)]
+[Exposed=Window]
 interface SourceBufferList : EventTarget {
     readonly        attribute unsigned long length;
                     attribute EventHandler  onaddsourcebuffer;
@@ -68,17 +66,14 @@ interface SourceBufferList : EventTarget {
     getter SourceBuffer (unsigned long index);
 };
 
-[Exposed=(Window,DedicatedWorker)]
 partial interface AudioTrack {
     readonly        attribute SourceBuffer? sourceBuffer;
 };
 
-[Exposed=(Window,DedicatedWorker)]
 partial interface VideoTrack {
     readonly        attribute SourceBuffer? sourceBuffer;
 };
 
-[Exposed=(Window,DedicatedWorker)]
 partial interface TextTrack {
     readonly        attribute SourceBuffer? sourceBuffer;
 };
