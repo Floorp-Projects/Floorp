@@ -15,6 +15,7 @@ function getExpectedTargets() {
     "appMenu",
     "backForward",
     "help",
+    "history",
     "logins",
     "pageAction-bookmark",
     ...(hasPocket ? ["pocket"] : []),

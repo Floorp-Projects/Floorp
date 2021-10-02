@@ -89,6 +89,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   TRRRacer: "resource:///modules/TRRPerformance.jsm",
   UIState: "resource://services-sync/UIState.jsm",
+  UITour: "resource:///modules/UITour.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   WebChannel: "resource://gre/modules/WebChannel.jsm",
@@ -4102,7 +4103,9 @@ BrowserGlue.prototype = {
       {
         "l10n-id": "restore-session-startup-suggestion-button",
         callback: () => {
-          win.PanelUI.show();
+          UITour.getTarget(win, "history").then(historyMenu => {
+            UITour.showHighlight(win, historyMenu, "color", { autohide: true });
+          });
         },
       },
     ];
