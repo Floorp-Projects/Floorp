@@ -4104,7 +4104,9 @@ BrowserGlue.prototype = {
         "l10n-id": "restore-session-startup-suggestion-button",
         callback: () => {
           UITour.getTarget(win, "history").then(historyMenu => {
-            UITour.showHighlight(win, historyMenu, "color", { autohide: true });
+            UITour.showHighlight(win, historyMenu, "focus-outline", {
+              autohide: true,
+            });
           });
         },
       },

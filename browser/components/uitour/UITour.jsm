@@ -109,7 +109,7 @@ var UITour = {
 
   _annotationPanelMutationObservers: new WeakMap(),
 
-  highlightEffects: ["random", "wobble", "zoom", "color"],
+  highlightEffects: ["random", "wobble", "zoom", "color", "focus-outline"],
   targets: new Map([
     [
       "accountStatus",
