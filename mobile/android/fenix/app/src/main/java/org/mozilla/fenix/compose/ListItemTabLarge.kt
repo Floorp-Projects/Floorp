@@ -20,8 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
-import mozilla.components.concept.fetch.Client
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -37,8 +35,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * ---------------------------------------------
  * ```
  *
- * @param client [Client] instance to be used for downloading the image.
- * When using [GeckoViewFetchClient] the image will automatically be cached if it has the right headers.
  * @param imageUrl URL from where the to download a header image of the tab this composable renders.
  * @param title Title off the tab this composable renders.
  * @param caption Optional caption text.
@@ -46,13 +42,12 @@ import org.mozilla.fenix.theme.FirefoxTheme
  */
 @Composable
 fun ListItemTabLarge(
-    client: Client,
     imageUrl: String,
     title: String,
     caption: String? = null,
     onClick: (() -> Unit)? = null
 ) {
-    ListItemTabSurface(client, imageUrl, onClick) {
+    ListItemTabSurface(imageUrl, onClick) {
         TabTitle(text = title, maxLines = 3)
 
         if (caption != null) {
@@ -77,8 +72,6 @@ fun ListItemTabLarge(
  * ---------------------------------------------
  * ```
  *
- * @param client [Client] instance to be used for downloading the image.
- * When using [GeckoViewFetchClient] the image will automatically be cached if it has the right headers.
  * @param imageUrl URL from where the to download a header image of the tab this composable renders.
  * @param title Composable rendering the title of the tab this composable represents.
  * @param subtitle Optional tab caption composable.
@@ -86,13 +79,12 @@ fun ListItemTabLarge(
  */
 @Composable
 fun ListItemTabLarge(
-    client: Client,
     imageUrl: String,
     onClick: () -> Unit,
     title: @Composable () -> Unit,
     subtitle: @Composable (() -> Unit)? = null
 ) {
-    ListItemTabSurface(client, imageUrl, onClick) {
+    ListItemTabSurface(imageUrl, onClick) {
         title()
 
         subtitle?.invoke()
@@ -102,15 +94,12 @@ fun ListItemTabLarge(
 /**
  * Shared default configuration of a ListItemTabLarge Composable.
  *
- * @param client [Client] instance to be used for downloading the image.
- * When using [GeckoViewFetchClient] the image will automatically be cached if it has the right headers.
  * @param imageUrl URL from where the to download a header image of the tab this composable renders.
  * @param onClick Optional callback to be invoked when this composable is clicked.
  * @param tabDetails [Composable] Displayed to the the end of the image. Allows for variation in the item text style.
  */
 @Composable
 private fun ListItemTabSurface(
-    client: Client,
     imageUrl: String,
     onClick: (() -> Unit)? = null,
     tabDetails: @Composable () -> Unit
@@ -132,7 +121,7 @@ private fun ListItemTabSurface(
                 .size(imageWidth, imageHeight)
                 .clip(RoundedCornerShape(8.dp))
 
-            Image(client, imageUrl, imageModifier, false, imageWidth)
+            Image(imageUrl, imageModifier, false, imageWidth)
 
             Spacer(Modifier.width(16.dp))
 
@@ -151,7 +140,6 @@ private fun ListItemTabSurface(
 private fun ListItemTabLargePreview() {
     FirefoxTheme {
         ListItemTabLarge(
-            client = FakeClient(),
             imageUrl = "",
             title = "This is a very long title for a tab but needs to be so for this preview",
             caption = "And this is a caption"

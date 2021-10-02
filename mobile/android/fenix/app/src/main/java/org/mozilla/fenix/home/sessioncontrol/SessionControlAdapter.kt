@@ -232,9 +232,8 @@ class SessionControlAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         when (viewType) {
             PocketStoriesViewHolder.LAYOUT_ID -> return PocketStoriesViewHolder(
-                ComposeView(parent.context),
-                store,
-                components.core.client,
+                composeView = ComposeView(parent.context),
+                store = store,
                 interactor = interactor
             )
             RecentTabViewHolder.LAYOUT_ID -> return RecentTabViewHolder(
