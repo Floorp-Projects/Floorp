@@ -4,6 +4,7 @@
 <link rel="help" href="https://github.com/WICG/webpackage/blob/main/explainers/subresource-loading.md" />
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="../resources/test-helpers.js"></script>
 
 <body>
   <link
@@ -12,5 +13,15 @@
   resources="resources/script.js"/>
   <script id="script" src="resources/script.js"></script>
 
-  <script src="/web-bundle/subresource-loading/resources/relative-url-with-base-test.js"></script>
+  <script>
+    const onLoadPromise = new Promise((resolve) => {
+      window.addEventListener('load', resolve, false);
+    });
+
+    promise_test(async () => {
+      await onLoadPromise;
+
+      assert_equals(resources_script_result, 'loaded from webbundle');
+    }, "A subresource script.js should be loaded from WebBundle using the relative URL and a base element.");
+  </script>
 </body>

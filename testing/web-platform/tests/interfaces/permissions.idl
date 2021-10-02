@@ -3,6 +3,22 @@
 // (https://github.com/w3c/webref)
 // Source: Permissions (https://w3c.github.io/permissions/)
 
+dictionary PermissionDescriptor {
+  required PermissionName name;
+};
+
+enum PermissionState {
+  "granted",
+  "denied",
+  "prompt",
+};
+
+[Exposed=(Window,Worker)]
+interface PermissionStatus : EventTarget {
+  readonly attribute PermissionState state;
+  attribute EventHandler onchange;
+};
+
 [Exposed=(Window)]
 partial interface Navigator {
   [SameObject] readonly attribute Permissions permissions;
@@ -18,23 +34,6 @@ interface Permissions {
   Promise<PermissionStatus> query(object permissionDesc);
 };
 
-dictionary PermissionDescriptor {
-  required PermissionName name;
-};
-
-[Exposed=(Window,Worker)]
-interface PermissionStatus : EventTarget {
-  readonly attribute PermissionState state;
-  readonly attribute PermissionName name;
-  attribute EventHandler onchange;
-};
-
-enum PermissionState {
-  "granted",
-  "denied",
-  "prompt",
-};
-
 enum PermissionName {
   "accelerometer",
   "ambient-light-sensor",
@@ -42,6 +41,8 @@ enum PermissionName {
   "background-sync",
   "bluetooth",
   "camera",
+  "clipboard-write",
+  "device-info",
   "display-capture",
   "geolocation",
   "gyroscope",
@@ -52,9 +53,7 @@ enum PermissionName {
   "notifications",
   "persistent-storage",
   "push",
-  "screen-wake-lock",
   "speaker-selection",
-  "xr-spatial-tracking",
 };
 
 dictionary PushPermissionDescriptor : PermissionDescriptor {
@@ -71,4 +70,10 @@ dictionary DevicePermissionDescriptor : PermissionDescriptor {
 
 dictionary CameraDevicePermissionDescriptor : DevicePermissionDescriptor {
   boolean panTiltZoom = false;
+};
+
+dictionary PermissionSetParameters {
+  required PermissionDescriptor descriptor;
+  required PermissionState state;
+  boolean oneRealm = false;
 };

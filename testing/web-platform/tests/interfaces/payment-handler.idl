@@ -75,6 +75,7 @@ interface PaymentRequestEvent : ExtendableEvent {
   readonly attribute FrozenArray<PaymentMethodData> methodData;
   readonly attribute object total;
   readonly attribute FrozenArray<PaymentDetailsModifier> modifiers;
+  readonly attribute DOMString instrumentKey;
   Promise<WindowClient?> openWindow(USVString url);
   Promise<PaymentRequestDetailsUpdate?> changePaymentMethod(DOMString methodName, optional object? methodDetails = null);
   undefined respondWith(Promise<PaymentHandlerResponse> handlerResponsePromise);
@@ -87,6 +88,7 @@ dictionary PaymentRequestEventInit : ExtendableEventInit {
   sequence<PaymentMethodData> methodData;
   PaymentCurrencyAmount total;
   sequence<PaymentDetailsModifier> modifiers;
+  DOMString instrumentKey;
 };
 
 dictionary PaymentHandlerResponse {

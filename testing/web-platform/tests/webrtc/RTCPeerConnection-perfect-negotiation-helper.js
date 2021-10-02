@@ -36,7 +36,7 @@ function peer(other, polite, fail = null) {
   try {
     pc.addEventListener("icecandidate", ({candidate}) => send(other,
                                                               {candidate}));
-    let makingOffer = false, ignoreIceCandidateFailures = false;
+    let makingOffer = false, ignoreOffer = false;
     let srdAnswerPending = false;
     pc.addEventListener("negotiationneeded", async () => {
       try {
@@ -63,16 +63,14 @@ function peer(other, polite, fail = null) {
           let isStable =
               pc.signalingState == "stable" ||
               (pc.signalingState == "have-local-offer" && srdAnswerPending);
-          const ignoreOffer = description.type == "offer" && !polite &&
+          ignoreOffer = description.type == "offer" && !polite &&
                          (makingOffer || !isStable);
           if (ignoreOffer) {
-            ignoreIceCandidateFailures = true;
             return;
           }
           if (description.type == "answer")
             srdAnswerPending = true;
           await pc.setRemoteDescription(description);
-          ignoreIceCandidateFailures = false;
           srdAnswerPending = false;
           if (description.type == "offer") {
             assert_equals(pc.signalingState, "have-remote-offer", "Remote offer");
@@ -90,7 +88,7 @@ function peer(other, polite, fail = null) {
           try {
             await pc.addIceCandidate(candidate);
           } catch (e) {
-            if (!ignoreIceCandidateFailures) throw e;
+            if (!ignoreOffer) throw e;
           }
         } else if (run) {
           send(window.parent, {[run.id]: await commands[run.cmd]() || 0});
