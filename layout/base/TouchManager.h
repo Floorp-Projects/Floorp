@@ -14,6 +14,7 @@
 
 #include "mozilla/BasicEvents.h"
 #include "mozilla/dom/Touch.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/TouchEvents.h"
 #include "nsRefPtrHashtable.h"
 
@@ -73,7 +74,8 @@ class TouchManager {
     bool mConvertToPointer;
   };
 
-  static nsTHashMap<nsUint32HashKey, TouchInfo>* sCaptureTouchList;
+  static StaticAutoPtr<nsTHashMap<nsUint32HashKey, TouchInfo>>
+      sCaptureTouchList;
   static layers::LayersId sCaptureTouchLayersId;
 };
 
