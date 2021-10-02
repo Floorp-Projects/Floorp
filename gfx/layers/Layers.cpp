@@ -1247,11 +1247,6 @@ void ContainerLayer::PrintInfo(std::stringstream& aStream,
                  .get();
 }
 
-void ColorLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
-  Layer::PrintInfo(aStream, aPrefix);
-  aStream << " [color=" << mColor << "] [bounds=" << mBounds << "]";
-}
-
 void RefLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   ContainerLayer::PrintInfo(aStream, aPrefix);
   if (mId.IsValid()) {

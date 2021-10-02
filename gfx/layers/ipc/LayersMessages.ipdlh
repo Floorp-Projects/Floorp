@@ -81,7 +81,6 @@ struct TargetConfig {
 // Create a shadow layer for |layer|
 struct OpCreatePaintedLayer    { LayerHandle layer; };
 struct OpCreateContainerLayer  { LayerHandle layer; };
-struct OpCreateColorLayer      { LayerHandle layer; };
 struct OpCreateRefLayer        { LayerHandle layer; };
 
 struct OpAttachCompositable {
