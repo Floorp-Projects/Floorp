@@ -23,6 +23,7 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.AutocompleteRequest
 import org.mozilla.geckoview.Autocomplete.Address
 import org.mozilla.geckoview.Autocomplete.AddressSelectOption
 import org.mozilla.geckoview.Autocomplete.CreditCard
+import org.mozilla.geckoview.Autocomplete.CreditCardSaveOption
 import org.mozilla.geckoview.Autocomplete.CreditCardSelectOption
 import org.mozilla.geckoview.Autocomplete.LoginEntry
 import org.mozilla.geckoview.Autocomplete.LoginSaveOption
@@ -103,7 +104,7 @@ class AutocompleteTest : BaseSessionTest() {
         val name = arrayOf("Peter Parker", "John Doe")
         val number = arrayOf("1234-1234-1234-1234", "2345-2345-2345-2345")
         val guid = arrayOf("test-guid1", "test-guid2")
-        val expMonth = arrayOf("Apr", "Aug")
+        val expMonth = arrayOf("04", "08")
         val expYear = arrayOf("22", "23")
         val savedCC = arrayOf(
           CreditCard.Builder()
@@ -132,6 +133,9 @@ class AutocompleteTest : BaseSessionTest() {
                     : GeckoResult<Array<CreditCard>>? {
                 return GeckoResult.fromValue(savedCC)
             }
+
+            @AssertCalled(false)
+            override fun onCreditCardSave(creditCard: CreditCard) {}
         })
 
         mainSession.delegateUntilTestEnd(object : PromptDelegate {
@@ -340,7 +344,6 @@ class AutocompleteTest : BaseSessionTest() {
 
         checkAddressesForCorrectness(savedAddresses.toTypedArray(), savedAddress)
     }
-
 
     @Test
     fun addressSelectAndFillMultipleAddresses() {
@@ -686,6 +689,356 @@ class AutocompleteTest : BaseSessionTest() {
         session2.waitForPageStop()
         session2.evaluateJS("document.querySelector('#pass1').value = '$pass2'")
         session2.evaluateJS("document.querySelector('#form1').submit()")
+
+        sessionRule.waitForResult(saveHandled2)
+    }
+
+    @Test
+    fun creditCardSaveAccept() {
+        val ccName = "MyCard"
+        val ccNumber = "5105-1051-0510-5100"
+        val ccExpMonth = "06"
+        val ccExpYear = "24"
+
+        mainSession.loadTestPath(CC_FORM_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val saveHandled = GeckoResult<Void>()
+
+        sessionRule.delegateUntilTestEnd(object : StorageDelegate {
+            @AssertCalled
+            override fun onCreditCardSave(creditCard: CreditCard) {
+                assertThat("Credit card name should match", creditCard.name, equalTo(ccName))
+                assertThat("Credit card number should match", creditCard.number, equalTo(ccNumber))
+                assertThat("Credit card expiration month should match", creditCard.expirationMonth, equalTo(ccExpMonth))
+                assertThat("Credit card expiration year should match", creditCard.expirationYear, equalTo(ccExpYear))
+                saveHandled.complete(null)
+            }
+        })
+
+        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+            @AssertCalled
+            override fun onCreditCardSave(
+                    session: GeckoSession,
+                    request: AutocompleteRequest<CreditCardSaveOption>)
+            : GeckoResult<PromptDelegate.PromptResponse> {
+                assertThat("Session should not be null", session, notNullValue())
+
+                val option = request.options[0]
+                val cc = option.value
+
+                assertThat("Credit card should not be null", cc, notNullValue())
+
+                assertThat(
+                        "Credit card name should match",
+                        cc.name,
+                        equalTo(ccName))
+                assertThat(
+                        "Credit card number should match",
+                        cc.number,
+                        equalTo(ccNumber))
+                assertThat(
+                        "Credit card expiration month should match",
+                        cc.expirationMonth,
+                        equalTo(ccExpMonth))
+                assertThat(
+                        "Credit card expiration year should match",
+                        cc.expirationYear,
+                        equalTo(ccExpYear))
+
+                return GeckoResult.fromValue(request.confirm(option))
+            }
+        })
+
+        // Enter the card values
+        mainSession.evaluateJS("document.querySelector('#name').value = '${ccName}'")
+        mainSession.evaluateJS("document.querySelector('#name').focus()")
+        mainSession.evaluateJS("document.querySelector('#number').value = '${ccNumber}'")
+        mainSession.evaluateJS("document.querySelector('#number').focus()")
+        mainSession.evaluateJS("document.querySelector('#expMonth').value = '${ccExpMonth}'")
+        mainSession.evaluateJS("document.querySelector('#expMonth').focus()")
+        mainSession.evaluateJS("document.querySelector('#expYear').value = '${ccExpYear}'")
+        mainSession.evaluateJS("document.querySelector('#expYear').focus()")
+
+        // Submit the form
+        mainSession.evaluateJS("document.querySelector('form').requestSubmit()")
+
+        sessionRule.waitForResult(saveHandled)
+    }
+
+    @Test
+    fun creditCardSaveDismiss() {
+        val ccName = "MyCard"
+        val ccNumber = "5105-1051-0510-5100"
+        val ccExpMonth = "06"
+        val ccExpYear = "24"
+
+        mainSession.loadTestPath(CC_FORM_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        sessionRule.delegateDuringNextWait(object : StorageDelegate {
+            @AssertCalled
+            override fun onCreditCardFetch(): GeckoResult<Array<CreditCard>>? {
+                return null
+            }
+        })
+
+        sessionRule.delegateUntilTestEnd(object : StorageDelegate {
+            @AssertCalled(count = 0)
+            override fun onCreditCardSave(creditCard: CreditCard) {}
+        })
+
+        // Enter the card values
+        mainSession.evaluateJS("document.querySelector('#name').value = '${ccName}'")
+        mainSession.evaluateJS("document.querySelector('#name').focus()")
+        mainSession.evaluateJS("document.querySelector('#number').value = '${ccNumber}'")
+        mainSession.evaluateJS("document.querySelector('#number').focus()")
+        mainSession.evaluateJS("document.querySelector('#expMonth').value = '${ccExpMonth}'")
+        mainSession.evaluateJS("document.querySelector('#expMonth').focus()")
+        mainSession.evaluateJS("document.querySelector('#expYear').value = '${ccExpYear}'")
+        mainSession.evaluateJS("document.querySelector('#expYear').focus()")
+
+        // Submit the form
+        mainSession.evaluateJS("document.querySelector('form').requestSubmit()")
+
+        sessionRule.waitUntilCalled(object : PromptDelegate {
+            @AssertCalled
+            override fun onCreditCardSave(
+                    session: GeckoSession,
+                    request: AutocompleteRequest<CreditCardSaveOption>)
+                    : GeckoResult<PromptDelegate.PromptResponse> {
+                assertThat("Session should not be null", session, notNullValue())
+
+                val option = request.options[0]
+                val cc = option.value
+
+                assertThat("Credit card should not be null", cc, notNullValue())
+
+                assertThat(
+                        "Credit card name should match",
+                        cc.name,
+                        equalTo(ccName))
+                assertThat(
+                        "Credit card number should match",
+                        cc.number,
+                        equalTo(ccNumber))
+                assertThat(
+                        "Credit card expiration month should match",
+                        cc.expirationMonth,
+                        equalTo(ccExpMonth))
+                assertThat(
+                        "Credit card expiration year should match",
+                        cc.expirationYear,
+                        equalTo(ccExpYear))
+
+                return GeckoResult.fromValue(request.dismiss())
+            }
+        })
+    }
+
+    @Test
+    fun creditCardSaveModifyAccept() {
+        val ccName = "MyCard"
+        val ccNumber = "5105-1051-0510-5100"
+        val ccExpMonth = "06"
+        val ccExpYearNew = "26"
+        val ccExpYear = "24"
+
+        mainSession.loadTestPath(CC_FORM_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val saveHandled = GeckoResult<Void>()
+
+        sessionRule.delegateUntilTestEnd(object : StorageDelegate {
+            @AssertCalled
+            override fun onCreditCardSave(creditCard: CreditCard) {
+                assertThat("Credit card name should match", creditCard.name, equalTo(ccName))
+                assertThat("Credit card number should match", creditCard.number, equalTo(ccNumber))
+                assertThat("Credit card expiration month should match", creditCard.expirationMonth, equalTo(ccExpMonth))
+                assertThat("Credit card expiration year should match", creditCard.expirationYear, equalTo(ccExpYearNew))
+                saveHandled.complete(null)
+            }
+        })
+
+        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+            @AssertCalled
+            override fun onCreditCardSave(
+                    session: GeckoSession,
+                    request: AutocompleteRequest<CreditCardSaveOption>)
+                    : GeckoResult<PromptDelegate.PromptResponse> {
+                assertThat("Session should not be null", session, notNullValue())
+
+                val option = request.options[0]
+                val cc = option.value
+
+                assertThat("Credit card should not be null", cc, notNullValue())
+
+                assertThat(
+                        "Credit card name should match",
+                        cc.name,
+                        equalTo(ccName))
+                assertThat(
+                        "Credit card number should match",
+                        cc.number,
+                        equalTo(ccNumber))
+                assertThat(
+                        "Credit card expiration month should match",
+                        cc.expirationMonth,
+                        equalTo(ccExpMonth))
+                assertThat(
+                        "Credit card expiration year should match",
+                        cc.expirationYear,
+                        equalTo(ccExpYear))
+
+                val modifiedCreditCard = CreditCard.Builder()
+                        .name(cc.name)
+                        .number(cc.number)
+                        .expirationMonth(cc.expirationMonth)
+                        .expirationYear(ccExpYearNew)
+                        .build()
+
+                return GeckoResult.fromValue(request.confirm(CreditCardSaveOption(modifiedCreditCard)))
+            }
+        })
+
+        // Enter the card values
+        mainSession.evaluateJS("document.querySelector('#name').value = '${ccName}'")
+        mainSession.evaluateJS("document.querySelector('#name').focus()")
+        mainSession.evaluateJS("document.querySelector('#number').value = '${ccNumber}'")
+        mainSession.evaluateJS("document.querySelector('#number').focus()")
+        mainSession.evaluateJS("document.querySelector('#expMonth').value = '${ccExpMonth}'")
+        mainSession.evaluateJS("document.querySelector('#expMonth').focus()")
+        mainSession.evaluateJS("document.querySelector('#expYear').value = '${ccExpYear}'")
+        mainSession.evaluateJS("document.querySelector('#expYear').focus()")
+
+        // Submit the form
+        mainSession.evaluateJS("document.querySelector('form').requestSubmit()")
+
+        sessionRule.waitForResult(saveHandled)
+    }
+
+    @Test
+    fun creditCardUpdateAccept() {
+        val ccName = "MyCard"
+        val ccNumber1 = "5105-1051-0510-5100"
+        val ccExpMonth1 = "06"
+        val ccExpYear1 = "24"
+        val ccNumber2 = "4111-1111-1111-1111"
+        val ccExpMonth2 = "11"
+        val ccExpYear2 = "21"
+        val savedCreditCards = mutableListOf<CreditCard>()
+
+        mainSession.loadTestPath(CC_FORM_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val saveHandled1 = GeckoResult<Void>()
+        val saveHandled2 = GeckoResult<Void>()
+
+        sessionRule.delegateUntilTestEnd(object : StorageDelegate {
+            @AssertCalled
+            override fun onCreditCardFetch(): GeckoResult<Array<CreditCard>> {
+                return GeckoResult.fromValue(savedCreditCards.toTypedArray())
+            }
+
+            @AssertCalled(count = 2)
+            override fun onCreditCardSave(creditCard: CreditCard) {
+                assertThat(
+                        "Credit card name should match",
+                        creditCard.name,
+                        equalTo(ccName))
+                assertThat(
+                        "Credit card number should match",
+                        creditCard.number,
+                        equalTo(forEachCall(ccNumber1, ccNumber2)))
+                assertThat(
+                        "Credit card expiration month should match",
+                        creditCard.expirationMonth,
+                        equalTo(forEachCall(ccExpMonth1, ccExpMonth2)))
+                assertThat(
+                        "Credit card expiration year should match",
+                        creditCard.expirationYear,
+                        equalTo(forEachCall(ccExpYear1, ccExpYear2)))
+
+                val savedCC = CreditCard.Builder()
+                        .guid("test1")
+                        .name(creditCard.name)
+                        .number(creditCard.number)
+                        .expirationMonth(creditCard.expirationMonth)
+                        .expirationYear(creditCard.expirationYear)
+                        .build()
+                savedCreditCards.add(savedCC)
+
+                if (sessionRule.currentCall.counter == 1) {
+                    saveHandled1.complete(null)
+                } else if (sessionRule.currentCall.counter == 2) {
+                    saveHandled2.complete(null)
+                }
+            }
+        })
+
+        sessionRule.delegateUntilTestEnd(object : PromptDelegate {
+            @AssertCalled(count = 2)
+            override fun onCreditCardSave(
+                    session: GeckoSession,
+                    request: AutocompleteRequest<CreditCardSaveOption>)
+                    : GeckoResult<PromptDelegate.PromptResponse> {
+                assertThat("Session should not be null", session, notNullValue())
+
+                val option = request.options[0]
+                val cc = option.value
+
+                assertThat("Credit card should not be null", cc, notNullValue())
+
+                assertThat(
+                        "Credit card name should match",
+                        cc.name,
+                        equalTo(ccName))
+                assertThat(
+                        "Credit card number should match",
+                        cc.number,
+                        equalTo(forEachCall(ccNumber1, ccNumber2)))
+                assertThat(
+                        "Credit card expiration month should match",
+                        cc.expirationMonth,
+                        equalTo(forEachCall(ccExpMonth1, ccExpMonth2)))
+                assertThat(
+                        "Credit card expiration year should match",
+                        cc.expirationYear,
+                        equalTo(forEachCall(ccExpYear1, ccExpYear2)))
+
+                return GeckoResult.fromValue(request.confirm(option))
+            }
+        })
+
+        // Enter the card values
+        mainSession.evaluateJS("document.querySelector('#name').value = '${ccName}'")
+        mainSession.evaluateJS("document.querySelector('#name').focus()")
+        mainSession.evaluateJS("document.querySelector('#number').value = '${ccNumber1}'")
+        mainSession.evaluateJS("document.querySelector('#number').focus()")
+        mainSession.evaluateJS("document.querySelector('#expMonth').value = '${ccExpMonth1}'")
+        mainSession.evaluateJS("document.querySelector('#expMonth').focus()")
+        mainSession.evaluateJS("document.querySelector('#expYear').value = '${ccExpYear1}'")
+        mainSession.evaluateJS("document.querySelector('#expYear').focus()")
+
+        // Submit the form
+        mainSession.evaluateJS("document.querySelector('form').requestSubmit()")
+
+        sessionRule.waitForResult(saveHandled1)
+
+        // Update credit card
+        val session2 = sessionRule.createOpenSession()
+        session2.loadTestPath(CC_FORM_HTML_PATH)
+        session2.waitForPageStop()
+        session2.evaluateJS("document.querySelector('#name').focus()")
+        session2.evaluateJS("document.querySelector('#name').value = '${ccName}'")
+        session2.evaluateJS("document.querySelector('#number').value = '${ccNumber2}'")
+        session2.evaluateJS("document.querySelector('#number').focus()")
+        session2.evaluateJS("document.querySelector('#expMonth').value = '${ccExpMonth2}'")
+        session2.evaluateJS("document.querySelector('#expMonth').focus()")
+        session2.evaluateJS("document.querySelector('#expYear').value = '${ccExpYear2}'")
+        session2.evaluateJS("document.querySelector('#expYear').focus()")
+
+        session2.evaluateJS("document.querySelector('form').requestSubmit()")
 
         sessionRule.waitForResult(saveHandled2)
     }

@@ -4995,6 +4995,35 @@ public class GeckoSession {
         }
 
         /**
+         * Handle a credit card save prompt request.
+         * This is triggered by the user entering new or modified credit card
+         * credentials into a form.
+         *
+         * @param session The {@link GeckoSession} that triggered the request.
+         * @param request The {@link AutocompleteRequest} containing the request
+         *                details.
+         *
+         * @return A {@link GeckoResult} resolving to a {@link PromptResponse}.
+         *
+         *         Confirm the request with an {@link Autocomplete.Option}
+         *         to trigger a
+         *         {@link Autocomplete.StorageDelegate#onCreditCardSave} request
+         *         to save the given selection.
+         *         The confirmed selection may be an entry out of the request's
+         *         options, a modified option, or a freshly created credit
+         *         card entry.
+         *
+         *         Dismiss the request to deny the saving request.
+         */
+        @UiThread
+        default @Nullable GeckoResult<PromptResponse> onCreditCardSave(
+                @NonNull final GeckoSession session,
+                @NonNull final AutocompleteRequest<Autocomplete.CreditCardSaveOption>
+                    request) {
+            return null;
+        }
+
+        /**
          * Handle a login selection prompt request.
          * This is triggered by the user focusing on a login username field.
          *

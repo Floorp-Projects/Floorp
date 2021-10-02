@@ -375,7 +375,7 @@ const GeckoViewAutocomplete = {
    * @param aCreditCard The {CreditCard} to be saved.
    */
   onCreditCardSave(aCreditCard) {
-    debug`onLoginSave ${aCreditCard}`;
+    debug`onCreditCardSave ${aCreditCard}`;
 
     EventDispatcher.instance.sendRequest({
       type: "GeckoView:Autocomplete:Save:CreditCard",
@@ -390,7 +390,7 @@ const GeckoViewAutocomplete = {
    * @param aAddress The {Address} to be saved.
    */
   onAddressSave(aAddress) {
-    debug`onLoginSave ${aAddress}`;
+    debug`onAddressSave ${aAddress}`;
 
     EventDispatcher.instance.sendRequest({
       type: "GeckoView:Autocomplete:Save:Address",

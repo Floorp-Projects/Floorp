@@ -186,6 +186,10 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public Autocomplete.CreditCard.Builder number(@Nullable String);
   }
 
+  public static class Autocomplete.CreditCardSaveOption extends Autocomplete.SaveOption {
+    ctor public CreditCardSaveOption(@NonNull Autocomplete.CreditCard);
+  }
+
   public static class Autocomplete.CreditCardSelectOption extends Autocomplete.SelectOption {
     ctor public CreditCardSelectOption(@NonNull Autocomplete.CreditCard);
   }
@@ -259,6 +263,7 @@ package org.mozilla.geckoview {
     method @Nullable @UiThread default public GeckoResult<Autocomplete.Address[]> onAddressFetch();
     method @UiThread default public void onAddressSave(@NonNull Autocomplete.Address);
     method @Nullable @UiThread default public GeckoResult<Autocomplete.CreditCard[]> onCreditCardFetch();
+    method @UiThread default public void onCreditCardSave(@NonNull Autocomplete.CreditCard);
     method @Nullable @UiThread default public GeckoResult<Autocomplete.LoginEntry[]> onLoginFetch(@NonNull String);
     method @UiThread default public void onLoginSave(@NonNull Autocomplete.LoginEntry);
     method @UiThread default public void onLoginUsed(@NonNull Autocomplete.LoginEntry, int);
@@ -1098,6 +1103,7 @@ package org.mozilla.geckoview {
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onButtonPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.ButtonPrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onChoicePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.ChoicePrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onColorPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.ColorPrompt);
+    method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onCreditCardSave(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.CreditCardSaveOption>);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onCreditCardSelect(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.CreditCardSelectOption>);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onDateTimePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.DateTimePrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onFilePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.FilePrompt);

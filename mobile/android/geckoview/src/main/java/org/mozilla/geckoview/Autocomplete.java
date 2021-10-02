@@ -210,8 +210,12 @@ public class Autocomplete {
             bundle.putString(GUID_KEY, guid);
             bundle.putString(NAME_KEY, name);
             bundle.putString(NUMBER_KEY, number);
-            bundle.putString(EXP_MONTH_KEY, expirationMonth);
-            bundle.putString(EXP_YEAR_KEY, expirationYear);
+            if (expirationMonth != null) {
+                bundle.putString(EXP_MONTH_KEY, expirationMonth);
+            }
+            if (expirationYear != null) {
+                bundle.putString(EXP_YEAR_KEY, expirationYear);
+            }
 
             return bundle;
         }
@@ -950,6 +954,17 @@ public class Autocomplete {
         default void onLoginSave(@NonNull final LoginEntry login) {}
 
         /**
+         * Request saving or updating of the given credit card entry.
+         * This is triggered by confirming a
+         * {@link GeckoSession.PromptDelegate#onCreditCardSave onCreditCardSave} request.
+         *
+         * @param creditCard The {@link CreditCard} as confirmed by the prompt
+         *              request.
+         */
+        @UiThread
+        default void onCreditCardSave(@NonNull CreditCard creditCard) {}
+
+        /**
          * Request saving or updating of the given address entry.
          * This is triggered by confirming a
          * {@link GeckoSession.PromptDelegate#onAddressSave onAddressSave} request.
@@ -1175,6 +1190,40 @@ public class Autocomplete {
     }
 
     /**
+     * Holds information required to process credit card saving requests.
+     */
+    public static class CreditCardSaveOption extends SaveOption<CreditCard> {
+        /**
+         * Construct a credit card save option.
+         *
+         * @param value The {@link CreditCard} credit card entry to be saved.
+         * @param hint The {@link Hint} detailing the type of the option.
+         */
+        /* package */ CreditCardSaveOption(
+                final @NonNull CreditCard value,
+                final @SaveOptionHint int hint) {
+            super(value, hint);
+        }
+
+        /**
+         * Construct a credit card save option.
+         *
+         * @param value The {@link CreditCard} credit card entry to be saved.
+         */
+        public CreditCardSaveOption(final @NonNull CreditCard value) {
+            this(value, Hint.NONE);
+        }
+
+        @Override
+        /* package */ @NonNull GeckoBundle toBundle() {
+            final GeckoBundle bundle = new GeckoBundle(2);
+            bundle.putBundle(VALUE_KEY, value.toBundle());
+            bundle.putInt(HINT_KEY, hint);
+            return bundle;
+        }
+    }
+
+    /**
      * Holds information required to process login selection requests.
      */
     public static class LoginSelectOption extends SelectOption<LoginEntry> {
@@ -1349,6 +1398,8 @@ public class Autocomplete {
                 "GeckoView:Autocomplete:Fetch:Address";
         private static final String SAVE_LOGIN_EVENT =
             "GeckoView:Autocomplete:Save:Login";
+        private static final String SAVE_CREDIT_CARD_EVENT =
+            "GeckoView:Autocomplete:Save:CreditCard";
         private static final String SAVE_ADDRESS_EVENT =
                 "GeckoView:Autocomplete:Save:Address";
         private static final String USED_LOGIN_EVENT =
@@ -1365,6 +1416,7 @@ public class Autocomplete {
                     FETCH_CREDIT_CARD_EVENT,
                     FETCH_ADDRESS_EVENT,
                     SAVE_LOGIN_EVENT,
+                    SAVE_CREDIT_CARD_EVENT,
                     SAVE_ADDRESS_EVENT,
                     USED_LOGIN_EVENT);
         }
@@ -1376,6 +1428,7 @@ public class Autocomplete {
                     FETCH_CREDIT_CARD_EVENT,
                     FETCH_ADDRESS_EVENT,
                     SAVE_LOGIN_EVENT,
+                    SAVE_CREDIT_CARD_EVENT,
                     SAVE_ADDRESS_EVENT,
                     USED_LOGIN_EVENT);
         }
@@ -1491,6 +1544,11 @@ public class Autocomplete {
                 final LoginEntry login = new LoginEntry(loginBundle);
 
                 mDelegate.onLoginSave(login);
+            } else if (SAVE_CREDIT_CARD_EVENT.equals(event)) {
+                final GeckoBundle creditCardBundle = message.getBundle("creditCard");
+                final CreditCard creditCard = new CreditCard(creditCardBundle);
+
+                mDelegate.onCreditCardSave(creditCard);
             } else if (SAVE_ADDRESS_EVENT.equals(event)) {
                 final GeckoBundle addressBundle = message.getBundle("address");
                 final Address address = new Address(addressBundle);
