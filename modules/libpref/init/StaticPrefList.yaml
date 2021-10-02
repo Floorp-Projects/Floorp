@@ -9940,6 +9940,16 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# When this pref is true we clear the Content-Encoding header for
+# application/x-gzip Content-Type responses, see bug 1030660.
+#
+# Assuming there are no regressions, this pref and related code should be
+# removed.
+- name: network.http.clear_bogus_content_encoding
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Support http3 version1
 - name: network.http.http3.support_version1
   type: RelaxedAtomicBool

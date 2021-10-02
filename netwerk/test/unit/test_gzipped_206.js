@@ -133,6 +133,7 @@ function continue_test(request, data) {
 }
 
 var enforcePref;
+var clearBogusContentEncodingPref;
 
 function finish_test(request, data, ctx) {
   Assert.equal(request.status, 0);
@@ -141,10 +142,18 @@ function finish_test(request, data, ctx) {
     Assert.equal(data.charCodeAt(i), responseBody[i]);
   }
   Services.prefs.setBoolPref("network.http.enforce-framing.http1", enforcePref);
+  Services.prefs.setBoolPref(
+    "network.http.clear_bogus_content_encoding",
+    clearBogusContentEncodingPref
+  );
   httpserver.stop(do_test_finished);
 }
 
 function run_test() {
+  clearBogusContentEncodingPref = Services.prefs.getBoolPref(
+    "network.http.clear_bogus_content_encoding"
+  );
+  Services.prefs.setBoolPref("network.http.clear_bogus_content_encoding", true);
   enforcePref = Services.prefs.getBoolPref(
     "network.http.enforce-framing.http1"
   );

@@ -4945,6 +4945,10 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
 }
 
 void nsHttpChannel::ClearBogusContentEncodingIfNeeded() {
+  if (!StaticPrefs::network_http_clear_bogus_content_encoding()) {
+    return;
+  }
+
   // For .gz files, apache sends both a Content-Type: application/x-gzip
   // as well as Content-Encoding: gzip, which is completely wrong.  In
   // this case, we choose to ignore the rogue Content-Encoding header. We
