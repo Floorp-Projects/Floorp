@@ -51,6 +51,7 @@
 #include "mozilla/ScrollbarPreferences.h"
 #include "mozilla/ScrollingMetrics.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/SVGOuterSVGFrame.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/LookAndFeel.h"
@@ -2178,7 +2179,7 @@ class ScrollFrameActivityTracker final
   }
 };
 
-static ScrollFrameActivityTracker* gScrollFrameActivityTracker = nullptr;
+static StaticAutoPtr<ScrollFrameActivityTracker> gScrollFrameActivityTracker;
 
 ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
     : mHScrollbarBox(nullptr),
@@ -4325,9 +4326,9 @@ nsRect ScrollFrameHelper::RestrictToRootDisplayPort(
 }
 
 /* static */ bool ScrollFrameHelper::ShouldActivateAllScrollFrames() {
-    return (StaticPrefs::apz_wr_activate_all_scroll_frames() ||
-            (StaticPrefs::apz_wr_activate_all_scroll_frames_when_fission() &&
-             FissionAutostart()));
+  return (StaticPrefs::apz_wr_activate_all_scroll_frames() ||
+          (StaticPrefs::apz_wr_activate_all_scroll_frames_when_fission() &&
+           FissionAutostart()));
 }
 
 bool ScrollFrameHelper::DecideScrollableLayer(
@@ -5563,7 +5564,6 @@ void ScrollFrameHelper::Destroy(PostDestroyData& aPostDestroyData) {
     gScrollFrameActivityTracker->RemoveObject(this);
   }
   if (gScrollFrameActivityTracker && gScrollFrameActivityTracker->IsEmpty()) {
-    delete gScrollFrameActivityTracker;
     gScrollFrameActivityTracker = nullptr;
   }
 

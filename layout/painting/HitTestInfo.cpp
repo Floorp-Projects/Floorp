@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HitTestInfo.h"
+
+#include "mozilla/StaticPtr.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "nsDisplayList.h"
 #include "nsIFrame.h"
@@ -12,7 +14,7 @@
 
 namespace mozilla {
 
-static const HitTestInfo* gEmptyHitTestInfo = nullptr;
+static StaticAutoPtr<const HitTestInfo> gEmptyHitTestInfo;
 
 const HitTestInfo& HitTestInfo::Empty() {
   if (gEmptyHitTestInfo) {
@@ -22,10 +24,7 @@ const HitTestInfo& HitTestInfo::Empty() {
   return *gEmptyHitTestInfo;
 }
 
-void HitTestInfo::Shutdown() {
-  delete gEmptyHitTestInfo;
-  gEmptyHitTestInfo = nullptr;
-}
+void HitTestInfo::Shutdown() { gEmptyHitTestInfo = nullptr; }
 
 using ViewID = layers::ScrollableLayerGuid::ViewID;
 
