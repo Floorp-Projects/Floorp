@@ -19,7 +19,7 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-nsTHashMap<nsUint32HashKey, TouchManager::TouchInfo>*
+StaticAutoPtr<nsTHashMap<nsUint32HashKey, TouchManager::TouchInfo>>
     TouchManager::sCaptureTouchList;
 layers::LayersId TouchManager::sCaptureTouchLayersId;
 
@@ -33,7 +33,6 @@ void TouchManager::InitializeStatics() {
 /*static*/
 void TouchManager::ReleaseStatics() {
   NS_ASSERTION(sCaptureTouchList, "ReleaseStatics called without Initialize!");
-  delete sCaptureTouchList;
   sCaptureTouchList = nullptr;
 }
 

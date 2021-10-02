@@ -56,6 +56,7 @@
 #include "mozilla/StaticPresData.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/SizeOfState.h"
 #include "mozilla/StyleAnimationValue.h"
@@ -87,7 +88,7 @@ using namespace mozilla::dom;
 bool ServoTraversalStatistics::sActive = false;
 ServoTraversalStatistics ServoTraversalStatistics::sSingleton;
 
-static RWLock* sServoFFILock = nullptr;
+static StaticAutoPtr<RWLock> sServoFFILock;
 
 static const nsFont* ThreadSafeGetDefaultFontHelper(
     const Document& aDocument, nsAtom* aLanguage,
@@ -1388,7 +1389,6 @@ void ShutdownServo() {
   UnregisterWeakMemoryReporter(gUACacheReporter);
   gUACacheReporter = nullptr;
 
-  delete sServoFFILock;
   sServoFFILock = nullptr;
   Servo_Shutdown();
 

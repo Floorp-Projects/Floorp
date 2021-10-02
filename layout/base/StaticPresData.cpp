@@ -10,11 +10,12 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoUtils.h"
+#include "mozilla/StaticPtr.h"
 #include "nsPresContext.h"
 
 namespace mozilla {
 
-static StaticPresData* sSingleton = nullptr;
+static StaticAutoPtr<StaticPresData> sSingleton;
 
 void StaticPresData::Init() {
   MOZ_ASSERT(!sSingleton);
@@ -23,7 +24,6 @@ void StaticPresData::Init() {
 
 void StaticPresData::Shutdown() {
   MOZ_ASSERT(sSingleton);
-  delete sSingleton;
   sSingleton = nullptr;
 }
 

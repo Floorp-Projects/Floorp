@@ -6,7 +6,7 @@
 #include "nsCellMap.h"
 
 #include "mozilla/PresShell.h"
-
+#include "mozilla/StaticPtr.h"
 #include "nsTArray.h"
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
@@ -30,7 +30,7 @@ static void SetDamageArea(int32_t aStartCol, int32_t aStartRow,
 }
 
 // Empty static array used for SafeElementAt() calls on mRows.
-static nsCellMap::CellDataArray* sEmptyRow;
+static StaticAutoPtr<nsCellMap::CellDataArray> sEmptyRow;
 
 // CellData
 
@@ -1058,10 +1058,7 @@ void nsCellMap::Init() {
 }
 
 /* static */
-void nsCellMap::Shutdown() {
-  delete sEmptyRow;
-  sEmptyRow = nullptr;
-}
+void nsCellMap::Shutdown() { sEmptyRow = nullptr; }
 
 nsTableCellFrame* nsCellMap::GetCellFrame(int32_t aRowIndexIn,
                                           int32_t aColIndexIn, CellData& aData,
