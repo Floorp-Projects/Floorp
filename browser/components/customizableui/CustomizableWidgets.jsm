@@ -135,7 +135,7 @@ const CustomizableWidgets = [
 
       PanelMultiView.getViewNode(
         document,
-        "appMenuRestoreSession"
+        "appMenu-restoreSession"
       ).hidden = !SessionStore.canRestoreLastSession;
 
       // We restrict the amount of results to 42. Not 50, but 42. Why? Because 42.

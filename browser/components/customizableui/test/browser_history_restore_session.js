@@ -20,7 +20,7 @@ add_task(async function testRestoreSession() {
   await openHistoryPanel(win.document);
 
   let restorePrevSessionBtn = win.document.getElementById(
-    "appMenuRestoreSession"
+    "appMenu-restoreSession"
   );
 
   Assert.ok(
@@ -41,7 +41,7 @@ add_task(async function testRestoreSession() {
 
   await openHistoryPanel(win.document);
 
-  restorePrevSessionBtn = win.document.getElementById("appMenuRestoreSession");
+  restorePrevSessionBtn = win.document.getElementById("appMenu-restoreSession");
   Assert.ok(
     !restorePrevSessionBtn.hidden,
     "Restore previous session button is visible"

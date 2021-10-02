@@ -22,6 +22,7 @@ function getExpectedTargets() {
     "privateWindow",
     ...(hasQuit ? ["quit"] : []),
     "readerMode-urlBar",
+    "restorePreviousSession",
     "urlbar",
   ];
 }
