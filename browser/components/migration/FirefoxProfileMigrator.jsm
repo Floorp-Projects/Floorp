@@ -171,7 +171,6 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(
     "logins.json",
     "key3.db",
     "key4.db",
-    "gecko-no-share-key4.db",
   ]);
   let formData = getFileResource(types.FORMDATA, [
     "formhistory.sqlite",
