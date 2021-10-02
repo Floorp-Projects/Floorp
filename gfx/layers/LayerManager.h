@@ -294,11 +294,6 @@ class LayerManager : public WindowRenderer {
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer() = 0;
   /**
    * CONSTRUCTION PHASE ONLY
-   * Create a ColorLayer for this manager's layer tree.
-   */
-  virtual already_AddRefed<ColorLayer> CreateColorLayer() = 0;
-  /**
-   * CONSTRUCTION PHASE ONLY
    * Create a RefLayer for this manager's layer tree.
    */
   virtual already_AddRefed<RefLayer> CreateRefLayer() { return nullptr; }
