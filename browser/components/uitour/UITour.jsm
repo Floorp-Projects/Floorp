@@ -151,6 +151,7 @@ var UITour = {
       },
     ],
     ["help", { query: "#appMenu-help-button2" }],
+    ["history", { query: "#appMenu-history-button" }],
     ["home", { query: "#home-button" }],
     [
       "logins",
