@@ -980,7 +980,7 @@ class InactiveRefreshDriverTimer final
 }  // namespace mozilla
 
 static StaticRefPtr<RefreshDriverTimer> sRegularRateTimer;
-static nsTArray<RefreshDriverTimer*>* sRegularRateTimerList;
+static StaticAutoPtr<nsTArray<RefreshDriverTimer*>> sRegularRateTimerList;
 static StaticRefPtr<InactiveRefreshDriverTimer> sThrottledRateTimer;
 
 void nsRefreshDriver::CreateVsyncRefreshTimer() {
@@ -1057,7 +1057,6 @@ void nsRefreshDriver::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   // clean up our timers
   sRegularRateTimer = nullptr;
-  delete sRegularRateTimerList;
   sRegularRateTimerList = nullptr;
   sThrottledRateTimer = nullptr;
 }
@@ -2107,7 +2106,7 @@ void nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime) {
   }
 }
 
-static AutoTArray<RefPtr<Task>, 8>* sPendingIdleTasks = nullptr;
+static StaticAutoPtr<AutoTArray<RefPtr<Task>, 8>> sPendingIdleTasks;
 
 void nsRefreshDriver::DispatchIdleTaskAfterTickUnlessExists(Task* aTask) {
   if (!sPendingIdleTasks) {
@@ -2129,7 +2128,6 @@ void nsRefreshDriver::CancelIdleTask(Task* aTask) {
   sPendingIdleTasks->RemoveElement(aTask);
 
   if (sPendingIdleTasks->IsEmpty()) {
-    delete sPendingIdleTasks;
     sPendingIdleTasks = nullptr;
   }
 }
@@ -2622,12 +2620,10 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
   }
 
   if (dispatchTasksAfterTick && sPendingIdleTasks) {
-    AutoTArray<RefPtr<Task>, 8>* tasks = sPendingIdleTasks;
-    sPendingIdleTasks = nullptr;
+    UniquePtr<AutoTArray<RefPtr<Task>, 8>> tasks(sPendingIdleTasks.forget());
     for (RefPtr<Task>& taskWithDelay : *tasks) {
       TaskController::Get()->AddTask(taskWithDelay.forget());
     }
-    delete tasks;
   }
 }
 
