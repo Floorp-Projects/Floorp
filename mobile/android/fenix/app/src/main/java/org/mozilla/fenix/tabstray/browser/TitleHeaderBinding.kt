@@ -13,6 +13,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.tabstray.ext.getNormalTrayTabs
+import org.mozilla.fenix.tabstray.ext.getSearchTabGroups
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -25,14 +26,13 @@ class TitleHeaderBinding(
     private val showHeader: (Boolean) -> Unit
 ) : AbstractBinding<BrowserState>(store) {
     override suspend fun onState(flow: Flow<BrowserState>) {
-        flow.map {
-            it.getNormalTrayTabs(
-                settings.searchTermTabGroupsAreEnabled,
-                settings.inactiveTabsAreEnabled
-            )
-        }.ifChanged { it.size }
-            .collect {
-                if (it.isEmpty()) {
+        val groupsEnabled = settings.searchTermTabGroupsAreEnabled
+        val inactiveEnabled = settings.inactiveTabsAreEnabled
+
+        flow.map { it.getSearchTabGroups(groupsEnabled) to it.getNormalTrayTabs(groupsEnabled, inactiveEnabled) }
+            .ifChanged()
+            .collect { (groups, normalTrayTabs) ->
+                if (groups.isEmpty() || normalTrayTabs.isEmpty()) {
                     showHeader(false)
                 } else {
                     showHeader(true)

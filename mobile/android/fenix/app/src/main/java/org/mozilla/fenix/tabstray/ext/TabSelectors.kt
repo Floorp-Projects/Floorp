@@ -8,6 +8,8 @@ import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
+import org.mozilla.fenix.ext.toSearchGroup
+import org.mozilla.fenix.tabstray.browser.TabGroup
 import org.mozilla.fenix.tabstray.browser.maxActiveTime
 
 /**
@@ -55,4 +57,15 @@ fun BrowserState.getNormalTrayTabs(
             this
         }
     }
+}
+
+/**
+ * The list of search groups filtered appropriately based on feature flags.
+ */
+fun BrowserState.getSearchTabGroups(
+    searchTermTabGroupsAreEnabled: Boolean
+): List<TabGroup> = if (searchTermTabGroupsAreEnabled) {
+    normalTabs.toSearchGroup().filter { it.tabs.size > 1 }
+} else {
+    emptyList()
 }

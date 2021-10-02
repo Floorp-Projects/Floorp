@@ -29,7 +29,7 @@ class TitleHeaderBindingTest {
     val coroutinesTestRule = MainCoroutineRule()
 
     @Test
-    fun `WHEN normal tabs are added to the list THEN return true`() = runBlockingTest {
+    fun `WHEN normal tabs are added to the list THEN return false`() = runBlockingTest {
         var result = false
         val store = BrowserStore()
         val settings: Settings = mockk(relaxed = true)
@@ -43,11 +43,55 @@ class TitleHeaderBindingTest {
 
         store.waitUntilIdle()
 
+        assertFalse(result)
+    }
+
+    @Test
+    fun `WHEN grouped and normal tabs are added THEN return true`() = runBlockingTest {
+        var result = false
+        val store = BrowserStore(
+            initialState = BrowserState(
+                listOf(
+                    createTab(
+                        url = "https://mozilla.org",
+                        historyMetadata = HistoryMetadataKey(
+                            url = "https://getpocket.com",
+                            searchTerm = "Mozilla"
+                        )
+                    ),
+                    createTab(
+                        url = "https://firefox.com",
+                        historyMetadata = HistoryMetadataKey(
+                            url = "https://getpocket.com",
+                            searchTerm = "Mozilla"
+                        )
+                    )
+                )
+            )
+        )
+        val settings: Settings = mockk(relaxed = true)
+        val binding = TitleHeaderBinding(store, settings) { result = it }
+
+        every { settings.inactiveTabsAreEnabled } returns true
+        every { settings.searchTermTabGroupsAreEnabled } returns true
+
+        binding.start()
+
+        store.dispatch(
+            TabListAction.AddTabAction(
+                createTab(
+                    url = "https://getpocket.com",
+                )
+            )
+        ).joinBlocking()
+
+        store.waitUntilIdle()
+
         assertTrue(result)
     }
 
     @Test
-    fun `WHEN grouped tabs are added to the list THEN return false`() = runBlockingTest {
+    fun `WHEN grouped tab is added to the list THEN return false`() = runBlockingTest {
         var result = false
         val store = BrowserStore()
         val settings: Settings = mockk(relaxed = true)

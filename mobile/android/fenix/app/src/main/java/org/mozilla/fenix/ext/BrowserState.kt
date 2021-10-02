@@ -82,7 +82,7 @@ val BrowserState.lastSearchGroup: RecentTab.SearchGroup?
 /**
  * Get search term groups sorted by last access time.
  */
-private fun List<TabSessionState>.toSearchGroup(): List<TabGroup> {
+fun List<TabSessionState>.toSearchGroup(): List<TabGroup> {
     val data = filter {
         it.isNormalTabActiveWithSearchTerm(maxActiveTime)
     }.groupBy {
