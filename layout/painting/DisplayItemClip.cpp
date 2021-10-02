@@ -11,6 +11,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/layers/StackingContextHelper.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsPresContext.h"
 #include "nsCSSRendering.h"
@@ -446,7 +447,7 @@ void DisplayItemClip::MoveBy(const nsPoint& aPoint) {
   }
 }
 
-static DisplayItemClip* gNoClip;
+static StaticAutoPtr<DisplayItemClip> gNoClip;
 
 const DisplayItemClip& DisplayItemClip::NoClip() {
   if (!gNoClip) {
@@ -455,10 +456,7 @@ const DisplayItemClip& DisplayItemClip::NoClip() {
   return *gNoClip;
 }
 
-void DisplayItemClip::Shutdown() {
-  delete gNoClip;
-  gNoClip = nullptr;
-}
+void DisplayItemClip::Shutdown() { gNoClip = nullptr; }
 
 nsCString DisplayItemClip::ToString() const {
   nsAutoCString str;

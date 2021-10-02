@@ -30,13 +30,15 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPtr.h"
 
 using namespace mozilla;
 
 static int32_t gPropertyTableRefCount;
-static nsStaticCaseInsensitiveNameTable* gFontDescTable;
-static nsStaticCaseInsensitiveNameTable* gCounterDescTable;
-static nsTHashMap<nsCStringHashKey, nsCSSPropertyID>* gPropertyIDLNameTable;
+static StaticAutoPtr<nsStaticCaseInsensitiveNameTable> gFontDescTable;
+static StaticAutoPtr<nsStaticCaseInsensitiveNameTable> gCounterDescTable;
+static StaticAutoPtr<nsTHashMap<nsCStringHashKey, nsCSSPropertyID>>
+    gPropertyIDLNameTable;
 
 static const char* const kCSSRawFontDescs[] = {
 #define CSS_FONT_DESC(name_, method_) #name_,
@@ -121,13 +123,8 @@ void nsCSSProps::AddRefTable(void) {
 
 void nsCSSProps::ReleaseTable(void) {
   if (0 == --gPropertyTableRefCount) {
-    delete gFontDescTable;
     gFontDescTable = nullptr;
-
-    delete gCounterDescTable;
     gCounterDescTable = nullptr;
-
-    delete gPropertyIDLNameTable;
     gPropertyIDLNameTable = nullptr;
   }
 }

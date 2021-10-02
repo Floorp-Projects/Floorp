@@ -13,6 +13,7 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/MotionPathUtils.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/StaticPtr.h"
 #include "gfx2DGlue.h"
 #include "nsExpirationTracker.h"
 #include "nsContainerFrame.h"
@@ -163,7 +164,7 @@ class LayerActivityTracker final
   bool mDestroying;
 };
 
-static LayerActivityTracker* gLayerActivityTracker = nullptr;
+static StaticAutoPtr<LayerActivityTracker> gLayerActivityTracker;
 
 LayerActivity::~LayerActivity() {
   if (mFrame || mContent) {
@@ -606,9 +607,6 @@ void ActiveLayerTracker::SetCurrentScrollHandlerFrame(nsIFrame* aFrame) {
 }
 
 /* static */
-void ActiveLayerTracker::Shutdown() {
-  delete gLayerActivityTracker;
-  gLayerActivityTracker = nullptr;
-}
+void ActiveLayerTracker::Shutdown() { gLayerActivityTracker = nullptr; }
 
 }  // namespace mozilla
