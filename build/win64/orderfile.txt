@@ -11651,7 +11651,6 @@ ZN5style7stylist7Stylist17remove_stylesheet17h3ad60902102208fbE
 ??8EventRegions@layers@mozilla@@QEBA_NAEBU012@@Z
 ?SetScrollMetadata@Layer@layers@mozilla@@QEAAXAEBV?$nsTArray@UScrollMetadata@layers@mozilla@@@@@Z
 ?ClearPendingScrollInfoUpdate@LayerManager@layers@mozilla@@QEAA?AV?$unordered_set@_KU?$hash@_K@std@@U?$equal_to@_K@2@V?$allocator@_K@2@@std@@XZ
-?SetVisibleRegion@BasicColorLayer@layers@mozilla@@UEAAXAEBV?$IntRegionTyped@ULayerPixel@mozilla@@@gfx@3@@Z
 ?SetVisibleRegion@Layer@layers@mozilla@@UEAAXAEBV?$IntRegionTyped@ULayerPixel@mozilla@@@gfx@3@@Z
 ?GetCombinedClipRect@Layer@layers@mozilla@@QEBA?AV?$Maybe@U?$IntRectTyped@UParentLayerPixel@mozilla@@@gfx@mozilla@@@3@XZ
 ?GetType@PaintedLayer@layers@mozilla@@UEBA?AW4LayerType@Layer@23@XZ
@@ -15066,18 +15065,12 @@ rust_net_is_valid_scheme
 ?CalculateCompositionSizeForFrame@nsLayoutUtils@@SA?AUnsSize@@PEAVnsIFrame@@_NPEBU2@@Z
 ?GetActualScrollbarSizes@nsHTMLScrollFrame@@UEBA?AUnsMargin@@W4ScrollbarSizesOptions@nsIScrollableFrame@@@Z
 ?AddDisplayItem@nsIFrame@@QEAAXPEAVnsDisplayItemBase@@@Z
-?CreatedColorLayer@ShadowLayerForwarder@layers@mozilla@@QEAAXPEAVShadowableLayer@23@@Z
-?AsLayer@ClientColorLayer@layers@mozilla@@UEAAPEAVLayer@23@XZ
-?SetColor@ColorLayer@layers@mozilla@@UEAAXAEBUDeviceColor@gfx@3@@Z
-?AsHostLayer@ColorLayerComposite@layers@mozilla@@UEAAPEAVHostLayer@23@XZ
 ?GetPostYScale@Layer@layers@mozilla@@UEBAMXZ
 ?GetPostXScale@Layer@layers@mozilla@@UEBAMXZ
 ?ScaleToInsidePixels@nsRegion@@QEBA?AV?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@mozilla@@MMH@Z
 ?RepositionChild@ContainerLayer@layers@mozilla@@UEAA_NPEAVLayer@23@0@Z
 ?RemoveChild@ContainerLayer@layers@mozilla@@UEAA_NPEAVLayer@23@@Z
 ?RemoveChild@ShadowLayerForwarder@layers@mozilla@@QEAAXPEAVShadowableLayer@23@0@Z
-?ComputeEffectiveTransforms@ColorLayer@layers@mozilla@@UEAAXAEBV?$Matrix4x4Typed@UUnknownUnits@gfx@mozilla@@U123@M@gfx@3@@Z
-?GetColor@ColorLayer@layers@mozilla@@UEAAAEBUDeviceColor@gfx@3@XZ
 ??4SpecificLayerAttributes@layers@mozilla@@QEAAAEAV012@$$QEAVColorLayerAttributes@12@@Z
 ??4TimingFunction@layers@mozilla@@QEAAAEAV012@$$QEAV012@@Z
 ??1ShadowableLayer@layers@mozilla@@UEAA@XZ
@@ -15184,9 +15177,7 @@ ZN5style9rule_tree50_$LT$impl$u20$style..rule_tree..core..RuleTree$GT$20update_r
 ?IsFeatureAllowed@FeaturePolicyUtils@dom@mozilla@@SA_NPEAVDocument@23@AEBV?$nsTSubstring@_S@@@Z
 ?AllowsFeature@FeaturePolicy@dom@mozilla@@QEBA_NAEBV?$nsTSubstring@_S@@AEBV?$Optional@V?$nsTSubstring@_S@@@23@@Z
 ?GetMozbrowser@nsGenericHTMLFrameElement@@UEAA?AW4nsresult@@PEA_N@Z
-?RenderLayer@ColorLayerComposite@layers@mozilla@@UEAAXAEBU?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@gfx@3@AEBV?$Maybe@V?$PolygonTyped@UUnknownUnits@gfx@mozilla@@@gfx@mozilla@@@3@@Z
 ??0AutoAddMaskEffect@LayerManagerComposite@layers@mozilla@@QEAA@PEAVLayer@23@AEAUEffectChain@23@@Z
-?GenEffectChain@ColorLayerComposite@layers@mozilla@@UEAAXAEAUEffectChain@23@@Z
 ?FillRectWithMask@layers@mozilla@@YAXPEAVDrawTarget@gfx@2@AEBU?$RectTyped@UUnknownUnits@gfx@mozilla@@M@42@AEBUDeviceColor@42@AEBUDrawOptions@42@PEAVSourceSurface@42@PEBV?$BaseMatrix@M@42@@Z
 moz_cairo_pattern_create_rgba
 cairo_pattern_create_solid

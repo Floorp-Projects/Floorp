@@ -66,7 +66,6 @@ class Animation;
 class AsyncPanZoomController;
 class PaintedLayer;
 class ContainerLayer;
-class ColorLayer;
 class CompositorAnimations;
 class RefLayer;
 class SpecificLayerAttributes;
@@ -790,12 +789,6 @@ class Layer {
    */
   virtual RefLayer* AsRefLayer() { return nullptr; }
 
-  /**
-   * Dynamic cast to a Color. Returns null if this is not a
-   * ColorLayer.
-   */
-  virtual ColorLayer* AsColorLayer() { return nullptr; }
-
   // These getters can be used anytime.  They return the effective
   // values that should be used when drawing this layer to screen,
   // accounting for this layer possibly being a shadow.
@@ -1345,58 +1338,6 @@ class ContainerLayer : public Layer {
   // This is updated by ComputeDifferences. This will be true if we need to
   // invalidate the intermediate surface.
   bool mChildrenChanged;
-};
-
-/**
- * A Layer which just renders a solid color in its visible region. It actually
- * can fill any area that contains the visible region, so if you need to
- * restrict the area filled, set a clip region on this layer.
- */
-class ColorLayer : public Layer {
- public:
-  ColorLayer* AsColorLayer() override { return this; }
-
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Set the color of the layer.
-   */
-  virtual void SetColor(const gfx::DeviceColor& aColor) {
-    if (mColor != aColor) {
-      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) Color", this));
-      mColor = aColor;
-      Mutated();
-    }
-  }
-
-  void SetBounds(const gfx::IntRect& aBounds) {
-    if (!mBounds.IsEqualEdges(aBounds)) {
-      mBounds = aBounds;
-      Mutated();
-    }
-  }
-
-  const gfx::IntRect& GetBounds() { return mBounds; }
-
-  // This getter can be used anytime.
-  virtual const gfx::DeviceColor& GetColor() { return mColor; }
-
-  MOZ_LAYER_DECL_NAME("ColorLayer", TYPE_COLOR)
-
-  void ComputeEffectiveTransforms(
-      const gfx::Matrix4x4& aTransformToSurface) override {
-    gfx::Matrix4x4 idealTransform = GetLocalTransform() * aTransformToSurface;
-    mEffectiveTransform = SnapTransformTranslation(idealTransform, nullptr);
-    ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
-  }
-
- protected:
-  ColorLayer(LayerManager* aManager, void* aImplData)
-      : Layer(aManager, aImplData), mColor() {}
-
-  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
-
-  gfx::IntRect mBounds;
-  gfx::DeviceColor mColor;
 };
 
 /**

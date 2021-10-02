@@ -11659,7 +11659,6 @@ _ZN11encoding_rs3mem20convert_str_to_utf1617h5ca12bd5f45f4892E
 ??0AnimationInfo@layers@mozilla@@QAE@XZ
 ?CreatedContainerLayer@ShadowLayerForwarder@layers@mozilla@@QAEXPAVShadowableLayer@23@@Z
 ??0Edit@layers@mozilla@@QAE@ABV012@@Z
-?AsLayer@ClientColorLayer@layers@mozilla@@UAEPAVLayer@23@XZ
 ??1?$nsTArray_Impl@V?$RefPtr@VTextureClient@layers@mozilla@@@@UnsTArrayInfallibleAllocator@@@@QAE@XZ
 ?GetBounds@nsDisplayCaret@@UBE?AUnsRect@@PAVnsDisplayListBuilder@@PA_N@Z
 ??_GnsDisplayText@@UAEPAXI@Z
@@ -11693,7 +11692,6 @@ _ZN11encoding_rs3mem20convert_str_to_utf1617h5ca12bd5f45f4892E
 ?DrawShapeImage@nsImageRenderer@mozilla@@QAE?AW4ImgDrawResult@image@2@PAVnsPresContext@@AAVgfxContext@@@Z
 ?And@nsRegion@@QAEAAV1@ABV1@0@Z
 ?HasHitTestInfo@nsDisplayHitTestInfoBase@@UBE_NXZ
-?AsHostLayer@ColorLayerComposite@layers@mozilla@@UAEPAVHostLayer@23@XZ
 ?ClearNotifySubDocInvalidationData@nsPresContext@@SAXPAVContainerLayer@layers@mozilla@@@Z
 ??1?$MaybeStorage@UScrollMetadata@layers@mozilla@@$0A@@detail@mozilla@@QAE@XZ
 ?SetNotifySubDocInvalidationData@nsPresContext@@QAEXPAVContainerLayer@layers@mozilla@@@Z
@@ -11720,7 +11718,6 @@ _ZN11encoding_rs3mem20convert_str_to_utf1617h5ca12bd5f45f4892E
 ?ClearPendingScrollInfoUpdate@LayerManager@layers@mozilla@@QAE?AV?$unordered_set@_KU?$hash@_K@std@@U?$equal_to@_K@2@V?$allocator@_K@2@@std@@XZ
 ??1?$nsTArray_Impl@UScrollMetadata@layers@mozilla@@UnsTArrayInfallibleAllocator@@@@QAE@XZ
 ?And@nsRegion@@QAEAAV1@ABV1@ABUnsRectAbsolute@@@Z
-?SetVisibleRegion@BasicColorLayer@layers@mozilla@@UAEXABV?$IntRegionTyped@ULayerPixel@mozilla@@@gfx@3@@Z
 ?SetVisibleRegion@Layer@layers@mozilla@@UAEXABV?$IntRegionTyped@ULayerPixel@mozilla@@@gfx@3@@Z
 ?GetCombinedClipRect@Layer@layers@mozilla@@QBE?AV?$Maybe@U?$IntRectTyped@UParentLayerPixel@mozilla@@@gfx@mozilla@@@3@XZ
 ?GetType@PaintedLayer@layers@mozilla@@UBE?AW4LayerType@Layer@23@XZ
@@ -14984,8 +14981,6 @@ Servo_Element_IsPrimaryStyleReusedViaRuleNode
 ?CalculateCompositionSizeForFrame@nsLayoutUtils@@SA?AUnsSize@@PAVnsIFrame@@_NPBU2@@Z
 ?GetActualScrollbarSizes@nsHTMLScrollFrame@@UBE?AUnsMargin@@W4ScrollbarSizesOptions@nsIScrollableFrame@@@Z
 ?AddDisplayItem@nsIFrame@@QAEXPAVnsDisplayItemBase@@@Z
-?CreatedColorLayer@ShadowLayerForwarder@layers@mozilla@@QAEXPAVShadowableLayer@23@@Z
-?SetColor@ColorLayer@layers@mozilla@@UAEXABUDeviceColor@gfx@3@@Z
 ?GetPostYScale@Layer@layers@mozilla@@UBEMXZ
 ?GetPostXScale@Layer@layers@mozilla@@UBEMXZ
 ?ScaleToInsidePixels@nsRegion@@QBE?AV?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@mozilla@@MMH@Z
@@ -14993,8 +14988,6 @@ Servo_Element_IsPrimaryStyleReusedViaRuleNode
 ?RepositionChild@ContainerLayer@layers@mozilla@@UAE_NPAVLayer@23@0@Z
 ?RemoveChild@ContainerLayer@layers@mozilla@@UAE_NPAVLayer@23@@Z
 ?RemoveChild@ShadowLayerForwarder@layers@mozilla@@QAEXPAVShadowableLayer@23@0@Z
-?ComputeEffectiveTransforms@ColorLayer@layers@mozilla@@UAEXABV?$Matrix4x4Typed@UUnknownUnits@gfx@mozilla@@U123@M@gfx@3@@Z
-?GetColor@ColorLayer@layers@mozilla@@UAEABUDeviceColor@gfx@3@XZ
 ??4SpecificLayerAttributes@layers@mozilla@@QAEAAV012@$$QAVColorLayerAttributes@12@@Z
 ??4TimingFunction@layers@mozilla@@QAEAAV012@$$QAV012@@Z
 ??1ShadowableLayer@layers@mozilla@@UAE@XZ
@@ -15060,9 +15053,7 @@ MOZ_APNG_write_frame_head
 ?growStorageBy@?$Vector@PAVMDefinition@jit@js@@$05VJitAllocPolicy@23@@mozilla@@AAE_NI@Z
 ?GetReadyPromise@WebExtensionPolicy@extensions@mozilla@@QBEXPAUJSContext@@V?$MutableHandle@PAVJSObject@@@JS@@@Z
 ?IsOpaque@Layer@layers@mozilla@@UAE_NXZ
-?RenderLayer@ColorLayerComposite@layers@mozilla@@UAEXABU?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@gfx@3@ABV?$Maybe@V?$PolygonTyped@UUnknownUnits@gfx@mozilla@@@gfx@mozilla@@@3@@Z
 ??0AutoAddMaskEffect@LayerManagerComposite@layers@mozilla@@QAE@PAVLayer@23@AAUEffectChain@23@@Z
-?GenEffectChain@ColorLayerComposite@layers@mozilla@@UAEXAAUEffectChain@23@@Z
 ?FillRectWithMask@layers@mozilla@@YAXPAVDrawTarget@gfx@2@ABU?$RectTyped@UUnknownUnits@gfx@mozilla@@M@42@ABUDeviceColor@42@ABUDrawOptions@42@PAVSourceSurface@42@PBV?$BaseMatrix@M@42@@Z
 _moz_cairo_pattern_create_rgba
 _cairo_pattern_create_solid
@@ -15334,7 +15325,6 @@ _ZN5style9rule_tree50_$LT$impl$u20$style..rule_tree..core..RuleTree$GT$20update_
 ?GetBrowsingContext@JSWindowActorChild@dom@mozilla@@QAEPAVBrowsingContext@23@AAVErrorResult@3@@Z
 ??4?$RefPtr@VPeriodicWave@dom@mozilla@@@@QAEAAV0@PAVPeriodicWave@dom@mozilla@@@Z
 ??_GPaintedLayerComposite@layers@mozilla@@MAEPAXI@Z
-?Name@ColorLayerComposite@layers@mozilla@@UBEPBDXZ
 ?InitSourceId@nsScriptErrorBase@@UAG?AW4nsresult@@I@Z
 ?CountSiteOrigins@CanonicalBrowsingContext@dom@mozilla@@SAIAAVGlobalObject@23@ABV?$Sequence@V?$OwningNonNull@VBrowsingContext@dom@mozilla@@@mozilla@@@23@@Z
 ?GetOwnerGlobal@nsWindowRoot@@UBEPAVnsIGlobalObject@@XZ
