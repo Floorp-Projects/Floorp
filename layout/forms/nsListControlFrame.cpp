@@ -44,7 +44,7 @@ const int32_t kNothingSelected = -1;
 
 // Static members
 nsListControlFrame* nsListControlFrame::mFocused = nullptr;
-nsString* nsListControlFrame::sIncrementalString = nullptr;
+StaticAutoPtr<nsString> nsListControlFrame::sIncrementalString;
 
 DOMTimeStamp nsListControlFrame::gLastKeyTime = 0;
 
@@ -1905,15 +1905,14 @@ void nsListControlFrame::AdjustIndexForDisabledOpt(int32_t aStartIndex,
 }
 
 nsAString& nsListControlFrame::GetIncrementalString() {
-  if (sIncrementalString == nullptr) sIncrementalString = new nsString();
+  if (!sIncrementalString) {
+    sIncrementalString = new nsString();
+  }
 
   return *sIncrementalString;
 }
 
-void nsListControlFrame::Shutdown() {
-  delete sIncrementalString;
-  sIncrementalString = nullptr;
-}
+void nsListControlFrame::Shutdown() { sIncrementalString = nullptr; }
 
 void nsListControlFrame::DropDownToggleKey(dom::Event* aKeyEvent) {
   // Cocoa widgets do native popups, so don't try to show
