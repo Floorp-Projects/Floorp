@@ -27,11 +27,16 @@ import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import mozilla.components.browser.icons.compose.Loader
 import mozilla.components.browser.icons.compose.Placeholder
 import mozilla.components.browser.icons.compose.WithIcon
+import mozilla.components.concept.base.images.ImageLoadRequest
 import mozilla.components.support.ktx.kotlin.getRepresentativeSnippet
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.R
@@ -125,6 +131,7 @@ private fun RecentTabItem(
         ) {
             RecentTabImage(
                 url = url,
+                tabId = tabId,
                 modifier = Modifier.size(116.dp, 84.dp),
                 icon = thumbnail,
                 contentScale = ContentScale.FillWidth,
@@ -227,42 +234,53 @@ private fun RecentSearchGroupItem(
  * is null.
  */
 @Composable
+@Suppress("LongParameterList")
 private fun RecentTabImage(
     url: String,
     modifier: Modifier = Modifier,
+    tabId: String? = null,
     contentScale: ContentScale = ContentScale.Fit,
     alignment: Alignment = Alignment.Center,
     icon: Bitmap? = null
 ) {
-    if (icon != null) {
-        Image(
-            painter = BitmapPainter(icon.asImageBitmap()),
-            contentDescription = null,
-            modifier = modifier,
-            contentScale = contentScale,
-            alignment = alignment
-        )
-    } else {
-        components.core.icons.Loader(
-            url = url
-        ) {
-            Placeholder {
-                Box(
-                    modifier = Modifier.background(
-                        color = when (isSystemInDarkTheme()) {
-                            true -> PhotonColors.DarkGrey30
-                            false -> PhotonColors.LightGrey30
-                        }
+    when {
+        icon != null -> {
+            Image(
+                painter = BitmapPainter(icon.asImageBitmap()),
+                contentDescription = null,
+                modifier = modifier,
+                contentScale = contentScale,
+                alignment = alignment
+            )
+        }
+        tabId != null -> {
+            ThumbnailImage(
+                tabId = tabId,
+                modifier = modifier,
+                contentScale = contentScale,
+                alignment = alignment
+            )
+        }
+        else -> {
+            components.core.icons.Loader(url) {
+                Placeholder {
+                    Box(
+                        modifier = Modifier.background(
+                            color = when (isSystemInDarkTheme()) {
+                                true -> PhotonColors.DarkGrey30
+                                false -> PhotonColors.LightGrey30
+                            }
+                        )
                     )
-                )
-            }
+                }
 
-            WithIcon { icon ->
-                Image(
-                    painter = icon.painter,
-                    contentDescription = null,
-                    modifier = modifier
-                )
+                WithIcon { icon ->
+                    Image(
+                        painter = icon.painter,
+                        contentDescription = null,
+                        modifier = modifier
+                    )
+                }
             }
         }
     }
@@ -298,4 +316,33 @@ private fun RecentTabSubtitle(subtitle: String) {
         overflow = TextOverflow.Ellipsis,
         maxLines = 1
     )
+}
+
+@Composable
+private fun ThumbnailImage(
+    tabId: String,
+    modifier: Modifier,
+    contentScale: ContentScale,
+    alignment: Alignment
+) {
+    val rememberBitmap = remember(tabId) { mutableStateOf<ImageBitmap?>(null) }
+    val size = LocalDensity.current.run { 116.dp.toPx().toInt() }
+    val request = ImageLoadRequest(tabId, size)
+    val storage = components.core.thumbnailStorage
+    val bitmap = rememberBitmap.value
+
+    LaunchedEffect(tabId) {
+        rememberBitmap.value = storage.loadThumbnail(request).await()?.asImageBitmap()
+    }
+
+    if (bitmap != null) {
+        val painter = BitmapPainter(bitmap)
+        Image(
+            painter = painter,
+            contentDescription = null,
+            modifier = modifier,
+            contentScale = contentScale,
+            alignment = alignment
+        )
+    }
 }
