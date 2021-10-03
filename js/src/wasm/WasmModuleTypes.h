@@ -279,13 +279,14 @@ using GlobalDescVector = Vector<GlobalDesc, 0, SystemAllocPolicy>;
 // A TagDesc represents fresh per-instance tags that are used for the
 // exception handling proposal and potentially other future proposals.
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 // The TagOffsetVector represents the offsets in the layout of the
 // data stored in a Wasm exception. For non-reference values, it is
 // an offset in the ArrayBuffer and for reference values it is the
 // offset in the elements of the exception's ArrayObject.
 using TagOffsetVector = Vector<int32_t, 0, SystemAllocPolicy>;
 
+// Not guarded by #ifdef like TagDesc as this is required for Wasm JS
+// API classes in WasmJS.h.
 struct TagType {
   ValTypeVector argTypes;
   TagOffsetVector argOffsets;
@@ -314,6 +315,7 @@ struct TagType {
   }
 };
 
+#ifdef ENABLE_WASM_EXCEPTIONS
 struct TagDesc {
   TagKind kind;
   TagType type;
