@@ -17,6 +17,7 @@ class LintIssueRegistry : IssueRegistry() {
         LintLogChecks.ISSUE_LOG_USAGE,
         AndroidSrcXmlDetector.ISSUE_XML_SRC_USAGE,
         TextViewAndroidSrcXmlDetector.ISSUE_XML_SRC_USAGE,
-        ImageViewAndroidTintXmlDetector.ISSUE_XML_SRC_USAGE
+        ImageViewAndroidTintXmlDetector.ISSUE_XML_SRC_USAGE,
+        FactCollectDetector.ISSUE_FACT_COLLECT_CALLED
     )
 }

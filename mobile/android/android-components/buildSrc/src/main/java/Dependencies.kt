@@ -145,6 +145,7 @@ object Dependencies {
 
     const val tools_lint = "com.android.tools.lint:lint:${Versions.lint}"
     const val tools_lintapi = "com.android.tools.lint:lint-api:${Versions.lint}"
+    const val tools_lintchecks = "com.android.tools.lint:lint-checks:${Versions.lint}"
     const val tools_linttests = "com.android.tools.lint:lint-tests:${Versions.lint}"
 
     const val tools_detekt_api = "io.gitlab.arturbosch.detekt:detekt-api:${Versions.detekt}"
