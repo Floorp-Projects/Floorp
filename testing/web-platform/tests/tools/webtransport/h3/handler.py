@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from .webtransport_h3_server import WebTransportSession
 
@@ -44,5 +44,20 @@ def datagram_received(session: WebTransportSession, data: bytes) -> None:
 
     :param session: A WebTransport session object.
     :param data: The received data.
+    """
+    pass
+
+
+def session_closed(session: WebTransportSession,
+                   close_info: Optional[Tuple[int, bytes]],
+                   abruptly: bool) -> None:
+    """
+    Called when a WebTransport session is closed.
+
+    :param session: A WebTransport session.
+    :param close_info: The code and reason attached to the
+                       CLOSE_WEBTRANSPORT_SESSION capsule.
+    :param abruptly: True when the session is closed forcibly
+                     (by a CLOSE_CONNECTION QUIC frame for example).
     """
     pass
