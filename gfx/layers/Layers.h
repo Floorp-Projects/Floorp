@@ -67,7 +67,6 @@ class AsyncPanZoomController;
 class PaintedLayer;
 class ContainerLayer;
 class CompositorAnimations;
-class RefLayer;
 class SpecificLayerAttributes;
 class Compositor;
 class TransformData;
@@ -121,7 +120,6 @@ class Layer {
     TYPE_CONTAINER,
     TYPE_DISPLAYITEM,
     TYPE_IMAGE,
-    TYPE_REF,
     TYPE_SHADOW,
     TYPE_PAINTED
   };
@@ -777,12 +775,6 @@ class Layer {
   virtual ContainerLayer* AsContainerLayer() { return nullptr; }
   virtual const ContainerLayer* AsContainerLayer() const { return nullptr; }
 
-  /**
-   * Dynamic cast to a RefLayer. Returns null if this is not a
-   * RefLayer.
-   */
-  virtual RefLayer* AsRefLayer() { return nullptr; }
-
   // These getters can be used anytime.  They return the effective
   // values that should be used when drawing this layer to screen,
   // accounting for this layer possibly being a shadow.
@@ -1321,146 +1313,6 @@ class ContainerLayer : public Layer {
   // This is updated by ComputeDifferences. This will be true if we need to
   // invalidate the intermediate surface.
   bool mChildrenChanged;
-};
-
-/**
- * ContainerLayer that refers to a "foreign" layer tree, through an
- * ID.  Usage of RefLayer looks like
- *
- * Construction phase:
- *   allocate ID for layer subtree
- *   create RefLayer, SetReferentId(ID)
- *
- * Composition:
- *   look up subtree for GetReferentId()
- *   ConnectReferentLayer(subtree)
- *   compose
- *   ClearReferentLayer()
- *
- * Clients will usually want to Connect/Clear() on each transaction to
- * avoid difficulties managing memory across multiple layer subtrees.
- */
-class RefLayer : public ContainerLayer {
-  friend class LayerManager;
-
- private:
-  bool InsertAfter(Layer* aChild, Layer* aAfter) override {
-    MOZ_CRASH("GFX: RefLayer");
-    return false;
-  }
-
-  bool RemoveChild(Layer* aChild) override {
-    MOZ_CRASH("GFX: RefLayer");
-    return false;
-  }
-
-  bool RepositionChild(Layer* aChild, Layer* aAfter) override {
-    MOZ_CRASH("GFX: RefLayer");
-    return false;
-  }
-
- public:
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Set the ID of the layer's referent.
-   */
-  void SetReferentId(LayersId aId) {
-    MOZ_ASSERT(aId.IsValid());
-    if (mId != aId) {
-      MOZ_LAYERS_LOG_IF_SHADOWABLE(this,
-                                   ("Layer::Mutated(%p) ReferentId", this));
-      mId = aId;
-      Mutated();
-    }
-  }
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Connect this ref layer to its referent, temporarily.
-   * ClearReferentLayer() must be called after composition.
-   */
-  void ConnectReferentLayer(Layer* aLayer) {
-    MOZ_ASSERT(!mFirstChild && !mLastChild);
-    MOZ_ASSERT(!aLayer->GetParent());
-    if (aLayer->Manager() != Manager()) {
-      // This can happen when e.g. rendering while dragging tabs
-      // between windows - aLayer's manager may be the manager for the
-      // old window's tab.  In that case, it will be changed before the
-      // next render (see SetLayerManager).  It is simply easier to
-      // ignore the rendering here than it is to pause it.
-      NS_WARNING("ConnectReferentLayer failed - Incorrect LayerManager");
-      return;
-    }
-
-    mFirstChild = mLastChild = aLayer;
-    aLayer->SetParent(this);
-  }
-
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Set flags that indicate how event regions in the child layer tree need
-   * to be overridden because of properties of the parent layer tree.
-   */
-  void SetEventRegionsOverride(EventRegionsOverride aVal) {
-    if (mEventRegionsOverride == aVal) {
-      return;
-    }
-
-    MOZ_LAYERS_LOG_IF_SHADOWABLE(
-        this, ("Layer::Mutated(%p) EventRegionsOverride", this));
-    mEventRegionsOverride = aVal;
-    Mutated();
-  }
-
-  EventRegionsOverride GetEventRegionsOverride() const {
-    return mEventRegionsOverride;
-  }
-
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Set remote subdocument iframe size.
-   */
-  void SetRemoteDocumentSize(const LayerIntSize& aRemoteDocumentSize) {
-    if (mRemoteDocumentSize == aRemoteDocumentSize) {
-      return;
-    }
-    mRemoteDocumentSize = aRemoteDocumentSize;
-    Mutated();
-  }
-
-  const LayerIntSize& GetRemoteDocumentSize() const {
-    return mRemoteDocumentSize;
-  }
-
-  /**
-   * DRAWING PHASE ONLY
-   * |aLayer| is the same as the argument to ConnectReferentLayer().
-   */
-  void DetachReferentLayer(Layer* aLayer) {
-    mFirstChild = mLastChild = nullptr;
-    aLayer->SetParent(nullptr);
-  }
-
-  // These getters can be used anytime.
-  RefLayer* AsRefLayer() override { return this; }
-
-  virtual LayersId GetReferentId() { return mId; }
-
-  MOZ_LAYER_DECL_NAME("RefLayer", TYPE_REF)
-
- protected:
-  RefLayer(LayerManager* aManager, void* aImplData)
-      : ContainerLayer(aManager, aImplData),
-        mId{0},
-        mEventRegionsOverride(EventRegionsOverride::NoOverride) {}
-
-  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
-
-  // 0 is a special value that means "no ID".
-  LayersId mId;
-  EventRegionsOverride mEventRegionsOverride;
-  // The remote documents only need their size because their origin is always
-  // (0, 0).
-  LayerIntSize mRemoteDocumentSize;
 };
 
 void SetAntialiasingFlags(Layer* aLayer, gfx::DrawTarget* aTarget);

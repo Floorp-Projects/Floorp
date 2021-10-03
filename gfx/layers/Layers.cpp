@@ -1227,19 +1227,6 @@ void ContainerLayer::PrintInfo(std::stringstream& aStream,
                  .get();
 }
 
-void RefLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
-  ContainerLayer::PrintInfo(aStream, aPrefix);
-  if (mId.IsValid()) {
-    aStream << " [id=" << mId << "]";
-  }
-  if (mEventRegionsOverride & EventRegionsOverride::ForceDispatchToContent) {
-    aStream << " [force-dtc]";
-  }
-  if (mEventRegionsOverride & EventRegionsOverride::ForceEmptyHitRegion) {
-    aStream << " [force-ehr]";
-  }
-}
-
 //--------------------------------------------------
 // LayerManager
 
