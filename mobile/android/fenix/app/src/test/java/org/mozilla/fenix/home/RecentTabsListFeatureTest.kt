@@ -29,6 +29,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.home.HomeFragmentAction.RecentTabsChange
@@ -118,6 +119,7 @@ class RecentTabsListFeatureTest {
         assertEquals(1, homeStore.state.recentTabs.size)
     }
 
+    @Ignore("Disabled until we want to enable this feature. See #21670.")
     @Test
     fun `GIVEN a valid inProgressMediaTabId and another selected tab exists WHEN the feature starts THEN dispatch both as as a recent tabs list`() {
         val mediaTab = createTab(
@@ -146,6 +148,7 @@ class RecentTabsListFeatureTest {
         assertEquals(mediaTab, (homeStore.state.recentTabs[1] as RecentTab.Tab).state)
     }
 
+    @Ignore("Disabled until we want to enable this feature. See #21670.")
     @Test
     fun `GIVEN a valid inProgressMediaTabId exists and that is the selected tab WHEN the feature starts THEN dispatch just one tab as the recent tabs list`() {
         val selectedMediaTab = createTab(
@@ -210,6 +213,7 @@ class RecentTabsListFeatureTest {
         assertEquals(tab2, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
     }
 
+    @Ignore("Disabled until we want to enable this feature. See #21670.")
     @Test
     fun `WHEN the browser state has an in progress media tab THEN dispatch the new recent tab list`() {
         val initialMediaTab = createTab(
@@ -602,12 +606,10 @@ class RecentTabsListFeatureTest {
         feature.start()
         homeStore.waitUntilIdle()
 
-        assertEquals(3, homeStore.state.recentTabs.size)
+        assertEquals(2, homeStore.state.recentTabs.size)
         assertTrue(homeStore.state.recentTabs[0] is RecentTab.Tab)
         assertEquals(selectedTab, (homeStore.state.recentTabs[0] as RecentTab.Tab).state)
-        assertTrue(homeStore.state.recentTabs[1] is RecentTab.Tab)
-        assertEquals(mediaTab, (homeStore.state.recentTabs[1] as RecentTab.Tab).state)
-        val searchGroup = (homeStore.state.recentTabs[2] as RecentTab.SearchGroup)
+        val searchGroup = (homeStore.state.recentTabs[1] as RecentTab.SearchGroup)
         assertEquals(searchGroup.searchTerm, "Test search term")
         assertEquals(searchGroup.tabId, "44")
         assertEquals(searchGroup.url, "https://www.mozilla.org")

@@ -85,13 +85,12 @@ class BrowserStateTest {
 
         val result = browserState.asRecentTabs()
 
-        assertEquals(2, result.size)
+        assertEquals(1, result.size)
         assertEquals(selectedTab, (result[0] as RecentTab.Tab).state)
-        assertEquals(mediaTab, (result[1] as RecentTab.Tab).state)
     }
 
     @Test
-    fun `GIVEN the selected tab is a private tab and another media tab exists WHEN asRecentTabs is called THEN return a list of the last normal tab and the media tab`() {
+    fun `GIVEN the selected tab is a private tab and another tab exists WHEN asRecentTabs is called THEN return a list of the last normal tab`() {
         val lastAccessedNormalTab = createTab(url = "url2", id = "2", lastAccess = 2)
         val selectedPrivateTab = createTab(url = "url", id = "1", lastAccess = 1, private = true)
         val mediaTab = createTab(
@@ -110,13 +109,12 @@ class BrowserStateTest {
 
         val result = browserState.asRecentTabs()
 
-        assertEquals(2, result.size)
+        assertEquals(1, result.size)
         assertEquals(lastAccessedNormalTab, (result[0] as RecentTab.Tab).state)
-        assertEquals(mediaTab, (result[1] as RecentTab.Tab).state)
     }
 
     @Test
-    fun `GIVEN the selected tab is a private tab and the media tab is the last accessed normal tab WHEN asRecentTabs is called THEN return a list of the media tab and the second-to-last normal tab`() {
+    fun `GIVEN the selected tab is a private tab and the media tab is the last accessed normal tab WHEN asRecentTabs is called THEN return a list of the second-to-last normal tab`() {
         val selectedPrivateTab = createTab(url = "url", id = "1", lastAccess = 1, private = true)
         val normalTab = createTab(url = "url2", id = "2", lastAccess = 2)
         val mediaTab = createTab(
@@ -130,7 +128,7 @@ class BrowserStateTest {
 
         val result = browserState.asRecentTabs()
 
-        assertEquals(2, result.size)
+        assertEquals(1, result.size)
         assertEquals(mediaTab, (result[0] as RecentTab.Tab).state)
     }
 
@@ -196,8 +194,17 @@ class BrowserStateTest {
                 referrerUrl = "https://www.mozilla.org"
             )
         )
+        val searchGroupTab2 = createTab(
+            url = "https://www.mozilla.org",
+            id = "5",
+            historyMetadata = HistoryMetadataKey(
+                url = "https://www.firefox.com",
+                searchTerm = "Test",
+                referrerUrl = "https://www.mozilla.org"
+            )
+        )
         val browserState = BrowserState(
-            tabs = listOf(mockk(relaxed = true), selectedTab, searchGroupTab),
+            tabs = listOf(mockk(relaxed = true), selectedTab, searchGroupTab, searchGroupTab2),
             selectedTabId = selectedTab.id
         )
 
@@ -226,14 +233,14 @@ class BrowserStateTest {
 
         val result = browserState.asRecentTabs()
 
-        assertEquals(3, result.size)
+        assertEquals(2, result.size)
         assertEquals(selectedTab, (result[0] as RecentTab.Tab).state)
-        assert(result[2] is RecentTab.SearchGroup)
-        assertEquals(searchGroupTab.historyMetadata?.searchTerm, (result[2] as RecentTab.SearchGroup).searchTerm)
-        assertEquals(searchGroupTab.id, (result[2] as RecentTab.SearchGroup).tabId)
-        assertEquals(searchGroupTab.content.url, (result[2] as RecentTab.SearchGroup).url)
-        assertEquals(searchGroupTab.content.thumbnail, (result[2] as RecentTab.SearchGroup).thumbnail)
-        assertEquals(2, (result[2] as RecentTab.SearchGroup).count)
+        assert(result[1] is RecentTab.SearchGroup)
+        assertEquals(searchGroupTab.historyMetadata?.searchTerm, (result[1] as RecentTab.SearchGroup).searchTerm)
+        assertEquals(searchGroupTab.id, (result[1] as RecentTab.SearchGroup).tabId)
+        assertEquals(searchGroupTab.content.url, (result[1] as RecentTab.SearchGroup).url)
+        assertEquals(searchGroupTab.content.thumbnail, (result[1] as RecentTab.SearchGroup).thumbnail)
+        assertEquals(2, (result[1] as RecentTab.SearchGroup).count)
     }
 
     @Test

@@ -24,15 +24,8 @@ import kotlin.math.max
 fun BrowserState.asRecentTabs(): List<RecentTab> {
     return mutableListOf<RecentTab>().apply {
         val lastOpenedNormalTab = lastOpenedNormalTab
-        val inProgressMediaTab = inProgressMediaTab
 
         lastOpenedNormalTab?.let { add(RecentTab.Tab(it)) }
-
-        if (inProgressMediaTab == lastOpenedNormalTab) {
-            secondToLastOpenedNormalTab?.let { add(RecentTab.Tab(it)) }
-        } else {
-            inProgressMediaTab?.let { add(RecentTab.Tab(it)) }
-        }
 
         lastSearchGroup?.let { add(it) }
     }
