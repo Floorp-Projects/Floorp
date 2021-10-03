@@ -180,7 +180,6 @@ size_t GlobalDesc::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return initial_.sizeOfExcludingThis(mallocSizeOf);
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 bool TagType::computeLayout() {
   StructLayout layout;
   int32_t refCount = 0;
@@ -216,7 +215,6 @@ bool TagType::computeLayout() {
 
   return true;
 }
-#endif
 
 size_t ElemSegment::serializedSize() const {
   return sizeof(kind) + sizeof(tableIndex) + sizeof(elemType) +
