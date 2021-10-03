@@ -11773,7 +11773,6 @@ _ZN11encoding_rs3mem20convert_str_to_utf1617h5ca12bd5f45f4892E
 ??0HangEntry@mozilla@@QAE@$$QAVHangEntrySuppressed@1@@Z
 ?SendNewCompositable@PImageBridgeChild@layers@mozilla@@QAE_NABVCompositableHandle@23@ABUTextureInfo@23@ABW4LayersBackend@23@@Z
 ?Attach@ShadowLayerForwarder@layers@mozilla@@QAEXPAVCompositableClient@23@PAVShadowableLayer@23@@Z
-?MayResample@Layer@layers@mozilla@@QAE_NXZ
 ?DrawTo@ContentClientBasic@layers@mozilla@@QAEXPAVPaintedLayer@23@PAVDrawTarget@gfx@3@MW4CompositionOp@63@PAVSourceSurface@63@PBV?$BaseMatrix@M@63@@Z
 ?BeginPaint@ContentClient@layers@mozilla@@UAE?AUPaintState@123@PAVPaintedLayer@23@I@Z
 ?CanUseOpaqueSurface@Layer@layers@mozilla@@QAE_NXZ
