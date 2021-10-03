@@ -5,8 +5,8 @@
   <circle cx="31.5" cy="31" r="31" fill="url(#paint0_linear)"/>
   <defs>
     <linearGradient id="paint0_linear" x1="44.4829" y1="19" x2="10.4829" y2="53" gradientUnits="userSpaceOnUse">
-      <stop stop-color="hsl(278, 33%, 40%)"/>
-      <stop offset="1" stop-color="hsl(279, 29%, 52%)"/>
+      <stop stop-color="#7B4C96"/>
+      <stop offset="1" stop-color="#6E4486"/>
     </linearGradient>
   </defs>
 </svg>
