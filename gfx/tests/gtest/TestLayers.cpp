@@ -86,12 +86,6 @@ TEST(Layers, Transform)
   ASSERT_EQ(identity, layer.GetTransform());
 }
 
-TEST(Layers, Type)
-{
-  TestContainerLayer layer(nullptr);
-  ASSERT_EQ(nullptr, layer.AsRefLayer());
-}
-
 TEST(Layers, UserData)
 {
   UniquePtr<TestContainerLayer> layerPtr(new TestContainerLayer(nullptr));

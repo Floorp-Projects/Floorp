@@ -21,7 +21,6 @@ class PresShell;
 
 namespace mozilla::layers {
 class Layer;
-class RefLayer;
 class RenderRootStateManager;
 class WebRenderLayerScrollData;
 class WebRenderScrollData;
@@ -203,7 +202,6 @@ class nsDisplayRemote final : public nsPaintedDisplayItem {
   typedef mozilla::layers::EventRegionsOverride EventRegionsOverride;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayersId LayersId;
-  typedef mozilla::layers::RefLayer RefLayer;
   typedef mozilla::layers::StackingContextHelper StackingContextHelper;
   typedef mozilla::LayerState LayerState;
   typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
