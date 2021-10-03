@@ -4087,7 +4087,6 @@ var SessionStoreInternal = {
 
     // We're not returning from this before we end up calling restoreTabs
     // for this window, so make sure we send the SSWindowStateBusy event.
-    this._sendWindowRestoringNotification(aWindow);
     this._setWindowStateBusy(aWindow);
 
     if (winData.workspaceID) {
@@ -5564,17 +5563,6 @@ var SessionStoreInternal = {
   _sendWindowStateEvent: function ssi_sendWindowStateEvent(aWindow, aType) {
     let event = aWindow.document.createEvent("Events");
     event.initEvent("SSWindowState" + aType, true, false);
-    aWindow.dispatchEvent(event);
-  },
-
-  /**
-   * Dispatch the SSWindowRestoring event for the given window.
-   * @param aWindow
-   *        The window which is going to be restored
-   */
-  _sendWindowRestoringNotification(aWindow) {
-    let event = aWindow.document.createEvent("Events");
-    event.initEvent("SSWindowRestoring", true, false);
     aWindow.dispatchEvent(event);
   },
 
