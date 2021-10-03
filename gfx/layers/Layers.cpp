@@ -214,26 +214,6 @@ Matrix4x4 Layer::SnapTransform(const Matrix4x4& aTransform,
   return gfxUtils::SnapTransform(aTransform, aSnapRect, aResidualTransform);
 }
 
-static bool AncestorLayerMayChangeTransform(Layer* aLayer) {
-  for (Layer* l = aLayer; l; l = l->GetParent()) {
-    if (l->GetContentFlags() & Layer::CONTENT_MAY_CHANGE_TRANSFORM) {
-      return true;
-    }
-
-    if (l->GetParent() && l->GetParent()->AsRefLayer()) {
-      return false;
-    }
-  }
-  return false;
-}
-
-bool Layer::MayResample() {
-  Matrix transform2d;
-  return !GetEffectiveTransform().Is2D(&transform2d) ||
-         ThebesMatrix(transform2d).HasNonIntegerTranslation() ||
-         AncestorLayerMayChangeTransform(this);
-}
-
 RenderTargetIntRect Layer::CalculateScissorRect(
     const RenderTargetIntRect& aCurrentScissorRect) {
   ContainerLayer* container = GetParent();
