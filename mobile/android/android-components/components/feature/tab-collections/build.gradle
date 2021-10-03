@@ -43,6 +43,12 @@ android {
     }
 }
 
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions.freeCompilerArgs += [
+            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
+    ]
+}
+
 dependencies {
     implementation project(':feature-tabs')
 
@@ -64,8 +70,10 @@ dependencies {
     kapt Dependencies.androidx_room_compiler
 
     testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
 
     testImplementation Dependencies.androidx_test_core
+    testImplementation Dependencies.testing_coroutines
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.testing_robolectric

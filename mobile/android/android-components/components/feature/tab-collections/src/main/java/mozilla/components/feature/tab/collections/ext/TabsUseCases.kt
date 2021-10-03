@@ -5,6 +5,7 @@
 package mozilla.components.feature.tab.collections.ext
 
 import android.content.Context
+import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
@@ -13,11 +14,14 @@ import mozilla.components.feature.tabs.TabsUseCases
 /**
  * Restores the given [Tab] from a [TabCollection]. Will invoke [onTabRestored] on successful restore
  * and [onFailure] otherwise.
+ *
+ * Will update the last accessed property of the tab if [updateLastAccess] is true.
  */
 operator fun TabsUseCases.RestoreUseCase.invoke(
     context: Context,
     engine: Engine,
     tab: Tab,
+    updateLastAccess: Boolean = true,
     onTabRestored: (String) -> Unit,
     onFailure: () -> Unit
 ) {
@@ -32,18 +36,28 @@ operator fun TabsUseCases.RestoreUseCase.invoke(
         onFailure()
     } else {
         invoke(listOf(item), item.id)
+
+        if (updateLastAccess) {
+            store.dispatch(LastAccessAction.UpdateLastAccessAction(item.id))
+        }
+
         onTabRestored(item.id)
     }
 }
 
 /**
- * Restores the given [TabCollection]. Will invoke [onFailure] if restoring a single [Tab] of the
- * collection failed. The URL of the tab will be passed to [onFailure].
+ * Restores the given [TabCollection].
+ *
+ * Will invoke [onFailure] if restoring a single [Tab] of the collection failed. The URL of the
+ * tab will be passed to [onFailure].
+ *
+ * Will update the last accessed property of the tab if [updateLastAccess] is true.
  */
 operator fun TabsUseCases.RestoreUseCase.invoke(
     context: Context,
     engine: Engine,
     collection: TabCollection,
+    updateLastAccess: Boolean = true,
     onFailure: (String) -> Unit
 ) {
     val tabs = collection.tabs.reversed().mapNotNull { tab ->
@@ -60,4 +74,13 @@ operator fun TabsUseCases.RestoreUseCase.invoke(
     }
 
     invoke(tabs, selectTabId = tabs.firstOrNull()?.id)
+
+    if (!updateLastAccess) {
+        return
+    }
+
+    val restoredTabIds = tabs.map { it.id }
+    restoredTabIds.forEach { tabId ->
+        store.dispatch(LastAccessAction.UpdateLastAccessAction(tabId))
+    }
 }

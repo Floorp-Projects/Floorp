@@ -322,7 +322,7 @@ class TabsUseCases(
      * Use case for restoring tabs.
      */
     class RestoreUseCase(
-        private val store: BrowserStore,
+        val store: BrowserStore,
         private val selectTab: SelectTabUseCase
     ) {
         /**
@@ -506,6 +506,7 @@ class TabsUseCases(
             )
         }
     }
+
     val selectTab: SelectTabUseCase by lazy { DefaultSelectTabUseCase(store) }
     val removeTab: RemoveTabUseCase by lazy { DefaultRemoveTabUseCase(store) }
     val addTab: AddNewTabUseCase by lazy { AddNewTabUseCase(store) }
