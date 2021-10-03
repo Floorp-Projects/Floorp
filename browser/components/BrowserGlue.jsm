@@ -3982,15 +3982,17 @@ BrowserGlue.prototype = {
     );
   },
 
+  // Helper to check for windows 7 that can be stubbed by tests.
+  _onWindows7() {
+    return AppConstants.isPlatformAndVersionAtMost("win", "6.1");
+  },
+
   async _maybeShowDefaultBrowserPrompt() {
     // Highest priority is the upgrade dialog, which can include a "primary
     // browser" request and is limited in various ways, e.g., major upgrades.
-    const dialogVersion = 89;
+    const dialogVersion = 94;
     const dialogVersionPref = "browser.startup.upgradeDialog.version";
     const dialogReason = await (async () => {
-      if (!Services.prefs.getBoolPref("browser.proton.enabled", true)) {
-        return "no-proton";
-      }
       if (!BrowserHandler.majorUpgrade) {
         return "not-major";
       }
@@ -4018,6 +4020,9 @@ BrowserGlue.prototype = {
       if (!Services.policies.isAllowed("postUpdateCustomPage")) {
         return "disallow-postUpdate";
       }
+      if (this._onWindows7()) {
+        return "win7";
+      }
 
       return NimbusFeatures.upgradeDialog.isEnabled() ? "" : "disabled";
     })();
@@ -4034,6 +4039,10 @@ BrowserGlue.prototype = {
     // Show the upgrade dialog if allowed and remember the version.
     if (!dialogReason) {
       Services.prefs.setIntPref(dialogVersionPref, dialogVersion);
+
+      // Show Firefox Home behind the upgrade dialog to see theme changes.
+      const { gBrowser } = BrowserWindowTracker.getTopWindow();
+      gBrowser.selectedTab = gBrowser.addTrustedTab("about:home");
       this._showUpgradeDialog();
       return;
     }

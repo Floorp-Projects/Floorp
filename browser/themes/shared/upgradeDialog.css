@@ -7,25 +7,23 @@
  * This should be okay as we wrap content for this fixed width dialog unless the
  * window is actually narrow and really does need horizontal scrollbars. */
 @media (min-width: 604px) {
-body {
-  overflow-x: hidden;
-}
+  body {
+    overflow-x: hidden;
+  }
 }
 
 body {
-  --margin: 3px;
-
   display: flex;
   flex-direction: column;
-  /* Specify a height based on the theme screen with 2-line title and 2-line
-   * theme text. This gets overridden if the first screen is taller. */
-  min-height: calc(336px + 12 * var(--margin));
-  padding: 24px 30px;
-  width: 544px;
+  /* Specify a height based on the colorway screen with 2-line title and
+   * checkbox. This gets overridden if the first screen is taller. */
+  min-height: 448px;
+  padding: 20px;
+  width: 564px;
 }
 
-body.compact {
-  --margin: 0px;
+body.confetti {
+  background: url(chrome://activity-stream/content/data/content/assets/confetti.svg) center -65px / cover no-repeat;
 }
 
 body > .hidden {
@@ -33,8 +31,8 @@ body > .hidden {
 }
 
 .logo {
-  margin: auto auto calc(4px + 2 * var(--margin));
-  width: calc(33px + 7 * var(--margin));
+  margin: 70px auto 10px;
+  width: 80px;
 }
 
 #title {
@@ -46,84 +44,63 @@ body > .hidden {
   white-space: pre-wrap;
 }
 
+body.confetti #title {
+  -webkit-background-clip: text;
+  background-image: linear-gradient(90deg, #6173FF, #ED1D5F, #F6901E, #6173FF);
+  background-size: 400%;
+  font-size: 36px;
+  line-height: 48px;
+}
+
+@media not (prefers-contrast) {
+  body.confetti #title {
+    color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body {
+    --rotate: 90deg;
+    --scale: 0.6;
+  }
+
+  @keyframes shine {
+    to {
+      background-position: 400% center;
+    }
+  }
+
+  body.confetti #title {
+    animation: shine 50s linear infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body {
+    --rotate: 0deg;
+    --scale: 1;
+  }
+}
+
 #subtitle {
-  color: var(--in-content-deemphasized-text);
-  font-size: 16px;
-  font-weight: bold;
-  line-height: 24px;
-  margin: 0 auto calc(15px + 2 * var(--margin));
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 28px;
+  margin: 0 auto 16px;
+  max-width: 485px;
   text-align: center;
 }
 
-body.compact #subtitle {
-  font-size: 14px;
-  line-height: 20px;
-}
-
-.items {
-  margin: auto;
-  max-width: calc(392px - 24 * var(--margin));
-}
-
-.items > li {
-  list-style: none;
-  margin-bottom: calc(18px + 2 * var(--margin));
-  position: relative;
-}
-
-/* Display a custom icon in front of each item. */
-.items > ::before {
-  background-size: 100%;
-  content: "";
-  -moz-context-properties: fill;
-  fill: var(--in-content-icon-color);
-  height: 24px;
-  inset-inline-start: -32px;
-  position: absolute;
-  width: 24px;
-}
-
-.items > :nth-child(1)::before {
-  background-image: url("chrome://browser/skin/upgradeDialog/menu-24.svg");
-}
-
-.items > :nth-child(2)::before {
-  background-image: url("chrome://browser/skin/upgradeDialog/tabs-24.svg");
-}
-
-.items > :nth-child(3)::before {
-  background-image: url("chrome://browser/skin/upgradeDialog/highlights-24.svg");
-}
-
-.items h2 {
-  font-size: 16px;
-  font-weight: bold;
-  line-height: 24px;
-  margin: 4px 0;
-}
-
-body.compact .items h2 {
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 16px;
-}
-
-.items p {
-  color: var(--in-content-deemphasized-text);
-  font-size: 14px;
-  line-height: 20px;
-  margin: 0;
-}
-
-body.compact .items p {
-  font-size: 12px;
-  line-height: 16px;
+.colorways {
+  display: flex;
+  flex-direction: column-reverse;
+  margin-top: auto;
+  padding-top: 3px;
 }
 
 .themes {
   display: flex;
-  margin-top: auto;
-  padding: 10px 0;
+  padding: 14px 0;
 }
 
 /* Make these theme radio buttons appear like regular buttons. */
@@ -162,41 +139,68 @@ body.compact .items p {
 
 /* Display a custom theme swatch at the top of each button. */
 .themes > ::before {
+  background-repeat: no-repeat;
   background-size: 100%;
   border-radius: 100%;
   content: "";
-  height: 52px;
-  margin: 0 auto 10px;
+  height: 22px;
+  margin: auto;
   outline: 1px solid var(--in-content-border-color);
   outline-offset: -0.5px;
-  width: 52px;
+  width: 22px;
 }
 
 .themes > :checked::before {
   box-shadow: 0 2px 14px rgba(0, 0, 0, 0.2);
   outline: 2px solid var(--in-content-primary-button-background);
+  outline-offset: 2px;
+}
+
+.variations.default,
+.variations[next="0"]::after {
+  /* Gradients aren't used for high contrast, so show a solid color instead. */
+  background-color: var(--in-content-page-background);
+  background-image: linear-gradient(#FFFFFF, #D8D8D8);
 }
 
 .themes > :nth-child(1)::before {
   background-image:  url("resource://default-theme/icon.svg");
 }
 
+.variations.abstract,
+.variations[next="1"]::after,
 .themes > :nth-child(2)::before {
-  background-image: url("resource://builtin-themes/light/icon.svg");
+  background-image: url("resource://builtin-themes/monochromatic/abstract/balanced/icon.svg");
 }
 
+.variations.cheers,
+.variations[next="2"]::after,
 .themes > :nth-child(3)::before {
-  background-image: url("resource://builtin-themes/dark/icon.svg");
+  background-image: url("resource://builtin-themes/monochromatic/cheers/balanced/icon.svg");
 }
 
+.variations.foto,
+.variations[next="3"]::after,
 .themes > :nth-child(4)::before {
-  background-image: url("resource://builtin-themes/alpenglow/icon.svg");
+  background-image: url("resource://builtin-themes/monochromatic/foto/balanced/icon.svg");
 }
 
-/* Zoom in to the corner of the ltr theme preview image without buttons. */
+.variations.lush,
+.variations[next="4"]::after,
 .themes > :nth-child(5)::before {
-  background: var(--theme-swatch) top right / 165% 255%;
-  transform: rotate(-45deg);
+  background-image: url("resource://builtin-themes/monochromatic/lush/balanced/icon.svg");
+}
+
+.variations.graffiti,
+.variations[next="5"]::after,
+.themes > :nth-child(6)::before {
+  background-image: url("resource://builtin-themes/monochromatic/graffiti/balanced/icon.svg");
+}
+
+.variations.elemental,
+.variations[next="6"]::after,
+.themes > :nth-child(7)::before {
+  background-image: url("resource://builtin-themes/monochromatic/elemental/balanced/icon.svg");
 }
 
 /* Theme swatches are up-to-right gradients in ltr, so mirror for rtl. */
@@ -204,34 +208,160 @@ body.compact .items p {
   transform: scaleX(-1);
 }
 
-.themes > :nth-child(5):dir(rtl)::before {
-  transform: rotate(-135deg);
+/* Variation backgrounds are colors, so override normal theme behavior. */
+@media not (prefers-contrast) {
+  .variations {
+    --in-content-box-border-color: transparent;
+    --in-content-button-background: transparent;
+    --in-content-button-background-active: rgba(0, 0, 0, 0.4);
+    --in-content-button-background-hover: rgba(0, 0, 0, 0.2);
+    --in-content-button-text-color-hover: var(--in-content-page-color);
+    --in-content-focus-outline-color: var(--in-content-primary-button-background);
+    --in-content-primary-button-background: rgba(0, 0, 0, 0.5);
+    --in-content-primary-button-background-active: rgba(0, 0, 0, 0.36);
+    --in-content-primary-button-background-hover: rgba(0, 0, 0, 0.64);
+    --in-content-primary-button-text-color: currentColor;
+    --in-content-primary-button-text-color-hover: white;
+  }
 }
 
-#primary,
-#secondary {
-  margin: calc(2px + var(--margin) / 3) auto;
+.variations {
+  background-size: cover;
+  border-radius: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 150px;
+  justify-content: space-around;
+  margin: auto;
+  padding: 20px;
+  position: relative;
+  text-align: center;
+  width: 150px;
+}
+
+.variations:is(.default, .cheers, .foto) {
+  --in-content-page-color: black;
+}
+
+.variations:is(.abstract, .lush, .graffiti, .elemental) {
+  --in-content-page-color: white;
+}
+
+/* Show a custom background image that transitions for each theme. */
+.variations::before {
+  background-size: 100%;
+  content: "";
+  height: 197px;
+  left: -49px;
+  margin: auto;
+  pointer-events: none;
+  position: absolute;
+  top: -7px;
+  transition: .5s all;
+  width: 286px;
+  z-index: -1;
+}
+
+.variations.in::before {
+  opacity: 0;
+  rotate: calc(-1 * var(--rotate));
+  scale: var(--scale);
+  transition: none;
+}
+
+.variations.out::before {
+  opacity: 0;
+  rotate: var(--rotate);
+  scale: var(--scale);
+}
+
+.variations.default::before {
+  background-image: url(chrome://browser/skin/upgradeDialog/default.png);
+}
+
+.variations.abstract::before {
+  background-image: url(chrome://browser/skin/upgradeDialog/abstract.png);
+}
+
+.variations.cheers::before {
+  background-image: url(chrome://browser/skin/upgradeDialog/cheers.png);
+}
+
+.variations.foto::before {
+  background-image: url(chrome://browser/skin/upgradeDialog/foto.png);
+}
+
+.variations.lush::before {
+  background-image: url(chrome://browser/skin/upgradeDialog/lush.png);
+}
+
+.variations.graffiti::before {
+  background-image: url(chrome://browser/skin/upgradeDialog/graffiti.png);
+}
+
+.variations.elemental::before {
+  background-image: url(chrome://browser/skin/upgradeDialog/elemental.png);
+}
+
+/* Cover up variations content while transitioning to the next one. */
+.variations::after {
+  background: center / cover;
+  border-radius: 100%;
+  content: "";
+  height: 190px;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: .4s opacity;
+  width: 190px;
+}
+
+.variations.start[next]::after,
+.variations.out::after {
+  opacity: 1;
+}
+
+.variations > * {
+  color: var(--in-content-page-color);
+  transition: .4s opacity;
+  opacity: 1;
+}
+
+.variations.start > * {
+  opacity: 0;
+}
+
+/* Make these variation radio buttons appear like regular buttons. */
+.variations > input {
+  border-radius: 2px;
+  font-size: 10px;
+  height: unset;
+  margin: auto;
+  padding: 6px 12px;
+  width: unset;
+}
+
+.variations > input:checked {
+  background-image: none;
+  color: white;
+}
+
+.checkbox {
+  display: flex;
+  font-size: 14px;
+  margin: auto;
+  max-width: 460px;
+  padding-bottom: 14px;
 }
 
 #primary {
-  margin-top: auto;
+  margin: auto auto 0;
 }
 
 #secondary {
   background: none;
   color: var(--in-content-link-color);
   font-weight: normal;
-}
-
-.steps {
-  color: var(--checkbox-border-color);
-  display: flex;
-  gap: 4px;
-  line-height: 14px;
-  margin: calc(2 * var(--margin)) auto 0;
-  user-select: none;
-}
-
-.steps > .current {
-  color: var(--checkbox-checked-bgcolor);
+  margin: 6px auto 0;
 }

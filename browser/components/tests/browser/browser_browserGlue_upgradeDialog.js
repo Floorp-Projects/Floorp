@@ -10,18 +10,6 @@ const { NimbusFeatures, ExperimentFeature, ExperimentAPI } = ChromeUtils.import(
   "resource://nimbus/ExperimentAPI.jsm"
 );
 
-function mockAppConstants({ isWin7 }) {
-  if (mockAppConstants.value === undefined) {
-    const stub = sinon.stub(window, "AppConstants").value({
-      isPlatformAndVersionAtMost() {
-        return mockAppConstants.value;
-      },
-    });
-    registerCleanupFunction(() => stub.restore());
-  }
-  mockAppConstants.value = isWin7;
-}
-
 function AssertEvents(message, ...events) {
   info(`Checking telemetry events: ${message}`);
   TelemetryTestUtils.assertEvents(
@@ -38,125 +26,20 @@ add_task(async function open_close_dialog() {
   Assert.ok(true, "Upgrade dialog opened and closed");
 });
 
-add_task(async function set_as_default() {
-  mockAppConstants({ isWin7: false });
-  const mock = mockShell({ isPinned: true });
-
-  await showAndWaitForDialog(async win => {
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("primary").click();
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.close();
-  });
-
-  Assert.equal(
-    mock.setAsDefault.callCount,
-    1,
-    "Primary button sets as default"
-  );
-});
-
-add_task(async function need_only_pin() {
-  const mock = mockShell({ canPin: true, isDefault: true });
-
-  let screen1Default, screen1Pin;
-  await showAndWaitForDialog(async win => {
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("primary").click();
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    screen1Default = mock.setAsDefault.callCount;
-    screen1Pin = mock.pinCurrentAppToTaskbar.callCount;
-    win.document.getElementById("primary").click();
-  });
-
-  Assert.equal(screen1Default, 0, "First screen didn't default");
-  Assert.equal(screen1Pin, 1, "First screen pinned");
-  Assert.equal(
-    mock.setAsDefault.callCount,
-    0,
-    "Primary buttons did not set as default"
-  );
-  Assert.equal(
-    mock.pinCurrentAppToTaskbar.callCount,
-    1,
-    "Primary button did not pin after second screen"
-  );
-});
-
-add_task(async function already_pin() {
-  const mock = mockShell({ canPin: true, isPinned: true });
-
-  await showAndWaitForDialog(async win => {
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("primary").click();
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.close();
-  });
-
-  Assert.equal(
-    mock.setAsDefault.callCount,
-    1,
-    "Primary button sets as default"
-  );
-  Assert.equal(
-    mock.pinCurrentAppToTaskbar.callCount,
-    0,
-    "Primary button avoids re-pinning"
-  );
-});
-
-add_task(async function already_default() {
-  const mock = mockShell({ isDefault: true });
-
-  await showAndWaitForDialog(async win => {
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("primary").click();
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.close();
-  });
-
-  Assert.equal(
-    mock.setAsDefault.callCount,
-    0,
-    "Primary button moves to second screen"
-  );
-});
-
-add_task(async function already_default_need_pin() {
-  const mock = mockShell({ canPin: true, isDefault: true });
-
-  await showAndWaitForDialog(async win => {
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("primary").click();
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.close();
-  });
-
-  Assert.equal(
-    mock.setAsDefault.callCount,
-    0,
-    "Primary button doesn't need to default"
-  );
-  Assert.equal(
-    mock.pinCurrentAppToTaskbar.callCount,
-    1,
-    "Primary button pins even when already default"
-  );
-});
-
 add_task(async function theme_change() {
   const theme = await AddonManager.getAddonByID(
-    "firefox-alpenglow@mozilla.org"
+    "foto-soft-colorway@mozilla.org"
   );
-  mockShell({ isPinned: true });
 
   await showAndWaitForDialog(async win => {
     await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("secondary").click();
-    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.document.getElementById("primary").click();
+    await BrowserTestUtils.waitForEvent(win, "variations");
     win.document.querySelectorAll("[name=theme]")[3].click();
     await TestUtils.waitForCondition(() => theme.isActive, "Theme is active");
     win.document.getElementById("primary").click();
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.close();
   });
 
   Assert.ok(theme.isActive, "Theme change saved");
@@ -164,8 +47,6 @@ add_task(async function theme_change() {
 });
 
 add_task(async function keyboard_focus_okay() {
-  mockShell({ canPin: true });
-
   await showAndWaitForDialog(async win => {
     await BrowserTestUtils.waitForEvent(win, "ready");
     Assert.equal(
@@ -177,134 +58,109 @@ add_task(async function keyboard_focus_okay() {
     win.document.getElementById("primary").click();
     await BrowserTestUtils.waitForEvent(win, "ready");
     Assert.equal(
-      win.document.activeElement,
-      win.document.getElementById("primary"),
-      "Primary button has focus"
+      win.document.activeElement.name,
+      "theme",
+      "A theme radio button has focus"
     );
 
     win.document.getElementById("primary").click();
     await BrowserTestUtils.waitForEvent(win, "ready");
     Assert.equal(
       win.document.activeElement,
-      win.document.querySelectorAll("[name=theme]")[0],
-      "First theme has focus"
+      win.document.getElementById("primary"),
+      "Primary button has focus"
     );
+
     win.close();
   });
+});
+
+add_task(async function keep_home() {
+  Services.prefs.setStringPref("browser.startup.homepage", "about:blank");
+
+  await showAndWaitForDialog(async win => {
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.document.getElementById("primary").click();
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.document.getElementById("checkbox").click();
+    win.document.getElementById("secondary").click();
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.close();
+  });
+
+  Assert.ok(
+    Services.prefs.prefHasUserValue("browser.startup.homepage"),
+    "Homepage kept"
+  );
+});
+
+add_task(async function revert_home() {
+  await showAndWaitForDialog(async win => {
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.document.getElementById("primary").click();
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.document.getElementById("secondary").click();
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.close();
+  });
+
+  Assert.equal(
+    Services.prefs.prefHasUserValue("browser.startup.homepage"),
+    false,
+    "Homepage reverted"
+  );
 });
 
 add_task(async function skip_screens() {
   Services.telemetry.clearEvents();
-  const mock = mockShell({ isPinned: true });
 
   await showAndWaitForDialog(async win => {
     await BrowserTestUtils.waitForEvent(win, "ready");
     win.document.getElementById("secondary").click();
     await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("secondary").click();
+    win.document.getElementById("primary").click();
   });
 
-  Assert.equal(
-    mock.setAsDefault.callCount,
-    0,
-    "Skipped both screens without setting default"
-  );
   AssertEvents(
-    "Displayed default button and skipped",
-    ["content", "show", "2-screens"],
-    ["content", "show", "upgrade-dialog-new-primary-default-button"],
-    ["content", "button", "upgrade-dialog-new-secondary-button"],
-    ["content", "show", "upgrade-dialog-theme-primary-button"],
-    ["content", "button", "upgrade-dialog-theme-secondary-button"],
+    "Skipped over colorway screen",
+    ["content", "show", "3-screens"],
+    ["content", "show", "upgrade-dialog-start-primary-button"],
+    ["content", "button", "upgrade-dialog-start-secondary-button"],
+    ["content", "show", "upgrade-dialog-thankyou-primary-button"],
+    ["content", "button", "upgrade-dialog-thankyou-primary-button"],
     ["content", "close", "complete"]
   );
 });
 
-add_task(async function exit_early() {
-  const mock = mockShell({ isDefault: true, isPinned: true });
-
+add_task(async function all_3_screens() {
   await showAndWaitForDialog(async win => {
+    // Always "randomly" select the first colorway.
+    win.Math.random = () => 0;
+
     await BrowserTestUtils.waitForEvent(win, "ready");
+    win.document.getElementById("primary").click();
+    await BrowserTestUtils.waitForEvent(win, "variations");
+    win.document.querySelectorAll("[name=variation]")[1].click();
     win.document.getElementById("secondary").click();
-  });
-
-  Assert.equal(
-    mock.setAsDefault.callCount,
-    0,
-    "Only 1 screen to skip when default"
-  );
-  AssertEvents(
-    "Displayed theme button and skipped",
-    ["content", "show", "2-screens"],
-    ["content", "show", "upgrade-dialog-new-primary-theme-button"],
-    ["content", "button", "upgrade-dialog-new-secondary-button"],
-    ["content", "close", "early"]
-  );
-});
-
-add_task(async function need_pin_and_default() {
-  mockShell({ canPin: true });
-
-  await showAndWaitForDialog(async win => {
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("primary").click();
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("primary").click();
     await BrowserTestUtils.waitForEvent(win, "ready");
     win.close();
   });
 
   AssertEvents(
-    "Pin and default shows 3 screens",
+    "Shows all 3 screens with variations",
     ["content", "show", "3-screens"],
-    ["content", "show", "upgrade-dialog-pin-primary-button"],
-    ["content", "button", "upgrade-dialog-pin-primary-button"],
-    ["content", "show", "upgrade-dialog-default-primary-button-2"],
-    ["content", "button", "upgrade-dialog-default-primary-button-2"],
-    ["content", "show", "upgrade-dialog-theme-primary-button"],
+    ["content", "show", "upgrade-dialog-start-primary-button"],
+    ["content", "button", "upgrade-dialog-start-primary-button"],
+    ["content", "show", "random-1"],
+    ["content", "show", "upgrade-dialog-colorway-primary-button"],
+    ["content", "theme", "balanced"],
+    ["content", "button", "upgrade-dialog-colorway-secondary-button"],
+    ["content", "show", "upgrade-dialog-thankyou-primary-button"],
     ["content", "close", "external"]
   );
 });
 
-add_task(async function win7_okay() {
-  mockAppConstants({ isWin7: true });
-  mockShell({ isDefault: true });
-
-  await showAndWaitForDialog(async win => {
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("primary").click();
-  });
-
-  AssertEvents(
-    "Dialog uses special windows 7 primary button",
-    ["content", "show", "2-screens"],
-    ["content", "show", "upgrade-dialog-new-primary-win7-button"],
-    ["content", "button", "upgrade-dialog-new-primary-win7-button"],
-    ["content", "close", "win7"]
-  );
-});
-
-add_task(async function win7_1screen() {
-  mockShell({ isPinned: true });
-
-  await showAndWaitForDialog(async win => {
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("secondary").click();
-  });
-
-  AssertEvents(
-    "Dialog closed after Windows 7's only screen",
-    ["content", "show", "2-screens"],
-    ["content", "show", "upgrade-dialog-new-primary-default-button"],
-    ["content", "button", "upgrade-dialog-new-secondary-button"],
-    ["content", "close", "win7"]
-  );
-});
-
 add_task(async function quit_app() {
-  mockAppConstants({ isWin7: false });
-  mockShell();
-
   await showAndWaitForDialog(async win => {
     await BrowserTestUtils.waitForEvent(win, "ready");
     const cancelled = Cc["@mozilla.org/supports-PRBool;1"].createInstance(
@@ -321,7 +177,7 @@ add_task(async function quit_app() {
   AssertEvents(
     "Dialog closed on quit request",
     ["content", "show", "3-screens"],
-    ["content", "show", "upgrade-dialog-pin-primary-button"],
+    ["content", "show", "upgrade-dialog-start-primary-button"],
     ["content", "close", "quit-application-requested"]
   );
 });
@@ -341,7 +197,7 @@ add_task(async function window_warning() {
   AssertEvents(
     "Dialog closed when close warning wants to open",
     ["content", "show", "3-screens"],
-    ["content", "show", "upgrade-dialog-pin-primary-button"],
+    ["content", "show", "upgrade-dialog-start-primary-button"],
     ["content", "close", "external"]
   );
 });
@@ -357,6 +213,7 @@ add_task(async function not_major_upgrade() {
 });
 
 add_task(async function remote_disabled() {
+  mockWin7(false);
   await ExperimentAPI.ready();
   await ExperimentFakes.remoteDefaultsHelper({
     feature: NimbusFeatures.upgradeDialog,
@@ -408,7 +265,17 @@ add_task(async function enterprise_disabled() {
   defaultPrefs.setBoolPref(pref, orig);
 });
 
+add_task(async function win7_excluded() {
+  mockWin7(true);
+
+  await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
+
+  AssertEvents("Not showing dialog for win7", ["trigger", "reason", "win7"]);
+});
+
 add_task(async function show_major_upgrade() {
+  mockWin7(false);
+
   const promise = waitForDialog(async win => {
     await BrowserTestUtils.waitForEvent(win, "ready");
     win.close();
@@ -420,9 +287,11 @@ add_task(async function show_major_upgrade() {
     "Upgrade dialog opened and closed from major upgrade",
     ["trigger", "reason", "satisfied"],
     ["content", "show", "3-screens"],
-    ["content", "show", "upgrade-dialog-pin-primary-button"],
+    ["content", "show", "upgrade-dialog-start-primary-button"],
     ["content", "close", "external"]
   );
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function dont_reshow() {

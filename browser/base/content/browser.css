@@ -1653,7 +1653,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 }
 
 #window-modal-dialog.showToolbar::backdrop {
-  background: linear-gradient(transparent, rgba(28, 27, 34, 0.45) 20%);
+  background: linear-gradient(transparent, rgba(28, 27, 34, 0.45) 50%);
 }
 
 /* For the window-modal dialog, the background is supplied by the HTML dialog
