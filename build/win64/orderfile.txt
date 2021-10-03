@@ -11707,7 +11707,6 @@ ZN5style7stylist7Stylist17remove_stylesheet17h3ad60902102208fbE
 ?Read@?$IPDLParamTraits@VGfxInfoFeatureStatus@gfx@mozilla@@@ipc@mozilla@@SA_NPEBVMessage@IPC@@PEAVPickleIterator@@PEAVIProtocol@23@PEAVGfxInfoFeatureStatus@gfx@3@@Z
 ?SendNewCompositable@PImageBridgeChild@layers@mozilla@@QEAA_NAEBVCompositableHandle@23@AEBUTextureInfo@23@AEBW4LayersBackend@23@@Z
 ?Attach@ShadowLayerForwarder@layers@mozilla@@QEAAXPEAVCompositableClient@23@PEAVShadowableLayer@23@@Z
-?MayResample@Layer@layers@mozilla@@QEAA_NXZ
 ?DrawTo@ContentClientBasic@layers@mozilla@@QEAAXPEAVPaintedLayer@23@PEAVDrawTarget@gfx@3@MW4CompositionOp@63@PEAVSourceSurface@63@PEBV?$BaseMatrix@M@63@@Z
 ?BeginPaint@ContentClient@layers@mozilla@@UEAA?AUPaintState@123@PEAVPaintedLayer@23@I@Z
 ?CanUseOpaqueSurface@Layer@layers@mozilla@@QEAA_NXZ
