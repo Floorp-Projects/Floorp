@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 # TODO(bashi): Remove import check suppressions once aioquic dependency is resolved.
 from aioquic.asyncio import QuicConnectionProtocol, serve  # type: ignore
 from aioquic.asyncio.client import connect  # type: ignore
-from aioquic.h3.connection import H3_ALPN, H3Connection  # type: ignore
+from aioquic.h3.connection import H3_ALPN, FrameType, H3Connection  # type: ignore
 from aioquic.h3.events import H3Event, HeadersReceived, WebTransportStreamDataReceived, DatagramReceived  # type: ignore
 from aioquic.quic.configuration import QuicConfiguration  # type: ignore
 from aioquic.quic.connection import stream_is_unidirectional  # type: ignore
@@ -187,6 +187,13 @@ class WebTransportSession:
         """
         stream_id = self._http.create_webtransport_stream(
             session_id=self.session_id, is_unidirectional=False)
+        # TODO(bashi): Remove this workaround when aioquic supports receiving
+        # data on server-initiated bidirectional streams.
+        stream = self._http._get_or_create_stream(stream_id)
+        assert stream.frame_type is None
+        assert stream.session_id is None
+        stream.frame_type = FrameType.WEBTRANSPORT_STREAM
+        stream.session_id = self.session_id
         return stream_id
 
     def send_stream_data(self,
