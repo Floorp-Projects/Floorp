@@ -25,7 +25,11 @@ var CreateXHR = function() {
   return new XMLHttpRequest();
 };
 
+// This will inherit settings from the "addons" logger.
 var logger = Log.repository.getLogger("addons.productaddons");
+// We want to set the level of this logger independent from its parent to help
+// debug things like GMP updates. Link this to its own level pref.
+logger.manageLevelFromPref("extensions.logging.productaddons.level");
 
 /**
  * Number of milliseconds after which we need to cancel `downloadXML`.
