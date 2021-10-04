@@ -95,6 +95,10 @@ managed-bookmarks-subfolder =
 other-bookmarks-folder =
   .label = Other Bookmarks
 
+places-show-in-folder =
+  .label = Show in Folder
+  .accesskey = F
+
 # Variables:
 # $count (number) - The number of elements being selected for removal.
 places-delete-bookmark =
