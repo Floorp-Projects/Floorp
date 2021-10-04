@@ -297,9 +297,7 @@ const MessageLoaderUtils = {
           if (record && record.data) {
             const downloader = new Downloader(
               RS_MAIN_BUCKET,
-              RS_COLLECTION_L10N,
-              "browser",
-              "newtab"
+              RS_COLLECTION_L10N
             );
             // Await here in order to capture the exceptions for reporting.
             await downloader.download(record.data, {
