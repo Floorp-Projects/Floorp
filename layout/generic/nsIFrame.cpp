@@ -7378,10 +7378,10 @@ void nsIFrame::SchedulePaintWithoutInvalidatingObservers(PaintType aType) {
   SchedulePaintInternal(displayRoot, this, aType);
 }
 
-Layer* nsIFrame::InvalidateLayer(DisplayItemType aDisplayItemKey,
-                                 const nsIntRect* aDamageRect,
-                                 const nsRect* aFrameDamageRect,
-                                 uint32_t aFlags /* = 0 */) {
+void nsIFrame::InvalidateLayer(DisplayItemType aDisplayItemKey,
+                               const nsIntRect* aDamageRect,
+                               const nsRect* aFrameDamageRect,
+                               uint32_t aFlags /* = 0 */) {
   NS_ASSERTION(aDisplayItemKey > DisplayItemType::TYPE_ZERO, "Need a key");
 
   nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
@@ -7391,11 +7391,11 @@ Layer* nsIFrame::InvalidateLayer(DisplayItemType aDisplayItemKey,
   if ((aFlags & UPDATE_IS_ASYNC) &&
       WebRenderUserData::SupportsAsyncUpdate(this)) {
     // WebRender does not use layer, then return nullptr.
-    return nullptr;
+    return;
   }
 
   if (aFrameDamageRect && aFrameDamageRect->IsEmpty()) {
-    return nullptr;
+    return;
   }
 
   // In the bug 930056, dialer app startup but not shown on the
@@ -7413,8 +7413,6 @@ Layer* nsIFrame::InvalidateLayer(DisplayItemType aDisplayItemKey,
   } else {
     InvalidateFrame(static_cast<uint32_t>(displayItemKey));
   }
-
-  return nullptr;
 }
 
 static nsRect ComputeEffectsRect(nsIFrame* aFrame, const nsRect& aOverflowRect,
