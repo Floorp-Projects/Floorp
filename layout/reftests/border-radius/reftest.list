@@ -19,8 +19,8 @@
 
 # percent units
 == percent-1.html percent-1-ref.html
-fuzzy-if(skiaContent,0-1,0-342) == percent-2.html percent-2-ref.html
-fuzzy-if(skiaContent,0-1,0-343) == percent-3.html percent-3-ref.html
+fuzzy(0-1,0-342) == percent-2.html percent-2-ref.html
+fuzzy(0-1,0-343) == percent-3.html percent-3-ref.html
 
 # more serious tests, using SVG reference
 fuzzy(17-30,58-70) == border-circle-2.html border-circle-2-ref.xhtml
@@ -44,21 +44,21 @@ fuzzy(17-30,58-111) == clipping-3.html clipping-3-ref.xhtml # edge of border-rad
 # Tests for clipping the contents of replaced elements and overflow!=visible
 != clipping-4-ref.html clipping-4-notref.html
 fuzzy(0-8,0-20) fuzzy-if(useDrawSnapshot,1-1,172-172) == clipping-4-canvas.html clipping-4-ref.html # bug 732535
-fuzzy-if(Android,0-5,0-54) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-37,0-157) fuzzy-if(skiaContent,0-1,0-172) == clipping-4-image.html clipping-4-ref.html
-fuzzy-if(skiaContent,0-1,0-77) == clipping-4-overflow-hidden.html clipping-4-ref.html
+fuzzy(0-1,0-172) == clipping-4-image.html clipping-4-ref.html
+fuzzy(0-1,0-77) == clipping-4-overflow-hidden.html clipping-4-ref.html
 == clipping-5-canvas.html clipping-5-refc.html
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-5) == clipping-5-image.html clipping-5-refi.html
-fuzzy-if(skiaContent,0-1,0-77) == clipping-5-overflow-hidden.html clipping-5-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-4) fuzzy-if(Android,0-5,0-21) fuzzy-if(skiaContent,0-1,0-97) == clipping-5-refi.html clipping-5-ref.html
-fuzzy(0-1,0-7) fuzzy-if(d2d,0-55,0-95) fuzzy-if(cocoaWidget,0-1,0-99) fuzzy-if(Android,0-99,0-115) fuzzy-if(skiaContent,0-1,0-77) fuzzy-if(useDrawSnapshot,1-1,97-97) == clipping-5-refc.html clipping-5-ref.html # bug 732535
-fuzzy-if(Android,0-8,0-469) fuzzy-if(skiaContent,0-21,0-76) fuzzy-if(winWidget,0-144,0-335) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == clipping-6.html clipping-6-ref.html # PaintedLayer and MaskLayer with transforms that aren't identical, bug 1392106
-fuzzy(0-2,0-29) fuzzy-if(d2d,0-46,0-71) fuzzy-if(Android,0-255,0-586) fuzzy-if(skiaContent,0-28,0-97) == clipping-7.html clipping-7-ref.html # ColorLayer and MaskLayer with transforms that aren't identical. Reference image rendered without using layers (which causes fuzzy failures).
+fuzzy(0-1,0-77) == clipping-5-overflow-hidden.html clipping-5-ref.html
+fuzzy(0-1,0-97) == clipping-5-refi.html clipping-5-ref.html
+fuzzy(0-1,0-77) fuzzy-if(useDrawSnapshot,1-1,97-97) == clipping-5-refc.html clipping-5-ref.html # bug 732535
+fuzzy(0-21,0-76) fuzzy-if(winWidget,0-144,0-335) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == clipping-6.html clipping-6-ref.html # PaintedLayer and MaskLayer with transforms that aren't identical, bug 1392106
+fuzzy(0-28,0-97) == clipping-7.html clipping-7-ref.html # ColorLayer and MaskLayer with transforms that aren't identical. Reference image rendered without using layers (which causes fuzzy failures).
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),0-1,0-5) == clipping-and-zindex-1.html clipping-and-zindex-1-ref.html
 fuzzy-if(cocoaWidget,0-1,0-4) fuzzy-if(d2d,0-59,0-342) fuzzy-if(d3d11&&advancedLayers&&!d2d,0-30,0-3) == intersecting-clipping-1-canvas.html intersecting-clipping-1-refc.html
 == intersecting-clipping-1-image.html intersecting-clipping-1-refi.html
 == intersecting-clipping-1-overflow-hidden.html intersecting-clipping-1-ref.html
-fuzzy-if(Android,0-5,0-105) fuzzy-if(d2d,0-1,0-20) fuzzy-if(skiaContent,0-1,0-300) == intersecting-clipping-1-refi.html intersecting-clipping-1-ref.html
-fuzzy(0-1,0-33) fuzzy-if(d2d,0-59,0-350) fuzzy-if(cocoaWidget,0-1,0-332) fuzzy-if(Android,0-124,0-440) fuzzy-if(skiaContent,0-1,0-135) fuzzy-if(d3d11&&advancedLayers,0-81,0-353) skip-if(winWidget) fuzzy-if(useDrawSnapshot,1-1,299-299) == intersecting-clipping-1-refc.html intersecting-clipping-1-ref.html # bug 732535 # Disable on Windows bug 1451808
+fuzzy(0-1,0-300) == intersecting-clipping-1-refi.html intersecting-clipping-1-ref.html
+fuzzy(0-1,0-135) fuzzy-if(d3d11&&advancedLayers,0-81,0-353) skip-if(winWidget) fuzzy-if(useDrawSnapshot,1-1,299-299) == intersecting-clipping-1-refc.html intersecting-clipping-1-ref.html # bug 732535 # Disable on Windows bug 1451808
 
 == clipping-preserve-3d.html clipping-preserve-3d-ref.html
 
@@ -69,18 +69,18 @@ fuzzy(0-1,0-33) fuzzy-if(d2d,0-59,0-350) fuzzy-if(cocoaWidget,0-1,0-332) fuzzy-i
 == table-collapse-1.html table-collapse-1-ref.html # border-radius is ignored on internal table elements
 # when border-collapse: collapse
 
-fuzzy-if(skiaContent,0-1,0-116) == invalidate-1a.html invalidate-1-ref.html
-fuzzy-if(skiaContent,0-1,0-117) == invalidate-1b.html invalidate-1-ref.html
+fuzzy(0-1,0-116) == invalidate-1a.html invalidate-1-ref.html
+fuzzy(0-1,0-117) == invalidate-1b.html invalidate-1-ref.html
 
 # test that border-radius is reduced for scrollbars
-fails-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-12,0-12) fuzzy-if(browserIsRemote&&layersGPUAccelerated&&/^Windows\x20NT\x206\.1/.test(http.oscpu),0-12,0-12) fuzzy-if(skiaContent&&!Android,0-1,0-50) fuzzy-if(gtkWidget&&layersGPUAccelerated,0-12,0-12) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
+fails-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-12,0-12) fuzzy-if(browserIsRemote&&layersGPUAccelerated&&/^Windows\x20NT\x206\.1/.test(http.oscpu),0-12,0-12) fuzzy-if(!Android,0-1,0-50) fuzzy-if(gtkWidget&&layersGPUAccelerated,0-12,0-12) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
 fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html
 
 # Test for bad corner joins.
 fuzzy(0-1,0-1) == corner-joins-1.xhtml corner-joins-1-ref.xhtml
-fuzzy(0-255,0-20) random-if(winWidget) fuzzy-if(skiaContent,0-255,0-610) == corner-joins-2.xhtml corner-joins-2-ref.xhtml
+random-if(winWidget) fuzzy(0-255,0-610) == corner-joins-2.xhtml corner-joins-2-ref.xhtml
 
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),0-1,0-20) fuzzy-if(d2d,0-98,0-157) fuzzy-if(Android,0-166,0-400) fuzzy-if(skiaContent,0-59,0-146) == scroll-1.html scroll-1-ref.html # see bug 732535 #Bug 959166
+fuzzy(0-59,0-146) == scroll-1.html scroll-1-ref.html # see bug 732535 #Bug 959166
 
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-35,0-194) == transforms-1.html transforms-1-ref.html # bug 1507152
 
@@ -89,7 +89,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-35,0-194) == transforms-1.
 == iframe-1.html iframe-1-ref.html
 
 # Test for antialiasing gaps between background and border
-fuzzy-if(gtkWidget,0-1,0-9) fuzzy-if(winWidget&&!d2d,0-1,0-9) fuzzy-if(d2d,0-5,0-40) fuzzy-if(Android||skiaContent,0-1,0-9) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
+fuzzy(0-1,0-9) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
 
 fuzzy(0-1,0-4) == color-layer-1a.html color-layer-1-ref.html
 

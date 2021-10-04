@@ -4,7 +4,7 @@ fuzzy(0-65,0-3) == size-1.html size-1-ref.html
 == baseline-1.html baseline-1-ref.html
 == chrome://reftest/content/forms/input/text/centering-1.xhtml chrome://reftest/content/forms/input/text/centering-1-ref.xhtml
 == chrome://reftest/content/forms/input/text/dynamic-height-1.xhtml chrome://reftest/content/forms/input/text/dynamic-height-1-ref.xhtml
-fuzzy-if(skiaContent,0-1,0-500) needs-focus == select.html select-ref.html
+fuzzy(0-1,0-500) needs-focus == select.html select-ref.html
 == intrinsic-size.html intrinsic-size-ref.html
 == line-height-0.5.html line-height-1.0.html
 != line-height-2.5.html line-height-1.0.html
