@@ -24,8 +24,8 @@ class GLContextGLX : public GLContext {
       GLXDrawable drawable, GLXFBConfig cfg, bool deleteDrawable,
       gfxXlibSurface* pixmap);
 
-  static bool FindVisual(Display* display, int screen, bool useWebRender,
-                         bool useAlpha, int* const out_visualId);
+  static bool FindVisual(Display* display, int screen, bool useAlpha,
+                         int* const out_visualId);
 
   // Finds a GLXFBConfig compatible with the provided window.
   static bool FindFBConfigForWindow(
