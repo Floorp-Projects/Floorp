@@ -74,6 +74,18 @@
   "c:\\windows\\prefetch\\{prefetch}.pf": {
     "ignore": true
   },
+  "c:\\windows\\system32\\shell32.dll": {
+    "mincount": 0,
+    "maxcount": 2,
+    "minbytes": 0,
+    "maxbytes": 16384
+  },
+  "c:\\windows\\system32\\kernelbase.dll": {
+    "mincount": 0,
+    "maxcount": 2,
+    "minbytes": 0,
+    "maxbytes": 16384
+  },
   "c:\\windows\\system32\\inputhost.dll": {
     "mincount": 0,
     "maxcount": 2,
@@ -103,6 +115,18 @@
     "maxcount": 4,
     "minbytes": 0,
     "maxbytes": 65536
+  },
+  "c:\\windows\\system32\\oleaut32.dll": {
+    "mincount": 4,
+    "maxcount": 4,
+    "minbytes": 0,
+    "maxbytes": 65536
+  },
+  "c:\\windows\\system32\\wscapi.dll": {
+    "mincount": 0,
+    "maxcount": 2,
+    "minbytes": 0,
+    "maxbytes": 15360
   },
   "c:\\windows\\system32\\ucrtbase.dll": {
     "mincount": 4,
