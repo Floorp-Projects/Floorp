@@ -16,7 +16,6 @@ namespace mozilla {
 namespace layers {
 
 class ContainerLayer;
-class PaintedLayer;
 
 class ReadbackProcessor {
  public:

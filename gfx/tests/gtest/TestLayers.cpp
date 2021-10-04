@@ -48,9 +48,6 @@ class TestLayerManager : public LayerManager {
                                           const nsCString& = nsCString()) {
     return true;
   }
-  virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
-                              void* aCallbackData,
-                              EndTransactionFlags aFlags = END_DEFAULT) {}
   virtual int32_t GetMaxTextureSize() const { return 0; }
 };
 

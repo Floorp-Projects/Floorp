@@ -36,7 +36,6 @@ class nsDisplayImage;
 class PresShell;
 namespace layers {
 class ImageContainer;
-class ImageLayer;
 class LayerManager;
 }  // namespace layers
 }  // namespace mozilla
@@ -66,7 +65,6 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
 
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
   typedef mozilla::layers::ImageContainer ImageContainer;
-  typedef mozilla::layers::ImageLayer ImageLayer;
   typedef mozilla::layers::LayerManager LayerManager;
 
   NS_DECL_FRAMEARENA_HELPERS(nsImageFrame)

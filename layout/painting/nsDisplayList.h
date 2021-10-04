@@ -86,7 +86,6 @@ namespace layers {
 struct FrameMetrics;
 class RenderRootStateManager;
 class Layer;
-class ImageLayer;
 class ImageContainer;
 class StackingContextHelper;
 class WebRenderScrollData;

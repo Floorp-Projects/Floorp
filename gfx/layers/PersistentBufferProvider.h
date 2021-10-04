@@ -25,7 +25,6 @@ class DrawTarget;
 
 namespace layers {
 
-class CopyableCanvasLayer;
 class TextureClient;
 
 /**
