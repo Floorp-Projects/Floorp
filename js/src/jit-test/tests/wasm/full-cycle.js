@@ -84,7 +84,7 @@ wasmFullPass(`(module
     )
 )`, 3, {}, 0);
 
-let table = new WebAssembly.Table({ element: 'funcref', initial: 3, maximum: 3 });
+let table = new WebAssembly.Table({ element: 'anyfunc', initial: 3, maximum: 3 });
 
 wasmFullPass(`(module
     (table (import "" "table") 3 4 funcref)
