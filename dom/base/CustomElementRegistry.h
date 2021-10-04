@@ -15,7 +15,9 @@
 #include "mozilla/dom/CustomElementRegistryBinding.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ElementInternals.h"
 #include "mozilla/dom/WebComponentsBinding.h"
+#include "mozilla/RefPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsGenericHTMLElement.h"
 #include "nsWrapperCache.h"
@@ -117,6 +119,8 @@ struct CustomElementData {
   void AttachedInternals();
   bool HasAttachedInternals() const { return mIsAttachedInternals; }
 
+  bool IsFormAssociated() const;
+
   void Traverse(nsCycleCollectionTraversalCallback& aCb) const;
   void Unlink();
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
@@ -127,11 +131,21 @@ struct CustomElementData {
     return aElement->NodeInfo()->NameAtom() == mType ? nullptr : mType.get();
   }
 
+  ElementInternals* GetElementInternals() const { return mElementInternals; }
+
+  ElementInternals* GetOrCreateElementInternals(HTMLElement* aTarget) {
+    if (!mElementInternals) {
+      mElementInternals = MakeAndAddRef<ElementInternals>(aTarget);
+    }
+    return mElementInternals;
+  }
+
  private:
   // Custom element type, for <button is="x-button"> or <x-button>
   // this would be x-button.
   RefPtr<nsAtom> mType;
   RefPtr<CustomElementDefinition> mCustomElementDefinition;
+  RefPtr<ElementInternals> mElementInternals;
   bool mIsAttachedInternals = false;
 };
 

@@ -7,6 +7,7 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/HTMLFieldSetElement.h"
 #include "mozilla/dom/HTMLFieldSetElementBinding.h"
 #include "nsContentList.h"
@@ -182,6 +183,14 @@ void HTMLFieldSetElement::AddElement(nsGenericHTMLFormElement* aElement) {
       UpdateValidity(false);
     }
     return;
+  }
+
+  // If the element is a form-associated custom element, adding element might be
+  // caused by FACE upgrade which won't trigger mutation observer, so mark
+  // mElements dirty manually here.
+  CustomElementData* data = aElement->GetCustomElementData();
+  if (data && data->IsFormAssociated() && mElements) {
+    mElements->SetDirty();
   }
 
   // We need to update the validity of the fieldset.

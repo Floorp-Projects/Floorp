@@ -14,13 +14,42 @@ namespace mozilla::dom {
 class HTMLElement final : public nsGenericHTMLFormElement {
  public:
   explicit HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  virtual ~HTMLElement() = default;
 
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLElement,
+                                           nsGenericHTMLFormElement)
+
+  // nsINode
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
+  // Element
+  void SetCustomElementDefinition(
+      CustomElementDefinition* aDefinition) override;
+
+  // nsGenericHTMLElement
+  // https://html.spec.whatwg.org/multipage/custom-elements.html#dom-attachinternals
+  already_AddRefed<mozilla::dom::ElementInternals> AttachInternals(
+      ErrorResult& aRv) override;
+
+  void UpdateFormOwner();
+
  protected:
+  virtual ~HTMLElement() = default;
+
   JSObject* WrapNode(JSContext* aCx,
                      JS::Handle<JSObject*> aGivenProto) override;
+
+  // nsGenericHTMLFormElement
+  void SetFormInternal(HTMLFormElement* aForm, bool aBindToTree) override;
+  HTMLFormElement* GetFormInternal() const override;
+  void SetFieldSetInternal(HTMLFieldSetElement* aFieldset) override;
+  HTMLFieldSetElement* GetFieldSetInternal() const override;
+  bool CanBeDisabled() const override;
+  bool DoesReadOnlyApply() const override;
+  bool IsFormAssociatedElement() const override;
+
+  ElementInternals* GetElementInternals() const;
 };
 
 }  // namespace mozilla::dom

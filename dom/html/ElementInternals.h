@@ -9,19 +9,23 @@
 
 #include "js/TypeDecls.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsGenericHTMLElement.h"
+#include "nsIFormControl.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
 namespace dom {
+
+class HTMLElement;
+class HTMLFieldSetElement;
+class HTMLFormElement;
 class ShadowRoot;
 
-class ElementInternals final : public nsISupports, public nsWrapperCache {
+class ElementInternals final : public nsIFormControl, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ElementInternals)
 
-  explicit ElementInternals(nsGenericHTMLElement* aTarget);
+  explicit ElementInternals(HTMLElement* aTarget);
 
   nsISupports* GetParentObject();
 
@@ -30,11 +34,42 @@ class ElementInternals final : public nsISupports, public nsWrapperCache {
 
   ShadowRoot* GetShadowRoot() const;
 
+  // nsIFormControl
+  mozilla::dom::HTMLFieldSetElement* GetFieldSet() override {
+    return mFieldSet;
+  }
+  mozilla::dom::HTMLFormElement* GetForm() const override { return mForm; }
+  void SetForm(mozilla::dom::HTMLFormElement* aForm) override;
+  void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) override;
+  NS_IMETHOD Reset() override { return NS_OK; }
+  NS_IMETHOD SubmitNamesValues(mozilla::dom::FormData* aFormData) override;
+  bool AllowDrop() override { return true; }
+
+  void SetFieldSet(mozilla::dom::HTMLFieldSetElement* aFieldSet) {
+    mFieldSet = aFieldSet;
+  }
+
+  void UpdateFormOwner();
+
+  void Unlink();
+
  private:
   ~ElementInternals() = default;
 
   // It's a target element which is a custom element.
-  RefPtr<nsGenericHTMLElement> mTarget;
+  // It's safe to use raw pointer because it will be reset via
+  // CustomElementData::Unlink when mTarget is released or unlinked.
+  HTMLElement* mTarget;
+
+  // The form that contains the target element.
+  // It's safe to use raw pointer because it will be reset via
+  // CustomElementData::Unlink when mTarget is released or unlinked.
+  HTMLFormElement* mForm;
+
+  // This is a pointer to the target element's closest fieldset parent if any.
+  // It's safe to use raw pointer because it will be reset via
+  // CustomElementData::Unlink when mTarget is released or unlinked.
+  HTMLFieldSetElement* mFieldSet;
 };
 
 }  // namespace dom

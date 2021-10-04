@@ -591,7 +591,7 @@ class Element : public FragmentOrElement {
    *
    * @param aDefinition The custom element definition.
    */
-  void SetCustomElementDefinition(CustomElementDefinition* aDefinition);
+  virtual void SetCustomElementDefinition(CustomElementDefinition* aDefinition);
 
   void SetDefined(bool aSet) {
     if (aSet) {

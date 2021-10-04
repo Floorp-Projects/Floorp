@@ -32,8 +32,9 @@ enum class FormControlType : uint8_t {
   Select,
   Textarea,
   Object,
+  FormAssociatedCustomElement,
 
-  LastWithoutSubtypes = Object,
+  LastWithoutSubtypes = FormAssociatedCustomElement,
 
   ButtonButton = kFormControlButtonElementMask + 1,
   ButtonReset,

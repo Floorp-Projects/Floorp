@@ -660,6 +660,12 @@ void nsINode::LastRelease() {
       }
     }
 
+    if (Element* element = Element::FromNode(this)) {
+      if (CustomElementData* data = element->GetCustomElementData()) {
+        data->Unlink();
+      }
+    }
+
     delete slots;
     mSlots = nullptr;
   }
