@@ -7,6 +7,7 @@
 /* import-globals-from ../PlacesUIUtils.jsm */
 /* import-globals-from ../../../../toolkit/components/places/PlacesUtils.jsm */
 /* import-globals-from ../../../../toolkit/components/places/PlacesTransactions.jsm */
+/* import-globals-from ./places.js */
 
 /**
  * Represents an insertion point within a container where we can insert
@@ -162,6 +163,7 @@ PlacesController.prototype = {
         return this._hasRemovableSelection();
       case "cmd_copy":
       case "placesCmd_copy":
+      case "placesCmd_showInFolder":
         return this._view.hasSelection;
       case "cmd_paste":
       case "placesCmd_paste":
@@ -321,6 +323,30 @@ PlacesController.prototype = {
         );
         break;
       }
+      case "placesCmd_showInFolder":
+        // Open containing folder in left pane bookmark tree
+        let currentNode = this._view.selectedNode;
+        if (this._view.parentElement.id.includes("Panel")) {
+          // We're in the sidebar - clear the search box first
+          let searchBox = document.getElementById("search-box");
+          searchBox.value = "";
+          searchBox.doCommand();
+          // And go to the node
+          this._view.selectItems([currentNode.bookmarkGuid], true);
+        } else {
+          PlacesUtils.bookmarks
+            .fetch(currentNode.bookmarkGuid, null, { includePath: true })
+            .then(b => {
+              let containers = b.path.map(obj => {
+                return obj.guid;
+              });
+              // selectLeftPane looks for literal "AllBookmarks" as a "built-in"
+              containers.splice(0, 0, "AllBookmarks");
+              PlacesOrganizer.selectLeftPaneContainerByHierarchy(containers);
+              this._view.selectItems([currentNode.bookmarkGuid], false);
+            });
+        }
+        break;
     }
   },
 
@@ -565,11 +591,17 @@ PlacesController.prototype = {
           !PlacesUIUtils.loadBookmarksInBackground &&
           !PlacesUIUtils.loadBookmarksInTabs &&
           this._view.singleClickOpens;
+        let hideIfNotSearch =
+          item.getAttribute("hide-if-not-search") == "true" &&
+          (!this._view.selectedNode ||
+            !this._view.selectedNode.parent ||
+            !PlacesUtils.nodeIsQuery(this._view.selectedNode.parent));
 
         let shouldHideItem =
           hideIfNoIP ||
           hideIfPrivate ||
           hideIfSingleClickOpens ||
+          hideIfNotSearch ||
           !this._shouldShowMenuItem(item, metadata);
         item.hidden = item.disabled = shouldHideItem;
 

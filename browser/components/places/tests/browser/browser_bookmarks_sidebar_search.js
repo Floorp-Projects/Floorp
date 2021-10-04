@@ -7,6 +7,9 @@ let sidebar = document.getElementById("sidebar");
 
 const TEST_URI = "http://example.com/";
 const BOOKMARKS_COUNT = 4;
+const TEST_PARENT_FOLDER = "testParentFolder";
+const TEST_SIF_URL = "http://testsif.example.com/";
+const TEST_SIF_TITLE = "TestSIF";
 
 function assertBookmarks(searchValue) {
   let found = 0;
@@ -35,6 +38,40 @@ function assertBookmarks(searchValue) {
   is(found, BOOKMARKS_COUNT, "found expected site");
 }
 
+function showInFolder(aSearchStr, aParentFolderGuid) {
+  let searchBox = sidebar.contentDocument.getElementById("search-box");
+
+  searchBox.value = aSearchStr;
+  searchBox.doCommand();
+
+  let tree = sidebar.contentDocument.getElementById("bookmarks-view");
+  let theNode = tree.view._getNodeForRow(0);
+  let bookmarkGuid = theNode.bookmarkGuid;
+
+  Assert.equal(theNode.uri, TEST_SIF_URL, "Found expected bookmark");
+
+  info("Running Show in Folder command");
+  tree.selectNode(theNode);
+  tree.controller.doCommand("placesCmd_showInFolder");
+
+  let treeNode = tree.selectedNode;
+  Assert.equal(
+    treeNode.parent.bookmarkGuid,
+    aParentFolderGuid,
+    "Containing folder node is correct"
+  );
+  Assert.equal(
+    treeNode.bookmarkGuid,
+    bookmarkGuid,
+    "The searched bookmark guid matches selected node"
+  );
+  Assert.equal(
+    treeNode.uri,
+    TEST_SIF_URL,
+    "The searched bookmark URL matches selected node"
+  );
+}
+
 add_task(async function test() {
   // Add bookmarks and tags.
   for (let i = 0; i < BOOKMARKS_COUNT; i++) {
@@ -55,6 +92,27 @@ add_task(async function test() {
     assertBookmarks("test");
   });
 
-  // Cleanup.
+  // Cleanup before testing Show in Folder.
+  await PlacesUtils.bookmarks.eraseEverything();
+
+  // Now test Show in Folder
+  info("Test Show in Folder");
+  let parentFolder = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    title: TEST_PARENT_FOLDER,
+  });
+
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: parentFolder.guid,
+    title: TEST_SIF_TITLE,
+    url: TEST_SIF_URL,
+  });
+
+  await withSidebarTree("bookmarks", function() {
+    showInFolder(TEST_SIF_TITLE, parentFolder.guid);
+  });
+
+  // Cleanup
   await PlacesUtils.bookmarks.eraseEverything();
 });

@@ -27,6 +27,9 @@
 
 const TEST_URL = "http://dummy.mozilla.org/";
 const TEST_DOWNLOAD_URL = "http://dummy.mozilla.org/dummy.pdf";
+const TEST_PARENT_FOLDER = "testParentFolder";
+const TEST_SIF_URL = "http://testsif.example.com/";
+const TEST_SIF_TITLE = "TestSIF";
 
 var gLibrary;
 
@@ -93,6 +96,45 @@ async function search(aFolderGuid, aSearchStr) {
   }
 }
 
+async function showInFolder(aFolderGuid, aSearchStr, aParentFolderGuid) {
+  let doc = gLibrary.document;
+  let folderTree = doc.getElementById("placesList");
+  let contentTree = doc.getElementById("placeContent");
+
+  let searchBox = doc.getElementById("searchFilter");
+  searchBox.value = aSearchStr;
+  gLibrary.PlacesSearchBox.search(searchBox.value);
+  let theNode = contentTree.view._getNodeForRow(0);
+  let bookmarkGuid = theNode.bookmarkGuid;
+
+  Assert.equal(theNode.uri, TEST_SIF_URL, "Found expected bookmark");
+
+  contentTree.selectNode(theNode);
+  info("Executing showInFolder");
+  info("Waiting for showInFolder to select folder in tree");
+  let folderSelected = BrowserTestUtils.waitForEvent(folderTree, "select");
+  contentTree.controller.doCommand("placesCmd_showInFolder");
+  await folderSelected;
+
+  let treeNode = folderTree.selectedNode;
+  let contentNode = contentTree.selectedNode;
+  Assert.equal(
+    treeNode.bookmarkGuid,
+    aParentFolderGuid,
+    "Containing folder node selected on left tree pane"
+  );
+  Assert.equal(
+    contentNode.bookmarkGuid,
+    bookmarkGuid,
+    "The searched bookmark guid matches selected node in content pane"
+  );
+  Assert.equal(
+    contentNode.uri,
+    TEST_SIF_URL,
+    "The searched bookmark URL matches selected node in content pane"
+  );
+}
+
 add_task(async function test() {
   // Add visits, a bookmark and a tag.
   await PlacesTestUtils.addVisits([
@@ -130,9 +172,35 @@ add_task(async function test() {
 
   await promiseLibraryClosed(gLibrary);
 
-  // Cleanup.
+  // Cleanup before testing Show in Folder.
   PlacesUtils.tagging.untagURI(Services.io.newURI(TEST_URL), ["dummyTag"]);
 
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
+
+  // Now test Show in Folder
+  gLibrary = await promiseLibrary();
+  info("Test Show in Folder");
+  let parentFolder = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    title: TEST_PARENT_FOLDER,
+  });
+
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: parentFolder.guid,
+    title: TEST_SIF_TITLE,
+    url: TEST_SIF_URL,
+  });
+
+  await showInFolder(
+    PlacesUtils.virtualAllBookmarksGuid,
+    TEST_SIF_TITLE,
+    parentFolder.guid
+  );
+
+  // Cleanup
+  await promiseLibraryClosed(gLibrary);
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
 });
