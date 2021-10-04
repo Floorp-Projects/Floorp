@@ -7,7 +7,7 @@ newGlobal({newCompartment: true}).Debugger().addDebuggee(this);
 
 var t = new WebAssembly.Table({
     initial: 1,
-    element: "anyfunc"
+    element: "funcref"
 });
 
 new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
