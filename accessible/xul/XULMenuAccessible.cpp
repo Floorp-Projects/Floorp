@@ -411,16 +411,8 @@ role XULMenupopupAccessible::NativeRole() const {
   }
 
   if (mParent) {
-    if (mParent->IsCombobox() || mParent->IsAutoComplete()) {
+    if (mParent->IsCombobox()) {
       return roles::COMBOBOX_LIST;
-    }
-
-    if (mParent->Role() == roles::PUSHBUTTON) {
-      // Some widgets like the search bar have several popups, owned by buttons.
-      LocalAccessible* grandParent = mParent->LocalParent();
-      if (grandParent && grandParent->IsAutoComplete()) {
-        return roles::COMBOBOX_LIST;
-      }
     }
   }
 
