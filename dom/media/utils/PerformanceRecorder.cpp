@@ -7,6 +7,7 @@
 #include "PerformanceRecorder.h"
 
 #include "mozilla/Logging.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -51,10 +52,17 @@ const char* FindMediaResolution(int32_t aHeight) {
   return resolution;
 }
 
+static TimeStamp GetCurrentTimeForMeasurement() {
+  // The system call to get the clock is rather expensive on Windows. As we
+  // only report the measurement report via markers, if the marker isn't enabled
+  // then we won't do any measurement in order to save CPU time.
+  return profiler_can_accept_markers() ? TimeStamp::Now() : TimeStamp();
+}
+
 void PerformanceRecorder::Start() {
   MOZ_ASSERT(mStage != Stage::Invalid);
   MOZ_ASSERT(!mStartTime);
-  mStartTime = Some(TimeStamp::Now());
+  mStartTime = Some(GetCurrentTimeForMeasurement());
 }
 
 void PerformanceRecorder::Reset() {
@@ -62,13 +70,44 @@ void PerformanceRecorder::Reset() {
   mStage = Stage::Invalid;
 }
 
+void AppendMediaInfoFlagToName(nsCString& aName, MediaInfoFlag aFlag) {
+  if (aFlag & MediaInfoFlag::KeyFrame) {
+    aName.Append("kf,");
+  }
+  // Decoding
+  if (aFlag & MediaInfoFlag::SoftwareDecoding) {
+    aName.Append("sw,");
+  } else if (aFlag & MediaInfoFlag::HardwareDecoding) {
+    aName.Append("hw,");
+  }
+  // Codec type
+  if (aFlag & MediaInfoFlag::VIDEO_AV1) {
+    aName.Append("av1,");
+  } else if (aFlag & MediaInfoFlag::VIDEO_H264) {
+    aName.Append("h264,");
+  } else if (aFlag & MediaInfoFlag::VIDEO_VP8) {
+    aName.Append("vp8,");
+  } else if (aFlag & MediaInfoFlag::VIDEO_VP9) {
+    aName.Append("vp9,");
+  }
+}
+
 void PerformanceRecorder::End() {
-  if (mStartTime) {
+  if (mStartTime && !mStartTime->IsNull()) {
     MOZ_ASSERT(mStage != Stage::Invalid);
-    const double passedTimeUs =
-        (TimeStamp::Now() - *mStartTime).ToMicroseconds();
-    MOZ_ASSERT(passedTimeUs > 0, "Passed time can't be less than 0!");
-    // TODO : report the time in following patches.
+    if (profiler_can_accept_markers()) {
+      const auto now = TimeStamp::Now();
+      const double passedTimeUs = (now - *mStartTime).ToMicroseconds();
+      MOZ_ASSERT(passedTimeUs > 0, "Passed time can't be less than 0!");
+      nsAutoCString name(StageToStr(mStage));
+      name.Append(":");
+      name.Append(FindMediaResolution(mHeight));
+      name.Append(":");
+      AppendMediaInfoFlagToName(name, mFlag);
+      PROFILER_MARKER_UNTYPED(
+          name, MEDIA_PLAYBACK,
+          MarkerOptions(MarkerTiming::Interval(*mStartTime, now)));
+    }
     Reset();
   }
 }
