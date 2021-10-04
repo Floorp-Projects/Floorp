@@ -20,7 +20,8 @@ namespace mozilla::dom {
 HTMLOutputElement::HTMLOutputElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     FromParser aFromParser)
-    : nsGenericHTMLFormElement(std::move(aNodeInfo), FormControlType::Output),
+    : nsGenericHTMLFormControlElement(std::move(aNodeInfo),
+                                      FormControlType::Output),
       mValueModeFlag(eModeDefault),
       mIsDoneAddingChildren(!aFromParser) {
   AddMutationObserver(this);
@@ -31,11 +32,12 @@ HTMLOutputElement::HTMLOutputElement(
 
 HTMLOutputElement::~HTMLOutputElement() = default;
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLOutputElement, nsGenericHTMLFormElement,
-                                   mValidity, mTokenList)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLOutputElement,
+                                   nsGenericHTMLFormControlElement, mValidity,
+                                   mTokenList)
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLOutputElement,
-                                             nsGenericHTMLFormElement,
+                                             nsGenericHTMLFormControlElement,
                                              nsIMutationObserver,
                                              nsIConstraintValidation)
 
@@ -64,7 +66,7 @@ bool HTMLOutputElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLFormElement::ParseAttribute(
+  return nsGenericHTMLFormControlElement::ParseAttribute(
       aNamespaceID, aAttribute, aValue, aMaybeScriptedPrincipal, aResult);
 }
 
@@ -75,7 +77,7 @@ void HTMLOutputElement::DoneAddingChildren(bool aHaveNotified) {
 }
 
 EventStates HTMLOutputElement::IntrinsicState() const {
-  EventStates states = nsGenericHTMLFormElement::IntrinsicState();
+  EventStates states = nsGenericHTMLFormControlElement::IntrinsicState();
 
   // We don't have to call IsCandidateForConstraintValidation()
   // because <output> can't be barred from constraint validation.
@@ -90,7 +92,7 @@ EventStates HTMLOutputElement::IntrinsicState() const {
 
 nsresult HTMLOutputElement::BindToTree(BindContext& aContext,
                                        nsINode& aParent) {
-  nsresult rv = nsGenericHTMLFormElement::BindToTree(aContext, aParent);
+  nsresult rv = nsGenericHTMLFormControlElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Unfortunately, we can actually end up having to change our state
