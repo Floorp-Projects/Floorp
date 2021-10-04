@@ -1081,6 +1081,12 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement {
    * Returns if the readonly attribute applies.
    */
   virtual bool DoesReadOnlyApply() const { return false; }
+
+  /**
+   *  Returns true if the element is a form associated element.
+   *  See https://html.spec.whatwg.org/#form-associated-element.
+   */
+  virtual bool IsFormAssociatedElement() const { return false; }
 };
 
 class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
@@ -1140,6 +1146,7 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
   mozilla::dom::HTMLFieldSetElement* GetFieldSetInternal() const override;
   void SetFieldSetInternal(
       mozilla::dom::HTMLFieldSetElement* aFieldset) override;
+  bool IsFormAssociatedElement() const override { return true; }
 
   /**
    * Update our required/optional flags to match the given aIsRequired boolean.

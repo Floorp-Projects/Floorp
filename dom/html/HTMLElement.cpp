@@ -11,7 +11,7 @@
 namespace mozilla::dom {
 
 HTMLElement::HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsGenericHTMLElement(std::move(aNodeInfo)) {
+    : nsGenericHTMLFormElement(std::move(aNodeInfo)) {
   if (NodeInfo()->Equals(nsGkAtoms::bdi)) {
     AddStatesSilently(NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO);
   }

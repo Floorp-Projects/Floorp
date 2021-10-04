@@ -11,7 +11,7 @@
 
 namespace mozilla::dom {
 
-class HTMLElement final : public nsGenericHTMLElement {
+class HTMLElement final : public nsGenericHTMLFormElement {
  public:
   explicit HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   virtual ~HTMLElement() = default;
