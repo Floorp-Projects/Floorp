@@ -85,7 +85,7 @@ fun RecentlyVisited(
                         RecentVisitItem(
                             recentVisit = recentVisit,
                             menuItems = menuItems,
-                            showDividerLine = index < VISITS_PER_COLUMN - 1,
+                            showDividerLine = index < items.size - 1,
                             onRecentVisitClick = onRecentVisitClick
                         )
                     }
