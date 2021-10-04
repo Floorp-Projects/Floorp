@@ -160,6 +160,7 @@ const presets = {
       "ModuleProcessThread",
       "NativeAudioCallback",
       "PacerThread",
+      "RemVidChild",
       "RenderBackend",
       "Renderer",
       "SwComposite",
