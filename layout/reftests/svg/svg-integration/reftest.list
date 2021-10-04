@@ -35,7 +35,7 @@ random == mask-html-01-extref-02.xhtml mask-html-01-ref.svg # random due to bug 
 fuzzy(0-1,0-125414) fails-if(useDrawSnapshot) == mask-html-zoomed-01.xhtml mask-html-01-ref.svg
 == mask-transformed-html-01.xhtml ../pass.svg
 == mask-transformed-html-02.xhtml ../pass.svg
-fuzzy-if(skiaContent,0-1,0-5) == patterned-svg-under-transformed-html-01.xhtml ../pass.svg
+fuzzy(0-1,0-5) == patterned-svg-under-transformed-html-01.xhtml ../pass.svg
 == patterned-svg-under-transformed-html-02.xhtml ../pass.svg
 
 fuzzy(0-1,0-5000) == mask-clipPath-opacity-01a.xhtml mask-clipPath-opacity-01-ref.xhtml

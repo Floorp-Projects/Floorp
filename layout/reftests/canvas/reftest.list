@@ -73,7 +73,7 @@ random != text-emoji.html text-emoji-notref.html
 == evenodd-fill-1.html evenodd-fill-ref.html
 
 == dash-sanity.html data:text/html,<body>Pass
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||azureSkia||skiaContent,0-9,0-470) random-if(Android) == dash-1.html dash-1-ref.svg  # Bug 668412 (really is android-specific, not IPC-specific)
+fuzzy(0-9,0-470) random-if(Android) == dash-1.html dash-1-ref.svg # Bug 668412 (really is android-specific, not IPC-specific)
 
 == ctm-sanity.html data:text/html,<body>Pass
 == ctm-singular-sanity.html data:text/html,<body>Pass
@@ -87,19 +87,19 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-45) == 674003-alpha-ra
 == 726951-shadow-clips.html 726951-shadow-clips-ref.html
 
 == transformed-clip.html transformed-clip-ref.html
-fuzzy-if(azureSkia,0-1,0-15) fuzzy-if(skiaContent,0-1,0-20) == transformed-gradient.html transformed-gradient-ref.html
+fuzzy(0-1,0-20) == transformed-gradient.html transformed-gradient-ref.html
 == transformed-path.html transformed-path.html
 
 == 749467-1.html 749467-1-ref.html
 
 # You get a little bit of rounding fuzz on OSX from transforming the paths between user space and device space
-fuzzy-if(d2d,0-12,0-21) fuzzy-if(skiaContent,0-16,0-84) fuzzy-if(d2d&&/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-2,0-153) == 784573-1.html 784573-1-ref.html
+fuzzy(0-16,0-84) fuzzy-if(d2d&&/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-2,0-153) == 784573-1.html 784573-1-ref.html
 
 == 802658-1.html 802658-1-ref.html
 == 1074733-1.html 1074733-1-ref.html
 == 1107096-invisibles.html 1107096-invisibles-ref.html
 == 1151821-1.html 1151821-1-ref.html
-fuzzy-if(skiaContent,0-1,0-43) == 1201272-1.html 1201272-1-ref.html
+fuzzy(0-1,0-43) == 1201272-1.html 1201272-1-ref.html
 == 1224976-1.html 1224976-1-ref.html
 == 1238795-1.html 1238795-1-ref.html
 == 1303534-1.html 1303534-1-ref.html

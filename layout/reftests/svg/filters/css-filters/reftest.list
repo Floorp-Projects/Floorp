@@ -53,7 +53,7 @@ fuzzy(0-1,0-10000) fuzzy-if(d2d,0-1,0-10000) == invert-percent.html invert-perce
 fuzzy-if(!useDrawSnapshot&&!geckoview,1-1,10000-10000) fuzzy-if(d2d,0-1,0-10000) == opacity.html opacity-ref.html
 == opacity-one.html opacity-one-ref.html
 == opacity-over-one.html opacity-over-one-ref.html
-fuzzy-if(skiaContent,0-1,0-10000) == opacity-over-one-translucent-source.html opacity-over-one-translucent-source-ref.html
+fuzzy(0-1,0-10000) == opacity-over-one-translucent-source.html opacity-over-one-translucent-source-ref.html
 fuzzy-if(!useDrawSnapshot&&!geckoview,1-1,10000-10000) fuzzy-if(d2d,0-1,0-10000) == opacity-percent.html opacity-percent-ref.html
 == opacity-zero.html opacity-zero-ref.html
 == saturate.html saturate-ref.html

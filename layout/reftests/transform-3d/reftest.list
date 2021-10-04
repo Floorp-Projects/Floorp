@@ -11,7 +11,7 @@ fuzzy(0-1,0-6) == rotatey-1a.html rotatey-1-ref.html
 == rotatex-perspective-1c.html rotatex-1-ref.html
 == rotatex-perspective-3a.html rotatex-perspective-3-ref.html
 == scalez-1a.html scalez-1-ref.html
-fuzzy-if(gtkWidget||winWidget,0-8,0-376) fuzzy-if(Android,0-8,0-441) fuzzy-if(skiaContent,0-16,0-346) fuzzy-if(cocoaWidget,0-200,0-310) fuzzy-if(winWidget,0-175,0-250) == preserve3d-1a.html preserve3d-1-ref.html
+fuzzy(0-16,0-346) fuzzy-if(cocoaWidget,0-200,0-310) fuzzy-if(winWidget,0-175,0-250) == preserve3d-1a.html preserve3d-1-ref.html
 == preserve3d-1b.html about:blank
 == preserve3d-clipped.html about:blank
 == preserve3d-2a.html preserve3d-2-ref.html
@@ -20,7 +20,7 @@ fuzzy-if(gtkWidget||winWidget,0-8,0-376) fuzzy-if(Android,0-8,0-441) fuzzy-if(sk
 == preserve3d-2d.html preserve3d-2-ref.html
 == preserve3d-3a.html preserve3d-3-ref.html
 == preserve3d-4a.html about:blank
-fuzzy-if(gtkWidget,0-4,0-200) fuzzy-if(Android,0-4,0-300) fuzzy-if(winWidget&&!layersGPUAccelerated,0-2,0-100) fuzzy-if(skiaContent,0-16,0-100) == preserve3d-5a.html preserve3d-5-ref.html
+fuzzy(0-16,0-100) == preserve3d-5a.html preserve3d-5-ref.html
 == preserve3d-6a.html preserve3d-6-ref.html
 == preserve3d-table.html preserve3d-table-ref.html
 == scale3d-z.html scalez-1-ref.html
@@ -30,7 +30,7 @@ fuzzy-if(winWidget,0-143,0-689) fuzzy-if(OSX,0-224,0-924) fuzzy-if(winWidget,0-1
 == translatez-1a.html translatez-1-ref.html
 != translatez-1b.html translatez-1-ref.html
 == translate3d-1a.html translate3d-1-ref.html
-fuzzy-if(skiaContent,0-1,0-4) == matrix3d-1a.html matrix3d-1-ref.html
+fuzzy(0-1,0-4) == matrix3d-1a.html matrix3d-1-ref.html
 == matrix3d-2a.html matrix3d-2-ref.html
 == rotate3d-1a.html rotatex-1-ref.html
 == 1467277-1.html rotatex-1-ref.html
@@ -72,8 +72,8 @@ fuzzy(0-3,0-99) == animate-cube-degrees.html animate-cube-degrees-ref.html # sub
 fails-if(useDrawSnapshot) == animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html
 != animate-cube-degrees-ref.html animate-cube-degrees-zoom-ref.html
 fuzzy-if(gtkWidget,0-128,0-100) fuzzy-if(Android||OSX==1010||(gtkWidget&&layersGPUAccelerated),0-143,0-100) fuzzy-if(winWidget||OSX,0-141,0-100) == preserves3d-nested.html preserves3d-nested-ref.html
-fuzzy-if(skiaContent,0-1,0-4) fuzzy-if(cocoaWidget,0-128,0-9) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == animate-preserve3d-parent.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
-fuzzy-if(skiaContent,0-1,0-4) fuzzy-if(cocoaWidget,0-128,0-9) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == animate-preserve3d-child.html animate-preserve3d-ref.html # intermittently fuzzy on Mac, bug 1461311 for Android
+fuzzy(0-1,0-4) fuzzy-if(cocoaWidget,0-128,0-9) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == animate-preserve3d-parent.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
+fuzzy(0-1,0-4) fuzzy-if(cocoaWidget,0-128,0-9) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == animate-preserve3d-child.html animate-preserve3d-ref.html # intermittently fuzzy on Mac, bug 1461311 for Android
 == animate-backface-hidden.html about:blank
 == 1245450-1.html green-rect.html
 fuzzy(0-1,0-2000) == opacity-preserve3d-1.html opacity-preserve3d-1-ref.html

@@ -45,8 +45,8 @@ skip-if(!asyncPan) fuzzy-if(swgl&&!Android,1-1,2-3) fails-if(useDrawSnapshot) ==
 == column-contain-1b.html column-contain-1-ref.html
 == column-contain-2.html column-contain-2-ref.html
 == block-in-inline-1.html block-in-inline-1-ref.html
-fuzzy-if(skiaContent,0-1,0-22) fuzzy-if(winWidget&&!layersGPUAccelerated,0-116,0-1320) fuzzy-if(Android,0-8,0-1533) == block-in-inline-2.html block-in-inline-2-ref.html
-fuzzy-if(Android,0-8,0-630) fuzzy-if(OSX,0-1,0-11) fuzzy-if(skiaContent,0-1,0-220) fuzzy-if(winWidget&&!layersGPUAccelerated,0-116,0-1320) == block-in-inline-3.html block-in-inline-3-ref.html
+fuzzy(0-1,0-22) fuzzy-if(winWidget&&!layersGPUAccelerated,0-116,0-1320) fuzzy-if(Android,0-8,0-1533) == block-in-inline-2.html block-in-inline-2-ref.html
+fuzzy(0-1,0-220) fuzzy-if(winWidget&&!layersGPUAccelerated,0-116,0-1320) == block-in-inline-3.html block-in-inline-3-ref.html
 == block-in-inline-continuations.html block-in-inline-continuations-ref.html
 == iframe-1.html iframe-1-ref.html
 == transformed-1.html transformed-1-ref.html
