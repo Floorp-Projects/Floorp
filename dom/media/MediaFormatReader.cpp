@@ -11,14 +11,17 @@
 #include <queue>
 
 #include "AllocationPolicy.h"
+#include "AOMDecoder.h"
 #include "DecoderBenchmark.h"
 #include "MediaData.h"
 #include "MediaDataDecoderProxy.h"
 #include "MediaInfo.h"
+#include "MP4Decoder.h"
 #include "PDMFactory.h"
 #include "PerformanceRecorder.h"
 #include "VideoFrameContainer.h"
 #include "VideoUtils.h"
+#include "VPXDecoder.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -1887,8 +1890,25 @@ void MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
       aTrack == TrackInfo::kVideoTrack
           ? decoder.GetCurrentInfo()->GetAsVideoInfo()->mImage.height
           : 0;
+  MediaInfoFlag flag = MediaInfoFlag::None;
+  flag |=
+      aSample->mKeyframe ? MediaInfoFlag::KeyFrame : MediaInfoFlag::NonKeyFrame;
+  if (aTrack == TrackInfo::kVideoTrack) {
+    flag |= VideoIsHardwareAccelerated() ? MediaInfoFlag::HardwareDecoding
+                                         : MediaInfoFlag::SoftwareDecoding;
+    const nsCString& mimeType = decoder.GetCurrentInfo()->mMimeType;
+    if (MP4Decoder::IsH264(mimeType)) {
+      flag |= MediaInfoFlag::VIDEO_H264;
+    } else if (VPXDecoder::IsVPX(mimeType, VPXDecoder::VP8)) {
+      flag |= MediaInfoFlag::VIDEO_VP8;
+    } else if (VPXDecoder::IsVPX(mimeType, VPXDecoder::VP9)) {
+      flag |= MediaInfoFlag::VIDEO_VP9;
+    } else if (AOMDecoder::IsAV1(mimeType)) {
+      flag |= MediaInfoFlag::VIDEO_AV1;
+    }
+  }
   PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::RequestDecode,
-                                   height);
+                                   height, flag);
   perfRecorder.Start();
   decoder.mDecoder->Decode(aSample)
       ->Then(
