@@ -30,6 +30,7 @@ import org.mozilla.focus.helpers.TestHelper.pressEnterKey
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
 import org.mozilla.focus.helpers.TestHelper.waitForWebSiteTitleLoad
 import org.mozilla.focus.helpers.TestHelper.waitingTime
+import org.mozilla.focus.testAnnotations.SmokeTest
 import java.io.IOException
 
 @RunWith(AndroidJUnit4ClassRunner::class)
@@ -210,6 +211,7 @@ class ImageSelectTest {
     }
 
     @Suppress("LongMethod")
+    @SmokeTest
     @Test
     @Throws(UiObjectNotFoundException::class)
     fun DownloadImageMenuTest() {

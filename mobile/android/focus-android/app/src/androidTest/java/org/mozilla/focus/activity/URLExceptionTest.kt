@@ -28,8 +28,7 @@ import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.waitForWebContent
 import org.mozilla.focus.testAnnotations.SmokeTest
 
-// https://testrail.stage.mozaws.net/index.php?/cases/view/104577
-@Ignore("Failing because of: https://github.com/mozilla-mobile/focus-android/issues/4729")
+@Ignore("To be updated and re-enabled: https://github.com/mozilla-mobile/focus-android/issues/5534")
 @RunWith(AndroidJUnit4ClassRunner::class)
 class URLExceptionTest {
     private val site = "680news.com"
@@ -129,7 +128,9 @@ class URLExceptionTest {
 
     private fun removeException() {
         mDevice.waitForIdle()
-        Espresso.openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getInstrumentation().getContext())
+        Espresso.openActionBarOverflowOrOptionsMenu(
+            InstrumentationRegistry.getInstrumentation().getContext()
+        )
         mDevice.waitForIdle() // wait until dialog fully appears
         Espresso.onView(ViewMatchers.withText("Remove"))
             .perform(ViewActions.click())
@@ -139,6 +140,7 @@ class URLExceptionTest {
             .perform(ViewActions.click())
     }
 
+    @SmokeTest
     @Test
     @Throws(UiObjectNotFoundException::class)
     fun removeAllExceptionsTest() {

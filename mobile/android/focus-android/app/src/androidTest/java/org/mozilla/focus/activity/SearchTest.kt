@@ -33,6 +33,7 @@ class SearchTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun changeSearchEngineTest() {
 
@@ -105,6 +106,7 @@ class SearchTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun disableSearchSuggestionsTest() {
         val searchString = "mozilla "

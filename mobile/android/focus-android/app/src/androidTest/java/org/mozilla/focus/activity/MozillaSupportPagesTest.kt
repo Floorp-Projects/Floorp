@@ -41,6 +41,7 @@ class MozillaSupportPagesTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun openAboutPageTest() {
         // Go to settings "About" page
@@ -55,6 +56,7 @@ class MozillaSupportPagesTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun openMozillaSettingsHelpLinkTest() {
         // Go to settings "About" page
@@ -67,6 +69,7 @@ class MozillaSupportPagesTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun openYourRightsPageTest() {
         val yourRightsString = appContext.getString(
@@ -84,6 +87,7 @@ class MozillaSupportPagesTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun openPrivacyNoticeTest() {
         homeScreen {

@@ -25,10 +25,11 @@ import org.mozilla.focus.helpers.TestHelper.pressEnterKey
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
 import org.mozilla.focus.helpers.TestHelper.waitForWebContent
 import org.mozilla.focus.helpers.TestHelper.waitingTime
+import org.mozilla.focus.testAnnotations.SmokeTest
 import java.io.IOException
 
 @RunWith(AndroidJUnit4ClassRunner::class)
-@Ignore("Test fails, will be refactored")
+@Ignore("To be updated and re-enabled: https://github.com/mozilla-mobile/focus-android/issues/5534")
 class SettingsBlockToggleTest {
     private var webServer: MockWebServer? = null
 
@@ -65,6 +66,7 @@ class SettingsBlockToggleTest {
     }
 
     @Suppress("LongMethod")
+    @SmokeTest
     @Test
     @Throws(UiObjectNotFoundException::class)
     fun SettingsToggleTest() {

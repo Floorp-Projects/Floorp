@@ -28,6 +28,7 @@ import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
+import org.mozilla.focus.testAnnotations.SmokeTest
 import java.io.IOException
 
 @RunWith(AndroidJUnit4ClassRunner::class)
@@ -59,6 +60,7 @@ class CustomTabTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun testCustomTabUI() {
         val customTabPage = webServer.url("plain_test.html").toString()
@@ -83,6 +85,7 @@ class CustomTabTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun openCustomTabInFocusTest() {
         val browserPage = webServer.url("plain_test.html").toString()

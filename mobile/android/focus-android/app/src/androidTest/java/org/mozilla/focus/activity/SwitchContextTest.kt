@@ -97,6 +97,7 @@ class SwitchContextTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun switchFromSettingsToFocusTest() {
         // Initialize UiDevice instance

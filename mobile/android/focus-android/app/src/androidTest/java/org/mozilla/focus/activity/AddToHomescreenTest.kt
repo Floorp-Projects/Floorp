@@ -51,6 +51,7 @@ class AddToHomescreenTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun addPageToHomeScreenTest() {
         val pageUrl = webServer.url("").toString()
