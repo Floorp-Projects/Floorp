@@ -12,6 +12,7 @@
 #include "mozilla/ipc/IdleSchedulerChild.h"
 #include "nsCycleCollector.h"
 #include "nsJSEnvironment.h"
+#include "nsCycleCollectionParticipant.h"
 
 namespace mozilla {
 
@@ -182,9 +183,10 @@ class CCGCScheduler {
 
   // Ensure that the current runner does a cycle collection, and trigger a GC
   // after it finishes.
-  void EnsureCCThenGC() {
+  void EnsureCCThenGC(CCReason aReason) {
     MOZ_ASSERT(mCCRunnerState != CCRunnerState::Inactive);
-    mNeedsFullCC = true;
+    MOZ_ASSERT(aReason != CCReason::NO_REASON);
+    mNeedsFullCC = aReason;
     mNeedsGCAfterCC = true;
   }
 
@@ -310,16 +312,22 @@ class CCGCScheduler {
   // garbage to cycle collect: either we just finished a GC, or the purple
   // buffer is getting really big, or it's getting somewhat big and it has been
   // too long since the last CC.
-  bool IsCCNeeded(TimeStamp aNow, uint32_t aSuspectedCCObjects) const {
-    if (mNeedsFullCC) {
-      return true;
+  CCReason IsCCNeeded(TimeStamp aNow, uint32_t aSuspectedCCObjects) const {
+    if (mNeedsFullCC != CCReason::NO_REASON) {
+      return mNeedsFullCC;
     }
-    return aSuspectedCCObjects > kCCPurpleLimit ||
-           (aSuspectedCCObjects > kCCForcedPurpleLimit && mLastCCEndTime &&
-            aNow - mLastCCEndTime > kCCForced);
+    if (aSuspectedCCObjects > kCCPurpleLimit) {
+      return CCReason::MANY_SUSPECTED;
+    }
+    if (aSuspectedCCObjects > kCCForcedPurpleLimit && mLastCCEndTime &&
+        aNow - mLastCCEndTime > kCCForced) {
+      return CCReason::TIMED;
+    }
+    return CCReason::NO_REASON;
   }
 
-  bool ShouldScheduleCC(TimeStamp aNow, uint32_t aSuspectedCCObjects) const;
+  mozilla::CCReason ShouldScheduleCC(TimeStamp aNow,
+                                     uint32_t aSuspectedCCObjects) const;
 
   // If we collected a substantial amount of cycles, poke the GC since more
   // objects might be unreachable now.
@@ -416,7 +424,7 @@ class CCGCScheduler {
   // gray bits.
   bool mHasRunGC = false;
 
-  bool mNeedsFullCC = false;
+  mozilla::CCReason mNeedsFullCC = CCReason::NO_REASON;
   bool mNeedsFullGC = true;
   bool mNeedsGCAfterCC = false;
   uint32_t mPreviousSuspectedCount = 0;
