@@ -105,6 +105,9 @@ struct CCRunnerStep {
   // or not. (ForgetSkippable is the only action requiring a parameter; if
   // that changes, this will become a union.)
   CCRunnerForgetSkippableRemoveChildless mRemoveChildless;
+
+  // If the action is CycleCollect, the reason for the collection.
+  CCReason mCCReason;
 };
 
 class CCGCScheduler {
@@ -200,14 +203,18 @@ class CCGCScheduler {
     return true;
   }
 
+  // Starting a major GC (incremental or non-incremental).
   void NoteGCBegin();
+
+  // Major GC completed.
   void NoteGCEnd();
+
   // A timer fired, but then decided not to run a GC.
   void NoteWontGC();
 
   // This is invoked when we reach the actual cycle collection portion of the
   // overall cycle collection.
-  void NoteCCBegin(TimeStamp aWhen);
+  void NoteCCBegin(CCReason aReason, TimeStamp aWhen);
 
   // This is invoked when the whole process of collection is done -- i.e., CC
   // preparation (eg ForgetSkippables) in addition to the CC itself. There
@@ -355,10 +362,13 @@ class CCGCScheduler {
     NumStates
   };
 
-  void InitCCRunnerStateMachine(CCRunnerState initialState) {
+  void InitCCRunnerStateMachine(CCRunnerState initialState, CCReason aReason) {
     if (mCCRunner) {
       return;
     }
+
+    MOZ_ASSERT(mCCReason == CCReason::NO_REASON);
+    mCCReason = aReason;
 
     // The state machine should always have been deactivated after the previous
     // collection, however far that collection may have gone.
@@ -438,6 +448,7 @@ class CCGCScheduler {
   nsITimer* mShrinkingGCTimer = nullptr;
   nsITimer* mFullGCTimer = nullptr;
 
+  mozilla::CCReason mCCReason = mozilla::CCReason::NO_REASON;
   JS::GCReason mMajorGCReason = JS::GCReason::NO_REASON;
 
   bool mIsCompactingOnUserInactive = false;
