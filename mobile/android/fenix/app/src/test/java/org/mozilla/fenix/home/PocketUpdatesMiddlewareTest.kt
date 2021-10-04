@@ -45,6 +45,20 @@ class PocketUpdatesMiddlewareTest {
     }
 
     @Test
+    fun `WHEN persistStories is called THEN update PocketStoriesService`() {
+        val stories: List<PocketRecommendedStory> = mockk()
+        val pocketService: PocketStoriesService = mockk(relaxed = true)
+
+        persistStories(
+            coroutineScope = TestCoroutineScope(),
+            pocketStoriesService = pocketService,
+            updatedStories = stories
+        )
+
+        coVerify { pocketService.updateStoriesTimesShown(stories) }
+    }
+
+    @Test
     fun `WHEN PocketStoriesCategoriesChange is dispatched THEN intercept and dispatch PocketStoriesCategoriesSelectionsChange`() {
         val persistedSelectedCategory: SelectedPocketStoriesCategory = mockk {
             every { name } returns "testCategory"

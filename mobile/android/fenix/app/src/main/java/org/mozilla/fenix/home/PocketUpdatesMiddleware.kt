@@ -13,6 +13,7 @@ import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
+import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStoriesService
 import org.mozilla.fenix.datastore.SelectedPocketStoriesCategories
 import org.mozilla.fenix.datastore.SelectedPocketStoriesCategories.SelectedPocketStoriesCategory
@@ -60,13 +61,13 @@ class PocketUpdatesMiddleware(
         // Post process actions
         when (action) {
             is HomeFragmentAction.PocketStoriesShown -> {
-                coroutineScope.launch {
-                    pocketStoriesService.updateStoriesTimesShown(
-                        action.storiesShown.map {
-                            it.copy(timesShown = it.timesShown.inc())
-                        }
-                    )
-                }
+                persistStories(
+                    coroutineScope = coroutineScope,
+                    pocketStoriesService = pocketStoriesService,
+                    updatedStories = action.storiesShown.map {
+                        it.copy(timesShown = it.timesShown.inc())
+                    }
+                )
             }
             is HomeFragmentAction.SelectPocketStoriesCategory,
             is HomeFragmentAction.DeselectPocketStoriesCategory -> {
@@ -80,6 +81,26 @@ class PocketUpdatesMiddleware(
                 // no-op
             }
         }
+    }
+}
+
+/**
+ * Persist [updatedStories] for making their details available in between app restarts.
+ *
+ * @param coroutineScope [CoroutineScope] used for reading the locally persisted data.
+ * @param pocketStoriesService [PocketStoriesService] used for updating details about the Pocket recommended stories.
+ * @param updatedStories the list of stories to persist.
+ */
+@VisibleForTesting
+internal fun persistStories(
+    coroutineScope: CoroutineScope,
+    pocketStoriesService: PocketStoriesService,
+    updatedStories: List<PocketRecommendedStory>
+) {
+    coroutineScope.launch {
+        pocketStoriesService.updateStoriesTimesShown(
+            updatedStories
+        )
     }
 }
 
