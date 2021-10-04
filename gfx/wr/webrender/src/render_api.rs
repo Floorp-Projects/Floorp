@@ -269,16 +269,12 @@ impl Transaction {
     /// * `viewport_size`: The size of the viewport for this frame.
     /// * `pipeline_id`: The ID of the pipeline that is supplying this display list.
     /// * `display_list`: The root Display list used in this frame.
-    /// * `preserve_frame_state`: If a previous frame exists which matches this pipeline
-    ///                           id, this setting determines if frame state (such as scrolling
-    ///                           position) should be preserved for this new display list.
     pub fn set_display_list(
         &mut self,
         epoch: Epoch,
         background: Option<ColorF>,
         viewport_size: LayoutSize,
         (pipeline_id, mut display_list): (PipelineId, BuiltDisplayList),
-        preserve_frame_state: bool,
     ) {
         display_list.set_send_time_ns(precise_time_ns());
         self.scene_ops.push(
@@ -288,7 +284,6 @@ impl Transaction {
                 pipeline_id,
                 background,
                 viewport_size,
-                preserve_frame_state,
             }
         );
     }
@@ -776,8 +771,6 @@ pub enum SceneMsg {
         background: Option<ColorF>,
         ///
         viewport_size: LayoutSize,
-        ///
-        preserve_frame_state: bool,
     },
     ///
     SetDocumentView {

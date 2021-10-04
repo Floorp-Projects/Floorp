@@ -484,7 +484,6 @@ fn main() {
             None,
             layout_size,
             root_builder.end(),
-            true,
         );
     }
 
@@ -523,7 +522,6 @@ fn main() {
                         None,
                         layout_size,
                         root_builder.end(),
-                        true,
                     );
                 }
                 Invalidations::Scrolling => {
