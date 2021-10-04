@@ -209,12 +209,6 @@ class nsIFormControl : public nsISupports {
     return uint8_t(aType) & kFormControlInputElementMask;
   }
 
-  /**
-   * Returns whether this is a auto-focusable form control.
-   * @return whether this is a auto-focusable form control.
-   */
-  inline bool IsAutofocusable() const;
-
   FormControlType mType;
 };
 
@@ -269,12 +263,6 @@ bool nsIFormControl::AllowDraggableChildren() const {
   auto type = ControlType();
   return type == FormControlType::Object || type == FormControlType::Fieldset ||
          type == FormControlType::Output;
-}
-
-bool nsIFormControl::IsAutofocusable() const {
-  auto type = ControlType();
-  return IsInputElement(type) || IsButtonElement(type) ||
-         type == FormControlType::Textarea || type == FormControlType::Select;
 }
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormControl, NS_IFORMCONTROL_IID)

@@ -1140,6 +1140,12 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
   bool IsAutocapitalizeInheriting() const;
 
   /**
+   * Returns whether this is a auto-focusable form control.
+   * @return whether this is a auto-focusable form control.
+   */
+  inline bool IsAutofocusable() const;
+
+  /**
    * Save to presentation state.  The form control will determine whether it
    * has anything to save and if so, create an entry in the layout history for
    * its pres context.

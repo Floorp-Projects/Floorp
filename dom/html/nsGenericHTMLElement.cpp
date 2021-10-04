@@ -2665,6 +2665,12 @@ bool nsGenericHTMLFormControlElement::IsAutocapitalizeInheriting() const {
          type == FormControlType::Select || type == FormControlType::Textarea;
 }
 
+bool nsGenericHTMLFormControlElement::IsAutofocusable() const {
+  auto type = ControlType();
+  return IsInputElement(type) || IsButtonElement(type) ||
+         type == FormControlType::Textarea || type == FormControlType::Select;
+}
+
 //----------------------------------------------------------------------
 
 nsGenericHTMLFormControlElementWithState::
