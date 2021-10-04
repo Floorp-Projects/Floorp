@@ -10,7 +10,6 @@ var { Ci, Cc, CC, Cr } = require("chrome");
 Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
 var Services = require("Services");
-var promise = require("promise");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn, dumpv } = DevToolsUtils;
 loader.lazyRequireGetter(
@@ -852,19 +851,23 @@ ServerSocketConnection.prototype = {
       server: this.server,
       transport: this._transport,
     });
-    switch (result) {
-      case AuthenticationResult.DISABLE_ALL:
-        this._listener._devToolsServer.closeAllSocketListeners();
-        Services.prefs.setBoolPref("devtools.debugger.remote-enabled", false);
-        return promise.reject(Cr.NS_ERROR_CONNECTION_REFUSED);
-      case AuthenticationResult.DENY:
-        return promise.reject(Cr.NS_ERROR_CONNECTION_REFUSED);
-      case AuthenticationResult.ALLOW:
-      case AuthenticationResult.ALLOW_PERSIST:
-        return promise.resolve();
-      default:
-        return promise.reject(Cr.NS_ERROR_CONNECTION_REFUSED);
+
+    // If result is fine, we can stop here
+    if (
+      result === AuthenticationResult.ALLOW ||
+      result === AuthenticationResult.ALLOW_PERSIST
+    ) {
+      return;
     }
+
+    if (result === AuthenticationResult.DISABLE_ALL) {
+      this._listener._devToolsServer.closeAllSocketListeners();
+      Services.prefs.setBoolPref("devtools.debugger.remote-enabled", false);
+    }
+
+    // If we got an error (DISABLE_ALL, DENY, …), let's throw a NS_ERROR_CONNECTION_REFUSED
+    // exception
+    throw Components.Exception("", Cr.NS_ERROR_CONNECTION_REFUSED);
   },
 
   deny(result) {
