@@ -11,17 +11,13 @@
 #include <queue>
 
 #include "AllocationPolicy.h"
-#include "AOMDecoder.h"
 #include "DecoderBenchmark.h"
 #include "MediaData.h"
 #include "MediaDataDecoderProxy.h"
 #include "MediaInfo.h"
-#include "MP4Decoder.h"
 #include "PDMFactory.h"
-#include "PerformanceRecorder.h"
 #include "VideoFrameContainer.h"
 #include "VideoUtils.h"
-#include "VPXDecoder.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -1459,14 +1455,10 @@ void MediaFormatReader::DoDemuxVideo() {
   using SamplesPromise = MediaTrackDemuxer::SamplesPromise;
 
   DDLOG(DDLogCategory::Log, "video_demuxing", DDNoValue{});
-  PerformanceRecorder perfRecorder(
-      PerformanceRecorder::Stage::RequestDemux,
-      mVideo.GetCurrentInfo()->GetAsVideoInfo()->mImage.height);
-  perfRecorder.Start();
   auto p = mVideo.mTrackDemuxer->GetSamples(1);
 
-  RefPtr<MediaFormatReader> self = this;
   if (mVideo.mFirstDemuxedSampleTime.isNothing()) {
+    RefPtr<MediaFormatReader> self = this;
     p = p->Then(
         OwnerThread(), __func__,
         [self](RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
@@ -1487,14 +1479,9 @@ void MediaFormatReader::DoDemuxVideo() {
         });
   }
 
-  p->Then(
-       OwnerThread(), __func__,
-       [self, perfRecorder(std::move(perfRecorder))](
-           RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) mutable {
-         perfRecorder.End();
-         self->OnVideoDemuxCompleted(std::move(aSamples));
-       },
-       [self](const MediaResult& aError) { self->OnVideoDemuxFailed(aError); })
+  p->Then(OwnerThread(), __func__, this,
+          &MediaFormatReader::OnVideoDemuxCompleted,
+          &MediaFormatReader::OnVideoDemuxFailed)
       ->Track(mVideo.mDemuxRequest);
 }
 
@@ -1553,12 +1540,10 @@ void MediaFormatReader::DoDemuxAudio() {
   using SamplesPromise = MediaTrackDemuxer::SamplesPromise;
 
   DDLOG(DDLogCategory::Log, "audio_demuxing", DDNoValue{});
-  PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::RequestDemux);
-  perfRecorder.Start();
   auto p = mAudio.mTrackDemuxer->GetSamples(1);
 
-  RefPtr<MediaFormatReader> self = this;
   if (mAudio.mFirstDemuxedSampleTime.isNothing()) {
+    RefPtr<MediaFormatReader> self = this;
     p = p->Then(
         OwnerThread(), __func__,
         [self](RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
@@ -1579,14 +1564,9 @@ void MediaFormatReader::DoDemuxAudio() {
         });
   }
 
-  p->Then(
-       OwnerThread(), __func__,
-       [self, perfRecorder(std::move(perfRecorder))](
-           RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) mutable {
-         perfRecorder.End();
-         self->OnAudioDemuxCompleted(std::move(aSamples));
-       },
-       [self](const MediaResult& aError) { self->OnAudioDemuxFailed(aError); })
+  p->Then(OwnerThread(), __func__, this,
+          &MediaFormatReader::OnAudioDemuxCompleted,
+          &MediaFormatReader::OnAudioDemuxFailed)
       ->Track(mAudio.mDemuxRequest);
 }
 
@@ -1885,37 +1865,10 @@ void MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
           aSample->mTimecode.ToMicroseconds(),
           aSample->mDuration.ToMicroseconds(), aSample->mKeyframe ? " kf" : "",
           aSample->mEOS ? " eos" : "");
-
-  const int32_t height =
-      aTrack == TrackInfo::kVideoTrack
-          ? decoder.GetCurrentInfo()->GetAsVideoInfo()->mImage.height
-          : 0;
-  MediaInfoFlag flag = MediaInfoFlag::None;
-  flag |=
-      aSample->mKeyframe ? MediaInfoFlag::KeyFrame : MediaInfoFlag::NonKeyFrame;
-  if (aTrack == TrackInfo::kVideoTrack) {
-    flag |= VideoIsHardwareAccelerated() ? MediaInfoFlag::HardwareDecoding
-                                         : MediaInfoFlag::SoftwareDecoding;
-    const nsCString& mimeType = decoder.GetCurrentInfo()->mMimeType;
-    if (MP4Decoder::IsH264(mimeType)) {
-      flag |= MediaInfoFlag::VIDEO_H264;
-    } else if (VPXDecoder::IsVPX(mimeType, VPXDecoder::VP8)) {
-      flag |= MediaInfoFlag::VIDEO_VP8;
-    } else if (VPXDecoder::IsVPX(mimeType, VPXDecoder::VP9)) {
-      flag |= MediaInfoFlag::VIDEO_VP9;
-    } else if (AOMDecoder::IsAV1(mimeType)) {
-      flag |= MediaInfoFlag::VIDEO_AV1;
-    }
-  }
-  PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::RequestDecode,
-                                   height, flag);
-  perfRecorder.Start();
   decoder.mDecoder->Decode(aSample)
       ->Then(
           mTaskQueue, __func__,
-          [self, aTrack, &decoder, perfRecorder(std::move(perfRecorder))](
-              MediaDataDecoder::DecodedData&& aResults) mutable {
-            perfRecorder.End();
+          [self, aTrack, &decoder](MediaDataDecoder::DecodedData&& aResults) {
             decoder.mDecodeRequest.Complete();
             self->NotifyNewOutput(aTrack, std::move(aResults));
           },
