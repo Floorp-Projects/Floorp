@@ -15,7 +15,6 @@ class CacheDomain {
   static constexpr uint64_t NameAndDescription = ((uint64_t)0x1) << 0;
   static constexpr uint64_t Value = ((uint64_t)0x1) << 1;
   static constexpr uint64_t Bounds = ((uint64_t)0x1) << 2;
-  static constexpr uint64_t Resolution = ((uint64_t)0x1) << 3;
   static constexpr uint64_t All = ~((uint64_t)0x0);
 };
 

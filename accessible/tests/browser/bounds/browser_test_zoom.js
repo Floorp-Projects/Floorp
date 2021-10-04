@@ -39,7 +39,7 @@ async function runTests(browser, accDoc) {
   await testContentBounds(browser, p2);
   await testContentBounds(browser, area);
 
-  await SpecialPowers.spawn(browser, [], () => {
+  await invokeContentTask(browser, [], () => {
     const { Layout } = ChromeUtils.import(
       "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
     );
