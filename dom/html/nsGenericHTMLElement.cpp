@@ -1651,29 +1651,19 @@ bool nsGenericHTMLElement::IsFormControlDefaultFocusable(
 
 nsGenericHTMLFormElement::nsGenericHTMLFormElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsGenericHTMLElement(std::move(aNodeInfo)),
-      mForm(nullptr),
-      mFieldSet(nullptr) {
+    : nsGenericHTMLElement(std::move(aNodeInfo)) {
   // We should add the NS_EVENT_STATE_ENABLED bit here as needed, but
   // that depends on our type, which is not initialized yet.  So we
   // have to do this in subclasses.
 }
 
-nsGenericHTMLFormElement::~nsGenericHTMLFormElement() {
-  if (mFieldSet) {
-    mFieldSet->RemoveElement(this);
-  }
-
-  // Check that this element doesn't know anything about its form at this point.
-  NS_ASSERTION(!mForm, "mForm should be null at this point!");
-}
-
 void nsGenericHTMLFormElement::ClearForm(bool aRemoveFromForm,
                                          bool aUnbindOrDelete) {
-  NS_ASSERTION((mForm != nullptr) == HasFlag(ADDED_TO_FORM),
+  HTMLFormElement* form = GetFormInternal();
+  NS_ASSERTION((form != nullptr) == HasFlag(ADDED_TO_FORM),
                "Form control should have had flag set correctly");
 
-  if (!mForm) {
+  if (!form) {
     return;
   }
 
@@ -1682,19 +1672,19 @@ void nsGenericHTMLFormElement::ClearForm(bool aRemoveFromForm,
     GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
     GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
 
-    mForm->RemoveElement(this, true);
+    form->RemoveElement(this, true);
 
     if (!nameVal.IsEmpty()) {
-      mForm->RemoveElementFromTable(this, nameVal);
+      form->RemoveElementFromTable(this, nameVal);
     }
 
     if (!idVal.IsEmpty()) {
-      mForm->RemoveElementFromTable(this, idVal);
+      form->RemoveElementFromTable(this, idVal);
     }
   }
 
   UnsetFlags(ADDED_TO_FORM);
-  mForm = nullptr;
+  SetFormInternal(nullptr, false);
 
   AfterClearForm(aUnbindOrDelete);
 }
@@ -1722,22 +1712,22 @@ nsresult nsGenericHTMLFormElement::BindToTree(BindContext& aContext,
 }
 
 void nsGenericHTMLFormElement::UnbindFromTree(bool aNullParent) {
-  if (mForm) {
-    // Might need to unset mForm
+  if (HTMLFormElement* form = GetFormInternal()) {
+    // Might need to unset form
     if (aNullParent) {
       // No more parent means no more form
       ClearForm(true, true);
     } else {
-      // Recheck whether we should still have an mForm.
+      // Recheck whether we should still have an form.
       if (HasAttr(kNameSpaceID_None, nsGkAtoms::form) ||
-          !FindAncestorForm(mForm)) {
+          !FindAncestorForm(form)) {
         ClearForm(true, true);
       } else {
         UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
       }
     }
 
-    if (!mForm) {
+    if (!GetFormInternal()) {
       // Our novalidate state might have changed
       UpdateState(false);
     }
@@ -1761,31 +1751,32 @@ nsresult nsGenericHTMLFormElement::BeforeSetAttr(
     bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None) {
     nsAutoString tmp;
+    HTMLFormElement* form = GetFormInternal();
 
     // remove the control from the hashtable as needed
 
-    if (mForm && (aName == nsGkAtoms::name || aName == nsGkAtoms::id)) {
+    if (form && (aName == nsGkAtoms::name || aName == nsGkAtoms::id)) {
       GetAttr(kNameSpaceID_None, aName, tmp);
 
       if (!tmp.IsEmpty()) {
-        mForm->RemoveElementFromTable(this, tmp);
+        form->RemoveElementFromTable(this, tmp);
       }
     }
 
-    if (mForm && aName == nsGkAtoms::type) {
+    if (form && aName == nsGkAtoms::type) {
       GetAttr(kNameSpaceID_None, nsGkAtoms::name, tmp);
 
       if (!tmp.IsEmpty()) {
-        mForm->RemoveElementFromTable(this, tmp);
+        form->RemoveElementFromTable(this, tmp);
       }
 
       GetAttr(kNameSpaceID_None, nsGkAtoms::id, tmp);
 
       if (!tmp.IsEmpty()) {
-        mForm->RemoveElementFromTable(this, tmp);
+        form->RemoveElementFromTable(this, tmp);
       }
 
-      mForm->RemoveElement(this, false);
+      form->RemoveElement(this, false);
     }
 
     if (aName == nsGkAtoms::form) {
@@ -1809,32 +1800,33 @@ nsresult nsGenericHTMLFormElement::AfterSetAttr(
     const nsAttrValue* aOldValue, nsIPrincipal* aMaybeScriptedPrincipal,
     bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None) {
-    // add the control to the hashtable as needed
+    HTMLFormElement* form = GetFormInternal();
 
-    if (mForm && (aName == nsGkAtoms::name || aName == nsGkAtoms::id) &&
+    // add the control to the hashtable as needed
+    if (form && (aName == nsGkAtoms::name || aName == nsGkAtoms::id) &&
         aValue && !aValue->IsEmptyString()) {
       MOZ_ASSERT(aValue->Type() == nsAttrValue::eAtom,
                  "Expected atom value for name/id");
-      mForm->AddElementToTable(this,
-                               nsDependentAtomString(aValue->GetAtomValue()));
+      form->AddElementToTable(this,
+                              nsDependentAtomString(aValue->GetAtomValue()));
     }
 
-    if (mForm && aName == nsGkAtoms::type) {
+    if (form && aName == nsGkAtoms::type) {
       nsAutoString tmp;
 
       GetAttr(kNameSpaceID_None, nsGkAtoms::name, tmp);
 
       if (!tmp.IsEmpty()) {
-        mForm->AddElementToTable(this, tmp);
+        form->AddElementToTable(this, tmp);
       }
 
       GetAttr(kNameSpaceID_None, nsGkAtoms::id, tmp);
 
       if (!tmp.IsEmpty()) {
-        mForm->AddElementToTable(this, tmp);
+        form->AddElementToTable(this, tmp);
       }
 
-      mForm->AddElement(this, false, aNotify);
+      form->AddElement(this, false, aNotify);
     }
 
     if (aName == nsGkAtoms::form) {
@@ -1859,8 +1851,8 @@ nsresult nsGenericHTMLFormElement::AfterSetAttr(
 }
 
 void nsGenericHTMLFormElement::ForgetFieldSet(nsIContent* aFieldset) {
-  if (mFieldSet == aFieldset) {
-    mFieldSet = nullptr;
+  if (GetFieldSetInternal() == aFieldset) {
+    SetFieldSetInternal(nullptr);
   }
 }
 
@@ -1961,13 +1953,15 @@ void nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
 
   bool needStateUpdate = false;
   if (!aBindToTree) {
-    needStateUpdate = mForm && mForm->IsDefaultSubmitElement(this);
+    HTMLFormElement* form = GetFormInternal();
+    needStateUpdate = form && form->IsDefaultSubmitElement(this);
     ClearForm(true, false);
   }
 
-  HTMLFormElement* oldForm = mForm;
-
-  if (!mForm) {
+  // We have to get form again since the above ClearForm() call might update the
+  // form value.
+  HTMLFormElement* oldForm = GetFormInternal();
+  if (!oldForm) {
     // If @form is set, we have to use that to find the form.
     nsAutoString formId;
     if (GetAttr(kNameSpaceID_None, nsGkAtoms::form, formId)) {
@@ -1993,7 +1987,7 @@ void nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
       }
     } else {
       // We now have a parent, so we may have picked up an ancestor form. Search
-      // for it.  Note that if mForm is already set we don't want to do this,
+      // for it.  Note that if form is already set we don't want to do this,
       // because that means someone (probably the content sink) has already set
       // it to the right value.  Also note that even if being bound here didn't
       // change our parent, we still need to search, since our parent chain
@@ -2002,7 +1996,8 @@ void nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
     }
   }
 
-  if (mForm && !HasFlag(ADDED_TO_FORM)) {
+  HTMLFormElement* form = GetFormInternal();
+  if (form && !HasFlag(ADDED_TO_FORM)) {
     // Now we need to add ourselves to the form
     nsAutoString nameVal, idVal;
     GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
@@ -2010,46 +2005,47 @@ void nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
 
     SetFlags(ADDED_TO_FORM);
 
-    // Notify only if we just found this mForm.
-    mForm->AddElement(this, true, oldForm == nullptr);
+    // Notify only if we just found this form.
+    form->AddElement(this, true, oldForm == nullptr);
 
     if (!nameVal.IsEmpty()) {
-      mForm->AddElementToTable(this, nameVal);
+      form->AddElementToTable(this, nameVal);
     }
 
     if (!idVal.IsEmpty()) {
-      mForm->AddElementToTable(this, idVal);
+      form->AddElementToTable(this, idVal);
     }
   }
 
-  if (mForm != oldForm || needStateUpdate) {
+  if (form != oldForm || needStateUpdate) {
     UpdateState(true);
   }
 }
 
 void nsGenericHTMLFormElement::UpdateFieldSet(bool aNotify) {
   if (IsInNativeAnonymousSubtree()) {
-    MOZ_ASSERT(!mFieldSet);
+    MOZ_ASSERT(!GetFieldSetInternal());
     return;
   }
 
   nsIContent* parent = nullptr;
   nsIContent* prev = nullptr;
+  HTMLFieldSetElement* fieldset = GetFieldSetInternal();
 
   for (parent = GetParent(); parent;
        prev = parent, parent = parent->GetParent()) {
-    HTMLFieldSetElement* fieldset = HTMLFieldSetElement::FromNode(parent);
-    if (fieldset && (!prev || fieldset->GetFirstLegend() != prev)) {
-      if (mFieldSet == fieldset) {
+    HTMLFieldSetElement* parentFieldset = HTMLFieldSetElement::FromNode(parent);
+    if (parentFieldset && (!prev || parentFieldset->GetFirstLegend() != prev)) {
+      if (fieldset == parentFieldset) {
         // We already have the right fieldset;
         return;
       }
 
-      if (mFieldSet) {
-        mFieldSet->RemoveElement(this);
+      if (fieldset) {
+        fieldset->RemoveElement(this);
       }
-      mFieldSet = fieldset;
-      fieldset->AddElement(this);
+      SetFieldSetInternal(parentFieldset);
+      parentFieldset->AddElement(this);
 
       // The disabled state may have changed
       FieldSetDisabledChanged(aNotify);
@@ -2058,9 +2054,9 @@ void nsGenericHTMLFormElement::UpdateFieldSet(bool aNotify) {
   }
 
   // No fieldset found.
-  if (mFieldSet) {
-    mFieldSet->RemoveElement(this);
-    mFieldSet = nullptr;
+  if (fieldset) {
+    fieldset->RemoveElement(this);
+    SetFieldSetInternal(nullptr);
     // The disabled state may have changed
     FieldSetDisabledChanged(aNotify);
   }
@@ -2071,8 +2067,9 @@ void nsGenericHTMLFormElement::UpdateDisabledState(bool aNotify) {
     return;
   }
 
+  HTMLFieldSetElement* fieldset = GetFieldSetInternal();
   const bool isDisabled =
-      HasAttr(nsGkAtoms::disabled) || (mFieldSet && mFieldSet->IsDisabled());
+      HasAttr(nsGkAtoms::disabled) || (fieldset && fieldset->IsDisabled());
 
   const EventStates disabledStates =
       isDisabled ? NS_EVENT_STATE_DISABLED : NS_EVENT_STATE_ENABLED;
@@ -2400,9 +2397,19 @@ void nsGenericHTMLElement::ChangeEditableState(int32_t aChange) {
 
 nsGenericHTMLFormControlElement::nsGenericHTMLFormControlElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo, FormControlType aType)
-    : nsGenericHTMLFormElement(std::move(aNodeInfo)), nsIFormControl(aType) {}
+    : nsGenericHTMLFormElement(std::move(aNodeInfo)),
+      nsIFormControl(aType),
+      mForm(nullptr),
+      mFieldSet(nullptr) {}
 
-nsGenericHTMLFormControlElement::~nsGenericHTMLFormControlElement() = default;
+nsGenericHTMLFormControlElement::~nsGenericHTMLFormControlElement() {
+  if (mFieldSet) {
+    mFieldSet->RemoveElement(this);
+  }
+
+  // Check that this element doesn't know anything about its form at this point.
+  NS_ASSERTION(!mForm, "mForm should be null at this point!");
+}
 
 NS_IMPL_ISUPPORTS_INHERITED(nsGenericHTMLFormControlElement,
                             nsGenericHTMLFormElement, nsIFormControl)
@@ -2520,7 +2527,7 @@ nsresult nsGenericHTMLFormControlElement::PreHandleEvent(
 }
 
 HTMLFieldSetElement* nsGenericHTMLFormControlElement::GetFieldSet() {
-  return mFieldSet;
+  return GetFieldSetInternal();
 }
 
 void nsGenericHTMLFormControlElement::SetForm(HTMLFormElement* aForm) {
@@ -2624,6 +2631,20 @@ void nsGenericHTMLFormControlElement::SetFormInternal(HTMLFormElement* aForm,
 
   // keep a *weak* ref to the form here
   mForm = aForm;
+}
+
+HTMLFormElement* nsGenericHTMLFormControlElement::GetFormInternal() const {
+  return mForm;
+}
+
+HTMLFieldSetElement* nsGenericHTMLFormControlElement::GetFieldSetInternal()
+    const {
+  return mFieldSet;
+}
+
+void nsGenericHTMLFormControlElement::SetFieldSetInternal(
+    HTMLFieldSetElement* aFieldset) {
+  mFieldSet = aFieldset;
 }
 
 void nsGenericHTMLFormControlElement::UpdateRequiredState(bool aIsRequired,

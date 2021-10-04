@@ -999,7 +999,7 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement {
   void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete);
 
  protected:
-  virtual ~nsGenericHTMLFormElement();
+  virtual ~nsGenericHTMLFormElement() = default;
 
   virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                  const nsAttrValueOrString* aValue,
@@ -1017,6 +1017,17 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement {
 
   virtual void SetFormInternal(mozilla::dom::HTMLFormElement* aForm,
                                bool aBindToTree) {}
+
+  virtual mozilla::dom::HTMLFormElement* GetFormInternal() const {
+    return nullptr;
+  }
+
+  virtual mozilla::dom::HTMLFieldSetElement* GetFieldSetInternal() const {
+    return nullptr;
+  }
+
+  virtual void SetFieldSetInternal(
+      mozilla::dom::HTMLFieldSetElement* aFieldset) {}
 
   /**
    * This method will update the form owner, using @form or looking to a parent.
@@ -1070,12 +1081,6 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement {
    * Returns if the readonly attribute applies.
    */
   virtual bool DoesReadOnlyApply() const { return false; }
-
-  /** The form that contains this control */
-  mozilla::dom::HTMLFormElement* mForm;
-
-  /* This is a pointer to our closest fieldset parent if any */
-  mozilla::dom::HTMLFieldSetElement* mFieldSet;
 };
 
 class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
@@ -1131,6 +1136,10 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
   bool DoesReadOnlyApply() const override;
   void SetFormInternal(mozilla::dom::HTMLFormElement* aForm,
                        bool aBindToTree) override;
+  mozilla::dom::HTMLFormElement* GetFormInternal() const override;
+  mozilla::dom::HTMLFieldSetElement* GetFieldSetInternal() const override;
+  void SetFieldSetInternal(
+      mozilla::dom::HTMLFieldSetElement* aFieldset) override;
 
   /**
    * Update our required/optional flags to match the given aIsRequired boolean.
@@ -1151,6 +1160,12 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
    * its pres context.
    */
   virtual void SaveState() {}
+
+  /** The form that contains this control */
+  mozilla::dom::HTMLFormElement* mForm;
+
+  /* This is a pointer to our closest fieldset parent if any */
+  mozilla::dom::HTMLFieldSetElement* mFieldSet;
 };
 
 class nsGenericHTMLFormControlElementWithState
