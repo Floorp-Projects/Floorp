@@ -330,6 +330,14 @@ void HTMLTextFieldAccessible::Value(nsString& aValue) const {
   }
 }
 
+bool HTMLTextFieldAccessible::AttributeChangesState(nsAtom* aAttribute) {
+  if (aAttribute == nsGkAtoms::readonly) {
+    return true;
+  }
+
+  return LocalAccessible::AttributeChangesState(aAttribute);
+}
+
 void HTMLTextFieldAccessible::ApplyARIAState(uint64_t* aState) const {
   HyperTextAccessibleWrap::ApplyARIAState(aState);
   aria::MapToState(aria::eARIAAutoComplete, mContent->AsElement(), aState);
