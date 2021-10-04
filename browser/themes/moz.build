@@ -7,7 +7,20 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Theme")
 
+with Files("ThemeVariableMap.jsm"):
+    BUG_COMPONENT = ("WebExtensions", "Themes")
+
+EXTRA_JS_MODULES += [
+    "BuiltInThemes.jsm",
+    "ThemeVariableMap.jsm",
+]
+
 toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
+
+if toolkit == "windows":
+    EXTRA_JS_MODULES += [
+        "Windows8WindowFrameColor.jsm",
+    ]
 
 if toolkit == "cocoa":
     DIRS += ["osx"]
