@@ -72,7 +72,8 @@ describe("<DSLinkMenu>", () => {
         .simulate("click", { preventDefault: () => {} });
       const linkMenuProps = wrapper.find(LinkMenu).props();
       assert.deepEqual(linkMenuProps.options, [
-        "CheckBookmarkOrArchive",
+        "CheckBookmark",
+        "CheckArchiveFromPocket",
         "CheckSavedToPocket",
         "Separator",
         "OpenInNewWindow",
@@ -95,7 +96,8 @@ describe("<DSLinkMenu>", () => {
         .simulate("click", { preventDefault: () => {} });
       const linkMenuProps = wrapper.find(LinkMenu).props();
       assert.deepEqual(linkMenuProps.options, [
-        "CheckBookmarkOrArchive",
+        "CheckBookmark",
+        "CheckArchiveFromPocket",
         "CheckSavedToPocket",
         "Separator",
         "OpenInNewWindow",
@@ -103,6 +105,30 @@ describe("<DSLinkMenu>", () => {
         "Separator",
         "BlockUrl",
         "ShowPrivacyInfo",
+      ]);
+    });
+
+    it("should pass through the correct menu options to LinkMenu for save to Pocket button", () => {
+      wrapper = shallow(
+        <DSLinkMenu
+          {...ValidDSLinkMenuProps}
+          flightId="1234"
+          saveToPocketCard={true}
+        />
+      );
+      wrapper
+        .find(ContextMenuButton)
+        .simulate("click", { preventDefault: () => {} });
+      const linkMenuProps = wrapper.find(LinkMenu).props();
+      assert.deepEqual(linkMenuProps.options, [
+        "CheckBookmark",
+        "CheckArchiveFromPocket",
+        "CheckDeleteFromPocket",
+        "Separator",
+        "OpenInNewWindow",
+        "OpenInPrivateWindow",
+        "Separator",
+        "BlockUrl",
       ]);
     });
   });

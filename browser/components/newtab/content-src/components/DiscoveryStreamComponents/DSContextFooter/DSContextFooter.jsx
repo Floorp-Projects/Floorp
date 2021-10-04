@@ -16,8 +16,14 @@ export const DSMessageFooter = props => {
     context_type,
     display_engagement_labels,
     engagement,
+    saveToPocketCard,
   } = props;
   const { icon, fluentID } = cardContextTypes[context_type] || {};
+
+  // This case is specific and already displayed to the user elsewhere.
+  if (saveToPocketCard && context_type === "pocket") {
+    return null;
+  }
 
   return (
     <TransitionGroup component={null}>
