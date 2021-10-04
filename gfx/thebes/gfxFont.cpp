@@ -1448,10 +1448,6 @@ bool gfxFont::SupportsSubSuperscript(uint32_t aSubSuperscript,
       ch = SURROGATE_TO_UCS4(ch, aString[i]);
     }
 
-    if (ch == 0xa0) {
-      ch = ' ';
-    }
-
     hb_codepoint_t gid = shaper->GetNominalGlyph(ch);
     hb_set_add(defaultGlyphsInRun, gid);
   }
@@ -1488,10 +1484,6 @@ bool gfxFont::FeatureWillHandleChar(Script aRunScript, uint32_t aFeature,
   // get the hbset containing input glyphs for the feature
   const hb_set_t* inputGlyphs =
       mFontEntry->InputsForOpenTypeFeature(aRunScript, aFeature);
-
-  if (aUnicode == 0xa0) {
-    aUnicode = ' ';
-  }
 
   hb_codepoint_t gid = shaper->GetNominalGlyph(aUnicode);
   return hb_set_has(inputGlyphs, gid);
