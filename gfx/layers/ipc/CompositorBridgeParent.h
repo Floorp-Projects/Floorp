@@ -98,9 +98,6 @@ class WebRenderScrollDataWrapper;
 struct CollectedFrames;
 
 struct ScopedLayerTreeRegistration {
-  // For Layers
-  ScopedLayerTreeRegistration(LayersId aLayersId, Layer* aRoot,
-                              GeckoContentController* aController);
   // For WebRender
   ScopedLayerTreeRegistration(LayersId aLayersId,
                               GeckoContentController* aController);
