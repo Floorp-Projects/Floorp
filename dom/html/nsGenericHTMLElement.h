@@ -959,36 +959,14 @@ ASSERT_NODE_FLAGS_SPACE(HTML_ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 3);
 /**
  * A helper class for form elements that can contain children
  */
-class nsGenericHTMLFormElement : public nsGenericHTMLElement,
-                                 public nsIFormControl {
+class nsGenericHTMLFormElement : public nsGenericHTMLElement {
  public:
-  nsGenericHTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                           FormControlType);
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  virtual bool IsNodeOfType(uint32_t aFlags) const override;
-
-  // nsIFormControl
-  virtual mozilla::dom::HTMLFieldSetElement* GetFieldSet() override;
-  virtual mozilla::dom::HTMLFormElement* GetForm() const override {
-    return mForm;
-  }
-  virtual void SetForm(mozilla::dom::HTMLFormElement* aForm) override;
-  virtual void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) override;
-
-  virtual bool AllowDrop() override { return true; }
+  nsGenericHTMLFormElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   // nsIContent
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent = true) override;
-
-  /**
-   * Save to presentation state.  The form control will determine whether it
-   * has anything to save and if so, create an entry in the layout history for
-   * its pres context.
-   */
-  virtual void SaveState() {}
 
   /**
    * This callback is called by a fieldest on all its elements whenever its
@@ -1018,6 +996,8 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
    */
   void ForgetFieldSet(nsIContent* aFieldset);
 
+  void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete);
+
  protected:
   virtual ~nsGenericHTMLFormElement();
 
@@ -1035,7 +1015,8 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
 
   virtual void AfterClearForm(bool aUnbindOrDelete) {}
 
-  void SetForm(mozilla::dom::HTMLFormElement* aForm, bool aBindToTree);
+  virtual void SetFormInternal(mozilla::dom::HTMLFormElement* aForm,
+                               bool aBindToTree) {}
 
   /**
    * This method will update the form owner, using @form or looking to a parent.
@@ -1097,17 +1078,26 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
   mozilla::dom::HTMLFieldSetElement* mFieldSet;
 };
 
-class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement {
+class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
+                                        public nsIFormControl {
  public:
   nsGenericHTMLFormControlElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo, FormControlType);
 
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_IMPL_FROMNODE_HELPER(nsGenericHTMLFormControlElement,
+                          IsNodeOfType(nsINode::eHTML_FORM_CONTROL))
+
   // nsINode
   nsINode* GetScopeChainParent() const override;
+  virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
   // nsIContent
   virtual void SaveSubtreeState() override;
   virtual IMEState GetDesiredIMEState() override;
+  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  virtual void UnbindFromTree(bool aNullParent = true) override;
 
   // nsGenericHTMLElement
   // autocapitalize attribute support
@@ -1120,6 +1110,15 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement {
   virtual nsresult PreHandleEvent(
       mozilla::EventChainVisitor& aVisitor) override;
 
+  // nsIFormControl
+  virtual mozilla::dom::HTMLFieldSetElement* GetFieldSet() override;
+  virtual mozilla::dom::HTMLFormElement* GetForm() const override {
+    return mForm;
+  }
+  virtual void SetForm(mozilla::dom::HTMLFormElement* aForm) override;
+  virtual void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) override;
+  virtual bool AllowDrop() override { return true; }
+
  protected:
   virtual ~nsGenericHTMLFormControlElement();
 
@@ -1130,6 +1129,8 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement {
   // nsGenericHTMLFormElement
   bool CanBeDisabled() const override;
   bool DoesReadOnlyApply() const override;
+  void SetFormInternal(mozilla::dom::HTMLFormElement* aForm,
+                       bool aBindToTree) override;
 
   /**
    * Update our required/optional flags to match the given aIsRequired boolean.
@@ -1137,6 +1138,13 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement {
   void UpdateRequiredState(bool aIsRequired, bool aNotify);
 
   bool IsAutocapitalizeInheriting() const;
+
+  /**
+   * Save to presentation state.  The form control will determine whether it
+   * has anything to save and if so, create an entry in the layout history for
+   * its pres context.
+   */
+  virtual void SaveState() {}
 };
 
 class nsGenericHTMLFormControlElementWithState
