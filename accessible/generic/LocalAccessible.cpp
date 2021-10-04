@@ -115,7 +115,6 @@ LocalAccessible::LocalAccessible(nsIContent* aContent, DocAccessible* aDoc)
       mDoc(aDoc),
       mParent(nullptr),
       mIndexInParent(-1),
-      mBounds(),
       mStateFlags(0),
       mContextFlags(0),
       mReorderEventTarget(false),
@@ -617,62 +616,6 @@ LocalAccessible* LocalAccessible::LocalChildAtPoint(
   }
 
   return accessible;
-}
-
-nsRect LocalAccessible::ParentRelativeBounds() {
-  nsIFrame* boundingFrame = nullptr;
-  nsIFrame* frame = GetFrame();
-  if (frame && mContent) {
-    if (mContent->GetProperty(nsGkAtoms::hitregion) && mContent->IsElement()) {
-      // This is for canvas fallback content
-      // Find a canvas frame the found hit region is relative to.
-      nsIFrame* canvasFrame = frame->GetParent();
-      if (canvasFrame) {
-        canvasFrame = nsLayoutUtils::GetClosestFrameOfType(
-            canvasFrame, LayoutFrameType::HTMLCanvas);
-      }
-
-      if (canvasFrame) {
-        if (auto* canvas =
-                dom::HTMLCanvasElement::FromNode(canvasFrame->GetContent())) {
-          if (auto* context = canvas->GetCurrentContext()) {
-            nsRect bounds;
-            if (context->GetHitRegionRect(mContent->AsElement(), bounds)) {
-              return bounds;
-            }
-          }
-        }
-      }
-    }
-
-    if (mParent) {
-      boundingFrame = mParent->GetFrame();
-    }
-
-    if (!boundingFrame) {
-      // if we can't get the bounding frame, use the pres shell root
-      boundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
-    }
-
-    nsRect unionRect = nsLayoutUtils::GetAllInFlowRectsUnion(
-        frame, boundingFrame, nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
-
-    if (unionRect.IsEmpty()) {
-      // If we end up with a 0x0 rect from above (or one with negative
-      // height/width) we should try using the ink overflow rect instead. If we
-      // use this rect, our relative bounds will match the bounds of what
-      // appears visually. We do this because some web authors (icloud.com for
-      // example) employ things like 0x0 buttons with visual overflow. Without
-      // this, such frames aren't navigable by screen readers.
-      nsRect overflow = frame->InkOverflowRectRelativeToSelf();
-      nsLayoutUtils::TransformRect(frame, boundingFrame, overflow);
-      return overflow;
-    }
-
-    return unionRect;
-  }
-
-  return nsRect();
 }
 
 nsRect LocalAccessible::RelativeBounds(nsIFrame** aBoundingFrame) const {
@@ -3108,23 +3051,6 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     fields->SetAttribute(nsGkAtoms::max, MaxValue());
     fields->SetAttribute(nsGkAtoms::min, MinValue());
     fields->SetAttribute(nsGkAtoms::step, Step());
-  }
-
-  if (aCacheDomain & CacheDomain::Bounds) {
-    nsRect newBoundsRect = ParentRelativeBounds();
-
-    if (mBounds.isNothing() || !newBoundsRect.IsEqualEdges(mBounds.value())) {
-      mBounds = Some(newBoundsRect);
-
-      nsTArray<int32_t> boundsArray(4);
-
-      boundsArray.AppendElement(newBoundsRect.x);
-      boundsArray.AppendElement(newBoundsRect.y);
-      boundsArray.AppendElement(newBoundsRect.width);
-      boundsArray.AppendElement(newBoundsRect.height);
-
-      fields->SetAttribute(nsGkAtoms::relativeBounds, std::move(boundsArray));
-    }
   }
 
   return fields.forget();

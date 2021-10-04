@@ -48,9 +48,6 @@
 #include "nsTHashSet.h"
 #include "nsThreadUtils.h"
 #include "nsWeakReference.h"
-#ifdef ACCESSIBILITY
-#  include "nsAccessibilityService.h"
-#endif
 
 class AutoPointerEventTargetUpdater;
 class AutoWeakFrame;
@@ -1854,13 +1851,6 @@ class PresShell final : public nsStubDocumentObserver,
     ~AutoSaveRestoreRenderingState() {
       mPresShell->mRenderingStateFlags = mOldState.mRenderingStateFlags;
       mPresShell->mResolution = mOldState.mResolution;
-#ifdef ACCESSIBILITY
-      if (nsAccessibilityService* accService =
-              PresShell::GetAccessibilityService()) {
-        accService->NotifyOfResolutionChange(mPresShell,
-                                             mPresShell->GetResolution());
-      }
-#endif
     }
 
     PresShell* mPresShell;
