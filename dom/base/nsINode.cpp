@@ -679,16 +679,16 @@ void nsINode::LastRelease() {
       document->RemoveAllPropertiesFor(this);
     }
 
-    // I wonder whether it's faster to do the HasFlag check first....
-    if (IsNodeOfType(nsINode::eHTML_FORM_CONTROL) && HasFlag(ADDED_TO_FORM)) {
-      // Tell the form (if any) this node is going away.  Don't
-      // notify, since we're being destroyed in any case.
-      static_cast<nsGenericHTMLFormElement*>(this)->ClearForm(true, true);
-    }
-
-    if (IsHTMLElement(nsGkAtoms::img) && HasFlag(ADDED_TO_FORM)) {
-      HTMLImageElement* imageElem = static_cast<HTMLImageElement*>(this);
-      imageElem->ClearForm(true);
+    if (HasFlag(ADDED_TO_FORM)) {
+      if (nsGenericHTMLFormControlElement* formControl =
+              nsGenericHTMLFormControlElement::FromNode(this)) {
+        // Tell the form (if any) this node is going away.  Don't
+        // notify, since we're being destroyed in any case.
+        formControl->ClearForm(true, true);
+      } else if (HTMLImageElement* imageElem =
+                     HTMLImageElement::FromNode(this)) {
+        imageElem->ClearForm(true);
+      }
     }
   }
   UnsetFlags(NODE_HAS_PROPERTIES);

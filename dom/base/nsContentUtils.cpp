@@ -3079,7 +3079,7 @@ void nsContentUtils::GenerateStateKey(nsIContent* aContent, Document* aDocument,
 
         if (appendedForm) {
           // Append the index of the control in the form
-          int32_t index = formElement->IndexOfControl(control);
+          int32_t index = formElement->IndexOfContent(aContent);
 
           if (index > -1) {
             KeyAppendInt(index, aKey);
