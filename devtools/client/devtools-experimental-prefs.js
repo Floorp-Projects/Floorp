@@ -36,11 +36,6 @@ const PREFERENCES = [
       "they are remote or not, independently of Fission being enabled or not",
   ],
   [
-    "devtools.testing.enableServerWatcherSupport",
-    "Enable experimental server-side resources (see watcher actor to get the " +
-      "list of impacted resources",
-  ],
-  [
     "fission.bfcacheInParent",
     "Enable bfcache navigation in parent process (requires Fission and involve " +
       "more top level target switching",
