@@ -57,3 +57,5 @@ UNIFIED_SOURCES += [
 SOURCES += [
     "StoreBuffer.cpp",
 ]
+
+REQUIRES_UNIFIED_BUILD = True
