@@ -5,8 +5,6 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 richlistbox {
-  appearance: auto;
-  -moz-default-appearance: listbox;
   margin: 2px 4px;
   background-color: Field;
   color: FieldText;
@@ -68,6 +66,7 @@ richlistbox.theme-listbox > richlistitem > label {
 
 @media (-moz-windows-default-theme) {
   richlistbox.theme-listbox > richlistitem {
+    --listitem-selectedTextColor: rgb(0,0,0);
     --listitem-selectedColor: rgb(217,217,217);
     --listitem-selectedBorder: var(--listitem-selectedColor);
     --listitem-selectedBottomBorder: rgb(204,204,204);
@@ -97,7 +96,7 @@ richlistbox.theme-listbox > richlistitem > label {
     border-bottom-color: var(--listitem-selectedBottomBorder);
     background-image: var(--listitem-selectedImage);
     background-color: var(--listitem-selectedBackground);
-    color: -moz-DialogText;
+    color: var(--listitem-selectedTextColor);
   }
 
   richlistbox.theme-listbox:focus > richlistitem[selected="true"] {
@@ -106,7 +105,7 @@ richlistbox.theme-listbox > richlistitem > label {
     border-bottom-color: var(--listitem-selectedFocusBottomBorder);
     background-image: var(--listitem-selectedFocusImage);
     background-color: var(--listitem-selectedFocusBackground);
-    color: -moz-DialogText;
+    color: var(--listitem-selectedTextColor);
   }
 
   richlistbox.theme-listbox:focus > richlistitem[current="true"] {
