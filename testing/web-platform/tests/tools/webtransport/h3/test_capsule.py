@@ -104,6 +104,16 @@ class H3CapsuleTest(unittest.TestCase):
         self.assertEqual(capsule1.data, b'a', 'data')
 
     @pytest.mark.skipif(not has_aioquic, reason='not having aioquic')
+    def test_empty_bytes_before_fin(self) -> None:
+        decoder = H3CapsuleDecoder()
+        decoder.append(b'')
+        decoder.final()
+
+        it = iter(decoder)
+        with self.assertRaises(StopIteration):
+            next(it)
+
+    @pytest.mark.skipif(not has_aioquic, reason='not having aioquic')
     def test_final_invalid(self) -> None:
         decoder = H3CapsuleDecoder()
         decoder.append(b'\x01')

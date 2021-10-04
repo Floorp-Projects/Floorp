@@ -60,6 +60,8 @@ class H3CapsuleDecoder:
         """
         assert not self._final
 
+        if len(data) == 0:
+            return
         if self._buffer:
             remaining = self._buffer.pull_bytes(
                 self._buffer.capacity - self._buffer.tell())
