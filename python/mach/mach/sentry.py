@@ -7,6 +7,7 @@ from __future__ import absolute_import
 import abc
 import re
 from os.path import expanduser
+from threading import Thread
 
 import sentry_sdk
 from mozboot.util import get_state_dir
@@ -51,6 +52,12 @@ def register_sentry(argv, settings, topsrcdir):
     if not is_telemetry_enabled(settings):
         return NoopErrorReporter()
 
+    global _is_unmodified_mach_core_thread
+    _is_unmodified_mach_core_thread = Thread(
+        target=_is_unmodified_mach_core, args=[topsrcdir]
+    )
+    _is_unmodified_mach_core_thread.start()
+
     sentry_sdk.init(
         _SENTRY_DSN, before_send=lambda event, _: _process_event(event, topsrcdir)
     )
@@ -73,7 +80,8 @@ def _process_event(sentry_event, topsrcdir):
         # not worth sending
         return
 
-    if not _is_unmodified_mach_core(repo):
+    _is_unmodified_mach_core_thread.join()
+    if not _is_unmodified_mach_core_result:
         return
 
     for map_fn in (_settle_mach_module_id, _patch_absolute_paths, _delete_server_name):
@@ -180,7 +188,7 @@ def _get_repository_object(topsrcdir):
         return None
 
 
-def _is_unmodified_mach_core(repo):
+def _is_unmodified_mach_core(topsrcdir):
     """True if mach is unmodified compared to the public tree.
 
     To avoid submitting Sentry events for errors caused by user's
@@ -193,11 +201,19 @@ def _is_unmodified_mach_core(repo):
     pretty confident that the Mach behaviour that caused the exception
     also exists in the public tree.
     """
+    global _is_unmodified_mach_core_result
+
+    repo = _get_repository_object(topsrcdir)
     try:
         files = set(repo.get_outgoing_files()) | set(repo.get_changed_files())
+        _is_unmodified_mach_core_result = not any(
+            [file for file in files if file == "mach" or file.endswith(".py")]
+        )
     except MissingUpstreamRepo:
         # If we don't know the upstream state, we don't know if the mach files
         # have been unmodified.
-        return False
+        _is_unmodified_mach_core_result = False
 
-    return not any([file for file in files if file == "mach" or file.endswith(".py")])
+
+_is_unmodified_mach_core_result = None
+_is_unmodified_mach_core_thread = None
