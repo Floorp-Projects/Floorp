@@ -3,6 +3,6 @@
 # e.g. filter: url(#f1) blur(3px) url(#2) grayscale(0.5);
 
 == clip-input-css-filter.html clip-input-css-filter-ref.html
-fuzzy-if(webrender,0-1,0-288) == css-filter-first.html css-filter-first-ref.html
+fuzzy(0-1,0-288) == css-filter-first.html css-filter-first-ref.html
 == css-filter-last.html css-filter-last-ref.html
 == css-filter-middle.html css-filter-middle-ref.html

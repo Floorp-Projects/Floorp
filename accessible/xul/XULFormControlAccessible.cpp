@@ -119,11 +119,6 @@ bool XULButtonAccessible::AreItemsOperable() const {
   return false;  // no items
 }
 
-LocalAccessible* XULButtonAccessible::ContainerWidget() const {
-  if (IsMenuButton() && mParent && mParent->IsAutoComplete()) return mParent;
-  return nullptr;
-}
-
 bool XULButtonAccessible::IsAcceptableChild(nsIContent* aEl) const {
   // In general XUL buttons should not have accessible children. However:
   return

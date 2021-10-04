@@ -36,7 +36,7 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceE
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == textarea-2.html textarea-2-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == textarea-3.html textarea-3-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == css-transform-1.html css-transform-1-ref.html
-test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) fuzzy-if(webrender,0-1,0-19) == css-transform-2.html css-transform-2-ref.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) fuzzy(0-1,0-19) == css-transform-2.html css-transform-2-ref.html
 fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-1764) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == container-with-clamping.html container-with-clamping-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) load video-1.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == intrinsic-min-1.html intrinsic-min-1-ref.html
@@ -49,7 +49,7 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceE
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == intrinsic-fit-2c.html intrinsic-fit-1c-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-listbox-1.html select-listbox-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) != select-listbox-1.html select-listbox-1.html
-fuzzy-if(skiaContent,0-4,0-7) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-combobox-1.html select-combobox-1-ref.html
+fuzzy(0-4,0-7) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-combobox-1.html select-combobox-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) != select-combobox-1.html select-combobox-1.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-listbox-2.html select-listbox-2-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) != select-listbox-2.html select-listbox-2.html
@@ -72,7 +72,7 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceE
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == fixed-width-viewport-no-inflation.html fixed-width-viewport-no-inflation.html
 asserts(0-2) pref(layout.css.devPixelsPerPx,"0.5") test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == fixed-width-viewport-no-inflation.html fixed-width-viewport-no-inflation.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == fixed-width-viewport-inflation.html fixed-width-viewport-inflation-ref.html
-skip-if(Android&&webrender||cocoaWidget) asserts(0-2) pref(layout.css.devPixelsPerPx,"2.0") test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == fixed-width-viewport-inflation.html fixed-width-viewport-inflation-ref.html
+skip-if(Android||cocoaWidget) asserts(0-2) pref(layout.css.devPixelsPerPx,"2.0") test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == fixed-width-viewport-inflation.html fixed-width-viewport-inflation-ref.html
 
 # Ordinarily, reftests use a browser.viewport.desktopWidth of 800px, same as the
 # size of the reftest document.  The failure condition of the test below however

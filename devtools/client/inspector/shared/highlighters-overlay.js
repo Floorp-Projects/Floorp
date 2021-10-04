@@ -726,7 +726,7 @@ class HighlightersOverlay {
    *        TextProperty where to write changes.
    */
   async toggleShapesHighlighter(node, options, textProperty) {
-    const shapesEditor = await this.getInContextEditor("shapesEditor");
+    const shapesEditor = await this.getInContextEditor(node, "shapesEditor");
     if (!shapesEditor) {
       return;
     }
@@ -743,7 +743,7 @@ class HighlightersOverlay {
    *         Object used for passing options to the shapes highlighter.
    */
   async showShapesHighlighter(node, options) {
-    const shapesEditor = await this.getInContextEditor("shapesEditor");
+    const shapesEditor = await this.getInContextEditor(node, "shapesEditor");
     if (!shapesEditor) {
       return;
     }
@@ -770,9 +770,11 @@ class HighlightersOverlay {
    * Hide the shapes highlighter if visible.
    * This method delegates the to the in-context shapes editor which wraps
    * the shapes highlighter with additional functionality.
+   *
+   * @param  {NodeFront} node.
    */
-  async hideShapesHighlighter() {
-    const shapesEditor = await this.getInContextEditor("shapesEditor");
+  async hideShapesHighlighter(node) {
+    const shapesEditor = await this.getInContextEditor(node, "shapesEditor");
     if (!shapesEditor) {
       return;
     }
@@ -1271,7 +1273,10 @@ class HighlightersOverlay {
    *        THe NodeFront of the element to highlight.
    */
   async showGeometryEditor(node) {
-    const highlighter = await this._getHighlighter("GeometryEditorHighlighter");
+    const highlighter = await this._getHighlighterTypeForNode(
+      "GeometryEditorHighlighter",
+      node
+    );
     if (!highlighter) {
       return;
     }
@@ -1289,14 +1294,19 @@ class HighlightersOverlay {
    * Hide the geometry editor highlighter.
    */
   async hideGeometryEditor() {
-    if (
-      !this.geometryEditorHighlighterShown ||
-      !this.highlighters.GeometryEditorHighlighter
-    ) {
+    if (!this.geometryEditorHighlighterShown) {
       return;
     }
 
-    await this.highlighters.GeometryEditorHighlighter.hide();
+    const highlighter = this.geometryEditorHighlighterShown.inspectorFront.getKnownHighlighter(
+      "GeometryEditorHighlighter"
+    );
+
+    if (!highlighter) {
+      return;
+    }
+
+    await highlighter.hide();
 
     this.emit("geometry-editor-highlighter-hidden");
     this.geometryEditorHighlighterShown = null;
@@ -1388,12 +1398,13 @@ class HighlightersOverlay {
    * need to write value changes back to something, like to properties in the Rule view.
    * They typically exist in the context of the page, like the ShapesInContextEditor.
    *
+   * @param  {NodeFront} node.
    * @param  {String} type
    *         Type of in-context editor. Currently supported: "shapesEditor"
    * @return {Object|null}
    *         Reference to instance for given type of in-context editor or null.
    */
-  async getInContextEditor(type) {
+  async getInContextEditor(node, type) {
     if (this.editors[type]) {
       return this.editors[type];
     }
@@ -1402,7 +1413,10 @@ class HighlightersOverlay {
 
     switch (type) {
       case "shapesEditor":
-        const highlighter = await this._getHighlighter("ShapesHighlighter");
+        const highlighter = await this._getHighlighterTypeForNode(
+          "ShapesHighlighter",
+          node
+        );
         if (!highlighter) {
           return null;
         }

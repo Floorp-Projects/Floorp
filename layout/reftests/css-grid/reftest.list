@@ -33,10 +33,10 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-abspos-items-015.ht
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-abspos-items-016.html grid-abspos-items-015-ref.html # Bug 1392106
 == grid-order-abspos-items-001.html grid-order-abspos-items-001-ref.html
 == grid-order-placement-auto-001.html grid-order-placement-auto-001-ref.html
-fuzzy-if(skiaContent,0-1,0-200) == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
+fuzzy(0-1,0-200) == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
 == grid-placement-definite-implicit-001.html grid-placement-definite-implicit-001-ref.html
 == grid-placement-definite-implicit-002.html grid-placement-definite-implicit-002-ref.html
-fuzzy-if(skiaContent,0-64,0-1) skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html # win10: bug 1507154
+fuzzy(0-64,0-1) skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html # win10: bug 1507154
 == grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001-ref.html # Bug 1392106
@@ -72,15 +72,15 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-min-content-min-siz
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-min-content-min-sizing-transferred-size-004.html grid-min-content-min-sizing-transferred-size-004-ref.html # Bug 1392106
 == grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-percent-001-ref.html
 == grid-track-intrinsic-sizing-001.html grid-track-intrinsic-sizing-001-ref.html
-fuzzy-if(webrender&&winWidget,0-1,0-75) == grid-track-intrinsic-sizing-002.html grid-track-intrinsic-sizing-002-ref.html
-fuzzy-if(webrender&&winWidget,0-1,0-75) == grid-track-intrinsic-sizing-003.html grid-track-intrinsic-sizing-003-ref.html
+fuzzy-if(winWidget,0-1,0-75) == grid-track-intrinsic-sizing-002.html grid-track-intrinsic-sizing-002-ref.html
+fuzzy-if(winWidget,0-1,0-75) == grid-track-intrinsic-sizing-003.html grid-track-intrinsic-sizing-003-ref.html
 == grid-track-intrinsic-sizing-004.html grid-track-intrinsic-sizing-004-ref.html
 == grid-track-percent-sizing-001.html grid-track-percent-sizing-001-ref.html
 == grid-track-fit-content-sizing-001.html grid-track-fit-content-sizing-001-ref.html
 == grid-track-fit-content-sizing-002.html grid-track-fit-content-sizing-002-ref.html
 == grid-max-sizing-flex-001.html grid-max-sizing-flex-001-ref.html
-fuzzy-if(webrender,0-2,0-100) == grid-max-sizing-flex-002.html grid-max-sizing-flex-002-ref.html
-fuzzy-if(webrender&&winWidget,0-1,0-10) == grid-max-sizing-flex-003.html grid-max-sizing-flex-003-ref.html
+fuzzy(0-2,0-100) == grid-max-sizing-flex-002.html grid-max-sizing-flex-002-ref.html
+fuzzy-if(winWidget,0-1,0-10) == grid-max-sizing-flex-003.html grid-max-sizing-flex-003-ref.html
 == grid-max-sizing-flex-004.html grid-max-sizing-flex-004-ref.html
 == grid-max-sizing-flex-005.html grid-max-sizing-flex-005-ref.html
 == grid-max-sizing-flex-006.html grid-max-sizing-flex-006-ref.html
@@ -142,7 +142,7 @@ skip-if(!gtkWidget) == grid-container-baselines-003.html grid-container-baseline
 == grid-container-synthesized-baseline-001.html grid-container-synthesized-baseline-001-ref.html
 == grid-column-gap-001.html grid-column-gap-001-ref.html
 == grid-column-gap-002.html grid-column-gap-002-ref.html
-fuzzy-if(webrender,0-2,0-60) == grid-column-gap-003.html grid-column-gap-003-ref.html
+fuzzy(0-2,0-60) == grid-column-gap-003.html grid-column-gap-003-ref.html
 == grid-column-gap-004.html grid-column-gap-004-ref.html
 == grid-row-gap-001.html grid-row-gap-001-ref.html
 == grid-percent-grid-gap-001.html grid-percent-grid-gap-001-ref.html
@@ -197,17 +197,17 @@ pref(layout.display-list.improve-fragmentation,true) == grid-fragmentation-013.h
 == grid-fragmentation-014.html grid-fragmentation-014-ref.html
 asserts(0-10) == grid-fragmentation-015.html grid-fragmentation-015-ref.html # bug 1144852 (due to vertical writing-mode)
 == grid-fragmentation-016.html grid-fragmentation-016-ref.html
-fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-017.html grid-fragmentation-017-ref.html
+fuzzy-if(winWidget,0-1,0-5) == grid-fragmentation-017.html grid-fragmentation-017-ref.html
 == grid-fragmentation-018.html grid-fragmentation-018-ref.html
 == grid-fragmentation-019.html grid-fragmentation-019-ref.html
 == grid-fragmentation-020.html grid-fragmentation-020-ref.html
 == grid-fragmentation-021.html grid-fragmentation-021-ref.html
 == grid-fragmentation-022.html grid-fragmentation-007-ref.html
 == grid-fragmentation-023.html grid-fragmentation-023-ref.html
-fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-024.html grid-fragmentation-024-ref.html
+fuzzy-if(winWidget,0-1,0-5) == grid-fragmentation-024.html grid-fragmentation-024-ref.html
 == grid-fragmentation-025.html grid-fragmentation-025-ref.html
-fuzzy-if(webrender&&swgl,0-2,0-200) == grid-fragmentation-026.html grid-fragmentation-026-ref.html
-fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-027.html grid-fragmentation-025-ref.html
+fuzzy-if(swgl,0-2,0-200) == grid-fragmentation-026.html grid-fragmentation-026-ref.html
+fuzzy-if(winWidget,0-1,0-5) == grid-fragmentation-027.html grid-fragmentation-025-ref.html
 == grid-fragmentation-028.html grid-fragmentation-028-ref.html
 == grid-fragmentation-029.html grid-fragmentation-029-ref.html
 == grid-fragmentation-030.html grid-fragmentation-030-ref.html
@@ -228,11 +228,11 @@ fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-027.html grid-fragm
 == grid-fragmentation-dyn5-007.html grid-fragmentation-007-ref.html
 == grid-fragmentation-dyn5-008.html grid-fragmentation-008-ref.html
 == grid-fragmentation-dyn3-009.html grid-fragmentation-009-ref.html
-fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn4-015.html grid-fragmentation-015-ref.html
-fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn1-015.html grid-fragmentation-015-ref.html
+fuzzy-if(winWidget,0-1,0-5) == grid-fragmentation-dyn4-015.html grid-fragmentation-015-ref.html
+fuzzy-if(winWidget,0-1,0-5) == grid-fragmentation-dyn1-015.html grid-fragmentation-015-ref.html
 == grid-fragmentation-dyn1-016.html grid-fragmentation-016-ref.html
 == grid-fragmentation-dyn5-016.html grid-fragmentation-016-ref.html
-fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn3-017.html grid-fragmentation-017-ref.html
+fuzzy-if(winWidget,0-1,0-5) == grid-fragmentation-dyn3-017.html grid-fragmentation-017-ref.html
 == grid-fragmentation-dyn2-018.html grid-fragmentation-018-ref.html
 == grid-fragmentation-dyn1-019.html grid-fragmentation-019-ref.html
 == grid-fragmentation-dyn2-019.html grid-fragmentation-019-ref.html
@@ -241,29 +241,29 @@ fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn3-017.html grid-
 == grid-fragmentation-dyn5-019.html grid-fragmentation-019-ref.html
 == grid-fragmentation-dyn1-020.html grid-fragmentation-020-ref.html
 == grid-fragmentation-dyn2-020.html grid-fragmentation-020-ref.html
-fuzzy-if(webrender&&gtkWidget,0-1,0-4) == grid-fragmentation-dyn1-021.html grid-fragmentation-021-ref.html
-fuzzy-if(webrender&&gtkWidget,0-1,0-4) == grid-fragmentation-dyn2-021.html grid-fragmentation-021-ref.html
-fuzzy-if(webrender&&gtkWidget,0-1,0-4) == grid-fragmentation-dyn3-021.html grid-fragmentation-021-ref.html
-fuzzy-if(webrender&&gtkWidget,0-1,0-4) == grid-fragmentation-dyn4-021.html grid-fragmentation-021-ref.html
-fuzzy-if(webrender&&gtkWidget,0-1,0-4) == grid-fragmentation-dyn5-021.html grid-fragmentation-021-ref.html
+fuzzy-if(gtkWidget,0-1,0-4) == grid-fragmentation-dyn1-021.html grid-fragmentation-021-ref.html
+fuzzy-if(gtkWidget,0-1,0-4) == grid-fragmentation-dyn2-021.html grid-fragmentation-021-ref.html
+fuzzy-if(gtkWidget,0-1,0-4) == grid-fragmentation-dyn3-021.html grid-fragmentation-021-ref.html
+fuzzy-if(gtkWidget,0-1,0-4) == grid-fragmentation-dyn4-021.html grid-fragmentation-021-ref.html
+fuzzy-if(gtkWidget,0-1,0-4) == grid-fragmentation-dyn5-021.html grid-fragmentation-021-ref.html
 == grid-fragmentation-dyn2-022.html grid-fragmentation-007-ref.html
 == grid-fragmentation-dyn1-023.html grid-fragmentation-023-ref.html
 == grid-fragmentation-dyn2-023.html grid-fragmentation-023-ref.html
 == grid-fragmentation-dyn3-023.html grid-fragmentation-023-ref.html
 == grid-fragmentation-dyn4-023.html grid-fragmentation-023-ref.html
 == grid-fragmentation-dyn5-023.html grid-fragmentation-023-ref.html
-fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn1-024.html grid-fragmentation-024-ref.html
-fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn2-025.html grid-fragmentation-025-ref.html
-fuzzy-if(webrender&&swgl,0-2,0-200) == grid-fragmentation-dyn1-026.html grid-fragmentation-026-ref.html
-fuzzy-if(webrender&&swgl,0-2,0-200) == grid-fragmentation-dyn2-026.html grid-fragmentation-026-ref.html
-fuzzy-if(webrender&&swgl,0-2,0-200) == grid-fragmentation-dyn3-026.html grid-fragmentation-026-ref.html
-fuzzy-if(webrender&&swgl,0-2,0-200) == grid-fragmentation-dyn4-026.html grid-fragmentation-026-ref.html
-fuzzy-if(webrender&&swgl,0-2,0-200) == grid-fragmentation-dyn5-026.html grid-fragmentation-026-ref.html
-fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn1-027.html grid-fragmentation-025-ref.html
-fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn2-027.html grid-fragmentation-025-ref.html
-fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn3-027.html grid-fragmentation-025-ref.html
-fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn4-027.html grid-fragmentation-025-ref.html
-fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn5-027.html grid-fragmentation-025-ref.html
+fuzzy-if(winWidget,0-1,0-5) == grid-fragmentation-dyn1-024.html grid-fragmentation-024-ref.html
+fuzzy-if(winWidget,0-1,0-5) == grid-fragmentation-dyn2-025.html grid-fragmentation-025-ref.html
+fuzzy-if(swgl,0-2,0-200) == grid-fragmentation-dyn1-026.html grid-fragmentation-026-ref.html
+fuzzy-if(swgl,0-2,0-200) == grid-fragmentation-dyn2-026.html grid-fragmentation-026-ref.html
+fuzzy-if(swgl,0-2,0-200) == grid-fragmentation-dyn3-026.html grid-fragmentation-026-ref.html
+fuzzy-if(swgl,0-2,0-200) == grid-fragmentation-dyn4-026.html grid-fragmentation-026-ref.html
+fuzzy-if(swgl,0-2,0-200) == grid-fragmentation-dyn5-026.html grid-fragmentation-026-ref.html
+fuzzy-if(winWidget,0-1,0-5) == grid-fragmentation-dyn1-027.html grid-fragmentation-025-ref.html
+fuzzy-if(winWidget,0-1,0-5) == grid-fragmentation-dyn2-027.html grid-fragmentation-025-ref.html
+fuzzy-if(winWidget,0-1,0-5) == grid-fragmentation-dyn3-027.html grid-fragmentation-025-ref.html
+fuzzy-if(winWidget,0-1,0-5) == grid-fragmentation-dyn4-027.html grid-fragmentation-025-ref.html
+fuzzy-if(winWidget,0-1,0-5) == grid-fragmentation-dyn5-027.html grid-fragmentation-025-ref.html
 == grid-fragmentation-dyn1-028.html grid-fragmentation-028-ref.html
 == grid-fragmentation-dyn2-028.html grid-fragmentation-028-ref.html
 == grid-fragmentation-dyn3-028.html grid-fragmentation-028-ref.html
@@ -272,7 +272,7 @@ fuzzy-if(webrender&&winWidget,0-1,0-5) == grid-fragmentation-dyn5-027.html grid-
 fuzzy(0-2,0-6) == grid-fragmentation-dyn1-029.html grid-fragmentation-029-ref.html
 fuzzy(0-2,0-6) == grid-fragmentation-dyn2-029.html grid-fragmentation-029-ref.html
 == grid-fragmentation-dyn2-030.html grid-fragmentation-030-ref.html
-fuzzy-if(webrender&&swgl,0-2,0-60) == grid-fragmentation-dyn2-031.html grid-fragmentation-031-ref.html
+fuzzy-if(swgl,0-2,0-60) == grid-fragmentation-dyn2-031.html grid-fragmentation-031-ref.html
 
 == bug1306106.html bug1306106-ref.html
 == bug1349571.html bug1349571-ref.html

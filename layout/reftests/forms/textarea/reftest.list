@@ -3,14 +3,14 @@
 == resize-rtl.html resize-rtl-ref.html
 == resize-rtl-vertical.html resize-rtl-ref.html
 # an offset seems to apply to the native resizer on windows so skip this test for now
-skip-if(Android) skip-if(winWidget) fuzzy-if(cocoaWidget,0-1,0-33) fuzzy-if(skiaContent&&!winWidget&&!Android,0-5,0-10) == resize-background.html resize-background-ref.html
+skip-if(Android) skip-if(winWidget) fuzzy-if(cocoaWidget,0-1,0-33) fuzzy-if(!winWidget&&!Android,0-5,0-10) == resize-background.html resize-background-ref.html
 skip-if(Android) != ltr.html rtl.html
 skip-if(Android) != ltr-scrollbar.html rtl-scrollbar.html
 skip-if(Android) != in-ltr-doc-scrollbar.html in-rtl-doc-scrollbar.html
 skip-if(Android) != ltr.html no-resize.html
 skip-if(Android) != rtl.html no-resize.html # bug 834724
-fuzzy-if(skiaContent,0-1,0-1) == rtl.html rtl-dynamic-attr.html
-fuzzy-if(skiaContent,0-1,0-1) == rtl.html rtl-dynamic-style.html
+fuzzy(0-1,0-1) == rtl.html rtl-dynamic-attr.html
+fuzzy(0-1,0-1) == rtl.html rtl-dynamic-style.html
 == rtl.html in-dynamic-rtl-doc.html
 fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-4168) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == padding-scrollbar-placement.html padding-scrollbar-placement-ref.html # Bug 1392106
 == various-cols.html various-cols-ref.html

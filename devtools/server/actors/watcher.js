@@ -155,9 +155,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           // We enabled them for content toolboxes only because we don't support
           // content process targets yet. Bug 1620248 should help supporting
           // them and enable this more broadly.
-          //
-          // New server-side resources can be gated behind
-          // `devtools.testing.enableServerWatcherSupport` if needed.
           [Resources.TYPES.CONSOLE_MESSAGE]: true,
           [Resources.TYPES.CSS_CHANGE]: hasBrowserElement,
           [Resources.TYPES.CSS_MESSAGE]: true,

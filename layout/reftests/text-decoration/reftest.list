@@ -1,5 +1,5 @@
-fuzzy-if(webrender&&gtkWidget,0-208,0-12) == complex-decoration-style-quirks.html complex-decoration-style-quirks-ref.html
-fuzzy-if(webrender&&gtkWidget,0-208,0-12) == complex-decoration-style-standards.html complex-decoration-style-standards-ref.html
+fuzzy-if(gtkWidget,0-208,0-12) == complex-decoration-style-quirks.html complex-decoration-style-quirks-ref.html
+fuzzy-if(gtkWidget,0-208,0-12) == complex-decoration-style-standards.html complex-decoration-style-standards-ref.html
 == decoration-color-quirks.html decoration-color-quirks-ref.html
 == decoration-color-standards.html decoration-color-standards-ref.html
 == decoration-style-quirks.html decoration-style-quirks-ref.html
@@ -105,7 +105,7 @@ fuzzy-if(cocoaWidget,0-1,0-5) == decoration-color-override-quirks.html decoratio
 == 676538-1.html 676538-1-ref.html
 fuzzy-if(OSX==1010,0-1,0-4) == underline-button-1.html underline-button-1-ref.html
 fuzzy-if(OSX==1010,0-1,0-2) == underline-button-2.html underline-button-2-ref.html
-fuzzy-if(skiaContent,0-4,0-2) == underline-select-1.html underline-select-1-ref.html
+fuzzy(0-4,0-2) == underline-select-1.html underline-select-1-ref.html
 == underline-select-2.html underline-select-2-ref.html
 == 1133392.html 1133392-ref.html
 != 1159729-offset-adjustment.html 1159729-offset-adjustment-notref.html

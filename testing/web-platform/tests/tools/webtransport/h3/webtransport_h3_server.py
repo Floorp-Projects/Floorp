@@ -4,19 +4,20 @@ import os
 import ssl
 import threading
 import traceback
+from enum import IntEnum
 from urllib.parse import urlparse
 from typing import Any, Dict, List, Optional, Tuple
 
 # TODO(bashi): Remove import check suppressions once aioquic dependency is resolved.
+from aioquic.buffer import UINT_VAR_MAX_SIZE, Buffer  # type: ignore
 from aioquic.asyncio import QuicConnectionProtocol, serve  # type: ignore
 from aioquic.asyncio.client import connect  # type: ignore
-from aioquic.h3.connection import H3_ALPN, H3Connection  # type: ignore
+from aioquic.h3.connection import H3_ALPN, FrameType, H3Connection  # type: ignore
 from aioquic.h3.events import H3Event, HeadersReceived, WebTransportStreamDataReceived, DatagramReceived  # type: ignore
 from aioquic.quic.configuration import QuicConfiguration  # type: ignore
 from aioquic.quic.connection import stream_is_unidirectional  # type: ignore
-from aioquic.quic.events import QuicEvent, ProtocolNegotiated  # type: ignore
+from aioquic.quic.events import QuicEvent, ProtocolNegotiated, ConnectionTerminated  # type: ignore
 from aioquic.tls import SessionTicket  # type: ignore
-from aioquic.quic.packet import QuicErrorCode  # type: ignore
 
 from tools.wptserve.wptserve import stash  # type: ignore
 
@@ -35,11 +36,49 @@ _logger: logging.Logger = logging.getLogger(__name__)
 _doc_root: str = ""
 
 
+class CapsuleType(IntEnum):
+    # Defined in
+    # https://www.ietf.org/archive/id/draft-ietf-webtrans-http3-01.html.
+    CLOSE_WEBTRANSPORT_SESSION = 0x2843
+
+
+class H3Capsule:
+    """
+    Represents the Capsule concept defined in
+    https://ietf-wg-masque.github.io/draft-ietf-masque-h3-datagram/draft-ietf-masque-h3-datagram.html#name-capsules.
+    """
+    def __init__(self, type: int, data: bytes) -> None:
+        self.type = type
+        self.data = data
+
+    @staticmethod
+    def decode(data: bytes) -> Any:
+        """
+        Returns an H3Capsule representing the given bytes.
+        """
+        buffer = Buffer(data=data)
+        type = buffer.pull_uint_var()
+        length = buffer.pull_uint_var()
+        return H3Capsule(type, buffer.pull_bytes(length))
+
+    def encode(self) -> bytes:
+        """
+        Encodes this H3Connection and return the bytes.
+        """
+        buffer = Buffer(capacity=len(self.data) + 2 * UINT_VAR_MAX_SIZE)
+        buffer.push_uint_var(self.type)
+        buffer.push_uint_var(len(self.data))
+        buffer.push_bytes(self.data)
+        return buffer.data
+
+
 class WebTransportH3Protocol(QuicConnectionProtocol):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._handler: Optional[Any] = None
         self._http: Optional[H3Connection] = None
+        self._session_stream_id: Optional[int] = None
+        self._session_stream_data: bytes = b""
 
     def quic_event_received(self, event: QuicEvent) -> None:
         if isinstance(event, ProtocolNegotiated):
@@ -48,6 +87,9 @@ class WebTransportH3Protocol(QuicConnectionProtocol):
         if self._http is not None:
             for http_event in self._http.handle_event(event):
                 self._h3_event_received(http_event)
+
+        if isinstance(event, ConnectionTerminated):
+            self.call_session_closed(close_info=None, abruptly=True)
 
     def _h3_event_received(self, event: H3Event) -> None:
         if isinstance(event, HeadersReceived):
@@ -64,12 +106,31 @@ class WebTransportH3Protocol(QuicConnectionProtocol):
                 self._handshake_webtransport(event, headers)
             else:
                 self._send_error_response(event.stream_id, 400)
+            self._session_stream_id = event.stream_id
 
-        if self._handler is not None:
+        if self._session_stream_id == event.stream_id and\
+           isinstance(event, WebTransportStreamDataReceived):
+            self._session_stream_data += event.data
+            if event.stream_ended:
+                close_info = None
+                if len(self._session_stream_data) > 0:
+                    capsule: H3Capsule =\
+                        H3Capsule.decode(self._session_stream_data)
+                    close_info = (0, b"")
+                    if capsule.type == CapsuleType.CLOSE_WEBTRANSPORT_SESSION:
+                        buffer = Buffer(capsule.data)
+                        code = buffer.pull_uint32()
+                        reason = buffer.data()
+                        # TODO(yutakahirano): Make sure `reason` is a
+                        # UTF-8 text.
+                        close_info = (code, reason)
+                self.call_session_closed(close_info, abruptly=False)
+        elif self._handler is not None:
             if isinstance(event, WebTransportStreamDataReceived):
-                self._handler.stream_data_received(stream_id=event.stream_id,
-                                                   data=event.data,
-                                                   stream_ended=event.stream_ended)
+                self._handler.stream_data_received(
+                    stream_id=event.stream_id,
+                    data=event.data,
+                    stream_ended=event.stream_ended)
             elif isinstance(event, DatagramReceived):
                 self._handler.datagram_received(data=event.data)
 
@@ -146,6 +207,8 @@ class WebTransportSession:
         # WebTransport sessions can access the same store easily.
         self._stash_path = '/webtransport/handlers'
         self._stash: Optional[stash.Stash] = None
+        self._dict_for_handlers: Dict[str, Any] = {}
+        self._allow_calling_session_closed = True
 
     @property
     def stash(self) -> stash.Stash:
@@ -155,24 +218,50 @@ class WebTransportSession:
             self._stash = stash.Stash(self._stash_path, address, authkey)
         return self._stash
 
+    @property
+    def dict_for_handlers(self) -> Dict[str, Any]:
+        """A dictionary that handlers can attach arbitrary data."""
+        return self._dict_for_handlers
+
     def stream_is_unidirectional(self, stream_id: int) -> bool:
         """Return True if the stream is unidirectional."""
         return stream_is_unidirectional(stream_id)
 
-    def close(self,
-              error_code: int = QuicErrorCode.NO_ERROR,
-              reason_phrase: str = "") -> None:
+    def close(self, close_info: Optional[Tuple[int, bytes]]) -> None:
         """
         Close the session.
 
-        :param error_code: An error code indicating why the session is
-                           being closed.
-        :param reason_phrase: A human readable explanation of why the
-                              session is being closed.
+        :param close_info The close information to send.
         """
-        self._http._quic.close(error_code=error_code,
-                               reason_phrase=reason_phrase)
+        self._allow_calling_session_closed = False
+        assert self._protocol._session_stream_id is not None
+        session_stream_id = self._protocol._session_stream_id
+        if close_info is not None:
+            code = close_info[0]
+            reason = close_info[1]
+            buffer = Buffer(capacity=len(reason) + 4)
+            buffer.push_uint32(code)
+            buffer.push_bytes(reason)
+            capsule =\
+                H3Capsule(CapsuleType.CLOSE_WEBTRANSPORT_SESSION, buffer.data)
+            self.send_stream_data(session_stream_id, capsule.encode())
+
+        self.send_stream_data(session_stream_id, b'', end_stream=True)
         self._protocol.transmit()
+        # TODO(yutakahirano): Reset all other streams.
+        # TODO(yutakahirano): Reject future stream open requests
+        # We need to wait for the stream data to arrive at the client, and then
+        # we need to close the connection. At this moment we're relying on the
+        # client's behavior.
+        # TODO(yutakahirano): Implement the above.
+
+    def call_session_closed(
+            self, close_info: Optional[Tuple[int, bytes]],
+            abruptly: bool) -> None:
+        allow_calling_session_closed = self._allow_calling_session_closed
+        self._allow_calling_session_closed = False
+        if self._protocol._handler and allow_calling_session_closed:
+            self._protocol._handler.session_closed(close_info, abruptly)
 
     def create_unidirectional_stream(self) -> int:
         """
@@ -187,6 +276,13 @@ class WebTransportSession:
         """
         stream_id = self._http.create_webtransport_stream(
             session_id=self.session_id, is_unidirectional=False)
+        # TODO(bashi): Remove this workaround when aioquic supports receiving
+        # data on server-initiated bidirectional streams.
+        stream = self._http._get_or_create_stream(stream_id)
+        assert stream.frame_type is None
+        assert stream.session_id is None
+        stream.frame_type = FrameType.WEBTRANSPORT_STREAM
+        stream.session_id = self.session_id
         return stream_id
 
     def send_stream_data(self,
@@ -244,6 +340,13 @@ class WebTransportEventHandler:
 
     def datagram_received(self, data: bytes) -> None:
         self._run_callback("datagram_received", self._session, data)
+
+    def session_closed(
+            self,
+            close_info: Optional[Tuple[int, bytes]],
+            abruptly: bool) -> None:
+        self._run_callback(
+            "session_closed", self._session, close_info, abruptly=abruptly)
 
 
 class SessionTicketStore:

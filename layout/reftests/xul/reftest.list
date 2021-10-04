@@ -1,20 +1,20 @@
 == chrome://reftest/content/xul/css-flex-1.xhtml css-flex-1-ref.html
-fuzzy-if(cocoaWidget&&webrender&&!nativeThemePref,0-7,0-2) == chrome://reftest/content/xul/css-grid-with-xul-item-1.xhtml chrome://reftest/content/xul/css-grid-with-xul-item-1-ref.xhtml
+fuzzy-if(cocoaWidget&&!nativeThemePref,0-7,0-2) == chrome://reftest/content/xul/css-grid-with-xul-item-1.xhtml chrome://reftest/content/xul/css-grid-with-xul-item-1-ref.xhtml
 
 == chrome://reftest/content/xul/menuitem-key.xhtml chrome://reftest/content/xul/menuitem-key-ref.xhtml
 # these random-if(Android) are due to differences between Android Native & Xul, see bug 732569
-random-if(Android) fuzzy-if(webrender&&!nativeThemePref,0-2,0-8) == chrome://reftest/content/xul/menulist-shrinkwrap-1.xhtml chrome://reftest/content/xul/menulist-shrinkwrap-1-ref.xhtml
-random-if(Android) fuzzy-if(webrender&&!nativeThemePref,0-2,0-8) == chrome://reftest/content/xul/menulist-shrinkwrap-2.xhtml chrome://reftest/content/xul/menulist-shrinkwrap-2-ref.xhtml
+random-if(Android) fuzzy-if(!nativeThemePref,0-2,0-8) == chrome://reftest/content/xul/menulist-shrinkwrap-1.xhtml chrome://reftest/content/xul/menulist-shrinkwrap-1-ref.xhtml
+random-if(Android) fuzzy-if(!nativeThemePref,0-2,0-8) == chrome://reftest/content/xul/menulist-shrinkwrap-2.xhtml chrome://reftest/content/xul/menulist-shrinkwrap-2-ref.xhtml
 == chrome://reftest/content/xul/textbox-overflow-1.xhtml chrome://reftest/content/xul/textbox-overflow-1-ref.xhtml # for bug 749658
 # accesskeys are not normally displayed on Mac, so set a pref to enable them
 pref(ui.key.menuAccessKey,18) == chrome://reftest/content/xul/accesskey.xhtml chrome://reftest/content/xul/accesskey-ref.xhtml
 fuzzy-if(xulRuntime.widgetToolkit=="gtk",0-1,0-11) fuzzy-if(winWidget&&!nativeThemePref,0-1,0-1) == chrome://reftest/content/xul/tree-row-outline-1.xhtml chrome://reftest/content/xul/tree-row-outline-1-ref.xhtml # win8: bug 1254832
-skip-if(!cocoaWidget) fails-if(webrender&&cocoaWidget&&nativeThemePref) == chrome://reftest/content/xul/mac-tab-toolbar.xhtml chrome://reftest/content/xul/mac-tab-toolbar-ref.xhtml
+skip-if(!cocoaWidget) fails-if(cocoaWidget&&nativeThemePref) == chrome://reftest/content/xul/mac-tab-toolbar.xhtml chrome://reftest/content/xul/mac-tab-toolbar-ref.xhtml
 != chrome://reftest/content/xul/tree-row-outline-1.xhtml chrome://reftest/content/xul/tree-row-outline-1-notref.xhtml
 == chrome://reftest/content/xul/text-crop.xhtml chrome://reftest/content/xul/text-crop-ref.xhtml
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == chrome://reftest/content/xul/text-small-caps-1.xhtml chrome://reftest/content/xul/text-small-caps-1-ref.xhtml
-fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,0-1,0-31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,0-1,0-50) fuzzy-if(webrender,0-1,0-2500) == chrome://reftest/content/xul/inactive-fixed-bg-bug1205630.xhtml inactive-fixed-bg-bug1205630-ref.html
-fuzzy-if(skiaContent,0-1,0-60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,0-1,0-31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,0-1,0-50) fuzzy-if(webrender,0-1,0-2500) == chrome://reftest/content/xul/inactive-fixed-bg-bug1272525.xhtml inactive-fixed-bg-bug1272525-ref.html
+fuzzy(0-1,0-2500) == chrome://reftest/content/xul/inactive-fixed-bg-bug1205630.xhtml inactive-fixed-bg-bug1205630-ref.html
+fuzzy(0-1,0-2500) == chrome://reftest/content/xul/inactive-fixed-bg-bug1272525.xhtml inactive-fixed-bg-bug1272525-ref.html
 
 # Tests for XUL <image> with 'object-fit' & 'object-position':
 # These tests should be very similar to tests in our w3c-css/submitted/images3

@@ -330,6 +330,14 @@ void HTMLTextFieldAccessible::Value(nsString& aValue) const {
   }
 }
 
+bool HTMLTextFieldAccessible::AttributeChangesState(nsAtom* aAttribute) {
+  if (aAttribute == nsGkAtoms::readonly) {
+    return true;
+  }
+
+  return LocalAccessible::AttributeChangesState(aAttribute);
+}
+
 void HTMLTextFieldAccessible::ApplyARIAState(uint64_t* aState) const {
   HyperTextAccessibleWrap::ApplyARIAState(aState);
   aria::MapToState(aria::eARIAAutoComplete, mContent->AsElement(), aState);
@@ -366,13 +374,6 @@ uint64_t HTMLTextFieldAccessible::NativeState() const {
 
   if (state & (states::PROTECTED | states::MULTI_LINE | states::READONLY |
                states::UNAVAILABLE)) {
-    return state;
-  }
-
-  // Expose autocomplete states if this input is part of autocomplete widget.
-  LocalAccessible* widget = ContainerWidget();
-  if (widget && widget - IsAutoComplete()) {
-    state |= states::HASPOPUP | states::SUPPORTS_AUTOCOMPLETION;
     return state;
   }
 

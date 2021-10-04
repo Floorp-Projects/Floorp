@@ -23,14 +23,14 @@ include svg-filter-chains/reftest.list
 fuzzy(0-1,0-42500) == feBlend-1.svg feBlend-1-ref.svg
 == feBlend-2.svg feBlend-2-ref.svg
 
-fuzzy-if(d2d||skiaContent,0-1,0-6400) == feColorMatrix-1.svg feColorMatrix-1-ref.svg
-fuzzy-if(d2d||webrender,0-1,0-10000) == feColorMatrix-2.svg feColorMatrix-2-ref.svg
+fuzzy(0-1,0-6400) == feColorMatrix-1.svg feColorMatrix-1-ref.svg
+fuzzy(0-1,0-10000) == feColorMatrix-2.svg feColorMatrix-2-ref.svg
 
 == feComponentTransfer-1.svg feComponentTransfer-1-ref.svg
 == feComponentTransfer-2.svg feComponentTransfer-2-ref.svg
 
-fuzzy-if(d2d||skiaContent,0-1,0-9600) == feComposite-1.svg feComposite-1-ref.svg
-fuzzy-if(d2d||skiaContent,0-1,0-10000) == feComposite-2.svg feComposite-2-ref.svg
+fuzzy(0-1,0-9600) == feComposite-1.svg feComposite-1-ref.svg
+fuzzy(0-1,0-10000) == feComposite-2.svg feComposite-2-ref.svg
 
 == feConvolveMatrix-1.svg feConvolveMatrix-1-ref.svg
 == feConvolveMatrix-2.svg feConvolveMatrix-2-ref.svg
@@ -38,14 +38,14 @@ fuzzy-if(d2d||skiaContent,0-1,0-10000) == feComposite-2.svg feComposite-2-ref.sv
 == feDisplacementMap-1.svg feDisplacementMap-1-ref.svg
 == feDisplacementMap-2.svg feDisplacementMap-2-ref.svg
 
-fuzzy-if(d2d,0-1,0-6400) fuzzy-if(skiaContent,0-1,0-1600)  == feFlood-1.svg feFlood-1-ref.svg
-skip-if(d2d) fuzzy-if(skiaContent,0-1,0-6400) == feFlood-2.svg feFlood-2-ref.svg
+fuzzy(0-1,0-1600) == feFlood-1.svg feFlood-1-ref.svg
+skip-if(d2d) fuzzy(0-1,0-6400) == feFlood-2.svg feFlood-2-ref.svg
 
-fuzzy(0-1,0-6400) fuzzy-if(skiaContent,0-1,0-6404) fuzzy-if(!useDrawSnapshot&&webrender,177-178,2556-3042) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
-fuzzy-if(webrender,0-2,0-304) == feGaussianBlur-2.svg feGaussianBlur-2-ref.svg
+fuzzy(0-1,0-6404) fuzzy-if(!useDrawSnapshot,177-178,2556-3042) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
+fuzzy(0-2,0-304) == feGaussianBlur-2.svg feGaussianBlur-2-ref.svg
 # != feGaussianBlur-3.svg feGaussianBlur-3-ref.svg
-fuzzy-if(!useDrawSnapshot&&webrender,2-5,4764-8168) == feGaussianBlur-4.svg feGaussianBlur-4-ref.svg
-fuzzy-if(geckoview&&webrender,0-4,0-200) == feGaussianBlur-5.svg feGaussianBlur-5-ref.svg
+fuzzy-if(!useDrawSnapshot,2-5,4764-8168) == feGaussianBlur-4.svg feGaussianBlur-4-ref.svg
+fuzzy-if(geckoview,0-4,0-200) == feGaussianBlur-5.svg feGaussianBlur-5-ref.svg
 == feGaussianBlur-6.svg feGaussianBlur-6-ref.svg
 skip-if(d2d) == feGaussianBlur-cap-large-directional-radius-on-software.html feGaussianBlur-cap-large-directional-radius-on-software-ref.html
 
@@ -67,7 +67,7 @@ skip-if(d2d) == feGaussianBlur-cap-large-directional-radius-on-software.html feG
 
 # no tests for feTurbulence
 
-fuzzy-if(geckoview&&webrender,0-36,0-220) == filter-clipped-rect-01.svg pass.svg
+fuzzy-if(geckoview,0-36,0-220) == filter-clipped-rect-01.svg pass.svg
 == filter-in-pattern-01.svg pass.svg
 fuzzy(0-5,0-67) != filter-in-pattern-02.svg filter-in-pattern-02-ref.svg
 random-if(winWidget) == filter-in-mask-01.svg pass.svg # bug 1356139
@@ -98,20 +98,20 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 == feComponentTransfer-03.svg pass.svg
 == feComponentTransfer-04.svg pass.svg
 == feComposite-arguments-01.svg pass.svg
-fuzzy-if(winWidget&&webrender,0-1,0-39600) == feComposite-operator-lighter.svg feComposite-operator-lighter-ref.html
+fuzzy-if(winWidget,0-1,0-39600) == feComposite-operator-lighter.svg feComposite-operator-lighter-ref.html
 fuzzy(0-1,0-26732) == feComposite-paint-01.svg feComposite-paint-01-ref.svg
 fuzzy(0-1,0-10000) == feConvolveMatrix-bias-01.svg feConvolveMatrix-bias-01-ref.svg
 == feConvolveMatrix-order-01.svg feConvolveMatrix-order-01-ref.svg
 
-fuzzy-if(skiaContent,0-1,0-400) == feDisplacementMap-alpha-01.svg pass.svg
+fuzzy(0-1,0-400) == feDisplacementMap-alpha-01.svg pass.svg
 fuzzy(0-2,0-500) == feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.svg
 == feDisplacementMap-scale-01.svg pass.svg
 
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-2,0-25) fuzzy-if(!useDrawSnapshot&&webrender,55-98,14033-16345) == feDropShadow-01.svg feDropShadow-01-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-2,0-25) fuzzy-if(!useDrawSnapshot,55-98,14033-16345) == feDropShadow-01.svg feDropShadow-01-ref.svg
 
 == feFlood-color-01.svg pass.svg
 
-fuzzy-if(!useDrawSnapshot&&webrender,20-21,5540-5646) == feGaussianBlur-alpha-01.svg feGaussianBlur-alpha-01-ref.svg
+fuzzy-if(!useDrawSnapshot,20-21,5540-5646) == feGaussianBlur-alpha-01.svg feGaussianBlur-alpha-01-ref.svg
 
 == feMorphology-radius-negative-01.svg pass.svg
 == feMorphology-radius-negative-02.svg pass.svg
@@ -136,7 +136,7 @@ fuzzy(0-1,0-10000) == feTurbulence-zero-baseFreq-01.svg feTurbulence-zero-baseFr
 
 == outside-sourcegraphic-1.svg outside-sourcegraphic-ref.svg
 # These failures are caused by bug 1586055
-fails-if(!useDrawSnapshot&&webrender) == outside-sourcegraphic-2.svg outside-sourcegraphic-ref.svg
-fails-if(!useDrawSnapshot&&webrender) == outside-sourcegraphic-3.svg outside-sourcegraphic-ref.svg
+fails-if(!useDrawSnapshot) == outside-sourcegraphic-2.svg outside-sourcegraphic-ref.svg
+fails-if(!useDrawSnapshot) == outside-sourcegraphic-3.svg outside-sourcegraphic-ref.svg
 == nested-filter.html nested-filter-ref.html
 == filter-giant.svg pass.svg

@@ -575,9 +575,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // Checks whether or not aURI and mOriginalURI share the same domain.
   virtual bool SameOriginWithOriginalUri(nsIURI* aURI);
 
-  // GetPrincipal Returns the channel's URI principal.
-  nsIPrincipal* GetURIPrincipal();
-
   [[nodiscard]] bool BypassServiceWorker() const;
 
   // Returns true if this channel should intercept the network request and

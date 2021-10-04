@@ -172,6 +172,63 @@
       await p;
     }
 
+    async function testDefaultSubmitChange() {
+      testStates("default-button",
+        STATE_DEFAULT, 0,
+        0, 0,
+        "button should have DEFAULT state");
+      let button = document.createElement("button");
+      button.textContent = "new default";
+      let p = waitForEvent(...stateChange(STATE_DEFAULT, false, false, "default-button"));
+      getNode("default-button").before(button);
+      await p;
+      testStates("default-button",
+        0, 0,
+        STATE_DEFAULT, 0,
+        "button should not have DEFAULT state");
+      p = waitForEvent(...stateChange(STATE_DEFAULT, false, true, "default-button"));
+      button.remove();
+      await p;
+      testStates("default-button",
+        STATE_DEFAULT, 0,
+        0, 0,
+        "button should have DEFAULT state");
+    }
+
+    async function testReadOnly() {
+      let p = waitForEvent(...stateChange(STATE_READONLY, false, true, "email"));
+      getNode("email").setAttribute("readonly", "true");
+      await p;
+      p = waitForEvent(...stateChange(STATE_READONLY, false, false, "email"));
+      getNode("email").removeAttribute("readonly");
+      await p;
+    }
+
+    async function testReadonlyUntilEditable() {
+      testStates("article",
+        STATE_READONLY, 0,
+        0, EXT_STATE_EDITABLE,
+        "article is READONLY and not EDITABLE");
+      let p = waitForEvents([
+        stateChange(STATE_READONLY, false, false, "article"),
+        stateChange(EXT_STATE_EDITABLE, true, true, "article")]);
+      getNode("article").contentEditable = "true";
+      await p;
+      testStates("article",
+        0, EXT_STATE_EDITABLE,
+        STATE_READONLY, 0,
+        "article is EDITABLE and not READONLY");
+      p = waitForEvents([
+        stateChange(STATE_READONLY, false, true, "article"),
+        stateChange(EXT_STATE_EDITABLE, true, false, "article")]);
+      getNode("article").contentEditable = "false";
+      await p;
+      testStates("article",
+        STATE_READONLY, 0,
+        0, EXT_STATE_EDITABLE,
+        "article is READONLY and not EDITABLE");
+    }
+
     async function doTests() {
       // Test opening details objects
       await openNode("detailsOpen", "summaryOpen", true);
@@ -217,11 +274,18 @@
       await echoingStateChange("text1", "aria-disabled", "disabled", null,
                                EXT_STATE_ENABLED, true, true);
 
+      await testReadOnly();
+
+      await testReadonlyUntilEditable();
+
       await testLinked();
 
       await testHasPopup();
 
       await toggleStateChange("textbox", "aria-multiline", EXT_STATE_MULTI_LINE, true);
+
+      await testDefaultSubmitChange();
+
       SimpleTest.finish();
     }
 
@@ -313,6 +377,13 @@
   <a id="link3">I am a non-link link</a>
 
   <div id="textbox" role="textbox" aria-multiline="false">hello</div>
+
+  <form id="form">
+    <button id="default-button">hello</button>
+    <button>world</button>
+  </form>
+
+  <div id="article" role="article">hello</div>
 
   <div id="eventdump"></div>
 

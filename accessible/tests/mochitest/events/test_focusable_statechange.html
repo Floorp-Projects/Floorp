@@ -26,6 +26,15 @@
       }];
      }
 
+    function editableStateChange(id, enabled) {
+      return [EVENT_STATE_CHANGE, e => {
+          e.QueryInterface(nsIAccessibleStateChangeEvent);
+          return getAccessible(id) == e.accessible &&
+          e.state == EXT_STATE_EDITABLE && e.isExtraState &&
+          (enabled == undefined || e.isEnabled == enabled);
+      }];
+    }
+
     async function doTests() {
       info("disable buttons.");
       // Expect focusable change with 'disabled',
@@ -70,6 +79,28 @@
       getNode("link").removeAttribute("href");
       await p;
 
+      info("add contenteditable");
+      // Expect editable change on non-input,
+      // and don't expect event on a native input.
+      p = waitForEvents({
+        expected: [focusableStateChange("div", true), editableStateChange("div", true)],
+        unexpected: [focusableStateChange("input"), editableStateChange("input")]
+      });
+      getNode("input").contentEditable = true;
+      getNode("div").contentEditable = true;
+      await p;
+
+      info("remove contenteditable");
+      // Expect editable change on non-input,
+      // and don't expect event on a native input.
+      p = waitForEvents({
+        expected: [focusableStateChange("div", false), editableStateChange("div", false)],
+        unexpected: [focusableStateChange("input"), editableStateChange("input")]
+      });
+      getNode("input").contentEditable = false;
+      getNode("div").contentEditable = false;
+      await p;
+
       SimpleTest.finish();
     }
 
@@ -92,5 +123,6 @@
 
   <a id="link" href="#">A link</a>
 
+  <input id="input" value="Hello">
 </body>
 </html>

@@ -1095,7 +1095,7 @@ void CanonicalBrowsingContext::HistoryGo(
   // GoToIndex checks that index is >= 0 and < length.
   nsTArray<nsSHistory::LoadEntryResult> loadResults;
   nsresult rv = shistory->GotoIndex(index.value(), loadResults, sameEpoch,
-                                    aUserActivation);
+                                    aOffset == 0, aUserActivation);
   if (NS_FAILED(rv)) {
     MOZ_LOG(gSHLog, LogLevel::Debug,
             ("Dropping HistoryGo - bad index or same epoch (not in same doc)"));

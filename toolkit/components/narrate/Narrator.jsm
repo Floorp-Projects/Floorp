@@ -159,7 +159,7 @@ Narrator.prototype = {
     }
 
     let utterance = new this._win.SpeechSynthesisUtterance(
-      paragraph.textContent
+      paragraph.textContent.replace(/\r?\n/g, " ")
     );
     utterance.rate = this._speechOptions.rate;
     if (this._speechOptions.voice) {
