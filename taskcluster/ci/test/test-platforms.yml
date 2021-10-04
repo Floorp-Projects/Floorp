@@ -271,7 +271,6 @@ macosx1100-64-shippable-qr/opt:
     test-sets:
         - macosx1100-64-jittests
         - macosx1100-64-qr-tests
-        - macosx1100-64-qr-failure-tests
         # - macosx64-talos
         # - browsertime-high-priority
         # - raptor-firefox
@@ -301,7 +300,6 @@ macosx1015-64-qr/opt:
     build-platform: macosx64/opt
     test-sets:
         - desktop-screenshot-capture
-        - macosx1015-64-qr-failure-tests
         - macosx1015-64-qr-tests
         - web-platform-tests
         - web-platform-tests-backlog
