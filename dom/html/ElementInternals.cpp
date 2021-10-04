@@ -6,21 +6,26 @@
 
 #include "mozilla/dom/ElementInternals.h"
 #include "mozilla/dom/ElementInternalsBinding.h"
+#include "mozilla/dom/HTMLElement.h"
+#include "mozilla/dom/HTMLFieldSetElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsGenericHTMLElement.h"
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ElementInternals, mTarget)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ElementInternals)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ElementInternals)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ElementInternals)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ElementInternals)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIFormControl)
 NS_INTERFACE_MAP_END
 
-ElementInternals::ElementInternals(nsGenericHTMLElement* aTarget)
-    : mTarget(aTarget) {}
+ElementInternals::ElementInternals(HTMLElement* aTarget)
+    : nsIFormControl(FormControlType::FormAssociatedCustomElement),
+      mTarget(aTarget),
+      mForm(nullptr),
+      mFieldSet(nullptr) {}
 
 nsISupports* ElementInternals::GetParentObject() { return ToSupports(mTarget); }
 
@@ -39,6 +44,37 @@ ShadowRoot* ElementInternals::GetShadowRoot() const {
   }
 
   return shadowRoot;
+}
+
+void ElementInternals::SetForm(HTMLFormElement* aForm) { mForm = aForm; }
+
+void ElementInternals::ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) {
+  if (mTarget) {
+    mTarget->ClearForm(aRemoveFromForm, aUnbindOrDelete);
+  }
+}
+
+NS_IMETHODIMP ElementInternals::SubmitNamesValues(FormData* aFormData) {
+  // TODO: Bug 1556372 - Custom elements: implement construct the entry list for
+  // form-associated custom element.
+  return NS_OK;
+}
+
+void ElementInternals::UpdateFormOwner() {
+  if (mTarget) {
+    mTarget->UpdateFormOwner();
+  }
+}
+
+void ElementInternals::Unlink() {
+  if (mForm) {
+    // Don't notify, since we're being destroyed in any case.
+    ClearForm(true, true);
+  }
+  if (mFieldSet) {
+    mFieldSet->RemoveElement(mTarget);
+  }
+  mTarget = nullptr;
 }
 
 }  // namespace mozilla::dom

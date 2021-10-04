@@ -1856,7 +1856,7 @@ nsresult nsGenericHTMLFormElement::AfterSetAttr(
 }
 
 void nsGenericHTMLFormElement::ForgetFieldSet(nsIContent* aFieldset) {
-  if (GetFieldSetInternal() == aFieldset) {
+  if (IsFormAssociatedElement() && GetFieldSetInternal() == aFieldset) {
     SetFieldSetInternal(nullptr);
   }
 }
@@ -2034,7 +2034,7 @@ void nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
 
 void nsGenericHTMLFormElement::UpdateFieldSet(bool aNotify) {
   if (IsInNativeAnonymousSubtree() || !IsFormAssociatedElement()) {
-    MOZ_ASSERT(!GetFieldSetInternal());
+    MOZ_ASSERT_IF(IsFormAssociatedElement(), !GetFieldSetInternal());
     return;
   }
 
@@ -2988,83 +2988,18 @@ void nsGenericHTMLElement::SetInnerText(const nsAString& aValue) {
   mb.NodesAdded();
 }
 
-// https://html.spec.whatwg.org/commit-snapshots/53bc3803433e1c817918b83e8a84f3db900031dd/#dom-attachinternals
 already_AddRefed<ElementInternals> nsGenericHTMLElement::AttachInternals(
     ErrorResult& aRv) {
-  CustomElementData* ceData = GetCustomElementData();
-
-  // 1. If element's is value is not null, then throw a "NotSupportedError"
-  //    DOMException.
-  nsAtom* isAtom = ceData ? ceData->GetIs(this) : nullptr;
-  nsAtom* nameAtom = NodeInfo()->NameAtom();
-  if (isAtom) {
-    aRv.ThrowNotSupportedError(nsPrintfCString(
-        "Cannot attach ElementInternals to a customized built-in element "
-        "'%s'",
-        NS_ConvertUTF16toUTF8(isAtom->GetUTF16String()).get()));
-    return nullptr;
-  }
-
-  // 2. Let definition be the result of looking up a custom element definition
-  //    given element's node document, its namespace, its local name, and null
-  //    as is value.
-  CustomElementDefinition* definition = nullptr;
-  if (ceData) {
-    definition = ceData->GetCustomElementDefinition();
-
-    // If the definition is null, the element possible hasn't yet upgraded.
-    // Fallback to use LookupCustomElementDefinition to find its definition.
-    if (!definition) {
-      definition = nsContentUtils::LookupCustomElementDefinition(
-          NodeInfo()->GetDocument(), nameAtom, NodeInfo()->NamespaceID(),
-          ceData->GetCustomElementType());
-    }
-  }
-
-  // 3. If definition is null, then throw an "NotSupportedError" DOMException.
-  if (!definition) {
-    aRv.ThrowNotSupportedError(nsPrintfCString(
-        "Cannot attach ElementInternals to a non-custom element '%s'",
-        NS_ConvertUTF16toUTF8(nameAtom->GetUTF16String()).get()));
-    return nullptr;
-  }
-
-  // 4. If definition's disable internals is true, then throw a
-  //    "NotSupportedError" DOMException.
-  if (definition->mDisableInternals) {
-    aRv.ThrowNotSupportedError(nsPrintfCString(
-        "AttachInternal() to '%s' is disabled by disabledFeatures",
-        NS_ConvertUTF16toUTF8(nameAtom->GetUTF16String()).get()));
-    return nullptr;
-  }
-
-  // If this is not a custom element, i.e. ceData is nullptr, we are unable to
-  // find a definition and should return earlier above.
-  MOZ_ASSERT(ceData);
-
-  // 5. If element's attached internals is true, then throw an
-  //    "NotSupportedError" DOMException.
-  if (ceData->HasAttachedInternals()) {
-    aRv.ThrowNotSupportedError(nsPrintfCString(
-        "AttachInternals() has already been called from '%s'",
-        NS_ConvertUTF16toUTF8(nameAtom->GetUTF16String()).get()));
-    return nullptr;
-  }
-
-  // 6. If element's custom element state is not "precustomized" or "custom",
-  //    then throw a "NotSupportedError" DOMException.
-  if (ceData->mState != CustomElementData::State::ePrecustomized &&
-      ceData->mState != CustomElementData::State::eCustom) {
-    aRv.ThrowNotSupportedError(
-        R"(Custom element state is not "precustomized" or "custom".)");
-    return nullptr;
-  }
-
-  // 7. Set element's attached internals to true.
-  ceData->AttachedInternals();
-
-  // 8. Create a new ElementInternals instance targeting element, and return it.
-  return MakeAndAddRef<ElementInternals>(this);
+  // ElementInternals is only available on autonomous custom element, so throws
+  // an error by default. The spec steps are implemented in HTMLElement because
+  // ElementInternals needs to hold a pointer to HTMLElement in order to forward
+  // form operation to it.
+  aRv.ThrowNotSupportedError(nsPrintfCString(
+      "Cannot attach ElementInternals to a customized built-in or non-custom "
+      "element "
+      "'%s'",
+      NS_ConvertUTF16toUTF8(NodeInfo()->NameAtom()->GetUTF16String()).get()));
+  return nullptr;
 }
 
 void nsGenericHTMLElement::GetAutocapitalize(nsAString& aValue) const {

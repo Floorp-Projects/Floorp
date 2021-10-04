@@ -11,6 +11,7 @@
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/CustomElementRegistryBinding.h"
 #include "mozilla/dom/ElementBinding.h"
+#include "mozilla/dom/HTMLElement.h"
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/PrimitiveConversions.h"
 #include "mozilla/dom/ShadowIncludingTreeIterator.h"
@@ -195,6 +196,13 @@ CustomElementDefinition* CustomElementData::GetCustomElementDefinition() const {
   return mCustomElementDefinition;
 }
 
+bool CustomElementData::IsFormAssociated() const {
+  // https://html.spec.whatwg.org/#form-associated-custom-element
+  return mCustomElementDefinition &&
+         !mCustomElementDefinition->IsCustomBuiltIn() &&
+         mCustomElementDefinition->mFormAssociated;
+}
+
 void CustomElementData::Traverse(
     nsCycleCollectionTraversalCallback& aCb) const {
   for (uint32_t i = 0; i < mReactionQueue.Length(); i++) {
@@ -209,10 +217,20 @@ void CustomElementData::Traverse(
         mCustomElementDefinition,
         NS_CYCLE_COLLECTION_PARTICIPANT(CustomElementDefinition));
   }
+
+  if (mElementInternals) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mElementInternals");
+    aCb.NoteNativeChild(mElementInternals,
+                        NS_CYCLE_COLLECTION_PARTICIPANT(ElementInternals));
+  }
 }
 
 void CustomElementData::Unlink() {
   mReactionQueue.Clear();
+  if (mElementInternals) {
+    mElementInternals->Unlink();
+    mElementInternals = nullptr;
+  }
   mCustomElementDefinition = nullptr;
 }
 
@@ -1237,6 +1255,16 @@ void CustomElementRegistry::Upgrade(Element* aElement,
     // Empty element's custom element reaction queue.
     data->mReactionQueue.Clear();
     return;
+  }
+
+  // Step 9.
+  if (data->IsFormAssociated()) {
+    ElementInternals* internals = data->GetElementInternals();
+    MOZ_ASSERT(internals);
+    MOZ_ASSERT(aElement->IsHTMLElement());
+    MOZ_ASSERT(!aDefinition->IsCustomBuiltIn());
+
+    internals->UpdateFormOwner();
   }
 
   // Step 10.

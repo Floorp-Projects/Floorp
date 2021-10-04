@@ -259,7 +259,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   }
 
   // https://html.spec.whatwg.org/multipage/custom-elements.html#dom-attachinternals
-  already_AddRefed<mozilla::dom::ElementInternals> AttachInternals(
+  virtual already_AddRefed<mozilla::dom::ElementInternals> AttachInternals(
       ErrorResult& aRv);
 
   // Returns true if the event should not be handled from GetEventTargetParent.
