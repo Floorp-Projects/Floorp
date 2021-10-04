@@ -26,7 +26,6 @@
 #include "nsILoadInfo.h"
 #include "nsNetUtil.h"
 #include "nsStringFwd.h"
-#include "mozilla/nsRedirectHistoryEntry.h"
 
 using namespace mozilla;
 using namespace TelemetryTestHelpers;
@@ -188,10 +187,12 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
                 "https://www.analytics.example/analytics.js"_ns);
       nsCOMPtr<nsIPrincipal> redirPrincipal =
           BasePrincipal::CreateContentPrincipal(redirUri, OriginAttributes());
-      nsCOMPtr<nsIRedirectHistoryEntry> entry =
-          new net::nsRedirectHistoryEntry(redirPrincipal, nullptr, ""_ns);
+      nsCOMPtr<nsIChannel> redirectChannel;
+      Unused << service->NewChannelFromURI(redirUri, nullptr, redirPrincipal,
+                                           nullptr, 0, currentTest.contentType,
+                                           getter_AddRefs(redirectChannel));
 
-      mockLoadInfo->AppendRedirectHistoryEntry(entry, false);
+      mockLoadInfo->AppendRedirectHistoryEntry(redirectChannel, false);
     }
 
     // this will record the event

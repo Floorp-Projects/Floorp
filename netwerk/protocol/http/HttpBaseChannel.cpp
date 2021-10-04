@@ -3719,30 +3719,6 @@ void HttpBaseChannel::ClearConsoleReports() {
   mReportCollector->ClearConsoleReports();
 }
 
-nsIPrincipal* HttpBaseChannel::GetURIPrincipal() {
-  if (mPrincipal) {
-    return mPrincipal;
-  }
-
-  nsIScriptSecurityManager* securityManager =
-      nsContentUtils::GetSecurityManager();
-
-  if (!securityManager) {
-    LOG(("HttpBaseChannel::GetURIPrincipal: No security manager [this=%p]",
-         this));
-    return nullptr;
-  }
-
-  securityManager->GetChannelURIPrincipal(this, getter_AddRefs(mPrincipal));
-  if (!mPrincipal) {
-    LOG(("HttpBaseChannel::GetURIPrincipal: No channel principal [this=%p]",
-         this));
-    return nullptr;
-  }
-
-  return mPrincipal;
-}
-
 bool HttpBaseChannel::IsNavigation() {
   return LoadForceMainDocumentChannel() || (mLoadFlags & LOAD_DOCUMENT_URI);
 }
@@ -3939,17 +3915,7 @@ already_AddRefed<nsILoadInfo> HttpBaseChannel::CloneLoadInfoForRedirect(
     newLoadInfo->ResetSandboxedNullPrincipalID();
   }
 
-  nsCString remoteAddress;
-  Unused << GetRemoteAddress(remoteAddress);
-  nsCOMPtr<nsIURI> referrer;
-  if (mReferrerInfo) {
-    referrer = mReferrerInfo->GetComputedReferrer();
-  }
-
-  nsCOMPtr<nsIRedirectHistoryEntry> entry =
-      new nsRedirectHistoryEntry(GetURIPrincipal(), referrer, remoteAddress);
-
-  newLoadInfo->AppendRedirectHistoryEntry(entry, isInternalRedirect);
+  newLoadInfo->AppendRedirectHistoryEntry(this, isInternalRedirect);
 
   return newLoadInfo.forget();
 }
