@@ -121,8 +121,6 @@
 
       li {
         border-top: $border-primary;
-        border-bottom: $border-primary;
-        margin-bottom: -1px;
         line-height: 24px;
         font-size: 13px;
         font-weight: 500;
@@ -136,14 +134,35 @@
         &:nth-last-child(3) {
           display: none;
         }
+
+        &:nth-last-child(1) {
+          border-bottom: $border-primary;
+        }
       }
 
       @media (min-width: $break-point-medium) {
         grid-template: repeat(3, 1fr) / repeat(2, 1fr);
+
+        li {
+          &:nth-child(3) {
+            border-bottom: $border-primary;
+          }
+        }
       }
 
       @media (min-width: $break-point-large) {
         grid-template: repeat(2, 1fr) / repeat(3, 1fr);
+
+
+        li {
+          &:nth-child(odd) {
+            border-bottom: 0;
+          }
+
+          &:nth-child(even) {
+            border-bottom: $border-primary;
+          }
+        }
       }
 
       @media (min-width: $break-point-widest) {
