@@ -478,7 +478,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Return boundaries in screen coordinates.
    */
-  virtual nsIntRect Bounds() const override;
+  virtual nsIntRect Bounds() const;
 
   /**
    * Return boundaries in screen coordinates in CSS pixels.
@@ -489,11 +489,6 @@ class LocalAccessible : public nsISupports, public Accessible {
    * Return boundaries rect relative the bounding frame.
    */
   virtual nsRect RelativeBounds(nsIFrame** aRelativeFrame) const;
-
-  /**
-   * Return boundaries rect relative to the frame of the parent accessible.
-   */
-  virtual nsRect ParentRelativeBounds();
 
   /**
    * Selects the accessible within its container if applicable.
@@ -1084,7 +1079,6 @@ class LocalAccessible : public nsISupports, public Accessible {
   LocalAccessible* mParent;
   nsTArray<LocalAccessible*> mChildren;
   int32_t mIndexInParent;
-  Maybe<nsRect> mBounds;
 
   static const uint8_t kStateFlagsBits = 11;
   static const uint8_t kContextFlagsBits = 3;

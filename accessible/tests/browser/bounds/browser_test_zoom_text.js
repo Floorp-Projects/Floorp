@@ -46,7 +46,7 @@ async function runTests(browser, accDoc) {
   await testTextNode("p2");
   await testEmptyInputNode("i1");
 
-  await SpecialPowers.spawn(browser, [], () => {
+  await invokeContentTask(browser, [], () => {
     const { Layout } = ChromeUtils.import(
       "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
     );
@@ -55,7 +55,7 @@ async function runTests(browser, accDoc) {
 
   await testTextNode("p1");
 
-  await SpecialPowers.spawn(browser, [], () => {
+  await invokeContentTask(browser, [], () => {
     const { Layout } = ChromeUtils.import(
       "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
     );

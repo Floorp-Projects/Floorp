@@ -928,10 +928,6 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
     }
   }
 
-  if (IPCAccessibilityActive() && mDocument) {
-    mDocument->ProcessBoundsChanged();
-  }
-
   mObservingState = eRefreshObserving;
   if (!mDocument) return;
 
