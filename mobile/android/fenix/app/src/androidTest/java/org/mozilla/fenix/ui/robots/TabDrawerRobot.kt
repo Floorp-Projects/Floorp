@@ -148,16 +148,18 @@ class TabDrawerRobot {
     }
 
     fun verifyTabMediaControlButtonState(action: String) {
-        mDevice.waitNotNull(
-            findObject(
-                By
-                    .res("$packageName:id/play_pause_button")
-                    .desc(action)
-            ),
-            waitingTime
-        )
+        mDevice.waitForIdle()
 
-        tabMediaControlButton().check(matches(withContentDescription(action)))
+        mDevice.findObject(
+            UiSelector()
+                .resourceId("$packageName:id/play_pause_button")
+        ).waitForExists(waitingTime)
+
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().descriptionContains(action)
+            ).waitForExists(waitingTime)
+        )
     }
 
     fun clickTabMediaControlButton() = tabMediaControlButton().click()
