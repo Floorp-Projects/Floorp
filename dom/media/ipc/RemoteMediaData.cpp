@@ -6,6 +6,7 @@
 
 #include "RemoteMediaData.h"
 
+#include "PerformanceRecorder.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/MediaIPCUtils.h"
 #include "mozilla/ipc/Shmem.h"
@@ -134,16 +135,23 @@ bool ArrayOfRemoteMediaRawData::Fill(
   nsTArray<AlignedByteBuffer> dataBuffers(aData.Length());
   nsTArray<AlignedByteBuffer> alphaBuffers(aData.Length());
   nsTArray<RefPtr<MediaByteBuffer>> extraDataBuffers(aData.Length());
+  int32_t height = 0;
   for (auto&& entry : aData) {
     dataBuffers.AppendElement(std::move(entry->mBuffer));
     alphaBuffers.AppendElement(std::move(entry->mAlphaBuffer));
     extraDataBuffers.AppendElement(std::move(entry->mExtraData));
+    if (auto&& info = entry->mTrackInfo; info && info->GetAsVideoInfo()) {
+      height = info->GetAsVideoInfo()->mImage.height;
+    }
     mSamples.AppendElement(RemoteMediaRawData{
         MediaDataIPDL(entry->mOffset, entry->mTime, entry->mTimecode,
                       entry->mDuration, entry->mKeyframe),
-        entry->mEOS, entry->mDiscardPadding,
+        entry->mEOS, height, entry->mDiscardPadding,
         entry->mOriginalPresentationWindow});
   }
+  PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::CopyDemuxedData,
+                                   height);
+  perfRecorder.Start();
   mBuffers = RemoteArrayOfByteBuffer(dataBuffers, aAllocator);
   if (!mBuffers.IsValid()) {
     return false;
@@ -153,7 +161,11 @@ bool ArrayOfRemoteMediaRawData::Fill(
     return false;
   }
   mExtraDatas = RemoteArrayOfByteBuffer(extraDataBuffers, aAllocator);
-  return mExtraDatas.IsValid();
+  if (!mExtraDatas.IsValid()) {
+    return false;
+  }
+  perfRecorder.End();
+  return true;
 }
 
 already_AddRefed<MediaRawData> ArrayOfRemoteMediaRawData::ElementAt(
@@ -167,6 +179,9 @@ already_AddRefed<MediaRawData> ArrayOfRemoteMediaRawData::ElementAt(
                             mExtraDatas.Count() == Count(),
                         "Something ain't right here");
   const auto& sample = mSamples[aIndex];
+  PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::CopyDemuxedData,
+                                   sample.mHeight);
+  perfRecorder.Start();
   AlignedByteBuffer data = mBuffers.AlignedBufferAt<uint8_t>(aIndex);
   if (mBuffers.SizeAt(aIndex) && !data) {
     // OOM
@@ -191,6 +206,7 @@ already_AddRefed<MediaRawData> ArrayOfRemoteMediaRawData::ElementAt(
   rawData->mEOS = sample.mEOS;
   rawData->mDiscardPadding = sample.mDiscardPadding;
   rawData->mExtraData = mExtraDatas.MediaByteBufferAt(aIndex);
+  perfRecorder.End();
   return rawData.forget();
 }
 
@@ -222,6 +238,7 @@ ipc::IPDLParamTraits<ArrayOfRemoteMediaRawData::RemoteMediaRawData>::Write(
     IPC::Message* aMsg, ipc::IProtocol* aActor, const paramType& aVar) {
   WriteIPDLParam(aMsg, aActor, aVar.mBase);
   WriteIPDLParam(aMsg, aActor, aVar.mEOS);
+  WriteIPDLParam(aMsg, aActor, aVar.mHeight);
   WriteIPDLParam(aMsg, aActor, aVar.mDiscardPadding);
   WriteIPDLParam(aMsg, aActor, aVar.mOriginalPresentationWindow);
 }
@@ -233,6 +250,7 @@ ipc::IPDLParamTraits<ArrayOfRemoteMediaRawData::RemoteMediaRawData>::Read(
   MediaDataIPDL mBase;
   return ReadIPDLParam(aMsg, aIter, aActor, &aVar->mBase) &&
          ReadIPDLParam(aMsg, aIter, aActor, &aVar->mEOS) &&
+         ReadIPDLParam(aMsg, aIter, aActor, &aVar->mHeight) &&
          ReadIPDLParam(aMsg, aIter, aActor, &aVar->mDiscardPadding) &&
          ReadIPDLParam(aMsg, aIter, aActor, &aVar->mOriginalPresentationWindow);
 };

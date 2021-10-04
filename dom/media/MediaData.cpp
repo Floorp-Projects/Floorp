@@ -8,6 +8,7 @@
 
 #include "ImageContainer.h"
 #include "MediaInfo.h"
+#include "PerformanceRecorder.h"
 #include "VideoUtils.h"
 #include "YCbCrUtils.h"
 #include "mozilla/layers/ImageBridgeChild.h"
@@ -317,6 +318,9 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
     return nullptr;
   }
 
+  PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::CopyDecodedVideo,
+                                   aInfo.mImage.height);
+  perfRecorder.Start();
   RefPtr<VideoData> v(new VideoData(aOffset, aTime, aDuration, aKeyframe,
                                     aTimecode, aInfo.mDisplay, 0));
 
@@ -337,6 +341,7 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
                                 : aAllocator,
                             aContainer, data)) {
       v->mImage = d3d11Image;
+      perfRecorder.End();
       return v.forget();
     }
   }
@@ -348,6 +353,7 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
     PlanarYCbCrData data = ConstructPlanarYCbCrData(aInfo, aBuffer, aPicture);
     if (ioImage->SetData(aContainer, data)) {
       v->mImage = ioImage;
+      perfRecorder.End();
       return v.forget();
     }
   }
@@ -369,6 +375,7 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
     return nullptr;
   }
 
+  perfRecorder.End();
   return v.forget();
 }
 
@@ -477,6 +484,13 @@ MediaRawData::MediaRawData(AlignedByteBuffer&& aData,
       mAlphaBuffer(std::move(aAlphaData)) {}
 
 already_AddRefed<MediaRawData> MediaRawData::Clone() const {
+  int32_t sampleHeight = 0;
+  if (mTrackInfo && mTrackInfo->GetAsVideoInfo()) {
+    sampleHeight = mTrackInfo->GetAsVideoInfo()->mImage.height;
+  }
+  PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::CopyDemuxedData,
+                                   sampleHeight);
+  perfRecorder.Start();
   RefPtr<MediaRawData> s = new MediaRawData;
   s->mTimecode = mTimecode;
   s->mTime = mTime;
@@ -494,6 +508,7 @@ already_AddRefed<MediaRawData> MediaRawData::Clone() const {
   if (!s->mAlphaBuffer.Append(mAlphaBuffer.Data(), mAlphaBuffer.Length())) {
     return nullptr;
   }
+  perfRecorder.End();
   return s.forget();
 }
 
