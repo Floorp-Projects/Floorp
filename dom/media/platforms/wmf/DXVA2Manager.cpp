@@ -12,7 +12,6 @@
 #include "ImageContainer.h"
 #include "MFTDecoder.h"
 #include "MediaTelemetryConstants.h"
-#include "PerformanceRecorder.h"
 #include "VideoUtils.h"
 #include "WMFUtils.h"
 #include "gfxCrashReporterUtils.h"
@@ -897,9 +896,6 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
       NS_ENSURE_TRUE(mSyncObject, E_FAIL);
     }
 
-    PerformanceRecorder perfRecorder(
-        PerformanceRecorder::Stage::CopyDecodedVideo, height);
-    perfRecorder.Start();
     // The D3D11TextureClientAllocator may return a different texture format
     // than preferred. In which case the destination texture will be BGRA32.
     if (outDesc.Format == inDesc.Format) {
@@ -929,7 +925,6 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
           [&]() -> void { hr = mTransform->Output(&sample); });
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
     }
-    perfRecorder.End();
   }
 
   if (!mutex && mDevice != DeviceManagerDx::Get()->GetCompositorDevice() &&
