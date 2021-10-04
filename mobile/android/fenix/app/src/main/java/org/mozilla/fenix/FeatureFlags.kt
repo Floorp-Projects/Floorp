@@ -31,42 +31,42 @@ object FeatureFlags {
     /**
      * Enables the Home button in the browser toolbar to navigate back to the home screen.
      */
-    val showHomeButtonFeature = Config.channel.isNightlyOrDebug || Config.channel.isBeta
+    const val showHomeButtonFeature = true
 
     /**
      * Enables the Start On Home feature in the settings page.
      */
-    val showStartOnHomeSettings = Config.channel.isNightlyOrDebug
+    const val showStartOnHomeSettings = true
 
     /**
      * Enables the "recent" tabs feature in the home screen.
      */
-    val showRecentTabsFeature = Config.channel.isNightlyOrDebug || Config.channel.isBeta
+    const val showRecentTabsFeature = true
 
     /**
      * Enables UI features based on history metadata.
      */
-    val historyMetadataUIFeature = Config.channel.isNightlyOrDebug || Config.channel.isBeta
+    const val historyMetadataUIFeature = true
 
     /**
      * Enables the recently saved bookmarks feature in the home screen.
      */
-    val recentBookmarksFeature = Config.channel.isNightlyOrDebug || Config.channel.isBeta
+    const val recentBookmarksFeature = true
 
     /**
      * Identifies and separates the tabs list with a secondary section containing least used tabs.
      */
-    val inactiveTabs = Config.channel.isNightlyOrDebug
+    const val inactiveTabs = true
 
     /**
      * Enables showing the home screen behind the search dialog
      */
-    val showHomeBehindSearch = Config.channel.isNightlyOrDebug
+    const val showHomeBehindSearch = true
 
     /**
      * Enables customizing the home screen
      */
-    val customizeHome = Config.channel.isNightlyOrDebug || Config.channel.isBeta
+    const val customizeHome = true
 
     /**
      * Identifies and separates the tabs list with a group containing search term tabs.
@@ -76,15 +76,13 @@ object FeatureFlags {
     /**
      * Enables showing search groupings in the History.
      */
-    val showHistorySearchGroups = Config.channel.isNightlyOrDebug
+    const val showHistorySearchGroups = true
 
     /**
      * Show Pocket recommended stories on home.
      */
     fun isPocketRecommendationsFeatureEnabled(context: Context): Boolean {
-        return Config.channel.isBeta || (
-            Config.channel.isNightlyOrDebug && "en-US" == LocaleManager.getCurrentLocale(context)
-                ?.toLanguageTag() ?: getSystemDefault().toLanguageTag()
-            )
+        return "en-US" == LocaleManager.getCurrentLocale(context)
+            ?.toLanguageTag() ?: getSystemDefault().toLanguageTag()
     }
 }
