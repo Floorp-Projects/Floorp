@@ -70,13 +70,7 @@ public class FloatingSessionsButton extends FloatingActionButton {
             if (behavior != null) {
                 behavior.setAutoHideEnabled(shouldBeVisible);
             }
-
-            if (shouldBeVisible) {
-                show();
-                invalidate();
-            } else {
-                hide();
-            }
+            invalidate();
         }
     }
 

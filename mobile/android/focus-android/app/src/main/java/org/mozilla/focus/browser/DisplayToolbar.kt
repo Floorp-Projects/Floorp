@@ -7,7 +7,12 @@ package org.mozilla.focus.browser
 import android.content.Context
 import android.util.AttributeSet
 import com.google.android.material.appbar.AppBarLayout
-import kotlinx.android.synthetic.main.browser_display_toolbar.view.*
+import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS
+import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL
+import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP
+import kotlinx.android.synthetic.main.browser_display_toolbar.view.browserToolbar
+import kotlinx.android.synthetic.main.browser_display_toolbar.view.urlbar
+import org.mozilla.focus.utils.Settings
 
 /**
  * The toolbar of the BrowserFragment; displaying the URL and other controls.
@@ -16,12 +21,23 @@ class DisplayToolbar(
     context: Context,
     attrs: AttributeSet
 ) : AppBarLayout(context, attrs), AppBarLayout.OnOffsetChangedListener {
+
     init {
         addOnOffsetChangedListener(this)
     }
 
     @Suppress("MagicNumber") // A mathematical expression - No need to add constants for 100% and 50%.
     override fun onOffsetChanged(appBarLayout: AppBarLayout, verticalOffset: Int) {
+
+        if (Settings.getInstance(context).isAccessibilityEnabled()) {
+            (urlbar.layoutParams as LayoutParams).scrollFlags = LayoutParams.SCROLL_FLAG_NO_SCROLL
+            browserToolbar.alpha = 1f
+            return
+        } else {
+            (urlbar.layoutParams as LayoutParams).scrollFlags =
+                SCROLL_FLAG_SCROLL or SCROLL_FLAG_ENTER_ALWAYS or SCROLL_FLAG_SNAP
+        }
+
         // When scrolling the toolbar away we want to fade out the content on the toolbar
         // with an alpha animation. This will avoid that the text clashes with the status bar.
 

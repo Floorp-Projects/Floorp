@@ -14,6 +14,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import android.util.AttributeSet;
 import android.view.View;
 
+import org.mozilla.focus.utils.Settings;
+
 /**
  * A Behavior implementation that will hide/show a FloatingActionButton based on whether an AppBarLayout
  * is visible or not.
@@ -58,7 +60,7 @@ public class FloatingActionButtonBehavior extends FloatingSessionsButton.Behavio
 
     @Override
     public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-        if (verticalOffset == 0 && !visible) {
+        if ((verticalOffset == 0 && !visible) || Settings.getInstance(appBarLayout.getContext()).isAccessibilityEnabled()) {
             showButton();
         } else if (Math.abs(verticalOffset) >= appBarLayout.getTotalScrollRange() && visible) {
             hideButton();
