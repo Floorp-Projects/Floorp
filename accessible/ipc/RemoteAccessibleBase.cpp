@@ -13,6 +13,8 @@
 #include "mozilla/a11y/Role.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/Unused.h"
 #include "RelationType.h"
 #include "xpcAccessibleDocument.h"
@@ -235,6 +237,116 @@ double RemoteAccessibleBase<Derived>::Step() const {
   }
 
   return UnspecifiedNaN<double>();
+}
+
+template <class Derived>
+Maybe<nsRect> RemoteAccessibleBase<Derived>::RetrieveCachedBounds() const {
+  Maybe<const nsTArray<int32_t>&> maybeArray =
+      mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::relativeBounds);
+  if (maybeArray) {
+    const nsTArray<int32_t>& relativeBoundsArr = *maybeArray;
+    MOZ_ASSERT(relativeBoundsArr.Length() == 4,
+               "Incorrectly sized bounds array");
+    nsRect relativeBoundsRect(relativeBoundsArr[0], relativeBoundsArr[1],
+                              relativeBoundsArr[2], relativeBoundsArr[3]);
+    return Some(relativeBoundsRect);
+  }
+
+  return Nothing();
+}
+
+template <class Derived>
+nsIntRect RemoteAccessibleBase<Derived>::Bounds() const {
+  if (mCachedFields) {
+    Maybe<nsRect> maybeBounds = RetrieveCachedBounds();
+    if (maybeBounds) {
+      nsRect bounds = *maybeBounds;
+      nsIntRect devPxBounds;
+      dom::CanonicalBrowsingContext* cbc =
+          static_cast<dom::BrowserParent*>(mDoc->Manager())
+              ->GetBrowsingContext()
+              ->Top();
+      dom::BrowserParent* bp = cbc->GetBrowserParent();
+      nsPresContext* presContext =
+          bp->GetOwnerElement()->OwnerDoc()->GetPresContext();
+
+      const Accessible* acc = this;
+      while (acc) {
+        if (LocalAccessible* localAcc =
+                const_cast<Accessible*>(acc)->AsLocal()) {
+          // LocalAccessible::Bounds returns screen-relative bounds in
+          // dev pixels.
+          nsIntRect localBounds = localAcc->Bounds();
+
+          // Convert our existing `bounds` rect from app units to dev pixels
+          devPxBounds =
+              bounds.ToNearestPixels(presContext->AppUnitsPerDevPixel());
+
+          // We factor in our zoom level before offsetting by
+          // `localBounds`, which has already taken zoom into account.
+          devPxBounds.ScaleRoundOut(cbc->GetFullZoom());
+
+          // The root document will always have an APZ resolution of 1,
+          // so we don't factor in its scale here. We also don't scale
+          // by GetFullZoom because LocalAccessible::Bounds already does
+          // that.
+          devPxBounds.MoveBy(localBounds.X(), localBounds.Y());
+
+          break;
+        } else {
+          RemoteAccessible* remoteAcc =
+              const_cast<Accessible*>(acc)->AsRemote();
+          // Verify that remoteAcc is not `this`, since `bounds` was
+          // initialised to include this->RetrieveCachedBounds()
+          Maybe<nsRect> maybeRemoteBounds =
+              (remoteAcc == this) ? Nothing()
+                                  : remoteAcc->RetrieveCachedBounds();
+
+          if (maybeRemoteBounds) {
+            // We need to take into account a non-1 resolution set on the
+            // presshell. This happens with async pinch zooming, among other
+            // things. We can't reliably query this value in the parent process,
+            // so we retrieve it from the document's cache.
+            Maybe<float> res;
+            if (remoteAcc->IsDoc()) {
+              // Apply the document's resolution to the bounds we've gathered
+              // thus far. We do this before applying the document's offset
+              // because document accs should not have their bounds scaled by
+              // their own resolution. They should be scaled by the resolution
+              // of their containing document (if any). We also skip this in the
+              // case that remoteAcc == this, since that implies `bounds` should
+              // be scaled relative to its parent doc.
+              res = remoteAcc->AsDoc()->mCachedFields->GetAttribute<float>(
+                  nsGkAtoms::resolution);
+              bounds.ScaleRoundOut(res.valueOr(1.0f));
+            }
+
+            // Regardless of whether this is a doc, we should offset `bounds`
+            // by the bounds retrieved here. This is how we build screen
+            // coordinates from relative coordinates.
+            nsRect remoteBounds = *maybeRemoteBounds;
+            bounds.MoveBy(remoteBounds.X(), remoteBounds.Y());
+          }
+        }
+
+        acc = acc->Parent();
+      }
+
+      PresShell* presShell = presContext->PresShell();
+
+      // Our relative bounds are pulled from the coordinate space of the layout
+      // viewport, but we need them to be in the coordinate space of the visual
+      // viewport. We calculate the difference and translate our bounds here.
+      nsPoint viewportOffset = presShell->GetVisualViewportOffset() -
+                               presShell->GetLayoutViewportOffset();
+      devPxBounds.MoveBy(-(
+          viewportOffset.ToNearestPixels(presContext->AppUnitsPerDevPixel())));
+
+      return devPxBounds;
+    }
+  }
+
+  return nsIntRect();
 }
 
 template class RemoteAccessibleBase<RemoteAccessible>;

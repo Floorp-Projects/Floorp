@@ -17,6 +17,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
+#include "nsTHashSet.h"
 #include "nsWeakReference.h"
 
 class nsAccessiblePivot;
@@ -340,6 +341,13 @@ class DocAccessible : public HyperTextAccessibleWrap,
   void ContentRemoved(LocalAccessible* aAccessible);
   void ContentRemoved(nsIContent* aContentNode);
 
+  /*
+   * Add the given accessible to mMaybeBoundsChanged so we
+   * can (later) check if its bounds have changed, and update
+   * the cache appropriately.
+   */
+  void MarkForBoundsProcessing(LocalAccessible* aAcc);
+
   /**
    * Updates accessible tree when rendered text is changed.
    */
@@ -481,6 +489,13 @@ class DocAccessible : public HyperTextAccessibleWrap,
    * invalidate their containers later.
    */
   void ProcessInvalidationList();
+
+  /**
+   * Called from NotificationController to process this doc's
+   * mMaybeBoundsChanged list. Sends a cache update for each acc in this
+   * doc whose bounds have changed since reflow.
+   */
+  void ProcessBoundsChanged();
 
   /**
    * Steals or puts back accessible subtrees.
@@ -697,6 +712,8 @@ class DocAccessible : public HyperTextAccessibleWrap,
 
   // Exclusively owned by IPDL so don't manually delete it!
   DocAccessibleChild* mIPCDoc;
+
+  nsTHashSet<RefPtr<LocalAccessible>> mMaybeBoundsChanged;
 };
 
 inline DocAccessible* LocalAccessible::AsDoc() {
