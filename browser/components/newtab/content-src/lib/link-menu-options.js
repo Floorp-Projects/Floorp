@@ -273,6 +273,14 @@ export const LinkMenuOptions = {
     site.pocket_id
       ? LinkMenuOptions.ArchiveFromPocket(site)
       : LinkMenuOptions.CheckBookmark(site),
+  CheckArchiveFromPocket: site =>
+    site.pocket_id
+      ? LinkMenuOptions.ArchiveFromPocket(site)
+      : LinkMenuOptions.EmptyItem(),
+  CheckDeleteFromPocket: site =>
+    site.pocket_id
+      ? LinkMenuOptions.DeleteFromPocket(site)
+      : LinkMenuOptions.EmptyItem(),
   OpenInPrivateWindow: (site, index, eventSource, isEnabled) =>
     isEnabled ? _OpenInPrivateWindow(site) : LinkMenuOptions.EmptyItem(),
 };
