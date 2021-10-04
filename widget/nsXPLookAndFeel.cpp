@@ -1072,6 +1072,12 @@ LookAndFeel::ColorScheme LookAndFeel::ColorSchemeForChrome() {
 
 static LookAndFeel::ColorScheme ColorSchemeForDocument(
     const dom::Document& aDoc, bool aContentSupportsDark) {
+  if (aDoc.ShouldAvoidNativeTheme()) {
+    // The non-native theme doesn't know how to draw dark form controls yet, so
+    // let's force light colors for now.
+    return LookAndFeel::ColorScheme::Light;
+  }
+
   if (nsContentUtils::IsChromeDoc(&aDoc)) {
     return LookAndFeel::ColorSchemeForChrome();
   }
