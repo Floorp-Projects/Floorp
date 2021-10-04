@@ -508,6 +508,15 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
   Assert.ok(doc);
   Assert.ok(tbody);
 
+  if (isFission) {
+    // We're going to kill this process later, so tell it to add an
+    // annotation so the leak checker knows it is okay there is no
+    // leak log.
+    await SpecialPowers.spawn(tabCloseProcess1.linkedBrowser, [], () => {
+      ChromeUtils.privateNoteIntentionalCrash();
+    });
+  }
+
   info("Setting up fake process hang detector");
   let hungChildID = tabHung.linkedBrowser.frameLoader.childID;
 
