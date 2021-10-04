@@ -9,32 +9,14 @@
 
 #include "nsContainerFrame.h"
 
-namespace mozilla {
-namespace detail {
-
-static nscoord GetCoord(const LengthPercentage& aCoord, nscoord aIfNotCoord) {
-  if (aCoord.ConvertsToLength()) {
-    return aCoord.ToLength();
-  }
-  return aIfNotCoord;
-}
-
-static nscoord GetCoord(const LengthPercentageOrAuto& aCoord,
-                        nscoord aIfNotCoord) {
-  if (aCoord.IsAuto()) {
-    return aIfNotCoord;
-  }
-  return GetCoord(aCoord.AsLengthPercentage(), aIfNotCoord);
-}
-
-}  // namespace detail
-}  // namespace mozilla
-
 template <typename ISizeData, typename F>
 void nsContainerFrame::DoInlineIntrinsicISize(ISizeData* aData,
                                               F& aHandleChildren) {
   using namespace mozilla;
-  using mozilla::detail::GetCoord;
+
+  auto GetMargin = [](const LengthPercentageOrAuto& aCoord) -> nscoord {
+    return aCoord.IsAuto() ? 0 : aCoord.AsLengthPercentage().Resolve(0);
+  };
 
   if (GetPrevInFlow()) return;  // Already added.
 
@@ -61,9 +43,9 @@ void nsContainerFrame::DoInlineIntrinsicISize(ISizeData* aData,
   if (!GetPrevContinuation() || MOZ_UNLIKELY(!sliceBreak)) {
     nscoord startPBM =
         // clamp negative calc() to 0
-        std::max(GetCoord(stylePadding->mPadding.Get(startSide), 0), 0) +
+        std::max(stylePadding->mPadding.Get(startSide).Resolve(0), 0) +
         styleBorder->GetComputedBorderWidth(startSide) +
-        GetCoord(styleMargin->mMargin.Get(startSide), 0);
+        GetMargin(styleMargin->mMargin.Get(startSide));
     if (MOZ_LIKELY(sliceBreak)) {
       aData->mCurrentLine += startPBM;
     } else {
@@ -73,9 +55,9 @@ void nsContainerFrame::DoInlineIntrinsicISize(ISizeData* aData,
 
   nscoord endPBM =
       // clamp negative calc() to 0
-      std::max(GetCoord(stylePadding->mPadding.Get(endSide), 0), 0) +
+      std::max(stylePadding->mPadding.Get(endSide).Resolve(0), 0) +
       styleBorder->GetComputedBorderWidth(endSide) +
-      GetCoord(styleMargin->mMargin.Get(endSide), 0);
+      GetMargin(styleMargin->mMargin.Get(endSide));
   if (MOZ_UNLIKELY(!sliceBreak)) {
     clonePBM += endPBM;
     aData->mCurrentLine += clonePBM;
