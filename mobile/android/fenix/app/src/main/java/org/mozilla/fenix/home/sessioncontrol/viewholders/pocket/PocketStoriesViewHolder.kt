@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.pocket
 
 import android.view.View
+import androidx.annotation.Dimension
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -52,7 +53,10 @@ class PocketStoriesViewHolder(
                     store,
                     interactor::onStoriesShown,
                     interactor::onCategoryClick,
-                    interactor::onExternalLinkClicked
+                    interactor::onExternalLinkClicked,
+                    with(composeView.resources) {
+                        getDimensionPixelSize(R.dimen.home_item_horizontal_margin) / displayMetrics.density
+                    }
                 )
             }
         }
@@ -68,7 +72,8 @@ fun PocketStories(
     store: HomeFragmentStore,
     onStoriesShown: (List<PocketRecommendedStory>) -> Unit,
     onCategoryClick: (PocketRecommendedStoriesCategory) -> Unit,
-    onExternalLinkClicked: (String) -> Unit
+    onExternalLinkClicked: (String) -> Unit,
+    @Dimension horizontalPadding: Float = 0f
 ) {
     val stories = store
         .observeAsComposableState { state -> state.pocketStories }.value
@@ -87,35 +92,45 @@ fun PocketStories(
         }
     }
 
-    Column(modifier = Modifier.padding(vertical = 48.dp)) {
+    Column(modifier = Modifier.padding(vertical = 44.dp)) {
         HomeSectionHeader(
             text = stringResource(R.string.pocket_stories_header_1),
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(horizontal = horizontalPadding.dp)
         )
 
         Spacer(Modifier.height(17.dp))
 
-        PocketStories(stories ?: emptyList(), onExternalLinkClicked)
+        PocketStories(stories ?: emptyList(), horizontalPadding.dp, onExternalLinkClicked)
 
         Spacer(Modifier.height(24.dp))
 
         HomeSectionHeader(
             text = stringResource(R.string.pocket_stories_categories_header),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = horizontalPadding.dp)
         )
 
         Spacer(Modifier.height(17.dp))
 
         PocketStoriesCategories(
             categories = categories ?: emptyList(),
-            selections = categoriesSelections ?: emptyList()
-        ) {
-            onCategoryClick(it)
-        }
+            selections = categoriesSelections ?: emptyList(),
+            onCategoryClick = onCategoryClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = horizontalPadding.dp)
+        )
 
         Spacer(Modifier.height(24.dp))
 
-        PoweredByPocketHeader(onExternalLinkClicked)
+        PoweredByPocketHeader(
+            onExternalLinkClicked,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = horizontalPadding.dp)
+        )
     }
 }

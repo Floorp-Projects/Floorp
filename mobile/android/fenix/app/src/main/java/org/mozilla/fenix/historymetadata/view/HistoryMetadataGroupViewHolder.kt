@@ -30,6 +30,9 @@ class HistoryMetadataGroupViewHolder(
 ) : ViewHolder(composeView) {
 
     init {
+        val horizontalPadding = composeView.resources.getDimensionPixelSize(R.dimen.home_item_horizontal_margin)
+        composeView.setPadding(horizontalPadding, 0, horizontalPadding, 0)
+
         composeView.setViewCompositionStrategy(
             ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
         )
