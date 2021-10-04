@@ -64,7 +64,7 @@ add_task(async function() {
     "shapes highlighter toggle is active."
   );
   ok(
-    highlighters.highlighters[HIGHLIGHTER_TYPE],
+    inspector.inspectorFront.getKnownHighlighter(HIGHLIGHTER_TYPE).actorID,
     "CSS shapes highlighter created in the rule-view."
   );
   ok(highlighters.shapesHighlighterShown, "CSS shapes highlighter is shown.");
