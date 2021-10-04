@@ -26,7 +26,9 @@
 #include "nsIMacDockSupport.h"
 #include "nsObjCExceptions.h"
 #include "nsString.h"
-#include "nsUpdateDriver.h"
+#ifdef MOZ_UPDATER
+#  include "nsUpdateDriver.h"
+#endif
 #include "SDKDeclarations.h"
 
 // For IOKit docs, see:
@@ -198,6 +200,7 @@ static void StripQuarantineBit(NSString* aBundlePath) {
   LaunchTask(@"/usr/bin/xattr", arguments);
 }
 
+#ifdef MOZ_UPDATER
 bool LaunchElevatedDmgInstall(NSString* aBundlePath, NSArray* aArguments) {
   NSTask* task;
   if (@available(macOS 10.13, *)) {
@@ -226,6 +229,7 @@ bool LaunchElevatedDmgInstall(NSString* aBundlePath, NSArray* aArguments) {
 
   return didSucceed;
 }
+#endif
 
 // Note: both arguments are expected to contain the app name (to end with
 // '.app').
@@ -238,6 +242,7 @@ static bool InstallFromDmg(NSString* aBundlePath, NSString* aDestPath) {
     installSuccessful = true;
   }
 
+#ifdef MOZ_UPDATER
   // The installation may have been unsuccessful if the user did not have the
   // rights to write to the Applications directory. Check for this situation and
   // launch an elevated installation if necessary. Rather than creating a new,
@@ -257,6 +262,7 @@ static bool InstallFromDmg(NSString* aBundlePath, NSString* aDestPath) {
     LaunchElevatedDmgInstall(updaterBinPath, arguments);
     installSuccessful = [fileManager fileExistsAtPath:aDestPath];
   }
+#endif
 
   if (!installSuccessful) {
     return false;
