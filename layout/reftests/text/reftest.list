@@ -52,7 +52,7 @@ fuzzy-if(Android,0-255,0-325) == pre-line-1.html pre-line-1-ref.html
 # Cairo's FreeType and GDI backends snap glyphs to pixels, while Mac (usually),
 # D2D, and Skia have subpixel positioning.  The tests for pixel-snapping assume that
 # 1 CSS pixel == 1 device pixel
-fails-if(Android) skip-if(d2d||cocoaWidget||skiaContent) == subpixel-glyphs-x-1a.html subpixel-glyphs-x-1b.html
+skip == subpixel-glyphs-x-1a.html subpixel-glyphs-x-1b.html
 # Platforms with subpixel positioning already have inconsistent glyphs by
 # design, but that is considered more tolerable because they are subpixel
 # inconsistencies.  On those platforms we just test that glyph positions are
@@ -129,7 +129,7 @@ pref(gfx.font_rendering.graphite.enabled,true) == wordbreak-9.html wordbreak-9-r
 == wordbreak-dynamic-1.html wordbreak-dynamic-1-ref.html
 == wordwrap-01.html wordwrap-01-ref.html
 fuzzy-if(Android,0-1,0-1) == wordwrap-02.html wordwrap-02-ref.html # bug 1363940
-fuzzy-if(gtkWidget,0-1,0-177) fuzzy-if(skiaContent,0-1,0-50) == wordwrap-03.html wordwrap-03-ref.html # Fuzzy on Linux because the native textbox gradient is painted in a slightly different position depending on the invalid area.
+fuzzy(0-1,0-50) == wordwrap-03.html wordwrap-03-ref.html # Fuzzy on Linux because the native textbox gradient is painted in a slightly different position depending on the invalid area.
 == wordwrap-04.html wordwrap-04-ref.html
 == overflowwrap-04.html wordwrap-04-ref.html
 == wordwrap-05.html wordwrap-05-ref.html
@@ -157,8 +157,8 @@ random-if(cocoaWidget) random-if(gtkWidget) == zwnj-01.xhtml zwnj-01-ref.xhtml #
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 444656.html 444656-ref.html # Bug 1392106
 fuzzy-if(geckoview,0-4,0-1) == 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
-fuzzy-if(skiaContent,0-1,0-600) == 475092-sub.html 475092-ref.html
-fails-if(Android) fuzzy-if(skiaContent&&!Android,0-90,0-3100) fuzzy-if(webrender&&cocoaWidget,72-72,353-353) == 475092-pos.html 475092-sub.html # bug 482596
+fuzzy(0-1,0-600) == 475092-sub.html 475092-ref.html
+fails-if(Android) fuzzy-if(!Android,0-90,0-3100) fuzzy-if(cocoaWidget,72-72,353-353) == 475092-pos.html 475092-sub.html # bug 482596
 == 476378-soft-hyphen-fallback.html 476378-soft-hyphen-fallback-ref.html
 # Test for bug 484954
 == rgba-text.html rgba-text-ref.html
@@ -193,15 +193,15 @@ skip-if(!cocoaWidget) != 1349308-1.html 1349308-notref.html # macOS-specific tes
 fuzzy-if(Android,0-128,0-233) == 1463020-letter-spacing-text-transform-1.html 1463020-letter-spacing-text-transform-1-ref.html
 fails-if(Android) == 1463020-letter-spacing-text-transform-2.html 1463020-letter-spacing-text-transform-2-ref.html # missing font coverage on Android
 == 1507661-spurious-hyphenation-after-explicit.html 1507661-spurious-hyphenation-after-explicit-ref.html
-fuzzy-if(useDrawSnapshot&&webrender,255-255,50-50) fuzzy-if(!webrender,12-66,288-1681) fails-if(gtkWidget&&!webrender) == 1522857-1.html 1522857-1-ref.html # antialiasing fuzz in non-webrender cases
+fuzzy-if(useDrawSnapshot,255-255,50-50) == 1522857-1.html 1522857-1-ref.html # antialiasing fuzz in non-webrender cases
 != 1637405-pua-shaping-1.html 1637405-pua-shaping-1-notref.html
-fuzzy-if(useDrawSnapshot&&webrender,255-255,50-50) fuzzy-if(!webrender,0-42,0-1590) fuzzy-if(gtkWidget&&!webrender,0-255,0-50) == 1655364-1.html 1655364-1-ref.html
+fuzzy-if(useDrawSnapshot,255-255,50-50) == 1655364-1.html 1655364-1-ref.html
 == 1670581-1.html 1670581-1-ref.html
 == 1673098-1.html 1673098-1-ref.html
 
 # ensure emoji chars don't render blank (bug 715798, bug 779042);
 # should at least render hexboxes if there's no font support
-random-if(geckoview&&webrender) != emoji-01.html emoji-01-notref.html
+random-if(geckoview) != emoji-01.html emoji-01-notref.html
 != emoji-02.html emoji-02-notref.html
 
 # Bug 727276: tests with variation selectors 15 and 16 to control emoji rendering style

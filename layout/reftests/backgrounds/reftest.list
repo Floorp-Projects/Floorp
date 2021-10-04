@@ -5,14 +5,14 @@ include vector/reftest.list
 == layers-layer-count-inheritance-1.xhtml layers-layer-count-1-ref.xhtml
 == layers-layer-count-cascade-2.xhtml layers-layer-count-2-ref.xhtml
 == layers-layer-count-inheritance-2.xhtml layers-layer-count-2-ref.xhtml
-fuzzy-if(Android,0-9,0-600000) fuzzy-if(skiaContent,0-1,0-5000) == viewport-translucent-color-1.html viewport-translucent-color-ref.html
-fuzzy-if(skiaContent,0-1,0-5000) == viewport-translucent-color-2.html viewport-translucent-color-ref.html
-fuzzy-if(skiaContent,0-1,0-5000) == viewport-translucent-color-3.html viewport-translucent-color-ref.html
+fuzzy(0-1,0-5000) == viewport-translucent-color-1.html viewport-translucent-color-ref.html
+fuzzy(0-1,0-5000) == viewport-translucent-color-2.html viewport-translucent-color-ref.html
+fuzzy(0-1,0-5000) == viewport-translucent-color-3.html viewport-translucent-color-ref.html
 != viewport-translucent-color-ref.html about:blank
-fuzzy-if(skiaContent,0-1,0-10000) == iframe-translucent-color-1.html iframe-translucent-color-ref.html
-fuzzy-if(skiaContent,0-1,0-1024) == translucent-color-1.html translucent-color-ref.html
-fuzzy-if(skiaContent,0-1,0-1024) == translucent-color-2.html translucent-color-ref.html
-fuzzy-if(skiaContent,0-1,0-1024) == translucent-color-3.html translucent-color-ref.html
+fuzzy(0-1,0-10000) == iframe-translucent-color-1.html iframe-translucent-color-ref.html
+fuzzy(0-1,0-1024) == translucent-color-1.html translucent-color-ref.html
+fuzzy(0-1,0-1024) == translucent-color-2.html translucent-color-ref.html
+fuzzy(0-1,0-1024) == translucent-color-3.html translucent-color-ref.html
 != translucent-color-ref.html about:blank
 == root-element-display-none-1.html root-element-display-none-ref.html
 == continuous-inline-1a.html continuous-inline-1ab-ref.html
@@ -125,7 +125,7 @@ random-if(OSX==1010) == background-size-monster-rem.html background-size-monster
 # the image aren't the issue, because they're being obscured to avoid sampling
 # algorithm dependencies (at least assuming the sampling algorithm in use
 # doesn't sample too far astray from the boundaries).
-fails-if(!webrender) == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html # bug 1073209
+== background-size-zoom-repeat.html background-size-zoom-repeat-ref.html # bug 1073209
 
 # -moz-default-background-color and -moz-default-color (bug 591341)
 == background-moz-default-background-color.html background-moz-default-background-color-ref.html
@@ -157,33 +157,33 @@ HTTP == background-referrer.html background-referrer-ref.html
 == attachment-local-clipping-color-1.html attachment-local-clipping-color-1-ref.html
 == attachment-local-clipping-color-2.html attachment-local-clipping-color-1-ref.html  # Same ref as the previous test.
 == attachment-local-clipping-color-3.html attachment-local-clipping-color-3-ref.html
-fuzzy-if(skiaContent,0-1,0-300) == attachment-local-clipping-color-4.html attachment-local-clipping-color-4-ref.html
-fuzzy-if(skiaContent,0-1,0-400) == attachment-local-clipping-color-5.html attachment-local-clipping-color-4-ref.html
-fuzzy(0-50,0-500) fuzzy-if(skiaContent,0-51,0-320) == attachment-local-clipping-color-6.html attachment-local-clipping-color-6-ref.html
+fuzzy(0-1,0-300) == attachment-local-clipping-color-4.html attachment-local-clipping-color-4-ref.html
+fuzzy(0-1,0-400) == attachment-local-clipping-color-5.html attachment-local-clipping-color-4-ref.html
+fuzzy(0-51,0-320) == attachment-local-clipping-color-6.html attachment-local-clipping-color-6-ref.html
 
 == attachment-local-clipping-image-1.html attachment-local-clipping-image-1-ref.html
 == attachment-local-clipping-image-2.html attachment-local-clipping-image-1-ref.html  # Same ref as the previous test.
 == attachment-local-clipping-image-3.html attachment-local-clipping-image-3-ref.html
 # The next three tests are fuzzy due to bug 1128229.
-fuzzy(0-16,0-69) fuzzy-if(skiaContent,0-95,0-2206) == attachment-local-clipping-image-4.html attachment-local-clipping-image-4-ref.html
-fuzzy(0-16,0-69) fuzzy-if(skiaContent,0-95,0-2206) == attachment-local-clipping-image-5.html attachment-local-clipping-image-4-ref.html
-fuzzy(0-80,0-500) fuzzy-if(skiaContent,0-109,0-908) fuzzy-if(geckoview&&webrender&&device,64-64,2010-2830) == attachment-local-clipping-image-6.html attachment-local-clipping-image-6-ref.html
+fuzzy(0-95,0-2206) == attachment-local-clipping-image-4.html attachment-local-clipping-image-4-ref.html
+fuzzy(0-95,0-2206) == attachment-local-clipping-image-5.html attachment-local-clipping-image-4-ref.html
+fuzzy(0-109,0-908) fuzzy-if(geckoview&&device,64-64,2010-2830) == attachment-local-clipping-image-6.html attachment-local-clipping-image-6-ref.html
 
-fuzzy-if(skiaContent,0-1,0-8) fuzzy-if(webrender,0-1,0-84) == background-multiple-with-border-radius.html background-multiple-with-border-radius-ref.html
-fuzzy-if(webrender,10-93,49600-49600) == background-repeat-large-area.html background-repeat-large-area-ref.html
+fuzzy(0-1,0-84) == background-multiple-with-border-radius.html background-multiple-with-border-radius-ref.html
+fuzzy(0-11,0-49600) == background-repeat-large-area.html background-repeat-large-area-ref.html
 
-fuzzy(0-30,0-474) fuzzy-if(skiaContent,0-31,0-474) == background-tiling-zoom-1.html background-tiling-zoom-1-ref.html
+fuzzy(0-31,0-474) == background-tiling-zoom-1.html background-tiling-zoom-1-ref.html
 
 skip-if(!cocoaWidget) == background-repeat-resampling.html background-repeat-resampling-ref.html
 
-fuzzy-if(winWidget,0-102,0-2032) fuzzy-if(skiaContent,0-102,0-2811) fuzzy-if(webrender&&winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1a.html background-clip-text-1-ref.html # Bug 1392106
-fuzzy-if(winWidget,0-102,0-2032) fuzzy-if(skiaContent,0-102,0-2811) fuzzy-if(webrender&&winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1b.html background-clip-text-1-ref.html # Bug 1392106
-fuzzy-if(winWidget,0-102,0-2032) fuzzy-if(skiaContent,0-102,0-2811) fuzzy-if(webrender&&winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1c.html background-clip-text-1-ref.html # Bug 1392106
-fuzzy-if(winWidget,0-102,0-2032) fuzzy-if(skiaContent,0-102,0-2811) fuzzy-if(webrender&&winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1d.html background-clip-text-1-ref.html # Bug 1392106
-fuzzy-if(winWidget,0-102,0-2032) fuzzy-if(skiaContent,0-102,0-2811) fuzzy-if(webrender&&winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1e.html background-clip-text-1-ref.html # Bug 1392106
+fuzzy(0-102,0-2811) fuzzy-if(winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1a.html background-clip-text-1-ref.html # Bug 1392106
+fuzzy(0-102,0-2811) fuzzy-if(winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1b.html background-clip-text-1-ref.html # Bug 1392106
+fuzzy(0-102,0-2811) fuzzy-if(winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1c.html background-clip-text-1-ref.html # Bug 1392106
+fuzzy(0-102,0-2811) fuzzy-if(winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1d.html background-clip-text-1-ref.html # Bug 1392106
+fuzzy(0-102,0-2811) fuzzy-if(winWidget,153-153,2866-2866) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-1e.html background-clip-text-1-ref.html # Bug 1392106
 
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == background-clip-text-2.html background-clip-text-2-ref.html # Bug 1392106
 
-== background-clip-text-scale.html background-clip-text-scale-ref.html
+fails-if(Android&&!swgl) == background-clip-text-scale.html background-clip-text-scale-ref.html # bug 1733942
 != background-clip-text-translate.html about:blank
 != text-clip-and-stroke.html text-clip-and-no-stroke.html

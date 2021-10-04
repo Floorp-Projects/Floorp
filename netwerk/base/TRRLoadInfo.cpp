@@ -391,7 +391,7 @@ TRRLoadInfo::GetInitialSecurityCheckDone(bool* aResult) {
 }
 
 NS_IMETHODIMP
-TRRLoadInfo::AppendRedirectHistoryEntry(nsIRedirectHistoryEntry* aEntry,
+TRRLoadInfo::AppendRedirectHistoryEntry(nsIChannel* aChannelToDeriveFrom,
                                         bool aIsInternalRedirect) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

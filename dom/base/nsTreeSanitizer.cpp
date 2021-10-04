@@ -1608,6 +1608,9 @@ void nsTreeSanitizer::WithWebSanitizerOptions(
   if (!aOptions.IsAnyMemberPresent()) {
     return;
   }
+  if (aOptions.mAllowComments.WasPassed()) {
+    mAllowComments = aOptions.mAllowComments.Value();
+  }
   if (aOptions.mAllowElements.WasPassed()) {
     mIsCustomized = true;
     const Sequence<nsString>& allowedElements = aOptions.mAllowElements.Value();

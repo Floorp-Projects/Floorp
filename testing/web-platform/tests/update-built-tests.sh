@@ -9,3 +9,4 @@ html/tools/build.sh
 python3 mimesniff/mime-types/resources/generated-mime-types.py
 python3 css/css-ui/tools/appearance-build-webkit-reftests.py
 python3 webidl/tools/generate-setlike.py
+python3 html/syntax/speculative-parsing/tools/generate.py

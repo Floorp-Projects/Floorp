@@ -59,7 +59,7 @@ interface nsIContentPermissionRequest : nsISupports {
   readonly attribute mozIDOMWindow window;
   readonly attribute Element element;
 
-  readonly attribute boolean isHandlingUserInput;
+  readonly attribute boolean hasValidTransientUserGestureActivation;
 
   /**
    * See nsIPermissionDelegateHandler.maybeUnsafePermissionDelegate.

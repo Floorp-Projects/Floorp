@@ -42,7 +42,6 @@ class XULButtonAccessible : public AccessibleWrap {
   virtual bool IsWidget() const override;
   virtual bool IsActiveWidget() const override;
   virtual bool AreItemsOperable() const override;
-  virtual LocalAccessible* ContainerWidget() const override;
 
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
 

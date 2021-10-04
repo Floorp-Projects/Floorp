@@ -36,26 +36,20 @@ add_task(async function test_certificateTabLink() {
       if (i < issuerNames.length - 1) {
         issuerNames[i].shadowRoot.querySelector("a").click();
         await ContentTaskUtils.waitForCondition(() => {
-          return (
-            // TODO: Bug 1726041
-            // eslint-disable-next-line no-sequences
-            certificateTabs[i + 1].classList.contains("selected"),
-            "Clicking link should select new tab."
-          );
-        });
+          return certificateTabs[i + 1].classList.contains("selected");
+        }, "Clicking link should select new tab.");
         ok(
           certificateTabs[i + 1].classList.contains("selected"),
           "Clicking link should select new tab."
         );
       } else {
         await ContentTaskUtils.waitForCondition(() => {
-          return (
-            // TODO: Bug 1726041
-            // eslint-disable-next-line no-sequences
-            certificateTabs[i].classList.contains("selected"),
-            "Clicking link should select new tab."
-          );
-        });
+          return certificateTabs[i].classList.contains("selected");
+        }, "Clicking link should select new tab.");
+        ok(
+          certificateTabs[i].classList.contains("selected"),
+          "Clicking link should select new tab."
+        );
         ok(
           !issuerNames[i].shadowRoot.querySelector("a"),
           "Final tab's issuer name should not be link."

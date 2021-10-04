@@ -228,7 +228,7 @@ class GeckoViewPermission {
     const perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
     if (
       perm.type === "desktop-notification" &&
-      !aRequest.isHandlingUserInput &&
+      !aRequest.hasValidTransientUserGestureActivation &&
       Services.prefs.getBoolPref(
         "dom.webnotifications.requireuserinteraction",
         true

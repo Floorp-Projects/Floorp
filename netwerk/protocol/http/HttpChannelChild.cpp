@@ -1537,17 +1537,7 @@ void HttpChannelChild::CleanupRedirectingChannel(nsresult rv) {
   if (mLoadGroup) mLoadGroup->RemoveRequest(this, nullptr, NS_BINDING_ABORTED);
 
   if (NS_SUCCEEDED(rv)) {
-    nsCString remoteAddress;
-    Unused << GetRemoteAddress(remoteAddress);
-    nsCOMPtr<nsIURI> referrer;
-    if (mReferrerInfo) {
-      referrer = mReferrerInfo->GetComputedReferrer();
-    }
-
-    nsCOMPtr<nsIRedirectHistoryEntry> entry =
-        new nsRedirectHistoryEntry(GetURIPrincipal(), referrer, remoteAddress);
-
-    mLoadInfo->AppendRedirectHistoryEntry(entry, false);
+    mLoadInfo->AppendRedirectHistoryEntry(this, false);
   } else {
     NS_WARNING("CompleteRedirectSetup failed, HttpChannelChild already open?");
   }

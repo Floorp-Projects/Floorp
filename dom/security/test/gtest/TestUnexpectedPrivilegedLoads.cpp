@@ -26,21 +26,26 @@
 #include "nsILoadInfo.h"
 #include "nsNetUtil.h"
 #include "nsStringFwd.h"
-#include "mozilla/nsRedirectHistoryEntry.h"
 
 using namespace mozilla;
 using namespace TelemetryTestHelpers;
 
 extern Atomic<bool, mozilla::Relaxed> sJSHacksChecked;
 extern Atomic<bool, mozilla::Relaxed> sJSHacksPresent;
+extern Atomic<bool, mozilla::Relaxed> sCSSHacksChecked;
+extern Atomic<bool, mozilla::Relaxed> sCSSHacksPresent;
 
 TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
-  // Disable JS Hacks Detection, which would consider this current profile as
-  // uninteresting for our measurements:
-  bool hacksPresent = sJSHacksPresent;
-  bool hacksChecked = sJSHacksChecked;
+  // Disable JS/CSS Hacks Detection, which would consider this current profile
+  // as uninteresting for our measurements:
+  bool origJSHacksPresent = sJSHacksPresent;
+  bool origJSHacksChecked = sJSHacksChecked;
   sJSHacksPresent = false;
   sJSHacksChecked = true;
+  bool origCSSHacksPresent = sCSSHacksPresent;
+  bool origCSSHacksChecked = sCSSHacksChecked;
+  sCSSHacksPresent = false;
+  sCSSHacksChecked = true;
 
   struct testResults {
     nsCString fileinfo;
@@ -182,10 +187,12 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
                 "https://www.analytics.example/analytics.js"_ns);
       nsCOMPtr<nsIPrincipal> redirPrincipal =
           BasePrincipal::CreateContentPrincipal(redirUri, OriginAttributes());
-      nsCOMPtr<nsIRedirectHistoryEntry> entry =
-          new net::nsRedirectHistoryEntry(redirPrincipal, nullptr, ""_ns);
+      nsCOMPtr<nsIChannel> redirectChannel;
+      Unused << service->NewChannelFromURI(redirUri, nullptr, redirPrincipal,
+                                           nullptr, 0, currentTest.contentType,
+                                           getter_AddRefs(redirectChannel));
 
-      mockLoadInfo->AppendRedirectHistoryEntry(entry, false);
+      mockLoadInfo->AppendRedirectHistoryEntry(redirectChannel, false);
     }
 
     // this will record the event
@@ -290,7 +297,9 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
         << currentTest.expected.extraValueRedirects.get();
   }
 
-  // Re-enable JS hacks detection
-  sJSHacksPresent = hacksPresent;
-  sJSHacksChecked = hacksChecked;
+  // Re-store JS/CSS hacks detection state
+  sJSHacksPresent = origJSHacksPresent;
+  sJSHacksChecked = origJSHacksChecked;
+  sCSSHacksPresent = origCSSHacksPresent;
+  sCSSHacksChecked = origCSSHacksChecked;
 }

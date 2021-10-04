@@ -33,21 +33,21 @@ fails == 345369-2.html 345369-2-ref.html
 == 1322843-1e.html 1322843-1-ref.html
 == 1322843-1f.html 1322843-1-ref.html
 == float-in-rtl-1a.html float-in-rtl-1-ref.html
-fuzzy-if(skiaContent,0-1,0-27000) == float-in-rtl-1b.html float-in-rtl-1-ref.html
-fuzzy-if(skiaContent,0-1,0-27000) == float-in-rtl-1c.html float-in-rtl-1-ref.html
-fuzzy-if(skiaContent,0-1,0-27000) == float-in-rtl-1d.html float-in-rtl-1-ref.html
+fuzzy(0-1,0-27000) == float-in-rtl-1b.html float-in-rtl-1-ref.html
+fuzzy(0-1,0-27000) == float-in-rtl-1c.html float-in-rtl-1-ref.html
+fuzzy(0-1,0-27000) == float-in-rtl-1d.html float-in-rtl-1-ref.html
 == float-in-rtl-2a.html float-in-rtl-2-ref.html
-fuzzy-if(skiaContent,0-1,0-12000) == float-in-rtl-2b.html float-in-rtl-2-ref.html
-fuzzy-if(skiaContent,0-1,0-12000) == float-in-rtl-2c.html float-in-rtl-2-ref.html
-fuzzy-if(skiaContent,0-1,0-12000) == float-in-rtl-2d.html float-in-rtl-2-ref.html
+fuzzy(0-1,0-12000) == float-in-rtl-2b.html float-in-rtl-2-ref.html
+fuzzy(0-1,0-12000) == float-in-rtl-2c.html float-in-rtl-2-ref.html
+fuzzy(0-1,0-12000) == float-in-rtl-2d.html float-in-rtl-2-ref.html
 == float-in-rtl-3a.html float-in-rtl-3-ref.html
-fuzzy-if(skiaContent,0-1,0-27000) == float-in-rtl-3b.html float-in-rtl-3-ref.html
-fuzzy-if(skiaContent,0-1,0-27000) == float-in-rtl-3c.html float-in-rtl-3-ref.html
-fuzzy-if(skiaContent,0-1,0-27000) == float-in-rtl-3d.html float-in-rtl-3-ref.html
+fuzzy(0-1,0-27000) == float-in-rtl-3b.html float-in-rtl-3-ref.html
+fuzzy(0-1,0-27000) == float-in-rtl-3c.html float-in-rtl-3-ref.html
+fuzzy(0-1,0-27000) == float-in-rtl-3d.html float-in-rtl-3-ref.html
 == float-in-rtl-4a.html float-in-rtl-4-ref.html
-fuzzy-if(skiaContent,0-1,0-12000) == float-in-rtl-4b.html float-in-rtl-4-ref.html
-fuzzy-if(skiaContent,0-1,0-12000) == float-in-rtl-4c.html float-in-rtl-4-ref.html
-fuzzy-if(skiaContent,0-1,0-12000) == float-in-rtl-4d.html float-in-rtl-4-ref.html
+fuzzy(0-1,0-12000) == float-in-rtl-4b.html float-in-rtl-4-ref.html
+fuzzy(0-1,0-12000) == float-in-rtl-4c.html float-in-rtl-4-ref.html
+fuzzy(0-1,0-12000) == float-in-rtl-4d.html float-in-rtl-4-ref.html
 
 == bfc-displace-1a.html bfc-displace-1a-ref.html
 == bfc-displace-1b.html bfc-displace-1b-ref.html

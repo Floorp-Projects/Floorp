@@ -10,9 +10,9 @@
 != textarea-not-blank.html about:blank
 
 != text-input-native.html text-input-nonnative.html
-fuzzy-if(skiaContent,0-2,0-88) == text-input-nonnative-when-styled.html text-input-nonnative-when-styled-ref.html
+fuzzy(0-2,0-88) == text-input-nonnative-when-styled.html text-input-nonnative-when-styled-ref.html
 != textarea-native.html textarea-nonnative.html
-fuzzy-if(skiaContent,0-2,0-53) == textarea-nonnative-when-styled.html textarea-nonnative-when-styled-ref.html
+fuzzy(0-2,0-53) == textarea-nonnative-when-styled.html textarea-nonnative-when-styled-ref.html
 != button-native.html button-nonnative.html
 == button-nonnative-when-styled.html button-nonnative-when-styled-ref.html
 != combobox-native.html combobox-nonnative.html

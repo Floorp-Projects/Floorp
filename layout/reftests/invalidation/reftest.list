@@ -69,7 +69,7 @@ pref(layers.single-tile.enabled,false) != paintedlayer-recycling-3.html about:bl
 != layer-splitting-5.html about:blank
 != layer-splitting-6.html about:blank
 != layer-splitting-7.html about:blank
-fuzzy-if(gtkWidget,0-2,0-4) fuzzy-if(asyncPan,0-2,0-3955) fuzzy-if(OSX,0-179,0-30) fuzzy-if(skiaContent,0-16,0-3230) == image-scrolling-zoom-1.html image-scrolling-zoom-1-ref.html
+fuzzy(0-16,0-3230) == image-scrolling-zoom-1.html image-scrolling-zoom-1-ref.html
 != image-scrolling-zoom-1-ref.html image-scrolling-zoom-1-notref.html
 pref(layers.single-tile.enabled,false) != fast-scrolling.html about:blank
 == background-position-1.html background-position-1-ref.html
@@ -105,5 +105,5 @@ skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) != fractional-transform-2.ht
 == paintedlayer-recycling-8.html paintedlayer-recycling-8-ref.html
 pref(image.downscale-during-decode.enabled,true) == jetstream-scroll.html jetstream-scroll-ref.html
 
-fuzzy-if(webrender,0-2,0-2) == svg-paint-rect-changes.html svg-paint-rect-changes-ref.html
-fuzzy-if(skiaContent&&!webrender&&!useDrawSnapshot,1-1,64-64) fuzzy-if(skiaContent&&!webrender&&Android,10-10,108-108) == border-radius-1.html border-radius-1-ref.html
+fuzzy(0-2,0-2) == svg-paint-rect-changes.html svg-paint-rect-changes-ref.html
+== border-radius-1.html border-radius-1-ref.html

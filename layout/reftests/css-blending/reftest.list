@@ -2,11 +2,11 @@
 == blend-constant-background-color.html blend-constant-background-color-ref.html
 == blend-gradient-background-color.html blend-gradient-background-color-ref.html
 == blend-image.html blend-image-ref.html
-fuzzy-if(geckoview&&webrender&&device,3-3,5-5) == blend-difference-stacking.html blend-difference-stacking-ref.html
+fuzzy-if(geckoview&&device,3-3,5-5) == blend-difference-stacking.html blend-difference-stacking-ref.html
 
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-10000) fuzzy-if(skiaContent,0-1,0-30000) == background-blending-alpha.html background-blending-alpha-ref.html
+fuzzy(0-1,0-30000) == background-blending-alpha.html background-blending-alpha-ref.html
 == background-blending-gradient-color.html background-blending-gradient-color-ref.html
-fuzzy-if(azureSkiaGL,0-3,0-7597) fuzzy-if(cocoaWidget,0-3,0-7597) fuzzy-if(d2d,0-1,0-3800) fuzzy-if(d3d11,0-1,0-4200) fuzzy-if(skiaContent,0-2,0-9450) fuzzy-if(webrender&&!geckoview,0-1,0-6200) == background-blending-gradient-gradient.html background-blending-gradient-gradient-ref.html
+fuzzy(0-2,0-9450) fuzzy-if(!geckoview,0-1,0-6200) == background-blending-gradient-gradient.html background-blending-gradient-gradient-ref.html
 fuzzy-if(azureSkiaGL,0-2,0-7174) == background-blending-gradient-image.html background-blending-gradient-color-ref.html
 fuzzy-if(azureSkia||d2d||gtkWidget,0-1,0-10000) == background-blending-image-color-jpg.html background-blending-image-color-ref.html
 == background-blending-image-color-png.html background-blending-image-color-ref.html
@@ -23,12 +23,12 @@ random-if(useDrawSnapshot) == background-blending-list-repeat.html background-bl
 fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) fuzzy-if(appleSilicon,0-1,0-11200) fuzzy-if(d2d,0-1,0-8000) fuzzy-if(swgl&&!Android,1-1,8000-9600) == background-blending-color.html background-blending-color-ref.svg
 == background-blending-darken.html background-blending-darken-ref.svg
 == background-blending-difference.html background-blending-difference-ref.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||skiaContent,0-1,0-1600) == background-blending-exclusion.html background-blending-exclusion-ref.svg
+fuzzy(0-1,0-1600) == background-blending-exclusion.html background-blending-exclusion-ref.svg
 fuzzy-if(cocoaWidget||d2d||swgl||/^Windows\x20NT\x206\.1/.test(http.oscpu),0-1,0-1600) == background-blending-hard-light.html background-blending-hard-light-ref.svg
-fuzzy-if(d2d,0-1,0-9600) fuzzy-if(azureSkia||gtkWidget,0-1,0-11200) fuzzy-if(webrender&&!geckoview,1-1,9600-11240) == background-blending-hue.html background-blending-hue-ref.svg
+fuzzy-if(d2d,0-1,0-9600) fuzzy-if(azureSkia||gtkWidget,0-1,0-11200) fuzzy-if(!geckoview,1-1,9600-11240) == background-blending-hue.html background-blending-hue-ref.svg
 == background-blending-lighten.html background-blending-lighten-ref.svg
 fuzzy-if(d2d,0-1,0-8000) fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) fuzzy-if(appleSilicon,0-1,0-11200) fuzzy-if(swgl&&!Android,1-1,8000-9600) == background-blending-luminosity.html background-blending-luminosity-ref.svg
-fuzzy-if(skiaContent,0-1,0-1600) == background-blending-multiply.html background-blending-multiply-ref.svg
+fuzzy(0-1,0-1600) == background-blending-multiply.html background-blending-multiply-ref.svg
 == background-blending-normal.html background-blending-normal-ref.svg
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||azureSkia||gtkWidget,0-1,0-1600) == background-blending-overlay.html background-blending-overlay-ref.svg
 fuzzy-if(d2d,0-1,0-3200) fuzzy-if(azureSkia||gtkWidget,0-2,0-12800) == background-blending-saturation.html background-blending-saturation-ref.svg
@@ -38,12 +38,12 @@ fuzzy-if(d2d||azureSkia||gtkWidget,0-10,0-4800) == background-blending-soft-ligh
 fuzzy-if(azureSkia||d2d||gtkWidget,0-1,0-40000) == background-blending-image-color-959674.html background-blending-image-color-959674-ref.html
 
 #fuzzy due to inconsistencies in rounded rect cliping between parent and child; may be related to antialiasing. Between platforms, the max difference is the same, and the number of different pixels is either 36 or 37. (Win, Mac and Lin)
-fuzzy(0-65,0-53) fuzzy-if(geckoview&&webrender&&device,63-64,163-328) == mix-blend-mode-952051.html mix-blend-mode-952051-ref.html
+fuzzy(0-65,0-53) fuzzy-if(geckoview&&device,63-64,163-328) == mix-blend-mode-952051.html mix-blend-mode-952051-ref.html
 
 fuzzy-if(d3d11,0-49,0-200) == mix-blend-mode-and-filter.html mix-blend-mode-and-filter-ref.html
 fuzzy-if(d3d11,0-1,0-6) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter-ref.svg
 
-fuzzy(0-2,0-14400) fuzzy-if(geckoview&&webrender&&device,3-3,700-700) == mix-blend-mode-child-of-blended-has-opacity.html mix-blend-mode-child-of-blended-has-opacity-ref.html
+fuzzy(0-2,0-14400) fuzzy-if(geckoview&&device,3-3,700-700) == mix-blend-mode-child-of-blended-has-opacity.html mix-blend-mode-child-of-blended-has-opacity-ref.html
 
 == mix-blend-mode-nested-976533.html mix-blend-mode-nested-976533-ref.html
 == mix-blend-mode-culling-1207041.html mix-blend-mode-culling-1207041-ref.html
@@ -87,8 +87,8 @@ test-pref(image.animation_mode,"none") == background-blending-image-color-gif.ht
 == background-blending-background-attachement-fixed.html background-blending-background-attachement-fixed-ref.html
 == background-blending-background-attachement-fixed-scroll.html background-blending-background-attachement-fixed-scroll-ref.html
 
-fuzzy-if(webrender,0-1,0-49719) == background-blend-mode-body-image.html background-blend-mode-body-image-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-16408) fuzzy-if(Android,0-4,0-768) fuzzy-if(gtkWidget,0-1,0-132) fuzzy-if(skiaContent,0-1,0-800) fuzzy-if(d2d,0-1,0-33208) fuzzy-if(webrender,0-1,0-78472) == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image-ref.html
+fuzzy(0-1,0-49719) == background-blend-mode-body-image.html background-blend-mode-body-image-ref.html
+fuzzy(0-1,0-78472) == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image-ref.html
 
 == background-blend-mode-body-fixed.html background-blend-mode-body-fixed-ref.html
 
@@ -100,4 +100,4 @@ fuzzy(0-1,0-40000) == mix-blend-mode-transformed.html mix-blend-mode-transformed
 # Test plan 4.4.2 element with isolation:isolate creates an isolated group for blended children
 == blend-isolation.html blend-isolation-ref.html
 
-fuzzy-if(skiaContent,0-1,0-8192) == bug1281593.html bug1281593-ref.html
+fuzzy(0-1,0-8192) == bug1281593.html bug1281593-ref.html

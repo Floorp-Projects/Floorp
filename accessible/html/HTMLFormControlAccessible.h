@@ -95,6 +95,7 @@ class HTMLTextFieldAccessible : public HyperTextAccessibleWrap {
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
   virtual already_AddRefed<AccAttributes> NativeAttributes() override;
+  virtual bool AttributeChangesState(nsAtom* aAttribute) override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() const override;

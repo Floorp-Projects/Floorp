@@ -70,7 +70,7 @@ skip-if(Android) needs-focus != spellcheck-textarea-property-dynamic-override-in
 needs-focus == caret_on_focus.html caret_on_focus-ref.html
 needs-focus fails-if(useDrawSnapshot) != caret_on_textarea_lastline.html caret_on_textarea_lastline-ref.html
 fuzzy-if(Android,0-1,0-1) needs-focus == input-text-onfocus-reframe.html input-text-onfocus-reframe-ref.html
-fuzzy-if(skiaContent,0-3,0-1) fuzzy-if(!nativeThemePref,0-5,0-1) needs-focus == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocus-reframe-ref.html
+fuzzy(0-3,0-1) fuzzy-if(!nativeThemePref,0-5,0-1) needs-focus == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocus-reframe-ref.html
 needs-focus == caret_after_reframe.html caret_after_reframe-ref.html
 == nobogusnode-1.html nobogusnode-ref.html
 == nobogusnode-2.html nobogusnode-ref.html
@@ -116,12 +116,12 @@ needs-focus == 462758-grabbers-resizers.html 462758-grabbers-resizers-ref.html
 # Android turns off spellchecker (Bug 1541697)
 skip-if(Android) needs-focus == spellcheck-superscript-1.html spellcheck-superscript-1-ref.html
 skip-if(Android) needs-focus != spellcheck-superscript-2.html spellcheck-superscript-2-ref.html
-fuzzy-if(skiaContent,0-1,0-3400) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-1.html 824080-1-ref.html
+fuzzy(0-1,0-3400) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-1.html 824080-1-ref.html
 fuzzy-if(OSX,0-1,0-1) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-2.html 824080-2-ref.html #Bug 1313253
 fuzzy-if(OSX,0-1,0-1) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-3.html 824080-3-ref.html #Bug 1312951
 needs-focus != 824080-2.html 824080-3.html
-fuzzy-if(skiaContent,0-1,0-3200) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-4.html 824080-4-ref.html
-fuzzy-if(skiaContent,0-2,0-1800) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-5.html 824080-5-ref.html
+fuzzy(0-1,0-3200) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-4.html 824080-4-ref.html
+fuzzy(0-2,0-1800) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-5.html 824080-5-ref.html
 needs-focus != 824080-4.html 824080-5.html
 needs-focus == 824080-6.html 824080-6-ref.html
 needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-7.html 824080-7-ref.html
@@ -147,8 +147,8 @@ skip-if(Android) == spellcheck-contenteditable-property-dynamic-override.html sp
 skip-if(Android) == spellcheck-contenteditable-property-dynamic-override-inherit.html spellcheck-contenteditable-disabled-ref.html
 == 911201.html 911201-ref.html
 needs-focus == 969773.html 969773-ref.html
-fuzzy-if(skiaContent,0-1,0-220) == 997805.html 997805-ref.html
-fuzzy-if(skiaContent,0-1,0-220) == 1088158.html 1088158-ref.html
+fuzzy(0-1,0-220) == 997805.html 997805-ref.html
+fuzzy(0-1,0-220) == 1088158.html 1088158-ref.html
 fuzzy-if(Android,0-1,0-1) needs-focus == 1443902-1.html 1443902-1-ref.html
 fuzzy-if(Android,0-1,0-1) needs-focus == 1443902-2.html 1443902-2-ref.html
 fuzzy-if(Android,0-1,0-1) needs-focus == 1443902-3.html 1443902-3-ref.html

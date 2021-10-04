@@ -108,33 +108,36 @@ SimpleTest.waitForExplicitFinish();
     for (let testInputAndType of possibleInputTypes(testString)) {
       const {testInput, testType} = testInputAndType;
 
-      // test sanitize(documentfragment)
-      try {
-        div.innerHTML = "";
-        const docFragment = testSanitizer.sanitize(testInput);
-        div.append(docFragment);
-        is(div.innerHTML, testExpected, `Sanitizer.sanitize() should turn (${testType}) '${testInput}' into '${testExpected}'`);
+      if (testType != "String") {
+        // test sanitize(document/fragment)
+        try {
+          div.innerHTML = "";
+          const docFragment = testSanitizer.sanitize(testInput);
+          div.append(docFragment);
+          is(div.innerHTML, testExpected, `Sanitizer.sanitize() should turn (${testType}) '${testInput}' into '${testExpected}'`);
+        }
+        catch (e) {
+          ok(false, 'Error in sanitize() test: ' + e)
+        }
       }
-      catch (e) {
-        ok(false, 'Error in sanitize() test: ' + e)
-      }
+      else {
+        // test setHTML:
+        try {
+          div.setHTML(testString, { sanitizer: testSanitizer });
+          is(div.innerHTML, testExpected, `div.setHTML() should turn(${testType}) '${testInput}' into '${testExpected}'`);
+        }
+        catch (e) {
+          ok(false, 'Error in setHTML() test: ' + e)
+        }
 
-      // test setHTML:
-      try {
-        div.setHTML(testString, {sanitizer: testSanitizer });
-        is(div.innerHTML, testExpected, `div.setHTML() should turn(${testType}) '${testInput}' into '${testExpected}'`);
-      }
-      catch (e) {
-        ok(false, 'Error in setHTML() test: ' + e)
-      }
-
-      // test sanitizeFor:
-      try {
-        const newDiv = testSanitizer.sanitizeFor('div', testString);
-        is(newDiv.innerHTML, testExpected, `Sanitizer.sanitizeFor('div', input) should turn(${testType}) '${testInput}' into '${testExpected}'`);
-      }
-      catch (e) {
-        ok(false, 'Error in sanitizeFor() test: ' + e)
+        // test sanitizeFor:
+        try {
+          const newDiv = testSanitizer.sanitizeFor('div', testString);
+          is(newDiv.innerHTML, testExpected, `Sanitizer.sanitizeFor('div', input) should turn(${testType}) '${testInput}' into '${testExpected}'`);
+        }
+        catch (e) {
+          ok(false, 'Error in sanitizeFor() test: ' + e)
+        }
       }
     }
   }
