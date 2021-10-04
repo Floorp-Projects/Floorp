@@ -814,10 +814,16 @@ void BrowsingContext::Detach(bool aFromIPC) {
   MOZ_DIAGNOSTIC_ASSERT(mEverAttached);
   MOZ_DIAGNOSTIC_ASSERT(!mIsDiscarded);
 
+  if (XRE_IsParentProcess()) {
+    Canonical()->AddPendingDiscard();
+  }
   auto callListeners =
-      MakeScopeExit([listeners = std::move(mDiscardListeners), id = Id()] {
+      MakeScopeExit([&, listeners = std::move(mDiscardListeners), id = Id()] {
         for (const auto& listener : listeners) {
           listener(id);
+        }
+        if (XRE_IsParentProcess()) {
+          Canonical()->RemovePendingDiscard();
         }
       });
 
