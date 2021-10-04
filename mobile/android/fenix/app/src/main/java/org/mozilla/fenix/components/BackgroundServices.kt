@@ -106,13 +106,17 @@ class BackgroundServices(
         SyncConfig(supportedEngines, PeriodicSyncConfig(periodMinutes = 240)) // four hours
 
     private val creditCardKeyProvider by lazyMonitored { creditCardsStorage.value.crypto }
+    private val passwordKeyProvider by lazyMonitored { passwordsStorage.value.crypto }
 
     init {
         // Make the "history", "bookmark", "passwords", "tabs", "credit cards" stores
         // accessible to workers spawned by the sync manager.
         GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarkStorage)
-        GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to passwordsStorage)
+        GlobalSyncableStoreProvider.configureStore(
+            storePair = SyncEngine.Passwords to passwordsStorage,
+            keyProvider = lazy { passwordKeyProvider }
+        )
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Tabs to remoteTabsStorage)
         GlobalSyncableStoreProvider.configureStore(
             storePair = SyncEngine.CreditCards to creditCardsStorage,
