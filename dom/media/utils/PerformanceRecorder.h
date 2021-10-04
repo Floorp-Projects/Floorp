@@ -10,9 +10,23 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/TypedEnumBits.h"
 #include "nsStringFwd.h"
 
 namespace mozilla {
+
+enum class MediaInfoFlag : uint16_t {
+  None = (0 << 0),
+  NonKeyFrame = (1 << 0),
+  KeyFrame = (1 << 1),
+  SoftwareDecoding = (1 << 2),
+  HardwareDecoding = (1 << 3),
+  VIDEO_AV1 = (1 << 4),
+  VIDEO_H264 = (1 << 5),
+  VIDEO_VP8 = (1 << 6),
+  VIDEO_VP9 = (1 << 7),
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MediaInfoFlag)
 
 /**
  * This class is used to record the passed time on the different stages in the
@@ -65,14 +79,16 @@ class PerformanceRecorder {
     CopyDecodedVideo,
   };
 
-  explicit PerformanceRecorder(Stage aStage, int32_t aHeight = 0)
-      : mStage(aStage), mHeight(aHeight) {}
+  explicit PerformanceRecorder(Stage aStage, int32_t aHeight = 0,
+                               MediaInfoFlag aFlag = MediaInfoFlag::None)
+      : mStage(aStage), mHeight(aHeight), mFlag(aFlag) {}
   ~PerformanceRecorder() = default;
 
   PerformanceRecorder(PerformanceRecorder&& aRhs) noexcept {
     mStage = aRhs.mStage;
     mHeight = aRhs.mHeight;
     mStartTime = std::move(aRhs.mStartTime);
+    mFlag = aRhs.mFlag;
     aRhs.mStage = Stage::Invalid;
   }
 
@@ -81,6 +97,7 @@ class PerformanceRecorder {
     mStage = aRhs.mStage;
     mHeight = aRhs.mHeight;
     mStartTime = std::move(aRhs.mStartTime);
+    mFlag = aRhs.mFlag;
     aRhs.mStage = Stage::Invalid;
     return *this;
   }
@@ -96,6 +113,7 @@ class PerformanceRecorder {
 
   Stage mStage = Stage::Invalid;
   int32_t mHeight;
+  MediaInfoFlag mFlag = MediaInfoFlag::None;
   Maybe<TimeStamp> mStartTime;
 };
 
