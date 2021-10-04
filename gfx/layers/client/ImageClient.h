@@ -26,7 +26,6 @@ namespace layers {
 class CompositableForwarder;
 class Image;
 class ImageContainer;
-class ShadowableLayer;
 class ImageClientSingle;
 
 /**
@@ -55,9 +54,6 @@ class ImageClient : public CompositableClient {
   virtual bool UpdateImage(ImageContainer* aContainer,
                            uint32_t aContentFlags) = 0;
 
-  void SetLayer(ShadowableLayer* aLayer) { mLayer = aLayer; }
-  ShadowableLayer* GetLayer() const { return mLayer; }
-
   /**
    * asynchronously remove all the textures used by the image client.
    *
@@ -81,7 +77,6 @@ class ImageClient : public CompositableClient {
   ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
               CompositableType aType);
 
-  ShadowableLayer* mLayer;
   CompositableType mType;
   uint32_t mLastUpdateGenerationCounter;
 };

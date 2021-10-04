@@ -58,12 +58,9 @@ namespace layers {
 class AsyncPanZoomController;
 class ClientLayerManager;
 class Layer;
-class PaintedLayer;
 class ContainerLayer;
-class ColorLayer;
 class CompositorBridgeChild;
 class ReadbackProcessor;
-class HostLayer;
 class FocusTarget;
 class KnowsCompositor;
 class TransactionIdAllocator;
@@ -172,56 +169,6 @@ class LayerManager : public WindowRenderer {
   }
 
   /**
-   * Function called to draw the contents of each PaintedLayer.
-   * aRegionToDraw contains the region that needs to be drawn.
-   * This would normally be a subregion of the visible region.
-   * The callee must draw all of aRegionToDraw. Drawing outside
-   * aRegionToDraw will be clipped out or ignored.
-   * The callee must draw all of aRegionToDraw.
-   * This region is relative to 0,0 in the PaintedLayer.
-   *
-   * aDirtyRegion should contain the total region that is be due to be painted
-   * during the transaction, even though only aRegionToDraw should be drawn
-   * during this call. aRegionToDraw must be entirely contained within
-   * aDirtyRegion. If the total dirty region is unknown it is okay to pass a
-   * subregion of the total dirty region, e.g. just aRegionToDraw, though it
-   * may not be as efficient.
-   *
-   * aRegionToInvalidate contains a region whose contents have been
-   * changed by the layer manager and which must therefore be invalidated.
-   * For example, this could be non-empty if a retained layer internally
-   * switches from RGBA to RGB or back ... we might want to repaint it to
-   * consistently use subpixel-AA or not.
-   * This region is relative to 0,0 in the PaintedLayer.
-   * aRegionToInvalidate may contain areas that are outside
-   * aRegionToDraw; the callee must ensure that these areas are repainted
-   * in the current layer manager transaction or in a later layer
-   * manager transaction.
-   *
-   * aContext must not be used after the call has returned.
-   * We guarantee that buffered contents in the visible
-   * region are valid once drawing is complete.
-   *
-   * The origin of aContext is 0,0 in the PaintedLayer.
-   */
-  typedef void (*DrawPaintedLayerCallback)(
-      PaintedLayer* aLayer, gfxContext* aContext,
-      const nsIntRegion& aRegionToDraw, const nsIntRegion& aDirtyRegion,
-      DrawRegionClip aClip, const nsIntRegion& aRegionToInvalidate,
-      void* aCallbackData);
-
-  /**
-   * Finish the construction phase of the transaction, perform the
-   * drawing phase, and end the transaction.
-   * During the drawing phase, all PaintedLayers in the tree are
-   * drawn in tree order, exactly once each, except for those layers
-   * where it is known that the visible region is empty.
-   */
-  virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
-                              void* aCallbackData,
-                              EndTransactionFlags aFlags = END_DEFAULT) = 0;
-
-  /**
    * Schedule a composition with the remote Compositor, if one exists
    * for this LayerManager. Useful in conjunction with the
    * END_NO_REMOTE_COMPOSITE flag to EndTransaction.
@@ -263,29 +210,6 @@ class LayerManager : public WindowRenderer {
   virtual void Mutated(Layer* aLayer) {}
   virtual void MutatedSimple(Layer* aLayer) {}
 
-  /**
-   * Hints that can be used during PaintedLayer creation to influence the type
-   * or properties of the layer created.
-   *
-   * NONE: No hint.
-   * SCROLLABLE: This layer may represent scrollable content.
-   */
-  enum PaintedLayerCreationHint { NONE, SCROLLABLE };
-
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Create a PaintedLayer for this manager's layer tree.
-   */
-  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() = 0;
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Create a PaintedLayer for this manager's layer tree, with a creation hint
-   * parameter to help optimise the type of layer created.
-   */
-  virtual already_AddRefed<PaintedLayer> CreatePaintedLayerWithHint(
-      PaintedLayerCreationHint) {
-    return CreatePaintedLayer();
-  }
   /**
    * CONSTRUCTION PHASE ONLY
    * Create a ContainerLayer for this manager's layer tree.

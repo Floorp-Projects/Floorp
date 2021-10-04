@@ -270,7 +270,6 @@ void ImageClientSingle::OnDetach() { mBuffers.Clear(); }
 ImageClient::ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
                          CompositableType aType)
     : CompositableClient(aFwd, aFlags),
-      mLayer(nullptr),
       mType(aType),
       mLastUpdateGenerationCounter(0) {}
 
