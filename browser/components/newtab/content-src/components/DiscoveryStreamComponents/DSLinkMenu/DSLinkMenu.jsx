@@ -10,8 +10,11 @@ export class DSLinkMenu extends React.PureComponent {
   render() {
     const { index, dispatch } = this.props;
     const TOP_STORIES_CONTEXT_MENU_OPTIONS = [
-      "CheckBookmarkOrArchive",
-      ...(!this.props.saveToPocketCard ? ["CheckSavedToPocket"] : []),
+      "CheckBookmark",
+      "CheckArchiveFromPocket",
+      ...(this.props.saveToPocketCard
+        ? ["CheckDeleteFromPocket"]
+        : ["CheckSavedToPocket"]),
       "Separator",
       "OpenInNewWindow",
       "OpenInPrivateWindow",

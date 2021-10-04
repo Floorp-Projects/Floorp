@@ -118,13 +118,14 @@ export const DefaultMeta = ({
     {/* Sponsored label is normally in the way of any message.
         Compact cards sponsored label is moved to just under the thumbnail,
         so we can display both, so we specifically don't pass in context. */}
-    {compact && !saveToPocketCard && (
+    {compact && (
       <div className="story-footer">
         <DSMessageFooter
           context_type={context_type}
           context={null}
           display_engagement_labels={display_engagement_labels}
           engagement={engagement}
+          saveToPocketCard={saveToPocketCard}
         />
       </div>
     )}
