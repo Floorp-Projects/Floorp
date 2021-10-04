@@ -16,6 +16,7 @@
 #include "MediaDataDecoderProxy.h"
 #include "MediaInfo.h"
 #include "PDMFactory.h"
+#include "PerformanceRecorder.h"
 #include "VideoFrameContainer.h"
 #include "VideoUtils.h"
 #include "mozilla/AbstractThread.h"
@@ -1455,10 +1456,14 @@ void MediaFormatReader::DoDemuxVideo() {
   using SamplesPromise = MediaTrackDemuxer::SamplesPromise;
 
   DDLOG(DDLogCategory::Log, "video_demuxing", DDNoValue{});
+  PerformanceRecorder perfRecorder(
+      PerformanceRecorder::Stage::RequestDemux,
+      mVideo.GetCurrentInfo()->GetAsVideoInfo()->mImage.height);
+  perfRecorder.Start();
   auto p = mVideo.mTrackDemuxer->GetSamples(1);
 
+  RefPtr<MediaFormatReader> self = this;
   if (mVideo.mFirstDemuxedSampleTime.isNothing()) {
-    RefPtr<MediaFormatReader> self = this;
     p = p->Then(
         OwnerThread(), __func__,
         [self](RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
@@ -1479,9 +1484,14 @@ void MediaFormatReader::DoDemuxVideo() {
         });
   }
 
-  p->Then(OwnerThread(), __func__, this,
-          &MediaFormatReader::OnVideoDemuxCompleted,
-          &MediaFormatReader::OnVideoDemuxFailed)
+  p->Then(
+       OwnerThread(), __func__,
+       [self, perfRecorder(std::move(perfRecorder))](
+           RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) mutable {
+         perfRecorder.End();
+         self->OnVideoDemuxCompleted(std::move(aSamples));
+       },
+       [self](const MediaResult& aError) { self->OnVideoDemuxFailed(aError); })
       ->Track(mVideo.mDemuxRequest);
 }
 
@@ -1540,10 +1550,12 @@ void MediaFormatReader::DoDemuxAudio() {
   using SamplesPromise = MediaTrackDemuxer::SamplesPromise;
 
   DDLOG(DDLogCategory::Log, "audio_demuxing", DDNoValue{});
+  PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::RequestDemux);
+  perfRecorder.Start();
   auto p = mAudio.mTrackDemuxer->GetSamples(1);
 
+  RefPtr<MediaFormatReader> self = this;
   if (mAudio.mFirstDemuxedSampleTime.isNothing()) {
-    RefPtr<MediaFormatReader> self = this;
     p = p->Then(
         OwnerThread(), __func__,
         [self](RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
@@ -1564,9 +1576,14 @@ void MediaFormatReader::DoDemuxAudio() {
         });
   }
 
-  p->Then(OwnerThread(), __func__, this,
-          &MediaFormatReader::OnAudioDemuxCompleted,
-          &MediaFormatReader::OnAudioDemuxFailed)
+  p->Then(
+       OwnerThread(), __func__,
+       [self, perfRecorder(std::move(perfRecorder))](
+           RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) mutable {
+         perfRecorder.End();
+         self->OnAudioDemuxCompleted(std::move(aSamples));
+       },
+       [self](const MediaResult& aError) { self->OnAudioDemuxFailed(aError); })
       ->Track(mAudio.mDemuxRequest);
 }
 
@@ -1865,10 +1882,20 @@ void MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
           aSample->mTimecode.ToMicroseconds(),
           aSample->mDuration.ToMicroseconds(), aSample->mKeyframe ? " kf" : "",
           aSample->mEOS ? " eos" : "");
+
+  const int32_t height =
+      aTrack == TrackInfo::kVideoTrack
+          ? decoder.GetCurrentInfo()->GetAsVideoInfo()->mImage.height
+          : 0;
+  PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::RequestDecode,
+                                   height);
+  perfRecorder.Start();
   decoder.mDecoder->Decode(aSample)
       ->Then(
           mTaskQueue, __func__,
-          [self, aTrack, &decoder](MediaDataDecoder::DecodedData&& aResults) {
+          [self, aTrack, &decoder, perfRecorder(std::move(perfRecorder))](
+              MediaDataDecoder::DecodedData&& aResults) mutable {
+            perfRecorder.End();
             decoder.mDecodeRequest.Complete();
             self->NotifyNewOutput(aTrack, std::move(aResults));
           },
