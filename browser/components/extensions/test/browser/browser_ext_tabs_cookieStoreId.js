@@ -110,25 +110,27 @@ add_task(async function() {
             browser.test.assertTrue(!!data.failure, "we want a failure");
 
             if (data.failure == "illegal") {
-              browser.test.assertTrue(
-                /Illegal cookieStoreId/.test(error.message),
+              browser.test.assertEq(
+                `Illegal cookieStoreId: ${data.cookieStoreId}`,
+                error.message,
                 "runtime.lastError should report the expected error message"
               );
             } else if (data.failure == "defaultToPrivate") {
-              browser.test.assertTrue(
-                "Illegal to set private cookieStorageId in a non private window",
+              browser.test.assertEq(
+                "Illegal to set private cookieStoreId in a non-private window",
                 error.message,
                 "runtime.lastError should report the expected error message"
               );
             } else if (data.failure == "privateToDefault") {
-              browser.test.assertTrue(
-                "Illegal to set non private cookieStorageId in a private window",
+              browser.test.assertEq(
+                "Illegal to set non-private cookieStoreId in a private window",
                 error.message,
                 "runtime.lastError should report the expected error message"
               );
             } else if (data.failure == "exist") {
-              browser.test.assertTrue(
-                /No cookie store exists/.test(error.message),
+              browser.test.assertEq(
+                `No cookie store exists with ID ${data.cookieStoreId}`,
+                error.message,
                 "runtime.lastError should report the expected error message"
               );
             } else {
