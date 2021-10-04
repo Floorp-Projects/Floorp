@@ -79,6 +79,7 @@ class WebTransportH3Protocol(QuicConnectionProtocol):
         self._http: Optional[H3Connection] = None
         self._session_stream_id: Optional[int] = None
         self._session_stream_data: bytes = b""
+        self._allow_calling_session_closed = True
 
     def quic_event_received(self, event: QuicEvent) -> None:
         if isinstance(event, ProtocolNegotiated):
@@ -89,7 +90,7 @@ class WebTransportH3Protocol(QuicConnectionProtocol):
                 self._h3_event_received(http_event)
 
         if isinstance(event, ConnectionTerminated):
-            self.call_session_closed(close_info=None, abruptly=True)
+            self._call_session_closed(close_info=None, abruptly=True)
 
     def _h3_event_received(self, event: H3Event) -> None:
         if isinstance(event, HeadersReceived):
@@ -124,7 +125,7 @@ class WebTransportH3Protocol(QuicConnectionProtocol):
                         # TODO(yutakahirano): Make sure `reason` is a
                         # UTF-8 text.
                         close_info = (code, reason)
-                self.call_session_closed(close_info, abruptly=False)
+                self._call_session_closed(close_info, abruptly=False)
         elif self._handler is not None:
             if isinstance(event, WebTransportStreamDataReceived):
                 self._handler.stream_data_received(
@@ -189,6 +190,14 @@ class WebTransportH3Protocol(QuicConnectionProtocol):
         session = WebTransportSession(self, session_id, request_headers)
         return WebTransportEventHandler(session, callbacks)
 
+    def _call_session_closed(
+            self, close_info: Optional[Tuple[int, bytes]],
+            abruptly: bool) -> None:
+        allow_calling_session_closed = self._allow_calling_session_closed
+        self._allow_calling_session_closed = False
+        if self._handler and allow_calling_session_closed:
+            self._handler.session_closed(close_info, abruptly)
+
 
 class WebTransportSession:
     """
@@ -208,7 +217,6 @@ class WebTransportSession:
         self._stash_path = '/webtransport/handlers'
         self._stash: Optional[stash.Stash] = None
         self._dict_for_handlers: Dict[str, Any] = {}
-        self._allow_calling_session_closed = True
 
     @property
     def stash(self) -> stash.Stash:
@@ -233,7 +241,7 @@ class WebTransportSession:
 
         :param close_info The close information to send.
         """
-        self._allow_calling_session_closed = False
+        self._protocol._allow_calling_session_closed = False
         assert self._protocol._session_stream_id is not None
         session_stream_id = self._protocol._session_stream_id
         if close_info is not None:
@@ -254,14 +262,6 @@ class WebTransportSession:
         # we need to close the connection. At this moment we're relying on the
         # client's behavior.
         # TODO(yutakahirano): Implement the above.
-
-    def call_session_closed(
-            self, close_info: Optional[Tuple[int, bytes]],
-            abruptly: bool) -> None:
-        allow_calling_session_closed = self._allow_calling_session_closed
-        self._allow_calling_session_closed = False
-        if self._protocol._handler and allow_calling_session_closed:
-            self._protocol._handler.session_closed(close_info, abruptly)
 
     def create_unidirectional_stream(self) -> int:
         """
