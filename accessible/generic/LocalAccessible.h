@@ -908,7 +908,7 @@ class LocalAccessible : public nsISupports, public Accessible {
    * This is used to capture the state before the attribute change and compare
    * it with the state after.
    */
-  bool AttributeChangesState(nsAtom* aAttribute);
+  virtual bool AttributeChangesState(nsAtom* aAttribute);
 
   /**
    * Notify accessible that a DOM attribute on its associated content has
