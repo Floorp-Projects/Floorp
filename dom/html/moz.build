@@ -63,6 +63,7 @@ EXPORTS.mozilla.dom += [
     "HTMLDialogElement.h",
     "HTMLDivElement.h",
     "HTMLDNSPrefetch.h",
+    "HTMLElement.h",
     "HTMLEmbedElement.h",
     "HTMLFieldSetElement.h",
     "HTMLFontElement.h",

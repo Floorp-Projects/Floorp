@@ -4,23 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsGenericHTMLElement.h"
+#include "mozilla/dom/HTMLElement.h"
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "nsContentUtils.h"
 
 namespace mozilla::dom {
-
-class HTMLElement final : public nsGenericHTMLElement {
- public:
-  explicit HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-  virtual ~HTMLElement();
-
-  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
-
- protected:
-  JSObject* WrapNode(JSContext* aCx,
-                     JS::Handle<JSObject*> aGivenProto) override;
-};
 
 HTMLElement::HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)) {
@@ -28,8 +16,6 @@ HTMLElement::HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     AddStatesSilently(NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO);
   }
 }
-
-HTMLElement::~HTMLElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLElement)
 
