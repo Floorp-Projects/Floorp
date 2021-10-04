@@ -234,10 +234,29 @@ class VirtualenvManager(VirtualenvHelper):
             if current_paths != required_paths:
                 return False
 
-        pip = os.path.join(self.bin_path, "pip")
-        package_result = env_requirements.validate_environment_packages([pip])
-        if not package_result.has_all_packages:
-            return False
+        if (
+            env_requirements.pypi_requirements
+            or env_requirements.pypi_optional_requirements
+        ):
+            pip_json = self._run_pip(
+                ["list", "--format", "json"], stdout=subprocess.PIPE
+            ).stdout
+            installed_packages = json.loads(pip_json)
+            installed_packages = {
+                package["name"]: package["version"] for package in installed_packages
+            }
+            for pkg in env_requirements.pypi_requirements:
+                if not pkg.requirement.specifier.contains(
+                    installed_packages.get(pkg.requirement.name, None)
+                ):
+                    return False
+
+            for pkg in env_requirements.pypi_optional_requirements:
+                installed_version = installed_packages.get(pkg.requirement.name, None)
+                if installed_version and not pkg.requirement.specifier.contains(
+                    installed_packages.get(pkg.requirement.name, None)
+                ):
+                    return False
 
         return True
 
