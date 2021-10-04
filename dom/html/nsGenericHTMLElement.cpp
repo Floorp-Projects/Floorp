@@ -2627,9 +2627,10 @@ nsGenericHTMLFormControlElement::~nsGenericHTMLFormControlElement() = default;
 
 //----------------------------------------------------------------------
 
-nsGenericHTMLFormElementWithState::nsGenericHTMLFormElementWithState(
-    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-    FromParser aFromParser, FormControlType aType)
+nsGenericHTMLFormControlElementWithState::
+    nsGenericHTMLFormControlElementWithState(
+        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+        FromParser aFromParser, FormControlType aType)
     : nsGenericHTMLFormControlElement(std::move(aNodeInfo), aType),
       mControlNumber(!!(aFromParser & FROM_PARSER_NETWORK)
                          ? OwnerDoc()->GetNextControlNumber()
@@ -2637,7 +2638,7 @@ nsGenericHTMLFormElementWithState::nsGenericHTMLFormElementWithState(
   mStateKey.SetIsVoid(true);
 }
 
-void nsGenericHTMLFormElementWithState::GenerateStateKey() {
+void nsGenericHTMLFormControlElementWithState::GenerateStateKey() {
   // Keep the key if already computed
   if (!mStateKey.IsVoid()) {
     return;
@@ -2660,7 +2661,7 @@ void nsGenericHTMLFormElementWithState::GenerateStateKey() {
   }
 }
 
-PresState* nsGenericHTMLFormElementWithState::GetPrimaryPresState() {
+PresState* nsGenericHTMLFormControlElementWithState::GetPrimaryPresState() {
   if (mStateKey.IsEmpty()) {
     return nullptr;
   }
@@ -2683,7 +2684,7 @@ PresState* nsGenericHTMLFormElementWithState::GetPrimaryPresState() {
 }
 
 already_AddRefed<nsILayoutHistoryState>
-nsGenericHTMLFormElementWithState::GetLayoutHistory(bool aRead) {
+nsGenericHTMLFormControlElementWithState::GetLayoutHistory(bool aRead) {
   nsCOMPtr<Document> doc = GetUncomposedDoc();
   if (!doc) {
     return nullptr;
@@ -2704,7 +2705,7 @@ nsGenericHTMLFormElementWithState::GetLayoutHistory(bool aRead) {
   return history.forget();
 }
 
-bool nsGenericHTMLFormElementWithState::RestoreFormControlState() {
+bool nsGenericHTMLFormControlElementWithState::RestoreFormControlState() {
   MOZ_ASSERT(!mStateKey.IsVoid(),
              "GenerateStateKey must already have been called");
 
@@ -2728,7 +2729,8 @@ bool nsGenericHTMLFormElementWithState::RestoreFormControlState() {
   return false;
 }
 
-void nsGenericHTMLFormElementWithState::NodeInfoChanged(Document* aOldDoc) {
+void nsGenericHTMLFormControlElementWithState::NodeInfoChanged(
+    Document* aOldDoc) {
   nsGenericHTMLFormControlElement::NodeInfoChanged(aOldDoc);
 
   // We need to regenerate the state key now we're in a new document.  Clearing
@@ -2739,7 +2741,7 @@ void nsGenericHTMLFormElementWithState::NodeInfoChanged(Document* aOldDoc) {
   mStateKey.SetIsVoid(true);
 }
 
-void nsGenericHTMLFormElementWithState::GetFormAction(nsString& aValue) {
+void nsGenericHTMLFormControlElementWithState::GetFormAction(nsString& aValue) {
   auto type = ControlType();
   if (!IsInputElement(type) && !IsButtonElement(type)) {
     return;

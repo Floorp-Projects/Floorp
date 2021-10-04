@@ -108,8 +108,8 @@ SafeOptionListMutation::~SafeOptionListMutation() {
 HTMLSelectElement::HTMLSelectElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     FromParser aFromParser)
-    : nsGenericHTMLFormElementWithState(std::move(aNodeInfo), aFromParser,
-                                        FormControlType::Select),
+    : nsGenericHTMLFormControlElementWithState(
+          std::move(aNodeInfo), aFromParser, FormControlType::Select),
       mOptions(new HTMLOptionsCollection(this)),
       mAutocompleteAttrState(nsContentUtils::eAutocompleteAttrState_Unknown),
       mAutocompleteInfoState(nsContentUtils::eAutocompleteAttrState_Unknown),
@@ -139,20 +139,20 @@ HTMLSelectElement::HTMLSelectElement(
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLSelectElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
-    HTMLSelectElement, nsGenericHTMLFormElementWithState)
+    HTMLSelectElement, nsGenericHTMLFormControlElementWithState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mValidity)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOptions)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectedOptions)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(
-    HTMLSelectElement, nsGenericHTMLFormElementWithState)
+    HTMLSelectElement, nsGenericHTMLFormControlElementWithState)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mValidity)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectedOptions)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLSelectElement,
-                                             nsGenericHTMLFormElementWithState,
-                                             nsIConstraintValidation)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(
+    HTMLSelectElement, nsGenericHTMLFormControlElementWithState,
+    nsIConstraintValidation)
 
 // nsIDOMHTMLSelectElement
 
@@ -182,8 +182,8 @@ void HTMLSelectElement::InsertChildBefore(nsIContent* aKid,
                                           ErrorResult& aRv) {
   int32_t index = aBeforeThis ? ComputeIndexOf(aBeforeThis) : GetChildCount();
   SafeOptionListMutation safeMutation(this, this, aKid, index, aNotify);
-  nsGenericHTMLFormElementWithState::InsertChildBefore(aKid, aBeforeThis,
-                                                       aNotify, aRv);
+  nsGenericHTMLFormControlElementWithState::InsertChildBefore(aKid, aBeforeThis,
+                                                              aNotify, aRv);
   if (aRv.Failed()) {
     safeMutation.MutationFailed();
   }
@@ -192,7 +192,7 @@ void HTMLSelectElement::InsertChildBefore(nsIContent* aKid,
 void HTMLSelectElement::RemoveChildNode(nsIContent* aKid, bool aNotify) {
   SafeOptionListMutation safeMutation(this, this, nullptr, ComputeIndexOf(aKid),
                                       aNotify);
-  nsGenericHTMLFormElementWithState::RemoveChildNode(aKid, aNotify);
+  nsGenericHTMLFormControlElementWithState::RemoveChildNode(aKid, aNotify);
 }
 
 void HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
@@ -956,7 +956,7 @@ int32_t HTMLSelectElement::TabIndexDefault() { return 0; }
 
 bool HTMLSelectElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                                         int32_t* aTabIndex) {
-  if (nsGenericHTMLFormElementWithState::IsHTMLFocusable(
+  if (nsGenericHTMLFormControlElementWithState::IsHTMLFocusable(
           aWithMouse, aIsFocusable, aTabIndex)) {
     return true;
   }
@@ -1002,7 +1002,7 @@ bool HTMLSelectElement::SelectSomething(bool aNotify) {
 nsresult HTMLSelectElement::BindToTree(BindContext& aContext,
                                        nsINode& aParent) {
   nsresult rv =
-      nsGenericHTMLFormElementWithState::BindToTree(aContext, aParent);
+      nsGenericHTMLFormControlElementWithState::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If there is a disabled fieldset in the parent chain, the element is now
@@ -1018,7 +1018,7 @@ nsresult HTMLSelectElement::BindToTree(BindContext& aContext,
 }
 
 void HTMLSelectElement::UnbindFromTree(bool aNullParent) {
-  nsGenericHTMLFormElementWithState::UnbindFromTree(aNullParent);
+  nsGenericHTMLFormControlElementWithState::UnbindFromTree(aNullParent);
 
   // We might be no longer disabled because our parent chain changed.
   // XXXbz is this still needed now that fieldset changes always call
@@ -1050,8 +1050,8 @@ nsresult HTMLSelectElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     }
   }
 
-  return nsGenericHTMLFormElementWithState::BeforeSetAttr(aNameSpaceID, aName,
-                                                          aValue, aNotify);
+  return nsGenericHTMLFormControlElementWithState::BeforeSetAttr(
+      aNameSpaceID, aName, aValue, aNotify);
 }
 
 nsresult HTMLSelectElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
@@ -1088,7 +1088,7 @@ nsresult HTMLSelectElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     }
   }
 
-  return nsGenericHTMLFormElementWithState::AfterSetAttr(
+  return nsGenericHTMLFormControlElementWithState::AfterSetAttr(
       aNameSpaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
@@ -1147,17 +1147,17 @@ bool HTMLSelectElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 
 void HTMLSelectElement::MapAttributesIntoRule(
     const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
-  nsGenericHTMLFormElementWithState::MapImageAlignAttributeInto(aAttributes,
-                                                                aDecls);
-  nsGenericHTMLFormElementWithState::MapCommonAttributesInto(aAttributes,
-                                                             aDecls);
+  nsGenericHTMLFormControlElementWithState::MapImageAlignAttributeInto(
+      aAttributes, aDecls);
+  nsGenericHTMLFormControlElementWithState::MapCommonAttributesInto(aAttributes,
+                                                                    aDecls);
 }
 
 nsChangeHint HTMLSelectElement::GetAttributeChangeHint(const nsAtom* aAttribute,
                                                        int32_t aModType) const {
   nsChangeHint retval =
-      nsGenericHTMLFormElementWithState::GetAttributeChangeHint(aAttribute,
-                                                                aModType);
+      nsGenericHTMLFormControlElementWithState::GetAttributeChangeHint(
+          aAttribute, aModType);
   if (aAttribute == nsGkAtoms::multiple || aAttribute == nsGkAtoms::size) {
     retval |= nsChangeHint_ReconstructFrame;
   }
@@ -1192,7 +1192,7 @@ void HTMLSelectElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
     return;
   }
 
-  nsGenericHTMLFormElementWithState::GetEventTargetParent(aVisitor);
+  nsGenericHTMLFormControlElementWithState::GetEventTargetParent(aVisitor);
 }
 
 nsresult HTMLSelectElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
@@ -1214,11 +1214,12 @@ nsresult HTMLSelectElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     UpdateState(true);
   }
 
-  return nsGenericHTMLFormElementWithState::PostHandleEvent(aVisitor);
+  return nsGenericHTMLFormControlElementWithState::PostHandleEvent(aVisitor);
 }
 
 EventStates HTMLSelectElement::IntrinsicState() const {
-  EventStates state = nsGenericHTMLFormElementWithState::IntrinsicState();
+  EventStates state =
+      nsGenericHTMLFormControlElementWithState::IntrinsicState();
 
   if (IsCandidateForConstraintValidation()) {
     if (IsValid()) {
@@ -1550,7 +1551,7 @@ void HTMLSelectElement::FieldSetDisabledChanged(bool aNotify) {
   // This *has* to be called before UpdateBarredFromConstraintValidation and
   // UpdateValueMissingValidityState because these two functions depend on our
   // disabled state.
-  nsGenericHTMLFormElementWithState::FieldSetDisabledChanged(aNotify);
+  nsGenericHTMLFormControlElementWithState::FieldSetDisabledChanged(aNotify);
 
   UpdateValueMissingValidityState();
   UpdateBarredFromConstraintValidation();

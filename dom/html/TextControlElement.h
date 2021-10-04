@@ -26,16 +26,16 @@ class TextEditor;
  * This abstract class is used for the text control frame to get the editor and
  * selection controller objects, and some helper properties.
  */
-class TextControlElement : public nsGenericHTMLFormElementWithState {
+class TextControlElement : public nsGenericHTMLFormControlElementWithState {
  public:
   TextControlElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo,
                      dom::FromParser aFromParser, FormControlType aType)
-      : nsGenericHTMLFormElementWithState(std::move(aNodeInfo), aFromParser,
-                                          aType){};
+      : nsGenericHTMLFormControlElementWithState(std::move(aNodeInfo),
+                                                 aFromParser, aType){};
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TextControlElement,
-                                           nsGenericHTMLFormElementWithState)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(
+      TextControlElement, nsGenericHTMLFormControlElementWithState)
 
   bool IsTextControlElement() const final { return true; }
 
