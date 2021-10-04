@@ -1129,10 +1129,10 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement {
   virtual ~nsGenericHTMLFormControlElement();
 };
 
-class nsGenericHTMLFormElementWithState
+class nsGenericHTMLFormControlElementWithState
     : public nsGenericHTMLFormControlElement {
  public:
-  nsGenericHTMLFormElementWithState(
+  nsGenericHTMLFormControlElementWithState(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
       mozilla::dom::FromParser aFromParser, FormControlType);
 

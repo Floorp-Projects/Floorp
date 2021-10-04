@@ -73,7 +73,7 @@ class MOZ_STACK_CLASS SafeOptionListMutation {
 /**
  * Implementation of &lt;select&gt;
  */
-class HTMLSelectElement final : public nsGenericHTMLFormElementWithState,
+class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
                                 public nsIConstraintValidation {
  public:
   /**
@@ -293,8 +293,8 @@ class HTMLSelectElement final : public nsGenericHTMLFormElementWithState,
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLSelectElement,
-                                           nsGenericHTMLFormElementWithState)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(
+      HTMLSelectElement, nsGenericHTMLFormControlElementWithState)
 
   HTMLOptionsCollection* GetOptions() { return mOptions; }
 
