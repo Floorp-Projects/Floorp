@@ -122,14 +122,14 @@ assertErrorMessage(() => run(), TypeError, badWasmFunc);
 importReturnValue = () => {};
 assertErrorMessage(() => run(), TypeError, badWasmFunc);
 
-var g = new Global({value:'funcref', mutable:true}, wasmFun);
+var g = new Global({value:'anyfunc', mutable:true}, wasmFun);
 assertEq(g.value, wasmFun);
 g.value = null;
 assertEq(g.value, null);
 Math.sin();
 assertErrorMessage(() => g.value = () => {}, TypeError, badWasmFunc);
-var g = new Global({value:'funcref', mutable:true}, null);
+var g = new Global({value:'anyfunc', mutable:true}, null);
 assertEq(g.value, null);
 g.value = wasmFun;
 assertEq(g.value, wasmFun);
-assertErrorMessage(() => new Global({value:'funcref'}, () => {}), TypeError, badWasmFunc);
+assertErrorMessage(() => new Global({value:'anyfunc'}, () => {}), TypeError, badWasmFunc);

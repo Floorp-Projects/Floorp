@@ -10,10 +10,10 @@ const mem3Page = new Memory({initial:3});
 const mem3PageMax3 = new Memory({initial:3, maximum: 3});
 const mem4Page = new Memory({initial:4});
 const mem4PageMax4 = new Memory({initial:4, maximum: 4});
-const tab1Elem = new Table({initial:1, element:"funcref"});
-const tab2Elem = new Table({initial:2, element:"funcref"});
-const tab3Elem = new Table({initial:3, element:"funcref"});
-const tab4Elem = new Table({initial:4, element:"funcref"});
+const tab1Elem = new Table({initial:1, element:"anyfunc"});
+const tab2Elem = new Table({initial:2, element:"anyfunc"});
+const tab3Elem = new Table({initial:3, element:"anyfunc"});
+const tab4Elem = new Table({initial:4, element:"anyfunc"});
 
 function assertSegmentFitError(f) {
     assertErrorMessage(f, RuntimeError, /out of bounds/);
@@ -317,13 +317,13 @@ assertEq(mem, e.foo);
 assertEq(mem, e.bar);
 
 var code = wasmTextToBinary('(module (import "a" "b" (table 1 1 funcref)) (export "foo" (table 0)) (export "bar" (table 0)))');
-var tbl = new Table({initial:1, maximum:1, element:"funcref"});
+var tbl = new Table({initial:1, maximum:1, element:"anyfunc"});
 var e = new Instance(new Module(code), {a:{b:tbl}}).exports;
 assertEq(tbl, e.foo);
 assertEq(tbl, e.bar);
 
 var code = wasmTextToBinary('(module (import "a" "b" (table 2 2 funcref)) (func $foo) (elem (i32.const 0) $foo) (export "foo" (func $foo)))');
-var tbl = new Table({initial:2, maximum:2, element:"funcref"});
+var tbl = new Table({initial:2, maximum:2, element:"anyfunc"});
 var e1 = new Instance(new Module(code), {a:{b:tbl}}).exports;
 assertEq(e1.foo, tbl.get(0));
 tbl.set(1, e1.foo);
@@ -493,7 +493,7 @@ var m = new Module(wasmTextToBinary(`
 var npages = 2;
 var mem = new Memory({initial:npages});
 var mem8 = new Uint8Array(mem.buffer);
-var tbl = new Table({initial:2, element:"funcref"});
+var tbl = new Table({initial:2, element:"anyfunc"});
 
 assertSegmentFitError(() => new Instance(m, {a:{mem, tbl, memOff:1, tblOff:2}}));
 // The first active element segment is applied, but the second active
@@ -540,7 +540,7 @@ var m = new Module(wasmTextToBinary(
        (func $g)
        (func $h))`));
 var mem = new Memory({initial:1});
-var tbl = new Table({initial:3, element:"funcref"});
+var tbl = new Table({initial:3, element:"anyfunc"});
 assertSegmentFitError(() => new Instance(m, {"":{mem, tbl}}));
 assertEq(tbl.get(0), null);
 assertEq(tbl.get(1), null);
@@ -576,7 +576,7 @@ var m = new Module(wasmTextToBinary(`
         (func $three (result i32) (i32.const 3))
         (func $four (result i32) (i32.const 4)))
 `));
-var tbl = new Table({initial:10, element:"funcref"});
+var tbl = new Table({initial:10, element:"anyfunc"});
 new Instance(m, {a:{b:tbl}});
 assertEq(tbl.get(0)(), 1);
 assertEq(tbl.get(1)(), 2);
@@ -597,7 +597,7 @@ var m = new Module(wasmTextToBinary(`
         (elem (i32.const 3) $their2)
     )
 `));
-var tbl = new Table({initial:4, element:"funcref"});
+var tbl = new Table({initial:4, element:"anyfunc"});
 var f = () => 42;
 new Instance(m, { "": { table: tbl, func: f} });
 assertEq(tbl.get(0), null);

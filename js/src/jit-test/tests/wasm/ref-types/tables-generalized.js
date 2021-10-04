@@ -155,7 +155,7 @@ assertErrorMessage(
     () => new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
     `(module
        (import "m" "t" (table 10 externref)))`)),
-                                   {m:{t: new WebAssembly.Table({element:"funcref", initial:10})}}),
+                                   {m:{t: new WebAssembly.Table({element:"anyfunc", initial:10})}}),
     WebAssembly.LinkError,
     /imported table type mismatch/);
 

@@ -66,7 +66,7 @@ assert_return(() => invoke($0, `get-externref`, [0]), [
 ]);
 
 // ./test/core/table_set.wast:35
-assert_return(() => invoke($0, `get-funcref`, [0]), [value("funcref", null)]);
+assert_return(() => invoke($0, `get-funcref`, [0]), [value("anyfunc", null)]);
 
 // ./test/core/table_set.wast:36
 assert_return(() => invoke($0, `set-funcref-from`, [0, 1]), []);
@@ -78,7 +78,7 @@ assert_return(() => invoke($0, `is_null-funcref`, [0]), [value("i32", 0)]);
 assert_return(() => invoke($0, `set-funcref`, [0, null]), []);
 
 // ./test/core/table_set.wast:39
-assert_return(() => invoke($0, `get-funcref`, [0]), [value("funcref", null)]);
+assert_return(() => invoke($0, `get-funcref`, [0]), [value("anyfunc", null)]);
 
 // ./test/core/table_set.wast:41
 assert_trap(
