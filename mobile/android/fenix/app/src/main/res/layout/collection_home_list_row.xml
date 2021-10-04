@@ -7,6 +7,7 @@
     android:id="@+id/item_collection"
     android:layout_width="match_parent"
     android:layout_height="48dp"
+    android:layout_marginHorizontal="@dimen/home_item_horizontal_margin"
     android:layout_marginTop="12dp"
     android:background="@drawable/card_list_row_background"
     android:clickable="true"
