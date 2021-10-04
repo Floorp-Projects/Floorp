@@ -546,6 +546,13 @@ JSOutOfMemory:
     to satisfy the allocation.
   type: string
 
+LastInteractionDuration:
+  description: >
+    How long the user had been inactive in seconds if the user was inactive
+    at crash.  The value is not set if the user state was active.
+  type: integer
+  ping: true
+
 MacMemoryPressure:
   description: >
     The current memory pressure state as provided by the macOS memory pressure
