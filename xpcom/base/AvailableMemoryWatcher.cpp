@@ -12,7 +12,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
-#include "nsICrashReporter.h"
 #include "nsMemoryPressure.h"
 #include "nsXULAppAPI.h"
 
@@ -57,60 +56,9 @@ NS_IMPL_ISUPPORTS(nsAvailableMemoryWatcherBase, nsIAvailableMemoryWatcherBase);
 nsAvailableMemoryWatcherBase::nsAvailableMemoryWatcherBase()
     : mNumOfTabUnloading(0),
       mNumOfMemoryPressure(0),
-      mTabUnloader(new NullTabUnloader),
-      mInteracting(false) {
+      mTabUnloader(new NullTabUnloader) {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Watching memory only in the main process.");
-}
-
-const char* const nsAvailableMemoryWatcherBase::kObserverTopics[] = {
-    // Use this shutdown phase to make sure the instance is destroyed in GTest
-    "xpcom-shutdown",
-    "user-interaction-active",
-    "user-interaction-inactive",
-};
-
-nsresult nsAvailableMemoryWatcherBase::Init() {
-  MOZ_ASSERT(NS_IsMainThread(),
-             "nsAvailableMemoryWatcherBase needs to be initialized "
-             "in the main thread.");
-
-  if (mObserverSvc) {
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
-
-  mObserverSvc = services::GetObserverService();
-  MOZ_ASSERT(mObserverSvc);
-
-  for (auto topic : kObserverTopics) {
-    nsresult rv = mObserverSvc->AddObserver(this, topic,
-                                            /* ownsWeak */ false);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return NS_OK;
-}
-
-void nsAvailableMemoryWatcherBase::Shutdown() {
-  for (auto topic : kObserverTopics) {
-    mObserverSvc->RemoveObserver(this, topic);
-  }
-}
-
-NS_IMETHODIMP
-nsAvailableMemoryWatcherBase::Observe(nsISupports* aSubject, const char* aTopic,
-                                      const char16_t* aData) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (strcmp(aTopic, "xpcom-shutdown") == 0) {
-    Shutdown();
-  } else if (strcmp(aTopic, "user-interaction-inactive") == 0) {
-    mInteracting = false;
-    CrashReporter::SetInactiveStateStart();
-  } else if (strcmp(aTopic, "user-interaction-active") == 0) {
-    mInteracting = true;
-    CrashReporter::ClearInactiveStateStart();
-  }
-  return NS_OK;
 }
 
 nsresult nsAvailableMemoryWatcherBase::RegisterTabUnloader(

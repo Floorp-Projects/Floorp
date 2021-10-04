@@ -25,7 +25,7 @@ class nsAvailableMemoryWatcher final : public nsAvailableMemoryWatcherBase {
   NS_DECL_ISUPPORTS_INHERITED
 
   nsAvailableMemoryWatcher();
-  nsresult Init() override;
+  nsresult Init();
 
   void OnMemoryPressureChanged(MacMemoryPressureLevel aLevel) override;
   void AddChildAnnotations(
@@ -103,11 +103,6 @@ nsresult nsAvailableMemoryWatcher::Init() {
   MOZ_ASSERT(!mInitialized);
   if (mInitialized) {
     return NS_ERROR_ALREADY_INITIALIZED;
-  }
-
-  nsresult rv = nsAvailableMemoryWatcherBase::Init();
-  if (NS_FAILED(rv)) {
-    return rv;
   }
 
   ReadSysctls();
