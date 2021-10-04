@@ -2002,7 +2002,7 @@ getHardcodedLayout = ({
                   "https://getpocket.com/explore/entertainment?utm_source=pocket-newtab",
               },
               {
-                name: "Health",
+                name: "Health & fitness",
                 url:
                   "https://getpocket.com/explore/health?utm_source=pocket-newtab",
               },
@@ -2050,8 +2050,7 @@ getHardcodedLayout = ({
               {
                 type: "PrivacyLink",
                 properties: {
-                  url:
-                    "https://www.mozilla.org/privacy/firefox/#suggest-relevant-content",
+                  url: "https://www.mozilla.org/privacy/firefox/",
                   title: {
                     id: "newtab-section-menu-privacy-notice",
                   },
