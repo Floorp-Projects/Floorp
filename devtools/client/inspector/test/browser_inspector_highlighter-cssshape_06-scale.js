@@ -150,10 +150,13 @@ async function testScale(config) {
 }
 
 async function getBoundingBoxInPx(config) {
-  const { highlighterTestFront, selector, inspector, highlighters } = config;
+  const { highlighterTestFront, selector, inspector } = config;
   const quads = await getAllAdjustedQuadsForContentPageElement(selector);
   const { width, height } = quads.content[0].bounds;
   const highlightedNode = await getNodeFront(selector, inspector);
+  const highlighterFront = inspector.inspectorFront.getKnownHighlighter(
+    HIGHLIGHTER_TYPE
+  );
   const computedStyle = await highlightedNode.inspectorFront.pageStyle.getComputed(
     highlightedNode
   );
@@ -163,7 +166,7 @@ async function getBoundingBoxInPx(config) {
   const path = await highlighterTestFront.getHighlighterNodeAttribute(
     "shapes-bounding-box",
     "d",
-    highlighters.highlighters[HIGHLIGHTER_TYPE]
+    highlighterFront
   );
   const coords = path
     .replace(/[MLZ]/g, "")
