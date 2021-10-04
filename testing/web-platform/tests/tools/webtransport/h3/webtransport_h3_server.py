@@ -308,6 +308,20 @@ class WebTransportSession:
         """
         self._http.send_datagram(flow_id=self.session_id, data=data)
 
+    def stop_stream(self, stream_id: int, code: int) -> None:
+        """
+        Send a STOP_SENDING frame to the given stream.
+        :param code: the reason of the error.
+        """
+        self._http._quic.stop_stream(stream_id, code)
+
+    def reset_stream(self, stream_id: int, code: int) -> None:
+        """
+        Send a RESET_STREAM frame to the given stream.
+        :param code: the reason of the error.
+        """
+        self._http._quic.reset_stream(stream_id, code)
+
 
 class WebTransportEventHandler:
     def __init__(self, session: WebTransportSession,
