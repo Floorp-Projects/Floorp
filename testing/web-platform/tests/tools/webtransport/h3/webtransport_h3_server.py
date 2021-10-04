@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from aioquic.buffer import Buffer  # type: ignore
 from aioquic.asyncio import QuicConnectionProtocol, serve  # type: ignore
 from aioquic.asyncio.client import connect  # type: ignore
-from aioquic.h3.connection import H3_ALPN, FrameType, H3Connection, ProtocolError  # type: ignore
+from aioquic.h3.connection import H3_ALPN, FrameType, H3Connection, ProtocolError, Setting  # type: ignore
 from aioquic.h3.events import H3Event, HeadersReceived, WebTransportStreamDataReceived, DatagramReceived  # type: ignore
 from aioquic.quic.configuration import QuicConfiguration  # type: ignore
 from aioquic.quic.connection import stream_is_unidirectional  # type: ignore
@@ -36,11 +36,42 @@ _logger: logging.Logger = logging.getLogger(__name__)
 _doc_root: str = ""
 
 
+class H3ConnectionWithDatagram04(H3Connection):
+    """
+    A H3Connection subclass, to make it work with the latest
+    HTTP Datagram protocol.
+    """
+    H3_DATAGRAM_04 = 0xffd277
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._supports_h3_datagram_04 = False
+
+    def _validate_settings(self, settings: Dict[int, int]) -> None:
+        H3_DATAGRAM_04 = H3ConnectionWithDatagram04.H3_DATAGRAM_04
+        if H3_DATAGRAM_04 in settings and settings[H3_DATAGRAM_04] == 1:
+            settings[Setting.H3_DATAGRAM] = 1
+            self._supports_h3_datagram_04 = True
+        return super()._validate_settings(settings)
+
+    def _get_local_settings(self) -> Dict[int, int]:
+        H3_DATAGRAM_04 = H3ConnectionWithDatagram04.H3_DATAGRAM_04
+        settings = super()._get_local_settings()
+        settings[H3_DATAGRAM_04] = 1
+        return settings
+
+    @property
+    def supports_h3_datagram_04(self) -> bool:
+        """
+        True if the client supports the latest HTTP Datagram protocol.
+        """
+        return self._supports_h3_datagram_04
+
 class WebTransportH3Protocol(QuicConnectionProtocol):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._handler: Optional[Any] = None
-        self._http: Optional[H3Connection] = None
+        self._http: Optional[H3ConnectionWithDatagram04] = None
         self._session_stream_id: Optional[int] = None
         self._close_info: Optional[Tuple[int, bytes]] = None
         self._capsule_decoder_for_session_stream: H3CapsuleDecoder =\
@@ -49,7 +80,8 @@ class WebTransportH3Protocol(QuicConnectionProtocol):
 
     def quic_event_received(self, event: QuicEvent) -> None:
         if isinstance(event, ProtocolNegotiated):
-            self._http = H3Connection(self._quic, enable_webtransport=True)
+            self._http = H3ConnectionWithDatagram04(
+                self._quic, enable_webtransport=True)
 
         if self._http is not None:
             for http_event in self._http.handle_event(event):
@@ -80,6 +112,9 @@ class WebTransportH3Protocol(QuicConnectionProtocol):
 
         if isinstance(event, WebTransportStreamDataReceived) and\
            self._session_stream_id == event.stream_id:
+            if self._http and not self._http.supports_h3_datagram_04 and\
+               len(event.data) > 0:
+                raise ProtocolError('Unexpected data on the session stream')
             self._receive_data_on_session_stream(
                 event.data, event.stream_ended)
         elif self._handler is not None:
@@ -302,7 +337,16 @@ class WebTransportSession:
 
         :param data: The data to send.
         """
-        self._http.send_datagram(flow_id=self.session_id, data=data)
+        flow_id = self.session_id
+        if self._http.supports_h3_datagram_04:
+            # The REGISTER_DATAGRAM_NO_CONTEXT capsule was on the session
+            # stream, so we must have the ID of the stream.
+            assert self._protocol._session_stream_id is not None
+            # TODO(yutakahirano): Make sure if this is the correct logic.
+            # Chrome always use 0 for the initial stream and the initial flow
+            # ID, we cannot check the correctness with it.
+            flow_id = self._protocol._session_stream_id // 4
+        self._http.send_datagram(flow_id=flow_id, data=data)
 
     def stop_stream(self, stream_id: int, code: int) -> None:
         """
