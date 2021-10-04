@@ -6,6 +6,7 @@
 
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsRefreshDriver.h"
 
@@ -47,6 +48,52 @@ void CCGCScheduler::NoteGCEnd() {
   if (child) {
     child->DoneGC();
   }
+}
+
+#ifdef MOZ_GECKO_PROFILER
+struct CCIntervalMarker {
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("CC");
+  }
+  static void StreamJSONMarkerData(
+      baseprofiler::SpliceableJSONWriter& aWriter) {}
+  static mozilla::MarkerSchema MarkerTypeDisplay() {
+    using MS = mozilla::MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
+              MS::Location::TimelineMemory};
+    schema.AddStaticLabelValue(
+        "Description",
+        "Summary data for the core part of a cycle collection, possibly "
+        "encompassing a set of incremental slices. The main thread is not "
+        "blocked for the entire major CC interval, only for the individual "
+        "slices.");
+    return schema;
+  }
+};
+#endif
+
+void CCGCScheduler::NoteCCBegin(TimeStamp aWhen) {
+#ifdef MOZ_GECKO_PROFILER
+  profiler_add_marker("CC", baseprofiler::category::GCCC,
+                      MarkerOptions(MarkerTiming::IntervalStart(aWhen)),
+                      CCIntervalMarker{});
+#endif
+  mIsCollectingCycles = true;
+}
+
+void CCGCScheduler::NoteCCEnd(TimeStamp aWhen) {
+#ifdef MOZ_GECKO_PROFILER
+  profiler_add_marker("CC", baseprofiler::category::GCCC,
+                      MarkerOptions(MarkerTiming::IntervalEnd(aWhen)),
+                      CCIntervalMarker{});
+#endif
+
+  mIsCollectingCycles = false;
+  mLastCCEndTime = aWhen;
+  mNeedsFullCC = false;
+
+  // The GC for this CC has already been requested.
+  mNeedsGCAfterCC = false;
 }
 
 void CCGCScheduler::NoteWontGC() {
