@@ -250,5 +250,3 @@ GeneratedFile(
 
 if CONFIG["FUZZING_INTERFACES"] or CONFIG["FUZZING_JS_FUZZILLI"]:
     include("/tools/fuzzing/libfuzzer-config.mozbuild")
-
-REQUIRES_UNIFIED_BUILD = True
