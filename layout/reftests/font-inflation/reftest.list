@@ -49,7 +49,7 @@ test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceE
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == intrinsic-fit-2c.html intrinsic-fit-1c-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-listbox-1.html select-listbox-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) != select-listbox-1.html select-listbox-1.html
-fuzzy-if(skiaContent,0-4,0-7) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-combobox-1.html select-combobox-1-ref.html
+fuzzy(0-4,0-7) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-combobox-1.html select-combobox-1-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) != select-combobox-1.html select-combobox-1.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-listbox-2.html select-listbox-2-ref.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) != select-listbox-2.html select-listbox-2.html

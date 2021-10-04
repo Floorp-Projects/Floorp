@@ -16,7 +16,7 @@ fuzzy(0-3,0-825) == quirks-decorations.html quirks-decorations-ref.html
 fuzzy(0-47,0-6) == selection.html selection-ref.html
 fuzzy(0-8,0-509) == marker-shadow.html marker-shadow-ref.html
 fuzzy(0-3,0-25) == aligned-baseline.html aligned-baseline-ref.html
-fuzzy-if(skiaContent,0-1,0-5) == clipped-elements.html clipped-elements-ref.html
+fuzzy(0-1,0-5) == clipped-elements.html clipped-elements-ref.html
 == theme-overflow.html theme-overflow-ref.html
 == table-cell.html table-cell-ref.html
 fuzzy(0-47,0-18) == two-value-syntax.html two-value-syntax-ref.html
