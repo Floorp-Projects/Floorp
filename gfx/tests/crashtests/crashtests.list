@@ -157,12 +157,12 @@ load 1242822.html
 load 1248222.html
 load 1278305.html
 load 1308394.html
-skip-if(geckoview&&webrender) load 1317403-1.html # bug 1331533, 1630774
-skip-if(geckoview&&webrender) load 1325159-1.html # bug 1630774
-skip-if(geckoview&&webrender) load 1331683.html # bug 1630774
+skip-if(geckoview) load 1317403-1.html # bug 1331533, 1630774
+skip-if(geckoview) load 1325159-1.html # bug 1630774
+skip-if(geckoview) load 1331683.html # bug 1630774
 skip-if(Android) pref(dom.disable_open_during_load,false) load 1343666.html
 load 1346601-1.html
-skip-if(geckoview&&webrender) load 1408078-1.html # bug 1630774
+skip-if(geckoview) load 1408078-1.html # bug 1630774
 load 1464243.html
 load 1467847-1.html
 load 1468020.html
@@ -196,9 +196,9 @@ load 1647862.html
 load 1647940.html
 load 1650989-very-large-mask.html
 load 1650990.html
-skip-if(!webrender||AddressSanitizer) load 1652750-deep-scene-stack.html
+skip-if(AddressSanitizer) load 1652750-deep-scene-stack.html
 load 1651882.html
-skip-if(!webrender||(Android&&swgl)) load 1678938-1.html
+skip-if(Android&&swgl) load 1678938-1.html
 load 1679477-1.html
 skip-if(Android) pref(dom.disable_open_during_load,false) load 1685009-1.html
 load 1694783-1.html

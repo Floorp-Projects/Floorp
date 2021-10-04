@@ -41,17 +41,17 @@ fuzzy-if(winWidget&&gpuProcess&&!d2d,0-1,0-1600) == blend-color-dodge.svg blend-
 # == blend-color.svg blend-color-ref.svg
 == blend-darken.svg blend-darken-ref.svg
 == blend-difference.svg blend-difference-ref.svg
-fuzzy-if(skiaContent,0-1,0-1600) fuzzy-if(geckoview&&webrender,0-5,0-254) == blend-exclusion.svg blend-exclusion-ref.svg
+fuzzy-if(skiaContent,0-1,0-1600) fuzzy-if(geckoview,0-5,0-254) == blend-exclusion.svg blend-exclusion-ref.svg
 # == blend-hard-light.svg blend-hard-light-ref.svg
 # == blend-hue.svg blend-hue-ref.svg
 == blend-layer-blend.svg blend-layer-blend-ref.svg
 == blend-layer-filter.svg blend-layer-filter-ref.svg
 == blend-layer-mask.svg blend-layer-mask-ref.svg
 == blend-layer-opacity.svg blend-layer-opacity-ref.svg
-random-if(Android&&webrender) == blend-lighten.svg blend-lighten-ref.svg
+random-if(Android) == blend-lighten.svg blend-lighten-ref.svg
 # == blend-luminosity.svg blend-luminosity-ref.svg
 #skip-if(Android) == blend-multiply-alpha.svg blend-multiply-alpha-ref.svg
-fuzzy-if(skiaContent,0-1,0-1600) random-if(Android&&webrender) == blend-multiply.svg blend-multiply-ref.svg
+fuzzy-if(skiaContent,0-1,0-1600) random-if(Android) == blend-multiply.svg blend-multiply-ref.svg
 == blend-normal.svg blend-normal-ref.svg
 #skip-if(Android) == blend-overlay.svg blend-overlay-ref.svg
 #skip-if(Android)  == blend-saturation.svg blend-saturation-ref.svg
@@ -71,7 +71,7 @@ fuzzy(0-11,0-7155) == blur-inside-clipPath.svg blur-inside-clipPath-ref.svg
 == clip-01.svg pass.svg
 == clip-02a.svg clip-02-ref.svg
 == clip-02b.svg clip-02-ref.svg
-fuzzy-if(webrender,0-1,0-10000) == clip-surface-clone-01.svg clip-surface-clone-01-ref.svg
+fuzzy(0-1,0-10000) == clip-surface-clone-01.svg clip-surface-clone-01-ref.svg
 == clip-use-element-01.svg pass.svg
 == clip-use-element-02.svg pass.svg
 
@@ -223,7 +223,7 @@ skip pref(security.fileuri.strict_origin_policy,true) == filter-extref-different
 == filter-foreignObject-01.svg pass.svg
 == filter-in-mask-01.svg pass.svg
 == filter-invalidation-01.svg pass.svg
-fuzzy(0-71,0-821) fails-if(winWidget) fuzzy-if(webrender&&OSX&&!swgl,1-1,216-458) == filter-on-continuation-box-01.html filter-on-continuation-box-ref.html
+fuzzy(0-71,0-821) fails-if(winWidget) fuzzy-if(OSX&&!swgl,1-1,216-458) == filter-on-continuation-box-01.html filter-on-continuation-box-ref.html
 == filter-result-01.svg filter-result-01-ref.svg
 == filter-scaled-01.svg pass.svg
 fuzzy-if(skiaContent,0-1,0-500) == filter-scaled-02.html filter-scaled-02-ref.html
@@ -382,7 +382,7 @@ fuzzy-if(skiaContent,0-1,0-400) == path-06.svg path-06-ref.svg
 == pathLength-02.svg pass.svg
 
 == pattern-basic-01.svg pass.svg
-fuzzy(0-1,0-5) fuzzy-if(webrender,0-2,0-61) == pattern-big-image.html pattern-big-image-ref.html
+fuzzy(0-2,0-61) == pattern-big-image.html pattern-big-image-ref.html
 == pattern-css-transform.html pattern-css-transform-ref.html
 == pattern-invalid-01.svg pattern-invalid-01-ref.svg
 fuzzy-if(skiaContent,0-1,0-5) == pattern-live-01a.svg pattern-live-01-ref.svg
@@ -391,8 +391,8 @@ fuzzy-if(skiaContent,0-1,0-5) == pattern-live-01c.svg pattern-live-01-ref.svg
 fuzzy-if(skiaContent,0-1,0-5) == pattern-scale-01a.svg pattern-scale-01-ref.svg
 == pattern-scale-01b.svg pattern-scale-01-ref.svg
 fuzzy-if(skiaContent,0-3,0-5) == pattern-scale-01c.svg pattern-scale-01-ref.svg
-fuzzy-if(webrender,0-2,0-227) == pattern-transform-presence-01.svg pattern-transform-presence-01-ref.svg
-fuzzy-if(skiaContent||webrender,0-72,0-1255) == pattern-transformed-01.svg pattern-transformed-01-ref.svg
+fuzzy(0-2,0-227) == pattern-transform-presence-01.svg pattern-transform-presence-01-ref.svg
+fuzzy(0-72,0-1255) == pattern-transformed-01.svg pattern-transformed-01-ref.svg
 
 == polygon-01.svg polygon-01-ref.svg
 == polygon-marker-01.svg pass.svg
@@ -407,7 +407,7 @@ fuzzy-if(skiaContent||webrender,0-72,0-1255) == pattern-transformed-01.svg patte
 
 == radialGradient-basic-01.svg pass.svg
 == radialGradient-basic-02.svg pass.svg
-fuzzy(0-1,0-3) fuzzy-if(winWidget,0-32,0-223) fuzzy-if(winWidget&&webrender&&!swgl&&!/^Windows\x20NT\x206\.1/.test(http.oscpu),96-96,21684-21684) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI))&&webrender&&!isDebugBuild,0-1,0-2) == radialGradient-basic-03.svg radialGradient-basic-03-ref.html # Bug 1718175
+fuzzy(0-1,0-3) fuzzy-if(winWidget,0-32,0-223) fuzzy-if(winWidget&&!swgl&&!/^Windows\x20NT\x206\.1/.test(http.oscpu),96-96,21684-21684) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&/^aarch64-msvc/.test(xulRuntime.XPCOMABI)&&!isDebugBuild,0-1,0-2) == radialGradient-basic-03.svg radialGradient-basic-03-ref.html # Bug 1718175
 == radialGradient-basic-04.svg pass.svg
 == radialGradient-fr-01.svg pass.svg
 fuzzy(0-1,0-3235) fuzzy-if(winWidget,0-1,0-7030) == radialGradient-fr-02.svg radialGradient-fr-02-ref.svg
@@ -467,7 +467,7 @@ fuzzy-if(skiaContent,0-1,0-2600) == svg-in-foreignObject-02.xhtml svg-in-foreign
 == svg-transform-01.svg pass.svg
 == svg-transform-02.svg pass.svg
 
-fuzzy-if(skiaContent||webrender,0-39,0-269) == symbol-01.svg symbol-01-ref.svg
+fuzzy(0-39,0-269) == symbol-01.svg symbol-01-ref.svg
 
 == text-font-size-01.svg pass.svg
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 1392106
@@ -599,16 +599,16 @@ defaults skip-if(ThreadSanitizer)
 == overflow-visible-image.html overflow-visible-image-ref.html
 
 # Shadow DOM id tracking.
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-1.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-2.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-3.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-4.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-5.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-6.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-7.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-8.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-9.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview&&webrender) == fragid-shadow-10.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-1.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-2.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-3.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-4.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-5.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-6.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-7.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-8.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-9.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(geckoview) == fragid-shadow-10.html fragid-shadow-ref.html # Bug 1392106, bug 1560367 for GV+WR, bug 1717061 for Win 7
 
 == mask-resource.html mask-resource-ref.html
 fails-if(Android) != mask-resource.html about:blank # The image the test uses is not on Android
@@ -616,5 +616,5 @@ fails-if(Android) != mask-resource.html about:blank # The image the test uses is
 != bug-1562091.html bug-1562091-ref.html
 == 1570363-1.html 1570363-1-ref.html
 
-fuzzy-if(webrender,0-1,0-150) fuzzy-if(!webrender,0-2,0-7882) == mask-opacity-invalidation-1.html mask-opacity-invalidation-1-ref.html # clip-path mask/opacity optimization
-skip-if(Android) skip-if(cocoaWidget&&webrender) skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == transform-animation-on-path.html transform-animation-on-path-ref.html #Bug 1638909
+fuzzy(0-1,0-150) == mask-opacity-invalidation-1.html mask-opacity-invalidation-1-ref.html # clip-path mask/opacity optimization
+skip-if(Android) skip-if(cocoaWidget) skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == transform-animation-on-path.html transform-animation-on-path-ref.html #Bug 1638909

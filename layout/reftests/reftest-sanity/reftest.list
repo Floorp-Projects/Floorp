@@ -39,8 +39,8 @@ HTTP == data:text/html,<div>Text</div> default.html
 != blank.html default.html
 HTTP != blank.html default.html
 
-fails-if(geckoview&&webrender&&device) == filter-1.xhtml filter-1-ref.xhtml
-fails-if(geckoview&&webrender&&device) == filter-2.xhtml filter-2-ref.xhtml
+fails-if(geckoview&&device) == filter-1.xhtml filter-1-ref.xhtml
+fails-if(geckoview&&device) == filter-2.xhtml filter-2-ref.xhtml
 
 # test that the MozReftestInvalidate event fires
 == invalidation.html about:blank
