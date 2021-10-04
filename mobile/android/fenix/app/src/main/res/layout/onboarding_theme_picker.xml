@@ -9,7 +9,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     style="@style/OnboardingCardLight"
-    android:paddingTop="16dp">
+    android:paddingTop="16dp"
+    android:layout_marginHorizontal="@dimen/home_item_horizontal_margin">
 
     <TextView
         android:id="@+id/header_text"

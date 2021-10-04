@@ -7,7 +7,8 @@
     android:id="@+id/experiment_card"
     style="@style/OnboardingCardLightWithPadding"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="@dimen/home_item_horizontal_margin">
 
     <ImageButton
         android:id="@+id/close"
