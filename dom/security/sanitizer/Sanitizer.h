@@ -35,9 +35,7 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Sanitizer);
 
   explicit Sanitizer(nsIGlobalObject* aGlobal, const SanitizerConfig& aOptions)
-      : mGlobal(aGlobal),
-        mTreeSanitizer(nsIParserUtils::SanitizerAllowStyle |
-                       nsIParserUtils::SanitizerAllowComments) {
+      : mGlobal(aGlobal), mTreeSanitizer(nsIParserUtils::SanitizerAllowStyle) {
     MOZ_ASSERT(aGlobal);
     mTreeSanitizer.WithWebSanitizerOptions(aOptions);
   }
@@ -61,8 +59,7 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
    * @return DocumentFragment of the sanitized HTML
    */
   already_AddRefed<DocumentFragment> Sanitize(
-      const mozilla::dom::StringOrDocumentFragmentOrDocument& aInput,
-      ErrorResult& aRv);
+      const mozilla::dom::DocumentFragmentOrDocument& aInput, ErrorResult& aRv);
 
   /**
    * sanitizeFor method.
@@ -97,8 +94,7 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
  private:
   ~Sanitizer() = default;
   already_AddRefed<DocumentFragment> InputToNewFragment(
-      const mozilla::dom::StringOrDocumentFragmentOrDocument& aInput,
-      ErrorResult& aRv);
+      const mozilla::dom::DocumentFragmentOrDocument& aInput, ErrorResult& aRv);
   /**
    * Logs localized message to either content console or browser console
    * @param aMessage           Message to log

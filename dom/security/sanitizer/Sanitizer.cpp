@@ -45,9 +45,8 @@ already_AddRefed<Sanitizer> Sanitizer::Constructor(
 
 /* static */
 already_AddRefed<DocumentFragment> Sanitizer::InputToNewFragment(
-    const mozilla::dom::StringOrDocumentFragmentOrDocument& aInput,
-    ErrorResult& aRv) {
-  // turns an StringOrDocumentFragmentOrDocument into a DocumentFragment for
+    const mozilla::dom::DocumentFragmentOrDocument& aInput, ErrorResult& aRv) {
+  // turns an DocumentFragmentOrDocument into a new DocumentFragment for
   // internal use with nsTreeSanitizer
 
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
@@ -63,8 +62,6 @@ already_AddRefed<DocumentFragment> Sanitizer::InputToNewFragment(
   if (aInput.IsDocumentFragment()) {
     RefPtr<DocumentFragment> inFragment = &aInput.GetAsDocumentFragment();
     inFragment->GetInnerHTML(innerHTML);
-  } else if (aInput.IsString()) {
-    innerHTML.Assign(aInput.GetAsString());
   } else if (aInput.IsDocument()) {
     RefPtr<Document> doc = &aInput.GetAsDocument();
     nsCOMPtr<Element> docElement = doc->GetDocumentElement();
@@ -106,8 +103,7 @@ already_AddRefed<DocumentFragment> Sanitizer::InputToNewFragment(
 }
 
 already_AddRefed<DocumentFragment> Sanitizer::Sanitize(
-    const mozilla::dom::StringOrDocumentFragmentOrDocument& aInput,
-    ErrorResult& aRv) {
+    const mozilla::dom::DocumentFragmentOrDocument& aInput, ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
   if (!window || !window->GetDoc()) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -143,6 +139,21 @@ already_AddRefed<Element> Sanitizer::SanitizeFor(const nsAString& aElement,
   if (aRv.Failed()) {
     return nullptr;
   }
+  RefPtr<nsAtom> elemName = NS_Atomize(aElement);
+  // FIXME(freddyb): Invalid parameters for SanitizeFor should throw, just like
+  // Element.setHTML does. Cf. https://github.com/WICG/sanitizer-api/issues/125
+  if (elemName == nsGkAtoms::script) {
+    // aRv.ThrowTypeError("This does not work on <script> elements");
+    return nullptr;
+  }
+  if (elemName == nsGkAtoms::object) {
+    // aRv.ThrowTypeError("This does not work on <object> elements");
+    return nullptr;
+  }
+  if (elemName == nsGkAtoms::iframe) {
+    // aRv.ThrowTypeError("This does not work on <iframe> elements");
+    return nullptr;
+  }
   RefPtr<Document> inertDoc = nsContentUtils::CreateInertHTMLDocument(nullptr);
   if (!inertDoc) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -151,7 +162,6 @@ already_AddRefed<Element> Sanitizer::SanitizeFor(const nsAString& aElement,
   RefPtr<DocumentFragment> fragment = new (inertDoc->NodeInfoManager())
       DocumentFragment(inertDoc->NodeInfoManager());
 
-  RefPtr<nsAtom> elemName = NS_Atomize(aElement);
   aRv = nsContentUtils::ParseFragmentHTML(aInput, fragment, elemName,
                                           kNameSpaceID_XHTML, false, true);
 

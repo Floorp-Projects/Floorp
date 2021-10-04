@@ -4525,6 +4525,20 @@ void Element::RegUnRegAccessKey(bool aDoReg) {
 void Element::SetHTML(const nsAString& aInnerHTML,
                       const SetHTMLOptions& aOptions, ErrorResult& aError) {
   FragmentOrElement* target = this;
+  // Throw for disallowed elements
+  if (IsHTMLElement(nsGkAtoms::script)) {
+    aError.ThrowTypeError("This does not work on <script> elements");
+    return;
+  }
+  if (IsHTMLElement(nsGkAtoms::object)) {
+    aError.ThrowTypeError("This does not work on <object> elements");
+    return;
+  }
+  if (IsHTMLElement(nsGkAtoms::iframe)) {
+    aError.ThrowTypeError("This does not work on <iframe> elements");
+    return;
+  }
+
   // Handle template case.
   if (target->IsTemplateElement()) {
     DocumentFragment* frag =
