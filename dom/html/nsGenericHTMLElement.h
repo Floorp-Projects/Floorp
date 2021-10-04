@@ -967,10 +967,7 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  nsINode* GetScopeChainParent() const override;
-
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
-  virtual void SaveSubtreeState() override;
 
   // nsIFormControl
   virtual mozilla::dom::HTMLFieldSetElement* GetFieldSet() override;
@@ -985,12 +982,6 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
   // nsIContent
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent = true) override;
-  virtual IMEState GetDesiredIMEState() override;
-  virtual mozilla::EventStates IntrinsicState() const override;
-
-  void GetEventTargetParent(mozilla::EventChainPreVisitor& aVisitor) override;
-  virtual nsresult PreHandleEvent(
-      mozilla::EventChainVisitor& aVisitor) override;
 
   /**
    * Save to presentation state.  The form control will determine whether it
@@ -1016,11 +1007,6 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
    */
   void UpdateDisabledState(bool aNotify);
 
-  /**
-   * Update our required/optional flags to match the given aIsRequired boolean.
-   */
-  void UpdateRequiredState(bool aIsRequired, bool aNotify);
-
   void FieldSetFirstLegendChanged(bool aNotify) { UpdateFieldSet(aNotify); }
 
   /**
@@ -1031,25 +1017,6 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
    * @param aFieldSet The fieldset being removed.
    */
   void ForgetFieldSet(nsIContent* aFieldset);
-
-  /**
-   * Returns if the control can be disabled.
-   */
-  bool CanBeDisabled() const;
-
-  /**
-   * Returns if the readonly attribute applies.
-   */
-  bool DoesReadOnlyApply() const;
-
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
-                               int32_t* aTabIndex) override;
-
-  virtual bool IsLabelable() const override;
-
-  // autocapitalize attribute support
-  virtual void GetAutocapitalize(nsAString& aValue) const override;
-  bool IsAutocapitalizeInheriting() const;
 
  protected:
   virtual ~nsGenericHTMLFormElement();
@@ -1113,6 +1080,16 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
   bool IsElementDisabledForEvents(mozilla::WidgetEvent* aEvent,
                                   nsIFrame* aFrame);
 
+  /**
+   * Returns if the control can be disabled.
+   */
+  virtual bool CanBeDisabled() const { return false; }
+
+  /**
+   * Returns if the readonly attribute applies.
+   */
+  virtual bool DoesReadOnlyApply() const { return false; }
+
   /** The form that contains this control */
   mozilla::dom::HTMLFormElement* mForm;
 
@@ -1125,8 +1102,41 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement {
   nsGenericHTMLFormControlElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo, FormControlType);
 
+  // nsINode
+  nsINode* GetScopeChainParent() const override;
+
+  // nsIContent
+  virtual void SaveSubtreeState() override;
+  virtual IMEState GetDesiredIMEState() override;
+
+  // nsGenericHTMLElement
+  // autocapitalize attribute support
+  virtual void GetAutocapitalize(nsAString& aValue) const override;
+  virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+                               int32_t* aTabIndex) override;
+
+  // EventTarget
+  void GetEventTargetParent(mozilla::EventChainPreVisitor& aVisitor) override;
+  virtual nsresult PreHandleEvent(
+      mozilla::EventChainVisitor& aVisitor) override;
+
  protected:
   virtual ~nsGenericHTMLFormControlElement();
+
+  // Element
+  virtual mozilla::EventStates IntrinsicState() const override;
+  virtual bool IsLabelable() const override;
+
+  // nsGenericHTMLFormElement
+  bool CanBeDisabled() const override;
+  bool DoesReadOnlyApply() const override;
+
+  /**
+   * Update our required/optional flags to match the given aIsRequired boolean.
+   */
+  void UpdateRequiredState(bool aIsRequired, bool aNotify);
+
+  bool IsAutocapitalizeInheriting() const;
 };
 
 class nsGenericHTMLFormControlElementWithState
