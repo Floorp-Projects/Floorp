@@ -106,15 +106,27 @@ class PerformanceRecorder {
   PerformanceRecorder& operator=(const PerformanceRecorder&) = delete;
 
   void Start();
-  void End();
 
- private:
+  // Return the passed time if it has started and still valid. Otherwise,
+  // return 0.
+  float End();
+
+ protected:
   void Reset();
+
+  static bool IsMeasurementEnabled();
+  static TimeStamp GetCurrentTimeForMeasurement();
+
+  // Return the resolution range for the given height. Eg. V:1080<h<=1440.
+  static const char* FindMediaResolution(int32_t aHeight);
 
   Stage mStage = Stage::Invalid;
   int32_t mHeight;
   MediaInfoFlag mFlag = MediaInfoFlag::None;
   Maybe<TimeStamp> mStartTime;
+
+  // We would enable the measurement on testing.
+  static inline bool sEnableMeasurementForTesting = false;
 };
 
 }  // namespace mozilla
