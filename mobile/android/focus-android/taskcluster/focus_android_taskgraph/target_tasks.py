@@ -11,8 +11,16 @@ def target_tasks_default(full_task_graph, parameters, graph_config):
     """Target the tasks which have indicated they should be run on this project
     via the `run_on_projects` attributes."""
 
-    filter = filter_for_tasks_for
-    return [l for l, t in full_task_graph.tasks.items() if filter_for_tasks_for(t, parameters)]
+    # Temporary until we have official beta support
+    def releases(task, parameters):
+        return task.attributes.get("release-type", "") == 'release'
+
+    _filter = filter_for_tasks_for
+
+    if parameters["tasks_for"] == "github-release":
+        _filter = releases
+
+    return [l for l, t in full_task_graph.tasks.items() if _filter(t, parameters)]
 
 
 @_target_task('release')

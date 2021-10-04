@@ -59,7 +59,11 @@ jobs:
             symbol: debug(Bkl)
 
     focus-release:
-        description: 'Release Focus build for debugging'
+        description: 'Release Focus build'
+            # any tasks that have this as a primary dependency will
+            # inherit this attribute via the multi_dep loader
+        attributes:
+            release-type: release
         run-on-tasks-for: [github-pull-request]
         run:
             gradle-build-type: release
@@ -69,7 +73,9 @@ jobs:
             symbol: release(Bf)
 
     klar-release:
-        description: 'Release Klar build for debugging'
+        description: 'Release Klar build'
+        attributes:
+            release-type: release
         run-on-tasks-for: [github-pull-request]
         run:
             gradle-build-type: release
@@ -101,8 +107,3 @@ jobs:
             gradle-build: focus
         treeherder:
             symbol: beta(B)
-
-
-    # TODO modify release, nightly and beta (focus only for the latter two) for signing and push-apk
-    # Add androidTest as a separate task
-    # Note: nightly and beta will not push to google plaly store

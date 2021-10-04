@@ -18,22 +18,30 @@ group-by: build-type
 
 only-for-build-types:
     - nightly
+    - focus-release
+    - klar-release
 
 job-template:
     description: Publish Focus
     worker-type: push-apk
-    run-on-tasks-for: [cron]
+    run-on-tasks-for: []
     worker:
         certificate-alias: focus
         commit: true
         channel:
             by-build-type:
                 nightly: nightly
+                focus-release: focus-release
+                klar-release: klar-release
         dep:
             by-level:
                 '3': false
                 default: true
         product: focus-android
     treeherder:
-        job-symbol: gp
+        job-symbol:
+            by-build-type:
+                nightly: gp
+                focus-release: gpf
+                klar-release: gpkl
         kind: build
