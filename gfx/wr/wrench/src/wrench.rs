@@ -573,7 +573,6 @@ impl Wrench {
                 root_background_color,
                 self.window_size_f32(),
                 display_list,
-                false,
             );
         }
 

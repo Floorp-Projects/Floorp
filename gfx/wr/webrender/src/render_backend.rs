@@ -579,10 +579,8 @@ impl Document {
             resource_cache,
         );
 
-        let old_scrolling_states = self.scene.spatial_tree.drain();
         self.scene = built_scene;
         self.scratch.recycle(recycler);
-        self.scene.spatial_tree.finalize_and_apply_pending_scroll_offsets(old_scrolling_states);
     }
 }
 
@@ -829,12 +827,6 @@ impl RenderBackend {
                     // we can sample from the sampler hook which might happen
                     // in the update_document call below.
                     resume_rx.recv().ok();
-                }
-
-                for pipeline_id in &txn.discard_frame_state_for_pipelines {
-                    doc.scene
-                        .spatial_tree
-                        .discard_frame_state_for_pipeline(*pipeline_id);
                 }
 
                 self.resource_cache.add_rasterized_blob_images(

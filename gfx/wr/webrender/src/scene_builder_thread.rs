@@ -65,7 +65,6 @@ pub struct BuiltTransaction {
     pub interner_updates: Option<InternerUpdates>,
     pub render_frame: bool,
     pub invalidate_rendered_frame: bool,
-    pub discard_frame_state_for_pipelines: Vec<PipelineId>,
     pub profile: TransactionProfile,
     pub frame_stats: FullFrameStats,
 }
@@ -451,7 +450,6 @@ impl SceneBuilderThread {
                 blob_rasterizer: None,
                 frame_ops: Vec::new(),
                 removed_pipelines: Vec::new(),
-                discard_frame_state_for_pipelines: Vec::new(),
                 notifications: Vec::new(),
                 interner_updates,
                 profile: TransactionProfile::new(),
@@ -504,7 +502,6 @@ impl SceneBuilderThread {
         let mut profile = txn.profile.take();
 
         let scene_build_start = precise_time_ns();
-        let mut discard_frame_state_for_pipelines = Vec::new();
         let mut removed_pipelines = Vec::new();
         let mut rebuild_scene = false;
         let mut frame_stats = FullFrameStats::default();
@@ -526,7 +523,6 @@ impl SceneBuilderThread {
                     background,
                     viewport_size,
                     display_list,
-                    preserve_frame_state,
                 } => {
                     let (builder_start_time_ns, builder_end_time_ns, send_time_ns) =
                       display_list.times();
@@ -557,10 +553,6 @@ impl SceneBuilderThread {
                         background,
                         viewport_size,
                     );
-
-                    if !preserve_frame_state {
-                        discard_frame_state_for_pipelines.push(pipeline_id);
-                    }
                 }
                 SceneMsg::SetRootPipeline(pipeline_id) => {
                     if scene.root_pipeline_id != Some(pipeline_id) {
@@ -638,7 +630,6 @@ impl SceneBuilderThread {
             blob_rasterizer: txn.blob_rasterizer,
             frame_ops: txn.frame_ops,
             removed_pipelines,
-            discard_frame_state_for_pipelines,
             notifications: txn.notifications,
             interner_updates,
             profile,
