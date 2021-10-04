@@ -31,7 +31,7 @@ findbar[noanim] {
 .findbar-container {
   margin-inline-start: 8px;
   height: 28px;
-  overflow: hidden; /* Ensures the close button stays visible. */
+  overflow-inline: clip; /* Ensures the close button stays visible. */
 }
 
 /* Remove start margin when close button is on the left side (on macOS) */
@@ -71,7 +71,7 @@ html|input.findbar-textbox:-moz-lwtheme {
 html|input.findbar-textbox:focus {
   border-color: transparent;
   outline: 2px solid color-mix(in srgb, var(--focus-outline-color, -moz-accent-color) 50%, transparent);
-  outline-offset: -1px; /* Prevents antialising around the corners */
+  outline-offset: -2px;
 }
 
 html|input.findbar-textbox:-moz-lwtheme::selection {
