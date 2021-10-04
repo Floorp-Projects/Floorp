@@ -8,17 +8,12 @@ with Files("test/**"):
 
 EXPORTS += [
     "MediaElementEventRunners.h",
-    "PerformanceRecorder.h",
     "TelemetryProbesReporter.h",
 ]
 
 UNIFIED_SOURCES += [
     "MediaElementEventRunners.cpp",
-    "PerformanceRecorder.cpp",
     "TelemetryProbesReporter.cpp",
 ]
-
-if CONFIG["ENABLE_TESTS"]:
-    DIRS += ["gtest"]
 
 FINAL_LIBRARY = "xul"
