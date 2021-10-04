@@ -172,6 +172,29 @@
       await p;
     }
 
+    async function testDefaultSubmitChange() {
+      testStates("default-button",
+        STATE_DEFAULT, 0,
+        0, 0,
+        "button should have DEFAULT state");
+      let button = document.createElement("button");
+      button.textContent = "new default";
+      let p = waitForEvent(...stateChange(STATE_DEFAULT, false, false, "default-button"));
+      getNode("default-button").before(button);
+      await p;
+      testStates("default-button",
+        0, 0,
+        STATE_DEFAULT, 0,
+        "button should not have DEFAULT state");
+      p = waitForEvent(...stateChange(STATE_DEFAULT, false, true, "default-button"));
+      button.remove();
+      await p;
+      testStates("default-button",
+        STATE_DEFAULT, 0,
+        0, 0,
+        "button should have DEFAULT state");
+    }
+
     async function doTests() {
       // Test opening details objects
       await openNode("detailsOpen", "summaryOpen", true);
@@ -222,6 +245,9 @@
       await testHasPopup();
 
       await toggleStateChange("textbox", "aria-multiline", EXT_STATE_MULTI_LINE, true);
+
+      await testDefaultSubmitChange();
+
       SimpleTest.finish();
     }
 
@@ -313,6 +339,11 @@
   <a id="link3">I am a non-link link</a>
 
   <div id="textbox" role="textbox" aria-multiline="false">hello</div>
+
+  <form id="form">
+    <button id="default-button">hello</button>
+    <button>world</button>
+  </form>
 
   <div id="eventdump"></div>
 
