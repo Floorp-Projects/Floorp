@@ -27,7 +27,8 @@ namespace mozilla::dom {
 HTMLObjectElement::HTMLObjectElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     FromParser aFromParser)
-    : nsGenericHTMLFormElement(std::move(aNodeInfo), FormControlType::Object),
+    : nsGenericHTMLFormControlElement(std::move(aNodeInfo),
+                                      FormControlType::Object),
       mIsDoneAddingChildren(!aFromParser) {
   RegisterActivityObserver();
   SetIsNetworkCreated(aFromParser == FROM_PARSER_NETWORK);
@@ -46,7 +47,7 @@ HTMLObjectElement::~HTMLObjectElement() {
 
 bool HTMLObjectElement::IsInteractiveHTMLContent() const {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::usemap) ||
-         nsGenericHTMLFormElement::IsInteractiveHTMLContent();
+         nsGenericHTMLFormControlElement::IsInteractiveHTMLContent();
 }
 
 void HTMLObjectElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {
@@ -67,29 +68,29 @@ void HTMLObjectElement::DoneAddingChildren(bool aHaveNotified) {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLObjectElement)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLObjectElement,
-                                                  nsGenericHTMLFormElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
+    HTMLObjectElement, nsGenericHTMLFormControlElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mValidity)
   nsObjectLoadingContent::Traverse(tmp, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLObjectElement,
-                                                nsGenericHTMLFormElement)
+                                                nsGenericHTMLFormControlElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mValidity)
   nsObjectLoadingContent::Unlink(tmp);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(
-    HTMLObjectElement, nsGenericHTMLFormElement, imgINotificationObserver,
-    nsIRequestObserver, nsIStreamListener, nsFrameLoaderOwner,
-    nsIObjectLoadingContent, nsIImageLoadingContent, nsIChannelEventSink,
-    nsIConstraintValidation)
+    HTMLObjectElement, nsGenericHTMLFormControlElement,
+    imgINotificationObserver, nsIRequestObserver, nsIStreamListener,
+    nsFrameLoaderOwner, nsIObjectLoadingContent, nsIImageLoadingContent,
+    nsIChannelEventSink, nsIConstraintValidation)
 
 NS_IMPL_ELEMENT_CLONE(HTMLObjectElement)
 
 nsresult HTMLObjectElement::BindToTree(BindContext& aContext,
                                        nsINode& aParent) {
-  nsresult rv = nsGenericHTMLFormElement::BindToTree(aContext, aParent);
+  nsresult rv = nsGenericHTMLFormControlElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = nsObjectLoadingContent::BindToTree(aContext, aParent);
@@ -107,7 +108,7 @@ nsresult HTMLObjectElement::BindToTree(BindContext& aContext,
 
 void HTMLObjectElement::UnbindFromTree(bool aNullParent) {
   nsObjectLoadingContent::UnbindFromTree(aNullParent);
-  nsGenericHTMLFormElement::UnbindFromTree(aNullParent);
+  nsGenericHTMLFormControlElement::UnbindFromTree(aNullParent);
 }
 
 nsresult HTMLObjectElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
@@ -118,7 +119,7 @@ nsresult HTMLObjectElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
   nsresult rv = AfterMaybeChangeAttr(aNamespaceID, aName, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return nsGenericHTMLFormElement::AfterSetAttr(
+  return nsGenericHTMLFormControlElement::AfterSetAttr(
       aNamespaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
@@ -128,8 +129,8 @@ nsresult HTMLObjectElement::OnAttrSetButNotChanged(
   nsresult rv = AfterMaybeChangeAttr(aNamespaceID, aName, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return nsGenericHTMLFormElement::OnAttrSetButNotChanged(aNamespaceID, aName,
-                                                          aValue, aNotify);
+  return nsGenericHTMLFormControlElement::OnAttrSetButNotChanged(
+      aNamespaceID, aName, aValue, aNotify);
 }
 
 nsresult HTMLObjectElement::AfterMaybeChangeAttr(int32_t aNamespaceID,
@@ -185,7 +186,7 @@ bool HTMLObjectElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   const nsAttrValue* attrVal = mAttrs.GetAttr(nsGkAtoms::tabindex);
   bool isFocusable = attrVal && attrVal->Type() == nsAttrValue::eInteger;
 
-  // This method doesn't call nsGenericHTMLFormElement intentionally.
+  // This method doesn't call nsGenericHTMLFormControlElement intentionally.
   // TODO: It should probably be changed when bug 597242 will be fixed.
   if (IsEditableRoot() ||
       ((Type() == eType_Document || Type() == eType_FakePlugin) &&
@@ -236,17 +237,21 @@ bool HTMLObjectElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLFormElement::ParseAttribute(
+  return nsGenericHTMLFormControlElement::ParseAttribute(
       aNamespaceID, aAttribute, aValue, aMaybeScriptedPrincipal, aResult);
 }
 
 void HTMLObjectElement::MapAttributesIntoRule(
     const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
-  nsGenericHTMLFormElement::MapImageAlignAttributeInto(aAttributes, aDecls);
-  nsGenericHTMLFormElement::MapImageBorderAttributeInto(aAttributes, aDecls);
-  nsGenericHTMLFormElement::MapImageMarginAttributeInto(aAttributes, aDecls);
-  nsGenericHTMLFormElement::MapImageSizeAttributesInto(aAttributes, aDecls);
-  nsGenericHTMLFormElement::MapCommonAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLFormControlElement::MapImageAlignAttributeInto(aAttributes,
+                                                              aDecls);
+  nsGenericHTMLFormControlElement::MapImageBorderAttributeInto(aAttributes,
+                                                               aDecls);
+  nsGenericHTMLFormControlElement::MapImageMarginAttributeInto(aAttributes,
+                                                               aDecls);
+  nsGenericHTMLFormControlElement::MapImageSizeAttributesInto(aAttributes,
+                                                              aDecls);
+  nsGenericHTMLFormControlElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)
@@ -279,7 +284,7 @@ void HTMLObjectElement::StartObjectLoad(bool aNotify, bool aForce) {
 }
 
 EventStates HTMLObjectElement::IntrinsicState() const {
-  return nsGenericHTMLFormElement::IntrinsicState() | ObjectState();
+  return nsGenericHTMLFormControlElement::IntrinsicState() | ObjectState();
 }
 
 uint32_t HTMLObjectElement::GetCapabilities() const {
@@ -288,11 +293,11 @@ uint32_t HTMLObjectElement::GetCapabilities() const {
 
 void HTMLObjectElement::DestroyContent() {
   nsObjectLoadingContent::Destroy();
-  nsGenericHTMLFormElement::DestroyContent();
+  nsGenericHTMLFormControlElement::DestroyContent();
 }
 
 nsresult HTMLObjectElement::CopyInnerTo(Element* aDest) {
-  nsresult rv = nsGenericHTMLFormElement::CopyInnerTo(aDest);
+  nsresult rv = nsGenericHTMLFormControlElement::CopyInnerTo(aDest);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDest->OwnerDoc()->IsStaticDocument()) {

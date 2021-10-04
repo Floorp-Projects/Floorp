@@ -18,10 +18,9 @@ class EventChainPreVisitor;
 namespace dom {
 class FormData;
 
-class HTMLFieldSetElement final : public nsGenericHTMLFormElement,
+class HTMLFieldSetElement final : public nsGenericHTMLFormControlElement,
                                   public nsIConstraintValidation {
  public:
-  using nsGenericHTMLFormElement::GetForm;
   using nsIConstraintValidation::GetValidationMessage;
   using nsIConstraintValidation::SetCustomValidity;
 
@@ -60,7 +59,7 @@ class HTMLFieldSetElement final : public nsGenericHTMLFormElement,
   void RemoveElement(nsGenericHTMLFormElement* aElement);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLFieldSetElement,
-                                           nsGenericHTMLFormElement)
+                                           nsGenericHTMLFormControlElement)
 
   // WebIDL
   bool Disabled() const { return GetBoolAttr(nsGkAtoms::disabled); }
