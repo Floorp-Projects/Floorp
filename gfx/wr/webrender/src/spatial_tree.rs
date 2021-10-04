@@ -7,16 +7,14 @@ use api::{PipelineId, ScrollClamping, ScrollSensitivity, SpatialTreeItemKey};
 use api::units::*;
 use euclid::Transform3D;
 use crate::gpu_types::TransformPalette;
-use crate::internal_types::{FastHashMap, FastHashSet};
+use crate::internal_types::FastHashSet;
 use crate::print_tree::{PrintableTree, PrintTree, PrintTreePrinter};
 use crate::scene::SceneProperties;
-use crate::spatial_node::{ScrollFrameInfo, SpatialNode, SpatialNodeType, StickyFrameInfo};
+use crate::spatial_node::{SpatialNode, SpatialNodeType, StickyFrameInfo};
 use crate::spatial_node::{SpatialNodeUid, ScrollFrameKind, SceneSpatialNode, SpatialNodeInfo};
 use std::{ops, u32};
 use crate::util::{FastTransform, LayoutToWorldFastTransform, MatrixHelpers, ScaleOffset, scale_factors};
 use smallvec::SmallVec;
-
-pub type ScrollStates = FastHashMap<ExternalScrollId, ScrollFrameInfo>;
 
 /// An id that identifies coordinate systems in the SpatialTree. Each
 /// coordinate system has an id and those ids will be shared when the coordinates
@@ -405,12 +403,6 @@ pub struct SpatialTree {
     /// they have a transform that is not a simple 2d translation.
     coord_systems: Vec<CoordinateSystem>,
 
-    pending_scroll_offsets: FastHashMap<ExternalScrollId, (LayoutPoint, ScrollClamping)>,
-
-    /// A set of pipelines which should be discarded the next time this
-    /// tree is drained.
-    pipelines_to_discard: FastHashSet<PipelineId>,
-
     root_reference_frame_index: SpatialNodeIndex,
 
     /// Stack of current state for each parent node while traversing and updating tree
@@ -544,8 +536,6 @@ impl SpatialTree {
         SpatialTree {
             spatial_nodes,
             coord_systems: Vec::new(),
-            pending_scroll_offsets: FastHashMap::default(),
-            pipelines_to_discard: FastHashSet::default(),
             root_reference_frame_index: scene.root_reference_frame_index,
             update_state_stack: Vec::new(),
         }
@@ -725,26 +715,6 @@ impl SpatialTree {
         self.root_reference_frame_index
     }
 
-    pub fn drain(&mut self) -> ScrollStates {
-        let mut scroll_states = FastHashMap::default();
-        for old_node in &mut self.spatial_nodes.drain(..) {
-            if self.pipelines_to_discard.contains(&old_node.pipeline_id) {
-                continue;
-            }
-
-            match old_node.node_type {
-                SpatialNodeType::ScrollFrame(info) => {
-                    scroll_states.insert(info.external_id, info);
-                }
-                _ => {}
-            }
-        }
-
-        self.coord_systems.clear();
-        self.pipelines_to_discard.clear();
-        scroll_states
-    }
-
     pub fn scroll_node(
         &mut self,
         origin: LayoutPoint,
@@ -757,7 +727,6 @@ impl SpatialTree {
             }
         }
 
-        self.pending_scroll_offsets.insert(id, (origin, clamp));
         false
     }
 
@@ -834,27 +803,6 @@ impl SpatialTree {
     pub fn build_transform_palette(&self) -> TransformPalette {
         profile_scope!("build_transform_palette");
         TransformPalette::new(self.spatial_nodes.len())
-    }
-
-    pub fn finalize_and_apply_pending_scroll_offsets(&mut self, old_states: ScrollStates) {
-        for node in &mut self.spatial_nodes {
-            let external_id = match node.node_type {
-                SpatialNodeType::ScrollFrame(ScrollFrameInfo { external_id, ..}) => external_id,
-                _ => continue,
-            };
-
-            if let Some(scrolling_state) = old_states.get(&external_id) {
-                node.apply_old_scrolling_state(scrolling_state);
-            }
-
-            if let Some((offset, clamping)) = self.pending_scroll_offsets.remove(&external_id) {
-                node.set_scroll_origin(&offset, clamping);
-            }
-        }
-    }
-
-    pub fn discard_frame_state_for_pipeline(&mut self, pipeline_id: PipelineId) {
-        self.pipelines_to_discard.insert(pipeline_id);
     }
 
     fn print_node<T: PrintTreePrinter>(

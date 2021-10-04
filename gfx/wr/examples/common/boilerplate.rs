@@ -212,7 +212,6 @@ pub fn main_wrapper<E: Example>(
         Some(ColorF::new(0.3, 0.0, 0.0, 1.0)),
         layout_size,
         builder.end(),
-        true,
     );
     txn.set_root_pipeline(pipeline_id);
     txn.generate_frame(0);
@@ -303,7 +302,6 @@ pub fn main_wrapper<E: Example>(
                 Some(ColorF::new(0.3, 0.0, 0.0, 1.0)),
                 layout_size,
                 builder.end(),
-                true,
             );
             txn.generate_frame(0);
         }

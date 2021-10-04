@@ -60,7 +60,6 @@ impl Example for App {
             None,
             sub_bounds.size(),
             sub_builder.end(),
-            true,
         );
         api.send_transaction(document_id, txn);
 

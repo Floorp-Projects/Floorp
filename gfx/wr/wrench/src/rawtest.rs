@@ -103,7 +103,6 @@ impl<'a> RawtestHarness<'a> {
             root_background_color,
             layout_size,
             builder.end(),
-            false,
         );
         epoch.0 += 1;
 
@@ -1252,7 +1251,6 @@ impl<'a> RawtestHarness<'a> {
             Some(ColorF::new(1.0, 1.0, 1.0, 1.0)),
             layout_size,
             builder.end(),
-            false,
         );
         txn.generate_frame(0);
 
@@ -1274,7 +1272,6 @@ impl<'a> RawtestHarness<'a> {
             Some(ColorF::new(1.0, 0.0, 0.0, 1.0)),
             layout_size,
             builder.end(),
-            false,
         );
         self.wrench.api.send_transaction(self.wrench.document_id, txn);
 
@@ -1321,7 +1318,6 @@ impl<'a> RawtestHarness<'a> {
             Some(ColorF::new(1.0, 0.0, 0.0, 1.0)),
             layout_size,
             builder.end(),
-            false,
         );
         txn.generate_frame(0);
         self.wrench.api.send_transaction(doc_id, txn);
