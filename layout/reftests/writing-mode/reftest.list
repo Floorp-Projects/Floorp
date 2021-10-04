@@ -69,7 +69,7 @@ skip-if(Android) == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1c-re
 
 fuzzy-if(Android,0-1,0-18) == ua-style-sheet-checkbox-radio-1.html ua-style-sheet-checkbox-radio-1-ref.html
 # Android uses different margins for buttons compared to the ref.
-skip-if(Android) fuzzy-if(skiaContent&&!Android,0-2,0-6) == ua-style-sheet-button-1.html chrome://reftest/content/writing-mode/ua-style-sheet-button-1a-ref.html
+skip-if(Android) fuzzy-if(!Android,0-2,0-6) == ua-style-sheet-button-1.html chrome://reftest/content/writing-mode/ua-style-sheet-button-1a-ref.html
 
 # Android uses different margins for buttons compared to the ref.
 skip-if(Android) == ua-style-sheet-input-color-1.html chrome://reftest/content/writing-mode/ua-style-sheet-input-color-1-ref.html
@@ -112,8 +112,8 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1130907-intrinsic-sizing
 == 1134744-radio-checkbox-baseline-1.html 1134744-radio-checkbox-baseline-1-ref.html
 == 1134849-orthogonal-inline.html 1134849-orthogonal-inline-ref.html
 fails-if(geckoview) == 1135361-ruby-justify-1.html 1135361-ruby-justify-1-ref.html # Bug 1558513 for GV
-fuzzy-if(winWidget,0-255,0-163) fuzzy-if(skiaContent,0-159,0-111) == 1136557-1-nested-spans.html 1136557-1-nested-spans-ref.html
-fuzzy-if(winWidget,0-255,0-221) fuzzy-if(skiaContent,0-159,0-111) == 1136557-2-nested-spans.html 1136557-2-nested-spans-ref.html
+fuzzy(0-159,0-111) == 1136557-1-nested-spans.html 1136557-1-nested-spans-ref.html
+fuzzy(0-159,0-111) == 1136557-2-nested-spans.html 1136557-2-nested-spans-ref.html
 fuzzy-if(winWidget,0-255,0-236) == 1136557-3-nested-spans.html 1136557-3-nested-spans-ref.html
 == 1138356-1-button-contents-alignment.html 1138356-1-button-contents-alignment-ref.html
 != 1138356-2-button-contents-alignment.html 1138356-2-button-contents-alignment-notref.html
@@ -153,7 +153,7 @@ random-if(gtkWidget) == 1193519-sideways-lr-1.html 1193519-sideways-lr-1-ref.htm
 random-if(gtkWidget) == 1193519-sideways-lr-2.html 1193519-sideways-lr-2-ref.html
 fuzzy-if(winWidget,0-3,0-84) == 1193519-sideways-lr-3.html 1193519-sideways-lr-3-ref.html
 fuzzy-if(winWidget,0-3,0-112) fails-if(Android) random-if(gtkWidget) == 1193519-sideways-lr-4.html 1193519-sideways-lr-4-ref.html # see bug 1366692. Rounding error with WR enabled, and on Android.
-fuzzy-if(gtkWidget,0-255,0-12) fuzzy-if(cocoaWidget,0-65,0-69) fuzzy-if(geckoview&&webrender,0-255,0-13) == 1193519-sideways-lr-decoration-1.html 1193519-sideways-lr-decoration-1-ref.html
+fuzzy-if(gtkWidget,0-255,0-12) fuzzy-if(cocoaWidget,0-65,0-69) fuzzy-if(geckoview,0-255,0-13) == 1193519-sideways-lr-decoration-1.html 1193519-sideways-lr-decoration-1-ref.html
 
 == 1196887-1-computed-display-inline-block.html 1196887-1-computed-display-inline-block-ref.html
 == 1205787-legacy-svg-values-1.html 1205787-legacy-svg-values-1-ref.html

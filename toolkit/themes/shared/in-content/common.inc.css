@@ -34,16 +34,19 @@
    /* button background states are also used for checkboxes and radiobuttons */
   --in-content-button-text-color: var(--in-content-text-color);
   --in-content-button-text-color-hover: var(--in-content-text-color);
+  --in-content-button-text-color-active: var(--in-content-button-text-color-hover);
   --in-content-button-background: rgba(207,207,216,.33);
   --in-content-button-background-hover: rgba(207,207,216,.66);
   --in-content-button-background-active: rgb(207,207,216);
   --in-content-button-border-color: transparent;
-  --in-content-button-border-hover: transparent;
+  --in-content-button-border-color-hover: transparent;
+  --in-content-button-border-color-active: var(--in-content-button-border-color-hover);
   --in-content-primary-button-text-color: rgb(251,251,254);
   --in-content-primary-button-text-color-hover: var(--in-content-primary-button-text-color);
   --in-content-primary-button-background: #0061e0;
   --in-content-primary-button-background-hover: #0250bb;
   --in-content-primary-button-background-active: #053e94;
+  --in-content-primary-button-border-color: transparent;
   --in-content-primary-button-border-hover: transparent;
   --in-content-danger-button-background: #e22850;
   --in-content-danger-button-background-hover: #c50042;
@@ -423,7 +426,7 @@ xul|button:not([disabled="true"]):hover,
 xul|menulist:not([disabled="true"]):hover {
   background-color: var(--in-content-button-background-hover);
   color: var(--in-content-button-text-color-hover);
-  border-color: var(--in-content-button-border-hover);
+  border-color: var(--in-content-button-border-color-hover);
 }
 
 html|button:enabled:hover:active,
@@ -434,6 +437,8 @@ xul|button[open],
 xul|button[open]:hover,
 xul|menulist[open="true"]:not([disabled="true"]) {
   background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-active);
+  border-color: var(--in-content-button-border-color-active);
 }
 
 html|button:disabled,
@@ -450,6 +455,7 @@ xul|button[default],
 button.primary {
   background-color: var(--in-content-primary-button-background);
   color: var(--in-content-primary-button-text-color);
+  border-color: var(--in-content-primary-button-border-color);
 }
 
 html|button[autofocus]:enabled:hover,
@@ -777,7 +783,7 @@ xul|*.radio-check[selected] {
   color: var(--in-content-primary-button-text-color);
   background-color: var(--in-content-primary-button-background);
   background-image: url("chrome://global/skin/icons/radio.svg");
-  border-color: transparent;
+  border-color: var(--in-content-primary-button-border-color);
 
   /* Style the button also when printing with "Print Backgrounds" unchecked */
   color-adjust: exact;

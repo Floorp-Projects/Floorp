@@ -876,6 +876,12 @@ void DocAccessible::ContentStateChanged(dom::Document* aDocument,
         new AccStateChangeEvent(accessible, states::TRAVERSED, true);
     FireDelayedEvent(event);
   }
+
+  if (aStateMask.HasState(NS_EVENT_STATE_DEFAULT)) {
+    RefPtr<AccEvent> event =
+        new AccStateChangeEvent(accessible, states::DEFAULT);
+    FireDelayedEvent(event);
+  }
 }
 
 void DocAccessible::CharacterDataWillChange(nsIContent* aContent,
