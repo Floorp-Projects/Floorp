@@ -38,7 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -79,7 +78,7 @@ fun RecentlyVisited(
 
             items(itemsList) { items ->
                 Column(
-                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     items.forEachIndexed { index, recentVisit ->
                         RecentVisitItem(
@@ -118,8 +117,7 @@ private fun RecentVisitItem(
                 onClick = { onRecentVisitClick(recentVisit) },
                 onLongClick = { menuExpanded = true }
             )
-            .size(268.dp, 56.dp)
-            .background(color = FirefoxTheme.colors.surface),
+            .size(268.dp, 56.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
