@@ -168,7 +168,7 @@ class HistoryMetadataMiddleware(
             // web content i.e., they followed a link, not if the user navigated directly via
             // toolbar.
             !directLoadTriggered && previousUrlIndex >= 0 -> {
-                // Once a tab is within the search group, only direct navigation event can change that.
+                // Once a tab is within the search group, only a direct load event (via the toolbar) can change that.
                 val (searchTerms, referrerUrl) = if (tabMetadataHasSearchTerms) {
                     tab.historyMetadata?.searchTerm to tab.historyMetadata?.referrerUrl
                 } else {
@@ -184,15 +184,15 @@ class HistoryMetadataMiddleware(
             }
             // In certain redirect cases, we won't have a previous url in the history stack of the tab,
             // but will have the search terms already set on the tab from having gone through this logic
-            // for the redirecting url.
-            // In that case, we leave this tab within the search group it's already in.
-            tabMetadataHasSearchTerms -> {
+            // for the redirecting url. So we leave this tab within the search group it's already in
+            // unless a new direct load (via the toolbar) was triggered.
+            tabMetadataHasSearchTerms && !(directLoadTriggered && previousUrlIndex >= 0) -> {
                 tab.historyMetadata?.searchTerm to tab.historyMetadata?.referrerUrl
             }
             // We had no search terms, no history stack, and no parent.
-            // For example, this would be a search results page itself.
-            // For now, the original search results page is not part of the search group.
-            // See https://github.com/mozilla-mobile/fenix/issues/21659.
+            // This would be the case for any page loaded directly via the toolbar including
+            // a search results page itself. For now, the original search results page is not
+            // part of the search group: https://github.com/mozilla-mobile/fenix/issues/21659.
             else -> null to null
         }
 
