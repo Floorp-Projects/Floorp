@@ -18,7 +18,7 @@ import org.mozilla.fenix.home.recentbookmarks.controller.RecentBookmarksControll
 import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
-import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoryCategory
+import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketStoriesController
 
 class SessionControlInteractorTest {
@@ -215,7 +215,7 @@ class SessionControlInteractorTest {
 
     @Test
     fun `GIVEN a PocketStoriesInteractor WHEN a category is clicked THEN handle it in a PocketStoriesController`() {
-        val clickedCategory: PocketRecommendedStoryCategory = mockk()
+        val clickedCategory: PocketRecommendedStoriesCategory = mockk()
 
         interactor.onCategoryClick(clickedCategory)
 

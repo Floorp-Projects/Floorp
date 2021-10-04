@@ -19,11 +19,11 @@ import org.mozilla.fenix.R
  */
 interface PocketStoriesController {
     /**
-     * Callback allowing to handle a specific [PocketRecommendedStoryCategory] being clicked by the user.
+     * Callback allowing to handle a specific [PocketRecommendedStoriesCategory] being clicked by the user.
      *
-     * @param categoryClicked the just clicked [PocketRecommendedStoryCategory].
+     * @param categoryClicked the just clicked [PocketRecommendedStoriesCategory].
      */
-    fun handleCategoryClick(categoryClicked: PocketRecommendedStoryCategory): Unit
+    fun handleCategoryClick(categoryClicked: PocketRecommendedStoriesCategory): Unit
 
     /**
      * Callback to decide what should happen as an effect of a new list of stories being shown.
@@ -52,30 +52,20 @@ internal class DefaultPocketStoriesController(
     private val homeStore: HomeFragmentStore,
     private val navController: NavController
 ) : PocketStoriesController {
-    override fun handleCategoryClick(categoryClicked: PocketRecommendedStoryCategory) {
-        val allCategories = homeStore.state.pocketStoriesCategories
+    override fun handleCategoryClick(categoryClicked: PocketRecommendedStoriesCategory) {
+        val initialCategoriesSelections = homeStore.state.pocketStoriesCategoriesSelections
 
         // First check whether the category is clicked to be deselected.
-        if (categoryClicked.isSelected) {
+        if (initialCategoriesSelections.map { it.name }.contains(categoryClicked.name)) {
             homeStore.dispatch(HomeFragmentAction.DeselectPocketStoriesCategory(categoryClicked.name))
             return
         }
 
         // If a new category is clicked to be selected:
         // Ensure the number of categories selected at a time is capped.
-        val currentlySelectedCategoriesCount = allCategories.fold(0) { count, category ->
-            if (category.isSelected) count + 1 else count
-        }
         val oldestCategoryToDeselect =
-            if (currentlySelectedCategoriesCount == POCKET_CATEGORIES_SELECTED_AT_A_TIME_COUNT) {
-                allCategories
-                    .filter { it.isSelected }
-                    .reduce { oldestSelected, category ->
-                        when (oldestSelected.lastInteractedWithTimestamp <= category.lastInteractedWithTimestamp) {
-                            true -> oldestSelected
-                            false -> category
-                        }
-                    }
+            if (initialCategoriesSelections.size == POCKET_CATEGORIES_SELECTED_AT_A_TIME_COUNT) {
+                initialCategoriesSelections.minByOrNull { it.selectionTimestamp }
             } else {
                 null
             }

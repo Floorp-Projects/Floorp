@@ -13,18 +13,15 @@ import mozilla.components.service.pocket.PocketRecommendedStory
 const val POCKET_STORIES_DEFAULT_CATEGORY_NAME = "general"
 
 /**
- * Pocket assigned topic of interest for each story.
+ * In memory cache of Pocket assigned topic of interest for recommended stories.
+ * Avoids multiple stories mappings for each time we are interested in their categories.
  *
  * One to many relationship with [PocketRecommendedStory]es.
  *
  * @property name The exact name of each category. Case sensitive.
- * @property stories All [PocketRecommendedStory]es with this category.
- * @property isSelected Whether this category is currently selected by the user.
- * @property lastInteractedWithTimestamp Last time the user selected or deselected this category.
+ * @property stories All [PocketRecommendedStory]s with this category.
  */
-data class PocketRecommendedStoryCategory(
+data class PocketRecommendedStoriesCategory(
     val name: String,
-    val stories: List<PocketRecommendedStory> = emptyList(),
-    val isSelected: Boolean = false,
-    val lastInteractedWithTimestamp: Long = 0L
+    val stories: List<PocketRecommendedStory> = emptyList()
 )

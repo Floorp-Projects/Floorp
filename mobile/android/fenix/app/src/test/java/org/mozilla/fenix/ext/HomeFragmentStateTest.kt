@@ -12,15 +12,16 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.POCKET_STORIES_DEFAULT_CATEGORY_NAME
-import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoryCategory
+import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoriesCategory
+import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoriesSelectedCategory
 import kotlin.random.Random
 
 class HomeFragmentStateTest {
     private val otherStoriesCategory =
-        PocketRecommendedStoryCategory("other", getFakePocketStories(3, "other"))
+        PocketRecommendedStoriesCategory("other", getFakePocketStories(3, "other"))
     private val anotherStoriesCategory =
-        PocketRecommendedStoryCategory("another", getFakePocketStories(3, "another"))
-    private val defaultStoriesCategory = PocketRecommendedStoryCategory(
+        PocketRecommendedStoriesCategory("another", getFakePocketStories(3, "another"))
+    private val defaultStoriesCategory = PocketRecommendedStoriesCategory(
         POCKET_STORIES_DEFAULT_CATEGORY_NAME,
         getFakePocketStories(3)
     )
@@ -60,9 +61,8 @@ class HomeFragmentStateTest {
     @Test
     fun `GIVEN a category is selected WHEN getFilteredStories is called for fewer than in the category THEN only stories from that category are returned`() {
         val homeState = HomeFragmentState(
-            pocketStoriesCategories = listOf(
-                otherStoriesCategory.copy(isSelected = true), anotherStoriesCategory, defaultStoriesCategory
-            )
+            pocketStoriesCategories = listOf(otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategory),
+            pocketStoriesCategoriesSelections = listOf(PocketRecommendedStoriesSelectedCategory(otherStoriesCategory.name))
         )
 
         var result = homeState.getFilteredStories(2)
@@ -77,10 +77,10 @@ class HomeFragmentStateTest {
     @Test
     fun `GIVEN two categories are selected WHEN getFilteredStories is called for fewer than in both THEN only stories from those categories are returned`() {
         val homeState = HomeFragmentState(
-            pocketStoriesCategories = listOf(
-                otherStoriesCategory.copy(isSelected = true),
-                anotherStoriesCategory.copy(isSelected = true),
-                defaultStoriesCategory
+            pocketStoriesCategories = listOf(otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategory),
+            pocketStoriesCategoriesSelections = listOf(
+                PocketRecommendedStoriesSelectedCategory(otherStoriesCategory.name),
+                PocketRecommendedStoriesSelectedCategory(anotherStoriesCategory.name)
             )
         )
 
@@ -103,19 +103,19 @@ class HomeFragmentStateTest {
 
     @Test
     fun `GIVEN two categories are selected WHEN getFilteredStories is called for an odd number of stories THEN there are more by one stories from the newest category`() {
-        val firstSelectedCategory = otherStoriesCategory.copy(lastInteractedWithTimestamp = 0, isSelected = true)
-        val lastSelectedCategory = anotherStoriesCategory.copy(lastInteractedWithTimestamp = 1, isSelected = true)
         val homeState = HomeFragmentState(
-            pocketStoriesCategories = listOf(
-                firstSelectedCategory, lastSelectedCategory, defaultStoriesCategory
+            pocketStoriesCategories = listOf(otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategory),
+            pocketStoriesCategoriesSelections = listOf(
+                PocketRecommendedStoriesSelectedCategory(otherStoriesCategory.name, selectionTimestamp = 0),
+                PocketRecommendedStoriesSelectedCategory(anotherStoriesCategory.name, selectionTimestamp = 1)
             )
         )
 
         val result = homeState.getFilteredStories(5)
 
         assertEquals(5, result.size)
-        assertEquals(2, result.filter { it.category == firstSelectedCategory.name }.size)
-        assertEquals(3, result.filter { it.category == lastSelectedCategory.name }.size)
+        assertEquals(2, result.filter { it.category == otherStoriesCategory.name }.size)
+        assertEquals(3, result.filter { it.category == anotherStoriesCategory.name }.size)
     }
 
     @Test
@@ -209,8 +209,8 @@ class HomeFragmentStateTest {
 
     @Test
     fun `GIVEN two categories selected with more than needed stories WHEN getFilteredStories is called THEN the results are sorted in the order of least shown`() {
-        val firstCategory = PocketRecommendedStoryCategory(
-            "first", getFakePocketStories(3, "first"), true, 0
+        val firstCategory = PocketRecommendedStoriesCategory(
+            "first", getFakePocketStories(3, "first")
         ).run {
             // Avoid the first item also being the oldest to eliminate a potential bug in code
             // that would still get the expected result.
@@ -224,8 +224,8 @@ class HomeFragmentStateTest {
                 }
             )
         }
-        val secondCategory = PocketRecommendedStoryCategory(
-            "second", getFakePocketStories(3, "second"), true, 222
+        val secondCategory = PocketRecommendedStoriesCategory(
+            "second", getFakePocketStories(3, "second")
         ).run {
             // Avoid the first item also being the oldest to eliminate a potential bug in code
             // that would still get the expected result.
@@ -240,7 +240,13 @@ class HomeFragmentStateTest {
             )
         }
 
-        val homeState = HomeFragmentState(pocketStoriesCategories = listOf(firstCategory, secondCategory))
+        val homeState = HomeFragmentState(
+            pocketStoriesCategories = listOf(firstCategory, secondCategory),
+            pocketStoriesCategoriesSelections = listOf(
+                PocketRecommendedStoriesSelectedCategory(firstCategory.name, selectionTimestamp = 0),
+                PocketRecommendedStoriesSelectedCategory(secondCategory.name, selectionTimestamp = 222)
+            )
+        )
 
         val result = homeState.getFilteredStories(6)
 

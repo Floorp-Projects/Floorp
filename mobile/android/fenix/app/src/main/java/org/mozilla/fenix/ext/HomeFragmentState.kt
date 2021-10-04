@@ -8,7 +8,7 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.POCKET_STORIES_DEFAULT_CATEGORY_NAME
-import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoryCategory
+import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoriesCategory
 
 /**
  * Get the list of stories to be displayed based on the user selected categories.
@@ -21,9 +21,7 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommende
 fun HomeFragmentState.getFilteredStories(
     neededStoriesCount: Int
 ): List<PocketRecommendedStory> {
-    val currentlySelectedCategories = pocketStoriesCategories.filter { it.isSelected }
-
-    if (currentlySelectedCategories.isEmpty()) {
+    if (pocketStoriesCategoriesSelections.isEmpty()) {
         return pocketStoriesCategories
             .find {
                 it.name == POCKET_STORIES_DEFAULT_CATEGORY_NAME
@@ -32,8 +30,13 @@ fun HomeFragmentState.getFilteredStories(
             ?.take(neededStoriesCount) ?: emptyList()
     }
 
-    val oldestSortedCategories = currentlySelectedCategories
-        .sortedByDescending { it.lastInteractedWithTimestamp }
+    val oldestSortedCategories = pocketStoriesCategoriesSelections
+        .sortedByDescending { it.selectionTimestamp }
+        .map { selectedCategory ->
+            pocketStoriesCategories.first {
+                it.name == selectedCategory.name
+            }
+        }
 
     val filteredStoriesCount = getFilteredStoriesCount(
         oldestSortedCategories, neededStoriesCount
@@ -57,7 +60,7 @@ fun HomeFragmentState.getFilteredStories(
 @VisibleForTesting
 @Suppress("ReturnCount", "NestedBlockDepth")
 internal fun getFilteredStoriesCount(
-    selectedCategories: List<PocketRecommendedStoryCategory>,
+    selectedCategories: List<PocketRecommendedStoriesCategory>,
     neededStoriesCount: Int
 ): Map<String, Int> {
     val totalStoriesInFilteredCategories = selectedCategories.fold(0) { availableStories, category ->

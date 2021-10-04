@@ -13,9 +13,9 @@ interface PocketStoriesInteractor {
     /**
      * Callback for when the user clicked a specific category.
      *
-     * @param categoryClicked the just clicked [PocketRecommendedStoryCategory].
+     * @param categoryClicked the just clicked [PocketRecommendedStoriesCategory].
      */
-    fun onCategoryClick(categoryClicked: PocketRecommendedStoryCategory)
+    fun onCategoryClick(categoryClicked: PocketRecommendedStoriesCategory)
 
     /**
      * Callback for then new stories are shown to the user.

@@ -72,7 +72,7 @@ fun PocketStories(
     store: HomeFragmentStore,
     client: Client,
     onStoriesShown: (List<PocketRecommendedStory>) -> Unit,
-    onCategoryClick: (PocketRecommendedStoryCategory) -> Unit,
+    onCategoryClick: (PocketRecommendedStoriesCategory) -> Unit,
     onExternalLinkClicked: (String) -> Unit
 ) {
     val stories = store
@@ -80,6 +80,9 @@ fun PocketStories(
 
     val categories = store
         .observeAsComposableState { state -> state.pocketStoriesCategories }.value
+
+    val categoriesSelections = store
+        .observeAsComposableState { state -> state.pocketStoriesCategoriesSelections }.value
 
     LaunchedEffect(stories) {
         // We should report back when a certain story is actually being displayed.
@@ -109,7 +112,10 @@ fun PocketStories(
 
         Spacer(Modifier.height(17.dp))
 
-        PocketStoriesCategories(categories ?: emptyList()) {
+        PocketStoriesCategories(
+            categories = categories ?: emptyList(),
+            selections = categoriesSelections ?: emptyList()
+        ) {
             onCategoryClick(it)
         }
 

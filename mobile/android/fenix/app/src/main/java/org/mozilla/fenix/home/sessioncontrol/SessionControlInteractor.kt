@@ -18,7 +18,7 @@ import org.mozilla.fenix.home.recentbookmarks.controller.RecentBookmarksControll
 import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
 import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
 import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
-import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoryCategory
+import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketStoriesController
 import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketStoriesInteractor
 
@@ -391,7 +391,7 @@ class SessionControlInteractor(
         controller.handleCustomizeHomeTapped()
     }
 
-    override fun onCategoryClick(categoryClicked: PocketRecommendedStoryCategory) {
+    override fun onCategoryClick(categoryClicked: PocketRecommendedStoriesCategory) {
         pocketStoriesController.handleCategoryClick(categoryClicked)
     }
 

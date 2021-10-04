@@ -150,21 +150,22 @@ fun PocketStories(
 }
 
 /**
- * Displays a list of [PocketRecommendedStoryCategory].
+ * Displays a list of [PocketRecommendedStoriesCategory]s.
  *
  * @param categories The categories needed to be displayed.
  * @param onCategoryClick Callback for when the user taps a category.
  */
 @Composable
 fun PocketStoriesCategories(
-    categories: List<PocketRecommendedStoryCategory>,
-    onCategoryClick: (PocketRecommendedStoryCategory) -> Unit
+    categories: List<PocketRecommendedStoriesCategory>,
+    selections: List<PocketRecommendedStoriesSelectedCategory>,
+    onCategoryClick: (PocketRecommendedStoriesCategory) -> Unit
 ) {
     StaggeredHorizontalGrid(
         horizontalItemsSpacing = 16.dp
     ) {
         categories.filter { it.name != POCKET_STORIES_DEFAULT_CATEGORY_NAME }.forEach { category ->
-            SelectableChip(category.name, category.isSelected) {
+            SelectableChip(category.name, selections.map { it.name }.contains(category.name)) {
                 onCategoryClick(category)
             }
         }
@@ -241,8 +242,9 @@ private fun PocketStoriesComposablesPreview() {
 
                 PocketStoriesCategories(
                     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor".split(" ").map {
-                        PocketRecommendedStoryCategory(it)
-                    }
+                        PocketRecommendedStoriesCategory(it)
+                    },
+                    emptyList()
                 ) { }
                 Spacer(Modifier.height(10.dp))
 
