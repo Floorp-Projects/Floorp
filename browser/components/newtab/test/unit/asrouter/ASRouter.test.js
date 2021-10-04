@@ -2743,6 +2743,24 @@ describe("ASRouter", () => {
       spy = sandbox.spy();
       global.Downloader.prototype.download = spy;
     });
+    it("should be called with the expected dir path", async () => {
+      const dlSpy = sandbox.spy(global, "Downloader");
+
+      sandbox
+        .stub(global.Services.locale, "appLocaleAsBCP47")
+        .get(() => "en-US");
+      sandbox.stub(global.RemoteL10n, "isLocaleSupported").returns(true);
+
+      await MessageLoaderUtils._remoteSettingsLoader(provider, {});
+
+      assert.calledWith(
+        dlSpy,
+        "main",
+        "ms-language-packs",
+        "browser",
+        "newtab"
+      );
+    });
     it("should allow fetch for known locales", async () => {
       sandbox
         .stub(global.Services.locale, "appLocaleAsBCP47")
