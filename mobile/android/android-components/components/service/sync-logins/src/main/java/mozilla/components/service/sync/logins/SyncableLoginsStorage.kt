@@ -110,7 +110,7 @@ class SyncableLoginsStorage(
 ) : LoginsStorage, SyncableStore, KeyRecoveryHandler, AutoCloseable {
     private val logger = Logger("SyncableLoginsStorage")
     private val coroutineContext by lazy { Dispatchers.IO }
-    private val crypto by lazy { LoginsCrypto(context, securePrefs.value, this) }
+    val crypto by lazy { LoginsCrypto(context, securePrefs.value, this) }
     private val conn by lazy {
         migrateSQLCipherDBIfNeeded()
         LoginStorageConnection.init(dbPath = context.getDatabasePath(DB_NAME).absolutePath)

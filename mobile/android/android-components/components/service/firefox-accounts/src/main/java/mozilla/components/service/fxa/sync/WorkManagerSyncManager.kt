@@ -349,6 +349,12 @@ internal class WorkManagerSyncWorker(
                 }
                 SyncEngine.Passwords -> {
                     it.value.lazyStore.value.registerWithSyncManager()
+
+                    checkNotNull(it.value.keyProvider) {
+                        "Passwords store must be configured with a KeyProvider"
+                    }
+
+                    engineKeyProviders[it.key] = it.value.keyProvider!!.value
                 }
                 SyncEngine.Tabs -> {
                     it.value.lazyStore.value.registerWithSyncManager()
