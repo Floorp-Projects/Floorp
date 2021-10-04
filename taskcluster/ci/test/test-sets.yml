@@ -322,11 +322,13 @@ windows-talos:
     - talos-perf-reftest-singletons
     - talos-svgr
     - talos-tp5o
-    - talos-xperf
     - talos-tabswitch
     - talos-realworld-webextensions
     - talos-webgl
     # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
+
+talos-xperf:
+    - talos-xperf
 
 # macOS
 
