@@ -58,6 +58,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "nsGtkUtils.h"
 #include "nsWaylandDisplay.h"
+#include "base/task.h"
 
 #ifdef MOZ_LOGGING
 
@@ -104,10 +105,7 @@ static void moz_container_wayland_invalidate(MozContainer* container) {
     LOGWAYLAND(("    Failed - missing GdkWindow!\n"));
     return;
   }
-
-  GdkRectangle rect = (GdkRectangle){0, 0, gdk_window_get_width(window),
-                                     gdk_window_get_height(window)};
-  gdk_window_invalidate_rect(window, &rect, true);
+  gdk_window_invalidate_rect(window, nullptr, true);
 }
 
 // Route input to parent wl_surface owned by Gtk+ so we get input
@@ -126,8 +124,8 @@ static void moz_container_wayland_move_locked(MozContainer* container, int dx,
               (void*)moz_container_get_nsWindow(container), dx, dy));
 
   MozContainerWayland* wl_container = &container->wl_container;
-
-  if (wl_container->subsurface_dx == dx && wl_container->subsurface_dy == dy) {
+  if (!wl_container->subsurface || (wl_container->subsurface_dx == dx &&
+                                    wl_container->subsurface_dy == dy)) {
     return;
   }
 
@@ -180,6 +178,7 @@ void moz_container_wayland_init(MozContainerWayland* container) {
   container->buffer_scale = 1;
   container->initial_draw_cbs.clear();
   container->container_lock = new mozilla::Mutex("MozContainer lock");
+  container->commit_to_parent = false;
 }
 
 static void moz_container_wayland_destroy(GtkWidget* widget) {
@@ -281,6 +280,9 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
 
   if (wl_container->opaque_region_used) {
     moz_gdk_wayland_window_remove_frame_callback_surface_locked(container);
+  }
+  if (wl_container->commit_to_parent) {
+    wl_container->surface = nullptr;
   }
 
   g_clear_pointer(&wl_container->eglwindow, wl_egl_window_destroy);
@@ -491,6 +493,15 @@ static bool moz_container_wayland_surface_create_locked(
   LOGWAYLAND(("    gtk wl_surface %p ID %d\n", (void*)parent_surface,
               wl_proxy_get_id((struct wl_proxy*)parent_surface)));
 
+  if (wl_container->commit_to_parent) {
+    LOGWAYLAND(("    commit to parent"));
+    wl_container->surface = parent_surface;
+    NS_DispatchToCurrentThread(NewRunnableFunction(
+        "moz_container_wayland_frame_callback_handler",
+        &moz_container_wayland_frame_callback_handler, container, nullptr, 0));
+    return true;
+  }
+
   // Available as of GTK 3.8+
   struct wl_compositor* compositor = WaylandDisplayGet()->GetCompositor();
   wl_container->surface = wl_compositor_create_surface(compositor);
@@ -638,14 +649,12 @@ double moz_container_wayland_get_scale(MozContainer* container) {
   return window ? window->FractionalScaleFactor() : 1;
 }
 
-struct wp_viewport* moz_container_wayland_get_viewport(
-    MozContainer* container) {
+void moz_container_wayland_set_commit_to_parent(MozContainer* container) {
   MozContainerWayland* wl_container = &container->wl_container;
-  MutexAutoLock lock(*wl_container->container_lock);
+  wl_container->commit_to_parent = true;
+}
 
-  if (!wl_container->viewport) {
-    wl_container->viewport = wp_viewporter_get_viewport(
-        WaylandDisplayGet()->GetViewporter(), wl_container->surface);
-  }
-  return wl_container->viewport;
+bool moz_container_wayland_is_commiting_to_parent(MozContainer* container) {
+  MozContainerWayland* wl_container = &container->wl_container;
+  return wl_container->commit_to_parent;
 }

@@ -43,6 +43,7 @@ struct MozContainerWayland {
   gboolean opaque_region_subtract_corners;
   gboolean opaque_region_used;
   gboolean ready_to_draw;
+  gboolean commit_to_parent;
   gboolean before_first_size_alloc;
   int buffer_scale;
   std::vector<std::function<void(void)>> initial_draw_cbs;
@@ -84,6 +85,7 @@ void moz_container_wayland_update_opaque_region(MozContainer* container,
                                                 bool aSubtractCorners);
 gboolean moz_container_wayland_can_draw(MozContainer* container);
 double moz_container_wayland_get_scale(MozContainer* container);
-struct wp_viewport* moz_container_wayland_get_viewport(MozContainer* container);
+void moz_container_wayland_set_commit_to_parent(MozContainer* container);
+bool moz_container_wayland_is_commiting_to_parent(MozContainer* container);
 
 #endif /* __MOZ_CONTAINER_WAYLAND_H__ */
