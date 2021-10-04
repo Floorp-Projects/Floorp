@@ -109,8 +109,8 @@ class WebTransportH3Protocol(QuicConnectionProtocol):
                 self._send_error_response(event.stream_id, 400)
             self._session_stream_id = event.stream_id
 
-        if self._session_stream_id == event.stream_id and\
-           isinstance(event, WebTransportStreamDataReceived):
+        if isinstance(event, WebTransportStreamDataReceived) and\
+           self._session_stream_id == event.stream_id:
             self._session_stream_data += event.data
             if event.stream_ended:
                 close_info = None
