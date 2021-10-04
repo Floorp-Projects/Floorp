@@ -32,7 +32,7 @@
       "toolbar_field_focus": "hsl(0, 0%, 100%)",
       "toolbar_field_border_focus": "rgba(0, 179, 244, 1)",
       "toolbar_bottom_separator": "hsl(38, 7%, 30%)",
-      "ntp_background": "hsl(40, 7%, 18%)",
+      "ntp_background": "hsl(42, 8%, 78%)",
       "ntp_card_background": "hsl(0, 0%, 100%)",
       "ntp_text": "hsl(0, 0%, 0%)",
       "sidebar": "hsl(0, 0%, 100%)",
