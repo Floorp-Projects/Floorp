@@ -4,15 +4,14 @@ import os
 import ssl
 import threading
 import traceback
-from enum import IntEnum
 from urllib.parse import urlparse
 from typing import Any, Dict, List, Optional, Tuple
 
 # TODO(bashi): Remove import check suppressions once aioquic dependency is resolved.
-from aioquic.buffer import UINT_VAR_MAX_SIZE, Buffer  # type: ignore
+from aioquic.buffer import Buffer  # type: ignore
 from aioquic.asyncio import QuicConnectionProtocol, serve  # type: ignore
 from aioquic.asyncio.client import connect  # type: ignore
-from aioquic.h3.connection import H3_ALPN, FrameType, H3Connection  # type: ignore
+from aioquic.h3.connection import H3_ALPN, FrameType, H3Connection, ProtocolError  # type: ignore
 from aioquic.h3.events import H3Event, HeadersReceived, WebTransportStreamDataReceived, DatagramReceived  # type: ignore
 from aioquic.quic.configuration import QuicConfiguration  # type: ignore
 from aioquic.quic.connection import stream_is_unidirectional  # type: ignore
@@ -20,6 +19,7 @@ from aioquic.quic.events import QuicEvent, ProtocolNegotiated, ConnectionTermina
 from aioquic.tls import SessionTicket  # type: ignore
 
 from tools.wptserve.wptserve import stash  # type: ignore
+from .capsule import H3Capsule, H3CapsuleDecoder, CapsuleType
 
 """
 A WebTransport over HTTP/3 server for testing.
@@ -36,49 +36,15 @@ _logger: logging.Logger = logging.getLogger(__name__)
 _doc_root: str = ""
 
 
-class CapsuleType(IntEnum):
-    # Defined in
-    # https://www.ietf.org/archive/id/draft-ietf-webtrans-http3-01.html.
-    CLOSE_WEBTRANSPORT_SESSION = 0x2843
-
-
-class H3Capsule:
-    """
-    Represents the Capsule concept defined in
-    https://ietf-wg-masque.github.io/draft-ietf-masque-h3-datagram/draft-ietf-masque-h3-datagram.html#name-capsules.
-    """
-    def __init__(self, type: int, data: bytes) -> None:
-        self.type = type
-        self.data = data
-
-    @staticmethod
-    def decode(data: bytes) -> Any:
-        """
-        Returns an H3Capsule representing the given bytes.
-        """
-        buffer = Buffer(data=data)
-        type = buffer.pull_uint_var()
-        length = buffer.pull_uint_var()
-        return H3Capsule(type, buffer.pull_bytes(length))
-
-    def encode(self) -> bytes:
-        """
-        Encodes this H3Connection and return the bytes.
-        """
-        buffer = Buffer(capacity=len(self.data) + 2 * UINT_VAR_MAX_SIZE)
-        buffer.push_uint_var(self.type)
-        buffer.push_uint_var(len(self.data))
-        buffer.push_bytes(self.data)
-        return buffer.data
-
-
 class WebTransportH3Protocol(QuicConnectionProtocol):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._handler: Optional[Any] = None
         self._http: Optional[H3Connection] = None
         self._session_stream_id: Optional[int] = None
-        self._session_stream_data: bytes = b""
+        self._close_info: Optional[Tuple[int, bytes]] = None
+        self._capsule_decoder_for_session_stream: H3CapsuleDecoder =\
+            H3CapsuleDecoder()
         self._allow_calling_session_closed = True
 
     def quic_event_received(self, event: QuicEvent) -> None:
@@ -104,28 +70,15 @@ class WebTransportH3Protocol(QuicConnectionProtocol):
             method = headers.get(b":method")
             protocol = headers.get(b":protocol")
             if method == b"CONNECT" and protocol == b"webtransport":
+                self._session_stream_id = event.stream_id
                 self._handshake_webtransport(event, headers)
             else:
                 self._send_error_response(event.stream_id, 400)
-            self._session_stream_id = event.stream_id
 
         if isinstance(event, WebTransportStreamDataReceived) and\
            self._session_stream_id == event.stream_id:
-            self._session_stream_data += event.data
-            if event.stream_ended:
-                close_info = None
-                if len(self._session_stream_data) > 0:
-                    capsule: H3Capsule =\
-                        H3Capsule.decode(self._session_stream_data)
-                    close_info = (0, b"")
-                    if capsule.type == CapsuleType.CLOSE_WEBTRANSPORT_SESSION:
-                        buffer = Buffer(capsule.data)
-                        code = buffer.pull_uint32()
-                        reason = buffer.data()
-                        # TODO(yutakahirano): Make sure `reason` is a
-                        # UTF-8 text.
-                        close_info = (code, reason)
-                self._call_session_closed(close_info, abruptly=False)
+            self._receive_data_on_session_stream(
+                event.data, event.stream_ended)
         elif self._handler is not None:
             if isinstance(event, WebTransportStreamDataReceived):
                 self._handler.stream_data_received(
@@ -134,6 +87,46 @@ class WebTransportH3Protocol(QuicConnectionProtocol):
                     stream_ended=event.stream_ended)
             elif isinstance(event, DatagramReceived):
                 self._handler.datagram_received(data=event.data)
+
+    def _receive_data_on_session_stream(self, data: bytes, fin: bool) -> None:
+        self._capsule_decoder_for_session_stream.append(data)
+        if fin:
+            self._capsule_decoder_for_session_stream.final()
+        for capsule in self._capsule_decoder_for_session_stream:
+            if capsule.type == CapsuleType.DATAGRAM:
+                raise ProtocolError(
+                    "Unimplemented capsule type: {}".format(capsule.type))
+            if capsule.type == CapsuleType.REGISTER_DATAGRAM_CONTEXT:
+                raise ProtocolError(
+                    "Unimplemented capsule type: {}".format(capsule.type))
+            elif capsule.type == CapsuleType.REGISTER_DATAGRAM_NO_CONTEXT:
+                # TODO(yutakahirano): Check the Datagram Format Type.
+                # TODO(yutakahirano): Check that this arrives before any
+                # datagrams/streams requests.
+                if self._close_info is not None:
+                    raise ProtocolError(
+                        "REGISTER_DATAGRAM_NO_CONTEXT after " +
+                        "CLOSE_WEBTRANSPORT_SESSION")
+            elif capsule.type == CapsuleType.CLOSE_DATAGRAM_CONTEXT:
+                raise ProtocolError(
+                    "Unimplemented capsule type: {}".format(capsule.type))
+            elif capsule.type == CapsuleType.CLOSE_WEBTRANSPORT_SESSION:
+                if self._close_info is not None:
+                    raise ProtocolError(
+                        "CLOSE_WEBTRANSPORT_SESSION arrives twice")
+            else:
+                # We should ignore unknown capsules.
+                continue
+
+                buffer = Buffer(data=capsule.data)
+                code = buffer.pull_uint32()
+                # TODO(yutakahirano): Make sure `reason` is a
+                # UTF-8 text.
+                reason = buffer.data
+                self._close_info = (code, reason)
+                # TODO(yutakahirano): Make sure this is the last capsule.
+        if fin:
+            self._call_session_closed(self._close_info, abruptly=False)
 
     def _send_error_response(self, stream_id: int, status_code: int) -> None:
         assert self._http is not None
