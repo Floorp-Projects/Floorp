@@ -29,7 +29,8 @@ const char* StageToStr(PerformanceRecorder::Stage aStage) {
   }
 }
 
-const char* FindMediaResolution(int32_t aHeight) {
+/* static */
+const char* PerformanceRecorder::FindMediaResolution(int32_t aHeight) {
   static const struct {
     const int32_t mH;
     const nsCString mRes;
@@ -52,11 +53,18 @@ const char* FindMediaResolution(int32_t aHeight) {
   return resolution;
 }
 
-static TimeStamp GetCurrentTimeForMeasurement() {
+/* static */
+bool PerformanceRecorder::IsMeasurementEnabled() {
+  return profiler_can_accept_markers() ||
+         PerformanceRecorder::sEnableMeasurementForTesting;
+}
+
+/* static */
+TimeStamp PerformanceRecorder::GetCurrentTimeForMeasurement() {
   // The system call to get the clock is rather expensive on Windows. As we
   // only report the measurement report via markers, if the marker isn't enabled
   // then we won't do any measurement in order to save CPU time.
-  return profiler_can_accept_markers() ? TimeStamp::Now() : TimeStamp();
+  return IsMeasurementEnabled() ? TimeStamp::Now() : TimeStamp();
 }
 
 void PerformanceRecorder::Start() {
@@ -92,13 +100,14 @@ void AppendMediaInfoFlagToName(nsCString& aName, MediaInfoFlag aFlag) {
   }
 }
 
-void PerformanceRecorder::End() {
+float PerformanceRecorder::End() {
+  double elapsedTimeUs = 0.0;
   if (mStartTime && !mStartTime->IsNull()) {
     MOZ_ASSERT(mStage != Stage::Invalid);
-    if (profiler_can_accept_markers()) {
+    if (IsMeasurementEnabled()) {
       const auto now = TimeStamp::Now();
-      const double passedTimeUs = (now - *mStartTime).ToMicroseconds();
-      MOZ_ASSERT(passedTimeUs > 0, "Passed time can't be less than 0!");
+      elapsedTimeUs = (now - *mStartTime).ToMicroseconds();
+      MOZ_ASSERT(elapsedTimeUs >= 0, "Elapsed time can't be less than 0!");
       nsAutoCString name(StageToStr(mStage));
       name.Append(":");
       name.Append(FindMediaResolution(mHeight));
@@ -110,6 +119,7 @@ void PerformanceRecorder::End() {
     }
     Reset();
   }
+  return elapsedTimeUs;
 }
 
 }  // namespace mozilla
