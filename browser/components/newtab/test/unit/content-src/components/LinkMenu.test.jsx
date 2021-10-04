@@ -195,6 +195,62 @@ describe("<LinkMenu>", () => {
       options.find(o => o.id && o.id === "newtab-menu-remove-bookmark")
     );
   });
+  it("should show Archive from Pocket option for a saved Pocket item if CheckArchiveFromPocket", () => {
+    wrapper = shallow(
+      <LinkMenu
+        site={{ url: "", pocket_id: 1234 }}
+        source={"TOP_STORIES"}
+        options={["CheckArchiveFromPocket"]}
+        dispatch={() => {}}
+      />
+    );
+    const { options } = wrapper.find(ContextMenu).props();
+    assert.isDefined(
+      options.find(o => o.id && o.id === "newtab-menu-archive-pocket")
+    );
+  });
+  it("should show empty from no Pocket option for no saved Pocket item if CheckArchiveFromPocket", () => {
+    wrapper = shallow(
+      <LinkMenu
+        site={{ url: "" }}
+        source={"TOP_STORIES"}
+        options={["CheckArchiveFromPocket"]}
+        dispatch={() => {}}
+      />
+    );
+    const { options } = wrapper.find(ContextMenu).props();
+    assert.isUndefined(
+      options.find(o => o.id && o.id === "newtab-menu-archive-pocket")
+    );
+  });
+  it("should show Delete from Pocket option for a saved Pocket item if CheckDeleteFromPocket", () => {
+    wrapper = shallow(
+      <LinkMenu
+        site={{ url: "", pocket_id: 1234 }}
+        source={"TOP_STORIES"}
+        options={["CheckDeleteFromPocket"]}
+        dispatch={() => {}}
+      />
+    );
+    const { options } = wrapper.find(ContextMenu).props();
+    assert.isDefined(
+      options.find(o => o.id && o.id === "newtab-menu-delete-pocket")
+    );
+  });
+  it("should show empty from Pocket option for no saved Pocket item if CheckDeleteFromPocket", () => {
+    wrapper = shallow(
+      <LinkMenu
+        site={{ url: "" }}
+        source={"TOP_STORIES"}
+        options={["CheckDeleteFromPocket"]}
+        dispatch={() => {}}
+      />
+    );
+    const { options } = wrapper.find(ContextMenu).props();
+    assert.isUndefined(
+      options.find(o => o.id && o.id === "newtab-menu-archive-pocket")
+    );
+  });
   it("should show Open File option for a downloaded item", () => {
     wrapper = shallow(
       <LinkMenu
