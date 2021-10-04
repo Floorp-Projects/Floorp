@@ -1672,18 +1672,8 @@ nsGenericHTMLFormElement::~nsGenericHTMLFormElement() {
 NS_IMPL_ISUPPORTS_INHERITED(nsGenericHTMLFormElement, nsGenericHTMLElement,
                             nsIFormControl)
 
-nsINode* nsGenericHTMLFormElement::GetScopeChainParent() const {
-  return mForm ? mForm : nsGenericHTMLElement::GetScopeChainParent();
-}
-
 bool nsGenericHTMLFormElement::IsNodeOfType(uint32_t aFlags) const {
   return !(aFlags & ~eHTML_FORM_CONTROL);
-}
-
-void nsGenericHTMLFormElement::SaveSubtreeState() {
-  SaveState();
-
-  nsGenericHTMLElement::SaveSubtreeState();
 }
 
 void nsGenericHTMLFormElement::SetForm(HTMLFormElement* aForm) {
@@ -1737,19 +1727,6 @@ void nsGenericHTMLFormElement::ClearForm(bool aRemoveFromForm,
 
 HTMLFieldSetElement* nsGenericHTMLFormElement::GetFieldSet() {
   return mFieldSet;
-}
-
-nsIContent::IMEState nsGenericHTMLFormElement::GetDesiredIMEState() {
-  TextEditor* textEditor = GetTextEditorInternal();
-  if (!textEditor) {
-    return nsGenericHTMLElement::GetDesiredIMEState();
-  }
-  IMEState state;
-  nsresult rv = textEditor->GetPreferredIMEState(&state);
-  if (NS_FAILED(rv)) {
-    return nsGenericHTMLElement::GetDesiredIMEState();
-  }
-  return state;
 }
 
 nsresult nsGenericHTMLFormElement::BindToTree(BindContext& aContext,
@@ -1919,131 +1896,10 @@ nsresult nsGenericHTMLFormElement::AfterSetAttr(
       aNameSpaceID, aName, aValue, aOldValue, aMaybeScriptedPrincipal, aNotify);
 }
 
-void nsGenericHTMLFormElement::GetEventTargetParent(
-    EventChainPreVisitor& aVisitor) {
-  if (aVisitor.mEvent->IsTrusted() && (aVisitor.mEvent->mMessage == eFocus ||
-                                       aVisitor.mEvent->mMessage == eBlur)) {
-    // We have to handle focus/blur event to change focus states in
-    // PreHandleEvent to prevent it breaks event target chain creation.
-    aVisitor.mWantsPreHandleEvent = true;
-  }
-  nsGenericHTMLElement::GetEventTargetParent(aVisitor);
-}
-
-nsresult nsGenericHTMLFormElement::PreHandleEvent(EventChainVisitor& aVisitor) {
-  if (aVisitor.mEvent->IsTrusted()) {
-    switch (aVisitor.mEvent->mMessage) {
-      case eFocus: {
-        // Check to see if focus has bubbled up from a form control's
-        // child textfield or button.  If that's the case, don't focus
-        // this parent file control -- leave focus on the child.
-        nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
-        if (formControlFrame &&
-            aVisitor.mEvent->mOriginalTarget == static_cast<nsINode*>(this))
-          formControlFrame->SetFocus(true, true);
-        break;
-      }
-      case eBlur: {
-        nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
-        if (formControlFrame) formControlFrame->SetFocus(false, false);
-        break;
-      }
-      default:
-        break;
-    }
-  }
-  return nsGenericHTMLElement::PreHandleEvent(aVisitor);
-}
-
 void nsGenericHTMLFormElement::ForgetFieldSet(nsIContent* aFieldset) {
   if (mFieldSet == aFieldset) {
     mFieldSet = nullptr;
   }
-}
-
-bool nsGenericHTMLFormElement::CanBeDisabled() const {
-  auto type = ControlType();
-  // It's easier to test the types that _cannot_ be disabled
-  return type != FormControlType::Object && type != FormControlType::Output;
-}
-
-bool nsGenericHTMLFormElement::DoesReadOnlyApply() const {
-  auto type = ControlType();
-  if (!IsInputElement(type) && type != FormControlType::Textarea) {
-    return false;
-  }
-
-  switch (type) {
-    case FormControlType::InputHidden:
-    case FormControlType::InputButton:
-    case FormControlType::InputImage:
-    case FormControlType::InputReset:
-    case FormControlType::InputSubmit:
-    case FormControlType::InputRadio:
-    case FormControlType::InputFile:
-    case FormControlType::InputCheckbox:
-    case FormControlType::InputRange:
-    case FormControlType::InputColor:
-      return false;
-#ifdef DEBUG
-    case FormControlType::Textarea:
-    case FormControlType::InputText:
-    case FormControlType::InputPassword:
-    case FormControlType::InputSearch:
-    case FormControlType::InputTel:
-    case FormControlType::InputEmail:
-    case FormControlType::InputUrl:
-    case FormControlType::InputNumber:
-    case FormControlType::InputDate:
-    case FormControlType::InputTime:
-    case FormControlType::InputMonth:
-    case FormControlType::InputWeek:
-    case FormControlType::InputDatetimeLocal:
-      return true;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected input type in DoesReadOnlyApply()");
-      return true;
-#else   // DEBUG
-    default:
-      return true;
-#endif  // DEBUG
-  }
-}
-
-bool nsGenericHTMLFormElement::IsHTMLFocusable(bool aWithMouse,
-                                               bool* aIsFocusable,
-                                               int32_t* aTabIndex) {
-  if (nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable,
-                                            aTabIndex)) {
-    return true;
-  }
-
-  *aIsFocusable = *aIsFocusable && IsFormControlDefaultFocusable(aWithMouse);
-  return false;
-}
-
-EventStates nsGenericHTMLFormElement::IntrinsicState() const {
-  // If you add attribute-dependent states here, you need to add them them to
-  // AfterSetAttr too.  And add them to AfterSetAttr for all subclasses that
-  // implement IntrinsicState() and are affected by that attribute.
-  EventStates state = nsGenericHTMLElement::IntrinsicState();
-
-  if (mForm && mForm->IsDefaultSubmitElement(this)) {
-    NS_ASSERTION(IsSubmitControl(),
-                 "Default submit element that isn't a submit control.");
-    // We are the default submit element (:default)
-    state |= NS_EVENT_STATE_DEFAULT;
-  }
-
-  // Make the text controls read-write
-  if (!state.HasState(NS_EVENT_STATE_READWRITE) && DoesReadOnlyApply()) {
-    if (!GetBoolAttr(nsGkAtoms::readonly) && !IsDisabled()) {
-      state |= NS_EVENT_STATE_READWRITE;
-      state &= ~NS_EVENT_STATE_READONLY;
-    }
-  }
-
-  return state;
 }
 
 Element* nsGenericHTMLFormElement::AddFormIdObserver() {
@@ -2271,47 +2127,8 @@ void nsGenericHTMLFormElement::UpdateDisabledState(bool aNotify) {
   }
 }
 
-void nsGenericHTMLFormElement::UpdateRequiredState(bool aIsRequired,
-                                                   bool aNotify) {
-#ifdef DEBUG
-  auto type = ControlType();
-#endif
-  MOZ_ASSERT(IsInputElement(type) || type == FormControlType::Select ||
-                 type == FormControlType::Textarea,
-             "This should be called only on types that @required applies");
-
-#ifdef DEBUG
-  if (HTMLInputElement* input = HTMLInputElement::FromNode(this)) {
-    MOZ_ASSERT(
-        input->DoesRequiredApply(),
-        "This should be called only on input types that @required applies");
-  }
-#endif
-
-  EventStates requiredStates;
-  if (aIsRequired) {
-    requiredStates |= NS_EVENT_STATE_REQUIRED;
-  } else {
-    requiredStates |= NS_EVENT_STATE_OPTIONAL;
-  }
-
-  EventStates oldRequiredStates = State() & REQUIRED_STATES;
-  EventStates changedStates = requiredStates ^ oldRequiredStates;
-
-  if (!changedStates.IsEmpty()) {
-    ToggleStates(changedStates, aNotify);
-  }
-}
-
 void nsGenericHTMLFormElement::FieldSetDisabledChanged(bool aNotify) {
   UpdateDisabledState(aNotify);
-}
-
-bool nsGenericHTMLFormElement::IsLabelable() const {
-  auto type = ControlType();
-  return (IsInputElement(type) && type != FormControlType::InputHidden) ||
-         IsButtonElement(type) || type == FormControlType::Output ||
-         type == FormControlType::Select || type == FormControlType::Textarea;
 }
 
 //----------------------------------------------------------------------
@@ -2624,6 +2441,213 @@ nsGenericHTMLFormControlElement::nsGenericHTMLFormControlElement(
     : nsGenericHTMLFormElement(std::move(aNodeInfo), aType) {}
 
 nsGenericHTMLFormControlElement::~nsGenericHTMLFormControlElement() = default;
+
+nsINode* nsGenericHTMLFormControlElement::GetScopeChainParent() const {
+  return mForm ? mForm : nsGenericHTMLElement::GetScopeChainParent();
+}
+
+void nsGenericHTMLFormControlElement::SaveSubtreeState() {
+  SaveState();
+
+  nsGenericHTMLFormElement::SaveSubtreeState();
+}
+
+nsIContent::IMEState nsGenericHTMLFormControlElement::GetDesiredIMEState() {
+  TextEditor* textEditor = GetTextEditorInternal();
+  if (!textEditor) {
+    return nsGenericHTMLFormElement::GetDesiredIMEState();
+  }
+  IMEState state;
+  nsresult rv = textEditor->GetPreferredIMEState(&state);
+  if (NS_FAILED(rv)) {
+    return nsGenericHTMLFormElement::GetDesiredIMEState();
+  }
+  return state;
+}
+
+void nsGenericHTMLFormControlElement::GetAutocapitalize(
+    nsAString& aValue) const {
+  if (nsContentUtils::HasNonEmptyAttr(this, kNameSpaceID_None,
+                                      nsGkAtoms::autocapitalize)) {
+    nsGenericHTMLFormElement::GetAutocapitalize(aValue);
+    return;
+  }
+
+  if (mForm && IsAutocapitalizeInheriting()) {
+    mForm->GetAutocapitalize(aValue);
+  }
+}
+
+bool nsGenericHTMLFormControlElement::IsHTMLFocusable(bool aWithMouse,
+                                                      bool* aIsFocusable,
+                                                      int32_t* aTabIndex) {
+  if (nsGenericHTMLFormElement::IsHTMLFocusable(aWithMouse, aIsFocusable,
+                                                aTabIndex)) {
+    return true;
+  }
+
+  *aIsFocusable = *aIsFocusable && IsFormControlDefaultFocusable(aWithMouse);
+  return false;
+}
+
+void nsGenericHTMLFormControlElement::GetEventTargetParent(
+    EventChainPreVisitor& aVisitor) {
+  if (aVisitor.mEvent->IsTrusted() && (aVisitor.mEvent->mMessage == eFocus ||
+                                       aVisitor.mEvent->mMessage == eBlur)) {
+    // We have to handle focus/blur event to change focus states in
+    // PreHandleEvent to prevent it breaks event target chain creation.
+    aVisitor.mWantsPreHandleEvent = true;
+  }
+  nsGenericHTMLFormElement::GetEventTargetParent(aVisitor);
+}
+
+nsresult nsGenericHTMLFormControlElement::PreHandleEvent(
+    EventChainVisitor& aVisitor) {
+  if (aVisitor.mEvent->IsTrusted()) {
+    switch (aVisitor.mEvent->mMessage) {
+      case eFocus: {
+        // Check to see if focus has bubbled up from a form control's
+        // child textfield or button.  If that's the case, don't focus
+        // this parent file control -- leave focus on the child.
+        nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
+        if (formControlFrame &&
+            aVisitor.mEvent->mOriginalTarget == static_cast<nsINode*>(this)) {
+          formControlFrame->SetFocus(true, true);
+        }
+        break;
+      }
+      case eBlur: {
+        nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
+        if (formControlFrame) {
+          formControlFrame->SetFocus(false, false);
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  return nsGenericHTMLFormElement::PreHandleEvent(aVisitor);
+}
+
+EventStates nsGenericHTMLFormControlElement::IntrinsicState() const {
+  // If you add attribute-dependent states here, you need to add them them to
+  // AfterSetAttr too.  And add them to AfterSetAttr for all subclasses that
+  // implement IntrinsicState() and are affected by that attribute.
+  EventStates state = nsGenericHTMLFormElement::IntrinsicState();
+
+  if (mForm && mForm->IsDefaultSubmitElement(this)) {
+    NS_ASSERTION(IsSubmitControl(),
+                 "Default submit element that isn't a submit control.");
+    // We are the default submit element (:default)
+    state |= NS_EVENT_STATE_DEFAULT;
+  }
+
+  // Make the text controls read-write
+  if (!state.HasState(NS_EVENT_STATE_READWRITE) && DoesReadOnlyApply()) {
+    if (!GetBoolAttr(nsGkAtoms::readonly) && !IsDisabled()) {
+      state |= NS_EVENT_STATE_READWRITE;
+      state &= ~NS_EVENT_STATE_READONLY;
+    }
+  }
+
+  return state;
+}
+
+bool nsGenericHTMLFormControlElement::IsLabelable() const {
+  auto type = ControlType();
+  return (IsInputElement(type) && type != FormControlType::InputHidden) ||
+         IsButtonElement(type) || type == FormControlType::Output ||
+         type == FormControlType::Select || type == FormControlType::Textarea;
+}
+
+bool nsGenericHTMLFormControlElement::CanBeDisabled() const {
+  auto type = ControlType();
+  // It's easier to test the types that _cannot_ be disabled
+  return type != FormControlType::Object && type != FormControlType::Output;
+}
+
+bool nsGenericHTMLFormControlElement::DoesReadOnlyApply() const {
+  auto type = ControlType();
+  if (!IsInputElement(type) && type != FormControlType::Textarea) {
+    return false;
+  }
+
+  switch (type) {
+    case FormControlType::InputHidden:
+    case FormControlType::InputButton:
+    case FormControlType::InputImage:
+    case FormControlType::InputReset:
+    case FormControlType::InputSubmit:
+    case FormControlType::InputRadio:
+    case FormControlType::InputFile:
+    case FormControlType::InputCheckbox:
+    case FormControlType::InputRange:
+    case FormControlType::InputColor:
+      return false;
+#ifdef DEBUG
+    case FormControlType::Textarea:
+    case FormControlType::InputText:
+    case FormControlType::InputPassword:
+    case FormControlType::InputSearch:
+    case FormControlType::InputTel:
+    case FormControlType::InputEmail:
+    case FormControlType::InputUrl:
+    case FormControlType::InputNumber:
+    case FormControlType::InputDate:
+    case FormControlType::InputTime:
+    case FormControlType::InputMonth:
+    case FormControlType::InputWeek:
+    case FormControlType::InputDatetimeLocal:
+      return true;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected input type in DoesReadOnlyApply()");
+      return true;
+#else   // DEBUG
+    default:
+      return true;
+#endif  // DEBUG
+  }
+}
+
+void nsGenericHTMLFormControlElement::UpdateRequiredState(bool aIsRequired,
+                                                          bool aNotify) {
+#ifdef DEBUG
+  auto type = ControlType();
+#endif
+  MOZ_ASSERT(IsInputElement(type) || type == FormControlType::Select ||
+                 type == FormControlType::Textarea,
+             "This should be called only on types that @required applies");
+
+#ifdef DEBUG
+  if (HTMLInputElement* input = HTMLInputElement::FromNode(this)) {
+    MOZ_ASSERT(
+        input->DoesRequiredApply(),
+        "This should be called only on input types that @required applies");
+  }
+#endif
+
+  EventStates requiredStates;
+  if (aIsRequired) {
+    requiredStates |= NS_EVENT_STATE_REQUIRED;
+  } else {
+    requiredStates |= NS_EVENT_STATE_OPTIONAL;
+  }
+
+  EventStates oldRequiredStates = State() & REQUIRED_STATES;
+  EventStates changedStates = requiredStates ^ oldRequiredStates;
+
+  if (!changedStates.IsEmpty()) {
+    ToggleStates(changedStates, aNotify);
+  }
+}
+
+bool nsGenericHTMLFormControlElement::IsAutocapitalizeInheriting() const {
+  auto type = ControlType();
+  return IsInputElement(type) || IsButtonElement(type) ||
+         type == FormControlType::Fieldset || type == FormControlType::Output ||
+         type == FormControlType::Select || type == FormControlType::Textarea;
+}
 
 //----------------------------------------------------------------------
 
@@ -2993,23 +3017,4 @@ already_AddRefed<ElementInternals> nsGenericHTMLElement::AttachInternals(
 void nsGenericHTMLElement::GetAutocapitalize(nsAString& aValue) const {
   GetEnumAttr(nsGkAtoms::autocapitalize, nullptr, kDefaultAutocapitalize->tag,
               aValue);
-}
-
-bool nsGenericHTMLFormElement::IsAutocapitalizeInheriting() const {
-  auto type = ControlType();
-  return IsInputElement(type) || IsButtonElement(type) ||
-         type == FormControlType::Fieldset || type == FormControlType::Output ||
-         type == FormControlType::Select || type == FormControlType::Textarea;
-}
-
-void nsGenericHTMLFormElement::GetAutocapitalize(nsAString& aValue) const {
-  if (nsContentUtils::HasNonEmptyAttr(this, kNameSpaceID_None,
-                                      nsGkAtoms::autocapitalize)) {
-    nsGenericHTMLElement::GetAutocapitalize(aValue);
-    return;
-  }
-
-  if (mForm && IsAutocapitalizeInheriting()) {
-    mForm->GetAutocapitalize(aValue);
-  }
 }
