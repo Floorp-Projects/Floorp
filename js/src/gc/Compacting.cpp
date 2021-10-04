@@ -17,7 +17,6 @@
 #include "gc/ParallelWork.h"
 #include "gc/Zone.h"
 #include "jit/JitCode.h"
-#include "gc/Zone-inl.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitZone.h"
 #include "js/GCAPI.h"
