@@ -35,6 +35,7 @@ object Versions {
     const val androidx_paging = "2.1.2"
     const val androidx_transition = "1.4.0"
     const val androidx_work = "2.5.0"
+    const val androidx_datastore = "1.0.0"
     const val google_material = "1.2.1"
 
     const val mozilla_android_components = AndroidComponents.VERSION
@@ -52,6 +53,8 @@ object Versions {
     const val google_ads_id_version = "16.0.0"
 
     const val google_play_store_version = "1.8.0"
+
+    const val protobuf = "3.11.4" // keep in sync with the version used in AS.
 }
 
 @Suppress("unused")
@@ -199,7 +202,11 @@ object Deps {
     const val androidx_transition = "androidx.transition:transition:${Versions.androidx_transition}"
     const val androidx_work_ktx = "androidx.work:work-runtime-ktx:${Versions.androidx_work}"
     const val androidx_work_testing = "androidx.work:work-testing:${Versions.androidx_work}"
+    const val androidx_datastore = "androidx.datastore:datastore:${Versions.androidx_datastore}"
     const val google_material = "com.google.android.material:material:${Versions.google_material}"
+
+    const val protobuf_javalite = "com.google.protobuf:protobuf-javalite:${Versions.protobuf}"
+    const val protobuf_compiler = "com.google.protobuf:protoc:${Versions.protobuf}"
 
     const val adjust = "com.adjust.sdk:adjust-android:${Versions.adjust}"
     const val installreferrer = "com.android.installreferrer:installreferrer:${Versions.installreferrer}"

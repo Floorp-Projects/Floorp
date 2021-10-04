@@ -93,6 +93,7 @@ import org.mozilla.fenix.components.tips.providers.MasterPasswordTipProvider
 import org.mozilla.fenix.components.toolbar.FenixTabCounterMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentHomeBinding
+import org.mozilla.fenix.datastore.pocketStoriesSelectedCategoriesDataStore
 import org.mozilla.fenix.ext.asRecentTabs
 import org.mozilla.fenix.experiments.FeatureId
 import org.mozilla.fenix.ext.components
@@ -248,7 +249,9 @@ class HomeFragment : Fragment() {
                 ),
                 listOf(
                     PocketUpdatesMiddleware(
-                        lifecycleScope, requireComponents.core.pocketStoriesService
+                        lifecycleScope,
+                        requireComponents.core.pocketStoriesService,
+                        requireContext().pocketStoriesSelectedCategoriesDataStore
                     )
                 )
             )

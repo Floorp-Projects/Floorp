@@ -1,5 +1,6 @@
 plugins {
     id "com.jetbrains.python.envs" version "0.0.26"
+    id "com.google.protobuf" version "0.8.17"
 }
 
 apply plugin: 'com.android.application'
@@ -525,6 +526,8 @@ dependencies {
     implementation Deps.androidx_core_ktx
     implementation Deps.androidx_transition
     implementation Deps.androidx_work_ktx
+    implementation Deps.androidx_datastore
+    implementation Deps.protobuf_javalite
     implementation Deps.google_material
 
     implementation Deps.adjust
@@ -587,6 +590,25 @@ dependencies {
     testImplementation "org.mozilla.telemetry:glean-native-forUnitTests:${project.ext.glean_version}"
 
     lintChecks project(":mozilla-lint-rules")
+}
+
+protobuf {
+    protoc {
+        artifact = Deps.protobuf_compiler
+    }
+
+    // Generates the java Protobuf-lite code for the Protobufs in this project. See
+    // https://github.com/google/protobuf-gradle-plugin#customizing-protobuf-compilation
+    // for more information.
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                java {
+                    option 'lite'
+                }
+            }
+        }
+    }
 }
 
 if (project.hasProperty("coverage")) {

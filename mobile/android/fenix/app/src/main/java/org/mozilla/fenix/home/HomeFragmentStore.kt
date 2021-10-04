@@ -103,6 +103,10 @@ sealed class HomeFragmentAction : Action {
     data class PocketStoriesChange(val pocketStories: List<PocketRecommendedStory>) : HomeFragmentAction()
     data class PocketStoriesCategoriesChange(val storiesCategories: List<PocketRecommendedStoriesCategory>) :
         HomeFragmentAction()
+    data class PocketStoriesCategoriesSelectionsChange(
+        val storiesCategories: List<PocketRecommendedStoriesCategory>,
+        val categoriesSelected: List<PocketRecommendedStoriesSelectedCategory>
+    ) : HomeFragmentAction()
     object RemoveCollectionsPlaceholder : HomeFragmentAction()
     object RemoveSetDefaultBrowserCard : HomeFragmentAction()
 }
@@ -172,8 +176,18 @@ private fun homeFragmentStateReducer(
             )
         }
         is HomeFragmentAction.PocketStoriesCategoriesChange -> {
-            // Whenever categories change stories to be displayed needs to also be changed.
             val updatedCategoriesState = state.copy(pocketStoriesCategories = action.storiesCategories)
+            // Whenever categories change stories to be displayed needs to also be changed.
+            return updatedCategoriesState.copy(
+                pocketStories = updatedCategoriesState.getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT)
+            )
+        }
+        is HomeFragmentAction.PocketStoriesCategoriesSelectionsChange -> {
+            val updatedCategoriesState = state.copy(
+                pocketStoriesCategories = action.storiesCategories,
+                pocketStoriesCategoriesSelections = action.categoriesSelected
+            )
+            // Whenever categories change stories to be displayed needs to also be changed.
             return updatedCategoriesState.copy(
                 pocketStories = updatedCategoriesState.getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT)
             )
