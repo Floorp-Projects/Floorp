@@ -18,6 +18,7 @@
 #include "gc/Zone.h"
 #include "jit/JitCode.h"
 #include "jit/JitRuntime.h"
+#include "gc/Zone-inl.h"
 #include "jit/JitZone.h"
 #include "js/GCAPI.h"
 #include "vm/HelperThreads.h"
