@@ -241,6 +241,7 @@ static AnnotationTable crashReporterAPIData_Table;
 static nsCString* notesField = nullptr;
 static bool isGarbageCollecting;
 static uint32_t eventloopNestingLevel = 0;
+static time_t inactiveStateStart = 0;
 
 // Avoid a race during application termination.
 static Mutex* dumpSafetyLock;
@@ -434,6 +435,16 @@ MAYBE_UNUSED static xpstring* CreatePathFromFile(nsIFile* file) {
   return new xpstring(path.get(), path.Length());
 }
 #endif
+
+static time_t GetCurrentTimeForCrashTime() {
+#ifdef XP_LINUX
+  struct kernel_timeval tv;
+  sys_gettimeofday(&tv, nullptr);
+  return tv.tv_sec;
+#else
+  return time(nullptr);
+#endif
+}
 
 static XP_CHAR* Concat(XP_CHAR* str, const XP_CHAR* toAppend, size_t* size) {
   size_t appendLen = XP_STRLEN(toAppend);
@@ -1317,6 +1328,11 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
   WriteSynthesizedAnnotations(writer);
   writer.Write(Annotation::CrashTime, uint64_t(crashTime));
 
+  if (inactiveStateStart) {
+    writer.Write(Annotation::LastInteractionDuration,
+                 crashTime - inactiveStateStart);
+  }
+
   double uptimeTS = (TimeStamp::NowLoRes() - TimeStamp::ProcessCreation())
                         .ToSecondsSigDigits();
   char uptimeTSString[64];
@@ -1472,14 +1488,7 @@ bool MinidumpCallback(
 #endif
   }
 
-  time_t crashTime;
-#ifdef XP_LINUX
-  struct kernel_timeval tv;
-  sys_gettimeofday(&tv, nullptr);
-  crashTime = tv.tv_sec;
-#else
-  crashTime = time(nullptr);
-#endif
+  time_t crashTime = GetCurrentTimeForCrashTime();
   char crashTimeString[32];
   XP_TTOA(crashTime, crashTimeString);
 
@@ -2484,9 +2493,17 @@ static void MergeContentCrashAnnotations(AnnotationTable& aDst) {
 
 // Adds crash time, uptime and memory report annotations
 static void AddCommonAnnotations(AnnotationTable& aAnnotations) {
-  nsAutoCString crashTime;
-  crashTime.AppendInt((uint64_t)time(nullptr));
-  aAnnotations[Annotation::CrashTime] = crashTime;
+  const time_t crashTime = time(nullptr);
+  nsAutoCString crashTimeStr;
+  crashTimeStr.AppendInt(static_cast<uint64_t>(crashTime));
+  aAnnotations[Annotation::CrashTime] = crashTimeStr;
+
+  if (inactiveStateStart) {
+    nsAutoCString inactiveDuration;
+    inactiveDuration.AppendInt(
+        static_cast<uint64_t>(crashTime - inactiveStateStart));
+    aAnnotations[Annotation::LastInteractionDuration] = inactiveDuration;
+  }
 
   double uptimeTS = (TimeStamp::NowLoRes() - TimeStamp::ProcessCreation())
                         .ToSecondsSigDigits();
@@ -2508,6 +2525,13 @@ nsresult SetGarbageCollecting(bool collecting) {
 }
 
 void SetEventloopNestingLevel(uint32_t level) { eventloopNestingLevel = level; }
+
+void ClearInactiveStateStart() { inactiveStateStart = 0; }
+void SetInactiveStateStart() {
+  if (!inactiveStateStart) {
+    inactiveStateStart = GetCurrentTimeForCrashTime();
+  }
+}
 
 void SetMinidumpAnalysisAllThreads() {
   char* env = strdup("MOZ_CRASHREPORTER_DUMP_ALL_THREADS=1");
