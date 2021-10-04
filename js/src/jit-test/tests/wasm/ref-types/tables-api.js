@@ -15,7 +15,7 @@ for (let value of WasmExternrefValues) {
   assertTableFilled(table, tableLength, value);
 }
 for (let value of WasmFuncrefValues) {
-  let table = new WebAssembly.Table({'element': 'funcref', initial: tableLength}, value);
+  let table = new WebAssembly.Table({'element': 'anyfunc', initial: tableLength}, value);
   assertTableFilled(table, tableLength, value);
 }
 
@@ -27,7 +27,7 @@ for (let value of WasmFuncrefValues) {
 
 // Test not specifying default value in constructor yields 'null' for funcref
 {
-  let table = new WebAssembly.Table({'element': 'funcref', initial: tableLength});
+  let table = new WebAssembly.Table({'element': 'anyfunc', initial: tableLength});
   assertTableFilled(table, tableLength, null);
 }
 
@@ -43,7 +43,7 @@ for (let value of WasmFuncrefValues) {
     assertEq(t.get(0), undefined);
 }
 {
-    let t = new WebAssembly.Table({element:"funcref", initial: 1});
+    let t = new WebAssembly.Table({element:"anyfunc", initial: 1});
     // Clear out initial value
     t.set(0, WasmFuncrefValues[0]);
     // Set with an omitted value
@@ -70,7 +70,7 @@ for (let value of WasmFuncrefValues) {
 }
 
 {
-    let t = new WebAssembly.Table({element:"funcref", initial:0});
+    let t = new WebAssembly.Table({element:"anyfunc", initial:0});
     t.grow(1);
     assertEq(t.get(t.length-1), null);
     let prev = null;

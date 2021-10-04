@@ -28,4 +28,4 @@ let $0 = instantiate(`(module
 assert_return(() => invoke($0, `externref`, []), [value("externref", null)]);
 
 // ./test/core/ref_null.wast:10
-assert_return(() => invoke($0, `funcref`, []), [value("funcref", null)]);
+assert_return(() => invoke($0, `funcref`, []), [value("anyfunc", null)]);
