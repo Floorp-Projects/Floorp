@@ -2,9 +2,9 @@
 <?xml-stylesheet type="text/css" href="chrome://global/skin"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 <!--
-  Tests that the isHandlingUserInput attribute on permission requests is set correctly.
+  Tests that the hasValidTransientUserGestureActivation attribute on permission requests is set correctly.
 -->
-<window title="isHandlingUserInput test" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<window title="hasValidTransientUserGestureActivation test" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
@@ -20,14 +20,14 @@
 
   let frame = document.getElementById("frame");
 
-  function checkPermissionRequest(permission, isHandlingUserInput) {
+  function checkPermissionRequest(permission, hasValidTransientUserGestureActivation) {
     return new Promise(function(resolve) {
       let TestIntegration = (base) => ({
         __proto__: base,
         createPermissionPrompt(type, request) {
           is(type, permission, `Has correct permission type ${permission}.`);
-          is(request.isHandlingUserInput, isHandlingUserInput,
-             "The isHandlingUserInput attribute is set correctly.");
+          is(request.hasValidTransientUserGestureActivation, hasValidTransientUserGestureActivation,
+             "The hasValidTransientUserGestureActivation attribute is set correctly.");
           Integration.contentPermission.unregister(TestIntegration);
           resolve();
           return { prompt() {} };
