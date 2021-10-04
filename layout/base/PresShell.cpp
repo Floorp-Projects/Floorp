@@ -138,7 +138,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsITimer.h"
 #ifdef ACCESSIBILITY
-#  include "nsAccessibilityService.h"
 #  include "mozilla/a11y/DocAccessible.h"
 #  ifdef DEBUG
 #    include "mozilla/a11y/Logging.h"
@@ -5462,6 +5461,12 @@ void PresShell::SetRenderingState(const RenderingState& aState) {
 
   mRenderingStateFlags = aState.mRenderingStateFlags;
   mResolution = aState.mResolution;
+#ifdef ACCESSIBILITY
+  if (nsAccessibilityService* accService =
+          PresShell::GetAccessibilityService()) {
+    accService->NotifyOfResolutionChange(this, GetResolution());
+  }
+#endif
 }
 
 void PresShell::SynthesizeMouseMove(bool aFromScroll) {
