@@ -158,8 +158,6 @@ class Accessible {
 
   bool IsAlert() const { return HasGenericType(eAlert); }
 
-  bool IsAutoComplete() const { return HasGenericType(eAutoComplete); }
-
   bool IsButton() const { return HasGenericType(eButton); }
 
   bool IsCombobox() const { return HasGenericType(eCombobox); }
