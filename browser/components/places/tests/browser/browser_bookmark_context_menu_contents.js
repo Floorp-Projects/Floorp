@@ -8,6 +8,7 @@
  *  Test removing bookmarks from the Bookmarks Toolbar and Library.
  */
 const BOOKMARKS_H2_2020_PREF = "browser.toolbars.bookmarks.2h2020";
+const SECOND_BOOKMARK_TITLE = "Second Bookmark Title";
 const bookmarksInfo = [
   {
     title: "firefox",
@@ -78,7 +79,7 @@ let checkContextMenu = async (cbfunc, optionItems, doc = document) => {
   });
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-    title: "Second Bookmark Title",
+    title: SECOND_BOOKMARK_TITLE,
     url: TEST_URL,
   });
 
@@ -416,6 +417,47 @@ add_task(async function test_sidebar_bookmark_contextmenu_contents() {
   });
 });
 
+add_task(async function test_sidebar_bookmark_search_contextmenu_contents() {
+  let optionItems = [
+    "placesContext_open:newtab",
+    "placesContext_open:newwindow",
+    "placesContext_open:newprivatewindow",
+    "placesContext_showInFolder",
+    "placesContext_show_bookmark:info",
+    "placesContext_deleteBookmark",
+    "placesContext_cut",
+    "placesContext_copy",
+  ];
+
+  await withSidebarTree("bookmarks", async tree => {
+    await checkContextMenu(
+      async bookmark => {
+        info("Checking bookmark sidebar menu contents in search context");
+        // Perform a search first
+        let searchBox = SidebarUI.browser.contentDocument.getElementById(
+          "search-box"
+        );
+        searchBox.value = SECOND_BOOKMARK_TITLE;
+        searchBox.doCommand();
+        tree.selectItems([bookmark.guid]);
+
+        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
+          "placesContext"
+        );
+        let popupShownPromise = BrowserTestUtils.waitForEvent(
+          contextMenu,
+          "popupshown"
+        );
+        synthesizeClickOnSelectedTreeCell(tree, { type: "contextmenu" });
+        await popupShownPromise;
+        return contextMenu;
+      },
+      optionItems,
+      SidebarUI.browser.contentDocument
+    );
+  });
+});
+
 add_task(async function test_library_bookmark_contextmenu_contents() {
   let optionItems = [
     "placesContext_open",
@@ -434,6 +476,43 @@ add_task(async function test_library_bookmark_contextmenu_contents() {
   await withLibraryWindow("BookmarksToolbar", async ({ left, right }) => {
     await checkContextMenu(
       async bookmark => {
+        let contextMenu = right.ownerDocument.getElementById("placesContext");
+        let popupShownPromise = BrowserTestUtils.waitForEvent(
+          contextMenu,
+          "popupshown"
+        );
+        right.selectItems([bookmark.guid]);
+        synthesizeClickOnSelectedTreeCell(right, { type: "contextmenu" });
+        await popupShownPromise;
+        return contextMenu;
+      },
+      optionItems,
+      right.ownerDocument
+    );
+  });
+});
+
+add_task(async function test_library_bookmark_search_contextmenu_contents() {
+  let optionItems = [
+    "placesContext_open",
+    "placesContext_open:newtab",
+    "placesContext_open:newwindow",
+    "placesContext_open:newprivatewindow",
+    "placesContext_showInFolder",
+    "placesContext_deleteBookmark",
+    "placesContext_cut",
+    "placesContext_copy",
+  ];
+
+  await withLibraryWindow("BookmarksToolbar", async ({ left, right }) => {
+    await checkContextMenu(
+      async bookmark => {
+        info("Checking bookmark library menu contents in search context");
+        // Perform a search first
+        let searchBox = right.ownerDocument.getElementById("searchFilter");
+        searchBox.value = SECOND_BOOKMARK_TITLE;
+        searchBox.doCommand();
+
         let contextMenu = right.ownerDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,

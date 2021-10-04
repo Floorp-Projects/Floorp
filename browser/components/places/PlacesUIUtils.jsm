@@ -506,6 +506,7 @@ var PlacesUIUtils = {
       "placesCmd_copy",
       "placesCmd_paste",
       "placesCmd_delete",
+      "placesCmd_showInFolder",
     ]) {
       win.goSetCommandEnabled(
         command,
