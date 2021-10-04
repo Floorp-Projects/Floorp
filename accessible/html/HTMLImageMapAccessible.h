@@ -58,6 +58,7 @@ class HTMLAreaAccessible final : public HTMLLinkAccessible {
   virtual LocalAccessible* LocalChildAtPoint(
       int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) override;
   virtual nsRect RelativeBounds(nsIFrame** aBoundingFrame) const override;
+  virtual nsRect ParentRelativeBounds() override;
 
   // HyperLinkAccessible
   virtual uint32_t StartOffset() override;
