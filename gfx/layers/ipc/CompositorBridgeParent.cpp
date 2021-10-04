@@ -1490,15 +1490,6 @@ static void UpdateControllerForLayersId(LayersId aLayersId,
 }
 
 ScopedLayerTreeRegistration::ScopedLayerTreeRegistration(
-    LayersId aLayersId, Layer* aRoot, GeckoContentController* aController)
-    : mLayersId(aLayersId) {
-  EnsureLayerTreeMapReady();
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  sIndirectLayerTrees[aLayersId].mRoot = aRoot;
-  sIndirectLayerTrees[aLayersId].mController = aController;
-}
-
-ScopedLayerTreeRegistration::ScopedLayerTreeRegistration(
     LayersId aLayersId, GeckoContentController* aController)
     : mLayersId(aLayersId) {
   EnsureLayerTreeMapReady();
