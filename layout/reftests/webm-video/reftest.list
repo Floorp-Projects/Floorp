@@ -53,5 +53,5 @@ fails-if(layersGPUAccelerated) == object-fit-none-webm-001.html object-fit-none-
 fails-if(layersGPUAccelerated) == object-fit-none-webm-002.html object-fit-none-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures
 fails-if(layersGPUAccelerated) == object-fit-scale-down-webm-001.html object-fit-scale-down-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures
 fails-if(layersGPUAccelerated) == object-fit-scale-down-webm-002.html object-fit-scale-down-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures
-fails-if(layersGPUAccelerated) fails == object-position-webm-001.html object-position-webm-001-ref.html # Bug 1098417 for across-the-board failure, Bug 1083516 for layersGPUAccelerated failures
-fails-if(layersGPUAccelerated) fails == object-position-webm-002.html object-position-webm-002-ref.html # Bug 1098417 for across-the-board failure, Bug 1083516 for layersGPUAccelerated failures
+fails == object-position-webm-001.html object-position-webm-001-ref.html # Bug 1098417 for across-the-board failure, Bug 1083516 for layersGPUAccelerated failures
+fails == object-position-webm-002.html object-position-webm-002-ref.html # Bug 1098417 for across-the-board failure, Bug 1083516 for layersGPUAccelerated failures

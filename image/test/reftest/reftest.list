@@ -20,10 +20,10 @@ include pngsuite-transparency/reftest.list
 include pngsuite-zlib/reftest.list
 
 # BMP tests
-skip-if(Android&&webrender) include bmp/reftest.list
+skip-if(Android) include bmp/reftest.list
 
 # ICO tests
-skip-if(Android&&webrender) include ico/reftest.list
+skip-if(Android) include ico/reftest.list
 
 # JPEG tests
 include jpeg/reftest.list
