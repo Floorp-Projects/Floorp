@@ -30,6 +30,8 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
+#include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIScriptElement.h"
 #include "nsISupportsImpl.h"
@@ -1326,14 +1328,41 @@ LoadInfo::GetInitialSecurityCheckDone(bool* aResult) {
 }
 
 NS_IMETHODIMP
-LoadInfo::AppendRedirectHistoryEntry(nsIRedirectHistoryEntry* aEntry,
+LoadInfo::AppendRedirectHistoryEntry(nsIChannel* aChannel,
                                      bool aIsInternalRedirect) {
-  NS_ENSURE_ARG(aEntry);
+  NS_ENSURE_ARG(aChannel);
   MOZ_ASSERT(NS_IsMainThread());
 
-  mRedirectChainIncludingInternalRedirects.AppendElement(aEntry);
+  nsCOMPtr<nsIPrincipal> uriPrincipal;
+  nsIScriptSecurityManager* sm = nsContentUtils::GetSecurityManager();
+  sm->GetChannelURIPrincipal(aChannel, getter_AddRefs(uriPrincipal));
+
+  nsCOMPtr<nsIURI> referrer;
+  nsCString remoteAddress;
+
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
+  if (httpChannel) {
+    nsCOMPtr<nsIReferrerInfo> referrerInfo;
+    Unused << httpChannel->GetReferrerInfo(getter_AddRefs(referrerInfo));
+    if (referrerInfo) {
+      referrer = referrerInfo->GetComputedReferrer();
+    }
+  }
+
+  // ClassifierDummyChannel implements this, but not nsIHttpChannel,
+  // whereas NullHttpChannel implements nsIHttpChannel but not this, so
+  // we can't make assumptions by nesting these QIs.
+  nsCOMPtr<nsIHttpChannelInternal> intChannel(do_QueryInterface(aChannel));
+  if (intChannel) {
+    Unused << intChannel->GetRemoteAddress(remoteAddress);
+  }
+
+  nsCOMPtr<nsIRedirectHistoryEntry> entry =
+      new nsRedirectHistoryEntry(uriPrincipal, referrer, remoteAddress);
+
+  mRedirectChainIncludingInternalRedirects.AppendElement(entry);
   if (!aIsInternalRedirect) {
-    mRedirectChain.AppendElement(aEntry);
+    mRedirectChain.AppendElement(entry);
   }
   return NS_OK;
 }

@@ -857,12 +857,11 @@ interface nsILoadInfo : nsISupports
    * the channels got redirected] to the loadinfo, so that at every point this
    * array provides us information about all the redirects this channel went
    * through.
-   * @param entry, the nsIRedirectHistoryEntry before the channel
-   *         got redirected.
+   * @param channelToDeriveFrom the channel being redirected
    * @param aIsInternalRedirect should be true if the channel is going
    *        through an internal redirect, otherwise false.
    */
-  void appendRedirectHistoryEntry(in nsIRedirectHistoryEntry entry,
+  void appendRedirectHistoryEntry(in nsIChannel channelToDeriveFrom,
                                   in boolean isInternalRedirect);
 
   /**
