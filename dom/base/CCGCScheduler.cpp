@@ -72,7 +72,7 @@ struct CCIntervalMarker {
 };
 #endif
 
-void CCGCScheduler::NoteCCBegin(TimeStamp aWhen) {
+void CCGCScheduler::NoteCCBegin(CCReason aReason, TimeStamp aWhen) {
 #ifdef MOZ_GECKO_PROFILER
   profiler_add_marker("CC", baseprofiler::category::GCCC,
                       MarkerOptions(MarkerTiming::IntervalStart(aWhen)),
@@ -439,14 +439,13 @@ void CCGCScheduler::MaybePokeCC(TimeStamp aNow, uint32_t aSuspectedCCObjects) {
     return;
   }
 
-  MOZ_ASSERT(mCCReason == CCReason::NO_REASON);
   CCReason reason = ShouldScheduleCC(aNow, aSuspectedCCObjects);
   if (reason != CCReason::NO_REASON) {
     // We can kill some objects before running forgetSkippable.
     nsCycleCollector_dispatchDeferredDeletion();
 
     if (!mCCRunner) {
-      InitCCRunnerStateMachine(CCRunnerState::ReducePurple);
+      InitCCRunnerStateMachine(CCRunnerState::ReducePurple, reason);
     }
     EnsureCCRunner(kCCSkippableDelay, kForgetSkippableSliceDuration);
   }
@@ -458,6 +457,7 @@ void CCGCScheduler::KillCCRunner() {
   if (mCCRunner) {
     mCCRunner->Cancel();
     mCCRunner = nullptr;
+    mCCReason = CCReason::NO_REASON;
   }
 }
 
@@ -735,8 +735,12 @@ CCRunnerStep CCGCScheduler::AdvanceCCRunner(TimeStamp aDeadline, TimeStamp aNow,
       [[fallthrough]];
 
       // CycleCollecting: continue running slices until done.
-    case CCRunnerState::CycleCollecting:
-      return {CCRunnerAction::CycleCollect, Yield};
+    case CCRunnerState::CycleCollecting: {
+      CCRunnerStep step{CCRunnerAction::CycleCollect, Yield};
+      step.mCCReason = mCCReason;
+      mCCReason = CCReason::SLICE;  // Set reason for following slices.
+      return step;
+    }
 
     default:
       MOZ_CRASH("Unexpected CCRunner state");

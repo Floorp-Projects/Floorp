@@ -108,7 +108,7 @@ void TestCC::MaybePokeCC() {
   mozilla::CCReason reason = mScheduler.ShouldScheduleCC(Now(), SuspectedCCObjects());
   EXPECT_EQ(reason, CCReason::GC_FINISHED);
 
-  mScheduler.InitCCRunnerStateMachine(CCRunnerState::ReducePurple);
+  mScheduler.InitCCRunnerStateMachine(CCRunnerState::ReducePurple, reason);
   EXPECT_TRUE(mScheduler.IsEarlyForgetSkippable());
 }
 
