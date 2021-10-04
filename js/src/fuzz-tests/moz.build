@@ -43,5 +43,3 @@ USE_LIBS += [
 ]
 
 DEFINES["topsrcdir"] = "%s/js/src" % TOPSRCDIR
-
-REQUIRES_UNIFIED_BUILD = True
