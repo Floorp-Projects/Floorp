@@ -16,7 +16,6 @@
 #include "gc/GCLock.h"
 #include "gc/ParallelWork.h"
 #include "gc/Zone.h"
-#include "gc/Zone-inl.h"
 #include "jit/JitCode.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitZone.h"
