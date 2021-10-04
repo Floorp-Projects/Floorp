@@ -407,10 +407,12 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
       if (!selector) {
         return nodeFront;
       }
-      nodeFront = await this.querySelector(nodeFront, selector);
-
+      nodeFront = await nodeFront.walkerFront.querySelector(
+        nodeFront,
+        selector
+      );
       // It's possible the containing iframe isn't available by the time
-      // this.querySelector is called, which causes the re-selected node to be
+      // walkerFront.querySelector is called, which causes the re-selected node to be
       // unavailable. There also isn't a way for us to know when all iframes on the page
       // have been created after a reload. Because of this, we should should bail here.
       if (!nodeFront) {
@@ -444,23 +446,6 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
       return querySelectors(nodeFront) || nodeFront;
     };
     const nodeFront = await this.getRootNode();
-
-    // If rootSelectors are [frameSelector1, ..., frameSelectorN, rootSelector]
-    // we expect that [frameSelector1, ..., frameSelectorN] will also be in
-    // nodeSelectors.
-    // Otherwise it means the nodeSelectors target a node outside of this walker
-    // and we should return null.
-    const rootFrontSelectors = await nodeFront.getAllSelectors();
-    for (let i = 0; i < rootFrontSelectors.length - 1; i++) {
-      if (rootFrontSelectors[i] !== nodeSelectors[i]) {
-        return null;
-      }
-    }
-
-    // The query will start from the walker's rootNode, remove all the
-    // "frameSelectors".
-    nodeSelectors.splice(0, rootFrontSelectors.length - 1);
-
     return querySelectors(nodeFront);
   }
 
