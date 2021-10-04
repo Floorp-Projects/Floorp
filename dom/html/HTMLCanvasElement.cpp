@@ -1062,27 +1062,21 @@ void HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect) {
     renderer->SetDirty();
     frame->SchedulePaint(nsIFrame::PAINT_COMPOSITE_ONLY);
   } else {
-    Layer* layer = nullptr;
     if (damageRect) {
       nsIntSize size = GetWidthHeight();
       if (size.width != 0 && size.height != 0) {
         gfx::IntRect invalRect = gfx::IntRect::Truncate(*damageRect);
-        layer =
-            frame->InvalidateLayer(DisplayItemType::TYPE_CANVAS, &invalRect);
+        frame->InvalidateLayer(DisplayItemType::TYPE_CANVAS, &invalRect);
       }
     } else {
-      layer = frame->InvalidateLayer(DisplayItemType::TYPE_CANVAS);
+      frame->InvalidateLayer(DisplayItemType::TYPE_CANVAS);
     }
 
-    if (layer) {
-      layer->SetInvalidRectToVisibleRegion();
-    } else {
-      // This path is taken in two situations:
-      // 1) WebRender is enabled and has not yet processed a display list.
-      // 2) WebRender is disabled and layer invalidation failed.
-      // In both cases, schedule a full paint to properly update canvas.
-      frame->SchedulePaint(nsIFrame::PAINT_DEFAULT, false);
-    }
+    // This path is taken in two situations:
+    // 1) WebRender is enabled and has not yet processed a display list.
+    // 2) WebRender is disabled and layer invalidation failed.
+    // In both cases, schedule a full paint to properly update canvas.
+    frame->SchedulePaint(nsIFrame::PAINT_DEFAULT, false);
   }
 
   /*

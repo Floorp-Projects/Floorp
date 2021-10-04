@@ -3572,10 +3572,10 @@ class nsIFrame : public nsQueryFrame {
    * @return Layer, if found, nullptr otherwise.
    */
   enum { UPDATE_IS_ASYNC = 1 << 0 };
-  Layer* InvalidateLayer(DisplayItemType aDisplayItemKey,
-                         const nsIntRect* aDamageRect = nullptr,
-                         const nsRect* aFrameDamageRect = nullptr,
-                         uint32_t aFlags = 0);
+  void InvalidateLayer(DisplayItemType aDisplayItemKey,
+                       const nsIntRect* aDamageRect = nullptr,
+                       const nsRect* aFrameDamageRect = nullptr,
+                       uint32_t aFlags = 0);
 
   void MarkNeedsDisplayItemRebuild();
 
