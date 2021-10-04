@@ -604,16 +604,6 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
 #undef COLOR
 
 // Taken from in-content/common.inc.css's dark theme.
-//
-// TODO(emilio): The XP_WIN defines are temporary, and are there because the
-// native windows theme doesn't support drawing dark form controls (see bug
-// 1733354 for example).
-//
-// Long term we should fix this by either adding support for that (though the
-// windows APIs we use don't seem to support it) or not use native win32 buttons
-// in the front end (like other browsers do), at least in dark mode.
-//
-// For now we just don't provide dark version of these colors there.
 Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
   nscolor color = NS_RGB(0, 0, 0);
   switch (aID) {
@@ -623,28 +613,23 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::TextBackground:
       color = NS_RGB(28, 27, 34);
       break;
-#ifndef XP_WIN
     case ColorID::MozDialog:  // --in-content-box-background
       color = NS_RGB(35, 34, 43);
       break;
-#endif
     case ColorID::Windowtext:  // --in-content-page-color
     case ColorID::WindowForeground:
     case ColorID::TextForeground:
-#ifndef XP_WIN
     case ColorID::MozDialogtext:
     case ColorID::Fieldtext:
     case ColorID::Buttontext:  // --in-content-button-text-color (via
                                // --in-content-page-color)
     case ColorID::MozButtonhovertext:
     case ColorID::MozButtonactivetext:
-#endif
       color = NS_RGB(251, 251, 254);
       break;
     case ColorID::Graytext:  // --in-content-deemphasized-text
       color = NS_RGB(191, 191, 201);
       break;
-#ifndef XP_WIN
     case ColorID::Selecteditem:  // --in-content-primary-button-background /
                                  // --in-content-item-selected
       color = NS_RGB(0, 221, 255);
@@ -661,7 +646,6 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::MozButtonactiveface:  // --in-content-button-background-active
       color = NS_RGB(91, 91, 102);
       break;
-#endif
     case ColorID::Highlight:
       color = NS_RGBA(0, 221, 255, 153);
       break;
