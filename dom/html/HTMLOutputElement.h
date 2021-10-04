@@ -17,7 +17,7 @@ namespace dom {
 
 class FormData;
 
-class HTMLOutputElement final : public nsGenericHTMLFormElement,
+class HTMLOutputElement final : public nsGenericHTMLFormControlElement,
                                 public nsStubMutationObserver,
                                 public nsIConstraintValidation {
  public:
@@ -59,14 +59,14 @@ class HTMLOutputElement final : public nsGenericHTMLFormElement,
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLOutputElement,
-                                           nsGenericHTMLFormElement)
+                                           nsGenericHTMLFormControlElement)
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
   nsDOMTokenList* HtmlFor();
-  // nsGenericHTMLFormElement::GetForm is fine.
+
   void GetName(nsAString& aName) { GetHTMLAttr(nsGkAtoms::name, aName); }
 
   void SetName(const nsAString& aName, ErrorResult& aRv) {

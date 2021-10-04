@@ -1120,7 +1120,17 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
   mozilla::dom::HTMLFieldSetElement* mFieldSet;
 };
 
-class nsGenericHTMLFormElementWithState : public nsGenericHTMLFormElement {
+class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement {
+ public:
+  nsGenericHTMLFormControlElement(
+      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo, FormControlType);
+
+ protected:
+  virtual ~nsGenericHTMLFormControlElement();
+};
+
+class nsGenericHTMLFormElementWithState
+    : public nsGenericHTMLFormControlElement {
  public:
   nsGenericHTMLFormElementWithState(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,

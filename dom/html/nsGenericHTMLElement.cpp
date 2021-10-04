@@ -2619,10 +2619,18 @@ void nsGenericHTMLElement::ChangeEditableState(int32_t aChange) {
 
 //----------------------------------------------------------------------
 
+nsGenericHTMLFormControlElement::nsGenericHTMLFormControlElement(
+    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo, FormControlType aType)
+    : nsGenericHTMLFormElement(std::move(aNodeInfo), aType) {}
+
+nsGenericHTMLFormControlElement::~nsGenericHTMLFormControlElement() = default;
+
+//----------------------------------------------------------------------
+
 nsGenericHTMLFormElementWithState::nsGenericHTMLFormElementWithState(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     FromParser aFromParser, FormControlType aType)
-    : nsGenericHTMLFormElement(std::move(aNodeInfo), aType),
+    : nsGenericHTMLFormControlElement(std::move(aNodeInfo), aType),
       mControlNumber(!!(aFromParser & FROM_PARSER_NETWORK)
                          ? OwnerDoc()->GetNextControlNumber()
                          : -1) {
@@ -2721,7 +2729,7 @@ bool nsGenericHTMLFormElementWithState::RestoreFormControlState() {
 }
 
 void nsGenericHTMLFormElementWithState::NodeInfoChanged(Document* aOldDoc) {
-  nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
+  nsGenericHTMLFormControlElement::NodeInfoChanged(aOldDoc);
 
   // We need to regenerate the state key now we're in a new document.  Clearing
   // mControlNumber means we stop considering this control to be parser
