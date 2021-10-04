@@ -175,6 +175,8 @@ class RemoteAccessibleBase : public Accessible {
   virtual double MaxValue() const override;
   virtual double Step() const override;
 
+  virtual nsIntRect Bounds() const override;
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */
@@ -234,6 +236,7 @@ class RemoteAccessibleBase : public Accessible {
 
  protected:
   void SetParent(Derived* aParent);
+  Maybe<nsRect> RetrieveCachedBounds() const;
 
  private:
   uintptr_t mParent;

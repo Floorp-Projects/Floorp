@@ -15,6 +15,7 @@
 #include "mozilla/a11y/Platform.h"
 #include "RelationType.h"
 #include "mozilla/a11y/Role.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 
 namespace mozilla {
 namespace a11y {
@@ -879,7 +880,11 @@ Accessible* RemoteAccessible::ChildAtPoint(
   return target;
 }
 
-nsIntRect RemoteAccessible::Bounds() {
+nsIntRect RemoteAccessible::Bounds() const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::Bounds();
+  }
+
   nsIntRect rect;
   Unused << mDoc->SendExtents(mID, false, &(rect.x), &(rect.y), &(rect.width),
                               &(rect.height));

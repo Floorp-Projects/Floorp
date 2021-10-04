@@ -250,7 +250,7 @@ RemoteAccessible* FocusedChild();
 virtual Accessible* ChildAtPoint(
     int32_t aX, int32_t aY,
     LocalAccessible::EWhichChildAtPoint aWhichChild) override;
-nsIntRect Bounds();
+nsIntRect Bounds() const override;
 nsIntRect BoundsInCSSPixels();
 
 void Language(nsString& aLocale);
