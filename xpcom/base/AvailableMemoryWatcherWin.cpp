@@ -8,12 +8,10 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_browser.h"
-#include "mozilla/Unused.h"
 #include "nsAppRunner.h"
 #include "nsExceptionHandler.h"
 #include "nsICrashReporter.h"
 #include "nsIObserver.h"
-#include "nsIObserverService.h"
 #include "nsISupports.h"
 #include "nsITimer.h"
 #include "nsMemoryPressure.h"
@@ -34,8 +32,7 @@ namespace mozilla {
 // When it has, we'll stop polling and start waiting for the next
 // LowMemoryCallback(). Meanwhile, the polling may be stopped and restarted by
 // user-interaction events from the observer service.
-class nsAvailableMemoryWatcher final : public nsIObserver,
-                                       public nsITimerCallback,
+class nsAvailableMemoryWatcher final : public nsITimerCallback,
                                        public nsINamed,
                                        public nsAvailableMemoryWatcherBase {
  public:
@@ -45,12 +42,9 @@ class nsAvailableMemoryWatcher final : public nsIObserver,
   NS_DECL_NSINAMED
 
   nsAvailableMemoryWatcher();
-  nsresult Init(uint32_t aPollingInterval);
+  nsresult Init() override;
 
  private:
-  // Observer topics we subscribe to, see below.
-  static const char* const kObserverTopics[];
-
   static VOID CALLBACK LowMemoryCallback(PVOID aContext, BOOLEAN aIsTimer);
   static void RecordLowMemoryEvent();
   static bool IsCommitSpaceLow();
@@ -67,7 +61,6 @@ class nsAvailableMemoryWatcher final : public nsIObserver,
   void StopPolling();
   void StopPollingIfUserIdle(const MutexAutoLock&);
   void OnUserInteracting(const MutexAutoLock&);
-  void OnUserIdle(const MutexAutoLock&);
 
   // The publicly available methods (::Observe() and ::Notify()) are called on
   // the main thread while the ::LowMemoryCallback() method is called by an
@@ -78,7 +71,6 @@ class nsAvailableMemoryWatcher final : public nsIObserver,
   nsAutoHandle mLowMemoryHandle;
   HANDLE mWaitHandle;
   bool mPolling;
-  bool mInteracting;
 
   // Indicates whether to start a timer when user interaction is notified.
   // This flag is needed because the low-memory callback may be triggered when
@@ -92,17 +84,11 @@ class nsAvailableMemoryWatcher final : public nsIObserver,
   bool mSavedReport;
   bool mIsShutdown;
 
-  // These members are used only in the main thread.  No lock is needed.
-  bool mInitialized;
-  uint32_t mPollingInterval;
-  nsCOMPtr<nsIObserverService> mObserverSvc;
-};
+  // Members below this line are used only in the main thread.
+  // No lock is needed.
 
-const char* const nsAvailableMemoryWatcher::kObserverTopics[] = {
-    // Use this shutdown phase to make sure the instance is destroyed in GTest
-    "xpcom-shutdown",
-    "user-interaction-active",
-    "user-interaction-inactive",
+  // Don't fire a low-memory notification more often than this interval.
+  uint32_t mPollingInterval;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(nsAvailableMemoryWatcher,
@@ -113,20 +99,16 @@ nsAvailableMemoryWatcher::nsAvailableMemoryWatcher()
     : mMutex("low memory callback mutex"),
       mWaitHandle(nullptr),
       mPolling(false),
-      mInteracting(false),
       mNeedToRestartTimerOnUserInteracting(false),
       mUnderMemoryPressure(false),
       mSavedReport(false),
       mIsShutdown(false),
-      mInitialized(false),
       mPollingInterval(0) {}
 
-nsresult nsAvailableMemoryWatcher::Init(uint32_t aPollingInterval) {
-  MOZ_ASSERT(
-      NS_IsMainThread(),
-      "nsAvailableMemoryWatcher needs to be initialized in the main thread.");
-  if (mInitialized) {
-    return NS_ERROR_ALREADY_INITIALIZED;
+nsresult nsAvailableMemoryWatcher::Init() {
+  nsresult rv = nsAvailableMemoryWatcherBase::Init();
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   mTimer = NS_NewTimer();
@@ -134,21 +116,13 @@ nsresult nsAvailableMemoryWatcher::Init(uint32_t aPollingInterval) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mObserverSvc = services::GetObserverService();
-  MOZ_ASSERT(mObserverSvc);
-  mPollingInterval = aPollingInterval;
+  // Use a very short interval for GTest to verify the timer's behavior.
+  mPollingInterval = gIsGtest ? 10 : 10000;
 
   if (!RegisterMemoryResourceHandler()) {
     return NS_ERROR_FAILURE;
   }
 
-  for (auto topic : kObserverTopics) {
-    nsresult rv = mObserverSvc->AddObserver(this, topic,
-                                            /* ownsWeak */ false);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  mInitialized = true;
   return NS_OK;
 }
 
@@ -233,10 +207,7 @@ void nsAvailableMemoryWatcher::UnregisterMemoryResourceHandler() {
 
 void nsAvailableMemoryWatcher::Shutdown(const MutexAutoLock&) {
   mIsShutdown = true;
-
-  for (auto topic : kObserverTopics) {
-    Unused << mObserverSvc->RemoveObserver(this, topic);
-  }
+  mNeedToRestartTimerOnUserInteracting = false;
 
   if (mTimer) {
     mTimer->Cancel();
@@ -369,14 +340,9 @@ void nsAvailableMemoryWatcher::StopPollingIfUserIdle(const MutexAutoLock&) {
 }
 
 void nsAvailableMemoryWatcher::OnUserInteracting(const MutexAutoLock& aLock) {
-  mInteracting = true;
   if (mNeedToRestartTimerOnUserInteracting) {
     StartPollingIfUserInteracting(aLock);
   }
-}
-
-void nsAvailableMemoryWatcher::OnUserIdle(const MutexAutoLock&) {
-  mInteracting = false;
 }
 
 // Timer callback, polls the low memory resource notification to detect when
@@ -408,28 +374,25 @@ nsAvailableMemoryWatcher::GetName(nsACString& aName) {
 NS_IMETHODIMP
 nsAvailableMemoryWatcher::Observe(nsISupports* aSubject, const char* aTopic,
                                   const char16_t* aData) {
+  nsresult rv = nsAvailableMemoryWatcherBase::Observe(aSubject, aTopic, aData);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   MutexAutoLock lock(mMutex);
 
   if (strcmp(aTopic, "xpcom-shutdown") == 0) {
     Shutdown(lock);
-  } else if (strcmp(aTopic, "user-interaction-inactive") == 0) {
-    OnUserIdle(lock);
   } else if (strcmp(aTopic, "user-interaction-active") == 0) {
     OnUserInteracting(lock);
-  } else {
-    MOZ_ASSERT_UNREACHABLE("Unknown topic");
   }
 
   return NS_OK;
 }
 
 already_AddRefed<nsAvailableMemoryWatcherBase> CreateAvailableMemoryWatcher() {
-  // Don't fire a low-memory notification more often than this interval.
-  // (Use a very short interval for GTest to verify the timer's behavior)
-  const uint32_t kLowMemoryNotificationIntervalMS = gIsGtest ? 10 : 10000;
-
   RefPtr watcher(new nsAvailableMemoryWatcher);
-  if (NS_FAILED(watcher->Init(kLowMemoryNotificationIntervalMS))) {
+  if (NS_FAILED(watcher->Init())) {
     return do_AddRef(new nsAvailableMemoryWatcherBase);  // fallback
   }
   return watcher.forget();
