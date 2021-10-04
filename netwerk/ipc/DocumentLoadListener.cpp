@@ -1399,14 +1399,7 @@ void DocumentLoadListener::SerializeRedirectData(
     redirectLoadInfo =
         static_cast<mozilla::net::LoadInfo*>(channelLoadInfo.get())->Clone();
 
-    nsCOMPtr<nsIPrincipal> uriPrincipal;
-    nsIScriptSecurityManager* sm = nsContentUtils::GetSecurityManager();
-    sm->GetChannelURIPrincipal(mChannel, getter_AddRefs(uriPrincipal));
-
-    nsCOMPtr<nsIRedirectHistoryEntry> entry =
-        new nsRedirectHistoryEntry(uriPrincipal, nullptr, ""_ns);
-
-    redirectLoadInfo->AppendRedirectHistoryEntry(entry, true);
+    redirectLoadInfo->AppendRedirectHistoryEntry(mChannel, true);
   }
 
   const Maybe<ClientInfo>& reservedClientInfo =
