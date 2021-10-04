@@ -515,7 +515,7 @@ void RootAccessible::HandlePopupShownEvent(LocalAccessible* aAccessible) {
     LocalAccessible* combobox = aAccessible->LocalParent();
     if (!combobox) return;
 
-    if (combobox->IsCombobox() || combobox->IsAutoComplete()) {
+    if (combobox->IsCombobox()) {
       RefPtr<AccEvent> event =
           new AccStateChangeEvent(combobox, states::EXPANDED, true);
       nsEventShell::FireEvent(event);
@@ -601,28 +601,14 @@ void RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode) {
     }
   }
 
-  if (popup->IsAutoCompletePopup()) {
-    // No focus event for autocomplete because it's managed by
-    // DOMMenuItemInactive events.
-    if (widget->IsAutoComplete()) notifyOf = kNotifyOfState;
-
-  } else if (widget->IsCombobox()) {
+  if (widget->IsCombobox()) {
     // Fire focus for active combobox, otherwise the focus is managed by DOM
     // focus notifications. Always fire state change event.
     if (widget->IsActiveWidget()) notifyOf = kNotifyOfFocus;
     notifyOf |= kNotifyOfState;
-
   } else if (widget->IsMenuButton()) {
-    // Can be a part of autocomplete.
-    LocalAccessible* compositeWidget = widget->ContainerWidget();
-    if (compositeWidget && compositeWidget->IsAutoComplete()) {
-      widget = compositeWidget;
-      notifyOf = kNotifyOfState;
-    }
-
     // Autocomplete (like searchbar) can be inactive when popup hiddens
     notifyOf |= kNotifyOfFocus;
-
   } else if (widget == popup) {
     // Top level context menus and alerts.
     // Ignore submenus and menubar. When submenu is closed then sumbenu

@@ -369,13 +369,6 @@ uint64_t HTMLTextFieldAccessible::NativeState() const {
     return state;
   }
 
-  // Expose autocomplete states if this input is part of autocomplete widget.
-  LocalAccessible* widget = ContainerWidget();
-  if (widget && widget - IsAutoComplete()) {
-    state |= states::HASPOPUP | states::SUPPORTS_AUTOCOMPLETION;
-    return state;
-  }
-
   // Expose autocomplete state if it has associated autocomplete list.
   if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::list_)) {
     return state | states::SUPPORTS_AUTOCOMPLETION | states::HASPOPUP;
