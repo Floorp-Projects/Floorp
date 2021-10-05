@@ -1265,6 +1265,9 @@ class Document : public nsINode,
   already_AddRefed<Promise> HasStorageAccess(ErrorResult& aRv);
   already_AddRefed<Promise> RequestStorageAccess(ErrorResult& aRv);
 
+  already_AddRefed<Promise> RequestStorageAccessForOrigin(
+      const nsAString& aThirdPartyOrigin, ErrorResult& aRv);
+
   bool UseRegularPrincipal() const;
 
   /**
