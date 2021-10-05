@@ -2132,10 +2132,12 @@ class BookmarkObserverRecorder {
     MirrorLog.trace("Recording observer notifications for changed GUIDs");
     await this.db.execute(
       `SELECT b.id, b.lastModified, b.type, b.guid AS newGuid,
-              c.oldGuid, p.id AS parentId, p.guid AS parentGuid
+              c.oldGuid, p.id AS parentId, p.guid AS parentGuid,
+              gp.guid AS grandParentGuid
        FROM guidsChanged c
        JOIN moz_bookmarks b ON b.id = c.itemId
        JOIN moz_bookmarks p ON p.id = b.parent
+       LEFT JOIN moz_bookmarks gp ON gp.id = p.parent
        ${this.orderBy("c.level", "b.parent", "b.position")}`,
       null,
       (row, cancel) => {
@@ -2151,6 +2153,7 @@ class BookmarkObserverRecorder {
           oldGuid: row.getResultByName("oldGuid"),
           parentId: row.getResultByName("parentId"),
           parentGuid: row.getResultByName("parentGuid"),
+          grandParentGuid: row.getResultByName("grandParentGuid"),
         };
         this.noteGuidChanged(info);
       }
@@ -2311,6 +2314,7 @@ class BookmarkObserverRecorder {
 
   noteGuidChanged(info) {
     PlacesUtils.invalidateCachedGuidFor(info.id);
+
     this.guidChangedArgs.push([
       info.id,
       "guid",
@@ -2324,6 +2328,21 @@ class BookmarkObserverRecorder {
       info.oldGuid,
       PlacesUtils.bookmarks.SOURCES.SYNC,
     ]);
+
+    this.placesEvents.push(
+      new PlacesBookmarkGuid({
+        id: info.id,
+        itemType: info.type,
+        url: info.urlHref,
+        guid: info.newGuid,
+        parentGuid: info.parentGuid,
+        lastModified: info.lastModified,
+        source: PlacesUtils.bookmarks.SOURCES.SYNC,
+        isTagging:
+          info.parentGuid === PlacesUtils.bookmarks.tagsGuid ||
+          info.grandParentGuid === PlacesUtils.bookmarks.tagsGuid,
+      })
+    );
   }
 
   noteItemMoved(info) {
