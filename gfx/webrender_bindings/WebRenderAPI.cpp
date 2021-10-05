@@ -1660,6 +1660,20 @@ already_AddRefed<gfxContext> DisplayListBuilder::GetTextContext(
   return tmp.forget();
 }
 
+void DisplayListBuilder::PushInheritedClipChain(
+    nsDisplayListBuilder* aBuilder, const DisplayItemClipChain* aClipChain) {
+  if (!aClipChain || mInheritedClipChain == aClipChain) {
+    return;
+  }
+  if (!mInheritedClipChain) {
+    mInheritedClipChain = aClipChain;
+    return;
+  }
+
+  mInheritedClipChain =
+      aBuilder->CreateClipChainIntersection(mInheritedClipChain, aClipChain);
+}
+
 }  // namespace wr
 }  // namespace mozilla
 
