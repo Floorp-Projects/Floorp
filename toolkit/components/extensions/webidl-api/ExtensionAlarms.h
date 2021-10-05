@@ -30,6 +30,7 @@ class ExtensionAlarms final : public nsISupports,
                               public nsWrapperCache,
                               public ExtensionAPINamespace {
   nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<ExtensionBrowser> mExtensionBrowser;
   RefPtr<ExtensionEventManager> mOnAlarmEventMgr;
 
   ~ExtensionAlarms() = default;
@@ -40,6 +41,10 @@ class ExtensionAlarms final : public nsISupports,
 
   // ExtensionAPIBase methods
   nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
+
+  ExtensionBrowser* GetExtensionBrowser() const override {
+    return mExtensionBrowser;
+  }
 
   nsString GetAPINamespace() const override { return u"alarms"_ns; }
 

@@ -16,7 +16,7 @@ namespace extensions {
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionMockAPI);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionMockAPI)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionMockAPI, mGlobal,
-                                      mOnTestEventMgr);
+                                      mExtensionBrowser, mOnTestEventMgr);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionMockAPI)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -25,8 +25,9 @@ NS_INTERFACE_MAP_END
 
 ExtensionMockAPI::ExtensionMockAPI(nsIGlobalObject* aGlobal,
                                    ExtensionBrowser* aExtensionBrowser)
-    : mGlobal(aGlobal) {
+    : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
+  MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
 }
 
 /* static */

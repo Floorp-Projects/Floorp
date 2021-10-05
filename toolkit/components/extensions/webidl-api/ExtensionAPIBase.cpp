@@ -11,9 +11,11 @@
 #include "ExtensionAPICallFunctionNoReturn.h"
 #include "ExtensionAPICallSyncFunction.h"
 #include "ExtensionAPIGetProperty.h"
+#include "ExtensionBrowser.h"
 #include "ExtensionEventManager.h"
 #include "ExtensionPort.h"
 
+#include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/FunctionBinding.h"
@@ -29,12 +31,14 @@ NS_IMPL_ISUPPORTS0(ChromeCompatCallbackHandler)
 
 // static
 void ChromeCompatCallbackHandler::Create(
-    dom::Promise* aPromise, const RefPtr<dom::Function>& aCallback) {
+    ExtensionBrowser* aExtensionBrowser, dom::Promise* aPromise,
+    const RefPtr<dom::Function>& aCallback) {
   MOZ_ASSERT(aPromise);
+  MOZ_ASSERT(aExtensionBrowser);
   MOZ_ASSERT(aCallback);
 
   RefPtr<ChromeCompatCallbackHandler> handler =
-      new ChromeCompatCallbackHandler(aCallback);
+      new ChromeCompatCallbackHandler(aExtensionBrowser, aCallback);
 
   aPromise->AppendNativeHandler(handler);
 }
@@ -53,7 +57,37 @@ void ChromeCompatCallbackHandler::RejectedCallback(
   // Call the chrome-compatible callback without any parameter, the errors
   // isn't passed to the callback as a parameter but the extension will be
   // able to retrieve it from chrome.runtime.lastError.
+  mExtensionBrowser->SetLastError(aValue);
   MOZ_KnownLive(mCallback)->Call({}, &retval, rv);
+  if (mExtensionBrowser->ClearLastError()) {
+    ReportUncheckedLastError(aCx, aValue);
+  }
+}
+
+void ChromeCompatCallbackHandler::ReportUncheckedLastError(
+    JSContext* aCx, JS::Handle<JS::Value> aValue) {
+  nsCString sourceSpec;
+  uint32_t line = 0;
+  uint32_t column = 0;
+  nsString valueString;
+
+  nsContentUtils::ExtractErrorValues(aCx, aValue, sourceSpec, &line, &column,
+                                     valueString);
+
+  nsTArray<nsString> params;
+  params.AppendElement(valueString);
+
+  RefPtr<ConsoleReportCollector> reporter = new ConsoleReportCollector();
+  reporter->AddConsoleReport(nsIScriptError::errorFlag, "content javascript"_ns,
+                             nsContentUtils::eDOM_PROPERTIES, sourceSpec, line,
+                             column, "WebExtensionUncheckedLastError"_ns,
+                             params);
+
+  dom::WorkerPrivate* workerPrivate = dom::GetWorkerPrivateFromContext(aCx);
+  RefPtr<Runnable> r = NS_NewRunnableFunction(
+      "ChromeCompatCallbackHandler::ReportUncheckedLastError",
+      [reporter]() { reporter->FlushReportsToConsole(0); });
+  workerPrivate->DispatchToMainThread(r.forget());
 }
 
 // WebExtensionStub methods shared between multiple API namespaces.
@@ -138,8 +172,8 @@ already_AddRefed<ExtensionPort> ExtensionAPIBase::CallWebExtMethodReturnsPort(
   }
 
   IgnoredErrorResult rv;
-  RefPtr<ExtensionPort> port =
-      ExtensionPort::Create(GetGlobalObject(), apiResult, rv);
+  RefPtr<ExtensionPort> port = ExtensionPort::Create(
+      GetGlobalObject(), GetExtensionBrowser(), apiResult, rv);
   if (NS_WARN_IF(rv.Failed())) {
     // ExtensionPort::Create doesn't throw the js exception with the generic
     // error message as the "api request forwarding" helper classes.
@@ -173,7 +207,8 @@ void ExtensionAPIBase::CallWebExtMethodAsyncInternal(
   // The async method has been called with the chrome-compatible callback
   // convention.
   if (aCallback) {
-    ChromeCompatCallbackHandler::Create(domPromise, aCallback);
+    ChromeCompatCallbackHandler::Create(GetExtensionBrowser(), domPromise,
+                                        aCallback);
     return;
   }
 
@@ -261,8 +296,8 @@ void ExtensionAPIBase::GetWebExtPropertyAsJSValue(
 already_AddRefed<ExtensionEventManager> ExtensionAPIBase::CreateEventManager(
     const nsAString& aEventName) {
   RefPtr<ExtensionEventManager> eventMgr = new ExtensionEventManager(
-      GetGlobalObject(), GetAPINamespace(), aEventName, GetAPIObjectType(),
-      GetAPIObjectId());
+      GetGlobalObject(), GetExtensionBrowser(), GetAPINamespace(), aEventName,
+      GetAPIObjectType(), GetAPIObjectId());
   return eventMgr.forget();
 }
 

@@ -46,8 +46,9 @@ class ExtensionEventListener final : public mozIExtensionEventListener {
   using CallbackType = ListenerCallOptions::CallbackType;
 
   static already_AddRefed<ExtensionEventListener> Create(
-      nsIGlobalObject* aGlobal, dom::Function* aCallback,
-      CleanupCallback&& aCleanupCallback, ErrorResult& aRv);
+      nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
+      dom::Function* aCallback, CleanupCallback&& aCleanupCallback,
+      ErrorResult& aRv);
 
   static bool IsPromise(JSContext* aCx, JS::Handle<JS::Value> aValue) {
     if (!aValue.isObject()) {
@@ -67,6 +68,8 @@ class ExtensionEventListener final : public mozIExtensionEventListener {
     return global;
   }
 
+  ExtensionBrowser* GetExtensionBrowser() const { return mExtensionBrowser; }
+
   void Cleanup() {
     if (mWorkerRef) {
       MutexAutoLock lock(mMutex);
@@ -77,13 +80,21 @@ class ExtensionEventListener final : public mozIExtensionEventListener {
 
     mGlobal = nullptr;
     mCallback = nullptr;
+    mExtensionBrowser = nullptr;
   }
 
  private:
-  ExtensionEventListener(nsIGlobalObject* aGlobal, dom::Function* aCallback)
+  ExtensionEventListener(nsIGlobalObject* aGlobal,
+                         ExtensionBrowser* aExtensionBrowser,
+                         dom::Function* aCallback)
       : mGlobal(do_GetWeakReference(aGlobal)),
+        mExtensionBrowser(aExtensionBrowser),
         mCallback(aCallback),
-        mMutex("ExtensionEventListener::mMutex"){};
+        mMutex("ExtensionEventListener::mMutex") {
+    MOZ_ASSERT(aGlobal);
+    MOZ_ASSERT(aExtensionBrowser);
+    MOZ_ASSERT(aCallback);
+  };
 
   static UniquePtr<dom::StructuredCloneHolder> SerializeCallArguments(
       const nsTArray<JS::Value>& aArgs, JSContext* aCx, ErrorResult& aRv);
@@ -95,6 +106,7 @@ class ExtensionEventListener final : public mozIExtensionEventListener {
 
   // Accessed only on the owning thread.
   nsWeakPtr mGlobal;
+  RefPtr<ExtensionBrowser> mExtensionBrowser;
   RefPtr<dom::Function> mCallback;
 
   // Used to make sure we are not going to release the

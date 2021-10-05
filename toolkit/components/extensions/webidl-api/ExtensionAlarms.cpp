@@ -15,7 +15,7 @@ namespace extensions {
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionAlarms);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionAlarms)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionAlarms, mGlobal,
-                                      mOnAlarmEventMgr);
+                                      mExtensionBrowser, mOnAlarmEventMgr);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionAlarms)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -24,8 +24,9 @@ NS_INTERFACE_MAP_END
 
 ExtensionAlarms::ExtensionAlarms(nsIGlobalObject* aGlobal,
                                  ExtensionBrowser* aExtensionBrowser)
-    : mGlobal(aGlobal) {
+    : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
+  MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
 }
 
 /* static */

@@ -38,6 +38,7 @@ class ExtensionEventManager final : public nsISupports,
                                     public nsWrapperCache,
                                     public ExtensionAPIBase {
   nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<ExtensionBrowser> mExtensionBrowser;
   nsString mAPINamespace;
   nsString mEventName;
   nsString mAPIObjectType;
@@ -57,6 +58,9 @@ class ExtensionEventManager final : public nsISupports,
  protected:
   // ExtensionAPIBase methods
   nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
+  ExtensionBrowser* GetExtensionBrowser() const override {
+    return mExtensionBrowser;
+  }
 
   nsString GetAPINamespace() const override { return mAPINamespace; }
 
@@ -65,7 +69,9 @@ class ExtensionEventManager final : public nsISupports,
   nsString GetAPIObjectId() const override { return mAPIObjectId; }
 
  public:
-  ExtensionEventManager(nsIGlobalObject* aGlobal, const nsAString& aNamespace,
+  ExtensionEventManager(nsIGlobalObject* aGlobal,
+                        ExtensionBrowser* aExtensionBrowser,
+                        const nsAString& aNamespace,
                         const nsAString& aEventName,
                         const nsAString& aObjectType = VoidString(),
                         const nsAString& aObjectId = VoidString());
