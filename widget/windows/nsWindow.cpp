@@ -7518,7 +7518,7 @@ bool nsWindow::AutoErase(HDC dc) { return false; }
 bool nsWindow::IsPopup() { return mWindowType == eWindowType_popup; }
 
 bool nsWindow::ShouldUseOffMainThreadCompositing() {
-  if (IsSmallPopup()) {
+  if (mWindowType == eWindowType_popup && mPopupType == ePopupTypeTooltip) {
     return false;
   }
 
