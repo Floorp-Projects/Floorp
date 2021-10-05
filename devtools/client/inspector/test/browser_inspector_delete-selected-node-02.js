@@ -67,11 +67,14 @@ add_task(async function() {
     await selectNodeInFrames(["#deleteIframe", "#deleteInIframe"], inspector);
 
     info("Deleting parent iframe node via javascript.");
-    const iframe = await getNodeFront("#deleteIframe", inspector);
-    await inspector.walker.removeNode(iframe);
+    const onInspectorUpdated = inspector.once("inspector-updated");
+
+    SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+      content.document.querySelector("iframe#deleteIframe").remove();
+    });
 
     info("Waiting for inspector to update.");
-    await inspector.once("inspector-updated");
+    await onInspectorUpdated;
 
     info("Inspector updated, performing checks.");
     await assertNodeSelectedAndPanelsUpdated("body", "body");
