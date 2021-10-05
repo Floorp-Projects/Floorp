@@ -1603,6 +1603,10 @@ parent:
 
     async StoreUserInteractionAsPermission(Principal aPrincipal);
 
+    async AsyncShouldAllowAccessFor(MaybeDiscardedBrowsingContext aContext,
+                                    Principal aPrincipal)
+          returns (bool allowed, uint32_t rejectReason);
+
    /**
     * When media element's controlled state changed in the content process, we
     * have to notify the chrome process in order to update the status of the

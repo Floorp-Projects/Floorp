@@ -70,6 +70,11 @@ class ContentBlocking final {
   static bool ShouldAllowAccessFor(nsIPrincipal* aPrincipal,
                                    nsICookieJarSettings* aCookieJarSettings);
 
+  typedef MozPromise<nsresult, uint32_t, true> AsyncShouldAllowAccessForPromise;
+  [[nodiscard]] static RefPtr<AsyncShouldAllowAccessForPromise>
+  AsyncShouldAllowAccessFor(dom::BrowsingContext* aBrowsingContext,
+                            nsIPrincipal* aPrincipal);
+
   enum StorageAccessPromptChoices { eAllow, eAllowAutoGrant };
 
   // Grant the permission for aOrigin to have access to the first party storage.

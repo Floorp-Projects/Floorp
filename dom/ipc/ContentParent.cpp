@@ -6414,6 +6414,28 @@ mozilla::ipc::IPCResult ContentParent::RecvStoreUserInteractionAsPermission(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvAsyncShouldAllowAccessFor(
+    const MaybeDiscarded<BrowsingContext>& aTopContext,
+    const Principal& aPrincipal,
+    const AsyncShouldAllowAccessForResolver&& aResolver) {
+  if (aTopContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
+  ContentBlocking::AsyncShouldAllowAccessFor(aTopContext.get_canonical(),
+                                             aPrincipal)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [aResolver](ContentBlocking::AsyncShouldAllowAccessForPromise::
+                             ResolveOrRejectValue&& aValue) {
+               bool allowed = aValue.IsResolve();
+
+               aResolver(Tuple<const bool&, const uint32_t&>(
+                   allowed, allowed ? 0 : aValue.RejectValue()));
+             });
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaPlaybackChanged(
     const MaybeDiscarded<BrowsingContext>& aContext,
     MediaPlaybackState aState) {
