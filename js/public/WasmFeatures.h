@@ -45,7 +45,8 @@
 //   a. Use conditionally compiled flag
 //   b. Set value to 'true' for default features, 'false' or @IS_NIGHTLY_BUILD@
 //      for experimental features.
-//
+// 5. [fuzzing] Add the feature to gluesmith/src/lib.rs, if wasm-smith has
+//    support for it.
 
 #ifdef ENABLE_WASM_SIMD
 #  define WASM_SIMD_ENABLED 1
