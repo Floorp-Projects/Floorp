@@ -185,8 +185,6 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   static DPIRatio GetDPIRatioForScrollbarPart(nsPresContext*);
   static DPIRatio GetDPIRatio(nsPresContext*, StyleAppearance);
   static DPIRatio GetDPIRatio(nsIFrame*, StyleAppearance);
-  static bool IsDateTimeResetButton(nsIFrame*);
-  static bool IsColorPickerButton(nsIFrame*);
 
   // Whether we should use system colors (for high contrast mode).
   enum class UseSystemColors : bool { No, Yes };
