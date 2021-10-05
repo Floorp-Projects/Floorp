@@ -473,7 +473,7 @@ test_only.ipc:
     range_max: 2147483646
     bucket_count: 10
     histogram_type: linear
-    telemetry_mirror: TELEMETRY_TEST_LINEAR
+    telemetry_mirror: TELEMETRY_TEST_MIRROR_FOR_CUSTOM
   a_string_list:
     type: string_list
     description: |
@@ -550,7 +550,6 @@ test_only.ipc:
       - store1
     no_lint:
       - COMMON_PREFIX
-    telemetry_mirror: TelemetryTest_MirrorWithExtra_Object1
   no_extra_event:
     type: event
     description: |
