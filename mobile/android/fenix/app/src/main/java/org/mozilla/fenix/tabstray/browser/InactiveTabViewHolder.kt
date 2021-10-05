@@ -38,6 +38,8 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
             itemView.apply {
                 isActivated = InactiveTabsState.isExpanded
 
+                correctHeaderBorder(isActivated)
+
                 setOnClickListener {
                     val newState = !it.isActivated
 
@@ -46,16 +48,22 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
                     it.isActivated = newState
                     binding.chevron.rotation = ROTATION_DEGREE
 
-                    // When the header is collapsed we use its bottom border instead of the footer's
-                    binding.inactiveHeaderBorder.updatePadding(
-                        bottom = binding.root.context.dpToPx(if (it.isActivated) 0f else 1f)
-                    )
+                    correctHeaderBorder(isActivated)
                 }
 
                 binding.delete.setOnClickListener {
                     tabsTrayInteractor.onDeleteInactiveTabs()
                 }
             }
+        }
+
+        /**
+         * When the header is collapsed we use its bottom border instead of the footer's
+         */
+        private fun correctHeaderBorder(isActivated: Boolean) {
+            binding.inactiveHeaderBorder.updatePadding(
+                bottom = binding.root.context.dpToPx(if (isActivated) 0f else 1f)
+            )
         }
 
         companion object {
