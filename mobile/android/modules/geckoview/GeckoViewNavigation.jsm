@@ -557,6 +557,18 @@ class GeckoViewNavigation extends GeckoViewModule {
     this.browser.removeProgressListener(this.progressFilter);
   }
 
+  serializePermission({ type, capability, principal }) {
+    const { URI, originAttributes, privateBrowsingId } = principal;
+    return {
+      uri: Services.io.createExposableURI(URI).displaySpec,
+      principal: E10SUtils.serializePrincipal(principal),
+      perm: type,
+      value: capability,
+      contextId: originAttributes.geckoViewSessionContextId,
+      privateMode: privateBrowsingId != 0,
+    };
+  }
+
   // WebProgress event handler.
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
     debug`onLocationChange`;
@@ -576,21 +588,34 @@ class GeckoViewNavigation extends GeckoViewModule {
       return;
     }
 
+    const { contentPrincipal } = this.browser;
     let permissions;
-    if (this.browser.contentPrincipal) {
-      const rawPerms = Services.perms.getAllForPrincipal(
-        this.browser.contentPrincipal
-      );
-      permissions = rawPerms.map(p => {
-        return {
-          uri: Services.io.createExposableURI(p.principal.URI).displaySpec,
-          principal: E10SUtils.serializePrincipal(p.principal),
-          perm: p.type,
-          value: p.capability,
-          contextId: p.principal.originAttributes.geckoViewSessionContextId,
-          privateMode: p.principal.privateBrowsingId != 0,
-        };
-      });
+    if (contentPrincipal) {
+      const rawPerms = Services.perms.getAllForPrincipal(contentPrincipal);
+      permissions = rawPerms.map(this.serializePermission);
+
+      // The only way for apps to set permissions is to get hold of an existing
+      // permission and change its value.
+      // Tracking protection exception permissions are only present when
+      // explicitly added by the app, so if one is not present, we need to send
+      // a DENY_ACTION tracking protection permission so that apps can use it
+      // to add tracking protection exceptions.
+      const trackingProtectionPermission =
+        contentPrincipal.privateBrowsingId == 0
+          ? "trackingprotection"
+          : "trackingprotection-pb";
+      if (
+        contentPrincipal.isContentPrincipal &&
+        rawPerms.findIndex(p => p.type == trackingProtectionPermission) == -1
+      ) {
+        permissions.push(
+          this.serializePermission({
+            type: trackingProtectionPermission,
+            capability: Ci.nsIPermissionManager.DENY_ACTION,
+            principal: contentPrincipal,
+          })
+        );
+      }
     }
 
     const message = {

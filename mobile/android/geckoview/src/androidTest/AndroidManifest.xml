@@ -49,6 +49,8 @@
         <service android:name=".TestRuntimeService$instance0" android:enabled="true" android:exported="false" android:process=":runtime0" />
         <service android:name=".TestRuntimeService$instance1" android:enabled="true" android:exported="false" android:process=":runtime1" />
 
+        <service android:name=".TrackingPermissionService" android:enabled="true" android:exported="false" android:process=":tp" />
+
         <!-- This is used to run xpcshell tests -->
         <service android:name=".XpcshellTestRunnerService$i0" android:enabled="true" android:exported="true" android:process=":xpcshell0"/>
         <service android:name=".XpcshellTestRunnerService$i1" android:enabled="true" android:exported="true" android:process=":xpcshell1"/>

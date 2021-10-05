@@ -277,11 +277,44 @@ public final class StorageController {
     /**
      * Set a new value for an existing permission.
      *
+     * Note: in private browsing, this value will only be cleared at the end of the session
+     * to add permanent permissions in private browsing, you can use
+     * {@link #setPrivateBrowsingPermanentPermission}.
+     *
      * @param perm A {@link ContentPermission} that you wish to update the value of.
      * @param value The new value for the permission.
      */
     @AnyThread
-    public void setPermission(final @NonNull ContentPermission perm, final @ContentPermission.Value int value) {
+    public void setPermission(
+            final @NonNull ContentPermission perm,
+            final @ContentPermission.Value int value) {
+        setPermissionInternal(perm, value, /* allowPermanentPrivateBrowsing */ false);
+    }
+
+    /**
+     * Set a permanent value for a permission in a private browsing session.
+     *
+     * Normally permissions in private browsing are cleared at the end of the session.
+     * This method allows you to set a permanent permission bypassing this behavior.
+     *
+     * Note: permanent permissions in private browsing are web discoverable and might
+     * make the user more easily trackable.
+     *
+     * @see #setPermission
+     * @param perm A {@link ContentPermission} that you wish to update the value of.
+     * @param value The new value for the permission.
+     */
+    @AnyThread
+    public void setPrivateBrowsingPermanentPermission(
+            final @NonNull ContentPermission perm,
+            final @ContentPermission.Value int value) {
+        setPermissionInternal(perm, value, /* allowPermanentPrivateBrowsing */ true);
+    }
+
+    private void setPermissionInternal(
+            final @NonNull ContentPermission perm,
+            final @ContentPermission.Value int value,
+            final boolean allowPermanentPrivateBrowsing) {
         if (perm.permission == GeckoSession.PermissionDelegate.PERMISSION_TRACKING &&
                 value == ContentPermission.VALUE_PROMPT) {
             Log.w(LOGTAG, "Cannot set a tracking permission to VALUE_PROMPT, aborting.");
@@ -289,6 +322,7 @@ public final class StorageController {
         }
         final GeckoBundle msg = perm.toGeckoBundle();
         msg.putInt("newValue", value);
+        msg.putBoolean("allowPermanentPrivateBrowsing", allowPermanentPrivateBrowsing);
         EventDispatcher.getInstance().dispatch("GeckoView:SetPermission", msg);
     }
 
