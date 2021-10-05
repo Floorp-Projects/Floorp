@@ -1,13 +1,13 @@
+use crate::{consumer::Consumer, producer::Producer};
 use alloc::{sync::Arc, vec::Vec};
+use cache_padded::CachePadded;
 use core::{
     cell::UnsafeCell,
     cmp::min,
-    mem::{self, MaybeUninit},
+    mem::MaybeUninit,
     ptr::{self, copy},
     sync::atomic::{AtomicUsize, Ordering},
 };
-use cache_padded::CachePadded;
-use crate::{consumer::Consumer, producer::Producer};
 
 pub(crate) struct SharedVec<T: Sized> {
     cell: UnsafeCell<Vec<T>>,
@@ -102,7 +102,7 @@ impl<T: Sized> Drop for RingBuffer<T> {
         };
 
         let drop = |elem_ref: &mut MaybeUninit<T>| unsafe {
-            mem::replace(elem_ref, MaybeUninit::uninit()).assume_init();
+            elem_ref.as_ptr().read();
         };
         for elem in data[slices.0].iter_mut() {
             drop(elem);

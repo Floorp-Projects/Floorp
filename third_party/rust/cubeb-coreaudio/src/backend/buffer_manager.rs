@@ -2,20 +2,13 @@ use std::fmt;
 use std::os::raw::c_void;
 use std::slice;
 
-use cubeb_backend::SampleFormat;
+use cubeb_backend::{SampleFormat, StreamParams};
 
 use super::ringbuf::RingBuffer;
 
 use self::LinearInputBuffer::*;
 use self::RingBufferConsumer::*;
 use self::RingBufferProducer::*;
-
-// When running duplex callbacks, the input data is fed to a ring buffer, and then later copied to
-// a linear piece of memory is used to hold the input samples, so that they are passed to the audio
-// callback that delivers it to the callees. Their size depends on the buffer size requested
-// initially.  This is to be tuned when changing tlength and fragsize, but this value works for
-// now.
-const INPUT_BUFFER_CAPACITY: usize = 4096;
 
 pub enum RingBufferConsumer {
     IntegerRingBufferConsumer(ringbuf::Consumer<i16>),
@@ -41,25 +34,29 @@ pub struct BufferManager {
 impl BufferManager {
     // When opening a duplex stream, the sample-spec are guaranteed to match. It's ok to have
     // either the input or output sample-spec here.
-    pub fn new(format: SampleFormat) -> BufferManager {
+    pub fn new(params: &StreamParams, input_buffer_size_frames: u32) -> BufferManager {
+        let format = params.format();
+        let channel_count = params.channels();
+        // Multiply by two for good measure.
+        let buffer_element_count = (channel_count * input_buffer_size_frames * 2) as usize;
         if format == SampleFormat::S16LE || format == SampleFormat::S16BE {
-            let ring = RingBuffer::<i16>::new(INPUT_BUFFER_CAPACITY);
+            let ring = RingBuffer::<i16>::new(buffer_element_count);
             let (prod, cons) = ring.split();
             BufferManager {
                 producer: IntegerRingBufferProducer(prod),
                 consumer: IntegerRingBufferConsumer(cons),
                 linear_input_buffer: IntegerLinearInputBuffer(Vec::<i16>::with_capacity(
-                    INPUT_BUFFER_CAPACITY,
+                    buffer_element_count,
                 )),
             }
         } else {
-            let ring = RingBuffer::<f32>::new(INPUT_BUFFER_CAPACITY);
+            let ring = RingBuffer::<f32>::new(buffer_element_count);
             let (prod, cons) = ring.split();
             BufferManager {
                 producer: FloatRingBufferProducer(prod),
                 consumer: FloatRingBufferConsumer(cons),
                 linear_input_buffer: FloatLinearInputBuffer(Vec::<f32>::with_capacity(
-                    INPUT_BUFFER_CAPACITY,
+                    buffer_element_count,
                 )),
             }
         }
@@ -88,10 +85,10 @@ impl BufferManager {
     fn pull_data(&mut self, input_data: *mut c_void, needed_samples: usize) {
         match &mut self.consumer {
             IntegerRingBufferConsumer(p) => {
-                let mut input: &mut [i16] = unsafe {
+                let input: &mut [i16] = unsafe {
                     slice::from_raw_parts_mut::<i16>(input_data as *mut i16, needed_samples)
                 };
-                let read = p.pop_slice(&mut input);
+                let read = p.pop_slice(input);
                 if read < needed_samples {
                     for i in 0..(needed_samples - read) {
                         input[read + i] = 0;
@@ -99,10 +96,10 @@ impl BufferManager {
                 }
             }
             FloatRingBufferConsumer(p) => {
-                let mut input: &mut [f32] = unsafe {
+                let input: &mut [f32] = unsafe {
                     slice::from_raw_parts_mut::<f32>(input_data as *mut f32, needed_samples)
                 };
-                let read = p.pop_slice(&mut input);
+                let read = p.pop_slice(input);
                 if read < needed_samples {
                     for i in 0..(needed_samples - read) {
                         input[read + i] = 0.0;
@@ -139,17 +136,13 @@ impl BufferManager {
                 let available = c.len();
                 assert!(available >= final_size);
                 let to_pop = available - final_size;
-                let mut buffer = [0_i16; INPUT_BUFFER_CAPACITY];
-                let mut slice_to_pop = buffer.split_at_mut(to_pop);
-                c.pop_slice(&mut slice_to_pop.0);
+                c.discard(to_pop);
             }
             FloatRingBufferConsumer(c) => {
                 let available = c.len();
                 assert!(available >= final_size);
                 let to_pop = available - final_size;
-                let mut buffer = [0 as f32; INPUT_BUFFER_CAPACITY];
-                let mut slice_to_pop = buffer.split_at_mut(to_pop);
-                c.pop_slice(&mut slice_to_pop.0);
+                c.discard(to_pop);
             }
         }
     }
