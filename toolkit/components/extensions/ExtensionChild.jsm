@@ -720,9 +720,10 @@ class ChildLocalAPIImplementation extends LocalAPIImplementation {
 }
 
 // We create one instance of this class for every extension context that
-// needs to use remote APIs. It uses the message manager to communicate
-// with the ParentAPIManager singleton in ExtensionParent.jsm. It
-// handles asynchronous function calls as well as event listeners.
+// needs to use remote APIs. It uses the the JSWindowActor and
+// JSProcessActor Conduits actors (see ConduitsChild.jsm) to communicate
+// with the ParentAPIManager singleton in ExtensionParent.jsm.
+// It handles asynchronous function calls as well as event listeners.
 class ChildAPIManager {
   constructor(context, messageManager, localAPICan, contextData) {
     this.context = context;
@@ -971,8 +972,330 @@ class ChildAPIManager {
   }
 }
 
+/**
+ * APIImplementation subclass specialized for handling mozIExtensionAPIRequests
+ * originated from webidl bindings.
+ *
+ * Provides a createListenerForAPIRequest method which is used by
+ * WebIDLChildAPIManager to retrieve an API event specific wrapper
+ * for the mozIExtensionEventListener for the API events that needs
+ * special handling (e.g. runtime.onConnect).
+ *
+ * createListenerForAPIRequest delegates to the API event the creation
+ * of the special event listener wrappers, the EventManager api objects
+ * for the events that needs special wrapper are expected to provide
+ * a method with the same name.
+ */
+class ChildLocalWebIDLAPIImplementation extends ChildLocalAPIImplementation {
+  constructor(pathObj, namespace, name, childApiManager) {
+    super(pathObj, namespace, name, childApiManager);
+    this.childApiManager = childApiManager;
+  }
+
+  createListenerForAPIRequest(request) {
+    return this.pathObj[this.name].createListenerForAPIRequest?.(request);
+  }
+
+  setProperty() {
+    // mozIExtensionAPIRequest doesn't support this requestType at the moment,
+    // setting a pref would just replace the previous value on the wrapper
+    // object living in the owner thread.
+    // To be implemented if we have an actual use case where that is needed.
+    throw new Error("Unexpected call to setProperty");
+  }
+
+  hasListener(listener) {
+    // hasListener is implemented in C++ by ExtensionEventManager, and so
+    // a call to this method is unexpected.
+    throw new Error("Unexpected call to hasListener");
+  }
+}
+
+/**
+ * APIImplementation subclass specialized for handling API requests related
+ * to an API Object type.
+ *
+ * Retrieving the apiObject instance is delegated internally to the
+ * ExtensionAPI subclass that implements the request apiNamespace,
+ * through an optional getAPIObjectForRequest method expected to be
+ * available on the ExtensionAPI class.
+ */
+class ChildWebIDLObjectTypeImplementation extends ChildLocalWebIDLAPIImplementation {
+  constructor(request, childApiManager) {
+    const { apiNamespace, apiName, apiObjectType, apiObjectId } = request;
+    const api = childApiManager.getExtensionAPIInstance(apiNamespace);
+    const pathObj = api.getAPIObjectForRequest?.(
+      childApiManager.context,
+      request
+    );
+    if (!pathObj) {
+      throw new Error(`apiObject instance not found for ${request}`);
+    }
+    super(pathObj, apiNamespace, apiName, childApiManager);
+    this.fullname = `${apiNamespace}.${apiObjectType}(${apiObjectId}).${apiName}`;
+  }
+}
+
+/**
+ * A ChildAPIManager subclass specialized for handling mozIExtensionAPIRequest
+ * originated from the WebIDL bindings.
+ *
+ * Currently used only for the extension contexts related to the background
+ * service worker.
+ */
+class WebIDLChildAPIManager extends ChildAPIManager {
+  constructor(...args) {
+    super(...args);
+    // Map<apiPathToEventString, WeakMap<nsIExtensionEventListener, Function>>
+    //
+    // apiPathToEventString is a string that represents the full API path
+    // related to the event name (e.g. "runtime.onConnect", or "runtime.Port.onMessage")
+    this.eventListenerWrappers = new DefaultMap(() => new WeakMap());
+  }
+
+  getImplementation(namespace, name) {
+    this.apiCan.findAPIPath(`${namespace}.${name}`);
+    let obj = this.apiCan.findAPIPath(namespace);
+
+    if (obj && name in obj) {
+      return new ChildLocalWebIDLAPIImplementation(obj, namespace, name, this);
+    }
+
+    return this.getFallbackImplementation(namespace, name);
+  }
+
+  getImplementationForRequest(request) {
+    const { apiNamespace, apiName, apiObjectType } = request;
+    if (apiObjectType) {
+      return new ChildWebIDLObjectTypeImplementation(request, this);
+    }
+    return this.getImplementation(apiNamespace, apiName);
+  }
+
+  /**
+   * Handles an ExtensionAPIRequest originated by the Extension APIs WebIDL bindings.
+   *
+   * @param {mozIExtensionAPIRequest} request
+   *        The object that represents the API request received
+   *        (including arguments, an event listener wrapper etc)
+   *
+   * @returns {mozIExtensionAPIRequestResult}
+   *          Result for the API request, either a value to be returned
+   *          (which has to be a value that can be structure cloned
+   *          if the request was originated from the worker thread) or
+   *          an error to raise to the extension code.
+   */
+  handleWebIDLAPIRequest(request) {
+    try {
+      const impl = this.getImplementationForRequest(request);
+      let result;
+      this.context.withAPIRequest(request, () => {
+        if (impl instanceof ProxyAPIImplementation) {
+          result = this.handleForProxyAPIImplementation(request, impl);
+        } else {
+          result = this.callAPIImplementation(request, impl);
+        }
+      });
+
+      return {
+        type: Ci.mozIExtensionAPIRequestResult.RETURN_VALUE,
+        value: result,
+      };
+    } catch (error) {
+      return this.handleExtensionError(error);
+    }
+  }
+
+  /**
+   * Convert an error raised while handling an API request,
+   * into the expected mozIExtensionAPIRequestResult.
+   *
+   * @param {Error | WorkerExtensionError} error
+   * @returns {mozIExtensionAPIRequestResult}
+   */
+
+  handleExtensionError(error) {
+    // Propagate an extension error to the caller on the worker thread.
+    if (error instanceof this.context.Error) {
+      return {
+        type: Ci.mozIExtensionAPIRequestResult.EXTENSION_ERROR,
+        value: error,
+      };
+    }
+
+    // Otherwise just log it and throw a generic error.
+    Cu.reportError(error);
+    return {
+      type: Ci.mozIExtensionAPIRequestResult.EXTENSION_ERROR,
+      value: new this.context.Error("An unexpected error occurred"),
+    };
+  }
+
+  /**
+   * Handle the given mozIExtensionAPIRequest using the given
+   * APIImplementation instance.
+   *
+   * @param {mozIExtensionAPIRequest} request
+   * @param {ChildLocalWebIDLAPIImplementation} impl
+   * @returns {any}
+   * @throws {Error | WorkerExtensionError}
+   */
+
+  callAPIImplementation(request, impl) {
+    const { requestType, args } = request;
+
+    switch (requestType) {
+      // TODO (Bug 1728328): follow up to take callAsyncFunction requireUserInput
+      // parameter into account (until then callAsyncFunction, callFunction
+      // and callFunctionNoReturn calls do not differ yet).
+      case "callAsyncFunction":
+      case "callFunction":
+      case "callFunctionNoReturn":
+      case "getProperty":
+        return impl[requestType](args);
+      case "addListener": {
+        const listener = this.getOrCreateListenerWrapper(request, impl);
+        impl.addListener(listener, args);
+
+        return undefined;
+      }
+      case "removeListener": {
+        const listener = this.getListenerWrapper(request);
+        if (listener) {
+          // Remove the previously added listener and forget the cleanup
+          // observer previously passed to context.callOnClose.
+          listener._callOnClose.close();
+          this.contet.forgetOnclose(listener._callOnClose);
+          this.forgetListenerWrapper(request);
+        }
+        return undefined;
+      }
+      default:
+        throw new Error(
+          `Unexpected requestType ${requestType} while handling "${request}"`
+        );
+    }
+  }
+
+  /**
+   * Handle the given mozIExtensionAPIRequest using the given
+   * ProxyAPIImplementation instance.
+   *
+   * @param {mozIExtensionAPIRequest} request
+   * @param {ProxyAPIImplementation} impl
+   * @returns {any}
+   * @throws {Error | WorkerExtensionError}
+   */
+
+  handleForProxyAPIImplementation(request, impl) {
+    // TODO: implemented in Bug 1688040 part1.2
+    const { apiNamespace, apiName } = request;
+    throw new Error(
+      `"${apiNamespace}.${apiName}" does not provide a local implementation.` +
+        `Not Implemented.`
+    );
+  }
+
+  getAPIPathForWebIDLRequest(request) {
+    const { apiNamespace, apiName, apiObjectType } = request;
+    if (apiObjectType) {
+      return `${apiNamespace}.${apiObjectType}.${apiName}`;
+    }
+
+    return `${apiNamespace}.${apiName}`;
+  }
+
+  /**
+   * Return an ExtensionAPI class instance given its namespace.
+   *
+   * @param {string} namespace
+   * @returns {ExtensionAPI}
+   */
+  getExtensionAPIInstance(namespace) {
+    return this.apiCan.apis.get(namespace);
+  }
+
+  getOrCreateListenerWrapper(request, impl) {
+    let listener = this.getListenerWrapper(request);
+    if (listener) {
+      return listener;
+    }
+
+    // Look for special wrappers that are needed for some API events
+    // (e.g. runtime.onMessage/onConnect/...).
+    if (impl instanceof ChildLocalWebIDLAPIImplementation) {
+      listener = impl.createListenerForAPIRequest(request);
+    }
+
+    const { eventListener } = request;
+    listener =
+      listener ??
+      function(...args) {
+        // Default wrapper just forwards all the arguments to the
+        // extension callback (all arguments has to be structure cloneable
+        // if the extension callback is on the worker thread).
+        eventListener.callListener(args);
+      };
+    listener._callOnClose = {
+      close: () => {
+        this.eventListenerWrappers.delete(eventListener);
+        // Failing to send the request to remove the listener in the parent
+        // process shouldn't prevent the extension or context shutdown,
+        // otherwise we would leak a WebExtensionPolicy instance.
+        try {
+          impl.removeListener(listener);
+        } catch (err) {
+          // Removing a listener when the extension context is being closed can
+          // fail if the API is proxied to the parent process and the conduit
+          // has been already closed, and so we ignore the error if we are not
+          // processing a call proxied to the parent process.
+          if (impl instanceof ChildLocalWebIDLAPIImplementation) {
+            Cu.reportError(err);
+          }
+        }
+      },
+    };
+    this.storeListenerWrapper(request, listener);
+    this.context.callOnClose(listener._callOnClose);
+    return listener;
+  }
+
+  getListenerWrapper(request) {
+    const { eventListener } = request;
+    if (!(eventListener instanceof Ci.mozIExtensionEventListener)) {
+      throw new Error(`Unexpected eventListener type for request: ${request}`);
+    }
+    const apiPath = this.getAPIPathForWebIDLRequest(request);
+    if (!this.eventListenerWrappers.has(apiPath)) {
+      return undefined;
+    }
+    return this.eventListenerWrappers.get(apiPath).get(eventListener);
+  }
+
+  storeListenerWrapper(request, listener) {
+    const { eventListener } = request;
+    if (!(eventListener instanceof Ci.mozIExtensionEventListener)) {
+      throw new Error(`Missing eventListener for request: ${request}`);
+    }
+    const apiPath = this.getAPIPathForWebIDLRequest(request);
+    this.eventListenerWrappers.get(apiPath).set(eventListener, listener);
+  }
+
+  forgetListenerWrapper(request) {
+    const { eventListener } = request;
+    if (!(eventListener instanceof Ci.mozIExtensionEventListener)) {
+      throw new Error(`Missing eventListener for request: ${request}`);
+    }
+    const apiPath = this.getAPIPathForWebIDLRequest(request);
+    if (this.eventListenerWrappers.has(apiPath)) {
+      this.eventListenerWrappers.get(apiPath).delete(eventListener);
+    }
+  }
+}
+
 var ExtensionChild = {
   BrowserExtensionContent,
   ChildAPIManager,
   Messenger,
+  WebIDLChildAPIManager,
 };

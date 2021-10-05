@@ -71,6 +71,19 @@ function filterStack(error) {
 }
 
 /**
+ * An Error subclass used to recognize the errors that should
+ * to be forwarded to the worker thread and being accessible
+ * to the extension worker script (vs. the errors that should be
+ * only logged internally and raised to the worker script as
+ * the generic unexpected error).
+ */
+class WorkerExtensionError extends DOMException {
+  constructor(message) {
+    super(message, "Error");
+  }
+}
+
+/**
  * Similar to a WeakMap, but creates a new key with the given
  * constructor if one is not present.
  */
@@ -340,4 +353,5 @@ var ExtensionUtils = {
   DefaultWeakMap,
   ExtensionError,
   LimitedSet,
+  WorkerExtensionError,
 };
