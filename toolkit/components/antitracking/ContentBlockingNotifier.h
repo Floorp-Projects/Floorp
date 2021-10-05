@@ -30,7 +30,8 @@ class ContentBlockingNotifier final {
   enum StorageAccessPermissionGrantedReason {
     eStorageAccessAPI,
     eOpenerAfterUserInteraction,
-    eOpener
+    eOpener,
+    ePrivilegeStorageAccessForOriginAPI,
   };
 
   // This method can be called on the parent process or on the content process.

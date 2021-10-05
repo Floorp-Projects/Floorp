@@ -27,7 +27,8 @@ struct ParamTraits<
           mozilla::ContentBlockingNotifier::
               StorageAccessPermissionGrantedReason::eStorageAccessAPI,
           mozilla::ContentBlockingNotifier::
-              StorageAccessPermissionGrantedReason::eOpener> {};
+              StorageAccessPermissionGrantedReason::
+                  ePrivilegeStorageAccessForOriginAPI> {};
 
 // ContentBlockingNotifier::BlockingDecision over IPC.
 template <>
