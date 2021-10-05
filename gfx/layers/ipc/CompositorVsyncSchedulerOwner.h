@@ -8,6 +8,7 @@
 #define mozilla_layers_CompositorVsyncSchedulerOwner_h
 
 #include "mozilla/VsyncDispatcher.h"
+#include "mozilla/webrender/webrender_ffi.h"
 
 namespace mozilla {
 
@@ -21,7 +22,8 @@ class CompositorVsyncSchedulerOwner {
  public:
   virtual bool IsPendingComposite() = 0;
   virtual void FinishPendingComposite() = 0;
-  virtual void CompositeToTarget(VsyncId aId, gfx::DrawTarget* aTarget,
+  virtual void CompositeToTarget(VsyncId aId, wr::RenderReasons aReasons,
+                                 gfx::DrawTarget* aTarget,
                                  const gfx::IntRect* aRect = nullptr) = 0;
   virtual TimeDuration GetVsyncInterval() const = 0;
 };

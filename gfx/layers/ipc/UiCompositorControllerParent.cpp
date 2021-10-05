@@ -95,7 +95,7 @@ UiCompositorControllerParent::RecvInvalidateAndRender() {
           mRootLayerTreeId);
   if (parent) {
     parent->Invalidate();
-    parent->ScheduleComposition();
+    parent->ScheduleComposition(wr::RenderReasons::OTHER);
   }
   return IPC_OK();
 }
@@ -141,7 +141,7 @@ UiCompositorControllerParent::RecvRequestScreenPixels() {
 
   if (state && state->mWrBridge) {
     state->mWrBridge->RequestScreenPixels(this);
-    state->mWrBridge->ScheduleForcedGenerateFrame();
+    state->mWrBridge->ScheduleForcedGenerateFrame(wr::RenderReasons::OTHER);
   }
 #endif  // defined(MOZ_WIDGET_ANDROID)
 

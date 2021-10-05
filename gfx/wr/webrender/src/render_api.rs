@@ -21,7 +21,7 @@ use crate::api::{DocumentId, PipelineId, PropertyBindingId, PropertyBindingKey, 
 use crate::api::{HitTestResult, HitTesterRequest, ApiHitTester, PropertyValue, DynamicProperties};
 use crate::api::{ScrollClamping, TileSize, NotificationRequest, DebugFlags};
 use crate::api::{GlyphDimensionRequest, GlyphIndexRequest, GlyphIndex, GlyphDimensions};
-use crate::api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
+use crate::api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation, RenderReasons};
 use crate::api::DEFAULT_TILE_SIZE;
 use crate::api::units::*;
 use crate::api_resources::ApiResources;
@@ -174,6 +174,9 @@ pub struct Transaction {
     pub invalidate_rendered_frame: bool,
 
     low_priority: bool,
+
+    ///
+    pub render_reasons: RenderReasons,
 }
 
 impl Transaction {
@@ -188,6 +191,7 @@ impl Transaction {
             generate_frame: GenerateFrame::No,
             invalidate_rendered_frame: false,
             low_priority: false,
+            render_reasons: RenderReasons::empty(),
         }
     }
 
@@ -358,8 +362,9 @@ impl Transaction {
     /// as to when happened.
     ///
     /// [notifier]: trait.RenderNotifier.html#tymethod.new_frame_ready
-    pub fn generate_frame(&mut self, id: u64) {
+    pub fn generate_frame(&mut self, id: u64, reasons: RenderReasons) {
         self.generate_frame = GenerateFrame::Yes{ id };
+        self.render_reasons |= reasons;
     }
 
     /// Invalidate rendered frame. It ensure that frame will be rendered during
@@ -368,8 +373,9 @@ impl Transaction {
     /// But there are cases that needs to force rendering.
     ///  - Content of image is updated by reusing same ExternalImageId.
     ///  - Platform requests it if pixels become stale (like wakeup from standby).
-    pub fn invalidate_rendered_frame(&mut self) {
+    pub fn invalidate_rendered_frame(&mut self, reasons: RenderReasons) {
         self.invalidate_rendered_frame = true;
+        self.render_reasons |= reasons
     }
 
     /// Reset the list of animated property bindings that should be used to resolve
@@ -412,6 +418,7 @@ impl Transaction {
             blob_requests: Vec::new(),
             rasterized_blobs: Vec::new(),
             profile: TransactionProfile::new(),
+            render_reasons: self.render_reasons,
         })
     }
 
@@ -597,6 +604,8 @@ pub struct TransactionMsg {
     pub rasterized_blobs: Vec<(BlobImageRequest, BlobImageResult)>,
     /// Collect various data along the rendering pipeline to display it in the embedded profiler.
     pub profile: TransactionProfile,
+    /// Keep track of who asks rendering to happen.
+    pub render_reasons: RenderReasons,
 }
 
 impl fmt::Debug for TransactionMsg {
@@ -1219,6 +1228,7 @@ impl RenderApi {
             blob_requests: Vec::new(),
             rasterized_blobs: Vec::new(),
             profile: TransactionProfile::new(),
+            render_reasons: RenderReasons::empty(),
         })
     }
 

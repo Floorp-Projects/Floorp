@@ -21,7 +21,7 @@ class CompositorController {
   /**
    * Ask the compositor to schedule a new composite.
    */
-  virtual void ScheduleRenderOnCompositorThread() = 0;
+  virtual void ScheduleRenderOnCompositorThread(wr::RenderReasons aReasons) = 0;
 
  protected:
   virtual ~CompositorController() = default;

@@ -311,7 +311,7 @@ void nsViewManager::Refresh(nsView* aView,
 #endif
       WindowRenderer* renderer = widget->GetWindowRenderer();
       if (!renderer->NeedsWidgetInvalidation()) {
-        renderer->FlushRendering();
+        renderer->FlushRendering(wr::RenderReasons::WIDGET);
       } else {
         presShell->SyncPaintFallback(aView);
       }

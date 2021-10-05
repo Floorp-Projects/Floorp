@@ -206,7 +206,7 @@ void CompositorWidgetParent::UpdateCompositorWnd(const HWND aCompositorWnd,
               // Schedule composition after ::SetParent() call in parent
               // process.
               layers::CompositorBridgeParent::ScheduleForcedComposition(
-                  self->mRootLayerTreeID.ref());
+                  self->mRootLayerTreeID.ref(), wr::RenderReasons::WIDGET);
             }
           },
           [self](const mozilla::ipc::ResponseRejectReason&) {});
