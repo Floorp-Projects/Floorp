@@ -35,6 +35,10 @@ class StorageAccessPermissionRequest final
       nsPIDOMWindowInner* aWindow, AllowCallback&& aAllowCallback,
       CancelCallback&& aCancelCallback);
 
+  static already_AddRefed<StorageAccessPermissionRequest> Create(
+      nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
+      AllowCallback&& aAllowCallback, CancelCallback&& aCancelCallback);
+
   using AutoGrantDelayPromise = MozPromise<bool, bool, true>;
   RefPtr<AutoGrantDelayPromise> MaybeDelayAutomaticGrants();
 

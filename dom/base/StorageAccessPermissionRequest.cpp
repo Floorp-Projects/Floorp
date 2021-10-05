@@ -100,11 +100,26 @@ StorageAccessPermissionRequest::Create(nsPIDOMWindowInner* aWindow,
     return nullptr;
   }
   nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(aWindow);
-  if (!win->GetPrincipal()) {
+
+  return Create(aWindow, win->GetPrincipal(), std::move(aAllowCallback),
+                std::move(aCancelCallback));
+}
+
+already_AddRefed<StorageAccessPermissionRequest>
+StorageAccessPermissionRequest::Create(nsPIDOMWindowInner* aWindow,
+                                       nsIPrincipal* aPrincipal,
+                                       AllowCallback&& aAllowCallback,
+                                       CancelCallback&& aCancelCallback) {
+  if (!aWindow) {
     return nullptr;
   }
+
+  if (!aPrincipal) {
+    return nullptr;
+  }
+
   RefPtr<StorageAccessPermissionRequest> request =
-      new StorageAccessPermissionRequest(aWindow, win->GetPrincipal(),
+      new StorageAccessPermissionRequest(aWindow, aPrincipal,
                                          std::move(aAllowCallback),
                                          std::move(aCancelCallback));
   return request.forget();
