@@ -674,7 +674,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     }
 
     const { contentDocument, contentWindow } = this.rawNode;
-    if (contentDocument && contentDocument.readyState !== "complete") {
+    if (contentDocument && contentDocument.readyState === "loading") {
       await new Promise(resolve => {
         DOMHelpers.onceDOMReady(contentWindow, resolve);
       });
