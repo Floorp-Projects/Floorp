@@ -8313,6 +8313,20 @@
   value: true
   mirror: always
 
+# When video continues later than the current media time for this period of
+# time, then it will trigger skip-to-next-keyframe mechanism. As this aims to
+# solve the drop frames issue where video decoding too slow for high
+# resolution videos. eg. 4k+. Therefore, the value is is determined by the
+# telemetry probe `video_inter_keyframe_max_ms` in the key of `AV,h>2160` which
+# shows that 95% video's key frame interval are less than ~5000. We use its
+# half value as a threashold to decide whether we should keep decoding in the
+# current video position or jump to the next keyframe in order to decode future
+# frames in advance.
+- name: media.decoder.skip_when_video_too_slow_ms
+  type: RelaxedAtomicInt32
+  value: 2500
+  mirror: always
+
 - name: media.gmp.decoder.enabled
   type: RelaxedAtomicBool
   value: false
