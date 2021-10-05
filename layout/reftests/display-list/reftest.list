@@ -22,7 +22,7 @@ fuzzy(0-1,0-235200) == 1413073.html 1413073-ref.html
 == 1417601-1.html 1417601-1-ref.html
 == 1418945-1.html 1418945-1-ref.html
 skip-if(Android) == 1428993-1.html 1428993-1-ref.html
-fuzzy-if(!Android&&!swgl&&!useDrawSnapshot,1-1,40000-40000) == 1420480-1.html 1420480-1-ref.html
+== 1420480-1.html 1420480-1-ref.html
 == 1428993-2.html 1428993-2-ref.html
 needs-focus fuzzy-if(!nativeThemePref,0-3,0-2) == 1429027-1.html 1429027-1-ref.html
 == 1432553-1.html 1432553-1-ref.html
