@@ -66,8 +66,8 @@ class ExtensionRuntime final : public nsISupports,
   ExtensionEventManager* OnMessage();
   ExtensionEventManager* OnMessageExternal();
 
-  void GetLastError(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {}
-  void GetId(nsString& aRetval) {}
+  void GetLastError(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
+  void GetId(DOMString& aRetval);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ExtensionRuntime)

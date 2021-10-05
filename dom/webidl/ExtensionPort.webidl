@@ -14,9 +14,9 @@ interface ExtensionPort {
   [Replaceable]
   readonly attribute DOMString name;
   [Replaceable]
-  readonly attribute object sender;
+  readonly attribute any sender;
   [Replaceable]
-  readonly attribute object? error;
+  readonly attribute any error;
 
   [Throws, WebExtensionStub="NoReturn"]
   void disconnect();
