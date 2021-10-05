@@ -19,6 +19,7 @@ class ErrorResult;
 
 namespace extensions {
 
+class ExtensionAlarms;
 class ExtensionMockAPI;
 class ExtensionTest;
 
@@ -26,6 +27,7 @@ bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal);
 
 class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<ExtensionAlarms> mExtensionAlarms;
   RefPtr<ExtensionMockAPI> mExtensionMockAPI;
   RefPtr<ExtensionTest> mExtensionTest;
 
@@ -42,6 +44,7 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
 
   nsIGlobalObject* GetParentObject() const;
 
+  ExtensionAlarms* GetExtensionAlarms();
   ExtensionMockAPI* GetExtensionMockAPI();
   ExtensionTest* GetExtensionTest();
 
