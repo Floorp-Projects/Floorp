@@ -10321,6 +10321,25 @@
   value: false
   mirror: always
 
+# Potentially send "global privacy control" HTTP header and set navigator
+# property accordingly. Communicates user's desire to opt-out/in of
+# websites or services selling or sharing the user's information, false by
+# default.
+# true - Send the header with a value of 1 to indicate opting-out
+# false - Do not send header to indicate opting-in
+- name: privacy.globalprivacycontrol.enabled
+  type: bool
+  value: false
+  mirror: always
+
+# Controls whether or not GPC signals are sent. Meant to act as a third option
+# of 'undecided' by leaving the navigator property undefined and not attaching
+# the Sec-GPC HTTP header.
+- name: privacy.globalprivacycontrol.functionality.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Lower the priority of network loads for resources on the tracking protection
 # list.  Note that this requires the
 # privacy.trackingprotection.annotate_channels pref to be on in order to have
