@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_extensions_ExtensionMockAPI_h
-#define mozilla_extensions_ExtensionMockAPI_h
+#ifndef mozilla_extensions_ExtensionRuntime_h
+#define mozilla_extensions_ExtensionRuntime_h
 
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
@@ -24,28 +24,30 @@ namespace mozilla {
 
 namespace extensions {
 
-using dom::DOMString;
-
 class ExtensionEventManager;
-class ExtensionPort;
 
-class ExtensionMockAPI final : public nsISupports,
+class ExtensionRuntime final : public nsISupports,
                                public nsWrapperCache,
                                public ExtensionAPINamespace {
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<ExtensionEventManager> mOnTestEventMgr;
+  RefPtr<ExtensionEventManager> mOnStartupEventMgr;
+  RefPtr<ExtensionEventManager> mOnInstalledEventMgr;
+  RefPtr<ExtensionEventManager> mOnUpdateAvailableEventMgr;
+  RefPtr<ExtensionEventManager> mOnConnectEventMgr;
+  RefPtr<ExtensionEventManager> mOnConnectExternalEventMgr;
+  RefPtr<ExtensionEventManager> mOnMessageEventMgr;
+  RefPtr<ExtensionEventManager> mOnMessageExternalEventMgr;
 
-  ~ExtensionMockAPI() = default;
+  ~ExtensionRuntime() = default;
 
- protected:
+ public:
+  ExtensionRuntime(nsIGlobalObject* aGlobal,
+                   ExtensionBrowser* aExtensionBrowser);
+
   // ExtensionAPIBase methods
   nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
 
-  nsString GetAPINamespace() const override { return u"mockExtensionAPI"_ns; }
-
- public:
-  ExtensionMockAPI(nsIGlobalObject* aGlobal,
-                   ExtensionBrowser* aExtensionBrowser);
+  nsString GetAPINamespace() const override { return u"runtime"_ns; }
 
   // nsWrapperCache interface methods
   JSObject* WrapObject(JSContext* aCx,
@@ -56,17 +58,22 @@ class ExtensionMockAPI final : public nsISupports,
 
   nsIGlobalObject* GetParentObject() const;
 
-  void GetPropertyAsErrorObject(JSContext* aCx,
-                                JS::MutableHandle<JS::Value> aRetval);
-  void GetPropertyAsString(DOMString& aRetval);
+  ExtensionEventManager* OnStartup();
+  ExtensionEventManager* OnInstalled();
+  ExtensionEventManager* OnUpdateAvailable();
+  ExtensionEventManager* OnConnect();
+  ExtensionEventManager* OnConnectExternal();
+  ExtensionEventManager* OnMessage();
+  ExtensionEventManager* OnMessageExternal();
 
-  ExtensionEventManager* OnTestEvent();
+  void GetLastError(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {}
+  void GetId(nsString& aRetval) {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ExtensionMockAPI)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ExtensionRuntime)
 };
 
 }  // namespace extensions
 }  // namespace mozilla
 
-#endif  // mozilla_extensions_ExtensionMockAPI_h
+#endif  // mozilla_extensions_ExtensionRuntime_h

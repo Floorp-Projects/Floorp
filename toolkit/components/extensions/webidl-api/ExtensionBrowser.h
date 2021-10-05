@@ -21,6 +21,7 @@ namespace extensions {
 
 class ExtensionAlarms;
 class ExtensionMockAPI;
+class ExtensionRuntime;
 class ExtensionTest;
 
 bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal);
@@ -29,6 +30,7 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<ExtensionAlarms> mExtensionAlarms;
   RefPtr<ExtensionMockAPI> mExtensionMockAPI;
+  RefPtr<ExtensionRuntime> mExtensionRuntime;
   RefPtr<ExtensionTest> mExtensionTest;
 
   ~ExtensionBrowser() = default;
@@ -46,6 +48,7 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
 
   ExtensionAlarms* GetExtensionAlarms();
   ExtensionMockAPI* GetExtensionMockAPI();
+  ExtensionRuntime* GetExtensionRuntime();
   ExtensionTest* GetExtensionTest();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
