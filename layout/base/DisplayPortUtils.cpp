@@ -295,9 +295,11 @@ static nsRect GetDisplayPortFromMarginsData(
   nsPresContext* presContext = frame->PresContext();
   int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
 
-  LayoutDeviceToScreenScale2D res(
-      presContext->PresShell()->GetCumulativeResolution() *
-      nsLayoutUtils::GetTransformToAncestorScale(frame));
+  LayoutDeviceToScreenScale2D res =
+      LayoutDeviceToParentLayerScale(
+          presContext->PresShell()->GetCumulativeResolution()) *
+      nsLayoutUtils::GetTransformToAncestorScaleCrossProcessForFrameMetrics(
+          frame);
 
   // Calculate the expanded scrollable rect, which we'll be clamping the
   // displayport to.
