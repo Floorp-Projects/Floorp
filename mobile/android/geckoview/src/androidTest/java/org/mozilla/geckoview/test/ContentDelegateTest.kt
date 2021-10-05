@@ -17,6 +17,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import androidx.annotation.AnyThread
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import android.view.PointerIcon
 import android.view.Surface
 import org.hamcrest.Matchers.*
 import org.json.JSONObject
@@ -340,6 +341,22 @@ class ContentDelegateTest : BaseSessionTest() {
 
             @AssertCalled(count = 1)
             override fun onPageStop(session: GeckoSession, success: Boolean) {
+            }
+        })
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test fun setCursor() {
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        mainSession.evaluateJS("document.body.style.cursor = 'wait'")
+        mainSession.synthesizeMouseMove(50, 50)
+
+        mainSession.waitUntilCalled(object : ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onPointerIconChange(session: GeckoSession, icon: PointerIcon) {
+                // PointerIcon has no compare method.
             }
         })
     }

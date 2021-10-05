@@ -13,6 +13,13 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v95
+- Added [`GeckoSession.ContentDelegate.onPointerIconChange()`][95.1] to notify
+  the application of changing pointer icon. If the application wants to handle
+  pointer icon, it should override this.
+
+[95.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onPointerIconChange-org.mozilla.geckoview.GeckoSession-android.view.PointerIcon-
+
 ## v94
 - Extended [`Autocomplete`][78.7] API to support credit card saving.
 
@@ -1046,4 +1053,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 1dd93adc7e95d81464cc99db2247be219e43ddcc
+[api-version]: ba98f05aa574dca862421ddbf5d65053eadb46f0
