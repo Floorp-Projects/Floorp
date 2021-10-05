@@ -165,8 +165,13 @@ add_task(async function test_port_as_event_listener_eventListener_param() {
                 "function",
                 "port.disconnect method"
               );
-              port.onMessage.addListener(msg => {
+              port.onMessage.addListener((msg, portArg) => {
                 if (msg === "test-done") {
+                  testAsserts.equal(
+                    portArg?.name,
+                    "a-port-name-2",
+                    "Got port as last argument"
+                  );
                   testLog("Got a port.onMessage event");
                   resolve();
                 } else {
@@ -192,9 +197,10 @@ add_task(async function test_port_as_event_listener_eventListener_param() {
           request.requestType == "addListener" &&
           request.apiName == "onTestEvent"
         ) {
-          request.eventListener.callListener([], {
+          request.eventListener.callListener(["arg0", "arg1"], {
             apiObjectType: Ci.mozIExtensionListenerCallOptions.RUNTIME_PORT,
             apiObjectDescriptor: { portId: "port-id-2", name: "a-port-name-2" },
+            apiObjectPrepended: true,
           });
           return;
         } else if (
@@ -202,7 +208,10 @@ add_task(async function test_port_as_event_listener_eventListener_param() {
           request.apiObjectType == "Port" &&
           request.apiObjectId == "port-id-2"
         ) {
-          request.eventListener.callListener(["test-done"]);
+          request.eventListener.callListener(["test-done"], {
+            apiObjectType: Ci.mozIExtensionListenerCallOptions.RUNTIME_PORT,
+            apiObjectDescriptor: { portId: "port-id-2", name: "a-port-name-2" },
+          });
           return;
         }
 

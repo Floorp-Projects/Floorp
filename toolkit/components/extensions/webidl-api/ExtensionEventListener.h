@@ -143,6 +143,7 @@ class ExtensionListenerCallWorkerRunnable : public dom::WorkerRunnable {
 
     if (aCallOptions) {
       aCallOptions->GetApiObjectType(&mAPIObjectType);
+      aCallOptions->GetApiObjectPrepended(&mAPIObjectPrepended);
       aCallOptions->GetCallbackType(&mCallbackArgType);
     }
   }
@@ -178,6 +179,7 @@ class ExtensionListenerCallWorkerRunnable : public dom::WorkerRunnable {
   RefPtr<dom::Promise> mPromiseResult;
   bool mIsCallResultCancelled = false;
   // Call Options.
+  bool mAPIObjectPrepended;
   APIObjectType mAPIObjectType;
   CallbackType mCallbackArgType;
 };
