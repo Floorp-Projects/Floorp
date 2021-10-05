@@ -9,7 +9,7 @@ use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use crate::render_api::MemoryReport;
 use crate::composite::CompositorKind;
 use crate::clip::{ClipStore, ClipStoreStats};
-use crate::spatial_tree::{SpatialTree, SceneSpatialTree};
+use crate::spatial_tree::SpatialTree;
 use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use crate::hit_test::{HitTester, HitTestingScene, HitTestingSceneStats};
 use crate::internal_types::{FastHashMap, PlaneSplitter};
@@ -284,7 +284,6 @@ pub struct BuiltScene {
     pub prim_store: PrimitiveStore,
     pub clip_store: ClipStore,
     pub config: FrameBuilderConfig,
-    pub spatial_tree: SpatialTree,
     pub hit_testing_scene: Arc<HitTestingScene>,
     pub tile_cache_config: TileCacheConfig,
     pub tile_cache_pictures: Vec<PictureIndex>,
@@ -301,7 +300,6 @@ impl BuiltScene {
             background_color: None,
             prim_store: PrimitiveStore::new(&PrimitiveStoreStats::empty()),
             clip_store: ClipStore::new(&ClipStoreStats::empty()),
-            spatial_tree: SpatialTree::new(&SceneSpatialTree::new()),
             hit_testing_scene: Arc::new(HitTestingScene::new(&HitTestingSceneStats::empty())),
             tile_cache_config: TileCacheConfig::new(0),
             tile_cache_pictures: Vec::new(),
@@ -340,10 +338,13 @@ impl BuiltScene {
         }
     }
 
-    pub fn create_hit_tester(&mut self) -> HitTester {
+    pub fn create_hit_tester(
+        &mut self,
+        spatial_tree: &SpatialTree,
+    ) -> HitTester {
         HitTester::new(
             Arc::clone(&self.hit_testing_scene),
-            &self.spatial_tree,
+            spatial_tree,
         )
     }
 }

@@ -50,6 +50,9 @@ use crate::resource_cache::PlainResources;
 use crate::scene::Scene;
 use crate::scene::{BuiltScene, SceneProperties};
 use crate::scene_builder_thread::*;
+use crate::spatial_tree::SpatialTree;
+#[cfg(feature = "replay")]
+use crate::spatial_tree::SceneSpatialTree;
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 #[cfg(feature = "replay")]
@@ -299,6 +302,9 @@ struct Document {
 
     data_stores: DataStores,
 
+    /// Retained frame-building version of the spatial tree
+    spatial_tree: SpatialTree,
+
     /// Contains various vecs of data that is used only during frame building,
     /// where we want to recycle the memory each new display list, to avoid constantly
     /// re-allocating and moving memory around.
@@ -343,6 +349,7 @@ impl Document {
             rendered_frame_is_valid: false,
             has_built_scene: false,
             data_stores: DataStores::default(),
+            spatial_tree: SpatialTree::new(),
             scratch: ScratchBuffer::default(),
             #[cfg(feature = "replay")]
             loaded_scene: Scene::new(),
@@ -410,7 +417,7 @@ impl Document {
                 self.dynamic_properties.add_transforms(property_bindings);
             }
             FrameMsg::SetIsTransformAsyncZooming(is_zooming, animation_id) => {
-                if let Some(node) = self.scene.spatial_tree.get_node_by_anim_id(animation_id) {
+                if let Some(node) = self.spatial_tree.get_node_by_anim_id(animation_id) {
                     if node.is_async_zooming != is_zooming {
                         node.is_async_zooming = is_zooming;
                         self.frame_is_valid = false;
@@ -453,6 +460,7 @@ impl Document {
                 debug_flags,
                 tile_cache_logger,
                 tile_caches,
+                &mut self.spatial_tree,
                 self.dirty_rects_are_valid,
                 &mut self.profile,
             );
@@ -484,9 +492,9 @@ impl Document {
     }
 
     fn rebuild_hit_tester(&mut self) {
-        self.scene.spatial_tree.update_tree(&self.dynamic_properties);
+        self.spatial_tree.update_tree(&self.dynamic_properties);
 
-        let hit_tester = Arc::new(self.scene.create_hit_tester());
+        let hit_tester = Arc::new(self.scene.create_hit_tester(&self.spatial_tree));
         self.hit_tester = Some(Arc::clone(&hit_tester));
         self.shared_hit_tester.update(hit_tester);
         self.hit_tester_is_valid = true;
@@ -508,7 +516,7 @@ impl Document {
         id: ExternalScrollId,
         clamp: ScrollClamping
     ) -> bool {
-        self.scene.spatial_tree.scroll_node(origin, id, clamp)
+        self.spatial_tree.scroll_node(origin, id, clamp)
     }
 
     /// Update the state of tile caches when a new scene is being swapped in to
@@ -790,6 +798,10 @@ impl RenderBackend {
                 } else {
                     Some(txn.frame_stats)
                 };
+
+                if let Some(updates) = txn.spatial_tree_updates.take() {
+                    doc.spatial_tree.apply_updates(updates);
+                }
 
                 if let Some(built_scene) = txn.built_scene.take() {
                     doc.new_async_scene_ready(
@@ -1386,6 +1398,9 @@ impl RenderBackend {
                     let data_stores_name = format!("data-stores-{}-{}", document_id.namespace_id.0, document_id.id);
                     config.serialize_for_frame(&doc.data_stores, data_stores_name);
 
+                    let frame_spatial_tree_name = format!("frame-spatial-tree-{}-{}", document_id.namespace_id.0, document_id.id);
+                    config.serialize_for_frame::<SpatialTree, _>(&doc.spatial_tree, frame_spatial_tree_name);
+
                     let properties_name = format!("properties-{}-{}", document_id.namespace_id.0, document_id.id);
                     config.serialize_for_frame(&doc.dynamic_properties, properties_name);
                 },
@@ -1541,7 +1556,7 @@ impl RenderBackend {
                 let file_name = format!("frame-{}-{}", id.namespace_id.0, id.id);
                 config.serialize_for_frame(&rendered_document.frame, file_name);
                 let file_name = format!("spatial-{}-{}", id.namespace_id.0, id.id);
-                config.serialize_tree_for_frame(&doc.scene.spatial_tree, file_name);
+                config.serialize_tree_for_frame(&doc.spatial_tree, file_name);
                 let file_name = format!("built-primitives-{}-{}", id.namespace_id.0, id.id);
                 config.serialize_for_frame(&doc.scene.prim_store, file_name);
                 let file_name = format!("built-clips-{}-{}", id.namespace_id.0, id.id);
@@ -1579,6 +1594,9 @@ impl RenderBackend {
 
             let data_stores_name = format!("data-stores-{}-{}", id.namespace_id.0, id.id);
             config.serialize_for_frame(&doc.data_stores, data_stores_name);
+
+            let frame_spatial_tree_name = format!("frame-spatial-tree-{}-{}", id.namespace_id.0, id.id);
+            config.serialize_for_frame::<SpatialTree, _>(&doc.spatial_tree, frame_spatial_tree_name);
 
             let properties_name = format!("properties-{}-{}", id.namespace_id.0, id.id);
             config.serialize_for_frame(&doc.dynamic_properties, properties_name);
@@ -1720,6 +1738,10 @@ impl RenderBackend {
             let scene = config.deserialize_for_scene::<Scene, _>(&scene_name)
                 .expect(&format!("Unable to open {}.ron", scene_name));
 
+            let scene_spatial_tree_name = format!("scene-spatial-tree-{}-{}", id.namespace_id.0, id.id);
+            let scene_spatial_tree = config.deserialize_for_scene::<SceneSpatialTree, _>(&scene_spatial_tree_name)
+                .expect(&format!("Unable to open {}.ron", scene_spatial_tree_name));
+
             let interners_name = format!("interners-{}-{}", id.namespace_id.0, id.id);
             let interners = config.deserialize_for_scene::<Interners, _>(&interners_name)
                 .expect(&format!("Unable to open {}.ron", interners_name));
@@ -1732,6 +1754,10 @@ impl RenderBackend {
             let properties = config.deserialize_for_frame::<SceneProperties, _>(&properties_name)
                 .expect(&format!("Unable to open {}.ron", properties_name));
 
+            let frame_spatial_tree_name = format!("frame-spatial-tree-{}-{}", id.namespace_id.0, id.id);
+            let frame_spatial_tree = config.deserialize_for_frame::<SpatialTree, _>(&frame_spatial_tree_name)
+                .expect(&format!("Unable to open {}.ron", frame_spatial_tree_name));
+
             // Update the document if it still exists, rather than replace it entirely.
             // This allows us to preserve state information such as the frame stamp,
             // which is necessary for cache sanity.
@@ -1741,6 +1767,7 @@ impl RenderBackend {
                     doc.view = view;
                     doc.loaded_scene = scene.clone();
                     doc.data_stores = data_stores;
+                    doc.spatial_tree = frame_spatial_tree;
                     doc.dynamic_properties = properties;
                     doc.frame_is_valid = false;
                     doc.rendered_frame_is_valid = false;
@@ -1764,6 +1791,7 @@ impl RenderBackend {
                         has_built_scene: false,
                         data_stores,
                         scratch: ScratchBuffer::default(),
+                        spatial_tree: frame_spatial_tree,
                         loaded_scene: scene.clone(),
                         prev_composite_descriptor: CompositeDescriptor::empty(),
                         dirty_rects_are_valid: false,
@@ -1808,6 +1836,7 @@ impl RenderBackend {
                 font_instances: self.resource_cache.get_font_instances(),
                 build_frame,
                 interners,
+                spatial_tree: scene_spatial_tree,
             });
         }
 
