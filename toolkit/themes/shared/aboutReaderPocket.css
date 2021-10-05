@@ -54,7 +54,7 @@
 }
 
 .pocket-btn-add {
-  background: no-repeat left center url("chrome://pocket/content/panels/img/glyph.svg");
+  background: no-repeat left center url("chrome://global/skin/icons/pocket-outline.svg");
   background-size: 16px;
   border: 0;
   padding-inline-start: 20px;
