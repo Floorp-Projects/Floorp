@@ -946,19 +946,6 @@ var Bookmarks = Object.freeze({
               updatedItem.url,
               updatedItem.source
             );
-            notify(observers, "onItemChanged", [
-              updatedItem._id,
-              "uri",
-              false,
-              updatedItem.url.href,
-              PlacesUtils.toPRTime(updatedItem.lastModified),
-              updatedItem.type,
-              updatedItem._parentId,
-              updatedItem.guid,
-              updatedItem.parentGuid,
-              item.url.href,
-              updatedItem.source,
-            ]);
 
             let isTagging = updatedItem.parentGuid == Bookmarks.tagsGuid;
             if (!isTagging) {

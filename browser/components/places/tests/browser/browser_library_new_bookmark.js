@@ -65,8 +65,9 @@ add_task(async function test_open_bookmark_from_library() {
     },
     async dialogWin => {
       let promiseLocationChange = PlacesTestUtils.waitForNotification(
-        "onItemChanged",
-        (id, parentId, index, itemUrl) => itemUrl === "https://example4.com/"
+        "bookmark-url-changed",
+        events => events.some(e => e.url === "https://example4.com/"),
+        "places"
       );
 
       fillBookmarkTextField(
