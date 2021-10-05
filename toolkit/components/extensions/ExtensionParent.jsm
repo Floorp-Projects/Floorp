@@ -93,6 +93,19 @@ let StartupCache;
 
 const global = this;
 
+function verifyActorForContext(actor, context) {
+  if (actor instanceof JSWindowActorParent) {
+    let target = actor.browsingContext.top.embedderElement;
+    if (context.parentMessageManager !== target.messageManager) {
+      throw new Error("Got message on unexpected message manager");
+    }
+  } else if (actor instanceof JSProcessActorParent) {
+    if (actor.manager.remoteType !== context.extension.remoteType) {
+      throw new Error("Got message from unexpected process");
+    }
+  }
+}
+
 // This object loads the ext-*.js scripts that define the extension API.
 let apiManager = new (class extends SchemaAPIManager {
   constructor() {
@@ -476,7 +489,8 @@ class ProxyContextParent extends BaseContext {
     // close the ProxyContext if the underlying message manager closes. This
     // message manager object may change when `xulBrowser` swaps docshells, e.g.
     // when a tab is moved to a different window.
-    this.messageManagerProxy = new MessageManagerProxy(xulBrowser);
+    this.messageManagerProxy =
+      xulBrowser && new MessageManagerProxy(xulBrowser);
 
     Object.defineProperty(this, "principal", {
       value: principal,
@@ -518,11 +532,11 @@ class ProxyContextParent extends BaseContext {
   }
 
   get xulBrowser() {
-    return this.messageManagerProxy.eventTarget;
+    return this.messageManagerProxy?.eventTarget;
   }
 
   get parentMessageManager() {
-    return this.messageManagerProxy.messageManager;
+    return this.messageManagerProxy?.messageManager;
   }
 
   shutdown() {
@@ -533,7 +547,9 @@ class ProxyContextParent extends BaseContext {
     if (this.unloaded) {
       return;
     }
-    this.messageManagerProxy.dispose();
+
+    this.messageManagerProxy?.dispose();
+
     super.unload();
     apiManager.emit("proxy-context-unload", this);
   }
@@ -790,7 +806,7 @@ ParentAPIManager = {
 
   recvCreateProxyContext(data, { actor, sender }) {
     let { envType, extensionId, childId, principal } = data;
-    let target = actor.browsingContext.top.embedderElement;
+    let target = actor.browsingContext?.top.embedderElement;
 
     if (this.proxyContexts.has(childId)) {
       throw new Error(
@@ -809,20 +825,34 @@ ParentAPIManager = {
         throw new Error(`Bad sender context envType: ${sender.envType}`);
       }
 
-      let processMessageManager =
-        target.messageManager.processMessageManager ||
-        Services.ppmm.getChildAt(0);
+      if (actor instanceof JSWindowActorParent) {
+        let processMessageManager =
+          target.messageManager.processMessageManager ||
+          Services.ppmm.getChildAt(0);
 
-      if (!extension.parentMessageManager) {
-        if (target.remoteType === extension.remoteType) {
-          this.attachMessageManager(extension, processMessageManager);
+        if (!extension.parentMessageManager) {
+          if (target.remoteType === extension.remoteType) {
+            this.attachMessageManager(extension, processMessageManager);
+          }
         }
-      }
 
-      if (processMessageManager !== extension.parentMessageManager) {
-        throw new Error(
-          "Attempt to create privileged extension parent from incorrect child process"
-        );
+        if (processMessageManager !== extension.parentMessageManager) {
+          throw new Error(
+            "Attempt to create privileged extension parent from incorrect child process"
+          );
+        }
+      } else if (actor instanceof JSProcessActorParent) {
+        if (actor.manager.remoteType !== extension.remoteType) {
+          throw new Error(
+            "Attempt to create privileged extension parent from incorrect child process"
+          );
+        }
+
+        if (envType !== "addon_parent") {
+          throw new Error(
+            `Unexpected envType ${envType} on an extension process actor`
+          );
+        }
       }
 
       if (envType == "addon_parent") {
@@ -912,13 +942,12 @@ ParentAPIManager = {
 
   async recvAPICall(data, { actor }) {
     let context = this.getContextById(data.childId);
-    let target = actor.browsingContext.top.embedderElement;
-    if (context.parentMessageManager !== target.messageManager) {
-      throw new Error("Got message on unexpected message manager");
-    }
+    let target = actor.browsingContext?.top.embedderElement;
+
+    verifyActorForContext(actor, context);
 
     let reply = result => {
-      if (!context.parentMessageManager) {
+      if (target && !context.parentMessageManager) {
         Services.console.logStringMessage(
           "Cannot send function call result: other side closed connection " +
             `(call data: ${uneval({ path: data.path, args: data.args })})`
@@ -973,10 +1002,8 @@ ParentAPIManager = {
 
   async recvAddListener(data, { actor }) {
     let context = this.getContextById(data.childId);
-    let target = actor.browsingContext.top.embedderElement;
-    if (context.parentMessageManager !== target.messageManager) {
-      throw new Error("Got message on unexpected message manager");
-    }
+
+    verifyActorForContext(actor, context);
 
     let { childId, alreadyLogged = false } = data;
     let handlingUserInput = false;
