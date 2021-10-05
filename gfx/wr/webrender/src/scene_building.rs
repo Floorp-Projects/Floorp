@@ -50,7 +50,7 @@ use crate::image_tiling::simplify_repeated_primitive;
 use crate::clip::{ClipChainId, ClipItemKey, ClipStore, ClipItemKeyKind};
 use crate::clip::{ClipInternData, ClipNodeKind, ClipInstance, SceneClipInstance};
 use crate::clip::{PolygonDataHandle};
-use crate::spatial_tree::{SpatialTree, SceneSpatialTree, SpatialNodeIndex, get_external_scroll_offset};
+use crate::spatial_tree::{SceneSpatialTree, SpatialNodeIndex, get_external_scroll_offset};
 use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use crate::glyph_rasterizer::FontInstance;
 use crate::hit_test::HitTestingScene;
@@ -397,7 +397,7 @@ pub struct SceneBuilder<'a> {
     pending_shadow_items: VecDeque<ShadowItem>,
 
     /// The SpatialTree that we are currently building during building.
-    pub spatial_tree: SceneSpatialTree,
+    pub spatial_tree: &'a mut SceneSpatialTree,
 
     /// The store of primitives.
     pub prim_store: PrimitiveStore,
@@ -462,6 +462,7 @@ impl<'a> SceneBuilder<'a> {
         view: &SceneView,
         frame_builder_config: &FrameBuilderConfig,
         interners: &mut Interners,
+        spatial_tree: &mut SceneSpatialTree,
         stats: &SceneStats,
     ) -> BuiltScene {
         profile_scope!("build_scene");
@@ -474,7 +475,6 @@ impl<'a> SceneBuilder<'a> {
             .background_color
             .and_then(|color| if color.a > 0.0 { Some(color) } else { None });
 
-        let spatial_tree = SceneSpatialTree::new();
         let root_reference_frame_index = spatial_tree.root_reference_frame_index();
 
         // During scene building, we assume a 1:1 picture -> raster pixel scale
@@ -529,7 +529,6 @@ impl<'a> SceneBuilder<'a> {
             output_rect: view.device_rect.size().into(),
             background_color,
             hit_testing_scene: Arc::new(builder.hit_testing_scene),
-            spatial_tree: SpatialTree::new(&builder.spatial_tree),
             prim_store: builder.prim_store,
             clip_store: builder.clip_store,
             config: builder.config,
@@ -556,7 +555,7 @@ impl<'a> SceneBuilder<'a> {
             .external_scroll_mapper
             .external_scroll_offset(
                 spatial_node_index,
-                &self.spatial_tree,
+                self.spatial_tree,
             );
 
         rf_offset + scroll_offset
@@ -1040,7 +1039,7 @@ impl<'a> SceneBuilder<'a> {
     ) -> LayoutRect {
         self.snap_to_device.set_target_spatial_node(
             target_spatial_node,
-            &self.spatial_tree
+            self.spatial_tree,
         );
         self.snap_to_device.snap_rect(&rect)
     }
@@ -1685,7 +1684,7 @@ impl<'a> SceneBuilder<'a> {
                     prim_rect,
                     spatial_node_index,
                     flags,
-                    &self.spatial_tree,
+                    self.spatial_tree,
                     &self.clip_store,
                     self.interners,
                     &self.config,
@@ -2053,7 +2052,7 @@ impl<'a> SceneBuilder<'a> {
             self.tile_cache_builder.add_tile_cache(
                 stacking_context.prim_list,
                 stacking_context.clip_chain_id,
-                &self.spatial_tree,
+                self.spatial_tree,
                 &self.clip_store,
                 self.interners,
                 &self.config,
