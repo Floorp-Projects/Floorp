@@ -1292,14 +1292,14 @@ nsDOMWindowUtils::GarbageCollect(nsICycleCollectorListener* aListener) {
   AUTO_PROFILER_LABEL("nsDOMWindowUtils::GarbageCollect", GCCC);
 
   nsJSContext::GarbageCollectNow(JS::GCReason::DOM_UTILS);
-  nsJSContext::CycleCollectNow(CCReason::API, aListener);
+  nsJSContext::CycleCollectNow(aListener);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMWindowUtils::CycleCollect(nsICycleCollectorListener* aListener) {
-  nsJSContext::CycleCollectNow(CCReason::API, aListener);
+  nsJSContext::CycleCollectNow(aListener);
   return NS_OK;
 }
 
