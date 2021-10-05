@@ -789,6 +789,8 @@ class StyleSheetsManager extends EventEmitter {
       applicable &&
       // No ownerNode means that this stylesheet is *not* associated to a DOM Element.
       styleSheet.ownerNode &&
+      (!this._targetActor.ignoreSubFrames ||
+        styleSheet.ownerNode.ownerGlobal === this._targetActor.window) &&
       this._shouldListSheet(styleSheet) &&
       !this._haveAncestorWithSameURL(styleSheet)
     ) {
