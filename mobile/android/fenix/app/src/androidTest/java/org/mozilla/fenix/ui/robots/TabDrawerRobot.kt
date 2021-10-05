@@ -376,7 +376,8 @@ fun tabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
 
 private fun tabMediaControlButton() = onView(withId(R.id.play_pause_button))
 
-private fun closeTabButton() = onView(withId(R.id.mozac_browser_tabstray_close))
+private fun closeTabButton() =
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_tabstray_close"))
 private fun assertCloseTabsButton(title: String) =
     onView(
         allOf(
