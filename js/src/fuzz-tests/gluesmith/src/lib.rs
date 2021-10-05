@@ -17,9 +17,32 @@ extern crate arbitrary;
 extern crate wasm_smith;
 
 use arbitrary::{Arbitrary, Unstructured};
-use wasm_smith::Module;
+use wasm_smith::{Config, Module};
 
 use std::ptr;
+
+// A custom configuration to enable all experimental features that we have
+// some support for.
+#[derive(Arbitrary, Debug)]
+struct SpiderMonkeyConfig;
+
+impl Config for SpiderMonkeyConfig {
+    fn bulk_memory_enabled(&self) -> bool {
+        true
+    }
+    fn reference_types_enabled(&self) -> bool {
+        true
+    }
+    fn exceptions_enabled(&self) -> bool {
+        true
+    }
+    fn memory64_enabled(&self) -> bool {
+        true
+    }
+    fn simd_enabled(&self) -> bool {
+        true
+    }
+}
 
 #[no_mangle]
 pub unsafe extern "C" fn gluesmith(
@@ -32,7 +55,7 @@ pub unsafe extern "C" fn gluesmith(
 
     let mut u = Unstructured::new(buf);
 
-    let module = match Module::arbitrary(&mut u) {
+    let module = match Module::new(SpiderMonkeyConfig{}, &mut u) {
         Ok(m) => m,
         Err(_e) => return 0,
     };
