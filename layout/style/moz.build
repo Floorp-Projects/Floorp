@@ -108,6 +108,7 @@ EXPORTS.mozilla += [
     "ServoUtils.h",
     "ShadowParts.h",
     "SharedStyleSheetCache.h",
+    "SharedSubResourceCache.h",
     "StyleAnimationValue.h",
     "StyleColorInlines.h",
     "StyleSheet.h",

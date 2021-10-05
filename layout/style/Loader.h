@@ -235,6 +235,15 @@ class Loader final {
 
   using StylePreloadKind = css::StylePreloadKind;
 
+  bool HasLoaded(const SheetLoadDataHashKey& aKey) const {
+    return mLoadsPerformed.Contains(aKey);
+  }
+
+  void WillStartPendingLoad() {
+    MOZ_DIAGNOSTIC_ASSERT(mPendingLoadCount, "Where did this load come from?");
+    mPendingLoadCount--;
+  }
+
   nsCompatibility CompatMode(StylePreloadKind aPreloadKind) const {
     // For Link header preload, we guess non-quirks, because otherwise it is
     // useless for modern pages.
