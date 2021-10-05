@@ -170,17 +170,9 @@ function initialize(toggleProfilerKeyShortcuts) {
           // The popup logic is stored in a separate script so it doesn't have
           // to be parsed at browser startup, and will only be lazily loaded
           // when the popup is viewed.
-          const {
-            selectElementsInPanelview,
-            createViewControllers,
-            addPopupEventHandlers,
-            initializePopup,
-          } = lazy.PopupPanel();
+          const { initializePopup } = lazy.PopupPanel();
 
-          const panelElements = selectElementsInPanelview(event.target);
-          const panelView = createViewControllers(panelState, panelElements);
-          addPopupEventHandlers(panelState, panelElements, panelView);
-          initializePopup(panelState, panelElements, panelView);
+          initializePopup(panelState, event.target);
         } catch (error) {
           // Surface any errors better in the console.
           console.error(error);
