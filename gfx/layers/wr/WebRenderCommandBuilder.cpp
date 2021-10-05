@@ -1232,7 +1232,8 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
                              item);
 
       {
-        auto spaceAndClipChain = mClipManager.SwitchItem(item);
+        auto spaceAndClipChain =
+            mClipManager.SwitchItem(aDisplayListBuilder, item);
         wr::SpaceAndClipChainHelper saccHelper(aBuilder, spaceAndClipChain);
         mHitTestInfoManager.ProcessItem(item, aBuilder, aDisplayListBuilder);
 
@@ -1748,13 +1749,17 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
         // the opacity and clip onto the builder and skip creating a stacking
         // context.
         float oldOpacity = aBuilder.GetInheritedOpacity();
+        const DisplayItemClipChain* oldClip = aBuilder.GetInheritedClipChain();
         aBuilder.SetInheritedOpacity(oldOpacity * opacity->GetOpacity());
+        aBuilder.PushInheritedClipChain(aDisplayListBuilder,
+                                        opacity->GetClipChain());
 
         CreateWebRenderCommandsFromDisplayList(opacity->GetChildren(), item,
                                                aDisplayListBuilder, aSc,
                                                aBuilder, aResources, false);
 
         aBuilder.SetInheritedOpacity(oldOpacity);
+        aBuilder.SetInheritedClipChain(oldClip);
         continue;
       }
     }
@@ -1818,7 +1823,7 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
 
     // This is where we emulate the clip/scroll stack that was previously
     // implemented on the WR display list side.
-    auto spaceAndClipChain = mClipManager.SwitchItem(item);
+    auto spaceAndClipChain = mClipManager.SwitchItem(aDisplayListBuilder, item);
     wr::SpaceAndClipChainHelper saccHelper(aBuilder, spaceAndClipChain);
 
     {  // scope restoreDoGrouping
