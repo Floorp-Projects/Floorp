@@ -37,6 +37,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -86,8 +88,6 @@ fun RecentTabs(
                         RecentSearchGroupItem(
                             searchTerm = tab.searchTerm,
                             tabId = tab.tabId,
-                            url = tab.url,
-                            thumbnail = tab.thumbnail,
                             count = tab.count,
                             onSearchGroupClicked = onRecentSearchGroupClicked
                         )
@@ -120,7 +120,7 @@ private fun RecentTabItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(116.dp)
+            .height(112.dp)
             .clickable { onRecentTabClick(tabId) },
         shape = RoundedCornerShape(8.dp),
         backgroundColor = FirefoxTheme.colors.surface,
@@ -132,10 +132,9 @@ private fun RecentTabItem(
             RecentTabImage(
                 url = url,
                 tabId = tabId,
-                modifier = Modifier.size(116.dp, 84.dp),
-                icon = thumbnail,
-                contentScale = ContentScale.FillWidth,
-                alignment = Alignment.TopCenter
+                modifier = Modifier.size(108.dp, 80.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                thumbnail = thumbnail
             )
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -147,9 +146,10 @@ private fun RecentTabItem(
                 RecentTabTitle(title = title)
 
                 Row {
-                    RecentTabImage(
+                    RecentTabIcon(
                         url = url,
-                        modifier = Modifier.size(18.dp, 18.dp),
+                        modifier = Modifier.size(18.dp, 18.dp)
+                            .clip(RoundedCornerShape(2.dp)),
                         icon = icon
                     )
 
@@ -167,8 +167,6 @@ private fun RecentTabItem(
  *
  * @param searchTerm The search term for the group.
  * @param tabId The id of the last accessed tab in the group.
- * @param url The loaded URL of the last accessed tab in the group.
- * @param thumbnail The icon of the group.
  * @param count Count of how many tabs belongs to the group.
  * @param onSearchGroupClicked Invoked when the user clicks on a group.
  */
@@ -177,15 +175,13 @@ private fun RecentTabItem(
 private fun RecentSearchGroupItem(
     searchTerm: String,
     tabId: String,
-    url: String,
-    thumbnail: Bitmap?,
     count: Int,
     onSearchGroupClicked: (String) -> Unit = {}
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(116.dp)
+            .height(112.dp)
             .clickable { onSearchGroupClicked(tabId) },
         shape = RoundedCornerShape(8.dp),
         backgroundColor = FirefoxTheme.colors.surface,
@@ -194,12 +190,12 @@ private fun RecentSearchGroupItem(
         Row(
             modifier = Modifier.padding(16.dp)
         ) {
-            RecentTabImage(
-                url = url,
-                modifier = Modifier.size(116.dp, 84.dp),
-                icon = thumbnail,
+            Image(
+                painter = painterResource(id = R.drawable.ic_search_group_thumbnail),
+                contentDescription = null,
+                modifier = Modifier.size(108.dp, 80.dp),
                 contentScale = ContentScale.FillWidth,
-                alignment = Alignment.TopCenter
+                alignment = Alignment.Center
             )
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -213,7 +209,9 @@ private fun RecentSearchGroupItem(
                 Row {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_all_tabs),
-                        contentDescription = null // decorative element
+                        modifier = Modifier.size(18.dp),
+                        contentDescription = null,
+                        tint = FirefoxTheme.colors.textSecondary
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -229,8 +227,11 @@ private fun RecentSearchGroupItem(
  * A recent tab image.
  *
  * @param url The loaded URL of the tab.
- * @param modifier modifier Modifier used to draw the image content.
- * @param icon The icon of the tab. Fallback to loading the icon from the [url] if the [icon]
+ * @param modifier [Modifier] used to draw the image content.
+ * @param tabId The id of the tab.
+ * @param contentScale [ContentScale] used to draw image content.
+ * @param alignment [Alignment] used to draw the image content.
+ * @param thumbnail The icon of the tab. Fallback to loading the icon from the [url] if the [thumbnail]
  * is null.
  */
 @Composable
@@ -239,6 +240,79 @@ private fun RecentTabImage(
     url: String,
     modifier: Modifier = Modifier,
     tabId: String? = null,
+    thumbnail: Bitmap? = null,
+    contentScale: ContentScale = ContentScale.FillWidth,
+    alignment: Alignment = Alignment.TopCenter
+) {
+    when {
+        thumbnail != null -> {
+            Image(
+                painter = BitmapPainter(thumbnail.asImageBitmap()),
+                contentDescription = null,
+                modifier = modifier,
+                contentScale = contentScale,
+                alignment = alignment
+            )
+        }
+        else -> {
+            Card(
+                modifier = modifier,
+                backgroundColor = colorResource(id = R.color.photonGrey20)
+            ) {
+                components.core.icons.Loader(url) {
+                    Placeholder {
+                        Box(
+                            modifier = Modifier.background(
+                                color = when (isSystemInDarkTheme()) {
+                                    true -> PhotonColors.DarkGrey30
+                                    false -> PhotonColors.LightGrey30
+                                }
+                            )
+                        )
+                    }
+
+                    WithIcon { icon ->
+                        Box(
+                            modifier = Modifier.size(36.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = icon.painter,
+                                contentDescription = null,
+                                modifier = Modifier.size(36.dp).clip(RoundedCornerShape(8.dp)),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
+                    }
+                }
+
+                if (tabId != null) {
+                    ThumbnailImage(
+                        tabId = tabId,
+                        modifier = modifier,
+                        contentScale = contentScale,
+                        alignment = alignment
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A recent tab icon.
+ *
+ * @param url The loaded URL of the tab.
+ * @param modifier [Modifier] used to draw the image content.
+ * @param contentScale [ContentScale] used to draw image content.
+ * @param alignment [Alignment] used to draw the image content.
+ * @param icon The icon of the tab. Fallback to loading the icon from the [url] if the [icon]
+ * is null.
+ */
+@Composable
+private fun RecentTabIcon(
+    url: String,
+    modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
     alignment: Alignment = Alignment.Center,
     icon: Bitmap? = null
@@ -248,14 +322,6 @@ private fun RecentTabImage(
             Image(
                 painter = BitmapPainter(icon.asImageBitmap()),
                 contentDescription = null,
-                modifier = modifier,
-                contentScale = contentScale,
-                alignment = alignment
-            )
-        }
-        tabId != null -> {
-            ThumbnailImage(
-                tabId = tabId,
                 modifier = modifier,
                 contentScale = contentScale,
                 alignment = alignment
@@ -278,7 +344,8 @@ private fun RecentTabImage(
                     Image(
                         painter = icon.painter,
                         contentDescription = null,
-                        modifier = modifier
+                        modifier = modifier,
+                        contentScale = ContentScale.Fit
                     )
                 }
             }
@@ -326,7 +393,7 @@ private fun ThumbnailImage(
     alignment: Alignment
 ) {
     val rememberBitmap = remember(tabId) { mutableStateOf<ImageBitmap?>(null) }
-    val size = LocalDensity.current.run { 116.dp.toPx().toInt() }
+    val size = LocalDensity.current.run { 108.dp.toPx().toInt() }
     val request = ImageLoadRequest(tabId, size)
     val storage = components.core.thumbnailStorage
     val bitmap = rememberBitmap.value

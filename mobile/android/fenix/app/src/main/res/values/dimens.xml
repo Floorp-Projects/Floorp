@@ -96,9 +96,9 @@
     <dimen name="home_item_horizontal_margin">16dp</dimen>
 
     <!-- Home - Recently saved bookmarks -->
-    <dimen name="recent_bookmark_item_height">132dp</dimen>
-    <dimen name="recent_bookmark_item_width">161dp</dimen>
-    <dimen name="recent_bookmark_item_favicon_height">72dp</dimen>
+    <dimen name="recent_bookmark_item_height">136dp</dimen>
+    <dimen name="recent_bookmark_item_width">156dp</dimen>
+    <dimen name="recent_bookmark_item_favicon_height">96dp</dimen>
     <dimen name="recent_bookmark_item_favicon_elevation">0dp</dimen>
     <dimen name="recent_bookmark_item_favicon_corner_size">8dp</dimen>
 

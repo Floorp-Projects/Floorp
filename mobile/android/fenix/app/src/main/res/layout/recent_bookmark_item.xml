@@ -11,17 +11,25 @@
     android:layout_height="@dimen/recent_bookmark_item_height"
     android:padding="4dp">
 
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/favicon_image"
-        style="@style/recentBookmarkFavicon"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:scaleType="centerCrop"
-        android:paddingBottom="8dp"
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/recent_bookmark_item_favicon_height"
+        android:background="@drawable/recent_bookmark_background"
         app:layout_constraintBottom_toTopOf="@+id/bookmark_title"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/favicon_image"
+            style="@style/recentBookmarkFavicon"
+            android:layout_width="@dimen/top_sites_favicon_size"
+            android:layout_height="@dimen/top_sites_favicon_size"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:background="?above" />
+
+    </RelativeLayout>
 
     <TextView
         android:id="@+id/bookmark_title"
@@ -33,8 +41,8 @@
         android:nestedScrollingEnabled="false"
         android:scrollbars="none"
         android:textAppearance="@style/recentBookmarkItemSubTitleText"
+        android:padding="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         tools:text="Recently Saved bookmark item" />
 

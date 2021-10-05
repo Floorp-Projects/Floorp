@@ -31,7 +31,6 @@
         android:layout_height="wrap_content"
         android:background="?android:attr/selectableItemBackground"
         android:contentDescription="@string/recently_saved_show_all_content_description"
-        android:paddingVertical="16dp"
         android:paddingStart="16dp"
         android:paddingEnd="0dp"
         android:gravity="end"
