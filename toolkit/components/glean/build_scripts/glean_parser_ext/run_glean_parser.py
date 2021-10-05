@@ -173,7 +173,10 @@ def output_gifft_map(output_fd, probe_type, all_objs, cpp_fd):
             ):
                 info = (metric.telemetry_mirror, f"{category_name}.{metric.name}")
                 if metric.type in GIFFT_TYPES[probe_type]:
-                    if info in ids_to_probes.values():
+                    if any(
+                        metric.telemetry_mirror == value[0]
+                        for value in ids_to_probes.values()
+                    ):
                         print(
                             f"Telemetry mirror {metric.telemetry_mirror} already registered",
                             file=sys.stderr,

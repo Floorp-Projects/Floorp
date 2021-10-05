@@ -170,7 +170,7 @@ test:
       - https://bugzilla.mozilla.org/1635260/
     data_reviews:
       - https://example.com
-    telemetry_mirror: SOME_KEYED_BOOL_SCALAR
+    telemetry_mirror: YET_ANOTHER_KEYED_BOOL_SCALAR
 
   timespan_metric:
     type: timespan

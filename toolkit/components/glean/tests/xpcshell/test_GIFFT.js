@@ -99,8 +99,10 @@ add_task(function test_gifft_custom_dist() {
     );
   }
 
-  data = Telemetry.getHistogramById("TELEMETRY_TEST_LINEAR").snapshot();
-  Telemetry.getHistogramById("TELEMETRY_TEST_LINEAR").clear();
+  data = Telemetry.getHistogramById(
+    "TELEMETRY_TEST_MIRROR_FOR_CUSTOM"
+  ).snapshot();
+  Telemetry.getHistogramById("TELEMETRY_TEST_MIRROR_FOR_CUSTOM").clear();
   Assert.equal(7 + 268435458, data.sum, "Sum in histogram is correct");
   Assert.equal(1, data.values["1"], "One sample in the low bucket");
   // Yes, the bucket is off-by-one compared to Glean.
