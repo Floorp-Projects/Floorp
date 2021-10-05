@@ -572,13 +572,23 @@ struct FrameMetrics {
   // system is understood by window.scrollTo().
   CSSRect mScrollableRect;
 
-  // The cumulative resolution that the current frame has been painted at.
-  // This is the product of the pres-shell resolutions of the document
-  // containing this scroll frame and its ancestors, and any css-driven
-  // resolution. This information is provided by Gecko at layout/paint time.
-  // Note that this is allowed to have different x- and y-scales, but only
-  // for subframes (mIsRootContent = false). (The same applies to other scales
-  // that "inherit" the 2D-ness of this one, such as mZoom.)
+  // The cumulative resolution of the current frame. This is the product of the
+  // pres-shell resolutions of the document containing this scroll frame and its
+  // in-process ancestors. This information is provided by Gecko at layout/paint
+  // time. Notably, for out of process iframes cumulative resolution will be 1.
+  // The reason for this is that AsyncPanZoomController::GetTransformToThis does
+  // not contain the resolution in the process of the root content document, but
+  // in oop iframes AsyncPanZoomController::GetTransformToThis does contain the
+  // resolution. This makes coordinate math work out in APZ code because in the
+  // old layers backend GetTransformToThis was a transform of rendered pixels,
+  // and the pixels were rendered with the scale applied already. The reason
+  // that AsyncPanZoomController::GetTransformToThis contains the scale in oop
+  // iframes is because we include the resolution in the transform that includes
+  // the iframe via this call
+  // https://searchfox.org/mozilla-central/rev/2eebd6e256fa0355e08421265e57ee1307836d92/layout/generic/nsSubDocumentFrame.cpp#1404
+  // So when coordinates are passed to the process of the oop iframe they have
+  // the resolution removed by unapplying that transform which includes the
+  // resolution.
   LayoutDeviceToLayerScale2D mCumulativeResolution;
 
   // The conversion factor between CSS pixels and device pixels for this frame.
