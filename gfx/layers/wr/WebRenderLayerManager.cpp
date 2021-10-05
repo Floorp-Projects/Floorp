@@ -609,7 +609,7 @@ void WebRenderLayerManager::DidComposite(
   }
 }
 
-void WebRenderLayerManager::ClearCachedResources(Layer* aSubtree) {
+void WebRenderLayerManager::ClearCachedResources() {
   if (!WrBridge()->IPCOpen()) {
     gfxCriticalNote << "IPC Channel is already torn down unexpectedly\n";
     return;
