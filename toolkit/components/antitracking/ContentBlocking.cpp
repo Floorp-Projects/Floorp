@@ -299,11 +299,16 @@ ContentBlocking::AllowAccessFor(
   // so we need to determine whether we can run it in the current process (in
   // most of cases it should be a child process).
   //
-  // If the following two cases are both true, we can continue to run in
+  // We will follow below algorithm to decide if we can continue to run in
   // the current process, otherwise, we need to ask the parent to continue
   // the work.
-  // 1. aParentContext is an in-process browsing contex because we need the
-  //    principal of the parent window.
+  // 1. Check if aParentContext is an in-process browsing context. If it isn't,
+  //    we cannot proceed in the content process because we need the
+  //    principal of the parent window. Otherwise, we go to step 2.
+  // 2. Check if the grant reason is ePrivilegeStorageAccessForOriginAPI. In
+  //    this case, we don't need to check the user interaction of the tracking
+  //    origin. So, we can proceed in the content process. Otherwise, go to
+  //    step 3.
   // 2. tracking origin is not third-party with respect to the parent window
   //    (aParentContext). This is because we need to test whether the user
   //    has interacted with the tracking origin before, and this info is
@@ -317,12 +322,13 @@ ContentBlocking::AllowAccessFor(
 
   bool runInSameProcess;
   if (XRE_IsParentProcess()) {
-    // If we are already in the parent, then continue run in the parent.
+    // If we are already in the parent, then continue to run in the parent.
     runInSameProcess = true;
   } else {
-    // Only continue to run in child processes when aParentContext is
-    // in-process and tracking origin is not third-party with respect to
-    // the parent window.
+    // We should run in the parent process when the tracking origin is
+    // third-party with respect to it's parent window. This is because we can't
+    // test if the user has interacted with the third-party origin in the child
+    // process.
     if (aParentContext->IsInProcess()) {
       bool isThirdParty;
       nsCOMPtr<nsIPrincipal> principal =
@@ -334,7 +340,10 @@ ContentBlocking::AllowAccessFor(
       }
       Unused << trackingPrincipal->IsThirdPartyPrincipal(principal,
                                                          &isThirdParty);
-      runInSameProcess = !isThirdParty;
+      runInSameProcess =
+          aReason ==
+              ContentBlockingNotifier::ePrivilegeStorageAccessForOriginAPI ||
+          !isThirdParty;
     } else {
       runInSameProcess = false;
     }
@@ -407,6 +416,12 @@ ContentBlocking::AllowAccessFor(
 //    aParentContext is the browsing context of the opener window, but
 //    AllowAccessFor is called by the opened window. So as long as
 //    aParentContext is not in-process, we should run in the parent.
+//
+// 4. ePrivilegeStorageAccessForOriginAPI
+//    aParentContext is the browsing context of the top window which calls the
+//    privilege API. So, it is always in-process. And we don't need to check the
+//    user interaction permission for the tracking origin in this case. We can
+//    run in the same process.
 /* static */ RefPtr<ContentBlocking::StorageAccessPermissionGrantPromise>
 ContentBlocking::CompleteAllowAccessFor(
     dom::BrowsingContext* aParentContext, uint64_t aTopLevelWindowId,
@@ -448,13 +463,17 @@ ContentBlocking::CompleteAllowAccessFor(
   // user-interaction state, because it could be that the current process has
   // just sent the request to store the user-interaction permission into the
   // parent, without having received the permission itself yet.
+  //
+  // For ePrivilegeStorageAccessForOriginAPI, we explicitly don't check the user
+  // interaction for the tracking origin.
 
   bool isInPrefList = false;
   trackingPrincipal->IsURIInPrefList(
       "privacy.restrict3rdpartystorage."
       "userInteractionRequiredForHosts",
       &isInPrefList);
-  if (isInPrefList &&
+  if (aReason != ContentBlockingNotifier::ePrivilegeStorageAccessForOriginAPI &&
+      isInPrefList &&
       !ContentBlockingUserInteraction::Exists(trackingPrincipal)) {
     LOG_PRIN(("Tracking principal (%s) hasn't been interacted with before, "
               "refusing to add a first-party storage permission to access it",
@@ -587,7 +606,7 @@ ContentBlocking::CompleteAllowAccessFor(
   MOZ_ASSERT(aParentContext->IsInProcess());
 
   // Let's inform the parent window and the other windows having the
-  // same tracking origin about the stroage permission is granted.
+  // same tracking origin about the storage permission is granted.
   ContentBlocking::UpdateAllowAccessOnCurrentProcess(aParentContext,
                                                      aTrackingOrigin);
 
@@ -742,7 +761,7 @@ ContentBlocking::SaveAccessForOriginOnParentProcess(
   return ParentAccessGrantPromise::CreateAndResolve(rv, __func__);
 }
 
-// There are two methods to handle permisson update:
+// There are two methods to handle permission update:
 // 1. UpdateAllowAccessOnCurrentProcess
 // 2. UpdateAllowAccessOnParentProcess
 //
@@ -817,7 +836,7 @@ void ContentBlocking::UpdateAllowAccessOnParentProcess(
   for (const auto& topContext : aParentContext->Group()->Toplevels()) {
     if (topContext == aParentContext->Top()) {
       // In non-fission mode, storage permission is stored in the top-level,
-      // don't need to propagtes it to tracker frames.
+      // don't need to propagate it to tracker frames.
       bool useRemoteSubframes;
       aParentContext->GetUseRemoteSubframes(&useRemoteSubframes);
       if (!useRemoteSubframes) {
