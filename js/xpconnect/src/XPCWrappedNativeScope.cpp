@@ -309,14 +309,14 @@ void XPCWrappedNativeScope::UpdateWeakPointersAfterGC() {
 
   // Sweep mWrappedNativeProtoMap for dying prototype JSObjects. Moving has
   // already been handled by XPCWrappedNativeProto::JSProtoObjectMoved.
-  for (auto i = mWrappedNativeProtoMap->Iter(); !i.Done(); i.Next()) {
-    auto entry = static_cast<ClassInfo2WrappedNativeProtoMap::Entry*>(i.Get());
-    JSObject* obj = entry->value->GetJSProtoObjectPreserveColor();
+  for (auto i = mWrappedNativeProtoMap->ModIter(); !i.done(); i.next()) {
+    XPCWrappedNativeProto* proto = i.get().value();
+    JSObject* obj = proto->GetJSProtoObjectPreserveColor();
     JS_UpdateWeakPointerAfterGCUnbarriered(&obj);
     MOZ_ASSERT_IF(obj, JS::GetCompartment(obj) == mCompartment);
-    MOZ_ASSERT(!obj || obj == entry->value->GetJSProtoObjectPreserveColor());
+    MOZ_ASSERT(!obj || obj == proto->GetJSProtoObjectPreserveColor());
     if (!obj) {
-      i.Remove();
+      i.remove();
     }
   }
 }
@@ -355,11 +355,9 @@ void XPCWrappedNativeScope::SystemIsBeingShutDown() {
 
     // Walk the protos first. Wrapper shutdown can leave dangling
     // proto pointers in the proto map.
-    for (auto i = cur->mWrappedNativeProtoMap->Iter(); !i.Done(); i.Next()) {
-      auto entry =
-          static_cast<ClassInfo2WrappedNativeProtoMap::Entry*>(i.Get());
-      entry->value->SystemIsBeingShutDown();
-      i.Remove();
+    for (auto i = cur->mWrappedNativeProtoMap->ModIter(); !i.done(); i.next()) {
+      i.get().value()->SystemIsBeingShutDown();
+      i.remove();
     }
     for (auto i = cur->mWrappedNativeMap->ModIter(); !i.done(); i.next()) {
       i.get().value()->SystemIsBeingShutDown();
@@ -451,10 +449,8 @@ void XPCWrappedNativeScope::DebugDump(int16_t depth) {
   // iterate contexts...
   if (depth && mWrappedNativeProtoMap->Count()) {
     XPC_LOG_INDENT();
-    for (auto i = mWrappedNativeProtoMap->Iter(); !i.Done(); i.Next()) {
-      auto entry =
-          static_cast<ClassInfo2WrappedNativeProtoMap::Entry*>(i.Get());
-      entry->value->DebugDump(depth);
+    for (auto i = mWrappedNativeProtoMap->Iter(); !i.done(); i.next()) {
+      i.get().value()->DebugDump(depth);
     }
     XPC_LOG_OUTDENT();
   }

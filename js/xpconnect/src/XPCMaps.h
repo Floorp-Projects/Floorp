@@ -251,44 +251,42 @@ class ClassInfo2NativeSetMap {
 /*************************/
 
 class ClassInfo2WrappedNativeProtoMap {
- public:
-  struct Entry : public PLDHashEntryHdr {
-    nsIClassInfo* key;
-    XPCWrappedNativeProto* value;
-  };
+  using Map = mozilla::HashMap<nsIClassInfo*, XPCWrappedNativeProto*,
+                               mozilla::DefaultHasher<nsIClassInfo*>,
+                               mozilla::MallocAllocPolicy>;
 
+ public:
   ClassInfo2WrappedNativeProtoMap();
 
-  inline XPCWrappedNativeProto* Find(nsIClassInfo* info) const {
-    auto entry = static_cast<Entry*>(mTable.Search(info));
-    return entry ? entry->value : nullptr;
+  XPCWrappedNativeProto* Find(nsIClassInfo* info) const {
+    auto ptr = mMap.lookup(info);
+    return ptr ? ptr->value() : nullptr;
   }
 
-  inline XPCWrappedNativeProto* Add(nsIClassInfo* info,
+  XPCWrappedNativeProto* Add(nsIClassInfo* info,
                                     XPCWrappedNativeProto* proto) {
     MOZ_ASSERT(info, "bad param");
-    auto entry = static_cast<Entry*>(mTable.Add(info, mozilla::fallible));
-    if (!entry) {
+    auto ptr = mMap.lookupForAdd(info);
+    if (ptr) {
+      return ptr->value();
+    }
+    if (!mMap.add(ptr, info, proto)) {
       return nullptr;
     }
-    if (entry->key) {
-      return entry->value;
-    }
-    entry->key = info;
-    entry->value = proto;
     return proto;
   }
 
-  inline void Clear() { mTable.Clear(); }
+  void Clear() { mMap.clear(); }
 
-  inline uint32_t Count() { return mTable.EntryCount(); }
+  uint32_t Count() { return mMap.count(); }
 
-  PLDHashTable::Iterator Iter() { return mTable.Iter(); }
+  Map::Iterator Iter() { return mMap.iter(); }
+  Map::ModIterator ModIter() { return mMap.modIter(); }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
  private:
-  PLDHashTable mTable;
+  Map mMap;
 };
 
 /*************************/
