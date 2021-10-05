@@ -24,6 +24,7 @@
 #include "nsWindowDbg.h"
 #include "cairo.h"
 #include "nsRegion.h"
+#include "mozilla/EnumeratedArray.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MouseEvents.h"
@@ -408,6 +409,9 @@ class nsWindow final : public nsWindowBase {
    */
   LPARAM lParamToScreen(LPARAM lParam);
   LPARAM lParamToClient(LPARAM lParam);
+
+  WPARAM wParamFromGlobalMouseState();
+
   virtual void SubclassWindow(BOOL bState);
   bool CanTakeFocus();
   bool UpdateNonClientMargins(int32_t aSizeMode = -1,
@@ -449,8 +453,9 @@ class nsWindow final : public nsWindowBase {
   static bool ConvertStatus(nsEventStatus aStatus);
   static void PostSleepWakeNotification(const bool aIsSleepMode);
   int32_t ClientMarginHitTestPoint(int32_t mx, int32_t my);
-  void SetMaximizeButtonRect(const LayoutDeviceIntRect& aClientRect) override {
-    mMaximizeBtnRect = aClientRect;
+  void SetWindowButtonRect(WindowButtonType aButtonType,
+                           const LayoutDeviceIntRect& aClientRect) override {
+    mWindowBtnRect[aButtonType] = aClientRect;
   }
   TimeStamp GetMessageTimeStamp(LONG aEventTime) const;
   static void UpdateFirstEventTime(DWORD aEventTime);
@@ -523,6 +528,7 @@ class nsWindow final : public nsWindowBase {
   }
   void UpdateGlass();
   bool IsSimulatedClientArea(int32_t clientX, int32_t clientY);
+  bool IsWindowButton(int32_t hitTestResult);
 
   bool DispatchTouchEventFromWMPointer(UINT msg, LPARAM aLParam,
                                        const WinPointerInfo& aPointerInfo,
@@ -747,8 +753,10 @@ class nsWindow final : public nsWindowBase {
 
   mozilla::UniquePtr<mozilla::widget::DirectManipulationOwner> mDmOwner;
 
-  // Client rect for maximize button.
-  LayoutDeviceIntRect mMaximizeBtnRect;
+  // Client rect for minimize, maximize and close buttons.
+  mozilla::EnumeratedArray<WindowButtonType, WindowButtonType::Count,
+                           LayoutDeviceIntRect>
+      mWindowBtnRect;
 };
 
 #endif  // Window_h__
