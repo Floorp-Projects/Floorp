@@ -136,7 +136,7 @@
 <a href="%2$s">Tìm hiểu thêm</a></p>]]></string>
 
     <!-- Header for the Privacy and Security settings menu -->
-    <string name="preference_privacy_and_security_header">Riêng tư &amp; Bảo mật</string>
+    <string name="preference_privacy_and_security_header">Riêng tư &amp; bảo mật</string>
 
     <!-- Preference summary for settings related to privacy and security -->
     <string name="preference_privacy_and_security_summary">Theo dõi, cookie, lựa chọn dữ liệu</string>
