@@ -58,21 +58,11 @@ job-template:
                     - repackage/win64-aarch64_sfx_stub.py
                     - repackage/win64_signed.py
     package-formats:
-        by-release-type:
-            esr.*:
-                by-build-platform:
-                    linux.*: [mar]
-                    linux4\b.*: [mar]
-                    macosx64\b.*: [mar, dmg]
-                    win32\b.*: [mar, installer]
-                    win64\b.*: [mar, installer]
-            default:
-                by-build-platform:
-                    linux.*: [mar]
-                    linux4\b.*: [mar]
-                    macosx64\b.*: [mar, dmg]
-                    win32\b.*: [mar, installer]
-                    win64\b.*: [mar, installer]
+        by-build-platform:
+            linux.*: [mar]
+            macosx64\b.*: [mar, dmg]
+            win32\b.*: [mar, installer]
+            win64\b.*: [mar, installer]
     fetches:
         toolchain:
             - linux64-mar-tools
