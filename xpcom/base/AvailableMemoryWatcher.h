@@ -7,12 +7,13 @@
 #ifndef mozilla_AvailableMemoryWatcher_h
 #define mozilla_AvailableMemoryWatcher_h
 
-#include "mozilla/TimeStamp.h"
 #include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/UniquePtr.h"
 #include "MemoryPressureLevelMac.h"
 #include "nsCOMPtr.h"
 #include "nsIAvailableMemoryWatcherBase.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
 
 namespace mozilla {
 
@@ -21,8 +22,10 @@ namespace mozilla {
 // a low-memory situation or a high-memory situation.
 // The actual logic to monitor the memory status is implemented in a subclass
 // of nsAvailableMemoryWatcherBase per platform.
-class nsAvailableMemoryWatcherBase : public nsIAvailableMemoryWatcherBase {
+class nsAvailableMemoryWatcherBase : public nsIAvailableMemoryWatcherBase,
+                                     public nsIObserver {
   static StaticRefPtr<nsAvailableMemoryWatcherBase> sSingleton;
+  static const char* const kObserverTopics[];
 
   TimeStamp mLowMemoryStart;
   uint32_t mNumOfTabUnloading;
@@ -30,8 +33,13 @@ class nsAvailableMemoryWatcherBase : public nsIAvailableMemoryWatcherBase {
 
  protected:
   nsCOMPtr<nsITabUnloader> mTabUnloader;
+  nsCOMPtr<nsIObserverService> mObserverSvc;
+  // Do not change this value off the main thread.
+  bool mInteracting;
 
   virtual ~nsAvailableMemoryWatcherBase() = default;
+  virtual nsresult Init();
+  void Shutdown();
   void UpdateLowMemoryTimeStamp();
   void RecordTelemetryEventOnHighMemory();
 
@@ -48,6 +56,7 @@ class nsAvailableMemoryWatcherBase : public nsIAvailableMemoryWatcherBase {
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIAVAILABLEMEMORYWATCHERBASE
+  NS_DECL_NSIOBSERVER
 };
 
 // Method to create a platform-specific object
