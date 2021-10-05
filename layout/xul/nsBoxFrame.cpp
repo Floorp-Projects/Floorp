@@ -66,6 +66,7 @@
 #include "nsIFrameInlines.h"
 #include "nsIScrollableFrame.h"
 #include "nsITheme.h"
+#include "nsIWidget.h"
 #include "nsLayoutUtils.h"
 #include "nsNameSpaceManager.h"
 #include "nsPlaceholderFrame.h"
@@ -921,12 +922,25 @@ void nsBoxFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
           this, nsRect(aBuilder->ToReferenceFrame(this), GetSize()));
     }
 
-    if (mContent->AsElement()->HasAttr(nsGkAtoms::titlebar_max_button)) {
+    nsStaticAtom* windowButtonTypes[] = {nsGkAtoms::min, nsGkAtoms::max,
+                                         nsGkAtoms::close, nullptr};
+    int32_t buttonTypeIndex = mContent->AsElement()->FindAttrValueIn(
+        kNameSpaceID_None, nsGkAtoms::titlebar_button, windowButtonTypes,
+        eCaseMatters);
+
+    if (buttonTypeIndex >= 0) {
+      MOZ_ASSERT(buttonTypeIndex < 3);
+
       if (auto* widget = GetNearestWidget()) {
+        using ButtonType = nsIWidget::WindowButtonType;
+        auto buttonType = buttonTypeIndex == 0
+                              ? ButtonType::Minimize
+                              : (buttonTypeIndex == 1 ? ButtonType::Maximize
+                                                      : ButtonType::Close);
         auto rect = LayoutDevicePixel::FromAppUnitsToNearest(
             nsRect(aBuilder->ToReferenceFrame(this), GetSize()),
             PresContext()->AppUnitsPerDevPixel());
-        widget->SetMaximizeButtonRect(rect);
+        widget->SetWindowButtonRect(buttonType, rect);
       }
     }
   }
