@@ -125,7 +125,7 @@ run locally like this:
 
 You can also run them against Chrome as:
 
-  % ./mach puppeteer-test --product=chrome --subset
+	% ./mach puppeteer-test --product=chrome --subset
 
 `--subset` disables a check for missing or skipped tests in our log parsing.
 This check is typically not relevant when running against Chrome.
@@ -145,7 +145,7 @@ To schedule all the Remote Protocol tests on try, you can use the
 
 But you can also schedule tests by selecting relevant jobs yourself:
 
-  mach try fuzzy
+	mach try fuzzy
 
 [Puppeteer test suite]: https://github.com/puppeteer/puppeteer/blob/master/test/README.md
 [track progress]: https://puppeteer.github.io/ispuppeteerfirefoxready/
