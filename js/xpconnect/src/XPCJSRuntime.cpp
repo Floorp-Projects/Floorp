@@ -13,6 +13,7 @@
 
 #include "xpcprivate.h"
 #include "xpcpublic.h"
+#include "XPCMaps.h"
 #include "XPCWrapper.h"
 #include "XPCJSMemoryReporter.h"
 #include "XrayWrapper.h"
