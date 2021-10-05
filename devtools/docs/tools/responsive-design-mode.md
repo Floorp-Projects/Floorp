@@ -68,3 +68,8 @@ line with how the rest of DevTools currently functions after restore.  To do so,
 we watch for `beforeunload` events on the tab at shutdown and quickly exit RDM
 so that session restore records only the original page content during its final
 write at shutdown.
+
+## List of Devices
+
+RDM is maintaining a list of popular mobile devices that can be used to quickly simulate a particular environment (screen resolution, pixel ratio, user agent, etc.)
+[Learn more](/devtools/responsive/devices) about how this list is maintained and how it should be properly updated.
