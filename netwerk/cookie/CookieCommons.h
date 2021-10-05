@@ -11,6 +11,7 @@
 #include "prtime.h"
 #include "nsString.h"
 #include "nsICookie.h"
+#include "mozilla/net/NeckoChannelParams.h"
 
 class nsIChannel;
 class nsIConsoleReportCollector;
