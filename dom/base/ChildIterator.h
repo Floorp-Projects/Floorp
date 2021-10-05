@@ -115,32 +115,20 @@ class FlattenedChildIterator : public ExplicitChildIterator {
                                   bool aStartAtBeginning = true)
       : ExplicitChildIterator(aParent, aStartAtBeginning),
         mOriginalContent(aParent) {
-    Init(false);
+    Init();
   }
 
   bool ShadowDOMInvolved() { return mShadowDOMInvolved; }
 
   const nsIContent* Parent() const { return mOriginalContent; }
 
- private:
-  void Init(bool aIgnoreXBL);
-
  protected:
-  /**
-   * This constructor is a hack to help AllChildrenIterator which sometimes
-   * doesn't want to consider XBL.
-   */
-  FlattenedChildIterator(const nsIContent* aParent, uint32_t aFlags,
-                         bool aStartAtBeginning = true)
-      : ExplicitChildIterator(aParent, aStartAtBeginning),
-        mOriginalContent(aParent) {
-    bool ignoreXBL = aFlags & nsIContent::eAllButXBL;
-    Init(ignoreXBL);
-  }
 
   const nsIContent* mOriginalContent;
 
  private:
+  void Init();
+
   // For certain optimizations, nsCSSFrameConstructor needs to know if the child
   // list of the element that we're iterating matches its .childNodes.
   bool mShadowDOMInvolved = false;
@@ -148,9 +136,9 @@ class FlattenedChildIterator : public ExplicitChildIterator {
 
 /**
  * AllChildrenIterator traverses the children of an element including before /
- * after content and optionally XBL children.  The iterator can be initialized
- * to start at the end by providing false for aStartAtBeginning in order to
- * start iterating in reverse from the last child.
+ * after content and shadow DOM.  The iterator can be initialized to start at
+ * the end by providing false for aStartAtBeginning in order to start iterating
+ * in reverse from the last child.
  *
  * Note: it assumes that no mutation of the DOM or frame tree takes place during
  * iteration, and will break horribly if that is not true.
@@ -159,7 +147,7 @@ class AllChildrenIterator : private FlattenedChildIterator {
  public:
   AllChildrenIterator(const nsIContent* aNode, uint32_t aFlags,
                       bool aStartAtBeginning = true)
-      : FlattenedChildIterator(aNode, aFlags, aStartAtBeginning),
+      : FlattenedChildIterator(aNode, aStartAtBeginning),
         mAnonKidsIdx(aStartAtBeginning ? UINT32_MAX : 0),
         mFlags(aFlags),
         mPhase(aStartAtBeginning ? eAtBegin : eAtEnd) {}

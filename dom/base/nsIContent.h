@@ -116,48 +116,28 @@ class nsIContent : public nsINode {
      *
      * @note the result children order is
      *   1. :before generated node
-     *   2. XBL flattened tree children of this node
+     *   2. Shadow DOM flattened tree children of this node
      *   3. native anonymous nodes
      *   4. :after generated node
      */
     eAllChildren = 0,
 
     /**
-     * All XBL explicit children of the node (see
-     * http://www.w3.org/TR/xbl/#explicit3 ), as well as :before and :after
-     * anonymous content and native anonymous children.
-     *
-     * @note the result children order is
-     *   1. :before generated node
-     *   2. XBL explicit children of the node
-     *   3. native anonymous nodes
-     *   4. :after generated node
+     * Skip native anonymous content created for placeholder of HTML input.
      */
-    eAllButXBL = 1,
-
-    /**
-     * Skip native anonymous content created for placeholder of HTML input,
-     * used in conjunction with eAllChildren or eAllButXBL.
-     */
-    eSkipPlaceholderContent = 2,
+    eSkipPlaceholderContent = 1 << 0,
 
     /**
      * Skip native anonymous content created by ancestor frames of the root
      * element's primary frame, such as scrollbar elements created by the root
      * scroll frame.
      */
-    eSkipDocumentLevelNativeAnonymousContent = 4,
+    eSkipDocumentLevelNativeAnonymousContent = 1 << 1,
   };
 
   /**
-   * Return either the XBL explicit children of the node or the XBL flattened
-   * tree children of the node, depending on the filter, as well as
-   * native anonymous children.
-   *
-   * @note calling this method with eAllButXBL will return children that are
-   *  also in the eAllButXBL and eAllChildren child lists of other descendants
-   *  of this node in the tree, but those other nodes cannot be reached from the
-   *  eAllButXBL child list.
+   * Return the flattened tree children of the node, depending on the filter, as
+   * well as native anonymous children.
    */
   virtual already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter) = 0;
 
