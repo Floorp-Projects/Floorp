@@ -26,6 +26,7 @@ class RejectForeignAllowList final
 
   static bool Check(dom::Document* aDocument);
   static bool Check(nsIHttpChannel* aChannel);
+  static bool Check(nsIPrincipal* aPrincipal);
 
  private:
   static RejectForeignAllowList* GetOrCreate();
@@ -34,6 +35,7 @@ class RejectForeignAllowList final
   ~RejectForeignAllowList();
 
   bool CheckInternal(nsIURI* aURI);
+  bool CheckInternal(nsIPrincipal* aPrincipal);
 
   nsCString mList;
 };
