@@ -13,6 +13,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/OperatorNewExtensions.h"
+#include "mozilla/ScopeExit.h"
 #include "nsAlgorithm.h"
 #include "nsPointerHashKeys.h"
 #include "mozilla/Likely.h"
