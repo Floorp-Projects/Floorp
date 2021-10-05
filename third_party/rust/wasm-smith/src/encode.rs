@@ -14,6 +14,7 @@ impl Module {
         self.encode_funcs(&mut module);
         self.encode_tables(&mut module);
         self.encode_memories(&mut module);
+        self.encode_tags(&mut module);
         self.encode_globals(&mut module);
         self.encode_exports(&mut module);
         self.encode_start(&mut module);
@@ -125,6 +126,20 @@ impl Module {
             section.module(&encoded);
         }
         module.section(&section);
+    }
+
+    fn encode_tags(&self, module: &mut wasm_encoder::Module) {
+        if self.num_defined_tags == 0 {
+            return;
+        }
+        let mut tags = wasm_encoder::TagSection::new();
+        for tag in self.tags[self.tags.len() - self.num_defined_tags..].iter() {
+            tags.tag(wasm_encoder::TagType {
+                kind: wasm_encoder::TagKind::Exception,
+                func_type_idx: tag.func_type_idx,
+            });
+        }
+        module.section(&tags);
     }
 
     fn encode_funcs(&self, module: &mut wasm_encoder::Module) {
@@ -303,6 +318,10 @@ fn translate_val_type(ty: ValType) -> wasm_encoder::ValType {
 
 fn translate_entity_type(ty: &EntityType) -> wasm_encoder::EntityType {
     match ty {
+        EntityType::Tag(t) => wasm_encoder::EntityType::Tag(wasm_encoder::TagType {
+            kind: wasm_encoder::TagKind::Exception,
+            func_type_idx: t.func_type_idx,
+        }),
         EntityType::Func(f, _) => wasm_encoder::EntityType::Function(*f),
         EntityType::Instance(i, _) => wasm_encoder::EntityType::Instance(*i),
         EntityType::Module(i, _) => wasm_encoder::EntityType::Module(*i),
@@ -353,6 +372,7 @@ fn translate_mem_arg(m: MemArg) -> wasm_encoder::MemArg {
 
 fn translate_item_kind(kind: &ItemKind) -> wasm_encoder::ItemKind {
     match kind {
+        ItemKind::Tag => wasm_encoder::ItemKind::Tag,
         ItemKind::Func => wasm_encoder::ItemKind::Function,
         ItemKind::Table => wasm_encoder::ItemKind::Table,
         ItemKind::Memory => wasm_encoder::ItemKind::Memory,
@@ -364,6 +384,7 @@ fn translate_item_kind(kind: &ItemKind) -> wasm_encoder::ItemKind {
 
 fn translate_export(export: &Export) -> wasm_encoder::Export {
     match export {
+        Export::Tag(idx) => wasm_encoder::Export::Tag(*idx),
         Export::Func(idx) => wasm_encoder::Export::Function(*idx),
         Export::Table(idx) => wasm_encoder::Export::Table(*idx),
         Export::Memory(idx) => wasm_encoder::Export::Memory(*idx),
@@ -383,6 +404,10 @@ fn translate_instruction(inst: &Instruction) -> wasm_encoder::Instruction {
         Loop(bt) => wasm_encoder::Instruction::Loop(translate_block_type(bt)),
         If(bt) => wasm_encoder::Instruction::If(translate_block_type(bt)),
         Else => wasm_encoder::Instruction::Else,
+        Try(bt) => wasm_encoder::Instruction::Try(translate_block_type(bt)),
+        Delegate(l) => wasm_encoder::Instruction::Delegate(l),
+        Catch(t) => wasm_encoder::Instruction::Catch(t),
+        CatchAll => wasm_encoder::Instruction::CatchAll,
         End => wasm_encoder::Instruction::End,
         Br(x) => wasm_encoder::Instruction::Br(x),
         BrIf(x) => wasm_encoder::Instruction::BrIf(x),
@@ -390,6 +415,8 @@ fn translate_instruction(inst: &Instruction) -> wasm_encoder::Instruction {
         Return => wasm_encoder::Instruction::Return,
         Call(x) => wasm_encoder::Instruction::Call(x),
         CallIndirect { ty, table } => wasm_encoder::Instruction::CallIndirect { ty, table },
+        Throw(t) => wasm_encoder::Instruction::Throw(t),
+        Rethrow(l) => wasm_encoder::Instruction::Rethrow(l),
 
         // Parametric instructions.
         Drop => wasm_encoder::Instruction::Drop,

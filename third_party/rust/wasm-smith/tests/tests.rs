@@ -11,6 +11,7 @@ fn wasm_features() -> WasmFeatures {
         reference_types: true,
         simd: true,
         memory64: true,
+        exceptions: true,
         ..WasmFeatures::default()
     }
 }

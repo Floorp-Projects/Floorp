@@ -145,6 +145,10 @@ pub struct Module {
     /// Number of items aliased into this module.
     num_aliases: usize,
 
+    /// The number of tags defined in this module (not imported or
+    /// aliased).
+    num_defined_tags: usize,
+
     /// The number of functions defined in this module (not imported or
     /// aliased).
     num_defined_funcs: usize,
@@ -160,6 +164,10 @@ pub struct Module {
     /// The indexes and initialization expressions of globals defined in this
     /// module.
     defined_globals: Vec<(u32, Instruction)>,
+
+    /// All tags available to this module, sorted by their index. The list
+    /// entry is the type of each tag.
+    tags: Vec<TagType>,
 
     /// All functions available to this module, sorted by their index. The list
     /// entry points to the index in this module where the function type is
@@ -249,10 +257,12 @@ impl Module {
             instance_types: Vec::new(),
             num_imports: 0,
             num_aliases: 0,
+            num_defined_tags: 0,
             num_defined_funcs: 0,
             num_defined_tables: 0,
             num_defined_memories: 0,
             defined_globals: Vec::new(),
+            tags: Vec::new(),
             funcs: Vec::new(),
             tables: Vec::new(),
             globals: Vec::new(),
@@ -346,6 +356,7 @@ enum EntityType {
     Global(GlobalType),
     Table(TableType),
     Memory(MemoryType),
+    Tag(TagType),
     Func(u32, Rc<FuncType>),
     Instance(u32, Rc<InstanceType>),
     Module(u32, Rc<ModuleType>),
@@ -383,6 +394,12 @@ struct GlobalType {
 }
 
 #[derive(Clone, Debug)]
+struct TagType {
+    func_type_idx: u32,
+    func_type: Rc<FuncType>,
+}
+
+#[derive(Clone, Debug)]
 enum Alias {
     InstanceExport {
         instance: u32,
@@ -411,6 +428,7 @@ enum ItemKind {
     Table,
     Memory,
     Global,
+    Tag,
     Instance,
     Module,
 }
@@ -421,6 +439,7 @@ enum Export {
     Table(u32),
     Memory(u32),
     Global(u32),
+    Tag(u32),
     Instance(u32),
     Module(u32),
 }
@@ -498,6 +517,10 @@ enum Instruction {
     Block(BlockType),
     Loop(BlockType),
     If(BlockType),
+    Try(BlockType),
+    Delegate(u32),
+    Catch(u32),
+    CatchAll,
     Else,
     End,
     Br(u32),
@@ -506,6 +529,8 @@ enum Instruction {
     Return,
     Call(u32),
     CallIndirect { ty: u32, table: u32 },
+    Throw(u32),
+    Rethrow(u32),
 
     // Parametric instructions.
     Drop,
@@ -971,6 +996,7 @@ impl Module {
             self.valtypes.push(ValType::FuncRef);
         }
         self.arbitrary_initial_sections(u)?;
+        self.arbitrary_tags(u)?;
         self.arbitrary_funcs(u)?;
         self.arbitrary_tables(u)?;
         self.arbitrary_memories(u)?;
@@ -1203,6 +1229,15 @@ impl Module {
                 Ok(EntityType::Func(idx, ty.clone()))
             });
         }
+        if self.config.exceptions_enabled()
+            && entities.tags < self.config.max_tags()
+            && self.has_tag_func_types()
+        {
+            choices.push(|u, m, e| {
+                e.tags += 1;
+                Ok(EntityType::Tag(m.arbitrary_tag_type(u)?))
+            });
+        }
         if entities.instances < self.config.max_instances() && self.instance_types.len() > 0 {
             choices.push(|u, m, e| {
                 e.instances += 1;
@@ -1220,6 +1255,12 @@ impl Module {
             });
         }
         u.choose(&choices)?(u, self, entities)
+    }
+
+    fn can_add_local_or_import_tag(&self) -> bool {
+        self.config.exceptions_enabled()
+            && self.has_tag_func_types()
+            && self.tags.len() < self.config.max_tags()
     }
 
     fn can_add_local_or_import_func(&self) -> bool {
@@ -1257,6 +1298,12 @@ impl Module {
         let mut imports = Vec::new();
         arbitrary_loop(u, min, self.config.max_imports() - self.num_imports, |u| {
             choices.clear();
+            if self.can_add_local_or_import_tag() {
+                choices.push(|u, m| {
+                    let ty = m.arbitrary_tag_type(u)?;
+                    Ok(EntityType::Tag(ty))
+                });
+            }
             if self.can_add_local_or_import_func() {
                 choices.push(|u, m| {
                     let idx = *u.choose(&m.func_types)?;
@@ -1336,6 +1383,7 @@ impl Module {
             // we've inserted the implicit instance, then we push the typed item
             // into the appropriate namespace.
             match &ty {
+                EntityType::Tag(ty) => self.tags.push(ty.clone()),
                 EntityType::Func(idx, ty) => self.funcs.push((Some(*idx), ty.clone())),
                 EntityType::Global(ty) => self.globals.push(ty.clone()),
                 EntityType::Table(ty) => self.tables.push(ty.clone()),
@@ -1418,6 +1466,13 @@ impl Module {
                                 _ => unreachable!(),
                             };
                             self.funcs.push((Some(i), ty.clone()));
+                        }
+                        ItemKind::Tag => {
+                            let ty = match &ty.exports[name] {
+                                EntityType::Tag(t) => t,
+                                _ => unreachable!(),
+                            };
+                            self.tags.push(ty.clone());
                         }
                         ItemKind::Module => {
                             let ty = match &ty.exports[name] {
@@ -1582,6 +1637,7 @@ impl Module {
                 let (_idx, ty) = &self.funcs[idx as usize];
                 EntityType::Func(u32::max_value(), ty.clone())
             }
+            Export::Tag(idx) => EntityType::Tag(self.tags[idx as usize].clone()),
             Export::Module(idx) => {
                 EntityType::Module(u32::max_value(), self.modules[idx as usize].clone())
             }
@@ -1631,11 +1687,29 @@ impl Module {
         panic!("looked up an instance type with the wrong index")
     }
 
+    fn tags<'a>(&'a self) -> impl Iterator<Item = (u32, &'a TagType)> + 'a {
+        self.tags
+            .iter()
+            .enumerate()
+            .map(move |(i, ty)| (i as u32, ty))
+    }
+
     fn funcs<'a>(&'a self) -> impl Iterator<Item = (u32, &'a Rc<FuncType>)> + 'a {
         self.funcs
             .iter()
             .enumerate()
             .map(move |(i, (_, ty))| (i as u32, ty))
+    }
+
+    fn has_tag_func_types(&self) -> bool {
+        self.tag_func_types().next().is_some()
+    }
+
+    fn tag_func_types<'a>(&'a self) -> impl Iterator<Item = u32> + 'a {
+        self.func_types
+            .iter()
+            .copied()
+            .filter(move |i| self.func_type(*i).results.len() == 0)
     }
 
     fn arbitrary_valtype(&self, u: &mut Unstructured) -> Result<ValType> {
@@ -1662,6 +1736,31 @@ impl Module {
             },
             minimum,
             maximum,
+        })
+    }
+
+    fn arbitrary_tag_type(&self, u: &mut Unstructured) -> Result<TagType> {
+        let candidate_func_types = self.tag_func_types().collect::<Vec<_>>();
+        let max = candidate_func_types.len() - 1;
+        let ty = candidate_func_types[u.int_in_range(0..=max)?];
+        Ok(TagType {
+            func_type_idx: ty,
+            func_type: self.func_type(ty).clone(),
+        })
+    }
+
+    fn arbitrary_tags(&mut self, u: &mut Unstructured) -> Result<()> {
+        if !self.config.exceptions_enabled() || !self.has_tag_func_types() {
+            return Ok(());
+        }
+
+        arbitrary_loop(u, self.config.min_tags(), self.config.max_tags(), |u| {
+            if !self.can_add_local_or_import_tag() {
+                return Ok(false);
+            }
+            self.tags.push(self.arbitrary_tag_type(u)?);
+            self.num_defined_tags += 1;
+            Ok(true)
         })
     }
 
@@ -2164,6 +2263,13 @@ impl Module {
     fn subtypes(&self, skip: &Entities, expected: &EntityType) -> Vec<Export> {
         let mut ret = Vec::new();
         match expected {
+            EntityType::Tag(expected) => {
+                for (i, actual) in self.tags.iter().enumerate().skip(skip.tags) {
+                    if self.is_subtype_tag(actual, expected) {
+                        ret.push(Export::Tag(i as u32));
+                    }
+                }
+            }
             EntityType::Global(expected) => {
                 for (i, actual) in self.globals.iter().enumerate().skip(skip.globals) {
                     if self.is_subtype_global(actual, expected) {
@@ -2213,6 +2319,10 @@ impl Module {
     // Returns whether `a` is a subtype of `b`.
     fn is_subtype(&self, a: &EntityType, b: &EntityType) -> bool {
         match a {
+            EntityType::Tag(a) => match b {
+                EntityType::Tag(b) => self.is_subtype_tag(a, b),
+                _ => false,
+            },
             EntityType::Global(a) => match b {
                 EntityType::Global(b) => self.is_subtype_global(a, b),
                 _ => false,
@@ -2238,6 +2348,11 @@ impl Module {
                 _ => false,
             },
         }
+    }
+
+    // TODO: no published exception-handling spec
+    fn is_subtype_tag(&self, a: &TagType, b: &TagType) -> bool {
+        a.func_type == b.func_type
     }
 
     // https://webassembly.github.io/spec/core/exec/modules.html#globals
@@ -2572,7 +2687,10 @@ fn arbitrary_vec_u8(u: &mut Unstructured) -> Result<Vec<u8>> {
 impl EntityType {
     fn size(&self) -> u32 {
         match self {
-            EntityType::Global(_) | EntityType::Table(_) | EntityType::Memory(_) => 1,
+            EntityType::Tag(_)
+            | EntityType::Global(_)
+            | EntityType::Table(_)
+            | EntityType::Memory(_) => 1,
             EntityType::Func(_, ty) => 1 + (ty.params.len() + ty.results.len()) as u32,
             EntityType::Instance(_, ty) => ty.type_size,
             EntityType::Module(_, ty) => ty.type_size,
@@ -2611,6 +2729,13 @@ impl AvailableAliases {
             let instance = instance as u32;
             for (name, ty) in ty.exports.iter() {
                 match ty {
+                    EntityType::Tag(_) => {
+                        self.aliases.push(Alias::InstanceExport {
+                            instance,
+                            kind: ItemKind::Tag,
+                            name: name.clone(),
+                        });
+                    }
                     EntityType::Global(_) => {
                         self.aliases.push(Alias::InstanceExport {
                             instance,
@@ -2693,6 +2818,10 @@ impl AvailableAliases {
                 ..
             } => module.funcs.len() < module.config.max_funcs(),
             Alias::InstanceExport {
+                kind: ItemKind::Tag,
+                ..
+            } => module.tags.len() < module.config.max_tags(),
+            Alias::InstanceExport {
                 kind: ItemKind::Memory,
                 ..
             } => module.memories.len() < module.config.max_memories(),
@@ -2762,6 +2891,7 @@ impl AvailableInstantiations {
             memories: module.memories.len(),
             tables: module.tables.len(),
             funcs: module.funcs.len(),
+            tags: module.tags.len(),
             modules: module.modules.len(),
             instances: module.instances.len(),
         };
@@ -2814,6 +2944,7 @@ struct Entities {
     memories: usize,
     tables: usize,
     funcs: usize,
+    tags: usize,
     modules: usize,
     instances: usize,
 }
