@@ -501,8 +501,11 @@ class ResponsiveUI {
     if (reloadNeeded) {
       this.reloadBrowser();
     }
+
     // Used by tests
-    this.emitForTests("device-changed", { reloadNeeded });
+    this.emitForTests("device-changed", {
+      reloadTriggered: reloadNeeded || reloadOnTouchSimulationChange,
+    });
   }
 
   async onChangeNetworkThrottling(event) {
@@ -561,7 +564,9 @@ class ResponsiveUI {
       this.reloadBrowser();
     }
     // Used by tests
-    this.emitForTests("device-association-removed", { reloadNeeded });
+    this.emitForTests("device-association-removed", {
+      reloadTriggered: reloadNeeded || reloadOnTouchSimulationChange,
+    });
   }
 
   /**
