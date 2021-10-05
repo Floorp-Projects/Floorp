@@ -445,7 +445,7 @@ auto SharedSubResourceCache<Traits, Derived>::Lookup(Loader& aLoader,
 template <typename Traits, typename Derived>
 size_t SharedSubResourceCache<Traits, Derived>::SizeOfIncludingThis(
     MallocSizeOf aMallocSizeOf) const {
-  size_t n = aMallocSizeOf(this);
+  size_t n = aMallocSizeOf(&AsDerived());
 
   n += mComplete.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (const auto& data : mComplete.Values()) {
