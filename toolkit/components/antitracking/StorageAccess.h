@@ -9,6 +9,11 @@
 
 #include <cstdint>
 
+#include "mozilla/MozPromise.h"
+#include "mozilla/RefPtr.h"
+
+#include "mozilla/dom/BrowsingContext.h"
+
 class nsIChannel;
 class nsICookieJarSettings;
 class nsIPrincipal;
@@ -104,6 +109,17 @@ bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
  */
 bool StorageDisabledByAntiTracking(dom::Document* aDocument, nsIURI* aURI,
                                    uint32_t& aRejectedReason);
+
+/*
+ * Returns true if the principal in the browsing context should disable storages
+ * because of the anti-tracking feature. Note that this has to be async because
+ * the aPrincipal is a cross-origin principal.
+ */
+using AsyncStorageDisabledByAntiTrackingPromise =
+    MozPromise<uint32_t, nsresult, true>;
+[[nodiscard]] RefPtr<AsyncStorageDisabledByAntiTrackingPromise>
+AsyncStorageDisabledByAntiTracking(dom::BrowsingContext* aContext,
+                                   nsIPrincipal* aPrincipal);
 
 bool ShouldPartitionStorage(StorageAccess aAccess);
 
