@@ -25,6 +25,10 @@ enum PlacesEventType {
    */
   "bookmark-title-changed",
   /**
+   * data: PlacesBookmarkUrl. Fired whenever a bookmark url changes.
+   */
+  "bookmark-url-changed",
+  /**
    * data: PlacesFavicon. Fired whenever a favicon changes.
    */
   "favicon-changed",
@@ -282,6 +286,27 @@ interface PlacesBookmarkTitle : PlacesBookmark {
    * The title of the changed bookmark.
    */
   readonly attribute DOMString title;
+
+  /**
+   * The updated last modified value in milliseconds.
+   */
+  readonly attribute long long lastModified;
+};
+
+dictionary PlacesBookmarkUrlInit {
+  required long long id;
+  required unsigned short itemType;
+  required DOMString url;
+  required ByteString guid;
+  required ByteString parentGuid;
+  required long long lastModified;
+  required unsigned short source;
+  required boolean isTagging;
+};
+
+[ChromeOnly, Exposed=Window]
+interface PlacesBookmarkUrl : PlacesBookmark {
+  constructor(PlacesBookmarkUrlInit initDict);
 
   /**
    * The updated last modified value in milliseconds.

@@ -959,6 +959,27 @@ var Bookmarks = Object.freeze({
               item.url.href,
               updatedItem.source,
             ]);
+
+            let isTagging = updatedItem.parentGuid == Bookmarks.tagsGuid;
+            if (!isTagging) {
+              if (!parent) {
+                parent = await fetchBookmark({ guid: updatedItem.parentGuid });
+              }
+              isTagging = parent.parentGuid === Bookmarks.tagsGuid;
+            }
+
+            notifications.push(
+              new PlacesBookmarkUrl({
+                id: updatedItem._id,
+                itemType: updatedItem.type,
+                url: updatedItem.url.href,
+                guid: updatedItem.guid,
+                parentGuid: updatedItem.parentGuid,
+                source: updatedItem.source,
+                isTagging,
+                lastModified: updatedItem.lastModified,
+              })
+            );
           }
           // If the item was moved, notify bookmark-moved.
           if (
