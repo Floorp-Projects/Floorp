@@ -21,6 +21,10 @@ enum PlacesEventType {
    */
   "bookmark-moved",
   /**
+   * data: PlacesBookmarkGuid. Fired whenever a bookmark guid changes.
+   */
+  "bookmark-guid-changed",
+  /**
    * data: PlacesBookmarkTitle. Fired whenever a bookmark title changes.
    */
   "bookmark-title-changed",
@@ -272,6 +276,22 @@ interface PlacesBookmarkChanged : PlacesBookmark {
    * The updated last modified value in milliseconds.
    */
   readonly attribute long long lastModified;
+};
+
+dictionary PlacesBookmarkGuidInit {
+  required long long id;
+  required unsigned short itemType;
+  DOMString? url = null;
+  required ByteString guid;
+  required ByteString parentGuid;
+  required long long lastModified;
+  required unsigned short source;
+  required boolean isTagging;
+};
+
+[ChromeOnly, Exposed=Window]
+interface PlacesBookmarkGuid : PlacesBookmarkChanged {
+  constructor(PlacesBookmarkGuidInit initDict);
 };
 
 dictionary PlacesBookmarkTitleInit {
