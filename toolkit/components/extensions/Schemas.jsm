@@ -3581,6 +3581,14 @@ this.Schemas = {
 
   _rootSchema: null,
 
+  // A weakmap for the validation Context class instances given an extension
+  // context (keyed by the extensin context instance).
+  // This is used instead of the InjectionContext for webIDL API validation
+  // and normalization (see Schemas.checkParameters).
+  paramsValidationContexts: new DefaultWeakMap(
+    extContext => new Context(extContext)
+  ),
+
   get rootSchema() {
     if (!this.initialized) {
       this.init();
@@ -3755,5 +3763,32 @@ this.Schemas = {
    */
   normalize(obj, typeName, context) {
     return this.rootSchema.normalize(obj, typeName, context);
+  },
+
+  /**
+   * Validate and normalize the arguments for an API request originated
+   * from the webIDL API bindings.
+   *
+   * This provides for calls originating through WebIDL the parameters
+   * validation and normalization guarantees that the ext-APINAMESPACE.js
+   * scripts expects (what InjectionContext does for the regular bindings).
+   *
+   * @param {object}     extContext
+   * @param {string}     apiNamespace
+   * @param {string}     apiName
+   * @param {Array<any>} args
+   *
+   * @returns {Array<any>} Normalized arguments array.
+   */
+  checkParameters(extContext, apiNamespace, apiName, args) {
+    const apiSchema = this.getNamespace(apiNamespace)?.get(apiName);
+    if (!apiSchema) {
+      throw new Error(`API Schema not found for ${apiNamespace}.${apiName}`);
+    }
+
+    return apiSchema.checkParameters(
+      args,
+      this.paramsValidationContexts.get(extContext)
+    );
   },
 };
