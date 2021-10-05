@@ -12,6 +12,12 @@
 namespace mozilla {
 namespace extensions {
 
+bool IsInAutomation(JSContext* aCx, JSObject* aGlobal) {
+  return NS_IsMainThread()
+             ? xpc::IsInAutomation()
+             : dom::WorkerGlobalScope::IsInAutomation(aCx, aGlobal);
+}
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionTest);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionTest)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionTest, mGlobal,
@@ -30,7 +36,12 @@ ExtensionTest::ExtensionTest(nsIGlobalObject* aGlobal,
 
 /* static */
 bool ExtensionTest::IsAllowed(JSContext* aCx, JSObject* aGlobal) {
-  return true;
+  // Allow browser.test API namespace while running in xpcshell tests.
+  if (PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR")) {
+    return true;
+  }
+
+  return IsInAutomation(aCx, aGlobal);
 }
 
 JSObject* ExtensionTest::WrapObject(JSContext* aCx,
