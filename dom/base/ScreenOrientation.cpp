@@ -570,11 +570,14 @@ JSObject* ScreenOrientation::WrapObject(JSContext* aCx,
 }
 
 bool ScreenOrientation::ShouldResistFingerprinting() const {
-  bool resist = false;
-  if (nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner()) {
-    resist = nsContentUtils::ShouldResistFingerprinting(owner->GetDocShell());
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    bool resist = false;
+    if (nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner()) {
+      resist = nsContentUtils::ShouldResistFingerprinting(owner->GetDocShell());
+    }
+    return resist;
   }
-  return resist;
+  return false;
 }
 
 NS_IMPL_ISUPPORTS(ScreenOrientation::VisibleEventListener, nsIDOMEventListener)
