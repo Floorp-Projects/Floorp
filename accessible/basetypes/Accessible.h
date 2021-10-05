@@ -9,6 +9,7 @@
 #include "mozilla/a11y/Role.h"
 #include "mozilla/a11y/AccTypes.h"
 #include "nsString.h"
+#include "nsRect.h"
 
 class nsAtom;
 
@@ -124,6 +125,8 @@ class Accessible {
   virtual double MinValue() const = 0;
   virtual double MaxValue() const = 0;
   virtual double Step() const = 0;
+
+  virtual nsIntRect Bounds() const = 0;
 
   // Type "is" methods
 
