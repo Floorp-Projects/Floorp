@@ -43,40 +43,12 @@ nsIGlobalObject* ExtensionMockAPI::GetParentObject() const { return mGlobal; }
 
 void ExtensionMockAPI::GetPropertyAsErrorObject(
     JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
-  IgnoredErrorResult rv;
-  RefPtr<ExtensionAPIGetProperty> request =
-      GetProperty(u"propertyAsErrorObject"_ns);
-  request->Run(mGlobal, aCx, aRetval, rv);
-  if (rv.Failed()) {
-    NS_WARNING("ExtensionMockAPI::GetPropertyAsErrorObject failure");
-    return;
-  }
+  ExtensionAPIBase::GetWebExtPropertyAsJSValue(aCx, u"propertyAsErrorObject"_ns,
+                                               aRetval);
 }
 
 void ExtensionMockAPI::GetPropertyAsString(DOMString& aRetval) {
-  IgnoredErrorResult rv;
-
-  dom::AutoJSAPI jsapi;
-  if (!jsapi.Init(GetParentObject())) {
-    NS_WARNING("ExtensionMockAPI::GetPropertyAsId fail to init jsapi");
-  }
-
-  JSContext* cx = jsapi.cx();
-  JS::RootedValue retval(cx);
-
-  RefPtr<ExtensionAPIGetProperty> request =
-      GetProperty(u"getPropertyAsString"_ns);
-  request->Run(mGlobal, cx, &retval, rv);
-  if (rv.Failed()) {
-    NS_WARNING("ExtensionMockAPI::GetPropertyAsString failure");
-    return;
-  }
-  nsAutoJSString strRetval;
-  if (!retval.isString() || !strRetval.init(cx, retval)) {
-    NS_WARNING("ExtensionMockAPI::GetPropertyAsString got a non string result");
-    return;
-  }
-  aRetval.SetKnownLiveString(strRetval);
+  GetWebExtPropertyAsString(u"getPropertyAsString"_ns, aRetval);
 }
 
 ExtensionEventManager* ExtensionMockAPI::OnTestEvent() {
