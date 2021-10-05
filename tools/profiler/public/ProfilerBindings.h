@@ -43,19 +43,9 @@ void gecko_profiler_construct_label(mozilla::AutoProfilerLabel* aAutoLabel,
                                     JS::ProfilingCategoryPair aCategoryPair);
 void gecko_profiler_destruct_label(mozilla::AutoProfilerLabel* aAutoLabel);
 
-// Construct, clone and destruct the timestamp for profiler time.
+// Construct and destruct the timestamp for profiler time.
 void gecko_profiler_construct_timestamp_now(mozilla::TimeStamp* aTimeStamp);
-void gecko_profiler_clone_timestamp(const mozilla::TimeStamp* aSrcTimeStamp,
-                                    mozilla::TimeStamp* aDestTimeStamp);
 void gecko_profiler_destruct_timestamp(mozilla::TimeStamp* aTimeStamp);
-
-// Addition and subtraction for timestamp.
-void gecko_profiler_add_timestamp(const mozilla::TimeStamp* aTimeStamp,
-                                  mozilla::TimeStamp* aDestTimeStamp,
-                                  double aMicroseconds);
-void gecko_profiler_subtract_timestamp(const mozilla::TimeStamp* aTimeStamp,
-                                       mozilla::TimeStamp* aDestTimeStamp,
-                                       double aMicroseconds);
 
 // Various MarkerTiming constructors and a destructor.
 void gecko_profiler_construct_marker_timing_instant_at(
@@ -118,8 +108,7 @@ void gecko_profiler_marker_schema_add_static_label_value(
 // Stream MarkerSchema to SpliceableJSONWriter.
 void gecko_profiler_marker_schema_stream(
     mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
-    size_t aNameLength, mozilla::MarkerSchema* aMarkerSchema,
-    void* aStreamedNamesSet);
+    size_t aNameLength, mozilla::MarkerSchema* aMarkerSchema);
 
 // Various SpliceableJSONWriter methods to add properties.
 void gecko_profiler_json_writer_int_property(
