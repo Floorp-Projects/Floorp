@@ -28,11 +28,13 @@ EXPORTS.mozilla.extensions += [
 # WebExtensions API namespaces.
 UNIFIED_SOURCES += [
     "ExtensionAlarms.cpp",
+    "ExtensionRuntime.cpp",
     "ExtensionTest.cpp",
 ]
 
 EXPORTS.mozilla.extensions += [
     "ExtensionAlarms.h",
+    "ExtensionRuntime.h",
     "ExtensionTest.h",
 ]
 
