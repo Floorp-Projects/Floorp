@@ -308,7 +308,11 @@ class Messenger {
       query: ["NativeMessage", "RuntimeMessage", "PortConnect"],
       recv: ["RuntimeMessage", "PortConnect"],
     });
+    this.initEventManagers();
+  }
 
+  initEventManagers() {
+    const { context } = this;
     this.onConnect = new SimpleEventAPI(context, "runtime.onConnect");
     this.onConnectEx = new SimpleEventAPI(context, "runtime.onConnectExternal");
     this.onMessage = new MessageEvent(context, "runtime.onMessage");
@@ -973,6 +977,123 @@ class ChildAPIManager {
 }
 
 /**
+ * SimpleEventAPI subclass specialized for the worker port events
+ * used by WorkerMessenger.
+ */
+class WorkerRuntimePortEvent extends SimpleEventAPI {
+  api() {
+    return {
+      ...super.api(),
+      createListenerForAPIRequest: (...args) =>
+        this.createListenerForAPIRequest(...args),
+    };
+  }
+
+  createListenerForAPIRequest(request) {
+    const { eventListener } = request;
+    return function(port, ...args) {
+      return eventListener.callListener(args, {
+        apiObjectType: Ci.mozIExtensionListenerCallOptions.RUNTIME_PORT,
+        apiObjectDescriptor: { portId: port.portId, name: port.name },
+      });
+    };
+  }
+}
+
+/**
+ * SimpleEventAPI subclass specialized for the worker runtime messaging events
+ * used by WorkerMessenger.
+ */
+class WorkerMessageEvent extends MessageEvent {
+  api() {
+    return {
+      ...super.api(),
+      createListenerForAPIRequest: (...args) =>
+        this.createListenerForAPIRequest(...args),
+    };
+  }
+
+  createListenerForAPIRequest(request) {
+    const { eventListener } = request;
+    return function(message, sender) {
+      return eventListener.callListener([message, sender], {
+        eventListenerType:
+          Ci.mozIExtensionListenerCallOptions.CALLBACK_SEND_RESPONSE,
+      });
+    };
+  }
+}
+
+/**
+ * A Messenger subclass specialized for the background service worker.
+ */
+class WorkerMessenger extends Messenger {
+  constructor(context) {
+    const { viewType, contextId } = context;
+    if (viewType !== "background_worker") {
+      throw new Error(
+        `Unexpected viewType "${viewType}" on context ${contextId}`
+      );
+    }
+
+    super(context);
+
+    // Used by WebIDL API requests to get a port instance given the apiObjectId
+    // received in the API request coming from the ExtensionPort instance
+    // returned in the thread where the request was originating from.
+    this.portsById = new Map();
+    this.context.callOnClose(this);
+  }
+
+  initEventManagers() {
+    const { context } = this;
+    this.onConnect = new WorkerRuntimePortEvent(context, "runtime.onConnect");
+    this.onConnectEx = new WorkerRuntimePortEvent(
+      context,
+      "runtime.onConnectExternal"
+    );
+    this.onMessage = new WorkerMessageEvent(this.context, "runtime.onMessage");
+    this.onMessageEx = new WorkerMessageEvent(
+      context,
+      "runtime.onMessageExternal"
+    );
+  }
+
+  close() {
+    this.portsById.clear();
+  }
+
+  getPortById(portId) {
+    return this.portsById.get(portId);
+  }
+
+  connect({ name, native, ...args }) {
+    let portId = getUniqueId();
+    // TODO: replaced with WorkerPort subclass in part 8.2
+    let port = new Port(this.context, portId, name, !!native);
+    this.conduit
+      .queryPortConnect({ portId, name, native, ...args })
+      .catch(error => port.recvPortDisconnect({ error }));
+    this.portsById.set(`${portId}`, port);
+    // Extension worker calls this method through the WebIDL bindings,
+    // and the Port instance returned by the runtime.connect/connectNative
+    // methods will be an instance of ExtensionPort webidl interface based
+    // on the ExtensionPortDescriptor dictionary returned by this method.
+    return { portId, name };
+  }
+
+  recvPortConnect({ extensionId, portId, name, sender }) {
+    let event = sender.id === extensionId ? this.onConnect : this.onConnectEx;
+    if (this.context.active && event.fires.size) {
+      // TODO: replaced with WorkerPort subclass in part 8.2
+      let port = new Port(this.context, portId, name, false, sender);
+      this.portsById.set(`${port.portId}`, port);
+      return event.emit(port).length;
+    }
+  }
+}
+
+/**
  * APIImplementation subclass specialized for handling mozIExtensionAPIRequests
  * originated from webidl bindings.
  *
@@ -1308,4 +1429,5 @@ var ExtensionChild = {
   ChildAPIManager,
   Messenger,
   WebIDLChildAPIManager,
+  WorkerMessenger,
 };
