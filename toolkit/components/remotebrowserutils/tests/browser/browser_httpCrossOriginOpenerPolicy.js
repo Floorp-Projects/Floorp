@@ -117,6 +117,41 @@ function waitForDownloadWindow() {
   });
 }
 
+async function waitForDownloadUI() {
+  return BrowserTestUtils.waitForEvent(DownloadsPanel.panel, "popupshown");
+}
+
+async function cleanupDownloads(downloadList) {
+  info("cleaning up downloads");
+  let [download] = await downloadList.getAll();
+  await downloadList.remove(download);
+  await download.finalize(true);
+
+  try {
+    if (Services.appinfo.OS === "WINNT") {
+      // We need to make the file writable to delete it on Windows.
+      await IOUtils.setPermissions(download.target.path, 0o600);
+    }
+    await IOUtils.remove(download.target.path);
+  } catch (error) {
+    info("The file " + download.target.path + " is not removed, " + error);
+  }
+
+  if (DownloadsPanel.panel.state !== "closed") {
+    let hiddenPromise = BrowserTestUtils.waitForEvent(
+      DownloadsPanel.panel,
+      "popuphidden"
+    );
+    DownloadsPanel.hidePanel();
+    await hiddenPromise;
+  }
+  is(
+    DownloadsPanel.panel.state,
+    "closed",
+    "Check that the download panel is closed"
+  );
+}
+
 async function test_download_from(initCoop, downloadCoop) {
   return BrowserTestUtils.withNewTab("about:blank", async function(_browser) {
     info(`test_download: Test tab ready`);
@@ -140,16 +175,30 @@ async function test_download_from(initCoop, downloadCoop) {
     info(`test_download: Download page ready ${start}`);
     info(`Downloading ${downloadCoop}`);
 
-    let winPromise = waitForDownloadWindow();
+    let expectDialog = !Services.prefs.getBoolPref(
+      "browser.download.improvements_to_download_panel",
+      false
+    );
+    let resultPromise = expectDialog
+      ? waitForDownloadWindow()
+      : waitForDownloadUI();
     let browser = gBrowser.selectedBrowser;
     SpecialPowers.spawn(browser, [downloadCoop], downloadCoop => {
       content.document.getElementById(downloadCoop).click();
     });
 
     // if the download page doesn't appear, the promise leads a timeout.
-    let win = await winPromise;
-
-    await BrowserTestUtils.closeWindow(win);
+    if (expectDialog) {
+      let win = await resultPromise;
+      await BrowserTestUtils.closeWindow(win);
+    } else {
+      // verify link target will get automatically downloaded
+      await resultPromise;
+      let downloadList = await Downloads.getList(Downloads.PUBLIC);
+      is((await downloadList.getAll()).length, 1, "Target was downloaded");
+      await cleanupDownloads(downloadList);
+      is((await downloadList.getAll()).length, 0, "Downloads were cleaned up");
+    }
   });
 }
 
