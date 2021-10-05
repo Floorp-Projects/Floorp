@@ -12,12 +12,10 @@
 #include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/gfx/Point.h"
 #include "nsTArray.h"
 
 namespace mozilla {
 namespace layers {
-class Layer;
 
 class FrameUniformityData {
   friend struct IPC::ParamTraits<FrameUniformityData>;
@@ -26,34 +24,6 @@ class FrameUniformityData {
   bool ToJS(JS::MutableHandleValue aOutValue, JSContext* aContext);
   // Contains the calculated frame uniformities
   std::map<uintptr_t, float> mUniformities;
-};
-
-struct LayerTransforms {
-  LayerTransforms() = default;
-
-  gfx::Point GetAverage();
-  gfx::Point GetStdDev();
-  bool Sanitize();
-
-  // 60 fps * 5 seconds worth of data
-  AutoTArray<gfx::Point, 300> mTransforms;
-};
-
-class LayerTransformRecorder {
- public:
-  LayerTransformRecorder() = default;
-  ~LayerTransformRecorder();
-
-  void RecordTransform(Layer* aLayer, const gfx::Point& aTransform);
-  void Reset();
-  void EndTest(FrameUniformityData* aOutData);
-
- private:
-  float CalculateFrameUniformity(uintptr_t aLayer);
-  LayerTransforms* GetLayerTransforms(uintptr_t aLayer);
-  using FrameTransformMap =
-      std::map<uintptr_t, mozilla::UniquePtr<LayerTransforms>>;
-  FrameTransformMap mFrameTransforms;
 };
 
 }  // namespace layers
