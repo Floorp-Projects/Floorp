@@ -409,6 +409,13 @@ class nsIWidget : public nsISupports {
   typedef mozilla::CSSPoint CSSPoint;
   typedef mozilla::CSSRect CSSRect;
 
+  enum class WindowButtonType {
+    Minimize,
+    Maximize,
+    Close,
+    Count,
+  };
+
   // Used in UpdateThemeGeometries.
   struct ThemeGeometry {
     // The ThemeGeometryType value for the themed widget, see
@@ -2179,7 +2186,8 @@ class nsIWidget : public nsISupports {
    * maximize button (for example, in fullscreen).  This is only implemented
    * on Windows.
    */
-  virtual void SetMaximizeButtonRect(const LayoutDeviceIntRect& aClientRect) {}
+  virtual void SetWindowButtonRect(WindowButtonType aButtonType,
+                                   const LayoutDeviceIntRect& aClientRect) {}
 
  protected:
   // keep the list of children.  We also keep track of our siblings.
