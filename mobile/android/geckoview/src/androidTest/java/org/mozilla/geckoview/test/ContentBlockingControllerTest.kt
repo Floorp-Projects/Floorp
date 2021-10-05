@@ -2,6 +2,9 @@
  * Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// For ContentBlockingException
+@file:Suppress("DEPRECATION")
+
 package org.mozilla.geckoview.test
 
 import androidx.test.filters.MediumTest
