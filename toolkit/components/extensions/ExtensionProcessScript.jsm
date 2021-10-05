@@ -476,6 +476,17 @@ var ExtensionAPIRequestHandler = {
       return [];
     }
 
+    if (request.apiObjectType) {
+      // skip parameter validation on request targeting an api object,
+      // even the JS-based implementation of the API objects are not
+      // going through the same kind of Schema based validation that
+      // the API namespaces methods and events go through.
+      //
+      // TODO(Bug 1728535): validate and normalize also this request arguments
+      // as a low priority follow up.
+      return request.args;
+    }
+
     const { apiNamespace, apiName, args } = request;
     // Validate and normalize parameters, set the normalized args on the
     // mozIExtensionAPIRequest normalizedArgs property.
