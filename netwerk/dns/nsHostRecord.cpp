@@ -7,6 +7,8 @@
 #include "TRRQuery.h"
 // Put DNSLogging.h at the end to avoid LOG being overwritten by other headers.
 #include "DNSLogging.h"
+#include "mozilla/Telemetry.h"
+#include "TRRService.h"
 
 //----------------------------------------------------------------------------
 // this macro filters out any flags that are not used when constructing the
@@ -21,6 +23,9 @@
 #define IS_OTHER_TYPE(_type) ((_type) != nsIDNSService::RESOLVE_TYPE_DEFAULT)
 
 //----------------------------------------------------------------------------
+
+using namespace mozilla;
+using namespace mozilla::net;
 
 nsHostKey::nsHostKey(const nsACString& aHost, const nsACString& aTrrServer,
                      uint16_t aType, uint16_t aFlags, uint16_t aAf, bool aPb,

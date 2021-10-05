@@ -7,6 +7,7 @@
 #define nsHostRecord_h__
 
 #include "mozilla/AtomicBitfields.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/net/HTTPSSVC.h"
 #include "nsIDNSService.h"
