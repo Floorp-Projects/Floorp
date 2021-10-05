@@ -499,7 +499,8 @@ class PermissionManager final : public nsIPermissionManager,
                        NotifyOperationType aNotifyOperation,
                        DBOperationType aDBOperation,
                        const bool aIgnoreSessionPermissions = false,
-                       const nsACString* aOriginString = nullptr);
+                       const nsACString* aOriginString = nullptr,
+                       const bool aAllowPersistInPrivateBrowsing = false);
 
   void MaybeAddReadEntryFromMigration(const nsACString& aOrigin,
                                       const nsCString& aType,
