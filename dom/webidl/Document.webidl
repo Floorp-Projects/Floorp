@@ -543,10 +543,11 @@ partial interface Document {
   Promise<void> requestStorageAccess();
 };
 
-// A privileged API to give chrome privileged code the ability to request the
-// storage access for a given third party.
+// A privileged API to give chrome privileged code and the content script of the
+// webcompat extension the ability to request the storage access for a given
+// third party.
 partial interface Document {
-  [ChromeOnly, Throws]
+  [Func="Document::CallerCanAccessPrivilegeSSA", Throws]
   Promise<void> requestStorageAccessForOrigin(DOMString thirdPartyOrigin);
 };
 

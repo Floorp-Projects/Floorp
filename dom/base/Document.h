@@ -2269,6 +2269,13 @@ class Document : public nsINode,
   static bool CallerIsTrustedAboutCertError(JSContext* aCx, JSObject* aObject);
 
   /**
+   * This function checks if the privilege storage access api is available for
+   * the caller. We only allow privilege SSA to be called by system principal
+   * and webcompat extension.
+   */
+  static bool CallerCanAccessPrivilegeSSA(JSContext* aCx, JSObject* aObject);
+
+  /**
    * Get the security info (i.e. certificate validity, errorCode, etc) for a
    * failed Channel. This property is only exposed for about:certerror
    * documents.
