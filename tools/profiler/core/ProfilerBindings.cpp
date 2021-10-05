@@ -10,6 +10,7 @@
 
 #include "GeckoProfiler.h"
 
+#include <set>
 #include <type_traits>
 
 void gecko_profiler_register_thread(const char* aName) {
@@ -233,9 +234,18 @@ void gecko_profiler_marker_schema_add_static_label_value(
 
 void gecko_profiler_marker_schema_stream(
     mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
-    size_t aNameLength, mozilla::MarkerSchema* aMarkerSchema) {
+    size_t aNameLength, mozilla::MarkerSchema* aMarkerSchema,
+    void* aStreamedNamesSet) {
 #ifdef MOZ_GECKO_PROFILER
-  std::move(*aMarkerSchema).Stream(*aWriter, mozilla::Span(aName, aNameLength));
+  auto* streamedNames = static_cast<std::set<std::string>*>(aStreamedNamesSet);
+  // std::set.insert(T&&) returns a pair, its `second` is true if the element
+  // was actually inserted (i.e., it was not there yet.).
+  const bool didInsert =
+      streamedNames->insert(std::string(aName, aNameLength)).second;
+  if (didInsert) {
+    std::move(*aMarkerSchema)
+        .Stream(*aWriter, mozilla::Span(aName, aNameLength));
+  }
 #endif
 }
 

@@ -86,7 +86,7 @@
 //!         "marker type from rust"
 //!     }
 //!     fn marker_type_display() -> gecko_profiler::MarkerSchema {
-//!         use gecko_profiler::schema::*;
+//!         use gecko_profiler::marker::schema::*;
 //!         let mut schema = MarkerSchema::new(&[Location::MarkerChart]);
 //!         schema.set_chart_label("Name: {marker.name}");
 //!         schema.set_tooltip_label("{marker.data.a}");
@@ -121,11 +121,14 @@ pub(crate) mod deserializer_tags_state;
 pub mod options;
 pub mod schema;
 
+pub use options::*;
+pub use schema::MarkerSchema;
+
 use crate::gecko_bindings::{bindings, profiling_categories::ProfilingCategoryPair};
 use crate::json_writer::JSONWriter;
 use crate::marker::deserializer_tags_state::get_or_insert_deserializer_tag;
 use crate::marker::options::MarkerOptions;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::os::raw::c_char;
 
 /// Marker API to add a new simple marker without any payload.
@@ -244,5 +247,38 @@ pub fn add_marker<T>(
             encoded_payload.as_ptr(),
             payload_size,
         )
+    }
+}
+
+/// Tracing marker type for Rust code.
+/// This must be kept in sync with the `mozilla::baseprofiler::markers::Tracing`
+/// C++ counterpart.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Tracing(pub String);
+
+impl ProfilerMarker for Tracing {
+    fn marker_type_name() -> &'static str {
+        "tracing"
+    }
+
+    fn stream_json_marker_data(&self, json_writer: &mut JSONWriter) {
+        if self.0.len() != 0 {
+            json_writer.string_property("category", &self.0);
+        }
+    }
+
+    // Tracing marker is a bit special because we have the same schema in the
+    // C++ side. This function will only get called when no Tracing markers are
+    // generated from the C++ side. But, most of the time, this will not be called
+    // when there is another C++ Tracing marker.
+    fn marker_type_display() -> schema::MarkerSchema {
+        use crate::marker::schema::*;
+        let mut schema = MarkerSchema::new(&[
+            Location::MarkerChart,
+            Location::MarkerTable,
+            Location::TimelineOverview,
+        ]);
+        schema.add_key_label_format("category", "Type", Format::String);
+        schema
     }
 }
