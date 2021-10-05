@@ -642,7 +642,14 @@ struct FrameMetrics {
   // invalid.
   CSSRect mLayoutViewport;
 
-  // The scale on this scroll frame induced by enclosing CSS transforms.
+  // The scale induced by css transforms and presshell resolution in this
+  // process and any ancestor processes that encloses this scroll frame that is
+  // _not_ included in mCumulativeResolution. This means that in the process of
+  // the root content document this only includes css transform scale (which
+  // happens in that process, but we assume there can be no css transform scale
+  // above the root content document). In other processes it includes css
+  // transform scale and any resolution scale in the current process and all
+  // ancestor processes.
   ParentLayerToScreenScale2D mTransformToAncestorScale;
 
   // The time at which the APZC last requested a repaint for this scroll frame.
