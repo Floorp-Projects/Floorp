@@ -17,20 +17,6 @@ using namespace mozilla;
 /***************************************************************************/
 // static shared...
 
-// Note this is returning the hash of the bit pattern of the first part of the
-// nsID, not the hash of the pointer to the nsID.
-
-static PLDHashNumber HashIIDPtrKey(const void* key) {
-  uintptr_t v;
-  memcpy(&v, key, sizeof(v));
-  return HashGeneric(v);
-}
-
-static bool MatchIIDPtrKey(const PLDHashEntryHdr* entry, const void* key) {
-  return ((const nsID*)key)
-      ->Equals(*((const nsID*)((PLDHashEntryStub*)entry)->key));
-}
-
 static PLDHashNumber HashNativeKey(const void* data) {
   return static_cast<const XPCNativeSetKey*>(data)->Hash();
 }
@@ -113,20 +99,15 @@ size_t Native2WrappedNativeMap::SizeOfIncludingThis(
 /***************************************************************************/
 // implement IID2NativeInterfaceMap...
 
-const struct PLDHashTableOps IID2NativeInterfaceMap::Entry::sOps = {
-    HashIIDPtrKey, MatchIIDPtrKey, PLDHashTable::MoveEntryStub,
-    PLDHashTable::ClearEntryStub};
-
 IID2NativeInterfaceMap::IID2NativeInterfaceMap()
-    : mTable(&Entry::sOps, sizeof(Entry), XPC_NATIVE_INTERFACE_MAP_LENGTH) {}
+    : mMap(XPC_NATIVE_INTERFACE_MAP_LENGTH) {}
 
 size_t IID2NativeInterfaceMap::SizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   size_t n = mallocSizeOf(this);
-  n += mTable.ShallowSizeOfExcludingThis(mallocSizeOf);
-  for (auto iter = mTable.ConstIter(); !iter.Done(); iter.Next()) {
-    auto entry = static_cast<IID2NativeInterfaceMap::Entry*>(iter.Get());
-    n += entry->value->SizeOfIncludingThis(mallocSizeOf);
+  n += mMap.shallowSizeOfExcludingThis(mallocSizeOf);
+  for (auto iter = mMap.iter(); !iter.done(); iter.next()) {
+    n += iter.get().value()->SizeOfIncludingThis(mallocSizeOf);
   }
   return n;
 }
