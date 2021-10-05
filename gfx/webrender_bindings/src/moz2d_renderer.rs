@@ -25,7 +25,7 @@ use std::collections::hash_map::HashMap;
 use std::collections::Bound::Included;
 use std::i32;
 use std::mem;
-use std::os::raw::{c_char, c_void};
+use std::os::raw::c_void;
 use std::ptr;
 use std::sync::Arc;
 
@@ -504,23 +504,19 @@ struct Moz2dBlobRasterizer {
 }
 
 struct GeckoProfilerMarker {
-    name: &'static [u8],
+    name: &'static str,
 }
 
 impl GeckoProfilerMarker {
-    pub fn new(name: &'static [u8]) -> GeckoProfilerMarker {
-        unsafe {
-            gecko_profiler_start_marker(name.as_ptr() as *const c_char);
-        }
+    pub fn new(name: &'static str) -> GeckoProfilerMarker {
+        gecko_profiler_start_marker(name);
         GeckoProfilerMarker { name }
     }
 }
 
 impl Drop for GeckoProfilerMarker {
     fn drop(&mut self) {
-        unsafe {
-            gecko_profiler_end_marker(self.name.as_ptr() as *const c_char);
-        }
+        gecko_profiler_end_marker(self.name);
     }
 }
 
@@ -531,7 +527,7 @@ impl AsyncBlobImageRasterizer for Moz2dBlobRasterizer {
         low_priority: bool,
     ) -> Vec<(BlobImageRequest, BlobImageResult)> {
         // All we do here is spin up our workers to callback into gecko to replay the drawing commands.
-        let _marker = GeckoProfilerMarker::new(b"BlobRasterization\0");
+        let _marker = GeckoProfilerMarker::new("BlobRasterization");
 
         let requests: Vec<Job> = requests
             .iter()
