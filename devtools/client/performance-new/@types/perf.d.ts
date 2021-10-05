@@ -430,14 +430,22 @@ export interface ScaleFunctions {
 export type ProfilerViewMode = "full" | "active-tab" | "origins";
 
 export interface PresetDefinition {
-  label: string;
-  description: string;
   entries: number;
   interval: number;
   features: string[];
   threads: string[];
   duration: number;
   profilerViewMode?: ProfilerViewMode;
+  l10nIds: {
+    popup: {
+      label: string;
+      description: string;
+    };
+    devtools: {
+      label: string;
+      description: string;
+    };
+  };
 }
 
 export interface Presets {
