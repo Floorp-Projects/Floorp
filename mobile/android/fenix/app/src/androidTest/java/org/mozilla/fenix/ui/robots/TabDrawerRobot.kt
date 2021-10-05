@@ -8,11 +8,9 @@ package org.mozilla.fenix.ui.robots
 
 import android.content.Context
 import android.view.View
-import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.action.GeneralLocation
@@ -21,9 +19,7 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -407,16 +403,23 @@ private fun assertExistingOpenTabs(title: String) {
         )
             .waitForExists(waitingTime)
 
-        tab(title).check(matches(isDisplayed()))
-    } catch (e: NoMatchingViewException) {
-        onView(withId(R.id.tabsTray)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                allOf(
-                    withId(R.id.mozac_browser_tabstray_title),
-                    withText(title)
-                )
-            )
-        ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        assertTrue(
+            mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/mozac_browser_tabstray_title")
+                    .textContains(title)
+            ).waitForExists(waitingTime)
+        )
+    } catch (e: AssertionError) {
+        println("The tab wasn't found")
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/tabsTray")).swipeUp(2)
+        assertTrue(
+            mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/mozac_browser_tabstray_title")
+                    .textContains(title)
+            ).waitForExists(waitingTime)
+        )
     }
 }
 
