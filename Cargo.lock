@@ -5567,7 +5567,6 @@ dependencies = [
  "core-foundation",
  "core-graphics",
  "core-text",
- "cstr",
  "derive_more",
  "dwrote",
  "etagere",

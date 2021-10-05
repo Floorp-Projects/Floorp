@@ -29,7 +29,6 @@ use api::units::DeviceIntSize;
 use std::collections::vec_deque::VecDeque;
 use std::fmt::{Write, Debug};
 use std::f32;
-use std::ffi::CStr;
 use std::ops::Range;
 use std::time::Duration;
 use time::precise_time_ns;
@@ -1186,17 +1185,14 @@ pub trait ProfilerHooks : Send + Sync {
     /// Unregister a thread with the profiler.
     fn unregister_thread(&self);
 
-    /// Called at the beginning of a profile scope. The label must
-    /// be a C string (null terminated).
-    fn begin_marker(&self, label: &CStr);
+    /// Called at the beginning of a profile scope.
+    fn begin_marker(&self, label: &str);
 
-    /// Called at the end of a profile scope. The label must
-    /// be a C string (null terminated).
-    fn end_marker(&self, label: &CStr);
+    /// Called at the end of a profile scope.
+    fn end_marker(&self, label: &str);
 
-    /// Called to mark an event happening. The label must
-    /// be a C string (null terminated).
-    fn event_marker(&self, label: &CStr);
+    /// Called to mark an event happening.
+    fn event_marker(&self, label: &str);
 
     /// Called with a duration to indicate a text marker that just ended. Text
     /// markers allow different types of entries to be recorded on the same row
@@ -1205,7 +1201,7 @@ pub trait ProfilerHooks : Send + Sync {
     /// This variant is also useful when the caller only wants to record events
     /// longer than a certain threshold, and thus they don't know in advance
     /// whether the event will qualify.
-    fn add_text_marker(&self, label: &CStr, text: &str, duration: Duration);
+    fn add_text_marker(&self, label: &str, text: &str, duration: Duration);
 
     /// Returns true if the current thread is being profiled.
     fn thread_is_being_profiled(&self) -> bool;
@@ -1227,7 +1223,7 @@ pub fn set_profiler_hooks(hooks: Option<&'static dyn ProfilerHooks>) {
 
 /// A simple RAII style struct to manage a profile scope.
 pub struct ProfileScope {
-    name: &'static CStr,
+    name: &'static str,
 }
 
 
@@ -1251,7 +1247,7 @@ pub fn unregister_thread() {
 }
 
 /// Records a marker of the given duration that just ended.
-pub fn add_text_marker(label: &CStr, text: &str, duration: Duration) {
+pub fn add_text_marker(label: &str, text: &str, duration: Duration) {
     unsafe {
         if let Some(ref hooks) = PROFILER_HOOKS {
             hooks.add_text_marker(label, text, duration);
@@ -1260,7 +1256,7 @@ pub fn add_text_marker(label: &CStr, text: &str, duration: Duration) {
 }
 
 /// Records a marker of the given duration that just ended.
-pub fn add_event_marker(label: &CStr) {
+pub fn add_event_marker(label: &str) {
     unsafe {
         if let Some(ref hooks) = PROFILER_HOOKS {
             hooks.event_marker(label);
@@ -1277,7 +1273,7 @@ pub fn thread_is_being_profiled() -> bool {
 
 impl ProfileScope {
     /// Begin a new profile scope
-    pub fn new(name: &'static CStr) -> Self {
+    pub fn new(name: &'static str) -> Self {
         unsafe {
             if let Some(ref hooks) = PROFILER_HOOKS {
                 hooks.begin_marker(name);
@@ -1303,7 +1299,7 @@ impl Drop for ProfileScope {
 /// A helper macro to define profile scopes.
 macro_rules! profile_marker {
     ($string:expr) => {
-        let _scope = $crate::profiler::ProfileScope::new(cstr!($string));
+        let _scope = $crate::profiler::ProfileScope::new($string);
     };
 }
 
