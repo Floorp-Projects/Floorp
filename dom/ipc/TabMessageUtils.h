@@ -69,13 +69,15 @@ struct ParamTraits<mozilla::dom::EffectsInfo> {
     WriteParam(aMsg, aParam.mVisibleRect);
     WriteParam(aMsg, aParam.mScaleX);
     WriteParam(aMsg, aParam.mScaleY);
+    WriteParam(aMsg, aParam.mTransformToAncestorScale);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     return ReadParam(aMsg, aIter, &aResult->mVisibleRect) &&
            ReadParam(aMsg, aIter, &aResult->mScaleX) &&
-           ReadParam(aMsg, aIter, &aResult->mScaleY);
+           ReadParam(aMsg, aIter, &aResult->mScaleY) &&
+           ReadParam(aMsg, aIter, &aResult->mTransformToAncestorScale);
   }
 };
 
