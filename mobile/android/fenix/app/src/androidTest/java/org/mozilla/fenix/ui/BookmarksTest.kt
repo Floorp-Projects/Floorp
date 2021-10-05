@@ -52,6 +52,8 @@ class BookmarksTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
+        val settings = activityTestRule.activity.settings()
+        settings.shouldShowJumpBackInCFR = false
     }
 
     @After
@@ -346,7 +348,7 @@ class BookmarksTest {
     @Test
     fun openSelectionInNewTabTest() {
         val settings = activityTestRule.activity.applicationContext.settings()
-        settings.hasShownHomeOnboardingDialog = true
+        settings.shouldShowJumpBackInCFR = false
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         browserScreen {

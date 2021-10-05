@@ -56,7 +56,7 @@ class NoNetworkAccessStartupTests {
     fun networkInterruptedFromBrowserToHomeTest() {
         val url = "example.com"
         val settings = InstrumentationRegistry.getInstrumentation().targetContext.settings()
-        settings.hasShownHomeOnboardingDialog = true
+        settings.shouldShowJumpBackInCFR = false
 
         activityTestRule.launchActivity(null)
 

@@ -837,6 +837,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true
     )
 
+    /**
+     * Indicates if the jump back in CRF should be shown.
+     */
+    var shouldShowJumpBackInCFR by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_should_show_jump_back_in_tabs_popup),
+        default = true
+    )
+
     fun getSitePermissionsPhoneFeatureAction(
         feature: PhoneFeature,
         default: Action = Action.ASK_TO_ALLOW

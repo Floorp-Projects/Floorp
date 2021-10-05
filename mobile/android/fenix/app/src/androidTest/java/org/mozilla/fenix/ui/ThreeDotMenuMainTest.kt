@@ -29,7 +29,7 @@ class ThreeDotMenuMainTest {
 
     @Before
     fun setUp() {
-        activityTestRule.activity.applicationContext.settings().hasShownHomeOnboardingDialog = true
+        activityTestRule.activity.applicationContext.settings().shouldShowJumpBackInCFR = false
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()

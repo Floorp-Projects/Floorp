@@ -50,7 +50,7 @@ class TopSitesTest {
     @Test
     fun verifyAddToFirefoxHome() {
         val settings = activityIntentTestRule.activity.applicationContext.settings()
-        settings.hasShownHomeOnboardingDialog = true
+        settings.shouldShowJumpBackInCFR = false
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val defaultWebPageTitle = "Test_Page_1"
 
@@ -70,7 +70,7 @@ class TopSitesTest {
     @Test
     fun verifyOpenTopSiteNormalTab() {
         val settings = activityIntentTestRule.activity.applicationContext.settings()
-        settings.hasShownHomeOnboardingDialog = true
+        settings.shouldShowJumpBackInCFR = false
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val defaultWebPageTitle = "Test_Page_1"
 
@@ -100,7 +100,7 @@ class TopSitesTest {
     @Test
     fun verifyOpenTopSitePrivateTab() {
         val settings = activityIntentTestRule.activity.applicationContext.settings()
-        settings.hasShownHomeOnboardingDialog = true
+        settings.shouldShowJumpBackInCFR = false
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val defaultWebPageTitle = "Test_Page_1"
 
@@ -124,7 +124,7 @@ class TopSitesTest {
     @Test
     fun verifyRenameTopSite() {
         val settings = activityIntentTestRule.activity.applicationContext.settings()
-        settings.hasShownHomeOnboardingDialog = true
+        settings.shouldShowJumpBackInCFR = false
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val defaultWebPageTitle = "Test_Page_1"
         val defaultWebPageTitleNew = "Test_Page_2"
@@ -150,7 +150,7 @@ class TopSitesTest {
     @Test
     fun verifyRemoveTopSite() {
         val settings = activityIntentTestRule.activity.applicationContext.settings()
-        settings.hasShownHomeOnboardingDialog = true
+        settings.shouldShowJumpBackInCFR = false
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val defaultWebPageTitle = "Test_Page_1"
 

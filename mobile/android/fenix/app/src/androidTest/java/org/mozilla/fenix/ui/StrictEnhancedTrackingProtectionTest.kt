@@ -44,7 +44,9 @@ class StrictEnhancedTrackingProtectionTest {
             start()
         }
 
-        activityTestRule.activity.settings().setStrictETP()
+        val settings = activityTestRule.activity.settings()
+        settings.setStrictETP()
+        settings.shouldShowJumpBackInCFR = false
     }
 
     @After

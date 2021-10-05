@@ -43,6 +43,8 @@ class SettingsBasicsTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
+        val settings = activityIntentTestRule.activity.settings()
+        settings.shouldShowJumpBackInCFR = false
     }
 
     @After
@@ -157,7 +159,7 @@ class SettingsBasicsTest {
         val fenixApp = activityIntentTestRule.activity.applicationContext as FenixApplication
         val webpage = getLoremIpsumAsset(mockWebServer).url
         val settings = fenixApp.applicationContext.settings()
-        settings.hasShownHomeOnboardingDialog = true
+        settings.shouldShowJumpBackInCFR = false
 
         // This value will represent the text size percentage the webpage will scale to. The default value is 100%.
         val textSizePercentage = 180

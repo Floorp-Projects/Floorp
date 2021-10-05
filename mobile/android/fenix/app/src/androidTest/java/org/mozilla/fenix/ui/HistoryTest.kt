@@ -43,7 +43,7 @@ class HistoryTest {
     @Before
     fun setUp() {
         InstrumentationRegistry.getInstrumentation().targetContext.settings()
-            .hasShownHomeOnboardingDialog = true
+            .shouldShowJumpBackInCFR = false
 
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()

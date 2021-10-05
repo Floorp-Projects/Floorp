@@ -77,7 +77,7 @@ class SettingsAboutTest {
     @Test
     fun verifyAboutFirefoxPreview() {
         val settings = activityIntentTestRule.activity.settings()
-        settings.hasShownHomeOnboardingDialog = true
+        settings.shouldShowJumpBackInCFR = false
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {

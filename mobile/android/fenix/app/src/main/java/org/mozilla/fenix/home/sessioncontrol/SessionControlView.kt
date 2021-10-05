@@ -24,6 +24,7 @@ import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.recenttabs.RecentTab
+import org.mozilla.fenix.onboarding.JumpBackInCFRDialog
 import org.mozilla.fenix.utils.Settings
 
 // This method got a little complex with the addition of the tab tray feature flag
@@ -197,7 +198,13 @@ class SessionControlView(
     init {
         view.apply {
             adapter = sessionControlAdapter
-            layoutManager = LinearLayoutManager(containerView.context)
+            layoutManager = object : LinearLayoutManager(containerView.context) {
+                override fun onLayoutCompleted(state: RecyclerView.State?) {
+                    super.onLayoutCompleted(state)
+
+                    JumpBackInCFRDialog(view).showIfNeeded()
+                }
+            }
             val itemTouchHelper =
                 ItemTouchHelper(
                     SwipeToDeleteCallback(
