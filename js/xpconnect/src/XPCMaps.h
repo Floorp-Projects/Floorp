@@ -207,44 +207,36 @@ class IID2NativeInterfaceMap {
 /*************************/
 
 class ClassInfo2NativeSetMap {
+  using Map = mozilla::HashMap<nsIClassInfo*, RefPtr<XPCNativeSet>,
+                               mozilla::DefaultHasher<nsIClassInfo*>,
+                               mozilla::MallocAllocPolicy>;
+
  public:
-  struct Entry : public PLDHashEntryHdr {
-    nsIClassInfo* key;
-    XPCNativeSet* value;  // strong reference
-    static const PLDHashTableOps sOps;
-
-   private:
-    static bool Match(const PLDHashEntryHdr* aEntry, const void* aKey);
-    static void Clear(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
-  };
-
   ClassInfo2NativeSetMap();
 
-  inline XPCNativeSet* Find(nsIClassInfo* info) const {
-    auto entry = static_cast<Entry*>(mTable.Search(info));
-    return entry ? entry->value : nullptr;
+  XPCNativeSet* Find(nsIClassInfo* info) const {
+    auto ptr = mMap.lookup(info);
+    return ptr ? ptr->value().get() : nullptr;
   }
 
-  inline XPCNativeSet* Add(nsIClassInfo* info, XPCNativeSet* set) {
+  XPCNativeSet* Add(nsIClassInfo* info, XPCNativeSet* set) {
     MOZ_ASSERT(info, "bad param");
-    auto entry = static_cast<Entry*>(mTable.Add(info, mozilla::fallible));
-    if (!entry) {
+    auto ptr = mMap.lookupForAdd(info);
+    if (ptr) {
+      return ptr->value();
+    }
+    if (!mMap.add(ptr, info, set)) {
       return nullptr;
     }
-    if (entry->key) {
-      return entry->value;
-    }
-    entry->key = info;
-    NS_ADDREF(entry->value = set);
     return set;
   }
 
-  inline void Remove(nsIClassInfo* info) {
+  void Remove(nsIClassInfo* info) {
     MOZ_ASSERT(info, "bad param");
-    mTable.Remove(info);
+    mMap.remove(info);
   }
 
-  inline uint32_t Count() { return mTable.EntryCount(); }
+  uint32_t Count() { return mMap.count(); }
 
   // ClassInfo2NativeSetMap holds pointers to *some* XPCNativeSets.
   // So we don't want to count those XPCNativeSets, because they are better
@@ -253,7 +245,7 @@ class ClassInfo2NativeSetMap {
   size_t ShallowSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
  private:
-  PLDHashTable mTable;
+  Map mMap;
 };
 
 /*************************/
