@@ -16,6 +16,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsSegmentedBuffer.h"
 #include "nsStreamUtils.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "mozilla/Logging.h"

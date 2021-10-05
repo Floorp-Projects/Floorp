@@ -7,6 +7,7 @@
 #include "nsTimerImpl.h"
 #include "TimerThread.h"
 
+#include "GeckoProfiler.h"
 #include "nsThreadUtils.h"
 #include "pratom.h"
 

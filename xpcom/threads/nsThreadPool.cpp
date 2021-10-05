@@ -4,9 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsThreadPool.h"
+
+#include "GeckoProfiler.h"
 #include "nsCOMArray.h"
 #include "ThreadDelay.h"
-#include "nsThreadPool.h"
 #include "nsThreadManager.h"
 #include "nsThread.h"
 #include "nsMemory.h"
