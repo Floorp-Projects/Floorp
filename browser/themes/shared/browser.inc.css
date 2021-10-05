@@ -725,6 +725,20 @@ popupnotificationcontent {
   margin-block-start: 8px;
 }
 
+/**
+ * Our OS integration code toggles whether system colors should return light or
+ * dark values based on the luminosity of the toolbar background. Because themes
+ * can style panels to have a different background color than the toolbar, we
+ * need specific overrides for system colors used in light or dark themes.
+ */
+.popup-notification-body:-moz-lwtheme {
+  color-scheme: light;
+}
+
+:root[lwt-popup-brighttext] .popup-notification-body {
+  color-scheme: dark;
+}
+
 .popup-notification-body menulist {
   margin: 0;
 }
