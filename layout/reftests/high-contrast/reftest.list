@@ -1,5 +1,5 @@
 # This pref enables high-contrast mode in the testcases here:
-defaults test-pref(browser.display.document_color_use,2) test-pref(browser.display.permit_backplate,true) test-pref(layout.css.prefers-contrast.enabled,true) test-pref(layout.css.forced-colors.enabled,true) test-pref(browser.display.foreground_color,"#000000") test-pref(browser.display.background_color,"#FFFFFF") pref(ui.use_standins_for_native_colors,true) pref(widget.non-native-theme.always-use-system-colors,true)
+defaults test-pref(browser.display.document_color_use,2) test-pref(browser.display.permit_backplate,true) test-pref(layout.css.prefers-contrast.enabled,true) test-pref(layout.css.forced-colors.enabled,true) test-pref(browser.display.foreground_color,"#000000") test-pref(browser.display.background_color,"#FFFFFF") pref(ui.use_standins_for_native_colors,true) pref(widget.non-native-theme.always-high-contrast,true)
 
 # There are several platform-specific fuzzy-if notations below due to
 # anti-aliasing, extra ink overflow, and slightly inacurate reftest
