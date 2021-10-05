@@ -346,7 +346,7 @@ nsMemoryInfoDumper::DumpGCAndCCLogsToFile(
 
   logSink->SetFilenameIdentifier(identifier);
 
-  nsJSContext::CycleCollectNow(CCReason::DUMP_HEAP, logger);
+  nsJSContext::CycleCollectNow(logger);
 
   nsCOMPtr<nsIFile> gcLog, ccLog;
   logSink->GetGcLog(getter_AddRefs(gcLog));
@@ -369,7 +369,7 @@ nsMemoryInfoDumper::DumpGCAndCCLogsToSink(bool aDumpAllTraces,
 
   logger->SetLogSink(aSink);
 
-  nsJSContext::CycleCollectNow(CCReason::DUMP_HEAP, logger);
+  nsJSContext::CycleCollectNow(logger);
 
   return NS_OK;
 }
