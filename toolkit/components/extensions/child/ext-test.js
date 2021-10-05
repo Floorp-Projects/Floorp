@@ -92,58 +92,23 @@ this.test = class extends ExtensionAPI {
   getAPI(context) {
     const { extension } = context;
 
-    function getStack(savedFrame = null) {
-      if (savedFrame) {
-        return ChromeUtils.createError("", savedFrame).stack.replace(
-          /^/gm,
-          "    "
-        );
-      }
+    function getStack() {
       return new context.Error().stack.replace(/^/gm, "    ");
     }
 
     function assertTrue(value, msg) {
-      extension.emit(
-        "test-result",
-        Boolean(value),
-        String(msg),
-        getStack(context.getCaller())
-      );
+      extension.emit("test-result", Boolean(value), String(msg), getStack());
     }
 
     class TestEventManager extends EventManager {
-      constructor(...args) {
-        super(...args);
-
-        // A map to keep track of the listeners wrappers being added in
-        // addListener (the wrapper will be needed to be able to remove
-        // the listener from this EventManager instance if the extension
-        // does call test.onMessage.removeListener).
-        this._listenerWrappers = new Map();
-        context.callOnClose({
-          close: () => this._listenerWrappers.clear(),
-        });
-      }
-
       addListener(callback, ...args) {
-        const listenerWrapper = function(...args) {
+        super.addListener(function(...args) {
           try {
             callback.call(this, ...args);
           } catch (e) {
             assertTrue(false, `${e}\n${e.stack}`);
           }
-        };
-        super.addListener(listenerWrapper, ...args);
-        this._listenerWrappers.set(callback, listenerWrapper);
-      }
-
-      removeListener(callback) {
-        if (!this._listenerWrappers.has(callback)) {
-          return;
-        }
-
-        super.removeListener(this._listenerWrappers.get(callback));
-        this._listenerWrappers.delete(callback);
+        }, ...args);
       }
     }
 
@@ -174,20 +139,15 @@ this.test = class extends ExtensionAPI {
         },
 
         notifyPass(msg) {
-          extension.emit("test-done", true, msg, getStack(context.getCaller()));
+          extension.emit("test-done", true, msg, getStack());
         },
 
         notifyFail(msg) {
-          extension.emit(
-            "test-done",
-            false,
-            msg,
-            getStack(context.getCaller())
-          );
+          extension.emit("test-done", false, msg, getStack());
         },
 
         log(msg) {
-          extension.emit("test-log", true, msg, getStack(context.getCaller()));
+          extension.emit("test-log", true, msg, getStack());
         },
 
         fail(msg) {
@@ -221,7 +181,7 @@ this.test = class extends ExtensionAPI {
             String(msg),
             expected,
             actual,
-            getStack(context.getCaller())
+            getStack()
           );
         },
 

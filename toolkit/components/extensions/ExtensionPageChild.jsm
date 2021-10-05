@@ -45,7 +45,7 @@ const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
 
-const { getInnerWindowID, getUniqueId, promiseEvent } = ExtensionUtils;
+const { getInnerWindowID, promiseEvent } = ExtensionUtils;
 
 const {
   BaseContext,
@@ -54,12 +54,7 @@ const {
   defineLazyGetter,
 } = ExtensionCommon;
 
-const {
-  ChildAPIManager,
-  Messenger,
-  WebIDLChildAPIManager,
-  WorkerMessenger,
-} = ExtensionChild;
+const { ChildAPIManager, Messenger } = ExtensionChild;
 
 var ExtensionPageChild;
 
@@ -155,168 +150,6 @@ var devtoolsAPIManager = new (class extends SchemaAPIManager {
     }
   }
 })();
-
-function getContextChildManagerGetter({ envType }) {
-  return function() {
-    let apiManager =
-      envType === "devtools_parent"
-        ? devtoolsAPIManager
-        : this.extension.apiManager;
-
-    apiManager.lazyInit();
-
-    let localApis = {};
-    let can = new CanOfAPIs(this, apiManager, localApis);
-
-    const ChildAPIManagerClass = this.useWebIDLBindings
-      ? WebIDLChildAPIManager
-      : ChildAPIManager;
-
-    let childManager = new ChildAPIManagerClass(
-      this,
-      this.messageManager,
-      can,
-      {
-        envType,
-        viewType: this.viewType,
-        url: this.uri.spec,
-        incognito: this.incognito,
-      }
-    );
-
-    this.callOnClose(childManager);
-
-    return childManager;
-  };
-}
-
-class WorkerContextChild extends BaseContext {
-  /**
-   * This WorkerContextChild represents an addon execution environment
-   * that is running on the worker thread in an extension child process.
-   *
-   * @param {BrowserExtensionContent} extension This context's owner.
-   * @param {object}                         params
-   * @param {mozIExtensionServiceWorkerInfo} params.serviceWorkerInfo
-   */
-  constructor(extension, { serviceWorkerInfo }) {
-    if (
-      !serviceWorkerInfo?.scriptURL ||
-      !serviceWorkerInfo?.clientInfoId ||
-      !serviceWorkerInfo?.principal
-    ) {
-      throw new Error("Missing or invalid serviceWorkerInfo");
-    }
-
-    super("addon_child", extension);
-    this.viewType = "background_worker";
-    this.uri = Services.io.newURI(serviceWorkerInfo.scriptURL);
-    this.workerClientInfoId = serviceWorkerInfo.clientInfoId;
-    this.workerPrincipal = serviceWorkerInfo.principal;
-    this.incognito = serviceWorkerInfo.principal.privateBrowsingId > 0;
-
-    // A mozIExtensionAPIRequest being processed (set by the withAPIRequest
-    // method while executing a given callable, can be optionally used by
-    // the API implementation methods to access the mozIExtensionAPIRequest
-    // being processed and customize their result if necessary to handle
-    // requests originated by the webidl bindings).
-    this.webidlAPIRequest = null;
-
-    // This context uses a plain object as a cloneScope (anyway the values
-    // moved across thread are going to be automatically serialized/deserialized
-    // as structure clone data, we may remove this if we are changing the
-    // internals to not use the context.cloneScope).
-    this.workerCloneScope = {
-      Promise,
-      // The instances of this Error constructor will be recognized by the
-      // ExtensionAPIRequestHandler as errors that should be propagated to
-      // the worker thread and received by extension code that originated
-      // the API request.
-      Error: ExtensionUtils.WorkerExtensionError,
-    };
-  }
-
-  openConduit(subject, address) {
-    let proc = ChromeUtils.domProcessChild;
-    let conduit = proc.getActor("ProcessConduits").openConduit(subject, {
-      id: subject.id || getUniqueId(),
-      extensionId: this.extension.id,
-      envType: this.envType,
-      workerScriptURL: this.uri.spec,
-      ...address,
-    });
-    this.callOnClose(conduit);
-    conduit.setCloseCallback(() => {
-      this.forgetOnClose(conduit);
-    });
-    return conduit;
-  }
-
-  withAPIRequest(request, callable) {
-    this.webidlAPIRequest = request;
-    try {
-      return callable();
-    } finally {
-      this.webidlAPIRequest = null;
-    }
-  }
-
-  getAPIRequest() {
-    return this.webidlAPIRequest;
-  }
-
-  /**
-   * Captures the most recent stack frame from the WebIDL API request being
-   * processed.
-   *
-   * @returns {SavedFrame?}
-   */
-  getCaller() {
-    return this.webidlAPIRequest?.callerSavedFrame;
-  }
-
-  logActivity(type, name, data) {
-    ExtensionActivityLogChild.log(this, type, name, data);
-  }
-
-  get cloneScope() {
-    return this.workerCloneScope;
-  }
-
-  get principal() {
-    return this.workerPrincipal;
-  }
-
-  get tabId() {
-    return -1;
-  }
-
-  get useWebIDLBindings() {
-    return true;
-  }
-
-  shutdown() {
-    this.unload();
-  }
-
-  unload() {
-    if (this.unloaded) {
-      return;
-    }
-
-    super.unload();
-  }
-}
-
-defineLazyGetter(WorkerContextChild.prototype, "messenger", function() {
-  return new WorkerMessenger(this);
-});
-
-defineLazyGetter(
-  WorkerContextChild.prototype,
-  "childManager",
-  getContextChildManagerGetter({ envType: "addon_parent" })
-);
 
 class ExtensionBaseContextChild extends BaseContext {
   /**
@@ -449,7 +282,23 @@ class ExtensionPageContextChild extends ExtensionBaseContextChild {
 defineLazyGetter(
   ExtensionPageContextChild.prototype,
   "childManager",
-  getContextChildManagerGetter({ envType: "addon_parent" })
+  function() {
+    this.extension.apiManager.lazyInit();
+
+    let localApis = {};
+    let can = new CanOfAPIs(this, this.extension.apiManager, localApis);
+
+    let childManager = new ChildAPIManager(this, this.messageManager, can, {
+      envType: "addon_parent",
+      viewType: this.viewType,
+      url: this.uri.spec,
+      incognito: this.incognito,
+    });
+
+    this.callOnClose(childManager);
+
+    return childManager;
+  }
 );
 
 class DevToolsContextChild extends ExtensionBaseContextChild {
@@ -483,20 +332,29 @@ class DevToolsContextChild extends ExtensionBaseContextChild {
   }
 }
 
-defineLazyGetter(
-  DevToolsContextChild.prototype,
-  "childManager",
-  getContextChildManagerGetter({ envType: "devtools_parent" })
-);
+defineLazyGetter(DevToolsContextChild.prototype, "childManager", function() {
+  devtoolsAPIManager.lazyInit();
+
+  let localApis = {};
+  let can = new CanOfAPIs(this, devtoolsAPIManager, localApis);
+
+  let childManager = new ChildAPIManager(this, this.messageManager, can, {
+    envType: "devtools_parent",
+    viewType: this.viewType,
+    url: this.uri.spec,
+    incognito: this.incognito,
+  });
+
+  this.callOnClose(childManager);
+
+  return childManager;
+});
 
 ExtensionPageChild = {
-  initialized: false,
-
   // Map<innerWindowId, ExtensionPageContextChild>
   extensionContexts: new Map(),
 
-  // Map<workerClientInfoId, ExtensionWorkerContextChild>
-  extensionWorkerContexts: new Map(),
+  initialized: false,
 
   apiManager,
 
@@ -535,30 +393,6 @@ ExtensionPageChild = {
         childId: context && context.childManager.id,
       });
     });
-  },
-
-  getContextForWorker(extension, serviceWorkerInfo) {
-    this._init();
-
-    if (!serviceWorkerInfo) {
-      return null;
-    }
-
-    let context = this.extensionWorkerContexts.get(
-      serviceWorkerInfo.clientInfoId
-    );
-    if (context && context.extension === extension) {
-      return context;
-    }
-
-    // Lazily create the context.
-    if (!context) {
-      context = new WorkerContextChild(extension, { serviceWorkerInfo });
-
-      this.extensionWorkerContexts.set(serviceWorkerInfo.clientInfoId, context);
-    }
-
-    return context;
   },
 
   /**
@@ -634,13 +468,6 @@ ExtensionPageChild = {
       if (context.extension.id == extensionId) {
         context.shutdown();
         this.extensionContexts.delete(windowId);
-      }
-    }
-
-    for (let [workerClientInfoId, context] of this.extensionWorkerContexts) {
-      if (context.extension.id == extensionId) {
-        context.shutdown();
-        this.extensionWorkerContexts.delete(workerClientInfoId);
       }
     }
   },

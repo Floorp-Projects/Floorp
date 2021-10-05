@@ -23,7 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   ExtensionContent: "resource://gre/modules/ExtensionContent.jsm",
   ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.jsm",
-  Schemas: "resource://gre/modules/Schemas.jsm",
 });
 
 const { ExtensionUtils } = ChromeUtils.import(
@@ -277,11 +276,6 @@ ExtensionManager = {
           let policy = WebExtensionPolicy.getByID(data.id);
           if (policy) {
             if (extensions.has(policy)) {
-              // Shutdown any remaining extension context if running in the
-              // extension process.
-              if (WebExtensionPolicy.isExtensionProcess) {
-                ExtensionPageChild.shutdownExtension(data.id);
-              }
               extensions.get(policy).shutdown();
             }
 
@@ -402,95 +396,11 @@ var ExtensionProcessScript = {
 
 var ExtensionAPIRequestHandler = {
   handleAPIRequest(policy, request) {
-    try {
-      let extension = extensions.get(policy);
-
-      if (!extension) {
-        throw new Error(`Extension instance not found for addon ${policy.id}`);
-      }
-
-      let context = this.getExtensionContextForAPIRequest({
-        extension,
-        request,
-      });
-
-      // Add a property to the request object for the normalizedArgs.
-      request.normalizedArgs = this.validateAndNormalizeRequestArgs({
-        context,
-        request,
-      });
-
-      return context.childManager.handleWebIDLAPIRequest(request);
-    } catch (error) {
-      // Do not propagate errors that are not meant to be accessible to the
-      // extension, report it to the console and just throw the generic
-      // "An unexpected error occurred".
-      Cu.reportError(error);
-      return {
-        type: Ci.mozIExtensionAPIRequestResult.EXTENSION_ERROR,
-        value: new Error("An unexpected error occurred"),
-      };
-    }
-  },
-
-  getExtensionContextForAPIRequest({ extension, request }) {
-    let context;
-
-    if (request.window) {
-      throw new Error(
-        `Extension API request originated from an extension window are not yet supported`
-      );
-    } else if (request.serviceWorkerInfo) {
-      context = ExtensionPageChild.getContextForWorker(
-        extension,
-        request.serviceWorkerInfo
-      );
-      if (!context) {
-        throw new Error(
-          `Extension context not found for the extension service worker`
-        );
-      }
-    } else {
-      throw new Error(
-        `Extension API request originated from an unsupported extension global`
-      );
-    }
-
-    if (!context.useWebIDLBindings) {
-      const { viewType, contextId } = context;
-      throw new Error(
-        `Extension ${extension.id} context "${viewType}" ${contextId} does not support WebIDL bindings`
-      );
-    }
-
-    return context;
-  },
-
-  validateAndNormalizeRequestArgs({ context, request }) {
-    if (!Schemas.checkPermissions(request.apiNamespace, context.extension)) {
-      throw new context.Error(
-        `Not enough privileges to access ${request.apiNamespace}`
-      );
-    }
-    if (request.requestType === "getProperty") {
-      return [];
-    }
-
-    if (request.apiObjectType) {
-      // skip parameter validation on request targeting an api object,
-      // even the JS-based implementation of the API objects are not
-      // going through the same kind of Schema based validation that
-      // the API namespaces methods and events go through.
-      //
-      // TODO(Bug 1728535): validate and normalize also this request arguments
-      // as a low priority follow up.
-      return request.args;
-    }
-
-    const { apiNamespace, apiName, args } = request;
-    // Validate and normalize parameters, set the normalized args on the
-    // mozIExtensionAPIRequest normalizedArgs property.
-    return Schemas.checkParameters(context, apiNamespace, apiName, args);
+    // TODO: to be actually implemented in the "part3" patches that follows,
+    // this patch does only contain a placeholder method, which is
+    // replaced with a mock in the set of unit tests defined in this
+    // patch.
+    throw new Error("Not implemented");
   },
 };
 

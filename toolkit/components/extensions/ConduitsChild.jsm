@@ -15,11 +15,7 @@
  * @prop {object} arg
  */
 
-const EXPORTED_SYMBOLS = [
-  "BaseConduit",
-  "ConduitsChild",
-  "ProcessConduitsChild",
-];
+const EXPORTED_SYMBOLS = ["BaseConduit", "ConduitsChild"];
 
 /**
  * Base class for both child (Point) and parent (Broadcast) side of conduits,
@@ -197,19 +193,4 @@ class ConduitsChild extends JSWindowActorChild {
     }
     this.conduits.clear();
   }
-}
-
-/**
- * Child side of the Conduits process actor.  Same code as JSWindowActor.
- */
-class ProcessConduitsChild extends JSProcessActorChild {
-  constructor() {
-    super();
-    this.conduits = new Map();
-  }
-
-  openConduit = ConduitsChild.prototype.openConduit;
-  receiveMessage = ConduitsChild.prototype.receiveMessage;
-  willDestroy = ConduitsChild.prototype.willDestroy;
-  didDestroy = ConduitsChild.prototype.didDestroy;
 }
