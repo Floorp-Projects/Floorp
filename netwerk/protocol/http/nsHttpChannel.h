@@ -502,7 +502,6 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   void SetOriginHeader();
   void SetDoNotTrack();
-  void SetGlobalPrivacyControl();
 
   already_AddRefed<nsChannelClassifier> GetOrCreateChannelClassifier();
 

@@ -5997,7 +5997,6 @@ nsresult nsHttpChannel::BeginConnect() {
 
   SetOriginHeader();
   SetDoNotTrack();
-  SetGlobalPrivacyControl();
 
   OriginAttributes originAttributes;
   // Regular principal in case we have a proxy.
@@ -8702,16 +8701,6 @@ void nsHttpChannel::SetDoNotTrack() {
     DebugOnly<nsresult> rv =
         mRequestHead.SetHeader(nsHttp::DoNotTrack, "1"_ns, false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-  }
-}
-
-void nsHttpChannel::SetGlobalPrivacyControl() {
-  MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread");
-
-  if (StaticPrefs::privacy_globalprivacycontrol_enabled() &&
-      StaticPrefs::privacy_globalprivacycontrol_functionality_enabled()) {
-    // Send the header with a value of 1 to indicate opting-out
-    mRequestHead.SetHeader(nsHttp::GlobalPrivacyControl, "1"_ns, false);
   }
 }
 
