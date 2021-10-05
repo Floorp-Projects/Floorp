@@ -41,7 +41,7 @@ NAME_SUBSTITUTIONS = [
     (re.compile(r"cltbld\.t-w732-ix-\d+\.\d+"), "{cltbld}"),
     (
         re.compile(r"venv\\lib\\site-packages\\pip\\_vendor\\.*"),
-        r"venv\lib\\site-packages\\{pip_vendor}",
+        r"venv\\lib\\site-packages\\{pip_vendor}",
     ),
 ]
 stages = ["startup", "normal", "shutdown"]
