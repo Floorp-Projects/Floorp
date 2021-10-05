@@ -30,6 +30,7 @@ use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::SceneView;
 use crate::renderer::{FullFrameStats, PipelineInfo, SceneBuilderHooks};
 use crate::scene::{Scene, BuiltScene, SceneStats};
+use crate::spatial_tree::{SceneSpatialTree, SpatialTreeUpdates};
 use std::iter;
 use time::precise_time_ns;
 use crate::util::drain_filter;
@@ -63,6 +64,7 @@ pub struct BuiltTransaction {
     pub removed_pipelines: Vec<(PipelineId, DocumentId)>,
     pub notifications: Vec<NotificationRequest>,
     pub interner_updates: Option<InternerUpdates>,
+    pub spatial_tree_updates: Option<SpatialTreeUpdates>,
     pub render_frame: bool,
     pub invalidate_rendered_frame: bool,
     pub profile: TransactionProfile,
@@ -78,6 +80,7 @@ pub struct LoadScene {
     pub config: FrameBuilderConfig,
     pub build_frame: bool,
     pub interners: Interners,
+    pub spatial_tree: SceneSpatialTree,
 }
 
 /// Message to the scene builder thread.
@@ -205,6 +208,7 @@ struct Document {
     interners: Interners,
     stats: SceneStats,
     view: SceneView,
+    spatial_tree: SceneSpatialTree,
 }
 
 impl Document {
@@ -213,6 +217,7 @@ impl Document {
             scene: Scene::new(),
             interners: Interners::default(),
             stats: SceneStats::empty(),
+            spatial_tree: SceneSpatialTree::new(),
             view: SceneView {
                 device_rect,
                 quality_settings: QualitySettings::default(),
@@ -398,6 +403,9 @@ impl SceneBuilderThread {
             let interners_name = format!("interners-{}-{}", id.namespace_id.0, id.id);
             config.serialize_for_scene(&doc.interners, interners_name);
 
+            let scene_spatial_tree_name = format!("scene-spatial-tree-{}-{}", id.namespace_id.0, id.id);
+            config.serialize_for_scene(&doc.spatial_tree, scene_spatial_tree_name);
+
             use crate::render_api::CaptureBits;
             if config.bits.contains(CaptureBits::SCENE) {
                 let file_name = format!("scene-{}-{}", id.namespace_id.0, id.id);
@@ -413,6 +421,7 @@ impl SceneBuilderThread {
 
             let mut built_scene = None;
             let mut interner_updates = None;
+            let mut spatial_tree_updates = None;
 
             if item.scene.has_root_pipeline() {
                 built_scene = Some(SceneBuilder::build(
@@ -421,11 +430,16 @@ impl SceneBuilderThread {
                     &item.view,
                     &self.config,
                     &mut item.interners,
+                    &mut item.spatial_tree,
                     &SceneStats::empty(),
                 ));
 
                 interner_updates = Some(
                     item.interners.end_frame_and_get_pending_updates()
+                );
+
+                spatial_tree_updates = Some(
+                    item.spatial_tree.end_frame_and_get_pending_updates()
                 );
             }
 
@@ -436,6 +450,7 @@ impl SceneBuilderThread {
                     interners: item.interners,
                     stats: SceneStats::empty(),
                     view: item.view.clone(),
+                    spatial_tree: item.spatial_tree,
                 },
             );
 
@@ -452,6 +467,7 @@ impl SceneBuilderThread {
                 removed_pipelines: Vec::new(),
                 notifications: Vec::new(),
                 interner_updates,
+                spatial_tree_updates,
                 profile: TransactionProfile::new(),
                 frame_stats: FullFrameStats::default(),
             })];
@@ -572,6 +588,8 @@ impl SceneBuilderThread {
 
         let mut built_scene = None;
         let mut interner_updates = None;
+        let mut spatial_tree_updates = None;
+
         if scene.has_root_pipeline() && rebuild_scene {
 
             let built = SceneBuilder::build(
@@ -580,6 +598,7 @@ impl SceneBuilderThread {
                 &doc.view,
                 &self.config,
                 &mut doc.interners,
+                &mut doc.spatial_tree,
                 &doc.stats,
             );
 
@@ -589,6 +608,10 @@ impl SceneBuilderThread {
             // Retrieve the list of updates from the clip interner.
             interner_updates = Some(
                 doc.interners.end_frame_and_get_pending_updates()
+            );
+
+            spatial_tree_updates = Some(
+                doc.spatial_tree.end_frame_and_get_pending_updates()
             );
 
             built_scene = Some(built);
@@ -632,6 +655,7 @@ impl SceneBuilderThread {
             removed_pipelines,
             notifications: txn.notifications,
             interner_updates,
+            spatial_tree_updates,
             profile,
             frame_stats,
         })

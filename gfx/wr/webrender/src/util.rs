@@ -990,6 +990,8 @@ impl<U> MaxRect for Box2D<f32, U> {
 /// An enum that tries to avoid expensive transformation matrix calculations
 /// when possible when dealing with non-perspective axis-aligned transformations.
 #[derive(Debug, MallocSizeOf)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum FastTransform<Src, Dst> {
     /// A simple offset, which can be used without doing any matrix math.
     Offset(Vector2D<f32, Src>),

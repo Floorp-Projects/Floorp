@@ -28,6 +28,8 @@ pub struct CoordinateSystemId(pub u32);
 /// A node in the hierarchy of coordinate system
 /// transforms.
 #[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CoordinateSystem {
     pub transform: LayoutTransform,
     pub world_transform: LayoutToWorldTransform,
@@ -108,6 +110,8 @@ pub trait SpatialNodeContainer {
 /// The representation of the spatial tree during scene building, which is
 /// mostly write-only, with a small number of queries for snapping,
 /// picture cache building
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct SceneSpatialTree {
     /// Nodes which determine the positions (offsets and transforms) for primitives
     /// and clips.
@@ -135,6 +139,22 @@ impl SpatialNodeContainer for SceneSpatialTree {
 
 impl SceneSpatialTree {
     pub fn new() -> Self {
+        let mut tree = SceneSpatialTree {
+            spatial_nodes: Vec::new(),
+            spatial_node_uids: FastHashSet::default(),
+            root_reference_frame_index: SpatialNodeIndex(0),
+        };
+
+        tree.reset();
+
+        tree
+    }
+
+    /// Reset the retained scene spatial tree, ready to build a new scene
+    fn reset(&mut self) {
+        self.spatial_nodes.clear();
+        self.spatial_node_uids.clear();
+
         let node = SceneSpatialNode::new_reference_frame(
             None,
             TransformStyle::Flat,
@@ -148,15 +168,24 @@ impl SceneSpatialTree {
             true,
         );
 
-        let mut tree = SceneSpatialTree {
-            spatial_nodes: Vec::new(),
-            spatial_node_uids: FastHashSet::default(),
-            root_reference_frame_index: SpatialNodeIndex(0),
-        };
+        self.add_spatial_node(node, SpatialNodeUid::root());
+    }
 
-        tree.add_spatial_node(node, SpatialNodeUid::root());
+    /// Complete building this scene, return the updates to apply to the frame spatial tree
+    pub fn end_frame_and_get_pending_updates(&mut self) -> SpatialTreeUpdates {
+        let spatial_nodes = self.spatial_nodes
+            .iter()
+            .map(|node| {
+                SpatialNode::from(node)
+            })
+            .collect();
 
-        tree
+        self.reset();
+
+        SpatialTreeUpdates {
+            root_reference_frame_index: self.root_reference_frame_index,
+            spatial_nodes,
+        }
     }
 
     /// Check if a given spatial node is an ancestor of another spatial node.
@@ -391,8 +420,20 @@ impl SceneSpatialTree {
     }
 }
 
+/// The delta updates to apply after building a new scene to the retained frame building
+/// tree.
+// TODO(gw): During the initial scaffolding work, this is the exact same as previous
+//           behavior - that is, a complete list of new spatial nodes. In future, this
+//           will instead be a list of deltas to apply to the frame spatial tree.
+pub struct SpatialTreeUpdates {
+    root_reference_frame_index: SpatialNodeIndex,
+    spatial_nodes: Vec<SpatialNode>,
+}
+
 /// Represents the spatial tree during frame building, which is mostly
 /// read-only, apart from the tree update at the start of the frame
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct SpatialTree {
     /// Nodes which determine the positions (offsets and transforms) for primitives
     /// and clips.
@@ -410,6 +451,8 @@ pub struct SpatialTree {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct TransformUpdateState {
     pub parent_reference_frame_transform: LayoutToWorldFastTransform,
     pub parent_accumulated_scroll_offset: LayoutVector2D,
@@ -525,20 +568,22 @@ impl SpatialNodeContainer for SpatialTree {
 }
 
 impl SpatialTree {
-    pub fn new(scene: &SceneSpatialTree) -> Self {
-        let spatial_nodes = scene.spatial_nodes
-            .iter()
-            .map(|node| {
-                SpatialNode::from(node)
-            })
-            .collect();
-
+    pub fn new() -> Self {
         SpatialTree {
-            spatial_nodes,
+            spatial_nodes: Vec::new(),
             coord_systems: Vec::new(),
-            root_reference_frame_index: scene.root_reference_frame_index,
+            root_reference_frame_index: SpatialNodeIndex::INVALID,
             update_state_stack: Vec::new(),
         }
+    }
+
+    /// Apply updates from a new scene to the frame spatial tree
+    pub fn apply_updates(
+        &mut self,
+        updates: SpatialTreeUpdates,
+    ) {
+        self.root_reference_frame_index = updates.root_reference_frame_index;
+        self.spatial_nodes = updates.spatial_nodes;
     }
 
     pub fn get_spatial_node(&self, index: SpatialNodeIndex) -> &SpatialNode {
@@ -994,13 +1039,14 @@ fn test_cst_simple_translation() {
         SpatialTreeItemKey::new(0, 3),
     );
 
-    let mut cst = SpatialTree::new(&cst);
-    cst.update_tree(&SceneProperties::new());
+    let mut st = SpatialTree::new();
+    st.apply_updates(cst.end_frame_and_get_pending_updates());
+    st.update_tree(&SceneProperties::new());
 
-    test_pt(100.0, 100.0, &cst, child1, root, 200.0, 100.0);
-    test_pt(100.0, 100.0, &cst, child2, root, 200.0, 150.0);
-    test_pt(100.0, 100.0, &cst, child2, child1, 100.0, 150.0);
-    test_pt(100.0, 100.0, &cst, child3, root, 400.0, 350.0);
+    test_pt(100.0, 100.0, &st, child1, root, 200.0, 100.0);
+    test_pt(100.0, 100.0, &st, child2, root, 200.0, 150.0);
+    test_pt(100.0, 100.0, &st, child2, child1, 100.0, 150.0);
+    test_pt(100.0, 100.0, &st, child3, root, 400.0, 350.0);
 }
 
 #[test]
@@ -1042,14 +1088,15 @@ fn test_cst_simple_scale() {
         SpatialTreeItemKey::new(0, 3),
     );
 
-    let mut cst = SpatialTree::new(&cst);
-    cst.update_tree(&SceneProperties::new());
+    let mut st = SpatialTree::new();
+    st.apply_updates(cst.end_frame_and_get_pending_updates());
+    st.update_tree(&SceneProperties::new());
 
-    test_pt(100.0, 100.0, &cst, child1, root, 400.0, 100.0);
-    test_pt(100.0, 100.0, &cst, child2, root, 400.0, 200.0);
-    test_pt(100.0, 100.0, &cst, child3, root, 800.0, 400.0);
-    test_pt(100.0, 100.0, &cst, child2, child1, 100.0, 200.0);
-    test_pt(100.0, 100.0, &cst, child3, child1, 200.0, 400.0);
+    test_pt(100.0, 100.0, &st, child1, root, 400.0, 100.0);
+    test_pt(100.0, 100.0, &st, child2, root, 400.0, 200.0);
+    test_pt(100.0, 100.0, &st, child3, root, 800.0, 400.0);
+    test_pt(100.0, 100.0, &st, child2, child1, 100.0, 200.0);
+    test_pt(100.0, 100.0, &st, child3, child1, 200.0, 400.0);
 }
 
 #[test]
@@ -1099,18 +1146,19 @@ fn test_cst_scale_translation() {
         SpatialTreeItemKey::new(0, 4),
     );
 
-    let mut cst = SpatialTree::new(&cst);
-    cst.update_tree(&SceneProperties::new());
+    let mut st = SpatialTree::new();
+    st.apply_updates(cst.end_frame_and_get_pending_updates());
+    st.update_tree(&SceneProperties::new());
 
-    test_pt(100.0, 100.0, &cst, child1, root, 200.0, 150.0);
-    test_pt(100.0, 100.0, &cst, child2, root, 300.0, 450.0);
-    test_pt(100.0, 100.0, &cst, child4, root, 1100.0, 450.0);
+    test_pt(100.0, 100.0, &st, child1, root, 200.0, 150.0);
+    test_pt(100.0, 100.0, &st, child2, root, 300.0, 450.0);
+    test_pt(100.0, 100.0, &st, child4, root, 1100.0, 450.0);
 
-    test_pt(0.0, 0.0, &cst, child4, child1, 400.0, -400.0);
-    test_pt(100.0, 100.0, &cst, child4, child1, 1000.0, 400.0);
-    test_pt(100.0, 100.0, &cst, child2, child1, 200.0, 400.0);
+    test_pt(0.0, 0.0, &st, child4, child1, 400.0, -400.0);
+    test_pt(100.0, 100.0, &st, child4, child1, 1000.0, 400.0);
+    test_pt(100.0, 100.0, &st, child2, child1, 200.0, 400.0);
 
-    test_pt(100.0, 100.0, &cst, child3, child1, 600.0, 0.0);
+    test_pt(100.0, 100.0, &st, child3, child1, 600.0, 0.0);
 }
 
 #[test]
@@ -1137,10 +1185,11 @@ fn test_cst_translation_rotate() {
         SpatialTreeItemKey::new(0, 1),
     );
 
-    let mut cst = SpatialTree::new(&cst);
-    cst.update_tree(&SceneProperties::new());
+    let mut st = SpatialTree::new();
+    st.apply_updates(cst.end_frame_and_get_pending_updates());
+    st.update_tree(&SceneProperties::new());
 
-    test_pt(100.0, 0.0, &cst, child1, root, 0.0, -100.0);
+    test_pt(100.0, 0.0, &st, child1, root, 0.0, -100.0);
 }
 
 #[test]
