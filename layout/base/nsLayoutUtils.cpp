@@ -2778,6 +2778,23 @@ nsresult nsLayoutUtils::GetFramesForArea(RelativeTo aRelativeTo,
   return NS_OK;
 }
 
+mozilla::ParentLayerToScreenScale2D
+nsLayoutUtils::GetTransformToAncestorScaleCrossProcessForFrameMetrics(
+    const nsIFrame* aFrame) {
+  ParentLayerToScreenScale2D transformToAncestorScale(
+      nsLayoutUtils::GetTransformToAncestorScale(aFrame));
+
+  if (BrowserChild* browserChild = BrowserChild::GetFrom(aFrame->PresShell())) {
+    transformToAncestorScale =
+        ViewTargetAs<ParentLayerPixel>(
+            transformToAncestorScale,
+            PixelCastJustification::PropagatingToChildProcess) *
+        browserChild->GetEffectsInfo().mTransformToAncestorScale;
+  }
+
+  return transformToAncestorScale;
+}
+
 // aScrollFrameAsScrollable must be non-nullptr and queryable to an nsIFrame
 FrameMetrics nsLayoutUtils::CalculateBasicFrameMetrics(
     nsIScrollableFrame* aScrollFrame) {
@@ -2806,8 +2823,9 @@ FrameMetrics nsLayoutUtils::CalculateBasicFrameMetrics(
   LayerToParentLayerScale layerToParentLayerScale(1.0f);
   metrics.SetDevPixelsPerCSSPixel(deviceScale);
   metrics.SetPresShellResolution(resolution);
-  metrics.SetTransformToAncestorScale(ParentLayerToScreenScale2D(
-      nsLayoutUtils::GetTransformToAncestorScale(frame)));
+
+  metrics.SetTransformToAncestorScale(
+      GetTransformToAncestorScaleCrossProcessForFrameMetrics(frame));
   metrics.SetCumulativeResolution(cumulativeResolution);
   metrics.SetZoom(deviceScale * cumulativeResolution * layerToParentLayerScale);
 
@@ -8765,12 +8783,9 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
   metrics.SetCumulativeResolution(LayoutDeviceToLayerScale2D(
       LayoutDeviceToLayerScale(presShell->GetCumulativeResolution())));
 
-  gfxSize transformToAncestorScale = nsLayoutUtils::GetTransformToAncestorScale(
-      aScrollFrame ? aScrollFrame : aForFrame);
-
   metrics.SetTransformToAncestorScale(
-      ParentLayerToScreenScale2D(transformToAncestorScale));
-
+      GetTransformToAncestorScaleCrossProcessForFrameMetrics(
+          aScrollFrame ? aScrollFrame : aForFrame));
   metrics.SetDevPixelsPerCSSPixel(presContext->CSSToDevPixelScale());
 
   // Initially, AsyncPanZoomController should render the content to the screen

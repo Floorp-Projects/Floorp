@@ -272,7 +272,7 @@ struct RepaintRequest {
   // invalid.
   CSSRect mLayoutViewport;
 
-  // The scale on this scroll frame induced by enclosing CSS transforms.
+  // See FrameMetrics::mTransformToAncestorScale for description.
   ParentLayerToScreenScale2D mTransformToAncestorScale;
 
   // The time at which the APZC last requested a repaint for this scroll frame.

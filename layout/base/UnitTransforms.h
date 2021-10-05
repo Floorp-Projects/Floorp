@@ -66,6 +66,8 @@ enum class PixelCastJustification : uint8_t {
   // type of their top-level event coordinate space even if technically
   // inaccurate.
   ContentProcessIsLayerInUiProcess,
+  // Propagating TransformToAncestorScale to a child process.
+  PropagatingToChildProcess,
 };
 
 template <class TargetUnits, class SourceUnits>
@@ -133,6 +135,13 @@ gfx::ScaleFactor<SourceUnits, NewTargetUnits> ViewTargetAs(
     const gfx::ScaleFactor<SourceUnits, OldTargetUnits>& aScaleFactor,
     PixelCastJustification) {
   return gfx::ScaleFactor<SourceUnits, NewTargetUnits>(aScaleFactor.scale);
+}
+template <class NewTargetUnits, class OldTargetUnits, class SourceUnits>
+gfx::ScaleFactors2D<SourceUnits, NewTargetUnits> ViewTargetAs(
+    const gfx::ScaleFactors2D<SourceUnits, OldTargetUnits>& aScaleFactors,
+    PixelCastJustification) {
+  return gfx::ScaleFactors2D<SourceUnits, NewTargetUnits>(aScaleFactors.xScale,
+                                                          aScaleFactors.yScale);
 }
 template <class TargetUnits, class SourceUnits>
 Maybe<gfx::IntRectTyped<TargetUnits>> ViewAs(
