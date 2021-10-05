@@ -929,6 +929,14 @@ class nsDisplayListBuilder {
       const DisplayItemClipChain* aLeafClip2);
 
   /**
+   * Same as above, except aAncestor is computed as the nearest common
+   * ancestor of the two provided clips.
+   */
+  const DisplayItemClipChain* CreateClipChainIntersection(
+      const DisplayItemClipChain* aLeafClip1,
+      const DisplayItemClipChain* aLeafClip2);
+
+  /**
    * Clone the supplied clip chain's chain items into this builder's arena.
    */
   const DisplayItemClipChain* CopyWholeChain(

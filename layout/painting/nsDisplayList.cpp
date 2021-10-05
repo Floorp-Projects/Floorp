@@ -1477,6 +1477,21 @@ const DisplayItemClipChain* nsDisplayListBuilder::CreateClipChainIntersection(
   return parentSC;
 }
 
+const DisplayItemClipChain* nsDisplayListBuilder::CreateClipChainIntersection(
+    const DisplayItemClipChain* aLeafClip1,
+    const DisplayItemClipChain* aLeafClip2) {
+  // aLeafClip2 might be a reference to a clip on the stack. We need to make
+  // sure that CreateClipChainIntersection will allocate the actual intersected
+  // clip in the builder's arena, so for the aLeafClip1 == nullptr case,
+  // we supply nullptr as the common ancestor so that
+  // CreateClipChainIntersection clones the whole chain.
+  const DisplayItemClipChain* ancestorClip =
+      aLeafClip1 ? FindCommonAncestorClipForIntersection(aLeafClip1, aLeafClip2)
+                 : nullptr;
+
+  return CreateClipChainIntersection(ancestorClip, aLeafClip1, aLeafClip2);
+}
+
 const DisplayItemClipChain* nsDisplayListBuilder::CopyWholeChain(
     const DisplayItemClipChain* aClipChain) {
   return CreateClipChainIntersection(nullptr, aClipChain, nullptr);
@@ -4986,7 +5001,9 @@ bool nsDisplayOpacity::CreateWebRenderCommands(
     nsDisplayListBuilder* aDisplayListBuilder) {
   MOZ_ASSERT(mChildOpacityState != ChildOpacityState::Applied);
   float oldOpacity = aBuilder.GetInheritedOpacity();
+  const DisplayItemClipChain* oldClipChain = aBuilder.GetInheritedClipChain();
   aBuilder.SetInheritedOpacity(1.0f);
+  aBuilder.SetInheritedClipChain(nullptr);
   float opacity = mOpacity * oldOpacity;
   float* opacityForSC = &opacity;
 
@@ -5008,6 +5025,7 @@ bool nsDisplayOpacity::CreateWebRenderCommands(
   aManager->CommandBuilder().CreateWebRenderCommandsFromDisplayList(
       &mList, this, aDisplayListBuilder, sc, aBuilder, aResources);
   aBuilder.SetInheritedOpacity(oldOpacity);
+  aBuilder.SetInheritedClipChain(oldClipChain);
   return true;
 }
 
@@ -8155,9 +8173,12 @@ bool nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
   }
 
   aBuilder.SetInheritedOpacity(1.0f);
+  const DisplayItemClipChain* oldClipChain = aBuilder.GetInheritedClipChain();
+  aBuilder.SetInheritedClipChain(nullptr);
   nsDisplayEffectsBase::CreateWebRenderCommands(aBuilder, aResources, *sc,
                                                 aManager, aDisplayListBuilder);
   aBuilder.SetInheritedOpacity(oldOpacity);
+  aBuilder.SetInheritedClipChain(oldClipChain);
 
   return true;
 }
@@ -8387,6 +8408,8 @@ bool nsDisplayFilters::CreateWebRenderCommands(
 
   float opacity = aBuilder.GetInheritedOpacity();
   aBuilder.SetInheritedOpacity(1.0f);
+  const DisplayItemClipChain* oldClipChain = aBuilder.GetInheritedClipChain();
+  aBuilder.SetInheritedClipChain(nullptr);
   wr::StackingContextParams params;
   params.mFilters = std::move(wrFilters.filters);
   params.mFilterDatas = std::move(wrFilters.filter_datas);
@@ -8398,6 +8421,7 @@ bool nsDisplayFilters::CreateWebRenderCommands(
   nsDisplayEffectsBase::CreateWebRenderCommands(aBuilder, aResources, sc,
                                                 aManager, aDisplayListBuilder);
   aBuilder.SetInheritedOpacity(opacity);
+  aBuilder.SetInheritedClipChain(oldClipChain);
 
   return true;
 }
