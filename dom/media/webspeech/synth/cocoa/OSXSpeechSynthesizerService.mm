@@ -171,7 +171,7 @@ SpeechTaskCallback::OnVolumeChanged(float aVolume) {
 
 float SpeechTaskCallback::GetTimeDurationFromStart() {
   TimeDuration duration = TimeStamp::Now() - mStartingTime;
-  return duration.ToMilliseconds();
+  return duration.ToSeconds();
 }
 
 void SpeechTaskCallback::OnWillSpeakWord(uint32_t aIndex, uint32_t aLength) {
