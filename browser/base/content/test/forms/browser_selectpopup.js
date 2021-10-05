@@ -506,7 +506,7 @@ add_task(async function test_event_order() {
           type: "input",
           cancelable: false,
           targetIsOption: false,
-          composed: false,
+          composed: true,
         },
         {
           type: "change",
@@ -533,7 +533,7 @@ add_task(async function test_event_order() {
           type: "input",
           cancelable: false,
           targetIsOption: false,
-          composed: false,
+          composed: true,
         },
         {
           type: "change",
