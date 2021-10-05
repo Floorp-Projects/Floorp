@@ -29,4 +29,9 @@ interface ExtensionBrowser {
    Func="mozilla::extensions::ExtensionMockAPI::IsAllowed",
    Pref="extensions.webidl-api.expose_mock_interface"]
   readonly attribute ExtensionMockAPI mockExtensionAPI;
+
+  // `browser.test` API namespace, available in tests.
+  [Replaceable, SameObject, BinaryName="GetExtensionTest",
+   Func="mozilla::extensions::ExtensionTest::IsAllowed"]
+  readonly attribute ExtensionTest test;
 };
