@@ -53,12 +53,24 @@ async function testCrossProcessTabNavigation(browser, resourceCommand) {
   info("Wait for log message");
   await onConsoleLogsComplete;
 
-  assertConsoleMessage(resourceCommand, messages[0], {
+  // messages are coming from different targets so the order isn't guaranteed
+  const topLevelMessageResource = messages.find(resource =>
+    resource.message.filename.startsWith(URL_ROOT_COM_SSL)
+  );
+  const iframeMessage = messages.find(resource =>
+    resource.message.filename.startsWith("data:")
+  );
+
+  assertConsoleMessage(resourceCommand, topLevelMessageResource, {
     targetFront: resourceCommand.targetCommand.targetFront,
     messageText: "top-level document log",
   });
-  assertConsoleMessage(resourceCommand, messages[1], {
-    targetFront: resourceCommand.targetCommand.targetFront,
+  assertConsoleMessage(resourceCommand, iframeMessage, {
+    targetFront: isEveryFrameTargetEnabled
+      ? resourceCommand.targetCommand
+          .getAllTargets([resourceCommand.targetCommand.TYPES.FRAME])
+          .find(t => t.url.startsWith("data:"))
+      : resourceCommand.targetCommand.targetFront,
     messageText: "data url data log",
   });
 
@@ -92,11 +104,19 @@ async function testCrossProcessIframeNavigation(browser, resourceCommand) {
     }
   );
 
+  // messages are coming from different targets so the order isn't guaranteed
+  const topLevelMessageResource = messages.find(resource =>
+    resource.message.arguments[0].startsWith("top-level")
+  );
+  const dataUrlMessageResource = messages.find(resource =>
+    resource.message.arguments[0].startsWith("data url")
+  );
+
   // Assert cached messages from the previous top document
-  assertConsoleMessage(resourceCommand, messages[0], {
+  assertConsoleMessage(resourceCommand, topLevelMessageResource, {
     messageText: "top-level document log",
   });
-  assertConsoleMessage(resourceCommand, messages[1], {
+  assertConsoleMessage(resourceCommand, dataUrlMessageResource, {
     messageText: "data url data log",
   });
 
@@ -114,7 +134,10 @@ async function testCrossProcessIframeNavigation(browser, resourceCommand) {
     resourceCommand.targetCommand
   );
 
-  assertConsoleMessage(resourceCommand, messages[2], {
+  const iframeMessageResource = messages.find(resource =>
+    resource.message.arguments[0].endsWith("iframe log")
+  );
+  assertConsoleMessage(resourceCommand, iframeMessageResource, {
     messageText: `${TEST_DOMAIN} iframe log`,
     targetFront: iframeTarget,
   });
@@ -145,10 +168,10 @@ function assertConsoleMessage(resourceCommand, messageResource, expected) {
   );
 }
 
-async function getIframeTargetFront(targetCommand, iframeUrl) {
-  // If Fission is enabled, the iframe will have a dedicated target,
+async function getIframeTargetFront(targetCommand) {
+  // If Fission/EFT is enabled, the iframe will have a dedicated target,
   // otherwise it will be debuggable via the top level target.
-  if (!isFissionEnabled()) {
+  if (!isFissionEnabled() && !isEveryFrameTargetEnabled()) {
     return targetCommand.targetFront;
   }
   const frameTargets = targetCommand.getAllTargets([targetCommand.TYPES.FRAME]);
