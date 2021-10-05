@@ -87,27 +87,5 @@ ExtensionEventManager* ExtensionMockAPI::OnTestEvent() {
   return mOnTestEventMgr;
 }
 
-already_AddRefed<ExtensionPort> ExtensionMockAPI::CallWebExtMethodReturnsPort(
-    JSContext* aCx, const nsAString& aApiMethod,
-    const dom::Sequence<JS::Value>& aArgs, ErrorResult& aRv) {
-  JS::Rooted<JS::Value> apiResult(aCx);
-  auto request = CallSyncFunction(u"methodReturnsPort"_ns);
-  request->Run(mGlobal, aCx, aArgs, &apiResult, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  IgnoredErrorResult rv;
-  RefPtr<ExtensionPort> port = ExtensionPort::Create(mGlobal, apiResult, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    // ExtensionPort::Create doesn't throw the js exception with the generic
-    // error message as the "api request forwarding" helper classes.
-    ThrowUnexpectedError(aCx, aRv);
-    return nullptr;
-  }
-
-  return port.forget();
-}
-
 }  // namespace extensions
 }  // namespace mozilla

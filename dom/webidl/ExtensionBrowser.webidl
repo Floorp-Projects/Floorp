@@ -34,7 +34,12 @@ interface ExtensionBrowser {
   [Replaceable, SameObject, BinaryName="GetExtensionAlarms",
    Func="mozilla::extensions::ExtensionAlarms::IsAllowed"]
   readonly attribute ExtensionAlarms alarms;
- 
+
+  // `browser.runtime` API namespace
+  [Replaceable, SameObject, BinaryName="GetExtensionRuntime",
+   Func="mozilla::extensions::ExtensionRuntime::IsAllowed"]
+  readonly attribute ExtensionRuntime runtime;
+
   // `browser.test` API namespace, available in tests.
   [Replaceable, SameObject, BinaryName="GetExtensionTest",
    Func="mozilla::extensions::ExtensionTest::IsAllowed"]
