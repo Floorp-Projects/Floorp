@@ -720,6 +720,8 @@ Toolbox.prototype = {
     if (targetFront.isTopLevel) {
       this.target.off("inspect-object", this._onInspectObject);
       this.target.off("frame-update", this._updateFrames);
+    } else if (this.selection) {
+      this.selection.onTargetDestroyed(targetFront);
     }
 
     if (this.hostType !== Toolbox.HostType.PAGE) {

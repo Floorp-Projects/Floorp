@@ -110,13 +110,55 @@ Selection.prototype = {
     this._nodeFront = null;
   },
 
+  /**
+   * @param {WalkerFront|null} walker
+   */
   setWalker: function(walker = null) {
     if (this._walker) {
-      this._walker.off("mutations", this._onMutations);
+      this._removeWalkerFrontEventListeners(this._walker);
     }
+
     this._walker = walker;
     if (this._walker) {
-      this._walker.on("mutations", this._onMutations);
+      this._setWalkerFrontEventListeners(this._walker);
+    }
+  },
+
+  /**
+   * Set event listeners on the passed walker front
+   *
+   * @param {WalkerFront} walker
+   */
+  _setWalkerFrontEventListeners(walker) {
+    walker.on("mutations", this._onMutations);
+  },
+
+  /**
+   * Remove event listeners we previously set on walker front
+   *
+   * @param {WalkerFront} walker
+   */
+  _removeWalkerFrontEventListeners(walker) {
+    walker.off("mutations", this._onMutations);
+  },
+
+  /**
+   * Called when a target front is destroyed.
+   *
+   * @param {TargetFront} front
+   * @emits detached-front
+   */
+  onTargetDestroyed: function(targetFront) {
+    // if the current walker belongs to the target that is destroyed, emit a `detached-front`
+    // event so consumers can act accordingly (e.g. in the inspector, another node will be
+    // selected)
+    if (
+      this._walker &&
+      !targetFront.isTopLevel &&
+      this._walker.targetFront == targetFront
+    ) {
+      this._removeWalkerFrontEventListeners(this._walker);
+      this.emit("detached-front");
     }
   },
 
