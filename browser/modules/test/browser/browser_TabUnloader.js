@@ -80,7 +80,7 @@ async function addWebRTCTab(win = window) {
   return tab;
 }
 
-async function pressure(tab) {
+async function pressure() {
   let tabDiscarded = BrowserTestUtils.waitForEvent(
     document,
     "TabBrowserDiscarded",
@@ -119,7 +119,7 @@ async function compareTabOrder(expectedOrder) {
     "right number of tabs in discard sort list"
   );
   for (let idx = 0; idx < expectedOrder.length; idx++) {
-    is(tabInfo[idx].tab, expectedOrder[idx], "index " + idx + " is correct");
+    is(tabInfo[idx].tab, expectedOrder[idx], "index " + idx + " is incorrect");
   }
 }
 
@@ -177,8 +177,8 @@ add_task(async function test() {
     tab2,
     pinnedTab,
     soundTab,
-    pinnedSoundTab,
     tab0,
+    pinnedSoundTab,
   ]);
 
   // Check that the tabs are present
@@ -192,37 +192,30 @@ add_task(async function test() {
   );
 
   // Check that low-memory memory-pressure events unload tabs
-  await pressure(tab1);
+  await pressure();
   ok(
     !tab1.linkedPanel,
     "low-memory memory-pressure notification unloaded the LRU tab"
   );
 
-  await compareTabOrder([tab2, pinnedTab, soundTab, pinnedSoundTab, tab0]);
+  await compareTabOrder([tab2, pinnedTab, soundTab, tab0, pinnedSoundTab]);
 
   // If no normal tab is available unload pinned tabs
-  await pressure(tab2);
+  await pressure();
   ok(!tab2.linkedPanel, "unloaded a second tab in LRU order");
-  await compareTabOrder([pinnedTab, soundTab, pinnedSoundTab, tab0]);
+  await compareTabOrder([pinnedTab, soundTab, tab0, pinnedSoundTab]);
 
-  ok(soundTab.soundPlaying, "tab is no longer playing sound");
+  ok(soundTab.soundPlaying, "tab is still playing sound");
 
-  await pressure(pinnedTab);
+  await pressure();
   ok(!pinnedTab.linkedPanel, "unloaded a pinned tab");
-  await compareTabOrder([soundTab, pinnedSoundTab, tab0]);
+  await compareTabOrder([soundTab, tab0, pinnedSoundTab]);
 
-  ok(pinnedSoundTab.soundPlaying, "tab is no longer playing sound");
+  ok(pinnedSoundTab.soundPlaying, "tab is still playing sound");
 
-  // If no pinned tab is available unload tabs playing sound
-  await pressure(soundTab);
-  ok(!soundTab.linkedPanel, "unloaded a tab playing sound");
-  await compareTabOrder([pinnedSoundTab, tab0]);
-
-  // If no pinned tab or tab playing sound is available unload tabs that are
-  // both pinned and playing sound
-  await pressure(pinnedSoundTab);
-  ok(!pinnedSoundTab.linkedPanel, "unloaded a pinned tab playing sound");
-  await compareTabOrder([tab0]);
+  // There are no unloadable tabs.
+  TabUnloader.unloadTabAsync();
+  ok(soundTab.linkedPanel, "a tab playing sound is never unloaded");
 
   const histogram = TelemetryTestUtils.getAndClearHistogram(
     "TAB_UNLOAD_TO_RELOAD"
@@ -241,26 +234,23 @@ add_task(async function test() {
   let anotherSoundTab = await addAudioTab();
 
   await BrowserTestUtils.switchTab(gBrowser, tab1);
-  await BrowserTestUtils.switchTab(gBrowser, soundTab);
   await BrowserTestUtils.switchTab(gBrowser, pinnedTab);
 
   const hist = histogram.snapshot();
   const numEvents = Object.values(hist.values).reduce((a, b) => a + b);
-  Assert.equal(numEvents, 3, "three tabs have been reloaded.");
+  Assert.equal(numEvents, 2, "two tabs have been reloaded.");
 
   // tab0 has never been unloaded.  No data is added to the histogram.
   await BrowserTestUtils.switchTab(gBrowser, tab0);
 
-  // Audio from the first sound tab was stopped when the tab was discarded earlier,
-  // so it should be treated as if it isn't playing sound and should appear earlier
-  // in the list.
   await compareTabOrder([
     tab1,
-    soundTab,
     pinnedTab,
+    soundTab,
     webrtcTab,
     anotherSoundTab,
     tab0,
+    pinnedSoundTab,
   ]);
 
   let window2 = await BrowserTestUtils.openNewBrowserWindow();
@@ -271,26 +261,28 @@ add_task(async function test() {
 
   await compareTabOrder([
     tab1,
-    soundTab,
     win2tab1,
     win2tab2,
     pinnedTab,
+    soundTab,
     webrtcTab,
     anotherSoundTab,
     win2winrtcTab,
     tab0,
     win2tab3,
+    pinnedSoundTab,
   ]);
 
   await BrowserTestUtils.closeWindow(window2);
 
   await compareTabOrder([
     tab1,
-    soundTab,
     pinnedTab,
+    soundTab,
     webrtcTab,
     anotherSoundTab,
     tab0,
+    pinnedSoundTab,
   ]);
 
   // Cleanup
