@@ -627,11 +627,6 @@ void Navigator::GetDoNotTrack(nsAString& aResult) {
   }
 }
 
-bool Navigator::GlobalPrivacyControl() {
-  return StaticPrefs::privacy_globalprivacycontrol_enabled() &&
-         StaticPrefs::privacy_globalprivacycontrol_functionality_enabled();
-}
-
 uint64_t Navigator::HardwareConcurrency() {
   workerinternals::RuntimeService* rts =
       workerinternals::RuntimeService::GetOrCreateService();
