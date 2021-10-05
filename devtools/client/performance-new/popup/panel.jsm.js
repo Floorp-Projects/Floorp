@@ -239,7 +239,7 @@ function createViewControllers(state, elements) {
  * @param {Elements} elements
  * @param {ViewController} view
  */
-function initializePopup(state, elements, view) {
+function initializeView(state, elements, view) {
   view.createPresetsList();
 
   state.cleanup.push(() => {
@@ -375,13 +375,22 @@ function addPopupEventHandlers(state, elements, view) {
   }
 }
 
+/**
+ * Initialize everything needed for the popup to work fine.
+ * @param {State} panelState
+ * @param {XULElement} panelview
+ */
+function initializePopup(panelState, panelview) {
+  const panelElements = selectElementsInPanelview(panelview);
+  const panelviewControllers = createViewControllers(panelState, panelElements);
+  addPopupEventHandlers(panelState, panelElements, panelviewControllers);
+  initializeView(panelState, panelElements, panelviewControllers);
+}
+
 // Provide an exports object for the JSM to be properly read by TypeScript.
 /** @type {any} */ (this).module = {};
 
 module.exports = {
-  selectElementsInPanelview,
-  createViewControllers,
-  addPopupEventHandlers,
   initializePopup,
 };
 
