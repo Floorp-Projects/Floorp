@@ -408,3 +408,18 @@ e46822faf5d85ea1ca89fc153aaf5a83ce0418b5 - Ricky Stewart - Bug 1672023 - Remove 
 e52e5ee6f9d6217f3be04a71ff089148116f8fb0 - Simon Giesecke - Bug 1648010 - Remove NS_NAMED_LITERAL_CSTRING and NS_NAMED_LITERAL_STRING macros. r=froydnj
 3d7ffaefcd5a6c10988a1ecc3b75c3d55e1cd9e2 - Simon Giesecke - Bug 1648010 - Fix uses of NS_LITERAL_STRING with C string literals. r=geckoview-reviewers,agi,froydnj
 3f8100fb74318f9e0b3b6351ade737994d13bcf8 - Simon Giesecke - Bug 1648010 - Replace uses of NS_LITERAL_STRING/NS_LITERAL_CSTRING macros by _ns literals. r=geckoview-reviewers,jgilbert,agi,hsivonen,froydnj
+d4a5d856797740630c86cb37dc57d14965b3f0e3 - Alex Lopez - Bug 1696251 - Pass MachCommandBase object as first argument for Mach Commands. r=mhentges,remote-protocol-reviewers,marionette-reviewers,webdriver-reviewers,perftest-reviewers
+b85edcc1ce08369f27947268f1ebef5787f8cbae - Cosmin Sabou - Backed out changeset d4a5d8567977 (bug 1696251) for non-unified build bustages. CLOSED TREE
+e169193b74235c34691dbbb0f51a804c486533fc - Alex Lopez - Bug 1696251 - Pass MachCommandBase object as first argument for Mach Commands. r=mhentges,remote-protocol-reviewers,marionette-reviewers,webdriver-reviewers,perftest-reviewers
+1c84c9a34575f034cad1ed970e0bc6c516d8547c - Alex Lopez - Bug 1696251 - Turn all properties in MachCommandBase subclasses into methods. r=mhentges,perftest-reviewers,sparky
+31a80696d4d5a3e745be3df2e86df061cf02daf5 - Butkovits Atila - Backed out 2 changesets (bug 1696251) for causing js-bench-sm failures. CLOSED TREE
+4b889750da57ff0994c7196bc8a0151c17f641b6 - Alex Lopez - Bug 1696251 - Refactor constructors in MachCommandBase subclasses to remove them. r=mhentges,remote-protocol-reviewers
+ca386bcad42046b17d617e55a92e353ef2dc3061 - Butkovits Atila - Backed out changeset 4b889750da57 (bug 1696251) for causing lint failures. CLOSED TREE
+e1921c5112d83da21aa2fae7a9c5710016d1b371 - Alex Lopez - Bug 1696251 - Replace self with command_context where possible in existing mach commands. r=mhentges,webdriver-reviewers,perftest-reviewers,whimboo
+abf91c0aeefdee7c7070dd9fb5f8895736d485ce - Butkovits Atila - Backed out changeset e1921c5112d8 (bug 1696251) for causing bustages complaining about 'CommandContext'. CLOSED TREE
+5f5b612878f318b3e635faf5cc145155cd454eb0 - Alex Lopez - Bug 1696251: Allow mach commands as stand-alone functions and adapt existing commands. r=mhentges,webdriver-reviewers,perftest-reviewers,sparky,whimboo
+e28c911d36db5524416becf1781c231a058e6c21 - Noemi Erli - Backed out changeset 5f5b612878f3 (bug 1696251) for causing multiple bustages
+510dd46a9de764e8730e081235a5d4d3aa9507ee - Alex Lopez - Bug 1696251: Allow mach commands as stand-alone functions and adapt existing commands. r=mhentges,webdriver-reviewers,perftest-reviewers,sparky,whimboo
+b747274f1da3e93a8bed6b8c8df6299ceb354417 - Butkovits Atila - Backed out changeset 510dd46a9de7 (bug 1696251) for causing Android build bustages.
+53b1fa0faa6d78f7cf72f9cbe3dc85221a04eea3 - Alex Lopez - Bug 1696251: Allow mach commands as stand-alone functions and adapt existing commands. r=mhentges,webdriver-reviewers,perftest-reviewers,sparky,whimboo
+c38d34be7c3f757510f037fef5a78ea08af32980 - Butkovits Atila - Backed out changeset 53b1fa0faa6d (bug 1696251) for breaking the static-analysis integration. a=backout
