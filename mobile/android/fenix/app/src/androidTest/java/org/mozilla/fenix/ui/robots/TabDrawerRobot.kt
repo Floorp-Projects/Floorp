@@ -419,9 +419,17 @@ private fun assertExistingOpenTabs(title: String) {
     }
 }
 
-private fun assertExistingTabList() =
-    onView(allOf(withId(R.id.tab_item)))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+private fun assertExistingTabList() {
+    mDevice.findObject(
+        UiSelector().resourceId("$packageName:id/tabsTray")
+    ).waitForExists(waitingTime)
+
+    assertTrue(
+        mDevice.findObject(
+            UiSelector().resourceId("$packageName:id/tab_item")
+        ).waitForExists(waitingTime)
+    )
+}
 
 private fun assertNoTabsOpenedText() =
     onView(withId(R.id.tab_tray_empty_view))
