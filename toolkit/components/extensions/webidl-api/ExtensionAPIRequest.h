@@ -93,6 +93,7 @@ class ExtensionAPIRequest : public mozIExtensionAPIRequest {
   virtual ~ExtensionAPIRequest() {
     mSWClientInfo = Nothing();
     mArgs.setUndefined();
+    mNormalizedArgs.setUndefined();
     mStack.setUndefined();
     mEventListener = nullptr;
     mozilla::DropJSObjects(this);
@@ -102,6 +103,7 @@ class ExtensionAPIRequest : public mozIExtensionAPIRequest {
   ExtensionAPIRequestTarget mRequestTarget;
   JS::Heap<JS::Value> mStack;
   JS::Heap<JS::Value> mArgs;
+  JS::Heap<JS::Value> mNormalizedArgs;
   Maybe<dom::ClientInfo> mSWClientInfo;
   RefPtr<ExtensionServiceWorkerInfo> mSWInfo;
 
