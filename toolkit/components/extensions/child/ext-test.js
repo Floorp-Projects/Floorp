@@ -101,14 +101,38 @@ this.test = class extends ExtensionAPI {
     }
 
     class TestEventManager extends EventManager {
+      constructor(...args) {
+        super(...args);
+
+        // A map to keep track of the listeners wrappers being added in
+        // addListener (the wrapper will be needed to be able to remove
+        // the listener from this EventManager instance if the extension
+        // does call test.onMessage.removeListener).
+        this._listenerWrappers = new Map();
+        context.callOnClose({
+          close: () => this._listenerWrappers.clear(),
+        });
+      }
+
       addListener(callback, ...args) {
-        super.addListener(function(...args) {
+        const listenerWrapper = function(...args) {
           try {
             callback.call(this, ...args);
           } catch (e) {
             assertTrue(false, `${e}\n${e.stack}`);
           }
-        }, ...args);
+        };
+        super.addListener(listenerWrapper, ...args);
+        this._listenerWrappers.set(callback, listenerWrapper);
+      }
+
+      removeListener(callback) {
+        if (!this._listenerWrappers.has(callback)) {
+          return;
+        }
+
+        super.removeListener(this._listenerWrappers.get(callback));
+        this._listenerWrappers.delete(callback);
       }
     }
 
