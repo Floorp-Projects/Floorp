@@ -266,6 +266,14 @@ interface PlacesBookmarkMoved : PlacesBookmark {
   readonly attribute long oldIndex;
 };
 
+[ChromeOnly, Exposed=Window]
+interface PlacesBookmarkChanged : PlacesBookmark {
+  /**
+   * The updated last modified value in milliseconds.
+   */
+  readonly attribute long long lastModified;
+};
+
 dictionary PlacesBookmarkTitleInit {
   required long long id;
   required unsigned short itemType;
@@ -279,18 +287,13 @@ dictionary PlacesBookmarkTitleInit {
 };
 
 [ChromeOnly, Exposed=Window]
-interface PlacesBookmarkTitle : PlacesBookmark {
+interface PlacesBookmarkTitle : PlacesBookmarkChanged {
   constructor(PlacesBookmarkTitleInit initDict);
 
   /**
    * The title of the changed bookmark.
    */
   readonly attribute DOMString title;
-
-  /**
-   * The updated last modified value in milliseconds.
-   */
-  readonly attribute long long lastModified;
 };
 
 dictionary PlacesBookmarkUrlInit {
@@ -305,13 +308,8 @@ dictionary PlacesBookmarkUrlInit {
 };
 
 [ChromeOnly, Exposed=Window]
-interface PlacesBookmarkUrl : PlacesBookmark {
+interface PlacesBookmarkUrl : PlacesBookmarkChanged {
   constructor(PlacesBookmarkUrlInit initDict);
-
-  /**
-   * The updated last modified value in milliseconds.
-   */
-  readonly attribute long long lastModified;
 };
 
 dictionary PlacesFaviconInit {
