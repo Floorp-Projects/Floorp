@@ -218,8 +218,8 @@ const gSelects = {
      select { background-color: #fff; }
      option { color: #2b2b2b; }
    </style></head><body><select id='one'>
-     <option>{"color": "rgb(43, 43, 43)", "backgroundColor": "-moz-Combobox"}</option>
-     <option>{"color": "rgb(43, 43, 43)", "backgroundColor": "-moz-Combobox"}</option>
+     <option>{"color": "rgb(43, 43, 43)", "backgroundColor": "rgb(255, 255, 255)"}</option>
+     <option>{"color": "rgb(43, 43, 43)", "backgroundColor": "rgb(255, 255, 255)"}</option>
      <option selected="true">{"end": "true"}</option>
    </select></body></html>
 `,
@@ -229,8 +229,8 @@ const gSelects = {
      select { background-color: #fff; }
      option { color: #2b2b2b; background-color: #fff; }
    </style></head><body><select id='one'>
-     <option>{"color": "rgb(43, 43, 43)", "backgroundColor": "-moz-Combobox"}</option>
-     <option>{"color": "rgb(43, 43, 43)", "backgroundColor": "-moz-Combobox"}</option>
+     <option>{"color": "rgb(43, 43, 43)", "backgroundColor": "rgb(255, 255, 255)"}</option>
+     <option>{"color": "rgb(43, 43, 43)", "backgroundColor": "rgb(255, 255, 255)"}</option>
      <option selected="true">{"end": "true"}</option>
    </select></body></html>
 `,
@@ -840,8 +840,8 @@ if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
     // even if it matched the UA style. They'll be overridden on individual
     // options where necessary.
     await testSelectColors("IDENTICAL_BG_DIFF_FG_OPTION_DARKMODE", 3, {
-      selectColor,
-      selectBgColor,
+      selectColor: "rgb(0, 0, 0)",
+      selectBgColor: "rgb(255, 255, 255)",
     });
 
     await hideSelectPopup(selectPopup, "escape");
@@ -855,8 +855,8 @@ if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
     // select, and the fg colour on the option. The behaviour should be the
     // same.
     await testSelectColors("SPLIT_FG_BG_OPTION_DARKMODE", 3, {
-      selectColor,
-      selectBgColor,
+      selectColor: "rgb(0, 0, 0)",
+      selectBgColor: "rgb(255, 255, 255)",
     });
 
     await hideSelectPopup(selectPopup, "escape");
