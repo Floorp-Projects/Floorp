@@ -229,7 +229,7 @@ impl<T: Sized> Consumer<T> {
                     None => left.len(),
                 };
                 for (i, dst) in left[0..lb].iter_mut().enumerate() {
-                    if !f(mem::replace(dst, MaybeUninit::uninit()).assume_init()) {
+                    if !f(dst.as_ptr().read()) {
                         return i + 1;
                     }
                 }
@@ -242,11 +242,11 @@ impl<T: Sized> Consumer<T> {
                     None => right.len(),
                 };
                 for (i, dst) in right[0..rb].iter_mut().enumerate() {
-                    if !f(mem::replace(dst, MaybeUninit::uninit()).assume_init()) {
-                        return i + lb + 1;
+                    if !f(dst.as_ptr().read()) {
+                        return lb + i + 1;
                     }
                 }
-                left.len() + right.len()
+                lb + rb
             })
         }
     }

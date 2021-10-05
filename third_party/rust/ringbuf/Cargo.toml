@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "ringbuf"
-version = "0.2.5"
+version = "0.2.6"
 authors = ["Alexey Gerasev <alexey.gerasev@gmail.com>"]
 description = "Lock-free SPSC FIFO ring buffer with direct access to inner data"
 homepage = "https://github.com/nthend/ringbuf"

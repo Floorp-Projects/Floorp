@@ -175,13 +175,13 @@ impl<T: Sized> Producer<T> {
             self.push_access(|left, right| {
                 for (i, dst) in left.iter_mut().enumerate() {
                     match f() {
-                        Some(e) => mem::replace(dst, MaybeUninit::new(e)),
+                        Some(e) => dst.as_mut_ptr().write(e),
                         None => return i,
                     };
                 }
                 for (i, dst) in right.iter_mut().enumerate() {
                     match f() {
-                        Some(e) => mem::replace(dst, MaybeUninit::new(e)),
+                        Some(e) => dst.as_mut_ptr().write(e),
                         None => return i + left.len(),
                     };
                 }

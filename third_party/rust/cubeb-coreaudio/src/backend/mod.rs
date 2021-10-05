@@ -55,7 +55,7 @@ const DISPATCH_QUEUE_LABEL: &str = "org.mozilla.cubeb";
 const PRIVATE_AGGREGATE_DEVICE_NAME: &str = "CubebAggregateDevice";
 
 // Testing empirically, some headsets report a minimal latency that is very low,
-// but this does not work in practice. Lie and say the minimum is 256 frames.
+// but this does not work in practice. Lie and say the minimum is 128 frames.
 const SAFE_MIN_LATENCY_FRAMES: u32 = 128;
 const SAFE_MAX_LATENCY_FRAMES: u32 = 512;
 
@@ -1834,22 +1834,13 @@ impl Default for DevicesData {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct SharedDevices {
     input: DevicesData,
     output: DevicesData,
 }
 
-impl Default for SharedDevices {
-    fn default() -> Self {
-        Self {
-            input: DevicesData::default(),
-            output: DevicesData::default(),
-        }
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct LatencyController {
     streams: u32,
     latency: Option<u32>,
@@ -1875,15 +1866,6 @@ impl LatencyController {
             self.latency = None;
         }
         self.latency
-    }
-}
-
-impl Default for LatencyController {
-    fn default() -> Self {
-        Self {
-            streams: 0,
-            latency: None,
-        }
     }
 }
 
@@ -2596,7 +2578,10 @@ impl<'ctx> CoreStreamData<'ctx> {
                 return Err(Error::error());
             }
 
-            self.input_buffer_manager = Some(BufferManager::new(self.input_stream_params.format()));
+            self.input_buffer_manager = Some(BufferManager::new(
+                &self.input_stream_params,
+                SAFE_MAX_LATENCY_FRAMES,
+            ));
 
             let aurcbs_in = AURenderCallbackStruct {
                 inputProc: Some(audiounit_input_callback),

@@ -2,23 +2,20 @@
 
 [![Crates.io][crates_badge]][crates]
 [![Docs.rs][docs_badge]][docs]
-[![Travis CI][travis_badge]][travis]
+[![Github Actions][github_badge]][github]
 [![Appveyor][appveyor_badge]][appveyor]
-[![Codecov.io][codecov_badge]][codecov]
 [![License][license_badge]][license]
 
 [crates_badge]: https://img.shields.io/crates/v/ringbuf.svg
 [docs_badge]: https://docs.rs/ringbuf/badge.svg
-[travis_badge]: https://api.travis-ci.org/agerasev/ringbuf.svg
+[github_badge]: https://github.com/agerasev/ringbuf/actions/workflows/test.yml/badge.svg
 [appveyor_badge]: https://ci.appveyor.com/api/projects/status/github/agerasev/ringbuf?branch=master&svg=true
-[codecov_badge]: https://codecov.io/gh/agerasev/ringbuf/graphs/badge.svg
 [license_badge]: https://img.shields.io/crates/l/ringbuf.svg
 
 [crates]: https://crates.io/crates/ringbuf
 [docs]: https://docs.rs/ringbuf
-[travis]: https://travis-ci.org/agerasev/ringbuf
+[github]: https://github.com/agerasev/ringbuf/actions/workflows/test.yml
 [appveyor]: https://ci.appveyor.com/project/agerasev/ringbuf
-[codecov]: https://codecov.io/gh/agerasev/ringbuf
 [license]: #license
 
 Lock-free single-producer single-consumer (SPSC) FIFO ring buffer with direct access to inner data.

@@ -771,7 +771,7 @@ dependencies = [
 [[package]]
 name = "coreaudio-sys-utils"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=4ee3b283182926f9a8bb31d603219ff2db70d2fd#4ee3b283182926f9a8bb31d603219ff2db70d2fd"
+source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=afe2077961cd50b908a7d609e2172d281c484f77#afe2077961cd50b908a7d609e2172d281c484f77"
 dependencies = [
  "core-foundation-sys",
  "coreaudio-sys",
@@ -1040,7 +1040,7 @@ dependencies = [
 [[package]]
 name = "cubeb-coreaudio"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=4ee3b283182926f9a8bb31d603219ff2db70d2fd#4ee3b283182926f9a8bb31d603219ff2db70d2fd"
+source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=afe2077961cd50b908a7d609e2172d281c484f77#afe2077961cd50b908a7d609e2172d281c484f77"
 dependencies = [
  "atomic",
  "audio-mixer",
@@ -4162,9 +4162,9 @@ checksum = "e3a8614ee435691de62bcffcf4a66d91b3594bf1428a5722e79103249a095690"
 
 [[package]]
 name = "ringbuf"
-version = "0.2.5"
+version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "908f26a8bb4110da2b151015792f3b8f434e2c76379fca8ab410f12ef534b404"
+checksum = "6c60f3923939c33e6c543ddbff14d0ee6a407fcd186d560be37282559616adf3"
 dependencies = [
  "cache-padded",
 ]
