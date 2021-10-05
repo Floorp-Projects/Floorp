@@ -14,6 +14,7 @@
 #include "nsImageFrame.h"
 #include "nsImageMap.h"
 #include "nsIURI.h"
+#include "nsLayoutUtils.h"
 #include "mozilla/dom/HTMLAreaElement.h"
 
 using namespace mozilla::a11y;
@@ -174,6 +175,7 @@ nsRect HTMLAreaAccessible::RelativeBounds(nsIFrame** aBoundingFrame) const {
 
   nsRect bounds;
   nsresult rv = map->GetBoundsForAreaContent(mContent, bounds);
+
   if (NS_FAILED(rv)) return nsRect();
 
   // XXX Areas are screwy; they return their rects as a pair of points, one pair
@@ -181,4 +183,26 @@ nsRect HTMLAreaAccessible::RelativeBounds(nsIFrame** aBoundingFrame) const {
   *aBoundingFrame = frame;
   bounds.SizeTo(bounds.Width() - bounds.X(), bounds.Height() - bounds.Y());
   return bounds;
+}
+
+nsRect HTMLAreaAccessible::ParentRelativeBounds() {
+  nsIFrame* boundingFrame = nullptr;
+  nsRect relativeBoundsRect = RelativeBounds(&boundingFrame);
+
+  nsIFrame* parentBoundingFrame = nullptr;
+  if (mParent) {
+    parentBoundingFrame = mParent->GetFrame();
+  }
+
+  if (!parentBoundingFrame) {
+    // if we can't get the bounding frame, use the pres shell root for the
+    // bounding frame RelativeBounds returned
+    parentBoundingFrame =
+        nsLayoutUtils::GetContainingBlockForClientRect(boundingFrame);
+  }
+
+  nsLayoutUtils::TransformRect(boundingFrame, parentBoundingFrame,
+                               relativeBoundsRect);
+
+  return relativeBoundsRect;
 }
