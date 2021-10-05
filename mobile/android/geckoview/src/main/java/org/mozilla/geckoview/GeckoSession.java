@@ -31,6 +31,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.mozglue.JNIObject;
@@ -41,6 +42,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
@@ -66,6 +68,7 @@ import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.PointerIcon;
 import android.view.Surface;
 import android.view.inputmethod.CursorAnchorInfo;
 import android.view.inputmethod.ExtractedText;
@@ -252,6 +255,11 @@ public class GeckoSession {
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
         public native void onSafeAreaInsetsChanged(int top, int right, int bottom, int left);
+
+        @WrapForJNI(calledFrom = "ui")
+        public void setPointerIcon(final int defaultCursor, final Bitmap customCursor, final float x, final float y) {
+            GeckoSession.this.setPointerIcon(defaultCursor, customCursor, x, y);
+        }
 
         @Override
         protected void finalize() throws Throwable {
@@ -3016,6 +3024,24 @@ public class GeckoSession {
          */
         @UiThread
         default void onPaintStatusReset(@NonNull final GeckoSession session) {}
+
+        /**
+         * A page has requested to change pointer icon.
+         *
+         * If the application wants to control pointer icon, it should override
+         * this, then handle it.
+         *
+         * @param session The GeckoSession that initiated the callback.
+         * @param icon The pointer icon sent from the content.
+         */
+        @TargetApi(Build.VERSION_CODES.N)
+        @UiThread
+        default void onPointerIconChange(@NonNull final GeckoSession session, @NonNull final PointerIcon icon) {
+            final View view = session.getTextInput().getView();
+            if (view != null) {
+                view.setPointerIcon(icon);
+            }
+        }
 
         /**
          * This is fired when the loaded document has a valid Web App Manifest present.
@@ -6146,6 +6172,30 @@ public class GeckoSession {
         if (mAttachedCompositor) {
             mCompositor.onSafeAreaInsetsChanged(top, right, bottom, left);
         }
+    }
+
+    /* package */ void setPointerIcon(final int defaultCursor, final @Nullable Bitmap customCursor, final float x, final float y) {
+        ThreadUtils.assertOnUiThread();
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            return;
+        }
+
+        final PointerIcon icon;
+        if (customCursor != null) {
+            try {
+                icon = PointerIcon.create(customCursor, x, y);
+            } catch (final IllegalArgumentException e) {
+                // x/y hotspot might be invalid
+                return;
+            }
+        } else {
+            final Context context = GeckoAppShell.getApplicationContext();
+            icon = PointerIcon.getSystemIcon(context, defaultCursor);
+        }
+
+        final ContentDelegate delegate = getContentDelegate();
+        delegate.onPointerIconChange(this, icon);
     }
 
     /**
