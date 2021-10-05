@@ -302,6 +302,18 @@ declare namespace MockedExports {
     Ci: Ci;
     Cu: Cu;
   };
+
+  interface FluentLocalization {
+    /**
+     * This function sets the attributes data-l10n-id and possibly data-l10n-args
+     * on the element.
+     */
+    setAttributes(
+      target: Element,
+      id?: string,
+      args?: Record<string, string>
+    ): void;
+  }
 }
 
 declare module "devtools/client/shared/vendor/react" {
@@ -400,6 +412,11 @@ declare interface ChromeDocument extends Document {
    */
   createXULElement: ((type: "iframe") => XULIframeElement) &
     ((type: string) => XULElement);
+
+  /**
+   * This is a fluent instance connected to this document.
+   */
+  l10n: MockedExports.FluentLocalization;
 }
 
 /**

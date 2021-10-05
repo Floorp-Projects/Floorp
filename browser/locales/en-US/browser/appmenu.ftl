@@ -149,11 +149,6 @@ profiler-popup-disabled =
 
 profiler-popup-recording-screen = Recording…
 
-# The profiler presets list is generated elsewhere, but the custom preset is defined
-# here only.
-profiler-popup-presets-custom =
-  .label = Custom
-
 profiler-popup-start-recording-button =
   .label = Start Recording
 
@@ -174,6 +169,36 @@ profiler-popup-capture-shortcut =
       [macos] ⌃⇧2
      *[other] Ctrl+Shift+2
   }
+
+## Profiler presets
+## They are shown in the popup's select box.
+
+# Presets and their l10n IDs are defined in the file
+# devtools/client/performance-new/popup/background.jsm.js
+# Please take care that the same values are also defined in devtools' perftools.ftl.
+
+profiler-popup-presets-web-developer-description = Recommended preset for most web app debugging, with low overhead.
+profiler-popup-presets-web-developer-label =
+  .label = Web Developer
+
+profiler-popup-presets-firefox-platform-description = Recommended preset for internal Firefox platform debugging.
+profiler-popup-presets-firefox-platform-label =
+  .label = Firefox Platform
+
+profiler-popup-presets-firefox-front-end-description = Recommended preset for internal Firefox front-end debugging.
+profiler-popup-presets-firefox-front-end-label =
+  .label = Firefox Front-End
+
+profiler-popup-presets-firefox-graphics-description = Recommended preset for Firefox graphics performance investigation.
+profiler-popup-presets-firefox-graphics-label =
+  .label = Firefox Graphics
+
+profiler-popup-presets-media-description = Recommended preset for diagnosing audio and video problems.
+profiler-popup-presets-media-label =
+  .label = Media
+
+profiler-popup-presets-custom-label =
+  .label = Custom
 
 ## History panel
 
