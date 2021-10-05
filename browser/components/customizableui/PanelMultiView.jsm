@@ -1467,6 +1467,8 @@ var PanelView = class extends AssociatedToNode {
       return;
     }
 
+    const profilerMarkerStartTime = Cu.now();
+
     // We batch DOM changes together in order to reduce synchronous layouts.
     // First we reset any change we may have made previously. The first time
     // this is called, and in the best case scenario, this has no effect.
@@ -1556,6 +1558,12 @@ var PanelView = class extends AssociatedToNode {
       });
       element.style.height = bounds.height + "px";
     }
+
+    ChromeUtils.addProfilerMarker(
+      "PMV.descriptionHeightWorkaround()",
+      profilerMarkerStartTime,
+      `<${this.node.tagName} id="${this.node.id}">`
+    );
   }
 
   /**
