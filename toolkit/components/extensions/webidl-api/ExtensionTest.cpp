@@ -20,7 +20,7 @@ bool IsInAutomation(JSContext* aCx, JSObject* aGlobal) {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionTest);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionTest)
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionTest, mGlobal,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionTest, mGlobal, mExtensionBrowser,
                                       mOnMessageEventMgr);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionTest)
@@ -30,8 +30,9 @@ NS_INTERFACE_MAP_END
 
 ExtensionTest::ExtensionTest(nsIGlobalObject* aGlobal,
                              ExtensionBrowser* aExtensionBrowser)
-    : mGlobal(aGlobal) {
+    : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
+  MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
 }
 
 /* static */

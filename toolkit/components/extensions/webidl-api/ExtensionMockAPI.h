@@ -33,6 +33,7 @@ class ExtensionMockAPI final : public nsISupports,
                                public nsWrapperCache,
                                public ExtensionAPINamespace {
   nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<ExtensionBrowser> mExtensionBrowser;
   RefPtr<ExtensionEventManager> mOnTestEventMgr;
 
   ~ExtensionMockAPI() = default;
@@ -40,6 +41,10 @@ class ExtensionMockAPI final : public nsISupports,
  protected:
   // ExtensionAPIBase methods
   nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
+
+  ExtensionBrowser* GetExtensionBrowser() const override {
+    return mExtensionBrowser;
+  }
 
   nsString GetAPINamespace() const override { return u"mockExtensionAPI"_ns; }
 

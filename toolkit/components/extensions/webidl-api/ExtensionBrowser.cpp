@@ -17,16 +17,37 @@
 namespace mozilla {
 namespace extensions {
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionBrowser);
+NS_IMPL_CYCLE_COLLECTION_CLASS(ExtensionBrowser)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionBrowser)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionBrowser)
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionBrowser, mGlobal,
-                                      mExtensionAlarms, mExtensionMockAPI,
-                                      mExtensionRuntime, mExtensionTest);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionBrowser)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionBrowser)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionAlarms)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionMockAPI)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionRuntime)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionTest)
+  tmp->mLastError.setUndefined();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ExtensionBrowser)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionAlarms)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionMockAPI)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionRuntime)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionTest)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ExtensionBrowser)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mLastError)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 ExtensionBrowser::ExtensionBrowser(nsIGlobalObject* aGlobal)
     : mGlobal(aGlobal) {
@@ -71,6 +92,22 @@ bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal) {
   // false (currently on all channels but nightly).
   return false;
 #endif
+}
+
+void ExtensionBrowser::SetLastError(JS::Handle<JS::Value> aLastError) {
+  mLastError.set(aLastError);
+  mCheckedLastError = false;
+}
+
+void ExtensionBrowser::GetLastError(JS::MutableHandle<JS::Value> aRetVal) {
+  aRetVal.set(mLastError);
+  mCheckedLastError = true;
+}
+
+bool ExtensionBrowser::ClearLastError() {
+  bool shouldReport = !mCheckedLastError;
+  mLastError.setUndefined();
+  return shouldReport;
 }
 
 ExtensionAlarms* ExtensionBrowser::GetExtensionAlarms() {

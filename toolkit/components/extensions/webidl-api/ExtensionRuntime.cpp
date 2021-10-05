@@ -15,9 +15,9 @@ namespace extensions {
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionRuntime);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionRuntime)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(
-    ExtensionRuntime, mGlobal, mOnStartupEventMgr, mOnInstalledEventMgr,
-    mOnUpdateAvailableEventMgr, mOnConnectEventMgr, mOnConnectExternalEventMgr,
-    mOnMessageEventMgr, mOnMessageExternalEventMgr);
+    ExtensionRuntime, mGlobal, mExtensionBrowser, mOnStartupEventMgr,
+    mOnInstalledEventMgr, mOnUpdateAvailableEventMgr, mOnConnectEventMgr,
+    mOnConnectExternalEventMgr, mOnMessageEventMgr, mOnMessageExternalEventMgr);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionRuntime)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -26,8 +26,9 @@ NS_INTERFACE_MAP_END
 
 ExtensionRuntime::ExtensionRuntime(nsIGlobalObject* aGlobal,
                                    ExtensionBrowser* aExtensionBrowser)
-    : mGlobal(aGlobal) {
+    : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
+  MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
 }
 
 /* static */
@@ -44,9 +45,7 @@ nsIGlobalObject* ExtensionRuntime::GetParentObject() const { return mGlobal; }
 
 void ExtensionRuntime::GetLastError(JSContext* aCx,
                                     JS::MutableHandle<JS::Value> aRetval) {
-  // TODO: special case this, using
-  // GetWebExtPropertyAsErrorObject(aCx, u"lastError"_ns, aRetval);
-  // doesn't seem a good solution nor an easy one in this case.
+  mExtensionBrowser->GetLastError(aRetval);
 }
 
 void ExtensionRuntime::GetId(DOMString& aRetval) {
