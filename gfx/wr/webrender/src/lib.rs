@@ -57,6 +57,8 @@ macro_rules! matches {
 #[macro_use]
 extern crate bitflags;
 #[macro_use]
+extern crate cstr;
+#[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
