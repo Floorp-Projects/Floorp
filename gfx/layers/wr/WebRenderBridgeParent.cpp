@@ -65,36 +65,6 @@ bool is_in_render_thread() {
   return mozilla::wr::RenderThread::IsInRenderThread();
 }
 
-void gecko_profiler_start_marker(const char* name) {
-  PROFILER_MARKER(mozilla::ProfilerString8View::WrapNullTerminatedString(name),
-                  GRAPHICS, mozilla::MarkerTiming::IntervalStart(), Tracing,
-                  "WebRender");
-}
-
-void gecko_profiler_end_marker(const char* name) {
-  PROFILER_MARKER(mozilla::ProfilerString8View::WrapNullTerminatedString(name),
-                  GRAPHICS, mozilla::MarkerTiming::IntervalEnd(), Tracing,
-                  "WebRender");
-}
-
-void gecko_profiler_event_marker(const char* name) {
-  PROFILER_MARKER(mozilla::ProfilerString8View::WrapNullTerminatedString(name),
-                  GRAPHICS, {}, Tracing, "WebRender");
-}
-
-void gecko_profiler_add_text_marker(const char* name, const char* text_bytes,
-                                    size_t text_len, uint64_t microseconds) {
-  if (profiler_thread_is_being_profiled()) {
-    auto now = mozilla::TimeStamp::Now();
-    [[maybe_unused]] auto start =
-        now - mozilla::TimeDuration::FromMicroseconds(microseconds);
-    PROFILER_MARKER_TEXT(
-        mozilla::ProfilerString8View::WrapNullTerminatedString(name), GRAPHICS,
-        mozilla::MarkerTiming::Interval(start, now),
-        mozilla::ProfilerString8View(text_bytes, text_len));
-  }
-}
-
 bool gecko_profiler_thread_is_being_profiled() {
   return profiler_thread_is_being_profiled();
 }
