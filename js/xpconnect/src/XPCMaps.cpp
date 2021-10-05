@@ -115,34 +115,13 @@ size_t IID2NativeInterfaceMap::SizeOfIncludingThis(
 /***************************************************************************/
 // implement ClassInfo2NativeSetMap...
 
-// static
-bool ClassInfo2NativeSetMap::Entry::Match(const PLDHashEntryHdr* aEntry,
-                                          const void* aKey) {
-  return static_cast<const Entry*>(aEntry)->key == aKey;
-}
-
-// static
-void ClassInfo2NativeSetMap::Entry::Clear(PLDHashTable* aTable,
-                                          PLDHashEntryHdr* aEntry) {
-  auto entry = static_cast<Entry*>(aEntry);
-  NS_RELEASE(entry->value);
-
-  entry->key = nullptr;
-  entry->value = nullptr;
-}
-
-const PLDHashTableOps ClassInfo2NativeSetMap::Entry::sOps = {
-    PLDHashTable::HashVoidPtrKeyStub, Match, PLDHashTable::MoveEntryStub, Clear,
-    nullptr};
-
 ClassInfo2NativeSetMap::ClassInfo2NativeSetMap()
-    : mTable(&ClassInfo2NativeSetMap::Entry::sOps, sizeof(Entry),
-             XPC_NATIVE_SET_MAP_LENGTH) {}
+    : mMap(XPC_NATIVE_SET_MAP_LENGTH) {}
 
 size_t ClassInfo2NativeSetMap::ShallowSizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf) {
   size_t n = mallocSizeOf(this);
-  n += mTable.ShallowSizeOfExcludingThis(mallocSizeOf);
+  n += mMap.shallowSizeOfExcludingThis(mallocSizeOf);
   return n;
 }
 
