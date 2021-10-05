@@ -9,7 +9,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "nsIOService.h"
-#include "DNS.h"
 
 namespace mozilla {
 namespace net {
