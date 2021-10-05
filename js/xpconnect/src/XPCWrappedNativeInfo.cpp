@@ -384,24 +384,20 @@ void XPCNativeInterface::DebugDump(int16_t depth) {
 /***************************************************************************/
 // XPCNativeSetKey
 
-static PLDHashNumber HashPointer(const void* ptr) {
-  return nsPtrHashKey<const void>::HashKey(ptr);
-}
-
-PLDHashNumber XPCNativeSetKey::Hash() const {
-  PLDHashNumber h = 0;
+HashNumber XPCNativeSetKey::Hash() const {
+  HashNumber h = 0;
 
   if (mBaseSet) {
     // If we ever start using mCx here, adjust the constructors accordingly.
     XPCNativeInterface** current = mBaseSet->GetInterfaceArray();
     uint16_t count = mBaseSet->GetInterfaceCount();
     for (uint16_t i = 0; i < count; i++) {
-      h ^= HashPointer(*(current++));
+      h = AddToHash(h, *(current++));
     }
   } else {
     // A newly created set will contain nsISupports first...
     RefPtr<XPCNativeInterface> isupp = XPCNativeInterface::GetISupports(mCx);
-    h ^= HashPointer(isupp);
+    h = AddToHash(h, isupp.get());
 
     // ...but no more than once.
     if (isupp == mAddition) {
@@ -410,7 +406,7 @@ PLDHashNumber XPCNativeSetKey::Hash() const {
   }
 
   if (mAddition) {
-    h ^= HashPointer(mAddition);
+    h = AddToHash(h, mAddition.get());
   }
 
   return h;

@@ -15,13 +15,6 @@
 using namespace mozilla;
 
 /***************************************************************************/
-// static shared...
-
-static PLDHashNumber HashNativeKey(const void* data) {
-  return static_cast<const XPCNativeSetKey*>(data)->Hash();
-}
-
-/***************************************************************************/
 // implement JSObject2WrappedJSMap...
 
 void JSObject2WrappedJSMap::UpdateWeakPointersAfterGC() {
@@ -144,11 +137,12 @@ size_t ClassInfo2WrappedNativeProtoMap::SizeOfIncludingThis(
 /***************************************************************************/
 // implement NativeSetMap...
 
-bool NativeSetMap::Entry::Match(const PLDHashEntryHdr* entry, const void* key) {
-  auto Key = static_cast<const XPCNativeSetKey*>(key);
-  XPCNativeSet* SetInTable = ((Entry*)entry)->key_value;
-  XPCNativeSet* Set = Key->GetBaseSet();
-  XPCNativeInterface* Addition = Key->GetAddition();
+bool NativeSetHasher::match(Key key, Lookup lookup) {
+  // The |key| argument is for the existing table entry and |lookup| is the
+  // value passed by the caller that is being compared with it.
+  XPCNativeSet* SetInTable = key;
+  XPCNativeSet* Set = lookup->GetBaseSet();
+  XPCNativeInterface* Addition = lookup->GetAddition();
 
   if (!Set) {
     // This is a special case to deal with the invariant that says:
@@ -185,20 +179,14 @@ bool NativeSetMap::Entry::Match(const PLDHashEntryHdr* entry, const void* key) {
   return !Addition || Addition == *(CurrentInTable++);
 }
 
-const struct PLDHashTableOps NativeSetMap::Entry::sOps = {
-    HashNativeKey, Match, PLDHashTable::MoveEntryStub,
-    PLDHashTable::ClearEntryStub};
-
-NativeSetMap::NativeSetMap()
-    : mTable(&Entry::sOps, sizeof(Entry), XPC_NATIVE_SET_MAP_LENGTH) {}
+NativeSetMap::NativeSetMap() : mSet(XPC_NATIVE_SET_MAP_LENGTH) {}
 
 size_t NativeSetMap::SizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   size_t n = mallocSizeOf(this);
-  n += mTable.ShallowSizeOfExcludingThis(mallocSizeOf);
-  for (auto iter = mTable.ConstIter(); !iter.Done(); iter.Next()) {
-    auto entry = static_cast<NativeSetMap::Entry*>(iter.Get());
-    n += entry->key_value->SizeOfIncludingThis(mallocSizeOf);
+  n += mSet.shallowSizeOfExcludingThis(mallocSizeOf);
+  for (auto iter = mSet.iter(); !iter.done(); iter.next()) {
+    n += iter.get()->SizeOfIncludingThis(mallocSizeOf);
   }
   return n;
 }
