@@ -1488,7 +1488,7 @@ void nsWindow::CloseAllPopupsBeforeRemotePopup() {
   MOZ_ASSERT(mWaylandToplevel == nullptr, "Should be called on toplevel only!");
 
   // Don't waste time when there's only one popup opened.
-  if (mWaylandPopupNext->mWaylandPopupNext == nullptr) {
+  if (!mWaylandPopupNext || mWaylandPopupNext->mWaylandPopupNext == nullptr) {
     return;
   }
 
@@ -2335,17 +2335,29 @@ void nsWindow::WaylandPopupMove() {
   }
 
   if (!mPopupUseMoveToRect) {
-    LOG_POPUP(("  use gtk_window_move(%d, %d)\n", mRelativePopupPosition.x,
-               mRelativePopupPosition.y));
-    gtk_window_move(GTK_WINDOW(mShell),
-                    mRelativePopupPosition.x + mRelativePopupOffset.x,
-                    mRelativePopupPosition.y + mRelativePopupOffset.y);
+    if (mNeedsShow) {
+      // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/4308
+      LOG_POPUP(("  use gtk_window_move(%d, %d) for hidden widget\n",
+                 mPopupPosition.x + mRelativePopupOffset.x,
+                 mPopupPosition.y + mRelativePopupOffset.y));
+      gtk_window_move(GTK_WINDOW(mShell),
+                      mPopupPosition.x + mRelativePopupOffset.x,
+                      mPopupPosition.y + mRelativePopupOffset.y);
+    } else {
+      LOG_POPUP(("  use gtk_window_move(%d, %d)\n",
+                 mRelativePopupPosition.x + mRelativePopupOffset.x,
+                 mRelativePopupPosition.y + mRelativePopupOffset.y));
+      gtk_window_move(GTK_WINDOW(mShell),
+                      mRelativePopupPosition.x + mRelativePopupOffset.x,
+                      mRelativePopupPosition.y + mRelativePopupOffset.y);
+    }
     if (mRelativePopupOffset.x || mRelativePopupOffset.y) {
       mBounds.x = (mRelativePopupPosition.x + mRelativePopupOffset.x) *
                   FractionalScaleFactor();
       mBounds.y = (mRelativePopupPosition.y + mRelativePopupOffset.y) *
                   FractionalScaleFactor();
-      LOG_POPUP(("  setting new bounds [%d, %d]\n", mBounds.x, mBounds.y));
+      LOG_POPUP(("  popup is moved, setting new bounds starts at [%d, %d]\n",
+                 mBounds.x, mBounds.y));
       NotifyWindowMoved(mBounds.x, mBounds.y);
     }
     return;
@@ -5965,7 +5977,6 @@ void nsWindow::NativeMoveResize() {
       NativeShow(false);
     }
     NativeMove();
-
     return;
   }
 
@@ -6204,7 +6215,9 @@ void nsWindow::WaylandStopVsync() {
 void nsWindow::NativeShow(bool aAction) {
   if (aAction) {
     // unset our flag now that our window has been shown
-    mNeedsShow = false;
+    mNeedsShow = true;
+    auto removeShow = MakeScopeExit([&] { mNeedsShow = false; });
+
     LOG(("nsWindow::NativeShow show [%p]\n", this));
 
     if (mIsTopLevel) {
