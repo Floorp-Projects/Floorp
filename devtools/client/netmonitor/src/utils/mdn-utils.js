@@ -78,7 +78,6 @@ const SUPPORTED_HEADERS = [
   "Sec-Fetch-Mode",
   "Sec-Fetch-Site",
   "Sec-Fetch-User",
-  "Sec-GPC",
   "Server",
   "Server-Timing",
   "Set-Cookie",
