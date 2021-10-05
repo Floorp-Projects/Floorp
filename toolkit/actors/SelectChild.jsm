@@ -259,6 +259,7 @@ SelectContentHelper.prototype = {
         if (this.initialSelection !== selectedOption) {
           let inputEvent = new win.Event("input", {
             bubbles: true,
+            composed: true,
           });
 
           let changeEvent = new win.Event("change", {
