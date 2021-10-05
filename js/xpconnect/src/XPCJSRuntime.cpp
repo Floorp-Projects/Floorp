@@ -908,11 +908,10 @@ void XPCJSRuntime::FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status,
       // referencing the protos in the dying list are themselves dead.
       // So, we can safely delete all the protos in the list.
 
-      for (auto i = self->mDyingWrappedNativeProtoMap->Iter(); !i.Done();
-           i.Next()) {
-        auto* entry = static_cast<XPCWrappedNativeProtoMap::Entry*>(i.Get());
-        delete static_cast<const XPCWrappedNativeProto*>(entry->key);
-        i.Remove();
+      for (auto i = self->mDyingWrappedNativeProtoMap->ModIter(); !i.done();
+           i.next()) {
+        delete i.get();
+        i.remove();
       }
 
       MOZ_ASSERT(self->mGCIsRunning, "bad state");
