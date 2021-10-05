@@ -415,7 +415,7 @@ option:disabled,
 optgroup:disabled,
 select:disabled {
   color: GrayText;
-  background-color: ThreeDLightShadow;
+  background-color: -moz-DisabledField;
   cursor: unset;
 }
 
@@ -651,6 +651,7 @@ button:is(:disabled, :disabled:active),
 input:is([type=reset], [type=button], [type=submit]):is(:disabled, :disabled:active),
 select:is(:disabled, :disabled:active) > button {
   color: GrayText;
+  background-color: -moz-ButtonDisabledFace;
 }
 
 /* file selector */

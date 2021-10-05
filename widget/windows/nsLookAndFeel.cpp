@@ -193,6 +193,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::Buttonface:
     case ColorID::MozButtonhoverface:
     case ColorID::MozButtonactiveface:
+    case ColorID::MozButtondisabledface:
       idx = COLOR_BTNFACE;
       break;
     case ColorID::Buttonhighlight:
@@ -279,6 +280,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       idx = COLOR_3DHIGHLIGHT;
       break;
     case ColorID::Threedlightshadow:
+    case ColorID::MozDisabledfield:
       idx = COLOR_3DLIGHT;
       break;
     case ColorID::Threedshadow:

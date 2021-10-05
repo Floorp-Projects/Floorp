@@ -233,6 +233,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
     case ColorID::Buttonface:
     case ColorID::MozButtonhoverface:
     case ColorID::MozButtonactiveface:
+    case ColorID::MozButtondisabledface:
       color = GetColorFromNSColor(NSColor.controlColor);
       break;
     case ColorID::Buttonhighlight:
@@ -267,6 +268,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       color = GetColorFromNSColor(NSColor.highlightColor);
       break;
     case ColorID::Threedlightshadow:
+    case ColorID::MozDisabledfield:
       color = NS_RGB(0xDA, 0xDA, 0xDA);
       break;
     case ColorID::Menu:

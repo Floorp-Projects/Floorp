@@ -36,8 +36,8 @@ struct PreferenceSheet {
 
     bool mUseDocumentColors = true;
 
-    // Whether the non-native theme should use system colors for widgets.
-    bool NonNativeThemeShouldUseSystemColors() const;
+    // Whether the non-native theme should use real system colors for widgets.
+    bool NonNativeThemeShouldBeHighContrast() const;
 
     void Load(bool aIsChrome);
   };
