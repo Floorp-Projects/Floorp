@@ -37,6 +37,8 @@ namespace mozilla {
 class nsDisplayItem;
 class nsPaintedDisplayItem;
 class nsDisplayTransform;
+class nsDisplayListBuilder;
+struct DisplayItemClipChain;
 
 struct ActiveScrolledRoot;
 
@@ -692,6 +694,14 @@ class DisplayListBuilder final {
   // nsDisplayItem::CanApplyOpacity.
   float GetInheritedOpacity() { return mInheritedOpacity; }
   void SetInheritedOpacity(float aOpacity) { mInheritedOpacity = aOpacity; }
+  const DisplayItemClipChain* GetInheritedClipChain() {
+    return mInheritedClipChain;
+  }
+  void PushInheritedClipChain(nsDisplayListBuilder* aBuilder,
+                              const DisplayItemClipChain* aClipChain);
+  void SetInheritedClipChain(const DisplayItemClipChain* aClipChain) {
+    mInheritedClipChain = aClipChain;
+  }
 
   layers::DisplayItemCache* GetDisplayItemCache() { return mDisplayItemCache; }
 
@@ -762,6 +772,7 @@ class DisplayListBuilder final {
   layers::DisplayItemCache* mDisplayItemCache;
   Maybe<uint16_t> mCurrentCacheSlot;
   float mInheritedOpacity = 1.0f;
+  const DisplayItemClipChain* mInheritedClipChain = nullptr;
 
   friend class WebRenderAPI;
   friend class SpaceAndClipChainHelper;

@@ -132,8 +132,18 @@ wr::WrSpatialId ClipManager::SpatialIdAfterOverride(
   return it->second.top();
 }
 
-wr::WrSpaceAndClipChain ClipManager::SwitchItem(nsDisplayItem* aItem) {
+wr::WrSpaceAndClipChain ClipManager::SwitchItem(nsDisplayListBuilder* aBuilder,
+                                                nsDisplayItem* aItem) {
   const DisplayItemClipChain* clip = aItem->GetClipChain();
+  if (mBuilder->GetInheritedClipChain() &&
+      mBuilder->GetInheritedClipChain() != clip) {
+    if (!clip) {
+      clip = mBuilder->GetInheritedClipChain();
+    } else {
+      clip = aBuilder->CreateClipChainIntersection(
+          mBuilder->GetInheritedClipChain(), clip);
+    }
+  }
   const ActiveScrolledRoot* asr = aItem->GetActiveScrolledRoot();
   CLIP_LOG("processing item %p (%s) asr %p\n", aItem,
            DisplayItemTypeName(aItem->GetType()), asr);
