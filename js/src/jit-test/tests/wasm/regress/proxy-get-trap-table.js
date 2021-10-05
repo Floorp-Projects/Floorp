@@ -3,7 +3,7 @@
 
 assertErrorMessage(() => {
     var desc = {
-        element: "funcref",
+        element: "anyfunc",
         initial: 1
     };
     var proxy = new Proxy({}, {

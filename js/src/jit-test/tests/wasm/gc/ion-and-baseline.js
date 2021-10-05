@@ -66,7 +66,7 @@ var nonrefmod = new WebAssembly.Module(wasmTextToBinary(
        (i32.const 37))
      )`));
 
-var tbl = new WebAssembly.Table({initial:4, element:"funcref"});
+var tbl = new WebAssembly.Table({initial:4, element:"anyfunc"});
 var refins = new WebAssembly.Instance(refmod, {"":{print, tbl}}).exports;
 var nonrefins = new WebAssembly.Instance(nonrefmod, {"":{print, tbl}}).exports;
 

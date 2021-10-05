@@ -3,7 +3,7 @@
 // Don't include wasm.js in timeout tests: when wasm isn't supported, it will
 // quit(0) which will cause the test to fail.
 
-var tbl = new WebAssembly.Table({initial:1, element:"funcref"});
+var tbl = new WebAssembly.Table({initial:1, element:"anyfunc"});
 
 new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`(module
     (import "imports" "tbl" (table 1 funcref))

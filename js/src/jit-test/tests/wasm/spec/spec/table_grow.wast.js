@@ -192,7 +192,7 @@ let $4 = instantiate(`(module
 
 // ./test/core/table_grow.wast:103
 assert_return(() => invoke($4, `check-table-null`, [0, 9]), [
-  value("funcref", null),
+  value("anyfunc", null),
 ]);
 
 // ./test/core/table_grow.wast:104
@@ -200,7 +200,7 @@ assert_return(() => invoke($4, `grow`, [10]), [value("i32", 10)]);
 
 // ./test/core/table_grow.wast:105
 assert_return(() => invoke($4, `check-table-null`, [0, 19]), [
-  value("funcref", null),
+  value("anyfunc", null),
 ]);
 
 // ./test/core/table_grow.wast:110
