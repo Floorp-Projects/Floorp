@@ -16,25 +16,9 @@ namespace extensions {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionPort);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionPort)
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(ExtensionPort)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionPort)
-  // Clean the entry for this instance from the ports lookup map
-  // stored in the related ExtensionBrowser instance.
-  tmp->ForgetReleasedPort();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionBrowser, mOnDisconnectEventMgr,
-                                  mOnMessageEventMgr)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ExtensionPort)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionBrowser, mOnDisconnectEventMgr,
-                                    mOnMessageEventMgr)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(ExtensionPort)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionPort, mGlobal,
+                                      mOnDisconnectEventMgr,
+                                      mOnMessageEventMgr);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionPort)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -43,16 +27,8 @@ NS_INTERFACE_MAP_END
 
 // static
 already_AddRefed<ExtensionPort> ExtensionPort::Create(
-    nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
-    UniquePtr<dom::ExtensionPortDescriptor>&& aPortDescriptor) {
-  RefPtr<ExtensionPort> port =
-      new ExtensionPort(aGlobal, aExtensionBrowser, std::move(aPortDescriptor));
-  return port.forget();
-}
-
-// static
-UniquePtr<dom::ExtensionPortDescriptor> ExtensionPort::ToPortDescriptor(
-    JS::Handle<JS::Value> aDescriptorValue, ErrorResult& aRv) {
+    nsIGlobalObject* aGlobal, JS::Handle<JS::Value> aDescriptorValue,
+    ErrorResult& aRv) {
   if (!aDescriptorValue.isObject()) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -66,26 +42,16 @@ UniquePtr<dom::ExtensionPortDescriptor> ExtensionPort::ToPortDescriptor(
     return nullptr;
   }
 
-  return portDescriptor;
+  RefPtr<ExtensionPort> port =
+      new ExtensionPort(aGlobal, std::move(portDescriptor));
+  return port.forget();
 }
 
 ExtensionPort::ExtensionPort(
-    nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
-    UniquePtr<dom::ExtensionPortDescriptor>&& aPortDescriptor)
-    : mGlobal(aGlobal),
-      mExtensionBrowser(aExtensionBrowser),
-      mPortDescriptor(std::move(aPortDescriptor)) {
+    nsIGlobalObject* aGlobal,
+    UniquePtr<dom::ExtensionPortDescriptor> aPortDescriptor)
+    : mGlobal(aGlobal), mPortDescriptor(std::move(aPortDescriptor)) {
   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
-  MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
-}
-
-void ExtensionPort::ForgetReleasedPort() {
-  if (mExtensionBrowser) {
-    mExtensionBrowser->ForgetReleasedPort(mPortDescriptor->mPortId);
-    mExtensionBrowser = nullptr;
-  }
-  mPortDescriptor = nullptr;
-  mGlobal = nullptr;
 }
 
 nsString ExtensionPort::GetAPIObjectId() const {

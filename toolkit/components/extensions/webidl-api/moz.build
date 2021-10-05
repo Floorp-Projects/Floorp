@@ -7,7 +7,6 @@
 with Files("**"):
     BUG_COMPONENT = ("WebExtensions", "General")
 
-# WebExtensions API objects and request handling internals.
 UNIFIED_SOURCES += [
     "ExtensionAPIBase.cpp",
     "ExtensionAPIRequest.cpp",
@@ -23,19 +22,6 @@ EXPORTS.mozilla.extensions += [
     "ExtensionBrowser.h",
     "ExtensionEventManager.h",
     "ExtensionPort.h",
-]
-
-# WebExtensions API namespaces.
-UNIFIED_SOURCES += [
-    "ExtensionAlarms.cpp",
-    "ExtensionRuntime.cpp",
-    "ExtensionTest.cpp",
-]
-
-EXPORTS.mozilla.extensions += [
-    "ExtensionAlarms.h",
-    "ExtensionRuntime.h",
-    "ExtensionTest.h",
 ]
 
 # The following is not a real WebExtensions API, it is a test WebIDL

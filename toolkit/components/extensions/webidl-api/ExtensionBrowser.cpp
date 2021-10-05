@@ -7,50 +7,22 @@
 #include "ExtensionBrowser.h"
 
 #include "mozilla/dom/ExtensionBrowserBinding.h"
-#include "mozilla/dom/ExtensionPortBinding.h"  // ExtensionPortDescriptor
-#include "mozilla/dom/WorkerPrivate.h"         // GetWorkerPrivateFromContext
-#include "mozilla/extensions/ExtensionAlarms.h"
+#include "mozilla/dom/WorkerPrivate.h"  // GetWorkerPrivateFromContext
 #include "mozilla/extensions/ExtensionMockAPI.h"
-#include "mozilla/extensions/ExtensionPort.h"
-#include "mozilla/extensions/ExtensionRuntime.h"
-#include "mozilla/extensions/ExtensionTest.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 
 namespace mozilla {
 namespace extensions {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(ExtensionBrowser)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionBrowser)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionBrowser);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionBrowser)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionBrowser, mGlobal,
+                                      mExtensionMockAPI);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionBrowser)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionBrowser)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionAlarms)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionMockAPI)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionRuntime)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionTest)
-  tmp->mLastError.setUndefined();
-  tmp->mPortsLookup.Clear();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ExtensionBrowser)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionAlarms)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionMockAPI)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionRuntime)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionTest)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ExtensionBrowser)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mLastError)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 ExtensionBrowser::ExtensionBrowser(nsIGlobalObject* aGlobal)
     : mGlobal(aGlobal) {
@@ -97,79 +69,12 @@ bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal) {
 #endif
 }
 
-void ExtensionBrowser::SetLastError(JS::Handle<JS::Value> aLastError) {
-  mLastError.set(aLastError);
-  mCheckedLastError = false;
-}
-
-void ExtensionBrowser::GetLastError(JS::MutableHandle<JS::Value> aRetVal) {
-  aRetVal.set(mLastError);
-  mCheckedLastError = true;
-}
-
-bool ExtensionBrowser::ClearLastError() {
-  bool shouldReport = !mCheckedLastError;
-  mLastError.setUndefined();
-  return shouldReport;
-}
-
-already_AddRefed<ExtensionPort> ExtensionBrowser::GetPort(
-    JS::Handle<JS::Value> aDescriptorValue, ErrorResult& aRv) {
-  // Get a port descriptor from the js value got from the API request
-  // handler.
-  UniquePtr<dom::ExtensionPortDescriptor> portDescriptor =
-      ExtensionPort::ToPortDescriptor(aDescriptorValue, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  auto portId = portDescriptor->mPortId;
-  auto maybePort = mPortsLookup.MaybeGet(portId);
-  if (maybePort.isSome() && maybePort.value().get()) {
-    RefPtr<ExtensionPort> existingPort = maybePort.value().get();
-    return existingPort.forget();
-  }
-
-  RefPtr<ExtensionPort> newPort =
-      ExtensionPort::Create(mGlobal, this, std::move(portDescriptor));
-  mPortsLookup.InsertOrUpdate(portId, newPort);
-  return newPort.forget();
-}
-
-void ExtensionBrowser::ForgetReleasedPort(const nsAString& aPortId) {
-  mPortsLookup.Remove(aPortId);
-}
-
-ExtensionAlarms* ExtensionBrowser::GetExtensionAlarms() {
-  if (!mExtensionAlarms) {
-    mExtensionAlarms = new ExtensionAlarms(mGlobal, this);
-  }
-
-  return mExtensionAlarms;
-}
-
 ExtensionMockAPI* ExtensionBrowser::GetExtensionMockAPI() {
   if (!mExtensionMockAPI) {
     mExtensionMockAPI = new ExtensionMockAPI(mGlobal, this);
   }
 
   return mExtensionMockAPI;
-}
-
-ExtensionRuntime* ExtensionBrowser::GetExtensionRuntime() {
-  if (!mExtensionRuntime) {
-    mExtensionRuntime = new ExtensionRuntime(mGlobal, this);
-  }
-
-  return mExtensionRuntime;
-}
-
-ExtensionTest* ExtensionBrowser::GetExtensionTest() {
-  if (!mExtensionTest) {
-    mExtensionTest = new ExtensionTest(mGlobal, this);
-  }
-
-  return mExtensionTest;
 }
 
 }  // namespace extensions

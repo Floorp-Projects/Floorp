@@ -19,51 +19,18 @@ class ErrorResult;
 
 namespace extensions {
 
-class ExtensionAlarms;
 class ExtensionMockAPI;
-class ExtensionPort;
-class ExtensionRuntime;
-class ExtensionTest;
 
 bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal);
 
 class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  JS::Heap<JS::Value> mLastError;
-  bool mCheckedLastError;
-  RefPtr<ExtensionAlarms> mExtensionAlarms;
   RefPtr<ExtensionMockAPI> mExtensionMockAPI;
-  RefPtr<ExtensionRuntime> mExtensionRuntime;
-  RefPtr<ExtensionTest> mExtensionTest;
-  nsTHashMap<nsStringHashKey, WeakPtr<ExtensionPort>> mPortsLookup;
 
   ~ExtensionBrowser() = default;
 
  public:
   explicit ExtensionBrowser(nsIGlobalObject* aGlobal);
-
-  // Helpers used for the expected behavior of the browser.runtime.lastError
-  // and browser.extension.lastError.
-  void SetLastError(JS::Handle<JS::Value> aLastError);
-  void GetLastError(JS::MutableHandle<JS::Value> aRetVal);
-  // ClearLastError is used by ChromeCompatCallbackHandler::RejectedCallback
-  // to clear the lastError property. When this method returns true the
-  // caller will know that the error value wasn't checked by the callback and
-  // should be reported to the console
-  bool ClearLastError();
-
-  // Helpers used for the ExtensionPort.
-
-  // Get an ExtensionPort instance given its port descriptor (returns an
-  // existing port if an instance is still tracked in the ports lookup table,
-  // otherwise it creates a new one).
-  already_AddRefed<ExtensionPort> GetPort(
-      JS::Handle<JS::Value> aDescriptorValue, ErrorResult& aRv);
-
-  // Remove the entry for an ExtensionPort tracked in the ports lookup map
-  // given its portId (called from the ExtensionPort destructor when the
-  // instance is being released).
-  void ForgetReleasedPort(const nsAString& aPortId);
 
   // nsWrapperCache interface methods
   JSObject* WrapObject(JSContext* aCx,
@@ -73,10 +40,7 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
 
   nsIGlobalObject* GetParentObject() const;
 
-  ExtensionAlarms* GetExtensionAlarms();
   ExtensionMockAPI* GetExtensionMockAPI();
-  ExtensionRuntime* GetExtensionRuntime();
-  ExtensionTest* GetExtensionTest();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ExtensionBrowser)

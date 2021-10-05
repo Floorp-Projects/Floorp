@@ -33,7 +33,6 @@ class ExtensionMockAPI final : public nsISupports,
                                public nsWrapperCache,
                                public ExtensionAPINamespace {
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<ExtensionBrowser> mExtensionBrowser;
   RefPtr<ExtensionEventManager> mOnTestEventMgr;
 
   ~ExtensionMockAPI() = default;
@@ -41,10 +40,6 @@ class ExtensionMockAPI final : public nsISupports,
  protected:
   // ExtensionAPIBase methods
   nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
-
-  ExtensionBrowser* GetExtensionBrowser() const override {
-    return mExtensionBrowser;
-  }
 
   nsString GetAPINamespace() const override { return u"mockExtensionAPI"_ns; }
 
@@ -64,6 +59,10 @@ class ExtensionMockAPI final : public nsISupports,
   void GetPropertyAsErrorObject(JSContext* aCx,
                                 JS::MutableHandle<JS::Value> aRetval);
   void GetPropertyAsString(DOMString& aRetval);
+
+  already_AddRefed<ExtensionPort> CallWebExtMethodReturnsPort(
+      JSContext* aCx, const nsAString& aApiMethod,
+      const dom::Sequence<JS::Value>& aArgs, ErrorResult& aRv);
 
   ExtensionEventManager* OnTestEvent();
 

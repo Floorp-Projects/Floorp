@@ -164,12 +164,11 @@ NS_IMPL_ISUPPORTS(ExtensionEventListener, mozIExtensionEventListener)
 
 // static
 already_AddRefed<ExtensionEventListener> ExtensionEventListener::Create(
-    nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
-    dom::Function* aCallback, CleanupCallback&& aCleanupCallback,
-    ErrorResult& aRv) {
+    nsIGlobalObject* aGlobal, dom::Function* aCallback,
+    CleanupCallback&& aCleanupCallback, ErrorResult& aRv) {
   MOZ_ASSERT(dom::IsCurrentThreadRunningWorker());
   RefPtr<ExtensionEventListener> extCb =
-      new ExtensionEventListener(aGlobal, aExtensionBrowser, aCallback);
+      new ExtensionEventListener(aGlobal, aCallback);
 
   auto* workerPrivate = dom::GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
@@ -280,19 +279,11 @@ NS_IMETHODIMP ExtensionEventListener::CallListener(
   }
 
   if (apiObjectType != APIObjectType::NONE) {
-    bool prependArgument = false;
-    aCallOptions->GetApiObjectPrepended(&prependArgument);
-    // Prepend or append the apiObjectDescriptor data to the call arguments,
+    // Prepend the apiObjectDescriptor data to the call arguments,
     // the worker runnable will convert that into an API object
     // instance on the worker thread.
-    if (prependArgument) {
-      if (!args.InsertElementAt(0, std::move(apiObjectDescriptor), fallible)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    } else {
-      if (!args.AppendElement(std::move(apiObjectDescriptor), fallible)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+    if (!args.InsertElementAt(0, std::move(apiObjectDescriptor), fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
@@ -341,11 +332,6 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
   MOZ_ASSERT(aWorkerPrivate == mWorkerPrivate);
   auto global = mListener->GetGlobalObject();
   if (NS_WARN_IF(!global)) {
-    return true;
-  }
-
-  RefPtr<ExtensionBrowser> extensionBrowser = mListener->GetExtensionBrowser();
-  if (NS_WARN_IF(!extensionBrowser)) {
     return true;
   }
 
@@ -404,9 +390,7 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
     // one element.
     MOZ_ASSERT(!argsSequence.IsEmpty());
 
-    uint32_t apiObjectIdx = mAPIObjectPrepended ? 0 : argsSequence.Length() - 1;
-    JS::Rooted<JS::Value> apiObjectDescriptor(
-        aCx, argsSequence.ElementAt(apiObjectIdx));
+    JS::Rooted<JS::Value> apiObjectDescriptor(aCx, argsSequence.ElementAt(0));
     JS::Rooted<JS::Value> apiObjectValue(aCx);
 
     // We only expect the object type to be RUNTIME_PORT at the moment,
@@ -414,7 +398,7 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
     // some specific API may need.
     MOZ_ASSERT(mAPIObjectType == APIObjectType::RUNTIME_PORT);
     RefPtr<ExtensionPort> port =
-        extensionBrowser->GetPort(apiObjectDescriptor, rv);
+        ExtensionPort::Create(global, apiObjectDescriptor, rv);
     if (NS_WARN_IF(rv.Failed())) {
       retPromise->MaybeReject(rv.StealNSResult());
       return true;
@@ -425,7 +409,7 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
       return true;
     }
 
-    argsSequence.ReplaceElementAt(apiObjectIdx, apiObjectValue);
+    argsSequence.ReplaceElementAt(0, apiObjectValue);
   }
 
   // Create callback argument and append it to the call arguments.

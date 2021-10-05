@@ -533,12 +533,12 @@ bool RequestWorkerRunnable::ProcessHandlerResult(
 
       ErrorResult rv;
       nsIGlobalObject* glob = xpc::CurrentNativeGlobal(aCx);
-      RefPtr<dom::Promise> retPromise =
+      already_AddRefed<dom::Promise> promise =
           dom::Promise::Resolve(glob, aCx, aRetval, rv);
       if (rv.Failed()) {
         return false;
       }
-      retPromise->AppendNativeHandler(mPromiseProxy);
+      promise.take()->AppendNativeHandler(mPromiseProxy);
       return true;
     }
   }
