@@ -20,16 +20,19 @@
 #include "mozilla/StoragePrincipalHelper.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsICookieJarSettings.h"
 #include "nsIChannel.h"
 #include "nsIClassifiedChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIURI.h"
 #include "nsIPrefBranch.h"
+#include "nsIWebProgressListener.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "ThirdPartyUtil.h"
+#include "nsIConsoleReportCollector.h"
 
 using namespace mozilla::ipc;
 
@@ -329,7 +332,7 @@ CookieServiceChild::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 NS_IMETHODIMP
-CookieServiceChild::GetCookieStringFromDocument(Document* aDocument,
+CookieServiceChild::GetCookieStringFromDocument(dom::Document* aDocument,
                                                 nsACString& aCookieString) {
   NS_ENSURE_ARG(aDocument);
 
@@ -448,7 +451,7 @@ CookieServiceChild::GetCookieStringFromHttp(nsIURI* /*aHostURI*/,
 
 NS_IMETHODIMP
 CookieServiceChild::SetCookieStringFromDocument(
-    Document* aDocument, const nsACString& aCookieString) {
+    dom::Document* aDocument, const nsACString& aCookieString) {
   NS_ENSURE_ARG(aDocument);
 
   nsCOMPtr<nsIURI> documentURI;
@@ -608,6 +611,7 @@ CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI,
     if (!CookieCommons::CheckCookiePermission(aChannel, cookieData)) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieString,
                         "cookie rejected by permission manager");
+      constexpr auto CONSOLE_REJECTION_CATEGORY = "cookiesRejection"_ns;
       CookieLogging::LogMessageToConsole(
           crc, aHostURI, nsIScriptError::warningFlag,
           CONSOLE_REJECTION_CATEGORY, "CookieRejectedByPermissionManager"_ns,

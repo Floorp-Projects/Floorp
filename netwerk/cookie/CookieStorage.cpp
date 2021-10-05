@@ -10,7 +10,11 @@
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "nsIMutableArray.h"
 #include "nsTPriorityQueue.h"
+#include "nsIScriptError.h"
+#include "nsServiceManagerUtils.h"
+#include "nsComponentManagerUtils.h"
 #include "prprf.h"
+#include "nsIPrefService.h"
 
 #undef ADD_TEN_PERCENT
 #define ADD_TEN_PERCENT(i) static_cast<uint32_t>((i) + (i) / 10)
@@ -420,6 +424,7 @@ void CookieStorage::AddCookie(nsIConsoleReportCollector* aCRC,
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
                       "cookie can't save because older cookie is secure "
                       "cookie but newer cookie is non-secure cookie");
+    constexpr auto CONSOLE_REJECTION_CATEGORY = "cookiesRejection"_ns;
     CookieLogging::LogMessageToConsole(
         aCRC, aHostURI, nsIScriptError::warningFlag, CONSOLE_REJECTION_CATEGORY,
         "CookieRejectedNonsecureOverSecure"_ns,
