@@ -99,7 +99,7 @@ assertEq(finalizeCount(), 2);
 // Before initialization, a table is not bound to any instance.
 resetFinalizeCount();
 var i = wasmEvalText(`(module (func $f0 (result i32) (i32.const 0)) (export "f0" (func $f0)))`);
-var t = new Table({initial:4, element:"funcref"});
+var t = new Table({initial:4, element:"anyfunc"});
 i.edge = makeFinalizeObserver();
 t.edge = makeFinalizeObserver();
 gc();
@@ -116,7 +116,7 @@ assertEq(finalizeCount(), 2);
 resetFinalizeCount();
 var i = wasmEvalText(`(module (func $f (result i32) (i32.const 42)) (export "f" (func $f)))`);
 var f = i.exports.f;
-var t = new Table({initial:1, element:"funcref"});
+var t = new Table({initial:1, element:"anyfunc"});
 i.edge = makeFinalizeObserver();
 f.edge = makeFinalizeObserver();
 t.edge = makeFinalizeObserver();
@@ -148,7 +148,7 @@ var i1 = wasmEvalText(`(module (func $f1 (result i32) (i32.const 13)) (export "f
 var i2 = wasmEvalText(`(module (func $f2 (result i32) (i32.const 42)) (export "f2" (func $f2)))`);
 var f1 = i1.exports.f1;
 var f2 = i2.exports.f2;
-var t = new Table({initial:2, element:"funcref"});
+var t = new Table({initial:2, element:"anyfunc"});
 i1.edge = makeFinalizeObserver();
 i2.edge = makeFinalizeObserver();
 f1.edge = makeFinalizeObserver();
@@ -182,7 +182,7 @@ assertEq(finalizeCount(), 5);
 // there are no outstanding references.
 resetFinalizeCount();
 const N = 10;
-var tbl = new Table({initial:N, element:"funcref"});
+var tbl = new Table({initial:N, element:"anyfunc"});
 tbl.edge = makeFinalizeObserver();
 function runTest() {
     tbl = null;

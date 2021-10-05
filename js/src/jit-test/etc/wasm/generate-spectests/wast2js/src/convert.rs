@@ -468,7 +468,7 @@ fn assert_expression_to_js_value(v: &wast::AssertExpression<'_>) -> Result<Strin
         F32(x) => f32_pattern_to_js_value(x),
         F64(x) => f64_pattern_to_js_value(x),
         RefNull(x) => match x {
-            Some(wast::HeapType::Func) => format!("value('funcref', null)"),
+            Some(wast::HeapType::Func) => format!("value('anyfunc', null)"),
             Some(wast::HeapType::Extern) => format!("value('externref', null)"),
             other => bail!(
                 "couldn't convert ref.null {:?} to a js assertion value",

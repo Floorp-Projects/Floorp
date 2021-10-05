@@ -1082,7 +1082,7 @@ static JSString* UTF8CharsToString(JSContext* cx, const char* chars) {
                                                const ValTypeVector& valTypes) {
   RootedArrayObject arrayObj(cx, NewDenseEmptyArray(cx));
   for (ValType valType : valTypes) {
-    RootedString type(cx, UTF8CharsToString(cx, ToString(valType).get()));
+    RootedString type(cx, UTF8CharsToString(cx, ToJSAPIString(valType).get()));
     if (!type) {
       return nullptr;
     }
@@ -1119,7 +1119,8 @@ static JSObject* TableTypeToObject(JSContext* cx, RefType type,
                                    uint32_t initial, Maybe<uint32_t> maximum) {
   Rooted<IdValueVector> props(cx, IdValueVector(cx));
 
-  RootedString elementType(cx, UTF8CharsToString(cx, ToString(type).get()));
+  RootedString elementType(cx,
+                           UTF8CharsToString(cx, ToJSAPIString(type).get()));
   if (!elementType || !props.append(IdValuePair(NameToId(cx->names().element),
                                                 StringValue(elementType)))) {
     ReportOutOfMemory(cx);
@@ -1184,7 +1185,7 @@ static JSObject* GlobalTypeToObject(JSContext* cx, ValType type,
     return nullptr;
   }
 
-  RootedString valueType(cx, UTF8CharsToString(cx, ToString(type).get()));
+  RootedString valueType(cx, UTF8CharsToString(cx, ToJSAPIString(type).get()));
   if (!valueType || !props.append(IdValuePair(NameToId(cx->names().value),
                                               StringValue(valueType)))) {
     ReportOutOfMemory(cx);
@@ -3103,23 +3104,7 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RefType tableType;
-  if (StringEqualsLiteral(elementLinearStr, "anyfunc") ||
-      StringEqualsLiteral(elementLinearStr, "funcref")) {
-    tableType = RefType::func();
-  } else if (StringEqualsLiteral(elementLinearStr, "externref")) {
-    tableType = RefType::extern_();
-#ifdef ENABLE_WASM_GC
-  } else if (StringEqualsLiteral(elementLinearStr, "eqref")) {
-    if (!GcAvailable(cx)) {
-      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                               JSMSG_WASM_BAD_ELEMENT);
-      return false;
-    }
-    tableType = RefType::eq();
-#endif
-  } else {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_BAD_ELEMENT_GENERALIZED);
+  if (!ToRefType(cx, elementLinearStr, &tableType)) {
     return false;
   }
 
