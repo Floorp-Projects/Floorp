@@ -67,6 +67,16 @@ class RemoteProcessMonitor(object):
                 activity_name="TestRunnerActivity",
                 e10s=True,
             )
+            # Newer Androids require that background services originate from
+            # active apps, so wait here until the test runner is the top
+            # activity.
+            retries = 20
+            top = self.device.get_top_activity(timeout=60)
+            while top != self.package and retries > 0:
+                self.log.info("Checking that %s is the top activity." % self.package)
+                top = self.device.get_top_activity(timeout=60)
+                time.sleep(1)
+                retries -= 1
 
         self.process_name = self.package + (":xpcshell%d" % selectedProcess)
         self.device.launch_service(
@@ -287,7 +297,14 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
 
         startTime = datetime.datetime.now()
 
-        pid = rpm.launch_service(cmd[1:], self.env, self.selectedProcess)
+        try:
+            pid = rpm.launch_service(cmd[1:], self.env, self.selectedProcess)
+        except Exception as e:
+            self.log.info(
+                "remotexpcshelltests.py | Failed to start process: %s" % str(e)
+            )
+            self.shellReturnCode = 1
+            return ""
 
         self.log.info("remotexpcshelltests.py | Launched Test App PID=%s" % str(pid))
 
@@ -308,6 +325,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
             self.log.info(
                 "remotexpcshelltests.py | Could not read log file: %s" % str(e)
             )
+            self.shellReturnCode = 1
             return ""
 
     def checkForCrashes(self, dump_directory, symbols_path, test_name=None):
