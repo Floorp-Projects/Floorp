@@ -14,6 +14,7 @@
 #include "nsHostResolver.h"
 #include "mozilla/Unused.h"
 #include "DNSResolverInfo.h"
+#include "nsServiceManagerUtils.h"
 
 using namespace mozilla::ipc;
 
