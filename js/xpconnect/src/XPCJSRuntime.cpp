@@ -3159,9 +3159,8 @@ void XPCJSRuntime::DebugDump(int16_t depth) {
   // iterate sets...
   if (depth && mNativeSetMap->Count()) {
     XPC_LOG_INDENT();
-    for (auto i = mNativeSetMap->Iter(); !i.Done(); i.Next()) {
-      auto* entry = static_cast<NativeSetMap::Entry*>(i.Get());
-      entry->key_value->DebugDump(depth);
+    for (auto i = mNativeSetMap->Iter(); !i.done(); i.next()) {
+      i.get()->DebugDump(depth);
     }
     XPC_LOG_OUTDENT();
   }

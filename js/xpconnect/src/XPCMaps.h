@@ -291,34 +291,36 @@ class ClassInfo2WrappedNativeProtoMap {
 
 /*************************/
 
+struct NativeSetHasher {
+  using Key = XPCNativeSet*;
+  using Lookup = const XPCNativeSetKey*;
+
+  static mozilla::HashNumber hash(Lookup lookup) { return lookup->Hash(); }
+  static bool match(Key key, Lookup lookup);
+};
+
 class NativeSetMap {
+  using Set = mozilla::HashSet<XPCNativeSet*, NativeSetHasher,
+                               mozilla::MallocAllocPolicy>;
+
  public:
-  struct Entry : public PLDHashEntryHdr {
-    XPCNativeSet* key_value;
-
-    static bool Match(const PLDHashEntryHdr* entry, const void* key);
-
-    static const struct PLDHashTableOps sOps;
-  };
-
   NativeSetMap();
 
-  inline XPCNativeSet* Find(XPCNativeSetKey* key) const {
-    auto entry = static_cast<Entry*>(mTable.Search(key));
-    return entry ? entry->key_value : nullptr;
+  XPCNativeSet* Find(const XPCNativeSetKey* key) const {
+    auto ptr = mSet.lookup(key);
+    return ptr ? *ptr : nullptr;
   }
 
-  inline XPCNativeSet* Add(const XPCNativeSetKey* key, XPCNativeSet* set) {
+  XPCNativeSet* Add(const XPCNativeSetKey* key, XPCNativeSet* set) {
     MOZ_ASSERT(key, "bad param");
     MOZ_ASSERT(set, "bad param");
-    auto entry = static_cast<Entry*>(mTable.Add(key, mozilla::fallible));
-    if (!entry) {
+    auto ptr = mSet.lookupForAdd(key);
+    if (ptr) {
+      return *ptr;
+    }
+    if (!mSet.add(ptr, set)) {
       return nullptr;
     }
-    if (entry->key_value) {
-      return entry->key_value;
-    }
-    entry->key_value = set;
     return set;
   }
 
@@ -335,21 +337,21 @@ class NativeSetMap {
     return true;
   }
 
-  inline void Remove(XPCNativeSet* set) {
+  void Remove(XPCNativeSet* set) {
     MOZ_ASSERT(set, "bad param");
 
     XPCNativeSetKey key(set);
-    mTable.Remove(&key);
+    mSet.remove(&key);
   }
 
-  inline uint32_t Count() { return mTable.EntryCount(); }
+  uint32_t Count() { return mSet.count(); }
 
-  PLDHashTable::Iterator Iter() { return mTable.Iter(); }
+  Set::Iterator Iter() { return mSet.iter(); }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
  private:
-  PLDHashTable mTable;
+  Set mSet;
 };
 
 /***************************************************************************/
