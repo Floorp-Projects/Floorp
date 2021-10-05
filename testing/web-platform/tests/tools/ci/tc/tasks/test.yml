@@ -16,7 +16,8 @@ components:
           textArtifactName: public/results/checkrun.md
 
   wpt-testharness:
-    chunks: 17
+    chunks: 16
+    maxRunTime: 10800
     vars:
       test-type: testharness
 
