@@ -36,13 +36,13 @@ class nsNativeBasicThemeCocoa : public nsNativeBasicTheme {
                            bool aHorizontal, nsIFrame* aFrame,
                            const ComputedStyle& aStyle,
                            const EventStates& aElementState,
-                           const EventStates& aDocumentState, UseSystemColors,
+                           const EventStates& aDocumentState, const Colors&,
                            DPIRatio) override;
   bool PaintScrollbarThumb(WebRenderBackendData&, const LayoutDeviceRect& aRect,
                            bool aHorizontal, nsIFrame* aFrame,
                            const ComputedStyle& aStyle,
                            const EventStates& aElementState,
-                           const EventStates& aDocumentState, UseSystemColors,
+                           const EventStates& aDocumentState, const Colors&,
                            DPIRatio) override;
 
   template <typename PaintBackendData>
@@ -54,19 +54,19 @@ class nsNativeBasicThemeCocoa : public nsNativeBasicTheme {
   bool PaintScrollbarTrack(DrawTarget&, const LayoutDeviceRect& aRect,
                            bool aHorizontal, nsIFrame* aFrame,
                            const ComputedStyle& aStyle,
-                           const EventStates& aDocumentState, UseSystemColors,
+                           const EventStates& aDocumentState, const Colors&,
                            DPIRatio) override;
   bool PaintScrollbarTrack(WebRenderBackendData&, const LayoutDeviceRect& aRect,
                            bool aHorizontal, nsIFrame* aFrame,
                            const ComputedStyle& aStyle,
-                           const EventStates& aDocumentState, UseSystemColors,
+                           const EventStates& aDocumentState, const Colors&,
                            DPIRatio) override;
 
   bool PaintScrollbar(DrawTarget&, const LayoutDeviceRect& aRect,
                       bool aHorizontal, nsIFrame* aFrame,
                       const ComputedStyle& aStyle,
                       const EventStates& aElementState,
-                      const EventStates& aDocumentState, UseSystemColors,
+                      const EventStates& aDocumentState, const Colors&,
                       DPIRatio) override {
     // Draw nothing; the scrollbar track is drawn in PaintScrollbarTrack.
     return true;
@@ -75,7 +75,7 @@ class nsNativeBasicThemeCocoa : public nsNativeBasicTheme {
                       bool aHorizontal, nsIFrame* aFrame,
                       const ComputedStyle& aStyle,
                       const EventStates& aElementState,
-                      const EventStates& aDocumentState, UseSystemColors,
+                      const EventStates& aDocumentState, const Colors&,
                       DPIRatio) override {
     // Draw nothing; the scrollbar track is drawn in PaintScrollbarTrack.
     return true;
@@ -89,11 +89,11 @@ class nsNativeBasicThemeCocoa : public nsNativeBasicTheme {
 
   bool PaintScrollCorner(DrawTarget&, const LayoutDeviceRect& aRect,
                          nsIFrame* aFrame, const ComputedStyle& aStyle,
-                         const EventStates& aDocumentState, UseSystemColors,
+                         const EventStates& aDocumentState, const Colors&,
                          DPIRatio aDpiRatio) override;
   bool PaintScrollCorner(WebRenderBackendData&, const LayoutDeviceRect& aRect,
                          nsIFrame* aFrame, const ComputedStyle& aStyle,
-                         const EventStates& aDocumentState, UseSystemColors,
+                         const EventStates& aDocumentState, const Colors&,
                          DPIRatio aDpiRatio) override;
 
   ThemeGeometryType ThemeGeometryTypeForWidget(nsIFrame*,
