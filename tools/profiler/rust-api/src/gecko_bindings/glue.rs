@@ -8,7 +8,7 @@ use crate::marker::deserializer_tags_state::{
     get_marker_type_functions_read_guard, MarkerTypeFunctions,
 };
 use std::ops::DerefMut;
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_void};
 
 #[no_mangle]
 pub unsafe extern "C" fn gecko_profiler_serialize_marker_for_tag(
@@ -34,6 +34,7 @@ pub unsafe extern "C" fn gecko_profiler_serialize_marker_for_tag(
 #[no_mangle]
 pub unsafe extern "C" fn gecko_profiler_stream_marker_schemas(
     json_writer: &mut mozilla::baseprofiler::SpliceableJSONWriter,
+    streamed_names_set: *mut c_void,
 ) {
     let marker_type_functions = get_marker_type_functions_read_guard();
 
@@ -46,6 +47,7 @@ pub unsafe extern "C" fn gecko_profiler_stream_marker_schemas(
             marker_name.as_ptr() as *const c_char,
             marker_name.len(),
             marker_schema.pin.deref_mut().as_mut_ptr(),
+            streamed_names_set,
         )
     }
 }
