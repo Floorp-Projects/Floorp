@@ -247,6 +247,24 @@ class nsNativeBasicTheme::AccentColor {
   }
 };
 
+// Widget color information associated to a particular frame.
+class nsNativeBasicTheme::Colors {
+  const AccentColor mAccentColor;
+  const bool mUseSystemColors;
+  const LookAndFeel::ColorScheme mColorScheme;
+
+ public:
+  explicit Colors(const nsIFrame* aFrame)
+      : mAccentColor(*aFrame->Style()),
+        mUseSystemColors(ShouldUseSystemColors(*aFrame->PresContext()) ==
+                         UseSystemColors::Yes),
+        mColorScheme(LookAndFeel::ColorSchemeForFrame(aFrame)) {}
+
+  const AccentColor& Accent() const { return mAccentColor; }
+  bool UseSystemColors() const { return mUseSystemColors; }
+  bool IsDark() const { return mColorScheme == LookAndFeel::ColorScheme::Dark; }
+};
+
 CSSIntCoord nsNativeBasicTheme::sHorizontalScrollbarHeight = CSSIntCoord(0);
 CSSIntCoord nsNativeBasicTheme::sVerticalScrollbarWidth = CSSIntCoord(0);
 bool nsNativeBasicTheme::sOverlayScrollbars = false;
@@ -418,7 +436,7 @@ static LayoutDeviceRect CheckBoxRadioRect(const LayoutDeviceRect& aRect) {
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
     const EventStates& aState, StyleAppearance aAppearance,
-    const AccentColor& aAccent, UseSystemColors aUseSystemColors) {
+    const Colors& aColors) {
   MOZ_ASSERT(aAppearance == StyleAppearance::Checkbox ||
              aAppearance == StyleAppearance::Radio);
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
@@ -429,7 +447,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
   bool isIndeterminate = aAppearance == StyleAppearance::Checkbox &&
                          aState.HasState(NS_EVENT_STATE_INDETERMINATE);
 
-  if (bool(aUseSystemColors)) {
+  if (aColors.UseSystemColors()) {
     sRGBColor backgroundColor = SystemColor(StyleSystemColor::Buttonface);
     sRGBColor borderColor = SystemColor(StyleSystemColor::Buttontext);
     if (isDisabled) {
@@ -453,9 +471,9 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
       backgroundColor = borderColor;
     }
   } else if (isChecked || isIndeterminate) {
-    const auto& color = isPressed   ? aAccent.GetDarker()
-                        : isHovered ? aAccent.GetDark()
-                                    : aAccent.Get();
+    const auto& color = isPressed   ? aColors.Accent().GetDarker()
+                        : isHovered ? aColors.Accent().GetDark()
+                                    : aColors.Accent().Get();
     backgroundColor = borderColor = color;
   } else if (isPressed) {
     backgroundColor = sColorGrey20;
@@ -468,22 +486,21 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
   return std::make_pair(backgroundColor, borderColor);
 }
 
-sRGBColor nsNativeBasicTheme::ComputeCheckmarkColor(
-    const EventStates& aState, const AccentColor& aAccent,
-    UseSystemColors aUseSystemColors) {
-  if (bool(aUseSystemColors)) {
+sRGBColor nsNativeBasicTheme::ComputeCheckmarkColor(const EventStates& aState,
+                                                    const Colors& aColors) {
+  if (aColors.UseSystemColors()) {
     return SystemColor(StyleSystemColor::Selecteditemtext);
   }
   if (aState.HasState(NS_EVENT_STATE_DISABLED)) {
     return sColorWhiteAlpha80;
   }
-  return aAccent.GetForeground();
+  return aColors.Accent().GetForeground();
 }
 
-sRGBColor nsNativeBasicTheme::ComputeBorderColor(
-    const EventStates& aState, UseSystemColors aUseSystemColors) {
+sRGBColor nsNativeBasicTheme::ComputeBorderColor(const EventStates& aState,
+                                                 const Colors& aColors) {
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
-  if (bool(aUseSystemColors)) {
+  if (aColors.UseSystemColors()) {
     return SystemColor(isDisabled ? StyleSystemColor::Graytext
                                   : StyleSystemColor::Buttontext);
   }
@@ -513,15 +530,14 @@ sRGBColor nsNativeBasicTheme::ComputeBorderColor(
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeButtonColors(
-    const EventStates& aState, UseSystemColors aUseSystemColors,
-    nsIFrame* aFrame) {
+    const EventStates& aState, const Colors& aColors, nsIFrame* aFrame) {
   bool isActive =
       aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
   bool isHovered = aState.HasState(NS_EVENT_STATE_HOVER);
 
   const sRGBColor backgroundColor = [&] {
-    if (bool(aUseSystemColors)) {
+    if (aColors.UseSystemColors()) {
       return SystemColor(StyleSystemColor::Buttonface);
     }
 
@@ -540,7 +556,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeButtonColors(
     return sColorGrey10;
   }();
 
-  const sRGBColor borderColor = ComputeBorderColor(aState, aUseSystemColors);
+  const sRGBColor borderColor = ComputeBorderColor(aState, aColors);
   return std::make_pair(backgroundColor, borderColor);
 }
 
@@ -549,9 +565,9 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeButtonColors(
 constexpr nscolor kAutofillColor = NS_RGBA(255, 249, 145, 128);
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeTextfieldColors(
-    const EventStates& aState, UseSystemColors aUseSystemColors) {
+    const EventStates& aState, const Colors& aColors) {
   nscolor backgroundColor = [&] {
-    if (bool(aUseSystemColors)) {
+    if (aColors.UseSystemColors()) {
       return SystemNsColor(StyleSystemColor::Field);
     }
     if (aState.HasState(NS_EVENT_STATE_DISABLED)) {
@@ -565,14 +581,13 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeTextfieldColors(
     backgroundColor = NS_ComposeColors(backgroundColor, kAutofillColor);
   }
 
-  const sRGBColor borderColor = ComputeBorderColor(aState, aUseSystemColors);
+  const sRGBColor borderColor = ComputeBorderColor(aState, aColors);
   return std::make_pair(sRGBColor::FromABGR(backgroundColor), borderColor);
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeProgressColors(
-    const EventStates& aState, const AccentColor& aAccent,
-    UseSystemColors aUseSystemColors) {
-  if (bool(aUseSystemColors)) {
+    const EventStates& aState, const Colors& aColors) {
+  if (aColors.UseSystemColors()) {
     return SystemColorPair(StyleSystemColor::Selecteditem,
                            StyleSystemColor::Buttontext);
   }
@@ -586,14 +601,15 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeProgressColors(
     return std::make_pair(sColorGrey40Alpha50, sColorGrey40Alpha50);
   }
   if (isActive || isHovered) {
-    return std::make_pair(aAccent.GetDark(), aAccent.GetDarker());
+    return std::make_pair(aColors.Accent().GetDark(),
+                          aColors.Accent().GetDarker());
   }
-  return std::make_pair(aAccent.Get(), aAccent.GetDark());
+  return std::make_pair(aColors.Accent().Get(), aColors.Accent().GetDark());
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeTrackColors(
-    const EventStates& aState, UseSystemColors aUseSystemColors) {
-  if (bool(aUseSystemColors)) {
+    const EventStates& aState, const Colors& aColors) {
+  if (aColors.UseSystemColors()) {
     return SystemColorPair(StyleSystemColor::TextBackground,
                            StyleSystemColor::Buttontext);
   }
@@ -612,9 +628,8 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeTrackColors(
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeThumbColors(
-    const EventStates& aState, const AccentColor& aAccent,
-    UseSystemColors aUseSystemColors) {
-  if (bool(aUseSystemColors)) {
+    const EventStates& aState, const Colors& aColors) {
+  if (aColors.UseSystemColors()) {
     return SystemColorPair(StyleSystemColor::Selecteditemtext,
                            StyleSystemColor::Selecteditem);
   }
@@ -629,7 +644,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeThumbColors(
       return sColorGrey40;
     }
     if (isActive) {
-      return aAccent.Get();
+      return aColors.Accent().Get();
     }
     if (isHovered) {
       return sColorGrey60;
@@ -643,17 +658,17 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeThumbColors(
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeProgressColors(
-    const AccentColor& aAccent, UseSystemColors aUseSystemColors) {
-  if (bool(aUseSystemColors)) {
+    const Colors& aColors) {
+  if (aColors.UseSystemColors()) {
     return SystemColorPair(StyleSystemColor::Selecteditem,
                            StyleSystemColor::Buttontext);
   }
-  return std::make_pair(aAccent.Get(), aAccent.GetDark());
+  return std::make_pair(aColors.Accent().Get(), aColors.Accent().GetDark());
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeProgressTrackColors(
-    UseSystemColors aUseSystemColors) {
-  if (bool(aUseSystemColors)) {
+    const Colors& aColors) {
+  if (aColors.UseSystemColors()) {
     return SystemColorPair(StyleSystemColor::Buttonface,
                            StyleSystemColor::Buttontext);
   }
@@ -661,10 +676,9 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeProgressTrackColors(
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeMeterchunkColors(
-    const EventStates& aMeterState, UseSystemColors aUseSystemColors) {
-  if (bool(aUseSystemColors)) {
-    // Accent color doesn't matter when using system colors.
-    return ComputeProgressColors(AccentColor(), aUseSystemColors);
+    const EventStates& aMeterState, const Colors& aColors) {
+  if (aColors.UseSystemColors()) {
+    return ComputeProgressColors(aColors);
   }
   sRGBColor borderColor = sColorMeterGreen20;
   sRGBColor chunkColor = sColorMeterGreen10;
@@ -681,21 +695,29 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeMeterchunkColors(
 }
 
 std::array<sRGBColor, 3> nsNativeBasicTheme::ComputeFocusRectColors(
-    const AccentColor& aAccent, UseSystemColors aUseSystemColors) {
-  if (bool(aUseSystemColors)) {
+    const Colors& aColors) {
+  if (aColors.UseSystemColors()) {
     return {SystemColor(StyleSystemColor::Selecteditem),
             SystemColor(StyleSystemColor::Buttontext),
             SystemColor(StyleSystemColor::TextBackground)};
   }
 
-  return {aAccent.Get(), sColorWhiteAlpha80, aAccent.GetLight()};
+  return {aColors.Accent().Get(), sColorWhiteAlpha80,
+          aColors.Accent().GetLight()};
+}
+
+bool nsNativeBasicTheme::IsScrollbarTrackOpaque(nsIFrame* aFrame) {
+  auto trackColor = ComputeScrollbarTrackColor(
+      aFrame, *nsLayoutUtils::StyleForScrollbar(aFrame),
+      aFrame->PresContext()->Document()->GetDocumentState(), Colors(aFrame));
+  return trackColor.a == 1.0f;
 }
 
 sRGBColor nsNativeBasicTheme::ComputeScrollbarTrackColor(
     nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aDocumentState, UseSystemColors aUseSystemColors) {
+    const EventStates& aDocumentState, const Colors& aColors) {
   const nsStyleUI* ui = aStyle.StyleUI();
-  if (bool(aUseSystemColors)) {
+  if (aColors.UseSystemColors()) {
     return SystemColor(StyleSystemColor::TextBackground);
   }
   if (ShouldUseDarkScrollbar(aFrame, aStyle)) {
@@ -841,8 +863,8 @@ static bool ShouldUseColorForActiveDarkScrollbarThumb(nscolor aColor) {
 sRGBColor nsNativeBasicTheme::ComputeScrollbarThumbColor(
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
-    UseSystemColors aUseSystemColors) {
-  if (!bool(aUseSystemColors) && ShouldUseDarkScrollbar(aFrame, aStyle)) {
+    const Colors& aColors) {
+  if (!aColors.UseSystemColors() && ShouldUseDarkScrollbar(aFrame, aStyle)) {
     if (aElementState.HasState(NS_EVENT_STATE_ACTIVE) &&
         StaticPrefs::widget_non_native_theme_scrollbar_active_always_themed()) {
       auto color = LookAndFeel::GetColor(
@@ -867,18 +889,18 @@ sRGBColor nsNativeBasicTheme::ComputeScrollbarThumbColor(
       return StyleSystemColor::ThemedScrollbarThumbInactive;
     }
     if (aElementState.HasState(NS_EVENT_STATE_ACTIVE)) {
-      if (bool(aUseSystemColors)) {
+      if (aColors.UseSystemColors()) {
         return StyleSystemColor::Selecteditem;
       }
       return StyleSystemColor::ThemedScrollbarThumbActive;
     }
     if (aElementState.HasState(NS_EVENT_STATE_HOVER)) {
-      if (bool(aUseSystemColors)) {
+      if (aColors.UseSystemColors()) {
         return StyleSystemColor::Selecteditem;
       }
       return StyleSystemColor::ThemedScrollbarThumbHover;
     }
-    if (bool(aUseSystemColors)) {
+    if (aColors.UseSystemColors()) {
       return StyleSystemColor::TextForeground;
     }
     return StyleSystemColor::ThemedScrollbarThumb;
@@ -894,8 +916,8 @@ std::pair<sRGBColor, sRGBColor>
 nsNativeBasicTheme::ComputeScrollbarButtonColors(
     nsIFrame* aFrame, StyleAppearance aAppearance, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
-    UseSystemColors aUseSystemColors) {
-  if (bool(aUseSystemColors)) {
+    const Colors& aColors) {
+  if (aColors.UseSystemColors()) {
     if (aElementState.HasAtLeastOneOfStates(NS_EVENT_STATE_ACTIVE |
                                             NS_EVENT_STATE_HOVER)) {
       return SystemColorPair(StyleSystemColor::Selecteditem,
@@ -905,8 +927,8 @@ nsNativeBasicTheme::ComputeScrollbarButtonColors(
                            StyleSystemColor::TextForeground);
   }
 
-  auto trackColor = ComputeScrollbarTrackColor(aFrame, aStyle, aDocumentState,
-                                               aUseSystemColors);
+  auto trackColor =
+      ComputeScrollbarTrackColor(aFrame, aStyle, aDocumentState, aColors);
   nscolor buttonColor =
       GetScrollbarButtonColor(trackColor.ToABGR(), aElementState);
   auto arrowColor =
@@ -914,7 +936,7 @@ nsNativeBasicTheme::ComputeScrollbarButtonColors(
           .map(sRGBColor::FromABGR)
           .valueOrFrom([&] {
             return ComputeScrollbarThumbColor(aFrame, aStyle, aElementState,
-                                              aDocumentState, aUseSystemColors);
+                                              aDocumentState, aColors);
           });
   return {sRGBColor::FromABGR(buttonColor), arrowColor};
 }
@@ -922,14 +944,15 @@ nsNativeBasicTheme::ComputeScrollbarButtonColors(
 static const CSSCoord kInnerFocusOutlineWidth = 2.0f;
 
 template <typename PaintBackendData>
-void nsNativeBasicTheme::PaintRoundedFocusRect(
-    PaintBackendData& aBackendData, const LayoutDeviceRect& aRect,
-    const AccentColor& aAccent, UseSystemColors aUseSystemColors,
-    DPIRatio aDpiRatio, CSSCoord aRadius, CSSCoord aOffset) {
+void nsNativeBasicTheme::PaintRoundedFocusRect(PaintBackendData& aBackendData,
+                                               const LayoutDeviceRect& aRect,
+                                               const Colors& aColors,
+                                               DPIRatio aDpiRatio,
+                                               CSSCoord aRadius,
+                                               CSSCoord aOffset) {
   // NOTE(emilio): If the widths or offsets here change, make sure to tweak
   // the GetWidgetOverflow path for FocusOutline.
-  auto [innerColor, middleColor, outerColor] =
-      ComputeFocusRectColors(aAccent, aUseSystemColors);
+  auto [innerColor, middleColor, outerColor] = ComputeFocusRectColors(aColors);
 
   LayoutDeviceRect focusRect(aRect);
 
@@ -1105,11 +1128,10 @@ void nsNativeBasicTheme::PaintRoundedRectWithRadius(
 void nsNativeBasicTheme::PaintCheckboxControl(DrawTarget& aDrawTarget,
                                               const LayoutDeviceRect& aRect,
                                               const EventStates& aState,
-                                              const AccentColor& aAccent,
-                                              UseSystemColors aUseSystemColors,
+                                              const Colors& aColors,
                                               DPIRatio aDpiRatio) {
-  auto [backgroundColor, borderColor] = ComputeCheckboxColors(
-      aState, StyleAppearance::Checkbox, aAccent, aUseSystemColors);
+  auto [backgroundColor, borderColor] =
+      ComputeCheckboxColors(aState, StyleAppearance::Checkbox, aColors);
   {
     const CSSCoord radius = 2.0f;
     CSSCoord borderWidth = kCheckboxRadioBorderWidth;
@@ -1121,15 +1143,13 @@ void nsNativeBasicTheme::PaintCheckboxControl(DrawTarget& aDrawTarget,
   }
 
   if (aState.HasState(NS_EVENT_STATE_INDETERMINATE)) {
-    PaintIndeterminateMark(aDrawTarget, aRect, aState, aAccent,
-                           aUseSystemColors);
+    PaintIndeterminateMark(aDrawTarget, aRect, aState, aColors);
   } else if (aState.HasState(NS_EVENT_STATE_CHECKED)) {
-    PaintCheckMark(aDrawTarget, aRect, aState, aAccent, aUseSystemColors);
+    PaintCheckMark(aDrawTarget, aRect, aState, aColors);
   }
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aDrawTarget, aRect, aAccent, aUseSystemColors,
-                          aDpiRatio, 5.0f, 1.0f);
+    PaintRoundedFocusRect(aDrawTarget, aRect, aColors, aDpiRatio, 5.0f, 1.0f);
   }
 }
 
@@ -1146,8 +1166,7 @@ static float ScaleToFillRect(const LayoutDeviceRect& aRect, const float aSize) {
 void nsNativeBasicTheme::PaintCheckMark(DrawTarget& aDrawTarget,
                                         const LayoutDeviceRect& aRect,
                                         const EventStates& aState,
-                                        const AccentColor& aAccent,
-                                        UseSystemColors aUseSystemColors) {
+                                        const Colors& aColors) {
   // Points come from the coordinates on a 14X14 (kCheckboxRadioBorderBoxSize)
   // unit box centered at 0,0
   const float checkPolygonX[] = {-4.5f, -1.5f, -0.5f, 5.0f, 4.75f,
@@ -1167,15 +1186,14 @@ void nsNativeBasicTheme::PaintCheckMark(DrawTarget& aDrawTarget,
   }
   RefPtr<Path> path = builder->Finish();
 
-  sRGBColor fillColor =
-      ComputeCheckmarkColor(aState, aAccent, aUseSystemColors);
+  sRGBColor fillColor = ComputeCheckmarkColor(aState, aColors);
   aDrawTarget.Fill(path, ColorPattern(ToDeviceColor(fillColor)));
 }
 
-void nsNativeBasicTheme::PaintIndeterminateMark(
-    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect,
-    const EventStates& aState, const AccentColor& aAccent,
-    UseSystemColors aUseSystemColors) {
+void nsNativeBasicTheme::PaintIndeterminateMark(DrawTarget& aDrawTarget,
+                                                const LayoutDeviceRect& aRect,
+                                                const EventStates& aState,
+                                                const Colors& aColors) {
   const CSSCoord borderWidth = 2.0f;
   const float scale = ScaleToFillRect(aRect, kCheckboxRadioBorderBoxSize);
 
@@ -1185,8 +1203,7 @@ void nsNativeBasicTheme::PaintIndeterminateMark(
   rect.x += (borderWidth * scale) + (borderWidth * scale / 8);
   rect.width -= ((borderWidth * scale) + (borderWidth * scale / 8)) * 2;
 
-  sRGBColor fillColor =
-      ComputeCheckmarkColor(aState, aAccent, aUseSystemColors);
+  sRGBColor fillColor = ComputeCheckmarkColor(aState, aColors);
   aDrawTarget.FillRect(rect, ColorPattern(ToDeviceColor(fillColor)));
 }
 
@@ -1280,11 +1297,10 @@ template <typename PaintBackendData>
 void nsNativeBasicTheme::PaintRadioControl(PaintBackendData& aPaintData,
                                            const LayoutDeviceRect& aRect,
                                            const EventStates& aState,
-                                           const AccentColor& aAccent,
-                                           UseSystemColors aUseSystemColors,
+                                           const Colors& aColors,
                                            DPIRatio aDpiRatio) {
-  auto [backgroundColor, borderColor] = ComputeCheckboxColors(
-      aState, StyleAppearance::Radio, aAccent, aUseSystemColors);
+  auto [backgroundColor, borderColor] =
+      ComputeCheckboxColors(aState, StyleAppearance::Radio, aColors);
   {
     CSSCoord borderWidth = kCheckboxRadioBorderWidth;
     if (backgroundColor == borderColor) {
@@ -1298,14 +1314,13 @@ void nsNativeBasicTheme::PaintRadioControl(PaintBackendData& aPaintData,
     LayoutDeviceRect rect(aRect);
     rect.Deflate(SnapBorderWidth(kCheckboxRadioBorderWidth, aDpiRatio));
 
-    auto checkColor = ComputeCheckmarkColor(aState, aAccent, aUseSystemColors);
+    auto checkColor = ComputeCheckmarkColor(aState, aColors);
     PaintStrokedCircle(aPaintData, rect, backgroundColor, checkColor,
                        kCheckboxRadioBorderWidth, aDpiRatio);
   }
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aPaintData, aRect, aAccent, aUseSystemColors,
-                          aDpiRatio, 5.0f, 1.0f);
+    PaintRoundedFocusRect(aPaintData, aRect, aColors, aDpiRatio, 5.0f, 1.0f);
   }
 }
 
@@ -1313,11 +1328,9 @@ template <typename PaintBackendData>
 void nsNativeBasicTheme::PaintTextField(PaintBackendData& aPaintData,
                                         const LayoutDeviceRect& aRect,
                                         const EventStates& aState,
-                                        const AccentColor& aAccent,
-                                        UseSystemColors aUseSystemColors,
+                                        const Colors& aColors,
                                         DPIRatio aDpiRatio) {
-  auto [backgroundColor, borderColor] =
-      ComputeTextfieldColors(aState, aUseSystemColors);
+  auto [backgroundColor, borderColor] = ComputeTextfieldColors(aState, aColors);
 
   const CSSCoord radius = 2.0f;
 
@@ -1325,8 +1338,8 @@ void nsNativeBasicTheme::PaintTextField(PaintBackendData& aPaintData,
                              kTextFieldBorderWidth, radius, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aPaintData, aRect, aAccent, aUseSystemColors,
-                          aDpiRatio, radius + kTextFieldBorderWidth,
+    PaintRoundedFocusRect(aPaintData, aRect, aColors, aDpiRatio,
+                          radius + kTextFieldBorderWidth,
                           -kTextFieldBorderWidth);
   }
 }
@@ -1335,20 +1348,17 @@ template <typename PaintBackendData>
 void nsNativeBasicTheme::PaintListbox(PaintBackendData& aPaintData,
                                       const LayoutDeviceRect& aRect,
                                       const EventStates& aState,
-                                      const AccentColor& aAccent,
-                                      UseSystemColors aUseSystemColors,
+                                      const Colors& aColors,
                                       DPIRatio aDpiRatio) {
   const CSSCoord radius = 2.0f;
-  auto [backgroundColor, borderColor] =
-      ComputeTextfieldColors(aState, aUseSystemColors);
+  auto [backgroundColor, borderColor] = ComputeTextfieldColors(aState, aColors);
 
   PaintRoundedRectWithRadius(aPaintData, aRect, backgroundColor, borderColor,
                              kMenulistBorderWidth, radius, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aPaintData, aRect, aAccent, aUseSystemColors,
-                          aDpiRatio, radius + kMenulistBorderWidth,
-                          -kMenulistBorderWidth);
+    PaintRoundedFocusRect(aPaintData, aRect, aColors, aDpiRatio,
+                          radius + kMenulistBorderWidth, -kMenulistBorderWidth);
   }
 }
 
@@ -1356,20 +1366,17 @@ template <typename PaintBackendData>
 void nsNativeBasicTheme::PaintMenulist(PaintBackendData& aDrawTarget,
                                        const LayoutDeviceRect& aRect,
                                        const EventStates& aState,
-                                       const AccentColor& aAccent,
-                                       UseSystemColors aUseSystemColors,
+                                       const Colors& aColors,
                                        DPIRatio aDpiRatio) {
   const CSSCoord radius = 4.0f;
-  auto [backgroundColor, borderColor] =
-      ComputeButtonColors(aState, aUseSystemColors);
+  auto [backgroundColor, borderColor] = ComputeButtonColors(aState, aColors);
 
   PaintRoundedRectWithRadius(aDrawTarget, aRect, backgroundColor, borderColor,
                              kMenulistBorderWidth, radius, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aDrawTarget, aRect, aAccent, aUseSystemColors,
-                          aDpiRatio, radius + kMenulistBorderWidth,
-                          -kMenulistBorderWidth);
+    PaintRoundedFocusRect(aDrawTarget, aRect, aColors, aDpiRatio,
+                          radius + kMenulistBorderWidth, -kMenulistBorderWidth);
   }
 }
 
@@ -1397,9 +1404,10 @@ void nsNativeBasicTheme::PaintArrow(DrawTarget& aDrawTarget,
   aDrawTarget.Fill(path, ColorPattern(ToDeviceColor(aFillColor)));
 }
 
-void nsNativeBasicTheme::PaintMenulistArrowButton(
-    nsIFrame* aFrame, DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect,
-    const EventStates& aState, UseSystemColors aUseSystemColors) {
+void nsNativeBasicTheme::PaintMenulistArrowButton(nsIFrame* aFrame,
+                                                  DrawTarget& aDrawTarget,
+                                                  const LayoutDeviceRect& aRect,
+                                                  const EventStates& aState) {
   const float kPolygonX[] = {-4.0f, -0.5f, 0.5f, 4.0f,  4.0f,
                              3.0f,  0.0f,  0.0f, -3.0f, -4.0f};
   const float kPolygonY[] = {-1,    3.0f, 3.0f, -1.0f, -2.0f,
@@ -1416,9 +1424,8 @@ void nsNativeBasicTheme::PaintMenulistArrowButton(
 void nsNativeBasicTheme::PaintSpinnerButton(
     nsIFrame* aFrame, DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect,
     const EventStates& aState, StyleAppearance aAppearance,
-    UseSystemColors aUseSystemColors, DPIRatio aDpiRatio) {
-  auto [backgroundColor, borderColor] =
-      ComputeButtonColors(aState, aUseSystemColors);
+    const Colors& aColors, DPIRatio aDpiRatio) {
+  auto [backgroundColor, borderColor] = ComputeButtonColors(aState, aColors);
 
   aDrawTarget.FillRect(aRect.ToUnknownRect(),
                        ColorPattern(ToDeviceColor(backgroundColor)));
@@ -1444,9 +1451,8 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame,
                                     PaintBackendData& aPaintData,
                                     const LayoutDeviceRect& aRect,
                                     const EventStates& aState,
-                                    const AccentColor& aAccent,
-                                    UseSystemColors aUseSystemColors,
-                                    DPIRatio aDpiRatio, bool aHorizontal) {
+                                    const Colors& aColors, DPIRatio aDpiRatio,
+                                    bool aHorizontal) {
   nsRangeFrame* rangeFrame = do_QueryFrame(aFrame);
   if (!rangeFrame) {
     return;
@@ -1492,9 +1498,9 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame,
   const CSSCoord radius = 3.0f;
 
   auto [progressColor, progressBorderColor] =
-      ComputeRangeProgressColors(aState, aAccent, aUseSystemColors);
+      ComputeRangeProgressColors(aState, aColors);
   auto [trackColor, trackBorderColor] =
-      ComputeRangeTrackColors(aState, aUseSystemColors);
+      ComputeRangeTrackColors(aState, aColors);
 
   PaintRoundedRectWithRadius(aPaintData, rect, progressClipRect, progressColor,
                              progressBorderColor, borderWidth, radius,
@@ -1516,14 +1522,13 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame,
   // Draw the thumb on top.
   const CSSCoord thumbBorderWidth = 2.0f;
   auto [thumbColor, thumbBorderColor] =
-      ComputeRangeThumbColors(aState, aAccent, aUseSystemColors);
+      ComputeRangeThumbColors(aState, aColors);
 
   PaintStrokedCircle(aPaintData, thumbRect, thumbColor, thumbBorderColor,
                      thumbBorderWidth, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aPaintData, aRect, aAccent, aUseSystemColors,
-                          aDpiRatio, radius, 1.0f);
+    PaintRoundedFocusRect(aPaintData, aRect, aColors, aDpiRatio, radius, 1.0f);
   }
 }
 
@@ -1532,8 +1537,7 @@ void nsNativeBasicTheme::PaintProgress(nsIFrame* aFrame,
                                        PaintBackendData& aPaintData,
                                        const LayoutDeviceRect& aRect,
                                        const EventStates& aState,
-                                       const AccentColor& aAccent,
-                                       UseSystemColors aUseSystemColors,
+                                       const Colors& aColors,
                                        DPIRatio aDpiRatio, bool aIsMeter) {
   const CSSCoord borderWidth = 1.0f;
   const CSSCoord radius = aIsMeter ? 6.0f : 3.0f;
@@ -1555,8 +1559,7 @@ void nsNativeBasicTheme::PaintProgress(nsIFrame* aFrame,
 
   {
     // Paint the track, unclipped.
-    auto [backgroundColor, borderColor] =
-        ComputeProgressTrackColors(aUseSystemColors);
+    auto [backgroundColor, borderColor] = ComputeProgressTrackColors(aColors);
     PaintRoundedRectWithRadius(aPaintData, rect, rect, backgroundColor,
                                borderColor, borderWidth, radius, aDpiRatio);
   }
@@ -1620,8 +1623,8 @@ void nsNativeBasicTheme::PaintProgress(nsIFrame* aFrame,
   }
 
   auto [backgroundColor, borderColor] =
-      aIsMeter ? ComputeMeterchunkColors(aState, aUseSystemColors)
-               : ComputeProgressColors(aAccent, aUseSystemColors);
+      aIsMeter ? ComputeMeterchunkColors(aState, aColors)
+               : ComputeProgressColors(aColors);
   PaintRoundedRectWithRadius(aPaintData, rect, clipRect, backgroundColor,
                              borderColor, borderWidth, radius, aDpiRatio);
 }
@@ -1631,20 +1634,18 @@ void nsNativeBasicTheme::PaintButton(nsIFrame* aFrame,
                                      PaintBackendData& aPaintData,
                                      const LayoutDeviceRect& aRect,
                                      const EventStates& aState,
-                                     const AccentColor& aAccent,
-                                     UseSystemColors aUseSystemColors,
+                                     const Colors& aColors,
                                      DPIRatio aDpiRatio) {
   const CSSCoord radius = 4.0f;
   auto [backgroundColor, borderColor] =
-      ComputeButtonColors(aState, aUseSystemColors, aFrame);
+      ComputeButtonColors(aState, aColors, aFrame);
 
   PaintRoundedRectWithRadius(aPaintData, aRect, backgroundColor, borderColor,
                              kButtonBorderWidth, radius, aDpiRatio);
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
-    PaintRoundedFocusRect(aPaintData, aRect, aAccent, aUseSystemColors,
-                          aDpiRatio, radius + kButtonBorderWidth,
-                          -kButtonBorderWidth);
+    PaintRoundedFocusRect(aPaintData, aRect, aColors, aDpiRatio,
+                          radius + kButtonBorderWidth, -kButtonBorderWidth);
   }
 }
 
@@ -1653,9 +1654,9 @@ bool nsNativeBasicTheme::DoPaintDefaultScrollbarThumb(
     PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
     bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
-    UseSystemColors aUseSystemColors, DPIRatio aDpiRatio) {
+    const Colors& aColors, DPIRatio aDpiRatio) {
   sRGBColor thumbColor = ComputeScrollbarThumbColor(
-      aFrame, aStyle, aElementState, aDocumentState, aUseSystemColors);
+      aFrame, aStyle, aElementState, aDocumentState, aColors);
   FillRect(aPaintData, aRect, thumbColor);
   return true;
 }
@@ -1664,20 +1665,20 @@ bool nsNativeBasicTheme::PaintScrollbarThumb(
     DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
-    UseSystemColors aUseSystemColors, DPIRatio aDpiRatio) {
+    const Colors& aColors, DPIRatio aDpiRatio) {
   return DoPaintDefaultScrollbarThumb(aDrawTarget, aRect, aHorizontal, aFrame,
                                       aStyle, aElementState, aDocumentState,
-                                      aUseSystemColors, aDpiRatio);
+                                      aColors, aDpiRatio);
 }
 
 bool nsNativeBasicTheme::PaintScrollbarThumb(
     WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
     bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
-    UseSystemColors aUseSystemColors, DPIRatio aDpiRatio) {
+    const Colors& aColors, DPIRatio aDpiRatio) {
   return DoPaintDefaultScrollbarThumb(aWrData, aRect, aHorizontal, aFrame,
                                       aStyle, aElementState, aDocumentState,
-                                      aUseSystemColors, aDpiRatio);
+                                      aColors, aDpiRatio);
 }
 
 template <typename PaintBackendData>
@@ -1685,13 +1686,13 @@ bool nsNativeBasicTheme::DoPaintDefaultScrollbar(
     PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
     bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
-    UseSystemColors aUseSystemColors, DPIRatio aDpiRatio) {
+    const Colors& aColors, DPIRatio aDpiRatio) {
   if (sOverlayScrollbars && !aElementState.HasAtLeastOneOfStates(
                                 NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE)) {
     return true;
   }
-  auto scrollbarColor = ComputeScrollbarTrackColor(
-      aFrame, aStyle, aDocumentState, aUseSystemColors);
+  auto scrollbarColor =
+      ComputeScrollbarTrackColor(aFrame, aStyle, aDocumentState, aColors);
   FillRect(aPaintData, aRect, scrollbarColor);
   return true;
 }
@@ -1700,30 +1701,30 @@ bool nsNativeBasicTheme::PaintScrollbar(
     DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
-    UseSystemColors aUseSystemColors, DPIRatio aDpiRatio) {
+    const Colors& aColors, DPIRatio aDpiRatio) {
   return DoPaintDefaultScrollbar(aDrawTarget, aRect, aHorizontal, aFrame,
-                                 aStyle, aElementState, aDocumentState,
-                                 aUseSystemColors, aDpiRatio);
+                                 aStyle, aElementState, aDocumentState, aColors,
+                                 aDpiRatio);
 }
 
 bool nsNativeBasicTheme::PaintScrollbar(
     WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
     bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
-    UseSystemColors aUseSystemColors, DPIRatio aDpiRatio) {
+    const Colors& aColors, DPIRatio aDpiRatio) {
   return DoPaintDefaultScrollbar(aWrData, aRect, aHorizontal, aFrame, aStyle,
-                                 aElementState, aDocumentState,
-                                 aUseSystemColors, aDpiRatio);
+                                 aElementState, aDocumentState, aColors,
+                                 aDpiRatio);
 }
 
 template <typename PaintBackendData>
 bool nsNativeBasicTheme::DoPaintDefaultScrollCorner(
     PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
     nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aDocumentState, UseSystemColors aUseSystemColors,
+    const EventStates& aDocumentState, const Colors& aColors,
     DPIRatio aDpiRatio) {
-  auto scrollbarColor = ComputeScrollbarTrackColor(
-      aFrame, aStyle, aDocumentState, aUseSystemColors);
+  auto scrollbarColor =
+      ComputeScrollbarTrackColor(aFrame, aStyle, aDocumentState, aColors);
   FillRect(aPaintData, aRect, scrollbarColor);
   return true;
 }
@@ -1731,10 +1732,9 @@ bool nsNativeBasicTheme::DoPaintDefaultScrollCorner(
 bool nsNativeBasicTheme::PaintScrollCorner(
     DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, nsIFrame* aFrame,
     const ComputedStyle& aStyle, const EventStates& aDocumentState,
-    UseSystemColors aUseSystemColors, DPIRatio aDpiRatio) {
+    const Colors& aColors, DPIRatio aDpiRatio) {
   return DoPaintDefaultScrollCorner(aDrawTarget, aRect, aFrame, aStyle,
-                                    aDocumentState, aUseSystemColors,
-                                    aDpiRatio);
+                                    aDocumentState, aColors, aDpiRatio);
 }
 
 bool nsNativeBasicTheme::PaintScrollCorner(WebRenderBackendData& aWrData,
@@ -1742,22 +1742,20 @@ bool nsNativeBasicTheme::PaintScrollCorner(WebRenderBackendData& aWrData,
                                            nsIFrame* aFrame,
                                            const ComputedStyle& aStyle,
                                            const EventStates& aDocumentState,
-                                           UseSystemColors aUseSystemColors,
+                                           const Colors& aColors,
                                            DPIRatio aDpiRatio) {
   return DoPaintDefaultScrollCorner(aWrData, aRect, aFrame, aStyle,
-                                    aDocumentState, aUseSystemColors,
-                                    aDpiRatio);
+                                    aDocumentState, aColors, aDpiRatio);
 }
 
 void nsNativeBasicTheme::PaintScrollbarButton(
     DrawTarget& aDrawTarget, StyleAppearance aAppearance,
     const LayoutDeviceRect& aRect, nsIFrame* aFrame,
     const ComputedStyle& aStyle, const EventStates& aElementState,
-    const EventStates& aDocumentState, UseSystemColors aUseSystemColors,
+    const EventStates& aDocumentState, const Colors& aColors,
     DPIRatio aDpiRatio) {
-  auto [buttonColor, arrowColor] =
-      ComputeScrollbarButtonColors(aFrame, aAppearance, aStyle, aElementState,
-                                   aDocumentState, aUseSystemColors);
+  auto [buttonColor, arrowColor] = ComputeScrollbarButtonColors(
+      aFrame, aAppearance, aStyle, aElementState, aDocumentState, aColors);
   aDrawTarget.FillRect(aRect.ToUnknownRect(),
                        ColorPattern(ToDeviceColor(buttonColor)));
 
@@ -1861,7 +1859,6 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
   const auto devPxRect = ToSnappedRect(aRect, twipsPerPixel, aPaintData);
 
   const EventStates docState = pc->Document()->GetDocumentState();
-  const auto useSystemColors = ShouldUseSystemColors(*pc);
   EventStates eventState = GetContentState(aFrame, aAppearance);
   if (aAppearance == StyleAppearance::MozMenulistArrowButton) {
     bool isHTML = IsHTMLContent(aFrame);
@@ -1893,15 +1890,13 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
     }
   }
 
-  const AccentColor accent(*aFrame->Style());
-
+  const Colors colors(aFrame);
   DPIRatio dpiRatio = GetDPIRatio(aFrame, aAppearance);
 
   switch (aAppearance) {
     case StyleAppearance::Radio: {
       auto rect = CheckBoxRadioRect(devPxRect);
-      PaintRadioControl(aPaintData, rect, eventState, accent, useSystemColors,
-                        dpiRatio);
+      PaintRadioControl(aPaintData, rect, eventState, colors, dpiRatio);
       break;
     }
     case StyleAppearance::Checkbox: {
@@ -1910,33 +1905,28 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
         return false;
       } else {
         auto rect = CheckBoxRadioRect(devPxRect);
-        PaintCheckboxControl(aPaintData, rect, eventState, accent,
-                             useSystemColors, dpiRatio);
+        PaintCheckboxControl(aPaintData, rect, eventState, colors, dpiRatio);
       }
       break;
     }
     case StyleAppearance::Textarea:
     case StyleAppearance::Textfield:
     case StyleAppearance::NumberInput:
-      PaintTextField(aPaintData, devPxRect, eventState, accent, useSystemColors,
-                     dpiRatio);
+      PaintTextField(aPaintData, devPxRect, eventState, colors, dpiRatio);
       break;
     case StyleAppearance::Listbox:
-      PaintListbox(aPaintData, devPxRect, eventState, accent, useSystemColors,
-                   dpiRatio);
+      PaintListbox(aPaintData, devPxRect, eventState, colors, dpiRatio);
       break;
     case StyleAppearance::MenulistButton:
     case StyleAppearance::Menulist:
-      PaintMenulist(aPaintData, devPxRect, eventState, accent, useSystemColors,
-                    dpiRatio);
+      PaintMenulist(aPaintData, devPxRect, eventState, colors, dpiRatio);
       break;
     case StyleAppearance::MozMenulistArrowButton:
       if constexpr (std::is_same_v<PaintBackendData, WebRenderBackendData>) {
         // TODO: Need to figure out how to best draw this using WR.
         return false;
       } else {
-        PaintMenulistArrowButton(aFrame, aPaintData, devPxRect, eventState,
-                                 useSystemColors);
+        PaintMenulistArrowButton(aFrame, aPaintData, devPxRect, eventState);
       }
       break;
     case StyleAppearance::SpinnerUpbutton:
@@ -1946,27 +1936,26 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
         return false;
       } else {
         PaintSpinnerButton(aFrame, aPaintData, devPxRect, eventState,
-                           aAppearance, useSystemColors, dpiRatio);
+                           aAppearance, colors, dpiRatio);
       }
       break;
     case StyleAppearance::Range:
-      PaintRange(aFrame, aPaintData, devPxRect, eventState, accent,
-                 useSystemColors, dpiRatio, IsRangeHorizontal(aFrame));
+      PaintRange(aFrame, aPaintData, devPxRect, eventState, colors, dpiRatio,
+                 IsRangeHorizontal(aFrame));
       break;
     case StyleAppearance::RangeThumb:
       // Painted as part of StyleAppearance::Range.
       break;
     case StyleAppearance::ProgressBar:
-      PaintProgress(aFrame, aPaintData, devPxRect, eventState, accent,
-                    useSystemColors, dpiRatio,
+      PaintProgress(aFrame, aPaintData, devPxRect, eventState, colors, dpiRatio,
                     /* aIsMeter = */ false);
       break;
     case StyleAppearance::Progresschunk:
       /* Painted as part of the progress bar */
       break;
     case StyleAppearance::Meter:
-      PaintProgress(aFrame, aPaintData, devPxRect, eventState, accent,
-                    useSystemColors, dpiRatio, /* aIsMeter = */ true);
+      PaintProgress(aFrame, aPaintData, devPxRect, eventState, colors, dpiRatio,
+                    /* aIsMeter = */ true);
       break;
     case StyleAppearance::Meterchunk:
       /* Painted as part of the meter bar */
@@ -1977,8 +1966,7 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
           aAppearance == StyleAppearance::ScrollbarthumbHorizontal;
       return PaintScrollbarThumb(aPaintData, devPxRect, isHorizontal, aFrame,
                                  *nsLayoutUtils::StyleForScrollbar(aFrame),
-                                 eventState, docState, useSystemColors,
-                                 dpiRatio);
+                                 eventState, docState, colors, dpiRatio);
     }
     case StyleAppearance::ScrollbartrackHorizontal:
     case StyleAppearance::ScrollbartrackVertical: {
@@ -1986,19 +1974,19 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
           aAppearance == StyleAppearance::ScrollbartrackHorizontal;
       return PaintScrollbarTrack(aPaintData, devPxRect, isHorizontal, aFrame,
                                  *nsLayoutUtils::StyleForScrollbar(aFrame),
-                                 docState, useSystemColors, dpiRatio);
+                                 docState, colors, dpiRatio);
     }
     case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarVertical: {
       bool isHorizontal = aAppearance == StyleAppearance::ScrollbarHorizontal;
       return PaintScrollbar(aPaintData, devPxRect, isHorizontal, aFrame,
                             *nsLayoutUtils::StyleForScrollbar(aFrame),
-                            eventState, docState, useSystemColors, dpiRatio);
+                            eventState, docState, colors, dpiRatio);
     }
     case StyleAppearance::Scrollcorner:
       return PaintScrollCorner(aPaintData, devPxRect, aFrame,
                                *nsLayoutUtils::StyleForScrollbar(aFrame),
-                               docState, useSystemColors, dpiRatio);
+                               docState, colors, dpiRatio);
     case StyleAppearance::ScrollbarbuttonUp:
     case StyleAppearance::ScrollbarbuttonDown:
     case StyleAppearance::ScrollbarbuttonLeft:
@@ -2011,17 +1999,15 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
         } else {
           PaintScrollbarButton(aPaintData, aAppearance, devPxRect, aFrame,
                                *nsLayoutUtils::StyleForScrollbar(aFrame),
-                               eventState, docState, useSystemColors, dpiRatio);
+                               eventState, docState, colors, dpiRatio);
         }
       }
       break;
     case StyleAppearance::Button:
-      PaintButton(aFrame, aPaintData, devPxRect, eventState, accent,
-                  useSystemColors, dpiRatio);
+      PaintButton(aFrame, aPaintData, devPxRect, eventState, colors, dpiRatio);
       break;
     case StyleAppearance::FocusOutline:
-      PaintAutoStyleOutline(aFrame, aPaintData, devPxRect, accent,
-                            useSystemColors, dpiRatio);
+      PaintAutoStyleOutline(aFrame, aPaintData, devPxRect, colors, dpiRatio);
       break;
     default:
       // Various appearance values are used for XUL elements.  Normally these
@@ -2039,11 +2025,9 @@ template <typename PaintBackendData>
 void nsNativeBasicTheme::PaintAutoStyleOutline(nsIFrame* aFrame,
                                                PaintBackendData& aPaintData,
                                                const LayoutDeviceRect& aRect,
-                                               const AccentColor& aAccent,
-                                               UseSystemColors aUseSystemColors,
+                                               const Colors& aColors,
                                                DPIRatio aDpiRatio) {
-  auto [innerColor, middleColor, outerColor] =
-      ComputeFocusRectColors(aAccent, aUseSystemColors);
+  auto [innerColor, middleColor, outerColor] = ComputeFocusRectColors(aColors);
   Unused << middleColor;
   Unused << outerColor;
 
@@ -2277,7 +2261,7 @@ nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
 }
 
 nsITheme::Transparency nsNativeBasicTheme::GetWidgetTransparency(
-    nsIFrame* aFrame, StyleAppearance aAppearance) {
+    nsIFrame*, StyleAppearance) {
   return eUnknownTransparency;
 }
 

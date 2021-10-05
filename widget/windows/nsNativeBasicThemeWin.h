@@ -13,8 +13,7 @@ class nsNativeBasicThemeWin : public nsNativeBasicTheme {
  public:
   nsNativeBasicThemeWin() = default;
 
-  Transparency GetWidgetTransparency(nsIFrame* aFrame,
-                                     StyleAppearance aAppearance) override;
+  Transparency GetWidgetTransparency(nsIFrame*, StyleAppearance) override;
 
  protected:
   virtual ~nsNativeBasicThemeWin() = default;
