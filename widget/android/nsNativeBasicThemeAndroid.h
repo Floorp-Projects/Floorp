@@ -25,25 +25,25 @@ class nsNativeBasicThemeAndroid final : public nsNativeBasicTheme {
                              bool aHorizontal, nsIFrame* aFrame,
                              const ComputedStyle& aStyle,
                              const EventStates& aElementState,
-                             const EventStates& aDocumentState, UseSystemColors,
+                             const EventStates& aDocumentState, const Colors&,
                              DPIRatio);
   bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect& aRect,
                            bool aHorizontal, nsIFrame* aFrame,
                            const ComputedStyle& aStyle,
                            const EventStates& aElementState,
-                           const EventStates& aDocumentState, UseSystemColors,
+                           const EventStates& aDocumentState, const Colors&,
                            DPIRatio) override;
   bool PaintScrollbarThumb(WebRenderBackendData&, const LayoutDeviceRect& aRect,
                            bool aHorizontal, nsIFrame* aFrame,
                            const ComputedStyle& aStyle,
                            const EventStates& aElementState,
-                           const EventStates& aDocumentState, UseSystemColors,
+                           const EventStates& aDocumentState, const Colors&,
                            DPIRatio) override;
 
   bool PaintScrollbarTrack(DrawTarget&, const LayoutDeviceRect& aRect,
                            bool aHorizontal, nsIFrame* aFrame,
                            const ComputedStyle& aStyle,
-                           const EventStates& aDocumentState, UseSystemColors,
+                           const EventStates& aDocumentState, const Colors&,
                            DPIRatio) override {
     // There's no visible track on android.
     return true;
@@ -51,7 +51,7 @@ class nsNativeBasicThemeAndroid final : public nsNativeBasicTheme {
   bool PaintScrollbarTrack(WebRenderBackendData&, const LayoutDeviceRect& aRect,
                            bool aHorizontal, nsIFrame* aFrame,
                            const ComputedStyle& aStyle,
-                           const EventStates& aDocumentState, UseSystemColors,
+                           const EventStates& aDocumentState, const Colors&,
                            DPIRatio) override {
     // There's no visible track on Android.
     return true;
@@ -61,7 +61,7 @@ class nsNativeBasicThemeAndroid final : public nsNativeBasicTheme {
                       bool aHorizontal, nsIFrame* aFrame,
                       const ComputedStyle& aStyle,
                       const EventStates& aElementState,
-                      const EventStates& aDocumentState, UseSystemColors,
+                      const EventStates& aDocumentState, const Colors&,
                       DPIRatio) override {
     // Draw nothing, we only draw the thumb.
     return true;
@@ -70,7 +70,7 @@ class nsNativeBasicThemeAndroid final : public nsNativeBasicTheme {
                       bool aHorizontal, nsIFrame* aFrame,
                       const ComputedStyle& aStyle,
                       const EventStates& aElementState,
-                      const EventStates& aDocumentState, UseSystemColors,
+                      const EventStates& aDocumentState, const Colors&,
                       DPIRatio) override {
     // Draw nothing, we only draw the thumb.
     return true;
@@ -78,14 +78,14 @@ class nsNativeBasicThemeAndroid final : public nsNativeBasicTheme {
 
   bool PaintScrollCorner(DrawTarget&, const LayoutDeviceRect& aRect,
                          nsIFrame* aFrame, const ComputedStyle& aStyle,
-                         const EventStates& aDocumentState, UseSystemColors,
+                         const EventStates& aDocumentState, const Colors&,
                          DPIRatio aDpiRatio) override {
     // Draw nothing, we only draw the thumb.
     return true;
   }
   bool PaintScrollCorner(WebRenderBackendData&, const LayoutDeviceRect& aRect,
                          nsIFrame* aFrame, const ComputedStyle& aStyle,
-                         const EventStates& aDocumentState, UseSystemColors,
+                         const EventStates& aDocumentState, const Colors&,
                          DPIRatio aDpiRatio) override {
     // Draw nothing, we only draw the thumb.
     return true;
