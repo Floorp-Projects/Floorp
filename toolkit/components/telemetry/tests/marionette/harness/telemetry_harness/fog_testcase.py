@@ -46,7 +46,7 @@ class FOGTestCase(TelemetryTestCase):
             {
                 "telemetry.fog.test.localhost_port": self.fog_ping_server.port,
                 # Enable FOG logging. 5 means "Verbose". See
-                # https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Gecko_Logging
+                # https://firefox-source-docs.mozilla.org/xpcom/logging.html
                 # for details.
                 "logging.config.clear_on_startup": False,
                 "logging.config.sync": True,

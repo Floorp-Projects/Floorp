@@ -102,7 +102,7 @@ To restrict logging to child processes, use `RUST_LOG_CHILD` instead of
 Rust logging can also be forwarded to the [Gecko logger] for capture via
 `MOZ_LOG` and `MOZ_LOG_FILE`.
 
-[Gecko logger]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Gecko_Logging
+[Gecko logger]: /xpcom/logging.html
 
 - When parsing modules from `MOZ_LOG`, modules containing `::` are considered
   to be Rust modules. To log everything in a top-level module like
