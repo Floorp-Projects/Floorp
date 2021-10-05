@@ -107,6 +107,7 @@ class Perftest(object):
     ):
         self._dirs_to_remove = []
         self.verbose = verbose
+        self.page_count = []
 
         # Override the magic --host HOST_IP with the value of the environment variable.
         if host == "HOST_IP":
