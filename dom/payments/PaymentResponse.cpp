@@ -280,6 +280,10 @@ void PaymentResponse::RespondRetry(const nsAString& aMethodName,
                                    const nsAString& aPayerName,
                                    const nsAString& aPayerEmail,
                                    const nsAString& aPayerPhone) {
+  // mRetryPromise could be nulled when document activity is changed.
+  if (!mRetryPromise) {
+    return;
+  }
   mMethodName = aMethodName;
   mShippingOption = aShippingOption;
   mShippingAddress = aShippingAddress;
