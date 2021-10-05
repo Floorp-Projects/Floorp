@@ -7,14 +7,14 @@
 #ifndef mozilla_dom_PlacesBookmarkUrl_h
 #define mozilla_dom_PlacesBookmarkUrl_h
 
-#include "mozilla/dom/PlacesBookmark.h"
+#include "mozilla/dom/PlacesBookmarkChanged.h"
 
 namespace mozilla {
 namespace dom {
-class PlacesBookmarkUrl final : public PlacesBookmark {
+class PlacesBookmarkUrl final : public PlacesBookmarkChanged {
  public:
   explicit PlacesBookmarkUrl()
-      : PlacesBookmark(PlacesEventType::Bookmark_url_changed) {}
+      : PlacesBookmarkChanged(PlacesEventType::Bookmark_url_changed) {}
 
   static already_AddRefed<PlacesBookmarkUrl> Constructor(
       const GlobalObject& aGlobal, const PlacesBookmarkUrlInit& aInitDict) {
@@ -36,10 +36,6 @@ class PlacesBookmarkUrl final : public PlacesBookmark {
   }
 
   const PlacesBookmarkUrl* AsPlacesBookmarkUrl() const override { return this; }
-
-  uint64_t LastModified() { return mLastModified; }
-
-  uint64_t mLastModified;
 
  private:
   ~PlacesBookmarkUrl() = default;

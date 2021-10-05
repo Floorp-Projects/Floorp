@@ -7,14 +7,14 @@
 #ifndef mozilla_dom_PlacesBookmarkTitle_h
 #define mozilla_dom_PlacesBookmarkTitle_h
 
-#include "mozilla/dom/PlacesBookmark.h"
+#include "mozilla/dom/PlacesBookmarkChanged.h"
 
 namespace mozilla {
 namespace dom {
-class PlacesBookmarkTitle final : public PlacesBookmark {
+class PlacesBookmarkTitle final : public PlacesBookmarkChanged {
  public:
   explicit PlacesBookmarkTitle()
-      : PlacesBookmark(PlacesEventType::Bookmark_title_changed) {}
+      : PlacesBookmarkChanged(PlacesEventType::Bookmark_title_changed) {}
 
   static already_AddRefed<PlacesBookmarkTitle> Constructor(
       const GlobalObject& aGlobal, const PlacesBookmarkTitleInit& aInitDict) {
@@ -41,10 +41,8 @@ class PlacesBookmarkTitle final : public PlacesBookmark {
   }
 
   void GetTitle(nsString& aTitle) const { aTitle = mTitle; }
-  uint64_t LastModified() { return mLastModified; }
 
   nsString mTitle;
-  uint64_t mLastModified;
 
  private:
   ~PlacesBookmarkTitle() = default;
