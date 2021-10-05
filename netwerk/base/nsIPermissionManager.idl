@@ -106,6 +106,23 @@ interface nsIPermissionManager : nsISupports
                         [optional] in int64_t expireTime);
 
   /**
+   * Add permanent permission information for a given principal in private
+   * browsing.
+   *
+   * Normally permissions in private browsing are cleared at the end of the
+   * session, this method allows you to override this behavior and set
+   * permanent permissions.
+   *
+   * WARNING: setting permanent permissions _will_ leak data in private
+   * browsing. Only use if you understand the consequences and trade-offs. If
+   * you are unsure, |addFromPrincipal| is very likely what you want to use
+   * instead.
+   */
+  void addFromPrincipalAndPersistInPrivateBrowsing(in nsIPrincipal principal,
+                                                   in ACString type,
+                                                   in uint32_t permission);
+
+  /**
    * Remove permission information for a given principal.
    * This is internally calling remove() with the host from the principal's URI.
    * Passing system principal will be a no-op because we never add them to the
