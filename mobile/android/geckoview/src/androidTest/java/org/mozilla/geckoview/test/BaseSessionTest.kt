@@ -105,9 +105,12 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val SHOW_DYNAMIC_TOOLBAR_HTML_PATH = "/assets/www/showDynamicToolbar.html"
 
         const val TEST_ENDPOINT = GeckoSessionTestRule.TEST_ENDPOINT
+        const val TEST_HOST = GeckoSessionTestRule.TEST_HOST
     }
 
     @get:Rule val sessionRule = GeckoSessionTestRule()
+
+    @get:Rule var temporaryProfile = TemporaryProfileRule()
 
     @get:Rule val errors = ErrorCollector()
 

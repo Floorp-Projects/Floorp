@@ -104,7 +104,8 @@ public class GeckoSessionTestRule implements TestRule {
     private static final String LOGTAG = "GeckoSessionTestRule";
 
     private static final int TEST_PORT = 4245;
-    public static final String TEST_ENDPOINT = "http://localhost:" + TEST_PORT;
+    public static final String TEST_HOST = "localhost";
+    public static final String TEST_ENDPOINT = "http://" + TEST_HOST + ":" + TEST_PORT;
 
     private static final Method sOnPageStart;
     private static final Method sOnPageStop;
