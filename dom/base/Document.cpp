@@ -16767,7 +16767,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
                   ContentPermissionRequestBase::DelayedTaskType::Request);
             });
 
-        return std::move(p);
+        return p;
       };
       ContentBlocking::AllowAccessFor(
           NodePrincipal(), bc, ContentBlockingNotifier::eStorageAccessAPI,
@@ -16792,6 +16792,220 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   }
 
   outer->SetStorageAccessPermissionGranted(true);
+  promise->MaybeResolveWithUndefined();
+  return promise.forget();
+}
+
+already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
+    const nsAString& aThirdPartyOrigin, mozilla::ErrorResult& aRv) {
+  nsIGlobalObject* global = GetScopeObject();
+  if (!global) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
+
+  RefPtr<Promise> promise =
+      Promise::Create(global, aRv, Promise::ePropagateUserInteraction);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> inner = GetInnerWindow();
+  if (!inner) {
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // We only allow request storage access for third-party origin from the
+  // first-party context.
+  if (AntiTrackingUtils::IsThirdPartyWindow(inner, nullptr)) {
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // If the document has a null origin, reject.
+  if (NodePrincipal()->GetIsNullPrincipal()) {
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    nsLiteralCString("requestStorageAccess"),
+                                    this, nsContentUtils::eDOM_PROPERTIES,
+                                    "RequestStorageAccessNullPrincipal");
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  nsCOMPtr<nsIURI> thirdPartyURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(thirdPartyURI), aThirdPartyOrigin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
+  // Only enforce third-party checks when there is a reason to enforce them.
+  if (!CookieJarSettings()->GetRejectThirdPartyContexts()) {
+    // If the the thrid party origin is equal to the window's, resolve.
+    bool isSameOrigin = false;
+    NodePrincipal()->IsSameOrigin(thirdPartyURI,
+                                  nsContentUtils::IsInPrivateBrowsing(this),
+                                  &isSameOrigin);
+    if (isSameOrigin) {
+      promise->MaybeResolveWithUndefined();
+      return promise.forget();
+    }
+  }
+
+  // If the browser is not processing a user gesture, reject.
+  if (!UserActivation::IsHandlingUserInput()) {
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    nsLiteralCString("requestStorageAccess"),
+                                    this, nsContentUtils::eDOM_PROPERTIES,
+                                    "RequestStorageAccessUserGesture");
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Check any additional rules that the browser has.
+  if (CookieJarSettings()->GetRejectThirdPartyContexts()) {
+    RefPtr<BrowsingContext> bc = GetBrowsingContext();
+    if (!bc) {
+      promise->MaybeRejectWithUndefined();
+      return promise.forget();
+    }
+
+    nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateContentPrincipal(
+        thirdPartyURI, NodePrincipal()->OriginAttributesRef());
+
+    if (!principal) {
+      promise->MaybeRejectWithUndefined();
+      return promise.forget();
+    }
+
+    RefPtr<Document> self(this);
+
+    auto performFinalChecks = [inner, self]() {
+      RefPtr<ContentBlocking::StorageAccessFinalCheckPromise::Private> p =
+          new ContentBlocking::StorageAccessFinalCheckPromise::Private(
+              __func__);
+      RefPtr<StorageAccessPermissionRequest> sapr =
+          StorageAccessPermissionRequest::Create(
+              inner,
+              // Allow
+              [p] {
+                Telemetry::AccumulateCategorical(
+                    Telemetry::LABELS_STORAGE_ACCESS_API_UI::Allow);
+                p->Resolve(ContentBlocking::eAllow, __func__);
+              },
+              // Block
+              [p] {
+                Telemetry::AccumulateCategorical(
+                    Telemetry::LABELS_STORAGE_ACCESS_API_UI::Deny);
+                p->Reject(false, __func__);
+              });
+
+      using PromptResult = ContentPermissionRequestBase::PromptResult;
+      PromptResult pr = sapr->CheckPromptPrefs();
+
+      if (pr == PromptResult::Pending) {
+        // We're about to show a prompt, record the request attempt
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_STORAGE_ACCESS_API_UI::Request);
+      }
+
+      self->AutomaticStorageAccessPermissionCanBeGranted()->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [p, pr, sapr,
+           inner](const AutomaticStorageAccessPermissionGrantPromise::
+                      ResolveOrRejectValue& aValue) -> void {
+            // Make a copy because we can't modified copy-captured lambda
+            // variables.
+            PromptResult pr2 = pr;
+
+            bool storageAccessCanBeGrantedAutomatically =
+                aValue.IsResolve() && aValue.ResolveValue();
+
+            bool autoGrant = false;
+            if (pr2 == PromptResult::Pending &&
+                storageAccessCanBeGrantedAutomatically) {
+              pr2 = PromptResult::Granted;
+              autoGrant = true;
+
+              Telemetry::AccumulateCategorical(
+                  Telemetry::LABELS_STORAGE_ACCESS_API_UI::AllowAutomatically);
+            }
+
+            if (pr2 != PromptResult::Pending) {
+              MOZ_ASSERT_IF(pr2 != PromptResult::Granted,
+                            pr2 == PromptResult::Denied);
+              if (pr2 == PromptResult::Granted) {
+                ContentBlocking::StorageAccessPromptChoices choice =
+                    ContentBlocking::eAllow;
+                if (autoGrant) {
+                  choice = ContentBlocking::eAllowAutoGrant;
+                }
+                if (!autoGrant) {
+                  p->Resolve(choice, __func__);
+                } else {
+                  sapr->MaybeDelayAutomaticGrants()->Then(
+                      GetCurrentSerialEventTarget(), __func__,
+                      [p, choice] { p->Resolve(choice, __func__); },
+                      [p] { p->Reject(false, __func__); });
+                }
+                return;
+              }
+              p->Reject(false, __func__);
+              return;
+            }
+
+            sapr->RequestDelayedTask(
+                inner->EventTargetFor(TaskCategory::Other),
+                ContentPermissionRequestBase::DelayedTaskType::Request);
+          });
+
+      return p;
+    };
+
+    // Only do something special for the third party that storage has been
+    // disabled by anti-tracking feature.
+    AsyncStorageDisabledByAntiTracking(bc, principal)
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [performFinalChecks, promise, bc, principal,
+             self](AsyncStorageDisabledByAntiTrackingPromise::
+                       ResolveOrRejectValue&& aValue) {
+              if (aValue.IsReject()) {
+                // Storage was enabled by anti-tracking feature.
+                return ContentBlocking::StorageAccessPermissionGrantPromise::
+                    CreateAndResolve(0, __func__);
+              }
+
+              MOZ_ASSERT(aValue.IsResolve());
+              // Storage was disabled by anti-tracking feature.
+
+              // If the storage was disabled by the cookie permission, we don't
+              // bother to show the prompt.
+              uint32_t rejectReason = aValue.ResolveValue();
+              if (rejectReason ==
+                  nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION) {
+                return ContentBlocking::StorageAccessPermissionGrantPromise::
+                    CreateAndReject(true, __func__);
+                ;
+              }
+
+              MOZ_ASSERT(!self->CookieJarSettings()
+                              ->GetIsOnContentBlockingAllowList());
+
+              return ContentBlocking::AllowAccessFor(
+                  principal, bc,
+                  ContentBlockingNotifier::ePrivilegeStorageAccessForOriginAPI,
+                  performFinalChecks);
+            })
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [promise] { promise->MaybeResolveWithUndefined(); },
+            [promise] { promise->MaybeRejectWithUndefined(); });
+
+    return promise.forget();
+  }
+
   promise->MaybeResolveWithUndefined();
   return promise.forget();
 }

@@ -543,6 +543,13 @@ partial interface Document {
   Promise<void> requestStorageAccess();
 };
 
+// A privileged API to give chrome privileged code the ability to request the
+// storage access for a given third party.
+partial interface Document {
+  [ChromeOnly, Throws]
+  Promise<void> requestStorageAccessForOrigin(DOMString thirdPartyOrigin);
+};
+
 enum DocumentAutoplayPolicy {
   "allowed",       // autoplay is currently allowed
   "allowed-muted", // muted video autoplay is currently allowed
