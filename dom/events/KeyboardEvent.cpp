@@ -376,7 +376,7 @@ bool KeyboardEvent::ShouldResistFingerprinting(CallerType aCallerType) {
 
   nsCOMPtr<Document> doc = GetDocument();
 
-  return doc && !nsContentUtils::IsChromeDoc(doc);
+  return nsContentUtils::ShouldResistFingerprinting(doc);
 }
 
 bool KeyboardEvent::GetSpoofedModifierStates(const Modifiers aModifierKey,
