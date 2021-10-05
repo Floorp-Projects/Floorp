@@ -559,11 +559,17 @@ nsresult nsXULTooltipListener::FindTooltip(nsIContent* aTarget,
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoString tooltipText;
-  if (aTarget->IsElement()) {
-    aTarget->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext,
-                                  tooltipText);
+  // On Windows, the OS shows the tooltip, so we don't want Gecko to do it
+#ifdef XP_WIN
+  if (aTarget->AsElement()->HasAttr(nsGkAtoms::titlebar_button)) {
+    return NS_OK;
   }
+#endif
+
+  nsAutoString tooltipText;
+  aTarget->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext,
+                                tooltipText);
+
   if (!tooltipText.IsEmpty()) {
     // specifying tooltiptext means we will always use the default tooltip
     nsIPopupContainer* popupContainer =
@@ -577,10 +583,8 @@ nsresult nsXULTooltipListener::FindTooltip(nsIContent* aTarget,
   }
 
   nsAutoString tooltipId;
-  if (aTarget->IsElement()) {
-    aTarget->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltip,
-                                  tooltipId);
-  }
+  aTarget->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltip,
+                                tooltipId);
 
   // if tooltip == _child, look for first <tooltip> child
   if (tooltipId.EqualsLiteral("_child")) {
