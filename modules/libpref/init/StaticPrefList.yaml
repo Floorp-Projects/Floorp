@@ -11677,7 +11677,7 @@
 
 # Whether the non-native theme should always use system colors. Useful mostly
 # for testing forced colors mode.
-- name: widget.non-native-theme.always-use-system-colors
+- name: widget.non-native-theme.always-high-contrast
   type: RelaxedAtomicBool
   value: false
   mirror: always
