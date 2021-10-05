@@ -38,7 +38,7 @@ class ExtensionPort final : public nsISupports,
 
   ~ExtensionPort() = default;
   ExtensionPort(nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
-                UniquePtr<dom::ExtensionPortDescriptor> aPortDescriptor);
+                UniquePtr<dom::ExtensionPortDescriptor>&& aPortDescriptor);
 
  protected:
   // ExtensionAPIBase methods
@@ -57,6 +57,9 @@ class ExtensionPort final : public nsISupports,
  public:
   static already_AddRefed<ExtensionPort> Create(
       nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
+      UniquePtr<dom::ExtensionPortDescriptor>&& aPortDescriptor);
+
+  static UniquePtr<dom::ExtensionPortDescriptor> ToPortDescriptor(
       JS::Handle<JS::Value> aDescriptorValue, ErrorResult& aRv);
 
   // nsWrapperCache interface methods

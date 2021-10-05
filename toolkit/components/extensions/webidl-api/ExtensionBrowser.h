@@ -21,6 +21,7 @@ namespace extensions {
 
 class ExtensionAlarms;
 class ExtensionMockAPI;
+class ExtensionPort;
 class ExtensionRuntime;
 class ExtensionTest;
 
@@ -34,6 +35,7 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   RefPtr<ExtensionMockAPI> mExtensionMockAPI;
   RefPtr<ExtensionRuntime> mExtensionRuntime;
   RefPtr<ExtensionTest> mExtensionTest;
+  nsRefPtrHashtable<nsStringHashKey, ExtensionPort> mPortsLookup;
 
   ~ExtensionBrowser() = default;
 
@@ -49,6 +51,10 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   // caller will know that the error value wasn't checked by the callback and
   // should be reported to the console
   bool ClearLastError();
+
+  // Helpers used to retrieve or destroy a port.
+  already_AddRefed<ExtensionPort> GetPort(
+      JS::Handle<JS::Value> aDescriptorValue, ErrorResult& aRv);
 
   // nsWrapperCache interface methods
   JSObject* WrapObject(JSContext* aCx,
