@@ -16881,13 +16881,13 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
 
     RefPtr<Document> self(this);
 
-    auto performFinalChecks = [inner, self]() {
+    auto performFinalChecks = [inner, self, principal]() {
       RefPtr<ContentBlocking::StorageAccessFinalCheckPromise::Private> p =
           new ContentBlocking::StorageAccessFinalCheckPromise::Private(
               __func__);
       RefPtr<StorageAccessPermissionRequest> sapr =
           StorageAccessPermissionRequest::Create(
-              inner,
+              inner, principal,
               // Allow
               [p] {
                 Telemetry::AccumulateCategorical(
