@@ -16,6 +16,7 @@
 class nsIPrincipal;
 class nsIURI;
 struct RawServoStyleSheetContents;
+struct StyleUseCounters;
 
 namespace mozilla {
 class StyleSheet;
@@ -77,6 +78,8 @@ struct StyleSheetInfo final {
   nsString mSourceURL;
 
   RefPtr<const RawServoStyleSheetContents> mContents;
+
+  UniquePtr<StyleUseCounters> mUseCounters;
 
   // XXX We already have mSheetURI, mBaseURI, and mPrincipal.
   //

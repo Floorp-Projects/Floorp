@@ -18,269 +18,24 @@
 
 extern mozilla::LazyLogModule sCssLoaderLog;
 
-#define LOG(args) MOZ_LOG(sCssLoaderLog, mozilla::LogLevel::Debug, args)
+#define LOG(...) MOZ_LOG(sCssLoaderLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {
-
-using css::SheetLoadData;
-using SheetState = css::Loader::SheetState;
-using LoadDataArray = css::Loader::LoadDataArray;
-using IsAlternate = css::Loader::IsAlternate;
-
-SharedStyleSheetCache* SharedStyleSheetCache::sInstance;
-
-void SharedStyleSheetCache::Clear(nsIPrincipal* aForPrincipal,
-                                  const nsACString* aBaseDomain) {
-  using ContentParent = dom::ContentParent;
-
-  if (XRE_IsParentProcess()) {
-    auto forPrincipal = aForPrincipal ? Some(RefPtr(aForPrincipal)) : Nothing();
-    auto baseDomain = aBaseDomain ? Some(nsCString(*aBaseDomain)) : Nothing();
-
-    for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
-      Unused << cp->SendClearStyleSheetCache(forPrincipal, baseDomain);
-    }
-  }
-
-  if (!sInstance) {
-    return;
-  }
-
-  // No filter, clear all.
-  if (!aForPrincipal && !aBaseDomain) {
-    sInstance->mCompleteSheets.Clear();
-    return;
-  }
-
-  for (auto iter = sInstance->mCompleteSheets.Iter(); !iter.Done();
-       iter.Next()) {
-    const bool shouldRemove = [&] {
-      if (aForPrincipal && iter.Key().Principal()->Equals(aForPrincipal)) {
-        return true;
-      }
-      if (!aBaseDomain) {
-        return false;
-      }
-      // Clear by baseDomain.
-      nsIPrincipal* partitionPrincipal = iter.Key().PartitionPrincipal();
-
-      // Clear entries with matching base domain. This includes entries
-      // which are partitioned under other top level sites (= have a
-      // partitionKey set).
-      nsAutoCString principalBaseDomain;
-      nsresult rv = partitionPrincipal->GetBaseDomain(principalBaseDomain);
-      if (NS_SUCCEEDED(rv) && principalBaseDomain.Equals(*aBaseDomain)) {
-        return true;
-      }
-
-      // Clear entries partitioned under aBaseDomain.
-      return StoragePrincipalHelper::PartitionKeyHasBaseDomain(
-          partitionPrincipal->OriginAttributesRef().mPartitionKey,
-          *aBaseDomain);
-    }();
-
-    if (shouldRemove) {
-      iter.Remove();
-    }
-  }
-}
-
-already_AddRefed<SharedStyleSheetCache> SharedStyleSheetCache::Create() {
-  MOZ_DIAGNOSTIC_ASSERT(!sInstance);
-  RefPtr<SharedStyleSheetCache> cache = new SharedStyleSheetCache();
-  sInstance = cache.get();
-  RegisterWeakMemoryReporter(cache.get());
-  return cache.forget();
-}
-
-SharedStyleSheetCache::~SharedStyleSheetCache() {
-  MOZ_DIAGNOSTIC_ASSERT(sInstance == this);
-  UnregisterWeakMemoryReporter(this);
-  sInstance = nullptr;
-}
 
 NS_IMPL_ISUPPORTS(SharedStyleSheetCache, nsIMemoryReporter)
 
 MOZ_DEFINE_MALLOC_SIZE_OF(SharedStyleSheetCacheMallocSizeOf)
 
-NS_IMETHODIMP
-SharedStyleSheetCache::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                      nsISupports* aData, bool aAnonymize) {
-  MOZ_COLLECT_REPORT("explicit/layout/style-sheet-cache/document-shared",
-                     KIND_HEAP, UNITS_BYTES,
-                     SizeOfIncludingThis(SharedStyleSheetCacheMallocSizeOf),
-                     "Memory used for SharedStyleSheetCache to share style "
-                     "sheets across documents (not to be confused with "
-                     "GlobalStyleSheetCache)");
-  return NS_OK;
-}
+SharedStyleSheetCache::SharedStyleSheetCache() = default;
 
-static RefPtr<StyleSheet> CloneSheet(StyleSheet& aSheet) {
-  return aSheet.Clone(nullptr, nullptr);
-}
+void SharedStyleSheetCache::Init() { RegisterWeakMemoryReporter(this); }
 
-static void AssertComplete(const StyleSheet& aSheet) {
-  // This sheet came from the XUL cache or SharedStyleSheetCache; it better be a
-  // complete sheet.
-  MOZ_ASSERT(aSheet.IsComplete(),
-             "Sheet thinks it's not complete while we think it is");
-}
-
-static void AssertIncompleteSheetMatches(const SheetLoadData& aData,
-                                         const SheetLoadDataHashKey& aKey) {
-  MOZ_ASSERT(aKey.Principal()->Equals(aData.mTriggeringPrincipal) ||
-                 dom::IsChromeURI(aKey.URI()),
-             "Principals should be the same");
-  MOZ_ASSERT(!aData.mSheet->HasForcedUniqueInner(),
-             "CSSOM shouldn't allow access to incomplete sheets");
-}
-
-bool SharedStyleSheetCache::CompleteSheet::Expired() const {
-  return mExpirationTime &&
-         mExpirationTime <= nsContentUtils::SecondsFromPRTime(PR_Now());
-}
-
-SharedStyleSheetCache::CacheResult SharedStyleSheetCache::Lookup(
-    css::Loader& aLoader, const SheetLoadDataHashKey& aKey, bool aSyncLoad) {
-  nsIURI* uri = aKey.URI();
-  LOG(("SharedStyleSheetCache::Lookup(%s)", uri->GetSpecOrDefault().get()));
-
-  // Now complete sheets.
-  if (auto lookup = mCompleteSheets.Lookup(aKey)) {
-    const CompleteSheet& completeSheet = lookup.Data();
-    // We can assert the stylesheet has not been modified, as we clone it on
-    // insertion.
-    StyleSheet& cachedSheet = *completeSheet.mSheet;
-    LOG(("  From completed: %p, bypass: %d, expired: %d", &cachedSheet,
-         aLoader.ShouldBypassCache(), completeSheet.Expired()));
-
-    if ((!aLoader.ShouldBypassCache() && !completeSheet.Expired()) ||
-        aLoader.mLoadsPerformed.Contains(aKey)) {
-      LOG(
-          ("    Not expired yet, or previously loaded already in "
-           "that document"));
-
-      AssertComplete(cachedSheet);
-      MOZ_ASSERT(cachedSheet.ParsingMode() == aKey.ParsingMode());
-      MOZ_ASSERT(!cachedSheet.HasForcedUniqueInner());
-      MOZ_ASSERT(!cachedSheet.HasModifiedRules());
-
-      RefPtr<StyleSheet> clone = CloneSheet(cachedSheet);
-      MOZ_ASSERT(!clone->HasForcedUniqueInner());
-      MOZ_ASSERT(!clone->HasModifiedRules());
-
-      aLoader.DidHitCompleteSheetCache(aKey, completeSheet.mUseCounters.get());
-      return {std::move(clone), SheetState::Complete};
-    }
-  }
-
-  if (aSyncLoad) {
-    return {};
-  }
-
-  if (SheetLoadData* data = mLoadingDatas.Get(aKey)) {
-    LOG(("  From loading: %p", data->mSheet.get()));
-    AssertIncompleteSheetMatches(*data, aKey);
-    return {CloneSheet(*data->mSheet), SheetState::Loading};
-  }
-
-  if (SheetLoadData* data = mPendingDatas.GetWeak(aKey)) {
-    LOG(("  From pending: %p", data->mSheet.get()));
-    AssertIncompleteSheetMatches(*data, aKey);
-    return {CloneSheet(*data->mSheet), SheetState::Pending};
-  }
-
-  return {};
-}
-
-void SharedStyleSheetCache::WillStartPendingLoad(SheetLoadData& aData) {
-  SheetLoadData* curr = &aData;
-  do {
-    MOZ_DIAGNOSTIC_ASSERT(curr->mLoader->mPendingLoadCount,
-                          "Where did this pending load come from?");
-    --curr->mLoader->mPendingLoadCount;
-  } while ((curr = curr->mNext));
-}
-
-bool SharedStyleSheetCache::CoalesceLoad(const SheetLoadDataHashKey& aKey,
-                                         SheetLoadData& aNewLoad,
-                                         SheetState aExistingLoadState) {
-  MOZ_ASSERT(SheetLoadDataHashKey(aNewLoad).KeyEquals(aKey));
-  SheetLoadData* existingData = nullptr;
-  if (aExistingLoadState == SheetState::Loading) {
-    existingData = mLoadingDatas.Get(aKey);
-    MOZ_ASSERT(existingData, "CreateSheet lied about the state");
-  } else if (aExistingLoadState == SheetState::Pending) {
-    existingData = mPendingDatas.GetWeak(aKey);
-    MOZ_ASSERT(existingData, "CreateSheet lied about the state");
-  }
-
-  if (!existingData) {
-    return false;
-  }
-
-  if (aExistingLoadState == SheetState::Pending && !aNewLoad.ShouldDefer()) {
-    // Kick the load off; someone cares about it right away
-    RefPtr<SheetLoadData> removedData;
-    mPendingDatas.Remove(aKey, getter_AddRefs(removedData));
-    MOZ_ASSERT(removedData == existingData, "Bad loading table");
-
-    WillStartPendingLoad(*removedData);
-
-    // We insert to the front instead of the back, to keep the invariant that
-    // the front sheet always is the one that triggers the load.
-    aNewLoad.mNext = std::move(removedData);
-    LOG(("  Forcing load of pending data"));
-    return false;
-  }
-
-  LOG(("  Glomming on to existing load"));
-  SheetLoadData* data = existingData;
-  while (data->mNext) {
-    data = data->mNext;
-  }
-  data->mNext = &aNewLoad;
-
-  return true;
-}
-
-size_t SharedStyleSheetCache::SizeOfIncludingThis(
-    MallocSizeOf aMallocSizeOf) const {
-  size_t n = aMallocSizeOf(this);
-
-  n += mCompleteSheets.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (const auto& data : mCompleteSheets.Values()) {
-    n += data.mSheet->SizeOfIncludingThis(aMallocSizeOf);
-    n += aMallocSizeOf(data.mUseCounters.get());
-  }
-
-  // Measurement of the following members may be added later if DMD finds it is
-  // worthwhile:
-  // - mLoadingDatas: transient, and should be small
-  // - mPendingDatas: transient, and should be small
-  return n;
-}
-
-void SharedStyleSheetCache::DeferSheetLoad(const SheetLoadDataHashKey& aKey,
-                                           SheetLoadData& aData) {
-  MOZ_ASSERT(SheetLoadDataHashKey(aData).KeyEquals(aKey));
-  MOZ_DIAGNOSTIC_ASSERT(!aData.mNext, "Should only defer loads once");
-
-  aData.mMustNotify = true;
-  mPendingDatas.InsertOrUpdate(aKey, RefPtr{&aData});
-}
-
-void SharedStyleSheetCache::LoadStarted(const SheetLoadDataHashKey& aKey,
-                                        SheetLoadData& aData) {
-  MOZ_ASSERT(aData.mURI, "No load required?");
-  MOZ_ASSERT(!aData.mIsLoading, "Already loading? How?");
-  MOZ_ASSERT(SheetLoadDataHashKey(aData).KeyEquals(aKey));
-  aData.mIsLoading = true;
-  mLoadingDatas.InsertOrUpdate(aKey, &aData);
+SharedStyleSheetCache::~SharedStyleSheetCache() {
+  UnregisterWeakMemoryReporter(this);
 }
 
 void SharedStyleSheetCache::LoadCompleted(SharedStyleSheetCache* aCache,
-                                          SheetLoadData& aData,
+                                          StyleSheetLoadData& aData,
                                           nsresult aStatus) {
   // If aStatus is a failure we need to mark this data failed.  We also need to
   // mark any ancestors of a failing data as failed and any sibling of a
@@ -291,7 +46,7 @@ void SharedStyleSheetCache::LoadCompleted(SharedStyleSheetCache* aCache,
     css::Loader::MarkLoadTreeFailed(aData);
   } else {
     cancelledStatus = NS_BINDING_ABORTED;
-    SheetLoadData* data = &aData;
+    css::SheetLoadData* data = &aData;
     do {
       if (data->mIsCancelled) {
         // We only need to mark loads for this loader as cancelled, so as to not
@@ -304,31 +59,56 @@ void SharedStyleSheetCache::LoadCompleted(SharedStyleSheetCache* aCache,
   // 8 is probably big enough for all our common cases.  It's not likely that
   // imports will nest more than 8 deep, and multiple sheets with the same URI
   // are rare.
-  AutoTArray<RefPtr<SheetLoadData>, 8> datasToNotify;
+  AutoTArray<RefPtr<css::SheetLoadData>, 8> datasToNotify;
   LoadCompletedInternal(aCache, aData, datasToNotify);
 
   // Now it's safe to go ahead and notify observers
-  for (RefPtr<SheetLoadData>& data : datasToNotify) {
+  for (RefPtr<css::SheetLoadData>& data : datasToNotify) {
     auto status = data->mIsCancelled ? cancelledStatus : aStatus;
     data->mLoader->NotifyObservers(*data, status);
   }
 }
 
+void SharedStyleSheetCache::InsertIfNeeded(css::SheetLoadData& aData) {
+  MOZ_ASSERT(aData.mLoader->GetDocument(),
+             "We only cache document-associated sheets");
+  LOG("SharedStyleSheetCache::InsertIfNeeded");
+  // If we ever start doing this for failed loads, we'll need to adjust the
+  // PostLoadEvent code that thinks anything already complete must have loaded
+  // succesfully.
+  if (aData.mLoadFailed) {
+    LOG("  Load failed, bailing");
+    return;
+  }
+
+  // If this sheet came from the cache already, there's no need to override
+  // anything.
+  if (aData.mSheetAlreadyComplete) {
+    LOG("  Sheet came from the cache, bailing");
+    return;
+  }
+
+  if (!aData.mURI) {
+    LOG("  Inline or constructable style sheet, bailing");
+    // Inline sheet caching happens in Loader::mInlineSheets.
+    // Constructable sheets are not worth caching, they're always unique.
+    return;
+  }
+
+  LOG("  Putting style sheet in shared cache: %s",
+      aData.mURI->GetSpecOrDefault().get());
+  Insert(aData);
+}
+
 void SharedStyleSheetCache::LoadCompletedInternal(
-    SharedStyleSheetCache* aCache, SheetLoadData& aData,
-    nsTArray<RefPtr<SheetLoadData>>& aDatasToNotify) {
-  if (aData.mIsLoading) {
-    MOZ_ASSERT(aCache);
-    SheetLoadDataHashKey key(aData);
-    Maybe<SheetLoadData*> loadingData = aCache->mLoadingDatas.Extract(key);
-    MOZ_DIAGNOSTIC_ASSERT(loadingData);
-    MOZ_DIAGNOSTIC_ASSERT(loadingData.value() == &aData);
-    Unused << loadingData;
-    aData.mIsLoading = false;
+    SharedStyleSheetCache* aCache, css::SheetLoadData& aData,
+    nsTArray<RefPtr<css::SheetLoadData>>& aDatasToNotify) {
+  if (aCache) {
+    aCache->LoadCompleted(aData);
   }
 
   // Go through and deal with the whole linked list.
-  SheetLoadData* data = &aData;
+  auto* data = &aData;
   do {
     MOZ_DIAGNOSTIC_ASSERT(!data->mSheetCompleteCalled);
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
@@ -406,182 +186,37 @@ void SharedStyleSheetCache::LoadCompletedInternal(
   } while (data);
 
   if (aCache) {
-    aCache->InsertIntoCompleteCacheIfNeeded(aData);
+    aCache->InsertIfNeeded(aData);
   }
 }
 
-void SharedStyleSheetCache::InsertIntoCompleteCacheIfNeeded(
-    SheetLoadData& aData) {
-  MOZ_ASSERT(aData.mLoader->GetDocument(),
-             "We only cache document-associated sheets");
-  LOG(("SharedStyleSheetCache::InsertIntoCompleteCacheIfNeeded"));
-  // If we ever start doing this for failed loads, we'll need to adjust the
-  // PostLoadEvent code that thinks anything already complete must have loaded
-  // succesfully.
-  if (aData.mLoadFailed) {
-    LOG(("  Load failed, bailing"));
-    return;
-  }
-
-  // If this sheet came from the cache already, there's no need to override
-  // anything.
-  if (aData.mSheetAlreadyComplete) {
-    LOG(("  Sheet came from the cache, bailing"));
-    return;
-  }
-
-  if (!aData.mURI) {
-    LOG(("  Inline or constructable style sheet, bailing"));
-    // Inline sheet caching happens in Loader::mInlineSheets.
-    // Constructable sheets are not worth caching, they're always unique.
-    return;
-  }
-
-  // We need to clone the sheet on insertion to the cache because otherwise the
-  // stylesheets can keep alive full windows alive via either their JS wrapper,
-  // or via StyleSheet::mRelevantGlobal.
-  //
-  // If this ever changes, then you also need to fix up the memory reporting in
-  // both SizeOfIncludingThis and nsXULPrototypeCache::CollectMemoryReports.
-  RefPtr<StyleSheet> sheet = CloneSheet(*aData.mSheet);
-
-  LOG(("  Putting style sheet in shared cache: %s",
-       aData.mURI->GetSpecOrDefault().get()));
-  SheetLoadDataHashKey key(aData);
-  MOZ_ASSERT(sheet->IsComplete(), "Should only be caching complete sheets");
-
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  for (const auto& entry : mCompleteSheets) {
-    if (!key.KeyEquals(entry.GetKey())) {
-      MOZ_DIAGNOSTIC_ASSERT(entry.GetData().mSheet != sheet,
-                            "Same sheet, different keys?");
-    } else {
-      MOZ_ASSERT(
-          entry.GetData().Expired() || aData.mLoader->ShouldBypassCache(),
-          "Overriding existing complete entry?");
-    }
-  }
-#endif
-
-  UniquePtr<StyleUseCounters> counters;
-  if (aData.mUseCounters) {
-    // TODO(emilio): Servo_UseCounters_Clone() or something?
-    counters = Servo_UseCounters_Create().Consume();
-    Servo_UseCounters_Merge(counters.get(), aData.mUseCounters.get());
-  }
-
-  mCompleteSheets.InsertOrUpdate(
-      key, CompleteSheet{aData.mExpirationTime, std::move(counters),
-                         std::move(sheet)});
+NS_IMETHODIMP
+SharedStyleSheetCache::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                      nsISupports* aData, bool aAnonymize) {
+  MOZ_COLLECT_REPORT("explicit/layout/style-sheet-cache/document-shared",
+                     KIND_HEAP, UNITS_BYTES,
+                     SizeOfIncludingThis(SharedStyleSheetCacheMallocSizeOf),
+                     "Memory used for SharedStyleSheetCache to share style "
+                     "sheets across documents (not to be confused with "
+                     "GlobalStyleSheetCache)");
+  return NS_OK;
 }
 
-void SharedStyleSheetCache::StartDeferredLoadsForLoader(
-    css::Loader& aLoader, StartLoads aStartLoads) {
-  using PendingLoad = css::Loader::PendingLoad;
+void SharedStyleSheetCache::Clear(nsIPrincipal* aForPrincipal,
+                                  const nsACString* aBaseDomain) {
+  using ContentParent = dom::ContentParent;
 
-  LoadDataArray arr;
-  for (auto iter = mPendingDatas.Iter(); !iter.Done(); iter.Next()) {
-    bool startIt = false;
-    SheetLoadData* data = iter.Data();
-    do {
-      if (data->mLoader == &aLoader) {
-        // Note that we don't want to affect what the selected style set is, so
-        // use true for aHasAlternateRel.
-        if (aStartLoads != StartLoads::IfNonAlternate ||
-            aLoader.IsAlternateSheet(iter.Data()->mTitle, true) !=
-                IsAlternate::Yes) {
-          startIt = true;
-          break;
-        }
-      }
-    } while ((data = data->mNext));
-    if (startIt) {
-      arr.AppendElement(std::move(iter.Data()));
-      iter.Remove();
-    }
-  }
-  for (auto& data : arr) {
-    WillStartPendingLoad(*data);
-    data->mLoader->LoadSheet(*data, SheetState::NeedsParser, PendingLoad::Yes);
-  }
-}
+  if (XRE_IsParentProcess()) {
+    auto forPrincipal = aForPrincipal ? Some(RefPtr(aForPrincipal)) : Nothing();
+    auto baseDomain = aBaseDomain ? Some(nsCString(*aBaseDomain)) : Nothing();
 
-void SharedStyleSheetCache::CancelDeferredLoadsForLoader(css::Loader& aLoader) {
-  LoadDataArray arr;
-
-  for (auto iter = mPendingDatas.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<SheetLoadData>& first = iter.Data();
-    SheetLoadData* prev = nullptr;
-    SheetLoadData* current = iter.Data();
-    do {
-      if (current->mLoader != &aLoader) {
-        prev = current;
-        current = current->mNext;
-        continue;
-      }
-      // Detach the load from the list, mark it as cancelled, and then below
-      // call SheetComplete on it.
-      RefPtr<SheetLoadData> strong =
-          prev ? std::move(prev->mNext) : std::move(first);
-      MOZ_ASSERT(strong == current);
-      if (prev) {
-        prev->mNext = std::move(strong->mNext);
-        current = prev->mNext;
-      } else {
-        first = std::move(strong->mNext);
-        current = first;
-      }
-      strong->mIsCancelled = true;
-      arr.AppendElement(std::move(strong));
-    } while (current);
-
-    if (!first) {
-      iter.Remove();
+    for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+      Unused << cp->SendClearStyleSheetCache(forPrincipal, baseDomain);
     }
   }
 
-  for (auto& data : arr) {
-    aLoader.SheetComplete(*data, NS_BINDING_ABORTED);
-  }
-}
-
-void SharedStyleSheetCache::CancelLoadsForLoader(css::Loader& aLoader) {
-  CancelDeferredLoadsForLoader(aLoader);
-
-  // We can't stop in-progress loads because some other loader may care about
-  // them.
-  for (SheetLoadData* data : mLoadingDatas.Values()) {
-    MOZ_DIAGNOSTIC_ASSERT(data,
-                          "We weren't properly notified and the load was "
-                          "incorrectly dropped on the floor");
-    for (; data; data = data->mNext) {
-      if (data->mLoader == &aLoader) {
-        data->mIsCancelled = true;
-      }
-    }
-  }
-}
-
-void SharedStyleSheetCache::RegisterLoader(css::Loader& aLoader) {
-  MOZ_ASSERT(aLoader.GetDocument());
-  mLoaderPrincipalRefCnt.LookupOrInsert(aLoader.GetDocument()->NodePrincipal(),
-                                        0) += 1;
-}
-
-void SharedStyleSheetCache::UnregisterLoader(css::Loader& aLoader) {
-  MOZ_ASSERT(aLoader.GetDocument());
-  nsIPrincipal* prin = aLoader.GetDocument()->NodePrincipal();
-  auto lookup = mLoaderPrincipalRefCnt.Lookup(prin);
-  MOZ_RELEASE_ASSERT(lookup);
-  MOZ_RELEASE_ASSERT(lookup.Data());
-  if (!--lookup.Data()) {
-    lookup.Remove();
-    // TODO(emilio): Do this off a timer or something maybe.
-    for (auto iter = mCompleteSheets.Iter(); !iter.Done(); iter.Next()) {
-      if (iter.Key().LoaderPrincipal()->Equals(prin)) {
-        iter.Remove();
-      }
-    }
+  if (sInstance) {
+    sInstance->ClearInProcess(aForPrincipal, aBaseDomain);
   }
 }
 
