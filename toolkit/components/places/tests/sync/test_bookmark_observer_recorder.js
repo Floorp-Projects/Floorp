@@ -545,18 +545,15 @@ add_task(async function test_apply_then_revert() {
       },
     },
     {
-      name: "onItemChanged",
+      name: "bookmark-url-changed",
       params: {
         itemId: localItemIds.get("bookmarkBBBB"),
-        property: "uri",
-        isAnnoProperty: false,
-        newValue: "http://example.com/b-remote",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-        parentId: localItemIds.get("folderAAAAAA"),
+        urlHref: "http://example.com/b-remote",
         guid: "bookmarkBBBB",
         parentGuid: "folderAAAAAA",
-        oldValue: "http://example.com/b",
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
+        isTagging: false,
       },
     },
   ]);

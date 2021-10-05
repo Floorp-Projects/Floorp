@@ -282,30 +282,24 @@ add_task(async function update_bookmark_uri() {
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: new URL("http://url.example.com/"),
   });
-  let observer = expectNotifications();
+  const observer = expectPlacesObserverNotifications(["bookmark-url-changed"]);
   bm = await PlacesUtils.bookmarks.update({
     guid: bm.guid,
     url: "http://mozilla.org/",
   });
   let itemId = await PlacesUtils.promiseItemId(bm.guid);
-  let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
 
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        itemId,
-        "uri",
-        false,
-        bm.url.href,
-        PlacesUtils.toPRTime(bm.lastModified),
-        bm.type,
-        parentId,
-        bm.guid,
-        bm.parentGuid,
-        "http://url.example.com/",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-url-changed",
+      id: itemId,
+      itemType: bm.type,
+      url: bm.url.href,
+      guid: bm.guid,
+      parentGuid: bm.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
+      lastModified: bm.lastModified,
     },
   ]);
 });

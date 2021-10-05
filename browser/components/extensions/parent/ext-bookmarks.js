@@ -120,9 +120,6 @@ const throwIfRootId = id => {
 let observer = new (class extends EventEmitter {
   constructor() {
     super();
-
-    this.skipTags = true;
-
     this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
   }
 
@@ -187,25 +184,17 @@ let observer = new (class extends EventEmitter {
             info: { title: event.title },
           });
           break;
-      }
-    }
-  }
+        case "bookmark-url-changed":
+          if (event.isTagging) {
+            continue;
+          }
 
-  onItemChanged(
-    id,
-    prop,
-    isAnno,
-    val,
-    lastMod,
-    itemType,
-    parentId,
-    guid,
-    parentGuid,
-    oldVal,
-    source
-  ) {
-    if (prop === "uri") {
-      this.emit("changed", { guid, info: { url: val } });
+          this.emit("changed", {
+            guid: event.guid,
+            info: { url: event.url },
+          });
+          break;
+      }
     }
   }
 })();
@@ -213,13 +202,13 @@ let observer = new (class extends EventEmitter {
 const decrementListeners = () => {
   listenerCount -= 1;
   if (!listenerCount) {
-    PlacesUtils.bookmarks.removeObserver(observer);
     PlacesUtils.observers.removeListener(
       [
         "bookmark-added",
         "bookmark-removed",
         "bookmark-moved",
         "bookmark-title-changed",
+        "bookmark-url-changed",
       ],
       observer.handlePlacesEvents
     );
@@ -229,13 +218,13 @@ const decrementListeners = () => {
 const incrementListeners = () => {
   listenerCount++;
   if (listenerCount == 1) {
-    PlacesUtils.bookmarks.addObserver(observer);
     PlacesUtils.observers.addListener(
       [
         "bookmark-added",
         "bookmark-removed",
         "bookmark-moved",
         "bookmark-title-changed",
+        "bookmark-url-changed",
       ],
       observer.handlePlacesEvents
     );

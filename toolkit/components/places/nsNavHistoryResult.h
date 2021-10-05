@@ -316,6 +316,8 @@ class nsNavHistoryResultNode : public nsINavHistoryResultNode {
 
   nsresult OnItemTitleChanged(int64_t aItemId, const nsACString& aGUID,
                               const nsACString& aTitle, PRTime aLastModified);
+  nsresult OnItemUrlChanged(int64_t aItemId, const nsACString& aGUID,
+                            const nsACString& aURL, PRTime aLastModified);
 
   // Called from result's onItemChanged, see also bookmark observer declaration
   // in nsNavHistoryFolderResultNode
@@ -696,6 +698,8 @@ class nsNavHistoryQueryResultNode final
                        const nsACString& aOldParentGUID,
                        const nsACString& aNewParentGUID, uint16_t aSource,
                        const nsACString& aURI);
+  nsresult OnItemUrlChanged(int64_t aItemId, const nsACString& aGUID,
+                            const nsACString& aURL, PRTime aLastModified);
 
   // The internal version has an output aAdded parameter, it is incremented by
   // query nodes when the visited uri belongs to them. If no such query exists,

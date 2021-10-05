@@ -28,6 +28,7 @@ var observer = {
     this.itemsChanged = new Map();
     this.itemsMoved = new Map();
     this.itemsTitleChanged = new Map();
+    this.itemsUrlChanged = new Map();
   },
 
   handlePlacesEvents(events) {
@@ -79,6 +80,15 @@ var observer = {
             parentGuid: event.parentGuid,
           });
           break;
+        case "bookmark-url-changed":
+          if (this.tagRelatedGuids.has(event.guid)) {
+            return;
+          }
+
+          this.itemsUrlChanged.set(event.guid, {
+            url: event.url,
+          });
+          break;
       }
     }
   },
@@ -126,6 +136,7 @@ function run_test() {
       "bookmark-removed",
       "bookmark-moved",
       "bookmark-title-changed",
+      "bookmark-url-changed",
     ],
     observer.handlePlacesEvents
   );
@@ -137,6 +148,7 @@ function run_test() {
         "bookmark-removed",
         "bookmark-moved",
         "bookmark-title-changed",
+        "bookmark-url-changed",
       ],
       observer.handlePlacesEvents
     );
@@ -337,6 +349,22 @@ function ensureItemsTitleChanged(...items) {
       item.parentGuid,
       "Should have the correct parent guid"
     );
+  }
+}
+
+function ensureItemsUrlChanged(...items) {
+  Assert.equal(
+    observer.itemsUrlChanged.size,
+    items.length,
+    "Should have received the correct number of bookmark-url-changed notifications"
+  );
+  for (const item of items) {
+    Assert.ok(
+      observer.itemsUrlChanged.has(item.guid),
+      `Observer should have a title changed for ${item.guid}`
+    );
+    const info = observer.itemsUrlChanged.get(item.guid);
+    Assert.equal(info.url, item.url, "Should have the correct url");
   }
 }
 
@@ -1420,10 +1448,9 @@ add_task(async function test_edit_url() {
     aPostChangeURI,
     aOLdURITagsPreserved
   ) {
-    ensureItemsChanged({
+    ensureItemsUrlChanged({
       guid: bm_info.guid,
-      property: "uri",
-      newValue: aPostChangeURI,
+      url: aPostChangeURI,
     });
     ensureTagsForURI(aPostChangeURI, bm_info.tags);
     ensureTagsForURI(aPreChangeURI, aOLdURITagsPreserved ? bm_info.tags : []);

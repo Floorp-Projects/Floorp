@@ -98,8 +98,9 @@ add_task(async function test_change_location_from_Toolbar() {
       );
 
       let promiseLocationChange = PlacesTestUtils.waitForNotification(
-        "onItemChanged",
-        (id, parentId, index, itemUrl) => itemUrl === TEST_URL2
+        "bookmark-url-changed",
+        events => events.some(e => e.url === TEST_URL2),
+        "places"
       );
       // Update the "location" field.
       fillBookmarkTextField(
@@ -156,8 +157,9 @@ add_task(async function test_change_location_from_Sidebar() {
         );
 
         let promiseLocationChange = PlacesTestUtils.waitForNotification(
-          "onItemChanged",
-          (id, parentId, index, itemUrl) => itemUrl === TEST_URL3
+          "bookmark-url-changed",
+          events => events.some(e => e.url === TEST_URL3),
+          "places"
         );
 
         // Update the "location" field.
