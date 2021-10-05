@@ -73,6 +73,7 @@ void ReportUnblockingToConsole(
 
         switch (aReason) {
           case ContentBlockingNotifier::eStorageAccessAPI:
+          case ContentBlockingNotifier::ePrivilegeStorageAccessForOriginAPI:
             messageWithSameOrigin = "CookieAllowedForOriginByStorageAccessAPI";
             break;
 
