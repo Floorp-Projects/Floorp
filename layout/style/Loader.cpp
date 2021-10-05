@@ -265,7 +265,7 @@ static NotNull<const Encoding*> GetFallbackEncoding(
  ********************************/
 NS_IMPL_ISUPPORTS(SheetLoadData, nsIRunnable, nsIThreadObserver)
 
-SheetLoadData::SheetLoadData(Loader* aLoader, const nsAString& aTitle,
+SheetLoadData::SheetLoadData(css::Loader* aLoader, const nsAString& aTitle,
                              nsIURI* aURI, StyleSheet* aSheet, bool aSyncLoad,
                              nsINode* aOwningNode, IsAlternate aIsAlternate,
                              MediaMatched aMediaMatches,
@@ -279,12 +279,10 @@ SheetLoadData::SheetLoadData(Loader* aLoader, const nsAString& aTitle,
       mURI(aURI),
       mLineNumber(1),
       mSheet(aSheet),
-      mNext(nullptr),
       mPendingChildren(0),
       mSyncLoad(aSyncLoad),
       mIsNonDocumentSheet(false),
       mIsChildSheet(aSheet->GetParentSheet()),
-      mIsLoading(false),
       mIsBeingParsed(false),
       mIsCancelled(false),
       mMustNotify(false),
@@ -309,8 +307,8 @@ SheetLoadData::SheetLoadData(Loader* aLoader, const nsAString& aTitle,
   MOZ_ASSERT(mLoader, "Must have a loader!");
 }
 
-SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
-                             SheetLoadData* aParentData,
+SheetLoadData::SheetLoadData(css::Loader* aLoader, nsIURI* aURI,
+                             StyleSheet* aSheet, SheetLoadData* aParentData,
                              nsICSSLoaderObserver* aObserver,
                              nsIPrincipal* aTriggeringPrincipal,
                              nsIReferrerInfo* aReferrerInfo)
@@ -319,13 +317,11 @@ SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
       mURI(aURI),
       mLineNumber(1),
       mSheet(aSheet),
-      mNext(nullptr),
       mParentData(aParentData),
       mPendingChildren(0),
       mSyncLoad(aParentData && aParentData->mSyncLoad),
       mIsNonDocumentSheet(aParentData && aParentData->mIsNonDocumentSheet),
       mIsChildSheet(aSheet->GetParentSheet()),
-      mIsLoading(false),
       mIsBeingParsed(false),
       mIsCancelled(false),
       mMustNotify(false),
@@ -351,7 +347,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
 }
 
 SheetLoadData::SheetLoadData(
-    Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet, bool aSyncLoad,
+    css::Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet, bool aSyncLoad,
     UseSystemPrincipal aUseSystemPrincipal, StylePreloadKind aPreloadKind,
     const Encoding* aPreloadEncoding, nsICSSLoaderObserver* aObserver,
     nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo* aReferrerInfo)
@@ -360,12 +356,10 @@ SheetLoadData::SheetLoadData(
       mURI(aURI),
       mLineNumber(1),
       mSheet(aSheet),
-      mNext(nullptr),
       mPendingChildren(0),
       mSyncLoad(aSyncLoad),
       mIsNonDocumentSheet(true),
       mIsChildSheet(false),
-      mIsLoading(false),
       mIsBeingParsed(false),
       mIsCancelled(false),
       mMustNotify(false),
@@ -394,12 +388,6 @@ SheetLoadData::~SheetLoadData() {
   MOZ_DIAGNOSTIC_ASSERT(mSheetCompleteCalled || mIntentionallyDropped,
                         "Should always call SheetComplete, except when "
                         "dropping the load");
-
-  // Do this iteratively to avoid blowing up the stack.
-  RefPtr<SheetLoadData> next = std::move(mNext);
-  while (next) {
-    next = std::move(next->mNext);
-  }
 }
 
 NS_IMETHODIMP
@@ -430,6 +418,16 @@ SheetLoadData::AfterProcessNextEvent(nsIThreadInternal* aThread,
   return NS_OK;
 }
 
+RefPtr<StyleSheet> SheetLoadData::ValueForCache() const {
+  // We need to clone the sheet on insertion to the cache because otherwise the
+  // stylesheets can keep full windows alive via either their JS wrapper, or via
+  // StyleSheet::mRelevantGlobal.
+  //
+  // If this ever changes, then you also need to fix up the memory reporting in
+  // both SizeOfIncludingThis and nsXULPrototypeCache::CollectMemoryReports.
+  return mSheet->Clone(nullptr, nullptr);
+}
+
 void SheetLoadData::PrioritizeAsPreload(nsIChannel* aChannel) {
   if (nsCOMPtr<nsISupportsPriority> sp = do_QueryInterface(aChannel)) {
     sp->AdjustPriority(nsISupportsPriority::PRIORITY_HIGHEST);
@@ -458,6 +456,11 @@ void SheetLoadData::FireLoadEvent(nsIThreadInternal* aThread) {
 
   MOZ_ASSERT(BlocksLoadEvent());
   mLoader->UnblockOnload(true);
+}
+
+void SheetLoadData::StartPendingLoad() {
+  mLoader->LoadSheet(*this, Loader::SheetState::NeedsParser,
+                     Loader::PendingLoad::Yes);
 }
 
 void SheetLoadData::ScheduleLoadEventIfNeeded() {
@@ -554,8 +557,9 @@ void Loader::DocumentStyleSheetSetChanged() {
   MOZ_ASSERT(mDocument);
 
   // start any pending alternates that aren't alternates anymore
-  mSheets->StartDeferredLoadsForLoader(
-      *this, SharedStyleSheetCache::StartLoads::IfNonAlternate);
+  mSheets->StartPendingLoadsForLoader(*this, [&](const SheetLoadData& aData) {
+    return IsAlternateSheet(aData.mTitle, true) != IsAlternate::Yes;
+  });
 }
 
 static const char kCharsetSym[] = "@charset \"";
@@ -955,15 +959,6 @@ static void RecordUseCountersIfNeeded(Document* aDoc,
   aDoc->MaybeWarnAboutZoom();
 }
 
-void Loader::DidHitCompleteSheetCache(const SheetLoadDataHashKey& aKey,
-                                      const StyleUseCounters* aCounters) {
-  MOZ_ASSERT(mDocument);
-  if (mLoadsPerformed.EnsureInserted(aKey)) {
-    mDocument->SetDidHitCompleteSheetCache();
-    RecordUseCountersIfNeeded(mDocument, aCounters);
-  }
-}
-
 /**
  * CreateSheet() creates a StyleSheet object for the given URI.
  *
@@ -1001,9 +996,23 @@ std::tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
                              aCORSMode, aParsingMode, CompatMode(aPreloadKind),
                              sriMetadata, aPreloadKind);
     auto cacheResult = mSheets->Lookup(*this, key, aSyncLoad);
-    if (const auto& [styleSheet, sheetState] = cacheResult; styleSheet) {
+    if (cacheResult.mState != CachedSubResourceState::Miss) {
+      SheetState sheetState = SheetState::Complete;
+      RefPtr<StyleSheet> sheet;
+      if (cacheResult.mCompleteValue) {
+        sheet = cacheResult.mCompleteValue->Clone(nullptr, nullptr);
+        mDocument->SetDidHitCompleteSheetCache();
+        RecordUseCountersIfNeeded(mDocument, sheet->GetStyleUseCounters());
+        mLoadsPerformed.PutEntry(key);
+      } else {
+        MOZ_ASSERT(cacheResult.mLoadingOrPendingValue);
+        sheet = cacheResult.mLoadingOrPendingValue->ValueForCache();
+        sheetState = cacheResult.mState == CachedSubResourceState::Loading
+                         ? SheetState::Loading
+                         : SheetState::Pending;
+      }
       LOG(("  Hit cache with state: %s", gStateStrings[size_t(sheetState)]));
-      return cacheResult;
+      return {std::move(sheet), sheetState};
     }
   }
 
@@ -1315,11 +1324,26 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
         mOngoingLoadCount > mPendingLoadCount + 1) {
       LOG(("  Deferring sheet load"));
       ++mPendingLoadCount;
-      mSheets->DeferSheetLoad(key, aLoadData);
+      mSheets->DeferLoad(key, aLoadData);
       return NS_OK;
     }
 
-    if ((coalescedLoad = mSheets->CoalesceLoad(key, aLoadData, aSheetState))) {
+    auto cacheState = [&aSheetState] {
+      switch (aSheetState) {
+        case SheetState::Complete:
+          return CachedSubResourceState::Complete;
+        case SheetState::Pending:
+          return CachedSubResourceState::Pending;
+        case SheetState::Loading:
+          return CachedSubResourceState::Loading;
+        case SheetState::NeedsParser:
+          return CachedSubResourceState::Miss;
+      }
+      MOZ_ASSERT_UNREACHABLE("wat");
+      return CachedSubResourceState::Miss;
+    }();
+
+    if ((coalescedLoad = mSheets->CoalesceLoad(key, aLoadData, cacheState))) {
       if (aSheetState == SheetState::Pending) {
         ++mPendingLoadCount;
         return NS_OK;
@@ -1562,7 +1586,7 @@ Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
 }
 
 void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
-  RecordUseCountersIfNeeded(mDocument, aData.mUseCounters.get());
+  RecordUseCountersIfNeeded(mDocument, aData.mSheet->GetStyleUseCounters());
   if (aData.mURI) {
     mLoadsPerformed.PutEntry(SheetLoadDataHashKey(aData));
     aData.NotifyStop(aStatus);
@@ -2188,8 +2212,8 @@ void Loader::RemoveObserver(nsICSSLoaderObserver* aObserver) {
 
 void Loader::StartDeferredLoads() {
   if (mSheets && mPendingLoadCount) {
-    mSheets->StartDeferredLoadsForLoader(
-        *this, SharedStyleSheetCache::StartLoads::Always);
+    mSheets->StartPendingLoadsForLoader(
+        *this, [](const SheetLoadData&) { return true; });
   }
 }
 
