@@ -32,9 +32,9 @@ const NEVER_DISCARD = 100000;
 let criteriaTypes = [
   ["isNonDiscardable", NEVER_DISCARD],
   ["isLoading", 8],
-  ["usingPictureInPicture", 4],
-  ["playingMedia", 3],
-  ["usingWebRTC", 3],
+  ["usingPictureInPicture", NEVER_DISCARD],
+  ["playingMedia", NEVER_DISCARD],
+  ["usingWebRTC", NEVER_DISCARD],
   ["isPinned", 2],
 ];
 
