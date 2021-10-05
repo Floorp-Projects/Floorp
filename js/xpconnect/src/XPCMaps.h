@@ -9,7 +9,9 @@
 #ifndef xpcmaps_h___
 #define xpcmaps_h___
 
+#include "mozilla/AllocPolicy.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/HashTable.h"
 
 #include "js/GCHashTable.h"
 
@@ -105,46 +107,44 @@ class JSObject2WrappedJSMap {
 /*************************/
 
 class Native2WrappedNativeMap {
- public:
-  struct Entry : public PLDHashEntryHdr {
-    nsISupports* key;
-    XPCWrappedNative* value;
-  };
+  using Map = mozilla::HashMap<nsISupports*, XPCWrappedNative*,
+                               mozilla::DefaultHasher<nsISupports*>,
+                               mozilla::MallocAllocPolicy>;
 
+ public:
   Native2WrappedNativeMap();
 
-  inline XPCWrappedNative* Find(nsISupports* Obj) const {
-    MOZ_ASSERT(Obj, "bad param");
-    auto entry = static_cast<Entry*>(mTable.Search(Obj));
-    return entry ? entry->value : nullptr;
+  XPCWrappedNative* Find(nsISupports* obj) const {
+    MOZ_ASSERT(obj, "bad param");
+    Map::Ptr ptr = mMap.lookup(obj);
+    return ptr ? ptr->value() : nullptr;
   }
 
-  inline XPCWrappedNative* Add(XPCWrappedNative* wrapper) {
+  XPCWrappedNative* Add(XPCWrappedNative* wrapper) {
     MOZ_ASSERT(wrapper, "bad param");
     nsISupports* obj = wrapper->GetIdentityObject();
-    MOZ_ASSERT(!Find(obj), "wrapper already in new scope!");
-    auto entry = static_cast<Entry*>(mTable.Add(obj, mozilla::fallible));
-    if (!entry) {
+    Map::AddPtr ptr = mMap.lookupForAdd(obj);
+    MOZ_ASSERT(!ptr, "wrapper already in new scope!");
+    if (ptr) {
+      return ptr->value();
+    }
+    if (!mMap.add(ptr, obj, wrapper)) {
       return nullptr;
     }
-    if (entry->key) {
-      return entry->value;
-    }
-    entry->key = obj;
-    entry->value = wrapper;
     return wrapper;
   }
 
-  inline void Clear() { mTable.Clear(); }
+  void Clear() { mMap.clear(); }
 
-  inline uint32_t Count() { return mTable.EntryCount(); }
+  uint32_t Count() { return mMap.count(); }
 
-  PLDHashTable::Iterator Iter() { return mTable.Iter(); }
+  Map::Iterator Iter() { return mMap.iter(); }
+  Map::ModIterator ModIter() { return mMap.modIter(); }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
  private:
-  PLDHashTable mTable;
+  Map mMap;
 };
 
 /*************************/
