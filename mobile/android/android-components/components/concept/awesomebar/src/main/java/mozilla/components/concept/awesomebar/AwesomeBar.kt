@@ -187,11 +187,13 @@ interface AwesomeBar {
      * @property providers The list of [SuggestionProvider]s in this group.
      * @property title An optional title for this group. The title may be rendered by an AwesomeBar
      * implementation.
+     * @property limit The maximum number of suggestions that will be shown in this group.
      * @property id A unique ID for this group (uses a generated UUID by default)
      */
     data class SuggestionProviderGroup(
         val providers: List<SuggestionProvider>,
         val title: String? = null,
+        val limit: Int = Integer.MAX_VALUE,
         val id: String = UUID.randomUUID().toString()
     )
 }

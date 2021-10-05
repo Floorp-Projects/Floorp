@@ -47,7 +47,7 @@ internal fun Suggestions(
                 }
 
                 items(
-                    items = groupSuggestions,
+                    items = groupSuggestions.take(group.limit),
                     key = { suggestion -> "${group.id}:${suggestion.provider.id}:${suggestion.id}" }
                 ) { suggestion ->
                     Suggestion(
