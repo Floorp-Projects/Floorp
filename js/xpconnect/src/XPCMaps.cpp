@@ -129,17 +129,14 @@ size_t ClassInfo2NativeSetMap::ShallowSizeOfIncludingThis(
 // implement ClassInfo2WrappedNativeProtoMap...
 
 ClassInfo2WrappedNativeProtoMap::ClassInfo2WrappedNativeProtoMap()
-    : mTable(PLDHashTable::StubOps(), sizeof(Entry),
-             XPC_NATIVE_PROTO_MAP_LENGTH) {}
+    : mMap(XPC_NATIVE_PROTO_MAP_LENGTH) {}
 
 size_t ClassInfo2WrappedNativeProtoMap::SizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   size_t n = mallocSizeOf(this);
-  n += mTable.ShallowSizeOfExcludingThis(mallocSizeOf);
-  for (auto iter = mTable.ConstIter(); !iter.Done(); iter.Next()) {
-    auto entry =
-        static_cast<ClassInfo2WrappedNativeProtoMap::Entry*>(iter.Get());
-    n += mallocSizeOf(entry->value);
+  n += mMap.shallowSizeOfExcludingThis(mallocSizeOf);
+  for (auto iter = mMap.iter(); !iter.done(); iter.next()) {
+    n += mallocSizeOf(iter.get().value());
   }
   return n;
 }
