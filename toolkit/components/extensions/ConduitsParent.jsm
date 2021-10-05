@@ -3,7 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const EXPORTED_SYMBOLS = ["BroadcastConduit", "ConduitsParent"];
+const EXPORTED_SYMBOLS = [
+  "BroadcastConduit",
+  "ConduitsParent",
+  "ProcessConduitsParent",
+];
 
 /**
  * This @file implements the parent side of Conduits, an abstraction over
@@ -270,9 +274,12 @@ class BroadcastConduit extends BaseConduit {
       // Target Messengers by extensionId, tabId (topBC) and frameId.
       tab: remote =>
         remote.extensionId === arg.extensionId &&
-        remote.actor.manager.browsingContext.top.id === arg.topBC &&
+        remote.actor.manager.browsingContext?.top.id === arg.topBC &&
         (arg.frameId == null || remote.frameId === arg.frameId) &&
         remote.recv.includes(method),
+
+      // Target Messengers by extensionId.
+      extension: remote => remote.instanceId === arg.instanceId,
     };
 
     let targets = Array.from(Hub.remotes.values()).filter(filters[kind]);
@@ -406,4 +413,13 @@ class ConduitsParent extends JSWindowActorParent {
   didDestroy() {
     Hub.actorClosed(this);
   }
+}
+
+/**
+ * Parent side of the Conduits process actor.  Same code as JSWindowActor.
+ */
+class ProcessConduitsParent extends JSProcessActorParent {
+  receiveMessage = ConduitsParent.prototype.receiveMessage;
+  willDestroy = ConduitsParent.prototype.willDestroy;
+  didDestroy = ConduitsParent.prototype.didDestroy;
 }
