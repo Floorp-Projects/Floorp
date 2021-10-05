@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ExtensionBrowserBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"  // GetWorkerPrivateFromContext
+#include "mozilla/extensions/ExtensionAlarms.h"
 #include "mozilla/extensions/ExtensionMockAPI.h"
 #include "mozilla/extensions/ExtensionTest.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
@@ -18,7 +19,8 @@ namespace extensions {
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionBrowser);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionBrowser)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionBrowser, mGlobal,
-                                      mExtensionMockAPI, mExtensionTest);
+                                      mExtensionAlarms, mExtensionMockAPI,
+                                      mExtensionTest);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionBrowser)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -68,6 +70,14 @@ bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal) {
   // false (currently on all channels but nightly).
   return false;
 #endif
+}
+
+ExtensionAlarms* ExtensionBrowser::GetExtensionAlarms() {
+  if (!mExtensionAlarms) {
+    mExtensionAlarms = new ExtensionAlarms(mGlobal, this);
+  }
+
+  return mExtensionAlarms;
 }
 
 ExtensionMockAPI* ExtensionBrowser::GetExtensionMockAPI() {
