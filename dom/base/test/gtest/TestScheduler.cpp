@@ -50,8 +50,7 @@ void TestGC::Run(int aNumSlices) {
   // Running the GC should not influence whether a CC is currently seen as
   // needed. But the first time we run GC, it will be false; later, we will
   // have run a GC and set it to true.
-  CCReason neededCCAtStartOfGC =
-      mScheduler.IsCCNeeded(Now(), SuspectedCCObjects());
+  bool neededCCAtStartOfGC = mScheduler.IsCCNeeded(Now(), SuspectedCCObjects());
 
   mScheduler.NoteGCBegin();
 
@@ -103,12 +102,9 @@ class TestCC {
 
 void TestCC::MaybePokeCC() {
   // nsJSContext::MaybePokeCC
+  EXPECT_TRUE(mScheduler.ShouldScheduleCC(Now(), SuspectedCCObjects()));
 
-  // In all tests so far, we will be running this just after a GC.
-  mozilla::CCReason reason = mScheduler.ShouldScheduleCC(Now(), SuspectedCCObjects());
-  EXPECT_EQ(reason, CCReason::GC_FINISHED);
-
-  mScheduler.InitCCRunnerStateMachine(CCRunnerState::ReducePurple, reason);
+  mScheduler.InitCCRunnerStateMachine(CCRunnerState::ReducePurple);
   EXPECT_TRUE(mScheduler.IsEarlyForgetSkippable());
 }
 
@@ -176,7 +172,6 @@ void TestCC::EndCycleCollectionCallback() {
   results.mFreedGCed = 10;
   results.mFreedJSZones = 2;
   mScheduler.NoteCycleCollected(results);
-  mScheduler.NoteCCEnd(Now());
 
   // Because > 0 zones were freed.
   EXPECT_TRUE(mScheduler.NeedsGCAfterCC());
@@ -297,31 +292,25 @@ static bool BasicScenario(CCGCScheduler& aScheduler, TestGC* aTestGC,
   // After a GC, the scheduler should decide to do a full CC regardless of the
   // number of purple buffer entries.
   SetNumSuspected(3);
-  EXPECT_EQ(aScheduler.IsCCNeeded(Now(), SuspectedCCObjects()),
-            CCReason::GC_FINISHED);
+  EXPECT_TRUE(aScheduler.IsCCNeeded(Now(), SuspectedCCObjects()));
 
   // Now we should want to CC.
-  EXPECT_EQ(aScheduler.ShouldScheduleCC(Now(), SuspectedCCObjects()),
-            CCReason::GC_FINISHED);
+  EXPECT_TRUE(aScheduler.ShouldScheduleCC(Now(), SuspectedCCObjects()));
 
   // Do a 5-slice CC.
   aTestCC->Run(5);
 
   // Not enough suspected objects to deserve a CC.
-  EXPECT_EQ(aScheduler.IsCCNeeded(Now(), SuspectedCCObjects()),
-            CCReason::NO_REASON);
-  EXPECT_EQ(aScheduler.ShouldScheduleCC(Now(), SuspectedCCObjects()),
-            CCReason::NO_REASON);
+  EXPECT_FALSE(aScheduler.IsCCNeeded(Now(), SuspectedCCObjects()));
+  EXPECT_FALSE(aScheduler.ShouldScheduleCC(Now(), SuspectedCCObjects()));
   SetNumSuspected(10000);
 
   // We shouldn't want to CC again yet, it's too soon.
-  EXPECT_EQ(aScheduler.ShouldScheduleCC(Now(), SuspectedCCObjects()),
-            CCReason::NO_REASON);
+  EXPECT_FALSE(aScheduler.ShouldScheduleCC(Now(), SuspectedCCObjects()));
   AdvanceTime(mozilla::kCCDelay);
 
   // *Now* it's time for another CC.
-  EXPECT_EQ(aScheduler.ShouldScheduleCC(Now(), SuspectedCCObjects()),
-            CCReason::MANY_SUSPECTED);
+  EXPECT_TRUE(aScheduler.ShouldScheduleCC(Now(), SuspectedCCObjects()));
 
   // Run a 3-slice incremental GC.
   EXPECT_TRUE(!aScheduler.InIncrementalGC());
@@ -338,8 +327,7 @@ static TestNonIdleCC ccNonIdle(scheduler);
 TEST(TestScheduler, Idle)
 {
   // Cannot CC until we GC once.
-  EXPECT_EQ(scheduler.ShouldScheduleCC(Now(), SuspectedCCObjects()),
-            CCReason::NO_REASON);
+  EXPECT_FALSE(scheduler.ShouldScheduleCC(Now(), SuspectedCCObjects()));
 
   EXPECT_TRUE(BasicScenario(scheduler, &gc, &ccIdle));
 }

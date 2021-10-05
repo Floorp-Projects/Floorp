@@ -6,7 +6,6 @@
 
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
-#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsRefreshDriver.h"
 
@@ -34,7 +33,7 @@ void CCGCScheduler::NoteGCEnd() {
   mCCBlockStart = TimeStamp();
   mReadyForMajorGC = false;
   mWantAtLeastRegularGC = false;
-  mNeedsFullCC = CCReason::GC_FINISHED;
+  mNeedsFullCC = true;
   mHasRunGC = true;
   mIsCompactingOnUserInactive = false;
 
@@ -48,61 +47,6 @@ void CCGCScheduler::NoteGCEnd() {
   if (child) {
     child->DoneGC();
   }
-}
-
-#ifdef MOZ_GECKO_PROFILER
-struct CCIntervalMarker {
-  static constexpr mozilla::Span<const char> MarkerTypeName() {
-    return mozilla::MakeStringSpan("CC");
-  }
-  static void StreamJSONMarkerData(
-      baseprofiler::SpliceableJSONWriter& aWriter,
-      const mozilla::ProfilerString8View& aReason) {
-    if (aReason.Length()) {
-      aWriter.StringProperty("reason", aReason);
-    }
-  }
-  static mozilla::MarkerSchema MarkerTypeDisplay() {
-    using MS = mozilla::MarkerSchema;
-    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
-              MS::Location::TimelineMemory};
-    schema.AddStaticLabelValue(
-        "Description",
-        "Summary data for the core part of a cycle collection, possibly "
-        "encompassing a set of incremental slices. The main thread is not "
-        "blocked for the entire major CC interval, only for the individual "
-        "slices.");
-    schema.AddKeyLabelFormatSearchable("reason", "Reason", MS::Format::String,
-                                       MS::Searchable::Searchable);
-    return schema;
-  }
-};
-#endif
-
-void CCGCScheduler::NoteCCBegin(CCReason aReason, TimeStamp aWhen) {
-#ifdef MOZ_GECKO_PROFILER
-  profiler_add_marker(
-      "CC", baseprofiler::category::GCCC,
-      MarkerOptions(MarkerTiming::IntervalStart(aWhen)), CCIntervalMarker{},
-      ProfilerString8View::WrapNullTerminatedString(CCReasonToString(aReason)));
-#endif
-
-  mIsCollectingCycles = true;
-}
-
-void CCGCScheduler::NoteCCEnd(TimeStamp aWhen) {
-#ifdef MOZ_GECKO_PROFILER
-  profiler_add_marker("CC", baseprofiler::category::GCCC,
-                      MarkerOptions(MarkerTiming::IntervalEnd(aWhen)),
-                      CCIntervalMarker{}, nullptr);
-#endif
-
-  mIsCollectingCycles = false;
-  mLastCCEndTime = aWhen;
-  mNeedsFullCC = CCReason::NO_REASON;
-
-  // The GC for this CC has already been requested.
-  mNeedsGCAfterCC = false;
 }
 
 void CCGCScheduler::NoteWontGC() {
@@ -354,7 +298,7 @@ void CCGCScheduler::PokeGC(JS::GCReason aReason, JSObject* aObj,
   if (mCCRunner) {
     // Make sure CC is called regardless of the size of the purple buffer, and
     // GC after it.
-    EnsureCCThenGC(CCReason::GC_WAITING);
+    EnsureCCThenGC();
     return;
   }
 
@@ -448,13 +392,12 @@ void CCGCScheduler::MaybePokeCC(TimeStamp aNow, uint32_t aSuspectedCCObjects) {
     return;
   }
 
-  CCReason reason = ShouldScheduleCC(aNow, aSuspectedCCObjects);
-  if (reason != CCReason::NO_REASON) {
+  if (ShouldScheduleCC(aNow, aSuspectedCCObjects)) {
     // We can kill some objects before running forgetSkippable.
     nsCycleCollector_dispatchDeferredDeletion();
 
     if (!mCCRunner) {
-      InitCCRunnerStateMachine(CCRunnerState::ReducePurple, reason);
+      InitCCRunnerStateMachine(CCRunnerState::ReducePurple);
     }
     EnsureCCRunner(kCCSkippableDelay, kForgetSkippableSliceDuration);
   }
@@ -466,7 +409,6 @@ void CCGCScheduler::KillCCRunner() {
   if (mCCRunner) {
     mCCRunner->Cancel();
     mCCRunner = nullptr;
-    mCCReason = CCReason::NO_REASON;
   }
 }
 
@@ -542,16 +484,16 @@ TimeDuration CCGCScheduler::ComputeInterSliceGCBudget(TimeStamp aDeadline,
   return std::max(budget, maxSliceGCBudget.MultDouble(percentOfBlockedTime));
 }
 
-CCReason CCGCScheduler::ShouldScheduleCC(TimeStamp aNow,
-                                         uint32_t aSuspectedCCObjects) const {
+bool CCGCScheduler::ShouldScheduleCC(TimeStamp aNow,
+                                     uint32_t aSuspectedCCObjects) const {
   if (!mHasRunGC) {
-    return CCReason::NO_REASON;
+    return false;
   }
 
   // Don't run consecutive CCs too often.
   if (mCleanupsSinceLastGC && !mLastCCEndTime.IsNull()) {
     if (aNow - mLastCCEndTime < kCCDelay) {
-      return CCReason::NO_REASON;
+      return false;
     }
   }
 
@@ -561,7 +503,7 @@ CCReason CCGCScheduler::ShouldScheduleCC(TimeStamp aNow,
       !mLastForgetSkippableCycleEndTime.IsNull()) {
     if (aNow - mLastForgetSkippableCycleEndTime <
         kTimeBetweenForgetSkippableCycles) {
-      return CCReason::NO_REASON;
+      return false;
     }
   }
 
@@ -643,8 +585,7 @@ CCRunnerStep CCGCScheduler::AdvanceCCRunner(TimeStamp aDeadline, TimeStamp aNow,
   // For states that aren't just continuations of previous states, check
   // whether a CC is still needed (after doing various things to reduce the
   // purple buffer).
-  if (desc.mCanAbortCC &&
-      IsCCNeeded(aNow, aSuspectedCCObjects) == CCReason::NO_REASON) {
+  if (desc.mCanAbortCC && !IsCCNeeded(aNow, aSuspectedCCObjects)) {
     // If we don't pass the threshold for wanting to cycle collect, stop now
     // (after possibly doing a final ForgetSkippable).
     mCCRunnerState = CCRunnerState::Canceled;
@@ -744,12 +685,8 @@ CCRunnerStep CCGCScheduler::AdvanceCCRunner(TimeStamp aDeadline, TimeStamp aNow,
       [[fallthrough]];
 
       // CycleCollecting: continue running slices until done.
-    case CCRunnerState::CycleCollecting: {
-      CCRunnerStep step{CCRunnerAction::CycleCollect, Yield};
-      step.mCCReason = mCCReason;
-      mCCReason = CCReason::SLICE;  // Set reason for following slices.
-      return step;
-    }
+    case CCRunnerState::CycleCollecting:
+      return {CCRunnerAction::CycleCollect, Yield};
 
     default:
       MOZ_CRASH("Unexpected CCRunner state");

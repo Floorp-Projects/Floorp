@@ -2590,7 +2590,7 @@ mozilla::ipc::IPCResult ContentChild::RecvCycleCollect() {
   if (obs) {
     obs->NotifyObservers(nullptr, "child-cc-request", nullptr);
   }
-  nsJSContext::CycleCollectNow(CCReason::IPC_MESSAGE);
+  nsJSContext::CycleCollectNow();
   return IPC_OK();
 }
 
