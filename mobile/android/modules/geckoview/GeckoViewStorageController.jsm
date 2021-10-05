@@ -154,12 +154,20 @@ const GeckoViewStorageController = {
         if (key == "storage-access") {
           key = "3rdPartyStorage^" + aData.thirdPartyOrigin;
         }
-        Services.perms.addFromPrincipal(
-          principal,
-          key,
-          aData.newValue,
-          Ci.nsIPermissionManager.EXPIRE_NEVER
-        );
+        if (aData.allowPermanentPrivateBrowsing) {
+          Services.perms.addFromPrincipalAndPersistInPrivateBrowsing(
+            principal,
+            key,
+            aData.newValue
+          );
+        } else {
+          Services.perms.addFromPrincipal(
+            principal,
+            key,
+            aData.newValue,
+            Ci.nsIPermissionManager.EXPIRE_NEVER
+          );
+        }
         break;
       }
       case "GeckoView:SetPermissionByURI": {

@@ -21,12 +21,16 @@ exclude: true
   [`StorageController`][95.3] instead. A [`PERMISSION_TRACKING`][95.4]
   permission is now present in [`onLocationChange`][95.5] for every page load,
   which can be used to set tracking protection exceptions.
+- Added [`setPrivateBrowsingPermanentPermission`][95.6], which allows apps to set
+  permanent permissions in private browsing (e.g. to set permanent tracking
+  protection permissions in private browsing).
 
 [95.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onPointerIconChange-org.mozilla.geckoview.GeckoSession-android.view.PointerIcon-
 [95.2]: {{javadoc_uri}/ContentBlockingController.html
 [95.3]: {{javadoc_uri}/StorageController.java
 [95.4]: {{javadoc_uri}/GeckoSession.PermissionDelegate.html#PERMISSION_TRACKING
 [95.5]: {{javadoc_uri}/GeckoSession.NavigationDelegate.html#onLocationChange-org.mozilla.geckoview.GeckoSession-java.lang.String-java.util.List-
+[95.6]: {{javadoc_uri}/StorageController.html#setPrivateBrowsingPermanentPermission-org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission-int-
 
 ## v94
 - Extended [`Autocomplete`][78.7] API to support credit card saving.
@@ -1061,4 +1065,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: f8c96394c053ddfed804cbfe31df4b129363b218
+[api-version]: d232006cf02e5e14925315cabfd6ccc2cf8bffe9

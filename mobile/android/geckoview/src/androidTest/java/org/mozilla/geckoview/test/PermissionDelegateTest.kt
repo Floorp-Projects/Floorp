@@ -6,13 +6,16 @@ package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.StorageController.ClearFlags
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaCallback
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ClosedSessionAtStart
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.RejectedPromiseException
+import org.mozilla.geckoview.test.TrackingPermissionService.TrackingPermissionInstance;
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -33,6 +36,8 @@ import org.mozilla.geckoview.GeckoSessionSettings
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 class PermissionDelegateTest : BaseSessionTest() {
+    private val targetContext
+        get() = InstrumentationRegistry.getInstrumentation().targetContext
 
     private fun hasPermission(permission: String): Boolean {
         if (Build.VERSION.SDK_INT < 23) {
@@ -286,6 +291,126 @@ class PermissionDelegateTest : BaseSessionTest() {
         })
         mainSession.reload()
         mainSession.waitForPageStop()
+    }
+
+    @ClosedSessionAtStart
+    @Test fun trackingProtection() {
+        // Tests that we get a tracking protection permission for every load, we
+        // can set the value of the permission and that the permission persists
+        // across sessions
+        trackingProtection(privateBrowsing = false, permanent = true)
+    }
+
+    @ClosedSessionAtStart
+    @Test fun trackingProtectionPrivateBrowsing() {
+        // Tests that we get a tracking protection permission for every load, we
+        // can set the value of the permission in private browsing and that the
+        // permission does not persists across private sessions
+        trackingProtection(privateBrowsing = true, permanent = false)
+    }
+
+    @ClosedSessionAtStart
+    @Test fun trackingProtectionPrivateBrowsingPermanent() {
+        // Tests that we get a tracking protection permission for every load, we
+        // can set the value of the permission permanently in private browsing
+        // and that the permanent permission _does_ persists across private sessions
+        trackingProtection(privateBrowsing = true, permanent = true)
+    }
+
+    private fun trackingProtection(privateBrowsing: Boolean, permanent: Boolean) {
+        // Make sure we start with a clean slate
+        storageController.clearDataFromHost(TEST_HOST, ClearFlags.PERMISSIONS)
+
+        assertThat("Non-permanent only makes sense with private browsing " +
+                "(because non-private browsing exceptions are always permanent",
+            permanent || privateBrowsing, equalTo(true))
+
+        val runtime0 = TrackingPermissionInstance.start(
+            targetContext, temporaryProfile.get(), privateBrowsing)
+
+        sessionRule.waitForResult(runtime0.loadTestPath(TRACKERS_PATH))
+        var permission = sessionRule.waitForResult(runtime0.trackingPermission)
+
+        assertThat("Permission value should start at DENY",
+            permission, equalTo(ContentPermission.VALUE_DENY))
+
+        if (privateBrowsing && permanent) {
+            runtime0.setPrivateBrowsingPermanentTrackingPermission(
+                ContentPermission.VALUE_ALLOW)
+        } else {
+            runtime0.setTrackingPermission(ContentPermission.VALUE_ALLOW)
+        }
+
+        sessionRule.waitForResult(runtime0.reload())
+
+        permission = sessionRule.waitForResult(runtime0.trackingPermission)
+        assertThat("Permission value should be ALLOW after setting",
+            permission, equalTo(ContentPermission.VALUE_ALLOW))
+
+        sessionRule.waitForResult(runtime0.quit())
+
+        // Restart the runtime and verifies that the value is still stored
+        val runtime1 = TrackingPermissionInstance.start(
+            targetContext, temporaryProfile.get(), privateBrowsing)
+
+        sessionRule.waitForResult(runtime1.loadTestPath(TRACKERS_PATH))
+
+        val trackingPermission = sessionRule.waitForResult(runtime1.trackingPermission)
+        assertThat("Tracking permissions should persist only if permanent",
+            trackingPermission, equalTo(when {
+                permanent -> ContentPermission.VALUE_ALLOW
+                else -> ContentPermission.VALUE_DENY
+            }))
+
+        sessionRule.waitForResult(runtime1.quit())
+    }
+
+    private fun assertTrackingProtectionPermission(value: Int?) {
+        var found = false
+        mainSession.waitUntilCalled(object : NavigationDelegate {
+            @AssertCalled
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<ContentPermission>
+            ) {
+                for (perm in perms) {
+                    if (perm.permission == PermissionDelegate.PERMISSION_TRACKING) {
+                        if (value != null) {
+                            assertThat(
+                                "Value should match",
+                                perm.value, equalTo(value)
+                            )
+                        }
+                        found = true
+                    }
+                }
+            }
+        })
+
+        assertThat(
+            "Permission should have been found if expected",
+            found, equalTo(value != null)
+        )
+    }
+
+    // Tests that all pages have a PERMISSION_TRACKING permission,
+    // except for pages that belong to Gecko like about:blank or about:config.
+    @Test fun trackingProtectionPermissionOnAllPages() {
+        val settings = sessionRule.runtime.settings
+        val aboutConfigEnabled = settings.aboutConfigEnabled
+        settings.aboutConfigEnabled = true
+
+        mainSession.loadUri("about:config")
+        assertTrackingProtectionPermission(null)
+
+        settings.aboutConfigEnabled = aboutConfigEnabled
+
+        mainSession.loadUri("about:blank")
+        assertTrackingProtectionPermission(null)
+
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        assertTrackingProtectionPermission(ContentPermission.VALUE_DENY)
     }
 
     @Test fun notification() {

@@ -15,6 +15,8 @@ import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission;
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.GeckoWebExecutor;
@@ -394,10 +396,10 @@ public class GeckoViewActivity
     private boolean mCollapsed;
     private boolean mKillProcessOnDestroy;
     private boolean mDesktopMode;
-    private boolean mTrackingProtectionException;
 
     private TabSession mPopupSession;
     private View mPopupView;
+    private ContentPermission mTrackingProtectionPermission;
 
     private boolean mShowNotificationsRejected;
     private ArrayList<String> mAcceptedPersistentStorage = new ArrayList<String>();
@@ -1084,34 +1086,21 @@ public class GeckoViewActivity
         return true;
     }
 
-    private void updateTrackingProtectionException() {
-        if (sGeckoRuntime == null) {
-            return;
-        }
-
-        final GeckoSession session = mTabSessionManager.getCurrentSession();
-        if (session == null) {
-            return;
-        }
-
-        sGeckoRuntime.getContentBlockingController()
-                .checkException(session)
-                .accept(value -> mTrackingProtectionException = value.booleanValue());
-    }
-
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.action_pb).setChecked(mUsePrivateBrowsing);
         menu.findItem(R.id.collapse).setChecked(mCollapsed);
         menu.findItem(R.id.desktop_mode).setChecked(mDesktopMode);
-        menu.findItem(R.id.action_tpe).setChecked(mTrackingProtectionException);
+        menu.findItem(R.id.action_tpe).setChecked(
+                mTrackingProtectionPermission != null
+                        && mTrackingProtectionPermission.value == ContentPermission.VALUE_ALLOW);
         menu.findItem(R.id.action_forward).setEnabled(mCanGoForward);
 
         final boolean hasSession = mTabSessionManager.getCurrentSession() != null;
         menu.findItem(R.id.action_reload).setEnabled(hasSession);
         menu.findItem(R.id.action_forward).setEnabled(hasSession);
         menu.findItem(R.id.action_close_tab).setEnabled(hasSession);
-        menu.findItem(R.id.action_tpe).setEnabled(hasSession);
+        menu.findItem(R.id.action_tpe).setEnabled(hasSession && mTrackingProtectionPermission != null);
         menu.findItem(R.id.action_pb).setEnabled(hasSession);
         menu.findItem(R.id.desktop_mode).setEnabled(hasSession);
 
@@ -1129,14 +1118,12 @@ public class GeckoViewActivity
                 session.goForward();
                 break;
             case R.id.action_tpe:
-                sGeckoRuntime.getContentBlockingController().checkException(session).accept(value -> {
-                    if (value.booleanValue()) {
-                        sGeckoRuntime.getContentBlockingController().removeException(session);
-                    } else {
-                        sGeckoRuntime.getContentBlockingController().addException(session);
-                    }
-                    session.reload();
-                });
+                sGeckoRuntime.getStorageController()
+                        .setPermission(mTrackingProtectionPermission,
+                                mTrackingProtectionPermission.value == ContentPermission.VALUE_ALLOW
+                                        ? ContentPermission.VALUE_DENY
+                                        : ContentPermission.VALUE_ALLOW);
+                session.reload();
                 break;
             case R.id.desktop_mode:
                 mDesktopMode = !mDesktopMode;
@@ -1716,14 +1703,14 @@ public class GeckoViewActivity
         }
     }
 
-    private class ExamplePermissionDelegate implements GeckoSession.PermissionDelegate {
+    private class ExamplePermissionDelegate implements PermissionDelegate {
 
         public int androidPermissionRequestCode = 1;
         private Callback mCallback;
 
-        class ExampleNotificationCallback implements GeckoSession.PermissionDelegate.Callback {
-            private final GeckoSession.PermissionDelegate.Callback mCallback;
-            ExampleNotificationCallback(final GeckoSession.PermissionDelegate.Callback callback) {
+        class ExampleNotificationCallback implements PermissionDelegate.Callback {
+            private final PermissionDelegate.Callback mCallback;
+            ExampleNotificationCallback(final PermissionDelegate.Callback callback) {
                 mCallback = callback;
             }
 
@@ -1740,10 +1727,10 @@ public class GeckoViewActivity
             }
         }
 
-        class ExamplePersistentStorageCallback implements GeckoSession.PermissionDelegate.Callback {
-            private final GeckoSession.PermissionDelegate.Callback mCallback;
+        class ExamplePersistentStorageCallback implements PermissionDelegate.Callback {
+            private final PermissionDelegate.Callback mCallback;
             private final String mUri;
-            ExamplePersistentStorageCallback(final GeckoSession.PermissionDelegate.Callback callback, String uri) {
+            ExamplePersistentStorageCallback(final PermissionDelegate.Callback callback, String uri) {
                 mCallback = callback;
                 mUri = uri;
             }
@@ -1893,16 +1880,25 @@ public class GeckoViewActivity
         }
     }
 
+    private ContentPermission getTrackingProtectionPermission(final List<ContentPermission> perms) {
+        for (ContentPermission perm : perms) {
+            if (perm.permission == PermissionDelegate.PERMISSION_TRACKING) {
+                return perm;
+            }
+        }
+        return null;
+    }
+
     private class ExampleNavigationDelegate implements GeckoSession.NavigationDelegate {
         @Override
-        public void onLocationChange(GeckoSession session, final String url, final List<GeckoSession.PermissionDelegate.ContentPermission> perms) {
+        public void onLocationChange(GeckoSession session, final String url, final List<ContentPermission> perms) {
             mToolbarView.getLocationView().setText(url);
             TabSession tabSession = mTabSessionManager.getSession(session);
             if (tabSession != null) {
                 tabSession.onLocationChange(url);
             }
+            mTrackingProtectionPermission = getTrackingProtectionPermission(perms);
             mCurrentUri = url;
-            updateTrackingProtectionException();
         }
 
         @Override
