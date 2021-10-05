@@ -7,8 +7,6 @@ import json
 import platform
 from pathlib import Path
 
-from manifestparser.util import evaluate_list_from_string
-
 from mozperftest.test.browsertime import add_options, add_option
 
 options = [
@@ -78,13 +76,16 @@ def before_runs(env):
         )
 
         add_option(env, "browsertime.url", test_site.get("test_url"), overwrite=True)
-        add_option(env, "browsertime.secondary_url", test_site.get("secondary_url"))
         add_option(env, "browsertime.screenshot", "true")
         add_option(env, "browsertime.testName", test_site.get("name"))
 
-        # pack array into string for transport to javascript, is there a better way?
-        cmds = evaluate_list_from_string(test_site.get("test_cmds", "[]"))
-        parsed_cmds = [":::".join([str(i) for i in item]) for item in cmds if item]
-        add_option(env, "browsertime.commands", ";;;".join(parsed_cmds))
+        second_url = test_site.get("secondary_url", None)
+        if second_url:
+            add_option(env, "browsertime.secondary_url", second_url)
 
-        print("Recording %s to file: %s" % (test_site.get("url"), recording_file))
+        cmds = test_site.get("test_cmds", [])
+        if cmds:
+            parsed_cmds = [":::".join([str(i) for i in item]) for item in cmds if item]
+            add_option(env, "browsertime.commands", ";;;".join(parsed_cmds))
+
+        print("Recording %s to file: %s" % (test_site.get("test_url"), recording_file))
