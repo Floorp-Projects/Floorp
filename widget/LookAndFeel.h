@@ -441,7 +441,6 @@ class LookAndFeel {
   // taken from win7, mostly). This forces light appearance, effectively.
   enum class UseStandins : bool { No, Yes };
   static UseStandins ShouldUseStandins(const dom::Document&, ColorID);
-  static UseStandins ShouldAlwaysUseStandinsForColorInContent(ColorID);
 
   // Returns a native color value (might be overwritten by prefs) for a given
   // color id.

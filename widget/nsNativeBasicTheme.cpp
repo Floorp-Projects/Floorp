@@ -246,19 +246,44 @@ class nsNativeBasicTheme::AccentColor {
 // Widget color information associated to a particular frame.
 class nsNativeBasicTheme::Colors {
   const AccentColor mAccentColor;
-  const bool mUseSystemColors;
+  const dom::Document& mDoc;
+  const bool mHighContrast;
   const LookAndFeel::ColorScheme mColorScheme;
 
  public:
   explicit Colors(const nsIFrame* aFrame)
       : mAccentColor(*aFrame->Style()),
-        mUseSystemColors(ShouldUseSystemColors(*aFrame->PresContext()) ==
-                         UseSystemColors::Yes),
+        mDoc(*aFrame->PresContext()->Document()),
+        mHighContrast(ShouldBeHighContrast(*aFrame->PresContext())),
         mColorScheme(LookAndFeel::ColorSchemeForFrame(aFrame)) {}
 
   const AccentColor& Accent() const { return mAccentColor; }
-  bool UseSystemColors() const { return mUseSystemColors; }
+  bool HighContrast() const { return mHighContrast; }
   bool IsDark() const { return mColorScheme == LookAndFeel::ColorScheme::Dark; }
+
+  nscolor SystemNs(StyleSystemColor aColor) const {
+    return LookAndFeel::Color(aColor, mColorScheme,
+                              LookAndFeel::ShouldUseStandins(mDoc, aColor));
+  }
+
+  sRGBColor System(StyleSystemColor aColor) const {
+    return sRGBColor::FromABGR(SystemNs(aColor));
+  }
+
+  template <typename Compute>
+  sRGBColor SystemOrElse(StyleSystemColor aColor, Compute aCompute) const {
+    if (auto color = LookAndFeel::GetColor(
+            aColor, mColorScheme,
+            LookAndFeel::ShouldUseStandins(mDoc, aColor))) {
+      return sRGBColor::FromABGR(*color);
+    }
+    return aCompute();
+  }
+
+  std::pair<sRGBColor, sRGBColor> SystemPair(StyleSystemColor aFirst,
+                                             StyleSystemColor aSecond) const {
+    return std::make_pair(System(aFirst), System(aSecond));
+  }
 };
 
 CSSIntCoord nsNativeBasicTheme::sHorizontalScrollbarHeight = CSSIntCoord(0);
@@ -331,45 +356,6 @@ static bool IsScrollbarWidthThin(nsIFrame* aFrame) {
   return scrollbarWidth == StyleScrollbarWidth::Thin;
 }
 
-// TODO: Like for the ColorScheme, this should probably look at the document,
-// like LookAndFeel does, but:
-//
-//  * We only draw with system colors when forcing colors, and we don't use
-//    standins for nnt by default.
-//  * We only expect non-native-themed buttons on content.
-//  * The colors we look up should always be CSS-accessible.
-//
-// So this should do the right thing for now with regards to the standins pref,
-// which is all we need for tests and should be good enough.
-static LookAndFeel::UseStandins ShouldUseStandins(LookAndFeel::ColorID aColor) {
-  return LookAndFeel::ShouldAlwaysUseStandinsForColorInContent(aColor);
-}
-
-static nscolor SystemNsColor(StyleSystemColor aColor) {
-  // TODO(emilio): We could not hardcode light appearance here with a bit of
-  // work, but doesn't matter for now.
-  return LookAndFeel::Color(aColor, LookAndFeel::ColorScheme::Light,
-                            ShouldUseStandins(aColor));
-}
-
-static sRGBColor SystemColor(StyleSystemColor aColor) {
-  return sRGBColor::FromABGR(SystemNsColor(aColor));
-}
-
-template <typename Compute>
-static sRGBColor SystemColorOrElse(StyleSystemColor aColor, Compute aCompute) {
-  if (auto color = LookAndFeel::GetColor(
-          aColor, LookAndFeel::ColorScheme::Light, ShouldUseStandins(aColor))) {
-    return sRGBColor::FromABGR(*color);
-  }
-  return aCompute();
-}
-
-static std::pair<sRGBColor, sRGBColor> SystemColorPair(
-    StyleSystemColor aFirst, StyleSystemColor aSecond) {
-  return std::make_pair(SystemColor(aFirst), SystemColor(aSecond));
-}
-
 /* static */
 auto nsNativeBasicTheme::GetDPIRatioForScrollbarPart(nsPresContext* aPc)
     -> DPIRatio {
@@ -413,56 +399,27 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
   MOZ_ASSERT(aAppearance == StyleAppearance::Checkbox ||
              aAppearance == StyleAppearance::Radio);
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
-  bool isPressed =
-      aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
-  bool isHovered = aState.HasState(NS_EVENT_STATE_HOVER);
   bool isChecked = aState.HasState(NS_EVENT_STATE_CHECKED);
   bool isIndeterminate = aAppearance == StyleAppearance::Checkbox &&
                          aState.HasState(NS_EVENT_STATE_INDETERMINATE);
 
-  if (aColors.UseSystemColors()) {
-    sRGBColor backgroundColor = SystemColor(StyleSystemColor::Buttonface);
-    sRGBColor borderColor = SystemColor(StyleSystemColor::Buttontext);
-    if (isDisabled) {
-      borderColor = SystemColor(StyleSystemColor::Graytext);
-      if (isChecked || isIndeterminate) {
-        backgroundColor = borderColor;
-      }
-    } else if (isChecked || isIndeterminate) {
-      backgroundColor = borderColor =
-          SystemColor(StyleSystemColor::Selecteditem);
-    }
-    return {backgroundColor, borderColor};
-  }
-
-  sRGBColor backgroundColor = sColorWhite;
-  sRGBColor borderColor = sColorGrey40;
-  if (isDisabled) {
-    backgroundColor = sColorWhiteAlpha50;
-    borderColor = sColorGrey40Alpha50;
-    if (isChecked || isIndeterminate) {
-      backgroundColor = borderColor;
-    }
-  } else if (isChecked || isIndeterminate) {
-    const auto& color = isPressed   ? aColors.Accent().GetDarker()
+  if (!isDisabled && (isChecked || isIndeterminate)) {
+    bool isActive =
+        aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
+    bool isHovered = aState.HasState(NS_EVENT_STATE_HOVER);
+    const auto& color = isActive    ? aColors.Accent().GetDarker()
                         : isHovered ? aColors.Accent().GetDark()
                                     : aColors.Accent().Get();
-    backgroundColor = borderColor = color;
-  } else if (isPressed) {
-    backgroundColor = sColorGrey20;
-    borderColor = sColorGrey60;
-  } else if (isHovered) {
-    backgroundColor = sColorWhite;
-    borderColor = sColorGrey50;
+    return std::make_pair(color, color);
   }
 
-  return std::make_pair(backgroundColor, borderColor);
+  return ComputeTextfieldColors(aState, aColors);
 }
 
 sRGBColor nsNativeBasicTheme::ComputeCheckmarkColor(const EventStates& aState,
                                                     const Colors& aColors) {
-  if (aColors.UseSystemColors()) {
-    return SystemColor(StyleSystemColor::Selecteditemtext);
+  if (aColors.HighContrast()) {
+    return aColors.System(StyleSystemColor::Selecteditemtext);
   }
   if (aState.HasState(NS_EVENT_STATE_DISABLED)) {
     return sColorWhiteAlpha80;
@@ -473,9 +430,9 @@ sRGBColor nsNativeBasicTheme::ComputeCheckmarkColor(const EventStates& aState,
 sRGBColor nsNativeBasicTheme::ComputeBorderColor(const EventStates& aState,
                                                  const Colors& aColors) {
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
-  if (aColors.UseSystemColors()) {
-    return SystemColor(isDisabled ? StyleSystemColor::Graytext
-                                  : StyleSystemColor::Buttontext);
+  if (aColors.HighContrast()) {
+    return aColors.System(isDisabled ? StyleSystemColor::Graytext
+                                     : StyleSystemColor::Buttontext);
   }
   bool isActive =
       aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
@@ -493,11 +450,12 @@ sRGBColor nsNativeBasicTheme::ComputeBorderColor(const EventStates& aState,
     // the border. But this looks harder to mess up.
     return sTransparent;
   }
+  bool dark = aColors.IsDark();
   if (isActive) {
-    return sColorGrey60;
+    return dark ? sColorGrey20 : sColorGrey60;
   }
   if (isHovered) {
-    return sColorGrey50;
+    return dark ? sColorGrey30 : sColorGrey50;
   }
   return sColorGrey40;
 }
@@ -510,20 +468,16 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeButtonColors(
   bool isHovered = aState.HasState(NS_EVENT_STATE_HOVER);
 
   const sRGBColor backgroundColor = [&] {
-    if (aColors.UseSystemColors()) {
-      return SystemColor(StyleSystemColor::Buttonface);
-    }
-
     if (isDisabled) {
-      return sColorGrey10Alpha50;
+      return aColors.System(StyleSystemColor::MozButtondisabledface);
     }
     if (isActive) {
-      return sColorGrey30;
+      return aColors.System(StyleSystemColor::MozButtonactiveface);
     }
     if (isHovered) {
-      return sColorGrey20;
+      return aColors.System(StyleSystemColor::MozButtonhoverface);
     }
-    return sColorGrey10;
+    return aColors.System(StyleSystemColor::Buttonface);
   }();
 
   const sRGBColor borderColor = ComputeBorderColor(aState, aColors);
@@ -537,13 +491,10 @@ constexpr nscolor kAutofillColor = NS_RGBA(255, 249, 145, 128);
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeTextfieldColors(
     const EventStates& aState, const Colors& aColors) {
   nscolor backgroundColor = [&] {
-    if (aColors.UseSystemColors()) {
-      return SystemNsColor(StyleSystemColor::Field);
-    }
     if (aState.HasState(NS_EVENT_STATE_DISABLED)) {
-      return NS_RGBA(0xff, 0xff, 0xff, 128);
+      return aColors.SystemNs(StyleSystemColor::MozDisabledfield);
     }
-    return NS_RGB(0xff, 0xff, 0xff);
+    return aColors.SystemNs(StyleSystemColor::Field);
   }();
 
   if (aState.HasState(NS_EVENT_STATE_AUTOFILL) &&
@@ -557,9 +508,9 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeTextfieldColors(
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeProgressColors(
     const EventStates& aState, const Colors& aColors) {
-  if (aColors.UseSystemColors()) {
-    return SystemColorPair(StyleSystemColor::Selecteditem,
-                           StyleSystemColor::Buttontext);
+  if (aColors.HighContrast()) {
+    return aColors.SystemPair(StyleSystemColor::Selecteditem,
+                              StyleSystemColor::Buttontext);
   }
 
   bool isActive =
@@ -579,9 +530,9 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeProgressColors(
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeTrackColors(
     const EventStates& aState, const Colors& aColors) {
-  if (aColors.UseSystemColors()) {
-    return SystemColorPair(StyleSystemColor::TextBackground,
-                           StyleSystemColor::Buttontext);
+  if (aColors.HighContrast()) {
+    return aColors.SystemPair(StyleSystemColor::TextBackground,
+                              StyleSystemColor::Buttontext);
   }
   bool isActive =
       aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
@@ -599,9 +550,9 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeTrackColors(
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeThumbColors(
     const EventStates& aState, const Colors& aColors) {
-  if (aColors.UseSystemColors()) {
-    return SystemColorPair(StyleSystemColor::Selecteditemtext,
-                           StyleSystemColor::Selecteditem);
+  if (aColors.HighContrast()) {
+    return aColors.SystemPair(StyleSystemColor::Selecteditemtext,
+                              StyleSystemColor::Selecteditem);
   }
 
   bool isActive =
@@ -629,25 +580,25 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeThumbColors(
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeProgressColors(
     const Colors& aColors) {
-  if (aColors.UseSystemColors()) {
-    return SystemColorPair(StyleSystemColor::Selecteditem,
-                           StyleSystemColor::Buttontext);
+  if (aColors.HighContrast()) {
+    return aColors.SystemPair(StyleSystemColor::Selecteditem,
+                              StyleSystemColor::Buttontext);
   }
   return std::make_pair(aColors.Accent().Get(), aColors.Accent().GetDark());
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeProgressTrackColors(
     const Colors& aColors) {
-  if (aColors.UseSystemColors()) {
-    return SystemColorPair(StyleSystemColor::Buttonface,
-                           StyleSystemColor::Buttontext);
+  if (aColors.HighContrast()) {
+    return aColors.SystemPair(StyleSystemColor::Buttonface,
+                              StyleSystemColor::Buttontext);
   }
   return std::make_pair(sColorGrey10, sColorGrey40);
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeMeterchunkColors(
     const EventStates& aMeterState, const Colors& aColors) {
-  if (aColors.UseSystemColors()) {
+  if (aColors.HighContrast()) {
     return ComputeProgressColors(aColors);
   }
   sRGBColor borderColor = sColorMeterGreen20;
@@ -666,10 +617,10 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeMeterchunkColors(
 
 std::array<sRGBColor, 3> nsNativeBasicTheme::ComputeFocusRectColors(
     const Colors& aColors) {
-  if (aColors.UseSystemColors()) {
-    return {SystemColor(StyleSystemColor::Selecteditem),
-            SystemColor(StyleSystemColor::Buttontext),
-            SystemColor(StyleSystemColor::TextBackground)};
+  if (aColors.HighContrast()) {
+    return {aColors.System(StyleSystemColor::Selecteditem),
+            aColors.System(StyleSystemColor::Buttontext),
+            aColors.System(StyleSystemColor::TextBackground)};
   }
 
   return {aColors.Accent().Get(), sColorWhiteAlpha80,
@@ -687,8 +638,8 @@ sRGBColor nsNativeBasicTheme::ComputeScrollbarTrackColor(
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aDocumentState, const Colors& aColors) {
   const nsStyleUI* ui = aStyle.StyleUI();
-  if (aColors.UseSystemColors()) {
-    return SystemColor(StyleSystemColor::TextBackground);
+  if (aColors.HighContrast()) {
+    return aColors.System(StyleSystemColor::TextBackground);
   }
   if (ShouldUseDarkScrollbar(aFrame, aStyle)) {
     return sRGBColor::FromU8(20, 20, 25, 77);
@@ -698,11 +649,11 @@ sRGBColor nsNativeBasicTheme::ComputeScrollbarTrackColor(
         ui->mScrollbarColor.AsColors().track.CalcColor(aStyle));
   }
   if (aDocumentState.HasAllStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
-    return SystemColorOrElse(StyleSystemColor::ThemedScrollbarInactive,
-                             [] { return sScrollbarColor; });
+    return aColors.SystemOrElse(StyleSystemColor::ThemedScrollbarInactive,
+                                [] { return sScrollbarColor; });
   }
-  return SystemColorOrElse(StyleSystemColor::ThemedScrollbar,
-                           [] { return sScrollbarColor; });
+  return aColors.SystemOrElse(StyleSystemColor::ThemedScrollbar,
+                              [] { return sScrollbarColor; });
 }
 
 nscolor nsNativeBasicTheme::AdjustUnthemedScrollbarThumbColor(
@@ -834,7 +785,7 @@ sRGBColor nsNativeBasicTheme::ComputeScrollbarThumbColor(
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors) {
-  if (!aColors.UseSystemColors() && ShouldUseDarkScrollbar(aFrame, aStyle)) {
+  if (!aColors.HighContrast() && ShouldUseDarkScrollbar(aFrame, aStyle)) {
     if (aElementState.HasState(NS_EVENT_STATE_ACTIVE) &&
         StaticPrefs::widget_non_native_theme_scrollbar_active_always_themed()) {
       auto color = LookAndFeel::GetColor(
@@ -859,24 +810,24 @@ sRGBColor nsNativeBasicTheme::ComputeScrollbarThumbColor(
       return StyleSystemColor::ThemedScrollbarThumbInactive;
     }
     if (aElementState.HasState(NS_EVENT_STATE_ACTIVE)) {
-      if (aColors.UseSystemColors()) {
+      if (aColors.HighContrast()) {
         return StyleSystemColor::Selecteditem;
       }
       return StyleSystemColor::ThemedScrollbarThumbActive;
     }
     if (aElementState.HasState(NS_EVENT_STATE_HOVER)) {
-      if (aColors.UseSystemColors()) {
+      if (aColors.HighContrast()) {
         return StyleSystemColor::Selecteditem;
       }
       return StyleSystemColor::ThemedScrollbarThumbHover;
     }
-    if (aColors.UseSystemColors()) {
+    if (aColors.HighContrast()) {
       return StyleSystemColor::TextForeground;
     }
     return StyleSystemColor::ThemedScrollbarThumb;
   }();
 
-  return SystemColorOrElse(systemColor, [&] {
+  return aColors.SystemOrElse(systemColor, [&] {
     return sRGBColor::FromABGR(AdjustUnthemedScrollbarThumbColor(
         sScrollbarThumbColor.ToABGR(), aElementState));
   });
@@ -887,14 +838,14 @@ nsNativeBasicTheme::ComputeScrollbarButtonColors(
     nsIFrame* aFrame, StyleAppearance aAppearance, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors) {
-  if (aColors.UseSystemColors()) {
+  if (aColors.HighContrast()) {
     if (aElementState.HasAtLeastOneOfStates(NS_EVENT_STATE_ACTIVE |
                                             NS_EVENT_STATE_HOVER)) {
-      return SystemColorPair(StyleSystemColor::Selecteditem,
-                             StyleSystemColor::Buttonface);
+      return aColors.SystemPair(StyleSystemColor::Selecteditem,
+                                StyleSystemColor::Buttonface);
     }
-    return SystemColorPair(StyleSystemColor::TextBackground,
-                           StyleSystemColor::TextForeground);
+    return aColors.SystemPair(StyleSystemColor::TextBackground,
+                              StyleSystemColor::TextForeground);
   }
 
   auto trackColor =
@@ -1805,14 +1756,13 @@ static LayoutDeviceRect ToSnappedRect(
   return LayoutDeviceRect::FromAppUnits(aRect, aTwipsPerPixel);
 }
 
-auto nsNativeBasicTheme::ShouldUseSystemColors(const nsPresContext& aPc)
-    -> UseSystemColors {
+bool nsNativeBasicTheme::ShouldBeHighContrast(const nsPresContext& aPc) {
   // We make sure that we're drawing backgrounds, since otherwise layout will
   // darken our used text colors etc anyways, and that can cause contrast issues
   // with dark high-contrast themes.
-  return UseSystemColors(aPc.GetBackgroundColorDraw() &&
-                         PreferenceSheet::PrefsFor(*aPc.Document())
-                             .NonNativeThemeShouldUseSystemColors());
+  return aPc.GetBackgroundColorDraw() &&
+         PreferenceSheet::PrefsFor(*aPc.Document())
+             .NonNativeThemeShouldBeHighContrast();
 }
 
 template <typename PaintBackendData>

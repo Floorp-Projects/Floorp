@@ -43,12 +43,8 @@ static constexpr gfx::sRGBColor sColorGrey40Alpha50(
     gfx::sRGBColor::UnusualFromARGB(0x7f8f8f9d));
 static constexpr gfx::sRGBColor sColorGrey50(
     gfx::sRGBColor::UnusualFromARGB(0xff676774));
-static constexpr gfx::sRGBColor sColorGrey50Alpha50(
-    gfx::sRGBColor::UnusualFromARGB(0x7f676774));
 static constexpr gfx::sRGBColor sColorGrey60(
     gfx::sRGBColor::UnusualFromARGB(0xff484851));
-static constexpr gfx::sRGBColor sColorGrey60Alpha50(
-    gfx::sRGBColor::UnusualFromARGB(0x7f484851));
 
 static constexpr gfx::sRGBColor sColorMeterGreen10(
     gfx::sRGBColor::UnusualFromARGB(0xff00ab60));
@@ -187,8 +183,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   static DPIRatio GetDPIRatio(nsIFrame*, StyleAppearance);
 
   // Whether we should use system colors (for high contrast mode).
-  enum class UseSystemColors : bool { No, Yes };
-  static UseSystemColors ShouldUseSystemColors(const nsPresContext&);
+  static bool ShouldBeHighContrast(const nsPresContext&);
 
   std::pair<sRGBColor, sRGBColor> ComputeCheckboxColors(const EventStates&,
                                                         StyleAppearance,
