@@ -593,11 +593,13 @@ class MediaDecoderStateMachine::DecodingState
   void HandleVideoDecoded(VideoData* aVideo) override {
     const auto currentTime = mMaster->GetMediaTime();
     if (aVideo->GetEndTime() < currentTime) {
-      SLOG("video %" PRId64 " is too late (current=%" PRId64 ")",
-           aVideo->GetEndTime().ToMicroseconds(), currentTime.ToMicroseconds());
-      mRequestNextVideoKeyFrame = true;
+      if (!mVideoFirstLateTime) {
+        mVideoFirstLateTime = Some(TimeStamp::Now());
+      }
+      SLOG("video %" PRId64 " starts being late (current=%" PRId64 ")",
+           aVideo->mTime.ToMicroseconds(), currentTime.ToMicroseconds());
     } else {
-      mRequestNextVideoKeyFrame = false;
+      mVideoFirstLateTime.reset();
     }
     mMaster->PushVideo(aVideo);
     DispatchDecodeTasksIfNeeded();
@@ -608,7 +610,7 @@ class MediaDecoderStateMachine::DecodingState
 
   void HandleVideoCanceled() override {
     mMaster->RequestVideoData(mMaster->GetMediaTime(),
-                              mRequestNextVideoKeyFrame);
+                              ShouldRequestNextKeyFrame());
   }
 
   void HandleEndOfAudio() override;
@@ -630,7 +632,7 @@ class MediaDecoderStateMachine::DecodingState
 
   void HandleVideoWaited(MediaData::Type aType) override {
     mMaster->RequestVideoData(mMaster->GetMediaTime(),
-                              mRequestNextVideoKeyFrame);
+                              ShouldRequestNextKeyFrame());
   }
 
   void HandleAudioCaptured() override {
@@ -660,6 +662,7 @@ class MediaDecoderStateMachine::DecodingState
 
     if (aPlayState == MediaDecoder::PLAY_STATE_PAUSED) {
       StartDormantTimer();
+      mVideoFirstLateTime.reset();
     } else {
       mDormantTimer.Reset();
     }
@@ -758,6 +761,23 @@ class MediaDecoderStateMachine::DecodingState
         [this]() { mDormantTimer.CompleteRequest(); });
   }
 
+  bool ShouldRequestNextKeyFrame() const {
+    if (!mVideoFirstLateTime) {
+      return false;
+    }
+    const double elapsedTimeMs =
+        (TimeStamp::Now() - *mVideoFirstLateTime).ToMilliseconds();
+    const bool rv = elapsedTimeMs >=
+                    StaticPrefs::media_decoder_skip_when_video_too_slow_ms();
+    if (rv) {
+      SLOG(
+          "video has been late behind media time for %f ms, should skip to "
+          "next key frame",
+          elapsedTimeMs);
+    }
+    return rv;
+  }
+
   // Time at which we started decoding.
   TimeStamp mDecodeStartTime;
 
@@ -776,10 +796,10 @@ class MediaDecoderStateMachine::DecodingState
   MediaEventListener mOnAudioPopped;
   MediaEventListener mOnVideoPopped;
 
-  // It will be set to true if the received decoded video frame is already late
-  // comparing to the current time. So we will want to directly request the next
-  // keyframe in order to catch up with the playback time.
-  bool mRequestNextVideoKeyFrame = false;
+  // If video has been later than the media time, this will records when the
+  // video started being late. It will be reset once video catches up with the
+  // media time.
+  Maybe<TimeStamp> mVideoFirstLateTime;
 };
 
 /**
@@ -2477,7 +2497,8 @@ void MediaDecoderStateMachine::DecodingState::EnsureVideoDecodeTaskQueued() {
       mMaster->IsWaitingVideoData()) {
     return;
   }
-  mMaster->RequestVideoData(mMaster->GetMediaTime(), mRequestNextVideoKeyFrame);
+  mMaster->RequestVideoData(mMaster->GetMediaTime(),
+                            ShouldRequestNextKeyFrame());
 }
 
 void MediaDecoderStateMachine::DecodingState::MaybeStartBuffering() {
