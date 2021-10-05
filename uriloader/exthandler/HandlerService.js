@@ -453,7 +453,10 @@ HandlerService.prototype = {
       handlerInfo.preferredAction == Ci.nsIHandlerInfo.saveToDisk ||
       handlerInfo.preferredAction == Ci.nsIHandlerInfo.useSystemDefault ||
       handlerInfo.preferredAction == Ci.nsIHandlerInfo.handleInternally ||
+      // For files (ie mimetype rather than protocol handling info), ensure
+      // we can store the "always ask" state, too:
       (handlerInfo.preferredAction == Ci.nsIHandlerInfo.alwaysAsk &&
+        this._isMIMEInfo(handlerInfo) &&
         Services.prefs.getBoolPref(
           "browser.download.improvements_to_download_panel"
         ))
