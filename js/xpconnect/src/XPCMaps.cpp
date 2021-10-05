@@ -195,7 +195,6 @@ size_t NativeSetMap::SizeOfIncludingThis(
 // implement XPCWrappedNativeProtoMap...
 
 XPCWrappedNativeProtoMap::XPCWrappedNativeProtoMap()
-    : mTable(PLDHashTable::StubOps(), sizeof(PLDHashEntryStub),
-             XPC_DYING_NATIVE_PROTO_MAP_LENGTH) {}
+    : mMap(XPC_DYING_NATIVE_PROTO_MAP_LENGTH) {}
 
 /***************************************************************************/
