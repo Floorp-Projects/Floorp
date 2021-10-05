@@ -91,16 +91,4 @@ this.runtime = class extends ExtensionAPI {
       },
     };
   }
-
-  getAPIObjectForRequest(context, request) {
-    if (request.apiObjectType === "Port") {
-      const port = context.messenger.getPortById(request.apiObjectId);
-      if (!port) {
-        throw new Error(`Port API object not found: ${request}`);
-      }
-      return port.api;
-    }
-
-    throw new Error(`Unexpected apiObjectType: ${request}`);
-  }
 };

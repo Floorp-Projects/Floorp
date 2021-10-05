@@ -11,11 +11,8 @@
 #include "ExtensionAPICallFunctionNoReturn.h"
 #include "ExtensionAPICallSyncFunction.h"
 #include "ExtensionAPIGetProperty.h"
-#include "ExtensionBrowser.h"
 #include "ExtensionEventManager.h"
-#include "ExtensionPort.h"
 
-#include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/FunctionBinding.h"
@@ -31,14 +28,12 @@ NS_IMPL_ISUPPORTS0(ChromeCompatCallbackHandler)
 
 // static
 void ChromeCompatCallbackHandler::Create(
-    ExtensionBrowser* aExtensionBrowser, dom::Promise* aPromise,
-    const RefPtr<dom::Function>& aCallback) {
+    dom::Promise* aPromise, const RefPtr<dom::Function>& aCallback) {
   MOZ_ASSERT(aPromise);
-  MOZ_ASSERT(aExtensionBrowser);
   MOZ_ASSERT(aCallback);
 
   RefPtr<ChromeCompatCallbackHandler> handler =
-      new ChromeCompatCallbackHandler(aExtensionBrowser, aCallback);
+      new ChromeCompatCallbackHandler(aCallback);
 
   aPromise->AppendNativeHandler(handler);
 }
@@ -57,37 +52,7 @@ void ChromeCompatCallbackHandler::RejectedCallback(
   // Call the chrome-compatible callback without any parameter, the errors
   // isn't passed to the callback as a parameter but the extension will be
   // able to retrieve it from chrome.runtime.lastError.
-  mExtensionBrowser->SetLastError(aValue);
   MOZ_KnownLive(mCallback)->Call({}, &retval, rv);
-  if (mExtensionBrowser->ClearLastError()) {
-    ReportUncheckedLastError(aCx, aValue);
-  }
-}
-
-void ChromeCompatCallbackHandler::ReportUncheckedLastError(
-    JSContext* aCx, JS::Handle<JS::Value> aValue) {
-  nsCString sourceSpec;
-  uint32_t line = 0;
-  uint32_t column = 0;
-  nsString valueString;
-
-  nsContentUtils::ExtractErrorValues(aCx, aValue, sourceSpec, &line, &column,
-                                     valueString);
-
-  nsTArray<nsString> params;
-  params.AppendElement(valueString);
-
-  RefPtr<ConsoleReportCollector> reporter = new ConsoleReportCollector();
-  reporter->AddConsoleReport(nsIScriptError::errorFlag, "content javascript"_ns,
-                             nsContentUtils::eDOM_PROPERTIES, sourceSpec, line,
-                             column, "WebExtensionUncheckedLastError"_ns,
-                             params);
-
-  dom::WorkerPrivate* workerPrivate = dom::GetWorkerPrivateFromContext(aCx);
-  RefPtr<Runnable> r = NS_NewRunnableFunction(
-      "ChromeCompatCallbackHandler::ReportUncheckedLastError",
-      [reporter]() { reporter->FlushReportsToConsole(0); });
-  workerPrivate->DispatchToMainThread(r.forget());
 }
 
 // WebExtensionStub methods shared between multiple API namespaces.
@@ -135,55 +100,6 @@ void ExtensionAPIBase::CallWebExtMethod(JSContext* aCx,
   }
 }
 
-void ExtensionAPIBase::CallWebExtMethodReturnsString(
-    JSContext* aCx, const nsAString& aApiMethod,
-    const dom::Sequence<JS::Value>& aArgs, nsAString& aRetVal,
-    ErrorResult& aRv) {
-  JS::Rooted<JS::Value> retval(aCx);
-  auto request = CallSyncFunction(aApiMethod);
-  request->Run(GetGlobalObject(), aCx, aArgs, &retval, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-
-  if (NS_WARN_IF(!retval.isString())) {
-    ThrowUnexpectedError(aCx, aRv);
-    return;
-  }
-
-  nsAutoJSString str;
-  if (!str.init(aCx, retval.toString())) {
-    JS_ClearPendingException(aCx);
-    ThrowUnexpectedError(aCx, aRv);
-    return;
-  }
-
-  aRetVal = str;
-}
-
-already_AddRefed<ExtensionPort> ExtensionAPIBase::CallWebExtMethodReturnsPort(
-    JSContext* aCx, const nsAString& aApiMethod,
-    const dom::Sequence<JS::Value>& aArgs, ErrorResult& aRv) {
-  JS::Rooted<JS::Value> apiResult(aCx);
-  auto request = CallSyncFunction(aApiMethod);
-  request->Run(GetGlobalObject(), aCx, aArgs, &apiResult, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  IgnoredErrorResult rv;
-  auto* extensionBrowser = GetExtensionBrowser();
-  RefPtr<ExtensionPort> port = extensionBrowser->GetPort(apiResult, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    // ExtensionPort::Create doesn't throw the js exception with the generic
-    // error message as the "api request forwarding" helper classes.
-    ThrowUnexpectedError(aCx, aRv);
-    return nullptr;
-  }
-
-  return port.forget();
-}
-
 void ExtensionAPIBase::CallWebExtMethodAsyncInternal(
     JSContext* aCx, const nsAString& aApiMethod,
     const dom::Sequence<JS::Value>& aArgs,
@@ -207,8 +123,7 @@ void ExtensionAPIBase::CallWebExtMethodAsyncInternal(
   // The async method has been called with the chrome-compatible callback
   // convention.
   if (aCallback) {
-    ChromeCompatCallbackHandler::Create(GetExtensionBrowser(), domPromise,
-                                        aCallback);
+    ChromeCompatCallbackHandler::Create(domPromise, aCallback);
     return;
   }
 
@@ -252,52 +167,11 @@ void ExtensionAPIBase::CallWebExtMethodAsyncAmbiguous(
 
 // ExtensionAPIBase - API Request helpers
 
-void ExtensionAPIBase::GetWebExtPropertyAsString(const nsString& aPropertyName,
-                                                 dom::DOMString& aRetval) {
-  IgnoredErrorResult rv;
-
-  dom::AutoJSAPI jsapi;
-  auto* global = GetGlobalObject();
-
-  if (!jsapi.Init(global)) {
-    NS_WARNING("GetWebExtPropertyAsString fail to init jsapi");
-    return;
-  }
-
-  JSContext* cx = jsapi.cx();
-  JS::RootedValue retval(cx);
-
-  RefPtr<ExtensionAPIGetProperty> request = GetProperty(aPropertyName);
-  request->Run(global, cx, &retval, rv);
-  if (rv.Failed()) {
-    NS_WARNING("GetWebExtPropertyAsString failure");
-    return;
-  }
-  nsAutoJSString strRetval;
-  if (!retval.isString() || !strRetval.init(cx, retval)) {
-    NS_WARNING("GetWebExtPropertyAsString got a non string result");
-    return;
-  }
-  aRetval.SetKnownLiveString(strRetval);
-}
-
-void ExtensionAPIBase::GetWebExtPropertyAsJSValue(
-    JSContext* aCx, const nsAString& aPropertyName,
-    JS::MutableHandle<JS::Value> aRetval) {
-  IgnoredErrorResult rv;
-  RefPtr<ExtensionAPIGetProperty> request = GetProperty(aPropertyName);
-  request->Run(GetGlobalObject(), aCx, aRetval, rv);
-  if (rv.Failed()) {
-    NS_WARNING("GetWebExtPropertyAsJSValue failure");
-    return;
-  }
-}
-
 already_AddRefed<ExtensionEventManager> ExtensionAPIBase::CreateEventManager(
     const nsAString& aEventName) {
   RefPtr<ExtensionEventManager> eventMgr = new ExtensionEventManager(
-      GetGlobalObject(), GetExtensionBrowser(), GetAPINamespace(), aEventName,
-      GetAPIObjectType(), GetAPIObjectId());
+      GetGlobalObject(), GetAPINamespace(), aEventName, GetAPIObjectType(),
+      GetAPIObjectId());
   return eventMgr.forget();
 }
 

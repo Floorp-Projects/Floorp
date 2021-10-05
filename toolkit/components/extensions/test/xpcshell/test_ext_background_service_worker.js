@@ -88,17 +88,6 @@ class TestWorkerWatcher extends EventEmitter {
     ChromeUtils.unregisterProcessActor(this.JS_ACTOR_NAME);
   }
 
-  getRegistration(extension) {
-    const swm = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
-      Ci.nsIServiceWorkerManager
-    );
-
-    return swm.getRegistrationByPrincipal(
-      extension.extension.principal,
-      extension.extension.principal.spec
-    );
-  }
-
   watchExtensionServiceWorker(extension) {
     // These events are emitted by TestWatchExtensionWorkersParent.
     const promiseWorkerSpawned = this.waitForEvent("worker-spawned", extension);
@@ -114,11 +103,6 @@ class TestWorkerWatcher extends EventEmitter {
         Services.prefs.clearUserPref("dom.serviceWorkers.idle_timeout");
       });
       Services.prefs.setIntPref("dom.serviceWorkers.idle_timeout", 0);
-      const swReg = this.getRegistration(extension);
-      // If the active worker is already active, we have to make sure the new value
-      // set on the idle_timeout pref is picked up by ServiceWorkerPrivate::ResetIdleTimeout.
-      swReg.activeWorker?.attachDebugger();
-      swReg.activeWorker?.detachDebugger();
       return promiseWorkerTerminated;
     };
 
@@ -232,7 +216,15 @@ add_task(
       "The extension service worker has been terminated as expected"
     );
 
-    const swReg = testWorkerWatcher.getRegistration(extension);
+    const swm = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
+      Ci.nsIServiceWorkerManager
+    );
+
+    const swReg = swm.getRegistrationByPrincipal(
+      extension.extension.principal,
+      extension.extension.principal.spec
+    );
+
     ok(swReg, "Got a service worker registration");
     ok(swReg?.activeWorker, "Got an active worker");
 
