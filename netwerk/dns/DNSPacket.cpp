@@ -11,6 +11,8 @@
 // Put DNSLogging.h at the end to avoid LOG being overwritten by other headers.
 #include "DNSLogging.h"
 
+#include "nsIInputStream.h"
+
 namespace mozilla {
 namespace net {
 
