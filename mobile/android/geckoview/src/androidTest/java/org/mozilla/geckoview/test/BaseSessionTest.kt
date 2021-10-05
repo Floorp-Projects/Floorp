@@ -53,6 +53,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val INVALID_URI = "not a valid uri"
         const val LINKS_HTML_PATH = "/assets/www/links.html"
         const val LOREM_IPSUM_HTML_PATH = "/assets/www/loremIpsum.html"
+        const val MOUSE_TO_RELOAD_HTML_PATH = "/assets/www/mouseToReload.html"
         const val NEW_SESSION_CHILD_HTML_PATH = "/assets/www/newSession_child.html"
         const val NEW_SESSION_HTML_PATH = "/assets/www/newSession.html"
         const val POPUP_HTML_PATH = "/assets/www/popup.html"
@@ -183,6 +184,9 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
 
     fun GeckoSession.synthesizeTap(x: Int, y: Int) =
             sessionRule.synthesizeTap(this, x, y)
+
+    fun GeckoSession.synthesizeMouseMove(x: Int, y: Int) =
+            sessionRule.synthesizeMouseMove(this, x, y)
 
     fun GeckoSession.evaluateJS(js: String): Any? =
             sessionRule.evaluateJS(this, js)

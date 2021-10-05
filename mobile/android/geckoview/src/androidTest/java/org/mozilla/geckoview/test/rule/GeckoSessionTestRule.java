@@ -63,6 +63,7 @@ import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 import android.util.Log;
 import android.util.Pair;
+import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.Surface;
 
@@ -1944,6 +1945,45 @@ public class GeckoSessionTestRule implements TestRule {
         final MotionEvent up = MotionEvent.obtain(
                 downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, x, y, 0);
         session.getPanZoomController().onTouchEvent(up);
+    }
+
+    /**
+     * Synthesize a mouse move event at the specified location using the main session.
+     * The session must have been created with a display.
+     *
+     * @param session Target session
+     * @param x X coordinate
+     * @param y Y coordinate
+     */
+    public void synthesizeMouseMove(final @NonNull GeckoSession session,
+                                    final int x, final int y) {
+        final MotionEvent.PointerProperties pointerProperty = new MotionEvent.PointerProperties();
+        pointerProperty.id = 0;
+        pointerProperty.toolType = MotionEvent.TOOL_TYPE_MOUSE;
+
+        final MotionEvent.PointerCoords pointerCoord = new MotionEvent.PointerCoords();
+        pointerCoord.x = x;
+        pointerCoord.y = y;
+
+        final MotionEvent.PointerProperties[] pointerProperties = new MotionEvent.PointerProperties[] { pointerProperty };
+        final MotionEvent.PointerCoords[] pointerCoords = new MotionEvent.PointerCoords[] { pointerCoord };
+
+        final long moveTime = SystemClock.uptimeMillis();
+        final MotionEvent moveEvent = MotionEvent.obtain(moveTime,
+                                                         SystemClock.uptimeMillis(),
+                                                         MotionEvent.ACTION_HOVER_MOVE,
+                                                         1,
+                                                         pointerProperties,
+                                                         pointerCoords,
+                                                         0,
+                                                         0,
+                                                         1.0f,
+                                                         1.0f,
+                                                         0,
+                                                         0,
+                                                         InputDevice.SOURCE_MOUSE,
+                                                         0);
+        session.getPanZoomController().onTouchEvent(moveEvent);
     }
 
     Map<GeckoSession, WebExtension.Port> mPorts = new HashMap<>();
