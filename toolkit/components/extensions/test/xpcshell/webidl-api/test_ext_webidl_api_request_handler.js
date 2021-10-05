@@ -365,3 +365,33 @@ add_task(async function test_sw_api_request_bgsw_runtime_onConnect() {
   await extPage.close();
   await extension.unload();
 });
+
+add_task(async function test_sw_runtime_lastError() {
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      background: {
+        service_worker: "sw.js",
+      },
+      applications: { gecko: { id: "test-bg-sw@mochi.test" } },
+    },
+    files: {
+      "page.html": "<!DOCTYPE html><body></body>",
+      "sw.js": async function() {
+        browser.runtime.sendMessage(() => {
+          const lastError = browser.runtime.lastError;
+          if (!(lastError instanceof Error)) {
+            browser.test.fail(
+              `lastError isn't an Error instance: ${lastError}`
+            );
+          }
+          browser.test.sendMessage("test-lastError-completed");
+        });
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("test-lastError-completed");
+  await extension.unload();
+});

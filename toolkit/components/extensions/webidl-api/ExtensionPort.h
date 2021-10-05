@@ -31,17 +31,22 @@ class ExtensionPort final : public nsISupports,
                             public nsWrapperCache,
                             public ExtensionAPIBase {
   nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<ExtensionBrowser> mExtensionBrowser;
   RefPtr<ExtensionEventManager> mOnDisconnectEventMgr;
   RefPtr<ExtensionEventManager> mOnMessageEventMgr;
   UniquePtr<dom::ExtensionPortDescriptor> mPortDescriptor;
 
   ~ExtensionPort() = default;
-  ExtensionPort(nsIGlobalObject* aGlobal,
+  ExtensionPort(nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
                 UniquePtr<dom::ExtensionPortDescriptor> aPortDescriptor);
 
  protected:
   // ExtensionAPIBase methods
   nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
+
+  ExtensionBrowser* GetExtensionBrowser() const override {
+    return mExtensionBrowser;
+  }
 
   nsString GetAPINamespace() const override { return u"runtime"_ns; }
 
@@ -51,8 +56,8 @@ class ExtensionPort final : public nsISupports,
 
  public:
   static already_AddRefed<ExtensionPort> Create(
-      nsIGlobalObject* aGlobal, JS::Handle<JS::Value> aDescriptorValue,
-      ErrorResult& aRv);
+      nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
+      JS::Handle<JS::Value> aDescriptorValue, ErrorResult& aRv);
 
   // nsWrapperCache interface methods
   JSObject* WrapObject(JSContext* aCx,
