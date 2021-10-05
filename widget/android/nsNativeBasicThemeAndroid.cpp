@@ -42,10 +42,10 @@ void nsNativeBasicThemeAndroid::DoPaintScrollbarThumb(
     PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
     bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
-    UseSystemColors aUseSystemColors, DPIRatio aDpiRatio) {
+    const Colors& aColors, DPIRatio aDpiRatio) {
   // TODO(emilio): Maybe do like macOS and draw a stroke?
-  const auto color = ComputeScrollbarThumbColor(
-      aFrame, aStyle, aElementState, aDocumentState, aUseSystemColors);
+  const auto color = ComputeScrollbarThumbColor(aFrame, aStyle, aElementState,
+                                                aDocumentState, aColors);
 
   // Draw the thumb rect centered in the scrollbar.
   LayoutDeviceRect thumbRect(aRect);
@@ -68,9 +68,9 @@ bool nsNativeBasicThemeAndroid::PaintScrollbarThumb(
     DrawTarget& aDt, const LayoutDeviceRect& aRect, bool aHorizontal,
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
-    UseSystemColors aUseSystemColors, DPIRatio aDpiRatio) {
+    const Colors& aColors, DPIRatio aDpiRatio) {
   DoPaintScrollbarThumb(aDt, aRect, aHorizontal, aFrame, aStyle, aElementState,
-                        aDocumentState, aUseSystemColors, aDpiRatio);
+                        aDocumentState, aColors, aDpiRatio);
   return true;
 }
 
@@ -78,10 +78,9 @@ bool nsNativeBasicThemeAndroid::PaintScrollbarThumb(
     WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
     bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
-    UseSystemColors aUseSystemColors, DPIRatio aDpiRatio) {
+    const Colors& aColors, DPIRatio aDpiRatio) {
   DoPaintScrollbarThumb(aWrData, aRect, aHorizontal, aFrame, aStyle,
-                        aElementState, aDocumentState, aUseSystemColors,
-                        aDpiRatio);
+                        aElementState, aDocumentState, aColors, aDpiRatio);
   return true;
 }
 
