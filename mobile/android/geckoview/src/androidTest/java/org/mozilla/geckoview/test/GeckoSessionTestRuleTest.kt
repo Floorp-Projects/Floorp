@@ -1260,6 +1260,15 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.session.waitForPageStop()
     }
 
+    @WithDisplay(width = 100, height = 100)
+    @Test fun synthesizeMouseMove() {
+        sessionRule.session.loadTestPath(MOUSE_TO_RELOAD_HTML_PATH)
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.session.synthesizeMouseMove(50, 50)
+        sessionRule.session.waitForPageStop()
+    }
+
     @Test fun evaluateExtensionJS() {
         assertThat("JS string result should be correct",
                 sessionRule.evaluateExtensionJS("return 'foo';") as String, equalTo("foo"))
