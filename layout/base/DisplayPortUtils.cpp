@@ -338,15 +338,13 @@ static nsRect GetDisplayPortFromMarginsData(
   PresShell* presShell = presContext->PresShell();
   MOZ_ASSERT(presShell);
 
-  bool useWebRender = gfxVars::UseWebRender();
-
   ScreenMargin margins = aMarginsData->mMargins.GetRelativeToLayoutViewport(
       aOptions.mGeometryType, scrollableFrame);
 
   if (presShell->IsDisplayportSuppressed() ||
       aContent->GetProperty(nsGkAtoms::MinimalDisplayPort)) {
     alignment = ScreenSize(1, 1);
-  } else if (useWebRender) {
+  } else {
     // Moving the displayport is relatively expensive with WR so we use a larger
     // alignment that causes the displayport to move less frequently. The
     // alignment scales up with the size of the base rect so larger scrollframes
@@ -359,18 +357,6 @@ static nsRect GetDisplayPortFromMarginsData(
     IntSize multiplier =
         layers::apz::GetDisplayportAlignmentMultiplier(screenRect.Size());
     alignment = ScreenSize(128 * multiplier.width, 128 * multiplier.height);
-  } else if (StaticPrefs::layers_enable_tiles_AtStartup()) {
-    // Don't align to tiles if they are too large, because we could expand
-    // the displayport by a lot which can take more paint time. It's a tradeoff
-    // though because if we don't align to tiles we have more waste on upload.
-    IntSize tileSize = gfxVars::TileSize();
-    alignment = ScreenSize(std::min(256, tileSize.width),
-                           std::min(256, tileSize.height));
-  } else {
-    // If we're not drawing with tiles then we need to be careful about not
-    // hitting the max texture size and we only need 1 draw call per layer
-    // so we can align to a smaller multiple.
-    alignment = ScreenSize(128, 128);
   }
 
   // Avoid division by zero.
@@ -381,53 +367,8 @@ static nsRect GetDisplayPortFromMarginsData(
     alignment.height = 128;
   }
 
-  if (StaticPrefs::layers_enable_tiles_AtStartup() || useWebRender) {
-    // Expand the rect by the margins
-    screenRect.Inflate(margins);
-  } else {
-    // Calculate the displayport to make sure we fit within the max texture size
-    // when not tiling.
-    nscoord maxSizeAppUnits = GetMaxDisplayPortSize(aContent, presContext);
-    MOZ_ASSERT(maxSizeAppUnits < nscoord_MAX);
-
-    // The alignment code can round up to 3 tiles, we want to make sure
-    // that the displayport can grow by up to 3 tiles without going
-    // over the max texture size.
-    const int MAX_ALIGN_ROUNDING = 3;
-
-    // Find the maximum size in screen pixels.
-    int32_t maxSizeDevPx = presContext->AppUnitsToDevPixels(maxSizeAppUnits);
-    int32_t maxWidthScreenPx = floor(double(maxSizeDevPx) * res.xScale) -
-                               MAX_ALIGN_ROUNDING * alignment.width;
-    int32_t maxHeightScreenPx = floor(double(maxSizeDevPx) * res.yScale) -
-                                MAX_ALIGN_ROUNDING * alignment.height;
-
-    // For each axis, inflate the margins up to the maximum size.
-    if (screenRect.height < maxHeightScreenPx) {
-      int32_t budget = maxHeightScreenPx - screenRect.height;
-      // Scale the margins down to fit into the budget if necessary, maintaining
-      // their relative ratio.
-      float scale = 1.0f;
-      if (float(budget) < margins.TopBottom()) {
-        scale = float(budget) / margins.TopBottom();
-      }
-      float top = margins.top * scale;
-      float bottom = margins.bottom * scale;
-      screenRect.y -= top;
-      screenRect.height += top + bottom;
-    }
-    if (screenRect.width < maxWidthScreenPx) {
-      int32_t budget = maxWidthScreenPx - screenRect.width;
-      float scale = 1.0f;
-      if (float(budget) < margins.LeftRight()) {
-        scale = float(budget) / margins.LeftRight();
-      }
-      float left = margins.left * scale;
-      float right = margins.right * scale;
-      screenRect.x -= left;
-      screenRect.width += left + right;
-    }
-  }
+  // Expand the rect by the margins
+  screenRect.Inflate(margins);
 
   ScreenPoint scrollPosScreen =
       LayoutDevicePoint::FromAppUnits(scrollPos, auPerDevPixel) * res;
