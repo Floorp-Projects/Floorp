@@ -69,7 +69,8 @@ void WebRenderImageHost::UseTextureHost(
     for (const auto& it : mWrBridges) {
       RefPtr<WebRenderBridgeParent> wrBridge = it.second->WrBridge();
       if (wrBridge && wrBridge->CompositorScheduler()) {
-        wrBridge->CompositorScheduler()->ScheduleComposition();
+        wrBridge->CompositorScheduler()->ScheduleComposition(
+            wr::RenderReasons::ASYNC_IMAGE);
       }
     }
   }

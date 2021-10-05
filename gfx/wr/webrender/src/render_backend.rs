@@ -12,7 +12,7 @@ use api::{DebugFlags, BlobImageHandler, Parameter, BoolParameter};
 use api::{DocumentId, ExternalScrollId, HitTestResult};
 use api::{IdNamespace, PipelineId, RenderNotifier, ScrollClamping};
 use api::{NotificationRequest, Checkpoint, QualitySettings};
-use api::{PrimitiveKeyKind};
+use api::{PrimitiveKeyKind, RenderReasons};
 use api::units::*;
 use api::channel::{single_msg_channel, Sender, Receiver};
 #[cfg(any(feature = "capture", feature = "replay"))]
@@ -436,7 +436,8 @@ impl Document {
         debug_flags: DebugFlags,
         tile_cache_logger: &mut TileCacheLogger,
         tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
-        frame_stats: Option<FullFrameStats>
+        frame_stats: Option<FullFrameStats>,
+        render_reasons: RenderReasons,
     ) -> RenderedDocument {
         let frame_build_start_time = precise_time_ns();
 
@@ -487,7 +488,8 @@ impl Document {
             frame,
             is_new_scene,
             profile: self.profile.take_and_reset(),
-            frame_stats: frame_stats
+            frame_stats: frame_stats,
+            render_reasons,
         }
     }
 
@@ -862,6 +864,7 @@ impl RenderBackend {
                 txn.frame_ops.take(),
                 txn.notifications.take(),
                 txn.render_frame,
+                RenderReasons::SCENE,
                 None,
                 txn.invalidate_rendered_frame,
                 frame_counter,
@@ -1204,6 +1207,7 @@ impl RenderBackend {
                 txn.frame_ops.take(),
                 txn.notifications.take(),
                 txn.generate_frame.as_bool(),
+                txn.render_reasons,
                 txn.generate_frame.id(),
                 txn.invalidate_rendered_frame,
                 frame_counter,
@@ -1241,6 +1245,7 @@ impl RenderBackend {
                     Vec::default(),
                     Vec::default(),
                     false,
+                    RenderReasons::empty(),
                     None,
                     false,
                     frame_counter,
@@ -1261,6 +1266,7 @@ impl RenderBackend {
         mut frame_ops: Vec<FrameMsg>,
         mut notifications: Vec<NotificationRequest>,
         mut render_frame: bool,
+        render_reasons: RenderReasons,
         generated_frame_id: Option<u64>,
         invalidate_rendered_frame: bool,
         frame_counter: &mut u32,
@@ -1352,7 +1358,8 @@ impl RenderBackend {
                     self.debug_flags,
                     &mut self.tile_cache_logger,
                     &mut self.tile_caches,
-                    frame_stats
+                    frame_stats,
+                    render_reasons,
                 );
 
                 debug!("generated frame for document {:?} with {} passes",
@@ -1544,6 +1551,7 @@ impl RenderBackend {
                     &mut self.tile_cache_logger,
                     &mut self.tile_caches,
                     None,
+                    RenderReasons::empty(),
                 );
                 // After we rendered the frames, there are pending updates to both
                 // GPU cache and resources. Instead of serializing them, we are going to make sure
@@ -1814,7 +1822,13 @@ impl RenderBackend {
 
                     let msg_publish = ResultMsg::PublishDocument(
                         id,
-                        RenderedDocument { frame, is_new_scene: true, profile: TransactionProfile::new(), frame_stats: None },
+                        RenderedDocument {
+                            frame,
+                            is_new_scene: true,
+                            profile: TransactionProfile::new(),
+                            render_reasons: RenderReasons::empty(),
+                            frame_stats: None,
+                        },
                         self.resource_cache.pending_updates(),
                     );
                     self.result_tx.send(msg_publish).unwrap();

@@ -126,7 +126,7 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   bool SendResume();
   bool SendResumeAsync();
   bool SendAdoptChild(const LayersId& id);
-  bool SendFlushRendering();
+  bool SendFlushRendering(const wr::RenderReasons& aReasons);
   bool SendStartFrameTimeRecording(const int32_t& bufferSize,
                                    uint32_t* startIndex);
   bool SendStopFrameTimeRecording(const uint32_t& startIndex,

@@ -110,12 +110,12 @@ class WebRenderLayerManager final : public WindowRenderer {
   void AddDidCompositeObserver(DidCompositeObserver* aObserver);
   void RemoveDidCompositeObserver(DidCompositeObserver* aObserver);
 
-  void FlushRendering() override;
+  void FlushRendering(wr::RenderReasons aReasons) override;
   void WaitOnTransactionProcessed() override;
 
   void SendInvalidRegion(const nsIntRegion& aRegion);
 
-  void ScheduleComposite();
+  void ScheduleComposite(wr::RenderReasons aReasons);
 
   void SetNeedsComposite(bool aNeedsComposite) {
     mNeedsComposite = aNeedsComposite;

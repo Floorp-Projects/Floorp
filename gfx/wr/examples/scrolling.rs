@@ -190,7 +190,7 @@ impl Example for App {
                         ExternalScrollId(EXT_SCROLL_ID_CONTENT, PipelineId::dummy()),
                         ScrollClamping::ToContentBounds,
                     );
-                    txn.generate_frame(0);
+                    txn.generate_frame(0, RenderReasons::empty());
                 }
             }
             winit::WindowEvent::CursorMoved { position: LogicalPosition { x, y }, .. } => {
@@ -211,7 +211,7 @@ impl Example for App {
                     ScrollClamping::ToContentBounds,
                 );
 
-                txn.generate_frame(0);
+                txn.generate_frame(0, RenderReasons::empty());
             }
             winit::WindowEvent::MouseInput { .. } => {
                 let results = api.hit_test(

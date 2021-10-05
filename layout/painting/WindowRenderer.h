@@ -7,6 +7,7 @@
 #ifndef MOZILLA_PAINTING_WINDOWRENDERER_H
 #define MOZILLA_PAINTING_WINDOWRENDERER_H
 
+#include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/dom/Animation.h"  // for Animation
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid, ScrollableLayerGuid::ViewID
@@ -164,7 +165,7 @@ class WindowRenderer : public FrameRecorder {
    * Note: This may sychronously wait on a remote compositor
    * to complete rendering.
    */
-  virtual void FlushRendering() {}
+  virtual void FlushRendering(wr::RenderReasons aReasons) {}
 
   /**
    * Make sure that the previous transaction has been
