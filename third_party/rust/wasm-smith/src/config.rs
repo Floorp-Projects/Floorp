@@ -48,6 +48,16 @@ pub trait Config: 'static + std::fmt::Debug {
         100
     }
 
+    /// The minimum number of tags to generate. Defaults to 0.
+    fn min_tags(&self) -> usize {
+        0
+    }
+
+    /// The maximum number of tags to generate. Defaults to 100.
+    fn max_tags(&self) -> usize {
+        100
+    }
+
     /// The minimum number of functions to generate. Defaults to 0.  This
     /// includes imported functions.
     fn min_funcs(&self) -> usize {
@@ -238,8 +248,14 @@ pub trait Config: 'static + std::fmt::Debug {
     }
 
     /// Determines whether the SIMD proposal is enabled for
-    /// generating insructions. Defaults to `true`.
+    /// generating insructions. Defaults to `false`.
     fn simd_enabled(&self) -> bool {
+        false
+    }
+
+    /// Determines whether the exception-handling proposal is enabled for
+    /// generating insructions. Defaults to `false`.
+    fn exceptions_enabled(&self) -> bool {
         false
     }
 
@@ -323,6 +339,7 @@ pub struct SwarmConfig {
     // These fields are configured via `Arbitrary`
     pub max_types: usize,
     pub max_imports: usize,
+    pub max_tags: usize,
     pub max_funcs: usize,
     pub max_globals: usize,
     pub max_exports: usize,
@@ -345,6 +362,7 @@ pub struct SwarmConfig {
     pub memory64_enabled: bool,
     pub min_types: usize,
     pub min_imports: usize,
+    pub min_tags: usize,
     pub min_funcs: usize,
     pub min_globals: usize,
     pub min_exports: usize,
@@ -358,6 +376,7 @@ pub struct SwarmConfig {
     pub memory_offset_choices: (u32, u32, u32),
     pub memory_max_size_required: bool,
     pub simd_enabled: bool,
+    pub exceptions_enabled: bool,
     pub allow_start_export: bool,
     pub max_type_size: u32,
     pub canonicalize_nans: bool,
@@ -373,6 +392,7 @@ impl<'a> Arbitrary<'a> for SwarmConfig {
         Ok(SwarmConfig {
             max_types: u.int_in_range(0..=MAX_MAXIMUM)?,
             max_imports: u.int_in_range(0..=MAX_MAXIMUM)?,
+            max_tags: u.int_in_range(0..=MAX_MAXIMUM)?,
             max_funcs: u.int_in_range(0..=MAX_MAXIMUM)?,
             max_globals: u.int_in_range(0..=MAX_MAXIMUM)?,
             max_exports: u.int_in_range(0..=MAX_MAXIMUM)?,
@@ -394,6 +414,7 @@ impl<'a> Arbitrary<'a> for SwarmConfig {
             // implemented yet so they're turned off by default.
             min_types: 0,
             min_imports: 0,
+            min_tags: 0,
             min_funcs: 0,
             min_globals: 0,
             min_exports: 0,
@@ -408,6 +429,7 @@ impl<'a> Arbitrary<'a> for SwarmConfig {
             memory_offset_choices: (75, 24, 1),
             allow_start_export: true,
             simd_enabled: false,
+            exceptions_enabled: false,
             memory64_enabled: false,
             max_type_size: 1000,
             module_linking_enabled: false,
@@ -543,6 +565,10 @@ impl Config for SwarmConfig {
 
     fn simd_enabled(&self) -> bool {
         self.simd_enabled
+    }
+
+    fn exceptions_enabled(&self) -> bool {
+        self.exceptions_enabled
     }
 
     fn allow_start_export(&self) -> bool {

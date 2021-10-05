@@ -85,6 +85,7 @@ mod memories;
 mod modules;
 mod start;
 mod tables;
+mod tags;
 mod types;
 
 pub use aliases::*;
@@ -102,6 +103,7 @@ pub use memories::*;
 pub use modules::*;
 pub use start::*;
 pub use tables::*;
+pub use tags::*;
 pub use types::*;
 
 pub mod encoders;
@@ -218,6 +220,7 @@ pub enum SectionId {
     Code = 10,
     Data = 11,
     DataCount = 12,
+    Tag = 13,
     Module = 14,
     Instance = 15,
     Alias = 16,
