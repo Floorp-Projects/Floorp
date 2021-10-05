@@ -1110,8 +1110,8 @@ static void FreePage(GMutLock aLock, uintptr_t aIndex,
     return;
   }
 #else
-  if (!mmap(pagePtr, kPageSize, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON,
-            -1, 0)) {
+  if (mmap(pagePtr, kPageSize, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON,
+           -1, 0) == MAP_FAILED) {
     return;
   }
 #endif
