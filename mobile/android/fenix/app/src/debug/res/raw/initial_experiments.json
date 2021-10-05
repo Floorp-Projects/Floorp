@@ -12,7 +12,7 @@
                       "value": {
                            "sections-enabled": {
                                "topSites": true,
-                               "recentExplorations": true,
+                               "recentExplorations": false,
                                "recentlySaved": false,
                                "jumpBackIn": false,
                                "pocket": false

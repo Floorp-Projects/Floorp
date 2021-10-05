@@ -85,4 +85,9 @@ object FeatureFlags {
         return "en-US" == LocaleManager.getCurrentLocale(context)
             ?.toLanguageTag() ?: getSystemDefault().toLanguageTag()
     }
+
+    /**
+     * Enables showing the homescreen onboarding card.
+     */
+    const val showHomeOnboarding = false
 }

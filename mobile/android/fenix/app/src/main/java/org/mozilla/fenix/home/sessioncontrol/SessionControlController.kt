@@ -27,6 +27,7 @@ import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
@@ -454,10 +455,12 @@ class DefaultSessionControlController(
     }
 
     override fun handleShowOnboardingDialog() {
-        navController.nav(
-            R.id.homeFragment,
-            HomeFragmentDirections.actionGlobalHomeOnboardingDialog()
-        )
+        if (FeatureFlags.showHomeOnboarding) {
+            navController.nav(
+                R.id.homeFragment,
+                HomeFragmentDirections.actionGlobalHomeOnboardingDialog()
+            )
+        }
     }
 
     override fun handleReadPrivacyNoticeClicked() {
