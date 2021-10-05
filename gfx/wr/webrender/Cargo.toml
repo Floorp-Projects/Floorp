@@ -30,7 +30,6 @@ webrender_build = { version = "0.0.1", path = "../webrender_build" }
 bincode = "1.0"
 bitflags = "1.2"
 byteorder = "1.0"
-cstr = "0.2"
 euclid = { version = "0.22.0", features = ["serde"] }
 fxhash = "0.2.1"
 gleam = "0.13.1"
