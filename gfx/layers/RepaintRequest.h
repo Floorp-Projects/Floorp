@@ -228,13 +228,7 @@ struct RepaintRequest {
   // This value is provided by Gecko at layout/paint time.
   ParentLayerRect mCompositionBounds;
 
-  // The cumulative resolution that the current frame has been painted at.
-  // This is the product of the pres-shell resolutions of the document
-  // containing this scroll frame and its ancestors, and any css-driven
-  // resolution. This information is provided by Gecko at layout/paint time.
-  // Note that this is allowed to have different x- and y-scales, but only
-  // for subframes (mIsRootContent = false). (The same applies to other scales
-  // that "inherit" the 2D-ness of this one, such as mZoom.)
+  // See FrameMetrics::mCumulativeResolution for description.
   LayoutDeviceToLayerScale2D mCumulativeResolution;
 
   // The conversion factor between CSS pixels and device pixels for this frame.
