@@ -149,50 +149,59 @@ class Native2WrappedNativeMap {
 
 /*************************/
 
-class IID2NativeInterfaceMap {
- public:
-  struct Entry : public PLDHashEntryHdr {
-    const nsIID* key;
-    XPCNativeInterface* value;
+struct IIDHasher {
+  using Key = const nsIID*;
+  using Lookup = Key;
 
-    static const struct PLDHashTableOps sOps;
-  };
-
-  IID2NativeInterfaceMap();
-
-  inline XPCNativeInterface* Find(REFNSIID iid) const {
-    auto entry = static_cast<Entry*>(mTable.Search(&iid));
-    return entry ? entry->value : nullptr;
+  // Note this is returning the hash of the bit pattern of the first part of the
+  // nsID, not the hash of the pointer to the nsID.
+  static mozilla::HashNumber hash(Lookup lookup) {
+    uintptr_t v;
+    memcpy(&v, lookup, sizeof(v));
+    return mozilla::HashGeneric(v);
   }
 
-  inline XPCNativeInterface* Add(XPCNativeInterface* iface) {
+  static bool match(Key key, Lookup lookup) {
+    return key->Equals(*lookup);
+  }
+};
+
+class IID2NativeInterfaceMap {
+  using Map = mozilla::HashMap<const nsIID*, XPCNativeInterface*, IIDHasher,
+                               mozilla::MallocAllocPolicy>;
+
+ public:
+  IID2NativeInterfaceMap();
+
+  XPCNativeInterface* Find(REFNSIID iid) const {
+    Map::Ptr ptr = mMap.lookup(&iid);
+    return ptr ? ptr->value() : nullptr;
+  }
+
+  XPCNativeInterface* Add(XPCNativeInterface* iface) {
     MOZ_ASSERT(iface, "bad param");
     const nsIID* iid = iface->GetIID();
-    auto entry = static_cast<Entry*>(mTable.Add(iid, mozilla::fallible));
-    if (!entry) {
+    Map::AddPtr ptr = mMap.lookupForAdd(iid);
+    if (ptr) {
+      return ptr->value();
+    }
+    if (!mMap.add(ptr, iid, iface)) {
       return nullptr;
     }
-    if (entry->key) {
-      return entry->value;
-    }
-    entry->key = iid;
-    entry->value = iface;
     return iface;
   }
 
-  inline void Remove(XPCNativeInterface* iface) {
+  void Remove(XPCNativeInterface* iface) {
     MOZ_ASSERT(iface, "bad param");
-    mTable.Remove(iface->GetIID());
+    mMap.remove(iface->GetIID());
   }
 
-  inline uint32_t Count() { return mTable.EntryCount(); }
-
-  PLDHashTable::Iterator Iter() { return mTable.Iter(); }
+  uint32_t Count() { return mMap.count(); }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
  private:
-  PLDHashTable mTable;
+  Map mMap;
 };
 
 /*************************/
