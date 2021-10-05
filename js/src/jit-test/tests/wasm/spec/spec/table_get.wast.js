@@ -53,7 +53,7 @@ assert_return(() => invoke($0, `get-externref`, [1]), [
 ]);
 
 // ./test/core/table_get.wast:29
-assert_return(() => invoke($0, `get-funcref`, [0]), [value("funcref", null)]);
+assert_return(() => invoke($0, `get-funcref`, [0]), [value("anyfunc", null)]);
 
 // ./test/core/table_get.wast:30
 assert_return(() => invoke($0, `is_null-funcref`, [1]), [value("i32", 0)]);

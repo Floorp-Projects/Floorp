@@ -63,7 +63,7 @@ var m = new Module(wasmTextToBinary(`
         (elem (global.get 0) $f0 $f0)
         ${callee(0)})
 `));
-var tbl = new Table({initial:50, element:"funcref"});
+var tbl = new Table({initial:50, element:"anyfunc"});
 assertEq(new Instance(m, {globals:{a:20, table:tbl}}) instanceof Instance, true);
 assertSegmentFitError(() => new Instance(m, {globals:{a:50, table:tbl}}));
 
@@ -100,7 +100,7 @@ assertEq(call(0), 0);
 assertErrorMessage(() => call(1), RuntimeError, /indirect call signature mismatch/);
 assertEq(call(2), 42);
 
-var tbl = new Table({initial:3, element:"funcref"});
+var tbl = new Table({initial:3, element:"anyfunc"});
 var call = wasmEvalText(`(module (import "a" "b" (table 3 funcref)) (export "tbl" (table 0)) (elem (i32.const 0) $f0 $f1) ${callee(0)} ${callee(1)} ${caller})`, {a:{b:tbl}}).exports.call;
 assertEq(call(0), 0);
 assertEq(call(1), 1);
@@ -140,7 +140,7 @@ assertEq(exp2.call(0), 0);
 assertEq(exp2.call(1), 1);
 assertEq(exp2.call(2), 1);
 
-var tbl = new Table({initial:3, element:"funcref"});
+var tbl = new Table({initial:3, element:"anyfunc"});
 var e1 = wasmEvalText(`(module (func $f (result i32) (i32.const 42)) (export "f" (func $f)))`).exports;
 var e2 = wasmEvalText(`(module (func $g (result f32) (f32.const 10)) (export "g" (func $g)))`).exports;
 var e3 = wasmEvalText(`(module (func $h (result i32) (i32.const 13)) (export "h" (func $h)))`).exports;
@@ -175,7 +175,7 @@ var m = new Module(wasmTextToBinary(`(module
     (export "call" (func $call))
 )`));
 var failTime = false;
-var tbl = new Table({initial:10, element:"funcref"});
+var tbl = new Table({initial:10, element:"anyfunc"});
 var mem1 = new Memory({initial:1});
 var e1 = new Instance(m, {a:{mem:mem1, tbl, imp() {if (failTime) throw new Error("ohai"); return 1}}}).exports;
 tbl.set(0, e1.call);
@@ -252,7 +252,7 @@ assertEq(tbl.get(0).foo, 42);
             (elem (i32.const 0) $f))
     `;
     g.mem = new Memory({initial:4});
-    g.tbl = new Table({initial:3, element:"funcref"});
+    g.tbl = new Table({initial:3, element:"anyfunc"});
     var i1 = g.evaluate("new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`" + src + "`)), {a:{t:tbl,m:mem}})");
 
     var call = new Instance(new Module(wasmTextToBinary(`

@@ -51,7 +51,24 @@ bool wasm::ToValType(JSContext* cx, HandleValue v, ValType* out) {
   } else if (SimdAvailable(cx) && StringEqualsLiteral(typeLinearStr, "v128")) {
     *out = ValType::V128;
 #endif
-  } else if (StringEqualsLiteral(typeLinearStr, "funcref")) {
+  } else {
+    RefType rt;
+    if (ToRefType(cx, typeLinearStr, &rt)) {
+      *out = ValType(rt);
+    } else {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool wasm::ToRefType(JSContext* cx, JSLinearString* typeLinearStr,
+                     RefType* out) {
+  if (StringEqualsLiteral(typeLinearStr, "anyfunc") ||
+      StringEqualsLiteral(typeLinearStr, "funcref")) {
+    // The JS API uses "anyfunc" uniformly as the external name of funcref.  We
+    // also allow "funcref" for compatibility with code we've already shipped.
     *out = RefType::func();
   } else if (StringEqualsLiteral(typeLinearStr, "externref")) {
     *out = RefType::extern_();
@@ -68,7 +85,20 @@ bool wasm::ToValType(JSContext* cx, HandleValue v, ValType* out) {
   return true;
 }
 
-UniqueChars wasm::ToString(RefType type) { return ToString(ValType(type)); }
+#ifdef ENABLE_WASM_TYPE_REFLECTIONS
+
+UniqueChars wasm::ToJSAPIString(RefType type) {
+  return ToJSAPIString(ValType(type));
+}
+
+UniqueChars wasm::ToJSAPIString(ValType type) {
+  if (type.kind() == ValType::Ref && type.refTypeKind() == RefType::Func) {
+    return JS_smprintf("anyfunc");
+  }
+  return ToString(type);
+}
+
+#endif
 
 UniqueChars wasm::ToString(ValType type) {
   const char* literal = nullptr;

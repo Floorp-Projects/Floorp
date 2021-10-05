@@ -466,7 +466,7 @@ assert_return(
 
 // ./test/core/select.wast:253
 assert_return(() => invoke($0, `select-funcref`, [null, null, 1]), [
-  value("funcref", null),
+  value("anyfunc", null),
 ]);
 
 // ./test/core/select.wast:254
