@@ -908,6 +908,10 @@ void DocAccessible::ContentRemoved(nsIContent* aChildNode,
   ContentRemoved(aChildNode);
 }
 
+void DocAccessible::MarkForBoundsProcessing(LocalAccessible* aAcc) {
+  mMaybeBoundsChanged.EnsureInserted(aAcc);
+}
+
 void DocAccessible::ParentChainChanged(nsIContent* aContent) {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1333,6 +1337,31 @@ void DocAccessible::ProcessInvalidationList() {
   }
 
   mInvalidationList.Clear();
+}
+
+void DocAccessible::ProcessBoundsChanged() {
+  if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return;
+  }
+
+  nsTArray<CacheData> data;
+  for (auto* acc : mMaybeBoundsChanged) {
+    if (!acc->IsDefunct()) {
+      RefPtr<AccAttributes> fields = acc->BundleFieldsForCache(
+          CacheDomain::Bounds, CacheUpdateType::Update);
+      if (fields->Count()) {
+        data.AppendElement(CacheData(
+            acc->IsDoc() ? 0 : reinterpret_cast<uint64_t>(acc->UniqueID()),
+            fields));
+      }
+    }
+  }
+
+  mMaybeBoundsChanged.Clear();
+
+  if (data.Length()) {
+    IPCDoc()->SendCache(CacheUpdateType::Update, data, true);
+  }
 }
 
 LocalAccessible* DocAccessible::GetAccessibleEvenIfNotInMap(
