@@ -524,6 +524,42 @@ pub enum BoolParameter {
     DrawCallsForTextureCopy = 3,
 }
 
+bitflags! {
+    /// Flags to track why we are rendering.
+    #[repr(C)]
+    #[derive(Default, Deserialize, MallocSizeOf, Serialize)]
+    pub struct RenderReasons: u32 {
+        /// Equivalent of empty() for the C++ side.
+        const NONE                          = 0;
+        const SCENE                         = 1 << 0;
+        const ANIMATED_PROPERTY             = 1 << 1;
+        const RESOURCE_UPDATE               = 1 << 2;
+        const ASYNC_IMAGE                   = 1 << 3;
+        const CLEAR_RESOURCES               = 1 << 4;
+        const APZ                           = 1 << 5;
+        /// Window resize
+        const RESIZE                        = 1 << 6;
+        /// Various widget-related reasons
+        const WIDGET                        = 1 << 7;
+        /// See Frame::must_be_drawn
+        const TEXTURE_CACHE_FLUSH           = 1 << 8;
+        const SNAPSHOT                      = 1 << 9;
+        const POST_RESOURCE_UPDATES_HOOK    = 1 << 10;
+        const CONFIG_CHANGE                 = 1 << 11;
+        const CONTENT_SYNC                  = 1 << 12;
+        const FLUSH                         = 1 << 13;
+        const TESTING                       = 1 << 14;
+        const OTHER                         = 1 << 15;
+        /// Vsync isn't actually "why" we render but it can be useful
+        /// to see which frames were driven by the vsync scheduler so
+        /// we store a bit for it.
+        const VSYNC                         = 1 << 16;
+    }
+}
+
+impl RenderReasons {
+    pub const NUM_BITS: u32 = 17;
+}
 
 bitflags! {
     /// Flags to enable/disable various builtin debugging tools.

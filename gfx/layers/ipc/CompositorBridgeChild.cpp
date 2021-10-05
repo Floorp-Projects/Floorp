@@ -395,11 +395,12 @@ bool CompositorBridgeChild::SendAdoptChild(const LayersId& id) {
   return PCompositorBridgeChild::SendAdoptChild(id);
 }
 
-bool CompositorBridgeChild::SendFlushRendering() {
+bool CompositorBridgeChild::SendFlushRendering(
+    const wr::RenderReasons& aReasons) {
   if (!mCanSend) {
     return false;
   }
-  return PCompositorBridgeChild::SendFlushRendering();
+  return PCompositorBridgeChild::SendFlushRendering(aReasons);
 }
 
 bool CompositorBridgeChild::SendStartFrameTimeRecording(

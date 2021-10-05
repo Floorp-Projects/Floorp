@@ -35,7 +35,7 @@
 //! calling `DrawTarget::to_framebuffer_rect`
 
 use api::{BlobImageHandler, ColorF, ColorU, MixBlendMode};
-use api::{DocumentId, Epoch, ExternalImageHandler};
+use api::{DocumentId, Epoch, ExternalImageHandler, RenderReasons};
 use api::CrashAnnotator;
 #[cfg(feature = "replay")]
 use api::ExternalImageId;
@@ -1502,6 +1502,7 @@ impl Renderer {
                         doc.profile.merge(&mut prev_doc.profile);
 
                         if prev_doc.frame.must_be_drawn() {
+                            prev_doc.render_reasons |= RenderReasons::TEXTURE_CACHE_FLUSH;
                             self.render_impl(
                                 document_id,
                                 &mut prev_doc,
@@ -2091,6 +2092,31 @@ impl Renderer {
 
           self.profiler.update_frame_stats(stats);
         }
+
+        // Turn the render reasons bitflags into something we can see in the profiler.
+        // For now this is just a binary yes/no for each bit, which means that when looking
+        // at "Render reasons" in the profiler HUD the average view indicates the proportion
+        // of frames that had the bit set over a half second window whereas max shows whether
+        // the bit as been set at least once during that time window.
+        // We could implement better ways to visualize this information.
+        let add_markers = thread_is_being_profiled();
+        for i in 0..RenderReasons::NUM_BITS {
+            let counter = profiler::RENDER_REASON_FIRST + i as usize;
+            let mut val = 0.0;
+            let reason_bit = RenderReasons::from_bits_truncate(1 << i);
+            if active_doc.render_reasons.contains(reason_bit) {
+                val = 1.0;
+                if add_markers {
+                    let event_str = format!("Render reason {:?}", reason_bit);
+                    if let Ok(event_str) = std::ffi::CString::new(&event_str[..]) {
+                        add_event_marker(event_str.as_c_str());
+                    }
+                }
+            }
+            self.profile.set(counter, val);
+        }
+        active_doc.render_reasons = RenderReasons::empty();
+
 
         self.texture_resolver.update_profile(&mut self.profile);
 

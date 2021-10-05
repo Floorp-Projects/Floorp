@@ -93,6 +93,8 @@ static PROFILER_PRESETS: &'static[(&'static str, &'static str)] = &[
     (&"Interners", "Interned primitives,Interned clips,Interned pictures,Interned text runs,Interned normal borders,Interned image borders,Interned images,Interned YUV images,Interned line decorations,Interned linear gradients,Interned radial gradients,Interned conic gradients,Interned filter data,Interned backdrops"),
     // Gpu sampler queries (need the pref gfx.webrender.debug.gpu-sampler-queries).
     (&"GPU samplers", &"Alpha targets samplers,Transparent pass samplers,Opaque pass samplers,Total samplers"),
+
+    (&"Render reasons", &"Reason scene, Reason animated propert, Reason resource update, Reason async image, Reason clear resources, Reason APZ, Reason resize, Reason widget, Reason cache flush, Reason snapshot, Reason resource hook, Reason config change, Reason content sync, Reason flush, Reason vsync, Reason testing, Reason other"),
 ];
 
 fn find_preset(name: &str) -> Option<&'static str> {
@@ -231,7 +233,26 @@ pub const DEPTH_TARGETS_MEM: usize = 100;
 
 pub const SHADER_BUILD_TIME: usize = 101;
 
-pub const NUM_PROFILER_EVENTS: usize = 102;
+pub const RENDER_REASON_FIRST: usize = 102;
+pub const RENDER_REASON_SCENE: usize = 102;
+pub const RENDER_REASON_ANIMATED_PROPERTY: usize = 103;
+pub const RENDER_REASON_RESOURCE_UPDATE: usize = 104;
+pub const RENDER_REASON_ASYNC_IMAGE: usize = 105;
+pub const RENDER_REASON_CLEAR_RESOURCES: usize = 106;
+pub const RENDER_REASON_APZ: usize = 107;
+pub const RENDER_REASON_RESIZE: usize = 108;
+pub const RENDER_REASON_WIDGET: usize = 109;
+pub const RENDER_REASON_TEXTURE_CACHE_FLUSH: usize = 110;
+pub const RENDER_REASON_SNAPSHOT: usize = 111;
+pub const RENDER_REASON_POST_RESOURCE_UPDATE_HOOKS: usize = 112;
+pub const RENDER_REASON_CONFIG_CHANGE: usize = 113;
+pub const RENDER_REASON_CONTENT_SYNC: usize = 114;
+pub const RENDER_REASON_FLUSH: usize = 115;
+pub const RENDER_REASON_TESTING: usize = 116;
+pub const RENDER_REASON_OTHER: usize = 117;
+pub const RENDER_REASON_VSYNC: usize = 118;
+
+pub const NUM_PROFILER_EVENTS: usize = 119;
 
 pub struct Profiler {
     counters: Vec<Counter>,
@@ -386,6 +407,25 @@ impl Profiler {
 
             float("Depth targets mem", "MB", DEPTH_TARGETS_MEM, Expected::none()),
             float("Shader build time", "ms", SHADER_BUILD_TIME, Expected::none()),
+            // We use the expected range to highlight render reasons that are happening.
+            float("Reason scene", "", RENDER_REASON_SCENE, expected(0.0..0.01)),
+            float("Reason animated propert", "", RENDER_REASON_ANIMATED_PROPERTY, expected(0.0..0.01)),
+            float("Reason resource update", "", RENDER_REASON_RESOURCE_UPDATE, expected(0.0..0.01)),
+            float("Reason async image", "", RENDER_REASON_ASYNC_IMAGE, expected(0.0..0.01)),
+            float("Reason clear resources", "", RENDER_REASON_CLEAR_RESOURCES, expected(0.0..0.01)),
+            float("Reason APZ", "", RENDER_REASON_APZ, expected(0.0..0.01)),
+            float("Reason resize", "", RENDER_REASON_RESIZE, expected(0.0..0.01)),
+            float("Reason widget", "", RENDER_REASON_WIDGET, expected(0.0..0.01)),
+            float("Reason texture cache flush", "", RENDER_REASON_TEXTURE_CACHE_FLUSH, expected(0.0..0.01)),
+            float("Reason snapshot", "", RENDER_REASON_SNAPSHOT, expected(0.0..0.01)),
+            float("Reason resource hook", "", RENDER_REASON_POST_RESOURCE_UPDATE_HOOKS, expected(0.0..0.01)),
+            float("Reason config change", "", RENDER_REASON_CONFIG_CHANGE, expected(0.0..0.01)),
+            float("Reason content sync", "", RENDER_REASON_CONTENT_SYNC, expected(0.0..0.01)),
+            float("Reason flush", "", RENDER_REASON_FLUSH, expected(0.0..0.01)),
+            float("Reason testing", "", RENDER_REASON_TESTING, expected(0.0..0.01)),
+            float("Reason other", "", RENDER_REASON_OTHER, expected(0.0..0.01)),
+            float("On vsync", "", RENDER_REASON_VSYNC, expected(0.0..0.01)),
+
         ];
 
         let mut counters = Vec::with_capacity(profile_counters.len());

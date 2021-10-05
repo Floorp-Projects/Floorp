@@ -39,6 +39,7 @@ using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::IdNamespace from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::RenderReasons from "mozilla/webrender/webrender_ffi.h";
 using base::ProcessId from "base/process.h";
 using mozilla::wr::MaybeExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
@@ -176,18 +177,18 @@ parent:
 
   // Make sure any pending composites are started immediately and
   // block until they are completed.
-  sync FlushRendering();
+  sync FlushRendering(RenderReasons aReasons);
 
   // Same as FlushRendering, but asynchronous, since not all platforms require
   // synchronous repaints on resize.
-  async FlushRenderingAsync();
+  async FlushRenderingAsync(RenderReasons aReasons);
 
   // Make sure any pending composites have been received.
   sync WaitOnTransactionProcessed();
 
   // Force an additional frame presentation to be executed. This is used to
   // work around a windows presentation bug (See Bug 1232042)
-  async ForcePresent();
+  async ForcePresent(RenderReasons aReasons);
 
   sync StartFrameTimeRecording(int32_t bufferSize)
     returns (uint32_t startIndex);

@@ -61,11 +61,17 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
   mozilla::ipc::IPCResult RecvAdoptChild(const LayersId& child) override {
     return IPC_FAIL_NO_REASON(this);
   }
-  mozilla::ipc::IPCResult RecvFlushRendering() override { return IPC_OK(); }
-  mozilla::ipc::IPCResult RecvFlushRenderingAsync() override {
+  mozilla::ipc::IPCResult RecvFlushRendering(
+      const wr::RenderReasons&) override {
     return IPC_OK();
   }
-  mozilla::ipc::IPCResult RecvForcePresent() override { return IPC_OK(); }
+  mozilla::ipc::IPCResult RecvFlushRenderingAsync(
+      const wr::RenderReasons&) override {
+    return IPC_OK();
+  }
+  mozilla::ipc::IPCResult RecvForcePresent(const wr::RenderReasons&) override {
+    return IPC_OK();
+  }
   mozilla::ipc::IPCResult RecvWaitOnTransactionProcessed() override {
     return IPC_OK();
   }

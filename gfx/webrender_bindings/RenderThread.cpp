@@ -1234,17 +1234,19 @@ void wr_notifier_external_event(mozilla::wr::WrWindowId aWindowId,
                                              std::move(evt));
 }
 
-static void NotifyScheduleRender(mozilla::wr::WrWindowId aWindowId) {
+static void NotifyScheduleRender(mozilla::wr::WrWindowId aWindowId,
+                                 wr::RenderReasons aReasons) {
   RefPtr<mozilla::layers::CompositorBridgeParent> cbp = mozilla::layers::
       CompositorBridgeParent::GetCompositorBridgeParentFromWindowId(aWindowId);
   if (cbp) {
-    cbp->ScheduleComposition();
+    cbp->ScheduleComposition(aReasons);
   }
 }
 
-void wr_schedule_render(mozilla::wr::WrWindowId aWindowId) {
+void wr_schedule_render(mozilla::wr::WrWindowId aWindowId,
+                        wr::RenderReasons aReasons) {
   layers::CompositorThread()->Dispatch(NewRunnableFunction(
-      "NotifyScheduleRender", &NotifyScheduleRender, aWindowId));
+      "NotifyScheduleRender", &NotifyScheduleRender, aWindowId, aReasons));
 }
 
 static void NotifyDidSceneBuild(

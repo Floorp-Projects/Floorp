@@ -505,31 +505,34 @@ CompositorBridgeParent::RecvWaitOnTransactionProcessed() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult CompositorBridgeParent::RecvFlushRendering() {
+mozilla::ipc::IPCResult CompositorBridgeParent::RecvFlushRendering(
+    const wr::RenderReasons& aReasons) {
   if (mWrBridge) {
-    mWrBridge->FlushRendering();
+    mWrBridge->FlushRendering(aReasons);
     return IPC_OK();
   }
 
   if (mCompositorScheduler->NeedsComposite()) {
     CancelCurrentCompositeTask();
-    ForceComposeToTarget(nullptr);
+    ForceComposeToTarget(aReasons, nullptr, nullptr);
   }
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult CompositorBridgeParent::RecvFlushRenderingAsync() {
+mozilla::ipc::IPCResult CompositorBridgeParent::RecvFlushRenderingAsync(
+    const wr::RenderReasons& aReasons) {
   if (mWrBridge) {
-    mWrBridge->FlushRendering(false);
+    mWrBridge->FlushRendering(aReasons, false);
     return IPC_OK();
   }
 
-  return RecvFlushRendering();
+  return RecvFlushRendering(aReasons);
 }
 
-mozilla::ipc::IPCResult CompositorBridgeParent::RecvForcePresent() {
+mozilla::ipc::IPCResult CompositorBridgeParent::RecvForcePresent(
+    const wr::RenderReasons& aReasons) {
   if (mWrBridge) {
-    mWrBridge->ScheduleForcedGenerateFrame();
+    mWrBridge->ScheduleForcedGenerateFrame(aReasons);
   }
   return IPC_OK();
 }
@@ -576,11 +579,12 @@ void CompositorBridgeParent::ActorDestroy(ActorDestroyReason why) {
                         &CompositorBridgeParent::DeferredDestroy));
 }
 
-void CompositorBridgeParent::ScheduleRenderOnCompositorThread() {
+void CompositorBridgeParent::ScheduleRenderOnCompositorThread(
+    wr::RenderReasons aReasons) {
   MOZ_ASSERT(CompositorThread());
-  CompositorThread()->Dispatch(
-      NewRunnableMethod("layers::CompositorBridgeParent::ScheduleComposition",
-                        this, &CompositorBridgeParent::ScheduleComposition));
+  CompositorThread()->Dispatch(NewRunnableMethod<wr::RenderReasons>(
+      "layers::CompositorBridgeParent::ScheduleComposition", this,
+      &CompositorBridgeParent::ScheduleComposition, aReasons));
 }
 
 void CompositorBridgeParent::PauseComposition() {
@@ -631,17 +635,18 @@ void CompositorBridgeParent::ResumeComposition() {
   mPaused = false;
 
   Invalidate();
-  mCompositorScheduler->ForceComposeToTarget(nullptr, nullptr);
+  mCompositorScheduler->ForceComposeToTarget(wr::RenderReasons::WIDGET, nullptr,
+                                             nullptr);
 
   // if anyone's waiting to make sure that composition really got resumed, tell
   // them
   lock.NotifyAll();
 }
 
-void CompositorBridgeParent::ForceComposition() {
+void CompositorBridgeParent::ForceComposition(wr::RenderReasons aReasons) {
   // Cancel the orientation changed state to force composition
   mForceCompositionTask = nullptr;
-  ScheduleRenderOnCompositorThread();
+  ScheduleRenderOnCompositorThread(aReasons);
 }
 
 void CompositorBridgeParent::CancelCurrentCompositeTask() {
@@ -673,30 +678,31 @@ void CompositorBridgeParent::NotifyShadowTreeTransaction(
     bool aScheduleComposite, uint32_t aPaintSequenceNumber,
     bool aIsRepeatTransaction, bool aHitTestUpdate) {
   if (aScheduleComposite) {
-    ScheduleComposition();
+    ScheduleComposition(wr::RenderReasons::OTHER);
   }
 }
 
-void CompositorBridgeParent::ScheduleComposition() {
+void CompositorBridgeParent::ScheduleComposition(wr::RenderReasons aReasons) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (mPaused) {
     return;
   }
 
   if (mWrBridge) {
-    mWrBridge->ScheduleGenerateFrame();
+    mWrBridge->ScheduleGenerateFrame(aReasons);
   } else {
-    mCompositorScheduler->ScheduleComposition();
+    mCompositorScheduler->ScheduleComposition(aReasons);
   }
 }
 
-void CompositorBridgeParent::ForceComposeToTarget(DrawTarget* aTarget,
+void CompositorBridgeParent::ForceComposeToTarget(wr::RenderReasons aReasons,
+                                                  DrawTarget* aTarget,
                                                   const gfx::IntRect* aRect) {
   AUTO_PROFILER_LABEL("CompositorBridgeParent::ForceComposeToTarget", GRAPHICS);
 
   AutoRestore<bool> override(mOverrideComposeReadiness);
   mOverrideComposeReadiness = true;
-  mCompositorScheduler->ForceComposeToTarget(aTarget, aRect);
+  mCompositorScheduler->ForceComposeToTarget(aReasons, aTarget, aRect);
 }
 
 PAPZCTreeManagerParent* CompositorBridgeParent::AllocPAPZCTreeManagerParent(
@@ -837,7 +843,7 @@ bool CompositorBridgeParent::SetTestSampleTime(const LayersId& aId,
   }
 
   if (mWrBridge) {
-    mWrBridge->FlushRendering();
+    mWrBridge->FlushRendering(wr::RenderReasons::TESTING);
     return true;
   }
 
@@ -950,7 +956,7 @@ void CompositorBridgeParent::SetFixedLayerMargins(ScreenIntCoord aTop,
   }
 
   Invalidate();
-  ScheduleComposition();
+  ScheduleComposition(wr::RenderReasons::RESIZE);
 }
 
 CompositorBridgeParent* CompositorBridgeParent::GetCompositorBridgeParent(
@@ -1003,7 +1009,7 @@ void CompositorBridgeParent::NotifyVsync(const VsyncEvent& aVsync,
 
 /* static */
 void CompositorBridgeParent::ScheduleForcedComposition(
-    const LayersId& aLayersId) {
+    const LayersId& aLayersId, wr::RenderReasons aReasons) {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
 
@@ -1019,9 +1025,9 @@ void CompositorBridgeParent::ScheduleForcedComposition(
   }
 
   if (cbp->mWrBridge) {
-    cbp->mWrBridge->ScheduleForcedGenerateFrame();
+    cbp->mWrBridge->ScheduleForcedGenerateFrame(aReasons);
   } else if (cbp->CanComposite()) {
-    cbp->mCompositorScheduler->ScheduleComposition();
+    cbp->mCompositorScheduler->ScheduleComposition(aReasons);
   }
 }
 
@@ -1090,7 +1096,6 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
     const LayersId& child) {
   RefPtr<APZUpdater> oldApzUpdater;
   APZCTreeManagerParent* parent;
-  bool scheduleComposition = false;
   bool apzEnablementChanged = false;
   RefPtr<WebRenderBridgeParent> childWrBridge;
 
@@ -1140,10 +1145,6 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
       childWrBridge = sIndirectLayerTrees[child].mWrBridge;
     }
     parent = sIndirectLayerTrees[child].mApzcTreeManagerParent;
-  }
-
-  if (scheduleComposition) {
-    ScheduleComposition();
   }
 
   if (childWrBridge) {
@@ -1643,7 +1644,7 @@ void CompositorBridgeParent::NotifyDidSceneBuild(
   if (mWrBridge) {
     mWrBridge->NotifyDidSceneBuild(aInfo);
   } else {
-    mCompositorScheduler->ScheduleComposition();
+    mCompositorScheduler->ScheduleComposition(wr::RenderReasons::SCENE);
   }
 }
 

@@ -178,7 +178,8 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
     MOZ_CRASH("Should only be called on ContentCompositorBridgeParent.");
   }
 
-  virtual void ForceComposeToTarget(gfx::DrawTarget* aTarget,
+  virtual void ForceComposeToTarget(wr::RenderReasons aReasons,
+                                    gfx::DrawTarget* aTarget,
                                     const gfx::IntRect* aRect = nullptr) {
     MOZ_CRASH();
   }
@@ -219,8 +220,10 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
       PCompositorWidgetParent* aActor) = 0;
 
   virtual mozilla::ipc::IPCResult RecvAdoptChild(const LayersId& id) = 0;
-  virtual mozilla::ipc::IPCResult RecvFlushRenderingAsync() = 0;
-  virtual mozilla::ipc::IPCResult RecvForcePresent() = 0;
+  virtual mozilla::ipc::IPCResult RecvFlushRenderingAsync(
+      const wr::RenderReasons& aReasons) = 0;
+  virtual mozilla::ipc::IPCResult RecvForcePresent(
+      const wr::RenderReasons& aReasons) = 0;
   virtual mozilla::ipc::IPCResult RecvBeginRecording(
       const TimeStamp& aRecordingStart, BeginRecordingResolver&& aResolve) = 0;
   virtual mozilla::ipc::IPCResult RecvEndRecordingToDisk(
@@ -241,7 +244,8 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
       CompositorOptions* compositorOptions) = 0;
   virtual mozilla::ipc::IPCResult RecvNotifyChildRecreated(
       const LayersId& id, CompositorOptions* compositorOptions) = 0;
-  virtual mozilla::ipc::IPCResult RecvFlushRendering() = 0;
+  virtual mozilla::ipc::IPCResult RecvFlushRendering(
+      const wr::RenderReasons& aReasons) = 0;
   virtual mozilla::ipc::IPCResult RecvWaitOnTransactionProcessed() = 0;
   virtual mozilla::ipc::IPCResult RecvStartFrameTimeRecording(
       const int32_t& bufferSize, uint32_t* startIndex) = 0;
@@ -308,10 +312,13 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   mozilla::ipc::IPCResult RecvNotifyChildRecreated(
       const LayersId& child, CompositorOptions* aOptions) override;
   mozilla::ipc::IPCResult RecvAdoptChild(const LayersId& child) override;
-  mozilla::ipc::IPCResult RecvFlushRendering() override;
-  mozilla::ipc::IPCResult RecvFlushRenderingAsync() override;
+  mozilla::ipc::IPCResult RecvFlushRendering(
+      const wr::RenderReasons& aReasons) override;
+  mozilla::ipc::IPCResult RecvFlushRenderingAsync(
+      const wr::RenderReasons& aReasons) override;
   mozilla::ipc::IPCResult RecvWaitOnTransactionProcessed() override;
-  mozilla::ipc::IPCResult RecvForcePresent() override;
+  mozilla::ipc::IPCResult RecvForcePresent(
+      const wr::RenderReasons& aReasons) override;
 
   mozilla::ipc::IPCResult RecvStartFrameTimeRecording(
       const int32_t& aBufferSize, uint32_t* aOutStartIndex) override;
@@ -408,9 +415,9 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   void AsyncRender();
 
   // Can be called from any thread
-  void ScheduleRenderOnCompositorThread() override;
+  void ScheduleRenderOnCompositorThread(wr::RenderReasons aReasons) override;
 
-  void ScheduleComposition();
+  void ScheduleComposition(wr::RenderReasons aReasons);
 
   void NotifyShadowTreeTransaction(LayersId aId, bool aIsFirstPaint,
                                    const FocusTarget& aFocusTarget,
@@ -426,7 +433,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   void ScheduleRotationOnCompositorThread(const TargetConfig& aTargetConfig,
                                           bool aIsFirstPaint);
 
-  static void ScheduleForcedComposition(const LayersId& aLayersId);
+  static void ScheduleForcedComposition(const LayersId& aLayersId,
+                                        wr::RenderReasons aReasons);
 
   /**
    * Returns the unique layer tree identifier that corresponds to the root
@@ -526,7 +534,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   widget::CompositorWidget* GetWidget() { return mWidget; }
 
   virtual void ForceComposeToTarget(
-      gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr) override;
+      wr::RenderReasons aReasons, gfx::DrawTarget* aTarget,
+      const gfx::IntRect* aRect = nullptr) override;
 
   PAPZCTreeManagerParent* AllocPAPZCTreeManagerParent(
       const LayersId& aLayersId) override;
@@ -648,7 +657,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   bool IsPaused() { return mPaused; }
 
  protected:
-  void ForceComposition();
+  void ForceComposition(wr::RenderReasons aReasons);
   void CancelCurrentCompositeTask();
 
   /**

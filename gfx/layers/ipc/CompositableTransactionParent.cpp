@@ -52,7 +52,7 @@ static bool ScheduleComposition(CompositableHost* aCompositable) {
   if (!cp) {
     return false;
   }
-  cp->ScheduleComposition();
+  cp->ScheduleComposition(wr::RenderReasons::ASYNC_IMAGE);
   return true;
 }
 
