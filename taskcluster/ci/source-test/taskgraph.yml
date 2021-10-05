@@ -16,6 +16,8 @@ diff:
             - type: directory
               name: public/taskgraph
               path: /builds/worker/artifacts
+    attributes:
+        code-review: true
     always-target: true
     treeherder:
         kind: test
