@@ -15,7 +15,6 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "ARefBase.h"
-#include "nsIRequest.h"
 
 //-----------------------------------------------------------------------------
 // nsHttpConnectionInfo - holds the properties of a connection
