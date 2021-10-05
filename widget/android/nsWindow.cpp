@@ -32,6 +32,7 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/gfx/Swizzle.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/widget/AndroidVsync.h"
@@ -2710,4 +2711,193 @@ already_AddRefed<nsIWidget> nsIWidget::CreateTopLevelWindow() {
 already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
   nsCOMPtr<nsIWidget> window = new nsWindow();
   return window.forget();
+}
+
+static already_AddRefed<DataSourceSurface> GetCursorImage(
+    const nsIWidget::Cursor& aCursor, mozilla::CSSToLayoutDeviceScale aScale) {
+  if (!aCursor.IsCustom()) {
+    return nullptr;
+  }
+
+  RefPtr<DataSourceSurface> destDataSurface;
+
+  nsIntSize size = nsIWidget::CustomCursorSize(aCursor);
+  // prevent DoS attacks
+  if (size.width > 128 || size.height > 128) {
+    return nullptr;
+  }
+
+  RefPtr<gfx::SourceSurface> surface = aCursor.mContainer->GetFrameAtSize(
+      size * aScale.scale, imgIContainer::FRAME_CURRENT,
+      imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_ASYNC_NOTIFY);
+  if (NS_WARN_IF(!surface)) {
+    return nullptr;
+  }
+
+  RefPtr<DataSourceSurface> srcDataSurface = surface->GetDataSurface();
+  if (NS_WARN_IF(!srcDataSurface)) {
+    return nullptr;
+  }
+
+  DataSourceSurface::ScopedMap sourceMap(srcDataSurface,
+                                         DataSourceSurface::READ);
+
+  destDataSurface = gfx::Factory::CreateDataSourceSurfaceWithStride(
+      srcDataSurface->GetSize(), SurfaceFormat::R8G8B8A8,
+      sourceMap.GetStride());
+  if (NS_WARN_IF(!destDataSurface)) {
+    return nullptr;
+  }
+
+  DataSourceSurface::ScopedMap destMap(destDataSurface,
+                                       DataSourceSurface::READ_WRITE);
+
+  SwizzleData(sourceMap.GetData(), sourceMap.GetStride(), surface->GetFormat(),
+              destMap.GetData(), destMap.GetStride(), SurfaceFormat::R8G8B8A8,
+              destDataSurface->GetSize());
+
+  return destDataSurface.forget();
+}
+
+static int32_t GetCursorType(nsCursor aCursor) {
+  // When our minimal requirement of SDK version is 25+,
+  // we should replace with JNI auto-generator.
+  switch (aCursor) {
+    case eCursor_standard:
+      // android.view.PointerIcon.TYPE_ARROW
+      return 0x3e8;
+    case eCursor_wait:
+      // android.view.PointerIcon.TYPE_WAIT
+      return 0x3ec;
+    case eCursor_select:
+      // android.view.PointerIcon.TYPE_TEXT;
+      return 0x3f0;
+    case eCursor_hyperlink:
+      // android.view.PointerIcon.TYPE_HAND
+      return 0x3ea;
+    case eCursor_n_resize:
+    case eCursor_s_resize:
+    case eCursor_ns_resize:
+    case eCursor_row_resize:
+      // android.view.PointerIcon.TYPE_VERTICAL_DOUBLE_ARROW
+      return 0x3f7;
+    case eCursor_w_resize:
+    case eCursor_e_resize:
+    case eCursor_ew_resize:
+    case eCursor_col_resize:
+      // android.view.PointerIcon.TYPE_HORIZONTAL_DOUBLE_ARROW
+      return 0x3f6;
+    case eCursor_nw_resize:
+    case eCursor_se_resize:
+    case eCursor_nwse_resize:
+      // android.view.PointerIcon.TYPE_TOP_LEFT_DIAGONAL_DOUBLE_ARROW
+      return 0x3f9;
+    case eCursor_ne_resize:
+    case eCursor_sw_resize:
+    case eCursor_nesw_resize:
+      // android.view.PointerIcon.TYPE_TOP_RIGHT_DIAGONAL_DOUBLE_ARROW
+      return 0x3f8;
+    case eCursor_crosshair:
+      // android.view.PointerIcon.TYPE_CROSSHAIR
+      return 0x3ef;
+    case eCursor_move:
+      // android.view.PointerIcon.TYPE_ARROW
+      return 0x3e8;
+    case eCursor_help:
+      // android.view.PointerIcon.TYPE_HELP
+      return 0x3eb;
+    case eCursor_copy:
+      // android.view.PointerIcon.TYPE_COPY
+      return 0x3f3;
+    case eCursor_alias:
+      // android.view.PointerIcon.TYPE_ALIAS
+      return 0x3f2;
+    case eCursor_context_menu:
+      // android.view.PointerIcon.TYPE_CONTEXT_MENU
+      return 0x3e9;
+    case eCursor_cell:
+      // android.view.PointerIcon.TYPE_CELL
+      return 0x3ee;
+    case eCursor_grab:
+      // android.view.PointerIcon.TYPE_GRAB
+      return 0x3fc;
+    case eCursor_grabbing:
+      // android.view.PointerIcon.TYPE_GRABBING
+      return 0x3fd;
+    case eCursor_spinning:
+      // android.view.PointerIcon.TYPE_WAIT
+      return 0x3ec;
+    case eCursor_zoom_in:
+      // android.view.PointerIcon.TYPE_ZOOM_IN
+      return 0x3fa;
+    case eCursor_zoom_out:
+      // android.view.PointerIcon.TYPE_ZOOM_OUT
+      return 0x3fb;
+    case eCursor_not_allowed:
+      // android.view.PointerIcon.TYPE_NO_DROP:
+      return 0x3f4;
+    case eCursor_no_drop:
+      // android.view.PointerIcon.TYPE_NO_DROP:
+      return 0x3f4;
+    case eCursor_vertical_text:
+      // android.view.PointerIcon.TYPE_VERTICAL_TEXT
+      return 0x3f1;
+    case eCursor_all_scroll:
+      // android.view.PointerIcon.TYPE_ALL_SCROLL
+      return 0x3f5;
+    case eCursor_none:
+      // android.view.PointerIcon.TYPE_NULL
+      return 0;
+    default:
+      NS_WARNING_ASSERTION(aCursor, "Invalid cursor type");
+      // android.view.PointerIcon.TYPE_ARROW
+      return 0x3e8;
+  }
+}
+
+void nsWindow::SetCursor(const Cursor& aCursor) {
+  if (mozilla::jni::GetAPIVersion() < 24) {
+    return;
+  }
+
+  // Only change cursor if it's actually been changed
+  if (!mUpdateCursor && mCursor == aCursor) {
+    return;
+  }
+
+  mUpdateCursor = false;
+  mCursor = aCursor;
+
+  int32_t type = 0;
+  RefPtr<DataSourceSurface> destDataSurface =
+      GetCursorImage(aCursor, GetDefaultScale());
+  if (!destDataSurface) {
+    type = GetCursorType(aCursor.mDefaultCursor);
+  }
+
+  if (mozilla::jni::NativeWeakPtr<LayerViewSupport>::Accessor lvs{
+          mLayerViewSupport.Access()}) {
+    const auto& compositor = lvs->GetJavaCompositor();
+
+    DispatchToUiThread(
+        "nsWindow::SetCursor",
+        [compositor = GeckoSession::Compositor::GlobalRef(compositor), type,
+         destDataSurface = std::move(destDataSurface),
+         hotspotX = aCursor.mHotspotX, hotspotY = aCursor.mHotspotY] {
+          java::sdk::Bitmap::LocalRef bitmap;
+          if (destDataSurface) {
+            DataSourceSurface::ScopedMap destMap(destDataSurface,
+                                                 DataSourceSurface::READ);
+            auto pixels = mozilla::jni::ByteBuffer::New(
+                reinterpret_cast<int8_t*>(destMap.GetData()),
+                destMap.GetStride() * destDataSurface->GetSize().height);
+            bitmap = java::sdk::Bitmap::CreateBitmap(
+                destDataSurface->GetSize().width,
+                destDataSurface->GetSize().height,
+                java::sdk::Config::ARGB_8888());
+            bitmap->CopyPixelsFromBuffer(pixels);
+          }
+          compositor->SetPointerIcon(type, bitmap, hotspotX, hotspotY);
+        });
+  }
 }
