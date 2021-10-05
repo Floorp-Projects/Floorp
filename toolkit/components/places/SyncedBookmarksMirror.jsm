@@ -2377,6 +2377,21 @@ class BookmarkObserverRecorder {
         info.oldURLHref,
         PlacesUtils.bookmarks.SOURCES.SYNC,
       ]);
+
+      this.placesEvents.push(
+        new PlacesBookmarkUrl({
+          id: info.id,
+          itemType: info.type,
+          url: info.newURLHref,
+          guid: info.guid,
+          parentGuid: info.parentGuid,
+          lastModified: info.lastModified,
+          source: PlacesUtils.bookmarks.SOURCES.SYNC,
+          isTagging:
+            info.parentGuid === PlacesUtils.bookmarks.tagsGuid ||
+            info.grandParentGuid === PlacesUtils.bookmarks.tagsGuid,
+        })
+      );
     }
   }
 
