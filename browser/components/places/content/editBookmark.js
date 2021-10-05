@@ -343,7 +343,7 @@ var gEditItemOverlay = {
       PlacesUtils.bookmarks.addObserver(this);
       this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
       PlacesUtils.observers.addListener(
-        ["bookmark-moved", "bookmark-title-changed"],
+        ["bookmark-moved", "bookmark-title-changed", "bookmark-url-changed"],
         this.handlePlacesEvents
       );
       window.addEventListener("unload", this);
@@ -561,7 +561,7 @@ var gEditItemOverlay = {
     if (this._observersAdded) {
       PlacesUtils.bookmarks.removeObserver(this);
       PlacesUtils.observers.removeListener(
-        ["bookmark-moved", "bookmark-title-changed"],
+        ["bookmark-moved", "bookmark-title-changed", "bookmark-url-changed"],
         this.handlePlacesEvents
       );
       window.removeEventListener("unload", this);
@@ -1160,6 +1160,24 @@ var gEditItemOverlay = {
             this._onItemTitleChange(event.id, event.title, event.guid);
           }
           break;
+        case "bookmark-url-changed":
+          if (!this._paneInfo.isItem || this._paneInfo.itemId != event.id) {
+            return;
+          }
+
+          const newURI = Services.io.newURI(event.url);
+          if (!newURI.equals(this._paneInfo.uri)) {
+            this._paneInfo.uri = newURI;
+            if (this._paneInfo.visibleRows.has("locationRow")) {
+              this._initLocationField();
+            }
+
+            if (this._paneInfo.visibleRows.has("tagsRow")) {
+              delete this._paneInfo._cachedCommonTags;
+              this._onTagsChange(event.guid, newURI).catch(Cu.reportError);
+            }
+          }
+          break;
       }
     }
   },
@@ -1283,20 +1301,6 @@ var gEditItemOverlay = {
     }
 
     switch (aProperty) {
-      case "uri":
-        let newURI = Services.io.newURI(aValue);
-        if (!newURI.equals(this._paneInfo.uri)) {
-          this._paneInfo.uri = newURI;
-          if (this._paneInfo.visibleRows.has("locationRow")) {
-            this._initLocationField();
-          }
-
-          if (this._paneInfo.visibleRows.has("tagsRow")) {
-            delete this._paneInfo._cachedCommonTags;
-            this._onTagsChange(aGuid, newURI).catch(Cu.reportError);
-          }
-        }
-        break;
       case "keyword":
         if (this._paneInfo.visibleRows.has("keywordRow")) {
           this._initKeywordField(aValue).catch(Cu.reportError);

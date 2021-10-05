@@ -810,6 +810,7 @@ BookmarksTracker.prototype = {
         "bookmark-removed",
         "bookmark-moved",
         "bookmark-title-changed",
+        "bookmark-url-changed",
       ],
       this._placesListener
     );
@@ -826,6 +827,7 @@ BookmarksTracker.prototype = {
         "bookmark-removed",
         "bookmark-moved",
         "bookmark-title-changed",
+        "bookmark-url-changed",
       ],
       this._placesListener
     );
@@ -879,39 +881,19 @@ BookmarksTracker.prototype = {
     for (let event of events) {
       switch (event.type) {
         case "bookmark-added":
-          if (IGNORED_SOURCES.includes(event.source)) {
-            continue;
-          }
-
-          this._log.trace("'bookmark-added': " + event.id);
-          this._upScore();
-          break;
         case "bookmark-removed":
+        case "bookmark-moved":
+        case "bookmark-title-changed":
+        case "bookmark-url-changed":
           if (IGNORED_SOURCES.includes(event.source)) {
             continue;
           }
 
-          this._log.trace("'bookmark-removed': " + event.id);
-          this._upScore();
-          break;
-        case "bookmark-moved":
-          if (IGNORED_SOURCES.includes(event.source)) {
-            return;
-          }
-
-          this._log.trace("'bookmark-moved': " + event.id);
+          this._log.trace(`'${event.type}': ${event.id}`);
           this._upScore();
           break;
         case "purge-caches":
           this._log.trace("purge-caches");
-          this._upScore();
-          break;
-        case "bookmark-title-changed":
-          if (IGNORED_SOURCES.includes(event.source)) {
-            return;
-          }
-
-          this._log.trace("'bookmark-title-changed': " + event.id);
           this._upScore();
           break;
       }
