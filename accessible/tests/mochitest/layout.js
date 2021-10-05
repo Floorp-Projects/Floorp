@@ -280,26 +280,26 @@ function getBounds(aID, aDPR = window.devicePixelRatio) {
 
   info(`DPR is: ${aDPR}`);
   isWithin(
-    x.value / aDPR,
     xInCSS.value,
+    x.value / aDPR,
     1,
     "X in CSS pixels is calculated correctly"
   );
   isWithin(
-    y.value / aDPR,
     yInCSS.value,
+    y.value / aDPR,
     1,
     "Y in CSS pixels is calculated correctly"
   );
   isWithin(
-    width.value / aDPR,
     widthInCSS.value,
+    width.value / aDPR,
     1,
     "Width in CSS pixels is calculated correctly"
   );
   isWithin(
-    height.value / aDPR,
     heightInCSS.value,
+    height.value / aDPR,
     1,
     "Height in CSS pixels is calculated correctly"
   );

@@ -219,7 +219,11 @@ uint64_t RemoteAccessible::State() const {
   return state;
 }
 
-nsIntRect RemoteAccessible::Bounds() {
+nsIntRect RemoteAccessible::Bounds() const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::Bounds();
+  }
+
   nsIntRect rect;
 
   RefPtr<IAccessible> acc;

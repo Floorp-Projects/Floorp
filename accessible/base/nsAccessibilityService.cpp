@@ -11,6 +11,7 @@
 #include "ARIAGridAccessibleWrap.h"
 #include "ARIAMap.h"
 #include "DocAccessible-inl.h"
+#include "DocAccessibleChild.h"
 #include "FocusManager.h"
 #include "HTMLCanvasAccessible.h"
 #include "HTMLElementAccessibles.h"
@@ -49,7 +50,6 @@
 #ifdef XP_WIN
 #  include "mozilla/a11y/Compatibility.h"
 #  include "mozilla/dom/ContentChild.h"
-#  include "mozilla/StaticPrefs_accessibility.h"
 #  include "mozilla/StaticPtr.h"
 #endif
 
@@ -73,6 +73,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/SVGGeometryFrame.h"
 #include "nsDeckFrame.h"
 
@@ -379,6 +380,34 @@ void nsAccessibilityService::NotifyOfImageSizeAvailable(
       RefPtr<AccEvent> event =
           new AccStateChangeEvent(accessible, states::INVISIBLE, false);
       document->FireDelayedEvent(event);
+    }
+  }
+}
+
+void nsAccessibilityService::NotifyOfPossibleBoundsChange(
+    mozilla::PresShell* aPresShell, nsIContent* aContent) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    DocAccessible* document = GetDocAccessible(aPresShell);
+    if (document) {
+      LocalAccessible* accessible = document->GetAccessible(aContent);
+      if (accessible) {
+        document->MarkForBoundsProcessing(accessible);
+        document->Controller()->ScheduleProcessing();
+      }
+    }
+  }
+}
+
+void nsAccessibilityService::NotifyOfResolutionChange(
+    mozilla::PresShell* aPresShell, float aResolution) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    DocAccessible* document = GetDocAccessible(aPresShell);
+    if (document) {
+      nsTArray<mozilla::a11y::CacheData> data(1);
+      RefPtr<AccAttributes> fields = new AccAttributes();
+      fields->SetAttribute(nsGkAtoms::resolution, aResolution);
+      data.AppendElement(mozilla::a11y::CacheData(0, fields));
+      document->IPCDoc()->SendCache(CacheUpdateType::Update, data, true);
     }
   }
 }

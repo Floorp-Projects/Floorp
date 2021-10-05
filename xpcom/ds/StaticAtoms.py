@@ -1030,6 +1030,7 @@ STATIC_ATOMS = [
     Atom("rectangle", "rectangle"),
     Atom("refresh", "refresh"),
     Atom("rel", "rel"),
+    Atom("relativeBounds", "relative-bounds"),
     Atom("rem", "rem"),
     Atom("remote", "remote"),
     Atom("removeelement", "removeelement"),
