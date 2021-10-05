@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
+<title>Test for bug 615015 of Mozilla</title>
 <script>
-
 function boom()
 {
   document.getElementById("j").focus();
@@ -10,7 +11,6 @@ function boom()
     document.execCommand("insertunorderedlist", false, null);
   } catch(e) { }
 }
-
 </script>
 </head>
 <body onload="boom();"><span><span contenteditable id="j"></span>T</span></body>
