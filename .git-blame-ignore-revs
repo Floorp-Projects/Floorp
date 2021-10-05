@@ -1924,3 +1924,48 @@ e3c223da3e69fdfbfc5bffa1cb6608f9acc256c6 # gecko-dev
 # 3f8100fb74318f9e0b3b6351ade737994d13bcf8 - Simon Giesecke - Bug 1648010 - Replace uses of NS_LITERAL_STRING/NS_LITERAL_CSTRING macros by _ns literals. r=geckoview-reviewers,jgilbert,agi,hsivonen,froydnj
 fbd56b0ecced359f8239f737a6dfad1a72eb6001 # cinnabar
 cd8b8939b911b3c28c13de23fde7201a8452499b # gecko-dev
+# d4a5d856797740630c86cb37dc57d14965b3f0e3 - Alex Lopez - Bug 1696251 - Pass MachCommandBase object as first argument for Mach Commands. r=mhentges,remote-protocol-reviewers,marionette-reviewers,webdriver-reviewers,perftest-reviewers
+75dfe3546879cebe9577f3f42ccd09c1160db7d7 # cinnabar
+d0cfe58fbf7efab6b71962b0d9796cb4c5561aa1 # gecko-dev
+# b85edcc1ce08369f27947268f1ebef5787f8cbae - Cosmin Sabou - Backed out changeset d4a5d8567977 (bug 1696251) for non-unified build bustages. CLOSED TREE
+785f9b8a87fdc3325c7055c0d985319ed4a08c29 # cinnabar
+6992a7ee6619df574d38905b4e3209f8f0c2ba2a # gecko-dev
+# e169193b74235c34691dbbb0f51a804c486533fc - Alex Lopez - Bug 1696251 - Pass MachCommandBase object as first argument for Mach Commands. r=mhentges,remote-protocol-reviewers,marionette-reviewers,webdriver-reviewers,perftest-reviewers
+d1a82b80922ffbbce091f287c7e00bd6a5da8b53 # cinnabar
+6c41083cda4216010f70b0e7b1c3471c58d54685 # gecko-dev
+# 1c84c9a34575f034cad1ed970e0bc6c516d8547c - Alex Lopez - Bug 1696251 - Turn all properties in MachCommandBase subclasses into methods. r=mhentges,perftest-reviewers,sparky
+41687360e8b2f5fe96be0ab853f222b34844e70d # cinnabar
+046df281c7e23895b0d1ff957267aca7e34ecb0b # gecko-dev
+# 31a80696d4d5a3e745be3df2e86df061cf02daf5 - Butkovits Atila - Backed out 2 changesets (bug 1696251) for causing js-bench-sm failures. CLOSED TREE
+2e34e363b9bc93fa83c418013fa3323b92c941ca # cinnabar
+7ee7f795367c79e2c9e53469dfa870846419a35e # gecko-dev
+# 4b889750da57ff0994c7196bc8a0151c17f641b6 - Alex Lopez - Bug 1696251 - Refactor constructors in MachCommandBase subclasses to remove them. r=mhentges,remote-protocol-reviewers
+2e8613720d7073576e1f5d5ade4be1488de4259f # cinnabar
+7501784f472d0c9fe2b815927646b23e43a688fd # gecko-dev
+# ca386bcad42046b17d617e55a92e353ef2dc3061 - Butkovits Atila - Backed out changeset 4b889750da57 (bug 1696251) for causing lint failures. CLOSED TREE
+6bb47ac42474928e4e19fd3a5a0d71c0bc97070f # cinnabar
+b1cddc95abff33c9d7cec35d98c2d5b0c6feebd8 # gecko-dev
+# e1921c5112d83da21aa2fae7a9c5710016d1b371 - Alex Lopez - Bug 1696251 - Replace self with command_context where possible in existing mach commands. r=mhentges,webdriver-reviewers,perftest-reviewers,whimboo
+190e03aaabf194020d595e7b9776a254beb44dc2 # cinnabar
+e560eab933b2be62ad49ad2ae686882a8dd0b82e # gecko-dev
+# abf91c0aeefdee7c7070dd9fb5f8895736d485ce - Butkovits Atila - Backed out changeset e1921c5112d8 (bug 1696251) for causing bustages complaining about 'CommandContext'. CLOSED TREE
+a07f790e420eeb51f5c3fc5af8b655061c2d33fc # cinnabar
+40d4c20d7af5399e17bb2cf619ad58ff88bbfa2c # gecko-dev
+# 5f5b612878f318b3e635faf5cc145155cd454eb0 - Alex Lopez - Bug 1696251: Allow mach commands as stand-alone functions and adapt existing commands. r=mhentges,webdriver-reviewers,perftest-reviewers,sparky,whimboo
+bf860fe7dce01964e6b5b341c4e166ced641f894 # cinnabar
+2d9b6367b3a86d60316edd5e213a5e0f87cbfdc6 # gecko-dev
+# e28c911d36db5524416becf1781c231a058e6c21 - Noemi Erli - Backed out changeset 5f5b612878f3 (bug 1696251) for causing multiple bustages
+91aa2e2b9cac820f191a57c06618bbd69cc3ed3f # cinnabar
+6ff47a6cd1bb3cfb8cd5f64a3001cc26bbf73fdf # gecko-dev
+# 510dd46a9de764e8730e081235a5d4d3aa9507ee - Alex Lopez - Bug 1696251: Allow mach commands as stand-alone functions and adapt existing commands. r=mhentges,webdriver-reviewers,perftest-reviewers,sparky,whimboo
+fe61e94ec88e76ea9d31cf9c8c267677b09cbc31 # cinnabar
+a7237935e277847ddb4520ab14836f222779a337 # gecko-dev
+# b747274f1da3e93a8bed6b8c8df6299ceb354417 - Butkovits Atila - Backed out changeset 510dd46a9de7 (bug 1696251) for causing Android build bustages.
+c06a3dd9faeee8196dfc3d11d31c50765a160b94 # cinnabar
+ff2f745e2dc1f012b03d85c2af7b82aed4460ba2 # gecko-dev
+# 53b1fa0faa6d78f7cf72f9cbe3dc85221a04eea3 - Alex Lopez - Bug 1696251: Allow mach commands as stand-alone functions and adapt existing commands. r=mhentges,webdriver-reviewers,perftest-reviewers,sparky,whimboo
+a8e7083c849eef5c4c978b537ac555c8000ac9ae # cinnabar
+8745fe84a3204ee8daa3469c155673f53caf8d16 # gecko-dev
+# c38d34be7c3f757510f037fef5a78ea08af32980 - Butkovits Atila - Backed out changeset 53b1fa0faa6d (bug 1696251) for breaking the static-analysis integration. a=backout
+eb735ac57e701c05a1deac60d563150c33a6a0e7 # cinnabar
+547e78004bf51e90cf4efcc6fe2a899f01ffa302 # gecko-dev
