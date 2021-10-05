@@ -441,8 +441,8 @@ async function testViewportResize(
   );
 
   if (hasDevice) {
-    const { reloadNeeded } = await deviceRemoved;
-    if (reloadNeeded) {
+    const { reloadTriggered } = await deviceRemoved;
+    if (reloadTriggered) {
       await waitForDevToolsReload();
     }
   }
@@ -549,8 +549,8 @@ const selectDevice = async (ui, value) => {
 
   const onDeviceChanged = once(ui, "device-changed");
   await selectMenuItem(ui, "#device-selector", value);
-  const { reloadNeeded } = await onDeviceChanged;
-  if (reloadNeeded) {
+  const { reloadTriggered } = await onDeviceChanged;
+  if (reloadTriggered) {
     await waitForDevToolsReload();
   }
 };
