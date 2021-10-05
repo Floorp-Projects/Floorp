@@ -62,11 +62,12 @@ CSSToScreenScale2D ComputeDisplayportScale(nsIScrollableFrame* aScrollFrame) {
   MOZ_ASSERT(frame);
   nsPresContext* presContext = frame->PresContext();
   PresShell* presShell = presContext->PresShell();
+
   return presContext->CSSToDevPixelScale() *
-         LayoutDeviceToLayerScale2D(
-             presShell->GetCumulativeResolution() *
-             nsLayoutUtils::GetTransformToAncestorScale(frame)) *
-         LayerToScreenScale2D(1.0, 1.0);
+         LayoutDeviceToLayerScale(presShell->GetCumulativeResolution()) *
+         LayerToParentLayerScale(1.0) *
+         nsLayoutUtils::GetTransformToAncestorScaleCrossProcessForFrameMetrics(
+             frame);
 }
 
 /* static */
