@@ -93,6 +93,7 @@
 #include "mozilla/Unused.h"
 #include "MobileViewportManager.h"
 #include "VisualViewport.h"
+#include "mozilla/dom/BrowserChild.h"
 #include <algorithm>
 #include <cstdlib>  // for std::abs(int/long)
 #include <cmath>    // for std::abs(float/double)
@@ -2874,9 +2875,19 @@ gfxSize GetPaintedLayerScaleForFrame(nsIFrame* aFrame) {
 
   MOZ_ASSERT(root);
 
-  float resolution = presCtx->PresShell()->GetResolution();
+  float res = presCtx->PresShell()->GetResolution();
+  gfxSize resolution(res, res);
 
-  Matrix4x4Flagged transform = Matrix4x4::Scaling(resolution, resolution, 1.0);
+  if (BrowserChild* browserChild =
+          BrowserChild::GetFrom(presCtx->PresShell())) {
+    ParentLayerToScreenScale2D ancestorProcessTransformToAncestorScale =
+        browserChild->GetEffectsInfo().mTransformToAncestorScale;
+    resolution.width *= ancestorProcessTransformToAncestorScale.xScale;
+    resolution.height *= ancestorProcessTransformToAncestorScale.yScale;
+  }
+
+  Matrix4x4Flagged transform =
+      Matrix4x4::Scaling(resolution.width, resolution.height, 1.0);
   if (aFrame != root) {
     // aTransform is applied first, then the scale is applied to the result
     transform = nsLayoutUtils::GetTransformToAncestor(RelativeTo{aFrame},
