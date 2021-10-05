@@ -78,6 +78,10 @@ instructions! {
     (None, nop, 800),
     (None, block),
     (None, r#loop),
+    (Some(try_valid), r#try),
+    (Some(delegate_valid), delegate),
+    (Some(catch_valid), catch),
+    (Some(catch_all_valid), catch_all),
     (Some(if_valid), r#if),
     (Some(else_valid), r#else),
     (Some(end_valid), end),
@@ -87,6 +91,8 @@ instructions! {
     (Some(return_valid), r#return, 900),
     (Some(call_valid), call),
     (Some(call_indirect_valid), call_indirect),
+    (Some(throw_valid), throw, 850),
+    (Some(rethrow_valid), rethrow),
     // Parametric instructions.
     (Some(drop_valid), drop),
     (Some(select_valid), select),
@@ -543,6 +549,10 @@ pub(crate) struct CodeBuilderAllocations {
     // of functions that have that function type.
     functions: BTreeMap<Vec<ValType>, Vec<u32>>,
 
+    // Like functions above this is a map from tag types to the list of tags
+    // have that tag type.
+    tags: BTreeMap<Vec<ValType>, Vec<u32>>,
+
     // Tables in this module which have a funcref element type.
     funcref_tables: Vec<u32>,
 
@@ -604,6 +614,9 @@ enum ControlKind {
     Block,
     If,
     Loop,
+    Try,
+    Catch,
+    CatchAll,
 }
 
 enum Float {
@@ -623,6 +636,13 @@ impl CodeBuilderAllocations {
                     .or_insert(Vec::new())
                     .push(i as u32);
             }
+        }
+
+        let mut tags = BTreeMap::new();
+        for (idx, tag_type) in module.tags() {
+            tags.entry(tag_type.func_type.params.clone())
+                .or_insert(Vec::new())
+                .push(idx);
         }
 
         let mut functions = BTreeMap::new();
@@ -677,6 +697,7 @@ impl CodeBuilderAllocations {
             operands: Vec::with_capacity(16),
             options: Vec::with_capacity(NUM_OPTIONS),
             functions,
+            tags,
             mutable_globals,
             funcref_tables,
             referenced_functions: referenced_functions.into_iter().collect(),
@@ -1069,6 +1090,94 @@ fn block(u: &mut Unstructured, module: &Module, builder: &mut CodeBuilder) -> Re
     Ok(Instruction::Block(block_ty))
 }
 
+#[inline]
+fn try_valid(module: &Module, _: &mut CodeBuilder) -> bool {
+    module.config.exceptions_enabled()
+}
+
+fn r#try(u: &mut Unstructured, module: &Module, builder: &mut CodeBuilder) -> Result<Instruction> {
+    let block_ty = builder.arbitrary_block_type(u, module)?;
+    let (params, results) = block_ty.params_results(module);
+    let height = builder.allocs.operands.len() - params.len();
+    builder.allocs.controls.push(Control {
+        kind: ControlKind::Try,
+        params,
+        results,
+        height,
+    });
+    Ok(Instruction::Try(block_ty))
+}
+
+#[inline]
+fn delegate_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
+    let control_kind = builder.allocs.controls.last().unwrap().kind;
+    // delegate is only valid if end could be used in a try control frame
+    module.config.exceptions_enabled()
+        && control_kind == ControlKind::Try
+        && end_valid(module, builder)
+}
+
+fn delegate(u: &mut Unstructured, _: &Module, builder: &mut CodeBuilder) -> Result<Instruction> {
+    // There will always be at least the function's return frame and try
+    // control frame if we are emitting delegate
+    let n = builder.allocs.controls.iter().count();
+    debug_assert!(n >= 2);
+    // Delegate must target an outer control from the try block, and is
+    // encoded with relative depth from the outer control
+    let target_relative_from_last = u.int_in_range(1..=n - 1)?;
+    let target_relative_from_outer = target_relative_from_last - 1;
+    // Delegate ends the try block
+    builder.allocs.controls.pop();
+    Ok(Instruction::Delegate(target_relative_from_outer as u32))
+}
+
+#[inline]
+fn catch_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
+    let control_kind = builder.allocs.controls.last().unwrap().kind;
+    // catch is only valid if end could be used in a try or catch (not
+    // catch_all) control frame. There must also be a tag that we can catch.
+    module.config.exceptions_enabled()
+        && (control_kind == ControlKind::Try || control_kind == ControlKind::Catch)
+        && end_valid(module, builder)
+        && module.tags.len() > 0
+}
+
+fn catch(u: &mut Unstructured, module: &Module, builder: &mut CodeBuilder) -> Result<Instruction> {
+    let tag_idx = u.int_in_range(0..=(module.tags.len() - 1))?;
+    let tag_type = &module.tags[tag_idx];
+    let control = builder.allocs.controls.pop().unwrap();
+    // Pop the results for the previous try or catch
+    builder.pop_operands(&control.results);
+    // Push the params of the tag we're catching
+    builder.push_operands(&tag_type.func_type.params);
+    builder.allocs.controls.push(Control {
+        kind: ControlKind::Catch,
+        ..control
+    });
+    Ok(Instruction::Catch(tag_idx as u32))
+}
+
+#[inline]
+fn catch_all_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
+    let control_kind = builder.allocs.controls.last().unwrap().kind;
+    // catch_all is only valid if end could be used in a try or catch (not
+    // catch_all) control frame.
+    module.config.exceptions_enabled()
+        && (control_kind == ControlKind::Try || control_kind == ControlKind::Catch)
+        && end_valid(module, builder)
+}
+
+fn catch_all(_: &mut Unstructured, _: &Module, builder: &mut CodeBuilder) -> Result<Instruction> {
+    let control = builder.allocs.controls.pop().unwrap();
+    // Pop the results for the previous try or catch
+    builder.pop_operands(&control.results);
+    builder.allocs.controls.push(Control {
+        kind: ControlKind::CatchAll,
+        ..control
+    });
+    Ok(Instruction::CatchAll)
+}
+
 fn r#loop(u: &mut Unstructured, module: &Module, builder: &mut CodeBuilder) -> Result<Instruction> {
     let block_ty = builder.arbitrary_block_type(u, module)?;
     let (params, results) = block_ty.params_results(module);
@@ -1330,6 +1439,65 @@ fn call_indirect(
         ty: *type_idx as u32,
         table,
     })
+}
+
+#[inline]
+fn throw_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
+    module.config.exceptions_enabled()
+        && builder
+            .allocs
+            .tags
+            .keys()
+            .any(|k| builder.types_on_stack(k))
+}
+
+fn throw(u: &mut Unstructured, module: &Module, builder: &mut CodeBuilder) -> Result<Instruction> {
+    let candidates = builder
+        .allocs
+        .tags
+        .iter()
+        .filter(|(k, _)| builder.types_on_stack(k))
+        .flat_map(|(_, v)| v.iter().copied())
+        .collect::<Vec<_>>();
+    assert!(candidates.len() > 0);
+    let i = u.int_in_range(0..=candidates.len() - 1)?;
+    let (tag_idx, tag_type) = module.tags().nth(candidates[i] as usize).unwrap();
+    // Tags have no results, throwing cannot return
+    assert!(tag_type.func_type.results.len() == 0);
+    builder.pop_operands(&tag_type.func_type.params);
+    Ok(Instruction::Throw(tag_idx as u32))
+}
+
+#[inline]
+fn rethrow_valid(module: &Module, builder: &mut CodeBuilder) -> bool {
+    // There must be a catch or catch_all control on the stack
+    module.config.exceptions_enabled()
+        && builder
+            .allocs
+            .controls
+            .iter()
+            .any(|l| l.kind == ControlKind::Catch || l.kind == ControlKind::CatchAll)
+}
+
+fn rethrow(u: &mut Unstructured, _: &Module, builder: &mut CodeBuilder) -> Result<Instruction> {
+    let n = builder
+        .allocs
+        .controls
+        .iter()
+        .filter(|l| l.kind == ControlKind::Catch || l.kind == ControlKind::CatchAll)
+        .count();
+    debug_assert!(n > 0);
+    let i = u.int_in_range(0..=n - 1)?;
+    let (target, _) = builder
+        .allocs
+        .controls
+        .iter()
+        .rev()
+        .enumerate()
+        .filter(|(_, l)| l.kind == ControlKind::Catch || l.kind == ControlKind::CatchAll)
+        .nth(i)
+        .unwrap();
+    Ok(Instruction::Rethrow(target as u32))
 }
 
 #[inline]

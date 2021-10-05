@@ -213,6 +213,10 @@ pub enum Instruction<'a> {
     Loop(BlockType),
     If(BlockType),
     Else,
+    Try(BlockType),
+    Delegate(u32),
+    Catch(u32),
+    CatchAll,
     End,
     Br(u32),
     BrIf(u32),
@@ -220,6 +224,8 @@ pub enum Instruction<'a> {
     Return,
     Call(u32),
     CallIndirect { ty: u32, table: u32 },
+    Throw(u32),
+    Rethrow(u32),
 
     // Parametric instructions.
     Drop,
@@ -679,6 +685,22 @@ impl Instruction<'_> {
                 bt.encode(bytes);
             }
             Instruction::Else => bytes.push(0x05),
+            Instruction::Try(bt) => {
+                bytes.push(0x06);
+                bt.encode(bytes);
+            }
+            Instruction::Catch(t) => {
+                bytes.push(0x07);
+                bytes.extend(encoders::u32(t));
+            }
+            Instruction::Throw(t) => {
+                bytes.push(0x08);
+                bytes.extend(encoders::u32(t));
+            }
+            Instruction::Rethrow(l) => {
+                bytes.push(0x09);
+                bytes.extend(encoders::u32(l));
+            }
             Instruction::End => bytes.push(0x0B),
             Instruction::Br(l) => {
                 bytes.push(0x0C);
@@ -705,6 +727,13 @@ impl Instruction<'_> {
                 bytes.push(0x11);
                 bytes.extend(encoders::u32(ty));
                 bytes.extend(encoders::u32(table));
+            }
+            Instruction::Delegate(l) => {
+                bytes.push(0x18);
+                bytes.extend(encoders::u32(l));
+            }
+            Instruction::CatchAll => {
+                bytes.push(0x19);
             }
 
             // Parametric instructions.

@@ -95,6 +95,8 @@ pub enum EntityType {
     Memory(MemoryType),
     /// A global type.
     Global(GlobalType),
+    /// A tag type.
+    Tag(TagType),
     /// The `n`th type, which is an instance.
     Instance(u32),
     /// The `n`th type, which is a module.
@@ -123,6 +125,12 @@ impl From<GlobalType> for EntityType {
     }
 }
 
+impl From<TagType> for EntityType {
+    fn from(t: TagType) -> Self {
+        EntityType::Tag(t)
+    }
+}
+
 impl EntityType {
     pub(crate) fn encode(&self, dst: &mut Vec<u8>) {
         match self {
@@ -140,6 +148,10 @@ impl EntityType {
             }
             EntityType::Global(ty) => {
                 dst.push(0x03);
+                ty.encode(dst);
+            }
+            EntityType::Tag(ty) => {
+                dst.push(0x04);
                 ty.encode(dst);
             }
             EntityType::Module(ty) => {

@@ -5445,18 +5445,18 @@ source = "git+https://github.com/kvark/dummy-web#5731e569d865a1ebaf116f48dad781f
 
 [[package]]
 name = "wasm-encoder"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2caacc74c68c74f0008c4055cdf509c43e623775eaf73323bb818dcf666ed9bd"
+checksum = "49cfbd7c23474849807ecde008c82eb38d303b07ec61d48f45b65f3c8cdd2770"
 dependencies = [
  "leb128",
 ]
 
 [[package]]
 name = "wasm-smith"
-version = "0.7.2"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b05fb86fe9042112d9659e3f56736b8ad4122023e568e5c55184677c84f66c9"
+checksum = "440458e050ee2731e85af3368ee58e23d4728d597809a88f841a24778876f2b6"
 dependencies = [
  "arbitrary",
  "indexmap",
