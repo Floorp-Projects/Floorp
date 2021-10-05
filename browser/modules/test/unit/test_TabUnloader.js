@@ -112,7 +112,7 @@ let unloadTests = [
   },
   {
     tabs: ["1", "2 selected", "3", "4 media", "5", "6"],
-    result: "0,2,4,5,3,1",
+    result: "0,2,4,5,1,3",
   },
   {
     tabs: ["1 media", "2 selected media", "3", "4 media", "5", "6"],
@@ -131,7 +131,7 @@ let unloadTests = [
       "5 media pinned",
       "6 selected",
     ],
-    result: "2,0,3,1,4,5",
+    result: "2,0,3,5,1,4",
   },
   {
     tabs: ["1", "2", "3", "4", "5", "6"],
