@@ -42,7 +42,7 @@
 }
 
 @itemFinished@[exists].hoveringMainArea:hover,
-@item@:is(.openWhenFinished) > .downloadMainArea:hover,
+@item@:is(.openWhenFinished).hoveringMainArea:hover,
 @item@:not([verdict]) > .downloadButton:hover,
 @item@[verdict]:hover,
 .downloadsPanelFooterButton:hover {
