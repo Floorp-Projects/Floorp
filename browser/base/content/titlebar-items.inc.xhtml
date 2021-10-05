@@ -5,22 +5,22 @@
 <hbox class="titlebar-buttonbox-container" skipintoolbarset="true">
   <hbox class="titlebar-buttonbox titlebar-color">
     <toolbarbutton class="titlebar-button titlebar-min"
+                   titlebar-btn="min"
                    oncommand="window.minimize();"
                    data-l10n-id="browser-window-minimize-button"
                    />
-    <!-- titlebar-max-btn is a special attribute used to identify the maximize
-         button elements programmatically -->
     <toolbarbutton class="titlebar-button titlebar-max"
-                   titlebar-max-btn=""
+                   titlebar-btn="max"
                    oncommand="window.maximize();"
                    data-l10n-id="browser-window-maximize-button"
                    />
     <toolbarbutton class="titlebar-button titlebar-restore"
-                   titlebar-max-btn=""
+                   titlebar-btn="max"
                    oncommand="window.restore();"
                    data-l10n-id="browser-window-restore-down-button"
                    />
     <toolbarbutton class="titlebar-button titlebar-close"
+                   titlebar-btn="close"
                    command="cmd_closeWindow"
                    data-l10n-id="browser-window-close-button"
                    />

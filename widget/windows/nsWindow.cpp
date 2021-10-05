@@ -5927,11 +5927,10 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         DispatchCustomEvent(u"draggableregionleftmousedown"_ns);
       }
 
-      // WM_NCHITTEST handles HTMAXBUTTON so we need to handle clicks here.
-      // WM_LBUTTONDOWNs will not be sent for this region.
-      if (wParam == HTMAXBUTTON && mCustomNonClient && !mWindowButtonsRect) {
-        DispatchMouseEvent(eMouseDown, wParam, lParamToClient(lParam), false,
-                           MouseButton::ePrimary, MOUSE_INPUT_SOURCE());
+      if (IsWindowButton(wParam) && mCustomNonClient && !mWindowButtonsRect) {
+        DispatchMouseEvent(eMouseDown, wParamFromGlobalMouseState(),
+                           lParamToClient(lParam), false, MouseButton::ePrimary,
+                           MOUSE_INPUT_SOURCE());
         DispatchPendingEvents();
         result = true;
       }
@@ -6447,8 +6446,14 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
 
     if (mDraggableRegion.Contains(pt.x, pt.y)) {
       testResult = HTCAPTION;
-    } else if (mMaximizeBtnRect.Contains(pt.x, pt.y)) {
+    } else if (mWindowBtnRect[WindowButtonType::Minimize].Contains(pt.x,
+                                                                   pt.y)) {
+      testResult = HTMINBUTTON;
+    } else if (mWindowBtnRect[WindowButtonType::Maximize].Contains(pt.x,
+                                                                   pt.y)) {
       testResult = HTMAXBUTTON;
+    } else if (mWindowBtnRect[WindowButtonType::Close].Contains(pt.x, pt.y)) {
+      testResult = HTCLOSE;
     } else {
       testResult = HTCLIENT;
     }
@@ -6460,7 +6465,12 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
 
 bool nsWindow::IsSimulatedClientArea(int32_t screenX, int32_t screenY) {
   int32_t testResult = ClientMarginHitTestPoint(screenX, screenY);
-  return testResult == HTCAPTION || testResult == HTMAXBUTTON;
+  return testResult == HTCAPTION || IsWindowButton(testResult);
+}
+
+bool nsWindow::IsWindowButton(int32_t hitTestResult) {
+  return hitTestResult == HTMINBUTTON || hitTestResult == HTMAXBUTTON ||
+         hitTestResult == HTCLOSE;
 }
 
 TimeStamp nsWindow::GetMessageTimeStamp(LONG aEventTime) const {
@@ -8486,6 +8496,40 @@ LPARAM nsWindow::lParamToClient(LPARAM lParam) {
   pt.y = GET_Y_LPARAM(lParam);
   ::ScreenToClient(mWnd, &pt);
   return MAKELPARAM(pt.x, pt.y);
+}
+
+WPARAM nsWindow::wParamFromGlobalMouseState() {
+  WPARAM result = 0;
+
+  if (!!::GetKeyState(VK_CONTROL)) {
+    result |= MK_CONTROL;
+  }
+
+  if (!!::GetKeyState(VK_SHIFT)) {
+    result |= MK_SHIFT;
+  }
+
+  if (!!::GetKeyState(VK_LBUTTON)) {
+    result |= MK_LBUTTON;
+  }
+
+  if (!!::GetKeyState(VK_MBUTTON)) {
+    result |= MK_MBUTTON;
+  }
+
+  if (!!::GetKeyState(VK_RBUTTON)) {
+    result |= MK_RBUTTON;
+  }
+
+  if (!!::GetKeyState(VK_XBUTTON1)) {
+    result |= MK_XBUTTON1;
+  }
+
+  if (!!::GetKeyState(VK_XBUTTON2)) {
+    result |= MK_XBUTTON2;
+  }
+
+  return result;
 }
 
 void nsWindow::PickerOpen() { mPickerDisplayCount++; }
