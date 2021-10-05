@@ -402,6 +402,13 @@ nsIFrame* nsCaret::GetGeometry(const Selection* aSelection, nsRect* aRect) {
   return frame;
 }
 
+[[nodiscard]] static nsIFrame* GetContainingBlockIfNeeded(nsIFrame* aFrame) {
+  if (aFrame->IsBlockOutside() || aFrame->IsBlockFrameOrSubclass()) {
+    return nullptr;
+  }
+  return aFrame->GetContainingBlock();
+}
+
 void nsCaret::SchedulePaint(Selection* aSelection) {
   Selection* selection;
   if (aSelection) {
@@ -413,8 +420,13 @@ void nsCaret::SchedulePaint(Selection* aSelection) {
   int32_t frameOffset;
   nsIFrame* frame = GetFrameAndOffset(selection, mOverrideContent,
                                       mOverrideOffset, &frameOffset);
+  if (!frame) {
+    return;
+  }
 
-  if (frame) {
+  if (nsIFrame* cb = GetContainingBlockIfNeeded(frame)) {
+    cb->SchedulePaint();
+  } else {
     frame->SchedulePaint();
   }
 }
@@ -455,10 +467,7 @@ void nsCaret::CheckSelectionLanguageChange() {
 [[nodiscard]] static nsIFrame* MapToContainingBlock(nsIFrame* aFrame,
                                                     nsRect* aCaretRect,
                                                     nsRect* aHookRect) {
-  if (aFrame->IsBlockOutside() || aFrame->IsBlockFrameOrSubclass()) {
-    return aFrame;
-  }
-  nsIFrame* containingBlock = aFrame->GetContainingBlock();
+  nsIFrame* containingBlock = GetContainingBlockIfNeeded(aFrame);
   if (!containingBlock) {
     return aFrame;
   }
