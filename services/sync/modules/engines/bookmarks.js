@@ -883,6 +883,7 @@ BookmarksTracker.prototype = {
         case "bookmark-added":
         case "bookmark-removed":
         case "bookmark-moved":
+        case "bookmark-guid-changed":
         case "bookmark-title-changed":
         case "bookmark-url-changed":
           if (IGNORED_SOURCES.includes(event.source)) {
