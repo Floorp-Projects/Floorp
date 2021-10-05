@@ -8233,21 +8233,25 @@ CSSSize nsLayoutUtils::CalculateBoundingCompositionSize(
   if (rootPresContext) {
     rootPresShell = rootPresContext->PresShell();
     if (nsIFrame* rootFrame = rootPresShell->GetRootFrame()) {
-      LayoutDeviceToLayerScale2D cumulativeResolution(
-          rootPresShell->GetCumulativeResolution() *
-          nsLayoutUtils::GetTransformToAncestorScale(rootFrame));
       ParentLayerRect compBounds;
       if (UpdateCompositionBoundsForRCDRSF(compBounds, rootPresContext)) {
         rootCompositionSize = ViewAs<ScreenPixel>(
             compBounds.Size(),
             PixelCastJustification::ScreenIsParentLayerForRoot);
       } else {
+        // LayoutDeviceToScreenScale2D =
+        //   LayoutDeviceToParentLayerScale *
+        //   ParentLayerToScreenScale2D
+        LayoutDeviceToScreenScale2D cumulativeResolution =
+            LayoutDeviceToParentLayerScale(
+                rootPresShell->GetCumulativeResolution()) *
+            GetTransformToAncestorScaleCrossProcessForFrameMetrics(rootFrame);
+
         int32_t rootAUPerDevPixel = rootPresContext->AppUnitsPerDevPixel();
-        LayerSize frameSize = (LayoutDeviceRect::FromAppUnits(
+        rootCompositionSize = (LayoutDeviceRect::FromAppUnits(
                                    rootFrame->GetRect(), rootAUPerDevPixel) *
                                cumulativeResolution)
                                   .Size();
-        rootCompositionSize = frameSize * LayerToScreenScale(1.0f);
       }
     }
   } else {
