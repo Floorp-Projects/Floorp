@@ -553,6 +553,11 @@ LastInteractionDuration:
   type: integer
   ping: true
 
+LastStartupWasCrash:
+  description: >
+    True if the last startup was detected to have been a crash.
+  type: boolean
+
 MacMemoryPressure:
   description: >
     The current memory pressure state as provided by the macOS memory pressure
@@ -780,6 +785,12 @@ ShutdownProgress:
     "xpcom-shutdown".
   type: string
   ping: true
+
+StartupCacheValid:
+  description: >
+    True if the startup cache was deemed valid and usable. Will be false if the
+    last session used a different browser version or had a startup cache.
+  type: boolean
 
 StartupCrash:
   description: >
