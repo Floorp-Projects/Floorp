@@ -59,7 +59,8 @@ class ClipManager {
   void BeginList(const StackingContextHelper& aStackingContext);
   void EndList(const StackingContextHelper& aStackingContext);
 
-  wr::WrSpaceAndClipChain SwitchItem(nsDisplayItem* aItem);
+  wr::WrSpaceAndClipChain SwitchItem(nsDisplayListBuilder* aBuilder,
+                                     nsDisplayItem* aItem);
   ~ClipManager();
 
   void PushOverrideForASR(const ActiveScrolledRoot* aASR,
