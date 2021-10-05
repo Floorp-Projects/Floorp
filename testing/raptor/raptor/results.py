@@ -533,7 +533,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
             bt_result = {
                 "bt_ver": bt_ver,
                 "browser": bt_browser,
-                "url": bt_url,
+                "url": (bt_url,),
                 "name": "%s%s" % (test_name, extra),
                 "measurements": {},
                 "statistics": {},
