@@ -57,22 +57,6 @@ config = {
                 "win64",
             ],
         },
-        "msix-latest": {
-            "product-name": "Firefox-nightly-msix-latest-SSL",
-            "check_uptake": True,
-            "platforms": [
-                "win",
-                "win64",
-            ],
-        },
-        "msix-latest-l10n": {
-            "product-name": "Firefox-nightly-msix-latest-l10n-SSL",
-            "check_uptake": True,
-            "platforms": [
-                "win",
-                "win64",
-            ],
-        },
         "stub-installer": {
             "product-name": "Firefox-nightly-stub",
             "check_uptake": True,
