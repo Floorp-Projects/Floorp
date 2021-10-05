@@ -7,6 +7,7 @@ pub const DRIFT_COMPENSATION: u32 = 1;
 pub struct AggregateDevice {
     plugin_id: AudioObjectID,
     device_id: AudioObjectID,
+    // For log only
     input_id: AudioObjectID,
     output_id: AudioObjectID,
 }
@@ -669,7 +670,12 @@ impl Drop for AggregateDevice {
                     r
                 );
             } else {
-                cubeb_log!("Destroyed aggregate device {}", self.device_id);
+                cubeb_log!(
+                    "Destroyed aggregate device {} (input {}, output {})",
+                    self.device_id,
+                    self.input_id,
+                    self.output_id
+                );
             }
         }
     }

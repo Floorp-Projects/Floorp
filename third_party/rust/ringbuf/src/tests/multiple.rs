@@ -45,6 +45,59 @@ fn for_each_mut() {
 }
 
 #[test]
+fn pop_each() {
+    let cap = 3;
+    let buf = RingBuffer::<i32>::new(cap);
+    let (mut prod, mut cons) = buf.split();
+
+    prod.push(10).unwrap();
+    prod.push(20).unwrap();
+
+    let mut sum_1 = 0;
+    cons.pop_each(
+        |v| {
+            sum_1 += v;
+            v != 20
+        },
+        Some(2),
+    );
+
+    prod.push(30).unwrap();
+    prod.push(40).unwrap();
+    prod.push(50).unwrap();
+
+    cons.pop_each(
+        |v| {
+            sum_1 += v;
+            true
+        },
+        Some(2),
+    );
+
+    prod.push(60).unwrap();
+
+    cons.pop_each(
+        |v| {
+            sum_1 += v;
+            v != 50
+        },
+        None,
+    );
+
+    prod.push(70).unwrap();
+
+    cons.pop_each(
+        |v| {
+            sum_1 += v;
+            true
+        },
+        Some(2),
+    );
+
+    assert_eq!(sum_1, 10 + 20 + 30 + 40 + 50 + 60 + 70);
+}
+
+#[test]
 fn push_pop_slice() {
     let buf = RingBuffer::<i32>::new(4);
     let (mut prod, mut cons) = buf.split();
