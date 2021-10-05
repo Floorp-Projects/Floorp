@@ -2856,10 +2856,5 @@ void xpc_DelocalizeRuntime(JSRuntime* rt);
 #include "XPCInlines.h"
 
 /***************************************************************************/
-// Maps have inlines that use the above - include last.
-
-#include "XPCMaps.h"
-
-/***************************************************************************/
 
 #endif /* xpcprivate_h___ */
