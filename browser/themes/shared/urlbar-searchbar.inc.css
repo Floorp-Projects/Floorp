@@ -38,6 +38,23 @@
   color: var(--toolbar-field-color);
 }
 
+/**
+ * System colors and widgets are set based on toolbar color. Since toolbar
+ * fields can be styled differently from the toolbar, we need to use the
+ * correct color scheme in toolbar fields.
+ */
+#urlbar:-moz-lwtheme,
+#searchbar:-moz-lwtheme {
+  color-scheme: light;
+}
+
+:root[lwt-toolbar-field-brighttext] #urlbar:not([focused="true"]),
+:root[lwt-toolbar-field-brighttext] #searchbar:not(:focus-within),
+:root[lwt-toolbar-field-focus-brighttext] #urlbar[focused="true"],
+:root[lwt-toolbar-field-focus-brighttext] #searchbar:focus-within {
+  color-scheme: dark;
+}
+
 #urlbar-background,
 #searchbar {
   background-color: var(--toolbar-field-background-color);
@@ -109,25 +126,13 @@
 
 #urlbar-input:-moz-lwtheme::selection,
 .searchbar-textbox:-moz-lwtheme::selection {
-  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(Highlight, light));
-  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(HighlightText, light));
+  background-color: var(--lwt-toolbar-field-highlight, Highlight);
+  color: var(--lwt-toolbar-field-highlight-text, HighlightText);
 }
 
 #urlbar-input:not(:focus):-moz-lwtheme::selection,
 .searchbar-textbox:not(:focus-within):-moz-lwtheme::selection {
-  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(text-select-background-disabled, light));
-}
-
-:root[lwt-toolbar-field-focus-brighttext] #urlbar-input:focus::selection,
-:root[lwt-toolbar-field-focus-brighttext] .searchbar-textbox:focus-within::selection {
-  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(Highlight, dark));
-  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(HighlightText, dark));
-}
-
-:root[lwt-toolbar-field-brighttext] #urlbar-input:not(:focus)::selection,
-:root[lwt-toolbar-field-brighttext] .searchbar-textbox:not(:focus-within)::selection {
-  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(text-select-background-disabled, dark));
-  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(HighlightText, dark));
+  background-color: var(--lwt-toolbar-field-highlight, text-select-background-disabled);
 }
 
 #urlbar:not([focused="true"]) {
