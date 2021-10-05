@@ -9551,6 +9551,18 @@
     "bug_numbers": [1288745, 1685406],
     "description": "a testing histogram; not meant to be touched"
   },
+  "TELEMETRY_TEST_MIRROR_FOR_CUSTOM": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["chutten@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 2147483646,
+    "n_buckets": 10,
+    "bug_numbers": [1716340],
+    "description": "a testing histogram; not meant to be touched"
+  },
   "TELEMETRY_TEST_BOOLEAN": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "thunderbird"],
