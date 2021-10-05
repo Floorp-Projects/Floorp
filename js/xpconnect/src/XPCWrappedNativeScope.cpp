@@ -248,9 +248,8 @@ void XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(XPCJSRuntime* xpcrt,
   // AllScopes() because that asserts we're on the main thread.
 
   for (XPCWrappedNativeScope* cur : xpcrt->GetWrappedNativeScopes()) {
-    for (auto i = cur->mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
-      auto entry = static_cast<Native2WrappedNativeMap::Entry*>(i.Get());
-      XPCWrappedNative* wrapper = entry->value;
+    for (auto i = cur->mWrappedNativeMap->Iter(); !i.done(); i.next()) {
+      XPCWrappedNative* wrapper = i.get().value();
       if (wrapper->HasExternalReference() && !wrapper->IsWrapperExpired()) {
         wrapper->TraceSelf(trc);
       }
@@ -262,8 +261,8 @@ void XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(XPCJSRuntime* xpcrt,
 void XPCWrappedNativeScope::SuspectAllWrappers(
     nsCycleCollectionNoteRootCallback& cb) {
   for (XPCWrappedNativeScope* cur : AllScopes()) {
-    for (auto i = cur->mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
-      static_cast<Native2WrappedNativeMap::Entry*>(i.Get())->value->Suspect(cb);
+    for (auto i = cur->mWrappedNativeMap->Iter(); !i.done(); i.next()) {
+      i.get().value()->Suspect(cb);
     }
   }
 }
@@ -296,15 +295,15 @@ void XPCWrappedNativeScope::UpdateWeakPointersAfterGC() {
 
   // Sweep mWrappedNativeMap for dying flat JS objects. Moving has already
   // been handled by XPCWrappedNative::FlatJSObjectMoved.
-  for (auto iter = GetWrappedNativeMap()->Iter(); !iter.Done(); iter.Next()) {
-    auto entry = static_cast<Native2WrappedNativeMap::Entry*>(iter.Get());
-    XPCWrappedNative* wrapper = entry->value;
+  for (auto iter = GetWrappedNativeMap()->ModIter(); !iter.done();
+       iter.next()) {
+    XPCWrappedNative* wrapper = iter.get().value();
     JSObject* obj = wrapper->GetFlatJSObjectPreserveColor();
     JS_UpdateWeakPointerAfterGCUnbarriered(&obj);
     MOZ_ASSERT(!obj || obj == wrapper->GetFlatJSObjectPreserveColor());
     MOZ_ASSERT_IF(obj, JS::GetCompartment(obj) == mCompartment);
     if (!obj) {
-      iter.Remove();
+      iter.remove();
     }
   }
 
@@ -325,9 +324,8 @@ void XPCWrappedNativeScope::UpdateWeakPointersAfterGC() {
 // static
 void XPCWrappedNativeScope::SweepAllWrappedNativeTearOffs() {
   for (XPCWrappedNativeScope* cur : AllScopes()) {
-    for (auto i = cur->mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
-      auto entry = static_cast<Native2WrappedNativeMap::Entry*>(i.Get());
-      entry->value->SweepTearOffs();
+    for (auto i = cur->mWrappedNativeMap->Iter(); !i.done(); i.next()) {
+      i.get().value()->SweepTearOffs();
     }
   }
 }
@@ -363,10 +361,9 @@ void XPCWrappedNativeScope::SystemIsBeingShutDown() {
       entry->value->SystemIsBeingShutDown();
       i.Remove();
     }
-    for (auto i = cur->mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
-      auto entry = static_cast<Native2WrappedNativeMap::Entry*>(i.Get());
-      entry->value->SystemIsBeingShutDown();
-      i.Remove();
+    for (auto i = cur->mWrappedNativeMap->ModIter(); !i.done(); i.next()) {
+      i.get().value()->SystemIsBeingShutDown();
+      i.remove();
     }
 
     CompartmentPrivate* priv = CompartmentPrivate::Get(cur->Compartment());
@@ -442,9 +439,8 @@ void XPCWrappedNativeScope::DebugDump(int16_t depth) {
   // iterate contexts...
   if (depth && mWrappedNativeMap->Count()) {
     XPC_LOG_INDENT();
-    for (auto i = mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
-      auto entry = static_cast<Native2WrappedNativeMap::Entry*>(i.Get());
-      entry->value->DebugDump(depth);
+    for (auto i = mWrappedNativeMap->Iter(); !i.done(); i.next()) {
+      i.get().value()->DebugDump(depth);
     }
     XPC_LOG_OUTDENT();
   }

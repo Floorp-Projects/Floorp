@@ -98,15 +98,14 @@ size_t JSObject2WrappedJSMap::SizeOfWrappedJS(
 // implement Native2WrappedNativeMap...
 
 Native2WrappedNativeMap::Native2WrappedNativeMap()
-    : mTable(PLDHashTable::StubOps(), sizeof(Entry), XPC_NATIVE_MAP_LENGTH) {}
+    : mMap(XPC_NATIVE_MAP_LENGTH) {}
 
 size_t Native2WrappedNativeMap::SizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   size_t n = mallocSizeOf(this);
-  n += mTable.ShallowSizeOfExcludingThis(mallocSizeOf);
-  for (auto iter = mTable.ConstIter(); !iter.Done(); iter.Next()) {
-    auto entry = static_cast<Native2WrappedNativeMap::Entry*>(iter.Get());
-    n += mallocSizeOf(entry->value);
+  n += mMap.shallowSizeOfExcludingThis(mallocSizeOf);
+  for (auto iter = mMap.iter(); !iter.done(); iter.next()) {
+    n += mallocSizeOf(iter.get().value());
   }
   return n;
 }
