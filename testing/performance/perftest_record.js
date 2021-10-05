@@ -97,7 +97,7 @@ async function interactive_test(input_cmds, context, commands) {
 
 async function test(context, commands) {
   let input_cmds = context.options.browsertime.commands;
-  if (input_cmds !== undefined) {
+  if (input_cmds) {
     await interactive_test(input_cmds, context, commands);
   } else {
     await pageload_test(context, commands);
