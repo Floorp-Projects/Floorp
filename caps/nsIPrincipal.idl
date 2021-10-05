@@ -320,6 +320,13 @@ interface nsIPrincipal : nsISupports
     [infallible]
     boolean isURIInPrefList(in string pref);
 
+    /**
+     * Check if the Principal's URI is contained in the given list
+     * @param list The list to be checked
+     */
+    [infallible]
+    boolean isURIInList(in ACString list);
+
     /*
     * Uses NS_Security Compare to determine if the
     * other URI is same-origin as the uri of the Principal
