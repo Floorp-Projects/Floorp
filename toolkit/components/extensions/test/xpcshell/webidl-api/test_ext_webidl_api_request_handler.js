@@ -100,3 +100,108 @@ add_task(async function test_sw_api_request_handling_main_process_api() {
   await extension.awaitMessage("test-completed");
   await extension.unload();
 });
+
+add_task(async function test_sw_api_request_bgsw_runtime_onMessage() {
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      background: {
+        service_worker: "sw.js",
+      },
+      permissions: [],
+      applications: { gecko: { id: "test-bg-sw-on-message@mochi.test" } },
+    },
+    files: {
+      "page.html": '<!DOCTYPE html><script src="page.js"></script>',
+      "page.js": async function() {
+        browser.test.onMessage.addListener(msg => {
+          if (msg !== "extpage-send-message") {
+            browser.test.fail(`Unexpected message received: ${msg}`);
+            return;
+          }
+          browser.runtime.sendMessage("extpage-send-message");
+        });
+      },
+      "sw.js": async function() {
+        browser.runtime.onMessage.addListener(msg => {
+          browser.test.sendMessage("bgsw-on-message", msg);
+        });
+        const extURL = browser.runtime.getURL("/");
+        browser.test.sendMessage("ext-url", extURL);
+      },
+    },
+  });
+
+  await extension.startup();
+  const extURL = await extension.awaitMessage("ext-url");
+  equal(
+    extURL,
+    `moz-extension://${extension.uuid}/`,
+    "Got the expected extension url"
+  );
+
+  const extPage = await ExtensionTestUtils.loadContentPage(
+    `${extURL}/page.html`,
+    { extension }
+  );
+  extension.sendMessage("extpage-send-message");
+
+  const msg = await extension.awaitMessage("bgsw-on-message");
+  equal(msg, "extpage-send-message", "Got the expected message");
+  await extPage.close();
+  await extension.unload();
+});
+
+add_task(async function test_sw_api_request_bgsw_runtime_sendMessage() {
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      background: {
+        service_worker: "sw.js",
+      },
+      permissions: [],
+      applications: { gecko: { id: "test-bg-sw-sendMessage@mochi.test" } },
+    },
+    files: {
+      "page.html": '<!DOCTYPE html><script src="page.js"></script>',
+      "page.js": async function() {
+        browser.runtime.onMessage.addListener(msg => {
+          browser.test.sendMessage("extpage-on-message", msg);
+        });
+
+        browser.test.sendMessage("extpage-ready");
+      },
+      "sw.js": async function() {
+        browser.test.onMessage.addListener(msg => {
+          if (msg !== "bgsw-send-message") {
+            browser.test.fail(`Unexpected message received: ${msg}`);
+            return;
+          }
+          browser.runtime.sendMessage("bgsw-send-message");
+        });
+        const extURL = browser.runtime.getURL("/");
+        browser.test.sendMessage("ext-url", extURL);
+      },
+    },
+  });
+
+  await extension.startup();
+  const extURL = await extension.awaitMessage("ext-url");
+  equal(
+    extURL,
+    `moz-extension://${extension.uuid}/`,
+    "Got the expected extension url"
+  );
+
+  const extPage = await ExtensionTestUtils.loadContentPage(
+    `${extURL}/page.html`,
+    { extension }
+  );
+  await extension.awaitMessage("extpage-ready");
+  extension.sendMessage("bgsw-send-message");
+
+  const msg = await extension.awaitMessage("extpage-on-message");
+  equal(msg, "bgsw-send-message", "Got the expected message");
+  await extPage.close();
+  await extension.unload();
+});
