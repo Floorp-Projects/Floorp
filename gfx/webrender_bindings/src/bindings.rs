@@ -856,61 +856,16 @@ pub unsafe extern "C" fn wr_renderer_flush_pipeline_info(renderer: &mut Renderer
 }
 
 extern "C" {
+    pub fn gecko_profiler_start_marker(name: *const c_char);
+    pub fn gecko_profiler_end_marker(name: *const c_char);
+    pub fn gecko_profiler_event_marker(name: *const c_char);
+    pub fn gecko_profiler_add_text_marker(
+        name: *const c_char,
+        text_bytes: *const c_char,
+        text_len: usize,
+        microseconds: u64,
+    );
     pub fn gecko_profiler_thread_is_being_profiled() -> bool;
-}
-
-pub fn gecko_profiler_start_marker(name: &str) {
-    use gecko_profiler::{gecko_profiler_category, MarkerOptions, MarkerTiming, ProfilerTime, Tracing};
-    gecko_profiler::add_marker(
-        name,
-        gecko_profiler_category!(Graphics),
-        MarkerOptions {
-            timing: MarkerTiming::interval_start(ProfilerTime::now()),
-            ..Default::default()
-        },
-        Tracing("Webrender".to_string()),
-    );
-}
-pub fn gecko_profiler_end_marker(name: &str) {
-    use gecko_profiler::{gecko_profiler_category, MarkerOptions, MarkerTiming, ProfilerTime, Tracing};
-    gecko_profiler::add_marker(
-        name,
-        gecko_profiler_category!(Graphics),
-        MarkerOptions {
-            timing: MarkerTiming::interval_end(ProfilerTime::now()),
-            ..Default::default()
-        },
-        Tracing("Webrender".to_string()),
-    );
-}
-
-pub fn gecko_profiler_event_marker(name: &str) {
-    use gecko_profiler::{gecko_profiler_category, Tracing};
-    gecko_profiler::add_marker(
-        name,
-        gecko_profiler_category!(Graphics),
-        Default::default(),
-        Tracing("Webrender".to_string()),
-    );
-}
-
-pub fn gecko_profiler_add_text_marker(name: &str, text: &str, microseconds: f64) {
-    use gecko_profiler::{gecko_profiler_category, MarkerOptions, MarkerTiming, ProfilerTime};
-    if !gecko_profiler::can_accept_markers() {
-        return;
-    }
-
-    let now = ProfilerTime::now();
-    let start = now.clone().subtract_microseconds(microseconds);
-    gecko_profiler::add_text_marker(
-        name,
-        gecko_profiler_category!(Graphics),
-        MarkerOptions {
-            timing: MarkerTiming::interval(start, now),
-            ..Default::default()
-        },
-        text,
-    );
 }
 
 /// Simple implementation of the WR ProfilerHooks trait to allow profile
@@ -926,21 +881,36 @@ impl ProfilerHooks for GeckoProfilerHooks {
         gecko_profiler::unregister_thread();
     }
 
-    fn begin_marker(&self, label: &str) {
-        gecko_profiler_start_marker(label);
+    fn begin_marker(&self, label: &CStr) {
+        unsafe {
+            gecko_profiler_start_marker(label.as_ptr());
+        }
     }
 
-    fn end_marker(&self, label: &str) {
-        gecko_profiler_end_marker(label);
+    fn end_marker(&self, label: &CStr) {
+        unsafe {
+            gecko_profiler_end_marker(label.as_ptr());
+        }
     }
 
-    fn event_marker(&self, label: &str) {
-        gecko_profiler_event_marker(label);
+    fn event_marker(&self, label: &CStr) {
+        unsafe {
+            gecko_profiler_event_marker(label.as_ptr());
+        }
     }
 
-    fn add_text_marker(&self, label: &str, text: &str, duration: Duration) {
-        let micros = duration.as_micros() as f64;
-        gecko_profiler_add_text_marker(label, text, micros);
+    fn add_text_marker(&self, label: &CStr, text: &str, duration: Duration) {
+        unsafe {
+            // NB: This can be as_micros() once we require Rust 1.33.
+            let micros = duration.subsec_micros() as u64 + duration.as_secs() * 1000 * 1000;
+            let text_bytes = text.as_bytes();
+            gecko_profiler_add_text_marker(
+                label.as_ptr(),
+                text_bytes.as_ptr() as *const c_char,
+                text_bytes.len(),
+                micros,
+            );
+        }
     }
 
     fn thread_is_being_profiled(&self) -> bool {
@@ -987,7 +957,9 @@ impl SceneBuilderHooks for APZCallbacks {
     }
 
     fn pre_scene_build(&self) {
-        gecko_profiler_start_marker("SceneBuilding");
+        unsafe {
+            gecko_profiler_start_marker(b"SceneBuilding\0".as_ptr() as *const c_char);
+        }
     }
 
     fn pre_scene_swap(&self, scenebuild_time: u64) {
@@ -1008,16 +980,22 @@ impl SceneBuilderHooks for APZCallbacks {
         // otherwise there's no guarantee that the new scene will get rendered
         // anytime soon
         unsafe { wr_finished_scene_build(self.window_id, &mut info) }
-        gecko_profiler_end_marker("SceneBuilding");
+        unsafe {
+            gecko_profiler_end_marker(b"SceneBuilding\0".as_ptr() as *const c_char);
+        }
     }
 
     fn post_resource_update(&self, _document_ids: &Vec<DocumentId>) {
         unsafe { wr_schedule_render(self.window_id) }
-        gecko_profiler_end_marker("SceneBuilding");
+        unsafe {
+            gecko_profiler_end_marker(b"SceneBuilding\0".as_ptr() as *const c_char);
+        }
     }
 
     fn post_empty_scene_build(&self) {
-        gecko_profiler_end_marker("SceneBuilding");
+        unsafe {
+            gecko_profiler_end_marker(b"SceneBuilding\0".as_ptr() as *const c_char);
+        }
     }
 
     fn poke(&self) {

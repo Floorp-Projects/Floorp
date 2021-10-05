@@ -8,7 +8,6 @@ extern crate app_units;
 extern crate bincode;
 extern crate euclid;
 extern crate fxhash;
-extern crate gecko_profiler;
 extern crate gleam;
 extern crate nsstring;
 extern crate num_cpus;
