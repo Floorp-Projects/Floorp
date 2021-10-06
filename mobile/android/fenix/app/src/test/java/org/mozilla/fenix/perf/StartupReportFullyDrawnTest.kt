@@ -26,7 +26,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.TopSiteItemBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.TopSiteItemViewHolder
+import org.mozilla.fenix.home.topsites.TopSiteItemViewHolder
 import org.mozilla.fenix.perf.StartupTimelineStateMachine.StartupDestination
 import org.mozilla.fenix.perf.StartupTimelineStateMachine.StartupState
 

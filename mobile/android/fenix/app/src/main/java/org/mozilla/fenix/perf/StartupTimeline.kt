@@ -6,7 +6,7 @@ package org.mozilla.fenix.perf
 
 import androidx.annotation.UiThread
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.TopSiteItemViewHolder
+import org.mozilla.fenix.home.topsites.TopSiteItemViewHolder
 import org.mozilla.fenix.perf.StartupTimeline.onApplicationInit
 import org.mozilla.fenix.perf.StartupTimelineStateMachine.StartupActivity
 import org.mozilla.fenix.perf.StartupTimelineStateMachine.StartupDestination

@@ -22,7 +22,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.TabTrayGridItemBinding
 import org.mozilla.fenix.databinding.TabTrayItemBinding
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.dpToPx
+import org.mozilla.fenix.home.topsites.dpToPx
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.ext.MIN_COLUMN_WIDTH_DP

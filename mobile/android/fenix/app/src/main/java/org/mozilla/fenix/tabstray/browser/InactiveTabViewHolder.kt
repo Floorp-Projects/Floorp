@@ -17,7 +17,7 @@ import org.mozilla.fenix.databinding.InactiveTabListItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.ext.toShortUrl
-import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.dpToPx
+import org.mozilla.fenix.home.topsites.dpToPx
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.browser.AutoCloseInterval.Manual
 import org.mozilla.fenix.tabstray.browser.AutoCloseInterval.OneDay

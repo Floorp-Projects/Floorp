@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.home.sessioncontrol.viewholders
+package org.mozilla.fenix.home.topsites
 
 import android.view.View
 import androidx.core.view.isVisible
@@ -15,7 +15,6 @@ import org.mozilla.fenix.databinding.ComponentTopSitesPagerBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.sessioncontrol.AdapterItem
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
-import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.TopSitesPagerAdapter
 
 class TopSitePagerViewHolder(
     view: View,

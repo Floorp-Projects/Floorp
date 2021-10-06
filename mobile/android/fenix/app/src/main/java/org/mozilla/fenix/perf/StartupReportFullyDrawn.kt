@@ -10,7 +10,7 @@ import androidx.core.view.doOnPreDraw
 import mozilla.components.support.ktx.android.view.reportFullyDrawnSafe
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.TopSiteItemViewHolder
+import org.mozilla.fenix.home.topsites.TopSiteItemViewHolder
 import org.mozilla.fenix.perf.StartupTimelineStateMachine.StartupDestination.APP_LINK
 import org.mozilla.fenix.perf.StartupTimelineStateMachine.StartupDestination.HOMESCREEN
 import org.mozilla.fenix.perf.StartupTimelineStateMachine.StartupState

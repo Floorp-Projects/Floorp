@@ -118,7 +118,7 @@ import org.mozilla.fenix.home.sessioncontrol.SessionControlView
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.DefaultPocketStoriesController
 import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoriesCategory
-import org.mozilla.fenix.home.sessioncontrol.viewholders.topsites.DefaultTopSitesView
+import org.mozilla.fenix.home.topsites.DefaultTopSitesView
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic.HELP
