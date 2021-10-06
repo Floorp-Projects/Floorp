@@ -181,11 +181,17 @@ Derived* RemoteAccessibleBase<Derived>::RemoteParent() const {
 
 template <class Derived>
 ENameValueFlag RemoteAccessibleBase<Derived>::Name(nsString& aName) const {
-  if (mCachedFields && mCachedFields->GetAttribute(nsGkAtoms::name, aName)) {
-    auto nameFlag =
-        mCachedFields->GetAttribute<int32_t>(nsGkAtoms::explicit_name);
-    VERIFY_CACHE(CacheDomain::NameAndDescription);
-    return nameFlag ? static_cast<ENameValueFlag>(*nameFlag) : eNameOK;
+  if (mCachedFields) {
+    if (IsText()) {
+      mCachedFields->GetAttribute(nsGkAtoms::text, aName);
+      return eNameOK;
+    }
+    if (mCachedFields->GetAttribute(nsGkAtoms::name, aName)) {
+      auto nameFlag =
+          mCachedFields->GetAttribute<int32_t>(nsGkAtoms::explicit_name);
+      VERIFY_CACHE(CacheDomain::NameAndDescription);
+      return nameFlag ? static_cast<ENameValueFlag>(*nameFlag) : eNameOK;
+    }
   }
 
   return eNameOK;
