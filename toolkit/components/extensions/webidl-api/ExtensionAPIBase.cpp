@@ -217,6 +217,47 @@ void ExtensionAPIBase::CallWebExtMethodAsyncAmbiguous(
 
 // ExtensionAPIBase - API Request helpers
 
+void ExtensionAPIBase::GetWebExtPropertyAsString(const nsString& aPropertyName,
+                                                 dom::DOMString& aRetval) {
+  IgnoredErrorResult rv;
+
+  dom::AutoJSAPI jsapi;
+  auto* global = GetGlobalObject();
+
+  if (!jsapi.Init(global)) {
+    NS_WARNING("GetWebExtPropertyAsString fail to init jsapi");
+    return;
+  }
+
+  JSContext* cx = jsapi.cx();
+  JS::RootedValue retval(cx);
+
+  RefPtr<ExtensionAPIGetProperty> request = GetProperty(aPropertyName);
+  request->Run(global, cx, &retval, rv);
+  if (rv.Failed()) {
+    NS_WARNING("GetWebExtPropertyAsString failure");
+    return;
+  }
+  nsAutoJSString strRetval;
+  if (!retval.isString() || !strRetval.init(cx, retval)) {
+    NS_WARNING("GetWebExtPropertyAsString got a non string result");
+    return;
+  }
+  aRetval.SetKnownLiveString(strRetval);
+}
+
+void ExtensionAPIBase::GetWebExtPropertyAsJSValue(
+    JSContext* aCx, const nsAString& aPropertyName,
+    JS::MutableHandle<JS::Value> aRetval) {
+  IgnoredErrorResult rv;
+  RefPtr<ExtensionAPIGetProperty> request = GetProperty(aPropertyName);
+  request->Run(GetGlobalObject(), aCx, aRetval, rv);
+  if (rv.Failed()) {
+    NS_WARNING("GetWebExtPropertyAsJSValue failure");
+    return;
+  }
+}
+
 already_AddRefed<ExtensionEventManager> ExtensionAPIBase::CreateEventManager(
     const nsAString& aEventName) {
   RefPtr<ExtensionEventManager> eventMgr = new ExtensionEventManager(

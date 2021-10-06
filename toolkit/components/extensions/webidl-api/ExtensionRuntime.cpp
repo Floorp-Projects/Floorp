@@ -42,6 +42,17 @@ JSObject* ExtensionRuntime::WrapObject(JSContext* aCx,
 
 nsIGlobalObject* ExtensionRuntime::GetParentObject() const { return mGlobal; }
 
+void ExtensionRuntime::GetLastError(JSContext* aCx,
+                                    JS::MutableHandle<JS::Value> aRetval) {
+  // TODO: special case this, using
+  // GetWebExtPropertyAsErrorObject(aCx, u"lastError"_ns, aRetval);
+  // doesn't seem a good solution nor an easy one in this case.
+}
+
+void ExtensionRuntime::GetId(DOMString& aRetval) {
+  GetWebExtPropertyAsString(u"id"_ns, aRetval);
+}
+
 ExtensionEventManager* ExtensionRuntime::OnStartup() {
   if (!mOnStartupEventMgr) {
     mOnStartupEventMgr = CreateEventManager(u"onStartup"_ns);
