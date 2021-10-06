@@ -360,9 +360,9 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
       qcms_transform* pipeTransform =
           mInfo.out_color_space != JCS_GRAYSCALE ? mTransform : nullptr;
 
-      Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
-          this, Size(), OutputSize(), FullFrame(), SurfaceFormat::OS_RGBX,
-          SurfaceFormat::OS_RGBX, Nothing(), pipeTransform, SurfacePipeFlags());
+      Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateReorientSurfacePipe(
+          this, Size(), OutputSize(), SurfaceFormat::OS_RGBX, pipeTransform,
+          GetOrientation());
       if (!pipe) {
         mState = JPEG_ERROR;
         MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,

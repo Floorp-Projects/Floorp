@@ -446,7 +446,7 @@ class Decoder {
   friend class DecoderTestHelper;
   friend class nsBMPDecoder;
   friend class nsICODecoder;
-  friend class PalettedSurfaceSink;
+  friend class ReorientSurfaceSink;
   friend class SurfaceSink;
 
   virtual ~Decoder();
