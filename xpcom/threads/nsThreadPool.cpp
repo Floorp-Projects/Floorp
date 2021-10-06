@@ -348,8 +348,9 @@ nsThreadPool::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags) {
         new nsThreadSyncDispatch(thread.forget(), std::move(aEvent));
     PutEvent(wrapper);
 
-    SpinEventLoopUntil(
-        [&, wrapper]() -> bool { return !wrapper->IsPending(); });
+    SpinEventLoopUntil("nsThreadPool::Dispatch"_ns, [&, wrapper]() -> bool {
+      return !wrapper->IsPending();
+    });
   } else {
     NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL || aFlags == NS_DISPATCH_AT_END,
                  "unexpected dispatch flags");

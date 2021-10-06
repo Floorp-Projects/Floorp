@@ -836,29 +836,35 @@ TEST(ThreadUtils, IdleTaskRunner)
       TimeDuration::FromMilliseconds(3), false, nullptr);
 
   // Firstly we wait until the two repeating tasks reach their limits.
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return cnt1 >= 100; }));
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return cnt2 >= 100; }));
+  MOZ_ALWAYS_TRUE(
+      SpinEventLoopUntil("xpcom:TEST(ThreadUtils, IdleTaskRunner) cnt1"_ns,
+                         [&]() { return cnt1 >= 100; }));
+  MOZ_ALWAYS_TRUE(
+      SpinEventLoopUntil("xpcom:TEST(ThreadUtils, IdleTaskRunner) cnt2"_ns,
+                         [&]() { return cnt2 >= 100; }));
 
   // At any point ==> 0 <= cnt3 <= 2 since MayStopProcessing() would return
   // true when cnt3 >= 2.
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
-    if (cnt3 > 2) {
-      EXPECT_TRUE(false) << "MaybeContinueProcess() doesn't work.";
-      return true;  // Stop on failure.
-    }
-    return cnt3 == 2;  // Stop finish if we have reached its max value.
-  }));
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
+      "xpcom:TEST(ThreadUtils, IdleTaskRunner) cnt3"_ns, [&]() {
+        if (cnt3 > 2) {
+          EXPECT_TRUE(false) << "MaybeContinueProcess() doesn't work.";
+          return true;  // Stop on failure.
+        }
+        return cnt3 == 2;  // Stop finish if we have reached its max value.
+      }));
 
   // At any point ==> 0 <= cnt4 <= 1 since this is a non-repeating
   // idle runner.
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
-    // At any point: 0 <= cnt4 <= 1
-    if (cnt4 > 1) {
-      EXPECT_TRUE(false) << "The 'mRepeating' flag doesn't work.";
-      return true;  // Stop on failure.
-    }
-    return cnt4 == 1;
-  }));
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
+      "xpcom:TEST(ThreadUtils, IdleTaskRunner) cnt4"_ns, [&]() {
+        // At any point: 0 <= cnt4 <= 1
+        if (cnt4 > 1) {
+          EXPECT_TRUE(false) << "The 'mRepeating' flag doesn't work.";
+          return true;  // Stop on failure.
+        }
+        return cnt4 == 1;
+      }));
 
   // The repeating timers require an explicit Cancel() call.
   runner1->Cancel();

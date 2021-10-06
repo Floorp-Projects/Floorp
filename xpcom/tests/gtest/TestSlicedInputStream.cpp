@@ -597,7 +597,9 @@ TEST(TestSlicedInputStream, AsyncInputStreamLength)
   nsresult rv = qi->AsyncLengthWait(callback, GetCurrentSerialEventTarget());
   ASSERT_EQ(NS_OK, rv);
 
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return callback->Called(); }));
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
+      "xpcom:TEST(TestSlicedInputStream, AsyncInputStreamLength)"_ns,
+      [&]() { return callback->Called(); }));
   ASSERT_EQ(5, callback->Size());
 }
 
@@ -622,7 +624,9 @@ TEST(TestSlicedInputStream, NegativeAsyncInputStreamLength)
   nsresult rv = qi->AsyncLengthWait(callback, GetCurrentSerialEventTarget());
   ASSERT_EQ(NS_OK, rv);
 
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return callback->Called(); }));
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
+      "xpcom:TEST(TestSlicedInputStream, NegativeAsyncInputStreamLength)"_ns,
+      [&]() { return callback->Called(); }));
   ASSERT_EQ(-1, callback->Size());
 }
 
@@ -650,7 +654,9 @@ TEST(TestSlicedInputStream, AbortLengthCallback)
   rv = qi->AsyncLengthWait(callback2, GetCurrentSerialEventTarget());
   ASSERT_EQ(NS_OK, rv);
 
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return callback2->Called(); }));
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
+      "xpcom:TEST(TestSlicedInputStream, AbortLengthCallback)"_ns,
+      [&]() { return callback2->Called(); }));
   ASSERT_TRUE(!callback1->Called());
   ASSERT_EQ(-1, callback2->Size());
 }
