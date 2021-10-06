@@ -7,7 +7,6 @@
 #define mozilla_a11y_HyperTextAccessible_h__
 
 #include "AccessibleWrap.h"
-#include "mozilla/a11y/HyperTextAccessibleBase.h"
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleTypes.h"
 #include "nsIFrame.h"  // only for nsSelectionAmount
@@ -39,11 +38,16 @@ struct DOMPoint {
   int32_t idx;
 };
 
+// This character marks where in the text returned via Text interface,
+// that embedded object characters exist
+const char16_t kEmbeddedObjectChar = 0xfffc;
+const char16_t kImaginaryEmbeddedObjectChar = ' ';
+const char16_t kForcedNewLineChar = '\n';
+
 /**
  * Special Accessible that knows how contain both text and embedded objects
  */
-class HyperTextAccessible : public HyperTextAccessibleBase,
-                            public AccessibleWrap {
+class HyperTextAccessible : public AccessibleWrap {
  public:
   HyperTextAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
@@ -144,7 +148,31 @@ class HyperTextAccessible : public HyperTextAccessibleBase,
   //////////////////////////////////////////////////////////////////////////////
   // TextAccessible
 
-  using HyperTextAccessibleBase::CharAt;
+  /**
+   * Return character count within the hypertext accessible.
+   */
+  uint32_t CharacterCount() const { return GetChildOffset(ChildCount()); }
+
+  /**
+   * Get a character at the given offset (don't support magic offsets).
+   */
+  bool CharAt(int32_t aOffset, nsAString& aChar,
+              int32_t* aStartOffset = nullptr, int32_t* aEndOffset = nullptr) {
+    NS_ASSERTION(!aStartOffset == !aEndOffset,
+                 "Offsets should be both defined or both undefined!");
+
+    int32_t childIdx = GetChildIndexAtOffset(aOffset);
+    if (childIdx == -1) return false;
+
+    LocalAccessible* child = LocalChildAt(childIdx);
+    child->AppendTextTo(aChar, aOffset - GetChildOffset(childIdx), 1);
+
+    if (aStartOffset && aEndOffset) {
+      *aStartOffset = aOffset;
+      *aEndOffset = aOffset + aChar.Length();
+    }
+    return true;
+  }
 
   char16_t CharAt(int32_t aOffset) {
     nsAutoString charAtOffset;
@@ -165,16 +193,21 @@ class HyperTextAccessible : public HyperTextAccessibleBase,
   bool IsLineEndCharAt(int32_t aOffset) { return IsCharAt(aOffset, '\n'); }
 
   /**
+   * Return text between given offsets.
+   */
+  void TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
+                     nsAString& aText);
+
+  /**
    * Return text before/at/after the given offset corresponding to
    * the boundary type.
    */
   void TextBeforeOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
                         int32_t* aStartOffset, int32_t* aEndOffset,
                         nsAString& aText);
-  virtual void TextAtOffset(int32_t aOffset,
-                            AccessibleTextBoundary aBoundaryType,
-                            int32_t* aStartOffset, int32_t* aEndOffset,
-                            nsAString& aText) override;
+  void TextAtOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                    int32_t* aStartOffset, int32_t* aEndOffset,
+                    nsAString& aText);
   void TextAfterOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
                        int32_t* aStartOffset, int32_t* aEndOffset,
                        nsAString& aText);
@@ -192,16 +225,47 @@ class HyperTextAccessible : public HyperTextAccessibleBase,
    */
   already_AddRefed<AccAttributes> DefaultTextAttributes();
 
-  // HyperTextAccessibleBase provides an overload which takes an Accessible.
-  using HyperTextAccessibleBase::GetChildOffset;
-  virtual int32_t GetChildOffset(uint32_t aChildIndex,
-                                 bool aInvalidateAfter = false) const override;
+  /**
+   * Return text offset of the given child accessible within hypertext
+   * accessible.
+   *
+   * @param  aChild           [in] accessible child to get text offset for
+   * @param  aInvalidateAfter [in, optional] indicates whether invalidate
+   *                           cached offsets for next siblings of the child
+   */
+  int32_t GetChildOffset(const LocalAccessible* aChild,
+                         bool aInvalidateAfter = false) const {
+    int32_t index = GetIndexOf(aChild);
+    return index == -1 ? -1 : GetChildOffset(index, aInvalidateAfter);
+  }
 
-  virtual int32_t GetChildIndexAtOffset(uint32_t aOffset) const override;
+  /**
+   * Return text offset for the child accessible index.
+   */
+  int32_t GetChildOffset(uint32_t aChildIndex,
+                         bool aInvalidateAfter = false) const;
 
-  virtual LocalAccessible* GetChildAtOffset(uint32_t aOffset) const override {
+  /**
+   * Return child accessible at the given text offset.
+   *
+   * @param  aOffset  [in] the given text offset
+   */
+  int32_t GetChildIndexAtOffset(uint32_t aOffset) const;
+
+  /**
+   * Return child accessible at the given text offset.
+   *
+   * @param  aOffset  [in] the given text offset
+   */
+  LocalAccessible* GetChildAtOffset(uint32_t aOffset) const {
     return LocalChildAt(GetChildIndexAtOffset(aOffset));
   }
+
+  /**
+   * Return true if the given offset/range is valid.
+   */
+  bool IsValidOffset(int32_t aOffset);
+  bool IsValidRange(int32_t aStartOffset, int32_t aEndOffset);
 
   /**
    * Return an offset at the given point.
@@ -230,7 +294,7 @@ class HyperTextAccessible : public HyperTextAccessibleBase,
   /**
    * Get/set caret offset, if no caret then -1.
    */
-  virtual int32_t CaretOffset() const override;
+  int32_t CaretOffset() const;
   void SetCaretOffset(int32_t aOffset);
 
   /**
@@ -321,6 +385,14 @@ class HyperTextAccessible : public HyperTextAccessibleBase,
    */
   void RangeAtPoint(int32_t aX, int32_t aY, TextRange& aRange) const;
 
+  /**
+   * Get a TextLeafPoint for a given offset in this HyperTextAccessible.
+   * If the offset points to an embedded object and aDescendToEnd is true,
+   * the point right at the end of this subtree will be returned instead of the
+   * start.
+   */
+  TextLeafPoint ToTextLeafPoint(int32_t aOffset, bool aDescendToEnd = false);
+
   //////////////////////////////////////////////////////////////////////////////
   // EditableTextAccessible
 
@@ -352,6 +424,11 @@ class HyperTextAccessible : public HyperTextAccessibleBase,
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 
   // HyperTextAccessible
+
+  /**
+   * Transform magic offset into text offset.
+   */
+  index_t ConvertMagicOffset(int32_t aOffset) const;
 
   /**
    * Adjust an offset the caret stays at to get a text by line boundary.
@@ -470,9 +547,6 @@ class HyperTextAccessible : public HyperTextAccessibleBase,
    */
   void SetMathMLXMLRoles(AccAttributes* aAttributes);
 
-  // HyperTextAccessibleBase
-  virtual const Accessible* Acc() const override { return this; }
-
  private:
   /**
    * End text offsets array.
@@ -485,10 +559,6 @@ class HyperTextAccessible : public HyperTextAccessibleBase,
 
 inline HyperTextAccessible* LocalAccessible::AsHyperText() {
   return IsHyperText() ? static_cast<HyperTextAccessible*>(this) : nullptr;
-}
-
-inline HyperTextAccessibleBase* LocalAccessible::AsHyperTextBase() {
-  return AsHyperText();
 }
 
 }  // namespace a11y

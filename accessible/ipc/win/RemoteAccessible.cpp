@@ -526,27 +526,24 @@ int32_t RemoteAccessible::OffsetAtPoint(int32_t aX, int32_t aY,
   return static_cast<int32_t>(offset);
 }
 
-void RemoteAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
-                                     nsAString& aText) const {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    return RemoteAccessibleBase<RemoteAccessible>::TextSubstring(
-        aStartOffset, aEndOffset, aText);
-  }
-
+bool RemoteAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
+                                     nsString& aText) const {
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
-    return;
+    return false;
   }
 
   BSTR result;
   HRESULT hr = acc->get_text(static_cast<long>(aStartOffset),
                              static_cast<long>(aEndOffset), &result);
   if (FAILED(hr)) {
-    return;
+    return false;
   }
 
   _bstr_t resultWrap(result, false);
   aText = (wchar_t*)result;
+
+  return true;
 }
 
 void RemoteAccessible::GetTextBeforeOffset(int32_t aOffset,
@@ -640,11 +637,7 @@ bool RemoteAccessible::RemoveFromSelection(int32_t aSelectionNum) {
   return SUCCEEDED(acc->removeSelection(static_cast<long>(aSelectionNum)));
 }
 
-int32_t RemoteAccessible::CaretOffset() const {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    return RemoteAccessibleBase<RemoteAccessible>::CaretOffset();
-  }
-
+int32_t RemoteAccessible::CaretOffset() {
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return -1;
