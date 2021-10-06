@@ -40,5 +40,3 @@ include('/toolkit/crashreporter/crashreporter.mozbuild')
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-shadow', '-Wno-error=stack-protector']
-
-REQUIRES_UNIFIED_BUILD = True

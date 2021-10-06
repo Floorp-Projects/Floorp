@@ -17,5 +17,3 @@ if CONFIG['OS_ARCH'] == 'Darwin':
 Library('breakpad_common_s')
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')
-
-REQUIRES_UNIFIED_BUILD = True
