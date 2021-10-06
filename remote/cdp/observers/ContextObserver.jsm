@@ -41,6 +41,8 @@ class ContextObserver {
     this.chromeEventHandler = chromeEventHandler;
     EventEmitter.decorate(this);
 
+    this._fissionEnabled = Services.appinfo.fissionAutostart;
+
     this.chromeEventHandler.addEventListener("DOMWindowCreated", this, {
       mozSystemGroup: true,
     });
@@ -55,7 +57,11 @@ class ContextObserver {
 
     Services.obs.addObserver(this, "inner-window-destroyed");
 
-    Services.obs.addObserver(this, "webnavigation-create");
+    // With Fission disabled the `DOMWindowCreated` event is fired too late.
+    // Use the `webnavigation-create` notification instead.
+    if (!this._fissionEnabled) {
+      Services.obs.addObserver(this, "webnavigation-create");
+    }
     Services.obs.addObserver(this, "webnavigation-destroy");
   }
 
@@ -72,7 +78,9 @@ class ContextObserver {
 
     Services.obs.removeObserver(this, "inner-window-destroyed");
 
-    Services.obs.removeObserver(this, "webnavigation-create");
+    if (!this._fissionEnabled) {
+      Services.obs.removeObserver(this, "webnavigation-create");
+    }
     Services.obs.removeObserver(this, "webnavigation-destroy");
   }
 
@@ -87,6 +95,14 @@ class ContextObserver {
         // that is destroyed. Instead, pass the frameId and let the listener figure out
         // what ExecutionContext(s) to destroy.
         this.emit("context-destroyed", { frameId });
+
+        // With Fission enabled the frame is attached early enough so that
+        // expected network requests and responses are handles afterward.
+        // Otherwise send the event when `webnavigation-create` is received.
+        if (this._fissionEnabled) {
+          this.emit("frame-attached", { frameId, window });
+        }
+
         this.emit("frame-navigated", { frameId, window });
         this.emit("context-created", { windowId: id, window });
         // Delay script-loaded to allow context cleanup to happen first
@@ -134,14 +150,14 @@ class ContextObserver {
   }
 
   onDocShellCreated(docShell) {
-    this.emit("docshell-created", {
-      id: docShell.browsingContext.id,
+    this.emit("frame-attached", {
+      frameId: docShell.browsingContext.id,
     });
   }
 
   onDocShellDestroyed(docShell) {
-    this.emit("docshell-destroyed", {
-      id: docShell.browsingContext.id,
+    this.emit("frame-detached", {
+      frameId: docShell.browsingContext.id,
     });
   }
 }
