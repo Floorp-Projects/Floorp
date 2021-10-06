@@ -107,7 +107,7 @@
 /components/service/glean/                  @mozilla-mobile/telemetry
 /components/service/location/               @pocmo
 /components/service/nimbus/                 @mozilla-mobile/telemetry @mozilla-mobile/ast
-/components/service/pocket/                 @mcomella
+/components/service/pocket/                 @Mugurell
 /components/service/sync-autofill/          @gabrielluong
 /components/service/sync-logins/            @grigoryk
 
