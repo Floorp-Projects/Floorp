@@ -18,6 +18,19 @@
 namespace mozilla {
 namespace a11y {
 
+inline bool HyperTextAccessible::IsValidOffset(int32_t aOffset) {
+  index_t offset = ConvertMagicOffset(aOffset);
+  return offset.IsValid() && offset <= CharacterCount();
+}
+
+inline bool HyperTextAccessible::IsValidRange(int32_t aStartOffset,
+                                              int32_t aEndOffset) {
+  index_t startOffset = ConvertMagicOffset(aStartOffset);
+  index_t endOffset = ConvertMagicOffset(aEndOffset);
+  return startOffset.IsValid() && endOffset.IsValid() &&
+         startOffset <= endOffset && endOffset <= CharacterCount();
+}
+
 inline void HyperTextAccessible::SetCaretOffset(int32_t aOffset) {
   SetSelectionRange(aOffset, aOffset);
   // XXX: Force cache refresh until a good solution for AT emulation of user
@@ -93,6 +106,16 @@ inline void HyperTextAccessible::PasteText(int32_t aPosition) {
     SetSelectionRange(aPosition, aPosition);
     editorBase->PasteAsAction(nsIClipboard::kGlobalClipboard, true);
   }
+}
+
+inline index_t HyperTextAccessible::ConvertMagicOffset(int32_t aOffset) const {
+  if (aOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT) {
+    return CharacterCount();
+  }
+
+  if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) return CaretOffset();
+
+  return aOffset;
 }
 
 inline uint32_t HyperTextAccessible::AdjustCaretOffset(uint32_t aOffset) const {

@@ -154,7 +154,7 @@ int32_t RemoteAccessible::CaretLineNumber() {
   return line;
 }
 
-int32_t RemoteAccessible::CaretOffset() const {
+int32_t RemoteAccessible::CaretOffset() {
   int32_t offset = 0;
   Unused << mDoc->SendCaretOffset(mID, &offset);
   return offset;
@@ -176,13 +176,12 @@ int32_t RemoteAccessible::SelectionCount() {
   return count;
 }
 
-void RemoteAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
-                                     nsAString& aText) const {
+bool RemoteAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
+                                     nsString& aText) const {
   bool valid;
-  nsString text;
-  Unused << mDoc->SendTextSubstring(mID, aStartOffset, aEndOfset, &text,
+  Unused << mDoc->SendTextSubstring(mID, aStartOffset, aEndOfset, &aText,
                                     &valid);
-  aText = std::move(text);
+  return valid;
 }
 
 void RemoteAccessible::GetTextAfterOffset(int32_t aOffset,
