@@ -567,9 +567,9 @@ function blackDuringGray() {
   showmarks();
   marks = getMarks();
   assertEq(marks[0], "gray", "map is gray");
-  assertEq(marks[1], "black", "black delegate should mark key black");
+  assertEq(marks[1], "gray", "gray map + black delegate should mark key gray");
   assertEq(marks[2], "black", "delegate is still black");
-  assertEq(marks[3], "gray", "gray map + black key => gray value");
+  assertEq(marks[3], "gray", "gray map + gray key => gray value");
 
   clearMarkQueue();
   clearMarkObservers();
@@ -629,9 +629,9 @@ function blackDuringGrayImplicit() {
   showmarks();
   marks = getMarks();
   assertEq(marks[0], "gray", "map is gray");
-  assertEq(marks[1], "black", "black delegate should mark key black");
+  assertEq(marks[1], "gray", "gray map + black delegate should mark key gray");
   assertEq(marks[2], "black", "delegate is black");
-  assertEq(marks[3], "gray", "gray map + black key => gray value via delegate -> value");
+  assertEq(marks[3], "gray", "gray map + gray key => gray value via delegate -> value");
 
   clearMarkQueue();
   clearMarkObservers();
