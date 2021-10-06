@@ -8,6 +8,8 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StaticPrefs_media.h"
+#include "mozilla/Telemetry.h"
 #include "mp3sniff.h"
 #include "nestegg/nestegg.h"
 #include "nsHttpChannel.h"
@@ -61,27 +63,44 @@ nsMediaSnifferEntry nsMediaSniffer::sSnifferEntries[] = {
     PATTERN_ENTRY("\xFF\xFF\xFF\xFF\xFF\xFF\xFF", "#EXTM3U",
                   APPLICATION_MPEGURL)};
 
+using PatternLabel = mozilla::Telemetry::LABELS_MEDIA_SNIFFER_MP4_BRAND_PATTERN;
+
+struct nsMediaSnifferFtypEntry : nsMediaSnifferEntry {
+  nsMediaSnifferFtypEntry(nsMediaSnifferEntry aBase, const PatternLabel aLabel)
+      : nsMediaSnifferEntry(aBase), mLabel(aLabel) {}
+  PatternLabel mLabel;
+};
+
 // For a complete list of file types, see http://www.ftyps.com/index.html
-nsMediaSnifferEntry sFtypEntries[] = {
-    PATTERN_ENTRY("\xFF\xFF\xFF", "mp4", VIDEO_MP4),  // Could be mp41 or mp42.
-    PATTERN_ENTRY("\xFF\xFF\xFF", "avc",
-                  VIDEO_MP4),  // Could be avc1, avc2, ...
-    PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "3gp4",
-                  VIDEO_MP4),  // 3gp4 is based on MP4
-    PATTERN_ENTRY("\xFF\xFF\xFF", "3gp",
-                  VIDEO_3GPP),  // Could be 3gp5, ...
-    PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "M4V ", VIDEO_MP4),
-    PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "M4A ", AUDIO_MP4),
-    PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "M4P ", AUDIO_MP4),
-    PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "qt  ", VIDEO_QUICKTIME),
-    PATTERN_ENTRY("\xFF\xFF\xFF", "iso", VIDEO_MP4),  // Could be isom or iso2.
-    PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "mmp4", VIDEO_MP4),
-    PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "avif", IMAGE_AVIF),
+nsMediaSnifferFtypEntry sFtypEntries[] = {
+    {PATTERN_ENTRY("\xFF\xFF\xFF", "mp4", VIDEO_MP4),
+     PatternLabel::ftyp_mp4},  // Could be mp41 or mp42.
+    {PATTERN_ENTRY("\xFF\xFF\xFF", "avc", VIDEO_MP4),
+     PatternLabel::ftyp_avc},  // Could be avc1, avc2, ...
+    {PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "3gp4", VIDEO_MP4),
+     PatternLabel::ftyp_3gp4},  // 3gp4 is based on MP4
+    {PATTERN_ENTRY("\xFF\xFF\xFF", "3gp", VIDEO_3GPP),
+     PatternLabel::ftyp_3gp},  // Could be 3gp5, ...
+    {PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "M4V ", VIDEO_MP4),
+     PatternLabel::ftyp_M4V},
+    {PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "M4A ", AUDIO_MP4),
+     PatternLabel::ftyp_M4A},
+    {PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "M4P ", AUDIO_MP4),
+     PatternLabel::ftyp_M4P},
+    {PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "qt  ", VIDEO_QUICKTIME),
+     PatternLabel::ftyp_qt},
+    {PATTERN_ENTRY("\xFF\xFF\xFF", "iso", VIDEO_MP4),
+     PatternLabel::ftyp_iso},  // Could be isom or iso2.
+    {PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "mmp4", VIDEO_MP4),
+     PatternLabel::ftyp_mmp4},
+    {PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "avif", IMAGE_AVIF),
+     PatternLabel::ftyp_avif},
 };
 
 static bool MatchesBrands(const uint8_t aData[4], nsACString& aSniffedType) {
   for (size_t i = 0; i < mozilla::ArrayLength(sFtypEntries); ++i) {
     const auto& currentEntry = sFtypEntries[i];
+
     bool matched = true;
     MOZ_ASSERT(currentEntry.mLength <= 4,
                "Pattern is too large to match brand strings.");
@@ -92,7 +111,17 @@ static bool MatchesBrands(const uint8_t aData[4], nsACString& aSniffedType) {
       }
     }
     if (matched) {
+      // If we eventually remove the "iso" pattern entry per bug 1725190,
+      // this block should be removed and the bug1725190.cr3 test in
+      // test_mediasniffer_ext.js will need to be updated
+      if (!mozilla::StaticPrefs::media_mp4_sniff_iso_brand() &&
+          currentEntry.mLabel == PatternLabel::ftyp_iso) {
+        matched = false;
+        continue;
+      }
+
       aSniffedType.AssignASCII(currentEntry.mContentType);
+      AccumulateCategorical(currentEntry.mLabel);
       return true;
     }
   }

@@ -8530,6 +8530,11 @@
 #endif
   mirror: always
 
+- name: media.mp4.sniff_iso_brand
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Error/warning handling, Decoder Doctor.
 #
 # Set to true to force demux/decode warnings to be treated as errors.
