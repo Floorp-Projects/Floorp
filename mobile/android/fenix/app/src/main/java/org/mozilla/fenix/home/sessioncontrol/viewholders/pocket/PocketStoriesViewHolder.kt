@@ -22,7 +22,7 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.HomeSectionHeader
+import org.mozilla.fenix.compose.SectionHeader
 import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -93,7 +93,7 @@ fun PocketStories(
     }
 
     Column(modifier = Modifier.padding(vertical = 44.dp)) {
-        HomeSectionHeader(
+        SectionHeader(
             text = stringResource(R.string.pocket_stories_header_1),
             modifier = Modifier
                 .fillMaxWidth()
@@ -106,7 +106,7 @@ fun PocketStories(
 
         Spacer(Modifier.height(24.dp))
 
-        HomeSectionHeader(
+        SectionHeader(
             text = stringResource(R.string.pocket_stories_categories_header),
             modifier = Modifier
                 .fillMaxWidth()
