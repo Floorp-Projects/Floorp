@@ -566,10 +566,6 @@ class ImageSurfaceCache {
       return aSize;
     }
 
-    if (image->GetOrientation().SwapsWidthAndHeight()) {
-      std::swap(factorSize.width, factorSize.height);
-    }
-
     if (mIsVectorImage) {
       // Ensure the aspect ratio matches the native size before forcing the
       // caller to accept a factor of 2 size. The difference between the aspect
