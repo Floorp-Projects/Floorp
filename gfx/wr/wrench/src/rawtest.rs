@@ -1406,7 +1406,6 @@ impl<'a> RawtestHarness<'a> {
         let hit_test = |point: WorldPoint| -> HitTestResult {
             self.wrench.api.hit_test(
                 self.wrench.document_id,
-                None,
                 point,
             )
         };

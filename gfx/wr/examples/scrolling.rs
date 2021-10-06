@@ -216,7 +216,6 @@ impl Example for App {
             winit::WindowEvent::MouseInput { .. } => {
                 let results = api.hit_test(
                     document_id,
-                    None,
                     self.cursor_position,
                 );
 
