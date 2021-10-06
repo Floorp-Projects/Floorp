@@ -26,6 +26,8 @@ namespace extensions {
 
 class ExtensionEventManager;
 
+bool IsInAutomation(JSContext* aCx, JSObject* aGlobal);
+
 class ExtensionTest final : public nsISupports,
                             public nsWrapperCache,
                             public ExtensionAPINamespace {
