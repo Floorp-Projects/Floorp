@@ -1136,7 +1136,7 @@ class WebIDLChildAPIManager extends ChildAPIManager {
    * APIImplementation instance.
    *
    * @param {mozIExtensionAPIRequest} request
-   * @param {ChildLocalWebIDLAPIImplementation} impl
+   * @param {ChildLocalWebIDLAPIImplementation | ProxyAPIImplementation} impl
    * @returns {any}
    * @throws {Error | WorkerExtensionError}
    */
@@ -1188,12 +1188,22 @@ class WebIDLChildAPIManager extends ChildAPIManager {
    */
 
   handleForProxyAPIImplementation(request, impl) {
-    // TODO: implemented in Bug 1688040 part1.2
-    const { apiNamespace, apiName } = request;
-    throw new Error(
-      `"${apiNamespace}.${apiName}" does not provide a local implementation.` +
-        `Not Implemented.`
-    );
+    const { requestType } = request;
+    switch (requestType) {
+      case "callAsyncFunction":
+      case "callFunctionNoReturn":
+      case "addListener":
+      case "removeListener":
+        return this.callAPIImplementation(request, impl);
+      default:
+        // Any other request types (e.g. getProperty or callFunction) are
+        // unexpected and so we raise a more detailed error to be logged
+        // on the browser console (while the extension will receive the
+        // generic "An unexpected error occurred" one).
+        throw new Error(
+          `Unexpected requestType ${requestType} while handling "${request}"`
+        );
+    }
   }
 
   getAPIPathForWebIDLRequest(request) {
