@@ -7,6 +7,10 @@ indicate something important happening at a point in time, or during an interval
 Each marker has a name, a category, some common optional information (timing, backtrace, etc.),
 and an optional payload of a specific type (containing arbitrary data relevant to that type).
 
+.. note::
+    This guide explains C++ markers in depth. To learn more about how to add a
+    marker in JavaScript or Rust, please take a look at their documentation
+    in :doc:`instrumenting-javascript` or :doc:`instrumenting-rust` respectively.
 
 Example
 -------
@@ -234,6 +238,8 @@ The first step is to determine the location of the marker type definition:
   * However, if there is a XUL dependency, then it needs to be defined in the Gecko Profiler:
     `tools/profiler/public/ProfilerMarkerTypes.h <https://searchfox.org/mozilla-central/source/tools/profiler/public/ProfilerMarkerTypes.h>`__
 
+.. _how-to-define-new-marker-types:
+
 How to Define New Marker Types
 ------------------------------
 
@@ -336,6 +342,8 @@ Here's how the above functions parameters could be streamed:
         aWriter.StringProperty("myURL", aURL);
         aWriter.TimeProperty("myTime", aTime);
       }
+
+.. _marker-type-display-schema:
 
 Marker Type Display Schema
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
