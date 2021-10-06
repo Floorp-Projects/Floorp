@@ -8,7 +8,9 @@
 
 #include "mozilla/a11y/Accessible.h"
 #include "mozilla/a11y/DocAccessible.h"
+#include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/LocalAccessible.h"
+#include "mozilla/BinarySearch.h"
 #include "mozilla/intl/WordBreaker.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsAccUtils.h"
@@ -82,15 +84,28 @@ class LeafRule : public PivotRule {
   }
 };
 
+/**
+ * Get the document Accessible which owns a given Accessible.
+ * This function is needed because there is no unified base class for local and
+ * remote documents and thus there is no unified way to retrieve the document
+ * from an Accessible.
+ */
+static Accessible* DocumentFor(Accessible* aAcc) {
+  if (LocalAccessible* localAcc = aAcc->AsLocal()) {
+    return localAcc->Document();
+  }
+  return aAcc->AsRemote()->Document();
+}
+
 static Accessible* NextLeaf(Accessible* aOrigin) {
-  DocAccessible* doc = aOrigin->AsLocal()->Document();
+  Accessible* doc = DocumentFor(aOrigin);
   Pivot pivot(doc);
   auto rule = LeafRule();
   return pivot.Next(aOrigin, rule);
 }
 
 static Accessible* PrevLeaf(Accessible* aOrigin) {
-  DocAccessible* doc = aOrigin->AsLocal()->Document();
+  Accessible* doc = DocumentFor(aOrigin);
   Pivot pivot(doc);
   auto rule = LeafRule();
   return pivot.Prev(aOrigin, rule);
@@ -223,7 +238,7 @@ class PrevWordBreakClassWalker {
       return false;
     }
     mText.Truncate();
-    mAcc->AsLocal()->AppendTextTo(mText);
+    mAcc->AppendTextTo(mText);
     mOffset = static_cast<int32_t>(mText.Length()) - 1;
     return true;
   }
@@ -380,13 +395,11 @@ bool TextLeafPoint::IsEmptyLastLine() const {
   if (!mAcc->IsTextLeaf()) {
     return false;
   }
-  LocalAccessible* localAcc = mAcc->AsLocal();
-  MOZ_ASSERT(localAcc);
-  if (mOffset < static_cast<int32_t>(nsAccUtils::TextLength(localAcc))) {
+  if (mOffset < static_cast<int32_t>(nsAccUtils::TextLength(mAcc))) {
     return false;
   }
   nsAutoString text;
-  mAcc->AsLocal()->AppendTextTo(text, mOffset - 1, 1);
+  mAcc->AppendTextTo(text, mOffset - 1, 1);
   return text.CharAt(0) == '\n';
 }
 
@@ -482,6 +495,48 @@ TextLeafPoint TextLeafPoint::FindNextLineStartSameLocalAcc(
   return TextLeafPoint(acc, lineStart);
 }
 
+TextLeafPoint TextLeafPoint::FindLineStartSameRemoteAcc(
+    nsDirection aDirection, bool aIncludeOrigin) const {
+  RemoteAccessible* acc = mAcc->AsRemote();
+  MOZ_ASSERT(acc);
+  auto lines = acc->GetCachedTextLines();
+  if (!lines) {
+    return TextLeafPoint();
+  }
+  size_t index;
+  // If BinarySearch returns true, mOffset is in the array and index points at
+  // it. If BinarySearch returns false, mOffset is not in the array and index
+  // points at the next line start after mOffset.
+  if (BinarySearch(*lines, 0, lines->Length(), mOffset, &index)) {
+    if (aIncludeOrigin) {
+      return *this;
+    }
+    if (aDirection == eDirNext) {
+      // We don't want to include the origin. Get the next line start.
+      ++index;
+    }
+  }
+  MOZ_ASSERT(index <= lines->Length());
+  if ((aDirection == eDirNext && index == lines->Length()) || index == 0) {
+    return TextLeafPoint();
+  }
+  // index points at the line start after mOffset.
+  if (aDirection == eDirPrevious) {
+    --index;
+  }
+  return TextLeafPoint(mAcc, lines->ElementAt(index));
+}
+
+TextLeafPoint TextLeafPoint::FindLineStartSameAcc(nsDirection aDirection,
+                                                  bool aIncludeOrigin) const {
+  if (mAcc->IsLocal()) {
+    return aDirection == eDirNext
+               ? FindNextLineStartSameLocalAcc(aIncludeOrigin)
+               : FindPrevLineStartSameLocalAcc(aIncludeOrigin);
+  }
+  return FindLineStartSameRemoteAcc(aDirection, aIncludeOrigin);
+}
+
 TextLeafPoint TextLeafPoint::FindPrevWordStartSameAcc(
     bool aIncludeOrigin) const {
   if (mOffset == 0 && !aIncludeOrigin) {
@@ -490,8 +545,7 @@ TextLeafPoint TextLeafPoint::FindPrevWordStartSameAcc(
     return TextLeafPoint();
   }
   nsAutoString text;
-  MOZ_ASSERT(mAcc->IsLocal());
-  mAcc->AsLocal()->AppendTextTo(text);
+  mAcc->AppendTextTo(text);
   intl::WordBreaker* breaker = nsContentUtils::WordBreaker();
   TextLeafPoint lineStart = *this;
   // A word never starts with a line feed character. If there are multiple
@@ -505,7 +559,7 @@ TextLeafPoint TextLeafPoint::FindPrevWordStartSameAcc(
     // There's no line start for our purposes.
     lineStart = TextLeafPoint();
   } else {
-    lineStart = lineStart.FindPrevLineStartSameLocalAcc(aIncludeOrigin);
+    lineStart = lineStart.FindLineStartSameAcc(eDirPrevious, aIncludeOrigin);
   }
   // Keep walking backward until we find an acceptable word start.
   intl::WordRange word;
@@ -547,8 +601,7 @@ TextLeafPoint TextLeafPoint::FindPrevWordStartSameAcc(
 TextLeafPoint TextLeafPoint::FindNextWordStartSameAcc(
     bool aIncludeOrigin) const {
   nsAutoString text;
-  MOZ_ASSERT(mAcc->IsLocal());
-  mAcc->AsLocal()->AppendTextTo(text);
+  mAcc->AppendTextTo(text);
   int32_t wordStart = mOffset;
   intl::WordBreaker* breaker = nsContentUtils::WordBreaker();
   if (aIncludeOrigin) {
@@ -561,7 +614,7 @@ TextLeafPoint TextLeafPoint::FindNextWordStartSameAcc(
       --wordStart;
     }
   }
-  TextLeafPoint lineStart = FindNextLineStartSameLocalAcc(aIncludeOrigin);
+  TextLeafPoint lineStart = FindLineStartSameAcc(eDirNext, aIncludeOrigin);
   if (lineStart) {
     // A word never starts with a line feed character. If there are multiple
     // consecutive line feed characters, lineStart will point at the second of
@@ -628,7 +681,7 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
             boundary = searchFrom;
           } else if (searchFrom.mOffset <
                      static_cast<int32_t>(
-                         nsAccUtils::TextLength(searchFrom.mAcc->AsLocal()))) {
+                         nsAccUtils::TextLength(searchFrom.mAcc))) {
             boundary.mAcc = searchFrom.mAcc;
             boundary.mOffset = searchFrom.mOffset + 1;
           }
@@ -642,11 +695,7 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
         }
         break;
       case nsIAccessibleText::BOUNDARY_LINE_START:
-        if (aDirection == eDirPrevious) {
-          boundary = searchFrom.FindPrevLineStartSameLocalAcc(includeOrigin);
-        } else {
-          boundary = searchFrom.FindNextLineStartSameLocalAcc(includeOrigin);
-        }
+        boundary = searchFrom.FindLineStartSameAcc(aDirection, includeOrigin);
         break;
       default:
         MOZ_ASSERT_UNREACHABLE();
@@ -660,19 +709,18 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
                                                  : NextLeaf(searchFrom.mAcc);
     if (!acc) {
       // No further leaf was found. Use the start/end of the first/last leaf.
-      return TextLeafPoint(searchFrom.mAcc,
-                           aDirection == eDirPrevious
-                               ? 0
-                               : static_cast<int32_t>(nsAccUtils::TextLength(
-                                     searchFrom.mAcc->AsLocal())));
+      return TextLeafPoint(
+          searchFrom.mAcc,
+          aDirection == eDirPrevious
+              ? 0
+              : static_cast<int32_t>(nsAccUtils::TextLength(searchFrom.mAcc)));
     }
     searchFrom.mAcc = acc;
     // When searching backward, search from the end of the text in the
     // Accessible. When searching forward, search from the start of the text.
-    searchFrom.mOffset =
-        aDirection == eDirPrevious
-            ? static_cast<int32_t>(nsAccUtils::TextLength(acc->AsLocal()))
-            : 0;
+    searchFrom.mOffset = aDirection == eDirPrevious
+                             ? static_cast<int32_t>(nsAccUtils::TextLength(acc))
+                             : 0;
     // The start/end of the Accessible might be a boundary. If so, we must stop
     // on it.
     includeOrigin = true;

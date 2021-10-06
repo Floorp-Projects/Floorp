@@ -86,6 +86,16 @@ class TextLeafPoint final {
 
  private:
   bool IsEmptyLastLine() const;
+
+  TextLeafPoint FindLineStartSameRemoteAcc(nsDirection aDirection,
+                                           bool aIncludeOrigin) const;
+
+  /**
+   * Helper which just calls the appropriate function based on whether mAcc
+   *is local or remote.
+   */
+  TextLeafPoint FindLineStartSameAcc(nsDirection aDirection,
+                                     bool aIncludeOrigin) const;
 };
 
 /**
