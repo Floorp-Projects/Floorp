@@ -205,3 +205,163 @@ add_task(async function test_sw_api_request_bgsw_runtime_sendMessage() {
   await extPage.close();
   await extension.unload();
 });
+
+// Verify ExtensionAPIRequestHandler handling API requests that
+// returns a runtinme.Port API object.
+add_task(async function test_sw_api_request_bgsw_connnect_runtime_port() {
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      background: {
+        service_worker: "sw.js",
+      },
+      permissions: [],
+      applications: { gecko: { id: "test-bg-sw@mochi.test" } },
+    },
+    files: {
+      "page.html": '<!DOCTYPE html><script src="page.js"></script>',
+      "page.js": async function() {
+        browser.runtime.onConnect.addListener(port => {
+          browser.test.sendMessage("page-got-port-from-sw");
+          port.postMessage("page-to-sw");
+        });
+        browser.test.sendMessage("page-waiting-port");
+      },
+      "sw.js": async function() {
+        browser.test.onMessage.addListener(msg => {
+          if (msg !== "connect-port") {
+            return;
+          }
+          const port = browser.runtime.connect();
+          if (!port) {
+            browser.test.fail("Got an undefined port");
+          }
+          port.onMessage.addListener((msg, port) => {
+            browser.test.sendMessage("test-done", msg);
+          });
+          browser.test.sendMessage("sw-waiting-port-message");
+        });
+
+        const portWithError = browser.runtime.connect();
+        portWithError.onDisconnect.addListener(() => {
+          const portError = portWithError.error;
+          browser.test.sendMessage("port-error", {
+            isError: portError instanceof Error,
+            message: portError?.message,
+          });
+        });
+
+        const extURL = browser.runtime.getURL("/");
+        browser.test.sendMessage("ext-url", extURL);
+        browser.test.sendMessage("ext-id", browser.runtime.id);
+      },
+    },
+  });
+
+  await extension.startup();
+  const extURL = await extension.awaitMessage("ext-url");
+  equal(
+    extURL,
+    `moz-extension://${extension.uuid}/`,
+    "Got the expected extension url"
+  );
+
+  const extId = await extension.awaitMessage("ext-id");
+  equal(extId, extension.id, "Got the expected extension id");
+
+  const lastError = await extension.awaitMessage("port-error");
+  Assert.deepEqual(
+    lastError,
+    {
+      isError: true,
+      message: "Could not establish connection. Receiving end does not exist.",
+    },
+    "Got the expected lastError value"
+  );
+
+  const extPage = await ExtensionTestUtils.loadContentPage(
+    `${extURL}/page.html`,
+    { extension }
+  );
+  await extension.awaitMessage("page-waiting-port");
+
+  info("bgsw connect port");
+  extension.sendMessage("connect-port");
+  await extension.awaitMessage("sw-waiting-port-message");
+  info("bgsw waiting port message");
+  await extension.awaitMessage("page-got-port-from-sw");
+  info("page got port from sw, wait to receive event");
+  const msg = await extension.awaitMessage("test-done");
+  equal(msg, "page-to-sw", "Got the expected message");
+  await extPage.close();
+  await extension.unload();
+});
+
+// Verify ExtensionAPIRequestHandler handling API events that should
+// get a runtinme.Port API object as an event argument.
+add_task(async function test_sw_api_request_bgsw_runtime_onConnect() {
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      background: {
+        service_worker: "sw.js",
+      },
+      permissions: [],
+      applications: { gecko: { id: "test-bg-sw-onConnect@mochi.test" } },
+    },
+    files: {
+      "page.html": '<!DOCTYPE html><script src="page.js"></script>',
+      "page.js": async function() {
+        browser.test.onMessage.addListener(msg => {
+          if (msg !== "connect-port") {
+            return;
+          }
+          const port = browser.runtime.connect();
+          port.onMessage.addListener(msg => {
+            browser.test.sendMessage("test-done", msg);
+          });
+          browser.test.sendMessage("page-waiting-port-message");
+        });
+      },
+      "sw.js": async function() {
+        try {
+          const extURL = browser.runtime.getURL("/");
+          browser.test.sendMessage("ext-url", extURL);
+
+          browser.runtime.onConnect.addListener(port => {
+            browser.test.sendMessage("bgsw-got-port-from-page");
+            port.postMessage("sw-to-page");
+          });
+          browser.test.sendMessage("bgsw-waiting-port");
+        } catch (err) {
+          browser.test.fail(`Error on runtime.onConnect: ${err}`);
+        }
+      },
+    },
+  });
+
+  await extension.startup();
+  const extURL = await extension.awaitMessage("ext-url");
+  equal(
+    extURL,
+    `moz-extension://${extension.uuid}/`,
+    "Got the expected extension url"
+  );
+  await extension.awaitMessage("bgsw-waiting-port");
+
+  const extPage = await ExtensionTestUtils.loadContentPage(
+    `${extURL}/page.html`,
+    { extension }
+  );
+  info("ext page connect port");
+  extension.sendMessage("connect-port");
+
+  await extension.awaitMessage("page-waiting-port-message");
+  info("page waiting port message");
+  await extension.awaitMessage("bgsw-got-port-from-page");
+  info("bgsw got port from page, page wait to receive event");
+  const msg = await extension.awaitMessage("test-done");
+  equal(msg, "sw-to-page", "Got the expected message");
+  await extPage.close();
+  await extension.unload();
+});
