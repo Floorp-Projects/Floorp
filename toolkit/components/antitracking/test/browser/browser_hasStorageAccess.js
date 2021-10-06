@@ -4,6 +4,12 @@
 /* import-globals-from antitracking_head.js */
 
 var settings = [
+  // same-origin no-tracker
+  {
+    name: "Test whether same-origin non-tracker frame has storage access",
+    topPage: TEST_TOP_PAGE,
+    thirdPartyPage: TEST_DOMAIN + TEST_PATH + "3rdParty.html",
+  },
   // 3rd-party no-tracker
   {
     name: "Test whether 3rd-party non-tracker frame has storage access",
@@ -68,6 +74,7 @@ var testCases = [
   {
     behavior: BEHAVIOR_ACCEPT, // 0
     hasStorageAccess: [
+      true /* same-origin non-tracker */,
       true /* 3rd-party non-tracker */,
       true /* 3rd-party non-tracker with permission */,
       true /* 3rd-party tracker */,
@@ -79,6 +86,7 @@ var testCases = [
   {
     behavior: BEHAVIOR_REJECT_FOREIGN, // 1
     hasStorageAccess: [
+      true /* same-origin non-tracker */,
       false /* 3rd-party non-tracker */,
       SpecialPowers.Services.prefs.getBoolPref(
         "network.cookie.rejectForeignWithExceptions.enabled"
@@ -94,17 +102,19 @@ var testCases = [
   {
     behavior: BEHAVIOR_REJECT, // 2
     hasStorageAccess: [
+      false /* same-origin non-tracker */,
       false /* 3rd-party non-tracker */,
       false /* 3rd-party non-tracker with permission */,
       false /* 3rd-party tracker */,
       false /* 3rd-party tracker with permission */,
       false /* same-site tracker */,
-      true /* same-origin tracker */,
+      false /* same-origin tracker */,
     ],
   },
   {
     behavior: BEHAVIOR_LIMIT_FOREIGN, // 3
     hasStorageAccess: [
+      true /* same-origin non-tracker */,
       false /* 3rd-party non-tracker */,
       false /* 3rd-party non-tracker with permission */,
       false /* 3rd-party tracker */,
@@ -116,6 +126,7 @@ var testCases = [
   {
     behavior: BEHAVIOR_REJECT_TRACKER, // 4
     hasStorageAccess: [
+      true /* same-origin non-tracker */,
       true /* 3rd-party non-tracker */,
       true /* 3rd-party non-tracker with permission */,
       false /* 3rd-party tracker */,
@@ -127,6 +138,7 @@ var testCases = [
   {
     behavior: BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN, // 5
     hasStorageAccess: [
+      true /* same-origin non-tracker */,
       false /* 3rd-party non-tracker */,
       true /* 3rd-party non-tracker with permission */,
       false /* 3rd-party tracker */,
