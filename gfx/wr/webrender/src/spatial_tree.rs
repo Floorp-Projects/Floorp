@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ExternalScrollId, PropertyBinding, ReferenceFrameKind, TransformStyle, PropertyBindingId};
-use api::{PipelineId, ScrollClamping, ScrollSensitivity, SpatialTreeItemKey};
+use api::{PipelineId, ScrollClamping, SpatialTreeItemKey};
 use api::units::*;
 use euclid::Transform3D;
 use crate::gpu_types::TransformPalette;
@@ -377,7 +377,6 @@ impl SceneSpatialTree {
         pipeline_id: PipelineId,
         frame_rect: &LayoutRect,
         content_size: &LayoutSize,
-        scroll_sensitivity: ScrollSensitivity,
         frame_kind: ScrollFrameKind,
         external_scroll_offset: LayoutVector2D,
         uid: SpatialNodeUid,
@@ -391,7 +390,6 @@ impl SceneSpatialTree {
             external_id,
             frame_rect,
             content_size,
-            scroll_sensitivity,
             frame_kind,
             external_scroll_offset,
             is_root_coord_system,
@@ -1275,7 +1273,6 @@ fn test_find_scroll_root_simple() {
         PipelineId::dummy(),
         &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
         &LayoutSize::new(800.0, 400.0),
-        ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1)),
@@ -1308,7 +1305,6 @@ fn test_find_scroll_root_sub_scroll_frame() {
         PipelineId::dummy(),
         &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
         &LayoutSize::new(800.0, 400.0),
-        ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1)),
@@ -1320,7 +1316,6 @@ fn test_find_scroll_root_sub_scroll_frame() {
         PipelineId::dummy(),
         &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
         &LayoutSize::new(800.0, 400.0),
-        ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 2)),
@@ -1353,7 +1348,6 @@ fn test_find_scroll_root_not_scrollable() {
         PipelineId::dummy(),
         &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
         &LayoutSize::new(400.0, 400.0),
-        ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1)),
@@ -1365,7 +1359,6 @@ fn test_find_scroll_root_not_scrollable() {
         PipelineId::dummy(),
         &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
         &LayoutSize::new(800.0, 400.0),
-        ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 2)),
@@ -1398,7 +1391,6 @@ fn test_find_scroll_root_too_small() {
         PipelineId::dummy(),
         &LayoutRect::from_size(LayoutSize::new(MIN_SCROLL_ROOT_SIZE, MIN_SCROLL_ROOT_SIZE)),
         &LayoutSize::new(1000.0, 1000.0),
-        ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1)),
@@ -1410,7 +1402,6 @@ fn test_find_scroll_root_too_small() {
         PipelineId::dummy(),
         &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
         &LayoutSize::new(800.0, 400.0),
-        ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 2)),
@@ -1444,7 +1435,6 @@ fn test_find_scroll_root_perspective() {
         PipelineId::dummy(),
         &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
         &LayoutSize::new(400.0, 400.0),
-        ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1)),
@@ -1468,7 +1458,6 @@ fn test_find_scroll_root_perspective() {
         PipelineId::dummy(),
         &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
         &LayoutSize::new(800.0, 400.0),
-        ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 3)),
@@ -1502,7 +1491,6 @@ fn test_find_scroll_root_2d_scale() {
         PipelineId::dummy(),
         &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
         &LayoutSize::new(400.0, 400.0),
-        ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1)),
@@ -1527,7 +1515,6 @@ fn test_find_scroll_root_2d_scale() {
         PipelineId::dummy(),
         &LayoutRect::from_size(LayoutSize::new(400.0, 400.0)),
         &LayoutSize::new(800.0, 400.0),
-        ScrollSensitivity::ScriptAndInputEvents,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 0.0),
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 3)),

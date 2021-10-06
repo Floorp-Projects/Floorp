@@ -318,12 +318,6 @@ pub struct StickyFrameDescriptor {
     pub key: SpatialTreeItemKey,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, PeekPoke)]
-pub enum ScrollSensitivity {
-    ScriptAndInputEvents,
-    Script,
-}
-
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub struct ScrollFrameDescriptor {
     /// The id of the space this scroll frame creates
@@ -334,7 +328,6 @@ pub struct ScrollFrameDescriptor {
     pub frame_rect: LayoutRect,
     pub parent_space: SpatialId,
     pub external_id: ExternalScrollId,
-    pub scroll_sensitivity: ScrollSensitivity,
     /// The amount this scrollframe has already been scrolled by, in the caller.
     /// This means that all the display items that are inside the scrollframe
     /// will have their coordinates shifted by this amount, and this offset
@@ -1770,7 +1763,6 @@ macro_rules! impl_default_for_enums {
 
 impl_default_for_enums! {
     DisplayItem => PopStackingContext,
-    ScrollSensitivity => ScriptAndInputEvents,
     LineOrientation => Vertical,
     LineStyle => Solid,
     RepeatMode => Stretch,
