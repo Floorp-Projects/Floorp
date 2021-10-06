@@ -9,6 +9,11 @@ In addition, markers can be created to specifically marker an instant in time, o
 duration. This can be helpful to make sense of a particular piece of the front-end,
 or record events that normally wouldn't show up in samples.
 
+.. note::
+    This guide explains JavaScript markers in depth. To learn more about how to add a
+    marker in C++ or Rust, please take a look at their documentation
+    in :doc:`markers-guide` or :doc:`instrumenting-rust` respectively.
+
 Markers in Browser Chrome
 *************************
 
