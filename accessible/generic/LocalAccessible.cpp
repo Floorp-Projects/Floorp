@@ -27,6 +27,7 @@
 #include "RootAccessible.h"
 #include "States.h"
 #include "StyleInfo.h"
+#include "TextLeafRange.h"
 #include "TextRange.h"
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"
@@ -3079,7 +3080,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     uint64_t aCacheDomain, CacheUpdateType aUpdateType) {
   RefPtr<AccAttributes> fields = new AccAttributes();
 
-  if (aCacheDomain & CacheDomain::NameAndDescription) {
+  // Caching name for text leaf Accessibles is redundant, since their name is
+  // always their text. Text gets handled below.
+  if (aCacheDomain & CacheDomain::NameAndDescription && !IsText()) {
     nsString name;
     int32_t nameFlag = Name(name);
     if (nameFlag != eNameOK) {
@@ -3124,6 +3127,29 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       boundsArray.AppendElement(newBoundsRect.height);
 
       fields->SetAttribute(nsGkAtoms::relativeBounds, std::move(boundsArray));
+    }
+  }
+
+  // We only cache text on leaf Accessibles.
+  if ((aCacheDomain & CacheDomain::Text) && !HasChildren()) {
+    // Only text Accessibles can have actual text.
+    if (IsText()) {
+      nsString text;
+      AppendTextTo(text);
+      fields->SetAttribute(nsGkAtoms::text, std::move(text));
+    }
+    // We cache line start offsets for both text and non-text leaf Accessibles
+    // because non-text leaf Accessibles can still start a line.
+    nsTArray<int32_t> lineStarts;
+    for (TextLeafPoint lineStart =
+             TextLeafPoint(this, 0).FindNextLineStartSameLocalAcc(
+                 /* aIncludeOrigin */ true);
+         lineStart;
+         lineStart = lineStart.FindNextLineStartSameLocalAcc(false)) {
+      lineStarts.AppendElement(lineStart.mOffset);
+    }
+    if (!lineStarts.IsEmpty()) {
+      fields->SetAttribute(nsGkAtoms::line, std::move(lineStarts));
     }
   }
 
