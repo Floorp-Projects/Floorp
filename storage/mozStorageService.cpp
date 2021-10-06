@@ -701,17 +701,19 @@ Service::Observe(nsISupports*, const char* aTopic, const char16_t*) {
       (void)os->RemoveObserver(this, sObserverTopics[i]);
     }
 
-    SpinEventLoopUntil([&]() -> bool {
-      // We must wait until all the closing connections are closed.
-      nsTArray<RefPtr<Connection>> connections;
-      getConnections(connections);
-      for (auto& conn : connections) {
-        if (conn->isClosing()) {
-          return false;
-        }
-      }
-      return true;
-    });
+    SpinEventLoopUntil("storage::Service::Observe(xpcom-shutdown-threads)"_ns,
+                       [&]() -> bool {
+                         // We must wait until all the closing connections are
+                         // closed.
+                         nsTArray<RefPtr<Connection>> connections;
+                         getConnections(connections);
+                         for (auto& conn : connections) {
+                           if (conn->isClosing()) {
+                             return false;
+                           }
+                         }
+                         return true;
+                       });
 
 #ifdef DEBUG
     nsTArray<RefPtr<Connection>> connections;
