@@ -271,53 +271,6 @@ nsIntRect HyperTextAccessible::GetBoundsInFrame(nsIFrame* aFrame,
   return screenRect.ToNearestPixels(presContext->AppUnitsPerDevPixel());
 }
 
-void HyperTextAccessible::TextSubstring(int32_t aStartOffset,
-                                        int32_t aEndOffset, nsAString& aText) {
-  aText.Truncate();
-
-  index_t startOffset = ConvertMagicOffset(aStartOffset);
-  index_t endOffset = ConvertMagicOffset(aEndOffset);
-  if (!startOffset.IsValid() || !endOffset.IsValid() ||
-      startOffset > endOffset || endOffset > CharacterCount()) {
-    NS_ERROR("Wrong in offset");
-    return;
-  }
-
-  int32_t startChildIdx = GetChildIndexAtOffset(startOffset);
-  if (startChildIdx == -1) return;
-
-  int32_t endChildIdx = GetChildIndexAtOffset(endOffset);
-  if (endChildIdx == -1) return;
-
-  if (startChildIdx == endChildIdx) {
-    int32_t childOffset = GetChildOffset(startChildIdx);
-    if (childOffset == -1) return;
-
-    LocalAccessible* child = LocalChildAt(startChildIdx);
-    child->AppendTextTo(aText, startOffset - childOffset,
-                        endOffset - startOffset);
-    return;
-  }
-
-  int32_t startChildOffset = GetChildOffset(startChildIdx);
-  if (startChildOffset == -1) return;
-
-  LocalAccessible* startChild = LocalChildAt(startChildIdx);
-  startChild->AppendTextTo(aText, startOffset - startChildOffset);
-
-  for (int32_t childIdx = startChildIdx + 1; childIdx < endChildIdx;
-       childIdx++) {
-    LocalAccessible* child = LocalChildAt(childIdx);
-    child->AppendTextTo(aText);
-  }
-
-  int32_t endChildOffset = GetChildOffset(endChildIdx);
-  if (endChildOffset == -1) return;
-
-  LocalAccessible* endChild = LocalChildAt(endChildIdx);
-  endChild->AppendTextTo(aText, 0, endOffset - endChildOffset);
-}
-
 uint32_t HyperTextAccessible::DOMPointToOffset(nsINode* aNode,
                                                int32_t aNodeOffset,
                                                bool aIsEndOffset) const {

@@ -184,12 +184,6 @@ class HyperTextAccessible : public HyperTextAccessibleBase,
   bool IsLineEndCharAt(int32_t aOffset) { return IsCharAt(aOffset, '\n'); }
 
   /**
-   * Return text between given offsets.
-   */
-  void TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
-                     nsAString& aText);
-
-  /**
    * Return text before/at/after the given offset corresponding to
    * the boundary type.
    */
