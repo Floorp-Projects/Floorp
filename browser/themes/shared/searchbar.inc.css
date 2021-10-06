@@ -67,6 +67,8 @@
 .searchbar-engine-one-off-item {
   appearance: none;
   display: inline-block;
+  background-color: transparent;
+  border: none;
   min-width: 32px;
   height: 32px;
   margin-inline-end: 8px;
