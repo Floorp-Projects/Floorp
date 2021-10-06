@@ -1093,3 +1093,9 @@ set_config(
 set_define(
     "ENABLE_WASM_EXCEPTIONS", depends_if("--enable-wasm-exceptions")(lambda x: True)
 )
+
+set_define(
+    "_WASI_EMULATED_PROCESS_CLOCKS",
+    True,
+    when=depends(target)(lambda t: t.os == "WASI"),
+)

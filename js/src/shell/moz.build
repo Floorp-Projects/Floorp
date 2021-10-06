@@ -57,3 +57,4 @@ OBJDIR_FILES.js.src += ["!/dist/bin/js%s" % CONFIG["BIN_SUFFIX"]]
 # Also make the stack grow towards 0 so that if SpiderMonkey's stack limiter is buggy, overflow will likely trap.
 if CONFIG["OS_ARCH"] == "WASI":
     LDFLAGS += ["-Wl,-z,stack-size=1048576", "-Wl,--stack-first"]
+    OS_LIBS += ["wasi-emulated-process-clocks"]
