@@ -113,8 +113,7 @@ class GLContextEGL final : public GLContext {
       widget::CompositorWidget* aCompositorWidget, const EGLConfig aConfig);
 
 #ifdef MOZ_X11
-  static bool FindVisual(bool aUseWebRender, bool useAlpha,
-                         int* const out_visualId);
+  static bool FindVisual(int* const out_visualId);
 #endif
 
  protected:
