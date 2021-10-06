@@ -113,7 +113,6 @@ EXPORTS.mozilla.layers += [
     "CanvasRenderer.h",
     "client/CanvasClient.h",
     "client/CompositableClient.h",
-    "client/ContentClient.h",
     "client/GPUVideoTextureClient.h",
     "client/ImageClient.h",
     "client/TextureClient.h",
