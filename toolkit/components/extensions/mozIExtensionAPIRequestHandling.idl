@@ -93,6 +93,13 @@ interface mozIExtensionAPIRequest : nsISupports
   // An array of API call arguments.
   [implicit_jscontext] readonly attribute jsval args;
 
+  // A property to store on the request objects the arguments normalized
+  // based on the API jsonschema, so that they are being propagated along
+  // with the API request object.
+  // TODO: change this attribute to a readonly attribute if we moved
+  // the parameters validation and normalization to the C++ layer.
+  [implicit_jscontext] attribute jsval normalizedArgs;
+
   // The caller SavedFrame (only set for calls originated off of the main thread
   // from a service worker).
   [implicit_jscontext] readonly attribute jsval callerSavedFrame;

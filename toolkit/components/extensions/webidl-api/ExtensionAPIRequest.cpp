@@ -62,6 +62,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ExtensionAPIRequest)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mArgs)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mNormalizedArgs)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStack)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -70,6 +71,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionAPIRequest)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSWInfo)
   tmp->mStack.setUndefined();
   tmp->mArgs.setUndefined();
+  tmp->mNormalizedArgs.setUndefined();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 ExtensionAPIRequest::ExtensionAPIRequest(
@@ -88,6 +90,7 @@ void ExtensionAPIRequest::Init(Maybe<dom::ClientInfo>& aSWClientInfo,
   mSWClientInfo = aSWClientInfo;
   mArgs.set(aRequestArgs);
   mStack.set(aCallerStack);
+  mNormalizedArgs.setUndefined();
 }
 
 NS_IMETHODIMP
@@ -179,6 +182,22 @@ ExtensionAPIRequest::GetArgs(JSContext* aCx,
                              JS::MutableHandle<JS::Value> aRetval) {
   MOZ_ASSERT(NS_IsMainThread());
   aRetval.set(mArgs);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ExtensionAPIRequest::GetNormalizedArgs(JSContext* aCx,
+                                       JS::MutableHandle<JS::Value> aRetval) {
+  MOZ_ASSERT(NS_IsMainThread());
+  aRetval.set(mNormalizedArgs);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ExtensionAPIRequest::SetNormalizedArgs(JSContext* aCx,
+                                       JS::Handle<JS::Value> aNormalizedArgs) {
+  MOZ_ASSERT(NS_IsMainThread());
+  mNormalizedArgs.set(aNormalizedArgs);
   return NS_OK;
 }
 
