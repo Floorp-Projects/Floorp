@@ -394,6 +394,13 @@ ifdef RUST_LIBRARY_FEATURES
 rust_features_flag := --features '$(RUST_LIBRARY_FEATURES)'
 endif
 
+ifeq (WASI,$(OS_ARCH))
+# The rust wasi target defaults to statically link the wasi crt, but when we
+# build static libraries from rust and link them with C/C++ code, we also link
+# a wasi crt, which may conflict with rust's.
+force-cargo-library-build: CARGO_RUSTCFLAGS += -C target-feature=-crt-static
+endif
+
 # Assume any system libraries rustc links against are already in the target's LIBS.
 #
 # We need to run cargo unconditionally, because cargo is the only thing that
