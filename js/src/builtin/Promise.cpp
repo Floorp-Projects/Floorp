@@ -1974,6 +1974,15 @@ static bool ForEachReaction(JSContext* cx, HandleValue reactionsVal, F f) {
                            reaction->unhandledRejectionBehavior());
 }
 
+/**
+ * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
+ *
+ * Await in async function
+ * https://tc39.es/ecma262/#await
+ *
+ * Step 3. fulfilledClosure Abstract Closure.
+ * Step 5. rejectedClosure Abstract Closure.
+ */
 [[nodiscard]] static bool AsyncFunctionPromiseReactionJob(
     JSContext* cx, Handle<PromiseReactionRecord*> reaction) {
   MOZ_ASSERT(reaction->isAsyncFunction());
@@ -1987,9 +1996,11 @@ static bool ForEachReaction(JSContext* cx, HandleValue reactionsVal, F f) {
   // They fail only on OOM.
 
   if (handler == PromiseHandlerAsyncFunctionAwaitedFulfilled) {
+    // Step 3. fulfilledClosure Abstract Closure.
     return AsyncFunctionAwaitedFulfilled(cx, generator, argument);
   }
 
+  // Step 5. rejectedClosure Abstract Closure.
   MOZ_ASSERT(handler == PromiseHandlerAsyncFunctionAwaitedRejected);
   return AsyncFunctionAwaitedRejected(cx, generator, argument);
 }
@@ -5253,9 +5264,19 @@ static bool OriginalPromiseThenBuiltin(JSContext* cx, HandleValue promiseVal,
 // Some async/await functions are implemented here instead of
 // js/src/builtin/AsyncFunction.cpp, to call Promise internal functions.
 
-// ES 2018 draft 14.6.11 and 14.7.14 step 1.
+/**
+ * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
+ *
+ * Runtime Semantics: EvaluateAsyncFunctionBody
+ * AsyncFunctionBody : FunctionBody
+ * https://tc39.es/ecma262/#sec-runtime-semantics-evaluateasyncfunctionbody
+ *
+ * Runtime Semantics: EvaluateAsyncConciseBody
+ * AsyncConciseBody : ExpressionBody
+ * https://tc39.es/ecma262/#sec-runtime-semantics-evaluateasyncconcisebody
+ */
 [[nodiscard]] PromiseObject* js::CreatePromiseObjectForAsync(JSContext* cx) {
-  // Step 1.
+  // Step 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
   PromiseObject* promise = CreatePromiseObjectWithoutResolutionFunctions(cx);
   if (!promise) {
     return nullptr;
@@ -5281,8 +5302,14 @@ bool js::IsPromiseForAsyncFunctionOrGenerator(JSObject* promise) {
   return promise;
 }
 
-// ES2019 draft rev 7428c89bef626548084cd4e697a19ece7168f24c
-// 25.7.5.1 AsyncFunctionStart, steps 3.f-g.
+/**
+ * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
+ *
+ * AsyncFunctionStart ( promiseCapability, asyncFunctionBody )
+ * https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start
+ *
+ * Steps 4.f-g.
+ */
 [[nodiscard]] bool js::AsyncFunctionThrown(JSContext* cx,
                                            Handle<PromiseObject*> resultPromise,
                                            HandleValue reason) {
@@ -5297,27 +5324,48 @@ bool js::IsPromiseForAsyncFunctionOrGenerator(JSObject* promise) {
     return true;
   }
 
+  // Step 4.f. Else,
+  // Step 4.f.i. Assert: result.[[Type]] is throw.
+  // Step 4.f.ii. Perform
+  //              ! Call(promiseCapability.[[Reject]], undefined,
+  //                 « result.[[Value]] »).
+  // Step 4.g. Return.
   return RejectPromiseInternal(cx, resultPromise, reason);
 }
 
-// ES2019 draft rev 7428c89bef626548084cd4e697a19ece7168f24c
-// 25.7.5.1 AsyncFunctionStart, steps 3.d-e, 3.g.
+/**
+ * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
+ *
+ * AsyncFunctionStart ( promiseCapability, asyncFunctionBody )
+ * https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start
+ *
+ * Steps 4.e, 4.g.
+ */
 [[nodiscard]] bool js::AsyncFunctionReturned(
     JSContext* cx, Handle<PromiseObject*> resultPromise, HandleValue value) {
+  // Step 4.e. Else if result.[[Type]] is return, then
+  // Step 4.e.i. Perform
+  //             ! Call(promiseCapability.[[Resolve]], undefined,
+  //                    « result.[[Value]] »).
   return ResolvePromiseInternal(cx, resultPromise, value);
 }
 
-// https://tc39.github.io/ecma262/#await
-//
-// Helper function that performs 6.2.3.1 Await(promise) steps 2 and 9.
-// The same steps are also used in a few other places in the spec.
+/**
+ * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
+ *
+ * Await
+ * https://tc39.github.io/ecma262/#await
+ *
+ * Helper function that performs Await(promise) steps 2-7.
+ * The same steps are also used in a few other places in the spec.
+ */
 template <typename T>
 [[nodiscard]] static bool InternalAwait(JSContext* cx, HandleValue value,
                                         HandleObject resultPromise,
                                         PromiseHandler onFulfilled,
                                         PromiseHandler onRejected,
                                         T extraStep) {
-  // Step 2: Let promise be ? PromiseResolve(%Promise%, « value »).
+  // Step 2. Let promise be ? PromiseResolve(%Promise%, value).
   RootedObject promise(cx, PromiseObject::unforgeableResolve(cx, value));
   if (!promise) {
     return false;
@@ -5332,9 +5380,9 @@ template <typename T>
     return false;
   }
 
-  // Steps 3-8 of the spec create onFulfilled and onRejected functions.
+  // Steps 3-6 for creating onFulfilled/onRejected are done by caller.
 
-  // Step 9: Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
+  // Step 7. Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
   RootedValue onFulfilledValue(cx, Int32Value(onFulfilled));
   RootedValue onRejectedValue(cx, Int32Value(onRejected));
   Rooted<PromiseCapability> resultCapability(cx);
@@ -5349,10 +5397,12 @@ template <typename T>
   return PerformPromiseThenWithReaction(cx, unwrappedPromise, reaction);
 }
 
-// https://tc39.github.io/ecma262/#await
-//
-// 6.2.3.1 Await(promise) steps 2-10 when the running execution context is
-// evaluating an `await` expression in an async function.
+/**
+ * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
+ *
+ * Await
+ * https://tc39.es/ecma262/#await
+ */
 [[nodiscard]] JSObject* js::AsyncFunctionAwait(
     JSContext* cx, Handle<AsyncFunctionGeneratorObject*> genObj,
     HandleValue value) {
