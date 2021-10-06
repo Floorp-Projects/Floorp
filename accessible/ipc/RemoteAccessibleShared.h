@@ -72,14 +72,17 @@ void ScrollToPoint(uint32_t aScrollType, int32_t aX, int32_t aY);
 void Announce(const nsString& aAnnouncement, uint16_t aPriority);
 
 int32_t CaretLineNumber();
-virtual int32_t CaretOffset() const override;
+int32_t CaretOffset();
 void SetCaretOffset(int32_t aOffset);
 
 int32_t CharacterCount();
 int32_t SelectionCount();
 
-virtual void TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
-                           nsAString& aText) const override;
+/**
+ * Get the text between the given offsets.
+ */
+bool TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
+                   nsString& aText) const;
 
 void GetTextAfterOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
                         nsString& aText, int32_t* aStartOffset,
