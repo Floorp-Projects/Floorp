@@ -44,7 +44,21 @@ fun String.isExtensionUrl() = this.startsWith("moz-extension://")
  */
 fun String.isResourceUrl() = this.startsWith("resource://")
 
-fun String.toNormalizedUrl() = URLStringUtils.toNormalizedURL(this)
+/**
+ * Appends `http` scheme if no scheme is present in this String.
+ */
+fun String.toNormalizedUrl(): String {
+    val s = this.trim()
+    // Most commonly we'll encounter http or https schemes.
+    // For these, avoid running through toNormalizedURL as an optimization.
+    return if (!s.startsWith("http://", ignoreCase = true) &&
+        !s.startsWith("https://", ignoreCase = true)
+    ) {
+        URLStringUtils.toNormalizedURL(s)
+    } else {
+        s
+    }
+}
 
 fun String.isPhone() = re.phoneish.matches(this)
 

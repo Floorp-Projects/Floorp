@@ -20,6 +20,7 @@ import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.kotlin.isUrl
+import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.WebURLFinder
 
@@ -50,7 +51,7 @@ class TabIntentProcessor(
         } else {
             val caller = intent.externalPackage()
             tabsUseCases.selectOrAddTab(
-                url,
+                url.toNormalizedUrl(),
                 private = isPrivate,
                 source = SessionState.Source.External.ActionView(caller),
                 flags = LoadUrlFlags.external()
@@ -61,7 +62,7 @@ class TabIntentProcessor(
 
     /**
      * Processes a send intent and tries to load [EXTRA_TEXT] as a URL.
-     * If its not a URL, a search is run instead.
+     * If it's not a URL, a search is run instead.
      */
     private fun processSendIntent(intent: SafeIntent): Boolean {
         val extraText = intent.getStringExtra(EXTRA_TEXT)
@@ -97,7 +98,10 @@ class TabIntentProcessor(
     }
 
     private fun addNewTab(url: String, source: SessionState.Source) {
-        tabsUseCases.addTab(url, source = source, flags = LoadUrlFlags.external(), private = isPrivate)
+        tabsUseCases.addTab(
+            url.toNormalizedUrl(),
+            source = source, flags = LoadUrlFlags.external(), private = isPrivate
+        )
     }
 
     /**

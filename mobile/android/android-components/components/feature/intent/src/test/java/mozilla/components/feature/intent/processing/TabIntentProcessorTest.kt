@@ -99,7 +99,7 @@ class TabIntentProcessorTest {
         val handler = TabIntentProcessor(TabsUseCases(store), useCases.loadUrl, searchUseCases.newTabSearch)
         val intent: Intent = mock()
         whenever(intent.action).thenReturn(Intent.ACTION_VIEW)
-        whenever(intent.dataString).thenReturn("https://mozilla.org")
+        whenever(intent.dataString).thenReturn("http://mozilla.org")
 
         assertEquals(0, store.state.tabs.size)
         handler.process(intent)
@@ -107,7 +107,7 @@ class TabIntentProcessorTest {
         assertEquals(1, store.state.tabs.size)
         assertTrue(store.state.tabs[0].source is SessionState.Source.External.ActionView)
 
-        val tab = store.state.findNormalOrPrivateTabByUrl("https://mozilla.org", private = false)
+        val tab = store.state.findNormalOrPrivateTabByUrl("http://mozilla.org", private = false)
         assertNotNull(tab)
 
         val otherTab = createTab("https://firefox.com")
@@ -118,12 +118,24 @@ class TabIntentProcessorTest {
 
         // processing the same intent again doesn't add an additional tab
         handler.process(intent)
+        // processing a similar intent which produces the same url doesn't add an additional tab
+        whenever(intent.dataString).thenReturn("mozilla.org")
+        handler.process(intent)
+
         store.waitUntilIdle()
         assertEquals(2, store.state.tabs.size)
         assertEquals(tab, store.state.selectedTab)
         // sources of existing tabs weren't affected
         assertTrue(store.state.tabs[0].source is SessionState.Source.External.ActionView)
         assertTrue(store.state.tabs[1].source is SessionState.Source.Internal.None)
+
+        // Intent with a url that's missing a scheme
+        whenever(intent.dataString).thenReturn("example.com")
+        handler.process(intent)
+        store.waitUntilIdle()
+        assertEquals(3, store.state.tabs.size)
+        assertTrue(store.state.tabs[0].source is SessionState.Source.External.ActionView)
+        assertNotNull(store.state.findNormalOrPrivateTabByUrl("http://example.com", private = false))
     }
 
     @Test
@@ -152,6 +164,14 @@ class TabIntentProcessorTest {
         store.waitUntilIdle()
         assertEquals(2, store.state.tabs.size)
         assertEquals(tab, store.state.selectedTab)
+
+        // Intent with a url that's missing a scheme
+        whenever(intent.dataString).thenReturn("example.com")
+        handler.process(intent)
+        store.waitUntilIdle()
+        assertEquals(3, store.state.tabs.size)
+        assertTrue(store.state.tabs[0].source is SessionState.Source.External.ActionView)
+        assertNotNull(store.state.findNormalOrPrivateTabByUrl("http://example.com", private = false))
     }
 
     @Test
@@ -179,6 +199,14 @@ class TabIntentProcessorTest {
         store.waitUntilIdle()
         assertEquals(2, store.state.tabs.size)
         assertEquals(tab, store.state.selectedTab)
+
+        // Intent with a url that's missing a scheme
+        whenever(intent.dataString).thenReturn("example.com")
+        handler.process(intent)
+        store.waitUntilIdle()
+        assertEquals(3, store.state.tabs.size)
+        assertTrue(store.state.tabs[0].source is SessionState.Source.External.ActionView)
+        assertNotNull(store.state.findNormalOrPrivateTabByUrl("http://example.com", private = false))
     }
 
     @Test
@@ -223,6 +251,14 @@ class TabIntentProcessorTest {
         assertEquals(5, store.state.tabs.size)
         assertEquals("HTTPS://tweets.mozilla.org", store.state.tabs[4].content.url)
         assertTrue(store.state.tabs[4].source is SessionState.Source.External.ActionSend)
+
+        // Intent with a url that's missing a scheme
+        whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("example.com")
+        handler.process(intent)
+        store.waitUntilIdle()
+        assertEquals(6, store.state.tabs.size)
+        assertTrue(store.state.tabs[5].source is SessionState.Source.External.ActionSend)
+        assertNotNull(store.state.findNormalOrPrivateTabByUrl("http://example.com", private = false))
     }
 
     @Test
@@ -286,6 +322,14 @@ class TabIntentProcessorTest {
         assertEquals("http://mozilla.org", store.state.tabs[0].content.url)
         assertEquals("", store.state.tabs[0].content.searchTerms)
         assertTrue(store.state.tabs[0].source is SessionState.Source.External.ActionSearch)
+
+        // Intent with a url that's missing a scheme
+        whenever(intent.getStringExtra(SearchManager.QUERY)).thenReturn("example.com")
+        handler.process(intent)
+        store.waitUntilIdle()
+        assertEquals(2, store.state.tabs.size)
+        assertTrue(store.state.tabs[1].source is SessionState.Source.External.ActionSearch)
+        assertNotNull(store.state.findNormalOrPrivateTabByUrl("http://example.com", private = false))
     }
 
     @Test
@@ -336,6 +380,14 @@ class TabIntentProcessorTest {
         assertEquals("http://mozilla.org", store.state.tabs[0].content.url)
         assertEquals("", store.state.tabs[0].content.searchTerms)
         assertTrue(store.state.tabs[0].source is SessionState.Source.External.ActionSearch)
+
+        // Intent with a url that's missing a scheme
+        whenever(intent.getStringExtra(SearchManager.QUERY)).thenReturn("example.com")
+        handler.process(intent)
+        store.waitUntilIdle()
+        assertEquals(2, store.state.tabs.size)
+        assertTrue(store.state.tabs[1].source is SessionState.Source.External.ActionSearch)
+        assertNotNull(store.state.findNormalOrPrivateTabByUrl("http://example.com", private = false))
     }
 
     @Test
