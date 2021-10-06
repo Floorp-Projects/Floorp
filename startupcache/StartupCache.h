@@ -165,8 +165,6 @@ class StartupCache : public nsIMemoryReporter {
   // Signal that data should not be loaded from the cache file
   static void IgnoreDiskCache();
 
-  static bool GetIgnoreDiskCache();
-
   // In DEBUG builds, returns a stream that will attempt to check for
   // and disallow multiple writes of the same object.
   nsresult GetDebugObjectOutputStream(nsIObjectOutputStream* aStream,
