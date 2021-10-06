@@ -159,6 +159,9 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // The deprecation will be addressed on
+    // https://github.com/mozilla-mobile/android-components/issues/11101
     fun isIgnoredForTrackingProtection() {
         val mockedContentBlockingController = mock<ContentBlockingController>()
         var geckoResult = GeckoResult<Boolean?>()
@@ -237,6 +240,9 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // The deprecation will be addressed on
+    // https://github.com/mozilla-mobile/android-components/issues/11101
     fun navigationDelegateNotifiesObservers() {
         val geckoResult = GeckoResult<Boolean?>()
         val mockedContentBlockingController = mock<ContentBlockingController>()
@@ -651,6 +657,9 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // The deprecation will be addressed on
+    // https://github.com/mozilla-mobile/android-components/issues/11101
     fun navigationDelegateIgnoresInitialLoadOfAboutBlank() {
         val geckoResult = GeckoResult<Boolean?>()
         val mockedContentBlockingController = mock<ContentBlockingController>()
@@ -683,6 +692,9 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // The deprecation will be addressed on
+    // https://github.com/mozilla-mobile/android-components/issues/11101
     fun `onLoadRequest will reset initial load flag on process switch to ignore about blank loads`() {
         val geckoResult = GeckoResult<Boolean?>()
         val mockedContentBlockingController = mock<ContentBlockingController>()
@@ -731,6 +743,9 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // The deprecation will be addressed on
+    // https://github.com/mozilla-mobile/android-components/issues/11101
     fun `keeps track of current url via onLocationChange events`() {
         val mockedContentBlockingController = mock<ContentBlockingController>()
         val engineSession = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
@@ -750,6 +765,9 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // The deprecation will be addressed on
+    // https://github.com/mozilla-mobile/android-components/issues/11101
     fun `notifies configured history delegate of title changes`() = runBlockingTest {
         val mockedContentBlockingController = mock<ContentBlockingController>()
         val engineSession = GeckoEngineSession(

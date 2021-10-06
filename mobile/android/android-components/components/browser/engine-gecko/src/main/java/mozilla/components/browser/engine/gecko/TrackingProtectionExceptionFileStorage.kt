@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// The deprecation will be addressed on
+// https://github.com/mozilla-mobile/android-components/issues/11101
+@file:Suppress("DEPRECATION")
 package mozilla.components.browser.engine.gecko
 
 import android.content.Context
