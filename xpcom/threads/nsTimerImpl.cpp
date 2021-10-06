@@ -287,8 +287,13 @@ static mozilla::LogModule* GetTimerFiringsLog() { return sTimerFiringsLog; }
 
 #include <math.h>
 
+/* static */
+mozilla::StaticMutex nsTimerImpl::sDeltaMutex;
+/* static */
 double nsTimerImpl::sDeltaSumSquared = 0;
+/* static */
 double nsTimerImpl::sDeltaSum = 0;
+/* static */
 double nsTimerImpl::sDeltaNum = 0;
 
 static void myNS_MeanAndStdDev(double n, double sumOfValues,
@@ -347,6 +352,7 @@ nsresult nsTimerImpl::Startup() { return gThreadWrapper.Init(); }
 
 void nsTimerImpl::Shutdown() {
   if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
+    mozilla::StaticMutexAutoLock lock(sDeltaMutex);
     double mean = 0, stddev = 0;
     myNS_MeanAndStdDev(sDeltaNum, sDeltaSum, sDeltaSumSquared, &mean, &stddev);
 
@@ -599,9 +605,12 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
   if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
     TimeDuration delta = fireTime - oldTimeout;
     int32_t d = delta.ToMilliseconds();  // delta in ms
-    sDeltaSum += abs(d);
-    sDeltaSumSquared += double(d) * double(d);
-    sDeltaNum++;
+    {
+      mozilla::StaticMutexAutoLock lock(sDeltaMutex);
+      sDeltaSum += abs(d);
+      sDeltaSumSquared += double(d) * double(d);
+      sDeltaNum++;
+    }
 
     MOZ_LOG(GetTimerLog(), LogLevel::Debug,
             ("[this=%p] expected delay time %4ums\n", this, oldDelay));
