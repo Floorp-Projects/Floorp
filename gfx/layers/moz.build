@@ -403,7 +403,6 @@ UNIFIED_SOURCES += [
     "opengl/TextureClientOGL.cpp",
     "opengl/TextureHostOGL.cpp",
     "ProfilerScreenshots.cpp",
-    "ReadbackProcessor.cpp",
     "RepaintRequest.cpp",
     "SampleTime.cpp",
     "ScreenshotGrabber.cpp",
