@@ -3819,7 +3819,7 @@ pub struct HitResult {
 pub extern "C" fn wr_api_hit_test(dh: &mut DocumentHandle, point: WorldPoint, out_results: &mut ThinVec<HitResult>) {
     dh.ensure_hit_tester();
 
-    let result = dh.hit_tester.as_ref().unwrap().hit_test(None, point);
+    let result = dh.hit_tester.as_ref().unwrap().hit_test(point);
 
     for item in &result.items {
         out_results.push(HitResult {

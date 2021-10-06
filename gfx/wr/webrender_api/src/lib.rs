@@ -277,11 +277,9 @@ impl NotificationRequest {
 /// the RenderBackendThread.
 pub trait ApiHitTester: Send + Sync {
     /// Does a hit test on display items in the specified document, at the given
-    /// point. If a pipeline_id is specified, it is used to further restrict the
-    /// hit results so that only items inside that pipeline are matched. The vector
-    /// of hit results will contain all display items that match, ordered from
-    /// front to back.
-    fn hit_test(&self, pipeline_id: Option<PipelineId>, point: WorldPoint) -> HitTestResult;
+    /// point. The vector of hit results will contain all display items that match,
+    /// ordered from front to back.
+    fn hit_test(&self, point: WorldPoint) -> HitTestResult;
 }
 
 /// A hit tester requested to the render backend thread but not necessarily ready yet.

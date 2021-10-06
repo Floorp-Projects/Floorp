@@ -798,7 +798,7 @@ pub enum FrameMsg {
     ///
     UpdateEpoch(PipelineId, Epoch),
     ///
-    HitTest(Option<PipelineId>, WorldPoint, Sender<HitTestResult>),
+    HitTest(WorldPoint, Sender<HitTestResult>),
     ///
     RequestHitTester(Sender<Arc<dyn ApiHitTester>>),
     ///
@@ -1273,14 +1273,13 @@ impl RenderApi {
     /// front to back.
     pub fn hit_test(&self,
         document_id: DocumentId,
-        pipeline_id: Option<PipelineId>,
         point: WorldPoint,
     ) -> HitTestResult {
         let (tx, rx) = single_msg_channel();
 
         self.send_frame_msg(
             document_id,
-            FrameMsg::HitTest(pipeline_id, point, tx)
+            FrameMsg::HitTest(point, tx)
         );
         rx.recv().unwrap()
     }
