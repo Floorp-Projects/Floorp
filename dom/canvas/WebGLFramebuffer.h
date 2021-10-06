@@ -69,7 +69,7 @@ class WebGLFBAttachPoint final {
   ////
 
   bool HasAttachment() const {
-    return bool(mTexturePtr) | bool(mRenderbufferPtr);
+    return bool(mTexturePtr) || bool(mRenderbufferPtr);
   }
 
   void Clear();
@@ -102,7 +102,7 @@ class WebGLFBAttachPoint final {
                              GLenum pname) const;
 
   bool IsEquivalentForFeedback(const WebGLFBAttachPoint& other) const {
-    if (!HasAttachment() | !other.HasAttachment()) return false;
+    if (!HasAttachment() || !other.HasAttachment()) return false;
 
 #define _(X) (X == other.X)
     return (_(mRenderbufferPtr) && _(mTexturePtr) && _(mTexImageLevel) &&
