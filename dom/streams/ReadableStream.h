@@ -40,6 +40,7 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
 
  public:
   explicit ReadableStream(const GlobalObject& aGlobal);
+  explicit ReadableStream(nsIGlobalObject* aGlobal);
 
   enum class ReaderState { Readable, Closed, Errored };
 
@@ -85,6 +86,9 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
       JSContext* aCx, const ReadableStreamGetReaderOptions& aOptions,
       ErrorResult& aRv);
 
+  void Tee(JSContext* aCx, nsTArray<RefPtr<ReadableStream>>& aResult,
+           ErrorResult& aRv);
+
   // Internal Slots:
  private:
   RefPtr<ReadableStreamDefaultController> mController;
@@ -114,6 +118,10 @@ extern void ReadableStreamAddReadRequest(ReadableStream* aStream,
 extern already_AddRefed<Promise> ReadableStreamCancel(
     JSContext* aCx, ReadableStream* aStream, JS::Handle<JS::Value> aError,
     ErrorResult& aRv);
+
+extern already_AddRefed<ReadableStreamDefaultReader>
+AcquireReadableStreamDefaultReader(JSContext* aCx, ReadableStream* aStream,
+                                   ErrorResult& aRv);
 
 }  // namespace dom
 }  // namespace mozilla

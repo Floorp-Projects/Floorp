@@ -15,6 +15,7 @@ EXPORTS.mozilla.dom += [
     "ReadableStreamDefaultReader.h",
     "ReadableStreamGenericReader.h",
     "ReadRequest.h",
+    "TeeState.h",
     "UnderlyingSourceCallbackHelpers.h",
 ]
 
@@ -23,6 +24,7 @@ UNIFIED_SOURCES += [
     "ReadableStream.cpp",
     "ReadableStreamDefaultController.cpp",
     "ReadableStreamDefaultReader.cpp",
+    "TeeState.cpp",
     "UnderlyingSourceCallbackHelpers.cpp",
 ]
 
