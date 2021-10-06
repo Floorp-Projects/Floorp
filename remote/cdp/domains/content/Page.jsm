@@ -263,10 +263,17 @@ class Page extends ContentProcessDomain {
       stack: null,
     });
 
-    const loaderId = this.frameIdToLoaderId.get(frameId);
-    const timestamp = Date.now() / 1000;
-    this.emit("Page.frameStartedLoading", { frameId: frameId.toString() });
-    this.emitLifecycleEvent(frameId, loaderId, "init", timestamp);
+    // Usually both events are emitted when the "pagehide" event is received.
+    // But this wont happen for a new window or frame when the initial
+    // about:blank page has already loaded, and is being replaced with the
+    // final document.
+    if (!window.document.isInitialDocument) {
+      this.emit("Page.frameStartedLoading", { frameId: frameId.toString() });
+
+      const loaderId = this.frameIdToLoaderId.get(frameId);
+      const timestamp = Date.now() / 1000;
+      this.emitLifecycleEvent(frameId, loaderId, "init", timestamp);
+    }
   }
 
   _onFrameDetached(name, { frameId }) {

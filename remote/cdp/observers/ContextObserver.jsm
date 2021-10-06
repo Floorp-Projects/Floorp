@@ -152,6 +152,7 @@ class ContextObserver {
   onDocShellCreated(docShell) {
     this.emit("frame-attached", {
       frameId: docShell.browsingContext.id,
+      window: docShell.browsingContext.window,
     });
   }
 

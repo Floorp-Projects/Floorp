@@ -183,13 +183,7 @@ async function runPageLifecycleTest(client, expectedEventSets, callback) {
       );
       lastTimestamp = payload.timestamp;
 
-      // TODO: For frames the "init" lifecycle event doesn't contain a loaderId
-      // because it's send out before the network request has been made.
-      if (frame.parentId && payload.name === "init") {
-        todo(payload.loaderId, frame.loaderId, `event has expected loaderId`);
-      } else {
-        is(payload.loaderId, frame.loaderId, `event has expected loaderId`);
-      }
+      is(payload.loaderId, frame.loaderId, `event has expected loaderId`);
     });
   }
 }
