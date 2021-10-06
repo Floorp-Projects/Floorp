@@ -61,20 +61,14 @@ class ControllersParent extends JSWindowActorParent {
       params: null,
     };
     if (aCommand == "cmd_lookUpDictionary") {
-      // Although getBoundingClientRect of the element is logical pixel, but
-      // x and y parameter of cmd_lookUpDictionary are device pixel.
-      // So we need calculate child process's coordinate using correct unit.
-      let browser = this.browser;
-      let rect = browser.getBoundingClientRect();
-      let scale = browser.ownerGlobal.devicePixelRatio;
       cmd.params = {
         x: {
           type: "long",
-          value: aCommandParams.getLongValue("x") - rect.left * scale,
+          value: aCommandParams.getLongValue("x"),
         },
         y: {
           type: "long",
-          value: aCommandParams.getLongValue("y") - rect.top * scale,
+          value: aCommandParams.getLongValue("y"),
         },
       };
     } else {

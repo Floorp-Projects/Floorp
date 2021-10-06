@@ -1057,6 +1057,16 @@ interface nsIDOMWindowUtils : nsISupports {
                        in float aWidth, in float aHeight);
 
   /**
+   * Transform a rectangle given in coordinates relative to the top level
+   * parent process widget to the local widget. This window should be in a
+   * child process.
+   */
+  DOMRect convertFromParentProcessWidgetToLocal(in float aX,
+                                                in float aY,
+                                                in float aWidth,
+                                                in float aHeight);
+
+  /**
    * Sets the maximum height of the dynamic toolbar in Screen pixel units.
    */
   [can_run_script]
