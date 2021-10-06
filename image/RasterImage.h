@@ -361,29 +361,6 @@ class RasterImage final : public ImageResource,
 
   void OnSurfaceDiscardedInternal(bool aAnimatedFramesDiscarded);
 
-  /**
-   * Computes a matrix that applies the rotation and reflection specified by
-   * mOrientation, or that matrix's inverse if aInvert is true.
-   *
-   * See OrientedImage::OrientationMatrix.
-   */
-  gfxMatrix OrientationMatrix(const UnorientedIntSize& aSize,
-                              bool aInvert = false) const;
-
-  // Functions to convert between oriented and unoriented pixels.
-  UnorientedIntSize ToUnoriented(OrientedIntSize aSize) const {
-    return mOrientation.SwapsWidthAndHeight()
-               ? UnorientedIntSize(aSize.height, aSize.width)
-               : UnorientedIntSize(aSize.width, aSize.height);
-  }
-  OrientedIntSize ToOriented(UnorientedIntSize aSize) const {
-    return mOrientation.SwapsWidthAndHeight()
-               ? OrientedIntSize(aSize.height, aSize.width)
-               : OrientedIntSize(aSize.width, aSize.height);
-  }
-  OrientedIntRect ToOriented(UnorientedIntRect aRect) const;
-  UnorientedIntRect ToUnoriented(OrientedIntRect aRect) const;
-
  private:  // data
   OrientedIntSize mSize;
   nsTArray<OrientedIntSize> mNativeSizes;
