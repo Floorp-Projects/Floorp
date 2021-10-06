@@ -15,6 +15,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Variant.h"
 #include "mozilla/Logging.h"
@@ -165,14 +166,16 @@ class nsTimerImpl {
   // Updated only after this timer has been removed from the timer thread.
   mozilla::TimeStamp mTimeout;
 
-  static double sDeltaSum;
-  static double sDeltaSumSquared;
-  static double sDeltaNum;
   RefPtr<nsITimer> mITimer;
   mozilla::Mutex mMutex;
   Callback mCallback;
   // Counter because in rare cases we can Fire reentrantly
   unsigned int mFiring;
+
+  static mozilla::StaticMutex sDeltaMutex;
+  static double sDeltaSum;
+  static double sDeltaSumSquared;
+  static double sDeltaNum;
 };
 
 class nsTimer final : public nsITimer {
