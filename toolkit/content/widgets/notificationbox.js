@@ -734,7 +734,7 @@
               "button",
               button.is ? { is: button.is } : {}
             );
-            buttonElem.classList.add("notification-button", "small");
+            buttonElem.classList.add("notification-button", "small-button");
 
             if (button.primary) {
               buttonElem.classList.add("primary");
