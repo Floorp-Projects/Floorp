@@ -198,7 +198,7 @@ class nsAccUtils {
   /**
    * Return text length of the given accessible, return 0 on failure.
    */
-  static uint32_t TextLength(LocalAccessible* aAccessible);
+  static uint32_t TextLength(Accessible* aAccessible);
 
   /**
    * Transform nsIAccessibleStates constants to internal state constant.
