@@ -32,6 +32,10 @@ interface mozIExtensionListenerCallOptions : nsISupports
   // if apiObjectType is RUNTIME_PORT).
   readonly attribute jsval apiObjectDescriptor;
 
+  // An optional boolean to be set to true if the api object should be
+  // prepended to the rest of the call arguments (by default it is appended).
+  readonly attribute bool apiObjectPrepended;
+
   cenum CallbackType: 8 {
     // Default: no callback argument is passed to the call to the event listener.
     CALLBACK_NONE,
