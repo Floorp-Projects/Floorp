@@ -52,7 +52,7 @@ linux64-hfsplus:
         fetch:
             - hfsplus-tools
         toolchain:
-            - linux64-clang-11
+            - linux64-clang-12
 
 linux64-libdmg:
     description: "libdmg-hfsplus toolchain build"
@@ -65,7 +65,7 @@ linux64-libdmg:
         fetch:
             - libdmg-hfsplus
         toolchain:
-            - linux64-clang-11
+            - linux64-clang-12
             - linux64-toolchain-sysroot
 
 linux64-mar-tools:
