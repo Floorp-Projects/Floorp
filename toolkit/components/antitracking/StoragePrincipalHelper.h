@@ -205,6 +205,7 @@ class nsICookieJarSettings;
 class nsILoadGroup;
 class nsIPrincipal;
 class nsIURI;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 
@@ -264,7 +265,19 @@ class StoragePrincipalHelper final {
   };
 
   /**
-   * Extract the right OriginAttributes from the channel's triggering principal.
+   * Extract the principal from the channel/document according to the given
+   * principal type.
+   */
+  static nsresult GetPrincipal(nsIChannel* aChannel,
+                               PrincipalType aPrincipalType,
+                               nsIPrincipal** aPrincipal);
+  static nsresult GetPrincipal(nsPIDOMWindowInner* aWindow,
+                               PrincipalType aPrincipalType,
+                               nsIPrincipal** aPrincipal);
+
+  /**
+   * Extract the right OriginAttributes from the channel's triggering
+   * principal.
    */
   static bool GetOriginAttributes(nsIChannel* aChannel,
                                   OriginAttributes& aAttributes,
