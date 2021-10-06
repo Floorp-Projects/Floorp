@@ -215,6 +215,7 @@ class RemoteAccessibleBase : public Accessible {
                             uint32_t aLength = UINT32_MAX) override;
 
   uint32_t GetCachedTextLength();
+  Maybe<const nsTArray<int32_t>&> GetCachedTextLines();
 
  protected:
   RemoteAccessibleBase(uint64_t aID, Derived* aParent,

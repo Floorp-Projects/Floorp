@@ -395,6 +395,13 @@ uint32_t RemoteAccessibleBase<Derived>::GetCachedTextLength() {
   return text->Length();
 }
 
+template <class Derived>
+Maybe<const nsTArray<int32_t>&>
+RemoteAccessibleBase<Derived>::GetCachedTextLines() {
+  MOZ_ASSERT(IsText());
+  return mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::line);
+}
+
 template class RemoteAccessibleBase<RemoteAccessible>;
 
 }  // namespace a11y
