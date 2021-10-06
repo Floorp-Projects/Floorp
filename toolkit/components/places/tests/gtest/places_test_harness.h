@@ -72,19 +72,20 @@ class WaitForTopicSpinner final : public nsIObserver {
 
   void Spin() {
     bool timedOut = false;
-    mozilla::SpinEventLoopUntil([&]() -> bool {
-      if (mTopicReceived) {
-        return true;
-      }
+    mozilla::SpinEventLoopUntil(
+        "places:WaitForTopicSpinner::Spin"_ns, [&]() -> bool {
+          if (mTopicReceived) {
+            return true;
+          }
 
-      if ((PR_IntervalNow() - mStartTime) >
-          (WAITFORTOPIC_TIMEOUT_SECONDS * PR_USEC_PER_SEC)) {
-        timedOut = true;
-        return true;
-      }
+          if ((PR_IntervalNow() - mStartTime) >
+              (WAITFORTOPIC_TIMEOUT_SECONDS * PR_USEC_PER_SEC)) {
+            timedOut = true;
+            return true;
+          }
 
-      return false;
-    });
+          return false;
+        });
 
     if (timedOut) {
       // Timed out waiting for the topic.
