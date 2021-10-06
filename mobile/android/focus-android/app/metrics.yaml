@@ -302,12 +302,14 @@ tracking_protection:
       - https://github.com/mozilla-mobile/focus-android/issues/5057
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5163
+      - https://github.com/mozilla-mobile/focus-android/pull/5543
     data_sensitivity:
       - interaction
     lifetime: user
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2022-08-17"
+      - mcarare@mozilla.com
+    expires: never
 
   tracker_setting_changed:
     type: event
