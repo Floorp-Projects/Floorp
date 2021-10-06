@@ -51,7 +51,6 @@ parent:
 child:
   async LayerTransforms(MatrixMessage[] aTransforms);
 
-  [Priority=control]
   async RequestContentRepaint(RepaintRequest request);
 
   async UpdateOverscrollVelocity(ScrollableLayerGuid aGuid, float aX, float aY, bool aIsRootContent);
@@ -62,7 +61,6 @@ child:
 
   async NotifyAPZStateChange(ScrollableLayerGuid aGuid, GeckoContentController_APZStateChange aChange, int aArg);
 
-  [Priority=control]
   async NotifyFlushComplete();
 
   async NotifyAsyncScrollbarDragInitiated(uint64_t aDragBlockId, ViewID aScrollId, ScrollDirection aDirection);

@@ -76,8 +76,6 @@ class ContentProcessController final : public GeckoContentController {
 
   void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) override;
 
-  PresShell* GetTopLevelPresShell() const override;
-
  private:
   RefPtr<dom::BrowserChild> mBrowser;
 };

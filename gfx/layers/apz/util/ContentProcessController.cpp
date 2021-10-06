@@ -104,12 +104,5 @@ void ContentProcessController::DispatchToRepaintThread(
   NS_DispatchToMainThread(std::move(aTask));
 }
 
-PresShell* ContentProcessController::GetTopLevelPresShell() const {
-  if (!mBrowser) {
-    return nullptr;
-  }
-  return mBrowser->GetTopLevelPresShell();
-}
-
 }  // namespace layers
 }  // namespace mozilla
