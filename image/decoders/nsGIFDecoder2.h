@@ -50,7 +50,7 @@ class nsGIFDecoder2 : public Decoder {
    * @param aDepth The palette depth of this frame.
    * @param aIsInterlaced If true, this frame is an interlaced frame.
    */
-  nsresult BeginImageFrame(const gfx::IntRect& aFrameRect, uint16_t aDepth,
+  nsresult BeginImageFrame(const OrientedIntRect& aFrameRect, uint16_t aDepth,
                            bool aIsInterlaced);
 
   /// Called when we finish decoding a frame.
@@ -76,7 +76,7 @@ class nsGIFDecoder2 : public Decoder {
 
   /// Checks if we have transparency, either because the header indicates that
   /// there's alpha, or because the frame rect doesn't cover the entire image.
-  bool CheckForTransparency(const gfx::IntRect& aFrameRect);
+  bool CheckForTransparency(const OrientedIntRect& aFrameRect);
 
   // @return the clear code used for LZW decompression.
   int ClearCode() const {

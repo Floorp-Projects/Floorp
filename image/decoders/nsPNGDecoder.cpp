@@ -130,7 +130,7 @@ nsPNGDecoder::~nsPNGDecoder() {
 }
 
 nsPNGDecoder::TransparencyType nsPNGDecoder::GetTransparencyType(
-    const IntRect& aFrameRect) {
+    const OrientedIntRect& aFrameRect) {
   // Check if the image has a transparent color in its palette.
   if (HasAlphaChannel()) {
     return TransparencyType::eAlpha;
@@ -194,7 +194,7 @@ nsresult nsPNGDecoder::CreateFrame(const FrameInfo& aFrameInfo) {
     }
 
     animParams.emplace(
-        AnimationParams{aFrameInfo.mFrameRect,
+        AnimationParams{aFrameInfo.mFrameRect.ToUnknownRect(),
                         FrameTimeout::FromRawMilliseconds(mAnimInfo.mTimeout),
                         mNumFrames, mAnimInfo.mBlend, mAnimInfo.mDispose});
   }
@@ -527,7 +527,7 @@ void nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr) {
   png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
                &interlace_type, &compression_type, &filter_type);
 
-  const IntRect frameRect(0, 0, width, height);
+  const OrientedIntRect frameRect(0, 0, width, height);
 
   // Post our size to the superclass
   decoder->PostSize(frameRect.Width(), frameRect.Height());
@@ -930,10 +930,11 @@ void nsPNGDecoder::frame_info_callback(png_structp png_ptr,
 
   // Save the information necessary to create the frame; we'll actually create
   // it when we return from the yield.
-  const IntRect frameRect(png_get_next_frame_x_offset(png_ptr, decoder->mInfo),
-                          png_get_next_frame_y_offset(png_ptr, decoder->mInfo),
-                          png_get_next_frame_width(png_ptr, decoder->mInfo),
-                          png_get_next_frame_height(png_ptr, decoder->mInfo));
+  const OrientedIntRect frameRect(
+      png_get_next_frame_x_offset(png_ptr, decoder->mInfo),
+      png_get_next_frame_y_offset(png_ptr, decoder->mInfo),
+      png_get_next_frame_width(png_ptr, decoder->mInfo),
+      png_get_next_frame_height(png_ptr, decoder->mInfo));
   const bool isInterlaced = bool(decoder->interlacebuf);
 
 #  ifndef MOZ_EMBEDDED_LIBPNG

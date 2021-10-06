@@ -42,7 +42,7 @@ class nsPNGDecoder : public Decoder {
 
   /// The information necessary to create a frame.
   struct FrameInfo {
-    gfx::IntRect mFrameRect;
+    OrientedIntRect mFrameRect;
     bool mIsInterlaced;
   };
 
@@ -56,7 +56,7 @@ class nsPNGDecoder : public Decoder {
 
   enum class TransparencyType { eNone, eAlpha, eFrameRect };
 
-  TransparencyType GetTransparencyType(const gfx::IntRect& aFrameRect);
+  TransparencyType GetTransparencyType(const OrientedIntRect& aFrameRect);
   void PostHasTransparencyIfNeeded(TransparencyType aTransparencyType);
 
   void PostInvalidationIfNeeded();
@@ -92,7 +92,7 @@ class nsPNGDecoder : public Decoder {
  public:
   png_structp mPNG;
   png_infop mInfo;
-  nsIntRect mFrameRect;
+  OrientedIntRect mFrameRect;
   uint8_t* mCMSLine;
   uint8_t* interlacebuf;
   gfx::SurfaceFormat mFormat;

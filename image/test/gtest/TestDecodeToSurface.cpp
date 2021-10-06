@@ -151,21 +151,22 @@ TEST_F(ImageDecodeToSurface, ICOMultipleSizes) {
       buffer, nsDependentCString(testCase.mMimeType), metadata);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(metadata.HasSize());
-  EXPECT_EQ(testCase.mSize, metadata.GetSize());
+  EXPECT_EQ(testCase.mSize, metadata.GetSize().ToUnknownSize());
 
-  const nsTArray<IntSize>& nativeSizes = metadata.GetNativeSizes();
+  const nsTArray<OrientedIntSize>& nativeSizes = metadata.GetNativeSizes();
   ASSERT_EQ(6u, nativeSizes.Length());
 
-  IntSize expectedSizes[] = {
-      IntSize(16, 16),   IntSize(32, 32),   IntSize(64, 64),
-      IntSize(128, 128), IntSize(256, 256), IntSize(256, 128),
+  OrientedIntSize expectedSizes[] = {
+      OrientedIntSize(16, 16),   OrientedIntSize(32, 32),
+      OrientedIntSize(64, 64),   OrientedIntSize(128, 128),
+      OrientedIntSize(256, 256), OrientedIntSize(256, 128),
   };
 
   for (int i = 0; i < 6; ++i) {
     EXPECT_EQ(expectedSizes[i], nativeSizes[i]);
 
     // Request decoding at native size
-    testCase.mOutputSize = nativeSizes[i];
+    testCase.mOutputSize = nativeSizes[i].ToUnknownSize();
     RunDecodeToSurface(testCase, buffer);
   }
 }
