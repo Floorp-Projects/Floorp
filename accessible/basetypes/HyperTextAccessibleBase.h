@@ -8,6 +8,7 @@
 
 namespace mozilla::a11y {
 class Accessible;
+class TextLeafPoint;
 
 // This character marks where in the text returned via Text interface,
 // that embedded object characters exist
@@ -92,6 +93,14 @@ class HyperTextAccessibleBase {
    */
   bool CharAt(int32_t aOffset, nsAString& aChar,
               int32_t* aStartOffset = nullptr, int32_t* aEndOffset = nullptr);
+
+  /**
+   * Get a TextLeafPoint for a given offset in this HyperTextAccessible.
+   * If the offset points to an embedded object and aDescendToEnd is true,
+   * the point right at the end of this subtree will be returned instead of the
+   * start.
+   */
+  TextLeafPoint ToTextLeafPoint(int32_t aOffset, bool aDescendToEnd = false);
 
  protected:
   virtual const Accessible* Acc() const = 0;
