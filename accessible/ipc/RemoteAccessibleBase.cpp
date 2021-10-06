@@ -7,9 +7,6 @@
 #include "DocAccessible.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/DocManager.h"
-// XXX HyperTextAccessible.h is needed for kEmbeddedObjectChar, etc. These
-// constants will be moved to HyperTextAccessibleBase soon.
-#include "mozilla/a11y/HyperTextAccessible.h"
 #include "mozilla/a11y/Platform.h"
 #include "mozilla/a11y/RemoteAccessibleBase.h"
 #include "mozilla/a11y/RemoteAccessible.h"
