@@ -7,6 +7,9 @@
 #include "DocAccessible.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/DocManager.h"
+// XXX HyperTextAccessible.h is needed for kEmbeddedObjectChar, etc. These
+// constants will be moved to HyperTextAccessibleBase soon.
+#include "mozilla/a11y/HyperTextAccessible.h"
 #include "mozilla/a11y/Platform.h"
 #include "mozilla/a11y/RemoteAccessibleBase.h"
 #include "mozilla/a11y/RemoteAccessible.h"
@@ -16,6 +19,7 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/Unused.h"
+#include "nsAccUtils.h"
 #include "RelationType.h"
 #include "xpcAccessibleDocument.h"
 
@@ -351,6 +355,34 @@ nsIntRect RemoteAccessibleBase<Derived>::Bounds() const {
   }
 
   return nsIntRect();
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::AppendTextTo(nsAString& aText,
+                                                 uint32_t aStartOffset,
+                                                 uint32_t aLength) {
+  if (IsText()) {
+    auto text = mCachedFields->GetAttribute<nsString>(nsGkAtoms::text);
+    if (text) {
+      aText.Append(Substring(*text, aStartOffset, aLength));
+    }
+    return;
+  }
+
+  if (aStartOffset != 0 || aLength == 0) {
+    return;
+  }
+
+  if (IsHTMLBr()) {
+    aText += kForcedNewLineChar;
+  } else if (RemoteParent() && nsAccUtils::MustPrune(RemoteParent())) {
+    // Expose the embedded object accessible as imaginary embedded object
+    // character if its parent hypertext accessible doesn't expose children to
+    // AT.
+    aText += kImaginaryEmbeddedObjectChar;
+  } else {
+    aText += kEmbeddedObjectChar;
+  }
 }
 
 template class RemoteAccessibleBase<RemoteAccessible>;

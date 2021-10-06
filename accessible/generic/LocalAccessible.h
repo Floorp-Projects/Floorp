@@ -457,18 +457,8 @@ class LocalAccessible : public nsISupports, public Accessible {
            !aEl->IsAnyOfHTMLElements(nsGkAtoms::option, nsGkAtoms::optgroup);
   }
 
-  /**
-   * Returns text of accessible if accessible has text role otherwise empty
-   * string.
-   *
-   * @param aText         [in] returned text of the accessible
-   * @param aStartOffset  [in, optional] start offset inside of the accessible,
-   *                        if missed entire text is appended
-   * @param aLength       [in, optional] required length of text, if missed
-   *                        then text form start offset till the end is appended
-   */
   virtual void AppendTextTo(nsAString& aText, uint32_t aStartOffset = 0,
-                            uint32_t aLength = UINT32_MAX);
+                            uint32_t aLength = UINT32_MAX) override;
 
   /**
    * Return boundaries in screen coordinates in app units.
