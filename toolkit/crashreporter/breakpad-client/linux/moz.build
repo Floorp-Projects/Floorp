@@ -39,5 +39,3 @@ if CONFIG['MOZ_PHC']:
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=stack-protector']
-
-REQUIRES_UNIFIED_BUILD = True

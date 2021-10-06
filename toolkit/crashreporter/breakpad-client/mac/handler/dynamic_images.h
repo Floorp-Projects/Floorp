@@ -355,6 +355,9 @@ kern_return_t ReadTaskMemory(task_port_t target_task,
                              size_t length,
                              vector<uint8_t> &bytes);
 
+std::string ReadTaskString(task_port_t target_task,
+                           const uint64_t address);
+
 }   // namespace google_breakpad
 
 #endif // CLIENT_MAC_HANDLER_DYNAMIC_IMAGES_H__

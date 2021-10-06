@@ -19,5 +19,3 @@ LOCAL_INCLUDES += [
 
 if CONFIG['CC_TYPE'] == 'clang':
     CXXFLAGS += ['-Wno-shadow']
-
-REQUIRES_UNIFIED_BUILD = True
