@@ -76,8 +76,6 @@ class ChromeProcessController : public mozilla::layers::GeckoContentController {
       const ScrollableLayerGuid::ViewID& aScrollId) override;
   void CancelAutoscroll(const ScrollableLayerGuid& aGuid) override;
 
-  PresShell* GetTopLevelPresShell() const override { return GetPresShell(); }
-
  private:
   nsCOMPtr<nsIWidget> mWidget;
   RefPtr<APZEventState> mAPZEventState;
