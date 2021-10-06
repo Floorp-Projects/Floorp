@@ -134,7 +134,6 @@ object TelemetryWrapper {
         val CUSTOM_SEARCH_ENGINE = "custom_search_engine"
         val REMOVE_SEARCH_ENGINES = "remove_search_engines"
         val GECKO_ENGINE = "gecko_engine"
-        val TIP = "tip"
         val SEARCH_SUGGESTION_PROMPT = "search_suggestion_prompt"
         val MAKE_DEFAULT_BROWSER_OPEN_WITH = "make_default_browser_open_with"
         val MAKE_DEFAULT_BROWSER_SETTINGS = "make_default_browser_settings"
@@ -171,12 +170,6 @@ object TelemetryWrapper {
         val SETTINGS = "settings"
         val QUICK_ADD = "quick_add"
         val FIND_IN_PAGE = "find_in_page"
-        val DEFAULT_BROWSER_TIP = "default_browser_tip"
-        val DISABLE_TRACKING_PROTECTION_TIP = "disable_tracking_protection_tip"
-        val ADD_TO_HOMESCREEN_TIP = "add_to_homescreen_tip"
-        val AUTOCOMPLETE_URL_TIP = "autocomplete_url_tip"
-        val OPEN_IN_NEW_TAB_TIP = "open_in_new_tab_tip"
-        val DISABLE_TIPS_TIP = "disable_tips_tip"
         val CLOSE_TAB = "close_tab"
     }
 
@@ -927,44 +920,6 @@ object TelemetryWrapper {
         // Make sure a minimum of 1 day has passed since we collected data
         val currentDateLong = dateFormat.format(Date()).toLong()
         return currentDateLong > dateOfLastPing
-    }
-
-    @JvmStatic
-    @Suppress("ComplexMethod") // Not actually complex
-    fun displayTipEvent(tipId: Int) {
-
-        val telemetryValue = when (tipId) {
-            R.string.tip_open_in_new_tab -> Value.OPEN_IN_NEW_TAB_TIP
-            R.string.tip_add_to_homescreen -> Value.ADD_TO_HOMESCREEN_TIP
-            R.string.tip_disable_tracking_protection3 -> Value.DISABLE_TRACKING_PROTECTION_TIP
-            R.string.tip_set_default_browser -> Value.DEFAULT_BROWSER_TIP
-            R.string.tip_autocomplete_url -> Value.AUTOCOMPLETE_URL_TIP
-            R.string.tip_disable_tips2 -> Value.DISABLE_TIPS_TIP
-            else -> {
-                // Unknown tip, fail silently rather than crashing.
-                return
-            }
-        }
-
-        TelemetryEvent.create(Category.ACTION, Method.SHOW, Object.TIP, telemetryValue).queue()
-    }
-
-    @JvmStatic
-    fun pressTipEvent(tipId: Int) {
-
-        val telemetryValue = when (tipId) {
-            R.string.tip_open_in_new_tab -> Value.OPEN_IN_NEW_TAB_TIP
-            R.string.tip_add_to_homescreen -> Value.ADD_TO_HOMESCREEN_TIP
-            R.string.tip_set_default_browser -> Value.DEFAULT_BROWSER_TIP
-            R.string.tip_autocomplete_url -> Value.AUTOCOMPLETE_URL_TIP
-            R.string.tip_disable_tips2 -> Value.DISABLE_TIPS_TIP
-            else -> {
-                // Unknown tip, fail silently rather than crashing.
-                return
-            }
-        }
-
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.TIP, telemetryValue).queue()
     }
 
     fun searchWithAdsShownEvent(provider: String) {

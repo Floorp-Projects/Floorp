@@ -19,7 +19,10 @@ class TipsHorizontalCarousel @JvmOverloads constructor(
     private val itemDecoration = DotPagerIndicatorDecoration()
 
     init {
-        layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+        layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false).apply {
+            // we need to disable prefetching to avoid recording telemetry when items are bind, not displayed
+            isItemPrefetchEnabled = false
+        }
         adapter = tipsAdapter
         pagerSnapHelper.attachToRecyclerView(this)
         addItemDecoration(itemDecoration)
