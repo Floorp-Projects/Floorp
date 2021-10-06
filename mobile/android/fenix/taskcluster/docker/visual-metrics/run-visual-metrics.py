@@ -43,6 +43,9 @@ class Job:
     #: A unique number for the job.
     count = attr.ib(type=int)
 
+    #: The tags for this job.
+    tags = attr.ib(type=str)
+
     #: The extra options for this job.
     extra_options = attr.ib(type=str)
 
@@ -63,6 +66,7 @@ JOB_SCHEMA = Schema(
             {
                 Required("test_name"): str,
                 Required("browsertime_json_path"): str,
+                Required("tags"): [str],
                 Required("extra_options"): [str],
                 Required("accept_zero_vismet"): bool,
             }
@@ -149,7 +153,7 @@ def run_command(log, cmd, job_count):
     return rc, res
 
 
-def append_result(log, suites, test_name, name, result, extra_options):
+def append_result(log, suites, test_name, name, result, tags, extra_options):
     """Appends a ``name`` metrics result in the ``test_name`` suite.
 
     Args:
@@ -177,7 +181,7 @@ def append_result(log, suites, test_name, name, result, extra_options):
         test_name,
         {
             "name": orig_test_name,
-            "tags": extra_options + ["visual"],
+            "tags": extra_options + tags + ["visual"],
             "subtests": {},
             "extraOptions": extra_options,
         },
@@ -320,9 +324,13 @@ def main(log, args):
         for site in browsertime_json:
             for video in site["files"]["video"]:
                 count += 1
+                name = job["test_name"]
+                if "alias" in site["info"] and site["info"]["alias"].strip() != "":
+                    name = "%s.%s" % (name, site["info"]["alias"])
                 jobs.append(
                     Job(
-                        test_name=job["test_name"],
+                        test_name=name,
+                        tags=job["tags"],
                         extra_options=len(job["extra_options"]) > 0
                         and job["extra_options"]
                         or jobs_json["extra_options"],
@@ -359,7 +367,13 @@ def main(log, args):
             else:
                 for name, value in res.items():
                     append_result(
-                        log, suites, job.test_name, name, value, job.extra_options
+                        log,
+                        suites,
+                        job.test_name,
+                        name,
+                        value,
+                        job.tags,
+                        job.extra_options,
                     )
 
     suites = [get_suite(suite) for suite in suites.values()]
