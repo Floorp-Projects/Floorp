@@ -855,8 +855,16 @@ void ContentEventHandler::AppendFontRanges(FontRangeArray& aFontRanges,
 
       FontRange* fontRange = AppendFontRange(aFontRanges, baseOffset);
       fontRange->mFontName.Append(NS_ConvertUTF8toUTF16(font->GetName()));
-      fontRange->mFontSize = font->GetAdjustedSize() *
-                             frame->PresShell()->GetCumulativeResolution();
+
+      ParentLayerToScreenScale2D cumulativeResolution =
+          ParentLayerToParentLayerScale(
+              frame->PresShell()->GetCumulativeResolution()) *
+          nsLayoutUtils::GetTransformToAncestorScaleCrossProcessForFrameMetrics(
+              frame);
+      float scale =
+          std::max(cumulativeResolution.xScale, cumulativeResolution.yScale);
+
+      fontRange->mFontSize = font->GetAdjustedSize() * scale;
 
       // The converted original offset may exceed the range,
       // hence we need to clamp it.
@@ -938,9 +946,18 @@ nsresult ContentEventHandler::GenerateFlatFontRanges(
                 .AppendToString(name, false);
           }
           AppendUTF8toUTF16(name, fontRange->mFontName);
+
+          ParentLayerToScreenScale2D cumulativeResolution =
+              ParentLayerToParentLayerScale(
+                  frame->PresShell()->GetCumulativeResolution()) *
+              nsLayoutUtils::
+                  GetTransformToAncestorScaleCrossProcessForFrameMetrics(frame);
+
+          float scale = std::max(cumulativeResolution.xScale,
+                                 cumulativeResolution.yScale);
+
           fontRange->mFontSize = frame->PresContext()->CSSPixelsToDevPixels(
-              font.size.ToCSSPixels() *
-              frame->PresShell()->GetCumulativeResolution());
+              font.size.ToCSSPixels() * scale);
         }
       }
       baseOffset += GetBRLength(aLineBreakType);
