@@ -1154,6 +1154,10 @@ bool FetchBody<Derived>::CheckBodyUsed() const {
   return bodyUsed;
 }
 
+template bool FetchBody<Request>::CheckBodyUsed() const;
+
+template bool FetchBody<Response>::CheckBodyUsed() const;
+
 template <class Derived>
 void FetchBody<Derived>::SetBodyUsed(JSContext* aCx, ErrorResult& aRv) {
   MOZ_ASSERT(aCx);
