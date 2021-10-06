@@ -34,7 +34,7 @@ fun SectionHeader(
         fontFamily = FontFamily(Font(R.font.metropolis_semibold)),
         lineHeight = 20.sp,
         overflow = TextOverflow.Ellipsis,
-        maxLines = 1
+        maxLines = 2
     )
 }
 
