@@ -396,11 +396,62 @@ var ExtensionProcessScript = {
 
 var ExtensionAPIRequestHandler = {
   handleAPIRequest(policy, request) {
-    // TODO: to be actually implemented in the "part3" patches that follows,
-    // this patch does only contain a placeholder method, which is
-    // replaced with a mock in the set of unit tests defined in this
-    // patch.
-    throw new Error("Not implemented");
+    try {
+      let extension = extensions.get(policy);
+
+      if (!extension) {
+        throw new Error(`Extension instance not found for addon ${policy.id}`);
+      }
+
+      let context = this.getExtensionContextForAPIRequest({
+        extension,
+        request,
+      });
+
+      return context.childManager.handleWebIDLAPIRequest(request);
+    } catch (error) {
+      // Do not propagate errors that are not meant to be accessible to the
+      // extension, report it to the console and just throw the generic
+      // "An unexpected error occurred".
+      Cu.reportError(error);
+      return {
+        type: Ci.mozIExtensionAPIRequestResult.EXTENSION_ERROR,
+        value: new Error("An unexpected error occurred"),
+      };
+    }
+  },
+
+  getExtensionContextForAPIRequest({ extension, request }) {
+    let context;
+
+    if (request.window) {
+      throw new Error(
+        `Extension API request originated from an extension window are not yet supported`
+      );
+    } else if (request.serviceWorkerInfo) {
+      context = ExtensionPageChild.getContextForWorker(
+        extension,
+        request.serviceWorkerInfo
+      );
+      if (!context) {
+        throw new Error(
+          `Extension context not found for the extension service worker`
+        );
+      }
+    } else {
+      throw new Error(
+        `Extension API request originated from an unsupported extension global`
+      );
+    }
+
+    if (!context.useWebIDLBindings) {
+      const { viewType, contextId } = context;
+      throw new Error(
+        `Extension ${extension.id} context "${viewType}" ${contextId} does not support WebIDL bindings`
+      );
+    }
+
+    return context;
   },
 };
 

@@ -489,6 +489,18 @@ class BaseContext {
     return this.extension.privateBrowsingAllowed;
   }
 
+  /**
+   * Whether the extension context is using the WebIDL bindings for the
+   * WebExtensions APIs.
+   * To be overridden in subclasses (e.g. WorkerContextChild) and to be
+   * optionally used in ExtensionAPI classes to customize the behavior of the
+   * API when the calls to the extension API are originated from the WebIDL
+   * bindings.
+   */
+  get useWebIDLBindings() {
+    return false;
+  }
+
   canAccessWindow(window) {
     return this.extension.canAccessWindow(window);
   }
