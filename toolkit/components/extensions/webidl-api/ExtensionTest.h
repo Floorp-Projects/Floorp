@@ -32,6 +32,7 @@ class ExtensionTest final : public nsISupports,
                             public nsWrapperCache,
                             public ExtensionAPINamespace {
   nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<ExtensionBrowser> mExtensionBrowser;
   RefPtr<ExtensionEventManager> mOnMessageEventMgr;
 
   ~ExtensionTest() = default;
@@ -41,6 +42,10 @@ class ExtensionTest final : public nsISupports,
 
   // ExtensionAPIBase methods
   nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
+
+  ExtensionBrowser* GetExtensionBrowser() const override {
+    return mExtensionBrowser;
+  }
 
   nsString GetAPINamespace() const override { return u"test"_ns; }
 

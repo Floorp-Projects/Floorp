@@ -164,11 +164,12 @@ NS_IMPL_ISUPPORTS(ExtensionEventListener, mozIExtensionEventListener)
 
 // static
 already_AddRefed<ExtensionEventListener> ExtensionEventListener::Create(
-    nsIGlobalObject* aGlobal, dom::Function* aCallback,
-    CleanupCallback&& aCleanupCallback, ErrorResult& aRv) {
+    nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
+    dom::Function* aCallback, CleanupCallback&& aCleanupCallback,
+    ErrorResult& aRv) {
   MOZ_ASSERT(dom::IsCurrentThreadRunningWorker());
   RefPtr<ExtensionEventListener> extCb =
-      new ExtensionEventListener(aGlobal, aCallback);
+      new ExtensionEventListener(aGlobal, aExtensionBrowser, aCallback);
 
   auto* workerPrivate = dom::GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
@@ -335,6 +336,11 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
     return true;
   }
 
+  RefPtr<ExtensionBrowser> extensionBrowser = mListener->GetExtensionBrowser();
+  if (NS_WARN_IF(!extensionBrowser)) {
+    return true;
+  }
+
   auto fn = mListener->GetCallback();
   if (NS_WARN_IF(!fn)) {
     return true;
@@ -397,8 +403,8 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
     // until we will need to expect it to support other object types that
     // some specific API may need.
     MOZ_ASSERT(mAPIObjectType == APIObjectType::RUNTIME_PORT);
-    RefPtr<ExtensionPort> port =
-        ExtensionPort::Create(global, apiObjectDescriptor, rv);
+    RefPtr<ExtensionPort> port = ExtensionPort::Create(global, extensionBrowser,
+                                                       apiObjectDescriptor, rv);
     if (NS_WARN_IF(rv.Failed())) {
       retPromise->MaybeReject(rv.StealNSResult());
       return true;

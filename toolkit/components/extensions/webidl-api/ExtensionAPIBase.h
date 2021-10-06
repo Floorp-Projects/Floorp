@@ -26,12 +26,14 @@ class ExtensionAPICallFunctionNoReturn;
 class ExtensionAPICallSyncFunction;
 class ExtensionAPICallAsyncFunction;
 class ExtensionAPIGetProperty;
+class ExtensionBrowser;
 class ExtensionEventManager;
 class ExtensionPort;
 
 class ExtensionAPIBase {
  protected:
   virtual nsIGlobalObject* GetGlobalObject() const = 0;
+  virtual ExtensionBrowser* GetExtensionBrowser() const = 0;
   virtual nsString GetAPINamespace() const = 0;
   virtual nsString GetAPIObjectType() const = 0;
   virtual nsString GetAPIObjectId() const = 0;
@@ -133,7 +135,8 @@ class ChromeCompatCallbackHandler final : public dom::PromiseNativeHandler {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  static void Create(dom::Promise* aPromise,
+  static void Create(ExtensionBrowser* aExtensionBrowser,
+                     dom::Promise* aPromise,
                      const RefPtr<dom::Function>& aCallback);
 
   MOZ_CAN_RUN_SCRIPT void ResolvedCallback(
@@ -142,14 +145,19 @@ class ChromeCompatCallbackHandler final : public dom::PromiseNativeHandler {
       JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
  private:
-  explicit ChromeCompatCallbackHandler(const RefPtr<dom::Function>& aCallback)
-      : mCallback(aCallback) {
+  ChromeCompatCallbackHandler(ExtensionBrowser* aExtensionBrowser,
+                              const RefPtr<dom::Function>& aCallback)
+      : mCallback(aCallback), mExtensionBrowser(aExtensionBrowser) {
     MOZ_ASSERT(aCallback);
+    MOZ_ASSERT(aExtensionBrowser);
   }
 
   ~ChromeCompatCallbackHandler() = default;
 
+  void ReportUncheckedLastError(JSContext* aCx, JS::Handle<JS::Value> aValue);
+
   RefPtr<dom::Function> mCallback;
+  RefPtr<ExtensionBrowser> mExtensionBrowser;
 };
 
 }  // namespace extensions

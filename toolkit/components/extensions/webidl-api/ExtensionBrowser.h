@@ -28,6 +28,8 @@ bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal);
 
 class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIGlobalObject> mGlobal;
+  JS::Heap<JS::Value> mLastError;
+  bool mCheckedLastError;
   RefPtr<ExtensionAlarms> mExtensionAlarms;
   RefPtr<ExtensionMockAPI> mExtensionMockAPI;
   RefPtr<ExtensionRuntime> mExtensionRuntime;
@@ -37,6 +39,16 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
 
  public:
   explicit ExtensionBrowser(nsIGlobalObject* aGlobal);
+
+  // Helpers used for the expected behavior of the browser.runtime.lastError
+  // and browser.extension.lastError.
+  void SetLastError(JS::Handle<JS::Value> aLastError);
+  void GetLastError(JS::MutableHandle<JS::Value> aRetVal);
+  // ClearLastError is used by ChromeCompatCallbackHandler::RejectedCallback
+  // to clear the lastError property. When this method returns true the
+  // caller will know that the error value wasn't checked by the callback and
+  // should be reported to the console
+  bool ClearLastError();
 
   // nsWrapperCache interface methods
   JSObject* WrapObject(JSContext* aCx,
