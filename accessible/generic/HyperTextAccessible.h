@@ -144,26 +144,7 @@ class HyperTextAccessible : public HyperTextAccessibleBase,
   //////////////////////////////////////////////////////////////////////////////
   // TextAccessible
 
-  /**
-   * Get a character at the given offset (don't support magic offsets).
-   */
-  bool CharAt(int32_t aOffset, nsAString& aChar,
-              int32_t* aStartOffset = nullptr, int32_t* aEndOffset = nullptr) {
-    NS_ASSERTION(!aStartOffset == !aEndOffset,
-                 "Offsets should be both defined or both undefined!");
-
-    int32_t childIdx = GetChildIndexAtOffset(aOffset);
-    if (childIdx == -1) return false;
-
-    LocalAccessible* child = LocalChildAt(childIdx);
-    child->AppendTextTo(aChar, aOffset - GetChildOffset(childIdx), 1);
-
-    if (aStartOffset && aEndOffset) {
-      *aStartOffset = aOffset;
-      *aEndOffset = aOffset + aChar.Length();
-    }
-    return true;
-  }
+  using HyperTextAccessibleBase::CharAt;
 
   char16_t CharAt(int32_t aOffset) {
     nsAutoString charAtOffset;
