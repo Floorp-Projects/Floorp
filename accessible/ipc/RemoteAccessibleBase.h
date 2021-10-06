@@ -223,6 +223,10 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
                          : nullptr;
   }
 
+  // HyperTextAccessibleBase
+  // XXX Implement this once it's cached.
+  virtual int32_t CaretOffset() const override { return -1; }
+
  protected:
   RemoteAccessibleBase(uint64_t aID, Derived* aParent,
                        DocAccessibleParent* aDoc, role aRole, AccType aType,

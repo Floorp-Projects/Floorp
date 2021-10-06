@@ -637,7 +637,11 @@ bool RemoteAccessible::RemoveFromSelection(int32_t aSelectionNum) {
   return SUCCEEDED(acc->removeSelection(static_cast<long>(aSelectionNum)));
 }
 
-int32_t RemoteAccessible::CaretOffset() {
+int32_t RemoteAccessible::CaretOffset() const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::CaretOffset();
+  }
+
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return -1;
