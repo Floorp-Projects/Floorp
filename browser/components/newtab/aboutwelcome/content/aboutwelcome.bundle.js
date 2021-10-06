@@ -864,7 +864,7 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "VariationsCircle", function() { return VariationsCircle; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "computeColorWayStateFromActiveTheme", function() { return computeColorWayStateFromActiveTheme; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "computeColorWay", function() { return computeColorWay; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Colorways", function() { return Colorways; });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -923,39 +923,11 @@ const VariationsCircle = props => {
 // format colorway-variationId inside LIGHT_WEIGHT_THEMES in AboutWelcomeParent
 
 function computeColorWay(themeName, systemVariations) {
-  if (!themeName) {
-    return "default";
-  }
-
-  let colorway = null;
-  let defaultTheme = systemVariations.find(variation => themeName === variation.id);
-
-  if (defaultTheme) {
-    colorway = "default";
-  } else {
-    [colorway] = themeName.split("-");
-  }
-
-  return colorway;
-}
-
-function computeColorWayStateFromActiveTheme(props) {
-  var _colorways$find;
-
-  const {
-    activeTheme
-  } = props;
-  const {
-    colorways,
-    systemVariations
-  } = props.content.tiles;
-  let colorwayId = computeColorWay(activeTheme, systemVariations);
-  return {
-    colorwayId,
-    colorwayText: (_colorways$find = colorways.find(colorway => colorway.id === colorwayId)) === null || _colorways$find === void 0 ? void 0 : _colorways$find.label
-  };
+  return !themeName || systemVariations.find(variation => themeName === variation.id) ? "default" : themeName.split("-")[0];
 }
 function Colorways(props) {
+  var _colorways$find;
+
   let {
     colorways,
     defaultVariationId,
@@ -964,22 +936,16 @@ function Colorways(props) {
     variations
   } = props.content.tiles; // This sets a default value
 
-  const [{
-    colorwayId,
-    colorwayText
-  }, setState] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(computeColorWayStateFromActiveTheme(props)); // Update state any time activeTheme changes.
+  const [colorwayId, setState] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(computeColorWay(props.activeTheme, systemVariations)); // Update state any time activeTheme changes.
 
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
-    setState(computeColorWayStateFromActiveTheme(props));
+    setState(computeColorWay(props.activeTheme, systemVariations));
   }, [props.activeTheme]); // Called on click of Colorway circle that sets colorway state
   // used to pass selected colorway to variation circle and
   // call handleAction passing 'colorway-defaultvariationId' as event target value
 
   function handleColorwayClick(event) {
-    setState({
-      colorwayId: event.currentTarget.dataset.colorway,
-      colorwayText: JSON.stringify(event.currentTarget.dataset.label)
-    });
+    setState(event.currentTarget.dataset.colorway);
     props.handleAction(event);
   }
 
@@ -1013,7 +979,6 @@ function Colorways(props) {
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", {
       type: "radio",
       "data-colorway": id,
-      "data-label": JSON.stringify(label),
       value: id === "default" ? systemDefaultVariationId : `${id}-${defaultVariationId}`,
       name: "theme",
       checked: (_computeColorWay = computeColorWay(props.activeTheme, systemVariations)) === null || _computeColorWay === void 0 ? void 0 : _computeColorWay.includes(id),
@@ -1029,7 +994,7 @@ function Colorways(props) {
   }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(VariationsCircle, {
     variations: colorwayId === "default" ? systemVariations : variations,
     colorway: colorwayId,
-    colorwayText: colorwayText,
+    colorwayText: (_colorways$find = colorways.find(colorway => colorway.id === colorwayId)) === null || _colorways$find === void 0 ? void 0 : _colorways$find.label,
     setVariation: props.handleAction,
     activeTheme: props.activeTheme
   }));

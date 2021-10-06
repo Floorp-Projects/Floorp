@@ -49,32 +49,11 @@ export const VariationsCircle = props => {
 // Return colorway as "default" for default theme variations Automatic, Light, Dark
 // For themes other then default, theme names exist in
 // format colorway-variationId inside LIGHT_WEIGHT_THEMES in AboutWelcomeParent
-function computeColorWay(themeName, systemVariations) {
-  if (!themeName) {
-    return "default";
-  }
-
-  let colorway = null;
-  let defaultTheme = systemVariations.find(
-    variation => themeName === variation.id
-  );
-  if (defaultTheme) {
-    colorway = "default";
-  } else {
-    [colorway] = themeName.split("-");
-  }
-  return colorway;
-}
-
-export function computeColorWayStateFromActiveTheme(props) {
-  const { activeTheme } = props;
-  const { colorways, systemVariations } = props.content.tiles;
-  let colorwayId = computeColorWay(activeTheme, systemVariations);
-
-  return {
-    colorwayId,
-    colorwayText: colorways.find(colorway => colorway.id === colorwayId)?.label,
-  };
+export function computeColorWay(themeName, systemVariations) {
+  return !themeName ||
+    systemVariations.find(variation => themeName === variation.id)
+    ? "default"
+    : themeName.split("-")[0];
 }
 
 export function Colorways(props) {
@@ -87,23 +66,20 @@ export function Colorways(props) {
   } = props.content.tiles;
 
   // This sets a default value
-  const [{ colorwayId, colorwayText }, setState] = useState(
-    computeColorWayStateFromActiveTheme(props)
+  const [colorwayId, setState] = useState(
+    computeColorWay(props.activeTheme, systemVariations)
   );
 
   // Update state any time activeTheme changes.
   useEffect(() => {
-    setState(computeColorWayStateFromActiveTheme(props));
+    setState(computeColorWay(props.activeTheme, systemVariations));
   }, [props.activeTheme]);
 
   // Called on click of Colorway circle that sets colorway state
   // used to pass selected colorway to variation circle and
   // call handleAction passing 'colorway-defaultvariationId' as event target value
   function handleColorwayClick(event) {
-    setState({
-      colorwayId: event.currentTarget.dataset.colorway,
-      colorwayText: JSON.stringify(event.currentTarget.dataset.label),
-    });
+    setState(event.currentTarget.dataset.colorway);
     props.handleAction(event);
   }
 
@@ -132,7 +108,6 @@ export function Colorways(props) {
                   <input
                     type="radio"
                     data-colorway={id}
-                    data-label={JSON.stringify(label)}
                     value={
                       id === "default"
                         ? systemDefaultVariationId
@@ -169,7 +144,9 @@ export function Colorways(props) {
       <VariationsCircle
         variations={colorwayId === "default" ? systemVariations : variations}
         colorway={colorwayId}
-        colorwayText={colorwayText}
+        colorwayText={
+          colorways.find(colorway => colorway.id === colorwayId)?.label
+        }
         setVariation={props.handleAction}
         activeTheme={props.activeTheme}
       />

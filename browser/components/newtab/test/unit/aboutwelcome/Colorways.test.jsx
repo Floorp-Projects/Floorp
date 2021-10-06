@@ -2,7 +2,7 @@ import React from "react";
 import { shallow } from "enzyme";
 import {
   Colorways,
-  computeColorWayStateFromActiveTheme,
+  computeColorWay,
   VariationsCircle,
 } from "content-src/aboutwelcome/components/Colorways";
 import { WelcomeScreen } from "content-src/aboutwelcome/components/MultiStageAboutWelcome";
@@ -190,31 +190,36 @@ describe("Multistage AboutWelcome module", () => {
         variationContainer.props().className.includes("abstract"),
         true
       );
+      // Localized tag text attribute is set to colorwayText
+      assert.strictEqual(
+        variationsWrapper.props().children[0].props.text,
+        "Abstract"
+      );
     });
 
-    it("should computeColorWayStateFromActiveTheme for default active theme", () => {
+    it("should computeColorWayId for default active theme", () => {
       let TEST_COLORWAY_PROPS = {
         ...COLORWAY_SCREEN_PROPS,
       };
 
-      const { colorwayId, colorwayText } = computeColorWayStateFromActiveTheme(
-        TEST_COLORWAY_PROPS
+      const colorwayId = computeColorWay(
+        TEST_COLORWAY_PROPS.activeTheme,
+        TEST_COLORWAY_PROPS.content.tiles.systemVariations
       );
       assert.strictEqual(colorwayId, "default");
-      assert.strictEqual(colorwayText, "Default");
     });
 
-    it("should computeColorWayStateFromActiveTheme for non-default active theme", () => {
+    it("should computeColorWayId for non-default active theme", () => {
       let TEST_COLORWAY_PROPS = {
         ...COLORWAY_SCREEN_PROPS,
         activeTheme: "abstract-soft",
       };
 
-      const { colorwayId, colorwayText } = computeColorWayStateFromActiveTheme(
-        TEST_COLORWAY_PROPS
+      const colorwayId = computeColorWay(
+        TEST_COLORWAY_PROPS.activeTheme,
+        TEST_COLORWAY_PROPS.content.tiles.systemVariations
       );
       assert.strictEqual(colorwayId, "abstract");
-      assert.strictEqual(colorwayText, "Abstract");
     });
   });
 });
