@@ -1881,7 +1881,6 @@ impl DisplayListBuilder {
         external_id: di::ExternalScrollId,
         content_rect: LayoutRect,
         frame_rect: LayoutRect,
-        scroll_sensitivity: di::ScrollSensitivity,
         external_scroll_offset: LayoutVector2D,
         key: di::SpatialTreeItemKey,
     ) -> di::SpatialId {
@@ -1901,7 +1900,6 @@ impl DisplayListBuilder {
             parent_space,
             scroll_frame_id,
             external_id,
-            scroll_sensitivity,
             external_scroll_offset,
             key,
         });

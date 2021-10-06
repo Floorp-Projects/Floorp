@@ -41,7 +41,7 @@ use api::{DisplayItem, DisplayItemRef, ExtendMode, ExternalScrollId, FilterData,
 use api::{FilterOp, FilterPrimitive, FontInstanceKey, FontSize, GlyphInstance, GlyphOptions, GradientStop};
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth, QualitySettings};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId, MixBlendMode, StackingContextFlags};
-use api::{PropertyBinding, ReferenceFrameKind, ScrollFrameDescriptor, ScrollSensitivity, ReferenceFrameMapper};
+use api::{PropertyBinding, ReferenceFrameKind, ScrollFrameDescriptor, ReferenceFrameMapper};
 use api::{Shadow, SpaceAndClipInfo, SpatialId, StickyFrameDescriptor, ImageMask, ItemTag};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
 use api::{ReferenceTransformBinding, Rotation, FillRule, SpatialTreeItem, ReferenceFrameDescriptor};
@@ -875,7 +875,6 @@ impl<'a> SceneBuilder<'a> {
             pipeline_id,
             &info.frame_rect,
             &content_size,
-            info.scroll_sensitivity,
             ScrollFrameKind::Explicit,
             info.external_scroll_offset,
             SpatialNodeUid::external(info.key),
@@ -936,7 +935,6 @@ impl<'a> SceneBuilder<'a> {
             iframe_pipeline_id,
             &iframe_rect,
             &bounds.size(),
-            ScrollSensitivity::ScriptAndInputEvents,
             ScrollFrameKind::PipelineRoot {
                 is_root_pipeline,
             },
@@ -2371,7 +2369,6 @@ impl<'a> SceneBuilder<'a> {
             pipeline_id,
             &viewport_rect,
             &viewport_rect.size(),
-            ScrollSensitivity::ScriptAndInputEvents,
             ScrollFrameKind::PipelineRoot {
                 is_root_pipeline: true,
             },
@@ -2520,7 +2517,6 @@ impl<'a> SceneBuilder<'a> {
         pipeline_id: PipelineId,
         frame_rect: &LayoutRect,
         content_size: &LayoutSize,
-        scroll_sensitivity: ScrollSensitivity,
         frame_kind: ScrollFrameKind,
         external_scroll_offset: LayoutVector2D,
         uid: SpatialNodeUid,
@@ -2531,7 +2527,6 @@ impl<'a> SceneBuilder<'a> {
             pipeline_id,
             frame_rect,
             content_size,
-            scroll_sensitivity,
             frame_kind,
             external_scroll_offset,
             uid,

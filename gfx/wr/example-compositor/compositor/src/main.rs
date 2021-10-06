@@ -279,7 +279,6 @@ fn build_display_list(
         scroll_id,
         LayoutRect::from_size(layout_size),
         LayoutRect::from_size(layout_size),
-        ScrollSensitivity::Script,
         LayoutVector2D::zero(),
         SpatialTreeItemKey::new(0, 1),
     );
