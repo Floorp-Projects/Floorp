@@ -30,7 +30,6 @@ T WaitFor(MediaEventSource<T>& aEvent) {
   MediaEventListener listener = aEvent.Connect(
       AbstractThread::GetCurrent(), [&](T aValue) { value = Some(aValue); });
   SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      "WaitFor(MediaEventSource<T>& aEvent)"_ns,
       [&] { return value.isSome(); });
   listener.Disconnect();
   return value.value();
@@ -54,7 +53,6 @@ Result<R, E> WaitFor(const RefPtr<MozPromise<R, E, Exc>>& aPromise) {
       [&](R aResult) { success = Some(aResult); },
       [&](E aError) { error = Some(aError); });
   SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      "WaitFor(const RefPtr<MozPromise<R, E, Exc>>& aPromise)"_ns,
       [&] { return success.isSome() || error.isSome(); });
   if (success.isSome()) {
     return success.extract();
@@ -76,7 +74,6 @@ void WaitUntil(MediaEventSource<T>& aEvent, const CallbackFunction& aF) {
         }
       });
   SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      "WaitUntil(MediaEventSource<T>& aEvent, const CallbackFunction& aF)"_ns,
       [&] { return done; });
   listener.Disconnect();
 }

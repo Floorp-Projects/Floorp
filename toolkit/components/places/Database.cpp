@@ -2604,11 +2604,10 @@ Database::Observe(nsISupports* aSubject, const char* aTopic,
 
     // Spin the events loop until the clients are done.
     // Note, this is just for tests, specifically test_clearHistory_shutdown.js
-    SpinEventLoopUntil("places:Database::Observe(SIMULATE_PLACES_SHUTDOWN)"_ns,
-                       [&]() {
-                         return mClientsShutdown->State() ==
-                                PlacesShutdownBlocker::States::RECEIVED_DONE;
-                       });
+    SpinEventLoopUntil([&]() {
+      return mClientsShutdown->State() ==
+             PlacesShutdownBlocker::States::RECEIVED_DONE;
+    });
 
     {
       nsCOMPtr<nsIAsyncShutdownClient> shutdownPhase =

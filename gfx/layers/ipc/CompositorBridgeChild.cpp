@@ -224,8 +224,7 @@ void CompositorBridgeChild::Destroy() {
 void CompositorBridgeChild::ShutDown() {
   if (sCompositorBridge) {
     sCompositorBridge->Destroy();
-    SpinEventLoopUntil("CompositorBridgeChild::ShutDown"_ns,
-                       [&]() { return !sCompositorBridge; });
+    SpinEventLoopUntil([&]() { return !sCompositorBridge; });
   }
 }
 

@@ -36,7 +36,7 @@ class FuzzRunner {
         [&](uint32_t aDecodeFps) { done = true; }, [&]() { done = true; });
 
     // Wait until benchmark completes.
-    SpinEventLoopUntil("FuzzRunner::Run"_ns, [&]() { return done; });
+    SpinEventLoopUntil([&]() { return done; });
     return;
   }
 

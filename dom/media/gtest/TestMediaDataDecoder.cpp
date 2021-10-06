@@ -37,7 +37,7 @@ class BenchmarkRunner {
         [&]() { done = true; });
 
     // Wait until benchmark completes.
-    SpinEventLoopUntil("BenchmarkRunner::Run"_ns, [&]() { return done; });
+    SpinEventLoopUntil([&]() { return done; });
     return result;
   }
 

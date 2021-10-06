@@ -449,9 +449,7 @@ StorageObserver::Observe(nsISupports* aSubject, const char* aTopic,
         MOZ_ALWAYS_SUCCEEDS(mBackgroundThread[id]->Dispatch(
             shutdownRunnable, NS_DISPATCH_NORMAL));
 
-        MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
-            "StorageObserver::Observe profile-before-change"_ns,
-            [&]() { return done; }));
+        MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return done; }));
 
         mBackgroundThread[id] = nullptr;
       }

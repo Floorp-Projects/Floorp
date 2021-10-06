@@ -102,7 +102,6 @@ TEST(TestURLQueryStringStripper, TestEmptyStripList)
   observer->StartWaitingObserver();
   Preferences::SetCString(kPrefQueryStrippingList, "");
   MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
-      "TEST(TestURLQueryStringStripper, TestEmptyStripList)"_ns,
       [&]() -> bool { return !observer->IsStillWaiting(); }));
 
   DoTest("https://example.com/"_ns, ""_ns, false);
@@ -123,7 +122,6 @@ TEST(TestURLQueryStringStripper, TestStripping)
   observer->StartWaitingObserver();
   Preferences::SetCString(kPrefQueryStrippingList, "fooBar foobaz");
   MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
-      "TEST(TestURLQueryStringStripper, TestStripping)"_ns,
       [&]() -> bool { return !observer->IsStillWaiting(); }));
 
   // Test the stripping.
@@ -148,7 +146,6 @@ TEST(TestURLQueryStringStripper, TestStripping)
   observer->StartWaitingObserver();
   Preferences::SetCString(kPrefQueryStrippingList, "Barfoo bazfoo");
   MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
-      "TEST(TestURLQueryStringStripper, TestStripping)"_ns,
       [&]() -> bool { return !observer->IsStillWaiting(); }));
 
   DoTest("https://example.com/?fooBar=123"_ns, ""_ns, false);

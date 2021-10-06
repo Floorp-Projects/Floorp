@@ -1220,7 +1220,6 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
           "RequestHelper::StartAndReturnResponse::SpinEventLoopTimer"));
 
       MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
-          "RequestHelper::StartAndReturnResponse"_ns,
           [&]() {
             if (mCancelled) {
               return true;

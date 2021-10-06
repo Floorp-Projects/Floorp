@@ -27,8 +27,7 @@ class DriftCompensatorTest : public ::testing::Test {
       bool updated = false;
       NS_DispatchToCurrentThread(
           NS_NewRunnableFunction(__func__, [&] { updated = true; }));
-      SpinEventLoopUntil("DriftCompensatorTest::DriftCompensatorTest"_ns,
-                         [&] { return updated; });
+      SpinEventLoopUntil([&] { return updated; });
     }
   }
 
