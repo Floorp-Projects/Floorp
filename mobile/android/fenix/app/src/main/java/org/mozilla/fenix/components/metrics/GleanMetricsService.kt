@@ -493,6 +493,23 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.PocketTopSiteRemoved -> EventWrapper<NoExtraKeys>(
             { Pocket.pocketTopSiteRemoved.record(it) }
         )
+        is Event.PocketHomeRecsShown -> EventWrapper<NoExtraKeys>(
+            { Pocket.homeRecsShown.record(it) }
+        )
+        is Event.PocketHomeRecsLearnMoreClicked -> EventWrapper<NoExtraKeys>(
+            { Pocket.homeRecsLearnMoreClicked.record(it) }
+        )
+        is Event.PocketHomeRecsDiscoverMoreClicked -> EventWrapper<NoExtraKeys>(
+            { Pocket.homeRecsDiscoverClicked.record(it) }
+        )
+        is Event.PocketHomeRecsStoryClicked -> EventWrapper(
+            { Pocket.homeRecsStoryClicked.record(it) },
+            { Pocket.homeRecsStoryClickedKeys.valueOf(it) }
+        )
+        is Event.PocketHomeRecsCategoryClicked -> EventWrapper(
+            { Pocket.homeRecsCategoryClicked.record(it) },
+            { Pocket.homeRecsCategoryClickedKeys.valueOf(it) }
+        )
         is Event.DarkThemeSelected -> EventWrapper(
             { AppTheme.darkThemeSelected.record(it) },
             { AppTheme.darkThemeSelectedKeys.valueOf(it) }

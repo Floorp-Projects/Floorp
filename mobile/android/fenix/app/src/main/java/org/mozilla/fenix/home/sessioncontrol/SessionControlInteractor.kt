@@ -391,15 +391,23 @@ class SessionControlInteractor(
         controller.handleCustomizeHomeTapped()
     }
 
-    override fun onCategoryClick(categoryClicked: PocketRecommendedStoriesCategory) {
-        pocketStoriesController.handleCategoryClick(categoryClicked)
-    }
-
     override fun onStoriesShown(storiesShown: List<PocketRecommendedStory>) {
         pocketStoriesController.handleStoriesShown(storiesShown)
     }
 
-    override fun onExternalLinkClicked(link: String) {
-        pocketStoriesController.handleExternalLinkClick(link)
+    override fun onCategoryClicked(categoryClicked: PocketRecommendedStoriesCategory) {
+        pocketStoriesController.handleCategoryClick(categoryClicked)
+    }
+
+    override fun onStoryClicked(storyClicked: PocketRecommendedStory, storyPosition: Pair<Int, Int>) {
+        pocketStoriesController.handleStoryClicked(storyClicked, storyPosition)
+    }
+
+    override fun onLearnMoreClicked(link: String) {
+        pocketStoriesController.handleLearnMoreClicked(link)
+    }
+
+    override fun onDiscoverMoreClicked(link: String) {
+        pocketStoriesController.handleDiscoverMoreClicked(link)
     }
 }

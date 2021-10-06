@@ -10,6 +10,7 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.service.pocket.PocketRecommendedStory
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -214,20 +215,48 @@ class SessionControlInteractorTest {
     }
 
     @Test
+    fun `GIVEN a PocketStoriesInteractor WHEN stories are shown THEN handle it in a PocketStoriesController`() {
+        val shownStories: List<PocketRecommendedStory> = mockk()
+
+        interactor.onStoriesShown(shownStories)
+
+        verify { pocketStoriesController.handleStoriesShown(shownStories) }
+    }
+
+    @Test
     fun `GIVEN a PocketStoriesInteractor WHEN a category is clicked THEN handle it in a PocketStoriesController`() {
         val clickedCategory: PocketRecommendedStoriesCategory = mockk()
 
-        interactor.onCategoryClick(clickedCategory)
+        interactor.onCategoryClicked(clickedCategory)
 
         verify { pocketStoriesController.handleCategoryClick(clickedCategory) }
     }
 
     @Test
-    fun `GIVEN a PocketStoriesInteractor WHEN an external link is clicked THEN handle it in a PocketStoriesController`() {
+    fun `GIVEN a PocketStoriesInteractor WHEN a story is clicked THEN handle it in a PocketStoriesController`() {
+        val clickedStory: PocketRecommendedStory = mockk()
+        val storyGridLocation = 1 to 2
+
+        interactor.onStoryClicked(clickedStory, storyGridLocation)
+
+        verify { pocketStoriesController.handleStoryClicked(clickedStory, storyGridLocation) }
+    }
+
+    @Test
+    fun `GIVEN a PocketStoriesInteractor WHEN discover more clicked THEN handle it in a PocketStoriesController`() {
+        val link = "http://getpocket.com/explore"
+
+        interactor.onDiscoverMoreClicked(link)
+
+        verify { pocketStoriesController.handleDiscoverMoreClicked(link) }
+    }
+
+    @Test
+    fun `GIVEN a PocketStoriesInteractor WHEN learn more clicked THEN handle it in a PocketStoriesController`() {
         val link = "https://www.mozilla.org/en-US/firefox/pocket/"
 
-        interactor.onExternalLinkClicked(link)
+        interactor.onLearnMoreClicked(link)
 
-        verify { pocketStoriesController.handleExternalLinkClick(link) }
+        verify { pocketStoriesController.handleLearnMoreClicked(link) }
     }
 }

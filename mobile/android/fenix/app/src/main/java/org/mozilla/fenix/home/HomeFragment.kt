@@ -355,7 +355,8 @@ class HomeFragment : Fragment() {
             pocketStoriesController = DefaultPocketStoriesController(
                 homeActivity = activity,
                 homeStore = homeFragmentStore,
-                navController = findNavController()
+                navController = findNavController(),
+                metrics = requireComponents.analytics.metrics
             )
         )
 

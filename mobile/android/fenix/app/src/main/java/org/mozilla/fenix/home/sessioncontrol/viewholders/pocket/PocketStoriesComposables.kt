@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -107,14 +107,15 @@ fun PocketStory(
  * @param stories The list of [PocketRecommendedStory]ies to be displayed. Expect a list with 8 items.
  * @param contentPadding Dimension for padding the content after it has been clipped.
  * This space will be used for shadows and also content rendering when the list is scrolled.
- * @param onExternalLinkClicked Callback for when the user taps an element which contains an
- * external link for where user can go for more recommendations.
+ * @param onStoryClicked Callback for when the user taps on a recommended story.
+ * @param onDiscoverMoreClicked Callback for when the user taps an element which contains an
  */
 @Composable
 fun PocketStories(
     @PreviewParameter(PocketStoryProvider::class) stories: List<PocketRecommendedStory>,
     contentPadding: Dp,
-    onExternalLinkClicked: (String) -> Unit
+    onStoryClicked: (PocketRecommendedStory, Pair<Int, Int>) -> Unit,
+    onDiscoverMoreClicked: (String) -> Unit
 ) {
     // Show stories in at most 3 rows but on any number of columns depending on the data received.
     val maxRowsNo = 3
@@ -129,20 +130,20 @@ fun PocketStories(
         flingBehavior = flingBehavior,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(storiesToShow) { columnItems ->
+        itemsIndexed(storiesToShow) { columnIndex, columnItems ->
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                columnItems.forEach { story ->
+                columnItems.forEachIndexed { rowIndex, story ->
                     if (story == placeholderStory) {
                         ListItemTabLargePlaceholder(stringResource(R.string.pocket_stories_placeholder_text)) {
-                            onExternalLinkClicked("https://getpocket.com/explore?$POCKET_FEATURE_UTM_KEY_VALUE")
+                            onDiscoverMoreClicked("https://getpocket.com/explore?$POCKET_FEATURE_UTM_KEY_VALUE")
                         }
                     } else {
-                        val uri = Uri.parse(story.url)
-                            .buildUpon()
-                            .appendQueryParameter(URI_PARAM_UTM_KEY, POCKET_STORIES_UTM_VALUE)
-                            .build().toString()
                         PocketStory(story) {
-                            onExternalLinkClicked(uri)
+                            val uri = Uri.parse(story.url)
+                                .buildUpon()
+                                .appendQueryParameter(URI_PARAM_UTM_KEY, POCKET_STORIES_UTM_VALUE)
+                                .build().toString()
+                            onStoryClicked(it.copy(url = uri), rowIndex to columnIndex)
                         }
                     }
                 }
@@ -184,13 +185,13 @@ fun PocketStoriesCategories(
  * Pocket feature section title.
  * Shows a default text about Pocket and offers a external link to learn more.
  *
- * @param onExternalLinkClicked Callback invoked when the user clicks the "Learn more" link.
+ * @param onLearnMoreClicked Callback invoked when the user clicks the "Learn more" link.
  * Contains the full URL for where the user should be navigated to.
  * @param modifier [Modifier] to be applied to the layout.
  */
 @Composable
 fun PoweredByPocketHeader(
-    onExternalLinkClicked: (String) -> Unit,
+    onLearnMoreClicked: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val color = when (isSystemInDarkTheme()) {
@@ -231,7 +232,7 @@ fun PoweredByPocketHeader(
                 )
 
                 ClickableSubstringLink(text, color, linkStartIndex, linkEndIndex) {
-                    onExternalLinkClicked("https://www.mozilla.org/en-US/firefox/pocket/?$POCKET_FEATURE_UTM_KEY_VALUE")
+                    onLearnMoreClicked("https://www.mozilla.org/en-US/firefox/pocket/?$POCKET_FEATURE_UTM_KEY_VALUE")
                 }
             }
         }
@@ -247,7 +248,8 @@ private fun PocketStoriesComposablesPreview() {
                 PocketStories(
                     stories = getFakePocketStories(8),
                     contentPadding = 0.dp,
-                    onExternalLinkClicked = { }
+                    onStoryClicked = { _, _ -> },
+                    onDiscoverMoreClicked = { }
                 )
                 Spacer(Modifier.height(10.dp))
 

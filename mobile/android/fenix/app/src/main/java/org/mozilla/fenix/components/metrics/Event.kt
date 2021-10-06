@@ -19,6 +19,7 @@ import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.Onboarding
+import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.TabsTray
@@ -127,6 +128,35 @@ sealed class Event {
     object WhatsNewTapped : Event()
     object PocketTopSiteClicked : Event()
     object PocketTopSiteRemoved : Event()
+    object PocketHomeRecsShown : Event()
+    object PocketHomeRecsDiscoverMoreClicked : Event()
+    object PocketHomeRecsLearnMoreClicked : Event()
+    data class PocketHomeRecsStoryClicked(
+        val timesShown: Long,
+        val storyPosition: Pair<Int, Int>,
+    ) : Event() {
+        override val extras: Map<Pocket.homeRecsStoryClickedKeys, String>
+            get() = mapOf(
+                Pocket.homeRecsStoryClickedKeys.timesShown to timesShown.toString(),
+                Pocket.homeRecsStoryClickedKeys.position to "${storyPosition.first}x${storyPosition.second}"
+            )
+    }
+
+    data class PocketHomeRecsCategoryClicked(
+        val categoryname: String,
+        val previousSelectedCategoriesTotal: Int,
+        val isSelectedNextState: Boolean
+    ) : Event() {
+        override val extras: Map<Pocket.homeRecsCategoryClickedKeys, String>
+            get() = mapOf(
+                Pocket.homeRecsCategoryClickedKeys.categoryName to categoryname,
+                Pocket.homeRecsCategoryClickedKeys.selectedTotal to previousSelectedCategoriesTotal.toString(),
+                Pocket.homeRecsCategoryClickedKeys.newState to when (isSelectedNextState) {
+                    true -> "selected"
+                    false -> "deselected"
+                }
+            )
+    }
     object FennecToFenixMigrated : Event()
     object AddonsOpenInSettings : Event()
     object VoiceSearchTapped : Event()

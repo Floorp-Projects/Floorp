@@ -11,23 +11,38 @@ import mozilla.components.service.pocket.PocketRecommendedStory
  */
 interface PocketStoriesInteractor {
     /**
-     * Callback for when the user clicked a specific category.
-     *
-     * @param categoryClicked the just clicked [PocketRecommendedStoriesCategory].
-     */
-    fun onCategoryClick(categoryClicked: PocketRecommendedStoriesCategory)
-
-    /**
      * Callback for then new stories are shown to the user.
      *
-     * @param storiesShown the new list of [PocketRecommendedStory]es shown to the user.
+     * @param storiesShown The new list of [PocketRecommendedStory]es shown to the user.
      */
     fun onStoriesShown(storiesShown: List<PocketRecommendedStory>)
 
     /**
-     * Callback for when the user clicks an external link.
+     * Callback for when the user clicks a specific category.
+     *
+     * @param categoryClicked The just clicked [PocketRecommendedStoriesCategory].
+     */
+    fun onCategoryClicked(categoryClicked: PocketRecommendedStoriesCategory)
+
+    /**
+     * Callback for when the user clicks on a specific story.
+     *
+     * @param storyClicked The just clicked [PocketRecommendedStory] URL.
+     * @param storyPosition `row x column` matrix representing the grid position of the clicked story.
+     */
+    fun onStoryClicked(storyClicked: PocketRecommendedStory, storyPosition: Pair<Int, Int>)
+
+    /**
+     * Callback for when the user clicks the "Learn more" link.
      *
      * @param link URL clicked.
      */
-    fun onExternalLinkClicked(link: String)
+    fun onLearnMoreClicked(link: String)
+
+    /**
+     * Callback for when the user clicks the "Discover more" link.
+     *
+     * @param link URL clicked.
+     */
+    fun onDiscoverMoreClicked(link: String)
 }

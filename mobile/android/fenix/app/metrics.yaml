@@ -3704,6 +3704,91 @@ pocket:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+  home_recs_shown:
+    type: event
+    description: |
+      The Pocket recommended stories are shown on the home screen.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21593
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21625#issuecomment-936745506
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-10-01"
+  home_recs_story_clicked:
+    type: event
+    description: |
+      User tapped a Pocket recommended story to be opened.
+    extra_keys:
+      times_shown:
+        description: |
+          How many times was this story shown, including current.
+      position:
+        description: |
+          Position of the clicked story in the list shown.
+          Uses the [row x column] matrix notation.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21593
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21625#issuecomment-936745506
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-10-01"
+  home_recs_category_clicked:
+    type: event
+    description: |
+      User tapped a Pocket stories category to filter stories.
+    extra_keys:
+      category_name:
+        description: |
+          Pocket set topic name representing the just clicked category.
+      selected_total:
+        description: |
+          How many categories were selected before this being tapped.
+      new_state:
+        description: |
+          Category's new state after being tapped.
+          Possible values: [selected], [deselected].
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21593
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21625#issuecomment-936745506
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-10-01"
+  home_recs_discover_clicked:
+    type: event
+    description: |
+      User tapped the "Discover more" tile to open a new tab
+      for more Pocket stories.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21593
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21625#issuecomment-936745506
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-10-01"
+  home_recs_learn_more_clicked:
+    type: event
+    description: |
+      User tapped "Learn more" to open a new tab for Pocket.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21593
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21625#issuecomment-936745506
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-10-01"
 
 first_session:
   campaign:

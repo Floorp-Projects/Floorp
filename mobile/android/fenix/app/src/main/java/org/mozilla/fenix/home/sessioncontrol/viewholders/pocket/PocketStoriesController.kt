@@ -13,18 +13,13 @@ import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 
 /**
  * Contract for how all user interactions with the Pocket recommended stories feature are to be handled.
  */
 interface PocketStoriesController {
-    /**
-     * Callback allowing to handle a specific [PocketRecommendedStoriesCategory] being clicked by the user.
-     *
-     * @param categoryClicked the just clicked [PocketRecommendedStoriesCategory].
-     */
-    fun handleCategoryClick(categoryClicked: PocketRecommendedStoriesCategory): Unit
-
     /**
      * Callback to decide what should happen as an effect of a new list of stories being shown.
      *
@@ -33,11 +28,33 @@ interface PocketStoriesController {
     fun handleStoriesShown(storiesShown: List<PocketRecommendedStory>)
 
     /**
-     * Callback for when the an external link is clicked.
+     * Callback allowing to handle a specific [PocketRecommendedStoriesCategory] being clicked by the user.
+     *
+     * @param categoryClicked the just clicked [PocketRecommendedStoriesCategory].
+     */
+    fun handleCategoryClick(categoryClicked: PocketRecommendedStoriesCategory): Unit
+
+    /**
+     * Callback for when the user clicks on a specific story.
+     *
+     * @param storyClicked The just clicked [PocketRecommendedStory] URL.
+     * @param storyPosition `row x column` matrix representing the grid position of the clicked story.
+     */
+    fun handleStoryClicked(storyClicked: PocketRecommendedStory, storyPosition: Pair<Int, Int>)
+
+    /**
+     * Callback for when the "Learn more" link is clicked.
      *
      * @param link URL clicked.
      */
-    fun handleExternalLinkClick(link: String)
+    fun handleLearnMoreClicked(link: String)
+
+    /**
+     * Callback for when the "Discover more" link is clicked.
+     *
+     * @param link URL clicked.
+     */
+    fun handleDiscoverMoreClicked(link: String)
 }
 
 /**
@@ -50,14 +67,27 @@ interface PocketStoriesController {
 internal class DefaultPocketStoriesController(
     private val homeActivity: HomeActivity,
     private val homeStore: HomeFragmentStore,
-    private val navController: NavController
+    private val navController: NavController,
+    private val metrics: MetricController
 ) : PocketStoriesController {
+    override fun handleStoriesShown(storiesShown: List<PocketRecommendedStory>) {
+        homeStore.dispatch(HomeFragmentAction.PocketStoriesShown(storiesShown))
+        metrics.track(Event.PocketHomeRecsShown)
+    }
+
     override fun handleCategoryClick(categoryClicked: PocketRecommendedStoriesCategory) {
         val initialCategoriesSelections = homeStore.state.pocketStoriesCategoriesSelections
 
         // First check whether the category is clicked to be deselected.
         if (initialCategoriesSelections.map { it.name }.contains(categoryClicked.name)) {
             homeStore.dispatch(HomeFragmentAction.DeselectPocketStoriesCategory(categoryClicked.name))
+            metrics.track(
+                Event.PocketHomeRecsCategoryClicked(
+                    categoryClicked.name,
+                    initialCategoriesSelections.size,
+                    false
+                )
+            )
             return
         }
 
@@ -75,19 +105,36 @@ internal class DefaultPocketStoriesController(
 
         // Finally update the selection.
         homeStore.dispatch(HomeFragmentAction.SelectPocketStoriesCategory(categoryClicked.name))
+
+        metrics.track(
+            Event.PocketHomeRecsCategoryClicked(
+                categoryClicked.name,
+                initialCategoriesSelections.size,
+                true
+            )
+        )
     }
 
-    override fun handleStoriesShown(storiesShown: List<PocketRecommendedStory>) {
-        homeStore.dispatch(HomeFragmentAction.PocketStoriesShown(storiesShown))
+    override fun handleStoryClicked(storyClicked: PocketRecommendedStory, storyPosition: Pair<Int, Int>) {
+        dismissSearchDialogIfDisplayed()
+        homeActivity.openToBrowserAndLoad(storyClicked.url, true, BrowserDirection.FromHome)
+        metrics.track(Event.PocketHomeRecsStoryClicked(storyClicked.timesShown.inc(), storyPosition))
     }
 
-    override fun handleExternalLinkClick(link: String) {
+    override fun handleLearnMoreClicked(link: String) {
         dismissSearchDialogIfDisplayed()
         homeActivity.openToBrowserAndLoad(link, true, BrowserDirection.FromHome)
+        metrics.track(Event.PocketHomeRecsLearnMoreClicked)
+    }
+
+    override fun handleDiscoverMoreClicked(link: String) {
+        dismissSearchDialogIfDisplayed()
+        homeActivity.openToBrowserAndLoad(link, true, BrowserDirection.FromHome)
+        metrics.track(Event.PocketHomeRecsDiscoverMoreClicked)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    fun dismissSearchDialogIfDisplayed() {
+    internal fun dismissSearchDialogIfDisplayed() {
         if (navController.currentDestination?.id == R.id.searchDialogFragment) {
             navController.navigateUp()
         }

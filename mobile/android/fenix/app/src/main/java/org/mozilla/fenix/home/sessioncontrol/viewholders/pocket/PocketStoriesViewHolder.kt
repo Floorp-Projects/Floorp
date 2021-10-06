@@ -52,8 +52,10 @@ class PocketStoriesViewHolder(
                 PocketStories(
                     store,
                     interactor::onStoriesShown,
-                    interactor::onCategoryClick,
-                    interactor::onExternalLinkClicked,
+                    interactor::onStoryClicked,
+                    interactor::onCategoryClicked,
+                    interactor::onDiscoverMoreClicked,
+                    interactor::onLearnMoreClicked,
                     with(composeView.resources) {
                         getDimensionPixelSize(R.dimen.home_item_horizontal_margin) / displayMetrics.density
                     }
@@ -68,11 +70,14 @@ class PocketStoriesViewHolder(
 }
 
 @Composable
+@Suppress("LongParameterList")
 fun PocketStories(
     store: HomeFragmentStore,
     onStoriesShown: (List<PocketRecommendedStory>) -> Unit,
-    onCategoryClick: (PocketRecommendedStoriesCategory) -> Unit,
-    onExternalLinkClicked: (String) -> Unit,
+    onStoryClicked: (PocketRecommendedStory, Pair<Int, Int>) -> Unit,
+    onCategoryClicked: (PocketRecommendedStoriesCategory) -> Unit,
+    onDiscoverMoreClicked: (String) -> Unit,
+    onLearnMoreClicked: (String) -> Unit,
     @Dimension horizontalPadding: Float = 0f
 ) {
     val stories = store
@@ -102,7 +107,7 @@ fun PocketStories(
 
         Spacer(Modifier.height(17.dp))
 
-        PocketStories(stories ?: emptyList(), horizontalPadding.dp, onExternalLinkClicked)
+        PocketStories(stories ?: emptyList(), horizontalPadding.dp, onStoryClicked, onDiscoverMoreClicked)
 
         Spacer(Modifier.height(24.dp))
 
@@ -118,7 +123,7 @@ fun PocketStories(
         PocketStoriesCategories(
             categories = categories ?: emptyList(),
             selections = categoriesSelections ?: emptyList(),
-            onCategoryClick = onCategoryClick,
+            onCategoryClick = onCategoryClicked,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = horizontalPadding.dp)
@@ -127,7 +132,7 @@ fun PocketStories(
         Spacer(Modifier.height(24.dp))
 
         PoweredByPocketHeader(
-            onExternalLinkClicked,
+            onLearnMoreClicked,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = horizontalPadding.dp)
