@@ -1288,7 +1288,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
   tlsData()->resetInterrupt(cx);
   tlsData()->jumpTable = code_->tieringJumpTable();
   tlsData()->addressOfNeedsIncrementalBarrier =
-      (uint8_t*)cx->compartment()->zone()->addressOfNeedsIncrementalBarrier();
+      cx->compartment()->zone()->addressOfNeedsIncrementalBarrier();
 
   // Initialize function imports in the tls data
   Tier callerTier = code_->bestTier();

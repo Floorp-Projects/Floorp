@@ -87,7 +87,7 @@ struct TlsData {
   // Set to 1 when wasm should call CheckForInterrupt.
   Atomic<uint32_t, mozilla::Relaxed> interrupt;
 
-  uint8_t* addressOfNeedsIncrementalBarrier;
+  const uint32_t* addressOfNeedsIncrementalBarrier;
 
   // Methods to set, test and clear the above two fields. Both interrupt
   // fields are Relaxed and so no consistency/ordering can be assumed.
