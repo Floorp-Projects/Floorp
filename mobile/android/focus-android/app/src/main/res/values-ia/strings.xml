@@ -585,7 +585,7 @@
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Nomine del usator</string>
     <string name="gv_prompt_password_hint">Contrasigno</string>
-    <string name="gv_prompt_clear">Clarar</string>
+    <string name="gv_prompt_clear">Vacuar</string>
 
     <!-- Text shown in Security Information Popup -->
     <!-- Text to denote secure or insecure connection -->
