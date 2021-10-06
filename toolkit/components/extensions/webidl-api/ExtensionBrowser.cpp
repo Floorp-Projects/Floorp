@@ -7,9 +7,11 @@
 #include "ExtensionBrowser.h"
 
 #include "mozilla/dom/ExtensionBrowserBinding.h"
-#include "mozilla/dom/WorkerPrivate.h"  // GetWorkerPrivateFromContext
+#include "mozilla/dom/ExtensionPortBinding.h"  // ExtensionPortDescriptor
+#include "mozilla/dom/WorkerPrivate.h"         // GetWorkerPrivateFromContext
 #include "mozilla/extensions/ExtensionAlarms.h"
 #include "mozilla/extensions/ExtensionMockAPI.h"
+#include "mozilla/extensions/ExtensionPort.h"
 #include "mozilla/extensions/ExtensionRuntime.h"
 #include "mozilla/extensions/ExtensionTest.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
@@ -28,6 +30,7 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionBrowser)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPortsLookup)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionAlarms)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionMockAPI)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionRuntime)
@@ -38,6 +41,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ExtensionBrowser)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPortsLookup)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionAlarms)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionMockAPI)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionRuntime)
@@ -108,6 +112,28 @@ bool ExtensionBrowser::ClearLastError() {
   bool shouldReport = !mCheckedLastError;
   mLastError.setUndefined();
   return shouldReport;
+}
+
+already_AddRefed<ExtensionPort> ExtensionBrowser::GetPort(
+    JS::Handle<JS::Value> aDescriptorValue, ErrorResult& aRv) {
+  // Get a port descriptor from the js value got from the API request
+  // handler.
+  UniquePtr<dom::ExtensionPortDescriptor> portDescriptor =
+      ExtensionPort::ToPortDescriptor(aDescriptorValue, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  auto portId = portDescriptor->mPortId;
+  Maybe<RefPtr<ExtensionPort>> maybePort = mPortsLookup.MaybeGet(portId);
+  if (maybePort.isSome()) {
+    return (*maybePort).forget();
+  }
+
+  RefPtr<ExtensionPort> newPort =
+      ExtensionPort::Create(mGlobal, this, std::move(portDescriptor));
+  mPortsLookup.InsertOrUpdate(portId, RefPtr{newPort});
+  return newPort.forget();
 }
 
 ExtensionAlarms* ExtensionBrowser::GetExtensionAlarms() {
