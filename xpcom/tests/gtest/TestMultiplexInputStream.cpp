@@ -352,7 +352,9 @@ TEST(MultiplexInputStream, AsyncWait_withEventTarget)
   ASSERT_FALSE(cb->Called());
 
   // Eventually it is called.
-  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil([&]() { return cb->Called(); }));
+  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
+      "xpcom:TEST(MultiplexInputStream, AsyncWait_withEventTarget)"_ns,
+      [&]() { return cb->Called(); }));
   ASSERT_TRUE(cb->Called());
 }
 
@@ -393,7 +395,9 @@ TEST(MultiplexInputStream, AsyncWait_withEventTarget_closureOnly)
   ASSERT_FALSE(cb->Called());
 
   // Eventually it is called.
-  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil([&]() { return cb->Called(); }));
+  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
+      "xpcom:TEST(MultiplexInputStream, AsyncWait_withEventTarget_closureOnly)"_ns,
+      [&]() { return cb->Called(); }));
   ASSERT_TRUE(cb->Called());
 }
 
@@ -776,7 +780,9 @@ TEST(MultiplexInputStream, LengthInputStream)
   rv = afsis->AsyncLengthWait(callback, GetCurrentSerialEventTarget());
   ASSERT_EQ(NS_OK, rv);
 
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return callback->Called(); }));
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
+      "xpcom:TEST(MultiplexInputStream, LengthInputStream) 1"_ns,
+      [&]() { return callback->Called(); }));
   ASSERT_EQ(buf.Length() * 3, callback->Size());
 
   // Now a negative stream
@@ -808,7 +814,9 @@ TEST(MultiplexInputStream, LengthInputStream)
   rv = afsis->AsyncLengthWait(callback2, GetCurrentSerialEventTarget());
   ASSERT_EQ(NS_OK, rv);
 
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return callback2->Called(); }));
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
+      "xpcom:TEST(MultiplexInputStream, LengthInputStream) 2"_ns,
+      [&]() { return callback2->Called(); }));
   ASSERT_FALSE(callback1->Called());
   ASSERT_TRUE(callback2->Called());
 }
