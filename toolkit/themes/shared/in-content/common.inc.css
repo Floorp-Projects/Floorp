@@ -636,7 +636,8 @@ html|a,
 }
 
 html|a:hover,
-.text-link:hover {
+.text-link:hover,
+button.text-link:is(:not([disabled="true"]), :enabled):hover {
   color: var(--in-content-link-color-hover);
   text-decoration: underline;
 }
@@ -646,7 +647,8 @@ html|a:visited {
 }
 
 html|a:hover:active,
-.text-link:hover:active {
+.text-link:hover:active,
+button.text-link:is(:not([disabled="true"]), :enabled):hover:active {
   color: var(--in-content-link-color-active);
   text-decoration: none;
 }
@@ -656,6 +658,15 @@ html|a:-moz-focusring,
   outline: 2px solid var(--in-content-focus-outline-color);
   outline-offset: 1px;
   border-radius: 4px;
+}
+
+button.text-link {
+  background-color: transparent !important; /* override hover related background changes */
+  padding: 0;
+  border: 0;
+  font-weight: normal;
+  min-height: 0;
+  min-width: 0;
 }
 
 /* Checkboxes and radio buttons */

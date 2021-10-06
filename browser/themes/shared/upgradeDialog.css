@@ -220,7 +220,7 @@ body.confetti #title {
     --in-content-primary-button-background: rgba(0, 0, 0, 0.5);
     --in-content-primary-button-background-active: rgba(0, 0, 0, 0.36);
     --in-content-primary-button-background-hover: rgba(0, 0, 0, 0.64);
-    --in-content-primary-button-text-color: currentColor;
+    --in-content-primary-button-text-color: white;
     --in-content-primary-button-text-color-hover: white;
   }
 }
@@ -344,7 +344,6 @@ body.confetti #title {
 
 .variations > input:checked {
   background-image: none;
-  color: white;
 }
 
 .checkbox {
@@ -360,8 +359,6 @@ body.confetti #title {
 }
 
 #secondary {
-  background: none;
-  color: var(--in-content-link-color);
-  font-weight: normal;
-  margin: 6px auto 0;
+  margin: 9px auto 0;
+  padding: 4px;
 }
