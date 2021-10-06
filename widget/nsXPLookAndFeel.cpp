@@ -1059,22 +1059,8 @@ static bool ShouldRespectSystemColorSchemeForChromeDoc() {
 #endif
 }
 
-static bool ShouldRespectGlobalToolbarThemeAppearanceForChromeDoc() {
-#ifdef XP_MACOSX
-  // Need to be consistent with AppearanceOverride.mm on macOS, which respects
-  // the browser.theme.toolbar-theme pref.
-  // However, if widget.macos.support-dark-appearance is false, we need to
-  // pretend everything's Light and not follow the toolbar theme.
-  return StaticPrefs::widget_macos_support_dark_appearance();
-#elif defined(MOZ_WIDGET_GTK)
-  return StaticPrefs::widget_gtk_follow_firefox_theme();
-#else
-  return false;
-#endif
-}
-
 LookAndFeel::ColorScheme LookAndFeel::ColorSchemeForChrome() {
-  if (ShouldRespectGlobalToolbarThemeAppearanceForChromeDoc()) {
+  if (StaticPrefs::widget_color_scheme_follow_firefox_theme()) {
     switch (StaticPrefs::browser_theme_toolbar_theme()) {
       case 0:  // Dark
         return ColorScheme::Dark;
