@@ -238,6 +238,8 @@ bool StoragePrincipalHelper::GetOriginAttributes(
   }
   aAttributes.SyncAttributesWithPrivateBrowsing(isPrivate);
 
+  nsCOMPtr<nsICookieJarSettings> cjs;
+
   switch (aPrincipalType) {
     case eRegularPrincipal:
       break;
@@ -248,6 +250,18 @@ bool StoragePrincipalHelper::GetOriginAttributes(
 
     case ePartitionedPrincipal:
       ChooseOriginAttributes(aChannel, aAttributes, true);
+      break;
+
+    case eForeignPartitionedPrincipal:
+      Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cjs));
+
+      // We only support foreign partitioned principal when dFPI is enabled.
+      // Otherwise, we will use the regular principal.
+      if (cjs->GetCookieBehavior() ==
+              nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
+          loadInfo->GetIsThirdPartyContextToTopWindow()) {
+        ChooseOriginAttributes(aChannel, aAttributes, true);
+      }
       break;
   }
 
