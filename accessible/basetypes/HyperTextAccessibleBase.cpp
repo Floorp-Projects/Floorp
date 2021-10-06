@@ -140,4 +140,24 @@ void HyperTextAccessibleBase::TextSubstring(int32_t aStartOffset,
   endChild->AppendTextTo(aText, 0, endOffset - endChildOffset);
 }
 
+bool HyperTextAccessibleBase::CharAt(int32_t aOffset, nsAString& aChar,
+              int32_t* aStartOffset, int32_t* aEndOffset) {
+  MOZ_ASSERT(!aStartOffset == !aEndOffset,
+                 "Offsets should be both defined or both undefined!");
+
+  int32_t childIdx = GetChildIndexAtOffset(aOffset);
+  if (childIdx == -1) {
+    return false;
+  }
+
+  Accessible* child = Acc()->ChildAt(childIdx);
+  child->AppendTextTo(aChar, aOffset - GetChildOffset(childIdx), 1);
+
+  if (aStartOffset && aEndOffset) {
+    *aStartOffset = aOffset;
+    *aEndOffset = aOffset + aChar.Length();
+  }
+  return true;
+}
+
 }  // namespace mozilla::a11y
