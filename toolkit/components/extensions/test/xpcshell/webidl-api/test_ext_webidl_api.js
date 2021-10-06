@@ -24,11 +24,13 @@ add_task(async function setup() {
 add_task(async function test_ext_context_does_have_webidl_bindings() {
   await runExtensionAPITest("should have a browser global object", {
     backgroundScript() {
-      const { browser } = self;
+      const { browser, chrome } = self;
 
       return {
         hasExtensionAPI: !!browser,
         hasExtensionMockAPI: !!browser?.mockExtensionAPI,
+        hasChromeCompatGlobal: !!chrome,
+        hasChromeMockAPI: !!chrome?.mockExtensionAPI,
       };
     },
     assertResults({ testResult, testError }) {
@@ -38,6 +40,8 @@ add_task(async function test_ext_context_does_have_webidl_bindings() {
         {
           hasExtensionAPI: true,
           hasExtensionMockAPI: true,
+          hasChromeCompatGlobal: true,
+          hasChromeMockAPI: true,
         },
         "browser and browser.test WebIDL API bindings found"
       );
