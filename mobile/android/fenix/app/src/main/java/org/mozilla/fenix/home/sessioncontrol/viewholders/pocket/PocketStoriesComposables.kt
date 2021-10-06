@@ -85,7 +85,7 @@ fun PocketStory(
         imageUrl = imageUrl,
         onClick = { onStoryClick(story) },
         title = {
-            TabTitle(text = story.title, maxLines = 3)
+            TabTitle(text = story.title, maxLines = 2)
         },
         subtitle = {
             if (isValidPublisher && isValidTimeToRead) {
@@ -168,7 +168,7 @@ fun PocketStoriesCategories(
 ) {
     Box(modifier = modifier) {
         StaggeredHorizontalGrid(
-            horizontalItemsSpacing = 16.dp
+            horizontalItemsSpacing = 8.dp
         ) {
             categories.filter { it.name != POCKET_STORIES_DEFAULT_CATEGORY_NAME }.forEach { category ->
                 SelectableChip(category.name, selections.map { it.name }.contains(category.name)) {
