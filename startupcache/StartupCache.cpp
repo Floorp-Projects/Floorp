@@ -695,10 +695,6 @@ void StartupCache::IgnoreDiskCache() {
   if (gStartupCache) gStartupCache->InvalidateCache();
 }
 
-bool StartupCache::GetIgnoreDiskCache() {
-  return gIgnoreDiskCache;
-}
-
 void StartupCache::WaitOnPrefetchThread() {
   if (!mPrefetchThread || mPrefetchThread == PR_GetCurrentThread()) return;
 
