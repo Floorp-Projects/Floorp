@@ -30,6 +30,11 @@ interface ExtensionBrowser {
    Pref="extensions.webidl-api.expose_mock_interface"]
   readonly attribute ExtensionMockAPI mockExtensionAPI;
 
+  // `browser.alarms` API namespace
+  [Replaceable, SameObject, BinaryName="GetExtensionAlarms",
+   Func="mozilla::extensions::ExtensionAlarms::IsAllowed"]
+  readonly attribute ExtensionAlarms alarms;
+ 
   // `browser.test` API namespace, available in tests.
   [Replaceable, SameObject, BinaryName="GetExtensionTest",
    Func="mozilla::extensions::ExtensionTest::IsAllowed"]
