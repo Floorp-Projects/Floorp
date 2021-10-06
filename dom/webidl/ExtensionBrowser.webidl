@@ -16,7 +16,7 @@
 [Exposed=(ServiceWorker)]
 interface mixin ExtensionGlobalsMixin {
   [Replaceable, SameObject, BinaryName="AcquireExtensionBrowser",
-   Func="extensions::ExtensionAPIAllowed"]
+   BindingAlias="chrome", Func="extensions::ExtensionAPIAllowed"]
   readonly attribute ExtensionBrowser browser;
 };
 
