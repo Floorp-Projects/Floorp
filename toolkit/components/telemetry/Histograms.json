@@ -10589,6 +10589,29 @@
     "description": "The operating system audio backend",
     "bug_numbers": [1671714, 1679745]
   },
+  "MEDIA_SNIFFER_MP4_BRAND_PATTERN": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "geckoview_streaming"],
+    "alert_emails": ["jolin@mozilla.com", "jbauman@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "ftyp_mp4",
+      "ftyp_avc",
+      "ftyp_3gp4",
+      "ftyp_3gp",
+      "ftyp_M4V",
+      "ftyp_M4A",
+      "ftyp_M4P",
+      "ftyp_qt",
+      "ftyp_iso",
+      "ftyp_mmp4",
+      "ftyp_avif"
+    ],
+    "description": "ISOBMFF brand pattern used to identify MP4 in media sniffer",
+    "bug_numbers": [1725190]
+  },
   "WEBRTC_DTLS_CIPHER": {
     "record_in_processes": ["content", "socket"],
     "products": ["firefox"],
