@@ -55,14 +55,8 @@ class Page extends ContentProcessDomain {
 
   async enable() {
     if (!this.enabled) {
-      this.session.contextObserver.on(
-        "docshell-created",
-        this._onFrameAttached
-      );
-      this.session.contextObserver.on(
-        "docshell-destroyed",
-        this._onFrameDetached
-      );
+      this.session.contextObserver.on("frame-attached", this._onFrameAttached);
+      this.session.contextObserver.on("frame-detached", this._onFrameDetached);
       this.session.contextObserver.on(
         "frame-navigated",
         this._onFrameNavigated
@@ -96,14 +90,8 @@ class Page extends ContentProcessDomain {
 
   disable() {
     if (this.enabled) {
-      this.session.contextObserver.off(
-        "docshell-created",
-        this._onFrameAttached
-      );
-      this.session.contextObserver.off(
-        "docshell-destroyed",
-        this._onFrameDetached
-      );
+      this.session.contextObserver.off("frame-attached", this._onFrameAttached);
+      this.session.contextObserver.off("frame-detached", this._onFrameDetached);
       this.session.contextObserver.off(
         "frame-navigated",
         this._onFrameNavigated
@@ -260,8 +248,8 @@ class Page extends ContentProcessDomain {
     return this.content.location.href;
   }
 
-  _onFrameAttached(name, { id }) {
-    const bc = BrowsingContext.get(id);
+  _onFrameAttached(name, { frameId, window }) {
+    const bc = BrowsingContext.get(frameId);
 
     // Don't emit for top-level browsing contexts
     if (!bc.parent) {
@@ -270,19 +258,19 @@ class Page extends ContentProcessDomain {
 
     // TODO: Use a unique identifier for frames (bug 1605359)
     this.emit("Page.frameAttached", {
-      frameId: bc.id.toString(),
+      frameId: frameId.toString(),
       parentFrameId: bc.parent.id.toString(),
       stack: null,
     });
 
-    const loaderId = this.frameIdToLoaderId.get(bc.id);
+    const loaderId = this.frameIdToLoaderId.get(frameId);
     const timestamp = Date.now() / 1000;
-    this.emit("Page.frameStartedLoading", { frameId: bc.id.toString() });
-    this.emitLifecycleEvent(bc.id, loaderId, "init", timestamp);
+    this.emit("Page.frameStartedLoading", { frameId: frameId.toString() });
+    this.emitLifecycleEvent(frameId, loaderId, "init", timestamp);
   }
 
-  _onFrameDetached(name, { id }) {
-    const bc = BrowsingContext.get(id);
+  _onFrameDetached(name, { frameId }) {
+    const bc = BrowsingContext.get(frameId);
 
     // Don't emit for top-level browsing contexts
     if (!bc.parent) {
@@ -290,7 +278,7 @@ class Page extends ContentProcessDomain {
     }
 
     // TODO: Use a unique identifier for frames (bug 1605359)
-    this.emit("Page.frameDetached", { frameId: bc.id.toString() });
+    this.emit("Page.frameDetached", { frameId: frameId.toString() });
   }
 
   _onFrameNavigated(name, { frameId }) {
