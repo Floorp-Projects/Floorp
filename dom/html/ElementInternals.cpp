@@ -56,6 +56,17 @@ HTMLFormElement* ElementInternals::GetForm(ErrorResult& aRv) const {
   return GetForm();
 }
 
+// https://html.spec.whatwg.org/#dom-elementinternals-labels
+already_AddRefed<nsINodeList> ElementInternals::GetLabels(
+    ErrorResult& aRv) const {
+  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+    aRv.ThrowNotSupportedError(
+        "Target element is not a form-associated custom element");
+    return nullptr;
+  }
+  return mTarget->Labels();
+}
+
 void ElementInternals::SetForm(HTMLFormElement* aForm) { mForm = aForm; }
 
 void ElementInternals::ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) {

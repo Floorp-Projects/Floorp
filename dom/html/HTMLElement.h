@@ -26,6 +26,7 @@ class HTMLElement final : public nsGenericHTMLFormElement {
   // Element
   void SetCustomElementDefinition(
       CustomElementDefinition* aDefinition) override;
+  bool IsLabelable() const override { return IsFormAssociatedElement(); }
 
   // nsGenericHTMLElement
   // https://html.spec.whatwg.org/multipage/custom-elements.html#dom-attachinternals
