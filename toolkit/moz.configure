@@ -2532,3 +2532,13 @@ wine = check_prog(
     when=want_wine,
     bootstrap="wine/bin",
 )
+
+# DOM Streams
+# ==============================================================
+option(
+    "--enable-dom-streams",
+    help="Enable the DOM Streams prototype",
+)
+
+set_config("MOZ_DOM_STREAMS", True, when="--enable-dom-streams")
+set_define("MOZ_DOM_STREAMS", True, when="--enable-dom-streams")
