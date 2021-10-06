@@ -4,11 +4,11 @@
 
 %include ../shared/searchbar.inc.css
 
-.searchbar-engine-one-off-item:-moz-focusring {
+.searchbar-engine-one-off-item:focus-visible {
   outline: none;
 }
 
-@media (-moz-proton) and (-moz-os-version: windows-win10) {
+@media (-moz-os-version: windows-win10) {
   #PopupSearchAutoComplete {
     /* A border is necessary because the shadow is bottom-right */
     border-color: var(--menu-border-color);
