@@ -16,9 +16,25 @@ namespace extensions {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionPort);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionPort)
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionPort, mGlobal, mExtensionBrowser,
-                                      mOnDisconnectEventMgr,
-                                      mOnMessageEventMgr);
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(ExtensionPort)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionPort)
+  // Clean the entry for this instance from the ports lookup map
+  // stored in the related ExtensionBrowser instance.
+  tmp->ForgetReleasedPort();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionBrowser, mOnDisconnectEventMgr,
+                                  mOnMessageEventMgr)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ExtensionPort)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionBrowser, mOnDisconnectEventMgr,
+                                    mOnMessageEventMgr)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(ExtensionPort)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionPort)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -61,6 +77,15 @@ ExtensionPort::ExtensionPort(
       mPortDescriptor(std::move(aPortDescriptor)) {
   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
   MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
+}
+
+void ExtensionPort::ForgetReleasedPort() {
+  if (mExtensionBrowser) {
+    mExtensionBrowser->ForgetReleasedPort(mPortDescriptor->mPortId);
+    mExtensionBrowser = nullptr;
+  }
+  mPortDescriptor = nullptr;
+  mGlobal = nullptr;
 }
 
 nsString ExtensionPort::GetAPIObjectId() const {
