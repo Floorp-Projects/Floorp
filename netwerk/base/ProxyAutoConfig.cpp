@@ -471,7 +471,7 @@ bool ProxyAutoConfig::ResolveAddress(const nsCString& aHostName,
   // Spin the event loop of the pac thread until lookup is complete.
   // nsPACman is responsible for keeping a queue and only allowing
   // one PAC execution at a time even when it is called re-entrantly.
-  SpinEventLoopUntil([&, helper, this]() {
+  SpinEventLoopUntil("ProxyAutoConfig::ResolveAddress"_ns, [&, helper, this]() {
     if (!helper->mRequest) {
       return true;
     }

@@ -31,7 +31,8 @@ already_AddRefed<nsISyncStreamListener> nsSyncStreamListener::Create() {
 nsresult nsSyncStreamListener::WaitForData() {
   mKeepWaiting = true;
 
-  if (!mozilla::SpinEventLoopUntil([&]() { return !mKeepWaiting; })) {
+  if (!mozilla::SpinEventLoopUntil("nsSyncStreamListener::Create"_ns,
+                                   [&]() { return !mKeepWaiting; })) {
     return NS_ERROR_FAILURE;
   }
 
