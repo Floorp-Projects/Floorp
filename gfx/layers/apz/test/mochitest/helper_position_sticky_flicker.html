@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+<style>
+body {
+  margin: 0;
+}
+#sticky {
+  position: sticky;
+  top: 0;
+  height: 50vh;
+  background-color: green;
+}
+</style>
+<div id="sticky"></div>
+<!-- Content to make the page scrollable will be added dynamically -->
+<script>
+  // Silence SimpleTest warning about missing assertions by having it wait
+  // indefinitely. We don't need to give it an explicit finish because the
+  // entire window this test runs in will be closed after the main browser test
+  // finished.
+  SimpleTest.waitForExplicitFinish();
+</script>
