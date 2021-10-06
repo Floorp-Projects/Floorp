@@ -46,16 +46,6 @@ ShadowRoot* ElementInternals::GetShadowRoot() const {
   return shadowRoot;
 }
 
-// https://html.spec.whatwg.org/#dom-elementinternals-form
-HTMLFormElement* ElementInternals::GetForm(ErrorResult& aRv) const {
-  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
-    aRv.ThrowNotSupportedError(
-        "Target element is not a form-associated custom element");
-    return nullptr;
-  }
-  return GetForm();
-}
-
 void ElementInternals::SetForm(HTMLFormElement* aForm) { mForm = aForm; }
 
 void ElementInternals::ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) {
