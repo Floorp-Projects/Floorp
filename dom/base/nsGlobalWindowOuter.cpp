@@ -5438,7 +5438,8 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
   }();
 
   if (shouldBlock) {
-    SpinEventLoopUntil([&] { return bc->IsDiscarded(); });
+    SpinEventLoopUntil("nsGlobalWindowOuter::Print"_ns,
+                       [&] { return bc->IsDiscarded(); });
   }
 
   return WindowProxyHolder(std::move(bc));
