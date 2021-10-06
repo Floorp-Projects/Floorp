@@ -53,3 +53,50 @@ add_task(async function test_sw_api_request_handling_local_process_api() {
   await extension.awaitFinish();
   await extension.unload();
 });
+
+// Verify ExtensionAPIRequestHandler handling API requests for
+// an ext-*.js API module running in the main process
+// (toolkit/components/extensions/parent/ext-alarms.js).
+add_task(async function test_sw_api_request_handling_main_process_api() {
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      background: {
+        service_worker: "sw.js",
+      },
+      permissions: ["alarms"],
+      applications: { gecko: { id: "test-bg-sw@mochi.test" } },
+    },
+    files: {
+      "page.html": "<!DOCTYPE html><body></body>",
+      "sw.js": async function() {
+        browser.alarms.create("test-alarm", { when: Date.now() + 2000000 });
+        const all = await browser.alarms.getAll();
+        if (all.length === 1 && all[0].name === "test-alarm") {
+          browser.test.succeed("Got the expected alarms");
+        } else {
+          browser.test.fail(
+            `browser.alarms.create didn't create the expected alarm: ${JSON.stringify(
+              all
+            )}`
+          );
+        }
+
+        browser.alarms.onAlarm.addListener(alarm => {
+          if (alarm.name === "test-onAlarm") {
+            browser.test.succeed("Got the expected onAlarm event");
+          } else {
+            browser.test.fail(`Got unexpected onAlarm event: ${alarm.name}`);
+          }
+          browser.test.sendMessage("test-completed");
+        });
+
+        browser.alarms.create("test-onAlarm", { when: Date.now() + 1000 });
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("test-completed");
+  await extension.unload();
+});
