@@ -92,12 +92,23 @@ this.test = class extends ExtensionAPI {
   getAPI(context) {
     const { extension } = context;
 
-    function getStack() {
+    function getStack(savedFrame = null) {
+      if (savedFrame) {
+        return ChromeUtils.createError("", savedFrame).stack.replace(
+          /^/gm,
+          "    "
+        );
+      }
       return new context.Error().stack.replace(/^/gm, "    ");
     }
 
     function assertTrue(value, msg) {
-      extension.emit("test-result", Boolean(value), String(msg), getStack());
+      extension.emit(
+        "test-result",
+        Boolean(value),
+        String(msg),
+        getStack(context.getCaller())
+      );
     }
 
     class TestEventManager extends EventManager {
@@ -163,15 +174,20 @@ this.test = class extends ExtensionAPI {
         },
 
         notifyPass(msg) {
-          extension.emit("test-done", true, msg, getStack());
+          extension.emit("test-done", true, msg, getStack(context.getCaller()));
         },
 
         notifyFail(msg) {
-          extension.emit("test-done", false, msg, getStack());
+          extension.emit(
+            "test-done",
+            false,
+            msg,
+            getStack(context.getCaller())
+          );
         },
 
         log(msg) {
-          extension.emit("test-log", true, msg, getStack());
+          extension.emit("test-log", true, msg, getStack(context.getCaller()));
         },
 
         fail(msg) {
@@ -205,7 +221,7 @@ this.test = class extends ExtensionAPI {
             String(msg),
             expected,
             actual,
-            getStack()
+            getStack(context.getCaller())
           );
         },
 
