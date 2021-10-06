@@ -1423,7 +1423,9 @@ Connection::SpinningSynchronousClose() {
   RefPtr<CloseListener> listener = new CloseListener();
   rv = AsyncClose(listener);
   NS_ENSURE_SUCCESS(rv, rv);
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return listener->mClosed; }));
+  MOZ_ALWAYS_TRUE(
+      SpinEventLoopUntil("storage::Connection::SpinningSynchronousClose"_ns,
+                         [&]() { return listener->mClosed; }));
   MOZ_ASSERT(isClosed(), "The connection should be closed at this point");
 
   return rv;
