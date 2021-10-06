@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textview.MaterialTextView
+import org.mozilla.focus.GleanMetrics.ProTips
 import org.mozilla.focus.R
 
 class TipsAdapter : ListAdapter<Tip, TipsAdapter.TipViewHolder>(TipsDiffCallback()) {
@@ -33,9 +34,9 @@ class TipsAdapter : ListAdapter<Tip, TipsAdapter.TipViewHolder>(TipsDiffCallback
 
         fun bind(tip: Tip) {
             val tipText = if (tip.appName != null) {
-                String.format(tipView.context.getString(tip.id), tip.appName)
+                String.format(tipView.context.getString(tip.stringId), tip.appName)
             } else {
-                tipView.context.getString(tip.id)
+                tipView.context.getString(tip.stringId)
             }
             if (tip.deepLink == null) {
                 tipView.text = tipText
@@ -57,12 +58,14 @@ class TipsAdapter : ListAdapter<Tip, TipsAdapter.TipViewHolder>(TipsDiffCallback
 
                 tipView.text = spannedText
             }
+
+            ProTips.tipDisplayed.record(ProTips.TipDisplayedExtra(tipId = tip.tipId))
         }
     }
 
     class TipsDiffCallback : DiffUtil.ItemCallback<Tip>() {
-        override fun areItemsTheSame(oldItem: Tip, newItem: Tip) = oldItem.id == newItem.id
+        override fun areItemsTheSame(oldItem: Tip, newItem: Tip) = oldItem.stringId == newItem.stringId
 
-        override fun areContentsTheSame(oldItem: Tip, newItem: Tip) = oldItem.id == newItem.id
+        override fun areContentsTheSame(oldItem: Tip, newItem: Tip) = oldItem.stringId == newItem.stringId
     }
 }

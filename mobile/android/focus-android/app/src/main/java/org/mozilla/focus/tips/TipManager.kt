@@ -7,26 +7,27 @@ package org.mozilla.focus.tips
 import android.content.Context
 import androidx.annotation.StringRes
 import mozilla.components.browser.state.state.SessionState
+import org.mozilla.focus.GleanMetrics.ProTips
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.SupportUtils.getSumoURLForTopic
 
 class Tip(
+    val tipId: String,
     @StringRes
-    val id: Int,
+    val stringId: Int,
     val appName: String? = null,
     val shouldDisplay: () -> Boolean,
     val deepLink: (() -> Unit)? = null
 ) {
     companion object {
 
-        fun createAllowlistTip(context: Context): Tip {
-            val id = R.string.tip_explain_allowlist3
-            val url = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.ALLOWLIST)
+        fun createAllowlistTip(context: Context, tipId: String): Tip {
+            val stringId = R.string.tip_explain_allowlist3
+            val url = getSumoURLForTopic(context, SupportUtils.SumoTopic.ALLOWLIST)
 
             val deepLink = {
                 context.components.tabsUseCases.addTab(
@@ -36,7 +37,7 @@ class Tip(
                     private = true
                 )
 
-                TelemetryWrapper.pressTipEvent(id)
+                ProTips.linkInTipClicked.record(ProTips.LinkInTipClickedExtra(tipId = tipId))
             }
 
             val shouldDisplayAllowListTip = {
@@ -50,11 +51,11 @@ class Tip(
                 false
             }
 
-            return Tip(id, null, shouldDisplayAllowListTip, deepLink)
+            return Tip(tipId, stringId, null, shouldDisplayAllowListTip, deepLink)
         }
 
-        fun createFreshLookTip(context: Context): Tip {
-            val id = R.string.tip_fresh_look
+        fun createFreshLookTip(context: Context, tipId: String): Tip {
+            val stringId = R.string.tip_fresh_look
             val name = context.getString(R.string.app_name)
 
             val sumoTopic = if (AppConstants.isKlarBuild) {
@@ -71,26 +72,26 @@ class Tip(
                     selectTab = true,
                     private = true
                 )
-                TelemetryWrapper.pressTipEvent(id)
+                ProTips.linkInTipClicked.record(ProTips.LinkInTipClickedExtra(tipId = tipId))
             }
             val shouldDisplayFreshLookTip = {
                 Settings.getInstance(context).getAppLaunchCount() == 0
             }
 
-            return Tip(id, name, shouldDisplayFreshLookTip, deepLink)
+            return Tip(tipId, stringId, name, shouldDisplayFreshLookTip, deepLink)
         }
 
-        fun createShortcutsTip(context: Context): Tip {
-            val id = R.string.tip_about_shortcuts
+        fun createShortcutsTip(context: Context, tipId: String): Tip {
+            val stringId = R.string.tip_about_shortcuts
             val name = context.getString(R.string.app_name)
 
             val shouldDisplayShortcutsTip = { true }
 
-            return Tip(id, name, shouldDisplayShortcutsTip)
+            return Tip(tipId, stringId, name, shouldDisplayShortcutsTip)
         }
 
-        fun createTrackingProtectionTip(context: Context): Tip {
-            val id = R.string.tip_disable_tracking_protection3
+        fun createTrackingProtectionTip(context: Context, tipId: String): Tip {
+            val stringId = R.string.tip_disable_tracking_protection3
 
             val shouldDisplayTrackingProtection = {
                 Settings.getInstance(context).shouldBlockOtherTrackers() ||
@@ -98,11 +99,11 @@ class Tip(
                     Settings.getInstance(context).shouldBlockAnalyticTrackers()
             }
 
-            return Tip(id, null, shouldDisplayTrackingProtection)
+            return Tip(tipId, stringId, null, shouldDisplayTrackingProtection)
         }
 
-        fun createRequestDesktopTip(context: Context): Tip {
-            val id = R.string.tip_request_desktop2
+        fun createRequestDesktopTip(context: Context, tipId: String): Tip {
+            val stringId = R.string.tip_request_desktop2
             val name = context.getString(R.string.app_name)
             val requestDesktopURL =
                 "https://support.mozilla.org/kb/switch-desktop-view-firefox-focus-android"
@@ -118,10 +119,10 @@ class Tip(
                     selectTab = true,
                     private = true
                 )
-                TelemetryWrapper.pressTipEvent(id)
+                ProTips.linkInTipClicked.record(ProTips.LinkInTipClickedExtra(tipId = tipId))
             }
 
-            return Tip(id, name, shouldDisplayRequestDesktop, deepLinkRequestDesktop)
+            return Tip(tipId, stringId, name, shouldDisplayRequestDesktop, deepLinkRequestDesktop)
         }
     }
 }
@@ -132,6 +133,12 @@ object TipManager {
 
     private val listOfTips = mutableListOf<Tip>()
     private var listInitialized = false
+
+    private const val FRESH_LOOK_TIP = "fresh_look_tip"
+    private const val SHORTCUTS_TIP = "shortcuts_tip"
+    private const val ALLOW_LIST_TIP = "allow_list_tip"
+    private const val ETP_TIP = "etp_tip"
+    private const val REQUEST_DESKTOP_TIP = "request_desktop_tip"
 
     private fun populateListOfTips(context: Context) {
         addFreshLookTip(context)
@@ -156,27 +163,27 @@ object TipManager {
     }
 
     private fun addFreshLookTip(context: Context) {
-        val tip = Tip.createFreshLookTip(context)
+        val tip = Tip.createFreshLookTip(context, FRESH_LOOK_TIP)
         listOfTips.add(tip)
     }
 
     private fun addShortcutsTip(context: Context) {
-        val tip = Tip.createShortcutsTip(context)
+        val tip = Tip.createShortcutsTip(context, SHORTCUTS_TIP)
         listOfTips.add(tip)
     }
 
     private fun addAllowlistTip(context: Context) {
-        val tip = Tip.createAllowlistTip(context)
+        val tip = Tip.createAllowlistTip(context, ALLOW_LIST_TIP)
         listOfTips.add(tip)
     }
 
     private fun addTrackingProtectionTip(context: Context) {
-        val tip = Tip.createTrackingProtectionTip(context)
+        val tip = Tip.createTrackingProtectionTip(context, ETP_TIP)
         listOfTips.add(tip)
     }
 
     private fun addRequestDesktopTip(context: Context) {
-        val tip = Tip.createRequestDesktopTip(context)
+        val tip = Tip.createRequestDesktopTip(context, REQUEST_DESKTOP_TIP)
         listOfTips.add(tip)
     }
 }

@@ -393,3 +393,41 @@ tracking_protection:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-08-17"
+pro_tips:
+  tip_displayed:
+    type: event
+    description: A pro tip has been displayed.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5541
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5542
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      tip_id:
+        description: |
+          The tip code of tip being displayed. Can be one of fresh_look_tip,
+          shortcuts_tip, allow_list_tip, etp_tip,request_desktop_tip.
+          Note that fresh_look_tip is automatically displayed on home screen.
+        type: string
+  link_in_tip_clicked:
+    type: event
+    description: A link in a pro tip has been clicked.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5541
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5542
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      tip_id:
+        description: |
+          The tip code of tip being clicked.
+          Can be one of fresh_look_tip, allow_list_tip, request_desktop_tip.
+        type: string
