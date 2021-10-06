@@ -11,7 +11,9 @@
 #include <queue>
 
 #include "AllocationPolicy.h"
-#include "AOMDecoder.h"
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
 #include "DecoderBenchmark.h"
 #include "MediaData.h"
 #include "MediaDataDecoderProxy.h"
@@ -1903,9 +1905,12 @@ void MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
       flag |= MediaInfoFlag::VIDEO_VP8;
     } else if (VPXDecoder::IsVPX(mimeType, VPXDecoder::VP9)) {
       flag |= MediaInfoFlag::VIDEO_VP9;
-    } else if (AOMDecoder::IsAV1(mimeType)) {
+    }
+#ifdef MOZ_AV1
+    else if (AOMDecoder::IsAV1(mimeType)) {
       flag |= MediaInfoFlag::VIDEO_AV1;
     }
+#endif
   }
   PerformanceRecorder perfRecorder(PerformanceRecorder::Stage::RequestDecode,
                                    height, flag);
