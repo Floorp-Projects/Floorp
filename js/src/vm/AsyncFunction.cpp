@@ -78,9 +78,17 @@ const JSClass js::AsyncFunctionClass = {"AsyncFunction", 0, JS_NULL_CLASS_OPS,
 
 enum class ResumeKind { Normal, Throw };
 
-// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
-// 6.2.3.1.1 Await Fulfilled Functions
-// 6.2.3.1.2 Await Rejected Functions
+/**
+ * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
+ *
+ * Await in async function
+ * https://tc39.es/ecma262/#await
+ *
+ * Unified implementation of
+ *
+ * Step 3. fulfilledClosure Abstract Closure.
+ * Step 5. rejectedClosure Abstract Closure.
+ */
 static bool AsyncFunctionResume(JSContext* cx,
                                 Handle<AsyncFunctionGeneratorObject*> generator,
                                 ResumeKind kind, HandleValue valueOrReason) {
@@ -119,6 +127,21 @@ static bool AsyncFunctionResume(JSContext* cx,
   MOZ_ASSERT(generator->isSuspended(),
              "non-suspended generator when resuming async function");
 
+  // Step {3,5}.a. Let prevContext be the running execution context.
+  // Step {3,5}.b. Suspend prevContext.
+  // Step {3,5}.c. Push asyncContext onto the execution context stack;
+  //               asyncContext is now the running execution context.
+  //
+  // fulfilledClosure
+  // Step 3.d. Resume the suspended evaluation of asyncContext using
+  //           NormalCompletion(value) as the result of the operation that
+  //           suspended it.
+  //
+  // rejectedClosure
+  // Step 5.d. Resume the suspended evaluation of asyncContext using
+  //           ThrowCompletion(reason) as the result of the operation that
+  //           suspended it.
+  //
   // Execution context switching is handled in generator.
   HandlePropertyName funName = kind == ResumeKind::Normal
                                    ? cx->names().AsyncFunctionNext
@@ -144,6 +167,10 @@ static bool AsyncFunctionResume(JSContext* cx,
     return false;
   }
 
+  // Step {3,f}.e. Assert: When we reach this step, asyncContext has already
+  //               been removed from the execution context stack and
+  //               prevContext is the currently running execution context.
+  // Step {3,f}.f. Return undefined.
   MOZ_ASSERT_IF(generator->isClosed(), generatorOrValue.isObject());
   MOZ_ASSERT_IF(generator->isClosed(),
                 &generatorOrValue.toObject() == resultPromise);
@@ -152,16 +179,28 @@ static bool AsyncFunctionResume(JSContext* cx,
   return true;
 }
 
-// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
-// 6.2.3.1.1 Await Fulfilled Functions
+/**
+ * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
+ *
+ * Await in async function
+ * https://tc39.es/ecma262/#await
+ *
+ * Step 3. fulfilledClosure Abstract Closure.
+ */
 [[nodiscard]] bool js::AsyncFunctionAwaitedFulfilled(
     JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
     HandleValue value) {
   return AsyncFunctionResume(cx, generator, ResumeKind::Normal, value);
 }
 
-// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
-// 6.2.3.1.2 Await Rejected Functions
+/**
+ * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
+ *
+ * Await in async function
+ * https://tc39.es/ecma262/#await
+ *
+ * Step 5. rejectedClosure Abstract Closure.
+ */
 [[nodiscard]] bool js::AsyncFunctionAwaitedRejected(
     JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
     HandleValue reason) {
