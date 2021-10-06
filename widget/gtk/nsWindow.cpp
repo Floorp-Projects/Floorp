@@ -5155,17 +5155,9 @@ static GdkWindow* CreateGdkWindow(GdkWindow* parent, GtkWidget* widget) {
   return window;
 }
 
-// Configure GL visual on X11. We add alpha silently
-// if we use WebRender to workaround NVIDIA specific Bug 1663273.
-bool nsWindow::ConfigureX11GLVisual(bool aUseAlpha) {
-  if (!GdkIsX11Display()) {
-    return false;
-  }
-
-  // If using WebRender on X11, we need to select a visual with a depth
-  // buffer, as well as an alpha channel if transparency is requested. This
-  // must be done before the widget is realized.
-  bool useWebRender = gfx::gfxVars::UseWebRender();
+#ifdef MOZ_X11
+// Configure GL visual on X11.
+bool nsWindow::ConfigureX11GLVisual() {
   auto* screen = gtk_widget_get_screen(mShell);
   int visualId = 0;
   bool haveVisual;
@@ -5182,11 +5174,9 @@ bool nsWindow::ConfigureX11GLVisual(bool aUseAlpha) {
   if (!gfxVars::UseEGL() || isMesa) {
     auto* display = GDK_DISPLAY_XDISPLAY(gtk_widget_get_display(mShell));
     int screenNumber = GDK_SCREEN_XNUMBER(screen);
-    haveVisual = GLContextGLX::FindVisual(display, screenNumber, useWebRender,
-                                          aUseAlpha || useWebRender, &visualId);
+    haveVisual = GLContextGLX::FindVisual(display, screenNumber, &visualId);
   } else {
-    haveVisual = GLContextEGL::FindVisual(useWebRender,
-                                          aUseAlpha || useWebRender, &visualId);
+    haveVisual = GLContextEGL::FindVisual(&visualId);
   }
 
   GdkVisual* gdkVisual = nullptr;
@@ -5197,20 +5187,19 @@ bool nsWindow::ConfigureX11GLVisual(bool aUseAlpha) {
   }
   if (!gdkVisual) {
     NS_WARNING("We're missing X11 Visual!");
-    if (aUseAlpha || useWebRender) {
-      // We try to use a fallback alpha visual
-      GdkScreen* screen = gtk_widget_get_screen(mShell);
-      gdkVisual = gdk_screen_get_rgba_visual(screen);
-    }
+    // We try to use a fallback alpha visual
+    GdkScreen* screen = gtk_widget_get_screen(mShell);
+    gdkVisual = gdk_screen_get_rgba_visual(screen);
   }
   if (gdkVisual) {
-    // TODO: We use alpha visual even on non-compositing screens (Bug 1479135).
     gtk_widget_set_visual(mShell, gdkVisual);
-    mHasAlphaVisual = aUseAlpha;
+    mHasAlphaVisual = true;
+    return true;
   }
 
-  return true;
+  return false;
 }
+#endif
 
 nsCString nsWindow::GetWindowNodeName() {
   nsCString nodeName("Unknown");
@@ -5369,9 +5358,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       bool isGLVisualSet = false;
       mIsAccelerated = ComputeShouldAccelerate();
 #ifdef MOZ_X11
-      if (mIsAccelerated) {
-        isGLVisualSet = ConfigureX11GLVisual(popupNeedsAlphaVisual ||
-                                             toplevelNeedsAlphaVisual);
+      if (GdkIsX11Display() && mIsAccelerated) {
+        isGLVisualSet = ConfigureX11GLVisual();
       }
 #endif
       if (!isGLVisualSet &&

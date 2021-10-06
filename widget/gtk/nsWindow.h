@@ -812,6 +812,10 @@ class nsWindow final : public nsBaseWidget {
 
   static bool sTransparentMainWindow;
 
+  /* Used for software rendering
+   */
+  mozilla::widget::WindowSurfaceProvider mSurfaceProvider;
+
 #ifdef ACCESSIBILITY
   RefPtr<mozilla::a11y::LocalAccessible> mRootAccessible;
 
@@ -863,13 +867,11 @@ class nsWindow final : public nsBaseWidget {
                 GTK_WIDGET_COMPOSIDED_DISABLED = 1,
                 GTK_WIDGET_COMPOSIDED_ENABLED = 2} WindowComposeRequest;
   void SetCompositorHint(WindowComposeRequest aState);
+  bool ConfigureX11GLVisual();
 
   Window mXWindow;
   Visual* mXVisual;
   int mXDepth;
-  mozilla::widget::WindowSurfaceProvider mSurfaceProvider;
-
-  bool ConfigureX11GLVisual(bool aUseAlpha);
 #endif
 #ifdef MOZ_WAYLAND
   RefPtr<mozilla::gfx::VsyncSource> mWaylandVsyncSource;

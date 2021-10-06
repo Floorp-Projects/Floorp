@@ -700,8 +700,8 @@ static bool ChooseConfig(GLXLibrary* glx, Display* display, int screen,
   return false;
 }
 
-bool GLContextGLX::FindVisual(Display* display, int screen, bool useWebRender,
-                              bool useAlpha, int* const out_visualId) {
+bool GLContextGLX::FindVisual(Display* display, int screen,
+                              int* const out_visualId) {
   if (!sGLXLibrary.EnsureInitialized(display)) {
     return false;
   }
@@ -736,9 +736,7 @@ bool GLContextGLX::FindVisual(Display* display, int screen, bool useWebRender,
     return false;
   }
 
-  const int bpp = useAlpha ? 32 : 24;
-  const int alphaSize = useAlpha ? 8 : 0;
-  const int depthSize = useWebRender ? 24 : 0;
+  const int bpp = 32;
 
   for (auto& cur : visualInfos) {
     const auto fnConfigMatches = [&](const int pname, const int expected) {
@@ -760,8 +758,7 @@ bool GLContextGLX::FindVisual(Display* display, int screen, bool useWebRender,
         fnConfigMatches(LOCAL_GLX_RED_SIZE, 8) &&
         fnConfigMatches(LOCAL_GLX_GREEN_SIZE, 8) &&
         fnConfigMatches(LOCAL_GLX_BLUE_SIZE, 8) &&
-        fnConfigMatches(LOCAL_GLX_ALPHA_SIZE, alphaSize) &&
-        fnConfigMatches(LOCAL_GLX_DEPTH_SIZE, depthSize)) {
+        fnConfigMatches(LOCAL_GLX_ALPHA_SIZE, 8)) {
       *out_visualId = cur.visualid;
       return true;
     }
