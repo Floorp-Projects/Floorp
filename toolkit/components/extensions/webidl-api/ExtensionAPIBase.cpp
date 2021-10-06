@@ -172,8 +172,8 @@ already_AddRefed<ExtensionPort> ExtensionAPIBase::CallWebExtMethodReturnsPort(
   }
 
   IgnoredErrorResult rv;
-  RefPtr<ExtensionPort> port = ExtensionPort::Create(
-      GetGlobalObject(), GetExtensionBrowser(), apiResult, rv);
+  auto* extensionBrowser = GetExtensionBrowser();
+  RefPtr<ExtensionPort> port = extensionBrowser->GetPort(apiResult, rv);
   if (NS_WARN_IF(rv.Failed())) {
     // ExtensionPort::Create doesn't throw the js exception with the generic
     // error message as the "api request forwarding" helper classes.
