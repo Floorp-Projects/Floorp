@@ -360,6 +360,46 @@ static bool SandboxCreateFetch(JSContext* cx, HandleObject obj) {
          dom::Headers_Binding::GetConstructorObject(cx);
 }
 
+static bool SandboxStructuredClone(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.requireAtLeast(cx, "structuredClone", 1)) {
+    return false;
+  }
+
+  RootedDictionary<dom::StructuredSerializeOptions> options(cx);
+  BindingCallContext callCx(cx, "structuredClone");
+  if (!options.Init(cx, args.hasDefined(1) ? args[1] : JS::NullHandleValue,
+                    "Argument 2", false)) {
+    return false;
+  }
+
+  nsIGlobalObject* global = CurrentNativeGlobal(cx);
+  if (!global) {
+    JS_ReportErrorASCII(cx, "structuredClone: Missing global");
+    return false;
+  }
+
+  JS::Rooted<JS::Value> result(cx);
+  ErrorResult rv;
+  nsContentUtils::StructuredClone(cx, global, args[0], options, &result, rv);
+  if (rv.MaybeSetPendingException(cx)) {
+    return false;
+  }
+
+  MOZ_ASSERT_IF(result.isGCThing(),
+                !JS::GCThingIsMarkedGray(result.toGCCellPtr()));
+  args.rval().set(result);
+  return true;
+}
+
+static bool SandboxCreateStructuredClone(JSContext* cx, HandleObject obj) {
+  MOZ_ASSERT(JS_IsGlobalObject(obj));
+
+  return JS_DefineFunction(cx, obj, "structuredClone", SandboxStructuredClone,
+                           1, 0);
+}
+
 static bool SandboxIsProxy(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() < 1) {
@@ -918,6 +958,8 @@ bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {
       crypto = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "fetch")) {
       fetch = true;
+    } else if (JS_LinearStringEqualsLiteral(nameStr, "structuredClone")) {
+      structuredClone = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "indexedDB")) {
       indexedDB = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "isSecureContext")) {
@@ -1073,6 +1115,10 @@ bool xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj) {
   }
 
   if (fetch && !SandboxCreateFetch(cx, obj)) {
+    return false;
+  }
+
+  if (structuredClone && !SandboxCreateStructuredClone(cx, obj)) {
     return false;
   }
 
