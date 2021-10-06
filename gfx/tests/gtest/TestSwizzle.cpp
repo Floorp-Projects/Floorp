@@ -7,9 +7,11 @@
 #include "gtest/gtest.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/gfx/Swizzle.h"
+#include "Orientation.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
+using namespace mozilla::image;
 
 TEST(Moz2D, PremultiplyData)
 {
@@ -329,4 +331,241 @@ TEST(Moz2D, SwizzleRow)
   memcpy(out_unpack, in_rgb, sizeof(in_rgb));
   func(out_unpack, out_unpack, 16);
   EXPECT_TRUE(ArrayEqual(out_unpack, check_unpack_xrgb));
+}
+
+TEST(Moz2D, ReorientRow)
+{
+  // Input is a 3x4 image.
+  const uint8_t in_row0[3 * 4] = {
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+  };
+  const uint8_t in_row1[3 * 4] = {
+      12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+  };
+  const uint8_t in_row2[3 * 4] = {
+      24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
+  };
+  const uint8_t in_row3[3 * 4] = {
+      36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+  };
+
+  // Output is either a 3x4 image or 4x3 image.
+  uint8_t out[3 * 4 * 4];
+  IntSize outSize(3, 4);
+  IntSize outSizeSwap(4, 3);
+  int32_t outStride = 3 * 4;
+  int32_t outStrideSwap = 4 * 4;
+  IntRect dirty;
+
+  auto func = ReorientRow(Orientation());
+  dirty = func(in_row0, 0, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 0, 3, 1));
+  dirty = func(in_row1, 1, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 1, 3, 1));
+  dirty = func(in_row2, 2, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 2, 3, 1));
+  dirty = func(in_row3, 3, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 3, 3, 1));
+
+  // clang-format off
+  const uint8_t check_identity[3 * 4 * 4] = {
+      0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+      12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+      24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
+      36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+  };
+  // clang-format on
+  EXPECT_TRUE(ArrayEqual(out, check_identity));
+
+  func = ReorientRow(Orientation(Angle::D90));
+  dirty = func(in_row0, 0, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(3, 0, 1, 3));
+  dirty = func(in_row1, 1, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(2, 0, 1, 3));
+  dirty = func(in_row2, 2, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(1, 0, 1, 3));
+  dirty = func(in_row3, 3, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(0, 0, 1, 3));
+
+  // clang-format off
+  const uint8_t check_d90[3 * 4 * 4] = {
+      36, 37, 38, 39, 24, 25, 26, 27, 12, 13, 14, 15, 0,  1,  2,  3,
+      40, 41, 42, 43, 28, 29, 30, 31, 16, 17, 18, 19, 4,  5,  6,  7,
+      44, 45, 46, 47, 32, 33, 34, 35, 20, 21, 22, 23, 8,  9,  10, 11,
+  };
+  // clang-format on
+  EXPECT_TRUE(ArrayEqual(out, check_d90));
+
+  func = ReorientRow(Orientation(Angle::D180));
+  dirty = func(in_row0, 0, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 3, 3, 1));
+  dirty = func(in_row1, 1, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 2, 3, 1));
+  dirty = func(in_row2, 2, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 1, 3, 1));
+  dirty = func(in_row3, 3, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 0, 3, 1));
+
+  // clang-format off
+  const uint8_t check_d180[3 * 4 * 4] = {
+      44, 45, 46, 47, 40, 41, 42, 43, 36, 37, 38, 39,
+      32, 33, 34, 35, 28, 29, 30, 31, 24, 25, 26, 27,
+      20, 21, 22, 23, 16, 17, 18, 19, 12, 13, 14, 15,
+      8,  9,  10, 11, 4,  5,  6,  7,  0,  1,  2,  3,
+  };
+  // clang-format on
+  EXPECT_TRUE(ArrayEqual(out, check_d180));
+
+  func = ReorientRow(Orientation(Angle::D270));
+  dirty = func(in_row0, 0, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(0, 0, 1, 3));
+  dirty = func(in_row1, 1, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(1, 0, 1, 3));
+  dirty = func(in_row2, 2, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(2, 0, 1, 3));
+  dirty = func(in_row3, 3, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(3, 0, 1, 3));
+
+  // clang-format off
+  const uint8_t check_d270[3 * 4 * 4] = {
+      8,  9,  10, 11, 20, 21, 22, 23, 32, 33, 34, 35, 44, 45, 46, 47,
+      4,  5,  6,  7,  16, 17, 18, 19, 28, 29, 30, 31, 40, 41, 42, 43,
+      0,  1,  2,  3,  12, 13, 14, 15, 24, 25, 26, 27, 36, 37, 38, 39,
+  };
+  // clang-format on
+  EXPECT_TRUE(ArrayEqual(out, check_d270));
+
+  func = ReorientRow(Orientation(Angle::D0, Flip::Horizontal));
+  dirty = func(in_row0, 0, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 0, 3, 1));
+  dirty = func(in_row1, 1, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 1, 3, 1));
+  dirty = func(in_row2, 2, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 2, 3, 1));
+  dirty = func(in_row3, 3, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 3, 3, 1));
+
+  // clang-format off
+  const uint8_t check_d0_flip[3 * 4 * 4] = {
+      8,  9,  10, 11, 4,  5,  6,  7,  0,  1,  2,  3,
+      20, 21, 22, 23, 16, 17, 18, 19, 12, 13, 14, 15,
+      32, 33, 34, 35, 28, 29, 30, 31, 24, 25, 26, 27,
+      44, 45, 46, 47, 40, 41, 42, 43, 36, 37, 38, 39,
+  };
+  // clang-format on
+  EXPECT_TRUE(ArrayEqual(out, check_d0_flip));
+
+  func = ReorientRow(Orientation(Angle::D90, Flip::Horizontal));
+  dirty = func(in_row0, 0, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(0, 0, 1, 3));
+  dirty = func(in_row1, 1, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(1, 0, 1, 3));
+  dirty = func(in_row2, 2, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(2, 0, 1, 3));
+  dirty = func(in_row3, 3, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(3, 0, 1, 3));
+
+  // clang-format off
+  const uint8_t check_d90_flip[3 * 4 * 4] = {
+      0,  1,  2,  3,  12, 13, 14, 15, 24, 25, 26, 27, 36, 37, 38, 39,
+      4,  5,  6,  7,  16, 17, 18, 19, 28, 29, 30, 31, 40, 41, 42, 43,
+      8,  9,  10, 11, 20, 21, 22, 23, 32, 33, 34, 35, 44, 45, 46, 47,
+  };
+  // clang-format on
+  EXPECT_TRUE(ArrayEqual(out, check_d90_flip));
+
+  func = ReorientRow(Orientation(Angle::D180, Flip::Horizontal));
+  dirty = func(in_row0, 0, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 3, 3, 1));
+  dirty = func(in_row1, 1, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 2, 3, 1));
+  dirty = func(in_row2, 2, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 1, 3, 1));
+  dirty = func(in_row3, 3, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 0, 3, 1));
+
+  // clang-format off
+  const uint8_t check_d180_flip[3 * 4 * 4] = {
+      36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+      24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
+      12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+      0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+  };
+  // clang-format on
+  EXPECT_TRUE(ArrayEqual(out, check_d180_flip));
+
+  func = ReorientRow(Orientation(Angle::D270, Flip::Horizontal));
+  dirty = func(in_row0, 0, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(3, 0, 1, 3));
+  dirty = func(in_row1, 1, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(2, 0, 1, 3));
+  dirty = func(in_row2, 2, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(1, 0, 1, 3));
+  dirty = func(in_row3, 3, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(0, 0, 1, 3));
+
+  // clang-format off
+  const uint8_t check_d270_flip[3 * 4 * 4] = {
+      44, 45, 46, 47, 32, 33, 34, 35, 20, 21, 22, 23, 8,  9,  10, 11,
+      40, 41, 42, 43, 28, 29, 30, 31, 16, 17, 18, 19, 4,  5,  6,  7,
+      36, 37, 38, 39, 24, 25, 26, 27, 12, 13, 14, 15, 0,  1,  2,  3,
+  };
+  // clang-format on
+  EXPECT_TRUE(ArrayEqual(out, check_d270_flip));
+
+  func = ReorientRow(
+      Orientation(Angle::D0, Flip::Horizontal, /* aFlipFirst */ true));
+  dirty = func(in_row0, 0, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 0, 3, 1));
+  dirty = func(in_row1, 1, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 1, 3, 1));
+  dirty = func(in_row2, 2, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 2, 3, 1));
+  dirty = func(in_row3, 3, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 3, 3, 1));
+
+  // No rotation, so flipping before and after are the same.
+  EXPECT_TRUE(ArrayEqual(out, check_d0_flip));
+
+  func = ReorientRow(
+      Orientation(Angle::D90, Flip::Horizontal, /* aFlipFirst */ true));
+  dirty = func(in_row0, 0, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(3, 0, 1, 3));
+  dirty = func(in_row1, 1, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(2, 0, 1, 3));
+  dirty = func(in_row2, 2, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(1, 0, 1, 3));
+  dirty = func(in_row3, 3, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(0, 0, 1, 3));
+
+  // Flip, rotate 90 degrees is the same as rotate 270 degrees, flip.
+  EXPECT_TRUE(ArrayEqual(out, check_d270_flip));
+
+  func = ReorientRow(
+      Orientation(Angle::D180, Flip::Horizontal, /* aFlipFirst */ true));
+  dirty = func(in_row0, 0, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 3, 3, 1));
+  dirty = func(in_row1, 1, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 2, 3, 1));
+  dirty = func(in_row2, 2, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 1, 3, 1));
+  dirty = func(in_row3, 3, out, outSize, outStride);
+  EXPECT_EQ(dirty, IntRect(0, 0, 3, 1));
+
+  // Flip, rotate 180 degrees is the same as rotate 180 degrees, flip.
+  EXPECT_TRUE(ArrayEqual(out, check_d180_flip));
+
+  func = ReorientRow(
+      Orientation(Angle::D270, Flip::Horizontal, /* aFlipFirst */ true));
+  dirty = func(in_row0, 0, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(0, 0, 1, 3));
+  dirty = func(in_row1, 1, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(1, 0, 1, 3));
+  dirty = func(in_row2, 2, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(2, 0, 1, 3));
+  dirty = func(in_row3, 3, out, outSizeSwap, outStrideSwap);
+  EXPECT_EQ(dirty, IntRect(3, 0, 1, 3));
+
+  // Flip, rotate 270 degrees is the same as rotate 90 degrees, flip.
+  EXPECT_TRUE(ArrayEqual(out, check_d90_flip));
 }
