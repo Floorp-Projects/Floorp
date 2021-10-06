@@ -1064,6 +1064,7 @@ WEBIDL_FILES += [
     # ExtensionMockAPI is not a real WebExtensions API, and it is only enabled in tests.
     "ExtensionMockAPI.webidl",
     "ExtensionPort.webidl",
+    "ExtensionRuntime.webidl",
     "ExtensionTest.webidl",
 ]
 

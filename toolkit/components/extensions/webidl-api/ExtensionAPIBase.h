@@ -27,6 +27,7 @@ class ExtensionAPICallSyncFunction;
 class ExtensionAPICallAsyncFunction;
 class ExtensionAPIGetProperty;
 class ExtensionEventManager;
+class ExtensionPort;
 
 class ExtensionAPIBase {
  protected:
@@ -69,6 +70,15 @@ class ExtensionAPIBase {
                                 const dom::Sequence<JS::Value>& aArgs,
                                 JS::MutableHandle<JS::Value> aRetVal,
                                 ErrorResult& aRv);
+
+  virtual void CallWebExtMethodReturnsString(
+      JSContext* aCx, const nsAString& aApiMethod,
+      const dom::Sequence<JS::Value>& aArgs, nsAString& aRetVal,
+      ErrorResult& aRv);
+
+  virtual already_AddRefed<ExtensionPort> CallWebExtMethodReturnsPort(
+      JSContext* aCx, const nsAString& aApiMethod,
+      const dom::Sequence<JS::Value>& aArgs, ErrorResult& aRv);
 
   virtual void CallWebExtMethodAsync(
       JSContext* aCx, const nsAString& aApiMethod,
