@@ -16,7 +16,7 @@ namespace extensions {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionPort);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionPort)
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionPort, mGlobal,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionPort, mGlobal, mExtensionBrowser,
                                       mOnDisconnectEventMgr,
                                       mOnMessageEventMgr);
 
@@ -27,8 +27,8 @@ NS_INTERFACE_MAP_END
 
 // static
 already_AddRefed<ExtensionPort> ExtensionPort::Create(
-    nsIGlobalObject* aGlobal, JS::Handle<JS::Value> aDescriptorValue,
-    ErrorResult& aRv) {
+    nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
+    JS::Handle<JS::Value> aDescriptorValue, ErrorResult& aRv) {
   if (!aDescriptorValue.isObject()) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -43,15 +43,18 @@ already_AddRefed<ExtensionPort> ExtensionPort::Create(
   }
 
   RefPtr<ExtensionPort> port =
-      new ExtensionPort(aGlobal, std::move(portDescriptor));
+      new ExtensionPort(aGlobal, aExtensionBrowser, std::move(portDescriptor));
   return port.forget();
 }
 
 ExtensionPort::ExtensionPort(
-    nsIGlobalObject* aGlobal,
+    nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
     UniquePtr<dom::ExtensionPortDescriptor> aPortDescriptor)
-    : mGlobal(aGlobal), mPortDescriptor(std::move(aPortDescriptor)) {
+    : mGlobal(aGlobal),
+      mExtensionBrowser(aExtensionBrowser),
+      mPortDescriptor(std::move(aPortDescriptor)) {
   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
+  MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
 }
 
 nsString ExtensionPort::GetAPIObjectId() const {
