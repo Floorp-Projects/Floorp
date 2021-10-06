@@ -418,6 +418,7 @@ class nsWindow final : public nsWindowBase {
   bool CanTakeFocus();
   bool UpdateNonClientMargins(int32_t aSizeMode = -1,
                               bool aReflowWindow = true);
+  void UpdateDarkModeToolbar();
   void UpdateGetWindowInfoCaptionStatus(bool aActiveCaption);
   void ResetLayout();
   void InvalidateNonClientRegion();
