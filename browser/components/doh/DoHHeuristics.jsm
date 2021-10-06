@@ -186,7 +186,13 @@ async function dnsListLookup(domainList) {
 async function globalCanary() {
   let { addresses, err } = await dnsLookup(GLOBAL_CANARY);
 
-  if (err === NXDOMAIN_ERR || !addresses.length) {
+  if (
+    err === NXDOMAIN_ERR ||
+    !addresses.length ||
+    addresses.every(addr =>
+      Services.io.hostnameIsLocalIPAddress(Services.io.newURI(`http://${addr}`))
+    )
+  ) {
     return "disable_doh";
   }
 
