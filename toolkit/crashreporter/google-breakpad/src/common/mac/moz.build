@@ -25,5 +25,3 @@ Library('breakpad_mac_common_s')
 CMFLAGS += ['-std=c99']
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')
-
-REQUIRES_UNIFIED_BUILD = True

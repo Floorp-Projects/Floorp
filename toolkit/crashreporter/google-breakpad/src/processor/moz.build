@@ -68,5 +68,3 @@ include('/toolkit/crashreporter/crashreporter.mozbuild')
 
 if CONFIG['CC_TYPE'] == 'clang-cl':
     AllowCompilerWarnings()  # workaround for bug 1090497
-
-REQUIRES_UNIFIED_BUILD = True
