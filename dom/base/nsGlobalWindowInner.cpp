@@ -148,7 +148,6 @@
 #include "mozilla/dom/PrimitiveConversions.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/RootedDictionary.h"
-#include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ServiceWorker.h"
@@ -7442,32 +7441,7 @@ void nsGlobalWindowInner::StructuredClone(
     JSContext* aCx, JS::Handle<JS::Value> aValue,
     const StructuredSerializeOptions& aOptions,
     JS::MutableHandle<JS::Value> aRetval, ErrorResult& aError) {
-  JS::Rooted<JS::Value> transferArray(aCx, JS::UndefinedValue());
-  aError = nsContentUtils::CreateJSValueFromSequenceOfObject(
-      aCx, aOptions.mTransfer, &transferArray);
-  if (NS_WARN_IF(aError.Failed())) {
-    return;
-  }
-
-  JS::CloneDataPolicy clonePolicy;
-  clonePolicy.allowIntraClusterClonableSharedObjects();
-  clonePolicy.allowSharedMemoryObjects();
-
-  StructuredCloneHolder holder(StructuredCloneHolder::CloningSupported,
-                               StructuredCloneHolder::TransferringSupported,
-                               JS::StructuredCloneScope::SameProcess);
-  holder.Write(aCx, aValue, transferArray, clonePolicy, aError);
-  if (NS_WARN_IF(aError.Failed())) {
-    return;
-  }
-
-  holder.Read(this, aCx, aRetval, clonePolicy, aError);
-  if (NS_WARN_IF(aError.Failed())) {
-    return;
-  }
-
-  nsTArray<RefPtr<MessagePort>> ports = holder.TakeTransferredPorts();
-  Unused << ports;
+  nsContentUtils::StructuredClone(aCx, this, aValue, aOptions, aRetval, aError);
 }
 
 nsresult nsGlobalWindowInner::Dispatch(

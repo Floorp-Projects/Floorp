@@ -187,6 +187,7 @@ struct LifecycleAdoptedCallbackArgs;
 class MessageBroadcaster;
 class NodeInfo;
 class Selection;
+struct StructuredSerializeOptions;
 class WorkerPrivate;
 enum class ElementCallbackType;
 enum class ReferrerPolicy : uint8_t;
@@ -3084,6 +3085,15 @@ class nsContentUtils {
   static nsresult CreateJSValueFromSequenceOfObject(
       JSContext* aCx, const mozilla::dom::Sequence<JSObject*>& aTransfer,
       JS::MutableHandle<JS::Value> aValue);
+
+  /**
+   * This implements the structured cloning algorithm as described by
+   * https://html.spec.whatwg.org/#structured-cloning.
+   */
+  static void StructuredClone(
+      JSContext* aCx, nsIGlobalObject* aGlobal, JS::Handle<JS::Value> aValue,
+      const mozilla::dom::StructuredSerializeOptions& aOptions,
+      JS::MutableHandle<JS::Value> aRetval, mozilla::ErrorResult& aError);
 
   /**
    * Returns true if reserved key events should be prevented from being sent
