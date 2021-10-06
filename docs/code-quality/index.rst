@@ -137,21 +137,6 @@ In this document, we try to list these all tools.
      - :ref:`clippy`
      - https://github.com/rust-lang/rust-clippy
 
-.. list-table:: Java
-   :widths: 20 20 20 20 20
-   :header-rows: 1
-
-   * - Tools
-     - Has autofixes
-     - Meta bug
-     - More info
-     - Upstream
-   * - Infer
-     -
-     - `bug 1175203 <https://bugzilla.mozilla.org/show_bug.cgi?id=1175203>`__
-     -
-     - https://github.com/facebook/infer
-
 .. list-table:: Others
    :widths: 20 20 20 20 20
    :header-rows: 1
