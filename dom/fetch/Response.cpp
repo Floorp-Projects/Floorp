@@ -281,6 +281,9 @@ already_AddRefed<Response> Response::Constructor(
 
     const fetch::ResponseBodyInit& body = aBody.Value();
     if (body.IsReadableStream()) {
+#ifdef MOZ_DOM_STREAMS
+      MOZ_CRASH("MOZ_DOM_STREAMS:NYI");
+#else
       aRv.MightThrowJSException();
 
       JSContext* cx = aGlobal.Context();
@@ -342,6 +345,7 @@ already_AddRefed<Response> Response::Constructor(
           return nullptr;
         }
       }
+#endif
     } else {
       uint64_t size = 0;
       aRv = ExtractByteStreamFromBody(body, getter_AddRefs(bodyStream),

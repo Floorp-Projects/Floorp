@@ -1001,6 +1001,15 @@ WEBIDL_FILES = [
     "XULPopupElement.webidl",
 ]
 
+if CONFIG["MOZ_DOM_STREAMS"]:
+    WEBIDL_FILES += [
+        "QueuingStrategy.webidl",
+        "ReadableStream.webidl",
+        "ReadableStreamDefaultController.webidl",
+        "ReadableStreamDefaultReader.webidl",
+        "UnderlyingSource.webidl",
+    ]
+
 if CONFIG["MOZ_WEBRTC"]:
     WEBIDL_FILES += [
         "PeerConnectionImpl.webidl",
