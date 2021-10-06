@@ -19,10 +19,40 @@ class ControllersChild extends JSWindowActorChild {
         var data = message.data;
         if (this.docShell && this.docShell.isCommandEnabled(data.cmd)) {
           var params = Cu.createCommandParams();
+          let substituteXY = false;
+          let x = 0;
+          let y = 0;
+          if (
+            data.cmd == "cmd_lookUpDictionary" &&
+            "x" in data.params &&
+            "y" in data.params &&
+            data.params.x.type == "long" &&
+            data.params.y.type == "long"
+          ) {
+            substituteXY = true;
+            x = parseInt(data.params.x.value);
+            y = parseInt(data.params.y.value);
+
+            let rect = this.contentWindow.windowUtils.convertFromParentProcessWidgetToLocal(
+              x,
+              y,
+              1,
+              1
+            );
+            x = Math.round(rect.x);
+            y = Math.round(rect.y);
+          }
+
           for (var name in data.params) {
             var value = data.params[name];
             if (value.type == "long") {
-              params.setLongValue(name, parseInt(value.value));
+              if (substituteXY && name === "x") {
+                params.setLongValue(name, x);
+              } else if (substituteXY && name === "y") {
+                params.setLongValue(name, y);
+              } else {
+                params.setLongValue(name, parseInt(value.value));
+              }
             } else {
               throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
             }
