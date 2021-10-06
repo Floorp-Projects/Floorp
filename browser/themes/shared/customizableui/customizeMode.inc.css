@@ -148,6 +148,15 @@
   align-items: center;
 }
 
+#customization-lwtheme-link:-moz-lwtheme {
+  color: inherit;
+  text-decoration: underline;
+}
+
+#customization-lwtheme-link:hover:-moz-lwtheme {
+  text-decoration: none;
+}
+
 #widget-overflow-fixed-list > toolbarpaletteitem:not([notransition])[place="menu-panel"],
 toolbarpaletteitem:not([notransition])[place="toolbar"] {
   transition: border-width var(--drag-drop-transition-duration) ease-in-out;
