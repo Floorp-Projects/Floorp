@@ -16,15 +16,19 @@
 #include "nsStringFwd.h"
 
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StoragePrincipalHelper.h"
 
+using mozilla::Preferences;
 using namespace mozilla;
 
 /**
  * Creates a test channel with CookieJarSettings which have a partitionKey set.
  */
-nsresult CreateMockChannel(nsIPrincipal* aPrincipal, nsIChannel** aChannel,
+nsresult CreateMockChannel(nsIPrincipal* aPrincipal, bool isThirdParty,
+                           const nsACString& aPartitionKey,
+                           nsIChannel** aChannel,
                            nsICookieJarSettings** aCookieJarSettings) {
   nsCOMPtr<nsIURI> mockUri;
   nsresult rv = NS_NewURI(getter_AddRefs(mockUri), "http://example.com"_ns);
@@ -40,12 +44,15 @@ nsresult CreateMockChannel(nsIPrincipal* aPrincipal, nsIChannel** aChannel,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsILoadInfo> mockLoadInfo = mockChannel->LoadInfo();
+  rv = mockLoadInfo->SetIsThirdPartyContextToTopWindow(isThirdParty);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsICookieJarSettings> cjs;
   rv = mockLoadInfo->GetCookieJarSettings(getter_AddRefs(cjs));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> partitionKeyUri;
-  rv = NS_NewURI(getter_AddRefs(partitionKeyUri), "http://example.com"_ns);
+  rv = NS_NewURI(getter_AddRefs(partitionKeyUri), aPartitionKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = cjs->InitWithURI(partitionKeyUri, false);
@@ -64,8 +71,9 @@ TEST(TestStoragePrincipalHelper, TestCreateContentPrincipal)
 
   nsCOMPtr<nsIChannel> mockChannel;
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-  nsresult rv = CreateMockChannel(contentPrincipal, getter_AddRefs(mockChannel),
-                                  getter_AddRefs(cookieJarSettings));
+  nsresult rv = CreateMockChannel(
+      contentPrincipal, false, "https://example.org"_ns,
+      getter_AddRefs(mockChannel), getter_AddRefs(cookieJarSettings));
   ASSERT_EQ(rv, NS_OK) << "Could not create a mock channel";
 
   nsCOMPtr<nsIPrincipal> storagePrincipal;
@@ -89,8 +97,9 @@ TEST(TestStoragePrincipalHelper, TestCreateNullPrincipal)
 
   nsCOMPtr<nsIChannel> mockChannel;
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-  nsresult rv = CreateMockChannel(nullPrincipal, getter_AddRefs(mockChannel),
-                                  getter_AddRefs(cookieJarSettings));
+  nsresult rv = CreateMockChannel(
+      nullPrincipal, false, "https://example.org"_ns,
+      getter_AddRefs(mockChannel), getter_AddRefs(cookieJarSettings));
   ASSERT_EQ(rv, NS_OK) << "Could not create a mock channel";
 
   nsCOMPtr<nsIPrincipal> storagePrincipal;
@@ -104,4 +113,102 @@ TEST(TestStoragePrincipalHelper, TestCreateNullPrincipal)
       nullPrincipal, cookieJarSettings, getter_AddRefs(storagePrincipalSW));
   EXPECT_TRUE(NS_FAILED(rv)) << "Should fail for NullPrincipal";
   EXPECT_FALSE(storagePrincipal);
+}
+
+TEST(TestStoragePrincipalHelper, TestGetPrincipalCookieBehavior4)
+{
+  Preferences::SetInt("network.cookie.cookieBehavior", 4);
+
+  nsCOMPtr<nsIPrincipal> contentPrincipal =
+      BasePrincipal::CreateContentPrincipal("https://example.com"_ns);
+  EXPECT_TRUE(contentPrincipal);
+
+  for (auto isThirdParty : {false, true}) {
+    nsCOMPtr<nsIChannel> mockChannel;
+    nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+    nsresult rv = CreateMockChannel(
+        contentPrincipal, isThirdParty, "https://example.org"_ns,
+        getter_AddRefs(mockChannel), getter_AddRefs(cookieJarSettings));
+    ASSERT_EQ(rv, NS_OK) << "Could not create a mock channel";
+
+    nsCOMPtr<nsIPrincipal> testPrincipal;
+    rv = StoragePrincipalHelper::GetPrincipal(
+        mockChannel, StoragePrincipalHelper::eRegularPrincipal,
+        getter_AddRefs(testPrincipal));
+    ASSERT_EQ(rv, NS_OK) << "Could not get regular principal";
+    EXPECT_TRUE(testPrincipal);
+    EXPECT_TRUE(testPrincipal->OriginAttributesRef().mPartitionKey.IsEmpty());
+
+    rv = StoragePrincipalHelper::GetPrincipal(
+        mockChannel, StoragePrincipalHelper::ePartitionedPrincipal,
+        getter_AddRefs(testPrincipal));
+    ASSERT_EQ(rv, NS_OK) << "Could not get partitioned principal";
+    EXPECT_TRUE(testPrincipal);
+    EXPECT_TRUE(
+        testPrincipal->OriginAttributesRef().mPartitionKey.EqualsLiteral(
+            "(https,example.org)"));
+
+    // We should always get regular principal if the dFPI is disabled.
+    rv = StoragePrincipalHelper::GetPrincipal(
+        mockChannel, StoragePrincipalHelper::eForeignPartitionedPrincipal,
+        getter_AddRefs(testPrincipal));
+    ASSERT_EQ(rv, NS_OK) << "Could not get foreign partitioned principal";
+    EXPECT_TRUE(testPrincipal);
+    EXPECT_TRUE(testPrincipal->OriginAttributesRef().mPartitionKey.IsEmpty());
+
+    // Note that we don't test eStorageAccessPrincipal here because it's hard to
+    // setup the right state for the storage access in gTest.
+  }
+}
+
+TEST(TestStoragePrincipalHelper, TestGetPrincipalCookieBehavior5)
+{
+  Preferences::SetInt("network.cookie.cookieBehavior", 5);
+
+  nsCOMPtr<nsIPrincipal> contentPrincipal =
+      BasePrincipal::CreateContentPrincipal("https://example.com"_ns);
+  EXPECT_TRUE(contentPrincipal);
+
+  for (auto isThirdParty : {false, true}) {
+    nsCOMPtr<nsIChannel> mockChannel;
+    nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+    nsresult rv = CreateMockChannel(
+        contentPrincipal, isThirdParty, "https://example.org"_ns,
+        getter_AddRefs(mockChannel), getter_AddRefs(cookieJarSettings));
+    ASSERT_EQ(rv, NS_OK) << "Could not create a mock channel";
+
+    nsCOMPtr<nsIPrincipal> testPrincipal;
+    rv = StoragePrincipalHelper::GetPrincipal(
+        mockChannel, StoragePrincipalHelper::eRegularPrincipal,
+        getter_AddRefs(testPrincipal));
+    ASSERT_EQ(rv, NS_OK) << "Could not get regular principal";
+    EXPECT_TRUE(testPrincipal);
+    EXPECT_TRUE(testPrincipal->OriginAttributesRef().mPartitionKey.IsEmpty());
+
+    rv = StoragePrincipalHelper::GetPrincipal(
+        mockChannel, StoragePrincipalHelper::ePartitionedPrincipal,
+        getter_AddRefs(testPrincipal));
+    ASSERT_EQ(rv, NS_OK) << "Could not get partitioned principal";
+    EXPECT_TRUE(testPrincipal);
+    EXPECT_TRUE(
+        testPrincipal->OriginAttributesRef().mPartitionKey.EqualsLiteral(
+            "(https,example.org)"));
+
+    // We should always get regular principal if the dFPI is disabled.
+    rv = StoragePrincipalHelper::GetPrincipal(
+        mockChannel, StoragePrincipalHelper::eForeignPartitionedPrincipal,
+        getter_AddRefs(testPrincipal));
+    ASSERT_EQ(rv, NS_OK) << "Could not get foreign partitioned principal";
+    EXPECT_TRUE(testPrincipal);
+    if (isThirdParty) {
+      EXPECT_TRUE(
+          testPrincipal->OriginAttributesRef().mPartitionKey.EqualsLiteral(
+              "(https,example.org)"));
+    } else {
+      EXPECT_TRUE(testPrincipal->OriginAttributesRef().mPartitionKey.IsEmpty());
+    }
+
+    // Note that we don't test eStorageAccessPrincipal here because it's hard to
+    // setup the right state for the storage access in gTest.
+  }
 }
