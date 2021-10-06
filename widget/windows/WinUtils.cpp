@@ -2353,5 +2353,19 @@ nsString WinUtils::GetPackageFamilyName() {
   return rv;
 }
 
+bool WinUtils::GetClassName(HWND aHwnd, nsAString& aClassName) {
+  const int bufferLength = 256;
+  aClassName.SetLength(bufferLength);
+
+  int length = ::GetClassNameW(aHwnd, (char16ptr_t)aClassName.BeginWriting(),
+                               bufferLength);
+  if (length == 0) {
+    return false;
+  }
+  MOZ_RELEASE_ASSERT(length <= (bufferLength - 1));
+  aClassName.Truncate(length);
+  return true;
+}
+
 }  // namespace widget
 }  // namespace mozilla

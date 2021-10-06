@@ -9,6 +9,7 @@
 #include <ole2.h>
 #include <shlobj.h>
 
+#include "nsComponentManagerUtils.h"
 #include "nsDataObj.h"
 #include "nsArrayUtils.h"
 #include "nsClipboard.h"
@@ -28,6 +29,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Unused.h"
+#include "nsIObserverService.h"
 #include "nsIOutputStream.h"
 #include "nscore.h"
 #include "nsDirectoryServiceDefs.h"
@@ -40,6 +42,7 @@
 #include "nsMimeTypes.h"
 #include "imgIEncoder.h"
 #include "imgITools.h"
+#include "WinUtils.h"
 
 #include "mozilla/LazyIdleThread.h"
 #include <algorithm>

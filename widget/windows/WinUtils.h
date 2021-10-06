@@ -569,6 +569,8 @@ class WinUtils {
 
   static const WhitelistVec& GetWhitelistedPaths();
 
+  static bool GetClassName(HWND aHwnd, nsAString& aName);
+
  private:
   static WhitelistVec BuildWhitelist();
 

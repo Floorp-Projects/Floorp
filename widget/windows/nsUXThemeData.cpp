@@ -13,6 +13,7 @@
 #include "nsToolkit.h"
 #include "nsUXThemeConstants.h"
 #include "WinContentSystemParameters.h"
+#include "gfxWindowsPlatform.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
