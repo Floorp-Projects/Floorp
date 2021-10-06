@@ -454,6 +454,7 @@ class PuppeteerRunner(MozbuildObject):
 
         prefs = {}
         for k, v in params.get("extra_prefs", {}).items():
+            print("Using extra preference: {}={}".format(k, v))
             prefs[k] = mozprofile.Preferences.cast(v)
 
         if prefs:
