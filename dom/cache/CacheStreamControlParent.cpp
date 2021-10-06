@@ -140,7 +140,8 @@ void CacheStreamControlParent::SetStreamList(
 void CacheStreamControlParent::CloseAll() {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
   NotifyCloseAll();
-  Unused << SendCloseAll();
+
+  QM_WARNONLY_TRY(OkIf(SendCloseAll()));
 }
 
 void CacheStreamControlParent::Shutdown() {
