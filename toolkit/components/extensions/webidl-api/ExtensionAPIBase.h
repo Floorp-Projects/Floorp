@@ -91,6 +91,13 @@ class ExtensionAPIBase {
       const dom::Sequence<JS::Value>& aArgs,
       JS::MutableHandle<JS::Value> aRetVal, ErrorResult& aRv);
 
+  virtual void GetWebExtPropertyAsString(const nsString& aPropertyName,
+                                         dom::DOMString& aRetval);
+
+  virtual void GetWebExtPropertyAsJSValue(JSContext* aCx,
+                                          const nsAString& aPropertyName,
+                                          JS::MutableHandle<JS::Value> aRetval);
+
   // API Requests helpers.
   already_AddRefed<ExtensionEventManager> CreateEventManager(
       const nsAString& aEventName);

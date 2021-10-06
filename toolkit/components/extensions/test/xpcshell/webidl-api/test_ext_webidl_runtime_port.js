@@ -121,6 +121,15 @@ add_task(async function test_method_return_runtime_port() {
             });
             return;
         }
+      } else if (
+        request.requestType == "getProperty" &&
+        request.apiObjectType == "Port" &&
+        request.apiName == "sender"
+      ) {
+        return {
+          type: Ci.mozIExtensionAPIRequestResult.RETURN_VALUE,
+          value: { id: "fake-sender-id-prop" },
+        };
       }
 
       throw new Error(`Unexpected request: ${request}`);
