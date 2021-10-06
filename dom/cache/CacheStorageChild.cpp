@@ -87,7 +87,7 @@ void CacheStorageChild::StartDestroy() {
   MOZ_DIAGNOSTIC_ASSERT(!mListener);
 
   // Start actor destruction from parent process
-  Unused << SendTeardown();
+  QM_WARNONLY_TRY(OkIf(SendTeardown()));
 }
 
 void CacheStorageChild::ActorDestroy(ActorDestroyReason aReason) {

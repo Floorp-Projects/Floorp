@@ -357,7 +357,8 @@ AutoParentOpResult::~AutoParentOpResult() {
       if (action == Forget || result.actorParent() == nullptr) {
         break;
       }
-      Unused << PCacheParent::Send__delete__(result.actorParent());
+
+      QM_WARNONLY_TRY(OkIf(PCacheParent::Send__delete__(result.actorParent())));
       break;
     }
     default:
@@ -366,7 +367,8 @@ AutoParentOpResult::~AutoParentOpResult() {
   }
 
   if (action == Delete && mStreamControl) {
-    Unused << PCacheStreamControlParent::Send__delete__(mStreamControl);
+    QM_WARNONLY_TRY(
+        OkIf(PCacheStreamControlParent::Send__delete__(mStreamControl)));
   }
 
   mStreamCleanupList.Clear();
