@@ -45,7 +45,7 @@ const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
 
-const { getInnerWindowID, promiseEvent } = ExtensionUtils;
+const { getInnerWindowID, getUniqueId, promiseEvent } = ExtensionUtils;
 
 const {
   BaseContext,
@@ -232,10 +232,19 @@ class WorkerContextChild extends BaseContext {
   }
 
   openConduit(subject, address) {
-    // TODO: part1.5 patch will add the actual method implementation here.
-    return {
-      sendCreateProxyContext: () => {},
-    };
+    let proc = ChromeUtils.domProcessChild;
+    let conduit = proc.getActor("ProcessConduits").openConduit(subject, {
+      id: subject.id || getUniqueId(),
+      extensionId: this.extension.id,
+      envType: this.envType,
+      workerScriptURL: this.uri.spec,
+      ...address,
+    });
+    this.callOnClose(conduit);
+    conduit.setCloseCallback(() => {
+      this.forgetOnClose(conduit);
+    });
+    return conduit;
   }
 
   withAPIRequest(request, callable) {
