@@ -180,4 +180,38 @@ TextLeafPoint HyperTextAccessibleBase::ToTextLeafPoint(int32_t aOffset,
   return TextLeafPoint(child, offset);
 }
 
+uint32_t HyperTextAccessibleBase::TransformOffset(Accessible* aDescendant,
+                                                  uint32_t aOffset,
+                                                  bool aIsEndOffset) const {
+  const Accessible* thisAcc = Acc();
+  // From the descendant, go up and get the immediate child of this hypertext.
+  uint32_t offset = aOffset;
+  Accessible* descendant = aDescendant;
+  while (descendant) {
+    Accessible* parent = descendant->Parent();
+    if (parent == thisAcc) {
+      return GetChildOffset(descendant) + offset;
+    }
+
+    // This offset no longer applies because the passed-in text object is not
+    // a child of the hypertext. This happens when there are nested hypertexts,
+    // e.g. <div>abc<h1>def</h1>ghi</div>. Thus we need to adjust the offset
+    // to make it relative the hypertext.
+    // If the end offset is not supposed to be inclusive and the original point
+    // is not at 0 offset then the returned offset should be after an embedded
+    // character the original point belongs to.
+    if (aIsEndOffset) {
+      offset = (offset > 0 || descendant->IndexInParent() > 0) ? 1 : 0;
+    } else {
+      offset = 0;
+    }
+
+    descendant = parent;
+  }
+
+  // If the given a11y point cannot be mapped into offset relative this
+  // hypertext offset then return length as fallback value.
+  return CharacterCount();
+}
+
 }  // namespace mozilla::a11y
