@@ -154,7 +154,7 @@ int32_t RemoteAccessible::CaretLineNumber() {
   return line;
 }
 
-int32_t RemoteAccessible::CaretOffset() {
+int32_t RemoteAccessible::CaretOffset() const {
   int32_t offset = 0;
   Unused << mDoc->SendCaretOffset(mID, &offset);
   return offset;

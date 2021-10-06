@@ -72,7 +72,7 @@ void ScrollToPoint(uint32_t aScrollType, int32_t aX, int32_t aY);
 void Announce(const nsString& aAnnouncement, uint16_t aPriority);
 
 int32_t CaretLineNumber();
-int32_t CaretOffset();
+virtual int32_t CaretOffset() const override;
 void SetCaretOffset(int32_t aOffset);
 
 int32_t CharacterCount();
