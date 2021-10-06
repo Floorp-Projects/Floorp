@@ -8,8 +8,13 @@
 #define MOZILLA_GFX_SWIZZLE_H_
 
 #include "Point.h"
+#include "Rect.h"
 
 namespace mozilla {
+namespace image {
+struct Orientation;
+}
+
 namespace gfx {
 
 /**
@@ -65,6 +70,20 @@ GFX2D_API SwizzleRowFn UnpremultiplyRow(SurfaceFormat aSrcFormat,
  */
 GFX2D_API SwizzleRowFn SwizzleRow(SurfaceFormat aSrcFormat,
                                   SurfaceFormat aDstFormat);
+
+/**
+ * Reorients source and writes it to destination. Returns the dirty rect of
+ * what was changed in aDst.
+ */
+typedef IntRect (*ReorientRowFn)(const uint8_t* aSrc, int32_t aSrcRow,
+                                 uint8_t* aDst, const IntSize& aDstSize,
+                                 int32_t aDstStride);
+
+/**
+ * Get a function pointer to perform reorientation by row.
+ */
+GFX2D_API ReorientRowFn
+ReorientRow(const struct image::Orientation& aOrientation);
 
 }  // namespace gfx
 }  // namespace mozilla

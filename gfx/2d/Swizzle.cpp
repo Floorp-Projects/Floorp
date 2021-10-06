@@ -6,6 +6,7 @@
 
 #include "Swizzle.h"
 #include "Logging.h"
+#include "Orientation.h"
 #include "Tools.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
@@ -1302,6 +1303,181 @@ SwizzleRowFn SwizzleRow(SurfaceFormat aSrcFormat, SurfaceFormat aDstFormat) {
   }
 
   MOZ_ASSERT_UNREACHABLE("Unsupported swizzle formats");
+  return nullptr;
+}
+
+static IntRect ReorientRowRotate0FlipFallback(const uint8_t* aSrc,
+                                              int32_t aSrcRow, uint8_t* aDst,
+                                              const IntSize& aDstSize,
+                                              int32_t aDstStride) {
+  // Reverse order of pixels in the row.
+  const uint32_t* src = reinterpret_cast<const uint32_t*>(aSrc);
+  const uint32_t* end = src + aDstSize.width;
+  uint32_t* dst = reinterpret_cast<uint32_t*>(aDst + aSrcRow * aDstStride) +
+                  aDstSize.width - 1;
+  do {
+    *dst-- = *src++;
+  } while (src < end);
+
+  return IntRect(0, aSrcRow, aDstSize.width, 1);
+}
+
+static IntRect ReorientRowRotate90FlipFallback(const uint8_t* aSrc,
+                                               int32_t aSrcRow, uint8_t* aDst,
+                                               const IntSize& aDstSize,
+                                               int32_t aDstStride) {
+  // Copy row of pixels from top to bottom, into left to right columns.
+  const uint32_t* src = reinterpret_cast<const uint32_t*>(aSrc);
+  const uint32_t* end = src + aDstSize.height;
+  uint32_t* dst = reinterpret_cast<uint32_t*>(aDst) + aSrcRow;
+  int32_t stride = aDstStride / sizeof(uint32_t);
+  do {
+    *dst = *src++;
+    dst += stride;
+  } while (src < end);
+
+  return IntRect(aSrcRow, 0, 1, aDstSize.height);
+}
+
+static IntRect ReorientRowRotate180FlipFallback(const uint8_t* aSrc,
+                                                int32_t aSrcRow, uint8_t* aDst,
+                                                const IntSize& aDstSize,
+                                                int32_t aDstStride) {
+  // Copy row of pixels from top to bottom, into bottom to top rows.
+  uint8_t* dst = aDst + (aDstSize.height - aSrcRow - 1) * aDstStride;
+  memcpy(dst, aSrc, aDstSize.width * sizeof(uint32_t));
+  return IntRect(0, aDstSize.height - aSrcRow - 1, aDstSize.width, 1);
+}
+
+static IntRect ReorientRowRotate270FlipFallback(const uint8_t* aSrc,
+                                                int32_t aSrcRow, uint8_t* aDst,
+                                                const IntSize& aDstSize,
+                                                int32_t aDstStride) {
+  // Copy row of pixels in reverse order from top to bottom, into right to left
+  // columns.
+  const uint32_t* src = reinterpret_cast<const uint32_t*>(aSrc);
+  const uint32_t* end = src + aDstSize.height;
+  uint32_t* dst =
+      reinterpret_cast<uint32_t*>(aDst + (aDstSize.height - 1) * aDstStride) +
+      aDstSize.width - aSrcRow - 1;
+  int32_t stride = aDstStride / sizeof(uint32_t);
+  do {
+    *dst = *src++;
+    dst -= stride;
+  } while (src < end);
+
+  return IntRect(aDstSize.width - aSrcRow - 1, 0, 1, aDstSize.height);
+}
+
+static IntRect ReorientRowRotate0Fallback(const uint8_t* aSrc, int32_t aSrcRow,
+                                          uint8_t* aDst,
+                                          const IntSize& aDstSize,
+                                          int32_t aDstStride) {
+  // Copy row of pixels into the destination.
+  uint8_t* dst = aDst + aSrcRow * aDstStride;
+  memcpy(dst, aSrc, aDstSize.width * sizeof(uint32_t));
+  return IntRect(0, aSrcRow, aDstSize.width, 1);
+}
+
+static IntRect ReorientRowRotate90Fallback(const uint8_t* aSrc, int32_t aSrcRow,
+                                           uint8_t* aDst,
+                                           const IntSize& aDstSize,
+                                           int32_t aDstStride) {
+  // Copy row of pixels from top to bottom, into right to left columns.
+  const uint32_t* src = reinterpret_cast<const uint32_t*>(aSrc);
+  const uint32_t* end = src + aDstSize.height;
+  uint32_t* dst =
+      reinterpret_cast<uint32_t*>(aDst) + aDstSize.width - aSrcRow - 1;
+  int32_t stride = aDstStride / sizeof(uint32_t);
+  do {
+    *dst = *src++;
+    dst += stride;
+  } while (src < end);
+
+  return IntRect(aDstSize.width - aSrcRow - 1, 0, 1, aDstSize.height);
+}
+
+static IntRect ReorientRowRotate180Fallback(const uint8_t* aSrc,
+                                            int32_t aSrcRow, uint8_t* aDst,
+                                            const IntSize& aDstSize,
+                                            int32_t aDstStride) {
+  // Copy row of pixels in reverse order from top to bottom, into bottom to top
+  // rows.
+  const uint32_t* src = reinterpret_cast<const uint32_t*>(aSrc);
+  const uint32_t* end = src + aDstSize.width;
+  uint32_t* dst = reinterpret_cast<uint32_t*>(
+                      aDst + (aDstSize.height - aSrcRow - 1) * aDstStride) +
+                  aDstSize.width - 1;
+  do {
+    *dst-- = *src++;
+  } while (src < end);
+
+  return IntRect(0, aDstSize.height - aSrcRow - 1, aDstSize.width, 1);
+}
+
+static IntRect ReorientRowRotate270Fallback(const uint8_t* aSrc,
+                                            int32_t aSrcRow, uint8_t* aDst,
+                                            const IntSize& aDstSize,
+                                            int32_t aDstStride) {
+  // Copy row of pixels in reverse order from top to bottom, into left to right
+  // column.
+  const uint32_t* src = reinterpret_cast<const uint32_t*>(aSrc);
+  const uint32_t* end = src + aDstSize.height;
+  uint32_t* dst =
+      reinterpret_cast<uint32_t*>(aDst + (aDstSize.height - 1) * aDstStride) +
+      aSrcRow;
+  int32_t stride = aDstStride / sizeof(uint32_t);
+  do {
+    *dst = *src++;
+    dst -= stride;
+  } while (src < end);
+
+  return IntRect(aSrcRow, 0, 1, aDstSize.height);
+}
+
+ReorientRowFn ReorientRow(const struct image::Orientation& aOrientation) {
+  switch (aOrientation.flip) {
+    case image::Flip::Unflipped:
+      switch (aOrientation.rotation) {
+        case image::Angle::D0:
+          return &ReorientRowRotate0Fallback;
+        case image::Angle::D90:
+          return &ReorientRowRotate90Fallback;
+        case image::Angle::D180:
+          return &ReorientRowRotate180Fallback;
+        case image::Angle::D270:
+          return &ReorientRowRotate270Fallback;
+        default:
+          break;
+      }
+      break;
+    case image::Flip::Horizontal:
+      switch (aOrientation.rotation) {
+        case image::Angle::D0:
+          return &ReorientRowRotate0FlipFallback;
+        case image::Angle::D90:
+          if (aOrientation.flipFirst) {
+            return &ReorientRowRotate270FlipFallback;
+          } else {
+            return &ReorientRowRotate90FlipFallback;
+          }
+        case image::Angle::D180:
+          return &ReorientRowRotate180FlipFallback;
+        case image::Angle::D270:
+          if (aOrientation.flipFirst) {
+            return &ReorientRowRotate90FlipFallback;
+          } else {
+            return &ReorientRowRotate270FlipFallback;
+          }
+        default:
+          break;
+      }
+      break;
+    default:
+      break;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Unhandled orientation!");
   return nullptr;
 }
 
