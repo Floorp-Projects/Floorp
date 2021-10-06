@@ -248,6 +248,19 @@ class StoragePrincipalHelper final {
     // This is the first-party principal, plus, First-party isolation attribute
     // set.
     ePartitionedPrincipal,
+
+    // This principal returns different results based on whether its associated
+    // channel/window is in a third-party context. While in a third-party
+    // context, it returns the partitioned principal; otherwise, it returns the
+    // regular principal.
+    //
+    // Note that this principal is not a dynamic principal like
+    // `eStorageAccessPrincipal`, which changes depending on whether the storage
+    // access permission is granted. This principal doesn't take the storage
+    // access permission into consideration. Also, this principle is used in
+    // dFPI only, meaning that it always returns the regular principal when dFP
+    // Is disabled.
+    eForeignPartitionedPrincipal,
   };
 
   /**
