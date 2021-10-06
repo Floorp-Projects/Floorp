@@ -9,6 +9,7 @@
 #include "mozilla/dom/ExtensionBrowserBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"  // GetWorkerPrivateFromContext
 #include "mozilla/extensions/ExtensionMockAPI.h"
+#include "mozilla/extensions/ExtensionTest.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 
 namespace mozilla {
@@ -17,7 +18,7 @@ namespace extensions {
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionBrowser);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionBrowser)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionBrowser, mGlobal,
-                                      mExtensionMockAPI);
+                                      mExtensionMockAPI, mExtensionTest);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionBrowser)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -75,6 +76,14 @@ ExtensionMockAPI* ExtensionBrowser::GetExtensionMockAPI() {
   }
 
   return mExtensionMockAPI;
+}
+
+ExtensionTest* ExtensionBrowser::GetExtensionTest() {
+  if (!mExtensionTest) {
+    mExtensionTest = new ExtensionTest(mGlobal, this);
+  }
+
+  return mExtensionTest;
 }
 
 }  // namespace extensions
