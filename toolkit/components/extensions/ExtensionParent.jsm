@@ -313,10 +313,13 @@ const ProxyMessenger = {
       url: source.url,
     };
 
-    let browser = source.actor.browsingContext.top.embedderElement;
-    let data = browser && apiManager.global.tabTracker.getBrowserData(browser);
-    if (data?.tabId > 0) {
-      sender.tab = extension.tabManager.get(data.tabId, null)?.convert();
+    if (source.actor instanceof JSWindowActorParent) {
+      let browser = source.actor.browsingContext.top.embedderElement;
+      let data =
+        browser && apiManager.global.tabTracker.getBrowserData(browser);
+      if (data?.tabId > 0) {
+        sender.tab = extension.tabManager.get(data.tabId, null)?.convert();
+      }
     }
 
     return sender;

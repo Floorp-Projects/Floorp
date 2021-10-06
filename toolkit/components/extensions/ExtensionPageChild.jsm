@@ -54,7 +54,12 @@ const {
   defineLazyGetter,
 } = ExtensionCommon;
 
-const { ChildAPIManager, Messenger, WebIDLChildAPIManager } = ExtensionChild;
+const {
+  ChildAPIManager,
+  Messenger,
+  WebIDLChildAPIManager,
+  WorkerMessenger,
+} = ExtensionChild;
 
 var ExtensionPageChild;
 
@@ -302,6 +307,10 @@ class WorkerContextChild extends BaseContext {
     super.unload();
   }
 }
+
+defineLazyGetter(WorkerContextChild.prototype, "messenger", function() {
+  return new WorkerMessenger(this);
+});
 
 defineLazyGetter(
   WorkerContextChild.prototype,
