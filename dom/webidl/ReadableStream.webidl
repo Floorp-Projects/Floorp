@@ -18,7 +18,9 @@ interface ReadableStream {
 
   // Bug 1734241
   // Promise<undefined> pipeTo(WritableStream destination, optional StreamPipeOptions options = {});
-  // sequence<ReadableStream> tee();
+
+  [Throws]
+  sequence<ReadableStream> tee();
 
   // Bug 1734244
   // async iterable<any>(optional ReadableStreamIteratorOptions options = {});
