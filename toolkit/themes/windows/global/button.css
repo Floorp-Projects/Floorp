@@ -16,7 +16,7 @@ button {
   color: ButtonText;
   background-color: ButtonFace;
   text-shadow: none;
-  border: 1px solid ThreeDDarkShadow;
+  border: 1px solid ThreeDLightShadow;
   padding: 2px 3px;
   /* TODO: In Windows 11 perhaps we want some border-radius */
 }

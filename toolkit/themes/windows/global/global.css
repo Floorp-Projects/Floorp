@@ -196,6 +196,22 @@ html|input {
   margin: 2px 4px;
 }
 
+@media (-moz-toolbar-prefers-color-scheme: dark) {
+  html|input {
+    appearance: none;
+    /* HTML inputs have 2px border and 1px padding by default (via forms.css).
+     * So to keep the same size as in light mode, but make the border 1px,
+     * tweak the padding to be 2px. */
+    border-style: solid;
+    border-width: 1px;
+    padding: 2px;
+  }
+  html|input:focus-visible {
+    outline: none;
+    border-color: currentColor;
+  }
+}
+
 /* Notification popups */
 
 %include ../../shared/notification-popup.inc.css
