@@ -17,35 +17,42 @@ namespace mozilla {
 
 namespace {
 
+bool ShouldPartitionChannel(nsIChannel* aChannel,
+                            nsICookieJarSettings* aCookieJarSettings) {
+  MOZ_ASSERT(aChannel);
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  uint32_t rejectedReason = 0;
+  if (ContentBlocking::ShouldAllowAccessFor(aChannel, uri, &rejectedReason)) {
+    return false;
+  }
+
+  // Let's use the storage principal only if we need to partition the cookie
+  // jar.  We use the lower-level ContentBlocking API here to ensure this
+  // check doesn't send notifications.
+  if (!ShouldPartitionStorage(rejectedReason) ||
+      !StoragePartitioningEnabled(rejectedReason, aCookieJarSettings)) {
+    return false;
+  }
+
+  return true;
+}
+
 bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs,
                             bool aForcePartitionedPrincipal) {
   MOZ_ASSERT(aChannel);
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsCOMPtr<nsICookieJarSettings> cjs;
-  if (NS_FAILED(loadInfo->GetCookieJarSettings(getter_AddRefs(cjs)))) {
+  Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cjs));
+
+  if (!aForcePartitionedPrincipal && !ShouldPartitionChannel(aChannel, cjs)) {
     return false;
-  }
-
-  if (!aForcePartitionedPrincipal) {
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
-    if (NS_FAILED(rv)) {
-      return false;
-    }
-
-    uint32_t rejectedReason = 0;
-    if (ContentBlocking::ShouldAllowAccessFor(aChannel, uri, &rejectedReason)) {
-      return false;
-    }
-
-    // Let's use the storage principal only if we need to partition the cookie
-    // jar.  We use the lower-level ContentBlocking API here to ensure this
-    // check doesn't send notifications.
-    if (!ShouldPartitionStorage(rejectedReason) ||
-        !StoragePartitioningEnabled(rejectedReason, cjs)) {
-      return false;
-    }
   }
 
   nsAutoString partitionKey;
@@ -216,6 +223,101 @@ bool StoragePrincipalHelper::VerifyValidStoragePrincipalInfoForPrincipalInfo(
 
   MOZ_CRASH("Invalid principalInfo type");
   return false;
+}
+
+// static
+nsresult StoragePrincipalHelper::GetPrincipal(nsIChannel* aChannel,
+                                              PrincipalType aPrincipalType,
+                                              nsIPrincipal** aPrincipal) {
+  MOZ_ASSERT(aChannel);
+  MOZ_ASSERT(aPrincipal);
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  nsCOMPtr<nsICookieJarSettings> cjs;
+  Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cjs));
+
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  MOZ_DIAGNOSTIC_ASSERT(ssm);
+
+  nsCOMPtr<nsIPrincipal> principal;
+  nsCOMPtr<nsIPrincipal> partitionedPrincipal;
+
+  nsresult rv =
+      ssm->GetChannelResultPrincipals(aChannel, getter_AddRefs(principal),
+                                      getter_AddRefs(partitionedPrincipal));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIPrincipal> outPrincipal = principal;
+
+  switch (aPrincipalType) {
+    case eRegularPrincipal:
+      break;
+
+    case eStorageAccessPrincipal:
+      if (ShouldPartitionChannel(aChannel, cjs)) {
+        outPrincipal = partitionedPrincipal;
+      }
+      break;
+
+    case ePartitionedPrincipal:
+      outPrincipal = partitionedPrincipal;
+      break;
+
+    case eForeignPartitionedPrincipal:
+      // We only support foreign partitioned principal when dFPI is enabled.
+      if (cjs->GetCookieBehavior() ==
+              nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
+          loadInfo->GetIsThirdPartyContextToTopWindow()) {
+        outPrincipal = partitionedPrincipal;
+      }
+      break;
+  }
+
+  outPrincipal.forget(aPrincipal);
+  return NS_OK;
+}
+
+// static
+nsresult StoragePrincipalHelper::GetPrincipal(nsPIDOMWindowInner* aWindow,
+                                              PrincipalType aPrincipalType,
+                                              nsIPrincipal** aPrincipal) {
+  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aPrincipal);
+
+  nsCOMPtr<Document> doc = aWindow->GetExtantDoc();
+  NS_ENSURE_STATE(doc);
+
+  nsCOMPtr<nsIPrincipal> outPrincipal;
+
+  switch (aPrincipalType) {
+    case eRegularPrincipal:
+      outPrincipal = doc->NodePrincipal();
+      break;
+
+    case eStorageAccessPrincipal:
+      outPrincipal = doc->EffectiveStoragePrincipal();
+      break;
+
+    case ePartitionedPrincipal:
+      outPrincipal = doc->PartitionedPrincipal();
+      break;
+
+    case eForeignPartitionedPrincipal:
+      // We only support foreign partitioned principal when dFPI is enabled.
+      if (doc->CookieJarSettings()->GetCookieBehavior() ==
+              nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
+          AntiTrackingUtils::IsThirdPartyWindow(aWindow, nullptr)) {
+        outPrincipal = doc->PartitionedPrincipal();
+      } else {
+        outPrincipal = doc->NodePrincipal();
+      }
+      break;
+  }
+
+  outPrincipal.forget(aPrincipal);
+  return NS_OK;
 }
 
 // static
