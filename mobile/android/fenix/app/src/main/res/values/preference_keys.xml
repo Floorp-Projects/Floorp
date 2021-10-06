@@ -264,6 +264,7 @@
     <string name="pref_key_tab_view_list_do_not_use" translatable="false">pref_key_tab_view_list</string>
     <string name="pref_key_tab_view_grid" translatable="false">pref_key_tab_view_grid</string>
     <string name="pref_key_tabs" translatable="false">pref_key_tabs</string>
+    <string name="pref_key_home" translatable="false">pref_key_home</string>
     <string name="pref_key_close_tabs_manually" translatable="false">pref_key_close_tabs_manually</string>
     <string name="pref_key_close_tabs_after_one_day" translatable="false">pref_key_close_tabs_after_one_day</string>
     <string name="pref_key_close_tabs_after_one_week" translatable="false">pref_key_close_tabs_after_one_week</string>

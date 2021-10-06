@@ -55,30 +55,6 @@
 
     <androidx.preference.PreferenceCategory
         android:layout="@layout/preference_cat_style"
-        android:title="@string/preferences_start_on_home"
-        app:allowDividerAbove="true"
-        app:isPreferenceVisible="false"
-        android:key="pref_key_start_on_home_category"
-        app:iconSpaceReserved="false">
-
-        <org.mozilla.fenix.settings.RadioButtonPreference
-            android:defaultValue="true"
-            android:key="@string/pref_key_start_on_home_after_four_hours"
-            android:title="@string/start_on_home_after_four_hours" />
-
-        <org.mozilla.fenix.settings.RadioButtonPreference
-            android:defaultValue="false"
-            android:key="@string/pref_key_start_on_home_always"
-            android:title="@string/start_on_home_always" />
-
-        <org.mozilla.fenix.settings.RadioButtonPreference
-            android:defaultValue="false"
-            android:key="@string/pref_key_start_on_home_never"
-            android:title="@string/start_on_home_never" />
-    </androidx.preference.PreferenceCategory>
-
-    <androidx.preference.PreferenceCategory
-        android:layout="@layout/preference_cat_style"
         android:title="@string/preferences_inactive_tabs"
         android:key="@string/pref_key_inactive_tabs_category"
         app:allowDividerAbove="true"

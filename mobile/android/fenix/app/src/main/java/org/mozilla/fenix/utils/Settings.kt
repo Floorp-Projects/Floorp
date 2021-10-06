@@ -381,7 +381,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      * Indicates if the user has selected the option to start on the home screen after
      * four hours of inactivity.
      */
-    var startOnHomeAfterFourHours by booleanPreference(
+    var openHomepageAfterFourHoursOfInactivity by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_start_on_home_after_four_hours),
         default = true
     )
@@ -389,15 +389,16 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if the user has selected the option to always start on the home screen.
      */
-    var startOnHomeAlways by booleanPreference(
+    var alwaysOpenTheHomepageWhenOpeningTheApp by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_start_on_home_always),
         default = false
     )
 
     /**
-     * Indicates if the user has selected the option to never start on the home screen.
+     * Indicates if the user has selected the option to never start on the home screen and have
+     * their last tab opened.
      */
-    var startOnHomeNever by booleanPreference(
+    var alwaysOpenTheLastTabWhenOpeningTheApp by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_start_on_home_never),
         default = false
     )
@@ -407,9 +408,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     fun shouldStartOnHome(): Boolean {
         return when {
-            startOnHomeAfterFourHours -> timeNowInMillis() - lastBrowseActivity >= FOUR_HOURS_MS
-            startOnHomeAlways -> true
-            startOnHomeNever -> false
+            openHomepageAfterFourHoursOfInactivity -> timeNowInMillis() - lastBrowseActivity >= FOUR_HOURS_MS
+            alwaysOpenTheHomepageWhenOpeningTheApp -> true
+            alwaysOpenTheLastTabWhenOpeningTheApp -> false
             else -> false
         }
     }

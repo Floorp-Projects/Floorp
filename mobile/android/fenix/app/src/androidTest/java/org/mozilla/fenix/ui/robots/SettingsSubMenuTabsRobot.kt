@@ -28,8 +28,6 @@ class SettingsSubMenuTabsRobot {
 
     fun verifyCloseTabsOptions() = assertCloseTabsOptions()
 
-    fun verifyStartOnHomeOptions() = assertStartOnHomeOptions()
-
     fun clickAlwaysStartOnHomeToggle() {
         scrollToElementByText("Move old tabs to inactive")
         alwaysStartOnHomeToggle().click()
@@ -68,17 +66,6 @@ private fun assertCloseTabsOptions() {
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     afterOneMonthToggle()
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-}
-
-private fun assertStartOnHomeOptions() {
-    // Scroll to ensure all the items are visible.
-    scrollToElementByText("Never")
-    startOnHomeHeading()
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    afterFourHoursToggle()
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    alwaysStartOnHomeToggle()
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun tabViewHeading() = onView(withText("Tab view"))

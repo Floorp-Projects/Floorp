@@ -677,18 +677,18 @@ class SettingsTest {
 
     @Test
     fun `GIVEN startOnHomeAlways is selected WHEN calling shouldStartOnHome THEN return true`() {
-        settings.startOnHomeAlways = true
-        settings.startOnHomeNever = false
-        settings.startOnHomeAfterFourHours = false
+        settings.alwaysOpenTheHomepageWhenOpeningTheApp = true
+        settings.alwaysOpenTheLastTabWhenOpeningTheApp = false
+        settings.openHomepageAfterFourHoursOfInactivity = false
 
         assertTrue(settings.shouldStartOnHome())
     }
 
     @Test
     fun `GIVEN startOnHomeNever is selected WHEN calling shouldStartOnHome THEN return be false`() {
-        settings.startOnHomeNever = true
-        settings.startOnHomeAlways = false
-        settings.startOnHomeAfterFourHours = false
+        settings.alwaysOpenTheLastTabWhenOpeningTheApp = true
+        settings.alwaysOpenTheHomepageWhenOpeningTheApp = false
+        settings.openHomepageAfterFourHoursOfInactivity = false
 
         assertFalse(settings.shouldStartOnHome())
     }
@@ -698,9 +698,9 @@ class SettingsTest {
         val localSetting = spyk(settings)
         val now = Calendar.getInstance()
 
-        localSetting.startOnHomeAfterFourHours = true
-        localSetting.startOnHomeNever = false
-        localSetting.startOnHomeAlways = false
+        localSetting.openHomepageAfterFourHoursOfInactivity = true
+        localSetting.alwaysOpenTheLastTabWhenOpeningTheApp = false
+        localSetting.alwaysOpenTheHomepageWhenOpeningTheApp = false
 
         now.timeInMillis = System.currentTimeMillis()
         localSetting.lastBrowseActivity = now.timeInMillis
@@ -716,9 +716,9 @@ class SettingsTest {
         val localSetting = spyk(settings)
         val now = System.currentTimeMillis()
 
-        localSetting.startOnHomeAfterFourHours = true
-        localSetting.startOnHomeNever = false
-        localSetting.startOnHomeAlways = false
+        localSetting.openHomepageAfterFourHoursOfInactivity = true
+        localSetting.alwaysOpenTheLastTabWhenOpeningTheApp = false
+        localSetting.alwaysOpenTheHomepageWhenOpeningTheApp = false
 
         localSetting.lastBrowseActivity = now
 

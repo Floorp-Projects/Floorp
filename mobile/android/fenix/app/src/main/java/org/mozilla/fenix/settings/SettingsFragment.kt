@@ -242,6 +242,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_tabs) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToTabsSettingsFragment()
             }
+            resources.getString(R.string.pref_key_home) -> {
+                SettingsFragmentDirections.actionSettingsFragmentToHomeSettingsFragment()
+            }
             resources.getString(R.string.pref_key_search_settings) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToSearchEngineFragment()
             }

@@ -63,6 +63,7 @@ class SettingsBasicsTest {
         }
     }
 
+    @Ignore // to be fixed https://github.com/mozilla-mobile/fenix/issues/21754
     @Test
     // Walks through settings menu and sub-menus to ensure all items are present
     fun settingsMenuBasicsItemsTests() {

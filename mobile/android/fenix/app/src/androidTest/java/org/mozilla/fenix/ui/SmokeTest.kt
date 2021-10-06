@@ -1434,10 +1434,10 @@ class SmokeTest {
         }.openTabsSubMenu {
             verifyTabViewOptions()
             verifyCloseTabsOptions()
-            verifyStartOnHomeOptions()
         }
     }
 
+    @Ignore // to be fixed here https://github.com/mozilla-mobile/fenix/issues/21747
     @Test
     fun alwaysStartOnHomeTest() {
         val settings = activityTestRule.activity.applicationContext.settings()

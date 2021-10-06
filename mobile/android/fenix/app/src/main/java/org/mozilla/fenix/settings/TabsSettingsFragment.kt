@@ -29,9 +29,6 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
     private lateinit var radioOneDay: RadioButtonPreference
     private lateinit var radioOneWeek: RadioButtonPreference
     private lateinit var radioOneMonth: RadioButtonPreference
-    private lateinit var startOnHomeRadioFourHours: RadioButtonPreference
-    private lateinit var startOnHomeRadioAlways: RadioButtonPreference
-    private lateinit var startOnHomeRadioNever: RadioButtonPreference
     private lateinit var inactiveTabsCategory: PreferenceCategory
     private lateinit var inactiveTabs: SwitchPreference
     private lateinit var searchTermTabGroups: SwitchPreference
@@ -70,13 +67,6 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
         radioOneWeek = requirePreference(R.string.pref_key_close_tabs_after_one_week)
         radioOneDay = requirePreference(R.string.pref_key_close_tabs_after_one_day)
 
-        startOnHomeRadioFourHours = requirePreference(R.string.pref_key_start_on_home_after_four_hours)
-        startOnHomeRadioAlways = requirePreference(R.string.pref_key_start_on_home_always)
-        startOnHomeRadioNever = requirePreference(R.string.pref_key_start_on_home_never)
-
-        requirePreference<PreferenceCategory>(R.string.pref_key_start_on_home_category).isVisible =
-            FeatureFlags.showStartOnHomeSettings
-
         inactiveTabs = requirePreference<SwitchPreference>(R.string.pref_key_inactive_tabs).also {
             it.isChecked = it.context.settings().inactiveTabsAreEnabled
             it.onPreferenceChangeListener = SharedPreferenceUpdater()
@@ -109,12 +99,6 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
             radioOneDay,
             radioOneMonth,
             radioOneWeek
-        )
-
-        addToRadioGroup(
-            startOnHomeRadioFourHours,
-            startOnHomeRadioAlways,
-            startOnHomeRadioNever
         )
     }
 
