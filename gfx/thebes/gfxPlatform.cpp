@@ -65,6 +65,7 @@
 
 #if defined(XP_WIN)
 #  include "gfxWindowsPlatform.h"
+#  include "mozilla/widget/WinWindowOcclusionTracker.h"
 #elif defined(XP_MACOSX)
 #  include "gfxPlatformMac.h"
 #  include "gfxQuartzSurface.h"
@@ -1265,6 +1266,9 @@ void gfxPlatform::InitLayersIPC() {
   sLayersIPCIsUp = true;
 
   if (XRE_IsParentProcess()) {
+#if defined(XP_WIN)
+    widget::WinWindowOcclusionTracker::Start();
+#endif
     if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS) && UseWebRender()) {
       wr::RenderThread::Start();
       image::ImageMemoryReporter::InitForWebRender();
@@ -1310,7 +1314,9 @@ void gfxPlatform::ShutdownLayersIPC() {
           nsDependentCString(
               StaticPrefs::GetPrefName_gfx_webrender_blob_tile_size()));
     }
-
+#if defined(XP_WIN)
+    widget::WinWindowOcclusionTracker::ShutDown();
+#endif
   } else {
     // TODO: There are other kind of processes and we should make sure gfx
     // stuff is either not created there or shut down properly.

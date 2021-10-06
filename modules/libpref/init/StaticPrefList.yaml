@@ -11918,7 +11918,23 @@
   type: bool
   value: false
   mirror: always
+
+- name: widget.windows.window_occlusion_tracking.enabled
+  type: bool
+  value: false
+  mirror: always
+
+- name: widget.windows.window_occlusion_tracking_display_state.enabled
+  type: bool
+  value: false
+  mirror: always
+
+- name: widget.windows.window_occlusion_tracking_session_lock.enabled
+  type: bool
+  value: false
+  mirror: always
 #endif
+
 
 #---------------------------------------------------------------------------
 # Prefs starting with "xul."

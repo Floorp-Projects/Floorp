@@ -29,11 +29,13 @@ WIN_LIBS=                                       \
 
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Span.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIPrintSettings.h"
 #include "nsIPrintSettingsWin.h"
 #include "nsIPrinterList.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsRect.h"
 
@@ -334,7 +336,8 @@ static nsresult ShowNativePrintDialog(HWND aHWnd,
   AutoTArray<int32_t, kMinSupportedRanges * 2> pageRanges;
   if (prntdlg.Flags & PD_PAGENUMS) {
     pageRanges.SetCapacity(prntdlg.nPageRanges * 2);
-    for (const auto& range : Span(prntdlg.lpPageRanges, prntdlg.nPageRanges)) {
+    for (const auto& range :
+         mozilla::Span(prntdlg.lpPageRanges, prntdlg.nPageRanges)) {
       pageRanges.AppendElement(range.nFromPage);
       pageRanges.AppendElement(range.nToPage);
     }

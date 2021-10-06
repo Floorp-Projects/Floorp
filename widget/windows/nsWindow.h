@@ -365,6 +365,8 @@ class nsWindow final : public nsWindowBase {
 
   virtual void LocalesChanged() override;
 
+  void NotifyOcclusionState(mozilla::widget::OcclusionState aState) override;
+
  protected:
   virtual ~nsWindow();
 
@@ -577,11 +579,14 @@ class nsWindow final : public nsWindowBase {
       const RECT& aRequiredClip);
 
   void CreateCompositor() override;
+  void DestroyCompositor() override;
   void RequestFxrOutput();
 
   void RecreateDirectManipulationIfNeeded();
   void ResizeDirectManipulationViewport();
   void DestroyDirectManipulation();
+
+  bool NeedsToTrackWindowOcclusionState();
 
  protected:
   nsCOMPtr<nsIWidget> mParent;
