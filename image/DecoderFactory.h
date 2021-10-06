@@ -13,6 +13,7 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/gfx/2D.h"
 #include "nsCOMPtr.h"
+#include "Orientation.h"
 #include "SurfaceFlags.h"
 
 namespace mozilla::image {
@@ -154,7 +155,7 @@ class DecoderFactory {
   static already_AddRefed<Decoder> CreateDecoderForICOResource(
       DecoderType aType, SourceBufferIterator&& aIterator,
       NotNull<nsICODecoder*> aICODecoder, bool aIsMetadataDecode,
-      const Maybe<gfx::IntSize>& aExpectedSize,
+      const Maybe<OrientedIntSize>& aExpectedSize,
       const Maybe<uint32_t>& aDataOffset = Nothing());
 
   /**

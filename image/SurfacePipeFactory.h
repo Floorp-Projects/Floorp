@@ -89,8 +89,8 @@ class SurfacePipeFactory {
    *         initialized.
    */
   static Maybe<SurfacePipe> CreateSurfacePipe(
-      Decoder* aDecoder, const nsIntSize& aInputSize,
-      const nsIntSize& aOutputSize, const nsIntRect& aFrameRect,
+      Decoder* aDecoder, const OrientedIntSize& aInputSize,
+      const OrientedIntSize& aOutputSize, const OrientedIntRect& aFrameRect,
       gfx::SurfaceFormat aInFormat, gfx::SurfaceFormat aOutFormat,
       const Maybe<AnimationParams>& aAnimParams, qcms_transform* aTransform,
       SurfacePipeFlags aFlags) {
@@ -101,7 +101,7 @@ class SurfacePipeFactory {
         bool(aFlags & SurfacePipeFlags::PROGRESSIVE_DISPLAY);
     const bool downscale = aInputSize != aOutputSize;
     const bool removeFrameRect = !aFrameRect.IsEqualEdges(
-        nsIntRect(0, 0, aInputSize.width, aInputSize.height));
+        OrientedIntRect(OrientedIntPoint(0, 0), aInputSize));
     const bool blendAnimation = aAnimParams.isSome();
     const bool colorManagement = aTransform != nullptr;
     const bool premultiplyAlpha =
@@ -174,13 +174,13 @@ class SurfacePipeFactory {
     // account.
     DeinterlacingConfig<uint32_t> deinterlacingConfig{progressiveDisplay};
     ADAM7InterpolatingConfig interpolatingConfig;
-    RemoveFrameRectConfig removeFrameRectConfig{aFrameRect};
+    RemoveFrameRectConfig removeFrameRectConfig{aFrameRect.ToUnknownRect()};
     BlendAnimationConfig blendAnimationConfig{aDecoder};
-    DownscalingConfig downscalingConfig{aInputSize, aOutFormat};
+    DownscalingConfig downscalingConfig{aInputSize.ToUnknownSize(), aOutFormat};
     ColorManagementConfig colorManagementConfig{aTransform};
     SwizzleConfig swizzleConfig{aInFormat, aOutFormat, premultiplyAlpha};
-    SurfaceConfig surfaceConfig{aDecoder, aOutputSize, aOutFormat,
-                                flipVertically, aAnimParams};
+    SurfaceConfig surfaceConfig{aDecoder, aOutputSize.ToUnknownSize(),
+                                aOutFormat, flipVertically, aAnimParams};
 
     Maybe<SurfacePipe> pipe;
 

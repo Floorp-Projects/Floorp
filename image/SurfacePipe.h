@@ -35,6 +35,7 @@
 #include "mozilla/Variant.h"
 #include "mozilla/gfx/2D.h"
 #include "nsDebug.h"
+#include "Orientation.h"
 
 namespace mozilla {
 namespace image {
@@ -47,8 +48,9 @@ class Decoder;
  * of the output surface (after all SurfaceFilters).
  */
 struct SurfaceInvalidRect {
-  gfx::IntRect mInputSpaceRect;  /// The invalid rect in pre-SurfacePipe space.
-  gfx::IntRect
+  OrientedIntRect
+      mInputSpaceRect;  /// The invalid rect in pre-SurfacePipe space.
+  OrientedIntRect
       mOutputSpaceRect;  /// The invalid rect in post-SurfacePipe space.
 };
 
@@ -774,7 +776,7 @@ class AbstractSurfaceSink : public SurfaceFilter {
   uint8_t* DoAdvanceRow() final;
   virtual uint8_t* GetRowPointer() const = 0;
 
-  gfx::IntRect
+  OrientedIntRect
       mInvalidRect;     /// The region of the surface that has been written
                         /// to since the last call to TakeInvalidRect().
   uint8_t* mImageData;  /// A pointer to the beginning of the surface data.

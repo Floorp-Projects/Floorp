@@ -78,7 +78,7 @@ class nsICODecoder : public Decoder {
   LexerTransition<ICOState> FinishResource();
 
   struct IconDirEntryEx : public IconDirEntry {
-    gfx::IntSize mSize;
+    OrientedIntSize mSize;
   };
 
   StreamingLexer<ICOState, 32> mLexer;  // The lexer.

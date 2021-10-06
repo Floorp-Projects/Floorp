@@ -194,12 +194,11 @@ class RasterImage final : public ImageResource,
    *                      these notifications, or DefaultSurfaceFlags() if the
    *                      notifications don't come from a decoder.
    */
-  void NotifyProgress(
-      Progress aProgress,
-      const UnorientedIntRect& aInvalidRect = UnorientedIntRect(),
-      const Maybe<uint32_t>& aFrameCount = Nothing(),
-      DecoderFlags aDecoderFlags = DefaultDecoderFlags(),
-      SurfaceFlags aSurfaceFlags = DefaultSurfaceFlags());
+  void NotifyProgress(Progress aProgress,
+                      const OrientedIntRect& aInvalidRect = OrientedIntRect(),
+                      const Maybe<uint32_t>& aFrameCount = Nothing(),
+                      DecoderFlags aDecoderFlags = DefaultDecoderFlags(),
+                      SurfaceFlags aSurfaceFlags = DefaultSurfaceFlags());
 
   /**
    * Records decoding results, sends out any final notifications, updates the
@@ -222,7 +221,7 @@ class RasterImage final : public ImageResource,
   void NotifyDecodeComplete(
       const DecoderFinalStatus& aStatus, const ImageMetadata& aMetadata,
       const DecoderTelemetry& aTelemetry, Progress aProgress,
-      const UnorientedIntRect& aInvalidRect, const Maybe<uint32_t>& aFrameCount,
+      const OrientedIntRect& aInvalidRect, const Maybe<uint32_t>& aFrameCount,
       DecoderFlags aDecoderFlags, SurfaceFlags aSurfaceFlags);
 
   // Helper method for NotifyDecodeComplete.
@@ -281,16 +280,16 @@ class RasterImage final : public ImageResource,
    * @return a drawable surface, which may be empty if the requested surface
    *         could not be found.
    */
-  LookupResult LookupFrame(const UnorientedIntSize& aSize, uint32_t aFlags,
+  LookupResult LookupFrame(const OrientedIntSize& aSize, uint32_t aFlags,
                            PlaybackType aPlaybackType, bool aMarkUsed);
 
   /// Helper method for LookupFrame().
-  LookupResult LookupFrameInternal(const UnorientedIntSize& aSize,
+  LookupResult LookupFrameInternal(const OrientedIntSize& aSize,
                                    uint32_t aFlags, PlaybackType aPlaybackType,
                                    bool aMarkUsed);
 
   ImgDrawResult DrawInternal(DrawableSurface&& aFrameRef, gfxContext* aContext,
-                             const UnorientedIntSize& aSize,
+                             const OrientedIntSize& aSize,
                              const ImageRegion& aRegion,
                              gfx::SamplingFilter aSamplingFilter,
                              uint32_t aFlags, float aOpacity);
@@ -322,7 +321,7 @@ class RasterImage final : public ImageResource,
    * aOutRanSync is set to true if the decode was run synchronously.
    * aOutFailed is set to true if failed to start a decode.
    */
-  void Decode(const UnorientedIntSize& aSize, uint32_t aFlags,
+  void Decode(const OrientedIntSize& aSize, uint32_t aFlags,
               PlaybackType aPlaybackType, bool& aOutRanSync, bool& aOutFailed);
 
   /**
@@ -358,8 +357,7 @@ class RasterImage final : public ImageResource,
    * RecoverFromInvalidFrames discards all existing frames and redecodes using
    * the provided @aSize and @aFlags.
    */
-  void RecoverFromInvalidFrames(const UnorientedIntSize& aSize,
-                                uint32_t aFlags);
+  void RecoverFromInvalidFrames(const OrientedIntSize& aSize, uint32_t aFlags);
 
   void OnSurfaceDiscardedInternal(bool aAnimatedFramesDiscarded);
 
@@ -463,8 +461,7 @@ class RasterImage final : public ImageResource,
 
   // Determines whether we can downscale during decode with the given
   // parameters.
-  bool CanDownscaleDuringDecode(const UnorientedIntSize& aSize,
-                                uint32_t aFlags);
+  bool CanDownscaleDuringDecode(const OrientedIntSize& aSize, uint32_t aFlags);
 
   // Error handling.
   void DoError();
@@ -491,7 +488,7 @@ class RasterImage final : public ImageResource,
 
   bool IsOpaque();
 
-  LookupResult RequestDecodeForSizeInternal(const UnorientedIntSize& aSize,
+  LookupResult RequestDecodeForSizeInternal(const OrientedIntSize& aSize,
                                             uint32_t aFlags,
                                             uint32_t aWhichFrame);
 
