@@ -4,7 +4,7 @@
 
 @file:Suppress("MagicNumber")
 
-package org.mozilla.fenix.home.sessioncontrol.viewholders.pocket
+package org.mozilla.fenix.home.pocket
 
 import android.net.Uri
 import androidx.compose.foundation.background

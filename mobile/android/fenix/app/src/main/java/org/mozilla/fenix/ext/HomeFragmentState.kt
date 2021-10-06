@@ -7,8 +7,8 @@ package org.mozilla.fenix.ext
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.home.HomeFragmentState
-import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.POCKET_STORIES_DEFAULT_CATEGORY_NAME
-import org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoriesCategory
+import org.mozilla.fenix.home.pocket.POCKET_STORIES_DEFAULT_CATEGORY_NAME
+import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 
 /**
  * Get the list of stories to be displayed based on the user selected categories.

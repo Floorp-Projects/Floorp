@@ -13,7 +13,7 @@ option java_multiple_files = true;
 message SelectedPocketStoriesCategories {
 
   // Details about a selected Pocket recommended stories category.
-  // See [org.mozilla.fenix.home.sessioncontrol.viewholders.pocket.PocketRecommendedStoriesSelectedCategory]
+  // See [org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory]
   message SelectedPocketStoriesCategory {
     // Name of this category.
     string name = 1;

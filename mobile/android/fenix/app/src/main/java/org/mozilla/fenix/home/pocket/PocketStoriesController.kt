@@ -2,12 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.home.sessioncontrol.viewholders.pocket
+package org.mozilla.fenix.home.pocket
 
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
-import org.mozilla.fenix.home.HomeFragmentAction
-import org.mozilla.fenix.home.HomeFragmentStore
 import mozilla.components.lib.state.Store
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.BrowserDirection
@@ -15,6 +13,8 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.home.HomeFragmentAction
+import org.mozilla.fenix.home.HomeFragmentStore
 
 /**
  * Contract for how all user interactions with the Pocket recommended stories feature are to be handled.
@@ -32,7 +32,7 @@ interface PocketStoriesController {
      *
      * @param categoryClicked the just clicked [PocketRecommendedStoriesCategory].
      */
-    fun handleCategoryClick(categoryClicked: PocketRecommendedStoriesCategory): Unit
+    fun handleCategoryClick(categoryClicked: PocketRecommendedStoriesCategory)
 
     /**
      * Callback for when the user clicks on a specific story.
