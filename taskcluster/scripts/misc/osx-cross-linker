@@ -1,7 +1,7 @@
 exec $MOZ_FETCHES_DIR/clang/bin/clang -v \
   -fuse-ld=$MOZ_FETCHES_DIR/cctools/bin/$TARGET-ld \
-  -mmacosx-version-min=${SDK_VER:-10.12} \
+  -mmacosx-version-min=${MACOSX_DEPLOYMENT_TARGET:-10.12} \
   -target $TARGET \
   -B $MOZ_FETCHES_DIR/cctools/bin \
-  -isysroot $MOZ_FETCHES_DIR/MacOSX${SDK_VER:-10.12}.sdk \
+  -isysroot $MOZ_FETCHES_DIR/MacOSX${SDK_VER:-11.0}.sdk \
   "$@"

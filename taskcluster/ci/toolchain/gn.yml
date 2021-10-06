@@ -32,7 +32,7 @@ macosx64-gn:
         toolchain:
             - linux64-cctools-port-clang-12
             - linux64-clang-12
-            - macosx64-sdk-10.12
+            - macosx64-sdk-11.0
 
 win32-gn:
     treeherder:

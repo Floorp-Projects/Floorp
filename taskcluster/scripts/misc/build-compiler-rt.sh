@@ -10,7 +10,7 @@ clang=$MOZ_FETCHES_DIR/clang/bin/clang
 case "$target" in
 aarch64-apple-darwin)
   arch=arm64
-  sdk=11.0
+  export MACOSX_DEPLOYMENT_TARGET=11.0
   compiler_wrapper() {
     echo exec \$MOZ_FETCHES_DIR/clang/bin/$1 -mcpu=apple-a12 \"\$@\" > $1
     chmod +x $1
@@ -21,7 +21,7 @@ aarch64-apple-darwin)
   ;;
 x86_64-apple-darwin)
   arch=x86_64
-  sdk=10.12
+  export MACOSX_DEPLOYMENT_TARGET=10.12
   ;;
 esac
 
@@ -32,11 +32,11 @@ case "$target" in
     -DCMAKE_LINKER=$MOZ_FETCHES_DIR/cctools/bin/$target-ld
     -DCMAKE_LIPO=$MOZ_FETCHES_DIR/cctools/bin/lipo
     -DCMAKE_SYSTEM_NAME=Darwin
-    -DCMAKE_SYSTEM_VERSION=$sdk
-    -DCMAKE_OSX_SYSROOT=$MOZ_FETCHES_DIR/MacOSX$sdk.sdk
+    -DCMAKE_SYSTEM_VERSION=$MACOSX_DEPLOYMENT_TARGET
+    -DCMAKE_OSX_SYSROOT=$MOZ_FETCHES_DIR/MacOSX11.0.sdk
     -DDARWIN_osx_ARCHS=$arch
-    -DDARWIN_osx_SYSROOT=$MOZ_FETCHES_DIR/MacOSX$sdk.sdk
-    -DDARWIN_macosx_OVERRIDE_SDK_VERSION=$sdk
+    -DDARWIN_osx_SYSROOT=$MOZ_FETCHES_DIR/MacOSX11.0.sdk
+    -DDARWIN_macosx_OVERRIDE_SDK_VERSION=11.0
     -DDARWIN_osx_BUILTIN_ARCHS=$arch
   "
   # compiler-rt build script expects to find `codesign` in $PATH.

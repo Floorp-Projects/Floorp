@@ -28,10 +28,12 @@ x86_64-unknown-linux-gnu)
     export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
     export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
     if test "$TARGET" = "aarch64-apple-darwin"; then
-        export SDK_VER=11.0
+        export MACOSX_DEPLOYMENT_TARGET=11.0
+    else
+        export MACOSX_DEPLOYMENT_TARGET=10.12
     fi
-    export TARGET_CC="$CC -isysroot $MOZ_FETCHES_DIR/MacOSX${SDK_VER:-10.12}.sdk"
-    export TARGET_CXX="$CXX -isysroot $MOZ_FETCHES_DIR/MacOSX${SDK_VER:-10.12}.sdk"
+    export TARGET_CC="$CC -isysroot $MOZ_FETCHES_DIR/MacOSX11.0.sdk"
+    export TARGET_CXX="$CXX -isysroot $MOZ_FETCHES_DIR/MacOSX11.0.sdk"
     ;;
 i686-pc-windows-msvc)
     # Cross-compiling for Windows on Linux.
