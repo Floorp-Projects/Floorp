@@ -21,7 +21,7 @@ case "$1" in
 macosx64)
     TOOLCHAINS="cctools rustc clang"
     echo ac_add_options --target=x86_64-apple-darwin >> .mozconfig
-    echo ac_add_options --with-macos-sdk=$MOZ_FETCHES_DIR/MacOSX10.12.sdk >> .mozconfig
+    echo ac_add_options --with-macos-sdk=$MOZ_FETCHES_DIR/MacOSX11.0.sdk >> .mozconfig
     ;;
 macosx64-aarch64)
     TOOLCHAINS="cctools rustc clang"

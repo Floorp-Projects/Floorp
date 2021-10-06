@@ -32,12 +32,14 @@ Linux)
         export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
         export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
         export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
-        export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
         if test "$TARGET" = "aarch64-apple-darwin"; then
-            export SDK_VER=11.0
+            export MACOSX_DEPLOYMENT_TARGET=11.0
+        else
+            export MACOSX_DEPLOYMENT_TARGET=10.12
         fi
-        export TARGET_CC="$MOZ_FETCHES_DIR/clang/bin/clang -isysroot $MOZ_FETCHES_DIR/MacOSX${SDK_VER:-10.12}.sdk"
-        export TARGET_CXX="$MOZ_FETCHES_DIR/clang/bin/clang++ -isysroot $MOZ_FETCHES_DIR/MacOSX${SDK_VER:-10.12}.sdk -stdlib=libc++"
+        export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
+        export TARGET_CC="$MOZ_FETCHES_DIR/clang/bin/clang -isysroot $MOZ_FETCHES_DIR/MacOSX11.0.sdk"
+        export TARGET_CXX="$MOZ_FETCHES_DIR/clang/bin/clang++ -isysroot $MOZ_FETCHES_DIR/MacOSX11.0.sdk -stdlib=libc++"
         cargo build --verbose --release --target $TARGET
         ;;
     *)
