@@ -307,14 +307,16 @@ def parse_chrome_manifest(path, base_path, chrome_entries):
 #    str - Version to use, may include buildid
 #
 ###
-def get_version_maybe_buildid(min_version):
-    version = str(min_version)
+def get_version_maybe_buildid(version):
     buildid = os.environ.get("MOZ_BUILD_DATE")
     if buildid and len(buildid) != 14:
         print("Ignoring invalid MOZ_BUILD_DATE: %s" % buildid, file=sys.stderr)
         buildid = None
     if buildid:
-        version = version + "buildid" + buildid
+        # Split into date/time parts so no part is >= 2^31 (bug 1732676)
+        # Bug 1733396 may revisit that limit
+        date, time = buildid[:8], buildid[8:]
+        version = f"{version}buildid{date}.{time}"
     return version
 
 
@@ -384,6 +386,7 @@ def get_version_maybe_buildid(min_version):
 ###
 def create_webmanifest(
     locstr,
+    version,
     min_app_ver,
     max_app_ver,
     app_name,
@@ -414,7 +417,7 @@ def create_webmanifest(
         },
         "name": "{0} Language Pack".format(defines["MOZ_LANG_TITLE"]),
         "description": "Language pack for {0} for {1}".format(app_name, main_locale),
-        "version": get_version_maybe_buildid(min_app_ver),
+        "version": get_version_maybe_buildid(version),
         "languages": {},
         "sources": {"browser": {"base_path": "browser/"}},
         "author": author,
@@ -449,9 +452,7 @@ def main(args):
     parser.add_argument(
         "--locales", help="List of language codes provided by the langpack"
     )
-    parser.add_argument(
-        "--min-app-ver", help="Min version of the application the langpack is for"
-    )
+    parser.add_argument("--app-version", help="Version of the application")
     parser.add_argument(
         "--max-app-ver", help="Max version of the application the langpack is for"
     )
@@ -481,7 +482,8 @@ def main(args):
 
     defines = parse_defines(args.defines)
 
-    min_app_version = args.min_app_ver
+    # Mangle the app version to set min version (remove patch level)
+    min_app_version = args.app_version
     if "a" not in min_app_version:  # Don't mangle alpha versions
         v = Version(min_app_version)
         if args.app_name == "SeaMonkey":
@@ -494,6 +496,7 @@ def main(args):
 
     res = create_webmanifest(
         args.locales,
+        args.app_version,
         min_app_version,
         args.max_app_ver,
         args.app_name,
