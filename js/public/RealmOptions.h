@@ -184,7 +184,11 @@ class JS_PUBLIC_API RealmCreationOptions {
 
   bool getStreamsEnabled() const { return streams_; }
   RealmCreationOptions& setStreamsEnabled(bool flag) {
+#ifndef MOZ_DOM_STREAMS
     streams_ = flag;
+#else
+    MOZ_ASSERT(!streams_);
+#endif
     return *this;
   }
 

@@ -7,13 +7,16 @@
 #ifndef mozilla_dom_ReadableStream_h
 #define mozilla_dom_ReadableStream_h
 
-#include "js/experimental/TypedData.h"
-#include "mozilla/dom/SpiderMonkeyInterface.h"
-
+#ifdef MOZ_DOM_STREAMS
+#  error "This shouldn't have been included"
+#else
+#  include "js/experimental/TypedData.h"
+#  include "mozilla/dom/SpiderMonkeyInterface.h"
 namespace mozilla {
 namespace dom {
 
-struct ReadableStream : public SpiderMonkeyInterfaceObjectStorage {
+class ReadableStream : public SpiderMonkeyInterfaceObjectStorage {
+ public:
   inline bool Init(JSObject* obj) {
     MOZ_ASSERT(!inited());
     mImplObj = mWrappedObj = js::UnwrapReadableStream(obj);
@@ -23,5 +26,5 @@ struct ReadableStream : public SpiderMonkeyInterfaceObjectStorage {
 
 }  // namespace dom
 }  // namespace mozilla
-
+#endif
 #endif /* mozilla_dom_ReadableStream_h */

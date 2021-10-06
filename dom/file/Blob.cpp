@@ -348,6 +348,7 @@ NS_INTERFACE_MAP_END_INHERITING(BodyStreamHolder)
 
 }  // anonymous namespace
 
+#ifndef MOZ_DOM_STREAMS
 void Blob::Stream(JSContext* aCx, JS::MutableHandle<JSObject*> aStream,
                   ErrorResult& aRv) {
   nsCOMPtr<nsIInputStream> stream;
@@ -370,5 +371,6 @@ void Blob::Stream(JSContext* aCx, JS::MutableHandle<JSObject*> aStream,
 
   aStream.set(holder->GetReadableStreamBody());
 }
+#endif
 
 }  // namespace mozilla::dom

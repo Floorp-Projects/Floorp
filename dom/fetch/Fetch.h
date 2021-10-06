@@ -39,7 +39,7 @@ class BlobImpl;
 class InternalRequest;
 class
     OwningBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString;
-struct ReadableStream;
+class ReadableStream;
 class RequestOrUSVString;
 class WorkerPrivate;
 
@@ -157,9 +157,14 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
     return ConsumeBody(aCx, BodyConsumer::CONSUME_TEXT, aRv);
   }
 
+#ifdef MOZ_DOM_STREAMS
+  already_AddRefed<ReadableStream> GetBody(ErrorResult& aRv) {
+    MOZ_CRASH("MOZ_DOM_STREAMS:NYI");
+  }
+#else
   void GetBody(JSContext* aCx, JS::MutableHandle<JSObject*> aBodyOut,
                ErrorResult& aRv);
-
+#endif
   void GetMimeType(nsACString& aMimeType);
 
   const nsACString& BodyBlobURISpec() const;

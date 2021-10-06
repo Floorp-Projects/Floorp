@@ -110,6 +110,9 @@ DIRS += [
     "l10n",
 ]
 
+if CONFIG["MOZ_DOM_STREAMS"]:
+    DIRS += ["streams"]
+
 TEST_DIRS += [
     "tests",
     "imptests",

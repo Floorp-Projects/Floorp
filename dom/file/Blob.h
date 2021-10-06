@@ -28,6 +28,10 @@ class GlobalObject;
 class OwningArrayBufferViewOrArrayBufferOrBlobOrUSVString;
 class Promise;
 
+#ifdef MOZ_DOM_STREAMS
+class ReadableStream;
+#endif
+
 #define NS_DOM_BLOB_IID                              \
   {                                                  \
     0x648c2a83, 0xbdb1, 0x4a7d, {                    \
@@ -118,8 +122,14 @@ class Blob : public nsSupportsWeakReference, public nsWrapperCache {
   nsresult GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
                        nsACString& aContentType, nsACString& aCharset) const;
 
+#ifdef MOZ_DOM_STREAMS
+  already_AddRefed<ReadableStream> Stream(ErrorResult& aRv) {
+    MOZ_CRASH("MOZ_DOM_STREAMS: NYI");
+  }
+#else
   void Stream(JSContext* aCx, JS::MutableHandle<JSObject*> aStream,
               ErrorResult& aRv);
+#endif
   already_AddRefed<Promise> Text(ErrorResult& aRv);
   already_AddRefed<Promise> ArrayBuffer(ErrorResult& aRv);
 
