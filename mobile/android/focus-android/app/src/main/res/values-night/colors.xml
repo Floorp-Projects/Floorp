@@ -36,6 +36,13 @@
     <color name="headerGradientMiddle">#281D4C</color>
     <color name="headerGradientEnd">#2A2051</color>
 
+    <color name="homeGradient1">#FF1E1236</color>
+    <color name="homeGradient2">#FF332866</color>
+    <color name="homeGradient3">#FF4D3A83</color>
+    <color name="homeGradient4">#FF3C286A</color>
+    <color name="homeGradient5">#FF21163E</color>
+    <color name="homeGradient6">#FF1D1133</color>
+
     <!-- Progress Bar -->
     <color name="colorProgressGradientStart">#FFFF1AD9</color>
     <color name="colorProgressGradientCenter">#FFFF1AD9</color>

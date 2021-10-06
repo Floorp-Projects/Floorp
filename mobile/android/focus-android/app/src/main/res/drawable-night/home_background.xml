@@ -19,14 +19,13 @@
           android:endY="1300.53"
           android:endX="-407.443"
           android:type="linear">
-        <item android:offset="0.015625" android:color="#D3D4FA"/>
-        <item android:offset="0.220059" android:color="#D7D6F9"/>
-        <item android:offset="0.416448" android:color="#ECEAFA"/>
-        <item android:offset="0.623772" android:color="#F5F4FE"/>
-        <item android:offset="0.757442" android:color="#D9D3F5"/>
-        <item android:offset="0.895833" android:color="#D6C9EB"/>
+        <item android:offset="0.015625" android:color="#FF1E1236"/>
+        <item android:offset="0.220059" android:color="#FF332866"/>
+        <item android:offset="0.416448" android:color="#FF4D3A83"/>
+        <item android:offset="0.623772" android:color="#FF3C286A"/>
+        <item android:offset="0.757442" android:color="#FF21163E"/>
+        <item android:offset="0.895833" android:color="#FF1D1133"/>
       </gradient>
     </aapt:attr>
   </path>
 </vector>
-
