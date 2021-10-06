@@ -32,6 +32,9 @@ class HTMLElement final : public nsGenericHTMLFormElement {
   already_AddRefed<mozilla::dom::ElementInternals> AttachInternals(
       ErrorResult& aRv) override;
 
+  // nsGenericHTMLFormElement
+  bool IsFormAssociatedElement() const override;
+
   void UpdateFormOwner();
 
  protected:
@@ -47,7 +50,6 @@ class HTMLElement final : public nsGenericHTMLFormElement {
   HTMLFieldSetElement* GetFieldSetInternal() const override;
   bool CanBeDisabled() const override;
   bool DoesReadOnlyApply() const override;
-  bool IsFormAssociatedElement() const override;
 
   ElementInternals* GetElementInternals() const;
 };
