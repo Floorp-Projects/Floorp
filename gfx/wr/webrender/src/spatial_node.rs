@@ -161,7 +161,6 @@ impl SceneSpatialNode {
             source_transform,
             kind,
             origin_in_parent_reference_frame,
-            invertible: true,
         };
         Self::new(
             pipeline_id,
@@ -438,6 +437,8 @@ impl SpatialNode {
     ) {
         let state = state_stack.last().unwrap();
 
+        self.is_ancestor_or_self_zooming = self.is_async_zooming | state.is_ancestor_or_self_zooming;
+
         // If any of our parents was not rendered, we are not rendered either and can just
         // quit here.
         if !state.invertible {
@@ -450,23 +451,9 @@ impl SpatialNode {
             coord_systems,
             scene_properties,
         );
-        //TODO: remove the field entirely?
-        self.transform_kind = if self.coordinate_system_id.0 == 0 {
-            TransformedRectKind::AxisAligned
-        } else {
-            TransformedRectKind::Complex
-        };
 
-        self.is_ancestor_or_self_zooming = self.is_async_zooming | state.is_ancestor_or_self_zooming;
-
-        // If this node is a reference frame, we check if it has a non-invertible matrix.
-        // For non-reference-frames we assume that they will produce only additional
-        // translations which should be invertible.
-        match self.node_type {
-            SpatialNodeType::ReferenceFrame(info) if !info.invertible => {
-                self.mark_uninvertible(state);
-            }
-            _ => self.invertible = true,
+        if !self.invertible {
+            self.mark_uninvertible(state);
         }
     }
 
@@ -478,120 +465,121 @@ impl SpatialNode {
     ) {
         let state = state_stack.last().unwrap();
 
+        // Start by assuming we're invertible
+        self.invertible = true;
+
         match self.node_type {
             SpatialNodeType::ReferenceFrame(ref mut info) => {
                 let mut cs_scale_offset = ScaleOffset::identity();
                 let mut coordinate_system_id = state.current_coordinate_system_id;
 
-                if info.invertible {
-                    // Resolve the transform against any property bindings.
-                    let source_transform = {
-                        let source_transform = scene_properties.resolve_layout_transform(&info.source_transform);
-                        if let ReferenceFrameKind::Transform { is_2d_scale_translation: true, .. } = info.kind {
-                            assert!(source_transform.is_2d_scale_translation(), "Reference frame was marked as only having 2d scale or translation");
-                        }
-
-                        LayoutFastTransform::from(source_transform)
-                    };
-
-                    // Do a change-basis operation on the perspective matrix using
-                    // the scroll offset.
-                    let source_transform = match info.kind {
-                        ReferenceFrameKind::Perspective { scrolling_relative_to: Some(external_id) } => {
-                            let mut scroll_offset = LayoutVector2D::zero();
-
-                            for parent_state in state_stack.iter().rev() {
-                                if let Some(parent_external_id) = parent_state.external_id {
-                                    if parent_external_id == external_id {
-                                        break;
-                                    }
-                                }
-
-                                scroll_offset += parent_state.scroll_offset;
-                            }
-
-                            // Do a change-basis operation on the
-                            // perspective matrix using the scroll offset.
-                            source_transform
-                                .pre_translate(scroll_offset)
-                                .then_translate(-scroll_offset)
-                        }
-                        ReferenceFrameKind::Perspective { scrolling_relative_to: None } |
-                        ReferenceFrameKind::Transform { .. } => source_transform,
-                    };
-
-                    let resolved_transform =
-                        LayoutFastTransform::with_vector(info.origin_in_parent_reference_frame)
-                            .pre_transform(&source_transform);
-
-                    // The transformation for this viewport in world coordinates is the transformation for
-                    // our parent reference frame, plus any accumulated scrolling offsets from nodes
-                    // between our reference frame and this node. Finally, we also include
-                    // whatever local transformation this reference frame provides.
-                    let relative_transform = resolved_transform
-                        .then_translate(snap_offset(state.parent_accumulated_scroll_offset, state.coordinate_system_relative_scale_offset.scale))
-                        .to_transform()
-                        .with_destination::<LayoutPixel>();
-
-                    let mut reset_cs_id = match info.transform_style {
-                        TransformStyle::Preserve3D => !state.preserves_3d,
-                        TransformStyle::Flat => state.preserves_3d,
-                    };
-
-                    // We reset the coordinate system upon either crossing the preserve-3d context boundary,
-                    // or simply a 3D transformation.
-                    if !reset_cs_id {
-                        // Try to update our compatible coordinate system transform. If we cannot, start a new
-                        // incompatible coordinate system.
-                        match ScaleOffset::from_transform(&relative_transform) {
-                            Some(ref scale_offset) => {
-                                // We generally do not want to snap animated transforms as it causes jitter.
-                                // However, we do want to snap the visual viewport offset when scrolling.
-                                // This may still cause jitter when zooming, unfortunately.
-                                let mut maybe_snapped = scale_offset.clone();
-                                if let ReferenceFrameKind::Transform { should_snap: true, .. } = info.kind {
-                                    maybe_snapped.offset = snap_offset(
-                                        scale_offset.offset,
-                                        state.coordinate_system_relative_scale_offset.scale,
-                                    );
-                                }
-                                cs_scale_offset =
-                                    state.coordinate_system_relative_scale_offset.accumulate(&maybe_snapped);
-                            }
-                            None => reset_cs_id = true,
-                        }
+                // Resolve the transform against any property bindings.
+                let source_transform = {
+                    let source_transform = scene_properties.resolve_layout_transform(&info.source_transform);
+                    if let ReferenceFrameKind::Transform { is_2d_scale_translation: true, .. } = info.kind {
+                        assert!(source_transform.is_2d_scale_translation(), "Reference frame was marked as only having 2d scale or translation");
                     }
-                    if reset_cs_id {
-                        // If we break 2D axis alignment or have a perspective component, we need to start a
-                        // new incompatible coordinate system with which we cannot share clips without masking.
-                        let transform = relative_transform.then(
-                            &state.coordinate_system_relative_scale_offset.to_transform()
-                        );
 
-                        // Push that new coordinate system and record the new id.
-                        let coord_system = {
-                            let parent_system = &coord_systems[state.current_coordinate_system_id.0 as usize];
-                            let mut cur_transform = transform;
-                            if parent_system.should_flatten {
-                                cur_transform.flatten_z_output();
-                            }
-                            let world_transform = cur_transform.then(&parent_system.world_transform);
-                            let determinant = world_transform.determinant();
-                            info.invertible = determinant != 0.0 && !determinant.is_nan();
+                    LayoutFastTransform::from(source_transform)
+                };
 
-                            CoordinateSystem {
-                                transform,
-                                world_transform,
-                                should_flatten: match (info.transform_style, info.kind) {
-                                    (TransformStyle::Flat, ReferenceFrameKind::Transform { .. }) => true,
-                                    (_, _) => false,
-                                },
-                                parent: Some(state.current_coordinate_system_id),
+                // Do a change-basis operation on the perspective matrix using
+                // the scroll offset.
+                let source_transform = match info.kind {
+                    ReferenceFrameKind::Perspective { scrolling_relative_to: Some(external_id) } => {
+                        let mut scroll_offset = LayoutVector2D::zero();
+
+                        for parent_state in state_stack.iter().rev() {
+                            if let Some(parent_external_id) = parent_state.external_id {
+                                if parent_external_id == external_id {
+                                    break;
+                                }
                             }
-                        };
-                        coordinate_system_id = CoordinateSystemId(coord_systems.len() as u32);
-                        coord_systems.push(coord_system);
+
+                            scroll_offset += parent_state.scroll_offset;
+                        }
+
+                        // Do a change-basis operation on the
+                        // perspective matrix using the scroll offset.
+                        source_transform
+                            .pre_translate(scroll_offset)
+                            .then_translate(-scroll_offset)
                     }
+                    ReferenceFrameKind::Perspective { scrolling_relative_to: None } |
+                    ReferenceFrameKind::Transform { .. } => source_transform,
+                };
+
+                let resolved_transform =
+                    LayoutFastTransform::with_vector(info.origin_in_parent_reference_frame)
+                        .pre_transform(&source_transform);
+
+                // The transformation for this viewport in world coordinates is the transformation for
+                // our parent reference frame, plus any accumulated scrolling offsets from nodes
+                // between our reference frame and this node. Finally, we also include
+                // whatever local transformation this reference frame provides.
+                let relative_transform = resolved_transform
+                    .then_translate(snap_offset(state.parent_accumulated_scroll_offset, state.coordinate_system_relative_scale_offset.scale))
+                    .to_transform()
+                    .with_destination::<LayoutPixel>();
+
+                let mut reset_cs_id = match info.transform_style {
+                    TransformStyle::Preserve3D => !state.preserves_3d,
+                    TransformStyle::Flat => state.preserves_3d,
+                };
+
+                // We reset the coordinate system upon either crossing the preserve-3d context boundary,
+                // or simply a 3D transformation.
+                if !reset_cs_id {
+                    // Try to update our compatible coordinate system transform. If we cannot, start a new
+                    // incompatible coordinate system.
+                    match ScaleOffset::from_transform(&relative_transform) {
+                        Some(ref scale_offset) => {
+                            // We generally do not want to snap animated transforms as it causes jitter.
+                            // However, we do want to snap the visual viewport offset when scrolling.
+                            // This may still cause jitter when zooming, unfortunately.
+                            let mut maybe_snapped = scale_offset.clone();
+                            if let ReferenceFrameKind::Transform { should_snap: true, .. } = info.kind {
+                                maybe_snapped.offset = snap_offset(
+                                    scale_offset.offset,
+                                    state.coordinate_system_relative_scale_offset.scale,
+                                );
+                            }
+                            cs_scale_offset =
+                                state.coordinate_system_relative_scale_offset.accumulate(&maybe_snapped);
+                        }
+                        None => reset_cs_id = true,
+                    }
+                }
+                if reset_cs_id {
+                    // If we break 2D axis alignment or have a perspective component, we need to start a
+                    // new incompatible coordinate system with which we cannot share clips without masking.
+                    let transform = relative_transform.then(
+                        &state.coordinate_system_relative_scale_offset.to_transform()
+                    );
+
+                    // Push that new coordinate system and record the new id.
+                    let coord_system = {
+                        let parent_system = &coord_systems[state.current_coordinate_system_id.0 as usize];
+                        let mut cur_transform = transform;
+                        if parent_system.should_flatten {
+                            cur_transform.flatten_z_output();
+                        }
+                        let world_transform = cur_transform.then(&parent_system.world_transform);
+                        let determinant = world_transform.determinant();
+                        self.invertible = determinant != 0.0 && !determinant.is_nan();
+
+                        CoordinateSystem {
+                            transform,
+                            world_transform,
+                            should_flatten: match (info.transform_style, info.kind) {
+                                (TransformStyle::Flat, ReferenceFrameKind::Transform { .. }) => true,
+                                (_, _) => false,
+                            },
+                            parent: Some(state.current_coordinate_system_id),
+                        }
+                    };
+                    coordinate_system_id = CoordinateSystemId(coord_systems.len() as u32);
+                    coord_systems.push(coord_system);
                 }
 
                 // Ensure that the current coordinate system ID is propagated to child
@@ -600,7 +588,6 @@ impl SpatialNode {
                 self.coordinate_system_id = coordinate_system_id;
                 self.viewport_transform = cs_scale_offset;
                 self.content_transform = cs_scale_offset;
-                self.invertible = info.invertible;
             }
             _ => {
                 // We calculate this here to avoid a double-borrow later.
@@ -629,6 +616,13 @@ impl SpatialNode {
                 self.coordinate_system_id = state.current_coordinate_system_id;
             }
         }
+
+        //TODO: remove the field entirely?
+        self.transform_kind = if self.coordinate_system_id.0 == 0 {
+            TransformedRectKind::AxisAligned
+        } else {
+            TransformedRectKind::Complex
+        };
     }
 
     fn calculate_sticky_offset(
@@ -964,9 +958,6 @@ pub struct ReferenceFrameInfo {
     /// origin of this reference frame. This is already rolled into the `transform' property, but
     /// we also store it here to properly transform the viewport for sticky positioning.
     pub origin_in_parent_reference_frame: LayoutVector2D,
-
-    /// True if the resolved transform is invertible.
-    pub invertible: bool,
 }
 
 #[derive(Clone, Debug)]
