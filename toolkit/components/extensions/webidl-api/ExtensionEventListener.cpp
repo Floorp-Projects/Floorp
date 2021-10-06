@@ -280,11 +280,19 @@ NS_IMETHODIMP ExtensionEventListener::CallListener(
   }
 
   if (apiObjectType != APIObjectType::NONE) {
-    // Prepend the apiObjectDescriptor data to the call arguments,
+    bool prependArgument = false;
+    aCallOptions->GetApiObjectPrepended(&prependArgument);
+    // Prepend or append the apiObjectDescriptor data to the call arguments,
     // the worker runnable will convert that into an API object
     // instance on the worker thread.
-    if (!args.InsertElementAt(0, std::move(apiObjectDescriptor), fallible)) {
-      return NS_ERROR_OUT_OF_MEMORY;
+    if (prependArgument) {
+      if (!args.InsertElementAt(0, std::move(apiObjectDescriptor), fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    } else {
+      if (!args.AppendElement(std::move(apiObjectDescriptor), fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
   }
 
@@ -396,7 +404,9 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
     // one element.
     MOZ_ASSERT(!argsSequence.IsEmpty());
 
-    JS::Rooted<JS::Value> apiObjectDescriptor(aCx, argsSequence.ElementAt(0));
+    uint32_t apiObjectIdx = mAPIObjectPrepended ? 0 : argsSequence.Length() - 1;
+    JS::Rooted<JS::Value> apiObjectDescriptor(
+        aCx, argsSequence.ElementAt(apiObjectIdx));
     JS::Rooted<JS::Value> apiObjectValue(aCx);
 
     // We only expect the object type to be RUNTIME_PORT at the moment,
@@ -415,7 +425,7 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
       return true;
     }
 
-    argsSequence.ReplaceElementAt(0, apiObjectValue);
+    argsSequence.ReplaceElementAt(apiObjectIdx, apiObjectValue);
   }
 
   // Create callback argument and append it to the call arguments.
