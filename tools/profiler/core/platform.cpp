@@ -2476,8 +2476,11 @@ static void StreamMarkerSchema(SpliceableJSONWriter& aWriter) {
     }
   }
 
-  // Now stream the Rust marker schemas.
-  profiler::ffi::gecko_profiler_stream_marker_schemas(&aWriter);
+  // Now stream the Rust marker schemas. Passing the names set as a void pointer
+  // as well, so we can continue checking if the schemes are added already in
+  // the Rust side.
+  profiler::ffi::gecko_profiler_stream_marker_schemas(
+      &aWriter, static_cast<void*>(&names));
 }
 
 // Some meta information that is better recorded before streaming the profile.
