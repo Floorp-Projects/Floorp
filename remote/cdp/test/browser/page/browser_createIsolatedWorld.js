@@ -94,7 +94,7 @@ add_task(async function noEventsWhenRuntimeDomainDisabled({ client }) {
       worldName: WORLD_NAME_1,
       grantUniversalAccess: true,
     });
-    await assertEventOrder({ history, expectedEvents: [] });
+    await assertEvents({ history, expectedEvents: [] });
   } catch (e) {
     errorThrown = e.message;
   }
@@ -124,7 +124,7 @@ add_task(async function noEventsAfterRuntimeDomainDisabled({ client }) {
     worldName: WORLD_NAME_2,
     grantUniversalAccess: true,
   });
-  await assertEventOrder({ history, expectedEvents: [] });
+  await assertEvents({ history, expectedEvents: [] });
 });
 
 add_task(async function contextCreatedAfterNavigation({ client }) {
@@ -145,7 +145,7 @@ add_task(async function contextCreatedAfterNavigation({ client }) {
     worldName: WORLD_NAME_1,
     grantUniversalAccess: true,
   });
-  await assertEventOrder({
+  await assertEvents({
     history,
     expectedEvents: [
       DESTROYED, // default, about:blank
@@ -183,7 +183,7 @@ add_task(async function contextDestroyedForNavigation({ client }) {
   await Page.navigate({ url: PAGE_URL });
   await frameNavigated;
 
-  await assertEventOrder({
+  await assertEvents({
     history,
     expectedEvents: [
       DESTROYED, // default, about:blank
@@ -242,7 +242,7 @@ add_task(async function contextsForFramesetNavigation({ client }) {
     grantUniversalAccess: true,
   });
 
-  await assertEventOrder({
+  await assertEvents({
     history: historyTo,
     expectedEvents: [
       DESTROYED, // default, about:blank
@@ -283,7 +283,7 @@ add_task(async function contextsForFramesetNavigation({ client }) {
   await Page.navigate({ url: PAGE_URL });
   await loadEventFrom;
 
-  await assertEventOrder({
+  await assertEvents({
     history: historyFrom,
     expectedEvents: [
       DESTROYED, // default, PAGE_URL
@@ -474,7 +474,7 @@ function recordEvents(Runtime, total, cleared = false) {
   return history;
 }
 
-async function assertEventOrder(options = {}) {
+async function assertEvents(options = {}) {
   const { history, expectedEvents, timeout = 1000 } = options;
   const events = await history.record(timeout);
   const eventNames = events.map(item => item.eventName);
@@ -486,8 +486,8 @@ async function assertEventOrder(options = {}) {
     "Received expected number of Runtime context events"
   );
   Assert.deepEqual(
-    eventNames,
-    expectedEvents,
-    "Received Runtime context events in expected order"
+    eventNames.sort(),
+    expectedEvents.sort(),
+    "Received expected Runtime context events"
   );
 }
