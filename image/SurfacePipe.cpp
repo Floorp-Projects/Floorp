@@ -36,12 +36,12 @@ uint8_t* AbstractSurfaceSink::DoResetToFirstRow() {
   return GetRowPointer();
 }
 
-uint8_t* AbstractSurfaceSink::DoAdvanceRowFromBuffer(const uint8_t* aInputRow) {
+uint8_t* SurfaceSink::DoAdvanceRowFromBuffer(const uint8_t* aInputRow) {
   CopyInputRow(aInputRow);
   return DoAdvanceRow();
 }
 
-uint8_t* AbstractSurfaceSink::DoAdvanceRow() {
+uint8_t* SurfaceSink::DoAdvanceRow() {
   if (mRow >= uint32_t(InputSize().height)) {
     return nullptr;
   }
@@ -98,6 +98,65 @@ uint8_t* SurfaceSink::GetRowPointer() const {
 
   return rowPtr;
 }
+
+uint8_t* ReorientSurfaceSink::DoAdvanceRowFromBuffer(const uint8_t* aInputRow) {
+  if (mRow >= uint32_t(InputSize().height)) {
+    return nullptr;
+  }
+
+  IntRect dirty = mReorientFn(aInputRow, mRow, mImageData, mSurfaceSize,
+                              mSurfaceSize.width * sizeof(uint32_t));
+  auto orientedDirty = OrientedIntRect::FromUnknownRect(dirty);
+  mInvalidRect.UnionRect(mInvalidRect, orientedDirty);
+
+  mRow = min(uint32_t(InputSize().height), mRow + 1);
+
+  return mRow < uint32_t(InputSize().height) ? GetRowPointer() : nullptr;
+}
+
+uint8_t* ReorientSurfaceSink::DoAdvanceRow() {
+  return DoAdvanceRowFromBuffer(mBuffer.get());
+}
+
+nsresult ReorientSurfaceSink::Configure(const ReorientSurfaceConfig& aConfig) {
+  mSurfaceSize = aConfig.mOutputSize.ToUnknownSize();
+
+  // Allocate the frame.
+  // XXX(seth): Once every Decoder subclass uses SurfacePipe, we probably want
+  // to allocate the frame directly here and get rid of Decoder::AllocateFrame
+  // altogether.
+  nsresult rv =
+      aConfig.mDecoder->AllocateFrame(mSurfaceSize, aConfig.mFormat, Nothing());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // The filters above us need the unoriented size as the input.
+  auto inputSize =
+      aConfig.mOrientation.ToUnoriented(aConfig.mOutputSize).ToUnknownSize();
+  mBuffer.reset(new (fallible) uint8_t[inputSize.width * sizeof(uint32_t)]);
+  if (MOZ_UNLIKELY(!mBuffer)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  memset(mBuffer.get(), 0xFF, inputSize.width * sizeof(uint32_t));
+
+  mReorientFn = ReorientRow(aConfig.mOrientation);
+  MOZ_ASSERT(mReorientFn);
+
+  mImageData = aConfig.mDecoder->mImageData;
+  mImageDataLength = aConfig.mDecoder->mImageDataLength;
+
+  MOZ_ASSERT(mImageData);
+  MOZ_ASSERT(uint64_t(mImageDataLength) == uint64_t(mSurfaceSize.width) *
+                                               uint64_t(mSurfaceSize.height) *
+                                               sizeof(uint32_t));
+
+  ConfigureFilter(inputSize, sizeof(uint32_t));
+  return NS_OK;
+}
+
+uint8_t* ReorientSurfaceSink::GetRowPointer() const { return mBuffer.get(); }
 
 }  // namespace image
 }  // namespace mozilla

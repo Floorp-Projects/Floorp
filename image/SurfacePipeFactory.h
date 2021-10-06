@@ -116,6 +116,8 @@ class SurfacePipeFactory {
     MOZ_ASSERT(aOutFormat == gfx::SurfaceFormat::OS_RGBA ||
                aOutFormat == gfx::SurfaceFormat::OS_RGBX);
 
+    MOZ_ASSERT(aDecoder->GetOrientation().IsIdentity());
+
     const bool inFormatRgb = aInFormat == gfx::SurfaceFormat::R8G8B8;
 
     const bool inFormatOpaque = aInFormat == gfx::SurfaceFormat::OS_RGBX ||
@@ -573,6 +575,82 @@ class SurfacePipeFactory {
               pipe = MakePipe(surfaceConfig);
             }
           }
+        }
+      }
+    }
+
+    return pipe;
+  }
+
+  /**
+   * Creates and initializes a reorienting SurfacePipe.
+   *
+   * @param aDecoder The decoder whose current frame the SurfacePipe will write
+   *                 to.
+   * @param aInputSize The original size of the image.
+   * @param aOutputSize The size the SurfacePipe should output. Must be the same
+   *                    as @aInputSize or smaller. If smaller, the image will be
+   *                    downscaled during decoding.
+   * @param aFormat The surface format of the image; generally B8G8R8A8 or
+   *                B8G8R8X8.
+   * @param aOrientation The orientation of the image.
+   *
+   * @return A SurfacePipe if the parameters allowed one to be created
+   *         successfully, or Nothing() if the SurfacePipe could not be
+   *         initialized.
+   */
+  static Maybe<SurfacePipe> CreateReorientSurfacePipe(
+      Decoder* aDecoder, const OrientedIntSize& aInputSize,
+      const OrientedIntSize& aOutputSize, gfx::SurfaceFormat aFormat,
+      qcms_transform* aTransform, const Orientation& aOrientation) {
+    const bool downscale = aInputSize != aOutputSize;
+    const bool colorManagement = aTransform != nullptr;
+
+    // Construct configurations for the SurfaceFilters. Note that the order of
+    // these filters is significant. We want to deinterlace or interpolate raw
+    // input rows, before any other transformations, and we want to remove the
+    // frame rect (which may involve adding blank rows or columns to the image)
+    // before any downscaling, so that the new rows and columns are taken into
+    // account.
+    DownscalingConfig downscalingConfig{
+        aOrientation.ToUnoriented(aInputSize).ToUnknownSize(), aFormat};
+    ColorManagementConfig colorManagementConfig{aTransform};
+    SurfaceConfig surfaceConfig{aDecoder, aOutputSize.ToUnknownSize(), aFormat,
+                                /* mFlipVertically */ false,
+                                /* mAnimParams */ Nothing()};
+    ReorientSurfaceConfig reorientSurfaceConfig{aDecoder, aOutputSize, aFormat,
+                                                aOrientation};
+
+    Maybe<SurfacePipe> pipe;
+
+    if (aOrientation.IsIdentity()) {
+      if (colorManagement) {
+        if (downscale) {
+          pipe =
+              MakePipe(downscalingConfig, colorManagementConfig, surfaceConfig);
+        } else {  // (downscale is false)
+          pipe = MakePipe(colorManagementConfig, surfaceConfig);
+        }
+      } else {  // (colorManagement is false)
+        if (downscale) {
+          pipe = MakePipe(downscalingConfig, surfaceConfig);
+        } else {  // (downscale is false)
+          pipe = MakePipe(surfaceConfig);
+        }
+      }
+    } else {  // (orientation is not identity)
+      if (colorManagement) {
+        if (downscale) {
+          pipe = MakePipe(downscalingConfig, colorManagementConfig,
+                          reorientSurfaceConfig);
+        } else {  // (downscale is false)
+          pipe = MakePipe(colorManagementConfig, reorientSurfaceConfig);
+        }
+      } else {  // (colorManagement is false)
+        if (downscale) {
+          pipe = MakePipe(downscalingConfig, reorientSurfaceConfig);
+        } else {  // (downscale is false)
+          pipe = MakePipe(reorientSurfaceConfig);
         }
       }
     }
