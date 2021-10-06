@@ -2499,8 +2499,8 @@ static bool ValidateRect(double& aX, double& aY, double& aWidth,
   // The values of canvas API input are in double precision, but Moz2D APIs are
   // using float precision. Bypass canvas API calls when the input is out of
   // float precision to avoid precision problem
-  if (!std::isfinite((float)aX) | !std::isfinite((float)aY) |
-      !std::isfinite((float)aWidth) | !std::isfinite((float)aHeight)) {
+  if (!std::isfinite((float)aX) || !std::isfinite((float)aY) ||
+      !std::isfinite((float)aWidth) || !std::isfinite((float)aHeight)) {
     return false;
   }
 

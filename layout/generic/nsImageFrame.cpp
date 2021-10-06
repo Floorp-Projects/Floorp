@@ -931,9 +931,13 @@ void nsImageFrame::UpdateImage(imgIRequest* aRequest, imgIContainer* aImage) {
       return;
     }
   }
-  // NOTE(emilio): Intentionally using `|` instead of `||` to avoid
-  // short-circuiting.
-  bool intrinsicSizeChanged = UpdateIntrinsicSize() | UpdateIntrinsicRatio();
+  bool intrinsicSizeOrRatioChanged = [&] {
+    // NOTE(emilio): We intentionally want to call both functions and avoid
+    // short-circuiting.
+    bool intrinsicSizeChanged = UpdateIntrinsicSize();
+    bool intrinsicRatioChanged = UpdateIntrinsicRatio();
+    return intrinsicSizeChanged || intrinsicRatioChanged;
+  }();
   if (!GotInitialReflow()) {
     return;
   }
@@ -941,7 +945,7 @@ void nsImageFrame::UpdateImage(imgIRequest* aRequest, imgIContainer* aImage) {
   // We're going to need to repaint now either way.
   InvalidateFrame();
 
-  if (intrinsicSizeChanged) {
+  if (intrinsicSizeOrRatioChanged) {
     // Now we need to reflow if we have an unconstrained size and have
     // already gotten the initial reflow.
     if (!(mState & IMAGE_SIZECONSTRAINED)) {
