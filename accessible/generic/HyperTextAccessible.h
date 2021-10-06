@@ -145,11 +145,6 @@ class HyperTextAccessible : public HyperTextAccessibleBase,
   // TextAccessible
 
   /**
-   * Return character count within the hypertext accessible.
-   */
-  uint32_t CharacterCount() const { return GetChildOffset(ChildCount()); }
-
-  /**
    * Get a character at the given offset (don't support magic offsets).
    */
   bool CharAt(int32_t aOffset, nsAString& aChar,
