@@ -114,7 +114,7 @@ nsLookAndFeel::nsLookAndFeel() {
   Preferences::RegisterCallback(
       FirefoxThemeChanged,
       nsDependentCString(
-          StaticPrefs::GetPrefName_widget_gtk_follow_firefox_theme()),
+          StaticPrefs::GetPrefName_widget_color_scheme_follow_firefox_theme()),
       this);
 }
 
@@ -124,7 +124,7 @@ nsLookAndFeel::~nsLookAndFeel() {
   Preferences::UnregisterCallback(
       FirefoxThemeChanged,
       nsDependentCString(
-          StaticPrefs::GetPrefName_widget_gtk_follow_firefox_theme()),
+          StaticPrefs::GetPrefName_widget_color_scheme_follow_firefox_theme()),
       this);
 }
 
@@ -1330,7 +1330,7 @@ bool nsLookAndFeel::MatchFirefoxThemeIfNeeded() {
   AutoRestore<bool> restoreIgnoreSettings(sIgnoreChangedSettings);
   sIgnoreChangedSettings = true;
 
-  if (!StaticPrefs::widget_gtk_follow_firefox_theme()) {
+  if (!StaticPrefs::widget_color_scheme_follow_firefox_theme()) {
     return false;
   }
 
