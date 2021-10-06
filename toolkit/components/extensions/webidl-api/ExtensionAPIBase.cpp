@@ -12,6 +12,7 @@
 #include "ExtensionAPICallSyncFunction.h"
 #include "ExtensionAPIGetProperty.h"
 #include "ExtensionEventManager.h"
+#include "ExtensionPort.h"
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/SerializedStackHolder.h"
@@ -98,6 +99,55 @@ void ExtensionAPIBase::CallWebExtMethod(JSContext* aCx,
   if (aRv.Failed()) {
     return;
   }
+}
+
+void ExtensionAPIBase::CallWebExtMethodReturnsString(
+    JSContext* aCx, const nsAString& aApiMethod,
+    const dom::Sequence<JS::Value>& aArgs, nsAString& aRetVal,
+    ErrorResult& aRv) {
+  JS::Rooted<JS::Value> retval(aCx);
+  auto request = CallSyncFunction(aApiMethod);
+  request->Run(GetGlobalObject(), aCx, aArgs, &retval, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (NS_WARN_IF(!retval.isString())) {
+    ThrowUnexpectedError(aCx, aRv);
+    return;
+  }
+
+  nsAutoJSString str;
+  if (!str.init(aCx, retval.toString())) {
+    JS_ClearPendingException(aCx);
+    ThrowUnexpectedError(aCx, aRv);
+    return;
+  }
+
+  aRetVal = str;
+}
+
+already_AddRefed<ExtensionPort> ExtensionAPIBase::CallWebExtMethodReturnsPort(
+    JSContext* aCx, const nsAString& aApiMethod,
+    const dom::Sequence<JS::Value>& aArgs, ErrorResult& aRv) {
+  JS::Rooted<JS::Value> apiResult(aCx);
+  auto request = CallSyncFunction(aApiMethod);
+  request->Run(GetGlobalObject(), aCx, aArgs, &apiResult, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  IgnoredErrorResult rv;
+  RefPtr<ExtensionPort> port =
+      ExtensionPort::Create(GetGlobalObject(), apiResult, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    // ExtensionPort::Create doesn't throw the js exception with the generic
+    // error message as the "api request forwarding" helper classes.
+    ThrowUnexpectedError(aCx, aRv);
+    return nullptr;
+  }
+
+  return port.forget();
 }
 
 void ExtensionAPIBase::CallWebExtMethodAsyncInternal(
