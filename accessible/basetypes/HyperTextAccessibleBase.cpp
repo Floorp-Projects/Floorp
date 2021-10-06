@@ -64,4 +64,8 @@ int32_t HyperTextAccessibleBase::GetChildOffset(uint32_t aChildIndex,
   return lastTextOffset;
 }
 
+uint32_t HyperTextAccessibleBase::CharacterCount() const {
+  return GetChildOffset(Acc()->ChildCount());
+}
+
 }  // namespace mozilla::a11y
