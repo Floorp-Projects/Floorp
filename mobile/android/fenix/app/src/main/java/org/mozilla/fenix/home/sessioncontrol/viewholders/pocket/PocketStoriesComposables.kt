@@ -168,7 +168,8 @@ fun PocketStoriesCategories(
 ) {
     Box(modifier = modifier) {
         StaggeredHorizontalGrid(
-            horizontalItemsSpacing = 8.dp
+            horizontalItemsSpacing = 16.dp,
+            verticalItemsSpacing = 16.dp
         ) {
             categories.filter { it.name != POCKET_STORIES_DEFAULT_CATEGORY_NAME }.forEach { category ->
                 SelectableChip(category.name, selections.map { it.name }.contains(category.name)) {
