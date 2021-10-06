@@ -526,24 +526,27 @@ int32_t RemoteAccessible::OffsetAtPoint(int32_t aX, int32_t aY,
   return static_cast<int32_t>(offset);
 }
 
-bool RemoteAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
-                                     nsString& aText) const {
+void RemoteAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
+                                     nsAString& aText) const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::TextSubstring(
+        aStartOffset, aEndOffset, aText);
+  }
+
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
-    return false;
+    return;
   }
 
   BSTR result;
   HRESULT hr = acc->get_text(static_cast<long>(aStartOffset),
                              static_cast<long>(aEndOffset), &result);
   if (FAILED(hr)) {
-    return false;
+    return;
   }
 
   _bstr_t resultWrap(result, false);
   aText = (wchar_t*)result;
-
-  return true;
 }
 
 void RemoteAccessible::GetTextBeforeOffset(int32_t aOffset,
