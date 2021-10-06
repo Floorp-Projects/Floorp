@@ -98,9 +98,7 @@ nsMediaSnifferFtypEntry sFtypEntries[] = {
 };
 
 static bool MatchesBrands(const uint8_t aData[4], nsACString& aSniffedType) {
-  for (size_t i = 0; i < mozilla::ArrayLength(sFtypEntries); ++i) {
-    const auto& currentEntry = sFtypEntries[i];
-
+  for (const auto& currentEntry : sFtypEntries) {
     bool matched = true;
     MOZ_ASSERT(currentEntry.mLength <= 4,
                "Pattern is too large to match brand strings.");
@@ -116,7 +114,6 @@ static bool MatchesBrands(const uint8_t aData[4], nsACString& aSniffedType) {
       // test_mediasniffer_ext.js will need to be updated
       if (!mozilla::StaticPrefs::media_mp4_sniff_iso_brand() &&
           currentEntry.mLabel == PatternLabel::ftyp_iso) {
-        matched = false;
         continue;
       }
 
@@ -167,7 +164,7 @@ bool MatchesMP4(const uint8_t* aData, const uint32_t aLength,
 }
 
 static bool MatchesWebM(const uint8_t* aData, const uint32_t aLength) {
-  return nestegg_sniff((uint8_t*)aData, aLength) ? true : false;
+  return nestegg_sniff((uint8_t*)aData, aLength);
 }
 
 // This function implements mp3 sniffing based on parsing
@@ -201,8 +198,7 @@ nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
     };
   });
 
-  for (size_t i = 0; i < mozilla::ArrayLength(sSnifferEntries); ++i) {
-    const nsMediaSnifferEntry& currentEntry = sSnifferEntries[i];
+  for (const auto& currentEntry : sSnifferEntries) {
     if (clampedLength < currentEntry.mLength || currentEntry.mLength == 0) {
       continue;
     }
