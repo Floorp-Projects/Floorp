@@ -8124,8 +8124,9 @@ void ConnectionPool::Shutdown() {
     return;
   }
 
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
-      [&]() { return static_cast<bool>(mShutdownComplete); }));
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil("ConnectionPool::Shutdown"_ns, [&]() {
+    return static_cast<bool>(mShutdownComplete);
+  }));
 }
 
 void ConnectionPool::Cleanup() {
@@ -8939,20 +8940,21 @@ nsresult ConnectionPool::ThreadRunnable::Run() {
     }
 #endif  // DEBUG
 
-    DebugOnly<bool> b = SpinEventLoopUntil([&]() -> bool {
-      if (!mContinueRunning) {
-        return true;
-      }
+    DebugOnly<bool> b =
+        SpinEventLoopUntil("ConnectionPool::ThreadRunnable"_ns, [&]() -> bool {
+          if (!mContinueRunning) {
+            return true;
+          }
 
 #ifdef DEBUG
-      if (kDEBUGTransactionThreadSleepMS) {
-        MOZ_ALWAYS_TRUE(PR_Sleep(PR_MillisecondsToInterval(
-                            kDEBUGTransactionThreadSleepMS)) == PR_SUCCESS);
-      }
+          if (kDEBUGTransactionThreadSleepMS) {
+            MOZ_ALWAYS_TRUE(PR_Sleep(PR_MillisecondsToInterval(
+                                kDEBUGTransactionThreadSleepMS)) == PR_SUCCESS);
+          }
 #endif  // DEBUG
 
-      return false;
-    });
+          return false;
+        });
     // MSVC can't stringify lambdas, so we have to separate the expression
     // generating the value from the assert itself.
 #if DEBUG
