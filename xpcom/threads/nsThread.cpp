@@ -818,9 +818,10 @@ void nsThread::ShutdownComplete(NotNull<nsThreadShutdownContext*> aContext) {
 }
 
 void nsThread::WaitForAllAsynchronousShutdowns() {
-  // This is the motivating example for why SpinEventLoop has the template
-  // parameter we are providing here.
+  // This is the motivating example for why SpinEventLoopUntil
+  // has the template parameter we are providing here.
   SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
+      "nsThread::WaitForAllAsynchronousShutdowns"_ns,
       [&]() { return mRequestedShutdownContexts.IsEmpty(); }, this);
 }
 
@@ -837,8 +838,10 @@ nsThread::Shutdown() {
 
   // Process events on the current thread until we receive a shutdown ACK.
   // Allows waiting; ensure no locks are held that would deadlock us!
-  SpinEventLoopUntil([&, context]() { return !context->mAwaitingShutdownAck; },
-                     context->mJoiningThread);
+  SpinEventLoopUntil(
+      "nsThread::Shutdown"_ns,
+      [&, context]() { return !context->mAwaitingShutdownAck; },
+      context->mJoiningThread);
 
   ShutdownComplete(context);
 
