@@ -130,6 +130,15 @@ class ReadableStreamDefaultController final : public nsISupports,
   RefPtr<ReadableStream> mStream;
 };
 
+extern void SetUpReadableStreamDefaultController(
+    JSContext* aCx, ReadableStream* aStream,
+    ReadableStreamDefaultController* aController,
+    UnderlyingSourceStartCallbackHelper* aStartAlgorithm,
+    UnderlyingSourcePullCallbackHelper* aPullAlgorithm,
+    UnderlyingSourceCancelCallbackHelper* aCancelAlgorithm,
+    double aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
+    ErrorResult& aRv);
+
 extern void SetupReadableStreamDefaultControllerFromUnderlyingSource(
     JSContext* aCx, ReadableStream* aStream, JS::HandleObject aUnderlyingSource,
     UnderlyingSource& aUnderlyingSourceDict, double aHighWaterMark,
@@ -137,6 +146,23 @@ extern void SetupReadableStreamDefaultControllerFromUnderlyingSource(
 
 extern already_AddRefed<Promise> DefaultUndefinedPromise(
     const ReadableStreamDefaultController* aController, ErrorResult& aRv);
+
+extern void ReadableStreamDefaultControllerEnqueue(
+    JSContext* aCx, ReadableStreamDefaultController* aController,
+    JS::Handle<JS::Value> aChunk, ErrorResult& aRv);
+
+extern void ReadableStreamDefaultControllerClose(
+    JSContext* aCx, ReadableStreamDefaultController* aController,
+    ErrorResult& aRv);
+
+extern void ReadableStreamDefaultReaderRead(JSContext* aCx,
+                                            ReadableStreamDefaultReader* reader,
+                                            ReadRequest* aRequest,
+                                            ErrorResult& aRv);
+
+extern void ReadableStreamDefaultControllerError(
+    JSContext* aCx, ReadableStreamDefaultController* aController,
+    JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
 }  // namespace dom
 }  // namespace mozilla

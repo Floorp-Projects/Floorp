@@ -177,10 +177,6 @@ static void ReadableStreamDefaultControllerCallPullIfNeeded(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     ErrorResult& aRv);
 
-void ReadableStreamDefaultControllerError(
-    JSContext* aCx, ReadableStreamDefaultController* aController,
-    JS::Handle<JS::Value> aValue, ErrorResult& errorResult);
-
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-enqueue
 MOZ_CAN_RUN_SCRIPT
 void ReadableStreamDefaultControllerEnqueue(
@@ -547,7 +543,7 @@ NS_INTERFACE_MAP_END
 
 // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller
 MOZ_CAN_RUN_SCRIPT
-static void SetUpReadableStreamDefaultController(
+void SetUpReadableStreamDefaultController(
     JSContext* aCx, ReadableStream* aStream,
     ReadableStreamDefaultController* aController,
     UnderlyingSourceStartCallbackHelper* aStartAlgorithm,
