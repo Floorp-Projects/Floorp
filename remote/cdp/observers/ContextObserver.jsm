@@ -55,6 +55,7 @@ class ContextObserver {
       mozSystemGroup: true,
     });
 
+    Services.obs.addObserver(this, "document-element-inserted");
     Services.obs.addObserver(this, "inner-window-destroyed");
 
     // With Fission disabled the `DOMWindowCreated` event is fired too late.
@@ -76,6 +77,7 @@ class ContextObserver {
       mozSystemGroup: true,
     });
 
+    Services.obs.removeObserver(this, "document-element-inserted");
     Services.obs.removeObserver(this, "inner-window-destroyed");
 
     if (!this._fissionEnabled) {
@@ -103,12 +105,6 @@ class ContextObserver {
           this.emit("frame-attached", { frameId, window });
         }
 
-        this.emit("frame-navigated", { frameId, window });
-        this.emit("context-created", { windowId: id, window });
-        // Delay script-loaded to allow context cleanup to happen first
-        executeSoon(() => {
-          this.emit("script-loaded", { windowId: id, window });
-        });
         break;
 
       case "pageshow":
@@ -134,6 +130,28 @@ class ContextObserver {
 
   observe(subject, topic, data) {
     switch (topic) {
+      case "document-element-inserted":
+        const window = subject.defaultView;
+
+        // Ignore events from other tabs
+        if (window.docShell.chromeEventHandler !== this.chromeEventHandler) {
+          return;
+        }
+
+        // Send when the document gets attached to the window, and its location
+        // is available.
+        this.emit("frame-navigated", {
+          frameId: window.browsingContext.id,
+          window,
+        });
+
+        const id = window.windowGlobalChild.innerWindowId;
+        this.emit("context-created", { windowId: id, window });
+        // Delay script-loaded to allow context cleanup to happen first
+        executeSoon(() => {
+          this.emit("script-loaded", { windowId: id, window });
+        });
+        break;
       case "inner-window-destroyed":
         const windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
         this.emit("context-destroyed", { windowId });
