@@ -204,12 +204,6 @@ class HyperTextAccessible : public HyperTextAccessibleBase,
   }
 
   /**
-   * Return true if the given offset/range is valid.
-   */
-  bool IsValidOffset(int32_t aOffset);
-  bool IsValidRange(int32_t aStartOffset, int32_t aEndOffset);
-
-  /**
    * Return an offset at the given point.
    */
   int32_t OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType);

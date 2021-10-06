@@ -275,4 +275,17 @@ void HyperTextAccessibleBase::TextAtOffset(int32_t aOffset,
   }
 }
 
+bool HyperTextAccessibleBase::IsValidOffset(int32_t aOffset) {
+  index_t offset = ConvertMagicOffset(aOffset);
+  return offset.IsValid() && offset <= CharacterCount();
+}
+
+bool HyperTextAccessibleBase::IsValidRange(int32_t aStartOffset,
+                                           int32_t aEndOffset) {
+  index_t startOffset = ConvertMagicOffset(aStartOffset);
+  index_t endOffset = ConvertMagicOffset(aEndOffset);
+  return startOffset.IsValid() && endOffset.IsValid() &&
+         startOffset <= endOffset && endOffset <= CharacterCount();
+}
+
 }  // namespace mozilla::a11y
