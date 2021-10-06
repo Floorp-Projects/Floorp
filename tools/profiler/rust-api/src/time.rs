@@ -34,6 +34,32 @@ impl ProfilerTime {
             ProfilerTime(marker_timing.assume_init())
         }
     }
+
+    pub fn add_microseconds(self, microseconds: f64) -> Self {
+        let mut dest = MaybeUninit::<mozilla::TimeStamp>::uninit();
+        unsafe {
+            bindings::gecko_profiler_add_timestamp(&self.0, dest.as_mut_ptr(), microseconds);
+            ProfilerTime(dest.assume_init())
+        }
+    }
+
+    pub fn subtract_microseconds(self, microseconds: f64) -> Self {
+        let mut dest = MaybeUninit::<mozilla::TimeStamp>::uninit();
+        unsafe {
+            bindings::gecko_profiler_subtract_timestamp(&self.0, dest.as_mut_ptr(), microseconds);
+            ProfilerTime(dest.assume_init())
+        }
+    }
+}
+
+impl Clone for ProfilerTime {
+    fn clone(&self) -> Self {
+        let mut dest = MaybeUninit::<mozilla::TimeStamp>::uninit();
+        unsafe {
+            bindings::gecko_profiler_clone_timestamp(&self.0, dest.as_mut_ptr());
+            ProfilerTime(dest.assume_init())
+        }
+    }
 }
 
 impl Drop for ProfilerTime {
