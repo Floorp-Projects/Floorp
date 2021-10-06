@@ -11,6 +11,14 @@
 <script>
 "use strict";
 
+const expectedBaseProps = {
+  // On Desktop builds, if "browse.chrome.guess_favicon" is set to true,
+  // a favicon requests may be triggered at a random time while the test
+  // cases are running, we include it the ignore list by default to prevent
+  // intermittent failures (e.g. see Bug 1733781 and Bug 1633189).
+  ignore: ["favicon.ico"],
+};
+
 function promiseWindowEvent(name, accept) {
   return new Promise(resolve => {
     window.addEventListener(name, function listener(event) {
@@ -81,7 +89,7 @@ add_task(async function test_webRequest_links() {
   addStylesheet("file_style_bad.css");
   await extension.awaitMessage("cancelled");
   // we redirect to style_good which completes the test
-  addStylesheet("file_style_redirect.css");
+  addStylesheet(`file_style_redirect.css?nocache=${Math.random()}`);
   await extension.awaitMessage("done");
 });
 
@@ -181,7 +189,7 @@ add_task(async function test_webRequest_checkCached() {
     },
     "file_style_good.css": {
       type: "stylesheet",
-      cached: true,
+      cached: false,
     },
     "nonexistent_script_url.js": {
       status: 404,
@@ -198,7 +206,7 @@ add_task(async function test_webRequest_checkCached() {
 
   is((await message).data, "test1", "good script ran");
 
-  addStylesheet("file_style_good.css");
+  addStylesheet(`file_style_good.css?nocache=${Math.random()}`);
   addScript("nonexistent_script_url.js");
   await extension.awaitMessage("done");
 });
@@ -276,15 +284,11 @@ add_task(async function test_webRequest_tabId() {
     },
   };
 
-  if (AppConstants.platform != "android") {
-    expect["favicon.ico"] = {
-      type: "image",
-      origin: SimpleTest.getTestFileURL(linkUrl),
-      cached: false,
-    };
-  }
-
-  extension.sendMessage("set-expected", {expect, origin: location.href});
+  extension.sendMessage("set-expected", {
+    ...expectedBaseProps,
+    expect,
+    origin: location.href,
+  });
   await extension.awaitMessage("continue");
   let a = addLink(linkUrl);
   a.click();
@@ -330,19 +334,15 @@ add_task(async function test_webRequest_tabId_browser() {
     },
   };
 
-  if (AppConstants.platform != "android") {
-    expect["favicon.ico"] = {
-      type: "image",
-      origin: pageUrl,
-      cached: true,
-    };
-  }
-
   await tabExt.startup();
   let origin = await tabExt.awaitMessage("origin");
 
   // expecting origin == extension baseUrl
-  extension.sendMessage("set-expected", {expect, origin});
+  extension.sendMessage("set-expected", {
+    ...expectedBaseProps,
+    expect,
+    origin,
+  });
   await extension.awaitMessage("continue");
 
   // open a tab from an extension principal
@@ -375,7 +375,11 @@ add_task(async function test_webRequest_frames() {
       error: ["NS_ERROR_UNKNOWN_HOST", "NS_ERROR_NET_ON_RESOLVED", "NS_ERROR_NET_ON_RESOLVING"],
     },
   };
-  extension.sendMessage("set-expected", {expect, origin: location.href});
+  extension.sendMessage("set-expected", {
+    ...expectedBaseProps,
+    expect,
+    origin: location.href
+  });
   await extension.awaitMessage("continue");
   addFrame("redirection.sjs");
   addFrame("https://nonresolvablehostname.invalid/badrobot");
