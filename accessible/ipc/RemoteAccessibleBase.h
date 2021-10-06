@@ -214,6 +214,8 @@ class RemoteAccessibleBase : public Accessible {
   virtual void AppendTextTo(nsAString& aText, uint32_t aStartOffset = 0,
                             uint32_t aLength = UINT32_MAX) override;
 
+  uint32_t GetCachedTextLength();
+
  protected:
   RemoteAccessibleBase(uint64_t aID, Derived* aParent,
                        DocAccessibleParent* aDoc, role aRole, AccType aType,

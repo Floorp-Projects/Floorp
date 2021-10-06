@@ -385,6 +385,16 @@ void RemoteAccessibleBase<Derived>::AppendTextTo(nsAString& aText,
   }
 }
 
+template <class Derived>
+uint32_t RemoteAccessibleBase<Derived>::GetCachedTextLength() {
+  MOZ_ASSERT(IsText());
+  auto text = mCachedFields->GetAttribute<nsString>(nsGkAtoms::text);
+  if (!text) {
+    return 0;
+  }
+  return text->Length();
+}
+
 template class RemoteAccessibleBase<RemoteAccessible>;
 
 }  // namespace a11y
