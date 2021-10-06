@@ -392,11 +392,6 @@ class HyperTextAccessible : public HyperTextAccessibleBase,
   // HyperTextAccessible
 
   /**
-   * Transform magic offset into text offset.
-   */
-  index_t ConvertMagicOffset(int32_t aOffset) const;
-
-  /**
    * Adjust an offset the caret stays at to get a text by line boundary.
    */
   uint32_t AdjustCaretOffset(uint32_t aOffset) const;
