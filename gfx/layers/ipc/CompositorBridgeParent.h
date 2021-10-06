@@ -488,7 +488,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
     // their FrameMetrics with the corresponding child process that holds
     // the PCompositorBridgeChild
     ContentCompositorBridgeParent* mContentCompositorBridgeParent;
-    TargetConfig mTargetConfig;
 
     CompositorController* GetCompositorController() const;
     RefPtr<UiCompositorControllerParent> mUiControllerParent;
