@@ -755,8 +755,7 @@ void FileHandleThreadPool::Shutdown() {
     return;
   }
 
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil("FileHandleThreadPool::Shutdown"_ns,
-                                     [&]() { return mShutdownComplete; }));
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return mShutdownComplete; }));
 }
 
 nsresult FileHandleThreadPool::Init() {

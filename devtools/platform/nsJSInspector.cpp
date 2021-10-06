@@ -71,8 +71,7 @@ nsJSInspector::EnterNestedEventLoop(JS::Handle<JS::Value> requestor,
   mozilla::dom::AutoNoJSAPI nojsapi;
 
   uint32_t nestLevel = ++mNestedLoopLevel;
-  if (!SpinEventLoopUntil("nsJSInspector::EnterNestedEventLoop"_ns,
-                          [&]() { return mNestedLoopLevel < nestLevel; })) {
+  if (!SpinEventLoopUntil([&]() { return mNestedLoopLevel < nestLevel; })) {
     rv = NS_ERROR_UNEXPECTED;
   }
 

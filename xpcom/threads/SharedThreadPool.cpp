@@ -85,7 +85,7 @@ bool SharedThreadPool::IsEmpty() {
 /* static */
 void SharedThreadPool::SpinUntilEmpty() {
   MOZ_ASSERT(NS_IsMainThread());
-  SpinEventLoopUntil("SharedThreadPool::SpinUntilEmpty"_ns, []() -> bool {
+  SpinEventLoopUntil([]() -> bool {
     sMonitor->AssertNotCurrentThreadIn();
     return IsEmpty();
   });

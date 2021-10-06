@@ -160,8 +160,7 @@ NS_IMETHODIMP nsDataObj::CStream::OnStopRequest(nsIRequest* aRequest,
 // and cancel the operation.
 nsresult nsDataObj::CStream::WaitForCompletion() {
   // We are guaranteed OnStopRequest will get called, so this should be ok.
-  SpinEventLoopUntil("widget:nsDataObj::CStream::WaitForCompletion"_ns,
-                     [&]() { return mChannelRead; });
+  SpinEventLoopUntil([&]() { return mChannelRead; });
 
   if (!mChannelData.Length()) mChannelResult = NS_ERROR_FAILURE;
 

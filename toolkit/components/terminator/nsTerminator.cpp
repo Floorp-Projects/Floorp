@@ -49,7 +49,6 @@
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Telemetry.h"
@@ -82,7 +81,7 @@ namespace {
  */
 struct ShutdownStep {
   mozilla::ShutdownPhase mPhase;
-  Atomic<int> mTicks;
+  int mTicks;
 
   constexpr explicit ShutdownStep(mozilla::ShutdownPhase aPhase)
       : mPhase(aPhase), mTicks(-1) {}
@@ -196,15 +195,6 @@ void RunWatchdog(void* arg) {
     }
 
     NoteIntentionalCrash(XRE_GetProcessTypeString());
-
-    // Until we have general log output for crash annotations in treeherder
-    // (bug 1728721) we manually spit out our nested event loop stack.
-    // XXX: Remove once bug 1728721 is fixed.
-    nsCString stack;
-    AutoNestedEventLoopAnnotation::CopyCurrentStack(stack);
-    printf_stderr(
-        "RunWatchdog: Mainthread nested event loops during hang: \n --- %s\n",
-        stack.get());
 
     // The shutdown steps are not completed yet. Let's report the last one.
     if (!sShutdownNotified) {

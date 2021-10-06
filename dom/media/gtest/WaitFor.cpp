@@ -12,7 +12,7 @@ void WaitFor(MediaEventSource<void>& aEvent) {
   MediaEventListener listener =
       aEvent.Connect(AbstractThread::GetCurrent(), [&] { done = true; });
   SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      "WaitFor(MediaEventSource<void>& aEvent)"_ns, [&] { return done; });
+      [&] { return done; });
   listener.Disconnect();
 }
 
