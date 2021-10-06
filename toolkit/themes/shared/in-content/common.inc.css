@@ -356,15 +356,9 @@ xul|menulist {
 button {
   font-weight: 600;
 }
-/* Medium and small buttons get sized to 7/14 and 6/12px padding (when adding
- * the 1px border): */
-button.medium {
-  padding: 6px 13px;
-  min-height: 28px;
-  font-size: 0.95em;
-}
 
-button.small {
+/* Small buttons get sized to 6/12px padding (when adding the 1px border) */
+.small-button {
   padding: 5px 11px;
   min-height: 24px;
   font-size: 0.9em;
