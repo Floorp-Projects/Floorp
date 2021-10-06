@@ -167,12 +167,17 @@ add_task(async function test_port_as_event_listener_eventListener_param() {
               );
               port.onMessage.addListener((msg, portArg) => {
                 if (msg === "test-done") {
+                  testLog("Got a port.onMessage event");
                   testAsserts.equal(
                     portArg?.name,
                     "a-port-name-2",
                     "Got port as last argument"
                   );
-                  testLog("Got a port.onMessage event");
+                  testAsserts.equal(
+                    portArg === port,
+                    true,
+                    "Got the same port instance as expected"
+                  );
                   resolve();
                 } else {
                   reject(
