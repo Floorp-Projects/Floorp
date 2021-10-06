@@ -1076,7 +1076,8 @@ class CDMStorageTest {
   }
 
   void AwaitFinished() {
-    mozilla::SpinEventLoopUntil([&]() -> bool { return mFinished; });
+    mozilla::SpinEventLoopUntil("CDMStorageTest::AwaitFinished"_ns,
+                                [&]() -> bool { return mFinished; });
     mFinished = false;
   }
 
