@@ -38,8 +38,27 @@ void gecko_profiler_construct_timestamp_now(mozilla::TimeStamp* aTimeStamp) {
   new (aTimeStamp) mozilla::TimeStamp(mozilla::TimeStamp::Now());
 }
 
+void gecko_profiler_clone_timestamp(const mozilla::TimeStamp* aSrcTimeStamp,
+                                    mozilla::TimeStamp* aDestTimeStamp) {
+  new (aDestTimeStamp) mozilla::TimeStamp(*aSrcTimeStamp);
+}
+
 void gecko_profiler_destruct_timestamp(mozilla::TimeStamp* aTimeStamp) {
   aTimeStamp->~TimeStamp();
+}
+
+void gecko_profiler_add_timestamp(const mozilla::TimeStamp* aTimeStamp,
+                                  mozilla::TimeStamp* aDestTimeStamp,
+                                  double aMicroseconds) {
+  new (aDestTimeStamp) mozilla::TimeStamp(
+      *aTimeStamp + mozilla::TimeDuration::FromMicroseconds(aMicroseconds));
+}
+
+void gecko_profiler_subtract_timestamp(const mozilla::TimeStamp* aTimeStamp,
+                                       mozilla::TimeStamp* aDestTimeStamp,
+                                       double aMicroseconds) {
+  new (aDestTimeStamp) mozilla::TimeStamp(
+      *aTimeStamp - mozilla::TimeDuration::FromMicroseconds(aMicroseconds));
 }
 
 void gecko_profiler_construct_marker_timing_instant_at(
