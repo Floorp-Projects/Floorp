@@ -221,39 +221,14 @@ class HyperTextAccessible : public HyperTextAccessibleBase,
    */
   already_AddRefed<AccAttributes> DefaultTextAttributes();
 
-  /**
-   * Return text offset of the given child accessible within hypertext
-   * accessible.
-   *
-   * @param  aChild           [in] accessible child to get text offset for
-   * @param  aInvalidateAfter [in, optional] indicates whether invalidate
-   *                           cached offsets for next siblings of the child
-   */
-  int32_t GetChildOffset(const LocalAccessible* aChild,
-                         bool aInvalidateAfter = false) const {
-    int32_t index = GetIndexOf(aChild);
-    return index == -1 ? -1 : GetChildOffset(index, aInvalidateAfter);
-  }
+  // HyperTextAccessibleBase provides an overload which takes an Accessible.
+  using HyperTextAccessibleBase::GetChildOffset;
+  virtual int32_t GetChildOffset(uint32_t aChildIndex,
+                                 bool aInvalidateAfter = false) const override;
 
-  /**
-   * Return text offset for the child accessible index.
-   */
-  int32_t GetChildOffset(uint32_t aChildIndex,
-                         bool aInvalidateAfter = false) const;
+  virtual int32_t GetChildIndexAtOffset(uint32_t aOffset) const override;
 
-  /**
-   * Return child accessible at the given text offset.
-   *
-   * @param  aOffset  [in] the given text offset
-   */
-  int32_t GetChildIndexAtOffset(uint32_t aOffset) const;
-
-  /**
-   * Return child accessible at the given text offset.
-   *
-   * @param  aOffset  [in] the given text offset
-   */
-  LocalAccessible* GetChildAtOffset(uint32_t aOffset) const {
+  virtual LocalAccessible* GetChildAtOffset(uint32_t aOffset) const override {
     return LocalChildAt(GetChildIndexAtOffset(aOffset));
   }
 
@@ -542,6 +517,9 @@ class HyperTextAccessible : public HyperTextAccessibleBase,
    * @param aAttributes
    */
   void SetMathMLXMLRoles(AccAttributes* aAttributes);
+
+  // HyperTextAccessibleBase
+  virtual const Accessible* Acc() const override { return this; }
 
  private:
   /**
