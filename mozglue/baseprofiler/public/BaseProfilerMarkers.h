@@ -148,8 +148,6 @@ struct TextMarker {
   }
 };
 
-// Keep this struct in sync with the `gecko_profiler::marker::Tracing` Rust
-// counterpart.
 struct Tracing {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("tracing");

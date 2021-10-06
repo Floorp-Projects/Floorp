@@ -10,7 +10,6 @@
 
 #include "GeckoProfiler.h"
 
-#include <set>
 #include <type_traits>
 
 void gecko_profiler_register_thread(const char* aName) {
@@ -39,27 +38,8 @@ void gecko_profiler_construct_timestamp_now(mozilla::TimeStamp* aTimeStamp) {
   new (aTimeStamp) mozilla::TimeStamp(mozilla::TimeStamp::Now());
 }
 
-void gecko_profiler_clone_timestamp(const mozilla::TimeStamp* aSrcTimeStamp,
-                                    mozilla::TimeStamp* aDestTimeStamp) {
-  new (aDestTimeStamp) mozilla::TimeStamp(*aSrcTimeStamp);
-}
-
 void gecko_profiler_destruct_timestamp(mozilla::TimeStamp* aTimeStamp) {
   aTimeStamp->~TimeStamp();
-}
-
-void gecko_profiler_add_timestamp(const mozilla::TimeStamp* aTimeStamp,
-                                  mozilla::TimeStamp* aDestTimeStamp,
-                                  double aMicroseconds) {
-  new (aDestTimeStamp) mozilla::TimeStamp(
-      *aTimeStamp + mozilla::TimeDuration::FromMicroseconds(aMicroseconds));
-}
-
-void gecko_profiler_subtract_timestamp(const mozilla::TimeStamp* aTimeStamp,
-                                       mozilla::TimeStamp* aDestTimeStamp,
-                                       double aMicroseconds) {
-  new (aDestTimeStamp) mozilla::TimeStamp(
-      *aTimeStamp - mozilla::TimeDuration::FromMicroseconds(aMicroseconds));
 }
 
 void gecko_profiler_construct_marker_timing_instant_at(
@@ -234,18 +214,9 @@ void gecko_profiler_marker_schema_add_static_label_value(
 
 void gecko_profiler_marker_schema_stream(
     mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
-    size_t aNameLength, mozilla::MarkerSchema* aMarkerSchema,
-    void* aStreamedNamesSet) {
+    size_t aNameLength, mozilla::MarkerSchema* aMarkerSchema) {
 #ifdef MOZ_GECKO_PROFILER
-  auto* streamedNames = static_cast<std::set<std::string>*>(aStreamedNamesSet);
-  // std::set.insert(T&&) returns a pair, its `second` is true if the element
-  // was actually inserted (i.e., it was not there yet.).
-  const bool didInsert =
-      streamedNames->insert(std::string(aName, aNameLength)).second;
-  if (didInsert) {
-    std::move(*aMarkerSchema)
-        .Stream(*aWriter, mozilla::Span(aName, aNameLength));
-  }
+  std::move(*aMarkerSchema).Stream(*aWriter, mozilla::Span(aName, aNameLength));
 #endif
 }
 
