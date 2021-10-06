@@ -427,28 +427,7 @@ TimerThread::Run() {
           // on the TimerThread instead of on the thread it targets.
           {
             LogTimerEvent::Run run(timerRef.get());
-            timerRef = PostTimerEvent(timerRef.forget());
-          }
-
-          if (timerRef) {
-            // We got our reference back due to an error.
-            // Unhook the nsRefPtr, and release manually so we can get the
-            // refcount.
-            nsrefcnt rc = timerRef.forget().take()->Release();
-            (void)rc;
-
-            // The nsITimer interface requires that its users keep a reference
-            // to the timers they use while those timers are initialized but
-            // have not yet fired.  If this ever happens, it is a bug in the
-            // code that created and used the timer.
-            //
-            // Further, note that this should never happen even with a
-            // misbehaving user, because nsTimerImpl::Release checks for a
-            // refcount of 1 with an armed timer (a timer whose only reference
-            // is from the timer thread) and when it hits this will remove the
-            // timer from the timer thread and thus destroy the last reference,
-            // preventing this situation from occurring.
-            MOZ_ASSERT(rc != 0, "destroyed timer off its target thread!");
+            PostTimerEvent(timerRef.forget());
           }
 
           if (mShutdown) {
@@ -761,14 +740,13 @@ void TimerThread::RemoveFirstTimerInternal() {
   mTimers.RemoveLastElement();
 }
 
-already_AddRefed<nsTimerImpl> TimerThread::PostTimerEvent(
-    already_AddRefed<nsTimerImpl> aTimerRef) {
+void TimerThread::PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef) {
   mMonitor.AssertCurrentThreadOwns();
 
   RefPtr<nsTimerImpl> timer(aTimerRef);
   if (!timer->mEventTarget) {
     NS_ERROR("Attempt to post timer event to NULL event target");
-    return timer.forget();
+    return;
   }
 
   // XXX we may want to reuse this nsTimerEvent in the case of repeating timers.
@@ -783,15 +761,15 @@ already_AddRefed<nsTimerImpl> TimerThread::PostTimerEvent(
 
   void* p = nsTimerEvent::operator new(sizeof(nsTimerEvent));
   if (!p) {
-    return timer.forget();
+    return;
   }
   RefPtr<nsTimerEvent> event =
       ::new (KnownNotNull, p) nsTimerEvent(timer.forget(), mProfilerThreadId);
 
   nsresult rv;
   {
-    // We release mMonitor around the Dispatch because if this timer is targeted
-    // at the TimerThread we'll deadlock.
+    // We release mMonitor around the Dispatch because if the Dispatch interacts
+    // with the timer API we'll deadlock.
     MonitorAutoUnlock unlock(mMonitor);
     rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
   }
@@ -799,10 +777,7 @@ already_AddRefed<nsTimerImpl> TimerThread::PostTimerEvent(
   if (NS_FAILED(rv)) {
     timer = event->ForgetTimer();
     RemoveTimerInternal(timer);
-    return timer.forget();
   }
-
-  return nullptr;
 }
 
 void TimerThread::DoBeforeSleep() {
