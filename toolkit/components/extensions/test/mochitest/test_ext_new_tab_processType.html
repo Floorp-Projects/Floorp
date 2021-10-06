@@ -59,24 +59,42 @@ add_task(async function test_target_blank_link_no_opener_from_privileged() {
       "extension_tab.js": extension_tab,
       "content_script.js": content_script,
     },
-    background() {
+    async background() {
       let pageTab;
-      browser.runtime.onMessage.addListener((msg, sender) => {
+      browser.test.onMessage.addListener(async (msg) => {
+        if (msg !== "close_tab") {
+          browser.test.fail("Unexpected test message: " + msg);
+          return;
+        }
+        if (!pageTab) {
+          browser.test.fail("Unexpected close-tab test message received when there is no pageTab");
+          return;
+        }
+        await browser.tabs.remove(pageTab.id);
+        browser.test.sendMessage("close_tab_done");
+      });
+      browser.runtime.onMessage.addListener(async (msg, sender) => {
         if (sender.tab) {
+          await browser.tabs.remove(sender.tab.id);
           browser.test.sendMessage(msg, sender.tab.url);
-          browser.tabs.remove(sender.tab.id);
-          browser.tabs.remove(pageTab.id);
         }
       });
-      pageTab = browser.tabs.create({ url: browser.runtime.getURL("page.html") });
+      pageTab = await browser.tabs.create({ url: browser.runtime.getURL("page.html") });
+      browser.test.sendMessage("tab_created");
     },
   });
 
   await extension.startup();
 
+  await extension.awaitMessage("tab_created");
+
   // Make sure page is loaded correctly
   const url = await extension.awaitMessage("content_page_loaded");
   is(url, linkURL, "Page URL should match");
+
+  // Clean up opened tab.
+  extension.sendMessage("close_tab");
+  await extension.awaitMessage("close_tab_done");
 
   await extension.unload();
 });
