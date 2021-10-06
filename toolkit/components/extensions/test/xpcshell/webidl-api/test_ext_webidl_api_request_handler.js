@@ -236,7 +236,11 @@ add_task(async function test_sw_api_request_bgsw_connnect_runtime_port() {
           if (!port) {
             browser.test.fail("Got an undefined port");
           }
-          port.onMessage.addListener((msg, port) => {
+          port.onMessage.addListener((msg, portArgument) => {
+            browser.test.assertTrue(
+              port === portArgument,
+              "Got the expected runtime.Port instance"
+            );
             browser.test.sendMessage("test-done", msg);
           });
           browser.test.sendMessage("sw-waiting-port-message");
