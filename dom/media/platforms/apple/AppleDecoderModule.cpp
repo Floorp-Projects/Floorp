@@ -15,6 +15,10 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_media.h"
+#if !defined(MAC_OS_VERSION_11_0) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_11_0
+#  include "nsCocoaFeatures.h"
+#endif
 
 extern "C" {
 // Only exists from MacOS 11
@@ -154,11 +158,14 @@ bool AppleDecoderModule::CanCreateVP9Decoder() {
 /* static */
 bool AppleDecoderModule::RegisterSupplementalVP9Decoder() {
   static bool sRegisterIfAvailable = []() {
-    if (__builtin_available(macos 10.16, *)) {
-      if (VTRegisterSupplementalVideoDecoderIfAvailable) {
-        VTRegisterSupplementalVideoDecoderIfAvailable(kCMVideoCodecType_VP9);
-        return true;
-      }
+#if !defined(MAC_OS_VERSION_11_0) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_11_0
+    if (nsCocoaFeatures::OnBigSurOrLater()) {
+#else
+    if (__builtin_available(macos 11.0, *)) {
+#endif
+      VTRegisterSupplementalVideoDecoderIfAvailable(kCMVideoCodecType_VP9);
+      return true;
     }
     return false;
   }();
