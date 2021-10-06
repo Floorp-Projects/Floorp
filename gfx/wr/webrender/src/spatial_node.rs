@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ExternalScrollId, PipelineId, PropertyBinding, PropertyBindingId, ReferenceFrameKind, ScrollClamping, ScrollLocation};
-use api::{TransformStyle, ScrollSensitivity, StickyOffsetBounds, SpatialTreeItemKey};
+use api::{TransformStyle, StickyOffsetBounds, SpatialTreeItemKey};
 use api::units::*;
 use crate::spatial_tree::{CoordinateSystem, SpatialNodeIndex, TransformUpdateState};
 use crate::spatial_tree::{CoordinateSystemId};
@@ -177,14 +177,12 @@ impl SceneSpatialNode {
         external_id: ExternalScrollId,
         frame_rect: &LayoutRect,
         content_size: &LayoutSize,
-        scroll_sensitivity: ScrollSensitivity,
         frame_kind: ScrollFrameKind,
         external_scroll_offset: LayoutVector2D,
         is_root_coord_system: bool,
     ) -> Self {
         let node_type = SpatialNodeType::ScrollFrame(ScrollFrameInfo::new(
                 *frame_rect,
-                scroll_sensitivity,
                 LayoutSize::new(
                     (content_size.width - frame_rect.width()).max(0.0),
                     (content_size.height - frame_rect.height()).max(0.0)
@@ -384,18 +382,6 @@ fn snap_offset<OffsetUnits, ScaleUnits>(
 }
 
 impl SpatialNode {
-    pub fn apply_old_scrolling_state(&mut self, old_scroll_info: &ScrollFrameInfo) {
-        match self.node_type {
-            SpatialNodeType::ScrollFrame(ref mut scrolling) => {
-                *scrolling = scrolling.combine_with_old_scroll_info(old_scroll_info);
-            }
-            _ if old_scroll_info.offset != LayoutVector2D::zero() => {
-                warn!("Tried to scroll a non-scroll node.")
-            }
-            _ => {}
-        }
-    }
-
     pub fn set_scroll_origin(&mut self, origin: &LayoutPoint, clamp: ScrollClamping) -> bool {
         let scrolling = match self.node_type {
             SpatialNodeType::ScrollFrame(ref mut scrolling) => scrolling,
@@ -909,8 +895,6 @@ pub struct ScrollFrameInfo {
     /// positioning of items inside child StickyFrames.
     pub viewport_rect: LayoutRect,
 
-    pub scroll_sensitivity: ScrollSensitivity,
-
     /// Amount that this ScrollFrame can scroll in both directions.
     pub scrollable_size: LayoutSize,
 
@@ -947,7 +931,6 @@ pub struct ScrollFrameInfo {
 impl ScrollFrameInfo {
     pub fn new(
         viewport_rect: LayoutRect,
-        scroll_sensitivity: ScrollSensitivity,
         scrollable_size: LayoutSize,
         external_id: ExternalScrollId,
         frame_kind: ScrollFrameKind,
@@ -956,33 +939,10 @@ impl ScrollFrameInfo {
         ScrollFrameInfo {
             viewport_rect,
             offset: -external_scroll_offset,
-            scroll_sensitivity,
             scrollable_size,
             external_id,
             frame_kind,
             external_scroll_offset,
-        }
-    }
-
-    pub fn sensitive_to_input_events(&self) -> bool {
-        match self.scroll_sensitivity {
-            ScrollSensitivity::ScriptAndInputEvents => true,
-            ScrollSensitivity::Script => false,
-        }
-    }
-
-    pub fn combine_with_old_scroll_info(
-        self,
-        old_scroll_info: &ScrollFrameInfo
-    ) -> ScrollFrameInfo {
-        ScrollFrameInfo {
-            viewport_rect: self.viewport_rect,
-            offset: old_scroll_info.offset,
-            scroll_sensitivity: self.scroll_sensitivity,
-            scrollable_size: self.scrollable_size,
-            external_id: self.external_id,
-            frame_kind: self.frame_kind,
-            external_scroll_offset: self.external_scroll_offset,
         }
     }
 }
@@ -1078,7 +1038,6 @@ fn test_cst_perspective_relative_scroll() {
         pipeline_id,
         &LayoutRect::from_size(LayoutSize::new(100.0, 100.0)),
         &LayoutSize::new(100.0, 500.0),
-        ScrollSensitivity::Script,
         ScrollFrameKind::Explicit,
         LayoutVector2D::zero(),
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1)),
@@ -1090,7 +1049,6 @@ fn test_cst_perspective_relative_scroll() {
         pipeline_id,
         &LayoutRect::from_size(LayoutSize::new(100.0, 100.0)),
         &LayoutSize::new(100.0, 500.0),
-        ScrollSensitivity::Script,
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 50.0),
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 3)),

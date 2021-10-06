@@ -2776,7 +2776,6 @@ pub extern "C" fn wr_dp_define_scroll_layer(
         ExternalScrollId(external_scroll_id, state.pipeline_id),
         content_rect,
         clip_rect,
-        ScrollSensitivity::Script,
         // TODO(gw): We should also update the Gecko-side APIs to provide
         //           this as a vector rather than a point.
         scroll_offset.to_vector(),
