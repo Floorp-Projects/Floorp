@@ -424,7 +424,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixelsOutput1_1) {
 void WriteRowAndCheckInterlacerOutput(image::Decoder* aDecoder,
                                       SurfaceFilter* aFilter, BGRAColor aColor,
                                       WriteState aNextState,
-                                      IntRect aInvalidRect,
+                                      OrientedIntRect aInvalidRect,
                                       uint32_t aFirstHaeberliRow,
                                       uint32_t aLastHaeberliRow) {
   uint32_t count = 0;
@@ -474,7 +474,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixelsIntermediateOutput7_7) {
         // the end of the first pass.
         WriteRowAndCheckInterlacerOutput(aDecoder, aFilter, BGRAColor::Green(),
                                          WriteState::NEED_MORE_DATA,
-                                         IntRect(0, 0, 7, 7), 0, 4);
+                                         OrientedIntRect(0, 0, 7, 7), 0, 4);
 
         // Second pass. Rows are positioned at 8n + 4.
 
@@ -482,7 +482,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixelsIntermediateOutput7_7) {
         // the end of the second pass.
         WriteRowAndCheckInterlacerOutput(aDecoder, aFilter, BGRAColor::Green(),
                                          WriteState::NEED_MORE_DATA,
-                                         IntRect(0, 0, 7, 7), 1, 4);
+                                         OrientedIntRect(0, 0, 7, 7), 1, 4);
 
         // Third pass. Rows are positioned at 4n + 2.
 
@@ -491,13 +491,13 @@ TEST_F(ImageDeinterlacingFilter, WritePixelsIntermediateOutput7_7) {
         // previous passes when seeking to the next output row (rows 4 and 5).
         WriteRowAndCheckInterlacerOutput(aDecoder, aFilter, BGRAColor::Red(),
                                          WriteState::NEED_MORE_DATA,
-                                         IntRect(0, 2, 7, 4), 2, 3);
+                                         OrientedIntRect(0, 2, 7, 4), 2, 3);
 
         // Output row 6. The invalid rect is the entire image because this is
         // the end of the third pass.
         WriteRowAndCheckInterlacerOutput(aDecoder, aFilter, BGRAColor::Red(),
                                          WriteState::NEED_MORE_DATA,
-                                         IntRect(0, 0, 7, 7), 6, 6);
+                                         OrientedIntRect(0, 0, 7, 7), 6, 6);
 
         // Fourth pass. Rows are positioned at 2n + 1.
 
@@ -506,21 +506,21 @@ TEST_F(ImageDeinterlacingFilter, WritePixelsIntermediateOutput7_7) {
         // previous passes when seeking to the next output row (row 2).
         WriteRowAndCheckInterlacerOutput(aDecoder, aFilter, BGRAColor::Green(),
                                          WriteState::NEED_MORE_DATA,
-                                         IntRect(0, 1, 7, 2), 1, 1);
+                                         OrientedIntRect(0, 1, 7, 2), 1, 1);
 
         // Output row 3. The invalid rect contains the Haeberli rows for this
         // output row (just row 3) as well as the rows that we copy from
         // previous passes when seeking to the next output row (row 4).
         WriteRowAndCheckInterlacerOutput(aDecoder, aFilter, BGRAColor::Red(),
                                          WriteState::NEED_MORE_DATA,
-                                         IntRect(0, 3, 7, 2), 3, 3);
+                                         OrientedIntRect(0, 3, 7, 2), 3, 3);
 
         // Output row 5. The invalid rect contains the Haeberli rows for this
         // output row (just row 5) as well as the rows that we copy from
         // previous passes when seeking to the next output row (row 6).
         WriteRowAndCheckInterlacerOutput(aDecoder, aFilter, BGRAColor::Green(),
                                          WriteState::FINISHED,
-                                         IntRect(0, 5, 7, 2), 5, 5);
+                                         OrientedIntRect(0, 5, 7, 2), 5, 5);
 
         // Assert that we're in the expected final state.
         EXPECT_TRUE(aFilter->IsSurfaceFinished());
@@ -557,7 +557,7 @@ TEST_F(ImageDeinterlacingFilter,
         // the end of the first pass.
         WriteRowAndCheckInterlacerOutput(aDecoder, aFilter, BGRAColor::Green(),
                                          WriteState::NEED_MORE_DATA,
-                                         IntRect(0, 0, 7, 7), 0, 0);
+                                         OrientedIntRect(0, 0, 7, 7), 0, 0);
 
         // Second pass. Rows are positioned at 8n + 4.
 
@@ -565,7 +565,7 @@ TEST_F(ImageDeinterlacingFilter,
         // the end of the second pass.
         WriteRowAndCheckInterlacerOutput(aDecoder, aFilter, BGRAColor::Green(),
                                          WriteState::NEED_MORE_DATA,
-                                         IntRect(0, 0, 7, 7), 4, 4);
+                                         OrientedIntRect(0, 0, 7, 7), 4, 4);
 
         // Third pass. Rows are positioned at 4n + 2.
 
@@ -574,13 +574,13 @@ TEST_F(ImageDeinterlacingFilter,
         // previous passes when seeking to the next output row (rows 4 and 5).
         WriteRowAndCheckInterlacerOutput(aDecoder, aFilter, BGRAColor::Red(),
                                          WriteState::NEED_MORE_DATA,
-                                         IntRect(0, 2, 7, 4), 2, 2);
+                                         OrientedIntRect(0, 2, 7, 4), 2, 2);
 
         // Output row 6. The invalid rect is the entire image because this is
         // the end of the third pass.
         WriteRowAndCheckInterlacerOutput(aDecoder, aFilter, BGRAColor::Red(),
                                          WriteState::NEED_MORE_DATA,
-                                         IntRect(0, 0, 7, 7), 6, 6);
+                                         OrientedIntRect(0, 0, 7, 7), 6, 6);
 
         // Fourth pass. Rows are positioned at 2n + 1.
 
@@ -589,21 +589,21 @@ TEST_F(ImageDeinterlacingFilter,
         // previous passes when seeking to the next output row (row 2).
         WriteRowAndCheckInterlacerOutput(aDecoder, aFilter, BGRAColor::Green(),
                                          WriteState::NEED_MORE_DATA,
-                                         IntRect(0, 1, 7, 2), 1, 1);
+                                         OrientedIntRect(0, 1, 7, 2), 1, 1);
 
         // Output row 3. The invalid rect contains the Haeberli rows for this
         // output row (just row 3) as well as the rows that we copy from
         // previous passes when seeking to the next output row (row 4).
         WriteRowAndCheckInterlacerOutput(aDecoder, aFilter, BGRAColor::Red(),
                                          WriteState::NEED_MORE_DATA,
-                                         IntRect(0, 3, 7, 2), 3, 3);
+                                         OrientedIntRect(0, 3, 7, 2), 3, 3);
 
         // Output row 5. The invalid rect contains the Haeberli rows for this
         // output row (just row 5) as well as the rows that we copy from
         // previous passes when seeking to the next output row (row 6).
         WriteRowAndCheckInterlacerOutput(aDecoder, aFilter, BGRAColor::Green(),
                                          WriteState::FINISHED,
-                                         IntRect(0, 5, 7, 2), 5, 5);
+                                         OrientedIntRect(0, 5, 7, 2), 5, 5);
 
         // Assert that we're in the expected final state.
         EXPECT_TRUE(aFilter->IsSurfaceFinished());

@@ -467,7 +467,7 @@ LookupResult FrameAnimator::GetCompositedFrame(AnimationState& aState,
       // getting called which calls UpdateState. The reason we care about this
       // is that img.decode promises won't resolve until GetCompositedFrame
       // returns a frame.
-      UnorientedIntRect rect = UnorientedIntRect::FromUnknownRect(
+      OrientedIntRect rect = OrientedIntRect::FromUnknownRect(
           aState.UpdateStateInternal(result, mSize));
 
       if (!rect.IsEmpty()) {

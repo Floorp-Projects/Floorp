@@ -56,21 +56,24 @@ class ImageMetadata {
   void SetSize(int32_t aWidth, int32_t aHeight, Orientation aOrientation,
                Resolution aResolution) {
     if (!HasSize()) {
-      mSize.emplace(nsIntSize(aWidth, aHeight));
+      mSize.emplace(
+          aOrientation.ToOriented(UnorientedIntSize(aWidth, aHeight)));
       mOrientation.emplace(aOrientation);
       mResolution = aResolution;
     }
   }
-  nsIntSize GetSize() const { return *mSize; }
+  OrientedIntSize GetSize() const { return *mSize; }
   bool HasSize() const { return mSize.isSome(); }
 
-  void AddNativeSize(const nsIntSize& aSize) {
+  void AddNativeSize(const OrientedIntSize& aSize) {
     mNativeSizes.AppendElement(aSize);
   }
 
   Resolution GetResolution() const { return mResolution; }
 
-  const nsTArray<nsIntSize>& GetNativeSizes() const { return mNativeSizes; }
+  const nsTArray<OrientedIntSize>& GetNativeSizes() const {
+    return mNativeSizes;
+  }
 
   Orientation GetOrientation() const { return *mOrientation; }
   bool HasOrientation() const { return mOrientation.isSome(); }
@@ -98,11 +101,11 @@ class ImageMetadata {
   // loops.
   Maybe<gfx::IntRect> mFirstFrameRefreshArea;
 
-  Maybe<nsIntSize> mSize;
+  Maybe<OrientedIntSize> mSize;
   Maybe<Orientation> mOrientation;
 
   // Sizes the image can natively decode to.
-  CopyableTArray<nsIntSize> mNativeSizes;
+  CopyableTArray<OrientedIntSize> mNativeSizes;
 
   bool mHasAnimation = false;
 };

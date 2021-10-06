@@ -277,13 +277,13 @@ already_AddRefed<Decoder> CreateTrivialDecoder() {
 }
 
 void AssertCorrectPipelineFinalState(SurfaceFilter* aFilter,
-                                     const gfx::IntRect& aInputSpaceRect,
-                                     const gfx::IntRect& aOutputSpaceRect) {
+                                     const IntRect& aInputSpaceRect,
+                                     const IntRect& aOutputSpaceRect) {
   EXPECT_TRUE(aFilter->IsSurfaceFinished());
   Maybe<SurfaceInvalidRect> invalidRect = aFilter->TakeInvalidRect();
   EXPECT_TRUE(invalidRect.isSome());
-  EXPECT_EQ(aInputSpaceRect, invalidRect->mInputSpaceRect);
-  EXPECT_EQ(aOutputSpaceRect, invalidRect->mOutputSpaceRect);
+  EXPECT_EQ(aInputSpaceRect, invalidRect->mInputSpaceRect.ToUnknownRect());
+  EXPECT_EQ(aOutputSpaceRect, invalidRect->mOutputSpaceRect.ToUnknownRect());
 }
 
 void CheckGeneratedImage(Decoder* aDecoder, const IntRect& aRect,

@@ -170,7 +170,7 @@ nsresult DecoderFactory::CreateDecoder(
   // Initialize the decoder.
   decoder->SetMetadataDecode(false);
   decoder->SetIterator(aSourceBuffer->Iterator());
-  decoder->SetOutputSize(aOutputSize);
+  decoder->SetOutputSize(OrientedIntSize::FromUnknownSize(aOutputSize));
   decoder->SetDecoderFlags(aDecoderFlags | DecoderFlags::FIRST_FRAME_ONLY);
   decoder->SetSurfaceFlags(aSurfaceFlags);
 
@@ -320,7 +320,8 @@ already_AddRefed<IDecodingTask> DecoderFactory::CreateMetadataDecoder(
 already_AddRefed<Decoder> DecoderFactory::CreateDecoderForICOResource(
     DecoderType aType, SourceBufferIterator&& aIterator,
     NotNull<nsICODecoder*> aICODecoder, bool aIsMetadataDecode,
-    const Maybe<IntSize>& aExpectedSize, const Maybe<uint32_t>& aDataOffset
+    const Maybe<OrientedIntSize>& aExpectedSize,
+    const Maybe<uint32_t>& aDataOffset
     /* = Nothing() */) {
   // Create the decoder.
   RefPtr<Decoder> decoder;
@@ -389,7 +390,7 @@ already_AddRefed<Decoder> DecoderFactory::CreateAnonymousDecoder(
 
   // Set an output size for downscale-during-decode if requested.
   if (aOutputSize) {
-    decoder->SetOutputSize(*aOutputSize);
+    decoder->SetOutputSize(OrientedIntSize::FromUnknownSize(*aOutputSize));
   }
 
   if (NS_FAILED(decoder->Init())) {

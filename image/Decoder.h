@@ -157,8 +157,8 @@ class Decoder {
    * TakeInvalidRect() returns only the invalidation region accumulated since
    * the last call to TakeInvalidRect().
    */
-  nsIntRect TakeInvalidRect() {
-    nsIntRect invalidRect = mInvalidRect;
+  OrientedIntRect TakeInvalidRect() {
+    OrientedIntRect invalidRect = mInvalidRect;
     mInvalidRect.SetEmpty();
     return invalidRect;
   }
@@ -211,7 +211,7 @@ class Decoder {
    *
    * This must be called before Init() is called.
    */
-  void SetOutputSize(const gfx::IntSize& aSize);
+  void SetOutputSize(const OrientedIntSize& aSize);
 
   /**
    * @return the output size of this decoder. If this is smaller than the
@@ -220,7 +220,7 @@ class Decoder {
    *
    * Illegal to call if HasSize() returns false.
    */
-  gfx::IntSize OutputSize() const {
+  OrientedIntSize OutputSize() const {
     MOZ_ASSERT(HasSize());
     return *mOutputSize;
   }
@@ -229,13 +229,13 @@ class Decoder {
    * @return either the size passed to SetOutputSize() or Nothing(), indicating
    * that SetOutputSize() was not explicitly called.
    */
-  Maybe<gfx::IntSize> ExplicitOutputSize() const;
+  Maybe<OrientedIntSize> ExplicitOutputSize() const;
 
   /**
    * Sets the expected image size of this decoder. Decoding will fail if this
    * does not match.
    */
-  void SetExpectedSize(const gfx::IntSize& aSize) {
+  void SetExpectedSize(const OrientedIntSize& aSize) {
     mExpectedSize.emplace(aSize);
   }
 
@@ -342,7 +342,7 @@ class Decoder {
    *
    * Illegal to call if HasSize() returns false.
    */
-  gfx::IntSize Size() const {
+  OrientedIntSize Size() const {
     MOZ_ASSERT(HasSize());
     return mImageMetadata.GetSize();
   }
@@ -354,8 +354,8 @@ class Decoder {
    *
    * Illegal to call if HasSize() returns false.
    */
-  gfx::IntRect FullFrame() const {
-    return gfx::IntRect(gfx::IntPoint(), Size());
+  OrientedIntRect FullFrame() const {
+    return OrientedIntRect(OrientedIntPoint(), Size());
   }
 
   /**
@@ -369,8 +369,18 @@ class Decoder {
    *
    * Illegal to call if HasSize() returns false.
    */
-  gfx::IntRect FullOutputFrame() const {
-    return gfx::IntRect(gfx::IntPoint(), OutputSize());
+  OrientedIntRect FullOutputFrame() const {
+    return OrientedIntRect(OrientedIntPoint(), OutputSize());
+  }
+
+  /**
+   * @return the orientation of the image.
+   *
+   * Illegal to call if HasSize() returns false.
+   */
+  Orientation GetOrientation() const {
+    MOZ_ASSERT(HasSize());
+    return mImageMetadata.GetOrientation();
   }
 
   /// @return final status information about this decoder. Should be called
@@ -514,8 +524,8 @@ class Decoder {
    *                          be supplied if we're downscaling during decode.
    */
   void PostInvalidation(
-      const gfx::IntRect& aRect,
-      const Maybe<gfx::IntRect>& aRectAtOutputSize = Nothing());
+      const OrientedIntRect& aRect,
+      const Maybe<OrientedIntRect>& aRectAtOutputSize = Nothing());
 
   // Called by the decoders when they have successfully decoded the image. This
   // may occur as the result of the decoder getting to the appropriate point in
@@ -586,14 +596,14 @@ class Decoder {
 
   ImageMetadata mImageMetadata;
 
-  gfx::IntRect
+  OrientedIntRect
       mInvalidRect;  // Tracks new rows as the current frame is decoded.
-  gfx::IntRect mRestoreDirtyRect;   // Tracks an invalidation region between the
-                                    // restore frame and the previous frame.
-  gfx::IntRect mRecycleRect;        // Tracks an invalidation region between the
-                                    // recycled frame and the current frame.
-  Maybe<gfx::IntSize> mOutputSize;  // The size of our output surface.
-  Maybe<gfx::IntSize> mExpectedSize;  // The expected size of the image.
+  gfx::IntRect mRestoreDirtyRect;  // Tracks an invalidation region between the
+                                   // restore frame and the previous frame.
+  gfx::IntRect mRecycleRect;       // Tracks an invalidation region between the
+                                   // recycled frame and the current frame.
+  Maybe<OrientedIntSize> mOutputSize;    // The size of our output surface.
+  Maybe<OrientedIntSize> mExpectedSize;  // The expected size of the image.
   Progress mProgress;
 
   uint32_t mFrameCount;      // Number of frames, including anything in-progress

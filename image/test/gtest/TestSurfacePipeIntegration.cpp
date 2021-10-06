@@ -48,8 +48,8 @@ void CheckSurfacePipeMethodResults(SurfacePipe* aPipe, image::Decoder* aDecoder,
   EXPECT_TRUE(aPipe->IsSurfaceFinished());
   Maybe<SurfaceInvalidRect> invalidRect = aPipe->TakeInvalidRect();
   EXPECT_TRUE(invalidRect.isSome());
-  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mInputSpaceRect);
-  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mOutputSpaceRect);
+  EXPECT_EQ(OrientedIntRect(0, 0, 100, 100), invalidRect->mInputSpaceRect);
+  EXPECT_EQ(OrientedIntRect(0, 0, 100, 100), invalidRect->mOutputSpaceRect);
 
   // Check the generated image.
   CheckGeneratedImage(aDecoder, aRect);
@@ -71,8 +71,8 @@ void CheckSurfacePipeMethodResults(SurfacePipe* aPipe, image::Decoder* aDecoder,
   EXPECT_TRUE(aPipe->IsSurfaceFinished());
   invalidRect = aPipe->TakeInvalidRect();
   EXPECT_TRUE(invalidRect.isSome());
-  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mInputSpaceRect);
-  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mOutputSpaceRect);
+  EXPECT_EQ(OrientedIntRect(0, 0, 100, 100), invalidRect->mInputSpaceRect);
+  EXPECT_EQ(OrientedIntRect(0, 0, 100, 100), invalidRect->mOutputSpaceRect);
 
   aPipe->ResetToFirstRow();
   EXPECT_FALSE(aPipe->IsSurfaceFinished());

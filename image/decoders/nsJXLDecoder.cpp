@@ -134,7 +134,7 @@ LexerTransition<nsJXLDecoder::State> nsJXLDecoder::ReadJXLData(
       }
 
       case JXL_DEC_FULL_IMAGE: {
-        gfx::IntSize size(mInfo.xsize, mInfo.ysize);
+        OrientedIntSize size(mInfo.xsize, mInfo.ysize);
         Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
             this, size, OutputSize(), FullFrame(), SurfaceFormat::R8G8B8A8,
             SurfaceFormat::OS_RGBA, Nothing(), nullptr, SurfacePipeFlags());
