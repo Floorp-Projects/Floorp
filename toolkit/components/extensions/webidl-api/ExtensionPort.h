@@ -29,16 +29,20 @@ class ExtensionEventManager;
 
 class ExtensionPort final : public nsISupports,
                             public nsWrapperCache,
+                            public SupportsWeakPtr,
                             public ExtensionAPIBase {
   nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<ExtensionBrowser> mExtensionBrowser;
   RefPtr<ExtensionEventManager> mOnDisconnectEventMgr;
   RefPtr<ExtensionEventManager> mOnMessageEventMgr;
   UniquePtr<dom::ExtensionPortDescriptor> mPortDescriptor;
+  RefPtr<dom::Function> mCallback;
 
   ~ExtensionPort() = default;
   ExtensionPort(nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
                 UniquePtr<dom::ExtensionPortDescriptor>&& aPortDescriptor);
+
+  void ForgetReleasedPort();
 
  protected:
   // ExtensionAPIBase methods
