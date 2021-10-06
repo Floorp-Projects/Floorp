@@ -30,18 +30,17 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionBrowser)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPortsLookup)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionAlarms)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionMockAPI)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionRuntime)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionTest)
   tmp->mLastError.setUndefined();
+  tmp->mPortsLookup.Clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ExtensionBrowser)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPortsLookup)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionAlarms)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionMockAPI)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionRuntime)
@@ -125,15 +124,20 @@ already_AddRefed<ExtensionPort> ExtensionBrowser::GetPort(
   }
 
   auto portId = portDescriptor->mPortId;
-  Maybe<RefPtr<ExtensionPort>> maybePort = mPortsLookup.MaybeGet(portId);
-  if (maybePort.isSome()) {
-    return (*maybePort).forget();
+  auto maybePort = mPortsLookup.MaybeGet(portId);
+  if (maybePort.isSome() && maybePort.value().get()) {
+    RefPtr<ExtensionPort> existingPort = maybePort.value().get();
+    return existingPort.forget();
   }
 
   RefPtr<ExtensionPort> newPort =
       ExtensionPort::Create(mGlobal, this, std::move(portDescriptor));
-  mPortsLookup.InsertOrUpdate(portId, RefPtr{newPort});
+  mPortsLookup.InsertOrUpdate(portId, newPort);
   return newPort.forget();
+}
+
+void ExtensionBrowser::ForgetReleasedPort(const nsAString& aPortId) {
+  mPortsLookup.Remove(aPortId);
 }
 
 ExtensionAlarms* ExtensionBrowser::GetExtensionAlarms() {

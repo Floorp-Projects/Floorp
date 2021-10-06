@@ -35,7 +35,7 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   RefPtr<ExtensionMockAPI> mExtensionMockAPI;
   RefPtr<ExtensionRuntime> mExtensionRuntime;
   RefPtr<ExtensionTest> mExtensionTest;
-  nsRefPtrHashtable<nsStringHashKey, ExtensionPort> mPortsLookup;
+  nsTHashMap<nsStringHashKey, WeakPtr<ExtensionPort>> mPortsLookup;
 
   ~ExtensionBrowser() = default;
 
@@ -52,9 +52,18 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   // should be reported to the console
   bool ClearLastError();
 
-  // Helpers used to retrieve or destroy a port.
+  // Helpers used for the ExtensionPort.
+
+  // Get an ExtensionPort instance given its port descriptor (returns an
+  // existing port if an instance is still tracked in the ports lookup table,
+  // otherwise it creates a new one).
   already_AddRefed<ExtensionPort> GetPort(
       JS::Handle<JS::Value> aDescriptorValue, ErrorResult& aRv);
+
+  // Remove the entry for an ExtensionPort tracked in the ports lookup map
+  // given its portId (called from the ExtensionPort destructor when the
+  // instance is being released).
+  void ForgetReleasedPort(const nsAString& aPortId);
 
   // nsWrapperCache interface methods
   JSObject* WrapObject(JSContext* aCx,
