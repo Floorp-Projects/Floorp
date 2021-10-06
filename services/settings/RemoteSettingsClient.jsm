@@ -27,8 +27,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Utils: "resource://services-settings/Utils.jsm",
 });
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
-
 const TELEMETRY_COMPONENT = "remotesettings";
 
 XPCOMUtils.defineLazyGetter(this, "console", () => Utils.log);
@@ -860,7 +858,7 @@ class RemoteSettingsClient extends EventEmitter {
     const {
       signature: { x5u, signature },
     } = metadata;
-    const certChain = await (await fetch(x5u)).text();
+    const certChain = await (await Utils.fetch(x5u)).text();
     // Merge remote records with local ones and serialize as canonical JSON.
     const serialized = await RemoteSettingsWorker.canonicalStringify(
       records,
