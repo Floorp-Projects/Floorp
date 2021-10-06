@@ -16505,6 +16505,12 @@ already_AddRefed<mozilla::dom::Promise> Document::HasStorageAccess(
     return promise.forget();
   }
 
+  uint32_t cookieBehavior = CookieJarSettings()->GetCookieBehavior();
+  if (cookieBehavior == nsICookieService::BEHAVIOR_REJECT) {
+    promise->MaybeResolve(false);
+    return promise.forget();
+  }
+
   if (IsTopLevelContentDocument()) {
     promise->MaybeResolve(true);
     return promise.forget();
