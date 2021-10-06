@@ -5,6 +5,7 @@
 
 #include "NotificationController.h"
 
+#include "CacheConstants.h"
 #include "DocAccessible-inl.h"
 #include "DocAccessibleChild.h"
 #include "nsEventShell.h"
@@ -656,6 +657,8 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
                  "isn't created!");
   }
 
+  nsTArray<CacheData> cache;
+
   // Process rendered text change notifications.
   for (nsIContent* textNode : mTextHash) {
     LocalAccessible* textAcc = mDocument->GetAccessible(textNode);
@@ -719,6 +722,13 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
 #endif
 
       TextUpdater::Run(mDocument, textAcc->AsTextLeaf(), text.mString);
+      if (IPCAccessibilityActive() &&
+          StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+        RefPtr<AccAttributes> fields = textAcc->BundleFieldsForCache(
+            CacheDomain::Text, CacheUpdateType::Update);
+        uint64_t id = reinterpret_cast<uint64_t>(textAcc->UniqueID());
+        cache.AppendElement(CacheData(id, fields));
+      }
       continue;
     }
 
@@ -747,6 +757,12 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
     }
   }
   mTextHash.Clear();
+
+  if (!cache.IsEmpty()) {
+    DocAccessibleChild* ipcDoc = mDocument->IPCDoc();
+    MOZ_ASSERT(ipcDoc);
+    ipcDoc->SendCache(CacheUpdateType::Update, cache, true);
+  }
 
   // Process content inserted notifications to update the tree.
   // Processing an insertion can indirectly run script (e.g. querying a XUL
