@@ -129,6 +129,7 @@
 #include "WinTaskbar.h"
 #include "WidgetUtils.h"
 #include "WinContentSystemParameters.h"
+#include "WinWindowOcclusionTracker.h"
 #include "nsIWidgetListener.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/MouseEventBinding.h"
@@ -7511,6 +7512,14 @@ bool nsWindow::OnResize(const LayoutDeviceIntSize& aSize) {
 }
 
 void nsWindow::OnSizeModeChange(nsSizeMode aSizeMode) {
+  MOZ_LOG(gWindowsLog, LogLevel::Info,
+          ("nsWindow::OnSizeModeChange() aSizeMode %d", aSizeMode));
+
+  if (NeedsToTrackWindowOcclusionState()) {
+    WinWindowOcclusionTracker::Get()->OnWindowVisibilityChanged(
+        this, aSizeMode != nsSizeMode_Minimized);
+  }
+
   if (mCompositorWidgetDelegate) {
     mCompositorWidgetDelegate->OnWindowModeChange(aSizeMode);
   }

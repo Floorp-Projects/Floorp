@@ -16,6 +16,7 @@
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/NativeLayer.h"
 #include "mozilla/widget/ThemeChangeKind.h"
+#include "mozilla/widget/WindowOcclusionState.h"
 #include "nsRect.h"
 #include "nsIWidget.h"
 #include "nsWidgetsCID.h"
@@ -435,6 +436,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 #endif
 
   virtual void LocalesChanged() {}
+
+  virtual void NotifyOcclusionState(mozilla::widget::OcclusionState aState) {}
 
  protected:
   // These are methods for CompositorWidgetWrapper, and should only be

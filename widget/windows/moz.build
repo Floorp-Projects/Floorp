@@ -51,9 +51,11 @@ EXPORTS.mozilla.widget += [
     "WinContentSystemParameters.h",
     "WindowsEMF.h",
     "WindowsSMTCProvider.h",
+    "WinEventObserver.h",
     "WinMessages.h",
     "WinModifierKeyState.h",
     "WinTaskbar.h",
+    "WinWindowOcclusionTracker.h",
 ]
 
 UNIFIED_SOURCES += [
@@ -100,11 +102,13 @@ UNIFIED_SOURCES += [
     "WinCompositorWindowThread.cpp",
     "WindowHook.cpp",
     "WindowsConsole.cpp",
+    "WinEventObserver.cpp",
     "WinIMEHandler.cpp",
     "WinPointerEvents.cpp",
     "WinTaskbar.cpp",
     "WinTextEventDispatcherListener.cpp",
     "WinUtils.cpp",
+    "WinWindowOcclusionTracker.cpp",
 ]
 
 # The following files cannot be built in unified mode because of name clashes.
@@ -139,11 +143,13 @@ SOURCES += [
 if CONFIG["NS_PRINTING"]:
     UNIFIED_SOURCES += [
         "nsDeviceContextSpecWin.cpp",
-        "nsPrintDialogUtil.cpp",
         "nsPrintDialogWin.cpp",
         "nsPrinterWin.cpp",
         "nsPrintSettingsServiceWin.cpp",
         "nsPrintSettingsWin.cpp",
+    ]
+    SOURCES += [
+        "nsPrintDialogUtil.cpp",
     ]
 
 if CONFIG["MOZ_ENABLE_SKIA_PDF"]:
