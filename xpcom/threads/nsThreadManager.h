@@ -92,7 +92,7 @@ class nsThreadManager : public nsIThreadManager {
   nsresult SpinEventLoopUntilInternal(
       const nsACString& aVeryGoodReasonToDoThis,
       nsINestedEventLoopCondition* aCondition,
-      mozilla::ShutdownPhase aShutdownPhaseToCheck);
+      mozilla::ShutdownPhase aCheckingShutdownPhase);
 
   static void ReleaseThread(void* aData);
 

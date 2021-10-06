@@ -32,18 +32,15 @@ class FuzzingWebSocketListener final : public nsIWebSocketListener {
   FuzzingWebSocketListener() = default;
 
   void waitUntilDoneOrStarted() {
-    SpinEventLoopUntil("FuzzingWebSocketListener::waitUntilDoneOrStarted"_ns,
-                       [&]() { return mChannelDone || mChannelStarted; });
+    SpinEventLoopUntil([&]() { return mChannelDone || mChannelStarted; });
   }
 
   void waitUntilDone() {
-    SpinEventLoopUntil("FuzzingWebSocketListener::waitUntilDone"_ns,
-                       [&]() { return mChannelDone; });
+    SpinEventLoopUntil([&]() { return mChannelDone; });
   }
 
   void waitUntilDoneOrAck() {
-    SpinEventLoopUntil("FuzzingWebSocketListener::waitUntilDoneOrAck"_ns,
-                       [&]() { return mChannelDone || mChannelAck; });
+    SpinEventLoopUntil([&]() { return mChannelDone || mChannelAck; });
   }
 
   bool isStarted() { return mChannelStarted; }
@@ -203,17 +200,15 @@ static int FuzzingRunNetworkWebsocket(const uint8_t* data, size_t size) {
   }
 
   // Wait for the channel to be destroyed
-  SpinEventLoopUntil(
-      "FuzzingRunNetworkWebsocket(channel == nullptr)"_ns, [&]() -> bool {
-        nsCycleCollector_collect(nullptr);
-        nsCOMPtr<nsIWebSocketChannel> channel = do_QueryReferent(channelRef);
-        return channel == nullptr;
-      });
+  SpinEventLoopUntil([&]() -> bool {
+    nsCycleCollector_collect(nullptr);
+    nsCOMPtr<nsIWebSocketChannel> channel = do_QueryReferent(channelRef);
+    return channel == nullptr;
+  });
 
   if (!signalNetworkFuzzingDone()) {
     // Wait for the connection to indicate closed
-    SpinEventLoopUntil("FuzzingRunNetworkWebsocket(gFuzzingConnClosed)"_ns,
-                       [&]() -> bool { return gFuzzingConnClosed; });
+    SpinEventLoopUntil([&]() -> bool { return gFuzzingConnClosed; });
   }
 
   return 0;

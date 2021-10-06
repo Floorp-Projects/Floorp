@@ -3060,8 +3060,7 @@ void XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
 
     nsAutoSyncOperation sync(suspendedDoc,
                              SyncOperationBehavior::eSuspendInput);
-    if (!SpinEventLoopUntil("XMLHttpRequestMainThread::SendInternal"_ns,
-                            [&]() { return !mFlagSyncLooping; })) {
+    if (!SpinEventLoopUntil([&]() { return !mFlagSyncLooping; })) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return;
     }

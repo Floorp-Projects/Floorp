@@ -16,8 +16,7 @@ class GMPTestMonitor {
 
   void AwaitFinished() {
     MOZ_ASSERT(NS_IsMainThread());
-    mozilla::SpinEventLoopUntil("GMPTestMonitor::AwaitFinished"_ns,
-                                [&]() { return mFinished; });
+    mozilla::SpinEventLoopUntil([&]() { return mFinished; });
     mFinished = false;
   }
 

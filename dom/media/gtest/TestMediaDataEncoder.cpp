@@ -195,8 +195,7 @@ void WaitForShutdown(RefPtr<MediaDataEncoder> aEncoder) {
         result = Some(true);
       },
       []() { FAIL() << "Shutdown should never be rejected"; });
-  SpinEventLoopUntil("TestMediaDataEncoder.cpp:WaitForShutdown"_ns,
-                     [&result]() { return result; });
+  SpinEventLoopUntil([&result]() { return result; });
 }
 
 TEST_F(MediaDataEncoderTest, H264Create) {

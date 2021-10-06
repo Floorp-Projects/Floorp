@@ -338,7 +338,6 @@ TEST_F(TestAudioDecoderInputTrack, VolumeChange) {
   expectedVolume = 0.1;
   mTrack->SetVolume(expectedVolume);
   SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      "TEST_F(TestAudioDecoderInputTrack, VolumeChange)"_ns,
       [&] { return mTrack->Volume() == expectedVolume; });
   start = end;
   end += 10;
@@ -367,7 +366,6 @@ TEST_F(TestAudioDecoderInputTrack, BatchedData) {
   // the track first time started to batch data, which we can't control here.
   // Therefore, we need to wait until the batched data gets cleared.
   SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      "TEST_F(TestAudioDecoderInputTrack, BatchedData)"_ns,
       [&] { return !mTrack->HasBatchedData(); });
 
   // Check that we received all the remainging data previously appended.
@@ -426,7 +424,6 @@ TEST_F(TestAudioDecoderInputTrack, PlaybackRateChange) {
   float expectedPlaybackRate = 2.0;
   mTrack->SetPlaybackRate(expectedPlaybackRate);
   SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      "TEST_F(TestAudioDecoderInputTrack, PlaybackRateChange)"_ns,
       [&] { return mTrack->PlaybackRate() == expectedPlaybackRate; });
 
   // Time stretcher in the track would usually need certain amount of data

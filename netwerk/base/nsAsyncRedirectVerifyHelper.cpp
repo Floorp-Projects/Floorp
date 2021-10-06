@@ -85,8 +85,7 @@ nsresult nsAsyncRedirectVerifyHelper::Init(
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (synchronize) {
-    if (!SpinEventLoopUntil("nsAsyncRedirectVerifyHelper::Init"_ns,
-                            [&]() { return !mWaitingForRedirectCallback; })) {
+    if (!SpinEventLoopUntil([&]() { return !mWaitingForRedirectCallback; })) {
       return NS_ERROR_UNEXPECTED;
     }
   }

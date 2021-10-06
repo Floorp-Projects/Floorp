@@ -27,8 +27,7 @@ nsresult RemotePrintJobChild::InitializePrint(const nsString& aDocumentTitle,
   // need to spin a nested event loop until initialization completes.
   Unused << SendInitializePrint(aDocumentTitle, aPrintToFile, aStartPage,
                                 aEndPage);
-  mozilla::SpinEventLoopUntil("RemotePrintJobChild::InitializePrint"_ns,
-                              [&]() { return mPrintInitialized; });
+  mozilla::SpinEventLoopUntil([&]() { return mPrintInitialized; });
 
   return mInitializationResult;
 }

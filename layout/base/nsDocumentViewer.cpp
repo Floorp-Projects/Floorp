@@ -1276,8 +1276,7 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
         *aPermitUnload = false;
       });
 
-  SpinEventLoopUntil("nsDocumentViewer::PermitUnload"_ns,
-                     [&]() { return done; });
+  SpinEventLoopUntil([&]() { return done; });
 
   mInPermitUnloadPrompt = false;
   return NS_OK;

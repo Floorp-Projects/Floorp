@@ -127,6 +127,5 @@ TEST(TestHttpChannel, PBAsyncOpen)
   ASSERT_EQ(isPrivate, true);
 
   MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
-      "TEST(TestHttpChannel, PBAsyncOpen)"_ns,
       [&]() -> bool { return listener->mOnStop.isSome(); }));
 }

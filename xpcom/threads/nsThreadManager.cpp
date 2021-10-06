@@ -9,7 +9,6 @@
 #include "nsThreadPool.h"
 #include "nsThreadUtils.h"
 #include "nsIClassInfoImpl.h"
-#include "nsExceptionHandler.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
 #include "nsExceptionHandler.h"
@@ -389,9 +388,7 @@ void nsThreadManager::Shutdown() {
   // preventing the task queues from emptying, preventing the shutdown promises
   // from resolving, and prevent anything checking `taskQueuesShutdown` from
   // working.
-  mozilla::SpinEventLoopUntil(
-      "nsThreadManager::Shutdown"_ns, [&]() { return taskQueuesShutdown; },
-      mMainThread);
+  ::SpinEventLoopUntil([&]() { return taskQueuesShutdown; }, mMainThread);
 
   {
     // We gather the threads from the hashtable into a list, so that we avoid
@@ -522,9 +519,7 @@ void nsThreadManager::CancelBackgroundDelayedRunnables() {
   bool canceled = false;
   mBackgroundEventTarget->CancelBackgroundDelayedRunnables()->Then(
       GetMainThreadSerialEventTarget(), __func__, [&] { canceled = true; });
-  mozilla::SpinEventLoopUntil(
-      "nsThreadManager::CancelBackgroundDelayedRunnables"_ns,
-      [&]() { return canceled; });
+  ::SpinEventLoopUntil([&]() { return canceled; });
 }
 
 nsThread* nsThreadManager::GetCurrentThread() {
@@ -656,30 +651,73 @@ nsThreadManager::SpinEventLoopUntilOrQuit(
                                     ShutdownPhase::AppShutdownConfirmed);
 }
 
-// statics from SpinEventLoopUntil.h
+struct MOZ_STACK_CLASS AutoNestedEventLoopAnnotation {
+  explicit AutoNestedEventLoopAnnotation(const nsACString& aEntry)
+      : mPrev(sCurrent) {
+    sCurrent = this;
+    if (mPrev) {
+      mStack = mPrev->mStack + "|"_ns + aEntry;
+    } else {
+      mStack = aEntry;
+    }
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::XPCOMSpinEventLoopStack, mStack);
+  }
+
+  ~AutoNestedEventLoopAnnotation() {
+    MOZ_ASSERT(sCurrent == this);
+    sCurrent = mPrev;
+    if (mPrev) {
+      CrashReporter::AnnotateCrashReport(
+          CrashReporter::Annotation::XPCOMSpinEventLoopStack, mPrev->mStack);
+    } else {
+      CrashReporter::RemoveCrashReportAnnotation(
+          CrashReporter::Annotation::XPCOMSpinEventLoopStack);
+    }
+  }
+
+ private:
+  AutoNestedEventLoopAnnotation(const AutoNestedEventLoopAnnotation&) = delete;
+  AutoNestedEventLoopAnnotation& operator=(
+      const AutoNestedEventLoopAnnotation&) = delete;
+
+  static AutoNestedEventLoopAnnotation* sCurrent;
+
+  AutoNestedEventLoopAnnotation* mPrev;
+  nsCString mStack;
+};
+
 AutoNestedEventLoopAnnotation* AutoNestedEventLoopAnnotation::sCurrent =
     nullptr;
-StaticMutex AutoNestedEventLoopAnnotation::sStackMutex;
-
-// static from SpinEventLoopUntil.h
-void AutoNestedEventLoopAnnotation::AnnotateXPCOMSpinEventLoopStack(
-    const nsACString& aStack) {
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::XPCOMSpinEventLoopStack, aStack);
-}
 
 nsresult nsThreadManager::SpinEventLoopUntilInternal(
     const nsACString& aVeryGoodReasonToDoThis,
     nsINestedEventLoopCondition* aCondition,
-    ShutdownPhase aShutdownPhaseToCheck) {
+    ShutdownPhase aCheckingShutdownPhase) {
+  AutoNestedEventLoopAnnotation annotation(aVeryGoodReasonToDoThis);
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE(
+      "nsThreadManager::SpinEventLoop", OTHER, aVeryGoodReasonToDoThis);
+  AUTO_PROFILER_MARKER_TEXT("SpinEventLoop", OTHER, MarkerStack::Capture(),
+                            aVeryGoodReasonToDoThis);
+
   // XXX: We would want to AssertIsOnMainThread(); but that breaks some GTest.
   nsCOMPtr<nsINestedEventLoopCondition> condition(aCondition);
   nsresult rv = NS_OK;
 
-  if (!mozilla::SpinEventLoopUntil(aVeryGoodReasonToDoThis, [&]() -> bool {
-        // Check if an ongoing shutdown reached our limits.
-        if (aShutdownPhaseToCheck > ShutdownPhase::NotInShutdown &&
-            AppShutdown::GetCurrentShutdownPhase() >= aShutdownPhaseToCheck) {
+  bool checkingShutdown =
+      (aCheckingShutdownPhase > ShutdownPhase::NotInShutdown);
+
+  // Nothing to do if already shutting down.
+  if (checkingShutdown &&
+      AppShutdown::GetCurrentShutdownPhase() >= aCheckingShutdownPhase) {
+    return NS_OK;
+  }
+
+  if (!mozilla::SpinEventLoopUntil([&]() -> bool {
+        // Check if shutting down reached our limits.
+        if (checkingShutdown &&
+            AppShutdown::GetCurrentShutdownPhase() >= aCheckingShutdownPhase) {
+          // This will make us return with NS_OK.
           return true;
         }
 

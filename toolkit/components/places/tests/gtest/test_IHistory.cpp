@@ -60,8 +60,7 @@ class VisitURIObserver final : public nsIObserver {
   }
 
   void WaitForNotification() {
-    SpinEventLoopUntil("places:VisitURIObserver::WaitForNotification"_ns,
-                       [&]() { return mVisits >= mExpectedVisits; });
+    SpinEventLoopUntil([&]() { return mVisits >= mExpectedVisits; });
   }
 
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
@@ -166,8 +165,7 @@ void test_unvisited_does_not_notify_part2() {
   using namespace test_unvisited_does_not_notify;
 
   if (StaticPrefs::layout_css_notify_of_unvisited()) {
-    SpinEventLoopUntil("places:test_unvisited_does_not_notify_part2"_ns,
-                       [&]() { return testLink->GotNotified(); });
+    SpinEventLoopUntil([&]() { return testLink->GotNotified(); });
   }
 
   // We would have had a failure at this point had the content node been told it
@@ -239,8 +237,7 @@ void test_new_visit_notifies_waiting_Link() {
   history->RegisterVisitedCallback(testURI, link);
 
   if (StaticPrefs::layout_css_notify_of_unvisited()) {
-    SpinEventLoopUntil("places:test_new_visit_notifies_waiting_Link"_ns,
-                       [&]() { return link->GotNotified(); });
+    SpinEventLoopUntil([&]() { return link->GotNotified(); });
   }
 
   link->AwaitNewNotification(expect_visit);

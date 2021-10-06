@@ -2938,9 +2938,7 @@ QuotaManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_ERROR_FAILURE;
     }
 
-    MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
-        "QuotaManager::Observer::Observe profile-before-change-qm"_ns,
-        [&]() { return mShutdownComplete; }));
+    MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return mShutdownComplete; }));
 
     gBasePath = nullptr;
 
@@ -3884,15 +3882,13 @@ void QuotaManager::Shutdown() {
                 this, SHUTDOWN_FORCE_KILL_TIMEOUT_MS, nsITimer::TYPE_ONE_SHOT,
                 "quota::QuotaManager::ForceKillTimer"));
 
-    MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
-        "QuotaManager::Shutdown"_ns, [this, &allClientTypes] {
-          return !gNormalOriginOps &&
-                 std::all_of(
-                     allClientTypes.cbegin(), allClientTypes.cend(),
-                     [&self = *this](const auto type) {
-                       return (*self.mClients)[type]->IsShutdownCompleted();
-                     });
-        }));
+    MOZ_ALWAYS_TRUE(SpinEventLoopUntil([this, &allClientTypes] {
+      return !gNormalOriginOps &&
+             std::all_of(allClientTypes.cbegin(), allClientTypes.cend(),
+                         [&self = *this](const auto type) {
+                           return (*self.mClients)[type]->IsShutdownCompleted();
+                         });
+    }));
   }
 
   for (Client::Type type : allClientTypes) {

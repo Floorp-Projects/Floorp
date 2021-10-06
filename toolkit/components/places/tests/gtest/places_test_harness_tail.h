@@ -81,8 +81,7 @@ TEST(IHistory, Test)
   run_next_test();
 
   // Spin the event loop until we've run out of tests to run.
-  mozilla::SpinEventLoopUntil("places:TEST(IHistory, Test)"_ns,
-                              [&]() { return !gPendingTests; });
+  mozilla::SpinEventLoopUntil([&]() { return !gPendingTests; });
 
   // And let any other events finish before we quit.
   (void)NS_ProcessPendingEvents(nullptr);
