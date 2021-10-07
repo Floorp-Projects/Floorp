@@ -162,14 +162,7 @@ bool Layer::IsOpaqueForVisibility() {
 bool Layer::CanUseOpaqueSurface() {
   // If the visible content in the layer is opaque, there is no need
   // for an alpha channel.
-  if (GetContentFlags() & CONTENT_OPAQUE) return true;
-  // Also, if this layer is the bottommost layer in a container which
-  // doesn't need an alpha channel, we can use an opaque surface for this
-  // layer too. Any transparent areas must be covered by something else
-  // in the container.
-  ContainerLayer* parent = GetParent();
-  return parent && parent->GetFirstChild() == this &&
-         parent->CanUseOpaqueSurface();
+  return false;
 }
 
 // NB: eventually these methods will be defined unconditionally, and
@@ -216,86 +209,7 @@ Matrix4x4 Layer::SnapTransform(const Matrix4x4& aTransform,
 
 RenderTargetIntRect Layer::CalculateScissorRect(
     const RenderTargetIntRect& aCurrentScissorRect) {
-  ContainerLayer* container = GetParent();
-  ContainerLayer* containerChild = nullptr;
-  NS_ASSERTION(GetParent(), "This can't be called on the root!");
-
-  // Find the layer creating the 3D context.
-  while (container->Extend3DContext() && !container->UseIntermediateSurface()) {
-    containerChild = container;
-    container = container->GetParent();
-    MOZ_ASSERT(container);
-  }
-
-  // Find the nearest layer with a clip, or this layer.
-  // ContainerState::SetupScrollingMetadata() may install a clip on
-  // the layer.
-  Layer* clipLayer = containerChild && containerChild->GetLocalClipRect()
-                         ? containerChild
-                         : this;
-
-  // Establish initial clip rect: it's either the one passed in, or
-  // if the parent has an intermediate surface, it's the extents of that
-  // surface.
-  RenderTargetIntRect currentClip;
-  if (container->UseIntermediateSurface()) {
-    currentClip.SizeTo(container->GetIntermediateSurfaceRect().Size());
-  } else {
-    currentClip = aCurrentScissorRect;
-  }
-
-  if (!clipLayer->GetLocalClipRect()) {
-    return currentClip;
-  }
-
-  if (GetLocalVisibleRegion().IsEmpty()) {
-    // When our visible region is empty, our parent may not have created the
-    // intermediate surface that we would require for correct clipping; however,
-    // this does not matter since we are invisible.
-    // Make sure we still compute a clip rect if we want to draw checkboarding
-    // for this layer, since we want to do this even if the layer is invisible.
-    return RenderTargetIntRect(currentClip.TopLeft(),
-                               RenderTargetIntSize(0, 0));
-  }
-
-  const RenderTargetIntRect clipRect = ViewAs<RenderTargetPixel>(
-      *clipLayer->GetLocalClipRect(),
-      PixelCastJustification::RenderTargetIsParentLayerForRoot);
-  if (clipRect.IsEmpty()) {
-    // We might have a non-translation transform in the container so we can't
-    // use the code path below.
-    return RenderTargetIntRect(currentClip.TopLeft(),
-                               RenderTargetIntSize(0, 0));
-  }
-
-  RenderTargetIntRect scissor = clipRect;
-  if (!container->UseIntermediateSurface()) {
-    gfx::Matrix matrix;
-    DebugOnly<bool> is2D = container->GetEffectiveTransform().Is2D(&matrix);
-    // See DefaultComputeEffectiveTransforms below
-    NS_ASSERTION(is2D && matrix.PreservesAxisAlignedRectangles(),
-                 "Non preserves axis aligned transform with clipped child "
-                 "should have forced intermediate surface");
-    gfx::Rect r(scissor.X(), scissor.Y(), scissor.Width(), scissor.Height());
-    gfxRect trScissor = gfx::ThebesRect(matrix.TransformBounds(r));
-    trScissor.Round();
-    IntRect tmp;
-    if (!gfxUtils::GfxRectToIntRect(trScissor, &tmp)) {
-      return RenderTargetIntRect(currentClip.TopLeft(),
-                                 RenderTargetIntSize(0, 0));
-    }
-    scissor = ViewAs<RenderTargetPixel>(tmp);
-
-    // Find the nearest ancestor with an intermediate surface
-    do {
-      container = container->GetParent();
-    } while (container && !container->UseIntermediateSurface());
-  }
-
-  if (container) {
-    scissor.MoveBy(-container->GetIntermediateSurfaceRect().TopLeft());
-  }
-  return currentClip.Intersect(scissor);
+  return RenderTargetIntRect();
 }
 
 const ScrollMetadata& Layer::GetScrollMetadata(uint32_t aIndex) const {
@@ -324,9 +238,6 @@ bool Layer::IsScrollableWithoutContent() const {
 Matrix4x4 Layer::GetTransform() const {
   Matrix4x4 transform = mSimpleAttrs.GetTransform();
   transform.PostScale(GetPostXScale(), GetPostYScale(), 1.0f);
-  if (const ContainerLayer* c = AsContainerLayer()) {
-    transform.PreScale(c->GetPreXScale(), c->GetPreYScale(), 1.0f);
-  }
   return transform;
 }
 
@@ -386,22 +297,10 @@ float Layer::GetLocalOpacity() {
 
 float Layer::GetEffectiveOpacity() {
   float opacity = GetLocalOpacity();
-  for (ContainerLayer* c = GetParent(); c && !c->UseIntermediateSurface();
-       c = c->GetParent()) {
-    opacity *= c->GetLocalOpacity();
-  }
   return opacity;
 }
 
 CompositionOp Layer::GetEffectiveMixBlendMode() {
-  if (mSimpleAttrs.GetMixBlendMode() != CompositionOp::OP_OVER)
-    return mSimpleAttrs.GetMixBlendMode();
-  for (ContainerLayer* c = GetParent(); c && !c->UseIntermediateSurface();
-       c = c->GetParent()) {
-    if (c->mSimpleAttrs.GetMixBlendMode() != CompositionOp::OP_OVER)
-      return c->mSimpleAttrs.GetMixBlendMode();
-  }
-
   return mSimpleAttrs.GetMixBlendMode();
 }
 
@@ -510,235 +409,6 @@ bool Layer::GetVisibleRegionRelativeToRootLayer(nsIntRegion& aResult,
   return true;
 }
 
-ContainerLayer::ContainerLayer(LayerManager* aManager, void* aImplData)
-    : Layer(aManager, aImplData),
-      mFirstChild(nullptr),
-      mLastChild(nullptr),
-      mPreXScale(1.0f),
-      mPreYScale(1.0f),
-      mInheritedXScale(1.0f),
-      mInheritedYScale(1.0f),
-      mPresShellResolution(1.0f),
-      mUseIntermediateSurface(false),
-      mMayHaveReadbackChild(false),
-      mChildrenChanged(false) {}
-
-ContainerLayer::~ContainerLayer() = default;
-
-bool ContainerLayer::InsertAfter(Layer* aChild, Layer* aAfter) {
-  if (aChild->Manager() != Manager()) {
-    NS_ERROR("Child has wrong manager");
-    return false;
-  }
-  if (aChild->GetParent()) {
-    NS_ERROR("aChild already in the tree");
-    return false;
-  }
-  if (aChild->GetNextSibling() || aChild->GetPrevSibling()) {
-    NS_ERROR("aChild already has siblings?");
-    return false;
-  }
-  if (aAfter &&
-      (aAfter->Manager() != Manager() || aAfter->GetParent() != this)) {
-    NS_ERROR("aAfter is not our child");
-    return false;
-  }
-
-  aChild->SetParent(this);
-  if (aAfter == mLastChild) {
-    mLastChild = aChild;
-  }
-  if (!aAfter) {
-    aChild->SetNextSibling(mFirstChild);
-    if (mFirstChild) {
-      mFirstChild->SetPrevSibling(aChild);
-    }
-    mFirstChild = aChild;
-    NS_ADDREF(aChild);
-    DidInsertChild(aChild);
-    return true;
-  }
-
-  Layer* next = aAfter->GetNextSibling();
-  aChild->SetNextSibling(next);
-  aChild->SetPrevSibling(aAfter);
-  if (next) {
-    next->SetPrevSibling(aChild);
-  }
-  aAfter->SetNextSibling(aChild);
-  NS_ADDREF(aChild);
-  DidInsertChild(aChild);
-  return true;
-}
-
-void ContainerLayer::RemoveAllChildren() {
-  // Optimizes "while (mFirstChild) ContainerLayer::RemoveChild(mFirstChild);"
-  Layer* current = mFirstChild;
-
-  // This is inlining DidRemoveChild() on each layer; we can skip the calls
-  // to NotifyPaintedLayerRemoved as it gets taken care of when as we call
-  // NotifyRemoved prior to removing any layers.
-  while (current) {
-    Layer* next = current->GetNextSibling();
-    current = next;
-  }
-
-  current = mFirstChild;
-  mFirstChild = nullptr;
-  while (current) {
-    MOZ_ASSERT(!current->GetPrevSibling());
-
-    Layer* next = current->GetNextSibling();
-    current->SetParent(nullptr);
-    current->SetNextSibling(nullptr);
-    if (next) {
-      next->SetPrevSibling(nullptr);
-    }
-    NS_RELEASE(current);
-    current = next;
-  }
-}
-
-// Note that ContainerLayer::RemoveAllChildren is an optimized
-// version of this code; if you make changes to ContainerLayer::RemoveChild
-// consider whether the matching changes need to be made to
-// ContainerLayer::RemoveAllChildren
-bool ContainerLayer::RemoveChild(Layer* aChild) {
-  if (aChild->Manager() != Manager()) {
-    NS_ERROR("Child has wrong manager");
-    return false;
-  }
-  if (aChild->GetParent() != this) {
-    NS_ERROR("aChild not our child");
-    return false;
-  }
-
-  Layer* prev = aChild->GetPrevSibling();
-  Layer* next = aChild->GetNextSibling();
-  if (prev) {
-    prev->SetNextSibling(next);
-  } else {
-    this->mFirstChild = next;
-  }
-  if (next) {
-    next->SetPrevSibling(prev);
-  } else {
-    this->mLastChild = prev;
-  }
-
-  aChild->SetNextSibling(nullptr);
-  aChild->SetPrevSibling(nullptr);
-  aChild->SetParent(nullptr);
-
-  this->DidRemoveChild(aChild);
-  NS_RELEASE(aChild);
-  return true;
-}
-
-bool ContainerLayer::RepositionChild(Layer* aChild, Layer* aAfter) {
-  if (aChild->Manager() != Manager()) {
-    NS_ERROR("Child has wrong manager");
-    return false;
-  }
-  if (aChild->GetParent() != this) {
-    NS_ERROR("aChild not our child");
-    return false;
-  }
-  if (aAfter &&
-      (aAfter->Manager() != Manager() || aAfter->GetParent() != this)) {
-    NS_ERROR("aAfter is not our child");
-    return false;
-  }
-  if (aChild == aAfter) {
-    NS_ERROR("aChild cannot be the same as aAfter");
-    return false;
-  }
-
-  Layer* prev = aChild->GetPrevSibling();
-  Layer* next = aChild->GetNextSibling();
-  if (prev == aAfter) {
-    // aChild is already in the correct position, nothing to do.
-    return true;
-  }
-  if (prev) {
-    prev->SetNextSibling(next);
-  } else {
-    mFirstChild = next;
-  }
-  if (next) {
-    next->SetPrevSibling(prev);
-  } else {
-    mLastChild = prev;
-  }
-  if (!aAfter) {
-    aChild->SetPrevSibling(nullptr);
-    aChild->SetNextSibling(mFirstChild);
-    if (mFirstChild) {
-      mFirstChild->SetPrevSibling(aChild);
-    }
-    mFirstChild = aChild;
-    return true;
-  }
-
-  Layer* afterNext = aAfter->GetNextSibling();
-  if (afterNext) {
-    afterNext->SetPrevSibling(aChild);
-  } else {
-    mLastChild = aChild;
-  }
-  aAfter->SetNextSibling(aChild);
-  aChild->SetPrevSibling(aAfter);
-  aChild->SetNextSibling(afterNext);
-  return true;
-}
-
-bool ContainerLayer::Creates3DContextWithExtendingChildren() {
-  if (Extend3DContext()) {
-    return false;
-  }
-  for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
-    if (child->Extend3DContext()) {
-      return true;
-    }
-  }
-  return false;
-}
-
-RenderTargetIntRect ContainerLayer::GetIntermediateSurfaceRect() {
-  NS_ASSERTION(mUseIntermediateSurface, "Must have intermediate surface");
-  LayerIntRect bounds = GetLocalVisibleRegion().GetBounds();
-  return RenderTargetIntRect::FromUnknownRect(bounds.ToUnknownRect());
-}
-
-bool ContainerLayer::HasMultipleChildren() {
-  uint32_t count = 0;
-  for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
-    const Maybe<ParentLayerIntRect>& clipRect = child->GetLocalClipRect();
-    if (clipRect && clipRect->IsEmpty()) continue;
-    if (!child->Extend3DContext() && child->GetLocalVisibleRegion().IsEmpty())
-      continue;
-    ++count;
-    if (count > 1) return true;
-  }
-
-  return false;
-}
-
-/**
- * Collect all leaf descendants of the current 3D context.
- */
-void ContainerLayer::Collect3DContextLeaves(nsTArray<Layer*>& aToSort) {
-  ForEachNode<ForwardIterator>((Layer*)this, [this, &aToSort](Layer* layer) {
-    ContainerLayer* container = layer->AsContainerLayer();
-    if (layer == this || (container && container->Extend3DContext() &&
-                          !container->UseIntermediateSurface())) {
-      return TraversalFlag::Continue;
-    }
-    aToSort.AppendElement(layer);
-    return TraversalFlag::Skip;
-  });
-}
-
 static nsTArray<LayerPolygon> SortLayersWithBSPTree(nsTArray<Layer*>& aArray) {
   std::list<LayerPolygon> inputLayers;
 
@@ -805,185 +475,6 @@ static nsTArray<LayerPolygon> StripLayerGeometry(
   }
 
   return layers;
-}
-
-nsTArray<LayerPolygon> ContainerLayer::SortChildrenBy3DZOrder(
-    SortMode aSortMode) {
-  AutoTArray<Layer*, 10> toSort;
-  nsTArray<LayerPolygon> drawOrder;
-
-  for (Layer* layer = GetFirstChild(); layer; layer = layer->GetNextSibling()) {
-    ContainerLayer* container = layer->AsContainerLayer();
-
-    if (container && container->Extend3DContext() &&
-        !container->UseIntermediateSurface()) {
-      // Collect 3D layers in toSort array.
-      container->Collect3DContextLeaves(toSort);
-
-      // Sort the 3D layers.
-      if (toSort.Length() > 0) {
-        nsTArray<LayerPolygon> sorted = SortLayersWithBSPTree(toSort);
-        drawOrder.AppendElements(std::move(sorted));
-
-        toSort.ClearAndRetainStorage();
-      }
-
-      continue;
-    }
-
-    drawOrder.AppendElement(LayerPolygon(layer));
-  }
-
-  if (aSortMode == SortMode::WITHOUT_GEOMETRY) {
-    // Compositor does not support arbitrary layers, strip the layer geometry
-    // and duplicate layers.
-    return StripLayerGeometry(drawOrder);
-  }
-
-  return drawOrder;
-}
-
-bool ContainerLayer::AnyAncestorOrThisIs3DContextLeaf() {
-  Layer* parent = this;
-  while (parent != nullptr) {
-    if (parent->Is3DContextLeaf()) {
-      return true;
-    }
-
-    parent = parent->GetParent();
-  }
-
-  return false;
-}
-
-void ContainerLayer::DefaultComputeEffectiveTransforms(
-    const Matrix4x4& aTransformToSurface) {
-  Matrix residual;
-  Matrix4x4 idealTransform = GetLocalTransform() * aTransformToSurface;
-
-  // Keep 3D transforms for leaves to keep z-order sorting correct.
-  if (!Extend3DContext() && !Is3DContextLeaf()) {
-    idealTransform.ProjectTo2D();
-  }
-
-  bool useIntermediateSurface;
-  if (GetMaskLayer() || GetForceIsolatedGroup()) {
-    useIntermediateSurface = true;
-#ifdef MOZ_DUMP_PAINTING
-  } else if (gfxEnv::DumpPaintIntermediate() && !Extend3DContext()) {
-    useIntermediateSurface = true;
-#endif
-  } else {
-    /* Don't use an intermediate surface for opacity when it's within a 3d
-     * context, since we'd rather keep the 3d effects. This matches the
-     * WebKit/blink behaviour, but is changing in the latest spec.
-     */
-    float opacity = GetEffectiveOpacity();
-    CompositionOp blendMode = GetEffectiveMixBlendMode();
-    if ((HasMultipleChildren() || Creates3DContextWithExtendingChildren()) &&
-        ((opacity != 1.0f && !Extend3DContext()) ||
-         (blendMode != CompositionOp::OP_OVER))) {
-      useIntermediateSurface = true;
-    } else if ((!idealTransform.Is2D() || AnyAncestorOrThisIs3DContextLeaf()) &&
-               Creates3DContextWithExtendingChildren()) {
-      useIntermediateSurface = true;
-    } else if (blendMode != CompositionOp::OP_OVER &&
-               Manager()->BlendingRequiresIntermediateSurface()) {
-      useIntermediateSurface = true;
-    } else {
-      useIntermediateSurface = false;
-      gfx::Matrix contTransform;
-      bool checkClipRect = false;
-      bool checkMaskLayers = false;
-
-      if (!idealTransform.Is2D(&contTransform)) {
-        // In 3D case, always check if we should use IntermediateSurface.
-        checkClipRect = true;
-        checkMaskLayers = true;
-      } else {
-        contTransform.NudgeToIntegers();
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-        if (!contTransform.PreservesAxisAlignedRectangles()) {
-#else
-        if (gfx::ThebesMatrix(contTransform).HasNonIntegerTranslation()) {
-#endif
-          checkClipRect = true;
-        }
-        /* In 2D case, only translation and/or positive scaling can be done w/o
-         * using IntermediateSurface. Otherwise, when rotation or flip happen,
-         * we should check whether to use IntermediateSurface.
-         */
-        if (contTransform.HasNonAxisAlignedTransform() ||
-            contTransform.HasNegativeScaling()) {
-          checkMaskLayers = true;
-        }
-      }
-
-      if (checkClipRect || checkMaskLayers) {
-        for (Layer* child = GetFirstChild(); child;
-             child = child->GetNextSibling()) {
-          const Maybe<ParentLayerIntRect>& clipRect = child->GetLocalClipRect();
-          /* We can't (easily) forward our transform to children with a
-           * non-empty clip rect since it would need to be adjusted for the
-           * transform. See the calculations performed by CalculateScissorRect
-           * above. Nor for a child with a mask layer.
-           */
-          if (checkClipRect && (clipRect && !clipRect->IsEmpty() &&
-                                (child->Extend3DContext() ||
-                                 !child->GetLocalVisibleRegion().IsEmpty()))) {
-            useIntermediateSurface = true;
-            break;
-          }
-          if (checkMaskLayers && child->GetMaskLayer()) {
-            useIntermediateSurface = true;
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  NS_ASSERTION(!Extend3DContext() || !useIntermediateSurface,
-               "Can't have an intermediate surface with preserve-3d!");
-
-  if (useIntermediateSurface) {
-    mEffectiveTransform = SnapTransformTranslation(idealTransform, &residual);
-  } else {
-    mEffectiveTransform = idealTransform;
-  }
-
-  // For layers extending 3d context, its ideal transform should be
-  // applied on children.
-  if (!Extend3DContext()) {
-    // Without this projection, non-container children would get a 3D
-    // transform while 2D is expected.
-    idealTransform.ProjectTo2D();
-  }
-  mUseIntermediateSurface = useIntermediateSurface;
-  if (useIntermediateSurface) {
-    ComputeEffectiveTransformsForChildren(Matrix4x4::From2D(residual));
-  } else {
-    ComputeEffectiveTransformsForChildren(idealTransform);
-  }
-
-  ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
-}
-
-void ContainerLayer::ComputeEffectiveTransformsForChildren(
-    const Matrix4x4& aTransformToSurface) {
-  for (Layer* l = mFirstChild; l; l = l->GetNextSibling()) {
-    l->ComputeEffectiveTransforms(aTransformToSurface);
-  }
-}
-
-// Note that ContainerLayer::RemoveAllChildren contains an optimized
-// version of this code; if you make changes to ContainerLayer::DidRemoveChild
-// consider whether the matching changes need to be made to
-// ContainerLayer::RemoveAllChildren
-void ContainerLayer::DidRemoveChild(Layer* aLayer) {
-}
-
-void ContainerLayer::DidInsertChild(Layer* aLayer) {
 }
 
 #ifdef MOZ_DUMP_PAINTING
@@ -1193,17 +684,6 @@ void Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
 }
 
 bool Layer::IsBackfaceHidden() {
-  if (GetContentFlags() & CONTENT_BACKFACE_HIDDEN) {
-    Layer* container = AsContainerLayer() ? this : GetParent();
-    if (container) {
-      // The effective transform can include non-preserve-3d parent
-      // transforms, since we don't always require an intermediate.
-      if (container->Extend3DContext() || container->Is3DContextLeaf()) {
-        return container->GetEffectiveTransform().IsBackfaceVisible();
-      }
-      return container->GetBaseTransform().IsBackfaceVisible();
-    }
-  }
   return false;
 }
 
@@ -1211,20 +691,6 @@ UniquePtr<LayerUserData> Layer::RemoveUserData(void* aKey) {
   UniquePtr<LayerUserData> d(static_cast<LayerUserData*>(
       mUserData.Remove(static_cast<gfx::UserDataKey*>(aKey))));
   return d;
-}
-
-void ContainerLayer::PrintInfo(std::stringstream& aStream,
-                               const char* aPrefix) {
-  Layer::PrintInfo(aStream, aPrefix);
-  if (UseIntermediateSurface()) {
-    aStream << " [usesTmpSurf]";
-  }
-  if (1.0 != mPreXScale || 1.0 != mPreYScale) {
-    aStream
-        << nsPrintfCString(" [preScale=%g, %g]", mPreXScale, mPreYScale).get();
-  }
-  aStream << nsPrintfCString(" [presShellResolution=%g]", mPresShellResolution)
-                 .get();
 }
 
 //--------------------------------------------------
