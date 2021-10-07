@@ -852,11 +852,11 @@ void MediaDecoder::ChangeState(PlayState aState) {
 
   if (mPlayState != aState) {
     DDLOG(DDLogCategory::Property, "play_state", ToPlayStateStr(aState));
+    LOG("Play state changes from %s to %s", ToPlayStateStr(mPlayState),
+        ToPlayStateStr(aState));
+    mPlayState = aState;
+    UpdateTelemetryHelperBasedOnPlayState(aState);
   }
-  LOG("Play state changes from %s to %s", ToPlayStateStr(mPlayState),
-      ToPlayStateStr(aState));
-  mPlayState = aState;
-  UpdateTelemetryHelperBasedOnPlayState(aState);
 }
 
 TelemetryProbesReporter::Visibility MediaDecoder::OwnerVisibility() const {
