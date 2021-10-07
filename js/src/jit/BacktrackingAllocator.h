@@ -657,6 +657,9 @@ class BacktrackingAllocator : protected RegisterAllocator {
                                          LiveBundle* bundle, bool* success,
                                          bool* pfixed,
                                          LiveBundleVector& conflicting);
+  [[nodiscard]] bool tryAllocateAnyRegister(LiveBundle* bundle, bool* success,
+                                            bool* pfixed,
+                                            LiveBundleVector& conflicting);
   [[nodiscard]] bool evictBundle(LiveBundle* bundle);
   [[nodiscard]] bool splitAndRequeueBundles(LiveBundle* bundle,
                                             const LiveBundleVector& newBundles);
