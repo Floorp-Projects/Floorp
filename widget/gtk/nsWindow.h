@@ -473,9 +473,7 @@ class nsWindow final : public nsBaseWidget {
   void UpdateAlpha(mozilla::gfx::SourceSurface* aSourceSurface,
                    nsIntRect aBoundsRect);
 
-  void NativeMove();
-  void NativeResize();
-  void NativeMoveResize();
+  void NativeMoveResize(bool aMoved, bool aResized);
 
   void NativeShow(bool aAction);
   void SetHasMappedToplevel(bool aState);
@@ -516,7 +514,7 @@ class nsWindow final : public nsBaseWidget {
 
   void ResizeInt(int aX, int aY, int aWidth, int aHeight, bool aMove,
                  bool aRepaint);
-  void NativeMoveResizeWaylandPopup(GdkPoint* aPosition, GdkRectangle* aSize);
+  void NativeMoveResizeWaylandPopup(bool aMove, bool aResize);
 
   // Returns true if the given point (in device pixels) is within a resizer
   // region of the window. Only used when drawing decorations client side.
@@ -668,7 +666,7 @@ class nsWindow final : public nsBaseWidget {
                                  bool aMustMatchParent);
   void WaylandPopupMarkAsClosed();
   void WaylandPopupRemoveClosedPopups();
-  void WaylandPopupSetDirectPosition(GdkPoint* aPosition, GdkRectangle* aSize);
+  void WaylandPopupSetDirectPosition();
   bool WaylandPopupFitsParentWindow(GdkRectangle* aSize);
   nsWindow* WaylandPopupFindLast(nsWindow* aPopup);
   GtkWindow* GetCurrentTopmostWindow();
@@ -786,11 +784,11 @@ class nsWindow final : public nsBaseWidget {
   /* mWaitingForMoveToRectCallback is set when move-to-rect is called
    * and we're waiting for move-to-rect callback.
    *
-   * If another resize request comes between move-to-rect call and
-   * move-to-rect callback we store it to mNewSizeAfterMoveToRect.
+   * If another position/resize request comes between move-to-rect call and
+   * move-to-rect callback we set mNewBoundsAfterMoveToRect.
    */
   bool mWaitingForMoveToRectCallback;
-  LayoutDeviceIntRect mNewSizeAfterMoveToRect;
+  LayoutDeviceIntRect mNewBoundsAfterMoveToRect;
 
   /**
    * |mIMContext| takes all IME related stuff.
