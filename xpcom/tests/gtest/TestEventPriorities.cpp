@@ -64,7 +64,8 @@ TEST(EventPriorities, IdleAfterNormal)
   NS_DispatchToMainThread(evNormal);
 
   MOZ_ALWAYS_TRUE(
-      SpinEventLoopUntil([&]() { return normalRan == 3 && idleRan == 3; }));
+      SpinEventLoopUntil("xpcom:TEST(EventPriorities, IdleAfterNormal)"_ns,
+                         [&]() { return normalRan == 3 && idleRan == 3; }));
 }
 
 TEST(EventPriorities, HighNormal)
@@ -85,5 +86,6 @@ TEST(EventPriorities, HighNormal)
   NS_DispatchToMainThread(evHigh);
 
   MOZ_ALWAYS_TRUE(
-      SpinEventLoopUntil([&]() { return normalRan == 3 && highRan == 3; }));
+      SpinEventLoopUntil("xpcom:TEST(EventPriorities, HighNormal)"_ns,
+                         [&]() { return normalRan == 3 && highRan == 3; }));
 }

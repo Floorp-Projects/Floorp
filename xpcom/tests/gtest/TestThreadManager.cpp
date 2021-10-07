@@ -47,7 +47,7 @@ class SpinRunnable final : public Runnable {
         do_GetService("@mozilla.org/thread-manager;1");
 
     mResult = threadMan->SpinEventLoopUntil(
-        "gtest TestThreadManager.cpp: SpinRunnable->Run()"_ns, mCondition);
+        "xpcom:TestThreadManager.cpp:SpinRunnable->Run()"_ns, mCondition);
     return NS_OK;
   }
 

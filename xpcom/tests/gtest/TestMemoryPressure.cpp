@@ -131,22 +131,26 @@ TEST(MemoryPressure, Singlethread)
 {
   RefPtr observer(new MemoryPressureObserver);
   NS_NotifyOfEventualMemoryPressure(MemoryPressureState::LowMemory);
-  SpinEventLoopUntil([&observer]() { return observer->GetCount() == 1; });
+  SpinEventLoopUntil("xpcom:TEST(MemoryPressure, Singlethread) 1"_ns,
+                     [&observer]() { return observer->GetCount() == 1; });
   EXPECT_EQ(observer->Top(), MemoryPressureEventType::LowMemory);
 
   observer->Reset();
   NS_NotifyOfEventualMemoryPressure(MemoryPressureState::LowMemory);
-  SpinEventLoopUntil([&observer]() { return observer->GetCount() == 1; });
+  SpinEventLoopUntil("xpcom:TEST(MemoryPressure, Singlethread) 2"_ns,
+                     [&observer]() { return observer->GetCount() == 1; });
   EXPECT_EQ(observer->Top(), MemoryPressureEventType::LowMemoryOngoing);
 
   observer->Reset();
   NS_NotifyOfEventualMemoryPressure(MemoryPressureState::LowMemory);
-  SpinEventLoopUntil([&observer]() { return observer->GetCount() == 1; });
+  SpinEventLoopUntil("xpcom:TEST(MemoryPressure, Singlethread) 3"_ns,
+                     [&observer]() { return observer->GetCount() == 1; });
   EXPECT_EQ(observer->Top(), MemoryPressureEventType::LowMemoryOngoing);
 
   observer->Reset();
   NS_NotifyOfEventualMemoryPressure(MemoryPressureState::NoPressure);
-  SpinEventLoopUntil([&observer]() { return observer->GetCount() == 1; });
+  SpinEventLoopUntil("xpcom:TEST(MemoryPressure, Singlethread) 4"_ns,
+                     [&observer]() { return observer->GetCount() == 1; });
   EXPECT_EQ(observer->Top(), MemoryPressureEventType::Stop);
 }
 
@@ -183,6 +187,7 @@ TEST(MemoryPressure, Multithread)
 
   // We cannot sleep here because the main thread needs to keep running.
   SpinEventLoopUntil(
+      "xpcom:TEST(MemoryPressure, Multithread)"_ns,
       [&observer]() { return observer->GetCount() >= kNumEventsToValidate; });
 
   shouldContinue = false;
