@@ -3402,13 +3402,6 @@ void CheckForBrokenChromeURL(nsILoadInfo* aLoadInfo, nsIURI* aURI) {
     return;
   }
 
-#ifdef ANDROID
-  // See bug 1722078
-  if (StringEndsWith(filePath, "/app-extension-fields.properties"_ns)) {
-    return;
-  }
-#endif
-
   nsCString spec;
   aURI->GetSpec(spec);
 
