@@ -718,8 +718,8 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   TelemetryProbesReporter::Visibility OwnerVisibility() const;
 
-  // They are used for reporting telemetry related results.
-  double GetTotalPlayTimeInSeconds() const;
+  // Those methods exist to report telemetry related metrics.
+  double GetTotalVideoPlayTimeInSeconds() const;
   double GetVisibleVideoPlayTimeInSeconds() const;
   double GetInvisibleVideoPlayTimeInSeconds() const;
   double GetVideoDecodeSuspendedTimeInSeconds() const;
