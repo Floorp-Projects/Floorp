@@ -508,21 +508,22 @@ CssRuleView.prototype = {
    */
   async _initSimulationFeatures() {
     if (!this.currentTarget.chrome) {
+      this.colorSchemeLightSimulationButton.removeAttribute("hidden");
+      this.colorSchemeDarkSimulationButton.removeAttribute("hidden");
       this.printSimulationButton.removeAttribute("hidden");
       this.printSimulationButton.addEventListener(
         "click",
         this._onTogglePrintSimulation
       );
+      this.colorSchemeLightSimulationButton.addEventListener(
+        "click",
+        this._onToggleLightColorSchemeSimulation
+      );
+      this.colorSchemeDarkSimulationButton.addEventListener(
+        "click",
+        this._onToggleDarkColorSchemeSimulation
+      );
     }
-
-    this.colorSchemeLightSimulationButton.addEventListener(
-      "click",
-      this._onToggleLightColorSchemeSimulation
-    );
-    this.colorSchemeDarkSimulationButton.addEventListener(
-      "click",
-      this._onToggleDarkColorSchemeSimulation
-    );
   },
 
   /**
