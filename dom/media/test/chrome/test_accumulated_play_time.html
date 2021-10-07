@@ -187,11 +187,7 @@ add_task(async function testHiddenPlayTime() {
     if (reason == "notInTree" || reason == "notInConnectedTree") {
       document.body.appendChild(video);
     } else if (reason == "invisibleInDisplay") {
-      // If we set only `display` the video would still be hidden, so setting
-      // width and height to make it visible.
-      video.style.display = "unset";
-      video.style.width = "300px";
-      video.style.height = "150px";
+      video.style.display = "block";
     } else {
       ok(false, "undefined reason");
     }
