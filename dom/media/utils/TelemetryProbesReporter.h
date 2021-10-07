@@ -8,6 +8,7 @@
 #include "MediaInfo.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/AwakeTimeStamp.h"
+#include "AudioChannelService.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {
@@ -48,12 +49,15 @@ class TelemetryProbesReporter final {
 
   static MediaContent MediaInfoToMediaContent(const MediaInfo& aInfo);
 
+  using AudibleState = dom::AudioChannelService::AudibleState;
+
   // State transitions
   void OnPlay(Visibility aVisibility, MediaContent aContent);
   void OnPause(Visibility aVisibility);
   void OnShutdown();
 
   void OnVisibilityChanged(Visibility aVisibility);
+  void OnAudibleChanged(AudibleState aAudible);
   void OnMediaContentChanged(MediaContent aContent);
   void OnDecodeSuspended();
   void OnDecodeResumed();
@@ -66,11 +70,14 @@ class TelemetryProbesReporter final {
  private:
   void StartInvisibleVideoTimeAcculator();
   void PauseInvisibleVideoTimeAcculator();
+  void StartInaudibleAudioTimeAcculator();
+  void PauseInaudibleAudioTimeAcculator();
   bool HasOwnerHadValidVideo() const;
   void AssertOnMainThreadAndNotShutdown() const;
 
   void ReportTelemetry();
   void ReportResultForVideo();
+  void ReportResultForAudio();
   void ReportResultForVideoFrameStatistics(double aTotalPlayTimeS,
                                            const nsCString& key);
 
@@ -117,17 +124,25 @@ class TelemetryProbesReporter final {
   // our whole life cycle.
   TelemetryProbesReporterOwner* mOwner;
 
-  // Total time an element has spent on playing.
+  // Total time an element has spent on playing video.
   TimeDurationAccumulator mTotalVideoPlayTime;
+
+  // Total time an element has spent on playing audio
+  TimeDurationAccumulator mTotalAudioPlayTime;
 
   // Total time a VIDEO element has spent playing while the corresponding media
   // element is invisible.
   TimeDurationAccumulator mInvisibleVideoPlayTime;
 
+  // Total time an element has spent on playing audio that was not audible
+  TimeDurationAccumulator mInaudibleAudioPlayTime;
+
   // Total time a VIDEO has spent in video-decode-suspend mode.
   TimeDurationAccumulator mVideoDecodeSuspendedTime;
 
   Visibility mMediaElementVisibility = Visibility::eInitial;
+
+  AudibleState mAudibleState = AudibleState::eNotAudible;
 
   MediaContent mMediaContent = MediaContent::MEDIA_HAS_NOTHING;
 
