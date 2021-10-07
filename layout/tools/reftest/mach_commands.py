@@ -244,7 +244,7 @@ def run_reftest(command_context, **kwargs):
     parser=get_parser,
 )
 def run_jstestbrowser(command_context, **kwargs):
-    if "--enable-js-shell" not in command_context.mozconfig["configure_args"]:
+    if command_context.substs.get("JS_DISABLE_SHELL"):
         raise Exception(
             "jstestbrowser requires --enable-js-shell be specified in mozconfig."
         )
