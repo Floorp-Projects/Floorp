@@ -1,6 +1,4 @@
 import org.gradle.api.Project
-import java.lang.RuntimeException
-
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

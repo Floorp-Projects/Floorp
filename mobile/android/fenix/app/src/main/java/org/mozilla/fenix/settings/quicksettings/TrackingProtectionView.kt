@@ -10,7 +10,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.QuicksettingsTrackingProtectionBinding
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.trackingprotection.TrackingProtectionState
 import org.mozilla.fenix.utils.Settings
 
