@@ -59,8 +59,6 @@ static const int32_t kIndentSizeDD = kTabSize;  // Indention of <dd>
 static const char16_t kNBSP = 160;
 static const char16_t kSPACE = ' ';
 
-constexpr int32_t kNoFlags = 0;
-
 static int32_t HeaderLevel(const nsAtom* aTag);
 static int32_t GetUnicharWidth(char16_t ucs);
 static int32_t GetUnicharStringWidth(const nsString& aString);
