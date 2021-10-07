@@ -81,6 +81,12 @@ class HyperTextAccessibleBase {
    */
   index_t ConvertMagicOffset(int32_t aOffset) const;
 
+  /**
+   * Return text between given offsets.
+   */
+  virtual void TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
+                             nsAString& aText) const;
+
  protected:
   virtual const Accessible* Acc() const = 0;
   Accessible* Acc() {

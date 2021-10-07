@@ -176,12 +176,13 @@ int32_t RemoteAccessible::SelectionCount() {
   return count;
 }
 
-bool RemoteAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
-                                     nsString& aText) const {
+void RemoteAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
+                                     nsAString& aText) const {
   bool valid;
-  Unused << mDoc->SendTextSubstring(mID, aStartOffset, aEndOfset, &aText,
+  nsString text;
+  Unused << mDoc->SendTextSubstring(mID, aStartOffset, aEndOfset, &text,
                                     &valid);
-  return valid;
+  aText = std::move(text);
 }
 
 void RemoteAccessible::GetTextAfterOffset(int32_t aOffset,
