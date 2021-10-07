@@ -4614,20 +4614,22 @@ gViewController.defineView("list", async type => {
         !isMonochromaticTheme(addon),
     },
   ];
-
-  if (type == "theme" && monochromaticEnabled) {
-    sections.push({
-      headingId: type + "-monochromatic-heading",
-      subheadingId: type + "-monochromatic-subheading",
-      filterFn: addon =>
-        !addon.hidden &&
-        !addon.isActive &&
-        !isPending(addon, "uninstall") &&
-        isMonochromaticTheme(addon),
-    });
-  }
   list.setSections(sections);
   frag.appendChild(list);
+
+  if (type == "theme" && monochromaticEnabled) {
+    let monochromaticList = document.createElement("addon-list");
+    monochromaticList.classList.add("monochromatic-addon-list");
+    monochromaticList.type = type;
+    monochromaticList.setSections([
+      {
+        headingId: type + "-monochromatic-heading",
+        subheadingId: type + "-monochromatic-subheading",
+        filterFn: addon => !addon.hidden && isMonochromaticTheme(addon),
+      },
+    ]);
+    frag.appendChild(monochromaticList);
+  }
 
   // Show recommendations for themes and extensions.
   if (

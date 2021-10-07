@@ -758,3 +758,53 @@ section:not(:empty) ~ #empty-addons-message {
     margin-top: -20px;
   }
 }
+
+/* Colorways Section */
+
+.monochromatic-addon-list section {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-between;
+}
+
+.monochromatic-addon-list .header-name,
+.monochromatic-addon-list .list-section-subheading {
+  flex-basis: 100%;
+}
+
+.monochromatic-addon-list addon-card .card {
+  box-sizing: border-box;
+  height: calc(100% - 16px);
+  overflow: clip;
+  width: calc((var(--section-width) / 3) - 16px);
+}
+
+.monochromatic-addon-list addon-card .card .card-contents {
+  white-space: normal;
+}
+
+/* Remove disabled add-on fade */
+.monochromatic-addon-list addon-card:not([expanded]) > .addon.card[active="false"] {
+  opacity: unset;
+}
+
+.monochromatic-addon-list .addon-name-container {
+  align-items: start;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 3em 1fr;
+  row-gap: 16px;
+}
+
+.monochromatic-addon-list .addon-name-container .addon-name {
+  grid-column-end: span 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.monochromatic-addon-list .addon-name-container .spacer {
+  display: none;
+}

@@ -23,8 +23,7 @@ add_task(async function testMonochromaticList() {
   let doc = win.document;
 
   // Wait for the colorway themes list to render.
-  let colorwayList = doc.querySelector("section[section='2']");
-  await colorwayList.cardsReady;
+  let colorwayList = doc.querySelector(".monochromatic-addon-list");
   await themeAddon.disable();
 
   // Check that all the cards are visible.
@@ -47,10 +46,10 @@ add_task(async function testMonochromaticList() {
   is(
     subheading.getAttribute("data-l10n-id"),
     "theme-monochromatic-subheading",
-    "Header string is correct."
+    "Subheader string is correct."
   );
 
-  // Check that an enabled theme moves to the enabled section & out of the colorways section.
+  // Check that the test theme is in the colorways section.
   let card = colorwayList.querySelector(
     "addon-card[addon-id='test-colorway@mozilla.org']"
   );
@@ -60,45 +59,36 @@ add_task(async function testMonochromaticList() {
     "Colorways section contains monochromatic theme"
   );
 
+  // Check that the test theme is in the enabled section.
   let addon = await AddonManager.getAddonByID("test-colorway@mozilla.org");
-  await addon.enable();
   let enabledSection = doc.querySelector("section[section='0']");
-
-  // After enabling the theme the card will not move to the appropriate section until a mousemove.
   let mutationPromise = BrowserTestUtils.waitForMutationCondition(
     enabledSection,
     { childList: true },
-    () => enabledSection.contains(card)
+    () =>
+      enabledSection.children.length > 1 &&
+      enabledSection.children[1].getAttribute("addon-id") ==
+        "test-colorway@mozilla.org"
   );
-
-  await EventUtils.synthesizeMouseAtCenter(heading, { type: "mousemove" }, win);
+  await addon.enable();
   await mutationPromise;
-
+  let enabledCard = enabledSection.querySelector(
+    "addon-card[addon-id='test-colorway@mozilla.org']"
+  );
   ok(
-    enabledSection.contains(card),
+    enabledSection.contains(enabledCard),
     "Enabled section contains enabled colorway theme"
   );
 
-  ok(
-    !colorwayList.contains(card),
-    "Colorway section no longer contains enabled theme"
-  );
-
-  // // Check that disabling a theme moves it back to the colorways section.
+  // Check that disabling a theme removes it from the enabled section.
   await addon.disable();
 
-  // After disabling a theme the card will not move to the appropriate section until a mousemove.
   mutationPromise = BrowserTestUtils.waitForMutationCondition(
-    colorwayList,
+    enabledSection,
     { childList: true },
-    () => colorwayList.contains(card)
+    () => !enabledSection.contains(enabledCard)
   );
 
-  await EventUtils.synthesizeMouseAtCenter(
-    subheading,
-    { type: "mousemove" },
-    win
-  );
   await mutationPromise;
 
   ok(
