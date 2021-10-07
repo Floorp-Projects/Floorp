@@ -178,18 +178,12 @@ add_task(async function test_checkTargeting() {
     "should return true if .targeting is not defined"
   );
   equal(
-    await loader.checkTargeting({
-      targeting: "'foo'",
-      slug: "test_checkTargeting",
-    }),
+    await loader.checkTargeting({ targeting: "'foo'" }),
     true,
     "should return true for truthy expression"
   );
   equal(
-    await loader.checkTargeting({
-      targeting: "aPropertyThatDoesNotExist",
-      slug: "test_checkTargeting",
-    }),
+    await loader.checkTargeting({ targeting: "aPropertyThatDoesNotExist" }),
     false,
     "should return false for falsey expression"
   );
