@@ -13304,7 +13304,7 @@
     "expires_in_version": "never",
     "description": "Total time spent playing video in milliseconds.",
     "kind": "exponential",
-    "high": 7200000,
+    "high": 14400000,
     "n_buckets": 100,
     "bug_numbers": [1261955, 1127646, 1570634, 1567604, 1685399],
     "releaseChannelCollection": "opt-out"
@@ -13317,7 +13317,7 @@
     "description": "Total time spent playing media in milliseconds, keyed by its content (Audio and video, audio only, video only, audio and video but audio inaudible, audio and video but audio muted).",
     "keyed": true,
     "kind": "exponential",
-    "high": 7200000,
+    "high": 14400000,
     "n_buckets": 100,
     "bug_numbers": [1678373],
     "releaseChannelCollection": "opt-out"
