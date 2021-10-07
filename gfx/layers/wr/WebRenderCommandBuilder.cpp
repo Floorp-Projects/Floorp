@@ -2291,6 +2291,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
 
   bool needPaint = true;
 
+  MOZ_RELEASE_ASSERT(aItem->GetType() != DisplayItemType::TYPE_SVG_WRAPPER);
   if (geometry && !fallbackData->IsInvalid() &&
       aItem->GetType() != DisplayItemType::TYPE_SVG_WRAPPER && differentScale) {
     nsRect invalid;
