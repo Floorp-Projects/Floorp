@@ -2295,7 +2295,8 @@ void nsDisplayList::DeleteAll(nsDisplayListBuilder* aBuilder) {
 }
 
 static bool IsFrameReceivingPointerEvents(nsIFrame* aFrame) {
-  return aFrame->Style()->PointerEvents() != StylePointerEvents::None;
+  return StylePointerEvents::None !=
+         aFrame->StyleUI()->GetEffectivePointerEvents(aFrame);
 }
 
 // A list of frames, and their z depth. Used for sorting

@@ -783,7 +783,7 @@ void SVGImageFrame::ReflowCallbackCanceled() { mReflowCallbackPosted = false; }
 uint16_t SVGImageFrame::GetHitTestFlags() {
   uint16_t flags = 0;
 
-  switch (Style()->PointerEvents()) {
+  switch (StyleUI()->mPointerEvents) {
     case StylePointerEvents::None:
       break;
     case StylePointerEvents::Visiblepainted:
