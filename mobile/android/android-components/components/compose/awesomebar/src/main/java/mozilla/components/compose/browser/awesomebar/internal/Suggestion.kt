@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
@@ -94,6 +95,7 @@ private fun SuggestionTitleAndDescription(
             color = colors.title,
             fontSize = 15.sp,
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .width(IntrinsicSize.Max)
                 .padding(start = 2.dp, end = 8.dp)
@@ -104,6 +106,7 @@ private fun SuggestionTitleAndDescription(
                 color = colors.description,
                 fontSize = 12.sp,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .width(IntrinsicSize.Max)
                     .padding(start = 2.dp, end = 8.dp)
