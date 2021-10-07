@@ -1037,16 +1037,6 @@ function handleRequest(req, res) {
       } else {
         var b64encoded = Buffer.from(odohconfig).toString("base64");
         let packet = dnsPacket.decode(payload);
-        if (
-          u.query.failConfirmation == "true" &&
-          packet.questions[0].type == "NS" &&
-          packet.questions[0].name == "example.com"
-        ) {
-          res.writeHead(200);
-          res.write("<12bytes");
-          res.end("");
-          return;
-        }
         if (packet.questions[0].type == "HTTPS") {
           answers.push({
             name: packet.questions[0].name,
