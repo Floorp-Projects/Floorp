@@ -1048,7 +1048,7 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                        const nsRect& aRect,
                                        const nsRect& aDirtyRect,
                                        DrawOverflow aDrawOverflow) {
-  if (IsNonNativeWidgetType(aAppearance)) {
+  if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
     return nsNativeBasicThemeGTK::DrawWidgetBackground(
         aContext, aFrame, aAppearance, aRect, aDirtyRect, aDrawOverflow);
   }
@@ -1177,7 +1177,7 @@ bool nsNativeThemeGTK::CreateWebRenderCommandsForWidget(
     const mozilla::layers::StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
     StyleAppearance aAppearance, const nsRect& aRect) {
-  if (IsNonNativeWidgetType(aAppearance)) {
+  if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
     return nsNativeBasicThemeGTK::CreateWebRenderCommandsForWidget(
         aBuilder, aResources, aSc, aManager, aFrame, aAppearance, aRect);
   }
@@ -1388,7 +1388,7 @@ bool nsNativeThemeGTK::GetWidgetOverflow(nsDeviceContext* aContext,
                                          nsIFrame* aFrame,
                                          StyleAppearance aAppearance,
                                          nsRect* aOverflowRect) {
-  if (IsNonNativeWidgetType(aAppearance)) {
+  if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
     return nsNativeBasicThemeGTK::GetWidgetOverflow(aContext, aFrame,
                                                     aAppearance, aOverflowRect);
   }
@@ -1408,9 +1408,23 @@ bool nsNativeThemeGTK::GetWidgetOverflow(nsDeviceContext* aContext,
   return true;
 }
 
-bool nsNativeThemeGTK::IsNonNativeWidgetType(StyleAppearance aAppearance) {
-  return StaticPrefs::widget_non_native_theme_enabled() &&
-         IsWidgetScrollbarPart(aAppearance);
+auto nsNativeThemeGTK::IsWidgetNonNative(nsIFrame* aFrame,
+                                         StyleAppearance aAppearance)
+    -> NonNative {
+  if (!StaticPrefs::widget_non_native_theme_enabled()) {
+    return NonNative::No;
+  }
+  if (IsWidgetScrollbarPart(aAppearance)) {
+    return NonNative::Always;
+  }
+  // We can't draw light widgets if the current GTK theme is dark or vice versa.
+  if (nsNativeBasicThemeGTK::ThemeSupportsWidget(aFrame->PresContext(), aFrame,
+                                                 aAppearance) &&
+      LookAndFeel::ColorSchemeForFrame(aFrame) !=
+          LookAndFeel::ColorSchemeForChrome()) {
+    return NonNative::BecauseColorMismatch;
+  }
+  return NonNative::No;
 }
 
 NS_IMETHODIMP
@@ -1419,7 +1433,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                        StyleAppearance aAppearance,
                                        LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable) {
-  if (IsNonNativeWidgetType(aAppearance)) {
+  if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
     return nsNativeBasicThemeGTK::GetMinimumWidgetSize(
         aPresContext, aFrame, aAppearance, aResult, aIsOverridable);
   }
@@ -1668,7 +1682,7 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
                                      const nsAttrValue* aOldValue) {
   *aShouldRepaint = false;
 
-  if (IsNonNativeWidgetType(aAppearance)) {
+  if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
     return nsNativeBasicThemeGTK::WidgetStateChanged(
         aFrame, aAppearance, aAttribute, aShouldRepaint, aOldValue);
   }
@@ -1779,7 +1793,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     return false;
   }
 
-  if (IsNonNativeWidgetType(aAppearance)) {
+  if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
     return nsNativeBasicThemeGTK::ThemeSupportsWidget(aPresContext, aFrame,
                                                       aAppearance);
   }
@@ -1931,7 +1945,7 @@ bool nsNativeThemeGTK::ThemeNeedsComboboxDropmarker() { return false; }
 
 nsITheme::Transparency nsNativeThemeGTK::GetWidgetTransparency(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
-  if (IsNonNativeWidgetType(aAppearance)) {
+  if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
     return nsNativeBasicThemeGTK::GetWidgetTransparency(aFrame, aAppearance);
   }
 
