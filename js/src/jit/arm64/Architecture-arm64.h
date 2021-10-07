@@ -547,6 +547,10 @@ class FloatRegisters {
   }
 };
 
+static const uint32_t SpillSlotSize =
+    std::max(sizeof(Registers::RegisterContent),
+             sizeof(FloatRegisters::RegisterContent));
+
 static const uint32_t ShadowStackSpace = 0;
 
 // When our only strategy for far jumps is to encode the offset directly, and
