@@ -353,6 +353,18 @@ function returnTrueWhenAllValuesAreTrue(arr) {
   return true;
 }
 
+// Block the main thread for a number of milliseconds
+function blockMainThread(durationMS) {
+  const start = Date.now();
+  while (Date.now() - start < durationMS) { /* spin */ }
+}
+
+// Allows comparing two values from the system clocks that are not gathered
+// atomically. Allow up to 1ms of fuzzing when lhs and rhs are seconds.
+function timeFuzzyEquals(lhs, rhs, str) {
+  ok(Math.abs(lhs - rhs) < 1e-3, str);
+}
+
 function assertAttributeDefined(mediaChrome, checkType) {
   ok(mediaChrome[checkType] != undefined, `${checkType} exists`);
 }
@@ -365,8 +377,9 @@ function assertValueEqualTo(mediaChrome, checkType, expectedValue) {
 async function assertValueConstantlyIncreases(mediaChrome, checkType) {
   assertAttributeDefined(mediaChrome, checkType);
   const valueSnapshot = mediaChrome[checkType];
-  // Simply wait for a short while.
-  await new Promise(r => r());
+  // 30ms is long enough to have a low-resolution system clock tick, but short
+  // enough to not slow the test down.
+  blockMainThread(30);
   const current = mediaChrome[checkType];
   ok(current > valueSnapshot, `${checkType} keeps increasing (${current} > ${valueSnapshot})`);
 }
@@ -374,7 +387,10 @@ async function assertValueConstantlyIncreases(mediaChrome, checkType) {
 function assertValueKeptUnchanged(mediaChrome, checkType) {
   assertAttributeDefined(mediaChrome, checkType);
   const valueSnapshot = mediaChrome[checkType];
-  is(mediaChrome[checkType], valueSnapshot, `${checkType} keeps unchanged (${valueSnapshot})`);
+  // 30ms is long enough to have a low-resolution system clock tick, but short
+  // enough to not slow the test down.
+  blockMainThread(30);
+  timeFuzzyEquals(mediaChrome[checkType], valueSnapshot, `${checkType} keeps unchanged (${valueSnapshot})`);
 }
 
 function assertAllProbeRelatedAttributesKeptUnchanged(video) {
