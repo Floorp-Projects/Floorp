@@ -28,6 +28,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Text.h"
+#include "mozilla/Span.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_converter.h"
 #include "mozilla/BinarySearch.h"
@@ -61,7 +62,7 @@ static const char16_t kSPACE = ' ';
 
 static int32_t HeaderLevel(const nsAtom* aTag);
 static int32_t GetUnicharWidth(char16_t ucs);
-static int32_t GetUnicharStringWidth(const nsString& aString);
+static int32_t GetUnicharStringWidth(Span<const char16_t> aString);
 
 // Someday may want to make this non-const:
 static const uint32_t TagStackSize = 500;
@@ -1880,18 +1881,12 @@ int32_t GetUnicharWidth(char16_t ucs) {
           (ucs >= 0xffe0 && ucs <= 0xffe6));
 }
 
-int32_t GetUnicharStringWidth(const nsString& aString) {
-  const char16_t* pwcs = aString.get();
-  int32_t n = aString.Length();
-
-  int32_t w, width = 0;
-
-  for (; *pwcs && n-- > 0; pwcs++)
-    if ((w = GetUnicharWidth(*pwcs)) < 0)
-      ++width;  // Taking 1 as the width of non-printable character, for bug#
-                // 94475.
-    else
-      width += w;
-
+int32_t GetUnicharStringWidth(Span<const char16_t> aString) {
+  int32_t width = 0;
+  for (char16_t c : aString) {
+    const int32_t w = GetUnicharWidth(c);
+    // Taking 1 as the width of non-printable character, for bug 94475.
+    width += (w < 0 ? 1 : w);
+  }
   return width;
 }
