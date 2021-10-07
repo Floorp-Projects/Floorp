@@ -4,8 +4,12 @@
 // Test that enabling Service Workers testing option enables the
 // mServiceWorkersTestingEnabled attribute added to nsPIDOMWindow.
 
+// We explicitly want to test that service worker testing allows to use service
+// workers on non-https, so we use mochi.test:8888 to avoid the automatic upgrade
+// to https when dom.security.https_first is true.
 const TEST_URI =
-  URL_ROOT + "browser_toolbox_options_enable_serviceworkers_testing.html";
+  URL_ROOT_MOCHI_8888 +
+  "browser_toolbox_options_enable_serviceworkers_testing.html";
 const ELEMENT_ID = "devtools-enable-serviceWorkersTesting";
 
 add_task(async function() {

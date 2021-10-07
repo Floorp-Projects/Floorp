@@ -1,10 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const exampleNetDocument = `http://example.net/document-builder.sjs`;
-const exampleComDocument = `http://example.com/document-builder.sjs`;
+const exampleOrgDocument = `https://example.org/document-builder.sjs`;
+const exampleComDocument = `https://example.com/document-builder.sjs`;
 
-const TEST_URL = `${exampleNetDocument}?html=
+const TEST_URL = `${exampleOrgDocument}?html=
   <style>
     body {
       margin: 0;
@@ -17,7 +17,7 @@ const TEST_URL = `${exampleNetDocument}?html=
     }
   </style>
   <iframe
-    src="${exampleNetDocument}?html=<body style='margin:0;height:30px;background:rgb(255,0,0)'></body>"
+    src="${exampleOrgDocument}?html=<body style='margin:0;height:30px;background:rgb(255,0,0)'></body>"
     id="same-origin"></iframe>
   <iframe
     src="${exampleComDocument}?html=<body style='margin:0;height:30px;background:rgb(0,255,0)'></body>"

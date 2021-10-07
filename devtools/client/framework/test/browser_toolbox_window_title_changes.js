@@ -11,9 +11,11 @@ const NAME_3 = NAME_2;
 const NAME_4 = "Toolbox test for another title update";
 
 const URL_1 = "data:text/plain;charset=UTF-8,abcde";
-const URL_2 = URL_ROOT_ORG + "browser_toolbox_window_title_changes_page.html";
-const URL_3 = URL_ROOT_COM + "browser_toolbox_window_title_changes_page.html";
-const URL_4 = `http://example.com/document-builder.sjs?html=<head><title>${NAME_4}</title></head><h1>Hello`;
+const URL_2 =
+  URL_ROOT_ORG_SSL + "browser_toolbox_window_title_changes_page.html";
+const URL_3 =
+  URL_ROOT_COM_SSL + "browser_toolbox_window_title_changes_page.html";
+const URL_4 = `https://example.com/document-builder.sjs?html=<head><title>${NAME_4}</title></head><h1>Hello`;
 
 add_task(async function test() {
   await addTab(URL_1);

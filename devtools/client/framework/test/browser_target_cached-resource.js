@@ -6,7 +6,7 @@
 // The target front holds resources that happend before ResourceCommand addeed listeners.
 // Test whether that feature works correctly or not.
 const TEST_URI =
-  "http://example.com/browser/devtools/client/framework/test/doc_cached-resource.html";
+  "https://example.com/browser/devtools/client/framework/test/doc_cached-resource.html";
 const PARENT_MESSAGE = "Hello from parent";
 const CHILD_MESSAGE = "Hello from child";
 
@@ -19,11 +19,11 @@ add_task(async function() {
   info("Check the initial messages");
   ok(
     findMessage(hud, PARENT_MESSAGE),
-    "Message from parent doument is in console"
+    "Message from parent document is in console"
   );
   ok(
     findMessage(hud, CHILD_MESSAGE),
-    "Message from child doument is in console"
+    "Message from child document is in console"
   );
 
   info("Clear the messages");

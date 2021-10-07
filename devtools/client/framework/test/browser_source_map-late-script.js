@@ -5,8 +5,8 @@
 
 "use strict";
 
-const PAGE_URL = `${URL_ROOT}doc_empty-tab-01.html`;
-const JS_URL = URL_ROOT + "code_bundle_late_script.js";
+const PAGE_URL = `${URL_ROOT_SSL}doc_empty-tab-01.html`;
+const JS_URL = URL_ROOT_SSL + "code_bundle_late_script.js";
 
 const ORIGINAL_URL = "webpack:///code_late_script.js";
 
