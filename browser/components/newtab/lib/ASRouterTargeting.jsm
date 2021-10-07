@@ -743,6 +743,9 @@ this.ASRouterTargeting = {
           return result.value;
         }
       }
+      // Used to report the source of the targeting error in the case of
+      // undesired events
+      targetingContext.setTelemetrySource(message.id);
       result = await targetingContext.evalWithDefault(message.targeting);
       if (shouldCache) {
         jexlEvaluationCache.set(message.targeting, {
