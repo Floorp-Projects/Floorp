@@ -152,6 +152,7 @@ void TelemetryProbesReporter::AssertOnMainThreadAndNotShutdown() const {
 void TelemetryProbesReporter::ReportTelemetry() {
   AssertOnMainThreadAndNotShutdown();
   ReportResultForVideo();
+  mOwner->DispatchAsyncTestingEvent(u"mozreportedtelemetry"_ns);
 }
 
 void TelemetryProbesReporter::ReportResultForVideo() {
@@ -248,7 +249,6 @@ void TelemetryProbesReporter::ReportResultForVideo() {
       videoDecodeSuspendPercentage, key.get());
 
   ReportResultForVideoFrameStatistics(totalVideoPlayTimeS, key);
-  mOwner->DispatchAsyncTestingEvent(u"mozreportedtelemetry"_ns);
 }
 
 void TelemetryProbesReporter::ReportResultForVideoFrameStatistics(
