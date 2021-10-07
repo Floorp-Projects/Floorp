@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
     private lateinit var keyStorage: SecureAbove22Preferences
 
     private val loginsStorage = lazy {
-        SyncableLoginsStorage(this, keyStorage.getString(SyncEngine.Passwords.nativeName)!!)
+        SyncableLoginsStorage(this, lazy { keyStorage })
     }
 
     private lateinit var listView: ListView

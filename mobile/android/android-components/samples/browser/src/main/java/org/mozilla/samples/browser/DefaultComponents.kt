@@ -71,11 +71,13 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.service.digitalassetlinks.local.StatementApi
 import mozilla.components.service.digitalassetlinks.local.StatementRelationChecker
 import mozilla.components.service.location.LocationService
+import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import org.mozilla.samples.browser.addons.AddonsActivity
 import org.mozilla.samples.browser.autofill.AutofillConfirmActivity
 import org.mozilla.samples.browser.autofill.AutofillSearchActivity
@@ -84,7 +86,6 @@ import org.mozilla.samples.browser.downloads.DownloadService
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.FindInPageIntegration
 import org.mozilla.samples.browser.request.SampleUrlEncodedRequestInterceptor
-import org.mozilla.samples.browser.storage.DummyLoginsStorage
 import java.util.concurrent.TimeUnit
 
 private const val DAY_IN_MINUTES = 24 * 60L
@@ -96,9 +97,14 @@ open class DefaultComponents(private val applicationContext: Context) {
         const val PREF_LAUNCH_EXTERNAL_APP = "sample_browser_launch_external_app"
     }
 
+    val preferences: SharedPreferences =
+        applicationContext.getSharedPreferences(SAMPLE_BROWSER_PREFERENCES, Context.MODE_PRIVATE)
+
+    private val securePreferences by lazy { SecureAbove22Preferences(applicationContext, "key_store") }
+
     val autofillConfiguration by lazy {
         AutofillConfiguration(
-            storage = DummyLoginsStorage(),
+            storage = SyncableLoginsStorage(applicationContext, lazy { securePreferences }),
             publicSuffixList = publicSuffixList,
             unlockActivity = AutofillUnlockActivity::class.java,
             confirmActivity = AutofillConfirmActivity::class.java,
@@ -109,9 +115,6 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
 
     val publicSuffixList by lazy { PublicSuffixList(applicationContext) }
-
-    val preferences: SharedPreferences =
-        applicationContext.getSharedPreferences(SAMPLE_BROWSER_PREFERENCES, Context.MODE_PRIVATE)
 
     // Engine Settings
     val engineSettings by lazy {

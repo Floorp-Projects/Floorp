@@ -96,6 +96,7 @@ dependencies {
 
     implementation project(':lib-fetch-httpurlconnection')
     implementation project(":lib-crash")
+    implementation project(':lib-dataprotect')
     implementation project(":lib-publicsuffixlist")
 
     implementation project(':feature-awesomebar')
@@ -130,6 +131,7 @@ dependencies {
     implementation project(':service-glean')
     implementation project(':service-location')
     implementation project(':service-digitalassetlinks')
+    implementation project(':service-sync-logins')
 
     implementation project(':support-utils')
     implementation project(':support-ktx')

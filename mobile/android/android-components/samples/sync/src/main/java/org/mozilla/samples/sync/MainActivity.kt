@@ -34,7 +34,6 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
-import mozilla.components.lib.dataprotect.generateEncryptionKey
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.PeriodicSyncConfig
