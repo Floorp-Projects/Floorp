@@ -8,6 +8,7 @@
  */
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
@@ -540,6 +541,13 @@ async function doDialogTest({
         UrlbarPrefs.get("quicksuggest.onboardingDialogChoice"),
         onboardingDialogChoice,
         "onboardingDialogChoice"
+      );
+      Assert.equal(
+        TelemetryEnvironment.currentEnvironment.settings.userPrefs[
+          "browser.urlbar.quicksuggest.onboardingDialogChoice"
+        ],
+        onboardingDialogChoice,
+        "onboardingDialogChoice is correct in TelemetryEnvironment"
       );
     }
 
