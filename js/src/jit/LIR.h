@@ -546,18 +546,21 @@ class LDefinition {
     return (Policy)((bits_ >> POLICY_SHIFT) & POLICY_MASK);
   }
   Type type() const { return (Type)((bits_ >> TYPE_SHIFT) & TYPE_MASK); }
+
+  static bool isFloatRegCompatible(Type type, FloatRegister reg) {
+    if (type == FLOAT32) {
+      return reg.isSingle();
+    }
+    if (type == DOUBLE) {
+      return reg.isDouble();
+    }
+    MOZ_ASSERT(type == SIMD128);
+    return reg.isSimd128();
+  }
+
   bool isCompatibleReg(const AnyRegister& r) const {
     if (isFloatReg() && r.isFloat()) {
-      if (type() == FLOAT32) {
-        return r.fpu().isSingle();
-      }
-      if (type() == DOUBLE) {
-        return r.fpu().isDouble();
-      }
-      if (type() == SIMD128) {
-        return r.fpu().isSimd128();
-      }
-      MOZ_CRASH("Unexpected MDefinition type");
+      return isFloatRegCompatible(type(), r.fpu());
     }
     return !isFloatReg() && !r.isFloat();
   }
@@ -572,9 +575,11 @@ class LDefinition {
 #endif
   }
 
-  bool isFloatReg() const {
-    return type() == FLOAT32 || type() == DOUBLE || type() == SIMD128;
+  static bool isFloatReg(Type type) {
+    return type == FLOAT32 || type == DOUBLE || type == SIMD128;
   }
+  bool isFloatReg() const { return isFloatReg(type()); }
+
   uint32_t virtualRegister() const {
     uint32_t index = (bits_ >> VREG_SHIFT) & VREG_MASK;
     // MOZ_ASSERT(index != 0);
