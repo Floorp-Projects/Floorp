@@ -348,8 +348,11 @@ function onLoad(ready) {
         document.l10n.setAttributes(el, stringId);
         translatedElements.push(el);
         el.classList.remove("hidden");
+        el.disabled = false;
       } else {
         el.classList.add("hidden");
+        // Disabled inputs take up space to avoid shifting layout.
+        el.disabled = true;
         // Avoid screen readers from seeing this too.
         el.textContent = "";
       }
