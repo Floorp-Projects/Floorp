@@ -16,6 +16,12 @@ var observer = {
           this._itemAddedIndex = event.index;
           break;
         }
+        case "bookmark-time-changed": {
+          this._itemTimeChangedGuid = event.guid;
+          this._itemTimeChangedDateAdded = event.dateAdded;
+          this._itemTimeChangedLastModified = event.lastModified;
+          break;
+        }
         case "bookmark-title-changed": {
           this._itemTitleChangedId = event.id;
           this._itemTitleChangedTitle = event.title;
@@ -34,14 +40,14 @@ var observer = {
 PlacesUtils.bookmarks.addObserver(observer);
 observer.handlePlacesEvents = observer.handlePlacesEvents.bind(observer);
 PlacesUtils.observers.addListener(
-  ["bookmark-added", "bookmark-title-changed"],
+  ["bookmark-added", "bookmark-time-changed", "bookmark-title-changed"],
   observer.handlePlacesEvents
 );
 
 registerCleanupFunction(function() {
   PlacesUtils.bookmarks.removeObserver(observer);
   PlacesUtils.observers.removeListener(
-    ["bookmark-added", "bookmark-title-changed"],
+    ["bookmark-added", "bookmark-time-changed", "bookmark-title-changed"],
     observer.handlePlacesEvents
   );
 });
@@ -80,8 +86,8 @@ add_task(async function test_bookmark_update_notifications() {
     dateAdded: PAST_DATE,
   });
 
-  Assert.equal(observer._itemChangedProperty, "dateAdded");
-  Assert.equal(observer._itemChangedValue, PlacesUtils.toPRTime(PAST_DATE));
+  Assert.equal(observer._itemTimeChangedGuid, bookmark.guid);
+  Assert.equal(observer._itemTimeChangedDateAdded, PAST_DATE.getTime());
 
   // After just inserting, modified should be the same as dateAdded.
   do_check_date_eq(bookmark.lastModified, bookmark.dateAdded);
@@ -98,8 +104,8 @@ add_task(async function test_bookmark_update_notifications() {
     lastModified: PAST_DATE,
   });
 
-  Assert.equal(observer._itemChangedProperty, "lastModified");
-  Assert.equal(observer._itemChangedValue, PlacesUtils.toPRTime(PAST_DATE));
+  Assert.equal(observer._itemTimeChangedGuid, bookmark.guid);
+  Assert.equal(observer._itemTimeChangedLastModified, PAST_DATE.getTime());
   do_check_date_eq(updatedBookmark.lastModified, PAST_DATE);
 
   // Set bookmark title

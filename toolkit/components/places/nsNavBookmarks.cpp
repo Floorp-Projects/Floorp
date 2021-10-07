@@ -52,15 +52,6 @@ PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavBookmarks, gBookmarksService)
 
 namespace {
 
-#define SKIP_TAGS(condition) ((condition) ? SkipTags : DontSkip)
-
-bool DontSkip(nsCOMPtr<nsINavBookmarkObserver> obs) { return false; }
-bool SkipTags(nsCOMPtr<nsINavBookmarkObserver> obs) {
-  bool skipTags = false;
-  (void)obs->GetSkipTags(&skipTags);
-  return skipTags;
-}
-
 // Returns the sync change counter increment for a change source constant.
 inline int64_t DetermineSyncChangeDelta(uint16_t aSource) {
   return aSource == nsINavBookmarksService::SOURCE_SYNC ? 0 : 1;
@@ -467,7 +458,7 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder, nsIURI* aURI, int32_t aIndex,
       MOZ_ASSERT(bookmarks[i].id != *aNewBookmarkId);
 
       NOTIFY_BOOKMARKS_OBSERVERS(
-          mCanNotify, mObservers, DontSkip,
+          mCanNotify, mObservers,
           OnItemChanged(bookmarks[i].id, "tags"_ns, false, ""_ns,
                         bookmarks[i].lastModified, TYPE_BOOKMARK,
                         bookmarks[i].parentId, bookmarks[i].guid,
@@ -590,7 +581,7 @@ nsNavBookmarks::RemoveItem(int64_t aItemId, uint16_t aSource) {
 
     for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
       NOTIFY_BOOKMARKS_OBSERVERS(
-          mCanNotify, mObservers, DontSkip,
+          mCanNotify, mObservers,
           OnItemChanged(bookmarks[i].id, "tags"_ns, false, ""_ns,
                         bookmarks[i].lastModified, TYPE_BOOKMARK,
                         bookmarks[i].parentId, bookmarks[i].guid,
@@ -891,7 +882,7 @@ nsresult nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId,
 
       for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
         NOTIFY_BOOKMARKS_OBSERVERS(
-            mCanNotify, mObservers, DontSkip,
+            mCanNotify, mObservers,
             OnItemChanged(bookmarks[i].id, "tags"_ns, false, ""_ns,
                           bookmarks[i].lastModified, TYPE_BOOKMARK,
                           bookmarks[i].parentId, bookmarks[i].guid,
@@ -1110,13 +1101,6 @@ nsNavBookmarks::SetItemLastModified(int64_t aItemId, PRTime aLastModified,
   }
 
   // Note: mDBSetItemDateAdded also sets lastModified to aDateAdded.
-  NOTIFY_BOOKMARKS_OBSERVERS(
-      mCanNotify, mObservers,
-      SKIP_TAGS(isTagging || bookmark.parentId == tagsRootId),
-      OnItemChanged(bookmark.id, "lastModified"_ns, false,
-                    nsPrintfCString("%" PRId64, bookmark.lastModified),
-                    bookmark.lastModified, bookmark.type, bookmark.parentId,
-                    bookmark.guid, bookmark.parentGuid, ""_ns, aSource));
 
   if (mCanNotify) {
     Sequence<OwningNonNull<PlacesEvent>> events;
@@ -1767,8 +1751,8 @@ void nsNavBookmarks::NotifyItemChanged(const ItemChangeData& aData) {
         aData.bookmark.id, lastModified));
   }
 
-  NOTIFY_OBSERVERS(
-      mCanNotify, mObservers, nsINavBookmarkObserver,
+  NOTIFY_BOOKMARKS_OBSERVERS(
+      mCanNotify, mObservers,
       OnItemChanged(aData.bookmark.id, aData.property, aData.isAnnotation,
                     aData.newValue, lastModified, aData.bookmark.type,
                     aData.bookmark.parentId, aData.bookmark.guid,
