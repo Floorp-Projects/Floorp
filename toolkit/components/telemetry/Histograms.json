@@ -1199,13 +1199,6 @@
     "n_values":  10,
     "description": "Count how often we use different fallbacks when the GPU process crashes: None=0, GPUProcessDecodingDisabled=1, GPUProcessDisabled=2"
   },
-  "XUL_CACHE_DISABLED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "default",
-    "kind": "flag",
-    "description": "XUL cache was disabled"
-  },
   "MEMORY_RESIDENT_FAST": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

@@ -10010,6 +10010,11 @@
   value: false
   mirror: always
 
+- name: nglayout.debug.disable_xul_cache
+  type: bool
+  value: false
+  mirror: always
+
 - name: nglayout.initialpaint.delay
   type: int32_t
   value: 5

@@ -25,6 +25,7 @@
 
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_nglayout.h"
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
 #include "mozilla/Telemetry.h"
@@ -35,34 +36,12 @@ using namespace mozilla;
 using namespace mozilla::scache;
 using mozilla::intl::LocaleService;
 
-#define XUL_CACHE_DISABLED_DEFAULT false
-
-static bool gDisableXULCache =
-    XUL_CACHE_DISABLED_DEFAULT;  // enabled by default
-static const char kDisableXULCachePref[] = "nglayout.debug.disable_xul_cache";
 static const char kXULCacheInfoKey[] = "nsXULPrototypeCache.startupCache";
 static const char kXULCachePrefix[] = "xulcache";
 
-//----------------------------------------------------------------------
-
-static void UpdategDisableXULCache() {
-  // Get the value of "nglayout.debug.disable_xul_cache" preference
-  gDisableXULCache =
-      Preferences::GetBool(kDisableXULCachePref, XUL_CACHE_DISABLED_DEFAULT);
-
-  // Sets the flag if the XUL cache is disabled
-  if (gDisableXULCache) {
-    Telemetry::Accumulate(Telemetry::XUL_CACHE_DISABLED, true);
-  }
-}
-
 static void DisableXULCacheChangedCallback(const char* aPref, void* aClosure) {
-  bool wasEnabled = !gDisableXULCache;
-  UpdategDisableXULCache();
-
-  if (wasEnabled && gDisableXULCache) {
-    nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
-    if (cache) {
+  if (nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance()) {
+    if (!cache->IsEnabled()) {
       // AbortCaching() calls Flush() for us.
       cache->AbortCaching();
     }
@@ -82,10 +61,10 @@ nsXULPrototypeCache* nsXULPrototypeCache::GetInstance() {
   if (!sInstance) {
     NS_ADDREF(sInstance = new nsXULPrototypeCache());
 
-    UpdategDisableXULCache();
-
-    Preferences::RegisterCallback(DisableXULCacheChangedCallback,
-                                  kDisableXULCachePref);
+    Preferences::RegisterCallback(
+        DisableXULCacheChangedCallback,
+        nsDependentCString(
+            StaticPrefs::GetPrefName_nglayout_debug_disable_xul_cache()));
 
     nsCOMPtr<nsIObserverService> obsSvc =
         mozilla::services::GetObserverService();
@@ -196,13 +175,11 @@ void nsXULPrototypeCache::Flush() {
   mStencilTable.Clear();
 }
 
-bool nsXULPrototypeCache::IsEnabled() { return !gDisableXULCache; }
+bool nsXULPrototypeCache::IsEnabled() {
+  return !StaticPrefs::nglayout_debug_disable_xul_cache();
+}
 
 void nsXULPrototypeCache::AbortCaching() {
-#ifdef DEBUG_brendan
-  NS_BREAK();
-#endif
-
   // Flush the XUL cache for good measure, in case we cached a bogus/downrev
   // script, somehow.
   Flush();
@@ -349,7 +326,9 @@ nsresult nsXULPrototypeCache::BeginCaching(nsIURI* aURI) {
   StartupCache* startupCache = StartupCache::GetSingleton();
   if (!startupCache) return NS_ERROR_FAILURE;
 
-  if (gDisableXULCache) return NS_ERROR_NOT_AVAILABLE;
+  if (StaticPrefs::nglayout_debug_disable_xul_cache()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   // Get the chrome directory to validate against the one stored in the
   // cache file, or to store there if we're generating a new file.
