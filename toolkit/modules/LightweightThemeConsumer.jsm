@@ -317,6 +317,11 @@ LightweightThemeConsumer.prototype = {
 
     let contentThemeData = _getContentProperties(this._doc, active, theme);
     Services.ppmm.sharedData.set(`theme/${this._winId}`, contentThemeData);
+    // We flush sharedData because contentThemeData can be responsible for
+    // painting large background surfaces. If this data isn't delivered to the
+    // content process before about:home is painted, we will paint a default
+    // background and then replace it when sharedData syncs, causing flashing.
+    Services.ppmm.sharedData.flush();
 
     this._win.dispatchEvent(new CustomEvent("windowlwthemeupdate"));
   },
