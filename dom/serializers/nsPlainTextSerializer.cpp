@@ -144,47 +144,37 @@ int32_t nsPlainTextSerializer::CurrentLine::FindWrapIndexForContent(
       --goodSpace;  // adjust the position since line breaker returns a
                     // position next to space
     }
-  } else {
-    // In this case we don't want strings, especially CJK-ones, to be split.
-    // See
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=333064 for more
-    // information.
-
-    if (aWrapColumn < prefixwidth) {
-      goodSpace = NS_LINEBREAKER_NEED_MORE_TEXT;
-    } else {
-      goodSpace = std::min(aWrapColumn - prefixwidth, mContent.Length() - 1);
-      while (goodSpace >= 0 &&
-             !nsCRT::IsAsciiSpace(mContent.CharAt(goodSpace))) {
-        goodSpace--;
-      }
-    }
-  }
-
-  if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT) {
-    // If we didn't find a good place to break, accept long line and
-    // try to find another place to break
-    goodSpace =
-        (prefixwidth > aWrapColumn + 1) ? 1 : aWrapColumn - prefixwidth + 1;
-    if (aLineBreaker) {
+    if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT) {
+      // If we didn't find a good place to break, accept long line and
+      // try to find another place to break
+      goodSpace =
+          (prefixwidth > aWrapColumn + 1) ? 1 : aWrapColumn - prefixwidth + 1;
       if ((uint32_t)goodSpace < mContent.Length())
         goodSpace = aLineBreaker->DeprecatedNext(mContent.get(),
                                                  mContent.Length(), goodSpace);
       if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT)
         goodSpace = mContent.Length();
-    } else {
-      // In this case we don't want strings, especially CJK-ones, to be
-      // split. See
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=333064 for more
-      // information.
-      goodSpace = (prefixwidth > aWrapColumn) ? 1 : aWrapColumn - prefixwidth;
-      const int32_t contentLength = mContent.Length();
-      while (goodSpace < contentLength &&
-             !nsCRT::IsAsciiSpace(mContent.CharAt(goodSpace))) {
-        goodSpace++;
-      }
+    }
+
+    return goodSpace;
+  }
+
+  // In this case we don't want strings, especially CJK-ones, to be split. See
+  // bug 333064 for more information.
+  if (aWrapColumn < prefixwidth) {
+    goodSpace = (prefixwidth > aWrapColumn) ? 1 : aWrapColumn - prefixwidth;
+    const int32_t contentLength = mContent.Length();
+    while (goodSpace < contentLength &&
+           !nsCRT::IsAsciiSpace(mContent.CharAt(goodSpace))) {
+      goodSpace++;
+    }
+  } else {
+    goodSpace = std::min(aWrapColumn - prefixwidth, mContent.Length() - 1);
+    while (goodSpace >= 0 && !nsCRT::IsAsciiSpace(mContent.CharAt(goodSpace))) {
+      goodSpace--;
     }
   }
+
   return goodSpace;
 }
 
