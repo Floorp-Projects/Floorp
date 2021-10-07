@@ -19,12 +19,12 @@ from copy import deepcopy
 
 from mach.mixin.logging import LoggingMixin
 
-from mozbuild.base import MozbuildObject
 from mozbuild.makeutil import Makefile
 from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.util import FileAvoidWrite
 
 import mozpack.path as mozpath
+import buildconfig
 
 # There are various imports in this file in functions to avoid adding
 # dependencies to config.status. See bug 949875.
@@ -649,9 +649,22 @@ class WebIDLCodegenManager(LoggingMixin):
 
 
 def create_build_system_manager(
-    topsrcdir, topobjdir, dist_dir, use_builtin_readable_stream
+    topsrcdir=None, topobjdir=None, dist_dir=None, use_builtin_readable_stream=None
 ):
     """Create a WebIDLCodegenManager for use by the build system."""
+    if topsrcdir is None:
+        assert (
+            topobjdir is None
+            and dist_dir is None
+            and use_builtin_readable_stream is None
+        )
+        import buildconfig
+
+        topsrcdir = buildconfig.topsrcdir
+        topobjdir = buildconfig.topobjdir
+        dist_dir = buildconfig.substs["DIST"]
+        use_builtin_readable_stream = not buildconfig.substs.get("MOZ_DOM_STREAMS")
+
     src_dir = os.path.join(topsrcdir, "dom", "bindings")
     obj_dir = os.path.join(topobjdir, "dom", "bindings")
     webidl_root = os.path.join(topsrcdir, "dom", "webidl")
@@ -686,20 +699,3 @@ def create_build_system_manager(
         make_deps_target="webidl.stub",
         use_builtin_readable_stream=use_builtin_readable_stream,
     )
-
-
-class BuildSystemWebIDL(MozbuildObject):
-    @property
-    def manager(self):
-        use_builtin_readable_stream = not (
-            "--enable-dom-streams" in self.mozconfig["configure_args"]
-        )
-        if not hasattr(self, "_webidl_manager"):
-            self._webidl_manager = create_build_system_manager(
-                self.topsrcdir,
-                self.topobjdir,
-                self.distdir,
-                use_builtin_readable_stream,
-            )
-
-        return self._webidl_manager
