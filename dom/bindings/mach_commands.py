@@ -30,9 +30,9 @@ def get_test_parser():
     "interface", nargs="+", help="Interface(s) whose examples to generate."
 )
 def webidl_example(command_context, interface):
-    from mozwebidlcodegen import BuildSystemWebIDL
+    from mozwebidlcodegen import create_build_system_manager
 
-    manager = command_context._spawn(BuildSystemWebIDL).manager
+    manager = create_build_system_manager()
     for i in interface:
         manager.generate_example_files(i)
 
