@@ -200,8 +200,7 @@ void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 // If pointer-events: none; is set on the popup, then the widget should
 // ignore mouse events, passing them through to the content behind.
 bool nsMenuPopupFrame::IsMouseTransparent(const ComputedStyle& aStyle) const {
-  return aStyle.StyleUI()->GetEffectivePointerEvents(this) ==
-         StylePointerEvents::None;
+  return aStyle.PointerEvents() == StylePointerEvents::None;
 }
 
 bool nsMenuPopupFrame::HasRemoteContent() const {
