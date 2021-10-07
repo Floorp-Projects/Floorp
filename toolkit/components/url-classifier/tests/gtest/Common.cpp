@@ -77,7 +77,8 @@ nsresult SyncApplyUpdates(TableUpdateArray& aUpdates) {
   // the main thread. As a result we have to keep processing
   // pending event until |done| becomes true. If there's no
   // more pending event, what we only can do is wait.
-  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return done; }));
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil("url-classifier:SyncApplyUpdates"_ns,
+                                     [&]() { return done; }));
 
   return ret;
 }
