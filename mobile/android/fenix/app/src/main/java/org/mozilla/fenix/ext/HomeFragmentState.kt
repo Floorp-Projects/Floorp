@@ -86,7 +86,7 @@ internal fun getFilteredStoriesCount(
             }
         }
         false -> {
-            return selectedCategories.map { it.name to it.stories.size }.toMap()
+            return selectedCategories.associate { it.name to it.stories.size }
         }
     }
 
