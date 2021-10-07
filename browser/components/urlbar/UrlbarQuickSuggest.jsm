@@ -4,7 +4,11 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["UrlbarQuickSuggest", "KeywordTree"];
+const EXPORTED_SYMBOLS = [
+  "KeywordTree",
+  "ONBOARDING_CHOICE",
+  "UrlbarQuickSuggest",
+];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -36,6 +40,20 @@ const NONSPONSORED_IAB_CATEGORIES = new Set(["5 - Education"]);
 const FEATURE_AVAILABLE = "quickSuggestEnabled";
 const SEEN_DIALOG_PREF = "quicksuggest.showedOnboardingDialog";
 const RESTARTS_PREF = "quicksuggest.seenRestarts";
+
+// Values returned by the onboarding dialog depending on the user's response.
+// These values are used in telemetry events, so be careful about changing them.
+const ONBOARDING_CHOICE = {
+  ACCEPT: "accept",
+  DISMISSED_ESCAPE_KEY: "dismissed_escape_key",
+  DISMISSED_OTHER: "dismissed_other",
+  LEARN_MORE: "learn_more",
+  NOT_NOW: "not_now_link",
+  SETTINGS: "settings",
+};
+
+const ONBOARDING_URI =
+  "chrome://browser/content/urlbar/quicksuggestOnboarding.xhtml";
 
 // This is a score in the range [0, 1] used by the provider to compare
 // suggestions from remote settings to suggestions from Merino. Remote settings
@@ -246,37 +264,73 @@ class Suggestions {
       return;
     }
 
-    let params = { accept: false, openSettings: false, learnMore: false };
     let win = BrowserWindowTracker.getTopWindow();
-    await win.gDialogBox.open(
-      "chrome://browser/content/urlbar/quicksuggestOnboarding.xhtml",
-      params
-    );
+
+    // Set up a key listener so we can tell when the dialog is dismissed with
+    // the Escape key. There are a few reasons this is so complicated:
+    //
+    // (1) Key events are not dispatched to the dialog content when the focus is
+    //     not in the dialog. The focus is in the dialog initially, but all it
+    //     takes to move out of the dialog is for the user to click outside it,
+    //     as they might when they're trying to dismiss it. Therefore we add our
+    //     key listener here, to the browser window.
+    // (2) `keypress` is not dispatched to the browser window when the focus is
+    //     inside the dialog but `keydown` is, so we listen for `keydown`.
+    // (3) Our dialog will be queued and deferred if other dialogs are currently
+    //     shown, so don't assume the first Escape key is related to ours.
+    let escapeKeyPressed = false;
+    let keyListener = keyEvent => {
+      if (
+        keyEvent.keyCode == keyEvent.DOM_VK_ESCAPE &&
+        win.gDialogBox.dialog?.frameContentWindow?.document?.documentURI ==
+          ONBOARDING_URI
+      ) {
+        escapeKeyPressed = true;
+      }
+    };
+    win.addEventListener("keydown", keyListener, true);
+
+    let params = { choice: undefined };
+    await win.gDialogBox.open(ONBOARDING_URI, params);
+
+    win.removeEventListener("keydown", keyListener, true);
 
     UrlbarPrefs.set(SEEN_DIALOG_PREF, true);
 
-    let telemetryEventObject;
-    if (params.accept) {
-      // Opting in enables both non-sponsored and sponsored results.
-      UrlbarPrefs.set("suggest.quicksuggest", true);
-      UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
-      telemetryEventObject = "accept";
-    } else if (params.openSettings) {
-      win.openPreferences("privacy-locationBar");
-      telemetryEventObject = "settings";
-    } else if (params.learnMore) {
-      win.openTrustedLinkIn(UrlbarProviderQuickSuggest.helpUrl, "tab", {
-        fromChrome: true,
-      });
-      telemetryEventObject = "learn_more";
-    } else {
-      telemetryEventObject = "not_now";
+    switch (params.choice) {
+      case ONBOARDING_CHOICE.ACCEPT:
+        // Opting in enables both non-sponsored and sponsored results.
+        UrlbarPrefs.set("suggest.quicksuggest", true);
+        UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+        break;
+      case ONBOARDING_CHOICE.LEARN_MORE:
+        win.openTrustedLinkIn(UrlbarProviderQuickSuggest.helpUrl, "tab", {
+          fromChrome: true,
+        });
+        break;
+      case ONBOARDING_CHOICE.NOT_NOW:
+        break;
+      case ONBOARDING_CHOICE.SETTINGS:
+        win.openPreferences("privacy-locationBar");
+        break;
+      default:
+        if (escapeKeyPressed) {
+          params.choice = ONBOARDING_CHOICE.DISMISSED_ESCAPE_KEY;
+          break;
+        }
+        // Catch-all for other cases. Typically this should not happen, but one
+        // case where it does is when the dialog is replaced by another higher
+        // priority dialog like the one that's shown when quitting the app.
+        params.choice = ONBOARDING_CHOICE.DISMISSED_OTHER;
+        break;
     }
+
+    UrlbarPrefs.set("quicksuggest.onboardingDialogChoice", params.choice);
 
     Services.telemetry.recordEvent(
       "contextservices.quicksuggest",
       "opt_in_dialog",
-      telemetryEventObject
+      params.choice
     );
   }
 
