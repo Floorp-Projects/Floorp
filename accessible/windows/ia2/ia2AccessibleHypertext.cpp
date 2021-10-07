@@ -26,17 +26,19 @@ ia2AccessibleHypertext::QueryInterface(REFIID aIID, void** aInstancePtr) {
 
   *aInstancePtr = nullptr;
 
-  HyperTextAccessibleWrap* hyp = TextAcc();
-  if (hyp && hyp->IsTextRole()) {
-    if (aIID == IID_IAccessibleText)
+  Accessible* acc = Acc();
+  if (acc && acc->IsTextRole()) {
+    bool isLocal = acc->IsLocal();
+    if (aIID == IID_IAccessibleText) {
       *aInstancePtr =
           static_cast<IAccessibleText*>(static_cast<ia2AccessibleText*>(this));
-    else if (aIID == IID_IAccessibleHypertext)
+    } else if (aIID == IID_IAccessibleHypertext && isLocal) {
       *aInstancePtr = static_cast<IAccessibleHypertext*>(this);
-    else if (aIID == IID_IAccessibleHypertext2)
+    } else if (aIID == IID_IAccessibleHypertext2 && isLocal) {
       *aInstancePtr = static_cast<IAccessibleHypertext2*>(this);
-    else if (aIID == IID_IAccessibleEditableText)
+    } else if (aIID == IID_IAccessibleEditableText && isLocal) {
       *aInstancePtr = static_cast<IAccessibleEditableText*>(this);
+    }
 
     if (*aInstancePtr) {
       AddRef();
