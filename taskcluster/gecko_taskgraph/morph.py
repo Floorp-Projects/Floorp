@@ -113,7 +113,7 @@ def derive_misc_task(
         task=task_def,
         dependencies=deps,
     )
-    task.task_id = slugid().decode("ascii")
+    task.task_id = slugid()
     return task
 
 

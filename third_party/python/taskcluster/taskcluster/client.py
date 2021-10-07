@@ -69,7 +69,7 @@ class BaseClient(object):
                 if value and not isinstance(value, six.binary_type):
                     try:
                         credentials[x] = credentials[x].encode('ascii')
-                    except:
+                    except Exception:
                         s = '%s (%s) must be unicode encodable' % (x, credentials[x])
                         raise exceptions.TaskclusterAuthFailure(s)
 
@@ -260,7 +260,6 @@ class BaseClient(object):
         routeParams, payload, query, paginationHandler, paginationLimit = x
         route = self._subArgsInRoute(entry, routeParams)
 
-        # TODO: Check for limit being in the Query of the api ref
         if paginationLimit and 'limit' in entry.get('query', []):
             query['limit'] = paginationLimit
 
@@ -516,7 +515,7 @@ class BaseClient(object):
                 data = {}
                 try:
                     data = response.json()
-                except:
+                except Exception:
                     pass  # Ignore JSON errors in error messages
                 # Find error message
                 message = "Unknown Server Error"
@@ -667,7 +666,7 @@ def createTemporaryCredentials(clientId, accessToken, start, expiry, scopes, nam
         scopes=scopes,
         start=calendar.timegm(start.utctimetuple()) * 1000,
         expiry=calendar.timegm(expiry.utctimetuple()) * 1000,
-        seed=utils.slugId() + utils.slugId(),
+        seed=utils.slugId().encode('ascii') + utils.slugId().encode('ascii'),
     )
 
     # if this is a named temporary credential, include the issuer in the certificate

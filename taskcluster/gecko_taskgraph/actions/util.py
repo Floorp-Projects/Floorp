@@ -242,7 +242,7 @@ def create_task_from_def(task_def, level):
     this yourself. Seeing how create_tasks handles it might prove helpful."""
     task_def["schedulerId"] = f"gecko-level-{level}"
     label = task_def["metadata"]["name"]
-    task_id = slugid().decode("ascii")
+    task_id = slugid()
     session = get_session()
     create.create_task(session, task_id, label, task_def)
 

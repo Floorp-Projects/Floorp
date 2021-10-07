@@ -32,8 +32,8 @@ responses==0.10.6
 rsa==3.1.4
 sentry-sdk==0.14.3
 six==1.13.0
-slugid==1.0.7
-taskcluster==6.0.0
-taskcluster-urls==11.0.0
+slugid==2.0.0
+taskcluster==44.2.2
+taskcluster-urls==13.0.1
 voluptuous==0.12.1
 yamllint==1.23
