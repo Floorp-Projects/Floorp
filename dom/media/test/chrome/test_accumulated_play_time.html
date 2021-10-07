@@ -16,9 +16,22 @@
  * - VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE
  * - VIDEO_VISIBLE_PLAY_TIME_MS
  * - MEDIA_PLAY_TIME_MS
+ * - MUTED_PLAY_TIME_PERCENT
+ * - AUDIBLE_PLAY_TIME_PERCENT
  */
-const videoHistNames = ["VIDEO_PLAY_TIME_MS", "VIDEO_HIDDEN_PLAY_TIME_MS"];
-const videoKeyedHistNames = ["VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE", "VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE", "VIDEO_VISIBLE_PLAY_TIME_MS"];
+const videoHistNames = [
+  "VIDEO_PLAY_TIME_MS",
+  "VIDEO_HIDDEN_PLAY_TIME_MS"
+];
+const videoKeyedHistNames = [
+  "VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE",
+  "VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE",
+  "VIDEO_VISIBLE_PLAY_TIME_MS"
+];
+const audioKeyedHistNames = [
+  "MUTED_PLAY_TIME_PERCENT",
+  "AUDIBLE_PLAY_TIME_PERCENT"
+];
 
 add_task(async function setTestPref() {
   await SpecialPowers.pushPrefEnv({
@@ -464,6 +477,25 @@ async function checkReportedTelemetry(media, reportExpected, hasVideo) {
       hist.clear();
     } else {
       ok(!reportExpected, "MEDIA_PLAY_TIME_MS should always be reported if a report is expected");
+    }
+  }
+
+  for (const name of audioKeyedHistNames) {
+    try {
+      const hist = SpecialPowers.Services.telemetry.getKeyedHistogramById(name);
+      const items = Object.entries(hist.snapshot());
+      if (items.length > 0) {
+        for (const [key, value] of items) {
+          const entriesNums = Object.entries(value.values).length;
+          ok(reportExpected && entriesNums > 0, `Reported ${key} for ${name}`);
+        }
+      } else {
+        ok(!reportExpected, `No audio telemetry expected, none reported`);
+      }
+      // Avoid to pollute next test task.
+      hist.clear();
+    } catch (e) {
+      ok(false , `keyed histogram '${name}' doesn't exist`);
     }
   }
 }
