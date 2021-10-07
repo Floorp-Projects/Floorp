@@ -64,6 +64,22 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
     "nodeActor has the expected inlineTextChild value"
   );
 
+  info("Check that the color scheme simulation buttons are hidden");
+  const lightButtonIsHidden = inspector.panelDoc
+    .querySelector("#color-scheme-simulation-light-toggle")
+    ?.hasAttribute("hidden");
+  const darkButtonIsHidded = inspector.panelDoc
+    .querySelector("#color-scheme-simulation-dark-toggle")
+    ?.hasAttribute("hidden");
+  ok(
+    lightButtonIsHidden,
+    "The light color scheme simulation button exists and is hidden"
+  );
+  ok(
+    darkButtonIsHidded,
+    "The dark color scheme simulation button exists and is hidden"
+  );
+
   await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
   await removeTemporaryExtension(ADDON_NAME, document);
   await removeTab(tab);
