@@ -17,8 +17,8 @@ class ListTest {
         val filePath1 = "filepath.txt"
         val filePath3 = "filepath3.txt"
 
-        var file1 = File(filePath1)
-        var file3 = File(filePath3)
+        val file1 = File(filePath1)
+        val file3 = File(filePath3)
 
         // Create files
         file1.createNewFile()
@@ -70,9 +70,9 @@ class ListTest {
         val filePath2 = "filepath.txt"
         val filePath3 = "filepath3.txt"
 
-        var file1 = File(filePath1)
-        var file2 = File(filePath2)
-        var file3 = File(filePath3)
+        val file1 = File(filePath1)
+        val file2 = File(filePath2)
+        val file3 = File(filePath3)
 
         // Create files
         file1.createNewFile()

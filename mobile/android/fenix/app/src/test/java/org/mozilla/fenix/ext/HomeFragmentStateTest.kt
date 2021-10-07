@@ -140,7 +140,7 @@ class HomeFragmentStateTest {
 
     @Test
     fun `GIVEN a category is selected WHEN getFilteredStoriesCount is called for more stories than in this category THEN return only that`() {
-        var result = getFilteredStoriesCount(listOf(otherStoriesCategory), 4)
+        val result = getFilteredStoriesCount(listOf(otherStoriesCategory), 4)
         assertEquals(1, result.keys.size)
         assertEquals(otherStoriesCategory.name, result.entries.first().key)
         assertEquals(3, result[otherStoriesCategory.name])
