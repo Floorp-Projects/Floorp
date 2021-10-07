@@ -117,44 +117,33 @@ void nsPlainTextSerializer::CurrentLine::ResetContentAndIndentationHeader() {
 }
 
 int32_t nsPlainTextSerializer::CurrentLine::FindWrapIndexForContent(
-    const uint32_t aWrapColumn, const uint32_t aContentWidth,
+    const uint32_t aWrapColumn,
     mozilla::intl::LineBreaker* aLineBreaker) const {
   MOZ_ASSERT(!mContent.IsEmpty());
-  MOZ_ASSERT(aContentWidth < std::numeric_limits<int32_t>::max());
-  MOZ_ASSERT(static_cast<int32_t>(aContentWidth) ==
-             GetUnicharStringWidth(mContent));
 
   const uint32_t prefixwidth = DeterminePrefixWidth();
-  int32_t goodSpace = mContent.Length();
+  int32_t goodSpace = 0;
 
   if (aLineBreaker) {
-    // We go from the end removing one letter at a time until
-    // we have a reasonable width
-    uint32_t width = aContentWidth;
-    while (goodSpace > 0 && (width + prefixwidth > aWrapColumn)) {
-      goodSpace--;
-      width -= GetUnicharWidth(mContent[goodSpace]);
-    }
-
-    goodSpace++;
-
-    goodSpace =
-        aLineBreaker->Prev(mContent.get(), mContent.Length(), goodSpace);
-    if (goodSpace != NS_LINEBREAKER_NEED_MORE_TEXT &&
-        nsCRT::IsAsciiSpace(mContent.CharAt(goodSpace - 1))) {
-      --goodSpace;  // adjust the position since line breaker returns a
-                    // position next to space
-    }
-    if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT) {
-      // If we didn't find a good place to break, accept long line and
-      // try to find another place to break
-      goodSpace =
-          (prefixwidth > aWrapColumn + 1) ? 1 : aWrapColumn - prefixwidth + 1;
-      if ((uint32_t)goodSpace < mContent.Length())
-        goodSpace = aLineBreaker->DeprecatedNext(mContent.get(),
-                                                 mContent.Length(), goodSpace);
-      if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT)
-        goodSpace = mContent.Length();
+    // We advance one line break point at a time from the beginning of the
+    // mContent until we find a width less than or equal to wrap column.
+    uint32_t width = 0;
+    const auto len = mContent.Length();
+    while (true) {
+      int32_t nextGoodSpace =
+          aLineBreaker->Next(mContent.get(), len, goodSpace);
+      if (nextGoodSpace == NS_LINEBREAKER_NEED_MORE_TEXT) {
+        // Line breaker reaches the end of mContent.
+        break;
+      }
+      width += GetUnicharStringWidth(Span<const char16_t>(
+          mContent.get() + goodSpace, nextGoodSpace - goodSpace));
+      if (prefixwidth + width > aWrapColumn) {
+        // The next break point makes the width exceeding the wrap column, so
+        // goodSpace is what we want.
+        break;
+      }
+      goodSpace = nextGoodSpace;
     }
 
     return goodSpace;
@@ -1243,8 +1232,8 @@ void nsPlainTextSerializer::MaybeWrapAndOutputCompleteLines() {
       break;
     }
 
-    const int32_t goodSpace = mCurrentLine.FindWrapIndexForContent(
-        wrapColumn, currentLineContentWidth, mLineBreaker);
+    const int32_t goodSpace =
+        mCurrentLine.FindWrapIndexForContent(wrapColumn, mLineBreaker);
 
     const int32_t contentLength = mCurrentLine.mContent.Length();
     if ((goodSpace < contentLength) && (goodSpace > 0)) {
