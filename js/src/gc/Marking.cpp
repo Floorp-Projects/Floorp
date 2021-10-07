@@ -1227,7 +1227,7 @@ bool js::GCMarker::mark(T* thing) {
 // traversing equivalent subgraphs.
 
 void BaseScript::traceChildren(JSTracer* trc) {
-  TraceEdge(trc, &functionOrGlobal_, "function");
+  TraceNullableEdge(trc, &function_, "function");
   TraceEdge(trc, &sourceObject_, "sourceObject");
 
   warmUpData_.trace(trc);
