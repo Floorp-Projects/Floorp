@@ -9316,6 +9316,57 @@ static bool DebugGetQueuedJobs(JSContext* cx, unsigned argc, Value* vp) {
 }
 #endif
 
+#ifdef FUZZING_INTERFACES
+extern "C" {
+size_t gluesmith(uint8_t* data, size_t size, uint8_t* out, size_t maxsize);
+}
+
+static bool GetWasmSmithModule(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
+
+  if (args.length() != 1) {
+    ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
+    return false;
+  }
+
+  if (!args[0].isObject() || !args[0].toObject().is<ArrayBufferObject>()) {
+    ReportUsageErrorASCII(cx, callee, "Argument must be ArrayBuffer.");
+    return false;
+  }
+
+  ArrayBufferObject* arrayBuffer = &args[0].toObject().as<ArrayBufferObject>();
+  size_t length = arrayBuffer->byteLength();
+  uint8_t* data = arrayBuffer->dataPointer();
+
+  const size_t maxModuleSize = 4096;
+  uint8_t tmp[maxModuleSize];
+
+  size_t outSize = gluesmith(data, length, tmp, maxModuleSize);
+  if (!outSize) {
+    JS_ReportErrorASCII(cx, "Generated module is too large.");
+    return false;
+  }
+
+  JS::Rooted<JSObject*> outArr(cx, JS_NewUint8ClampedArray(cx, outSize));
+  if (!outArr) {
+    return false;
+  }
+
+  {
+    JS::AutoCheckCannotGC nogc;
+    bool isShared;
+    uint8_t* data = JS_GetUint8ClampedArrayData(outArr, &isShared, nogc);
+    MOZ_RELEASE_ASSERT(!isShared);
+    memcpy(data, tmp, outSize);
+  }
+
+  args.rval().setObject(*outArr);
+  return true;
+}
+
+#endif
+
 // clang-format off
 static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("options", Options, 0, 0,
@@ -9991,6 +10042,12 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("fuzzilli", Fuzzilli, 0, 0,
 "fuzzilli(operation, arg)",
 "  Exposes functionality used by the Fuzzilli JavaScript fuzzer."),
+#endif
+
+#ifdef FUZZING_INTERFACES
+    JS_FN_HELP("getWasmSmithModule", GetWasmSmithModule, 1, 0,
+"getWasmSmithModule(arrayBuffer)",
+"  Call wasm-smith to generate a random wasm module from the provided data."),
 #endif
 
     JS_FS_HELP_END
