@@ -20,7 +20,8 @@ class FuzzingStreamListener final : public nsIStreamListener {
   FuzzingStreamListener() = default;
 
   void waitUntilDone() {
-    SpinEventLoopUntil([&]() { return mChannelDone; });
+    SpinEventLoopUntil("net::FuzzingStreamListener::waitUntilDone"_ns,
+                       [&]() { return mChannelDone; });
   }
 
   bool isDone() { return mChannelDone; }
