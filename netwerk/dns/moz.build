@@ -38,6 +38,7 @@ EXPORTS.mozilla.net += [
     "DNS.h",
     "DNSByTypeRecord.h",
     "DNSListenerProxy.h",
+    "DNSPacket.h",
     "DNSRequestBase.h",
     "DNSRequestChild.h",
     "DNSRequestParent.h",

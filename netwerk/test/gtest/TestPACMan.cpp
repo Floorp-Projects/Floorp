@@ -6,6 +6,8 @@
 #include "nsIDHCPClient.h"
 #include "nsIPrefBranch.h"
 #include "nsComponentManager.h"
+#include "nsIPrefService.h"
+#include "nsNetCID.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/GenericFactory.h"
 #include "../../base/nsPACMan.h"
