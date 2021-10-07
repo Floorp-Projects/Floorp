@@ -4147,7 +4147,7 @@ class nsIFrame : public nsQueryFrame {
    * @return whether the frame correspods to generated content
    */
   bool IsGeneratedContentFrame() const {
-    return HasAnyStateBits(NS_FRAME_GENERATED_CONTENT);
+    return (mState & NS_FRAME_GENERATED_CONTENT) != 0;
   }
 
   /**

@@ -4010,8 +4010,7 @@ nsresult nsCSSFrameConstructor::GetAnonymousContent(
       StaticPrefs::layout_css_cached_scrollbar_styles_enabled() &&
       aParentFrame->StyleVisibility()->mVisible == StyleVisibility::Visible &&
 #ifndef ANDROID
-      aParentFrame->StyleUI()->ComputedPointerEvents() ==
-          StylePointerEvents::Auto &&
+      aParentFrame->StyleUI()->mPointerEvents == StylePointerEvents::Auto &&
 #endif
       mPresShell->GetPresContext()->Medium() == nsGkAtoms::screen;
 
@@ -4067,8 +4066,7 @@ nsresult nsCSSFrameConstructor::GetAnonymousContent(
             "cached anonymous content styles should be identical to those we "
             "would compute normally");
 #  ifdef ANDROID
-        MOZ_ASSERT(cs->StyleUI()->ComputedPointerEvents() ==
-                   StylePointerEvents::None);
+        MOZ_ASSERT(cs->StyleUI()->mPointerEvents == StylePointerEvents::None);
 #  endif
 #endif
         Servo_SetExplicitStyle(elements[i], cachedStyles[i]);

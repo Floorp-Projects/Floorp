@@ -3102,8 +3102,9 @@ void nsIFrame::BuildDisplayListForStackingContext(
       this, nsCSSPropertyIDSet::OpacityProperties());
   // We can stop right away if this is a zero-opacity stacking context and
   // we're painting, and we're not animating opacity.
-  bool needHitTestInfo = aBuilder->BuildCompositorHitTestInfo() &&
-                         Style()->PointerEvents() != StylePointerEvents::None;
+  bool needHitTestInfo =
+      aBuilder->BuildCompositorHitTestInfo() &&
+      StyleUI()->GetEffectivePointerEvents(this) != StylePointerEvents::None;
   bool opacityItemForEventsOnly = false;
   if (effects->mOpacity == 0.0 && aBuilder->IsForPainting() &&
       !(disp->mWillChange.bits & StyleWillChangeBits::OPACITY) &&
@@ -4525,14 +4526,8 @@ static bool IsEditingHost(const nsIFrame* aFrame) {
   return element && element->IsEditableRoot();
 }
 
-static bool IsTopmostModalDialog(const nsIFrame* aFrame) {
-  auto* element = Element::FromNodeOrNull(aFrame->GetContent());
-  return element &&
-         element->State().HasState(NS_EVENT_STATE_TOPMOST_MODAL_DIALOG);
-}
-
 static StyleUserSelect UsedUserSelect(const nsIFrame* aFrame) {
-  if (aFrame->IsGeneratedContentFrame()) {
+  if (aFrame->HasAnyStateBits(NS_FRAME_GENERATED_CONTENT)) {
     return StyleUserSelect::None;
   }
 
@@ -4550,19 +4545,15 @@ static StyleUserSelect UsedUserSelect(const nsIFrame* aFrame) {
   //
   // Also, we check for auto first to allow explicitly overriding the value for
   // the editing host.
-  auto style = aFrame->Style()->UserSelect();
+  auto style = aFrame->StyleUIReset()->mUserSelect;
   if (style != StyleUserSelect::Auto) {
     return style;
   }
 
-  if (aFrame->IsTextInputFrame() || IsEditingHost(aFrame) ||
-      IsTopmostModalDialog(aFrame)) {
+  if (aFrame->IsTextInputFrame() || IsEditingHost(aFrame)) {
     // We don't implement 'contain' itself, but we make 'text' behave as
     // 'contain' for contenteditable and <input> / <textarea> elements anyway so
     // this is ok.
-    //
-    // Topmost modal dialogs need to behave like `text` too, because they're
-    // supposed to be selectable even if their ancestors are inert.
     return StyleUserSelect::Text;
   }
 
@@ -4842,7 +4833,7 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
       (offsets.EndOffset() - offsets.StartOffset()) == 1) {
     // A single node is selected and we aren't extending an existing
     // selection, which means the user clicked directly on an object (either
-    // user-select: all or a non-text node without children).
+    // -moz-user-select: all or a non-text node without children).
     // Therefore, disable selection extension during mouse moves.
     // XXX This is a bit hacky; shouldn't editor be able to deal with this?
     fc->SetDragState(false);
@@ -5309,7 +5300,7 @@ static bool SelfIsSelectable(nsIFrame* aFrame, uint32_t aFlags) {
     return false;
   }
   return !aFrame->IsGeneratedContentFrame() &&
-         aFrame->Style()->UserSelect() != StyleUserSelect::None;
+         aFrame->StyleUIReset()->mUserSelect != StyleUserSelect::None;
 }
 
 static bool SelectionDescendToKids(nsIFrame* aFrame) {
@@ -5337,7 +5328,7 @@ static bool SelectionDescendToKids(nsIFrame* aFrame) {
     return false;
   }
 
-  auto style = aFrame->Style()->UserSelect();
+  auto style = aFrame->StyleUIReset()->mUserSelect;
   return style != StyleUserSelect::All && style != StyleUserSelect::None;
 }
 
@@ -5601,7 +5592,7 @@ static nsIFrame* AdjustFrameForSelectionStyles(nsIFrame* aFrame) {
   for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
     // These are the conditions that make all children not able to handle
     // a cursor.
-    auto userSelect = frame->Style()->UserSelect();
+    StyleUserSelect userSelect = frame->StyleUIReset()->mUserSelect;
     if (userSelect != StyleUserSelect::Auto &&
         userSelect != StyleUserSelect::All) {
       break;
@@ -5628,9 +5619,9 @@ nsIFrame::ContentOffsets nsIFrame::GetContentOffsetsFromPoint(
 
     adjustedFrame = AdjustFrameForSelectionStyles(this);
 
-    // user-select: all needs special handling, because clicking on it
+    // -moz-user-select: all needs special handling, because clicking on it
     // should lead to the whole frame being selected
-    if (adjustedFrame->Style()->UserSelect() == StyleUserSelect::All) {
+    if (adjustedFrame->StyleUIReset()->mUserSelect == StyleUserSelect::All) {
       nsPoint adjustedPoint = aPoint + this->GetOffsetTo(adjustedFrame);
       return OffsetsForSingleFrame(adjustedFrame, adjustedPoint);
     }
@@ -5721,7 +5712,7 @@ StyleImageRendering nsIFrame::UsedImageRendering() const {
 }
 
 Maybe<nsIFrame::Cursor> nsIFrame::GetCursor(const nsPoint&) {
-  StyleCursorKind kind = StyleUI()->Cursor().keyword;
+  StyleCursorKind kind = StyleUI()->mCursor.keyword;
   if (kind == StyleCursorKind::Auto) {
     // If this is editable, I-beam cursor is better for most elements.
     kind = (mContent && mContent->IsEditable()) ? StyleCursorKind::Text
@@ -6776,7 +6767,7 @@ void nsIFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
 bool nsIFrame::IsContentDisabled() const {
   // FIXME(emilio): Doing this via CSS means callers must ensure the style is up
   // to date, and they don't!
-  if (StyleUI()->UserInput() == StyleUserInput::None) {
+  if (StyleUI()->mUserInput == StyleUserInput::None) {
     return true;
   }
 
@@ -10216,8 +10207,8 @@ nsIFrame::Focusable nsIFrame::IsFocusable(bool aWithMouse) {
     return {};
   }
 
-  const nsStyleUI& ui = *StyleUI();
-  if (ui.IsInert()) {
+  const nsStyleUI* ui = StyleUI();
+  if (ui->mInert == StyleInert::Inert) {
     return {};
   }
 
@@ -10228,8 +10219,8 @@ nsIFrame::Focusable nsIFrame::IsFocusable(bool aWithMouse) {
   }
 
   int32_t tabIndex = -1;
-  if (ui.UserFocus() != StyleUserFocus::Ignore &&
-      ui.UserFocus() != StyleUserFocus::None) {
+  if (ui->mUserFocus != StyleUserFocus::Ignore &&
+      ui->mUserFocus != StyleUserFocus::None) {
     // Pass in default tabindex of -1 for nonfocusable and 0 for focusable
     tabIndex = 0;
   }
@@ -11292,7 +11283,9 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
     // frames, are the event targets for any regions viewport frames may cover.
     return result;
   }
-  if (Style()->PointerEvents() == StylePointerEvents::None) {
+  const StylePointerEvents pointerEvents =
+      StyleUI()->GetEffectivePointerEvents(this);
+  if (pointerEvents == StylePointerEvents::None) {
     return result;
   }
   if (!StyleVisibility()->IsVisible()) {
