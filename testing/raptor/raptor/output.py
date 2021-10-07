@@ -1513,7 +1513,9 @@ class BrowsertimeOutput(PerftestOutput):
                     "name": test["name"],
                     "type": test["type"],
                     "extraOptions": extra_options,
-                    "tags": test.get("tags", extra_options),
+                    # There may be unique options in tags now, but we don't want to remove the
+                    # previous behaviour which includes the extra options in the tags.
+                    "tags": test.get("tags", []) + extra_options,
                     "lowerIsBetter": test["lower_is_better"],
                     "unit": test["unit"],
                     "alertThreshold": float(test["alert_threshold"]),
