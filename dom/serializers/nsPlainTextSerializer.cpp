@@ -28,7 +28,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Text.h"
-#include "mozilla/Span.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_converter.h"
 #include "mozilla/BinarySearch.h"
@@ -60,9 +59,11 @@ static const int32_t kIndentSizeDD = kTabSize;  // Indention of <dd>
 static const char16_t kNBSP = 160;
 static const char16_t kSPACE = ' ';
 
+constexpr int32_t kNoFlags = 0;
+
 static int32_t HeaderLevel(const nsAtom* aTag);
 static int32_t GetUnicharWidth(char16_t ucs);
-static int32_t GetUnicharStringWidth(Span<const char16_t> aString);
+static int32_t GetUnicharStringWidth(const nsString& aString);
 
 // Someday may want to make this non-const:
 static const uint32_t TagStackSize = 500;
@@ -117,54 +118,74 @@ void nsPlainTextSerializer::CurrentLine::ResetContentAndIndentationHeader() {
 }
 
 int32_t nsPlainTextSerializer::CurrentLine::FindWrapIndexForContent(
-    const uint32_t aWrapColumn,
+    const uint32_t aWrapColumn, const uint32_t aContentWidth,
     mozilla::intl::LineBreaker* aLineBreaker) const {
-  MOZ_ASSERT(!mContent.IsEmpty());
+  MOZ_ASSERT(aContentWidth < std::numeric_limits<int32_t>::max());
+  MOZ_ASSERT(static_cast<int32_t>(aContentWidth) ==
+             GetUnicharStringWidth(mContent));
 
   const uint32_t prefixwidth = DeterminePrefixWidth();
-  int32_t goodSpace = 0;
+  int32_t goodSpace = mContent.Length();
 
   if (aLineBreaker) {
-    // We advance one line break point at a time from the beginning of the
-    // mContent until we find a width less than or equal to wrap column.
-    uint32_t width = 0;
-    const auto len = mContent.Length();
-    while (true) {
-      int32_t nextGoodSpace =
-          aLineBreaker->Next(mContent.get(), len, goodSpace);
-      if (nextGoodSpace == NS_LINEBREAKER_NEED_MORE_TEXT) {
-        // Line breaker reaches the end of mContent.
-        break;
-      }
-      width += GetUnicharStringWidth(
-          Span(mContent.get() + goodSpace, nextGoodSpace - goodSpace));
-      if (prefixwidth + width > aWrapColumn) {
-        // The next break point makes the width exceeding the wrap column, so
-        // goodSpace is what we want.
-        break;
-      }
-      goodSpace = nextGoodSpace;
+    // We go from the end removing one letter at a time until
+    // we have a reasonable width
+    uint32_t width = aContentWidth;
+    while (goodSpace > 0 && (width + prefixwidth > aWrapColumn)) {
+      goodSpace--;
+      width -= GetUnicharWidth(mContent[goodSpace]);
     }
 
-    return goodSpace;
-  }
+    goodSpace++;
 
-  // In this case we don't want strings, especially CJK-ones, to be split. See
-  // bug 333064 for more information.
-  if (aWrapColumn < prefixwidth) {
-    goodSpace = (prefixwidth > aWrapColumn) ? 1 : aWrapColumn - prefixwidth;
-    const int32_t contentLength = mContent.Length();
-    while (goodSpace < contentLength &&
-           !nsCRT::IsAsciiSpace(mContent.CharAt(goodSpace))) {
-      goodSpace++;
+    goodSpace =
+        aLineBreaker->Prev(mContent.get(), mContent.Length(), goodSpace);
+    if (goodSpace != NS_LINEBREAKER_NEED_MORE_TEXT &&
+        nsCRT::IsAsciiSpace(mContent.CharAt(goodSpace - 1))) {
+      --goodSpace;  // adjust the position since line breaker returns a
+                    // position next to space
     }
   } else {
-    goodSpace = std::min(aWrapColumn - prefixwidth, mContent.Length() - 1);
-    while (goodSpace >= 0 && !nsCRT::IsAsciiSpace(mContent.CharAt(goodSpace))) {
-      goodSpace--;
+    // In this case we don't want strings, especially CJK-ones, to be split.
+    // See
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=333064 for more
+    // information.
+
+    if (mContent.IsEmpty() || aWrapColumn < prefixwidth) {
+      goodSpace = NS_LINEBREAKER_NEED_MORE_TEXT;
+    } else {
+      goodSpace = std::min(aWrapColumn - prefixwidth, mContent.Length() - 1);
+      while (goodSpace >= 0 &&
+             !nsCRT::IsAsciiSpace(mContent.CharAt(goodSpace))) {
+        goodSpace--;
+      }
     }
   }
 
+  if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT) {
+    // If we didn't find a good place to break, accept long line and
+    // try to find another place to break
+    goodSpace =
+        (prefixwidth > aWrapColumn + 1) ? 1 : aWrapColumn - prefixwidth + 1;
+    if (aLineBreaker) {
+      if ((uint32_t)goodSpace < mContent.Length())
+        goodSpace = aLineBreaker->DeprecatedNext(mContent.get(),
+                                                 mContent.Length(), goodSpace);
+      if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT)
+        goodSpace = mContent.Length();
+    } else {
+      // In this case we don't want strings, especially CJK-ones, to be
+      // split. See
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=333064 for more
+      // information.
+      goodSpace = (prefixwidth > aWrapColumn) ? 1 : aWrapColumn - prefixwidth;
+      const int32_t contentLength = mContent.Length();
+      while (goodSpace < contentLength &&
+             !nsCRT::IsAsciiSpace(mContent.CharAt(goodSpace))) {
+        goodSpace++;
+      }
+    }
+  }
   return goodSpace;
 }
 
@@ -1217,6 +1238,10 @@ void nsPlainTextSerializer::MaybeWrapAndOutputCompleteLines() {
 
   const uint32_t prefixwidth = mCurrentLine.DeterminePrefixWidth();
 
+  // The width of the line as it will appear on the screen (approx.).
+  uint32_t currentLineContentWidth =
+      GetUnicharStringWidth(mCurrentLine.mContent);
+
   // Yes, wrap!
   // The "+4" is to avoid wrap lines that only would be a couple
   // of letters too long. We give this bonus only if the
@@ -1224,16 +1249,9 @@ void nsPlainTextSerializer::MaybeWrapAndOutputCompleteLines() {
   const uint32_t wrapColumn = mSettings.GetWrapColumn();
   uint32_t bonuswidth = (wrapColumn > 20) ? 4 : 0;
 
-  while (!mCurrentLine.mContent.IsEmpty()) {
-    // The width of the line as it will appear on the screen (approx.).
-    const uint32_t currentLineContentWidth =
-        GetUnicharStringWidth(mCurrentLine.mContent);
-    if (currentLineContentWidth + prefixwidth <= wrapColumn + bonuswidth) {
-      break;
-    }
-
-    const int32_t goodSpace =
-        mCurrentLine.FindWrapIndexForContent(wrapColumn, mLineBreaker);
+  while (currentLineContentWidth + prefixwidth > wrapColumn + bonuswidth) {
+    const int32_t goodSpace = mCurrentLine.FindWrapIndexForContent(
+        wrapColumn, currentLineContentWidth, mLineBreaker);
 
     const int32_t contentLength = mCurrentLine.mContent.Length();
     if ((goodSpace < contentLength) && (goodSpace > 0)) {
@@ -1265,6 +1283,7 @@ void nsPlainTextSerializer::MaybeWrapAndOutputCompleteLines() {
         }
       }
       mCurrentLine.mContent.Append(restOfContent);
+      currentLineContentWidth = GetUnicharStringWidth(mCurrentLine.mContent);
       mEmptyLines = -1;
     } else {
       // Nothing to do. Hopefully we get more data later
@@ -1870,12 +1889,18 @@ int32_t GetUnicharWidth(char16_t ucs) {
           (ucs >= 0xffe0 && ucs <= 0xffe6));
 }
 
-int32_t GetUnicharStringWidth(Span<const char16_t> aString) {
-  int32_t width = 0;
-  for (char16_t c : aString) {
-    const int32_t w = GetUnicharWidth(c);
-    // Taking 1 as the width of non-printable character, for bug 94475.
-    width += (w < 0 ? 1 : w);
-  }
+int32_t GetUnicharStringWidth(const nsString& aString) {
+  const char16_t* pwcs = aString.get();
+  int32_t n = aString.Length();
+
+  int32_t w, width = 0;
+
+  for (; *pwcs && n-- > 0; pwcs++)
+    if ((w = GetUnicharWidth(*pwcs)) < 0)
+      ++width;  // Taking 1 as the width of non-printable character, for bug#
+                // 94475.
+    else
+      width += w;
+
   return width;
 }
