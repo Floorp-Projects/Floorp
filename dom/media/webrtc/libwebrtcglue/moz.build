@@ -31,10 +31,4 @@ UNIFIED_SOURCES += [
     "WebrtcVideoCodecFactory.cpp",
 ]
 
-if CONFIG["OS_TARGET"] == "Android":
-    UNIFIED_SOURCES += [
-        "MediaCodecVideoCodec.cpp",
-        "WebrtcMediaCodecVP8VideoCodec.cpp",
-    ]
-
 FINAL_LIBRARY = "xul"

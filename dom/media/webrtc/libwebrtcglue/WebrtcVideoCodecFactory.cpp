@@ -41,35 +41,12 @@ WebrtcVideoDecoderFactory::CreateVideoDecoder(
       break;
     }
 
+    // Use libvpx decoders as fallbacks.
     case webrtc::VideoCodecType::kVideoCodecVP8:
-#ifdef MOZ_WEBRTC_MEDIACODEC
-      // Attempt to get a MediaCodec decoder
-      if (StaticPrefs::
-              media_navigator_hardware_vp8_decode_acceleration_enabled()) {
-        nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-        if (gfxInfo) {
-          int32_t status;
-          nsCString discardFailureId;
-
-          if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(
-                  nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_DECODE,
-                  discardFailureId, &status))) {
-            if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
-              NS_WARNING("VP8 decoder hardware is blocked: disabling.\n");
-            } else {
-              decoder = MediaCodecVideoCodec::CreateDecoder(
-                  MediaCodecVideoCodec::CodecType::CODEC_VP8);
-            }
-          }
-        }
-      }
-#endif
-      // Use a software VP8 decoder as a fallback.
       if (!decoder) {
         decoder = webrtc::VP8Decoder::Create();
       }
       break;
-
     case webrtc::VideoCodecType::kVideoCodecVP9:
       decoder = webrtc::VP9Decoder::Create();
       break;
@@ -134,36 +111,12 @@ WebrtcVideoEncoderFactory::InternalFactory::CreateVideoEncoder(
       encoder.reset(gmpEncoder.release());
       break;
     }
-
+    // libvpx fallbacks.
     case webrtc::VideoCodecType::kVideoCodecVP8:
-#ifdef MOZ_WEBRTC_MEDIACODEC
-      // Attempt to get a MediaCodec encoder
-      if (StaticPrefs::
-              media_navigator_hardware_vp8_encode_acceleration_enabled()) {
-        nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-        if (gfxInfo) {
-          int32_t status;
-          nsCString discardFailureId;
-
-          if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(
-                  nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_ENCODE,
-                  discardFailureId, &status))) {
-            if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
-              NS_WARNING("VP8 encoder hardware is blocked: disabling.\n");
-            } else {
-              encoder = MediaCodecVideoCodec::CreateEncoder(
-                  MediaCodecVideoCodec::CodecType::CODEC_VP8);
-            }
-          }
-        }
-      }
-#endif
       if (!encoder) {
-        // Software fallback
         encoder = webrtc::VP8Encoder::Create();
       }
       break;
-
     case webrtc::VideoCodecType::kVideoCodecVP9:
       encoder = webrtc::VP9Encoder::Create();
       break;
