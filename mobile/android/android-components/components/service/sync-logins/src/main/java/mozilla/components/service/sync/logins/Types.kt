@@ -9,7 +9,7 @@ import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 
 // Convert between application-services data classes and the ones in
-// concepts.storage.
+// concept.storage.
 fun mozilla.appservices.logins.EncryptedLogin.toEncryptedLogin() = EncryptedLogin(
     guid = record.id,
     origin = fields.origin,

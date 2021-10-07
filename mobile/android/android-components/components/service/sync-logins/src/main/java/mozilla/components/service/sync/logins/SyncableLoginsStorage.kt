@@ -29,7 +29,7 @@ import java.io.Closeable
 const val DB_NAME_SQLCIPHER = "logins.sqlite"
 // Current database
 const val DB_NAME = "logins2.sqlite"
-// Key that we stored the old SQLCipher encryption key
+// Prefs key that we stored the old SQLCipher encryption key
 const val ENCRYPTION_KEY_SQLCIPHER = "passwords"
 
 /**
@@ -158,8 +158,7 @@ class SyncableLoginsStorage(
      */
     @Throws(LoginsStorageException::class)
     override suspend fun get(guid: String): Login? = withContext(coroutineContext) {
-        val encryptedLogin = conn.getStorage().get(guid)?.toEncryptedLogin()
-        if (encryptedLogin == null) null else decryptLogin(encryptedLogin)
+        conn.getStorage().get(guid)?.toEncryptedLogin()?.let { decryptLogin(it) }
     }
 
     /**
