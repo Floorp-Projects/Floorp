@@ -101,6 +101,10 @@
         "$ref": "types.Setting",
         "description": "This setting controls whether the user-chosen colors override the page's colors."
       },
+      "overrideContentColorScheme": {
+        "$ref": "types.Setting",
+        "description": "This setting controls whether a light or dark color scheme overrides the page's preferred color scheme."
+      },
       "useDocumentFonts": {
         "$ref": "types.Setting",
         "description": "This setting controls whether the document's fonts are used."
