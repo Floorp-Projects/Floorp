@@ -236,7 +236,7 @@ void ReadStream::Inner::Serialize(
 
 void ReadStream::Inner::CloseStream() {
   MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
-  Close();
+  MOZ_ALWAYS_SUCCEEDS(Close());
 }
 
 void ReadStream::Inner::CloseStreamWithoutReporting() {
