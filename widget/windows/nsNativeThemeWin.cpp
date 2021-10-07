@@ -71,8 +71,8 @@ bool nsNativeThemeWin::IsWidgetNonNative(nsIFrame* aFrame,
                                          StyleAppearance aAppearance) {
   // We only know how to draw light widgets, so we defer to the non-native
   // theme when appropriate.
-  return nsNativeBasicTheme::ThemeSupportsWidget(aFrame->PresContext(), aFrame,
-                                                 aAppearance) &&
+  return nsNativeBasicThemeWin::ThemeSupportsWidget(aFrame->PresContext(),
+                                                    aFrame, aAppearance) &&
          LookAndFeel::ColorSchemeForFrame(aFrame) ==
              LookAndFeel::ColorScheme::Dark;
 }
@@ -1883,6 +1883,18 @@ RENDER_AGAIN:
   nativeDrawing.PaintToContext();
 
   return NS_OK;
+}
+
+bool nsNativeThemeWin::CreateWebRenderCommandsForWidget(
+    wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
+    const layers::StackingContextHelper& aSc,
+    layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
+    StyleAppearance aAppearance, const nsRect& aRect) {
+  if (IsWidgetNonNative(aFrame, aAppearance)) {
+    return nsNativeBasicThemeWin::CreateWebRenderCommandsForWidget(
+        aBuilder, aResources, aSc, aManager, aFrame, aAppearance, aRect);
+  }
+  return false;
 }
 
 static void ScaleForFrameDPI(LayoutDeviceIntMargin* aMargin, nsIFrame* aFrame) {
