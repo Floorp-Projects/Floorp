@@ -272,10 +272,6 @@ class FloatRegistersMIPSShared {
 #endif
 };
 
-static const uint32_t SpillSlotSize =
-    std::max(sizeof(Registers::RegisterContent),
-             sizeof(FloatRegistersMIPSShared::RegisterContent));
-
 template <typename T>
 class TypedRegisterSet;
 

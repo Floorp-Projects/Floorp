@@ -22,8 +22,7 @@ MemOperand MoveEmitterARM64::toMemOperand(const MoveOperand& operand) const {
 
 void MoveEmitterARM64::emit(const MoveResolver& moves) {
   if (moves.numCycles()) {
-    static_assert(SpillSlotSize == 16);
-    masm.reserveStack(SpillSlotSize);
+    masm.reserveStack(Simd128DataSize);
     pushedAtCycle_ = masm.framePushed();
   }
 
