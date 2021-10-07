@@ -335,7 +335,7 @@ def repackage_msix(
     # We might want to include the publisher ID hash here.  I.e.,
     # "__{publisherID}".  My locally produced MSIX was named like
     # `Mozilla.MozillaFirefoxNightly_89.0.0.0_x64__4gf61r4q480j0`, suggesting also a
-    # missing field, but it's necessary, since this is just an output file name.
+    # missing field, but it's not necessary, since this is just an output file name.
     package_output_name = "{identity}_{version}_{arch}".format(
         identity=identity, version=version, arch=_MSIX_ARCH[arch]
     )
@@ -508,7 +508,7 @@ def repackage_msix(
         makeappx = find_sdk_tool("makeappx.exe", log=log)
     if not makeappx:
         raise ValueError(
-            "makeappx is required; " "set SIGNTOOL or WINDOWSSDKDIR or PATH"
+            "makeappx is required; " "set MAKEAPPX or WINDOWSSDKDIR or PATH"
         )
 
     # `makeappx.exe` supports both slash and hyphen style arguments; `makemsix`
