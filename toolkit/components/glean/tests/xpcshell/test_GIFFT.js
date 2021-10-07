@@ -37,6 +37,11 @@ add_task(function test_setup() {
     true
   );
 
+  Services.prefs.setBoolPref(
+    "toolkit.telemetry.testing.overrideProductsCheck",
+    true
+  );
+
   // We need to initialize it once, otherwise operations will be stuck in the pre-init queue.
   let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
   FOG.initializeFOG();
