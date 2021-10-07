@@ -137,6 +137,7 @@ void MediaFormatReader::DecoderData::ShutdownDecoder() {
   // we can forget mDecoder and be ready to create a new one.
   mDecoder = nullptr;
   mDescription = "shutdown"_ns;
+  mHasReportedVideoHardwareSupportTelemtry = false;
   mOwner->ScheduleUpdate(mType == MediaData::Type::AUDIO_DATA
                              ? TrackType::kAudioTrack
                              : TrackType::kVideoTrack);
@@ -2255,9 +2256,18 @@ void MediaFormatReader::Update(TrackType aTrack) {
           }
           mPreviousDecodedKeyframeTime_us = output->mTime.ToMicroseconds();
         }
+        bool wasHardwareAccelerated = mVideo.mIsHardwareAccelerated;
         nsCString error;
         mVideo.mIsHardwareAccelerated =
             mVideo.mDecoder && mVideo.mDecoder->IsHardwareAccelerated(error);
+        if (!mVideo.mHasReportedVideoHardwareSupportTelemtry ||
+            wasHardwareAccelerated != mVideo.mIsHardwareAccelerated) {
+          mVideo.mHasReportedVideoHardwareSupportTelemtry = true;
+          Telemetry::ScalarSet(
+              Telemetry::ScalarID::MEDIA_VIDEO_HARDWARE_DECODING_SUPPORT,
+              NS_ConvertUTF8toUTF16(mVideo.GetCurrentInfo()->mMimeType),
+              !!mVideo.mIsHardwareAccelerated);
+        }
 #ifdef XP_WIN
         // D3D11_YCBCR_IMAGE images are GPU based, we try to limit the amount
         // of GPU RAM used.

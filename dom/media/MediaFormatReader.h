@@ -586,6 +586,9 @@ class MediaFormatReader final
     // Use NullDecoderModule or not.
     bool mIsNullDecode;
     bool mHardwareDecodingDisabled;
+    // Whether we have reported hardware decoding support for video. Used only
+    // on reader's task queue,
+    bool mHasReportedVideoHardwareSupportTelemtry = false;
 
     class {
      public:
