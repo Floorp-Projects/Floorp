@@ -49,7 +49,7 @@ bool WaitUntil(const ConditionT& aCondition, uint32_t aTimeoutMs) {
       },
       &isTimeout, aTimeoutMs, nsITimer::TYPE_ONE_SHOT, __func__);
 
-  SpinEventLoopUntil([&]() -> bool {
+  SpinEventLoopUntil("xpcom-tests:WaitUntil"_ns, [&]() -> bool {
     if (isTimeout) {
       return true;
     }
