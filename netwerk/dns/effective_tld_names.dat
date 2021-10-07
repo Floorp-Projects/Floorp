@@ -7125,7 +7125,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-10-01T15:13:10Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-10-06T15:12:57Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -9895,9 +9895,6 @@ suzuki
 
 // swatch : 2015-01-08 The Swatch Group Ltd
 swatch
-
-// swiftcover : 2015-07-23 Swiftcover Insurance Services Limited
-swiftcover
 
 // swiss : 2014-10-16 Swiss Confederation
 swiss
