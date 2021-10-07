@@ -85,6 +85,16 @@ async function start() {
     }, { once: true });
   });
 
+  // Mouse wheel event should be dispatched to locked element.
+  synthesizeWheel(iframe, 10, 10, { deltaY: 3.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
+  await new Promise((aResolve) => {
+    document.addEventListener("wheel", function(e) {
+      info("Got wheel");
+      is(e.target, target, "event.target");
+      aResolve();
+    }, { once: true });
+  });
+
   // Pointer lock requested in iframe should be rejected.
   let win = iframe.contentWindow;
   win.focus()
