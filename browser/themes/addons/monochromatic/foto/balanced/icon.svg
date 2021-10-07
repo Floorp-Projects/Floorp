@@ -4,9 +4,9 @@
 <svg width="63" height="62" viewBox="0 0 63 62" fill="none" xmlns="http://www.w3.org/2000/svg">
   <circle cx="31.5" cy="31" r="31" fill="url(#paint0_linear)"/>
   <defs>
-    <linearGradient id="paint0_linear" x1="44.4829" y1="19" x2="10.4829" y2="53" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#CC9DA4"/>
-      <stop offset="1" stop-color="#CB7885"/>
+    <linearGradient id="paint0_linear" gradientTransform="rotate(90)">
+      <stop stop-color="#F9DDE0"/>
+      <stop offset="1" stop-color="#E18995"/>
     </linearGradient>
   </defs>
 </svg>
