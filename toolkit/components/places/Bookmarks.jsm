@@ -854,47 +854,9 @@ var Bookmarks = Object.freeze({
 
           // Notify onItemChanged to listeners.
           let observers = PlacesUtils.bookmarks.getObservers();
-          // For lastModified, we only care about the original input, since we
-          // should not notify implciit lastModified changes.
-          if (
-            info.hasOwnProperty("lastModified") &&
-            updateInfo.hasOwnProperty("lastModified") &&
-            item.lastModified != updatedItem.lastModified
-          ) {
-            notify(observers, "onItemChanged", [
-              updatedItem._id,
-              "lastModified",
-              false,
-              `${PlacesUtils.toPRTime(updatedItem.lastModified)}`,
-              PlacesUtils.toPRTime(updatedItem.lastModified),
-              updatedItem.type,
-              updatedItem._parentId,
-              updatedItem.guid,
-              updatedItem.parentGuid,
-              "",
-              updatedItem.source,
-            ]);
-          }
-          if (
-            info.hasOwnProperty("dateAdded") &&
-            updateInfo.hasOwnProperty("dateAdded") &&
-            item.dateAdded != updatedItem.dateAdded
-          ) {
-            notify(observers, "onItemChanged", [
-              updatedItem._id,
-              "dateAdded",
-              false,
-              `${PlacesUtils.toPRTime(updatedItem.dateAdded)}`,
-              PlacesUtils.toPRTime(updatedItem.lastModified),
-              updatedItem.type,
-              updatedItem._parentId,
-              updatedItem.guid,
-              updatedItem.parentGuid,
-              "",
-              updatedItem.source,
-            ]);
-          }
 
+          // For lastModified, we only care about the original input, since we
+          // should not notify implicit lastModified changes.
           if (
             (info.hasOwnProperty("lastModified") &&
               updateInfo.hasOwnProperty("lastModified") &&
