@@ -64,7 +64,6 @@ namespace layers {
 
 class Animation;
 class AsyncPanZoomController;
-class ContainerLayer;
 class CompositorAnimations;
 class SpecificLayerAttributes;
 class Compositor;
@@ -574,7 +573,7 @@ class Layer {
   bool HasScrollableFrameMetrics() const;
   bool IsScrollableWithoutContent() const;
   const EventRegions& GetEventRegions() const { return mEventRegions; }
-  ContainerLayer* GetParent() const { return mParent; }
+  Layer* GetParent() const { return mParent; }
   Layer* GetNextSibling() {
     if (mNextSibling) {
       mNextSibling->CheckCanary();
@@ -771,8 +770,8 @@ class Layer {
    * Dynamic cast to a ContainerLayer. Returns null if this is not
    * a ContainerLayer.
    */
-  virtual ContainerLayer* AsContainerLayer() { return nullptr; }
-  virtual const ContainerLayer* AsContainerLayer() const { return nullptr; }
+  virtual Layer* AsContainerLayer() { return nullptr; }
+  virtual const Layer* AsContainerLayer() const { return nullptr; }
 
   // These getters can be used anytime.  They return the effective
   // values that should be used when drawing this layer to screen,
@@ -903,7 +902,7 @@ class Layer {
   /**
    * Only the implementation should use these methods.
    */
-  void SetParent(ContainerLayer* aParent) { mParent = aParent; }
+  void SetParent(Layer* aParent) { mParent = aParent; }
   void SetNextSibling(Layer* aSibling) { mNextSibling = aSibling; }
   void SetPrevSibling(Layer* aSibling) { mPrevSibling = aSibling; }
 
@@ -1079,7 +1078,7 @@ class Layer {
                                gfx::Matrix* aResidualTransform);
 
   LayerManager* mManager;
-  ContainerLayer* mParent;
+  Layer* mParent;
   Layer* mNextSibling;
   Layer* mPrevSibling;
   void* mImplData;
@@ -1111,207 +1110,6 @@ class Layer {
 #endif
   // Store display list log.
   nsCString mDisplayListLog;
-};
-
-/**
- * A Layer which other layers render into. It holds references to its
- * children.
- */
-class ContainerLayer : public Layer {
- public:
-  virtual ~ContainerLayer();
-
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Insert aChild into the child list of this container. aChild must
-   * not be currently in any child list or the root for the layer manager.
-   * If aAfter is non-null, it must be a child of this container and
-   * we insert after that layer. If it's null we insert at the start.
-   */
-  virtual bool InsertAfter(Layer* aChild, Layer* aAfter);
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Remove aChild from the child list of this container. aChild must
-   * be a child of this container.
-   */
-  virtual bool RemoveChild(Layer* aChild);
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Reposition aChild from the child list of this container. aChild must
-   * be a child of this container.
-   * If aAfter is non-null, it must be a child of this container and we
-   * reposition after that layer. If it's null, we reposition at the start.
-   */
-  virtual bool RepositionChild(Layer* aChild, Layer* aAfter);
-
-  void SetPreScale(float aXScale, float aYScale) {
-    if (mPreXScale == aXScale && mPreYScale == aYScale) {
-      return;
-    }
-
-    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) PreScale", this));
-    mPreXScale = aXScale;
-    mPreYScale = aYScale;
-    Mutated();
-  }
-
-  void SetInheritedScale(float aXScale, float aYScale) {
-    if (mInheritedXScale == aXScale && mInheritedYScale == aYScale) {
-      return;
-    }
-
-    MOZ_LAYERS_LOG_IF_SHADOWABLE(this,
-                                 ("Layer::Mutated(%p) InheritedScale", this));
-    mInheritedXScale = aXScale;
-    mInheritedYScale = aYScale;
-    Mutated();
-  }
-
-  void SetScaleToResolution(float aResolution) {
-    if (mPresShellResolution == aResolution) {
-      return;
-    }
-
-    MOZ_LAYERS_LOG_IF_SHADOWABLE(
-        this, ("Layer::Mutated(%p) ScaleToResolution", this));
-    mPresShellResolution = aResolution;
-    Mutated();
-  }
-
-  enum class SortMode {
-    WITH_GEOMETRY,
-    WITHOUT_GEOMETRY,
-  };
-
-  nsTArray<LayerPolygon> SortChildrenBy3DZOrder(SortMode aSortMode);
-
-  ContainerLayer* AsContainerLayer() override { return this; }
-  const ContainerLayer* AsContainerLayer() const override { return this; }
-
-  // These getters can be used anytime.
-  Layer* GetFirstChild() const override { return mFirstChild; }
-  Layer* GetLastChild() const override { return mLastChild; }
-  float GetPreXScale() const { return mPreXScale; }
-  float GetPreYScale() const { return mPreYScale; }
-  float GetInheritedXScale() const { return mInheritedXScale; }
-  float GetInheritedYScale() const { return mInheritedYScale; }
-  float GetPresShellResolution() const { return mPresShellResolution; }
-
-  MOZ_LAYER_DECL_NAME("ContainerLayer", TYPE_CONTAINER)
-
-  /**
-   * ContainerLayer backends need to override ComputeEffectiveTransforms
-   * since the decision about whether to use a temporary surface for the
-   * container is backend-specific. ComputeEffectiveTransforms must also set
-   * mUseIntermediateSurface.
-   */
-  void ComputeEffectiveTransforms(
-      const gfx::Matrix4x4& aTransformToSurface) override = 0;
-
-  /**
-   * Call this only after ComputeEffectiveTransforms has been invoked
-   * on this layer.
-   * Returns true if this will use an intermediate surface. This is largely
-   * backend-dependent, but it affects the operation of GetEffectiveOpacity().
-   */
-  bool UseIntermediateSurface() { return mUseIntermediateSurface; }
-
-  /**
-   * Returns the rectangle covered by the intermediate surface,
-   * in this layer's coordinate system.
-   *
-   * NOTE: Since this layer has an intermediate surface it follows
-   *       that LayerPixel == RenderTargetPixel
-   */
-  RenderTargetIntRect GetIntermediateSurfaceRect();
-
-  /**
-   * Returns true if this container has more than one non-empty child
-   */
-  bool HasMultipleChildren();
-
-  void SetChildrenChanged(bool aVal) { mChildrenChanged = aVal; }
-
-  // If |aRect| is null, the entire layer should be considered invalid for
-  // compositing.
-  virtual void SetInvalidCompositeRect(const gfx::IntRect* aRect) {}
-
- protected:
-  friend class ReadbackProcessor;
-
-  // Note that this is not virtual, and is based on the implementation of
-  // ContainerLayer::RemoveChild, so it should only be called where you would
-  // want to explicitly call the base class implementation of RemoveChild;
-  // e.g., while (mFirstChild) ContainerLayer::RemoveChild(mFirstChild);
-  void RemoveAllChildren();
-
-  void DidInsertChild(Layer* aLayer);
-  void DidRemoveChild(Layer* aLayer);
-
-  bool AnyAncestorOrThisIs3DContextLeaf();
-
-  void Collect3DContextLeaves(nsTArray<Layer*>& aToSort);
-
-  // Collects child layers that do not extend 3D context. For ContainerLayers
-  // that do extend 3D context, the 3D context leaves are collected.
-  nsTArray<Layer*> CollectChildren() {
-    nsTArray<Layer*> children;
-
-    for (Layer* layer = GetFirstChild(); layer;
-         layer = layer->GetNextSibling()) {
-      ContainerLayer* container = layer->AsContainerLayer();
-
-      if (container && container->Extend3DContext() &&
-          !container->UseIntermediateSurface()) {
-        container->Collect3DContextLeaves(children);
-      } else {
-        children.AppendElement(layer);
-      }
-    }
-
-    return children;
-  }
-
-  ContainerLayer(LayerManager* aManager, void* aImplData);
-
-  /**
-   * A default implementation of ComputeEffectiveTransforms for use by OpenGL
-   * and D3D.
-   */
-  void DefaultComputeEffectiveTransforms(
-      const gfx::Matrix4x4& aTransformToSurface);
-
-  /**
-   * Loops over the children calling ComputeEffectiveTransforms on them.
-   */
-  void ComputeEffectiveTransformsForChildren(
-      const gfx::Matrix4x4& aTransformToSurface);
-
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
-
-  /**
-   * True for if the container start a new 3D context extended by one
-   * or more children.
-   */
-  bool Creates3DContextWithExtendingChildren();
-
-  Layer* mFirstChild;
-  Layer* mLastChild;
-  float mPreXScale;
-  float mPreYScale;
-  // The resolution scale inherited from the parent layer. This will already
-  // be part of mTransform.
-  float mInheritedXScale;
-  float mInheritedYScale;
-  // For layers corresponding to an nsDisplayAsyncZoom, the resolution of the
-  // associated pres shell; for other layers, 1.0.
-  float mPresShellResolution;
-  bool mUseIntermediateSurface;
-  bool mMayHaveReadbackChild;
-  // This is updated by ComputeDifferences. This will be true if we need to
-  // invalidate the intermediate surface.
-  bool mChildrenChanged;
 };
 
 void SetAntialiasingFlags(Layer* aLayer, gfx::DrawTarget* aTarget);
