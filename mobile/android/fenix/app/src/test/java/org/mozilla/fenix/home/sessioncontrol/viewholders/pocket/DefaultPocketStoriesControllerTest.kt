@@ -39,15 +39,10 @@ class DefaultPocketStoriesControllerTest {
         )
         val controller = DefaultPocketStoriesController(mockk(), store, mockk(), metrics)
 
-        controller.handleCategoryClick(category1)
-        verify(exactly = 0) { store.dispatch(HomeFragmentAction.DeselectPocketStoriesCategory(category1.name)) }
-        verify { store.dispatch(HomeFragmentAction.SelectPocketStoriesCategory(category1.name)) }
-        verify { metrics.track(Event.PocketHomeRecsCategoryClicked(category1.name, 1, true)) }
-
         controller.handleCategoryClick(category2)
         verify(exactly = 0) { store.dispatch(HomeFragmentAction.SelectPocketStoriesCategory(category2.name)) }
         verify { store.dispatch(HomeFragmentAction.DeselectPocketStoriesCategory(category2.name)) }
-        verify { metrics.track(Event.PocketHomeRecsCategoryClicked(category2.name, 2, false)) }
+        verify { metrics.track(Event.PocketHomeRecsCategoryClicked(category2.name, 1, false)) }
     }
 
     @Test
