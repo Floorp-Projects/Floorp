@@ -57,7 +57,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
     private var pendingHistoryDeletionJob: (suspend () -> Unit)? = null
 
     private var _historyView: HistoryView? = null
-    protected val historyView: HistoryView
+    private val historyView: HistoryView
         get() = _historyView!!
     private var _binding: FragmentHistoryBinding? = null
     private val binding get() = _binding!!

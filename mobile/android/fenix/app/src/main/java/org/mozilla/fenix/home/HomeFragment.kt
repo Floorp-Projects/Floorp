@@ -169,7 +169,7 @@ class HomeFragment : Fragment() {
 
     private lateinit var homeFragmentStore: HomeFragmentStore
     private var _sessionControlInteractor: SessionControlInteractor? = null
-    protected val sessionControlInteractor: SessionControlInteractor
+    private val sessionControlInteractor: SessionControlInteractor
         get() = _sessionControlInteractor!!
 
     private var sessionControlView: SessionControlView? = null

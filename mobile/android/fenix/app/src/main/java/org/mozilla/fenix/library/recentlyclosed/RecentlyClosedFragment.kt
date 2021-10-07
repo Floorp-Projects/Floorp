@@ -35,7 +35,7 @@ import org.mozilla.fenix.library.LibraryPageFragment
 class RecentlyClosedFragment : LibraryPageFragment<RecoverableTab>(), UserInteractionHandler {
     private lateinit var recentlyClosedFragmentStore: RecentlyClosedFragmentStore
     private var _recentlyClosedFragmentView: RecentlyClosedFragmentView? = null
-    protected val recentlyClosedFragmentView: RecentlyClosedFragmentView
+    private val recentlyClosedFragmentView: RecentlyClosedFragmentView
         get() = _recentlyClosedFragmentView!!
 
     private lateinit var recentlyClosedInteractor: RecentlyClosedFragmentInteractor
