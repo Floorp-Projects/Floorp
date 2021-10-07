@@ -6,8 +6,10 @@ package mozilla.components.browser.tabstray
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import mozilla.components.concept.base.images.ImageLoader
+import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
@@ -34,7 +36,7 @@ open class TabsAdapter(
         )
     },
     delegate: Observable<TabsTray.Observer> = ObserverRegistry()
-) : RecyclerView.Adapter<TabViewHolder>(), TabsTray, Observable<TabsTray.Observer> by delegate {
+) : ListAdapter<Tab, TabViewHolder>(DiffCallback), TabsTray, Observable<TabsTray.Observer> by delegate {
     private var tabs: Tabs? = null
 
     var styling: TabsTrayStyling = TabsTrayStyling()
@@ -42,8 +44,6 @@ open class TabsAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabViewHolder {
         return viewHolderProvider.invoke(parent)
     }
-
-    override fun getItemCount() = tabs?.list?.size ?: 0
 
     override fun onBindViewHolder(holder: TabViewHolder, position: Int) {
         val tabs = tabs ?: return
@@ -75,16 +75,10 @@ open class TabsAdapter(
     override fun updateTabs(tabs: Tabs) {
         this.tabs = tabs
 
+        submitList(tabs.list)
+
         notifyObservers { onTabsUpdated() }
     }
-
-    override fun onTabsInserted(position: Int, count: Int) = notifyItemRangeInserted(position, count)
-
-    override fun onTabsRemoved(position: Int, count: Int) = notifyItemRangeRemoved(position, count)
-
-    override fun onTabsMoved(fromPosition: Int, toPosition: Int) = notifyItemMoved(fromPosition, toPosition)
-
-    override fun onTabsChanged(position: Int, count: Int) = notifyItemRangeChanged(position, count)
 
     override fun isTabSelected(tabs: Tabs, position: Int) = tabs.selectedIndex == position
 
@@ -102,5 +96,15 @@ open class TabsAdapter(
          * Signals that the currently selected tab should NOT be highlighted. No tabs would appear as highlighted.
          */
         val PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM: Int = R.id.payload_dont_highlight_selected_item
+    }
+
+    private object DiffCallback : DiffUtil.ItemCallback<Tab>() {
+        override fun areItemsTheSame(oldItem: Tab, newItem: Tab): Boolean {
+            return oldItem.id == newItem.id
+        }
+
+        override fun areContentsTheSame(oldItem: Tab, newItem: Tab): Boolean {
+            return oldItem == newItem
+        }
     }
 }

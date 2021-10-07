@@ -20,7 +20,7 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  */
 @Suppress("LongParameterList")
 class TabsFeature(
-    tabsTray: TabsTray,
+    private val tabsTray: TabsTray,
     private val store: BrowserStore,
     selectTabUseCase: TabsUseCases.SelectTabUseCase,
     removeTabUseCase: TabsUseCases.RemoveTabUseCase,
@@ -63,6 +63,6 @@ class TabsFeature(
         presenter.tabsFilter = tabsFilter
 
         val state = store.state
-        presenter.updateTabs(state.toTabs(tabsFilter))
+        tabsTray.updateTabs(state.toTabs(tabsFilter))
     }
 }

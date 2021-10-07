@@ -72,19 +72,6 @@ class TabsAdapterTest {
             )
         )
         assertEquals(2, adapter.itemCount)
-
-        adapter.updateTabs(
-            Tabs(
-                list = listOf(
-                    Tab("A", "https://www.mozilla.org"),
-                    Tab("B", "https://www.firefox.com"),
-                    Tab("C", "https://getpocket.com")
-                ),
-                selectedIndex = 0
-            )
-        )
-
-        assertEquals(3, adapter.itemCount)
     }
 
     @Test
@@ -105,23 +92,6 @@ class TabsAdapterTest {
         adapter.onBindViewHolder(holder, 0)
 
         verify(holder).bind(tab, true, adapter.styling, adapter)
-    }
-
-    @Test
-    fun `underlying adapter is notified about data set changes`() {
-        val adapter = spy(TabsAdapter())
-
-        adapter.onTabsInserted(27, 101)
-        verify(adapter).notifyItemRangeInserted(27, 101)
-
-        adapter.onTabsRemoved(11, 202)
-        verify(adapter).notifyItemRangeRemoved(11, 202)
-
-        adapter.onTabsMoved(13, 23)
-        verify(adapter).notifyItemMoved(13, 23)
-
-        adapter.onTabsChanged(42, 78)
-        verify(adapter).notifyItemRangeChanged(42, 78)
     }
 
     @Test

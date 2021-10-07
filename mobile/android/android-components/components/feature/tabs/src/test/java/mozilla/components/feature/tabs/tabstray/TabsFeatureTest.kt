@@ -7,6 +7,7 @@ package mozilla.components.feature.tabs.tabstray
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.tabstray.Tabs
+import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -103,12 +104,13 @@ class TabsFeatureTest {
     fun filterTabs() {
         val store = BrowserStore()
         val presenter: TabsTrayPresenter = mock()
+        val tabsTray: TabsTray = mock()
         val interactor: TabsTrayInteractor = mock()
         val selectTabUseCase: TabsUseCases.SelectTabUseCase = mock()
         val removeTabUseCase: TabsUseCases.RemoveTabUseCase = mock()
         val tabsFeature = spy(
             TabsFeature(
-                mock(),
+                tabsTray,
                 store,
                 selectTabUseCase,
                 removeTabUseCase,
@@ -125,7 +127,7 @@ class TabsFeatureTest {
         tabsFeature.filterTabs(filter)
 
         verify(presenter).tabsFilter = filter
-        verify(presenter).updateTabs(Tabs(emptyList(), -1))
+        verify(tabsTray).updateTabs(Tabs(emptyList(), -1))
     }
 
     @Test

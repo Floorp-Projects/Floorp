@@ -4,11 +4,14 @@
 
 package mozilla.components.browser.tabstray.ext
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.tabstray.TabsAdapter
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class TabsAdapterKtTest {
 
     @Test

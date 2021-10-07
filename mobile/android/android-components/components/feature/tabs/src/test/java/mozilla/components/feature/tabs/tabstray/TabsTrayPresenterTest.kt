@@ -120,8 +120,6 @@ class TabsTrayPresenterTest {
 
         assertEquals(3, tabsTray.updateTabs!!.list.size)
 
-        verify(tabsTray).onTabsInserted(2, 1)
-
         presenter.stop()
     }
 
@@ -155,13 +153,11 @@ class TabsTrayPresenterTest {
         testDispatcher.advanceUntilIdle()
 
         assertEquals(1, tabsTray.updateTabs!!.list.size)
-        verify(tabsTray).onTabsRemoved(0, 1)
 
         store.dispatch(TabListAction.RemoveTabAction("b")).joinBlocking()
         testDispatcher.advanceUntilIdle()
 
         assertEquals(0, tabsTray.updateTabs!!.list.size)
-        verify(tabsTray, times(2)).onTabsRemoved(0, 1)
 
         presenter.stop()
     }
@@ -196,8 +192,6 @@ class TabsTrayPresenterTest {
         testDispatcher.advanceUntilIdle()
 
         assertEquals(0, tabsTray.updateTabs!!.list.size)
-
-        verify(tabsTray).onTabsRemoved(0, 2)
 
         presenter.stop()
     }
@@ -236,9 +230,6 @@ class TabsTrayPresenterTest {
 
         println("Selection: " + store.state.selectedTabId)
         assertEquals(3, tabsTray.updateTabs!!.selectedIndex)
-
-        verify(tabsTray).onTabsChanged(0, 1)
-        verify(tabsTray).onTabsChanged(3, 1)
     }
 
     @Test
@@ -348,7 +339,7 @@ class TabsTrayPresenterTest {
             )
         ).toTabs()
 
-        presenter.updateTabs(tabs)
+        tabsTray.updateTabs(tabs)
         testDispatcher.advanceUntilIdle()
 
         verify(tabsTray).updateTabs(tabs)
@@ -411,14 +402,6 @@ private class MockedTabsTray : TabsTray {
     override fun updateTabs(tabs: Tabs) {
         updateTabs = tabs
     }
-
-    override fun onTabsInserted(position: Int, count: Int) {}
-
-    override fun onTabsRemoved(position: Int, count: Int) {}
-
-    override fun onTabsMoved(fromPosition: Int, toPosition: Int) {}
-
-    override fun onTabsChanged(position: Int, count: Int) {}
 
     override fun register(observer: TabsTray.Observer) {}
 

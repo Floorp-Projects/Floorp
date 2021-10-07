@@ -44,24 +44,40 @@ interface TabsTray : Observable<TabsTray.Observer> {
      * Called after updateTabs() when <code>count</code> number of tabs are inserted at the
      * given position.
      */
-    fun onTabsInserted(position: Int, count: Int)
+    @Deprecated(
+        "We no longer support diff updates. Use alternatives like DiffUtil and ListAdapter directly.",
+        ReplaceWith("Unit")
+    )
+    fun onTabsInserted(position: Int, count: Int) = Unit
 
     /**
      * Called after updateTabs() when <code>count</code> number of tabs are removed from
      * the given position.
      */
-    fun onTabsRemoved(position: Int, count: Int)
+    @Deprecated(
+        "We no longer support diff updates. Use alternatives like DiffUtil and ListAdapter directly.",
+        ReplaceWith("Unit")
+    )
+    fun onTabsRemoved(position: Int, count: Int) = Unit
 
     /**
      * Called after updateTabs() when a tab changes it position.
      */
-    fun onTabsMoved(fromPosition: Int, toPosition: Int)
+    @Deprecated(
+        "We no longer support diff updates. Use alternatives like DiffUtil and ListAdapter directly.",
+        ReplaceWith("Unit")
+    )
+    fun onTabsMoved(fromPosition: Int, toPosition: Int) = Unit
 
     /**
      * Called after updateTabs() when <code>count</code> number of tabs are updated at the
      * given position.
      */
-    fun onTabsChanged(position: Int, count: Int)
+    @Deprecated(
+        "We no longer support diff updates. Use alternatives like DiffUtil and ListAdapter directly.",
+        ReplaceWith("Unit")
+    )
+    fun onTabsChanged(position: Int, count: Int) = Unit
 
     /**
      * Called when binding a new item to get if it should be shown as selected or not.
@@ -71,5 +87,6 @@ interface TabsTray : Observable<TabsTray.Observer> {
     /**
      * Convenience method to cast the implementation of this interface to an Android View object.
      */
+    @Deprecated("Will be removed in a future release.", ReplaceWith(""))
     fun asView(): View = this as View
 }
