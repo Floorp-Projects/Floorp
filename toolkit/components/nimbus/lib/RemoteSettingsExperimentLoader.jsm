@@ -109,7 +109,10 @@ const RemoteDefaultsLoader = {
           try {
             result = await RemoteSettingsExperimentLoader.evaluateJexl(
               configuration.targeting,
-              { activeRemoteDefaults: existingConfigIds }
+              {
+                activeRemoteDefaults: existingConfigIds,
+                source: configuration.slug,
+              }
             );
           } catch (e) {
             Cu.reportError(e);
@@ -246,6 +249,12 @@ class _RemoteSettingsExperimentLoader {
       );
     }
 
+    if (!customContext.source) {
+      throw new Error(
+        "Expected a .source property that identifies which targeting expression is being evaluated."
+      );
+    }
+
     const context = TargetingContext.combineContexts(
       customContext,
       this.manager.createTargetingContext(),
@@ -253,7 +262,9 @@ class _RemoteSettingsExperimentLoader {
     );
 
     log.debug("Testing targeting expression:", jexlString);
-    const targetingContext = new TargetingContext(context);
+    const targetingContext = new TargetingContext(context, {
+      source: customContext.source,
+    });
 
     let result = null;
     try {
@@ -279,6 +290,7 @@ class _RemoteSettingsExperimentLoader {
 
     const result = await this.evaluateJexl(recipe.targeting, {
       experiment: recipe,
+      source: recipe.slug,
     });
 
     return Boolean(result);
