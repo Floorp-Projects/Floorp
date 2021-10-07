@@ -211,6 +211,67 @@ add_task(async function testHiddenPlayTime() {
   }
 });
 
+add_task(async function testAudioProbesWithoutAudio() {
+  const video = document.createElement('video');
+  video.src = "gizmo-noaudio.mp4";
+  video.loop = true;
+  document.body.appendChild(video);
+
+  info(`all accumulated time should be zero`);
+  const videoChrome = SpecialPowers.wrap(video);
+  await new Promise(r => video.onloadeddata = r);
+  assertValueEqualTo(videoChrome, "totalVideoPlayTime", 0);
+  assertValueEqualTo(videoChrome, "totalAudioPlayTime", 0);
+  assertValueEqualTo(videoChrome, "mutedPlayTime", 0);
+  assertValueEqualTo(videoChrome, "audiblePlayTime", 0);
+
+  info(`start accumulating play time after media starts`);
+  await Promise.all([
+    video.play(),
+    once(video, "moztotalplaytimestarted"),
+  ]);
+
+  async function checkInvariants() {
+    await assertValueConstantlyIncreases(videoChrome, "totalVideoPlayTime");
+    assertValueKeptUnchanged(videoChrome, "audiblePlayTime");
+    assertValueKeptUnchanged(videoChrome, "mutedPlayTime");
+    assertValueKeptUnchanged(videoChrome, "totalAudioPlayTime");
+  }
+
+  checkInvariants();
+
+  video.muted = true;
+
+  checkInvariants();
+
+  video.currentTime = 0.0;
+  await once(video, "seeked");
+
+  checkInvariants();
+
+  video.muted = false;
+
+  checkInvariants();
+
+  video.volume = 0.0;
+
+  checkInvariants();
+
+  video.volume = 1.0;
+
+  checkInvariants();
+
+  video.muted = true;
+
+  checkInvariants();
+
+  video.currentTime = 0.0;
+
+  checkInvariants();
+
+  await cleanUpMediaAndCheckTelemetry(video, {hasAudio: false});
+});
+
 add_task(async function testMutedAudioPlayTime() {
   const audio = document.createElement('audio');
   audio.src = "gizmo.mp4";
@@ -397,16 +458,16 @@ add_task(async function testNoReportedTelemetryResult() {
 /**
  * Following are helper functions
  */
-async function cleanUpMediaAndCheckTelemetry(media, { reportExpected = true, hasVideo = true} = {}) {
+async function cleanUpMediaAndCheckTelemetry(media, { reportExpected = true, hasVideo = true, hasAudio = true} = {}) {
   media.src = "";
-  await checkReportedTelemetry(media, reportExpected, hasVideo);
+  await checkReportedTelemetry(media, reportExpected, hasVideo, hasAudio);
 }
 
 async function assertNoReportedTelemetryResult(media) {
-  await checkReportedTelemetry(media, false, true);
+  await checkReportedTelemetry(media, false, true, true);
 }
 
-async function checkReportedTelemetry(media, reportExpected, hasVideo) {
+async function checkReportedTelemetry(media, reportExpected, hasVideo, hasAudio) {
   const reportResultPromise = once(media, "mozreportedtelemetry");
   info(`check telemetry result, reportExpected=${reportExpected}`);
   if (reportExpected) {
@@ -496,7 +557,7 @@ async function checkReportedTelemetry(media, reportExpected, hasVideo) {
           ok(reportExpected && entriesNums > 0, `Reported ${key} for ${name}`);
         }
       } else {
-        ok(!reportExpected, `No audio telemetry expected, none reported`);
+        ok(!reportExpected || !hasAudio, `No audio telemetry expected, none reported`);
       }
       // Avoid to pollute next test task.
       hist.clear();

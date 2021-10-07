@@ -176,11 +176,21 @@ void TelemetryProbesReporter::OnAudibleChanged(AudibleState aAudibleState) {
 }
 
 void TelemetryProbesReporter::OnMutedChanged(bool aMuted) {
+  // There are multiple ways to mute an element:
+  // - volume = 0
+  // - muted = true
+  // - set the enabled property of the playing AudioTrack to false
+  // Muted -> Muted "transisition" can therefore happen, and we can't add
+  // asserts here.
   AssertOnMainThreadAndNotShutdown();
+  if (!(mMediaContent & MediaContent::MEDIA_HAS_AUDIO)) {
+    return;
+  }
   LOG("Muted changed, was %s now %s", ToMutedStr(mIsMuted), ToMutedStr(aMuted));
   if (aMuted) {
-    MOZ_ASSERT(!mIsMuted);
-    StartMutedAudioTimeAccumulator();
+    if (!mMutedAudioPlayTime.IsStarted()) {
+      StartMutedAudioTimeAccumulator();
+    }
   } else {
     // This happens when starting playback, no need to pause, because it hasn't
     // been started yet.
@@ -215,6 +225,9 @@ void TelemetryProbesReporter::OnMediaContentChanged(MediaContent aContent) {
     if (mInaudibleAudioPlayTime.IsStarted()) {
       mInaudibleAudioPlayTime.Pause();
     }
+    if (mMutedAudioPlayTime.IsStarted()) {
+      mMutedAudioPlayTime.Pause();
+    }
   }
   if (!(mMediaContent & MediaContent::MEDIA_HAS_VIDEO) &&
       aContent & MediaContent::MEDIA_HAS_VIDEO) {
@@ -231,6 +244,9 @@ void TelemetryProbesReporter::OnMediaContentChanged(MediaContent aContent) {
     LOG("Audio track added to media.");
     if (mIsPlaying) {
       mTotalAudioPlayTime.Start();
+      if (mIsMuted) {
+        StartMutedAudioTimeAccumulator();
+      }
     }
   }
 
