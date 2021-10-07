@@ -108,16 +108,6 @@ inline void HyperTextAccessible::PasteText(int32_t aPosition) {
   }
 }
 
-inline index_t HyperTextAccessible::ConvertMagicOffset(int32_t aOffset) const {
-  if (aOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT) {
-    return CharacterCount();
-  }
-
-  if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) return CaretOffset();
-
-  return aOffset;
-}
-
 inline uint32_t HyperTextAccessible::AdjustCaretOffset(uint32_t aOffset) const {
   // It is the same character offset when the caret is visually at the very
   // end of a line or the start of a new line (soft line break). Getting text
