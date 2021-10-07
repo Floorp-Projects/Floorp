@@ -204,6 +204,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether to show QuickSuggest related logs.
   ["quicksuggest.log", false],
 
+  // The user's response to the Firefox Suggest online opt-in dialog.
+  ["quicksuggest.onboardingDialogChoice", ""],
+
   // Whether Remote Settings is enabled as a quick suggest source.
   ["quicksuggest.remoteSettings.enabled", true],
 
