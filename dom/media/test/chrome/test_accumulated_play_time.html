@@ -161,6 +161,7 @@ add_task(async function testHiddenPlayTime() {
 add_task(async function testDecodeSuspendedTime() {
   const video = document.createElement('video');
   video.src = "gizmo.mp4";
+  video.loop = true;
   document.body.appendChild(video);
 
   info(`start video should start accumulating timers`);
