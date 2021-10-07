@@ -24,9 +24,9 @@ import org.mozilla.geckoview.GeckoRuntimeSettings
 
 object GeckoProvider {
     private var runtime: GeckoRuntime? = null
-    const val CN_UPDATE_URL =
+    private const val CN_UPDATE_URL =
         "https://sb.firefox.com.cn/downloads?client=SAFEBROWSING_ID&appver=%MAJOR_VERSION%&pver=2.2"
-    const val CN_GET_HASH_URL =
+    private const val CN_GET_HASH_URL =
         "https://sb.firefox.com.cn/gethash?client=SAFEBROWSING_ID&appver=%MAJOR_VERSION%&pver=2.2"
 
     @Synchronized

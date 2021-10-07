@@ -115,7 +115,7 @@ class SwipeToDeleteCallback(
     companion object {
         const val BACKGROUND_CORNER_OFFSET = 40
         const val MARGIN = 32
-        const val DENSITY_CONVERSION = 160f
+        private const val DENSITY_CONVERSION = 160f
 
         private fun draw(
             background: Drawable,

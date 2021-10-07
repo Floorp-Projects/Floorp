@@ -198,7 +198,7 @@ class AddSearchEngineFragment :
         }
     }
 
-    fun checkForErrors(name: String, searchString: String): Boolean {
+    private fun checkForErrors(name: String, searchString: String): Boolean {
         return when {
             name.isEmpty() -> {
                 customSearchEngine.customSearchEngineNameField.error = resources

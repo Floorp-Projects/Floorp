@@ -1180,7 +1180,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         featureFlag = FeatureFlags.addressesFeature
     )
 
-    var isHistoryMetadataEnabled by booleanPreference(
+    private var isHistoryMetadataEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_history_metadata_feature),
         default = false
     )

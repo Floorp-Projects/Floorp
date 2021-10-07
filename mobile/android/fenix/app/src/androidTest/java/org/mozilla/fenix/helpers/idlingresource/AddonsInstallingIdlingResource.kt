@@ -6,7 +6,7 @@ import androidx.test.espresso.IdlingResource
 import mozilla.components.feature.addons.ui.AddonInstallationDialogFragment
 
 class AddonsInstallingIdlingResource(
-    val fragmentManager: FragmentManager
+    private val fragmentManager: FragmentManager
 ) :
     IdlingResource {
     private var resourceCallback: IdlingResource.ResourceCallback? = null

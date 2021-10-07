@@ -34,7 +34,7 @@ class TabGroupViewHolder(
 ) : RecyclerView.ViewHolder(itemView) {
     private val binding = TabGroupItemBinding.bind(itemView)
 
-    lateinit var groupListAdapter: TabGroupListAdapter
+    private lateinit var groupListAdapter: TabGroupListAdapter
 
     fun bind(
         group: TabGroup,

@@ -13,9 +13,9 @@ import android.os.Build
  */
 object ManufacturerCodes {
     const val HUAWEI: String = "HUAWEI"
-    const val LG = "LGE"
+    private const val LG = "LGE"
     const val ONE_PLUS: String = "OnePlus"
-    const val SAMSUNG = "samsung"
+    private const val SAMSUNG = "samsung"
 
     val isLG get() = Build.MANUFACTURER.equals(LG, ignoreCase = true)
     val isSamsung get() = Build.MANUFACTURER.equals(SAMSUNG, ignoreCase = true)

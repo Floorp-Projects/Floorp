@@ -55,7 +55,7 @@ class DownloadView(
     var mode: DownloadFragmentState.Mode = DownloadFragmentState.Mode.Normal
         private set
 
-    val downloadAdapter = DownloadAdapter(interactor)
+    private val downloadAdapter = DownloadAdapter(interactor)
     private val layoutManager = LinearLayoutManager(container.context)
 
     init {
@@ -104,7 +104,7 @@ class DownloadView(
         }
     }
 
-    fun updateEmptyState(userHasDownloads: Boolean) {
+    private fun updateEmptyState(userHasDownloads: Boolean) {
         binding.downloadList.isVisible = userHasDownloads
         binding.downloadEmptyView.isVisible = !userHasDownloads
         if (!userHasDownloads) {

@@ -42,7 +42,7 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = android.R.attr.preferenceStyle
 ) : Preference(context, attrs, defStyleAttr), CompoundButton.OnCheckedChangeListener {
-    val itemResId: Int
+    private val itemResId: Int
         get() = R.layout.search_engine_radio_button
 
     init {

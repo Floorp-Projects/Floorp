@@ -45,11 +45,11 @@ class SitePermissionsWifiIntegration(
         }
     }
 
-    fun addWifiConnectedListener() {
+    private fun addWifiConnectedListener() {
         wifiConnectionMonitor.addOnWifiConnectedChangedListener(wifiConnectedListener)
     }
 
-    fun removeWifiConnectedListener() {
+    private fun removeWifiConnectedListener() {
         wifiConnectionMonitor.removeOnWifiConnectedChangedListener(wifiConnectedListener)
     }
 
