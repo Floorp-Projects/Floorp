@@ -126,7 +126,6 @@ struct MOZ_STACK_CLASS AutoNestedEventLoopAnnotation {
   nsCString mStack;
 };
 
-// This is the preferred way to use SpinEventLoopUntil from C++.
 // Please see the above notes for the Behavior template parameter.
 //
 // aVeryGoodReasonToDoThis is usually a literal string unique to each
@@ -169,13 +168,6 @@ bool SpinEventLoopUntil(const nsACString& aVeryGoodReasonToDoThis,
   }
 
   return true;
-}
-
-// This is the "legacy" way of invoking SpinEventLoopUntil. We want to
-// get rid of this in favor of a motivated SpinEventLoopUntil.
-template <typename Pred>
-bool SpinEventLoopUntil(Pred&& aPredicate, nsIThread* aThread = nullptr) {
-  return SpinEventLoopUntil("Missing motivation."_ns, aPredicate, aThread);
 }
 
 }  // namespace mozilla
