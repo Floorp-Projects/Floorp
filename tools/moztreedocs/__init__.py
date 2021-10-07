@@ -53,7 +53,8 @@ def read_build_config(docdir):
 
         if name == "SPHINX_TREES":
             # If we're building a subtree, only process that specific subtree.
-            absdir = os.path.join(build.topsrcdir, reldir, value)
+            # topsrcdir always uses POSIX-style path, normalize it for proper comparison.
+            absdir = os.path.normpath(os.path.join(build.topsrcdir, reldir, value))
             if not is_main and absdir not in (docdir, MAIN_DOC_PATH):
                 continue
 
