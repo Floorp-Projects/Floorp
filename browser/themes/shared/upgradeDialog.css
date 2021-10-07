@@ -23,10 +23,10 @@ body {
 }
 
 body.confetti {
-  background: url(chrome://activity-stream/content/data/content/assets/confetti.svg) center -65px / cover no-repeat;
+  background: url(chrome://activity-stream/content/data/content/assets/confetti.svg) top / 100% no-repeat;
 }
 
-body > .hidden {
+body > .hidden:not(:disabled) {
   display: none;
 }
 
@@ -93,54 +93,31 @@ body.confetti #title {
 
 .colorways {
   display: flex;
+  flex: 1;
   flex-direction: column-reverse;
-  margin-top: auto;
-  padding-top: 3px;
 }
 
 .themes {
   display: flex;
-  padding: 14px 0;
+  margin: 0 auto auto;
 }
 
 /* Make these theme radio buttons appear like regular buttons. */
 .themes > input {
-  background: initial;
+  background: initial !important; /* Override custom radio/:hover styles. */
   border: initial;
   border-radius: 4px;
   display: flex;
-  flex: 1;
-  flex-direction: column;
-  font-size: 12px;
   height: initial;
-  line-height: 16px;
-  margin: 0 5px;
-  overflow: clip;
+  margin: 0;
   padding: 7px;
-  text-align: center;
-  width: initial;
-}
-
-.themes > input:checked {
-  background: initial;
-  color: inherit;
-}
-
-/* The selected/checked theme styling is handled on the ::before, so override
- * the special checked colors and match those of an unchecked radio button. */
-.themes > input:enabled:checked:hover {
-  background-color: var(--in-content-button-background-hover);
-  color: var(--in-content-button-text-color-hover);
-}
-
-.themes > input:enabled:checked:hover:active {
-  background-color: var(--in-content-button-background-active);
+  width: 55px;
 }
 
 /* Display a custom theme swatch at the top of each button. */
 .themes > ::before {
   background-repeat: no-repeat;
-  background-size: 100%;
+  background-size: cover;
   border-radius: 100%;
   content: "";
   height: 22px;
@@ -148,6 +125,15 @@ body.confetti #title {
   outline: 1px solid var(--in-content-border-color);
   outline-offset: -0.5px;
   width: 22px;
+}
+
+.themes > :hover::before {
+  outline: 2px solid var(--in-content-primary-button-background-hover);
+  outline-offset: 2px;
+}
+
+.themes > :hover:active::before {
+  outline-color: var(--in-content-primary-button-background-active);
 }
 
 .themes > :checked::before {
@@ -160,7 +146,7 @@ body.confetti #title {
 .variations[next="0"]::after {
   /* Gradients aren't used for high contrast, so show a solid color instead. */
   background-color: var(--in-content-page-background);
-  background-image: linear-gradient(#FFFFFF, #D8D8D8);
+  background-image: linear-gradient(#F0F0F4, #9F9FAD);
 }
 
 .themes > :nth-child(1)::before {
@@ -217,6 +203,8 @@ body.confetti #title {
     --in-content-button-background-hover: rgba(0, 0, 0, 0.2);
     --in-content-button-text-color-hover: var(--in-content-page-color);
     --in-content-focus-outline-color: var(--in-content-primary-button-background);
+    --in-content-page-color: black;
+    --in-content-page-background: transparent;
     --in-content-primary-button-background: rgba(0, 0, 0, 0.5);
     --in-content-primary-button-background-active: rgba(0, 0, 0, 0.36);
     --in-content-primary-button-background-hover: rgba(0, 0, 0, 0.64);
@@ -230,21 +218,15 @@ body.confetti #title {
   border-radius: 100%;
   display: flex;
   flex-direction: column;
-  height: 150px;
+  height: 158px;
   justify-content: space-around;
   margin: auto;
-  padding: 20px;
+  outline: 2px solid var(--in-content-box-border-color);
+  outline-offset: -2px;
+  padding-block: 20px 12px;
   position: relative;
   text-align: center;
-  width: 150px;
-}
-
-.variations:is(.default, .cheers, .foto) {
-  --in-content-page-color: black;
-}
-
-.variations:is(.abstract, .lush, .graffiti, .elemental) {
-  --in-content-page-color: white;
+  width: 190px;
 }
 
 /* Show a custom background image that transitions for each theme. */
@@ -252,7 +234,7 @@ body.confetti #title {
   background-size: 100%;
   content: "";
   height: 197px;
-  left: -49px;
+  left: -48px;
   margin: auto;
   pointer-events: none;
   position: absolute;
@@ -313,6 +295,7 @@ body.confetti #title {
   opacity: 0;
   pointer-events: none;
   position: absolute;
+  top: 0;
   transition: .4s opacity;
   width: 190px;
 }
@@ -324,6 +307,8 @@ body.confetti #title {
 
 .variations > * {
   color: var(--in-content-page-color);
+  background-color: var(--in-content-page-background);
+  margin-inline: auto;
   transition: .4s opacity;
   opacity: 1;
 }
@@ -335,8 +320,9 @@ body.confetti #title {
 /* Make these variation radio buttons appear like regular buttons. */
 .variations > input {
   border-radius: 2px;
-  font-size: 10px;
+  font-size: 12px;
   height: unset;
+  line-height: 1.2;
   margin: auto;
   padding: 6px 12px;
   width: unset;
@@ -351,14 +337,20 @@ body.confetti #title {
   font-size: 14px;
   margin: auto;
   max-width: 460px;
-  padding-bottom: 14px;
+  padding-bottom: 20px;
 }
 
-#primary {
+button {
+  line-height: 1;
   margin: auto auto 0;
 }
 
 #secondary {
-  margin: 9px auto 0;
+  margin-top: 9px;
   padding: 4px;
+}
+
+#secondary:disabled {
+  margin-bottom: 1em;
+  visibility: hidden;
 }
