@@ -75,15 +75,12 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val openLearnMore = {
-            val tabId = requireComponents.tabsUseCases.addTab(
-                SupportUtils.getSumoURLForTopic(requireContext(), SupportUtils.SumoTopic.ADD_SEARCH_ENGINE),
-                selectTab = true,
-                private = true
+            val learnMoreUrl = SupportUtils.getSumoURLForTopic(
+                requireContext(),
+                SupportUtils.SumoTopic.ADD_SEARCH_ENGINE
             )
-
+            SupportUtils.openUrlInCustomTab(requireActivity(), learnMoreUrl)
             TelemetryWrapper.addSearchEngineLearnMoreEvent()
-
-            requireComponents.appStore.dispatch(AppAction.OpenTab(tabId))
         }
 
         val saveSearchEngine = {
