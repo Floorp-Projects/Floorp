@@ -510,7 +510,7 @@ nsIFrame* nsCaret::GetPaintGeometry(nsRect* aCaretRect, nsRect* aHookRect,
   // since the <br> we're focused at is editable, but we do want to paint it at
   // the adjusted frame offset, so that we can see the collapsed whitespace.
   const nsStyleUI* ui = unadjustedFrame->StyleUI();
-  if ((!mIgnoreUserModify && ui->mUserModify == StyleUserModify::ReadOnly) ||
+  if ((!mIgnoreUserModify && ui->UserModify() == StyleUserModify::ReadOnly) ||
       unadjustedFrame->IsContentDisabled()) {
     return nullptr;
   }

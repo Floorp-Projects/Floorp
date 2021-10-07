@@ -138,7 +138,7 @@ nsresult nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
 void nsImageControlFrame::SetFocus(bool aOn, bool aRepaint) {}
 
 Maybe<nsIFrame::Cursor> nsImageControlFrame::GetCursor(const nsPoint&) {
-  StyleCursorKind kind = StyleUI()->mCursor.keyword;
+  StyleCursorKind kind = StyleUI()->Cursor().keyword;
   if (kind == StyleCursorKind::Auto) {
     kind = StyleCursorKind::Pointer;
   }
