@@ -154,8 +154,6 @@ class TelemetryProbesReporter final {
 
   Visibility mMediaElementVisibility = Visibility::eInitial;
 
-  AudibleState mAudibleState = AudibleState::eNotAudible;
-
   MediaContent mMediaContent = MediaContent::MEDIA_HAS_NOTHING;
 
   bool mIsPlaying = false;
