@@ -894,6 +894,38 @@ var Bookmarks = Object.freeze({
               updatedItem.source,
             ]);
           }
+
+          if (
+            (info.hasOwnProperty("lastModified") &&
+              updateInfo.hasOwnProperty("lastModified") &&
+              item.lastModified != updatedItem.lastModified) ||
+            (info.hasOwnProperty("dateAdded") &&
+              updateInfo.hasOwnProperty("dateAdded") &&
+              item.dateAdded != updatedItem.dateAdded)
+          ) {
+            let isTagging = updatedItem.parentGuid == Bookmarks.tagsGuid;
+            if (!isTagging) {
+              if (!parent) {
+                parent = await fetchBookmark({ guid: updatedItem.parentGuid });
+              }
+              isTagging = parent.parentGuid === Bookmarks.tagsGuid;
+            }
+
+            notifications.push(
+              new PlacesBookmarkTime({
+                id: updatedItem._id,
+                itemType: updatedItem.type,
+                url: updatedItem.url?.href,
+                guid: updatedItem.guid,
+                parentGuid: updatedItem.parentGuid,
+                dateAdded: updatedItem.dateAdded,
+                lastModified: updatedItem.lastModified,
+                source: updatedItem.source,
+                isTagging,
+              })
+            );
+          }
+
           if (updateInfo.hasOwnProperty("title")) {
             let isTagging = updatedItem.parentGuid == Bookmarks.tagsGuid;
             if (!isTagging) {

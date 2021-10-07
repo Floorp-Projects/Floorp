@@ -295,6 +295,7 @@ interface nsINavBookmarksService : nsISupports
    *       any other method that changes an item property, but we will send
    *       the corresponding itemChanged notification instead.
    */
+  [can_run_script]
   void setItemLastModified(in long long aItemId,
                            in PRTime aLastModified,
                            [optional] in unsigned short aSource);
