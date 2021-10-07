@@ -357,7 +357,7 @@ def get_subgraph(
     for label in sorted(
         target_task_graph.graph.nodes - removed_tasks - set(label_to_taskid)
     ):
-        label_to_taskid[label] = slugid().decode("ascii")
+        label_to_taskid[label] = slugid()
 
     # resolve labels to taskIds and populate task['dependencies']
     tasks_by_taskid = {}

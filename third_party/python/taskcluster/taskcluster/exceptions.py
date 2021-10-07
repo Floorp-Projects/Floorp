@@ -34,3 +34,10 @@ class TaskclusterAuthFailure(TaskclusterFailure):
 class TaskclusterTopicExchangeFailure(TaskclusterFailure):
     """ Error while creating a Topic Exchange routing key """
     pass
+
+
+class TaskclusterArtifactError(TaskclusterFailure):
+    """Download of an 'error' Artifact"""
+    def __init__(self, message, reason):
+        TaskclusterFailure.__init__(self, message)
+        self.reason = reason

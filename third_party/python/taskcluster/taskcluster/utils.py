@@ -13,6 +13,8 @@ import time
 import six
 import random
 
+import taskcluster_urls as liburls
+
 from . import exceptions
 
 MAX_RETRIES = 5
@@ -27,13 +29,13 @@ log = logging.getLogger(__name__)
 # Regular expression matching: X days Y hours Z minutes
 # todo: support hr, wk, yr
 r = re.compile(''.join([
-   '^(\s*(?P<years>\d+)\s*y(ears?)?)?',
-   '(\s*(?P<months>\d+)\s*mo(nths?)?)?',
-   '(\s*(?P<weeks>\d+)\s*w(eeks?)?)?',
-   '(\s*(?P<days>\d+)\s*d(ays?)?)?',
-   '(\s*(?P<hours>\d+)\s*h(ours?)?)?',
-   '(\s*(?P<minutes>\d+)\s*m(in(utes?)?)?)?\s*',
-   '(\s*(?P<seconds>\d+)\s*s(ec(onds?)?)?)?\s*$',
+   r'^(\s*(?P<years>\d+)\s*y(ears?)?)?',
+   r'(\s*(?P<months>\d+)\s*mo(nths?)?)?',
+   r'(\s*(?P<weeks>\d+)\s*w(eeks?)?)?',
+   r'(\s*(?P<days>\d+)\s*d(ays?)?)?',
+   r'(\s*(?P<hours>\d+)\s*h(ours?)?)?',
+   r'(\s*(?P<minutes>\d+)\s*m(in(utes?)?)?)?\s*',
+   r'(\s*(?P<seconds>\d+)\s*s(ec(onds?)?)?)?\s*$',
 ]))
 
 
@@ -170,7 +172,11 @@ def encodeStringForB64Header(s):
     """ HTTP Headers can't have new lines in them, let's """
     if isinstance(s, six.text_type):
         s = s.encode()
-    return base64.encodestring(s).strip().replace(b'\n', b'')
+    if six.PY3:
+        b64str = base64.encodebytes(s)
+    else:
+        b64str = base64.encodestring(s)
+    return b64str.strip().replace(b'\n', b'')
 
 
 def slugId():
@@ -266,7 +272,7 @@ def makeHttpRequest(method, url, payload, headers, retries=MAX_RETRIES, session=
         # Handle non 2xx status code and retry if possible
         try:
             response.raise_for_status()
-        except requests.exceptions.RequestException as rerr:
+        except requests.exceptions.RequestException:
             pass
         status = response.status_code
         if 500 <= status and status < 600 and retry < retries:
@@ -287,7 +293,7 @@ def makeSingleHttpRequest(method, url, payload, headers, session=None):
     log.debug('HTTP Headers: %s' % str(headers))
     log.debug('HTTP Payload: %s (limit 100 char)' % str(payload)[:100])
     obj = session if session else requests
-    response = obj.request(method.upper(), url, data=payload, headers=headers)
+    response = obj.request(method.upper(), url, data=payload, headers=headers, allow_redirects=False)
     log.debug('Received HTTP Status:    %s' % response.status_code)
     log.debug('Received HTTP Headers: %s' % str(response.headers))
 
@@ -328,7 +334,7 @@ def optionsFromEnvironment(defaults=None):
 
     rootUrl = os.environ.get('TASKCLUSTER_ROOT_URL')
     if rootUrl:
-        options['rootUrl'] = rootUrl
+        options['rootUrl'] = liburls.normalize_root_url(rootUrl)
 
     clientId = os.environ.get('TASKCLUSTER_CLIENT_ID')
     if clientId:

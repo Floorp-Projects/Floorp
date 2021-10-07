@@ -4,22 +4,16 @@ from __future__ import absolute_import, division, print_function
 
 import os
 import logging
-import hashlib
-import hmac
-import datetime
-import calendar
-import six
 from six.moves import urllib
 
 import mohawk
 import mohawk.bewit
 import aiohttp
-import asyncio
 
 from .. import exceptions
 from .. import utils
-from ..client import BaseClient
-from . import asyncutils
+from ..client import BaseClient, createTemporaryCredentials
+from . import asyncutils, retry
 
 log = logging.getLogger(__name__)
 
@@ -89,7 +83,6 @@ class AsyncBaseClient(BaseClient):
         routeParams, payload, query, paginationHandler, paginationLimit = x
         route = self._subArgsInRoute(entry, routeParams)
 
-        # TODO: Check for limit being in the Query of the api ref
         if paginationLimit and 'limit' in entry.get('query', []):
             query['limit'] = paginationLimit
 
@@ -123,16 +116,7 @@ class AsyncBaseClient(BaseClient):
         if payload is not None:
             payload = utils.dumpJson(payload)
 
-        # Do a loop of retries
-        retry = -1  # we plus first in the loop, and attempt 1 is retry 0
-        retries = self.options['maxRetries']
-        while retry < retries:
-            retry += 1
-            # if this isn't the first retry then we sleep
-            if retry > 0:
-                snooze = float(retry * retry) / 10.0
-                log.info('Sleeping %0.2f seconds for exponential backoff', snooze)
-                await asyncio.sleep(utils.calculateSleepTime(retry))
+        async def tryRequest(retryFor):
             # Construct header
             if self._hasCredentials():
                 sender = mohawk.Sender(
@@ -157,20 +141,15 @@ class AsyncBaseClient(BaseClient):
                 # outside this loop.
                 headers['Content-Type'] = 'application/json'
 
-            log.debug('Making attempt %d', retry)
             try:
                 response = await asyncutils.makeSingleHttpRequest(
                     method, url, payload, headers, session=self.session
                 )
             except aiohttp.ClientError as rerr:
-                if retry < retries:
-                    log.warn('Retrying because of: %s' % rerr)
-                    continue
-                # raise a connection exception
-                raise exceptions.TaskclusterConnectionError(
+                return retryFor(exceptions.TaskclusterConnectionError(
                     "Failed to establish connection",
                     superExc=rerr
-                )
+                ))
 
             status = response.status
             if status == 204:
@@ -178,9 +157,11 @@ class AsyncBaseClient(BaseClient):
 
             # Catch retryable errors and go to the beginning of the loop
             # to do the retry
-            if 500 <= status and status < 600 and retry < retries:
-                log.warn('Retrying because of a %s status code' % status)
-                continue
+            if 500 <= status and status < 600:
+                try:
+                    response.raise_for_status()
+                except Exception as exc:
+                    return retryFor(exc)
 
             # Throw errors for non-retryable errors
             if status < 200 or status >= 300:
@@ -188,12 +169,12 @@ class AsyncBaseClient(BaseClient):
                 data = {}
                 try:
                     data = await response.json()
-                except:
+                except Exception:
                     pass  # Ignore JSON errors in error messages
                 # Find error message
                 message = "Unknown Server Error"
-                if isinstance(data, dict):
-                    message = data.get('message')
+                if isinstance(data, dict) and 'message' in data:
+                    message = data['message']
                 else:
                     if status == 401:
                         message = "Authentication Error"
@@ -224,8 +205,7 @@ class AsyncBaseClient(BaseClient):
             except (ValueError, aiohttp.client_exceptions.ContentTypeError):
                 return {"response": response}
 
-        # This code-path should be unreachable
-        assert False, "Error from last retry should have been raised!"
+        return await retry.retry(self.options['maxRetries'], tryRequest)
 
     async def __aenter__(self):
         if self._implicitSession and not self.session:
@@ -316,80 +296,6 @@ def createApiClient(name, api):
         attributes[entry['name']] = f
 
     return type(utils.toStr(name), (BaseClient,), attributes)
-
-
-def createTemporaryCredentials(clientId, accessToken, start, expiry, scopes, name=None):
-    """ Create a set of temporary credentials
-
-    Callers should not apply any clock skew; clock drift is accounted for by
-    auth service.
-
-    clientId: the issuing clientId
-    accessToken: the issuer's accessToken
-    start: start time of credentials, seconds since epoch
-    expiry: expiration time of credentials, seconds since epoch
-    scopes: list of scopes granted
-    name: credential name (optional)
-
-    Returns a dictionary in the form:
-        { 'clientId': str, 'accessToken: str, 'certificate': str}
-    """
-
-    now = datetime.datetime.utcnow()
-    now = now - datetime.timedelta(minutes=10)  # Subtract 5 minutes for clock drift
-
-    for scope in scopes:
-        if not isinstance(scope, six.string_types):
-            raise exceptions.TaskclusterFailure('Scope must be string')
-
-    # Credentials can only be valid for 31 days.  I hope that
-    # this is validated on the server somehow...
-
-    if expiry - start > datetime.timedelta(days=31):
-        raise exceptions.TaskclusterFailure('Only 31 days allowed')
-
-    # We multiply times by 1000 because the auth service is JS and as a result
-    # uses milliseconds instead of seconds
-    cert = dict(
-        version=1,
-        scopes=scopes,
-        start=calendar.timegm(start.utctimetuple()) * 1000,
-        expiry=calendar.timegm(expiry.utctimetuple()) * 1000,
-        seed=utils.slugId() + utils.slugId(),
-    )
-
-    # if this is a named temporary credential, include the issuer in the certificate
-    if name:
-        cert['issuer'] = utils.toStr(clientId)
-
-    sig = ['version:' + utils.toStr(cert['version'])]
-    if name:
-        sig.extend([
-            'clientId:' + utils.toStr(name),
-            'issuer:' + utils.toStr(clientId),
-        ])
-    sig.extend([
-        'seed:' + utils.toStr(cert['seed']),
-        'start:' + utils.toStr(cert['start']),
-        'expiry:' + utils.toStr(cert['expiry']),
-        'scopes:'
-    ] + scopes)
-    sigStr = '\n'.join(sig).encode()
-
-    if isinstance(accessToken, six.text_type):
-        accessToken = accessToken.encode()
-    sig = hmac.new(accessToken, sigStr, hashlib.sha256).digest()
-
-    cert['signature'] = utils.encodeStringForB64Header(sig)
-
-    newToken = hmac.new(accessToken, cert['seed'], hashlib.sha256).digest()
-    newToken = utils.makeB64UrlSafe(utils.encodeStringForB64Header(newToken)).replace(b'=', b'')
-
-    return {
-        'clientId': name or clientId,
-        'accessToken': newToken,
-        'certificate': utils.dumpJson(cert),
-    }
 
 
 __all__ = [
