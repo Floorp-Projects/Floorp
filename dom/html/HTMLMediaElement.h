@@ -655,14 +655,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   // These functions return accumulated time, which are used for the telemetry
   // usage. Return -1 for error.
-  double TotalVideoPlayTime() const;
+  double TotalPlayTime() const;
   double VisiblePlayTime() const;
   double InvisiblePlayTime() const;
   double VideoDecodeSuspendedTime() const;
-  double TotalAudioPlayTime() const;
-  double AudiblePlayTime() const;
-  double InaudiblePlayTime() const;
-  double MutedPlayTime() const;
 
   // Test methods for decoder doctor.
   void SetFormatDiagnosticsReportForMimeType(const nsAString& aMimeType,

@@ -2081,8 +2081,8 @@ bool HTMLMediaElement::IsVideoDecodingSuspended() const {
   return mDecoder && mDecoder->IsVideoDecodingSuspended();
 }
 
-double HTMLMediaElement::TotalVideoPlayTime() const {
-  return mDecoder ? mDecoder->GetTotalVideoPlayTimeInSeconds() : -1.0;
+double HTMLMediaElement::TotalPlayTime() const {
+  return mDecoder ? mDecoder->GetTotalPlayTimeInSeconds() : -1.0;
 }
 
 double HTMLMediaElement::VisiblePlayTime() const {
@@ -2091,22 +2091,6 @@ double HTMLMediaElement::VisiblePlayTime() const {
 
 double HTMLMediaElement::InvisiblePlayTime() const {
   return mDecoder ? mDecoder->GetInvisibleVideoPlayTimeInSeconds() : -1.0;
-}
-
-double HTMLMediaElement::TotalAudioPlayTime() const {
-  return mDecoder ? mDecoder->GetTotalAudioPlayTimeInSeconds() : -1.0;
-}
-
-double HTMLMediaElement::AudiblePlayTime() const {
-  return mDecoder ? mDecoder->GetAudiblePlayTimeInSeconds() : -1.0;
-}
-
-double HTMLMediaElement::InaudiblePlayTime() const {
-  return mDecoder ? mDecoder->GetInaudiblePlayTimeInSeconds() : -1.0;
-}
-
-double HTMLMediaElement::MutedPlayTime() const {
-  return mDecoder ? mDecoder->GetMutedPlayTimeInSeconds() : -1.0;
 }
 
 double HTMLMediaElement::VideoDecodeSuspendedTime() const {

@@ -229,7 +229,7 @@ partial interface HTMLMediaElement {
   readonly attribute boolean isVideoDecodingSuspended;
 
   [ChromeOnly]
-  readonly attribute double totalVideoPlayTime;
+  readonly attribute double totalPlayTime;
 
   [ChromeOnly]
   readonly attribute double visiblePlayTime;
@@ -239,18 +239,6 @@ partial interface HTMLMediaElement {
 
   [ChromeOnly]
   readonly attribute double videoDecodeSuspendedTime;
-
-  [ChromeOnly]
-  readonly attribute double totalAudioPlayTime;
-
-  [ChromeOnly]
-  readonly attribute double audiblePlayTime;
-
-  [ChromeOnly]
-  readonly attribute double inaudiblePlayTime;
-
-  [ChromeOnly]
-  readonly attribute double mutedPlayTime;
 
   // These APIs are used for decoder doctor tests.
   [ChromeOnly]
