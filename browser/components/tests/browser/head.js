@@ -8,6 +8,19 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
 
+// Helpers for testing telemetry events.
+
+// Tests can change the category to filter for different events.
+var gTelemetryCategory = "upgrade_dialog";
+
+function AssertEvents(message, ...events) {
+  info(`Checking telemetry events: ${message}`);
+  TelemetryTestUtils.assertEvents(
+    events.map(event => [gTelemetryCategory, ...event]),
+    { category: gTelemetryCategory }
+  );
+}
+
 const BROWSER_GLUE = Cc["@mozilla.org/browser/browserglue;1"].getService()
   .wrappedJSObject;
 
