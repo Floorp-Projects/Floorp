@@ -11084,7 +11084,6 @@ _cairo_spline_bound
 _cairo_path_fixed_approximate_fill_extents
 ?InsertFrames@SVGDisplayContainerFrame@mozilla@@UAEXW4FrameChildListID@layout@2@PAVnsIFrame@@PBVnsLineList_iterator@@AAVnsFrameList@@@Z
 ?ContentAppended@SVGRenderingObserver@mozilla@@UAEXPAVnsIContent@@@Z
-?Add@?$TiledRegion@V?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@mozilla@@@gfx@mozilla@@QAEXABU?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@23@@Z
 ?GetPostFilterInkOverflowRect@SVGUtils@mozilla@@SA?AUnsRect@@PAVnsIFrame@@ABU3@@Z
 ?GetAndObserveFilters@SVGObserverUtils@mozilla@@SA?AW4ReferenceState@12@PAVnsIFrame@@PAV?$nsTArray@PAVSVGFilterFrame@mozilla@@@@@Z
 ?GetPostFilterBounds@FilterInstance@mozilla@@SA?AUnsRect@@PAVnsIFrame@@PBU?$RectTyped@UUnknownUnits@gfx@mozilla@@N@gfx@2@PBU3@@Z
@@ -11698,7 +11697,6 @@ _ZN11encoding_rs3mem20convert_str_to_utf1617h5ca12bd5f45f4892E
 ?LayerUserDataDestroy@LayerManager@layers@mozilla@@SAXPAX@Z
 ?IsInvalid@nsDisplayWrapList@@UBE_NAAUnsRect@@@Z
 ?SetInvalidRectToVisibleRegion@Layer@layers@mozilla@@QAEXXZ
-?Add@?$TiledRegion@V?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@mozilla@@@gfx@mozilla@@QAEXABV?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@23@@Z
 ?AsCSSTransition@CSSTransition@dom@mozilla@@UBEPBV123@XZ
 ?SetClipRect@Layer@layers@mozilla@@QAEXABV?$Maybe@U?$IntRectTyped@UParentLayerPixel@mozilla@@@gfx@mozilla@@@3@@Z
 ?SetAncestorMaskLayers@Layer@layers@mozilla@@QAEXABV?$nsTArray@V?$RefPtr@VLayer@layers@mozilla@@@@@@@Z
@@ -11739,7 +11737,6 @@ _ZN11encoding_rs3mem20convert_str_to_utf1617h5ca12bd5f45f4892E
 ?AllocateGeometry@nsDisplaySolidColorBase@@UAEPAVnsDisplayItemGeometry@@PAVnsDisplayListBuilder@@@Z
 ??0nsDisplayItemBoundsGeometry@@QAE@PAVnsDisplayItem@@PAVnsDisplayListBuilder@@@Z
 ?InvalidateRegion@BasicPaintedLayer@layers@mozilla@@UAEXABV?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@3@@Z
-?AddRect@TiledRegionImpl@gfx@mozilla@@QAE_NABUpixman_box32@@@Z
 ??$moveConstruct@V?$Variant@UEmptyAttributes@gfx@mozilla@@UBlendAttributes@23@UMorphologyAttributes@23@UColorMatrixAttributes@23@UFloodAttributes@23@UTileAttributes@23@UComponentTransferAttributes@23@UOpacityAttributes@23@UConvolveMatrixAttributes@23@UOffsetAttributes@23@UDisplacementMapAttributes@23@UTurbulenceAttributes@23@UCompositeAttributes@23@UMergeAttributes@23@UImageAttributes@23@UGaussianBlurAttributes@23@UDropShadowAttributes@23@UDiffuseLightingAttributes@23@USpecularLightingAttributes@23@UToAlphaAttributes@23@@mozilla@@@?$VariantImplementation@E$0BC@USpecularLightingAttributes@gfx@mozilla@@UToAlphaAttributes@23@@detail@mozilla@@SAXPAX$$QAV?$Variant@UEmptyAttributes@gfx@mozilla@@UBlendAttributes@23@UMorphologyAttributes@23@UColorMatrixAttributes@23@UFloodAttributes@23@UTileAttributes@23@UComponentTransferAttributes@23@UOpacityAttributes@23@UConvolveMatrixAttributes@23@UOffsetAttributes@23@UDisplacementMapAttributes@23@UTurbulenceAttributes@23@UCompositeAttributes@23@UMergeAttributes@23@UImageAttributes@23@UGaussianBlurAttributes@23@UDropShadowAttributes@23@UDiffuseLightingAttributes@23@USpecularLightingAttributes@23@UToAlphaAttributes@23@@2@@Z
 ?IsInvisibleInRect@nsDisplayBorder@@UBE_NABUnsRect@@@Z
 ?GetMostRecentGeometry@FrameLayerBuilder@mozilla@@SAPAVnsDisplayItemGeometry@@PAVnsDisplayItem@@@Z
@@ -12444,7 +12441,6 @@ skcms_TransferFunction_invert
 ?MaybeDestroy@CompositableOperationDetail@layers@mozilla@@AAE_NW4Type@123@@Z
 ??0CompositableOperationDetail@layers@mozilla@@QAE@$$QAVOpPaintTextureRegion@12@@Z
 ??4?$nsTArray_Impl@V?$RefPtr@VLayer@layers@mozilla@@@@UnsTArrayInfallibleAllocator@@@@QAEAAV0@$$QAV0@@Z
-?GetInvalidRegion@Layer@layers@mozilla@@UAEABV?$TiledRegion@V?$IntRegionTyped@UUnknownUnits@gfx@mozilla@@@gfx@mozilla@@@gfx@3@XZ
 ?Destroy@TextureClientPool@layers@mozilla@@QAEXXZ
 ?EndCanvasTransaction@CompositorBridgeChild@layers@mozilla@@QAEXXZ
 ?Freeze@nsRefreshDriver@@QAEXXZ
