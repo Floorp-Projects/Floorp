@@ -135,9 +135,7 @@ class ToolbarView(
             if (searchState.pastedText.isNullOrEmpty()) {
                 // If we're in edit mode, setting the search term will update the toolbar,
                 // so we make sure we have the correct term/query to show.
-                val termOrQuery = if (searchState.searchTerms.isNotEmpty()) {
-                    searchState.searchTerms
-                } else {
+                val termOrQuery = searchState.searchTerms.ifEmpty {
                     searchState.query
                 }
                 view.setSearchTerms(termOrQuery)

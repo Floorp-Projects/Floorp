@@ -156,9 +156,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         // Reload bookmarks when returning to this fragment in case they have been edited
         val args by navArgs<BookmarkFragmentArgs>()
         val currentGuid = bookmarkStore.state.tree?.guid
-            ?: if (args.currentRoot.isNotEmpty()) {
-                args.currentRoot
-            } else {
+            ?: args.currentRoot.ifEmpty {
                 BookmarkRoot.Mobile.id
             }
         loadInitialBookmarkFolder(currentGuid)

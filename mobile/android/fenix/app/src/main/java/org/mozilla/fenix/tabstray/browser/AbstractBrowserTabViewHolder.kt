@@ -124,9 +124,7 @@ abstract class AbstractBrowserTabViewHolder(
     }
 
     private fun updateTitle(tab: TabSessionState) {
-        val title = if (tab.content.title.isNotEmpty()) {
-            tab.content.title
-        } else {
+        val title = tab.content.title.ifEmpty {
             tab.content.url
         }
         titleView.text = title

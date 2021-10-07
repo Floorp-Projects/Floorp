@@ -33,7 +33,7 @@ class RecentlyClosedItemViewHolder(
 
     fun bind(item: RecoverableTab) {
         binding.historyLayout.titleView.text =
-            if (item.title.isNotEmpty()) item.title else item.url
+            item.title.ifEmpty { item.url }
         binding.historyLayout.urlView.text = item.url
 
         binding.historyLayout.setSelectionInteractor(
