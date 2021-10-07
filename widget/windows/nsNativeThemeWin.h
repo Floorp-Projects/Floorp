@@ -47,6 +47,12 @@ class nsNativeThemeWin : public nsNativeBasicThemeWin {
                                   const nsRect& aRect, const nsRect& aDirtyRect,
                                   DrawOverflow) override;
 
+  bool CreateWebRenderCommandsForWidget(
+      mozilla::wr::DisplayListBuilder&, mozilla::wr::IpcResourceUpdateQueue&,
+      const mozilla::layers::StackingContextHelper&,
+      mozilla::layers::RenderRootStateManager*, nsIFrame*, StyleAppearance,
+      const nsRect&) override;
+
   [[nodiscard]] LayoutDeviceIntMargin GetWidgetBorder(
       nsDeviceContext* aContext, nsIFrame* aFrame,
       StyleAppearance aAppearance) override;
