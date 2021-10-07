@@ -656,9 +656,10 @@ nsThreadManager::SpinEventLoopUntilOrQuit(
                                     ShutdownPhase::AppShutdownConfirmed);
 }
 
-// static from SpinEventLoopUntil.h
+// statics from SpinEventLoopUntil.h
 AutoNestedEventLoopAnnotation* AutoNestedEventLoopAnnotation::sCurrent =
     nullptr;
+StaticMutex AutoNestedEventLoopAnnotation::sStackMutex;
 
 // static from SpinEventLoopUntil.h
 void AutoNestedEventLoopAnnotation::AnnotateXPCOMSpinEventLoopStack(
