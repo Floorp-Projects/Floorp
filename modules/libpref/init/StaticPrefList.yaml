@@ -4250,10 +4250,19 @@
   mirror: always
   do_not_use_directly: true
 
-# Allow renaming of process names to the origin on nightly
+# Allow renaming of processes from Private Windows to the eTLD+1 on nightly
+# Setting this pref creates a privacy leak, but helps greatly with
+# debugging.
+- name: fission.processPrivateWindowSiteNames
+  type: bool
+  value: false
+  mirror: always
+
+# Allow renaming of process names to the eTLD+1 on all versions, NOT
+# including processes from Private Windows
 # Setting this pref creates a privacy leak, but helps greatly with
 # debugging
-- name: fission.processOriginNames
+- name: fission.processSiteNames
   type: bool
   value: false
   mirror: always
