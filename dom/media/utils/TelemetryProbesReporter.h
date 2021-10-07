@@ -44,7 +44,7 @@ class TelemetryProbesReporter final {
   void OnDecodeResumed();
   void OnShutdown();
 
-  double GetTotalPlayTimeInSeconds() const;
+  double GetTotalVideoPlayTimeInSeconds() const;
   double GetVisibleVideoPlayTimeInSeconds() const;
   double GetInvisibleVideoPlayTimeInSeconds() const;
   double GetVideoDecodeSuspendedTimeInSeconds() const;
@@ -104,7 +104,7 @@ class TelemetryProbesReporter final {
   TelemetryProbesReporterOwner* mOwner;
 
   // Total time an element has spent on playing.
-  TimeDurationAccumulator mTotalPlayTime;
+  TimeDurationAccumulator mTotalVideoPlayTime;
 
   // Total time a VIDEO element has spent playing while the corresponding media
   // element is invisible.
