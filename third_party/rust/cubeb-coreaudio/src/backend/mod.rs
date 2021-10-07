@@ -3299,6 +3299,7 @@ impl<'ctx> AudioUnitStream<'ctx> {
                 "({:p}) Stream reinit failed.",
                 self.core_stream_data.stm_ptr
             );
+            self.core_stream_data.close();
             if has_input && input_device != kAudioObjectUnknown {
                 // Attempt to re-use the same device-id failed, so attempt again with
                 // default input device.
