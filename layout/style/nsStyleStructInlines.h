@@ -178,17 +178,6 @@ bool nsStyleDisplay::IsAbsolutelyPositioned(
          !mozilla::SVGUtils::IsInSVGTextSubtree(aContextFrame);
 }
 
-mozilla::StylePointerEvents nsStyleUI::GetEffectivePointerEvents(
-    const nsIFrame* aFrame) const {
-  if (aFrame->GetContent() && !aFrame->GetContent()->GetParent()) {
-    // The root frame is not allowed to have pointer-events: none, or else
-    // no frames could be hit test against and scrolling the viewport would
-    // not work.
-    return mozilla::StylePointerEvents::Auto;
-  }
-  return mPointerEvents;
-}
-
 bool nsStyleBackground::HasLocalBackground() const {
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mImage) {
     const nsStyleImageLayers::Layer& layer = mImage.mLayers[i];

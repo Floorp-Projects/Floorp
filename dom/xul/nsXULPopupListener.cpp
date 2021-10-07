@@ -185,8 +185,8 @@ nsresult nsXULPopupListener::FireFocusOnTargetContent(
   nsIFrame* targetFrame = aTargetContent->GetPrimaryFrame();
   if (!targetFrame) return NS_ERROR_FAILURE;
 
-  const nsStyleUI* ui = targetFrame->StyleUI();
-  bool suppressBlur = (ui->mUserFocus == StyleUserFocus::Ignore);
+  const bool suppressBlur =
+      targetFrame->StyleUI()->UserFocus() == StyleUserFocus::Ignore;
 
   RefPtr<Element> newFocusElement;
 
