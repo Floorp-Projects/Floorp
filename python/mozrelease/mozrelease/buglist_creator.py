@@ -9,7 +9,7 @@ import logging
 import os
 import re
 import requests
-from taskcluster.notify import Notify
+from taskcluster import Notify
 from taskcluster import optionsFromEnvironment
 from operator import itemgetter
 

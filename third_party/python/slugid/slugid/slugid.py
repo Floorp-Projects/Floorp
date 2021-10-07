@@ -11,7 +11,14 @@ def encode(uuid_):
     Returns the given uuid.UUID object as a 22 character slug. This can be a
     regular v4 slug or a "nice" slug.
     """
-    return base64.urlsafe_b64encode(uuid_.bytes)[:-2]  # Drop '==' padding
+    return _convert_bytes_to_slug(uuid_.bytes)
+
+
+def _convert_bytes_to_slug(bytes_):
+    slug = base64.urlsafe_b64encode(bytes_)[:-2]  # Drop '==' padding
+    if sys.version_info.major != 2 and isinstance(slug, bytes):
+        slug = slug.decode('utf-8')
+    return slug
 
 
 def decode(slug):
@@ -28,7 +35,7 @@ def v4():
     """
     Returns a randomly generated uuid v4 compliant slug
     """
-    return base64.urlsafe_b64encode(uuid.uuid4().bytes)[:-2]  # Drop '==' padding
+    return _convert_bytes_to_slug(uuid.uuid4().bytes)
 
 
 def nice():
@@ -45,4 +52,4 @@ def nice():
     """
     rawBytes = bytearray(uuid.uuid4().bytes)
     rawBytes[0] = rawBytes[0] & 0x7f  # Ensure slug starts with [A-Za-f]
-    return base64.urlsafe_b64encode(rawBytes)[:-2]  # Drop '==' padding
+    return _convert_bytes_to_slug(rawBytes)

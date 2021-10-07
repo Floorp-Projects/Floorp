@@ -397,22 +397,23 @@ six==1.13.0 \
     #   pyrsistent
     #   responses
     #   taskcluster
-slugid==1.0.7 \
-    --hash=sha256:6dab3c7eef0bb423fb54cb7752e0f466ddd0ee495b78b763be60e8a27f69e779
+slugid==2.0.0 \
+    --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297 \
+    --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c
     # via
     #   -r requirements-mach-vendor-python.in
     #   taskcluster
-taskcluster-urls==11.0.0 \
-    --hash=sha256:18dcaa9c2412d34ff6c78faca33f0dd8f2384e3f00a98d5832c62d6d664741f0 \
-    --hash=sha256:2aceab7cf5b1948bc197f2e5e50c371aa48181ccd490b8bada00f1e3baf0c5cc \
-    --hash=sha256:74bd2110b5daaebcec5e1d287bf137b61cb8cf6b2d8f5f2b74183e32bc4e7c87
+taskcluster-urls==13.0.1 \
+    --hash=sha256:5e25e7e6818e8877178b175ff43d2e6548afad72694aa125f404a7329ece0973 \
+    --hash=sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367 \
+    --hash=sha256:f66dcbd6572a6216ab65949f0fa0b91f2df647918028436c384e6af5cd12ae2b
     # via
     #   -r requirements-mach-vendor-python.in
     #   taskcluster
-taskcluster==6.0.0 \
-    --hash=sha256:48ecd4898c7928deddfb34cb1cfe2b2505c68416e6c503f8a7f3dd0572425e96 \
-    --hash=sha256:6d5cf7bdbc09dc48b2d376b418b95c1c157a2d359c4b6b231c1fb14a323c0cc5 \
-    --hash=sha256:e409fce7a72808e4f87dc7baca7a79d8b64d5c5045264b9e197c120cc40e219b
+taskcluster==44.2.2 \
+    --hash=sha256:0266a6a901e1a2ec838984a7f24e7adb6d58f9f2e221a7f613388f8f23f786fc \
+    --hash=sha256:846d73c597f0f47dd8525c85c8d9bc41111d5200b090690d3f16b2f57c56a2e1 \
+    --hash=sha256:c1b0e82be25b1ed17e07c90b24a382634b2bfce273fdf2682d94568abe10716c
     # via -r requirements-mach-vendor-python.in
 typing-extensions==3.7.4.3 \
     --hash=sha256:7cb407020f00f7bfc3cb3e7881628838e69d8f3fcab2f64742a5e76b2f841918 \

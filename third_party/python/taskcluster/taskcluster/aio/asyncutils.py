@@ -3,6 +3,7 @@ import aiohttp
 import aiohttp.hdrs
 import asyncio
 import async_timeout
+import functools
 import logging
 import os
 import six
@@ -114,3 +115,33 @@ async def putFile(filename, url, contentType, session=None):
             'Content-Length': str(contentLength),
             'Content-Type': contentType,
         }, session=session)
+
+
+def runAsync(coro):
+    """
+    Replacement of asyncio.run, as it doesn't exist in python<3.7.
+    """
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    loop = asyncio.get_event_loop()
+    result = loop.run_until_complete(coro)
+    loop.close()
+    return result
+
+
+def ensureCoro(func):
+    """
+    If func is a regular function, execute in a thread and return an
+    async version of it. If func is already an async function, return
+    it without change.
+    """
+    if asyncio.iscoroutinefunction(func):
+        return func
+
+    @functools.wraps(func)
+    async def coro(*args, **kwargs):
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None,
+            functools.partial(func, *args, **kwargs)
+        )
+    return coro

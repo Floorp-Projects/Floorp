@@ -37,7 +37,7 @@ Usage:
 from .slugid import decode, encode, nice, v4
 
 __title__ = 'slugid'
-__version__ = '1.0.7'
+__version__ = '2.0.0'
 __author__ = 'Peter Moore'
 __license__ = 'MPL 2.0'
 __all__ = [
