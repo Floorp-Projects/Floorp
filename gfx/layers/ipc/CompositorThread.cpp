@@ -138,7 +138,7 @@ void CompositorThreadHolder::Shutdown() {
   sCompositorThreadHolder = nullptr;
   sBackgroundHangMonitor = nullptr;
 
-  SpinEventLoopUntil([&]() {
+  SpinEventLoopUntil("CompositorThreadHolder::Shutdown"_ns, [&]() {
     bool finished = sFinishedCompositorShutDown;
     return finished;
   });
