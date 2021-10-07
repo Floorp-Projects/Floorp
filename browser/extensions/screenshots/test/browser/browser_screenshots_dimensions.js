@@ -58,6 +58,7 @@ add_task(async function test_visiblePageScreenshot() {
       url: TEST_GREEN_PAGE,
     },
     async browser => {
+      const DEVICE_PIXEL_RATIO = window.devicePixelRatio;
       let helper = new ScreenshotsHelper(browser);
       let contentInfo = await helper.getContentDimensions();
       ok(contentInfo, "Got dimensions back from the content");
@@ -93,17 +94,16 @@ add_task(async function test_visiblePageScreenshot() {
       info("result: " + JSON.stringify(result, null, 2));
       info("contentInfo: " + JSON.stringify(contentInfo, null, 2));
 
-      // TODO: (Bug 1714234) Bug results from visible-page screenshots seem to be variable across platforms/environments
-      // is(
-      //   result.width,
-      //   contentInfo.documentWidth,
-      //   "Got expected screenshot width"
-      // );
-      // is(
-      //   result.height,
-      //   contentInfo.clientHeight,
-      //   "Got expected screenshot height"
-      // );
+      is(
+        result.width,
+        contentInfo.documentWidth * DEVICE_PIXEL_RATIO,
+        "Got expected screenshot width"
+      );
+      is(
+        result.height,
+        contentInfo.clientHeight * DEVICE_PIXEL_RATIO,
+        "Got expected screenshot height"
+      );
     }
   );
 });
