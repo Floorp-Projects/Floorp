@@ -244,6 +244,14 @@ add_task(async function testMutedAudioPlayTime() {
   await assertValueConstantlyIncreases(audioChrome, "audiblePlayTime");
   assertValueKeptUnchanged(audioChrome, "totalVideoPlayTime");
 
+  audio.currentTime = 0.0;
+  await once(audio, "seeked");
+
+  await assertValueConstantlyIncreases(audioChrome, "totalAudioPlayTime");
+  await assertValueConstantlyIncreases(audioChrome, "mutedPlayTime");
+  await assertValueConstantlyIncreases(audioChrome, "audiblePlayTime");
+  assertValueKeptUnchanged(audioChrome, "totalVideoPlayTime");
+
   audio.muted = false;
   await once(audio, "mozmutedeaudioplaytimepaused");
 
@@ -283,8 +291,6 @@ add_task(async function testMutedAudioPlayTime() {
   await assertValueConstantlyIncreases(audioChrome, "audiblePlayTime");
   assertValueKeptUnchanged(audioChrome, "totalVideoPlayTime");
 
-  // The media has a video track, but it's being played back in an
-  // HTMLAudioElement, without video frame location.
   // The media has a video track, but it's being played back in an
   // HTMLAudioElement, without video frame location.
   await cleanUpMediaAndCheckTelemetry(audio, {hasVideo: false});
