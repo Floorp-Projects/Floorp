@@ -10,6 +10,7 @@ UNIFIED_SOURCES += [
     "TestBufferedInputStream.cpp",
     "TestCommon.cpp",
     "TestCookie.cpp",
+    "TestDNSPacket.cpp",
     "TestHeaders.cpp",
     "TestHttpAuthUtils.cpp",
     "TestHttpChannel.cpp",
