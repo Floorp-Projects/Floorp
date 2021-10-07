@@ -171,9 +171,10 @@ class HyperTextAccessible : public AccessibleWrap,
   void TextBeforeOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
                         int32_t* aStartOffset, int32_t* aEndOffset,
                         nsAString& aText);
-  void TextAtOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
-                    int32_t* aStartOffset, int32_t* aEndOffset,
-                    nsAString& aText);
+  virtual void TextAtOffset(int32_t aOffset,
+                            AccessibleTextBoundary aBoundaryType,
+                            int32_t* aStartOffset, int32_t* aEndOffset,
+                            nsAString& aText) override;
   void TextAfterOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
                        int32_t* aStartOffset, int32_t* aEndOffset,
                        nsAString& aText);
