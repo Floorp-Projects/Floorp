@@ -217,30 +217,25 @@ add_task(async function update_bookmark_lastModified() {
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: new URL("http://lastmod.example.com/"),
   });
-  let observer = expectNotifications();
+  const observer = expectPlacesObserverNotifications(["bookmark-time-changed"]);
   bm = await PlacesUtils.bookmarks.update({
     guid: bm.guid,
     lastModified: new Date(),
   });
   let itemId = await PlacesUtils.promiseItemId(bm.guid);
-  let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
 
   observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        itemId,
-        "lastModified",
-        false,
-        `${PlacesUtils.toPRTime(bm.lastModified)}`,
-        PlacesUtils.toPRTime(bm.lastModified),
-        bm.type,
-        parentId,
-        bm.guid,
-        bm.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-time-changed",
+      id: itemId,
+      itemType: bm.type,
+      url: bm.url,
+      guid: bm.guid,
+      parentGuid: bm.parentGuid,
+      dateAdded: bm.dateAdded,
+      lastModified: bm.lastModified,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
 });

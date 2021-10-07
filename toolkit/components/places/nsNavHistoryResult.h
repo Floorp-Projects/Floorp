@@ -314,6 +314,8 @@ class nsNavHistoryResultNode : public nsINavHistoryResultNode {
 
   virtual void OnRemoving();
 
+  nsresult OnItemTimeChanged(int64_t aItemId, const nsACString& aGUID,
+                             PRTime aDateAdded, PRTime aLastModified);
   nsresult OnItemTitleChanged(int64_t aItemId, const nsACString& aGUID,
                               const nsACString& aTitle, PRTime aLastModified);
   nsresult OnItemUrlChanged(int64_t aItemId, const nsACString& aGUID,

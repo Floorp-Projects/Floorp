@@ -22,6 +22,7 @@
 #include "mozilla/dom/PlacesVisitRemoved.h"
 #include "mozilla/dom/PlacesVisitTitle.h"
 #include "mozilla/dom/PlacesBookmarkMoved.h"
+#include "mozilla/dom/PlacesBookmarkTime.h"
 #include "mozilla/dom/PlacesBookmarkTitle.h"
 #include "mozilla/dom/PlacesBookmarkUrl.h"
 
@@ -3192,6 +3193,41 @@ nsresult nsNavHistoryFolderResultNode::OnItemRemoved(
   return RemoveChildAt(index);
 }
 
+nsresult nsNavHistoryResultNode::OnItemTimeChanged(int64_t aItemId,
+                                                   const nsACString& aGUID,
+                                                   PRTime aDateAdded,
+                                                   PRTime aLastModified) {
+  if (aItemId != mItemId) {
+    return NS_OK;
+  }
+
+  bool isDateAddedChanged = mDateAdded != aDateAdded;
+  bool isLastModifiedChanged = mLastModified != aLastModified;
+
+  if (!isDateAddedChanged && !isLastModifiedChanged) {
+    return NS_OK;
+  }
+
+  mDateAdded = aDateAdded;
+  mLastModified = aLastModified;
+
+  bool shouldNotify = !mParent || mParent->AreChildrenVisible();
+  if (shouldNotify) {
+    nsNavHistoryResult* result = GetResult();
+    NS_ENSURE_STATE(result);
+
+    if (isDateAddedChanged) {
+      NOTIFY_RESULT_OBSERVERS(result, NodeDateAddedChanged(this, aDateAdded));
+    }
+    if (isLastModifiedChanged) {
+      NOTIFY_RESULT_OBSERVERS(result,
+                              NodeLastModifiedChanged(this, aLastModified));
+    }
+  }
+
+  return NS_OK;
+}
+
 nsresult nsNavHistoryResultNode::OnItemTitleChanged(int64_t aItemId,
                                                     const nsACString& aGUID,
                                                     const nsACString& aTitle,
@@ -3272,17 +3308,6 @@ nsNavHistoryResultNode::OnItemChanged(
   } else if (aProperty.EqualsLiteral("tags")) {
     mTags.SetIsVoid(true);
     if (shouldNotify) NOTIFY_RESULT_OBSERVERS(result, NodeTagsChanged(this));
-  } else if (aProperty.EqualsLiteral("dateAdded")) {
-    // aNewValue has the date as a string, but we can use aLastModified,
-    // because it's set to the same value when dateAdded is changed.
-    mDateAdded = aLastModified;
-    if (shouldNotify)
-      NOTIFY_RESULT_OBSERVERS(result, NodeDateAddedChanged(this, mDateAdded));
-  } else if (aProperty.EqualsLiteral("lastModified")) {
-    if (shouldNotify) {
-      NOTIFY_RESULT_OBSERVERS(result,
-                              NodeLastModifiedChanged(this, aLastModified));
-    }
   } else if (aProperty.EqualsLiteral("keyword")) {
     if (shouldNotify)
       NOTIFY_RESULT_OBSERVERS(result, NodeKeywordChanged(this, aNewValue));
@@ -3558,7 +3583,7 @@ nsNavHistoryResult::~nsNavHistoryResult() {
 }
 
 void nsNavHistoryResult::StopObserving() {
-  AutoTArray<PlacesEventType, 9> events;
+  AutoTArray<PlacesEventType, 10> events;
   events.AppendElement(PlacesEventType::Favicon_changed);
   if (mIsBookmarksObserver) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
@@ -3569,6 +3594,7 @@ void nsNavHistoryResult::StopObserving() {
     events.AppendElement(PlacesEventType::Bookmark_added);
     events.AppendElement(PlacesEventType::Bookmark_removed);
     events.AppendElement(PlacesEventType::Bookmark_moved);
+    events.AppendElement(PlacesEventType::Bookmark_time_changed);
     events.AppendElement(PlacesEventType::Bookmark_title_changed);
     events.AppendElement(PlacesEventType::Bookmark_url_changed);
   }
@@ -3691,10 +3717,11 @@ void nsNavHistoryResult::EnsureIsObservingBookmarks() {
     return;
   }
   bookmarks->AddObserver(this, true);
-  AutoTArray<PlacesEventType, 6> events;
+  AutoTArray<PlacesEventType, 7> events;
   events.AppendElement(PlacesEventType::Bookmark_added);
   events.AppendElement(PlacesEventType::Bookmark_removed);
   events.AppendElement(PlacesEventType::Bookmark_moved);
+  events.AppendElement(PlacesEventType::Bookmark_time_changed);
   events.AppendElement(PlacesEventType::Bookmark_title_changed);
   events.AppendElement(PlacesEventType::Bookmark_url_changed);
   // If we're not observing visits yet, also add a page-visited observer to
@@ -4262,6 +4289,20 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
             OnItemMoved(item->mId, item->mOldIndex, item->mIndex,
                         item->mItemType, item->mGuid, item->mOldParentGuid,
                         item->mParentGuid, item->mSource, url));
+        break;
+      }
+      case PlacesEventType::Bookmark_time_changed: {
+        const dom::PlacesBookmarkTime* timeEvent =
+            event->AsPlacesBookmarkTime();
+        if (NS_WARN_IF(!timeEvent)) {
+          continue;
+        }
+
+        ENUMERATE_BOOKMARK_CHANGED_OBSERVERS(
+            timeEvent->mParentGuid, timeEvent->mId,
+            OnItemTimeChanged(timeEvent->mId, timeEvent->mGuid,
+                              timeEvent->mDateAdded * 1000,
+                              timeEvent->mLastModified * 1000));
         break;
       }
       case PlacesEventType::Bookmark_title_changed: {
