@@ -181,6 +181,29 @@ const ThemeVariableMap = [
       optionalElementID: "browser",
     },
   ],
+  [
+    "--tabpanel-background-color",
+    {
+      lwtProperty: "ntp_background",
+      processColor(rgbaChannels) {
+        if (!rgbaChannels) {
+          return null;
+        }
+        if (!Services.prefs.getBoolPref("browser.newtabpage.enabled")) {
+          // We only set the tabpanel background to the new tab background color
+          // if the user uses about:home for new tabs. Otherwise, we flash a
+          // colorful background when a new tab is opened. We will flash the
+          // newtab color in new windows if the user uses about:home for new
+          // tabs but not new windows. However, the flash is concealed by the OS
+          // window-open animation.
+          return null;
+        }
+        const { r, g, b } = rgbaChannels;
+        // Drop alpha channel
+        return `rgb(${r}, ${g}, ${b})`;
+      },
+    },
+  ],
 ];
 
 const ThemeContentPropertyList = [
