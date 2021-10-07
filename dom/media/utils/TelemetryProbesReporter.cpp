@@ -159,20 +159,18 @@ void TelemetryProbesReporter::OnVisibilityChanged(Visibility aVisibility) {
 
 void TelemetryProbesReporter::OnAudibleChanged(AudibleState aAudibleState) {
   AssertOnMainThreadAndNotShutdown();
-  LOG("Audibility changed: %s -> %s", ToAudibilityStr(mAudibleState),
-      ToAudibilityStr(aAudibleState));
+  LOG("Audibility changed, now %s", ToAudibilityStr(aAudibleState));
   if (aAudibleState == AudibleState::eNotAudible) {
-    MOZ_ASSERT(mAudibleState == AudibleState::eAudible);
-    StartInaudibleAudioTimeAccumulator();
+    if (!mInaudibleAudioPlayTime.IsStarted()) {
+      StartInaudibleAudioTimeAccumulator();
+    }
   } else {
-    MOZ_ASSERT(mAudibleState == AudibleState::eNotAudible);
     // This happens when starting playback, no need to pause, because it hasn't
     // been started yet.
     if (mInaudibleAudioPlayTime.IsStarted()) {
       PauseInaudibleAudioTimeAccumulator();
     }
   }
-  mAudibleState = aAudibleState;
 }
 
 void TelemetryProbesReporter::OnMutedChanged(bool aMuted) {
