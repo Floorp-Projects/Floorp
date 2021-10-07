@@ -905,8 +905,3 @@ class GleanMetricsService(
         return event.wrapper != null
     }
 }
-
-// Helper function for making our booleans fit into the string list formatting
-fun Boolean.toStringList(): List<String> {
-    return listOf(this.toString())
-}

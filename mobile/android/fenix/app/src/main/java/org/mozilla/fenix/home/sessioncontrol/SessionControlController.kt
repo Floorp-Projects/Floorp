@@ -208,8 +208,7 @@ class DefaultSessionControlController(
     private val hideOnboarding: () -> Unit,
     private val registerCollectionStorageObserver: () -> Unit,
     private val removeCollectionWithUndo: (tabCollection: TabCollection) -> Unit,
-    private val showTabTray: () -> Unit,
-    private val handleSwipedItemDeletionCancel: () -> Unit
+    private val showTabTray: () -> Unit
 ) : SessionControlController {
 
     override fun handleCollectionAddTabTapped(collection: TabCollection) {

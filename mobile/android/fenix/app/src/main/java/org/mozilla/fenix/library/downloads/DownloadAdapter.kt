@@ -6,10 +6,9 @@ package org.mozilla.fenix.library.downloads
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.library.downloads.viewholders.DownloadsListItemViewHolder
+import org.mozilla.fenix.selection.SelectionHolder
 
 class DownloadAdapter(
     private val downloadInteractor: DownloadInteractor
@@ -46,21 +45,5 @@ class DownloadAdapter(
 
     fun updatePendingDeletionIds(pendingDeletionIds: Set<String>) {
         this.pendingDeletionIds = pendingDeletionIds
-    }
-
-    companion object {
-        private val downloadDiffCallback = object : DiffUtil.ItemCallback<DownloadItem>() {
-            override fun areItemsTheSame(oldItem: DownloadItem, newItem: DownloadItem): Boolean {
-                return oldItem == newItem
-            }
-
-            override fun areContentsTheSame(oldItem: DownloadItem, newItem: DownloadItem): Boolean {
-                return oldItem == newItem
-            }
-
-            override fun getChangePayload(oldItem: DownloadItem, newItem: DownloadItem): Any? {
-                return newItem
-            }
-        }
     }
 }

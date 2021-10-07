@@ -7,7 +7,6 @@ package org.mozilla.fenix.library.bookmarks
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
-import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.junit.Before
@@ -29,9 +28,6 @@ class BookmarkFragmentInteractorTest {
     private val subfolder = BookmarkNode(BookmarkNodeType.FOLDER, "987", "123", 0, "Subfolder", null, 0, listOf())
     private val tree: BookmarkNode = BookmarkNode(
         BookmarkNodeType.FOLDER, "123", null, 0, "Mobile", null, 0, listOf(item, separator, item, subfolder)
-    )
-    private val root = BookmarkNode(
-        BookmarkNodeType.FOLDER, BookmarkRoot.Root.id, null, 0, BookmarkRoot.Root.name, null, 0, null
     )
 
     @Before

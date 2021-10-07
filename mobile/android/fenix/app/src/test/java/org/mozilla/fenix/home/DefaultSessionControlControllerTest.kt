@@ -820,28 +820,26 @@ class DefaultSessionControlControllerTest {
         hideOnboarding: () -> Unit = { },
         registerCollectionStorageObserver: () -> Unit = { },
         showTabTray: () -> Unit = { },
-        handleSwipedItemDeletionCancel: () -> Unit = { },
         removeCollectionWithUndo: (tabCollection: TabCollection) -> Unit = { }
     ): DefaultSessionControlController {
         return DefaultSessionControlController(
             activity = activity,
-            store = store,
             settings = settings,
             engine = engine,
             metrics = metrics,
+            store = store,
             tabCollectionStorage = tabCollectionStorage,
             addTabUseCase = tabsUseCases.addTab,
+            restoreUseCase = mockk(relaxed = true),
             reloadUrlUseCase = reloadUrlUseCase.reload,
             selectTabUseCase = selectTabUseCase.selectTab,
-            restoreUseCase = mockk(relaxed = true),
             fragmentStore = fragmentStore,
             navController = navController,
             viewLifecycleScope = scope,
             hideOnboarding = hideOnboarding,
             registerCollectionStorageObserver = registerCollectionStorageObserver,
             removeCollectionWithUndo = removeCollectionWithUndo,
-            showTabTray = showTabTray,
-            handleSwipedItemDeletionCancel = handleSwipedItemDeletionCancel
+            showTabTray = showTabTray
         )
     }
 }

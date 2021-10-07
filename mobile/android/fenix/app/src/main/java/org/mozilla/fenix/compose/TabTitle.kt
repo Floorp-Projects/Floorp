@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -39,6 +40,7 @@ fun TabTitle(
 }
 
 @Composable
+@Preview
 private fun TabTitlePreview() {
     FirefoxTheme {
         Box(Modifier.background(FirefoxTheme.colors.surface)) {
