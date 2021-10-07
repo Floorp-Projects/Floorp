@@ -6,13 +6,13 @@ from __future__ import absolute_import, print_function
 
 import sys
 
-from mozwebidlcodegen import BuildSystemWebIDL
+from mozwebidlcodegen import create_build_system_manager
 from mozbuild.action.util import log_build_task
 
 
 def main(argv):
     """Perform WebIDL code generation required by the build system."""
-    manager = BuildSystemWebIDL.from_environment().manager
+    manager = create_build_system_manager()
     manager.generate_build_files()
 
 
