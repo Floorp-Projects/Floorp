@@ -25,6 +25,7 @@ struct AnyRegister {
   using Code = uint8_t;
 
   static const uint8_t Total = Registers::Total + FloatRegisters::Total;
+  static const uint8_t FirstFloatReg = Registers::Total;
   static const uint8_t Invalid = UINT8_MAX;
 
   static_assert(size_t(Registers::Total) + FloatRegisters::Total <= UINT8_MAX,
