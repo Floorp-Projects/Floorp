@@ -79,7 +79,7 @@ class HistoryMetadataMiddlewareTest {
 
         assertEquals(2, capturedTabs.size)
 
-        capturedTabs[0].apply() {
+        capturedTabs[0].apply {
             assertEquals(tab.id, id)
         }
 
