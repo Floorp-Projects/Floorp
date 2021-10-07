@@ -1524,6 +1524,10 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
       return;
     }
     case eWheelEventClass: {
+      if (BrowserParent* pointerLockedRemote =
+              PointerLockManager::GetLockedRemoteTarget()) {
+        remote = pointerLockedRemote;
+      }
       remote->SendMouseWheelEvent(*aEvent->AsWheelEvent());
       return;
     }
