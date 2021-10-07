@@ -1068,28 +1068,21 @@ Unlike other Activity Stream pings, this is a Firefox Events telemetry event, an
 ### Experiment attribute errors
 
 This records whether issues were encountered with any of the targeting attributes used in the experiment enrollment or message targeting.
-Two different types of events are sent: `attribute_error` and `attribute_timeout` along with the attribute that caused it. An attribute
-is a variable inside the JEXL targeting expression that is evaluated client side by the browser.
+Two different types of events are sent: `attribute_error` and `attribute_timeout` along with the attribute that caused it.
 
 ```js
-{
+[
   "messaging_experiments",
   "targeting",
   "attribute_error", // event
-  "foo", // attribute,
-  "extra_keys": {
-    "source": "message id or experiment slug",
-  },
-},
-{
+  "foo" // attribute
+],
+[
   "messaging_experiments",
   "targeting",
   "attribute_timeout", // event
-  "bar", // attribute,
-  "extra_keys": {
-    "source": "message id or experiment slug",
-  },
-}
+  "bar" // attribute
+]
 ```
 
 ## Firefox Onboarding (about:welcome) pings
