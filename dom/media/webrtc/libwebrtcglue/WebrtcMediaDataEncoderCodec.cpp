@@ -75,16 +75,18 @@ static const char* PacketModeStr(const webrtc::CodecSpecificInfo& aInfo) {
   }
 }
 
-/*
 static MediaDataEncoder::H264Specific::ProfileLevel ConvertProfileLevel(
-    webrtc::H264::Profile aProfile) {
-  if (aProfile == webrtc::H264::kProfileConstrainedBaseline ||
-      aProfile == webrtc::H264::kProfileBaseline) {
+    const webrtc::SdpVideoFormat::Parameters& aParameters) {
+  const absl::optional<webrtc::H264::ProfileLevelId> profileLevel =
+      webrtc::H264::ParseSdpProfileLevelId(aParameters);
+  if (profileLevel &&
+      (profileLevel->profile == webrtc::H264::Profile::kProfileBaseline ||
+       profileLevel->profile ==
+           webrtc::H264::Profile::kProfileConstrainedBaseline)) {
     return MediaDataEncoder::H264Specific::ProfileLevel::BaselineAutoLevel;
   }
   return MediaDataEncoder::H264Specific::ProfileLevel::MainAutoLevel;
 }
-*/
 
 static MediaDataEncoder::VPXSpecific::Complexity MapComplexity(
     webrtc::VideoCodecComplexity aComplexity) {
@@ -102,11 +104,13 @@ static MediaDataEncoder::VPXSpecific::Complexity MapComplexity(
   }
 }
 
-WebrtcMediaDataEncoder::WebrtcMediaDataEncoder()
+WebrtcMediaDataEncoder::WebrtcMediaDataEncoder(
+    const webrtc::SdpVideoFormat& aFormat)
     : mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
                                "WebrtcMediaDataEncoder::mTaskQueue")),
       mFactory(new PEMFactory()),
       mCallbackMutex("WebrtcMediaDataEncoderCodec encoded callback mutex"),
+      mFormatParams(aFormat.parameters),
       // Use the same lower and upper bound as h264_video_toolbox_encoder which
       // is an encoder from webrtc's upstream codebase.
       // 0.5 is set as a mininum to prevent overcompensating for large temporary
@@ -226,8 +230,8 @@ already_AddRefed<MediaDataEncoder> WebrtcMediaDataEncoder::CreateEncoder(
       keyframeInterval, mBitrateAdjuster.GetTargetBitrateBps());
   switch (aCodecSettings->codecType) {
     case webrtc::VideoCodecType::kVideoCodecH264: {
-      params.SetCodecSpecific(MediaDataEncoder::H264Specific(
-          MediaDataEncoder::H264Specific::ProfileLevel::MainAutoLevel));
+      params.SetCodecSpecific(
+          MediaDataEncoder::H264Specific(ConvertProfileLevel(mFormatParams)));
       break;
     }
     case webrtc::VideoCodecType::kVideoCodecVP8: {
@@ -369,7 +373,8 @@ int32_t WebrtcMediaDataEncoder::Encode(
     }
   }
 
-  LOG_V("Encode frame, type %d size %u", static_cast<int>((*aFrameTypes)[0]), aInputFrame.size());
+  LOG_V("Encode frame, type %d size %u", static_cast<int>((*aFrameTypes)[0]),
+        aInputFrame.size());
   MOZ_ASSERT(aInputFrame.video_frame_buffer()->type() ==
              webrtc::VideoFrameBuffer::Type::kI420);
   RefPtr<VideoData> data = CreateVideoDataFromWebrtcVideoFrame(
@@ -418,44 +423,6 @@ int32_t WebrtcMediaDataEncoder::Encode(
       });
   return WEBRTC_VIDEO_CODEC_OK;
 }
-
-/*
-webrtc::RTPFragmentationHeader WebrtcMediaDataEncoder::GetFragHeader(
-    const webrtc::VideoCodecType aCodecType,
-    const RefPtr<MediaRawData>& aFrame) {
-  webrtc::RTPFragmentationHeader header;
-  switch (aCodecType) {
-    case webrtc::VideoCodecType::kVideoCodecH264: {
-      nsTArray<AnnexB::NALEntry> entries;
-      AnnexB::ParseNALEntries(
-          Span<const uint8_t>(aFrame->Data(), aFrame->Size()), entries);
-      const size_t nalNums = entries.Length();
-      LOG_V("NAL nums %zu", nalNums);
-      MOZ_ASSERT(nalNums, "Should have at least 1 NALU in encoded frame!");
-
-      header.VerifyAndAllocateFragmentationHeader(nalNums);
-      for (size_t idx = 0; idx < nalNums; idx++) {
-        header.fragmentationOffset[idx] = entries[idx].mOffset;
-        header.fragmentationLength[idx] = entries[idx].mSize;
-        LOG_V("NAL offset %" PRId64 " size %" PRId64, entries[idx].mOffset,
-              entries[idx].mSize);
-      }
-      break;
-    }
-    case webrtc::VideoCodecType::kVideoCodecVP8:
-      [[fallthrough]];
-    case webrtc::VideoCodecType::kVideoCodecVP9: {
-      header.VerifyAndAllocateFragmentationHeader(1);
-      header.fragmentationLength[0] = aFrame->Size();
-      break;
-    }
-    default:
-      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unknown codec type");
-  }
-
-  return header;
-}
-*/
 
 int32_t WebrtcMediaDataEncoder::SetRates(
     const webrtc::VideoEncoder::RateControlParameters& aParameters) {
