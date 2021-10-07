@@ -48,6 +48,11 @@ class HyperTextAccessibleBase {
   virtual int32_t GetChildOffset(uint32_t aChildIndex,
                                  bool aInvalidateAfter = false) const;
 
+  /**
+   * Return character count within the hypertext accessible.
+   */
+  uint32_t CharacterCount() const;
+
  protected:
   virtual const Accessible* Acc() const = 0;
   Accessible* Acc() {
