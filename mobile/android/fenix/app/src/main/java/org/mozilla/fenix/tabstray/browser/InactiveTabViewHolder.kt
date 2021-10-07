@@ -14,6 +14,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.InactiveFooterItemBinding
 import org.mozilla.fenix.databinding.InactiveHeaderItemBinding
 import org.mozilla.fenix.databinding.InactiveTabListItemBinding
+import org.mozilla.fenix.databinding.InactiveTabsAutoCloseBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.ext.toShortUrl
@@ -69,6 +70,27 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
         companion object {
             const val LAYOUT_ID = R.layout.inactive_header_item
             private const val ROTATION_DEGREE = 180F
+        }
+    }
+
+    class AutoCloseDialogHolder(
+        itemView: View,
+        interactor: InactiveTabsAutoCloseDialogInteractor
+    ) : InactiveTabViewHolder(itemView) {
+        private val binding = InactiveTabsAutoCloseBinding.bind(itemView)
+
+        init {
+            binding.closeButton.setOnClickListener {
+                interactor.onCloseClicked()
+            }
+
+            binding.action.setOnClickListener {
+                interactor.onEnabledAutoCloseClicked()
+            }
+        }
+
+        companion object {
+            const val LAYOUT_ID = R.layout.inactive_tabs_auto_close
         }
     }
 

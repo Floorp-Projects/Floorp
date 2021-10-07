@@ -67,6 +67,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         private const val CFR_COUNT_CONDITION_FOCUS_INSTALLED = 1
         private const val CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED = 3
         private const val APP_LAUNCHES_TO_SHOW_DEFAULT_BROWSER_CARD = 3
+        private const val INACTIVE_TAB_MINIMUM_TO_SHOW_AUTO_CLOSE_DIALOG = 20
 
         const val FOUR_HOURS_MS = 60 * 60 * 4 * 1000L
         const val ONE_DAY_MS = 60 * 60 * 24 * 1000L
@@ -837,6 +838,26 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_should_show_inactive_tabs_popup),
         default = true
     )
+
+    /**
+     * Indicates if the auto-close dialog for inactive tabs has been dismissed before.
+     */
+    var hasInactiveTabsAutoCloseDialogBeenDismissed by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_has_inactive_tabs_auto_close_dialog_dismissed),
+        default = false
+    )
+
+    /**
+     * Indicates if the auto-close dialog should be visible based on
+     * if the user has dismissed it before [hasInactiveTabsAutoCloseDialogBeenDismissed],
+     * if the minimum number of tabs has been accumulated [numbersOfTabs]
+     * and if the auto-close setting is already set to [closeTabsAfterOneMonth].
+     */
+    fun shouldShowInactiveTabsAutoCloseDialog(numbersOfTabs: Int): Boolean {
+        return !hasInactiveTabsAutoCloseDialogBeenDismissed &&
+            numbersOfTabs >= INACTIVE_TAB_MINIMUM_TO_SHOW_AUTO_CLOSE_DIALOG &&
+            !closeTabsAfterOneMonth
+    }
 
     /**
      * Indicates if the jump back in CRF should be shown.

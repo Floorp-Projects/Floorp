@@ -227,6 +227,8 @@
 
     <!-- A value  of `true` means the Inactive tabs onboarding popup has not been shown yet -->
     <string name="pref_key_should_show_inactive_tabs_popup" translatable="false">pref_key_should_show_inactive_tabs_popup</string>
+    <!-- A value  of `true` means the Inactive tabs auto close dialog has been dismissed by the user -->
+    <string name="pref_key_has_inactive_tabs_auto_close_dialog_dismissed" translatable="false">pref_key_has_inactive_tabs_auto_close_dialog_dismissed</string>
     <!-- A value  of `true` means the jump back in onboarding popup has not been shown yet -->
     <string name="pref_key_should_show_jump_back_in_tabs_popup" translatable="false">pref_key_should_show_jump_back_in_tabs_popup</string>
 

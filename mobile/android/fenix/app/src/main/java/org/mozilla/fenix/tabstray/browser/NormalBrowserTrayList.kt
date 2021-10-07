@@ -39,19 +39,31 @@ class NormalBrowserTrayList @JvmOverloads constructor(
     private val swipeDelegate = SwipeToDeleteDelegate()
     private val concatAdapter by lazy { adapter as ConcatAdapter }
     private val tabSorter by lazy { TabSorter(context, concatAdapter, context.components.core.store) }
-    private val inactiveTabsInteractor by lazy {
-        val tabFilter: (TabSessionState) -> Boolean = filter@{
-            if (!context.settings().inactiveTabsAreEnabled) {
-                return@filter false
-            }
-            it.isNormalTabInactive(maxActiveTime)
+    private val inactiveTabsFilter: (TabSessionState) -> Boolean = filter@{
+        if (!context.settings().inactiveTabsAreEnabled) {
+            return@filter false
         }
+        it.isNormalTabInactive(maxActiveTime)
+    }
+
+    private val inactiveTabsInteractor by lazy {
         DefaultInactiveTabsInteractor(
             InactiveTabsController(
                 context.components.core.store,
-                tabFilter,
+                inactiveTabsFilter,
                 concatAdapter.inactiveTabsAdapter,
                 context.components.analytics.metrics
+            )
+        )
+    }
+
+    private val inactiveTabsAutoCloseInteractor by lazy {
+        DefaultInactiveTabsAutoCloseDialogInteractor(
+            InactiveTabsAutoCloseDialogController(
+                context.components.core.store,
+                context.settings(),
+                inactiveTabsFilter,
+                concatAdapter.inactiveTabsAdapter
             )
         )
     }
@@ -81,6 +93,7 @@ class NormalBrowserTrayList @JvmOverloads constructor(
         super.onAttachedToWindow()
 
         concatAdapter.inactiveTabsAdapter.inactiveTabsInteractor = inactiveTabsInteractor
+        concatAdapter.inactiveTabsAdapter.inactiveTabsAutoCloseDialogInteractor = inactiveTabsAutoCloseInteractor
 
         tabsFeature.start()
 

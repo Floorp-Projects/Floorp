@@ -40,7 +40,7 @@ class TrayPagerAdapter(
      */
     private val normalAdapter by lazy {
         ConcatAdapter(
-            InactiveTabsAdapter(context, browserInteractor, interactor, INACTIVE_TABS_FEATURE_NAME),
+            InactiveTabsAdapter(context, browserInteractor, interactor, INACTIVE_TABS_FEATURE_NAME, context.settings()),
             TabGroupAdapter(context, browserInteractor, tabsTrayStore, TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(browserStore, context.settings()),
             BrowserTabsAdapter(context, browserInteractor, tabsTrayStore, TABS_TRAY_FEATURE_NAME)
