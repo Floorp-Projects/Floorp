@@ -3,7 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/homeFragment">
+    app:startDestination="@id/startupFragment">
+
+    <action
+        android:id="@+id/action_startup_home"
+        app:destination="@id/homeFragment"
+        app:popUpTo="@id/startupFragment"
+        app:popUpToInclusive="true" />
 
     <action
         android:id="@+id/action_global_home"
@@ -156,6 +162,11 @@
             android:defaultValue="@null"
             app:argType="string" />
     </dialog>
+
+    <fragment
+        android:id="@+id/startupFragment"
+        android:name="org.mozilla.fenix.StartupFragment">
+    </fragment>
 
     <fragment
         android:id="@+id/homeFragment"

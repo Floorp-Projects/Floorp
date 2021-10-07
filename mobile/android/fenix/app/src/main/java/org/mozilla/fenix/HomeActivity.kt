@@ -132,7 +132,7 @@ import java.lang.ref.WeakReference
  * - browser screen
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-@SuppressWarnings("TooManyFunctions", "LargeClass", "LongParameterList")
+@SuppressWarnings("TooManyFunctions", "LargeClass", "LongParameterList", "LongMethod")
 open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     // DO NOT MOVE ANYTHING ABOVE THIS, GETTING INIT TIME IS CRITICAL
     // we need to store startup timestamp for warm startup. we cant directly store
@@ -229,12 +229,18 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             it.start()
         }
 
-        if (!shouldStartOnHome() &&
-            shouldNavigateBrowserFragmentOnColdStart(savedInstanceState)
-        ) {
+        // Unless the activity is recreated, navigate to home first (without rendering it)
+        // to add it to the back stack.
+        if (savedInstanceState == null) {
+            navigateToHome()
+        }
+
+        if (!shouldStartOnHome() && shouldNavigateToBrowserOnColdStart(savedInstanceState)) {
             navigateToBrowserOnColdStart()
-        } else if (FeatureFlags.showStartOnHomeSettings) {
-            components.analytics.metrics.track(Event.StartOnHomeEnterHomeScreen)
+        } else {
+            if (FeatureFlags.showStartOnHomeSettings) {
+                components.analytics.metrics.track(Event.StartOnHomeEnterHomeScreen)
+            }
         }
 
         Performance.processIntentIfPerformanceTest(intent, this)
@@ -879,11 +885,14 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     open fun navigateToBrowserOnColdStart() {
         // Normal tabs + cold start -> Should go back to browser if we had any tabs open when we left last
         // except for PBM + Cold Start there won't be any tabs since they're evicted so we never will navigate
-        if (settings().shouldReturnToBrowser &&
-            !browsingModeManager.mode.isPrivate
-        ) {
+        if (settings().shouldReturnToBrowser && !browsingModeManager.mode.isPrivate) {
+            // Navigate to home first (without rendering it) to add it to the back stack.
             openToBrowser(BrowserDirection.FromGlobal, null)
         }
+    }
+
+    open fun navigateToHome() {
+        navHost.navController.navigate(NavGraphDirections.actionStartupHome())
     }
 
     override fun attachBaseContext(base: Context) {
@@ -1001,7 +1010,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     @VisibleForTesting
     internal fun getSettings(): Settings = settings()
 
-    private fun shouldNavigateBrowserFragmentOnColdStart(savedInstanceState: Bundle?): Boolean {
+    private fun shouldNavigateToBrowserOnColdStart(savedInstanceState: Bundle?): Boolean {
         return isActivityColdStarted(intent, savedInstanceState) &&
             !externalSourceIntentProcessors.any {
                 it.process(

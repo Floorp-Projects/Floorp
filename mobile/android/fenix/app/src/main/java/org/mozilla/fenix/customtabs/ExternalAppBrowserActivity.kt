@@ -53,6 +53,10 @@ open class ExternalAppBrowserActivity : HomeActivity() {
         // No-op for external app
     }
 
+    override fun navigateToHome() {
+        // No-op for external app
+    }
+
     override fun handleNewIntent(intent: Intent) {
         // No-op for external app
     }
