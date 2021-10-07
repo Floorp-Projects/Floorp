@@ -6,6 +6,8 @@
 #ifndef _HyperTextAccessibleBase_H_
 #define _HyperTextAccessibleBase_H_
 
+#include "nsIAccessibleText.h"
+
 namespace mozilla::a11y {
 class Accessible;
 class TextLeafPoint;
@@ -101,6 +103,15 @@ class HyperTextAccessibleBase {
    * start.
    */
   TextLeafPoint ToTextLeafPoint(int32_t aOffset, bool aDescendToEnd = false);
+
+  /**
+   * Return text at the given offset corresponding to
+   * the boundary type.
+   */
+  virtual void TextAtOffset(int32_t aOffset,
+                            AccessibleTextBoundary aBoundaryType,
+                            int32_t* aStartOffset, int32_t* aEndOffset,
+                            nsAString& aText);
 
  protected:
   virtual const Accessible* Acc() const = 0;
