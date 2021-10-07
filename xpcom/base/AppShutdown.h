@@ -8,6 +8,8 @@
 #define AppShutdown_h
 
 #include <type_traits>
+#include "nsCOMPtr.h"
+#include "nsISupportsBase.h"
 #include "ShutdownPhase.h"
 
 namespace mozilla {

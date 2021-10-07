@@ -255,6 +255,7 @@ TEST(TestAudioTrackGraph, ErrorCallback)
   MediaEventListener initListener = cubeb->StreamInitEvent().Connect(
       AbstractThread::GetCurrent(), [&] { init = true; });
   SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
+      "TEST(TestAudioTrackGraph, ErrorCallback)"_ns,
       [&] { return errored && init; });
   errorListener.Disconnect();
   initListener.Disconnect();

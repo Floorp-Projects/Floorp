@@ -392,7 +392,7 @@ void WaitFor(TimeDuration aDuration) {
       NS_NewRunnableFunction(__func__, [&] { done = true; }),
       aDuration.ToMilliseconds());
   SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      [&] { return done; });
+      "WaitFor(TimeDuration aDuration)"_ns, [&] { return done; });
 }
 
 class MediaPipelineTest : public ::testing::Test {
