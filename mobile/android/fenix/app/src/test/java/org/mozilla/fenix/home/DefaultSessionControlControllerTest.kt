@@ -170,7 +170,7 @@ class DefaultSessionControlControllerTest {
         verify {
             navController.navigate(
                 match<NavDirections> {
-                    it.actionId == R.id.action_global_customizationFragment
+                    it.actionId == R.id.action_global_homeSettingsFragment
                 },
                 null
             )

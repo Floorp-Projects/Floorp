@@ -881,7 +881,7 @@ class HomeFragment : Fragment() {
                         hideOnboardingIfNeeded()
                         nav(
                             R.id.homeFragment,
-                            HomeFragmentDirections.actionGlobalCustomizationFragment()
+                            HomeFragmentDirections.actionGlobalHomeSettingsFragment()
                         )
                     }
                     is HomeMenu.Item.SyncAccount -> {
