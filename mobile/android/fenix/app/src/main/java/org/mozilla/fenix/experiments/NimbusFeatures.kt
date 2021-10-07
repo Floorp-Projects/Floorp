@@ -6,7 +6,6 @@ package org.mozilla.fenix.experiments
 
 import android.content.Context
 import org.mozilla.experiments.nimbus.mapKeysAsEnums
-import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getVariables
@@ -51,10 +50,10 @@ class NimbusFeatures(private val context: Context) {
         @Suppress("EnumNaming")
         private enum class HomeScreenSection(val default: Boolean) {
             topSites(true),
-            recentlySaved(false),
-            jumpBackIn(false),
-            pocket(false),
-            recentExplorations(false);
+            recentlySaved(true),
+            jumpBackIn(true),
+            pocket(true),
+            recentExplorations(true);
 
             companion object {
                 /**
@@ -62,12 +61,12 @@ class NimbusFeatures(private val context: Context) {
                  */
                 fun toMap(context: Context): Map<HomeScreenSection, Boolean> {
                     return values().associate { section ->
-                        val channelDefault = if (section == pocket && Config.channel.isNightlyOrDebug) {
+                        val value = if (section == pocket) {
                             FeatureFlags.isPocketRecommendationsFeatureEnabled(context)
                         } else {
-                            Config.channel.isNightlyOrDebug
+                            section.default
                         }
-                        section to (channelDefault || section.default)
+                        section to value
                     }
                 }
             }
