@@ -1545,9 +1545,9 @@ bool nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
           if (wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT) {
             foundWrapPosition = true;
           } else {
-            wrapPosition =
-                lineBreaker->Next(aSequenceStart, (aEnd - aSequenceStart),
-                                  (aPos - aSequenceStart));
+            wrapPosition = lineBreaker->DeprecatedNext(aSequenceStart,
+                                                       (aEnd - aSequenceStart),
+                                                       (aPos - aSequenceStart));
             if (wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT) {
               foundWrapPosition = true;
             }

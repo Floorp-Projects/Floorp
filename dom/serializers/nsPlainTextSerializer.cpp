@@ -169,8 +169,8 @@ int32_t nsPlainTextSerializer::CurrentLine::FindWrapIndexForContent(
         (prefixwidth > aWrapColumn + 1) ? 1 : aWrapColumn - prefixwidth + 1;
     if (aLineBreaker) {
       if ((uint32_t)goodSpace < mContent.Length())
-        goodSpace =
-            aLineBreaker->Next(mContent.get(), mContent.Length(), goodSpace);
+        goodSpace = aLineBreaker->DeprecatedNext(mContent.get(),
+                                                 mContent.Length(), goodSpace);
       if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT)
         goodSpace = mContent.Length();
     } else {
