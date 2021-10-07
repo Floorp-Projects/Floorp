@@ -37,6 +37,8 @@ abstract class TabsAdapter<T : TabViewHolder>(
     override fun updateTabs(tabs: Tabs) {
         this.tabs = tabs
 
+        submitList(tabs.list)
+
         notifyObservers { onTabsUpdated() }
     }
 
@@ -47,22 +49,8 @@ abstract class TabsAdapter<T : TabViewHolder>(
         holder.bind(tabs.list[position], isTabSelected(tabs, position), styling, this)
     }
 
-    override fun getItemCount(): Int = tabs?.list?.size ?: 0
-
     final override fun isTabSelected(tabs: Tabs, position: Int): Boolean =
         tabs.selectedIndex == position
-
-    final override fun onTabsChanged(position: Int, count: Int) =
-        notifyItemRangeChanged(position, count)
-
-    final override fun onTabsInserted(position: Int, count: Int) =
-        notifyItemRangeInserted(position, count)
-
-    final override fun onTabsMoved(fromPosition: Int, toPosition: Int) =
-        notifyItemMoved(fromPosition, toPosition)
-
-    final override fun onTabsRemoved(position: Int, count: Int) =
-        notifyItemRangeRemoved(position, count)
 
     private object DiffCallback : DiffUtil.ItemCallback<Tab>() {
         override fun areItemsTheSame(oldItem: Tab, newItem: Tab): Boolean {

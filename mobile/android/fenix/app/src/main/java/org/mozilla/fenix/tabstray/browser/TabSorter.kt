@@ -46,19 +46,10 @@ class TabSorter(
         // Normal tabs.
         val totalNormalTabs = (normalTabs + remainderTabs)
         val selectedTabIndex = totalNormalTabs.findSelectedIndex(selectedTabId)
-
-        // N.B: For regular tabs, we cannot use submitList alone, because the `TabsAdapter` needs to have a reference
-        //  to the new tabs in it. We considered moving the call within `updateTabs` but this would have the side-effect
-        //  of notifying the adapter twice for private tabs which shared the `TabsAdapter`.
         concatAdapter.browserAdapter.updateTabs(Tabs(totalNormalTabs, selectedTabIndex))
-        concatAdapter.browserAdapter.submitList(totalNormalTabs)
     }
 
     override fun isTabSelected(tabs: Tabs, position: Int): Boolean = false
-    override fun onTabsChanged(position: Int, count: Int) = Unit
-    override fun onTabsInserted(position: Int, count: Int) = Unit
-    override fun onTabsMoved(fromPosition: Int, toPosition: Int) = Unit
-    override fun onTabsRemoved(position: Int, count: Int) = Unit
 }
 
 private fun List<Tab>.findSelectedIndex(tabId: String?): Int {

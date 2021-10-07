@@ -105,10 +105,6 @@ class InactiveTabsAdapter(
     }
 
     override fun isTabSelected(tabs: Tabs, position: Int): Boolean = false
-    override fun onTabsChanged(position: Int, count: Int) = Unit
-    override fun onTabsInserted(position: Int, count: Int) = Unit
-    override fun onTabsMoved(fromPosition: Int, toPosition: Int) = Unit
-    override fun onTabsRemoved(position: Int, count: Int) = Unit
 
     private object DiffCallback : DiffUtil.ItemCallback<Item>() {
         override fun areItemsTheSame(oldItem: Item, newItem: Item): Boolean {

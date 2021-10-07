@@ -51,7 +51,6 @@ class AbstractBrowserPageViewHolderTest {
                 selectedIndex = 0
             )
         )
-        adapter.onTabsInserted(0, 1)
 
         assertTrue(trayList.visibility == VISIBLE)
         assertTrue(emptyList.visibility == GONE)
@@ -74,7 +73,6 @@ class AbstractBrowserPageViewHolderTest {
                 selectedIndex = 0
             )
         )
-        adapter.onTabsInserted(0, 0)
 
         assertTrue(trayList.visibility == GONE)
         assertTrue(emptyList.visibility == VISIBLE)
