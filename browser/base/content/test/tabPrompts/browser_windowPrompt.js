@@ -39,11 +39,6 @@ add_task(async function test_check_window_modal_prompt_service() {
     dialogWin?.docShell?.chromeEventHandler,
     "Should have embedded the dialog."
   );
-  is(
-    window.getComputedStyle(document.body).getPropertyValue("-moz-user-input"),
-    "none",
-    "Browser window should be inert."
-  );
   for (let menu of document.querySelectorAll("menubar > menu")) {
     ok(menu.disabled, `Menu ${menu.id} should be disabled.`);
   }
@@ -65,11 +60,6 @@ add_task(async function test_check_window_modal_prompt_service() {
   );
 
   // Check we cleaned up:
-  is(
-    window.getComputedStyle(document.body).getPropertyValue("-moz-user-input"),
-    "auto",
-    "Browser window should no longer be inert."
-  );
   for (let menu of document.querySelectorAll("menubar > menu")) {
     ok(!menu.disabled, `Menu ${menu.id} should not be disabled anymore.`);
   }
@@ -95,11 +85,6 @@ add_task(async function test_check_window_modal_prompt_service() {
     dialogWin?.docShell?.chromeEventHandler,
     "Should have embedded the dialog."
   );
-  is(
-    window.getComputedStyle(document.body).getPropertyValue("-moz-user-input"),
-    "none",
-    "Browser window should be inert."
-  );
 
   let container = dialogWin.docShell.chromeEventHandler.closest("dialog");
   let closedPromise = BrowserTestUtils.waitForMutationCondition(
@@ -114,11 +99,6 @@ add_task(async function test_check_window_modal_prompt_service() {
   await closedPromise;
 
   // Check we cleaned up:
-  is(
-    window.getComputedStyle(document.body).getPropertyValue("-moz-user-input"),
-    "auto",
-    "Browser window should no longer be inert."
-  );
   for (let menu of document.querySelectorAll("menubar > menu")) {
     ok(!menu.disabled, `Menu ${menu.id} should not be disabled anymore.`);
   }
@@ -145,11 +125,6 @@ add_task(async function test_check_multiple_prompts() {
     dialogWin?.docShell?.chromeEventHandler,
     "Should have embedded the dialog."
   );
-  is(
-    window.getComputedStyle(document.body).getPropertyValue("-moz-user-input"),
-    "none",
-    "Browser window should be inert."
-  );
   is(container.childElementCount, 1, "Should only have 1 dialog in the DOM.");
 
   let secondDialogClosedPromise = new Promise(resolve => {
@@ -173,12 +148,6 @@ add_task(async function test_check_multiple_prompts() {
   isnot(oldWin, dialogWin, "Opened a new dialog.");
   ok(container.open, "Dialog should be open.");
 
-  is(
-    window.getComputedStyle(document.body).getPropertyValue("-moz-user-input"),
-    "none",
-    "Browser window should be inert again."
-  );
-
   info("Now close the second dialog.");
   dialogWin.document.querySelector("dialog").acceptDialog();
 
@@ -191,11 +160,6 @@ add_task(async function test_check_multiple_prompts() {
     () => !container.hasChildNodes() && !container.open
   );
   // Check we cleaned up:
-  is(
-    window.getComputedStyle(document.body).getPropertyValue("-moz-user-input"),
-    "auto",
-    "Browser window should no longer be inert."
-  );
   for (let menu of document.querySelectorAll("menubar > menu")) {
     ok(!menu.disabled, `Menu ${menu.id} should not be disabled anymore.`);
   }
