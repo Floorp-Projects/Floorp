@@ -175,5 +175,5 @@ internal fun View.getKeyboardHeight(): Int {
  * The assumed minimum height of the keyboard.
  */
 @VisibleForTesting
-@Dimension(unit = Dimension.DP)
+@Dimension(unit = DP)
 internal const val MINIMUM_KEYBOARD_HEIGHT = 100

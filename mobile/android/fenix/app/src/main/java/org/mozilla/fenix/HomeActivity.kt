@@ -35,7 +35,6 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -945,7 +944,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         isVisuallyComplete = true
     }
 
-    private fun captureSnapshotTelemetryMetrics() = CoroutineScope(Dispatchers.IO).launch {
+    private fun captureSnapshotTelemetryMetrics() = CoroutineScope(IO).launch {
         // PWA
         val recentlyUsedPwaCount = components.core.webAppShortcutManager.recentlyUsedWebAppsCount(
             activeThresholdMs = PWA_RECENTLY_USED_THRESHOLD

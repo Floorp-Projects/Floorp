@@ -32,7 +32,6 @@ import kotlinx.coroutines.CoroutineScope
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
@@ -367,8 +366,8 @@ class TabsTrayFragmentTest {
         )
         val behavior = BottomSheetBehavior.from(tabsTrayBinding.tabWrapper)
 
-        Assert.assertFalse(behavior.isFitToContents)
-        Assert.assertFalse(behavior.skipCollapsed)
+        assertFalse(behavior.isFitToContents)
+        assertFalse(behavior.skipCollapsed)
         assert(behavior.halfExpandedRatio <= 0.001f)
     }
 

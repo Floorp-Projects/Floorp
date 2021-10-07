@@ -13,7 +13,6 @@ import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
-import org.mozilla.fenix.collections.CollectionCreationAction.StepChanged
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.Tab

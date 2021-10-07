@@ -230,7 +230,7 @@ class CreditCardsSettingFragment : BiometricPromptPreferenceFragment() {
             getString(R.string.credit_cards_biometric_prompt_message_pin),
             getString(R.string.credit_cards_biometric_prompt_message)
         )
-        startActivityForResult(intent, BiometricPromptPreferenceFragment.PIN_REQUEST)
+        startActivityForResult(intent, PIN_REQUEST)
     }
 
     private fun navigateToCreditCardManagementFragment() {

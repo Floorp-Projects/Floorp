@@ -12,7 +12,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.cancel
@@ -193,10 +192,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
             .setText(resources.getString(R.string.preferences_delete_browsing_data_snackbar))
             .show()
 
-        if (popAfter) viewLifecycleOwner.lifecycleScope.launch(
-            Dispatchers.Main
-        ) {
-
+        if (popAfter) viewLifecycleOwner.lifecycleScope.launch(Main) {
             findNavController().apply {
                 // If the user deletes all open tabs we need to make sure we remove
                 // the BrowserFragment from the backstack.
@@ -241,9 +237,9 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
     private fun updateHistoryCount() {
         binding.browsingDataItem.subtitleView.text = ""
 
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+        viewLifecycleOwner.lifecycleScope.launch(IO) {
             val historyCount = requireComponents.core.historyStorage.getVisited().size
-            launch(Dispatchers.Main) {
+            launch(Main) {
                 binding.browsingDataItem.apply {
                     subtitleView.text =
                         resources.getString(
