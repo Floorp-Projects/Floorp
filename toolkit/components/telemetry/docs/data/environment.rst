@@ -382,6 +382,8 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``browser.search.suggest.enabled``: The "master switch" for search suggestions everywhere in Firefox (search bar, urlbar, etc.). Defaults to true.
 
+- ``browser.urlbar.quicksuggest.onboardingDialogChoice``: The user's choice in the Firefox Suggest onboarding dialog. If the dialog was shown multiple times, this records the user's most recent choice. Values are the following. Empty string: The user has not made a choice (e.g., because the dialog hasn't been shown). ``accept``: The user accepted the dialog and opted in. ``settings``: The user clicked in the "Customize" button (the user remains opted out in this case). ``learn_more``: The user clicked "Learn more" (the user remains opted out). ``not_now_link``: The user clicked "Not now" (the user remains opted out). ``dismissed_escape_key``: The user dismissed the dialog by pressing the Escape key (the user remains opted out). ``dismissed_other``: The dialog was dismissed in some other unknown way, for example when the dialog is replaced with another higher priority dialog like the one shown when quitting the app (the user remains opted out).
+
 - ``browser.urlbar.suggest.quicksuggest``: True if Firefox Suggest suggestions in general are enabled in the urlbar.
 
 - ``browser.urlbar.suggest.quicksuggest.sponsored``: True if sponsored Firefox Suggest suggestions in particular are enabled in the urlbar.
