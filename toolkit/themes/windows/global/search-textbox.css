@@ -18,16 +18,6 @@
   color: FieldText;
 }
 
-@media (-moz-toolbar-prefers-color-scheme: dark) {
-  :host {
-    appearance: none;
-    border: 1px solid ThreeDLightShadow;
-  }
-  :host(:focus-within) {
-    border-color: currentColor;
-  }
-}
-
 html|input {
   border: none;
   padding: 0 1px;
