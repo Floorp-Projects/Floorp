@@ -176,6 +176,15 @@ ExtensionPreferencesManager.addSetting("overrideDocumentColors", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("overrideContentColorScheme", {
+  permission: "browserSettings",
+  prefNames: ["layout.css.prefers-color-scheme.content-override"],
+
+  setCallback(value) {
+    return { [this.prefNames[0]]: value };
+  },
+});
+
 ExtensionPreferencesManager.addSetting("useDocumentFonts", {
   permission: "browserSettings",
   prefNames: ["browser.display.use_document_fonts"],
@@ -430,6 +439,43 @@ this.browserSettings = class extends ExtensionAPI {
               return ExtensionPreferencesManager.setSetting(
                 extension.id,
                 "overrideDocumentColors",
+                prefValue
+              );
+            },
+          }
+        ),
+        overrideContentColorScheme: Object.assign(
+          getSettingsAPI({
+            context,
+            name: "overrideContentColorScheme",
+            callback() {
+              let prefValue = Services.prefs.getIntPref(
+                "layout.css.prefers-color-scheme.content-override"
+              );
+              if (prefValue === 0) {
+                return "dark";
+              } else if (prefValue === 1) {
+                return "light";
+              }
+              return "system";
+            },
+          }),
+          {
+            set: details => {
+              if (!["light", "dark", "system"].includes(details.value)) {
+                throw new ExtensionError(
+                  `${details.value} is not a valid value for overrideContentColorScheme.`
+                );
+              }
+              let prefValue = 2; // initialize to 2 - system colors
+              if (details.value === "light") {
+                prefValue = 1;
+              } else if (details.value === "dark") {
+                prefValue = 0;
+              }
+              return ExtensionPreferencesManager.setSetting(
+                extension.id,
+                "overrideContentColorScheme",
                 prefValue
               );
             },
