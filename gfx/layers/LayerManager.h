@@ -198,7 +198,7 @@ class LayerManager : public WindowRenderer {
   /**
    * Can be called anytime
    */
-  Layer* GetRoot() { return mRoot; }
+  Layer* GetRoot() { return nullptr; }
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -379,7 +379,6 @@ class LayerManager : public WindowRenderer {
   void SetContainsSVG(bool aContainsSVG) { mContainsSVG = aContainsSVG; }
 
  protected:
-  RefPtr<Layer> mRoot;
   gfx::UserData mUserData;
   bool mDestroyed;
   bool mSnapEffectiveTransforms;
