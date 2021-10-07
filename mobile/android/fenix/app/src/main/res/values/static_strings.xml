@@ -9,10 +9,6 @@
     <!-- Preference for developers -->
     <string name="preference_leakcanary" translatable="false">LeakCanary</string>
 
-    <string name="intent_extra_toolbar_color" translatable="false">android.support.customtabs.extra.TOOLBAR_COLOR</string>
-    <string name="intent_extra_session" translatable="false">android.support.customtabs.extra.SESSION</string>
-    <string name="intent_extra_auth" translatable="false">support.customtabs.extra.AUTH</string>
-
     <!--suppress CheckTagEmptyBody This is a default value for places where we don't want a string set-->
     <string name="empty_string" translatable="false"></string>
 
@@ -53,9 +49,6 @@
     <!-- A secret menu option in the tabs tray for making a tab inactive for testing. -->
     <string name="inactive_tabs_menu_item">Make inactive</string>
 
-    <!-- Label for showing Synced Tabs in the tabs tray -->
-    <string name="preferences_debug_synced_tabs_tabs_tray">Show Synced Tabs in the tabs tray</string>
-
     <!-- Content description (not visible, for screen readers etc.) used to announce [LinkTextView]. -->
     <string name="link_text_view_type_announcement" translatable="false">link</string>
 
@@ -79,7 +72,6 @@
     <string name="mp_dialog_message_transfer_failure">An unknown error occurred and logins could not be transferred.</string>
 
     <!-- Secret debug info strings -->
-    <string name="debug_info_telemetry_title" translatable="false">Telemetry</string>
     <string name="debug_info_region_home" translatable="false">Home region</string>
     <string name="debug_info_region_current" translatable="false">Current region</string>
 </resources>

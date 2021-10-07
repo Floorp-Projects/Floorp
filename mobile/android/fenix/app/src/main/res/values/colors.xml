@@ -183,7 +183,6 @@
     <!-- Tab Tray -->
     <color name="tab_tray_item_selected_background_private_theme">#422875</color>
     <color name="tab_tray_toolbar_background_private_theme">@color/photonInk50</color>
-    <color name="tab_tray_item_divider_private_theme">@color/photonDarkGrey10</color>
     <color name="tab_tray_item_media_background_private_theme">@color/photonViolet50</color>
 
     <!-- Tab History -->
@@ -287,7 +286,6 @@
     <!-- Quick action buttons-->
 
     <color name="quick_action_reader_appearance_icon">#482166</color>
-    <color name="quick_action_reader_appearance_icon_background">#ecbcfb</color>
 
     <!-- Toggle Colors -->
     <color name="toggle_off_knob_light_theme">@color/photonGrey10</color>
@@ -299,7 +297,6 @@
 
     <!-- Misc colors applied universally-->
     <color name="suggestion_highlight_color">#5C592ACB</color>
-    <color name="private_browsing_button_accent_color">@color/foundation_private_theme</color>
     <color name="white_color">@color/photonLightGrey05</color>
     <color name="neutral_text">@color/white_color</color>
     <color name="text_scale_example_text_color">#232749</color>
@@ -314,7 +311,6 @@
 
     <!-- Onboarding colors -->
     <color name="onboarding_padded_background_color">#1F000000</color>
-    <color name="onboarding_card_background_dark">@color/photonInk80</color>
     <color name="onboarding_card_primary_text_dark">#FFFFFF</color>
     <color name="onboarding_card_button_background_dark">@color/photonLightGrey10</color>
     <color name="onboarding_card_button_text_dark">@color/photonInk20</color>
@@ -362,7 +358,4 @@
 
     <!-- App Spinners colors -->
     <color name="spinner_selected_item">#1415141A</color>
-
-    <!-- Toolbar menu icon colors -->
-    <color name="toolbar_menu_transparent">@android:color/transparent</color>
 </resources>

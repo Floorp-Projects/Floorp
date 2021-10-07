@@ -23,7 +23,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 open tab. Tap to switch tabs.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s open tabs. Tap to switch tabs.</string>
+    <string name="open_tab_tray_plural" moz:removedIn="95" tools:ignore="UnusedResources">%1$s open tabs. Tap to switch tabs.</string>
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d selected</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
@@ -125,7 +125,7 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">New private tab</string>
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Top sites</string>
+    <string name="home_screen_top_sites_heading" moz:removedIn="95" tools:ignore="UnusedResources">Top sites</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -169,7 +169,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Stop</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Bookmark</string>
+    <string name="browser_menu_bookmark" moz:removedIn="95" tools:ignore="UnusedResources">Bookmark</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Edit bookmark</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -566,7 +566,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Turn on Sync</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Scan pairing code in desktop Firefox</string>
+    <string name="preferences_sync_pair" moz:removedIn="95" tools:ignore="UnusedResources">Scan pairing code in desktop Firefox</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Sign in</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -760,7 +760,7 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Save to collection</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">Select</string>
+    <string name="tab_tray_menu_select" moz:removedIn="95" tools:ignore="UnusedResources">Select</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Share all tabs</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -920,7 +920,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Bookmark menu</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Edit bookmark</string>
+    <string name="bookmark_edit" moz:removedIn="95" tools:ignore="UnusedResources">Edit bookmark</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Select folder</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
