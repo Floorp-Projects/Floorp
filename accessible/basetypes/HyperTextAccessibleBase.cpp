@@ -8,6 +8,7 @@
 #include "mozilla/a11y/Accessible.h"
 #include "nsAccUtils.h"
 #include "nsIAccessibleText.h"
+#include "TextLeafRange.h"
 
 namespace mozilla::a11y {
 
@@ -158,6 +159,25 @@ bool HyperTextAccessibleBase::CharAt(int32_t aOffset, nsAString& aChar,
     *aEndOffset = aOffset + aChar.Length();
   }
   return true;
+}
+
+TextLeafPoint HyperTextAccessibleBase::ToTextLeafPoint(int32_t aOffset,
+                                                       bool aDescendToEnd) {
+  Accessible* thisAcc = Acc();
+  if (!thisAcc->HasChildren()) {
+    return TextLeafPoint(thisAcc, 0);
+  }
+  Accessible* child = GetChildAtOffset(aOffset);
+  if (!child) {
+    return TextLeafPoint();
+  }
+  if (HyperTextAccessibleBase* childHt = child->AsHyperTextBase()) {
+    return childHt->ToTextLeafPoint(
+        aDescendToEnd ? static_cast<int32_t>(childHt->CharacterCount()) : 0,
+        aDescendToEnd);
+  }
+  int32_t offset = aOffset - GetChildOffset(child);
+  return TextLeafPoint(child, offset);
 }
 
 }  // namespace mozilla::a11y

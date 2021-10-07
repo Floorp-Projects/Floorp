@@ -2087,24 +2087,6 @@ void HyperTextAccessible::RangeAtPoint(int32_t aX, int32_t aY,
   }
 }
 
-TextLeafPoint HyperTextAccessible::ToTextLeafPoint(int32_t aOffset,
-                                                   bool aDescendToEnd) {
-  if (!HasChildren()) {
-    return TextLeafPoint(this, 0);
-  }
-  LocalAccessible* child = GetChildAtOffset(aOffset);
-  if (!child) {
-    return TextLeafPoint();
-  }
-  if (HyperTextAccessible* childHt = child->AsHyperText()) {
-    return childHt->ToTextLeafPoint(
-        aDescendToEnd ? static_cast<int32_t>(childHt->CharacterCount()) : 0,
-        aDescendToEnd);
-  }
-  int32_t offset = aOffset - GetChildOffset(child);
-  return TextLeafPoint(child, offset);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // LocalAccessible public
 
