@@ -512,7 +512,8 @@ NS_IMETHODIMP AppWindow::ShowModal() {
 
   {
     AutoNoJSAPI nojsapi;
-    SpinEventLoopUntil([&]() { return !mContinueModalLoop; });
+    SpinEventLoopUntil("AppWindow::ShowModal"_ns,
+                       [&]() { return !mContinueModalLoop; });
   }
 
   mContinueModalLoop = false;
@@ -2339,7 +2340,8 @@ NS_IMETHODIMP AppWindow::CreateNewContentWindow(
 
   {
     AutoNoJSAPI nojsapi;
-    SpinEventLoopUntil([&]() { return !appWin->IsLocked(); });
+    SpinEventLoopUntil("AppWindow::CreateNewContentWindow"_ns,
+                       [&]() { return !appWin->IsLocked(); });
   }
 
   NS_ENSURE_STATE(appWin->mPrimaryContentShell ||
