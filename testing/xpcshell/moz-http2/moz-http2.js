@@ -336,7 +336,7 @@ function handleRequest(req, res) {
     return true;
   }
 
-  function createDNSAnswer(response, packet, responseIP) {
+  function createDNSAnswer(response, packet, responseIP, requestPayload) {
     // This shuts down the connection so we can test if the client reconnects
     if (
       packet.questions.length > 0 &&
@@ -344,6 +344,33 @@ function handleRequest(req, res) {
     ) {
       response.stream.connection.close("INTERNAL_ERROR", response.stream.id);
       return null;
+    }
+
+    if (
+      packet.questions.length > 0 &&
+      packet.questions[0].name.endsWith(".pd")
+    ) {
+      // Bug 1543811: test edns padding extension. Return whether padding was
+      // included via the first half of the ip address (1.1 vs 2.2) and the
+      // size of the request in the second half of the ip address allowing to
+      // verify that the correct amount of padding was added.
+      if (
+        packet.additionals.length > 0 &&
+        packet.additionals[0].type == "OPT" &&
+        packet.additionals[0].options.some(o => o.type === "PADDING")
+      ) {
+        responseIP =
+          "1.1." +
+          ((requestPayload.length >> 8) & 0xff) +
+          "." +
+          (requestPayload.length & 0xff);
+      } else {
+        responseIP =
+          "2.2." +
+          ((requestPayload.length >> 8) & 0xff) +
+          "." +
+          (requestPayload.length & 0xff);
+      }
     }
 
     if (u.query.corruptedAnswer) {
@@ -892,7 +919,12 @@ function handleRequest(req, res) {
 
     function emitResponse(response, requestPayload) {
       let packet = dnsPacket.decode(requestPayload);
-      let answer = createDNSAnswer(response, packet, responseIP);
+      let answer = createDNSAnswer(
+        response,
+        packet,
+        responseIP,
+        requestPayload
+      );
       if (!answer) {
         return;
       }
@@ -1095,7 +1127,12 @@ function handleRequest(req, res) {
     function emitResponse(response, requestPayload) {
       let decryptedQuery = odoh.decrypt_query(requestPayload);
       let packet = dnsPacket.decode(Buffer.from(decryptedQuery.buffer));
-      let answer = createDNSAnswer(response, packet, responseIP);
+      let answer = createDNSAnswer(
+        response,
+        packet,
+        responseIP,
+        requestPayload
+      );
       if (!answer) {
         return;
       }
