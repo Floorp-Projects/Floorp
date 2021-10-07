@@ -1390,32 +1390,11 @@ bool BacktrackingAllocator::tryAllocateNonFixed(LiveBundle* bundle,
   }
 
   if (conflicting.empty() || minimalBundle(bundle)) {
-    // Search for any available register which the bundle can be
-    // allocated to.
-    LDefinition::Type type = bundle->firstRange()->vreg().type();
-    if (LDefinition::isFloatReg(type)) {
-      for (size_t i = AnyRegister::FirstFloatReg; i < AnyRegister::Total; i++) {
-        if (!LDefinition::isFloatRegCompatible(type, registers[i].reg.fpu())) {
-          continue;
-        }
-        if (!tryAllocateRegister(registers[i], bundle, success, pfixed,
-                                 conflicting)) {
-          return false;
-        }
-        if (*success) {
-          return true;
-        }
-      }
-    } else {
-      for (size_t i = 0; i < AnyRegister::FirstFloatReg; i++) {
-        if (!tryAllocateRegister(registers[i], bundle, success, pfixed,
-                                 conflicting)) {
-          return false;
-        }
-        if (*success) {
-          return true;
-        }
-      }
+    if (!tryAllocateAnyRegister(bundle, success, pfixed, conflicting)) {
+      return false;
+    }
+    if (*success) {
+      return true;
     }
   }
 
@@ -1698,6 +1677,41 @@ bool BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r,
   return true;
 }
 
+bool BacktrackingAllocator::tryAllocateAnyRegister(
+    LiveBundle* bundle, bool* success, bool* pfixed,
+    LiveBundleVector& conflicting) {
+  // Search for any available register which the bundle can be allocated to.
+
+  LDefinition::Type type = bundle->firstRange()->vreg().type();
+
+  if (LDefinition::isFloatReg(type)) {
+    for (size_t i = AnyRegister::FirstFloatReg; i < AnyRegister::Total; i++) {
+      if (!LDefinition::isFloatRegCompatible(type, registers[i].reg.fpu())) {
+        continue;
+      }
+      if (!tryAllocateRegister(registers[i], bundle, success, pfixed,
+                               conflicting)) {
+        return false;
+      }
+      if (*success) {
+        break;
+      }
+    }
+    return true;
+  }
+
+  for (size_t i = 0; i < AnyRegister::FirstFloatReg; i++) {
+    if (!tryAllocateRegister(registers[i], bundle, success, pfixed,
+                             conflicting)) {
+      return false;
+    }
+    if (*success) {
+      break;
+    }
+  }
+  return true;
+}
+
 bool BacktrackingAllocator::evictBundle(LiveBundle* bundle) {
   JitSpewIfEnabled(JitSpew_RegAlloc,
                    "  Evicting %s [priority %zu] [weight %zu]",
@@ -1824,32 +1838,8 @@ bool BacktrackingAllocator::tryAllocatingRegistersForSpillBundles() {
     JitSpewIfEnabled(JitSpew_RegAlloc, "Spill or allocate %s",
                      bundle->toString().get());
 
-    // Search for any available register which the bundle can be
-    // allocated to.
-    LDefinition::Type type = bundle->firstRange()->vreg().type();
-    if (LDefinition::isFloatReg(type)) {
-      for (size_t i = AnyRegister::FirstFloatReg; i < AnyRegister::Total; i++) {
-        if (!LDefinition::isFloatRegCompatible(type, registers[i].reg.fpu())) {
-          continue;
-        }
-        if (!tryAllocateRegister(registers[i], bundle, &success, &fixed,
-                                 conflicting)) {
-          return false;
-        }
-        if (success) {
-          break;
-        }
-      }
-    } else {
-      for (size_t i = 0; i < AnyRegister::FirstFloatReg; i++) {
-        if (!tryAllocateRegister(registers[i], bundle, &success, &fixed,
-                                 conflicting)) {
-          return false;
-        }
-        if (success) {
-          break;
-        }
-      }
+    if (!tryAllocateAnyRegister(bundle, &success, &fixed, conflicting)) {
+      return false;
     }
 
     // If the bundle still has no register, spill the bundle.
