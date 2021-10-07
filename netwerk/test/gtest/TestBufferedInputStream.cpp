@@ -89,7 +89,9 @@ TEST(TestBufferedInputStream, AsyncWait_async)
   ASSERT_FALSE(cb->Called());
 
   // Eventually it is called.
-  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil([&]() { return cb->Called(); }));
+  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
+      "TEST(TestBufferedInputStream, AsyncWait_async)"_ns,
+      [&]() { return cb->Called(); }));
   ASSERT_TRUE(cb->Called());
 }
 
@@ -132,7 +134,9 @@ TEST(TestBufferedInputStream, AsyncWait_async_closureOnly)
   ASSERT_FALSE(cb->Called());
 
   // Eventually it is called.
-  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil([&]() { return cb->Called(); }));
+  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
+      "TEST(TestBufferedInputStream, AsyncWait_async_closureOnly)"_ns,
+      [&]() { return cb->Called(); }));
   ASSERT_TRUE(cb->Called());
 }
 
@@ -147,14 +151,18 @@ TEST(TestBufferedInputStream, AsyncWait_after_close)
 
   auto cb = mozilla::MakeRefPtr<testing::InputStreamCallback>();
   ASSERT_EQ(NS_OK, bis->AsyncWait(cb, 0, 0, eventTarget));
-  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil([&]() { return cb->Called(); }));
+  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
+      "TEST(TestBufferedInputStream, AsyncWait_after_close) 1"_ns,
+      [&]() { return cb->Called(); }));
   ASSERT_TRUE(cb->Called());
 
   ASSERT_EQ(NS_OK, bis->Close());
 
   cb = mozilla::MakeRefPtr<testing::InputStreamCallback>();
   ASSERT_EQ(NS_OK, bis->AsyncWait(cb, 0, 0, eventTarget));
-  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil([&]() { return cb->Called(); }));
+  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
+      "TEST(TestBufferedInputStream, AsyncWait_after_close) 2"_ns,
+      [&]() { return cb->Called(); }));
   ASSERT_TRUE(cb->Called());
 }
 
@@ -169,7 +177,9 @@ TEST(TestBufferedInputStream, AsyncLengthWait_after_close)
 
   auto cb = mozilla::MakeRefPtr<testing::LengthCallback>();
   ASSERT_EQ(NS_OK, bis->AsyncLengthWait(cb, eventTarget));
-  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil([&]() { return cb->Called(); }));
+  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
+      "TEST(TestBufferedInputStream, AsyncLengthWait_after_close) 1"_ns,
+      [&]() { return cb->Called(); }));
   ASSERT_TRUE(cb->Called());
 
   uint64_t length;
@@ -178,6 +188,8 @@ TEST(TestBufferedInputStream, AsyncLengthWait_after_close)
 
   cb = mozilla::MakeRefPtr<testing::LengthCallback>();
   ASSERT_EQ(NS_OK, bis->AsyncLengthWait(cb, eventTarget));
-  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil([&]() { return cb->Called(); }));
+  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
+      "TEST(TestBufferedInputStream, AsyncLengthWait_after_close) 2"_ns,
+      [&]() { return cb->Called(); }));
   ASSERT_TRUE(cb->Called());
 }

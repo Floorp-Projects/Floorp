@@ -21,7 +21,8 @@ class WaitForCondition final : public nsIRunnable {
     MOZ_ASSERT(mPending == 0);
 
     mPending = pending;
-    mozilla::SpinEventLoopUntil([&]() { return !mPending; });
+    mozilla::SpinEventLoopUntil("TestCommon.h:WaitForCondition::Wait"_ns,
+                                [&]() { return !mPending; });
     NS_ProcessPendingEvents(nullptr);
   }
 
