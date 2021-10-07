@@ -337,6 +337,18 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         # not using control server with bt
         pass
 
+    def build_tags(self, test={}):
+        """Use to build the tags option for our perfherder data.
+
+        This should only contain items that will only be shown within
+        the tags section and excluded from the extra options.
+        """
+        tags = []
+        LOG.info(test)
+        if test.get("interactive", False):
+            tags.append("interactive")
+        return tags
+
     def parse_browsertime_json(
         self,
         raw_btresults,
@@ -637,6 +649,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         test_name,
         browsertime_json,
         json_name="browsertime.json",
+        tags=[],
         extra_options=[],
         accept_zero_vismet=False,
     ):
@@ -651,6 +664,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         return {
             "browsertime_json_path": _normalized_join(reldir, json_name),
             "test_name": test_name,
+            "tags": tags,
             "extra_options": extra_options,
             "accept_zero_vismet": accept_zero_vismet,
         }
@@ -727,6 +741,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
 
             if not run_local:
                 extra_options = self.build_extra_options()
+                tags = self.build_tags(test=test)
 
                 if self.chimera:
                     if cold_path is None or warm_path is None:
@@ -737,6 +752,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                             test_name,
                             cold_path,
                             json_name="cold-browsertime.json",
+                            tags=list(tags),
                             extra_options=list(extra_options),
                             accept_zero_vismet=accept_zero_vismet,
                         )
@@ -749,6 +765,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                             test_name,
                             warm_path,
                             json_name="warm-browsertime.json",
+                            tags=list(tags),
                             extra_options=list(extra_options),
                             accept_zero_vismet=accept_zero_vismet,
                         )
@@ -758,6 +775,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                         self._extract_vmetrics(
                             test_name,
                             bt_res_json,
+                            tags=list(tags),
                             extra_options=list(extra_options),
                             accept_zero_vismet=accept_zero_vismet,
                         )
@@ -793,6 +811,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     new_result["subtest_unit"] = subtest_unit
 
                     new_result["extra_options"] = self.build_extra_options()
+                    new_result.setdefault("tags", []).extend(self.build_tags(test=test))
 
                     # Split the chimera
                     if self.chimera and "run=2" in new_result["url"][0]:
