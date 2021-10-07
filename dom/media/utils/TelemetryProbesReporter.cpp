@@ -322,6 +322,10 @@ bool TelemetryProbesReporter::HasOwnerHadValidVideo() const {
          (info.mImage.height > 0 && info.mImage.width > 0);
 }
 
+bool TelemetryProbesReporter::HasOwnerHadValidMedia() const {
+  return mMediaContent != MediaContent::MEDIA_HAS_NOTHING;
+}
+
 void TelemetryProbesReporter::AssertOnMainThreadAndNotShutdown() const {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mOwner, "Already shutdown?");
@@ -329,8 +333,10 @@ void TelemetryProbesReporter::AssertOnMainThreadAndNotShutdown() const {
 
 void TelemetryProbesReporter::ReportTelemetry() {
   AssertOnMainThreadAndNotShutdown();
-  ReportResultForVideo();
+  // ReportResultForAudio needs to be called first, because it can use the video
+  // play time, that is reset in ReportResultForVideo.
   ReportResultForAudio();
+  ReportResultForVideo();
   mOwner->DispatchAsyncTestingEvent(u"mozreportedtelemetry"_ns);
 }
 
@@ -431,6 +437,15 @@ void TelemetryProbesReporter::ReportResultForVideo() {
 }
 
 void TelemetryProbesReporter::ReportResultForAudio() {
+  // Don't record telemetry for a media that didn't have a valid audio or video
+  // to play, or hasn't played.
+  if (!HasOwnerHadValidMedia() ||
+      (mTotalAudioPlayTime.PeekTotal() == 0.0 &&
+       mTotalVideoPlayTime.PeekTotal() == 0.0)) {
+    return;
+  }
+
+  nsCString key;
   const double totalAudioPlayTimeS = mTotalAudioPlayTime.GetAndClearTotal();
   const double inaudiblePlayTimeS = mInaudibleAudioPlayTime.GetAndClearTotal();
   const double mutedPlayTimeS = mMutedAudioPlayTime.GetAndClearTotal();
@@ -440,12 +455,46 @@ void TelemetryProbesReporter::ReportResultForAudio() {
       lround(audiblePlayTimeS / totalAudioPlayTimeS * 100.0);
   const uint32_t unmutedPercentage =
       lround(unmutedPlayTimeS / totalAudioPlayTimeS * 100.0);
+  const double totalVideoPlayTimeS = mTotalVideoPlayTime.PeekTotal();
+
+  // Key semantics:
+  // - AV: Audible audio + video
+  // - IV: Inaudible audio + video
+  // - MV: Muted audio + video
+  // - A: Audible audio-only
+  // - I: Inaudible audio-only
+  // - M: Muted audio-only
+  // - V: Video-only
+  if (mMediaContent & MediaContent::MEDIA_HAS_AUDIO) {
+    if (audiblePercentage == 0) {
+      // Media element had an audio track, but it was inaudible throughout
+      key.AppendASCII("I");
+    } else if (unmutedPercentage == 0) {
+      // Media element had an audio track, but it was muted throughout
+      key.AppendASCII("M");
+    } else {
+      // Media element had an audible audio track
+      key.AppendASCII("A");
+    }
+  }
+  if (mMediaContent & MediaContent::MEDIA_HAS_VIDEO) {
+    key.AppendASCII("V");
+  }
+
+  LOG("Key: %s", key.get());
 
   if (mMediaContent & MediaContent::MEDIA_HAS_AUDIO) {
-    LOG("## Audio:\ntotal: %lf\naudible: %lf\ninaudible: %lf\nmuted: %lf\npercentage audible: "
+    LOG("Audio:\ntotal: %lf\naudible: %lf\ninaudible: %lf\nmuted: "
+        "%lf\npercentage audible: "
         "%u\npercentage unmuted: %u\n",
-        totalAudioPlayTimeS, audiblePlayTimeS, inaudiblePlayTimeS, mutedPlayTimeS
-        audiblePercentage, unmutedPercentage);
+        totalAudioPlayTimeS, audiblePlayTimeS, inaudiblePlayTimeS,
+        mutedPlayTimeS, audiblePercentage, unmutedPercentage);
+    Telemetry::Accumulate(Telemetry::MEDIA_PLAY_TIME_MS, key,
+                          SECONDS_TO_MS(totalAudioPlayTimeS));
+  } else {
+    MOZ_ASSERT(mMediaContent & MediaContent::MEDIA_HAS_VIDEO);
+    Telemetry::Accumulate(Telemetry::MEDIA_PLAY_TIME_MS, key,
+                          SECONDS_TO_MS(totalVideoPlayTimeS));
   }
 }
 
