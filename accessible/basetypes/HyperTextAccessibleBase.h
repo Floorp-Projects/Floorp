@@ -113,6 +113,12 @@ class HyperTextAccessibleBase {
                             int32_t* aStartOffset, int32_t* aEndOffset,
                             nsAString& aText);
 
+  /**
+   * Return true if the given offset/range is valid.
+   */
+  bool IsValidOffset(int32_t aOffset);
+  bool IsValidRange(int32_t aStartOffset, int32_t aEndOffset);
+
  protected:
   virtual const Accessible* Acc() const = 0;
   Accessible* Acc() {
