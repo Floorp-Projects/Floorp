@@ -29,8 +29,11 @@
 }
 
 :root[privatebrowsingmode=temporary] {
-  /* Value for --in-content-page-background in aboutPrivateBrowsing.css */
-  --tabpanel-background-color: #25003e;
+  /* Value for --in-content-page-background in aboutPrivateBrowsing.css.
+     !important overrides the direct setting of this variable in
+     ThemeVariableMap.jsm when the user has a theme that defines
+     ntp_background. */
+  --tabpanel-background-color: #25003e !important;
 }
 
 :root[uidensity=compact] {
