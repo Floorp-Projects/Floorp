@@ -40,6 +40,8 @@ import org.mozilla.fenix.R
 
 import java.text.NumberFormat
 import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 /**
@@ -182,7 +184,7 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
          */
         set(seekBarIncrement) {
             if (seekBarIncrement != mSeekBarIncrement) {
-                mSeekBarIncrement = Math.min(mMax - mMin, Math.abs(seekBarIncrement))
+                mSeekBarIncrement = min(mMax - mMin, abs(seekBarIncrement))
                 notifyChanged()
             }
         }
