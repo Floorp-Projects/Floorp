@@ -18,19 +18,28 @@
 [scriptable, uuid(438307fd-0c68-4d79-922a-f6cc9550cd02)]
 interface nsIClipboardHelper : nsISupports
 {
+  cenum SensitiveData : 8 {
+    NotSensitive = 0,
+    Sensitive = 1,
+  };
+
   /**
    * copy string to given clipboard
    *
    * @param aString, the string to copy to the clipboard
    * @param aClipboardID, the ID of the clipboard to copy to
    *        (eg. kSelectionClipboard -- see nsIClipboard.idl)
+   * @param aSensitive, optional flag to indicate that data is sensitive, like a password.
+   *        That will exclude data from Cloud Clipboard/Clipboard History on Windows.
    */
-  void copyStringToClipboard(in AString aString, in long aClipboardID);
+  void copyStringToClipboard(in AString aString, in long aClipboardID,
+                             [optional, default(NotSensitive)] in nsIClipboardHelper_SensitiveData aSensitive);
 
   /**
    * copy string to (default) clipboard
    *
    * @param aString, the string to copy to the clipboard
    */
-  void copyString(in AString aString);
+  void copyString(in AString aString,
+                  [optional, default(NotSensitive)] in nsIClipboardHelper_SensitiveData aSensitive);
 };
