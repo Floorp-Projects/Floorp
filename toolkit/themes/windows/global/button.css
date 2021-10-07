@@ -59,6 +59,7 @@ button:focus-visible {
 
 button:where([disabled="true"]) {
   color: GrayText;
+  background-color: ButtonFace;
 }
 
 @media (-moz-windows-classic) {
