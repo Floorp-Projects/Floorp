@@ -6,8 +6,8 @@
 #include "HyperTextAccessibleBase.h"
 
 #include "mozilla/a11y/Accessible.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "nsAccUtils.h"
-#include "nsIAccessibleText.h"
 #include "TextLeafRange.h"
 
 namespace mozilla::a11y {
@@ -212,6 +212,67 @@ uint32_t HyperTextAccessibleBase::TransformOffset(Accessible* aDescendant,
   // If the given a11y point cannot be mapped into offset relative this
   // hypertext offset then return length as fallback value.
   return CharacterCount();
+}
+
+void HyperTextAccessibleBase::TextAtOffset(int32_t aOffset,
+                                           AccessibleTextBoundary aBoundaryType,
+                                           int32_t* aStartOffset,
+                                           int32_t* aEndOffset,
+                                           nsAString& aText) {
+  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  *aStartOffset = *aEndOffset = 0;
+  aText.Truncate();
+
+  uint32_t adjustedOffset = ConvertMagicOffset(aOffset);
+  if (adjustedOffset == std::numeric_limits<uint32_t>::max()) {
+    NS_ERROR("Wrong given offset!");
+    return;
+  }
+
+  switch (aBoundaryType) {
+    case nsIAccessibleText::BOUNDARY_CHAR:
+      // XXX Add handling for caret at end of wrapped line.
+      CharAt(adjustedOffset, aText, aStartOffset, aEndOffset);
+      break;
+    case nsIAccessibleText::BOUNDARY_WORD_START:
+    case nsIAccessibleText::BOUNDARY_LINE_START:
+      TextLeafPoint origStart =
+          ToTextLeafPoint(static_cast<int32_t>(adjustedOffset));
+      TextLeafPoint end;
+      Accessible* childAcc = GetChildAtOffset(adjustedOffset);
+      if (childAcc && childAcc->IsHyperText()) {
+        // We're searching for boundaries enclosing an embedded object.
+        // An embedded object might contain several boundaries itself.
+        // Thus, we must ensure we search for the end boundary from the last
+        // text in the subtree, not just the first.
+        // For example, if the embedded object is a link and it contains two
+        // words, but the second word expands beyond the link, we want to
+        // include the part of the second word which is outside of the link.
+        end = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset),
+                              /* aDescendToEnd */ true);
+      } else {
+        end = origStart;
+      }
+      TextLeafPoint start = origStart.FindBoundary(aBoundaryType, eDirPrevious,
+                                                   /* aIncludeOrigin */ true);
+      *aStartOffset =
+          static_cast<int32_t>(TransformOffset(start.mAcc, start.mOffset,
+                                               /* aIsEndOffset */ false));
+      if (*aStartOffset == static_cast<int32_t>(CharacterCount()) &&
+          (*aStartOffset > static_cast<int32_t>(adjustedOffset) ||
+           start != origStart)) {
+        // start is before this HyperTextAccessible. In that case,
+        // Transformoffset will return CharacterCount(), but we want to
+        // clip to the start of this HyperTextAccessible, not the end.
+        *aStartOffset = 0;
+      }
+      end = end.FindBoundary(aBoundaryType, eDirNext);
+      *aEndOffset =
+          static_cast<int32_t>(TransformOffset(end.mAcc, end.mOffset,
+                                               /* aIsEndOffset */ true));
+      TextSubstring(*aStartOffset, *aEndOffset, aText);
+      return;
+  }
 }
 
 }  // namespace mozilla::a11y
