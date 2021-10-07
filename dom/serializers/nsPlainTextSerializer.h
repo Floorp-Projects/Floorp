@@ -239,11 +239,9 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
       return !mContent.IsEmpty() || !mIndentation.mHeader.IsEmpty();
     }
 
-    // @param aContentWidth Has to be the unichar string width of mContent.
     // @param aLineBreaker May be nullptr.
     int32_t FindWrapIndexForContent(
-        uint32_t aWrapColumn, uint32_t aContentWidth,
-        mozilla::intl::LineBreaker* aLineBreaker) const;
+        uint32_t aWrapColumn, mozilla::intl::LineBreaker* aLineBreaker) const;
 
     // @return Combined width of cite quote level and indentation.
     uint32_t DeterminePrefixWidth() const {
