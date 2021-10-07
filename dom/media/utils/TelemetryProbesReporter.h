@@ -72,10 +72,10 @@ class TelemetryProbesReporter final {
   double GetAudiblePlayTimeInSeconds() const;
 
  private:
-  void StartInvisibleVideoTimeAcculator();
-  void PauseInvisibleVideoTimeAcculator();
-  void StartInaudibleAudioTimeAcculator();
-  void PauseInaudibleAudioTimeAcculator();
+  void StartInvisibleVideoTimeAccumulator();
+  void PauseInvisibleVideoTimeAccumulator();
+  void StartInaudibleAudioTimeAccumulator();
+  void PauseInaudibleAudioTimeAccumulator();
   bool HasOwnerHadValidVideo() const;
   void AssertOnMainThreadAndNotShutdown() const;
 

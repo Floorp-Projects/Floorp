@@ -112,7 +112,7 @@ void TelemetryProbesReporter::OnPause(Visibility aVisibility) {
     LOG("Pause video time accumulation for total play time");
     if (mInvisibleVideoPlayTime.IsStarted()) {
       LOG("Pause invisible video time accumulation for total play time");
-      PauseInvisibleVideoTimeAcculator();
+      PauseInvisibleVideoTimeAccumulator();
     }
     mTotalVideoPlayTime.Pause();
   }
@@ -136,10 +136,10 @@ void TelemetryProbesReporter::OnVisibilityChanged(Visibility aVisibility) {
   LOG("Corresponding media element visibility change=%s -> %s",
       ToVisibilityStr(mMediaElementVisibility), ToVisibilityStr(aVisibility));
   if (aVisibility == Visibility::eInvisible) {
-    StartInvisibleVideoTimeAcculator();
+    StartInvisibleVideoTimeAccumulator();
   } else {
     if (aVisibility != Visibility::eInitial) {
-      PauseInvisibleVideoTimeAcculator();
+      PauseInvisibleVideoTimeAccumulator();
     } else {
       LOG("Visibility was initial, not pausing.");
     }
@@ -153,13 +153,13 @@ void TelemetryProbesReporter::OnAudibleChanged(AudibleState aAudibleState) {
       ToAudibilityStr(aAudibleState));
   if (aAudibleState == AudibleState::eNotAudible) {
     MOZ_ASSERT(mAudibleState == AudibleState::eAudible);
-    StartInaudibleAudioTimeAcculator();
+    StartInaudibleAudioTimeAccumulator();
   } else {
     MOZ_ASSERT(mAudibleState == AudibleState::eNotAudible);
     // This happens when starting playback, no need to pause, because it hasn't
     // been started yet.
     if (mInaudibleAudioPlayTime.IsStarted()) {
-      PauseInaudibleAudioTimeAcculator();
+      PauseInaudibleAudioTimeAccumulator();
     }
   }
   mAudibleState = aAudibleState;
@@ -174,7 +174,7 @@ void TelemetryProbesReporter::OnMediaContentChanged(MediaContent aContent) {
       !(aContent & MediaContent::MEDIA_HAS_VIDEO)) {
     LOG("Video track removed from media.");
     if (mInvisibleVideoPlayTime.IsStarted()) {
-      PauseInvisibleVideoTimeAcculator();
+      PauseInvisibleVideoTimeAccumulator();
     }
     if (mTotalVideoPlayTime.IsStarted()) {
       mTotalVideoPlayTime.Pause();
@@ -240,7 +240,7 @@ void TelemetryProbesReporter::OnShutdown() {
   mOwner = nullptr;
 }
 
-void TelemetryProbesReporter::StartInvisibleVideoTimeAcculator() {
+void TelemetryProbesReporter::StartInvisibleVideoTimeAccumulator() {
   AssertOnMainThreadAndNotShutdown();
   if (!mTotalVideoPlayTime.IsStarted() || mInvisibleVideoPlayTime.IsStarted() ||
       !HasOwnerHadValidVideo()) {
@@ -251,7 +251,7 @@ void TelemetryProbesReporter::StartInvisibleVideoTimeAcculator() {
   mOwner->DispatchAsyncTestingEvent(u"mozinvisibleplaytimestarted"_ns);
 }
 
-void TelemetryProbesReporter::PauseInvisibleVideoTimeAcculator() {
+void TelemetryProbesReporter::PauseInvisibleVideoTimeAccumulator() {
   AssertOnMainThreadAndNotShutdown();
   if (!mInvisibleVideoPlayTime.IsStarted()) {
     return;
@@ -262,14 +262,14 @@ void TelemetryProbesReporter::PauseInvisibleVideoTimeAcculator() {
   mOwner->DispatchAsyncTestingEvent(u"mozinvisibleplaytimepaused"_ns);
 }
 
-void TelemetryProbesReporter::StartInaudibleAudioTimeAcculator() {
+void TelemetryProbesReporter::StartInaudibleAudioTimeAccumulator() {
   AssertOnMainThreadAndNotShutdown();
   MOZ_ASSERT(!mInaudibleAudioPlayTime.IsStarted());
   mInaudibleAudioPlayTime.Start();
   mOwner->DispatchAsyncTestingEvent(u"mozinaudibleaudioplaytimestarted"_ns);
 }
 
-void TelemetryProbesReporter::PauseInaudibleAudioTimeAcculator() {
+void TelemetryProbesReporter::PauseInaudibleAudioTimeAccumulator() {
   AssertOnMainThreadAndNotShutdown();
   MOZ_ASSERT(mInaudibleAudioPlayTime.IsStarted());
   mInaudibleAudioPlayTime.Pause();
