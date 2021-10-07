@@ -59,7 +59,10 @@ class TopSitesPagerAdapter(
 
         // Update new list with the changed items
         currentPageChangedItems.forEach { item ->
-            refreshedItems[item.first - (position * TOP_SITES_PER_PAGE)] = item.second
+            val index = item.first - (position * TOP_SITES_PER_PAGE)
+            if (index in refreshedItems.indices) {
+                refreshedItems[index] = item.second
+            }
         }
 
         // Display the updated list without any of the removed items
