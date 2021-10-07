@@ -2549,29 +2549,11 @@ async function runNetworkTest(testFunction, fixtureOptions = {}) {
     "resource://gre/modules/AppConstants.jsm",
     {}
   );
-  let isNightly = AppConstants.NIGHTLY_BUILD;
-  let isAndroid = AppConstants.platform == "android";
 
   await scriptsReady;
   await runTestWhenReady(async options => {
     await startNetworkAndTest();
     await setupIceServerConfig(fixtureOptions.useIceServer);
-
-    // currently we set android hardware encoder default enabled in nightly.
-    // But before QA approves the quality, we want to ensure the legacy
-    // encoder is working fine.
-    if (isNightly && isAndroid) {
-      let value = Math.random() >= 0.5;
-      await SpecialPowers.pushPrefEnv({
-        set: [
-          ["media.navigator.hardware.vp8_encode.acceleration_enabled", value],
-          [
-            "media.navigator.hardware.vp8_encode.acceleration_remote_enabled",
-            value,
-          ],
-        ],
-      });
-    }
     await testFunction(options);
     await networkTestFinished();
   });

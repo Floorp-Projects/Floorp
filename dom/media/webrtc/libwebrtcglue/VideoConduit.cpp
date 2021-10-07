@@ -41,10 +41,6 @@
 #  include "VideoEngine.h"
 #endif
 
-#ifdef MOZ_WEBRTC_MEDIACODEC
-#  include "MediaCodecVideoCodec.h"
-#endif
-
 // for ntohs
 #ifdef _MSC_VER
 #  include "Winsock2.h"
