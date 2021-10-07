@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// https://drafts.csswg.org/cssom/#stylesheetlist
 [Exposed=Window]
 interface StyleSheetList {
+  getter CSSStyleSheet? item(unsigned long index);
   readonly attribute unsigned long length;
-  getter StyleSheet? item(unsigned long index);
 };
