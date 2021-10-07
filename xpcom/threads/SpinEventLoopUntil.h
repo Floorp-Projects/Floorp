@@ -9,6 +9,9 @@
 
 #include "MainThreadUtils.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ProfilerLabels.h"
+#include "mozilla/ProfilerMarkers.h"
+#include "nsString.h"
 #include "nsThreadUtils.h"
 #include "xpcpublic.h"
 
@@ -75,10 +78,75 @@ enum class ProcessFailureBehavior {
   ReportToCaller,
 };
 
+// SpinEventLoopUntil is a dangerous operation that can result in hangs.
+// In particular during shutdown we want to know if we are hanging
+// inside a nested event loop on the main thread.
+// This is a helper annotation class to keep track of this.
+struct MOZ_STACK_CLASS AutoNestedEventLoopAnnotation {
+  explicit AutoNestedEventLoopAnnotation(const nsACString& aEntry)
+      : mPrev(nullptr) {
+    if (NS_IsMainThread()) {
+      mPrev = sCurrent;
+      sCurrent = this;
+      if (mPrev) {
+        mStack = mPrev->mStack + "|"_ns + aEntry;
+      } else {
+        mStack = aEntry;
+      }
+      AnnotateXPCOMSpinEventLoopStack(mStack);
+    }
+  }
+
+  ~AutoNestedEventLoopAnnotation() {
+    if (NS_IsMainThread()) {
+      MOZ_ASSERT(sCurrent == this);
+      sCurrent = mPrev;
+      if (mPrev) {
+        AnnotateXPCOMSpinEventLoopStack(mPrev->mStack);
+      } else {
+        AnnotateXPCOMSpinEventLoopStack(""_ns);
+      }
+    }
+  }
+
+ private:
+  AutoNestedEventLoopAnnotation(const AutoNestedEventLoopAnnotation&) = delete;
+  AutoNestedEventLoopAnnotation& operator=(
+      const AutoNestedEventLoopAnnotation&) = delete;
+
+  // The declaration of this static lives in nsThreadManager.cpp.
+  static AutoNestedEventLoopAnnotation* sCurrent;
+
+  // We need this to avoid the inclusion of nsExceptionHandler.h here
+  // which can include windows.h which disturbs some dom/media/gtest.
+  // The implementation lives in nsThreadManager.cpp.
+  static void AnnotateXPCOMSpinEventLoopStack(const nsACString& aStack);
+
+  AutoNestedEventLoopAnnotation* mPrev;
+  nsCString mStack;
+};
+
+// This is the preferred way to use SpinEventLoopUntil from C++.
+// Please see the above notes for the Behavior template parameter.
+//
+// aVeryGoodReasonToDoThis is usually a literal string unique to each
+//   caller that can be recognized in the XPCOMSpinEventLoopStack
+//   annotation.
+// aPredicate is the condition we wait for.
+// aThread can be used to specify a thread, see the above introduction.
+//   It defaults to the current thread.
 template <
     ProcessFailureBehavior Behavior = ProcessFailureBehavior::ReportToCaller,
     typename Pred>
-bool SpinEventLoopUntil(Pred&& aPredicate, nsIThread* aThread = nullptr) {
+bool SpinEventLoopUntil(const nsACString& aVeryGoodReasonToDoThis,
+                        Pred&& aPredicate, nsIThread* aThread = nullptr) {
+  // Prepare the annotations
+  AutoNestedEventLoopAnnotation annotation(aVeryGoodReasonToDoThis);
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE(
+      "SpinEventLoopUntil", OTHER, aVeryGoodReasonToDoThis);
+  AUTO_PROFILER_MARKER_TEXT("SpinEventLoop", OTHER, MarkerStack::Capture(),
+                            aVeryGoodReasonToDoThis);
+
   nsIThread* thread = aThread ? aThread : NS_GetCurrentThread();
 
   // From a latency perspective, spinning the event loop is like leaving script
@@ -101,6 +169,13 @@ bool SpinEventLoopUntil(Pred&& aPredicate, nsIThread* aThread = nullptr) {
   }
 
   return true;
+}
+
+// This is the "legacy" way of invoking SpinEventLoopUntil. We want to
+// get rid of this in favor of a motivated SpinEventLoopUntil.
+template <typename Pred>
+bool SpinEventLoopUntil(Pred&& aPredicate, nsIThread* aThread = nullptr) {
+  return SpinEventLoopUntil("Missing motivation."_ns, aPredicate, aThread);
 }
 
 }  // namespace mozilla
