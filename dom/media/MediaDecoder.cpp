@@ -1427,6 +1427,18 @@ double MediaDecoder::GetVideoDecodeSuspendedTimeInSeconds() const {
   return mTelemetryProbesReporter->GetVideoDecodeSuspendedTimeInSeconds();
 }
 
+double MediaDecoder::GetTotalAudioPlayTimeInSeconds() const {
+  return mTelemetryProbesReporter->GetTotalAudioPlayTimeInSeconds();
+}
+
+double MediaDecoder::GetAudiblePlayTimeInSeconds() const {
+  return mTelemetryProbesReporter->GetAudiblePlayTimeInSeconds();
+}
+
+double MediaDecoder::GetInaudiblePlayTimeInSeconds() const {
+  return mTelemetryProbesReporter->GetInaudiblePlayTimeInSeconds();
+}
+
 MediaMemoryTracker::MediaMemoryTracker() = default;
 
 void MediaMemoryTracker::InitMemoryReporter() {
