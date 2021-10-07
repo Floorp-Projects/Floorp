@@ -225,8 +225,25 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          *
          * @param enabled whether to enable this feature or not
          * @return The builder instance
+         * @deprecated use {@link #setEnterpriseRootsEnabled} instead.
          */
+        @Deprecated
+        @DeprecationSchedule(version = 98, id = "runtime-settings-typo")
         public @NonNull Builder enterpiseRootsEnabled(final boolean enabled) {
+            getSettings().setEnterpriseRootsEnabled(enabled);
+            return this;
+        }
+
+        /**
+         * Enable the Enterprise Roots feature.
+         *
+         * When Enabled, GeckoView will fetch the third-party root certificates added to the
+         * Android OS CA store and will use them internally.
+         *
+         * @param enabled whether to enable this feature or not
+         * @return The builder instance
+         */
+        public @NonNull Builder enterpriseRootsEnabled(final boolean enabled) {
             getSettings().setEnterpriseRootsEnabled(enabled);
             return this;
         }
