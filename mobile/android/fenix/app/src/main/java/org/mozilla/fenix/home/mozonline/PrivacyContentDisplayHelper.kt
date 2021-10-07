@@ -6,7 +6,6 @@ package org.mozilla.fenix.home.mozonline
 
 import android.app.Activity
 import android.content.Context
-import android.content.DialogInterface
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.method.LinkMovementMethod
@@ -46,13 +45,13 @@ fun showPrivacyPopWindow(context: Context, activity: Activity) {
     val builder = AlertDialog.Builder(activity)
         .setPositiveButton(
             context.getString(R.string.privacy_notice_positive_button),
-            DialogInterface.OnClickListener { _, _ ->
+            { _, _ ->
                 context.settings().shouldShowPrivacyPopWindow = false
             }
         )
         .setNeutralButton(
             context.getString(R.string.privacy_notice_neutral_button),
-            DialogInterface.OnClickListener { _, _ -> exitProcess(0) }
+            { _, _ -> exitProcess(0) }
         )
         .setTitle(context.getString(R.string.privacy_notice_title))
         .setMessage(messageSpannable)

@@ -69,7 +69,7 @@ class SitePermissionsExceptionsFragment :
 
                 liveData.observe(
                     viewLifecycleOwner,
-                    Observer<PagedList<SitePermissions>> {
+                    {
                         if (it.isEmpty()) {
                             showEmptyListMessage()
                         } else {
