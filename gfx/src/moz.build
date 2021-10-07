@@ -50,7 +50,6 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.gfx += [
     "CompositorHitTestInfo.h",
-    "TiledRegion.h",
 ]
 
 if CONFIG["MOZ_X11"]:
@@ -72,7 +71,6 @@ UNIFIED_SOURCES += [
     "nsRegion.cpp",
     "nsThebesFontEnumerator.cpp",
     "nsTransform2D.cpp",
-    "TiledRegion.cpp",
 ]
 
 # nsDeviceContext.cpp cannot be built in unified mode because it pulls in OS X system headers.

@@ -28,7 +28,6 @@
 #include "mozilla/gfx/Point.h"        // for Point, PointTyped
 #include "mozilla/gfx/Polygon.h"      // for Polygon
 #include "mozilla/gfx/Rect.h"         // for IntRectTyped, IntRect
-#include "mozilla/gfx/TiledRegion.h"  // for TiledIntRegion
 #include "mozilla/gfx/Types.h"  // for CompositionOp, DeviceColor, SamplingFilter, SideBits
 #include "mozilla/gfx/UserData.h"  // for UserData, UserDataKey (ptr only)
 #include "mozilla/layers/AnimationInfo.h"  // for AnimationInfo
