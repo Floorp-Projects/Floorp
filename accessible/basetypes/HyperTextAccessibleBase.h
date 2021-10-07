@@ -7,6 +7,7 @@
 #define _HyperTextAccessibleBase_H_
 
 namespace mozilla::a11y {
+class Accessible;
 
 // This character marks where in the text returned via Text interface,
 // that embedded object characters exist
@@ -14,7 +15,47 @@ const char16_t kEmbeddedObjectChar = 0xfffc;
 const char16_t kImaginaryEmbeddedObjectChar = ' ';
 const char16_t kForcedNewLineChar = '\n';
 
-class HyperTextAccessibleBase {};
+class HyperTextAccessibleBase {
+ public:
+  /**
+   * Return child accessible at the given text offset.
+   *
+   * @param  aOffset  [in] the given text offset
+   */
+  virtual int32_t GetChildIndexAtOffset(uint32_t aOffset) const;
+
+  /**
+   * Return child accessible at the given text offset.
+   *
+   * @param  aOffset  [in] the given text offset
+   */
+  virtual Accessible* GetChildAtOffset(uint32_t aOffset) const;
+
+  /**
+   * Return text offset of the given child accessible within hypertext
+   * accessible.
+   *
+   * @param  aChild           [in] accessible child to get text offset for
+   * @param  aInvalidateAfter [in, optional] indicates whether invalidate
+   *                           cached offsets for next siblings of the child
+   */
+  int32_t GetChildOffset(const Accessible* aChild,
+                         bool aInvalidateAfter = false) const;
+
+  /**
+   * Return text offset for the child accessible index.
+   */
+  virtual int32_t GetChildOffset(uint32_t aChildIndex,
+                                 bool aInvalidateAfter = false) const;
+
+ protected:
+  virtual const Accessible* Acc() const = 0;
+  Accessible* Acc() {
+    const Accessible* acc =
+        const_cast<const HyperTextAccessibleBase*>(this)->Acc();
+    return const_cast<Accessible*>(acc);
+  }
+};
 
 }  // namespace mozilla::a11y
 
