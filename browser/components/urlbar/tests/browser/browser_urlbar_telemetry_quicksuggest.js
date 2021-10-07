@@ -3,6 +3,7 @@
 
 /**
  * This file tests urlbar telemetry for Quick Suggest results.
+ * See also browser_quicksuggest_onboardingDialog.js for onboarding telemetry.
  */
 
 "use strict";
