@@ -20,7 +20,7 @@ import mozilla.components.ui.tabcounter.TabCounter
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class TabCounterBinding(
-    private val store: BrowserStore,
+    store: BrowserStore,
     private val counter: TabCounter
 ) : AbstractBinding<BrowserState>(store) {
 

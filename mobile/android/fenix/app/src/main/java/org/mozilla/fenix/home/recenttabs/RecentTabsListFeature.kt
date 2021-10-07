@@ -24,7 +24,7 @@ import org.mozilla.fenix.home.HomeFragmentStore
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class RecentTabsListFeature(
-    private val browserStore: BrowserStore,
+    browserStore: BrowserStore,
     private val homeStore: HomeFragmentStore
 ) : AbstractBinding<BrowserState>(browserStore) {
 

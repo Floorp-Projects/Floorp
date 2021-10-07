@@ -41,7 +41,7 @@ class AwesomeBarView(
     private val activity: HomeActivity,
     val interactor: AwesomeBarInteractor,
     val view: AwesomeBarWrapper,
-    private val fromHomeFragment: Boolean
+    fromHomeFragment: Boolean
 ) {
     private val sessionProvider: SessionSuggestionProvider
     private val historyStorageProvider: HistoryStorageSuggestionProvider
