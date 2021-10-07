@@ -11,6 +11,8 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.service.pocket.PocketRecommendedStory
@@ -59,6 +61,7 @@ class PocketUpdatesMiddlewareTest {
     }
 
     @Test
+    @Suppress("UNCHECKED_CAST")
     fun `WHEN PocketStoriesCategoriesChange is dispatched THEN intercept and dispatch PocketStoriesCategoriesSelectionsChange`() {
         val persistedSelectedCategory: SelectedPocketStoriesCategory = mockk {
             every { name } returns "testCategory"
@@ -67,9 +70,10 @@ class PocketUpdatesMiddlewareTest {
         val persistedSelectedCategories: SelectedPocketStoriesCategories = mockk {
             every { valuesList } returns mutableListOf(persistedSelectedCategory)
         }
-        val dataStore: DataStore<SelectedPocketStoriesCategories> = mockk {
-            every { data } returns flowOf(persistedSelectedCategories)
-        }
+        val dataStore: DataStore<SelectedPocketStoriesCategories> =
+            mockk<FakeDataStore<SelectedPocketStoriesCategories>>(relaxed = true) {
+                every { data } returns flowOf(persistedSelectedCategories)
+            } as DataStore<SelectedPocketStoriesCategories>
         val currentCategories = listOf(mockk<PocketRecommendedStoriesCategory>())
         val pocketMiddleware = PocketUpdatesMiddleware(TestCoroutineScope(), mockk(), dataStore)
         val homeStore = spyk(
@@ -96,10 +100,13 @@ class PocketUpdatesMiddlewareTest {
     }
 
     @Test
+    @Suppress("UNCHECKED_CAST")
     fun `WHEN SelectPocketStoriesCategory is dispatched THEN persist details in DataStore`() {
         val categ1 = PocketRecommendedStoriesCategory("categ1")
         val categ2 = PocketRecommendedStoriesCategory("categ2")
-        val dataStore: DataStore<SelectedPocketStoriesCategories> = mockk(relaxed = true)
+        val dataStore: DataStore<SelectedPocketStoriesCategories> =
+            mockk<FakeDataStore<SelectedPocketStoriesCategories>>(relaxed = true) as
+                DataStore<SelectedPocketStoriesCategories>
         val pocketMiddleware = PocketUpdatesMiddleware(TestCoroutineScope(), mockk(), dataStore)
         val homeStore = spyk(
             HomeFragmentStore(
@@ -117,10 +124,13 @@ class PocketUpdatesMiddlewareTest {
     }
 
     @Test
+    @Suppress("UNCHECKED_CAST")
     fun `WHEN DeselectPocketStoriesCategory is dispatched THEN persist details in DataStore`() {
         val categ1 = PocketRecommendedStoriesCategory("categ1")
         val categ2 = PocketRecommendedStoriesCategory("categ2")
-        val dataStore: DataStore<SelectedPocketStoriesCategories> = mockk(relaxed = true)
+        val dataStore: DataStore<SelectedPocketStoriesCategories> =
+            mockk<FakeDataStore<SelectedPocketStoriesCategories>>(relaxed = true) as
+                DataStore<SelectedPocketStoriesCategories>
         val pocketMiddleware = PocketUpdatesMiddleware(TestCoroutineScope(), mockk(), dataStore)
         val homeStore = spyk(
             HomeFragmentStore(
@@ -138,8 +148,11 @@ class PocketUpdatesMiddlewareTest {
     }
 
     @Test
+    @Suppress("UNCHECKED_CAST")
     fun `WHEN persistCategories is called THEN update dataStore`() {
-        val dataStore: DataStore<SelectedPocketStoriesCategories> = mockk(relaxed = true)
+        val dataStore: DataStore<SelectedPocketStoriesCategories> =
+            mockk<FakeDataStore<SelectedPocketStoriesCategories>>(relaxed = true) as
+                DataStore<SelectedPocketStoriesCategories>
 
         persistSelectedCategories(TestCoroutineScope(), listOf(mockk(relaxed = true)), dataStore)
 
@@ -148,6 +161,7 @@ class PocketUpdatesMiddlewareTest {
     }
 
     @Test
+    @Suppress("UNCHECKED_CAST")
     fun `WHEN restoreSelectedCategories is called THEN dispatch PocketStoriesCategoriesSelectionsChange with data read from the persistence layer`() {
         val persistedSelectedCategory: SelectedPocketStoriesCategory = mockk {
             every { name } returns "testCategory"
@@ -156,9 +170,10 @@ class PocketUpdatesMiddlewareTest {
         val persistedSelectedCategories: SelectedPocketStoriesCategories = mockk {
             every { valuesList } returns mutableListOf(persistedSelectedCategory)
         }
-        val dataStore: DataStore<SelectedPocketStoriesCategories> = mockk {
-            every { data } returns flowOf(persistedSelectedCategories)
-        }
+        val dataStore: DataStore<SelectedPocketStoriesCategories> =
+            mockk<FakeDataStore<SelectedPocketStoriesCategories>>(relaxed = true) {
+                every { data } returns flowOf(persistedSelectedCategories)
+            } as DataStore<SelectedPocketStoriesCategories>
         val currentCategories = listOf(mockk<PocketRecommendedStoriesCategory>())
         val homeStore = spyk(
             HomeFragmentStore(HomeFragmentState())
@@ -181,5 +196,20 @@ class PocketUpdatesMiddlewareTest {
                 )
             )
         }
+    }
+}
+
+/**
+ * Incomplete fake of a [DataStore].
+ * Respects the [DataStore] contract with basic method implementations but needs to have mocked behavior
+ * for more complex interactions.
+ * Can be used as a replacement for mocks of the [DataStore] interface which might fail intermittently.
+ */
+private class FakeDataStore<T> : DataStore<T?> {
+    override val data: Flow<T?>
+        get() = flow { }
+
+    override suspend fun updateData(transform: suspend (t: T?) -> T?): T? {
+        return transform(null)
     }
 }
