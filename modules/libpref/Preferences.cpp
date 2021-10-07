@@ -2971,7 +2971,8 @@ class PreferencesWriter final {
     // event loop. Given that PWRunnable generally runs on a thread pool,
     // if we're stuck here, it's likely because of PreferencesWriter::Write
     // and not some other runnable. Thus, spin away.
-    mozilla::SpinEventLoopUntil([]() { return sPendingWriteCount <= 0; });
+    mozilla::SpinEventLoopUntil("PreferencesWriter::Flush"_ns,
+                                []() { return sPendingWriteCount <= 0; });
   }
 
   // This is the data that all of the runnables (see below) will attempt
