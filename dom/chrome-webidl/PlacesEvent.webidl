@@ -25,6 +25,14 @@ enum PlacesEventType {
    */
   "bookmark-guid-changed",
   /**
+   * data: PlacesBookmarkTime.
+   * Fired whenever dateAdded or lastModified of a bookmark is explicitly changed
+   * through the Bookmarks API. This notification doesn't fire when a bookmark is
+   * created, or when a property of a bookmark (e.g. title) is changed, even if
+   * lastModified will be updated as a consequence of that change.
+   */
+  "bookmark-time-changed",
+  /**
    * data: PlacesBookmarkTitle. Fired whenever a bookmark title changes.
    */
   "bookmark-title-changed",
@@ -292,6 +300,28 @@ dictionary PlacesBookmarkGuidInit {
 [ChromeOnly, Exposed=Window]
 interface PlacesBookmarkGuid : PlacesBookmarkChanged {
   constructor(PlacesBookmarkGuidInit initDict);
+};
+
+dictionary PlacesBookmarkTimeInit {
+  required long long id;
+  required unsigned short itemType;
+  DOMString? url = null;
+  required ByteString guid;
+  required ByteString parentGuid;
+  required long long dateAdded;
+  required long long lastModified;
+  required unsigned short source;
+  required boolean isTagging;
+};
+
+[ChromeOnly, Exposed=Window]
+interface PlacesBookmarkTime : PlacesBookmarkChanged {
+  constructor(PlacesBookmarkTimeInit initDict);
+
+  /**
+   * The added date in milliseconds.
+   */
+  readonly attribute long long dateAdded;
 };
 
 dictionary PlacesBookmarkTitleInit {
