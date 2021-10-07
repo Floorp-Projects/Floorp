@@ -52,13 +52,14 @@ class TelemetryProbesReporter final {
   using AudibleState = dom::AudioChannelService::AudibleState;
 
   // State transitions
-  void OnPlay(Visibility aVisibility, MediaContent aContent);
+  void OnPlay(Visibility aVisibility, MediaContent aContent, bool aIsMuted);
   void OnPause(Visibility aVisibility);
   void OnShutdown();
 
   void OnVisibilityChanged(Visibility aVisibility);
   void OnAudibleChanged(AudibleState aAudible);
   void OnMediaContentChanged(MediaContent aContent);
+  void OnMutedChanged(bool aMuted);
   void OnDecodeSuspended();
   void OnDecodeResumed();
 
@@ -70,12 +71,15 @@ class TelemetryProbesReporter final {
   double GetTotalAudioPlayTimeInSeconds() const;
   double GetInaudiblePlayTimeInSeconds() const;
   double GetAudiblePlayTimeInSeconds() const;
+  double GetMutedPlayTimeInSeconds() const;
 
  private:
   void StartInvisibleVideoTimeAccumulator();
   void PauseInvisibleVideoTimeAccumulator();
   void StartInaudibleAudioTimeAccumulator();
   void PauseInaudibleAudioTimeAccumulator();
+  void StartMutedAudioTimeAccumulator();
+  void PauseMutedAudioTimeAccumulator();
   bool HasOwnerHadValidVideo() const;
   void AssertOnMainThreadAndNotShutdown() const;
 
@@ -138,8 +142,11 @@ class TelemetryProbesReporter final {
   // element is invisible.
   TimeDurationAccumulator mInvisibleVideoPlayTime;
 
-  // Total time an element has spent on playing audio that was not audible
+  // Total time an element has spent playing audio that was not audible
   TimeDurationAccumulator mInaudibleAudioPlayTime;
+
+  // Total time an element with an audio track has spent muted
+  TimeDurationAccumulator mMutedAudioPlayTime;
 
   // Total time a VIDEO has spent in video-decode-suspend mode.
   TimeDurationAccumulator mVideoDecodeSuspendedTime;
@@ -151,6 +158,8 @@ class TelemetryProbesReporter final {
   MediaContent mMediaContent = MediaContent::MEDIA_HAS_NOTHING;
 
   bool mIsPlaying = false;
+
+  bool mIsMuted = false;
 };
 
 }  // namespace mozilla

@@ -69,7 +69,8 @@ TelemetryProbesReporter::TelemetryProbesReporter(
 }
 
 void TelemetryProbesReporter::OnPlay(Visibility aVisibility,
-                                     MediaContent aMediaContent) {
+                                     MediaContent aMediaContent,
+                                     bool aIsMuted) {
   LOG("Start time accumulation for total play time");
 
   AssertOnMainThreadAndNotShutdown();
@@ -87,6 +88,7 @@ void TelemetryProbesReporter::OnPlay(Visibility aVisibility,
 
   OnMediaContentChanged(aMediaContent);
   OnVisibilityChanged(aVisibility);
+  OnMutedChanged(aIsMuted);
 
   mOwner->DispatchAsyncTestingEvent(u"moztotalplaytimestarted"_ns);
 
@@ -121,6 +123,10 @@ void TelemetryProbesReporter::OnPause(Visibility aVisibility) {
     if (mInaudibleAudioPlayTime.IsStarted()) {
       LOG("Pause audible audio time accumulation for total play time");
       mInaudibleAudioPlayTime.Pause();
+    }
+    if (mMutedAudioPlayTime.IsStarted()) {
+      LOG("Pause muted audio time accumulation for total play time");
+      mMutedAudioPlayTime.Pause();
     }
     mTotalAudioPlayTime.Pause();
   }
@@ -163,6 +169,22 @@ void TelemetryProbesReporter::OnAudibleChanged(AudibleState aAudibleState) {
     }
   }
   mAudibleState = aAudibleState;
+}
+
+void TelemetryProbesReporter::OnMutedChanged(bool aMuted) {
+  AssertOnMainThreadAndNotShutdown();
+  LOG("Muted changed, now %s", aMuted ? "muted" : "unmuted");
+  if (aMuted) {
+    MOZ_ASSERT(!mIsMuted);
+    StartMutedAudioTimeAccumulator();
+  } else {
+    // This happens when starting playback, no need to pause, because it hasn't
+    // been started yet.
+    if (mMutedAudioPlayTime.IsStarted()) {
+      PauseMutedAudioTimeAccumulator();
+    }
+  }
+  mIsMuted = aMuted;
 }
 
 void TelemetryProbesReporter::OnMediaContentChanged(MediaContent aContent) {
@@ -274,6 +296,20 @@ void TelemetryProbesReporter::PauseInaudibleAudioTimeAccumulator() {
   MOZ_ASSERT(mInaudibleAudioPlayTime.IsStarted());
   mInaudibleAudioPlayTime.Pause();
   mOwner->DispatchAsyncTestingEvent(u"mozinaudibleaudioplaytimepaused"_ns);
+}
+
+void TelemetryProbesReporter::StartMutedAudioTimeAccumulator() {
+  AssertOnMainThreadAndNotShutdown();
+  MOZ_ASSERT(!mMutedAudioPlayTime.IsStarted());
+  mMutedAudioPlayTime.Start();
+  mOwner->DispatchAsyncTestingEvent(u"mozmutedaudioplaytimestarted"_ns);
+}
+
+void TelemetryProbesReporter::PauseMutedAudioTimeAccumulator() {
+  AssertOnMainThreadAndNotShutdown();
+  MOZ_ASSERT(mMutedAudioPlayTime.IsStarted());
+  mMutedAudioPlayTime.Pause();
+  mOwner->DispatchAsyncTestingEvent(u"mozmutedeaudioplaytimepaused"_ns);
 }
 
 bool TelemetryProbesReporter::HasOwnerHadValidVideo() const {
@@ -397,14 +433,20 @@ void TelemetryProbesReporter::ReportResultForVideo() {
 void TelemetryProbesReporter::ReportResultForAudio() {
   const double totalAudioPlayTimeS = mTotalAudioPlayTime.GetAndClearTotal();
   const double inaudiblePlayTimeS = mInaudibleAudioPlayTime.GetAndClearTotal();
+  const double mutedPlayTimeS = mMutedAudioPlayTime.GetAndClearTotal();
   const double audiblePlayTimeS = totalAudioPlayTimeS - inaudiblePlayTimeS;
+  const double unmutedPlayTimeS = totalAudioPlayTimeS - mutedPlayTimeS;
   const uint32_t audiblePercentage =
       lround(audiblePlayTimeS / totalAudioPlayTimeS * 100.0);
+  const uint32_t unmutedPercentage =
+      lround(unmutedPlayTimeS / totalAudioPlayTimeS * 100.0);
 
-  LOG("Audio:\ntotal: %lf\naudible: %lf\ninaudible: %lf\npercentage audible: "
-      "%u",
-      totalAudioPlayTimeS, audiblePlayTimeS, inaudiblePlayTimeS,
-      audiblePercentage);
+  if (mMediaContent & MediaContent::MEDIA_HAS_AUDIO) {
+    LOG("## Audio:\ntotal: %lf\naudible: %lf\ninaudible: %lf\nmuted: %lf\npercentage audible: "
+        "%u\npercentage unmuted: %u\n",
+        totalAudioPlayTimeS, audiblePlayTimeS, inaudiblePlayTimeS, mutedPlayTimeS
+        audiblePercentage, unmutedPercentage);
+  }
 }
 
 void TelemetryProbesReporter::ReportResultForVideoFrameStatistics(
@@ -486,6 +528,10 @@ double TelemetryProbesReporter::GetTotalAudioPlayTimeInSeconds() const {
 
 double TelemetryProbesReporter::GetInaudiblePlayTimeInSeconds() const {
   return mInaudibleAudioPlayTime.PeekTotal();
+}
+
+double TelemetryProbesReporter::GetMutedPlayTimeInSeconds() const {
+  return mMutedAudioPlayTime.PeekTotal();
 }
 
 double TelemetryProbesReporter::GetAudiblePlayTimeInSeconds() const {
