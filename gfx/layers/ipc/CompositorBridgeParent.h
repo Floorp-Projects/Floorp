@@ -479,7 +479,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   struct LayerTreeState {
     LayerTreeState();
     ~LayerTreeState();
-    RefPtr<Layer> mRoot;
     RefPtr<GeckoContentController> mController;
     APZCTreeManagerParent* mApzcTreeManagerParent;
     RefPtr<CompositorBridgeParent> mParent;
