@@ -662,6 +662,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   double TotalAudioPlayTime() const;
   double AudiblePlayTime() const;
   double InaudiblePlayTime() const;
+  double MutedPlayTime() const;
 
   // Test methods for decoder doctor.
   void SetFormatDiagnosticsReportForMimeType(const nsAString& aMimeType,
