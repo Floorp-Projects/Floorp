@@ -93,16 +93,13 @@ WebrtcVideoEncoderFactory::InternalFactory::CreateVideoEncoder(
     const webrtc::SdpVideoFormat& aFormat) {
   MOZ_ASSERT(Supports(aFormat));
   std::unique_ptr<webrtc::VideoEncoder> encoder;
-  auto type = webrtc::PayloadStringToCodecType(aFormat.name);
 
-  if (StaticPrefs::media_webrtc_platformencoder()) {
-    encoder.reset(MediaDataCodec::CreateEncoder(type));
-    if (encoder) {
-      return encoder;
-    }
+  encoder.reset(MediaDataCodec::CreateEncoder(aFormat));
+  if (encoder) {
+    return encoder;
   }
 
-  switch (type) {
+  switch (webrtc::PayloadStringToCodecType(aFormat.name)) {
     case webrtc::VideoCodecType::kVideoCodecH264: {
       // get an external encoder
       auto gmpEncoder = WrapUnique(GmpVideoCodec::CreateEncoder(mPCHandle));
