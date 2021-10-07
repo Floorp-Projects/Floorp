@@ -313,6 +313,7 @@ describe("ASRouterTargeting", () => {
     fakeTargetingContext = {
       combineContexts: sandbox.stub(),
       evalWithDefault: sandbox.stub().resolves(),
+      setTelemetrySource: sandbox.stub(),
     };
     globals = new GlobalOverrider();
     globals.set(
@@ -320,6 +321,10 @@ describe("ASRouterTargeting", () => {
       class {
         static combineContexts(...args) {
           return fakeTargetingContext.combineContexts.apply(sandbox, args);
+        }
+
+        setTelemetrySource(id) {
+          fakeTargetingContext.setTelemetrySource(id);
         }
 
         evalWithDefault(expr) {
@@ -333,6 +338,23 @@ describe("ASRouterTargeting", () => {
     clock.restore();
     sandbox.restore();
     globals.restore();
+  });
+  it("should provide message.id as source", async () => {
+    await ASRouterTargeting.checkMessageTargeting(
+      {
+        id: "message",
+        targeting: "true",
+      },
+      fakeTargetingContext,
+      sandbox.stub(),
+      false
+    );
+    assert.calledOnce(fakeTargetingContext.evalWithDefault);
+    assert.calledWithExactly(fakeTargetingContext.evalWithDefault, "true");
+    assert.calledWithExactly(
+      fakeTargetingContext.setTelemetrySource,
+      "message"
+    );
   });
   it("should cache evaluation result", async () => {
     evalStub.resolves(true);
