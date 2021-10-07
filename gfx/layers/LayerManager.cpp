@@ -64,6 +64,7 @@ LayerManager::~LayerManager() = default;
 void LayerManager::Destroy() {
   mDestroyed = true;
   mUserData.Destroy();
+  mRoot = nullptr;
   mPartialPrerenderedAnimations.Clear();
 }
 
