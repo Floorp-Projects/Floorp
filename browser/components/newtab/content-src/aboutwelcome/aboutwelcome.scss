@@ -669,8 +669,8 @@ body {
     display: block;
     margin: auto;
     background-image: url('chrome://activity-stream/content/data/content/assets/confetti.svg');
-    background-position: center;
-    background-size: cover;
+    background-position: top;
+    background-size: 100%;
     background-repeat: no-repeat;
     height: 438px;
     width: 504px;
@@ -1004,14 +1004,7 @@ body {
       padding-bottom: 16px;
       position: relative;
       text-align: center;
-      background: linear-gradient(70deg,
-        rgba(220, 171, 32, 0) 5%,
-        #2A613A 22%,
-        #D198A1 41%,
-        #844D9E 59%,
-        #E27B50 78%,
-        rgba(220, 171, 32, 0) 95%
-      ), linear-gradient(rgba(220, 171, 32, 100), rgba(220, 171, 32, 100));
+      background-image: linear-gradient(90deg, #6173FF, #ED1D5F, #F6901E, #6173FF);
       background-size: 400% auto;
       color: #000;
       background-clip: text;
