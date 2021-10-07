@@ -432,6 +432,7 @@ module.exports = {
     PlacesBookmarkGuid: false,
     PlacesBookmarkMoved: false,
     PlacesBookmarkRemoved: false,
+    PlacesBookmarkTime: false,
     PlacesBookmarkTitle: false,
     PlacesBookmarkUrl: false,
     PlacesEvent: false,
