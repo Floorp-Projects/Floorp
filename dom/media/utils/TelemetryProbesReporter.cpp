@@ -28,10 +28,26 @@ static const char* ToVisibilityStr(
       return "visible";
     case TelemetryProbesReporter::Visibility::eInvisible:
       return "invisible";
+    case TelemetryProbesReporter::Visibility::eInitial:
+      return "initial";
     default:
       MOZ_ASSERT_UNREACHABLE("invalid visibility");
       return "unknown";
   }
+}
+
+MediaContent TelemetryProbesReporter::MediaInfoToMediaContent(
+    const MediaInfo& aInfo) {
+  if (aInfo.HasAudio() && aInfo.HasVideo()) {
+    return MediaContent::MEDIA_HAS_VIDEO | MediaContent::MEDIA_HAS_AUDIO;
+  }
+  if (aInfo.HasAudio()) {
+    return MediaContent::MEDIA_HAS_AUDIO;
+  }
+  if (aInfo.HasVideo()) {
+    return MediaContent::MEDIA_HAS_VIDEO;
+  }
+  return MediaContent::MEDIA_HAS_NOTHING;
 }
 
 TelemetryProbesReporter::TelemetryProbesReporter(
@@ -40,47 +56,94 @@ TelemetryProbesReporter::TelemetryProbesReporter(
   MOZ_ASSERT(mOwner);
 }
 
-void TelemetryProbesReporter::OnPlay(Visibility aVisibility) {
-  AssertOnMainThreadAndNotShutdown();
-  if (mTotalVideoPlayTime.IsStarted()) {
-    return;
-  }
+void TelemetryProbesReporter::OnPlay(Visibility aVisibility,
+                                     MediaContent aMediaContent) {
   LOG("Start time accumulation for total play time");
-  mTotalPlayTime.Start();
-  mOwner->DispatchAsyncTestingEvent(u"moztotalplaytimestarted"_ns);
-  if (aVisibility == Visibility::eInvisible) {
-    StartInvisibleVideoTimeAcculator();
+
+  AssertOnMainThreadAndNotShutdown();
+  MOZ_ASSERT_IF(mMediaContent & MediaContent::MEDIA_HAS_VIDEO,
+                !mTotalVideoPlayTime.IsStarted());
+
+  if (aMediaContent & MediaContent::MEDIA_HAS_VIDEO) {
+    mTotalVideoPlayTime.Start();
   }
+
+  OnMediaContentChanged(aMediaContent);
+  OnVisibilityChanged(aVisibility);
+
+  mOwner->DispatchAsyncTestingEvent(u"moztotalplaytimestarted"_ns);
+
+  mIsPlaying = true;
 }
 
 void TelemetryProbesReporter::OnPause(Visibility aVisibility) {
-  AssertOnMainThreadAndNotShutdown();
-  if (!mTotalVideoPlayTime.IsStarted()) {
+  if (!mIsPlaying) {
+    // Not started
     return;
   }
-  if (aVisibility == Visibility::eInvisible) {
-    PauseInvisibleVideoTimeAcculator();
-  }
+
   LOG("Pause time accumulation for total play time");
-  mTotalVideoPlayTime.Pause();
+
+  AssertOnMainThreadAndNotShutdown();
+  MOZ_ASSERT_IF(mMediaContent & MediaContent::MEDIA_HAS_VIDEO,
+                mTotalVideoPlayTime.IsStarted());
+
+  if (mMediaContent & MediaContent::MEDIA_HAS_VIDEO) {
+    LOG("Pause video time accumulation for total play time");
+    if (mInvisibleVideoPlayTime.IsStarted()) {
+      LOG("Pause invisible video time accumulation for total play time");
+      PauseInvisibleVideoTimeAcculator();
+    }
+    mTotalVideoPlayTime.Pause();
+  }
   mOwner->DispatchAsyncTestingEvent(u"moztotalplaytimepaused"_ns);
   ReportTelemetry();
+
+  mIsPlaying = false;
 }
 
 void TelemetryProbesReporter::OnVisibilityChanged(Visibility aVisibility) {
   AssertOnMainThreadAndNotShutdown();
-  if (mMediaElementVisibility == aVisibility) {
-    return;
-  }
-
-  mMediaElementVisibility = aVisibility;
-  LOG("Corresponding media element visibility change=%s",
-      ToVisibilityStr(aVisibility));
-  if (mMediaElementVisibility == Visibility::eInvisible) {
+  LOG("Corresponding media element visibility change=%s -> %s",
+      ToVisibilityStr(mMediaElementVisibility), ToVisibilityStr(aVisibility));
+  if (aVisibility == Visibility::eInvisible) {
     StartInvisibleVideoTimeAcculator();
   } else {
-    PauseInvisibleVideoTimeAcculator();
+    if (aVisibility != Visibility::eInitial) {
+      PauseInvisibleVideoTimeAcculator();
+    } else {
+      LOG("Visibility was initial, not pausing.");
+    }
   }
+  mMediaElementVisibility = aVisibility;
+}
+void TelemetryProbesReporter::OnMediaContentChanged(MediaContent aContent) {
+  AssertOnMainThreadAndNotShutdown();
+  if (aContent == mMediaContent) {
+    return;
+  }
+  if (mMediaContent & MediaContent::MEDIA_HAS_VIDEO &&
+      !(aContent & MediaContent::MEDIA_HAS_VIDEO)) {
+    LOG("Video track removed from media.");
+    if (mInvisibleVideoPlayTime.IsStarted()) {
+      PauseInvisibleVideoTimeAcculator();
+    }
+    if (mTotalVideoPlayTime.IsStarted()) {
+      mTotalVideoPlayTime.Pause();
+    }
+  }
+  if (!(mMediaContent & MediaContent::MEDIA_HAS_VIDEO) &&
+      aContent & MediaContent::MEDIA_HAS_VIDEO) {
+    LOG("Video track added to media.");
+    if (mIsPlaying) {
+      mTotalVideoPlayTime.Start();
+      if (mMediaElementVisibility == Visibility::eInvisible) {
+        StartInvisibleVideoTimeAccumulator();
+      }
+    }
+  }
+
+  mMediaContent = aContent;
 }
 
 void TelemetryProbesReporter::OnDecodeSuspended() {
@@ -312,7 +375,8 @@ double TelemetryProbesReporter::GetTotalVideoPlayTimeInSeconds() const {
 }
 
 double TelemetryProbesReporter::GetVisibleVideoPlayTimeInSeconds() const {
-  return GetTotalVideoPlayTimeInSeconds() - GetInvisibleVideoPlayTimeInSeconds();
+  return GetTotalVideoPlayTimeInSeconds() -
+         GetInvisibleVideoPlayTimeInSeconds();
 }
 
 double TelemetryProbesReporter::GetInvisibleVideoPlayTimeInSeconds() const {
