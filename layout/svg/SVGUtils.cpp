@@ -1539,7 +1539,7 @@ void SVGUtils::SetupStrokeGeometry(nsIFrame* aFrame, gfxContext* aContext,
 uint16_t SVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame) {
   uint16_t flags = 0;
 
-  switch (aFrame->StyleUI()->mPointerEvents) {
+  switch (aFrame->Style()->PointerEvents()) {
     case StylePointerEvents::None:
       break;
     case StylePointerEvents::Auto:
