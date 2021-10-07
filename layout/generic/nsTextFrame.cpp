@@ -4692,7 +4692,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsContinuingTextFrame)
 nsTextFrame::~nsTextFrame() = default;
 
 Maybe<nsIFrame::Cursor> nsTextFrame::GetCursor(const nsPoint& aPoint) {
-  StyleCursorKind kind = StyleUI()->mCursor.keyword;
+  StyleCursorKind kind = StyleUI()->Cursor().keyword;
   if (kind == StyleCursorKind::Auto) {
     if (!IsSelectable(nullptr)) {
       kind = StyleCursorKind::Default;

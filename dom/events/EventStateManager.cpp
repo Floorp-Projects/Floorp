@@ -3367,7 +3367,6 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         bool suppressBlur = false;
         if (mCurrentTarget) {
           mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(newFocus));
-          const nsStyleUI* ui = mCurrentTarget->StyleUI();
           activeContent = mCurrentTarget->GetContent();
 
           // In some cases, we do not want to even blur the current focused
@@ -3381,7 +3380,8 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           // we click on a non-focusable element like a <div>.
           // We have to use |aEvent->mTarget| to not make sure we do not check
           // an anonymous node of the targeted element.
-          suppressBlur = (ui->mUserFocus == StyleUserFocus::Ignore);
+          suppressBlur =
+              mCurrentTarget->StyleUI()->UserFocus() == StyleUserFocus::Ignore;
 
           nsCOMPtr<Element> element = do_QueryInterface(aEvent->mTarget);
           if (!suppressBlur && element) {
@@ -4067,7 +4067,7 @@ static CursorImage ComputeCustomCursor(nsPresContext* aPresContext,
   // If we are falling back because any cursor before us is loading, let the
   // consumer know.
   bool loading = false;
-  for (const auto& image : style.StyleUI()->mCursor.images.AsSpan()) {
+  for (const auto& image : style.StyleUI()->Cursor().images.AsSpan()) {
     MOZ_ASSERT(image.image.IsImageRequestType(),
                "Cursor image should only parse url() types");
     uint32_t status;
@@ -5602,11 +5602,9 @@ bool EventStateManager::SetContentState(nsIContent* aContent,
 
     // check to see that this state is allowed by style. Check dragover too?
     // XXX Is this even what we want?
-    if (mCurrentTarget) {
-      const nsStyleUI* ui = mCurrentTarget->StyleUI();
-      if (ui->mUserInput == StyleUserInput::None) {
-        return false;
-      }
+    if (mCurrentTarget &&
+        mCurrentTarget->StyleUI()->UserInput() == StyleUserInput::None) {
+      return false;
     }
 
     if (aState == NS_EVENT_STATE_ACTIVE) {
