@@ -62,7 +62,7 @@ class NimbusFeatures(private val context: Context) {
                  */
                 fun toMap(context: Context): Map<HomeScreenSection, Boolean> {
                     return values().associate { section ->
-                        val channelDefault = if (section == pocket) {
+                        val channelDefault = if (section == pocket && Config.channel.isNightlyOrDebug) {
                             FeatureFlags.isPocketRecommendationsFeatureEnabled(context)
                         } else {
                             Config.channel.isNightlyOrDebug
