@@ -1341,8 +1341,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupLocked(
     bool shouldAttemptNative =
         !StaticPrefs::network_trr_strict_native_fallback() ||
         aReason == TRRSkippedReason::TRR_NXDOMAIN ||
-        aReason == TRRSkippedReason::TRR_DISABLED_FLAG ||
-        aReason == TRRSkippedReason::TRR_NOT_CONFIRMED;
+        aReason == TRRSkippedReason::TRR_DISABLED_FLAG;
 
     if (NS_FAILED(status) &&
         addrRec->mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE &&
