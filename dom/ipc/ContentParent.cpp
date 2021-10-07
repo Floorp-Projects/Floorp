@@ -879,7 +879,9 @@ already_AddRefed<ContentParent> ContentParent::MinTabSelect(
   return candidate.forget();
 }
 
-static already_AddRefed<nsIPrincipal> CreateRemoteTypeIsolationPrincipal(
+/* static */
+already_AddRefed<nsIPrincipal>
+ContentParent::CreateRemoteTypeIsolationPrincipal(
     const nsACString& aRemoteType) {
   if ((RemoteTypePrefix(aRemoteType) != FISSION_WEB_REMOTE_TYPE) &&
       !StringBeginsWith(aRemoteType, WITH_COOP_COEP_REMOTE_TYPE_PREFIX)) {
