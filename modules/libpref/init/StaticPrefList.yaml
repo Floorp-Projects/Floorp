@@ -9733,6 +9733,12 @@
   value: ""
   mirror: never
 
+# Whether to add padding in the doh dns queries (rfc 7830)
+- name: network.trr.padding
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Whether to skip the NS check for the blocked host.
 # Note this is used for test only.
 - name: network.trr.skip-check-for-blocked-host
