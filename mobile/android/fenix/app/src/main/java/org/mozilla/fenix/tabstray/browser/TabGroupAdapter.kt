@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.tabstray.browser
 
-import TabGroupViewHolder
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup

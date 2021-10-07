@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+package org.mozilla.fenix.tabstray.browser
+
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -12,9 +14,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.TrayPagerAdapter
-import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
-import org.mozilla.fenix.tabstray.browser.TabGroup
-import org.mozilla.fenix.tabstray.browser.TabGroupListAdapter
 
 /**
  * A RecyclerView ViewHolder implementation for tab group items.
