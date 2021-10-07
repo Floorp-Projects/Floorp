@@ -20,7 +20,7 @@ class SecurePrefsTelemetry(
     private val appContext: Context,
     private val experiments: NimbusApi
 ) {
-    suspend fun startTests() {
+    fun startTests() {
         // The Android Keystore is used to secure the shared prefs only on API 23+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // These tests should run only if the experiment is live
