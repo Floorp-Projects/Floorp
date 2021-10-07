@@ -249,6 +249,9 @@ partial interface HTMLMediaElement {
   [ChromeOnly]
   readonly attribute double inaudiblePlayTime;
 
+  [ChromeOnly]
+  readonly attribute double mutedPlayTime;
+
   // These APIs are used for decoder doctor tests.
   [ChromeOnly]
   void setFormatDiagnosticsReportForMimeType(DOMString mimeType, DecoderDoctorReportType error);
