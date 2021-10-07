@@ -20,6 +20,7 @@ import mozilla.components.lib.crash.Crash
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.getWindowInsetsController
 import mozilla.components.support.utils.SafeIntent
+import org.mozilla.focus.GleanMetrics.AppOpened
 import org.mozilla.focus.R
 import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.ext.components
@@ -86,7 +87,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         }
 
         if (intent.isLauncherIntent) {
-            TelemetryWrapper.openFromIconEvent()
+            AppOpened.fromIcons.record(AppOpened.FromIconsExtra(AppOpenType.LAUNCH.type))
         }
 
         val launchCount = Settings.getInstance(this).getAppLaunchCount()
@@ -166,7 +167,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         }
 
         if (intent.isLauncherIntent) {
-            TelemetryWrapper.resumeFromIconEvent()
+            AppOpened.fromIcons.record(AppOpened.FromIconsExtra(AppOpenType.RESUME.type))
         }
 
         super.onNewIntent(unsafeIntent)
@@ -284,6 +285,11 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             // API level can display handle light navigation bar color
             window.getWindowInsetsController().isAppearanceLightNavigationBars = false
         }
+    }
+
+    enum class AppOpenType(val type: String) {
+        LAUNCH("Launch"),
+        RESUME("Resume")
     }
 
     companion object {

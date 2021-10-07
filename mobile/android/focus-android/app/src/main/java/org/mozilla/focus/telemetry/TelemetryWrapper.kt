@@ -674,16 +674,6 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun openFromIconEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.APP_ICON, Value.OPEN).queue()
-    }
-
-    @JvmStatic
-    fun resumeFromIconEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.APP_ICON, Value.RESUME).queue()
-    }
-
-    @JvmStatic
     fun openFirefoxEvent() {
         TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.FIREFOX).queue()
     }

@@ -448,3 +448,23 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-10-01"
+
+app_opened:
+  from_icons:
+    type: event
+    description: |
+      The user has opened the app using launcher icons
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5546
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5552
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      open_type:
+        description: |
+          Can be "Launch" if Focus was not already opened or "Resume" if it was.
+        type: string
