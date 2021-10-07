@@ -90,47 +90,51 @@ class UntrustedModulesCollector {
     mData.clear();
     int pendingQueries = 0;
 
-    EXPECT_TRUE(SpinEventLoopUntil([this, &pendingQueries, &aChecker, &rv]() {
-      // Some of expected loaded modules are still missing
-      // after kMaximumPendingQueries queries were submitted.
-      // Giving up here to avoid an infinite loop.
-      if (pendingQueries >= kMaximumPendingQueries) {
-        rv = NS_ERROR_ABORT;
-        return true;
-      }
+    EXPECT_TRUE(SpinEventLoopUntil(
+        "xre:UntrustedModulesCollector"_ns,
+        [this, &pendingQueries, &aChecker, &rv]() {
+          // Some of expected loaded modules are still missing
+          // after kMaximumPendingQueries queries were submitted.
+          // Giving up here to avoid an infinite loop.
+          if (pendingQueries >= kMaximumPendingQueries) {
+            rv = NS_ERROR_ABORT;
+            return true;
+          }
 
-      ++pendingQueries;
+          ++pendingQueries;
 
-      RefPtr<DllServices> dllSvc(DllServices::Get());
-      dllSvc->GetUntrustedModulesData()->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [this, &pendingQueries,
-           &aChecker](Maybe<UntrustedModulesData>&& aResult) {
-            EXPECT_GT(pendingQueries, 0);
-            --pendingQueries;
+          RefPtr<DllServices> dllSvc(DllServices::Get());
+          dllSvc->GetUntrustedModulesData()->Then(
+              GetMainThreadSerialEventTarget(), __func__,
+              [this, &pendingQueries,
+               &aChecker](Maybe<UntrustedModulesData>&& aResult) {
+                EXPECT_GT(pendingQueries, 0);
+                --pendingQueries;
 
-            if (aResult.isSome()) {
-              wprintf(L"Received data. (pendingQueries=%d)\n", pendingQueries);
-              for (const auto& evt : aResult.ref().mEvents) {
-                aChecker.Decrement(evt.mRequestedDllName);
-              }
-              EXPECT_TRUE(mData.emplaceBack(std::move(aResult.ref())));
-            }
-          },
-          [&pendingQueries, &rv](nsresult aReason) {
-            EXPECT_GT(pendingQueries, 0);
-            --pendingQueries;
+                if (aResult.isSome()) {
+                  wprintf(L"Received data. (pendingQueries=%d)\n",
+                          pendingQueries);
+                  for (const auto& evt : aResult.ref().mEvents) {
+                    aChecker.Decrement(evt.mRequestedDllName);
+                  }
+                  EXPECT_TRUE(mData.emplaceBack(std::move(aResult.ref())));
+                }
+              },
+              [&pendingQueries, &rv](nsresult aReason) {
+                EXPECT_GT(pendingQueries, 0);
+                --pendingQueries;
 
-            wprintf(L"GetUntrustedModulesData() failed - %08x\n", aReason);
-            EXPECT_TRUE(false);
-            rv = aReason;
-          });
+                wprintf(L"GetUntrustedModulesData() failed - %08x\n", aReason);
+                EXPECT_TRUE(false);
+                rv = aReason;
+              });
 
-      // Keep calling GetUntrustedModulesData() until we meet the condition.
-      return aChecker.IsDone();
-    }));
+          // Keep calling GetUntrustedModulesData() until we meet the condition.
+          return aChecker.IsDone();
+        }));
 
     EXPECT_TRUE(SpinEventLoopUntil(
+        "xre:UntrustedModulesCollector(pendingQueries)"_ns,
         [&pendingQueries]() { return pendingQueries <= 0; }));
 
     return rv;
