@@ -42,7 +42,7 @@ TelemetryProbesReporter::TelemetryProbesReporter(
 
 void TelemetryProbesReporter::OnPlay(Visibility aVisibility) {
   AssertOnMainThreadAndNotShutdown();
-  if (mTotalPlayTime.IsStarted()) {
+  if (mTotalVideoPlayTime.IsStarted()) {
     return;
   }
   LOG("Start time accumulation for total play time");
@@ -55,14 +55,14 @@ void TelemetryProbesReporter::OnPlay(Visibility aVisibility) {
 
 void TelemetryProbesReporter::OnPause(Visibility aVisibility) {
   AssertOnMainThreadAndNotShutdown();
-  if (!mTotalPlayTime.IsStarted()) {
+  if (!mTotalVideoPlayTime.IsStarted()) {
     return;
   }
   if (aVisibility == Visibility::eInvisible) {
     PauseInvisibleVideoTimeAcculator();
   }
   LOG("Pause time accumulation for total play time");
-  mTotalPlayTime.Pause();
+  mTotalVideoPlayTime.Pause();
   mOwner->DispatchAsyncTestingEvent(u"moztotalplaytimepaused"_ns);
   ReportTelemetry();
 }
@@ -114,7 +114,7 @@ void TelemetryProbesReporter::OnShutdown() {
 
 void TelemetryProbesReporter::StartInvisibleVideoTimeAcculator() {
   AssertOnMainThreadAndNotShutdown();
-  if (!mTotalPlayTime.IsStarted() || mInvisibleVideoPlayTime.IsStarted() ||
+  if (!mTotalVideoPlayTime.IsStarted() || mInvisibleVideoPlayTime.IsStarted() ||
       !HasOwnerHadValidVideo()) {
     return;
   }
@@ -160,43 +160,43 @@ void TelemetryProbesReporter::ReportResultForVideo() {
     return;
   }
 
-  const double totalPlayTimeS = mTotalPlayTime.GetAndClearTotal();
+  const double totalVideoPlayTimeS = mTotalVideoPlayTime.GetAndClearTotal();
   const double invisiblePlayTimeS = mInvisibleVideoPlayTime.GetAndClearTotal();
   const double videoDecodeSuspendTimeS =
       mVideoDecodeSuspendedTime.GetAndClearTotal();
 
   // No need to report result for video that didn't start playing.
-  if (totalPlayTimeS == 0.0) {
+  if (totalVideoPlayTimeS == 0.0) {
     return;
   }
-  MOZ_ASSERT(totalPlayTimeS >= invisiblePlayTimeS);
+  MOZ_ASSERT(totalVideoPlayTimeS >= invisiblePlayTimeS);
 
-  LOG("VIDEO_PLAY_TIME_S = %f", totalPlayTimeS);
+  LOG("VIDEO_PLAY_TIME_S = %f", totalVideoPlayTimeS);
   Telemetry::Accumulate(Telemetry::VIDEO_PLAY_TIME_MS,
-                        SECONDS_TO_MS(totalPlayTimeS));
+                        SECONDS_TO_MS(totalVideoPlayTimeS));
 
   LOG("VIDEO_HIDDEN_PLAY_TIME_S = %f", invisiblePlayTimeS);
   Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_MS,
                         SECONDS_TO_MS(invisiblePlayTimeS));
 
   if (mOwner->IsEncrypted()) {
-    LOG("VIDEO_ENCRYPTED_PLAY_TIME_S = %f", totalPlayTimeS);
+    LOG("VIDEO_ENCRYPTED_PLAY_TIME_S = %f", totalVideoPlayTimeS);
     Telemetry::Accumulate(Telemetry::VIDEO_ENCRYPTED_PLAY_TIME_MS,
-                          SECONDS_TO_MS(totalPlayTimeS));
+                          SECONDS_TO_MS(totalVideoPlayTimeS));
   }
 
   // Report result for video using CDM
   auto keySystem = mOwner->GetKeySystem();
   if (keySystem) {
     if (IsClearkeyKeySystem(*keySystem)) {
-      LOG("VIDEO_CLEARKEY_PLAY_TIME_S = %f", totalPlayTimeS);
+      LOG("VIDEO_CLEARKEY_PLAY_TIME_S = %f", totalVideoPlayTimeS);
       Telemetry::Accumulate(Telemetry::VIDEO_CLEARKEY_PLAY_TIME_MS,
-                            SECONDS_TO_MS(totalPlayTimeS));
+                            SECONDS_TO_MS(totalVideoPlayTimeS));
 
     } else if (IsWidevineKeySystem(*keySystem)) {
-      LOG("VIDEO_WIDEVINE_PLAY_TIME_S = %f", totalPlayTimeS);
+      LOG("VIDEO_WIDEVINE_PLAY_TIME_S = %f", totalVideoPlayTimeS);
       Telemetry::Accumulate(Telemetry::VIDEO_WIDEVINE_PLAY_TIME_MS,
-                            SECONDS_TO_MS(totalPlayTimeS));
+                            SECONDS_TO_MS(totalVideoPlayTimeS));
     }
   }
 
@@ -219,7 +219,7 @@ void TelemetryProbesReporter::ReportResultForVideo() {
   }
   key.AppendASCII(resolution);
 
-  auto visiblePlayTimeS = totalPlayTimeS - invisiblePlayTimeS;
+  auto visiblePlayTimeS = totalVideoPlayTimeS - invisiblePlayTimeS;
   LOG("VIDEO_VISIBLE_PLAY_TIME = %f, keys: '%s' and 'All'", visiblePlayTimeS,
       key.get());
   Telemetry::Accumulate(Telemetry::VIDEO_VISIBLE_PLAY_TIME_MS, key,
@@ -229,7 +229,7 @@ void TelemetryProbesReporter::ReportResultForVideo() {
                         SECONDS_TO_MS(visiblePlayTimeS));
 
   const uint32_t hiddenPercentage =
-      lround(invisiblePlayTimeS / totalPlayTimeS * 100.0);
+      lround(invisiblePlayTimeS / totalVideoPlayTimeS * 100.0);
   Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE, key,
                         hiddenPercentage);
   // Also accumulate all percentages in an "All" key.
@@ -239,7 +239,7 @@ void TelemetryProbesReporter::ReportResultForVideo() {
       hiddenPercentage, key.get());
 
   const uint32_t videoDecodeSuspendPercentage =
-      lround(videoDecodeSuspendTimeS / totalPlayTimeS * 100.0);
+      lround(videoDecodeSuspendTimeS / totalVideoPlayTimeS * 100.0);
   Telemetry::Accumulate(Telemetry::VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE,
                         key, videoDecodeSuspendPercentage);
   Telemetry::Accumulate(Telemetry::VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE,
@@ -247,7 +247,7 @@ void TelemetryProbesReporter::ReportResultForVideo() {
   LOG("VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE = %u, keys: '%s' and 'All'",
       videoDecodeSuspendPercentage, key.get());
 
-  ReportResultForVideoFrameStatistics(totalPlayTimeS, key);
+  ReportResultForVideoFrameStatistics(totalVideoPlayTimeS, key);
   mOwner->DispatchAsyncTestingEvent(u"mozreportedtelemetry"_ns);
 }
 
@@ -307,12 +307,12 @@ void TelemetryProbesReporter::ReportResultForVideoFrameStatistics(
   }
 }
 
-double TelemetryProbesReporter::GetTotalPlayTimeInSeconds() const {
-  return mTotalPlayTime.PeekTotal();
+double TelemetryProbesReporter::GetTotalVideoPlayTimeInSeconds() const {
+  return mTotalVideoPlayTime.PeekTotal();
 }
 
 double TelemetryProbesReporter::GetVisibleVideoPlayTimeInSeconds() const {
-  return GetTotalPlayTimeInSeconds() - GetInvisibleVideoPlayTimeInSeconds();
+  return GetTotalVideoPlayTimeInSeconds() - GetInvisibleVideoPlayTimeInSeconds();
 }
 
 double TelemetryProbesReporter::GetInvisibleVideoPlayTimeInSeconds() const {
