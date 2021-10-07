@@ -249,8 +249,9 @@ nsresult InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
           }
 
           // Else try looking forwards:
-          breakPt = lineBreaker->Next(tString.get() + posInString,
-                                      length - posInString, eol - posInString);
+          breakPt = lineBreaker->DeprecatedNext(tString.get() + posInString,
+                                                length - posInString,
+                                                eol - posInString);
 
           rv = breakPt == NS_LINEBREAKER_NEED_MORE_TEXT ? NS_ERROR_BASE : NS_OK;
         } else {

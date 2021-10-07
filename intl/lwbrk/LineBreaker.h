@@ -33,8 +33,23 @@ class LineBreaker {
 
   static already_AddRefed<LineBreaker> Create();
 
+  // Find the next line break opportunity starting from aPos + 1. It can return
+  // aLen if there's no break opportunity between [aPos + 1, aLen - 1].
+  //
+  // If aPos is already at the end of aText or beyond, i.e. aPos >= aLen, return
+  // NS_LINEBREAKER_NEED_MORE_TEXT.
   int32_t Next(const char16_t* aText, uint32_t aLen, uint32_t aPos);
 
+  // Similar to Next(), but doesn't treat the end of text a line break
+  // opportunity. It returns NS_LINEBREAKER_NEED_MORE_TEXT when reaching the end
+  // of text.
+  ///
+  // XXX: Please do not add new callers to DeprecatedNext(). This method will be
+  // removed.
+  int32_t DeprecatedNext(const char16_t* aText, uint32_t aLen, uint32_t aPos);
+
+  // Bug 1733009: Please do not add new callers to Prev(). This method will be
+  // removed.
   int32_t Prev(const char16_t* aText, uint32_t aLen, uint32_t aPos);
 
   // Call this on a word with whitespace at either end. We will apply JISx4051
