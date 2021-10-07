@@ -795,3 +795,49 @@ add_task(async function test_old_bootstrap_pref() {
   setModeAndURI(Ci.nsIDNSService.MODE_TRRONLY, `doh?responseIP=4.4.4.4`);
   await new TRRDNSListener("testytest.com", "4.4.4.4");
 });
+
+add_task(async function test_padding() {
+  setModeAndURI(Ci.nsIDNSService.MODE_TRRONLY, `doh`);
+  async function CheckPadding(request, none, ecs, padding, ecsPadding) {
+    dns.clearCache(true);
+    Services.prefs.setBoolPref("network.trr.padding", false);
+    Services.prefs.setBoolPref("network.trr.disable-ECS", false);
+    await new TRRDNSListener(request, none);
+
+    dns.clearCache(true);
+    Services.prefs.setBoolPref("network.trr.padding", false);
+    Services.prefs.setBoolPref("network.trr.disable-ECS", true);
+    await new TRRDNSListener(request, ecs);
+
+    dns.clearCache(true);
+    Services.prefs.setBoolPref("network.trr.padding", true);
+    Services.prefs.setBoolPref("network.trr.disable-ECS", false);
+    await new TRRDNSListener(request, padding);
+
+    dns.clearCache(true);
+    Services.prefs.setBoolPref("network.trr.padding", true);
+    Services.prefs.setBoolPref("network.trr.disable-ECS", true);
+    await new TRRDNSListener(request, ecsPadding);
+  }
+
+  // short domain name
+  await CheckPadding("a.pd", "2.2.0.22", "2.2.0.41", "1.1.0.48", "1.1.0.48");
+
+  // medium domain name
+  await CheckPadding(
+    "has-padding.pd",
+    "2.2.0.32",
+    "2.2.0.51",
+    "1.1.0.48",
+    "1.1.0.64"
+  );
+
+  // long domain name
+  await CheckPadding(
+    "abcdefghijklmnopqrstuvwxyz0123456789.abcdefghijklmnopqrstuvwxyz0123456789.abcdefghijklmnopqrstuvwxyz0123456789.pd",
+    "2.2.0.131",
+    "2.2.0.150",
+    "1.1.0.160",
+    "1.1.0.160"
+  );
+}).only();
