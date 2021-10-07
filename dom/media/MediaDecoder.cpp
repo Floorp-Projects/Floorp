@@ -317,8 +317,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   mWatchManager.Watch(mIsAudioDataAudible,
                       &MediaDecoder::NotifyAudibleStateChanged);
 
-  mWatchManager.Watch(mVolume, &MediaDecoder::NotifyVolumeChanged);
-
   mVideoDecodingOberver->RegisterEvent();
 }
 
@@ -674,9 +672,6 @@ void MediaDecoder::MetadataLoaded(
       aInfo->mMediaSeekableOnlyInBufferedRanges;
   mInfo = std::move(aInfo);
 
-  mTelemetryProbesReporter->OnMediaContentChanged(
-      TelemetryProbesReporter::MediaInfoToMediaContent(*mInfo));
-
   // Make sure the element and the frame (if any) are told about
   // our new size.
   if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
@@ -740,8 +735,6 @@ void MediaDecoder::FirstFrameLoaded(
       aInfo->HasVideo(), PlayStateStr(), IsTransportSeekable());
 
   mInfo = std::move(aInfo);
-  mTelemetryProbesReporter->OnMediaContentChanged(
-      TelemetryProbesReporter::MediaInfoToMediaContent(*mInfo));
 
   Invalidate();
 
@@ -859,11 +852,11 @@ void MediaDecoder::ChangeState(PlayState aState) {
 
   if (mPlayState != aState) {
     DDLOG(DDLogCategory::Property, "play_state", ToPlayStateStr(aState));
-    LOG("Play state changes from %s to %s", ToPlayStateStr(mPlayState),
-        ToPlayStateStr(aState));
-    mPlayState = aState;
-    UpdateTelemetryHelperBasedOnPlayState(aState);
   }
+  LOG("Play state changes from %s to %s", ToPlayStateStr(mPlayState),
+      ToPlayStateStr(aState));
+  mPlayState = aState;
+  UpdateTelemetryHelperBasedOnPlayState(aState);
 }
 
 TelemetryProbesReporter::Visibility MediaDecoder::OwnerVisibility() const {
@@ -875,10 +868,7 @@ TelemetryProbesReporter::Visibility MediaDecoder::OwnerVisibility() const {
 void MediaDecoder::UpdateTelemetryHelperBasedOnPlayState(
     PlayState aState) const {
   if (aState == PlayState::PLAY_STATE_PLAYING) {
-    mTelemetryProbesReporter->OnPlay(
-        OwnerVisibility(),
-        TelemetryProbesReporter::MediaInfoToMediaContent(*mInfo),
-        mVolume == 0.f);
+    mTelemetryProbesReporter->OnPlay(OwnerVisibility());
   } else if (aState == PlayState::PLAY_STATE_PAUSED ||
              aState == PlayState::PLAY_STATE_ENDED) {
     mTelemetryProbesReporter->OnPause(OwnerVisibility());
@@ -1409,18 +1399,10 @@ RefPtr<GenericPromise> MediaDecoder::RequestDebugInfo(
 void MediaDecoder::NotifyAudibleStateChanged() {
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   GetOwner()->SetAudibleState(mIsAudioDataAudible);
-  mTelemetryProbesReporter->OnAudibleChanged(
-      mIsAudioDataAudible ? TelemetryProbesReporter::AudibleState::eAudible
-                          : TelemetryProbesReporter::AudibleState::eNotAudible);
 }
 
-void MediaDecoder::NotifyVolumeChanged() {
-  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  mTelemetryProbesReporter->OnMutedChanged(mVolume == 0.f);
-}
-
-double MediaDecoder::GetTotalVideoPlayTimeInSeconds() const {
-  return mTelemetryProbesReporter->GetTotalVideoPlayTimeInSeconds();
+double MediaDecoder::GetTotalPlayTimeInSeconds() const {
+  return mTelemetryProbesReporter->GetTotalPlayTimeInSeconds();
 }
 
 double MediaDecoder::GetVisibleVideoPlayTimeInSeconds() const {
@@ -1433,22 +1415,6 @@ double MediaDecoder::GetInvisibleVideoPlayTimeInSeconds() const {
 
 double MediaDecoder::GetVideoDecodeSuspendedTimeInSeconds() const {
   return mTelemetryProbesReporter->GetVideoDecodeSuspendedTimeInSeconds();
-}
-
-double MediaDecoder::GetTotalAudioPlayTimeInSeconds() const {
-  return mTelemetryProbesReporter->GetTotalAudioPlayTimeInSeconds();
-}
-
-double MediaDecoder::GetAudiblePlayTimeInSeconds() const {
-  return mTelemetryProbesReporter->GetAudiblePlayTimeInSeconds();
-}
-
-double MediaDecoder::GetInaudiblePlayTimeInSeconds() const {
-  return mTelemetryProbesReporter->GetInaudiblePlayTimeInSeconds();
-}
-
-double MediaDecoder::GetMutedPlayTimeInSeconds() const {
-  return mTelemetryProbesReporter->GetMutedPlayTimeInSeconds();
 }
 
 MediaMemoryTracker::MediaMemoryTracker() = default;

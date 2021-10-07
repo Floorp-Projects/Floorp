@@ -28,42 +28,10 @@ static const char* ToVisibilityStr(
       return "visible";
     case TelemetryProbesReporter::Visibility::eInvisible:
       return "invisible";
-    case TelemetryProbesReporter::Visibility::eInitial:
-      return "initial";
     default:
       MOZ_ASSERT_UNREACHABLE("invalid visibility");
       return "unknown";
   }
-}
-static const char* ToAudibilityStr(
-    TelemetryProbesReporter::AudibleState aAudibleState) {
-  switch (aAudibleState) {
-    case TelemetryProbesReporter::AudibleState::eAudible:
-      return "audible";
-    case TelemetryProbesReporter::AudibleState::eNotAudible:
-      return "inaudible";
-    default:
-      MOZ_ASSERT_UNREACHABLE("invalid audibility");
-      return "unknown";
-  }
-}
-
-static const char* ToMutedStr(bool aMuted) {
-  return aMuted ? "muted" : "unmuted";
-}
-
-MediaContent TelemetryProbesReporter::MediaInfoToMediaContent(
-    const MediaInfo& aInfo) {
-  if (aInfo.HasAudio() && aInfo.HasVideo()) {
-    return MediaContent::MEDIA_HAS_VIDEO | MediaContent::MEDIA_HAS_AUDIO;
-  }
-  if (aInfo.HasAudio()) {
-    return MediaContent::MEDIA_HAS_AUDIO;
-  }
-  if (aInfo.HasVideo()) {
-    return MediaContent::MEDIA_HAS_VIDEO;
-  }
-  return MediaContent::MEDIA_HAS_NOTHING;
 }
 
 TelemetryProbesReporter::TelemetryProbesReporter(
@@ -72,183 +40,47 @@ TelemetryProbesReporter::TelemetryProbesReporter(
   MOZ_ASSERT(mOwner);
 }
 
-void TelemetryProbesReporter::OnPlay(Visibility aVisibility,
-                                     MediaContent aMediaContent,
-                                     bool aIsMuted) {
-  LOG("Start time accumulation for total play time");
-
+void TelemetryProbesReporter::OnPlay(Visibility aVisibility) {
   AssertOnMainThreadAndNotShutdown();
-  MOZ_ASSERT_IF(mMediaContent & MediaContent::MEDIA_HAS_VIDEO,
-                !mTotalVideoPlayTime.IsStarted());
-  MOZ_ASSERT_IF(mMediaContent & MediaContent::MEDIA_HAS_AUDIO,
-                !mTotalAudioPlayTime.IsStarted());
-
-  if (aMediaContent & MediaContent::MEDIA_HAS_VIDEO) {
-    mTotalVideoPlayTime.Start();
+  if (mTotalPlayTime.IsStarted()) {
+    return;
   }
-  if (aMediaContent & MediaContent::MEDIA_HAS_AUDIO) {
-    mTotalAudioPlayTime.Start();
-  }
-
-  OnMediaContentChanged(aMediaContent);
-  OnVisibilityChanged(aVisibility);
-  OnMutedChanged(aIsMuted);
-
+  LOG("Start time accumulation for total play time");
+  mTotalPlayTime.Start();
   mOwner->DispatchAsyncTestingEvent(u"moztotalplaytimestarted"_ns);
-
-  mIsPlaying = true;
+  if (aVisibility == Visibility::eInvisible) {
+    StartInvisibleVideoTimeAcculator();
+  }
 }
 
 void TelemetryProbesReporter::OnPause(Visibility aVisibility) {
-  if (!mIsPlaying) {
-    // Not started
-    LOG("TelemetryProbesReporter::OnPause: not started, early return");
+  AssertOnMainThreadAndNotShutdown();
+  if (!mTotalPlayTime.IsStarted()) {
     return;
   }
-
+  if (aVisibility == Visibility::eInvisible) {
+    PauseInvisibleVideoTimeAcculator();
+  }
   LOG("Pause time accumulation for total play time");
-
-  AssertOnMainThreadAndNotShutdown();
-  MOZ_ASSERT_IF(mMediaContent & MediaContent::MEDIA_HAS_VIDEO,
-                mTotalVideoPlayTime.IsStarted());
-  MOZ_ASSERT_IF(mMediaContent & MediaContent::MEDIA_HAS_AUDIO,
-                mTotalAudioPlayTime.IsStarted());
-
-  if (mMediaContent & MediaContent::MEDIA_HAS_VIDEO) {
-    LOG("Pause video time accumulation for total play time");
-    if (mInvisibleVideoPlayTime.IsStarted()) {
-      LOG("Pause invisible video time accumulation for total play time");
-      PauseInvisibleVideoTimeAccumulator();
-    }
-    mTotalVideoPlayTime.Pause();
-  }
-  if (mMediaContent & MediaContent::MEDIA_HAS_AUDIO) {
-    LOG("Pause audio time accumulation for total play time");
-    if (mInaudibleAudioPlayTime.IsStarted()) {
-      LOG("Pause audible audio time accumulation for total play time");
-      PauseInaudibleAudioTimeAccumulator();
-    }
-    if (mMutedAudioPlayTime.IsStarted()) {
-      LOG("Pause muted audio time accumulation for total play time");
-      PauseMutedAudioTimeAccumulator();
-    }
-    mTotalAudioPlayTime.Pause();
-  }
-
+  mTotalPlayTime.Pause();
   mOwner->DispatchAsyncTestingEvent(u"moztotalplaytimepaused"_ns);
   ReportTelemetry();
-
-  mIsPlaying = false;
 }
 
 void TelemetryProbesReporter::OnVisibilityChanged(Visibility aVisibility) {
   AssertOnMainThreadAndNotShutdown();
-  LOG("Corresponding media element visibility change=%s -> %s",
-      ToVisibilityStr(mMediaElementVisibility), ToVisibilityStr(aVisibility));
-  if (aVisibility == Visibility::eInvisible) {
-    StartInvisibleVideoTimeAccumulator();
-  } else {
-    if (aVisibility != Visibility::eInitial) {
-      PauseInvisibleVideoTimeAccumulator();
-    } else {
-      LOG("Visibility was initial, not pausing.");
-    }
+  if (mMediaElementVisibility == aVisibility) {
+    return;
   }
+
   mMediaElementVisibility = aVisibility;
-}
-
-void TelemetryProbesReporter::OnAudibleChanged(AudibleState aAudibleState) {
-  AssertOnMainThreadAndNotShutdown();
-  LOG("Audibility changed, now %s", ToAudibilityStr(aAudibleState));
-  if (aAudibleState == AudibleState::eNotAudible) {
-    if (!mInaudibleAudioPlayTime.IsStarted()) {
-      StartInaudibleAudioTimeAccumulator();
-    }
+  LOG("Corresponding media element visibility change=%s",
+      ToVisibilityStr(aVisibility));
+  if (mMediaElementVisibility == Visibility::eInvisible) {
+    StartInvisibleVideoTimeAcculator();
   } else {
-    // This happens when starting playback, no need to pause, because it hasn't
-    // been started yet.
-    if (mInaudibleAudioPlayTime.IsStarted()) {
-      PauseInaudibleAudioTimeAccumulator();
-    }
+    PauseInvisibleVideoTimeAcculator();
   }
-}
-
-void TelemetryProbesReporter::OnMutedChanged(bool aMuted) {
-  // There are multiple ways to mute an element:
-  // - volume = 0
-  // - muted = true
-  // - set the enabled property of the playing AudioTrack to false
-  // Muted -> Muted "transisition" can therefore happen, and we can't add
-  // asserts here.
-  AssertOnMainThreadAndNotShutdown();
-  if (!(mMediaContent & MediaContent::MEDIA_HAS_AUDIO)) {
-    return;
-  }
-  LOG("Muted changed, was %s now %s", ToMutedStr(mIsMuted), ToMutedStr(aMuted));
-  if (aMuted) {
-    if (!mMutedAudioPlayTime.IsStarted()) {
-      StartMutedAudioTimeAccumulator();
-    }
-  } else {
-    // This happens when starting playback, no need to pause, because it hasn't
-    // been started yet.
-    if (mMutedAudioPlayTime.IsStarted()) {
-      PauseMutedAudioTimeAccumulator();
-    }
-  }
-  mIsMuted = aMuted;
-}
-
-void TelemetryProbesReporter::OnMediaContentChanged(MediaContent aContent) {
-  AssertOnMainThreadAndNotShutdown();
-  if (aContent == mMediaContent) {
-    return;
-  }
-  if (mMediaContent & MediaContent::MEDIA_HAS_VIDEO &&
-      !(aContent & MediaContent::MEDIA_HAS_VIDEO)) {
-    LOG("Video track removed from media.");
-    if (mInvisibleVideoPlayTime.IsStarted()) {
-      PauseInvisibleVideoTimeAccumulator();
-    }
-    if (mTotalVideoPlayTime.IsStarted()) {
-      mTotalVideoPlayTime.Pause();
-    }
-  }
-  if (mMediaContent & MediaContent::MEDIA_HAS_AUDIO &&
-      !(aContent & MediaContent::MEDIA_HAS_AUDIO)) {
-    LOG("Audio track removed from media.");
-    if (mTotalAudioPlayTime.IsStarted()) {
-      mTotalAudioPlayTime.Pause();
-    }
-    if (mInaudibleAudioPlayTime.IsStarted()) {
-      mInaudibleAudioPlayTime.Pause();
-    }
-    if (mMutedAudioPlayTime.IsStarted()) {
-      mMutedAudioPlayTime.Pause();
-    }
-  }
-  if (!(mMediaContent & MediaContent::MEDIA_HAS_VIDEO) &&
-      aContent & MediaContent::MEDIA_HAS_VIDEO) {
-    LOG("Video track added to media.");
-    if (mIsPlaying) {
-      mTotalVideoPlayTime.Start();
-      if (mMediaElementVisibility == Visibility::eInvisible) {
-        StartInvisibleVideoTimeAccumulator();
-      }
-    }
-  }
-  if (!(mMediaContent & MediaContent::MEDIA_HAS_AUDIO) &&
-      aContent & MediaContent::MEDIA_HAS_AUDIO) {
-    LOG("Audio track added to media.");
-    if (mIsPlaying) {
-      mTotalAudioPlayTime.Start();
-      if (mIsMuted) {
-        StartMutedAudioTimeAccumulator();
-      }
-    }
-  }
-
-  mMediaContent = aContent;
 }
 
 void TelemetryProbesReporter::OnDecodeSuspended() {
@@ -280,9 +112,9 @@ void TelemetryProbesReporter::OnShutdown() {
   mOwner = nullptr;
 }
 
-void TelemetryProbesReporter::StartInvisibleVideoTimeAccumulator() {
+void TelemetryProbesReporter::StartInvisibleVideoTimeAcculator() {
   AssertOnMainThreadAndNotShutdown();
-  if (!mTotalVideoPlayTime.IsStarted() || mInvisibleVideoPlayTime.IsStarted() ||
+  if (!mTotalPlayTime.IsStarted() || mInvisibleVideoPlayTime.IsStarted() ||
       !HasOwnerHadValidVideo()) {
     return;
   }
@@ -291,7 +123,7 @@ void TelemetryProbesReporter::StartInvisibleVideoTimeAccumulator() {
   mOwner->DispatchAsyncTestingEvent(u"mozinvisibleplaytimestarted"_ns);
 }
 
-void TelemetryProbesReporter::PauseInvisibleVideoTimeAccumulator() {
+void TelemetryProbesReporter::PauseInvisibleVideoTimeAcculator() {
   AssertOnMainThreadAndNotShutdown();
   if (!mInvisibleVideoPlayTime.IsStarted()) {
     return;
@@ -300,34 +132,6 @@ void TelemetryProbesReporter::PauseInvisibleVideoTimeAccumulator() {
   LOG("Pause time accumulation for invisible video");
   mInvisibleVideoPlayTime.Pause();
   mOwner->DispatchAsyncTestingEvent(u"mozinvisibleplaytimepaused"_ns);
-}
-
-void TelemetryProbesReporter::StartInaudibleAudioTimeAccumulator() {
-  AssertOnMainThreadAndNotShutdown();
-  MOZ_ASSERT(!mInaudibleAudioPlayTime.IsStarted());
-  mInaudibleAudioPlayTime.Start();
-  mOwner->DispatchAsyncTestingEvent(u"mozinaudibleaudioplaytimestarted"_ns);
-}
-
-void TelemetryProbesReporter::PauseInaudibleAudioTimeAccumulator() {
-  AssertOnMainThreadAndNotShutdown();
-  MOZ_ASSERT(mInaudibleAudioPlayTime.IsStarted());
-  mInaudibleAudioPlayTime.Pause();
-  mOwner->DispatchAsyncTestingEvent(u"mozinaudibleaudioplaytimepaused"_ns);
-}
-
-void TelemetryProbesReporter::StartMutedAudioTimeAccumulator() {
-  AssertOnMainThreadAndNotShutdown();
-  MOZ_ASSERT(!mMutedAudioPlayTime.IsStarted());
-  mMutedAudioPlayTime.Start();
-  mOwner->DispatchAsyncTestingEvent(u"mozmutedaudioplaytimestarted"_ns);
-}
-
-void TelemetryProbesReporter::PauseMutedAudioTimeAccumulator() {
-  AssertOnMainThreadAndNotShutdown();
-  MOZ_ASSERT(mMutedAudioPlayTime.IsStarted());
-  mMutedAudioPlayTime.Pause();
-  mOwner->DispatchAsyncTestingEvent(u"mozmutedeaudioplaytimepaused"_ns);
 }
 
 bool TelemetryProbesReporter::HasOwnerHadValidVideo() const {
@@ -340,10 +144,6 @@ bool TelemetryProbesReporter::HasOwnerHadValidVideo() const {
          (info.mImage.height > 0 && info.mImage.width > 0);
 }
 
-bool TelemetryProbesReporter::HasOwnerHadValidMedia() const {
-  return mMediaContent != MediaContent::MEDIA_HAS_NOTHING;
-}
-
 void TelemetryProbesReporter::AssertOnMainThreadAndNotShutdown() const {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mOwner, "Already shutdown?");
@@ -351,11 +151,7 @@ void TelemetryProbesReporter::AssertOnMainThreadAndNotShutdown() const {
 
 void TelemetryProbesReporter::ReportTelemetry() {
   AssertOnMainThreadAndNotShutdown();
-  // ReportResultForAudio needs to be called first, because it can use the video
-  // play time, that is reset in ReportResultForVideo.
-  ReportResultForAudio();
   ReportResultForVideo();
-  mOwner->DispatchAsyncTestingEvent(u"mozreportedtelemetry"_ns);
 }
 
 void TelemetryProbesReporter::ReportResultForVideo() {
@@ -364,43 +160,43 @@ void TelemetryProbesReporter::ReportResultForVideo() {
     return;
   }
 
-  const double totalVideoPlayTimeS = mTotalVideoPlayTime.GetAndClearTotal();
+  const double totalPlayTimeS = mTotalPlayTime.GetAndClearTotal();
   const double invisiblePlayTimeS = mInvisibleVideoPlayTime.GetAndClearTotal();
   const double videoDecodeSuspendTimeS =
       mVideoDecodeSuspendedTime.GetAndClearTotal();
 
   // No need to report result for video that didn't start playing.
-  if (totalVideoPlayTimeS == 0.0) {
+  if (totalPlayTimeS == 0.0) {
     return;
   }
-  MOZ_ASSERT(totalVideoPlayTimeS >= invisiblePlayTimeS);
+  MOZ_ASSERT(totalPlayTimeS >= invisiblePlayTimeS);
 
-  LOG("VIDEO_PLAY_TIME_S = %f", totalVideoPlayTimeS);
+  LOG("VIDEO_PLAY_TIME_S = %f", totalPlayTimeS);
   Telemetry::Accumulate(Telemetry::VIDEO_PLAY_TIME_MS,
-                        SECONDS_TO_MS(totalVideoPlayTimeS));
+                        SECONDS_TO_MS(totalPlayTimeS));
 
   LOG("VIDEO_HIDDEN_PLAY_TIME_S = %f", invisiblePlayTimeS);
   Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_MS,
                         SECONDS_TO_MS(invisiblePlayTimeS));
 
   if (mOwner->IsEncrypted()) {
-    LOG("VIDEO_ENCRYPTED_PLAY_TIME_S = %f", totalVideoPlayTimeS);
+    LOG("VIDEO_ENCRYPTED_PLAY_TIME_S = %f", totalPlayTimeS);
     Telemetry::Accumulate(Telemetry::VIDEO_ENCRYPTED_PLAY_TIME_MS,
-                          SECONDS_TO_MS(totalVideoPlayTimeS));
+                          SECONDS_TO_MS(totalPlayTimeS));
   }
 
   // Report result for video using CDM
   auto keySystem = mOwner->GetKeySystem();
   if (keySystem) {
     if (IsClearkeyKeySystem(*keySystem)) {
-      LOG("VIDEO_CLEARKEY_PLAY_TIME_S = %f", totalVideoPlayTimeS);
+      LOG("VIDEO_CLEARKEY_PLAY_TIME_S = %f", totalPlayTimeS);
       Telemetry::Accumulate(Telemetry::VIDEO_CLEARKEY_PLAY_TIME_MS,
-                            SECONDS_TO_MS(totalVideoPlayTimeS));
+                            SECONDS_TO_MS(totalPlayTimeS));
 
     } else if (IsWidevineKeySystem(*keySystem)) {
-      LOG("VIDEO_WIDEVINE_PLAY_TIME_S = %f", totalVideoPlayTimeS);
+      LOG("VIDEO_WIDEVINE_PLAY_TIME_S = %f", totalPlayTimeS);
       Telemetry::Accumulate(Telemetry::VIDEO_WIDEVINE_PLAY_TIME_MS,
-                            SECONDS_TO_MS(totalVideoPlayTimeS));
+                            SECONDS_TO_MS(totalPlayTimeS));
     }
   }
 
@@ -423,7 +219,7 @@ void TelemetryProbesReporter::ReportResultForVideo() {
   }
   key.AppendASCII(resolution);
 
-  auto visiblePlayTimeS = totalVideoPlayTimeS - invisiblePlayTimeS;
+  auto visiblePlayTimeS = totalPlayTimeS - invisiblePlayTimeS;
   LOG("VIDEO_VISIBLE_PLAY_TIME = %f, keys: '%s' and 'All'", visiblePlayTimeS,
       key.get());
   Telemetry::Accumulate(Telemetry::VIDEO_VISIBLE_PLAY_TIME_MS, key,
@@ -433,7 +229,7 @@ void TelemetryProbesReporter::ReportResultForVideo() {
                         SECONDS_TO_MS(visiblePlayTimeS));
 
   const uint32_t hiddenPercentage =
-      lround(invisiblePlayTimeS / totalVideoPlayTimeS * 100.0);
+      lround(invisiblePlayTimeS / totalPlayTimeS * 100.0);
   Telemetry::Accumulate(Telemetry::VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE, key,
                         hiddenPercentage);
   // Also accumulate all percentages in an "All" key.
@@ -443,7 +239,7 @@ void TelemetryProbesReporter::ReportResultForVideo() {
       hiddenPercentage, key.get());
 
   const uint32_t videoDecodeSuspendPercentage =
-      lround(videoDecodeSuspendTimeS / totalVideoPlayTimeS * 100.0);
+      lround(videoDecodeSuspendTimeS / totalPlayTimeS * 100.0);
   Telemetry::Accumulate(Telemetry::VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE,
                         key, videoDecodeSuspendPercentage);
   Telemetry::Accumulate(Telemetry::VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE,
@@ -451,75 +247,8 @@ void TelemetryProbesReporter::ReportResultForVideo() {
   LOG("VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE = %u, keys: '%s' and 'All'",
       videoDecodeSuspendPercentage, key.get());
 
-  ReportResultForVideoFrameStatistics(totalVideoPlayTimeS, key);
-}
-
-void TelemetryProbesReporter::ReportResultForAudio() {
-  // Don't record telemetry for a media that didn't have a valid audio or video
-  // to play, or hasn't played.
-  if (!HasOwnerHadValidMedia() || (mTotalAudioPlayTime.PeekTotal() == 0.0 &&
-                                   mTotalVideoPlayTime.PeekTotal() == 0.0)) {
-    return;
-  }
-
-  nsCString key;
-  nsCString avKey;
-  const double totalAudioPlayTimeS = mTotalAudioPlayTime.GetAndClearTotal();
-  const double inaudiblePlayTimeS = mInaudibleAudioPlayTime.GetAndClearTotal();
-  const double mutedPlayTimeS = mMutedAudioPlayTime.GetAndClearTotal();
-  const double audiblePlayTimeS = totalAudioPlayTimeS - inaudiblePlayTimeS;
-  const double unmutedPlayTimeS = totalAudioPlayTimeS - mutedPlayTimeS;
-  const uint32_t audiblePercentage =
-      lround(audiblePlayTimeS / totalAudioPlayTimeS * 100.0);
-  const uint32_t unmutedPercentage =
-      lround(unmutedPlayTimeS / totalAudioPlayTimeS * 100.0);
-  const double totalVideoPlayTimeS = mTotalVideoPlayTime.PeekTotal();
-
-  // Key semantics:
-  // - AV: Audible audio + video
-  // - IV: Inaudible audio + video
-  // - MV: Muted audio + video
-  // - A: Audible audio-only
-  // - I: Inaudible audio-only
-  // - M: Muted audio-only
-  // - V: Video-only
-  if (mMediaContent & MediaContent::MEDIA_HAS_AUDIO) {
-    if (audiblePercentage == 0) {
-      // Media element had an audio track, but it was inaudible throughout
-      key.AppendASCII("I");
-    } else if (unmutedPercentage == 0) {
-      // Media element had an audio track, but it was muted throughout
-      key.AppendASCII("M");
-    } else {
-      // Media element had an audible audio track
-      key.AppendASCII("A");
-    }
-    avKey.AppendASCII("A");
-  }
-  if (mMediaContent & MediaContent::MEDIA_HAS_VIDEO) {
-    key.AppendASCII("V");
-    avKey.AppendASCII("V");
-  }
-
-  LOG("Key: %s", key.get());
-
-  if (mMediaContent & MediaContent::MEDIA_HAS_AUDIO) {
-    LOG("Audio:\ntotal: %lf\naudible: %lf\ninaudible: %lf\nmuted: "
-        "%lf\npercentage audible: "
-        "%u\npercentage unmuted: %u\n",
-        totalAudioPlayTimeS, audiblePlayTimeS, inaudiblePlayTimeS,
-        mutedPlayTimeS, audiblePercentage, unmutedPercentage);
-    Telemetry::Accumulate(Telemetry::MEDIA_PLAY_TIME_MS, key,
-                          SECONDS_TO_MS(totalAudioPlayTimeS));
-    Telemetry::Accumulate(Telemetry::MUTED_PLAY_TIME_PERCENT, avKey,
-                          100 - unmutedPercentage);
-    Telemetry::Accumulate(Telemetry::AUDIBLE_PLAY_TIME_PERCENT, avKey,
-                          audiblePercentage);
-  } else {
-    MOZ_ASSERT(mMediaContent & MediaContent::MEDIA_HAS_VIDEO);
-    Telemetry::Accumulate(Telemetry::MEDIA_PLAY_TIME_MS, key,
-                          SECONDS_TO_MS(totalVideoPlayTimeS));
-  }
+  ReportResultForVideoFrameStatistics(totalPlayTimeS, key);
+  mOwner->DispatchAsyncTestingEvent(u"mozreportedtelemetry"_ns);
 }
 
 void TelemetryProbesReporter::ReportResultForVideoFrameStatistics(
@@ -578,13 +307,12 @@ void TelemetryProbesReporter::ReportResultForVideoFrameStatistics(
   }
 }
 
-double TelemetryProbesReporter::GetTotalVideoPlayTimeInSeconds() const {
-  return mTotalVideoPlayTime.PeekTotal();
+double TelemetryProbesReporter::GetTotalPlayTimeInSeconds() const {
+  return mTotalPlayTime.PeekTotal();
 }
 
 double TelemetryProbesReporter::GetVisibleVideoPlayTimeInSeconds() const {
-  return GetTotalVideoPlayTimeInSeconds() -
-         GetInvisibleVideoPlayTimeInSeconds();
+  return GetTotalPlayTimeInSeconds() - GetInvisibleVideoPlayTimeInSeconds();
 }
 
 double TelemetryProbesReporter::GetInvisibleVideoPlayTimeInSeconds() const {
@@ -593,22 +321,6 @@ double TelemetryProbesReporter::GetInvisibleVideoPlayTimeInSeconds() const {
 
 double TelemetryProbesReporter::GetVideoDecodeSuspendedTimeInSeconds() const {
   return mVideoDecodeSuspendedTime.PeekTotal();
-}
-
-double TelemetryProbesReporter::GetTotalAudioPlayTimeInSeconds() const {
-  return mTotalAudioPlayTime.PeekTotal();
-}
-
-double TelemetryProbesReporter::GetInaudiblePlayTimeInSeconds() const {
-  return mInaudibleAudioPlayTime.PeekTotal();
-}
-
-double TelemetryProbesReporter::GetMutedPlayTimeInSeconds() const {
-  return mMutedAudioPlayTime.PeekTotal();
-}
-
-double TelemetryProbesReporter::GetAudiblePlayTimeInSeconds() const {
-  return GetTotalAudioPlayTimeInSeconds() - GetInaudiblePlayTimeInSeconds();
 }
 
 #undef LOG
