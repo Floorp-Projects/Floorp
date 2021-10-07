@@ -480,5 +480,17 @@ double TelemetryProbesReporter::GetVideoDecodeSuspendedTimeInSeconds() const {
   return mVideoDecodeSuspendedTime.PeekTotal();
 }
 
+double TelemetryProbesReporter::GetTotalAudioPlayTimeInSeconds() const {
+  return mTotalAudioPlayTime.PeekTotal();
+}
+
+double TelemetryProbesReporter::GetInaudiblePlayTimeInSeconds() const {
+  return mInaudibleAudioPlayTime.PeekTotal();
+}
+
+double TelemetryProbesReporter::GetAudiblePlayTimeInSeconds() const {
+  return GetTotalAudioPlayTimeInSeconds() - GetInaudiblePlayTimeInSeconds();
+}
+
 #undef LOG
 }  // namespace mozilla
