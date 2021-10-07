@@ -4,37 +4,46 @@
 
 "use strict";
 
+const { ONBOARDING_CHOICE } = ChromeUtils.import(
+  "resource:///modules/UrlbarQuickSuggest.jsm"
+);
+
 document.addEventListener("dialogaccept", event => {
+  // dialogaccept is fired when the user presses the enter key even when an
+  // element other than the accept button is focused. If another element is
+  // focused, then peform its action.
   switch (document.activeElement?.id) {
     case "onboardingSettingsButton":
+      window.arguments[0].choice = ONBOARDING_CHOICE.SETTINGS;
       event.preventDefault();
-      window.arguments[0].openSettings = true;
       window.close();
       return;
     case "onboardingNotNow":
+      window.arguments[0].choice = ONBOARDING_CHOICE.NOT_NOW;
       event.preventDefault();
       window.close();
       return;
     case "onboardingLearnMore":
+      window.arguments[0].choice = ONBOARDING_CHOICE.LEARN_MORE;
       event.preventDefault();
-      window.arguments[0].learnMore = true;
       window.close();
       return;
   }
 
-  window.arguments[0].accept = true;
+  window.arguments[0].choice = ONBOARDING_CHOICE.ACCEPT;
 });
 
 document.addEventListener("dialogextra1", () => {
-  window.arguments[0].openSettings = true;
+  window.arguments[0].choice = ONBOARDING_CHOICE.SETTINGS;
   window.close();
 });
 
 document.getElementById("onboardingNotNow").addEventListener("click", () => {
+  window.arguments[0].choice = ONBOARDING_CHOICE.NOT_NOW;
   window.close();
 });
 
 document.getElementById("onboardingLearnMore").addEventListener("click", () => {
-  window.arguments[0].learnMore = true;
+  window.arguments[0].choice = ONBOARDING_CHOICE.LEARN_MORE;
   window.close();
 });

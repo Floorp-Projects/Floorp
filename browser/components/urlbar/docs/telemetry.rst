@@ -536,12 +536,24 @@ contextservices.quicksuggest
 
     - Category: ``contextservices.quicksuggest``
     - Method: ``opt_in_dialog``
-    - Objects: ``accept``, ``settings``, ``learn_more``, ``not_now`` --
+    - Objects: ``accept``, ``dismissed_escape_key``, ``dismissed_other``,
+      ``learn_more``, ``not_now_link``, ``settings`` --
       ``accept`` is recorded when the user accepts the dialog and opts in,
       ``settings`` is recorded when the user clicks in the "Customize" button
-      (the user remains opted out in this case), ``learn_more`` is recorded when
-      the user clicks "Learn more" (the user remains opted out), ``not_now`` is
-      recorded when the user clicks "Not now" (the user remains opted out)
+      (the user remains opted out in this case),
+      ``learn_more`` is recorded when the user clicks "Learn more" (the user
+      remains opted out),
+      ``not_now_link`` is recorded when the user clicks "Not now" (the user
+      remains opted out),
+      ``dismissed_escape_key`` is recorded when the user dismisses the dialog by
+      pressing the Escape key (the user remains opted out),
+      ``dismissed_other`` is recorded when the dialog is dismissed in some other
+      unknown way, for example when the dialog is replaced with another higher
+      priority dialog like the one shown when quitting the app (the user remains
+      opted out).
+      Note: In older versions of Firefox, ``not_now_link``,
+      ``dismissed_escape_key``, ``dismissed_other`` did not exist; instead, all
+      three of these cases were represented by a single ``not_now`` object.
     - Value: Not used
     - Extra: Not used
 
