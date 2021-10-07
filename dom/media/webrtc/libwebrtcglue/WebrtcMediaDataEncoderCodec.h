@@ -24,7 +24,7 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
  public:
   static bool CanCreate(const webrtc::VideoCodecType aCodecType);
 
-  WebrtcMediaDataEncoder();
+  explicit WebrtcMediaDataEncoder(const webrtc::SdpVideoFormat& aFormat);
 
   int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
                      const webrtc::VideoEncoder::Settings& aSettings) override;
@@ -67,6 +67,7 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
   MediaResult mError = NS_OK;
 
   VideoInfo mInfo;
+  webrtc::SdpVideoFormat::Parameters mFormatParams;
   webrtc::CodecSpecificInfo mCodecSpecific;
   webrtc::BitrateAdjuster mBitrateAdjuster;
   uint32_t mMaxFrameRate;
