@@ -36,7 +36,8 @@ nsClipboardHelper::~nsClipboardHelper() {
 
 NS_IMETHODIMP
 nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
-                                         int32_t aClipboardID) {
+                                         int32_t aClipboardID,
+                                         SensitiveData aSensitive) {
   nsresult rv;
 
   // get the clipboard
@@ -69,6 +70,9 @@ nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
   NS_ENSURE_TRUE(trans, NS_ERROR_FAILURE);
 
   trans->Init(nullptr);
+  if (aSensitive == SensitiveData::Sensitive) {
+    trans->SetIsPrivateData(true);
+  }
 
   // Add the text data flavor to the transferable
   rv = trans->AddDataFlavor(kUnicodeMime);
@@ -102,11 +106,13 @@ nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
 }
 
 NS_IMETHODIMP
-nsClipboardHelper::CopyString(const nsAString& aString) {
+nsClipboardHelper::CopyString(const nsAString& aString,
+                              SensitiveData aSensitive) {
   nsresult rv;
 
   // copy to the global clipboard. it's bad if this fails in any way.
-  rv = CopyStringToClipboard(aString, nsIClipboard::kGlobalClipboard);
+  rv = CopyStringToClipboard(aString, nsIClipboard::kGlobalClipboard,
+                             aSensitive);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // unix also needs us to copy to the selection clipboard. this will
@@ -118,7 +124,7 @@ nsClipboardHelper::CopyString(const nsAString& aString) {
   // if this fails in any way other than "not being unix", we'll get
   // the assertion we need in CopyStringToClipboard, and we needn't
   // assert again here.
-  CopyStringToClipboard(aString, nsIClipboard::kSelectionClipboard);
+  CopyStringToClipboard(aString, nsIClipboard::kSelectionClipboard, aSensitive);
 
   return NS_OK;
 }

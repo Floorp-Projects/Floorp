@@ -1481,6 +1481,15 @@
 #endif
   mirror: always
 
+#ifdef XP_WIN
+  # allow to copy clipboard data to Clipboard History/Cloud
+  # (used on sensitive data in about:logins and Private Browsing)
+-   name: clipboard.copyPrivateDataToClipboardCloudOrHistory
+    type: bool
+    value: false
+    mirror: always
+#endif
+
 #---------------------------------------------------------------------------
 # Prefs starting with "consoleservice."
 #---------------------------------------------------------------------------
