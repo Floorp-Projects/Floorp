@@ -1297,7 +1297,8 @@ void ParentImpl::ShutdownBackgroundThread() {
           &ShutdownTimerCallback, &closure, kShutdownTimerDelayMS,
           nsITimer::TYPE_ONE_SHOT, "ParentImpl::ShutdownTimerCallback"));
 
-      SpinEventLoopUntil([&]() { return !sLiveActorCount; });
+      SpinEventLoopUntil("ParentImpl::ShutdownBackgroundThread"_ns,
+                         [&]() { return !sLiveActorCount; });
 
       MOZ_ASSERT(liveActors->IsEmpty());
 
