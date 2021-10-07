@@ -11,8 +11,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
-const DIALOG_URI =
+const ONBOARDING_URI =
   "chrome://browser/content/urlbar/quicksuggestOnboarding.xhtml";
+
+const OTHER_DIALOG_URI = getRootDirectory(gTestPath) + "subdialog.xhtml";
 
 const LEARN_MORE_URL =
   Services.urlFormatter.formatURLPref("app.support.baseURL") +
@@ -41,6 +43,7 @@ add_task(async function accept() {
       );
       Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
     },
+    onboardingDialogChoice: "accept",
     telemetryEvents: [
       {
         category: TELEMETRY_EVENT_CATEGORY,
@@ -82,11 +85,12 @@ add_task(async function notNow() {
       );
       Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
     },
+    onboardingDialogChoice: "not_now_link",
     telemetryEvents: [
       {
         category: TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "not_now",
+        object: "not_now_link",
       },
     ],
   });
@@ -121,6 +125,7 @@ add_task(async function settings() {
         "Current tab is about:preferences#privacy"
       );
     },
+    onboardingDialogChoice: "settings",
     telemetryEvents: [
       {
         category: TELEMETRY_EVENT_CATEGORY,
@@ -163,6 +168,7 @@ add_task(async function learnMore() {
       );
       BrowserTestUtils.removeTab(tab);
     },
+    onboardingDialogChoice: "learn_more",
     telemetryEvents: [
       {
         category: TELEMETRY_EVENT_CATEGORY,
@@ -173,15 +179,19 @@ add_task(async function learnMore() {
   });
 });
 
-// The Esc key should behave like Not now: It should dismiss the dialog without
-// opting in.
-add_task(async function escKey() {
+// The Escape key should dismiss the dialog without opting in. This task tests
+// when Escape is pressed while the focus is inside the dialog.
+add_task(async function escKey_focusInsideDialog() {
   await doFocusTest({
     tabKeyRepeat: 0,
     expectedFocusID: "onboardingAcceptButton",
     expectOptIn: false,
     callback: async () => {
       let tabCount = gBrowser.tabs.length;
+      Assert.ok(
+        document.activeElement.classList.contains("dialogFrame"),
+        "dialogFrame is focused in the browser window"
+      );
       EventUtils.synthesizeKey("KEY_Escape");
       Assert.equal(
         gBrowser.currentURI.spec,
@@ -190,11 +200,130 @@ add_task(async function escKey() {
       );
       Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
     },
+    onboardingDialogChoice: "dismissed_escape_key",
     telemetryEvents: [
       {
         category: TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "not_now",
+        object: "dismissed_escape_key",
+      },
+    ],
+  });
+});
+
+// The Escape key should dismiss the dialog without opting in. This task tests
+// when Escape is pressed while the focus is outside the dialog.
+add_task(async function escKey_focusOutsideDialog() {
+  await doFocusTest({
+    tabKeyRepeat: 0,
+    expectedFocusID: "onboardingAcceptButton",
+    expectOptIn: false,
+    callback: async () => {
+      document.documentElement.focus();
+      Assert.ok(
+        !document.activeElement.classList.contains("dialogFrame"),
+        "dialogFrame is not focused in the browser window"
+      );
+      EventUtils.synthesizeKey("KEY_Escape");
+    },
+    onboardingDialogChoice: "dismissed_escape_key",
+    telemetryEvents: [
+      {
+        category: TELEMETRY_EVENT_CATEGORY,
+        method: "opt_in_dialog",
+        object: "dismissed_escape_key",
+      },
+    ],
+  });
+});
+
+// The Escape key should dismiss the dialog without opting in when another
+// dialog is queued and shown before the onboarding. This task dismisses the
+// other dialog by pressing the Escape key.
+add_task(async function escKey_queued_esc() {
+  await doQueuedEscKeyTest("KEY_Escape");
+});
+
+// The Escape key should dismiss the dialog without opting in when another
+// dialog is queued and shown before the onboarding. This task dismisses the
+// other dialog by pressing the Enter key.
+add_task(async function escKey_queued_enter() {
+  await doQueuedEscKeyTest("KEY_Enter");
+});
+
+async function doQueuedEscKeyTest(otherDialogKey) {
+  await doDialogTest({
+    expectOptIn: false,
+    callback: async () => {
+      // Create promises that will resolve when each dialog is opened.
+      let uris = [OTHER_DIALOG_URI, ONBOARDING_URI];
+      let [otherOpenedPromise, onboardingOpenedPromise] = uris.map(uri =>
+        TestUtils.topicObserved(
+          "subdialog-loaded",
+          contentWin => contentWin.document.documentURI == uri
+        ).then(async ([contentWin]) => {
+          if (contentWin.document.readyState != "complete") {
+            await BrowserTestUtils.waitForEvent(contentWin, "load");
+          }
+        })
+      );
+
+      info("Queuing dialogs for opening");
+      let otherClosedPromise = gDialogBox.open(OTHER_DIALOG_URI);
+      let onboardingClosedPromise = UrlbarQuickSuggest.maybeShowOnboardingDialog();
+
+      info("Waiting for the other dialog to open");
+      await otherOpenedPromise;
+
+      info(`Pressing ${otherDialogKey} and waiting for other dialog to close`);
+      EventUtils.synthesizeKey(otherDialogKey);
+      await otherClosedPromise;
+
+      info("Waiting for the onboarding dialog to open");
+      await onboardingOpenedPromise;
+
+      info("Pressing Escape and waiting for onboarding dialog to close");
+      EventUtils.synthesizeKey("KEY_Escape");
+      await onboardingClosedPromise;
+    },
+    onboardingDialogChoice: "dismissed_escape_key",
+    telemetryEvents: [
+      {
+        category: TELEMETRY_EVENT_CATEGORY,
+        method: "opt_in_dialog",
+        object: "dismissed_escape_key",
+      },
+    ],
+  });
+}
+
+// Tests `dismissed_other` by closing the dialog programmatically.
+add_task(async function dismissed_other() {
+  await doDialogTest({
+    expectOptIn: false,
+    callback: async () => {
+      let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen(
+        null,
+        ONBOARDING_URI,
+        { isSubDialog: true }
+      );
+
+      let maybeShowPromise = UrlbarQuickSuggest.maybeShowOnboardingDialog();
+
+      let win = await dialogPromise;
+      if (win.document.readyState != "complete") {
+        await BrowserTestUtils.waitForEvent(win, "load");
+      }
+
+      gDialogBox._dialog.close();
+      await maybeShowPromise;
+    },
+    onboardingDialogChoice: "dismissed_other",
+    telemetryEvents: [
+      {
+        category: TELEMETRY_EVENT_CATEGORY,
+        method: "opt_in_dialog",
+        object: "dismissed_other",
       },
     ],
   });
@@ -211,6 +340,7 @@ add_task(async function focus_accept() {
     callback: async () => {
       EventUtils.synthesizeKey("KEY_Enter");
     },
+    onboardingDialogChoice: "accept",
     telemetryEvents: [
       {
         category: TELEMETRY_EVENT_CATEGORY,
@@ -256,6 +386,7 @@ add_task(async function focus_settings() {
         "Current tab is about:preferences#privacy"
       );
     },
+    onboardingDialogChoice: "settings",
     telemetryEvents: [
       {
         category: TELEMETRY_EVENT_CATEGORY,
@@ -296,6 +427,7 @@ add_task(async function focus_learnMore() {
       );
       BrowserTestUtils.removeTab(tab);
     },
+    onboardingDialogChoice: "learn_more",
     telemetryEvents: [
       {
         category: TELEMETRY_EVENT_CATEGORY,
@@ -324,11 +456,12 @@ add_task(async function focus_notNow() {
       );
       Assert.equal(gBrowser.tabs.length, tabCount, "No news tabs were opened");
     },
+    onboardingDialogChoice: "not_now_link",
     telemetryEvents: [
       {
         category: TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
-        object: "not_now",
+        object: "not_now_link",
       },
     ],
   });
@@ -345,6 +478,7 @@ add_task(async function focus_accept_wraparound() {
     callback: async () => {
       EventUtils.synthesizeKey("KEY_Enter");
     },
+    onboardingDialogChoice: "accept",
     telemetryEvents: [
       {
         category: TELEMETRY_EVENT_CATEGORY,
@@ -365,7 +499,12 @@ add_task(async function focus_accept_wraparound() {
   });
 });
 
-async function doDialogTest({ expectOptIn, telemetryEvents, callback }) {
+async function doDialogTest({
+  expectOptIn,
+  onboardingDialogChoice,
+  telemetryEvents,
+  callback,
+}) {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     // Set all the required prefs for showing the onboarding dialog.
     await SpecialPowers.pushPrefEnv({
@@ -396,8 +535,21 @@ async function doDialogTest({ expectOptIn, telemetryEvents, callback }) {
       "Sponsored pref enabled status"
     );
 
+    if (onboardingDialogChoice) {
+      Assert.equal(
+        UrlbarPrefs.get("quicksuggest.onboardingDialogChoice"),
+        onboardingDialogChoice,
+        "onboardingDialogChoice"
+      );
+    }
+
     if (telemetryEvents) {
-      TelemetryTestUtils.assertEvents(telemetryEvents);
+      // Even with the `clearEvents` call above, events related to remote
+      // settings can occur in TV tests during the callback, so pass a filter
+      // arg to make sure we get only the events we're interested in.
+      TelemetryTestUtils.assertEvents(telemetryEvents, {
+        category: TELEMETRY_EVENT_CATEGORY,
+      });
     }
 
     await SpecialPowers.popPrefEnv();
@@ -412,26 +564,26 @@ async function doFocusTest({
   tabKeyRepeat,
   expectedFocusID,
   expectOptIn,
+  onboardingDialogChoice,
   telemetryEvents,
   callback,
 }) {
-  if (AppConstants.platform == "macosx") {
-    if (gCanTabMoveFocus === undefined) {
-      gCanTabMoveFocus = await canTabMoveFocus();
-    }
-    if (!gCanTabMoveFocus) {
-      Assert.ok(true, "Skipping focus/tabbing test on Mac");
-      return;
-    }
+  if (gCanTabMoveFocus === undefined) {
+    gCanTabMoveFocus = await canTabMoveFocus();
+  }
+  if (!gCanTabMoveFocus && tabKeyRepeat) {
+    Assert.ok(true, "Tab key can't move focus, skipping test");
+    return;
   }
 
   await doDialogTest({
     expectOptIn,
+    onboardingDialogChoice,
     telemetryEvents,
     callback: async () => {
       let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen(
         null,
-        DIALOG_URI,
+        ONBOARDING_URI,
         { isSubDialog: true }
       );
 
@@ -446,12 +598,18 @@ async function doFocusTest({
 
       Assert.equal(
         doc.activeElement.id,
-        "onboardingAcceptButton",
+        gCanTabMoveFocus
+          ? "onboardingAcceptButton"
+          : "quicksuggestOnboardingDialogWindow",
         "Accept button is focused initially"
       );
 
       if (tabKeyRepeat) {
         EventUtils.synthesizeKey("KEY_Tab", { repeat: tabKeyRepeat });
+      }
+
+      if (!gCanTabMoveFocus) {
+        expectedFocusID = "quicksuggestOnboardingDialogWindow";
       }
       Assert.equal(
         doc.activeElement.id,
@@ -466,7 +624,7 @@ async function doFocusTest({
 }
 
 async function openDialog(button = undefined) {
-  await BrowserTestUtils.promiseAlertDialog(button, DIALOG_URI, {
+  await BrowserTestUtils.promiseAlertDialog(button, ONBOARDING_URI, {
     isSubDialog: true,
   });
   info("Saw dialog");
@@ -493,13 +651,17 @@ async function openDialog(button = undefined) {
  * @returns {boolean}
  */
 async function canTabMoveFocus() {
+  if (AppConstants.platform != "macosx") {
+    return true;
+  }
+
   let canMove = false;
   await doDialogTest({
     expectOptIn: false,
     callback: async () => {
       let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen(
         null,
-        DIALOG_URI,
+        ONBOARDING_URI,
         { isSubDialog: true }
       );
 

@@ -2930,13 +2930,13 @@ contextservices.quicksuggest:
     description: >
       This is recorded when the `browser.urlbar.suggest.quicksuggest.sponsored`
       boolean pref is toggled.
-    bug_numbers: [1728430]
+    bug_numbers: [1728430, 1733687]
     notification_emails:
       - fx-search@mozilla.com
       - adw@mozilla.com
     expiry_version: never
   opt_in_dialog:
-    objects: ["accept", "not_now", "settings", "learn_more"]
+    objects: ["accept", "dismissed_escape_key", "dismissed_other", "learn_more", "not_now_link", "settings"]
     release_channel_collection: opt-out
     products:
       - "firefox"
@@ -2947,7 +2947,12 @@ contextservices.quicksuggest:
       and opts in, 'settings' is recorded when the user clicks in the
       "Customize" button (the user remains opted out in this case), 'learn_more'
       is recorded when the user clicks "Learn more" (the user remains opted
-      out), 'not_now' is recorded when the user clicks "Not now" (the user
+      out), 'not_now_link' is recorded when the user clicks "Not now" (the user
+      remains opted out), 'dismissed_escape_key' is recorded when the user
+      dismisses the dialog by pressing the Escape key (the user remains opted
+      out), 'dismissed_other' is recorded when the dialog is dismissed in some
+      other unknown way, for example when the dialog is replaced with another
+      higher priority dialog like the one shown when quitting the app (the user
       remains opted out)
     bug_numbers: [1723860]
     notification_emails:
