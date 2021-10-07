@@ -1392,13 +1392,29 @@ bool BacktrackingAllocator::tryAllocateNonFixed(LiveBundle* bundle,
   if (conflicting.empty() || minimalBundle(bundle)) {
     // Search for any available register which the bundle can be
     // allocated to.
-    for (size_t i = 0; i < AnyRegister::Total; i++) {
-      if (!tryAllocateRegister(registers[i], bundle, success, pfixed,
-                               conflicting)) {
-        return false;
+    LDefinition::Type type = bundle->firstRange()->vreg().type();
+    if (LDefinition::isFloatReg(type)) {
+      for (size_t i = AnyRegister::FirstFloatReg; i < AnyRegister::Total; i++) {
+        if (!LDefinition::isFloatRegCompatible(type, registers[i].reg.fpu())) {
+          continue;
+        }
+        if (!tryAllocateRegister(registers[i], bundle, success, pfixed,
+                                 conflicting)) {
+          return false;
+        }
+        if (*success) {
+          return true;
+        }
       }
-      if (*success) {
-        return true;
+    } else {
+      for (size_t i = 0; i < AnyRegister::FirstFloatReg; i++) {
+        if (!tryAllocateRegister(registers[i], bundle, success, pfixed,
+                                 conflicting)) {
+          return false;
+        }
+        if (*success) {
+          return true;
+        }
       }
     }
   }
@@ -1596,11 +1612,9 @@ bool BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r,
   for (LiveRange::BundleLinkIterator iter = bundle->rangesBegin(); iter;
        iter++) {
     LiveRange* range = LiveRange::get(*iter);
-    VirtualRegister& reg = range->vreg();
 
-    if (!reg.isCompatible(r.reg)) {
-      return true;
-    }
+    // All ranges in the bundle must be compatible with the physical register.
+    MOZ_ASSERT(range->vreg().isCompatible(r.reg));
 
     for (size_t a = 0; a < r.reg.numAliased(); a++) {
       PhysicalRegister& rAlias = registers[r.reg.aliased(a).code()];
@@ -1812,13 +1826,29 @@ bool BacktrackingAllocator::tryAllocatingRegistersForSpillBundles() {
 
     // Search for any available register which the bundle can be
     // allocated to.
-    for (size_t i = 0; i < AnyRegister::Total; i++) {
-      if (!tryAllocateRegister(registers[i], bundle, &success, &fixed,
-                               conflicting)) {
-        return false;
+    LDefinition::Type type = bundle->firstRange()->vreg().type();
+    if (LDefinition::isFloatReg(type)) {
+      for (size_t i = AnyRegister::FirstFloatReg; i < AnyRegister::Total; i++) {
+        if (!LDefinition::isFloatRegCompatible(type, registers[i].reg.fpu())) {
+          continue;
+        }
+        if (!tryAllocateRegister(registers[i], bundle, &success, &fixed,
+                                 conflicting)) {
+          return false;
+        }
+        if (success) {
+          break;
+        }
       }
-      if (success) {
-        break;
+    } else {
+      for (size_t i = 0; i < AnyRegister::FirstFloatReg; i++) {
+        if (!tryAllocateRegister(registers[i], bundle, &success, &fixed,
+                                 conflicting)) {
+          return false;
+        }
+        if (success) {
+          break;
+        }
       }
     }
 
