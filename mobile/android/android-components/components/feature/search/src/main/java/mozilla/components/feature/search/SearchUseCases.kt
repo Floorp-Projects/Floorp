@@ -5,7 +5,6 @@
 package mozilla.components.feature.search
 
 import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.findTabOrCustomTab
@@ -13,6 +12,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.search.ext.buildSearchUrl
+import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.base.log.logger.Logger
 
@@ -21,7 +21,8 @@ import mozilla.components.support.base.log.logger.Logger
  */
 class SearchUseCases(
     store: BrowserStore,
-    tabsUseCases: TabsUseCases
+    tabsUseCases: TabsUseCases,
+    sessionUseCases: SessionUseCases
 ) {
     interface SearchUseCase {
         /**
@@ -36,7 +37,8 @@ class SearchUseCases(
 
     class DefaultSearchUseCase(
         private val store: BrowserStore,
-        private val tabsUseCases: TabsUseCases
+        private val tabsUseCases: TabsUseCases,
+        private val sessionUseCases: SessionUseCases
     ) : SearchUseCase {
         private val logger = Logger("DefaultSearchUseCase")
 
@@ -80,12 +82,7 @@ class SearchUseCases(
                 // If we got a `sessionId` then try to find the tab and load the search URL in it
                 val existingTab = store.state.findTabOrCustomTab(sessionId)
                 if (existingTab != null) {
-                    store.dispatch(
-                        EngineAction.LoadUrlAction(
-                            existingTab.id,
-                            searchUrl
-                        )
-                    )
+                    sessionUseCases.loadUrl(searchUrl, sessionId = existingTab.id)
                     existingTab.id
                 } else {
                     // If the tab with the provided id was not found then create a new tab
@@ -252,7 +249,7 @@ class SearchUseCases(
     }
 
     val defaultSearch: DefaultSearchUseCase by lazy {
-        DefaultSearchUseCase(store, tabsUseCases)
+        DefaultSearchUseCase(store, tabsUseCases, sessionUseCases)
     }
 
     val newTabSearch: NewTabSearchUseCase by lazy {

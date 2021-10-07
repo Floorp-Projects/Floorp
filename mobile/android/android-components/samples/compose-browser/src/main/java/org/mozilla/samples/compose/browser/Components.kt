@@ -46,7 +46,7 @@ class Components(
 
     val sessionUseCases by lazy { SessionUseCases(store) }
     val tabsUseCases by lazy { TabsUseCases(store) }
-    val searchUseCases by lazy { SearchUseCases(store, tabsUseCases) }
+    val searchUseCases by lazy { SearchUseCases(store, tabsUseCases, sessionUseCases) }
 
     val locationService by lazy { LocationService.default() }
 }

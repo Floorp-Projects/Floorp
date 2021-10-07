@@ -7,7 +7,6 @@ package mozilla.components.feature.search
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
@@ -19,6 +18,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.search.ext.createSearchEngine
+import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
@@ -31,6 +31,7 @@ import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -40,6 +41,8 @@ class SearchUseCasesTest {
     private lateinit var store: BrowserStore
     private lateinit var useCases: SearchUseCases
     private lateinit var tabsUseCases: TabsUseCases
+    private lateinit var sessionUseCases: SessionUseCases
+    private lateinit var loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase
 
     private val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
 
@@ -55,6 +58,9 @@ class SearchUseCasesTest {
         )
 
         tabsUseCases = mock()
+        sessionUseCases = mock()
+        loadUrlUseCase = mock()
+        doReturn(loadUrlUseCase).`when`(sessionUseCases).loadUrl
 
         store = BrowserStore(
             initialState = BrowserState(
@@ -67,7 +73,8 @@ class SearchUseCasesTest {
 
         useCases = SearchUseCases(
             store,
-            tabsUseCases
+            tabsUseCases,
+            sessionUseCases
         )
     }
 
@@ -88,8 +95,11 @@ class SearchUseCasesTest {
         useCases.defaultSearch(searchTerms)
         store.waitUntilIdle()
 
-        val loadUrlAction = middleware.findFirstAction(EngineAction.LoadUrlAction::class)
-        assertEquals(searchUrl, loadUrlAction.url)
+        verify(loadUrlUseCase).invoke(searchUrl, sessionId = "mozilla")
+
+        val searchTermsAccessAction = middleware.findFirstAction(ContentAction.UpdateSearchTermsAction::class)
+        assertEquals(searchTerms, searchTermsAccessAction.searchTerms)
+        assertEquals("mozilla", searchTermsAccessAction.sessionId)
     }
 
     @Test
@@ -213,7 +223,7 @@ class SearchUseCasesTest {
             )
         )
 
-        val useCases = SearchUseCases(store, mock())
+        val useCases = SearchUseCases(store, mock(), mock())
 
         useCases.selectSearchEngine.invoke(
             store.findSearchEngineById("engine-d")
@@ -275,7 +285,7 @@ class SearchUseCasesTest {
             )
         )
 
-        val useCases = SearchUseCases(store, mock())
+        val useCases = SearchUseCases(store, mock(), mock())
 
         assertEquals(6, store.state.search.searchEngines.size)
         assertEquals(3, store.state.search.availableSearchEngines.size)
@@ -328,7 +338,7 @@ class SearchUseCasesTest {
             )
         )
 
-        val useCases = SearchUseCases(store, mock())
+        val useCases = SearchUseCases(store, mock(), mock())
 
         assertEquals(6, store.state.search.searchEngines.size)
         assertEquals(3, store.state.search.availableSearchEngines.size)
@@ -381,7 +391,7 @@ class SearchUseCasesTest {
             )
         )
 
-        val useCases = SearchUseCases(store, mock())
+        val useCases = SearchUseCases(store, mock(), mock())
 
         assertEquals(6, store.state.search.searchEngines.size)
         assertEquals(3, store.state.search.availableSearchEngines.size)
@@ -439,7 +449,7 @@ class SearchUseCasesTest {
             )
         )
 
-        val useCases = SearchUseCases(store, mock())
+        val useCases = SearchUseCases(store, mock(), mock())
 
         assertEquals(6, store.state.search.searchEngines.size)
         assertEquals(3, store.state.search.availableSearchEngines.size)
@@ -492,7 +502,7 @@ class SearchUseCasesTest {
             )
         )
 
-        val useCases = SearchUseCases(store, mock())
+        val useCases = SearchUseCases(store, mock(), mock())
 
         assertEquals(6, store.state.search.searchEngines.size)
         assertEquals(3, store.state.search.availableSearchEngines.size)
@@ -545,7 +555,7 @@ class SearchUseCasesTest {
             )
         )
 
-        val useCases = SearchUseCases(store, mock())
+        val useCases = SearchUseCases(store, mock(), mock())
 
         assertEquals(6, store.state.search.searchEngines.size)
         assertEquals(3, store.state.search.availableSearchEngines.size)
