@@ -13,6 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const HOMEPAGE_PREF = "browser.startup.homepage";
+const NEWTAB_PREF = "browser.newtabpage.enabled";
 
 // Strings for various elements with matching ids on each screen.
 const SCREEN_STRINGS = [
@@ -250,12 +251,16 @@ function onLoad(ready) {
     colorways.classList.remove("hidden");
     adjustModalBackdrop();
 
-    // Show checkbox to revert homepage if customized.
-    if (Services.prefs.prefHasUserValue(HOMEPAGE_PREF)) {
+    // Show checkbox to revert homepage or newtab if customized.
+    if (
+      Services.prefs.prefHasUserValue(HOMEPAGE_PREF) ||
+      Services.prefs.prefHasUserValue(NEWTAB_PREF)
+    ) {
       checkbox.classList.remove("hidden");
-      recordEvent("show", "revert-home");
+      recordEvent("show", checkbox.lastElementChild.dataset.l10nId);
     } else {
       checkbox.remove();
+      checkbox.firstElementChild.checked = false;
     }
 
     return selected;
@@ -268,9 +273,12 @@ function onLoad(ready) {
     colorways.remove();
     checkbox.remove();
 
-    // Revert homepage if still checked.
+    // Revert both homepage and newtab if still checked (potentially doing
+    // nothing if each pref is already the default value).
     if (checkbox.firstElementChild.checked) {
       Services.prefs.clearUserPref(HOMEPAGE_PREF);
+      Services.prefs.clearUserPref(NEWTAB_PREF);
+      recordEvent("button", checkbox.lastElementChild.dataset.l10nId);
     }
   }
 
