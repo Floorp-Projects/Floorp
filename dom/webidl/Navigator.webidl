@@ -119,6 +119,12 @@ partial interface Navigator {
   readonly attribute DOMString doNotTrack;
 };
 
+// https://globalprivacycontrol.github.io/gpc-spec/
+partial interface Navigator {
+  [Pref="privacy.globalprivacycontrol.functionality.enabled"]
+  readonly attribute boolean globalPrivacyControl;
+};
+
 // http://www.w3.org/TR/geolocation-API/#geolocation_interface
 interface mixin NavigatorGeolocation {
   [Throws, Pref="geo.enabled"]
