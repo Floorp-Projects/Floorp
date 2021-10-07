@@ -7,15 +7,14 @@
 #include <stdio.h>
 
 #include "gtest/gtest.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/intl/LineBreaker.h"
 #include "mozilla/intl/WordBreaker.h"
+#include "mozilla/Span.h"
 #include "nsISupports.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
+#include "nsTArray.h"
 #include "nsXPCOM.h"
-
-using mozilla::ArrayLength;
 
 // Turn off clang-format to align the ruler comments to the test strings.
 
@@ -73,8 +72,10 @@ static char ruler1[] =
 static char ruler2[] =
     "0123456789012345678901234567890123456789012345678901234567890123456789012";
 
-bool Check(const char* in, const uint32_t* out, uint32_t outlen, uint32_t i,
-           uint32_t res[256]) {
+bool Check(const char* in, mozilla::Span<const uint32_t> out,
+           mozilla::Span<const uint32_t> res) {
+  const uint32_t outlen = out.Length();
+  const uint32_t i = res.Length();
   bool ok = true;
 
   if (i != outlen) {
@@ -115,35 +116,42 @@ bool Check(const char* in, const uint32_t* out, uint32_t outlen, uint32_t i,
 }
 
 bool TestASCIILB(mozilla::intl::LineBreaker* lb, const char* in,
-                 const uint32_t* out, uint32_t outlen) {
-  NS_ConvertASCIItoUTF16 eng1(in);
-  uint32_t i;
-  uint32_t res[256];
-  int32_t curr;
+                 mozilla::Span<const uint32_t> out) {
+  NS_ConvertASCIItoUTF16 input(in);
+  EXPECT_GT(input.Length(), 0u) << "Expect a non-empty input!";
 
-  for (i = 0, curr = 0; curr != NS_LINEBREAKER_NEED_MORE_TEXT && i < 256; i++) {
-    curr = lb->Next(eng1.get(), eng1.Length(), curr);
-    res[i] = curr != NS_LINEBREAKER_NEED_MORE_TEXT ? curr : eng1.Length();
+  nsTArray<uint32_t> result;
+  int32_t curr = 0;
+  while (true) {
+    curr = lb->Next(input.get(), input.Length(), curr);
+    if (curr == NS_LINEBREAKER_NEED_MORE_TEXT) {
+      // XXX: We should remove the following line once LineBreaker recognizes
+      // text end as a line break point.
+      result.AppendElement(input.Length());
+      break;
+    }
+    result.AppendElement(curr);
   }
 
-  return Check(in, out, outlen, i, res);
+  return Check(in, out, result);
 }
 
 bool TestASCIIWB(mozilla::intl::WordBreaker* wb, const char* in,
-                 const uint32_t* out, uint32_t outlen) {
-  NS_ConvertASCIItoUTF16 eng1(in);
+                 mozilla::Span<const uint32_t> out) {
+  NS_ConvertASCIItoUTF16 input(in);
+  EXPECT_GT(input.Length(), 0u) << "Expect a non-empty input!";
 
-  uint32_t i;
-  uint32_t res[256];
+  nsTArray<uint32_t> result;
   int32_t curr = 0;
-
-  for (i = 0, curr = wb->Next(eng1.get(), eng1.Length(), curr);
-       curr != NS_WORDBREAKER_NEED_MORE_TEXT && i < 256;
-       curr = wb->Next(eng1.get(), eng1.Length(), curr), i++) {
-    res[i] = curr != NS_WORDBREAKER_NEED_MORE_TEXT ? curr : eng1.Length();
+  while (true) {
+    curr = wb->Next(input.get(), input.Length(), curr);
+    if (curr == NS_WORDBREAKER_NEED_MORE_TEXT) {
+      break;
+    }
+    result.AppendElement(curr);
   }
 
-  return Check(in, out, outlen, i, res);
+  return Check(in, out, result);
 }
 
 TEST(LineBreak, LineBreaker)
@@ -152,21 +160,21 @@ TEST(LineBreak, LineBreaker)
 
   ASSERT_TRUE(t);
 
-  ASSERT_TRUE(TestASCIILB(t, teng0, lexp0, ArrayLength(lexp0)));
-  ASSERT_TRUE(TestASCIILB(t, teng1, lexp1, ArrayLength(lexp1)));
-  ASSERT_TRUE(TestASCIILB(t, teng2, lexp2, ArrayLength(lexp2)));
-  ASSERT_TRUE(TestASCIILB(t, teng3, lexp3, ArrayLength(lexp3)));
+  ASSERT_TRUE(TestASCIILB(t, teng0, lexp0));
+  ASSERT_TRUE(TestASCIILB(t, teng1, lexp1));
+  ASSERT_TRUE(TestASCIILB(t, teng2, lexp2));
+  ASSERT_TRUE(TestASCIILB(t, teng3, lexp3));
 }
 
-TEST(LineBreak, WordBreaker)
+TEST(WordBreak, WordBreaker)
 {
   RefPtr<mozilla::intl::WordBreaker> t = mozilla::intl::WordBreaker::Create();
   ASSERT_TRUE(t);
 
-  ASSERT_TRUE(TestASCIIWB(t, teng0, wexp0, ArrayLength(wexp0)));
-  ASSERT_TRUE(TestASCIIWB(t, teng1, wexp1, ArrayLength(wexp1)));
-  ASSERT_TRUE(TestASCIIWB(t, teng2, wexp2, ArrayLength(wexp2)));
-  ASSERT_TRUE(TestASCIIWB(t, teng3, wexp3, ArrayLength(wexp3)));
+  ASSERT_TRUE(TestASCIIWB(t, teng0, wexp0));
+  ASSERT_TRUE(TestASCIIWB(t, teng1, wexp1));
+  ASSERT_TRUE(TestASCIIWB(t, teng2, wexp2));
+  ASSERT_TRUE(TestASCIIWB(t, teng3, wexp3));
 }
 
 //                         012345678901234
