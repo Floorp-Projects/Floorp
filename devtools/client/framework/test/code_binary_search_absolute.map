@@ -1,7 +1,7 @@
 {
   "version": 3,
   "file": "code_binary_search.js",
-  "sourceRoot": "http://example.com/browser/devtools/client/framework/test/",
+  "sourceRoot": "https://example.com/browser/devtools/client/framework/test/",
   "sources": [
     "code_binary_search.coffee"
   ],

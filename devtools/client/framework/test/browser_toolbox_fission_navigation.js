@@ -3,9 +3,9 @@
 "use strict";
 
 const EXAMPLE_COM_URI =
-  "http://example.com/document-builder.sjs?html=<div id=com>com";
-const EXAMPLE_NET_URI =
-  "http://example.net/document-builder.sjs?html=<div id=net>net";
+  "https://example.com/document-builder.sjs?html=<div id=com>com";
+const EXAMPLE_ORG_URI =
+  "https://example.org/document-builder.sjs?html=<div id=org>org";
 
 add_task(async function() {
   info("Test with server side target switching ENABLED");
@@ -24,16 +24,16 @@ async function testCase() {
   const comNode = await getNodeBySelector(toolbox, "#com");
   ok(comNode, "Found node for the COM page");
 
-  info("Navigate to the NET page");
-  await navigateTo(EXAMPLE_NET_URI);
-  const netNode = await getNodeBySelector(toolbox, "#net");
-  ok(netNode, "Found node for the NET page");
+  info("Navigate to the ORG page");
+  await navigateTo(EXAMPLE_ORG_URI);
+  const orgNode = await getNodeBySelector(toolbox, "#org");
+  ok(orgNode, "Found node for the ORG page");
 
-  info("Reload the NET page");
-  await navigateTo(EXAMPLE_NET_URI);
-  const netNodeAfterReload = await getNodeBySelector(toolbox, "#net");
-  ok(netNodeAfterReload, "Found node for the NET page after reload");
-  isnot(netNode, netNodeAfterReload, "The new node is different");
+  info("Reload the ORG page");
+  await navigateTo(EXAMPLE_ORG_URI);
+  const orgNodeAfterReload = await getNodeBySelector(toolbox, "#org");
+  ok(orgNodeAfterReload, "Found node for the ORG page after reload");
+  isnot(orgNode, orgNodeAfterReload, "The new node is different");
 
   info("Navigate back to the COM page");
   await navigateTo(EXAMPLE_COM_URI);

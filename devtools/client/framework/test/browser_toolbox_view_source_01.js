@@ -6,8 +6,8 @@
  * yet opened.
  */
 
-var URL = `${URL_ROOT}doc_viewsource.html`;
-var JS_URL = `${URL_ROOT}code_math.js`;
+var URL = `${URL_ROOT_SSL}doc_viewsource.html`;
+var JS_URL = `${URL_ROOT_SSL}code_math.js`;
 
 async function viewSource() {
   const toolbox = await openNewTabAndToolbox(URL);

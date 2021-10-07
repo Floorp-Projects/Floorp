@@ -9,9 +9,9 @@
  */
 
 const EXAMPLE_COM_URI =
-  "http://example.com/document-builder.sjs?html=<div id=com>com";
-const EXAMPLE_NET_URI =
-  "http://example.net/document-builder.sjs?html=<div id=net>net";
+  "https://example.com/document-builder.sjs?html=<div id=com>com";
+const EXAMPLE_ORG_URI =
+  "https://example.org/document-builder.sjs?html=<div id=org>org";
 
 add_task(async function() {
   const tab = await addTab(EXAMPLE_COM_URI);
@@ -34,14 +34,14 @@ add_task(async function() {
     "The toolbox target is also the target associated with the tab descriptor"
   );
 
-  await navigateTo(EXAMPLE_NET_URI);
+  await navigateTo(EXAMPLE_ORG_URI);
 
   info("Call list tabs again to update the tab descriptor forms");
   await client.mainRoot.listTabs();
 
   is(
     decodeURIComponent(tabDescriptor.url),
-    EXAMPLE_NET_URI,
+    EXAMPLE_ORG_URI,
     "The existing descriptor now points to the new URI"
   );
 
@@ -58,7 +58,7 @@ add_task(async function() {
     );
     ok(
       comTabTarget != newTarget,
-      "With Fission or server side target switching, a new target was created for example.net"
+      "With Fission or server side target switching, a new target was created for example.org"
     );
   } else {
     is(
