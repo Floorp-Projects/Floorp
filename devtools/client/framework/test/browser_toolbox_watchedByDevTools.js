@@ -6,15 +6,15 @@
 /**
  * Check that the "watchedByDevTools" flag is properly handled.
  */
-const EXAMPLE_NET_URI =
-  "http://example.net/document-builder.sjs?html=<div id=net>net";
+const EXAMPLE_HTTP_URI =
+  "http://mochi.test:8888/document-builder.sjs?html=<div id=http>http";
 const EXAMPLE_COM_URI =
   "https://example.com/document-builder.sjs?html=<div id=com>com";
 const EXAMPLE_ORG_URI =
   "https://example.org/document-builder.sjs?headers=Cross-Origin-Opener-Policy:same-origin&html=<div id=org>org</div>";
 
 add_task(async function() {
-  const tab = await addTab(EXAMPLE_NET_URI);
+  const tab = await addTab(EXAMPLE_HTTP_URI);
 
   is(
     tab.linkedBrowser.browsingContext.watchedByDevTools,

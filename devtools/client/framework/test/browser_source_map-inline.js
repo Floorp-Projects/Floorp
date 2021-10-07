@@ -13,7 +13,7 @@ const { PromiseTestUtils } = ChromeUtils.import(
 PromiseTestUtils.allowMatchingRejectionsGlobally(/this\.worker is null/);
 PromiseTestUtils.allowMatchingRejectionsGlobally(/Component not initialized/);
 
-const TEST_ROOT = "http://example.com/browser/devtools/client/framework/test/";
+const TEST_ROOT = "https://example.com/browser/devtools/client/framework/test/";
 // Empty page
 const PAGE_URL = `${TEST_ROOT}doc_empty-tab-01.html`;
 const JS_URL = `${TEST_ROOT}code_inline_bundle.js`;

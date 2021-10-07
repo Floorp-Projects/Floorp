@@ -5,9 +5,9 @@
 
 "use strict";
 
-const INITIAL_URL = URL_ROOT + "doc_empty-tab-01.html";
-const PAGE_URL = URL_ROOT + "doc_reload.html";
-const JS_URL = URL_ROOT + "sjs_code_reload.sjs";
+const INITIAL_URL = URL_ROOT_SSL + "doc_empty-tab-01.html";
+const PAGE_URL = URL_ROOT_SSL + "doc_reload.html";
+const JS_URL = URL_ROOT_SSL + "sjs_code_reload.sjs";
 
 const ORIGINAL_URL_1 = "webpack:///code_reload_1.js";
 const ORIGINAL_URL_2 = "webpack:///code_reload_2.js";
