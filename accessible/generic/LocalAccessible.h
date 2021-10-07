@@ -44,6 +44,7 @@ class HTMLImageMapAccessible;
 class HTMLLIAccessible;
 class HTMLLinkAccessible;
 class HyperTextAccessible;
+class HyperTextAccessibleBase;
 class ImageAccessible;
 class KeyBinding;
 class OuterDocAccessible;
@@ -529,6 +530,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   DocAccessible* AsDoc();
 
   HyperTextAccessible* AsHyperText();
+  virtual HyperTextAccessibleBase* AsHyperTextBase() override;
 
   HTMLLIAccessible* AsHTMLListItem();
 
