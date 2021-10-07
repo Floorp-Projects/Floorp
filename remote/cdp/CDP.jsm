@@ -12,10 +12,15 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   JSONHandler: "chrome://remote/content/cdp/JSONHandler.jsm",
+  Log: "chrome://remote/content/shared/Log.jsm",
   RecommendedPreferences:
     "chrome://remote/content/shared/RecommendedPreferences.jsm",
   TargetList: "chrome://remote/content/cdp/targets/TargetList.jsm",
 });
+
+XPCOMUtils.defineLazyGetter(this, "textEncoder", () => new TextEncoder());
+
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get(Log.TYPES.CDP));
 
 // Map of CDP-specific preferences that should be set via
 // RecommendedPreferences.
@@ -48,12 +53,19 @@ class CDP {
   constructor(agent) {
     this.agent = agent;
     this.targetList = null;
+
     this._running = false;
+    this._devToolsActivePortPath;
   }
 
   get address() {
     const mainTarget = this.targetList.getMainProcessTarget();
     return mainTarget.wsDebuggerURL;
+  }
+
+  get mainTargetPath() {
+    const mainTarget = this.targetList.getMainProcessTarget();
+    return mainTarget.path;
   }
 
   /**
@@ -84,17 +96,44 @@ class CDP {
     await this.targetList.watchForTargets();
 
     Cu.printStderr(`DevTools listening on ${this.address}\n`);
+
+    // Write connection details to DevToolsActivePort file within the profile
+    const profileDir = await PathUtils.getProfileDir();
+    this._devToolsActivePortPath = PathUtils.join(
+      profileDir,
+      "DevToolsActivePort"
+    );
+
+    const data = `${this.agent.port}\n${this.mainTargetPath}`;
+    try {
+      await IOUtils.write(
+        this._devToolsActivePortPath,
+        textEncoder.encode(data)
+      );
+    } catch (e) {
+      logger.warn(
+        `Failed to create ${this._devToolsActivePortPath} (${e.message})`
+      );
+    }
   }
 
   /**
    * Stops the CDP support.
    */
-  stop() {
+  async stop() {
     if (!this._running) {
       return;
     }
 
     try {
+      try {
+        await IOUtils.remove(this._devToolsActivePortPath);
+      } catch (e) {
+        logger.warn(
+          `Failed to remove ${this._devToolsActivePortPath} (${e.message})`
+        );
+      }
+
       this.targetList?.destructor();
       this.targetList = null;
 
