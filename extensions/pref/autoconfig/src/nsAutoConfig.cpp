@@ -277,7 +277,8 @@ nsresult nsAutoConfig::downloadAutoConfig() {
        that mLoaded will be set to true in any case (success/failure)
     */
 
-    if (!mozilla::SpinEventLoopUntil([&]() { return mLoaded; })) {
+    if (!mozilla::SpinEventLoopUntil("nsAutoConfig::downloadAutoConfig"_ns,
+                                     [&]() { return mLoaded; })) {
       return NS_ERROR_FAILURE;
     }
 
