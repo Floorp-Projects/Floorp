@@ -6,6 +6,7 @@
 
 EXPORTS.mozilla.a11y += [
     "Accessible.h",
+    "HyperTextAccessibleBase.h",
 ]
 
 UNIFIED_SOURCES += [

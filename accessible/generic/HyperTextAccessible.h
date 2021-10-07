@@ -7,6 +7,7 @@
 #define mozilla_a11y_HyperTextAccessible_h__
 
 #include "AccessibleWrap.h"
+#include "mozilla/a11y/HyperTextAccessibleBase.h"
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleTypes.h"
 #include "nsIFrame.h"  // only for nsSelectionAmount
@@ -38,16 +39,11 @@ struct DOMPoint {
   int32_t idx;
 };
 
-// This character marks where in the text returned via Text interface,
-// that embedded object characters exist
-const char16_t kEmbeddedObjectChar = 0xfffc;
-const char16_t kImaginaryEmbeddedObjectChar = ' ';
-const char16_t kForcedNewLineChar = '\n';
-
 /**
  * Special Accessible that knows how contain both text and embedded objects
  */
-class HyperTextAccessible : public AccessibleWrap {
+class HyperTextAccessible : public AccessibleWrap,
+                            public HyperTextAccessibleBase {
  public:
   HyperTextAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
@@ -559,6 +555,10 @@ class HyperTextAccessible : public AccessibleWrap {
 
 inline HyperTextAccessible* LocalAccessible::AsHyperText() {
   return IsHyperText() ? static_cast<HyperTextAccessible*>(this) : nullptr;
+}
+
+inline HyperTextAccessibleBase* LocalAccessible::AsHyperTextBase() {
+  return AsHyperText();
 }
 
 }  // namespace a11y

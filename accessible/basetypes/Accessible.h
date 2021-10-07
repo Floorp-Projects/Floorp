@@ -18,6 +18,7 @@ struct nsRoleMapEntry;
 namespace mozilla {
 namespace a11y {
 
+class HyperTextAccessibleBase;
 class LocalAccessible;
 class RemoteAccessible;
 
@@ -251,6 +252,8 @@ class Accessible {
 
   bool IsLocal() { return !IsRemote(); }
   LocalAccessible* AsLocal();
+
+  virtual HyperTextAccessibleBase* AsHyperTextBase() { return nullptr; }
 
  private:
   static const uint8_t kTypeBits = 6;
