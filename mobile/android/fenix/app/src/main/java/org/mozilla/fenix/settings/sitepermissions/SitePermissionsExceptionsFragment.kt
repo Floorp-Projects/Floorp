@@ -16,10 +16,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.LivePagedListBuilder
-import androidx.paging.PagedList
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -96,7 +94,7 @@ class SitePermissionsExceptionsFragment :
     }
 
     private fun bindEmptyContainerMess(rootView: View) {
-        emptyContainerMessage = rootView.findViewById<View>(R.id.empty_exception_container)
+        emptyContainerMessage = rootView.findViewById(R.id.empty_exception_container)
     }
 
     private fun bindClearButton(rootView: View) {

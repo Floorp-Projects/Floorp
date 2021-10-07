@@ -19,11 +19,11 @@ class AccountPreference @JvmOverloads constructor(
 ) : Preference(context, attrs) {
     private var emailView: TextView? = null
     private var displayNameView: TextView? = null
-    var displayName: String? by Delegates.observable<String?>(null) { _, _, new ->
+    var displayName: String? by Delegates.observable(null) { _, _, new ->
         updateDisplayName(new)
     }
 
-    var email: String? by Delegates.observable<String?>(null) { _, _, new ->
+    var email: String? by Delegates.observable(null) { _, _, new ->
         new?.let { updateEmailText(it) }
     }
 

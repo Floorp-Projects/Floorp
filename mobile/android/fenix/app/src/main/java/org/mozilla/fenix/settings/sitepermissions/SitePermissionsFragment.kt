@@ -38,7 +38,7 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
 
     private fun bindExceptions() {
         val keyExceptions = getPreferenceKey(R.string.pref_key_show_site_exceptions)
-        val exceptionsCategory = requireNotNull<Preference>(findPreference(keyExceptions))
+        val exceptionsCategory = requireNotNull(findPreference(keyExceptions))
 
         exceptionsCategory.onPreferenceClickListener = OnPreferenceClickListener {
             val directions = SitePermissionsFragmentDirections.actionSitePermissionsToExceptions()

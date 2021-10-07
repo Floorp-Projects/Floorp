@@ -19,7 +19,7 @@ class AccountAuthErrorPreference @JvmOverloads constructor(
     attributeSetId: Int = android.R.attr.preferenceStyle
 ) : Preference(context, attrs, attributeSetId) {
     private var emailView: TextView? = null
-    var email: String? by Delegates.observable<String?>(null) { _, _, new -> updateEmailView(new) }
+    var email: String? by Delegates.observable(null) { _, _, new -> updateEmailView(new) }
 
     init {
         layoutResource = R.layout.account_auth_error_preference

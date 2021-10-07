@@ -33,7 +33,7 @@ class ExtensionsTest {
         every { components.core.store } returns store
 
         components.tryReloadTabBy("https://www.getpocket.com".getOrigin()!!)
-        verify(exactly = 0) { components.useCases.sessionUseCases.reload(any<String>()) }
+        verify(exactly = 0) { components.useCases.sessionUseCases.reload(any()) }
 
         components.tryReloadTabBy("https://www.mozilla.org".getOrigin()!!)
         verify { components.useCases.sessionUseCases.reload("2") }

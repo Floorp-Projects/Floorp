@@ -24,7 +24,7 @@ class MozillaBannedPropertyAccess(config: Config = Config.empty) : Rule(config) 
     private val banned by lazy {
         val bannedPropertiesList = valueOrDefault("bannedProperties", "")
         if (bannedPropertiesList.contentEquals("")) {
-            listOf<String>()
+            listOf()
         } else {
             bannedPropertiesList.split(",")
         }
