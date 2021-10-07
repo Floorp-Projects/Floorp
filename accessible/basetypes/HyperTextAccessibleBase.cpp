@@ -7,6 +7,7 @@
 
 #include "mozilla/a11y/Accessible.h"
 #include "nsAccUtils.h"
+#include "nsIAccessibleText.h"
 
 namespace mozilla::a11y {
 
@@ -66,6 +67,18 @@ int32_t HyperTextAccessibleBase::GetChildOffset(uint32_t aChildIndex,
 
 uint32_t HyperTextAccessibleBase::CharacterCount() const {
   return GetChildOffset(Acc()->ChildCount());
+}
+
+index_t HyperTextAccessibleBase::ConvertMagicOffset(int32_t aOffset) const {
+  if (aOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT) {
+    return CharacterCount();
+  }
+
+  if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
+    return CaretOffset();
+  }
+
+  return aOffset;
 }
 
 }  // namespace mozilla::a11y

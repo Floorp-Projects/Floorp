@@ -15,6 +15,24 @@ const char16_t kEmbeddedObjectChar = 0xfffc;
 const char16_t kImaginaryEmbeddedObjectChar = ' ';
 const char16_t kForcedNewLineChar = '\n';
 
+/**
+ * An index type. Assert if out of range value was attempted to be used.
+ */
+class index_t {
+ public:
+  MOZ_IMPLICIT index_t(int32_t aVal) : mVal(aVal) {}
+
+  operator uint32_t() const {
+    MOZ_ASSERT(mVal >= 0, "Attempt to use wrong index!");
+    return mVal;
+  }
+
+  bool IsValid() const { return mVal >= 0; }
+
+ private:
+  int32_t mVal;
+};
+
 class HyperTextAccessibleBase {
  public:
   /**
@@ -57,6 +75,11 @@ class HyperTextAccessibleBase {
    * Get caret offset, if no caret then -1.
    */
   virtual int32_t CaretOffset() const = 0;
+
+  /**
+   * Transform magic offset into text offset.
+   */
+  index_t ConvertMagicOffset(int32_t aOffset) const;
 
  protected:
   virtual const Accessible* Acc() const = 0;
