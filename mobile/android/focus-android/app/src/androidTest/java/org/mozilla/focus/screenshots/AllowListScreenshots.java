@@ -96,7 +96,7 @@ public class AllowListScreenshots extends ScreenshotTest {
 
         TestHelper.menuButton.perform(click());
         Screengrab.screenshot("BrowserViewMenu");
-        onView(withId(R.id.blocking_switch)).perform(click());
+        onView(withId(R.id.enhanced_tracking)).perform(click());
 
         // Open setting
         onView(withId(R.id.menuView))

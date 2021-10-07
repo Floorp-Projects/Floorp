@@ -119,9 +119,9 @@ class URLExceptionTest {
             .check(ViewAssertions.matches(Matchers.not(ViewMatchers.withText("-"))))
 
         // Disable blocking
-        Espresso.onView(ViewMatchers.withId(R.id.blocking_switch))
+        Espresso.onView(ViewMatchers.withId(R.id.enhanced_tracking))
             .check(ViewAssertions.matches(ViewMatchers.isChecked()))
-        Espresso.onView(ViewMatchers.withId(R.id.blocking_switch))
+        Espresso.onView(ViewMatchers.withId(R.id.enhanced_tracking))
             .perform(ViewActions.click())
         waitForWebContent()
     }
