@@ -245,11 +245,12 @@ NS_IMETHODIMP FakeListener::OnStopRequest(nsIRequest* request,
 bool eventInProgress = true;
 
 void Await() {
-  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil([&]() {
-    bool yield = !eventInProgress;
-    eventInProgress = true;  // Just for convenience
-    return yield;
-  }));
+  MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
+      "uriloader:TestFetchPreloader:Await"_ns, [&]() {
+        bool yield = !eventInProgress;
+        eventInProgress = true;  // Just for convenience
+        return yield;
+      }));
 }
 
 void Yield() { eventInProgress = false; }
