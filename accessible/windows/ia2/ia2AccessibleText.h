@@ -8,6 +8,7 @@
 #ifndef _ACCESSIBLE_TEXT_H
 #define _ACCESSIBLE_TEXT_H
 
+#include <utility>
 #include "AccessibleText.h"
 #include "nsIAccessibleText.h"
 
@@ -18,6 +19,7 @@ template <class T>
 class StaticRefPtr;
 
 namespace a11y {
+class HyperTextAccessibleBase;
 class HyperTextAccessibleWrap;
 
 class ia2AccessibleText : public IAccessibleText {
@@ -132,7 +134,15 @@ class ia2AccessibleText : public IAccessibleText {
   HRESULT GetModifiedText(bool aGetInsertedText, IA2TextSegment* aNewText);
   AccessibleTextBoundary GetGeckoTextBoundary(
       enum IA2TextBoundaryType coordinateType);
-  HyperTextAccessibleWrap* TextAcc();
+  HyperTextAccessibleBase* TextAcc();
+
+  /**
+   * This can return null for two reasons. The HRESULT indicates the reason:
+   * CO_E_OBJNOTCONNECTED: The Accessible is dead.
+   * E_NOTIMPL: It isn't a LocalAccessible (so we can't support the method
+   * being called yet).
+   */
+  std::pair<HyperTextAccessibleWrap*, HRESULT> LocalTextAcc();
 };
 
 }  // namespace a11y
