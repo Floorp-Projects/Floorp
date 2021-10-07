@@ -260,3 +260,57 @@ add_task(async function test_targeting_os() {
   );
   Assert.ok(res, `Should detect platform version got: ${res}`);
 });
+
+add_task(async function test_targeting_source_constructor() {
+  Services.telemetry.clearEvents();
+  const targeting = new TargetingContext(
+    { ctx: { foo: true } },
+    { source: "unit_testing" }
+  );
+
+  let res = await targeting.eval("ctx.foo");
+  Assert.ok(res, "Should eval to true");
+
+  let expectedEvents = [
+    [
+      "messaging_experiments",
+      "targeting",
+      "attribute_error",
+      "bar.foo",
+      JSON.stringify({ source: "unit_testing" }),
+    ],
+  ];
+  try {
+    await targeting.eval("bar.foo");
+  } catch (e) {}
+
+  TelemetryTestUtils.assertEvents(expectedEvents);
+  Services.telemetry.clearEvents();
+});
+
+add_task(async function test_targeting_source_override() {
+  Services.telemetry.clearEvents();
+  const targeting = new TargetingContext(
+    { ctx: { foo: true } },
+    { source: "unit_testing" }
+  );
+
+  let res = await targeting.eval("ctx.foo");
+  Assert.ok(res, "Should eval to true");
+
+  let expectedEvents = [
+    [
+      "messaging_experiments",
+      "targeting",
+      "attribute_error",
+      "bar.foo",
+      JSON.stringify({ source: "override" }),
+    ],
+  ];
+  try {
+    await targeting.evalWithDefault("bar.foo", { source: "override" });
+  } catch (e) {}
+
+  TelemetryTestUtils.assertEvents(expectedEvents);
+  Services.telemetry.clearEvents();
+});
