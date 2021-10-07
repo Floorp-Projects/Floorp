@@ -322,8 +322,8 @@ describe("ASRouterTargeting", () => {
           return fakeTargetingContext.combineContexts.apply(sandbox, args);
         }
 
-        evalWithDefault(expr) {
-          return fakeTargetingContext.evalWithDefault(expr);
+        evalWithDefault(expr, options) {
+          return fakeTargetingContext.evalWithDefault(expr, options);
         }
       }
     );
@@ -333,6 +333,21 @@ describe("ASRouterTargeting", () => {
     clock.restore();
     sandbox.restore();
     globals.restore();
+  });
+  it("should provide message.id as source", async () => {
+    await ASRouterTargeting.checkMessageTargeting(
+      {
+        id: "message",
+        targeting: "true",
+      },
+      fakeTargetingContext,
+      sandbox.stub(),
+      false
+    );
+    assert.calledOnce(fakeTargetingContext.evalWithDefault);
+    assert.calledWithExactly(fakeTargetingContext.evalWithDefault, "true", {
+      source: "message",
+    });
   });
   it("should cache evaluation result", async () => {
     evalStub.resolves(true);
