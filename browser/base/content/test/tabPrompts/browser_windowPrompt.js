@@ -39,11 +39,6 @@ add_task(async function test_check_window_modal_prompt_service() {
     dialogWin?.docShell?.chromeEventHandler,
     "Should have embedded the dialog."
   );
-  is(
-    window.getComputedStyle(document.body).getPropertyValue("-moz-user-input"),
-    "none",
-    "Browser window should be inert."
-  );
   for (let menu of document.querySelectorAll("menubar > menu")) {
     ok(menu.disabled, `Menu ${menu.id} should be disabled.`);
   }
@@ -65,11 +60,6 @@ add_task(async function test_check_window_modal_prompt_service() {
   );
 
   // Check we cleaned up:
-  is(
-    window.getComputedStyle(document.body).getPropertyValue("-moz-user-input"),
-    "auto",
-    "Browser window should no longer be inert."
-  );
   for (let menu of document.querySelectorAll("menubar > menu")) {
     ok(!menu.disabled, `Menu ${menu.id} should not be disabled anymore.`);
   }
