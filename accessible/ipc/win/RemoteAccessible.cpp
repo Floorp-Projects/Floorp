@@ -784,7 +784,11 @@ RemoteAccessible* RemoteAccessible::AnchorAt(uint32_t aIdx) {
   return proxyAnchor;
 }
 
-void RemoteAccessible::DOMNodeID(nsString& aID) {
+void RemoteAccessible::DOMNodeID(nsString& aID) const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::DOMNodeID(aID);
+  }
+
   aID.Truncate();
   RefPtr<IGeckoCustom> custom = QueryInterface<IGeckoCustom>(this);
   if (!custom) {
