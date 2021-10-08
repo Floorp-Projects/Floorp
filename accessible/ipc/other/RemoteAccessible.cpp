@@ -929,7 +929,10 @@ void RemoteAccessible::Extents(bool aNeedsScreenCoords, int32_t* aX,
   Unused << mDoc->SendExtents(mID, aNeedsScreenCoords, aX, aY, aWidth, aHeight);
 }
 
-void RemoteAccessible::DOMNodeID(nsString& aID) {
+void RemoteAccessible::DOMNodeID(nsString& aID) const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::DOMNodeID(aID);
+  }
   Unused << mDoc->SendDOMNodeID(mID, &aID);
 }
 
