@@ -52,7 +52,7 @@ AccessibleWrap* DocAccessibleWrap::GetAccessibleByID(int32_t aID) const {
 
   // If the ID is not in the hash table, check the IDs of the child docs.
   for (uint32_t i = 0; i < ChildDocumentCount(); i++) {
-    auto childDoc = reinterpret_cast<AccessibleWrap*>(GetChildDocumentAt(i));
+    auto childDoc = static_cast<AccessibleWrap*>(GetChildDocumentAt(i));
     if (childDoc->VirtualViewID() == aID) {
       return childDoc;
     }
