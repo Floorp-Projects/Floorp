@@ -458,6 +458,18 @@ void MacroAssembler::cmp32Set(Condition cond, T1 lhs, T2 rhs, Register dest) {
 // ===============================================================
 // Branch instructions
 
+void MacroAssembler::branch8(Condition cond, const Address& lhs, Imm32 rhs,
+                             Label* label) {
+  cmp8(lhs, rhs);
+  j(cond, label);
+}
+
+void MacroAssembler::branch16(Condition cond, const Address& lhs, Imm32 rhs,
+                              Label* label) {
+  cmp16(lhs, rhs);
+  j(cond, label);
+}
+
 template <class L>
 void MacroAssembler::branch32(Condition cond, Register lhs, Register rhs,
                               L label) {
