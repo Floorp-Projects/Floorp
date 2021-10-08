@@ -229,47 +229,6 @@
         "article is READONLY and not EDITABLE");
     }
 
-    async function testAnimatedImage() {
-      testStates("animated-image",
-        STATE_ANIMATED, 0,
-        0, 0,
-        "image should be animated 1");
-      let p = waitForEvent(...stateChange(STATE_ANIMATED, false, false, "animated-image"));
-      getNode("animated-image").src = "../animated-gif-finalframe.gif";
-      await p;
-      testStates("animated-image",
-        0, 0,
-        STATE_ANIMATED, 0,
-        "image should not be animated 2");
-      p = waitForEvent(...stateChange(STATE_ANIMATED, false, true, "animated-image"));
-      getNode("animated-image").src = "../animated-gif.gif";
-      await p;
-      testStates("animated-image",
-        STATE_ANIMATED, 0,
-        0, 0,
-        "image should be animated 3");
-    }
-
-    async function testImageLoad() {
-      let img = document.createElement("img");
-      img.id = "image";
-      img.src = "http://example.com/a11y/accessible/tests/mochitest/events/slow_image.sjs";
-      let p = waitForEvent(EVENT_SHOW, "image");
-      getNode("eventdump").before(img);
-      await p;
-      testStates("image",
-        STATE_INVISIBLE, 0,
-        0, 0,
-        "image should be invisible");
-      p = waitForEvent(...stateChange(STATE_INVISIBLE, false, false, "image"));
-      await fetch("http://example.com/a11y/accessible/tests/mochitest/events/slow_image.sjs?complete");
-      await p;
-      testStates("image",
-        0, 0,
-        STATE_INVISIBLE, 0,
-        "image should be invisible");
-    }
-
     async function doTests() {
       // Test opening details objects
       await openNode("detailsOpen", "summaryOpen", true);
@@ -326,10 +285,6 @@
       await toggleStateChange("textbox", "aria-multiline", EXT_STATE_MULTI_LINE, true);
 
       await testDefaultSubmitChange();
-
-      await testAnimatedImage();
-
-      await testImageLoad();
 
       SimpleTest.finish();
     }
@@ -429,13 +384,6 @@
   </form>
 
   <div id="article" role="article">hello</div>
-
-  <form id="form">
-    <button id="default-button">hello</button>
-    <button>world</button>
-  </form>
-
-  <img id="animated-image" src="../animated-gif.gif">
 
   <div id="eventdump"></div>
 

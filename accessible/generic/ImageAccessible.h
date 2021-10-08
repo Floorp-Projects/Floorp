@@ -7,7 +7,6 @@
 #define mozilla_a11y_ImageAccessible_h__
 
 #include "BaseAccessibles.h"
-#include "imgINotificationObserver.h"
 
 namespace mozilla {
 namespace a11y {
@@ -17,16 +16,11 @@ namespace a11y {
  * - gets name, role
  * - support basic state
  */
-class ImageAccessible : public LinkableAccessible,
-                        public imgINotificationObserver {
+class ImageAccessible : public LinkableAccessible {
  public:
   ImageAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_IMGINOTIFICATIONOBSERVER
-
   // LocalAccessible
-  virtual void Shutdown() override;
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
   virtual already_AddRefed<AccAttributes> NativeAttributes() override;
@@ -72,8 +66,6 @@ class ImageAccessible : public LinkableAccessible,
    * @returns  true if index is valid for longdesc action.
    */
   inline bool IsLongDescIndex(uint8_t aIndex) const;
-
-  uint32_t mImageRequestStatus;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
