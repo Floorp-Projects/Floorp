@@ -1807,17 +1807,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   // check mReason and the preferred action to see what we should do.
 
   bool alwaysAsk = true;
-
-  // Skip showing UnknownContentType dialog by default if the pref is set.
-  bool skipShowingDialog =
-      StaticPrefs::browser_download_improvements_to_download_panel();
-
-  if (skipShowingDialog) {
-    alwaysAsk = false;
-  } else {
-    mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
-  }
-
+  mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
   if (alwaysAsk) {
     // But we *don't* ask if this mimeInfo didn't come from
     // our user configuration datastore and the user has said
@@ -1867,7 +1857,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   bool forcePrompt =
       mReason == nsIHelperAppLauncherDialog::REASON_TYPESNIFFED ||
       (mReason == nsIHelperAppLauncherDialog::REASON_SERVERREQUEST &&
-       !skipShowingDialog);
+       !StaticPrefs::browser_download_improvements_to_download_panel());
 
   // OK, now check why we're here
   if (!alwaysAsk && forcePrompt) {
