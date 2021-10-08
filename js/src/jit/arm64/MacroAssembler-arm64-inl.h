@@ -933,6 +933,66 @@ void MacroAssembler::popcnt64(Register64 src_, Register64 dest_,
 // ===============================================================
 // Branch functions
 
+void MacroAssembler::branch8(Condition cond, const Address& lhs, Imm32 rhs,
+                             Label* label) {
+  vixl::UseScratchRegisterScope temps(this);
+  Register scratch = temps.AcquireX().asUnsized();
+  MOZ_ASSERT(scratch != lhs.base);
+
+  switch (cond) {
+    case Assembler::Equal:
+    case Assembler::NotEqual:
+    case Assembler::Above:
+    case Assembler::AboveOrEqual:
+    case Assembler::Below:
+    case Assembler::BelowOrEqual:
+      load8ZeroExtend(lhs, scratch);
+      branch32(cond, scratch, Imm32(uint8_t(rhs.value)), label);
+      break;
+
+    case Assembler::GreaterThan:
+    case Assembler::GreaterThanOrEqual:
+    case Assembler::LessThan:
+    case Assembler::LessThanOrEqual:
+      load8SignExtend(lhs, scratch);
+      branch32(cond, scratch, Imm32(int8_t(rhs.value)), label);
+      break;
+
+    default:
+      MOZ_CRASH("unexpected condition");
+  }
+}
+
+void MacroAssembler::branch16(Condition cond, const Address& lhs, Imm32 rhs,
+                              Label* label) {
+  vixl::UseScratchRegisterScope temps(this);
+  Register scratch = temps.AcquireX().asUnsized();
+  MOZ_ASSERT(scratch != lhs.base);
+
+  switch (cond) {
+    case Assembler::Equal:
+    case Assembler::NotEqual:
+    case Assembler::Above:
+    case Assembler::AboveOrEqual:
+    case Assembler::Below:
+    case Assembler::BelowOrEqual:
+      load16ZeroExtend(lhs, scratch);
+      branch32(cond, scratch, Imm32(uint16_t(rhs.value)), label);
+      break;
+
+    case Assembler::GreaterThan:
+    case Assembler::GreaterThanOrEqual:
+    case Assembler::LessThan:
+    case Assembler::LessThanOrEqual:
+      load16SignExtend(lhs, scratch);
+      branch32(cond, scratch, Imm32(int16_t(rhs.value)), label);
+      break;
+
+    default:
+      MOZ_CRASH("unexpected condition");
+  }
+}
+
 template <class L>
 void MacroAssembler::branch32(Condition cond, Register lhs, Register rhs,
                               L label) {
