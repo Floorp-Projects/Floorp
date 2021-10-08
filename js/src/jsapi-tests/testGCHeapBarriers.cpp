@@ -60,7 +60,7 @@ JSFunction* CreateNurseryGCThing(JSContext* cx) {
 }
 
 template <typename T>
-static T* CreateTenuredGCThing(JSContext* cx) {
+static T CreateTenuredGCThing(JSContext* cx) {
   MOZ_CRASH();
   return nullptr;
 }
@@ -352,18 +352,17 @@ BEGIN_TEST(testGCHeapReadBarriers) {
 template <typename WrapperT, typename ObjectT>
 bool TestWrapperType() {
   // Check that the read barrier normally marks gray things black.
-  {
-    Rooted<ObjectT> obj0(cx, CreateTenuredGCThing<JSObject>(cx));
-    WrapperT wrapper0(obj0);
-    MakeGray(obj0);
-    (void)*wrapper0;
-    CHECK(obj0->isMarkedBlack());
-  }
+  CHECK((TestReadBarrierUnmarksGray<WrapperT, ObjectT>()));
+
+  // Check that the read barrier marks gray and white things black during an
+  // incremental GC.
+  CHECK((TestReadBarrierMarksBlack<WrapperT, ObjectT>(true)));
+  CHECK((TestReadBarrierMarksBlack<WrapperT, ObjectT>(false)));
 
   // Allocate test objects and make them gray. We will make sure they stay
   // gray. (For most reads, the barrier will unmark gray.)
-  Rooted<ObjectT> obj1(cx, CreateTenuredGCThing<JSObject>(cx));
-  Rooted<ObjectT> obj2(cx, CreateTenuredGCThing<JSObject>(cx));
+  Rooted<ObjectT> obj1(cx, CreateTenuredGCThing<ObjectT>(cx));
+  Rooted<ObjectT> obj2(cx, CreateTenuredGCThing<ObjectT>(cx));
   MakeGray(obj1);
   MakeGray(obj2);
 
@@ -375,6 +374,79 @@ bool TestWrapperType() {
                                                       wrapper2)));
   CHECK((TestUnbarrieredOperations<WrapperT, ObjectT>(constobj1, constobj2,
                                                       wrapper1, wrapper2)));
+
+  return true;
+}
+
+template <typename WrapperT, typename ObjectT>
+bool TestReadBarrierUnmarksGray() {
+  Rooted<ObjectT> obj(cx, CreateTenuredGCThing<ObjectT>(cx));
+  WrapperT wrapper(obj);
+
+  CHECK(obj->color() == gc::CellColor::White);
+
+  (void)*wrapper;
+
+  CHECK(obj->color() == gc::CellColor::White);
+
+  MakeGray(obj);
+  (void)*wrapper;
+
+  CHECK(obj->color() == gc::CellColor::Black);
+
+  return true;
+}
+
+// Execute thunk |f| between two slices of an incremental GC controlled by zeal
+// mode |mode|.
+template <typename F>
+bool CallDuringIncrementalGC(uint32_t mode, F&& f) {
+#ifndef JS_GC_ZEAL
+  fprintf(stderr, "This test requires building with --enable-gczeal\n");
+#else
+  AutoGCParameter incremental(cx, JSGC_INCREMENTAL_GC_ENABLED, true);
+
+  const int64_t BudgetMS = 10000;  // 10S should be long enough for anyone.
+
+  JS_SetGCZeal(cx, mode, 0);
+  JS::PrepareZoneForGC(cx, js::GetContextZone(cx));
+  JS::StartIncrementalGC(cx, JS::GCOptions(), JS::GCReason::DEBUG_GC, BudgetMS);
+  CHECK(JS::IsIncrementalGCInProgress(cx));
+
+  CHECK(f());
+
+  JS::FinishIncrementalGC(cx, JS::GCReason::DEBUG_GC);
+#endif
+
+  return true;
+}
+
+template <typename WrapperT, typename ObjectT>
+bool TestReadBarrierMarksBlack(bool fromWhite) {
+  AutoLeaveZeal noZeal(cx);
+
+  // Create an object and hide it from the hazard analysis.
+  void* ptr = CreateTenuredGCThing<ObjectT>(cx);
+  CHECK(ptr);
+
+  CallDuringIncrementalGC(9 /* YieldBeforeSweeping */, [&]() -> bool {
+    CHECK(JS::IsIncrementalBarrierNeeded(cx));
+
+    auto obj = reinterpret_cast<ObjectT>(ptr);
+
+    WrapperT wrapper(obj);
+
+    CHECK(obj->color() == gc::CellColor::White);
+    if (!fromWhite) {
+      MakeGray(obj);
+    }
+
+    (void)*wrapper;
+
+    CHECK(obj->color() == gc::CellColor::Black);
+
+    return true;
+  });
 
   return true;
 }
@@ -444,7 +516,7 @@ BEGIN_TEST(testGCHeapPreBarriers) {
   size_t objectCount = 100;  // Increase this if necessary when adding tests.
   ObjectVector testObjects;
   for (size_t i = 0; i < objectCount; i++) {
-    JSObject* obj = CreateTenuredGCThing<JSObject>(cx);
+    JSObject* obj = CreateTenuredGCThing<JSObject*>(cx);
     CHECK(obj);
     CHECK(testObjects.append(obj));
   }
