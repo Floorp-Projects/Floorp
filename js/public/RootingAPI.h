@@ -312,11 +312,11 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapOperations<T, Heap<T>> {
    * breaks common usage of move semantics, so we need to define both, even
    * though they are equivalent.
    */
-  explicit Heap(const Heap<T>& other) { init(other.ptr); }
-  Heap(Heap<T>&& other) { init(other.ptr); }
+  explicit Heap(const Heap<T>& other) { init(other.getWithoutExpose()); }
+  Heap(Heap<T>&& other) { init(other.getWithoutExpose()); }
 
   Heap& operator=(Heap<T>&& other) {
-    set(other.unbarrieredGet());
+    set(other.getWithoutExpose());
     other.set(SafelyInitialized<T>());
     return *this;
   }
@@ -329,8 +329,13 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapOperations<T, Heap<T>> {
   const T* address() const { return &ptr; }
 
   void exposeToActiveJS() const { js::BarrierMethods<T>::exposeToJS(ptr); }
+
   const T& get() const {
     exposeToActiveJS();
+    return ptr;
+  }
+  const T& getWithoutExpose() const {
+    js::BarrierMethods<T>::readBarrier(ptr);
     return ptr;
   }
   const T& unbarrieredGet() const { return ptr; }
@@ -748,6 +753,11 @@ struct PtrBarrierMethodsBase {
   static void exposeToJS(T* t) {
     if (t) {
       js::gc::ExposeGCThingToActiveJS(JS::GCCellPtr(t));
+    }
+  }
+  static void readBarrier(T* t) {
+    if (t) {
+      js::gc::IncrementalReadBarrier(JS::GCCellPtr(t));
     }
   }
 };
