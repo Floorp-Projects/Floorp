@@ -539,6 +539,10 @@
   MACRO_(weekend, weekend, "weekend")                                          \
   MACRO_(while, while_, "while")                                               \
   MACRO_(with, with, "with")                                                   \
+  MACRO_(withAt, withAt, "withAt")                                             \
+  MACRO_(withReversed, withReversed, "withReversed")                           \
+  MACRO_(withSorted, withSorted, "withSorted")                                 \
+  MACRO_(withSpliced, withSpliced, "withSpliced")                              \
   MACRO_(writable, writable, "writable")                                       \
   MACRO_(write, write, "write")                                                \
   MACRO_(year, year, "year")                                                   \
