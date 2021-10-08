@@ -840,4 +840,4 @@ add_task(async function test_padding() {
     "1.1.0.160",
     "1.1.0.160"
   );
-}).only();
+});
