@@ -361,26 +361,14 @@ class ProviderSearchTips extends UrlbarProvider {
       return;
     }
 
-    // Don't show a tip if the browser is already showing some other
-    // notification.
-    if ((await isBrowserShowingNotification()) && !ignoreShowLimits) {
-      return;
-    }
-
     // Don't show a tip if the browser has been updated recently.
     let date = await lastBrowserUpdateDate();
     if (Date.now() - date <= LAST_UPDATE_THRESHOLD_MS && !ignoreShowLimits) {
       return;
     }
 
-    // At this point, we're showing a tip.
-    this.disableTipsForCurrentSession = true;
-
-    // Store the new shown count.
-    UrlbarPrefs.set(`tipShownCount.${tip}`, shownCount + 1);
-
     // Start a search.
-    setTimeout(() => {
+    setTimeout(async () => {
       if (this._maybeShowTipForUrlInstance != instance) {
         return;
       }
@@ -394,6 +382,21 @@ class ProviderSearchTips extends UrlbarProvider {
       ) {
         return;
       }
+
+      // Don't show a tip if the browser is already showing some other
+      // notification.
+      if (
+        (!ignoreShowLimits && (await isBrowserShowingNotification())) ||
+        this._maybeShowTipForUrlInstance != instance
+      ) {
+        return;
+      }
+
+      // At this point, we're showing a tip.
+      this.disableTipsForCurrentSession = true;
+
+      // Store the new shown count.
+      UrlbarPrefs.set(`tipShownCount.${tip}`, shownCount + 1);
 
       this.currentTip = tip;
       window.gURLBar.search("", { focus: tip == TIPS.ONBOARD });
@@ -451,6 +454,12 @@ async function isBrowserShowingNotification() {
     if (node.getAttribute("open") == "true") {
       return true;
     }
+  }
+
+  // Other modals like spotlight messages or default browser prompt
+  // can be shown at startup
+  if (window.gDialogBox.isOpen) {
+    return true;
   }
 
   // On startup, the default browser check normally opens after the Search Tip.
