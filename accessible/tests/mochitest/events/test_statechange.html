@@ -229,6 +229,26 @@
         "article is READONLY and not EDITABLE");
     }
 
+    async function testImageLoad() {
+      let img = document.createElement("img");
+      img.id = "image";
+      img.src = "http://example.com/a11y/accessible/tests/mochitest/events/slow_image.sjs";
+      let p = waitForEvent(EVENT_SHOW, "image");
+      getNode("eventdump").before(img);
+      await p;
+      testStates("image",
+        STATE_INVISIBLE, 0,
+        0, 0,
+        "image should be invisible");
+      p = waitForEvent(...stateChange(STATE_INVISIBLE, false, false, "image"));
+      await fetch("http://example.com/a11y/accessible/tests/mochitest/events/slow_image.sjs?complete");
+      await p;
+      testStates("image",
+        0, 0,
+        STATE_INVISIBLE, 0,
+        "image should be invisible");
+    }
+
     async function doTests() {
       // Test opening details objects
       await openNode("detailsOpen", "summaryOpen", true);
@@ -285,6 +305,8 @@
       await toggleStateChange("textbox", "aria-multiline", EXT_STATE_MULTI_LINE, true);
 
       await testDefaultSubmitChange();
+
+      await testImageLoad();
 
       SimpleTest.finish();
     }
