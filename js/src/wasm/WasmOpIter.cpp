@@ -606,6 +606,10 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::F32x4RelaxedFms:
         case SimdOp::F64x2RelaxedFma:
         case SimdOp::F64x2RelaxedFms:
+        case SimdOp::I8x16LaneSelect:
+        case SimdOp::I16x8LaneSelect:
+        case SimdOp::I32x4LaneSelect:
+        case SimdOp::I64x2LaneSelect:
           WASM_SIMD_OP(OpKind::Ternary);
 #  ifdef ENABLE_WASM_SIMD_WORMHOLE
         case SimdOp::MozWHSELFTEST:

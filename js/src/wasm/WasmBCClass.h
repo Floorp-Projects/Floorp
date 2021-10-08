@@ -1496,6 +1496,7 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitLoadLane(uint32_t laneSize);
   [[nodiscard]] bool emitStoreLane(uint32_t laneSize);
   [[nodiscard]] bool emitVectorShuffle();
+  [[nodiscard]] bool emitVectorLaneSelect();
 #  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
   [[nodiscard]] bool emitVectorShiftRightI64x2();
 #  endif

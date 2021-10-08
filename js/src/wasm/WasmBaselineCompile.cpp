@@ -7664,6 +7664,40 @@ bool BaseCompiler::emitVectorShiftRightI64x2() {
 #  endif
 #endif  // ENABLE_WASM_SIMD
 
+#ifdef ENABLE_WASM_RELAXED_SIMD
+bool BaseCompiler::emitVectorLaneSelect() {
+  Nothing unused_a, unused_b, unused_c;
+
+  if (!iter_.readTernary(ValType::V128, &unused_a, &unused_b, &unused_c)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  RegV128 mask = popV128(RegV128(vmm0));
+  RegV128 rhsDest = popV128();
+  RegV128 lhs = popV128();
+  masm.laneSelectSimd128(mask, rhsDest, lhs);
+  freeV128(lhs);
+  freeV128(mask);
+  pushV128(rhsDest);
+#  elif defined(JS_CODEGEN_ARM64)
+  RegV128 maskDest = popV128();
+  RegV128 rhs = popV128();
+  RegV128 lhs = popV128();
+  masm.laneSelectSimd128(maskDest, lhs, rhs, maskDest);
+  freeV128(lhs);
+  freeV128(rhs);
+  pushV128(maskDest);
+#  endif
+
+  return true;
+}
+#endif  // ENABLE_WASM_RELAXED_SIMD
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // "Intrinsics" - magically imported functions for internal use.
@@ -9087,6 +9121,14 @@ bool BaseCompiler::emitBody() {
             }
             CHECK_NEXT(dispatchTernary1(RelaxedFmsF64x2, ValType::V128));
             break;
+          case uint32_t(SimdOp::I8x16LaneSelect):
+          case uint32_t(SimdOp::I16x8LaneSelect):
+          case uint32_t(SimdOp::I32x4LaneSelect):
+          case uint32_t(SimdOp::I64x2LaneSelect):
+            if (!moduleEnv_.v128RelaxedEnabled()) {
+              return iter_.unrecognizedOpcode(&op);
+            }
+            CHECK_NEXT(emitVectorLaneSelect());
           case uint32_t(SimdOp::F32x4RelaxedMin):
             if (!moduleEnv_.v128RelaxedEnabled()) {
               return iter_.unrecognizedOpcode(&op);

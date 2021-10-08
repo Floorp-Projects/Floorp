@@ -2397,6 +2397,12 @@ void MacroAssembler::blendInt16x8(const uint16_t lanes[8], FloatRegister lhs,
   blendInt8x16(reinterpret_cast<const uint8_t*>(lanes), lhs, rhs, dest);
 }
 
+void MacroAssembler::laneSelectSimd128(FloatRegister mask, FloatRegister lhs,
+                                       FloatRegister rhs, FloatRegister dest) {
+  MOZ_ASSERT(mask == dest);
+  Bsl(Simd16B(mask), Simd16B(lhs), Simd16B(rhs));
+}
+
 void MacroAssembler::interleaveHighInt16x8(FloatRegister lhs, FloatRegister rhs,
                                            FloatRegister dest) {
   Zip2(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));

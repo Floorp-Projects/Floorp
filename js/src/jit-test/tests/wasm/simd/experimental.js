@@ -279,3 +279,53 @@ for (let op of [I32x4RelaxedTruncSSatF32x4, I32x4RelaxedTruncUSatF32x4,
             funcBody({locals:[],
                       body: [...V128StoreExpr(0, [SimdPrefix, varU32(op)])]})])])));
 }
+
+// Relaxed blend / laneselect, https://github.com/WebAssembly/relaxed-simd/issues/17
+
+for (let [k, opcode, AT] of [[1, I8x16LaneSelect, Int8Array],
+                             [2, I16x8LaneSelect, Int16Array],
+                             [4, I32x4LaneSelect, Int32Array],
+                             [8, I64x2LaneSelect, BigInt64Array]]) {
+
+    var ins = wasmValidateAndEval(moduleWithSections([
+        sigSection([v2vSig]),
+        declSection([0]),
+        memorySection(1),
+        exportSection([{funcIndex: 0, name: "run"},
+                        {memIndex: 0, name: "mem"}]),
+        bodySection([
+            funcBody({locals:[],
+                        body: [...V128StoreExpr(0, [...V128Load(16),
+                                                    ...V128Load(32),
+                                                    ...V128Load(48),
+                                                    SimdPrefix, varU32(opcode)])]})])]));
+
+    var mem = ins.exports.mem.buffer;
+    var mem8 = new Uint8Array(mem);
+    set(mem8, 16, [1,2,3,4,0,0,0,0,100,0,102,0,0,250,251,252,253]);
+    set(mem8, 32, [0,0,0,0,5,6,7,8,0,101,0,103,0,254,255,0,1]);
+    var c = new AT(mem, 48, 16 / k);
+    for (let i = 0; i < c.length; i++) {
+        // Use popcnt to randomize 0 and ~0 
+        const popcnt_i = i.toString(2).replace(/0/g, "").length;
+        const v = popcnt_i & 1 ? -1 : 0
+        c[i] = k == 8 ? BigInt(v) : v;
+    }
+    ins.exports.run();
+    for (let i = 0; i < 16; i++) {
+        const r = c[(i / k) | 0] ? mem8[16 + i] : mem8[32 + i];
+        assertEq(r, mem8[i]);
+    }
+
+    assertEq(false, WebAssembly.validate(moduleWithSections([
+        sigSection([v2vSig]),
+        declSection([0]),
+        memorySection(1),
+        exportSection([{funcIndex: 0, name: "run"},
+                       {memIndex: 0, name: "mem"}]),
+        bodySection([
+            funcBody({locals:[],
+                      body: [...V128StoreExpr(0, [...V128Load(0),
+                                                  ...V128Load(0),
+                                                  SimdPrefix, varU32(opcode)])]})])])));    
+}
