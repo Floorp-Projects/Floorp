@@ -2576,7 +2576,11 @@ nsresult HTMLEditor::InsertWithQuotationsAsSubAction(
 
   // Let the citer quote it for us:
   nsString quotedStuff;
-  InternetCiter::GetCiteString(aQuotedText, quotedStuff);
+  nsresult rv = InternetCiter::GetCiteString(aQuotedText, quotedStuff);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("InternetCiter::GetCiteString() failed");
+    return rv;
+  }
 
   // It's best to put a blank line after the quoted text so that mails
   // written without thinking won't be so ugly.
@@ -2595,7 +2599,7 @@ nsresult HTMLEditor::InsertWithQuotationsAsSubAction(
       !ignoredError.Failed(),
       "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
+  rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -2989,8 +2993,12 @@ NS_IMETHODIMP HTMLEditor::Rewrap(bool aRespectNewlines) {
   nsString wrapped;
   uint32_t firstLineOffset = 0;  // XXX need to reset this if there is a
                                  //     selection
-  InternetCiter::Rewrap(current, wrapWidth, firstLineOffset, aRespectNewlines,
-                        wrapped);
+  rv = InternetCiter::Rewrap(current, wrapWidth, firstLineOffset,
+                             aRespectNewlines, wrapped);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("InternetCiter::Rewrap() failed");
+    return EditorBase::ToGenericNSResult(rv);
+  }
 
   if (isCollapsed) {
     DebugOnly<nsresult> rvIgnored = SelectAllInternal();
