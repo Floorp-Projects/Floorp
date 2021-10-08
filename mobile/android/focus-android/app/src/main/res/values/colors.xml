@@ -66,7 +66,7 @@
 
     <!-- Search Suggestions -->
     <color name="searchSuggestionsBackground">@color/photonLightGrey05</color>
-    <color name="searchSuggestionPromptBackground">@color/photonLightGrey05</color>
+    <color name="searchSuggestionPromptBackground">@color/photonViolet05</color>
     <color name="searchSuggestionPromptTitleColor">@color/photonInk80</color>
     <color name="searchSuggestionPromptSubtitleColor">@color/photonInk80</color>
     <color name="searchSuggestionPromptBorderColor">@color/colorSecondary</color>

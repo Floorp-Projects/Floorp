@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
@@ -38,6 +37,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import mozilla.components.compose.browser.awesomebar.AwesomeBar
+import mozilla.components.compose.browser.awesomebar.AwesomeBarDefaults
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.top.sites.TopSite
@@ -48,6 +48,7 @@ import org.mozilla.focus.components
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.State
 import org.mozilla.focus.theme.FocusTheme
+import org.mozilla.focus.theme.focusColors
 import org.mozilla.focus.topsites.TopSites
 import kotlin.coroutines.CoroutineContext
 
@@ -226,6 +227,9 @@ private fun SearchSuggestions(
         ) {
             AwesomeBar(
                 text = text,
+                colors = AwesomeBarDefaults.colors(
+                    background = focusColors.surface,
+                ),
                 providers = listOf(provider),
                 onSuggestionClicked = onSuggestionClicked,
                 onAutoComplete = onAutoComplete
@@ -242,7 +246,7 @@ private fun TopSitesOverlay(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colors.background),
+                .background(focusColors.surface),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(24.dp))
