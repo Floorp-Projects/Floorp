@@ -153,28 +153,28 @@ class AsyncNotifyRunnable : public Runnable {
   nsTArray<RefPtr<IProgressObserver>> mObservers;
 };
 
-ProgressTracker::MediumHighRunnable::MediumHighRunnable(
+ProgressTracker::RenderBlockingRunnable::RenderBlockingRunnable(
     already_AddRefed<AsyncNotifyRunnable>&& aEvent)
     : PrioritizableRunnable(std::move(aEvent),
-                            nsIRunnablePriority::PRIORITY_MEDIUMHIGH) {}
+                            nsIRunnablePriority::PRIORITY_RENDER_BLOCKING) {}
 
-void ProgressTracker::MediumHighRunnable::AddObserver(
+void ProgressTracker::RenderBlockingRunnable::AddObserver(
     IProgressObserver* aObserver) {
   static_cast<AsyncNotifyRunnable*>(mRunnable.get())->AddObserver(aObserver);
 }
 
-void ProgressTracker::MediumHighRunnable::RemoveObserver(
+void ProgressTracker::RenderBlockingRunnable::RemoveObserver(
     IProgressObserver* aObserver) {
   static_cast<AsyncNotifyRunnable*>(mRunnable.get())->RemoveObserver(aObserver);
 }
 
 /* static */
-already_AddRefed<ProgressTracker::MediumHighRunnable>
-ProgressTracker::MediumHighRunnable::Create(
+already_AddRefed<ProgressTracker::RenderBlockingRunnable>
+ProgressTracker::RenderBlockingRunnable::Create(
     already_AddRefed<AsyncNotifyRunnable>&& aEvent) {
   MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<ProgressTracker::MediumHighRunnable> event(
-      new ProgressTracker::MediumHighRunnable(std::move(aEvent)));
+  RefPtr<ProgressTracker::RenderBlockingRunnable> event(
+      new ProgressTracker::RenderBlockingRunnable(std::move(aEvent)));
   return event.forget();
 }
 
@@ -200,7 +200,7 @@ void ProgressTracker::Notify(IProgressObserver* aObserver) {
     mRunnable->AddObserver(aObserver);
   } else {
     RefPtr<AsyncNotifyRunnable> ev = new AsyncNotifyRunnable(this, aObserver);
-    mRunnable = ProgressTracker::MediumHighRunnable::Create(ev.forget());
+    mRunnable = ProgressTracker::RenderBlockingRunnable::Create(ev.forget());
     mEventTarget->Dispatch(mRunnable, NS_DISPATCH_NORMAL);
   }
 }

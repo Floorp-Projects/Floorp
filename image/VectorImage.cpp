@@ -1141,7 +1141,7 @@ void VectorImage::SendFrameComplete(bool aDidCache, uint32_t aFlags) {
                                          GetMaxSizedIntRect());
   } else {
     NotNull<RefPtr<VectorImage>> image = WrapNotNull(this);
-    NS_DispatchToMainThread(CreateMediumHighRunnable(NS_NewRunnableFunction(
+    NS_DispatchToMainThread(CreateRenderBlockingRunnable(NS_NewRunnableFunction(
         "ProgressTracker::SyncNotifyProgress", [=]() -> void {
           RefPtr<ProgressTracker> tracker = image->GetProgressTracker();
           if (tracker) {
@@ -1504,7 +1504,7 @@ void VectorImage::InvalidateObserversOnNextRefreshDriverTick() {
   nsCOMPtr<nsIRunnable> ev(NS_NewRunnableFunction(
       "VectorImage::SendInvalidationNotifications",
       [=]() -> void { self->SendInvalidationNotifications(); }));
-  eventTarget->Dispatch(CreateMediumHighRunnable(ev.forget()),
+  eventTarget->Dispatch(CreateRenderBlockingRunnable(ev.forget()),
                         NS_DISPATCH_NORMAL);
 }
 

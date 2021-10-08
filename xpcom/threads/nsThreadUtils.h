@@ -510,7 +510,7 @@ class PrioritizableRunnable : public Runnable, public nsIRunnablePriority {
   uint32_t mPriority;
 };
 
-extern already_AddRefed<nsIRunnable> CreateMediumHighRunnable(
+extern already_AddRefed<nsIRunnable> CreateRenderBlockingRunnable(
     already_AddRefed<nsIRunnable>&& aRunnable);
 
 namespace detail {
