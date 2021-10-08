@@ -209,20 +209,21 @@ class ProgressTracker : public mozilla::SupportsWeakPtr {
 
   // Wrapper for AsyncNotifyRunnable to make it have medium high priority like
   // other imagelib runnables.
-  class MediumHighRunnable final : public PrioritizableRunnable {
-    explicit MediumHighRunnable(already_AddRefed<AsyncNotifyRunnable>&& aEvent);
-    virtual ~MediumHighRunnable() = default;
+  class RenderBlockingRunnable final : public PrioritizableRunnable {
+    explicit RenderBlockingRunnable(
+        already_AddRefed<AsyncNotifyRunnable>&& aEvent);
+    virtual ~RenderBlockingRunnable() = default;
 
    public:
     void AddObserver(IProgressObserver* aObserver);
     void RemoveObserver(IProgressObserver* aObserver);
 
-    static already_AddRefed<MediumHighRunnable> Create(
+    static already_AddRefed<RenderBlockingRunnable> Create(
         already_AddRefed<AsyncNotifyRunnable>&& aEvent);
   };
 
   // The runnable, if any, that we've scheduled to deliver async notifications.
-  RefPtr<MediumHighRunnable> mRunnable;
+  RefPtr<RenderBlockingRunnable> mRunnable;
 
   // mMutex protects access to mImage and mEventTarget.
   mutable Mutex mMutex;
