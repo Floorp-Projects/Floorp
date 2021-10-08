@@ -422,7 +422,9 @@ public final class EventDispatcher extends JNIObject {
                     ThreadUtils.getUiHandler().post(new Runnable() {
                         @Override
                         public void run() {
+                            final Double startTime = GeckoJavaSampler.tryToGetProfilerTime();
                             listener.handleMessage(type, message, wrappedCallback);
+                            GeckoJavaSampler.addMarker("EventDispatcher handleMessage", startTime, null, type);
                         }
                     });
                 }
