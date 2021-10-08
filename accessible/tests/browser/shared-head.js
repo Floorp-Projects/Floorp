@@ -413,16 +413,23 @@ function snippetToURL(doc, options = {}) {
     doc = wrapWithIFrame(doc, options);
   }
 
-  const encodedDoc = encodeURIComponent(
-    `<html>
-      <head>
-        <meta charset="utf-8"/>
-        <title>Accessibility Test</title>
-      </head>
-      <body ${attrsToString(attrs)}>${doc}</body>
-    </html>`
-  );
+  const fullDoc = `<html>
+    <head>
+      <meta charset="utf-8"/>
+      <title>Accessibility Test</title>
+    </head>
+    <body ${attrsToString(attrs)}>${doc}</body>
+  </html>`;
 
+  if (options.chrome) {
+    // Load with a chrome:// URL so this loads as a chrome document in the
+    // parent process.
+    const url = new URL(`${CURRENT_DIR}chrome-document-builder.html`);
+    url.searchParams.append("html", fullDoc);
+    return url.href;
+  }
+
+  const encodedDoc = encodeURIComponent(fullDoc);
   return `data:text/html;charset=utf-8,${encodedDoc}`;
 }
 
@@ -435,7 +442,7 @@ function accessibleTask(doc, task, options = {}) {
       // Load with a chrome:// URL so this loads as a chrome document in the
       // parent process.
       url = `${CURRENT_DIR}${doc}`;
-    } else if (doc.endsWith("html") && !gIsIframe) {
+    } else if (!options.chrome && doc.endsWith("html") && !gIsIframe) {
       url = `${CURRENT_CONTENT_DIR}${doc}`;
     } else {
       url = snippetToURL(doc, options);
@@ -542,10 +549,11 @@ function accessibleTask(doc, task, options = {}) {
  *           Default is true.
  *         - {Boolean} chrome
  *           Flag to run the test with content as a chrome document in the
- *           parent process. Default is false. This is only valid if url is a
- *           relative URL to a XUL document, not a markup snippet. topLevel
- *           should usually be set to false in this case, since XUL documents
- *           don't work in the content process.
+ *           parent process. Default is false. Although url can be a markup
+ *           snippet, a snippet cannot be used for XUL content. To load XUL,
+ *           specify a relative URL to a XUL document. In that case, toplevel
+ *           should usually be set to false, since XUL documents don't work in
+ *           content processes.
  *         - {Boolean} iframe
  *           Flag to run the test with content wrapped in an iframe. Default is
  *           false.
