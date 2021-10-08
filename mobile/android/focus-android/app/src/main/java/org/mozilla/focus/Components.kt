@@ -51,6 +51,7 @@ import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.AppContentInterceptor
 import org.mozilla.focus.engine.ClientWrapper
 import org.mozilla.focus.engine.SanityCheckMiddleware
+import org.mozilla.focus.engine.TabsFeatureMiddleware
 import org.mozilla.focus.exceptions.ExceptionMigrationMiddleware
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.locale.LocaleManager
@@ -136,7 +137,8 @@ class Components(
                 SearchFilterMiddleware(),
                 PromptMiddleware(),
                 AdsTelemetryMiddleware(adsTelemetry),
-                BlockedTrackersMiddleware(context)
+                BlockedTrackersMiddleware(context),
+                TabsFeatureMiddleware()
             ) + EngineMiddleware.create(engine)
         )
     }
