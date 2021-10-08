@@ -72,9 +72,8 @@ function selectElementsInPanelview(panelview) {
     active: getElementById("PanelUI-profiler-active"),
     locked: getElementById("PanelUI-profiler-locked"),
     presetDescription: getElementById("PanelUI-profiler-content-description"),
-    presetCustom: getElementById("PanelUI-profiler-content-custom"),
-    presetsCustomButton: getElementById(
-      "PanelUI-profiler-content-custom-button"
+    presetsEditSettings: getElementById(
+      "PanelUI-profiler-content-edit-settings"
     ),
     presetsMenuList: /** @type {MenuListElement} */ (getElementById(
       "PanelUI-profiler-presets"
@@ -359,7 +358,7 @@ function addPopupEventHandlers(state, elements, view) {
     event.preventDefault();
   });
 
-  addHandler(elements.presetsCustomButton, "click", () => {
+  addHandler(elements.presetsEditSettings, "click", () => {
     elements.window.openTrustedLinkIn("about:profiling", "tab");
     view.hidePopup();
   });
