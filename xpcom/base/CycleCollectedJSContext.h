@@ -145,13 +145,6 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, private JS::JobQueue {
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
  private:
-  static JSObject* GetIncumbentGlobalCallback(JSContext* aCx);
-  static bool EnqueuePromiseJobCallback(JSContext* aCx,
-                                        JS::HandleObject aPromise,
-                                        JS::HandleObject aJob,
-                                        JS::HandleObject aAllocationSite,
-                                        JS::HandleObject aIncumbentGlobal,
-                                        void* aData);
   static void PromiseRejectionTrackerCallback(
       JSContext* aCx, bool aMutedErrors, JS::HandleObject aPromise,
       JS::PromiseRejectionHandlingState state, void* aData);
