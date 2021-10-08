@@ -8,9 +8,7 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers
@@ -30,6 +28,7 @@ import org.hamcrest.Matchers.allOf
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 
 /**
@@ -73,12 +72,12 @@ class SettingsSubMenuSearchRobot {
     fun selectAddCustomSearchEngine() = onView(withText("Other")).click()
 
     fun typeCustomEngineDetails(engineName: String, engineURL: String) {
-        onView(withId(R.id.edit_engine_name))
-            .perform(clearText())
-            .perform(typeText(engineName))
-        onView(withId(R.id.edit_search_string))
-            .perform(clearText())
-            .perform(typeText(engineURL))
+        mDevice.findObject(
+            UiSelector().resourceId("$packageName:id/edit_engine_name")
+        ).setText(engineName)
+        mDevice.findObject(
+            UiSelector().resourceId("$packageName:id/edit_search_string")
+        ).setText(engineURL)
     }
 
     fun openEngineOverflowMenu(searchEngineName: String) {
