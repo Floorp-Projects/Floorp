@@ -38,7 +38,6 @@ import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.feature.app.links.AppLinksFeature
-import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.DownloadsFeature
@@ -63,6 +62,7 @@ import org.mozilla.focus.browser.integration.BrowserMenuController
 import org.mozilla.focus.browser.integration.BrowserToolbarIntegration
 import org.mozilla.focus.browser.integration.FindInPageIntegration
 import org.mozilla.focus.browser.integration.FullScreenIntegration
+import org.mozilla.focus.contextmenu.ContextMenuCandidates
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.EngineSharedPreferencesListener
 import org.mozilla.focus.exceptions.ExceptionDomains
@@ -183,16 +183,13 @@ class BrowserFragment :
             ContextMenuFeature(
                 parentFragmentManager,
                 components.store,
-                ContextMenuCandidate.defaultCandidates(
+                ContextMenuCandidates.get(
                     requireContext(),
                     components.tabsUseCases,
                     components.contextMenuUseCases,
+                    components.appLinksUseCases,
                     view
-                ) +
-                    ContextMenuCandidate.createOpenInExternalAppCandidate(
-                        requireContext(),
-                        components.appLinksUseCases
-                    ),
+                ),
                 engineView!!,
                 requireComponents.contextMenuUseCases,
                 tabId,
