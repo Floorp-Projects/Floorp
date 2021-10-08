@@ -176,88 +176,46 @@ class Browsertime(Perftest):
         super(Browsertime, self).clean_up()
 
     def _compose_cmd(self, test, timeout):
+        """Browsertime has the following overwrite priorities(in order of highest-lowest)
+        (1) User - input commandline flag.
+        (2) Browsertime args mentioned for a test
+        (3) Test-manifest settings
+        (4) Default settings
+        """
+
+        browsertime_path = os.path.join(
+            os.path.dirname(__file__), "..", "..", "browsertime"
+        )
+
         if test.get("type", "") == "scenario":
-            browsertime_script = [
-                os.path.join(
-                    os.path.dirname(__file__),
-                    "..",
-                    "..",
-                    "browsertime",
-                    "browsertime_scenario.js",
-                ),
-                "--browsertime.scenario_time",
-                test.get("scenario_time", 60000),
-                "--browsertime.background_app",
-                test.get("background_app", "false"),
-            ]
+            browsertime_script = os.path.join(
+                browsertime_path,
+                "browsertime_scenario.js",
+            )
         elif test.get("type", "") == "benchmark":
-            browsertime_script = [
-                os.path.join(
-                    os.path.dirname(__file__),
-                    "..",
-                    "..",
-                    "browsertime",
-                    "browsertime_benchmark.js",
-                )
-            ]
+            browsertime_script = os.path.join(
+                browsertime_path,
+                "browsertime_benchmark.js",
+            )
         else:
             # Custom scripts are treated as pageload tests for now
             if test.get("interactive", False):
-                browsertime_script = [
-                    os.path.join(
-                        os.path.dirname(__file__),
-                        "..",
-                        "..",
-                        "browsertime",
-                        "browsertime_interactive.js",
-                    )
-                ]
+                browsertime_script = os.path.join(
+                    browsertime_path,
+                    "browsertime_interactive.js",
+                )
             else:
-                browsertime_script = [
-                    os.path.join(
-                        os.path.dirname(__file__),
-                        "..",
-                        "..",
-                        "browsertime",
-                        test.get("test_script", "browsertime_pageload.js"),
-                    )
-                ]
+                browsertime_script = os.path.join(
+                    browsertime_path,
+                    test.get("test_script", "browsertime_pageload.js"),
+                )
 
-        btime_args = self.browsertime_args
-        if self.config["app"] in ("chrome", "chromium", "chrome-m"):
-            btime_args.extend(self.setup_chrome_args(test))
-
-        browsertime_script.extend(btime_args)
-
-        # pass a few extra options to the browsertime script
-        # XXX maybe these should be in the browsertime_args() func
-        browsertime_script.extend(
-            ["--browsertime.page_cycles", str(test.get("page_cycles", 1))]
-        )
-        browsertime_script.extend(["--browsertime.url", test["test_url"]])
-        if test.get("secondary_url"):
-            browsertime_script.extend(
-                ["--browsertime.secondary_url", test.get("secondary_url")]
-            )
-
-        # Raptor's `pageCycleDelay` delay (ms) between pageload cycles
-        browsertime_script.extend(["--browsertime.page_cycle_delay", "1000"])
-
-        # Raptor's `post startup delay` is settle time after the browser has started
-        browsertime_script.extend(
-            ["--browsertime.post_startup_delay", str(self.post_startup_delay)]
-        )
-
-        # a delay was added by default to browsertime from 5s -> 8s for iphones, not needed
-        browsertime_script.extend(
-            ["--pageCompleteWaitTime", str(test.get("page_complete_wait_time", "5000"))]
-        )
-
-        self.results_handler.remove_result_dir_for_test(test)
-
+        # All the configurations in the browsertime_options variable initialization
+        # and the secondary_url are priority 3, since none overlap they are grouped together
         browsertime_options = [
-            "--firefox.profileTemplate",
-            str(self.profile.profile),
+            "--browsertime.page_cycle_delay",
+            "1000",
+            # Raptor's `pageCycleDelay` delay (ms) between pageload cycles
             "--skipHar",
             "--pageLoadStrategy",
             "none",
@@ -267,18 +225,66 @@ class Browsertime(Perftest):
             "true",
             "--pageCompleteCheckStartWait",
             "5000",
+            # url load timeout (milliseconds)
             "--pageCompleteCheckPollTimeout",
             "1000",
-            # url load timeout (milliseconds)
+            # running browser scripts timeout (milliseconds)
             "--timeouts.pageLoad",
             str(timeout),
-            # running browser scripts timeout (milliseconds)
             "--timeouts.script",
             str(timeout * int(test.get("page_cycles", 1))),
-            "--resultDir",
-            self.results_handler.result_dir_for_test(test),
+            "--browsertime.page_cycles",
+            str(test.get("page_cycles", 1)),
+            # a delay was added by default to browsertime from 5s -> 8s for iphones, not needed
+            "--pageCompleteWaitTime",
+            str(test.get("page_complete_wait_time", "5000")),
+            "--browsertime.url",
+            test["test_url"],
+            # Raptor's `post startup delay` is settle time after the browser has started
+            "--browsertime.post_startup_delay",
+            str(self.post_startup_delay),
         ]
 
+        if test.get("secondary_url"):
+            browsertime_options.extend(
+                ["--browsertime.secondary_url", test.get("secondary_url")]
+            )
+
+        # In this code block we check if any priority 2 argument is in conflict with a priority
+        # 3 arg if so we overwrite the value with the priority 2 argument, and otherwise we
+        # simply add the priority 2 arg
+        if test.get("browsertime_args", None):
+            split_args = test.get("browsertime_args").strip().split()
+            for split_arg in split_args:
+                pairing = split_arg.split("=")
+                if len(pairing) not in (1, 2):
+                    raise Exception(
+                        "One of the browsertime_args from the test was not split properly. "
+                        f"Expecting a --flag, or a --option=value pairing. Found: {split_arg}"
+                    )
+                if pairing[0] in browsertime_options:
+                    # If it's a flag, don't re-add it
+                    if len(pairing) > 1:
+                        ind = browsertime_options.index(pairing[0])
+                        browsertime_options[ind + 1] = pairing[1]
+                else:
+                    browsertime_options.extend(pairing)
+
+        priority1_options = self.browsertime_args
+        if self.config["app"] in ("chrome", "chromium", "chrome-m"):
+            priority1_options.extend(self.setup_chrome_args(test))
+
+        # must happen before --firefox.profileTemplate and --resultDir
+        self.results_handler.remove_result_dir_for_test(test)
+        priority1_options.extend(
+            ["--firefox.profileTemplate", str(self.profile.profile)]
+        )
+        priority1_options.extend(
+            ["--resultDir", self.results_handler.result_dir_for_test(test)]
+        )
+
+        # This argument can have duplicates of the value "--firefox.env" so we do not need
+        # to check if it conflicts
         for var, val in self.config.get("environment", {}).items():
             browsertime_options.extend(["--firefox.env", "{}={}".format(var, val)])
 
@@ -287,11 +293,11 @@ class Browsertime(Perftest):
         parsed_cmds = [":::".join([str(i) for i in item]) for item in cmds if item]
         browsertime_options.extend(["--browsertime.commands", ";;;".join(parsed_cmds)])
 
-        if self.verbose:
+        if self.verbose and "-vvv" not in browsertime_options:
             browsertime_options.append("-vvv")
 
         if self.browsertime_video:
-            browsertime_options.extend(
+            priority1_options.extend(
                 [
                     "--video",
                     "true",
@@ -305,7 +311,7 @@ class Browsertime(Perftest):
                 "chrome-m",
                 "chrome",
             ):
-                browsertime_options.extend(
+                priority1_options.extend(
                     [
                         "--firefox.windowRecorder",
                         "false",
@@ -317,7 +323,7 @@ class Browsertime(Perftest):
                     "Using adb screenrecord for mobile, or ffmpeg on desktop for videos"
                 )
             else:
-                browsertime_options.extend(
+                priority1_options.extend(
                     [
                         "--firefox.windowRecorder",
                         "true",
@@ -325,7 +331,7 @@ class Browsertime(Perftest):
                 )
                 LOG.info("Using Firefox Window Recorder for videos")
         else:
-            browsertime_options.extend(["--video", "false", "--visualMetrics", "false"])
+            priority1_options.extend(["--video", "false", "--visualMetrics", "false"])
 
         # have browsertime use our newly-created conditioned-profile path
         if self.config.get("conditioned_profile"):
@@ -336,7 +342,7 @@ class Browsertime(Perftest):
                 "browsertime_result_dir"
             ] = self.results_handler.result_dir_for_test(test)
             self._init_gecko_profiling(test)
-            browsertime_options.append("--firefox.geckoProfiler")
+            priority1_options.append("--firefox.geckoProfiler")
             for option, browser_time_option, default in (
                 (
                     "gecko_profile_features",
@@ -369,33 +375,34 @@ class Browsertime(Perftest):
                     extra = self.config.get("gecko_profile_extra_threads", [])
                     value = ",".join(value.split(",") + extra)
                 if value is not None:
-                    browsertime_options.extend([browser_time_option, str(value)])
+                    priority1_options.extend([browser_time_option, str(value)])
 
-        # Add custom test-specific options and allow them to
-        # overwrite our presets.
-        browsertime_all_options = browsertime_script + browsertime_options
-        if test.get("browsertime_args", None):
-            split_args = test.get("browsertime_args").strip().split()
-            for split_arg in split_args:
-                pairing = split_arg.split("=")
-                if len(pairing) not in (1, 2):
-                    raise Exception(
-                        "One of the browsertime_args from the test was not split properly. "
-                        f"Expecting a --flag, or a --option=value pairing. Found: {split_arg}"
-                    )
-
-                if pairing[0] in browsertime_all_options:
-                    # If it's a flag, don't re-add it
-                    if len(pairing) > 1:
-                        ind = browsertime_all_options.index(pairing[0])
-                        browsertime_all_options[ind + 1] = pairing[1]
+        # In this code block we check if any priority 1 arguments are in conflict with a
+        # priority 2/3/4 argument
+        for index, argument in list(enumerate(priority1_options)):
+            if argument.startswith("--"):
+                if index == len(priority1_options) - 1:
+                    if argument not in browsertime_options:
+                        browsertime_options.append(argument)
                 else:
-                    browsertime_all_options.extend(pairing)
+                    arg = priority1_options[index + 1]
+                    try:
+                        ind = browsertime_options.index(argument)
+                        if not arg.startswith("--"):
+                            browsertime_options[ind + 1] = arg
+                    except ValueError:
+                        res = [argument]
+                        if not arg.startswith("--"):
+                            res.append(arg)
+                        browsertime_options.extend(res)
+            else:
+                continue
 
         return (
             [self.browsertime_node, self.browsertime_browsertimejs]
             + self.driver_paths
-            + browsertime_all_options
+            + [browsertime_script]
+            + browsertime_options
             # -n option for the browsertime to restart the browser
             + ["-n", str(test.get("browser_cycles", 1))]
         )

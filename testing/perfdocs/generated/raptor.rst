@@ -6862,13 +6862,13 @@ Tests that perform a specific action (a scenario), i.e. idle application, idle a
 
    * **alert threshold**: 2.0
    * **apps**: fenix, geckoview, refbrow
-   * **background app**: true
+   * **browsertime args**: --browsertime.scenario_time=60000 --browsertime.background_app=false
    * **expected**: pass
    * **lower is better**: true
    * **measure**: fakeMeasure
    * **page cycles**: 1
    * **page timeout**: 1320000
-   * **scenario time**: 600000
+   * **scenario time**: 1200000
    * **test url**: `<about:blank>`__
    * **type**: scenario
    * **unit**: scenarioComplete
