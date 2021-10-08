@@ -357,6 +357,7 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
   widget->SetWindowShadowStyle(GetShadowStyle());
   widget->SetWindowOpacity(StyleUIReset()->mWindowOpacity);
   widget->SetWindowTransform(ComputeWidgetTransform());
+  widget->SetColorScheme(LookAndFeel::ColorSchemeForFrame(this));
 
   // most popups don't have a title so avoid setting the title if there isn't
   // one
@@ -494,6 +495,12 @@ void nsMenuPopupFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
   if (newUI.mMozWindowTransform != oldUI.mMozWindowTransform) {
     if (nsIWidget* widget = GetWidget()) {
       widget->SetWindowTransform(ComputeWidgetTransform());
+    }
+  }
+
+  if (StyleUI()->mColorScheme != aOldStyle->StyleUI()->mColorScheme) {
+    if (nsIWidget* widget = GetWidget()) {
+      widget->SetColorScheme(LookAndFeel::ColorSchemeForFrame(this));
     }
   }
 
