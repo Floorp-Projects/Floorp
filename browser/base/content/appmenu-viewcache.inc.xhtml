@@ -270,13 +270,13 @@
                 <image class="PanelUI-profiler-info-icon" />
               </vbox>
             </hbox>
-            <label data-l10n-id="profiler-popup-description-title" />
-            <description data-l10n-id="profiler-popup-description" />
+            <label class="PanelUI-profiler-description-title" data-l10n-id="profiler-popup-description-title" />
+            <description class="PanelUI-profiler-description" data-l10n-id="profiler-popup-description" />
             <hbox>
               <button id="PanelUI-profiler-learn-more"
+                      class="PanelUI-profiler-button-link"
                       tabindex="-1"
-                      data-l10n-id="profiler-popup-learn-more" />
-              <space flex="1" />
+                      data-l10n-id="profiler-popup-learn-more-button" />
             </hbox>
           </vbox>
         </hbox>
@@ -300,9 +300,10 @@
           </menulist>
           <!-- The following description gets inserted dynamically. -->
           <description id="PanelUI-profiler-content-description" />
-          <hbox id="PanelUI-profiler-content-custom">
-            <button id="PanelUI-profiler-content-custom-button"
-                    data-l10n-id="profiler-popup-edit-settings">
+          <hbox>
+            <button id="PanelUI-profiler-content-edit-settings"
+                    class="PanelUI-profiler-button-link"
+                    data-l10n-id="profiler-popup-edit-settings-button">
             </button>
           </hbox>
         </vbox>

@@ -1973,6 +1973,19 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   min-width: 0 !important;
 }
 
+/* This utility class styles a button as a link. */
+.PanelUI-profiler-button-link {
+  appearance: none;
+  font-size: inherit;
+  cursor: pointer;
+  min-width: 0;
+  text-decoration: underline;
+}
+
+.PanelUI-profiler-button-link .button-text {
+  margin: 0; /* Cancel out the default internal margin */
+}
+
 #PanelUI-profiler description {
   max-width: 290px;
 }
@@ -2053,11 +2066,6 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   --arrowpanel-background: #fbfbfb;
 }
 
-/* Hide the unused box that gets added here. */
-#PanelUI-profiler-learn-more > hbox {
-  display: none;
-}
-
 #PanelUI-profiler-content {
   position: relative;
 }
@@ -2067,30 +2075,26 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   margin-inline-end: 4px;
 }
 
-#PanelUI-profiler-info label {
+.PanelUI-profiler-description-title {
   font-size: 16px;
   font-weight: bold;
   margin: 6px 15px;
 }
 
-#PanelUI-profiler-info description {
+.PanelUI-profiler-description {
   margin: 4px 15px;
 }
 
-#PanelUI-profiler-info button {
-  appearance: none;
-  padding: 2px;
-  margin: 4px 13px 13px;
+#PanelUI-profiler-learn-more {
+  margin: 4px 15px 13px;
   color: #fff;
-  text-decoration: underline;
-  cursor: pointer;
 }
 
-#PanelUI-profiler-info button:active {
+#PanelUI-profiler-learn-more:active {
   color: #fffc;
 }
 
-#PanelUI-profiler-info button:focus {
+#PanelUI-profiler-learn-more:focus {
   box-shadow: 0 0 0 2px #fff, 0 0 0 6px rgba(255, 255, 255, 0.3);
   border-radius: 2px;
   text-decoration: none;
@@ -2100,29 +2104,21 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   margin: 8px 15px;
 }
 
-#PanelUI-profiler-content-custom-button {
-  appearance: none;
-  margin: 0;
+#PanelUI-profiler-content-edit-settings {
+  margin: 0 15px;
   color: #0046A4;
+  text-decoration: none;
   font-size: 12px;
-  cursor: pointer;
 }
 
-:root[lwt-popup-brighttext] #PanelUI-profiler-content-custom-button {
+:root[lwt-popup-brighttext] #PanelUI-profiler-content-edit-settings {
   color: #76B1FF;
 }
 
-#PanelUI-profiler-content-custom-button:hover {
+#PanelUI-profiler-content-edit-settings:hover,
+#PanelUI-profiler-content-edit-settings:active,
+#PanelUI-profiler-content-edit-settings:focus {
   text-decoration: underline;
-}
-
-#PanelUI-profiler-content-custom-button:active,
-#PanelUI-profiler-content-custom-button:focus {
-  text-decoration: underline;
-}
-
-#PanelUI-profiler-content-custom {
-  margin-inline: 15px;
 }
 
 .PanelUI-profiler-content-label {
