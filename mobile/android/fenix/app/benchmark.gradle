@@ -61,6 +61,16 @@ ext.maybeConfigForJetpackBenchmark = { android ->
         // and to opt into a lower-max CPU frequency on unrooted devices that support it
         // - UNLOCKED: ./gradlew lockClocks, which locks the CPU frequency, fails on my device. See
         // https://issuetracker.google.com/issues/176836267 for potential workarounds.
-        testInstrumentationRunnerArgument 'androidx.benchmark.suppressErrors', 'ACTIVITY-MISSING,UNLOCKED'
+
+        // The tests don't always output a JSON file with the data. To make sure it does, we have to
+        // set androidx.benchmark.output.enable to true.
+        // We set the the output directory simply for simplicity since the benchmark_runner.py script
+        // can't know the name of the phone in the /build/outputs/ directory. The system defaults to
+        // {phone_name} which can be troublesome finding in some case.
+        testInstrumentationRunnerArguments = [
+                'androidx.benchmark.suppressErrors' : 'ACTIVITY-MISSING,UNLOCKED',
+                'androidx.benchmark.output.enable' : 'true',
+                additionalTestOutputDir : '/storage/emulated/0/benchmark'
+        ]
     }
 }
