@@ -148,7 +148,13 @@ function selectJsonViewContentTab(name) {
 
   const browser = gBrowser.selectedBrowser;
   const selector = ".tabs-menu .tabs-menu-item." + name + " a";
-  return BrowserTestUtils.synthesizeMouseAtCenter(selector, {}, browser);
+  const tabChanged = ContentTask.spawn(browser, null, () => {
+    return new Promise(resolve => {
+      content.addEventListener("TabChanged", resolve, { once: true });
+    });
+  });
+  BrowserTestUtils.synthesizeMouseAtCenter(selector, {}, browser);
+  return tabChanged;
 }
 
 function getElementCount(selector) {
