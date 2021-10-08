@@ -7,8 +7,8 @@ package org.mozilla.focus.utils
 /**
  * Simple feature flags.
  */
-class Features {
-    companion object {
-        val SEARCH_TERMS_OR_URL: Boolean = true
-    }
+object Features {
+    const val SEARCH_TERMS_OR_URL: Boolean = true
+
+    const val TABS = true
 }
