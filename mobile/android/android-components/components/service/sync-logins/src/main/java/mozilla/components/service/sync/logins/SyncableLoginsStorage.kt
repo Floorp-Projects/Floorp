@@ -9,8 +9,8 @@ import androidx.annotation.GuardedBy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
-import mozilla.appservices.logins.LoginStore
-import mozilla.appservices.logins.migrateLogins
+import mozilla.appservices.logins.DatabaseLoginsStorage
+import mozilla.appservices.logins.migrateLoginsWithMetrics
 import mozilla.appservices.sync15.SyncTelemetryPing
 import mozilla.components.concept.storage.EncryptedLogin
 import mozilla.components.concept.storage.KeyGenerationReason
@@ -280,14 +280,15 @@ class SyncableLoginsStorage(
         if (sqlcipherKey == null) return
 
         try {
-            migrateLogins(
+            migrateLoginsWithMetrics(
                 context.getDatabasePath(DB_NAME).absolutePath,
                 crypto.key().key,
                 context.getDatabasePath(DB_NAME_SQLCIPHER).absolutePath,
                 sqlcipherKey,
-                null
             )
-            // TODO: migrateLogins returns a JSON string with metrics.  We need to report those somehow.
+            // Note: DatabaseLoginsStorage.migrateLogins, defined in
+            // application-services, is responsible for reporting the migration
+            // metrics
         } finally {
             // Delete the old key regardless of if the migration succeeded.  If
             // it failed, it's just going to fail again next time.
@@ -301,16 +302,16 @@ class SyncableLoginsStorage(
  */
 internal object LoginStorageConnection : Closeable {
     @GuardedBy("this")
-    private var storage: LoginStore? = null
+    private var storage: DatabaseLoginsStorage? = null
 
     internal fun init(dbPath: String = DB_NAME) = synchronized(this) {
         if (storage == null) {
-            storage = LoginStore(dbPath)
+            storage = DatabaseLoginsStorage(dbPath)
         }
         storage
     }
 
-    internal fun getStorage(): LoginStore = synchronized(this) {
+    internal fun getStorage(): DatabaseLoginsStorage = synchronized(this) {
         check(storage != null) { "must call init first" }
         return storage!!
     }
