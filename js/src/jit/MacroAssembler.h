@@ -1352,9 +1352,19 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // ===============================================================
   // Condition functions
 
+  inline void cmp8Set(Condition cond, Address lhs, Imm32 rhs,
+                      Register dest) PER_SHARED_ARCH;
+
+  inline void cmp16Set(Condition cond, Address lhs, Imm32 rhs,
+                       Register dest) PER_SHARED_ARCH;
+
   template <typename T1, typename T2>
   inline void cmp32Set(Condition cond, T1 lhs, T2 rhs, Register dest)
       DEFINED_ON(x86_shared, arm, arm64, mips32, mips64);
+
+  // Only the NotEqual and Equal conditions are allowed.
+  inline void cmp64Set(Condition cond, Address lhs, Imm64 rhs,
+                       Register dest) PER_ARCH;
 
   template <typename T1, typename T2>
   inline void cmpPtrSet(Condition cond, T1 lhs, T2 rhs, Register dest) PER_ARCH;
