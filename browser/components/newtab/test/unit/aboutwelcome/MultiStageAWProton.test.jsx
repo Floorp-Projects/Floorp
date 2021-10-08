@@ -225,5 +225,38 @@ describe("MultiStageAboutWelcomeProton module", () => {
         { id: "world", order: 1 },
       ]);
     });
+    it("shouldn't remove colorway screens on win7", async () => {
+      sandbox.stub(AppConstants, "isPlatformAndVersionAtMost").returns(true);
+
+      const { screens } = await AboutWelcomeDefaults.prepareContentForReact({
+        screens: [
+          {
+            order: 0,
+            content: {
+              tiles: { type: "colorway" },
+            },
+          },
+          { id: "hello", order: 1 },
+          {
+            order: 2,
+            content: {
+              tiles: { type: "theme" },
+            },
+          },
+          { id: "world", order: 3 },
+        ],
+      });
+
+      assert.deepEqual(screens, [
+        {
+          order: 0,
+          content: {
+            tiles: { type: "colorway" },
+          },
+        },
+        { id: "hello", order: 1 },
+        { id: "world", order: 2 },
+      ]);
+    });
   });
 });

@@ -444,9 +444,7 @@ async function prepareContentForReact(content) {
 
   // Change content for Windows 7 because non-light themes aren't quite right.
   if (AppConstants.isPlatformAndVersionAtMost("win", "6.1")) {
-    removeScreens(screen =>
-      ["theme", "colorway"].includes(screen.content?.tiles?.type)
-    );
+    removeScreens(screen => ["theme"].includes(screen.content?.tiles?.type));
   }
 
   // Set the primary import button source based on attribution.
