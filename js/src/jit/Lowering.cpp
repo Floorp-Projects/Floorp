@@ -961,6 +961,39 @@ void LIRGenerator::visitCompare(MCompare* comp) {
   // LCompareSAndBranch. Doing this now wouldn't be wrong, but doesn't
   // make sense and avoids confusion.
   if (comp->compareType() == MCompare::Compare_String) {
+    if (IsEqualityOp(comp->jsop())) {
+      MConstant* constant = nullptr;
+      if (left->isConstant()) {
+        constant = left->toConstant();
+      } else if (right->isConstant()) {
+        constant = right->toConstant();
+      }
+
+      if (constant) {
+        JSLinearString* linear = &constant->toString()->asLinear();
+        size_t length = linear->length();
+
+        // Limit the number of inline instructions used for character
+        // comparisons. Use the same instruction limit for both encodings, i.e.
+        // two-byte uses half the limit of Latin-1 strings.
+        constexpr size_t Latin1StringCompareCutoff = 32;
+        constexpr size_t TwoByteStringCompareCutoff = 16;
+
+        bool canCompareInline =
+            length > 0 &&
+            (linear->hasLatin1Chars() ? length <= Latin1StringCompareCutoff
+                                      : length <= TwoByteStringCompareCutoff);
+        if (canCompareInline) {
+          MDefinition* input = left->isConstant() ? right : left;
+
+          auto* lir = new (alloc()) LCompareSInline(useRegister(input), linear);
+          define(lir, comp);
+          assignSafepoint(lir, comp);
+          return;
+        }
+      }
+    }
+
     LCompareS* lir =
         new (alloc()) LCompareS(useRegister(left), useRegister(right));
     define(lir, comp);

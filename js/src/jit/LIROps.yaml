@@ -576,6 +576,14 @@
     right: WordSized
   mir_op: Compare
 
+- name: CompareSInline
+  result_type: WordSized
+  operands:
+    input: WordSized
+  arguments:
+    constant: JSLinearString*
+  mir_op: Compare
+
 - name: CompareBigInt
   result_type: WordSized
   operands:
