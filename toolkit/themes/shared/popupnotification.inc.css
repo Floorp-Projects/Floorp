@@ -160,6 +160,7 @@ popupnotification {
 .panel-footer > button:not([disabled])[default] {
   color: var(--button-primary-color);
   background-color: var(--button-primary-bgcolor);
+  --focus-outline-color: var(--button-primary-bgcolor);
 }
 
 .panel-footer > button:not([disabled])[default]:hover {
