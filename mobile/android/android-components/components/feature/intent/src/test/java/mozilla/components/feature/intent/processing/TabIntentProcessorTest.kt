@@ -90,7 +90,7 @@ class TabIntentProcessorTest {
 
         sessionUseCases = SessionUseCases(store)
         tabsUseCases = TabsUseCases(store)
-        searchUseCases = SearchUseCases(store, tabsUseCases)
+        searchUseCases = SearchUseCases(store, tabsUseCases, sessionUseCases)
     }
 
     @Test
