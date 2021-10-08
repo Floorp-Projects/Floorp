@@ -261,10 +261,6 @@ void URLDocTypeMimeType(nsString& aURL, nsString& aDocType,
 void Extents(bool aNeedsScreenCoords, int32_t* aX, int32_t* aY, int32_t* aWidth,
              int32_t* aHeight);
 
-/**
- * Return the id of the dom node this accessible represents.  Note this
- * should probably only be used for testing.
- */
-void DOMNodeID(nsString& aID);
+virtual void DOMNodeID(nsString& aID) const override;
 
 #endif

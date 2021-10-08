@@ -399,6 +399,14 @@ RemoteAccessibleBase<Derived>::GetCachedTextLines() {
   return mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::line);
 }
 
+template <class Derived>
+void RemoteAccessibleBase<Derived>::DOMNodeID(nsString& aID) const {
+  if (mCachedFields) {
+    mCachedFields->GetAttribute(nsGkAtoms::id, aID);
+    VERIFY_CACHE(CacheDomain::DOMNodeID);
+  }
+}
+
 template class RemoteAccessibleBase<RemoteAccessible>;
 
 }  // namespace a11y

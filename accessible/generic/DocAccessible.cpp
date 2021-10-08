@@ -769,6 +769,7 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
     dom::Element* elm = accessible->Elm();
     RelocateARIAOwnedIfNeeded(elm);
     ARIAActiveDescendantIDMaybeMoved(elm);
+    accessible->SendCache(CacheDomain::DOMNodeID, CacheUpdateType::Update);
   }
 
   // The activedescendant universal property redirects accessible focus events

@@ -223,6 +223,12 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
                          : nullptr;
   }
 
+  /**
+   * Return the id of the dom node this accessible represents.  Note this
+   * should probably only be used for testing.
+   */
+  virtual void DOMNodeID(nsString& aID) const;
+
   // HyperTextAccessibleBase
   // XXX Implement this once it's cached.
   virtual int32_t CaretOffset() const override { return -1; }

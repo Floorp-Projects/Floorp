@@ -3066,7 +3066,13 @@ void LocalAccessible::SendCache(uint64_t aCacheDomain,
   }
 
   DocAccessibleChild* ipcDoc = mDoc->IPCDoc();
-  MOZ_ASSERT(ipcDoc);
+  if (!ipcDoc) {
+    // This means DocAccessible::DoInitialUpdate hasn't been called yet, which
+    // means the a11y tree hasn't been built yet. Therefore, this should only
+    // be possible if this is a DocAccessible.
+    MOZ_ASSERT(IsDoc(), "Called on a non-DocAccessible but IPCDoc is null");
+    return;
+  }
 
   RefPtr<AccAttributes> fields =
       BundleFieldsForCache(aCacheDomain, aUpdateType);
@@ -3150,6 +3156,16 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
     if (!lineStarts.IsEmpty()) {
       fields->SetAttribute(nsGkAtoms::line, std::move(lineStarts));
+    }
+  }
+
+  if (aCacheDomain & CacheDomain::DOMNodeID) {
+    MOZ_ASSERT(mContent);
+    nsAtom* id = mContent->GetID();
+    if (id) {
+      fields->SetAttribute(nsGkAtoms::id, id);
+    } else if (aUpdateType == CacheUpdateType::Update) {
+      fields->SetAttribute(nsGkAtoms::id, DeleteEntry());
     }
   }
 
