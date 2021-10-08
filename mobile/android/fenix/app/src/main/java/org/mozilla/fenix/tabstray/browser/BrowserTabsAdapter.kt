@@ -106,16 +106,14 @@ class BrowserTabsAdapter(
      * display itself.
      */
     override fun onBindViewHolder(holder: AbstractBrowserTabViewHolder, position: Int, payloads: List<Any>) {
-        val tabs = tabs ?: return
-
-        if (tabs.list.isEmpty()) return
+        if (currentList.isEmpty()) return
 
         if (payloads.isEmpty()) {
             onBindViewHolder(holder, position)
             return
         }
 
-        if (position == tabs.selectedIndex) {
+        if (position == selectedIndex) {
             if (payloads.contains(PAYLOAD_HIGHLIGHT_SELECTED_ITEM)) {
                 holder.updateSelectedTabIndicator(true)
             } else if (payloads.contains(PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM)) {
