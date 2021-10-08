@@ -400,6 +400,16 @@ void MacroAssembler::cmp16Set(Condition cond, Address lhs, Imm32 rhs,
 // ===============================================================
 // Branch functions
 
+void MacroAssembler::branch8(Condition cond, const Address& lhs, Imm32 rhs,
+                             Label* label) {
+  MOZ_CRASH("NYI");
+}
+
+void MacroAssembler::branch16(Condition cond, const Address& lhs, Imm32 rhs,
+                              Label* label) {
+  MOZ_CRASH("NYI");
+}
+
 template <class L>
 void MacroAssembler::branch32(Condition cond, Register lhs, Register rhs,
                               L label) {
