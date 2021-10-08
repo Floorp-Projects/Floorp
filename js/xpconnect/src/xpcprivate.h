@@ -82,9 +82,11 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/mozalloc.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Vector.h"
 
 #include "mozilla/dom/ScriptSettings.h"
 
@@ -481,8 +483,11 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
 
   NativeSetMap* GetNativeSetMap() const { return mNativeSetMap.get(); }
 
-  XPCWrappedNativeProtoMap* GetDyingWrappedNativeProtoMap() const {
-    return mDyingWrappedNativeProtoMap.get();
+  using WrappedNativeProtoVector =
+      mozilla::Vector<mozilla::UniquePtr<XPCWrappedNativeProto>, 0,
+                      InfallibleAllocPolicy>;
+  WrappedNativeProtoVector& GetDyingWrappedNativeProtos() {
+    return mDyingWrappedNativeProtos;
   }
 
   XPCWrappedNativeScopeList& GetWrappedNativeScopes() {
@@ -624,7 +629,7 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   mozilla::UniquePtr<NativeSetMap> mNativeSetMap;
   Principal2JSObjectMap mUAWidgetScopeMap;
   XPCWrappedNativeScopeList mWrappedNativeScopes;
-  mozilla::UniquePtr<XPCWrappedNativeProtoMap> mDyingWrappedNativeProtoMap;
+  WrappedNativeProtoVector mDyingWrappedNativeProtos;
   bool mGCIsRunning;
   nsTArray<nsISupports*> mNativesToReleaseArray;
   bool mDoingFinalization;
@@ -1192,11 +1197,11 @@ class XPCNativeSet final {
 /***********************************************/
 // XPCWrappedNativeProtos hold the additional shared wrapper data for
 // XPCWrappedNative whose native objects expose nsIClassInfo.
+//
 // The XPCWrappedNativeProto is owned by its mJSProtoObject, until that object
 // is finalized. After that, it is owned by XPCJSRuntime's
-// mDyingWrappedNativeProtoMap. See
-// XPCWrappedNativeProto::JSProtoObjectFinalized and
-// XPCJSRuntime::FinalizeCallback.
+// mDyingWrappedNativeProtos. See XPCWrappedNativeProto::JSProtoObjectFinalized
+// and XPCJSRuntime::FinalizeCallback.
 
 class XPCWrappedNativeProto final {
  public:
@@ -1239,14 +1244,6 @@ class XPCWrappedNativeProto final {
   }
 
   void TraceJS(JSTracer* trc) { TraceSelf(trc); }
-
-  /*
-  void WriteBarrierPre(JSContext* cx) {
-    if (JS::IsIncrementalBarrierNeeded(cx) && mJSProtoObject) {
-      mJSProtoObject.writeBarrierPre(cx);
-    }
-  }
-  */
 
   // NOP. This is just here to make the AutoMarkingPtr code compile.
   void Mark() const {}

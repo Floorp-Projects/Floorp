@@ -896,24 +896,20 @@ void XPCJSRuntime::FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status,
       XPCWrappedNativeScope::SweepAllWrappedNativeTearOffs();
 
       // Now we need to kill the 'Dying' XPCWrappedNativeProtos.
-      // We transfered these native objects to this table when their
-      // JSObject's were finalized. We did not destroy them immediately
-      // at that point because the ordering of JS finalization is not
-      // deterministic and we did not yet know if any wrappers that
-      // might still be referencing the protos where still yet to be
-      // finalized and destroyed. We *do* know that the protos'
-      // JSObjects would not have been finalized if there were any
-      // wrappers that referenced the proto but where not themselves
-      // slated for finalization in this gc cycle. So... at this point
-      // we know that any and all wrappers that might have been
-      // referencing the protos in the dying list are themselves dead.
-      // So, we can safely delete all the protos in the list.
-
-      for (auto i = self->mDyingWrappedNativeProtoMap->ModIter(); !i.done();
-           i.next()) {
-        delete i.get();
-        i.remove();
-      }
+      //
+      // We transferred these native objects to this list when their JSObjects
+      // were finalized. We did not destroy them immediately at that point
+      // because the ordering of JS finalization is not deterministic and we did
+      // not yet know if any wrappers that might still be referencing the protos
+      // were still yet to be finalized and destroyed. We *do* know that the
+      // protos' JSObjects would not have been finalized if there were any
+      // wrappers that referenced the proto but were not themselves slated for
+      // finalization in this gc cycle.
+      //
+      // At this point we know that any and all wrappers that might have been
+      // referencing the protos in the dying list are themselves dead. So, we
+      // can safely delete all the protos in the list.
+      self->mDyingWrappedNativeProtos.clear();
 
       MOZ_ASSERT(self->mGCIsRunning, "bad state");
       self->mGCIsRunning = false;
@@ -1113,8 +1109,6 @@ void XPCJSRuntime::Shutdown(JSContext* cx) {
   mClassInfo2NativeSetMap = nullptr;
 
   mNativeSetMap = nullptr;
-
-  mDyingWrappedNativeProtoMap = nullptr;
 
   // Prevent ~LinkedList assertion failures if we leaked things.
   mWrappedNativeScopes.clear();
@@ -2899,8 +2893,6 @@ XPCJSRuntime::XPCJSRuntime(JSContext* aCx)
       mClassInfo2NativeSetMap(mozilla::MakeUnique<ClassInfo2NativeSetMap>()),
       mNativeSetMap(mozilla::MakeUnique<NativeSetMap>()),
       mWrappedNativeScopes(),
-      mDyingWrappedNativeProtoMap(
-          mozilla::MakeUnique<XPCWrappedNativeProtoMap>()),
       mGCIsRunning(false),
       mNativesToReleaseArray(),
       mDoingFinalization(false),

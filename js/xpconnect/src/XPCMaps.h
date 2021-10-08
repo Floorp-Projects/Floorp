@@ -346,30 +346,6 @@ class NativeSetMap {
 
 /***************************************************************************/
 
-class XPCWrappedNativeProtoMap {
- public:
-  using Map = mozilla::HashSet<XPCWrappedNativeProto*,
-                               mozilla::DefaultHasher<XPCWrappedNativeProto*>,
-                               mozilla::MallocAllocPolicy>;
-
-  XPCWrappedNativeProtoMap();
-
-  XPCWrappedNativeProto* Add(XPCWrappedNativeProto* proto) {
-    MOZ_ASSERT(proto, "bad param");
-    if (!mMap.put(proto)) {
-      return nullptr;
-    }
-    return proto;
-  }
-
-  Map::ModIterator ModIter() { return mMap.modIter(); }
-
- private:
-  Map mMap;
-};
-
-/***************************************************************************/
-
 class JSObject2JSObjectMap {
   using Map = JS::GCHashMap<JS::Heap<JSObject*>, JS::Heap<JSObject*>,
                             js::MovableCellHasher<JS::Heap<JSObject*>>,

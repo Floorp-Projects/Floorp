@@ -74,7 +74,7 @@ void XPCWrappedNativeProto::JSProtoObjectFinalized(JSFreeOp* fop,
   MOZ_ASSERT(map->Find(mClassInfo) != this);
 #endif
 
-  GetRuntime()->GetDyingWrappedNativeProtoMap()->Add(this);
+  MOZ_ALWAYS_TRUE(GetRuntime()->GetDyingWrappedNativeProtos().append(this));
   mJSProtoObject = nullptr;
 }
 

@@ -192,9 +192,3 @@ size_t NativeSetMap::SizeOfIncludingThis(
 }
 
 /***************************************************************************/
-// implement XPCWrappedNativeProtoMap...
-
-XPCWrappedNativeProtoMap::XPCWrappedNativeProtoMap()
-    : mMap(XPC_DYING_NATIVE_PROTO_MAP_LENGTH) {}
-
-/***************************************************************************/
