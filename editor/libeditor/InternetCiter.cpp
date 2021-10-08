@@ -98,11 +98,7 @@ nsresult InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
 
   aOutString.Truncate();
 
-  nsresult rv;
-
-  RefPtr<mozilla::intl::LineBreaker> lineBreaker =
-      mozilla::intl::LineBreaker::Create();
-  MOZ_ASSERT(lineBreaker);
+  mozilla::intl::LineBreaker* lineBreaker = nsContentUtils::LineBreaker();
 
   // Loop over lines in the input string, rewrapping each one.
   uint32_t length;
@@ -232,37 +228,23 @@ nsresult InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
         continue;  // continue inner loop, with outStringCol now at bol
       }
 
-      int32_t breakPt = 0;
-      // XXX Why this uses NS_ERROR_"BASE"?
-      rv = NS_ERROR_BASE;
-      if (lineBreaker) {
-        breakPt =
-            lineBreaker->Prev(tString.get() + posInString, length - posInString,
-                              eol + 1 - posInString);
-        if (breakPt == NS_LINEBREAKER_NEED_MORE_TEXT) {
-          // if we couldn't find a breakpoint looking backwards,
-          // and we're not starting a new line, then end this line
-          // and loop around again:
-          if (outStringCol > citeLevel + 1) {
-            BreakLine(aOutString, outStringCol, citeLevel);
-            continue;  // continue inner loop, with outStringCol now at bol
-          }
-
-          // Else try looking forwards:
-          breakPt = lineBreaker->DeprecatedNext(tString.get() + posInString,
-                                                length - posInString,
-                                                eol - posInString);
-
-          rv = breakPt == NS_LINEBREAKER_NEED_MORE_TEXT ? NS_ERROR_BASE : NS_OK;
-        } else {
-          rv = NS_OK;
+      int32_t breakPt =
+          lineBreaker->Prev(tString.get() + posInString, length - posInString,
+                            eol + 1 - posInString);
+      if (breakPt == NS_LINEBREAKER_NEED_MORE_TEXT) {
+        // if we couldn't find a breakpoint looking backwards,
+        // and we're not starting a new line, then end this line
+        // and loop around again:
+        if (outStringCol > citeLevel + 1) {
+          BreakLine(aOutString, outStringCol, citeLevel);
+          continue;  // continue inner loop, with outStringCol now at bol
         }
-      }
-      // If rv is okay, then breakPt is the place to break.
-      // If we get out here and rv is set, something went wrong with line
-      // breaker.  Just break the line, hard.
-      if (NS_FAILED(rv)) {
-        breakPt = eol;
+
+        // Else try looking forwards:
+        breakPt = lineBreaker->Next(tString.get() + posInString,
+                                    length - posInString, eol - posInString);
+        MOZ_ASSERT(breakPt != NS_LINEBREAKER_NEED_MORE_TEXT,
+                   "Next() always treats end-of-text as a break");
       }
 
       // Special case: maybe we should have wrapped last time.
