@@ -525,25 +525,39 @@ static MOZ_ALWAYS_INLINE JS::Zone* GetTenuredGCThingZone(const uintptr_t addr) {
   return *reinterpret_cast<JS::Zone**>(zone_addr);
 }
 
-static MOZ_ALWAYS_INLINE bool TenuredCellIsMarkedGray(const TenuredCell* cell) {
-  // Return true if GrayOrBlackBit is set and BlackBit is not set.
+static MOZ_ALWAYS_INLINE bool TenuredCellIsMarkedBlack(
+    const TenuredCell* cell) {
+  // Return true if BlackBit is set.
+
   MOZ_ASSERT(cell);
   MOZ_ASSERT(!js::gc::IsInsideNursery(cell));
+
+  MarkBitmapWord* blackWord;
+  uintptr_t blackMask;
+  TenuredChunkBase* chunk = GetCellChunkBase(cell);
+  chunk->markBits.getMarkWordAndMask(cell, js::gc::ColorBit::BlackBit,
+                                     &blackWord, &blackMask);
+  return *blackWord & blackMask;
+}
+
+static MOZ_ALWAYS_INLINE bool NonBlackCellIsMarkedGray(
+    const TenuredCell* cell) {
+  // Return true if GrayOrBlackBit is set. Callers should check BlackBit first.
+
+  MOZ_ASSERT(cell);
+  MOZ_ASSERT(!js::gc::IsInsideNursery(cell));
+  MOZ_ASSERT(!TenuredCellIsMarkedBlack(cell));
 
   MarkBitmapWord* grayWord;
   uintptr_t grayMask;
   TenuredChunkBase* chunk = GetCellChunkBase(cell);
   chunk->markBits.getMarkWordAndMask(cell, js::gc::ColorBit::GrayOrBlackBit,
                                      &grayWord, &grayMask);
-  if (!(*grayWord & grayMask)) {
-    return false;
-  }
+  return *grayWord & grayMask;
+}
 
-  MarkBitmapWord* blackWord;
-  uintptr_t blackMask;
-  chunk->markBits.getMarkWordAndMask(cell, js::gc::ColorBit::BlackBit,
-                                     &blackWord, &blackMask);
-  return !(*blackWord & blackMask);
+static MOZ_ALWAYS_INLINE bool TenuredCellIsMarkedGray(const TenuredCell* cell) {
+  return !TenuredCellIsMarkedBlack(cell) && NonBlackCellIsMarkedGray(cell);
 }
 
 static MOZ_ALWAYS_INLINE bool CellIsMarkedGray(const Cell* cell) {
@@ -716,10 +730,16 @@ static MOZ_ALWAYS_INLINE void ExposeGCThingToActiveJS(JS::GCCellPtr thing) {
     return;
   }
 
+  // Bug 1734801: I'd like to arrange for this to subsume the permanent GC thing
+  // check above.
+  if (detail::TenuredCellIsMarkedBlack(cell)) {
+    return;
+  }
+
   auto* zone = JS::shadow::Zone::from(JS::GetTenuredGCThingZone(thing));
   if (zone->needsIncrementalBarrier()) {
     PerformIncrementalReadBarrier(thing);
-  } else if (!zone->isGCPreparing() && detail::TenuredCellIsMarkedGray(cell)) {
+  } else if (!zone->isGCPreparing() && detail::NonBlackCellIsMarkedGray(cell)) {
     MOZ_ALWAYS_TRUE(JS::UnmarkGrayGCThingRecursively(thing));
   }
 
