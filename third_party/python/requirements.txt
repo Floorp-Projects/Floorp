@@ -43,6 +43,7 @@ appdirs==1.4.4 \
     # via
     #   -r requirements-mach-vendor-python.in
     #   glean-parser
+    #   taskcluster-taskgraph
 async-timeout==3.0.1 \
     --hash=sha256:0c3c816a028d47f659d6ff5c745cb2acf1f966da1fe5c19c77a70282b25f4c5f \
     --hash=sha256:4291ca197d287d274d0b6cb5d6f8f8f82d434ed288f962539ff18cc9012f9ea3
@@ -57,6 +58,7 @@ attrs==19.1.0 \
     #   aiohttp
     #   jsonschema
     #   mozilla-version
+    #   taskcluster-taskgraph
 blessings==1.7 \
     --hash=sha256:98e5854d805f50a5b58ac2333411b0482516a8210f23f43308baeb58d77c157d \
     --hash=sha256:b1fdd7e7a675295630f9ae71527a8ebc10bfefa236b3d6aa4932ee4462c17ba3 \
@@ -187,7 +189,9 @@ jsmin==2.1.0 \
     # via -r requirements-mach-vendor-python.in
 json-e==2.7.0 \
     --hash=sha256:d8c1ec3f5bbc7728c3a504ebe58829f283c64eca230871e4eefe974b4cdaae4a
-    # via -r requirements-mach-vendor-python.in
+    # via
+    #   -r requirements-mach-vendor-python.in
+    #   taskcluster-taskgraph
 jsonschema==3.2.0 \
     --hash=sha256:4e5b3cf8216f577bee9ce139cbe72eca3ea4f292ec60928ff24758ce626cd163 \
     --hash=sha256:c8a85b28d377cc7737e46e2d9f2b4f44ee3c0e1deac6bf46ddefc7187d30797a
@@ -355,15 +359,20 @@ pyyaml==5.4.1 \
     # via
     #   -r requirements-mach-vendor-python.in
     #   glean-parser
+    #   taskcluster-taskgraph
     #   yamllint
 redo==2.0.3 \
     --hash=sha256:36784bf8ae766e14f9db0e377ccfa02835d648321d2007b6ae0bf4fd612c0f94 \
     --hash=sha256:71161cb0e928d824092a5f16203939bbc0867ce4c4685db263cf22c3ae7634a8
-    # via -r requirements-mach-vendor-python.in
+    # via
+    #   -r requirements-mach-vendor-python.in
+    #   taskcluster-taskgraph
 requests-unixsocket==0.2.0 \
     --hash=sha256:014d07bfb66dc805a011a8b4b306cf4ec96d2eddb589f6b2b5765e626f0dc0cc \
     --hash=sha256:9e5c1a20afc3cf786197ae59c79bcdb0e7565f218f27df5f891307ee8817c1ea
-    # via -r requirements-mach-vendor-python.in
+    # via
+    #   -r requirements-mach-vendor-python.in
+    #   taskcluster-taskgraph
 requests==2.25.1 \
     --hash=sha256:27973dd4a904a4f13b263a19c866c13b92a39ed1c964655f025f3f8d3d75b804 \
     --hash=sha256:c210084e36a42ae6b9219e00e48287def368a26d03a048ddad7bfee44f75871e
@@ -372,6 +381,7 @@ requests==2.25.1 \
     #   requests-unixsocket
     #   responses
     #   taskcluster
+    #   taskcluster-taskgraph
 responses==0.10.6 \
     --hash=sha256:502d9c0c8008439cfcdef7e251f507fcfdd503b56e8c0c87c3c3e3393953f790 \
     --hash=sha256:97193c0183d63fba8cd3a041c75464e4b09ea0aff6328800d1546598567dde0b
@@ -403,6 +413,11 @@ slugid==2.0.0 \
     # via
     #   -r requirements-mach-vendor-python.in
     #   taskcluster
+    #   taskcluster-taskgraph
+taskcluster-taskgraph==1.0.1 \
+    --hash=sha256:99376afaee4ca52ea2b98eee6467409aae86fa9c1bd300d028e85032f961edef \
+    --hash=sha256:9ee1ba6063ad6c367cf67f80904faf872b722b63843b6c8d36525e75a03b9588
+    # via -r requirements-mach-vendor-python.in
 taskcluster-urls==13.0.1 \
     --hash=sha256:5e25e7e6818e8877178b175ff43d2e6548afad72694aa125f404a7329ece0973 \
     --hash=sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367 \
@@ -410,6 +425,7 @@ taskcluster-urls==13.0.1 \
     # via
     #   -r requirements-mach-vendor-python.in
     #   taskcluster
+    #   taskcluster-taskgraph
 taskcluster==44.2.2 \
     --hash=sha256:0266a6a901e1a2ec838984a7f24e7adb6d58f9f2e221a7f613388f8f23f786fc \
     --hash=sha256:846d73c597f0f47dd8525c85c8d9bc41111d5200b090690d3f16b2f57c56a2e1 \
@@ -433,7 +449,9 @@ urllib3==1.25.9 \
 voluptuous==0.12.1 \
     --hash=sha256:663572419281ddfaf4b4197fd4942d181630120fb39b333e3adad70aeb56444b \
     --hash=sha256:8ace33fcf9e6b1f59406bfaf6b8ec7bcc44266a9f29080b4deb4fe6ff2492386
-    # via -r requirements-mach-vendor-python.in
+    # via
+    #   -r requirements-mach-vendor-python.in
+    #   taskcluster-taskgraph
 yamllint==1.23 \
     --hash=sha256:0fa69bf8a86182b7fe14918bdd3a30354c869966bbc7cbfff176af71bda9c806 \
     --hash=sha256:59f3ff77f44e7f46be6aecdb985830f73a1c51e290b7082a7d38c2ae1940f4a9
