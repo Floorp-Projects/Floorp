@@ -3982,11 +3982,6 @@ BrowserGlue.prototype = {
     );
   },
 
-  // Helper to check for windows 7 that can be stubbed by tests.
-  _onWindows7() {
-    return AppConstants.isPlatformAndVersionAtMost("win", "6.1");
-  },
-
   async _maybeShowDefaultBrowserPrompt() {
     // Highest priority is the upgrade dialog, which can include a "primary
     // browser" request and is limited in various ways, e.g., major upgrades.
@@ -4019,9 +4014,6 @@ BrowserGlue.prototype = {
       }
       if (!Services.policies.isAllowed("postUpdateCustomPage")) {
         return "disallow-postUpdate";
-      }
-      if (this._onWindows7()) {
-        return "win7";
       }
 
       return NimbusFeatures.upgradeDialog.isEnabled() ? "" : "disabled";
