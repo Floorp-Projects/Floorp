@@ -178,6 +178,13 @@ var PlacesBackups = {
   },
 
   /**
+   * Invalidates the internal cache for testing purposes.
+   */
+  invalidateCache() {
+    this._backupFiles = null;
+  },
+
+  /**
    * Generates a ISO date string (YYYY-MM-DD) from a Date object.
    *
    * @param dateObj
@@ -252,6 +259,37 @@ var PlacesBackups = {
       }
       return null;
     })();
+  },
+
+  /**
+   * Returns whether a recent enough backup exists, using these heuristic: if
+   * a backup exists, it should be newer than the last browser session date,
+   * otherwise it should not be older than maxDays.
+   * If the backup is older than the last session, the calculated time is
+   * reported to telemetry.
+   *
+   * @param [maxDays] The maximum number of days a backup can be old.
+   */
+  async hasRecentBackup({ maxDays = 3 } = {}) {
+    let lastBackupFile = await PlacesBackups.getMostRecentBackup();
+    if (!lastBackupFile) {
+      return false;
+    }
+    let lastBackupTime = PlacesBackups.getDateForFile(lastBackupFile);
+    let profileLastUse = Services.appinfo.replacedLockTime || Date.now();
+    if (lastBackupTime > profileLastUse) {
+      return true;
+    }
+    let backupAge = Math.round((profileLastUse - lastBackupTime) / 86400000);
+    // Telemetry the age of the last available backup.
+    try {
+      Services.telemetry
+        .getHistogramById("PLACES_BACKUPS_DAYSFROMLAST")
+        .add(backupAge);
+    } catch (ex) {
+      Cu.reportError(new Error("Unable to report telemetry."));
+    }
+    return backupAge <= maxDays;
   },
 
   /**

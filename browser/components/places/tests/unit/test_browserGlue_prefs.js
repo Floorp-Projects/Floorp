@@ -12,7 +12,7 @@ const PREF_RESTORE_DEFAULT_BOOKMARKS =
 const PREF_AUTO_EXPORT_HTML = "browser.bookmarks.autoExportHTML";
 
 const TOPIC_BROWSERGLUE_TEST = "browser-glue-test";
-const TOPICDATA_FORCE_PLACES_INIT = "force-places-init";
+const TOPICDATA_FORCE_PLACES_INIT = "test-force-places-init";
 
 var bg = Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver);
 
