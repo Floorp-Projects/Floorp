@@ -696,9 +696,13 @@ Result<Ok, nsresult> ScriptPreloader::WriteCache() {
     size_t offset = 0;
     for (auto script : scripts) {
       script->mOffset = offset;
+      MOZ_DIAGNOSTIC_ASSERT(
+          JS::IsTranscodingBytecodeOffsetAligned(script->mOffset));
       script->Code(buf);
 
       offset += script->mSize;
+      MOZ_DIAGNOSTIC_ASSERT(
+          JS::IsTranscodingBytecodeOffsetAligned(script->mSize));
     }
 
     uint8_t headerSize[4];
