@@ -238,7 +238,8 @@
     {
       "login": true,
       "name": "linkedin",
-      "test_url": "https://www.linkedin.com/in/thommy-harris-hk-385723106/"
+      "test_url": "https://www.linkedin.com/in/thommy-harris-hk-385723106/",
+      "secondary_url": "https://www.linkedin.com/company/github?trk=affiliated-pages"
     },
     {
       "login": false,
