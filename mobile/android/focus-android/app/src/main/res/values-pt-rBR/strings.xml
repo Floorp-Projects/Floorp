@@ -174,7 +174,7 @@
     <string name="preference_show_search_suggestions">Receber sugestões de pesquisa</string>
     <!-- Description of the preference that enables/disables search suggestions
         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_show_search_suggestions_summary">O %1$s envia o que você escreve na barra de endereços para seu mecanismo de pesquisa.</string>
+    <string name="preference_show_search_suggestions_summary">Se ativar, o %1$s envia o que você escreve na barra de endereços para seu mecanismo de pesquisa.</string>
 
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">Padrão</string>
@@ -189,7 +189,7 @@
     <string name="preference_state_off">Desativado</string>
 
     <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
-    <string name="preference_subitem_autocomplete">Preenchimento automático de URL</string>
+    <string name="preference_subitem_autocomplete">Preenchimento automático de URLs</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">Em sites populares</string>

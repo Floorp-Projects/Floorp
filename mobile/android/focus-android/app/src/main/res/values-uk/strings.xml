@@ -154,7 +154,7 @@
     <string name="preference_category_tracking_protection3">Розширений захист від стеження</string>
 
     <!-- Preference category for settings related to controlling web content -->
-    <string name="preference_category_web_content">Веб-вміст</string>
+    <string name="preference_category_web_content">Вебвміст</string>
 
     <!-- Preference category: stealth settings for while switching apps -->
     <string name="preference_category_switching_apps">Перемикання програм</string>
@@ -304,12 +304,12 @@
      app's content (in our case especially the content of webpages) to show up in the "recent apps"
      screen. Additionally Android will prevent the user from taking screenshots or casting the app
      to other displays. -->
-    <string name="preference_privacy_stealth_summary">Приховувати веб-сторінки при перемиканні додатків та не дозволяти знімки екрану.</string>
+    <string name="preference_privacy_stealth_summary">Приховувати вебсторінки при перемиканні застосунків та не дозволяти знімки екрану.</string>
 
     <string name="preference_category_security">Безпека</string>
 
     <string name="preference_category_performance">Швидкодія</string>
-    <string name="preference_performance_block_webfonts">Блокувати веб-шрифти</string>
+    <string name="preference_performance_block_webfonts">Блокувати вебшрифти</string>
     <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
     <string name="preference_performance_block_webfonts_summary">Може призвести до втрати піктограм чи зображень</string>
 
@@ -408,7 +408,7 @@
 
     <!-- This text is not visible. Instead it will be read by the accessibility service once we
      finished loading a website -->
-    <string name="accessibility_announcement_loading_finished">Веб-сайт завантажено</string>
+    <string name="accessibility_announcement_loading_finished">Вебсайт завантажено</string>
 
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Додатково</string>
@@ -421,7 +421,7 @@
     <string name="content_description_forward">Перехід уперед</string>
 
     <!-- Content description (not visible, for screen readers etc.): Reload current website -->
-    <string name="content_description_reload">Перезавантажити веб-сайт</string>
+    <string name="content_description_reload">Перезавантажити вебсайт</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
     <string name="content_description_back">Перейти назад</string>
@@ -506,7 +506,7 @@
     <!-- First run tour (Privacy): Title -->
     <string name="firstrun_privacy_title">Зробіть приватність звичкою</string>
     <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
-    <string name="firstrun_privacy_text">Встановіть %1$s своїм типовим браузером та отримайте переваги приватного перегляду при переході на веб-сайти з інших програм.</string>
+    <string name="firstrun_privacy_text">Встановіть %1$s своїм типовим браузером та отримайте переваги приватного перегляду при переході на вебсайти з інших застосунків.</string>
 
     <string name="firstrun_close_button">Гаразд, зрозуміло!</string>
     <string name="firstrun_skip_button">Пропустити</string>
@@ -691,7 +691,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">Сайт виглядає чи поводиться дивно?\n
+    <string name="tip_disable_tracking_protection3">Вигляд чи поведінка сайту дивні?\n
     Спробуйте вимкнути Розширений захист від стеження</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -753,11 +753,11 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Винятки</string>
     <!-- Description for the exceptions preference screen-->
-    <string name="preference_exceptions_description">Ви вимкнули блокування вмісту для цих веб-сайтів.</string>
+    <string name="preference_exceptions_description">Ви вимкнули блокування вмісту для цих вебсайтів.</string>
     <!-- Menu item to remove existing exceptions. -->
     <string name="preference_exceptions_menu_remove">Вилучити</string>
     <!-- Button to remove all websites from the exception list -->
-    <string name="preference_exceptions_remove_all_button_label">Вилучити всі веб-сайти</string>
+    <string name="preference_exceptions_remove_all_button_label">Вилучити всі вебсайти</string>
 
     <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
     <string name="preference_block_cookies_title">Блокувати куки</string>
