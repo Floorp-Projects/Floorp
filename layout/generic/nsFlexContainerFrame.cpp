@@ -1989,6 +1989,8 @@ const CachedBAxisMeasurement& nsFlexContainerFrame::MeasureBSizeForFlexItem(
     FLEX_LOG("[perf] MeasureBSizeForFlexItem didn't have a cached value");
   }
 
+  // CachedFlexItemData is stored in item's writing mode, so we pass
+  // aChildReflowInput into ReflowOutput's constructor.
   ReflowOutput childReflowOutput(aChildReflowInput);
   nsReflowStatus childReflowStatus;
 
@@ -5636,6 +5638,8 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
   // after this point, because some of its methods (e.g. SetComputedWidth)
   // internally call InitResizeFlags and stomp on mVResize & mHResize.
 
+  // CachedFlexItemData is stored in item's writing mode, so we pass
+  // aChildReflowInput into ReflowOutput's constructor.
   ReflowOutput childReflowOutput(childReflowInput);
   nsReflowStatus childReflowStatus;
   ReflowChild(aItem.Frame(), PresContext(), childReflowOutput, childReflowInput,
@@ -5679,7 +5683,7 @@ void nsFlexContainerFrame::ReflowPlaceholders(
                                  availSize);
     // No need to set the -webkit-line-clamp related flags when reflowing
     // a placeholder.
-    ReflowOutput childReflowOutput(childReflowInput);
+    ReflowOutput childReflowOutput(outerWM);
     nsReflowStatus childReflowStatus;
     ReflowChild(placeholder, PresContext(), childReflowOutput, childReflowInput,
                 outerWM, aContentBoxOrigin, aContainerSize,
