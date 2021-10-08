@@ -8,6 +8,7 @@ BROWSER_CHROME_MANIFESTS += [
     "test/browser.ini",
     "test/browser_bug1717599_XDG-CONFIG-DIRS.ini",
     "test/browser_bug1717599_XDG-CONFIG-HOME.ini",
+    "test/browser_snap.ini",
     "test/browser_xdg.ini",
 ]
 

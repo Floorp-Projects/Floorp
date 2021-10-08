@@ -639,6 +639,59 @@ async function testFileAccessLinuxOnly() {
     });
   }
 
+  // Assert that if we run with SNAP=  env, then we allow access to it in the
+  // content process
+  let snap = GetEnvironmentVariable("SNAP");
+  let populateFakeSnap = async aPath => {
+    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+    await OS.File.makeDir(aPath, { unixMode: OS.Constants.S_IRWXU });
+    ok(await OS.File.exists(aPath), `SNAP ${aPath} was created`);
+    info(`SNAP ${aPath} was created`);
+  };
+
+  let unpopulateFakeSnap = async aPath => {
+    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+    await OS.File.remove(aPath);
+    ok(!(await OS.File.exists(aPath)), `SNAP ${aPath} was removed`);
+    info(`SNAP ${aPath} was removed`);
+
+    const parentDir = OS.Path.dirname(aPath);
+    await OS.File.removeDir(parentDir);
+    info(`SNAP ${parentDir} was removed`);
+  };
+
+  let snapExpectedResult = false;
+  if (snap.length > 1) {
+    snapExpectedResult = true;
+  } else {
+    snap = "/tmp/.snap_firefox_current/";
+  }
+
+  // We need to create a fake SNAP= directory but not populate the env var
+  // to assert that blocking access is in effect
+  //
+  // And we also need this directory to be accessible for us to create it during
+  // tests, but default to unreadable for the content process.
+  await populateFakeSnap(snap);
+
+  let snapDir = GetDir(snap);
+  snapDir.normalize();
+
+  let snapFile = GetSubdirFile(snapDir);
+  await createFile(snapFile.path);
+  ok(await OS.File.exists(snapFile.path), `SNAP ${snapFile.path} was created`);
+  info(`SNAP (file) ${snapFile.path} was created`);
+
+  tests.push({
+    desc: `$SNAP (${snapDir.path} => ${snapFile.path})`,
+    ok: snapExpectedResult,
+    browser: webBrowser,
+    file: snapFile,
+    minLevel: minHomeReadSandboxLevel(),
+    func: readFile,
+    cleanup: unpopulateFakeSnap,
+  });
+
   await runTestsList(tests);
 }
 
