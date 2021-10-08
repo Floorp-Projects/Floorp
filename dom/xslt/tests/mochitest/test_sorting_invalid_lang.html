@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1734679
+-->
+<head>
+  <title>Test sorting with invalid lang</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1734679">Mozilla Bug 1734679</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/**
+ * Test for Bug 1734679. Invalid language tags should not throw an error, and should
+ * fall back to the app's locale.
+ * */
+
+var xmldoc, xsltdoc;
+
+xmldoc = new DOMParser().parseFromString('<?xml version="1.0" encoding="UTF-8"?>\n\
+  <?xml-stylesheet type="text/xsl" href="sort-lang.xsl" ?>\n\
+  <list>\n\
+    <entry>\n\
+      <technology>CSS</technology>\n\
+      <term>text-direction</term>\n\
+    </entry>\n\
+    <entry>\n\
+      <technology>JavaScript</technology>\n\
+      <term>Array.prototype.sort</term>\n\
+    </entry>\n\
+  </list>\n\
+  ', "text/xml");
+
+xsltdoc = new DOMParser().parseFromString('<?xml version="1.0" encoding="UTF-8"?>\n\
+  <xsl:stylesheet version="1.0"\n\
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform">\n\
+    <xsl:template match="/">\n\
+      <html>\n\
+      <body>\n\
+        <table border="1">\n\
+          <tr bgcolor="#9acd32">\n\
+            <th>Technology</th>\n\
+            <th>Term</th>\n\
+          </tr>\n\
+          <xsl:for-each select="list/entry">\n\
+          <xsl:sort select="term" lang="$invalidLanguageTag"/>\n\
+          <tr>\n\
+            <td><xsl:value-of select="technology"/></td>\n\
+            <td><xsl:value-of select="term"/></td>\n\
+          </tr>\n\
+          </xsl:for-each>\n\
+        </table>\n\
+      </body>\n\
+      </html>\n\
+    </xsl:template>\n\
+  \n\
+  </xsl:stylesheet>\n\
+  ', "text/xml");
+
+var processor = new XSLTProcessor;
+processor.importStylesheet(xsltdoc);
+
+try
+{
+  var result = processor.transformToDocument(xmldoc);
+}
+catch (e)
+{
+  ok(false, "There was an error.");
+}
+ok(result && result instanceof Document, "XSLT transform should have created a document");
+</script>
+</pre>
+</body>
+</html>
