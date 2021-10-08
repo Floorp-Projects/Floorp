@@ -8,15 +8,14 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 
-#include "nsISupportsUtils.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsCycleCollector.h"
+
+#include "js/GCAPI.h"
 
 #include "gtest/gtest.h"
 
-using mozilla::JSHolderMap;
-using mozilla::Maybe;
-using mozilla::UniquePtr;
-using mozilla::Vector;
+using namespace mozilla;
 
 enum HolderKind { SingleZone, MultiZone };
 
@@ -172,4 +171,122 @@ TEST(JSHolderMap, TestAddRemoveMany)
 {
   TestAddRemoveMany(SingleZone, 10000);
   TestAddRemoveMany(MultiZone, 10000);
+}
+
+class ObjectHolder final {
+ public:
+  ObjectHolder() { HoldJSObjects(this); }
+
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ObjectHolder)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(ObjectHolder)
+
+  void SetObject(JSObject* aObject) { mObject = aObject; }
+
+  void ClearObject() { mObject = nullptr; }
+
+  JSObject* GetObject() const { return mObject; }
+  JSObject* GetObjectUnbarriered() const { return mObject.unbarrieredGet(); }
+
+  bool ObjectIsGray() const {
+    JSObject* obj = mObject.unbarrieredGet();
+    MOZ_RELEASE_ASSERT(obj);
+    return JS::GCThingIsMarkedGray(JS::GCCellPtr(obj));
+  }
+
+ private:
+  JS::Heap<JSObject*> mObject;
+
+  ~ObjectHolder() { DropJSObjects(this); }
+};
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(ObjectHolder)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ObjectHolder)
+  tmp->ClearObject();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ObjectHolder)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ObjectHolder)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mObject)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ObjectHolder, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ObjectHolder, Release)
+
+// Test GC things stored in JS holders are marked as gray roots by the GC.
+static void TestHoldersAreMarkedGray(JSContext* cx) {
+  RefPtr holder(new ObjectHolder);
+
+  JSObject* obj = JS_NewPlainObject(cx);
+  ASSERT_TRUE(obj);
+  holder->SetObject(obj);
+  obj = nullptr;
+
+  JS_GC(cx);
+
+  ASSERT_TRUE(holder->ObjectIsGray());
+}
+
+// Test GC things stored in JS holders are updated by compacting GC.
+static void TestHoldersAreMoved(JSContext* cx, bool singleZone) {
+  JS::RootedObject obj(cx, JS_NewPlainObject(cx));
+  ASSERT_TRUE(obj);
+
+  // Set a property so we can check we have the same object at the end.
+  const char* PropertyName = "answer";
+  const int32_t PropertyValue = 42;
+  JS::RootedValue value(cx, JS::Int32Value(PropertyValue));
+  ASSERT_TRUE(JS_SetProperty(cx, obj, PropertyName, value));
+
+  // Ensure the object is tenured.
+  JS_GC(cx);
+
+  RefPtr<ObjectHolder> holder(new ObjectHolder);
+  holder->SetObject(obj);
+
+  uintptr_t original = uintptr_t(obj.get());
+
+  if (singleZone) {
+    JS::PrepareZoneForGC(cx, js::GetContextZone(cx));
+  } else {
+    JS::PrepareForFullGC(cx);
+  }
+
+  JS::NonIncrementalGC(cx, JS::GCOptions::Shrink, JS::GCReason::DEBUG_GC);
+
+  // Shrinking DEBUG_GC should move all GC things.
+  ASSERT_NE(uintptr_t(holder->GetObject()), original);
+
+  // Both root and holder should have been updated.
+  ASSERT_EQ(obj, holder->GetObject());
+
+  // Check it's the object we expect.
+  value.setUndefined();
+  ASSERT_TRUE(JS_GetProperty(cx, obj, PropertyName, &value));
+  ASSERT_EQ(value, JS::Int32Value(PropertyValue));
+}
+
+TEST(JSHolderMap, GCIntegration)
+{
+  CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get();
+  ASSERT_NE(ccjscx, nullptr);
+  JSContext* cx = ccjscx->Context();
+  ASSERT_NE(cx, nullptr);
+
+  static const JSClass GlobalClass = {"global", JSCLASS_GLOBAL_FLAGS,
+                                      &JS::DefaultGlobalClassOps};
+
+  JS::RealmOptions options;
+  JS::RootedObject global(cx);
+  global = JS_NewGlobalObject(cx, &GlobalClass, nullptr,
+                              JS::FireOnNewGlobalHook, options);
+  ASSERT_NE(global, nullptr);
+
+  JSAutoRealm ar(cx, global);
+
+  TestHoldersAreMarkedGray(cx);
+  TestHoldersAreMoved(cx, true);
+  TestHoldersAreMoved(cx, false);
 }
