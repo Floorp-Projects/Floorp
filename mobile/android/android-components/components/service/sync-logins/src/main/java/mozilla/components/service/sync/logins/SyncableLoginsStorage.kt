@@ -31,6 +31,16 @@ const val DB_NAME_SQLCIPHER = "logins.sqlite"
 const val DB_NAME = "logins2.sqlite"
 // Prefs key that we stored the old SQLCipher encryption key
 const val ENCRYPTION_KEY_SQLCIPHER = "passwords"
+// Name of our preferences file
+const val PREFS_NAME = "logins"
+// SQLCipher migration status.
+//   - 0 / unset: We haven't done the SQLCipher migration
+//   - 1: We performed v1 of the SQLCipher migration
+//
+// If we discover errors in the migration later, then we can bump this number
+// and potentially write code to recover data for users who ran the v1
+// migration.
+const val SQL_CIPHER_MIGRATION = "sql-cipher-migration"
 
 /**
  * The telemetry ping from a successful sync
@@ -108,6 +118,7 @@ class SyncableLoginsStorage(
     private val context: Context,
     private val securePrefs: Lazy<SecureAbove22Preferences>
 ) : LoginsStorage, SyncableStore, KeyRecoveryHandler, AutoCloseable {
+    private val plaintextPrefs by lazy { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
     private val logger = Logger("SyncableLoginsStorage")
     private val coroutineContext by lazy { Dispatchers.IO }
     val crypto by lazy { LoginsCrypto(context, securePrefs.value, this) }
@@ -279,20 +290,25 @@ class SyncableLoginsStorage(
         val sqlcipherKey = securePrefs.value.getString(ENCRYPTION_KEY_SQLCIPHER)
         if (sqlcipherKey == null) return
 
-        try {
-            migrateLoginsWithMetrics(
-                context.getDatabasePath(DB_NAME).absolutePath,
-                crypto.key().key,
-                context.getDatabasePath(DB_NAME_SQLCIPHER).absolutePath,
-                sqlcipherKey,
-            )
-            // Note: DatabaseLoginsStorage.migrateLogins, defined in
-            // application-services, is responsible for reporting the migration
-            // metrics
-        } finally {
-            // Delete the old key regardless of if the migration succeeded.  If
-            // it failed, it's just going to fail again next time.
-            securePrefs.value.remove(ENCRYPTION_KEY_SQLCIPHER)
+        val version = plaintextPrefs.getInt(SQL_CIPHER_MIGRATION, 0)
+
+        if (version == 0) {
+            try {
+                migrateLoginsWithMetrics(
+                    context.getDatabasePath(DB_NAME).absolutePath,
+                    crypto.key().key,
+                    context.getDatabasePath(DB_NAME_SQLCIPHER).absolutePath,
+                    sqlcipherKey,
+                )
+                // Note: DatabaseLoginsStorage.migrateLogins, defined in
+                // application-services, is responsible for reporting the migration
+                // metrics
+            } finally {
+                // Set the new version regardless of if the migration
+                // succeeded.  If it failed, it's just going to fail until we
+                // update the code and bump the version number.
+                plaintextPrefs.edit().putInt(SQL_CIPHER_MIGRATION, 1).commit()
+            }
         }
     }
 }

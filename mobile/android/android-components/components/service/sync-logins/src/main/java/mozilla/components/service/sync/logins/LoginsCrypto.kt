@@ -36,7 +36,7 @@ class LoginsCrypto(
     private val keyRecoveryHandler: KeyRecoveryHandler
 ) : KeyProvider {
     private val logger = Logger("LoginsCrypto")
-    private val plaintextPrefs by lazy { context.getSharedPreferences(LOGINS_PREFS, Context.MODE_PRIVATE) }
+    private val plaintextPrefs by lazy { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
 
     fun decryptLogin(login: EncryptedLogin): Login {
         val secFields = decryptFields(login.secFields, key().key)
@@ -149,7 +149,7 @@ class LoginsCrypto(
     }
 
     companion object {
-        const val LOGINS_PREFS = "loginsCrypto"
+        const val PREFS_NAME = "loginsCrypto"
         const val LOGINS_KEY = "loginsKey"
         const val CANARY_PHRASE_CIPHERTEXT_KEY = "canaryPhrase"
         const val CANARY_PHRASE_PLAINTEXT = "a string for checking validity of the key"
