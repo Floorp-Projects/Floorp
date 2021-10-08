@@ -10,7 +10,7 @@
     </item>
     <item android:gravity="center">
         <inset
-            android:drawable="@drawable/ic_delete"
+            android:drawable="@drawable/mozac_ic_delete"
             android:inset="4dp" />
     </item>
 </layer-list>

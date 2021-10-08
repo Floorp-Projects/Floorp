@@ -65,6 +65,7 @@
                 app:fabSize="normal"
                 app:layout_dodgeInsetEdges="bottom"/>
 
+            <!-- Intentionally hardcoded color for delete icon on both themes. -->
             <org.mozilla.focus.widget.FloatingEraseButton
                 android:id="@+id/erase"
                 android:layout_width="wrap_content"
@@ -73,7 +74,8 @@
                 android:layout_marginBottom="@dimen/floating_action_button_margin"
                 android:layout_marginEnd="@dimen/floating_action_button_margin"
                 android:elevation="4dp"
-                android:src="@drawable/ic_delete"
+                android:src="@drawable/mozac_ic_delete"
+                android:tint="@color/photonLightGrey05"
                 app:backgroundTint="@color/accentBright"
                 app:rippleColor="@color/accent"
                 android:visibility="gone"
@@ -101,11 +103,11 @@
 
     <FrameLayout
         android:id="@+id/popup_tint"
-        android:visibility="gone"
-        android:background="@color/colorPrimary"
-        android:alpha=".5"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:alpha=".5"
+        android:background="@color/colorPrimary"
+        android:visibility="gone" />
 
     <FrameLayout
         android:id="@+id/video_container"

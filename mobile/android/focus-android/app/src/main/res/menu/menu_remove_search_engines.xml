@@ -7,6 +7,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/menu_delete_items"
         android:title="@string/preference_search_remove"
-        android:icon="@drawable/ic_delete"
+        android:icon="@drawable/mozac_ic_delete"
         app:showAsAction="always"/>
 </menu>

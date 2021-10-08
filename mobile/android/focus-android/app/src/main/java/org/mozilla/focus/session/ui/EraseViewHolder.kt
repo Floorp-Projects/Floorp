@@ -21,7 +21,7 @@ class EraseViewHolder(
 
     init {
         val textView = itemView as TextView
-        val leftDrawable = AppCompatResources.getDrawable(itemView.getContext(), R.drawable.ic_delete)
+        val leftDrawable = AppCompatResources.getDrawable(itemView.getContext(), R.drawable.mozac_ic_delete)
         textView.setCompoundDrawablesWithIntrinsicBounds(leftDrawable, null, null, null)
         textView.setOnClickListener(this)
     }
