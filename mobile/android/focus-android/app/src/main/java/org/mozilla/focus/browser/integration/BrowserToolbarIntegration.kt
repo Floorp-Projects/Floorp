@@ -66,7 +66,8 @@ class BrowserToolbarIntegration(
             colors = colors.copy(
                 hint = ContextCompat.getColor(toolbar.context, R.color.urlBarHintText),
                 securityIconInsecure = Color.TRANSPARENT,
-                text = ContextCompat.getColor(toolbar.context, R.color.primaryText)
+                text = ContextCompat.getColor(toolbar.context, R.color.primaryText),
+                menu = ContextCompat.getColor(toolbar.context, R.color.primaryText)
             )
 
             addTrackingProtectionIndicator()
