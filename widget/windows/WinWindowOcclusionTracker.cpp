@@ -14,6 +14,7 @@
 #include "base/thread.h"
 #include "base/message_loop.h"
 #include "base/platform_thread.h"
+#include "gfxConfig.h"
 #include "nsThreadUtils.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/gfx/Logging.h"
@@ -349,7 +350,7 @@ void WinWindowOcclusionTracker::Start() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sTracker);
 
-  if (!StaticPrefs::widget_windows_window_occlusion_tracking_enabled()) {
+  if (!gfx::gfxConfig::IsEnabled(gfx::Feature::WINDOW_OCCLUSION)) {
     return;
   }
 
