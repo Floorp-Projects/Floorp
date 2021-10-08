@@ -6,9 +6,9 @@
 import copy
 import logging
 
+from taskgraph.util.yaml import load_yaml
 
 from .transform import loader as transform_loader
-from ..util.yaml import load_yaml
 
 logger = logging.getLogger(__name__)
 

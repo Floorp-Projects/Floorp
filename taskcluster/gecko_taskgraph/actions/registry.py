@@ -8,13 +8,14 @@ import re
 from types import FunctionType
 from collections import namedtuple
 
+from mozbuild.util import memoize
+from taskgraph.util import yaml
 
 from gecko_taskgraph import create
 from gecko_taskgraph.config import load_graph_config
-from gecko_taskgraph.util import taskcluster, yaml, hash
+from gecko_taskgraph.util import taskcluster, hash
 from gecko_taskgraph.util.python_path import import_sibling_modules
 from gecko_taskgraph.parameters import Parameters
-from mozbuild.util import memoize
 
 
 actions = []
@@ -143,7 +144,9 @@ def register_callback_action(
     # ensure that context is callable
     if not callable(context):
         context_value = context
-        context = lambda params: context_value  # noqa
+
+        def context(params):
+            return context_value  # noqa
 
     def register_callback(cb):
         assert isinstance(name, str), "name must be a string"

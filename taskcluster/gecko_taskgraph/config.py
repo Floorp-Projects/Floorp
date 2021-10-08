@@ -6,13 +6,14 @@
 import os
 import logging
 import sys
+
 import attr
 from mozpack import path
+from taskgraph.util.yaml import load_yaml
+from voluptuous import Required, Optional, Any
 
 from .util.python_path import find_object
 from .util.schema import validate_schema, Schema, optionally_keyed_by
-from voluptuous import Required, Optional, Any
-from .util.yaml import load_yaml
 
 logger = logging.getLogger(__name__)
 

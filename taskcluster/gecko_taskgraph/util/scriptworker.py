@@ -25,10 +25,10 @@ from datetime import datetime
 import jsone
 
 from mozbuild.util import memoize
+from taskgraph.util.yaml import load_yaml
 
 from .schema import resolve_keyed_by
 from .taskcluster import get_artifact_prefix
-from .yaml import load_yaml
 
 # constants {{{1
 """Map signing scope aliases to sets of projects.

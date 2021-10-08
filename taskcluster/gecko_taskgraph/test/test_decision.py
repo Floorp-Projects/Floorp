@@ -9,10 +9,11 @@ import shutil
 import unittest
 import tempfile
 
-from unittest.mock import patch
 from mozunit import main, MockedOpen
+from taskgraph.util.yaml import load_yaml
+from unittest.mock import patch
+
 from gecko_taskgraph import decision
-from gecko_taskgraph.util.yaml import load_yaml
 
 
 FAKE_GRAPH_CONFIG = {"product-dir": "browser", "taskgraph": {}}
