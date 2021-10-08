@@ -16,7 +16,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.DialogFragment
 import androidx.preference.PreferenceManager
+import mozilla.components.browser.icons.IconRequest
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.shortcut.HomeScreen
 import org.mozilla.focus.shortcut.IconGenerator
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -39,14 +41,11 @@ class AddToHomescreenDialogFragment : DialogFragment() {
         val dialogView = inflater.inflate(R.layout.dialog_add_to_homescreen2, null)
         builder.setView(dialogView)
 
-        // For the dialog we display the Pre Oreo version of the icon because the Oreo+
-        // adaptive launcher icon does not have a mask applied until we create the shortcut
-        val iconBitmap = IconGenerator.generateLauncherIconPreOreo(
-            requireContext(),
-            IconGenerator.getRepresentativeCharacter(url)
-        )
         val iconView = dialogView.findViewById<ImageView>(R.id.homescreen_icon)
-        iconView.setImageBitmap(iconBitmap)
+        requireContext().components.icons.loadIntoView(
+            iconView,
+            IconRequest(url.toString(), isPrivate = true)
+        )
 
         val blockIcon = dialogView.findViewById<ImageView>(R.id.homescreen_dialog_block_icon)
         blockIcon.setImageResource(R.drawable.mozac_ic_shield_disabled)
