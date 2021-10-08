@@ -3971,7 +3971,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
          * 350509, due to Igor Bukanov.
          */
         ReservedRooted<Value> v(&rootValue0, rval);
-        cx->setPendingExceptionAndCaptureStack(v);
+        cx->setPendingException(v, ShouldCaptureStack::Maybe);
         goto error;
       }
 
@@ -4485,7 +4485,7 @@ prologue_error:
 
 bool js::ThrowOperation(JSContext* cx, HandleValue v) {
   MOZ_ASSERT(!cx->isExceptionPending());
-  cx->setPendingExceptionAndCaptureStack(v);
+  cx->setPendingException(v, ShouldCaptureStack::Maybe);
   return false;
 }
 

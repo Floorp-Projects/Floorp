@@ -47,7 +47,7 @@ void js::CompileError::throwError(JSContext* cx) {
 }
 
 bool js::ReportExceptionClosure::operator()(JSContext* cx) {
-  cx->setPendingExceptionAndCaptureStack(exn_);
+  cx->setPendingException(exn_, ShouldCaptureStack::Always);
   return false;
 }
 
