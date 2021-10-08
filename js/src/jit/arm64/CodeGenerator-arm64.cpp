@@ -2994,6 +2994,16 @@ void CodeGenerator::visitWasmTernarySimd128(LWasmTernarySimd128* ins) {
       masm.fmsFloat64x2(ToFloatRegister(ins->v1()), ToFloatRegister(ins->v2()),
                         ToFloatRegister(ins->v0()));
       break;
+    case wasm::SimdOp::I8x16LaneSelect:
+    case wasm::SimdOp::I16x8LaneSelect:
+    case wasm::SimdOp::I32x4LaneSelect:
+    case wasm::SimdOp::I64x2LaneSelect: {
+      FloatRegister lhs = ToFloatRegister(ins->v0());
+      FloatRegister rhs = ToFloatRegister(ins->v1());
+      FloatRegister maskDest = ToFloatRegister(ins->v2());
+      masm.laneSelectSimd128(maskDest, lhs, rhs, maskDest);
+      break;
+    }
     default:
       MOZ_CRASH("NYI");
   }
