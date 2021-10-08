@@ -14,6 +14,7 @@
       "downgrade-mangling-error_clang_12.patch",
       "bug47258-extract-symbols-mbcs.patch",
       "revert-llvmorg-12-init-7827-g2a078c307204.patch",
-      "loosen-msvc-detection.patch"
+      "loosen-msvc-detection.patch",
+      "Remove-FlushViewOfFile-when-unmaping-gcda-files.patch"
     ]
 }
