@@ -75,8 +75,7 @@ void MediaEngineWebRTC::SetFakeDeviceChangeEventsEnabled(bool aEnable) {
 }
 
 void MediaEngineWebRTC::EnumerateVideoDevices(
-    uint64_t aWindowId, camera::CaptureEngine aCapEngine,
-    nsTArray<RefPtr<MediaDevice>>* aDevices) {
+    camera::CaptureEngine aCapEngine, nsTArray<RefPtr<MediaDevice>>* aDevices) {
   AssertIsOnOwningThread();
 
   // flag sources with cross-origin exploit potential
@@ -163,7 +162,7 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
 }
 
 void MediaEngineWebRTC::EnumerateMicrophoneDevices(
-    uint64_t aWindowId, nsTArray<RefPtr<MediaDevice>>* aDevices) {
+    nsTArray<RefPtr<MediaDevice>>* aDevices) {
   AssertIsOnOwningThread();
 
   nsTArray<RefPtr<AudioDeviceInfo>> devices;
@@ -214,7 +213,7 @@ void MediaEngineWebRTC::EnumerateMicrophoneDevices(
 }
 
 void MediaEngineWebRTC::EnumerateSpeakerDevices(
-    uint64_t aWindowId, nsTArray<RefPtr<MediaDevice>>* aDevices) {
+    nsTArray<RefPtr<MediaDevice>>* aDevices) {
   AssertIsOnOwningThread();
 
   nsTArray<RefPtr<AudioDeviceInfo>> devices;
@@ -248,8 +247,8 @@ void MediaEngineWebRTC::EnumerateSpeakerDevices(
 }
 
 void MediaEngineWebRTC::EnumerateDevices(
-    uint64_t aWindowId, dom::MediaSourceEnum aMediaSource,
-    MediaSinkEnum aMediaSink, nsTArray<RefPtr<MediaDevice>>* aDevices) {
+    dom::MediaSourceEnum aMediaSource, MediaSinkEnum aMediaSink,
+    nsTArray<RefPtr<MediaDevice>>* aDevices) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aMediaSource != dom::MediaSourceEnum::Other ||
              aMediaSink != MediaSinkEnum::Other);
@@ -260,18 +259,18 @@ void MediaEngineWebRTC::EnumerateDevices(
         // value as a request for getDisplayMedia-equivalent sharing: Combine
         // window and fullscreen into a single list of choices. The other values
         // are still useful for testing.
-        EnumerateVideoDevices(aWindowId, camera::WinEngine, aDevices);
-        EnumerateVideoDevices(aWindowId, camera::BrowserEngine, aDevices);
-        EnumerateVideoDevices(aWindowId, camera::ScreenEngine, aDevices);
+        EnumerateVideoDevices(camera::WinEngine, aDevices);
+        EnumerateVideoDevices(camera::BrowserEngine, aDevices);
+        EnumerateVideoDevices(camera::ScreenEngine, aDevices);
         break;
       case dom::MediaSourceEnum::Screen:
-        EnumerateVideoDevices(aWindowId, camera::ScreenEngine, aDevices);
+        EnumerateVideoDevices(camera::ScreenEngine, aDevices);
         break;
       case dom::MediaSourceEnum::Browser:
-        EnumerateVideoDevices(aWindowId, camera::BrowserEngine, aDevices);
+        EnumerateVideoDevices(camera::BrowserEngine, aDevices);
         break;
       case dom::MediaSourceEnum::Camera:
-        EnumerateVideoDevices(aWindowId, camera::CameraEngine, aDevices);
+        EnumerateVideoDevices(camera::CameraEngine, aDevices);
         break;
       default:
         MOZ_CRASH("No valid video source");
@@ -285,11 +284,11 @@ void MediaEngineWebRTC::EnumerateDevices(
         NS_ConvertUTF8toUTF16(audioCaptureSource->GetUUID()),
         audioCaptureSource->GetGroupId(), u""_ns));
   } else if (aMediaSource == dom::MediaSourceEnum::Microphone) {
-    EnumerateMicrophoneDevices(aWindowId, aDevices);
+    EnumerateMicrophoneDevices(aDevices);
   }
 
   if (aMediaSink == MediaSinkEnum::Speaker) {
-    EnumerateSpeakerDevices(aWindowId, aDevices);
+    EnumerateSpeakerDevices(aDevices);
   }
 }
 

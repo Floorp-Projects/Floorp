@@ -1162,19 +1162,16 @@ static const MediaTrackConstraints& GetInvariant(
 
 // Source getter returning full list
 
-static void GetMediaDevices(MediaEngine* aEngine, uint64_t aWindowId,
-                            MediaSourceEnum aSrcType,
+static void GetMediaDevices(MediaEngine* aEngine, MediaSourceEnum aSrcType,
                             MediaManager::MediaDeviceSet& aResult,
                             const char* aMediaDeviceName = nullptr) {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
 
-  LOG("%s: aEngine=%p, aWindowId=%" PRIu64 ", aSrcType=%" PRIu8
-      ", aMediaDeviceName=%s",
-      __func__, aEngine, aWindowId, static_cast<uint8_t>(aSrcType),
+  LOG("%s: aEngine=%p, aSrcType=%" PRIu8 ", aMediaDeviceName=%s", __func__,
+      aEngine, static_cast<uint8_t>(aSrcType),
       aMediaDeviceName ? aMediaDeviceName : "null");
   nsTArray<RefPtr<MediaDevice>> devices;
-  aEngine->EnumerateDevices(aWindowId, aSrcType, MediaSinkEnum::Other,
-                            &devices);
+  aEngine->EnumerateDevices(aSrcType, MediaSinkEnum::Other, &devices);
 
   /*
    * We're allowing multiple tabs to access the same camera for parity
@@ -1803,9 +1800,8 @@ void MediaManager::GuessVideoDeviceGroupIDs(MediaDeviceSet& aDevices,
  */
 
 RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
-    uint64_t aWindowId, MediaSourceEnum aVideoInputType,
-    MediaSourceEnum aAudioInputType, MediaSinkEnum aAudioOutputType,
-    DeviceEnumerationType aVideoInputEnumType,
+    MediaSourceEnum aVideoInputType, MediaSourceEnum aAudioInputType,
+    MediaSinkEnum aAudioOutputType, DeviceEnumerationType aVideoInputEnumType,
     DeviceEnumerationType aAudioInputEnumType, bool aForceNoPermRequest,
     const RefPtr<MediaDeviceSetRefCnt>& aOutDevices) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1830,10 +1826,9 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
                  aAudioInputType == MediaSourceEnum::Microphone,
              "If loopback audio is requested audio type should be microphone!");
 
-  LOG("%s: aWindowId=%" PRIu64 ", aVideoInputType=%" PRIu8
-      ", aAudioInputType=%" PRIu8 ", aVideoInputEnumType=%" PRIu8
-      ", aAudioInputEnumType=%" PRIu8,
-      __func__, aWindowId, static_cast<uint8_t>(aVideoInputType),
+  LOG("%s: aVideoInputType=%" PRIu8 ", aAudioInputType=%" PRIu8
+      ", aVideoInputEnumType=%" PRIu8 ", aAudioInputEnumType=%" PRIu8,
+      __func__, static_cast<uint8_t>(aVideoInputType),
       static_cast<uint8_t>(aAudioInputType),
       static_cast<uint8_t>(aVideoInputEnumType),
       static_cast<uint8_t>(aAudioInputEnumType));
@@ -1864,100 +1859,98 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
     Preferences::GetCString("media.audio_loopback_dev", audioLoopDev);
   }
 
-  RefPtr<Runnable> task = NewTaskFrom([holder = std::move(holder), aWindowId,
-                                       aVideoInputType, aAudioInputType,
-                                       aVideoInputEnumType, aAudioInputEnumType,
-                                       videoLoopDev, audioLoopDev, hasVideo,
-                                       hasAudio, hasAudioOutput,
-                                       fakeDeviceRequested, realDeviceRequested,
-                                       aOutDevices]() mutable {
-    // Only enumerate what's asked for, and only fake cams and mics.
-    RefPtr<MediaEngine> fakeBackend, realBackend;
-    if (fakeDeviceRequested) {
-      fakeBackend = new MediaEngineDefault();
-    }
-    if (realDeviceRequested) {
-      MediaManager* manager = MediaManager::GetIfExists();
-      MOZ_RELEASE_ASSERT(manager);  // Must exist while media thread is alive
-      realBackend = manager->GetBackend();
-    }
-
-    RefPtr<MediaEngine> videoBackend;
-    RefPtr<MediaEngine> audioBackend;
-    Maybe<MediaDeviceSet> micsOfVideoBackend;
-    Maybe<MediaDeviceSet> speakers;
-
-    if (hasVideo) {
-      videoBackend = aVideoInputEnumType == DeviceEnumerationType::Fake
-                         ? fakeBackend
-                         : realBackend;
-      MediaDeviceSet videos;
-      LOG("EnumerateRawDevices Task: Getting video sources with %s backend",
-          videoBackend == fakeBackend ? "fake" : "real");
-      GetMediaDevices(videoBackend, aWindowId, aVideoInputType, videos,
-                      videoLoopDev.get());
-      aOutDevices->AppendElements(videos);
-    }
-    if (hasAudio) {
-      audioBackend = aAudioInputEnumType == DeviceEnumerationType::Fake
-                         ? fakeBackend
-                         : realBackend;
-      MediaDeviceSet audios;
-      LOG("EnumerateRawDevices Task: Getting audio sources with %s backend",
-          audioBackend == fakeBackend ? "fake" : "real");
-      GetMediaDevices(audioBackend, aWindowId, aAudioInputType, audios,
-                      audioLoopDev.get());
-      if (aAudioInputType == MediaSourceEnum::Microphone &&
-          audioBackend == videoBackend) {
-        micsOfVideoBackend = Some(MediaDeviceSet());
-        micsOfVideoBackend->AppendElements(audios);
-      }
-      aOutDevices->AppendElements(audios);
-    }
-    if (hasAudioOutput) {
-      MediaDeviceSet outputs;
-      MOZ_ASSERT(realBackend);
-      realBackend->EnumerateDevices(aWindowId, MediaSourceEnum::Other,
-                                    MediaSinkEnum::Speaker, &outputs);
-      speakers = Some(MediaDeviceSet());
-      speakers->AppendElements(outputs);
-      aOutDevices->AppendElements(outputs);
-    }
-    if (hasVideo && aVideoInputType == MediaSourceEnum::Camera) {
-      MediaDeviceSet audios;
-      LOG("EnumerateRawDevices Task: Getting audio sources with %s backend "
-          "for "
-          "groupId correlation",
-          videoBackend == fakeBackend ? "fake" : "real");
-      // We need to correlate cameras with audio groupIds. We use the backend
-      // of the camera to always do correlation on devices in the same scope.
-      // If we don't do this, video-only getUserMedia will not apply groupId
-      // constraints to the same set of groupIds as gets returned by
-      // enumerateDevices.
-      if (micsOfVideoBackend.isSome()) {
-        // Microphones from the same backend used for the cameras have already
-        // been enumerated. Avoid doing it again.
-        audios.AppendElements(*micsOfVideoBackend);
-      } else {
-        GetMediaDevices(videoBackend, aWindowId, MediaSourceEnum::Microphone,
-                        audios, audioLoopDev.get());
-      }
-      if (videoBackend == realBackend) {
-        // When using the real backend for video, there could also be speakers
-        // to correlate with. There are no fake speakers.
-        if (speakers.isSome()) {
-          // Speakers have already been enumerated. Avoid doing it again.
-          audios.AppendElements(*speakers);
-        } else {
-          realBackend->EnumerateDevices(aWindowId, MediaSourceEnum::Other,
-                                        MediaSinkEnum::Speaker, &audios);
+  RefPtr<Runnable> task = NewTaskFrom(
+      [holder = std::move(holder), aVideoInputType, aAudioInputType,
+       aVideoInputEnumType, aAudioInputEnumType, videoLoopDev, audioLoopDev,
+       hasVideo, hasAudio, hasAudioOutput, fakeDeviceRequested,
+       realDeviceRequested, aOutDevices]() mutable {
+        // Only enumerate what's asked for, and only fake cams and mics.
+        RefPtr<MediaEngine> fakeBackend, realBackend;
+        if (fakeDeviceRequested) {
+          fakeBackend = new MediaEngineDefault();
         }
-      }
-      GuessVideoDeviceGroupIDs(*aOutDevices, audios);
-    }
+        if (realDeviceRequested) {
+          MediaManager* manager = MediaManager::GetIfExists();
+          MOZ_RELEASE_ASSERT(manager, "Must exist while media thread is alive");
+          realBackend = manager->GetBackend();
+        }
 
-    holder.Resolve(false, __func__);
-  });
+        RefPtr<MediaEngine> videoBackend;
+        RefPtr<MediaEngine> audioBackend;
+        Maybe<MediaDeviceSet> micsOfVideoBackend;
+        Maybe<MediaDeviceSet> speakers;
+
+        if (hasVideo) {
+          videoBackend = aVideoInputEnumType == DeviceEnumerationType::Fake
+                             ? fakeBackend
+                             : realBackend;
+          MediaDeviceSet videos;
+          LOG("EnumerateRawDevices Task: Getting video sources with %s backend",
+              videoBackend == fakeBackend ? "fake" : "real");
+          GetMediaDevices(videoBackend, aVideoInputType, videos,
+                          videoLoopDev.get());
+          aOutDevices->AppendElements(videos);
+        }
+        if (hasAudio) {
+          audioBackend = aAudioInputEnumType == DeviceEnumerationType::Fake
+                             ? fakeBackend
+                             : realBackend;
+          MediaDeviceSet audios;
+          LOG("EnumerateRawDevices Task: Getting audio sources with %s backend",
+              audioBackend == fakeBackend ? "fake" : "real");
+          GetMediaDevices(audioBackend, aAudioInputType, audios,
+                          audioLoopDev.get());
+          if (aAudioInputType == MediaSourceEnum::Microphone &&
+              audioBackend == videoBackend) {
+            micsOfVideoBackend = Some(MediaDeviceSet());
+            micsOfVideoBackend->AppendElements(audios);
+          }
+          aOutDevices->AppendElements(audios);
+        }
+        if (hasAudioOutput) {
+          MediaDeviceSet outputs;
+          MOZ_ASSERT(realBackend);
+          realBackend->EnumerateDevices(MediaSourceEnum::Other,
+                                        MediaSinkEnum::Speaker, &outputs);
+          speakers = Some(MediaDeviceSet());
+          speakers->AppendElements(outputs);
+          aOutDevices->AppendElements(outputs);
+        }
+        if (hasVideo && aVideoInputType == MediaSourceEnum::Camera) {
+          MediaDeviceSet audios;
+          LOG("EnumerateRawDevices Task: Getting audio sources with %s backend "
+              "for "
+              "groupId correlation",
+              videoBackend == fakeBackend ? "fake" : "real");
+          // We need to correlate cameras with audio groupIds. We use the
+          // backend of the camera to always do correlation on devices in the
+          // same scope. If we don't do this, video-only getUserMedia will not
+          // apply groupId constraints to the same set of groupIds as gets
+          // returned by enumerateDevices.
+          if (micsOfVideoBackend.isSome()) {
+            // Microphones from the same backend used for the cameras have
+            // already been enumerated. Avoid doing it again.
+            audios.AppendElements(*micsOfVideoBackend);
+          } else {
+            GetMediaDevices(videoBackend, MediaSourceEnum::Microphone, audios,
+                            audioLoopDev.get());
+          }
+          if (videoBackend == realBackend) {
+            // When using the real backend for video, there could also be
+            // speakers to correlate with. There are no fake speakers.
+            if (speakers.isSome()) {
+              // Speakers have already been enumerated. Avoid doing it again.
+              audios.AppendElements(*speakers);
+            } else {
+              realBackend->EnumerateDevices(MediaSourceEnum::Other,
+                                            MediaSinkEnum::Speaker, &audios);
+            }
+          }
+          GuessVideoDeviceGroupIDs(*aOutDevices, audios);
+        }
+
+        holder.Resolve(false, __func__);
+      });
 
   if (realDeviceRequested && aForceNoPermRequest &&
       Preferences::GetBool("media.navigator.permission.device", false)) {
@@ -2266,7 +2259,7 @@ void MediaManager::DeviceListChanged() {
                   __func__);
             }
             return EnumerateRawDevices(
-                0, MediaSourceEnum::Camera, MediaSourceEnum::Microphone,
+                MediaSourceEnum::Camera, MediaSourceEnum::Microphone,
                 MediaSinkEnum::Speaker, DeviceEnumerationType::Normal,
                 DeviceEnumerationType::Normal, false, devices);
           },
@@ -3019,7 +3012,7 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
                   __func__);
             }
             return mgr->EnumerateRawDevices(
-                windowId, aVideoInputType, aAudioInputType, aAudioOutputType,
+                aVideoInputType, aAudioInputType, aAudioOutputType,
                 aVideoInputEnumType, aAudioInputEnumType, aForceNoPermRequest,
                 aOutDevices);
           },
