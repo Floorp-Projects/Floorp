@@ -566,6 +566,16 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
 #endif
   }
 
+  // Bug 1732580: when packaged as a strictly confined snap, may need
+  // read-access to configuration files under $SNAP/.
+  const char* snap = PR_GetEnv("SNAP");
+  if (snap) {
+    // When running as a snap, the directory pointed to by $SNAP is guaranteed
+    // to exist before the app is launched, but unit tests need to create it
+    // dynamically, hence the use of AddFutureDir().
+    policy->AddFutureDir(rdonly, snap);
+  }
+
   // Read any extra paths that will get write permissions,
   // configured by the user or distro
   AddDynamicPathList(policy, "security.sandbox.content.write_path_whitelist",
