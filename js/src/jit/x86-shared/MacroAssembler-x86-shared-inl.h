@@ -2876,14 +2876,21 @@ void MacroAssembler::unsignedWidenLowInt32x4(FloatRegister src,
 }
 
 void MacroAssembler::widenHighInt32x4(FloatRegister src, FloatRegister dest) {
-  vpshufd(ComputeShuffleMask(2, 3, 2, 3), src, dest);
+  if (src == dest) {
+    vmovhlps(dest, dest, dest);
+  } else {
+    vpshufd(ComputeShuffleMask(2, 3, 2, 3), src, dest);
+  }
   vpmovsxdq(Operand(dest), dest);
 }
 
 void MacroAssembler::unsignedWidenHighInt32x4(FloatRegister src,
                                               FloatRegister dest) {
-  vpshufd(ComputeShuffleMask(2, 3, 2, 3), src, dest);
-  vpmovzxdq(Operand(dest), dest);
+  moveSimd128(src, dest);
+
+  ScratchSimd128Scope scratch(*this);
+  vpxor(scratch, scratch, scratch);
+  vpunpckhdq(scratch, dest, dest);
 }
 
 // Floating multiply-accumulate: srcDest [+-]= src1 * src2
