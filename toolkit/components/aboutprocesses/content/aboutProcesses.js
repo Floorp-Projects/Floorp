@@ -1334,6 +1334,9 @@ var Control = {
     if (this.selectedRow && !this.selectedRow.parentNode) {
       this.selectedRow = null;
     }
+
+    // Used by tests to differentiate full updates from l10n updates.
+    document.dispatchEvent(new CustomEvent("AboutProcessesUpdated"));
   },
   _showThreads(row) {
     let process = row.process;
