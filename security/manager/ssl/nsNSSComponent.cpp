@@ -1757,7 +1757,8 @@ static nsresult AttemptToRenamePKCS11ModuleDB(const nsACString& profilePath) {
 // there anyway.
 // |profilePath| is encoded in UTF-8.
 static nsresult InitializeNSSWithFallbacks(const nsACString& profilePath,
-                                           bool nocertdb, bool safeMode) {
+                                           bool nocertdb, bool safeMode,
+                                           const char* nssDBPrefix) {
   if (nocertdb || profilePath.IsEmpty()) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("nocertdb mode or empty profile path -> NSS_NoDB_Init"));
@@ -1778,7 +1779,7 @@ static nsresult InitializeNSSWithFallbacks(const nsACString& profilePath,
   PKCS11DBConfig safeModeDBConfig =
       safeMode ? PKCS11DBConfig::DoNotLoadModules : PKCS11DBConfig::LoadModules;
   SECStatus srv = ::mozilla::psm::InitializeNSS(
-      profilePath, NSSDBConfig::ReadWrite, safeModeDBConfig);
+      profilePath, NSSDBConfig::ReadWrite, safeModeDBConfig, nssDBPrefix);
   if (srv == SECSuccess) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("initialized NSS in r/w mode"));
     return NS_OK;
@@ -1789,7 +1790,7 @@ static nsresult InitializeNSSWithFallbacks(const nsACString& profilePath,
 #endif  // ifndef ANDROID
   // That failed. Try read-only mode.
   srv = ::mozilla::psm::InitializeNSS(profilePath, NSSDBConfig::ReadOnly,
-                                      safeModeDBConfig);
+                                      safeModeDBConfig, nssDBPrefix);
   if (srv == SECSuccess) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("initialized NSS in r-o mode"));
     return NS_OK;
@@ -1817,7 +1818,8 @@ static nsresult InitializeNSSWithFallbacks(const nsACString& profilePath,
     // flags causes NSS initialization to fail, so unfortunately we have to use
     // read-write mode.
     srv = ::mozilla::psm::InitializeNSS(profilePath, NSSDBConfig::ReadWrite,
-                                        PKCS11DBConfig::DoNotLoadModules);
+                                        PKCS11DBConfig::DoNotLoadModules,
+                                        nssDBPrefix);
     if (srv == SECSuccess) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("FIPS may be the problem"));
       // Unload NSS so we can attempt to fix this situation for the user.
@@ -1844,13 +1846,15 @@ static nsresult InitializeNSSWithFallbacks(const nsACString& profilePath,
         return rv;
       }
       srv = ::mozilla::psm::InitializeNSS(profilePath, NSSDBConfig::ReadWrite,
-                                          PKCS11DBConfig::LoadModules);
+                                          PKCS11DBConfig::LoadModules,
+                                          nssDBPrefix);
       if (srv == SECSuccess) {
         MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("initialized in r/w mode"));
         return NS_OK;
       }
       srv = ::mozilla::psm::InitializeNSS(profilePath, NSSDBConfig::ReadOnly,
-                                          PKCS11DBConfig::LoadModules);
+                                          PKCS11DBConfig::LoadModules,
+                                          nssDBPrefix);
       if (srv == SECSuccess) {
         MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("initialized in r-o mode"));
         return NS_OK;
@@ -1869,6 +1873,60 @@ static nsresult InitializeNSSWithFallbacks(const nsACString& profilePath,
 #endif
   return srv == SECSuccess ? NS_OK : NS_ERROR_FAILURE;
 }
+
+#if defined(NIGHTLY_BUILD) && !defined(ANDROID)
+const char* sGeckoNSSDBPrefix = "gecko-no-share-";
+#else
+const char* sGeckoNSSDBPrefix = "";
+#endif
+
+#if defined(NIGHTLY_BUILD) && !defined(ANDROID)
+// dbType is either "cert9.db" or "key4.db"
+void MigrateOneCertDB(const nsCOMPtr<nsIFile>& profileDirectory,
+                      const nsACString& dbType) {
+  nsCOMPtr<nsIFile> newDBFile;
+  nsresult rv = profileDirectory->Clone(getter_AddRefs(newDBFile));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  nsAutoCString newDBFilename(sGeckoNSSDBPrefix);
+  newDBFilename.Append(dbType);
+  rv = newDBFile->AppendNative(newDBFilename);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  bool exists;
+  rv = newDBFile->Exists(&exists);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  // If the prefixed DB already exists, don't overwrite it.
+  if (exists) {
+    return;
+  }
+  nsCOMPtr<nsIFile> oldDBFile;
+  rv = profileDirectory->Clone(getter_AddRefs(oldDBFile));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  rv = oldDBFile->AppendNative(dbType);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  Unused << oldDBFile->MoveToNative(nullptr, newDBFilename);
+}
+
+void MigrateToPrefixedCertDBs() {
+  nsCOMPtr<nsIFile> profileDirectory;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(profileDirectory));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  MigrateOneCertDB(profileDirectory, "cert9.db"_ns);
+  MigrateOneCertDB(profileDirectory, "key4.db"_ns);
+}
+#endif  // defined(NIGHTLY_BUILD) && !defined(ANDROID)
 
 nsresult nsNSSComponent::InitializeNSS() {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::InitializeNSS\n"));
@@ -1891,6 +1949,12 @@ nsresult nsNSSComponent::InitializeNSS() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+#if defined(NIGHTLY_BUILD) && !defined(ANDROID)
+  if (!profileStr.IsEmpty()) {
+    MigrateToPrefixedCertDBs();
+  }
+#endif
+
 #if defined(XP_WIN) || (defined(XP_LINUX) && !defined(ANDROID))
   SetNSSDatabaseCacheModeAsAppropriate();
 #endif
@@ -1910,7 +1974,8 @@ nsresult nsNSSComponent::InitializeNSS() {
   }
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("inSafeMode: %u\n", inSafeMode));
 
-  rv = InitializeNSSWithFallbacks(profileStr, nocertdb, inSafeMode);
+  rv = InitializeNSSWithFallbacks(profileStr, nocertdb, inSafeMode,
+                                  sGeckoNSSDBPrefix);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("failed to initialize NSS"));
