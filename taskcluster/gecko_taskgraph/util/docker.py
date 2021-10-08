@@ -7,18 +7,18 @@ import hashlib
 import json
 import os
 import re
-import requests
-import requests_unixsocket
 import sys
 from collections.abc import Mapping
 from urllib.parse import quote, urlencode, urlunparse
 
+import requests
+import requests_unixsocket
 from mozbuild.util import memoize
 from mozpack.files import GeneratedFile
 from mozpack.archive import create_tar_gz_from_files
-from .. import GECKO
+from taskgraph.util.yaml import load_yaml
 
-from .yaml import load_yaml
+from .. import GECKO
 
 
 IMAGE_DIR = os.path.join(GECKO, "taskcluster", "docker")

@@ -8,12 +8,14 @@ import datetime
 import functools
 import requests
 import logging
+
 import taskcluster_urls as liburls
 from mozbuild.util import memoize
 from requests.packages.urllib3.util.retry import Retry
 from taskcluster import Hooks
+from taskgraph.util import yaml
+
 from gecko_taskgraph.task import Task
-from gecko_taskgraph.util import yaml
 
 logger = logging.getLogger(__name__)
 

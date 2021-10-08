@@ -279,8 +279,8 @@ def load_parameters_file(spec, strict=True, overrides=None, trust_domain=None):
         project=mozilla-central
     """
     import requests
+    from taskgraph.util import yaml
     from gecko_taskgraph.util.taskcluster import get_artifact_url, find_task_id
-    from gecko_taskgraph.util import yaml
 
     if overrides is None:
         overrides = {}
