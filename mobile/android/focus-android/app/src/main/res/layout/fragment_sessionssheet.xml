@@ -3,6 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -10,8 +11,7 @@
     <View
         android:id="@+id/background"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/colorOverlay" />
+        android:layout_height="match_parent"/>
 
     <androidx.cardview.widget.CardView
         android:id="@+id/card"
@@ -24,7 +24,7 @@
         android:clickable="true"
         android:focusable="true"
         android:elevation="16dp"
-        style="@style/CardView.Light">
+        app:cardCornerRadius="4dp">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/sessions"

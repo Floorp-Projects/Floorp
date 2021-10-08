@@ -88,8 +88,7 @@
 
     <!-- Session -->
     <color name="colorSession">@color/photonLightGrey05</color>
-    <color name="colorActiveSession">#353852</color>
-    <color name="colorAction">@color/photonBlue50</color>
+    <color name="colorActiveSession">@color/photonViolet05</color>
 
     <!-- Launcher Icon Background-->
     <color name="add_to_homescreen_icon_background">@color/photonInk60</color>

@@ -2,18 +2,22 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- Intentionally hardcoded colors for icon and text on both themes. -->
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="56dp"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:background="@color/menuBackground"
+    android:background="@color/photonPink70"
     android:drawablePadding="16dp"
-    android:gravity="start|center_vertical"
-    android:paddingEnd="16dp"
-    android:paddingStart="16dp"
-    android:lines="1"
     android:ellipsize="end"
-    tools:drawableStart="@drawable/mozac_ic_delete"
+    android:gravity="start|center_vertical"
+    android:lines="1"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
     android:text="@string/tabs_tray_action_erase"
-    android:textColor="@color/primaryText"
-    android:textSize="14sp" />
+    android:textColor="@color/photonLightGrey05"
+    android:textSize="14sp"
+    app:drawableTint="@color/photonLightGrey05"
+    tools:drawableStart="@drawable/mozac_ic_delete" />
