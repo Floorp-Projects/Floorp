@@ -170,7 +170,6 @@ android-x86-fuzzing/debug:
 
 android-x86-shippable/opt:
     description: "Android 5.0 x86 Shippable"
-    use-pgo: true
     attributes:
         enable-full-crashsymbols: true
         shippable: true
@@ -201,7 +200,6 @@ android-x86-shippable/opt:
 
 android-x86-shippable-lite/opt:
     description: "Android 4.1 x86 Shippable Lite"
-    use-pgo: android-x86-shippable/opt
     attributes:
         enable-full-crashsymbols: true
         shippable: true
@@ -563,7 +561,6 @@ android-x86_64-lite/opt:
 
 android-x86_64-shippable/opt:
     description: "Android 5.0 x86-64 Shippable"
-    use-pgo: true
     attributes:
         enable-full-crashsymbols: true
         shippable: true
@@ -594,7 +591,6 @@ android-x86_64-shippable/opt:
 
 android-x86_64-shippable-lite/opt:
     description: "Android 5.0 x86-64 Shippable Lite"
-    use-pgo: android-x86_64-shippable/opt
     attributes:
         enable-full-crashsymbols: true
         shippable: true
