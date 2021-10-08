@@ -1099,27 +1099,3 @@ set_define(
     True,
     when=depends(target)(lambda t: t.os == "WASI"),
 )
-
-# Enable change-array-by-copy
-# ===================================================
-@depends(milestone.is_nightly)
-def use_change_array_by_copy(is_nightly):
-    if is_nightly:
-        return True
-
-
-option(
-    "--enable-change-array-by-copy",
-    default=use_change_array_by_copy,
-    help="{Enable|Disable} change-array-by-copy methods",
-)
-
-
-@depends("--enable-change-array-by-copy")
-def enable_change_array_by_copy(value):
-    if value:
-        return True
-
-
-set_config("ENABLE_CHANGE_ARRAY_BY_COPY", enable_change_array_by_copy)
-set_define("ENABLE_CHANGE_ARRAY_BY_COPY", enable_change_array_by_copy)
