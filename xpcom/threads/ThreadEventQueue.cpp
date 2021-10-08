@@ -84,6 +84,8 @@ bool ThreadEventQueue::PutEventInternal(already_AddRefed<nsIRunnable>&& aEvent,
         runnablePrio->GetPriority(&prio);
         if (prio == nsIRunnablePriority::PRIORITY_CONTROL) {
           aPriority = EventQueuePriority::Control;
+        } else if (prio == nsIRunnablePriority::PRIORITY_RENDER_BLOCKING) {
+          aPriority = EventQueuePriority::RenderBlocking;
         } else if (prio == nsIRunnablePriority::PRIORITY_VSYNC) {
           aPriority = EventQueuePriority::Vsync;
         } else if (prio == nsIRunnablePriority::PRIORITY_INPUT_HIGH) {
