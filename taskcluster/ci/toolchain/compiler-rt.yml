@@ -11,6 +11,74 @@ job-defaults:
         script: build-compiler-rt.sh
         toolchain-artifact: public/build/compiler-rt.tar.zst
 
+android-aarch64-compiler-rt-12:
+    description: "android aarch64 Compiler-rt for Clang 12 toolchain build"
+    treeherder:
+        symbol: TA(aarch64-crt-12)
+    run:
+        arguments:
+            - aarch64-linux-android
+            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+        resources:
+            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+    fetches:
+        fetch:
+            - clang-12
+        toolchain:
+            - linux64-clang-12
+            - linux64-android-ndk-linux-repack
+
+android-arm-compiler-rt-12:
+    description: "android arm Compiler-rt for Clang 12 toolchain build"
+    treeherder:
+        symbol: TA(arm-crt-12)
+    run:
+        arguments:
+            - armv7-linux-android
+            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+        resources:
+            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+    fetches:
+        fetch:
+            - clang-12
+        toolchain:
+            - linux64-clang-12
+            - linux64-android-ndk-linux-repack
+
+android-x86-compiler-rt-12:
+    description: "android x86 Compiler-rt for Clang 12 toolchain build"
+    treeherder:
+        symbol: TA(x86-crt-12)
+    run:
+        arguments:
+            - i686-linux-android
+            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+        resources:
+            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+    fetches:
+        fetch:
+            - clang-12
+        toolchain:
+            - linux64-clang-12
+            - linux64-android-ndk-linux-repack
+
+android-x64-compiler-rt-12:
+    description: "android x64 Compiler-rt for Clang 12 toolchain build"
+    treeherder:
+        symbol: TA(x64-crt-12)
+    run:
+        arguments:
+            - x86_64-linux-android
+            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+        resources:
+            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+    fetches:
+        fetch:
+            - clang-12
+        toolchain:
+            - linux64-clang-12
+            - linux64-android-ndk-linux-repack
+
 linux64-aarch64-compiler-rt-12:
     description: "Linux aarch64 Compiler-rt for Clang 12 toolchain build"
     treeherder:
