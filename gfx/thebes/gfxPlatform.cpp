@@ -27,6 +27,7 @@
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPrefs_webgl.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
@@ -899,6 +900,7 @@ void gfxPlatform::Init() {
 
   gPlatform->InitWebGLConfig();
   gPlatform->InitWebGPUConfig();
+  gPlatform->InitWindowOcclusionConfig();
 
   // When using WebRender, we defer initialization of the D3D11 devices until
   // the (rare) cases where they're used. Note that the GPU process where
@@ -2756,6 +2758,31 @@ void gfxPlatform::InitWebGPUConfig() {
                          "WebGPU can't present without WebRender",
                          "FEATURE_FAILURE_WEBGPU_NEED_WEBRENDER"_ns);
   }
+}
+
+void gfxPlatform::InitWindowOcclusionConfig() {
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+#ifdef XP_WIN
+  FeatureState& feature = gfxConfig::GetFeature(Feature::WINDOW_OCCLUSION);
+  feature.SetDefaultFromPref(
+      StaticPrefs::
+          GetPrefName_widget_windows_window_occlusion_tracking_enabled(),
+      true,
+      StaticPrefs::
+          GetPrefDefault_widget_windows_window_occlusion_tracking_enabled());
+
+  const char* env = PR_GetEnv("MOZ_WINDOW_OCCLUSION");
+  if (env) {
+    if (*env == '1') {
+      feature.UserForceEnable("Force enabled by envvar");
+    } else {
+      feature.UserDisable("Force disabled by envvar",
+                          "FEATURE_FAILURE_OCCL_ENV"_ns);
+    }
+  }
+#endif
 }
 
 bool gfxPlatform::CanUseHardwareVideoDecoding() {
