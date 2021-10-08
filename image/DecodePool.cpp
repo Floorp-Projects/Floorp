@@ -139,7 +139,7 @@ class DecodingTask final : public Task {
   explicit DecodingTask(RefPtr<IDecodingTask>&& aTask)
       : Task(false, aTask->Priority() == TaskPriority::eLow
                         ? EventQueuePriority::Normal
-                        : EventQueuePriority::MediumHigh),
+                        : EventQueuePriority::RenderBlocking),
         mTask(aTask) {}
 
   bool Run() override {
