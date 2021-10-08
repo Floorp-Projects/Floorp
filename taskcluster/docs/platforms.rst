@@ -126,7 +126,7 @@ or prevening some classes of errors (memory, threading, etc).
    :header: "Platform", "Owner", "Why?"
    :widths: 40, 20, 40
 
-   Linux 18.04 x64 tsan, Christian Holler, Identify threading issues with ThreadSanitizer
+   Linux 18.04 x64 tsan, Christian Holler, Identify threading issues with :ref:`ThreadSanitizer <Thread Sanitizer>`
    Linux x64 asan, "| Christian Holler
    | Tyson Smith (ubsan)", "| Identify memory issues with :ref:`Address Sanitizer`.
    | Also includes the UndefinedBehaviorSanitizer"
