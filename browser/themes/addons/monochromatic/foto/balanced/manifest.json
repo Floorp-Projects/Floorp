@@ -16,7 +16,7 @@
       "tab_background_text": "hsl(0, 0%, 100%)",
       "tab_text": "hsl(0, 0%, 0%)",
       "tab_selected": "hsl(349, 35%, 94%)",
-      "tab_line": "hsl(0, 0%, 0%)",
+      "tab_line": "transparent",
       "tab_loading": "hsl(351, 37%, 40%)",
       "tab_loading_inactive": "hsl(352, 56%, 84%)",
       "frame": "hsl(351, 37%, 40%)",
