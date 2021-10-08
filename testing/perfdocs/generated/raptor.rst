@@ -3006,9 +3006,10 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-linkedin.manifest
-   * **playback version**: 5.1.1
-   * **test url**: `<https://www.linkedin.com/in/thommy-harris-hk-385723106/>`__
+   * **playback pageset manifest**: mitm6-linux-firefox-linkedin.manifest
+   * **playback version**: 6.0.2
+   * **secondary url**: `<https://www.linkedin.com/in/thommy-harris-hk-385723106/>`__
+   * **test url**: `<https://www.linkedin.com/feed/>`__
    * **type**: pageload
    * **unit**: ms
    * **use live sites**: false
