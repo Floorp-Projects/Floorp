@@ -59,6 +59,7 @@ void CCGCScheduler::NoteWontGC() {
 
 bool CCGCScheduler::GCRunnerFired(TimeStamp aDeadline) {
   MOZ_ASSERT(!mDidShutdown, "GCRunner still alive during shutdown");
+  MOZ_ASSERT(!mHaveAskedParent, "GCRunner alive after asking the parent");
 
   GCRunnerStep step = GetNextGCRunnerAction();
   switch (step.mAction) {
@@ -73,10 +74,12 @@ bool CCGCScheduler::GCRunnerFired(TimeStamp aDeadline) {
         break;
       }
 
+      mHaveAskedParent = true;
       KillGCRunner();
       mbPromise->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [this](bool aMayGC) {
+            mHaveAskedParent = false;
             if (aMayGC) {
               if (!NoteReadyForMajorGC()) {
                 // Another GC started and maybe completed while waiting.
@@ -94,6 +97,7 @@ bool CCGCScheduler::GCRunnerFired(TimeStamp aDeadline) {
             }
           },
           [this](mozilla::ipc::ResponseRejectReason r) {
+            mHaveAskedParent = false;
             if (!InIncrementalGC()) {
               KillGCRunner();
               NoteWontGC();
@@ -288,8 +292,8 @@ void CCGCScheduler::PokeGC(JS::GCReason aReason, JSObject* aObj,
     SetNeedsFullGC();
   }
 
-  if (mGCRunner) {
-    // There's already a runner for GC'ing, just return
+  if (mGCRunner || mHaveAskedParent) {
+    // There's already a GC runner, there or will be, so just return.
     return;
   }
 
@@ -315,7 +319,7 @@ void CCGCScheduler::PokeGC(JS::GCReason aReason, JSObject* aObj,
 }
 
 void CCGCScheduler::EnsureGCRunner(TimeDuration aDelay) {
-  if (mGCRunner) {
+  if (mGCRunner || mHaveAskedParent) {
     return;
   }
 
