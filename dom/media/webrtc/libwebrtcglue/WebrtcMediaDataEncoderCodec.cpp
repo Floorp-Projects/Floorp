@@ -314,8 +314,11 @@ static void UpdateCodecSpecificInfo(webrtc::CodecSpecificInfo& aInfo,
       // See webrtc::VP8EncoderImpl::PopulateCodecSpecific().
       webrtc::CodecSpecificInfoVP8& vp8 = aInfo.codecSpecific.VP8;
       vp8.keyIdx = webrtc::kNoKeyIdx;
+      // Cannot be 100% sure unless parsing significant portion of the
+      // bitstream. Treat all frames as referenced just to be safe.
+      vp8.nonReference = false;
       // One temporal layer only.
-      vp8.temporalIdx = 1;
+      vp8.temporalIdx = webrtc::kNoTemporalIdx;
       vp8.layerSync = false;
       break;
     }
