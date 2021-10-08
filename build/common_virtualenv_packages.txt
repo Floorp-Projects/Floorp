@@ -107,6 +107,7 @@ vendored:third_party/python/sentry_sdk
 vendored:third_party/python/six
 vendored:third_party/python/slugid
 vendored:third_party/python/taskcluster
+vendored:third_party/python/taskcluster_taskgraph
 vendored:third_party/python/taskcluster_urls
 vendored:third_party/python/typing_extensions
 vendored:third_party/python/urllib3
