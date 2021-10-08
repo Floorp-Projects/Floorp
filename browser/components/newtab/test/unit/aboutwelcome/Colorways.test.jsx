@@ -8,11 +8,16 @@ import {
 import { WelcomeScreen } from "content-src/aboutwelcome/components/MultiStageAboutWelcome";
 
 describe("Multistage AboutWelcome module", () => {
+  let clock;
   let sandbox;
   beforeEach(() => {
+    clock = sinon.useFakeTimers();
     sandbox = sinon.createSandbox();
   });
-  afterEach(() => sandbox.restore());
+  afterEach(() => {
+    clock.restore();
+    sandbox.restore();
+  });
 
   describe("Colorway component", () => {
     const COLORWAY_SCREEN_PROPS = {
@@ -98,7 +103,7 @@ describe("Multistage AboutWelcome module", () => {
       );
     });
 
-    it("should render coloways options", () => {
+    it("should render colorways options", () => {
       const wrapper = shallow(<Colorways {...COLORWAY_SCREEN_PROPS} />);
 
       const colorwaysOptions = wrapper.find(
@@ -126,8 +131,6 @@ describe("Multistage AboutWelcome module", () => {
         colorwaysOptions.first().prop("data-colorway"),
         "default"
       );
-      // Value  of Default theme radio option should be using systemDefaultVariationId
-      assert.strictEqual(colorwaysOptions.first().prop("value"), "automatic");
 
       // Second colorway option
       assert.strictEqual(
@@ -143,12 +146,47 @@ describe("Multistage AboutWelcome module", () => {
         colorwaysOptions.last().prop("data-colorway"),
         "abstract"
       );
-      // Value  of non-Default theme radio option should be using
-      // 'colorwayId-defaultVariationId'
-      assert.strictEqual(
-        colorwaysOptions.last().prop("value"),
-        "abstract-soft"
+    });
+
+    it("should handle colorway clicks", () => {
+      sandbox.stub(React, "useEffect").callsFake((fn, vals) => {
+        if (vals[0] === "in") {
+          fn();
+        }
+      });
+
+      const handleAction = sandbox.stub();
+      const wrapper = shallow(
+        <Colorways handleAction={handleAction} {...COLORWAY_SCREEN_PROPS} />
       );
+      const colorwaysOptions = wrapper.find(
+        ".tiles-theme-section .theme input[name='theme']"
+      );
+
+      let props = wrapper.find(VariationsCircle).props();
+      assert.propertyVal(props, "transition", "");
+      assert.propertyVal(props, "nextColor", "default");
+
+      const option = colorwaysOptions.last();
+      option.simulate("click", {
+        currentTarget: {
+          dataset: {
+            colorway: option.prop("data-colorway"),
+          },
+        },
+      });
+      props = wrapper.find(VariationsCircle).props();
+      assert.propertyVal(props, "transition", "out");
+      assert.propertyVal(props, "nextColor", "abstract");
+
+      clock.tick(500);
+      assert.strictEqual(
+        wrapper.find(VariationsCircle).props().transition,
+        "in"
+      );
+      assert.calledWith(handleAction, {
+        currentTarget: { value: "abstract-soft" },
+      });
     });
 
     it("should render variations options", () => {
@@ -192,7 +230,10 @@ describe("Multistage AboutWelcome module", () => {
       );
       // Localized tag text attribute is set to colorwayText
       assert.strictEqual(
-        variationsWrapper.props().children[0].props.text,
+        variationsWrapper
+          .find(".colorway-text")
+          .parent()
+          .prop("text"),
         "Abstract"
       );
     });
