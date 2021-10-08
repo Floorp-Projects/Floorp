@@ -167,7 +167,11 @@ always easy to parse the results.
 
     $ ./mach test dom/serviceworkers
 
-`More information <https://developer.mozilla.org/docs/Mozilla/QA/Automated_testing>`__
+To run tests based on :ref:`GTest` (C/C++ based unit tests), run:
+
+.. code-block:: shell
+
+    $ ./mach gtest 'QuotaManager.*'
 
 To test a change remotely
 -------------------------
