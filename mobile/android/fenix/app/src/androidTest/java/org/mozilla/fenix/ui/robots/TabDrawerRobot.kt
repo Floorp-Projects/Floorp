@@ -375,13 +375,13 @@ private fun tabMediaControlButton() = onView(withId(R.id.play_pause_button))
 private fun closeTabButton() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_tabstray_close"))
 private fun assertCloseTabsButton(title: String) =
-    onView(
-        allOf(
-            withId(R.id.mozac_browser_tabstray_close),
-            withContentDescription("Close tab $title")
-        )
+    assertTrue(
+        mDevice.findObject(
+            UiSelector()
+                .resourceId("$packageName:id/mozac_browser_tabstray_close")
+                .descriptionContains("Close tab $title")
+        ).waitForExists(waitingTime)
     )
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun normalBrowsingButton() = onView(
     anyOf(
