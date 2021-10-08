@@ -63,6 +63,7 @@ class WidgetKeyboardEvent;
 struct FontRange;
 
 enum class StyleWindowShadow : uint8_t;
+enum class ColorScheme : uint8_t;
 
 #if defined(MOZ_WIDGET_ANDROID)
 namespace ipc {
@@ -1168,6 +1169,12 @@ class nsIWidget : public nsISupports {
    * Ignored on child widgets and on non-Mac platforms.
    */
   virtual void SetWindowTransform(const mozilla::gfx::Matrix& aTransform) {}
+
+  /**
+   * Set the preferred color-scheme for the widget.
+   * Ignored on non-Mac platforms.
+   */
+  virtual void SetColorScheme(mozilla::ColorScheme) {}
 
   /**
    * Set whether the window should ignore mouse events or not.
