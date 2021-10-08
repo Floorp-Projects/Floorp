@@ -134,13 +134,22 @@ class FakeAudioTrack : public mozilla::ProcessedMediaTrack {
   }
 };
 
+template <typename Function>
+void RunOnSts(Function&& aFunction) {
+  MOZ_ALWAYS_SUCCEEDS(test_utils->sts_target()->Dispatch(
+      NS_NewRunnableFunction(__func__, [&] { aFunction(); }),
+      nsISerialEventTarget::DISPATCH_SYNC));
+}
+
 class LoopbackTransport : public MediaTransportHandler {
  public:
   LoopbackTransport() : MediaTransportHandler(nullptr) {
-    SetState("mux", TransportLayer::TS_INIT, false);
-    SetState("mux", TransportLayer::TS_INIT, true);
-    SetState("non-mux", TransportLayer::TS_INIT, false);
-    SetState("non-mux", TransportLayer::TS_INIT, true);
+    RunOnSts([&] {
+      SetState("mux", TransportLayer::TS_INIT);
+      SetRtcpState("mux", TransportLayer::TS_INIT);
+      SetState("non-mux", TransportLayer::TS_INIT);
+      SetRtcpState("non-mux", TransportLayer::TS_INIT);
+    });
   }
 
   static void InitAndConnect(LoopbackTransport& client,
@@ -220,13 +229,13 @@ class LoopbackTransport : public MediaTransportHandler {
     peer_->SignalPacketReceived(aTransportId, aPacket);
   }
 
-  void SetState(const std::string& aTransportId, TransportLayer::State aState,
-                bool aRtcp) {
-    if (aRtcp) {
-      MediaTransportHandler::OnRtcpStateChange(aTransportId, aState);
-    } else {
-      MediaTransportHandler::OnStateChange(aTransportId, aState);
-    }
+  void SetState(const std::string& aTransportId, TransportLayer::State aState) {
+    MediaTransportHandler::OnStateChange(aTransportId, aState);
+  }
+
+  void SetRtcpState(const std::string& aTransportId,
+                    TransportLayer::State aState) {
+    MediaTransportHandler::OnRtcpStateChange(aTransportId, aState);
   }
 
  private:
@@ -249,24 +258,19 @@ class TestAgent {
 
   virtual void CreatePipeline(const std::string& aTransportId) = 0;
 
-  void SetState(const std::string& aTransportId, TransportLayer::State aState,
-                bool aRtcp) {
-    test_utils->sts_target()->Dispatch(
-        WrapRunnable(transport_, &LoopbackTransport::SetState, aTransportId,
-                     aState, aRtcp),
-        nsISerialEventTarget::DISPATCH_SYNC);
+  void SetState_s(const std::string& aTransportId,
+                  TransportLayer::State aState) {
+    transport_->SetState(aTransportId, aState);
   }
 
-  void UpdateTransport(const std::string& aTransportId,
-                       UniquePtr<MediaPipelineFilter>&& aFilter) {
-    test_utils->sts_target()->Dispatch(
-        NS_NewRunnableFunction(__func__,
-                               [pipeline = audio_pipeline_, aTransportId,
-                                filter = std::move(aFilter)]() mutable {
-                                 pipeline->UpdateTransport_s(aTransportId,
-                                                             std::move(filter));
-                               }),
-        nsISerialEventTarget::DISPATCH_SYNC);
+  void SetRtcpState_s(const std::string& aTransportId,
+                      TransportLayer::State aState) {
+    transport_->SetRtcpState(aTransportId, aState);
+  }
+
+  void UpdateTransport_s(const std::string& aTransportId,
+                         UniquePtr<MediaPipelineFilter>&& aFilter) {
+    audio_pipeline_->UpdateTransport_s(aTransportId, std::move(aFilter));
   }
 
   void Stop() {
@@ -438,19 +442,23 @@ class MediaPipelineTest : public ::testing::Test {
     // Set state of transports to CONNECTING. MediaPipeline doesn't really care
     // about this transition, but we're trying to simluate what happens in a
     // real case.
-    p1_.SetState(transportId, TransportLayer::TS_CONNECTING, false);
-    p1_.SetState(transportId, TransportLayer::TS_CONNECTING, true);
-    p2_.SetState(transportId, TransportLayer::TS_CONNECTING, false);
-    p2_.SetState(transportId, TransportLayer::TS_CONNECTING, true);
+    RunOnSts([&] {
+      p1_.SetState_s(transportId, TransportLayer::TS_CONNECTING);
+      p1_.SetRtcpState_s(transportId, TransportLayer::TS_CONNECTING);
+      p2_.SetState_s(transportId, TransportLayer::TS_CONNECTING);
+      p2_.SetRtcpState_s(transportId, TransportLayer::TS_CONNECTING);
+    });
 
     WaitFor(TimeDuration::FromMilliseconds(10));
 
     // Set state of transports to OPEN (ie; connected). This should result in
     // media flowing.
-    p1_.SetState(transportId, TransportLayer::TS_OPEN, false);
-    p1_.SetState(transportId, TransportLayer::TS_OPEN, true);
-    p2_.SetState(transportId, TransportLayer::TS_OPEN, false);
-    p2_.SetState(transportId, TransportLayer::TS_OPEN, true);
+    RunOnSts([&] {
+      p1_.SetState_s(transportId, TransportLayer::TS_OPEN);
+      p1_.SetRtcpState_s(transportId, TransportLayer::TS_OPEN);
+      p2_.SetState_s(transportId, TransportLayer::TS_OPEN);
+      p2_.SetRtcpState_s(transportId, TransportLayer::TS_OPEN);
+    });
 
     if (bundle) {
       WaitFor(TimeDuration::FromMilliseconds(ms_until_filter_update));
@@ -463,7 +471,9 @@ class MediaPipelineTest : public ::testing::Test {
         refinedFilter->AddRemoteSSRC(p1_.GetLocalSSRC());
       }
 
-      p2_.UpdateTransport(transportId, std::move(refinedFilter));
+      RunOnSts([&] {
+        p2_.UpdateTransport_s(transportId, std::move(refinedFilter));
+      });
     }
 
     // wait for some RTP/RTCP tx and rx to happen
