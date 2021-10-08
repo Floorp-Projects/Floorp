@@ -879,16 +879,21 @@ __webpack_require__.r(__webpack_exports__);
 // includes just variation.id e.g. Light, Dark, Automatic
 
 const VariationsCircle = props => {
-  let {
-    variations,
+  const {
+    activeTheme,
     colorway,
     colorwayText,
-    activeTheme,
-    setVariation
+    nextColor,
+    setVariation,
+    transition,
+    variations
   } = props;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-    className: `colorway-variations ${colorway}`
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    className: `colorway-variations ${colorway} ${transition}`,
+    next: nextColor
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    className: "variations-disc"
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
     text: colorwayText
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: "colorway-text"
@@ -936,17 +941,35 @@ function Colorways(props) {
     variations
   } = props.content.tiles; // This sets a default value
 
-  const [colorwayId, setState] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(computeColorWay(props.activeTheme, systemVariations)); // Update state any time activeTheme changes.
+  const activeId = computeColorWay(props.activeTheme, systemVariations);
+  const [colorwayId, setState] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(activeId); // Update state any time activeTheme changes.
 
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
     setState(computeColorWay(props.activeTheme, systemVariations));
-  }, [props.activeTheme]); // Called on click of Colorway circle that sets colorway state
-  // used to pass selected colorway to variation circle and
-  // call handleAction passing 'colorway-defaultvariationId' as event target value
+  }, [props.activeTheme]); // Allow "in" style to render to actually transition towards regular state.
+
+  const [transition, setTransition] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])("");
+  Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
+    if (transition === "in") {
+      // Simulate a color click event now that we're ready to transition in.
+      props.handleAction({
+        currentTarget: {
+          value: colorwayId === "default" ? systemDefaultVariationId : `${colorwayId}-${defaultVariationId}`
+        }
+      }); // Trigger the transition from "in" to normal.
+
+      requestAnimationFrame(() => requestAnimationFrame(() => setTransition("")));
+    }
+  }, [transition]); // Called on click of Colorway circle that sets the next colorway state and
+  // starts transitions if not already started.
 
   function handleColorwayClick(event) {
     setState(event.currentTarget.dataset.colorway);
-    props.handleAction(event);
+
+    if (transition !== "out") {
+      setTransition("out");
+      setTimeout(() => setTransition("in"), 500);
+    }
   }
 
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
@@ -962,39 +985,36 @@ function Colorways(props) {
     label,
     tooltip,
     description
-  }) => {
-    var _computeColorWay, _computeColorWay2;
-
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
-      key: id + label,
-      text: typeof tooltip === "object" ? tooltip : {}
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("label", {
-      className: "theme colorway",
-      title: label,
-      "data-l10n-args": JSON.stringify({
-        colorwayName: label
-      })
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
-      text: typeof description === "object" ? description : {}
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", {
-      type: "radio",
-      "data-colorway": id,
-      value: id === "default" ? systemDefaultVariationId : `${id}-${defaultVariationId}`,
-      name: "theme",
-      checked: (_computeColorWay = computeColorWay(props.activeTheme, systemVariations)) === null || _computeColorWay === void 0 ? void 0 : _computeColorWay.includes(id),
-      className: "sr-only input",
-      onClick: handleColorwayClick,
-      "data-l10n-attrs": "aria-description",
-      "data-l10n-args": JSON.stringify({
-        colorwayName: label
-      })
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: `icon colorway ${(_computeColorWay2 = computeColorWay(props.activeTheme, systemVariations)) !== null && _computeColorWay2 !== void 0 && _computeColorWay2.includes(id) ? " selected" : ""} ${id}`
-    })));
-  }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(VariationsCircle, {
-    variations: colorwayId === "default" ? systemVariations : variations,
-    colorway: colorwayId,
-    colorwayText: (_colorways$find = colorways.find(colorway => colorway.id === colorwayId)) === null || _colorways$find === void 0 ? void 0 : _colorways$find.label,
+  }) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    key: id + label,
+    text: typeof tooltip === "object" ? tooltip : {}
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("label", {
+    className: "theme colorway",
+    title: label,
+    "data-l10n-args": JSON.stringify({
+      colorwayName: label
+    })
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
+    text: typeof description === "object" ? description : {}
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", {
+    type: "radio",
+    "data-colorway": id,
+    name: "theme",
+    checked: colorwayId === id,
+    className: "sr-only input",
+    onClick: handleColorwayClick,
+    "data-l10n-attrs": "aria-description",
+    "data-l10n-args": JSON.stringify({
+      colorwayName: label
+    })
+  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    className: `icon colorway ${colorwayId === id ? "selected" : ""} ${id}`
+  })))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(VariationsCircle, {
+    nextColor: colorwayId,
+    transition: transition,
+    variations: activeId === "default" ? systemVariations : variations,
+    colorway: activeId,
+    colorwayText: (_colorways$find = colorways.find(colorway => colorway.id === activeId)) === null || _colorways$find === void 0 ? void 0 : _colorways$find.label,
     setVariation: props.handleAction,
     activeTheme: props.activeTheme
   }));

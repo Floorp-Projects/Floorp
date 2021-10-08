@@ -198,39 +198,114 @@ body[lwt-newtab-brighttext] {
   width: 1px;
 }
 .onboardingContainer .colorway-variations {
+  align-items: center;
+  color: #000;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  width: 190px;
   height: 190px;
-  border-radius: 190px;
-  color: #FFF;
-  padding-top: 50px;
   margin-bottom: 10px;
+  padding-top: 34px;
+  position: relative;
+  transition: var(--transition);
+  width: 190px;
+  /* Show a custom background image that transitions for each theme. */
+  /* Stack a disc background above the custom background image and below other
+   * content so that we can transform the parent variations element. Use a
+   * similar ::after disc to cover up content while transitioning. */
 }
-.onboardingContainer .colorway-variations.default {
-  background: linear-gradient(180deg, #4B4B4B 0%, #4B4B4B 100%);
+.onboardingContainer .colorway-variations::before {
+  background-size: 100%;
+  content: "";
+  height: 197px;
+  left: -48px;
+  margin: auto;
+  pointer-events: none;
+  position: absolute;
+  top: -7px;
+  transition: 0.5s opacity, 0.5s rotate, 0.5s scale;
+  width: 286px;
+  z-index: -1;
 }
-.onboardingContainer .colorway-variations.abstract {
-  background: linear-gradient(180deg, #CD5F3A 0%, #A54727 100%);
+.onboardingContainer .colorway-variations.in::before {
+  rotate: calc(-4.5 * var(--rotate));
+  transition: none;
 }
-.onboardingContainer .colorway-variations.cheers {
-  background: linear-gradient(180deg, #FBB900 0%, #CE9800 100%);
+.onboardingContainer .colorway-variations:where(.in, .out)::before {
+  opacity: 0;
+  rotate: calc(4.5 * var(--rotate));
+  scale: var(--scale);
 }
-.onboardingContainer .colorway-variations.elemental {
-  background: linear-gradient(180deg, #8F8E89 0%, #6B675E 100%);
+.onboardingContainer .colorway-variations .variations-disc, .onboardingContainer .colorway-variations::after {
+  background: center/cover;
+  border-radius: 100%;
+  height: 190px;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 190px;
 }
-.onboardingContainer .colorway-variations.foto {
-  background: linear-gradient(180deg, #F2BDC5 0%, #C47985 100%);
+.onboardingContainer .colorway-variations .variations-disc {
+  z-index: -1;
 }
-.onboardingContainer .colorway-variations.graffiti {
-  background: linear-gradient(180deg, #B27ECA 0%, #844D9E 100%);
+.onboardingContainer .colorway-variations::after {
+  content: "";
+  opacity: 0;
+  transition: 0.4s opacity;
 }
-.onboardingContainer .colorway-variations.lush {
-  background: linear-gradient(180deg, #5F9B78 0%, #4E6A5A 100%);
+.onboardingContainer .colorway-variations.out::after {
+  opacity: 1;
 }
-.onboardingContainer .colorway-variations:active, .onboardingContainer .colorway-variations:focus-within {
-  outline: 2px var(--in-content-primary-button-background) solid;
+.onboardingContainer .colorway-variations.default .variations-disc, .onboardingContainer .colorway-variations[next=default]::after {
+  /* Gradients aren't used for high contrast, so show a solid color instead. */
+  background-color: var(--in-content-page-background);
+  background-image: linear-gradient(#F0F0F4, #9F9FAD);
+  outline: 2px solid var(--in-content-button-border-color);
+  outline-offset: -2px;
+}
+.onboardingContainer .colorway-variations.default::before {
+  background-image: url("chrome://browser/skin/upgradeDialog/default.png");
+}
+.onboardingContainer .colorway-variations.abstract .variations-disc, .onboardingContainer .colorway-variations[next=abstract]::after {
+  background-image: url("resource://builtin-themes/monochromatic/abstract/balanced/icon.svg");
+}
+.onboardingContainer .colorway-variations.abstract::before {
+  background-image: url("chrome://browser/skin/upgradeDialog/abstract.png");
+}
+.onboardingContainer .colorway-variations.cheers .variations-disc, .onboardingContainer .colorway-variations[next=cheers]::after {
+  background-image: url("resource://builtin-themes/monochromatic/cheers/balanced/icon.svg");
+}
+.onboardingContainer .colorway-variations.cheers::before {
+  background-image: url("chrome://browser/skin/upgradeDialog/cheers.png");
+}
+.onboardingContainer .colorway-variations.elemental .variations-disc, .onboardingContainer .colorway-variations[next=elemental]::after {
+  background-image: url("resource://builtin-themes/monochromatic/elemental/balanced/icon.svg");
+}
+.onboardingContainer .colorway-variations.elemental::before {
+  background-image: url("chrome://browser/skin/upgradeDialog/elemental.png");
+}
+.onboardingContainer .colorway-variations.foto .variations-disc, .onboardingContainer .colorway-variations[next=foto]::after {
+  background-image: url("resource://builtin-themes/monochromatic/foto/balanced/icon.svg");
+}
+.onboardingContainer .colorway-variations.foto::before {
+  background-image: url("chrome://browser/skin/upgradeDialog/foto.png");
+}
+.onboardingContainer .colorway-variations.graffiti .variations-disc, .onboardingContainer .colorway-variations[next=graffiti]::after {
+  background-image: url("resource://builtin-themes/monochromatic/graffiti/balanced/icon.svg");
+}
+.onboardingContainer .colorway-variations.graffiti::before {
+  background-image: url("chrome://browser/skin/upgradeDialog/graffiti.png");
+}
+.onboardingContainer .colorway-variations.lush .variations-disc, .onboardingContainer .colorway-variations[next=lush]::after {
+  background-image: url("resource://builtin-themes/monochromatic/lush/balanced/icon.svg");
+}
+.onboardingContainer .colorway-variations.lush::before {
+  background-image: url("chrome://browser/skin/upgradeDialog/lush.png");
+}
+.onboardingContainer .colorway-variations .colorway:focus-within {
+  border-radius: 4px;
+  outline: 2px solid rgba(0, 0, 0, 0.64);
+  outline-offset: -1px;
 }
 .onboardingContainer .colorway-variations .colorway-text {
   font-size: 16px;
@@ -239,14 +314,13 @@ body[lwt-newtab-brighttext] {
   margin-bottom: 15px;
 }
 .onboardingContainer .colorway-variations .variation-button {
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 12px;
   line-height: 12px;
   padding: 6px 12px;
   width: auto;
   height: 24px;
+  margin: 3px;
   min-height: 24px;
-  margin: 0;
 }
 .onboardingContainer .colorway-variations .variation-button:hover {
   background: rgba(0, 0, 0, 0.2);
@@ -255,6 +329,7 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .colorway-variations .variation-button.selected, .onboardingContainer .colorway-variations .variation-button:active {
   background: rgba(0, 0, 0, 0.64);
   border-radius: 2px;
+  color: #FFF;
 }
 .onboardingContainer .tiles-theme-section {
   border: 0;
@@ -267,8 +342,8 @@ body[lwt-newtab-brighttext] {
   transition: var(--transition);
 }
 .onboardingContainer .tiles-theme-section:hover, .onboardingContainer .tiles-theme-section:active, .onboardingContainer .tiles-theme-section:focus-within {
-  outline: 1px var(--in-content-primary-button-background) solid;
-  border-radius: 10px;
+  border-radius: 8px;
+  outline: 2px solid var(--in-content-primary-button-background);
 }
 .onboardingContainer .tiles-theme-section .theme {
   align-items: center;
@@ -309,6 +384,7 @@ body[lwt-newtab-brighttext] {
 }
 .onboardingContainer .tiles-theme-section .theme .icon:focus, .onboardingContainer .tiles-theme-section .theme .icon:active, .onboardingContainer .tiles-theme-section .theme .icon.selected {
   outline: 2px solid var(--in-content-primary-button-background);
+  outline-offset: 2px;
 }
 .onboardingContainer .tiles-theme-section .theme .icon.light {
   background-image: url("resource://builtin-themes/light/icon.svg");
@@ -697,6 +773,7 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .dialog-initial .welcome-text {
   transition-delay: 0.8s;
 }
+.onboardingContainer .dialog-initial .colorway-variations,
 .onboardingContainer .dialog-initial .tiles-theme-section {
   transition-delay: 0.9s;
 }
@@ -705,6 +782,7 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .dialog-initial .steps {
   transition-delay: 1s;
 }
+.onboardingContainer .screen:not(.dialog-initial):not(.screen-0) .colorway-variations,
 .onboardingContainer .screen:not(.dialog-initial):not(.screen-0) .tiles-theme-section {
   transition-delay: 0.2s;
 }
@@ -826,6 +904,7 @@ body[lwt-newtab-brighttext] {
   opacity: 0.2;
 }
 .onboardingContainer.transition-in .screen:not(.screen-0) .welcome-text,
+.onboardingContainer.transition-in .screen:not(.screen-0) .colorway-variations,
 .onboardingContainer.transition-in .screen:not(.screen-0) .tiles-theme-section,
 .onboardingContainer.transition-in .screen:not(.screen-0) .primary,
 .onboardingContainer.transition-in .screen:not(.screen-0) .secondary-cta:not(.top) {
@@ -863,6 +942,7 @@ body[lwt-newtab-brighttext] {
   translate: 0 var(--translate);
   transition-delay: 0.1s;
 }
+.onboardingContainer.transition-out .screen:not(.dialog-last):not(.screen-0) .colorway-variations,
 .onboardingContainer.transition-out .screen:not(.dialog-last):not(.screen-0) .tiles-theme-section {
   opacity: 0;
   translate: 0 var(--translate);

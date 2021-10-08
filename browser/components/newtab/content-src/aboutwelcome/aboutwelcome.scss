@@ -211,28 +211,144 @@ body {
   }
 
   .colorway-variations {
+    align-items: center;
+    color: #000;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    width: 190px;
     height: 190px;
-    border-radius: 190px;
-    color: #FFF;
-    padding-top: 50px;
     margin-bottom: 10px;
-    &.default { background: linear-gradient(180deg, #4B4B4B 0%, #4B4B4B 100%); }
-    &.abstract { background: linear-gradient(180deg, #CD5F3A 0%, #A54727 100%); }
-    &.cheers { background: linear-gradient(180deg, #FBB900 0%, #CE9800 100%); }
-    &.elemental { background: linear-gradient(180deg, #8F8E89 0%, #6B675E 100%); }
-    &.foto { background: linear-gradient(180deg, #F2BDC5 0%, #C47985 100%); }
-    &.graffiti { background: linear-gradient(180deg, #B27ECA 0%, #844D9E 100%); }
-    &.lush { background: linear-gradient(180deg, #5F9B78 0%, #4E6A5A 100%); }
+    padding-top: 34px;
+    position: relative;
+    transition: var(--transition);
+    width: 190px;
 
-    &:active,
-    &:focus-within {
-      outline: 2px var(--in-content-primary-button-background) solid;
+    /* Show a custom background image that transitions for each theme. */
+    &::before {
+      background-size: 100%;
+      content: '';
+      height: 197px;
+      left: -48px;
+      margin: auto;
+      pointer-events: none;
+      position: absolute;
+      top: -7px;
+      transition: 0.5s opacity, 0.5s rotate, 0.5s scale;
+      width: 286px;
+      z-index: -1;
     }
 
+    &.in::before {
+      rotate: calc(-4.5 * var(--rotate));
+      transition: none;
+    }
+
+    &:where(.in, .out)::before {
+      opacity: 0;
+      rotate: calc(4.5 * var(--rotate));
+      scale: var(--scale);
+    }
+
+    /* Stack a disc background above the custom background image and below other
+     * content so that we can transform the parent variations element. Use a
+     * similar ::after disc to cover up content while transitioning. */
+    .variations-disc,
+    &::after {
+      background: center / cover;
+      border-radius: 100%;
+      height: 190px;
+      left: 0;
+      pointer-events: none;
+      position: absolute;
+      top: 0;
+      width: 190px;
+    }
+
+    .variations-disc {
+      z-index: -1;
+    }
+
+    &::after {
+      content: '';
+      opacity: 0;
+      transition: 0.4s opacity;
+    }
+
+    &.out::after {
+      opacity: 1;
+    }
+
+    &.default .variations-disc,
+    &[next='default']::after {
+      /* Gradients aren't used for high contrast, so show a solid color instead. */
+      background-color: var(--in-content-page-background);
+      background-image: linear-gradient(#F0F0F4, #9F9FAD);
+      outline: 2px solid var(--in-content-button-border-color);
+      outline-offset: -2px;
+    }
+
+    &.default::before {
+      background-image: url('chrome://browser/skin/upgradeDialog/default.png');
+    }
+
+    &.abstract .variations-disc,
+    &[next='abstract']::after {
+      background-image: url('resource://builtin-themes/monochromatic/abstract/balanced/icon.svg');
+    }
+
+    &.abstract::before {
+      background-image: url('chrome://browser/skin/upgradeDialog/abstract.png');
+    }
+
+    &.cheers .variations-disc,
+    &[next='cheers']::after {
+      background-image: url('resource://builtin-themes/monochromatic/cheers/balanced/icon.svg');
+    }
+
+    &.cheers::before {
+      background-image: url('chrome://browser/skin/upgradeDialog/cheers.png');
+    }
+
+    &.elemental .variations-disc,
+    &[next='elemental']::after {
+      background-image: url('resource://builtin-themes/monochromatic/elemental/balanced/icon.svg');
+    }
+
+    &.elemental::before {
+      background-image: url('chrome://browser/skin/upgradeDialog/elemental.png');
+    }
+
+    &.foto .variations-disc,
+    &[next='foto']::after {
+      background-image: url('resource://builtin-themes/monochromatic/foto/balanced/icon.svg');
+    }
+
+    &.foto::before {
+      background-image: url('chrome://browser/skin/upgradeDialog/foto.png');
+    }
+
+    &.graffiti .variations-disc,
+    &[next='graffiti']::after {
+      background-image: url('resource://builtin-themes/monochromatic/graffiti/balanced/icon.svg');
+    }
+
+    &.graffiti::before {
+      background-image: url('chrome://browser/skin/upgradeDialog/graffiti.png');
+    }
+
+    &.lush .variations-disc,
+    &[next='lush']::after {
+      background-image: url('resource://builtin-themes/monochromatic/lush/balanced/icon.svg');
+    }
+
+    &.lush::before {
+      background-image: url('chrome://browser/skin/upgradeDialog/lush.png');
+    }
+
+    .colorway:focus-within {
+      border-radius: 4px;
+      outline: 2px solid rgba(0, 0, 0, 0.64);
+      outline-offset: -1px;
+    }
 
     .colorway-text {
       font-size: 16px;
@@ -242,14 +358,13 @@ body {
     }
 
     .variation-button {
-      font-size: 10px;
-      font-weight: 600;
+      font-size: 12px;
       line-height: 12px;
       padding: 6px 12px;
       width: auto;
       height: 24px;
+      margin: 3px;
       min-height: 24px;
-      margin: 0;
 
       &:hover {
         background: rgba(0, 0, 0, 0.2);
@@ -260,6 +375,7 @@ body {
       &:active {
         background: rgba(0, 0, 0, 0.64);
         border-radius: 2px;
+        color: #FFF;
       }
     }
   }
@@ -277,8 +393,8 @@ body {
     &:hover,
     &:active,
     &:focus-within {
-      outline: 1px var(--in-content-primary-button-background) solid;
-      border-radius: 10px;
+      border-radius: 8px;
+      outline: 2px solid var(--in-content-primary-button-background);
     }
 
     .theme {
@@ -327,6 +443,7 @@ body {
         &:active,
         &.selected {
           outline: 2px solid var(--in-content-primary-button-background);
+          outline-offset: 2px;
         }
 
         &.light {
@@ -788,6 +905,7 @@ body {
       transition-delay: 0.8s;
     }
 
+    .colorway-variations,
     .tiles-theme-section {
       transition-delay: 0.9s;
     }
@@ -801,6 +919,7 @@ body {
 
   // Delays for transitioning-in of intermediate screens
   .screen:not(.dialog-initial):not(.screen-0) {
+    .colorway-variations,
     .tiles-theme-section {
       transition-delay: 0.2s;
     }
@@ -955,6 +1074,7 @@ body {
 
     .screen:not(.screen-0) {
       .welcome-text,
+      .colorway-variations,
       .tiles-theme-section,
       .primary,
       .secondary-cta:not(.top) {
@@ -1006,6 +1126,7 @@ body {
         transition-delay: 0.1s;
       }
 
+      .colorway-variations,
       .tiles-theme-section {
         opacity: 0;
         translate: 0 var(--translate);
