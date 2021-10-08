@@ -111,7 +111,7 @@ private fun ListItemTabSurface(
         modifier = modifier,
         shape = RoundedCornerShape(8.dp),
         backgroundColor = FirefoxTheme.colors.surface,
-        elevation = 6.dp
+        elevation = 1.dp
     ) {
         Row(
             modifier = Modifier.padding(16.dp)
