@@ -94,7 +94,7 @@ static PROFILER_PRESETS: &'static[(&'static str, &'static str)] = &[
     // Gpu sampler queries (need the pref gfx.webrender.debug.gpu-sampler-queries).
     (&"GPU samplers", &"Alpha targets samplers,Transparent pass samplers,Opaque pass samplers,Total samplers"),
 
-    (&"Render reasons", &"Reason scene, Reason animated propert, Reason resource update, Reason async image, Reason clear resources, Reason APZ, Reason resize, Reason widget, Reason cache flush, Reason snapshot, Reason resource hook, Reason config change, Reason content sync, Reason flush, Reason vsync, Reason testing, Reason other"),
+    (&"Render reasons", &"Reason scene, Reason animated property, Reason resource update, Reason async image, Reason clear resources, Reason APZ, Reason resize, Reason widget, Reason cache flush, Reason snapshot, Reason resource hook, Reason config change, Reason content sync, Reason flush, On vsync, Reason testing, Reason other"),
 ];
 
 fn find_preset(name: &str) -> Option<&'static str> {
@@ -409,14 +409,14 @@ impl Profiler {
             float("Shader build time", "ms", SHADER_BUILD_TIME, Expected::none()),
             // We use the expected range to highlight render reasons that are happening.
             float("Reason scene", "", RENDER_REASON_SCENE, expected(0.0..0.01)),
-            float("Reason animated propert", "", RENDER_REASON_ANIMATED_PROPERTY, expected(0.0..0.01)),
+            float("Reason animated property", "", RENDER_REASON_ANIMATED_PROPERTY, expected(0.0..0.01)),
             float("Reason resource update", "", RENDER_REASON_RESOURCE_UPDATE, expected(0.0..0.01)),
             float("Reason async image", "", RENDER_REASON_ASYNC_IMAGE, expected(0.0..0.01)),
             float("Reason clear resources", "", RENDER_REASON_CLEAR_RESOURCES, expected(0.0..0.01)),
             float("Reason APZ", "", RENDER_REASON_APZ, expected(0.0..0.01)),
             float("Reason resize", "", RENDER_REASON_RESIZE, expected(0.0..0.01)),
             float("Reason widget", "", RENDER_REASON_WIDGET, expected(0.0..0.01)),
-            float("Reason texture cache flush", "", RENDER_REASON_TEXTURE_CACHE_FLUSH, expected(0.0..0.01)),
+            float("Reason cache flush", "", RENDER_REASON_TEXTURE_CACHE_FLUSH, expected(0.0..0.01)),
             float("Reason snapshot", "", RENDER_REASON_SNAPSHOT, expected(0.0..0.01)),
             float("Reason resource hook", "", RENDER_REASON_POST_RESOURCE_UPDATE_HOOKS, expected(0.0..0.01)),
             float("Reason config change", "", RENDER_REASON_CONFIG_CHANGE, expected(0.0..0.01)),
