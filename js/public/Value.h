@@ -1106,11 +1106,6 @@ struct BarrierMethods<JS::Value> {
     JS::HeapValuePostWriteBarrier(v, prev, next);
   }
   static void exposeToJS(const JS::Value& v) { JS::ExposeValueToActiveJS(v); }
-  static void readBarrier(const JS::Value& v) {
-    if (v.isGCThing()) {
-      js::gc::IncrementalReadBarrier(v.toGCCellPtr());
-    }
-  }
 };
 
 template <class Wrapper>
