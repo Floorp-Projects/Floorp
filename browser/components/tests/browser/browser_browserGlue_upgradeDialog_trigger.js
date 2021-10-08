@@ -23,7 +23,6 @@ add_task(async function not_major_upgrade() {
 });
 
 add_task(async function remote_disabled() {
-  mockWin7(false);
   await ExperimentAPI.ready();
   await ExperimentFakes.remoteDefaultsHelper({
     feature: NimbusFeatures.upgradeDialog,
@@ -75,17 +74,7 @@ add_task(async function enterprise_disabled() {
   defaultPrefs.setBoolPref(pref, orig);
 });
 
-add_task(async function win7_excluded() {
-  mockWin7(true);
-
-  await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
-
-  AssertEvents("Not showing dialog for win7", ["trigger", "reason", "win7"]);
-});
-
 add_task(async function show_major_upgrade() {
-  mockWin7(false);
-
   const promise = waitForDialog(async win => {
     await BrowserTestUtils.waitForEvent(win, "ready");
     win.close();
