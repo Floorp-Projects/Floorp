@@ -2107,7 +2107,7 @@ gfxSize nsLayoutUtils::GetTransformToAncestorScale(const nsIFrame* aFrame) {
       RelativeTo{aFrame},
       RelativeTo{nsLayoutUtils::GetDisplayRootFrame(aFrame)});
   Matrix transform2D;
-  if (transform.Is2D(&transform2D)) {
+  if (transform.CanDraw2D(&transform2D)) {
     return ThebesMatrix(transform2D).ScaleFactors();
   }
   return gfxSize(1, 1);
