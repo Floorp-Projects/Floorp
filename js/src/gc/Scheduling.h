@@ -10,6 +10,9 @@
  * GC Scheduling Overview
  * ======================
  *
+ * See also GC scheduling from Firefox's perspective here:
+ * https://searchfox.org/mozilla-central/source/dom/base/CCGCScheduler.cpp
+ *
  * Scheduling GC's in SpiderMonkey/Firefox is tremendously complicated because
  * of the large number of subtle, cross-cutting, and widely dispersed factors
  * that must be taken into account. A summary of some of the more important
