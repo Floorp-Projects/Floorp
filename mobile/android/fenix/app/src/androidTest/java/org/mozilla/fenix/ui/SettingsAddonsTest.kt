@@ -1,22 +1,21 @@
 package org.mozilla.fenix.ui
 
-import android.view.View
-import androidx.test.espresso.IdlingRegistry
-import org.mozilla.fenix.helpers.TestAssetHelper
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import android.view.View
+import androidx.test.espresso.IdlingRegistry
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.Rule
-import org.junit.Before
 import org.junit.After
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
+import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -80,7 +79,7 @@ class SettingsAddonsTest {
         val addonName = "uBlock Origin"
 
         navigationToolbar {}
-            .openNewTabAndEnterToBrowser(defaultWebPage.url) {}
+            .enterURLAndEnterToBrowser(defaultWebPage.url) {}
             .openThreeDotMenu {}
             .openAddonsManagerMenu {
                 addonsListIdlingResource =

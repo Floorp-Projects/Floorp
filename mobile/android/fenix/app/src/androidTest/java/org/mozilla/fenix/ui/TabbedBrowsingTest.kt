@@ -65,7 +65,7 @@ class TabbedBrowsingTest {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
-        }.openNewTabAndEnterToBrowser(defaultWebPage.url) {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
             mDevice.waitForIdle()
             verifyTabCounter("1")
         }.openTabDrawer {
@@ -91,7 +91,7 @@ class TabbedBrowsingTest {
         homeScreen {}.togglePrivateBrowsingMode()
 
         navigationToolbar {
-        }.openNewTabAndEnterToBrowser(defaultWebPage.url) {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
             mDevice.waitForIdle()
             verifyTabCounter("1")
         }.openTabDrawer {
@@ -141,7 +141,8 @@ class TabbedBrowsingTest {
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
-        }.openNewTabAndEnterToBrowser(genericURL.url) {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+            mDevice.waitForIdle()
         }.openTabDrawer {
             verifyExistingOpenTabs("Test_Page_1")
             closeTab()
@@ -183,7 +184,8 @@ class TabbedBrowsingTest {
 
         homeScreen { }.togglePrivateBrowsingMode()
         navigationToolbar {
-        }.openNewTabAndEnterToBrowser(genericURL.url) {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+            mDevice.waitForIdle()
         }.openTabDrawer {
             verifyExistingOpenTabs("Test_Page_1")
             verifyCloseTabsButton("Test_Page_1")

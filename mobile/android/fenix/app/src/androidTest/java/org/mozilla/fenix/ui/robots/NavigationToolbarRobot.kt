@@ -150,25 +150,6 @@ class NavigationToolbarRobot {
             return TabDrawerRobot.Transition()
         }
 
-        fun openNewTabAndEnterToBrowser(
-            url: Uri,
-            interact: BrowserRobot.() -> Unit
-        ): BrowserRobot.Transition {
-            sessionLoadedIdlingResource = SessionLoadedIdlingResource()
-            mDevice.waitNotNull(Until.findObject(By.res("$packageName:id/toolbar")), waitingTime)
-            urlBar().click()
-            awesomeBar().setText(url.toString())
-            mDevice.pressEnter()
-
-            runWithIdleRes(sessionLoadedIdlingResource) {
-                onView(ViewMatchers.withResourceName("browserLayout"))
-                    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-            }
-
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
-        }
-
         fun visitLinkFromClipboard(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.waitNotNull(
                 Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_clear_view")),
