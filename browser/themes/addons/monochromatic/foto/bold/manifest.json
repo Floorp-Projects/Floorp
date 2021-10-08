@@ -31,6 +31,7 @@
       "toolbar_field_text": "hsl(0, 0%, 100%)",
       "toolbar_field_focus": "hsl(351, 27%, 25%)",
       "toolbar_field_border_focus": "rgba(0, 221, 255, 0.7)",
+      "toolbar_top_separator": "transparent",
       "toolbar_bottom_separator": "hsl(350, 32%, 30%)",
       "ntp_background": "hsl(350, 14%, 17%)",
       "ntp_card_background": "hsl(351, 27%, 25%)",
