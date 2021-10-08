@@ -385,6 +385,19 @@ void MacroAssembler::popcnt32(Register input, Register output, Register tmp) {
 }
 
 // ===============================================================
+// Condition functions
+
+void MacroAssembler::cmp8Set(Condition cond, Address lhs, Imm32 rhs,
+                             Register dest) {
+  MOZ_CRASH("NYI");
+}
+
+void MacroAssembler::cmp16Set(Condition cond, Address lhs, Imm32 rhs,
+                              Register dest) {
+  MOZ_CRASH("NYI");
+}
+
+// ===============================================================
 // Branch functions
 
 template <class L>

@@ -1249,6 +1249,44 @@ class AssemblerX86Shared : public AssemblerShared {
   void cmpw(Register rhs, Register lhs) {
     masm.cmpw_rr(rhs.encoding(), lhs.encoding());
   }
+  void cmpw(Imm32 rhs, const Operand& lhs) {
+    switch (lhs.kind()) {
+      case Operand::REG:
+        masm.cmpw_ir(rhs.value, lhs.reg());
+        break;
+      case Operand::MEM_REG_DISP:
+        masm.cmpw_im(rhs.value, lhs.disp(), lhs.base());
+        break;
+      case Operand::MEM_SCALE:
+        masm.cmpw_im(rhs.value, lhs.disp(), lhs.base(), lhs.index(),
+                     lhs.scale());
+        break;
+      case Operand::MEM_ADDRESS32:
+        masm.cmpw_im(rhs.value, lhs.address());
+        break;
+      default:
+        MOZ_CRASH("unexpected operand kind");
+    }
+  }
+  void cmpb(Imm32 rhs, const Operand& lhs) {
+    switch (lhs.kind()) {
+      case Operand::REG:
+        masm.cmpb_ir(rhs.value, lhs.reg());
+        break;
+      case Operand::MEM_REG_DISP:
+        masm.cmpb_im(rhs.value, lhs.disp(), lhs.base());
+        break;
+      case Operand::MEM_SCALE:
+        masm.cmpb_im(rhs.value, lhs.disp(), lhs.base(), lhs.index(),
+                     lhs.scale());
+        break;
+      case Operand::MEM_ADDRESS32:
+        masm.cmpb_im(rhs.value, lhs.address());
+        break;
+      default:
+        MOZ_CRASH("unexpected operand kind");
+    }
+  }
   void setCC(Condition cond, Register r) {
     masm.setCC_r(static_cast<X86Encoding::Condition>(cond), r.encoding());
   }
