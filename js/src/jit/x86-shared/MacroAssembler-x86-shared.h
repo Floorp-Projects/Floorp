@@ -149,6 +149,12 @@ class MacroAssemblerX86Shared : public Assembler {
   void cmp32(const Operand& lhs, Register rhs) { cmpl(rhs, lhs); }
   void cmp32(Register lhs, const Operand& rhs) { cmpl(rhs, lhs); }
 
+  void cmp16(const Address& lhs, Imm32 rhs) { cmp16(Operand(lhs), rhs); }
+  void cmp16(const Operand& lhs, Imm32 rhs) { cmpw(rhs, lhs); }
+
+  void cmp8(const Address& lhs, Imm32 rhs) { cmp8(Operand(lhs), rhs); }
+  void cmp8(const Operand& lhs, Imm32 rhs) { cmpb(rhs, lhs); }
+
   void atomic_inc32(const Operand& addr) { lock_incl(addr); }
   void atomic_dec32(const Operand& addr) { lock_decl(addr); }
 

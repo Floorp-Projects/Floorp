@@ -974,10 +974,100 @@ void MacroAssembler::rotateRight64(Register shift, Register64 src,
 // ===============================================================
 // Condition functions
 
+void MacroAssembler::cmp8Set(Condition cond, Address lhs, Imm32 rhs,
+                             Register dest) {
+  ScratchRegisterScope scratch(*this);
+  SecondScratchRegisterScope scratch2(*this);
+
+  // Inlined calls to load8{Zero,Sign}Extend() and cmp32Set() to acquire
+  // exclusive access to scratch registers.
+
+  bool isSigned;
+  Imm32 imm(0);
+  switch (cond) {
+    case Assembler::Equal:
+    case Assembler::NotEqual:
+    case Assembler::Above:
+    case Assembler::AboveOrEqual:
+    case Assembler::Below:
+    case Assembler::BelowOrEqual:
+      isSigned = false;
+      imm = Imm32(uint8_t(rhs.value));
+      break;
+
+    case Assembler::GreaterThan:
+    case Assembler::GreaterThanOrEqual:
+    case Assembler::LessThan:
+    case Assembler::LessThanOrEqual:
+      isSigned = true;
+      imm = Imm32(int8_t(rhs.value));
+      break;
+
+    default:
+      MOZ_CRASH("unexpected condition");
+  }
+
+  ma_dataTransferN(IsLoad, 8, isSigned, lhs.base, Imm32(lhs.offset), scratch,
+                   scratch2);
+  ma_cmp(scratch, imm, scratch2);
+  emitSet(cond, dest);
+}
+
+void MacroAssembler::cmp16Set(Condition cond, Address lhs, Imm32 rhs,
+                              Register dest) {
+  ScratchRegisterScope scratch(*this);
+  SecondScratchRegisterScope scratch2(*this);
+
+  // Inlined calls to load16{Zero,Sign}Extend() and cmp32Set() to acquire
+  // exclusive access to scratch registers.
+
+  bool isSigned;
+  Imm32 imm(0);
+  switch (cond) {
+    case Assembler::Equal:
+    case Assembler::NotEqual:
+    case Assembler::Above:
+    case Assembler::AboveOrEqual:
+    case Assembler::Below:
+    case Assembler::BelowOrEqual:
+      isSigned = false;
+      imm = Imm32(uint16_t(rhs.value));
+      break;
+
+    case Assembler::GreaterThan:
+    case Assembler::GreaterThanOrEqual:
+    case Assembler::LessThan:
+    case Assembler::LessThanOrEqual:
+      isSigned = true;
+      imm = Imm32(int16_t(rhs.value));
+      break;
+
+    default:
+      MOZ_CRASH("unexpected condition");
+  }
+
+  ma_dataTransferN(IsLoad, 16, isSigned, lhs.base, Imm32(lhs.offset), scratch,
+                   scratch2);
+  ma_cmp(scratch, imm, scratch2);
+  emitSet(cond, dest);
+}
+
 template <typename T1, typename T2>
 void MacroAssembler::cmp32Set(Condition cond, T1 lhs, T2 rhs, Register dest) {
   cmp32(lhs, rhs);
   emitSet(cond, dest);
+}
+
+void MacroAssembler::cmp64Set(Condition cond, Address lhs, Imm64 rhs,
+                              Register dest) {
+  Label success, done;
+
+  branch64(cond, lhs, rhs, &success);
+  move32(Imm32(0), dest);
+  jump(&done);
+  bind(&success);
+  move32(Imm32(1), dest);
+  bind(&done);
 }
 
 template <typename T1, typename T2>

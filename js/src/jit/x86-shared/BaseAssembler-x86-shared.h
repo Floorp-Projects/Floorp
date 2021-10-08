@@ -1819,6 +1819,17 @@ class BaseAssembler : public GenericAssembler {
     }
   }
 
+  void cmpb_ir(int32_t rhs, RegisterID lhs) {
+    if (rhs == 0) {
+      testb_rr(lhs, lhs);
+      return;
+    }
+
+    spew("cmpb       $0x%x, %s", uint32_t(rhs), GPReg8Name(lhs));
+    m_formatter.oneByteOp(OP_GROUP1_EvIb, lhs, GROUP1_OP_CMP);
+    m_formatter.immediate8(rhs);
+  }
+
   void cmpb_im(int32_t rhs, int32_t offset, RegisterID base) {
     spew("cmpb       $0x%x, " MEM_ob, uint32_t(rhs), ADDR_ob(offset, base));
     m_formatter.oneByteOp(OP_GROUP1_EbIb, offset, base, GROUP1_OP_CMP);
@@ -1831,6 +1842,12 @@ class BaseAssembler : public GenericAssembler {
          ADDR_obs(offset, base, index, scale));
     m_formatter.oneByteOp(OP_GROUP1_EbIb, offset, base, index, scale,
                           GROUP1_OP_CMP);
+    m_formatter.immediate8(rhs);
+  }
+
+  void cmpb_im(int32_t rhs, const void* addr) {
+    spew("cmpb       $0x%x, %p", uint32_t(rhs), addr);
+    m_formatter.oneByteOp(OP_GROUP1_EbIb, addr, GROUP1_OP_CMP);
     m_formatter.immediate8(rhs);
   }
 
@@ -1927,6 +1944,37 @@ class BaseAssembler : public GenericAssembler {
     m_formatter.oneByteOp(OP_CMP_EvGv, offset, base, index, scale, rhs);
   }
 
+  void cmpw_ir(int32_t rhs, RegisterID lhs) {
+    if (rhs == 0) {
+      testw_rr(lhs, lhs);
+      return;
+    }
+
+    spew("cmpw       $0x%x, %s", uint32_t(rhs), GPReg16Name(lhs));
+    if (CAN_SIGN_EXTEND_8_32(rhs)) {
+      m_formatter.prefix(PRE_OPERAND_SIZE);
+      m_formatter.oneByteOp(OP_GROUP1_EvIb, lhs, GROUP1_OP_CMP);
+      m_formatter.immediate8s(rhs);
+    } else {
+      m_formatter.prefix(PRE_OPERAND_SIZE);
+      m_formatter.oneByteOp(OP_GROUP1_EvIz, lhs, GROUP1_OP_CMP);
+      m_formatter.immediate16(rhs);
+    }
+  }
+
+  void cmpw_im(int32_t rhs, int32_t offset, RegisterID base) {
+    spew("cmpw       $0x%x, " MEM_ob, uint32_t(rhs), ADDR_ob(offset, base));
+    if (CAN_SIGN_EXTEND_8_32(rhs)) {
+      m_formatter.prefix(PRE_OPERAND_SIZE);
+      m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, GROUP1_OP_CMP);
+      m_formatter.immediate8s(rhs);
+    } else {
+      m_formatter.prefix(PRE_OPERAND_SIZE);
+      m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_CMP);
+      m_formatter.immediate16(rhs);
+    }
+  }
+
   void cmpw_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index,
                int scale) {
     spew("cmpw       $%d, " MEM_obs, imm, ADDR_obs(offset, base, index, scale));
@@ -1940,6 +1988,19 @@ class BaseAssembler : public GenericAssembler {
       m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, index, scale,
                             GROUP1_OP_CMP);
       m_formatter.immediate16(imm);
+    }
+  }
+
+  void cmpw_im(int32_t rhs, const void* addr) {
+    spew("cmpw       $0x%x, %p", uint32_t(rhs), addr);
+    if (CAN_SIGN_EXTEND_8_32(rhs)) {
+      m_formatter.prefix(PRE_OPERAND_SIZE);
+      m_formatter.oneByteOp(OP_GROUP1_EvIb, addr, GROUP1_OP_CMP);
+      m_formatter.immediate8s(rhs);
+    } else {
+      m_formatter.prefix(PRE_OPERAND_SIZE);
+      m_formatter.oneByteOp(OP_GROUP1_EvIz, addr, GROUP1_OP_CMP);
+      m_formatter.immediate16(rhs);
     }
   }
 
