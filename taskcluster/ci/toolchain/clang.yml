@@ -159,20 +159,34 @@ linux64-clang-12-android-cross:
         symbol: TL(clang12-android)
     run:
         using: toolchain-script
-        script: build-clang.sh
+        script: repack-clang-linux-cross.sh
         arguments:
-            - 'build/build-clang/clang-12-android.json'
-        resources:
-            - 'build/build-clang/clang-12-android.json'
+            - aarch64
+            - arm
+            - x86
+            - x64
         toolchain-alias: linux64-clang-android-cross
         toolchain-artifact: public/build/clang.tar.zst
+    dependencies:
+        android-aarch64-compiler-rt-12: toolchain-android-aarch64-compiler-rt-12
+        android-arm-compiler-rt-12: toolchain-android-arm-compiler-rt-12
+        android-x86-compiler-rt-12: toolchain-android-x86-compiler-rt-12
+        android-x64-compiler-rt-12: toolchain-android-x64-compiler-rt-12
     fetches:
-        fetch:
-            - clang-12
         toolchain:
-            - linux64-android-ndk-linux-repack
-            - linux64-toolchain-sysroot
-            - wasm32-wasi-compiler-rt-12
+            - linux64-clang-12
+        android-aarch64-compiler-rt-12:
+            - artifact: compiler-rt.tar.zst
+              dest: aarch64
+        android-arm-compiler-rt-12:
+            - artifact: compiler-rt.tar.zst
+              dest: arm
+        android-x86-compiler-rt-12:
+            - artifact: compiler-rt.tar.zst
+              dest: x86
+        android-x64-compiler-rt-12:
+            - artifact: compiler-rt.tar.zst
+              dest: x64
 
 linux64-clang-12-aarch64-cross:
     description: "Clang 12 toolchain build with aarch64 runtime"
