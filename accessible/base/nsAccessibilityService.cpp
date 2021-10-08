@@ -365,25 +365,6 @@ void nsAccessibilityService::FireAccessibleEvent(uint32_t aEvent,
   nsEventShell::FireEvent(aEvent, aTarget);
 }
 
-void nsAccessibilityService::NotifyOfImageSizeAvailable(
-    mozilla::PresShell* aPresShell, nsIContent* aContent) {
-  // If the size of an image is initially unknown, it will have the invisible
-  // state (and a 0 width and height), causing it to be ignored by some screen
-  // readers. Fire a state change event to update any client caches.
-  DocAccessible* document = GetDocAccessible(aPresShell);
-  if (document) {
-    LocalAccessible* accessible = document->GetAccessible(aContent);
-    // The accessible may not be an ImageAccessible if this was previously a
-    // broken image with an alt attribute. In that case, do nothing; the
-    // accessible will be recreated if this becomes a valid image.
-    if (accessible && accessible->IsImage()) {
-      RefPtr<AccEvent> event =
-          new AccStateChangeEvent(accessible, states::INVISIBLE, false);
-      document->FireDelayedEvent(event);
-    }
-  }
-}
-
 void nsAccessibilityService::NotifyOfPossibleBoundsChange(
     mozilla::PresShell* aPresShell, nsIContent* aContent) {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
