@@ -84,7 +84,7 @@ void IDecodingTask::NotifyProgress(NotNull<RasterImage*> aImage,
 
   // We're forced to notify asynchronously.
   NotNull<RefPtr<RasterImage>> image = aImage;
-  mEventTarget->Dispatch(CreateMediumHighRunnable(NS_NewRunnableFunction(
+  mEventTarget->Dispatch(CreateRenderBlockingRunnable(NS_NewRunnableFunction(
                              "IDecodingTask::NotifyProgress",
                              [=]() -> void {
                                image->NotifyProgress(progress, invalidRect,
@@ -125,7 +125,7 @@ void IDecodingTask::NotifyDecodeComplete(NotNull<RasterImage*> aImage,
 
   // We're forced to notify asynchronously.
   NotNull<RefPtr<RasterImage>> image = aImage;
-  mEventTarget->Dispatch(CreateMediumHighRunnable(NS_NewRunnableFunction(
+  mEventTarget->Dispatch(CreateRenderBlockingRunnable(NS_NewRunnableFunction(
                              "IDecodingTask::NotifyDecodeComplete",
                              [=]() -> void {
                                image->NotifyDecodeComplete(

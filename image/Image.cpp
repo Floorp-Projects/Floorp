@@ -537,7 +537,7 @@ void ImageResource::SendOnUnlockedDraw(uint32_t aFlags) {
             tracker->OnUnlockedDraw();
           }
         });
-    eventTarget->Dispatch(CreateMediumHighRunnable(ev.forget()),
+    eventTarget->Dispatch(CreateRenderBlockingRunnable(ev.forget()),
                           NS_DISPATCH_NORMAL);
   }
 }
