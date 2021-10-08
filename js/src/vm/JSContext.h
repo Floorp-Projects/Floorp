@@ -155,6 +155,8 @@ enum class InterruptReason : uint32_t {
   CallbackCanWait = 1 << 3,
 };
 
+enum class ShouldCaptureStack { Maybe, Always };
+
 } /* namespace js */
 
 /*
@@ -807,7 +809,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   bool isClosingGenerator();
 
   void setPendingException(JS::HandleValue v, js::HandleSavedFrame stack);
-  void setPendingExceptionAndCaptureStack(JS::HandleValue v);
+  void setPendingException(JS::HandleValue v,
+                           js::ShouldCaptureStack captureStack);
 
   void clearPendingException() {
     status = JS::ExceptionStatus::None;

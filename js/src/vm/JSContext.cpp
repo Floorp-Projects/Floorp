@@ -1127,15 +1127,18 @@ void JSContext::setPendingException(HandleValue v, HandleSavedFrame stack) {
   this->unwrappedExceptionStack() = stack;
 }
 
-void JSContext::setPendingExceptionAndCaptureStack(HandleValue value) {
-  RootedObject stack(this);
-  if (!CaptureStack(this, &stack)) {
-    clearPendingException();
-  }
-
+void JSContext::setPendingException(HandleValue value,
+                                    ShouldCaptureStack captureStack) {
   RootedSavedFrame nstack(this);
-  if (stack) {
-    nstack = &stack->as<SavedFrame>();
+  if (captureStack == ShouldCaptureStack::Always ||
+      realm()->shouldCaptureStackForThrow()) {
+    RootedObject stack(this);
+    if (!CaptureStack(this, &stack)) {
+      clearPendingException();
+    }
+    if (stack) {
+      nstack = &stack->as<SavedFrame>();
+    }
   }
   setPendingException(value, nstack);
 }

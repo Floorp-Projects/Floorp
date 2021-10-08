@@ -600,6 +600,40 @@ void Realm::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
   }
 }
 
+bool Realm::shouldCaptureStackForThrow() {
+  // Determine whether a stack trace should be captured for throw-statements (or
+  // similar) in JS code in this realm. We don't want to do this unconditionally
+  // because capturing stacks is slow and some scripts throw a lot of
+  // exceptions.
+  //
+  // Note: this is unrelated to Error.stack! That property is observable from
+  // JS code so we can't use these heuristics there. The code here is mostly
+  // relevant for uncaught exceptions that are not Error objects.
+
+  // To match other browsers, we always capture a stack trace if the realm is a
+  // debuggee (this includes the devtools console being open).
+  if (isDebuggee()) {
+    return true;
+  }
+
+  // Also always capture for chrome code. This is code we control and this helps
+  // debugging.
+  if (principals() &&
+      principals() == runtimeFromMainThread()->trustedPrincipals()) {
+    return true;
+  }
+
+  // Else, capture the stack only for the first N exceptions so that we can
+  // still show stack traces for scripts that don't throw a lot of exceptions
+  // (if the console is opened later).
+  static constexpr uint16_t MaxStacksCapturedForThrow = 50;
+  if (numStacksCapturedForThrow_ > MaxStacksCapturedForThrow) {
+    return false;
+  }
+  numStacksCapturedForThrow_++;
+  return true;
+}
+
 mozilla::HashCodeScrambler Realm::randomHashCodeScrambler() {
   return mozilla::HashCodeScrambler(randomKeyGenerator_.next(),
                                     randomKeyGenerator_.next());

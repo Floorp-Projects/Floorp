@@ -295,7 +295,7 @@ static void PropagateForcedReturn(JSContext* cx, AbstractFramePtr frame,
       if (exnStack) {
         cx->setPendingException(rval, exnStack);
       } else {
-        cx->setPendingExceptionAndCaptureStack(rval);
+        cx->setPendingException(rval, ShouldCaptureStack::Always);
       }
       return false;
 
@@ -1014,7 +1014,7 @@ NativeResumeMode DebugAPI::slowPathOnNativeCall(JSContext* cx,
       break;
 
     case ResumeMode::Throw:
-      cx->setPendingExceptionAndCaptureStack(rval);
+      cx->setPendingException(rval, ShouldCaptureStack::Always);
       return NativeResumeMode::Abort;
 
     case ResumeMode::Terminate:

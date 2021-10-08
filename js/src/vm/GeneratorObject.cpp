@@ -255,7 +255,7 @@ bool js::GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,
                                 GeneratorResumeKind resumeKind) {
   MOZ_ASSERT(genObj->isRunning());
   if (resumeKind == GeneratorResumeKind::Throw) {
-    cx->setPendingExceptionAndCaptureStack(arg);
+    cx->setPendingException(arg, ShouldCaptureStack::Maybe);
   } else {
     MOZ_ASSERT(resumeKind == GeneratorResumeKind::Return);
 
