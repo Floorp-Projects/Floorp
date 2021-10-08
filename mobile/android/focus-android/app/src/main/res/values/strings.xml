@@ -48,7 +48,7 @@
     <string name="menu_open_with_a_browser2">Open in…</string>
 
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
-    <string name="menu_add_to_home_screen">Add to Home screen</string>
+    <string name="menu_add_to_home_screen">Add to home screen</string>
 
     <!-- Menu item: Add the current site as a shortcut on the Home screen -->
     <string name="menu_add_to_shortcuts">Add to Shortcuts</string>

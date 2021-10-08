@@ -4,7 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <color name="colorPrimary">@color/photonInk60</color>
-    <color name="colorSecondary">@color/photonInk10</color>
+    <color name="colorSecondary">@color/photonInk05</color>
     <color name="primaryText">@color/photonLightGrey05</color>
     <color name="secondaryText">@color/photonLightGrey50</color>
 
@@ -93,19 +93,8 @@
     <color name="colorActiveSession">#353852</color>
     <color name="colorAction">@color/photonBlue50</color>
 
-    <!-- Dialogs -->
-    <color name="add_to_homescreen_text">#B3FFFFFF</color>
+    <!-- Launcher Icon Background-->
     <color name="add_to_homescreen_icon_background">@color/photonInk60</color>
-
-    <color name="home_screen_dialog_warning_bg">#353852</color>
-    <color name="home_screen_dialog_warning_text">#96f9f9fa</color>
-
-    <!-- Add to Home screen dialog color palette -->
-    <color name="home_screen_dialog_bg">@color/colorSecondary</color>
-    <color name="home_screen_dialog_button_text">@color/focusContrastPink</color>
-    <color name="home_screen_dialog_bg_tint">@color/focusContrastPink</color>
-    <color name="home_screen_dialog_text">@color/photonGrey10</color>
-    <color name="home_screen_dialog_highlight">@color/focusContrastPink</color>
 
     <!-- Find in Page -->
     <color name="find_in_page_background">@color/photonWhite</color>
@@ -142,7 +131,8 @@
     <color name="onboarding_title">@color/photonGrey90</color>
 
     <!--Modals colors -->
-    <color name="modal_background">@color/photonInk80</color>
+    <color name="modal_background">@color/colorSecondary</color>
+    <color name="dialog_title">@color/primaryText</color>
 
     <!-- Override AC colors -->
     <color name="mozac_ui_icons_fill">@color/primaryText</color>
