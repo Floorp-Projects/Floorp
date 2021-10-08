@@ -97,7 +97,7 @@ fun PocketStories(
         }
     }
 
-    Column(modifier = Modifier.padding(vertical = 44.dp)) {
+    Column(modifier = Modifier.padding(top = 72.dp)) {
         SectionHeader(
             text = stringResource(R.string.pocket_stories_header_1),
             modifier = Modifier
