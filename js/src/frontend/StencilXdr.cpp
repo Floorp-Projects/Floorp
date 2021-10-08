@@ -808,9 +808,25 @@ template <XDRMode mode>
 
     MOZ_TRY(CodeMarker(xdr, SectionMarker::ModuleMetadata));
     MOZ_TRY(codeModuleMetadata(xdr, *stencil.moduleMetadata));
+
+    // codeModuleMetadata doesn't guarantee alignment.
+    MOZ_TRY(xdr->align32());
   }
 
   MOZ_TRY(CodeMarker(xdr, SectionMarker::End));
+
+  // The result should be aligned.
+  //
+  // NOTE:
+  // If the top-level isn't a module, ScriptData/ScriptExtra sections
+  // guarantee the alignment because there should be at least 1 item,
+  // and XDRSpanContent adds alignment before span content, and the struct size
+  // should also be aligned.
+  static_assert(sizeof(ScriptStencil) % 4 == 0,
+                "size of ScriptStencil should be aligned");
+  static_assert(sizeof(ScriptStencilExtra) % 4 == 0,
+                "size of ScriptStencilExtra should be aligned");
+  MOZ_RELEASE_ASSERT(xdr->isAligned32());
 
   return Ok();
 }
