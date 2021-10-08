@@ -20,7 +20,7 @@
         android:fontFamily="@font/metropolis_semibold"
         android:letterSpacing="0.05"
         android:text="@string/menu_add_to_home_screen"
-        android:textColor="@color/dialog_title"
+        android:textColor="@color/primaryText"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

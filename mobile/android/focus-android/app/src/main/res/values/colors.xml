@@ -132,7 +132,6 @@
 
     <!--Modals colors -->
     <color name="modal_background">@color/colorSecondary</color>
-    <color name="dialog_title">@color/primaryText</color>
 
     <!-- Override AC colors -->
     <color name="mozac_ui_icons_fill">@color/primaryText</color>

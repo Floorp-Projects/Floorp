@@ -38,7 +38,7 @@
     </style>
 
     <style name="DialogTitleStyle" parent="TextAppearance.AppCompat.Title">
-        <item name="android:textColor">@color/dialog_title</item>
+        <item name="android:textColor">@color/primaryText</item>
         <item name="android:textSize">20sp</item>
         <item name="android:fontFamily">@string/font_roboto_medium</item>
     </style>
@@ -47,7 +47,7 @@
         <item name="android:textSize">20sp</item>
         <!-- Setting textVisiblePassword as inputType removes the line below the text-->
         <item name="android:inputType">text|textVisiblePassword</item>
-        <item name="android:textColor">@color/dialog_title</item>
+        <item name="android:textColor">@color/primaryText</item>
         <item name="android:textCursorDrawable">@null</item>
     </style>
 
@@ -62,6 +62,9 @@
         <item name="android:windowBackground">@drawable/dialog_background_with_insets</item>
         <!-- This is the default color for activated controls(buttons) -->
         <item name="android:colorAccent">@color/accentBright</item>
+        <item name="textColorAlertDialogListItem">@color/primaryText</item>
+        <item name="colorControlActivated">@color/accentBright</item>
+        <item name="colorControlNormal">@color/accentBright</item>
     </style>
 
     <style name="ButtonStyle" parent="Base.Widget.AppCompat.ButtonBar.AlertDialog">
