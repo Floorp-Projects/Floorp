@@ -40,14 +40,6 @@ class LineBreaker {
   // NS_LINEBREAKER_NEED_MORE_TEXT.
   int32_t Next(const char16_t* aText, uint32_t aLen, uint32_t aPos);
 
-  // Similar to Next(), but doesn't treat the end of text a line break
-  // opportunity. It returns NS_LINEBREAKER_NEED_MORE_TEXT when reaching the end
-  // of text.
-  ///
-  // XXX: Please do not add new callers to DeprecatedNext(). This method will be
-  // removed.
-  int32_t DeprecatedNext(const char16_t* aText, uint32_t aLen, uint32_t aPos);
-
   // Bug 1733009: Please do not add new callers to Prev(). This method will be
   // removed.
   int32_t Prev(const char16_t* aText, uint32_t aLen, uint32_t aPos);
