@@ -286,7 +286,7 @@ class MediaManager final : public nsIMediaManagerService,
 
  private:
   RefPtr<MgrPromise> EnumerateRawDevices(
-      uint64_t aWindowId, dom::MediaSourceEnum aVideoInputType,
+      dom::MediaSourceEnum aVideoInputType,
       dom::MediaSourceEnum aAudioInputType, MediaSinkEnum aAudioOutputType,
       DeviceEnumerationType aVideoInputEnumType,
       DeviceEnumerationType aAudioInputEnumType, bool aForceNoPermRequest,

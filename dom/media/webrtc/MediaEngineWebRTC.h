@@ -60,7 +60,7 @@ class MediaEngineWebRTC : public MediaEngine {
   // Returns whether the host supports duplex audio track.
   bool SupportsDuplex();
 
-  void EnumerateDevices(uint64_t aWindowId, dom::MediaSourceEnum, MediaSinkEnum,
+  void EnumerateDevices(dom::MediaSourceEnum, MediaSinkEnum,
                         nsTArray<RefPtr<MediaDevice>>*) override;
 
   MediaEventSource<void>& DeviceListChangeEvent() override {
@@ -69,13 +69,10 @@ class MediaEngineWebRTC : public MediaEngine {
 
  private:
   ~MediaEngineWebRTC() = default;
-  void EnumerateVideoDevices(uint64_t aWindowId,
-                             camera::CaptureEngine aCapEngine,
+  void EnumerateVideoDevices(camera::CaptureEngine aCapEngine,
                              nsTArray<RefPtr<MediaDevice>>*);
-  void EnumerateMicrophoneDevices(uint64_t aWindowId,
-                                  nsTArray<RefPtr<MediaDevice>>*);
-  void EnumerateSpeakerDevices(uint64_t aWindowId,
-                               nsTArray<RefPtr<MediaDevice>>*);
+  void EnumerateMicrophoneDevices(nsTArray<RefPtr<MediaDevice>>*);
+  void EnumerateSpeakerDevices(nsTArray<RefPtr<MediaDevice>>*);
 
   void DeviceListChanged() { mDeviceListChangeEvent.Notify(); }
 
