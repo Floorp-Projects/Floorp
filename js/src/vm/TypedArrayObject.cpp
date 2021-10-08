@@ -31,7 +31,6 @@
 #include "js/Conversions.h"
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewType, JS_GetTypedArray{Length,ByteOffset,ByteLength}, JS_IsTypedArrayObject
 #include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
-#include "js/PropertyAndElement.h"      // JS_DefineFunctions
 #include "js/PropertySpec.h"
 #include "js/ScalarType.h"  // JS::Scalar::Type
 #include "js/UniquePtr.h"
@@ -1988,26 +1987,6 @@ bool TypedArrayObject::copyWithin(JSContext* cx, unsigned argc, Value* vp) {
     JS_SELF_HOSTED_FN("at", "TypedArrayAt", 1, 0),
     JS_FS_END};
 
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-const JSFunctionSpec changeArrayByCopyProtoFunctions[] = {
-    JS_SELF_HOSTED_FN("withReversed", "TypedArrayWithReversed", 0, 0),
-    JS_SELF_HOSTED_FN("withSorted", "TypedArrayWithSorted", 1, 0),
-    JS_SELF_HOSTED_FN("withAt", "TypedArrayWithAt", 2, 0),
-    JS_SELF_HOSTED_FN("withSpliced", "TypedArrayWithSpliced", 3, 0),
-
-    JS_FS_END};
-
-static bool typed_array_proto_finish(JSContext* cx, JS::HandleObject ctor,
-                                     JS::HandleObject proto) {
-  if (cx->options().changeArrayByCopy()) {
-    if (!JS_DefineFunctions(cx, proto, changeArrayByCopyProtoFunctions)) {
-      return false;
-    }
-  }
-  return true;
-}
-#endif
-
 /* static */ const JSFunctionSpec TypedArrayObject::staticFunctions[] = {
     JS_SELF_HOSTED_FN("from", "TypedArrayStaticFrom", 3, 0),
     JS_SELF_HOSTED_FN("of", "TypedArrayStaticOf", 0, 0), JS_FS_END};
@@ -2028,11 +2007,7 @@ static const ClassSpec TypedArrayObjectSharedTypedArrayPrototypeClassSpec = {
     TypedArrayObject::staticProperties,
     TypedArrayObject::protoFunctions,
     TypedArrayObject::protoAccessors,
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-    typed_array_proto_finish,
-#else
     nullptr,
-#endif
     ClassSpec::DontDefineConstructor};
 
 /* static */ const JSClass TypedArrayObject::sharedTypedArrayPrototypeClass = {

@@ -527,15 +527,6 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-  value = BooleanValue(true);
-#else
-  value = BooleanValue(false);
-#endif
-  if (!JS_SetProperty(cx, info, "change-array-by-copy", value)) {
-    return false;
-  }
-
   args.rval().setObject(*info);
   return true;
 }
