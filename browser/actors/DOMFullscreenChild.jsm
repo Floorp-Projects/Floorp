@@ -11,8 +11,14 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 class DOMFullscreenChild extends JSWindowActorChild {
   receiveMessage(aMessage) {
     let window = this.contentWindow;
-    let windowUtils = window && window.windowUtils;
+    if (!window) {
+      if (!aMessage.data.remoteFrameBC) {
+        this.sendAsyncMessage("DOMFullscreen:Exit", {});
+      }
+      return;
+    }
 
+    let windowUtils = window.windowUtils;
     if (!windowUtils) {
       return;
     }
