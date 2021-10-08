@@ -54,6 +54,15 @@ enum class SimdPermuteOp {
   // Zeroes are shifted into low-order bytes and high-order bytes are lost.
   // control_[0] has the number of places to shift by.
   SHIFT_LEFT_8x16,
+
+  // Reverse bytes of 16-bit lanes.
+  REVERSE_16x8,
+
+  // Reverse bytes of 32-bit lanes.
+  REVERSE_32x4,
+
+  // Reverse bytes of 64-bit lanes.
+  REVERSE_64x2,
 };
 
 // Shuffle operations.  NOTE: these may still be x86-centric, but the set can

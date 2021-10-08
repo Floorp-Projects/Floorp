@@ -667,6 +667,26 @@ for ( let byte of [3, 11, 8, 2] ) {
     assertSame(get(mem, 0, 16), rev8x16_pattern);
 }
 
+// Byteswap of half-word, word and quad-word groups should be
+// reverse bytes analysis
+for (let k of [2, 4, 8]) {
+  let rev8_pattern = iota(16).map(i => i ^ (k - 1));
+  let ins = wasmCompile(`
+(module
+(memory (export "mem") 1 1)
+(func (export "run")
+  (v128.store (i32.const 0) (call $f (v128.load (i32.const 16)))))
+(func $f (param v128) (result v128)
+  (i8x16.shuffle ${rev8_pattern.join(' ')} (local.get 0) (local.get 0))))`);
+
+  assertEq(wasmSimdAnalysis(), `shuffle -> reverse bytes in ${8 * k}-bit lanes`);
+
+  let mem = new Int8Array(ins.exports.mem.buffer);
+  set(mem, 16, iota(16));
+  ins.exports.run();
+  assertSame(get(mem, 0, 16), rev8_pattern);
+}
+
 // Word reversal should be a word permute
 {
     let rev16x8_pattern = i16ToI8(iota(8).reverse());

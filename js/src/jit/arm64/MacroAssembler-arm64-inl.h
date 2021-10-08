@@ -2509,6 +2509,20 @@ void MacroAssembler::concatAndRightShiftSimd128(FloatRegister lhs,
   Ext(Simd16B(dest), Simd16B(rhs), Simd16B(lhs), shift);
 }
 
+// Reverse bytes in lanes.
+
+void MacroAssembler::reverseInt16x8(FloatRegister src, FloatRegister dest) {
+  Rev16(Simd16B(dest), Simd16B(src));
+}
+
+void MacroAssembler::reverseInt32x4(FloatRegister src, FloatRegister dest) {
+  Rev32(Simd16B(dest), Simd16B(src));
+}
+
+void MacroAssembler::reverseInt64x2(FloatRegister src, FloatRegister dest) {
+  Rev64(Simd16B(dest), Simd16B(src));
+}
+
 // Swizzle - permute with variable indices.  `rhs` holds the lanes parameter.
 
 void MacroAssembler::swizzleInt8x16(FloatRegister rhs, FloatRegister lhsDest) {

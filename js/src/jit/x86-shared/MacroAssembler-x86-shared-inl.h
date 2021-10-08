@@ -1415,6 +1415,30 @@ void MacroAssembler::rightShiftSimd128(Imm32 count, FloatRegister src,
   vpsrldq(count, dest, dest);
 }
 
+// Reverse bytes in lanes.
+
+void MacroAssembler::reverseInt16x8(FloatRegister src, FloatRegister dest) {
+  // Byteswap is MOV + PSLLW + PSRLW + POR, a small win over PSHUFB.
+  ScratchSimd128Scope scratch(*this);
+  moveSimd128(src, dest);
+  moveSimd128(src, scratch);
+  vpsllw(Imm32(8), dest, dest);
+  vpsrlw(Imm32(8), scratch, scratch);
+  vpor(scratch, dest, dest);
+}
+
+void MacroAssembler::reverseInt32x4(FloatRegister src, FloatRegister dest) {
+  moveSimd128Int(src, dest);
+  int8_t lanes[] = {3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12};
+  vpshufbSimd128(SimdConstant::CreateX16((const int8_t*)lanes), dest);
+}
+
+void MacroAssembler::reverseInt64x2(FloatRegister src, FloatRegister dest) {
+  moveSimd128Int(src, dest);
+  int8_t lanes[] = {7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8};
+  vpshufbSimd128(SimdConstant::CreateX16((const int8_t*)lanes), dest);
+}
+
 // All lanes true
 
 void MacroAssembler::allTrueInt8x16(FloatRegister src, Register dest) {
