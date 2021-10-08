@@ -576,7 +576,7 @@
 }
 
 #reader-mode-button[readeractive] > .urlbar-icon {
-  fill: var(--toolbarbutton-icon-fill-attention);
+  fill: var(--lwt-toolbar-field-icon-fill-attention, var(--toolbarbutton-icon-fill-attention));
   fill-opacity: 1;
 }
 

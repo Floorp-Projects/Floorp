@@ -283,7 +283,7 @@
 
 .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/bookmark-12.svg);
-  fill: var(--toolbarbutton-icon-fill-attention);
+  fill: var(--lwt-toolbar-field-icon-fill-attention, var(--toolbarbutton-icon-fill-attention));
 }
 
 .urlbarView-row[pinned] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
@@ -719,7 +719,7 @@
 .urlbarView-row[source="bookmarks"] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon,
 #urlbar-engine-one-off-item-bookmarks {
   list-style-image: url("chrome://browser/skin/bookmark.svg");
-  fill: var(--toolbarbutton-icon-fill-attention);
+  fill: var(--lwt-toolbar-field-icon-fill-attention, var(--toolbarbutton-icon-fill-attention));
   fill-opacity: 1;
   -moz-context-properties: fill, fill-opacity;
 }
