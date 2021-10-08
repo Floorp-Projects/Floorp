@@ -1104,7 +1104,8 @@ set_define(
 # ===================================================
 @depends(milestone.is_nightly)
 def use_change_array_by_copy(is_nightly):
-    return False
+    if is_nightly:
+        return True
 
 
 option(
