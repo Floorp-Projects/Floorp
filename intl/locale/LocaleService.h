@@ -193,6 +193,20 @@ class LocaleService final : public mozILocaleService,
     return T::TryCreate(appLocale.get(), args...);
   }
 
+  /**
+   * Create a component from intl/components with a given locale, but fallback
+   * to the app locale if it doesn't work.
+   */
+  template <typename T, typename... Args>
+  static Result<UniquePtr<T>, ICUError> TryCreateComponentWithLocale(
+      const char* aLocale, Args... args) {
+    auto result = T::TryCreate(aLocale, args...);
+    if (result.isOk()) {
+      return result;
+    }
+    return TryCreateComponent<T>(args...);
+  }
+
  private:
   void NegotiateAppLocales(nsTArray<nsCString>& aRetVal);
 
