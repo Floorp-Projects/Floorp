@@ -151,7 +151,7 @@ class Components(
     val tabsUseCases: TabsUseCases by lazy { TabsUseCases(store) }
 
     val searchUseCases: SearchUseCases by lazy {
-        SearchUseCases(store, tabsUseCases)
+        SearchUseCases(store, tabsUseCases, sessionUseCases)
     }
 
     val contextMenuUseCases: ContextMenuUseCases by lazy { ContextMenuUseCases(store) }
