@@ -189,13 +189,16 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                                                         StyleAppearance,
                                                         const Colors&);
   sRGBColor ComputeCheckmarkColor(const EventStates&, const Colors&);
-  sRGBColor ComputeBorderColor(const EventStates&, const Colors&);
+  enum class OutlineCoversBorder : bool { No, Yes };
+  sRGBColor ComputeBorderColor(const EventStates&, const Colors&,
+                               OutlineCoversBorder);
 
   std::pair<sRGBColor, sRGBColor> ComputeButtonColors(const EventStates&,
                                                       const Colors&,
                                                       nsIFrame* = nullptr);
   std::pair<sRGBColor, sRGBColor> ComputeTextfieldColors(const EventStates&,
-                                                         const Colors&);
+                                                         const Colors&,
+                                                         OutlineCoversBorder);
   std::pair<sRGBColor, sRGBColor> ComputeRangeProgressColors(const EventStates&,
                                                              const Colors&);
   std::pair<sRGBColor, sRGBColor> ComputeRangeTrackColors(const EventStates&,
