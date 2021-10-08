@@ -59,6 +59,9 @@ define(function(require, exports, module) {
 
     onTabChanged(index) {
       this.setState({ activeTab: index });
+
+      // Send notification event to the window. This is useful for tests.
+      window.dispatchEvent(new CustomEvent("TabChanged"));
     }
 
     render() {
