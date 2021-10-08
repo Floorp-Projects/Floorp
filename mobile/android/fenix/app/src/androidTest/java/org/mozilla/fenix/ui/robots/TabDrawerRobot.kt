@@ -114,21 +114,6 @@ class TabDrawerRobot {
         }
     }
 
-    fun closeTabViaXButton(title: String) {
-        mDevice.findObject(UiSelector().text(title)).waitForExists(waitingTime)
-        var retries = 0 // number of retries before failing, will stop at 2
-        do {
-            val closeButton = onView(
-                allOf(
-                    withId(R.id.mozac_browser_tabstray_close),
-                    withContentDescription("Close tab $title")
-                )
-            )
-            closeButton.perform(click())
-            retries++
-        } while (mDevice.findObject(UiSelector().text(title)).exists() && retries < 3)
-    }
-
     fun verifySnackBarText(expectedText: String) {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.waitNotNull(findObject(By.text(expectedText)), TestAssetHelper.waitingTime)

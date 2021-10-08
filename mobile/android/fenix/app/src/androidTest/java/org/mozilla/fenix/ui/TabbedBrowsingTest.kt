@@ -144,7 +144,7 @@ class TabbedBrowsingTest {
         }.openNewTabAndEnterToBrowser(genericURL.url) {
         }.openTabDrawer {
             verifyExistingOpenTabs("Test_Page_1")
-            closeTabViaXButton("Test_Page_1")
+            closeTab()
             verifySnackBarText("Tab closed")
             snackBarButtonClick("UNDO")
         }
@@ -187,7 +187,7 @@ class TabbedBrowsingTest {
         }.openTabDrawer {
             verifyExistingOpenTabs("Test_Page_1")
             verifyCloseTabsButton("Test_Page_1")
-            closeTabViaXButton("Test_Page_1")
+            closeTab()
             verifySnackBarText("Private tab closed")
             snackBarButtonClick("UNDO")
         }
