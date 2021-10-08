@@ -23,8 +23,8 @@ namespace mozilla {
  * Mail citations using the Internet style: > This is a citation.
  */
 
-nsresult InternetCiter::GetCiteString(const nsAString& aInString,
-                                      nsAString& aOutString) {
+void InternetCiter::GetCiteString(const nsAString& aInString,
+                                  nsAString& aOutString) {
   aOutString.Truncate();
   char16_t uch = HTMLEditUtils::kNewLine;
 
@@ -58,7 +58,6 @@ nsresult InternetCiter::GetCiteString(const nsAString& aInString,
   if (uch != HTMLEditUtils::kNewLine) {
     aOutString += HTMLEditUtils::kNewLine;
   }
-  return NS_OK;
 }
 
 static void AddCite(nsAString& aOutString, int32_t citeLevel) {
@@ -86,9 +85,9 @@ static inline bool IsSpace(char16_t c) {
           (c == HTMLEditUtils::kCarridgeReturn) || (c == HTMLEditUtils::kNBSP));
 }
 
-nsresult InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
-                               uint32_t aFirstLineOffset, bool aRespectNewlines,
-                               nsAString& aOutString) {
+void InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
+                           uint32_t aFirstLineOffset, bool aRespectNewlines,
+                           nsAString& aOutString) {
   // There shouldn't be returns in this string, only dom newlines.
   // Check to make sure:
 #ifdef DEBUG
@@ -282,8 +281,6 @@ nsresult InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
       }
     }  // end inner loop within one line of aInString
   }    // end outer loop over lines of aInString
-
-  return NS_OK;
 }
 
 }  // namespace mozilla
