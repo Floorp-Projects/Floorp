@@ -8,8 +8,10 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -47,7 +49,6 @@ import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.feature.top.sites.TopSitesConfig
 import mozilla.components.feature.top.sites.TopSitesFeature
 import mozilla.components.lib.crash.Crash
-import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.focus.GleanMetrics.TrackingProtection
@@ -82,8 +83,6 @@ import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.topsites.DefaultTopSitesStorage.Companion.TOP_SITES_MAX_LIMIT
 import org.mozilla.focus.topsites.DefaultTopSitesView
-import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_DOWNLOAD_PERMISSIONS
-import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_PROMPT_PERMISSIONS
 import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.FocusSnackbar
 import org.mozilla.focus.utils.FocusSnackbarDelegate
@@ -225,8 +224,17 @@ class BrowserFragment :
                 customTabId = tryGetCustomTabId(),
                 fragmentManager = parentFragmentManager,
                 onNeedToRequestPermissions = { permissions ->
-                    @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/4959
-                    requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
+                    requestInPlacePermissions(permissions) { result ->
+                        promptFeature.get()?.onPermissionsResult(
+                            result.keys.toTypedArray(),
+                            result.values.map {
+                                when (it) {
+                                    true -> PackageManager.PERMISSION_GRANTED
+                                    false -> PackageManager.PERMISSION_DENIED
+                                }
+                            }.toIntArray()
+                        )
+                    }
                 }
             ),
             this, view
@@ -244,8 +252,18 @@ class BrowserFragment :
                     DownloadService::class
                 ),
                 onNeedToRequestPermissions = { permissions ->
-                    @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/4959
-                    requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
+                    requestInPlacePermissions(permissions) { result ->
+                        Log.d("Blabla", "Browser fragment")
+                        downloadsFeature.get()?.onPermissionsResult(
+                            result.keys.toTypedArray(),
+                            result.values.map {
+                                when (it) {
+                                    true -> PackageManager.PERMISSION_GRANTED
+                                    false -> PackageManager.PERMISSION_DENIED
+                                }
+                            }.toIntArray()
+                        )
+                    }
                 },
                 onDownloadStopped = { state, _, status ->
                     showDownloadSnackbar(state, status)
@@ -433,16 +451,6 @@ class BrowserFragment :
         // This fragment might get destroyed before the user left immersive mode (e.g. by opening another URL from an
         // app). In this case let's leave immersive mode now when the fragment gets destroyed.
         fullScreenIntegration.get()?.exitImmersiveModeIfNeeded()
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        val feature: PermissionsFeature? = when (requestCode) {
-            REQUEST_CODE_PROMPT_PERMISSIONS -> promptFeature.get()
-            REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.get()
-            else -> null
-        }
-
-        feature?.onPermissionsResult(permissions, grantResults)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

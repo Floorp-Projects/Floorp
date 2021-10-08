@@ -8,6 +8,7 @@ import android.content.res.Resources
 import android.view.animation.Animation
 import android.view.animation.AnimationSet
 import android.view.animation.AnimationUtils
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 
 abstract class BaseFragment : Fragment() {
@@ -37,5 +38,20 @@ abstract class BaseFragment : Fragment() {
         } else {
             null
         }
+    }
+}
+
+fun Fragment.requestInPlacePermissions(
+    permissionsToRequest: Array<String>,
+    onResult: (Map<String, Boolean>) -> Unit
+) {
+
+    requireActivity().activityResultRegistry.register(
+        "permissionsRequest",
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        onResult(permissions)
+    }.also {
+        it.launch(permissionsToRequest)
     }
 }
