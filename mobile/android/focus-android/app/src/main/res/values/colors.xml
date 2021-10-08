@@ -83,7 +83,7 @@
     <!-- Home Tips -->
     <color name="inactive_dot_background">@color/photonInk20A48</color>
     <color name="active_dot_background">@color/photonLightGrey05</color>
-    <color name="tip_text_color">@color/disabled</color>
+    <color name="tip_text_color">@color/secondaryText</color>
     <color name="tip_deeplink_color">@color/accent</color>
 
     <!-- Session -->
