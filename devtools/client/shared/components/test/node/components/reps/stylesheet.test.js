@@ -31,10 +31,10 @@ describe("Test StyleSheet", () => {
     );
 
     expect(renderedComponent.text()).toEqual(
-      "StyleSheet https://example.com/styles.css"
+      "CSSStyleSheet https://example.com/styles.css"
     );
     expect(renderedComponent.prop("title")).toEqual(
-      "StyleSheet https://example.com/styles.css"
+      "CSSStyleSheet https://example.com/styles.css"
     );
     expectActorAttribute(renderedComponent, stub.actor);
   });
