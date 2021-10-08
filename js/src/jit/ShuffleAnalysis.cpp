@@ -257,6 +257,17 @@ static bool TryBroadcast8x16(SimdConstant* control) {
   return ScanConstant(lanes, lanes[0], 0) >= 16;
 }
 
+template <int N>
+static bool TryReverse(SimdConstant* control) {
+  const SimdConstant::I8x16& lanes = control->asInt8x16();
+  for (int i = 0; i < 16; i++) {
+    if (lanes[i] != (i ^ (N - 1))) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // Look for permutations of a single operand.
 static SimdPermuteOp AnalyzePermute(SimdConstant* control) {
   // Lane indices are input-agnostic for single-operand permutations.
@@ -301,14 +312,21 @@ static SimdPermuteOp AnalyzePermute(SimdConstant* control) {
   if (TryBroadcast8x16(control)) {
     return SimdPermuteOp::BROADCAST_8x16;
   }
+  if (TryReverse<2>(control)) {
+    return SimdPermuteOp::REVERSE_16x8;
+  }
+  if (TryReverse<4>(control)) {
+    return SimdPermuteOp::REVERSE_32x4;
+  }
+  if (TryReverse<8>(control)) {
+    return SimdPermuteOp::REVERSE_64x2;
+  }
 
   // TODO: (From v8) Unzip and transpose generally have renditions that slightly
   // beat a general permute (three or four instructions)
   //
   // TODO: (From MacroAssemblerX86Shared::ShuffleX4): MOVLHPS and MOVHLPS can be
   // used when merging two values.
-  //
-  // TODO: Byteswap is MOV + PSLLW + PSRLW + POR, a small win over PSHUFB.
 
   // The default operation is to permute bytes with the default control.
   return SimdPermuteOp::PERMUTE_8x16;
@@ -624,6 +642,18 @@ static const SimdShuffle& ReportShuffleSpecialization(const SimdShuffle& s) {
           break;
         case SimdPermuteOp::MOVE:
           js::wasm::ReportSimdAnalysis("shuffle -> move");
+          break;
+        case SimdPermuteOp::REVERSE_16x8:
+          js::wasm::ReportSimdAnalysis(
+              "shuffle -> reverse bytes in 16-bit lanes");
+          break;
+        case SimdPermuteOp::REVERSE_32x4:
+          js::wasm::ReportSimdAnalysis(
+              "shuffle -> reverse bytes in 32-bit lanes");
+          break;
+        case SimdPermuteOp::REVERSE_64x2:
+          js::wasm::ReportSimdAnalysis(
+              "shuffle -> reverse bytes in 64-bit lanes");
           break;
         case SimdPermuteOp::PERMUTE_8x16:
           js::wasm::ReportSimdAnalysis("shuffle -> permute 8x16");
