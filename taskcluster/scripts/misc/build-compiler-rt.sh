@@ -23,6 +23,30 @@ x86_64-apple-darwin)
   arch=x86_64
   export MACOSX_DEPLOYMENT_TARGET=10.12
   ;;
+armv7-linux-android)
+  api_level=16
+  ndk_target=arm-linux-androideabi
+  ndk_prefix=arm-linux-androideabi
+  ndk_arch=arm
+  ;;
+aarch64-linux-android)
+  api_level=21
+  ndk_target=aarch64-linux-android
+  ndk_prefix=aarch64-linux-android
+  ndk_arch=arm64
+  ;;
+i686-linux-android)
+  api_level=16
+  ndk_target=i686-linux-android
+  ndk_prefix=x86
+  ndk_arch=x86
+  ;;
+x86_64-linux-android)
+  api_level=21
+  ndk_target=x86_64-linux-android
+  ndk_prefix=x86_64
+  ndk_arch=x86_64
+  ;;
 esac
 
 case "$target" in
@@ -44,6 +68,34 @@ case "$target" in
   echo "#!/bin/sh" > codesign
   chmod +x codesign
   PATH="$PWD:$MOZ_FETCHES_DIR/cctools/bin:$PATH"
+  ;;
+*-linux-android)
+  libdir=lib/linux
+  cflags="
+    --gcc-toolchain=$MOZ_FETCHES_DIR/android-ndk/toolchains/$ndk_prefix-4.9/prebuilt/linux-x86_64
+    -isystem $MOZ_FETCHES_DIR/android-ndk/sysroot/usr/include/$ndk_target
+    -isystem $MOZ_FETCHES_DIR/android-ndk/sysroot/usr/include
+    -D__ANDROID_API__=$api_level
+  "
+  # These flags are only necessary to pass the cmake tests.
+  exe_linker_flags="
+    -L$MOZ_FETCHES_DIR/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$ndk_target/$api_level
+    -L$MOZ_FETCHES_DIR/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$ndk_target
+  "
+  EXTRA_CMAKE_FLAGS="
+    -DCMAKE_SYSROOT=$MOZ_FETCHES_DIR/android-ndk/platforms/android-$api_level/arch-$ndk_arch
+    -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld
+    -DCMAKE_LINKER=$MOZ_FETCHES_DIR/clang/bin/ld.lld
+    -DCMAKE_C_FLAGS='-fPIC $cflags'
+    -DCMAKE_ASM_FLAGS='$cflags'
+    -DCMAKE_CXX_FLAGS='-fPIC -Qunused-arguments $cflags'
+    -DCMAKE_EXE_LINKER_FLAGS='-fuse-ld=lld $exe_linker_flags'
+    -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld
+    -DANDROID=1
+    -DANDROID_NATIVE_API_LEVEL=$api_level
+    -DSANITIZER_ALLOW_CXXABI=OFF
+    -DCOMPILER_RT_BUILD_LIBFUZZER=OFF
+  "
   ;;
 aarch64-unknown-linux-gnu)
   libdir=lib/linux
@@ -70,7 +122,7 @@ for patchfile in "$@"; do
   patch -d $MOZ_FETCHES_DIR/llvm-project -p1 < $GECKO_PATH/$patchfile
 done
 
-cmake \
+eval cmake \
   $MOZ_FETCHES_DIR/llvm-project/compiler-rt \
   -GNinja \
   -DCMAKE_C_COMPILER=$clang \
