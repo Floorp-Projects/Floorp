@@ -271,6 +271,11 @@ struct BarrierMethods<jsid> {
       js::gc::ExposeGCThingToActiveJS(id.toGCCellPtr());
     }
   }
+  static void readBarrier(jsid id) {
+    if (id.isGCThing()) {
+      js::gc::IncrementalReadBarrier(id.toGCCellPtr());
+    }
+  }
 };
 
 // If the jsid is a GC pointer type, convert to that type and call |f| with the
