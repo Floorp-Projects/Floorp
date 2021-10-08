@@ -31,6 +31,10 @@
   text-shadow: none;
 }
 
+:root[lwtheme-image] #customization-palette .toolbarbutton-1 {
+  fill: currentColor;
+}
+
 #customization-palette {
   padding: 5px 20px 20px;
 }
@@ -221,9 +225,6 @@ toolbarpaletteitem[place="toolbar"] {
   margin-bottom: 20px;
 }
 
-#customization-palette .toolbarbutton-1 {
-  fill: currentColor;
-}
 
 toolbarpaletteitem[place="palette"]:-moz-focusring,
 toolbarpaletteitem[place="menu-panel"]:-moz-focusring,
