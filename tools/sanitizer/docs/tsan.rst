@@ -1,5 +1,5 @@
 Thread Sanitizer
-=================
+================
 
 What is Thread Sanitizer?
 --------------------------
@@ -14,6 +14,8 @@ TSan works can be found on `the Thread Sanitizer wiki <https://github.com/google
 
 A `meta bug called tsan <https://bugzilla.mozilla.org/show_bug.cgi?id=tsan>`__
 is maintained to keep track of all the bugs found with TSan.
+
+A `blog post on hacks.mozilla.org <https://hacks.mozilla.org/2021/04/eliminating-data-races-in-firefox-a-technical-report/>`__ describes this project.
 
 Note that unlike other sanitizers, TSan is currently **only supported on Linux**.
 
