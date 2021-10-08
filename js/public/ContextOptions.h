@@ -51,9 +51,6 @@ class JS_PUBLIC_API ContextOptions {
         fuzzing_(false),
         privateClassFields_(false),
         privateClassMethods_(false),
- #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-        changeArrayByCopy_(false),
- #endif
         ergonomicBrandChecks_(false) {
   }
   // clang-format on
@@ -163,14 +160,6 @@ class JS_PUBLIC_API ContextOptions {
     ergonomicBrandChecks_ = enabled;
     return *this;
   }
-
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-  bool changeArrayByCopy() const { return changeArrayByCopy_; }
-  ContextOptions& setChangeArrayByCopy(bool enabled) {
-    changeArrayByCopy_ = enabled;
-    return *this;
-  }
-#endif
 
   bool classStaticBlocks() const { return classStaticBlocks_; }
   ContextOptions& setClassStaticBlocks(bool enabled) {
@@ -287,9 +276,6 @@ class JS_PUBLIC_API ContextOptions {
   bool fuzzing_ : 1;
   bool privateClassFields_ : 1;
   bool privateClassMethods_ : 1;
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-  bool changeArrayByCopy_ : 1;
-#endif
   bool ergonomicBrandChecks_ : 1;
   bool classStaticBlocks_ : 1;
 };
