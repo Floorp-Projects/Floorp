@@ -63,7 +63,8 @@ class UseCases(
     val searchUseCases by lazyMonitored {
         SearchUseCases(
             store,
-            tabsUseCases
+            tabsUseCases,
+            sessionUseCases
         )
     }
 
