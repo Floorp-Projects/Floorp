@@ -1331,6 +1331,12 @@ void MacroAssembler::blendInt16x8(const uint16_t lanes[8], FloatRegister lhs,
   MacroAssemblerX86Shared::blendInt16x8(lhs, rhs, dest, lanes);
 }
 
+void MacroAssembler::laneSelectSimd128(FloatRegister mask,
+                                       FloatRegister rhsDest,
+                                       FloatRegister lhs) {
+  MacroAssemblerX86Shared::laneSelectSimd128(lhs, rhsDest, mask, rhsDest);
+}
+
 void MacroAssembler::interleaveHighInt16x8(FloatRegister rhs,
                                            FloatRegister lhsDest) {
   vpunpckhwd(rhs, lhsDest, lhsDest);

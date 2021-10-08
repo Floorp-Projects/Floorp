@@ -179,6 +179,16 @@ void MacroAssemblerX86Shared::blendInt16x8(FloatRegister lhs, FloatRegister rhs,
   vpblendw(mask, rhs, lhs, lhs);
 }
 
+void MacroAssemblerX86Shared::laneSelectSimd128(FloatRegister lhs,
+                                                FloatRegister rhs,
+                                                FloatRegister mask,
+                                                FloatRegister output) {
+  MOZ_ASSERT(rhs == output);
+  MOZ_ASSERT(mask.encoding() == X86Encoding::xmm0, "pblendvb needs xmm0");
+
+  vpblendvb(mask, lhs, rhs, output);
+}
+
 void MacroAssemblerX86Shared::shuffleInt8x16(FloatRegister lhs,
                                              FloatRegister rhs,
                                              FloatRegister output,

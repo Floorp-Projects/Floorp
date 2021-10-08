@@ -681,8 +681,8 @@ enum class SimdOp {
   F32x4RelaxedFma = 0xaf,
   F32x4RelaxedFms = 0xb0,
   I32x4Sub = 0xb1,
-  // SubSatS = 0xb2
-  // SubSatU = 0xb3
+  I8x16LaneSelect = 0xb2,
+  I16x8LaneSelect = 0xb3,
   F32x4RelaxedMin = 0xb4,
   I32x4Mul = 0xb5,
   I32x4MinS = 0xb6,
@@ -713,8 +713,8 @@ enum class SimdOp {
   F64x2RelaxedFma = 0xcf,
   F64x2RelaxedFms = 0xd0,
   I64x2Sub = 0xd1,
-  // Unused = 0xd2
-  // Unused = 0xd3
+  I32x4LaneSelect = 0xd2,
+  I64x2LaneSelect = 0xd3,
   F64x2RelaxedMin = 0xd4,
   I64x2Mul = 0xd5,
   I64x2Eq = 0xd6,
