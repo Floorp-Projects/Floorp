@@ -525,39 +525,25 @@ static MOZ_ALWAYS_INLINE JS::Zone* GetTenuredGCThingZone(const uintptr_t addr) {
   return *reinterpret_cast<JS::Zone**>(zone_addr);
 }
 
-static MOZ_ALWAYS_INLINE bool TenuredCellIsMarkedBlack(
-    const TenuredCell* cell) {
-  // Return true if BlackBit is set.
-
+static MOZ_ALWAYS_INLINE bool TenuredCellIsMarkedGray(const TenuredCell* cell) {
+  // Return true if GrayOrBlackBit is set and BlackBit is not set.
   MOZ_ASSERT(cell);
   MOZ_ASSERT(!js::gc::IsInsideNursery(cell));
-
-  MarkBitmapWord* blackWord;
-  uintptr_t blackMask;
-  TenuredChunkBase* chunk = GetCellChunkBase(cell);
-  chunk->markBits.getMarkWordAndMask(cell, js::gc::ColorBit::BlackBit,
-                                     &blackWord, &blackMask);
-  return *blackWord & blackMask;
-}
-
-static MOZ_ALWAYS_INLINE bool NonBlackCellIsMarkedGray(
-    const TenuredCell* cell) {
-  // Return true if GrayOrBlackBit is set. Callers should check BlackBit first.
-
-  MOZ_ASSERT(cell);
-  MOZ_ASSERT(!js::gc::IsInsideNursery(cell));
-  MOZ_ASSERT(!TenuredCellIsMarkedBlack(cell));
 
   MarkBitmapWord* grayWord;
   uintptr_t grayMask;
   TenuredChunkBase* chunk = GetCellChunkBase(cell);
   chunk->markBits.getMarkWordAndMask(cell, js::gc::ColorBit::GrayOrBlackBit,
                                      &grayWord, &grayMask);
-  return *grayWord & grayMask;
-}
+  if (!(*grayWord & grayMask)) {
+    return false;
+  }
 
-static MOZ_ALWAYS_INLINE bool TenuredCellIsMarkedGray(const TenuredCell* cell) {
-  return !TenuredCellIsMarkedBlack(cell) && NonBlackCellIsMarkedGray(cell);
+  MarkBitmapWord* blackWord;
+  uintptr_t blackMask;
+  chunk->markBits.getMarkWordAndMask(cell, js::gc::ColorBit::BlackBit,
+                                     &blackWord, &blackMask);
+  return !(*blackWord & blackMask);
 }
 
 static MOZ_ALWAYS_INLINE bool CellIsMarkedGray(const Cell* cell) {
@@ -722,43 +708,22 @@ static MOZ_ALWAYS_INLINE void ExposeGCThingToActiveJS(JS::GCCellPtr thing) {
     return;
   }
 
+  auto* cell = reinterpret_cast<TenuredCell*>(thing.asCell());
+
   // There's nothing to do for permanent GC things that might be owned by
   // another runtime.
   if (thing.mayBeOwnedByOtherRuntime()) {
     return;
   }
 
-  // Bug 1734801: I'd like to arrange for this to subsume the permanent GC thing
-  // check above.
-  auto* cell = reinterpret_cast<TenuredCell*>(thing.asCell());
-  if (detail::TenuredCellIsMarkedBlack(cell)) {
-    return;
-  }
-
   auto* zone = JS::shadow::Zone::from(JS::GetTenuredGCThingZone(thing));
   if (zone->needsIncrementalBarrier()) {
     PerformIncrementalReadBarrier(thing);
-  } else if (!zone->isGCPreparing() && detail::NonBlackCellIsMarkedGray(cell)) {
+  } else if (!zone->isGCPreparing() && detail::TenuredCellIsMarkedGray(cell)) {
     MOZ_ALWAYS_TRUE(JS::UnmarkGrayGCThingRecursively(thing));
   }
 
   MOZ_ASSERT_IF(!zone->isGCPreparing(), !detail::TenuredCellIsMarkedGray(cell));
-}
-
-static MOZ_ALWAYS_INLINE void IncrementalReadBarrier(JS::GCCellPtr thing) {
-  // This is a lighter version of ExposeGCThingToActiveJS that doesn't do gray
-  // unmarking.
-
-  if (IsInsideNursery(thing.asCell()) || thing.mayBeOwnedByOtherRuntime()) {
-    return;
-  }
-
-  auto* zone = JS::shadow::Zone::from(JS::GetTenuredGCThingZone(thing));
-  auto* cell = reinterpret_cast<TenuredCell*>(thing.asCell());
-  if (zone->needsIncrementalBarrier() &&
-      !detail::TenuredCellIsMarkedBlack(cell)) {
-    PerformIncrementalReadBarrier(thing);
-  }
 }
 
 template <typename T>
