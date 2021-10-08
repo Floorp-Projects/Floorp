@@ -46,13 +46,17 @@ define(function(require, exports, module) {
     return {
       "data-link-actor-id": grip.actor,
       className: "objectBox objectBox-object",
-      title: shouldRenderTooltip ? `StyleSheet ${location}` : null,
+      title: shouldRenderTooltip
+        ? `${getGripType(grip, false)} ${location}`
+        : null,
     };
   }
 
   function getTitle(grip) {
-    const title = "StyleSheet ";
-    return span({ className: "objectBoxTitle" }, title);
+    return span(
+      { className: "objectBoxTitle" },
+      `${getGripType(grip, false)} `
+    );
   }
 
   function getLocation(grip) {
