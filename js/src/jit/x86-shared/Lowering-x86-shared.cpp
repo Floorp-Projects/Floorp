@@ -1247,6 +1247,9 @@ void LIRGenerator::visitWasmShuffleSimd128(MWasmShuffleSimd128* ins) {
         case SimdPermuteOp::ROTATE_RIGHT_8x16:
         case SimdPermuteOp::SHIFT_LEFT_8x16:
         case SimdPermuteOp::SHIFT_RIGHT_8x16:
+        case SimdPermuteOp::REVERSE_16x8:
+        case SimdPermuteOp::REVERSE_32x4:
+        case SimdPermuteOp::REVERSE_64x2:
           useAtStartAndReuse = true;
           break;
         default:
