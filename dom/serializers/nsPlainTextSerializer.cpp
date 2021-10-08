@@ -1809,7 +1809,12 @@ int32_t GetUnicharWidth(char32_t aCh) {
 
 int32_t GetUnicharStringWidth(Span<const char16_t> aString) {
   int32_t width = 0;
-  for (char16_t c : aString) {
+  for (auto iter = aString.begin(); iter != aString.end(); ++iter) {
+    char32_t c = *iter;
+    if (NS_IS_HIGH_SURROGATE(c) && iter != aString.end() &&
+        NS_IS_LOW_SURROGATE(*(iter + 1))) {
+      c = SURROGATE_TO_UCS4(c, *++iter);
+    }
     const int32_t w = GetUnicharWidth(c);
     // Taking 1 as the width of non-printable character, for bug 94475.
     width += (w < 0 ? 1 : w);
