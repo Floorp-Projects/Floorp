@@ -154,7 +154,7 @@ function initialize(toggleProfilerKeyShortcuts) {
     id: WIDGET_ID,
     type: "button-and-view",
     viewId,
-    tooltiptext: "profiler-button.tooltiptext",
+    l10nId: "profiler-popup-button-idle",
 
     onViewShowing:
       /**
@@ -229,13 +229,14 @@ function initialize(toggleProfilerKeyShortcuts) {
      * This method is used when we need to operate upon the button element itself.
      * This is called once per browser window.
      *
-     * @type {(node: HTMLElement) => void}
+     * @type {(node: ChromeHTMLElement) => void}
      */
     onCreated: node => {
-      const window = node.ownerDocument?.defaultView;
-      if (!window) {
+      const document = node.ownerDocument;
+      const window = document?.defaultView;
+      if (!document || !window) {
         console.error(
-          "Unable to find the window of the profiler toolbar item."
+          "Unable to find the document or the window of the profiler toolbar item."
         );
         return;
       }
@@ -258,25 +259,25 @@ function initialize(toggleProfilerKeyShortcuts) {
       buttonElement.classList.add("subviewbutton-nav");
 
       function setButtonActive() {
-        buttonElement.setAttribute(
-          "tooltiptext",
-          "The profiler is recording a profile"
+        document.l10n.setAttributes(
+          buttonElement,
+          "profiler-popup-button-recording"
         );
         buttonElement.classList.toggle("profiler-active", true);
         buttonElement.classList.toggle("profiler-paused", false);
       }
       function setButtonPaused() {
-        buttonElement.setAttribute(
-          "tooltiptext",
-          "The profiler is capturing a profile"
+        document.l10n.setAttributes(
+          buttonElement,
+          "profiler-popup-button-capturing"
         );
         buttonElement.classList.toggle("profiler-active", false);
         buttonElement.classList.toggle("profiler-paused", true);
       }
       function setButtonInactive() {
-        buttonElement.setAttribute(
-          "tooltiptext",
-          "Record a performance profile"
+        document.l10n.setAttributes(
+          buttonElement,
+          "profiler-popup-button-idle"
         );
         buttonElement.classList.toggle("profiler-active", false);
         buttonElement.classList.toggle("profiler-paused", false);

@@ -84,6 +84,23 @@ function getElementByLabel(container, label) {
 /* exported getElementByLabel */
 
 /**
+ * This function looks inside of a container for some element that has a tooltip.
+ * It runs in a loop every requestAnimationFrame until it finds the element. If
+ * it doesn't find the element it throws an error.
+ *
+ * @param {Element} container
+ * @param {string} tooltip
+ * @returns {Promise<HTMLElement>}
+ */
+function getElementByTooltip(container, tooltip) {
+  return waitUntil(
+    () => container.querySelector(`[tooltiptext="${tooltip}"]`),
+    `Trying to find the button with the tooltip "${tooltip}".`
+  );
+}
+/* exported getElementByTooltip */
+
+/**
  * This function will select a node from the XPath.
  * @returns {HTMLElement?}
  */
