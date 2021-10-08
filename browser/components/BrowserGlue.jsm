@@ -916,9 +916,6 @@ const BOOKMARKS_BACKUP_IDLE_TIME_SEC = 8 * 60;
 // Minimum interval between backups.  We try to not create more than one backup
 // per interval.
 const BOOKMARKS_BACKUP_MIN_INTERVAL_DAYS = 1;
-// Maximum interval between backups.  If the last backup is older than these
-// days we will try to create a new one more aggressively.
-const BOOKMARKS_BACKUP_MAX_INTERVAL_DAYS = 3;
 // Seconds of idle time before the late idle tasks will be scheduled.
 const LATE_TASKS_IDLE_TIME_SEC = 20;
 // Time after we stop tracking startup crashes.
@@ -1099,7 +1096,8 @@ BrowserGlue.prototype = {
         } else if (data == "force-distribution-customization") {
           this._distributionCustomizer.applyCustomizations();
           // To apply distribution bookmarks use "places-init-complete".
-        } else if (data == "force-places-init") {
+        } else if (data == "test-force-places-init") {
+          this._placesInitialized = false;
           this._initPlaces(false);
         } else if (data == "mock-alerts-service") {
           Object.defineProperty(this, "AlertsService", {
@@ -1283,7 +1281,7 @@ BrowserGlue.prototype = {
         this,
         this._bookmarksBackupIdleTime
       );
-      delete this._bookmarksBackupIdleTime;
+      this._bookmarksBackupIdleTime = null;
     }
     if (this._lateTasksIdleObserver) {
       this._userIdleService.removeIdleObserver(
@@ -1957,7 +1955,7 @@ BrowserGlue.prototype = {
             this,
             this._bookmarksBackupIdleTime
           );
-          delete this._bookmarksBackupIdleTime;
+          this._bookmarksBackupIdleTime = null;
         }
       },
 
@@ -2997,6 +2995,11 @@ BrowserGlue.prototype = {
    *   bookmarks.
    */
   _initPlaces: function BG__initPlaces(aInitialMigrationPerformed) {
+    if (this._placesInitialized) {
+      throw new Error("Cannot initialize Places more than once");
+    }
+    this._placesInitialized = true;
+
     // We must instantiate the history service since it will tell us if we
     // need to import or restore bookmarks due to first-run, corruption or
     // forced migration (due to a major schema change).
@@ -3061,15 +3064,11 @@ BrowserGlue.prototype = {
         }
       } catch (ex) {}
 
-      // This may be reused later, check for "=== undefined" to see if it has
-      // been populated already.
-      let lastBackupFile;
-
       // If the user did not require to restore default bookmarks, or import
       // from bookmarks.html, we will try to restore from JSON
       if (importBookmarks && !restoreDefaultBookmarks && !importBookmarksHTML) {
         // get latest JSON backup
-        lastBackupFile = await PlacesBackups.getMostRecentBackup();
+        let lastBackupFile = await PlacesBackups.getMostRecentBackup();
         if (lastBackupFile) {
           // restore from JSON backup
           await BookmarkJSONUtils.importFromFile(lastBackupFile, {
@@ -3151,46 +3150,14 @@ BrowserGlue.prototype = {
       }
 
       // Initialize bookmark archiving on idle.
-      if (!this._bookmarksBackupIdleTime) {
-        this._bookmarksBackupIdleTime = BOOKMARKS_BACKUP_IDLE_TIME_SEC;
-
-        // If there is no backup, or the last bookmarks backup is too old, use
-        // a more aggressive idle observer.
-        if (lastBackupFile === undefined) {
-          lastBackupFile = await PlacesBackups.getMostRecentBackup();
-        }
-        if (!lastBackupFile) {
-          this._bookmarksBackupIdleTime /= 2;
-        } else {
-          let lastBackupTime = PlacesBackups.getDateForFile(lastBackupFile);
-          let profileLastUse = Services.appinfo.replacedLockTime || Date.now();
-
-          // If there is a backup after the last profile usage date it's fine,
-          // regardless its age.  Otherwise check how old is the last
-          // available backup compared to that session.
-          if (profileLastUse > lastBackupTime) {
-            let backupAge = Math.round(
-              (profileLastUse - lastBackupTime) / 86400000
-            );
-            // Report the age of the last available backup.
-            try {
-              Services.telemetry
-                .getHistogramById("PLACES_BACKUPS_DAYSFROMLAST")
-                .add(backupAge);
-            } catch (ex) {
-              Cu.reportError(new Error("Unable to report telemetry."));
-            }
-
-            if (backupAge > BOOKMARKS_BACKUP_MAX_INTERVAL_DAYS) {
-              this._bookmarksBackupIdleTime /= 2;
-            }
-          }
-        }
-        this._userIdleService.addIdleObserver(
-          this,
-          this._bookmarksBackupIdleTime
-        );
+      // If the last backup has been created before the last browser session,
+      // and is days old, be more aggressive with the idle timer.
+      let idleTime = BOOKMARKS_BACKUP_IDLE_TIME_SEC;
+      if (!(await PlacesBackups.hasRecentBackup())) {
+        idleTime /= 2;
       }
+      this._userIdleService.addIdleObserver(this, idleTime);
+      this._bookmarksBackupIdleTime = idleTime;
 
       if (this._isNewProfile) {
         try {
