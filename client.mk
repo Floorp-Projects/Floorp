@@ -39,9 +39,18 @@ build::
 # In automation, manage an sccache daemon. The starting of the server
 # needs to be in a make file so sccache inherits the jobserver.
 ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
+SCCACHE_STOP = $(MOZBUILD_MANAGE_SCCACHE_DAEMON) --stop-server
+
+# When a command fails, make is going to abort, but we need to terminate the
+# sccache server, otherwise it will prevent make itself from terminating
+# because it would still be running and holding a jobserver token.
+# However, we also need to preserve the command's exit code, thus the
+# gymnastics.
+SCCACHE_STOP_ON_FAILURE = || (x=$$?; $(SCCACHE_STOP) || true; exit $$x)
+
 build::
 	# Terminate any sccache server that might still be around.
-	-$(MOZBUILD_MANAGE_SCCACHE_DAEMON) --stop-server > /dev/null 2>&1
+	-$(SCCACHE_STOP) > /dev/null 2>&1
 	# Start a new server, ensuring it gets the jobserver file descriptors
 	# from make (but don't use the + prefix when make -n is used, so that
 	# the command doesn't run in that case)
@@ -51,17 +60,17 @@ endif
 
 ### Build it
 build::
-	+$(MOZ_MAKE)
+	+$(MOZ_MAKE) $(SCCACHE_STOP_ON_FAILURE)
 
 ifdef MOZ_AUTOMATION
 build::
-	+$(MOZ_MAKE) automation/build
+	+$(MOZ_MAKE) automation/build $(SCCACHE_STOP_ON_FAILURE)
 endif
 
 ifdef MOZBUILD_MANAGE_SCCACHE_DAEMON
 build::
 	# Terminate sccache server. This prints sccache stats.
-	-$(MOZBUILD_MANAGE_SCCACHE_DAEMON) --stop-server
+	-$(SCCACHE_STOP)
 endif
 
 .PHONY: \
