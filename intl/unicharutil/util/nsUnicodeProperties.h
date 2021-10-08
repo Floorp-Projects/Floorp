@@ -167,6 +167,20 @@ inline bool IsEastAsianWidthAFW(uint32_t aCh) {
   return false;
 }
 
+inline bool IsEastAsianWidthFW(uint32_t aCh) {
+  switch (u_getIntPropertyValue(aCh, UCHAR_EAST_ASIAN_WIDTH)) {
+    case U_EA_FULLWIDTH:
+    case U_EA_WIDE:
+      return true;
+    case U_EA_AMBIGUOUS:
+    case U_EA_HALFWIDTH:
+    case U_EA_NARROW:
+    case U_EA_NEUTRAL:
+      return false;
+  }
+  return false;
+}
+
 inline bool IsDefaultIgnorable(uint32_t aCh) {
   return u_hasBinaryProperty(aCh, UCHAR_DEFAULT_IGNORABLE_CODE_POINT);
 }
