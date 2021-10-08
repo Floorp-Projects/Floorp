@@ -196,19 +196,19 @@ VideoCaptureAndroid::~VideoCaptureAndroid() {
 
 int32_t VideoCaptureAndroid::StartCapture(
     const VideoCaptureCapability& capability) {
-  JNIEnv* env = nullptr;
+  AttachThreadScoped ats(g_jvm_capture);
+  JNIEnv* env = ats.env();
   int width = 0;
   int height = 0;
   int min_mfps = 0;
   int max_mfps = 0;
   {
     MutexLock lock(&api_lock_);
-    AttachThreadScoped ats(g_jvm_capture);
-    env = ats.env();
 
     if (_deviceInfo.GetBestMatchedCapability(_deviceUniqueId, capability,
                                              _captureCapability) < 0) {
-      RTC_LOG(LS_ERROR) << __FUNCTION__ << "s: GetBestMatchedCapability failed: "
+      RTC_LOG(LS_ERROR) << __FUNCTION__
+                        << "s: GetBestMatchedCapability failed: "
                         << capability.width << "x" << capability.height;
       return -1;
     }
@@ -237,11 +237,10 @@ int32_t VideoCaptureAndroid::StartCapture(
 }
 
 int32_t VideoCaptureAndroid::StopCapture() {
-  JNIEnv* env = nullptr;
+  AttachThreadScoped ats(g_jvm_capture);
+  JNIEnv* env = ats.env();
   {
     MutexLock lock(&api_lock_);
-    AttachThreadScoped ats(g_jvm_capture);
-    env = ats.env();
 
     memset(&_requestedCapability, 0, sizeof(_requestedCapability));
     memset(&_captureCapability, 0, sizeof(_captureCapability));
