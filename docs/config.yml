@@ -44,6 +44,7 @@ categories:
         - testing/marionette
         - testing/geckodriver
         - web-platform
+        - gtest
         - tools/fuzzing
         - tools/sanitizer
         - testing/perfdocs
