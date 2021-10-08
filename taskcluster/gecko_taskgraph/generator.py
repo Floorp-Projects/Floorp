@@ -5,7 +5,9 @@
 import logging
 import os
 import copy
+
 import attr
+from taskgraph.util.yaml import load_yaml
 
 from . import filter_tasks
 from .graph import Graph
@@ -20,7 +22,6 @@ from .util.verify import (
     verify_docs,
     verifications,
 )
-from .util.yaml import load_yaml
 from .config import load_graph_config, GraphConfig
 
 logger = logging.getLogger(__name__)

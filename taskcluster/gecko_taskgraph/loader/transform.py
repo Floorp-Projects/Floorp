@@ -5,9 +5,9 @@
 
 import logging
 
+from taskgraph.util.yaml import load_yaml
 
 from ..util.templates import merge
-from ..util.yaml import load_yaml
 
 logger = logging.getLogger(__name__)
 
