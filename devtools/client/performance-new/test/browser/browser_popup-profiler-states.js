@@ -23,7 +23,7 @@ add_task(async function test() {
   }
 
   info("The profiler button starts out inactive");
-  checkButtonState(button, {
+  await checkButtonState(button, {
     tooltip: "Record a performance profile",
     active: false,
     paused: false,
@@ -31,7 +31,7 @@ add_task(async function test() {
 
   info("Toggling the profiler turns on the active state");
   toggleProfiler("aboutprofiling");
-  checkButtonState(button, {
+  await checkButtonState(button, {
     tooltip: "The profiler is recording a profile",
     active: true,
     paused: false,
@@ -39,16 +39,24 @@ add_task(async function test() {
 
   info("Capturing a profile makes the button paused");
   captureProfile("aboutprofiling");
-  checkButtonState(button, {
-    tooltip: "The profiler is capturing a profile",
+
+  // The state "capturing" can be very quick, so waiting for the tooltip
+  // translation is racy. Let's only check the button's states.
+  await checkButtonState(button, {
     active: false,
     paused: true,
   });
 
-  waitUntil(
+  await waitUntil(
     () => !button.classList.contains("profiler-paused"),
     "Waiting until the profiler is no longer paused"
   );
+
+  await checkButtonState(button, {
+    tooltip: "Record a performance profile",
+    active: false,
+    paused: false,
+  });
 
   await checkTabLoadedProfile({
     initialTitle: "Waiting on the profile",
@@ -62,12 +70,7 @@ add_task(async function test() {
  * because it's hard to provide a user-focused interpretation of button
  * stylings.
  */
-function checkButtonState(button, { tooltip, active, paused }) {
-  is(
-    button.getAttribute("tooltiptext"),
-    tooltip,
-    `The tooltip for the button is "${tooltip}".`
-  );
+async function checkButtonState(button, { tooltip, active, paused }) {
   is(
     button.classList.contains("profiler-active"),
     active,
@@ -78,4 +81,10 @@ function checkButtonState(button, { tooltip, active, paused }) {
     paused,
     `The expected profiler button paused state is: ${paused}`
   );
+
+  if (tooltip) {
+    // Let's also check the tooltip, but because the translation happens
+    // asynchronously, we need a waiting mechanism.
+    await getElementByTooltip(document, tooltip);
+  }
 }

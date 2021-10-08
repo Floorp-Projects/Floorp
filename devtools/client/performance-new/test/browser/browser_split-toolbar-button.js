@@ -58,10 +58,16 @@ add_task(async function click_icon() {
   ok(!isActive(), "should start with the profiler inactive");
 
   button.click();
+  await getElementByTooltip(document, "The profiler is recording a profile");
   ok(isActive(), "should have started the profiler");
 
   button.click();
+  // We're not testing for the tooltip "capturing a profile" because this might
+  // be racy.
   await waitForProfileAndCloseTab();
+
+  // Back to the inactive state.
+  await getElementByTooltip(document, "Record a performance profile");
 });
 
 add_task(async function click_dropmarker() {
