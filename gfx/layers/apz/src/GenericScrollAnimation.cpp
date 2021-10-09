@@ -62,8 +62,8 @@ void GenericScrollAnimation::Update(TimeStamp aTime,
 bool GenericScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
                                       const TimeDuration& aDelta) {
   TimeStamp now = mApzc.GetFrameTime().Time();
-  CSSToParentLayerScale2D zoom = aFrameMetrics.GetZoom();
-  if (zoom == CSSToParentLayerScale2D(0, 0)) {
+  CSSToParentLayerScale zoom(aFrameMetrics.GetZoom());
+  if (zoom == CSSToParentLayerScale(0)) {
     return false;
   }
 

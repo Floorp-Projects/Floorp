@@ -206,8 +206,7 @@ void UiCompositorControllerParent::NotifyUpdateScreenMetrics(
 #if defined(MOZ_WIDGET_ANDROID)
   // TODO: Need to handle different x-and y-scales.
   CSSToScreenScale scale = ViewTargetAs<ScreenPixel>(
-      aMetrics.mZoom.ToScaleFactor(),
-      PixelCastJustification::ScreenIsParentLayerForRoot);
+      aMetrics.mZoom, PixelCastJustification::ScreenIsParentLayerForRoot);
   ScreenPoint scrollOffset = aMetrics.mVisualScrollOffset * scale;
   CompositorThread()->Dispatch(NewRunnableMethod<ScreenPoint, CSSToScreenScale>(
       "UiCompositorControllerParent::SendRootFrameMetrics", this,

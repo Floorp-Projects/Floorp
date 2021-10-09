@@ -118,19 +118,17 @@ struct RepaintRequest {
     return mZoom * mTransformToAncestorScale;
   }
 
-  CSSToLayerScale2D LayersPixelsPerCSSPixel() const {
+  CSSToLayerScale LayersPixelsPerCSSPixel() const {
     return mDevPixelsPerCSSPixel * mCumulativeResolution;
   }
 
   // Get the amount by which this frame has been zoomed since the last repaint.
   LayerToParentLayerScale GetAsyncZoom() const {
-    // The async portion of the zoom should be the same along the x and y
-    // axes.
-    return (mZoom / LayersPixelsPerCSSPixel()).ToScaleFactor();
+    return mZoom / LayersPixelsPerCSSPixel();
   }
 
   CSSSize CalculateCompositedSizeInCssPixels() const {
-    if (GetZoom() == CSSToParentLayerScale2D(0, 0)) {
+    if (GetZoom() == CSSToParentLayerScale(0)) {
       return CSSSize();  // avoid division by zero
     }
     return mCompositionBounds.Size() / GetZoom();
@@ -142,7 +140,7 @@ struct RepaintRequest {
     return mCompositionBounds;
   }
 
-  const LayoutDeviceToLayerScale2D& GetCumulativeResolution() const {
+  const LayoutDeviceToLayerScale& GetCumulativeResolution() const {
     return mCumulativeResolution;
   }
 
@@ -158,7 +156,7 @@ struct RepaintRequest {
 
   const CSSPoint& GetVisualScrollOffset() const { return mScrollOffset; }
 
-  const CSSToParentLayerScale2D& GetZoom() const { return mZoom; }
+  const CSSToParentLayerScale& GetZoom() const { return mZoom; }
 
   ScrollOffsetUpdateType GetScrollUpdateType() const {
     return mScrollUpdateType;
@@ -229,7 +227,7 @@ struct RepaintRequest {
   ParentLayerRect mCompositionBounds;
 
   // See FrameMetrics::mCumulativeResolution for description.
-  LayoutDeviceToLayerScale2D mCumulativeResolution;
+  LayoutDeviceToLayerScale mCumulativeResolution;
 
   // The conversion factor between CSS pixels and device pixels for this frame.
   // This can vary based on a variety of things, such as reflowing-zoom.
@@ -244,7 +242,7 @@ struct RepaintRequest {
   // steady state, the two will be the same, but during an async zoom action the
   // two may diverge. This information is initialized in Gecko but updated in
   // the APZC.
-  CSSToParentLayerScale2D mZoom;
+  CSSToParentLayerScale mZoom;
 
   // The scroll generation counter used to acknowledge the scroll offset update.
   ScrollGeneration mScrollGeneration;

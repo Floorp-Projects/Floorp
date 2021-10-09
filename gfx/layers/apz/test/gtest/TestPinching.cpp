@@ -23,7 +23,7 @@ class APZCPinchTester : public APZCBasicTester {
     fm.SetScrollableRect(CSSRect(0, 0, 980, 1000));
     fm.SetVisualScrollOffset(CSSPoint(300, 300));
     fm.SetLayoutViewport(CSSRect(300, 300, 100, 200));
-    fm.SetZoom(CSSToParentLayerScale2D(2.0, 2.0));
+    fm.SetZoom(CSSToParentLayerScale(2.0));
     // APZC only allows zooming on the root scrollable frame.
     fm.SetIsRootContent(true);
     // the visible area of the document in CSS pixels is x=300 y=300 w=50 h=100
@@ -59,20 +59,20 @@ class APZCPinchTester : public APZCBasicTester {
     if (aShouldTriggerPinch) {
       // the visible area of the document in CSS pixels is now x=325 y=330 w=40
       // h=80
-      EXPECT_EQ(2.5f, fm.GetZoom().ToScaleFactor().scale);
+      EXPECT_EQ(2.5f, fm.GetZoom().scale);
       EXPECT_EQ(325, fm.GetVisualScrollOffset().x);
       EXPECT_EQ(330, fm.GetVisualScrollOffset().y);
     } else {
       // The frame metrics should stay the same since touch-action:none makes
       // apzc ignore pinch gestures.
-      EXPECT_EQ(2.0f, fm.GetZoom().ToScaleFactor().scale);
+      EXPECT_EQ(2.0f, fm.GetZoom().scale);
       EXPECT_EQ(300, fm.GetVisualScrollOffset().x);
       EXPECT_EQ(300, fm.GetVisualScrollOffset().y);
     }
 
     // part 2 of the test, move to the top-right corner of the page and pinch
     // and make sure we stay in the correct spot
-    fm.SetZoom(CSSToParentLayerScale2D(2.0, 2.0));
+    fm.SetZoom(CSSToParentLayerScale(2.0));
     fm.SetVisualScrollOffset(CSSPoint(930, 5));
     apzc->SetFrameMetrics(fm);
     // the visible area of the document in CSS pixels is x=930 y=5 w=50 h=100
@@ -93,11 +93,11 @@ class APZCPinchTester : public APZCBasicTester {
     if (aShouldTriggerPinch) {
       // the visible area of the document in CSS pixels is now x=805 y=0 w=100
       // h=200
-      EXPECT_EQ(1.0f, fm.GetZoom().ToScaleFactor().scale);
+      EXPECT_EQ(1.0f, fm.GetZoom().scale);
       EXPECT_EQ(805, fm.GetVisualScrollOffset().x);
       EXPECT_EQ(0, fm.GetVisualScrollOffset().y);
     } else {
-      EXPECT_EQ(2.0f, fm.GetZoom().ToScaleFactor().scale);
+      EXPECT_EQ(2.0f, fm.GetZoom().scale);
       EXPECT_EQ(930, fm.GetVisualScrollOffset().x);
       EXPECT_EQ(5, fm.GetVisualScrollOffset().y);
     }
@@ -348,7 +348,7 @@ TEST_F(APZCPinchTester, Panning_TwoFinger_ZoomDisabled) {
   // causes the scroll offset to change by half of that (25, 25) pixels.
   EXPECT_EQ(325, fm.GetVisualScrollOffset().x);
   EXPECT_EQ(325, fm.GetVisualScrollOffset().y);
-  EXPECT_EQ(2.0, fm.GetZoom().ToScaleFactor().scale);
+  EXPECT_EQ(2.0, fm.GetZoom().scale);
 }
 
 TEST_F(APZCPinchTester, Panning_Beyond_LayoutViewport) {

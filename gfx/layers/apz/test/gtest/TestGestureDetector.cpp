@@ -23,7 +23,7 @@ class APZCGestureDetectorTester : public APZCBasicTester {
     fm.SetCompositionBounds(ParentLayerRect(200, 200, 100, 200));
     fm.SetScrollableRect(CSSRect(0, 0, 980, 1000));
     fm.SetVisualScrollOffset(CSSPoint(300, 300));
-    fm.SetZoom(CSSToParentLayerScale2D(2.0, 2.0));
+    fm.SetZoom(CSSToParentLayerScale(2.0));
     // APZC only allows zooming on the root scrollable frame.
     fm.SetIsRootContent(true);
     // the visible area of the document in CSS pixels is x=300 y=300 w=50 h=100
@@ -84,9 +84,8 @@ TEST_F(APZCGestureDetectorTester, Pan_After_Pinch) {
   // Verify that the zoom changed, just to make sure our code above did what it
   // was supposed to.
   FrameMetrics zoomedMetrics = apzc->GetFrameMetrics();
-  float newZoom = zoomedMetrics.GetZoom().ToScaleFactor().scale;
-  EXPECT_EQ(originalMetrics.GetZoom().ToScaleFactor().scale * zoomAmount,
-            newZoom);
+  float newZoom = zoomedMetrics.GetZoom().scale;
+  EXPECT_EQ(originalMetrics.GetZoom().scale * zoomAmount, newZoom);
 
   // Now we lift one finger...
   mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, mcc->Time(), 0);
@@ -208,7 +207,7 @@ TEST_F(APZCGestureDetectorTester, Pan_With_Tap) {
 
   // Verify that we scrolled
   FrameMetrics finalMetrics = apzc->GetFrameMetrics();
-  float zoom = finalMetrics.GetZoom().ToScaleFactor().scale;
+  float zoom = finalMetrics.GetZoom().scale;
   EXPECT_EQ(
       originalMetrics.GetVisualScrollOffset().y - (panDistance * 2 / zoom),
       finalMetrics.GetVisualScrollOffset().y);
