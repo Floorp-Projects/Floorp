@@ -2967,7 +2967,6 @@ class PresShell final : public nsStubDocumentObserver,
   // needed for the synthetic mouse events.
   layers::ScrollableLayerGuid mMouseEventTargetGuid;
 
-  // Only populated on root content documents.
   nsSize mVisualViewportSize;
 
   // The focus information needed for async keyboard scrolling
