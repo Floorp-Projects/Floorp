@@ -126,7 +126,7 @@ void FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
 /* static */
 CSSRect FrameMetrics::CalculateScrollRange(
     const CSSRect& aScrollableRect, const ParentLayerRect& aCompositionBounds,
-    const CSSToParentLayerScale2D& aZoom) {
+    const CSSToParentLayerScale& aZoom) {
   CSSSize scrollPortSize =
       CalculateCompositedSizeInCssPixels(aCompositionBounds, aZoom);
   CSSRect scrollRange = aScrollableRect;
@@ -140,8 +140,8 @@ CSSRect FrameMetrics::CalculateScrollRange(
 /* static */
 CSSSize FrameMetrics::CalculateCompositedSizeInCssPixels(
     const ParentLayerRect& aCompositionBounds,
-    const CSSToParentLayerScale2D& aZoom) {
-  if (aZoom == CSSToParentLayerScale2D(0, 0)) {
+    const CSSToParentLayerScale& aZoom) {
+  if (aZoom == CSSToParentLayerScale(0)) {
     return CSSSize();  // avoid division by zero
   }
   return aCompositionBounds.Size() / aZoom;

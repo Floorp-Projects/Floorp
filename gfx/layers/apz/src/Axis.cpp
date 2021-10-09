@@ -319,7 +319,7 @@ bool Axis::CanScroll(ParentLayerCoord aDelta) const {
 }
 
 CSSCoord Axis::ClampOriginToScrollableRect(CSSCoord aOrigin) const {
-  CSSToParentLayerScale zoom = GetAxisScale(GetFrameMetrics().GetZoom());
+  CSSToParentLayerScale zoom = GetFrameMetrics().GetZoom();
   ParentLayerCoord origin = aOrigin * zoom;
   ParentLayerCoord result;
   if (origin < GetPageStart()) {
@@ -364,7 +364,7 @@ ParentLayerCoord Axis::DisplacementWillOverscrollAmount(
 CSSCoord Axis::ScaleWillOverscrollAmount(float aScale, CSSCoord aFocus) const {
   // Internally, do computations in ParentLayer coordinates *before* the scale
   // is applied.
-  CSSToParentLayerScale zoom = GetAxisScale(GetFrameMetrics().GetZoom());
+  CSSToParentLayerScale zoom = GetFrameMetrics().GetZoom();
   ParentLayerCoord focus = aFocus * zoom;
   ParentLayerCoord originAfterScale = (GetOrigin() + focus) - (focus / aScale);
 

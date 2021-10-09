@@ -370,10 +370,8 @@ void APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest) {
     // probability of being exactly 1.
     presShellResolution =
         (aRequest.GetPresShellResolution() /
-         aRequest.GetCumulativeResolution().ToScaleFactor().scale) *
-        (aRequest.GetZoom().ToScaleFactor() /
-         aRequest.GetDevPixelsPerCSSPixel())
-            .scale;
+         aRequest.GetCumulativeResolution().scale) *
+        (aRequest.GetZoom() / aRequest.GetDevPixelsPerCSSPixel()).scale;
     presShell->SetResolutionAndScaleTo(presShellResolution,
                                        ResolutionChangeOrigin::Apz);
 

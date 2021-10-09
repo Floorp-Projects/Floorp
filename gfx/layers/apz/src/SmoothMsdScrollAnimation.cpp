@@ -21,8 +21,8 @@ SmoothMsdScrollAnimation::SmoothMsdScrollAnimation(
 
 bool SmoothMsdScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
                                         const TimeDuration& aDelta) {
-  CSSToParentLayerScale2D zoom = aFrameMetrics.GetZoom();
-  if (zoom == CSSToParentLayerScale2D(0, 0)) {
+  CSSToParentLayerScale zoom(aFrameMetrics.GetZoom());
+  if (zoom == CSSToParentLayerScale(0)) {
     return false;
   }
   CSSPoint oneParentLayerPixel =

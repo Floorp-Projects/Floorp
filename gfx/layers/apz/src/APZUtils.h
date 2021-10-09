@@ -157,7 +157,7 @@ constexpr AsyncTransformComponents LayoutAndVisual(
  */
 struct GeckoViewMetrics {
   CSSPoint mVisualScrollOffset;
-  CSSToParentLayerScale2D mZoom;
+  CSSToParentLayerScale mZoom;
 };
 
 namespace apz {

@@ -1195,7 +1195,7 @@ class AsyncPanZoomController {
     return mScrollMetadata.GetMetrics().GetCompositionBounds();
   }
 
-  LayoutDeviceToLayerScale2D GetCumulativeResolution() const {
+  LayoutDeviceToLayerScale GetCumulativeResolution() const {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     return mScrollMetadata.GetMetrics().GetCumulativeResolution();
   }
@@ -1246,7 +1246,7 @@ class AsyncPanZoomController {
   CSSPoint GetEffectiveScrollOffset(
       AsyncTransformConsumer aMode,
       const RecursiveMutexAutoLock& aProofOfLock) const;
-  CSSToParentLayerScale2D GetEffectiveZoom(
+  CSSToParentLayerScale GetEffectiveZoom(
       AsyncTransformConsumer aMode,
       const RecursiveMutexAutoLock& aProofOfLock) const;
 
