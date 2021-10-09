@@ -54,8 +54,6 @@ function frameScript() {
   // as it sets up the observers that inject extension content scripts.
   Cc["@mozilla.org/addons/policy-service;1"].getService();
 
-  Services.obs.notifyObservers(this, "tab-content-frameloader-created");
-
   const messageListener = {
     async receiveMessage({ target, messageName, recipient, data, name }) {
       /* globals content */

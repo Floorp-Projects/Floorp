@@ -1743,9 +1743,6 @@ var gBrowserInit = {
     CaptivePortalWatcher.init();
     ZoomUI.init(window);
 
-    let mm = window.getGroupMessageManager("browsers");
-    mm.loadFrameScript("chrome://browser/content/tab-content.js", true, true);
-
     if (!gMultiProcessBrowser) {
       // There is a Content:Click message manually sent from content.
       Services.els.addSystemEventListener(

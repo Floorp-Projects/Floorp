@@ -516,12 +516,6 @@ function startup() {
   const browser = createBrowser();
   ModuleManager.init(browser, [
     {
-      name: "ExtensionContent",
-      onInit: {
-        frameScript: "chrome://geckoview/content/extension-content.js",
-      },
-    },
-    {
       name: "GeckoViewContent",
       onInit: {
         resource: "resource://gre/modules/GeckoViewContent.jsm",

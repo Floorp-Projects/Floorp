@@ -37,7 +37,6 @@ EXTRA_JS_MODULES += [
     "MessageManagerProxy.jsm",
     "NativeManifests.jsm",
     "NativeMessaging.jsm",
-    "onExtensionBrowser.js",
     "PerformanceCounters.jsm",
     "ProxyChannelFilter.jsm",
     "Schemas.jsm",

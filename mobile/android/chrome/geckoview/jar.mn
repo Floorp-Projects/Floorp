@@ -7,7 +7,6 @@ geckoview.jar:
 
   content/config.xhtml
   content/config.js
-  content/extension-content.js
   content/geckoview.xhtml
   content/geckoview.js
   content/GeckoViewMediaControlChild.js
