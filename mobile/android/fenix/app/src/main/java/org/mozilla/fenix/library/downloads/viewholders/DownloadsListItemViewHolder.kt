@@ -5,7 +5,6 @@
 package org.mozilla.fenix.library.downloads.viewholders
 
 import android.view.View
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.downloads.toMegabyteOrKilobyteString
 import org.mozilla.fenix.R
@@ -16,7 +15,6 @@ import org.mozilla.fenix.library.downloads.DownloadInteractor
 import org.mozilla.fenix.library.downloads.DownloadItem
 import org.mozilla.fenix.ext.getIcon
 import org.mozilla.fenix.ext.showAndEnable
-import org.mozilla.fenix.library.downloads.DownloadFragmentState
 import org.mozilla.fenix.library.downloads.DownloadItemMenu
 
 class DownloadsListItemViewHolder(
@@ -31,20 +29,10 @@ class DownloadsListItemViewHolder(
 
     init {
         setupMenu()
-
-        binding.deleteDownloadsButton.setOnClickListener {
-            val selected = selectionHolder.selectedItems
-            if (selected.isEmpty()) {
-                downloadInteractor.onDeleteAll()
-            } else {
-                downloadInteractor.onDeleteSome(selected)
-            }
-        }
     }
 
     fun bind(
         item: DownloadItem,
-        mode: DownloadFragmentState.Mode,
         isPendingDeletion: Boolean = false
     ) {
         binding.downloadLayout.visibility = if (isPendingDeletion) {
@@ -54,8 +42,6 @@ class DownloadsListItemViewHolder(
         }
         binding.downloadLayout.titleView.text = item.fileName
         binding.downloadLayout.urlView.text = item.size.toLong().toMegabyteOrKilobyteString()
-
-        toggleTopContent(false, mode == DownloadFragmentState.Mode.Normal)
 
         binding.downloadLayout.setSelectionInteractor(item, selectionHolder, downloadInteractor)
         binding.downloadLayout.changeSelected(item in selectionHolder.selectedItems)
@@ -73,25 +59,6 @@ class DownloadsListItemViewHolder(
         this.item = item
     }
 
-    private fun toggleTopContent(
-        showTopContent: Boolean,
-        isNormalMode: Boolean
-    ) {
-        binding.deleteDownloadsButton.isVisible = showTopContent
-
-        if (showTopContent) {
-            binding.deleteDownloadsButton.run {
-                if (isNormalMode) {
-                    isEnabled = true
-                    alpha = 1f
-                } else {
-                    isEnabled = false
-                    alpha = DELETE_BUTTON_DISABLED_ALPHA
-                }
-            }
-        }
-    }
-
     private fun setupMenu() {
         val downloadMenu = DownloadItemMenu(itemView.context) {
             val item = this.item ?: return@DownloadItemMenu
@@ -104,7 +71,6 @@ class DownloadsListItemViewHolder(
     }
 
     companion object {
-        const val DELETE_BUTTON_DISABLED_ALPHA = 0.4f
         const val LAYOUT_ID = R.layout.download_list_item
     }
 }

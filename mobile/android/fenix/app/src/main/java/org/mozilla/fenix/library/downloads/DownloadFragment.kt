@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.library.downloads
 
-import android.content.DialogInterface
 import android.os.Bundle
 import android.text.SpannableString
 import android.view.LayoutInflater
@@ -14,10 +13,8 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
-import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.state.BrowserState
@@ -29,7 +26,6 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.databinding.FragmentDownloadsBinding
@@ -76,7 +72,6 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
         val downloadController: DownloadController = DefaultDownloadController(
             downloadStore,
             ::openItem,
-            ::displayDeleteAll,
             ::invalidateOptionsMenu,
             ::deleteDownloadItems
         )
@@ -125,32 +120,6 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-    }
-
-    private fun displayDeleteAll() {
-        activity?.let { activity ->
-            AlertDialog.Builder(activity).apply {
-                setMessage(R.string.download_delete_all_dialog)
-                setNegativeButton(R.string.delete_browsing_data_prompt_cancel) { dialog: DialogInterface, _ ->
-                    dialog.cancel()
-                }
-                setPositiveButton(R.string.delete_browsing_data_prompt_allow) { dialog: DialogInterface, _ ->
-                    // Use fragment's lifecycle; the view may be gone by the time dialog is interacted with.
-                    lifecycleScope.launch(IO) {
-                        downloadsUseCases.removeAllDownloads()
-                        updatePendingDownloadToDelete(downloadStore.state.items.toSet())
-                        launch(Dispatchers.Main) {
-                            showSnackBar(
-                                requireView(),
-                                getString(R.string.download_delete_multiple_items_snackbar_1)
-                            )
-                        }
-                    }
-                    dialog.dismiss()
-                }
-                create()
-            }.show()
-        }
     }
 
     /**

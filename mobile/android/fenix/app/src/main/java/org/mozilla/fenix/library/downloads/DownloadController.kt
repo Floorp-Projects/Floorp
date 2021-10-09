@@ -13,13 +13,11 @@ interface DownloadController {
     fun handleBackPressed(): Boolean
     fun handleModeSwitched()
     fun handleDeleteSome(items: Set<DownloadItem>)
-    fun handleDeleteAll()
 }
 
 class DefaultDownloadController(
     private val store: DownloadFragmentStore,
     private val openToFileManager: (item: DownloadItem, mode: BrowsingMode?) -> Unit,
-    private val displayDeleteAll: () -> Unit,
     private val invalidateOptionsMenu: () -> Unit,
     private val deleteDownloadItems: (Set<DownloadItem>) -> Unit
 ) : DownloadController {
@@ -46,10 +44,6 @@ class DefaultDownloadController(
 
     override fun handleModeSwitched() {
         invalidateOptionsMenu.invoke()
-    }
-
-    override fun handleDeleteAll() {
-        displayDeleteAll.invoke()
     }
 
     override fun handleDeleteSome(items: Set<DownloadItem>) {

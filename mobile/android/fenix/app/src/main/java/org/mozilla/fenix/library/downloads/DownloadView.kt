@@ -36,11 +36,6 @@ interface DownloadViewInteractor : SelectionInteractor<DownloadItem> {
      * @param items the downloads items to delete
      */
     fun onDeleteSome(items: Set<DownloadItem>)
-
-    /**
-     * Called when all downloads items are deleted
-     */
-    fun onDeleteAll()
 }
 
 /**

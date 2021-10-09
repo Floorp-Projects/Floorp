@@ -75,15 +75,6 @@ class DownloadInteractorTest {
     }
 
     @Test
-    fun onDeleteAll() {
-        interactor.onDeleteAll()
-
-        verifyAll {
-            controller.handleDeleteAll()
-        }
-    }
-
-    @Test
     fun onDeleteSome() {
         val items = setOf(downloadItem)
 

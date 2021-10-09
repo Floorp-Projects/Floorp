@@ -34,8 +34,4 @@ class DownloadInteractor(
     override fun onDeleteSome(items: Set<DownloadItem>) {
         downloadController.handleDeleteSome(items)
     }
-
-    override fun onDeleteAll() {
-        downloadController.handleDeleteAll()
-    }
 }

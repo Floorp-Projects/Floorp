@@ -40,9 +40,6 @@ class DownloadControllerTest {
     private var openToFileManagerCapturedItem: DownloadItem? = null
     private var openToFileManagerCapturedMode: BrowsingMode? = null
 
-    private val displayDeleteAll: () -> Unit = { wasDisplayDeleteAllCalled = true }
-    private var wasDisplayDeleteAllCalled = false
-
     private val invalidateOptionsMenu: () -> Unit = { wasInvalidateOptionsMenuCalled = true }
     private var wasInvalidateOptionsMenuCalled = false
 
@@ -52,7 +49,6 @@ class DownloadControllerTest {
     private val controller = DefaultDownloadController(
         store,
         openToFileManager,
-        displayDeleteAll,
         invalidateOptionsMenu,
         deleteDownloadItems
     )
@@ -117,13 +113,6 @@ class DownloadControllerTest {
         controller.handleModeSwitched()
 
         assertTrue(wasInvalidateOptionsMenuCalled)
-    }
-
-    @Test
-    fun onDeleteAll() {
-        controller.handleDeleteAll()
-
-        assertTrue(wasDisplayDeleteAllCalled)
     }
 
     @Test
