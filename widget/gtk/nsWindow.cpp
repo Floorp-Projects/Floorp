@@ -7104,8 +7104,19 @@ RefPtr<VsyncSource> nsWindow::GetVsyncSource() {
     return mWaylandVsyncSource;
   }
 #endif
-
   return nullptr;
+}
+
+bool nsWindow::SynchronouslyRepaintOnResize() {
+  if (GdkIsWaylandDisplay()) {
+    // See Bug 1734368
+    // Don't request synchronous repaint on HW accelerated backend - mesa can be
+    // deadlocked when it's missing back buffer and main event loop is blocked.
+    return false;
+  }
+
+  // default is synced repaint.
+  return true;
 }
 
 static bool IsFullscreenSupported(GtkWidget* aShell) {
