@@ -6368,7 +6368,12 @@
 
 - name: layers.force-synchronous-resize
   type: RelaxedAtomicBool
+#ifdef MOZ_WAYLAND
+  # We want to control it by nsWindow::SynchronouslyRepaintOnResize() on Linux/Wayland.
+  value: false
+#else
   value: true
+#endif
   mirror: always
 
 - name: layers.gpu-process.allow-software

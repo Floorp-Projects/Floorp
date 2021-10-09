@@ -241,6 +241,7 @@ class nsWindow final : public nsBaseWidget {
   void SetProgress(unsigned long progressPercent);
 
   RefPtr<mozilla::gfx::VsyncSource> GetVsyncSource() override;
+  bool SynchronouslyRepaintOnResize() override;
 
   void OnDPIChanged(void);
   void OnCheckResize(void);
