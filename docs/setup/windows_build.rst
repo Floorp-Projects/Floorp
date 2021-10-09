@@ -123,7 +123,7 @@ Now that your system is bootstrapped, you should be able to build!
 .. code-block:: shell
 
     rm bootstrap.py
-    cd mozilla-central
+    cd mozilla-unified
     ./mach build
     ./mach run
 
