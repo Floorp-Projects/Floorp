@@ -323,6 +323,8 @@ class SingleTestMixin(object):
         mozinfo.find_and_update_from_json(dirs["abs_test_install_dir"])
         e10s = self.config.get("e10s", False)
         mozinfo.update({"e10s": e10s})
+        is_fission = "fission.autostart=true" in self.config.get("extra_prefs", [])
+        mozinfo.update({"fission": is_fission})
         headless = self.config.get("headless", False)
         mozinfo.update({"headless": headless})
         if mozinfo.info["buildapp"] == "mobile/android":
