@@ -244,6 +244,7 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   bool HasCreatedMediaSession() const;
 
  private:
+  void ValidateShareData(const ShareData& aData, ErrorResult& aRv);
   RefPtr<MediaKeySystemAccessManager> mMediaKeySystemAccessManager;
 
  public:
