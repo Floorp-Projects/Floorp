@@ -164,15 +164,13 @@ struct FrameMetrics {
     return mZoom * mTransformToAncestorScale;
   }
 
-  CSSToLayerScale2D LayersPixelsPerCSSPixel() const {
+  CSSToLayerScale LayersPixelsPerCSSPixel() const {
     return mDevPixelsPerCSSPixel * mCumulativeResolution;
   }
 
   // Get the amount by which this frame has been zoomed since the last repaint.
   LayerToParentLayerScale GetAsyncZoom() const {
-    // The async portion of the zoom should be the same along the x and y
-    // axes.
-    return (mZoom / LayersPixelsPerCSSPixel()).ToScaleFactor();
+    return mZoom / LayersPixelsPerCSSPixel();
   }
 
   // Ensure the scrollableRect is at least as big as the compositionBounds
@@ -216,7 +214,7 @@ struct FrameMetrics {
    * for that.)
    */
   CSSRect CalculateCompositionBoundsInCssPixelsOfSurroundingContent() const {
-    if (GetZoom() == CSSToParentLayerScale2D(0, 0)) {
+    if (GetZoom() == CSSToParentLayerScale(0)) {
       return CSSRect();  // avoid division by zero
     }
     // The CSS pixels of the scrolled content and the CSS pixels of the
@@ -240,12 +238,7 @@ struct FrameMetrics {
     SetVisualScrollOffset(GetVisualScrollOffset() + aPoint);
   }
 
-  void ZoomBy(float aScale) { ZoomBy(gfxSize(aScale, aScale)); }
-
-  void ZoomBy(const gfxSize& aScale) {
-    mZoom.xScale *= aScale.width;
-    mZoom.yScale *= aScale.height;
-  }
+  void ZoomBy(float aScale) { mZoom.scale *= aScale; }
 
   /*
    * Compares an APZ frame metrics with an incoming content frame metrics
@@ -314,11 +307,11 @@ struct FrameMetrics {
   const CSSRect& GetCriticalDisplayPort() const { return mCriticalDisplayPort; }
 
   void SetCumulativeResolution(
-      const LayoutDeviceToLayerScale2D& aCumulativeResolution) {
+      const LayoutDeviceToLayerScale& aCumulativeResolution) {
     mCumulativeResolution = aCumulativeResolution;
   }
 
-  const LayoutDeviceToLayerScale2D& GetCumulativeResolution() const {
+  const LayoutDeviceToLayerScale& GetCumulativeResolution() const {
     return mCumulativeResolution;
   }
 
@@ -358,9 +351,9 @@ struct FrameMetrics {
     mScrollOffset = aVisualScrollOffset;
   }
 
-  void SetZoom(const CSSToParentLayerScale2D& aZoom) { mZoom = aZoom; }
+  void SetZoom(const CSSToParentLayerScale& aZoom) { mZoom = aZoom; }
 
-  const CSSToParentLayerScale2D& GetZoom() const { return mZoom; }
+  const CSSToParentLayerScale& GetZoom() const { return mZoom; }
 
   void SetScrollGeneration(const ScrollGeneration& aScrollGeneration) {
     mScrollGeneration = aScrollGeneration;
@@ -493,10 +486,10 @@ struct FrameMetrics {
   // frame metrics object.
   static CSSRect CalculateScrollRange(const CSSRect& aScrollableRect,
                                       const ParentLayerRect& aCompositionBounds,
-                                      const CSSToParentLayerScale2D& aZoom);
+                                      const CSSToParentLayerScale& aZoom);
   static CSSSize CalculateCompositedSizeInCssPixels(
       const ParentLayerRect& aCompositionBounds,
-      const CSSToParentLayerScale2D& aZoom);
+      const CSSToParentLayerScale& aZoom);
 
  private:
   // A ID assigned to each scrollable frame, unique within each LayersId..
@@ -589,7 +582,7 @@ struct FrameMetrics {
   // So when coordinates are passed to the process of the oop iframe they have
   // the resolution removed by unapplying that transform which includes the
   // resolution.
-  LayoutDeviceToLayerScale2D mCumulativeResolution;
+  LayoutDeviceToLayerScale mCumulativeResolution;
 
   // The conversion factor between CSS pixels and device pixels for this frame.
   // This can vary based on a variety of things, such as reflowing-zoom.
@@ -614,7 +607,7 @@ struct FrameMetrics {
   // steady state, the two will be the same, but during an async zoom action the
   // two may diverge. This information is initialized in Gecko but updated in
   // the APZC.
-  CSSToParentLayerScale2D mZoom;
+  CSSToParentLayerScale mZoom;
 
   // The scroll generation counter used to acknowledge the scroll offset update.
   ScrollGeneration mScrollGeneration;

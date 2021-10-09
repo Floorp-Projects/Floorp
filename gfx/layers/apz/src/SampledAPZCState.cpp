@@ -67,10 +67,7 @@ void SampledAPZCState::ClampVisualScrollOffset(const FrameMetrics& aMetrics) {
       aMetrics.GetScrollableRect(), mLayoutViewport);
 }
 
-void SampledAPZCState::ZoomBy(const gfxSize& aScale) {
-  mZoom.xScale *= aScale.width;
-  mZoom.yScale *= aScale.height;
-}
+void SampledAPZCState::ZoomBy(float aScale) { mZoom.scale *= aScale; }
 
 void SampledAPZCState::RemoveFractionalAsyncDelta() {
   // This function is a performance hack. With non-WebRender, having small

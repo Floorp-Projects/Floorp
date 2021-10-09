@@ -2817,7 +2817,7 @@ FrameMetrics nsLayoutUtils::CalculateBasicFrameMetrics(
     // the presShell's resolution. All the other frames are 1.0.
     resolution = presShell->GetResolution();
   }
-  LayoutDeviceToLayerScale2D cumulativeResolution(
+  LayoutDeviceToLayerScale cumulativeResolution(
       LayoutDeviceToLayerScale(presShell->GetCumulativeResolution()));
 
   LayerToParentLayerScale layerToParentLayerScale(1.0f);
@@ -2833,15 +2833,14 @@ FrameMetrics nsLayoutUtils::CalculateBasicFrameMetrics(
   // displayport calculation, not its origin.
   nsSize compositionSize =
       nsLayoutUtils::CalculateCompositionSizeForFrame(frame);
-  LayoutDeviceToParentLayerScale2D compBoundsScale;
+  LayoutDeviceToParentLayerScale compBoundsScale;
   if (frame == presShell->GetRootScrollFrame() &&
       presContext->IsRootContentDocumentCrossProcess()) {
     if (presContext->GetParentPresContext()) {
       float res = presContext->GetParentPresContext()
                       ->PresShell()
                       ->GetCumulativeResolution();
-      compBoundsScale =
-          LayoutDeviceToParentLayerScale2D(LayoutDeviceToParentLayerScale(res));
+      compBoundsScale = LayoutDeviceToParentLayerScale(res);
     }
   } else {
     compBoundsScale = cumulativeResolution * layerToParentLayerScale;
@@ -8784,8 +8783,8 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
   // don't have a aContainerParameters. In that case we're also not rasterizing
   // in Gecko anyway, so the only resolution we care about here is the presShell
   // resolution which we need to propagate to WebRender.
-  metrics.SetCumulativeResolution(LayoutDeviceToLayerScale2D(
-      LayoutDeviceToLayerScale(presShell->GetCumulativeResolution())));
+  metrics.SetCumulativeResolution(
+      LayoutDeviceToLayerScale(presShell->GetCumulativeResolution()));
 
   metrics.SetTransformToAncestorScale(
       GetTransformToAncestorScaleCrossProcessForFrameMetrics(
