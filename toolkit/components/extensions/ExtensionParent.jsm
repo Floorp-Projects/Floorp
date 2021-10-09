@@ -218,28 +218,16 @@ let apiManager = new (class extends SchemaAPIManager {
       });
     })();
 
-    /* eslint-disable mozilla/balanced-listeners */
-    Services.mm.addMessageListener("Extension:GetTabAndWindowId", this);
-    /* eslint-enable mozilla/balanced-listeners */
+    Services.mm.addMessageListener("Extension:GetFrameData", this);
 
     this.initialized = promise;
     return this.initialized;
   }
 
-  receiveMessage({ name, target, sync }) {
-    if (name === "Extension:GetTabAndWindowId") {
-      let result = this.global.tabTracker.getBrowserData(target);
-
-      if (result.tabId) {
-        if (sync) {
-          return result;
-        }
-        target.messageManager.sendAsyncMessage(
-          "Extension:SetFrameData",
-          result
-        );
-      }
-    }
+  receiveMessage({ target }) {
+    let data = GlobalManager.frameData.get(target) || {};
+    Object.assign(data, this.global.tabTracker.getBrowserData(target));
+    return data;
   }
 
   // Call static handlers for the given event on the given extension ids,
@@ -418,6 +406,9 @@ GlobalManager = {
   extensionMap: new Map(),
   initialized: false,
 
+  /** @type {WeakMap<Browser, object>} Extension Context init data. */
+  frameData: new WeakMap(),
+
   init(extension) {
     if (this.extensionMap.size == 0) {
       apiManager.on("extension-browser-inserted", this._onExtensionBrowser);
@@ -451,21 +442,10 @@ GlobalManager = {
     }
   },
 
-  _onExtensionBrowser(type, browser, additionalData = {}) {
-    browser.messageManager.loadFrameScript(
-      "resource://gre/modules/onExtensionBrowser.js",
-      false,
-      true
-    );
-
-    let viewType = browser.getAttribute("webextension-view-type");
-    if (viewType) {
-      let data = { viewType };
-
-      let { tabTracker } = apiManager.global;
-      Object.assign(data, tabTracker.getBrowserData(browser), additionalData);
-
-      browser.messageManager.sendAsyncMessage("Extension:SetFrameData", data);
+  _onExtensionBrowser(type, browser, data = {}) {
+    data.viewType = browser.getAttribute("webextension-view-type");
+    if (data.viewType) {
+      GlobalManager.frameData.set(browser, data);
     }
   },
 

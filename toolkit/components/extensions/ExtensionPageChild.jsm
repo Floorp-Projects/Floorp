@@ -23,11 +23,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "ExtensionProcessScript",
-  "resource://gre/modules/ExtensionProcessScript.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "Schemas",
   "resource://gre/modules/Schemas.jsm"
 );
@@ -113,10 +108,6 @@ const initializeBackgroundPage = context => {
     defineAs: "alert",
   });
 };
-
-function getFrameData(global) {
-  return ExtensionProcessScript.getFrameData(global, true);
-}
 
 var apiManager = new (class extends SchemaAPIManager {
   constructor() {
@@ -590,11 +581,15 @@ ExtensionPageChild = {
       );
     }
 
-    let mm = contentWindow.docShell.messageManager;
-
-    let { viewType, tabId, devtoolsToolboxInfo } = getFrameData(mm) || {};
-
     let uri = contentWindow.document.documentURIObject;
+
+    let mm = contentWindow.docShell.messageManager;
+    let data = mm.sendSyncMessage("Extension:GetFrameData")[0];
+    let { viewType, tabId, devtoolsToolboxInfo } = data;
+
+    if (viewType) {
+      ExtensionPageChild.expectViewLoad(mm, viewType);
+    }
 
     if (devtoolsToolboxInfo) {
       context = new DevToolsContextChild(extension, {
