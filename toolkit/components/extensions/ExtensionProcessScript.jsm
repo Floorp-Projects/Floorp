@@ -34,7 +34,7 @@ XPCOMUtils.defineLazyGetter(this, "console", () =>
   ExtensionCommon.getConsole()
 );
 
-const { DefaultWeakMap, getInnerWindowID } = ExtensionUtils;
+const { DefaultWeakMap } = ExtensionUtils;
 
 const { sharedData } = Services.cpmm;
 
@@ -66,49 +66,9 @@ var pendingExtensions = new Map();
 
 var ExtensionManager;
 
-class ExtensionGlobal {
-  constructor(global) {
-    this.global = global;
-    this.global.addMessageListener("Extension:SetFrameData", this);
-
-    this.frameData = null;
-  }
-
-  get messageFilterStrict() {
-    return {
-      innerWindowID: getInnerWindowID(this.global.content),
-    };
-  }
-
-  getFrameData(force = false) {
-    if (!this.frameData && force) {
-      this.frameData = this.global.sendSyncMessage(
-        "Extension:GetTabAndWindowId"
-      )[0];
-    }
-    return this.frameData;
-  }
-
-  receiveMessage({ target, messageName, recipient, data, name }) {
-    switch (name) {
-      case "Extension:SetFrameData":
-        if (this.frameData) {
-          Object.assign(this.frameData, data);
-        } else {
-          this.frameData = data;
-        }
-        if (data.viewType && WebExtensionPolicy.isExtensionProcess) {
-          ExtensionPageChild.expectViewLoad(this.global, data.viewType);
-        }
-    }
-  }
-}
-
 ExtensionManager = {
   // WeakMap<WebExtensionPolicy, Map<string, WebExtensionContentScript>>
   registeredContentScripts: new DefaultWeakMap(policy => new Map()),
-
-  globals: new WeakMap(),
 
   init() {
     Services.cpmm.addMessageListener("Extension:Startup", this);
@@ -118,12 +78,6 @@ ExtensionManager = {
     Services.cpmm.addMessageListener(
       "Extension:UnregisterContentScripts",
       this
-    );
-
-    // eslint-disable-next-line mozilla/balanced-listeners
-    Services.obs.addObserver(
-      global => this.globals.set(global, new ExtensionGlobal(global)),
-      "tab-content-frameloader-created"
     );
 
     this.updateStubExtensions();
@@ -356,11 +310,6 @@ ExtensionManager = {
 
 var ExtensionProcessScript = {
   extensions,
-
-  getFrameData(global, force) {
-    let extGlobal = ExtensionManager.globals.get(global);
-    return extGlobal && extGlobal.getFrameData(force);
-  },
 
   initExtension(extension) {
     return ExtensionManager.initExtensionPolicy(extension);
