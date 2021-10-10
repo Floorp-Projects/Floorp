@@ -93,7 +93,7 @@ class CacheQuotaClient final : public quota::Client {
     // next action recalculate the padding size.
     QM_TRY(MOZ_TO_RESULT(aCommitHook()));
 
-    QM_WARNONLY_TRY(ToResult(DirectoryPaddingFinalizeWrite(aBaseDir)),
+    QM_WARNONLY_TRY(MOZ_TO_RESULT(DirectoryPaddingFinalizeWrite(aBaseDir)),
                     ([&aBaseDir](const nsresult) {
                       // Force restore file next time.
                       QM_WARNONLY_TRY(QM_TO_RESULT(DirectoryPaddingDeleteFile(
