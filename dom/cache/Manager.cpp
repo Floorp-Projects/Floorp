@@ -255,7 +255,7 @@ class Manager::Factory {
       // XXX Can't use QM_TRY_INSPECT because that causes a clang-plugin
       // error of the NoNewThreadsChecker.
       nsCOMPtr<nsIThread> ioThread;
-      QM_TRY(ToResult(
+      QM_TRY(MOZ_TO_RESULT(
           NS_NewNamedThread("DOMCacheThread", getter_AddRefs(ioThread))));
 
       ref = MakeSafeRefPtr<Manager>(aManagerId.clonePtr(), ioThread,

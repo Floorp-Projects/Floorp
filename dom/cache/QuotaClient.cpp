@@ -108,9 +108,9 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
         // warning in the reports is not desired).
         QM_TRY(QM_OR_ELSE_LOG_VERBOSE_IF(
             // Expression.
-            ToResult(BodyTraverseFiles(QuotaInfo{}, *bodyDir, getUsage,
-                                       /* aCanRemoveFiles */ true,
-                                       /* aTrackQuota */ false)),
+            MOZ_TO_RESULT(BodyTraverseFiles(QuotaInfo{}, *bodyDir, getUsage,
+                                            /* aCanRemoveFiles */ true,
+                                            /* aTrackQuota */ false)),
             // Predicate.
             IsSpecificError<NS_ERROR_FILE_FS_CORRUPTED>,
             // Fallback. We treat NS_ERROR_FILE_FS_CORRUPTED as if the
