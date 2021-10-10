@@ -981,7 +981,9 @@ void CycleCollectedJSRuntime::TraceBlackJS(JSTracer* aTracer, void* aData) {
 }
 
 /* static */
-void CycleCollectedJSRuntime::TraceGrayJS(JSTracer* aTracer, void* aData) {
+bool CycleCollectedJSRuntime::TraceGrayJS(JSTracer* aTracer,
+                                          js::SliceBudget& budget,
+                                          void* aData) {
   CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
 
   // Mark these roots as gray so the CC can walk them later.
@@ -993,6 +995,8 @@ void CycleCollectedJSRuntime::TraceGrayJS(JSTracer* aTracer, void* aData) {
   }
 
   self->TraceNativeGrayRoots(aTracer, which);
+
+  return true;
 }
 
 /* static */
