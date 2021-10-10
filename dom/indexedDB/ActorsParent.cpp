@@ -679,7 +679,8 @@ nsresult SetDefaultPragmas(mozIStorageConnection& aConnection) {
     // currently too full.
     QM_TRY(QM_OR_ELSE_WARN_IF(
         // Expression.
-        ToResult(aConnection.SetGrowthIncrement(kSQLiteGrowthIncrement, ""_ns)),
+        MOZ_TO_RESULT(
+            aConnection.SetGrowthIncrement(kSQLiteGrowthIncrement, ""_ns)),
         // Predicate.
         IsSpecificError<NS_ERROR_FILE_TOO_BIG>,
         // Fallback.
@@ -5778,7 +5779,7 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
   QM_TRY_INSPECT(const auto& didExist,
                  QM_OR_ELSE_LOG_VERBOSE_IF(
                      // Expression.
-                     ToResult(aFile.Remove(false)).map(Some<Ok>),
+                     MOZ_TO_RESULT(aFile.Remove(false)).map(Some<Ok>),
                      // Predicate.
                      isIgnorableError,
                      // Fallback.
@@ -5825,7 +5826,7 @@ nsresult DeleteFilesNoQuota(nsIFile& aFile) {
   QM_TRY_INSPECT(const auto& didExist,
                  QM_OR_ELSE_WARN_IF(
                      // Expression.
-                     ToResult(aFile.Remove(true)).map(Some<Ok>),
+                     MOZ_TO_RESULT(aFile.Remove(true)).map(Some<Ok>),
                      // Predicate.
                      IsFileNotFoundError,
                      // Fallback.
@@ -5886,7 +5887,7 @@ Result<nsCOMPtr<nsIFile>, nsresult> CreateMarkerFile(
   // QM_OR_ELSE_LOG_VERBOSE_IF to QM_OR_ELSE_WARN_IF in the end.
   QM_TRY(QM_OR_ELSE_LOG_VERBOSE_IF(
       // Expression.
-      ToResult(markerFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644)),
+      MOZ_TO_RESULT(markerFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644)),
       // Predicate.
       IsSpecificError<NS_ERROR_FILE_ALREADY_EXISTS>,
       // Fallback.
@@ -6951,7 +6952,7 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
 
   QM_TRY(QM_OR_ELSE_WARN_IF(
       // Expression.
-      ToResult(beginStmt->Execute()),
+      MOZ_TO_RESULT(beginStmt->Execute()),
       // Predicate.
       IsSpecificError<NS_ERROR_STORAGE_BUSY>,
       // Fallback.
@@ -6974,7 +6975,7 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
           }
         }
 
-        return ToResult(rv);
+        return MOZ_TO_RESULT(rv);
       })));
 
   mInWriteTransaction = true;
@@ -7036,7 +7037,7 @@ void DatabaseConnection::FinishWriteTransaction() {
     mUpdateRefcountFunction->Reset();
   }
 
-  QM_WARNONLY_TRY(ToResult(ExecuteCachedStatement("BEGIN;"_ns))
+  QM_WARNONLY_TRY(MOZ_TO_RESULT(ExecuteCachedStatement("BEGIN;"_ns))
                       .andThen([&](const auto) -> Result<Ok, nsresult> {
                         mInReadTransaction = true;
                         return Ok{};
@@ -7197,7 +7198,7 @@ void DatabaseConnection::DoIdleProcessing(bool aNeedsCheckpoint) {
   // Finally try to restart the read transaction if we rolled it back earlier.
   if (beginStmt) {
     QM_WARNONLY_TRY(
-        ToResult(beginStmt.Borrow()->Execute())
+        MOZ_TO_RESULT(beginStmt.Borrow()->Execute())
             .andThen([&self = *this](const Ok) -> Result<Ok, nsresult> {
               self.mInReadTransaction = true;
               return Ok{};
@@ -14701,7 +14702,7 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
     // collision and not spam the reports.
     QM_TRY(QM_OR_ELSE_LOG_VERBOSE_IF(
         // Expression.
-        ToResult(borrowedStmt->Execute()),
+        MOZ_TO_RESULT(borrowedStmt->Execute()),
         // Predicate.
         ([&info, index, &aIndexValues](nsresult rv) {
           if (rv == NS_ERROR_STORAGE_CONSTRAINT && info.mUnique) {
@@ -19822,10 +19823,10 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
                  IDB_REPORT_INTERNAL_ERR_LAMBDA);
 
           QM_TRY(
-              ToResult(fileHelper->CreateFileFromStream(
-                           *file, *journalFile, *inputStream,
-                           storedFileInfo.ShouldCompress(),
-                           Transaction().GetDatabase().MaybeKeyRef()))
+              MOZ_TO_RESULT(fileHelper->CreateFileFromStream(
+                                *file, *journalFile, *inputStream,
+                                storedFileInfo.ShouldCompress(),
+                                Transaction().GetDatabase().MaybeKeyRef()))
                   .mapErr([](const nsresult rv) {
                     if (NS_ERROR_GET_MODULE(rv) !=
                         NS_ERROR_MODULE_DOM_INDEXEDDB) {

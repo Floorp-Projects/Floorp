@@ -423,12 +423,12 @@ class MOZ_RAII AutoDisableForeignKeyChecking {
                    MOZ_TO_RESULT_INVOKE(*state, GetInt32, 0), QM_VOID);
 
     if (mode) {
-      QM_WARNONLY_TRY(
-          ToResult(mConn->ExecuteSimpleSQL("PRAGMA foreign_keys = OFF;"_ns))
-              .andThen([this](const auto) -> Result<Ok, nsresult> {
-                mForeignKeyCheckingDisabled = true;
-                return Ok{};
-              }));
+      QM_WARNONLY_TRY(MOZ_TO_RESULT(mConn->ExecuteSimpleSQL(
+                                        "PRAGMA foreign_keys = OFF;"_ns))
+                          .andThen([this](const auto) -> Result<Ok, nsresult> {
+                            mForeignKeyCheckingDisabled = true;
+                            return Ok{};
+                          }));
     }
   }
 
@@ -566,7 +566,7 @@ nsresult InitializeConnection(mozIStorageConnection& aConn) {
   // Limit fragmentation by growing the database by many pages at once.
   QM_TRY(QM_OR_ELSE_WARN_IF(
       // Expression.
-      ToResult(aConn.SetGrowthIncrement(kGrowthSize, ""_ns)),
+      MOZ_TO_RESULT(aConn.SetGrowthIncrement(kGrowthSize, ""_ns)),
       // Predicate.
       IsSpecificError<NS_ERROR_FILE_TOO_BIG>,
       // Fallback.

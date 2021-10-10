@@ -447,7 +447,7 @@ nsresult SetDefaultPragmas(mozIStorageConnection* aConnection) {
     // currently too full.
     QM_TRY(QM_OR_ELSE_WARN_IF(
         // Expression.
-        ToResult(
+        MOZ_TO_RESULT(
             aConnection->SetGrowthIncrement(kSQLiteGrowthIncrement, ""_ns)),
         // Predicate.
         IsSpecificError<NS_ERROR_FILE_TOO_BIG>,
@@ -496,7 +496,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
             // so the use of QM_OR_ELSE_WARN_IF is ok here.
             QM_TRY(QM_OR_ELSE_WARN_IF(
                 // Expression.
-                ToResult(aUsageFile.Remove(false)),
+                MOZ_TO_RESULT(aUsageFile.Remove(false)),
                 // Predicate.
                 ([](const nsresult rv) {
                   return rv == NS_ERROR_FILE_NOT_FOUND ||
@@ -872,7 +872,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateShadowStorageConnection(
   // handling the shadow file or not).
   QM_TRY(QM_OR_ELSE_WARN(
       // Expression.
-      ToResult(StorageDBUpdater::Update(connection)),
+      MOZ_TO_RESULT(StorageDBUpdater::Update(connection)),
       // Fallback.
       ([&connection, &shadowFile, &ss](const nsresult) -> Result<Ok, nsresult> {
         QM_TRY(MOZ_TO_RESULT(connection->Close()));
