@@ -737,6 +737,8 @@ class GCRuntime {
   void traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrMark);
   void traceEmbeddingBlackRoots(JSTracer* trc);
   void traceEmbeddingGrayRoots(JSTracer* trc);
+  IncrementalProgress traceEmbeddingGrayRoots(JSTracer* trc,
+                                              SliceBudget& budget);
   void markFinalizationRegistryRoots(JSTracer* trc);
   void checkNoRuntimeRoots(AutoGCSession& session);
   void maybeDoCycleCollection();
@@ -751,7 +753,8 @@ class GCRuntime {
   IncrementalProgress markWeakReferences(SliceBudget& budget);
   IncrementalProgress markWeakReferencesInCurrentGroup(SliceBudget& budget);
   template <class ZoneIterT>
-  void markGrayRoots(gcstats::PhaseKind phase);
+  IncrementalProgress markGrayRoots(SliceBudget& budget,
+                                    gcstats::PhaseKind phase);
   void markBufferedGrayRoots(JS::Zone* zone);
   IncrementalProgress markAllWeakReferences();
   void markAllGrayReferences(gcstats::PhaseKind phase);
@@ -763,6 +766,8 @@ class GCRuntime {
   [[nodiscard]] bool findSweepGroupEdges();
   void getNextSweepGroup();
   void resetGrayList(Compartment* comp);
+  IncrementalProgress beginMarkingSweepGroup(JSFreeOp* fop,
+                                             SliceBudget& budget);
   IncrementalProgress markGrayRootsInCurrentGroup(JSFreeOp* fop,
                                                   SliceBudget& budget);
   IncrementalProgress markGray(JSFreeOp* fop, SliceBudget& budget);
