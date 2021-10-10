@@ -120,7 +120,43 @@ class UrlPreview extends Component {
         span({ key: "url-filename", className: "url-filename" }, `${filename}`),
         !!queryParamNames.length &&
           span({ key: "url-ques", className: "url-chars" }, "?"),
+
         queryParamNames.map((name, index) => {
+          if (Array.isArray(query[name])) {
+            return query[name].map((item, queryIndex) => {
+              return span(
+                {
+                  key: `url-params-${name}${queryIndex}`,
+                  className: "url-params",
+                },
+                span(
+                  {
+                    key: `url-params${name}${queryIndex}-name`,
+                    className: "url-params-name",
+                  },
+                  `${name}`
+                ),
+                span(
+                  {
+                    key: `url-chars-${name}${queryIndex}-equals`,
+                    className: "url-chars",
+                  },
+                  "="
+                ),
+                span(
+                  {
+                    key: `url-params-${name}${queryIndex}-value`,
+                    className: "url-params-value",
+                  },
+                  `${item}`
+                ),
+                (query[name].length - 1 !== queryIndex ||
+                  queryParamNames.length - 1 !== index) &&
+                  span({ key: "url-amp", className: "url-chars" }, "&")
+              );
+            });
+          }
+
           return span(
             { key: `url-params-${name}`, className: "url-params" },
             span(
