@@ -528,6 +528,8 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   int GetPopupAnchor() { return mPopupAnchor; }
   FlipType GetFlipType() { return mFlip; }
 
+  void WidgetPositionOrSizeDidChange();
+
  protected:
   nsString mIncrementalString;  // for incremental typing navigation
 
