@@ -173,6 +173,61 @@ TEST(JSHolderMap, TestAddRemoveMany)
   TestAddRemoveMany(MultiZone, 10000);
 }
 
+static void TestRemoveWhileIterating(HolderKind kind, size_t count) {
+  JSHolderMap map;
+  Vector<UniquePtr<MyHolder>, 0, InfallibleAllocPolicy> holders;
+  Maybe<JSHolderMap::Iter> iter;
+
+  for (size_t i = 0; i < count; i++) {
+    MOZ_ALWAYS_TRUE(holders.emplaceBack(MakeUnique<MyHolder>(kind)));
+  }
+
+  // Iterate a map with one entry but remove it before we get to it.
+  MyHolder* holder = holders[0].get();
+  map.Put(holder, holder, ZoneForKind(kind));
+  iter.emplace(map);
+  ASSERT_FALSE(iter->Done());
+  ASSERT_EQ(map.Extract(holder), holder);
+  iter->UpdateForRemovals();
+  ASSERT_TRUE(iter->Done());
+
+  // Check UpdateForRemovals is safe to call on a done iterator.
+  iter->UpdateForRemovals();
+  ASSERT_TRUE(iter->Done());
+  iter.reset();
+
+  // Add many holders and remove them mid way through iteration.
+
+  for (size_t i = 0; i < count; i++) {
+    MyHolder* holder = holders[i].get();
+    map.Put(holder, holder, ZoneForKind(kind));
+  }
+
+  iter.emplace(map);
+  for (size_t i = 0; i < count / 2; i++) {
+    iter->Next();
+    ASSERT_FALSE(iter->Done());
+  }
+
+  for (size_t i = 0; i < count; i++) {
+    MyHolder* holder = holders[i].get();
+    ASSERT_EQ(map.Extract(holder), holder);
+  }
+
+  iter->UpdateForRemovals();
+
+  ASSERT_TRUE(iter->Done());
+  iter.reset();
+
+  ASSERT_EQ(CountEntries(map), 0u);
+}
+
+TEST(JSHolderMap, TestRemoveWhileIterating)
+{
+  TestRemoveWhileIterating(SingleZone, 10000);
+  TestRemoveWhileIterating(MultiZone, 10000);
+}
+
 class ObjectHolder final {
  public:
   ObjectHolder() { HoldJSObjects(this); }
