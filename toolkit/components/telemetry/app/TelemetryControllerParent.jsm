@@ -73,7 +73,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryEventPing: "resource://gre/modules/EventPing.jsm",
   TelemetryPrioPing: "resource://gre/modules/PrioPing.jsm",
   UninstallPing: "resource://gre/modules/UninstallPing.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
 });
 
 /**
@@ -1345,7 +1344,7 @@ var Impl = {
       return null;
     }
 
-    return OS.File.read(probeFile.path, { encoding: "utf-8" });
+    return IOUtils.readUTF8(probeFile.path);
   },
 
   async registerScalarProbes() {
