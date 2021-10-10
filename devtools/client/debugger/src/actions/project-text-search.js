@@ -79,9 +79,15 @@ export function searchSources(cx, query) {
     await dispatch(clearSearchResults(cx));
     await dispatch(addSearchQuery(cx, query));
     dispatch(updateSearchStatus(cx, statusType.fetching));
-    const validSources = getSourceList(getState()).filter(
+    let validSources = getSourceList(getState()).filter(
       source => !hasPrettySource(getState(), source.id) && !isThirdParty(source)
     );
+    // Sort original entries first so that search results are more useful.
+    // See bug 1642778.
+    validSources = [
+      ...validSources.filter(x => x.isOriginal),
+      ...validSources.filter(x => !x.isOriginal),
+    ];
     for (const source of validSources) {
       if (cancelled) {
         return;
