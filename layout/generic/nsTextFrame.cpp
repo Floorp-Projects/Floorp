@@ -4505,7 +4505,8 @@ class nsContinuingTextFrame final : public nsTextFrame {
         auto* prev = static_cast<nsContinuingTextFrame*>(mPrevContinuation);
         MOZ_ASSERT(mFirstContinuation == prev->mFirstContinuation);
       } else {
-        MOZ_ASSERT(mFirstContinuation == mPrevContinuation->FirstContinuation());
+        MOZ_ASSERT(mFirstContinuation ==
+                   mPrevContinuation->FirstContinuation());
       }
     } else {
       MOZ_ASSERT(!mFirstContinuation);
@@ -10178,8 +10179,13 @@ bool nsTextFrame::IsEmpty() {
   // XXXldb Should this check compatibility mode as well???
   const nsStyleText* textStyle = StyleText();
   if (textStyle->WhiteSpaceIsSignificant()) {
-    // XXX shouldn't we return true if the length is zero?
-    return false;
+    // When WhiteSpaceIsSignificant styles are in effect, we only treat the
+    // frame as empty if its content really is entirely *empty* (not just
+    // whitespace), AND it is NOT editable or within an <input> element.
+    // In these cases we consider that the whitespace-preserving style makes
+    // the frame behave as non-empty so that its height doesn't become zero.
+    return GetContentLength() == 0 && !GetContent()->IsEditable() &&
+           !GetContent()->GetParent()->IsHTMLElement(nsGkAtoms::input);
   }
 
   if (mState & TEXT_ISNOT_ONLY_WHITESPACE) {
