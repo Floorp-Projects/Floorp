@@ -1394,22 +1394,6 @@ nsRect nsMenuPopupFrame::ComputeAnchorRect(nsPresContext* aRootPresContext,
       PresContext()->AppUnitsPerDevPixel());
 }
 
-static void NotifyPositionUpdatedForRemoteContents(nsIContent* aContent) {
-  for (nsIContent* content = aContent->GetFirstChild(); content;
-       content = content->GetNextSibling()) {
-    if (content->IsXULElement(nsGkAtoms::browser) &&
-        content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::remote,
-                                          nsGkAtoms::_true, eIgnoreCase)) {
-      if (dom::BrowserParent* browserParent =
-              dom::BrowserParent::GetFrom(content)) {
-        browserParent->NotifyPositionUpdatedForContentsInPopup();
-      }
-    } else {
-      NotifyPositionUpdatedForRemoteContents(content);
-    }
-  }
-}
-
 nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
                                             bool aIsMove, bool aSizedToPopup) {
   if (!mShouldAutoPosition) return NS_OK;
@@ -1752,15 +1736,42 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
     }
   }
 
+  // NOTE(emilio): This call below is kind of a workaround, but we need to do
+  // this here because some position changes don't go through the
+  // view system -> popup manager, like:
+  //
+  //   https://searchfox.org/mozilla-central/rev/477950cf9ca9c9bb5ff6f34e0d0f6ca4718ea798/widget/gtk/nsWindow.cpp#3847
+  //
+  // So this might be the last chance we have to set the remote browser's
+  // position.
+  //
+  // Ultimately this probably wants to get fixed in the widget size of things,
+  // but given this is worst-case a redundant DOM traversal, and that popups
+  // usually don't have all that much content, this is probably an ok
+  // workaround.
+  WidgetPositionOrSizeDidChange();
+
+  return NS_OK;
+}
+
+void nsMenuPopupFrame::WidgetPositionOrSizeDidChange() {
   // In the case this popup has remote contents having OOP iframes, it's
   // possible that OOP iframe's nsSubDocumentFrame has been already reflowed
   // thus, we will never have a chance to tell this parent browser's position
   // update to the OOP documents without notifying it explicitly.
-  if (HasRemoteContent()) {
-    NotifyPositionUpdatedForRemoteContents(mContent);
+  if (!HasRemoteContent()) {
+    return;
   }
-
-  return NS_OK;
+  for (nsIContent* content = mContent->GetFirstChild(); content;
+       content = content->GetNextNode(mContent)) {
+    if (content->IsXULElement(nsGkAtoms::browser) &&
+        content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::remote,
+                                          nsGkAtoms::_true, eIgnoreCase)) {
+      if (auto* browserParent = dom::BrowserParent::GetFrom(content)) {
+        browserParent->NotifyPositionUpdatedForContentsInPopup();
+      }
+    }
+  }
 }
 
 void nsMenuPopupFrame::GenerateFrames() {

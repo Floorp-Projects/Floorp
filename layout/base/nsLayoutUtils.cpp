@@ -2617,10 +2617,11 @@ LayoutDeviceIntPoint nsLayoutUtils::WidgetToWidgetOffset(nsIWidget* aFrom,
   nsIWidget* toRoot;
   LayoutDeviceIntPoint toOffset = GetWidgetOffset(aTo, toRoot);
 
-  if (fromRoot == toRoot) {
-    return fromOffset - toOffset;
+  if (fromRoot != toRoot) {
+    fromOffset = aFrom->WidgetToScreenOffset();
+    toOffset = aTo->WidgetToScreenOffset();
   }
-  return aFrom->WidgetToScreenOffset() - aTo->WidgetToScreenOffset();
+  return fromOffset - toOffset;
 }
 
 nsPoint nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
