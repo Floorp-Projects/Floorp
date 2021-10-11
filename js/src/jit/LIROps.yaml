@@ -2558,6 +2558,12 @@
     tlsPtr: WordSized
   mir_op: true
 
+- name: WasmLoadTls64
+  result_type: Int64
+  operands:
+    tlsPtr: WordSized
+  mir_op: WasmLoadTls
+
 - name: WasmHeapBase
   result_type: WordSized
   operands:

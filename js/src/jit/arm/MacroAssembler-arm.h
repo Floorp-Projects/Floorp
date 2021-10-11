@@ -1151,12 +1151,28 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
   }
 
   void load64(const Address& address, Register64 dest) {
-    load32(LowWord(address), dest.low);
-    load32(HighWord(address), dest.high);
+    bool highBeforeLow = address.base == dest.low;
+    if (highBeforeLow) {
+      load32(HighWord(address), dest.high);
+      load32(LowWord(address), dest.low);
+    } else {
+      load32(LowWord(address), dest.low);
+      load32(HighWord(address), dest.high);
+    }
   }
   void load64(const BaseIndex& address, Register64 dest) {
-    load32(LowWord(address), dest.low);
-    load32(HighWord(address), dest.high);
+    // If you run into this, relax your register allocation constraints.
+    MOZ_RELEASE_ASSERT(
+        !((address.base == dest.low || address.base == dest.high) &&
+          (address.index == dest.low || address.index == dest.high)));
+    bool highBeforeLow = address.base == dest.low || address.index == dest.low;
+    if (highBeforeLow) {
+      load32(HighWord(address), dest.high);
+      load32(LowWord(address), dest.low);
+    } else {
+      load32(LowWord(address), dest.low);
+      load32(HighWord(address), dest.high);
+    }
   }
 
   template <typename S>

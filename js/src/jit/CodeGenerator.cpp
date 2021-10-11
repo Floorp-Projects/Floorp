@@ -14662,15 +14662,15 @@ void CodeGenerator::visitWasmLoadTls(LWasmLoadTls* ins) {
       masm.load32(Address(ToRegister(ins->tlsPtr()), ins->mir()->offset()),
                   ToRegister(ins->output()));
       break;
-#ifdef JS_64BIT
-    case MIRType::Int64:
-      masm.load64(Address(ToRegister(ins->tlsPtr()), ins->mir()->offset()),
-                  ToOutRegister64(ins));
-      break;
-#endif
     default:
       MOZ_CRASH("MIRType not supported in WasmLoadTls");
   }
+}
+
+void CodeGenerator::visitWasmLoadTls64(LWasmLoadTls64* ins) {
+  MOZ_ASSERT(ins->mir()->type() == MIRType::Int64);
+  masm.load64(Address(ToRegister(ins->tlsPtr()), ins->mir()->offset()),
+              ToOutRegister64(ins));
 }
 
 void CodeGenerator::incrementWarmUpCounter(AbsoluteAddress warmUpCount,
