@@ -246,35 +246,40 @@ void ChannelWrapper::UpgradeToSecure(ErrorResult& aRv) {
   }
 }
 
-void ChannelWrapper::Suspend(ErrorResult& aRv) {
+void ChannelWrapper::Suspend(const nsCString& aProfileMarkerText,
+                             ErrorResult& aRv) {
   if (!mSuspended) {
     nsresult rv = NS_ERROR_UNEXPECTED;
     if (nsCOMPtr<nsIChannel> chan = MaybeChannel()) {
-      mSuspendTime = mozilla::TimeStamp::Now();
       rv = chan->Suspend();
     }
     if (NS_FAILED(rv)) {
       aRv.Throw(rv);
     } else {
       mSuspended = true;
+      MOZ_ASSERT(mSuspendedMarkerText.IsVoid());
+      mSuspendedMarkerText = aProfileMarkerText;
+      PROFILER_MARKER_TEXT("Extension Suspend", NETWORK,
+                           MarkerOptions(MarkerTiming::IntervalStart()),
+                           mSuspendedMarkerText);
     }
   }
 }
 
-void ChannelWrapper::Resume(const nsCString& aText, ErrorResult& aRv) {
+void ChannelWrapper::Resume(ErrorResult& aRv) {
   if (mSuspended) {
     nsresult rv = NS_ERROR_UNEXPECTED;
     if (nsCOMPtr<nsIChannel> chan = MaybeChannel()) {
       rv = chan->Resume();
-
-      PROFILER_MARKER_TEXT("Extension Suspend", NETWORK,
-                           MarkerTiming::IntervalUntilNowFrom(mSuspendTime),
-                           aText);
     }
     if (NS_FAILED(rv)) {
       aRv.Throw(rv);
     } else {
       mSuspended = false;
+      PROFILER_MARKER_TEXT("Extension Suspend", NETWORK,
+                           MarkerOptions(MarkerTiming::IntervalEnd()),
+                           mSuspendedMarkerText);
+      mSuspendedMarkerText = VoidCString();
     }
   }
 }
