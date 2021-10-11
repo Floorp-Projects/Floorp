@@ -16,12 +16,11 @@ namespace mozilla {
  */
 class InternetCiter final {
  public:
-  static nsresult GetCiteString(const nsAString& aInString,
-                                nsAString& aOutString);
+  static void GetCiteString(const nsAString& aInString, nsAString& aOutString);
 
-  static nsresult Rewrap(const nsAString& aInString, uint32_t aWrapCol,
-                         uint32_t aFirstLineOffset, bool aRespectNewlines,
-                         nsAString& aOutString);
+  static void Rewrap(const nsAString& aInString, uint32_t aWrapCol,
+                     uint32_t aFirstLineOffset, bool aRespectNewlines,
+                     nsAString& aOutString);
 };
 
 }  // namespace mozilla
