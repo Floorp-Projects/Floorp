@@ -461,7 +461,7 @@ const DoHController = {
 
     if (results.steeredProvider) {
       gDNSService.setDetectedTrrURI(results.steeredProvider.uri);
-      resultsForTelemetry.steeredProvider = results.steeredProvider.name;
+      resultsForTelemetry.steeredProvider = results.steeredProvider.id;
     }
 
     if (decision === Heuristics.DISABLE_DOH) {
