@@ -113,6 +113,8 @@ sealed class Event {
     object TopSiteOpenInNewTab : Event()
     object TopSiteOpenInPrivateTab : Event()
     object TopSiteRemoved : Event()
+    object GoogleTopSiteRemoved : Event()
+    object BaiduTopSiteRemoved : Event()
     object TrackingProtectionTrackerList : Event()
     object TrackingProtectionIconPressed : Event()
     object TrackingProtectionSettingsPanel : Event()

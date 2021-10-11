@@ -347,8 +347,10 @@ class DefaultSessionControlController(
 
     override fun handleRemoveTopSiteClicked(topSite: TopSite) {
         metrics.track(Event.TopSiteRemoved)
-        if (topSite.url == SupportUtils.POCKET_TRENDING_URL) {
-            metrics.track(Event.PocketTopSiteRemoved)
+        when (topSite.url) {
+            SupportUtils.POCKET_TRENDING_URL -> metrics.track(Event.PocketTopSiteRemoved)
+            SupportUtils.GOOGLE_URL -> metrics.track(Event.GoogleTopSiteRemoved)
+            SupportUtils.BAIDU_URL -> metrics.track(Event.BaiduTopSiteRemoved)
         }
 
         viewLifecycleScope.launch(Dispatchers.IO) {

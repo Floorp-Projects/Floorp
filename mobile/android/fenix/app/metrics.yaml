@@ -3715,6 +3715,32 @@ top_sites:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+  google_top_site_removed:
+    type: event
+    description: |
+      A user removed the default Google top site
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21841
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21845#issuecomment-944608568
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-02-01"
+  baidu_top_site_removed:
+    type: event
+    description: |
+      A user removed the default Baidu top site
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21841
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21845#issuecomment-944608568
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-02-01"
 
 app_theme:
   dark_theme_selected:

@@ -479,6 +479,12 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.TopSiteRemoved -> EventWrapper<NoExtraKeys>(
             { TopSites.remove.record(it) }
         )
+        is Event.GoogleTopSiteRemoved -> EventWrapper<NoExtraKeys>(
+            { TopSites.googleTopSiteRemoved.record(it) }
+        )
+        is Event.BaiduTopSiteRemoved -> EventWrapper<NoExtraKeys>(
+            { TopSites.baiduTopSiteRemoved.record(it) }
+        )
         is Event.TopSiteLongPress -> EventWrapper(
             { TopSites.longPress.record(it) },
             { TopSites.longPressKeys.valueOf(it) }
