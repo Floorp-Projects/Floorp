@@ -14,7 +14,6 @@
  */
 
 const { Cu, Cc, Ci } = require("chrome");
-const promise = require("resource://gre/modules/Promise.jsm").Promise;
 const jsmScope = require("resource://devtools/shared/Loader.jsm");
 const { Services } = require("resource://gre/modules/Services.jsm");
 
@@ -210,7 +209,6 @@ exports.modules = {
   DebuggerNotificationObserver,
   HeapSnapshot,
   InspectorUtils,
-  promise,
   // Expose "chrome" Promise, which aren't related to any document
   // and so are never frozen, even if the browser loader module which
   // pull it is destroyed. See bug 1402779.
