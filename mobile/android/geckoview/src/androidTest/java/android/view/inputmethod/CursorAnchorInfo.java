@@ -6,10 +6,9 @@
 package android.view.inputmethod;
 
 /**
- * This dummy class is used when running tests on Android versions prior to 21,
- * when the CursorAnchorInfo class was first introduced. Without this class,
- * tests will crash with ClassNotFoundException when the test rule uses reflection
- * to access the TextInputDelegate interface.
+ * This dummy class is used when running tests on Android versions prior to 21, when the
+ * CursorAnchorInfo class was first introduced. Without this class, tests will crash with
+ * ClassNotFoundException when the test rule uses reflection to access the TextInputDelegate
+ * interface.
  */
-public class CursorAnchorInfo {
-}
+public class CursorAnchorInfo {}

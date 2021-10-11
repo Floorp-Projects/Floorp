@@ -4,41 +4,40 @@
 
 package org.mozilla.gecko.media;
 
-import androidx.annotation.NonNull;
 import android.util.Log;
-
+import androidx.annotation.NonNull;
 import java.util.ArrayList;
 
 public final class GeckoPlayerFactory {
-    public static final ArrayList<BaseHlsPlayer> sPlayerList = new ArrayList<BaseHlsPlayer>();
+  public static final ArrayList<BaseHlsPlayer> sPlayerList = new ArrayList<BaseHlsPlayer>();
 
-    synchronized static BaseHlsPlayer getPlayer() {
-        try {
-            final Class<?> cls = Class.forName("org.mozilla.gecko.media.GeckoHlsPlayer");
-            final BaseHlsPlayer player = (BaseHlsPlayer) cls.newInstance();
-            sPlayerList.add(player);
-            return player;
-        } catch (final Exception e) {
-            Log.e("GeckoPlayerFactory", "Class GeckoHlsPlayer not found or failed to create", e);
-        }
-        return null;
+  static synchronized BaseHlsPlayer getPlayer() {
+    try {
+      final Class<?> cls = Class.forName("org.mozilla.gecko.media.GeckoHlsPlayer");
+      final BaseHlsPlayer player = (BaseHlsPlayer) cls.newInstance();
+      sPlayerList.add(player);
+      return player;
+    } catch (final Exception e) {
+      Log.e("GeckoPlayerFactory", "Class GeckoHlsPlayer not found or failed to create", e);
     }
+    return null;
+  }
 
-    synchronized static BaseHlsPlayer getPlayer(final int id) {
-        for (final BaseHlsPlayer player : sPlayerList) {
-            if (player.getId() == id) {
-                return player;
-            }
-        }
-        Log.w("GeckoPlayerFactory", "No player found with id : " + id);
-        return null;
+  static synchronized BaseHlsPlayer getPlayer(final int id) {
+    for (final BaseHlsPlayer player : sPlayerList) {
+      if (player.getId() == id) {
+        return player;
+      }
     }
+    Log.w("GeckoPlayerFactory", "No player found with id : " + id);
+    return null;
+  }
 
-    synchronized static void removePlayer(final @NonNull BaseHlsPlayer player) {
-        final int index = sPlayerList.indexOf(player);
-        if (index >= 0) {
-            sPlayerList.remove(player);
-            Log.d("GeckoPlayerFactory", "HlsPlayer with id(" + player.getId() + ") is removed.");
-        }
+  static synchronized void removePlayer(final @NonNull BaseHlsPlayer player) {
+    final int index = sPlayerList.indexOf(player);
+    if (index >= 0) {
+      sPlayerList.remove(player);
+      Log.d("GeckoPlayerFactory", "HlsPlayer with id(" + player.getId() + ") is removed.");
     }
+  }
 }
