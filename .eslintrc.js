@@ -21,7 +21,7 @@ function removeOverrides(config) {
   return config;
 }
 
-const xpcshellTestPaths = ["**/test*/unit*/", "**/test*/xpcshell/"];
+const xpcshellTestPaths = ["**/test*/unit*/**/", "**/test*/xpcshell/**/"];
 
 const browserTestPaths = ["**/test*/**/browser*/"];
 
@@ -120,6 +120,76 @@ module.exports = {
           {
             args: "none",
             vars: "local",
+          },
+        ],
+      },
+    },
+    {
+      // This section enables warning of no-unused-vars globally for all test*.js
+      // files in xpcshell test paths.
+      // These are turned into errors with selected exclusions in the next
+      // section.
+      // Bug 1612907: This section should go away once the exclusions are removed
+      // from the following section.
+      files: xpcshellTestPaths.map(path => `${path}test*.js`),
+      rules: {
+        // No declaring variables that are never used
+        "no-unused-vars": [
+          "warn",
+          {
+            args: "none",
+            vars: "all",
+          },
+        ],
+      },
+    },
+    {
+      // This section makes global issues with no-unused-vars be reported as
+      // errors - except for the excluded lists which are being fixed in the
+      // dependencies of bug 1612907.
+      files: xpcshellTestPaths.map(path => `${path}test*.js`),
+      excludedFiles: [
+        // These are suitable as good first bugs, take one or two related lines
+        // per bug.
+        "caps/tests/unit/test_origin.js",
+        "caps/tests/unit/test_site_origin.js",
+        "chrome/test/unit/test_no_remote_registration.js",
+        "extensions/permissions/**",
+        "image/test/unit/**",
+        "intl/uconv/tests/unit/test_bug317216.js",
+        "intl/uconv/tests/unit/test_bug340714.js",
+        "modules/libjar/test/unit/test_empty_jar_telemetry.js",
+        "modules/libjar/zipwriter/test/unit/test_alignment.js",
+        "modules/libjar/zipwriter/test/unit/test_bug419769_2.js",
+        "modules/libjar/zipwriter/test/unit/test_storedata.js",
+        "modules/libjar/zipwriter/test/unit/test_zippermissions.js",
+        "modules/libpref/test/unit/test_changeType.js",
+        "modules/libpref/test/unit/test_dirtyPrefs.js",
+        "toolkit/crashreporter/test/unit/test_crash_AsyncShutdown.js",
+        "toolkit/mozapps/update/tests/unit_aus_update/testConstants.js",
+        "xpcom/tests/unit/test_hidden_files.js",
+        "xpcom/tests/unit/test_localfile.js",
+
+        // These are more complicated bugs which may require some in-depth
+        // investigation or different solutions. They are also likely to be
+        // a reasonable size.
+        "browser/components/**",
+        "browser/modules/**",
+        "dom/**",
+        "netwerk/**",
+        "security/manager/ssl/tests/unit/**",
+        "services/**",
+        "testing/xpcshell/**",
+        "toolkit/components/**",
+        "toolkit/modules/**",
+      ],
+      rules: {
+        // No declaring variables that are never used
+        "no-unused-vars": [
+          "error",
+          {
+            args: "none",
+            vars: "all",
           },
         ],
       },

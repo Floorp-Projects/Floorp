@@ -66,11 +66,9 @@ const SEGMENT_AND_HALF = [1, 2, 3, 4, 5, 6];
 const QUARTER_SEGMENT = [1];
 const HALF_SEGMENT = [1, 2];
 const SECOND_HALF_SEGMENT = [3, 4];
-const THREE_QUARTER_SEGMENT = [1, 2, 3];
 const EXTRA_HALF_SEGMENT = [5, 6];
 const MIDDLE_HALF_SEGMENT = [2, 3];
 const LAST_QUARTER_SEGMENT = [4];
-const FOURTH_HALF_SEGMENT = [7, 8];
 const HALF_THIRD_SEGMENT = [9, 10];
 const LATTER_HALF_THIRD_SEGMENT = [11, 12];
 
@@ -388,6 +386,8 @@ function note(m) {
  * PUBLIC API!  If you use any of these I will knowingly break your code by
  * changing the names of variables and properties.
  */
+// These are used in head.js.
+/* exported BinaryInputStream, BinaryOutputStream */
 var BinaryInputStream = function BIS(stream) {
   return stream;
 };

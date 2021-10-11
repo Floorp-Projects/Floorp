@@ -105,11 +105,10 @@ function newPrefixHandler(channel) {
 }
 
 var srv;
-var serverBasePath;
-var testsDirectory;
 
 function run_test() {
-  testsDirectory = do_get_profile();
+  // Ensure the profile exists.
+  do_get_profile();
 
   srv = createServer();
   srv.start(-1);
