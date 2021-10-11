@@ -15,6 +15,7 @@
 
 #include "nsAnnoProtocolHandler.h"
 #include "nsFaviconService.h"
+#include "nsICancelable.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsISupportsUtils.h"
@@ -72,7 +73,10 @@ namespace {
  * just fallback to the default favicon.  If anything happens at that point, the
  * world must be against us, so we can do nothing.
  */
-class faviconAsyncLoader : public AsyncStatementCallback {
+class faviconAsyncLoader : public AsyncStatementCallback, public nsICancelable {
+  NS_DECL_NSICANCELABLE
+  NS_DECL_ISUPPORTS_INHERITED
+
  public:
   faviconAsyncLoader(nsIChannel* aChannel, nsIStreamListener* aListener,
                      uint16_t aPreferredSize)
@@ -120,13 +124,35 @@ class faviconAsyncLoader : public AsyncStatementCallback {
     return NS_OK;
   }
 
+  static void CancelRequest(nsIStreamListener* aListener, nsIChannel* aChannel,
+                            nsresult aResult) {
+    MOZ_ASSERT(aListener);
+    MOZ_ASSERT(aChannel);
+
+    aListener->OnStartRequest(aChannel);
+    aListener->OnStopRequest(aChannel, aResult);
+    aChannel->Cancel(NS_BINDING_ABORTED);
+  }
+
   NS_IMETHOD HandleCompletion(uint16_t aReason) override {
     MOZ_DIAGNOSTIC_ASSERT(mListener);
+    MOZ_ASSERT(mChannel);
     NS_ENSURE_TRUE(mListener, NS_ERROR_UNEXPECTED);
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_UNEXPECTED);
+
+    // Ensure we'll break possible cycles with the listener.
+    auto cleanup = MakeScopeExit([&]() {
+      mListener = nullptr;
+      mChannel = nullptr;
+    });
+
+    if (mCanceled) {
+      // The channel that has created this faviconAsyncLoader has been canceled.
+      CancelRequest(mListener, mChannel, mStatus);
+      return NS_OK;
+    }
 
     nsresult rv;
-    // Ensure we'll break possible cycles with the listener.
-    auto cleanup = MakeScopeExit([&]() { mListener = nullptr; });
 
     nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
     nsCOMPtr<nsIEventTarget> target =
@@ -141,7 +167,14 @@ class faviconAsyncLoader : public AsyncStatementCallback {
                                        target);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
         if (NS_SUCCEEDED(rv)) {
-          return pump->AsyncRead(mListener);
+          rv = pump->AsyncRead(mListener);
+          if (NS_FAILED(rv)) {
+            CancelRequest(mListener, mChannel, rv);
+            return rv;
+          }
+
+          mPump = pump;
+          return NS_OK;
         }
       }
     }
@@ -150,14 +183,20 @@ class faviconAsyncLoader : public AsyncStatementCallback {
     // we should pass the loadInfo of the original channel along
     // to the new channel. Note that mChannel can not be null,
     // constructor checks that.
-    nsCOMPtr<nsIChannel> newChannel;
-    rv = GetDefaultIcon(mChannel, getter_AddRefs(newChannel));
+    rv = GetDefaultIcon(mChannel, getter_AddRefs(mDefaultIconChannel));
     if (NS_FAILED(rv)) {
-      mListener->OnStartRequest(mChannel);
-      mListener->OnStopRequest(mChannel, rv);
+      CancelRequest(mListener, mChannel, rv);
       return rv;
     }
-    return newChannel->AsyncOpen(mListener);
+
+    rv = mDefaultIconChannel->AsyncOpen(mListener);
+    if (NS_FAILED(rv)) {
+      mDefaultIconChannel = nullptr;
+      CancelRequest(mListener, mChannel, rv);
+      return rv;
+    }
+
+    return NS_OK;
   }
 
  protected:
@@ -165,10 +204,39 @@ class faviconAsyncLoader : public AsyncStatementCallback {
 
  private:
   nsCOMPtr<nsIChannel> mChannel;
+  nsCOMPtr<nsIChannel> mDefaultIconChannel;
   nsCOMPtr<nsIStreamListener> mListener;
+  nsCOMPtr<nsIInputStreamPump> mPump;
   nsCString mData;
   uint16_t mPreferredSize;
+  bool mCanceled{false};
+  nsresult mStatus{NS_OK};
 };
+
+NS_IMPL_ISUPPORTS_INHERITED(faviconAsyncLoader, AsyncStatementCallback,
+                            nsICancelable)
+
+NS_IMETHODIMP
+faviconAsyncLoader::Cancel(nsresult aStatus) {
+  if (mCanceled) {
+    return NS_OK;
+  }
+
+  mCanceled = true;
+  mStatus = aStatus;
+
+  if (mPump) {
+    mPump->Cancel(aStatus);
+    mPump = nullptr;
+  }
+
+  if (mDefaultIconChannel) {
+    mDefaultIconChannel->Cancel(aStatus);
+    mDefaultIconChannel = nullptr;
+  }
+
+  return NS_OK;
+}
 
 }  // namespace
 
@@ -266,7 +334,7 @@ nsresult nsAnnoProtocolHandler::NewFaviconChannel(nsIURI* aURI,
   nsCOMPtr<nsIChannel> channel = NS_NewSimpleChannel(
       aURI, aLoadInfo, aAnnotationURI,
       [](nsIStreamListener* listener, nsIChannel* channel,
-         nsIURI* annotationURI) {
+         nsIURI* annotationURI) -> RequestOrReason {
         auto fallback = [&]() -> RequestOrReason {
           nsCOMPtr<nsIChannel> chan;
           nsresult rv = GetDefaultIcon(channel, getter_AddRefs(chan));
@@ -275,7 +343,8 @@ nsresult nsAnnoProtocolHandler::NewFaviconChannel(nsIURI* aURI,
           rv = chan->AsyncOpen(listener);
           NS_ENSURE_SUCCESS(rv, Err(rv));
 
-          return RequestOrReason(std::move(chan));
+          nsCOMPtr<nsIRequest> request(chan);
+          return RequestOrCancelable(WrapNotNull(request));
         };
 
         // Now we go ahead and get our data asynchronously for the favicon.
@@ -298,7 +367,8 @@ nsresult nsAnnoProtocolHandler::NewFaviconChannel(nsIURI* aURI,
         rv = faviconService->GetFaviconDataAsync(faviconSpec, callback);
         if (NS_FAILED(rv)) return fallback();
 
-        return RequestOrReason(nullptr);
+        nsCOMPtr<nsICancelable> cancelable = do_QueryInterface(callback);
+        return RequestOrCancelable(WrapNotNull(cancelable));
       });
   NS_ENSURE_TRUE(channel, NS_ERROR_OUT_OF_MEMORY);
 

@@ -25,7 +25,10 @@ class nsIURI;
 namespace mozilla {
 
 using InputStreamOrReason = Result<nsCOMPtr<nsIInputStream>, nsresult>;
-using RequestOrReason = Result<nsCOMPtr<nsIRequest>, nsresult>;
+using NotNullRequest = NotNull<nsCOMPtr<nsIRequest>>;
+using NotNullCancelable = NotNull<nsCOMPtr<nsICancelable>>;
+using RequestOrCancelable = Variant<NotNullRequest, NotNullCancelable>;
+using RequestOrReason = Result<RequestOrCancelable, nsresult>;
 
 namespace net {
 
@@ -78,7 +81,8 @@ class SimpleChannel : public nsBaseChannel {
                                      nsIChannel** channel) override;
 
   virtual nsresult BeginAsyncRead(nsIStreamListener* listener,
-                                  nsIRequest** request) override;
+                                  nsIRequest** request,
+                                  nsICancelable** cancelableRequest) override;
 
  private:
   UniquePtr<SimpleChannelCallbacks> mCallbacks;
