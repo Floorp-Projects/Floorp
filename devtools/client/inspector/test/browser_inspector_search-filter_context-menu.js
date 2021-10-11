@@ -54,9 +54,16 @@ add_task(async function() {
   await onContextMenuClose;
 
   info("Copy text in search field using the context menu");
+  const onSearchProcessingDone = inspector.searchSuggestions.once(
+    "processing-done"
+  );
   searchBox.setUserInput(TEST_INPUT);
   searchBox.select();
   searchBox.focus();
+
+  // We have to wait for search query to avoid test failure.
+  info("Waiting for search query to complete and getting the suggestions");
+  await onSearchProcessingDone;
 
   onContextMenuOpen = toolbox.once("menu-open");
   synthesizeContextMenuEvent(searchBox);
@@ -100,8 +107,4 @@ add_task(async function() {
   const onContextMenuHidden = toolbox.once("menu-close");
   searchContextMenu.hidePopup();
   await onContextMenuHidden;
-
-  // We have to wait for search query to avoid test failure.
-  info("Waiting for search query to complete and getting the suggestions");
-  await inspector.searchSuggestions._lastQuery;
 });
