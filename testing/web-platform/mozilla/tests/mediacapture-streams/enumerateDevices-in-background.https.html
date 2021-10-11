@@ -1,0 +1,67 @@
+<!doctype html>
+<title>enumerateDevices() in background tab with focus in chrome</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
+<body></body>
+<script>
+'use strict';
+// This test is not in cross-browser wpt because it uses Gecko-specific API
+// for focusing browser chrome and it assumes a specific tab browser design.
+// It assumes that
+// * browser chrome widget focus is associated with a single current document
+//   presentation (tab),
+//   https://github.com/w3c/mediacapture-main/issues/752#issuecomment-742036800
+// * window.open() focuses the new tab and makes the current tab hidden, and
+// * the opener tab becomes the current and visible tab again when the new tab
+//   is closed.
+const blank_url = '/common/blank.html';
+
+function promise_event(target, name) {
+  return new Promise(resolve => target[`on${name}`] = resolve);
+}
+
+promise_test(async t => {
+  // Open a new tab, which is expected to receive focus and hide the first tab.
+  await test_driver.bless('window.open()');
+  assert_true(document.hasFocus(), 'This test needs focus on the browser.');
+  const promise_hidden = promise_event(document, 'visibilitychange');
+  const proxy = window.open(blank_url);
+  t.add_cleanup(() => proxy.close());
+  await Promise.all([
+    promise_hidden,
+    promise_event(proxy, 'focus'),
+    promise_event(proxy, 'load'),
+  ]);
+  assert_true(proxy.document.hasFocus(), 'proxy.document.hasFocus()');
+
+  await Promise.all([
+    promise_event(proxy, 'blur'),
+    SpecialPowers.spawnChrome([], function focus_url_bar() {
+      this.browsingContext.topChromeWindow.gURLBar.focus();
+    }),
+  ]);
+  assert_false(proxy.document.hasFocus(), 'proxy.document.hasFocus()');
+  assert_false(document.hasFocus(), 'document.hasFocus()');
+  assert_equals(document.visibilityState, 'hidden', 'visibilityState');
+
+  // Enumeration should remain pending while the first tab is background.
+  const promise_enumerate = navigator.mediaDevices.enumerateDevices();
+  // Enumerate in the foreground tab to confirm that URL bar focus is
+  // sufficient, and to provide enough time to check that the Promise from the
+  // background tab does not settle.
+  await proxy.navigator.mediaDevices.enumerateDevices();
+  // Race a settled Promise to check that the enumeration in the background tab
+  // has not settled.
+  const result = await Promise.race([promise_enumerate, 'pending']);
+  assert_equals(result, 'pending', 'pending Promise while background.');
+
+  // The enumeration Promise should resolve after the first tab returns to the
+  // foreground.
+  proxy.close();
+  await promise_event(document, 'visibilitychange');
+  assert_equals(document.visibilityState, 'visible', 'visibilityState');
+  await promise_enumerate;
+}, 'enumerateDevices in background');
+</script>
