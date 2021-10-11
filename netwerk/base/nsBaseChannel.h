@@ -30,6 +30,7 @@
 #include "nsThreadUtils.h"
 
 class nsIInputStream;
+class nsICancelable;
 
 //-----------------------------------------------------------------------------
 // nsBaseChannel is designed to be subclassed.  The subclass is responsible for
@@ -100,10 +101,23 @@ class nsBaseChannel
   //
   // On success, the callee must begin pumping data to the stream listener,
   // and at some point call OnStartRequest followed by OnStopRequest.
-  // Additionally, it may provide a request object which may be used to
-  // suspend, resume, and cancel the underlying request.
+  //
+  // Additionally, when a successful nsresult is returned, then the subclass
+  // should be setting  through its two out params either:
+  // - a request object, which may be used to suspend, resume, and cancel
+  //   the underlying request.
+  // - or a cancelable object (e.g. when a request can't be returned right away
+  //   due to some async work needed to retrieve it). which may be used to
+  //   cancel the underlying request (e.g. because the channel has been
+  //   canceled)
+  //
+  // Not returning a request or cancelable leads to potentially leaking the
+  // an underling stream pump (which would keep to be pumping data even after
+  // the channel has been canceled and nothing is going to handle the data
+  // available, e.g. see Bug 1706594).
   virtual nsresult BeginAsyncRead(nsIStreamListener* listener,
-                                  nsIRequest** request) {
+                                  nsIRequest** request,
+                                  nsICancelable** cancelableRequest) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -271,6 +285,7 @@ class nsBaseChannel
 
   RefPtr<nsInputStreamPump> mPump;
   RefPtr<nsIRequest> mRequest;
+  nsCOMPtr<nsICancelable> mCancelableAsyncRequest;
   bool mPumpingData{false};
   nsCOMPtr<nsIProgressEventSink> mProgressSink;
   nsCOMPtr<nsIURI> mOriginalURI;

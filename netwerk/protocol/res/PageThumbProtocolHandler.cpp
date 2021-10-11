@@ -49,7 +49,10 @@ StaticRefPtr<PageThumbProtocolHandler> PageThumbProtocolHandler::sSingleton;
  * Helper class used with SimpleChannel to asynchronously obtain an input
  * stream from the parent for a remote moz-page-thumb load from the child.
  */
-class PageThumbStreamGetter : public RefCounted<PageThumbStreamGetter> {
+class PageThumbStreamGetter final : public nsICancelable {
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICANCELABLE
+
  public:
   PageThumbStreamGetter(nsIURI* aURI, nsILoadInfo* aLoadInfo)
       : mURI(aURI), mLoadInfo(aLoadInfo) {
@@ -58,8 +61,6 @@ class PageThumbStreamGetter : public RefCounted<PageThumbStreamGetter> {
 
     SetupEventTarget();
   }
-
-  ~PageThumbStreamGetter() = default;
 
   void SetupEventTarget() {
     mMainThreadEventTarget = nsContentUtils::GetEventTargetByLoadInfo(
@@ -70,8 +71,7 @@ class PageThumbStreamGetter : public RefCounted<PageThumbStreamGetter> {
   }
 
   // Get an input stream from the parent asynchronously.
-  Result<Ok, nsresult> GetAsync(nsIStreamListener* aListener,
-                                nsIChannel* aChannel);
+  RequestOrReason GetAsync(nsIStreamListener* aListener, nsIChannel* aChannel);
 
   // Handle an input stream being returned from the parent
   void OnStream(already_AddRefed<nsIInputStream> aStream);
@@ -79,24 +79,31 @@ class PageThumbStreamGetter : public RefCounted<PageThumbStreamGetter> {
   static void CancelRequest(nsIStreamListener* aListener, nsIChannel* aChannel,
                             nsresult aResult);
 
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(PageThumbStreamGetter)
-
  private:
+  ~PageThumbStreamGetter() = default;
+
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsILoadInfo> mLoadInfo;
   nsCOMPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsISerialEventTarget> mMainThreadEventTarget;
+  nsCOMPtr<nsIInputStreamPump> mPump;
+  bool mCanceled{false};
+  nsresult mStatus{NS_OK};
 };
 
+NS_IMPL_ISUPPORTS(PageThumbStreamGetter, nsICancelable)
+
 // Request an input stream from the parent.
-Result<Ok, nsresult> PageThumbStreamGetter::GetAsync(
-    nsIStreamListener* aListener, nsIChannel* aChannel) {
+RequestOrReason PageThumbStreamGetter::GetAsync(nsIStreamListener* aListener,
+                                                nsIChannel* aChannel) {
   MOZ_ASSERT(IsNeckoChild());
   MOZ_ASSERT(mMainThreadEventTarget);
 
   mListener = aListener;
   mChannel = aChannel;
+
+  nsCOMPtr<nsICancelable> cancelableRequest(this);
 
   RefPtr<PageThumbStreamGetter> self = this;
 
@@ -109,7 +116,25 @@ Result<Ok, nsresult> PageThumbStreamGetter::GetAsync(
       [self](const mozilla::ipc::ResponseRejectReason) {
         self->OnStream(nullptr);
       });
-  return Ok();
+  return RequestOrCancelable(WrapNotNull(cancelableRequest));
+}
+
+// Called to cancel the ongoing async request.
+NS_IMETHODIMP
+PageThumbStreamGetter::Cancel(nsresult aStatus) {
+  if (mCanceled) {
+    return NS_OK;
+  }
+
+  mCanceled = true;
+  mStatus = aStatus;
+
+  if (mPump) {
+    mPump->Cancel(aStatus);
+    mPump = nullptr;
+  }
+
+  return NS_OK;
 }
 
 // static
@@ -127,20 +152,26 @@ void PageThumbStreamGetter::CancelRequest(nsIStreamListener* aListener,
 // Handle an input stream sent from the parent.
 void PageThumbStreamGetter::OnStream(already_AddRefed<nsIInputStream> aStream) {
   MOZ_ASSERT(IsNeckoChild());
+  MOZ_ASSERT(mChannel);
   MOZ_ASSERT(mListener);
   MOZ_ASSERT(mMainThreadEventTarget);
 
   nsCOMPtr<nsIInputStream> stream = std::move(aStream);
+  nsCOMPtr<nsIChannel> channel = std::move(mChannel);
 
   // We must keep an owning reference to the listener until we pass it on
   // to AsyncRead.
   nsCOMPtr<nsIStreamListener> listener = mListener.forget();
 
-  MOZ_ASSERT(mChannel);
+  if (mCanceled) {
+    // The channel that has created this stream getter has been canceled.
+    CancelRequest(listener, channel, mStatus);
+    return;
+  }
 
   if (!stream) {
     // The parent didn't send us back a stream.
-    CancelRequest(listener, mChannel, NS_ERROR_FILE_ACCESS_DENIED);
+    CancelRequest(listener, channel, NS_ERROR_FILE_ACCESS_DENIED);
     return;
   }
 
@@ -148,14 +179,17 @@ void PageThumbStreamGetter::OnStream(already_AddRefed<nsIInputStream> aStream) {
   nsresult rv = NS_NewInputStreamPump(getter_AddRefs(pump), stream.forget(), 0,
                                       0, false, mMainThreadEventTarget);
   if (NS_FAILED(rv)) {
-    CancelRequest(listener, mChannel, rv);
+    CancelRequest(listener, channel, rv);
     return;
   }
 
   rv = pump->AsyncRead(listener);
   if (NS_FAILED(rv)) {
-    CancelRequest(listener, mChannel, rv);
+    CancelRequest(listener, channel, rv);
+    return;
   }
+
+  mPump = pump;
 }
 
 NS_IMPL_QUERY_INTERFACE(PageThumbProtocolHandler,
@@ -454,8 +488,7 @@ void PageThumbProtocolHandler::NewSimpleChannel(
       aURI, aLoadinfo, aStreamGetter,
       [](nsIStreamListener* listener, nsIChannel* simpleChannel,
          PageThumbStreamGetter* getter) -> RequestOrReason {
-        MOZ_TRY(getter->GetAsync(listener, simpleChannel));
-        return RequestOrReason(nullptr);
+        return getter->GetAsync(listener, simpleChannel);
       });
 
   SetContentType(aURI, channel);
