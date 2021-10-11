@@ -354,12 +354,6 @@ add_task(async function test_pushState() {
 });
 
 // Test that when the pref is flipped, we are skipping history
-// entries without user interaction when using loadURI.
-add_task(async function test_loadURI() {
-  await runTopLevelTest(loadURI);
-});
-
-// Test that when the pref is flipped, we are skipping history
 // entries without user interaction when following a link.
 add_task(async function test_followLink() {
   await runTopLevelTest(followLink);
