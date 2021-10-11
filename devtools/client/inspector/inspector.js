@@ -5,6 +5,7 @@
 "use strict";
 
 const Services = require("Services");
+const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 const flags = require("devtools/shared/flags");
 const { executeSoon } = require("devtools/shared/DevToolsUtils");
@@ -1873,7 +1874,7 @@ Inspector.prototype = {
         parents: hierarchical,
       });
     }
-    return Promise.resolve();
+    return promise.resolve();
   },
 
   /**

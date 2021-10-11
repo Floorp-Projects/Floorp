@@ -128,14 +128,11 @@ add_task(async function() {
     );
 
     const onCommand = once(searchBox, "input", true);
-    const onSearchProcessingDone = inspector.searchSuggestions.once(
-      "processing-done"
-    );
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
     await onCommand;
 
     info("Waiting for the suggestions to be retrieved");
-    await onSearchProcessingDone;
+    await inspector.searchSuggestions._lastQuery;
 
     const actualSuggestions = popup.getItems();
     is(

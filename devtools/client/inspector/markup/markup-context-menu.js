@@ -5,6 +5,7 @@
 "use strict";
 
 const Services = require("Services");
+const promise = require("promise");
 const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
@@ -286,7 +287,7 @@ class MarkupContextMenu {
   _pasteAdjacentHTML(position) {
     const content = this._getClipboardContentForPaste();
     if (!content) {
-      return Promise.reject("No clipboard content for paste");
+      return promise.reject("No clipboard content for paste");
     }
 
     const node = this.selection.nodeFront;
@@ -299,7 +300,7 @@ class MarkupContextMenu {
   _pasteInnerHTML() {
     const content = this._getClipboardContentForPaste();
     if (!content) {
-      return Promise.reject("No clipboard content for paste");
+      return promise.reject("No clipboard content for paste");
     }
 
     const node = this.selection.nodeFront;
@@ -314,7 +315,7 @@ class MarkupContextMenu {
   _pasteOuterHTML() {
     const content = this._getClipboardContentForPaste();
     if (!content) {
-      return Promise.reject("No clipboard content for paste");
+      return promise.reject("No clipboard content for paste");
     }
 
     const node = this.selection.nodeFront;
