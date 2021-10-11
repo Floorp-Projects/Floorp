@@ -39,6 +39,7 @@ class MediaDevices final : public DOMEventTargetHelper {
   explicit MediaDevices(nsPIDOMWindowInner* aWindow);
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaDevices, DOMEventTargetHelper)
 
   JSObject* WrapObject(JSContext* cx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -79,14 +80,21 @@ class MediaDevices final : public DOMEventTargetHelper {
   void EventListenerAdded(nsAtom* aType) override;
   using DOMEventTargetHelper::EventListenerAdded;
 
+  void BackgroundStateChanged() { MaybeResumeDeviceExposure(); }
+  void WindowResumed() { MaybeResumeDeviceExposure(); }
+  void BrowserWindowBecameActive() { MaybeResumeDeviceExposure(); }
+
  private:
   class GumResolver;
   class EnumDevResolver;
   class GumRejecter;
 
   virtual ~MediaDevices();
+  void MaybeResumeDeviceExposure();
+  void ResumeEnumerateDevices(RefPtr<Promise> aPromise);
 
   nsTHashSet<nsString> mExplicitlyGrantedAudioOutputIds;
+  nsTArray<RefPtr<Promise>> mPendingEnumerateDevicesPromises;
   nsCOMPtr<nsITimer> mFuzzTimer;
 
   // Connect/Disconnect on main thread only
