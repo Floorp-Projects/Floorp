@@ -392,7 +392,7 @@ async function providerSteering() {
   let provider = steeredProviders.find(p => {
     return p.canonicalName == canonicalName;
   });
-  if (!provider || !provider.uri || !provider.name) {
+  if (!provider || !provider.uri || !provider.id) {
     return null;
   }
 
