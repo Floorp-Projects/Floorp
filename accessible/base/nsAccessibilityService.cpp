@@ -402,7 +402,7 @@ void nsAccessibilityService::NotifyOfResolutionChange(
     mozilla::PresShell* aPresShell, float aResolution) {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     DocAccessible* document = GetDocAccessible(aPresShell);
-    if (document) {
+    if (document && document->IPCDoc()) {
       nsTArray<mozilla::a11y::CacheData> data(1);
       RefPtr<AccAttributes> fields = new AccAttributes();
       fields->SetAttribute(nsGkAtoms::resolution, aResolution);
