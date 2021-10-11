@@ -438,16 +438,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cstr"
-version = "0.2.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c11a39d776a3b35896711da8a04dc1835169dcd36f710878187637314e47941b"
-dependencies = [
- "proc-macro2 1.0.10",
- "quote 1.0.3",
-]
-
-[[package]]
 name = "deflate"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1685,7 +1675,6 @@ dependencies = [
  "core-foundation 0.9.0",
  "core-graphics 0.22.0",
  "core-text",
- "cstr",
  "derive_more",
  "dwrote",
  "etagere",
