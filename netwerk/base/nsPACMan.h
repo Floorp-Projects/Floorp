@@ -260,7 +260,7 @@ class nsPACMan final : public nsIStreamLoaderObserver,
   nsresult DispatchToPAC(already_AddRefed<nsIRunnable> aEvent,
                          bool aSync = false);
 
-  ProxyAutoConfig mPAC;
+  UniquePtr<ProxyAutoConfigBase> mPAC;
   nsCOMPtr<nsIThread> mPACThread;
   nsCOMPtr<nsISystemProxySettings> mSystemProxySettings;
   nsCOMPtr<nsIDHCPClient> mDHCPClient;
