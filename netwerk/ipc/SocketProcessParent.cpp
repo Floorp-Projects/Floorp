@@ -26,6 +26,9 @@
 #include "nsIHttpActivityObserver.h"
 #include "nsIObserverService.h"
 #include "nsNSSIOLayer.h"
+#include "nsIOService.h"
+#include "nsHttpHandler.h"
+#include "nsHttpConnectionInfo.h"
 #include "PSMIPCCommon.h"
 #include "secerr.h"
 #ifdef MOZ_WEBRTC
