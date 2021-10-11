@@ -417,7 +417,9 @@ impl Document {
                 self.dynamic_properties.add_transforms(property_bindings);
             }
             FrameMsg::SetIsTransformAsyncZooming(is_zooming, animation_id) => {
-                if let Some(node) = self.spatial_tree.get_node_by_anim_id(animation_id) {
+                if let Some(node_index) = self.spatial_tree.find_spatial_node_by_anim_id(animation_id) {
+                    let node = self.spatial_tree.get_spatial_node_mut(node_index);
+
                     if node.is_async_zooming != is_zooming {
                         node.is_async_zooming = is_zooming;
                         self.frame_is_valid = false;
