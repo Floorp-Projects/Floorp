@@ -9,11 +9,11 @@ package org.mozilla.geckoview;
 import android.os.Parcel;
 
 class ParcelableUtils {
-    public static void writeBoolean(final Parcel out, final boolean val) {
-        out.writeByte((byte) (val ? 1 : 0));
-    }
+  public static void writeBoolean(final Parcel out, final boolean val) {
+    out.writeByte((byte) (val ? 1 : 0));
+  }
 
-    public static boolean readBoolean(final Parcel source) {
-        return source.readByte() == 1;
-    }
+  public static boolean readBoolean(final Parcel source) {
+    return source.readByte() == 1;
+  }
 }

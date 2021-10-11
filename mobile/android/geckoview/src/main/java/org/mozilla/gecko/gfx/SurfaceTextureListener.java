@@ -5,35 +5,34 @@
 
 package org.mozilla.gecko;
 
+import android.graphics.SurfaceTexture;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
 
-import android.graphics.SurfaceTexture;
+/* package */ final class SurfaceTextureListener extends JNIObject
+    implements SurfaceTexture.OnFrameAvailableListener {
+  @WrapForJNI(calledFrom = "gecko")
+  private SurfaceTextureListener() {}
 
-/* package */ final class SurfaceTextureListener
-    extends JNIObject implements SurfaceTexture.OnFrameAvailableListener {
-    @WrapForJNI(calledFrom = "gecko")
-    private SurfaceTextureListener() {
+  @WrapForJNI(dispatchTo = "gecko")
+  @Override // JNIObject
+  protected native void disposeNative();
+
+  @Override
+  protected void finalize() {
+    disposeNative();
+  }
+
+  @WrapForJNI(stubName = "OnFrameAvailable")
+  private native void nativeOnFrameAvailable();
+
+  @Override // SurfaceTexture.OnFrameAvailableListener
+  public void onFrameAvailable(final SurfaceTexture surfaceTexture) {
+    try {
+      nativeOnFrameAvailable();
+    } catch (final NullPointerException e) {
+      // Ignore exceptions caused by a disposed object, i.e.
+      // getting a callback after this listener is no longer in use.
     }
-
-    @WrapForJNI(dispatchTo = "gecko") @Override // JNIObject
-    protected native void disposeNative();
-
-    @Override
-    protected void finalize() {
-        disposeNative();
-    }
-
-    @WrapForJNI(stubName = "OnFrameAvailable")
-    private native void nativeOnFrameAvailable();
-
-    @Override // SurfaceTexture.OnFrameAvailableListener
-    public void onFrameAvailable(final SurfaceTexture surfaceTexture) {
-        try {
-            nativeOnFrameAvailable();
-        } catch (final NullPointerException e) {
-            // Ignore exceptions caused by a disposed object, i.e.
-            // getting a callback after this listener is no longer in use.
-        }
-    }
+  }
 }

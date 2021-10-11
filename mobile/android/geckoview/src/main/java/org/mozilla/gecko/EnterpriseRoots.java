@@ -5,97 +5,92 @@
 
 package org.mozilla.gecko;
 
+import android.util.Log;
 import java.io.IOException;
-
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
-
 import java.util.ArrayList;
 import java.util.Enumeration;
-
 import org.mozilla.gecko.annotation.WrapForJNI;
-
-import android.util.Log;
 
 // This class implements the functionality needed to find third-party root
 // certificates that have been added to the android CA store.
 public class EnterpriseRoots {
-    private static final String LOGTAG = "EnterpriseRoots";
+  private static final String LOGTAG = "EnterpriseRoots";
 
-    // Gecko calls this function from C++ to find third-party root certificates
-    // it can use as trust anchors for TLS connections.
-    @WrapForJNI
-    private static byte[][] gatherEnterpriseRoots() {
+  // Gecko calls this function from C++ to find third-party root certificates
+  // it can use as trust anchors for TLS connections.
+  @WrapForJNI
+  private static byte[][] gatherEnterpriseRoots() {
 
-        // The KeyStore "AndroidCAStore" contains the certificates we're
-        // interested in.
-        final KeyStore ks;
-        try {
-            ks = KeyStore.getInstance("AndroidCAStore");
-        } catch (final KeyStoreException kse) {
-            Log.e(LOGTAG, "getInstance() failed", kse);
-            return new byte[0][0];
-        }
-        try {
-            ks.load(null);
-        } catch (final CertificateException ce) {
-            Log.e(LOGTAG, "load() failed", ce);
-            return new byte[0][0];
-        } catch (final IOException ioe) {
-            Log.e(LOGTAG, "load() failed", ioe);
-            return new byte[0][0];
-        } catch (final NoSuchAlgorithmException nsae) {
-            Log.e(LOGTAG, "load() failed", nsae);
-            return new byte[0][0];
-        }
-        // Given the KeyStore, we get an identifier for each object in it. For
-        // each one that is a Certificate, we try to distinguish between
-        // entries that shipped with the OS and entries that were added by the
-        // user or an administrator. The former we ignore and the latter we
-        // collect in an array of byte arrays and return.
-        final Enumeration<String> aliases;
-        try {
-            aliases = ks.aliases();
-        } catch (final KeyStoreException kse) {
-            Log.e(LOGTAG, "aliases() failed", kse);
-            return new byte[0][0];
-        }
-        final ArrayList<byte[]> roots = new ArrayList<byte[]>();
-        while (aliases.hasMoreElements()) {
-            final String alias = aliases.nextElement();
-            final boolean isCertificate;
-            try {
-                isCertificate = ks.isCertificateEntry(alias);
-            } catch (final KeyStoreException kse) {
-                Log.e(LOGTAG, "isCertificateEntry() failed", kse);
-                continue;
-            }
-            // Built-in certificate aliases start with "system:", whereas
-            // 3rd-party certificate aliases start with "user:". It's
-            // unfortunate to be relying on this implementation detail, but
-            // there appears to be no other way to differentiate between the
-            // two.
-            if (isCertificate && alias.startsWith("user:")) {
-                final Certificate certificate;
-                try {
-                    certificate = ks.getCertificate(alias);
-                } catch (final KeyStoreException kse) {
-                    Log.e(LOGTAG, "getCertificate() failed", kse);
-                    continue;
-                }
-                try {
-                    roots.add(certificate.getEncoded());
-                } catch (final CertificateEncodingException cee) {
-                    Log.e(LOGTAG, "getEncoded() failed", cee);
-                }
-            }
-        }
-        Log.d(LOGTAG, "found " + roots.size() + " enterprise roots");
-        return roots.toArray(new byte[0][0]);
+    // The KeyStore "AndroidCAStore" contains the certificates we're
+    // interested in.
+    final KeyStore ks;
+    try {
+      ks = KeyStore.getInstance("AndroidCAStore");
+    } catch (final KeyStoreException kse) {
+      Log.e(LOGTAG, "getInstance() failed", kse);
+      return new byte[0][0];
     }
+    try {
+      ks.load(null);
+    } catch (final CertificateException ce) {
+      Log.e(LOGTAG, "load() failed", ce);
+      return new byte[0][0];
+    } catch (final IOException ioe) {
+      Log.e(LOGTAG, "load() failed", ioe);
+      return new byte[0][0];
+    } catch (final NoSuchAlgorithmException nsae) {
+      Log.e(LOGTAG, "load() failed", nsae);
+      return new byte[0][0];
+    }
+    // Given the KeyStore, we get an identifier for each object in it. For
+    // each one that is a Certificate, we try to distinguish between
+    // entries that shipped with the OS and entries that were added by the
+    // user or an administrator. The former we ignore and the latter we
+    // collect in an array of byte arrays and return.
+    final Enumeration<String> aliases;
+    try {
+      aliases = ks.aliases();
+    } catch (final KeyStoreException kse) {
+      Log.e(LOGTAG, "aliases() failed", kse);
+      return new byte[0][0];
+    }
+    final ArrayList<byte[]> roots = new ArrayList<byte[]>();
+    while (aliases.hasMoreElements()) {
+      final String alias = aliases.nextElement();
+      final boolean isCertificate;
+      try {
+        isCertificate = ks.isCertificateEntry(alias);
+      } catch (final KeyStoreException kse) {
+        Log.e(LOGTAG, "isCertificateEntry() failed", kse);
+        continue;
+      }
+      // Built-in certificate aliases start with "system:", whereas
+      // 3rd-party certificate aliases start with "user:". It's
+      // unfortunate to be relying on this implementation detail, but
+      // there appears to be no other way to differentiate between the
+      // two.
+      if (isCertificate && alias.startsWith("user:")) {
+        final Certificate certificate;
+        try {
+          certificate = ks.getCertificate(alias);
+        } catch (final KeyStoreException kse) {
+          Log.e(LOGTAG, "getCertificate() failed", kse);
+          continue;
+        }
+        try {
+          roots.add(certificate.getEncoded());
+        } catch (final CertificateEncodingException cee) {
+          Log.e(LOGTAG, "getEncoded() failed", cee);
+        }
+      }
+    }
+    Log.d(LOGTAG, "found " + roots.size() + " enterprise roots");
+    return roots.toArray(new byte[0][0]);
+  }
 }

@@ -9,43 +9,42 @@ import android.os.Parcelable;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
 public final class SessionKeyInfo implements Parcelable {
-    @WrapForJNI
-    public byte[] keyId;
+  @WrapForJNI public byte[] keyId;
 
-    @WrapForJNI
-    public int status;
+  @WrapForJNI public int status;
 
-    @WrapForJNI
-    public SessionKeyInfo(final byte[] keyId, final int status) {
-        this.keyId = keyId;
-        this.status = status;
-    }
+  @WrapForJNI
+  public SessionKeyInfo(final byte[] keyId, final int status) {
+    this.keyId = keyId;
+    this.status = status;
+  }
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
+  @Override
+  public int describeContents() {
+    return 0;
+  }
 
-    @Override
-    public void writeToParcel(final Parcel dest, final int parcelableFlags) {
-        dest.writeByteArray(keyId);
-        dest.writeInt(status);
-    }
+  @Override
+  public void writeToParcel(final Parcel dest, final int parcelableFlags) {
+    dest.writeByteArray(keyId);
+    dest.writeInt(status);
+  }
 
-    public static final Creator<SessionKeyInfo> CREATOR = new Creator<SessionKeyInfo>() {
+  public static final Creator<SessionKeyInfo> CREATOR =
+      new Creator<SessionKeyInfo>() {
         @Override
         public SessionKeyInfo createFromParcel(final Parcel in) {
-            return new SessionKeyInfo(in);
+          return new SessionKeyInfo(in);
         }
 
         @Override
         public SessionKeyInfo[] newArray(final int size) {
-            return new SessionKeyInfo[size];
+          return new SessionKeyInfo[size];
         }
-    };
+      };
 
-    private SessionKeyInfo(final Parcel src) {
-        keyId = src.createByteArray();
-        status = src.readInt();
-    }
+  private SessionKeyInfo(final Parcel src) {
+    keyId = src.createByteArray();
+    status = src.readInt();
+  }
 }

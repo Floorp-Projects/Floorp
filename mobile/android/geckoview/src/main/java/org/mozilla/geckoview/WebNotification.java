@@ -7,142 +7,154 @@ package org.mozilla.geckoview;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
-
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.ThreadUtils;
 
 /**
- * This class represents a single <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification">Web Notification</a>.
- * These can be received by connecting a {@link WebNotificationDelegate} to
- * {@link GeckoRuntime} via {@link GeckoRuntime#setWebNotificationDelegate(WebNotificationDelegate)}.
+ * This class represents a single <a
+ * href="https://developer.mozilla.org/en-US/docs/Web/API/Notification">Web Notification</a>. These
+ * can be received by connecting a {@link WebNotificationDelegate} to {@link GeckoRuntime} via
+ * {@link GeckoRuntime#setWebNotificationDelegate(WebNotificationDelegate)}.
  */
 public class WebNotification {
 
-    /**
-     * Title is shown at the top of the notification window.
-     *
-     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/title">Web Notification - title</a>
-     */
-    public final @Nullable String title;
+  /**
+   * Title is shown at the top of the notification window.
+   *
+   * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/title">Web
+   *     Notification - title</a>
+   */
+  public final @Nullable String title;
 
-    /**
-     * Tag is the ID of the notification.
-     *
-     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/tag">Web Notification - tag</a>
-     */
-    public final @NonNull String tag;
+  /**
+   * Tag is the ID of the notification.
+   *
+   * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/tag">Web
+   *     Notification - tag</a>
+   */
+  public final @NonNull String tag;
 
-    private final @Nullable String mCookie;
+  private final @Nullable String mCookie;
 
-    /**
-     * Text represents the body of the notification.
-     *
-     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/body">Web Notification - text</a>
-     */
-    public final @Nullable String text;
+  /**
+   * Text represents the body of the notification.
+   *
+   * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/body">Web
+   *     Notification - text</a>
+   */
+  public final @Nullable String text;
 
-    /**
-     * ImageURL contains the URL of an icon to be displayed as part of the notification.
-     *
-     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/icon">Web Notification - icon</a>
-     */
-    public final @Nullable String imageUrl;
+  /**
+   * ImageURL contains the URL of an icon to be displayed as part of the notification.
+   *
+   * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/icon">Web
+   *     Notification - icon</a>
+   */
+  public final @Nullable String imageUrl;
 
-    /**
-     * TextDirection indicates the direction that the language of the text is displayed.
-     * Possible values are:
-     * auto: adopts the browser's language setting behaviour (the default.)
-     * ltr: left to right.
-     * rtl: right to left.
-     *
-     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/dir">Web Notification - dir</a>
-     */
-    public final @Nullable String textDirection;
+  /**
+   * TextDirection indicates the direction that the language of the text is displayed. Possible
+   * values are: auto: adopts the browser's language setting behaviour (the default.) ltr: left to
+   * right. rtl: right to left.
+   *
+   * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/dir">Web
+   *     Notification - dir</a>
+   */
+  public final @Nullable String textDirection;
 
-    /**
-     * Lang indicates the notification's language, as specified using a DOMString
-     * representing a BCP 47 language tag.
-     *
-     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/DOMString">DOM String</a>
-     * @see <a href="http://www.rfc-editor.org/rfc/bcp/bcp47.txt">BCP 47</a>
-     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/lang">Web Notification - lang</a>
-     */
-    public final @Nullable String lang;
+  /**
+   * Lang indicates the notification's language, as specified using a DOMString representing a BCP
+   * 47 language tag.
+   *
+   * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/DOMString">DOM String</a>
+   * @see <a href="http://www.rfc-editor.org/rfc/bcp/bcp47.txt">BCP 47</a>
+   * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/lang">Web
+   *     Notification - lang</a>
+   */
+  public final @Nullable String lang;
 
-    /**
-     * RequireInteraction indicates whether a notification should remain active until the user
-     * clicks or dismisses it, rather than closing automatically.
-     *
-     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/requireInteraction">Web Notification - requireInteraction</a>
-     */
-    public final @NonNull boolean requireInteraction;
+  /**
+   * RequireInteraction indicates whether a notification should remain active until the user clicks
+   * or dismisses it, rather than closing automatically.
+   *
+   * @see <a
+   *     href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/requireInteraction">Web
+   *     Notification - requireInteraction</a>
+   */
+  public final @NonNull boolean requireInteraction;
 
-    /**
-     * This is the URL of the page or Service Worker that generated the notification.
-     * Null if this notification was not generated by a Web Page (e.g. from an Extension).
-     *
-     * TODO: make NonNull once we have Bug 1589693
-     */
-    public final @Nullable String source;
+  /**
+   * This is the URL of the page or Service Worker that generated the notification. Null if this
+   * notification was not generated by a Web Page (e.g. from an Extension).
+   *
+   * <p>TODO: make NonNull once we have Bug 1589693
+   */
+  public final @Nullable String source;
 
-    /**
-     * When set, indicates that no sounds or vibrations should be made.
-     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/silent">Web Notification - silent</a>
-     */
-    public final boolean silent;
+  /**
+   * When set, indicates that no sounds or vibrations should be made.
+   *
+   * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/silent">Web
+   *     Notification - silent</a>
+   */
+  public final boolean silent;
 
-    /**
-     * A vibration pattern to run with the display of the notification. A
-     * vibration pattern can be an array with as few as one member. The values
-     * are times in milliseconds where the even indices (0, 2, 4, etc.) indicate
-     * how long to vibrate and the odd indices indicate how long to pause. For
-     * example, [300, 100, 400] would vibrate 300ms, pause 100ms, then vibrate
-     * 400ms.
-     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/vibrate">Web Notification - vibrate</a>
-     */
-    public final @NonNull int[] vibrate;
+  /**
+   * A vibration pattern to run with the display of the notification. A vibration pattern can be an
+   * array with as few as one member. The values are times in milliseconds where the even indices
+   * (0, 2, 4, etc.) indicate how long to vibrate and the odd indices indicate how long to pause.
+   * For example, [300, 100, 400] would vibrate 300ms, pause 100ms, then vibrate 400ms.
+   *
+   * @see <a href="https://developer.mozilla.org/en-US/docs/Web/API/Notification/vibrate">Web
+   *     Notification - vibrate</a>
+   */
+  public final @NonNull int[] vibrate;
 
-    @WrapForJNI
-    /* package */ WebNotification(@Nullable final String title, @NonNull final String tag,
-                        @Nullable final String cookie, @Nullable final String text,
-                        @Nullable final String imageUrl, @Nullable final String textDirection,
-                        @Nullable final String lang, @NonNull final boolean requireInteraction,
-                        @NonNull final String source, final boolean silent,
-                        @NonNull final int[] vibrate) {
-        this.tag = tag;
-        this.mCookie = cookie;
-        this.title = title;
-        this.text = text;
-        this.imageUrl = imageUrl;
-        this.textDirection = textDirection;
-        this.lang = lang;
-        this.requireInteraction = requireInteraction;
-        this.source = "".equals(source) ? null : source;
-        this.silent = silent;
-        this.vibrate = vibrate;
-    }
+  @WrapForJNI
+  /* package */ WebNotification(
+      @Nullable final String title,
+      @NonNull final String tag,
+      @Nullable final String cookie,
+      @Nullable final String text,
+      @Nullable final String imageUrl,
+      @Nullable final String textDirection,
+      @Nullable final String lang,
+      @NonNull final boolean requireInteraction,
+      @NonNull final String source,
+      final boolean silent,
+      @NonNull final int[] vibrate) {
+    this.tag = tag;
+    this.mCookie = cookie;
+    this.title = title;
+    this.text = text;
+    this.imageUrl = imageUrl;
+    this.textDirection = textDirection;
+    this.lang = lang;
+    this.requireInteraction = requireInteraction;
+    this.source = "".equals(source) ? null : source;
+    this.silent = silent;
+    this.vibrate = vibrate;
+  }
 
-    /**
-     * This should be called when the user taps or clicks a notification. Note that this
-     * does not automatically dismiss the notification as far as Web Content is concerned.
-     * For that, see {@link #dismiss()}.
-     */
-    @UiThread
-    public void click() {
-        ThreadUtils.assertOnUiThread();
-        GeckoAppShell.onNotificationClick(tag, mCookie);
+  /**
+   * This should be called when the user taps or clicks a notification. Note that this does not
+   * automatically dismiss the notification as far as Web Content is concerned. For that, see {@link
+   * #dismiss()}.
+   */
+  @UiThread
+  public void click() {
+    ThreadUtils.assertOnUiThread();
+    GeckoAppShell.onNotificationClick(tag, mCookie);
+  }
 
-    }
-
-    /**
-     * This should be called when the app stops showing the notification. This is
-     * important, as there may be a limit to the number of active notifications each site
-     * can display.
-     */
-    @UiThread
-    public void dismiss() {
-        ThreadUtils.assertOnUiThread();
-        GeckoAppShell.onNotificationClose(tag, mCookie);
-    }
+  /**
+   * This should be called when the app stops showing the notification. This is important, as there
+   * may be a limit to the number of active notifications each site can display.
+   */
+  @UiThread
+  public void dismiss() {
+    ThreadUtils.assertOnUiThread();
+    GeckoAppShell.onNotificationClose(tag, mCookie);
+  }
 }
