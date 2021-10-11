@@ -41,22 +41,6 @@ enum nsUXThemeClass {
   eUXNumClasses
 };
 
-// Native windows style constants
-enum WindowsTheme {
-  WINTHEME_UNRECOGNIZED = 0,
-  WINTHEME_CLASSIC = 1,  // no theme
-  WINTHEME_AERO = 2,
-  WINTHEME_LUNA = 3,
-  WINTHEME_ROYALE = 4,
-  WINTHEME_ZUNE = 5,
-  WINTHEME_AERO_LITE = 6
-};
-enum WindowsThemeColor {
-  WINTHEMECOLOR_UNRECOGNIZED = 0,
-  WINTHEMECOLOR_NORMAL = 1,
-  WINTHEMECOLOR_HOMESTEAD = 2,
-  WINTHEMECOLOR_METALLIC = 3
-};
 enum CmdButtonIdx {
   CMDBUTTONIDX_MINIMIZE = 0,
   CMDBUTTONIDX_RESTORE,
@@ -103,7 +87,6 @@ class nsUXThemeData {
  public:
   static bool sTitlebarInfoPopulatedAero;
   static bool sTitlebarInfoPopulatedThemed;
-  static mozilla::LookAndFeel::WindowsTheme sThemeId;
   static bool sIsDefaultWindowsTheme;
   static bool sIsHighContrastOn;
 
@@ -123,7 +106,6 @@ class nsUXThemeData {
     return sCommandButtonBoxMetrics;
   }
   static void UpdateNativeThemeInfo();
-  static mozilla::LookAndFeel::WindowsTheme GetNativeThemeId();
   static bool IsDefaultWindowTheme();
   static bool IsHighContrastOn();
 
