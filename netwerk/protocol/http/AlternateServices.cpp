@@ -23,7 +23,6 @@
 #include "mozilla/dom/PContent.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/net/AltSvcTransactionParent.h"
-#include "mozilla/net/AltSvcTransactionChild.h"
 
 /* RFC 7838 Alternative Services
    http://httpwg.org/http-extensions/opsec.html
@@ -1313,8 +1312,6 @@ AltSvcOverride::GetAllow1918(bool* allow) {
   *allow = true;
   return NS_OK;
 }
-
-template class AltSvcTransaction<AltSvcTransactionChild>;
 
 NS_IMPL_ISUPPORTS(AltSvcOverride, nsIInterfaceRequestor,
                   nsISpeculativeConnectionOverrider)

@@ -11,7 +11,6 @@
 #include "mozilla/net/DocumentChannel.h"
 #include "mozilla/net/DocumentLoadListener.h"
 #include "nsIObserver.h"
-#include "nsIAsyncVerifyRedirectCallback.h"
 
 namespace mozilla {
 namespace net {

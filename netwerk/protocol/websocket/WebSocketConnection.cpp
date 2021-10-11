@@ -4,16 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIInterfaceRequestor.h"
 #include "WebSocketConnection.h"
 
 #include "WebSocketLog.h"
 #include "mozilla/net/WebSocketConnectionListener.h"
 #include "nsIOService.h"
 #include "nsISocketTransport.h"
-#include "nsSocketTransportService2.h"
-
-namespace mozilla::net {
 
 NS_IMPL_ISUPPORTS(WebSocketConnection, nsIInputStreamCallback,
                   nsIOutputStreamCallback)
@@ -245,5 +241,3 @@ WebSocketConnection::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
 
   return NS_OK;
 }
-
-}  // namespace mozilla::net
