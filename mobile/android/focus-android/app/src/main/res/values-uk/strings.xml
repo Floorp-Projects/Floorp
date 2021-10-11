@@ -569,7 +569,7 @@
     <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
-    <string name="your_rights_content3"><![CDATA[Вам не надаються жодні права чи ліцензії на торгові марки Mozilla Foundation або будь-яких її сторін, включно з Mozilla, Firefox, а також назвами чи логотипами %1$s. Додаткову інформацію можна знайти <a href="%2$s">тут</a>.]]></string>
+    <string name="your_rights_content3"><![CDATA[Вам не надаються жодні права чи ліцензії на торговельні марки Mozilla Foundation або на будь-які її частини, включно з Mozilla, Firefox, а також назвами чи логотипами %1$s. Додаткову інформацію можна знайти <a href="%2$s">тут</a>.]]></string>
 
     <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)

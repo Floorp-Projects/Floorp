@@ -46,6 +46,11 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Chika\'a nu pantalla xina</string>
 
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Tyika xina</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Stoó ña xina</string>
+
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Ña tsa\'a</string>
     <string name="menu_settings">Nu samu</string>
@@ -140,9 +145,6 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">Ntií</string>
 
-    <!-- Preference summary for General Settings category; the three things users can find in this category -->
-    <string name="preference_general_summary">Navegador, xikua, tu\'un</string>
-
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Satutu kue tutu cha nchi vai</string>
 
@@ -183,6 +185,9 @@
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Chaa URL</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Tyika URL</string>
 
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Chaa URL</string>
@@ -248,7 +253,10 @@
     <string name="preference_privacy_block_content_summary2">Tatu na Kuachu\'un ña ku kueva\'a nuna pàguina</string>
     <string name="preference_privacy_category_cookies">Kasi cookies</string>
 
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Kasi cookies ña inka nivi</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Kasi cookies ña inkana</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">Va´a</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Kuchun huella digital tava kunu aplicación</string>
@@ -301,6 +309,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Ndu tsaa ña nda nduku</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Katsi buscador</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Ndu tsaa ña nda ntuku</string>
 
@@ -309,6 +320,11 @@
     <string name="preference_search_add2">+ Chika´a inka motor nduku</string>
     <string name="preference_search_remove_title">Sto\'o ña ntuku</string>
     <string name="preference_search_remove">Xitaá</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Tyika inka buscador</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Katsi buscador va´á:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -470,8 +486,18 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">Chikaa</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">Va´a</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Kunchatu</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">Va´á</string>
+
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2"></string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -567,6 +593,10 @@
      When pressed, the user's previous session is cleared, and authentication is not required. -->
     <string name="biometric_auth_new_session">Kitsaa tuku</string>
 
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Kuna nu xikua tsàa</string>
+
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">Huellas digitales</string>
 
@@ -621,6 +651,12 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">Atoo ntii pagina web</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Kasi cookies</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">¿A kunu kasú cookies?</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Vaa Xikua</string>
     <!-- Subtitle for the tab crash report screen -->
@@ -636,8 +672,19 @@
 
     <!-- Tracking protection bottom sheet -->
 
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Contenido</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Publicidad</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Social</string>
     <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
     <string name="analytics">Analítica</string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Conexión va´a</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Rastreadores y scripts a bloquear</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
     <string name="go_back">Satà</string>
