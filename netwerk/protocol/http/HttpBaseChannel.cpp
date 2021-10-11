@@ -93,6 +93,7 @@
 #include "mozilla/RemoteLazyInputStreamUtils.h"
 #include "mozilla/net/SFVService.h"
 #include "mozilla/dom/ContentChild.h"
+#include "nsQueryObject.h"
 
 namespace mozilla {
 namespace net {
