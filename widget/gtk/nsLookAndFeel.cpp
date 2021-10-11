@@ -397,7 +397,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::WindowBackground:
     case ColorID::WidgetBackground:
     case ColorID::TextBackground:
-    case ColorID::Activecaption:  // active window caption background
     case ColorID::Appworkspace:   // MDI background color
     case ColorID::Background:     // desktop background
     case ColorID::Window:
@@ -409,8 +408,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::WindowForeground:
     case ColorID::WidgetForeground:
     case ColorID::TextForeground:
-    case ColorID::Captiontext:  // text in active window caption, size box, and
-                                // scrollbar arrow box (!)
     case ColorID::Windowtext:
     case ColorID::MozDialogtext:
       aColor = mMozWindowText;
@@ -500,19 +497,22 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       // inactive window border
       aColor = mMozWindowInactiveBorder;
       break;
-    case ColorID::MozGtkTitlebarText:
-      aColor = mTitlebarText;
-      break;
-    case ColorID::MozGtkTitlebarInactiveText:
-      aColor = mTitlebarInactiveText;
-      break;
     case ColorID::Graytext:             // disabled text in windows, menus, etc.
-    case ColorID::Inactivecaptiontext:  // text in inactive window caption
       aColor = mMenuTextInactive;
+      break;
+    case ColorID::Activecaption:
+      aColor = mTitlebarBackground;
+      break;
+    case ColorID::Captiontext:  // text in active window caption (titlebar)
+      aColor = mTitlebarText;
       break;
     case ColorID::Inactivecaption:
       // inactive window caption
-      aColor = mMozWindowInactiveCaption;
+      aColor = mTitlebarInactiveBackground;
+      break;
+    case ColorID::Inactivecaptiontext:  // text in active window caption
+                                        // (titlebar)
+      aColor = mTitlebarInactiveText;
       break;
     case ColorID::Infobackground:
       // tooltip background color
@@ -1513,9 +1513,6 @@ void nsLookAndFeel::PerThemeData::Init() {
   gtk_style_context_get_border_color(style, GTK_STATE_FLAG_INSENSITIVE, &color);
   mMozWindowInactiveBorder = GDK_RGBA_TO_NS_RGBA(color);
 
-  mMozWindowInactiveCaption =
-      GetBackgroundColor(style, mMozWindowText, GTK_STATE_FLAG_INSENSITIVE);
-
   style = GetStyleContext(MOZ_GTK_WINDOW_CONTAINER);
   {
     GtkStyleContext* labelStyle = CreateStyleForWidget(labelWidget, style);
@@ -1549,9 +1546,12 @@ void nsLookAndFeel::PerThemeData::Init() {
   {
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
     mTitlebarText = GDK_RGBA_TO_NS_RGBA(color);
+    mTitlebarBackground = GetBackgroundColor(style, mTitlebarText);
 
     gtk_style_context_get_color(style, GTK_STATE_FLAG_BACKDROP, &color);
     mTitlebarInactiveText = GDK_RGBA_TO_NS_RGBA(color);
+    mTitlebarInactiveBackground =
+        GetBackgroundColor(style, mTitlebarText, GTK_STATE_FLAG_BACKDROP);
   }
 
   style = GetStyleContext(MOZ_GTK_MENUPOPUP);
