@@ -1350,7 +1350,7 @@ void nsRefreshDriver::RemovePostRefreshObserver(
   Unused << removed;
 }
 
-bool nsRefreshDriver::AddImageRequest(imgIRequest* aRequest) {
+void nsRefreshDriver::AddImageRequest(imgIRequest* aRequest) {
   uint32_t delay = GetFirstFrameDelay(aRequest);
   if (delay == 0) {
     mRequests.Insert(aRequest);
@@ -1373,8 +1373,6 @@ bool nsRefreshDriver::AddImageRequest(imgIRequest* aRequest) {
                                            GetDocShell(mPresContext))),
                          uristr);
   }
-
-  return true;
 }
 
 void nsRefreshDriver::RemoveImageRequest(imgIRequest* aRequest) {
@@ -1970,8 +1968,7 @@ void nsRefreshDriver::UpdateIntersectionObservations(TimeStamp aNowTime) {
         return document->HasIntersectionObservers();
       });
 
-  for (uint32_t i = 0; i < documents.Length(); ++i) {
-    Document* doc = documents[i];
+  for (const auto& doc : documents) {
     doc->UpdateIntersectionObservations(aNowTime);
     doc->ScheduleIntersectionObserverNotification();
   }
@@ -2473,24 +2470,22 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     }
   }
 
-  if (mRequests.Count()) {
+  if (!mRequests.IsEmpty()) {
     // RequestRefresh may run scripts, so it's not safe to directly call it
     // while using a hashtable enumerator to enumerate mRequests in case
     // script modifies the hashtable. Instead, we build a (local) array of
     // images to refresh, and then we refresh each image in that array.
-    nsCOMArray<imgIContainer> imagesToRefresh(mRequests.Count());
+    nsTArray<nsCOMPtr<imgIContainer>> imagesToRefresh(mRequests.Count());
 
-    for (nsISupports* entry : mRequests) {
-      auto* req = static_cast<imgIRequest*>(entry);
-      MOZ_ASSERT(req, "Unable to retrieve the image request");
+    for (const auto& req : mRequests) {
       nsCOMPtr<imgIContainer> image;
       if (NS_SUCCEEDED(req->GetImage(getter_AddRefs(image)))) {
         imagesToRefresh.AppendElement(image.forget());
       }
     }
 
-    for (uint32_t i = 0; i < imagesToRefresh.Length(); i++) {
-      imagesToRefresh[i]->RequestRefresh(aNowTime);
+    for (const auto& image : imagesToRefresh) {
+      image->RequestRefresh(aNowTime);
     }
   }
 
@@ -2629,10 +2624,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
 
 void nsRefreshDriver::BeginRefreshingImages(RequestTable& aEntries,
                                             mozilla::TimeStamp aDesired) {
-  for (const auto& key : aEntries) {
-    auto* req = static_cast<imgIRequest*>(key);
-    MOZ_ASSERT(req, "Unable to retrieve the image request");
-
+  for (const auto& req : aEntries) {
     mRequests.Insert(req);
 
     nsCOMPtr<imgIContainer> image;
