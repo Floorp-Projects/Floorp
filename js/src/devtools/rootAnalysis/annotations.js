@@ -111,6 +111,7 @@ var ignoreCallees = {
     "struct js::gc::Callback<void (*)(JSContext*, void*)>.op" : true,
     "mozilla::ThreadSharedFloatArrayBufferList::Storage.mFree" : true,
     "mozilla::SizeOfState.mMallocSizeOf": true,
+    "mozilla::gfx::SourceSurfaceRawData.mDeallocator": true,
 };
 
 function fieldCallCannotGC(csu, fullfield)
@@ -446,6 +447,10 @@ function isLimitConstructor(typeInfo, edgeType, varName)
 // to get overridden with something that can GC.
 function isOverridableField(staticCSU, csu, field)
 {
+    // Special-case AddRef/Release for now. This isn't really true.
+    if (field == "AddRef" || field == "Release")
+        return false;
+
     if (csu != 'nsISupports')
         return false;
 
@@ -468,6 +473,10 @@ function isOverridableField(staticCSU, csu, field)
     if (field == "DocAddSizeOfIncludingThis")
         return false;
     if (field == "ConstructUbiNode")
+        return false;
+    if (field == "isSystemOrAddonPrincipal")
+        return false;
+    if (field == "GetIsAddonOrExpandedAddonPrincipal")
         return false;
 
     // Fields on the [builtinclass] nsIPrincipal
