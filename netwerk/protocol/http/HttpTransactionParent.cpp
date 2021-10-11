@@ -18,6 +18,8 @@
 #include "nsSerializationHelper.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
+#include "nsNetUtil.h"
+#include "nsIThreadRetargetableStreamListener.h"
 
 namespace mozilla {
 namespace net {
