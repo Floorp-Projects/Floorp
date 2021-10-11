@@ -12,6 +12,7 @@ import requests
 from mozbuild.util import memoize
 
 from gecko_taskgraph.util.taskcluster import requests_retry_session
+from gecko_taskgraph import create
 
 try:
     # TODO(py3): use time.monotonic()
@@ -73,6 +74,10 @@ def _write_perfherder_data(lower_is_better):
 
 @memoize
 def push_schedules(branch, rev):
+    # Noop if we're in test-action-callback
+    if create.testing:
+        return
+
     url = BUGBUG_BASE_URL + "/push/{branch}/{rev}/schedules".format(
         branch=branch, rev=rev
     )
