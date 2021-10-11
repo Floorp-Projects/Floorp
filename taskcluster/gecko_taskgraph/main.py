@@ -672,7 +672,7 @@ def action_callback(options):
 def test_action_callback(options):
     import gecko_taskgraph.parameters
     import gecko_taskgraph.actions
-    from gecko_taskgraph.util import yaml
+    from taskgraph.util import yaml
     from gecko_taskgraph.config import load_graph_config
 
     def load_data(filename):

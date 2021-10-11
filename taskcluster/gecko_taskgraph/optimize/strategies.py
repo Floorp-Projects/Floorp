@@ -38,7 +38,9 @@ class IndexSearch(OptimizationStrategy):
             try:
                 task_id = find_task_id(index_path)
                 status = status_task(task_id)
-                if status.get("state") in ("exception", "failed"):
+                # status can be `None` if we're in `testing` mode
+                # (e.g. test-action-callback)
+                if not status or status.get("state") in ("exception", "failed"):
                     continue
 
                 if deadline and datetime.strptime(

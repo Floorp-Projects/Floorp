@@ -15,7 +15,7 @@ from redo import retry
 from taskgraph.util.yaml import load_yaml
 from voluptuous import Required, Optional, Any
 
-from . import GECKO
+from . import GECKO, create
 from .actions import render_actions_json
 from .create import create_tasks
 from .generator import TaskGraphGenerator
@@ -207,8 +207,9 @@ def taskgraph_decision(options, parameters=None):
         write_artifacts=True,
     )
 
-    # set additional index paths for the decision task
-    set_decision_indexes(decision_task_id, tgg.parameters, tgg.graph_config)
+    if not create.testing:
+        # set additional index paths for the decision task
+        set_decision_indexes(decision_task_id, tgg.parameters, tgg.graph_config)
 
     # write out the parameters used to generate this graph
     write_artifact("parameters.yml", dict(**tgg.parameters))
