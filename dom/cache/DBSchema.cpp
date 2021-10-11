@@ -1034,7 +1034,8 @@ Result<EntryIds, nsresult> QueryCache(mozIStorageConnection& aConn,
 
   QM_TRY(MOZ_TO_RESULT(state->BindInt64ByName("cache_id"_ns, aCacheId)));
 
-  QM_TRY_INSPECT(const auto& crypto, ToResultGet<nsCOMPtr<nsICryptoHash>>(
+  QM_TRY_INSPECT(const auto& crypto,
+                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsICryptoHash>,
                                          MOZ_SELECT_OVERLOAD(do_CreateInstance),
                                          NS_CRYPTO_HASH_CONTRACTID));
 
@@ -1498,7 +1499,8 @@ nsresult InsertEntry(mozIStorageConnection& aConn, CacheId aCacheId,
                      const nsID* aResponseBodyId) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  QM_TRY_INSPECT(const auto& crypto, ToResultGet<nsCOMPtr<nsICryptoHash>>(
+  QM_TRY_INSPECT(const auto& crypto,
+                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsICryptoHash>,
                                          MOZ_SELECT_OVERLOAD(do_CreateInstance),
                                          NS_CRYPTO_HASH_CONTRACTID));
 

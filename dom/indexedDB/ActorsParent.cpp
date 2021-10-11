@@ -589,14 +589,16 @@ Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
     const Maybe<CipherKey>& aMaybeKey) {
   MOZ_ASSERT(aDirectoryLockId >= -1);
 
-  QM_TRY_INSPECT(const auto& protocolHandler,
-                 ToResultGet<nsCOMPtr<nsIProtocolHandler>>(
-                     MOZ_SELECT_OVERLOAD(do_GetService),
-                     NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "file"));
+  QM_TRY_INSPECT(
+      const auto& protocolHandler,
+      MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIProtocolHandler>,
+                              MOZ_SELECT_OVERLOAD(do_GetService),
+                              NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "file"));
 
   QM_TRY_INSPECT(const auto& fileHandler,
-                 ToResultGet<nsCOMPtr<nsIFileProtocolHandler>>(
-                     MOZ_SELECT_OVERLOAD(do_QueryInterface), protocolHandler));
+                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIFileProtocolHandler>,
+                                         MOZ_SELECT_OVERLOAD(do_QueryInterface),
+                                         protocolHandler));
 
   QM_TRY_INSPECT(const auto& mutator, MOZ_TO_RESULT_INVOKE_TYPED(
                                           nsCOMPtr<nsIURIMutator>, fileHandler,
@@ -843,10 +845,10 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
   QM_TRY_INSPECT(const auto& dbFileUrl,
                  GetDatabaseFileURL(aDBFile, aDirectoryLockId, aMaybeKey));
 
-  QM_TRY_INSPECT(
-      const auto& storageService,
-      ToResultGet<nsCOMPtr<mozIStorageService>>(
-          MOZ_SELECT_OVERLOAD(do_GetService), MOZ_STORAGE_SERVICE_CONTRACTID));
+  QM_TRY_INSPECT(const auto& storageService,
+                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<mozIStorageService>,
+                                         MOZ_SELECT_OVERLOAD(do_GetService),
+                                         MOZ_STORAGE_SERVICE_CONTRACTID));
 
   QM_TRY_UNWRAP(
       auto connection,
@@ -1101,10 +1103,10 @@ GetStorageConnection(nsIFile& aDatabaseFile, const int64_t aDirectoryLockId,
       const auto& dbFileUrl,
       GetDatabaseFileURL(aDatabaseFile, aDirectoryLockId, aMaybeKey));
 
-  QM_TRY_INSPECT(
-      const auto& storageService,
-      ToResultGet<nsCOMPtr<mozIStorageService>>(
-          MOZ_SELECT_OVERLOAD(do_GetService), MOZ_STORAGE_SERVICE_CONTRACTID));
+  QM_TRY_INSPECT(const auto& storageService,
+                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<mozIStorageService>,
+                                         MOZ_SELECT_OVERLOAD(do_GetService),
+                                         MOZ_STORAGE_SERVICE_CONTRACTID));
 
   QM_TRY_UNWRAP(
       nsCOMPtr<mozIStorageConnection> connection,

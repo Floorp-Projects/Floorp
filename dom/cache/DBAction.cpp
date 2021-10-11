@@ -163,11 +163,11 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDBConnection(
                            .SetQuery("cache=private"_ns + directoryLockIdClause)
                            .Finalize(dbFileUrl)));
 
-  QM_TRY_INSPECT(
-      const auto& storageService,
-      ToResultGet<nsCOMPtr<mozIStorageService>>(
-          MOZ_SELECT_OVERLOAD(do_GetService), MOZ_STORAGE_SERVICE_CONTRACTID),
-      Err(NS_ERROR_UNEXPECTED));
+  QM_TRY_INSPECT(const auto& storageService,
+                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<mozIStorageService>,
+                                         MOZ_SELECT_OVERLOAD(do_GetService),
+                                         MOZ_STORAGE_SERVICE_CONTRACTID),
+                 Err(NS_ERROR_UNEXPECTED));
 
   QM_TRY_UNWRAP(
       auto conn,

@@ -5612,9 +5612,10 @@ Result<Ok, nsresult> QuotaManager::CopyLocalStorageArchiveFromWebAppsStore(
 #endif
 
   // Get the storage service first, we will need it at multiple places.
-  QM_TRY_INSPECT(const auto& ss, ToResultGet<nsCOMPtr<mozIStorageService>>(
-                                     MOZ_SELECT_OVERLOAD(do_GetService),
-                                     MOZ_STORAGE_SERVICE_CONTRACTID));
+  QM_TRY_INSPECT(const auto& ss,
+                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<mozIStorageService>,
+                                         MOZ_SELECT_OVERLOAD(do_GetService),
+                                         MOZ_STORAGE_SERVICE_CONTRACTID));
 
   // Get the web apps store file.
   QM_TRY_INSPECT(const auto& webAppsStoreFile, QM_NewLocalFile(mBasePath));
@@ -5739,9 +5740,10 @@ QuotaManager::CreateLocalStorageArchiveConnection(
   // (similarly as wrong content of the file).
   QM_TRY(OkIf(!isDirectory), Err(NS_ERROR_FILE_CORRUPTED));
 
-  QM_TRY_INSPECT(const auto& ss, ToResultGet<nsCOMPtr<mozIStorageService>>(
-                                     MOZ_SELECT_OVERLOAD(do_GetService),
-                                     MOZ_STORAGE_SERVICE_CONTRACTID));
+  QM_TRY_INSPECT(const auto& ss,
+                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<mozIStorageService>,
+                                         MOZ_SELECT_OVERLOAD(do_GetService),
+                                         MOZ_STORAGE_SERVICE_CONTRACTID));
 
   // This may return NS_ERROR_FILE_CORRUPTED too.
   QM_TRY_UNWRAP(auto connection, MOZ_TO_RESULT_INVOKE_TYPED(
@@ -6108,9 +6110,10 @@ Result<Ok, nsresult> QuotaManager::CreateEmptyLocalStorageArchive(
     // words, finishing what was started here).
   }
 
-  QM_TRY_INSPECT(const auto& ss, ToResultGet<nsCOMPtr<mozIStorageService>>(
-                                     MOZ_SELECT_OVERLOAD(do_GetService),
-                                     MOZ_STORAGE_SERVICE_CONTRACTID));
+  QM_TRY_INSPECT(const auto& ss,
+                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<mozIStorageService>,
+                                         MOZ_SELECT_OVERLOAD(do_GetService),
+                                         MOZ_STORAGE_SERVICE_CONTRACTID));
 
   QM_TRY_UNWRAP(
       const auto connection,
@@ -6142,9 +6145,10 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
 
     QM_TRY(MOZ_TO_RESULT(MaybeUpgradeToDefaultStorageDirectory(*storageFile)));
 
-    QM_TRY_INSPECT(const auto& ss, ToResultGet<nsCOMPtr<mozIStorageService>>(
-                                       MOZ_SELECT_OVERLOAD(do_GetService),
-                                       MOZ_STORAGE_SERVICE_CONTRACTID));
+    QM_TRY_INSPECT(const auto& ss,
+                   MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<mozIStorageService>,
+                                           MOZ_SELECT_OVERLOAD(do_GetService),
+                                           MOZ_STORAGE_SERVICE_CONTRACTID));
 
     QM_TRY_UNWRAP(
         auto connection,
@@ -6350,8 +6354,9 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
 
     QM_TRY_INSPECT(
         const auto& storageDir,
-        ToResultGet<nsCOMPtr<nsIFile>>(MOZ_SELECT_OVERLOAD(do_CreateInstance),
-                                       NS_LOCAL_FILE_CONTRACTID));
+        MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIFile>,
+                                MOZ_SELECT_OVERLOAD(do_CreateInstance),
+                                NS_LOCAL_FILE_CONTRACTID));
 
     QM_TRY(MOZ_TO_RESULT(storageDir->InitWithPath(GetStoragePath())));
 
