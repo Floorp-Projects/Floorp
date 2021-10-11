@@ -9527,11 +9527,6 @@
   mirror: always
 #endif
 
-- name: network.proxy.parse_pac_on_socket_process
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Some requests during a page load are marked as "tail", mainly trackers, but not only.
 # This pref controls whether such requests are put to the tail, behind other requests
 # emerging during page loading process.
