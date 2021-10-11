@@ -78,7 +78,7 @@ add_task(async function() {
     }
 
     info("Waiting for search query to complete");
-    promises.push(inspector.searchSuggestions._lastQuery);
+    promises.push(inspector.searchSuggestions.once("processing-done"));
 
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
 
