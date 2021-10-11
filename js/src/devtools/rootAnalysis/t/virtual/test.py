@@ -79,3 +79,13 @@ assert "c17" in hazmap
 
 # Super.onBase() could call the GC'ing Base::onBase().
 assert "c15" in hazmap
+
+# virtual ~nsJSPrincipals calls ~JSPrincipals calls GC.
+assert "c18" in hazmap
+assert "c19" in hazmap
+
+# ~SafePrincipals does not GC.
+assert "c20" not in hazmap
+
+# ...but when cast to a nsISupports*, the compiler can't tell that it won't.
+assert "c21" in hazmap
