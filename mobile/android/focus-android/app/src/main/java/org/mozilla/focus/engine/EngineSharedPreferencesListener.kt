@@ -5,7 +5,7 @@
 package org.mozilla.focus.engine
 
 import android.content.Context
-import android.content.SharedPreferences
+import androidx.preference.Preference
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
@@ -16,27 +16,27 @@ import org.mozilla.focus.utils.Settings
  */
 class EngineSharedPreferencesListener(
     private val context: Context
-) : SharedPreferences.OnSharedPreferenceChangeListener {
+) : Preference.OnPreferenceChangeListener {
 
-    override fun onSharedPreferenceChanged(preferences: SharedPreferences, key: String) {
-
-        when (key) {
-
+    override fun onPreferenceChange(preference: Preference?, newValue: Any?): Boolean {
+        when (preference?.key) {
             context.getString(R.string.pref_key_performance_enable_cookies) ->
                 updateTrackingProtectionPolicy()
 
             context.getString(R.string.pref_key_safe_browsing) ->
-                updateSafeBrowsingPolicy()
+                updateSafeBrowsingPolicy(newValue as Boolean)
 
             context.getString(R.string.pref_key_performance_block_javascript) ->
-                updateJavaScriptSetting()
+                updateJavaScriptSetting(newValue as Boolean)
 
             context.getString(R.string.pref_key_remote_debugging) ->
-                updateRemoteDebugging()
+                updateRemoteDebugging(newValue as Boolean)
 
             context.getString(R.string.pref_key_performance_block_webfonts) ->
-                updateWebFontsBlocking()
+                updateWebFontsBlocking(newValue as Boolean)
         }
+
+        return true
     }
 
     internal fun updateTrackingProtectionPolicy(
@@ -61,29 +61,28 @@ class EngineSharedPreferencesListener(
         }
     }
 
-    private fun updateSafeBrowsingPolicy() {
-        Settings.getInstance(context).setupSafeBrowsing(context.components.engine)
+    private fun updateSafeBrowsingPolicy(newValue: Boolean) {
+        Settings.getInstance(context).setupSafeBrowsing(context.components.engine, newValue)
     }
 
-    private fun updateJavaScriptSetting() {
-        val settings = Settings.getInstance(context)
+    private fun updateJavaScriptSetting(newValue: Boolean) {
         val components = context.components
 
-        components.engineDefaultSettings.javascriptEnabled = !settings.shouldBlockJavaScript()
-        components.engine.settings.javascriptEnabled = !settings.shouldBlockJavaScript()
+        components.engineDefaultSettings.javascriptEnabled = !newValue
+        components.engine.settings.javascriptEnabled = !newValue
+        components.sessionUseCases.reload()
     }
 
-    private fun updateRemoteDebugging() {
-        context.components.engine.settings.remoteDebuggingEnabled =
-            Settings.getInstance(context).shouldEnableRemoteDebugging()
+    private fun updateRemoteDebugging(newValue: Boolean) {
+        context.components.engine.settings.remoteDebuggingEnabled = newValue
     }
 
-    private fun updateWebFontsBlocking() {
-        val settings = Settings.getInstance(context)
+    private fun updateWebFontsBlocking(newValue: Boolean) {
         val components = context.components
 
-        components.engineDefaultSettings.webFontsEnabled = !settings.shouldBlockWebFonts()
-        components.engine.settings.webFontsEnabled = !settings.shouldBlockWebFonts()
+        components.engineDefaultSettings.webFontsEnabled = !newValue
+        components.engine.settings.webFontsEnabled = !newValue
+        components.sessionUseCases.reload()
     }
 
     enum class ChangeSource(val source: String) {

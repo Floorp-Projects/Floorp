@@ -39,10 +39,26 @@ class PrivacySecuritySettingsFragment :
             preferenceScreen.removePreference(biometricPreference)
         }
 
+        val preferencesListener = EngineSharedPreferencesListener(requireContext())
+
         val cookiesPreference =
             findPreference(getString(R.string.pref_key_performance_enable_cookies)) as? CookiesPreference
-
         cookiesPreference?.updateSummary()
+
+        val safeBrowsingSwitchPreference =
+            findPreference(getString(R.string.pref_key_safe_browsing)) as? SwitchPreferenceCompat
+        val javaScriptPreference =
+            findPreference(getString(R.string.pref_key_performance_block_javascript)) as? SwitchPreferenceCompat
+        val remoteDebuggingPreference =
+            findPreference(getString(R.string.pref_key_remote_debugging)) as? SwitchPreferenceCompat
+        val webFontsPreference =
+            findPreference(getString(R.string.pref_key_performance_block_webfonts)) as? SwitchPreferenceCompat
+
+        cookiesPreference?.onPreferenceChangeListener = preferencesListener
+        safeBrowsingSwitchPreference?.onPreferenceChangeListener = preferencesListener
+        javaScriptPreference?.onPreferenceChangeListener = preferencesListener
+        remoteDebuggingPreference?.onPreferenceChangeListener = preferencesListener
+        webFontsPreference?.onPreferenceChangeListener = preferencesListener
     }
 
     override fun onResume() {
