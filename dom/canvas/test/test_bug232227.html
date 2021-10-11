@@ -10,15 +10,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=232227
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=232227">Mozilla Bug 232227</a>
-<!-- CSS system colors -->
-<!--<table cellspacing=0 border=1>
-<caption>CSS system colors</caption>
-<canvas id=colorTestCanvas width=1 height=1 style="display:none"></canvas> -->
-<script type="application/javascript">
+<script>
 
 /** Test for Bug 232227 **/
 
-function beginTest() {
+function runTest(testCanvasColors) {
   var colorNames = [
     [ "ActiveBorder", 0xB4, 0xB4, 0xB4 ],
     [ "ActiveCaption", 0x99, 0xB4, 0xD1 ],
@@ -75,7 +71,6 @@ function beginTest() {
     [ "-moz-mac-menutextdisable", 0x88, 0x88, 0x88 ],
     [ "-moz-mac-menutextselect", 0xFF, 0xFF, 0xFF ],
     [ "-moz-mac-DisabledToolbarText", 0x3F, 0x3F, 0x3F ],
-    [ "-moz-mac-AlternatePrimaryHighlight", 0x3F, 0x3F, 0x3F ],
     [ "-moz-mac-SecondaryHighlight", 0xD4, 0xD4, 0xD4 ],
     [ "-moz-win-MediaText", 0xFF, 0xFF, 0xFF ],
     [ "-moz-win-CommunicationsText", 0xFF, 0xFF, 0xFF ],
@@ -95,56 +90,44 @@ function beginTest() {
   colorTestCanvas = colorTestCanvas.getContext("2d");
 
   var colorTestDiv = document.createElement("div");
-  document.body.appendChild(colorTestDiv); // ie
+  document.body.appendChild(colorTestDiv);
 
-  for (var i in colorNames) {
-    (function(colorName, r, g, b) {
-      // test value
-      var ctest = "rgb(" + r + ", " + g + ", " + b + ")";
+  for (let [colorName, r, g, b] of colorNames) {
+    // test value
+    var ctest = "rgb(" + r + ", " + g + ", " + b + ")";
 
-      // computed value
-      colorTestDiv.style.backgroundColor = "#FF00FE";
-      try {
-        colorTestDiv.style.backgroundColor = colorName;
-      } catch (ex) {} // ie
-      var c1;
-      if (window.getComputedStyle) {
-        c1 = getComputedStyle(colorTestDiv, null).backgroundColor;
-      } else { // ie
-        var range = document.body.createTextRange();
-        range.moveToElementText(colorTestDiv);
-        c1 = range.queryCommandValue("BackColor");
-        c1 = "rgb(" + (c1 & 0xFF) + ", " + ((c1 >> 8) & 0xFF) + ", " + ((c1 >> 16) & 0xFF) + ")";
-      }
-      if (c1 != "rgb(255, 0, 254)") {
-        is(c1, ctest, "Stand-in computed color: " + colorName + " is correct.");
-      }
+    // computed value
+    colorTestDiv.style.backgroundColor = "";
+    colorTestDiv.style.backgroundColor = colorName;
+    var c1 = getComputedStyle(colorTestDiv).backgroundColor;
+    is(c1, ctest, "Stand-in computed color: " + colorName + " is correct.");
 
-      // canvas
-      if (colorTestCanvas) {
-        colorTestCanvas.fillStyle = colorName;
-        colorTestCanvas.fillRect(0, 0, 1, 1);
-        var c2 = colorTestCanvas.getImageData(0, 0, 1, 1).data;
-        c2 = "rgb(" + c2[0] + ", " + c2[1] + ", " + c2[2] + ")";
-
-        // combine
-        if (c2 != c1 && c2 != "rgb(0, 0, 0)") {
-          is(c2, ctest, "Stand-in canvas color: " + colorName + " is correct.");
-        }
-      }
-    })(colorNames[i][0], colorNames[i][1], colorNames[i][2], colorNames[i][3]);
+    // canvas
+    if (testCanvasColors && colorTestCanvas) {
+      colorTestCanvas.fillStyle = colorName;
+      colorTestCanvas.fillRect(0, 0, 1, 1);
+      var c2 = colorTestCanvas.getImageData(0, 0, 1, 1).data;
+      c2 = "rgb(" + c2[0] + ", " + c2[1] + ", " + c2[2] + ")";
+      is(c2, ctest, "Stand-in canvas color: " + colorName + " is correct.");
+    }
   }
-  SimpleTest.finish();
 }
 
-var prefs = [
-  [ "ui.use_standins_for_native_colors", true ],
-];
-
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({ "set" : prefs }, beginTest);
-
+(async function() {
+  SimpleTest.waitForExplicitFinish();
+  await SpecialPowers.pushPrefEnv({ "set" : [
+    [ "ui.use_standins_for_native_colors", true ],
+  ]});
+  runTest(/* testCanvasColors = */ true);
+  await SpecialPowers.pushPrefEnv({ "set" : [
+    [ "privacy.resistFingerprinting", true ],
+    [ "ui.use_standins_for_native_colors", false ],
+  ]});
+  // With privacy.resistFingerprinting canvas data doesn't reflect the actual
+  // canvas, apparently.
+  runTest(/* testCanvasColors = */ false);
+  SimpleTest.finish();
+}());
 </script>
-<!-- </table> -->
 </body>
 </html>
