@@ -3066,7 +3066,7 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
 }
 
 RefPtr<MediaManager::DeviceSetPromise> MediaManager::EnumerateDevices(
-    nsPIDOMWindowInner* aWindow, CallerType aCallerType) {
+    nsPIDOMWindowInner* aWindow) {
   MOZ_ASSERT(NS_IsMainThread());
   if (sHasShutdown) {
     return DeviceSetPromise::CreateAndReject(
@@ -3103,7 +3103,7 @@ RefPtr<MediaManager::DeviceSetPromise> MediaManager::EnumerateDevices(
     return DeviceSetPromise::CreateAndResolve(devices, __func__);
   }
 
-  bool resistFingerprinting = nsContentUtils::ResistFingerprinting(aCallerType);
+  bool resistFingerprinting = nsContentUtils::ShouldResistFingerprinting(doc);
   // In order of precedence: resist fingerprinting > loopback > fake pref
   if (resistFingerprinting) {
     videoEnumerationType = DeviceEnumerationType::Fake;
