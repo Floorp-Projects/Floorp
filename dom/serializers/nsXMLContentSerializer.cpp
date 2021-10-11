@@ -1545,10 +1545,15 @@ bool nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
           if (wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT) {
             foundWrapPosition = true;
           } else {
-            wrapPosition = lineBreaker->DeprecatedNext(aSequenceStart,
-                                                       (aEnd - aSequenceStart),
-                                                       (aPos - aSequenceStart));
-            if (wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT) {
+            wrapPosition = lineBreaker->Next(aSequenceStart,
+                                             (aEnd - aSequenceStart),
+                                             (aPos - aSequenceStart));
+            MOZ_ASSERT(wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT,
+                       "Next() always treats end-of-text as a break");
+            // If the line-breaker returned end-of-text, we don't know that it
+            // is actually a good wrap position, so ignore it and continue to
+            // use the fallback code below.
+            if (wrapPosition < aEnd - aSequenceStart) {
               foundWrapPosition = true;
             }
           }
@@ -1573,6 +1578,14 @@ bool nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
           // try some simple fallback logic
           // go forward up to the next whitespace position,
           // in the worst case this will be all the rest of the data
+
+          // XXX(jfkthame) Should we (conditionally) output indentation here?
+          // It makes for tidier-looking formatted output, at the cost of
+          // exceeding the target width by a greater amount on such lines.
+          // if (!mColPos && mDoFormat) {
+          //   NS_ENSURE_TRUE(AppendIndentation(aOutputStr), false);
+          //   mAddSpace = false;
+          // }
 
           // we update the mColPos variable with the length of
           // the part already parsed.
