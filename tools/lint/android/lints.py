@@ -6,6 +6,7 @@
 
 import itertools
 import json
+import glob
 import os
 import re
 import six
@@ -17,7 +18,6 @@ import xml.etree.ElementTree as ET
 from mozpack.files import FileFinder
 import mozpack.path as mozpath
 from mozlint import result
-
 
 # The Gradle target invocations are serialized with a simple locking file scheme.  It's fine for
 # them to take a while, since the first will compile all the Java, etc, and then perform
@@ -82,6 +82,45 @@ def gradle(log, topsrcdir=None, topobjdir=None, tasks=[], extra_args=[], verbose
         except KeyboardInterrupt:
             proc.kill()
             raise
+
+
+def format(config, fix=None, **lintargs):
+    topsrcdir = lintargs["root"]
+    topobjdir = lintargs["topobjdir"]
+
+    if fix:
+        tasks = lintargs["substs"]["GRADLE_ANDROID_FORMAT_LINT_FIX_TASKS"]
+    else:
+        tasks = lintargs["substs"]["GRADLE_ANDROID_FORMAT_LINT_CHECK_TASKS"]
+
+    gradle(
+        lintargs["log"],
+        topsrcdir=topsrcdir,
+        topobjdir=topobjdir,
+        tasks=tasks,
+        extra_args=lintargs.get("extra_args") or [],
+    )
+
+    results = []
+    for path in lintargs["substs"]["GRADLE_ANDROID_FORMAT_LINT_FOLDERS"]:
+        folder = os.path.join(
+            topobjdir, "gradle", "build", path, "spotless", "spotlessJava"
+        )
+        for filename in glob.iglob(folder + "/**/*.java", recursive=True):
+            err = {
+                "rule": "spotless-java",
+                "path": os.path.join(path, mozpath.relpath(filename, folder)),
+                "lineno": 0,
+                "column": 0,
+                "message": "Formatting error, please run ./mach lint -l android-format --fix",
+                "level": "error",
+            }
+            results.append(result.from_config(config, **err))
+
+    # If --fix was passed, we just report the number of files that were changed
+    if fix:
+        return {"results": [], "fixed": len(results)}
+    return results
 
 
 def api_lint(config, **lintargs):

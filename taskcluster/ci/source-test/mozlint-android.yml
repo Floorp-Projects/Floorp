@@ -70,6 +70,7 @@ lints:
             ./mach --log-no-times build pre-export export &&
             ./mach --log-no-times lint -f treeherder -f json:/builds/worker/mozlint.json
             --linter android-api-lint
+            --linter android-format
             --linter android-javadoc
             --linter android-checkstyle
             --linter android-lint
