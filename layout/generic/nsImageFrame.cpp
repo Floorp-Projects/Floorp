@@ -949,13 +949,6 @@ void nsImageFrame::UpdateImage(imgIRequest* aRequest, imgIContainer* aImage) {
     // Now we need to reflow if we have an unconstrained size and have
     // already gotten the initial reflow.
     if (!(mState & IMAGE_SIZECONSTRAINED)) {
-#ifdef ACCESSIBILITY
-      if (mKind != Kind::ListStyleImage) {
-        if (nsAccessibilityService* accService = GetAccService()) {
-          accService->NotifyOfImageSizeAvailable(PresShell(), mContent);
-        }
-      }
-#endif
       PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
                                     NS_FRAME_IS_DIRTY);
     } else if (PresShell()->IsActive()) {
