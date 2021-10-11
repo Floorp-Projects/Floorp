@@ -103,7 +103,12 @@ class SearchRobot {
     }
 
     fun typeSearch(searchTerm: String) {
+        mDevice.findObject(
+            UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view")
+        ).waitForExists(waitingTime)
+
         browserToolbarEditView().setText(searchTerm)
+
         mDevice.waitForIdle()
     }
 
