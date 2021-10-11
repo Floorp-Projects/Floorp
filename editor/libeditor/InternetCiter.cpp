@@ -33,7 +33,7 @@ nsresult InternetCiter::GetCiteString(const nsAString& aInString,
   nsReadingIterator<char16_t> beginIter, endIter;
   aInString.BeginReading(beginIter);
   aInString.EndReading(endIter);
-  while (beginIter != endIter && (*endIter == HTMLEditUtils::kCarridgeReturn ||
+  while (beginIter != endIter && (*endIter == HTMLEditUtils::kCarriageReturn ||
                                   *endIter == HTMLEditUtils::kNewLine)) {
     --endIter;
   }
@@ -83,7 +83,7 @@ static inline void BreakLine(nsAString& aOutString, uint32_t& outStringCol,
 
 static inline bool IsSpace(char16_t c) {
   return (nsCRT::IsAsciiSpace(c) || (c == HTMLEditUtils::kNewLine) ||
-          (c == HTMLEditUtils::kCarridgeReturn) || (c == HTMLEditUtils::kNBSP));
+          (c == HTMLEditUtils::kCarriageReturn) || (c == HTMLEditUtils::kNBSP));
 }
 
 nsresult InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
@@ -92,7 +92,7 @@ nsresult InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
   // There shouldn't be returns in this string, only dom newlines.
   // Check to make sure:
 #ifdef DEBUG
-  int32_t crPosition = aInString.FindChar(HTMLEditUtils::kCarridgeReturn);
+  int32_t crPosition = aInString.FindChar(HTMLEditUtils::kCarriageReturn);
   NS_ASSERTION(crPosition < 0, "Rewrap: CR in string gotten from DOM!\n");
 #endif /* DEBUG */
 
