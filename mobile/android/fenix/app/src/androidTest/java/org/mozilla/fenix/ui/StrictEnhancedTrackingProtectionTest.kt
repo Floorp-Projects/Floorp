@@ -79,9 +79,12 @@ class StrictEnhancedTrackingProtectionTest {
         // browsing a generic page to allow GV to load on a fresh run
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericPage.url) {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(trackingProtectionTest.url) {}
+        }.openTabDrawer {
+            closeTab()
+        }
 
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(trackingProtectionTest.url) {}
         enhancedTrackingProtection {
         }.openEnhancedTrackingProtectionSheet {
             verifyEnhancedTrackingProtectionSheetStatus("ON", true)
@@ -97,9 +100,12 @@ class StrictEnhancedTrackingProtectionTest {
         // browsing a generic page to allow GV to load on a fresh run
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericPage.url) {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(trackingProtectionTest.url) {}
+        }.openTabDrawer {
+            closeTab()
+        }
 
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(trackingProtectionTest.url) {}
         enhancedTrackingProtection {
         }.openEnhancedTrackingProtectionSheet {
             verifyEnhancedTrackingProtectionSheetStatus("ON", true)
@@ -113,7 +119,7 @@ class StrictEnhancedTrackingProtectionTest {
 
         settingsSubMenuEnhancedTrackingProtection {
         }.openExceptions {
-            verifyListedURL(trackingProtectionTest.url.toString())
+            verifyListedURL(trackingProtectionTest.url.host.toString())
         }.disableExceptions {
             verifyDefault()
         }
@@ -128,9 +134,12 @@ class StrictEnhancedTrackingProtectionTest {
         // browsing a generic page to allow GV to load on a fresh run
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericPage.url) {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(trackingProtectionTest.url) {}
+        }.openTabDrawer {
+            closeTab()
+        }
 
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(trackingProtectionTest.url) {}
         enhancedTrackingProtection {
         }.openEnhancedTrackingProtectionSheet {
             verifyEnhancedTrackingProtectionSheetStatus("ON", true)

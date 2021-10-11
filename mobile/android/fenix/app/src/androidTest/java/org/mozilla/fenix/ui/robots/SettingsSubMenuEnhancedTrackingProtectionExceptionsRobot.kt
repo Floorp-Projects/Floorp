@@ -6,16 +6,19 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
+import junit.framework.TestCase.assertTrue
 import org.hamcrest.CoreMatchers.allOf
-import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.click
 
 /**
  * Implementation of Robot Pattern for the settings Enhanced Tracking Protection Exceptions sub menu.
@@ -24,11 +27,11 @@ class SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot {
 
     fun verifyNavigationToolBarHeader() = assertNavigationToolBarHeader()
 
-    fun verifyDefault() = assertExceptionDefault()!!
+    fun verifyDefault() = assertExceptionDefault()
 
-    fun verifyExceptionLearnMoreText() = assertExceptionLearnMoreText()!!
+    fun verifyExceptionLearnMoreText() = assertExceptionLearnMoreText()
 
-    fun verifyListedURL(url: String) = assertExceptionURL(url)!!
+    fun verifyListedURL(url: String) = assertExceptionURL(url)
 
     fun verifyEnhancedTrackingProtectionProtectionExceptionsSubMenuItems() {
         verifyDefault()
@@ -63,13 +66,25 @@ private fun assertNavigationToolBarHeader() {
 }
 
 private fun assertExceptionDefault() =
-    onView(allOf(withText(R.string.exceptions_empty_message_description)))
+    assertTrue(
+        mDevice.findObject(
+            UiSelector().text("Exceptions let you disable tracking protection for selected sites.")
+        ).waitForExists(waitingTime)
+    )
 
 private fun assertExceptionLearnMoreText() =
-    onView(allOf(withText(R.string.exceptions_empty_message_learn_more_link)))
+    assertTrue(
+        mDevice.findObject(
+            UiSelector().text("Learn more")
+        ).waitForExists(waitingTime)
+    )
 
 private fun assertExceptionURL(url: String) =
-    onView(allOf(withText(url)))
+    assertTrue(
+        mDevice.findObject(
+            UiSelector().textContains(url.replace("http://", "https://"))
+        ).waitForExists(waitingTime)
+    )
 
 private fun disableExceptionsButton() =
-    onView(allOf(withId(R.id.removeAllExceptions)))
+    onView(withId(R.id.removeAllExceptions)).click()
