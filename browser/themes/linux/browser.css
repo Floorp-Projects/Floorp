@@ -401,11 +401,11 @@ menuitem.bookmark-item {
   :root[tabsintitlebar] #titlebar {
     appearance: auto;
     -moz-default-appearance: -moz-window-titlebar-maximized;
-    color: -moz-gtk-titlebar-text;
+    color: CaptionText;
   }
 
   :root[tabsintitlebar] #titlebar:-moz-window-inactive {
-    color: -moz-gtk-titlebar-inactive-text;
+    color: InactiveCaptionText;
   }
 
   :root[tabsintitlebar] #titlebar:-moz-lwtheme {
