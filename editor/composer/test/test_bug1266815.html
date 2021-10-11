@@ -26,6 +26,12 @@ const MOCK_HELPERAPP_DIALOG_CID =
 var registrar = SpecialPowers.wrap(Components).manager
                 .QueryInterface(Ci.nsIComponentRegistrar);
 
+const HandlerService = Cc[
+  "@mozilla.org/uriloader/handler-service;1"
+].getService(Ci.nsIHandlerService);
+
+const MIMEService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+
 var helperAppDlgPromise = new Promise(function(resolve) {
   var mockHelperAppService;
 
@@ -49,6 +55,15 @@ var helperAppDlgPromise = new Promise(function(resolve) {
 });
 
 add_task(async function() {
+  // ensure the download triggers the external app dialog
+  const mimeInfo = MIMEService.getFromTypeAndExtension("application/octet-stream", "");
+  mimeInfo.alwaysAskBeforeHandling = true;
+  HandlerService.store(mimeInfo);
+
+  SimpleTest.registerCleanupFunction(() => {
+    HandlerService.remove(mimeInfo);
+  });
+
   let promise = new Promise(function(resolve) {
     let iframe = document.createElement("iframe");
     iframe.onload = function() {
