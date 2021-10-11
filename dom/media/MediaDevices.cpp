@@ -5,6 +5,7 @@
 #include "mozilla/dom/MediaDevices.h"
 
 #include "AudioDeviceInfo.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/MediaDeviceInfo.h"
@@ -139,10 +140,39 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(ErrorResult& aRv) {
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
+  mPendingEnumerateDevicesPromises.AppendElement(p);
+  MaybeResumeDeviceExposure();
+  return p.forget();
+}
+
+void MediaDevices::MaybeResumeDeviceExposure() {
+  if (mPendingEnumerateDevicesPromises.IsEmpty()) {
+    return;
+  }
+  nsPIDOMWindowInner* window = GetOwner();
+  if (!window || !window->IsFullyActive()) {
+    return;
+  }
+  BrowsingContext* bc = window->GetBrowsingContext();
+  if (!bc->IsActive() ||                  // not foreground tab
+      !bc->GetIsActiveBrowserWindow()) {  // browser window does not have focus
+    return;
+  }
+
+  auto pending = std::move(mPendingEnumerateDevicesPromises);
+  for (auto& promise : pending) {
+    ResumeEnumerateDevices(std::move(promise));
+  }
+}
+
+void MediaDevices::ResumeEnumerateDevices(RefPtr<Promise> aPromise) {
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
+  MOZ_ASSERT(window, "Fully active document should have window");
   RefPtr<MediaDevices> self(this);
-  MediaManager::Get()->EnumerateDevices(owner)->Then(
+  MediaManager::Get()->EnumerateDevices(window)->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [this, self, p](RefPtr<MediaManager::MediaDeviceSetRefCnt>&& aDevices) {
+      [this, self,
+       aPromise](RefPtr<MediaManager::MediaDeviceSetRefCnt>&& aDevices) {
         nsPIDOMWindowInner* window = GetWindowIfCurrent();
         if (!window) {
           return;  // Leave Promise pending after navigation by design.
@@ -189,16 +219,15 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(ErrorResult& aRv) {
           infos.AppendElement(MakeRefPtr<MediaDeviceInfo>(
               device->mID, device->mKind, label, device->mGroupID));
         }
-        p->MaybeResolve(std::move(infos));
+        aPromise->MaybeResolve(std::move(infos));
       },
-      [this, self, p](const RefPtr<MediaMgrError>& error) {
+      [this, self, aPromise](const RefPtr<MediaMgrError>& error) {
         nsPIDOMWindowInner* window = GetWindowIfCurrent();
         if (!window) {
           return;  // Leave Promise pending after navigation by design.
         }
-        error->Reject(p);
+        error->Reject(aPromise);
       });
-  return p.forget();
 }
 
 already_AddRefed<Promise> MediaDevices::GetDisplayMedia(
@@ -479,7 +508,10 @@ RefPtr<MediaDevices::SinkInfoPromise> MediaDevices::GetSinkDevice(
           });
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(MediaDevices, DOMEventTargetHelper)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(MediaDevices,
+                                               DOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaDevices, DOMEventTargetHelper,
+                                   mPendingEnumerateDevicesPromises)
 
 void MediaDevices::OnDeviceChange() {
   MOZ_ASSERT(NS_IsMainThread());

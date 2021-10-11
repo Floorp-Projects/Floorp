@@ -325,6 +325,12 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   virtual bool IsFrozen() const override;
   void SyncStateFromParentWindow();
 
+  // Called on the current inner window of a browsing context when its
+  // background state changes according to selected tab or visibility of the
+  // browser window.  Used with Suspend()/Resume() or Freeze()/Thaw() because
+  // background state may change while the inner window is not current.
+  void UpdateBackgroundState();
+
   mozilla::dom::DebuggerNotificationManager*
   GetOrCreateDebuggerNotificationManager() override;
 
