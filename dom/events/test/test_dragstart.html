@@ -68,8 +68,9 @@ function afterDragTests()
 //  synthesizeMouse(draggable, 15, 15, { type: "mousemove" });
 //  sendMouseEventsForDrag("input");
 
-  // draggable element inside a shadow root
-  sendMouseEventsForShadowRootDrag();
+  // draggable elements inside a shadow root
+  sendMouseEventsForShadowRootDrag("shadow_host_containing_draggable");
+  sendMouseEventsForShadowRootDrag("shadow_host_containing_image");
 
   // next, check if the draggable attribute can be used to adjust the drag target
   gDragInfo = { target: $("dragtrue"), testid: "draggable true node" };
@@ -82,7 +83,7 @@ function afterDragTests()
   sendMouseEventsForDrag("spanfalse");
 
   synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
-  if (gExtraDragTests == 5)
+  if (gExtraDragTests == 6)
     SimpleTest.finish();
 }
 
@@ -93,9 +94,9 @@ function sendMouseEventsForDrag(nodeid)
   synthesizeMouse(draggable, 10, 10, { type: "mousemove" });
   synthesizeMouse(draggable, 12, 12, { type: "mousemove" });
 }
-function sendMouseEventsForShadowRootDrag()
+function sendMouseEventsForShadowRootDrag(host)
 {
-  var draggable = $("shadow_host_containing_draggable").shadowRoot.firstElementChild;
+  var draggable = $(host).shadowRoot.firstElementChild;
   synthesizeMouse(draggable, 3, 3, { type: "mousedown" });
   synthesizeMouse(draggable, 10, 10, { type: "mousemove" });
   synthesizeMouse(draggable, 12, 12, { type: "mousemove" });
@@ -476,6 +477,22 @@ function doDragStartInShadowRoot(event)
 
   gExtraDragTests++;
 }
+
+function doDragStartShadowRootImage(event)
+{
+  var dt = event.dataTransfer;
+
+  checkTypes(dt, ["text/x-moz-url", "text/x-moz-url-data", "text/x-moz-url-desc", "text/uri-list",
+                  "text/_moz_htmlcontext", "text/_moz_htmlinfo", "text/html", "text/plain"], 0, "shadow root link with image");
+
+  is(dt.getData("text/uri-list"), "http://example.org/", "shadow root link text/uri-list");
+  is(dt.getData("text/plain"), "http://example.org/", "shadow root link text/plain");
+
+  event.preventDefault();
+
+  gExtraDragTests++;
+}
+
 function doDragStartSynthetic(event)
 {
   is(event.type, "dragstart", "synthetic dragstart event type");
@@ -625,7 +642,15 @@ function expectError(fn, eid, testid)
 shadow_host_containing_draggable.attachShadow({ mode: 'open' }).innerHTML = 
 `<span>Inside shadow root</span>`;
 shadow_host_containing_draggable.addEventListener("dragstart", doDragStartInShadowRoot);
+</script>
 
+<a href="http://example.org" ondragstart="doDragStartShadowRootImage(event)">
+  <div id="shadow_host_containing_image"></div>
+</a>
+
+<script>
+shadow_host_containing_image.attachShadow({ mode: 'open' }).innerHTML = 
+`<img src="${$("image").src}" alt="Alt Text"></img>`;
 </script>
 </body>
 </html>
