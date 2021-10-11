@@ -17,10 +17,12 @@
 #include "nsIPromptFactory.h"
 #include "nsIProtocolProxyService.h"
 #include "nsISystemProxySettings.h"
+#include "nsIOService.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
 
 //-----------------------------------------------------------------------------
@@ -270,8 +272,9 @@ class ExecutePACThreadAction final : public Runnable {
       mSetupPAC = false;
 
       nsCOMPtr<nsIEventTarget> target = mPACMan->GetNeckoTarget();
-      mPACMan->mPAC.Init(mSetupPACURI, mSetupPACData, mPACMan->mIncludePath,
-                         mExtraHeapSize, target);
+      mPACMan->mPAC->ConfigurePAC(mSetupPACURI, mSetupPACData,
+                                  mPACMan->mIncludePath, mExtraHeapSize,
+                                  target);
 
       RefPtr<PACLoadComplete> runnable = new PACLoadComplete(mPACMan);
       mPACMan->Dispatch(runnable.forget());
@@ -372,12 +375,18 @@ nsPACMan::nsPACMan(nsISerialEventTarget* mainThreadEventTarget)
       mWPADOverDHCPEnabled(false),
       mProxyConfigType(0) {
   MOZ_ASSERT(NS_IsMainThread(), "pacman must be created on main thread");
-  if (!sThreadLocalSetup) {
-    sThreadLocalSetup = true;
-    PR_NewThreadPrivateIndex(&sThreadLocalIndex, nullptr);
-  }
-  mPAC.SetThreadLocalIndex(sThreadLocalIndex);
   mIncludePath = Preferences::GetBool(kPACIncludePath, false);
+  if (StaticPrefs::network_proxy_parse_pac_on_socket_process() &&
+      gIOService->SocketProcessReady()) {
+    mPAC = MakeUnique<RemoteProxyAutoConfig>();
+  } else {
+    mPAC = MakeUnique<ProxyAutoConfig>();
+    if (!sThreadLocalSetup) {
+      sThreadLocalSetup = true;
+      PR_NewThreadPrivateIndex(&sThreadLocalIndex, nullptr);
+    }
+    mPAC->SetThreadLocalIndex(sThreadLocalIndex);
+  }
 }
 
 nsPACMan::~nsPACMan() {
@@ -438,6 +447,10 @@ nsresult nsPACMan::DispatchToPAC(already_AddRefed<nsIRunnable> aEvent,
   // have to worry about threading issues here.
   if (!mPACThread) {
     MOZ_TRY(NS_NewNamedThread("ProxyResolution", getter_AddRefs(mPACThread)));
+    nsresult rv = mPAC->Init(mPACThread);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   return mPACThread->Dispatch(
@@ -760,7 +773,9 @@ void nsPACMan::CancelPendingQ(nsresult status, bool aShutdown) {
     query->Complete(status, ""_ns);
   }
 
-  if (aShutdown) mPAC.Shutdown();
+  if (aShutdown) {
+    mPAC->Shutdown();
+  }
 }
 
 void nsPACMan::ProcessPendingQ() {
@@ -770,10 +785,10 @@ void nsPACMan::ProcessPendingQ() {
   }
 
   if (mShutdown) {
-    mPAC.Shutdown();
+    mPAC->Shutdown();
   } else {
     // do GC while the thread has nothing pending
-    mPAC.GC();
+    mPAC->GC();
   }
 }
 
@@ -831,10 +846,13 @@ bool nsPACMan::ProcessPending() {
 
   // the systemproxysettings didn't complete the resolution. try via PAC
   if (!completed) {
-    nsresult status =
-        mPAC.GetProxyForURI(query->mSpec, query->mHost, pacString);
-    LOG(("Use proxy from PAC: %s\n", pacString.get()));
-    query->Complete(status, pacString);
+    auto callback = [query(query)](nsresult aStatus,
+                                   const nsACString& aResult) {
+      LOG(("Use proxy from PAC: %s\n", PromiseFlatCString(aResult).get()));
+      query->Complete(aStatus, aResult);
+    };
+    mPAC->GetProxyForURIWithCallback(query->mSpec, query->mHost,
+                                     std::move(callback));
   }
 
   mInProgress = false;

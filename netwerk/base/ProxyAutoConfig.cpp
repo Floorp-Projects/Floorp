@@ -28,7 +28,12 @@
 #include "nsITimer.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/net/DNS.h"
+#include "mozilla/net/SocketProcessChild.h"
+#include "mozilla/net/SocketProcessParent.h"
+#include "mozilla/net/ProxyAutoConfigChild.h"
+#include "mozilla/net/ProxyAutoConfigParent.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "nsServiceManagerUtils.h"
 #include "nsNetCID.h"
@@ -366,6 +371,21 @@ class PACResolver final : public nsIDNSListener,
 NS_IMPL_ISUPPORTS(PACResolver, nsIDNSListener, nsITimerCallback, nsINamed)
 
 static void PACLogToConsole(nsString& aMessage) {
+  if (XRE_IsSocketProcess()) {
+    auto task = [message(aMessage)]() {
+      SocketProcessChild* child = SocketProcessChild::GetSingleton();
+      if (child) {
+        Unused << child->SendOnConsoleMessage(message);
+      }
+    };
+    if (NS_IsMainThread()) {
+      task();
+    } else {
+      NS_DispatchToMainThread(NS_NewRunnableFunction("PACLogToConsole", task));
+    }
+    return;
+  }
+
   nsCOMPtr<nsIConsoleService> consoleService =
       do_GetService(NS_CONSOLESERVICE_CONTRACTID);
   if (!consoleService) return;
@@ -468,16 +488,19 @@ bool ProxyAutoConfig::ResolveAddress(const nsCString& aHostName,
     }
   }
 
+  mWaitingForDNSResolve = true;
   // Spin the event loop of the pac thread until lookup is complete.
   // nsPACman is responsible for keeping a queue and only allowing
   // one PAC execution at a time even when it is called re-entrantly.
   SpinEventLoopUntil("ProxyAutoConfig::ResolveAddress"_ns, [&, helper, this]() {
     if (!helper->mRequest) {
+      mWaitingForDNSResolve = false;
       return true;
     }
     if (this->mShutdown) {
       NS_WARNING("mShutdown set with PAC request not cancelled");
       MOZ_ASSERT(NS_FAILED(helper->mStatus));
+      mWaitingForDNSResolve = false;
       return true;
     }
     return false;
@@ -693,10 +716,11 @@ void ProxyAutoConfig::SetThreadLocalIndex(uint32_t index) {
   RunningIndex() = index;
 }
 
-nsresult ProxyAutoConfig::Init(const nsCString& aPACURI,
-                               const nsCString& aPACScriptData,
-                               bool aIncludePath, uint32_t aExtraHeapSize,
-                               nsIEventTarget* aEventTarget) {
+nsresult ProxyAutoConfig::ConfigurePAC(const nsCString& aPACURI,
+                                       const nsCString& aPACScriptData,
+                                       bool aIncludePath,
+                                       uint32_t aExtraHeapSize,
+                                       nsIEventTarget* aEventTarget) {
   mShutdown = false;  // Shutdown needs to be called prior to destruction
 
   mPACURI = aPACURI;
@@ -818,6 +842,15 @@ nsresult ProxyAutoConfig::SetupJS() {
   mPACURI.Truncate();
 
   return NS_OK;
+}
+
+void ProxyAutoConfig::GetProxyForURIWithCallback(
+    const nsCString& aTestURI, const nsCString& aTestHost,
+    std::function<void(nsresult aStatus, const nsACString& aResult)>&&
+        aCallback) {
+  nsAutoCString result;
+  nsresult status = GetProxyForURI(aTestURI, aTestHost, result);
+  aCallback(status, result);
 }
 
 nsresult ProxyAutoConfig::GetProxyForURI(const nsCString& aTestURI,
@@ -1057,6 +1090,73 @@ bool ProxyAutoConfig::MyIPAddress(const JS::CallArgs& aArgs) {
 
   aArgs.rval().setString(dottedDecimalString);
   return true;
+}
+
+RemoteProxyAutoConfig::RemoteProxyAutoConfig() = default;
+
+RemoteProxyAutoConfig::~RemoteProxyAutoConfig() = default;
+
+nsresult RemoteProxyAutoConfig::Init(nsIThread* aPACThread) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  SocketProcessParent* socketProcessParent =
+      SocketProcessParent::GetSingleton();
+  if (!socketProcessParent) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  ipc::Endpoint<PProxyAutoConfigParent> parent;
+  ipc::Endpoint<PProxyAutoConfigChild> child;
+  nsresult rv = PProxyAutoConfig::CreateEndpoints(
+      base::GetCurrentProcId(), socketProcessParent->OtherPid(), &parent,
+      &child);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  Unused << socketProcessParent->SendInitProxyAutoConfigChild(std::move(child));
+  mProxyAutoConfigParent = new ProxyAutoConfigParent();
+  return aPACThread->Dispatch(
+      NS_NewRunnableFunction("ProxyAutoConfigParent::ProxyAutoConfigParent",
+                             [proxyAutoConfigParent(mProxyAutoConfigParent),
+                              endpoint{std::move(parent)}]() mutable {
+                               proxyAutoConfigParent->Init(std::move(endpoint));
+                             }));
+}
+
+nsresult RemoteProxyAutoConfig::ConfigurePAC(const nsCString& aPACURI,
+                                             const nsCString& aPACScriptData,
+                                             bool aIncludePath,
+                                             uint32_t aExtraHeapSize,
+                                             nsIEventTarget*) {
+  Unused << mProxyAutoConfigParent->SendConfigurePAC(
+      aPACURI, aPACScriptData, aIncludePath, aExtraHeapSize);
+  return NS_OK;
+}
+
+void RemoteProxyAutoConfig::Shutdown() { mProxyAutoConfigParent->Close(); }
+
+void RemoteProxyAutoConfig::GC() { Unused << mProxyAutoConfigParent->SendGC(); }
+
+void RemoteProxyAutoConfig::GetProxyForURIWithCallback(
+    const nsCString& aTestURI, const nsCString& aTestHost,
+    std::function<void(nsresult aStatus, const nsACString& aResult)>&&
+        aCallback) {
+  if (!mProxyAutoConfigParent->CanSend()) {
+    return;
+  }
+
+  mProxyAutoConfigParent->SendGetProxyForURI(
+      aTestURI, aTestHost,
+      [aCallback](Tuple<nsresult, nsCString>&& aResult) {
+        nsresult status;
+        nsCString result;
+        Tie(status, result) = aResult;
+        aCallback(status, result);
+      },
+      [aCallback](mozilla::ipc::ResponseRejectReason&& aReason) {
+        aCallback(NS_ERROR_FAILURE, ""_ns);
+      });
 }
 
 }  // namespace net
