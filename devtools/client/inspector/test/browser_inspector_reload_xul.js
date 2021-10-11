@@ -5,7 +5,7 @@
 
 // Tests for inspecting a node on a XUL document, spanning a tab reload.
 
-const TEST_URI = URL_ROOT + "doc_inspector_reload_xul.xhtml";
+const TEST_URI = URL_ROOT_SSL + "doc_inspector_reload_xul.xhtml";
 
 add_task(async function() {
   await pushPref("dom.allow_XUL_XBL_for_file", false);

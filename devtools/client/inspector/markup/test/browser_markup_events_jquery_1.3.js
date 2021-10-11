@@ -7,7 +7,7 @@
 // and jQuery Live events (jQuery version 1.3).
 
 const TEST_LIB = "lib_jquery_1.3_min.js";
-const TEST_URL = URL_ROOT + "doc_markup_events_jquery.html?" + TEST_LIB;
+const TEST_URL = URL_ROOT_SSL + "doc_markup_events_jquery.html?" + TEST_LIB;
 
 loadHelperScript("helper_events_test_runner.js");
 
@@ -18,7 +18,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "DOMContentLoaded",
-        filename: URL_ROOT + TEST_LIB + ":19:18937",
+        filename: URL_ROOT_SSL + TEST_LIB + ":19:18937",
         attributes: [
           "Bubbling",
           "DOM2"

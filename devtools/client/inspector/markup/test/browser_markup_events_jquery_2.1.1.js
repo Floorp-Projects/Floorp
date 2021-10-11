@@ -9,7 +9,7 @@ requestLongerTimeout(2);
 // and jQuery Live events (jQuery version 2.1.1).
 
 const TEST_LIB = "lib_jquery_2.1.1_min.js";
-const TEST_URL = URL_ROOT + "doc_markup_events_jquery.html?" + TEST_LIB;
+const TEST_URL = URL_ROOT_SSL + "doc_markup_events_jquery.html?" + TEST_LIB;
 
 loadHelperScript("helper_events_test_runner.js");
 

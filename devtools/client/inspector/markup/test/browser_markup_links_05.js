@@ -6,7 +6,7 @@
 // Tests that the contextual menu items shown when clicking on links in
 // attributes actually do the right things.
 
-const TEST_URL = URL_ROOT + "doc_markup_links.html";
+const TEST_URL = URL_ROOT_SSL + "doc_markup_links.html";
 
 add_task(async function() {
   const { inspector } = await openInspectorForURL(TEST_URL);
@@ -29,7 +29,7 @@ add_task(async function() {
   ok(true, "A new tab opened");
   is(
     tab.linkedBrowser.currentURI.spec,
-    URL_ROOT + "doc_markup_tooltip.png",
+    URL_ROOT_SSL + "doc_markup_tooltip.png",
     "The URL for the new tab is correct"
   );
   gBrowser.removeTab(tab);

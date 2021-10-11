@@ -2,8 +2,8 @@
  http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const TEST_URI = URL_ROOT + "doc_rules_imported_stylesheet_edit.html";
-const SJS_URI = URL_ROOT + "sjs_imported_stylesheet_edit.sjs";
+const TEST_URI = URL_ROOT_SSL + "doc_rules_imported_stylesheet_edit.html";
+const SJS_URI = URL_ROOT_SSL + "sjs_imported_stylesheet_edit.sjs";
 /**
  * Test that imported stylesheets are correctly handled by the inspector after
  * being updated.

@@ -6,7 +6,7 @@
 // Test that the stylesheet links in the rule view are correct when source maps
 // are involved.
 
-const TESTCASE_URI = URL_ROOT + "doc_sourcemaps.html";
+const TESTCASE_URI = URL_ROOT_SSL + "doc_sourcemaps.html";
 const PREF = "devtools.source-map.client-service.enabled";
 const SCSS_LOC = "doc_sourcemaps.scss:4";
 const CSS_LOC = "doc_sourcemaps.css:1";
@@ -89,7 +89,7 @@ function verifyLinkText(text, view) {
   return waitForSuccess(function() {
     return (
       label.textContent == text &&
-      label.getAttribute("title") === URL_ROOT + text
+      label.getAttribute("title") === URL_ROOT_SSL + text
     );
   }, "Link text changed to display correct location: " + text);
 }

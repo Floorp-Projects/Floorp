@@ -9,7 +9,7 @@ requestLongerTimeout(2);
 
 add_task(async function() {
   const { inspector } = await openInspectorForURL(
-    `${URL_ROOT_ORG}doc_inspector_search-iframes.html`
+    `${URL_ROOT_ORG_SSL}doc_inspector_search-iframes.html`
   );
 
   info("Focus the search box");

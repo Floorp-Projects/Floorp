@@ -7,7 +7,7 @@
 // and jQuery Live events (jQuery version 1.11.1).
 
 const TEST_LIB = "lib_jquery_1.11.1_min.js";
-const TEST_URL = URL_ROOT + "doc_markup_events_jquery.html?" + TEST_LIB;
+const TEST_URL = URL_ROOT_SSL + "doc_markup_events_jquery.html?" + TEST_LIB;
 
 loadHelperScript("helper_events_test_runner.js");
 
