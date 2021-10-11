@@ -1189,7 +1189,7 @@ class nsCycleCollector : public nsIMemoryReporter {
   void FixGrayBits(bool aForceGC, TimeLog& aTimeLog);
   bool IsIncrementalGCInProgress();
   void FinishAnyIncrementalGCInProgress();
-  bool ShouldMergeZones(ccType aCCType, ccIsManual aIsManual);
+  bool ShouldMergeZones(ccIsManual aIsManual);
 
   void BeginCollection(ccType aCCType, ccIsManual aIsManual,
                        nsICycleCollectorListener* aManualListener);
@@ -3511,7 +3511,7 @@ void nsCycleCollector::FinishAnyCurrentCollection() {
 static const uint32_t kMinConsecutiveUnmerged = 3;
 static const uint32_t kMaxConsecutiveMerged = 3;
 
-bool nsCycleCollector::ShouldMergeZones(ccType aCCType, ccIsManual aIsManual) {
+bool nsCycleCollector::ShouldMergeZones(ccIsManual aIsManual) {
   if (!mCCJSRuntime) {
     return false;
   }
@@ -3603,7 +3603,7 @@ void nsCycleCollector::BeginCollection(
   mGraph.Init();
   mResults.Init();
   mResults.mAnyManual = aIsManual;
-  bool mergeZones = ShouldMergeZones(aCCType, aIsManual);
+  bool mergeZones = ShouldMergeZones(aIsManual);
   mResults.mMergedZones = mergeZones;
 
   MOZ_ASSERT(!mBuilder, "Forgot to clear mBuilder");
