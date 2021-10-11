@@ -634,7 +634,7 @@ static void PrepareFontOptions(FcPattern* aPattern, int* aOutLoadFlags,
   }
 
   int fc_hintstyle = FC_HINT_NONE;
-  if ((!printing || hinting) &&
+  if (!printing && hinting &&
       FcPatternGetInteger(aPattern, FC_HINT_STYLE, 0, &fc_hintstyle) !=
           FcResultMatch) {
     fc_hintstyle = FC_HINT_FULL;
