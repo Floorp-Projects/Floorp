@@ -49,11 +49,14 @@ add_task(async function() {
     info("Pressing " + key + " to get " + suggestions.join(", "));
 
     const command = once(searchBox, "input");
+    const onSearchProcessingDone = inspector.searchSuggestions.once(
+      "processing-done"
+    );
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
     await command;
 
     info("Waiting for search query to complete and getting the suggestions");
-    await inspector.searchSuggestions._lastQuery;
+    await onSearchProcessingDone;
     const actualSuggestions = popup.getItems();
 
     is(
