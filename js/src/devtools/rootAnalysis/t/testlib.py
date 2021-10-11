@@ -121,12 +121,10 @@ sixgill_bin = '{bindir}'
         values = (extract(line.strip()) for line in open(fullpath, "r"))
         return list(filter(lambda _: _ is not None, values))
 
-    def load_suppressed_functions(self):
-        return set(
-            self.load_text_file(
-                "limitedFunctions.lst", extract=lambda l: l.split(" ")[1]
-            )
-        )
+    def load_json_file(self, filename, reviver=None):
+        fullpath = os.path.join(self.outdir, filename)
+        with open(fullpath) as fh:
+            return json.load(fh, object_hook=reviver)
 
     def load_gcTypes(self):
         def grab_type(line):
@@ -143,8 +141,10 @@ sixgill_bin = '{bindir}'
         return gctypes
 
     def load_typeInfo(self, filename="typeInfo.txt"):
-        with open(os.path.join(self.outdir, filename)) as fh:
-            return json.load(fh)
+        return self.load_json_file(filename)
+
+    def load_funcInfo(self, filename="limitedFunctions.lst"):
+        return self.load_json_file(filename)
 
     def load_gcFunctions(self):
         return self.load_text_file("gcFunctions.lst", extract=extract_unmangled)
@@ -200,9 +200,7 @@ sixgill_bin = '{bindir}'
             elif tokens[0] == "T":
                 data.tags[tokens[1]].add(line.split(" ", 2)[2])
             elif tokens[0] in ("F", "V"):
-                m = re.match(r"^[FV] (\d+) (\d+) CLASS (.*?) FIELD (.*)", line)
-                caller, callee, csu, field = m.groups()
-                add_call(lookup(caller), lookup(callee), limit)
+                pass
 
             elif tokens[0] == "I":
                 m = re.match(r"^I (\d+) VARIABLE ([^\,]*)", line)
