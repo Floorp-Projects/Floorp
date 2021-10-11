@@ -86,16 +86,6 @@ inline bool IsTranscodingBytecodeAligned(const void* offset) {
 
 // Decode CompilationStencil from the buffer and instantiate JSScript from it.
 //
-// The start of `buffer` and `cursorIndex` should meet
-// IsTranscodingBytecodeAligned and IsTranscodingBytecodeOffsetAligned.
-// (This should be handled while encoding).
-extern JS_PUBLIC_API TranscodeResult DecodeScriptMaybeStencil(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    TranscodeBuffer& buffer, MutableHandle<JSScript*> scriptp,
-    size_t cursorIndex = 0);
-
-// Decode CompilationStencil from the buffer and instantiate JSScript from it.
-//
 // And then register an encoder on its script source, such that all functions
 // can be encoded as they are parsed. This strategy is used to avoid blocking
 // the main thread in a non-interruptible way.

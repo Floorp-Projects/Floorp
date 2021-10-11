@@ -4475,40 +4475,6 @@ static JS::TranscodeResult DecodeStencil(JSContext* cx,
   return JS::TranscodeResult::Ok;
 }
 
-JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptMaybeStencil(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
-    size_t cursorIndex) {
-  MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(buffer.begin()));
-  MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(cursorIndex));
-
-  // The buffer contains stencil.
-
-  CompileOptions opts(cx, options);
-  opts.borrowBuffer = true;
-
-  Rooted<frontend::CompilationInput> input(cx,
-                                           frontend::CompilationInput(opts));
-  frontend::CompilationStencil stencil(nullptr);
-
-  JS::TranscodeResult res =
-      DecodeStencil(cx, buffer, input.get(), stencil, cursorIndex);
-  if (res != JS::TranscodeResult::Ok) {
-    return res;
-  }
-
-  Rooted<frontend::CompilationGCOutput> gcOutput(cx);
-  if (!frontend::InstantiateStencils(cx, input.get(), stencil,
-                                     gcOutput.get())) {
-    return JS::TranscodeResult::Throw;
-  }
-
-  MOZ_ASSERT(gcOutput.get().script);
-  scriptp.set(gcOutput.get().script);
-
-  return JS::TranscodeResult::Ok;
-}
-
 JS_PUBLIC_API JS::TranscodeResult JS::DecodeScriptAndStartIncrementalEncoding(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     TranscodeBuffer& buffer, JS::MutableHandleScript scriptp,
