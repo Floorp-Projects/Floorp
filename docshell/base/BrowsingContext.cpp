@@ -33,6 +33,7 @@
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/LocationBinding.h"
+#include "mozilla/dom/MediaDevices.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SessionStorageManager.h"
@@ -2930,14 +2931,19 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsActiveBrowserWindowInternal>,
     if (RefPtr<Document> doc = aContext->GetExtantDocument()) {
       doc->UpdateDocumentStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE, true);
 
+      RefPtr<nsPIDOMWindowInner> win = doc->GetInnerWindow();
+      RefPtr<MediaDevices> devices;
+      if (isActivateEvent && (devices = win->GetExtantMediaDevices())) {
+        devices->BrowserWindowBecameActive();
+      }
+
       if (XRE_IsContentProcess() &&
           (!aContext->GetParent() || !aContext->GetParent()->IsInProcess())) {
         // Send the inner window an activate/deactivate event if
         // the context is the top of a sub-tree of in-process
         // contexts.
         nsContentUtils::DispatchEventOnlyToChrome(
-            doc, doc->GetWindow()->GetCurrentInnerWindow(),
-            isActivateEvent ? u"activate"_ns : u"deactivate"_ns,
+            doc, win, isActivateEvent ? u"activate"_ns : u"deactivate"_ns,
             CanBubble::eYes, Cancelable::eYes, nullptr);
       }
     }

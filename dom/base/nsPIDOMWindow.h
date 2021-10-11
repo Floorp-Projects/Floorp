@@ -62,6 +62,7 @@ class DocGroup;
 class Document;
 class Element;
 class Location;
+class MediaDevices;
 class MediaKeys;
 class Navigator;
 class Performance;
@@ -577,6 +578,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   uint32_t GetMarkedCCGeneration() { return mMarkedCCGeneration; }
 
   mozilla::dom::Navigator* Navigator();
+  mozilla::dom::MediaDevices* GetExtantMediaDevices() const;
   virtual mozilla::dom::Location* Location() = 0;
 
   virtual nsresult GetControllers(nsIControllers** aControllers) = 0;

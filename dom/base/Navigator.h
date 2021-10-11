@@ -178,6 +178,7 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   already_AddRefed<LegacyMozTCPSocket> MozTCPSocket();
   network::Connection* GetConnection(ErrorResult& aRv);
   MediaDevices* GetMediaDevices(ErrorResult& aRv);
+  MediaDevices* GetExtantMediaDevices() const { return mMediaDevices; };
 
   void GetGamepads(nsTArray<RefPtr<Gamepad>>& aGamepads, ErrorResult& aRv);
   GamepadServiceTest* RequestGamepadServiceTest();
