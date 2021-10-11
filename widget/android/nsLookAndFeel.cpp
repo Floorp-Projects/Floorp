@@ -361,7 +361,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
 
     case IntID::WindowsDefaultTheme:
-    case IntID::WindowsThemeIdentifier:
     case IntID::OperatingSystemVersionIdentifier:
       aResult = 0;
       rv = NS_ERROR_NOT_IMPLEMENTED;
