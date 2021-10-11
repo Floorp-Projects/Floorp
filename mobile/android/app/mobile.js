@@ -389,8 +389,6 @@ pref("apz.second_tap_tolerance", "0.3");
 pref("apz.touch_move_tolerance", "0.03");
 pref("apz.touch_start_tolerance", "0.06");
 
-pref("layers.low-precision-buffer", true);
-
 pref("notification.feature.enabled", true);
 
 // prevent tooltips from showing up
