@@ -6,8 +6,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ParentChannelWrapper.h"
+#include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/UrlClassifierCommon.h"
-#include "nsIRedirectChannelRegistrar.h"
+#include "mozilla/net/RedirectChannelRegistrar.h"
+#include "nsIViewSourceChannel.h"
+#include "nsNetUtil.h"
+#include "nsQueryObject.h"
+#include "mozilla/dom/RemoteType.h"
 
 namespace mozilla {
 namespace net {
