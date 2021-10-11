@@ -19,6 +19,7 @@
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
 #include "js/Conversions.h"
+#include "js/experimental/JSStencil.h"
 #include "js/HeapAPI.h"
 #include "js/OffThreadScriptCompilation.h"
 #include "js/ProfilingCategory.h"
@@ -178,9 +179,16 @@ nsresult JSExecutionContext::Decode(mozilla::Vector<uint8_t>& aBytecodeBuf,
     return mRv;
   }
 
+  JS::CompileOptions options(mCx, mCompileOptions);
+  options.borrowBuffer = true;
+
+  JS::TranscodeRange range(aBytecodeBuf.begin() + aBytecodeIndex,
+                           aBytecodeBuf.length() - aBytecodeIndex);
+
   MOZ_ASSERT(!mWantsReturnValue);
-  JS::TranscodeResult tr = JS::DecodeScriptMaybeStencil(
-      mCx, mCompileOptions, aBytecodeBuf, &mScript, aBytecodeIndex);
+  RefPtr<JS::Stencil> stencil;
+  JS::TranscodeResult tr =
+      JS::DecodeStencil(mCx, options, range, getter_AddRefs(stencil));
   // These errors are external parameters which should be handled before the
   // decoding phase, and which are the only reasons why you might want to
   // fallback on decoding failures.
@@ -190,6 +198,11 @@ nsresult JSExecutionContext::Decode(mozilla::Vector<uint8_t>& aBytecodeBuf,
     mSkip = true;
     mRv = NS_ERROR_DOM_JS_DECODING_ERROR;
     return mRv;
+  }
+
+  mScript = JS::InstantiateGlobalStencil(mCx, options, stencil);
+  if (!mScript) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   if (!UpdateDebugMetadata()) {
