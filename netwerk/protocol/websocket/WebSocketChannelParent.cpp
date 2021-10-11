@@ -13,6 +13,9 @@
 #include "SerializedLoadContext.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/WebSocketChannel.h"
+#include "nsComponentManagerUtils.h"
+#include "IPCTransportProvider.h"
+#include "mozilla/net/ChannelEventQueue.h"
 
 using namespace mozilla::ipc;
 
