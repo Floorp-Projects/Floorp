@@ -964,16 +964,6 @@ int32_t LineBreaker::Next(const char16_t* aText, uint32_t aLen, uint32_t aPos) {
   return WordMove(aText, aLen, aPos, 1);
 }
 
-int32_t LineBreaker::DeprecatedNext(const char16_t* aText, uint32_t aLen,
-                                    uint32_t aPos) {
-  NS_ASSERTION(aText, "aText shouldn't be null");
-  NS_ASSERTION(aLen > aPos,
-               "Bad position passed to nsJISx4051LineBreaker::Next");
-
-  int32_t nextPos = WordMove(aText, aLen, aPos, 1);
-  return nextPos < int32_t(aLen) ? nextPos : NS_LINEBREAKER_NEED_MORE_TEXT;
-}
-
 int32_t LineBreaker::Prev(const char16_t* aText, uint32_t aLen, uint32_t aPos) {
   NS_ASSERTION(aText, "aText shouldn't be null");
   NS_ASSERTION(aLen >= aPos && aPos > 0,
