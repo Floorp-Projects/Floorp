@@ -102,7 +102,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     nscolor mMozWindowBackground = kWhite;
     nscolor mMozWindowActiveBorder = kBlack;
     nscolor mMozWindowInactiveBorder = kBlack;
-    nscolor mMozWindowInactiveCaption = kWhite;
     nscolor mMozCellHighlightBackground = kWhite;
     nscolor mMozCellHighlightText = kBlack;
     nscolor mTextSelectedText = kBlack;
@@ -113,7 +112,9 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     nscolor mMozColHeaderText = kBlack;
     nscolor mMozColHeaderHoverText = kBlack;
     nscolor mTitlebarText = kBlack;
+    nscolor mTitlebarBackground = kWhite;
     nscolor mTitlebarInactiveText = kBlack;
+    nscolor mTitlebarInactiveBackground = kWhite;
     nscolor mThemedScrollbar = kWhite;
     nscolor mThemedScrollbarInactive = kWhite;
     nscolor mThemedScrollbarThumb = kBlack;
