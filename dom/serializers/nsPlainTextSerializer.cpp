@@ -152,16 +152,20 @@ int32_t nsPlainTextSerializer::CurrentLine::FindWrapIndexForContent(
   // In this case we don't want strings, especially CJK-ones, to be split. See
   // bug 333064 for more information.
   if (aWrapColumn < prefixwidth) {
+    goodSpace = NS_LINEBREAKER_NEED_MORE_TEXT;
+  } else {
+    goodSpace = static_cast<int32_t>(
+        std::min(aWrapColumn - prefixwidth, mContent.Length() - 1));
+    while (goodSpace >= 0 && !nsCRT::IsAsciiSpace(mContent.CharAt(goodSpace))) {
+      goodSpace--;
+    }
+  }
+  if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT) {
     goodSpace = (prefixwidth > aWrapColumn) ? 1 : aWrapColumn - prefixwidth;
     const int32_t contentLength = mContent.Length();
     while (goodSpace < contentLength &&
            !nsCRT::IsAsciiSpace(mContent.CharAt(goodSpace))) {
       goodSpace++;
-    }
-  } else {
-    goodSpace = std::min(aWrapColumn - prefixwidth, mContent.Length() - 1);
-    while (goodSpace >= 0 && !nsCRT::IsAsciiSpace(mContent.CharAt(goodSpace))) {
-      goodSpace--;
     }
   }
 
