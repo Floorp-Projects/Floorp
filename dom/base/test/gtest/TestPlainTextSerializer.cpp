@@ -116,6 +116,36 @@ TEST(PlainTextSerializer, CJKWithDisallowLineBreaking)
   << "Wrong HTML to CJK text serialization with OutputDisallowLineBreaking";
 }
 
+// Test for Latin with DisallowLineBreaking
+TEST(PlainTextSerializer, LatinWithDisallowLineBreaking)
+{
+  nsString test;
+  test.AssignLiteral("<html><body>");
+  for (uint32_t i = 0; i < 400; i++) {
+    // Insert á (Latin Small Letter a with Acute) (U+00E1)
+    test.Append(0x00E1);
+  }
+  test.AppendLiteral("</body></html>\r\n");
+
+  ConvertBufToPlainText(test,
+                        nsIDocumentEncoder::OutputFormatted |
+                            nsIDocumentEncoder::OutputCRLineBreak |
+                            nsIDocumentEncoder::OutputLFLineBreak |
+                            nsIDocumentEncoder::OutputFormatFlowed |
+                            nsIDocumentEncoder::OutputDisallowLineBreaking,
+                        kDefaultWrapColumn);
+
+  // Create expect case.
+  nsString expect;
+  for (uint32_t i = 0; i < 400; i++) {
+    expect.Append(0x00E1);
+  }
+  expect.AppendLiteral(" \r\n\r\n");
+
+  ASSERT_TRUE(test.Equals(expect))
+  << "Wrong HTML to Latin text serialization with OutputDisallowLineBreaking";
+}
+
 // Test for ASCII with format=flowed; and quoted lines in preformatted span.
 TEST(PlainTextSerializer, PreformatFlowedQuotes)
 {
