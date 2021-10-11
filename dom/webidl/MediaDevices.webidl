@@ -17,7 +17,7 @@ interface MediaDevices : EventTarget {
   attribute EventHandler ondevicechange;
   MediaTrackSupportedConstraints getSupportedConstraints();
 
-  [Throws, NeedsCallerType, UseCounter]
+  [Throws, UseCounter]
   Promise<sequence<MediaDeviceInfo>> enumerateDevices();
 
   [Throws, NeedsCallerType, UseCounter]

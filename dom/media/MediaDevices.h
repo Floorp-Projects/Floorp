@@ -58,8 +58,7 @@ class MediaDevices final : public DOMEventTargetHelper {
       const MediaStreamConstraints& aConstraints, CallerType aCallerType,
       ErrorResult& aRv);
 
-  already_AddRefed<Promise> EnumerateDevices(CallerType aCallerType,
-                                             ErrorResult& aRv);
+  already_AddRefed<Promise> EnumerateDevices(ErrorResult& aRv);
 
   already_AddRefed<Promise> GetDisplayMedia(
       const DisplayMediaStreamConstraints& aConstraints, CallerType aCallerType,
