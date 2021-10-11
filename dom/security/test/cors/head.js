@@ -5,12 +5,8 @@ function scopedCuImport(path) {
   ChromeUtils.import(path, scope);
   return scope;
 }
-const { loader, require } = scopedCuImport(
-  "resource://devtools/shared/Loader.jsm"
-);
-const { Utils: WebConsoleUtils } = require("devtools/client/webconsole/utils");
+const { require } = scopedCuImport("resource://devtools/shared/Loader.jsm");
 let { gDevTools } = require("devtools/client/framework/devtools");
-let promise = require("promise");
 
 /**
  * Open the toolbox in a given tab.
