@@ -26,10 +26,10 @@ add_task(async function test_about_back() {
     let browser = tab.linkedBrowser;
     assertBackForwardState(false, false);
 
-    await loadURI(TEST_PAGE + "?entry=1");
+    await followLink(TEST_PAGE + "?entry=1");
     assertBackForwardState(true, false);
 
-    await loadURI(TEST_PAGE + "?entry=2");
+    await followLink(TEST_PAGE + "?entry=2");
     assertBackForwardState(true, false);
 
     // Add some user interaction to entry 2
