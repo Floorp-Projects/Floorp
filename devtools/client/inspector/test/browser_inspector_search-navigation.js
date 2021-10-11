@@ -64,9 +64,10 @@ add_task(async function() {
 
     const done = inspector.searchSuggestions.once("processing-done");
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
+    await done;
 
     info("Waiting for search query to complete");
-    await done;
+    await inspector.searchSuggestions._lastQuery;
 
     is(inspector.searchBox.value, query, "The searchbox value is correct");
   }

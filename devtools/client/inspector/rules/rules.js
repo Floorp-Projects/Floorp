@@ -4,6 +4,7 @@
 
 "use strict";
 
+const promise = require("promise");
 const Services = require("Services");
 const flags = require("devtools/shared/flags");
 const { l10n } = require("devtools/shared/inspector/css-logic");
@@ -647,7 +648,7 @@ CssRuleView.prototype = {
     // request to complete, and then focus the new rule's selector.
     const eventPromise = this.once("ruleview-refreshed");
     const newRulePromise = this.pageStyle.addNewRule(element, pseudoClasses);
-    Promise.all([eventPromise, newRulePromise]).then(values => {
+    promise.all([eventPromise, newRulePromise]).then(values => {
       const options = values[1];
       // Be sure the reference the correct |rules| here.
       for (const rule of this._elementStyle.rules) {
@@ -928,7 +929,7 @@ CssRuleView.prototype = {
   selectElement: function(element, allowRefresh = false) {
     const refresh = this._viewedElement === element;
     if (refresh && !allowRefresh) {
-      return Promise.resolve(undefined);
+      return promise.resolve(undefined);
     }
 
     if (this._popup && this.popup.isOpen) {
@@ -950,7 +951,7 @@ CssRuleView.prototype = {
         this.pageStyle.off("stylesheet-updated", this.refreshPanel);
         this.pageStyle = null;
       }
-      return Promise.resolve(undefined);
+      return promise.resolve(undefined);
     }
 
     this.pageStyle = element.inspectorFront.pageStyle;
@@ -959,7 +960,8 @@ CssRuleView.prototype = {
     // To figure out how shorthand properties are interpreted by the
     // engine, we will set properties on a dummy element and observe
     // how their .style attribute reflects them as computed values.
-    const dummyElementPromise = Promise.resolve(this.styleDocument)
+    const dummyElementPromise = promise
+      .resolve(this.styleDocument)
       .then(document => {
         // ::before and ::after do not have a namespaceURI
         const namespaceURI =
@@ -1015,7 +1017,7 @@ CssRuleView.prototype = {
   refreshPanel: function() {
     // Ignore refreshes when the panel is hidden, or during editing or when no element is selected.
     if (!this.isPanelVisible() || this.isEditing || !this._elementStyle) {
-      return Promise.resolve(undefined);
+      return promise.resolve(undefined);
     }
 
     // Repopulate the element style once the current modifications are done.
@@ -1026,7 +1028,7 @@ CssRuleView.prototype = {
       }
     }
 
-    return Promise.all(promises).then(() => {
+    return promise.all(promises).then(() => {
       return this._populate();
     });
   },
@@ -1308,7 +1310,7 @@ CssRuleView.prototype = {
     let container = null;
 
     if (!this._elementStyle.rules) {
-      return Promise.resolve();
+      return promise.resolve();
     }
 
     const editorReadyPromises = [];
@@ -1381,7 +1383,7 @@ CssRuleView.prototype = {
       this.searchValue && !seenSearchTerm
     );
 
-    return Promise.all(editorReadyPromises);
+    return promise.all(editorReadyPromises);
   },
 
   /**
