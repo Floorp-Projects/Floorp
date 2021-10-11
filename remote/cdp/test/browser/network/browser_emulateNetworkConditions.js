@@ -4,7 +4,7 @@
 "use strict";
 
 const pageEmptyURL =
-  "http://example.com/browser/remote/cdp/test/browser/page/doc_empty.html";
+  "https://example.com/browser/remote/cdp/test/browser/page/doc_empty.html";
 
 /*
  * Set the optional preference to disallow access to localhost when offline. This is

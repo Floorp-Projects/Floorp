@@ -3,9 +3,6 @@
 
 "use strict";
 
-const pageEmptyURL =
-  "http://example.com/browser/remote/cdp/test/browser/page/doc_empty.html";
-
 add_task(async function testBasicNavigation({ client }) {
   const { Page, Network } = client;
   await Page.enable();
@@ -13,7 +10,7 @@ add_task(async function testBasicNavigation({ client }) {
   const loadEventFired = Page.loadEventFired();
   const requestEvent = Network.requestWillBeSent();
   const { frameId, loaderId, errorText } = await Page.navigate({
-    url: pageEmptyURL,
+    url: PAGE_URL,
   });
   const { loaderId: requestLoaderId } = await requestEvent;
 
@@ -29,11 +26,7 @@ add_task(async function testBasicNavigation({ client }) {
   const currentFrame = await getTopFrame(client);
   is(frameId, currentFrame.id, "Page.navigate returns expected frameId");
 
-  is(
-    gBrowser.selectedBrowser.currentURI.spec,
-    pageEmptyURL,
-    "Expected URL loaded"
-  );
+  is(gBrowser.selectedBrowser.currentURI.spec, PAGE_URL, "Expected URL loaded");
 });
 
 add_task(async function testTwoNavigations({ client }) {
@@ -43,15 +36,11 @@ add_task(async function testTwoNavigations({ client }) {
   let requestEvent = Network.requestWillBeSent();
   let loadEventFired = Page.loadEventFired();
   const { frameId, loaderId, errorText } = await Page.navigate({
-    url: pageEmptyURL,
+    url: PAGE_URL,
   });
   const { loaderId: requestLoaderId } = await requestEvent;
   await loadEventFired;
-  is(
-    gBrowser.selectedBrowser.currentURI.spec,
-    pageEmptyURL,
-    "Expected URL loaded"
-  );
+  is(gBrowser.selectedBrowser.currentURI.spec, PAGE_URL, "Expected URL loaded");
 
   loadEventFired = Page.loadEventFired();
   requestEvent = Network.requestWillBeSent();
@@ -60,7 +49,7 @@ add_task(async function testTwoNavigations({ client }) {
     loaderId: loaderId2,
     errorText: errorText2,
   } = await Page.navigate({
-    url: pageEmptyURL,
+    url: PAGE_URL,
   });
   const { loaderId: requestLoaderId2 } = await requestEvent;
   ok(!!loaderId, "Page.navigate returns loaderId");
@@ -81,18 +70,14 @@ add_task(async function testTwoNavigations({ client }) {
   is(frameId, frameId2, "Page.navigate return same frameId");
 
   await loadEventFired;
-  is(
-    gBrowser.selectedBrowser.currentURI.spec,
-    pageEmptyURL,
-    "Expected URL loaded"
-  );
+  is(gBrowser.selectedBrowser.currentURI.spec, PAGE_URL, "Expected URL loaded");
 });
 
 add_task(async function testRedirect({ client }) {
   const { Page, Network } = client;
   const sjsURL =
-    "http://example.com/browser/remote/cdp/test/browser/page/sjs_redirect.sjs";
-  const redirectURL = `${sjsURL}?${pageEmptyURL}`;
+    "https://example.com/browser/remote/cdp/test/browser/page/sjs_redirect.sjs";
+  const redirectURL = `${sjsURL}?${PAGE_URL}`;
   await Page.enable();
   await Network.enable();
   const requestEvent = Network.requestWillBeSent();
@@ -112,17 +97,13 @@ add_task(async function testRedirect({ client }) {
   ok(!!frameId, "Page.navigate returns frameId");
 
   await loadEventFired;
-  is(
-    gBrowser.selectedBrowser.currentURI.spec,
-    pageEmptyURL,
-    "Expected URL loaded"
-  );
+  is(gBrowser.selectedBrowser.currentURI.spec, PAGE_URL, "Expected URL loaded");
 });
 
 add_task(async function testUnknownHost({ client }) {
   const { Page } = client;
   const { frameId, loaderId, errorText } = await Page.navigate({
-    url: "http://example-does-not-exist.com",
+    url: "https://example-does-not-exist.com",
   });
   ok(!!frameId, "Page.navigate returns frameId");
   ok(!!loaderId, "Page.navigate returns loaderId");
@@ -164,7 +145,7 @@ add_task(async function testUnknownCertificate({ client }) {
 add_task(async function testNotFound({ client }) {
   const { Page } = client;
   const { frameId, loaderId, errorText } = await Page.navigate({
-    url: "http://example.com/browser/remote/doesnotexist.html",
+    url: "https://example.com/browser/remote/doesnotexist.html",
   });
   ok(!!frameId, "Page.navigate returns frameId");
   ok(!!loaderId, "Page.navigate returns loaderId");
