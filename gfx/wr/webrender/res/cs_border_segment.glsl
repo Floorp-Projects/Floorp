@@ -15,12 +15,14 @@ flat varying vec4 vColor11;
 // transition occurs. Used for corners only.
 flat varying vec4 vColorLine;
 
-// x = segment, y = styles, z = edge axes, w = clip mode
-// Since by default in GLES the vertex shader uses highp 
-// and the fragment shader uses mediump, we explicitely 
-// use mediump precision so we align with the default 
-// mediump precision in the fragment shader.
-flat varying mediump ivec4 vConfig;
+// x: segment, y: clip mode
+// We cast these to/from floats rather than using an ivec due to a driver bug
+// on Adreno 3xx. See bug 1730458.
+flat varying mediump vec2 vSegmentClipMode;
+// x, y: styles, z, w: edge axes
+// We cast these to/from floats rather than using an ivec (and bitshifting)
+// due to a driver bug on Adreno 3xx. See bug 1730458.
+flat varying mediump vec4 vStyleEdgeAxis;
 
 // xy = Local space position of the clip center.
 // zw = Scale the rect origin by this to get the outer
@@ -196,12 +198,9 @@ void main(void) {
             break;
     }
 
-    vConfig = ivec4(
-        segment,
-        style0 | (style1 << 8),
-        edge_axis.x | (edge_axis.y << 8),
-        clip_mode
-    );
+    vSegmentClipMode = vec2(float(segment), float(clip_mode));
+    vStyleEdgeAxis = vec4(float(style0), float(style1), float(edge_axis.x), float(edge_axis.y));
+
     vPartialWidths = vec4(aWidths / 3.0, aWidths / 2.0);
     vPos = size * aPosition.xy;
 
@@ -346,10 +345,10 @@ void main(void) {
     float aa_range = compute_aa_range(vPos);
     vec4 color0, color1;
 
-    int segment = vConfig.x;
-    ivec2 style = ivec2(vConfig.y & 0xff, vConfig.y >> 8);
-    ivec2 edge_axis = ivec2(vConfig.z & 0xff, vConfig.z >> 8);
-    int clip_mode = vConfig.w;
+    int segment = int(vSegmentClipMode.x);
+    int clip_mode = int(vSegmentClipMode.y);
+    ivec2 style = ivec2(int(vStyleEdgeAxis.x), int(vStyleEdgeAxis.y));
+    ivec2 edge_axis = ivec2(int(vStyleEdgeAxis.z), int(vStyleEdgeAxis.w));
 
     float mix_factor = 0.0;
     if (edge_axis.x != edge_axis.y) {
