@@ -13,8 +13,6 @@
 #include "nsICacheStorageService.h"
 #include "nsICacheStorage.h"
 #include "nsThreadUtils.h"
-#include "CacheControlParser.h"
-#include "nsHttpHandler.h"
 
 namespace mozilla {
 namespace net {

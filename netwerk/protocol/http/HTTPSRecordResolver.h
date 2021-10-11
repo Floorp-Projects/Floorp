@@ -9,7 +9,6 @@
 
 #include "nsICancelable.h"
 #include "nsIDNSListener.h"
-#include "nsHttpConnectionInfo.h"
 
 namespace mozilla {
 namespace net {

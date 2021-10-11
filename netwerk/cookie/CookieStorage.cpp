@@ -10,11 +10,7 @@
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "nsIMutableArray.h"
 #include "nsTPriorityQueue.h"
-#include "nsIScriptError.h"
-#include "nsServiceManagerUtils.h"
-#include "nsComponentManagerUtils.h"
 #include "prprf.h"
-#include "nsIPrefService.h"
 
 #undef ADD_TEN_PERCENT
 #define ADD_TEN_PERCENT(i) static_cast<uint32_t>((i) + (i) / 10)
@@ -406,7 +402,6 @@ void CookieStorage::AddCookie(nsIConsoleReportCollector* aCRC,
     potentiallyTrustworthy =
         nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(aHostURI);
   }
-  constexpr auto CONSOLE_REJECTION_CATEGORY = "cookiesRejection"_ns;
   bool oldCookieIsSession = false;
   // Step1, call FindSecureCookie(). FindSecureCookie() would
   // find the existing cookie with the security flag and has
