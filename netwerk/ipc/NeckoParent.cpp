@@ -39,6 +39,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/network/TCPSocketParent.h"
 #include "mozilla/dom/network/TCPServerSocketParent.h"
 #include "mozilla/dom/network/UDPSocketParent.h"
@@ -268,7 +269,7 @@ bool NeckoParent::DeallocPAltDataOutputStreamParent(
 
 already_AddRefed<PDocumentChannelParent>
 NeckoParent::AllocPDocumentChannelParent(
-    const MaybeDiscarded<BrowsingContext>& aContext,
+    const dom::MaybeDiscarded<BrowsingContext>& aContext,
     const DocumentChannelCreationArgs& args) {
   RefPtr<DocumentChannelParent> p = new DocumentChannelParent();
   return p.forget();
@@ -276,7 +277,7 @@ NeckoParent::AllocPDocumentChannelParent(
 
 mozilla::ipc::IPCResult NeckoParent::RecvPDocumentChannelConstructor(
     PDocumentChannelParent* aActor,
-    const MaybeDiscarded<BrowsingContext>& aContext,
+    const dom::MaybeDiscarded<BrowsingContext>& aContext,
     const DocumentChannelCreationArgs& aArgs) {
   DocumentChannelParent* p = static_cast<DocumentChannelParent*>(aActor);
 
@@ -542,7 +543,7 @@ mozilla::ipc::IPCResult NeckoParent::RecvSpeculativeConnect(
 mozilla::ipc::IPCResult NeckoParent::RecvHTMLDNSPrefetch(
     const nsString& hostname, const bool& isHttps,
     const OriginAttributes& aOriginAttributes, const uint32_t& flags) {
-  HTMLDNSPrefetch::Prefetch(hostname, isHttps, aOriginAttributes, flags);
+  dom::HTMLDNSPrefetch::Prefetch(hostname, isHttps, aOriginAttributes, flags);
   return IPC_OK();
 }
 
@@ -550,8 +551,8 @@ mozilla::ipc::IPCResult NeckoParent::RecvCancelHTMLDNSPrefetch(
     const nsString& hostname, const bool& isHttps,
     const OriginAttributes& aOriginAttributes, const uint32_t& flags,
     const nsresult& reason) {
-  HTMLDNSPrefetch::CancelPrefetch(hostname, isHttps, aOriginAttributes, flags,
-                                  reason);
+  dom::HTMLDNSPrefetch::CancelPrefetch(hostname, isHttps, aOriginAttributes,
+                                       flags, reason);
   return IPC_OK();
 }
 

@@ -9,6 +9,7 @@
 
 #include <functional>
 #include "nsIProtocolProxyCallback.h"
+#include "nsCOMPtr.h"
 
 class nsIURI;
 
