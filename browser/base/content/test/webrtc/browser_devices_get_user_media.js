@@ -890,6 +890,9 @@ var gTests = [
         set: [
           ["media.devices.insecure.enabled", true],
           ["media.getusermedia.insecure.enabled", true],
+          // explicitly testing an http page, setting
+          // https-first to false.
+          ["dom.security.https_first", false],
         ],
       });
 
