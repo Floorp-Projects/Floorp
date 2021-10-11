@@ -131,9 +131,10 @@ Result<std::pair<nsID, nsCOMPtr<nsISupports>>, nsresult> BodyStartWriteStream(
   MOZ_DIAGNOSTIC_ASSERT(aClosure);
   MOZ_DIAGNOSTIC_ASSERT(aCallback);
 
-  QM_TRY_INSPECT(const auto& idGen, ToResultGet<nsCOMPtr<nsIUUIDGenerator>>(
-                                        MOZ_SELECT_OVERLOAD(do_GetService),
-                                        "@mozilla.org/uuid-generator;1"));
+  QM_TRY_INSPECT(const auto& idGen,
+                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIUUIDGenerator>,
+                                         MOZ_SELECT_OVERLOAD(do_GetService),
+                                         "@mozilla.org/uuid-generator;1"));
 
   nsID id;
   QM_TRY(MOZ_TO_RESULT(idGen->GenerateUUIDInPlace(&id)));

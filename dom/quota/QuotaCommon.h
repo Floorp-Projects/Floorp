@@ -1061,6 +1061,9 @@ Result<R, nsresult> ToResultGet(const Func& aFunc, Args&&... aArgs) {
   return res;
 }
 
+#define MOZ_TO_RESULT_GET_TYPED(resultType, ...) \
+  ::mozilla::ToResultGet<MOZ_REMOVE_PAREN(resultType)>(__VA_ARGS__)
+
 // Like Rust's collect with a step function, not a generic iterator/range.
 //
 // Cond must be a function type with a return type to Result<V, E>, where

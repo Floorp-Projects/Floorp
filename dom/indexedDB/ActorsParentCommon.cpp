@@ -103,10 +103,10 @@ Result<StructuredCloneFileParent, nsresult> DeserializeStructuredCloneFile(
   const StructuredCloneFileBase::FileType type =
       ToStructuredCloneFileType(aText.First());
 
-  QM_TRY_INSPECT(
-      const auto& id,
-      ToResultGet<int32_t>(
-          ToInteger, type == StructuredCloneFileBase::eBlob
+  QM_TRY_INSPECT(const auto& id,
+                 MOZ_TO_RESULT_GET_TYPED(
+                     int32_t, ToInteger,
+                     type == StructuredCloneFileBase::eBlob
                          ? aText
                          : static_cast<const nsAString&>(Substring(aText, 1))));
 
