@@ -4,7 +4,7 @@
 "use strict";
 
 // Test color scheme simulation.
-const TEST_URI = URL_ROOT + "doc_media_queries.html";
+const TEST_URI = URL_ROOT_SSL + "doc_media_queries.html";
 
 add_task(async function() {
   await addTab(TEST_URI);

@@ -8,7 +8,7 @@
 // style event listeners and that no bubbles are shown for objects without any
 // handleEvent method.
 
-const TEST_URL = URL_ROOT + "doc_markup_events_object_listener.html";
+const TEST_URL = URL_ROOT_SSL + "doc_markup_events_object_listener.html";
 
 loadHelperScript("helper_events_test_runner.js");
 

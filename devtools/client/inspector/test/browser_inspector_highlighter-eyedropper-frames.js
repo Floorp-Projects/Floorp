@@ -25,14 +25,14 @@ const HTML = `
   }
 </style>
 <div>top-level element</div>
-<iframe src="http://example.com/document-builder.sjs?html=<style>body {background:${encodeURIComponent(
+<iframe src="https://example.com/document-builder.sjs?html=<style>body {background:${encodeURIComponent(
   SAME_ORIGIN_FRAME_BACKGROUND_COLOR
 )};text-align: center;}</style><body>same origin iframe</body>"></iframe>
-<iframe src="http://example.org/document-builder.sjs?html=<style>body {background:${encodeURIComponent(
+<iframe src="https://example.org/document-builder.sjs?html=<style>body {background:${encodeURIComponent(
   REMOTE_FRAME_BACKGROUND_COLOR
 )};text-align: center;}</style><body>remote iframe</body>"></iframe>
 `;
-const TEST_URI = `http://example.com/document-builder.sjs?html=${encodeURIComponent(
+const TEST_URI = `https://example.com/document-builder.sjs?html=${encodeURIComponent(
   HTML
 )}`;
 

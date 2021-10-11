@@ -13,7 +13,7 @@ const STYLESHEET_DATA_URL = `data:text/css,${encodeURIComponent(
 )}`;
 
 const EXTERNAL_STYLESHEET_FILE_NAME = "doc_style_editor_link.css";
-const EXTERNAL_STYLESHEET_URL = URL_ROOT + EXTERNAL_STYLESHEET_FILE_NAME;
+const EXTERNAL_STYLESHEET_URL = URL_ROOT_SSL + EXTERNAL_STYLESHEET_FILE_NAME;
 
 const DOCUMENT_HTML = encodeURIComponent(`
   <html>
@@ -51,7 +51,7 @@ const DOCUMENT_HTML = encodeURIComponent(`
 
 const DOCUMENT_DATA_URL = "data:text/html;charset=utf-8," + DOCUMENT_HTML;
 const EXAMPLE_ORG_DOCUMENT_URL =
-  "http://example.org/document-builder.sjs?html=" + DOCUMENT_HTML;
+  "https://example.org/document-builder.sjs?html=" + DOCUMENT_HTML;
 
 add_task(async function() {
   await addTab(DOCUMENT_DATA_URL);

@@ -6,7 +6,7 @@
 // Tests that a middle-click or meta/ctrl-click on links in attributes actually
 // do follows the link.
 
-const TEST_URL = URL_ROOT + "doc_markup_links.html";
+const TEST_URL = URL_ROOT_SSL + "doc_markup_links.html";
 
 add_task(async function() {
   const { inspector } = await openInspectorForURL(TEST_URL);
@@ -22,11 +22,15 @@ add_task(async function() {
   await followLinkWaitForTab(
     linkEl,
     false,
-    URL_ROOT + "doc_markup_tooltip.png"
+    URL_ROOT_SSL + "doc_markup_tooltip.png"
   );
 
   info("Follow the link with meta/ctrl-click and wait for the new tab to open");
-  await followLinkWaitForTab(linkEl, true, URL_ROOT + "doc_markup_tooltip.png");
+  await followLinkWaitForTab(
+    linkEl,
+    true,
+    URL_ROOT_SSL + "doc_markup_tooltip.png"
+  );
 
   info("Select a node with a IDREF attribute");
   await selectNode("label", inspector);

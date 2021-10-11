@@ -9,7 +9,7 @@ requestLongerTimeout(2);
 // and jQuery Live events (jQuery version 1.7).
 
 const TEST_LIB = "lib_jquery_1.7_min.js";
-const TEST_URL = URL_ROOT + "doc_markup_events_jquery.html?" + TEST_LIB;
+const TEST_URL = URL_ROOT_SSL + "doc_markup_events_jquery.html?" + TEST_LIB;
 
 loadHelperScript("helper_events_test_runner.js");
 
@@ -20,7 +20,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "DOMContentLoaded",
-        filename: URL_ROOT + TEST_LIB + ":2:14177",
+        filename: URL_ROOT_SSL + TEST_LIB + ":2:14177",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -94,7 +94,7 @@ const TEST_DATA = [
       },
       {
         type: "load",
-        filename: URL_ROOT + TEST_LIB + ":2:9526",
+        filename: URL_ROOT_SSL + TEST_LIB + ":2:9526",
         attributes: [
           "Bubbling",
           "DOM2"

@@ -3,12 +3,12 @@
 
 "use strict";
 
-const exampleNetDocument = `http://example.net/document-builder.sjs`;
-const exampleComDocument = `http://example.com/document-builder.sjs`;
+const exampleOrgDocument = `https://example.org/document-builder.sjs`;
+const exampleComDocument = `https://example.com/document-builder.sjs`;
 
-const TEST_URL = `${exampleNetDocument}?html=
+const TEST_URL = `${exampleOrgDocument}?html=
   <iframe
-    src="${exampleNetDocument}?html=<div style='width:30px;height:30px;background:rgb(255,0,0)'></div>"
+    src="${exampleOrgDocument}?html=<div style='width:30px;height:30px;background:rgb(255,0,0)'></div>"
     id="same-origin"></iframe>
   <iframe
     src="${exampleComDocument}?html=<div style='width:25px;height:10px;background:rgb(0,255,0)'></div>"

@@ -10,7 +10,7 @@
 
 const osString = Services.appinfo.OS;
 
-const TEST_URI = URL_ROOT + "doc_copystyles.html";
+const TEST_URI = URL_ROOT_SSL + "doc_copystyles.html";
 
 add_task(async function() {
   await addTab(TEST_URI);
@@ -130,7 +130,7 @@ add_task(async function() {
       node: ruleEditor.source,
       menuItemLabel: "styleinspector.contextmenu.copyLocation",
       expectedPattern:
-        "http://example.com/browser/devtools/client/" +
+        "https://example.com/browser/devtools/client/" +
         "inspector/rules/test/doc_copystyles.css",
       visible: {
         copyLocation: true,

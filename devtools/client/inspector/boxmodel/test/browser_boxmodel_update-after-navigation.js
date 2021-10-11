@@ -6,8 +6,8 @@
 // Test that the box model view continues to work after a page navigation and that
 // it also works after going back
 
-const IFRAME1 = URL_ROOT + "doc_boxmodel_iframe1.html";
-const IFRAME2 = URL_ROOT + "doc_boxmodel_iframe2.html";
+const IFRAME1 = URL_ROOT_SSL + "doc_boxmodel_iframe1.html";
+const IFRAME2 = URL_ROOT_SSL + "doc_boxmodel_iframe2.html";
 
 add_task(async function() {
   const tab = await addTab(IFRAME1);
