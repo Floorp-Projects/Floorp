@@ -19,12 +19,12 @@ add_task(async function testProviderSteering() {
 
   let providerTestcases = [
     {
-      name: "provider1",
+      id: "provider1",
       canonicalName: "foo.provider1.com",
       uri: "https://foo.provider1.com/query",
     },
     {
-      name: "provider2",
+      id: "provider2",
       canonicalName: "bar.provider2.com",
       uri: "https://bar.provider2.com/query",
     },
@@ -61,10 +61,10 @@ add_task(async function testProviderSteering() {
     );
   };
 
-  for (let { name, canonicalName, uri } of providerTestcases) {
+  for (let { id, canonicalName, uri } of providerTestcases) {
     gDNSOverride.addIPOverride(TEST_DOMAIN, "9.9.9.9");
     gDNSOverride.setCnameOverride(TEST_DOMAIN, canonicalName);
-    await testNetChangeResult(uri, "enable_doh", name);
+    await testNetChangeResult(uri, "enable_doh", id);
     gDNSOverride.clearHostOverride(TEST_DOMAIN);
   }
 
@@ -74,7 +74,7 @@ add_task(async function testProviderSteering() {
   let provider = providerTestcases[0];
   gDNSOverride.addIPOverride(TEST_DOMAIN, "9.9.9.9");
   gDNSOverride.setCnameOverride(TEST_DOMAIN, provider.canonicalName);
-  await testNetChangeResult(provider.uri, "enable_doh", provider.name);
+  await testNetChangeResult(provider.uri, "enable_doh", provider.id);
 
   // Set enterprise roots enabled and ensure provider steering is disabled.
   Preferences.set("security.enterprise_roots.enabled", true);
@@ -82,7 +82,7 @@ add_task(async function testProviderSteering() {
   Preferences.reset("security.enterprise_roots.enabled");
 
   // Check that provider steering is enabled again after we reset above.
-  await testNetChangeResult(provider.uri, "enable_doh", provider.name);
+  await testNetChangeResult(provider.uri, "enable_doh", provider.id);
 
   // Trigger safesearch heuristics and ensure provider steering is disabled.
   let googleDomain = "google.com.";
@@ -95,7 +95,7 @@ add_task(async function testProviderSteering() {
   gDNSOverride.addIPOverride(googleDomain, googleIP);
 
   // Check that provider steering is enabled again after we reset above.
-  await testNetChangeResult(provider.uri, "enable_doh", provider.name);
+  await testNetChangeResult(provider.uri, "enable_doh", provider.id);
 
   // Finally, provider steering should be disabled once we clear the override.
   gDNSOverride.clearHostOverride(TEST_DOMAIN);
