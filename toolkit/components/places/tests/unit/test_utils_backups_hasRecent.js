@@ -8,8 +8,6 @@
  * Check for correct functionality of bookmarks backups
  */
 
-const NUMBER_OF_BACKUPS = 10;
-
 /**
  * Creates a fake empty dated backup.
  * @param {Date} date the Date to use for the backup file name
