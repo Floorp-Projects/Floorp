@@ -203,10 +203,6 @@ class LookAndFeel {
      */
     MenuBarDrag,
     /**
-     * Return the appropriate WindowsThemeIdentifier for the current theme.
-     */
-    WindowsThemeIdentifier,
-    /**
      * Return an appropriate os version identifier.
      */
     OperatingSystemVersionIdentifier,
@@ -357,21 +353,6 @@ class LookAndFeel {
   static bool UseOverlayScrollbars() {
     return GetInt(IntID::UseOverlayScrollbars);
   }
-
-  /**
-   * Windows themes we currently detect.
-   */
-  enum WindowsTheme {
-    eWindowsTheme_Generic = 0,  // unrecognized theme
-    eWindowsTheme_Classic,
-    eWindowsTheme_Aero,
-    eWindowsTheme_LunaBlue,
-    eWindowsTheme_LunaOlive,
-    eWindowsTheme_LunaSilver,
-    eWindowsTheme_Royale,
-    eWindowsTheme_Zune,
-    eWindowsTheme_AeroLite
-  };
 
   /**
    * Operating system versions.

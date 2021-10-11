@@ -457,9 +457,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::WindowsDefaultTheme:
       aResult = nsUXThemeData::IsDefaultWindowTheme();
       break;
-    case IntID::WindowsThemeIdentifier:
-      aResult = nsUXThemeData::GetNativeThemeId();
-      break;
     case IntID::OperatingSystemVersionIdentifier: {
       aResult = int32_t(GetOperatingSystemVersion());
       break;

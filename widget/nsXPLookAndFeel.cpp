@@ -150,7 +150,6 @@ static const char sIntPrefs[][43] = {
     "ui.IMESelectedConvertedTextUnderlineStyle",
     "ui.SpellCheckerUnderlineStyle",
     "ui.menuBarDrag",
-    "ui.windowsThemeIdentifier",
     "ui.operatingSystemVersionIdentifier",
     "ui.scrollbarButtonAutoRepeatBehavior",
     "ui.tooltipDelay",
