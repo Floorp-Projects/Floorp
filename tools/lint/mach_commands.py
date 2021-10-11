@@ -8,6 +8,7 @@ import os
 
 from mozbuild.base import (
     BuildEnvironmentNotFoundException,
+    MachCommandConditions as conditions,
 )
 
 
@@ -31,6 +32,7 @@ if os.path.exists(thunderbird_excludes):
 GLOBAL_EXCLUDES = ["node_modules", "tools/lint/test/files", ".hg", ".git"]
 
 VALID_FORMATTERS = {"black", "clang-format", "rustfmt"}
+VALID_ANDROID_FORMATTERS = {"android-format"}
 
 
 def setup_argument_parser():
@@ -143,16 +145,20 @@ def eslint(command_context, paths, extra_args=[], **kwargs):
 def format_files(command_context, paths, extra_args=[], **kwargs):
     linters = kwargs["linters"]
 
+    formatters = VALID_FORMATTERS
+    if conditions.is_android(command_context):
+        formatters |= VALID_ANDROID_FORMATTERS
+
     if not linters:
-        linters = VALID_FORMATTERS
+        linters = formatters
     else:
-        invalid_linters = set(linters) - VALID_FORMATTERS
+        invalid_linters = set(linters) - formatters
         if invalid_linters:
             print(
                 "error: One or more linters passed are not valid formatters. "
                 "Note that only the following linters are valid formatters:"
             )
-            print("\n".join(sorted(VALID_FORMATTERS)))
+            print("\n".join(sorted(formatters)))
             return 1
 
     kwargs["linters"] = list(linters)

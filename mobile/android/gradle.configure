@@ -213,6 +213,30 @@ def gradle_android_api_lint_tasks(build_config):
 set_config("GRADLE_ANDROID_API_LINT_TASKS", gradle_android_api_lint_tasks)
 
 
+set_config("GRADLE_ANDROID_FORMAT_LINT_FIX_TASKS", ["spotlessJavaApply"])
+
+
+@dependable
+def gradle_android_format_lint_check_tasks():
+    return ["spotlessJavaCheck"]
+
+
+set_config(
+    "GRADLE_ANDROID_FORMAT_LINT_CHECK_TASKS", gradle_android_format_lint_check_tasks
+)
+
+set_config(
+    "GRADLE_ANDROID_FORMAT_LINT_FOLDERS",
+    [
+        "mobile/android/annotations",
+        "mobile/android/geckoview",
+        "mobile/android/geckoview_example",
+        "mobile/android/examples/messaging_example",
+        "mobile/android/examples/port_messaging_example",
+    ],
+)
+
+
 @depends(gradle_android_build_config)
 def gradle_android_checkstyle_tasks(build_config):
     """Gradle tasks run by |mach android checkstyle|."""
@@ -400,6 +424,7 @@ def gradle_android_dependencies():
 
 @depends(
     gradle_android_api_lint_tasks,
+    gradle_android_format_lint_check_tasks,
     gradle_android_checkstyle_tasks,
     gradle_android_dependencies,
 )
