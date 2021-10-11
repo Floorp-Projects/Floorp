@@ -19,6 +19,8 @@ EXPORTS.mozilla.net += [
     "NeckoTargetHolder.h",
     "ParentChannelWrapper.h",
     "ParentProcessDocumentChannel.h",
+    "ProxyAutoConfigChild.h",
+    "ProxyAutoConfigParent.h",
     "ProxyConfigLookup.h",
     "ProxyConfigLookupChild.h",
     "ProxyConfigLookupParent.h",
@@ -54,6 +56,12 @@ UNIFIED_SOURCES += [
     "SocketProcessParent.cpp",
 ]
 
+SOURCES += [
+    "ProxyAutoConfigChild.cpp",
+    "ProxyAutoConfigParent.cpp",
+]
+
+
 PREPROCESSED_IPDL_SOURCES += [
     "PNecko.ipdl",
     "PSocketProcess.ipdl",
@@ -65,6 +73,7 @@ IPDL_SOURCES = [
     "PDocumentChannel.ipdl",
     "PFileChannel.ipdl",
     "PInputChannelThrottleQueue.ipdl",
+    "PProxyAutoConfig.ipdl",
     "PProxyConfigLookup.ipdl",
     "PSimpleChannel.ipdl",
     "PSocketProcessBridge.ipdl",
