@@ -56,20 +56,23 @@ add_task(async function() {
   let index = 0;
   for (const [key, id, isTextNode, isValid] of KEY_STATES) {
     info(index + ": Pressing key " + key + " to get id " + id + ".");
+    const onSearchProcessingDone = inspector.searchSuggestions.once(
+      "processing-done"
+    );
+    const onSearchResult = inspector.search.once("search-result");
     EventUtils.synthesizeKey(
       key,
       { shiftKey: key === "*" },
       inspector.panelWin
     );
-    info("Got processing-done event");
 
     if (key === "VK_RETURN") {
       info("Waiting for " + (isValid ? "NO " : "") + "results");
-      await inspector.search.once("search-result");
+      await onSearchResult;
     }
 
     info("Waiting for search query to complete");
-    await inspector.searchSuggestions._lastQuery;
+    await onSearchProcessingDone;
 
     if (isTextNode) {
       info(
