@@ -141,8 +141,8 @@ class ChannelWrapper final : public DOMEventTargetHelper,
   void UpgradeToSecure(ErrorResult& aRv);
 
   bool Suspended() const { return mSuspended; }
-  void Suspend(ErrorResult& aRv);
-  void Resume(const nsCString& aText, ErrorResult& aRv);
+  void Suspend(const nsCString& aProfileMarkerText, ErrorResult& aRv);
+  void Resume(ErrorResult& aRv);
 
   void GetContentType(nsCString& aContentType) const;
   void SetContentType(const nsACString& aContentType);
@@ -318,7 +318,9 @@ class ChannelWrapper final : public DOMEventTargetHelper,
 
   nsInterfaceHashtable<nsPtrHashKey<const nsAtom>, nsIRemoteTab> mAddonEntries;
 
-  mozilla::TimeStamp mSuspendTime;
+  // The text for the "Extension Suspend" marker, set from the Suspend method
+  // when called for the first time and then cleared on the Resume method.
+  nsCString mSuspendedMarkerText = VoidCString();
 
   class RequestListener final : public nsIStreamListener,
                                 public nsIMultiPartChannelListener,
