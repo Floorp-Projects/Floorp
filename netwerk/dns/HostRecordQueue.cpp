@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HostRecordQueue.h"
+#include "mozilla/Telemetry.h"
+#include "nsQueryObject.h"
 
 namespace mozilla {
 namespace net {
