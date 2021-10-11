@@ -609,10 +609,29 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
   void load32(AbsoluteAddress address, Register dest) {
     movl(Operand(address), dest);
   }
-  template <typename T>
-  void load64(const T& address, Register64 dest) {
-    movl(Operand(LowWord(address)), dest.low);
-    movl(Operand(HighWord(address)), dest.high);
+  void load64(const Address& address, Register64 dest) {
+    bool highBeforeLow = address.base == dest.low;
+    if (highBeforeLow) {
+      movl(Operand(HighWord(address)), dest.high);
+      movl(Operand(LowWord(address)), dest.low);
+    } else {
+      movl(Operand(LowWord(address)), dest.low);
+      movl(Operand(HighWord(address)), dest.high);
+    }
+  }
+  void load64(const BaseIndex& address, Register64 dest) {
+    // If you run into this, relax your register allocation constraints.
+    MOZ_RELEASE_ASSERT(
+        !((address.base == dest.low || address.base == dest.high) &&
+          (address.index == dest.low || address.index == dest.high)));
+    bool highBeforeLow = address.base == dest.low || address.index == dest.low;
+    if (highBeforeLow) {
+      movl(Operand(HighWord(address)), dest.high);
+      movl(Operand(LowWord(address)), dest.low);
+    } else {
+      movl(Operand(LowWord(address)), dest.low);
+      movl(Operand(HighWord(address)), dest.high);
+    }
   }
   template <typename T>
   void load64Unaligned(const T& address, Register64 dest) {
