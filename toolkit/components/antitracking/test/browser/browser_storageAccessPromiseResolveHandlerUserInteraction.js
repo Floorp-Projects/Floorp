@@ -5,30 +5,23 @@ AntiTracking.runTest(
   // blocking callback
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
-    let [threw, rejected] = await callRequestStorageAccess(dwu => {
+    let [threw, rejected] = await callRequestStorageAccess(() => {
       ok(
-        dwu.isHandlingUserInput,
+        SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
         "Promise handler must run as if we're handling user input"
       );
     });
     ok(!threw, "requestStorageAccess should not throw");
     ok(!rejected, "requestStorageAccess should be available");
 
-    let dwu = SpecialPowers.getDOMWindowUtils(window);
-    let helper = dwu.setHandlingUserInput(true);
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
 
-    let promise;
-    try {
-      promise = document.hasStorageAccess();
-    } finally {
-      helper.destruct();
-    }
-    await promise.then(_ => {
-      ok(
-        dwu.isHandlingUserInput,
-        "Promise handler must run as if we're handling user input"
-      );
-    });
+    await document.hasStorageAccess();
+
+    ok(
+      SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
+      "Promise handler must run as if we're handling user input"
+    );
   },
 
   null, // non-blocking callback
