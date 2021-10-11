@@ -30,7 +30,7 @@ void SetupFilterParams(
     int gpu_data_address,
     out vec4 color_offset,
     out mat4 color_mat,
-    out int table_address
+    out highp int table_address
 ) {
     float lumR = 0.2126;
     float lumG = 0.7152;
@@ -123,7 +123,7 @@ vec3 LinearToSrgb(vec3 color) {
 // This function has to be factored out due to the following issue:
 // https://github.com/servo/webrender/wiki/Driver-issues#bug-1532245---switch-statement-inside-control-flow-inside-switch-statement-fails-to-compile-on-some-android-phones
 // (and now the words "default: default:" so angle_shader_validation.rs passes)
-vec4 ComponentTransfer(vec4 colora, int vfuncs, int table_address) {
+vec4 ComponentTransfer(vec4 colora, vec4 vfuncs, highp int table_address) {
     // We push a different amount of data to the gpu cache depending on the
     // function type.
     // Identity => 0 blocks
@@ -135,16 +135,19 @@ vec4 ComponentTransfer(vec4 colora, int vfuncs, int table_address) {
     // function type put into the gpu cache.
     // Table/Discrete use a 256 entry look up table.
     // Linear/Gamma are a simple calculation.
-    int offset = 0;
+
+    // Both offset and k must be marked as highp due to a Adreno 3xx bug likely
+    // to do with converting between precisions (as they would otherwise be
+    // promoted when adding to table_address).
+    highp int offset = 0;
+    highp int k;
+
     vec4 texel;
-    int k;
 
+    // Dynamically indexing a vector is buggy on some platforms, so use a temporary array
+    int[4] funcs = int[4](int(vfuncs.r), int(vfuncs.g), int(vfuncs.b), int(vfuncs.a));
     for (int i = 0; i < 4; i++) {
-        // Each function value is packed in to 4 bits, with the "r" function at bits 15-12
-        // and the "a" function at bits 3-0.
-        int func = (vfuncs >> (12 - (i * 4))) & 0xf;
-
-        switch (func) {
+        switch (funcs[i]) {
             case COMPONENT_TRANSFER_IDENTITY:
                 break;
             case COMPONENT_TRANSFER_TABLE:
@@ -185,10 +188,10 @@ void CalculateFilter(
     vec4 Cs,
     int op,
     float amount,
-    int table_address,
+    highp int table_address,
     vec4 color_offset,
     mat4 color_mat,
-    int v_funcs,
+    vec4 v_funcs,
     out vec3 color,
     out float alpha
 ) {
