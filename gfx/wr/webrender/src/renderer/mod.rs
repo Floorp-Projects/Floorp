@@ -58,7 +58,6 @@ use crate::composite::{CompositeState, CompositeTileSurface, ResolvedExternalSur
 use crate::composite::{CompositorKind, Compositor, NativeTileId, CompositeFeatures, CompositeSurfaceFormat, ResolvedExternalSurfaceColorData};
 use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails, NativeSurfaceId, NativeSurfaceOperation};
 use crate::composite::TileKind;
-use crate::c_str;
 use crate::debug_colors;
 use crate::device::{DepthFunction, Device, DrawTarget, ExternalTexture, GpuFrameId};
 use crate::device::{ProgramCache, ReadTarget, ShaderError, Texture, TextureFilter, TextureFlags, TextureSlot};
@@ -2011,7 +2010,7 @@ impl Renderer {
                     let duration = Duration::new(0,0);
                     if let Some(n) = self.profile.get(profiler::RENDERED_PICTURE_TILES) {
                         let message = (n as usize).to_string();
-                        add_text_marker(cstr!("NumPictureCacheInvalidated"), &message, duration);
+                        add_text_marker("NumPictureCacheInvalidated", &message, duration);
                     }
                 }
 
@@ -2068,7 +2067,7 @@ impl Renderer {
         if thread_is_being_profiled() {
             let duration = Duration::new(0,0);
             let message = (self.profile.get_or(profiler::DRAW_CALLS, 0.0) as usize).to_string();
-            add_text_marker(cstr!("NumDrawCalls"), &message, duration);
+            add_text_marker("NumDrawCalls", &message, duration);
         }
 
         let report = self.texture_resolver.report_memory();
@@ -2108,9 +2107,7 @@ impl Renderer {
                 val = 1.0;
                 if add_markers {
                     let event_str = format!("Render reason {:?}", reason_bit);
-                    if let Ok(event_str) = std::ffi::CString::new(&event_str[..]) {
-                        add_event_marker(event_str.as_c_str());
-                    }
+                    add_event_marker(&event_str);
                 }
             }
             self.profile.set(counter, val);
@@ -2301,7 +2298,7 @@ impl Renderer {
             if !pending_deletes.is_empty() {
                 let delete_texture_start = precise_time_ns();
                 for (texture, _) in pending_deletes {
-                    add_event_marker(c_str!("TextureCacheFree"));
+                    add_event_marker("TextureCacheFree");
                     self.device.delete_texture(texture);
                 }
                 delete_cache_texture_time += precise_time_ns() - delete_texture_start;
@@ -2309,8 +2306,8 @@ impl Renderer {
 
             for allocation in update_list.allocations {
                 match allocation.kind {
-                    TextureCacheAllocationKind::Alloc(_) => add_event_marker(c_str!("TextureCacheAlloc")),
-                    TextureCacheAllocationKind::Reset(_) => add_event_marker(c_str!("TextureCacheReset")),
+                    TextureCacheAllocationKind::Alloc(_) => add_event_marker("TextureCacheAlloc"),
+                    TextureCacheAllocationKind::Reset(_) => add_event_marker("TextureCacheReset"),
                     TextureCacheAllocationKind::Free => {}
                 };
                 match allocation.kind {
