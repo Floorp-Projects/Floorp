@@ -947,7 +947,7 @@ MOZ_EXPORT void DumpCompleteHeap() {
     return;
   }
 
-  nsJSContext::CycleCollectNow(alltracesListener);
+  nsJSContext::CycleCollectNow(CCReason::DUMP_HEAP, alltracesListener);
 }
 
 }  // extern "C"
