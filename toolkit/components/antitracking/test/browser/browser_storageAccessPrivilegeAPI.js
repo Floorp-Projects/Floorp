@@ -177,9 +177,10 @@ add_task(async function test_privilege_api_with_reject_tracker() {
 
   // Call the privilege API.
   await SpecialPowers.spawn(browser, [], async _ => {
-    // The privilege API requires user activation. So, we set the user
-    // activation flag before we call the API.
-    content.document.notifyUserGestureActivation();
+    // The privilege API requires a user gesture. So, we set the user handling
+    // flag before we call the API.
+    let dwu = SpecialPowers.getDOMWindowUtils(content);
+    let helper = dwu.setHandlingUserInput(true);
 
     try {
       await content.document.requestStorageAccessForOrigin(
@@ -189,7 +190,7 @@ add_task(async function test_privilege_api_with_reject_tracker() {
       ok(false, "The API shouldn't throw.");
     }
 
-    content.document.clearUserGestureActivation();
+    helper.destruct();
   });
 
   // Verify if the storage access permission is set correctly.
@@ -273,7 +274,8 @@ add_task(async function test_privilege_api_with_dFPI() {
   await SpecialPowers.spawn(browser, [], async _ => {
     // The privilege API requires a user gesture. So, we set the user handling
     // flag before we call the API.
-    content.document.notifyUserGestureActivation();
+    let dwu = SpecialPowers.getDOMWindowUtils(content);
+    let helper = dwu.setHandlingUserInput(true);
 
     try {
       await content.document.requestStorageAccessForOrigin(
@@ -283,7 +285,7 @@ add_task(async function test_privilege_api_with_dFPI() {
       ok(false, "The API shouldn't throw.");
     }
 
-    content.document.clearUserGestureActivation();
+    helper.destruct();
   });
 
   // Verify if the storage access permission is set correctly.
@@ -363,7 +365,8 @@ add_task(async function test_prompt() {
     let callAPIPromise = SpecialPowers.spawn(browser, [allow], async allow => {
       // The privilege API requires a user gesture. So, we set the user handling
       // flag before we call the API.
-      content.document.notifyUserGestureActivation();
+      let dwu = SpecialPowers.getDOMWindowUtils(content);
+      let helper = dwu.setHandlingUserInput(true);
       let isThrown = false;
 
       try {
@@ -376,7 +379,7 @@ add_task(async function test_prompt() {
 
       is(isThrown, !allow, `The API ${allow ? "shouldn't" : "should"} throw.`);
 
-      content.document.clearUserGestureActivation();
+      helper.destruct();
     });
 
     await shownPromise;
@@ -444,7 +447,9 @@ add_task(async function test_invalid_input() {
     }
     ok(isThrown, "The API should throw without user gesture.");
 
-    content.document.notifyUserGestureActivation();
+    let dwu = SpecialPowers.getDOMWindowUtils(content);
+    let helper = dwu.setHandlingUserInput(true);
+
     isThrown = false;
     try {
       await content.document.requestStorageAccessForOrigin();
@@ -453,7 +458,6 @@ add_task(async function test_invalid_input() {
     }
     ok(isThrown, "The API should throw with no input.");
 
-    content.document.notifyUserGestureActivation();
     isThrown = false;
     try {
       await content.document.requestStorageAccessForOrigin("");
@@ -463,7 +467,6 @@ add_task(async function test_invalid_input() {
     }
     ok(isThrown, "The API should throw with empty string.");
 
-    content.document.notifyUserGestureActivation();
     isThrown = false;
     try {
       await content.document.requestStorageAccessForOrigin("invalid url");
@@ -473,7 +476,7 @@ add_task(async function test_invalid_input() {
     }
     ok(isThrown, "The API should throw with invalid url.");
 
-    content.document.clearUserGestureActivation();
+    helper.destruct();
   });
 
   BrowserTestUtils.removeTab(tab);
