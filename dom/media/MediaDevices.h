@@ -32,13 +32,6 @@ struct DisplayMediaStreamConstraints;
 struct MediaTrackSupportedConstraints;
 struct AudioOutputOptions;
 
-#define MOZILLA_DOM_MEDIADEVICES_IMPLEMENTATION_IID  \
-  {                                                  \
-    0x2f784d8a, 0x7485, 0x4280, {                    \
-      0x9a, 0x36, 0x74, 0xa4, 0xd6, 0x71, 0xa6, 0xc8 \
-    }                                                \
-  }
-
 class MediaDevices final : public DOMEventTargetHelper {
  public:
   using SinkInfoPromise = MozPromise<RefPtr<AudioDeviceInfo>, nsresult, true>;
@@ -46,7 +39,6 @@ class MediaDevices final : public DOMEventTargetHelper {
   explicit MediaDevices(nsPIDOMWindowInner* aWindow);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOM_MEDIADEVICES_IMPLEMENTATION_IID)
 
   JSObject* WrapObject(JSContext* cx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -104,9 +96,6 @@ class MediaDevices final : public DOMEventTargetHelper {
 
   void RecordAccessTelemetry(const UseCounter counter) const;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(MediaDevices,
-                              MOZILLA_DOM_MEDIADEVICES_IMPLEMENTATION_IID)
 
 }  // namespace dom
 }  // namespace mozilla
