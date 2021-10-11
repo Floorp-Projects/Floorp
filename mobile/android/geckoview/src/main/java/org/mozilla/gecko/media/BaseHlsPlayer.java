@@ -8,90 +8,97 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public interface BaseHlsPlayer {
 
-    public enum TrackType {
-        UNDEFINED,
-        AUDIO,
-        VIDEO,
-        TEXT,
+  public enum TrackType {
+    UNDEFINED,
+    AUDIO,
+    VIDEO,
+    TEXT,
+  }
+
+  public enum ResourceError {
+    BASE(-100),
+    UNKNOWN(-101),
+    PLAYER(-102),
+    UNSUPPORTED(-103);
+
+    private int mNumVal;
+
+    private ResourceError(final int numVal) {
+      mNumVal = numVal;
     }
 
-    public enum ResourceError {
-        BASE(-100),
-        UNKNOWN(-101),
-        PLAYER(-102),
-        UNSUPPORTED(-103);
+    public int code() {
+      return mNumVal;
+    }
+  }
 
-        private int mNumVal;
-        private ResourceError(final int numVal) {
-            mNumVal = numVal;
-        }
-        public int code() {
-            return mNumVal;
-        }
+  public enum DemuxerError {
+    BASE(-200),
+    UNKNOWN(-201),
+    PLAYER(-202),
+    UNSUPPORTED(-203);
+
+    private int mNumVal;
+
+    private DemuxerError(final int numVal) {
+      mNumVal = numVal;
     }
 
-    public enum DemuxerError {
-        BASE(-200),
-        UNKNOWN(-201),
-        PLAYER(-202),
-        UNSUPPORTED(-203);
-
-        private int mNumVal;
-        private DemuxerError(final int numVal) {
-            mNumVal = numVal;
-        }
-        public int code() {
-            return mNumVal;
-        }
+    public int code() {
+      return mNumVal;
     }
+  }
 
-    public interface DemuxerCallbacks {
-        void onInitialized(boolean hasAudio, boolean hasVideo);
-        void onError(int errorCode);
-    }
+  public interface DemuxerCallbacks {
+    void onInitialized(boolean hasAudio, boolean hasVideo);
 
-    public interface ResourceCallbacks {
-        void onLoad(String mediaUrl);
-        void onDataArrived();
-        void onError(int errorCode);
-    }
+    void onError(int errorCode);
+  }
 
-    // Used to identify player instance.
-    public int getId();
+  public interface ResourceCallbacks {
+    void onLoad(String mediaUrl);
 
-    // =======================================================================
-    // API for GeckoHLSResourceWrapper
-    // =======================================================================
-    public void init(String url, ResourceCallbacks callback);
+    void onDataArrived();
 
-    public boolean isLiveStream();
+    void onError(int errorCode);
+  }
 
-    // =======================================================================
-    // API for GeckoHLSDemuxerWrapper
-    // =======================================================================
-    public void addDemuxerWrapperCallbackListener(DemuxerCallbacks callback);
+  // Used to identify player instance.
+  public int getId();
 
-    public ConcurrentLinkedQueue<GeckoHLSSample> getSamples(TrackType trackType, int number);
+  // =======================================================================
+  // API for GeckoHLSResourceWrapper
+  // =======================================================================
+  public void init(String url, ResourceCallbacks callback);
 
-    public long getBufferedPosition();
+  public boolean isLiveStream();
 
-    public int getNumberOfTracks(TrackType trackType);
+  // =======================================================================
+  // API for GeckoHLSDemuxerWrapper
+  // =======================================================================
+  public void addDemuxerWrapperCallbackListener(DemuxerCallbacks callback);
 
-    public GeckoVideoInfo getVideoInfo(int index);
+  public ConcurrentLinkedQueue<GeckoHLSSample> getSamples(TrackType trackType, int number);
 
-    public GeckoAudioInfo getAudioInfo(int index);
+  public long getBufferedPosition();
 
-    public boolean seek(long positionUs);
+  public int getNumberOfTracks(TrackType trackType);
 
-    public long getNextKeyFrameTime();
+  public GeckoVideoInfo getVideoInfo(int index);
 
-    public void suspend();
+  public GeckoAudioInfo getAudioInfo(int index);
 
-    public void resume();
+  public boolean seek(long positionUs);
 
-    public void play();
+  public long getNextKeyFrameTime();
 
-    public void pause();
+  public void suspend();
 
-    public void release();
+  public void resume();
+
+  public void play();
+
+  public void pause();
+
+  public void release();
 }

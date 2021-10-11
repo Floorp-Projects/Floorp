@@ -9,21 +9,19 @@ package org.mozilla.geckoview;
 import androidx.annotation.AnyThread;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Locale;
-
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
 /**
- * GeckoWebExecutor is responsible for fetching a {@link WebRequest} and delivering
- * a {@link WebResponse} to the caller via {@link #fetch(WebRequest)}. Example:
+ * GeckoWebExecutor is responsible for fetching a {@link WebRequest} and delivering a {@link
+ * WebResponse} to the caller via {@link #fetch(WebRequest)}. Example:
+ *
  * <pre>
  *     final GeckoWebExecutor executor = new GeckoWebExecutor();
  *
@@ -39,157 +37,153 @@ import org.mozilla.gecko.annotation.WrapForJNI;
  */
 @AnyThread
 public class GeckoWebExecutor {
-    // We don't use this right now because we access GeckoThread directly, but
-    // it's future-proofing for a world where we allow multiple GeckoRuntimes.
-    private final GeckoRuntime mRuntime;
+  // We don't use this right now because we access GeckoThread directly, but
+  // it's future-proofing for a world where we allow multiple GeckoRuntimes.
+  private final GeckoRuntime mRuntime;
 
-    @WrapForJNI(dispatchTo = "gecko", stubName = "Fetch")
-    private static native void nativeFetch(WebRequest request, int flags, GeckoResult<WebResponse> result);
+  @WrapForJNI(dispatchTo = "gecko", stubName = "Fetch")
+  private static native void nativeFetch(
+      WebRequest request, int flags, GeckoResult<WebResponse> result);
 
-    @WrapForJNI(dispatchTo = "gecko", stubName = "Resolve")
-    private static native void nativeResolve(String host, GeckoResult<InetAddress[]> result);
+  @WrapForJNI(dispatchTo = "gecko", stubName = "Resolve")
+  private static native void nativeResolve(String host, GeckoResult<InetAddress[]> result);
 
-    @WrapForJNI(calledFrom = "gecko", exceptionMode = "nsresult")
-    private static ByteBuffer createByteBuffer(final int capacity) {
-        return ByteBuffer.allocateDirect(capacity);
+  @WrapForJNI(calledFrom = "gecko", exceptionMode = "nsresult")
+  private static ByteBuffer createByteBuffer(final int capacity) {
+    return ByteBuffer.allocateDirect(capacity);
+  }
+
+  @Retention(RetentionPolicy.SOURCE)
+  @IntDef({
+    FETCH_FLAGS_NONE,
+    FETCH_FLAGS_ANONYMOUS,
+    FETCH_FLAGS_NO_REDIRECTS,
+    FETCH_FLAGS_PRIVATE,
+    FETCH_FLAGS_STREAM_FAILURE_TEST,
+  })
+  /* package */ @interface FetchFlags {}
+
+  /** No special treatment. */
+  public static final int FETCH_FLAGS_NONE = 0;
+
+  /** Don't send cookies or other user data along with the request. */
+  @WrapForJNI public static final int FETCH_FLAGS_ANONYMOUS = 1;
+
+  /** Don't automatically follow redirects. */
+  @WrapForJNI public static final int FETCH_FLAGS_NO_REDIRECTS = 1 << 1;
+
+  // There was supposed to be another flag, which we then decided not to implement.
+  // That's the reason there's no value 1 << 2, and it can absolutely be used :)
+
+  /** Associates this download with the current private browsing session */
+  @WrapForJNI public static final int FETCH_FLAGS_PRIVATE = 1 << 3;
+
+  /** This flag causes a read error in the {@link WebResponse} body. Useful for testing. */
+  @WrapForJNI public static final int FETCH_FLAGS_STREAM_FAILURE_TEST = 1 << 10;
+
+  /**
+   * Create a new GeckoWebExecutor instance.
+   *
+   * @param runtime A GeckoRuntime instance
+   */
+  public GeckoWebExecutor(final @NonNull GeckoRuntime runtime) {
+    mRuntime = runtime;
+  }
+
+  /**
+   * Send the given {@link WebRequest}.
+   *
+   * @param request A {@link WebRequest} instance
+   * @return A {@link GeckoResult} which will be completed with a {@link WebResponse}. If the
+   *     request fails to complete, the {@link GeckoResult} will be completed exceptionally with a
+   *     {@link WebRequestError}.
+   * @throws IllegalArgumentException if request is null or otherwise unusable.
+   */
+  public @NonNull GeckoResult<WebResponse> fetch(final @NonNull WebRequest request) {
+    return fetch(request, FETCH_FLAGS_NONE);
+  }
+
+  /**
+   * Send the given {@link WebRequest} with specified flags.
+   *
+   * @param request A {@link WebRequest} instance
+   * @param flags The specified flags. One or more of the {@link #FETCH_FLAGS_NONE FETCH_*} flags.
+   * @return A {@link GeckoResult} which will be completed with a {@link WebResponse}. If the
+   *     request fails to complete, the {@link GeckoResult} will be completed exceptionally with a
+   *     {@link WebRequestError}.
+   * @throws IllegalArgumentException if request is null or otherwise unusable.
+   */
+  public @NonNull GeckoResult<WebResponse> fetch(
+      final @NonNull WebRequest request, final @FetchFlags int flags) {
+    if (request.body != null && !request.body.isDirect()) {
+      throw new IllegalArgumentException("Request body must be a direct ByteBuffer");
     }
 
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({
-            FETCH_FLAGS_NONE,
-            FETCH_FLAGS_ANONYMOUS,
-            FETCH_FLAGS_NO_REDIRECTS,
-            FETCH_FLAGS_PRIVATE,
-            FETCH_FLAGS_STREAM_FAILURE_TEST,
-    })
-    /* package */ @interface FetchFlags {}
-
-    /**
-     * No special treatment.
-     */
-    public static final int FETCH_FLAGS_NONE = 0;
-
-    /**
-     * Don't send cookies or other user data along with the request.
-     */
-    @WrapForJNI
-    public static final int FETCH_FLAGS_ANONYMOUS = 1;
-
-    /**
-     * Don't automatically follow redirects.
-     */
-    @WrapForJNI
-    public static final int FETCH_FLAGS_NO_REDIRECTS = 1 << 1;
-
-    // There was supposed to be another flag, which we then decided not to implement.
-    // That's the reason there's no value 1 << 2, and it can absolutely be used :)
-
-    /**
-     * Associates this download with the current private browsing session
-     */
-    @WrapForJNI
-    public static final int FETCH_FLAGS_PRIVATE = 1 << 3;
-
-    /**
-     * This flag causes a read error in the {@link WebResponse} body. Useful for testing.
-     */
-    @WrapForJNI
-    public static final int FETCH_FLAGS_STREAM_FAILURE_TEST = 1 << 10;
-
-    /**
-     * Create a new GeckoWebExecutor instance.
-     *
-     * @param runtime A GeckoRuntime instance
-     */
-    public GeckoWebExecutor(final @NonNull GeckoRuntime runtime) {
-        mRuntime = runtime;
+    if (request.cacheMode < WebRequest.CACHE_MODE_FIRST
+        || request.cacheMode > WebRequest.CACHE_MODE_LAST) {
+      throw new IllegalArgumentException("Unknown cache mode");
     }
 
-    /**
-     * Send the given {@link WebRequest}.
-     *
-     * @param request A {@link WebRequest} instance
-     * @return A {@link GeckoResult} which will be completed with a {@link WebResponse}. If the
-     *         request fails to complete, the {@link GeckoResult} will be completed exceptionally
-     *         with a {@link WebRequestError}.
-     * @throws IllegalArgumentException if request is null or otherwise unusable.
-     */
-    public @NonNull GeckoResult<WebResponse> fetch(final @NonNull WebRequest request) {
-        return fetch(request, FETCH_FLAGS_NONE);
+    final String uri = request.uri.toLowerCase(Locale.ROOT);
+    // We don't need to fully validate the URI here, just a sanity check
+    if (!uri.startsWith("http") && !uri.startsWith("blob")) {
+      throw new IllegalArgumentException(
+          "Unsupported URI scheme: " + (uri.length() > 10 ? uri.substring(0, 10) : uri));
     }
 
-    /**
-     * Send the given {@link WebRequest} with specified flags.
-     *
-     * @param request A {@link WebRequest} instance
-     * @param flags The specified flags. One or more of the {@link #FETCH_FLAGS_NONE FETCH_*} flags.
-     * @return A {@link GeckoResult} which will be completed with a {@link WebResponse}. If the
-     *         request fails to complete, the {@link GeckoResult} will be completed exceptionally
-     *         with a {@link WebRequestError}.
-     * @throws IllegalArgumentException if request is null or otherwise unusable.
-     */
-    public @NonNull GeckoResult<WebResponse> fetch(final @NonNull WebRequest request,
-                                                   final @FetchFlags int flags) {
-        if (request.body != null && !request.body.isDirect()) {
-            throw new IllegalArgumentException("Request body must be a direct ByteBuffer");
-        }
+    final GeckoResult<WebResponse> result = new GeckoResult<>();
 
-        if (request.cacheMode < WebRequest.CACHE_MODE_FIRST ||
-            request.cacheMode > WebRequest.CACHE_MODE_LAST) {
-            throw new IllegalArgumentException("Unknown cache mode");
-        }
-
-        final String uri = request.uri.toLowerCase(Locale.ROOT);
-        // We don't need to fully validate the URI here, just a sanity check
-        if (!uri.startsWith("http") && !uri.startsWith("blob")) {
-            throw new IllegalArgumentException("Unsupported URI scheme: " +
-                    (uri.length() > 10 ? uri.substring(0, 10) : uri));
-        }
-
-        final GeckoResult<WebResponse> result = new GeckoResult<>();
-
-        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            nativeFetch(request, flags, result);
-        } else {
-            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, this,
-                    "nativeFetch", WebRequest.class, request, flags,
-                    GeckoResult.class, result);
-        }
-
-        return result;
+    if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+      nativeFetch(request, flags, result);
+    } else {
+      GeckoThread.queueNativeCallUntil(
+          GeckoThread.State.PROFILE_READY,
+          this,
+          "nativeFetch",
+          WebRequest.class,
+          request,
+          flags,
+          GeckoResult.class,
+          result);
     }
 
-    /**
-     * Resolves the specified host name.
-     *
-     * @param host An Internet host name, e.g. mozilla.org.
-     * @return A {@link GeckoResult} which will be fulfilled with a {@link List}
-     *         of {@link InetAddress}. In case of failure, the {@link GeckoResult}
-     *         will be completed exceptionally with a {@link java.net.UnknownHostException}.
-     */
-    public @NonNull GeckoResult<InetAddress[]> resolve(final @NonNull String host) {
-        final GeckoResult<InetAddress[]> result = new GeckoResult<>();
+    return result;
+  }
 
-        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            nativeResolve(host, result);
-        } else {
-            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, this,
-                    "nativeResolve", String.class, host,
-                    GeckoResult.class, result);
-        }
-        return result;
-    }
+  /**
+   * Resolves the specified host name.
+   *
+   * @param host An Internet host name, e.g. mozilla.org.
+   * @return A {@link GeckoResult} which will be fulfilled with a {@link List} of {@link
+   *     InetAddress}. In case of failure, the {@link GeckoResult} will be completed exceptionally
+   *     with a {@link java.net.UnknownHostException}.
+   */
+  public @NonNull GeckoResult<InetAddress[]> resolve(final @NonNull String host) {
+    final GeckoResult<InetAddress[]> result = new GeckoResult<>();
 
-    /**
-     * This causes a speculative connection to be made to the host
-     * in the specified URI. This is useful if an app thinks it may
-     * be making a request to that host in the near future. If no request
-     * is made, the connection will be cleaned up after an unspecified
-     * amount of time.
-     *
-     * @param uri A URI String.
-     */
-    public void speculativeConnect(final @NonNull String uri) {
-        GeckoThread.speculativeConnect(uri);
+    if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+      nativeResolve(host, result);
+    } else {
+      GeckoThread.queueNativeCallUntil(
+          GeckoThread.State.PROFILE_READY,
+          this,
+          "nativeResolve",
+          String.class,
+          host,
+          GeckoResult.class,
+          result);
     }
+    return result;
+  }
+
+  /**
+   * This causes a speculative connection to be made to the host in the specified URI. This is
+   * useful if an app thinks it may be making a request to that host in the near future. If no
+   * request is made, the connection will be cleaned up after an unspecified amount of time.
+   *
+   * @param uri A URI String.
+   */
+  public void speculativeConnect(final @NonNull String uri) {
+    GeckoThread.speculativeConnect(uri);
+  }
 }

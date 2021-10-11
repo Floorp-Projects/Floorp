@@ -11,71 +11,71 @@ import java.lang.reflect.Method;
 import java.util.Comparator;
 
 public class AlphabeticAnnotatableEntityComparator<T extends Member> implements Comparator<T> {
-    @Override
-    public int compare(T aLhs, T aRhs) {
-        // Constructors, Methods, Fields.
-        boolean lIsConstructor = aLhs instanceof Constructor;
-        boolean rIsConstructor = aRhs instanceof Constructor;
-        boolean lIsMethod = aLhs instanceof Method;
-        boolean rIsField = aRhs instanceof Field;
+  @Override
+  public int compare(T aLhs, T aRhs) {
+    // Constructors, Methods, Fields.
+    boolean lIsConstructor = aLhs instanceof Constructor;
+    boolean rIsConstructor = aRhs instanceof Constructor;
+    boolean lIsMethod = aLhs instanceof Method;
+    boolean rIsField = aRhs instanceof Field;
 
-        if (lIsConstructor) {
-            if (!rIsConstructor) {
-                return -1;
-            }
-        } else if (lIsMethod) {
-            if (rIsConstructor) {
-                return 1;
-            } else if (rIsField) {
-                return -1;
-            }
-        } else {
-            if (!rIsField) {
-                return 1;
-            }
-        }
-
-        // Verify these objects are the same type and cast them.
-        if (aLhs instanceof Method) {
-            return compare((Method) aLhs, (Method) aRhs);
-        } else if (aLhs instanceof Field) {
-            return compare((Field) aLhs, (Field) aRhs);
-        } else {
-            return compare((Constructor) aLhs, (Constructor) aRhs);
-        }
+    if (lIsConstructor) {
+      if (!rIsConstructor) {
+        return -1;
+      }
+    } else if (lIsMethod) {
+      if (rIsConstructor) {
+        return 1;
+      } else if (rIsField) {
+        return -1;
+      }
+    } else {
+      if (!rIsField) {
+        return 1;
+      }
     }
 
-    // Alas, the type system fails us.
-    private static int compare(Method aLhs, Method aRhs) {
-        // Initially, attempt to differentiate the methods be name alone..
-        String lName = aLhs.getName();
-        String rName = aRhs.getName();
+    // Verify these objects are the same type and cast them.
+    if (aLhs instanceof Method) {
+      return compare((Method) aLhs, (Method) aRhs);
+    } else if (aLhs instanceof Field) {
+      return compare((Field) aLhs, (Field) aRhs);
+    } else {
+      return compare((Constructor) aLhs, (Constructor) aRhs);
+    }
+  }
 
-        int ret = lName.compareTo(rName);
-        if (ret != 0) {
-            return ret;
-        }
+  // Alas, the type system fails us.
+  private static int compare(Method aLhs, Method aRhs) {
+    // Initially, attempt to differentiate the methods be name alone..
+    String lName = aLhs.getName();
+    String rName = aRhs.getName();
 
-        // The names were the same, so we need to compare signatures to find their uniqueness..
-        lName = Utils.getSignature(aLhs);
-        rName = Utils.getSignature(aRhs);
-
-        return lName.compareTo(rName);
+    int ret = lName.compareTo(rName);
+    if (ret != 0) {
+      return ret;
     }
 
-    private static int compare(Constructor<?> aLhs, Constructor<?> aRhs) {
-        // The names will be the same, so we need to compare signatures to find their uniqueness..
-        String lName = Utils.getSignature(aLhs);
-        String rName = Utils.getSignature(aRhs);
+    // The names were the same, so we need to compare signatures to find their uniqueness..
+    lName = Utils.getSignature(aLhs);
+    rName = Utils.getSignature(aRhs);
 
-        return lName.compareTo(rName);
-    }
+    return lName.compareTo(rName);
+  }
 
-    private static int compare(Field aLhs, Field aRhs) {
-        // Compare field names..
-        String lName = aLhs.getName();
-        String rName = aRhs.getName();
+  private static int compare(Constructor<?> aLhs, Constructor<?> aRhs) {
+    // The names will be the same, so we need to compare signatures to find their uniqueness..
+    String lName = Utils.getSignature(aLhs);
+    String rName = Utils.getSignature(aRhs);
 
-        return lName.compareTo(rName);
-    }
+    return lName.compareTo(rName);
+  }
+
+  private static int compare(Field aLhs, Field aRhs) {
+    // Compare field names..
+    String lName = aLhs.getName();
+    String rName = aRhs.getName();
+
+    return lName.compareTo(rName);
+  }
 }

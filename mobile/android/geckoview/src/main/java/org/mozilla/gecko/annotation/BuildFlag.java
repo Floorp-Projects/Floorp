@@ -10,17 +10,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation is used to tag classes that are conditionally built behind
- * build flags. Any generated JNI bindings will incorporate the specified build
- * flags.
+ * This annotation is used to tag classes that are conditionally built behind build flags. Any
+ * generated JNI bindings will incorporate the specified build flags.
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface BuildFlag {
-    /**
-     * Preprocessor macro for conditionally building the generated bindings.
-     * "MOZ_FOO" wraps generated bindings in "#ifdef MOZ_FOO / #endif"
-     * "!MOZ_FOO" wraps generated bindings in "#ifndef MOZ_FOO / #endif"
-     */
-    String value() default "";
+  /**
+   * Preprocessor macro for conditionally building the generated bindings. "MOZ_FOO" wraps generated
+   * bindings in "#ifdef MOZ_FOO / #endif" "!MOZ_FOO" wraps generated bindings in "#ifndef MOZ_FOO /
+   * #endif"
+   */
+  String value() default "";
 }

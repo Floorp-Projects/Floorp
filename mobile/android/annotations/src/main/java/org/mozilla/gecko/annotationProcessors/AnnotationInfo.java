@@ -4,55 +4,56 @@
 
 package org.mozilla.gecko.annotationProcessors;
 
-/**
- * Object holding annotation data. Used by GeneratableElementIterator.
- */
+/** Object holding annotation data. Used by GeneratableElementIterator. */
 public class AnnotationInfo {
-    public enum ExceptionMode {
-        ABORT,
-        NSRESULT,
-        IGNORE;
+  public enum ExceptionMode {
+    ABORT,
+    NSRESULT,
+    IGNORE;
 
-        String nativeValue() {
-            return "mozilla::jni::ExceptionMode::" + name();
-        }
+    String nativeValue() {
+      return "mozilla::jni::ExceptionMode::" + name();
     }
+  }
 
-    public enum CallingThread {
-        GECKO,
-        UI,
-        ANY;
+  public enum CallingThread {
+    GECKO,
+    UI,
+    ANY;
 
-        String nativeValue() {
-            return "mozilla::jni::CallingThread::" + name();
-        }
+    String nativeValue() {
+      return "mozilla::jni::CallingThread::" + name();
     }
+  }
 
-    public enum DispatchTarget {
-        GECKO,
-        GECKO_PRIORITY,
-        PROXY,
-        CURRENT;
+  public enum DispatchTarget {
+    GECKO,
+    GECKO_PRIORITY,
+    PROXY,
+    CURRENT;
 
-        String nativeValue() {
-            return "mozilla::jni::DispatchTarget::" + name();
-        }
+    String nativeValue() {
+      return "mozilla::jni::DispatchTarget::" + name();
     }
+  }
 
-    public final String wrapperName;
-    public final ExceptionMode exceptionMode;
-    public final CallingThread callingThread;
-    public final DispatchTarget dispatchTarget;
-    public final boolean noLiteral;
+  public final String wrapperName;
+  public final ExceptionMode exceptionMode;
+  public final CallingThread callingThread;
+  public final DispatchTarget dispatchTarget;
+  public final boolean noLiteral;
 
-    public AnnotationInfo(String wrapperName, ExceptionMode exceptionMode,
-                          CallingThread callingThread, DispatchTarget dispatchTarget,
-                          boolean noLiteral) {
+  public AnnotationInfo(
+      String wrapperName,
+      ExceptionMode exceptionMode,
+      CallingThread callingThread,
+      DispatchTarget dispatchTarget,
+      boolean noLiteral) {
 
-        this.wrapperName = wrapperName;
-        this.exceptionMode = exceptionMode;
-        this.callingThread = callingThread;
-        this.dispatchTarget = dispatchTarget;
-        this.noLiteral = noLiteral;
-    }
+    this.wrapperName = wrapperName;
+    this.exceptionMode = exceptionMode;
+    this.callingThread = callingThread;
+    this.dispatchTarget = dispatchTarget;
+    this.noLiteral = noLiteral;
+  }
 }

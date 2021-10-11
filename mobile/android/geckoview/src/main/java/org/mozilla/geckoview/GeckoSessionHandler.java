@@ -6,103 +6,101 @@
 
 package org.mozilla.geckoview;
 
+import android.util.Log;
+import androidx.annotation.UiThread;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
-import androidx.annotation.UiThread;
-import android.util.Log;
+/* package */ abstract class GeckoSessionHandler<Delegate> implements BundleEventListener {
 
-/* package */ abstract class GeckoSessionHandler<Delegate>
-    implements BundleEventListener {
+  private static final String LOGTAG = "GeckoSessionHandler";
+  private static final boolean DEBUG = false;
 
-    private static final String LOGTAG = "GeckoSessionHandler";
-    private static final boolean DEBUG = false;
+  private final String mModuleName;
+  private final String[] mEvents;
+  private Delegate mDelegate;
+  private boolean mRegisteredListeners;
 
-    private final String mModuleName;
-    private final String[] mEvents;
-    private Delegate mDelegate;
-    private boolean mRegisteredListeners;
+  /* package */ GeckoSessionHandler(
+      final String module, final GeckoSession session, final String[] events) {
+    this(module, session, events, new String[] {});
+  }
 
-    /* package */ GeckoSessionHandler(final String module,
-                                      final GeckoSession session,
-                                      final String[] events) {
-        this(module, session, events, new String[]{});
+  /* package */ GeckoSessionHandler(
+      final String module,
+      final GeckoSession session,
+      final String[] events,
+      final String[] defaultEvents) {
+    session.handlersCount++;
+
+    mModuleName = module;
+    mEvents = events;
+
+    // Default events are always active
+    session.getEventDispatcher().registerUiThreadListener(this, defaultEvents);
+  }
+
+  public Delegate getDelegate() {
+    return mDelegate;
+  }
+
+  public void setDelegate(final Delegate delegate, final GeckoSession session) {
+    if (mDelegate == delegate) {
+      return;
     }
 
-    /* package */ GeckoSessionHandler(final String module,
-                                      final GeckoSession session,
-                                      final String[] events,
-                                      final String[] defaultEvents) {
-        session.handlersCount++;
+    mDelegate = delegate;
 
-        mModuleName = module;
-        mEvents = events;
-
-        // Default events are always active
-        session.getEventDispatcher().registerUiThreadListener(this, defaultEvents);
+    if (!mRegisteredListeners && delegate != null) {
+      session.getEventDispatcher().registerUiThreadListener(this, mEvents);
+      mRegisteredListeners = true;
     }
 
-    public Delegate getDelegate() {
-        return mDelegate;
+    // If session is not open, we will update module state during session opening.
+    if (!session.isOpen()) {
+      return;
     }
 
-    public void setDelegate(final Delegate delegate, final GeckoSession session) {
-        if (mDelegate == delegate) {
-            return;
-        }
+    final GeckoBundle msg = new GeckoBundle(2);
+    msg.putString("module", mModuleName);
+    msg.putBoolean("enabled", isEnabled());
+    session.getEventDispatcher().dispatch("GeckoView:UpdateModuleState", msg);
+  }
 
-        mDelegate = delegate;
+  public String getName() {
+    return mModuleName;
+  }
 
-        if (!mRegisteredListeners && delegate != null) {
-            session.getEventDispatcher().registerUiThreadListener(this, mEvents);
-            mRegisteredListeners = true;
-        }
+  public boolean isEnabled() {
+    return mDelegate != null;
+  }
 
-        // If session is not open, we will update module state during session opening.
-        if (!session.isOpen()) {
-            return;
-        }
-
-        final GeckoBundle msg = new GeckoBundle(2);
-        msg.putString("module", mModuleName);
-        msg.putBoolean("enabled", isEnabled());
-        session.getEventDispatcher().dispatch("GeckoView:UpdateModuleState", msg);
+  @Override
+  @UiThread
+  public void handleMessage(
+      final String event, final GeckoBundle message, final EventCallback callback) {
+    if (DEBUG) {
+      Log.d(LOGTAG, mModuleName + " handleMessage: event = " + event);
     }
 
-    public String getName() {
-        return mModuleName;
+    if (mDelegate != null) {
+      handleMessage(mDelegate, event, message, callback);
+    } else {
+      handleDefaultMessage(event, message, callback);
     }
+  }
 
-    public boolean isEnabled() {
-        return mDelegate != null;
+  protected abstract void handleMessage(
+      final Delegate delegate,
+      final String event,
+      final GeckoBundle message,
+      final EventCallback callback);
+
+  protected void handleDefaultMessage(
+      final String event, final GeckoBundle message, final EventCallback callback) {
+    if (callback != null) {
+      callback.sendError("No delegate registered");
     }
-
-    @Override
-    @UiThread
-    public void handleMessage(final String event, final GeckoBundle message,
-                              final EventCallback callback) {
-        if (DEBUG) {
-            Log.d(LOGTAG, mModuleName + " handleMessage: event = " + event);
-        }
-
-        if (mDelegate != null) {
-            handleMessage(mDelegate, event, message, callback);
-        } else {
-            handleDefaultMessage(event, message, callback);
-        }
-    }
-
-    protected abstract void handleMessage(final Delegate delegate,
-                                          final String event,
-                                          final GeckoBundle message,
-                                          final EventCallback callback);
-
-    protected void handleDefaultMessage(final String event,
-                                        final GeckoBundle message,
-                                        final EventCallback callback) {
-        if (callback != null) {
-            callback.sendError("No delegate registered");
-        }
-    }
+  }
 }

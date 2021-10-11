@@ -15,152 +15,147 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
-import androidx.annotation.RequiresApi;
 import android.util.Log;
 import android.view.InputDevice;
+import androidx.annotation.RequiresApi;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.InputDeviceUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
-public class GeckoSystemStateListener
-        implements InputManager.InputDeviceListener {
-    private static final String LOGTAG = "SystemStateListener";
+public class GeckoSystemStateListener implements InputManager.InputDeviceListener {
+  private static final String LOGTAG = "SystemStateListener";
 
-    private static final GeckoSystemStateListener listenerInstance = new GeckoSystemStateListener();
+  private static final GeckoSystemStateListener listenerInstance = new GeckoSystemStateListener();
 
-    private boolean mInitialized;
-    private ContentObserver mContentObserver;
-    private static Context sApplicationContext;
-    private InputManager mInputManager;
-    private boolean mIsNightMode;
+  private boolean mInitialized;
+  private ContentObserver mContentObserver;
+  private static Context sApplicationContext;
+  private InputManager mInputManager;
+  private boolean mIsNightMode;
 
-    public static GeckoSystemStateListener getInstance() {
-        return listenerInstance;
+  public static GeckoSystemStateListener getInstance() {
+    return listenerInstance;
+  }
+
+  private GeckoSystemStateListener() {}
+
+  public synchronized void initialize(final Context context) {
+    if (mInitialized) {
+      Log.w(LOGTAG, "Already initialized!");
+      return;
     }
+    mInputManager = (InputManager) context.getSystemService(Context.INPUT_SERVICE);
+    mInputManager.registerInputDeviceListener(listenerInstance, ThreadUtils.getUiHandler());
 
-    private GeckoSystemStateListener() {
-    }
-
-    public synchronized void initialize(final Context context) {
-        if (mInitialized) {
-            Log.w(LOGTAG, "Already initialized!");
-            return;
-        }
-        mInputManager = (InputManager)
-            context.getSystemService(Context.INPUT_SERVICE);
-        mInputManager.registerInputDeviceListener(listenerInstance, ThreadUtils.getUiHandler());
-
-        sApplicationContext = context;
-        final ContentResolver contentResolver = sApplicationContext.getContentResolver();
-        final Uri animationSetting = Settings.System.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE);
-        mContentObserver = new ContentObserver(new Handler(Looper.getMainLooper())) {
-            @Override
-            public void onChange(final boolean selfChange) {
-                onDeviceChanged();
-            }
+    sApplicationContext = context;
+    final ContentResolver contentResolver = sApplicationContext.getContentResolver();
+    final Uri animationSetting = Settings.System.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE);
+    mContentObserver =
+        new ContentObserver(new Handler(Looper.getMainLooper())) {
+          @Override
+          public void onChange(final boolean selfChange) {
+            onDeviceChanged();
+          }
         };
-        contentResolver.registerContentObserver(animationSetting, false, mContentObserver);
+    contentResolver.registerContentObserver(animationSetting, false, mContentObserver);
 
-        mIsNightMode = (sApplicationContext.getResources().getConfiguration().uiMode &
-            Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
-
-        mInitialized = true;
-    }
-
-    public synchronized void shutdown() {
-        if (!mInitialized) {
-            Log.w(LOGTAG, "Already shut down!");
-            return;
-        }
-
-        if (mInputManager != null) {
-            Log.e(LOGTAG, "mInputManager should be valid!");
-            return;
-        }
-
-        mInputManager.unregisterInputDeviceListener(listenerInstance);
-
-        final ContentResolver contentResolver = sApplicationContext.getContentResolver();
-        contentResolver.unregisterContentObserver(mContentObserver);
-
-        mInitialized = false;
-        mInputManager = null;
-        mContentObserver = null;
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
-    @WrapForJNI(calledFrom = "gecko")
-    /**
-     * For prefers-reduced-motion media queries feature.
-     *
-     * Uses `Settings.Global` which was introduced in API version 17.
-     */
-    private static boolean prefersReducedMotion() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            return false;
-        }
-
-        final ContentResolver contentResolver = sApplicationContext.getContentResolver();
-
-        return Settings.Global.getFloat(contentResolver,
-                                        Settings.Global.ANIMATOR_DURATION_SCALE,
-                                        1) == 0.0f;
-    }
-
-    /**
-     * For prefers-color-scheme media queries feature.
-     */
-    public boolean isNightMode() {
-        return mIsNightMode;
-    }
-
-    public void updateNightMode(final int newUIMode) {
-        final boolean isNightMode = (newUIMode & Configuration.UI_MODE_NIGHT_MASK)
+    mIsNightMode =
+        (sApplicationContext.getResources().getConfiguration().uiMode
+                & Configuration.UI_MODE_NIGHT_MASK)
             == Configuration.UI_MODE_NIGHT_YES;
-        if (isNightMode == mIsNightMode) {
-            return;
-        }
-        mIsNightMode = isNightMode;
-        onDeviceChanged();
+
+    mInitialized = true;
+  }
+
+  public synchronized void shutdown() {
+    if (!mInitialized) {
+      Log.w(LOGTAG, "Already shut down!");
+      return;
     }
 
-    @WrapForJNI(stubName = "OnDeviceChanged", calledFrom = "any", dispatchTo = "gecko")
-    private static native void nativeOnDeviceChanged();
-
-    public static void onDeviceChanged() {
-        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            nativeOnDeviceChanged();
-        } else {
-            GeckoThread.queueNativeCallUntil(
-                    GeckoThread.State.PROFILE_READY, GeckoSystemStateListener.class,
-                    "nativeOnDeviceChanged");
-        }
+    if (mInputManager != null) {
+      Log.e(LOGTAG, "mInputManager should be valid!");
+      return;
     }
 
-    private void notifyDeviceChanged(final int deviceId) {
-        final InputDevice device = InputDevice.getDevice(deviceId);
-        if (device == null ||
-            !InputDeviceUtils.isPointerTypeDevice(device)) {
-            return;
-        }
-        onDeviceChanged();
+    mInputManager.unregisterInputDeviceListener(listenerInstance);
+
+    final ContentResolver contentResolver = sApplicationContext.getContentResolver();
+    contentResolver.unregisterContentObserver(mContentObserver);
+
+    mInitialized = false;
+    mInputManager = null;
+    mContentObserver = null;
+  }
+
+  @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
+  @WrapForJNI(calledFrom = "gecko")
+  /**
+   * For prefers-reduced-motion media queries feature.
+   *
+   * <p>Uses `Settings.Global` which was introduced in API version 17.
+   */
+  private static boolean prefersReducedMotion() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
+      return false;
     }
 
-    @Override
-    public void onInputDeviceAdded(final int deviceId) {
-        notifyDeviceChanged(deviceId);
-    }
+    final ContentResolver contentResolver = sApplicationContext.getContentResolver();
 
-    @Override
-    public void onInputDeviceRemoved(final int deviceId) {
-        // Call onDeviceChanged directly without checking device source types
-        // since we can no longer get a valid `InputDevice` in the case of
-        // device removal.
-        onDeviceChanged();
-    }
+    return Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1)
+        == 0.0f;
+  }
 
-    @Override
-    public void onInputDeviceChanged(final int deviceId) {
-        notifyDeviceChanged(deviceId);
+  /** For prefers-color-scheme media queries feature. */
+  public boolean isNightMode() {
+    return mIsNightMode;
+  }
+
+  public void updateNightMode(final int newUIMode) {
+    final boolean isNightMode =
+        (newUIMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+    if (isNightMode == mIsNightMode) {
+      return;
     }
+    mIsNightMode = isNightMode;
+    onDeviceChanged();
+  }
+
+  @WrapForJNI(stubName = "OnDeviceChanged", calledFrom = "any", dispatchTo = "gecko")
+  private static native void nativeOnDeviceChanged();
+
+  public static void onDeviceChanged() {
+    if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+      nativeOnDeviceChanged();
+    } else {
+      GeckoThread.queueNativeCallUntil(
+          GeckoThread.State.PROFILE_READY, GeckoSystemStateListener.class, "nativeOnDeviceChanged");
+    }
+  }
+
+  private void notifyDeviceChanged(final int deviceId) {
+    final InputDevice device = InputDevice.getDevice(deviceId);
+    if (device == null || !InputDeviceUtils.isPointerTypeDevice(device)) {
+      return;
+    }
+    onDeviceChanged();
+  }
+
+  @Override
+  public void onInputDeviceAdded(final int deviceId) {
+    notifyDeviceChanged(deviceId);
+  }
+
+  @Override
+  public void onInputDeviceRemoved(final int deviceId) {
+    // Call onDeviceChanged directly without checking device source types
+    // since we can no longer get a valid `InputDevice` in the case of
+    // device removal.
+    onDeviceChanged();
+  }
+
+  @Override
+  public void onInputDeviceChanged(final int deviceId) {
+    notifyDeviceChanged(deviceId);
+  }
 }
