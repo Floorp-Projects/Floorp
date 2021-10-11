@@ -18,12 +18,21 @@ var virtualDefinitions = new Map();
 // Every virtual method declaration, anywhere.
 //
 // Map from csu => Set of function-info.
-// function-info: { name, annotations, inherited, pureVirtual }, where
+// function-info: {
 //   name : simple string
 //   typedfield : "name:nargs" ("mangled" field name)
+//   field: full Field datastructure
 //   annotations : Set of [annotation-name, annotation-value] 2-element arrays
 //   inherited : whether the method is inherited from a base class
 //   pureVirtual : whether the method is pure virtual on this CSU
+//   dtor : if this is a virtual destructor with a definition in this class or
+//     a superclass, then the full name of the definition as if it were defined
+//     in this class. This is weird, but it's how gcc emits it. We will add a
+//     synthetic call from this function to its immediate base classes' dtors,
+//     so even if the function does not actually exist and is inherited from a
+//     base class, we will get a path to the inherited function. (Regular
+//     virtual methods are *not* claimed to exist when they don't.)
+// }
 var virtualDeclarations = new Map();
 
 var virtualResolutionsSeen = new Set();
@@ -49,9 +58,9 @@ function processCSU(csuName, csu)
         addToNamedSet(superclasses, csuName, Base);
     }
 
-    for (const field of csu.FunctionField) {
+    for (const {Field, Variable} of csu.FunctionField) {
         // Virtual method
-        const info = field.Field[0];
+        const info = Field[0];
         const name = info.Name[0];
         const annotations = new Set();
         const funcInfo = {
@@ -59,10 +68,17 @@ function processCSU(csuName, csu)
             typedfield: typedField(info),
             field: info,
             annotations,
-            inherited: (info.FieldCSU.Type.Name != csuName),
-            pureVirtual: "Variable" in field,
-            synthetic: false
+            inherited: (info.FieldCSU.Type.Name != csuName), // Always false for virtual dtors
+            pureVirtual: Boolean(Variable),
+            dtor: false,
         };
+
+        if (Variable && isSyntheticVirtualDestructor(name)) {
+            // This is one of gcc's artificial dtors.
+            funcInfo.dtor = Variable.Name[0];
+            funcInfo.pureVirtual = false;
+        }
+
         addToNamedSet(virtualDeclarations, csuName, funcInfo);
         if ('Annotation' in info) {
             for (const {Name: [annType, annValue]} of info.Annotation) {
@@ -70,10 +86,10 @@ function processCSU(csuName, csu)
             }
         }
 
-        if ("Variable" in field) {
+        if (Variable) {
             // Note: not dealing with overloading correctly.
-            const name = field.Variable.Name[0];
-            addToNamedSet(virtualDefinitions, fieldKey(csuName, field.Field[0]), name);
+            const name = Variable.Name[0];
+            addToNamedSet(virtualDefinitions, fieldKey(csuName, Field[0]), name);
         }
     }
 }

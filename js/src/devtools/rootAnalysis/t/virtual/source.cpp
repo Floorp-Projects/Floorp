@@ -132,6 +132,29 @@ void use(Cell*) { asm(""); }
 class nsISupports {
  public:
   virtual ANNOTATE("Can run script") void danger() { asm(""); }
+
+  virtual ~nsISupports() = 0;
+};
+
+class nsIPrincipal : public nsISupports {
+ public:
+  ~nsIPrincipal() override {};
+};
+
+struct JSPrincipals {
+  int debugToken;
+  JSPrincipals() = default;
+  virtual ~JSPrincipals() { GC(); }
+};
+
+class nsJSPrincipals : public nsIPrincipal, public JSPrincipals {
+ public:
+  void Release() { delete this; }
+};
+
+class SafePrincipals : public nsIPrincipal {
+ public:
+  ~SafePrincipals() { foo(); }
 };
 
 void f() {
@@ -210,10 +233,10 @@ void f() {
     use(c13);
   }
 
-  nsISupports nsi;
+  nsJSPrincipals pals;
   {
     Cell* c14 = &cell;
-    nsISupports* p = &nsi;
+    nsISupports* p = &pals;
     p->danger();
     use(c14);
   }
@@ -235,5 +258,35 @@ void f() {
     Cell* c17 = &cell;
     super->someGC(7);
     use(c17);
+  }
+
+  {
+    nsJSPrincipals* princ = new nsJSPrincipals();
+    Cell* c18 = &cell;
+    delete princ; // Can GC
+    use(c18);
+  }
+
+  {
+    nsJSPrincipals* princ = new nsJSPrincipals();
+    nsISupports* supp = static_cast<nsISupports*>(princ);
+    Cell* c19 = &cell;
+    delete supp; // Can GC
+    use(c19);
+  }
+
+  {
+    auto* safe = new SafePrincipals();
+    Cell* c20 = &cell;
+    delete safe; // Cannot GC
+    use(c20);
+  }
+
+  {
+    auto* safe = new SafePrincipals();
+    nsISupports* supp = static_cast<nsISupports*>(safe);
+    Cell* c21 = &cell;
+    delete supp; // Compiler thinks destructor can GC.
+    use(c21);
   }
 }

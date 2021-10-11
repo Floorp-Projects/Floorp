@@ -220,10 +220,12 @@ function isOverridable(C, field) {
 // dynamic type C, so that the callgraph contains calls to all descendant
 // subclasses' implementations.
 for (const [csu, methods] of virtualDeclarations) {
-    for (const {field} of methods) {
+    for (const {field, dtor} of methods) {
         const caller = getId(fieldKey(csu, field));
         if (isOverridable(csu, field.Name[0]))
             printOnce(`D ${caller} ${functionId("(unknown-definition)")}`);
+        if (dtor)
+            printOnce(`D ${caller} ${functionId(dtor)}`);
         if (!subclasses.has(csu))
             continue;
         for (const sub of subclasses.get(csu)) {
