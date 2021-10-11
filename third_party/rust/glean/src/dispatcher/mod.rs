@@ -156,7 +156,7 @@ impl DispatchGuard {
         }
     }
 
-    fn block_on_queue(&self) {
+    fn block_on_queue(&self) -> Result<(), DispatchError> {
         let (tx, rx) = crossbeam_channel::bounded(0);
 
         // We explicitly don't use `self.launch` here.
@@ -168,12 +168,10 @@ impl DispatchGuard {
             tx.send(())
                 .expect("(worker) Can't send message on single-use channel");
         }));
-        self.sender
-            .send(task)
-            .expect("Failed to launch the blocking task");
+        self.sender.send(task)?;
 
-        rx.recv()
-            .expect("Failed to receive message on single-use channel");
+        rx.recv()?;
+        Ok(())
     }
 
     fn kill(&mut self) -> Result<(), DispatchError> {
@@ -326,7 +324,7 @@ impl Dispatcher {
         self.guard.clone()
     }
 
-    fn block_on_queue(&self) {
+    fn block_on_queue(&self) -> Result<(), DispatchError> {
         self.guard().block_on_queue()
     }
 
@@ -390,7 +388,7 @@ mod test {
             })
             .expect("Failed to dispatch the test task");
 
-        dispatcher.block_on_queue();
+        dispatcher.block_on_queue().unwrap();
         assert!(thread_canary.load(Ordering::SeqCst));
         assert_eq!(main_thread_id, thread::current().id());
     }
@@ -458,7 +456,7 @@ mod test {
                 .unwrap();
         }
 
-        dispatcher.block_on_queue();
+        dispatcher.block_on_queue().unwrap();
 
         // This additionally checks that tasks were executed in order.
         assert_eq!(
@@ -531,7 +529,7 @@ mod test {
                 .unwrap();
         }
 
-        dispatcher.block_on_queue();
+        dispatcher.block_on_queue().unwrap();
 
         assert_eq!(&*result.lock().unwrap(), &[1, 2, 3, 4, 5, 20]);
     }
