@@ -30,7 +30,7 @@ function testSelected(aTab) {
 add_task(async function testScreenSharingTabClose() {
   let initialTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    "http://example.com"
+    "https://example.com"
   );
 
   // Open another foreground tab and ensure its selected.
