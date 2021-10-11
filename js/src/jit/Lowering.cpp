@@ -4749,8 +4749,20 @@ void LIRGenerator::visitWasmAddOffset(MWasmAddOffset* ins) {
 }
 
 void LIRGenerator::visitWasmLoadTls(MWasmLoadTls* ins) {
-  auto* lir = new (alloc()) LWasmLoadTls(useRegisterAtStart(ins->tlsPtr()));
-  define(lir, ins);
+  if (ins->type() == MIRType::Int64) {
+#ifdef JS_PUNBOX64
+    LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
+#else
+    // Avoid reusing tlsPtr for a 64-bit output pair as the load clobbers the
+    // first half of that pair before loading the second half.
+    LAllocation tlsPtr = useRegister(ins->tlsPtr());
+#endif
+    auto* lir = new (alloc()) LWasmLoadTls64(tlsPtr);
+    defineInt64(lir, ins);
+  } else {
+    auto* lir = new (alloc()) LWasmLoadTls(useRegisterAtStart(ins->tlsPtr()));
+    define(lir, ins);
+  }
 }
 
 void LIRGenerator::visitWasmBoundsCheck(MWasmBoundsCheck* ins) {
@@ -4801,6 +4813,8 @@ void LIRGenerator::visitWasmLoadGlobalVar(MWasmLoadGlobalVar* ins) {
 #ifdef JS_PUNBOX64
     LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
 #else
+    // Avoid reusing tlsPtr for the output pair as the load clobbers the first
+    // half of that pair before loading the second half.
     LAllocation tlsPtr = useRegister(ins->tlsPtr());
 #endif
     defineInt64(new (alloc()) LWasmLoadSlotI64(tlsPtr, offs), ins);
@@ -4815,6 +4829,8 @@ void LIRGenerator::visitWasmLoadGlobalCell(MWasmLoadGlobalCell* ins) {
 #ifdef JS_PUNBOX64
     LAllocation cellPtr = useRegisterAtStart(ins->cellPtr());
 #else
+    // Avoid reusing cellPtr for the output pair as the load clobbers the first
+    // half of that pair before loading the second half.
     LAllocation cellPtr = useRegister(ins->cellPtr());
 #endif
     defineInt64(new (alloc()) LWasmLoadSlotI64(cellPtr, /*offs=*/0), ins);
