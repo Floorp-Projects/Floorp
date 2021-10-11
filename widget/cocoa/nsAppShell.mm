@@ -687,6 +687,22 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
         eventProcessed = true;
       }
     } else {
+      // In at least 10.15, AcquireFirstMatchingEventInQueue will move 1
+      // CGEvent from the CGEvent queue into the Carbon event queue. Unfortunately,
+      // once an event has been moved to the Carbon event queue it's no longer a
+      // candidate for coalescing. This means that even if we don't remove the
+      // event from the queue, just calling AcquireFirstMatchingEventInQueue can
+      // cause behaviour change. Prior to bug 1690687 landing, the event that we got
+      // from AcquireFirstMatchingEventInQueue was often our own ApplicationDefined
+      // event that. However, once we stopped post that event on every Gecko event
+      // we're much more likely to get a CGEvent. When we have a high amount of load
+      // on the main thread, we end up alternating between Gecko events and native events.
+      // Without CGEvent coalescing, the native event events can accumulate in the Carbon
+      // event queue which will manifest as laggy scrolling.
+#ifdef NIGHTLY_BUILD
+      eventProcessed = false;
+      break;
+#else
       // AcquireFirstMatchingEventInQueue() doesn't spin the (native) event
       // loop, though it does queue up any newly available events from the
       // window server.
@@ -726,6 +742,7 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
       // AcquireFirstMatchingEventInQueue() above.
       ReleaseEvent(currentEvent);
       eventProcessed = true;
+#endif
     }
   } while (mRunningEventLoop);
 
