@@ -36,35 +36,50 @@ function sanitize(name) {
 }
 
 add_task(async function() {
+  function promiseMessage(messageName) {
+    return new Promise(resolve => {
+      chromeScript.addMessageListener(messageName, function listener(data) {
+        chromeScript.removeMessageListener(messageName, listener);
+        resolve(data);
+      });
+    });
+  }
+
   let url = SimpleTest.getTestFileURL("HelperAppLauncherDialog_chromeScript.js");
   let chromeScript = SpecialPowers.loadChromeScript(url);
 
-  for (let test of tests) {
-    for (let char of unsafeBidiChars) {
-      let promiseName = new Promise(function(resolve) {
-        chromeScript.addMessageListener("suggestedFileName",
-                                        function listener(data) {
-          chromeScript.removeMessageListener("suggestedFileName", listener);
-          resolve(data);
-        });
-      });
-      let name = replace(test, char);
-      let expected = sanitize(test);
-      document.getElementById("test").src =
-        "unsafeBidiFileName.sjs?name=" + encodeURIComponent(name);
-      is((await promiseName), expected, "got the expected sanitized name");
+  function wrongAPICallListener(msg) {
+    ok(
+      false,
+      `Called ${msg} when improvements pref was set to ${
+        Services.prefs.getBoolPref(
+          "browser.download.improvements_to_download_panel"
+        )
+      }, which shouldn't happen.`
+    );
+  }
+  chromeScript.addMessageListener("wrongAPICall", wrongAPICallListener);
+
+  for (let prefVal of [false, true]) {
+    await SpecialPowers.pushPrefEnv({set: [["browser.download.improvements_to_download_panel", prefVal]]});
+    for (let test of tests) {
+      for (let char of unsafeBidiChars) {
+        let promiseName = promiseMessage("suggestedFileName");
+        let name = replace(test, char);
+        let expected = sanitize(test);
+        document.getElementById("test").src =
+          "unsafeBidiFileName.sjs?name=" + encodeURIComponent(name);
+        is((await promiseName), expected, "got the expected sanitized name");
+      }
     }
   }
 
-  let promise = new Promise(function(resolve) {
-    chromeScript.addMessageListener("unregistered", function listener() {
-      chromeScript.removeMessageListener("unregistered", listener);
-      resolve();
-    });
-  });
+  // Clean up.
+  let promise = promiseMessage("unregistered");
   chromeScript.sendAsyncMessage("unregister");
   await promise;
 
+  chromeScript.removeMessageListener("wrongAPICall", wrongAPICallListener);
   chromeScript.destroy();
 });
 </script>
