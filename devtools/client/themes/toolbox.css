@@ -68,6 +68,7 @@
 
 .debug-target-info .navigation-button {
   padding: 8px;
+  margin: auto 2px;
   grid-column-gap: 0;
   border: 0;
   background: var(--theme-toolbarbutton-background);
