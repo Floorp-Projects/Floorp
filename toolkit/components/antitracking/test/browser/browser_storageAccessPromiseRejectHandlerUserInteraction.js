@@ -1,14 +1,14 @@
 /* import-globals-from antitracking_head.js */
 
 AntiTracking.runTest(
-  "Storage Access API returns promises that maintain user activation for calling its reject handler",
+  "Storage Access API returns promises that do not maintain user activation for calling its reject handler",
   // blocking callback
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */
-    let [threw, rejected] = await callRequestStorageAccess(dwu => {
+    let [threw, rejected] = await callRequestStorageAccess(() => {
       ok(
-        dwu.isHandlingUserInput,
-        "Promise reject handler must run as if we're handling user input"
+        !SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
+        "Promise reject handler must not have user activation"
       );
     }, true);
     ok(!threw, "requestStorageAccess should not throw");
