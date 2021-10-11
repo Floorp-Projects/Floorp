@@ -740,8 +740,8 @@ void XPCJSRuntime::PrepareForForgetSkippable() {
   }
 }
 
-void XPCJSRuntime::BeginCycleCollectionCallback() {
-  nsJSContext::BeginCycleCollectionCallback();
+void XPCJSRuntime::BeginCycleCollectionCallback(CCReason aReason) {
+  nsJSContext::BeginCycleCollectionCallback(aReason);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -801,9 +801,12 @@ void XPCJSRuntime::GCSliceCallback(JSContext* cx, JS::GCProgress progress,
 void XPCJSRuntime::DoCycleCollectionCallback(JSContext* cx) {
   // The GC has detected that a CC at this point would collect a tremendous
   // amount of garbage that is being revivified unnecessarily.
-  NS_DispatchToCurrentThread(
-      NS_NewRunnableFunction("XPCJSRuntime::DoCycleCollectionCallback",
-                             []() { nsJSContext::CycleCollectNow(nullptr); }));
+  //
+  // The GC_WAITING reason is a little overloaded here, but we want to do
+  // a CC to allow Realms to be collected when they are referenced by a cycle.
+  NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+      "XPCJSRuntime::DoCycleCollectionCallback",
+      []() { nsJSContext::CycleCollectNow(CCReason::GC_WAITING, nullptr); }));
 
   XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
   if (!self) {
