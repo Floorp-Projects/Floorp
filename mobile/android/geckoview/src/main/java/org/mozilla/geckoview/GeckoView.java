@@ -785,8 +785,6 @@ public class GeckoView extends FrameLayout {
     @Override
     public void onProvideAutofillVirtualStructure(final ViewStructure structure,
                                                   final int flags) {
-        super.onProvideAutofillVirtualStructure(structure, flags);
-
         if (mSession == null) {
             return;
         }
@@ -798,8 +796,6 @@ public class GeckoView extends FrameLayout {
     @Override
     @TargetApi(26)
     public void autofill(@NonNull final SparseArray<AutofillValue> values) {
-        super.autofill(values);
-
         if (mSession == null) {
             return;
         }
@@ -812,6 +808,14 @@ public class GeckoView extends FrameLayout {
             }
         }
         mSession.autofill(strValues);
+    }
+
+    @Override
+    public boolean isVisibleToUserForAutofill(final int virtualId) {
+        // If autofill service works with compatibility mode,
+        // View.isVisibleToUserForAutofill walks through the accessibility nodes.
+        // This override avoids it.
+        return true;
     }
 
     /**
