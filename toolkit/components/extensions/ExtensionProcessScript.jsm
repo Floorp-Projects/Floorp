@@ -23,6 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   ExtensionContent: "resource://gre/modules/ExtensionContent.jsm",
   ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.jsm",
+  ExtensionWorkerChild: "resource://gre/modules/ExtensionWorkerChild.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
 });
 
@@ -385,7 +386,7 @@ var ExtensionAPIRequestHandler = {
         `Extension API request originated from an extension window are not yet supported`
       );
     } else if (request.serviceWorkerInfo) {
-      context = ExtensionPageChild.getContextForWorker(
+      context = ExtensionWorkerChild.getContextForWorker(
         extension,
         request.serviceWorkerInfo
       );
