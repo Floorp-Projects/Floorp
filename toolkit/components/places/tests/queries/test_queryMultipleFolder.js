@@ -3,7 +3,6 @@
 
 "use strict";
 
-var folderIds = [];
 var folderGuids = [];
 var bookmarkGuids = [];
 

@@ -4,7 +4,6 @@
 /* This test checks that bookmarks service is correctly forwarding async
  * events like visit or favicon additions. */
 
-const NOW = Date.now() * 1000;
 let gBookmarkGuids = [];
 
 add_task(async function setup() {
