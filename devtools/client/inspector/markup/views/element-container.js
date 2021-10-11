@@ -4,7 +4,6 @@
 
 "use strict";
 
-const promise = require("promise");
 const Services = require("Services");
 const MarkupContainer = require("devtools/client/inspector/markup/views/markup-container");
 const ElementEditor = require("devtools/client/inspector/markup/views/element-editor");
@@ -113,7 +112,7 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
    */
   _getPreview: function() {
     if (!this.isPreviewable()) {
-      return promise.reject("_getPreview called on a non-previewable element.");
+      return Promise.reject("_getPreview called on a non-previewable element.");
     }
 
     if (this.tooltipDataPromise) {
