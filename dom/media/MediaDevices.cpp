@@ -479,11 +479,7 @@ RefPtr<MediaDevices::SinkInfoPromise> MediaDevices::GetSinkDevice(
           });
 }
 
-NS_IMPL_ADDREF_INHERITED(MediaDevices, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(MediaDevices, DOMEventTargetHelper)
-NS_INTERFACE_MAP_BEGIN(MediaDevices)
-  NS_INTERFACE_MAP_ENTRY(MediaDevices)
-NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
+NS_IMPL_ISUPPORTS_INHERITED0(MediaDevices, DOMEventTargetHelper)
 
 void MediaDevices::OnDeviceChange() {
   MOZ_ASSERT(NS_IsMainThread());
