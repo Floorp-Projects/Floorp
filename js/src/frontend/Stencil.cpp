@@ -3732,24 +3732,30 @@ bool CompilationStencilMerger::addDelazification(
   auto& destFun = initial_->scriptData[delazifiedFunctionIndex];
 
   if (destFun.hasSharedData()) {
-    // If the function was already non-lazy, it means the following happened.
-    //   1. this function is lazily parsed
-    //   2. incremental encoding is started
-    //   3. this function is delazified, and encoded
-    //   4. incremental encoding is finished
-    //   5. decoded and merged
-    //   6. incremental encoding is started
-    //      here, this function is encoded as non-lazy
-    //   7. this function is relazified
-    //   8. this function is delazified, and encoded
-    //   9. incremental encoding is finished
-    //  10. decoded and merged
+    // If the function was already non-lazy, it means the following happened:
+    //   A. delazified twice within single incremental encoding
+    //     1. this function is lazily parsed
+    //     2. incremental encoding is started
+    //     3. this function is delazified, encoded, and merged
+    //     4. this function is relazified
+    //     5. this function is delazified, encoded, and merged
     //
-    // This shouldn't happen in wild, but can happen in testcase that uses
-    // JS::DecodeScriptAndStartIncrementalEncoding at steps 5-6
-    // (this may change in future).
+    //   B. delazified twice across decode
+    //     1. this function is lazily parsed
+    //     2. incremental encoding is started
+    //     3. this function is delazified, encoded, and merged
+    //     4. incremental encoding is finished
+    //     5. decoded
+    //     6. incremental encoding is started
+    //        here, this function is non-lazy
+    //     7. this function is relazified
+    //     8. this function is delazified, encoded, and merged
     //
-    // Encoding same function's delazification again shouldn't happen.
+    // A can happen with public API.
+    //
+    // B cannot happen with public API, but can happen if incremental
+    // encoding at step B.6 is explicitly started by internal function.
+    // See Evaluate and StartIncrementalEncoding in js/src/shell/js.cpp.
     return true;
   }
 
