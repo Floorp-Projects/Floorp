@@ -10,7 +10,6 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsSerializationHelper.h"
 #include "nsThreadUtils.h"
-#include "WebSocketConnectionListener.h"
 
 namespace mozilla {
 namespace net {

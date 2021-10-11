@@ -9,7 +9,6 @@
 #include "nsAboutProtocolHandler.h"
 #include "nsIURI.h"
 #include "nsIAboutModule.h"
-#include "nsContentUtils.h"
 #include "nsString.h"
 #include "nsNetCID.h"
 #include "nsAboutProtocolUtils.h"

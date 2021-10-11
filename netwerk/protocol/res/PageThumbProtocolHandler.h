@@ -7,10 +7,7 @@
 #define PageThumbProtocolHandler_h___
 
 #include "mozilla/Result.h"
-#include "mozilla/MozPromise.h"
 #include "SubstitutingProtocolHandler.h"
-#include "nsIInputStream.h"
-#include "nsWeakReference.h"
 
 namespace mozilla {
 namespace net {

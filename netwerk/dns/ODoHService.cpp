@@ -10,7 +10,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_network.h"
-#include "nsICancelable.h"
 #include "nsIDNSService.h"
 #include "nsIDNSByTypeRecord.h"
 #include "nsIOService.h"
