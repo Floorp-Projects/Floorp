@@ -4,8 +4,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Preferences.jsm"
 );
 
-const SYNC_PARENT_ANNO = "sync/parent";
-
 var makeGuid = PlacesUtils.history.makeGuid;
 
 function shuffle(array) {
@@ -83,11 +81,6 @@ var populateTree = async function populate(parentGuid, ...items) {
   }
 
   return guids;
-};
-
-var recordIdToId = async function recordIdToId(recordId) {
-  let guid = await PlacesSyncUtils.bookmarks.recordIdToGuid(recordId);
-  return PlacesUtils.promiseItemId(guid);
 };
 
 var moveSyncedBookmarksToUnsyncedParent = async function() {

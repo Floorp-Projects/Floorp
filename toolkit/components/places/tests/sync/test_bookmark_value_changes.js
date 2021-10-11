@@ -1,14 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let unfiledFolderId;
-
-add_task(async function setup() {
-  unfiledFolderId = await PlacesUtils.promiseItemId(
-    PlacesUtils.bookmarks.unfiledGuid
-  );
-});
-
 add_task(async function test_value_combo() {
   let buf = await openMirror("value_combo");
   let now = Date.now();

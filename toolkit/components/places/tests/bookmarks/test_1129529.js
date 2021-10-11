@@ -1,5 +1,3 @@
-var now = Date.now() * 1000;
-
 // Test that importing bookmark data where a bookmark has a tag longer than 100
 // chars imports everything except the tags for that bookmark.
 add_task(async function() {

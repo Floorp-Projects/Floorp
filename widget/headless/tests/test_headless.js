@@ -4,7 +4,7 @@
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-const gProfDir = do_get_profile();
+do_get_profile();
 const server = new HttpServer();
 server.registerDirectory("/", do_get_cwd());
 server.start(-1);

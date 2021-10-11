@@ -23,6 +23,19 @@ module.exports = {
         ],
       },
     },
+    {
+      // No declaring variables that are never used
+      files: "test*.js",
+      rules: {
+        "no-unused-vars": [
+          "error",
+          {
+            args: "none",
+            vars: "all",
+          },
+        ],
+      },
+    },
   ],
 
   rules: {

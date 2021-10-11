@@ -368,15 +368,6 @@ function ensureItemsUrlChanged(...items) {
   }
 }
 
-function ensureTimestampsUpdated(aGuid, aCheckDateAdded = false) {
-  Assert.ok(observer.itemsChanged.has(aGuid));
-  let changes = observer.itemsChanged.get(aGuid);
-  if (aCheckDateAdded) {
-    Assert.ok(changes.has("dateAdded"));
-  }
-  Assert.ok(changes.has("lastModified"));
-}
-
 function ensureTagsForURI(aURI, aTags) {
   let tagsSet = tagssvc.getTagsForURI(Services.io.newURI(aURI));
   Assert.equal(tagsSet.length, aTags.length);

@@ -44,14 +44,6 @@ function checkException(fun, err, msg) {
   do_throw(msg);
 }
 
-function callASAPLater(fun) {
-  gThreadManager.dispatchToMainThread({
-    run() {
-      fun();
-    },
-  });
-}
-
 /** ***************
  * PATH HANDLERS *
  *****************/
