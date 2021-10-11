@@ -221,6 +221,7 @@ static const char* gCallbackPrefsForSocketProcess[] = {
     "network.dns.skipTRR-when-parental-control-enabled",
     "network.offline-mirrors-connectivity",
     "network.disable-localhost-when-offline",
+    "network.proxy.parse_pac_on_socket_process",
     nullptr,
 };
 
