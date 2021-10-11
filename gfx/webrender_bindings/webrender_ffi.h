@@ -30,11 +30,6 @@ void gecko_printf_stderr_output(const char* msg);
 void* get_proc_address_from_glcontext(void* glcontext_ptr,
                                       const char* procname);
 
-void gecko_profiler_start_marker(const char* name);
-void gecko_profiler_end_marker(const char* name);
-void gecko_profiler_event_marker(const char* name);
-void gecko_profiler_add_text_marker(const char* name, const char* text_ptr,
-                                    size_t text_len, uint64_t microseconds);
 bool gecko_profiler_thread_is_being_profiled();
 
 // IMPORTANT: Keep this synchronized with enumerate_interners in
