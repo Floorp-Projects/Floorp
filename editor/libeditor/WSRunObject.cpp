@@ -1527,7 +1527,7 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
     WSType wsTypeOfNonCollapsibleChar;
     switch (textFragment.CharAt(AssertedCast<int32_t>(i - 1))) {
       case HTMLEditUtils::kSpace:
-      case HTMLEditUtils::kCarridgeReturn:
+      case HTMLEditUtils::kCarriageReturn:
       case HTMLEditUtils::kTab:
         if (isWhiteSpaceCollapsible) {
           continue;  // collapsible white-space or invisible white-space.
@@ -1666,7 +1666,7 @@ Maybe<WSRunScanner::TextFragmentData::BoundaryData> WSRunScanner::
     WSType wsTypeOfNonCollapsibleChar;
     switch (textFragment.CharAt(AssertedCast<int32_t>(i))) {
       case HTMLEditUtils::kSpace:
-      case HTMLEditUtils::kCarridgeReturn:
+      case HTMLEditUtils::kCarriageReturn:
       case HTMLEditUtils::kTab:
         if (isWhiteSpaceCollapsible) {
           continue;  // collapsible white-space or invisible white-space.

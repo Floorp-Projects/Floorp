@@ -2680,7 +2680,7 @@ nsresult HTMLEditor::InsertTextWithQuotationsInternal(
   // there aren't any there:
 #ifdef DEBUG
   nsAString::const_iterator dbgStart(hunkStart);
-  if (FindCharInReadable(HTMLEditUtils::kCarridgeReturn, dbgStart, strEnd)) {
+  if (FindCharInReadable(HTMLEditUtils::kCarriageReturn, dbgStart, strEnd)) {
     NS_ASSERTION(
         false,
         "Return characters in DOM! InsertTextWithQuotations may be wrong");
