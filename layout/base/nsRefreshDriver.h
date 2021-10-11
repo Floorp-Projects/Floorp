@@ -140,10 +140,8 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
    * @note Technically, imgIRequest objects are not nsARefreshObservers, but
    * for controlling animated image repaint events, we subscribe the
    * imgIRequests to the nsRefreshDriver for notification of paint events.
-   *
-   * @returns whether the operation succeeded, or void in the case of removal.
    */
-  bool AddImageRequest(imgIRequest* aRequest);
+  void AddImageRequest(imgIRequest* aRequest);
   void RemoveImageRequest(imgIRequest* aRequest);
 
   /**
@@ -428,7 +426,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   typedef nsTArray<RefPtr<VVPResizeEvent>> VisualViewportResizeEventArray;
   typedef nsTArray<RefPtr<mozilla::Runnable>> ScrollEventArray;
   typedef nsTArray<RefPtr<VVPScrollEvent>> VisualViewportScrollEventArray;
-  typedef nsTHashSet<nsCOMPtr<nsISupports>> RequestTable;
+  using RequestTable = nsTHashSet<RefPtr<imgIRequest>>;
   struct ImageStartData {
     ImageStartData() = default;
 
