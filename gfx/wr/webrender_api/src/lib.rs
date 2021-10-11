@@ -188,7 +188,7 @@ impl ExternalEvent {
 }
 
 /// Describe whether or not scrolling should be clamped by the content bounds.
-#[derive(Copy, Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub enum ScrollClamping {
     ///
     ToContentBounds,
