@@ -206,6 +206,11 @@ class nsHostResolver : public nsISupports, public AHostResolver {
 
   virtual void MaybeRenewHostRecord(nsHostRecord* aRec) override;
 
+  // Records true if the TRR service is enabled for the record's effective
+  // TRR mode. Also records the TRRSkipReason when the TRR service is not
+  // available/enabled.
+  bool TRRServiceEnabledForRecord(nsHostRecord* aRec);
+
  private:
   explicit nsHostResolver(uint32_t maxCacheEntries,
                           uint32_t defaultCacheEntryLifetime,

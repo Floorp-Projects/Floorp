@@ -296,6 +296,7 @@ void AddrHostRecord::ResolveComplete() {
   }
 
   if (nsHostResolver::Mode() == nsIDNSService::MODE_TRRFIRST) {
+    MOZ_ASSERT(mTRRSkippedReason != mozilla::net::TRRSkippedReason::TRR_UNSET);
     Telemetry::Accumulate(Telemetry::TRR_SKIP_REASON_TRR_FIRST2,
                           TRRService::ProviderKey(),
                           static_cast<uint32_t>(mTRRSkippedReason));
