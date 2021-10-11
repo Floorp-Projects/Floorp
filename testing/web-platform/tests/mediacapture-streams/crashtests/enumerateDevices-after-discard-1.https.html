@@ -1,11 +1,11 @@
-<html class="reftest-wait">
+<html class="test-wait">
 <head>
   <title>
     Test enumerateDevices() calls either side of browsing context discard
-  </title>    
+  </title>
 </head>
 <script>
-  const frame = document.createElement('frame')
+  const frame = document.createElement('frame');
   document.documentElement.appendChild(frame);
   const devices = frame.contentWindow.navigator.mediaDevices;
   devices.enumerateDevices();
