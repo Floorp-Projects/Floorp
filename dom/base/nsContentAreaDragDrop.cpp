@@ -345,25 +345,18 @@ DragDataProducer::DragDataProducer(nsPIDOMWindowOuter* aWindow,
 //
 // FindParentLinkNode
 //
-// Finds the parent with the given link tag starting at |inNode|. If
+// Finds the parent with the given link tag starting at |aContent|. If
 // it gets up to the root without finding it, we stop looking and
 // return null.
 //
 already_AddRefed<nsIContent> DragDataProducer::FindParentLinkNode(
-    nsIContent* inNode) {
-  nsIContent* content = inNode;
-  if (!content) {
-    // That must have been the document node; nothing else to do here;
-    return nullptr;
-  }
-
-  for (; content; content = content->GetParent()) {
+    nsIContent* aContent) {
+  for (nsIContent* content = aContent; content;
+       content = content->GetFlattenedTreeParent()) {
     if (nsContentUtils::IsDraggableLink(content)) {
-      nsCOMPtr<nsIContent> ret = content;
-      return ret.forget();
+      return do_AddRef(content);
     }
   }
-
   return nullptr;
 }
 
