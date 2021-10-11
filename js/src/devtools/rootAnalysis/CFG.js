@@ -216,6 +216,12 @@ function getFieldCallInstanceCSU(edge, field)
     }
 }
 
+// gcc uses something like "__dt_del " for virtual destructors that it
+// generates.
+function isSyntheticVirtualDestructor(funcName) {
+    return funcName.endsWith(" ");
+}
+
 function typedField(field)
 {
     if ("FieldInstanceFunction" in field) {
@@ -225,11 +231,18 @@ function typedField(field)
         // incorporating the number of parameters. So far, that is all that has
         // been needed. If more is needed, sixgill will need to produce a full
         // mangled type.
+        const {Type, Name: [name]} = field;
+
+        // Virtual destructors don't need a type or argument count,
+        // and synthetic ones don't have them filled in.
+        if (isSyntheticVirtualDestructor(name)) {
+            return name;
+        }
+
         var nargs = 0;
-        const {Type} = field;
         if (Type.Kind == "Function" && "TypeFunctionArguments" in Type)
             nargs = Type.TypeFunctionArguments.Type.length;
-        return field.Name[0] + ":" + nargs;
+        return name + ":" + nargs;
     } else {
         // Function pointer field
         return field.Name[0];

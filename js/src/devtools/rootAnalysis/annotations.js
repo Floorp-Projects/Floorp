@@ -448,6 +448,9 @@ function isOverridableField(staticCSU, csu, field)
     if (csu != 'nsISupports')
         return false;
 
+    if (field.endsWith(" "))
+        return false; // gcc-synthesized virtual dtor
+
     // Now that binary XPCOM is dead, all these annotations should be replaced
     // with something based on bug 1347999.
     if (field == 'GetCurrentJSContext')

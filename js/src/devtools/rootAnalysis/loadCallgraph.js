@@ -257,8 +257,7 @@ function loadCallgraph(file)
     for (const name in gcFunctions)
         worklist.push(name);
 
-    // Include all field calls (but not virtual method calls; those will have
-    // edges to a "(unknown-definition)" function that can GC.)
+    // Add all field calls (but not virtual method calls) to gcFunctions.
     for (const [name, csuName] of fieldCallCSU) {
         const fullFieldName = functionNames[name];
         if (!fieldCallCannotGC(csuName, fullFieldName)) {
