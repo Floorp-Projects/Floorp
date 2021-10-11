@@ -10,6 +10,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/MathAlgorithms.h"
 
+#include <algorithm>
+
 #include "jit/arm64/vixl/Instructions-vixl.h"
 #include "jit/shared/Architecture-shared.h"
 
@@ -546,6 +548,10 @@ class FloatRegisters {
     return Code((invalid << 7) | (kind << 5) | encoding);
   }
 };
+
+static const uint32_t SpillSlotSize =
+    std::max(sizeof(Registers::RegisterContent),
+             sizeof(FloatRegisters::RegisterContent));
 
 static const uint32_t ShadowStackSpace = 0;
 
