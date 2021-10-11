@@ -38,7 +38,7 @@ class HTMLEditUtils final {
 
  public:
   static constexpr char16_t kNewLine = '\n';
-  static constexpr char16_t kCarridgeReturn = '\r';
+  static constexpr char16_t kCarriageReturn = '\r';
   static constexpr char16_t kTab = '\t';
   static constexpr char16_t kSpace = ' ';
   static constexpr char16_t kNBSP = 0x00A0;
@@ -1595,7 +1595,7 @@ class HTMLEditUtils final {
       //       and `CharAt` needs to check it everytime.
       switch (textFragment.CharAt(AssertedCast<int32_t>(i - 1))) {
         case HTMLEditUtils::kSpace:
-        case HTMLEditUtils::kCarridgeReturn:
+        case HTMLEditUtils::kCarriageReturn:
         case HTMLEditUtils::kTab:
           if (!isWhiteSpaceCollapsible) {
             return Some(i - 1);
@@ -1667,7 +1667,7 @@ class HTMLEditUtils final {
       //       and `CharAt` needs to check it everytime.
       switch (textFragment.CharAt(AssertedCast<int32_t>(i))) {
         case HTMLEditUtils::kSpace:
-        case HTMLEditUtils::kCarridgeReturn:
+        case HTMLEditUtils::kCarriageReturn:
         case HTMLEditUtils::kTab:
           if (!isWhiteSpaceCollapsible) {
             return Some(i);
