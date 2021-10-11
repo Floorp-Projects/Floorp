@@ -5,7 +5,6 @@
 
 #include "ImageAccessible.h"
 
-#include "LocalAccessible-inl.h"
 #include "nsAccUtils.h"
 #include "Role.h"
 #include "AccAttributes.h"
@@ -24,27 +23,13 @@
 
 using namespace mozilla::a11y;
 
-NS_IMPL_ISUPPORTS_INHERITED(ImageAccessible, LinkableAccessible,
-                            imgINotificationObserver)
-
 ////////////////////////////////////////////////////////////////////////////////
 // ImageAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
 ImageAccessible::ImageAccessible(nsIContent* aContent, DocAccessible* aDoc)
-    : LinkableAccessible(aContent, aDoc),
-      mImageRequestStatus(imgIRequest::STATUS_NONE) {
+    : LinkableAccessible(aContent, aDoc) {
   mType = eImageType;
-  nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(mContent));
-  if (content) {
-    content->AddNativeObserver(this);
-    nsCOMPtr<imgIRequest> imageRequest;
-    content->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
-                        getter_AddRefs(imageRequest));
-    if (imageRequest) {
-      imageRequest->GetImageStatus(&mImageRequestStatus);
-    }
-  }
 }
 
 ImageAccessible::~ImageAccessible() {}
@@ -52,34 +37,43 @@ ImageAccessible::~ImageAccessible() {}
 ////////////////////////////////////////////////////////////////////////////////
 // LocalAccessible public
 
-void ImageAccessible::Shutdown() {
-  nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(mContent));
-  if (content) {
-    content->RemoveNativeObserver(this);
-  }
-
-  LinkableAccessible::Shutdown();
-}
-
 uint64_t ImageAccessible::NativeState() const {
   // The state is a bitfield, get our inherited state, then logically OR it with
   // states::ANIMATED if this is an animated image.
 
   uint64_t state = LinkableAccessible::NativeState();
 
-  if (mImageRequestStatus & imgIRequest::STATUS_IS_ANIMATED) {
-    state |= states::ANIMATED;
+  nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(mContent));
+  nsCOMPtr<imgIRequest> imageRequest;
+
+  if (content) {
+    content->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                        getter_AddRefs(imageRequest));
   }
 
-  if (!(mImageRequestStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
+  if (imageRequest) {
+    nsCOMPtr<imgIContainer> imgContainer;
+    imageRequest->GetImage(getter_AddRefs(imgContainer));
+    if (imgContainer) {
+      bool animated = false;
+      imgContainer->GetAnimated(&animated);
+      if (animated) {
+        state |= states::ANIMATED;
+      }
+    }
+
     nsIFrame* frame = GetFrame();
     MOZ_ASSERT(!frame || frame->AccessibleType() == eImageType ||
                frame->AccessibleType() == a11y::eHTMLImageMapType);
     if (frame && !(frame->GetStateBits() & IMAGE_SIZECONSTRAINED)) {
-      // The size of this image hasn't been constrained and we haven't loaded
-      // enough of the image to know its size yet. This means it currently
-      // has 0 width and height.
-      state |= states::INVISIBLE;
+      uint32_t status = imgIRequest::STATUS_NONE;
+      imageRequest->GetImageStatus(&status);
+      if (!(status & imgIRequest::STATUS_SIZE_AVAILABLE)) {
+        // The size of this image hasn't been constrained and we haven't loaded
+        // enough of the image to know its size yet. This means it currently
+        // has 0 width and height.
+        state |= states::INVISIBLE;
+      }
     }
   }
 
@@ -205,43 +199,4 @@ already_AddRefed<nsIURI> ImageAccessible::GetLongDescURI() const {
 
 bool ImageAccessible::IsLongDescIndex(uint8_t aIndex) const {
   return aIndex == LinkableAccessible::ActionCount();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// imgINotificationObserver
-
-void ImageAccessible::Notify(imgIRequest* aRequest, int32_t aType,
-                             const nsIntRect* aData) {
-  if (aType != imgINotificationObserver::FRAME_COMPLETE &&
-      aType != imgINotificationObserver::LOAD_COMPLETE &&
-      aType != imgINotificationObserver::DECODE_COMPLETE) {
-    // We should update our state if the whole image was decoded,
-    // or the first frame in the case of a gif.
-    return;
-  }
-
-  if (IsDefunct() || !mParent) {
-    return;
-  }
-
-  uint32_t status = imgIRequest::STATUS_NONE;
-  aRequest->GetImageStatus(&status);
-
-  if ((status ^ mImageRequestStatus) & imgIRequest::STATUS_SIZE_AVAILABLE) {
-    nsIFrame* frame = GetFrame();
-    if (frame && !(frame->GetStateBits() & IMAGE_SIZECONSTRAINED)) {
-      RefPtr<AccEvent> event = new AccStateChangeEvent(
-          this, states::INVISIBLE,
-          !(status & imgIRequest::STATUS_SIZE_AVAILABLE));
-      mDoc->FireDelayedEvent(event);
-    }
-  }
-
-  if ((status ^ mImageRequestStatus) & imgIRequest::STATUS_IS_ANIMATED) {
-    RefPtr<AccEvent> event = new AccStateChangeEvent(
-        this, states::ANIMATED, (status & imgIRequest::STATUS_IS_ANIMATED));
-    mDoc->FireDelayedEvent(event);
-  }
-
-  mImageRequestStatus = status;
 }
