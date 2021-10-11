@@ -20,13 +20,14 @@ var callgraphOut_filename = scriptArgs[1] || "callgraph.txt";
 var origOut = os.file.redirect(callgraphOut_filename);
 
 var memoized = new Map();
-var memoizedCount = 0;
 
 var JSNativeCaller = Object.create(null);
 var JSNatives = [];
 
 var unmangled2id = new Set();
 
+// Insert a string into the name table and return the ID. Do not use for
+// functions, which must be handled specially.
 function getId(name)
 {
     let id = memoized.get(name);
@@ -40,6 +41,8 @@ function getId(name)
     return id;
 }
 
+// Split a function into mangled and unmangled parts and return the ID for the
+// function.
 function functionId(name)
 {
     const [mangled, unmangled] = splitFunction(name);
@@ -184,6 +187,50 @@ function processBody(functionName, body)
 var typeInfo = loadTypeInfo(typeInfo_filename);
 
 loadTypes("src_comp.xdb");
+
+// Output call edges for all virtual methods defined anywhere, from
+// Class.methodname to what a (dynamic) instance of Class would run when
+// methodname was called (either Class::methodname() if defined, or some
+// Base::methodname() for inherited method definitions).
+for (const [fieldkey, methods] of virtualDefinitions) {
+    const caller = getId(fieldkey);
+    for (const name of methods) {
+        const callee = functionId(name);
+        printOnce(`D ${caller} ${callee}`);
+    }
+}
+
+function ancestorClassesAndSelf(C) {
+    const ancestors = [C];
+    for (const base of (superclasses.get(C) || []))
+        ancestors.push(...ancestorClassesAndSelf(base));
+    return ancestors;
+}
+
+function isOverridable(C, field) {
+    for (const A of ancestorClassesAndSelf(C)) {
+        if (isOverridableField(C, A, field))
+            return true;
+    }
+    return false;
+}
+
+// Output call edges from C.methodname -> S.methodname for all subclasses S of
+// class C. This is for when you are calling methodname on a pointer/ref of
+// dynamic type C, so that the callgraph contains calls to all descendant
+// subclasses' implementations.
+for (const [csu, methods] of virtualDeclarations) {
+    for (const {field} of methods) {
+        const caller = getId(fieldKey(csu, field));
+        if (isOverridable(csu, field.Name[0]))
+            printOnce(`D ${caller} ${functionId("(unknown-definition)")}`);
+        if (!subclasses.has(csu))
+            continue;
+        for (const sub of subclasses.get(csu)) {
+            printOnce(`D ${caller} ${getId(fieldKey(sub, field))}`);
+        }
+    }
+}
 
 var xdb = xdbLibrary();
 xdb.open("src_body.xdb");

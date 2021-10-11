@@ -76,7 +76,8 @@ function addGCFunction(caller, reason, functionLimits)
 function merge_repeated_calls(calleesOf) {
     const callersOf = Object.create(null);
 
-    for (const [caller, callee_limits] of Object.entries(calleesOf)) {
+    for (const [caller_prop, callee_limits] of Object.entries(calleesOf)) {
+        const caller = caller_prop|0;
         const ordered_callees = [];
 
         // callee_limits is a list of {callee,limit} objects.
@@ -111,7 +112,6 @@ function loadCallgraph(file)
 {
     const fieldCallLimits = {};
     const fieldCallCSU = new Map(); // map from full field name id => csu name
-    const resolvedFieldCalls = new Set();
 
     // set of mangled names (map from mangled name => limit intset)
     var functionLimits = {};
@@ -160,7 +160,7 @@ function loadCallgraph(file)
             {
                 addGCFunction(caller, "IndirectCall: " + name, functionLimits);
             }
-        } else if (match = (tag == 'F' || tag == 'V') && /^[FV] (\d+) (\d+) CLASS (.*?) FIELD (.*)/.exec(line)) {
+        } else if (match = tag == 'F' && /^F (\d+) (\d+) CLASS (.*?) FIELD (.*)/.exec(line)) {
             const caller = match[1]|0;
             const fullfield = match[2]|0;
             const csu = match[3];
@@ -170,27 +170,15 @@ function loadCallgraph(file)
                 fieldCallLimits[fullfield] = limits;
             addToKeyedList(calleesOf, caller, {callee:fullfield, limits});
             fieldCallCSU.set(fullfield, csu);
+        } else if (match = tag == 'V' && /^V (\d+) (\d+) CLASS (.*?) FIELD (.*)/.exec(line)) {
+            // V tag is no longer used, but we are still emitting it becasue it
+            // can be helpful to understand what's going on.
         } else if (match = tag == 'D' && /^D (\d+) (\d+)/.exec(line)) {
             const caller = match[1]|0;
             const callee = match[2]|0;
             addToKeyedList(calleesOf, caller, {callee:callee, limits:limits});
         } else if (match = tag == 'R' && /^R (\d+) (\d+)/.exec(line)) {
-            const callerField = match[1]|0;
-            const callee = match[2]|0;
-            // Resolved virtual functions create a dummy node for the field
-            // call, and callers call it. It will then call all possible
-            // instantiations. No additional limits are placed on the callees;
-            // it's as if there were a function named BaseClass.foo:
-            //
-            //     void BaseClass.foo() {
-            //         Subclass1::foo();
-            //         Subclass2::foo();
-            //     }
-            //
-            addToKeyedList(calleesOf, callerField, {callee:callee, limits:0});
-            // Mark that we resolved this virtual method, so that it isn't
-            // assumed to call some random function that might do anything.
-            resolvedFieldCalls.add(callerField);
+            assert(false, "R tag is no longer used");
         } else if (match = tag == 'T' && /^T (\d+) (.*)/.exec(line)) {
             const id = match[1]|0;
             let tag = match[2];
@@ -214,6 +202,10 @@ function loadCallgraph(file)
     // functions even exist in the first place.)
     for (var func of extraGCFunctions()) {
         addGCFunction(mangledToId[func], "annotation", functionLimits);
+    }
+    const unknown = mangledToId['(unknown-definition)'];
+    if (unknown) {
+        addGCFunction(unknown, "internal", functionLimits);
     }
 
     // Compute functionLimits: it should contain the set of functions that
@@ -240,10 +232,10 @@ function loadCallgraph(file)
     // has eliminated everything reachable from simple roots, traverse the
     // remaining graph to gather up a representative function from each root
     // cycle.
-    roots = gather_recursive_roots(roots, functionLimits, callersOf);
+    const recursive_roots = gather_recursive_roots(functionLimits, calleesOf, callersOf);
 
     // And do a final traversal starting with the recursive roots.
-    propagate_limits(roots, functionLimits, calleesOf);
+    propagate_limits(recursive_roots, functionLimits, calleesOf);
 
     // Eliminate GC-limited functions from the set of functions known to GC.
     for (var name in gcFunctions) {
@@ -265,13 +257,12 @@ function loadCallgraph(file)
     for (const name in gcFunctions)
         worklist.push(name);
 
-    // Include all field calls and unresolved virtual method calls.
+    // Include all field calls (but not virtual method calls; those will have
+    // edges to a "(unknown-definition)" function that can GC.)
     for (const [name, csuName] of fieldCallCSU) {
-        if (resolvedFieldCalls.has(name))
-            continue; // Skip resolved virtual functions.
         const fullFieldName = functionNames[name];
         if (!fieldCallCannotGC(csuName, fullFieldName)) {
-            gcFunctions[name] = 'unresolved ' + fullFieldName;
+            gcFunctions[name] = 'arbitrary function pointer ' + fullFieldName;
             worklist.push(name);
         }
     }
@@ -295,7 +286,13 @@ function loadCallgraph(file)
     // of ids.)
 
     for (const [id, limits] of Object.entries(functionLimits))
-        limitedFunctions[functionNames[id]] = limits;
+        limitedFunctions[functionNames[id]] = { limits };
+
+    for (const [id, limits, label] of recursive_roots) {
+        const name = functionNames[id];
+        const s = limitedFunctions[name] || (limitedFunctions[name] = {});
+        s.recursive_root = true;
+    }
 
     // The above code uses integer ids for efficiency. External code uses
     // mangled names. Rewrite the various data structures to convert ids to
@@ -322,7 +319,8 @@ function gather_simple_roots(functionLimits, callersOf) {
 // Recursively traverse the callgraph from the roots. Recurse through every
 // edge that weakens the limits. (Limits that entirely disappear, aka go to a
 // zero intset, will be removed from functionLimits.)
-function propagate_limits(worklist, functionLimits, calleesOf) {
+function propagate_limits(roots, functionLimits, calleesOf) {
+    const worklist = Array.from(roots);
     let top = worklist.length;
     while (top > 0) {
         // Consider caller where (graph) -> caller -> (0 or more callees)
@@ -347,30 +345,20 @@ function propagate_limits(worklist, functionLimits, calleesOf) {
 
 // Mutually-recursive roots and their descendants will not have been visited,
 // and will still be set to LIMIT_UNVISITED. Scan through and gather them.
-function gather_recursive_roots(functionLimits, callersOf) {
+function gather_recursive_roots(functionLimits, calleesOf, callersOf) {
     const roots = [];
 
-    // 'seen' maps functions to the most recent starting function that each was
-    // first reachable from, to distinguish between the current pass and passes
-    // for preceding functions.
+    // Pick any node. Mark everything reachable by adding to a 'seen' set. At
+    // the end, if there are any incoming edges to that node from an unmarked
+    // node, then it is not a root. Otherwise, mark the node as a root. (There
+    // will be at least one back edge coming into the node from a marked node
+    // in this case, since otherwise it would have already been considered to
+    // be a root.)
     //
-    // Consider:
-    //
-    //   A <--> B --> C <-- D <--> E
-    //                C --> F
-    //                C --> G
-    //
-    // So there are two root cycles AB and DE, both calling C that in turn
-    // calls F and G. If we start at F and scan up through callers, we will
-    // keep going until A loops back to B and E loops back to D, and will add B
-    // and D as roots. Then if we scan from G, we encounter C and see that it
-    // was already been seen on an earlier pass. So C and everything reachable
-    // from it is already reachable by some root. (We need to label nodes with
-    // their pass because otherwise we couldn't distinguish "already seen C,
-    // done" from "already seen B, must be a root".)
-    //
-    const seen = new Map();
-    for (var func in functionLimits) {
+    // Repeat with remaining unmarked nodes until all nodes are marked.
+    const seen = new Set();
+    for (let func in functionLimits) {
+        func = func|0;
         if (functionLimits[func] != LIMIT_UNVISITED)
             continue;
 
@@ -378,25 +366,29 @@ function gather_recursive_roots(functionLimits, callersOf) {
         // they would have been handled in the previous pass!
         assert(callersOf[func].length > 0);
 
+        if (seen.has(func))
+            continue;
+
         const work = [func];
         while (work.length > 0) {
             const f = work.pop();
-            if (seen.has(f)) {
-                if (seen.get(f) == func) {
-                    // We have traversed a cycle and reached an already-seen
-                    // node. Treat it as a root.
-                    roots.push([f, LIMIT_NONE, 'root']);
-                    print(`recursive root? ${f} = ${functionNames[f]}`);
-                } else {
-                    // Otherwise we hit the portion of the graph that is
-                    // reachable from a past root.
-                    seen.set(f, func);
+            for (const callee of (calleesOf[f] || []).map(o => o.callee)) {
+                if (!seen.has(callee) &&
+                    callee != func &&
+                    functionLimits[callee] == LIMIT_UNVISITED)
+                {
+                    work.push(callee);
+                    seen.add(callee);
                 }
-            } else {
-                print(`retained by recursive root? ${f} = ${functionNames[f]}`);
-                work.push(...callersOf[f]);
-                seen.set(f, func);
             }
+        }
+
+        assert(!seen.has(func));
+        seen.add(func);
+        if (callersOf[func].findIndex(o => !seen.has(o.caller)) == -1) {
+            // No unmarked incoming edges, including self-edges, so this is a
+            // (recursive) root.
+            roots.push([func, LIMIT_NONE, 'recursive-root']);
         }
     }
 
@@ -408,21 +400,4 @@ function remap_ids_to_mangled_names() {
     gcFunctions = {};
     for (const [caller, reason] of Object.entries(tmp))
         gcFunctions[functionNames[caller]] = functionNames[reason] || reason;
-
-    tmp = calleesOf;
-    calleesOf = {};
-    for (const [callerId, callees] of Object.entries(calleesOf)) {
-        const caller = functionNames[callerId];
-        for (const {calleeId, limits} of callees)
-            calleesOf[caller][functionNames[calleeId]] = limits;
-    }
-
-    tmp = callersOf;
-    callersOf = {};
-    for (const [calleeId, callers] of Object.entries(callersOf)) {
-        const callee = functionNames[calleeId];
-        callersOf[callee] = {};
-        for (const {callerId, limits} of callers)
-            callersOf[callee][functionNames[caller]] = limits;
-    }
 }

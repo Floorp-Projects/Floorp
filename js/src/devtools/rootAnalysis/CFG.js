@@ -177,3 +177,66 @@ function pointsInRAIIScope(bodies, body, constructorEdge, limits) {
 
     return points;
 }
+
+// Look at an invocation of a virtual method or function pointer contained in a
+// field, and return the static type of the invocant (or the containing struct,
+// for a function pointer field.)
+function getFieldCallInstanceCSU(edge, field)
+{
+    if ("FieldInstanceFunction" in field) {
+        // We have a 'this'.
+        const instanceExp = edge.PEdgeCallInstance.Exp;
+        if (instanceExp.Kind == 'Drf') {
+            // somevar->foo()
+            return edge.Type.TypeFunctionCSU.Type.Name;
+        } else if (instanceExp.Kind == 'Fld') {
+            // somevar.foo()
+            return instanceExp.Field.FieldCSU.Type.Name;
+        } else if (instanceExp.Kind == 'Index') {
+            // A strange construct.
+            // C++ code: static_cast<JS::CustomAutoRooter*>(this)->trace(trc);
+            // CFG: Call(21,30, this*[-1]{JS::CustomAutoRooter}.trace*(trc*))
+            return instanceExp.Type.Name;
+        } else if (instanceExp.Kind == 'Var') {
+            // C++: reinterpret_cast<SimpleTimeZone*>(gRawGMT)->~SimpleTimeZone();
+            // CFG:
+            //   # icu_64::SimpleTimeZone::icu_64::SimpleTimeZone.__comp_dtor
+            //   [6,7] Call gRawGMT.icu_64::SimpleTimeZone.__comp_dtor ()
+            return field.FieldCSU.Type.Name;
+        } else {
+            printErr("------------------ edge -------------------");
+            printErr(JSON.stringify(edge, null, 4));
+            printErr("------------------ field -------------------");
+            printErr(JSON.stringify(field, null, 4));
+            assert(false, `unrecognized FieldInstanceFunction Kind ${instanceExp.Kind}`);
+        }
+    } else {
+        // somefar.foo() where somevar is a field of some CSU.
+        return field.FieldCSU.Type.Name;
+    }
+}
+
+function typedField(field)
+{
+    if ("FieldInstanceFunction" in field) {
+        // Virtual call
+        //
+        // This makes a minimal attempt at dealing with overloading, by
+        // incorporating the number of parameters. So far, that is all that has
+        // been needed. If more is needed, sixgill will need to produce a full
+        // mangled type.
+        var nargs = 0;
+        const {Type} = field;
+        if (Type.Kind == "Function" && "TypeFunctionArguments" in Type)
+            nargs = Type.TypeFunctionArguments.Type.length;
+        return field.Name[0] + ":" + nargs;
+    } else {
+        // Function pointer field
+        return field.Name[0];
+    }
+}
+
+function fieldKey(csuName, field)
+{
+    return csuName + "." + typedField(field);
+}

@@ -40,14 +40,7 @@ assert(text.pop().length == 0);
 for (const line of text)
     gcFunctions[mangled(line)] = readable(line);
 
-var limitedFunctions = {};
-var text = snarf(limitedFunctionsFile).split("\n");
-assert(text.pop().length == 0);
-for (var line of text) {
-    const [_, limits, func] = line.match(/(.*?) (.*)/);
-    assert(limits !== undefined);
-    limitedFunctions[func] = limits | 0;
-}
+var limitedFunctions = JSON.parse(snarf(limitedFunctionsFile));
 text = null;
 
 var typeInfo = loadTypeInfo(typeInfoFile);
@@ -538,25 +531,23 @@ function edgeCanGC(edge)
             var func = mangled(variable.Name[0]);
             if ((func in gcFunctions) || ((func + internalMarker) in gcFunctions))
                 return `'${func}$${gcFunctions[func]}'`;
-            return null;
+            return false;
         }
 
         var varName = variable.Name[0];
-        return indirectCallCannotGC(functionName, varName) ? null : "'*" + varName + "'";
+        return indirectCallCannotGC(functionName, varName) ? false : "'*" + varName + "'";
     }
 
-    if (callee.Kind == "Fld") {
-        var field = callee.Field;
-        var csuName = field.FieldCSU.Type.Name;
-        var fullFieldName = csuName + "." + field.Name[0];
-        if (fieldCallCannotGC(csuName, fullFieldName))
-            return null;
+    assert(callee.Kind == "Fld");
+    const staticCSU = getFieldCallInstanceCSU(edge, callee.Field);
 
-        if (fullFieldName in gcFunctions)
-            return "'" + fullFieldName + "'";
+    if (fieldCallCannotGC(staticCSU, callee.Field.Name[0]))
+        return false;
 
-        return null;
-    }
+    const fieldkey = fieldKey(staticCSU, callee.Field);
+    if (fieldkey in gcFunctions)
+        return `'${fieldkey}'`;
+    return false;
 }
 
 // Search recursively through predecessors from the use of a variable's value,
@@ -986,8 +977,9 @@ function typeDesc(type)
 function processBodies(functionName)
 {
     if (!("DefineVariable" in functionBodies[0]))
-        return;
-    var suppressed = Boolean(limitedFunctions[mangled(functionName)] & LIMIT_CANNOT_GC);
+      return;
+    const funcInfo = limitedFunctions[mangled(functionName)] || {};
+    var suppressed = Boolean(funcInfo.limits & LIMIT_CANNOT_GC);
 
     // Look for the JS_EXPECT_HAZARDS annotation, and output a different
     // message in that case that won't be counted as a hazard.
