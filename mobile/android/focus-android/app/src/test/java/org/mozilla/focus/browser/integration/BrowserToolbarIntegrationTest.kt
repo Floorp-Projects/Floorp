@@ -33,7 +33,6 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
-import org.mozilla.focus.browser.DisplayToolbar
 import org.mozilla.focus.fragment.BrowserFragment
 import org.robolectric.RobolectricTestRunner
 
@@ -48,9 +47,6 @@ class BrowserToolbarIntegrationTest {
     private lateinit var fragment: BrowserFragment
 
     private lateinit var browserToolbarIntegration: BrowserToolbarIntegration
-
-    @Mock
-    private lateinit var toolbarView: DisplayToolbar
 
     @Mock
     private lateinit var fragmentView: View
@@ -81,7 +77,6 @@ class BrowserToolbarIntegrationTest {
             BrowserToolbarIntegration(
                 store,
                 toolbar,
-                toolbarView,
                 fragment,
                 mock(),
                 mock(),
@@ -151,6 +146,24 @@ class BrowserToolbarIntegrationTest {
 
         verify(browserToolbarIntegration).addTrackingProtectionIndicator()
         assertEquals(listOf(Indicators.TRACKING_PROTECTION), toolbar.display.indicators)
+    }
+
+    @Test
+    fun `WHEN the integration starts THEN start the toolbarController`() {
+        browserToolbarIntegration.toolbarController = mock()
+
+        browserToolbarIntegration.start()
+
+        verify(browserToolbarIntegration.toolbarController).start()
+    }
+
+    @Test
+    fun `WHEN the integration stops THEN stop the toolbarController`() {
+        browserToolbarIntegration.toolbarController = mock()
+
+        browserToolbarIntegration.stop()
+
+        verify(browserToolbarIntegration.toolbarController).stop()
     }
 
     private fun updateSecurityStatus(secure: Boolean) {

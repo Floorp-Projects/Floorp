@@ -36,8 +36,7 @@
                 android:layout_height="match_parent"
                 android:focusable="true"
                 android:focusableInTouchMode="true"
-                android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+                android:scrollbarThumbVertical="@drawable/scrollbar_thumb" />
 
             <FrameLayout
                 android:id="@+id/crash_container"
@@ -46,8 +45,21 @@
                 android:background="@color/destructive"
                 android:visibility="gone"/>
 
-            <include
-                layout="@layout/browser_display_toolbar"/>
+            <mozilla.components.browser.toolbar.BrowserToolbar
+                android:id="@+id/browserToolbar"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/browser_toolbar_height"
+                android:layout_gravity="top"
+                android:background="@drawable/background_gradient"
+                android:clickable="true"
+                android:elevation="4dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                app:browserToolbarClearColor="?primaryText"
+                app:browserToolbarInsecureColor="?primaryText"
+                app:browserToolbarMenuColor="?primaryText"
+                app:browserToolbarProgressBarGravity="bottom"
+                app:browserToolbarSecureColor="?primaryText" />
 
             <org.mozilla.focus.widget.FloatingSessionsButton
                 android:id="@+id/tabs"

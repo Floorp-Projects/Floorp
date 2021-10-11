@@ -10,20 +10,21 @@ import android.view.View
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
-import org.mozilla.focus.R
-import org.mozilla.focus.browser.DisplayToolbar
+import org.mozilla.focus.ext.disableDynamicBehavior
+import org.mozilla.focus.ext.enableDynamicBehavior
 
 class FullScreenIntegration(
     val activity: Activity,
     val store: BrowserStore,
     tabId: String?,
     sessionUseCases: SessionUseCases,
-    private val toolbarView: DisplayToolbar,
+    private val toolbarView: BrowserToolbar,
     private val statusBar: View,
     private val engineView: EngineView
 ) : LifecycleAwareFeature, UserInteractionHandler {
@@ -45,23 +46,18 @@ class FullScreenIntegration(
 
     private fun fullScreenChanged(enabled: Boolean) {
         if (enabled) {
-            toolbarView.setExpanded(false, true)
+            toolbarView.collapse()
+            toolbarView.disableDynamicBehavior(engineView)
             statusBar.visibility = View.GONE
 
             switchToImmersiveMode()
         } else {
-            toolbarView.setExpanded(true, true)
             statusBar.visibility = View.VISIBLE
+            toolbarView.enableDynamicBehavior(activity, engineView)
+            toolbarView.expand()
 
             exitImmersiveModeIfNeeded()
         }
-
-        val maxToolbarHeightInPx = if (enabled) {
-            0
-        } else {
-            activity.resources.getDimension(R.dimen.display_toolbar_height).toInt()
-        }
-        engineView.setDynamicToolbarMaxHeight(maxToolbarHeightInPx)
     }
 
     override fun onBackPressed(): Boolean {

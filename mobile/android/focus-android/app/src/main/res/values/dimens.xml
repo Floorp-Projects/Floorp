@@ -72,7 +72,7 @@
     <dimen name="search_suggestions_padding_start">56dp</dimen>
     <dimen name="search_suggestions_padding_with_icon">16dp</dimen>
 
-    <dimen name="display_toolbar_height">56dp</dimen>
+    <dimen name="browser_toolbar_height">56dp</dimen>
 
     <!-- Override the default menu width values from AC. -->
     <dimen name="mozac_browser_menu_width_min" tools:ignore="UnusedResources">112dp</dimen>

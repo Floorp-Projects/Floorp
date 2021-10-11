@@ -20,7 +20,6 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.preference.PreferenceManager
-import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -55,7 +54,6 @@ import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.InstallFirefoxActivity
 import org.mozilla.focus.activity.MainActivity
-import org.mozilla.focus.browser.DisplayToolbar
 import org.mozilla.focus.browser.binding.TabCountBinding
 import org.mozilla.focus.browser.integration.BrowserMenuController
 import org.mozilla.focus.browser.integration.BrowserToolbarIntegration
@@ -66,6 +64,8 @@ import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.EngineSharedPreferencesListener
 import org.mozilla.focus.exceptions.ExceptionDomains
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.disableDynamicBehavior
+import org.mozilla.focus.ext.enableDynamicBehavior
 import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.ext.isCustomTab
 import org.mozilla.focus.ext.requireComponents
@@ -97,14 +97,14 @@ import org.mozilla.focus.widget.FloatingSessionsButton
 @Suppress("LargeClass", "TooManyFunctions")
 class BrowserFragment :
     BaseFragment(),
-    View.OnClickListener {
+    View.OnClickListener,
+    AccessibilityManager.AccessibilityStateChangeListener {
 
-    private lateinit var toolbarView: DisplayToolbar
     private var statusBar: View? = null
-    private var urlBar: View? = null
     private var popupTint: FrameLayout? = null
 
-    private var engineView: EngineView? = null
+    private lateinit var engineView: EngineView
+    private lateinit var toolbar: BrowserToolbar
 
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val fullScreenIntegration = ViewBoundFeatureWrapper<FullScreenIntegration>()
@@ -141,7 +141,6 @@ class BrowserFragment :
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_browser, container, false)
 
-        urlBar = view.findViewById(R.id.urlbar)
         statusBar = view.findViewById(R.id.status_bar_background)
 
         popupTint = view.findViewById(R.id.popup_tint)
@@ -153,17 +152,14 @@ class BrowserFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val components = requireComponents
 
-        engineView = (view.findViewById<View>(R.id.engineView) as EngineView).apply {
-            setDynamicToolbarMaxHeight(resources.getDimension(R.dimen.display_toolbar_height).toInt())
-        }
-
-        toolbarView = view.findViewById<DisplayToolbar>(R.id.appbar)
+        engineView = (view.findViewById<View>(R.id.engineView) as EngineView)
+        toolbar = view.findViewById(R.id.browserToolbar)
 
         findInPageIntegration.set(
             FindInPageIntegration(
                 components.store,
                 view.findViewById(R.id.find_in_page),
-                engineView!!
+                engineView
             ),
             this, view
         )
@@ -174,9 +170,9 @@ class BrowserFragment :
                 components.store,
                 tab.id,
                 components.sessionUseCases,
-                toolbarView,
+                toolbar,
                 statusBar!!,
-                engineView!!
+                engineView
             ),
             this, view
         )
@@ -193,7 +189,7 @@ class BrowserFragment :
                     view,
                     FocusSnackbarDelegate(view)
                 ),
-                engineView!!,
+                engineView,
                 requireComponents.contextMenuUseCases,
                 tabId,
                 additionalNote = { hitResult -> getAdditionalNote(hitResult) }
@@ -205,7 +201,7 @@ class BrowserFragment :
             SessionFeature(
                 components.store,
                 components.sessionUseCases.goBack,
-                engineView!!,
+                engineView,
                 tab.id
             ),
             this, view
@@ -309,6 +305,11 @@ class BrowserFragment :
         }
     }
 
+    override fun onAccessibilityStateChanged(enabled: Boolean) = when (enabled) {
+        true -> toolbar.enableDynamicBehavior(requireContext(), engineView)
+        false -> toolbar.disableDynamicBehavior(engineView)
+    }
+
     private fun getAdditionalNote(hitResult: HitResult): String? {
         return if ((hitResult is HitResult.IMAGE_SRC || hitResult is HitResult.IMAGE) &&
             hitResult.src.isNotEmpty()
@@ -350,9 +351,8 @@ class BrowserFragment :
 
         toolbarIntegration.set(
             BrowserToolbarIntegration(
-                store = requireComponents.store,
+                requireComponents.store,
                 toolbar = browserToolbar,
-                toolbarView = toolbarView,
                 fragment = this,
                 controller = controller,
                 customTabId = tryGetCustomTabId(),
@@ -366,6 +366,10 @@ class BrowserFragment :
     }
 
     private fun initialiseNormalBrowserUi(view: View) {
+        if (!requireContext().settings.isAccessibilityEnabled()) {
+            toolbar.enableDynamicBehavior(requireContext(), engineView)
+        }
+
         val eraseButton = view.findViewById<FloatingEraseButton>(R.id.erase)
         eraseButton.setOnClickListener(this)
 
@@ -397,9 +401,8 @@ class BrowserFragment :
         val sessions = view.findViewById<FloatingSessionsButton>(R.id.tabs)
         eraseContainer.removeView(sessions)
 
-        if (!customTabConfig.enableUrlbarHiding) {
-            val params = urlBar!!.layoutParams as AppBarLayout.LayoutParams
-            params.scrollFlags = 0
+        if (customTabConfig.enableUrlbarHiding && !requireContext().settings.isAccessibilityEnabled()) {
+            toolbar.enableDynamicBehavior(requireContext(), engineView)
         }
     }
 
