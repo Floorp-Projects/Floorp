@@ -421,12 +421,17 @@ static LayoutDeviceRect CheckBoxRadioRect(const LayoutDeviceRect& aRect) {
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
-    const EventStates& aState, const Colors& aColors) {
-  bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
-  bool isCheckedOrIndeterminate = aState.HasAtLeastOneOfStates(
-      NS_EVENT_STATE_CHECKED | NS_EVENT_STATE_INDETERMINATE);
+    const EventStates& aState, StyleAppearance aAppearance,
+    const Colors& aColors) {
+  MOZ_ASSERT(aAppearance == StyleAppearance::Checkbox ||
+             aAppearance == StyleAppearance::Radio);
 
-  if (isCheckedOrIndeterminate) {
+  bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
+  bool isChecked = aState.HasState(NS_EVENT_STATE_CHECKED);
+  bool isIndeterminate = aAppearance == StyleAppearance::Checkbox &&
+                         aState.HasState(NS_EVENT_STATE_INDETERMINATE);
+
+  if (isChecked || isIndeterminate) {
     if (isDisabled) {
       auto color = ComputeBorderColor(aState, aColors, OutlineCoversBorder::No);
       return std::make_pair(color, color);
@@ -1086,7 +1091,8 @@ void nsNativeBasicTheme::PaintCheckboxControl(DrawTarget& aDrawTarget,
                                               const EventStates& aState,
                                               const Colors& aColors,
                                               DPIRatio aDpiRatio) {
-  auto [backgroundColor, borderColor] = ComputeCheckboxColors(aState, aColors);
+  auto [backgroundColor, borderColor] =
+      ComputeCheckboxColors(aState, StyleAppearance::Checkbox, aColors);
   {
     const CSSCoord radius = 2.0f;
     CSSCoord borderWidth = kCheckboxRadioBorderWidth;
@@ -1254,7 +1260,8 @@ void nsNativeBasicTheme::PaintRadioControl(PaintBackendData& aPaintData,
                                            const EventStates& aState,
                                            const Colors& aColors,
                                            DPIRatio aDpiRatio) {
-  auto [backgroundColor, borderColor] = ComputeCheckboxColors(aState, aColors);
+  auto [backgroundColor, borderColor] =
+      ComputeCheckboxColors(aState, StyleAppearance::Radio, aColors);
   {
     CSSCoord borderWidth = kCheckboxRadioBorderWidth;
     if (backgroundColor == borderColor) {
