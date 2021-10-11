@@ -447,7 +447,7 @@ void CodeGenerator::visitNotI64(LNotI64* lir) {
   Register64 input = ToRegister64(lir->getInt64Operand(0));
   Register output = ToRegister(lir->output());
 
-  masm.cmp64Set(Assembler::Equal, input.reg, Imm32(0), output);
+  masm.ma_cmp_set(output, input.reg, ImmPtr(0), Assembler::Equal);
 }
 
 void CodeGenerator::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir) {
