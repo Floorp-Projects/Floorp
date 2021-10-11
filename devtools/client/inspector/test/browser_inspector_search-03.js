@@ -194,11 +194,14 @@ add_task(async function() {
     info("Pressing " + key + " to get " + formatSuggestions(suggestions));
 
     const command = once(searchBox, "input");
+    const onSearchProcessingDone = inspector.searchSuggestions.once(
+      "processing-done"
+    );
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
     await command;
 
     info("Waiting for search query to complete");
-    await inspector.searchSuggestions._lastQuery;
+    await onSearchProcessingDone;
 
     info(
       "Query completed. Performing checks for input '" + searchBox.value + "'"
