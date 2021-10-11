@@ -33,7 +33,7 @@
             android:paddingStart="24dp"
             android:paddingEnd="24dp"
             android:scaleType="centerInside"
-            android:src="@drawable/wordmark2"
+            app:srcCompat="@drawable/wordmark2"
             app:layout_constraintBottom_toTopOf="@id/home_tips"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
