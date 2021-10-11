@@ -133,8 +133,11 @@ class ContextObserver {
       case "document-element-inserted":
         const window = subject.defaultView;
 
-        // Ignore events from other tabs
-        if (window.docShell.chromeEventHandler !== this.chromeEventHandler) {
+        // Ignore events without a window and those from other tabs
+        if (
+          !window ||
+          window.docShell.chromeEventHandler !== this.chromeEventHandler
+        ) {
           return;
         }
 
