@@ -9,6 +9,7 @@
 
 #include "mozilla/MathAlgorithms.h"
 
+#include <algorithm>
 #include <limits.h>
 #include <stdint.h>
 
@@ -271,6 +272,10 @@ class FloatRegistersMIPSShared {
   typedef uint64_t SetType;
 #endif
 };
+
+static const uint32_t SpillSlotSize =
+    std::max(sizeof(Registers::RegisterContent),
+             sizeof(FloatRegistersMIPSShared::RegisterContent));
 
 template <typename T>
 class TypedRegisterSet;

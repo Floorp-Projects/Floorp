@@ -9,6 +9,7 @@
 
 #include "mozilla/MathAlgorithms.h"
 
+#include <algorithm>
 #include <limits.h>
 #include <stdint.h>
 
@@ -328,6 +329,10 @@ class FloatRegisters {
 
   static const SetType AllocatableMask = AllMask & ~NonAllocatableMask;
 };
+
+static const uint32_t SpillSlotSize =
+    std::max(sizeof(Registers::RegisterContent),
+             sizeof(FloatRegisters::RegisterContent));
 
 template <typename T>
 class TypedRegisterSet;
