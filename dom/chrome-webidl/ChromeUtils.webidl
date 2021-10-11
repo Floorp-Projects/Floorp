@@ -631,6 +631,7 @@ enum WebIDLProcType {
 dictionary ThreadInfoDictionary {
   long long tid = 0;
   DOMString name = "";
+  unsigned long long cpuCycleCount = 0;
   unsigned long long cpuUser = 0;
   unsigned long long cpuKernel = 0;
 };
@@ -684,6 +685,11 @@ dictionary ChildProcInfoDictionary {
   // Time spent by the process in kernel mode, in ns.
   unsigned long long cpuKernel = 0;
 
+  // Total CPU cycles used by this process.
+  // On Windows where the resolution of CPU timings is 16ms, this can
+  // be used to determine if a process is idle or slightly active.
+  unsigned long long cpuCycleCount = 0;
+
   // Thread information for this process.
   sequence<ThreadInfoDictionary> threads = [];
 
@@ -726,6 +732,11 @@ dictionary ParentProcInfoDictionary {
 
   // Time spent by the process in kernel mode, in ns.
   unsigned long long cpuKernel = 0;
+
+  // Total CPU cycles used by this process.
+  // On Windows where the resolution of CPU timings is 16ms, this can
+  // be used to determine if a process is idle or slightly active.
+  unsigned long long cpuCycleCount = 0;
 
   // Thread information for this process.
   sequence<ThreadInfoDictionary> threads = [];

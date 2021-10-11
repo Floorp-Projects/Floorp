@@ -91,6 +91,8 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
           info.filename.Assign(filename);
           info.cpuKernel = ToNanoSeconds(kernelTime);
           info.cpuUser = ToNanoSeconds(userTime);
+          QueryProcessCycleTime(handle.get(), &info.cpuCycleCount);
+
           info.memory = memoryCounters.PrivateUsage;
 
           if (!gathered.put(request.pid, std::move(info))) {
@@ -156,6 +158,8 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
             threadInfo->cpuKernel = ToNanoSeconds(kernelTime);
             threadInfo->cpuUser = ToNanoSeconds(userTime);
           }
+
+          QueryThreadCycleTime(hThread.get(), &threadInfo->cpuCycleCount);
 
           // Attempt to get thread name.
           // If we fail, continue without this piece of information.
