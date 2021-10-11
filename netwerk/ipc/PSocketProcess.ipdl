@@ -20,6 +20,7 @@ include protocol PTRRService;
 include protocol PProxyConfigLookup;
 include protocol PNativeDNSResolverOverride;
 include protocol PRemoteLazyInputStream;
+include protocol PProxyAutoConfig;
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
 include protocol PSandboxTesting;
@@ -136,6 +137,8 @@ parent:
 
   async ExcludeHttp2OrHttp3(HttpConnectionInfoCloneArgs aArgs);
 
+  async OnConsoleMessage(nsString aMessage);
+
 child:
   async Init(SocketPorcessInitAttributes aAttributes);
   async PreferenceUpdate(Pref pref);
@@ -180,6 +183,8 @@ child:
     returns (DNSCacheEntries[] entries);
    async GetHttpConnectionData()
     returns (HttpRetParams[] params);
+
+  async InitProxyAutoConfigChild(Endpoint<PProxyAutoConfigChild> endpoint);
 
 both:
   async PFileDescriptorSet(FileDescriptor fd);
