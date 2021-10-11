@@ -51,7 +51,14 @@ parser.add_argument(
 parser.add_argument(
     "tests",
     nargs="*",
-    default=["sixgill-tree", "suppression", "hazards", "exceptions", "virtual"],
+    default=[
+        "sixgill-tree",
+        "suppression",
+        "hazards",
+        "exceptions",
+        "virtual",
+        "graph",
+    ],
     help="tests to run",
 )
 

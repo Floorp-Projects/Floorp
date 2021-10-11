@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* -*- indent-tabs-mode: nil; js-indent-level: 4 -*- */
-
 "use strict";
 
 loadRelativeToScript('utility.js');
@@ -73,5 +72,4 @@ for (var block in gcEdges) {
 
 printErr("Writing " + limitedFunctionsList_filename);
 redirect(limitedFunctionsList_filename);
-for (const [name, limits] of Object.entries(limitedFunctions))
-    print(`${limits} ${name}`);
+print(JSON.stringify(limitedFunctions, null, 4));
