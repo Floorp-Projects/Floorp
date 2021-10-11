@@ -8,12 +8,12 @@
 "use strict";
 
 const IFRAME_TEST_COM_URI =
-  `http://example.com/document-builder.sjs?html=` +
+  `https://example.com/document-builder.sjs?html=` +
   encodeURI(`<script>const a=2;\ndebugger;\nconsole.log(a);</script>`);
 
 // Embed the example.com test page in an example.org iframe.
 const IFRAME_TEST_URI =
-  `http://example.org/document-builder.sjs?html=` +
+  `https://example.org/document-builder.sjs?html=` +
   encodeURI(
     `<script>function breakDebugger() {const b=3;\ndebugger;\nconsole.log(b);}</script><iframe src="${IFRAME_TEST_COM_URI}"></iframe><body>`
   );
