@@ -388,6 +388,7 @@ def analyze(command_context, application, shell_objdir, work_dir, extra):
     work_dir = get_work_dir(command_context, application, work_dir)
     return command_context.run_process(args=args, cwd=work_dir, pass_thru=True)
 
+
 @SubCommand(
     "hazards",
     "self-test",
