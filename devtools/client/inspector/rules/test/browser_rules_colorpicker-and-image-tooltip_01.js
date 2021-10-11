@@ -45,7 +45,10 @@ async function testImageTooltipAfterColorChange(swatch, url, ruleView) {
 
   const spectrum = picker.spectrum;
   const onHidden = picker.tooltip.once("hidden");
-  const onModifications = ruleView.once("ruleview-changed");
+
+  // On "RETURN", `ruleview-changed` is triggered when the SwatchBasedEditorTooltip calls
+  // its `commit` method, and then another event is emitted when the editor is hidden.
+  const onModifications = waitForNEvents(ruleView, "ruleview-changed", 2);
   focusAndSendKey(spectrum.element.ownerDocument.defaultView, "RETURN");
   await onHidden;
   await onModifications;
