@@ -634,7 +634,7 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
         number,
         "The number of active threads should not exceed the total number of threads"
       );
-      let activeThreads = row.process.threads.filter(t => t.slopeCpu);
+      let activeThreads = row.process.threads.filter(t => t.active);
       Assert.equal(
         active,
         activeThreads.length,

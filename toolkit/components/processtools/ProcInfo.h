@@ -60,6 +60,7 @@ struct ThreadInfo {
   uint64_t cpuUser = 0;
   // System time in ns.
   uint64_t cpuKernel = 0;
+  uint64_t cpuCycleCount = 0;
 };
 
 // Info on a DOM window.
@@ -111,6 +112,7 @@ struct ProcInfo {
   uint64_t cpuUser = 0;
   // System time in ns.
   uint64_t cpuKernel = 0;
+  uint64_t cpuCycleCount = 0;
   // Threads owned by this process.
   CopyableTArray<ThreadInfo> threads;
   // DOM windows represented by this process.
@@ -213,6 +215,7 @@ nsresult CopySysProcInfoToDOM(const ProcInfo& source, T* dest) {
   dest->mMemory = source.memory;
   dest->mCpuUser = source.cpuUser;
   dest->mCpuKernel = source.cpuKernel;
+  dest->mCpuCycleCount = source.cpuCycleCount;
 
   // Copy thread info.
   mozilla::dom::Sequence<mozilla::dom::ThreadInfoDictionary> threads;
@@ -224,6 +227,7 @@ nsresult CopySysProcInfoToDOM(const ProcInfo& source, T* dest) {
     }
     thread->mCpuUser = entry.cpuUser;
     thread->mCpuKernel = entry.cpuKernel;
+    thread->mCpuCycleCount = entry.cpuCycleCount;
     thread->mTid = entry.tid;
     thread->mName.Assign(entry.name);
   }
