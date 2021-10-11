@@ -32,6 +32,7 @@ EXTRA_JS_MODULES += [
     "ExtensionStorageSyncKinto.jsm",
     "ExtensionTelemetry.jsm",
     "ExtensionUtils.jsm",
+    "ExtensionWorkerChild.jsm",
     "FindContent.jsm",
     "MatchURLFilters.jsm",
     "MessageManagerProxy.jsm",
