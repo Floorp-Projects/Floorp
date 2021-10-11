@@ -692,7 +692,7 @@ function findGCBeforeValueUse(start_body, start_point, suppressed, variable)
 
             var src_gcInfo = gcInfo;
             var src_preGCLive = preGCLive;
-            if (!gcInfo && !(body.limits[source] & LIMIT_CANNOT_GC) && !suppressed) {
+            if (!gcInfo && !(body.limits[source] & LIMIT_CANNOT_GC) && !(suppressed & LIMIT_CANNOT_GC)) {
                 var gcName = edgeCanGC(edge, body);
                 if (gcName)
                     src_gcInfo = {name:gcName, body:body, ppoint:source};
@@ -830,7 +830,7 @@ function unsafeVariableAddressTaken(suppressed, variable)
             continue;
         for (var edge of body.PEdge) {
             if (edgeTakesVariableAddress(edge, variable, body)) {
-                if (edge.Kind == "Assign" || (!suppressed && edgeCanGC(edge)))
+                if (edge.Kind == "Assign" || (!(suppressed & LIMIT_CANNOT_GC) && edgeCanGC(edge)))
                     return {body:body, ppoint:edge.Index[0]};
             }
         }
@@ -974,12 +974,12 @@ function typeDesc(type)
     }
 }
 
-function processBodies(functionName)
+function processBodies(functionName, wholeBodyLimits)
 {
     if (!("DefineVariable" in functionBodies[0]))
       return;
     const funcInfo = limitedFunctions[mangled(functionName)] || {};
-    var suppressed = Boolean(funcInfo.limits & LIMIT_CANNOT_GC);
+    const suppressed = funcInfo.limits | wholeBodyLimits;
 
     // Look for the JS_EXPECT_HAZARDS annotation, and output a different
     // message in that case that won't be counted as a hazard.
@@ -1137,12 +1137,23 @@ function process(name, json) {
                 pbody.limits[id] = limits;
         }
     }
-    processBodies(functionName);
+
+    // Special case: std::swap of two refcounted values thinks it can drop the
+    // ref count to zero. Or rather, it just calls operator=() in a context
+    // where the refcount will never drop to zero. Limit all calls within the
+    // body with LIMIT_CANNOT_GC.
+    let wholeBodyLimits = 0;
+    if (functionName.includes("std::swap") || functionName.includes("mozilla::Swap")) {
+        wholeBodyLimits = LIMIT_CANNOT_GC;
+    }
+
+    processBodies(functionName, wholeBodyLimits);
 }
 
 if (theFunctionNameToFind) {
     var data = xdb.read_entry(theFunctionNameToFind);
     var json = data.readString();
+    debugger;
     process(theFunctionNameToFind, json);
     xdb.free_string(data);
     quit(0);
