@@ -112,6 +112,8 @@ class XDRBuffer<XDR_DECODE> : public XDRBufferBase {
   XDRBuffer(JSContext* cx, const JS::TranscodeRange& range)
       : XDRBufferBase(cx), buffer_(range) {}
 
+  // This isn't used by XDRStencilDecoder.
+  // Defined just for XDRState, shared with XDRStencilEncoder.
   XDRBuffer(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
       : XDRBufferBase(cx, cursor), buffer_(buffer.begin(), buffer.length()) {}
 
@@ -447,12 +449,6 @@ class XDRStencilDecoder : public XDRState<XDR_DECODE> {
   using Base = XDRState<XDR_DECODE>;
 
  public:
-  XDRStencilDecoder(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor)
-      : Base(cx, buffer, cursor) {
-    MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(buffer.begin()));
-    MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(cursor));
-  }
-
   XDRStencilDecoder(JSContext* cx, const JS::TranscodeRange& range)
       : Base(cx, range) {
     MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(range.begin().get()));
