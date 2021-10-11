@@ -188,7 +188,6 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   static bool ShouldBeHighContrast(const nsPresContext&);
 
   std::pair<sRGBColor, sRGBColor> ComputeCheckboxColors(const EventStates&,
-                                                        StyleAppearance,
                                                         const Colors&);
   sRGBColor ComputeCheckmarkColor(const EventStates&, const Colors&);
   enum class OutlineCoversBorder : bool { No, Yes };
