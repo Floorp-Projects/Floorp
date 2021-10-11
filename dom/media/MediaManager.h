@@ -232,8 +232,7 @@ class MediaManager final : public nsIMediaManagerService,
       const dom::MediaStreamConstraints& aConstraints,
       dom::CallerType aCallerType);
 
-  RefPtr<DeviceSetPromise> EnumerateDevices(nsPIDOMWindowInner* aWindow,
-                                            dom::CallerType aCallerType);
+  RefPtr<DeviceSetPromise> EnumerateDevices(nsPIDOMWindowInner* aWindow);
 
   enum class DeviceEnumerationType : uint8_t {
     Normal,  // Enumeration should not return loopback or fake devices
