@@ -122,17 +122,17 @@ interface ChannelWrapper : EventTarget {
   void upgradeToSecure();
 
   /**
-   * Suspends the underlying channel.
+   * Suspends the underlying channel.  The profilerText parameter is only used
+   * to annotate profiles.
    */
   [Throws]
-  void suspend();
+  void suspend(ByteString profileMarkerText);
 
   /**
-   * Resumes (un-suspends) the underlying channel.  The profilerText parameter
-   * is only used to annotate profiles.
+   * Resumes (un-suspends) the underlying channel.
    */
   [Throws]
-  void resume(ByteString profileText);
+  void resume();
 
   /**
    * The content type of the request, usually as read from the Content-Type
