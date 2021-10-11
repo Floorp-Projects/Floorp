@@ -14,6 +14,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
@@ -2482,8 +2483,16 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
             return false;
           }
         } else {
-          rv = JS::DecodeScriptMaybeStencil(cx, options, loadBuffer, &script);
+          JS::TranscodeRange range(loadBuffer.begin(), loadBuffer.length());
+
+          RefPtr<JS::Stencil> stencil;
+          rv = JS::DecodeStencil(cx, options, range, getter_AddRefs(stencil));
           if (!ConvertTranscodeResultToJSException(cx, rv)) {
+            return false;
+          }
+
+          script = JS::InstantiateGlobalStencil(cx, options, stencil);
+          if (!script) {
             return false;
           }
         }
