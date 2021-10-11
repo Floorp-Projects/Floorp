@@ -266,6 +266,11 @@ nsSimpleURI::GetHasRef(bool* result) {
 
 nsresult nsSimpleURI::SetSpecInternal(const nsACString& aSpec,
                                       bool aStripWhitespace) {
+  if (StaticPrefs::network_url_max_length() &&
+      aSpec.Length() > StaticPrefs::network_url_max_length()) {
+    return NS_ERROR_MALFORMED_URI;
+  }
+
   nsresult rv = net_ExtractURLScheme(aSpec, mScheme);
   if (NS_FAILED(rv)) {
     return rv;
@@ -377,6 +382,11 @@ nsSimpleURI::GetPathQueryRef(nsACString& result) {
 }
 
 nsresult nsSimpleURI::SetPathQueryRef(const nsACString& aPath) {
+  if (StaticPrefs::network_url_max_length() &&
+      aPath.Length() > StaticPrefs::network_url_max_length()) {
+    return NS_ERROR_MALFORMED_URI;
+  }
+
   nsAutoCString path;
   nsresult rv = NS_EscapeURL(aPath, esc_OnlyNonASCII, path, fallible);
   if (NS_FAILED(rv)) {
@@ -439,6 +449,11 @@ nsSimpleURI::GetRef(nsACString& result) {
 // NOTE: SetRef("") removes our ref, whereas SetRef("#") sets it to the empty
 // string (and will result in .spec and .path having a terminal #).
 nsresult nsSimpleURI::SetRef(const nsACString& aRef) {
+  if (StaticPrefs::network_url_max_length() &&
+      aRef.Length() > StaticPrefs::network_url_max_length()) {
+    return NS_ERROR_MALFORMED_URI;
+  }
+
   nsAutoCString ref;
   nsresult rv =
       NS_EscapeURL(aRef, esc_OnlyNonASCII | esc_Spaces, ref, fallible);
@@ -682,6 +697,10 @@ nsSimpleURI::GetQuery(nsACString& aQuery) {
 }
 
 nsresult nsSimpleURI::SetQuery(const nsACString& aQuery) {
+  if (StaticPrefs::network_url_max_length() &&
+      aQuery.Length() > StaticPrefs::network_url_max_length()) {
+    return NS_ERROR_MALFORMED_URI;
+  }
   nsAutoCString query;
   nsresult rv = NS_EscapeURL(aQuery, esc_OnlyNonASCII, query, fallible);
   if (NS_FAILED(rv)) {
