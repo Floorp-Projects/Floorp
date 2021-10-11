@@ -277,7 +277,8 @@
     {
       "login": true,
       "name": "pinterest",
-      "test_url": "https://pinterest.com/"
+      "test_url": "https://pinterest.com/",
+      "secondary_url": "https://www.pinterest.com/today/best/halloween-costumes-for-your-furry-friends/75787/"
     },
     {
       "login": false,
