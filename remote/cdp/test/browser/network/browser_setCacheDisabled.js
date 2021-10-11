@@ -6,7 +6,7 @@
 const { INHIBIT_CACHING, LOAD_BYPASS_CACHE, LOAD_NORMAL } = Ci.nsIRequest;
 
 const TEST_PAGE =
-  "http://example.com/browser/remote/cdp/test/browser/network/doc_empty.html";
+  "https://example.com/browser/remote/cdp/test/browser/network/doc_empty.html";
 
 add_task(async function cacheEnabledAfterDisabled({ client }) {
   const { Network } = client;

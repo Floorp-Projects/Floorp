@@ -27,7 +27,7 @@
 // in different processes.
 
 const PAGE_URL =
-  "http://example.com/browser/remote/cdp/test/browser/input/doc_dispatchKeyEvent_race.html";
+  "https://example.com/browser/remote/cdp/test/browser/input/doc_dispatchKeyEvent_race.html";
 
 add_task(async function({ client }) {
   await loadURL(PAGE_URL);

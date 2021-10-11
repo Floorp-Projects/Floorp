@@ -4,7 +4,7 @@
 "use strict";
 
 const PAGE_CONSOLE_EVENTS =
-  "http://example.com/browser/remote/cdp/test/browser/runtime/doc_console_events.html";
+  "https://example.com/browser/remote/cdp/test/browser/runtime/doc_console_events.html";
 
 add_task(async function noEventsWhenRuntimeDomainDisabled({ client }) {
   await runConsoleTest(client, 0, async () => {
