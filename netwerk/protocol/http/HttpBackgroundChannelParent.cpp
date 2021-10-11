@@ -15,6 +15,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Unused.h"
 #include "mozilla/net/BackgroundChannelRegistrar.h"
+#include "mozilla/net/ChannelEventQueue.h"
 #include "nsNetCID.h"
 #include "nsQueryObject.h"
 #include "nsThreadUtils.h"

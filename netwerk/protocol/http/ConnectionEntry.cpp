@@ -15,6 +15,7 @@
 #include "ConnectionEntry.h"
 #include "nsQueryObject.h"
 #include "mozilla/ChaosMode.h"
+#include "nsHttpHandler.h"
 
 namespace mozilla {
 namespace net {
