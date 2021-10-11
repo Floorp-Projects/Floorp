@@ -827,6 +827,67 @@ void nsHostResolver::MaybeRenewHostRecordLocked(nsHostRecord* aRec,
   mQueue.MaybeRenewHostRecord(aRec, aLock);
 }
 
+bool nsHostResolver::TRRServiceEnabledForRecord(nsHostRecord* aRec) {
+  MOZ_ASSERT(aRec, "Record must not be empty");
+  MOZ_ASSERT(aRec->mEffectiveTRRMode != nsIRequest::TRR_DEFAULT_MODE,
+             "effective TRR mode must be computed before this call");
+  if (!TRRService::Get()) {
+    aRec->RecordReason(TRRSkippedReason::TRR_NO_GSERVICE);
+    return false;
+  }
+
+  // We always try custom resolvers.
+  if (!aRec->mTrrServer.IsEmpty()) {
+    return true;
+  }
+
+  nsIRequest::TRRMode reqMode = aRec->mEffectiveTRRMode;
+  if (TRRService::Get()->Enabled(reqMode)) {
+    return true;
+  }
+
+  if (NS_IsOffline()) {
+    // If we are in the NOT_CONFIRMED state _because_ we lack connectivity,
+    // then we should report that the browser is offline instead.
+    aRec->RecordReason(TRRSkippedReason::TRR_IS_OFFLINE);
+    return false;
+  }
+
+  auto hasConnectivity = [this]() -> bool {
+    if (!mNCS) {
+      return true;
+    }
+    nsINetworkConnectivityService::ConnectivityState ipv4 = mNCS->GetIPv4();
+    nsINetworkConnectivityService::ConnectivityState ipv6 = mNCS->GetIPv6();
+
+    if (ipv4 == nsINetworkConnectivityService::OK ||
+        ipv6 == nsINetworkConnectivityService::OK) {
+      return true;
+    }
+
+    if (ipv4 == nsINetworkConnectivityService::UNKNOWN ||
+        ipv6 == nsINetworkConnectivityService::UNKNOWN) {
+      // One of the checks hasn't completed yet. Optimistically assume we'll
+      // have network connectivity.
+      return true;
+    }
+
+    return false;
+  };
+
+  if (!hasConnectivity()) {
+    aRec->RecordReason(TRRSkippedReason::TRR_NO_CONNECTIVITY);
+    return false;
+  }
+
+  if (!TRRService::Get()->IsConfirmed()) {
+    aRec->RecordReason(TRRSkippedReason::TRR_NOT_CONFIRMED);
+    return false;
+  }
+
+  return false;
+}
+
 // returns error if no TRR resolve is issued
 // it is impt this is not called while a native lookup is going on
 nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec,
@@ -853,43 +914,7 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec,
 
   MOZ_ASSERT(!rec->mResolving);
 
-  auto hasConnectivity = [this]() -> bool {
-    if (!mNCS) {
-      return true;
-    }
-    nsINetworkConnectivityService::ConnectivityState ipv4 = mNCS->GetIPv4();
-    nsINetworkConnectivityService::ConnectivityState ipv6 = mNCS->GetIPv6();
-
-    if (ipv4 == nsINetworkConnectivityService::OK ||
-        ipv6 == nsINetworkConnectivityService::OK) {
-      return true;
-    }
-
-    if (ipv4 == nsINetworkConnectivityService::UNKNOWN ||
-        ipv6 == nsINetworkConnectivityService::UNKNOWN) {
-      // One of the checks hasn't completed yet. Optimistically assume we'll
-      // have network connectivity.
-      return true;
-    }
-
-    return false;
-  };
-
-  nsIRequest::TRRMode reqMode = rec->mEffectiveTRRMode;
-  if (rec->mTrrServer.IsEmpty() &&
-      (!TRRService::Get() || !TRRService::Get()->Enabled(reqMode))) {
-    if (NS_IsOffline()) {
-      // If we are in the NOT_CONFIRMED state _because_ we lack connectivity,
-      // then we should report that the browser is offline instead.
-      rec->RecordReason(TRRSkippedReason::TRR_IS_OFFLINE);
-    }
-    if (!hasConnectivity()) {
-      rec->RecordReason(TRRSkippedReason::TRR_NO_CONNECTIVITY);
-    } else {
-      rec->RecordReason(TRRSkippedReason::TRR_NOT_CONFIRMED);
-    }
-
-    LOG(("TrrLookup:: %s service not enabled\n", rec->host.get()));
+  if (!TRRServiceEnabledForRecord(aRec)) {
     return NS_ERROR_UNKNOWN_HOST;
   }
 
@@ -1085,8 +1110,8 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
     rec->RecordReason(TRRSkippedReason::TRR_DISABLED_FLAG);
   }
 
-  bool serviceNotReady =
-      !TRRService::Get() || !TRRService::Get()->Enabled(rec->mEffectiveTRRMode);
+  bool serviceNotReady = !TRRServiceEnabledForRecord(rec);
+
   if (rec->mEffectiveTRRMode != nsIRequest::TRR_DISABLED_MODE &&
       !((rec->flags & RES_DISABLE_TRR)) && !serviceNotReady) {
     rv = TrrLookup(rec, aLock);
