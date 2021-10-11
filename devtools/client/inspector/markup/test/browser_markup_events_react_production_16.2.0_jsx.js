@@ -8,11 +8,11 @@ requestLongerTimeout(4);
 // Test that markup view event bubbles show the correct event info for React
 // events (React production version 16.2.0) using JSX.
 
-const TEST_LIB = URL_ROOT + "lib_react_dom_16.2.0_min.js";
-const TEST_LIB_BABEL = URL_ROOT + "lib_babel_6.21.0_min.js";
-const TEST_EXTERNAL_LISTENERS = URL_ROOT + "react_external_listeners.js";
+const TEST_LIB = URL_ROOT_SSL + "lib_react_dom_16.2.0_min.js";
+const TEST_LIB_BABEL = URL_ROOT_SSL + "lib_babel_6.21.0_min.js";
+const TEST_EXTERNAL_LISTENERS = URL_ROOT_SSL + "react_external_listeners.js";
 const TEST_URL =
-  URL_ROOT + "doc_markup_events_react_production_16.2.0_jsx.html";
+  URL_ROOT_SSL + "doc_markup_events_react_production_16.2.0_jsx.html";
 
 loadHelperScript("helper_events_test_runner.js");
 

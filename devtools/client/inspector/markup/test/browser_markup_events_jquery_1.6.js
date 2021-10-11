@@ -9,7 +9,7 @@ requestLongerTimeout(2);
 // and jQuery Live events (jQuery version 1.6).
 
 const TEST_LIB = "lib_jquery_1.6_min.js";
-const TEST_URL = URL_ROOT + "doc_markup_events_jquery.html?" + TEST_LIB;
+const TEST_URL = URL_ROOT_SSL + "doc_markup_events_jquery.html?" + TEST_LIB;
 
 loadHelperScript("helper_events_test_runner.js");
 
@@ -20,7 +20,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "DOMContentLoaded",
-        filename: URL_ROOT + TEST_LIB + ":16:14483",
+        filename: URL_ROOT_SSL + TEST_LIB + ":16:14483",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -94,7 +94,7 @@ const TEST_DATA = [
       },
       {
         type: "load",
-        filename: URL_ROOT + TEST_LIB + ":16:10001",
+        filename: URL_ROOT_SSL + TEST_LIB + ":16:10001",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -166,7 +166,7 @@ const TEST_DATA = [
       },
       {
         type: "dblclick",
-        filename: URL_ROOT + TEST_LIB + ":16:4732",
+        filename: URL_ROOT_SSL + TEST_LIB + ":16:4732",
         attributes: [
           "jQuery",
           "Live"
@@ -223,7 +223,7 @@ const TEST_DATA = [
       },
       {
         type: "dragend",
-        filename: URL_ROOT + TEST_LIB + ":16:4732",
+        filename: URL_ROOT_SSL + TEST_LIB + ":16:4732",
         attributes: [
           "jQuery",
           "Live"
@@ -280,7 +280,7 @@ const TEST_DATA = [
       },
       {
         type: "dragleave",
-        filename: URL_ROOT + TEST_LIB + ":16:4732",
+        filename: URL_ROOT_SSL + TEST_LIB + ":16:4732",
         attributes: [
           "jQuery",
           "Live"
@@ -337,7 +337,7 @@ const TEST_DATA = [
       },
       {
         type: "dragstart",
-        filename: URL_ROOT + TEST_LIB + ":16:4732",
+        filename: URL_ROOT_SSL + TEST_LIB + ":16:4732",
         attributes: [
           "jQuery",
           "Live"

@@ -7,7 +7,7 @@
 // and jQuery Live events (jQuery version 1.1).
 
 const TEST_LIB = "lib_jquery_1.1.js";
-const TEST_URL = URL_ROOT + "doc_markup_events_jquery.html?" + TEST_LIB;
+const TEST_URL = URL_ROOT_SSL + "doc_markup_events_jquery.html?" + TEST_LIB;
 
 loadHelperScript("helper_events_test_runner.js");
 
@@ -80,7 +80,7 @@ const TEST_DATA = [
       },
       {
         type: "load",
-        filename: URL_ROOT + TEST_LIB + ":1224:17",
+        filename: URL_ROOT_SSL + TEST_LIB + ":1224:17",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -148,7 +148,7 @@ const TEST_DATA = [
       },
       {
         type: "click",
-        filename: URL_ROOT + TEST_LIB + ":1224:17",
+        filename: URL_ROOT_SSL + TEST_LIB + ":1224:17",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -200,7 +200,7 @@ const TEST_DATA = [
       },
       {
         type: "keydown",
-        filename: URL_ROOT + TEST_LIB + ":1224:17",
+        filename: URL_ROOT_SSL + TEST_LIB + ":1224:17",
         attributes: [
           "Bubbling",
           "DOM2"

@@ -8,7 +8,7 @@
 const TEST_URL_1 =
   'data:text/html,<html><body id="test-doc-1">page</body></html>';
 const TEST_URL_2 = "http://127.0.0.1:36325/";
-const TEST_URL_3 = "http://www.wronguri.wronguri/";
+const TEST_URL_3 = "https://www.wronguri.wronguri/";
 const TEST_URL_4 = "data:text/html,<html><body>test-doc-4</body></html>";
 
 add_task(async function() {
@@ -50,7 +50,7 @@ add_task(async function() {
   info("Navigate to unknown domain");
   await navigateTo(TEST_URL_3, { isErrorPage: true });
 
-  domain = TEST_URL_3.match(/^http:\/\/(.*)\/$/)[1];
+  domain = TEST_URL_3.match(/^https:\/\/(.*)\/$/)[1];
   errorMsg = bundle.formatStringFromName("dnsNotFound2", [domain]);
   is(
     await getDisplayedNodeTextContent("#errorShortDescText", inspector),

@@ -6,10 +6,10 @@
 // Test that inspector updates when page is navigated.
 
 const TEST_URL_FILE =
-  "browser/devtools/client/inspector/test/" + "doc_inspector_breadcrumbs.html";
+  "browser/devtools/client/inspector/test/doc_inspector_breadcrumbs.html";
 
-const TEST_URL_1 = "http://test1.example.org/" + TEST_URL_FILE;
-const TEST_URL_2 = "http://test2.example.org/" + TEST_URL_FILE;
+const TEST_URL_1 = "https://test1.example.org/" + TEST_URL_FILE;
+const TEST_URL_2 = "https://test2.example.org/" + TEST_URL_FILE;
 
 // Bug 1340592: "srcset" attribute causes bfcache events (pageshow/pagehide)
 // with buggy "persisted" values.

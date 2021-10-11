@@ -8,9 +8,10 @@ requestLongerTimeout(4);
 // Test that markup view event bubbles show the correct event info for React
 // events (React production version 16.2.0) without JSX.
 
-const TEST_LIB = URL_ROOT + "lib_react_dom_16.2.0_min.js";
-const TEST_EXTERNAL_LISTENERS = URL_ROOT + "react_external_listeners.js";
-const TEST_URL = URL_ROOT + "doc_markup_events_react_production_16.2.0.html";
+const TEST_LIB = URL_ROOT_SSL + "lib_react_dom_16.2.0_min.js";
+const TEST_EXTERNAL_LISTENERS = URL_ROOT_SSL + "react_external_listeners.js";
+const TEST_URL =
+  URL_ROOT_SSL + "doc_markup_events_react_production_16.2.0.html";
 
 loadHelperScript("helper_events_test_runner.js");
 
@@ -22,25 +23,19 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_LIB + ":93:417",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: `function() {}`
+        attributes: ["Bubbling", "DOM2"],
+        handler: `function() {}`,
       },
       {
         type: "onClick",
         filename: TEST_URL + ":21:22",
-        attributes: [
-          "Bubbling",
-          "React"
-        ],
+        attributes: ["Bubbling", "React"],
         handler: `
           inlineFunction() {
             alert("inlineFunction");
-          }`
-      }
-    ]
+          }`,
+      },
+    ],
   },
   {
     selector: "#external",
@@ -48,25 +43,19 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_LIB + ":93:417",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: `function() {}`
+        attributes: ["Bubbling", "DOM2"],
+        handler: `function() {}`,
       },
       {
         type: "onClick",
         filename: TEST_EXTERNAL_LISTENERS + ":4:25",
-        attributes: [
-          "Bubbling",
-          "React"
-        ],
+        attributes: ["Bubbling", "React"],
         handler: `
           function externalFunction() {
             alert("externalFunction");
-          }`
-      }
-    ]
+          }`,
+      },
+    ],
   },
   {
     selector: "#externalinline",
@@ -74,37 +63,28 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_LIB + ":93:417",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: `function() {}`
+        attributes: ["Bubbling", "DOM2"],
+        handler: `function() {}`,
       },
       {
         type: "onClick",
         filename: TEST_EXTERNAL_LISTENERS + ":4:25",
-        attributes: [
-          "Bubbling",
-          "React"
-        ],
+        attributes: ["Bubbling", "React"],
         handler: `
           function externalFunction() {
             alert("externalFunction");
-          }`
+          }`,
       },
       {
         type: "onMouseUp",
         filename: TEST_URL + ":21:22",
-        attributes: [
-          "Bubbling",
-          "React"
-        ],
+        attributes: ["Bubbling", "React"],
         handler: `
           inlineFunction() {
             alert("inlineFunction");
-          }`
-      }
-    ]
+          }`,
+      },
+    ],
   },
   {
     selector: "#externalcapturing",
@@ -112,16 +92,13 @@ const TEST_DATA = [
       {
         type: "onClickCapture",
         filename: TEST_EXTERNAL_LISTENERS + ":8:34",
-        attributes: [
-          "Capturing",
-          "React"
-        ],
+        attributes: ["Capturing", "React"],
         handler: `
           function externalCapturingFunction() {
             alert("externalCapturingFunction");
-          }`
-      }
-    ]
+          }`,
+      },
+    ],
   },
   {
     selector: "#doublebind",
@@ -129,25 +106,19 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_LIB + ":93:417",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: `function() {}`
+        attributes: ["Bubbling", "DOM2"],
+        handler: `function() {}`,
       },
       {
         type: "onClick",
         filename: TEST_URL + ":21:22",
-        attributes: [
-          "Bubbling",
-          "React"
-        ],
+        attributes: ["Bubbling", "React"],
         handler: `
           function() {
             alert("inlineFunction");
-          }`
-      }
-    ]
+          }`,
+      },
+    ],
   },
 ];
 /* eslint-enable */

@@ -7,7 +7,7 @@
 // and jQuery Live events (jQuery version 1.4).
 
 const TEST_LIB = "lib_jquery_1.4_min.js";
-const TEST_URL = URL_ROOT + "doc_markup_events_jquery.html?" + TEST_LIB;
+const TEST_URL = URL_ROOT_SSL + "doc_markup_events_jquery.html?" + TEST_LIB;
 
 loadHelperScript("helper_events_test_runner.js");
 
@@ -18,7 +18,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "DOMContentLoaded",
-        filename: URL_ROOT + TEST_LIB + ":32:355",
+        filename: URL_ROOT_SSL + TEST_LIB + ":32:355",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -93,7 +93,7 @@ const TEST_DATA = [
       },
       {
         type: "load",
-        filename: URL_ROOT + TEST_LIB + ":26:107",
+        filename: URL_ROOT_SSL + TEST_LIB + ":26:107",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -168,7 +168,7 @@ const TEST_DATA = [
       },
       {
         type: "dblclick",
-        filename: URL_ROOT + TEST_LIB + ":17:183",
+        filename: URL_ROOT_SSL + TEST_LIB + ":17:183",
         attributes: [
           "jQuery",
           "Live"
@@ -192,7 +192,7 @@ const TEST_DATA = [
       },
       {
         type: "dragstart",
-        filename: URL_ROOT + TEST_LIB + ":17:183",
+        filename: URL_ROOT_SSL + TEST_LIB + ":17:183",
         attributes: [
           "jQuery",
           "Live"

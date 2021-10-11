@@ -7,7 +7,7 @@
 
 // Load the test page under .com TLD, to make the inner .org iframe remote with
 // Fission.
-const TEST_URI = URL_ROOT_COM + "doc_print_media_simulation.html";
+const TEST_URI = URL_ROOT_COM_SSL + "doc_print_media_simulation.html";
 
 add_task(async function() {
   await addTab(TEST_URI);

@@ -7,9 +7,9 @@
 
 const PARENT_PROCESS_URI = "about:robots";
 const EXAMPLE_COM_URI =
-  "http://example.com/document-builder.sjs?html=<div id=com>com";
-const EXAMPLE_NET_URI =
-  "http://example.net/document-builder.sjs?html=<div id=net>net";
+  "https://example.com/document-builder.sjs?html=<div id=com>com";
+const EXAMPLE_ORG_URI =
+  "https://example.org/document-builder.sjs?html=<div id=org>org";
 
 add_task(async function() {
   const { inspector } = await openInspectorForURL(PARENT_PROCESS_URI);
@@ -21,9 +21,9 @@ add_task(async function() {
   const comNodeFront = await getNodeFront("#com", inspector);
   ok(!!comNodeFront, "Can retrieve a node front from example.com");
 
-  await navigateTo(EXAMPLE_NET_URI);
-  const netNodeFront = await getNodeFront("#net", inspector);
-  ok(!!netNodeFront, "Can retrieve a node front from example.net");
+  await navigateTo(EXAMPLE_ORG_URI);
+  const orgNodeFront = await getNodeFront("#org", inspector);
+  ok(!!orgNodeFront, "Can retrieve a node front from example.org");
 
   await navigateTo(PARENT_PROCESS_URI);
   const aboutRobotsNodeFront2 = await getNodeFront(".title-text", inspector);
