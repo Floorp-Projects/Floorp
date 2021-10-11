@@ -11,32 +11,21 @@ def target_tasks_default(full_task_graph, parameters, graph_config):
     """Target the tasks which have indicated they should be run on this project
     via the `run_on_projects` attributes."""
 
-    # Temporary until we have official beta support
-    def releases(task, parameters):
-        return task.attributes.get("release-type", "") == 'release'
-
     _filter = filter_for_tasks_for
 
+    # Temporary until we move to shipit for release and beta
+    def release(task, parameters):
+        return task.attributes.get("release-type", "") == 'release'
+
+    def beta(task, parameters):
+        return task.attributes.get("release-type", "") == 'beta'
+
     if parameters["tasks_for"] == "github-release":
-        _filter = releases
+        _filter = release
+        if 'beta' in parameters["head_tag"]:
+            _filter = beta
 
     return [l for l, t in full_task_graph.tasks.items() if _filter(t, parameters)]
-
-
-@_target_task('release')
-def target_tasks_default(full_task_graph, parameters, graph_config):
-
-    # TODO Use shipping-phase once we retire github-releases
-    def filter(task, parameters):
-        # Mark-as-shipped is always red on github-release and it confuses people.
-        # This task cannot be green if we kick off a release through github-releases, so
-        # let's exlude that task there.
-        if task.kind == "mark-as-shipped" and parameters["tasks_for"] == "github-release":
-            return False
-
-        return task.attributes.get("release-type", "") == parameters["release_type"]
-
-    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
 @_target_task('nightly')
