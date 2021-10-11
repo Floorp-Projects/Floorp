@@ -18,9 +18,10 @@ add_task(async function() {
   info("Enter # to search for all ids");
   let processingDone = once(inspector.searchSuggestions, "processing-done");
   EventUtils.synthesizeKey("#", {}, inspector.panelWin);
+  await processingDone;
 
   info("Wait for search query to complete");
-  await processingDone;
+  await inspector.searchSuggestions._lastQuery;
 
   info("Press tab to fill the search input with the first suggestion");
   processingDone = once(inspector.searchSuggestions, "processing-done");

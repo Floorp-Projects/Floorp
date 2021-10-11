@@ -26,6 +26,7 @@
       "resource://devtools/shared/Loader.jsm"
     );
     this.isWorker = false;
+    this.Promise = require("resource://gre/modules/Promise.jsm").Promise;
     this.console = console;
     factory.call(
       this,

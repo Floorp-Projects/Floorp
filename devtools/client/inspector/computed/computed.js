@@ -4,6 +4,7 @@
 
 "use strict";
 
+const promise = require("promise");
 const flags = require("devtools/shared/flags");
 const ToolDefinitions = require("devtools/client/definitions").Tools;
 const CssLogic = require("devtools/shared/inspector/css-logic");
@@ -332,7 +333,7 @@ CssComputedView.prototype = {
    *        The highlighted node to get styles for.
    * @returns a promise that will be resolved when highlighting is complete.
    */
-  selectElement: function(element) {
+  selectElement: async function(element) {
     if (!element) {
       if (this.viewedElementPageStyle) {
         this.viewedElementPageStyle.off(
@@ -351,11 +352,11 @@ CssComputedView.prototype = {
       for (const propView of this.propertyViews) {
         propView.refresh();
       }
-      return Promise.resolve(undefined);
+      return promise.resolve(undefined);
     }
 
     if (element === this._viewedElement) {
-      return Promise.resolve(undefined);
+      return promise.resolve(undefined);
     }
 
     if (this.viewedElementPageStyle) {
@@ -559,24 +560,25 @@ CssComputedView.prototype = {
    */
   refreshPanel: function() {
     if (!this._viewedElement || !this.isPanelVisible()) {
-      return Promise.resolve();
+      return promise.resolve();
     }
 
     // Capture the current viewed element to return from the promise handler
     // early if it changed
     const viewedElement = this._viewedElement;
 
-    return Promise.all([
-      this._createPropertyViews(),
-      this.viewedElementPageStyle.getComputed(this._viewedElement, {
-        filter: this._sourceFilter,
-        onlyMatched: !this.includeBrowserStyles,
-        markMatched: true,
-      }),
-    ])
+    return promise
+      .all([
+        this._createPropertyViews(),
+        this.viewedElementPageStyle.getComputed(this._viewedElement, {
+          filter: this._sourceFilter,
+          onlyMatched: !this.includeBrowserStyles,
+          markMatched: true,
+        }),
+      ])
       .then(([, computed]) => {
         if (viewedElement !== this._viewedElement) {
-          return Promise.resolve();
+          return promise.resolve();
         }
 
         this._matchedProperties = new Set();
@@ -1245,7 +1247,7 @@ PropertyView.prototype = {
       STYLE_INSPECTOR_L10N.getStr("rule.twistyExpand.label")
     );
     this.tree.inspector.emit("computed-view-property-collapsed");
-    return Promise.resolve(undefined);
+    return promise.resolve(undefined);
   },
 
   get matchedSelectors() {

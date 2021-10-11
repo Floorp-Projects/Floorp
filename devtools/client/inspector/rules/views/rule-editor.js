@@ -28,6 +28,7 @@ const {
   SELECTOR_ELEMENT,
   SELECTOR_PSEUDO_CLASS,
 } = require("devtools/shared/css/parsing-utils");
+const promise = require("promise");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const CssLogic = require("devtools/shared/inspector/css-logic");
@@ -363,7 +364,7 @@ RuleEditor.prototype = {
       this._onToolChanged();
     }
 
-    Promise.resolve().then(() => {
+    promise.resolve().then(() => {
       this.emit("source-link-updated");
     });
   },
