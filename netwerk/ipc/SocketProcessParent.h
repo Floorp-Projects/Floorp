@@ -123,7 +123,6 @@ class SocketProcessParent final
 
   mozilla::ipc::IPCResult RecvExcludeHttp2OrHttp3(
       const HttpConnectionInfoCloneArgs& aArgs);
-  mozilla::ipc::IPCResult RecvOnConsoleMessage(const nsString& aMessage);
 
  private:
   SocketProcessHost* mHost;
