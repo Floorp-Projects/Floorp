@@ -74,10 +74,38 @@ macro_rules! impl_labeled_metric {
         /// Create a new instance of the sub-metric of this labeled metric.
         #[no_mangle]
         pub extern "C" fn $get_name(handle: u64, label: FfiStr) -> u64 {
-            $global.call_infallible_mut(handle, |labeled| {
-                let metric = labeled.get(label.as_str());
-                $metric_global.insert_with_log(|| Ok(metric))
-            })
+            // A map from a unique ID for the labeled submetric to a handle of an instantiated
+            // metric type.
+            static LABEL_MAP: once_cell::sync::Lazy<
+                std::sync::Mutex<std::collections::HashMap<String, u64>>,
+            > = once_cell::sync::Lazy::new(|| {
+                std::sync::Mutex::new(std::collections::HashMap::new())
+            });
+
+            // The handle is a unique number per metric.
+            // The label identifies the submetric.
+            let id = format!("{}/{}", handle, label.as_str());
+
+            let mut map = LABEL_MAP.lock().unwrap();
+
+            use std::collections::hash_map::Entry;
+            match map.entry(id) {
+                Entry::Occupied(entry) => {
+                    // This label handle _could_ get stale if language SDKs call the corresponding
+                    // `glean_destroy_*` functions on the sub-metric.
+                    // We don't guard against this for now, but ensure our language SDKs don't call
+                    // it for metric types that can be labeled (counter, string, boolean).
+                    *entry.get()
+                }
+                Entry::Vacant(entry) => {
+                    let label_handle = $global.call_infallible_mut(handle, |labeled| {
+                        let metric = labeled.get(label.as_str());
+                        $metric_global.insert_with_log(|| Ok(metric))
+                    });
+                    entry.insert(label_handle);
+                    label_handle
+                }
+            }
         }
 
         #[no_mangle]
