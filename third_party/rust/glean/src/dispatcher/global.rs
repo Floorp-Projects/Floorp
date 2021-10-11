@@ -47,8 +47,8 @@ pub fn launch(task: impl FnOnce() + Send + 'static) {
 }
 
 /// Block until all tasks prior to this call are processed.
-pub fn block_on_queue() {
-    guard().block_on_queue();
+pub fn block_on_queue() -> Result<(), DispatchError> {
+    guard().block_on_queue()
 }
 
 /// Starts processing queued tasks in the global dispatch queue.
@@ -150,7 +150,7 @@ mod test {
             });
         }
 
-        block_on_queue();
+        block_on_queue().unwrap();
 
         let mut expected = (1..=GLOBAL_DISPATCHER_LIMIT).collect::<Vec<_>>();
         expected.push(200);
@@ -189,7 +189,7 @@ mod test {
             });
         }
 
-        block_on_queue();
+        block_on_queue().unwrap();
 
         let expected = vec![1, 21, 22, 3];
         assert_eq!(&*result.lock().unwrap(), &expected);
