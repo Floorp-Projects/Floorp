@@ -8,8 +8,8 @@
 // meant that this navigation now leads to a process switch. Unfortunately,
 // about:debugging is not resillient to process switches, so the URLs were
 // changed to both load within the same content process.
-const ORIGINAL_URL = "http://example.com/document-builder.sjs?html=page1";
-const OTHER_URL = "http://example.com/document-builder.sjs?html=page2";
+const ORIGINAL_URL = "https://example.com/document-builder.sjs?html=page1";
+const OTHER_URL = "https://example.com/document-builder.sjs?html=page2";
 
 async function waitForUrl(url, toolbox, browserTab, win) {
   const {
