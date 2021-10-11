@@ -11,7 +11,7 @@ loadRelativeToScript('annotations.js');
 loadRelativeToScript('CFG.js');
 loadRelativeToScript('dumpCFG.js');
 
-var sourceRoot = (os.getenv('SOURCE') || '') + '/'
+var sourceRoot = (os.getenv('SOURCE') || '') + '/';
 
 var functionName;
 var functionBodies;
@@ -37,8 +37,8 @@ var tmpfile = scriptArgs[7] || "tmp.txt";
 var gcFunctions = {};
 var text = snarf("gcFunctions.lst").split("\n");
 assert(text.pop().length == 0);
-for (var line of text)
-    gcFunctions[mangled(line)] = true;
+for (const line of text)
+    gcFunctions[mangled(line)] = readable(line);
 
 var limitedFunctions = {};
 var text = snarf(limitedFunctionsFile).split("\n");
@@ -55,7 +55,7 @@ var typeInfo = loadTypeInfo(typeInfoFile);
 var gcEdges = {};
 text = snarf(gcEdgesFile).split('\n');
 assert(text.pop().length == 0);
-for (var line of text) {
+for (const line of text) {
     var [ block, edge, func ] = line.split(" || ");
     if (!(block in gcEdges))
         gcEdges[block] = {}
@@ -537,7 +537,7 @@ function edgeCanGC(edge)
         if (variable.Kind == "Func") {
             var func = mangled(variable.Name[0]);
             if ((func in gcFunctions) || ((func + internalMarker) in gcFunctions))
-                return "'" + variable.Name[0] + "'";
+                return `'${func}$${gcFunctions[func]}'`;
             return null;
         }
 

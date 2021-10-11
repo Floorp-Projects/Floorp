@@ -27,9 +27,10 @@ printErr("Writing " + gcFunctions_filename);
 redirect(gcFunctions_filename);
 
 for (var name in gcFunctions) {
-    for (let readable of (readableNames[name] || [])) {
+    for (const readable of (readableNames[name] || [name])) {
         print("");
-        print("GC Function: " + name + "$" + readable);
+        const fullname = (name == readable) ? name : name + "$" + readable;
+        print("GC Function: " + fullname);
         let current = name;
         do {
             current = gcFunctions[current];
