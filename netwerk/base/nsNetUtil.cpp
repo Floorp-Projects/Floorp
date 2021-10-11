@@ -1823,6 +1823,11 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  if (StaticPrefs::network_url_max_length() &&
+      aSpec.Length() > StaticPrefs::network_url_max_length()) {
+    return NS_ERROR_MALFORMED_URI;
+  }
+
   nsAutoCString scheme;
   nsresult rv = net_ExtractURLScheme(aSpec, scheme);
   if (NS_FAILED(rv)) {
