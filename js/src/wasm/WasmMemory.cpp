@@ -210,12 +210,22 @@ wasm::Pages wasm::MaxMemoryPages() {
 size_t wasm::MaxMemoryBoundsCheckLimit() { return size_t(UINT32_MAX) + 1; }
 #  endif
 #else
+// On 32-bit systems, the heap limit must be representable in the nonnegative
+// range of an int32_t, which means the maximum heap size as observed by wasm
+// code is one wasm page less than 2GB.
 wasm::Pages wasm::MaxMemoryPages() {
   MOZ_ASSERT(ArrayBufferObject::maxBufferByteLength() >= INT32_MAX / PageSize);
   return wasm::Pages(INT32_MAX / PageSize);
 }
 
-size_t wasm::MaxMemoryBoundsCheckLimit() { return size_t(INT32_MAX) + 1; }
+// The max bounds check limit can be larger than the MaxMemoryPages because it
+// is really MaxMemoryPages rounded up to the next valid bounds check immediate,
+// see ComputeMappedSize().
+size_t wasm::MaxMemoryBoundsCheckLimit() {
+  size_t boundsCheckLimit = size_t(INT32_MAX) + 1;
+  MOZ_ASSERT(IsValidBoundsCheckImmediate(boundsCheckLimit));
+  return boundsCheckLimit;
+}
 #endif
 
 // Because ARM has a fixed-width instruction encoding, ARM can only express a
