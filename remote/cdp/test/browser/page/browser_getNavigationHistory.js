@@ -45,9 +45,9 @@ add_task(async function locationRedirect({ client }) {
   const { Page } = client;
 
   const pageEmptyURL =
-    "http://example.com/browser/remote/cdp/test/browser/page/doc_empty.html";
+    "https://example.com/browser/remote/cdp/test/browser/page/doc_empty.html";
   const sjsURL =
-    "http://example.com/browser/remote/cdp/test/browser/page/sjs_redirect.sjs";
+    "https://example.com/browser/remote/cdp/test/browser/page/sjs_redirect.sjs";
   const redirectURL = `${sjsURL}?${pageEmptyURL}`;
 
   const data = [

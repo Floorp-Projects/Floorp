@@ -3,7 +3,7 @@
 
 "use strict";
 
-const BASE_PATH = "http://example.com/browser/remote/cdp/test/browser/network";
+const BASE_PATH = "https://example.com/browser/remote/cdp/test/browser/network";
 const FRAMESET_URL = `${BASE_PATH}/doc_frameset.html`;
 const FRAMESET_JS_URL = `${BASE_PATH}/file_framesetEvents.js`;
 const PAGE_URL = `${BASE_PATH}/doc_networkEvents.html`;

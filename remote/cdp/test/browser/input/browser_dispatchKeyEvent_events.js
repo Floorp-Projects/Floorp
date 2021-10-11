@@ -4,7 +4,7 @@
 "use strict";
 
 const PAGE_URL =
-  "http://example.com/browser/remote/cdp/test/browser/input/doc_events.html";
+  "https://example.com/browser/remote/cdp/test/browser/input/doc_events.html";
 
 add_task(async function testShiftEvents({ client }) {
   await setupForInput(PAGE_URL);

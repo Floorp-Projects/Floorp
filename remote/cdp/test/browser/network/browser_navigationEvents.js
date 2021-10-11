@@ -6,6 +6,7 @@
 // Test order and consistency of Network/Page events as a whole.
 // Details of specific events are checked in event-specific test files.
 
+// Bug 1734694: network request header mismatch when using HTTPS
 const BASE_PATH = "http://example.com/browser/remote/cdp/test/browser/network";
 const FRAMESET_URL = `${BASE_PATH}/doc_frameset.html`;
 const FRAMESET_JS_URL = `${BASE_PATH}/file_framesetEvents.js`;

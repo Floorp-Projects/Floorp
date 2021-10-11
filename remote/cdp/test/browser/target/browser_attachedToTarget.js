@@ -4,7 +4,7 @@
 "use strict";
 
 const PAGE_TEST =
-  "http://example.com/browser/remote/cdp/test/browser/target/doc_test.html";
+  "https://example.com/browser/remote/cdp/test/browser/target/doc_test.html";
 
 add_task(
   async function attachedPageTarget({ client }) {
