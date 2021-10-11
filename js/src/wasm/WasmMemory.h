@@ -119,12 +119,20 @@ struct Pages {
   bool operator>(Pages other) const { return value_ > other.value_; }
 };
 
+// The largest number of pages the application can request.
 extern Pages MaxMemoryPages();
 
-extern size_t MaxMemoryBoundsCheckLimit();
-
+// The byte value of MaxMemoryPages().
 static inline size_t MaxMemoryBytes() { return MaxMemoryPages().byteLength(); }
 
+// A value at least as large as MaxMemoryBytes() representing the largest valid
+// bounds check limit on the system.  (It can be larger than MaxMemoryBytes()
+// because bounds check limits are rounded up to fit formal requirements on some
+// platforms.  Also see ComputeMappedSize().)
+extern size_t MaxMemoryBoundsCheckLimit();
+
+// The largest value allowed for the 'maximum' field of a memory of the given
+// type.
 static inline uint64_t MaxMemoryLimitField(IndexType indexType) {
   return indexType == IndexType::I32 ? MaxMemory32LimitField
                                      : MaxMemory64LimitField;
@@ -138,7 +146,7 @@ extern Pages ClampedMaxPages(Pages initialPages,
 
 // For a given WebAssembly/asm.js 'clamped' max pages, return the number of
 // bytes to map which will necessarily be a multiple of the system page size and
-// greater than maxPages in bytes.  See "Wasm Linear Memory Structure" in
+// greater than clampedMaxPages in bytes.  See "Wasm Linear Memory Structure" in
 // vm/ArrayBufferObject.cpp.
 extern size_t ComputeMappedSize(Pages clampedMaxPages);
 
