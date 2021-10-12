@@ -20,10 +20,10 @@ file_url = "file:///"
 
 def parse_args():
     parser = argparse.ArgumentParser(description=DESCRIPTION)
-    parser.add_argument("--class_to_test",
+    parser.add_argument("class_to_test",
                         help="Path to the class to test. Format it as 'org.mozilla.fenix.[path_to_benchmark_test")
-     parser.add_argument("--open_file_in_browser",
-                            help="Open the JSON file in the browser once the tests are done.")
+    parser.add_argument("--open_file_in_browser",
+                        help="Open the JSON file in the browser once the tests are done.")
     return parser.parse_args()
 
 
