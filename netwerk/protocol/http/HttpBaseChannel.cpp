@@ -209,7 +209,8 @@ HttpBaseChannel::HttpBaseChannel()
       mCachedOpaqueResponseBlockingPref(
           StaticPrefs::browser_opaqueResponseBlocking()),
       mBlockOpaqueResponseAfterSniff(false),
-      mCheckIsOpaqueResponseAllowedAfterSniff(false) {
+      mCheckIsOpaqueResponseAllowedAfterSniff(false),
+      mDummyChannelForImageCache(false) {
   StoreApplyConversion(true);
   StoreAllowSTS(true);
   StoreTracingEnabled(true);
@@ -609,7 +610,7 @@ HttpBaseChannel::GetContentType(nsACString& aContentType) {
 
 NS_IMETHODIMP
 HttpBaseChannel::SetContentType(const nsACString& aContentType) {
-  if (mListener || LoadWasOpened()) {
+  if (mListener || LoadWasOpened() || mDummyChannelForImageCache) {
     if (!mResponseHead) return NS_ERROR_NOT_AVAILABLE;
 
     nsAutoCString contentTypeBuf, charsetBuf;
@@ -757,8 +758,13 @@ HttpBaseChannel::GetContentLength(int64_t* aContentLength) {
 
 NS_IMETHODIMP
 HttpBaseChannel::SetContentLength(int64_t value) {
-  MOZ_ASSERT_UNREACHABLE("HttpBaseChannel::SetContentLength");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mDummyChannelForImageCache) {
+    MOZ_ASSERT_UNREACHABLE("HttpBaseChannel::SetContentLength");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  MOZ_ASSERT(mResponseHead);
+  mResponseHead->SetContentLength(value);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5651,6 +5657,13 @@ bool HttpBaseChannel::Http3Allowed() const {
   return !mUpgradeProtocolCallback && isDirectOrNoProxy &&
          !(mCaps & NS_HTTP_BE_CONSERVATIVE) && !LoadBeConservative() &&
          LoadAllowHttp3();
+}
+
+void HttpBaseChannel::SetDummyChannelForImageCache() {
+  mDummyChannelForImageCache = true;
+  MOZ_ASSERT(!mResponseHead,
+             "SetDummyChannelForImageCache should only be called once");
+  mResponseHead = MakeUnique<nsHttpResponseHead>();
 }
 
 }  // namespace net
