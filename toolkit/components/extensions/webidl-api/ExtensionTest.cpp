@@ -6,6 +6,7 @@
 #include "ExtensionTest.h"
 #include "ExtensionEventManager.h"
 
+#include "js/Equality.h"  // JS::StrictlyEqual
 #include "mozilla/dom/ExtensionTestBinding.h"
 #include "nsIGlobalObject.h"
 
@@ -51,6 +52,61 @@ JSObject* ExtensionTest::WrapObject(JSContext* aCx,
 }
 
 nsIGlobalObject* ExtensionTest::GetParentObject() const { return mGlobal; }
+
+void ExtensionTest::CallWebExtMethodAssertEq(
+    JSContext* aCx, const nsAString& aApiMethod,
+    const dom::Sequence<JS::Value>& aArgs, ErrorResult& aRv) {
+  uint32_t argsCount = aArgs.Length();
+
+  JS::Rooted<JS::Value> expectedVal(
+      aCx, argsCount > 0 ? aArgs[0] : JS::UndefinedValue());
+  JS::Rooted<JS::Value> actualVal(
+      aCx, argsCount > 1 ? aArgs[1] : JS::UndefinedValue());
+  JS::Rooted<JS::Value> messageVal(
+      aCx, argsCount > 2 ? aArgs[2] : JS::UndefinedValue());
+
+  bool isEqual;
+  if (NS_WARN_IF(!JS::StrictlyEqual(aCx, actualVal, expectedVal, &isEqual))) {
+    ThrowUnexpectedError(aCx, aRv);
+    return;
+  }
+
+  JS::RootedString expectedJSString(aCx, JS::ToString(aCx, expectedVal));
+  JS::RootedString actualJSString(aCx, JS::ToString(aCx, actualVal));
+  JS::RootedString messageJSString(aCx, JS::ToString(aCx, messageVal));
+
+  nsString expected;
+  nsString actual;
+  nsString message;
+
+  if (NS_WARN_IF(!AssignJSString(aCx, expected, expectedJSString) ||
+                 !AssignJSString(aCx, actual, actualJSString) ||
+                 !AssignJSString(aCx, message, messageJSString))) {
+    ThrowUnexpectedError(aCx, aRv);
+    return;
+  }
+
+  if (!isEqual && actual.Equals(expected)) {
+    actual.AppendLiteral(" (different)");
+  }
+
+  if (NS_WARN_IF(!dom::ToJSValue(aCx, expected, &expectedVal) ||
+                 !dom::ToJSValue(aCx, actual, &actualVal) ||
+                 !dom::ToJSValue(aCx, message, &messageVal))) {
+    ThrowUnexpectedError(aCx, aRv);
+    return;
+  }
+
+  dom::Sequence<JS::Value> args;
+  if (NS_WARN_IF(!args.AppendElement(expectedVal, fallible) ||
+                 !args.AppendElement(actualVal, fallible) ||
+                 !args.AppendElement(messageVal, fallible))) {
+    ThrowUnexpectedError(aCx, aRv);
+    return;
+  }
+
+  CallWebExtMethodNoReturn(aCx, aApiMethod, args, aRv);
+}
 
 ExtensionEventManager* ExtensionTest::OnMessage() {
   if (!mOnMessageEventMgr) {

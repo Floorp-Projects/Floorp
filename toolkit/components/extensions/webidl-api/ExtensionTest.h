@@ -58,6 +58,10 @@ class ExtensionTest final : public nsISupports,
 
   nsIGlobalObject* GetParentObject() const;
 
+  void CallWebExtMethodAssertEq(JSContext* aCx, const nsAString& aApiMethod,
+                                const dom::Sequence<JS::Value>& aArgs,
+                                ErrorResult& aRv);
+
   ExtensionEventManager* OnMessage();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

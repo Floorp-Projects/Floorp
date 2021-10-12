@@ -40,6 +40,15 @@ add_task(async function test_sw_api_request_handling_local_process_api() {
           browser.test.succeed("call to test.succeed");
           browser.test.assertTrue(true, "call to test.assertTrue");
           browser.test.assertFalse(false, "call to test.assertFalse");
+          // Smoke test assertEq (more complete coverage of the behavior expected
+          // by the test API will be introduced in test_ext_test.html as part of
+          // Bug 1723785).
+          const errorObject = new Error("fake_error_message");
+          browser.test.assertEq(
+            errorObject,
+            errorObject,
+            "call to test.assertEq"
+          );
           browser.test.notifyPass("test-completed");
         });
         browser.test.sendMessage("bgsw-ready");
