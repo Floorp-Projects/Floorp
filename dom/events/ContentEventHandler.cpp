@@ -526,15 +526,16 @@ static void AppendSubString(nsString& aString, const Text& aTextNode,
 }
 
 #if defined(XP_WIN)
-static uint32_t CountNewlinesInXPLength(Text* aText, uint32_t aXPLength) {
-  const nsTextFragment* text = &aText->TextFragment();
+static uint32_t CountNewlinesInXPLength(const Text& aTextNode,
+                                        uint32_t aXPLength) {
+  const nsTextFragment& textFragment = aTextNode.TextFragment();
   // For automated tests, we should abort on debug build.
-  MOZ_ASSERT(aXPLength == UINT32_MAX || aXPLength <= text->GetLength(),
+  MOZ_ASSERT(aXPLength == UINT32_MAX || aXPLength <= textFragment.GetLength(),
              "aXPLength is out-of-bounds");
-  const uint32_t length = std::min(aXPLength, text->GetLength());
+  const uint32_t length = std::min(aXPLength, textFragment.GetLength());
   uint32_t newlines = 0;
   for (uint32_t i = 0; i < length; ++i) {
-    if (text->CharAt(i) == '\n') {
+    if (textFragment.CharAt(i) == '\n') {
       ++newlines;
     }
   }
@@ -575,8 +576,9 @@ uint32_t ContentEventHandler::GetNativeTextLength(nsIContent* aContent,
   if (aStartOffset == aEndOffset) {
     return 0;
   }
-  return GetTextLength(aContent->AsText(), LINE_BREAK_TYPE_NATIVE, aEndOffset) -
-         GetTextLength(aContent->AsText(), LINE_BREAK_TYPE_NATIVE,
+  return GetTextLength(*aContent->AsText(), LINE_BREAK_TYPE_NATIVE,
+                       aEndOffset) -
+         GetTextLength(*aContent->AsText(), LINE_BREAK_TYPE_NATIVE,
                        aStartOffset);
 }
 
@@ -586,7 +588,7 @@ uint32_t ContentEventHandler::GetNativeTextLength(nsIContent* aContent,
   if (NS_WARN_IF(!aContent->IsText())) {
     return 0;
   }
-  return GetTextLength(aContent->AsText(), LINE_BREAK_TYPE_NATIVE, aMaxLength);
+  return GetTextLength(*aContent->AsText(), LINE_BREAK_TYPE_NATIVE, aMaxLength);
 }
 
 /* static */
@@ -611,29 +613,24 @@ uint32_t ContentEventHandler::GetBRLength(LineBreakType aLineBreakType) {
 }
 
 /* static */
-uint32_t ContentEventHandler::GetTextLength(nsIContent* aContent,
+uint32_t ContentEventHandler::GetTextLength(const Text& aTextNode,
                                             LineBreakType aLineBreakType,
                                             uint32_t aMaxLength) {
-  MOZ_ASSERT(aContent->IsText());
-
-  uint32_t textLengthDifference =
+  const uint32_t textLengthDifference =
 #if defined(XP_WIN)
       // On Windows, the length of a native newline ("\r\n") is twice the length
       // of the XP newline ("\n"), so XP length is equal to the length of the
       // native offset plus the number of newlines encountered in the string.
       (aLineBreakType == LINE_BREAK_TYPE_NATIVE)
-          ? CountNewlinesInXPLength(aContent->AsText(), aMaxLength)
+          ? CountNewlinesInXPLength(aTextNode, aMaxLength)
           : 0;
 #else
       // On other platforms, the native and XP newlines are the same.
       0;
 #endif
 
-  const nsTextFragment* text = aContent->GetText();
-  if (!text) {
-    return 0;
-  }
-  uint32_t length = std::min(text->GetLength(), aMaxLength);
+  const uint32_t length =
+      std::min(aTextNode.TextFragment().GetLength(), aMaxLength);
   return length + textLengthDifference;
 }
 
@@ -1063,11 +1060,11 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
       NS_ADDREF(*aLastTextNode = content);
     }
 
-    uint32_t textLength = content->IsText()
-                              ? GetTextLength(content, aLineBreakType)
-                              : (ShouldBreakLineBefore(content, mRootContent)
-                                     ? GetBRLength(aLineBreakType)
-                                     : 0);
+    uint32_t textLength =
+        content->IsText() ? GetTextLength(*content->AsText(), aLineBreakType)
+                          : (ShouldBreakLineBefore(content, mRootContent)
+                                 ? GetBRLength(aLineBreakType)
+                                 : 0);
     if (!textLength) {
       continue;
     }
@@ -2858,17 +2855,17 @@ nsresult ContentEventHandler::GetFlatTextLengthInRange(
     }
     nsIContent* content = node->AsContent();
 
-    if (node->IsText()) {
+    if (const Text* textNode = Text::FromNode(content)) {
       // Note: our range always starts from offset 0
       if (node == endPosition.Container()) {
         // NOTE: We should have an offset here, as endPosition.Container() is a
         // nsINode::eTEXT, which always has an offset.
         *aLength += GetTextLength(
-            content, aLineBreakType,
+            *textNode, aLineBreakType,
             *endPosition.Offset(
                 NodePosition::OffsetFilter::kValidOrInvalidOffsets));
       } else {
-        *aLength += GetTextLength(content, aLineBreakType);
+        *aLength += GetTextLength(*textNode, aLineBreakType);
       }
     } else if (ShouldBreakLineBefore(content, aRootContent)) {
       // If the start position is start of this node but doesn't include the
