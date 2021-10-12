@@ -4,6 +4,12 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+%ifdef ANDROID
+scrollbar, resizer, scrollcorner {
+  pointer-events: none;
+}
+%endif
+
 scrollbar {
   appearance: auto;
   -moz-default-appearance: scrollbar-horizontal;
@@ -22,7 +28,8 @@ scrollbar[root="true"] {
 @media (-moz-overlay-scrollbars) {
   scrollbar:not([active="true"]),
   scrollbar[disabled="true"] {
-    visibility: hidden;
+    pointer-events: none;
+    opacity: 0;
   }
 }
 
