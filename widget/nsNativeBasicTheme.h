@@ -398,7 +398,6 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
 
   static CSSIntCoord sHorizontalScrollbarHeight;
   static CSSIntCoord sVerticalScrollbarWidth;
-  static bool sOverlayScrollbars;
 
   static void PrefChangedCallback(const char*, void*) { LookAndFeelChanged(); }
   static void RecomputeAccentColors();

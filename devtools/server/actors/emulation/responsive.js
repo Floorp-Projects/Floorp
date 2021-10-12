@@ -4,14 +4,8 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
-const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
 const { responsiveSpec } = require("devtools/shared/specs/responsive");
-
-const FLOATING_SCROLLBARS_SHEET = Services.io.newURI(
-  "chrome://devtools/skin/floating-scrollbars-responsive-design.css"
-);
 
 /**
  * This actor overrides various browser features to simulate different environments to
@@ -31,25 +25,15 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.targetActor = targetActor;
     this.docShell = targetActor.docShell;
-
-    this.onWindowReady = this.onWindowReady.bind(this);
-
-    this.targetActor.on("window-ready", this.onWindowReady);
   },
 
   destroy() {
     this.clearNetworkThrottling();
 
-    this.targetActor.off("window-ready", this.onWindowReady);
-
     this.targetActor = null;
     this.docShell = null;
 
     protocol.Actor.prototype.destroy.call(this);
-  },
-
-  async onWindowReady() {
-    await this.setFloatingScrollbars(true);
   },
 
   /**
@@ -187,44 +171,6 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
     const { CustomEvent } = this.win;
     const orientationChangeEvent = new CustomEvent("orientationchange");
     this.win.dispatchEvent(orientationChangeEvent);
-  },
-
-  /**
-   * Applies a mobile scrollbar overlay to the content document.
-   *
-   * @param {Boolean} applyFloatingScrollbars
-   */
-  async setFloatingScrollbars(applyFloatingScrollbars) {
-    const docShell = this.docShell;
-    const allDocShells = [docShell];
-
-    for (let i = 0; i < docShell.childCount; i++) {
-      const child = docShell.getChildAt(i).QueryInterface(Ci.nsIDocShell);
-      allDocShells.push(child);
-    }
-
-    for (const d of allDocShells) {
-      const win = d.contentViewer.DOMDocument.defaultView;
-      const winUtils = win.windowUtils;
-      try {
-        if (applyFloatingScrollbars) {
-          winUtils.loadSheet(FLOATING_SCROLLBARS_SHEET, this.win.AGENT_SHEET);
-        } else {
-          winUtils.removeSheet(FLOATING_SCROLLBARS_SHEET, this.win.AGENT_SHEET);
-        }
-      } catch (e) {}
-    }
-
-    this.flushStyle();
-  },
-
-  flushStyle() {
-    // Force presContext destruction
-    const isSticky = this.docShell.contentViewer.sticky;
-    this.docShell.contentViewer.sticky = false;
-    this.docShell.contentViewer.hide();
-    this.docShell.contentViewer.show();
-    this.docShell.contentViewer.sticky = isSticky;
   },
 });
 

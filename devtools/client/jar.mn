@@ -64,7 +64,6 @@ devtools.jar:
     skin/images/dock-side-left.svg (themes/images/dock-side-left.svg)
     skin/images/dock-side-right.svg (themes/images/dock-side-right.svg)
     skin/images/dock-undock.svg (themes/images/dock-undock.svg)
-    skin/floating-scrollbars-responsive-design.css (themes/floating-scrollbars-responsive-design.css)
     skin/accessibility-color-contrast.css (themes/accessibility-color-contrast.css)
     skin/badge.css (themes/badge.css)
     skin/inspector.css (themes/inspector.css)

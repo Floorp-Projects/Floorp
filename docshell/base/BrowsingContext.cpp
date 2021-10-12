@@ -2662,6 +2662,22 @@ void BrowsingContext::DidSet(FieldIndex<IDX_ExplicitActive>,
   });
 }
 
+void BrowsingContext::DidSet(FieldIndex<IDX_InRDMPane>, bool aOldValue) {
+  MOZ_ASSERT(IsTop(),
+             "Should only set InRDMPane in the top-level browsing context");
+  if (GetInRDMPane() == aOldValue) {
+    return;
+  }
+
+  PreOrderWalk([&](BrowsingContext* aContext) {
+    if (nsIDocShell* shell = aContext->GetDocShell()) {
+      if (nsPresContext* pc = shell->GetPresContext()) {
+        pc->RecomputeTheme();
+      }
+    }
+  });
+}
+
 bool BrowsingContext::CanSet(FieldIndex<IDX_PageAwakeRequestCount>,
                              uint32_t aNewValue, ContentParent* aSource) {
   return IsTop() && XRE_IsParentProcess() && !aSource;

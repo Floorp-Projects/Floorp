@@ -84,7 +84,7 @@ bool nsNativeBasicThemeAndroid::PaintScrollbarThumb(
   return true;
 }
 
-already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
+already_AddRefed<nsITheme> do_GetAndroidNonNativeThemeDoNotUseDirectly() {
   static mozilla::StaticRefPtr<nsITheme> gInstance;
   if (MOZ_UNLIKELY(!gInstance)) {
     gInstance = new nsNativeBasicThemeAndroid();
@@ -93,7 +93,14 @@ already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
   return do_AddRef(gInstance);
 }
 
+
+#ifdef ANDROID
+already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
+  return do_GetAndroidNonNativeThemeDoNotUseDirectly();
+}
+
 already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
   // Android doesn't have a native theme.
   return do_GetBasicNativeThemeDoNotUseDirectly();
 }
+#endif

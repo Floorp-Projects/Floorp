@@ -510,8 +510,6 @@ function BuildConditionSandbox(aURL) {
       g.windowUtils.usingAdvancedLayers == true;
     sandbox.layerChecksEnabled = !sandbox.webrender;
 
-    sandbox.usesOverlayScrollbars = g.windowUtils.usesOverlayScrollbars;
-
     // Shortcuts for widget toolkits.
     sandbox.Android = xr.OS == "Android";
     sandbox.cocoaWidget = xr.widgetToolkit == "cocoa";
