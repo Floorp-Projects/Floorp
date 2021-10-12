@@ -1109,7 +1109,7 @@ ProfilerThreadId ProfileBuffer::StreamSamplesToJSON(
           // We don't have any full sample yet, we cannot duplicate a "previous"
           // one. This should only happen at most once per thread, for the very
           // first sample.
-          break;
+          continue;
         }
 
         // Keep the same `mStack` as previously output.
