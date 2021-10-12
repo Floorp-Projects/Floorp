@@ -248,12 +248,12 @@ class MOZ_STACK_CLASS ContentEventHandler {
                                            LineBreakType aLineBreakType,
                                            bool aIsRemovingNode = false);
   // Computes the native text length between aStartOffset and aEndOffset of
-  // aContent.  aContent must be a text node.
-  static uint32_t GetNativeTextLength(nsIContent* aContent,
+  // aTextNode.
+  static uint32_t GetNativeTextLength(const dom::Text& aTextNode,
                                       uint32_t aStartOffset,
                                       uint32_t aEndOffset);
-  // Get the native text length of aContent.  aContent must be a text node.
-  static uint32_t GetNativeTextLength(nsIContent* aContent,
+  // Get the native text length of aTextNode.
+  static uint32_t GetNativeTextLength(const dom::Text& aTextNode,
                                       uint32_t aMaxLength = UINT32_MAX);
   // Get the native text length which is inserted before aContent.
   // aContent should be an element.
