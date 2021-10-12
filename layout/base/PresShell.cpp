@@ -997,7 +997,7 @@ void PresShell::Init(nsPresContext* aPresContext, nsViewManager* aViewManager) {
         os->AddObserver(this, "sessionstore-one-or-no-tab-restored", false);
       }
       os->AddObserver(this, "font-info-updated", false);
-      os->AddObserver(this, "look-and-feel-changed", false);
+      os->AddObserver(this, "internal-look-and-feel-changed", false);
     }
   }
 
@@ -1301,7 +1301,7 @@ void PresShell::Destroy() {
         os->RemoveObserver(this, "sessionstore-one-or-no-tab-restored");
       }
       os->RemoveObserver(this, "font-info-updated");
-      os->RemoveObserver(this, "look-and-feel-changed");
+      os->RemoveObserver(this, "internal-look-and-feel-changed");
     }
   }
 
@@ -9880,7 +9880,9 @@ PresShell::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  if (!nsCRT::strcmp(aTopic, "look-and-feel-changed")) {
+  // The "look-and-feel-changed" notification for JS observers will be
+  // dispatched HandleGlobalThemeChange once LookAndFeel caches are cleared.
+  if (!nsCRT::strcmp(aTopic, "internal-look-and-feel-changed")) {
     // See how LookAndFeel::NotifyChangedAllWindows encodes this.
     auto kind = widget::ThemeChangeKind(aData[0]);
     ThemeChanged(kind);

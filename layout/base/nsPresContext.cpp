@@ -465,6 +465,13 @@ static void HandleGlobalThemeChange() {
   if (XRE_IsParentProcess()) {
     ContentParent::BroadcastThemeUpdate(kind);
   }
+
+  nsContentUtils::AddScriptRunner(
+      NS_NewRunnableFunction("HandleGlobalThemeChange", [] {
+        if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
+          obs->NotifyObservers(nullptr, "look-and-feel-changed", nullptr);
+        }
+      }));
 }
 
 void nsPresContext::GetUserPreferences() {

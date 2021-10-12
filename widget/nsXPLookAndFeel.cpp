@@ -1000,7 +1000,7 @@ namespace mozilla {
 void LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind aKind) {
   if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
     const char16_t kind[] = {char16_t(aKind), 0};
-    obs->NotifyObservers(nullptr, "look-and-feel-changed", kind);
+    obs->NotifyObservers(nullptr, "internal-look-and-feel-changed", kind);
   }
 }
 
