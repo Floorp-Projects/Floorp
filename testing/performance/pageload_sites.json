@@ -321,7 +321,8 @@
     {
       "login": false,
       "name": "youtube",
-      "test_url": "https://www.youtube.com"
+      "test_url": "https://www.youtube.com",
+      "secondary_url": "https://www.youtube.com/watch?v=JrdEMERq8MA"
     },
     {
       "login": false,
