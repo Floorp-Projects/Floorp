@@ -9,7 +9,6 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.jsm",
-  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
 const SPONSORED_SEARCH_STRING = "frab";
@@ -152,7 +151,7 @@ add_task(async function init() {
   // Set up the remote settings client with the test data. Need to set the
   // `suggest.quicksuggest` pref to make `init` finish.
   UrlbarPrefs.set("suggest.quicksuggest", true);
-  await UrlbarTestUtils.ensureQuickSuggestInit(REMOTE_SETTINGS_DATA);
+  await QuickSuggestTestUtils.ensureQuickSuggestInit(REMOTE_SETTINGS_DATA);
 });
 
 // Tests with only non-sponsored suggestions enabled with a matching search

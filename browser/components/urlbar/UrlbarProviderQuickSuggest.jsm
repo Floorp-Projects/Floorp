@@ -67,9 +67,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   get helpUrl() {
     return (
-      this._helpUrl ||
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
-        "firefox-suggest"
+      "firefox-suggest"
     );
   }
 
@@ -440,9 +439,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
   // Whether we added a result during the most recent query.
   _addedResultInLastQuery = false;
-
-  // This is intended for tests and allows them to set a different help URL.
-  _helpUrl = undefined;
 }
 
 var UrlbarProviderQuickSuggest = new ProviderQuickSuggest();
