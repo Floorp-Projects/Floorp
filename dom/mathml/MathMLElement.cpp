@@ -840,8 +840,7 @@ int32_t MathMLElement::TabIndexDefault() {
 
 // XXX Bug 1586011: Share logic with other element classes.
 bool MathMLElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
-  Document* doc = GetComposedDoc();
-  if (!doc || doc->HasFlag(NODE_IS_EDITABLE)) {
+  if (!IsInComposedDoc() || IsInDesignMode()) {
     // In designMode documents we only allow focusing the document.
     if (aTabIndex) {
       *aTabIndex = -1;

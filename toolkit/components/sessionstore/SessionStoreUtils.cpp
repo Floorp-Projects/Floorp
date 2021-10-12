@@ -35,6 +35,7 @@
 #include "nsContentUtils.h"
 #include "nsFocusManager.h"
 #include "nsGlobalWindowOuter.h"
+#include "nsIContentInlines.h"
 #include "nsIDocShell.h"
 #include "nsIFormControl.h"
 #include "nsIScrollableFrame.h"
@@ -942,7 +943,7 @@ static void CollectCurrentFormData(JSContext* aCx, Document& aDocument,
                                               aRetVal);
 
   Element* bodyElement = aDocument.GetBody();
-  if (aDocument.HasFlag(NODE_IS_EDITABLE) && bodyElement) {
+  if (bodyElement && bodyElement->IsInDesignMode()) {
     bodyElement->GetInnerHTML(aRetVal.SetValue().mInnerHTML.Construct(),
                               IgnoreErrors());
   }
@@ -1140,7 +1141,7 @@ static void SetSessionData(JSContext* aCx, Element* aElement,
 MOZ_CAN_RUN_SCRIPT
 static void SetInnerHTML(Document& aDocument, const nsString& aInnerHTML) {
   RefPtr<Element> bodyElement = aDocument.GetBody();
-  if (aDocument.HasFlag(NODE_IS_EDITABLE) && bodyElement) {
+  if (bodyElement && bodyElement->IsInDesignMode()) {
     IgnoredErrorResult rv;
     bodyElement->SetInnerHTML(aInnerHTML, aDocument.NodePrincipal(), rv);
     if (!rv.Failed()) {

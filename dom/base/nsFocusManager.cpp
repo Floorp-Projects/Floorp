@@ -15,6 +15,7 @@
 #include "nsContentUtils.h"
 #include "ContentParent.h"
 #include "nsPIDOMWindow.h"
+#include "nsIContentInlines.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIFormControl.h"
@@ -2026,16 +2027,19 @@ bool nsFocusManager::IsNonFocusableRoot(nsIContent* aContent) {
   MOZ_ASSERT(aContent, "aContent must not be NULL");
   MOZ_ASSERT(aContent->IsInComposedDoc(), "aContent must be in a document");
 
-  // If aContent is in designMode, the root element is not focusable.
-  // NOTE: in designMode, most elements are not focusable, just the document is
-  //       focusable.
-  // Also, if aContent is not editable but it isn't in designMode, it's not
+  // If the uncomposed document of aContent is in designMode, the root element
+  // is not focusable.
+  // NOTE: Most elements whose uncomposed document is in design mode are not
+  //       focusable, just the document is focusable.  However, if it's in a
+  //       shadow tree, it may be focus able even if the shadow host is in
+  //       design mode.
+  // Also, if aContent is not editable and it's not in designMode, it's not
   // focusable.
   // And in userfocusignored context nothing is focusable.
   Document* doc = aContent->GetComposedDoc();
   NS_ASSERTION(doc, "aContent must have current document");
   return aContent == doc->GetRootElement() &&
-         (doc->HasFlag(NODE_IS_EDITABLE) || !aContent->IsEditable());
+         (aContent->IsInDesignMode() || !aContent->IsEditable());
 }
 
 Element* nsFocusManager::FlushAndCheckIfFocusable(Element* aElement,
@@ -2592,10 +2596,13 @@ void nsFocusManager::Focus(
   // document and then the window.
   if (aIsNewDocument) {
     Document* doc = aWindow->GetExtantDoc();
-    // The focus change should be notified to IMEStateManager from here if
-    // the focused element is a designMode editor since any content won't
+    // The focus change should be notified to IMEStateManager from here if:
+    // * the focused element is in design mode or
+    // * nobody gets focus and the document is in design mode
+    // since any element whose uncomposed document is in design mode won't
     // receive focus event.
-    if (doc && doc->HasFlag(NODE_IS_EDITABLE)) {
+    if (doc && ((aElement && aElement->IsInDesignMode()) ||
+                (!aElement && doc->IsInDesignMode()))) {
       IMEStateManager::OnChangeFocus(presShell->GetPresContext(), nullptr,
                                      GetFocusMoveActionCause(aFlags));
     }

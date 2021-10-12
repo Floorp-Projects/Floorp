@@ -49,6 +49,10 @@
   <!-- a element -->
   <a id="a_href" href="about:blank">a[href]</a><br/>
 
+  <!-- multimedia element -->
+  <audio id="audio_with_controls" controls=""></audio><br/>
+  <video id="video_with_controls" controls=""></video><br/>
+
   <!-- ime-mode test -->
   <input type="text" id="ime_mode_auto"     style="ime-mode: auto;"/><br/>
   <input type="text" id="ime_mode_normal"   style="ime-mode: normal;"/><br/>
@@ -171,7 +175,8 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
     function moveFocus(aTestInner, aFocusEventHandler) {
       function getFocusedElement() {
         let focusedElement = gFM.focusedElement;
-        if (focusedElement?.containingShadowRoot?.isUAWidget()) {
+        if (aTest.idInUAWidget === undefined &&
+            focusedElement?.containingShadowRoot?.isUAWidget()) {
           focusedElement = focusedElement.containingShadowRoot.host;
         }
         return focusedElement;
@@ -190,6 +195,10 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
       }
       var previousFocusedElement = getFocusedElement();
       var element = document.getElementById(aTest.id);
+      if (aTest.idInUAWidget !== undefined) {
+        element = SpecialPowers.wrap(element).
+          openOrClosedShadowRoot.getElementById(aTest.idInUAWidget);
+      }
       var focusEventTarget = element;
       if (element.contentDocument) {
         focusEventTarget = element.contentDocument;
@@ -360,6 +369,8 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
     aInDesignMode ? gUtils.IME_STATUS_ENABLED : gUtils.IME_STATUS_PASSWORD;
   const kEnabledStateOnReadonlyField =
     aInDesignMode ? gUtils.IME_STATUS_ENABLED : gUtils.IME_STATUS_DISABLED;
+  const kEnabledStateInUAWidget =
+    aInDesignMode ? gUtils.IME_STATUS_ENABLED : gUtils.IME_STATUS_DISABLED;
   const kTests = [
     { id: "text",
       description: "input[type=text]",
@@ -481,6 +492,58 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
       description: "a[href]",
       focusable: !aIsEditable && !aInDesignMode,
       expectedEnabled: kEnabledStateOnNonEditableElement },
+
+    // audio element
+    { id: "audio_with_controls",
+      description: "audio",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnNonEditableElement },
+    { id: "audio_with_controls",
+      idInUAWidget: "playButton",
+      description: "playButton in audio",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateInUAWidget },
+    { id: "audio_with_controls",
+      idInUAWidget: "scrubber",
+      description: "scrubber in audio",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateInUAWidget },
+    { id: "audio_with_controls",
+      idInUAWidget: "muteButton",
+      description: "muteButton in audio",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateInUAWidget },
+    { id: "audio_with_controls",
+      idInUAWidget: "volumeControl",
+      description: "volumeControl in audio",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateInUAWidget },
+
+    // video element
+    { id: "video_with_controls",
+      description: "video",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateOnNonEditableElement },
+    { id: "video_with_controls",
+      idInUAWidget: "playButton",
+      description: "playButton in video",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateInUAWidget },
+    { id: "video_with_controls",
+      idInUAWidget: "scrubber",
+      description: "scrubber in video",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateInUAWidget },
+    { id: "video_with_controls",
+      idInUAWidget: "muteButton",
+      description: "muteButton in video",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateInUAWidget },
+    { id: "video_with_controls",
+      idInUAWidget: "volumeControl",
+      description: "volumeControl in video",
+      focusable: !aInDesignMode,
+      expectedEnabled: kEnabledStateInUAWidget },
 
     // ime-mode
     { id: "ime_mode_auto",

@@ -6,6 +6,7 @@
 
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/BindContext.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/ElementInlines.h"
@@ -13,7 +14,7 @@
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsError.h"
-#include "mozilla/dom/Document.h"
+#include "nsIContentInlines.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
 #ifdef XP_MACOSX
@@ -164,7 +165,7 @@ bool HTMLObjectElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   // TODO: this should probably be managed directly by IsHTMLFocusable.
   // See bug 597242.
   Document* doc = GetComposedDoc();
-  if (!doc || doc->HasFlag(NODE_IS_EDITABLE)) {
+  if (!doc || IsInDesignMode()) {
     if (aTabIndex) {
       *aTabIndex = -1;
     }

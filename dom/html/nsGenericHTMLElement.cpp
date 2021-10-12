@@ -2138,7 +2138,7 @@ bool nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   }
 
   Document* doc = GetComposedDoc();
-  if (!doc || doc->HasFlag(NODE_IS_EDITABLE)) {
+  if (!doc || IsInDesignMode()) {
     // In designMode documents we only allow focusing the document.
     if (aTabIndex) {
       *aTabIndex = -1;
@@ -2325,12 +2325,11 @@ void nsGenericHTMLElement::RecompileScriptEventListeners() {
 }
 
 bool nsGenericHTMLElement::IsEditableRoot() const {
-  Document* document = GetComposedDoc();
-  if (!document) {
+  if (!IsInComposedDoc()) {
     return false;
   }
 
-  if (document->HasFlag(NODE_IS_EDITABLE)) {
+  if (IsInDesignMode()) {
     return false;
   }
 
@@ -2343,8 +2342,7 @@ bool nsGenericHTMLElement::IsEditableRoot() const {
   return !parent || !parent->HasFlag(NODE_IS_EDITABLE);
 }
 
-static void MakeContentDescendantsEditable(nsIContent* aContent,
-                                           Document* aDocument) {
+static void MakeContentDescendantsEditable(nsIContent* aContent) {
   // If aContent is not an element, we just need to update its
   // internal editable state and don't need to notify anyone about
   // that.  For elements, we need to send a ContentStateChanged
@@ -2363,7 +2361,7 @@ static void MakeContentDescendantsEditable(nsIContent* aContent,
     if (!child->IsElement() ||
         !child->AsElement()->HasAttr(kNameSpaceID_None,
                                      nsGkAtoms::contenteditable)) {
-      MakeContentDescendantsEditable(child, aDocument);
+      MakeContentDescendantsEditable(child);
     }
   }
 }
@@ -2380,21 +2378,21 @@ void nsGenericHTMLElement::ChangeEditableState(int32_t aChange) {
     previousEditingState = document->GetEditingState();
   }
 
-  if (document->HasFlag(NODE_IS_EDITABLE)) {
-    document = nullptr;
-  }
-
   // MakeContentDescendantsEditable is going to call ContentStateChanged for
   // this element and all descendants if editable state has changed.
   // We might as well wrap it all in one script blocker.
   nsAutoScriptBlocker scriptBlocker;
-  MakeContentDescendantsEditable(this, document);
+  MakeContentDescendantsEditable(this);
 
   // If the document already had contenteditable and JS adds new
   // contenteditable, that might cause changing editing host to current editing
   // host's ancestor.  In such case, HTMLEditor needs to know that
   // synchronously to update selection limitter.
-  if (document && aChange > 0 &&
+  // Additionally, elements in shadow DOM is not editable in the normal cases,
+  // but if its content has `contenteditable`, only in it can be ediable.
+  // So we don't need to notify HTMLEditor of this change only when we're not
+  // in shadow DOM and the composed document is in design mode.
+  if (IsInDesignMode() && !IsInShadowTree() && aChange > 0 &&
       previousEditingState == Document::EditingState::eContentEditable) {
     if (HTMLEditor* htmlEditor =
             nsContentUtils::GetHTMLEditor(document->GetPresContext())) {

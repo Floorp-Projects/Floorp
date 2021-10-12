@@ -18,6 +18,7 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 
 #include "nsGenericHTMLElement.h"
+#include "nsIContentInlines.h"
 
 namespace mozilla::dom {
 
@@ -126,7 +127,7 @@ void SessionStoreDataCollector::Collect() {
     uint32_t size = SessionStoreUtils::CollectFormData(document, formData);
 
     Element* body = document->GetBody();
-    if (document->HasFlag(NODE_IS_EDITABLE) && body) {
+    if (body && body->IsInDesignMode()) {
       IgnoredErrorResult result;
       body->GetInnerHTML(formData.innerHTML(), result);
       size += formData.innerHTML().Length();
