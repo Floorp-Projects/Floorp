@@ -115,6 +115,7 @@ const PAUSE_URL = EXAMPLE_URL + "html_pause-test-page.html";
 const OPEN_REQUEST_IN_TAB_URL = EXAMPLE_URL + "html_open-request-in-tab.html";
 const CSP_URL = EXAMPLE_URL + "html_csp-test-page.html";
 const CSP_RESEND_URL = EXAMPLE_URL + "html_csp-resend-test-page.html";
+const IMAGE_CACHE_URL = EXAMPLE_URL + "html_image-cache.html";
 const SLOW_REQUESTS_URL = EXAMPLE_URL + "html_slow-requests-test-page.html";
 
 const SIMPLE_SJS = EXAMPLE_URL + "sjs_simple-test-server.sjs";
@@ -427,9 +428,13 @@ function waitForNetworkEvents(monitor, getRequests, options = {}) {
       // * for any blocked request,
       let expectedEventTimings =
         document.visibilityState == "hidden" ? 0 : nonBlockedNetworkEvent;
+      let expectedPayloadReady = getRequests;
       // Typically ignore this option if it is undefined or null
       if (typeof options?.expectedEventTimings == "number") {
         expectedEventTimings = options.expectedEventTimings;
+      }
+      if (typeof options?.expectedPayloadReady == "number") {
+        expectedPayloadReady = options.expectedPayloadReady;
       }
       info(
         "> Network event progress: " +
@@ -441,7 +446,7 @@ function waitForNetworkEvents(monitor, getRequests, options = {}) {
           "PayloadReady: " +
           payloadReady +
           "/" +
-          getRequests +
+          expectedPayloadReady +
           ", " +
           "EventTimings: " +
           eventTimings +
@@ -456,7 +461,7 @@ function waitForNetworkEvents(monitor, getRequests, options = {}) {
 
       if (
         networkEvent >= getRequests &&
-        payloadReady >= getRequests &&
+        payloadReady >= expectedPayloadReady &&
         eventTimings >= expectedEventTimings
       ) {
         panel.api.off(TEST_EVENTS.NETWORK_EVENT, onNetworkEvent);
