@@ -260,7 +260,7 @@ class BrowserFragment :
                 store = components.store,
                 sessionId = tabId,
                 fragmentManager = parentFragmentManager,
-                launchInApp = { true },
+                launchInApp = { Settings.getInstance(requireContext()).openLinksInExternalApp },
                 loadUrlUseCase = requireContext().components.sessionUseCases.loadUrl
             ),
             owner = this,

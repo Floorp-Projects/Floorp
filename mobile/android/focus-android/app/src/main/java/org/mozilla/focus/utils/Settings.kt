@@ -111,6 +111,12 @@ class Settings private constructor(
     val defaultSearchEngineName: String
         get() = preferences.getString(getPreferenceKey(R.string.pref_key_search_engine), "")!!
 
+    val openLinksInExternalApp: Boolean
+        get() = preferences.getBoolean(
+            getPreferenceKey(R.string.pref_key_open_links_in_external_app),
+            false
+        )
+
     fun shouldBlockImages(): Boolean =
         // Not shipping in v1 (#188)
             /* preferences.getBoolean(

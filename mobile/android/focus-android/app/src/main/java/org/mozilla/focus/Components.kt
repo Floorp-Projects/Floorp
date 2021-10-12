@@ -179,7 +179,13 @@ class Components(
     val topSitesUseCases: TopSitesUseCases by lazy { TopSitesUseCases(topSitesStorage) }
 
     val appLinksInterceptor by lazy {
-        AppLinksInterceptor(context, interceptLinkClicks = true, launchInApp = { true })
+        AppLinksInterceptor(
+            context,
+            interceptLinkClicks = true,
+            launchInApp = {
+                Settings.getInstance(context).openLinksInExternalApp
+            }
+        )
     }
 }
 
