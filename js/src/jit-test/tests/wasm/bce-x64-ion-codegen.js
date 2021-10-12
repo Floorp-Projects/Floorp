@@ -1,0 +1,60 @@
+// |jit-test| --wasm-compiler=ion; --disable-wasm-huge-memory; --spectre-mitigations=off; skip-if: !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration().x64 || getBuildConfiguration().simulator || getJitCompilerOptions()["ion.check-range-analysis"]; include:codegen-x64-test.js
+
+// Spectre mitigation is disabled above to make the generated code simpler to
+// match; ion.check-range-analysis makes a hash of the code and makes testing
+// pointless.
+
+// White-box testing of bounds check elimination on 64-bit systems.
+//
+// This is probably fairly brittle, but BCE on 64-bit platforms regressed (bug
+// 1735207) without us noticing, so it's not like we can do without these tests.
+//
+// See also bce-x86-ion-codegen.js.
+//
+// If this turns out to be too brittle to be practical then an alternative to
+// testing the output code is to do what we do for SIMD, record (in a log or
+// buffer of some kind) that certain optimizations triggered, and then check the
+// log.
+
+// Make sure the check for the second load is removed: the two load instructions
+// should appear back-to-back in the output.
+codegenTestX64_adhoc(
+`(module
+   (memory 1)
+   (func (export "f") (param i32) (result i32)
+     (local i32)
+     (local.set 1 (i32.add (local.get 0) (i32.const 4)))
+     (i32.load (local.get 1))
+     drop
+     (i32.load (local.get 1))))`,
+    'f', `
+48 3b ..                  cmp %r.x, %r.x
+0f 82 02 00 00 00         jb 0x00000000000000..
+0f 0b                     ud2
+41 8b .. ..               movl \\(%r15,%r..,1\\), %e..
+41 8b .. ..               movl \\(%r15,%r..,1\\), %eax`,
+    {no_prefix:true});
+
+// Make sure constant indices below the heap minimum do not require a bounds check.
+codegenTestX64_adhoc(
+`(module
+   (memory 1)
+   (func (export "f") (result i32)
+     (i32.load (i32.const 16))))`,
+    'f',
+    `41 8b 47 10               movl 0x10\\(%r15\\), %eax`, {log:true});
+
+// Ditto, even at the very limit of the known heap, extending into the guard
+// page.  This is an OOB access, of course, but it needs no explicit bounds
+// check.
+codegenTestX64_adhoc(
+`(module
+   (memory 1)
+   (func (export "f") (result i32)
+     (i32.load (i32.const 65535))))`,
+    'f',
+`
+b8 ff ff 00 00            mov \\$0xFFFF, %eax
+41 8b 04 07               movl \\(%r15,%rax,1\\), %eax`);
+
+
