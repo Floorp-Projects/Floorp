@@ -65,22 +65,16 @@
         }
       }
 
-      @media (-moz-windows-default-theme: 0) {
+      /* See bug 1715990 about why we do this ourselves on HCM */
+      @media (prefers-contrast) {
         :root[tabsintitlebar] {
-          appearance: auto;
-          -moz-default-appearance: -moz-win-glass;
+          background-color: ActiveCaption;
+          color: CaptionText;
         }
 
-        :root[tabsintitlebar]:not(:-moz-lwtheme) {
-          background-color: transparent;
-        }
-
-        /* On win10, if we don't set this on the entire browser container including
-         * the sidebar, if the sidebar is open the accent color bleeds through in
-         * the titlebar */
-        :root[tabsintitlebar] #browser {
-          appearance: auto;
-          -moz-default-appearance: -moz-win-exclude-glass;
+        :root[tabsintitlebar]:-moz-window-inactive {
+          background-color: InactiveCaption;
+          color: InactiveCaptionText;
         }
       }
 

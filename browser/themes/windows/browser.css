@@ -115,11 +115,11 @@
   /* Please keep the menu text colors in this media block in sync with
    * compacttheme.css, minus the :not(:-moz-lwtheme) condition - see Bug 1165718.
    */
-  :root[tabsintitlebar]:not([inFullscreen], :-moz-lwtheme) {
+  :root[tabsintitlebar]:not(:-moz-lwtheme) {
     color: CaptionText;
   }
 
-  :root[tabsintitlebar]:not([inFullscreen], :-moz-lwtheme):-moz-window-inactive {
+  :root[tabsintitlebar]:not(:-moz-lwtheme):-moz-window-inactive {
     color: InactiveCaptionText;
   }
 }
@@ -148,7 +148,7 @@
           ActiveBorder 2px, ActiveBorder 4px, transparent 4px);
   }
 
-  :root[tabsintitlebar]:not([inFullscreen]) :is(#TabsToolbar, #toolbar-menubar) toolbarbutton:not(:-moz-lwtheme) {
+  :root[tabsintitlebar] :is(#TabsToolbar, #toolbar-menubar) toolbarbutton:not(:-moz-lwtheme) {
     color: inherit;
   }
 }
