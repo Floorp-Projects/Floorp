@@ -26,9 +26,6 @@ transforms = TransformSequence()
 INCLUDE_VERSION_REGEXES = {
     "beta": r"'^(\d+\.\d+(b\d+)?)$'",
     "nonbeta": r"'^\d+\.\d+(\.\d+)?$'",
-    # Same as beta, except excludes 58.0b1 due to issues with it not being able
-    # to update to latest
-    "devedition_hack": r"'^((?!58\.0b1$)\d+\.\d+(b\d+)?)$'",
     # Same as nonbeta, except for the esr suffix
     "esr": r"'^\d+\.\d+(\.\d+)?esr$'",
     # Previous esr versions, for update testing before we update users to esr91
