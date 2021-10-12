@@ -1536,13 +1536,10 @@ nscoord ScrollFrameHelper::GetNondisappearingScrollbarWidth(
 
 void ScrollFrameHelper::HandleScrollbarStyleSwitching() {
   // Check if we switched between scrollbar styles.
-  if (mScrollbarActivity &&
-      LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) == 0) {
+  if (mScrollbarActivity && !UsesOverlayScrollbars()) {
     mScrollbarActivity->Destroy();
     mScrollbarActivity = nullptr;
-  } else if (!mScrollbarActivity &&
-             LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) !=
-                 0) {
+  } else if (!mScrollbarActivity && UsesOverlayScrollbars()) {
     mScrollbarActivity = new ScrollbarActivity(do_QueryFrame(mOuter));
   }
 }
@@ -2239,7 +2236,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mVelocityQueue(aOuter->PresContext()) {
   AppendScrollUpdate(ScrollPositionUpdate::NewScrollframe(nsPoint()));
 
-  if (LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0) {
+  if (UsesOverlayScrollbars()) {
     mScrollbarActivity = new ScrollbarActivity(do_QueryFrame(aOuter));
   }
 
@@ -3329,8 +3326,7 @@ void ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder* aBuilder,
                                             const nsDisplayListSet& aLists,
                                             bool aCreateLayer,
                                             bool aPositioned) {
-  const bool overlayScrollbars =
-      LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0;
+  const bool overlayScrollbars = UsesOverlayScrollbars();
 
   AutoTArray<nsIFrame*, 3> scrollParts;
   for (nsIFrame* kid : mOuter->PrincipalChildList()) {
@@ -6708,7 +6704,8 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
 
   bool hasResizer = HasResizer();
   bool scrollbarOnLeft = !IsScrollbarOnRight();
-  bool overlayScrollBarsOnRoot = UsesOverlayScrollbars() && mIsRoot;
+  const bool overlayScrollbars = UsesOverlayScrollbars();
+  const bool overlayScrollBarsOnRoot = overlayScrollbars && mIsRoot;
 
   nsSize compositionSize = mScrollPort.Size();
   if (overlayScrollBarsOnRoot) {
@@ -6736,7 +6733,7 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
       // hence visible). For non-overlay scrollbars it is a 0 margin.
       mVScrollbarBox->GetXULMargin(margin);
 
-      if (!UsesOverlayScrollbars() && mOnlyNeedVScrollbarToScrollVVInsideLV) {
+      if (!overlayScrollbars && mOnlyNeedVScrollbarToScrollVVInsideLV) {
         // There is no space reserved for the layout scrollbar, it is currently
         // not visible because it is positioned just outside the scrollport. But
         // we know that it needs to be made visible so we shift it back in.
@@ -6755,7 +6752,7 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
   }
 
   bool hasVisualOnlyScrollbarsOnBothDirections =
-      !UsesOverlayScrollbars() && mHScrollbarBox && mHasHorizontalScrollbar &&
+      !overlayScrollbars && mHScrollbarBox && mHasHorizontalScrollbar &&
       mOnlyNeedHScrollbarToScrollVVInsideLV && mVScrollbarBox &&
       mHasVerticalScrollbar && mOnlyNeedVScrollbarToScrollVVInsideLV;
 
@@ -6777,7 +6774,7 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
       // hence visible). For non-overlay scrollbars it is a 0 margin.
       mHScrollbarBox->GetXULMargin(margin);
 
-      if (!UsesOverlayScrollbars() && mOnlyNeedHScrollbarToScrollVVInsideLV) {
+      if (!overlayScrollbars && mOnlyNeedHScrollbarToScrollVVInsideLV) {
         // There is no space reserved for the layout scrollbar, it is currently
         // not visible because it is positioned just outside the scrollport. But
         // we know that it needs to be made visible so we shift it back in.
@@ -7710,7 +7707,7 @@ bool ScrollFrameHelper::GetSnapPointForDestination(ScrollUnit aUnit,
 }
 
 bool ScrollFrameHelper::UsesOverlayScrollbars() const {
-  return Document::UseOverlayScrollbars(mOuter->PresShell()->GetDocument());
+  return mOuter->PresContext()->UseOverlayScrollbars();
 }
 
 bool ScrollFrameHelper::DragScroll(WidgetEvent* aEvent) {

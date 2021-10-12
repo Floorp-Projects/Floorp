@@ -4688,12 +4688,6 @@ nsDOMWindowUtils::GetLayersId(uint64_t* aOutLayersId) {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetUsesOverlayScrollbars(bool* aResult) {
-  *aResult = Document::UseOverlayScrollbars(GetDocument());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::GetPaintCount(uint64_t* aPaintCount) {
   auto* presShell = GetPresShell();
   *aPaintCount = presShell ? presShell->GetPaintCount() : 0;

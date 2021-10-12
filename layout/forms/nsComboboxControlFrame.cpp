@@ -758,8 +758,7 @@ nscoord nsComboboxControlFrame::GetIntrinsicISize(gfxContext* aRenderingContext,
 
   if (mDropdownFrame) {
     nscoord dropdownContentISize;
-    bool isUsingOverlayScrollbars =
-        LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0;
+    const bool isUsingOverlayScrollbars = PresContext()->UseOverlayScrollbars();
     if (aType == IntrinsicISizeType::MinISize) {
       dropdownContentISize =
           isContainSize ? 0 : mDropdownFrame->GetMinISize(aRenderingContext);

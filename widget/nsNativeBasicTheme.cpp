@@ -288,7 +288,6 @@ class nsNativeBasicTheme::Colors {
 
 CSSIntCoord nsNativeBasicTheme::sHorizontalScrollbarHeight = CSSIntCoord(0);
 CSSIntCoord nsNativeBasicTheme::sVerticalScrollbarWidth = CSSIntCoord(0);
-bool nsNativeBasicTheme::sOverlayScrollbars = false;
 
 static constexpr nsLiteralCString kPrefs[] = {
     "widget.non-native-theme.use-theme-accent"_ns,
@@ -327,9 +326,6 @@ void nsNativeBasicTheme::RecomputeAccentColors() {
 }
 
 void nsNativeBasicTheme::RecomputeScrollbarParams() {
-  sOverlayScrollbars =
-      LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars);
-
   uint32_t defaultSize = StaticPrefs::widget_non_native_theme_scrollbar_size();
   if (StaticPrefs::widget_non_native_theme_win_scrollbar_use_system_size()) {
     sHorizontalScrollbarHeight = LookAndFeel::GetInt(
@@ -1620,8 +1616,9 @@ bool nsNativeBasicTheme::DoPaintDefaultScrollbar(
     bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors, DPIRatio aDpiRatio) {
-  if (sOverlayScrollbars && !aElementState.HasAtLeastOneOfStates(
-                                NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE)) {
+  if (aFrame->PresContext()->UseOverlayScrollbars() &&
+      !aElementState.HasAtLeastOneOfStates(NS_EVENT_STATE_HOVER |
+                                           NS_EVENT_STATE_ACTIVE)) {
     return true;
   }
   auto scrollbarColor =

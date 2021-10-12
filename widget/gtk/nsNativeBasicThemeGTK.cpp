@@ -25,7 +25,7 @@ already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
 
 nsITheme::Transparency nsNativeBasicThemeGTK::GetWidgetTransparency(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
-  if (!sOverlayScrollbars &&
+  if (!aFrame->PresContext()->UseOverlayScrollbars() &&
       (aAppearance == StyleAppearance::ScrollbarVertical ||
        aAppearance == StyleAppearance::ScrollbarHorizontal) &&
       IsScrollbarTrackOpaque(aFrame)) {
@@ -109,7 +109,8 @@ bool nsNativeBasicThemeGTK::DoPaintScrollbarThumb(
 
   LayoutDeviceRect thumbRect(aRect);
 
-  if (sOverlayScrollbars && !IsParentScrollbarHoveredOrActive(aFrame)) {
+  if (aFrame->PresContext()->UseOverlayScrollbars() &&
+      !IsParentScrollbarHoveredOrActive(aFrame)) {
     if (aHorizontal) {
       thumbRect.height *= 0.5;
       thumbRect.y += thumbRect.height;

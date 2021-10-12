@@ -53,13 +53,6 @@ const responsiveSpec = generateActorSpec({
       request: {},
       response: {},
     },
-
-    setFloatingScrollbars: {
-      request: {
-        state: Arg(0, "boolean"),
-      },
-      response: {},
-    },
   },
 });
 

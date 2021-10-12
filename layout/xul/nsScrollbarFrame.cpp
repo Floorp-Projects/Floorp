@@ -167,8 +167,7 @@ nsIScrollbarMediator* nsScrollbarFrame::GetScrollbarMediator() {
 nsresult nsScrollbarFrame::GetXULMargin(nsMargin& aMargin) {
   aMargin.SizeTo(0, 0, 0, 0);
 
-  const bool overlayScrollbars =
-      !!LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars);
+  const bool overlayScrollbars = PresContext()->UseOverlayScrollbars();
 
   const bool horizontal = IsXULHorizontal();
   bool didSetMargin = false;
