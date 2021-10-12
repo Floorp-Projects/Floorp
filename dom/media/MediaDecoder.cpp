@@ -1406,6 +1406,9 @@ RefPtr<GenericPromise> MediaDecoder::RequestDebugInfo(
 void MediaDecoder::NotifyAudibleStateChanged() {
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   GetOwner()->SetAudibleState(mIsAudioDataAudible);
+  mTelemetryProbesReporter->OnAudibleChanged(
+      mIsAudioDataAudible ? TelemetryProbesReporter::AudibleState::eAudible
+                          : TelemetryProbesReporter::AudibleState::eNotAudible);
 }
 
 double MediaDecoder::GetTotalPlayTimeInSeconds() const {
