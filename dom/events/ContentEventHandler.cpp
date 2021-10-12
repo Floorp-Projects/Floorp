@@ -589,7 +589,7 @@ uint32_t ContentEventHandler::GetNativeTextLengthBefore(nsIContent* aContent,
   if (NS_WARN_IF(aContent->IsText())) {
     return 0;
   }
-  return ShouldBreakLineBefore(aContent, aRootNode)
+  return ShouldBreakLineBefore(*aContent, aRootNode)
              ? GetBRLength(LINE_BREAK_TYPE_NATIVE)
              : 0;
 }
@@ -641,10 +641,10 @@ static uint32_t ConvertToXPOffset(nsIContent* aContent,
 }
 
 /* static */
-bool ContentEventHandler::ShouldBreakLineBefore(nsIContent* aContent,
-                                                nsINode* aRootNode) {
+bool ContentEventHandler::ShouldBreakLineBefore(
+    const nsIContent& aContent, const nsINode* aRootNode /* = nullptr */) {
   // We don't need to append linebreak at the start of the root element.
-  if (aContent == aRootNode) {
+  if (&aContent == aRootNode) {
     return false;
   }
 
@@ -652,22 +652,22 @@ bool ContentEventHandler::ShouldBreakLineBefore(nsIContent* aContent,
   // we shouldn't insert like break before that for now.  Becoming this is a
   // problem must be edge case.  E.g., when ContentEventHandler is used with
   // MathML or SVG elements.
-  if (!aContent->IsHTMLElement()) {
+  if (!aContent.IsHTMLElement()) {
     return false;
   }
 
   // If the element is <br>, we need to check if the <br> is caused by web
   // content.  Otherwise, i.e., it's caused by internal reason of Gecko,
   // it shouldn't be exposed as a line break to flatten text.
-  if (aContent->IsHTMLElement(nsGkAtoms::br)) {
-    return IsContentBR(*aContent);
+  if (aContent.IsHTMLElement(nsGkAtoms::br)) {
+    return IsContentBR(aContent);
   }
 
   // Note that ideally, we should refer the style of the primary frame of
   // aContent for deciding if it's an inline.  However, it's difficult
   // IMEContentObserver to notify IME of text change caused by style change.
   // Therefore, currently, we should check only from the tag for now.
-  if (aContent->IsAnyOfHTMLElements(
+  if (aContent.IsAnyOfHTMLElements(
           nsGkAtoms::a, nsGkAtoms::abbr, nsGkAtoms::acronym, nsGkAtoms::b,
           nsGkAtoms::bdi, nsGkAtoms::bdo, nsGkAtoms::big, nsGkAtoms::cite,
           nsGkAtoms::code, nsGkAtoms::data, nsGkAtoms::del, nsGkAtoms::dfn,
@@ -681,7 +681,8 @@ bool ContentEventHandler::ShouldBreakLineBefore(nsIContent* aContent,
 
   // If the element is unknown element, we shouldn't insert line breaks before
   // it since unknown elements should be ignored.
-  RefPtr<HTMLUnknownElement> unknownHTMLElement = do_QueryObject(aContent);
+  RefPtr<HTMLUnknownElement> unknownHTMLElement =
+      do_QueryObject(const_cast<nsIContent*>(&aContent));
   return !unknownHTMLElement;
 }
 
@@ -743,7 +744,7 @@ nsresult ContentEventHandler::GenerateFlatTextContent(
       } else {
         AppendString(aString, *textNode);
       }
-    } else if (ShouldBreakLineBefore(node->AsContent(), mRootContent)) {
+    } else if (ShouldBreakLineBefore(*node->AsContent(), mRootContent)) {
       aString.Append(char16_t('\n'));
     }
   }
@@ -916,7 +917,7 @@ nsresult ContentEventHandler::GenerateFlatFontRanges(
                        aLineBreakType);
       baseOffset +=
           GetTextLengthInRange(content, startOffset, endOffset, aLineBreakType);
-    } else if (ShouldBreakLineBefore(content, mRootContent)) {
+    } else if (ShouldBreakLineBefore(*content, mRootContent)) {
       if (aFontRanges.IsEmpty()) {
         MOZ_ASSERT(baseOffset == 0);
         FontRange* fontRange = AppendFontRange(aFontRanges, baseOffset);
@@ -1055,7 +1056,7 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
 
     uint32_t textLength =
         content->IsText() ? GetTextLength(*content->AsText(), aLineBreakType)
-                          : (ShouldBreakLineBefore(content, mRootContent)
+                          : (ShouldBreakLineBefore(*content, mRootContent)
                                  ? GetBRLength(aLineBreakType)
                                  : 0);
     if (!textLength) {
@@ -1182,7 +1183,7 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
       }
 
       if (content->HasChildren() &&
-          ShouldBreakLineBefore(content, mRootContent)) {
+          ShouldBreakLineBefore(*content, mRootContent)) {
         // Rule #2.3: </element>]
         rv = aRawRange->SetEnd(content, 0);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1513,7 +1514,7 @@ ContentEventHandler::GetFirstFrameInRangeForTextRect(
 
     // If the element node causes a line break before it, it's the first
     // node causing text.
-    if (ShouldBreakLineBefore(node->AsContent(), mRootContent) ||
+    if (ShouldBreakLineBefore(*node->AsContent(), mRootContent) ||
         IsPaddingBR(*node->AsContent())) {
       nodePosition = {node, 0};
     }
@@ -1606,7 +1607,7 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange) {
       break;
     }
 
-    if (ShouldBreakLineBefore(node->AsContent(), mRootContent) ||
+    if (ShouldBreakLineBefore(*node->AsContent(), mRootContent) ||
         IsPaddingBR(*node->AsContent())) {
       nodePosition = {node, 0};
       break;
@@ -1667,8 +1668,9 @@ ContentEventHandler::GetLineBreakerRectBefore(nsIFrame* aFrame) {
   // Note that this method should be called only with an element's frame whose
   // open tag causes a line break or moz-<br> for computing empty last line's
   // rect.
-  MOZ_ASSERT(ShouldBreakLineBefore(aFrame->GetContent(), mRootContent) ||
-             (aFrame->GetContent() && IsPaddingBR(*aFrame->GetContent())));
+  MOZ_ASSERT(aFrame->GetContent());
+  MOZ_ASSERT(ShouldBreakLineBefore(*aFrame->GetContent(), mRootContent) ||
+             IsPaddingBR(*aFrame->GetContent()));
 
   nsIFrame* frameForFontMetrics = aFrame;
 
@@ -1929,7 +1931,7 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
     // Note that moz-<br> element does not cause any text, however,
     // it represents empty line at the last of current block.  Therefore,
     // we need to compute its rect too.
-    else if (ShouldBreakLineBefore(firstContent, mRootContent) ||
+    else if (ShouldBreakLineBefore(*firstContent, mRootContent) ||
              IsPaddingBR(*firstContent)) {
       nsRect brRect;
       // If the frame is not a <br> frame, we need to compute the caret rect
@@ -2860,7 +2862,7 @@ nsresult ContentEventHandler::GetFlatTextLengthInRange(
       } else {
         *aLength += GetTextLength(*textNode, aLineBreakType);
       }
-    } else if (ShouldBreakLineBefore(content, aRootContent)) {
+    } else if (ShouldBreakLineBefore(*content, aRootContent)) {
       // If the start position is start of this node but doesn't include the
       // open tag, don't append the line break length.
       if (node == aStartPosition.Container() &&

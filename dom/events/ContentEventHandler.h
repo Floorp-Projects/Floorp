@@ -289,7 +289,8 @@ class MOZ_STACK_CLASS ContentEventHandler {
   // Check if we should insert a line break before aContent.
   // This should return false only when aContent is an html element which
   // is typically used in a paragraph like <em>.
-  static bool ShouldBreakLineBefore(nsIContent* aContent, nsINode* aRootNode);
+  static bool ShouldBreakLineBefore(const nsIContent& aContent,
+                                    const nsINode* aRootNode = nullptr);
   // Get the line breaker length.
   static inline uint32_t GetBRLength(LineBreakType aLineBreakType);
   static LineBreakType GetLineBreakType(WidgetQueryContentEvent* aEvent);
