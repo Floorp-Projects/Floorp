@@ -9,6 +9,7 @@
 #include "LocalAccessible-inl.h"
 #include "HyperTextAccessible-inl.h"
 #include "mozilla/a11y/PDocAccessible.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "TextRange.h"
 #include "AccAttributes.h"
 #include "nsComponentManagerUtils.h"
@@ -45,15 +46,14 @@ xpcAccessibleHyperText::GetCharacterCount(int32_t* aCharacterCount) {
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsLocal()) {
-    *aCharacterCount = IntlLocal()->CharacterCount();
-  } else {
 #if defined(XP_WIN)
+  if (mIntl->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    *aCharacterCount = mIntl->AsRemote()->CharacterCount();
-#endif
   }
+#endif
+
+  *aCharacterCount = static_cast<int32_t>(Intl()->CharacterCount());
   return NS_OK;
 }
 
@@ -64,13 +64,7 @@ xpcAccessibleHyperText::GetText(int32_t aStartOffset, int32_t aEndOffset,
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsLocal()) {
-    IntlLocal()->TextSubstring(aStartOffset, aEndOffset, aText);
-  } else {
-    nsString text;
-    mIntl->AsRemote()->TextSubstring(aStartOffset, aEndOffset, text);
-    aText = text;
-  }
+  Intl()->TextSubstring(aStartOffset, aEndOffset, aText);
   return NS_OK;
 }
 
@@ -109,13 +103,7 @@ xpcAccessibleHyperText::GetTextAtOffset(int32_t aOffset,
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsLocal()) {
-    IntlLocal()->TextAtOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset,
-                              aText);
-  } else {
-    mIntl->AsRemote()->TextAtOffset(aOffset, aBoundaryType, aStartOffset,
-                                    aEndOffset, aText);
-  }
+  Intl()->TextAtOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
   return NS_OK;
 }
 

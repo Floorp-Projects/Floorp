@@ -37,6 +37,8 @@ class xpcAccessibleHyperText : public xpcAccessibleGeneric,
   virtual ~xpcAccessibleHyperText() {}
 
  private:
+  HyperTextAccessibleBase* Intl() { return mIntl->AsHyperTextBase(); }
+
   HyperTextAccessible* IntlLocal() {
     if (LocalAccessible* acc = mIntl->AsLocal()) {
       return acc->AsHyperText();
