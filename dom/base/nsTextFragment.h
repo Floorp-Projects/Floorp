@@ -102,7 +102,7 @@ class nsTextFragment final {
    * you can access the value faster but may waste memory if all characters
    * are less than U+0100.
    */
-  bool SetTo(const char16_t* aBuffer, int32_t aLength, bool aUpdateBidi,
+  bool SetTo(const char16_t* aBuffer, uint32_t aLength, bool aUpdateBidi,
              bool aForce2b);
 
   bool SetTo(const nsString& aString, bool aUpdateBidi, bool aForce2b) {
@@ -169,7 +169,7 @@ class nsTextFragment final {
    * @param aOffset where to start the substring in this text fragment
    * @param aLength the length of the substring
    */
-  void AppendTo(nsAString& aString, int32_t aOffset, int32_t aLength) const {
+  void AppendTo(nsAString& aString, uint32_t aOffset, uint32_t aLength) const {
     if (!AppendTo(aString, aOffset, aLength, mozilla::fallible)) {
       aString.AllocFailed(aString.Length() + aLength);
     }
@@ -182,8 +182,8 @@ class nsTextFragment final {
    * @param aLength the length of the substring
    * @return false if an out of memory condition is detected, true otherwise
    */
-  [[nodiscard]] bool AppendTo(nsAString& aString, int32_t aOffset,
-                              int32_t aLength,
+  [[nodiscard]] bool AppendTo(nsAString& aString, uint32_t aOffset,
+                              uint32_t aLength,
                               const mozilla::fallible_t& aFallible) const {
     if (mState.mIs2b) {
       bool ok = aString.Append(Get2b() + aOffset, aLength, aFallible);
@@ -204,14 +204,14 @@ class nsTextFragment final {
    * lie within the fragments data. The fragments data is converted if
    * necessary.
    */
-  void CopyTo(char16_t* aDest, int32_t aOffset, int32_t aCount);
+  void CopyTo(char16_t* aDest, uint32_t aOffset, uint32_t aCount);
 
   /**
    * Return the character in the text-fragment at the given
    * index. This always returns a char16_t.
    */
-  char16_t CharAt(int32_t aIndex) const {
-    MOZ_ASSERT(uint32_t(aIndex) < mState.mLength, "bad index");
+  char16_t CharAt(uint32_t aIndex) const {
+    MOZ_ASSERT(aIndex < mState.mLength, "bad index");
     return mState.mIs2b ? Get2b()[aIndex]
                         : static_cast<unsigned char>(m1b[aIndex]);
   }
@@ -220,8 +220,7 @@ class nsTextFragment final {
    * IsHighSurrogateFollowedByLowSurrogateAt() returns true if character at
    * aIndex is high surrogate and it's followed by low surrogate.
    */
-  inline bool IsHighSurrogateFollowedByLowSurrogateAt(int32_t aIndex) const {
-    MOZ_ASSERT(aIndex >= 0);
+  inline bool IsHighSurrogateFollowedByLowSurrogateAt(uint32_t aIndex) const {
     MOZ_ASSERT(aIndex < mState.mLength);
     if (!mState.mIs2b || aIndex + 1 >= mState.mLength) {
       return false;
@@ -233,10 +232,9 @@ class nsTextFragment final {
    * IsLowSurrogateFollowingHighSurrogateAt() returns true if character at
    * aIndex is low surrogate and it follows high surrogate.
    */
-  inline bool IsLowSurrogateFollowingHighSurrogateAt(int32_t aIndex) const {
-    MOZ_ASSERT(aIndex >= 0);
+  inline bool IsLowSurrogateFollowingHighSurrogateAt(uint32_t aIndex) const {
     MOZ_ASSERT(aIndex < mState.mLength);
-    if (!mState.mIs2b || aIndex <= 0) {
+    if (!mState.mIs2b || !aIndex) {
       return false;
     }
     return NS_IS_SURROGATE_PAIR(Get2b()[aIndex - 1], Get2b()[aIndex]);
@@ -248,8 +246,7 @@ class nsTextFragment final {
    * code for the pair.  If the index is low surrogate, or a high surrogate but
    * not in a pair, returns 0.
    */
-  inline char32_t ScalarValueAt(int32_t aIndex) const {
-    MOZ_ASSERT(aIndex >= 0);
+  inline char32_t ScalarValueAt(uint32_t aIndex) const {
     MOZ_ASSERT(aIndex < mState.mLength);
     if (!mState.mIs2b) {
       return static_cast<unsigned char>(m1b[aIndex]);

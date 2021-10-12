@@ -551,8 +551,7 @@ Element* HTMLEditUtils::GetElementOfImmediateBlockBoundary(
       continue;
     }
     for (uint32_t i = 0; i < textFragment.GetLength(); i++) {
-      if (textFragment.CharAt(AssertedCast<int32_t>(i)) ==
-          HTMLEditUtils::kNewLine) {
+      if (textFragment.CharAt(i) == HTMLEditUtils::kNewLine) {
         if (isNewLinePreformatted) {
           return nullptr;  // found a visible text node.
         }

@@ -282,7 +282,7 @@ nsresult CharacterData::SetTextInternal(
     bool bidi = mText.IsBidi();
 
     // Allocate new buffer
-    int32_t newLength = textLength - aCount + aLength;
+    const uint32_t newLength = textLength - aCount + aLength;
     // Use nsString and not nsAutoString so that we get a nsStringBuffer which
     // can be just AddRefed in nsTextFragment.
     nsString to;
