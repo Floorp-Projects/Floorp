@@ -27,6 +27,7 @@
 #include "Relation.h"
 #include "sdnAccessible.h"
 #include "sdnTextAccessible.h"
+#include "HyperTextAccessible-inl.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
