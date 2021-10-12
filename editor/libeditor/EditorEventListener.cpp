@@ -275,24 +275,6 @@ nsPresContext* EditorEventListener::GetPresContext() const {
   return presShell ? presShell->GetPresContext() : nullptr;
 }
 
-nsIContent* EditorEventListener::GetFocusedRootContent() {
-  MOZ_ASSERT(!DetachedFromEditor());
-  nsCOMPtr<nsIContent> focusedContent = mEditorBase->GetFocusedContent();
-  if (!focusedContent) {
-    return nullptr;
-  }
-
-  if (MOZ_UNLIKELY(NS_WARN_IF(!focusedContent->IsInComposedDoc()))) {
-    return nullptr;
-  }
-
-  if (focusedContent->IsInDesignMode()) {
-    return nullptr;
-  }
-
-  return focusedContent;
-}
-
 bool EditorEventListener::EditorHasFocus() {
   MOZ_ASSERT(!DetachedFromEditor());
   nsCOMPtr<nsIContent> focusedContent = mEditorBase->GetFocusedContent();
@@ -680,7 +662,8 @@ nsresult EditorEventListener::MouseClick(WidgetMouseEvent* aMouseClickEvent) {
   if (EditorHasFocus()) {
     RefPtr<nsPresContext> presContext = GetPresContext();
     if (presContext) {
-      IMEStateManager::OnClickInEditor(presContext, GetFocusedRootContent(),
+      nsCOMPtr<nsIContent> focusedContent = mEditorBase->GetFocusedContent();
+      IMEStateManager::OnClickInEditor(presContext, focusedContent,
                                        aMouseClickEvent);
       if (DetachedFromEditor()) {
         return NS_OK;
@@ -751,9 +734,9 @@ bool EditorEventListener::NotifyIMEOfMouseButtonEvent(
   if (NS_WARN_IF(!presContext)) {
     return false;
   }
-  nsCOMPtr<nsIContent> focusedRootContent = GetFocusedRootContent();
+  nsCOMPtr<nsIContent> focusedContent = mEditorBase->GetFocusedContent();
   return IMEStateManager::OnMouseButtonEventInEditor(
-      presContext, focusedRootContent, aMouseEvent);
+      presContext, focusedContent, aMouseEvent);
 }
 
 nsresult EditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
@@ -1170,7 +1153,7 @@ nsresult EditorEventListener::Focus(InternalFocusEvent* aFocusEvent) {
   if (NS_WARN_IF(!presContext)) {
     return NS_OK;
   }
-  nsCOMPtr<nsIContent> focusedContent = editorBase->GetFocusedContentForIME();
+  nsCOMPtr<nsIContent> focusedContent = editorBase->GetFocusedContent();
   IMEStateManager::OnFocusInEditor(presContext, focusedContent, *editorBase);
 
   return NS_OK;
