@@ -17,6 +17,12 @@ Services.scriptloader.loadSubScript(
 // Then change the source of the iframe, which should kill that orphan.
 
 add_task(async function testRetain() {
+  // The test does not make sense when EFT is enabled, as different documents will have
+  // different walkers.
+  if (isEveryFrameTargetEnabled()) {
+    return;
+  }
+
   const { walker } = await initInspectorFront(
     MAIN_DOMAIN + "inspector-traversal-data.html"
   );
