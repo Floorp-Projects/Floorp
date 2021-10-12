@@ -243,6 +243,11 @@ class String final {
     utext_close(&text);
     return len;
   }
+
+  /**
+   * Return the Unicode version, for example "13.0".
+   */
+  static Span<const char> GetUnicodeVersion();
 };
 
 }  // namespace mozilla::intl

@@ -5,6 +5,9 @@
 
 #include "mozilla/intl/String.h"
 #include "mozilla/Span.h"
+#include "mozilla/TextUtils.h"
+
+#include <algorithm>
 
 #include "TestBuffer.h"
 
@@ -234,6 +237,15 @@ TEST(IntlString, IsCaseIgnorable)
 {
   ASSERT_FALSE(String::IsCaseIgnorable(U'a'));
   ASSERT_TRUE(String::IsCaseIgnorable(U'.'));
+}
+
+TEST(IntlString, GetUnicodeVersion)
+{
+  auto version = String::GetUnicodeVersion();
+
+  ASSERT_TRUE(std::all_of(version.begin(), version.end(), [](char ch) {
+    return IsAsciiDigit(ch) || ch == '.';
+  }));
 }
 
 }  // namespace mozilla::intl
