@@ -8,11 +8,26 @@ MY_DIR=$(pwd)
 popd &>/dev/null
 SCRIPTS_DIR="$MY_DIR/.."
 PYTHON='./mach python'
-
-chunks=$1
-thisChunk=$2
-
 VERIFY_CONFIG="$MOZ_FETCHES_DIR/update-verify.cfg"
+
+while [ "$#" -gt 0 ]; do
+  case $1 in
+      # Parse total-chunks
+      --total-chunks=*) chunks="${1#*=}"; shift 1;;
+      --total-chunks) chunks="${2}"; shift 2;;
+
+      # Parse this-chunk
+      --this-chunk=*) thisChunk="${1#*=}"; shift 1;;
+      --this-chunk) thisChunk="${2}"; shift 2;;
+
+      # Stop if other parameters are sent
+      *) echo "Unknown parameter: ${1}"; exit 1;;
+  esac
+done
+
+# Validate parameters
+if [ -z "${chunks}" ]; then echo "Required parameter: --total-chunks"; exit 1; fi
+if [ -z "${thisChunk}" ]; then echo "Required parameter: --this-chunk"; exit 1; fi
 
 # release promotion
 if [ -n "$CHANNEL" ]; then
