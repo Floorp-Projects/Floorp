@@ -101,7 +101,14 @@ class CacheStorageService final : public nsICacheStorageService,
   mozilla::Mutex& Lock() { return mLock; }
 
   // Tracks entries that may be forced valid in a pruned hashtable.
-  nsTHashMap<nsCStringHashKey, TimeStamp> mForcedValidEntries;
+  struct ForcedValidData {
+    // The timestamp is computed when the entry gets inserted into the map.
+    // It should never be null for an entry in the map.
+    TimeStamp validUntil;
+    // viewed gets set to true by a call to MarkForcedValidEntryUse()
+    bool viewed = false;
+  };
+  nsTHashMap<nsCStringHashKey, ForcedValidData> mForcedValidEntries;
   void ForcedValidEntriesPrune(TimeStamp& now);
 
   // Helper thread-safe interface to pass entry info, only difference from
@@ -189,6 +196,11 @@ class CacheStorageService final : public nsICacheStorageService,
    */
   bool IsForcedValidEntry(nsACString const& aContextKey,
                           nsACString const& aEntryKey);
+
+  // Marks the entry as used, so we may properly report when it gets evicted
+  // if the prefetched resource was used or not.
+  void MarkForcedValidEntryUse(nsACString const& aContextKey,
+                               nsACString const& aEntryKey);
 
  private:
   friend class CacheIndex;

@@ -74,6 +74,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   nsresult SetContentType(uint8_t aContentType);
   nsresult ForceValidFor(uint32_t aSecondsToTheFuture);
   nsresult GetIsForcedValid(bool* aIsForcedValid);
+  nsresult MarkForcedValidUse();
   nsresult OpenInputStream(int64_t offset, nsIInputStream** _retval);
   nsresult OpenOutputStream(int64_t offset, int64_t predictedSize,
                             nsIOutputStream** _retval);
@@ -472,6 +473,9 @@ class CacheEntryHandle final : public nsICacheEntry {
   }
   NS_IMETHOD GetIsForcedValid(bool* aIsForcedValid) override {
     return mEntry->GetIsForcedValid(aIsForcedValid);
+  }
+  NS_IMETHOD MarkForcedValidUse() override {
+    return mEntry->MarkForcedValidUse();
   }
   NS_IMETHOD OpenInputStream(int64_t offset,
                              nsIInputStream** _retval) override {
