@@ -536,14 +536,6 @@ body {
       font-size: 14px;
       font-weight: normal;
       line-height: 20px;
-
-      @media (forced-colors: active) {
-        &:hover {
-          background-color: var(--in-content-button-background-hover);
-          color: var(--in-content-button-text-color-hover);
-          text-decoration: none;
-        }
-      }
     }
 
     &.top {
@@ -629,7 +621,7 @@ body {
       background: var(--grey-subtitle-1);
       border-radius: 5px;
       // using border will show up in Windows High Contrast Mode to improve accessibility.
-      border: 3px solid var(--checkbox-border-color);
+      border: 3px solid var(--grey-subtitle-1);
       opacity: 0.25;
 
       &.current {
@@ -1009,8 +1001,11 @@ body {
       color: #000;
       background-clip: text;
       -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
       animation: shine 50s linear infinite;
+
+      @media (prefers-contrast: no-preference) {
+        -webkit-text-fill-color: transparent;
+      }
     }
 
     @keyframes shine {
