@@ -79,6 +79,9 @@ static std::string ChooseDeviceReplacement(const std::string& str) {
     if (Contains(str, "RENOIR")) {
       return RADEON_R9_290;
     }
+    if (Contains(str, "ARUBA")) {
+      return RADEON_HD_5850;
+    }
 
     return RADEON_D3D_FL10_1;
   }
