@@ -72,6 +72,10 @@ ext.maybeConfigForJetpackBenchmark = { android ->
                 // We set the the output directory simply for simplicity since the benchmark_runner.py script
                 // can't know the name of the phone in the /build/outputs/ directory. The system defaults to
                 // {phone_name} which can be troublesome finding in some case.
+
+                //NOTE: Jetpack Benchmark outputs to Logcat too. However, the output in the logcat is
+                //the min of the several repeats, for more statistics. Therefore, to get more stats,
+                //we refer to the JSON file.
                 additionalTestOutputDir : '/storage/emulated/0/benchmark'
         ]
     }

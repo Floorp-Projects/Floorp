@@ -21,7 +21,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument("--class_to_test",
                         help="Path to the class to test. Format it as 'org.mozilla.fenix.[path_to_benchmark_test")
-
+     parser.add_argument("--open_file_in_browser",
+                            help="Open the JSON file in the browser once the tests are done.")
     return parser.parse_args()
 
 
@@ -49,7 +50,8 @@ def main():
     args = parse_args()
     run_benchmark(args.class_to_test)
     fetch_benchmark_results()
-    open_in_browser()
+    if args.open_file_in_browser:
+        open_in_browser()
 
 
 if __name__ == '__main__':
