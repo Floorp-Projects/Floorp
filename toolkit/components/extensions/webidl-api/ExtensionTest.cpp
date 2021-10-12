@@ -336,5 +336,185 @@ ExtensionEventManager* ExtensionTest::OnMessage() {
   return mOnMessageEventMgr;
 }
 
+#define ASSERT_REJECT_UNKNOWN_FAIL_STR "Failed to complete assertRejects call"
+
+class AssertRejectsHandler final : public dom::PromiseNativeHandler {
+ public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AssertRejectsHandler)
+
+  static void Create(ExtensionTest* aExtensionTest, dom::Promise* aPromise,
+                     dom::Promise* outPromise,
+                     JS::HandleValue aExpectedMatchValue,
+                     const dom::Optional<nsAString>& aMessage,
+                     UniquePtr<dom::SerializedStackHolder>&& aCallerStack) {
+    MOZ_ASSERT(aPromise);
+    MOZ_ASSERT(outPromise);
+    MOZ_ASSERT(aExtensionTest);
+
+    RefPtr<AssertRejectsHandler> handler = new AssertRejectsHandler(
+        aExtensionTest, outPromise, aExpectedMatchValue, aMessage,
+        std::move(aCallerStack));
+
+    aPromise->AppendNativeHandler(handler);
+  }
+
+  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(
+      JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+    nsAutoJSString expectedErrorSource;
+    JS::Rooted<JS::Value> rootedExpectedMatchValue(aCx, mExpectedMatchValue);
+    JS::Rooted<JSString*> expectedErrorToSource(
+        aCx, JS_ValueToSource(aCx, rootedExpectedMatchValue));
+    if (NS_WARN_IF(!expectedErrorToSource ||
+                   !expectedErrorSource.init(aCx, expectedErrorToSource))) {
+      mOutPromise->MaybeRejectWithUnknownError(ASSERT_REJECT_UNKNOWN_FAIL_STR);
+      return;
+    }
+
+    nsString message;
+    message.AppendPrintf("Promise resolved, expect rejection '%s'",
+                         NS_ConvertUTF16toUTF8(expectedErrorSource).get());
+
+    if (mMessage.WasPassed()) {
+      message.AppendPrintf(": %s",
+                           NS_ConvertUTF16toUTF8(mMessage.Value()).get());
+    }
+
+    dom::Sequence<JS::Value> assertTrueArgs;
+    JS::Rooted<JS::Value> arg0(aCx);
+    JS::Rooted<JS::Value> arg1(aCx);
+    if (NS_WARN_IF(!dom::ToJSValue(aCx, false, &arg0) ||
+                   !dom::ToJSValue(aCx, message, &arg1) ||
+                   !assertTrueArgs.AppendElement(arg0, fallible) ||
+                   !assertTrueArgs.AppendElement(arg1, fallible))) {
+      mOutPromise->MaybeRejectWithUnknownError(ASSERT_REJECT_UNKNOWN_FAIL_STR);
+      return;
+    }
+
+    IgnoredErrorResult erv;
+    auto request = mExtensionTest->CallFunctionNoReturn(u"assertTrue"_ns);
+    request->SetSerializedCallerStack(std::move(mCallerStack));
+    request->Run(mExtensionTest->GetGlobalObject(), aCx, assertTrueArgs, erv);
+    if (NS_WARN_IF(erv.Failed())) {
+      mOutPromise->MaybeRejectWithUnknownError(ASSERT_REJECT_UNKNOWN_FAIL_STR);
+      return;
+    }
+    mOutPromise->MaybeResolve(JS::UndefinedValue());
+  }
+
+  MOZ_CAN_RUN_SCRIPT void RejectedCallback(
+      JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+    JS::Rooted<JS::Value> expectedMatchRooted(aCx, mExpectedMatchValue);
+    ErrorResult erv;
+
+    if (NS_WARN_IF(!MOZ_KnownLive(mExtensionTest)
+                        ->AssertMatchInternal(
+                            aCx, aValue, expectedMatchRooted,
+                            u"Promise rejected, expected rejection"_ns,
+                            mMessage, std::move(mCallerStack), erv))) {
+      // Reject for other unknown errors.
+      mOutPromise->MaybeRejectWithUnknownError(ASSERT_REJECT_UNKNOWN_FAIL_STR);
+      return;
+    }
+
+    // Reject with the matcher function exception.
+    erv.WouldReportJSException();
+    if (erv.Failed()) {
+      mOutPromise->MaybeReject(std::move(erv));
+      return;
+    }
+    mExpectedMatchValue.setUndefined();
+    mOutPromise->MaybeResolveWithUndefined();
+  }
+
+ private:
+  AssertRejectsHandler(ExtensionTest* aExtensionTest, dom::Promise* mOutPromise,
+                       JS::HandleValue aExpectedMatchValue,
+                       const dom::Optional<nsAString>& aMessage,
+                       UniquePtr<dom::SerializedStackHolder>&& aCallerStack)
+      : mOutPromise(mOutPromise), mExtensionTest(aExtensionTest) {
+    MOZ_ASSERT(mOutPromise);
+    MOZ_ASSERT(mExtensionTest);
+    mozilla::HoldJSObjects(this);
+    mExpectedMatchValue.set(aExpectedMatchValue);
+    mCallerStack = std::move(aCallerStack);
+    if (aMessage.WasPassed()) {
+      mMessageStr = aMessage.Value();
+      mMessage = &mMessageStr;
+    }
+  }
+
+  ~AssertRejectsHandler() {
+    mOutPromise = nullptr;
+    mExtensionTest = nullptr;
+    mExpectedMatchValue.setUndefined();
+    mozilla::DropJSObjects(this);
+  };
+
+  RefPtr<dom::Promise> mOutPromise;
+  RefPtr<ExtensionTest> mExtensionTest;
+  JS::Heap<JS::Value> mExpectedMatchValue;
+  dom::Optional<nsAString> mMessage;
+  UniquePtr<dom::SerializedStackHolder> mCallerStack;
+  nsString mMessageStr;
+};
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AssertRejectsHandler)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(AssertRejectsHandler)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(AssertRejectsHandler)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(AssertRejectsHandler)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AssertRejectsHandler)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionTest)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutPromise)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(AssertRejectsHandler)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mExpectedMatchValue)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AssertRejectsHandler)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionTest)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutPromise)
+  tmp->mExpectedMatchValue.setUndefined();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+void ExtensionTest::AssertRejects(
+    JSContext* aCx, dom::Promise& aPromise,
+    const JS::HandleValue aExpectedError,
+    const dom::Optional<nsAString>& aMessage,
+    const dom::Optional<OwningNonNull<dom::Function>>& aCallback,
+    JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv) {
+  auto* global = GetGlobalObject();
+
+  IgnoredErrorResult erv;
+  RefPtr<dom::Promise> outPromise = dom::Promise::Create(global, erv);
+  if (NS_WARN_IF(erv.Failed())) {
+    ThrowUnexpectedError(aCx, aRv);
+    return;
+  }
+  MOZ_ASSERT(outPromise);
+
+  AssertRejectsHandler::Create(this, &aPromise, outPromise, aExpectedError,
+                               aMessage, dom::GetCurrentStack(aCx));
+
+  if (aCallback.WasPassed()) {
+    // In theory we could also support the callback-based behavior, but we
+    // only use this in tests and so we don't really need to support it
+    // for Chrome-compatibility reasons.
+    aRv.ThrowNotSupportedError("assertRejects does not support a callback");
+    return;
+  }
+
+  if (NS_WARN_IF(!ToJSValue(aCx, outPromise, aRetval))) {
+    ThrowUnexpectedError(aCx, aRv);
+    return;
+  }
+}
+
 }  // namespace extensions
 }  // namespace mozilla
