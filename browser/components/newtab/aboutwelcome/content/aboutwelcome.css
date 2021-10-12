@@ -458,13 +458,6 @@ body[lwt-newtab-brighttext] {
   font-weight: normal;
   line-height: 20px;
 }
-@media (forced-colors: active) {
-  .onboardingContainer .secondary-cta .secondary:hover {
-    background-color: var(--in-content-button-background-hover);
-    color: var(--in-content-button-text-color-hover);
-    text-decoration: none;
-  }
-}
 .onboardingContainer .secondary-cta.top {
   justify-content: end;
   padding-inline-end: 30px;
@@ -534,7 +527,7 @@ body[lwt-newtab-brighttext] {
   margin-inline-start: 4px;
   background: var(--grey-subtitle-1);
   border-radius: 5px;
-  border: 3px solid var(--checkbox-border-color);
+  border: 3px solid var(--grey-subtitle-1);
   opacity: 0.25;
 }
 .onboardingContainer .steps .indicator.current {
@@ -864,8 +857,12 @@ body[lwt-newtab-brighttext] {
   color: #000;
   background-clip: text;
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   animation: shine 50s linear infinite;
+}
+@media (prefers-contrast: no-preference) {
+  .onboardingContainer .fancy-headings h1 {
+    -webkit-text-fill-color: transparent;
+  }
 }
 @keyframes shine {
   to {
