@@ -758,6 +758,7 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
       content,
       totalNumberOfScreens: total
     } = this.props;
+    const windowObj = this.props.windowObj || window;
     const isWelcomeScreen = this.props.order === 0;
     const isLastScreen = this.props.order === total;
     const autoCloseTime = 20000; // Assign proton screen style 'screen-1' or 'screen-2' by checking
@@ -765,11 +766,14 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
 
     const screenClassName = isWelcomeScreen ? "screen-0" : `${this.props.order === 1 ? `dialog-initial` : ``} ${this.props.order === total ? `dialog-last` : ``} screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
 
-    if (this.props.order === total && autoClose) {
-      let currentURL = window.location.href;
+    if (isLastScreen && autoClose) {
+      let currentURL = windowObj.location.href;
       setTimeout(function () {
-        if (window.location.href === currentURL) {
-          window.location.href = "about:home";
+        // set the timer to close last screen and redirect to about:home after 20 seconds
+        const screenEl = windowObj.document.querySelector(".screen");
+
+        if (windowObj.location.href === currentURL && screenEl.className.includes("dialog-last")) {
+          windowObj.location.href = "about:home";
         }
       }, autoCloseTime);
     }

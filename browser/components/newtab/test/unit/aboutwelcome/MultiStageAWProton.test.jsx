@@ -5,10 +5,15 @@ import { mount } from "enzyme";
 
 describe("MultiStageAboutWelcomeProton module", () => {
   let sandbox;
+  let clock;
   beforeEach(() => {
+    clock = sinon.useFakeTimers();
     sandbox = sinon.createSandbox();
   });
-  afterEach(() => sandbox.restore());
+  afterEach(() => {
+    clock.restore();
+    sandbox.restore();
+  });
 
   describe("MultiStageAWProton component", () => {
     it("should render MultiStageProton Screen", () => {
@@ -34,6 +39,35 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.ok(wrapper.exists());
       assert.equal(wrapper.find(".welcome-text h1").text(), "test title");
       assert.equal(wrapper.find(".section-left h1").text(), "test subtitle");
+    });
+
+    it("should autoClose on last screen", () => {
+      const fakeWindow = {
+        location: {
+          href: "test",
+        },
+        document: {
+          querySelector: () => {
+            return { className: "dialog-last" };
+          },
+        },
+      };
+      const SCREEN_PROPS = {
+        order: 1,
+        autoClose: true,
+        totalNumberOfScreens: 1,
+        content: {
+          title: "test title",
+          subtitle: "test subtitle",
+        },
+        windowObj: fakeWindow,
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      assert.equal(fakeWindow.location.href, "test");
+
+      clock.tick(20001);
+      assert.equal(fakeWindow.location.href, "about:home");
     });
   });
 
