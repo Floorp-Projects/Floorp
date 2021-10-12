@@ -595,7 +595,7 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
       // Test-only third-party library
       "resource://testing-common/sinon-7.2.7.js"_ns,
       // Test-only third-party library
-      "resource://testing-common/ajv-4.1.1.js"_ns,
+      "resource://testing-common/ajv-6.12.6.js"_ns,
       // Test-only utility
       "resource://testing-common/content-task.js"_ns,
 

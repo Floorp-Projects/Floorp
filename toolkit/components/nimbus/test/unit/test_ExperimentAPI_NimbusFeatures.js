@@ -8,7 +8,6 @@ const {
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
-const { Ajv } = ChromeUtils.import("resource://testing-common/ajv-4.1.1.js");
 
 Cu.importGlobalProperties(["fetch"]);
 
