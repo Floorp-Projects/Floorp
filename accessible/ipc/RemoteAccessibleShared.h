@@ -84,9 +84,9 @@ void GetTextAfterOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
                         nsString& aText, int32_t* aStartOffset,
                         int32_t* aEndOffset);
 
-void GetTextAtOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
-                     nsString& aText, int32_t* aStartOffset,
-                     int32_t* aEndOffset);
+virtual void TextAtOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                          int32_t* aStartOffset, int32_t* aEndOffset,
+                          nsAString& aText) override;
 
 void GetTextBeforeOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
                          nsString& aText, int32_t* aStartOffset,

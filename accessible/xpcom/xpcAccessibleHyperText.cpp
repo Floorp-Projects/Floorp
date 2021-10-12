@@ -113,10 +113,8 @@ xpcAccessibleHyperText::GetTextAtOffset(int32_t aOffset,
     Intl()->TextAtOffset(aOffset, aBoundaryType, aStartOffset, aEndOffset,
                          aText);
   } else {
-    nsString text;
-    mIntl->AsRemote()->GetTextAtOffset(aOffset, aBoundaryType, text,
-                                       aStartOffset, aEndOffset);
-    aText = text;
+    mIntl->AsRemote()->TextAtOffset(aOffset, aBoundaryType, aStartOffset,
+                                    aEndOffset, aText);
   }
   return NS_OK;
 }
