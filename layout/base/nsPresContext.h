@@ -817,6 +817,10 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
     return EnsureTheme();
   }
 
+  void RecomputeTheme();
+
+  bool UseOverlayScrollbars() const;
+
   /*
    * Notify the pres context that the theme has changed.  An internal switch
    * means it's one of our Mozilla themes that changed (e.g., Modern to

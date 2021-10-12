@@ -266,7 +266,6 @@ class ResponsiveUI {
       await Promise.all([
         this.updateScreenOrientation("landscape-primary", 0),
         this.updateMaxTouchPointsEnabled(false),
-        this.responsiveFront.setFloatingScrollbars(false),
       ]);
 
       // Hide browser UI to avoid displaying weird intermediate states while closing.
@@ -755,9 +754,6 @@ class ResponsiveUI {
     // on the BrowsingContext by RDM are not preserved. So we need to call
     // enterResponsiveMode whenever there is a target switch.
     this.tab.linkedBrowser.enterResponsiveMode();
-
-    // Apply floating scrollbar styles to document.
-    await this.responsiveFront.setFloatingScrollbars(true);
 
     // Attach current target to the selected browser tab.
     await this.currentTarget.attach();

@@ -17519,13 +17519,6 @@ StylePrefersColorScheme Document::PrefersColorScheme(
   return dark ? StylePrefersColorScheme::Dark : StylePrefersColorScheme::Light;
 }
 
-// static
-bool Document::UseOverlayScrollbars(const Document* aDocument) {
-  BrowsingContext* bc = aDocument ? aDocument->GetBrowsingContext() : nullptr;
-  return LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) ||
-         (bc && bc->InRDMPane());
-}
-
 bool Document::HasRecentlyStartedForegroundLoads() {
   if (!sLoadingForegroundTopLevelContentDocument) {
     return false;

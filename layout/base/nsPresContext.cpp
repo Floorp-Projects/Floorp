@@ -1512,12 +1512,39 @@ void nsPresContext::RecordInteractionTime(InteractionType aType,
 nsITheme* nsPresContext::EnsureTheme() {
   MOZ_ASSERT(!mTheme);
   if (Document()->ShouldAvoidNativeTheme()) {
-    mTheme = do_GetBasicNativeThemeDoNotUseDirectly();
+    BrowsingContext* bc = Document()->GetBrowsingContext();
+    if (bc && bc->Top()->InRDMPane()) {
+      mTheme = do_GetAndroidNonNativeThemeDoNotUseDirectly();
+    } else {
+      mTheme = do_GetBasicNativeThemeDoNotUseDirectly();
+    }
   } else {
     mTheme = do_GetNativeThemeDoNotUseDirectly();
   }
   MOZ_RELEASE_ASSERT(mTheme);
   return mTheme;
+}
+
+void nsPresContext::RecomputeTheme() {
+  if (!mTheme) {
+    return;
+  }
+  nsCOMPtr<nsITheme> oldTheme = std::move(mTheme);
+  EnsureTheme();
+  if (oldTheme == mTheme) {
+    return;
+  }
+  // Theme only affects layout information, not style, so we just need to
+  // reframe (as it affects whether we create scrollbar buttons for example).
+  RebuildAllStyleData(nsChangeHint_ReconstructFrame, RestyleHint{0});
+}
+
+bool nsPresContext::UseOverlayScrollbars() const {
+  if (LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars)) {
+    return true;
+  }
+  BrowsingContext* bc = Document()->GetBrowsingContext();
+  return bc && bc->Top()->InRDMPane();
 }
 
 void nsPresContext::ThemeChanged(widget::ThemeChangeKind aKind) {
