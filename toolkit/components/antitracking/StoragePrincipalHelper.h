@@ -242,10 +242,9 @@ class StoragePrincipalHelper final {
   static nsresult PrepareEffectiveStoragePrincipalOriginAttributes(
       nsIChannel* aChannel, OriginAttributes& aOriginAttributes);
 
-  static bool VerifyValidPartitionedPrincipalInfoForPrincipalInfo(
-      const mozilla::ipc::PrincipalInfo& aPartitionedPrincipalInfo,
-      const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-      bool aIgnoreSpecForContentPrincipal);
+  static bool VerifyValidStoragePrincipalInfoForPrincipalInfo(
+      const mozilla::ipc::PrincipalInfo& aStoragePrincipalInfo,
+      const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
   enum PrincipalType {
     // This is the first-party principal.
@@ -285,12 +284,6 @@ class StoragePrincipalHelper final {
   static nsresult GetPrincipal(nsPIDOMWindowInner* aWindow,
                                PrincipalType aPrincipalType,
                                nsIPrincipal** aPrincipal);
-
-  // Check if we need to use the partitioned principal for the service worker of
-  // the given docShell. Please do not use this API unless you cannot get the
-  // foreign partitioned principal, e.g. creating the inital about:blank page.
-  static bool ShouldUsePartitionPrincipalForServiceWorker(
-      nsIDocShell* aDocShell);
 
   /**
    * Extract the right OriginAttributes from the channel's triggering

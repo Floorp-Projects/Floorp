@@ -12,7 +12,6 @@
 #include "mozilla/dom/ClientsBinding.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/ipc/BackgroundUtils.h"
-#include "mozilla/StoragePrincipalHelper.h"
 #include "nsContentUtils.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIChannel.h"
@@ -108,14 +107,15 @@ class ClientChannelHelper : public nsIInterfaceRequestor,
           // nsGlobalWindowInner will be controlled as unexpected.
           if (oldLoadInfo->GetController().isSome() &&
               newLoadInfo->GetController().isNothing()) {
-            nsCOMPtr<nsIPrincipal> foreignPartitionedPrincipal;
-            rv = StoragePrincipalHelper::GetPrincipal(
-                aNewChannel,
-                StoragePrincipalHelper::eForeignPartitionedPrincipal,
-                getter_AddRefs(foreignPartitionedPrincipal));
+            nsIScriptSecurityManager* ssm =
+                nsContentUtils::GetSecurityManager();
+            MOZ_DIAGNOSTIC_ASSERT(ssm);
+            nsCOMPtr<nsIPrincipal> principal;
+            rv = ssm->GetChannelResultPrincipal(aNewChannel,
+                                                getter_AddRefs(principal));
             NS_ENSURE_SUCCESS(rv, rv);
             reservedClient.reset();
-            CreateClient(newLoadInfo, foreignPartitionedPrincipal);
+            CreateClient(newLoadInfo, principal);
           } else {
             newLoadInfo->SetReservedClientInfo(reservedClientInfo.ref());
           }
@@ -130,14 +130,17 @@ class ClientChannelHelper : public nsIInterfaceRequestor,
     // If it's a cross-origin redirect then we discard the old reserved client
     // and create a new one.
     else {
-      nsCOMPtr<nsIPrincipal> foreignPartitionedPrincipal;
-      rv = StoragePrincipalHelper::GetPrincipal(
-          aNewChannel, StoragePrincipalHelper::eForeignPartitionedPrincipal,
-          getter_AddRefs(foreignPartitionedPrincipal));
+      // If CheckSameOrigin() worked, then the security manager must exist.
+      nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+      MOZ_DIAGNOSTIC_ASSERT(ssm);
+
+      nsCOMPtr<nsIPrincipal> principal;
+      rv = ssm->GetChannelResultPrincipal(aNewChannel,
+                                          getter_AddRefs(principal));
       NS_ENSURE_SUCCESS(rv, rv);
 
       reservedClient.reset();
-      CreateClient(newLoadInfo, foreignPartitionedPrincipal);
+      CreateClient(newLoadInfo, principal);
     }
 
     uint32_t redirectMode = nsIHttpChannelInternal::REDIRECT_MODE_MANUAL;
@@ -296,10 +299,12 @@ nsresult AddClientChannelHelperInternal(nsIChannel* aChannel,
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
-  nsCOMPtr<nsIPrincipal> channelForeignPartitionedPrincipal;
-  nsresult rv = StoragePrincipalHelper::GetPrincipal(
-      aChannel, StoragePrincipalHelper::eForeignPartitionedPrincipal,
-      getter_AddRefs(channelForeignPartitionedPrincipal));
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  NS_ENSURE_TRUE(ssm, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPrincipal> channelPrincipal;
+  nsresult rv = ssm->GetChannelResultPrincipal(
+      aChannel, getter_AddRefs(channelPrincipal));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Only allow the initial ClientInfo to be set if the current channel
@@ -309,10 +314,9 @@ nsresult AddClientChannelHelperInternal(nsIChannel* aChannel,
         PrincipalInfoToPrincipal(initialClientInfo.ref().PrincipalInfo());
 
     bool equals = false;
-    rv = initialPrincipalOrErr.isErr()
-             ? initialPrincipalOrErr.unwrapErr()
-             : initialPrincipalOrErr.unwrap()->Equals(
-                   channelForeignPartitionedPrincipal, &equals);
+    rv = initialPrincipalOrErr.isErr() ? initialPrincipalOrErr.unwrapErr()
+                                       : initialPrincipalOrErr.unwrap()->Equals(
+                                             channelPrincipal, &equals);
     if (NS_FAILED(rv) || !equals) {
       initialClientInfo.reset();
     }
@@ -327,8 +331,8 @@ nsresult AddClientChannelHelperInternal(nsIChannel* aChannel,
     bool equals = false;
     rv = reservedPrincipalOrErr.isErr()
              ? reservedPrincipalOrErr.unwrapErr()
-             : reservedPrincipalOrErr.unwrap()->Equals(
-                   channelForeignPartitionedPrincipal, &equals);
+             : reservedPrincipalOrErr.unwrap()->Equals(channelPrincipal,
+                                                       &equals);
     if (NS_FAILED(rv) || !equals) {
       reservedClientInfo.reset();
     }
@@ -341,8 +345,7 @@ nsresult AddClientChannelHelperInternal(nsIChannel* aChannel,
   RefPtr<ClientChannelHelper> helper = new T(outerCallbacks, aEventTarget);
 
   if (initialClientInfo.isNothing() && reservedClientInfo.isNothing()) {
-    helper->CreateClientForPrincipal(
-        loadInfo, channelForeignPartitionedPrincipal, aEventTarget);
+    helper->CreateClientForPrincipal(loadInfo, channelPrincipal, aEventTarget);
   }
 
   // Only set the callbacks helper if we are able to reserve the client
