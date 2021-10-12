@@ -304,6 +304,15 @@ ICUResult TimeZone::SetDefaultTimeZoneFromHostTimeZone() {
   return Ok{};
 }
 
+Result<Span<const char>, ICUError> TimeZone::GetTZDataVersion() {
+  UErrorCode status = U_ZERO_ERROR;
+  const char* tzdataVersion = ucal_getTZDataVersion(&status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+  return MakeStringSpan(tzdataVersion);
+}
+
 Result<SpanEnumeration<char>, ICUError> TimeZone::GetAvailableTimeZones(
     const char* aRegion) {
   // Get the time zones that are commonly used in the given region. Uses the
