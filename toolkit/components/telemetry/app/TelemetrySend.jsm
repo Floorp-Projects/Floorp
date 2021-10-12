@@ -17,7 +17,6 @@ var EXPORTED_SYMBOLS = [
   "SendScheduler",
   "TelemetrySendImpl",
   "PING_SUBMIT_TIMEOUT_MS",
-  "sendStandalonePing",
   "gzipCompressString",
 ];
 
@@ -194,42 +193,6 @@ function gzipCompressString(string) {
   converter.onDataAvailable(null, stringStream, 0, string.length);
   converter.onStopRequest(null, null, null);
   return observer.buffer;
-}
-
-const STANDALONE_PING_TIMEOUT = 30 * 1000; // 30 seconds
-
-function sendStandalonePing(endpoint, payload, extraHeaders = {}) {
-  return new Promise((resolve, reject) => {
-    let request = new ServiceRequest({ mozAnon: true });
-    request.mozBackgroundRequest = true;
-    request.timeout = STANDALONE_PING_TIMEOUT;
-
-    request.open("POST", endpoint, true);
-    request.overrideMimeType("text/plain");
-    request.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
-    request.setRequestHeader("Content-Encoding", "gzip");
-    request.setRequestHeader("Date", new Date().toUTCString());
-    for (let header in extraHeaders) {
-      request.setRequestHeader(header, extraHeaders[header]);
-    }
-
-    request.onload = event => {
-      if (request.status !== 200) {
-        reject(event);
-      } else {
-        resolve(event);
-      }
-    };
-    request.onerror = reject;
-    request.onabort = reject;
-    request.ontimeout = reject;
-
-    let payloadStream = Cc[
-      "@mozilla.org/io/string-input-stream;1"
-    ].createInstance(Ci.nsIStringInputStream);
-    payloadStream.data = gzipCompressString(payload);
-    request.sendInputStream(payloadStream);
-  });
 }
 
 var TelemetrySend = {
@@ -1638,14 +1601,12 @@ var TelemetrySendImpl = {
     }
 
     const exeName =
-      AppConstants.MOZ_APP_NAME +
-      (AppConstants.platform === "win" ? ".exe" : "");
+      AppConstants.platform === "win" ? "pingsender.exe" : "pingsender";
 
     let exe = Services.dirsvc.get("GreBinD", Ci.nsIFile);
     exe.append(exeName);
 
-    let params = ["--backgroundtask", "pingsender"];
-    params.push(...pings.flatMap(ping => [ping.url, ping.path]));
+    let params = pings.flatMap(ping => [ping.url, ping.path]);
     let process = Cc["@mozilla.org/process/util;1"].createInstance(
       Ci.nsIProcess
     );
