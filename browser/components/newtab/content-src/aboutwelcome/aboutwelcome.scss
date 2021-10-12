@@ -607,7 +607,7 @@ body {
     margin-top: 0;
     padding-block: 16px 0;
     transition: var(--transition);
-    z-index: 1;
+    z-index: -1;
 
     &.has-helptext {
       padding-bottom: 0;
