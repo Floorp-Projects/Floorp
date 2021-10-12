@@ -49,10 +49,7 @@ def add_command(config, tasks):
                 "using": "run-task",
                 "cwd": "{checkout}",
                 "command": "tools/update-verify/scripts/chunked-verify.sh "
-                "{} {}".format(
-                    total_chunks,
-                    this_chunk,
-                ),
+                f"--total-chunks={total_chunks} --this-chunk={this_chunk}",
                 "sparse-profile": "update-verify",
             }
 
