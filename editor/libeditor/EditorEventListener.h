@@ -87,7 +87,6 @@ class EditorEventListener : public nsIDOMEventListener {
   void CleanupDragDropCaret();
   PresShell* GetPresShell() const;
   nsPresContext* GetPresContext() const;
-  nsIContent* GetFocusedRootContent();
   // Returns true if IME consumes the mouse event.
   MOZ_CAN_RUN_SCRIPT bool NotifyIMEOfMouseButtonEvent(
       WidgetMouseEvent* aMouseEvent);

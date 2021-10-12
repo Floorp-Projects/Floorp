@@ -602,12 +602,6 @@ class EditorBase : public nsIEditor,
   virtual nsIContent* GetFocusedContent() const;
 
   /**
-   * Get the focused content for the argument of some IMEStateManager's
-   * methods.
-   */
-  virtual nsIContent* GetFocusedContentForIME() const;
-
-  /**
    * Whether the aGUIEvent should be handled by this editor or not.  When this
    * returns false, The aGUIEvent shouldn't be handled on this editor,
    * i.e., The aGUIEvent should be handled by another inner editor or ancestor

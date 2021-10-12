@@ -5785,19 +5785,6 @@ nsIContent* HTMLEditor::GetFocusedContent() const {
   return OurWindowHasFocus() ? focusedContent : nullptr;
 }
 
-nsIContent* HTMLEditor::GetFocusedContentForIME() const {
-  nsIContent* focusedContent = GetFocusedContent();
-  if (!focusedContent) {
-    return nullptr;
-  }
-
-  Document* document = GetDocument();
-  if (NS_WARN_IF(!document)) {
-    return nullptr;
-  }
-  return IsInDesignMode() ? nullptr : focusedContent;
-}
-
 bool HTMLEditor::IsActiveInDOMWindow() const {
   nsFocusManager* focusManager = nsFocusManager::GetFocusManager();
   if (NS_WARN_IF(!focusManager)) {
