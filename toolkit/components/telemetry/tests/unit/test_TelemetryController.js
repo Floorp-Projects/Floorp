@@ -810,12 +810,12 @@ add_task(async function test_sendNewProfile() {
   // Check that the new-profile ping is sent at shutdown using the pingsender.
   Assert.equal(
     req.getHeader("User-Agent"),
-    "pingsender/1.0",
+    "pingsender/2.0",
     "Should have received the correct user agent string."
   );
   Assert.equal(
     req.getHeader("X-PingSender-Version"),
-    "1.0",
+    "2.0",
     "Should have received the correct PingSender version string."
   );
 
