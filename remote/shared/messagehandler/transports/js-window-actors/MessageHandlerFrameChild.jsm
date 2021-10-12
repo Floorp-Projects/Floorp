@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  error: "chrome://remote/content/shared/messagehandler/Errors.jsm",
   MessageHandlerRegistry:
     "chrome://remote/content/shared/messagehandler/MessageHandlerRegistry.jsm",
   WindowGlobalMessageHandler:
@@ -37,13 +38,22 @@ class MessageHandlerFrameChild extends JSWindowActorChild {
     this._registry.on("message-handler-registry-event", this._onRegistryEvent);
   }
 
-  receiveMessage(message) {
+  async receiveMessage(message) {
     if (message.name === "MessageHandlerFrameParent:sendCommand") {
       const { sessionId, command } = message.data;
       const messageHandler = this._registry.getOrCreateMessageHandler(
         sessionId
       );
-      return messageHandler.handleCommand(command);
+      try {
+        return await messageHandler.handleCommand(command);
+      } catch (e) {
+        if (e instanceof error.MessageHandlerError) {
+          return {
+            error: e.toJSON(),
+          };
+        }
+        throw e;
+      }
     }
 
     return null;
