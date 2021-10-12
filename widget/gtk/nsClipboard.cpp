@@ -783,7 +783,7 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
     AppendUTF16toUTF8(ucs2string, html);
 
     LOGCLIP("  Setting %d bytest of %s data\n", html.Length(),
-             gdk_atom_name(selectionTarget));
+            gdk_atom_name(selectionTarget));
     gtk_selection_data_set(aSelectionData, selectionTarget, 8,
                            (const guchar*)html.get(), html.Length());
     return;
