@@ -363,6 +363,9 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
 
   Maybe<nsID> clientId = Some(clientInfo.ref().Id());
 
+  Maybe<PrincipalInfo> clientPrincipalInfo =
+      Some(clientInfo.ref().PrincipalInfo());
+
   nsString documentURI;
   if (nsCOMPtr<Document> doc = aWindow->GetExtantDoc()) {
     rv = doc->GetDocumentURI(documentURI);
@@ -376,6 +379,7 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
   object->mStoragePrincipalInfo = std::move(storagePrincipalInfo);
   object->mPrivateBrowsingId = privateBrowsingId;
   object->mClientId = clientId;
+  object->mClientPrincipalInfo = clientPrincipalInfo;
   object->mOrigin = origin;
   object->mOriginKey = originKey;
   object->mDocumentURI = documentURI;
@@ -932,6 +936,7 @@ nsresult LSObject::EnsureDatabase() {
   LSRequestPrepareDatastoreParams params;
   params.commonParams() = commonParams;
   params.clientId() = mClientId;
+  params.clientPrincipalInfo() = mClientPrincipalInfo;
 
   LSRequestResponse response;
 
@@ -992,6 +997,7 @@ nsresult LSObject::EnsureObserver() {
   params.principalInfo() = *mPrincipalInfo;
   params.storagePrincipalInfo() = *mStoragePrincipalInfo;
   params.clientId() = mClientId;
+  params.clientPrincipalInfo() = mClientPrincipalInfo;
 
   LSRequestResponse response;
 

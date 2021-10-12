@@ -82,6 +82,7 @@ class LSObject final : public Storage {
 
   uint32_t mPrivateBrowsingId;
   Maybe<nsID> mClientId;
+  Maybe<PrincipalInfo> mClientPrincipalInfo;
   nsCString mOrigin;
   nsCString mOriginKey;
   nsString mDocumentURI;
