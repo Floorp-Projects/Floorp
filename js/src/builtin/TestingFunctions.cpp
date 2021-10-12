@@ -103,9 +103,7 @@
 #include "js/Wrapper.h"
 #include "threading/CpuCount.h"
 #ifdef JS_HAS_INTL_API
-#  include "unicode/ucal.h"
 #  include "unicode/uchar.h"
-#  include "unicode/utypes.h"
 #  include "unicode/uversion.h"
 #endif
 #include "util/DifferentialTesting.h"
@@ -7338,14 +7336,13 @@ static bool GetICUOptions(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  UErrorCode status = U_ZERO_ERROR;
-  const char* tzdataVersion = ucal_getTZDataVersion(&status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
+  auto tzdataVersion = mozilla::intl::TimeZone::GetTZDataVersion();
+  if (tzdataVersion.isErr()) {
+    intl::ReportInternalError(cx, tzdataVersion.unwrapErr());
     return false;
   }
 
-  str = NewStringCopyZ<CanGC>(cx, tzdataVersion);
+  str = NewStringCopy<CanGC>(cx, tzdataVersion.unwrap());
   if (!str || !JS_DefineProperty(cx, info, "tzdata", str, JSPROP_ENUMERATE)) {
     return false;
   }

@@ -6,8 +6,10 @@
 #include "mozilla/intl/TimeZone.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Span.h"
+#include "mozilla/TextUtils.h"
 #include "TestBuffer.h"
 
+#include <algorithm>
 #include <string>
 
 namespace mozilla::intl {
@@ -206,6 +208,42 @@ TEST(IntlTimeZone, GetAvailableTimeZonesNoRegion)
   ASSERT_TRUE(hasAmericaNewYork);
   ASSERT_TRUE(hasAsiaTokyo);
   ASSERT_TRUE(hasEuropeParis);
+}
+
+TEST(IntlTimeZone, GetTZDataVersion)
+{
+  // From <https://data.iana.org/time-zones/tz-link.html#download>:
+  //
+  // "Since 1996, each version has been a four-digit year followed by lower-case
+  // letter (a through z, then za through zz, then zza through zzz, and so on)."
+  //
+  // More than 26 releases are unlikely or at least never happend. 2009 got
+  // quite close with 21 releases, but that was the first time ever with more
+  // than twenty releases in a single year.
+  //
+  // Should this assertion ever fail, because more than 26 releases were issued,
+  // update it accordingly. And in that case we should be extra cautious that
+  // all time zone functionality in Firefox and in external libraries we're
+  // using can cope with more than 26 tzdata releases.
+  //
+  // Also see <https://mm.icann.org/pipermail/tz/2021-September/030621.html>:
+  //
+  // "For Android having 2021a1 and 2021b would be inconvenient. Because there
+  // are hardcoded places which expect that tzdata version is exactly 5
+  // characters."
+
+  auto version = TimeZone::GetTZDataVersion().unwrap();
+  auto [year, release] = version.SplitAt(4);
+
+  ASSERT_TRUE(std::all_of(year.begin(), year.end(), IsAsciiDigit<char>));
+  ASSERT_TRUE(IsAsciiAlpha(release[0]));
+
+  // ICU issued a non-standard release "2021a1".
+  ASSERT_TRUE(release.Length() == 1 || release.Length() == 2);
+
+  if (release.Length() == 2) {
+    ASSERT_TRUE(IsAsciiDigit(release[1]));
+  }
 }
 
 }  // namespace mozilla::intl

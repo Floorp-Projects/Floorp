@@ -167,6 +167,13 @@ class TimeZone final {
   static ICUResult SetDefaultTimeZoneFromHostTimeZone();
 
   /**
+   * Return the tzdata version.
+   *
+   * The tzdata version is a string of the form "<year><release>", e.g. "2021a".
+   */
+  static Result<Span<const char>, ICUError> GetTZDataVersion();
+
+  /**
    * Constant for the typical maximal length of a time zone identifier.
    *
    * At the time of this writing 32 characters fits every supported time zone:
