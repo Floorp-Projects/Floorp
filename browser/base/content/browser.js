@@ -9186,16 +9186,17 @@ class TabDialogBox {
       modalType === Ci.nsIPrompt.MODAL_TYPE_CONTENT
         ? this.getContentDialogManager()
         : this._tabDialogManager;
-    let hasDialogs =
+
+    let hasDialogs = () =>
       this._tabDialogManager.hasDialogs ||
       this._contentDialogManager?.hasDialogs;
 
-    if (!hasDialogs) {
+    if (!hasDialogs()) {
       this._onFirstDialogOpen();
     }
 
     let closingCallback = event => {
-      if (!hasDialogs) {
+      if (!hasDialogs()) {
         this._onLastDialogClose();
       }
 
