@@ -10,6 +10,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
 #ifdef JS_HAS_INTL_API
+#  include "mozilla/intl/ICU4CLibrary.h"
 #  include "mozilla/intl/Locale.h"
 #  include "mozilla/intl/String.h"
 #  include "mozilla/intl/TimeZone.h"
@@ -103,9 +104,6 @@
 #include "js/Vector.h"
 #include "js/Wrapper.h"
 #include "threading/CpuCount.h"
-#ifdef JS_HAS_INTL_API
-#  include "unicode/uversion.h"
-#endif
 #include "util/DifferentialTesting.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
@@ -7321,7 +7319,7 @@ static bool GetICUOptions(JSContext* cx, unsigned argc, Value* vp) {
 #ifdef JS_HAS_INTL_API
   RootedString str(cx);
 
-  str = NewStringCopyZ<CanGC>(cx, U_ICU_VERSION);
+  str = NewStringCopy<CanGC>(cx, mozilla::intl::ICU4CLibrary::GetVersion());
   if (!str || !JS_DefineProperty(cx, info, "version", str, JSPROP_ENUMERATE)) {
     return false;
   }
