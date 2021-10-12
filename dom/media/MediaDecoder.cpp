@@ -317,6 +317,8 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   mWatchManager.Watch(mIsAudioDataAudible,
                       &MediaDecoder::NotifyAudibleStateChanged);
 
+  mWatchManager.Watch(mVolume, &MediaDecoder::NotifyVolumeChanged);
+
   mVideoDecodingOberver->RegisterEvent();
 }
 
@@ -875,7 +877,8 @@ void MediaDecoder::UpdateTelemetryHelperBasedOnPlayState(
   if (aState == PlayState::PLAY_STATE_PLAYING) {
     mTelemetryProbesReporter->OnPlay(
         OwnerVisibility(),
-        TelemetryProbesReporter::MediaInfoToMediaContent(*mInfo));
+        TelemetryProbesReporter::MediaInfoToMediaContent(*mInfo),
+        mVolume == 0.f);
   } else if (aState == PlayState::PLAY_STATE_PAUSED ||
              aState == PlayState::PLAY_STATE_ENDED) {
     mTelemetryProbesReporter->OnPause(OwnerVisibility());
@@ -1411,6 +1414,11 @@ void MediaDecoder::NotifyAudibleStateChanged() {
                           : TelemetryProbesReporter::AudibleState::eNotAudible);
 }
 
+void MediaDecoder::NotifyVolumeChanged() {
+  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
+  mTelemetryProbesReporter->OnMutedChanged(mVolume == 0.f);
+}
+
 double MediaDecoder::GetTotalVideoPlayTimeInSeconds() const {
   return mTelemetryProbesReporter->GetTotalVideoPlayTimeInSeconds();
 }
@@ -1437,6 +1445,10 @@ double MediaDecoder::GetAudiblePlayTimeInSeconds() const {
 
 double MediaDecoder::GetInaudiblePlayTimeInSeconds() const {
   return mTelemetryProbesReporter->GetInaudiblePlayTimeInSeconds();
+}
+
+double MediaDecoder::GetMutedPlayTimeInSeconds() const {
+  return mTelemetryProbesReporter->GetMutedPlayTimeInSeconds();
 }
 
 MediaMemoryTracker::MediaMemoryTracker() = default;
