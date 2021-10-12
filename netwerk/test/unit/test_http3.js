@@ -76,6 +76,7 @@ function run_test() {
   // We always resolve elements of localDomains as it's hardcoded without the
   // following pref:
   prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);
+  prefs.setBoolPref("network.http.altsvc.oe", true);
 
   // The certificate for the http3server server is for foo.example.com and
   // is signed by http2-ca.pem so add that cert to the trust list as a
@@ -564,6 +565,7 @@ function testsDone() {
   prefs.clearUserPref("network.http.http3.enabled");
   prefs.clearUserPref("network.dns.localDomains");
   prefs.clearUserPref("network.proxy.allow_hijacking_localhost");
+  prefs.clearUserPref("network.http.altsvc.oe");
   dump("testDone\n");
   do_test_pending();
   h1Server.stop(do_test_finished);
