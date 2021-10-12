@@ -27,16 +27,10 @@ add_task(async function() {
 
   ok(cert, "Cert was created");
 
-  Assert.ok(
-    !overrideService.hasMatchingOverride(
-      TEST_URI.asciiHost,
-      TEST_URI.port,
-      {},
-      cert,
-      {},
-      {}
-    ),
-    `Should not have override for ${TEST_URI.asciiHost}:${TEST_URI.port} yet`
+  Assert.equal(
+    overrideService.isCertUsedForOverrides(cert, true, true),
+    0,
+    "Cert should not be used for override yet"
   );
 
   overrideService.rememberValidityOverride(
@@ -48,16 +42,10 @@ add_task(async function() {
     false
   );
 
-  Assert.ok(
-    overrideService.hasMatchingOverride(
-      TEST_URI.asciiHost,
-      TEST_URI.port,
-      {},
-      cert,
-      {},
-      {}
-    ),
-    `Should have override for ${TEST_URI.asciiHost}:${TEST_URI.port} now`
+  Assert.equal(
+    overrideService.isCertUsedForOverrides(cert, true, true),
+    1,
+    "Cert should be used for override now"
   );
 
   await new Promise(aResolve => {
@@ -72,16 +60,10 @@ add_task(async function() {
     );
   });
 
-  Assert.ok(
-    !overrideService.hasMatchingOverride(
-      TEST_URI.asciiHost,
-      TEST_URI.port,
-      {},
-      cert,
-      {},
-      {}
-    ),
-    `Should not have override for ${TEST_URI.asciiHost}:${TEST_URI.port} now`
+  Assert.equal(
+    overrideService.isCertUsedForOverrides(cert, true, true),
+    0,
+    "Cert should not be used for override now"
   );
 
   for (let uri of [TEST_URI, ANOTHER_TEST_URI, YET_ANOTHER_TEST_URI]) {
