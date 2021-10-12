@@ -9426,9 +9426,11 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
 
     for (auto&& file : std::exchange(directoriesForRemovalRetry,
                                      nsTArray<nsCOMPtr<nsIFile>>{})) {
-      if (NS_FAILED((file->Remove(true)))) {
-        directoriesForRemovalRetry.AppendElement(std::move(file));
-      }
+      QM_WARNONLY_TRY(
+          QM_TO_RESULT(file->Remove(true)),
+          ([&directoriesForRemovalRetry, &file](const auto&) {
+            directoriesForRemovalRetry.AppendElement(std::move(file));
+          }));
     }
 
     if (directoriesForRemovalRetry.IsEmpty()) {
@@ -9443,13 +9445,10 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
     PR_Sleep(PR_MillisecondsToInterval(200));
   }
 
-  if (!directoriesForRemovalRetry.IsEmpty()) {
-    aQuotaManager.MaybeRecordQuotaManagerShutdownStep(
-        "Failed to remove one or more directories, giving up!"_ns);
-  } else {
-    aQuotaManager.MaybeRecordQuotaManagerShutdownStep(
-        "ClearRequestBase: Completed deleting files"_ns);
-  }
+  QM_WARNONLY_TRY(OkIf(directoriesForRemovalRetry.IsEmpty()));
+
+  aQuotaManager.MaybeRecordQuotaManagerShutdownStep(
+      "ClearRequestBase: Completed deleting files"_ns);
 }
 
 nsresult ClearRequestBase::DoDirectoryWork(QuotaManager& aQuotaManager) {
