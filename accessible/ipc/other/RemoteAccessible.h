@@ -33,6 +33,8 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
 
 #include "mozilla/a11y/RemoteAccessibleShared.h"
 
+  virtual uint32_t CharacterCount() const override;
+
  protected:
   explicit RemoteAccessible(DocAccessibleParent* aThisAsDoc)
       : RemoteAccessibleBase(aThisAsDoc) {
