@@ -1272,7 +1272,7 @@ class SmokeTest {
             assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
         }.openTabDrawer {
             verifyTabMediaControlButtonState("Pause")
-            clickTabMediaControlButton()
+            clickTabMediaControlButton("Pause")
             verifyTabMediaControlButtonState("Play")
         }.openTab(audioTestPage.title) {
             assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
