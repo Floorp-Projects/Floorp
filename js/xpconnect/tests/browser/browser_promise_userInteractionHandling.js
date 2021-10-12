@@ -22,7 +22,7 @@ add_task(async function test_explicit_object_prototype() {
 
       button.addEventListener("click", () => {
         is(DOMWindowUtils.isHandlingUserInput, true, "handling user input");
-        content.document.requestStorageAccess().then(() => {
+        content.document.hasStorageAccess().then(() => {
           is(DOMWindowUtils.isHandlingUserInput, true,
              "still handling user input");
           Promise.resolve().then(() => {

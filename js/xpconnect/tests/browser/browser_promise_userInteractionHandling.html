@@ -16,7 +16,7 @@ const button = document.getElementById("button")
 button.addEventListener("click", () => {
   is(domWindowUtils.isHandlingUserInput, true, "handling user input");
 
-  document.requestStorageAccess().then(() => {
+  document.hasStorageAccess().then(() => {
     is(domWindowUtils.isHandlingUserInput, true, "still handling user input");
   });
 });
