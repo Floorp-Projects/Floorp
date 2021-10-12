@@ -14,34 +14,50 @@ var tests = [
 ];
 
 add_task(async function() {
-  let url = SimpleTest.getTestFileURL("HelperAppLauncherDialog_chromeScript.js");
-  let chromeScript = SpecialPowers.loadChromeScript(url);
-
-  for (let [name, expected] of tests) {
-    let promiseName = new Promise(function(resolve) {
-      chromeScript.addMessageListener("suggestedFileName",
-                                      function listener(data) {
-        chromeScript.removeMessageListener("suggestedFileName", listener);
+  function promiseMessage(messageName) {
+    return new Promise(resolve => {
+      chromeScript.addMessageListener(messageName, function listener(data) {
+        chromeScript.removeMessageListener(messageName, listener);
         resolve(data);
       });
     });
-    const a = document.createElement('a');
-    // Pass an unknown mimetype so we don't "correct" the extension:
-    a.href = "data:application/baconizer;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
-    a.download = name;
-    a.dispatchEvent(new MouseEvent('click'));
-    is((await promiseName), expected, "got the expected sanitized name");
   }
 
-  let promise = new Promise(function(resolve) {
-    chromeScript.addMessageListener("unregistered", function listener() {
-      chromeScript.removeMessageListener("unregistered", listener);
-      resolve();
-    });
-  });
+  let url = SimpleTest.getTestFileURL("HelperAppLauncherDialog_chromeScript.js");
+  let chromeScript = SpecialPowers.loadChromeScript(url);
+
+  function wrongAPICallListener(msg) {
+    ok(
+      false,
+      `Called ${msg} when improvements pref was set to ${
+        Services.prefs.getBoolPref(
+          "browser.download.improvements_to_download_panel"
+        )
+      }, which shouldn't happen.`
+    );
+  }
+  chromeScript.addMessageListener("wrongAPICall", wrongAPICallListener);
+
+  for (let prefVal of [false, true]) {
+    info("Pushing pref");
+    await SpecialPowers.pushPrefEnv({set: [["browser.download.improvements_to_download_panel", prefVal]]});
+    for (let [name, expected] of tests) {
+      let promiseName = promiseMessage("suggestedFileName");
+      const a = document.createElement('a');
+      // Pass an unknown mimetype so we don't "correct" the extension:
+      a.href = "data:application/baconizer;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
+      a.download = name;
+      a.dispatchEvent(new MouseEvent('click'));
+      is((await promiseName), expected, "got the expected sanitized name");
+    }
+  }
+
+  // Clean up.
+  let promise = promiseMessage("unregistered");
   chromeScript.sendAsyncMessage("unregister");
   await promise;
 
+  chromeScript.removeMessageListener("wrongAPICall", wrongAPICallListener);
   chromeScript.destroy();
 });
 </script>
