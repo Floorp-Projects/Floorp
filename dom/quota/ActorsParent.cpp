@@ -9436,8 +9436,10 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
   // ensure that the directory lock is upheld until we complete or give up
   // though.
   for (uint32_t index = 0; index < 10; index++) {
-    aQuotaManager.MaybeRecordQuotaManagerShutdownStep(
-        "ClearRequestBase: Retrying directory removal"_ns);
+    aQuotaManager.MaybeRecordQuotaManagerShutdownStepWith([index]() {
+      return nsPrintfCString(
+          "ClearRequestBase: Starting repeated directory removal #%d", index);
+    });
 
     for (auto&& file : std::exchange(directoriesForRemovalRetry,
                                      nsTArray<nsCOMPtr<nsIFile>>{})) {
@@ -9448,17 +9450,24 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
           }));
     }
 
+    aQuotaManager.MaybeRecordQuotaManagerShutdownStepWith([index]() {
+      return nsPrintfCString(
+          "ClearRequestBase: Completed repeated directory removal #%d", index);
+    });
+
     if (directoriesForRemovalRetry.IsEmpty()) {
       break;
     }
 
     aQuotaManager.MaybeRecordQuotaManagerShutdownStepWith([index]() {
-      return nsPrintfCString(
-          "Failed to remove one or more directories, retry number: %d",
-          index + 1);
+      return nsPrintfCString("ClearRequestBase: Before sleep #%d", index);
     });
 
     PR_Sleep(PR_MillisecondsToInterval(200));
+
+    aQuotaManager.MaybeRecordQuotaManagerShutdownStepWith([index]() {
+      return nsPrintfCString("ClearRequestBase: After sleep #%d", index);
+    });
   }
 
   QM_WARNONLY_TRY(OkIf(directoriesForRemovalRetry.IsEmpty()));
