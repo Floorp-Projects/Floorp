@@ -1545,9 +1545,9 @@ bool nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
           if (wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT) {
             foundWrapPosition = true;
           } else {
-            wrapPosition = lineBreaker->Next(aSequenceStart,
-                                             (aEnd - aSequenceStart),
-                                             (aPos - aSequenceStart));
+            wrapPosition =
+                lineBreaker->Next(aSequenceStart, (aEnd - aSequenceStart),
+                                  (aPos - aSequenceStart));
             MOZ_ASSERT(wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT,
                        "Next() always treats end-of-text as a break");
             // If the line-breaker returned end-of-text, we don't know that it
