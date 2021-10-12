@@ -672,6 +672,9 @@ void MediaDecoder::MetadataLoaded(
       aInfo->mMediaSeekableOnlyInBufferedRanges;
   mInfo = std::move(aInfo);
 
+  mTelemetryProbesReporter->OnMediaContentChanged(
+      TelemetryProbesReporter::MediaInfoToMediaContent(*mInfo));
+
   // Make sure the element and the frame (if any) are told about
   // our new size.
   if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
@@ -735,6 +738,8 @@ void MediaDecoder::FirstFrameLoaded(
       aInfo->HasVideo(), PlayStateStr(), IsTransportSeekable());
 
   mInfo = std::move(aInfo);
+  mTelemetryProbesReporter->OnMediaContentChanged(
+      TelemetryProbesReporter::MediaInfoToMediaContent(*mInfo));
 
   Invalidate();
 
@@ -868,7 +873,9 @@ TelemetryProbesReporter::Visibility MediaDecoder::OwnerVisibility() const {
 void MediaDecoder::UpdateTelemetryHelperBasedOnPlayState(
     PlayState aState) const {
   if (aState == PlayState::PLAY_STATE_PLAYING) {
-    mTelemetryProbesReporter->OnPlay(OwnerVisibility());
+    mTelemetryProbesReporter->OnPlay(
+        OwnerVisibility(),
+        TelemetryProbesReporter::MediaInfoToMediaContent(*mInfo));
   } else if (aState == PlayState::PLAY_STATE_PAUSED ||
              aState == PlayState::PLAY_STATE_ENDED) {
     mTelemetryProbesReporter->OnPause(OwnerVisibility());
