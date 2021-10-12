@@ -10,7 +10,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
-  Ajv: "resource://testing-common/ajv-4.1.1.js",
+  Ajv: "resource://testing-common/ajv-6.12.6.js",
   ExperimentTestUtils: "resource://testing-common/NimbusTestUtils.jsm",
   RemoteDefaultsLoader:
     "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm",
