@@ -1070,6 +1070,13 @@ public class GeckoSession {
         final @Nullable String triggeringUri,
         final boolean hasUserGesture,
         final boolean isTopLevel) {
+      final ProfilerController profilerController = runtime.getProfilerController();
+      final Double onLoadRequestProfilerStartTime = profilerController.getProfilerTime();
+      final Runnable addMarker =
+          () ->
+              profilerController.addMarker(
+                  "GeckoSession.onLoadRequest", onLoadRequestProfilerStartTime);
+
       final GeckoSession session = mOwner.get();
       if (session == null) {
         // Don't handle any load request if we can't get the session for some reason.
@@ -1085,6 +1092,7 @@ public class GeckoSession {
 
               if (delegate == null) {
                 res.complete(false);
+                addMarker.run();
                 return;
               }
 
@@ -1104,6 +1112,7 @@ public class GeckoSession {
 
               if (reqResponse == null) {
                 res.complete(false);
+                addMarker.run();
                 return;
               }
 
@@ -1114,10 +1123,12 @@ public class GeckoSession {
                     } else {
                       res.complete(false);
                     }
+                    addMarker.run();
                   },
                   ex -> {
                     // This is incredibly ugly and unreadable because checkstyle sucks.
                     res.complete(false);
+                    addMarker.run();
                   });
             }
           });
