@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FileTestUtils: "resource://testing-common/FileTestUtils.jsm",
   _RemoteSettingsExperimentLoader:
     "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm",
-  Ajv: "resource://testing-common/ajv-4.1.1.js",
+  Ajv: "resource://testing-common/ajv-6.12.6.js",
   sinon: "resource://testing-common/Sinon.jsm",
   FeatureManifest: "resource://nimbus/FeatureManifest.js",
 });

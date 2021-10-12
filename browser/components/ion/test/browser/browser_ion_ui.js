@@ -7,7 +7,7 @@
 ChromeUtils.defineModuleGetter(
   this,
   "Ajv",
-  "resource://testing-common/ajv-4.1.1.js"
+  "resource://testing-common/ajv-6.12.6.js"
 );
 
 const { TelemetryArchive } = ChromeUtils.import(

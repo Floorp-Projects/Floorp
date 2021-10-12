@@ -7,7 +7,7 @@ const { ASRouterTriggerListeners } = ChromeUtils.import(
 const { CFRMessageProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/CFRMessageProvider.jsm"
 );
-const { Ajv } = ChromeUtils.import("resource://testing-common/ajv-4.1.1.js");
+const { Ajv } = ChromeUtils.import("resource://testing-common/ajv-6.12.6.js");
 
 XPCOMUtils.defineLazyGetter(this, "fetchTriggerActionSchema", async () => {
   const response = await fetch(
