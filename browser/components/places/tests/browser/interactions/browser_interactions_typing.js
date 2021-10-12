@@ -79,8 +79,14 @@ add_task(async function test_load_type_and_navigate_away() {
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     await sendTextToInput(browser, sentence);
 
+    // Reducing the intermittent rate for Bug 1717218 while this is being debugged
+    await TestUtils.waitForTick();
+    await TestUtils.waitForTick();
+
     BrowserTestUtils.loadURI(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
+
+    await TestUtils.waitForTick();
 
     await assertDatabaseValues([
       {
