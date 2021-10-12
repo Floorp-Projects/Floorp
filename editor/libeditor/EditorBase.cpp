@@ -459,9 +459,7 @@ nsresult EditorBase::PostCreateInternal() {
       NS_WARNING("EditorBase::GetPreferredIMEState() failed");
       return NS_OK;
     }
-    // May be null in design mode
-    nsCOMPtr<nsIContent> content = GetFocusedContentForIME();
-    IMEStateManager::UpdateIMEState(newState, content, *this);
+    IMEStateManager::UpdateIMEState(newState, focusedContent, *this);
   }
 
   // FYI: This call might cause destroying this editor.
@@ -707,7 +705,7 @@ NS_IMETHODIMP EditorBase::SetFlags(uint32_t aFlags) {
     if (NS_SUCCEEDED(rv)) {
       // NOTE: When the enabled state isn't going to be modified, this method
       // is going to do nothing.
-      nsCOMPtr<nsIContent> content = GetFocusedContentForIME();
+      nsCOMPtr<nsIContent> content = GetFocusedContent();
       IMEStateManager::UpdateIMEState(newState, content, *this);
     }
   }
@@ -5347,7 +5345,7 @@ void EditorBase::ReinitializeSelection(Element& aElement) {
   if (NS_WARN_IF(!presContext)) {
     return;
   }
-  nsCOMPtr<nsIContent> focusedContent = GetFocusedContentForIME();
+  nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
   IMEStateManager::OnFocusInEditor(presContext, focusedContent, *this);
 }
 
@@ -5523,10 +5521,6 @@ nsIContent* EditorBase::GetFocusedContent() const {
   MOZ_ASSERT((content == piTarget) == SameCOMIdentity(content, piTarget));
 
   return (content == piTarget) ? content : nullptr;
-}
-
-nsIContent* EditorBase::GetFocusedContentForIME() const {
-  return GetFocusedContent();
 }
 
 bool EditorBase::IsActiveInDOMWindow() const {

@@ -219,7 +219,6 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult
   HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) final;
   nsIContent* GetFocusedContent() const final;
-  nsIContent* GetFocusedContentForIME() const final;
   bool IsActiveInDOMWindow() const final;
   dom::EventTarget* GetDOMEventTarget() const final;
   Element* FindSelectionRoot(nsINode* aNode) const final;

@@ -291,8 +291,8 @@ class IMEStateManager {
   static nsresult NotifyIME(IMEMessage aMessage, nsPresContext* aPresContext,
                             BrowserParent* aBrowserParent = nullptr);
 
-  static nsINode* GetRootEditableNode(nsPresContext* aPresContext,
-                                      nsIContent* aContent);
+  static nsINode* GetRootEditableNode(const nsPresContext* aPresContext,
+                                      const nsIContent* aContent);
 
   /**
    * Returns active IMEContentObserver but may be nullptr if focused content
@@ -320,7 +320,14 @@ class IMEStateManager {
   //     marked too.  Probably, we should initialize IMEContentObserver
   //     asynchronously.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY static void CreateIMEContentObserver(
-      EditorBase& aEditorBase);
+      EditorBase& aEditorBase, nsIContent* aFocusedContent);
+
+  /**
+   * Check whether the content matches or does not match with focus information
+   * which is previously notified via OnChangeFocus();
+   */
+  static bool IsFocusedContent(const nsPresContext* aPresContext,
+                               const nsIContent* aFocusedContent);
 
   static void DestroyIMEContentObserver();
 

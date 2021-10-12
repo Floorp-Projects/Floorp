@@ -1,0 +1,157 @@
+<!doctype html>
+<html>
+<head>
+<meta chareset="utf-8">
+<title>Testing non-editable root becomes editable after getting focus</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+SimpleTest.waitForExplicitFinish();
+addEventListener("load", async () => {
+  await SimpleTest.promiseFocus(window);
+
+  await (async () => {
+    const iframe = document.createElement("iframe");
+    document.body.appendChild(iframe);
+    await new Promise(resolve => {
+      iframe.addEventListener("load", async () => {
+        const doc = iframe.contentDocument;
+        const win = iframe.contentWindow;
+        win.focus();
+        doc.documentElement.focus();
+        doc.designMode = "on";
+        await new Promise(r => win.requestAnimationFrame(() => win.requestAnimationFrame(r)));
+        is(
+          SpecialPowers.getDOMWindowUtils(win).IMEStatus,
+          SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED,
+          "IME should be enabled in the design mode document"
+        );
+        is(
+          SpecialPowers.unwrap(SpecialPowers.getDOMWindowUtils(win).nodeObservedByIMEContentObserver),
+          doc.body,
+          "The <body> should be observed by IMEContentObserver in design mode"
+        );
+        doc.designMode = "off";
+        iframe.remove();
+        resolve();
+      }, {once: true});
+      info("Waiting for load of sub-document for testing design mode");
+      iframe.srcdoc = "<!doctype html><html><meta charset=\"utf-8\"></head><body></body></html>";
+    });
+  })();
+
+  await (async () => {
+    const iframe = document.createElement("iframe");
+    document.body.appendChild(iframe);
+    await new Promise(resolve => {
+      iframe.addEventListener("load", async () => {
+        const doc = iframe.contentDocument;
+        const win = iframe.contentWindow;
+        win.focus()
+        doc.documentElement.focus();
+        doc.documentElement.contentEditable = "true";
+        await new Promise(r => win.requestAnimationFrame(() => win.requestAnimationFrame(r)));
+        is(
+          SpecialPowers.getDOMWindowUtils(win).IMEStatus,
+          SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED,
+          "IME should be enabled when the <html> element whose contenteditable is set to true"
+        );
+        is(
+          SpecialPowers.unwrap(SpecialPowers.getDOMWindowUtils(win).nodeObservedByIMEContentObserver),
+          doc.documentElement,
+          "The <html> should be observed by IMEContentObserver when <html contenteditable=\"true\">"
+        );
+        iframe.remove();
+        resolve();
+      }, {once: true});
+      info("Waiting for load of sub-document for testing <html> element becomes editable");
+      iframe.srcdoc = "<!doctype html><html><meta charset=\"utf-8\"></head><body></body></html>";
+    });
+  })();
+
+  await (async () => {
+    const iframe = document.createElement("iframe");
+    document.body.appendChild(iframe);
+    await new Promise(resolve => {
+      iframe.addEventListener("load", async () => {
+        const doc = iframe.contentDocument;
+        const win = iframe.contentWindow;
+        win.focus();
+        doc.body.focus();
+        doc.body.contentEditable = "true";
+        await new Promise(r => win.requestAnimationFrame(() => win.requestAnimationFrame(r)));
+        if (doc.activeElement === doc.body && doc.hasFocus()) {
+          todo_is(
+            SpecialPowers.getDOMWindowUtils(win).IMEStatus,
+            SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED,
+            "IME should be enabled when the <body> element whose contenteditable is set to true and it has focus"
+          );
+          todo_is(
+            SpecialPowers.unwrap(SpecialPowers.getDOMWindowUtils(win).nodeObservedByIMEContentObserver),
+            doc.body,
+            "The <body> should be observed by IMEContentObserver when <body contenteditable=\"true\"> and it has focus"
+          );
+        } else {
+          is(
+            SpecialPowers.getDOMWindowUtils(win).IMEStatus,
+            SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+            "IME should be disabled when the <body> element whose contenteditable is set to true but it does not have focus"
+          );
+          is(
+            SpecialPowers.unwrap(SpecialPowers.getDOMWindowUtils(win).nodeObservedByIMEContentObserver),
+            null,
+            "Nobody should be observed by IMEContentObserver when <body contenteditable=\"true\"> but it does not have focus"
+          );
+        }
+        iframe.remove();
+        resolve();
+      }, {once: true});
+      info("Waiting for load of sub-document for testing <body> element becomes editable");
+      iframe.srcdoc = "<!doctype html><html><meta charset=\"utf-8\"></head><body></body></html>";
+    });
+  })();
+
+  await (async () => {
+    const iframe = document.createElement("iframe");
+    document.body.appendChild(iframe);
+    await new Promise(resolve => {
+      iframe.addEventListener("load", async () => {
+        const doc = iframe.contentDocument;
+        const win = iframe.contentWindow;
+        win.focus();
+        const editingHost = doc.createElement("div");
+        doc.documentElement.remove();
+        doc.appendChild(editingHost);
+        editingHost.focus();
+        is(
+          SpecialPowers.unwrap(SpecialPowers.focusManager.focusedElement),
+          editingHost,
+          "The <div contenteditable> should have focus because of only child of the Document node"
+        );
+        editingHost.contentEditable = "true";
+        await new Promise(r => win.requestAnimationFrame(() => win.requestAnimationFrame(r)));
+        is(
+          SpecialPowers.getDOMWindowUtils(win).IMEStatus,
+          SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED,
+          "IME should be enabled in the root element"
+        );
+        is(
+          SpecialPowers.unwrap(SpecialPowers.getDOMWindowUtils(win).nodeObservedByIMEContentObserver),
+          editingHost,
+          "The <div contenteditable> should be observed by IMEContentObserver"
+        );
+        iframe.srcdoc = "";
+        resolve();
+      }, {once: true});
+      info("Waiting for load of sub-document for testing root <div> element becomes editable");
+      iframe.srcdoc = "<!doctype html><html><meta charset=\"utf-8\"></head><body></body></html>";
+    });
+  })();
+
+  SimpleTest.finish();
+}, false);
+</script>
+</body>
+</html>
