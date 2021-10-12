@@ -32,6 +32,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
+  const { QuickSuggestTestUtils: module } = ChromeUtils.import(
+    "resource://testing-common/QuickSuggestTestUtils.jsm"
+  );
+  module.init(this);
+  return module;
+});
+
 SearchTestUtils.init(this);
 AddonTestUtils.init(this, false);
 AddonTestUtils.createAppInfo(
