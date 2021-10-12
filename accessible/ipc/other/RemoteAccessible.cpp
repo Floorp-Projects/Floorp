@@ -164,7 +164,10 @@ void RemoteAccessible::SetCaretOffset(int32_t aOffset) {
   Unused << mDoc->SendSetCaretOffset(mID, aOffset);
 }
 
-int32_t RemoteAccessible::CharacterCount() {
+uint32_t RemoteAccessible::CharacterCount() const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::CharacterCount();
+  }
   int32_t count = 0;
   Unused << mDoc->SendCharacterCount(mID, &count);
   return count;

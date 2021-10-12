@@ -75,7 +75,6 @@ int32_t CaretLineNumber();
 virtual int32_t CaretOffset() const override;
 void SetCaretOffset(int32_t aOffset);
 
-int32_t CharacterCount();
 int32_t SelectionCount();
 
 virtual void TextSubstring(int32_t aStartOffset, int32_t aEndOfset,

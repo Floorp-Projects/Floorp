@@ -72,7 +72,7 @@ class HyperTextAccessibleBase {
   /**
    * Return character count within the hypertext accessible.
    */
-  uint32_t CharacterCount() const;
+  virtual uint32_t CharacterCount() const;
 
   /**
    * Get caret offset, if no caret then -1.
