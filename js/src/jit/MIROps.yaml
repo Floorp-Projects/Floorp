@@ -2465,6 +2465,9 @@
   operands:
     input: Int32
   result_type: Int64
+  movable: true
+  congruent_to: if_operands_equal
+  folds_to: custom
   type_policy: none
   alias_set: none
 
@@ -2472,6 +2475,9 @@
   operands:
     input: Int64
   result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  folds_to: custom
   type_policy: none
   alias_set: none
 
