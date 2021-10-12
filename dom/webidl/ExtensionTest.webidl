@@ -52,7 +52,7 @@ interface ExtensionTest {
   [Throws, WebExtensionStub="NoReturn"]
   void assertFalse(any... args);
 
-  [Throws, WebExtensionStub="NotImplementedNoReturn"]
+  [Throws, WebExtensionStub="AssertEq"]
   void assertEq(any... args);
 
   [Throws, WebExtensionStub="NotImplementedAsync"]
