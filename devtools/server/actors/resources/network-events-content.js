@@ -45,10 +45,16 @@ class NetworkEventContentWatcher {
     this.onUpdated = onUpdated;
 
     this.httpFailedOpeningRequest = this.httpFailedOpeningRequest.bind(this);
+    this.httpOnImageCacheResponse = this.httpOnImageCacheResponse.bind(this);
 
     Services.obs.addObserver(
       this.httpFailedOpeningRequest,
       "http-on-failed-opening-request"
+    );
+
+    Services.obs.addObserver(
+      this.httpOnImageCacheResponse,
+      "http-on-image-cache-response"
     );
   }
 
@@ -107,6 +113,71 @@ class NetworkEventContentWatcher {
     NetworkUtils.fetchRequestHeadersAndCookies(channel, actor, {});
   }
 
+  httpOnImageCacheResponse(subject, topic) {
+    if (
+      topic != "http-on-image-cache-response" ||
+      !(subject instanceof Ci.nsIHttpChannel)
+    ) {
+      return;
+    }
+
+    const channel = subject.QueryInterface(Ci.nsIHttpChannel);
+
+    const event = NetworkUtils.createNetworkEvent(channel, {
+      fromCache: true,
+    });
+
+    const actor = new NetworkEventActor(
+      this,
+      {
+        onNetworkEventUpdate: this.onNetworkEventUpdatedForImageCache.bind(
+          this
+        ),
+        onNetworkEventDestroy: this.onNetworkEventDestroyed.bind(this),
+      },
+      event
+    );
+    this.targetActor.manage(actor);
+
+    const resource = actor.asResource();
+
+    this._networkEvents.set(resource.resourceId, {
+      resourceId: resource.resourceId,
+      resourceType: resource.resourceType,
+      types: [],
+      resourceUpdates: {},
+    });
+
+    // The channel we get here is a dummy channel and no real internet
+    // connection has been made, thus some dummy values need to be
+    // set.
+    resource.status = 200;
+    resource.statusText = "OK";
+    resource.totalTime = 0;
+    resource.mimeType = channel.contentType;
+    resource.contentSize = channel.contentLength;
+
+    this.onAvailable([resource]);
+    NetworkUtils.fetchRequestHeadersAndCookies(channel, actor, {});
+  }
+
+  onNetworkEventUpdatedForImageCache(updateResource) {
+    const networkEvent = this._networkEvents.get(updateResource.resourceId);
+
+    if (!networkEvent) {
+      return;
+    }
+
+    const { resourceId, resourceType, resourceUpdates, types } = networkEvent;
+
+    resourceUpdates[`${updateResource.updateType}Available`] = true;
+    types.push(updateResource.updateType);
+
+    if (types.includes("requestHeaders")) {
+      this.onUpdated([{ resourceType, resourceId, resourceUpdates }]);
+    }
+  }
+
   onNetworkEventUpdated(updateResource) {
     const networkEvent = this._networkEvents.get(updateResource.resourceId);
 
@@ -134,6 +205,11 @@ class NetworkEventContentWatcher {
     Services.obs.removeObserver(
       this.httpFailedOpeningRequest,
       "http-on-failed-opening-request"
+    );
+
+    Services.obs.removeObserver(
+      this.httpOnImageCacheResponse,
+      "http-on-image-cache-response"
     );
   }
 }

@@ -369,6 +369,12 @@ class imgLoader final : public imgILoader,
       imgRequestProxy** aProxyRequest, nsIPrincipal* aLoadingPrincipal,
       mozilla::CORSMode, bool aLinkPreload, bool* aNewChannelCreated);
 
+  void NotifyObserversForCachedImage(imgCacheEntry* aEntry, imgRequest* request,
+                                     nsIURI* aURI,
+                                     nsIReferrerInfo* aReferrerInfo,
+                                     mozilla::dom::Document* aLoadingDocument,
+                                     nsIPrincipal* aLoadingPrincipal,
+                                     mozilla::CORSMode);
   // aURI may be different from imgRequest's URI in the case of blob URIs, as we
   // can share requests with different URIs.
   nsresult CreateNewProxyForRequest(imgRequest* aRequest, nsIURI* aURI,
