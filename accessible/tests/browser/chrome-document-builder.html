@@ -1,5 +1,8 @@
+<!doctype html>
 <html>
 <head>
+<meta charset="utf-8"/>
+<title>Accessibility Test</title>
 <script>
 /*
  * This file is used to load an HTML snippet in the parent process via a
@@ -10,11 +13,10 @@
 window.addEventListener("DOMContentLoaded", function() {
   const params = new URLSearchParams(document.location.search);
   const html = params.get("html");
-  document.open();
-  // eslint-disable-next-line no-unsanitized/method
-  document.write(html);
-  document.close();
+  // eslint-disable-next-line no-unsanitized/property
+  document.body.innerHTML = html;
 });
 </script>
 </head>
+<body></body>
 </html>
