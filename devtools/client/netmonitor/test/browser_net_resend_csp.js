@@ -31,9 +31,10 @@ add_task(async function() {
 
   // Context Menu > "Resend"
   EventUtils.sendMouseEvent({ type: "contextmenu" }, imgRequest);
-  getContextMenuItem(monitor, "request-list-context-resend-only").click();
 
-  await performRequests(monitor, tab, 1);
+  const waitForResentRequest = waitForNetworkEvents(monitor, 1);
+  getContextMenuItem(monitor, "request-list-context-resend-only").click();
+  await waitForResentRequest;
 
   // Selects request that was resent
   const selReq = getSelectedRequest(store.getState());
