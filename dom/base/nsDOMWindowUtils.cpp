@@ -125,6 +125,8 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
+#include "mozilla/IMEStateManager.h"
+#include "mozilla/IMEContentObserver.h"
 
 #ifdef XP_WIN
 #  undef GetClassName
@@ -2096,6 +2098,19 @@ nsDOMWindowUtils::GetInputContextOrigin(uint32_t* aOrigin) {
   MOZ_ASSERT(context.mOrigin == InputContext::Origin::ORIGIN_MAIN ||
              context.mOrigin == InputContext::Origin::ORIGIN_CONTENT);
   *aOrigin = static_cast<uint32_t>(context.mOrigin);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetNodeObservedByIMEContentObserver(nsINode** aNode) {
+  NS_ENSURE_ARG_POINTER(aNode);
+
+  IMEContentObserver* observer = IMEStateManager::GetActiveContentObserver();
+  if (!observer) {
+    *aNode = nullptr;
+    return NS_OK;
+  }
+  *aNode = do_AddRef(observer->GetObservingContent()).take();
   return NS_OK;
 }
 
