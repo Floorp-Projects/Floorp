@@ -13,6 +13,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 
+  error: "chrome://remote/content/shared/messagehandler/Errors.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
   ModuleCache: "chrome://remote/content/shared/messagehandler/ModuleCache.jsm",
 });
@@ -71,6 +72,32 @@ class MessageHandler extends EventEmitter {
 
   get sessionId() {
     return this._sessionId;
+  }
+
+  /**
+   * Check if the command can be handled from this MessageHandler node.
+   *
+   * @param {Command} command
+   *     The command to check. See type definition in MessageHandler.js
+   * @throws {Error}
+   *     Throws if there is no module supporting the provided command on the
+   *     path to the command's destination
+   */
+  checkCommand(command) {
+    const { commandName, destination, moduleName } = command;
+
+    // Retrieve all the modules classes which can be used to reach the
+    // command's destination.
+    const moduleClasses = this._moduleCache.getAllModuleClasses(
+      moduleName,
+      destination
+    );
+
+    if (!moduleClasses.some(cls => cls.supportsMethod(commandName))) {
+      throw new error.UnsupportedCommandError(
+        `${moduleName}.${commandName} not supported for destination ${destination?.type}`
+      );
+    }
   }
 
   destroy() {
@@ -139,8 +166,10 @@ class MessageHandler extends EventEmitter {
       `Received command ${moduleName}.${commandName} for destination ${destination.type}`
     );
 
+    this.checkCommand(command);
+
     const module = this._moduleCache.getModuleInstance(moduleName, destination);
-    if (this._isCommandSupportedByModule(commandName, module)) {
+    if (module && module.supportsMethod(commandName)) {
       return module[commandName](params, destination);
     }
 
@@ -149,14 +178,6 @@ class MessageHandler extends EventEmitter {
 
   toString() {
     return `[object ${this.constructor.name} ${this.name}]`;
-  }
-
-  _isCommandSupportedByModule(commandName, module) {
-    // TODO: With the current implementation, all functions of a given module
-    // are considered as valid commands.
-    // This should probably be replaced by a more explicit declaration, via a
-    // manifest for instance.
-    return module && typeof module[commandName] === "function";
   }
 
   /**
