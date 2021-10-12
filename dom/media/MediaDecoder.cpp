@@ -1402,7 +1402,7 @@ void MediaDecoder::NotifyAudibleStateChanged() {
 }
 
 double MediaDecoder::GetTotalPlayTimeInSeconds() const {
-  return mTelemetryProbesReporter->GetTotalPlayTimeInSeconds();
+  return mTelemetryProbesReporter->GetTotalVideoPlayTimeInSeconds();
 }
 
 double MediaDecoder::GetVisibleVideoPlayTimeInSeconds() const {
