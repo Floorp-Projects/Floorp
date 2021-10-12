@@ -134,4 +134,6 @@
 
     <!-- Override AC colors -->
     <color name="mozac_ui_icons_fill">@color/primaryText</color>
+    <color name="mozac_additional_note_background">@color/colorPrimary</color>
+    <color name="mozac_additional_note_text_color">@color/secondaryText</color>
 </resources>
