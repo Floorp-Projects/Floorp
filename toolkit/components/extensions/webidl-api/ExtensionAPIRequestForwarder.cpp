@@ -97,6 +97,13 @@ ExtensionAPIRequestForwarder::APIRequestHandler() {
   return *sAPIRequestHandler;
 }
 
+void ExtensionAPIRequestForwarder::SetSerializedCallerStack(
+    UniquePtr<dom::SerializedStackHolder> aCallerStack) {
+  MOZ_ASSERT(dom::IsCurrentThreadRunningWorker());
+  MOZ_ASSERT(mStackHolder.isNothing());
+  mStackHolder = Some(std::move(aCallerStack));
+}
+
 void ExtensionAPIRequestForwarder::Run(nsIGlobalObject* aGlobal, JSContext* aCx,
                                        const dom::Sequence<JS::Value>& aArgs,
                                        ExtensionEventListener* aListener,
@@ -109,6 +116,10 @@ void ExtensionAPIRequestForwarder::Run(nsIGlobalObject* aGlobal, JSContext* aCx,
 
   RefPtr<RequestWorkerRunnable> runnable =
       new RequestWorkerRunnable(workerPrivate, this);
+
+  if (mStackHolder.isSome()) {
+    runnable->SetSerializedCallerStack(mStackHolder.extract());
+  }
 
   RefPtr<dom::Promise> domPromise;
 
@@ -299,7 +310,10 @@ void RequestWorkerRunnable::Init(nsIGlobalObject* aGlobal, JSContext* aCx,
     return;
   }
 
-  SerializeCallerStack(aCx);
+  if (!mStackHolder.isSome()) {
+    SerializeCallerStack(aCx);
+  }
+
   mEventListener = aListener;
 }
 
@@ -326,6 +340,13 @@ void RequestWorkerRunnable::Init(nsIGlobalObject* aGlobal, JSContext* aCx,
       &kExtensionAPIRequestStructuredCloneCallbacks);
 }
 
+void RequestWorkerRunnable::SetSerializedCallerStack(
+    UniquePtr<dom::SerializedStackHolder> aCallerStack) {
+  MOZ_ASSERT(dom::IsCurrentThreadRunningWorker());
+  MOZ_ASSERT(mStackHolder.isNothing());
+  mStackHolder = Some(std::move(aCallerStack));
+}
+
 void RequestWorkerRunnable::SerializeCallerStack(JSContext* aCx) {
   MOZ_ASSERT(dom::IsCurrentThreadRunningWorker());
   MOZ_ASSERT(mStackHolder.isNothing());
@@ -337,6 +358,7 @@ void RequestWorkerRunnable::DeserializeCallerStack(
   MOZ_ASSERT(NS_IsMainThread());
   if (mStackHolder.isSome()) {
     JS::RootedObject savedFrame(aCx, mStackHolder->get()->ReadStack(aCx));
+    MOZ_ASSERT(savedFrame);
     aRetval.set(JS::ObjectValue(*savedFrame));
     mStackHolder = Nothing();
   }
