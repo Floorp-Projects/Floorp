@@ -2062,7 +2062,7 @@ void nsWindow::NativeMoveResizeWaylandPopupCallback(
   }
 
   LOG_POPUP("  orig mBounds [%d, %d] -> [%d x %d]\n", mBounds.x, mBounds.y,
-             mBounds.width, mBounds.height);
+            mBounds.width, mBounds.height);
 
   LayoutDeviceIntRect newBounds(0, 0, 0, 0);
   int parentX, parentY;
@@ -2076,7 +2076,7 @@ void nsWindow::NativeMoveResizeWaylandPopupCallback(
   newBounds.height = NSToIntRound(scale * aFinalSize->height);
 
   LOG_POPUP("  new mBounds [%d, %d] -> [%d x %d]", newBounds.x, newBounds.y,
-             newBounds.width, newBounds.height);
+            newBounds.width, newBounds.height);
 
   bool needsPositionUpdate =
       (newBounds.x != mBounds.x || newBounds.y != mBounds.y);
@@ -6830,7 +6830,7 @@ void nsWindow::UpdateTitlebarTransparencyBitmap() {
 
 void nsWindow::GrabPointer(guint32 aTime) {
   LOG("GrabPointer time=0x%08x retry=%d\n", (unsigned int)aTime,
-       mRetryPointerGrab);
+      mRetryPointerGrab);
 
   mRetryPointerGrab = false;
   sRetryGrabTime = aTime;
@@ -7126,7 +7126,7 @@ static bool IsFullscreenSupported(GtkWidget* aShell) {
 
 nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
   LOG("nsWindow::MakeFullScreen [%p] aFullScreen %d\n", (void*)this,
-       aFullScreen);
+      aFullScreen);
 
   if (GdkIsX11Display() && !IsFullscreenSupported(mShell)) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -7173,7 +7173,7 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
 
 void nsWindow::SetWindowDecoration(nsBorderStyle aStyle) {
   LOG("nsWindow::SetWindowDecoration() [%p] Border style %x\n", (void*)this,
-       aStyle);
+      aStyle);
 
   if (!mShell) {
     // Pass the request to the toplevel window
@@ -8164,8 +8164,7 @@ void WindowDragLeaveHandler(GtkWidget* aWidget) {
     return;
   }
 
-  LOGDRAG(
-      "WindowDragLeaveHandler nsWindow %p\n", (void*)mostRecentDragWindow);
+  LOGDRAG("WindowDragLeaveHandler nsWindow %p\n", (void*)mostRecentDragWindow);
   dragService->ScheduleLeaveEvent();
 }
 
@@ -8495,8 +8494,7 @@ nsIWidget::WindowRenderer* nsWindow::GetWindowRenderer() {
 }
 
 void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
-  LOG("nsWindow::SetCompositorWidgetDelegate [%p] %p\n", (void*)this,
-       delegate);
+  LOG("nsWindow::SetCompositorWidgetDelegate [%p] %p\n", (void*)this, delegate);
 
   if (delegate) {
     mCompositorWidgetDelegate = delegate->AsPlatformSpecificDelegate();
@@ -8532,7 +8530,7 @@ void nsWindow::UpdateClientOffsetFromCSDWindow() {
     mClientOffset = nsIntPoint(x, y);
 
     LOG("nsWindow::UpdateClientOffsetFromCSDWindow [%p] %d, %d\n", (void*)this,
-         mClientOffset.x, mClientOffset.y);
+        mClientOffset.x, mClientOffset.y);
 
     // Send a WindowMoved notification. This ensures that BrowserParent
     // picks up the new client offset and sends it to the child process
@@ -8548,7 +8546,7 @@ nsresult nsWindow::SetNonClientMargins(LayoutDeviceIntMargin& aMargins) {
 
 void nsWindow::SetDrawsInTitlebar(bool aState) {
   LOG("nsWindow::SetDrawsInTitlebar() [%p] State %d mGtkWindowDecoration %d\n",
-       (void*)this, aState, (int)mGtkWindowDecoration);
+      (void*)this, aState, (int)mGtkWindowDecoration);
 
   if (mIsPIPWindow && aState == mDrawInTitlebar) {
     gtk_window_set_decorated(GTK_WINDOW(mShell), !aState);
