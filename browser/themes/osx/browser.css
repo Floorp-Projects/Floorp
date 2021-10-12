@@ -185,14 +185,6 @@
   opacity: 0.5;
 }
 
-/* ----- FULLSCREEN WINDOW CONTROLS ----- */
-
-#minimize-button,
-#close-button,
-#fullscreen-button ~ #window-controls > #restore-button {
-  display: none;
-}
-
 /* Address bar */
 
 %include ../shared/urlbar-searchbar.inc.css
