@@ -86,6 +86,9 @@ class ExtensionAPIRequestForwarder {
   void Run(nsIGlobalObject* aGlobal, JSContext* aCx,
            JS::MutableHandleValue aRetVal, ErrorResult& aRv);
 
+  void SetSerializedCallerStack(
+      UniquePtr<dom::SerializedStackHolder> aCallerStack);
+
  protected:
   virtual ~ExtensionAPIRequestForwarder() = default;
 
@@ -97,6 +100,7 @@ class ExtensionAPIRequestForwarder {
 
   APIRequestType mRequestType;
   ExtensionAPIRequestTarget mRequestTarget;
+  Maybe<UniquePtr<dom::SerializedStackHolder>> mStackHolder;
 };
 
 /*
@@ -122,6 +126,9 @@ class RequestWorkerRunnable : public dom::WorkerMainThreadRunnable {
 
   RequestWorkerRunnable(dom::WorkerPrivate* aWorkerPrivate,
                         ExtensionAPIRequestForwarder* aOuterAPIRequest);
+
+  void SetSerializedCallerStack(
+      UniquePtr<dom::SerializedStackHolder> aCallerStack);
 
   /**
    * Init a request runnable for AddListener and RemoveListener API requests
