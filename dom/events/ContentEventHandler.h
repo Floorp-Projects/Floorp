@@ -20,6 +20,10 @@ struct nsRect;
 
 namespace mozilla {
 
+namespace dom {
+class Text;
+}  // namespace dom
+
 enum LineBreakType { LINE_BREAK_TYPE_NATIVE, LINE_BREAK_TYPE_XP };
 
 /*
@@ -257,8 +261,8 @@ class MOZ_STACK_CLASS ContentEventHandler {
                                             nsINode* aRootNode);
 
  protected:
-  // Get the text length of aContent.  aContent must be a text node.
-  static uint32_t GetTextLength(nsIContent* aContent,
+  // Get the text length of aTextNode.
+  static uint32_t GetTextLength(const dom::Text& aTextNode,
                                 LineBreakType aLineBreakType,
                                 uint32_t aMaxLength = UINT32_MAX);
   // Get the text length of a given range of a content node in
