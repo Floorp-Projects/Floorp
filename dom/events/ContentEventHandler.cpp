@@ -508,20 +508,20 @@ static void ConvertToNativeNewlines(nsString& aString) {
 #endif
 }
 
-static void AppendString(nsString& aString, Text* aText) {
-  uint32_t oldXPLength = aString.Length();
-  aText->TextFragment().AppendTo(aString);
-  if (aText->HasFlag(NS_MAYBE_MASKED)) {
-    EditorUtils::MaskString(aString, aText, oldXPLength, 0);
+static void AppendString(nsString& aString, const Text& aTextNode) {
+  const uint32_t oldXPLength = aString.Length();
+  aTextNode.TextFragment().AppendTo(aString);
+  if (aTextNode.HasFlag(NS_MAYBE_MASKED)) {
+    EditorUtils::MaskString(aString, aTextNode, oldXPLength, 0);
   }
 }
 
-static void AppendSubString(nsString& aString, Text* aText, uint32_t aXPOffset,
-                            uint32_t aXPLength) {
+static void AppendSubString(nsString& aString, const Text& aTextNode,
+                            uint32_t aXPOffset, uint32_t aXPLength) {
   const uint32_t oldXPLength = aString.Length();
-  aText->TextFragment().AppendTo(aString, aXPOffset, aXPLength);
-  if (aText->HasFlag(NS_MAYBE_MASKED)) {
-    EditorUtils::MaskString(aString, aText, oldXPLength, aXPOffset);
+  aTextNode.TextFragment().AppendTo(aString, aXPOffset, aXPLength);
+  if (aTextNode.HasFlag(NS_MAYBE_MASKED)) {
+    EditorUtils::MaskString(aString, aTextNode, oldXPLength, aXPOffset);
   }
 }
 
@@ -724,7 +724,7 @@ nsresult ContentEventHandler::GenerateFlatTextContent(
   }
 
   if (startNode == endNode && startNode->IsText()) {
-    AppendSubString(aString, startNode->AsText(), aRawRange.StartOffset(),
+    AppendSubString(aString, *startNode->AsText(), aRawRange.StartOffset(),
                     aRawRange.EndOffset() - aRawRange.StartOffset());
     ConvertToNativeNewlines(aString);
     return NS_OK;
@@ -745,14 +745,14 @@ nsresult ContentEventHandler::GenerateFlatTextContent(
       continue;
     }
 
-    if (node->IsText()) {
-      if (node == startNode) {
-        AppendSubString(aString, node->AsText(), aRawRange.StartOffset(),
-                        node->AsText()->TextLength() - aRawRange.StartOffset());
-      } else if (node == endNode) {
-        AppendSubString(aString, node->AsText(), 0, aRawRange.EndOffset());
+    if (const Text* textNode = Text::FromNode(node)) {
+      if (textNode == startNode) {
+        AppendSubString(aString, *textNode, aRawRange.StartOffset(),
+                        textNode->TextLength() - aRawRange.StartOffset());
+      } else if (textNode == endNode) {
+        AppendSubString(aString, *textNode, 0, aRawRange.EndOffset());
       } else {
-        AppendString(aString, node->AsText());
+        AppendString(aString, *textNode);
       }
     } else if (ShouldBreakLineBefore(node->AsContent(), mRootContent)) {
       aString.Append(char16_t('\n'));
@@ -1911,7 +1911,7 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
       }
       // Assign the characters whose rects are computed by the call of
       // nsTextFrame::GetCharacterRectsInRange().
-      AppendSubString(chars, firstContent->AsText(), firstFrame.mOffsetInNode,
+      AppendSubString(chars, *firstContent->AsText(), firstFrame.mOffsetInNode,
                       charRects.Length());
       if (NS_WARN_IF(chars.Length() != charRects.Length())) {
         return NS_ERROR_UNEXPECTED;

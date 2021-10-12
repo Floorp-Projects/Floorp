@@ -482,15 +482,15 @@ bool EditorUtils::IsDescendantOf(const nsINode& aNode, const nsINode& aParent,
 }
 
 // static
-void EditorUtils::MaskString(nsString& aString, Text* aText,
+void EditorUtils::MaskString(nsString& aString, const Text& aTextNode,
                              uint32_t aStartOffsetInString,
                              uint32_t aStartOffsetInText) {
-  MOZ_ASSERT(aText->HasFlag(NS_MAYBE_MASKED));
+  MOZ_ASSERT(aTextNode.HasFlag(NS_MAYBE_MASKED));
   MOZ_ASSERT(aStartOffsetInString == 0 || aStartOffsetInText == 0);
 
   uint32_t unmaskStart = UINT32_MAX, unmaskLength = 0;
   TextEditor* textEditor =
-      nsContentUtils::GetTextEditorFromAnonymousNodeWithoutCreation(aText);
+      nsContentUtils::GetTextEditorFromAnonymousNodeWithoutCreation(&aTextNode);
   if (textEditor && textEditor->UnmaskedLength() > 0) {
     unmaskStart = textEditor->UnmaskedStart();
     unmaskLength = textEditor->UnmaskedLength();
