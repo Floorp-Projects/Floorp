@@ -1240,7 +1240,7 @@ StorageAccessPermissionPrompt.prototype = {
 
   get permissionKey() {
     // Make sure this name is unique per each third-party tracker
-    return "storage-access-" + this.principal.origin;
+    return `3rdPartyStorage${SitePermissions.PERM_KEY_DELIMITER}${this.principal.origin}`;
   },
 
   prettifyHostPort(hostport) {
