@@ -51,14 +51,13 @@ exports.isDataScheme = isDataScheme;
 exports.isPdfFile = isPdfFile;
 exports.isValidFetchUrl = isValidFetchUrl;
 exports.loadScript = loadScript;
-exports.StatTimer = exports.RenderingCancelledException = exports.PixelsPerInch = exports.PDFDateString = exports.PageViewport = exports.LinkTarget = exports.DOMSVGFactory = exports.DOMStandardFontDataFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = void 0;
+exports.StatTimer = exports.RenderingCancelledException = exports.PixelsPerInch = exports.PDFDateString = exports.PageViewport = exports.LinkTarget = exports.DOMSVGFactory = exports.DOMStandardFontDataFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
 var _base_factory = __w_pdfjs_require__(5);
 
 const DEFAULT_LINK_REL = "noopener noreferrer nofollow";
-exports.DEFAULT_LINK_REL = DEFAULT_LINK_REL;
 const SVG_NS = "http://www.w3.org/2000/svg";
 const PixelsPerInch = {
   CSS: 96.0,
@@ -972,12 +971,28 @@ function _isValidProtocol(url) {
   }
 }
 
-function createValidAbsoluteUrl(url, baseUrl) {
+function createValidAbsoluteUrl(url, baseUrl = null, options = null) {
   if (!url) {
     return null;
   }
 
   try {
+    if (options && typeof url === "string") {
+      if (options.addDefaultProtocol && url.startsWith("www.")) {
+        const dots = url.match(/\./g);
+
+        if (dots && dots.length >= 2) {
+          url = `http://${url}`;
+        }
+      }
+
+      if (options.tryConvertEncoding) {
+        try {
+          url = stringToUTF8String(url);
+        } catch (ex) {}
+      }
+    }
+
     const absoluteUrl = baseUrl ? new URL(url, baseUrl) : new URL(url);
 
     if (_isValidProtocol(absoluteUrl)) {
@@ -1912,7 +1927,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.11.298',
+    apiVersion: '2.12.16',
     source: {
       data: source.data,
       url: source.url,
@@ -2718,84 +2733,14 @@ exports.PDFPageProxy = PDFPageProxy;
 class LoopbackPort {
   constructor() {
     this._listeners = [];
-    this._deferred = Promise.resolve(undefined);
+    this._deferred = Promise.resolve();
   }
 
   postMessage(obj, transfers) {
-    function cloneValue(value) {
-      if (typeof value === "function" || typeof value === "symbol" || value instanceof URL) {
-        throw new Error(`LoopbackPort.postMessage - cannot clone: ${value?.toString()}`);
-      }
-
-      if (typeof value !== "object" || value === null) {
-        return value;
-      }
-
-      if (cloned.has(value)) {
-        return cloned.get(value);
-      }
-
-      let buffer, result;
-
-      if ((buffer = value.buffer) && (0, _util.isArrayBuffer)(buffer)) {
-        if (transfers?.includes(buffer)) {
-          result = new value.constructor(buffer, value.byteOffset, value.byteLength);
-        } else {
-          result = new value.constructor(value);
-        }
-
-        cloned.set(value, result);
-        return result;
-      }
-
-      if (value instanceof Map) {
-        result = new Map();
-        cloned.set(value, result);
-
-        for (const [key, val] of value) {
-          result.set(key, cloneValue(val));
-        }
-
-        return result;
-      }
-
-      if (value instanceof Set) {
-        result = new Set();
-        cloned.set(value, result);
-
-        for (const val of value) {
-          result.add(cloneValue(val));
-        }
-
-        return result;
-      }
-
-      result = Array.isArray(value) ? [] : Object.create(null);
-      cloned.set(value, result);
-
-      for (const i in value) {
-        let desc,
-            p = value;
-
-        while (!(desc = Object.getOwnPropertyDescriptor(p, i))) {
-          p = Object.getPrototypeOf(p);
-        }
-
-        if (typeof desc.value === "undefined") {
-          continue;
-        }
-
-        if (typeof desc.value === "function" && !value.hasOwnProperty?.(i)) {
-          continue;
-        }
-
-        result[i] = cloneValue(desc.value);
-      }
-
-      return result;
+    function cloneValue(object) {
+      return globalThis.structuredClone(object, transfers);
     }
 
-    const cloned = new WeakMap();
     const event = {
       data: cloneValue(obj)
     };
@@ -3996,9 +3941,9 @@ class InternalRenderTask {
 
 }
 
-const version = '2.11.298';
+const version = '2.12.16';
 exports.version = version;
-const build = 'd370a281c';
+const build = '394596560';
 exports.build = build;
 
 /***/ }),
@@ -7594,10 +7539,10 @@ class MessageHandler {
   }
 
   sendWithStream(actionName, data, queueingStrategy, transfers) {
-    const streamId = this.streamId++;
-    const sourceName = this.sourceName;
-    const targetName = this.targetName;
-    const comObj = this.comObj;
+    const streamId = this.streamId++,
+          sourceName = this.sourceName,
+          targetName = this.targetName,
+          comObj = this.comObj;
     return new ReadableStream({
       start: controller => {
         const startCapability = (0, _util.createPromiseCapability)();
@@ -7650,12 +7595,12 @@ class MessageHandler {
   }
 
   _createStreamSink(data) {
-    const self = this;
-    const action = this.actionHandler[data.action];
-    const streamId = data.streamId;
-    const sourceName = this.sourceName;
-    const targetName = data.sourceName;
-    const comObj = this.comObj;
+    const streamId = data.streamId,
+          sourceName = this.sourceName,
+          targetName = data.sourceName,
+          comObj = this.comObj;
+    const self = this,
+          action = this.actionHandler[data.action];
     const streamSink = {
       enqueue(chunk, size = 1, transfers) {
         if (this.isCancelled) {
@@ -7743,32 +7688,34 @@ class MessageHandler {
   }
 
   _processStreamMessage(data) {
-    const streamId = data.streamId;
-    const sourceName = this.sourceName;
-    const targetName = data.sourceName;
-    const comObj = this.comObj;
+    const streamId = data.streamId,
+          sourceName = this.sourceName,
+          targetName = data.sourceName,
+          comObj = this.comObj;
+    const streamController = this.streamControllers[streamId],
+          streamSink = this.streamSinks[streamId];
 
     switch (data.stream) {
       case StreamKind.START_COMPLETE:
         if (data.success) {
-          this.streamControllers[streamId].startCall.resolve();
+          streamController.startCall.resolve();
         } else {
-          this.streamControllers[streamId].startCall.reject(wrapReason(data.reason));
+          streamController.startCall.reject(wrapReason(data.reason));
         }
 
         break;
 
       case StreamKind.PULL_COMPLETE:
         if (data.success) {
-          this.streamControllers[streamId].pullCall.resolve();
+          streamController.pullCall.resolve();
         } else {
-          this.streamControllers[streamId].pullCall.reject(wrapReason(data.reason));
+          streamController.pullCall.reject(wrapReason(data.reason));
         }
 
         break;
 
       case StreamKind.PULL:
-        if (!this.streamSinks[streamId]) {
+        if (!streamSink) {
           comObj.postMessage({
             sourceName,
             targetName,
@@ -7779,16 +7726,13 @@ class MessageHandler {
           break;
         }
 
-        if (this.streamSinks[streamId].desiredSize <= 0 && data.desiredSize > 0) {
-          this.streamSinks[streamId].sinkCapability.resolve();
+        if (streamSink.desiredSize <= 0 && data.desiredSize > 0) {
+          streamSink.sinkCapability.resolve();
         }
 
-        this.streamSinks[streamId].desiredSize = data.desiredSize;
-        const {
-          onPull
-        } = this.streamSinks[streamId];
+        streamSink.desiredSize = data.desiredSize;
         new Promise(function (resolve) {
-          resolve(onPull && onPull());
+          resolve(streamSink.onPull && streamSink.onPull());
         }).then(function () {
           comObj.postMessage({
             sourceName,
@@ -7809,58 +7753,55 @@ class MessageHandler {
         break;
 
       case StreamKind.ENQUEUE:
-        (0, _util.assert)(this.streamControllers[streamId], "enqueue should have stream controller");
+        (0, _util.assert)(streamController, "enqueue should have stream controller");
 
-        if (this.streamControllers[streamId].isClosed) {
+        if (streamController.isClosed) {
           break;
         }
 
-        this.streamControllers[streamId].controller.enqueue(data.chunk);
+        streamController.controller.enqueue(data.chunk);
         break;
 
       case StreamKind.CLOSE:
-        (0, _util.assert)(this.streamControllers[streamId], "close should have stream controller");
+        (0, _util.assert)(streamController, "close should have stream controller");
 
-        if (this.streamControllers[streamId].isClosed) {
+        if (streamController.isClosed) {
           break;
         }
 
-        this.streamControllers[streamId].isClosed = true;
-        this.streamControllers[streamId].controller.close();
+        streamController.isClosed = true;
+        streamController.controller.close();
 
-        this._deleteStreamController(streamId);
+        this._deleteStreamController(streamController, streamId);
 
         break;
 
       case StreamKind.ERROR:
-        (0, _util.assert)(this.streamControllers[streamId], "error should have stream controller");
-        this.streamControllers[streamId].controller.error(wrapReason(data.reason));
+        (0, _util.assert)(streamController, "error should have stream controller");
+        streamController.controller.error(wrapReason(data.reason));
 
-        this._deleteStreamController(streamId);
+        this._deleteStreamController(streamController, streamId);
 
         break;
 
       case StreamKind.CANCEL_COMPLETE:
         if (data.success) {
-          this.streamControllers[streamId].cancelCall.resolve();
+          streamController.cancelCall.resolve();
         } else {
-          this.streamControllers[streamId].cancelCall.reject(wrapReason(data.reason));
+          streamController.cancelCall.reject(wrapReason(data.reason));
         }
 
-        this._deleteStreamController(streamId);
+        this._deleteStreamController(streamController, streamId);
 
         break;
 
       case StreamKind.CANCEL:
-        if (!this.streamSinks[streamId]) {
+        if (!streamSink) {
           break;
         }
 
-        const {
-          onCancel
-        } = this.streamSinks[streamId];
         new Promise(function (resolve) {
-          resolve(onCancel && onCancel(wrapReason(data.reason)));
+          resolve(streamSink.onCancel && streamSink.onCancel(wrapReason(data.reason)));
         }).then(function () {
           comObj.postMessage({
             sourceName,
@@ -7878,8 +7819,8 @@ class MessageHandler {
             reason: wrapReason(reason)
           });
         });
-        this.streamSinks[streamId].sinkCapability.reject(wrapReason(data.reason));
-        this.streamSinks[streamId].isCancelled = true;
+        streamSink.sinkCapability.reject(wrapReason(data.reason));
+        streamSink.isCancelled = true;
         delete this.streamSinks[streamId];
         break;
 
@@ -7888,10 +7829,8 @@ class MessageHandler {
     }
   }
 
-  async _deleteStreamController(streamId) {
-    await Promise.allSettled([this.streamControllers[streamId].startCall, this.streamControllers[streamId].pullCall, this.streamControllers[streamId].cancelCall].map(function (capability) {
-      return capability && capability.promise;
-    }));
+  async _deleteStreamController(streamController, streamId) {
+    await Promise.allSettled([streamController.startCall && streamController.startCall.promise, streamController.pullCall && streamController.pullCall.promise, streamController.cancelCall && streamController.cancelCall.promise]);
     delete this.streamControllers[streamId];
   }
 
@@ -8604,9 +8543,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.AnnotationLayer = void 0;
 
-var _display_utils = __w_pdfjs_require__(1);
-
 var _util = __w_pdfjs_require__(2);
+
+var _display_utils = __w_pdfjs_require__(1);
 
 var _annotation_storage = __w_pdfjs_require__(9);
 
@@ -8786,7 +8725,9 @@ class AnnotationElement {
           break;
       }
 
-      if (data.color) {
+      const borderColor = data.borderColor || data.color || null;
+
+      if (borderColor) {
         container.style.borderColor = _util.Util.makeHexColor(data.color[0] | 0, data.color[1] | 0, data.color[2] | 0);
       } else {
         container.style.borderWidth = 0;
@@ -8836,9 +8777,9 @@ class AnnotationElement {
       container,
       trigger,
       color: data.color,
-      title: data.title,
+      titleObj: data.titleObj,
       modificationDate: data.modificationDate,
-      contents: data.contents,
+      contentsObj: data.contentsObj,
       hideWrapper: true
     });
     const popup = popupElement.render();
@@ -8933,7 +8874,7 @@ class AnnotationElement {
 
 class LinkAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    const isRenderable = !!(parameters.data.url || parameters.data.dest || parameters.data.action || parameters.data.isTooltipOnly || parameters.data.actions && (parameters.data.actions.Action || parameters.data.actions["Mouse Up"] || parameters.data.actions["Mouse Down"]));
+    const isRenderable = !!(parameters.data.url || parameters.data.dest || parameters.data.action || parameters.data.isTooltipOnly || parameters.data.resetForm || parameters.data.actions && (parameters.data.actions.Action || parameters.data.actions["Mouse Up"] || parameters.data.actions["Mouse Down"]));
     super(parameters, {
       isRenderable,
       createQuadrilaterals: true
@@ -8948,20 +8889,25 @@ class LinkAnnotationElement extends AnnotationElement {
     const link = document.createElement("a");
 
     if (data.url) {
-      (0, _display_utils.addLinkAttributes)(link, {
-        url: data.url,
-        target: data.newWindow ? _display_utils.LinkTarget.BLANK : linkService.externalLinkTarget,
-        rel: linkService.externalLinkRel,
-        enabled: linkService.externalLinkEnabled
-      });
+      linkService.addLinkAttributes?.(link, data.url, data.newWindow);
     } else if (data.action) {
       this._bindNamedAction(link, data.action);
     } else if (data.dest) {
       this._bindLink(link, data.dest);
-    } else if (data.actions && (data.actions.Action || data.actions["Mouse Up"] || data.actions["Mouse Down"]) && this.enableScripting && this.hasJSActions) {
-      this._bindJSAction(link, data);
     } else {
-      this._bindLink(link, "");
+      let hasClickAction = false;
+
+      if (data.actions && (data.actions.Action || data.actions["Mouse Up"] || data.actions["Mouse Down"]) && this.enableScripting && this.hasJSActions) {
+        hasClickAction = true;
+
+        this._bindJSAction(link, data);
+      }
+
+      if (data.resetForm) {
+        this._bindResetFormAction(link, data.resetForm);
+      } else if (!hasClickAction) {
+        this._bindLink(link, "");
+      }
     }
 
     if (this.quadrilaterals) {
@@ -9034,11 +8980,136 @@ class LinkAnnotationElement extends AnnotationElement {
     link.className = "internalLink";
   }
 
+  _bindResetFormAction(link, resetForm) {
+    const otherClickAction = link.onclick;
+
+    if (!otherClickAction) {
+      link.href = this.linkService.getAnchorUrl("");
+    }
+
+    link.className = "internalLink";
+
+    if (!this._fieldObjects) {
+      (0, _util.warn)(`_bindResetFormAction - "resetForm" action not supported, ` + "ensure that the `fieldObjects` parameter is provided.");
+
+      if (!otherClickAction) {
+        link.onclick = () => false;
+      }
+
+      return;
+    }
+
+    link.onclick = () => {
+      if (otherClickAction) {
+        otherClickAction();
+      }
+
+      const {
+        fields: resetFormFields,
+        refs: resetFormRefs,
+        include
+      } = resetForm;
+      const allFields = [];
+
+      if (resetFormFields.length !== 0 || resetFormRefs.length !== 0) {
+        const fieldIds = new Set(resetFormRefs);
+
+        for (const fieldName of resetFormFields) {
+          const fields = this._fieldObjects[fieldName] || [];
+
+          for (const {
+            id
+          } of fields) {
+            fieldIds.add(id);
+          }
+        }
+
+        for (const fields of Object.values(this._fieldObjects)) {
+          for (const field of fields) {
+            if (fieldIds.has(field.id) === include) {
+              allFields.push(field);
+            }
+          }
+        }
+      } else {
+        for (const fields of Object.values(this._fieldObjects)) {
+          allFields.push(...fields);
+        }
+      }
+
+      const storage = this.annotationStorage;
+      const allIds = [];
+
+      for (const field of allFields) {
+        const {
+          id
+        } = field;
+        allIds.push(id);
+
+        switch (field.type) {
+          case "text":
+            {
+              const value = field.defaultValue || "";
+              storage.setValue(id, {
+                value,
+                valueAsString: value
+              });
+              break;
+            }
+
+          case "checkbox":
+          case "radiobutton":
+            {
+              const value = field.defaultValue === field.exportValues;
+              storage.setValue(id, {
+                value
+              });
+              break;
+            }
+
+          case "combobox":
+          case "listbox":
+            {
+              const value = field.defaultValue || "";
+              storage.setValue(id, {
+                value
+              });
+              break;
+            }
+
+          default:
+            continue;
+        }
+
+        const domElement = document.getElementById(id);
+
+        if (!domElement || !GetElementsByNameSet.has(domElement)) {
+          continue;
+        }
+
+        domElement.dispatchEvent(new Event("resetform"));
+      }
+
+      if (this.enableScripting) {
+        this.linkService.eventBus?.dispatch("dispatcheventinsandbox", {
+          source: this,
+          detail: {
+            id: "app",
+            ids: allIds,
+            name: "ResetForm"
+          }
+        });
+      }
+
+      return false;
+    };
+  }
+
 }
 
 class TextAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.titleObj?.str || parameters.data.contentsObj?.str);
     super(parameters, {
       isRenderable
     });
@@ -9117,6 +9188,11 @@ class WidgetAnnotationElement extends AnnotationElement {
         this._setEventListener(element, baseName, eventName, getter);
       }
     }
+  }
+
+  _setBackgroundColor(element) {
+    const color = this.data.backgroundColor || null;
+    element.style.backgroundColor = color === null ? "transparent" : _util.Util.makeHexColor(color[0], color[1], color[2]);
   }
 
   _dispatchEventFromSandbox(actions, jsEvent) {
@@ -9259,6 +9335,11 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
           value: event.target.value
         });
         this.setPropertyOnSiblings(element, "value", event.target.value, "value");
+      });
+      element.addEventListener("resetform", event => {
+        const defaultValue = this.data.defaultFieldValue || "";
+        element.value = elementData.userValue = defaultValue;
+        delete elementData.formattedValue;
       });
 
       let blurListener = event => {
@@ -9427,6 +9508,8 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
 
     this._setTextStyle(element);
 
+    this._setBackgroundColor(element);
+
     this.container.appendChild(element);
     return this.container;
   }
@@ -9464,7 +9547,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
     const data = this.data;
     const id = data.id;
     let value = storage.getValue(id, {
-      value: data.fieldValue && (data.exportValue && data.exportValue === data.fieldValue || !data.exportValue && data.fieldValue !== "Off")
+      value: data.exportValue === data.fieldValue
     }).value;
 
     if (typeof value === "string") {
@@ -9510,6 +9593,10 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
         value: checked
       });
     });
+    element.addEventListener("resetform", event => {
+      const defaultValue = data.defaultFieldValue || "Off";
+      event.target.checked = defaultValue === data.exportValue;
+    });
 
     if (this.enableScripting && this.hasJSActions) {
       element.addEventListener("updatefromsandbox", jsEvent => {
@@ -9528,6 +9615,8 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
 
       this._setEventListeners(element, [["change", "Validate"], ["change", "Action"], ["focus", "Focus"], ["blur", "Blur"], ["mousedown", "Mouse Down"], ["mouseenter", "Mouse Enter"], ["mouseleave", "Mouse Exit"], ["mouseup", "Mouse Up"]], event => event.target.checked);
     }
+
+    this._setBackgroundColor(element);
 
     this.container.appendChild(element);
     return this.container;
@@ -9586,6 +9675,10 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement {
         value: checked
       });
     });
+    element.addEventListener("resetform", event => {
+      const defaultValue = data.defaultFieldValue;
+      event.target.checked = defaultValue !== null && defaultValue !== undefined && defaultValue === data.buttonValue;
+    });
 
     if (this.enableScripting && this.hasJSActions) {
       const pdfButtonValue = data.buttonValue;
@@ -9613,6 +9706,8 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement {
 
       this._setEventListeners(element, [["change", "Validate"], ["change", "Action"], ["focus", "Focus"], ["blur", "Blur"], ["mousedown", "Mouse Down"], ["mouseenter", "Mouse Enter"], ["mouseleave", "Mouse Exit"], ["mouseup", "Mouse Up"]], event => event.target.checked);
     }
+
+    this._setBackgroundColor(element);
 
     this.container.appendChild(element);
     return this.container;
@@ -9673,6 +9768,14 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
       }
     }
 
+    selectElement.addEventListener("resetform", event => {
+      const defaultValue = this.data.defaultFieldValue;
+
+      for (const option of selectElement.options) {
+        option.selected = option.value === defaultValue;
+      }
+    });
+
     for (const option of this.data.options) {
       const optionElement = document.createElement("option");
       optionElement.textContent = option.displayValue;
@@ -9714,12 +9817,13 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
       selectElement.addEventListener("updatefromsandbox", jsEvent => {
         const actions = {
           value(event) {
-            const options = selectElement.options;
             const value = event.detail.value;
             const values = new Set(Array.isArray(value) ? value : [value]);
-            Array.prototype.forEach.call(options, option => {
+
+            for (const option of selectElement.options) {
               option.selected = values.has(option.value);
-            });
+            }
+
             storage.setValue(id, {
               value: getValue(event, true)
             });
@@ -9808,10 +9912,11 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
 
           indices(event) {
             const indices = new Set(event.detail.indices);
-            const options = event.target.options;
-            Array.prototype.forEach.call(options, (option, i) => {
-              option.selected = indices.has(i);
-            });
+
+            for (const option of event.target.options) {
+              option.selected = indices.has(option.index);
+            }
+
             storage.setValue(id, {
               value: getValue(event, true)
             });
@@ -9854,6 +9959,8 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
       });
     }
 
+    this._setBackgroundColor(selectElement);
+
     this.container.appendChild(selectElement);
     return this.container;
   }
@@ -9862,7 +9969,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
 
 class PopupAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    const isRenderable = !!(parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.titleObj?.str || parameters.data.contentsObj?.str);
     super(parameters, {
       isRenderable
     });
@@ -9887,9 +9994,9 @@ class PopupAnnotationElement extends AnnotationElement {
       container: this.container,
       trigger: Array.from(parentElements),
       color: this.data.color,
-      title: this.data.title,
+      titleObj: this.data.titleObj,
       modificationDate: this.data.modificationDate,
-      contents: this.data.contents
+      contentsObj: this.data.contentsObj
     });
     const page = this.page;
 
@@ -9911,9 +10018,9 @@ class PopupElement {
     this.container = parameters.container;
     this.trigger = parameters.trigger;
     this.color = parameters.color;
-    this.title = parameters.title;
+    this.titleObj = parameters.titleObj;
     this.modificationDate = parameters.modificationDate;
-    this.contents = parameters.contents;
+    this.contentsObj = parameters.contentsObj;
     this.hideWrapper = parameters.hideWrapper || false;
     this.pinned = false;
   }
@@ -9936,7 +10043,8 @@ class PopupElement {
     }
 
     const title = document.createElement("h1");
-    title.textContent = this.title;
+    title.dir = this.titleObj.dir;
+    title.textContent = this.titleObj.str;
     popup.appendChild(title);
 
     const dateObject = _display_utils.PDFDateString.toDateObject(this.modificationDate);
@@ -9952,7 +10060,7 @@ class PopupElement {
       popup.appendChild(modificationDate);
     }
 
-    const contents = this._formatContents(this.contents);
+    const contents = this._formatContents(this.contentsObj);
 
     popup.appendChild(contents);
 
@@ -9971,9 +10079,13 @@ class PopupElement {
     return wrapper;
   }
 
-  _formatContents(contents) {
+  _formatContents({
+    str,
+    dir
+  }) {
     const p = document.createElement("p");
-    const lines = contents.split(/(?:\r\n?|\n)/);
+    p.dir = dir;
+    const lines = str.split(/(?:\r\n?|\n)/);
 
     for (let i = 0, ii = lines.length; i < ii; ++i) {
       const line = lines[i];
@@ -10021,7 +10133,7 @@ class PopupElement {
 
 class FreeTextAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.titleObj?.str || parameters.data.contentsObj?.str);
     super(parameters, {
       isRenderable,
       ignoreBorder: true
@@ -10042,7 +10154,7 @@ class FreeTextAnnotationElement extends AnnotationElement {
 
 class LineAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.titleObj?.str || parameters.data.contentsObj?.str);
     super(parameters, {
       isRenderable,
       ignoreBorder: true
@@ -10062,6 +10174,7 @@ class LineAnnotationElement extends AnnotationElement {
     line.setAttribute("y2", data.rect[3] - data.lineCoordinates[3]);
     line.setAttribute("stroke-width", data.borderStyle.width || 1);
     line.setAttribute("stroke", "transparent");
+    line.setAttribute("fill", "transparent");
     svg.appendChild(line);
     this.container.append(svg);
 
@@ -10074,7 +10187,7 @@ class LineAnnotationElement extends AnnotationElement {
 
 class SquareAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.titleObj?.str || parameters.data.contentsObj?.str);
     super(parameters, {
       isRenderable,
       ignoreBorder: true
@@ -10095,7 +10208,7 @@ class SquareAnnotationElement extends AnnotationElement {
     square.setAttribute("height", height - borderWidth);
     square.setAttribute("stroke-width", borderWidth || 1);
     square.setAttribute("stroke", "transparent");
-    square.setAttribute("fill", "none");
+    square.setAttribute("fill", "transparent");
     svg.appendChild(square);
     this.container.append(svg);
 
@@ -10108,7 +10221,7 @@ class SquareAnnotationElement extends AnnotationElement {
 
 class CircleAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.titleObj?.str || parameters.data.contentsObj?.str);
     super(parameters, {
       isRenderable,
       ignoreBorder: true
@@ -10129,7 +10242,7 @@ class CircleAnnotationElement extends AnnotationElement {
     circle.setAttribute("ry", height / 2 - borderWidth / 2);
     circle.setAttribute("stroke-width", borderWidth || 1);
     circle.setAttribute("stroke", "transparent");
-    circle.setAttribute("fill", "none");
+    circle.setAttribute("fill", "transparent");
     svg.appendChild(circle);
     this.container.append(svg);
 
@@ -10142,7 +10255,7 @@ class CircleAnnotationElement extends AnnotationElement {
 
 class PolylineAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.titleObj?.str || parameters.data.contentsObj?.str);
     super(parameters, {
       isRenderable,
       ignoreBorder: true
@@ -10170,7 +10283,7 @@ class PolylineAnnotationElement extends AnnotationElement {
     polyline.setAttribute("points", points);
     polyline.setAttribute("stroke-width", data.borderStyle.width || 1);
     polyline.setAttribute("stroke", "transparent");
-    polyline.setAttribute("fill", "none");
+    polyline.setAttribute("fill", "transparent");
     svg.appendChild(polyline);
     this.container.append(svg);
 
@@ -10192,7 +10305,7 @@ class PolygonAnnotationElement extends PolylineAnnotationElement {
 
 class CaretAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.titleObj?.str || parameters.data.contentsObj?.str);
     super(parameters, {
       isRenderable,
       ignoreBorder: true
@@ -10213,7 +10326,7 @@ class CaretAnnotationElement extends AnnotationElement {
 
 class InkAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.titleObj?.str || parameters.data.contentsObj?.str);
     super(parameters, {
       isRenderable,
       ignoreBorder: true
@@ -10243,7 +10356,7 @@ class InkAnnotationElement extends AnnotationElement {
       polyline.setAttribute("points", points);
       polyline.setAttribute("stroke-width", data.borderStyle.width || 1);
       polyline.setAttribute("stroke", "transparent");
-      polyline.setAttribute("fill", "none");
+      polyline.setAttribute("fill", "transparent");
 
       this._createPopup(polyline, data);
 
@@ -10258,7 +10371,7 @@ class InkAnnotationElement extends AnnotationElement {
 
 class HighlightAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.titleObj?.str || parameters.data.contentsObj?.str);
     super(parameters, {
       isRenderable,
       ignoreBorder: true,
@@ -10283,7 +10396,7 @@ class HighlightAnnotationElement extends AnnotationElement {
 
 class UnderlineAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.titleObj?.str || parameters.data.contentsObj?.str);
     super(parameters, {
       isRenderable,
       ignoreBorder: true,
@@ -10308,7 +10421,7 @@ class UnderlineAnnotationElement extends AnnotationElement {
 
 class SquigglyAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.titleObj?.str || parameters.data.contentsObj?.str);
     super(parameters, {
       isRenderable,
       ignoreBorder: true,
@@ -10333,7 +10446,7 @@ class SquigglyAnnotationElement extends AnnotationElement {
 
 class StrikeOutAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.titleObj?.str || parameters.data.contentsObj?.str);
     super(parameters, {
       isRenderable,
       ignoreBorder: true,
@@ -10358,7 +10471,7 @@ class StrikeOutAnnotationElement extends AnnotationElement {
 
 class StampAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.titleObj?.str || parameters.data.contentsObj?.str);
     super(parameters, {
       isRenderable,
       ignoreBorder: true
@@ -10403,7 +10516,7 @@ class FileAttachmentAnnotationElement extends AnnotationElement {
     trigger.style.width = this.container.style.width;
     trigger.addEventListener("dblclick", this._download.bind(this));
 
-    if (!this.data.hasPopup && (this.data.title || this.data.contents)) {
+    if (!this.data.hasPopup && (this.data.titleObj?.str || this.data.contentsObj?.str)) {
       this._createPopup(trigger, this.data);
     }
 
@@ -11388,6 +11501,8 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.XfaLayer = void 0;
 
+var _util = __w_pdfjs_require__(2);
+
 var _xfa_text = __w_pdfjs_require__(17);
 
 class XfaLayer {
@@ -11468,10 +11583,17 @@ class XfaLayer {
     }
   }
 
-  static setAttributes(html, element, storage, intent) {
+  static setAttributes({
+    html,
+    element,
+    storage = null,
+    intent,
+    linkService
+  }) {
     const {
       attributes
     } = element;
+    const isHTMLAnchorElement = html instanceof HTMLAnchorElement;
 
     if (attributes.type === "radio") {
       attributes.name = `${attributes.name}-${intent}`;
@@ -11488,11 +11610,19 @@ class XfaLayer {
         } else if (key === "class") {
           html.setAttribute(key, value.join(" "));
         } else {
+          if (isHTMLAnchorElement && (key === "href" || key === "newWindow")) {
+            continue;
+          }
+
           html.setAttribute(key, value);
         }
       } else {
         Object.assign(html.style, value);
       }
+    }
+
+    if (isHTMLAnchorElement) {
+      linkService.addLinkAttributes?.(html, attributes.href, attributes.newWindow);
     }
 
     if (storage && attributes.dataId) {
@@ -11502,12 +11632,18 @@ class XfaLayer {
 
   static render(parameters) {
     const storage = parameters.annotationStorage;
+    const linkService = parameters.linkService;
     const root = parameters.xfa;
     const intent = parameters.intent || "display";
     const rootHtml = document.createElement(root.name);
 
     if (root.attributes) {
-      this.setAttributes(rootHtml, root);
+      this.setAttributes({
+        html: rootHtml,
+        element: root,
+        intent,
+        linkService
+      });
     }
 
     const stack = [[root, -1, rootHtml]];
@@ -11554,7 +11690,13 @@ class XfaLayer {
       html.appendChild(childHtml);
 
       if (child.attributes) {
-        this.setAttributes(childHtml, child, storage, intent);
+        this.setAttributes({
+          html: childHtml,
+          element: child,
+          storage,
+          intent,
+          linkService
+        });
       }
 
       if (child.children && child.children.length > 0) {
@@ -11867,8 +12009,8 @@ var _svg = __w_pdfjs_require__(21);
 
 var _xfa_layer = __w_pdfjs_require__(22);
 
-const pdfjsVersion = '2.11.298';
-const pdfjsBuild = 'd370a281c';
+const pdfjsVersion = '2.12.16';
+const pdfjsBuild = '394596560';
 ;
 })();
 

@@ -927,6 +927,10 @@ class Field extends _pdf_object.PDFObject {
     return false;
   }
 
+  _reset() {
+    this.value = this.valueAsString = this.defaultValue;
+  }
+
   _runActions(event) {
     const eventName = event.name;
 
@@ -2643,6 +2647,14 @@ class EventDispatcher {
         this._document.obj._dispatchDocEvent(event.name);
       } else if (id === "page") {
         this._document.obj._dispatchPageEvent(event.name, baseEvent.actions, baseEvent.pageNumber);
+      } else if (id === "app" && baseEvent.name === "ResetForm") {
+        for (const fieldId of baseEvent.ids) {
+          const obj = this._objects[fieldId];
+
+          if (obj) {
+            obj.obj._reset();
+          }
+        }
       }
 
       return;
@@ -4932,8 +4944,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.11.298';
-const pdfjsBuild = 'd370a281c';
+const pdfjsVersion = '2.12.16';
+const pdfjsBuild = '394596560';
 })();
 
 /******/ 	return __webpack_exports__;
