@@ -8,7 +8,7 @@ const MESSAGES = [
   "foo@bar.com",
   "http://abc.com/q?fizz=buzz&alpha=beta/",
   "https://xyz.com/?path=/world",
-  "foooobaaaar",
+  "FOOoobaaaar",
   "123 working",
 ];
 
@@ -63,6 +63,28 @@ add_task(async function() {
   await setFilterInput(hud, "-/[^0-9]$/", MESSAGES[0]);
   filteredNodes = outputNode.querySelectorAll(".message");
   checkFilteredMessages(filteredNodes, [MESSAGES[0]], 1);
+
+  info("Filter out messages starting with 'foo', case-sensitive default");
+  await setFilterInput(hud, "/^foo/", MESSAGES[1]);
+  filteredNodes = outputNode.querySelectorAll(".message");
+  checkFilteredMessages(filteredNodes, [MESSAGES[1]], 1);
+
+  info("Filter out messages starting with 'FOO', case-sensitive default");
+  await setFilterInput(hud, "/^FOO/", MESSAGES[4]);
+  filteredNodes = outputNode.querySelectorAll(".message");
+  checkFilteredMessages(filteredNodes, [MESSAGES[4]], 1);
+
+  info(
+    "Filter out messages starting with 'foo', case-insensitive flag specified"
+  );
+  await setFilterInput(hud, "/^foo/i", MESSAGES[4]);
+  filteredNodes = outputNode.querySelectorAll(".message");
+  checkFilteredMessages(filteredNodes, [MESSAGES[1], MESSAGES[4]], 2);
+
+  info("Plaintext search if a wrong flag is specified");
+  await setFilterInput(hud, "/abc.com/q", MESSAGES[2]);
+  filteredNodes = outputNode.querySelectorAll(".message");
+  checkFilteredMessages(filteredNodes, [MESSAGES[2]], 1);
 });
 
 async function setFilterInput(hud, value, lastMessage) {
