@@ -22,6 +22,7 @@ remote.jar:
   content/shared/WindowManager.jsm (shared/WindowManager.jsm)
 
   # shared modules (messagehandler architecture)
+  content/shared/messagehandler/Errors.jsm (shared/messagehandler/Errors.jsm)
   content/shared/messagehandler/MessageHandler.jsm (shared/messagehandler/MessageHandler.jsm)
   content/shared/messagehandler/MessageHandlerRegistry.jsm (shared/messagehandler/MessageHandlerRegistry.jsm)
   content/shared/messagehandler/Module.jsm (shared/messagehandler/Module.jsm)
