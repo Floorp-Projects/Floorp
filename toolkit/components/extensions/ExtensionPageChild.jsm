@@ -352,9 +352,6 @@ ExtensionPageChild = {
   // Map<innerWindowId, ExtensionPageContextChild>
   extensionContexts: new Map(),
 
-  // Map<workerClientInfoId, ExtensionWorkerContextChild>
-  extensionWorkerContexts: new Map(),
-
   apiManager,
 
   _init() {
