@@ -301,15 +301,14 @@ def initialize(topsrcdir):
 
                 # all environments should have an instance of build object.
                 build = MozbuildObject.from_environment()
-                if build is not None and hasattr(build, "mozconfig"):
-                    ac_options = build.mozconfig["configure_args"]
-                    if ac_options and "--disable-tests" in ac_options:
-                        print(
-                            "Tests have been disabled by mozconfig with the flag "
-                            + '"ac_add_options --disable-tests".\n'
-                            + "Remove the flag, and re-compile to enable tests."
-                        )
-                        sys.exit(1)
+                if build is not None and not getattr(
+                    build, "substs", {"ENABLE_TESTS": True}
+                ).get("ENABLE_TESTS"):
+                    print(
+                        "Tests have been disabled with --disable-tests.\n"
+                        + "Remove the flag, and re-compile to enable tests."
+                    )
+                    sys.exit(1)
             except BuildEnvironmentNotFoundException:
                 # likely automation environment, so do nothing.
                 pass
