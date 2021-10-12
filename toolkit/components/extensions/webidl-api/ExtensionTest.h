@@ -10,6 +10,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/SerializedStackHolder.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
@@ -61,6 +62,13 @@ class ExtensionTest final : public nsISupports,
   void CallWebExtMethodAssertEq(JSContext* aCx, const nsAString& aApiMethod,
                                 const dom::Sequence<JS::Value>& aArgs,
                                 ErrorResult& aRv);
+
+  MOZ_CAN_RUN_SCRIPT bool AssertMatchInternal(
+      JSContext* aCx, const JS::HandleValue aActualValue,
+      const JS::HandleValue aExpectedMatchValue, const nsAString& aMessagePre,
+      const dom::Optional<nsAString>& aMessage,
+      UniquePtr<dom::SerializedStackHolder> aSerializedCallerStack,
+      ErrorResult& aRv);
 
   ExtensionEventManager* OnMessage();
 
