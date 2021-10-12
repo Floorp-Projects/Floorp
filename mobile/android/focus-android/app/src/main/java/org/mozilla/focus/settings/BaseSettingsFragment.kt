@@ -37,7 +37,7 @@ abstract class BaseSettingsFragment : PreferenceFragmentCompat() {
             statusBarView.setBackgroundColor(
                 ContextCompat.getColor(
                     view.context,
-                    R.color.statusBarBackground
+                    R.color.settings_background
                 )
             )
         }

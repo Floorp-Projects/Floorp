@@ -63,7 +63,7 @@
             android:id="@+id/toolbarBackgroundView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/toolbar_color" />
+            android:background="@drawable/background_gradient" />
 
         <View
             android:id="@+id/toolbarBottomBorder"
