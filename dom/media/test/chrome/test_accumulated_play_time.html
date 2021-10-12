@@ -490,7 +490,8 @@ function assertValueKeptUnchanged(mediaChrome, checkType) {
   // 30ms is long enough to have a low-resolution system clock tick, but short
   // enough to not slow the test down.
   blockMainThread(30);
-  timeFuzzyEquals(mediaChrome[checkType], valueSnapshot, `${checkType} keeps unchanged (${valueSnapshot})`);
+  const newValue = mediaChrome[checkType];
+  timeFuzzyEquals(newValue, valueSnapshot, `${checkType} keeps unchanged (${newValue} vs. ${valueSnapshot})`);
 }
 
 function assertAllProbeRelatedAttributesKeptUnchanged(video) {
