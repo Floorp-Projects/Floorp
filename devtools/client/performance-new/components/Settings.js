@@ -66,6 +66,7 @@ const {
   h3,
   section,
   p,
+  span,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 const Range = createFactory(
   require("devtools/client/performance-new/components/Range")
@@ -264,6 +265,7 @@ class Settings extends PureComponent {
    */
   _renderThreadsColumns(threadDisplay, index) {
     const { threads } = this.props;
+    const areAllThreadsIncluded = threads.includes("*");
     return div(
       { className: "perf-settings-thread-column", key: index },
       threadDisplay.map(({ name, id, l10nId }) =>
@@ -272,8 +274,11 @@ class Settings extends PureComponent {
           { id: l10nId, attrs: { title: true }, key: name },
           label(
             {
-              className:
-                "perf-settings-checkbox-label perf-settings-thread-label toggle-container-with-text",
+              className: `perf-settings-checkbox-label perf-settings-thread-label toggle-container-with-text ${
+                areAllThreadsIncluded
+                  ? "perf-settings-checkbox-label-disabled"
+                  : ""
+              }`,
             },
             input({
               className: "perf-settings-checkbox",
@@ -282,9 +287,10 @@ class Settings extends PureComponent {
               // Do not localize the value, this is used internally by the profiler.
               value: name,
               checked: threads.includes(name),
+              disabled: areAllThreadsIncluded,
               onChange: this._handleThreadCheckboxChange,
             }),
-            name
+            span(null, name)
           )
         )
       )
