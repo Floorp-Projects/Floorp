@@ -37,7 +37,8 @@ AntiTracking._createTask({
     ok(document.cookie != "", "Nothing is blocked");
 
     // requestStorageAccess should resolve
-    SpecialPowers.wrap(document).notifyUserGestureActivation();
+    let dwu = SpecialPowers.getDOMWindowUtils(window);
+    let helper = dwu.setHandlingUserInput(true);
     await document
       .requestStorageAccess()
       .then(() => {
@@ -46,7 +47,7 @@ AntiTracking._createTask({
       .catch(() => {
         ok(false, "Should grant storage access");
       });
-    SpecialPowers.wrap(document).clearUserGestureActivation();
+    helper.destruct();
   },
   extraPrefs: null,
   expectedBlockingNotifications: 0,
