@@ -88,6 +88,7 @@
 #include "mozilla/dom/quota/PQuotaRequestParent.h"
 #include "mozilla/dom/quota/PQuotaUsageRequest.h"
 #include "mozilla/dom/quota/PQuotaUsageRequestParent.h"
+#include "mozilla/dom/quota/QuotaManagerImpl.h"
 #include "mozilla/dom/quota/ScopedLogExtraInfo.h"
 #include "mozilla/dom/simpledb/ActorsParent.h"
 #include "mozilla/fallible.h"
@@ -9451,11 +9452,12 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
       break;
     }
 
-    nsCString message;
-    message.AppendPrintf(
-        "Failed to remove one or more directories, retry number: %d",
-        index + 1);
-    aQuotaManager.MaybeRecordQuotaManagerShutdownStep(message);
+    aQuotaManager.MaybeRecordQuotaManagerShutdownStepWith([index]() {
+      return nsPrintfCString(
+          "Failed to remove one or more directories, retry number: %d",
+          index + 1);
+    });
+
     PR_Sleep(PR_MillisecondsToInterval(200));
   }
 
