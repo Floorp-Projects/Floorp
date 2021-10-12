@@ -289,7 +289,8 @@
     {
       "login": true,
       "name": "tumblr",
-      "test_url": "https://www.tumblr.com/dashboard"
+      "test_url": "https://www.tumblr.com/dashboard",
+      "secondary_url": "https://www.tumblr.com/tagged/funny+cats?sort=top"
     },
     {
       "login": false,
