@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings.studies
 
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.nimbus.NimbusApi
+import org.mozilla.experiments.nimbus.NimbusInterface
 import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -36,8 +37,14 @@ class DefaultStudiesInteractor(
     }
 
     override fun removeStudy(experiment: EnrolledExperiment) {
+        experiments.register(object : NimbusInterface.Observer {
+            override fun onUpdatesApplied(updated: List<EnrolledExperiment>) {
+                // Wait until the experiment is unrolled from nimbus to restart.
+                killApplication()
+            }
+        })
         experiments.optOut(experiment.slug)
-        killApplication()
+        experiments.applyPendingExperiments()
     }
 
     @VisibleForTesting
