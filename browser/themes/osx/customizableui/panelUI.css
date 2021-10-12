@@ -24,6 +24,16 @@ panel[type="arrow"][side="right"] {
   margin-block: -8px;
 }
 
+#downloadsPanel,
+#widget-overflow,
+#appMenu-popup,
+#customizationui-widget-panel,
+#identity-popup,
+#permission-popup,
+#protections-popup {
+  margin-top: -1px; /* Overrides value from panelUI.inc.css */
+}
+
 #BMB_bookmarksPopup {
   margin-top: -4px; /* Overrides value from panelUI.inc.css */
 }
