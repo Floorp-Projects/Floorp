@@ -49,6 +49,29 @@ add_task(async function test_sw_api_request_handling_local_process_api() {
             errorObject,
             "call to test.assertEq"
           );
+
+          // Smoke test for assertThrows/assertRejects.
+          const errorMatchingTestCases = [
+            ["expected error instance", errorObject],
+            ["expected error message string", "fake_error_message"],
+            ["expected regexp", /fake_error/],
+            ["matching function", error => errorObject === error],
+            ["matching Constructor", Error],
+          ];
+
+          browser.test.log("run assertThrows smoke tests");
+
+          const throwFn = () => {
+            throw errorObject;
+          };
+          for (const [msg, expected] of errorMatchingTestCases) {
+            browser.test.assertThrows(
+              throwFn,
+              expected,
+              `call to assertThrow with ${msg}`
+            );
+          }
+
           browser.test.notifyPass("test-completed");
         });
         browser.test.sendMessage("bgsw-ready");

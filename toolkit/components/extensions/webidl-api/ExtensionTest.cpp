@@ -260,6 +260,74 @@ MOZ_CAN_RUN_SCRIPT bool ExtensionTest::AssertMatchInternal(
   return true;
 }
 
+MOZ_CAN_RUN_SCRIPT void ExtensionTest::AssertThrows(
+    JSContext* aCx, dom::Function& aFunction,
+    const JS::HandleValue aExpectedError,
+    const dom::Optional<nsAString>& aMessage, ErrorResult& aRv) {
+  // Call the function that is expected to throw, then get the pending exception
+  // to pass it to the AssertMatchInternal.
+  ErrorResult erv;
+  erv.MightThrowJSException();
+  JS::Rooted<JS::Value> ignoredRetval(aCx);
+  aFunction.Call({}, &ignoredRetval, erv, "ExtensionTest::AssertThrows",
+                 dom::Function::eRethrowExceptions);
+
+  bool didThrow = false;
+  JS::Rooted<JS::Value> exn(aCx);
+
+  if (erv.MaybeSetPendingException(aCx) && JS_GetPendingException(aCx, &exn)) {
+    JS_ClearPendingException(aCx);
+    didThrow = true;
+  }
+
+  // If the function did not throw, then the assertion is failed
+  // and the result should be forwarded to assertTrue on the main thread.
+  if (!didThrow) {
+    JS::Rooted<JSString*> expectedErrorToSource(
+        aCx, JS_ValueToSource(aCx, aExpectedError));
+    if (NS_WARN_IF(!expectedErrorToSource)) {
+      ThrowUnexpectedError(aCx, aRv);
+      return;
+    }
+    nsAutoJSString expectedErrorSource;
+    if (NS_WARN_IF(!expectedErrorSource.init(aCx, expectedErrorToSource))) {
+      ThrowUnexpectedError(aCx, aRv);
+      return;
+    }
+
+    nsString message;
+    message.AppendPrintf("Function did not throw, expected error '%s'",
+                         NS_ConvertUTF16toUTF8(expectedErrorSource).get());
+    if (aMessage.WasPassed()) {
+      message.AppendPrintf(": %s",
+                           NS_ConvertUTF16toUTF8(aMessage.Value()).get());
+    }
+
+    dom::Sequence<JS::Value> assertTrueArgs;
+    JS::Rooted<JS::Value> arg0(aCx);
+    JS::Rooted<JS::Value> arg1(aCx);
+    if (NS_WARN_IF(!dom::ToJSValue(aCx, false, &arg0) ||
+                   !dom::ToJSValue(aCx, message, &arg1) ||
+                   !assertTrueArgs.AppendElement(arg0, fallible) ||
+                   !assertTrueArgs.AppendElement(arg1, fallible))) {
+      ThrowUnexpectedError(aCx, aRv);
+      return;
+    }
+
+    CallWebExtMethodNoReturn(aCx, u"assertTrue"_ns, assertTrueArgs, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      ThrowUnexpectedError(aCx, aRv);
+    }
+    return;
+  }
+
+  if (NS_WARN_IF(!AssertMatchInternal(aCx, exn, aExpectedError,
+                                      u"Function did throw, expected error"_ns,
+                                      aMessage, nullptr, aRv))) {
+    ThrowUnexpectedError(aCx, aRv);
+  }
+}
+
 ExtensionEventManager* ExtensionTest::OnMessage() {
   if (!mOnMessageEventMgr) {
     mOnMessageEventMgr = CreateEventManager(u"onMessage"_ns);
