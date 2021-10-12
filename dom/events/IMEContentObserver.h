@@ -167,6 +167,10 @@ class IMEContentObserver final : public nsStubMutationObserver,
   void BeforeEditAction();
   void CancelEditAction();
 
+  nsIContent* GetObservingContent() const {
+    return mIsObserving ? mRootContent.get() : nullptr;
+  }
+
  private:
   ~IMEContentObserver() = default;
 
