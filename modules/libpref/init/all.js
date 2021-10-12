@@ -4490,12 +4490,8 @@ pref("services.common.log.logger.tokenserverclient", "Debug");
 // Enable the JSON View tool (an inspector for application/json documents).
 pref("devtools.jsonview.enabled", true);
 
-// Default theme ("dark" or "light").
-#ifdef MOZ_DEV_EDITION
-  pref("devtools.theme", "dark", sticky);
-#else
-  pref("devtools.theme", "light", sticky);
-#endif
+// Default theme ("auto", "dark" or "light").
+pref("devtools.theme", "auto", sticky);
 
 // Completely disable DevTools entry points, as well as all DevTools command
 // line arguments This should be merged with devtools.enabled, see Bug 1440675.

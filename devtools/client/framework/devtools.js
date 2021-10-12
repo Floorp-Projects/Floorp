@@ -50,6 +50,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const {
   getTheme,
   setTheme,
+  getAutoTheme,
   addThemeObserver,
   removeThemeObserver,
 } = require("devtools/client/shared/theme");
@@ -286,6 +287,15 @@ DevTools.prototype = {
   },
 
   /**
+   * Returns the name of the default (auto) theme for devtools.
+   *
+   * @return {string} theme
+   */
+  getAutoTheme() {
+    return getAutoTheme();
+  },
+
+  /**
    * Called when the developer tools theme changes.
    */
   _onThemeChanged() {
@@ -361,7 +371,7 @@ DevTools.prototype = {
       !isCoreTheme &&
       theme.id == currTheme
     ) {
-      setTheme("light");
+      setTheme("auto");
 
       this.emit("theme-unregistered", theme);
     }
