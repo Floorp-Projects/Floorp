@@ -14,7 +14,7 @@
         android:id="@+id/urlbar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/display_toolbar_height"
-        android:background="@color/background"
+        android:background="@drawable/background_gradient"
         android:elevation="4dp"
         app:layout_scrollFlags="scroll|enterAlways|snap|exitUntilCollapsed"
         android:clipChildren="false">

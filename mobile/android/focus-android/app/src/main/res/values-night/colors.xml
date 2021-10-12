@@ -32,9 +32,9 @@
     <color name="destructive">#FF6A75</color>
 
     <!-- Logo and Splash -->
-    <color name="headerGradientStart">#2B2154</color>
-    <color name="headerGradientMiddle">#281D4C</color>
-    <color name="headerGradientEnd">#2A2051</color>
+    <color name="headerGradientStart">#FF1E1236</color>
+    <color name="headerGradientMiddle">#FF21163E</color>
+    <color name="headerGradientEnd">#FF1D1133</color>
 
     <color name="homeGradient1">#FF1E1236</color>
     <color name="homeGradient2">#FF332866</color>
