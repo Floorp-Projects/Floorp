@@ -27,6 +27,7 @@
 #include "nsFocusManager.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
+#include "nsIContentInlines.h"
 #include "nsIDocShell.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
@@ -689,8 +690,7 @@ bool RootWindowGlobalKeyListener::IsHTMLEditorFocused() {
     return false;
   }
 
-  dom::Document* doc = htmlEditor->GetDocument();
-  if (doc->HasFlag(NODE_IS_EDITABLE)) {
+  if (htmlEditor->IsInDesignMode()) {
     // Don't need to perform any checks in designMode documents.
     return true;
   }

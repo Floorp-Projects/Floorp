@@ -1293,6 +1293,18 @@ class nsINode : public mozilla::dom::EventTarget {
   inline bool IsEditable() const;
 
   /**
+   * Check if this node is in design mode or not.  When this returns true and:
+   * - if this is a Document node, it's the design mode root.
+   * - if this is a content node, it's connected, it's not in a shadow tree
+   *   (except shadow tree for UI widget and native anonymous subtree) and its
+   *   uncomposed document is in design mode.
+   * Note that returning true does NOT mean the node or its children is
+   * editable.  E.g., when this node is in a shadow tree of a UA widget and its
+   * host is in design mode.
+   */
+  inline bool IsInDesignMode() const;
+
+  /**
    * Returns true if |this| or any of its ancestors is native anonymous.
    */
   bool IsInNativeAnonymousSubtree() const {

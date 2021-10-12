@@ -245,7 +245,7 @@ dom::Element* nsIContent::GetEditingHost() {
   }
 
   // If this is in designMode, we should return <body>
-  if (doc->HasFlag(NODE_IS_EDITABLE) && !IsInShadowTree()) {
+  if (IsInDesignMode() && !IsInShadowTree()) {
     return doc->GetBodyElement();
   }
 

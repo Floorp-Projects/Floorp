@@ -675,10 +675,7 @@ class HTMLEditor final : public EditorBase,
   /**
    * Retruns true if we're in designMode.
    */
-  bool IsInDesignMode() const {
-    Document* document = GetDocument();
-    return document && document->HasFlag(NODE_IS_EDITABLE);
-  }
+  bool IsInDesignMode() const;
 
   /**
    * Basically, this always returns true if we're for `contenteditable` or
