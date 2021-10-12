@@ -81,9 +81,7 @@ class DebugTargetInfo extends PureComponent {
     const { debugTargetData, L10N } = this.props;
     const { name, version } = debugTargetData.runtimeInfo;
     const { connectionType } = debugTargetData;
-    const brandShorterName = Services.strings
-      .createBundle("chrome://branding/locale/brand.properties")
-      .GetStringFromName("brandShorterName");
+    const brandShorterName = L10N.getStr("brandShorterName");
 
     return connectionType === CONNECTION_TYPES.THIS_FIREFOX
       ? L10N.getFormatStr(

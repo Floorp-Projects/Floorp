@@ -41,9 +41,10 @@ const { BrowserLoader } = ChromeUtils.import(
   "resource://devtools/client/shared/browser-loader.js"
 );
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper(
-  "devtools/client/locales/toolbox.properties"
+const { MultiLocalizationHelper } = require("devtools/shared/l10n");
+const L10N = new MultiLocalizationHelper(
+  "devtools/client/locales/toolbox.properties",
+  "chrome://branding/locale/brand.properties"
 );
 
 loader.lazyRequireGetter(
