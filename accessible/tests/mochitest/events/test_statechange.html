@@ -360,6 +360,8 @@
 
       await testMultiSelectable("listbox", "aria-multiselectable");
 
+      await testMultiSelectable("select", "multiple");
+
       SimpleTest.finish();
     }
 
@@ -473,6 +475,15 @@
     <li role="option">four</li>
     <li role="option">five</li>
   </ul>
+
+  <select id="select" size="2">
+    <option>one</option>
+    <option>two</option>
+    <option>three</option>
+    <option>four</option>
+    <option>five</option>
+    <option>size</option>
+  </select>
 
   <div id="eventdump"></div>
 
