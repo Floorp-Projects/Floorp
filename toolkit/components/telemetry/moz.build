@@ -116,6 +116,10 @@ EXTRA_JS_MODULES += [
     "TelemetryStartup.jsm",
 ]
 
+EXTRA_JS_MODULES.backgroundtasks += [
+    "pings/BackgroundTask_pingsender.jsm",
+]
+
 if CONFIG["OS_ARCH"] == "WINNT":
     EXTRA_JS_MODULES += [
         "pings/UninstallPing.jsm",
