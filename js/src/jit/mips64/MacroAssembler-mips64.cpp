@@ -913,6 +913,13 @@ void MacroAssemblerMIPS64::ma_cmp_set(Register rd, Register rs, ImmWord imm,
   }
 }
 
+void MacroAssemblerMIPS64::ma_cmp_set(Register rd, Address address, ImmWord imm,
+                                      Condition c) {
+  SecondScratchRegisterScope scratch2(asMasm());
+  ma_load(scratch2, address, SizeDouble);
+  ma_cmp_set(rd, scratch2, imm, c);
+}
+
 void MacroAssemblerMIPS64::ma_cmp_set(Register rd, Register rs, ImmPtr imm,
                                       Condition c) {
   ma_cmp_set(rd, rs, ImmWord(uintptr_t(imm.value)), c);
@@ -920,8 +927,9 @@ void MacroAssemblerMIPS64::ma_cmp_set(Register rd, Register rs, ImmPtr imm,
 
 void MacroAssemblerMIPS64::ma_cmp_set(Register rd, Address address, Imm32 imm,
                                       Condition c) {
-  ma_load(ScratchRegister, address, SizeWord, SignExtend);
-  ma_cmp_set(rd, ScratchRegister, imm, c);
+  SecondScratchRegisterScope scratch2(asMasm());
+  ma_load(scratch2, address, SizeWord, SignExtend);
+  ma_cmp_set(rd, scratch2, imm, c);
 }
 
 // fp instructions
