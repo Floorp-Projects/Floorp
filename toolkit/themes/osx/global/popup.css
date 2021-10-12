@@ -48,19 +48,6 @@ panel[type="arrow"][side="right"] {
   margin-block: -25px;
 }
 
-:is(panel, menupopup)[type="arrow"][side="top"] {
-  margin-top: -1px;
-}
-:is(panel, menupopup)[type="arrow"][side="bottom"] {
-  margin-bottom: -1px;
-}
-:is(panel, menupopup)[type="arrow"][side="left"] {
-  margin-left: -1px;
-}
-:is(panel, menupopup)[type="arrow"][side="right"] {
-  margin-right: -1px;
-}
-
 :is(panel, menupopup)::part(content) {
   display: -moz-box;
   -moz-box-flex: 1;

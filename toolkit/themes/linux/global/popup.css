@@ -35,24 +35,6 @@ panel[type="arrow"][side="right"] {
   margin-block: -20px;
 }
 
-/*
- * The 4 pixel margin to give space for the box shadow puts the panel in the
- * wrong place (See Bug 1718011). So we'll adjust the panel 4 pixels back
- * towards its anchor with a negative margin.
- */
-:is(panel, menupopup)[type="arrow"][side="top"] {
-  margin-top: -4px;
-}
-:is(panel, menupopup)[type="arrow"][side="bottom"] {
-  margin-bottom: -4px;
-}
-:is(panel, menupopup)[type="arrow"][side="left"] {
-  margin-left: -4px;
-}
-:is(panel, menupopup)[type="arrow"][side="right"] {
-  margin-right: -4px;
-}
-
 :is(panel, menupopup)::part(content) {
   display: -moz-box;
   -moz-box-flex: 1;
