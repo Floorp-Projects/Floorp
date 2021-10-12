@@ -1652,16 +1652,6 @@ bool DocAccessible::UpdateAccessibleOnAttrChange(dom::Element* aElement,
     return true;
   }
 
-  if (aAttribute == nsGkAtoms::aria_multiselectable &&
-      aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::role)) {
-    // This affects whether the accessible supports SelectAccessible.
-    // COM says we cannot change what interfaces are supported on-the-fly,
-    // so invalidate this object. A new one will be created on demand.
-    RecreateAccessible(aElement);
-
-    return true;
-  }
-
   if (aAttribute == nsGkAtoms::type) {
     // If the input[type] changes, we should recreate the accessible.
     RecreateAccessible(aElement);

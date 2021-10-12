@@ -269,6 +269,33 @@
         STATE_INVISIBLE, 0,
         "image should be invisible");
     }
+    
+    async function testMultiSelectable(aID, aAttribute) {
+      testStates(aID,
+        0, 0,
+        STATE_MULTISELECTABLE | STATE_EXTSELECTABLE, 0,
+        `${aID} should not be multiselectable`);
+      let p = waitForEvents([
+        stateChange(STATE_MULTISELECTABLE, false, true, aID),
+        stateChange(STATE_EXTSELECTABLE, false, true, aID),
+      ]);
+      getNode(aID).setAttribute(aAttribute, true);
+      await p;
+      testStates(aID,
+        STATE_MULTISELECTABLE | STATE_EXTSELECTABLE, 0,
+        0, 0,
+        `${aID} should not be multiselectable`);
+      p = waitForEvents([
+        stateChange(STATE_MULTISELECTABLE, false, false, aID),
+        stateChange(STATE_EXTSELECTABLE, false, false, aID),
+      ]);
+      getNode(aID).removeAttribute(aAttribute);
+      await p;
+      testStates(aID,
+        0, 0,
+        STATE_MULTISELECTABLE | STATE_EXTSELECTABLE, 0,
+        `${aID} should not be multiselectable`);
+    }
 
     async function doTests() {
       // Test opening details objects
@@ -330,6 +357,8 @@
       await testAnimatedImage();
 
       await testImageLoad();
+
+      await testMultiSelectable("listbox", "aria-multiselectable");
 
       SimpleTest.finish();
     }
@@ -437,8 +466,17 @@
 
   <img id="animated-image" src="../animated-gif.gif">
 
+  <ul id="listbox" role="listbox">
+    <li role="option">one</li>
+    <li role="option">two</li>
+    <li role="option">three</li>
+    <li role="option">four</li>
+    <li role="option">five</li>
+  </ul>
+
   <div id="eventdump"></div>
 
+  <div id="eventdump"></div>
   <button id="popupButton">action</button>
 </body>
 </html>
