@@ -4142,6 +4142,7 @@ void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
     }
   }
   MOZ_ASSERT(diffG == 0);
+  (void)diffG;
 
   // See above.
 #ifdef ENABLE_WASM_SIMD
