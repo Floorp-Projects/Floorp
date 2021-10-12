@@ -2704,7 +2704,7 @@ class nsContentUtils {
    * `aAnonymousContent` hasn't been created yet.
    */
   static mozilla::TextEditor* GetTextEditorFromAnonymousNodeWithoutCreation(
-      nsIContent* aAnonymousContent);
+      const nsIContent* aAnonymousContent);
 
   /**
    * Returns whether a node has an editable ancestor.
