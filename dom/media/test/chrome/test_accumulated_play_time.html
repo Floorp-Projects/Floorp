@@ -15,6 +15,7 @@
  * - VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE
  * - VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE
  * - VIDEO_VISIBLE_PLAY_TIME_MS
+ * - MEDIA_PLAY_TIME_MS
  */
 const videoHistNames = ["VIDEO_PLAY_TIME_MS", "VIDEO_HIDDEN_PLAY_TIME_MS"];
 const videoKeyedHistNames = ["VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE", "VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE", "VIDEO_VISIBLE_PLAY_TIME_MS"];
@@ -447,6 +448,22 @@ async function checkReportedTelemetry(media, reportExpected, hasVideo) {
       hist.clear();
     } catch (e) {
       ok(false , `keyed histogram '${name}' doesn't exist`);
+    }
+  }
+
+  // In any case, the combined probe MEDIA_PLAY_TIME_MS should be reported, if
+  // expected
+  {
+    const hist =
+      SpecialPowers.Services.telemetry.getKeyedHistogramById("MEDIA_PLAY_TIME_MS");
+    const items = Object.entries(hist.snapshot());
+    if (items.length > 0) {
+      for (const item of items) {
+        ok(item[0].includes("V") != -1 || !hasVideo, "Video time is reported if video was present");
+      }
+      hist.clear();
+    } else {
+      ok(!reportExpected, "MEDIA_PLAY_TIME_MS should always be reported if a report is expected");
     }
   }
 }
