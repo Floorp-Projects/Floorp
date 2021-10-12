@@ -193,8 +193,8 @@ static gchar* getTextAtOffsetCB(AtkText* aText, gint aOffset,
                        autoStr);
     ConvertTexttoAsterisks(accWrap, autoStr);
   } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    proxy->GetTextAtOffset(aOffset, aBoundaryType, autoStr, &startOffset,
-                           &endOffset);
+    proxy->TextAtOffset(aOffset, aBoundaryType, &startOffset, &endOffset,
+                        autoStr);
   }
 
   *aStartOffset = startOffset;

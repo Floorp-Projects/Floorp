@@ -197,12 +197,18 @@ void RemoteAccessible::GetTextAfterOffset(int32_t aOffset,
                                          aStartOffset, aEndOffset);
 }
 
-void RemoteAccessible::GetTextAtOffset(int32_t aOffset,
-                                       AccessibleTextBoundary aBoundaryType,
-                                       nsString& aText, int32_t* aStartOffset,
-                                       int32_t* aEndOffset) {
-  Unused << mDoc->SendGetTextAtOffset(mID, aOffset, aBoundaryType, &aText,
+void RemoteAccessible::TextAtOffset(int32_t aOffset,
+                                    AccessibleTextBoundary aBoundaryType,
+                                    int32_t* aStartOffset, int32_t* aEndOffset,
+                                    nsAString& aText) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::TextAtOffset(
+        aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
+  }
+  nsString text;
+  Unused << mDoc->SendGetTextAtOffset(mID, aOffset, aBoundaryType, &text,
                                       aStartOffset, aEndOffset);
+  aText = std::move(text);
 }
 
 void RemoteAccessible::GetTextBeforeOffset(int32_t aOffset,
