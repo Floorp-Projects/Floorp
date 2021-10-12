@@ -109,9 +109,11 @@ struct JSStructuredCloneWriter;
 #define JWK_ALG_PS256 "PS256"
 #define JWK_ALG_PS384 "PS384"
 #define JWK_ALG_PS512 "PS512"
+// The JSON Web Algorithms spec (RFC 7518) uses the hash to identify these, not
+// the curve.
 #define JWK_ALG_ECDSA_P_256 "ES256"
 #define JWK_ALG_ECDSA_P_384 "ES384"
-#define JWK_ALG_ECDSA_P_521 "ES521"
+#define JWK_ALG_ECDSA_P_521 "ES512"
 
 // JWK usages
 #define JWK_USE_ENC "enc"
