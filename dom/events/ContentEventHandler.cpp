@@ -565,30 +565,22 @@ static uint32_t CountNewlinesInNativeLength(Text* aText,
 #endif
 
 /* static */
-uint32_t ContentEventHandler::GetNativeTextLength(nsIContent* aContent,
+uint32_t ContentEventHandler::GetNativeTextLength(const Text& aTextNode,
                                                   uint32_t aStartOffset,
                                                   uint32_t aEndOffset) {
   MOZ_ASSERT(aEndOffset >= aStartOffset,
              "aEndOffset must be equals or larger than aStartOffset");
-  if (NS_WARN_IF(!aContent->IsText())) {
-    return 0;
-  }
   if (aStartOffset == aEndOffset) {
     return 0;
   }
-  return GetTextLength(*aContent->AsText(), LINE_BREAK_TYPE_NATIVE,
-                       aEndOffset) -
-         GetTextLength(*aContent->AsText(), LINE_BREAK_TYPE_NATIVE,
-                       aStartOffset);
+  return GetTextLength(aTextNode, LINE_BREAK_TYPE_NATIVE, aEndOffset) -
+         GetTextLength(aTextNode, LINE_BREAK_TYPE_NATIVE, aStartOffset);
 }
 
 /* static */
-uint32_t ContentEventHandler::GetNativeTextLength(nsIContent* aContent,
+uint32_t ContentEventHandler::GetNativeTextLength(const Text& aTextNode,
                                                   uint32_t aMaxLength) {
-  if (NS_WARN_IF(!aContent->IsText())) {
-    return 0;
-  }
-  return GetTextLength(*aContent->AsText(), LINE_BREAK_TYPE_NATIVE, aMaxLength);
+  return GetTextLength(aTextNode, LINE_BREAK_TYPE_NATIVE, aMaxLength);
 }
 
 /* static */
@@ -775,7 +767,8 @@ uint32_t ContentEventHandler::GetTextLengthInRange(
   MOZ_ASSERT(aContent->IsText());
 
   return aLineBreakType == LINE_BREAK_TYPE_NATIVE
-             ? GetNativeTextLength(aContent, aXPStartOffset, aXPEndOffset)
+             ? GetNativeTextLength(*aContent->AsText(), aXPStartOffset,
+                                   aXPEndOffset)
              : aXPEndOffset - aXPStartOffset;
 }
 

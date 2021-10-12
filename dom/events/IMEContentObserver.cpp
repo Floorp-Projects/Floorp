@@ -40,6 +40,7 @@ namespace mozilla {
 using NodePosition = ContentEventHandler::NodePosition;
 using NodePositionBefore = ContentEventHandler::NodePositionBefore;
 
+using namespace dom;
 using namespace widget;
 
 LazyLogModule sIMECOLog("IMEContentObserver");
@@ -338,7 +339,7 @@ void IMEContentObserver::ObserveEditableNode() {
   mRootContent->AddMutationObserver(this);
   // If it's in a document (should be so), we can use document observer to
   // reduce redundant computation of text change offsets.
-  dom::Document* doc = mRootContent->GetComposedDoc();
+  Document* doc = mRootContent->GetComposedDoc();
   if (doc) {
     RefPtr<DocumentObserver> documentObserver = mDocumentObserver;
     documentObserver->Observe(doc);
@@ -531,7 +532,7 @@ bool IMEContentObserver::IsEditorComposing() const {
 }
 
 nsresult IMEContentObserver::GetSelectionAndRoot(
-    dom::Selection** aSelection, nsIContent** aRootContent) const {
+    Selection** aSelection, nsIContent** aRootContent) const {
   if (!mEditableNode || !mSelection) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -542,7 +543,7 @@ nsresult IMEContentObserver::GetSelectionAndRoot(
   return NS_OK;
 }
 
-void IMEContentObserver::OnSelectionChange(dom::Selection& aSelection) {
+void IMEContentObserver::OnSelectionChange(Selection& aSelection) {
   if (!mIsObserving) {
     return;
   }
@@ -776,7 +777,7 @@ void IMEContentObserver::CharacterDataWillChange(
   MaybeNotifyIMEOfAddedTextDuringDocumentChange();
 
   mPreCharacterDataChangeLength = ContentEventHandler::GetNativeTextLength(
-      aContent, aInfo.mChangeStart, aInfo.mChangeEnd);
+      *aContent->AsText(), aInfo.mChangeStart, aInfo.mChangeEnd);
   MOZ_ASSERT(
       mPreCharacterDataChangeLength >= aInfo.mChangeEnd - aInfo.mChangeStart,
       "The computed length must be same as or larger than XP length");
@@ -817,7 +818,8 @@ void IMEContentObserver::CharacterDataChanged(
   }
 
   uint32_t newLength = ContentEventHandler::GetNativeTextLength(
-      aContent, aInfo.mChangeStart, aInfo.mChangeStart + aInfo.mReplaceLength);
+      *aContent->AsText(), aInfo.mChangeStart,
+      aInfo.mChangeStart + aInfo.mReplaceLength);
 
   uint32_t oldEnd = offset + static_cast<uint32_t>(removedLength);
   uint32_t newEnd = offset + newLength;
@@ -968,8 +970,8 @@ void IMEContentObserver::ContentRemoved(nsIContent* aChild,
 
   // get offset at the end of the deleted node
   uint32_t textLength = 0;
-  if (aChild->IsText()) {
-    textLength = ContentEventHandler::GetNativeTextLength(aChild);
+  if (const Text* textNode = Text::FromNode(aChild)) {
+    textLength = ContentEventHandler::GetNativeTextLength(*textNode);
   } else {
     uint32_t nodeLength = static_cast<int32_t>(aChild->GetChildCount());
     rv = ContentEventHandler::GetFlatTextLengthInRange(
@@ -1998,12 +2000,12 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(IMEContentObserver::DocumentObserver)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(IMEContentObserver::DocumentObserver)
 
-void IMEContentObserver::DocumentObserver::Observe(dom::Document* aDocument) {
+void IMEContentObserver::DocumentObserver::Observe(Document* aDocument) {
   MOZ_ASSERT(aDocument);
 
   // Guarantee that aDocument won't be destroyed during a call of
   // StopObserving().
-  RefPtr<dom::Document> newDocument = aDocument;
+  RefPtr<Document> newDocument = aDocument;
 
   StopObserving();
 
@@ -2020,7 +2022,7 @@ void IMEContentObserver::DocumentObserver::StopObserving() {
   RefPtr<IMEContentObserver> observer = std::move(mIMEContentObserver);
 
   // Stop observing the document first.
-  RefPtr<dom::Document> document = std::move(mDocument);
+  RefPtr<Document> document = std::move(mDocument);
   document->RemoveObserver(this);
 
   // Notify IMEContentObserver of ending of document updates if this already
@@ -2039,8 +2041,7 @@ void IMEContentObserver::DocumentObserver::Destroy() {
   mIMEContentObserver = nullptr;
 }
 
-void IMEContentObserver::DocumentObserver::BeginUpdate(
-    dom::Document* aDocument) {
+void IMEContentObserver::DocumentObserver::BeginUpdate(Document* aDocument) {
   if (NS_WARN_IF(Destroyed()) || NS_WARN_IF(!IsObserving())) {
     return;
   }
@@ -2048,7 +2049,7 @@ void IMEContentObserver::DocumentObserver::BeginUpdate(
   mIMEContentObserver->BeginDocumentUpdate();
 }
 
-void IMEContentObserver::DocumentObserver::EndUpdate(dom::Document* aDocument) {
+void IMEContentObserver::DocumentObserver::EndUpdate(Document* aDocument) {
   if (NS_WARN_IF(Destroyed()) || NS_WARN_IF(!IsObserving()) ||
       NS_WARN_IF(!IsUpdating())) {
     return;
