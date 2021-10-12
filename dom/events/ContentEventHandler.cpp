@@ -519,9 +519,8 @@ static void AppendString(nsString& aString, Text* aText) {
 
 static void AppendSubString(nsString& aString, Text* aText, uint32_t aXPOffset,
                             uint32_t aXPLength) {
-  uint32_t oldXPLength = aString.Length();
-  aText->TextFragment().AppendTo(aString, static_cast<int32_t>(aXPOffset),
-                                 static_cast<int32_t>(aXPLength));
+  const uint32_t oldXPLength = aString.Length();
+  aText->TextFragment().AppendTo(aString, aXPOffset, aXPLength);
   if (aText->HasFlag(NS_MAYBE_MASKED)) {
     EditorUtils::MaskString(aString, aText, oldXPLength, aXPOffset);
   }

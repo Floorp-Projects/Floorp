@@ -9053,9 +9053,9 @@ void nsLayoutUtils::GetFrameTextContent(nsIFrame* aFrame, nsAString& aResult) {
 void nsLayoutUtils::AppendFrameTextContent(nsIFrame* aFrame,
                                            nsAString& aResult) {
   if (aFrame->IsTextFrame()) {
-    auto textFrame = static_cast<nsTextFrame*>(aFrame);
-    auto offset = textFrame->GetContentOffset();
-    auto length = textFrame->GetContentLength();
+    auto* const textFrame = static_cast<nsTextFrame*>(aFrame);
+    const auto offset = AssertedCast<uint32_t>(textFrame->GetContentOffset());
+    const auto length = AssertedCast<uint32_t>(textFrame->GetContentLength());
     textFrame->TextFragment()->AppendTo(aResult, offset, length);
   } else {
     for (nsIFrame* child : aFrame->PrincipalChildList()) {

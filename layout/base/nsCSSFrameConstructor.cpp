@@ -9956,9 +9956,9 @@ static int32_t FirstLetterCount(const nsTextFragment* aFragment) {
   int32_t count = 0;
   int32_t firstLetterLength = 0;
 
-  int32_t i, n = aFragment->GetLength();
-  for (i = 0; i < n; i++) {
-    char16_t ch = aFragment->CharAt(i);
+  const uint32_t n = aFragment->GetLength();
+  for (uint32_t i = 0; i < n; i++) {
+    const char16_t ch = aFragment->CharAt(i);
     // FIXME: take content language into account when deciding whitespace.
     if (dom::IsSpaceCharacter(ch)) {
       if (firstLetterLength) {

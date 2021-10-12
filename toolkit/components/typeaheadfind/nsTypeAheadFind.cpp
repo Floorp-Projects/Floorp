@@ -840,10 +840,8 @@ void nsTypeAheadFind::RangeStartsInsideLink(nsRange* aRange,
       // look for non whitespace character before start offset
       for (uint32_t index = 0; index < startOffset; index++) {
         // FIXME: take content language into account when deciding whitespace.
-        if (!mozilla::dom::IsSpaceCharacter(
-                textFrag->CharAt(static_cast<int32_t>(index)))) {
+        if (!mozilla::dom::IsSpaceCharacter(textFrag->CharAt(index))) {
           *aIsStartingLink = false;  // not at start of a node
-
           break;
         }
       }
