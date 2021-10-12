@@ -439,13 +439,13 @@ void TelemetryProbesReporter::ReportResultForVideo() {
 void TelemetryProbesReporter::ReportResultForAudio() {
   // Don't record telemetry for a media that didn't have a valid audio or video
   // to play, or hasn't played.
-  if (!HasOwnerHadValidMedia() ||
-      (mTotalAudioPlayTime.PeekTotal() == 0.0 &&
-       mTotalVideoPlayTime.PeekTotal() == 0.0)) {
+  if (!HasOwnerHadValidMedia() || (mTotalAudioPlayTime.PeekTotal() == 0.0 &&
+                                   mTotalVideoPlayTime.PeekTotal() == 0.0)) {
     return;
   }
 
   nsCString key;
+  nsCString avKey;
   const double totalAudioPlayTimeS = mTotalAudioPlayTime.GetAndClearTotal();
   const double inaudiblePlayTimeS = mInaudibleAudioPlayTime.GetAndClearTotal();
   const double mutedPlayTimeS = mMutedAudioPlayTime.GetAndClearTotal();
@@ -476,9 +476,11 @@ void TelemetryProbesReporter::ReportResultForAudio() {
       // Media element had an audible audio track
       key.AppendASCII("A");
     }
+    avKey.AppendASCII("A");
   }
   if (mMediaContent & MediaContent::MEDIA_HAS_VIDEO) {
     key.AppendASCII("V");
+    avKey.AppendASCII("V");
   }
 
   LOG("Key: %s", key.get());
@@ -491,6 +493,10 @@ void TelemetryProbesReporter::ReportResultForAudio() {
         mutedPlayTimeS, audiblePercentage, unmutedPercentage);
     Telemetry::Accumulate(Telemetry::MEDIA_PLAY_TIME_MS, key,
                           SECONDS_TO_MS(totalAudioPlayTimeS));
+    Telemetry::Accumulate(Telemetry::MUTED_PLAY_TIME_PERCENT, avKey,
+                          100 - unmutedPercentage);
+    Telemetry::Accumulate(Telemetry::AUDIBLE_PLAY_TIME_PERCENT, avKey,
+                          audiblePercentage);
   } else {
     MOZ_ASSERT(mMediaContent & MediaContent::MEDIA_HAS_VIDEO);
     Telemetry::Accumulate(Telemetry::MEDIA_PLAY_TIME_MS, key,
