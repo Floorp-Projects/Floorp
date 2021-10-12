@@ -2105,6 +2105,10 @@ double HTMLMediaElement::InaudiblePlayTime() const {
   return mDecoder ? mDecoder->GetInaudiblePlayTimeInSeconds() : -1.0;
 }
 
+double HTMLMediaElement::MutedPlayTime() const {
+  return mDecoder ? mDecoder->GetMutedPlayTimeInSeconds() : -1.0;
+}
+
 double HTMLMediaElement::VideoDecodeSuspendedTime() const {
   return mDecoder ? mDecoder->GetVideoDecodeSuspendedTimeInSeconds() : -1.0;
 }

@@ -726,6 +726,7 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   double GetTotalAudioPlayTimeInSeconds() const;
   double GetAudiblePlayTimeInSeconds() const;
   double GetInaudiblePlayTimeInSeconds() const;
+  double GetMutedPlayTimeInSeconds() const;
 
  private:
   /**
@@ -743,6 +744,8 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   // Notify owner when the audible state changed
   void NotifyAudibleStateChanged();
+
+  void NotifyVolumeChanged();
 
   bool mTelemetryReported;
   const MediaContainerType mContainerType;
