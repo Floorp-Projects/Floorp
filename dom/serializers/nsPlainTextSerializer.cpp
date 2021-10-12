@@ -436,7 +436,7 @@ nsPlainTextSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
 
   // Mask the text if the text node is in a password field.
   if (content->HasFlag(NS_MAYBE_MASKED)) {
-    EditorUtils::MaskString(textstr, content->AsText(), 0, aStartOffset);
+    EditorUtils::MaskString(textstr, *content->AsText(), 0, aStartOffset);
   }
 
   // We have to split the string across newlines

@@ -1186,7 +1186,7 @@ class EditorUtils final {
    * been copied (apppended) to `aString`.  `aStartOffsetInString` is where
    * the password was appended into `aString`.
    */
-  static void MaskString(nsString& aString, dom::Text* aText,
+  static void MaskString(nsString& aString, const dom::Text& aTextNode,
                          uint32_t aStartOffsetInString,
                          uint32_t aStartOffsetInText);
 
