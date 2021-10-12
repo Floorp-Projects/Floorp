@@ -1,0 +1,16 @@
+<script>
+  window.onpageshow = function(e) {
+    let bc = new BroadcastChannel("new_shentry_during_history_navigation");
+    bc.onmessage = function(event) {
+      bc.close();
+      if (event.data == "loadnext") {
+        location.href = "file_new_shentry_during_history_navigation_3.html?v2";
+      } else if (event.data == "forward") {
+        history.forward();
+      } else if (event.data == "close") {
+        window.close();
+      }
+    }
+    bc.postMessage({page: location.href, type: e.type, persisted: e.persisted});
+  }
+</script>

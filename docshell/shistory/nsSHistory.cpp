@@ -1202,9 +1202,14 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
 
   aEntry->SetFrameLoader(nullptr);
 
+  nsCOMPtr<nsISHistory> shistory = aEntry->GetShistory();
+  int32_t indexOfHistoryLoad =
+      shistory ? shistory->GetIndexOfEntry(aEntry) : -1;
+
   nsCOMPtr<nsFrameLoaderOwner> frameLoaderOwner =
       do_QueryInterface(aBrowsingContext->GetEmbedderElement());
-  if (frameLoaderOwner && aFrameLoader->GetMaybePendingBrowsingContext()) {
+  if (frameLoaderOwner && aFrameLoader->GetMaybePendingBrowsingContext() &&
+      indexOfHistoryLoad >= 0) {
     // Synthesize a STATE_START WebProgress state change event from here
     // in order to ensure emitting it on the BrowsingContext we navigate *from*
     // instead of the BrowsingContext we navigate *to*.
@@ -1255,7 +1260,8 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
 
     // Assuming we still have the session history, update the index.
     if (loadingBC->GetSessionHistory()) {
-      loadingBC->GetSessionHistory()->UpdateIndex();
+      shistory->InternalSetRequestedIndex(indexOfHistoryLoad);
+      shistory->UpdateIndex();
     }
     loadingBC->HistoryCommitIndexAndLength();
     Unused << loadingBC->SetIsInBFCache(false);
