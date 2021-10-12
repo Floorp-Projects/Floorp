@@ -144,19 +144,20 @@ class SerializedTaskDispatcher {
  private:
   ~SerializedTaskDispatcher();
 
-  void PostTasks(nsISerialEventTarget* aEventTarget);
-  void HandleDelayedTask(already_AddRefed<nsIRunnable> aTask);
-  void HandleTasks();
-  void PopFrontTask();
-  already_AddRefed<SerializedRunnable> PeekFrontTask();
-
-  // Hold current EventTarget during calling nsIRunnable::Run().
-  nsISerialEventTarget* mCurrentEventTarget = nullptr;
-
   struct Data {
     std::queue<RefPtr<SerializedRunnable>> mTasks;
     bool mDestroyed = false;
   };
+
+  void PostTasks(nsISerialEventTarget* aEventTarget,
+                 const DataMutex<Data>::AutoLock& aProofOfLock);
+  void HandleDelayedTask(already_AddRefed<nsIRunnable> aTask);
+  void HandleTasks();
+  already_AddRefed<SerializedRunnable> GetNextTask(
+      const RefPtr<SerializedRunnable>& aPrevTask);
+
+  // Hold current EventTarget during calling nsIRunnable::Run().
+  nsISerialEventTarget* mCurrentEventTarget = nullptr;
 
   DataMutex<Data> mData;
 };
@@ -201,7 +202,7 @@ void SerializedTaskDispatcher::PostTaskToMain(
   data->mTasks.push(new SerializedRunnable(std::move(aTask), eventTarget));
   // Post task when there was no pending tasks.
   if (data->mTasks.size() == 1) {
-    PostTasks(eventTarget);
+    PostTasks(eventTarget, data);
   }
 }
 
@@ -217,7 +218,7 @@ void SerializedTaskDispatcher::PostTaskToCalculator(
   data->mTasks.push(new SerializedRunnable(std::move(aTask), eventTarget));
   // Post task when there was no pending tasks.
   if (data->mTasks.size() == 1) {
-    PostTasks(eventTarget);
+    PostTasks(eventTarget, data);
   }
 }
 
@@ -238,7 +239,9 @@ bool SerializedTaskDispatcher::IsOnCurrentThread() {
   return !!mCurrentEventTarget;
 }
 
-void SerializedTaskDispatcher::PostTasks(nsISerialEventTarget* aEventTarget) {
+void SerializedTaskDispatcher::PostTasks(
+    nsISerialEventTarget* aEventTarget,
+    const DataMutex<Data>::AutoLock& aProofOfLock) {
   RefPtr<Runnable> runnable =
       WrapRunnable(RefPtr<SerializedTaskDispatcher>(this),
                    &SerializedTaskDispatcher::HandleTasks);
@@ -272,22 +275,12 @@ void SerializedTaskDispatcher::HandleDelayedTask(
 }
 
 void SerializedTaskDispatcher::HandleTasks() {
+  MOZ_RELEASE_ASSERT(!mCurrentEventTarget);
+
   RefPtr<SerializedRunnable> frontTask;
   RefPtr<SerializedRunnable> prevTask;
 
-  {
-    auto data = mData.Lock();
-    if (data->mDestroyed) {
-      return;
-    }
-  }
-
-  do {
-    frontTask = PeekFrontTask();
-    if (!frontTask) {
-      return;
-    }
-
+  while ((frontTask = GetNextTask(prevTask))) {
     if (NS_IsMainThread()) {
       LOG(LogLevel::Debug, "SerializedTaskDispatcher::HandleTasks()");
     } else {
@@ -304,36 +297,37 @@ void SerializedTaskDispatcher::HandleTasks() {
     frontTask->Run();
     mCurrentEventTarget = nullptr;
 
-    PopFrontTask();
-
-    prevTask = frontTask.forget();
-    frontTask = PeekFrontTask();
-    if (!frontTask) {
-      return;
-    }
-  } while (prevTask->mEventTarget == frontTask->mEventTarget);
-
-  MOZ_ASSERT(prevTask->mEventTarget != frontTask->mEventTarget);
-
-  // Current front task needs to be run on different thread.
-  PostTasks(frontTask->mEventTarget);
-}
-
-void SerializedTaskDispatcher::PopFrontTask() {
-  auto data = mData.Lock();
-  if (data->mTasks.empty()) {
-    return;
+    prevTask = frontTask;
   }
-  data->mTasks.pop();
 }
 
-already_AddRefed<SerializedRunnable> SerializedTaskDispatcher::PeekFrontTask() {
+already_AddRefed<SerializedRunnable> SerializedTaskDispatcher::GetNextTask(
+    const RefPtr<SerializedRunnable>& aPrevTask) {
   auto data = mData.Lock();
+
+  if (data->mDestroyed) {
+    return nullptr;
+  }
+  MOZ_RELEASE_ASSERT(!data->mTasks.empty());
+
+  // Pop previous task if it exists.
+  if (aPrevTask) {
+    MOZ_RELEASE_ASSERT(aPrevTask == data->mTasks.front());
+    data->mTasks.pop();
+  }
+
   if (data->mTasks.empty()) {
     return nullptr;
   }
-  RefPtr<SerializedRunnable> task = data->mTasks.front();
-  return task.forget();
+
+  RefPtr<SerializedRunnable> frontTask = data->mTasks.front();
+  if (!aPrevTask || aPrevTask->mEventTarget == frontTask->mEventTarget) {
+    return frontTask.forget();
+  }
+
+  // Current front task needs to be run on different thread.
+  PostTasks(frontTask->mEventTarget, data);
+  return nullptr;
 }
 
 // static
