@@ -31,7 +31,7 @@ class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
             is ContentAction.UpdateLoadingStateAction -> {
                 context.state.findTab(action.sessionId)?.let { tab ->
                     // Record UriOpened event when a page finishes loading
-                    if (tab.content.loading && !action.loading) {
+                    if (!tab.content.loading && !action.loading) {
                         Browser.totalUriCount.add()
                     }
                 }
