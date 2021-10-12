@@ -967,7 +967,9 @@ void nsMenuFrame::PassMenuCommandEventToPopupManager() {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   nsMenuParent* menuParent = GetMenuParent();
   if (pm && menuParent && mDelayedMenuCommandEvent) {
-    pm->ExecuteMenu(mContent, mDelayedMenuCommandEvent);
+    nsCOMPtr<nsIContent> content = mContent;
+    RefPtr<nsXULMenuCommandEvent> event = mDelayedMenuCommandEvent;
+    pm->ExecuteMenu(content, event);
   }
   mDelayedMenuCommandEvent = nullptr;
 }
