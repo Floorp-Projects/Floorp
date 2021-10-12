@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 add_task(async function init() {
-  await UrlbarTestUtils.ensureQuickSuggestInit();
+  await QuickSuggestTestUtils.ensureQuickSuggestInit();
 });
 
 // The default is to wait for no browser restarts to show the onboarding dialog

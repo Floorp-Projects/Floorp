@@ -51,6 +51,7 @@ EXTRA_JS_MODULES += [
 ]
 
 TESTING_JS_MODULES += [
+    "tests/QuickSuggestTestUtils.jsm",
     "tests/UrlbarTestUtils.jsm",
 ]
 BROWSER_CHROME_MANIFESTS += [
