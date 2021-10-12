@@ -38,29 +38,12 @@ const TEST_DATA = [
 
 const SEEN_DIALOG_PREF = "browser.urlbar.quicksuggest.showedOnboardingDialog";
 
-/**
- * Asserts that none of the results are Quick Suggest results.
- *
- * @param {window} [win]
- */
-async function assertNoQuickSuggestResults(win = window) {
-  for (let i = 0; i < UrlbarTestUtils.getResultCount(win); i++) {
-    let r = await UrlbarTestUtils.getDetailsOfResultAt(win, i);
-    Assert.ok(
-      r.type != UrlbarUtils.RESULT_TYPE.URL ||
-        !r.url.includes(TEST_URL) ||
-        !r.isSponsored,
-      `Result at index ${i} should not be a QuickSuggest result`
-    );
-  }
-}
-
 add_task(async function init() {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
   await UrlbarTestUtils.formHistory.clear();
 
-  await UrlbarTestUtils.ensureQuickSuggestInit(TEST_DATA);
+  await QuickSuggestTestUtils.ensureQuickSuggestInit(TEST_DATA);
 });
 
 add_task(async function test_onboarding() {
@@ -82,7 +65,7 @@ add_task(async function test_onboarding() {
     window,
     value: "fra",
   });
-  await assertNoQuickSuggestResults();
+  await QuickSuggestTestUtils.assertNoQuickSuggestResults(window);
   await UrlbarTestUtils.promisePopupClose(window);
 
   let dialogPromise = BrowserTestUtils.promiseAlertDialog(
@@ -120,10 +103,11 @@ add_task(async function sponsored() {
     window,
     value: "fra",
   });
-  await assertIsQuickSuggest({
+  await QuickSuggestTestUtils.assertIsQuickSuggest({
+    window,
     index: 1,
-    sponsoredURL: `${TEST_URL}?q=frabbits`,
-    nonsponsoredURL: `${TEST_URL}?q=nonsponsored`,
+    isSponsored: true,
+    url: `${TEST_URL}?q=frabbits`,
   });
   let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
   Assert.equal(
@@ -145,11 +129,11 @@ add_task(async function nonSponsored() {
     window,
     value: "nonspon",
   });
-  await assertIsQuickSuggest({
+  await QuickSuggestTestUtils.assertIsQuickSuggest({
+    window,
     index: 1,
     isSponsored: false,
-    sponsoredURL: `${TEST_URL}?q=frabbits`,
-    nonsponsoredURL: `${TEST_URL}?q=nonsponsored`,
+    url: `${TEST_URL}?q=nonsponsored`,
   });
   await UrlbarTestUtils.promisePopupClose(window);
 });

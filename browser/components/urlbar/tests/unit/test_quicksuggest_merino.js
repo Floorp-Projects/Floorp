@@ -48,7 +48,7 @@ add_task(async function init() {
   UrlbarPrefs.set(PREF_MERINO_ENDPOINT_URL, url.toString());
 
   // Set up the remote settings client with the test data.
-  await UrlbarTestUtils.ensureQuickSuggestInit(REMOTE_SETTINGS_DATA);
+  await QuickSuggestTestUtils.ensureQuickSuggestInit(REMOTE_SETTINGS_DATA);
 });
 
 // Tests with Merino enabled and remote settings disabled.

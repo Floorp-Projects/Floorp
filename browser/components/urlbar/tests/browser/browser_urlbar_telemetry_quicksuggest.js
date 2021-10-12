@@ -9,13 +9,9 @@
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  CONTEXTUAL_SERVICES_PING_TYPES:
-    "resource:///modules/PartnerLinkAttribution.jsm",
-  PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.jsm",
-  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
@@ -35,30 +31,14 @@ const TEST_DATA = [
   },
 ];
 
-const TEST_HELP_URL = "http://example.com/help";
-
-const TELEMETRY_SCALARS = {
-  IMPRESSION: "contextual.services.quicksuggest.impression",
-  CLICK: "contextual.services.quicksuggest.click",
-  HELP: "contextual.services.quicksuggest.help",
-};
-
-const TELEMETRY_EVENT_CATEGORY = "contextservices.quicksuggest";
-
 const EXPERIMENT_PREF = "browser.urlbar.quicksuggest.enabled";
 const SUGGEST_PREF = "suggest.quicksuggest";
-
-const DEFAULT_SCENARIO = UrlbarPrefs.get("quicksuggest.scenario");
 
 // Spy for the custom impression/click sender
 let spy;
 
 add_task(async function init() {
-  sandbox = sinon.createSandbox();
-  spy = sandbox.spy(
-    PartnerLinkAttribution._pingCentre,
-    "sendStructuredIngestionPing"
-  );
+  ({ sandbox, spy } = QuickSuggestTestUtils.createTelemetryPingSpy());
 
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -70,8 +50,7 @@ add_task(async function init() {
   Services.search.setDefault(Services.search.getEngineByName("Example"));
 
   // Set up Quick Suggest.
-  await UrlbarTestUtils.ensureQuickSuggestInit(TEST_DATA);
-  UrlbarProviderQuickSuggest._helpUrl = TEST_HELP_URL;
+  await QuickSuggestTestUtils.ensureQuickSuggestInit(TEST_DATA);
 
   // Enable local telemetry recording for the duration of the test.
   let oldCanRecord = Services.telemetry.canRecordExtended;
@@ -80,10 +59,8 @@ add_task(async function init() {
   Services.telemetry.clearScalars();
 
   registerCleanupFunction(async () => {
-    sandbox.restore();
     Services.search.setDefault(oldDefaultEngine);
     Services.telemetry.canRecordExtended = oldCanRecord;
-    delete UrlbarProviderQuickSuggest._helpUrl;
   });
 });
 
@@ -96,12 +73,18 @@ add_task(async function impression() {
       fireInputEvent: true,
     });
     let index = 1;
-    await assertIsQuickSuggest(index);
+    await QuickSuggestTestUtils.assertIsQuickSuggest({
+      window,
+      index,
+      url: TEST_URL,
+    });
     await UrlbarTestUtils.promisePopupClose(window, () => {
       EventUtils.synthesizeKey("KEY_Enter");
     });
-    assertScalars({ [TELEMETRY_SCALARS.IMPRESSION]: index + 1 });
-    assertCustomImpression(index);
+    QuickSuggestTestUtils.assertScalars({
+      [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index + 1,
+    });
+    QuickSuggestTestUtils.assertImpressionPing({ index, spy });
   });
   await PlacesUtils.history.clear();
 });
@@ -126,12 +109,23 @@ add_task(async function impression_online() {
           fireInputEvent: true,
         });
         let index = 1;
-        await assertIsQuickSuggest(index);
+        await QuickSuggestTestUtils.assertIsQuickSuggest({
+          window,
+          index,
+          url: TEST_URL,
+        });
         await UrlbarTestUtils.promisePopupClose(window, () => {
           EventUtils.synthesizeKey("KEY_Enter");
         });
-        assertScalars({ [TELEMETRY_SCALARS.IMPRESSION]: index + 1 });
-        assertCustomImpression(index, "online");
+        QuickSuggestTestUtils.assertScalars({
+          [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index + 1,
+        });
+        QuickSuggestTestUtils.assertImpressionPing({
+          index,
+          spy,
+          scenario: "online",
+          search_query: TEST_SEARCH_STRING,
+        });
       });
       await PlacesUtils.history.clear();
     },
@@ -148,12 +142,15 @@ add_task(async function noImpression_abandonment() {
       value: TEST_SEARCH_STRING,
       fireInputEvent: true,
     });
-    await assertIsQuickSuggest();
+    await QuickSuggestTestUtils.assertIsQuickSuggest({
+      window,
+      url: TEST_URL,
+    });
     await UrlbarTestUtils.promisePopupClose(window, () => {
       gURLBar.blur();
     });
-    assertScalars({});
-    assertNoCustomImpression();
+    QuickSuggestTestUtils.assertScalars({});
+    QuickSuggestTestUtils.assertNoImpressionPing(spy);
   });
 });
 
@@ -167,12 +164,12 @@ add_task(async function noImpression_noQuickSuggestResult() {
       value: "noImpression_noQuickSuggestResult",
       fireInputEvent: true,
     });
-    await assertNoQuickSuggestResults();
+    await QuickSuggestTestUtils.assertNoQuickSuggestResults(window);
     await UrlbarTestUtils.promisePopupClose(window, () => {
       EventUtils.synthesizeKey("KEY_Enter");
     });
-    assertScalars({});
-    assertNoCustomImpression();
+    QuickSuggestTestUtils.assertScalars({});
+    QuickSuggestTestUtils.assertNoImpressionPing(spy);
   });
   await PlacesUtils.history.clear();
 });
@@ -188,16 +185,20 @@ add_task(async function click_keyboard() {
       fireInputEvent: true,
     });
     let index = 1;
-    await assertIsQuickSuggest(index);
+    await QuickSuggestTestUtils.assertIsQuickSuggest({
+      window,
+      index,
+      url: TEST_URL,
+    });
     await UrlbarTestUtils.promisePopupClose(window, () => {
       EventUtils.synthesizeKey("KEY_ArrowDown");
       EventUtils.synthesizeKey("KEY_Enter");
     });
-    assertScalars({
-      [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
-      [TELEMETRY_SCALARS.CLICK]: index + 1,
+    QuickSuggestTestUtils.assertScalars({
+      [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index + 1,
+      [QuickSuggestTestUtils.SCALARS.CLICK]: index + 1,
     });
-    assertCustomClick(index);
+    QuickSuggestTestUtils.assertClickPing({ index, spy });
   });
   await PlacesUtils.history.clear();
 });
@@ -213,15 +214,19 @@ add_task(async function click_mouse() {
       fireInputEvent: true,
     });
     let index = 1;
-    let result = await assertIsQuickSuggest(index);
+    let result = await QuickSuggestTestUtils.assertIsQuickSuggest({
+      window,
+      index,
+      url: TEST_URL,
+    });
     await UrlbarTestUtils.promisePopupClose(window, () => {
       EventUtils.synthesizeMouseAtCenter(result.element.row, {});
     });
-    assertScalars({
-      [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
-      [TELEMETRY_SCALARS.CLICK]: index + 1,
+    QuickSuggestTestUtils.assertScalars({
+      [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index + 1,
+      [QuickSuggestTestUtils.SCALARS.CLICK]: index + 1,
     });
-    assertCustomClick(index);
+    QuickSuggestTestUtils.assertClickPing({ index, spy });
   });
   await PlacesUtils.history.clear();
 });
@@ -247,16 +252,20 @@ add_task(async function click_beforeSearchSuggestions() {
         "Result count >= 1 heuristic + 1 quick suggest + 2 suggestions"
       );
       let index = resultCount - 3;
-      await assertIsQuickSuggest(index);
+      await QuickSuggestTestUtils.assertIsQuickSuggest({
+        window,
+        index,
+        url: TEST_URL,
+      });
       await UrlbarTestUtils.promisePopupClose(window, () => {
         EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: index });
         EventUtils.synthesizeKey("KEY_Enter");
       });
-      assertScalars({
-        [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
-        [TELEMETRY_SCALARS.CLICK]: index + 1,
+      QuickSuggestTestUtils.assertScalars({
+        [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index + 1,
+        [QuickSuggestTestUtils.SCALARS.CLICK]: index + 1,
       });
-      assertCustomClick(index);
+      QuickSuggestTestUtils.assertClickPing({ index, spy });
     });
   });
   await PlacesUtils.history.clear();
@@ -273,7 +282,11 @@ add_task(async function help_keyboard() {
     fireInputEvent: true,
   });
   let index = 1;
-  let result = await assertIsQuickSuggest(index);
+  let result = await QuickSuggestTestUtils.assertIsQuickSuggest({
+    window,
+    index,
+    url: TEST_URL,
+  });
   let helpButton = result.element.row._elements.get("helpButton");
   Assert.ok(helpButton, "The result has a help button");
   let helpLoadPromise = BrowserTestUtils.waitForNewTab(gBrowser);
@@ -282,12 +295,16 @@ add_task(async function help_keyboard() {
     EventUtils.synthesizeKey("KEY_Enter");
   });
   await helpLoadPromise;
-  Assert.equal(gBrowser.currentURI.spec, TEST_HELP_URL, "Help URL loaded");
-  assertScalars({
-    [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
-    [TELEMETRY_SCALARS.HELP]: index + 1,
+  Assert.equal(
+    gBrowser.currentURI.spec,
+    QuickSuggestTestUtils.LEARN_MORE_URL,
+    "Help URL loaded"
+  );
+  QuickSuggestTestUtils.assertScalars({
+    [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index + 1,
+    [QuickSuggestTestUtils.SCALARS.HELP]: index + 1,
   });
-  assertNoCustomClick();
+  QuickSuggestTestUtils.assertNoClickPing(spy);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await PlacesUtils.history.clear();
 });
@@ -302,7 +319,11 @@ add_task(async function help_mouse() {
     fireInputEvent: true,
   });
   let index = 1;
-  let result = await assertIsQuickSuggest(index);
+  let result = await QuickSuggestTestUtils.assertIsQuickSuggest({
+    window,
+    index,
+    url: TEST_URL,
+  });
   let helpButton = result.element.row._elements.get("helpButton");
   Assert.ok(helpButton, "The result has a help button");
   let helpLoadPromise = BrowserTestUtils.waitForNewTab(gBrowser);
@@ -310,12 +331,16 @@ add_task(async function help_mouse() {
     EventUtils.synthesizeMouseAtCenter(helpButton, {});
   });
   await helpLoadPromise;
-  Assert.equal(gBrowser.currentURI.spec, TEST_HELP_URL, "Help URL loaded");
-  assertScalars({
-    [TELEMETRY_SCALARS.IMPRESSION]: index + 1,
-    [TELEMETRY_SCALARS.HELP]: index + 1,
+  Assert.equal(
+    gBrowser.currentURI.spec,
+    QuickSuggestTestUtils.LEARN_MORE_URL,
+    "Help URL loaded"
+  );
+  QuickSuggestTestUtils.assertScalars({
+    [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index + 1,
+    [QuickSuggestTestUtils.SCALARS.HELP]: index + 1,
   });
-  assertNoCustomClick();
+  QuickSuggestTestUtils.assertNoClickPing(spy);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await PlacesUtils.history.clear();
 });
@@ -333,7 +358,7 @@ add_task(async function enableToggled() {
     UrlbarPrefs.set(SUGGEST_PREF, enabled);
     TelemetryTestUtils.assertEvents([
       {
-        category: TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "enable_toggled",
         object: enabled ? "enabled" : "disabled",
       },
@@ -354,7 +379,9 @@ add_task(async function enableToggled() {
   });
   enabled = !enabled;
   UrlbarPrefs.set(SUGGEST_PREF, enabled);
-  TelemetryTestUtils.assertEvents([], { category: TELEMETRY_EVENT_CATEGORY });
+  TelemetryTestUtils.assertEvents([], {
+    category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+  });
   await SpecialPowers.popPrefEnv();
 
   // Set the pref back to what it was at the start of the task.
@@ -376,7 +403,7 @@ add_task(async function sponsoredToggled() {
     UrlbarPrefs.set("suggest.quicksuggest.sponsored", enabled);
     TelemetryTestUtils.assertEvents([
       {
-        category: TELEMETRY_EVENT_CATEGORY,
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "sponsored_toggled",
         object: enabled ? "enabled" : "disabled",
       },
@@ -397,15 +424,17 @@ add_task(async function sponsoredToggled() {
   });
   enabled = !enabled;
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", enabled);
-  TelemetryTestUtils.assertEvents([], { category: TELEMETRY_EVENT_CATEGORY });
+  TelemetryTestUtils.assertEvents([], {
+    category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+  });
   await SpecialPowers.popPrefEnv();
 
   // Set the pref back to what it was at the start of the task.
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", !enabled);
 });
 
-// Tests the Nimbus "exposure" event gets recorded when the user is enrolled in
-// a Nimbus experiment for urlbar
+// Tests the Nimbus exposure event gets recorded after a quick suggest result
+// impression.
 add_task(async function nimbusExposure() {
   // Exposure event recording is queued to the idle thread, so wait for idle
   // before we start so any events from previous tasks will have been recorded
@@ -445,7 +474,7 @@ add_task(async function nimbusExposure() {
     value: "nimbusExposure no result",
     fireInputEvent: true,
   });
-  await assertNoQuickSuggestResults();
+  await QuickSuggestTestUtils.assertNoQuickSuggestResults(window);
   await UrlbarTestUtils.promisePopupClose(window);
   Assert.ok(
     !UrlbarProviderQuickSuggest._recordedExposureEvent,
@@ -460,7 +489,11 @@ add_task(async function nimbusExposure() {
     value: TEST_SEARCH_STRING,
     fireInputEvent: true,
   });
-  await assertIsQuickSuggest(1);
+  await QuickSuggestTestUtils.assertIsQuickSuggest({
+    window,
+    index: 1,
+    url: TEST_URL,
+  });
   Assert.ok(
     UrlbarProviderQuickSuggest._recordedExposureEvent,
     "_recordedExposureEvent is true after showing quick suggest result"
@@ -678,161 +711,6 @@ add_task(async function telemetryEnvironmentUpdateNotification() {
 
   await TelemetryEnvironment.testCleanRestart().onInitialized();
 });
-
-/**
- * Checks the values of all the Quick Suggest scalars.
- *
- * @param {object} expectedIndexesByScalarName
- *   Maps scalar names to the expected 1-based indexes of results.  If you
- *   expect a scalar to be incremented, then include it in this object.  If you
- *   expect a scalar not to be incremented, don't include it.
- */
-function assertScalars(expectedIndexesByScalarName) {
-  let scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
-  for (let scalarName of Object.values(TELEMETRY_SCALARS)) {
-    if (scalarName in expectedIndexesByScalarName) {
-      TelemetryTestUtils.assertKeyedScalar(
-        scalars,
-        scalarName,
-        expectedIndexesByScalarName[scalarName],
-        1
-      );
-    } else {
-      Assert.ok(
-        !(scalarName in scalars),
-        "Scalar should not be present: " + scalarName
-      );
-    }
-  }
-}
-
-/**
- * Asserts that a result is a Quick Suggest result.
- *
- * @param {number} [index]
- *   The expected index of the Quick Suggest result.  Pass -1 to use the index
- *   of the last result.
- * @returns {result}
- *   The result at the given index.
- */
-async function assertIsQuickSuggest(index = -1) {
-  if (index < 0) {
-    index = UrlbarTestUtils.getResultCount(window) - 1;
-    Assert.greater(index, -1, "Sanity check: Result count should be > 0");
-  }
-  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
-  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.URL, "Result type");
-  Assert.equal(result.url, TEST_URL, "Result URL");
-  Assert.ok(result.isSponsored, "Result isSponsored");
-  return result;
-}
-
-/**
- * Asserts that none of the results are Quick Suggest results.
- */
-async function assertNoQuickSuggestResults() {
-  for (let i = 0; i < UrlbarTestUtils.getResultCount(window); i++) {
-    let r = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
-    Assert.ok(
-      r.type != UrlbarUtils.RESULT_TYPE.URL ||
-        !r.url.includes(TEST_URL) ||
-        !r.isSponsored,
-      `Result at index ${i} should not be a QuickSuggest result`
-    );
-  }
-}
-
-/**
- * Asserts that a custom impression ping is sent with the expected payload.
- *
- * @param {number} [index]
- *   The expected index of the Quick Suggest result.
- * @param {string} [scenario]
- *   The scenario of the Quick Suggest, should be one of "offline", "history", "online".
- */
-function assertCustomImpression(index, scenario = DEFAULT_SCENARIO) {
-  Assert.ok(spy.calledOnce, "Should send a custom impression ping");
-  // Validate the impression ping
-  let [payload, endpoint] = spy.firstCall.args;
-  let expectedSearchQuery = scenario === "online" ? TEST_SEARCH_STRING : "";
-  let expectedMatchedKeywords = scenario === "online" ? TEST_SEARCH_STRING : "";
-  let expectedScenario = scenario;
-
-  Assert.ok(
-    endpoint.includes(CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION),
-    "Should set the endpoint for QuickSuggest impression"
-  );
-  Assert.ok(!!payload.context_id, "Should set the context_id");
-  Assert.equal(
-    payload.advertiser,
-    "test-advertiser",
-    "Should set the advertiser"
-  );
-  Assert.equal(
-    payload.reporting_url,
-    "http://impression.reporting.test.com/",
-    "Should set the impression reporting URL"
-  );
-  Assert.equal(payload.block_id, 1, "Should set the block_id");
-  Assert.equal(payload.position, index + 1, "Should set the position");
-  Assert.equal(
-    payload.search_query,
-    expectedSearchQuery,
-    "Should set the search_query"
-  );
-  Assert.equal(
-    payload.matched_keywords,
-    expectedMatchedKeywords,
-    "Should set the matched_keywords"
-  );
-  Assert.equal(payload.scenario, expectedScenario, "Should set the scenario");
-}
-
-/**
- * Asserts no custom impression ping is sent.
- */
-function assertNoCustomImpression() {
-  Assert.ok(spy.notCalled, "Should not send a custom impression");
-}
-
-/**
- * Asserts that a custom click ping is sent with the expected payload.
- *
- * @param {number} [index]
- *   The expected index of the Quick Suggest result.
- */
-function assertCustomClick(index) {
-  // Impression is sent first, followed by the click
-  Assert.ok(spy.calledTwice, "Should send a custom impression ping");
-  // Validate the impression ping
-  let [payload, endpoint] = spy.secondCall.args;
-  Assert.ok(
-    endpoint.includes(CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION),
-    "Should set the endpoint for QuickSuggest click"
-  );
-  Assert.ok(!!payload.context_id, "Should set the context_id");
-  Assert.equal(
-    payload.advertiser,
-    "test-advertiser",
-    "Should set the advertiser"
-  );
-  Assert.equal(
-    payload.reporting_url,
-    "http://click.reporting.test.com/",
-    "Should set the click reporting URL"
-  );
-  Assert.equal(payload.block_id, 1, "Should set the block_id");
-  Assert.equal(payload.position, index + 1, "Should set the position");
-  Assert.equal(payload.scenario, DEFAULT_SCENARIO, "Should set the scenario");
-}
-
-/**
- * Asserts no custom click ping is sent.
- */
-function assertNoCustomClick() {
-  // Only called once for the impression
-  Assert.ok(spy.calledOnce, "Should not send a custom impression");
-}
 
 /**
  * Adds a search engine that provides suggestions, calls your callback, and then

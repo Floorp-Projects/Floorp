@@ -65,7 +65,7 @@ add_task(async function init() {
   let oldDefaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(Services.search.getEngineByName("Example"));
 
-  await UrlbarTestUtils.ensureQuickSuggestInit(TEST_DATA);
+  await QuickSuggestTestUtils.ensureQuickSuggestInit(TEST_DATA);
 
   registerCleanupFunction(async () => {
     await PlacesUtils.history.clear();
@@ -308,11 +308,13 @@ async function doTest({
     expectedResultCount,
     "Expected result count"
   );
-  await assertIsQuickSuggest({
+  await QuickSuggestTestUtils.assertIsQuickSuggest({
+    window,
     isSponsored,
     index: expectedIndex,
-    sponsoredURL: `${TEST_URL}?q=${SPONSORED_SEARCH_STRING}`,
-    nonsponsoredURL: `${TEST_URL}?q=${NON_SPONSORED_SEARCH_STRING}`,
+    url: isSponsored
+      ? `${TEST_URL}?q=${SPONSORED_SEARCH_STRING}`
+      : `${TEST_URL}?q=${NON_SPONSORED_SEARCH_STRING}`,
   });
 
   await UrlbarTestUtils.promisePopupClose(window);
