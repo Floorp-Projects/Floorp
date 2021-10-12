@@ -128,12 +128,25 @@ TestArray.addTest(
   }
 );
 
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Verify that ECDSA import fails with a key with a mismatched 'alg' field",
+  function() {
+    var that = this;
+    var alg = { name: "ECDSA", namedCurve: "P-521", hash: "SHA-512" };
+
+    crypto.subtle.importKey("jwk", tv.ecdsa_jwk_alg_mismatch.pub_jwk, alg, true, ["verify"])
+      .then(error(that), complete(that));
+  }
+);
+
 // -----------------------------------------------------------------------------
 TestArray.addTest(
   "Verify that ECDSA import fails with a known-bad public key",
   function() {
     var that = this;
-    var alg = { name: "ECDSA", namedCurve: "P-256", hash: "SHA-256" };
+    var alg = { name: "ECDSA", namedCurve: "P-521", hash: "SHA-512" };
 
     crypto.subtle.importKey("jwk", tv.ecdsa_bad.pub_jwk, alg, true, ["verify"])
       .then(error(that), complete(that));

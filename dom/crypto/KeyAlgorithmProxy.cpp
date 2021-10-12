@@ -202,6 +202,19 @@ nsString KeyAlgorithmProxy::JwkAlg() const {
     }
   }
 
+  if (mName.EqualsLiteral(WEBCRYPTO_ALG_ECDSA)) {
+    nsString curveName = mEc.mNamedCurve;
+    if (curveName.EqualsLiteral(WEBCRYPTO_NAMED_CURVE_P256)) {
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_ECDSA_P_256);
+    }
+    if (curveName.EqualsLiteral(WEBCRYPTO_NAMED_CURVE_P384)) {
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_ECDSA_P_384);
+    }
+    if (curveName.EqualsLiteral(WEBCRYPTO_NAMED_CURVE_P521)) {
+      return NS_LITERAL_STRING_FROM_CSTRING(JWK_ALG_ECDSA_P_521);
+    }
+  }
+
   return nsString();
 }
 
