@@ -10,11 +10,8 @@
 // mousemove event.
 const TIME_BEFORE_SORTING_AGAIN = 5000;
 
-// How often we should add a sample to our buffer.
-const BUFFER_SAMPLING_RATE_MS = 1000;
-
-// The age of the oldest sample to keep.
-const BUFFER_DURATION_MS = 10000;
+// How long we should wait between samples.
+const MINIMUM_INTERVAL_BETWEEN_SAMPLES_MS = 1000;
 
 // How often we should update
 const UPDATE_INTERVAL_MS = 2000;
@@ -64,34 +61,6 @@ const PROFILE_DURATION = Math.max(
   1,
   Services.prefs.getIntPref("toolkit.aboutProcesses.profileDuration")
 );
-
-/**
- * Returns a Promise that's resolved after the next turn of the event loop.
- *
- * Just returning a resolved Promise would mean that any `then` callbacks
- * would be called right after the end of the current turn, so `setTimeout`
- * is used to delay Promise resolution until the next turn.
- *
- * In mochi tests, it's possible for this to be called after the
- * about:performance window has been torn down, which causes `setTimeout` to
- * throw an NS_ERROR_NOT_INITIALIZED exception. In that case, returning
- * `undefined` is fine.
- */
-function wait(ms = 0) {
-  try {
-    let resolve;
-    let p = new Promise(resolve_ => {
-      resolve = resolve_;
-    });
-    setTimeout(resolve, ms);
-    return p;
-  } catch (e) {
-    dump(
-      "WARNING: wait aborted because of an invalid Window state in aboutPerformance.js.\n"
-    );
-    return undefined;
-  }
-}
 
 /**
  * For the time being, Fluent doesn't support duration or memory formats, so we need
@@ -160,17 +129,8 @@ let tabFinder = {
  * Utilities for dealing with state
  */
 var State = {
-  /**
-   * Indexed by the number of minutes since the snapshot was taken.
-   *
-   * @type {Array<ApplicationSnapshot>}
-   */
-  _buffer: [],
-  /**
-   * The latest snapshot.
-   *
-   * @type ApplicationSnapshot
-   */
+  // Store the previous and current samples so they can be compared.
+  _previous: null,
   _latest: null,
 
   async _promiseSnapshot() {
@@ -194,27 +154,18 @@ var State = {
    * @return {Promise}
    */
   async update(force = false) {
-    // If the buffer is empty, add one value for bootstraping purposes.
-    if (!this._buffer.length) {
-      this._latest = await this._promiseSnapshot();
-      this._buffer.push(this._latest);
-      await wait(BUFFER_SAMPLING_RATE_MS * 1.1);
-    }
-
-    let now = Cu.now();
-
-    // If we haven't sampled in a while, add a sample to the buffer.
-    let latestInBuffer = this._buffer[this._buffer.length - 1];
-    let deltaT = now - latestInBuffer.date;
-    if (force || deltaT > BUFFER_SAMPLING_RATE_MS) {
-      this._latest = await this._promiseSnapshot();
-      this._buffer.push(this._latest);
-    }
-
-    // If we have too many samples, remove the oldest sample.
-    let oldestInBuffer = this._buffer[0];
-    if (oldestInBuffer.date + BUFFER_DURATION_MS < this._latest.date) {
-      this._buffer.shift();
+    if (
+      force ||
+      !this._latest ||
+      Cu.now() - this._latest.date > MINIMUM_INTERVAL_BETWEEN_SAMPLES_MS
+    ) {
+      // Replacing this._previous before we are done awaiting
+      // this._promiseSnapshot can cause this._previous and this._latest to be
+      // equal for a short amount of time, which can cause test failures when
+      // a forced update of the display is triggered in the meantime.
+      let newSnapshot = await this._promiseSnapshot();
+      this._previous = this._latest;
+      this._latest = newSnapshot;
     }
   },
 
@@ -227,15 +178,13 @@ var State = {
       slopeCpu: null,
       active: null,
     };
-    if (!prev) {
+    if (!deltaT) {
       return result;
     }
-    if (prev.tid != cur.tid) {
-      throw new Error("Assertion failed: A thread cannot change tid.");
-    }
     result.slopeCpu =
-      (cur.cpuUser + cur.cpuKernel - prev.cpuUser - prev.cpuKernel) / deltaT;
-    result.active = !!result.slopeCpu || cur.cpuCycleCount > prev.cpuCycleCount;
+      (result.totalCpu - (prev ? prev.cpuUser + prev.cpuKernel : 0)) / deltaT;
+    result.active =
+      !!result.slopeCpu || cur.cpuCycleCount > (prev ? prev.cpuCycleCount : 0);
     return result;
   },
 
@@ -336,9 +285,7 @@ var State = {
     }
     if (!prev) {
       if (SHOW_THREADS) {
-        result.threads = cur.threads.map(data =>
-          this._getThreadDelta(data, null, null)
-        );
+        result.threads = cur.threads.map(data => this._getThreadDelta(data));
       }
       return result;
     }
@@ -352,13 +299,9 @@ var State = {
       for (let thread of prev.threads) {
         prevThreads.set(thread.tid, thread);
       }
-      threads = cur.threads.map(curThread => {
-        let prevThread = prevThreads.get(curThread.tid);
-        if (!prevThread) {
-          return this._getThreadDelta(curThread);
-        }
-        return this._getThreadDelta(curThread, prevThread, deltaT);
-      });
+      threads = cur.threads.map(curThread =>
+        this._getThreadDelta(curThread, prevThreads.get(curThread.tid), deltaT)
+      );
     }
     result.deltaRamSize = cur.memory - prev.memory;
     result.slopeCpu =
@@ -371,32 +314,11 @@ var State = {
   getCounters() {
     tabFinder.update();
 
-    // We rebuild the maps during each iteration to make sure that
-    // we do not maintain references to processes that have been
-    // shutdown.
-
-    let current = this._latest;
     let counters = [];
 
-    for (let cur of current.processes.values()) {
-      // Look for the oldest point of comparison
-      let oldest = null;
-      let delta;
-      for (let index = 0; index <= this._buffer.length - 2; ++index) {
-        oldest = this._buffer[index].processes.get(cur.pid);
-        if (oldest) {
-          // Found it!
-          break;
-        }
-      }
-      if (oldest) {
-        // Existing process. Let's display slopes info.
-        delta = this._getProcessDelta(cur, oldest);
-      } else {
-        // New process. Let's display basic info.
-        delta = this._getProcessDelta(cur, null);
-      }
-      counters.push(delta);
+    for (let cur of this._latest.processes.values()) {
+      let prev = this._previous?.processes.get(cur.pid);
+      counters.push(this._getProcessDelta(cur, prev));
     }
 
     return counters;
@@ -1236,8 +1158,6 @@ var Control = {
       return;
     }
 
-    await wait(0);
-
     await this._updateDisplay(force);
   },
 
@@ -1529,6 +1449,17 @@ var Control = {
 
 window.onload = async function() {
   Control.init();
+
+  // Display immediately the list of processes. CPU values will be missing.
   await Control.update();
+
+  // After the minimum interval between samples, force an update to show
+  // valid CPU values asap.
+  await new Promise(resolve =>
+    setTimeout(resolve, MINIMUM_INTERVAL_BETWEEN_SAMPLES_MS)
+  );
+  await Control.update(true);
+
+  // Then update at the normal frequency.
   window.setInterval(() => Control.update(), UPDATE_INTERVAL_MS);
 };
