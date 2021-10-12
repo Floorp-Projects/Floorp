@@ -316,6 +316,9 @@ interface nsIXULRuntime : nsISupports
    */
   readonly attribute boolean restartedByOS;
 
+  /** Whether the chrome color-scheme is dark */
+  readonly attribute boolean chromeColorSchemeIsDark;
+
   /**
    * The path of the shortcut used to start the current process, or "" if none.
    *

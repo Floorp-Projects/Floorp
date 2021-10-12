@@ -18,6 +18,12 @@ loader.lazyGetter(this, "debugJsModules", function() {
   return !!AppConstants.DEBUG_JS_MODULES;
 });
 
+const {
+  getTheme,
+  addThemeObserver,
+  removeThemeObserver,
+} = require("devtools/client/shared/theme");
+
 const BinaryInput = CC(
   "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream",
@@ -290,7 +296,7 @@ function initialHTML(doc) {
       "html",
       {
         platform: os,
-        class: "theme-" + Services.prefs.getCharPref("devtools.theme"),
+        class: "theme-" + getTheme(),
         dir: Services.locale.isAppLocaleRTL ? "rtl" : "ltr",
       },
       [
@@ -342,14 +348,13 @@ function insertJsonData(win, json) {
 
 function keepThemeUpdated(win) {
   const listener = function() {
-    const theme = Services.prefs.getCharPref("devtools.theme");
-    win.document.documentElement.className = "theme-" + theme;
+    win.document.documentElement.className = "theme-" + getTheme();
   };
-  Services.prefs.addObserver("devtools.theme", listener);
+  addThemeObserver(listener);
   win.addEventListener(
     "unload",
     function(event) {
-      Services.prefs.removeObserver("devtools.theme", listener);
+      removeThemeObserver(listener);
       win = null;
     },
     { once: true }
