@@ -51,6 +51,7 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/UserActivation.h"
 
@@ -1649,6 +1650,27 @@ bool DocAccessible::UpdateAccessibleOnAttrChange(dom::Element* aElement,
     // a different sets of interfaces (COM restriction).
     RecreateAccessible(aElement);
 
+    return true;
+  }
+
+  if (aAttribute == nsGkAtoms::multiple) {
+    if (dom::HTMLSelectElement* select =
+            dom::HTMLSelectElement::FromNode(aElement)) {
+      if (select->Size() <= 1) {
+        // Adding the 'multiple' attribute to a select that has a size of 1
+        // creates a listbox as opposed to a combobox with a popup combobox
+        // list. Removing the attribute does the opposite.
+        RecreateAccessible(aElement);
+        return true;
+      }
+    }
+  }
+
+  if (aAttribute == nsGkAtoms::size &&
+      aElement->IsHTMLElement(nsGkAtoms::select)) {
+    // Changing the size of a select element can potentially change it from a
+    // combobox button to a listbox with different underlying implementations.
+    RecreateAccessible(aElement);
     return true;
   }
 
