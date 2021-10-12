@@ -15,6 +15,11 @@
 const { Cc, Ci } = require("chrome");
 const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
+const {
+  getTheme,
+  addThemeObserver,
+  removeThemeObserver,
+} = require("devtools/client/shared/theme");
 
 // Load toolbox lazily as it needs gDevTools to be fully initialized
 loader.lazyRequireGetter(
@@ -161,7 +166,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
   updateDevtoolsThemeAttribute(win) {
     // Set an attribute on root element of each window to make it possible
     // to change colors based on the selected devtools theme.
-    let devtoolsTheme = Services.prefs.getCharPref("devtools.theme");
+    let devtoolsTheme = getTheme();
     if (devtoolsTheme != "dark") {
       devtoolsTheme = "light";
     }
@@ -185,11 +190,6 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
             this.updateCommandAvailability(win);
           }
         }
-        if (prefName === "devtools.theme") {
-          for (const win of this._trackedBrowserWindows) {
-            this.updateDevtoolsThemeAttribute(win);
-          }
-        }
         break;
       case "quit-application":
         gDevToolsBrowser.destroy({ shuttingDown: true });
@@ -204,14 +204,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     }
   },
 
-  _prefObserverRegistered: false,
-
-  ensurePrefObserver() {
-    if (!this._prefObserverRegistered) {
-      this._prefObserverRegistered = true;
-      Services.prefs.addObserver("devtools.", this);
-    }
-  },
+  _observersRegistered: false,
 
   /**
    * This function is for the benefit of Tools:{toolId} commands,
@@ -453,11 +446,23 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
 
     this.updateCommandAvailability(win);
     this.updateDevtoolsThemeAttribute(win);
-    this.ensurePrefObserver();
+    if (!this._observersRegistered) {
+      this._observersRegistered = true;
+      Services.prefs.addObserver("devtools.", this);
+      this._onThemeChanged = this._onThemeChanged.bind(this);
+      addThemeObserver(this._onThemeChanged);
+    }
+
     win.addEventListener("unload", this);
 
     const tabContainer = win.gBrowser.tabContainer;
     tabContainer.addEventListener("TabSelect", this);
+  },
+
+  _onThemeChanged() {
+    for (const win of this._trackedBrowserWindows) {
+      this.updateDevtoolsThemeAttribute(win);
+    }
   },
 
   /**
@@ -736,6 +741,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
    */
   destroy({ shuttingDown }) {
     Services.prefs.removeObserver("devtools.", gDevToolsBrowser);
+    removeThemeObserver(this._onThemeChanged);
     Services.obs.removeObserver(
       gDevToolsBrowser,
       "browser-delayed-startup-finished"

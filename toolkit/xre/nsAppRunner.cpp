@@ -1326,6 +1326,12 @@ nsXULAppInfo::GetRestartedByOS(bool* aResult) {
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetChromeColorSchemeIsDark(bool* aResult) {
+  *aResult = LookAndFeel::ColorSchemeForChrome() == ColorScheme::Dark;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::GetProcessStartupShortcut(nsAString& aShortcut) {
 #if defined(XP_WIN)
   if (XRE_IsParentProcess()) {

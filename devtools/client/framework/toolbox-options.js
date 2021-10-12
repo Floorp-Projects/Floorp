@@ -409,6 +409,13 @@ OptionsPanel.prototype = {
     };
 
     // Populating the default theme list
+    themeBox.appendChild(
+      createThemeOption({
+        id: "auto",
+        label: L10N.getStr("options.autoTheme.label"),
+      })
+    );
+
     const themes = gDevTools.getThemeDefinitionArray();
     for (const theme of themes) {
       themeBox.appendChild(createThemeOption(theme));
@@ -592,9 +599,9 @@ OptionsPanel.prototype = {
     if (themeRadioInput) {
       themeRadioInput.checked = true;
     } else {
-      // If the current theme does not exist anymore, switch to light theme
-      const lightThemeInputRadio = themeBox.querySelector("[value=light]");
-      lightThemeInputRadio.checked = true;
+      // If the current theme does not exist anymore, switch to auto theme
+      const autoThemeInputRadio = themeBox.querySelector("[value=auto]");
+      autoThemeInputRadio.checked = true;
     }
   },
 

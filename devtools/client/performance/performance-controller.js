@@ -4,14 +4,17 @@
 /* globals $ */
 "use strict";
 
-const { PrefObserver } = require("devtools/client/shared/prefs");
-
 // Events emitted by various objects in the panel.
 const EVENTS = require("devtools/client/performance/events");
 
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const flags = require("devtools/shared/flags");
+const {
+  getTheme,
+  addThemeObserver,
+  removeThemeObserver,
+} = require("devtools/client/shared/theme");
 
 // Logic modules
 const {
@@ -92,8 +95,7 @@ const PerformanceController = {
       this._onDetailsViewSelected
     );
 
-    this._prefObserver = new PrefObserver("devtools.");
-    this._prefObserver.on("devtools.theme", this._onThemeChanged);
+    addThemeObserver(this._onThemeChanged);
   },
 
   /**
@@ -118,8 +120,7 @@ const PerformanceController = {
       this._onDetailsViewSelected
     );
 
-    this._prefObserver.off("devtools.theme", this._onThemeChanged);
-    this._prefObserver.destroy();
+    removeThemeObserver(this._onThemeChanged);
 
     this._telemetry.destroy();
   },
@@ -161,7 +162,7 @@ const PerformanceController = {
    * Returns the current devtools theme.
    */
   getTheme: function() {
-    return Services.prefs.getCharPref("devtools.theme");
+    return getTheme();
   },
 
   /**
@@ -372,8 +373,7 @@ const PerformanceController = {
   /*
    * Called when the developer tools theme changes.
    */
-  _onThemeChanged: function() {
-    const newValue = Services.prefs.getCharPref("devtools.theme");
+  _onThemeChanged: function(newValue) {
     this.emit(EVENTS.THEME_CHANGED, newValue);
   },
 
