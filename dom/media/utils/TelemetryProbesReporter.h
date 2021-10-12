@@ -22,6 +22,14 @@ class TelemetryProbesReporterOwner {
   virtual void DispatchAsyncTestingEvent(const nsAString& aName) = 0;
 };
 
+enum class MediaContent : uint8_t {
+  MEDIA_HAS_NOTHING = (0 << 0),
+  MEDIA_HAS_VIDEO = (1 << 0),
+  MEDIA_HAS_AUDIO = (1 << 1)
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MediaContent)
+
 /**
  * This class is used for collecting and reporting telemetry probes for
  * its owner which should inherit from TelemetryProbesReporterOwner. We use it
@@ -33,16 +41,22 @@ class TelemetryProbesReporter final {
   ~TelemetryProbesReporter() = default;
 
   enum class Visibility {
+    eInitial,
     eVisible,
     eInvisible,
   };
 
-  void OnPlay(Visibility aVisibility);
+  static MediaContent MediaInfoToMediaContent(const MediaInfo& aInfo);
+
+  // State transitions
+  void OnPlay(Visibility aVisibility, MediaContent aContent);
   void OnPause(Visibility aVisibility);
+  void OnShutdown();
+
   void OnVisibilityChanged(Visibility aVisibility);
+  void OnMediaContentChanged(MediaContent aContent);
   void OnDecodeSuspended();
   void OnDecodeResumed();
-  void OnShutdown();
 
   double GetTotalVideoPlayTimeInSeconds() const;
   double GetVisibleVideoPlayTimeInSeconds() const;
@@ -113,7 +127,11 @@ class TelemetryProbesReporter final {
   // Total time a VIDEO has spent in video-decode-suspend mode.
   TimeDurationAccumulator mVideoDecodeSuspendedTime;
 
-  Visibility mMediaElementVisibility = Visibility::eInvisible;
+  Visibility mMediaElementVisibility = Visibility::eInitial;
+
+  MediaContent mMediaContent = MediaContent::MEDIA_HAS_NOTHING;
+
+  bool mIsPlaying = false;
 };
 
 }  // namespace mozilla
