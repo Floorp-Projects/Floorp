@@ -358,4 +358,7 @@
 
     <!-- App Spinners colors -->
     <color name="spinner_selected_item">#1415141A</color>
+
+    <!-- Toolbar menu icon colors -->
+    <color name="toolbar_menu_transparent">@android:color/transparent</color>
 </resources>

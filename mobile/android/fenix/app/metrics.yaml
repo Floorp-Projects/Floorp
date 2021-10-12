@@ -1720,6 +1720,38 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-11-01"
+  inactive_tabs_survey_opened:
+    type: event
+    description: >
+      A survey for asking the user why she intends to turn off the
+      inactive tabs feature is shown.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21732
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21862#issuecomment-949598042
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-02-01"
+  turn_off_inactive_tabs_survey:
+    type: event
+    description: >
+      The user has disabled inactive tabs feature and responded
+      to our request for feedback.
+    extra_keys:
+      feedback:
+        description: |
+          The user's feedback regarding inactive tabs feature.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21732
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21862#issuecomment-946977614
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-02-01"
 
 search.default_engine:
   code:
