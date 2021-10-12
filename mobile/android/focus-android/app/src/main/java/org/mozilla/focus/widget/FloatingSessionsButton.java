@@ -13,6 +13,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.view.View;
 
 import org.mozilla.focus.R;
 
@@ -65,7 +66,7 @@ public class FloatingSessionsButton extends FloatingActionButton {
             final CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) getLayoutParams();
             final FloatingActionButtonBehavior behavior = (FloatingActionButtonBehavior) params.getBehavior();
 
-            final boolean shouldBeVisible = tabCount >= 2;
+            final boolean shouldBeVisible = shouldBeVisible();
 
             if (shouldBeVisible) {
                 show();
@@ -90,5 +91,22 @@ public class FloatingSessionsButton extends FloatingActionButton {
             final String text = tabCount < TOO_MANY_TABS ? String.valueOf(tabCount) : TOO_MANY_TABS_SYMBOL;
             canvas.drawText(text, x, y, textPaint);
         }
+    }
+
+    @Override
+    public void setVisibility(int visibility) {
+        final boolean shouldBeVisible = shouldBeVisible();
+
+        if ((!shouldBeVisible && visibility == View.VISIBLE) ||
+                (shouldBeVisible && visibility != View.VISIBLE)) {
+            // no-op.
+            // Based on "shouldBeVisible" we know better if this should be visible or not.
+        } else {
+            super.setVisibility(visibility);
+        }
+    }
+
+    private boolean shouldBeVisible() {
+        return tabCount >= 2;
     }
 }
