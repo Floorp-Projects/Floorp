@@ -2061,42 +2061,40 @@ void nsWindow::NativeMoveResizeWaylandPopupCallback(
     return;
   }
 
-  int parentX, parentY;
-  GetParentPosition(&parentX, &parentY);
-
-  parentX = GdkCoordToDevicePixels(parentX);
-  parentY = GdkCoordToDevicePixels(parentY);
-
   LOG_POPUP(("  orig mBounds [%d, %d] -> [%d x %d]\n", mBounds.x, mBounds.y,
              mBounds.width, mBounds.height));
 
-  LayoutDeviceIntRect newBounds(0, 0, aFinalSize->width, aFinalSize->height);
-  newBounds.x = GdkCoordToDevicePixels(aFinalSize->x) + parentX;
-  newBounds.y = GdkCoordToDevicePixels(aFinalSize->y) + parentY;
+  LayoutDeviceIntRect newBounds(0, 0, 0, 0);
+  int parentX, parentY;
+  GetParentPosition(&parentX, &parentY);
+  newBounds.x = GdkCoordToDevicePixels(aFinalSize->x + parentX);
+  newBounds.y = GdkCoordToDevicePixels(aFinalSize->y + parentY);
 
   double scale =
       BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
-  int32_t newWidth = NSToIntRound(scale * newBounds.width);
-  int32_t newHeight = NSToIntRound(scale * newBounds.height);
+  newBounds.width = NSToIntRound(scale * aFinalSize->width);
+  newBounds.height = NSToIntRound(scale * aFinalSize->height);
 
   LOG_POPUP(("  new mBounds [%d, %d] -> [%d x %d]", newBounds.x, newBounds.y,
-             newWidth, newHeight));
+             newBounds.width, newBounds.height));
 
   bool needsPositionUpdate =
       (newBounds.x != mBounds.x || newBounds.y != mBounds.y);
   bool needsSizeUpdate =
-      (newWidth != mBounds.width || newHeight != mBounds.height);
+      (newBounds.width != mBounds.width || newBounds.height != mBounds.height);
+
   // Update view
   if (needsSizeUpdate) {
     LOG_POPUP(("  needSizeUpdate\n"));
     // TODO: use correct monitor here?
     int32_t p2a = AppUnitsPerCSSPixel() / gfxPlatformGtk::GetFontScaleFactor();
-    mPreferredPopupRect = nsRect(NSIntPixelsToAppUnits(newBounds.x, p2a),
-                                 NSIntPixelsToAppUnits(newBounds.y, p2a),
-                                 NSIntPixelsToAppUnits(newBounds.width, p2a),
-                                 NSIntPixelsToAppUnits(newBounds.height, p2a));
+    mPreferredPopupRect =
+        nsRect(NSIntPixelsToAppUnits(newBounds.x, p2a),
+               NSIntPixelsToAppUnits(newBounds.y, p2a),
+               NSIntPixelsToAppUnits(aFinalSize->width, p2a),
+               NSIntPixelsToAppUnits(aFinalSize->height, p2a));
     mPreferredPopupRectFlushed = false;
-    Resize(newBounds.width, newBounds.height, true);
+    Resize(aFinalSize->width, aFinalSize->height, true);
 
     nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
     if (popupFrame) {
