@@ -70,6 +70,11 @@ class ExtensionTest final : public nsISupports,
       UniquePtr<dom::SerializedStackHolder> aSerializedCallerStack,
       ErrorResult& aRv);
 
+  MOZ_CAN_RUN_SCRIPT void AssertThrows(JSContext* aCx, dom::Function& aFunction,
+                                       const JS::HandleValue aExpectedError,
+                                       const dom::Optional<nsAString>& aMessage,
+                                       ErrorResult& aRv);
+
   ExtensionEventManager* OnMessage();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
