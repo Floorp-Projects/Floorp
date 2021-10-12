@@ -14,7 +14,7 @@
             Cc, Cu, arrayFromChildren, forceGC, contentSpawnMutation,
             DEFAULT_IFRAME_ID, DEFAULT_IFRAME_DOC_BODY_ID, invokeContentTask,
             matchContentDoc, currentContentDoc, getContentDPR,
-            waitForImageMap, getContentBoundsForDOMElm */
+            waitForImageMap, getContentBoundsForDOMElm, untilCacheIs, untilCacheOk */
 
 const CURRENT_FILE_DIR = "/browser/accessible/tests/browser/";
 
@@ -784,4 +784,61 @@ async function getContentBoundsForDOMElm(browser, id) {
 
     return LayoutUtils.getBoundsForDOMElm(contentId, content.document);
   });
+}
+
+const CACHE_WAIT_TIMEOUT_MS = 5000;
+
+/**
+ * Wait for a predicate to be true after cache ticks.
+ * This function takes two callbacks, the condition is evaluated
+ * by calling the first callback with the arguments returned by the second.
+ * This allows us to asynchronously return the arguments as a result if the condition
+ * of the first callback is met, or if it times out. The returned arguments can then
+ * be used to record a pass or fail in the test.
+ */
+function untilCacheCondition(conditionFunc, argsFunc) {
+  return new Promise((resolve, reject) => {
+    let args = argsFunc();
+    if (conditionFunc(...args)) {
+      resolve(args);
+      return;
+    }
+
+    let cacheObserver = {
+      observe(subject) {
+        args = argsFunc();
+        if (conditionFunc(...args)) {
+          clearTimeout(this.timer);
+          Services.obs.removeObserver(this, "accessible-cache");
+          resolve(args);
+        }
+      },
+
+      timeout() {
+        Services.obs.removeObserver(this, "accessible-cache");
+        args = argsFunc();
+        resolve(args);
+      },
+    };
+
+    cacheObserver.timer = setTimeout(
+      cacheObserver.timeout.bind(cacheObserver),
+      CACHE_WAIT_TIMEOUT_MS
+    );
+    Services.obs.addObserver(cacheObserver, "accessible-cache");
+  });
+}
+
+function untilCacheOk(conditionFunc, message) {
+  return untilCacheCondition(
+    (v, _unusedMessage) => v,
+    () => [conditionFunc(), message]
+  ).then(([v, msg]) => ok(v, msg));
+}
+
+function untilCacheIs(retrievalFunc, expected, message) {
+  return untilCacheCondition(
+    (a, b, _unusedMessage) => Object.is(a, b),
+    () => [retrievalFunc(), expected, message]
+  ).then(([got, exp, msg]) => is(got, exp, msg));
 }

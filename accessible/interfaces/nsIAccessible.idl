@@ -13,6 +13,7 @@ interface nsIAccessibleRelation;
 webidl Node;
 
 %{C++
+#define NS_ACCESSIBLE_CACHE_TOPIC "accessible-cache"
 namespace mozilla {
 namespace a11y {
 class LocalAccessible;
