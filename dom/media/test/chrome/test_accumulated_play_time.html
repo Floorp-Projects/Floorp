@@ -35,7 +35,7 @@ add_task(async function testTotalPlayTime() {
   info(`all accumulated time should be zero`);
   const videoChrome = SpecialPowers.wrap(video);
   await new Promise(r => video.onloadeddata = r);
-  assertValueEqualTo(videoChrome, "totalPlayTime", 0);
+  assertValueEqualTo(videoChrome, "totalVideoPlayTime", 0);
   assertValueEqualTo(videoChrome, "invisiblePlayTime", 0);
 
   info(`start accumulating play time after media starts`);
@@ -44,15 +44,15 @@ add_task(async function testTotalPlayTime() {
     once(video, "playing"),
     once(video, "moztotalplaytimestarted"),
   ]);
-  await assertValueConstantlyIncreases(videoChrome, "totalPlayTime");
+  await assertValueConstantlyIncreases(videoChrome, "totalVideoPlayTime");
   assertValueKeptUnchanged(videoChrome, "invisiblePlayTime");
   assertValueKeptUnchanged(videoChrome, "videoDecodeSuspendedTime");
 
   info(`should not accumulate time for paused video`);
   video.pause();
   await once(video, "moztotalplaytimepaused");
-  assertValueKeptUnchanged(videoChrome, "totalPlayTime");
-  assertValueEqualTo(videoChrome, "totalPlayTime", 0);
+  assertValueKeptUnchanged(videoChrome, "totalVideoPlayTime");
+  assertValueEqualTo(videoChrome, "totalVideoPlayTime", 0);
 
   info(`should start accumulating time again`);
   let rv = await Promise.all([
@@ -60,7 +60,7 @@ add_task(async function testTotalPlayTime() {
     video.play().then(_ => true, _ => false),
   ]);
   ok(returnTrueWhenAllValuesAreTrue(rv), "video started again");
-  await assertValueConstantlyIncreases(videoChrome, "totalPlayTime");
+  await assertValueConstantlyIncreases(videoChrome, "totalVideoPlayTime");
   await cleanUpMediaAndCheckTelemetry(video);
 });
 
@@ -72,7 +72,7 @@ add_task(async function testVisiblePlayTime() {
   info(`all accumulated time should be zero`);
   const videoChrome = SpecialPowers.wrap(video);
   await new Promise(r => video.onloadeddata = r);
-  assertValueEqualTo(videoChrome, "totalPlayTime", 0);
+  assertValueEqualTo(videoChrome, "totalVideoPlayTime", 0);
   assertValueEqualTo(videoChrome, "visiblePlayTime", 0);
   assertValueEqualTo(videoChrome, "invisiblePlayTime", 0);
 
@@ -82,14 +82,14 @@ add_task(async function testVisiblePlayTime() {
     once(video, "playing"),
     once(video, "moztotalplaytimestarted"),
   ]);
-  await assertValueConstantlyIncreases(videoChrome, "totalPlayTime");
+  await assertValueConstantlyIncreases(videoChrome, "totalVideoPlayTime");
   await assertValueConstantlyIncreases(videoChrome, "visiblePlayTime");
   assertValueKeptUnchanged(videoChrome, "invisiblePlayTime");
 
   info(`make video invisible`);
   video.style.display = "none";
   await once(video, "mozinvisibleplaytimestarted");
-  await assertValueConstantlyIncreases(videoChrome, "totalPlayTime");
+  await assertValueConstantlyIncreases(videoChrome, "totalVideoPlayTime");
   await assertValueConstantlyIncreases(videoChrome, "invisiblePlayTime");
   assertValueKeptUnchanged(videoChrome, "visiblePlayTime");
   await cleanUpMediaAndCheckTelemetry(video);
@@ -171,14 +171,14 @@ add_task(async function testDecodeSuspendedTime() {
     video.play().then(_ => true, _ => false),
   ]);
   ok(returnTrueWhenAllValuesAreTrue(rv), "video started playing");
-  await assertValueConstantlyIncreases(videoChrome, "totalPlayTime");
+  await assertValueConstantlyIncreases(videoChrome, "totalVideoPlayTime");
   assertValueKeptUnchanged(videoChrome, "invisiblePlayTime");
   assertValueKeptUnchanged(videoChrome, "videoDecodeSuspendedTime");
 
   info(`make it invisible and force to suspend decoding`);
   video.setVisible(false);
   await once(video, "mozvideodecodesuspendedstarted");
-  await assertValueConstantlyIncreases(videoChrome, "totalPlayTime");
+  await assertValueConstantlyIncreases(videoChrome, "totalVideoPlayTime");
   await assertValueConstantlyIncreases(videoChrome, "invisiblePlayTime");
   await assertValueConstantlyIncreases(videoChrome, "videoDecodeSuspendedTime");
 
@@ -188,7 +188,7 @@ add_task(async function testDecodeSuspendedTime() {
     once(video, "mozinvisibleplaytimepaused"),
     once(video, "mozvideodecodesuspendedpaused"),
   ]);
-  await assertValueConstantlyIncreases(videoChrome, "totalPlayTime");
+  await assertValueConstantlyIncreases(videoChrome, "totalVideoPlayTime");
   assertValueKeptUnchanged(videoChrome, "invisiblePlayTime");
   assertValueKeptUnchanged(videoChrome, "videoDecodeSuspendedTime");
   await cleanUpMediaAndCheckTelemetry(video);
@@ -206,7 +206,7 @@ add_task(async function reuseSameElementForPlayback() {
     video.play().then(_ => true, _ => false),
   ]);
   ok(returnTrueWhenAllValuesAreTrue(rv), "video started again");
-  await assertValueConstantlyIncreases(videoChrome, "totalPlayTime");
+  await assertValueConstantlyIncreases(videoChrome, "totalVideoPlayTime");
 
   info(`reset its src and all accumulated value should be reset after then`);
   // After setting its src to nothing, that would trigger a failed load and set
@@ -218,7 +218,7 @@ add_task(async function reuseSameElementForPlayback() {
     cleanUpMediaAndCheckTelemetry(video),
   ]);
   // video doesn't have a decoder, so the return value would be -1 (error).
-  assertValueEqualTo(videoChrome, "totalPlayTime", -1);
+  assertValueEqualTo(videoChrome, "totalVideoPlayTime", -1);
   assertValueEqualTo(videoChrome, "invisiblePlayTime", -1);
 
   info(`resue same element, make it visible and start playback again`);
@@ -228,7 +228,7 @@ add_task(async function reuseSameElementForPlayback() {
     video.play().then(_ => true, _ => false),
   ]);
   ok(returnTrueWhenAllValuesAreTrue(rv), "video started");
-  await assertValueConstantlyIncreases(videoChrome, "totalPlayTime");
+  await assertValueConstantlyIncreases(videoChrome, "totalVideoPlayTime");
   await cleanUpMediaAndCheckTelemetry(video);
 });
 
@@ -395,7 +395,7 @@ function assertValueKeptUnchanged(mediaChrome, checkType) {
 
 function assertAllProbeRelatedAttributesKeptUnchanged(video) {
   const videoChrome = SpecialPowers.wrap(video);
-  assertValueKeptUnchanged(videoChrome, "totalPlayTime");
+  assertValueKeptUnchanged(videoChrome, "totalVideoPlayTime");
   assertValueKeptUnchanged(videoChrome, "invisiblePlayTime");
   assertValueKeptUnchanged(videoChrome, "videoDecodeSuspendedTime");
 }
