@@ -321,8 +321,7 @@ toolbar[customizing] #whats-new-menu-button {
 :root:not([sizemode=normal]) .titlebar-spacer[type="pre-tabs"],
 %endif
 %endif
-:root:not([chromemargin]) .titlebar-buttonbox-container,
-:root[inFullscreen] .titlebar-buttonbox-container,
+:root:not([chromemargin], [inFullscreen]) .titlebar-buttonbox-container,
 :root[inFullscreen] .titlebar-spacer,
 :root:not([tabsintitlebar]) .titlebar-spacer {
   display: none;
@@ -342,8 +341,8 @@ toolbar[customizing] #whats-new-menu-button {
 }
 %endif
 
-:root:not([sizemode=maximized]) .titlebar-restore,
-:root[sizemode=maximized] .titlebar-max {
+:root:not([sizemode=maximized], [sizemode=fullscreen]) .titlebar-restore,
+:root:is([sizemode=maximized], [sizemode=fullscreen]) .titlebar-max {
   display: none;
 }
 
@@ -361,7 +360,7 @@ toolbar[customizing] #whats-new-menu-button {
   position: relative;
 }
 
-:root:not([tabsintitlebar]) .titlebar-buttonbox {
+:root:not([tabsintitlebar], [sizemode=fullscreen]) .titlebar-buttonbox {
   display: none;
 }
 
