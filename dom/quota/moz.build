@@ -51,6 +51,7 @@ EXPORTS.mozilla.dom.quota += [
     "PersistenceType.h",
     "QuotaCommon.h",
     "QuotaManager.h",
+    "QuotaManagerImpl.h",
     "QuotaManagerService.h",
     "QuotaObject.h",
     "ScopedLogExtraInfo.h",
