@@ -21,15 +21,14 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "ServiceRequest",
-  "resource://gre/modules/ServiceRequest.jsm"
+  "TelemetrySend",
+  "resource://gre/modules/TelemetrySend.jsm"
 );
 
 const PREF_BRANCH = "browser.ping-centre.";
 
 const TELEMETRY_PREF = `${PREF_BRANCH}telemetry`;
 const LOGGING_PREF = `${PREF_BRANCH}log`;
-const STRUCTURED_INGESTION_SEND_TIMEOUT = 30 * 1000; // 30 seconds
 
 const FHR_UPLOAD_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
 
@@ -108,69 +107,9 @@ class PingCentre {
     return payload;
   }
 
-  static _gzipCompressString(string) {
-    let observer = {
-      buffer: "",
-      onStreamComplete(loader, context, status, length, result) {
-        this.buffer = String.fromCharCode(...result);
-      },
-    };
-
-    let scs = Cc["@mozilla.org/streamConverters;1"].getService(
-      Ci.nsIStreamConverterService
-    );
-    let listener = Cc["@mozilla.org/network/stream-loader;1"].createInstance(
-      Ci.nsIStreamLoader
-    );
-    listener.init(observer);
-    let converter = scs.asyncConvertData(
-      "uncompressed",
-      "gzip",
-      listener,
-      null
-    );
-    let stringStream = Cc[
-      "@mozilla.org/io/string-input-stream;1"
-    ].createInstance(Ci.nsIStringInputStream);
-    stringStream.data = string;
-    converter.onStartRequest(null, null);
-    converter.onDataAvailable(null, stringStream, 0, string.length);
-    converter.onStopRequest(null, null, null);
-    return observer.buffer;
-  }
-
-  static _sendInGzip(endpoint, payload) {
-    return new Promise((resolve, reject) => {
-      let request = new ServiceRequest({ mozAnon: true });
-      request.mozBackgroundRequest = true;
-      request.timeout = STRUCTURED_INGESTION_SEND_TIMEOUT;
-
-      request.open("POST", endpoint, true);
-      request.overrideMimeType("text/plain");
-      request.setRequestHeader(
-        "Content-Type",
-        "application/json; charset=UTF-8"
-      );
-      request.setRequestHeader("Content-Encoding", "gzip");
-      request.setRequestHeader("Date", new Date().toUTCString());
-
-      request.onload = event => {
-        if (request.status !== 200) {
-          reject(event);
-        } else {
-          resolve(event);
-        }
-      };
-      request.onerror = reject;
-      request.onabort = reject;
-      request.ontimeout = reject;
-
-      let payloadStream = Cc[
-        "@mozilla.org/io/string-input-stream;1"
-      ].createInstance(Ci.nsIStringInputStream);
-      payloadStream.data = PingCentre._gzipCompressString(payload);
-      request.sendInputStream(payloadStream);
-    });
+  // We route through this helper because it gets hooked in testing.
+  static _sendStandalonePing(endpoint, payload) {
+    return TelemetrySend.sendStandalonePing(endpoint, payload);
   }
 
   /**
@@ -198,7 +137,7 @@ class PingCentre {
       );
     }
 
-    return PingCentre._sendInGzip(endpoint, payload).catch(event => {
+    return PingCentre._sendStandalonePing(endpoint, payload).catch(event => {
       Cu.reportError(
         `Structured Ingestion ping failure with error: ${event.type}`
       );
