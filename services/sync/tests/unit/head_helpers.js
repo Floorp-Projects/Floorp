@@ -97,7 +97,7 @@ XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function() {
 
 XPCOMUtils.defineLazyGetter(this, "SyncPingValidator", function() {
   let ns = {};
-  ChromeUtils.import("resource://testing-common/ajv-4.1.1.js", ns);
+  ChromeUtils.import("resource://testing-common/ajv-6.12.6.js", ns);
   let ajv = new ns.Ajv({ async: "co*" });
   return ajv.compile(SyncPingSchema);
 });

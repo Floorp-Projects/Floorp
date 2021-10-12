@@ -3,7 +3,6 @@
 const { FeatureManifest } = ChromeUtils.import(
   "resource://nimbus/FeatureManifest.js"
 );
-const { Ajv } = ChromeUtils.import("resource://testing-common/ajv-4.1.1.js");
 Cu.importGlobalProperties(["fetch"]);
 
 XPCOMUtils.defineLazyGetter(this, "fetchSchema", async () => {
@@ -37,13 +36,6 @@ add_task(async function test_feature_manifest_is_valid() {
     const [valid, errors] = await validateManifestEntry(entry);
     if (!valid) {
       throwValidationError(featureId, errors);
-    }
-
-    // Note: Because we're on an old version of ajv if/else isn't supported, see https://bugzilla.mozilla.org/show_bug.cgi?id=1730924
-    if (entry.hasExposure && !entry.exposureDescription) {
-      throwValidationError(featureId, {
-        message: "Should have required property 'exposureDescription'",
-      });
     }
   }
 });
