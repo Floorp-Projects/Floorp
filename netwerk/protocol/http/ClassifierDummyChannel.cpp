@@ -93,8 +93,6 @@ ClassifierDummyChannel::ClassifierDummyChannel(nsIURI* aURI,
 }
 
 ClassifierDummyChannel::~ClassifierDummyChannel() {
-  NS_ReleaseOnMainThread("ClassifierDummyChannel::mLoadInfo",
-                         mLoadInfo.forget());
   NS_ReleaseOnMainThread("ClassifierDummyChannel::mURI", mURI.forget());
   NS_ReleaseOnMainThread("ClassifierDummyChannel::mTopWindowURI",
                          mTopWindowURI.forget());
