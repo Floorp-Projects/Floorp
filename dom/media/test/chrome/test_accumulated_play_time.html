@@ -87,7 +87,8 @@ add_task(async function testVisiblePlayTime() {
   assertValueKeptUnchanged(videoChrome, "invisiblePlayTime");
 
   info(`make video invisible`);
-  document.body.removeChild(video);
+  video.style.display = "none";
+  await once(video, "mozinvisibleplaytimestarted");
   await assertValueConstantlyIncreases(videoChrome, "totalPlayTime");
   await assertValueConstantlyIncreases(videoChrome, "invisiblePlayTime");
   assertValueKeptUnchanged(videoChrome, "visiblePlayTime");
