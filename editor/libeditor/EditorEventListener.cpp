@@ -24,19 +24,20 @@
 #include "mozilla/dom/MouseEvent.h"        // for MouseEvent
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
-#include "nsCaret.h"         // for nsCaret
-#include "nsDebug.h"         // for NS_WARNING, etc.
-#include "nsFocusManager.h"  // for nsFocusManager
-#include "nsGkAtoms.h"       // for nsGkAtoms, nsGkAtoms::input
-#include "nsIContent.h"      // for nsIContent
-#include "nsIController.h"   // for nsIController
+#include "nsCaret.h"            // for nsCaret
+#include "nsDebug.h"            // for NS_WARNING, etc.
+#include "nsFocusManager.h"     // for nsFocusManager
+#include "nsGkAtoms.h"          // for nsGkAtoms, nsGkAtoms::input
+#include "nsIContent.h"         // for nsIContent
+#include "nsIContentInlines.h"  // for nsINode::IsInDesignMode()
+#include "nsIController.h"      // for nsIController
 #include "nsID.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Document.h"  // for Document
 #include "nsIFormControl.h"        // for nsIFormControl, etc.
-#include "nsINode.h"               // for nsINode, ::NODE_IS_EDITABLE, etc.
+#include "nsINode.h"               // for nsINode, etc.
 #include "nsIWidget.h"             // for nsIWidget
 #include "nsLiteralString.h"       // for NS_LITERAL_STRING
 #include "nsPIWindowRoot.h"        // for nsPIWindowRoot
@@ -281,12 +282,11 @@ nsIContent* EditorEventListener::GetFocusedRootContent() {
     return nullptr;
   }
 
-  Document* composedDoc = focusedContent->GetComposedDoc();
-  if (NS_WARN_IF(!composedDoc)) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!focusedContent->IsInComposedDoc()))) {
     return nullptr;
   }
 
-  if (composedDoc->HasFlag(NODE_IS_EDITABLE)) {
+  if (focusedContent->IsInDesignMode()) {
     return nullptr;
   }
 
@@ -1122,8 +1122,7 @@ nsresult EditorEventListener::Focus(InternalFocusEvent* aFocusEvent) {
 
   // If the target is a document node but it's not editable, we should ignore
   // it because actual focused element's event is going to come.
-  if (eventTargetNode->IsDocument() &&
-      !eventTargetNode->HasFlag(NODE_IS_EDITABLE)) {
+  if (eventTargetNode->IsDocument() && !eventTargetNode->IsInDesignMode()) {
     return NS_OK;
   }
 
@@ -1194,6 +1193,8 @@ nsresult EditorEventListener::Blur(InternalFocusEvent* aBlurEvent) {
     // If it's in the designMode, and blur occurs, the target must be the
     // window.  If a blur event is fired and the target is an element, it
     // must be delayed blur event at initializing the `HTMLEditor`.
+    // TODO: Add automated tests for checking the case that the target node
+    //       is in a shadow DOM tree whose host is in design mode.
     if (mEditorBase->IsHTMLEditor() &&
         mEditorBase->AsHTMLEditor()->IsInDesignMode()) {
       if (nsCOMPtr<Element> targetElement =
@@ -1263,8 +1264,7 @@ bool EditorEventListener::ShouldHandleNativeKeyBindings(
     return false;
   }
 
-  RefPtr<Document> doc = htmlEditor->GetDocument();
-  if (doc->HasFlag(NODE_IS_EDITABLE)) {
+  if (htmlEditor->IsInDesignMode()) {
     // Don't need to perform any checks in designMode documents.
     return true;
   }

@@ -558,8 +558,7 @@ nsIContent* nsINode::GetSelectionRootContent(PresShell* aPresShell) {
     HTMLEditor* htmlEditor = nsContentUtils::GetHTMLEditor(presContext);
     if (htmlEditor) {
       // This node is in HTML editor.
-      Document* doc = GetComposedDoc();
-      if (!doc || doc->HasFlag(NODE_IS_EDITABLE) ||
+      if (!IsInComposedDoc() || IsInDesignMode() ||
           !HasFlag(NODE_IS_EDITABLE)) {
         nsIContent* editorRoot = htmlEditor->GetRoot();
         NS_ENSURE_TRUE(editorRoot, nullptr);

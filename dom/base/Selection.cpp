@@ -38,6 +38,7 @@
 #include "nsContentCID.h"
 #include "nsDeviceContext.h"
 #include "nsIContent.h"
+#include "nsIContentInlines.h"
 #include "nsRange.h"
 #include "nsITableCellLayout.h"
 #include "nsTArray.h"
@@ -3052,7 +3053,7 @@ void Selection::StyledRanges::MaybeFocusCommonEditingHost(
   nsPIDOMWindowOuter* window = document->GetWindow();
   // If the document is in design mode or doesn't have contenteditable
   // element, we don't need to move focus.
-  if (window && !document->HasFlag(NODE_IS_EDITABLE) &&
+  if (window && !document->IsInDesignMode() &&
       nsContentUtils::GetHTMLEditor(presContext)) {
     RefPtr<Element> newEditingHost = GetCommonEditingHost();
     RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager();

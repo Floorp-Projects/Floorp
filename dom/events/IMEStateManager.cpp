@@ -24,6 +24,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/MouseEventBinding.h"
@@ -36,7 +37,7 @@
 #include "nsContentUtils.h"
 #include "nsFocusManager.h"
 #include "nsIContent.h"
-#include "mozilla/dom/Document.h"
+#include "nsIContentInlines.h"
 #include "nsIFormControl.h"
 #include "nsINode.h"
 #include "nsISupports.h"
@@ -1130,8 +1131,8 @@ IMEState IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
   if (!aContent) {
     // Even if there are no focused content, the focused document might be
     // editable, such case is design mode.
-    Document* doc = aPresContext->Document();
-    if (doc && doc->HasFlag(NODE_IS_EDITABLE)) {
+    if (aPresContext->Document() &&
+        aPresContext->Document()->IsInDesignMode()) {
       MOZ_LOG(sISMLog, LogLevel::Debug,
               ("  GetNewIMEState() returns IMEEnabled::Enabled because "
                "design mode editor has focus"));
@@ -1939,11 +1940,9 @@ nsINode* IMEStateManager::GetRootEditableNode(nsPresContext* aPresContext,
     }
     return root;
   }
-  if (aPresContext) {
-    Document* document = aPresContext->Document();
-    if (document && document->IsEditable()) {
-      return document;
-    }
+  if (aPresContext && aPresContext->Document() &&
+      aPresContext->Document()->IsInDesignMode()) {
+    return aPresContext->Document();
   }
   return nullptr;
 }
