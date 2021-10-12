@@ -39,12 +39,6 @@
       document.getElementById("div1").setAttribute("role", "button");
       await events;
 
-      msg = "Set a listbox as multiselectable";
-      events = waitForOrderedEvents(
-        [[EVENT_HIDE, "div3"], [EVENT_SHOW, "div3"], [EVENT_REORDER, "container"]], msg);
-      document.getElementById("div3").setAttribute("aria-multiselectable", "true");
-      await events;
-
       msg = "Change a password field to a text field";
       events = waitForOrderedEvents(
         [[EVENT_HIDE, "password"], [EVENT_SHOW, "password"], [EVENT_REORDER, "container"]], msg);
