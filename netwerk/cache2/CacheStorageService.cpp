@@ -18,6 +18,7 @@
 #include "nsIObserverService.h"
 #include "nsIFile.h"
 #include "nsIURI.h"
+#include "nsINetworkPredictor.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsNetCID.h"
@@ -1159,24 +1160,44 @@ bool CacheStorageService::IsForcedValidEntry(
     nsACString const& aContextEntryKey) {
   mozilla::MutexAutoLock lock(mForcedValidEntriesLock);
 
-  TimeStamp validUntil;
+  ForcedValidData data;
 
-  if (!mForcedValidEntries.Get(aContextEntryKey, &validUntil)) {
+  if (!mForcedValidEntries.Get(aContextEntryKey, &data)) {
     return false;
   }
 
-  if (validUntil.IsNull()) {
+  if (data.validUntil.IsNull()) {
+    MOZ_ASSERT_UNREACHABLE("the timeStamp should never be null");
     return false;
   }
 
   // Entry timeout not reached yet
-  if (TimeStamp::NowLoRes() <= validUntil) {
+  if (TimeStamp::NowLoRes() <= data.validUntil) {
     return true;
   }
 
   // Entry timeout has been reached
   mForcedValidEntries.Remove(aContextEntryKey);
+
+  if (!data.viewed) {
+    Telemetry::AccumulateCategorical(
+        Telemetry::LABELS_PREDICTOR_PREFETCH_USE_STATUS::WaitedTooLong);
+  }
   return false;
+}
+
+void CacheStorageService::MarkForcedValidEntryUse(nsACString const& aContextKey,
+                                                  nsACString const& aEntryKey) {
+  mozilla::MutexAutoLock lock(mForcedValidEntriesLock);
+
+  ForcedValidData data;
+
+  if (!mForcedValidEntries.Get(aContextKey + aEntryKey, &data)) {
+    return;
+  }
+
+  data.viewed = true;
+  mForcedValidEntries.InsertOrUpdate(aContextKey + aEntryKey, data);
 }
 
 // Allows a cache entry to be loaded directly from cache without further
@@ -1189,10 +1210,11 @@ void CacheStorageService::ForceEntryValidFor(nsACString const& aContextKey,
   TimeStamp now = TimeStamp::NowLoRes();
   ForcedValidEntriesPrune(now);
 
-  // This will be the timeout
-  TimeStamp validUntil = now + TimeDuration::FromSeconds(aSecondsToTheFuture);
+  ForcedValidData data;
+  data.validUntil = now + TimeDuration::FromSeconds(aSecondsToTheFuture);
+  data.viewed = false;
 
-  mForcedValidEntries.InsertOrUpdate(aContextKey + aEntryKey, validUntil);
+  mForcedValidEntries.InsertOrUpdate(aContextKey + aEntryKey, data);
 }
 
 void CacheStorageService::RemoveEntryForceValid(nsACString const& aContextKey,
@@ -1201,6 +1223,12 @@ void CacheStorageService::RemoveEntryForceValid(nsACString const& aContextKey,
 
   LOG(("CacheStorageService::RemoveEntryForceValid context='%s' entryKey=%s",
        aContextKey.BeginReading(), aEntryKey.BeginReading()));
+  ForcedValidData data;
+  bool ok = mForcedValidEntries.Get(aContextKey + aEntryKey, &data);
+  if (ok && !data.viewed) {
+    Telemetry::AccumulateCategorical(
+        Telemetry::LABELS_PREDICTOR_PREFETCH_USE_STATUS::WaitedTooLong);
+  }
   mForcedValidEntries.Remove(aContextKey + aEntryKey);
 }
 
@@ -1211,7 +1239,11 @@ void CacheStorageService::ForcedValidEntriesPrune(TimeStamp& now) {
   if (now < dontPruneUntil) return;
 
   for (auto iter = mForcedValidEntries.Iter(); !iter.Done(); iter.Next()) {
-    if (iter.Data() < now) {
+    if (iter.Data().validUntil < now) {
+      if (!iter.Data().viewed) {
+        Telemetry::AccumulateCategorical(
+            Telemetry::LABELS_PREDICTOR_PREFETCH_USE_STATUS::WaitedTooLong);
+      }
       iter.Remove();
     }
   }
