@@ -15,9 +15,6 @@ const { PermissionUI } = ChromeUtils.import(
 const { SitePermissions } = ChromeUtils.import(
   "resource:///modules/SitePermissions.jsm"
 );
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
-);
 
 // Tests that GeolocationPermissionPrompt works as expected
 add_task(async function test_geo_permission_prompt() {
@@ -73,12 +70,15 @@ async function testPrompt(Prompt) {
       let mockRequest = makeMockPermissionRequest(browser);
       let principal = mockRequest.principal;
       let TestPrompt = new Prompt(mockRequest);
-      let permissionKey =
-        TestPrompt.usePermissionManager && TestPrompt.permissionKey;
+      let { usePermissionManager, permissionKey } = TestPrompt;
 
       registerCleanupFunction(function() {
         if (permissionKey) {
-          PermissionTestUtils.remove(principal.URI, permissionKey);
+          SitePermissions.removeFromPrincipal(
+            principal,
+            permissionKey,
+            browser
+          );
         }
       });
 
@@ -183,16 +183,26 @@ async function testPrompt(Prompt) {
       );
       await clickSecondaryAction(secondaryActionToClickIndex);
       if (permissionKey) {
-        curPerm = PermissionTestUtils.getPermissionObject(
-          principal.URI,
-          permissionKey
+        curPerm = SitePermissions.getForPrincipal(
+          principal,
+          permissionKey,
+          browser
         );
         Assert.equal(
-          curPerm.capability,
-          Services.perms.DENY_ACTION,
+          curPerm.state,
+          SitePermissions.BLOCK,
           "Should have denied the action"
         );
-        Assert.equal(curPerm.expireTime, 0, "Deny should be permanent");
+
+        let expectedScope = usePermissionManager
+          ? SitePermissions.SCOPE_PERSISTENT
+          : SitePermissions.SCOPE_TEMPORARY;
+        Assert.equal(
+          curPerm.scope,
+          expectedScope,
+          `Deny should be ${usePermissionManager ? "persistent" : "temporary"}`
+        );
+
         Assert.ok(
           mockRequest._cancelled,
           "The request should have been cancelled"
@@ -203,11 +213,7 @@ async function testPrompt(Prompt) {
         );
       }
 
-      SitePermissions.removeFromPrincipal(
-        principal,
-        TestPrompt.permissionKey,
-        browser
-      );
+      SitePermissions.removeFromPrincipal(principal, permissionKey, browser);
       mockRequest._cancelled = false;
 
       // Bring the PopupNotification back up now...
@@ -223,17 +229,24 @@ async function testPrompt(Prompt) {
       popupNotification.checkbox.checked = true;
 
       await clickMainAction();
-      if (permissionKey) {
-        curPerm = PermissionTestUtils.getPermissionObject(
-          principal.URI,
-          permissionKey
+      // If the prompt does not use the permission manager, it can not set a
+      // persistent allow. Temporary allow is not supported.
+      if (usePermissionManager && permissionKey) {
+        curPerm = SitePermissions.getForPrincipal(
+          principal,
+          permissionKey,
+          browser
         );
         Assert.equal(
-          curPerm.capability,
-          Services.perms.ALLOW_ACTION,
+          curPerm.state,
+          SitePermissions.ALLOW,
           "Should have allowed the action"
         );
-        Assert.equal(curPerm.expireTime, 0, "Allow should be permanent");
+        Assert.equal(
+          curPerm.scope,
+          SitePermissions.SCOPE_PERSISTENT,
+          "Allow should be permanent"
+        );
         Assert.ok(
           !mockRequest._cancelled,
           "The request should not have been cancelled"
