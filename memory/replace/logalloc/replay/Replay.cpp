@@ -802,7 +802,8 @@ class Replay {
           num_sloppy_objects++;
         }
 
-        if (used <= stats.page_size / 2) {
+        if (used <=
+            (stats.subpage_max ? stats.subpage_max : stats.quantum_wide_max)) {
           // We know that this is an inefficient linear search, but there's a
           // small number of bins and this is simple.
           for (unsigned i = 0; i < JEMALLOC_MAX_STATS_BINS; i++) {
@@ -828,24 +829,25 @@ class Replay {
                        stats.bookkeeping + stats.bin_unused;
 
     FdPrintf(mStdErr, "\n");
-    FdPrintf(mStdErr, "Objects:      %9zu\n", num_objects);
-    FdPrintf(mStdErr, "Slots:        %9zu\n", mNumUsedSlots);
-    FdPrintf(mStdErr, "Ops:          %9zu\n", mOps);
-    FdPrintf(mStdErr, "mapped:       %9zu\n", stats.mapped);
-    FdPrintf(mStdErr, "committed:    %9zu\n", committed);
+    FdPrintf(mStdErr, "Objects:          %9zu\n", num_objects);
+    FdPrintf(mStdErr, "Slots:            %9zu\n", mNumUsedSlots);
+    FdPrintf(mStdErr, "Ops:              %9zu\n", mOps);
+    FdPrintf(mStdErr, "mapped:           %9zu\n", stats.mapped);
+    FdPrintf(mStdErr, "committed:        %9zu\n", committed);
 #ifdef XP_LINUX
     if (rss) {
-      FdPrintf(mStdErr, "rss:          %9zu\n", rss);
+      FdPrintf(mStdErr, "rss:              %9zu\n", rss);
     }
 #endif
-    FdPrintf(mStdErr, "allocated:    %9zu\n", stats.allocated);
-    FdPrintf(mStdErr, "waste:        %9zu\n", stats.waste);
-    FdPrintf(mStdErr, "dirty:        %9zu\n", stats.page_cache);
-    FdPrintf(mStdErr, "bookkeep:     %9zu\n", stats.bookkeeping);
-    FdPrintf(mStdErr, "bin-unused:   %9zu\n", stats.bin_unused);
-    FdPrintf(mStdErr, "quantum-max:  %9zu\n", stats.quantum_max);
-    FdPrintf(mStdErr, "subpage-max:  %9zu\n", stats.page_size / 2);
-    FdPrintf(mStdErr, "large-max:    %9zu\n", stats.large_max);
+    FdPrintf(mStdErr, "allocated:        %9zu\n", stats.allocated);
+    FdPrintf(mStdErr, "waste:            %9zu\n", stats.waste);
+    FdPrintf(mStdErr, "dirty:            %9zu\n", stats.page_cache);
+    FdPrintf(mStdErr, "bookkeep:         %9zu\n", stats.bookkeeping);
+    FdPrintf(mStdErr, "bin-unused:       %9zu\n", stats.bin_unused);
+    FdPrintf(mStdErr, "quantum-max:      %9zu\n", stats.quantum_max);
+    FdPrintf(mStdErr, "quantum-wide-max: %9zu\n", stats.quantum_wide_max);
+    FdPrintf(mStdErr, "subpage-max:      %9zu\n", stats.subpage_max);
+    FdPrintf(mStdErr, "large-max:        %9zu\n", stats.large_max);
     if (mCalculateSlop) {
       size_t slop = mTotalAllocatedSize - mTotalRequestedSize;
       FdPrintf(mStdErr,
@@ -916,6 +918,9 @@ class Replay {
       } else if (bin.size <= stats.quantum_max) {
         // 4 buckets, (4 bytes per bucket with a 16 byte quantum).
         dist = Distribution(bin.size, last_size, stats.quantum / 4);
+      } else if (bin.size <= stats.quantum_wide_max) {
+        // 8 buckets, (32 bytes per bucket with a 256 byte quantum-wide).
+        dist = Distribution(bin.size, last_size, stats.quantum_wide / 8);
       } else {
         // 16 buckets.
         dist = Distribution(bin.size, last_size, (bin.size - last_size) / 16);

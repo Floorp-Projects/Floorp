@@ -136,9 +136,10 @@ TEST(Jemalloc, PtrInfo)
   jemalloc_ptr_info_t info;
   Vector<char*> small, large, huge;
 
-  // For small (<= 2KiB) allocations, test every position within many possible
-  // sizes.
-  size_t small_max = stats.page_size / 2;
+  // For small (less than half the page size) allocations, test every position
+  // within many possible sizes.
+  size_t small_max =
+      stats.subpage_max ? stats.subpage_max : stats.quantum_wide_max;
   for (size_t n = 0; n <= small_max; n += 8) {
     auto p = (char*)moz_arena_malloc(arenaId, n);
     size_t usable = moz_malloc_size_of(p);
@@ -149,7 +150,7 @@ TEST(Jemalloc, PtrInfo)
     }
   }
 
-  // Similar for large (2KiB + 1 KiB .. 1MiB - 8KiB) allocations.
+  // Similar for large (small_max + 1 KiB .. 1MiB - 8KiB) allocations.
   for (size_t n = small_max + 1_KiB; n <= stats.large_max; n += 1_KiB) {
     auto p = (char*)moz_arena_malloc(arenaId, n);
     size_t usable = moz_malloc_size_of(p);
@@ -199,7 +200,7 @@ TEST(Jemalloc, PtrInfo)
   // the former.
   ASSERT_TRUE(isFreedAlloc != 0);
   ASSERT_TRUE(isFreedPage != 0);
-  ASSERT_TRUE(isFreedAlloc / isFreedPage > 10);
+  ASSERT_TRUE(isFreedAlloc / isFreedPage > 8);
 
   // Free the large allocations and recheck them.
   len = large.length();
@@ -277,7 +278,7 @@ TEST(Jemalloc, PtrInfo)
   moz_dispose_arena(arenaId);
 }
 
-size_t sSizes[] = {1,      42,      79,      918,     1.5_KiB,
+size_t sSizes[] = {1,      42,      79,      918,     1.4_KiB,
                    73_KiB, 129_KiB, 1.1_MiB, 2.6_MiB, 5.1_MiB};
 
 TEST(Jemalloc, Arenas)
