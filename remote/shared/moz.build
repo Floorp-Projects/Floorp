@@ -8,6 +8,7 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [
+    "messagehandler/test/xpcshell/xpcshell.ini",
     "test/xpcshell/xpcshell.ini",
     "webdriver/test/xpcshell/xpcshell.ini",
 ]
