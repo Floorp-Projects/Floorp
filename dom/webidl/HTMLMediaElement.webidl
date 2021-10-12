@@ -229,7 +229,7 @@ partial interface HTMLMediaElement {
   readonly attribute boolean isVideoDecodingSuspended;
 
   [ChromeOnly]
-  readonly attribute double totalPlayTime;
+  readonly attribute double totalVideoPlayTime;
 
   [ChromeOnly]
   readonly attribute double visiblePlayTime;

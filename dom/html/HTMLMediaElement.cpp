@@ -2081,8 +2081,8 @@ bool HTMLMediaElement::IsVideoDecodingSuspended() const {
   return mDecoder && mDecoder->IsVideoDecodingSuspended();
 }
 
-double HTMLMediaElement::TotalPlayTime() const {
-  return mDecoder ? mDecoder->GetTotalPlayTimeInSeconds() : -1.0;
+double HTMLMediaElement::TotalVideoPlayTime() const {
+  return mDecoder ? mDecoder->GetTotalVideoPlayTimeInSeconds() : -1.0;
 }
 
 double HTMLMediaElement::VisiblePlayTime() const {
