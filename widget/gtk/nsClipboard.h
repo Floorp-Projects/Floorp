@@ -18,9 +18,9 @@
 #  include "nsTArray.h"
 #  include "Units.h"
 extern mozilla::LazyLogModule gClipboardLog;
-#  define LOGCLIP(args) MOZ_LOG(gClipboardLog, mozilla::LogLevel::Debug, args)
+#  define LOGCLIP(...) MOZ_LOG(gClipboardLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 #else
-#  define LOGCLIP(args)
+#  define LOGCLIP(...)
 #endif /* MOZ_LOGGING */
 
 enum ClipboardDataType { CLIPBOARD_DATA, CLIPBOARD_TEXT, CLIPBOARD_TARGETS };
