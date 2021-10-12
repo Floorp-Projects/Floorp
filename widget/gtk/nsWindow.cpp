@@ -7137,19 +7137,13 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (mWidgetListener) {
-    // Signal a fullscreen state change request regardless of whether our widget
-    // state already has the target value. This is necessary under e.g. wayland
-    // where the compositor may refuse to let the widget enter xdg-shell
-    // fullscreen mode but we're still toggling the internal fullscreen drawing
-    // state.
+  bool wasFullscreen = mSizeState == nsSizeMode_Fullscreen;
+  if (aFullScreen != wasFullscreen && mWidgetListener) {
     mWidgetListener->FullscreenWillChange(aFullScreen);
   }
 
   if (aFullScreen) {
-    if (mSizeMode != nsSizeMode_Fullscreen) {
-      mLastSizeMode = mSizeMode;
-    }
+    if (mSizeMode != nsSizeMode_Fullscreen) mLastSizeMode = mSizeMode;
 
     mSizeMode = nsSizeMode_Fullscreen;
 
