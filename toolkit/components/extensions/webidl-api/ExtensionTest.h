@@ -75,6 +75,13 @@ class ExtensionTest final : public nsISupports,
                                        const dom::Optional<nsAString>& aMessage,
                                        ErrorResult& aRv);
 
+  void AssertRejects(
+      JSContext* aCx, dom::Promise& aPromise,
+      const JS::HandleValue aExpectedError,
+      const dom::Optional<nsAString>& aMessage,
+      const dom::Optional<OwningNonNull<dom::Function>>& aCallback,
+      JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv);
+
   ExtensionEventManager* OnMessage();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
