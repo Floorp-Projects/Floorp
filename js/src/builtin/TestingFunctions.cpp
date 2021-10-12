@@ -11,6 +11,7 @@
 #include "mozilla/FloatingPoint.h"
 #ifdef JS_HAS_INTL_API
 #  include "mozilla/intl/Locale.h"
+#  include "mozilla/intl/String.h"
 #  include "mozilla/intl/TimeZone.h"
 #endif
 #include "mozilla/Maybe.h"
@@ -103,7 +104,6 @@
 #include "js/Wrapper.h"
 #include "threading/CpuCount.h"
 #ifdef JS_HAS_INTL_API
-#  include "unicode/uchar.h"
 #  include "unicode/uversion.h"
 #endif
 #include "util/DifferentialTesting.h"
@@ -7326,7 +7326,7 @@ static bool GetICUOptions(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  str = NewStringCopyZ<CanGC>(cx, U_UNICODE_VERSION);
+  str = NewStringCopy<CanGC>(cx, mozilla::intl::String::GetUnicodeVersion());
   if (!str || !JS_DefineProperty(cx, info, "unicode", str, JSPROP_ENUMERATE)) {
     return false;
   }
