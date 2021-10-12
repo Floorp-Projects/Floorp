@@ -18,7 +18,6 @@
 #include "GeckoProfiler.h"
 #include "gfx2DGlue.h"
 #include "nsAppRunner.h"
-#include "LayersHelpers.h"
 
 namespace mozilla {
 
