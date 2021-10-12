@@ -655,7 +655,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   // These functions return accumulated time, which are used for the telemetry
   // usage. Return -1 for error.
-  double TotalPlayTime() const;
+  double TotalVideoPlayTime() const;
   double VisiblePlayTime() const;
   double InvisiblePlayTime() const;
   double VideoDecodeSuspendedTime() const;

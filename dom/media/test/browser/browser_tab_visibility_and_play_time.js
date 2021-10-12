@@ -112,10 +112,13 @@ function startMedia({
       if (accumulateTime) {
         await content.assertValueConstantlyIncreases(
           videoChrome,
-          "totalPlayTime"
+          "totalVideoPlayTime"
         );
       } else {
-        await content.assertValueKeptUnchanged(videoChrome, "totalPlayTime");
+        await content.assertValueKeptUnchanged(
+          videoChrome,
+          "totalVideoPlayTime"
+        );
       }
       if (accumulateInvisibleTime) {
         await content.assertValueConstantlyIncreases(
@@ -138,7 +141,7 @@ function pauseMedia(tab) {
     video.pause();
     ok(true, "video paused");
     const videoChrome = SpecialPowers.wrap(video);
-    await content.assertValueKeptUnchanged(videoChrome, "totalPlayTime");
+    await content.assertValueKeptUnchanged(videoChrome, "totalVideoPlayTime");
     await content.assertValueKeptUnchanged(videoChrome, "invisiblePlayTime");
   });
 }

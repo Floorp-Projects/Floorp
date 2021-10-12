@@ -1411,7 +1411,7 @@ void MediaDecoder::NotifyAudibleStateChanged() {
                           : TelemetryProbesReporter::AudibleState::eNotAudible);
 }
 
-double MediaDecoder::GetTotalPlayTimeInSeconds() const {
+double MediaDecoder::GetTotalVideoPlayTimeInSeconds() const {
   return mTelemetryProbesReporter->GetTotalVideoPlayTimeInSeconds();
 }
 
