@@ -98,6 +98,11 @@ bool HTMLSelectListAccessible::IsAcceptableChild(nsIContent* aEl) const {
   return aEl->IsAnyOfHTMLElements(nsGkAtoms::option, nsGkAtoms::optgroup);
 }
 
+bool HTMLSelectListAccessible::AttributeChangesState(nsAtom* aAttribute) {
+  return aAttribute == nsGkAtoms::multiple ||
+         LocalAccessible::AttributeChangesState(aAttribute);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLSelectOptionAccessible
 ////////////////////////////////////////////////////////////////////////////////
