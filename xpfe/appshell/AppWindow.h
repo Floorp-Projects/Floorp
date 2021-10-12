@@ -265,32 +265,35 @@ class AppWindow final : public nsIBaseWindow,
 
   // Enum for the current state of a fullscreen change.
   //
-  // It is used to ensure that fullscreen change is issued after both
+  // It is used to ensure that fullscreen change waits for both
   // the window state change and the window size change at best effort.
   // This is needed because some platforms can't guarantee the order
-  // between such two events.
+  // between such two events, or even that they occur at all.
   //
   // It's changed in the following way:
-  // +---------------------------+--------------------------------------+
-  // |                           |                                      |
-  // |                           v                                      |
-  // |                      NotChanging                                 |
-  // |                           +                                      |
-  // |                           | FullscreenWillChange                 |
-  // |                           v                                      |
-  // |        +-----------+ WillChange +------------------+             |
-  // |        | WindowResized           FullscreenChanged |             |
-  // |        v                                           v             |
+  // +--+------------------------+--------------------------------------+
+  // |  |                        |                                      |
+  // |  |                        v                                      |
+  // |  ^ delayed dispatch    NotChanging                               |
+  // |  | (if no fullscreen)     +                                      |
+  // |  |                        | FullscreenWillChange                 |
+  // |  +-------------------+    v                                      |
+  // |  |     +-----------+ WillChange +------------------+             |
+  // |  |     | WindowResized           FullscreenChanged |             |
+  // |  +     v                                           v             |
   // |  WidgetResized                         WidgetEnteredFullscreen   |
   // |        +                              or WidgetExitedFullscreen  |
   // |        | FullscreenChanged                         +             |
   // |        v                          WindowResized or |             |
   // +--------+                          delayed dispatch |             |
-  //                                                      v             |
+  //                                     (if no resize)   v             |
   //                                                      +-------------+
   //
-  // The delayed dispatch serves as timeout, which is necessary because it's
-  // not even guaranteed that the widget will be resized at all.
+  // The delayed dispatches serve as timeouts if expected widget state
+  // changes never occur, which is necessary because it isn't guaranteed
+  // that a widget will be made fullscreen when it wants (in some
+  // environments), and it's not guaranteed that the widget will be resized
+  // at all even if made fullscreen.
   enum class FullscreenChangeState : uint8_t {
     // No current fullscreen change. Any previous change has finished.
     NotChanging,
@@ -348,6 +351,7 @@ class AppWindow final : public nsIBaseWindow,
   WidgetListenerDelegate mWidgetListenerDelegate;
 
  private:
+  static bool IsWaitingForFullscreenChange(FullscreenChangeState changeState);
   // GetPrimaryBrowserParentSize is called from xpidl methods and we don't have
   // a good way to annotate those with MOZ_CAN_RUN_SCRIPT yet.  It takes no
   // refcounted args other than "this", and the "this" uses seem ok.

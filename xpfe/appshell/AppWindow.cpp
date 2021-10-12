@@ -103,6 +103,11 @@
 
 #define SIZE_PERSISTENCE_TIMEOUT 500  // msec
 
+// Time to wait for window events that should trigger further actions but aren't
+// guaranteed to occur. Long enough for the desktop environment to act, but not
+// so long as to cause UI lag if it doesn't.
+#define NON_GUARANTEED_WINDOW_EVENT_TIMEOUT_MS 80
+
 //*****************************************************************************
 //***    AppWindow: Object Management
 //*****************************************************************************
@@ -2170,6 +2175,19 @@ AppWindow::GetPrimaryContentSize(int32_t* aWidth, int32_t* aHeight) {
   return NS_ERROR_UNEXPECTED;
 }
 
+bool AppWindow::IsWaitingForFullscreenChange(
+    FullscreenChangeState changeState) {
+  switch (changeState) {
+    case FullscreenChangeState::WillChange:
+    case FullscreenChangeState::WidgetResized:
+      return true;
+    case FullscreenChangeState::NotChanging:
+    case FullscreenChangeState::WidgetEnteredFullscreen:
+    case FullscreenChangeState::WidgetExitedFullscreen:
+      return false;
+  }
+}
+
 nsresult AppWindow::GetPrimaryRemoteTabSize(int32_t* aWidth, int32_t* aHeight) {
   BrowserHost* host = BrowserHost::GetFrom(mPrimaryBrowserParent.get());
   // Need strong ref, since Client* can run script.
@@ -2905,6 +2923,21 @@ void AppWindow::FullscreenWillChange(bool aInFullscreen) {
   }
   MOZ_ASSERT(mFullscreenChangeState == FullscreenChangeState::NotChanging);
   mFullscreenChangeState = FullscreenChangeState::WillChange;
+
+  // Wait for fullscreen state for a small amount of time: in some environments,
+  // e.g. GTK running under wayland, a fullscreen request from the window widget
+  // may be denied in which case no specific signal is received. In these cases
+  // we have to trust the compositor/window-manager has placed us where it wants
+  // and we can still finish setting the internal fullscreen state.
+  NS_DelayedDispatchToCurrentThread(
+      NS_NewRunnableFunction("AppWindow::FullscreenWillChange",
+                             [self = RefPtr<AppWindow>(this), aInFullscreen]() {
+                               if (self->IsWaitingForFullscreenChange(
+                                       self->mFullscreenChangeState)) {
+                                 self->FinishFullscreenChange(aInFullscreen);
+                               }
+                             }),
+      NON_GUARANTEED_WINDOW_EVENT_TIMEOUT_MS);
 }
 
 void AppWindow::FullscreenChanged(bool aInFullscreen) {
@@ -2919,10 +2952,9 @@ void AppWindow::FullscreenChanged(bool aInFullscreen) {
                       : FullscreenChangeState::WidgetExitedFullscreen;
     mFullscreenChangeState = newState;
     nsCOMPtr<nsIAppWindow> kungFuDeathGrip(this);
-    // Wait for resize for a small amount of time.
-    // 80ms is actually picked arbitrarily. But it shouldn't be too large
-    // in case the widget resize is not going to happen at all, which can
-    // be the case for some Linux window managers and possibly Android.
+    // Wait for resize but timeout if it looks like the widget resize is not
+    // going to happen at all, which can be the case for some Linux window
+    // managers and possibly Android.
     NS_DelayedDispatchToCurrentThread(
         NS_NewRunnableFunction(
             "AppWindow::FullscreenChanged",
@@ -2931,7 +2963,7 @@ void AppWindow::FullscreenChanged(bool aInFullscreen) {
                 FinishFullscreenChange(aInFullscreen);
               }
             }),
-        80);
+        NON_GUARANTEED_WINDOW_EVENT_TIMEOUT_MS);
   }
 }
 
