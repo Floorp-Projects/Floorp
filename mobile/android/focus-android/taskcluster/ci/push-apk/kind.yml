@@ -20,6 +20,7 @@ only-for-build-types:
     - nightly
     - focus-release
     - klar-release
+    - beta
 
 job-template:
     description: Publish Focus
@@ -33,6 +34,7 @@ job-template:
                 nightly: nightly
                 focus-release: focus-release
                 klar-release: klar-release
+                beta: beta
         dep:
             by-level:
                 '3': false
@@ -41,7 +43,7 @@ job-template:
     treeherder:
         job-symbol:
             by-build-type:
-                nightly: gp
+                default: gp
                 focus-release: gpf
                 klar-release: gpkl
         kind: build

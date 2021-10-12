@@ -24,7 +24,7 @@ job-template:
         by-tasks-for:
             (action|cron|github-release):
                 by-build-type:
-                    (nightly|focus-release|klar-release):
+                    (nightly|focus-release|klar-release|beta):
                         type: signing
                     default: {}
             default: {}
