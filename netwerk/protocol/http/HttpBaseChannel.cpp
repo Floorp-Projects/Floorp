@@ -276,7 +276,6 @@ void HttpBaseChannel::ReleaseMainThreadOnlyReferences() {
 
   nsTArray<nsCOMPtr<nsISupports>> arrayToRelease;
   arrayToRelease.AppendElement(mLoadGroup.forget());
-  arrayToRelease.AppendElement(mLoadInfo.forget());
   arrayToRelease.AppendElement(mCallbacks.forget());
   arrayToRelease.AppendElement(mProgressSink.forget());
   arrayToRelease.AppendElement(mPrincipal.forget());

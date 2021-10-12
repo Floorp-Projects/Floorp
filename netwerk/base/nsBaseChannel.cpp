@@ -56,9 +56,7 @@ nsBaseChannel::nsBaseChannel() : NeckoTargetHolder(nullptr) {
   mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
 }
 
-nsBaseChannel::~nsBaseChannel() {
-  NS_ReleaseOnMainThread("nsBaseChannel::mLoadInfo", mLoadInfo.forget());
-}
+nsBaseChannel::~nsBaseChannel() {}
 
 nsresult nsBaseChannel::Redirect(nsIChannel* newChannel, uint32_t redirectFlags,
                                  bool openNewChannel) {
