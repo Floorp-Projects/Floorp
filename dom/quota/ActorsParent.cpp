@@ -3734,12 +3734,27 @@ nsresult QuotaManager::Init() {
 }
 
 // static
+void QuotaManager::MaybeRecordQuotaClientShutdownStep(
+    const Client::Type aClientType, const nsACString& aStepDescription) {
+  // Callable on any thread.
+
+  auto* const quotaManager = QuotaManager::Get();
+  MOZ_DIAGNOSTIC_ASSERT(quotaManager);
+
+  if (quotaManager->ShutdownStarted()) {
+    quotaManager->RecordShutdownStep(Some(aClientType), aStepDescription);
+  }
+}
+
+// static
 void QuotaManager::SafeMaybeRecordQuotaClientShutdownStep(
     const Client::Type aClientType, const nsACString& aStepDescription) {
   // Callable on any thread.
 
-  if (auto* const quotaManager = QuotaManager::Get()) {
-    quotaManager->MaybeRecordShutdownStep(Some(aClientType), aStepDescription);
+  auto* const quotaManager = QuotaManager::Get();
+
+  if (quotaManager && quotaManager->ShutdownStarted()) {
+    quotaManager->RecordShutdownStep(Some(aClientType), aStepDescription);
   }
 }
 
@@ -3747,17 +3762,16 @@ void QuotaManager::MaybeRecordQuotaManagerShutdownStep(
     const nsACString& aStepDescription) {
   // Callable on any thread.
 
-  MaybeRecordShutdownStep(Nothing{}, aStepDescription);
+  if (ShutdownStarted()) {
+    RecordShutdownStep(Nothing{}, aStepDescription);
+  }
 }
 
-void QuotaManager::MaybeRecordShutdownStep(
-    const Maybe<Client::Type> aClientType, const nsACString& aStepDescription) {
-  if (!mShutdownStarted) {
-    // We are not shutting down yet, we intentionally ignore this here to avoid
-    // that every caller has to make a distinction for shutdown vs. non-shutdown
-    // situations.
-    return;
-  }
+bool QuotaManager::ShutdownStarted() const { return mShutdownStarted; }
+
+void QuotaManager::RecordShutdownStep(const Maybe<Client::Type> aClientType,
+                                      const nsACString& aStepDescription) {
+  MOZ_ASSERT(mShutdownStarted);
 
   const TimeDuration elapsedSinceShutdownStart =
       TimeStamp::NowLoRes() - *mShutdownStartedAt;
