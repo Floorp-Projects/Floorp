@@ -3706,7 +3706,7 @@ impl TileCacheInstance {
 
         let sub_slice = &mut self.sub_slices[sub_slice_index];
 
-        if let Some(backdrop_candidate) = backdrop_candidate {
+        if let Some(mut backdrop_candidate) = backdrop_candidate {
             let is_suitable_backdrop = match backdrop_candidate.kind {
                 Some(BackdropKind::Clear) => {
                     // Clear prims are special - they always end up in their own slice,
@@ -3739,8 +3739,19 @@ impl TileCacheInstance {
 
             if sub_slice_index == 0 &&
                is_suitable_backdrop &&
-               sub_slice.compositor_surfaces.is_empty() &&
-               !prim_clip_chain.needs_mask {
+               sub_slice.compositor_surfaces.is_empty() {
+
+                // If the backdrop candidate has a clip-mask, try to extract an opaque inner
+                // rect that is safe to use for subpixel rendering
+                if prim_clip_chain.needs_mask {
+                    backdrop_candidate.opaque_rect = clip_store
+                        .get_inner_rect_for_clip_chain(
+                            prim_clip_chain,
+                            &data_stores.clip,
+                            frame_context.spatial_tree,
+                        )
+                        .unwrap_or(PictureRect::zero());
+                }
 
                 if backdrop_candidate.opaque_rect.contains_box(&self.backdrop.opaque_rect) {
                     self.backdrop.opaque_rect = backdrop_candidate.opaque_rect;
