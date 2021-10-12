@@ -2372,8 +2372,7 @@ void ReflowInput::InitConstraints(
                               ComputedLogicalBorderPadding(wm).Size(wm),
                               mStyleSizeOverrides, mComputeSizeFlags);
 
-      ComputedISize() = size.mLogicalSize.ISize(wm);
-      ComputedBSize() = size.mLogicalSize.BSize(wm);
+      mComputedSize = size.mLogicalSize;
       NS_ASSERTION(ComputedISize() >= 0, "Bogus inline-size");
       NS_ASSERTION(
           ComputedBSize() == NS_UNCONSTRAINEDSIZE || ComputedBSize() >= 0,
