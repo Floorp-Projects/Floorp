@@ -1228,6 +1228,66 @@ impl ClipStore {
         }
     }
 
+    /// Given a clip-chain instance, return a safe rect within the visible region
+    /// that can be assumed to be unaffected by clip radii. Returns None if it
+    /// encounters any complex cases, just handling rounded rects in the same
+    /// coordinate system as the clip-chain for now.
+    pub fn get_inner_rect_for_clip_chain(
+        &self,
+        clip_chain: &ClipChainInstance,
+        clip_data_store: &ClipDataStore,
+        spatial_tree: &SpatialTree,
+    ) -> Option<PictureRect> {
+        let mut inner_rect = clip_chain.pic_clip_rect;
+        let clip_instances = &self
+            .clip_node_instances[clip_chain.clips_range.to_range()];
+
+        for clip_instance in clip_instances {
+            // Don't handle mapping between coord systems for now
+            if !clip_instance.flags.contains(ClipNodeFlags::SAME_COORD_SYSTEM) {
+                return None;
+            }
+
+            let clip_node = &clip_data_store[clip_instance.handle];
+
+            match clip_node.item.kind {
+                // Ignore any clips which are complex or impossible to calculate
+                // inner rects for now
+                ClipItemKind::Rectangle { mode: ClipMode::ClipOut, .. } |
+                ClipItemKind::Image { .. } |
+                ClipItemKind::BoxShadow { .. } |
+                ClipItemKind::RoundedRectangle { mode: ClipMode::ClipOut, .. } => {
+                    return None;
+                }
+                // Normal Clip rects are already handled by the clip-chain pic_clip_rect,
+                // no need to do anything here
+                ClipItemKind::Rectangle { mode: ClipMode::Clip, .. } => {}
+                ClipItemKind::RoundedRectangle { mode: ClipMode::Clip, rect, radius } => {
+                    // Get an inner rect for the rounded-rect clip
+                    let local_inner_rect = match extract_inner_rect_safe(&rect, &radius) {
+                        Some(rect) => rect,
+                        None => return None,
+                    };
+
+                    // Map it from local -> picture space
+                    let mapper = SpaceMapper::new_with_target(
+                        clip_chain.pic_spatial_node_index,
+                        clip_instance.spatial_node_index,
+                        PictureRect::max_rect(),
+                        spatial_tree,
+                    );
+
+                    // Accumulate in to the inner_rect, in case there are multiple rounded-rect clips
+                    if let Some(pic_inner_rect) = mapper.map(&local_inner_rect) {
+                        inner_rect = inner_rect.intersection(&pic_inner_rect).unwrap_or(PictureRect::zero());
+                    }
+                }
+            }
+        }
+
+        Some(inner_rect)
+    }
+
     /// The main interface external code uses. Given a local primitive, positioning
     /// information, and a clip chain id, build an optimized clip chain instance.
     pub fn build_clip_chain_instance(

@@ -1,0 +1,8 @@
+---
+root:
+  items:
+    - text: "A"
+      origin: 20 190
+      size: 180
+      color: black
+      font: "FreeSans.ttf"
