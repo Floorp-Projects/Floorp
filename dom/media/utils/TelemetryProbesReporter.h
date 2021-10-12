@@ -81,6 +81,7 @@ class TelemetryProbesReporter final {
   void StartMutedAudioTimeAccumulator();
   void PauseMutedAudioTimeAccumulator();
   bool HasOwnerHadValidVideo() const;
+  bool HasOwnerHadValidMedia() const;
   void AssertOnMainThreadAndNotShutdown() const;
 
   void ReportTelemetry();
