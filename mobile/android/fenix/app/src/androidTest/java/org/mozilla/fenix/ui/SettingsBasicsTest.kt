@@ -138,7 +138,6 @@ class SettingsBasicsTest {
         }
     }
 
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/19016")
     @Test
     fun changeThemeSetting() {
         // Goes through the settings and changes the default search engine, then verifies it changes.
