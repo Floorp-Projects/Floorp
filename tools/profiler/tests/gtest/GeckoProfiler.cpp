@@ -972,6 +972,91 @@ TEST(GeckoProfiler, ThreadRegistry_DataAccess)
   testThread.join();
 }
 
+TEST(GeckoProfiler, ThreadRegistration_RegistrationEdgeCases)
+{
+  using TR = profiler::ThreadRegistration;
+  using TRy = profiler::ThreadRegistry;
+
+  profiler_init_main_thread_id();
+  ASSERT_TRUE(profiler_is_main_thread())
+  << "This test assumes it runs on the main thread";
+
+  // Note that the main thread could already be registered, so we work in a new
+  // thread to test an actual registration that we control.
+
+  int registrationCount = 0;
+  int otherThreadLoops = 0;
+  int otherThreadReads = 0;
+
+  // This thread will register and unregister in a loop, with some pauses.
+  // Another thread will attempty to access the test thread, and lock its data.
+  // The main goal is to check edges cases around (un)registrations.
+  std::thread testThread([&]() {
+    const ProfilerThreadId testThreadId = profiler_current_thread_id();
+
+    const TimeStamp endTestAt = TimeStamp::Now() + TimeDuration::FromSeconds(1);
+
+    std::thread otherThread([&]() {
+      // Initial sleep so that testThread can start its loop.
+      PR_Sleep(PR_MillisecondsToInterval(1));
+
+      while (TimeStamp::Now() < endTestAt) {
+        ++otherThreadLoops;
+
+        TRy::WithOffThreadRef(testThreadId, [&](TRy::OffThreadRef
+                                                    aOffThreadRef) {
+          if (otherThreadLoops % 1000 == 0) {
+            PR_Sleep(PR_MillisecondsToInterval(1));
+          }
+          TRy::OffThreadRef::RWFromAnyThreadWithLock rwFromAnyThreadWithLock =
+              aOffThreadRef.LockedRWFromAnyThread();
+          ++otherThreadReads;
+          if (otherThreadReads % 1000 == 0) {
+            PR_Sleep(PR_MillisecondsToInterval(1));
+          }
+        });
+      }
+    });
+
+    while (TimeStamp::Now() < endTestAt) {
+      ASSERT_FALSE(TR::IsRegistered())
+      << "A new std::thread should not start registered";
+      EXPECT_FALSE(TR::GetOnThreadPtr());
+      EXPECT_FALSE(TR::WithOnThreadRefOr([&](auto) { return true; }, false));
+
+      char onStackChar;
+
+      TR tr{"Test thread", &onStackChar};
+      ++registrationCount;
+
+      ASSERT_TRUE(TR::IsRegistered());
+
+      int ranTest = 0;
+      TRy::WithOffThreadRef(testThreadId, [&](TRy::OffThreadRef aOffThreadRef) {
+        if (registrationCount % 2000 == 0) {
+          PR_Sleep(PR_MillisecondsToInterval(1));
+        }
+        ++ranTest;
+      });
+      EXPECT_EQ(ranTest, 1);
+
+      if (registrationCount % 1000 == 0) {
+        PR_Sleep(PR_MillisecondsToInterval(1));
+      }
+    }
+
+    otherThread.join();
+  });
+
+  testThread.join();
+
+  // It's difficult to guess what these numbers should be, but they definitely
+  // should be non-zero. The main goal was to test that nothing goes wrong.
+  EXPECT_GT(registrationCount, 0);
+  EXPECT_GT(otherThreadLoops, 0);
+  EXPECT_GT(otherThreadReads, 0);
+}
+
 #ifdef MOZ_GECKO_PROFILER
 
 TEST(BaseProfiler, BlocksRingBuffer)
