@@ -48,6 +48,10 @@ static const char* ToAudibilityStr(
   }
 }
 
+static const char* ToMutedStr(bool aMuted) {
+  return aMuted ? "muted" : "unmuted";
+}
+
 MediaContent TelemetryProbesReporter::MediaInfoToMediaContent(
     const MediaInfo& aInfo) {
   if (aInfo.HasAudio() && aInfo.HasVideo()) {
@@ -122,11 +126,11 @@ void TelemetryProbesReporter::OnPause(Visibility aVisibility) {
     LOG("Pause audio time accumulation for total play time");
     if (mInaudibleAudioPlayTime.IsStarted()) {
       LOG("Pause audible audio time accumulation for total play time");
-      mInaudibleAudioPlayTime.Pause();
+      PauseInaudibleAudioTimeAccumulator();
     }
     if (mMutedAudioPlayTime.IsStarted()) {
       LOG("Pause muted audio time accumulation for total play time");
-      mMutedAudioPlayTime.Pause();
+      PauseMutedAudioTimeAccumulator();
     }
     mTotalAudioPlayTime.Pause();
   }
@@ -173,7 +177,7 @@ void TelemetryProbesReporter::OnAudibleChanged(AudibleState aAudibleState) {
 
 void TelemetryProbesReporter::OnMutedChanged(bool aMuted) {
   AssertOnMainThreadAndNotShutdown();
-  LOG("Muted changed, now %s", aMuted ? "muted" : "unmuted");
+  LOG("Muted changed, was %s now %s", ToMutedStr(mIsMuted), ToMutedStr(aMuted));
   if (aMuted) {
     MOZ_ASSERT(!mIsMuted);
     StartMutedAudioTimeAccumulator();
