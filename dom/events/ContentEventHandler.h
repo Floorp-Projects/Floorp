@@ -161,7 +161,8 @@ class MOZ_STACK_CLASS ContentEventHandler {
    * @param aNormalSelection    This must be a Selection instance whose type is
    *                            SelectionType::eNormal.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult InitRootContent(Selection* aNormalSelection);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  InitRootContent(const Selection& aNormalSelection);
 
  public:
   // FlatText means the text that is generated from DOM tree. The BR elements
