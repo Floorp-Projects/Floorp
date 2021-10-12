@@ -1130,6 +1130,19 @@ nsresult CacheEntry::ForceValidFor(uint32_t aSecondsToTheFuture) {
   return NS_OK;
 }
 
+nsresult CacheEntry::MarkForcedValidUse() {
+  LOG(("CacheEntry::MarkForcedValidUse [this=%p, ]", this));
+
+  nsAutoCString key;
+  nsresult rv = HashingKey(key);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  CacheStorageService::Self()->MarkForcedValidEntryUse(mStorageID, key);
+  return NS_OK;
+}
+
 nsresult CacheEntry::SetExpirationTime(uint32_t aExpirationTime) {
   NS_ENSURE_SUCCESS(mFileStatus, NS_ERROR_NOT_AVAILABLE);
 

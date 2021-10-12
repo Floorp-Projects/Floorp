@@ -126,6 +126,14 @@ interface nsICacheEntry : nsISupports
   readonly attribute boolean isForcedValid;
 
   /**
+   * This method gets called to mark the actual use of the forced-valid entry.
+   * This is necessary for telemetry, so when the entry eventually gets
+   * evicted we can report whether it was ever used or not.
+   * If the entry was not forced-valid, then this operation has no effect.
+   */
+  void markForcedValidUse();
+
+  /**
    * Open blocking input stream to cache data.  Use the stream transport
    * service to asynchronously read this stream on a background thread.
    * The returned stream MAY implement nsISeekableStream.

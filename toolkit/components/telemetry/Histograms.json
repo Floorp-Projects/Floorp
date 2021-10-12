@@ -4944,16 +4944,15 @@
     "n_buckets": 50,
     "description": "How many actual prefetches happen"
   },
-  "PREDICTOR_TOTAL_PREFETCHES_USED": {
+  "PREDICTOR_PREFETCH_USE_STATUS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "alert_emails": ["necko@mozilla.com"],
-    "bug_numbers": [1016628],
-    "kind": "exponential",
-    "high": 1000000,
-    "n_buckets": 50,
-    "description": "How many prefetches are actually used by a channel"
+    "bug_numbers": [1016628, 1312057],
+    "kind": "categorical",
+    "labels": ["Used", "Not200", "Expired", "WouldVary", "WaitedTooLong", "Etag", "Auth", "Redirect"],
+    "description": "If and why prefetches are used/unused."
   },
   "PREDICTOR_PREFETCH_TIME": {
     "record_in_processes": ["main"],
@@ -5101,21 +5100,21 @@
   "PREDICTOR_PREFETCH_DECISION_REASON": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "65",
+    "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 15,
     "alert_emails": ["necko@mozilla.com"],
-    "bug_numbers": [1409542, 1430322],
+    "bug_numbers": [1409542, 1430322, 1312057],
     "description": "Why the predictor determined a particular resource was eligible for future prefetch (or not). See PrefetchDecisionReason in Predictor.cpp for value meanings"
   },
   "PREDICTOR_PREFETCH_IGNORE_REASON": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "65",
+    "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 15,
     "alert_emails": ["necko@mozilla.com"],
-    "bug_numbers": [1409542, 1430322],
+    "bug_numbers": [1409542, 1430322, 1312057],
     "description": "Why the predictor determined a particular resource that was marked eligible for prefetch should not be prefetched. See PrefetchIgnoreReason in Predictor.cpp for value meanings"
   },
   "HTTPCONNMGR_TOTAL_SPECULATIVE_CONN": {

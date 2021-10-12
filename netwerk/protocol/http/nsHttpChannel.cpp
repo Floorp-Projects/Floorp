@@ -3785,6 +3785,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, uint32_t* aResult) {
 
   bool isForcedValid = false;
   entry->GetIsForcedValid(&isForcedValid);
+  auto prefetchStatus = Telemetry::LABELS_PREDICTOR_PREFETCH_USE_STATUS::Used;
 
   bool weaklyFramed, isImmutable;
   nsHttp::DetermineFramingAndImmutability(entry, mCachedResponseHead.get(),
@@ -3795,7 +3796,12 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, uint32_t* aResult) {
     LOG(("Validating based on Vary headers returning TRUE\n"));
     canAddImsHeader = false;
     doValidation = true;
+    prefetchStatus = Telemetry::LABELS_PREDICTOR_PREFETCH_USE_STATUS::WouldVary;
   } else {
+    if (mCachedResponseHead->ExpiresInPast() ||
+        mCachedResponseHead->MustValidateIfExpired()) {
+      prefetchStatus = Telemetry::LABELS_PREDICTOR_PREFETCH_USE_STATUS::Expired;
+    }
     doValidation = nsHttp::ValidationRequired(
         isForcedValid, mCachedResponseHead.get(), mLoadFlags,
         LoadAllowStaleCacheContent(), isImmutable,
@@ -3837,6 +3843,9 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, uint32_t* aResult) {
     doValidation =
         (fromPreviousSession && !buf.IsEmpty()) ||
         (buf.IsEmpty() && mRequestHead.HasHeader(nsHttp::Authorization));
+    if (doValidation) {
+      prefetchStatus = Telemetry::LABELS_PREDICTOR_PREFETCH_USE_STATUS::Auth;
+    }
   }
 
   // Bug #561276: We maintain a chain of cache-keys which returns cached
@@ -3860,10 +3869,27 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, uint32_t* aResult) {
          doValidation ? "contains" : "does not contain", cacheKey.get()));
 
     // Append cacheKey if not in the chain already
-    if (!doValidation) mRedirectedCachekeys->AppendElement(cacheKey);
+    if (!doValidation) {
+      mRedirectedCachekeys->AppendElement(cacheKey);
+    } else {
+      prefetchStatus =
+          Telemetry::LABELS_PREDICTOR_PREFETCH_USE_STATUS::Redirect;
+    }
   }
 
   mCachedContentIsValid = !doValidation;
+
+  if (isForcedValid) {
+    // Telemetry value is only useful if this was a prefetched item
+    if (!doValidation) {
+      // Could have gotten to a funky state with some of the if chain above
+      // and in nsHttp::ValidationRequired. Make sure we get it right here.
+      prefetchStatus = Telemetry::LABELS_PREDICTOR_PREFETCH_USE_STATUS::Used;
+
+      entry->MarkForcedValidUse();
+    }
+    Telemetry::AccumulateCategorical(prefetchStatus);
+  }
 
   if (doValidation) {
     //
