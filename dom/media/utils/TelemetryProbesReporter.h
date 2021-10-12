@@ -67,6 +67,10 @@ class TelemetryProbesReporter final {
   double GetInvisibleVideoPlayTimeInSeconds() const;
   double GetVideoDecodeSuspendedTimeInSeconds() const;
 
+  double GetTotalAudioPlayTimeInSeconds() const;
+  double GetInaudiblePlayTimeInSeconds() const;
+  double GetAudiblePlayTimeInSeconds() const;
+
  private:
   void StartInvisibleVideoTimeAcculator();
   void PauseInvisibleVideoTimeAcculator();

@@ -723,6 +723,9 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   double GetVisibleVideoPlayTimeInSeconds() const;
   double GetInvisibleVideoPlayTimeInSeconds() const;
   double GetVideoDecodeSuspendedTimeInSeconds() const;
+  double GetTotalAudioPlayTimeInSeconds() const;
+  double GetAudiblePlayTimeInSeconds() const;
+  double GetInaudiblePlayTimeInSeconds() const;
 
  private:
   /**
