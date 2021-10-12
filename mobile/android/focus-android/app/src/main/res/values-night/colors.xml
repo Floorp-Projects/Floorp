@@ -110,7 +110,7 @@
 
     <!-- Preferences -->
     <color name="preference_summary_text">@color/secondaryText</color>
-    <color name="settings_background">@color/background</color>
+    <color name="settings_background">@color/photonInk05</color>
     <color name="preference_learn_more_link">@color/accentBright</color>
     <color name="selected_search_engine">@color/accentBright</color>
     <color name="settings_whats_new">@color/accentBright</color>
