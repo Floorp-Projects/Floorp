@@ -70,11 +70,11 @@
   @media (-moz-windows-compositor: 0),
          (-moz-windows-default-theme: 0),
          (-moz-os-version: windows-win8) {
-    :root[tabsintitlebar]:not([inFullscreen]) {
+    :root[tabsintitlebar] {
       color: CaptionText;
     }
 
-    :root[tabsintitlebar]:not([inFullscreen]):-moz-window-inactive {
+    :root[tabsintitlebar]:-moz-window-inactive {
       color: InactiveCaptionText;
     }
 
