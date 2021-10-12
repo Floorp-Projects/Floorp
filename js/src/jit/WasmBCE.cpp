@@ -52,9 +52,12 @@ bool jit::EliminateBoundsChecks(MIRGenerator* mir, MIRGraph& graph) {
           // result is above 2^31-1, but we don't care about that for BCE.
 
           if (addr->isConstant() &&
-              addr->toConstant()->type() == MIRType::Int32 &&
-              uint64_t(addr->toConstant()->toInt32()) <
-                  mir->minWasmHeapLength()) {
+              ((addr->toConstant()->type() == MIRType::Int32 &&
+                uint64_t(addr->toConstant()->toInt32()) <
+                    mir->minWasmHeapLength()) ||
+               (addr->toConstant()->type() == MIRType::Int64 &&
+                uint64_t(addr->toConstant()->toInt64()) <
+                    mir->minWasmHeapLength()))) {
             bc->setRedundant();
             if (JitOptions.spectreIndexMasking) {
               bc->replaceAllUsesWith(addr);
