@@ -11,12 +11,9 @@ import android.os.Looper
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.TextView
 import androidx.annotation.StringRes
-import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import com.google.android.material.snackbar.Snackbar
-import org.mozilla.focus.R
 import java.lang.ref.WeakReference
 
 object ViewUtils {
@@ -86,16 +83,12 @@ object ViewUtils {
     }
 
     /**
-     * Create a snackbar with Focus branding (See #193).
+     * Create a custom FocusSnackbar.
      */
     fun showBrandedSnackbar(view: View?, @StringRes resId: Int, delayMillis: Int) {
         val context = view!!.context
-        val snackbar = Snackbar.make(view, resId, Snackbar.LENGTH_LONG)
-
-        val snackbarView = snackbar.view
-        val snackbarTextView = snackbarView.findViewById<View>(R.id.snackbar_text) as TextView
-        snackbarTextView.setTextColor(ContextCompat.getColor(context, R.color.snackbarTextColor))
-        snackbarView.setBackgroundResource(R.drawable.background_snackbar)
+        val snackbar = FocusSnackbar.make(view, Snackbar.LENGTH_LONG)
+        snackbar.setText(context.getString(resId))
 
         view.postDelayed({ snackbar.show() }, delayMillis.toLong())
     }

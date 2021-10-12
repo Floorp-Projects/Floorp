@@ -62,9 +62,9 @@
     <color name="menuBackground">@color/colorSecondary</color>
 
     <!-- Snackbar-->
-    <color name="snackbarBackground">@color/photonDarkGrey05</color>
-    <color name="snackbarTextColor">@color/photonWhite</color>
-    <color name="snackbarActionText">@color/photonBlue50</color>
+    <color name="snackbarBackground">@color/colorSecondary</color>
+    <color name="snackbarTextColor">@color/primaryText</color>
+    <color name="snackbarActionText">@color/accentBright</color>
 
     <!-- Search Suggestions -->
     <color name="searchSuggestionsBackground">@color/photonInk80</color>
