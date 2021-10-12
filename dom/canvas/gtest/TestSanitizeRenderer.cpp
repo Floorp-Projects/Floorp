@@ -64,6 +64,15 @@ TEST(SanitizeRenderer, TestMacAmd)
   EXPECT_EQ(sanitized, expectation);
 }
 
+TEST(SanitizeRenderer, TestLinuxAruba)
+{
+  const std::string renderer(
+      "AMD ARUBA (DRM 2.50.0 / 5.10.42-calculate, LLVM 12.0.1)");
+  const std::string expectation("Radeon HD 5850");
+  const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
+  EXPECT_EQ(sanitized, expectation);
+}
+
 TEST(SanitizeRenderer, TestLinuxIntel620)
 {
   const std::string renderer("Mesa Intel(R) UHD Graphics 620 (KBL GT2)");
