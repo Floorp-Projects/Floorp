@@ -2,14 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* ===== xulscrollbars.css ==============================================
-  == Styles used by XUL scrollbar-related elements.
-  ======================================================================= */
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
-
-/* ::::: scrollbar ::::: */
 
 scrollbar {
   appearance: auto;
@@ -17,24 +10,22 @@ scrollbar {
   cursor: default;
 }
 
-@media all and (-moz-overlay-scrollbars) {
-  scrollbar[root="true"] {
-    position: relative;
-    z-index: 2147483647; /* largest positive value of a signed 32-bit integer */
-  }
+scrollbar[orient="vertical"] {
+  -moz-default-appearance: scrollbar-vertical;
+}
 
+scrollbar[root="true"] {
+  position: relative;
+  z-index: 2147483647; /* largest positive value of a signed 32-bit integer */
+}
+
+@media (-moz-overlay-scrollbars) {
   scrollbar:not([active="true"]),
   scrollbar[disabled="true"] {
     visibility: hidden;
   }
 }
 
-scrollbar[orient="vertical"] {
-  appearance: auto;
-  -moz-default-appearance: scrollbar-vertical;
-}
-
-/* ::::: slider - a thumb is inside  ::::: */
 slider {
   appearance: auto;
   -moz-default-appearance: scrollbartrack-horizontal;
@@ -45,30 +36,15 @@ slider[orient="vertical"] {
   -moz-default-appearance: scrollbartrack-vertical;
 }
 
-/* ::::: thumb (horizontal) ::::: */
-
 thumb[orient="vertical"] {
   appearance: auto;
   -moz-default-appearance: scrollbarthumb-vertical;
-  min-height: 8px;
 }
 
 thumb[orient="horizontal"] {
   appearance: auto;
   -moz-default-appearance: scrollbarthumb-horizontal;
-  min-width: 8px;
 }
-
-/* ::::: square at the corner of two scrollbars ::::: */
-
-scrollcorner {
-  appearance: auto;
-  -moz-default-appearance: scrollcorner;
-  width: 16px;
-  cursor: default;
-}
-
-/* ..... increment .... */
 
 scrollbarbutton[type="increment"] {
   appearance: auto;
@@ -80,8 +56,6 @@ scrollbar[orient="vertical"] > scrollbarbutton[type="increment"] {
   -moz-default-appearance: scrollbarbutton-down;
 }
 
-/* ..... decrement .... */
-
 scrollbarbutton[type="decrement"] {
   appearance: auto;
   -moz-default-appearance: scrollbarbutton-left;
@@ -90,4 +64,11 @@ scrollbarbutton[type="decrement"] {
 scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"] {
   appearance: auto;
   -moz-default-appearance: scrollbarbutton-up;
+}
+
+scrollcorner {
+  appearance: auto;
+  -moz-default-appearance: scrollcorner;
+  width: 16px;
+  cursor: default;
 }
