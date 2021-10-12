@@ -238,5 +238,11 @@ void ImageAccessible::Notify(imgIRequest* aRequest, int32_t aType,
     }
   }
 
+  if ((status ^ mImageRequestStatus) & imgIRequest::STATUS_IS_ANIMATED) {
+    RefPtr<AccEvent> event = new AccStateChangeEvent(
+        this, states::ANIMATED, (status & imgIRequest::STATUS_IS_ANIMATED));
+    mDoc->FireDelayedEvent(event);
+  }
+
   mImageRequestStatus = status;
 }
