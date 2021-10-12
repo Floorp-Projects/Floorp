@@ -1015,8 +1015,11 @@ uint32_t gfxTextRun::BreakAndMeasureText(
       // atHyphenationBreak indicates we're at a "soft" hyphen, where an extra
       // hyphen glyph will need to be painted. It is NOT set for breaks at an
       // explicit hyphen present in the text.
+      //
+      // NOTE(emilio): If you change this condition you also need to change
+      // nsTextFrame::AddInlineMinISizeForFlow to match.
       bool atHyphenationBreak = !atNaturalBreak && haveHyphenation &&
-                                hyphenBuffer[i - aStart] > HyphenType::Explicit;
+                                IsOptionalHyphenBreak(hyphenBuffer[i - aStart]);
       bool atAutoHyphenWithManualHyphenInSameWord =
           atHyphenationBreak &&
           hyphenBuffer[i - aStart] == HyphenType::AutoWithManualInSameWord;
