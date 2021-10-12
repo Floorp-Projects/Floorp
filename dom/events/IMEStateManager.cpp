@@ -667,6 +667,11 @@ nsresult IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
   // Don't call CreateIMEContentObserver() here  because it will be called from
   // the focus event handler of focused editor.
 
+  MOZ_LOG(sISMLog, LogLevel::Debug,
+          ("  OnChangeFocusInternal(), modified IME state for "
+           "sPresContext=0x%p, sContent=0x%p",
+           sPresContext.get(), sContent.get()));
+
   return NS_OK;
 }
 
@@ -695,10 +700,10 @@ bool IMEStateManager::OnMouseButtonEventInEditor(
     nsPresContext* aPresContext, nsIContent* aContent,
     WidgetMouseEvent* aMouseEvent) {
   MOZ_LOG(sISMLog, LogLevel::Info,
-          ("OnMouseButtonEventInEditor(aPresContext=0x%p, "
+          ("OnMouseButtonEventInEditor(aPresContext=0x%p (available: %s), "
            "aContent=0x%p, aMouseEvent=0x%p), sPresContext=0x%p, sContent=0x%p",
-           aPresContext, aContent, aMouseEvent, sPresContext.get(),
-           sContent.get()));
+           aPresContext, GetBoolName(CanHandleWith(aPresContext)), aContent,
+           aMouseEvent, sPresContext.get(), sContent.get()));
 
   if (NS_WARN_IF(!aMouseEvent)) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
@@ -746,12 +751,13 @@ bool IMEStateManager::OnMouseButtonEventInEditor(
 void IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
                                       nsIContent* aContent,
                                       const WidgetMouseEvent* aMouseEvent) {
-  MOZ_LOG(
-      sISMLog, LogLevel::Info,
-      ("OnClickInEditor(aPresContext=0x%p, aContent=0x%p, aMouseEvent=0x%p), "
-       "sPresContext=0x%p, sContent=0x%p, sWidget=0x%p (available: %s)",
-       aPresContext, aContent, aMouseEvent, sPresContext.get(), sContent.get(),
-       sWidget, GetBoolName(sWidget && !sWidget->Destroyed())));
+  MOZ_LOG(sISMLog, LogLevel::Info,
+          ("OnClickInEditor(aPresContext=0x%p (available: %s), aContent=0x%p, "
+           "aMouseEvent=0x%p), sPresContext=0x%p, sContent=0x%p, sWidget=0x%p "
+           "(available: %s)",
+           aPresContext, GetBoolName(CanHandleWith(aPresContext)), aContent,
+           aMouseEvent, sPresContext.get(), sContent.get(), sWidget,
+           GetBoolName(sWidget && !sWidget->Destroyed())));
 
   if (NS_WARN_IF(!aMouseEvent)) {
     return;
@@ -810,12 +816,13 @@ void IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
 void IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
                                       nsIContent* aContent,
                                       EditorBase& aEditorBase) {
-  MOZ_LOG(
-      sISMLog, LogLevel::Info,
-      ("OnFocusInEditor(aPresContext=0x%p, aContent=0x%p, aEditorBase=0x%p), "
-       "sPresContext=0x%p, sContent=0x%p, sActiveIMEContentObserver=0x%p",
-       aPresContext, aContent, &aEditorBase, sPresContext.get(), sContent.get(),
-       sActiveIMEContentObserver.get()));
+  MOZ_LOG(sISMLog, LogLevel::Info,
+          ("OnFocusInEditor(aPresContext=0x%p (available: %s), aContent=0x%p, "
+           "aEditorBase=0x%p), sPresContext=0x%p, sContent=0x%p, "
+           "sActiveIMEContentObserver=0x%p",
+           aPresContext, GetBoolName(CanHandleWith(aPresContext)), aContent,
+           &aEditorBase, sPresContext.get(), sContent.get(),
+           sActiveIMEContentObserver.get()));
 
   if (sPresContext != aPresContext || sContent != aContent) {
     MOZ_LOG(sISMLog, LogLevel::Debug,
@@ -892,10 +899,10 @@ void IMEStateManager::OnEditorDestroying(EditorBase& aEditorBase) {
 void IMEStateManager::OnReFocus(nsPresContext* aPresContext,
                                 nsIContent& aContent) {
   MOZ_LOG(sISMLog, LogLevel::Info,
-          ("OnReFocus(aPresContext=0x%p, aContent=0x%p), "
+          ("OnReFocus(aPresContext=0x%p (available: %s), aContent=0x%p), "
            "sActiveIMEContentObserver=0x%p, sContent=0x%p",
-           aPresContext, &aContent, sActiveIMEContentObserver.get(),
-           sContent.get()));
+           aPresContext, GetBoolName(CanHandleWith(aPresContext)), &aContent,
+           sActiveIMEContentObserver.get(), sContent.get()));
 
   if (NS_WARN_IF(!sWidget) || NS_WARN_IF(sWidget->Destroyed())) {
     return;
@@ -942,11 +949,12 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
   MOZ_LOG(
       sISMLog, LogLevel::Info,
       ("UpdateIMEState(aNewIMEState=%s, aContent=0x%p, aEditorBase=0x%p, "
-       "aOptions=0x%0x), "
-       "sPresContext=0x%p, sContent=0x%p, sWidget=0x%p (available: %s), "
-       "sActiveIMEContentObserver=0x%p, sIsGettingNewIMEState=%s",
+       "aOptions=0x%0x), sPresContext=0x%p (available: %s), sContent=0x%p, "
+       "sWidget=0x%p (available: %s), sActiveIMEContentObserver=0x%p, "
+       "sIsGettingNewIMEState=%s",
        ToString(aNewIMEState).c_str(), aContent, &aEditorBase,
-       aOptions.serialize(), sPresContext.get(), sContent.get(), sWidget,
+       aOptions.serialize(), sPresContext.get(),
+       GetBoolName(CanHandleWith(sPresContext)), sContent.get(), sWidget,
        GetBoolName(sWidget && !sWidget->Destroyed()),
        sActiveIMEContentObserver.get(), GetBoolName(sIsGettingNewIMEState)));
 
