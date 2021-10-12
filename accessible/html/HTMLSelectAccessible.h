@@ -38,6 +38,7 @@ class HTMLSelectListAccessible : public AccessibleWrap {
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
+  virtual bool AttributeChangesState(nsAtom* aAttribute) override;
 
   // SelectAccessible
   virtual bool SelectAll() override;
