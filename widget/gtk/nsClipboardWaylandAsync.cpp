@@ -48,8 +48,8 @@ struct AsyncClipboardData {
 
 static void wayland_clipboard_contents_received_async(
     GtkClipboard* clipboard, GtkSelectionData* selection_data, gpointer data) {
-  LOGCLIP(("wayland_clipboard_contents_received_async() selection_data = %p\n",
-           selection_data));
+  LOGCLIP("wayland_clipboard_contents_received_async() selection_data = %p\n",
+          selection_data);
   AsyncClipboardData* fastTrack = static_cast<AsyncClipboardData*>(data);
   fastTrack->mRetrievalContex->TransferAsyncClipboardData(
       fastTrack->mDataType, fastTrack->mClipboardRequestNumber, selection_data);
@@ -58,7 +58,7 @@ static void wayland_clipboard_contents_received_async(
 
 static void wayland_clipboard_text_received(GtkClipboard* clipboard,
                                             const gchar* text, gpointer data) {
-  LOGCLIP(("wayland_clipboard_text_received() text = %p\n", text));
+  LOGCLIP("wayland_clipboard_text_received() text = %p\n", text);
   AsyncClipboardData* fastTrack = static_cast<AsyncClipboardData*>(data);
   fastTrack->mRetrievalContex->TransferAsyncClipboardData(
       fastTrack->mDataType, fastTrack->mClipboardRequestNumber, (void*)text);
@@ -69,18 +69,18 @@ void nsRetrievalContextWaylandAsync::TransferAsyncClipboardData(
     ClipboardDataType aDataType, int aClipboardRequestNumber,
     const void* aData) {
   LOGCLIP(
-      ("nsRetrievalContextWaylandAsync::TransferAsyncClipboardData(), "
-       "aSelectionData = %p\n",
-       aData));
+      "nsRetrievalContextWaylandAsync::TransferAsyncClipboardData(), "
+      "aSelectionData = %p\n",
+      aData);
 
   MOZ_RELEASE_ASSERT(mClipboardData == nullptr && mClipboardDataLength == 0,
                      "Clipboard contains old data?");
 
   if (mClipboardRequestNumber != aClipboardRequestNumber) {
-    LOGCLIP(("    request number does not match!\n"));
+    LOGCLIP("    request number does not match!\n");
     return;
   }
-  LOGCLIP(("    request number matches\n"));
+  LOGCLIP("    request number matches\n");
 
   int dataLength = 0;
   if (aDataType == CLIPBOARD_TARGETS || aDataType == CLIPBOARD_DATA) {
@@ -93,13 +93,13 @@ void nsRetrievalContextWaylandAsync::TransferAsyncClipboardData(
 
   // Negative size means no data or data error.
   if (dataLength <= 0) {
-    LOGCLIP(("    zero dataLength, quit.\n"));
+    LOGCLIP("    zero dataLength, quit.\n");
     return;
   }
 
   switch (aDataType) {
     case CLIPBOARD_TARGETS: {
-      LOGCLIP(("    getting %d bytes of clipboard targets.\n", dataLength));
+      LOGCLIP("    getting %d bytes of clipboard targets.\n", dataLength);
       gint n_targets = 0;
       GdkAtom* targets = nullptr;
       if (!gtk_selection_data_get_targets((GtkSelectionData*)aData, &targets,
@@ -113,24 +113,24 @@ void nsRetrievalContextWaylandAsync::TransferAsyncClipboardData(
       break;
     }
     case CLIPBOARD_TEXT: {
-      LOGCLIP(("    getting %d bytes of text.\n", dataLength));
+      LOGCLIP("    getting %d bytes of text.\n", dataLength);
       mClipboardDataLength = dataLength;
       mClipboardData = reinterpret_cast<char*>(
           g_malloc(sizeof(char) * (mClipboardDataLength + 1)));
       memcpy(mClipboardData, aData, sizeof(char) * mClipboardDataLength);
       mClipboardData[mClipboardDataLength] = '\0';
-      LOGCLIP(("    done, mClipboardData = %p\n", mClipboardData));
+      LOGCLIP("    done, mClipboardData = %p\n", mClipboardData);
       break;
     }
     case CLIPBOARD_DATA: {
-      LOGCLIP(("    getting %d bytes of data.\n", dataLength));
+      LOGCLIP("    getting %d bytes of data.\n", dataLength);
       mClipboardDataLength = dataLength;
       mClipboardData = reinterpret_cast<char*>(
           g_malloc(sizeof(char) * mClipboardDataLength));
       memcpy(mClipboardData,
              gtk_selection_data_get_data((GtkSelectionData*)aData),
              sizeof(char) * mClipboardDataLength);
-      LOGCLIP(("    done, mClipboardData = %p\n", mClipboardData));
+      LOGCLIP("    done, mClipboardData = %p\n", mClipboardData);
       break;
     }
   }
@@ -138,10 +138,10 @@ void nsRetrievalContextWaylandAsync::TransferAsyncClipboardData(
 
 GdkAtom* nsRetrievalContextWaylandAsync::GetTargets(int32_t aWhichClipboard,
                                                     int* aTargetNum) {
-  LOGCLIP(("nsRetrievalContextWaylandAsync::GetTargets()\n"));
+  LOGCLIP("nsRetrievalContextWaylandAsync::GetTargets()\n");
 
   if (!mMutex.TryLock()) {
-    LOGCLIP(("  nsRetrievalContextWaylandAsync is already used!\n"));
+    LOGCLIP("  nsRetrievalContextWaylandAsync is already used!\n");
     *aTargetNum = 0;
     return nullptr;
   }
@@ -180,11 +180,11 @@ GdkAtom* nsRetrievalContextWaylandAsync::GetTargets(int32_t aWhichClipboard,
 
 const char* nsRetrievalContextWaylandAsync::GetClipboardData(
     const char* aMimeType, int32_t aWhichClipboard, uint32_t* aContentLength) {
-  LOGCLIP(("nsRetrievalContextWaylandAsync::GetClipboardData() mime %s\n",
-           aMimeType));
+  LOGCLIP("nsRetrievalContextWaylandAsync::GetClipboardData() mime %s\n",
+          aMimeType);
 
   if (!mMutex.TryLock()) {
-    LOGCLIP(("  nsRetrievalContextWaylandAsync is already used!\n"));
+    LOGCLIP("  nsRetrievalContextWaylandAsync is already used!\n");
     *aContentLength = 0;
     return nullptr;
   }
@@ -214,11 +214,11 @@ const char* nsRetrievalContextWaylandAsync::GetClipboardText(
     int32_t aWhichClipboard) {
   GdkAtom selection = GetSelectionAtom(aWhichClipboard);
 
-  LOGCLIP(("nsRetrievalContextWaylandAsync::GetClipboardText(), clipboard %s\n",
-           (selection == GDK_SELECTION_PRIMARY) ? "Primary" : "Selection"));
+  LOGCLIP("nsRetrievalContextWaylandAsync::GetClipboardText(), clipboard %s\n",
+          (selection == GDK_SELECTION_PRIMARY) ? "Primary" : "Selection");
 
   if (!mMutex.TryLock()) {
-    LOGCLIP(("  nsRetrievalContextWaylandAsync is already used!\n"));
+    LOGCLIP("  nsRetrievalContextWaylandAsync is already used!\n");
     return nullptr;
   }
 
@@ -247,12 +247,12 @@ bool nsRetrievalContextWaylandAsync::WaitForClipboardContent() {
       /* sleep for 10 ms/iteration */
       PR_Sleep(PR_MillisecondsToInterval(10));
       if (PR_Now() - entryTime > kClipboardTimeout) {
-        LOGCLIP(("  failed to get async clipboard data in time limit\n"));
+        LOGCLIP("  failed to get async clipboard data in time limit\n");
         break;
       }
     }
-    LOGCLIP(("doing iteration %d msec %ld ...\n", (iteration - 1),
-             (long)((PR_Now() - entryTime) / 1000)));
+    LOGCLIP("doing iteration %d msec %ld ...\n", (iteration - 1),
+            (long)((PR_Now() - entryTime) / 1000));
     gtk_main_iteration();
   }
 
@@ -261,8 +261,8 @@ bool nsRetrievalContextWaylandAsync::WaitForClipboardContent() {
 
 void nsRetrievalContextWaylandAsync::ReleaseClipboardData(
     const char* aClipboardData) {
-  LOGCLIP(("nsRetrievalContextWaylandAsync::ReleaseClipboardData [%p]\n",
-           aClipboardData));
+  LOGCLIP("nsRetrievalContextWaylandAsync::ReleaseClipboardData [%p]\n",
+          aClipboardData);
   if (aClipboardData != mClipboardData) {
     NS_WARNING("Wayland clipboard: Releasing unknown clipboard data!");
   }

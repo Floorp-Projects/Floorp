@@ -51,23 +51,24 @@ extern mozilla::LazyLogModule gWidgetLog;
 extern mozilla::LazyLogModule gWidgetDragLog;
 extern mozilla::LazyLogModule gWidgetPopupLog;
 
-#  define LOG(args)                                   \
+#  define LOG(...)                                    \
     MOZ_LOG(IsPopup() ? gWidgetPopupLog : gWidgetLog, \
-            mozilla::LogLevel::Debug, args)
-#  define LOGW(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
-#  define LOGDRAG(args) MOZ_LOG(gWidgetDragLog, mozilla::LogLevel::Debug, args)
-#  define LOG_POPUP(args) \
-    MOZ_LOG(gWidgetPopupLog, mozilla::LogLevel::Debug, args)
+            mozilla::LogLevel::Debug, (__VA_ARGS__))
+#  define LOGW(...) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+#  define LOGDRAG(...) \
+    MOZ_LOG(gWidgetDragLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+#  define LOG_POPUP(...) \
+    MOZ_LOG(gWidgetPopupLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 #  define LOG_ENABLED()                                         \
     (MOZ_LOG_TEST(gWidgetPopupLog, mozilla::LogLevel::Debug) || \
      MOZ_LOG_TEST(gWidgetLog, mozilla::LogLevel::Debug))
 
 #else
 
-#  define LOG(args)
-#  define LOGW(args)
-#  define LOGDRAG(args)
-#  define LOG_POPUP(args)
+#  define LOG(...)
+#  define LOGW(...)
+#  define LOGDRAG(...)
+#  define LOG_POPUP(...)
 #  define LOG_ENABLED() false
 
 #endif /* MOZ_LOGGING */
