@@ -1030,7 +1030,7 @@ var TPS = {
       // so we load Ajv manually.
       let ajvFile = this._getFileRelativeToSourceRoot(
         testFile,
-        "testing/modules/ajv-4.1.1.js"
+        "testing/modules/ajv-6.12.6.js"
       );
       let ajvURL = fileProtocolHandler.getURLSpecFromActualFile(ajvFile);
       let ns = {};
