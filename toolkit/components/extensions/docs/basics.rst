@@ -249,3 +249,21 @@ all API scripts look to the following source:
    The extension API authors should never redefine these globals to avoid introducing potential
    conflicts between API scripts (e.g. see `Bug 1697404 comment 3 <https://bugzilla.mozilla.org/show_bug.cgi?id=1697404#c3>`_
    and `Bug 1697404 comment 4 <https://bugzilla.mozilla.org/show_bug.cgi?id=1697404#c4>`_).
+
+WebIDL Bindings
+---------------
+
+In ``manifest_version: 3`` the extension will be able to declare a background service worker 
+instead of a background page, and the existing WebExtensions API bindings can't be injected into this
+new extension global, because it lives off the main thread.
+
+To expose WebExtensions API bindings to the WebExtensions ``background.service_worker`` global
+we are in the process of generating new WebIDL bindings for the WebExtensions API.
+
+An high level view of the architecture and a more in depth details about the architecture process
+to create or modify WebIDL bindings for the WebExtensions API can be found here:
+
+.. toctree::
+   :maxdepth: 2
+
+   webidl_bindings
