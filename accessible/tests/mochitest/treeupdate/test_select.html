@@ -110,12 +110,69 @@
       };
     }
 
+    /**
+     * Setting multiple on select makes the accessible recreate.
+     */
+     function setMultipleOnSelect() {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, "s3"),
+        new invokerChecker(EVENT_SHOW, "s3"),
+      ];
+
+      this.invoke = function setRoleOnOption_setRole() {
+        getNode("s3").multiple = true;
+      };
+
+      this.finalCheck = function() {
+        var tree =
+          { LISTBOX: [
+            { OPTION: [ ] },
+          ] };
+        testAccessibleTree("s3", tree);
+      };
+
+      this.getID = function removeptions_getID() {
+        return "setting multiple on select element";
+      };
+    }
+
+
+    /**
+     * Removing size on select makes the accessible recreate.
+     */
+     function removeSizeFromSelect() {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, "s4"),
+        new invokerChecker(EVENT_SHOW, "s4"),
+      ];
+
+      this.invoke = function setRoleOnOption_setRole() {
+        getNode("s4").removeAttribute("size");
+      };
+
+      this.finalCheck = function() {
+        var tree =
+          { COMBOBOX: [
+            { COMBOBOX_LIST: [
+              { COMBOBOX_OPTION: [ ] },
+            ] },
+          ] };
+        testAccessibleTree("s4", tree);
+      };
+
+      this.getID = function removeptions_getID() {
+        return "removing size from select element";
+      };
+    }
+
     function doTest() {
       const gQueue = new eventQueue();
 
       gQueue.push(new addOptions("select"));
       gQueue.push(new removeOptions("select"));
       gQueue.push(new setRoleOnOption());
+      gQueue.push(new setMultipleOnSelect());
+      gQueue.push(new removeSizeFromSelect());
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -132,5 +189,7 @@
 
   <select id="select"></select>
   <select id="s2"><option id="s2_o"></option></select>
+  <select id="s3"><option></option></select>
+  <select id="s4" size="3"><option></option></select>
 </body>
 </html>
