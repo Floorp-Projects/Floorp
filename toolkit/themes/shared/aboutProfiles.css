@@ -2,27 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- @import url("chrome://global/skin/in-content/info-pages.css");
+@import url("chrome://global/skin/in-content/info-pages.css");
 
-.page-subtitle {
-  margin-bottom: 3em;
+#profiles {
+  clear: both;
 }
 
 button {
-  margin-inline-start: 0;
-  margin-inline-end: 8px;
-  padding: 3px;
+  margin-inline: 0 8px;
 }
 
 .opendir {
   margin-inline-start: 3px;
-}
-
-#action-box {
-  float: inline-end;
-  margin-top: 2em;
-  margin-bottom: 20px;
-  margin-inline-start: 20px;
-  margin-inline-end: 0;
-  width: 30%;
 }
