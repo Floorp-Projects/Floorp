@@ -58,7 +58,7 @@ interface ExtensionTest {
   [Throws, WebExtensionStub="NotImplementedAsync"]
   any assertRejects(Promise<any> promise, any expectedError, optional DOMString message, optional Function callback);
 
-  [Throws, WebExtensionStub="NotImplementedNoReturn"]
+  [Throws]
   void assertThrows(Function func, any expectedError, optional DOMString message);
 
   // API events.
