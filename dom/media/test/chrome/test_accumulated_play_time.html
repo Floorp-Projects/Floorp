@@ -16,8 +16,8 @@
  * - VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE
  * - VIDEO_VISIBLE_PLAY_TIME_MS
  */
-const histNames = ["VIDEO_PLAY_TIME_MS", "VIDEO_HIDDEN_PLAY_TIME_MS"];
-const keyedHistNames = ["VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE", "VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE", "VIDEO_VISIBLE_PLAY_TIME_MS"];
+const videoHistNames = ["VIDEO_PLAY_TIME_MS", "VIDEO_HIDDEN_PLAY_TIME_MS"];
+const videoKeyedHistNames = ["VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE", "VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE", "VIDEO_VISIBLE_PLAY_TIME_MS"];
 
 add_task(async function setTestPref() {
   await SpecialPowers.pushPrefEnv({
@@ -138,7 +138,7 @@ add_task(async function testAudibleAudioPlayTime() {
   assertValueKeptUnchanged(audioChrome, "mutedPlayTime");
   assertValueKeptUnchanged(audioChrome, "totalVideoPlayTime");
 
-  await cleanUpMediaAndCheckTelemetry(audio);
+  await cleanUpMediaAndCheckTelemetry(audio, {hasVideo: false});
 });
 
 add_task(async function testHiddenPlayTime() {
@@ -254,6 +254,23 @@ add_task(async function testMutedAudioPlayTime() {
   assertValueKeptUnchanged(audioChrome, "mutedPlayTime");
   assertValueKeptUnchanged(audioChrome, "totalVideoPlayTime");
 
+  audio.muted = true;
+  await once(audio, "mozmutedaudioplaytimestarted");
+
+  await assertValueConstantlyIncreases(audioChrome, "totalAudioPlayTime");
+  await assertValueConstantlyIncreases(audioChrome, "mutedPlayTime");
+  await assertValueConstantlyIncreases(audioChrome, "audiblePlayTime");
+  assertValueKeptUnchanged(audioChrome, "totalVideoPlayTime");
+
+  audio.currentTime = 0.0;
+
+  await assertValueConstantlyIncreases(audioChrome, "totalAudioPlayTime");
+  await assertValueConstantlyIncreases(audioChrome, "mutedPlayTime");
+  await assertValueConstantlyIncreases(audioChrome, "audiblePlayTime");
+  assertValueKeptUnchanged(audioChrome, "totalVideoPlayTime");
+
+  // The media has a video track, but it's being played back in an
+  // HTMLAudioElement, without video frame location.
   // The media has a video track, but it's being played back in an
   // HTMLAudioElement, without video frame location.
   await cleanUpMediaAndCheckTelemetry(audio, {hasVideo: false});
@@ -360,22 +377,22 @@ add_task(async function testNoReportedTelemetryResult() {
 /**
  * Following are helper functions
  */
-async function cleanUpMediaAndCheckTelemetry(media, { shouldReport = true } = {}) {
+async function cleanUpMediaAndCheckTelemetry(media, { reportExpected = true, hasVideo = true} = {}) {
   media.src = "";
-  await checkReportedTelemetry(media, shouldReport);
+  await checkReportedTelemetry(media, reportExpected, hasVideo);
 }
 
 async function assertNoReportedTelemetryResult(media) {
-  await checkReportedTelemetry(media, false);
+  await checkReportedTelemetry(media, false, true);
 }
 
-async function checkReportedTelemetry(media, shouldReport) {
+async function checkReportedTelemetry(media, reportExpected, hasVideo) {
   const reportResultPromise = once(media, "mozreportedtelemetry");
-  info(`check telemetry result, shouldReport=${shouldReport}`);
-  if (shouldReport) {
+  info(`check telemetry result, reportExpected=${reportExpected}`);
+  if (reportExpected) {
     await reportResultPromise;
   }
-  for (const name of histNames) {
+  for (const name of videoHistNames) {
     try {
       const hist = SpecialPowers.Services.telemetry.getHistogramById(name);
       /**
@@ -389,7 +406,7 @@ async function checkReportedTelemetry(media, shouldReport) {
        * }
        */
       const entriesNums = Object.entries(hist.snapshot().values).length;
-      if (shouldReport) {
+      if (reportExpected && hasVideo) {
         ok(entriesNums > 0, `Reported result for ${name}`);
       } else {
         ok(entriesNums == 0, `Reported nothing for ${name}`);
@@ -399,7 +416,7 @@ async function checkReportedTelemetry(media, shouldReport) {
       ok(false , `histogram '${name}' doesn't exist`);
     }
   }
-  for (const name of keyedHistNames) {
+  for (const name of videoKeyedHistNames) {
     try {
       const hist = SpecialPowers.Services.telemetry.getKeyedHistogramById(name);
       /**
@@ -419,10 +436,12 @@ async function checkReportedTelemetry(media, shouldReport) {
       if (items.length > 0) {
         for (const [key, value] of items) {
           const entriesNums = Object.entries(value.values).length;
-          ok(shouldReport && entriesNums > 0, `Reported ${key} for ${name}`);
+          ok(reportExpected && entriesNums > 0, `Reported ${key} for ${name}`);
         }
+      } else if (reportExpected) {
+        ok(!hasVideo, `No video telemetry reported but no video track in the media`);
       } else {
-        ok(!shouldReport, `Reported nothing for ${name}`);
+        ok(true, `No video telemetry expected, none reported`);
       }
       // Avoid to pollute next test task.
       hist.clear();
