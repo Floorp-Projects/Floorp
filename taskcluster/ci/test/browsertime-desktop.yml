@@ -463,6 +463,7 @@ browsertime-tp6-live-sheriffed:
     description: Raptor (browsertime) tp6 on live-sites
     mozharness:
         extra-options:
+            - --browser-cycles=5
             - --chimera
             - --live-sites
     raptor-subtests:
