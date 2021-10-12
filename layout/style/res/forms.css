@@ -257,6 +257,10 @@ select:-moz-select-list-box {
   vertical-align: text-bottom;
   appearance: auto;
   -moz-default-appearance: listbox;
+%ifdef XP_MACOSX
+  /* TODO(emilio): See if this is still necessary with the non-native theme */
+  scrollbar-width: thin;
+%endif
 }
 
 select > button {
