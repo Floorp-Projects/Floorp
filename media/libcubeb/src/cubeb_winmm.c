@@ -121,6 +121,10 @@ struct cubeb_stream {
   CRITICAL_SECTION lock;
   uint64_t written;
   float soft_volume;
+  /* For position wrap-around handling: */
+  size_t frame_size;
+  DWORD prev_pos_lo_dword;
+  DWORD pos_hi_dword;
 };
 
 static size_t
@@ -557,6 +561,10 @@ winmm_stream_init(cubeb * context, cubeb_stream ** stream,
     winmm_refill_stream(stm);
   }
 
+  stm->frame_size = bytes_per_frame(stm->params);
+  stm->prev_pos_lo_dword = 0;
+  stm->pos_hi_dword = 0;
+
   *stream = stm;
 
   return CUBEB_OK;
@@ -709,6 +717,58 @@ winmm_stream_stop(cubeb_stream * stm)
   return CUBEB_OK;
 }
 
+/*
+Microsoft wave audio docs say "samples are the preferred time format in which
+to represent the current position", but relying on this causes problems on
+Windows XP, the only OS cubeb_winmm is used on.
+
+While the wdmaud.sys driver internally tracks a 64-bit position and ensures no
+backward movement, the WinMM API limits the position returned from
+waveOutGetPosition() to a 32-bit DWORD (this applies equally to XP x64). The
+higher 32 bits are chopped off, and to an API consumer the position can appear
+to move backward.
+
+In theory, even a 32-bit TIME_SAMPLES position should provide plenty of
+playback time for typical use cases before this pseudo wrap-around, e.g:
+    (2^32 - 1)/48000 = ~24:51:18 for 48.0 kHz stereo;
+    (2^32 - 1)/44100 = ~27:03:12 for 44.1 kHz stereo.
+In reality, wdmaud.sys doesn't provide a TIME_SAMPLES position at all, only a
+32-bit TIME_BYTES position, from which wdmaud.drv derives TIME_SAMPLES:
+    SamplePos = (BytePos * 8) / BitsPerFrame,
+    where BitsPerFrame = Channels * BitsPerSample,
+Per dom\media\AudioSampleFormat.h, desktop builds always use 32-bit FLOAT32
+samples, so the maximum for TIME_SAMPLES should be:
+    (2^29 - 1)/48000 = ~03:06:25;
+    (2^29 - 1)/44100 = ~03:22:54.
+This might still be OK for typical browser usage, but there's also a bug in the
+formula above: BytePos * 8 (BytePos << 3) is done on a 32-bit BytePos, without
+first casting it to 64 bits, so the highest 3 bits, if set, would get shifted
+out, and the maximum possible TIME_SAMPLES drops unacceptably low:
+    (2^26 - 1)/48000 = ~00:23:18;
+    (2^26 - 1)/44100 = ~00:25:22.
+
+To work around these limitations, we just get the position in TIME_BYTES,
+recover the 64-bit value, and do our own conversion to samples.
+*/
+
+/* Convert chopped 32-bit waveOutGetPosition() into 64-bit true position. */
+static uint64_t
+update_64bit_position(cubeb_stream * stm, DWORD pos_lo_dword)
+{
+  /* Caller should be holding stm->lock. */
+  if (pos_lo_dword < stm->prev_pos_lo_dword) {
+    stm->pos_hi_dword++;
+    LOG("waveOutGetPosition() has wrapped around: %#lx -> %#lx",
+        stm->prev_pos_lo_dword, pos_lo_dword);
+    LOG("Wrap-around count = %#lx", stm->pos_hi_dword);
+    LOG("Current 64-bit position = %#llx",
+        (((uint64_t)stm->pos_hi_dword) << 32) | ((uint64_t)pos_lo_dword));
+  }
+  stm->prev_pos_lo_dword = pos_lo_dword;
+
+  return (((uint64_t)stm->pos_hi_dword) << 32) | ((uint64_t)pos_lo_dword);
+}
+
 static int
 winmm_stream_get_position(cubeb_stream * stm, uint64_t * position)
 {
@@ -716,15 +776,17 @@ winmm_stream_get_position(cubeb_stream * stm, uint64_t * position)
   MMTIME time;
 
   EnterCriticalSection(&stm->lock);
-  time.wType = TIME_SAMPLES;
+  /* See the long comment above for why not just use TIME_SAMPLES here. */
+  time.wType = TIME_BYTES;
   r = waveOutGetPosition(stm->waveout, &time, sizeof(time));
-  LeaveCriticalSection(&stm->lock);
 
-  if (r != MMSYSERR_NOERROR || time.wType != TIME_SAMPLES) {
+  if (r != MMSYSERR_NOERROR || time.wType != TIME_BYTES) {
+    LeaveCriticalSection(&stm->lock);
     return CUBEB_ERROR;
   }
 
-  *position = time.u.sample;
+  *position = update_64bit_position(stm, time.u.cb) / stm->frame_size;
+  LeaveCriticalSection(&stm->lock);
 
   return CUBEB_OK;
 }
@@ -734,20 +796,24 @@ winmm_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
 {
   MMRESULT r;
   MMTIME time;
-  uint64_t written;
+  uint64_t written, position;
 
   EnterCriticalSection(&stm->lock);
-  time.wType = TIME_SAMPLES;
+  /* See the long comment above for why not just use TIME_SAMPLES here. */
+  time.wType = TIME_BYTES;
   r = waveOutGetPosition(stm->waveout, &time, sizeof(time));
-  written = stm->written;
-  LeaveCriticalSection(&stm->lock);
 
-  if (r != MMSYSERR_NOERROR || time.wType != TIME_SAMPLES) {
+  if (r != MMSYSERR_NOERROR || time.wType != TIME_BYTES) {
+    LeaveCriticalSection(&stm->lock);
     return CUBEB_ERROR;
   }
 
-  XASSERT(written - time.u.sample <= UINT32_MAX);
-  *latency = (uint32_t)(written - time.u.sample);
+  position = update_64bit_position(stm, time.u.cb);
+  written = stm->written;
+  LeaveCriticalSection(&stm->lock);
+
+  XASSERT((written - (position / stm->frame_size)) <= UINT32_MAX);
+  *latency = (uint32_t)(written - (position / stm->frame_size));
 
   return CUBEB_OK;
 }

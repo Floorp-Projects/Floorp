@@ -2178,13 +2178,13 @@ setup_wasapi_stream_one_side(cubeb_stream * stm,
     return CUBEB_ERROR;
   }
 
-  REFERENCE_TIME latency_hns;
+  REFERENCE_TIME latency_hns = frames_to_hns(stream_params->rate, stm->latency);
+  stm->input_bluetooth_handsfree = false;
 
-  uint32_t latency_frames = stm->latency;
   cubeb_device_info device_info;
-  int rv = wasapi_create_device(stm->context, device_info,
-                                stm->device_enumerator.get(), device.get());
-  if (rv == CUBEB_OK) {
+  if (wasapi_create_device(stm->context, device_info,
+                           stm->device_enumerator.get(),
+                           device.get()) == CUBEB_OK) {
     const char * HANDSFREE_TAG = "BTHHFENUM";
     size_t len = sizeof(HANDSFREE_TAG);
     if (direction == eCapture) {
@@ -2193,20 +2193,15 @@ setup_wasapi_stream_one_side(cubeb_stream * stm,
       if (strlen(device_info.group_id) >= len &&
           strncmp(device_info.group_id, HANDSFREE_TAG, len) == 0) {
         stm->input_bluetooth_handsfree = true;
-      } else {
-        stm->input_bluetooth_handsfree = false;
       }
       // This multiplicator has been found empirically.
-      latency_frames = default_period_frames * 8;
+      uint32_t latency_frames = default_period_frames * 8;
       LOG("Input: latency increased to %u frames from a default of %u",
           latency_frames, default_period_frames);
+      latency_hns = frames_to_hns(device_info.default_rate, latency_frames);
     }
-    latency_hns = frames_to_hns(device_info.default_rate, latency_frames);
-
     wasapi_destroy_device(&device_info);
   } else {
-    stm->input_bluetooth_handsfree = false;
-    latency_hns = frames_to_hns(mix_params->rate, latency_frames);
     LOG("Could not get cubeb_device_info.");
   }
 
