@@ -492,14 +492,14 @@ nsresult ContentEventHandler::QueryContentRect(
 // doesn't have any text. This happens even for single line editors.
 // When we get text content and when we change the selection,
 // we don't want to include the padding <br> elements at the end.
-static bool IsContentBR(nsIContent* aContent) {
-  HTMLBRElement* brElement = HTMLBRElement::FromNode(aContent);
+static bool IsContentBR(const nsIContent& aContent) {
+  const HTMLBRElement* brElement = HTMLBRElement::FromNode(aContent);
   return brElement && !brElement->IsPaddingForEmptyLastLine() &&
          !brElement->IsPaddingForEmptyEditor();
 }
 
-static bool IsPaddingBR(nsIContent* aContent) {
-  return aContent->IsHTMLElement(nsGkAtoms::br) && !IsContentBR(aContent);
+static bool IsPaddingBR(const nsIContent& aContent) {
+  return aContent.IsHTMLElement(nsGkAtoms::br) && !IsContentBR(aContent);
 }
 
 static void ConvertToNativeNewlines(nsString& aString) {
@@ -671,7 +671,7 @@ bool ContentEventHandler::ShouldBreakLineBefore(nsIContent* aContent,
   // content.  Otherwise, i.e., it's caused by internal reason of Gecko,
   // it shouldn't be exposed as a line break to flatten text.
   if (aContent->IsHTMLElement(nsGkAtoms::br)) {
-    return IsContentBR(aContent);
+    return IsContentBR(*aContent);
   }
 
   // Note that ideally, we should refer the style of the primary frame of
@@ -1524,7 +1524,7 @@ ContentEventHandler::GetFirstFrameInRangeForTextRect(
     // If the element node causes a line break before it, it's the first
     // node causing text.
     if (ShouldBreakLineBefore(node->AsContent(), mRootContent) ||
-        IsPaddingBR(node->AsContent())) {
+        IsPaddingBR(*node->AsContent())) {
       nodePosition = {node, 0};
     }
   }
@@ -1617,7 +1617,7 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange) {
     }
 
     if (ShouldBreakLineBefore(node->AsContent(), mRootContent) ||
-        IsPaddingBR(node->AsContent())) {
+        IsPaddingBR(*node->AsContent())) {
       nodePosition = {node, 0};
       break;
     }
@@ -1678,7 +1678,7 @@ ContentEventHandler::GetLineBreakerRectBefore(nsIFrame* aFrame) {
   // open tag causes a line break or moz-<br> for computing empty last line's
   // rect.
   MOZ_ASSERT(ShouldBreakLineBefore(aFrame->GetContent(), mRootContent) ||
-             IsPaddingBR(aFrame->GetContent()));
+             (aFrame->GetContent() && IsPaddingBR(*aFrame->GetContent())));
 
   nsIFrame* frameForFontMetrics = aFrame;
 
@@ -1940,7 +1940,7 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
     // it represents empty line at the last of current block.  Therefore,
     // we need to compute its rect too.
     else if (ShouldBreakLineBefore(firstContent, mRootContent) ||
-             IsPaddingBR(firstContent)) {
+             IsPaddingBR(*firstContent)) {
       nsRect brRect;
       // If the frame is not a <br> frame, we need to compute the caret rect
       // with last character's rect before firstContent if there is.
