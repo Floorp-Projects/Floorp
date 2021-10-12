@@ -875,12 +875,13 @@ void mozInlineSpellWordUtil::SoftText::AdjustBeginAndBuildText(
       MOZ_ASSERT(content, "Where is our content?");
       const nsTextFragment* textFragment = content->GetText();
       MOZ_ASSERT(textFragment, "Where is our text?");
-      int32_t lastOffsetInNode = textFragment->GetLength();
+      uint32_t lastOffsetInNode = textFragment->GetLength();
 
       if (seenSoftEnd) {
         // check whether we can stop after this
-        for (int32_t i = node == mEnd.mNode ? mEnd.mOffset : 0;
-             i < int32_t(textFragment->GetLength()); ++i) {
+        for (uint32_t i =
+                 node == mEnd.mNode ? AssertedCast<uint32_t>(mEnd.mOffset) : 0;
+             i < textFragment->GetLength(); ++i) {
           if (IsDOMWordSeparator(textFragment->CharAt(i))) {
             exit = true;
             // stop at the first separator after the soft end point
@@ -890,13 +891,15 @@ void mozInlineSpellWordUtil::SoftText::AdjustBeginAndBuildText(
         }
       }
 
-      if (firstOffsetInNode < lastOffsetInNode) {
-        int32_t len = lastOffsetInNode - firstOffsetInNode;
+      if (firstOffsetInNode >= 0 &&
+          static_cast<uint32_t>(firstOffsetInNode) < lastOffsetInNode) {
+        const uint32_t len = lastOffsetInNode - firstOffsetInNode;
         mDOMMapping.AppendElement(DOMTextMapping(
             NodeOffset(node, firstOffsetInNode), mValue.Length(), len));
 
-        bool ok = textFragment->AppendTo(mValue, firstOffsetInNode, len,
-                                         mozilla::fallible);
+        const bool ok = textFragment->AppendTo(
+            mValue, static_cast<uint32_t>(firstOffsetInNode), len,
+            mozilla::fallible);
         if (!ok) {
           // probably out of memory, remove from mDOMMapping
           mDOMMapping.RemoveLastElement();
