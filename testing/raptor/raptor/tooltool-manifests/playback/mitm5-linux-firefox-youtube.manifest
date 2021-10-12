@@ -1,9 +1,0 @@
-[
-  {
-    "algorithm": "sha512",
-    "digest": "bbbf25606130d97a61aad5e48e80ee0f9743cfb8481cd6ece7fcadc370b1f9737ba1dc37dc8d889efdc0128a3ee9bbc8a061bc4ad5a65b8efcccaf6c3b1f223e",
-    "filename": "mitm5-linux-firefox-youtube.zip",
-    "size": 7078105,
-    "visibility": "public"
-  }
-]
