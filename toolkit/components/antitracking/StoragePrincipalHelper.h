@@ -242,9 +242,10 @@ class StoragePrincipalHelper final {
   static nsresult PrepareEffectiveStoragePrincipalOriginAttributes(
       nsIChannel* aChannel, OriginAttributes& aOriginAttributes);
 
-  static bool VerifyValidStoragePrincipalInfoForPrincipalInfo(
-      const mozilla::ipc::PrincipalInfo& aStoragePrincipalInfo,
-      const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
+  static bool VerifyValidPartitionedPrincipalInfoForPrincipalInfo(
+      const mozilla::ipc::PrincipalInfo& aPartitionedPrincipalInfo,
+      const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+      bool aIgnoreSpecForContentPrincipal);
 
   enum PrincipalType {
     // This is the first-party principal.
