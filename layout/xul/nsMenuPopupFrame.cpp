@@ -51,6 +51,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_xul.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/Element.h"
@@ -399,6 +400,13 @@ NS_IMETHODIMP nsXULPopupShownEvent::Run() {
     popup->SetPopupState(ePopupShown);
   }
 
+  if (!mPopup->IsXULElement(nsGkAtoms::tooltip)) {
+    nsCOMPtr<nsIObserverService> obsService =
+        mozilla::services::GetObserverService();
+    if (obsService) {
+      obsService->NotifyObservers(mPopup, "popup-shown", nullptr);
+    }
+  }
   WidgetMouseEvent event(true, eXULPopupShown, nullptr,
                          WidgetMouseEvent::eReal);
   return EventDispatcher::Dispatch(mPopup, mPresContext, &event);
