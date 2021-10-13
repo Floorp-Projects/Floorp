@@ -230,15 +230,10 @@ add_task(async function test_change_in_about_profiling() {
       // Let's check some thread as well
       info("Change the threads values using the checkboxes");
 
-      const styleThreadLabel = await getElementFromDocumentByText(
+      const styleThreadInput = await getNearestInputFromText(
         aboutProfilingDocument,
         "StyleThread"
       );
-      const styleThreadInput = styleThreadLabel.querySelector("input");
-      if (!styleThreadInput) {
-        throw new Error("Unable to find the input from the StyleThread label.");
-      }
-
       ok(
         !styleThreadInput.checked,
         "The StyleThread thread isn't checked by default."

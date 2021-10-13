@@ -7,14 +7,7 @@ add_task(async function test() {
   info("Test that about:profiling can be loaded, and the threads changed.");
 
   await withAboutProfiling(async document => {
-    const geckoMainLabel = await getElementFromDocumentByText(
-      document,
-      "GeckoMain"
-    );
-    const geckoMainInput = geckoMainLabel.querySelector("input");
-    if (!geckoMainInput) {
-      throw new Error("Unable to find the input from the GeckoMain label.");
-    }
+    const geckoMainInput = await getNearestInputFromText(document, "GeckoMain");
 
     ok(
       geckoMainInput.checked,
