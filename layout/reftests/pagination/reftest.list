@@ -164,6 +164,7 @@ fuzzy-if(cocoaWidget&&swgl,0-1,0-23) == content-url-pseudo.html content-url-pseu
 == fieldset-00J-grid.html fieldset-00J-ref.html
 == fieldset-00K.html fieldset-00K-ref.html
 == fieldset-00L.html fieldset-00L-ref.html
+== fieldset-00M.html fieldset-00M-ref.html
 
 == block-max-height-001.html block-max-height-001-ref.html
 == block-max-height-002.html block-max-height-001-ref.html

@@ -426,7 +426,8 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
       inner = GetInner();
     }
   }
-  if (aReflowInput.ShouldReflowAllKids() || GetNextInFlow()) {
+  if (aReflowInput.ShouldReflowAllKids() || GetNextInFlow() ||
+      aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) {
     reflowInner = inner != nullptr;
     reflowLegend = legend != nullptr;
   } else {
