@@ -16,22 +16,6 @@
         "description": "Returns the value of the 'places.history.enabled' preference",
         "parameters": [],
         "async": true
-      },
-      {
-        "name": "setIcon",
-        "type": "function",
-        "description": "Disables or enables the screenshot toolbar button",
-        "parameters": [
-          {
-            "name": "isActive",
-            "type": "boolean"
-          },
-          {
-            "name": "windowId",
-            "type": "integer"
-          }
-        ],
-        "async": false
       }
     ],
     "events": [
