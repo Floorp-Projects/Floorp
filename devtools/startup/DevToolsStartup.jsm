@@ -9,9 +9,9 @@
  * It manages all the possible entry points for DevTools:
  * - Handles command line arguments like -jsconsole,
  * - Register all key shortcuts,
- * - Listen for "Web Developer" system menu opening, under "Tools",
+ * - Listen for "Browser Tools" system menu opening, under "Tools",
  * - Inject the wrench icon in toolbar customization, which is used
- *   by the "Web Developer" list displayed in the hamburger menu,
+ *   by the "Browser Tools" list displayed in the hamburger menu,
  * - Register the JSON Viewer protocol handler.
  * - Inject the profiler recording button in toolbar customization.
  *
@@ -516,7 +516,7 @@ DevToolsStartup.prototype = {
     // The developer menu hook only needs to be added if devtools have not been
     // initialized yet.
     if (!this.initialized) {
-      this.hookWebDeveloperMenu(window);
+      this.hookBrowserToolsMenu(window);
     }
 
     this.createDevToolsEnableMenuItem(window);
@@ -529,13 +529,13 @@ DevToolsStartup.prototype = {
    * and dragging it from the customization panel to the toolbar.
    * (i.e. this isn't displayed by default to users!)
    *
-   * _But_, the "Web Developer" entry in the hamburger menu (the menu with
+   * _But_, the "Browser Tools" entry in the hamburger menu (the menu with
    * 3 horizontal lines), is using this "developer-button" view to populate
    * its menu. So we have to register this button for the menu to work.
    *
-   * Also, this menu duplicates its own entries from the "Web Developer"
+   * Also, this menu duplicates its own entries from the "Browser Tools"
    * menu in the system menu, under "Tools" main menu item. The system
-   * menu is being hooked by "hookWebDeveloperMenu" which ends up calling
+   * menu is being hooked by "hookBrowserToolsMenu" which ends up calling
    * devtools/client/framework/browser-menus to create the items for real,
    * initDevTools, from onViewShowing is also calling browser-menu.
    */
@@ -682,12 +682,12 @@ DevToolsStartup.prototype = {
   },
 
   /*
-   * We listen to the "Web Developer" system menu, which is under "Tools" main item.
+   * We listen to the "Browser Tools" system menu, which is under "Tools" main item.
    * This menu item is hardcoded empty in Firefox UI. We listen for its opening to
    * populate it lazily. Loading main DevTools module is going to populate it.
    */
-  hookWebDeveloperMenu(window) {
-    const menu = window.document.getElementById("webDeveloperMenu");
+  hookBrowserToolsMenu(window) {
+    const menu = window.document.getElementById("browserToolsMenu");
     const onPopupShowing = () => {
       if (!Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
         return;
