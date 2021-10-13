@@ -18,6 +18,10 @@
 #include "nsIURI.h"
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
+#include "NeckoChild.h"
+#include "mozilla/ContentBlocking.h"
+#include "nsIHttpChannel.h"
+#include "nsIStreamListener.h"
 
 namespace mozilla {
 namespace net {

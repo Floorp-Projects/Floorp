@@ -13,6 +13,7 @@
 #define LOG_ENABLED() LOG5_ENABLED()
 
 #include "ConnectionHandle.h"
+#include "nsHttpHandler.h"
 
 namespace mozilla {
 namespace net {
