@@ -8,13 +8,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/bookmark_item"
     android:layout_width="@dimen/recent_bookmark_item_width"
-    android:layout_height="@dimen/recent_bookmark_item_height"
-    android:padding="4dp">
+    android:layout_height="wrap_content" >
 
-    <RelativeLayout
-        android:layout_width="match_parent"
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="@dimen/recent_bookmark_item_card_width"
         android:layout_height="@dimen/recent_bookmark_item_favicon_height"
-        android:background="@drawable/recent_bookmark_background"
+        android:layout_marginTop="@dimen/recent_bookmark_item_card_padding_top"
+        android:layout_marginBottom="@dimen/recent_bookmark_item_card_padding_bottom"
+        app:cardBackgroundColor="?mozac_widget_favicon_background_color"
+        app:cardElevation="@dimen/recent_bookmark_item_card_elevation"
         app:layout_constraintBottom_toTopOf="@+id/bookmark_title"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -25,11 +27,9 @@
             style="@style/recentBookmarkFavicon"
             android:layout_width="@dimen/top_sites_favicon_size"
             android:layout_height="@dimen/top_sites_favicon_size"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:background="?above" />
+            android:layout_gravity="center" />
 
-    </RelativeLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <TextView
         android:id="@+id/bookmark_title"
@@ -41,7 +41,7 @@
         android:nestedScrollingEnabled="false"
         android:scrollbars="none"
         android:textAppearance="@style/recentBookmarkItemSubTitleText"
-        android:padding="8dp"
+        android:paddingHorizontal="@dimen/recent_bookmark_item_text_padding_horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         tools:text="Recently Saved bookmark item" />

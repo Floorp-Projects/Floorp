@@ -9,8 +9,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="40dp"
-    android:layout_marginBottom="16dp">
+    android:layout_marginTop="@dimen/recent_bookmark_header_margin_top">
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/header"
