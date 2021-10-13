@@ -17,7 +17,8 @@
     This script extracts information about 1) mappings between deprecated and
     current Unicode BCP 47 locale identifiers, and 2) deprecated and current
     BCP 47 Unicode extension value from CLDR, and converts it to C++ mapping
-    code in LanguageTagGenerated.cpp. The code is used in LanguageTag.cpp.
+    code in intl/components/LocaleGenerated.cpp. The code is used in
+    intl/components/Locale.cpp.
 
 
     Target "tzdata":
@@ -125,7 +126,7 @@ def writeMappingsBinarySearch(
     writeMappingHeader(println, description, source, url)
     println(
         """
-bool js::intl::LanguageTag::{0}({1} {2}) {{
+bool mozilla::intl::Locale::{0}({1} {2}) {{
   MOZ_ASSERT({3}({2}.span()));
   MOZ_ASSERT({4}({2}.span()));
 """.format(
@@ -309,7 +310,7 @@ def writeComplexLanguageTagMappings(
     writeMappingHeader(println, description, source, url)
     println(
         """
-void js::intl::LanguageTag::performComplexLanguageMappings() {
+void mozilla::intl::Locale::performComplexLanguageMappings() {
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language().span()));
   MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
 """.lstrip()
@@ -406,7 +407,7 @@ def writeComplexRegionTagMappings(
     writeMappingHeader(println, description, source, url)
     println(
         """
-void js::intl::LanguageTag::performComplexRegionMappings() {
+void mozilla::intl::Locale::performComplexRegionMappings() {
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language().span()));
   MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
   MOZ_ASSERT(IsStructurallyValidRegionTag(region().span()));
@@ -524,7 +525,7 @@ static const char* ToCharPointer(const char* str) {
   return str;
 }
 
-static const char* ToCharPointer(const js::UniqueChars& str) {
+static const char* ToCharPointer(const mozilla::intl::UniqueChars& str) {
   return str.get();
 }
 
@@ -537,7 +538,7 @@ static bool IsLessThan(const T& a, const U& b) {
     writeMappingHeader(println, description, source, url)
     println(
         """
-bool js::intl::LanguageTag::performVariantMappings(JSContext* cx) {
+bool mozilla::intl::Locale::performVariantMappings() {
   // The variant subtags need to be sorted for binary search.
   MOZ_ASSERT(std::is_sorted(variants_.begin(), variants_.end(),
                             IsLessThan<decltype(variants_)::ElementType>));
@@ -547,9 +548,9 @@ bool js::intl::LanguageTag::performVariantMappings(JSContext* cx) {
   };
 
   auto insertVariantSortedIfNotPresent = [&](const char* variant) {
-    auto* p = std::lower_bound(variants_.begin(), variants_.end(), variant,
-                               IsLessThan<decltype(variants_)::ElementType,
-                                          decltype(variant)>);
+    auto* p = std::lower_bound(
+        variants_.begin(), variants_.end(), variant,
+        IsLessThan<decltype(variants_)::ElementType, decltype(variant)>);
 
     // Don't insert the replacement when already present.
     if (p != variants_.end() && strcmp(p->get(), variant) == 0) {
@@ -557,14 +558,11 @@ bool js::intl::LanguageTag::performVariantMappings(JSContext* cx) {
     }
 
     // Insert the preferred variant in sort order.
-    auto preferred = DuplicateString(cx, variant);
-    if (!preferred) {
-      return false;
-    }
+    auto preferred = DuplicateStringToUniqueChars(variant);
     return !!variants_.insert(p, std::move(preferred));
   };
 
-  for (size_t i = 0; i < variants_.length(); ) {
+  for (size_t i = 0; i < variants_.length();) {
     const char* variant = variants_[i].get();
     MOZ_ASSERT(IsCanonicallyCasedVariantTag(mozilla::MakeStringSpan(variant)));
 """.lstrip()
@@ -657,7 +655,7 @@ def writeLegacyMappingsFunction(println, legacy_mappings, description, source, u
     writeMappingHeader(println, description, source, url)
     println(
         """\
-bool js::intl::LanguageTag::updateLegacyMappings(JSContext* cx) {
+bool mozilla::intl::Locale::updateLegacyMappings() {
   // We're mapping legacy tags to non-legacy form here.
   // Other tags remain unchanged.
   //
@@ -672,8 +670,10 @@ bool js::intl::LanguageTag::updateLegacyMappings(JSContext* cx) {
   }
 
   for ([[maybe_unused]] const auto& variant : variants()) {
-    MOZ_ASSERT(IsStructurallyValidVariantTag(mozilla::MakeStringSpan(variant.get())));
-    MOZ_ASSERT(IsCanonicallyCasedVariantTag(mozilla::MakeStringSpan(variant.get())));
+    MOZ_ASSERT(
+        IsStructurallyValidVariantTag(mozilla::MakeStringSpan(variant.get())));
+    MOZ_ASSERT(
+        IsCanonicallyCasedVariantTag(mozilla::MakeStringSpan(variant.get())));
   }
 
   // The variant subtags need to be sorted for binary search.
@@ -702,10 +702,7 @@ bool js::intl::LanguageTag::updateLegacyMappings(JSContext* cx) {
     }
 
     // Insert the preferred variant in sort order.
-    auto preferred = DuplicateString(cx, variant);
-    if (!preferred) {
-      return false;
-    }
+    auto preferred = DuplicateStringToUniqueChars(variant);
     return !!variants_.insert(p, std::move(preferred));
   };
 
@@ -924,7 +921,7 @@ def writeSignLanguageMappingsFunction(
     writeMappingHeader(println, description, source, url)
     println(
         """\
-bool js::intl::LanguageTag::signLanguageMapping(LanguageSubtag& language,
+bool mozilla::intl::Locale::signLanguageMapping(LanguageSubtag& language,
                                                 const RegionSubtag& region) {
   MOZ_ASSERT(language.equalTo("sgn"));
   MOZ_ASSERT(IsStructurallyValidRegionTag(region.span()));
@@ -1646,39 +1643,36 @@ def writeCLDRLanguageTagData(println, data, url):
 #include <string>
 #include <type_traits>
 
-#include "builtin/intl/LanguageTag.h"
-#include "util/Text.h"
-#include "vm/JSContext.h"
+#include "mozilla/intl/Locale.h"
 
-using namespace js::intl::LanguageTagLimits;
+using namespace mozilla::intl::LanguageTagLimits;
 
 template <size_t Length, size_t TagLength, size_t SubtagLength>
 static inline bool HasReplacement(
     const char (&subtags)[Length][TagLength],
-    const js::intl::LanguageTagSubtag<SubtagLength>& subtag) {
+    const mozilla::intl::LanguageTagSubtag<SubtagLength>& subtag) {
   MOZ_ASSERT(subtag.length() == TagLength - 1,
              "subtag must have the same length as the list of subtags");
 
   const char* ptr = subtag.span().data();
   return std::binary_search(std::begin(subtags), std::end(subtags), ptr,
                             [](const char* a, const char* b) {
-    return memcmp(a, b, TagLength - 1) < 0;
-  });
+                              return memcmp(a, b, TagLength - 1) < 0;
+                            });
 }
 
 template <size_t Length, size_t TagLength, size_t SubtagLength>
 static inline const char* SearchReplacement(
-    const char (&subtags)[Length][TagLength],
-    const char* (&aliases)[Length],
-    const js::intl::LanguageTagSubtag<SubtagLength>& subtag) {
+    const char (&subtags)[Length][TagLength], const char* (&aliases)[Length],
+    const mozilla::intl::LanguageTagSubtag<SubtagLength>& subtag) {
   MOZ_ASSERT(subtag.length() == TagLength - 1,
              "subtag must have the same length as the list of subtags");
 
   const char* ptr = subtag.span().data();
   auto p = std::lower_bound(std::begin(subtags), std::end(subtags), ptr,
                             [](const char* a, const char* b) {
-    return memcmp(a, b, TagLength - 1) < 0;
-  });
+                              return memcmp(a, b, TagLength - 1) < 0;
+                            });
   if (p != std::end(subtags) && memcmp(*p, ptr, TagLength - 1) == 0) {
     return aliases[std::distance(std::begin(subtags), p)];
   }
@@ -1695,32 +1689,23 @@ static bool IsAsciiLowercaseAlphanumericOrDash(char c) {
 }
 
 static bool IsCanonicallyCasedLanguageTag(mozilla::Span<const char> span) {
-  // Tell the analysis the |std::all_of| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
-  return std::all_of(span.begin(), span.end(), mozilla::IsAsciiLowercaseAlpha<char>);
+  return std::all_of(span.begin(), span.end(),
+                     mozilla::IsAsciiLowercaseAlpha<char>);
 }
 
 static bool IsCanonicallyCasedScriptTag(mozilla::Span<const char> span) {
-  // Tell the analysis the |std::all_of| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
   return mozilla::IsAsciiUppercaseAlpha(span[0]) &&
-         std::all_of(span.begin() + 1, span.end(), mozilla::IsAsciiLowercaseAlpha<char>);
+         std::all_of(span.begin() + 1, span.end(),
+                     mozilla::IsAsciiLowercaseAlpha<char>);
 }
 
 static bool IsCanonicallyCasedRegionTag(mozilla::Span<const char> span) {
-  // Tell the analysis the |std::all_of| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
-  return std::all_of(span.begin(), span.end(), mozilla::IsAsciiUppercaseAlpha<char>) ||
+  return std::all_of(span.begin(), span.end(),
+                     mozilla::IsAsciiUppercaseAlpha<char>) ||
          std::all_of(span.begin(), span.end(), mozilla::IsAsciiDigit<char>);
 }
 
 static bool IsCanonicallyCasedVariantTag(mozilla::Span<const char> span) {
-  // Tell the analysis the |std::all_of| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
   return std::all_of(span.begin(), span.end(), IsAsciiLowercaseAlphanumeric);
 }
 
@@ -1729,7 +1714,8 @@ static bool IsCanonicallyCasedUnicodeKey(mozilla::Span<const char> key) {
 }
 
 static bool IsCanonicallyCasedUnicodeType(mozilla::Span<const char> type) {
-  return std::all_of(type.begin(), type.end(), IsAsciiLowercaseAlphanumericOrDash);
+  return std::all_of(type.begin(), type.end(),
+                     IsAsciiLowercaseAlphanumericOrDash);
 }
 
 static bool IsCanonicallyCasedTransformKey(mozilla::Span<const char> key) {
@@ -1737,7 +1723,8 @@ static bool IsCanonicallyCasedTransformKey(mozilla::Span<const char> key) {
 }
 
 static bool IsCanonicallyCasedTransformType(mozilla::Span<const char> type) {
-  return std::all_of(type.begin(), type.end(), IsAsciiLowercaseAlphanumericOrDash);
+  return std::all_of(type.begin(), type.end(),
+                     IsAsciiLowercaseAlphanumericOrDash);
 }
 #endif
 """.rstrip()
@@ -2049,7 +2036,7 @@ def readCLDRVersionFromICU():
 
 
 def updateCLDRLangTags(args):
-    """ Update the LanguageTagGenerated.cpp file. """
+    """ Update the LocaleGenerated.cpp file. """
     version = args.version
     url = args.url
     out = args.out
@@ -3204,16 +3191,14 @@ def writeUnicodeExtensionsMappings(println, mapping, extension):
     println(
         """
 template <size_t Length>
-static inline bool Is{0}Key(
-  mozilla::Span<const char> key, const char (&str)[Length]) {{
+static inline bool Is{0}Key(mozilla::Span<const char> key, const char (&str)[Length]) {{
   static_assert(Length == {0}KeyLength + 1,
                 "{0} extension key is two characters long");
   return memcmp(key.data(), str, Length - 1) == 0;
 }}
 
 template <size_t Length>
-static inline bool Is{0}Type(
-  mozilla::Span<const char> type, const char (&str)[Length]) {{
+static inline bool Is{0}Type(mozilla::Span<const char> type, const char (&str)[Length]) {{
   static_assert(Length > {0}KeyLength + 1,
                 "{0} extension type contains more than two characters");
   return type.size() == (Length - 1) &&
@@ -3262,8 +3247,8 @@ static inline const char* Search{0}Replacement(
 
   auto p = std::lower_bound(std::begin(types), std::end(types), type,
                             [](const auto& a, const auto& b) {{
-    return Compare{0}Type(a, b) < 0;
-  }});
+                              return Compare{0}Type(a, b) < 0;
+                            }});
   if (p != std::end(types) && Compare{0}Type(*p, type) == 0) {{
     return aliases[std::distance(std::begin(types), p)];
   }}
@@ -3285,7 +3270,7 @@ static inline const char* Search{0}Replacement(
  * Spec: https://www.unicode.org/reports/tr35/#Unicode_Locale_Extension_Data_Files
  * Spec: https://www.unicode.org/reports/tr35/#t_Extension
  */
-const char* js::intl::LanguageTag::replace{0}ExtensionType(
+const char* mozilla::intl::Locale::replace{0}ExtensionType(
     mozilla::Span<const char> key, mozilla::Span<const char> type) {{
   MOZ_ASSERT(key.size() == {0}KeyLength);
   MOZ_ASSERT(IsCanonicallyCased{0}Key(key));
@@ -3307,11 +3292,11 @@ const char* js::intl::LanguageTag::replace{0}ExtensionType(
 
         for entries in grouper(subtags, max_entries):
             entries = (
-                '"{}"'.format(tag).rjust(length + 2)
+                '"{}"'.format(tag).center(length + 2)
                 for tag in entries
                 if tag is not None
             )
-            println("      {},".format(", ".join(entries)))
+            println("        {},".format(", ".join(entries)))
 
         println("    };")
 
@@ -4054,7 +4039,9 @@ if __name__ == "__main__":
     )
     parser_cldr_tags.add_argument(
         "--out",
-        default="LanguageTagGenerated.cpp",
+        default=os.path.join(
+            topsrcdir, "intl", "components", "src", "LocaleGenerated.cpp"
+        ),
         help="Output file (default: %(default)s)",
     )
     parser_cldr_tags.add_argument(
