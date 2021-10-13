@@ -1063,6 +1063,7 @@ xul|richlistbox:not(#categories) > xul|richlistitem[selected] {
   --in-content-button-background-active: color-mix(in srgb, currentColor 45%, transparent);
   --in-content-button-text-color: var(--in-content-item-selected-text);
   --in-content-button-text-color-hover: var(--in-content-item-selected-text);
+  --in-content-button-text-color-active: var(--in-content-button-text-color-hover);
   --in-content-focus-outline-color: var(--in-content-item-selected-text);
 }
 
