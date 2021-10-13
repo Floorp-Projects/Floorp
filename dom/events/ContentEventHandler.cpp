@@ -994,7 +994,7 @@ nsresult ContentEventHandler::ExpandToClusterBoundary(
 nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
     RawRange* aRawRange, uint32_t aOffset, uint32_t aLength,
     LineBreakType aLineBreakType, bool aExpandToClusterBoundaries,
-    uint32_t* aNewOffset, nsIContent** aLastTextNode) {
+    uint32_t* aNewOffset, Text** aLastTextNode) {
   if (aNewOffset) {
     *aNewOffset = aOffset;
   }
@@ -1028,18 +1028,19 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
     if (node == mRootContent || !node->IsContent()) {
       continue;
     }
-    nsIContent* content = node->AsContent();
+    nsIContent* const content = node->AsContent();
+    Text* const contentAsText = Text::FromNode(content);
 
-    if (aLastTextNode && content->IsText()) {
+    if (aLastTextNode && contentAsText) {
       NS_IF_RELEASE(*aLastTextNode);
-      NS_ADDREF(*aLastTextNode = content);
+      NS_ADDREF(*aLastTextNode = contentAsText);
     }
 
-    uint32_t textLength =
-        content->IsText() ? GetTextLength(*content->AsText(), aLineBreakType)
-                          : (ShouldBreakLineBefore(*content, mRootContent)
-                                 ? GetBRLength(aLineBreakType)
-                                 : 0);
+    uint32_t textLength = contentAsText
+                              ? GetTextLength(*contentAsText, aLineBreakType)
+                              : (ShouldBreakLineBefore(*content, mRootContent)
+                                     ? GetBRLength(aLineBreakType)
+                                     : 0);
     if (!textLength) {
       continue;
     }
@@ -1049,16 +1050,17 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
     if (!startSet && aOffset <= offset + textLength) {
       nsINode* startNode = nullptr;
       int32_t startNodeOffset = -1;
-      if (Text* textNode = Text::FromNode(content)) {
+      if (contentAsText) {
         // Rule #1.1: [textNode or text[Node or textNode[
         uint32_t xpOffset = aOffset - offset;
         if (aLineBreakType == LINE_BREAK_TYPE_NATIVE) {
-          xpOffset = ConvertToXPOffset(*textNode, xpOffset);
+          xpOffset = ConvertToXPOffset(*contentAsText, xpOffset);
         }
 
         if (aExpandToClusterBoundaries) {
-          uint32_t oldXPOffset = xpOffset;
-          nsresult rv = ExpandToClusterBoundary(*textNode, false, &xpOffset);
+          const uint32_t oldXPOffset = xpOffset;
+          nsresult rv =
+              ExpandToClusterBoundary(*contentAsText, false, &xpOffset);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -1067,7 +1069,7 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
             *aNewOffset -= (oldXPOffset - xpOffset);
           }
         }
-        startNode = textNode;
+        startNode = contentAsText;
         startNodeOffset = static_cast<int32_t>(xpOffset);
       } else if (aOffset < offset + textLength) {
         // Rule #1.2 [<element>
@@ -1120,14 +1122,16 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
     // range.
     if (endOffset <= offset + textLength) {
       MOZ_ASSERT(startSet, "The start of the range should've been set already");
-      if (Text* textNode = Text::FromNode(content)) {
+      if (contentAsText) {
         // Rule #2.1: ]textNode or text]Node or textNode]
         uint32_t xpOffset = endOffset - offset;
         if (aLineBreakType == LINE_BREAK_TYPE_NATIVE) {
-          uint32_t xpOffsetCurrent = ConvertToXPOffset(*textNode, xpOffset);
+          const uint32_t xpOffsetCurrent =
+              ConvertToXPOffset(*contentAsText, xpOffset);
           if (xpOffset && GetBRLength(aLineBreakType) > 1) {
             MOZ_ASSERT(GetBRLength(aLineBreakType) == 2);
-            uint32_t xpOffsetPre = ConvertToXPOffset(*textNode, xpOffset - 1);
+            const uint32_t xpOffsetPre =
+                ConvertToXPOffset(*contentAsText, xpOffset - 1);
             // If previous character's XP offset is same as current character's,
             // it means that the end offset is between \r and \n.  So, the
             // range end should be after the \n.
@@ -1139,13 +1143,14 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
           }
         }
         if (aExpandToClusterBoundaries) {
-          nsresult rv = ExpandToClusterBoundary(*textNode, true, &xpOffset);
+          nsresult rv =
+              ExpandToClusterBoundary(*contentAsText, true, &xpOffset);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
         }
         NS_ASSERTION(xpOffset <= INT32_MAX, "The end node offset is too large");
-        nsresult rv = aRawRange->SetEnd(textNode, xpOffset);
+        nsresult rv = aRawRange->SetEnd(contentAsText, xpOffset);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -1821,11 +1826,11 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
   // lastFrame is base frame of lastCharRect.
   nsIFrame* lastFrame = nullptr;
   while (offset < kEndOffset) {
-    nsCOMPtr<nsIContent> lastTextContent;
+    RefPtr<Text> lastTextNode;
     RawRange rawRange;
-    rv =
+    nsresult rv =
         SetRawRangeFromFlatTextOffset(&rawRange, offset, 1, lineBreakType, true,
-                                      nullptr, getter_AddRefs(lastTextContent));
+                                      nullptr, getter_AddRefs(lastTextNode));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1896,9 +1901,9 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
         // between a line breaker (i.e., the range starts between "\r" and
         // "\n").
         RawRange rawRangeToPrevOffset;
-        rv = SetRawRangeFromFlatTextOffset(&rawRangeToPrevOffset,
-                                           aEvent->mInput.mOffset - 1, 1,
-                                           lineBreakType, true, nullptr);
+        nsresult rv = SetRawRangeFromFlatTextOffset(&rawRangeToPrevOffset,
+                                                    aEvent->mInput.mOffset - 1,
+                                                    1, lineBreakType, true);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -1961,14 +1966,14 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
       // If it's not a <br> frame and it's the first character rect at the
       // queried range, we need to the previous character of the start of
       // the queried range if there is a text node.
-      else if (!firstFrame->IsBrFrame() && lastTextContent) {
+      else if (!firstFrame->IsBrFrame() && lastTextNode) {
         FrameRelativeRect brRectRelativeToLastTextFrame =
-            GuessLineBreakerRectAfter(lastTextContent);
+            GuessLineBreakerRectAfter(lastTextNode);
         if (NS_WARN_IF(!brRectRelativeToLastTextFrame.IsValid())) {
           return NS_ERROR_FAILURE;
         }
-        // Look for the last text frame for lastTextContent.
-        nsIFrame* primaryFrame = lastTextContent->GetPrimaryFrame();
+        // Look for the last text frame for lastTextNode.
+        nsIFrame* primaryFrame = lastTextNode->GetPrimaryFrame();
         if (NS_WARN_IF(!primaryFrame)) {
           return NS_ERROR_FAILURE;
         }
@@ -1998,9 +2003,8 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
         // the first frame for the start of query range are same, that means
         // the start offset is between the first line breaker (i.e., the range
         // starts between "\r" and "\n").
-        rv =
-            SetRawRangeFromFlatTextOffset(&rawRange, aEvent->mInput.mOffset - 1,
-                                          1, lineBreakType, true, nullptr);
+        nsresult rv = SetRawRangeFromFlatTextOffset(
+            &rawRange, aEvent->mInput.mOffset - 1, 1, lineBreakType, true);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return NS_ERROR_UNEXPECTED;
         }
@@ -2139,7 +2143,7 @@ nsresult ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent) {
 
   LineBreakType lineBreakType = GetLineBreakType(aEvent);
   RawRange rawRange;
-  nsCOMPtr<nsIContent> lastTextContent;
+  RefPtr<Text> lastTextContent;
   uint32_t startOffset = 0;
   if (NS_WARN_IF(NS_FAILED(SetRawRangeFromFlatTextOffset(
           &rawRange, aEvent->mInput.mOffset, aEvent->mInput.mLength,
