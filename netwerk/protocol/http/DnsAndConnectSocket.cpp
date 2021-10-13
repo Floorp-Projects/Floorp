@@ -53,13 +53,11 @@ DnsAndConnectSocket::DnsAndConnectSocket(nsHttpConnectionInfo* ci,
                                          uint32_t caps, bool speculative,
                                          bool isFromPredictor, bool urgentStart)
     : mTransaction(trans),
-      mPrimaryTransport(false),
       mCaps(caps),
       mSpeculative(speculative),
       mUrgentStart(urgentStart),
       mIsFromPredictor(isFromPredictor),
-      mConnInfo(ci),
-      mBackupTransport(true) {
+      mConnInfo(ci) {
   MOZ_ASSERT(ci && trans, "constructor with null arguments");
   LOG(("Creating DnsAndConnectSocket [this=%p trans=%p ent=%s key=%s]\n", this,
        trans, mConnInfo->Origin(), mConnInfo->HashKey().get()));
