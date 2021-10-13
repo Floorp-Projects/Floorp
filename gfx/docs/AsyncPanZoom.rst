@@ -329,6 +329,21 @@ preventDefault():
    thread for touch-action information, which again involves a
    round-trip.)
 
+Other event types
+~~~~~~~~~~~~~~~~~
+
+The above sections talk mostly about touch events, but over time APZ has
+been extended to handle a variety of other event types, such as trackpad
+and mousewheel scrolling, scrollbar thumb dragging, and keyboard
+scrolling in some cases. Much of the above applies to these other event
+types too (for example, wheel events can be prevent-defaulted as well).
+
+Importantly, the "untransformation" described above needs to happen even
+for event types which are not handled in APZ, such as mouse click events,
+since async scrolling can still affect the correct targeting of such
+events.
+
+
 Technical details
 -----------------
 
