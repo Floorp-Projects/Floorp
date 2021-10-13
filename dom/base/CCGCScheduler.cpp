@@ -56,7 +56,12 @@ struct CCIntervalMarker {
     return mozilla::MakeStringSpan("CC");
   }
   static void StreamJSONMarkerData(
-      baseprofiler::SpliceableJSONWriter& aWriter) {}
+      baseprofiler::SpliceableJSONWriter& aWriter,
+      const mozilla::ProfilerString8View& aReason) {
+    if (aReason.Length()) {
+      aWriter.StringProperty("reason", aReason);
+    }
+  }
   static mozilla::MarkerSchema MarkerTypeDisplay() {
     using MS = mozilla::MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
@@ -67,6 +72,8 @@ struct CCIntervalMarker {
         "encompassing a set of incremental slices. The main thread is not "
         "blocked for the entire major CC interval, only for the individual "
         "slices.");
+    schema.AddKeyLabelFormatSearchable("reason", "Reason", MS::Format::String,
+                                       MS::Searchable::Searchable);
     return schema;
   }
 };
@@ -74,10 +81,12 @@ struct CCIntervalMarker {
 
 void CCGCScheduler::NoteCCBegin(CCReason aReason, TimeStamp aWhen) {
 #ifdef MOZ_GECKO_PROFILER
-  profiler_add_marker("CC", baseprofiler::category::GCCC,
-                      MarkerOptions(MarkerTiming::IntervalStart(aWhen)),
-                      CCIntervalMarker{});
+  profiler_add_marker(
+      "CC", baseprofiler::category::GCCC,
+      MarkerOptions(MarkerTiming::IntervalStart(aWhen)), CCIntervalMarker{},
+      ProfilerString8View::WrapNullTerminatedString(CCReasonToString(aReason)));
 #endif
+
   mIsCollectingCycles = true;
 }
 
@@ -85,7 +94,7 @@ void CCGCScheduler::NoteCCEnd(TimeStamp aWhen) {
 #ifdef MOZ_GECKO_PROFILER
   profiler_add_marker("CC", baseprofiler::category::GCCC,
                       MarkerOptions(MarkerTiming::IntervalEnd(aWhen)),
-                      CCIntervalMarker{});
+                      CCIntervalMarker{}, nullptr);
 #endif
 
   mIsCollectingCycles = false;
