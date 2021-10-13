@@ -67,11 +67,11 @@ class ContentProcessStartup {
       this.receiveMessage
     );
     Services.cpmm.addMessageListener(
-      "debug:add-watcher-data-entry",
+      "debug:add-session-data-entry",
       this.receiveMessage
     );
     Services.cpmm.addMessageListener(
-      "debug:remove-watcher-data-entry",
+      "debug:remove-session-data-entry",
       this.receiveMessage
     );
     Services.cpmm.addMessageListener(
@@ -92,11 +92,11 @@ class ContentProcessStartup {
       this.receiveMessage
     );
     Services.cpmm.removeMessageListener(
-      "debug:add-watcher-data-entry",
+      "debug:add-session-data-entry",
       this.receiveMessage
     );
     Services.cpmm.removeMessageListener(
-      "debug:remove-watcher-data-entry",
+      "debug:remove-session-data-entry",
       this.receiveMessage
     );
     Services.cpmm.removeMessageListener(
@@ -118,15 +118,15 @@ class ContentProcessStartup {
       case "debug:destroy-target":
         this.destroyTarget(msg.data.watcherActorID);
         break;
-      case "debug:add-watcher-data-entry":
-        this.addWatcherDataEntry(
+      case "debug:add-session-data-entry":
+        this.addSessionDataEntry(
           msg.data.watcherActorID,
           msg.data.type,
           msg.data.entries
         );
         break;
-      case "debug:remove-watcher-data-entry":
-        this.addWatcherDataEntry(
+      case "debug:remove-session-data-entry":
+        this.addSessionDataEntry(
           msg.data.watcherActorID,
           msg.data.type,
           msg.data.entries
@@ -233,7 +233,7 @@ class ContentProcessStartup {
 
     // Pass initialization data to the target actor
     for (const type in initialData) {
-      actor.addWatcherDataEntry(type, initialData[type]);
+      actor.addSessionDataEntry(type, initialData[type]);
     }
   }
 
@@ -249,7 +249,7 @@ class ContentProcessStartup {
     this._connections.delete(watcherActorID);
   }
 
-  async addWatcherDataEntry(watcherActorID, type, entries) {
+  async addSessionDataEntry(watcherActorID, type, entries) {
     const connectionInfo = this._connections.get(watcherActorID);
     if (!connectionInfo) {
       throw new Error(
@@ -257,19 +257,19 @@ class ContentProcessStartup {
       );
     }
     const { actor } = connectionInfo;
-    await actor.addWatcherDataEntry(type, entries);
-    Services.cpmm.sendAsyncMessage("debug:add-watcher-data-entry-done", {
+    await actor.addSessionDataEntry(type, entries);
+    Services.cpmm.sendAsyncMessage("debug:add-session-data-entry-done", {
       watcherActorID,
     });
   }
 
-  removeWatcherDataEntry(watcherActorID, type, entries) {
+  removeSessionDataEntry(watcherActorID, type, entries) {
     const connectionInfo = this._connections.get(watcherActorID);
     if (!connectionInfo) {
       return;
     }
     const { actor } = connectionInfo;
-    actor.removeWatcherDataEntry(type, entries);
+    actor.removeSessionDataEntry(type, entries);
   }
 }
 

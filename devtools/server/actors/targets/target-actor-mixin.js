@@ -47,7 +47,7 @@ module.exports = function(targetType, targetActorSpec, implementation) {
      *        associated target) is created.
      */
     // eslint-disable-next-line complexity
-    async addWatcherDataEntry(type, entries, isDocumentCreation = false) {
+    async addSessionDataEntry(type, entries, isDocumentCreation = false) {
       if (type == RESOURCES) {
         await this._watchTargetResources(entries);
       } else if (type == BREAKPOINTS) {
@@ -62,13 +62,13 @@ module.exports = function(targetType, targetActorSpec, implementation) {
         const isTargetCreation =
           this.threadActor.state == THREAD_STATES.DETACHED;
         if (isTargetCreation && !this.targetType.endsWith("worker")) {
-          // If addWatcherDataEntry is called during target creation, attach the
+          // If addSessionDataEntry is called during target creation, attach the
           // thread actor automatically and pass the initial breakpoints.
           // However, do not attach the thread actor for Workers. They use a codepath
           // which releases the worker on `attach`. For them, the client will call `attach`. (bug 1691986)
           await this.threadActor.attach({ breakpoints: entries });
         } else {
-          // If addWatcherDataEntry is called for an existing target, set the new
+          // If addSessionDataEntry is called for an existing target, set the new
           // breakpoints on the already running thread actor.
           await Promise.all(
             entries.map(({ location, options }) =>
@@ -145,7 +145,7 @@ module.exports = function(targetType, targetActorSpec, implementation) {
       }
     },
 
-    removeWatcherDataEntry(type, entries) {
+    removeSessionDataEntry(type, entries) {
       if (type == RESOURCES) {
         return this._unwatchTargetResources(entries);
       } else if (type == BREAKPOINTS) {

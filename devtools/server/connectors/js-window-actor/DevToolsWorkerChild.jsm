@@ -174,13 +174,13 @@ class DevToolsWorkerChild extends JSWindowActorChild {
         const { watcherActorID } = message.data;
         return this._destroyTargetActors(watcherActorID);
       }
-      case "DevToolsWorkerParent:addWatcherDataEntry": {
+      case "DevToolsWorkerParent:addSessionDataEntry": {
         const { watcherActorID, type, entries } = message.data;
-        return this._addWatcherDataEntry(watcherActorID, type, entries);
+        return this._addSessionDataEntry(watcherActorID, type, entries);
       }
-      case "DevToolsWorkerParent:removeWatcherDataEntry": {
+      case "DevToolsWorkerParent:removeSessionDataEntry": {
         const { watcherActorID, type, entries } = message.data;
-        return this._removeWatcherDataEntry(watcherActorID, type, entries);
+        return this._removeSessionDataEntry(watcherActorID, type, entries);
       }
       case "DevToolsWorkerParent:packet":
         return this.emit("packet-received", message);
@@ -429,7 +429,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
     });
   }
 
-  async _addWatcherDataEntry(watcherActorID, type, entries) {
+  async _addSessionDataEntry(watcherActorID, type, entries) {
     const watcherConnectionData = this._connections.get(watcherActorID);
     if (!watcherConnectionData) {
       return;
@@ -447,7 +447,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
       workerThreadServerForwardingPrefix,
     } of watcherConnectionData.workers) {
       promises.push(
-        addWatcherDataEntryInWorkerTarget({
+        addSessionDataEntryInWorkerTarget({
           dbg,
           workerThreadServerForwardingPrefix,
           type,
@@ -458,7 +458,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
     await Promise.all(promises);
   }
 
-  _removeWatcherDataEntry(watcherActorID, type, entries) {
+  _removeSessionDataEntry(watcherActorID, type, entries) {
     const watcherConnectionData = this._connections.get(watcherActorID);
 
     if (!watcherConnectionData) {
@@ -478,7 +478,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
       if (DevToolsUtils.isWorkerDebuggerAlive(dbg)) {
         dbg.postMessage(
           JSON.stringify({
-            type: "remove-watcher-data-entry",
+            type: "remove-session-data-entry",
             forwardingPrefix: workerThreadServerForwardingPrefix,
             dataEntryType: type,
             entries,
@@ -556,7 +556,7 @@ function shouldNotifyWindowGlobal(windowGlobal, watchedBrowserId) {
  * @returns {Promise} Returns a Promise that resolves once the data entry were handled
  *                    by the worker target.
  */
-function addWatcherDataEntryInWorkerTarget({
+function addSessionDataEntryInWorkerTarget({
   dbg,
   workerThreadServerForwardingPrefix,
   type,
@@ -572,7 +572,7 @@ function addWatcherDataEntryInWorkerTarget({
     const listener = {
       onMessage: message => {
         message = JSON.parse(message);
-        if (message.type === "watcher-data-entry-added") {
+        if (message.type === "session-data-entry-added") {
           resolve();
           dbg.removeListener(listener);
         }
@@ -585,7 +585,7 @@ function addWatcherDataEntryInWorkerTarget({
 
     dbg.postMessage(
       JSON.stringify({
-        type: "add-watcher-data-entry",
+        type: "add-session-data-entry",
         forwardingPrefix: workerThreadServerForwardingPrefix,
         dataEntryType: type,
         entries,

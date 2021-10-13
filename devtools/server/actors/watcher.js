@@ -407,7 +407,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
         continue;
       }
       const targetHelperModule = TARGET_HELPERS[targetType];
-      await targetHelperModule.addWatcherDataEntry({
+      await targetHelperModule.addSessionDataEntry({
         watcher: this,
         type: "resources",
         entries: targetResourceTypes,
@@ -438,7 +438,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     if (frameResourceTypes.length > 0) {
       const targetActor = this._getTargetActorInParentProcess();
       if (targetActor) {
-        await targetActor.addWatcherDataEntry("resources", frameResourceTypes);
+        await targetActor.addSessionDataEntry("resources", frameResourceTypes);
       }
     }
   },
@@ -492,7 +492,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           continue;
         }
         const targetHelperModule = TARGET_HELPERS[targetType];
-        targetHelperModule.removeWatcherDataEntry({
+        targetHelperModule.removeSessionDataEntry({
           watcher: this,
           type: "resources",
           entries: targetResourceTypes,
@@ -508,7 +508,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     if (frameResourceTypes.length > 0) {
       const targetActor = this._getTargetActorInParentProcess();
       if (targetActor) {
-        targetActor.removeWatcherDataEntry("resources", frameResourceTypes);
+        targetActor.removeSessionDataEntry("resources", frameResourceTypes);
       }
     }
 
@@ -581,7 +581,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    *        List of values to add for this data type.
    */
   async addDataEntry(type, entries) {
-    WatcherRegistry.addWatcherDataEntry(this, type, entries);
+    WatcherRegistry.addSessionDataEntry(this, type, entries);
 
     await Promise.all(
       Object.values(Targets.TYPES)
@@ -597,7 +597,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
         )
         .map(async targetType => {
           const targetHelperModule = TARGET_HELPERS[targetType];
-          await targetHelperModule.addWatcherDataEntry({
+          await targetHelperModule.addSessionDataEntry({
             watcher: this,
             type,
             entries,
@@ -608,7 +608,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     // See comment in watchResources
     const targetActor = this._getTargetActorInParentProcess();
     if (targetActor) {
-      await targetActor.addWatcherDataEntry(type, entries);
+      await targetActor.addSessionDataEntry(type, entries);
     }
   },
 
@@ -623,7 +623,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    *        List of values to remove from this data type.
    */
   removeDataEntry(type, entries) {
-    WatcherRegistry.removeWatcherDataEntry(this, type, entries);
+    WatcherRegistry.removeSessionDataEntry(this, type, entries);
 
     Object.values(Targets.TYPES)
       .filter(
@@ -634,7 +634,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       )
       .forEach(targetType => {
         const targetHelperModule = TARGET_HELPERS[targetType];
-        targetHelperModule.removeWatcherDataEntry({
+        targetHelperModule.removeSessionDataEntry({
           watcher: this,
           type,
           entries,
@@ -644,7 +644,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     // See comment in addDataEntry
     const targetActor = this._getTargetActorInParentProcess();
     if (targetActor) {
-      targetActor.removeWatcherDataEntry(type, entries);
+      targetActor.removeSessionDataEntry(type, entries);
     }
   },
 

@@ -88,16 +88,16 @@ class DevToolsWorkerParent extends JSWindowActorParent {
   /**
    * Communicate to the content process that some data have been added.
    */
-  async addWatcherDataEntry({ watcherActorID, type, entries }) {
+  async addSessionDataEntry({ watcherActorID, type, entries }) {
     try {
-      await this.sendQuery("DevToolsWorkerParent:addWatcherDataEntry", {
+      await this.sendQuery("DevToolsWorkerParent:addSessionDataEntry", {
         watcherActorID,
         type,
         entries,
       });
     } catch (e) {
       console.warn(
-        "Failed to add watcher data entry for worker targets in browsing context",
+        "Failed to add session data entry for worker targets in browsing context",
         this.browsingContext.id,
         "and watcher actor id",
         watcherActorID
@@ -109,8 +109,8 @@ class DevToolsWorkerParent extends JSWindowActorParent {
   /**
    * Communicate to the content process that some data have been removed.
    */
-  removeWatcherDataEntry({ watcherActorID, type, entries }) {
-    this.sendAsyncMessage("DevToolsWorkerParent:removeWatcherDataEntry", {
+  removeSessionDataEntry({ watcherActorID, type, entries }) {
+    this.sendAsyncMessage("DevToolsWorkerParent:removeSessionDataEntry", {
       watcherActorID,
       type,
       entries,

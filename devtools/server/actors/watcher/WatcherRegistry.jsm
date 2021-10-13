@@ -173,13 +173,13 @@ const WatcherRegistry = {
    * @param Array<Object> entries
    *               The values to be added to this type of data
    */
-  addWatcherDataEntry(watcher, type, entries) {
+  addSessionDataEntry(watcher, type, entries) {
     const sessionData = this.getSessionData(watcher, {
       createData: true,
     });
 
     if (!(type in sessionData)) {
-      throw new Error(`Unsupported watcher data type: ${type}`);
+      throw new Error(`Unsupported session data type: ${type}`);
     }
 
     SessionDataHelpers.addSessionDataEntry(sessionData, type, entries);
@@ -193,19 +193,19 @@ const WatcherRegistry = {
   /**
    * Notify that a given watcher removed an entry in a given data type.
    *
-   * See `addWatcherDataEntry` for argument definition.
+   * See `addSessionDataEntry` for argument definition.
    *
    * @return boolean
    *         True if we such entry was already registered, for this watcher actor.
    */
-  removeWatcherDataEntry(watcher, type, entries) {
+  removeSessionDataEntry(watcher, type, entries) {
     const sessionData = this.getSessionData(watcher);
     if (!sessionData) {
       return false;
     }
 
     if (!(type in sessionData)) {
-      throw new Error(`Unsupported watcher data type: ${type}`);
+      throw new Error(`Unsupported session data type: ${type}`);
     }
 
     if (
@@ -250,7 +250,7 @@ const WatcherRegistry = {
    *               The new target type to start listening to.
    */
   watchTargets(watcher, targetType) {
-    this.addWatcherDataEntry(watcher, SUPPORTED_DATA.TARGETS, [targetType]);
+    this.addSessionDataEntry(watcher, SUPPORTED_DATA.TARGETS, [targetType]);
   },
 
   /**
@@ -262,7 +262,7 @@ const WatcherRegistry = {
    *         True if we were watching for this target type, for this watcher actor.
    */
   unwatchTargets(watcher, targetType) {
-    return this.removeWatcherDataEntry(watcher, SUPPORTED_DATA.TARGETS, [
+    return this.removeSessionDataEntry(watcher, SUPPORTED_DATA.TARGETS, [
       targetType,
     ]);
   },
@@ -276,7 +276,7 @@ const WatcherRegistry = {
    *               The new resource types to start listening to.
    */
   watchResources(watcher, resourceTypes) {
-    this.addWatcherDataEntry(watcher, SUPPORTED_DATA.RESOURCES, resourceTypes);
+    this.addSessionDataEntry(watcher, SUPPORTED_DATA.RESOURCES, resourceTypes);
   },
 
   /**
@@ -288,7 +288,7 @@ const WatcherRegistry = {
    *         True if we were watching for this resource type, for this watcher actor.
    */
   unwatchResources(watcher, resourceTypes) {
-    return this.removeWatcherDataEntry(
+    return this.removeSessionDataEntry(
       watcher,
       SUPPORTED_DATA.RESOURCES,
       resourceTypes

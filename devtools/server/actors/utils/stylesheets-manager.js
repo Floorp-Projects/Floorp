@@ -893,17 +893,19 @@ function hasStyleSheetWatcherSupportForTarget(targetActor) {
     return false;
   }
 
-  const watcherData = Array.from(sessionDataByWatcherActor.values()).find(
-    sessionData => {
-      const actors = TargetActorRegistry.getTargetActors(
-        targetActor.browserId,
-        sessionData.connectionPrefix
-      );
-      return actors.includes(targetActor);
-    }
-  );
+  const watcherSessionData = Array.from(
+    sessionDataByWatcherActor.values()
+  ).find(sessionData => {
+    const actors = TargetActorRegistry.getTargetActors(
+      targetActor.browserId,
+      sessionData.connectionPrefix
+    );
+    return actors.includes(targetActor);
+  });
 
-  return watcherData?.watcherTraits?.resources?.[TYPES.STYLESHEET] || false;
+  return (
+    watcherSessionData?.watcherTraits?.resources?.[TYPES.STYLESHEET] || false
+  );
 }
 
 module.exports = {
