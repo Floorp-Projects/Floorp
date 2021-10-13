@@ -9,6 +9,7 @@
 #include "nsAboutProtocolHandler.h"
 #include "nsIURI.h"
 #include "nsIAboutModule.h"
+#include "nsContentUtils.h"
 #include "nsString.h"
 #include "nsNetCID.h"
 #include "nsAboutProtocolUtils.h"
@@ -26,7 +27,6 @@
 namespace mozilla {
 namespace net {
 
-static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kNestedAboutURICID, NS_NESTEDABOUTURI_CID);
 
 static bool IsSafeForUntrustedContent(nsIAboutModule* aModule, nsIURI* aURI) {
