@@ -15,7 +15,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Storage.h"
-#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsID.h"
 #include "nsISupports.h"
@@ -31,6 +30,12 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 
 class ErrorResult;
+
+namespace ipc {
+
+class PrincipalInfo;
+
+}  // namespace ipc
 
 namespace dom {
 
@@ -77,7 +82,6 @@ class LSObject final : public Storage {
 
   uint32_t mPrivateBrowsingId;
   Maybe<nsID> mClientId;
-  Maybe<PrincipalInfo> mClientPrincipalInfo;
   nsCString mOrigin;
   nsCString mOriginKey;
   nsString mDocumentURI;
