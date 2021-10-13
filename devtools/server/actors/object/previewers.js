@@ -692,21 +692,22 @@ previewers.Object = [
   },
 
   function ObjectWithURL({ obj, hooks }, grip, rawObj) {
+    if (isWorker || !rawObj) {
+      return false;
+    }
+
+    const isWindow = Window.isInstance(rawObj);
     if (
-      isWorker ||
-      !rawObj ||
-      !(
-        obj.class == "CSSImportRule" ||
-        obj.class == "CSSStyleSheet" ||
-        obj.class == "Location" ||
-        rawObj instanceof Ci.nsIDOMWindow
-      )
+      obj.class != "CSSImportRule" &&
+      obj.class != "CSSStyleSheet" &&
+      obj.class != "Location" &&
+      !isWindow
     ) {
       return false;
     }
 
     let url;
-    if (rawObj instanceof Ci.nsIDOMWindow && rawObj.location) {
+    if (isWindow && rawObj.location) {
       url = rawObj.location.href;
     } else if (rawObj.href) {
       url = rawObj.href;
