@@ -21,6 +21,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers
@@ -72,12 +73,56 @@ class SettingsSubMenuSearchRobot {
     fun selectAddCustomSearchEngine() = onView(withText("Other")).click()
 
     fun typeCustomEngineDetails(engineName: String, engineURL: String) {
-        mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/edit_engine_name")
-        ).setText(engineName)
-        mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/edit_search_string")
-        ).setText(engineURL)
+        mDevice.findObject(By.res("$packageName:id/edit_engine_name")).clear()
+        mDevice.findObject(By.res("$packageName:id/edit_engine_name")).setText(engineName)
+        mDevice.findObject(By.res("$packageName:id/edit_search_string")).clear()
+        mDevice.findObject(By.res("$packageName:id/edit_search_string")).setText(engineURL)
+
+        try {
+            assertTrue(
+                mDevice.findObject(
+                    UiSelector()
+                        .resourceId("$packageName:id/edit_engine_name")
+                        .text(engineName)
+                ).waitForExists(waitingTime)
+            )
+
+            assertTrue(
+                mDevice.findObject(
+                    UiSelector()
+                        .resourceId("$packageName:id/edit_search_string")
+                        .text(engineURL)
+                ).waitForExists(waitingTime)
+            )
+        } catch (e: AssertionError) {
+            println("The name or the search string were not set properly")
+
+            // Lets again set both name and search string
+            goBackButton().click()
+            openAddSearchEngineMenu()
+            selectAddCustomSearchEngine()
+
+            mDevice.findObject(By.res("$packageName:id/edit_engine_name")).clear()
+            mDevice.findObject(By.res("$packageName:id/edit_engine_name")).setText(engineName)
+            mDevice.findObject(By.res("$packageName:id/edit_search_string")).clear()
+            mDevice.findObject(By.res("$packageName:id/edit_search_string")).setText(engineURL)
+
+            assertTrue(
+                mDevice.findObject(
+                    UiSelector()
+                        .resourceId("$packageName:id/edit_engine_name")
+                        .text(engineName)
+                ).waitForExists(waitingTime)
+            )
+
+            assertTrue(
+                mDevice.findObject(
+                    UiSelector()
+                        .resourceId("$packageName:id/edit_search_string")
+                        .text(engineURL)
+                ).waitForExists(waitingTime)
+            )
+        }
     }
 
     fun openEngineOverflowMenu(searchEngineName: String) {
