@@ -1,0 +1,103 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>Examples of rule lateral properties</title>
+<style>
+html,body {
+  color:black; background-color:white; font:20px/1 monospace;
+}
+
+.grid {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  gap: 4px 16px;
+
+  column-rule: 8px solid blue;
+
+  row-rule: 2px solid purple;
+  row-rule-align: rule;
+  row-rule-extent: end;
+  row-rule-longitudinal-inset: 2px;
+
+  border: 5px solid;
+  margin-right: 15px;
+  margin-bottom: 30px;
+  background: lightgrey;
+  padding: 10px;
+}
+
+x {
+  inline-size: 50px;
+  block-size: 1.5em;
+  background: grey;
+}
+
+.test1 {
+  column-rule-width: auto;
+  column-rule-lateral-inset: 2px 6px;
+}
+.test2 {
+  column-rule-width: auto;
+  column-rule-lateral-inset: auto 3px;
+}
+.test3 {
+  column-rule-width: auto;
+  column-rule-lateral-inset: auto;
+}
+.test4 {
+  column-rule-width: 2px;
+  column-rule-lateral-inset: 3px auto;
+}
+.test5 {
+  column-rule-width: 2px;
+  column-rule-lateral-inset: 10px 100px;
+}
+.test6 {
+  column-rule-width: auto;
+  column-rule-lateral-inset: 12px 100px;
+}
+.test7 {
+  column-rule-width: auto;
+  column-rule-lateral-inset: auto 30px;
+}
+
+.grid::after {
+  position: absolute;
+  width: 200px;
+  bottom: -2em;
+  content: attr(test);
+  font-size: 10px;
+}
+pre {
+  font-size: 10px;
+}
+</style>
+
+<pre>
+The triplet of values below each grid container are:
+column-rule-lateral-inset-start, column-rule-width, column-rule-lateral-inset-end
+</pre>
+<div class="grid test1"><x>1</x><x>2</x></div>
+<div class="grid test2"><x>1</x><x>2</x></div>
+<div class="grid test3"><x>1</x><x>2</x></div><br>
+<div class="grid test4"><x>1</x><x>2</x></div>
+<div class="grid test5"><x>1</x><x>2</x></div><br>
+<div class="grid test6"><x>1</x><x>2</x><x>3</x><x>4</x></div>
+<div class="grid test7"><x>1</x><x>2</x><x>3</x><x>4</x></div>
+
+
+<script>
+window.onload = function() {
+  [...document.querySelectorAll('.grid')].forEach(function(elm) {
+    const cs = window.getComputedStyle(elm);
+    elm.setAttribute("test", 
+      cs.columnRuleLateralInsetStart + ", " +
+      cs.columnRuleWidth + ", " +
+      cs.columnRuleLateralInsetEnd
+    );
+  });
+}
+</script>
