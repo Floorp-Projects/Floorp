@@ -134,6 +134,13 @@ var AboutReader = function(actor, articlePromise) {
   });
   this._intersectionObs.observe(doc.querySelector(".top-anchor"));
 
+  this._ctaIntersectionObserver = new win.IntersectionObserver(
+    this._pocketCTAObserved.bind(this),
+    {
+      threshold: 0.5,
+    }
+  );
+
   Services.obs.addObserver(this, "inner-window-destroyed");
 
   this._setupButton(
@@ -456,8 +463,15 @@ AboutReader.prototype = {
 
         this._actor.readerModeHidden();
         this.clearActor();
+
+        // Disconnect and delete IntersectionObservers to prevent memory leaks:
+
         this._intersectionObs.unobserve(this._doc.querySelector(".top-anchor"));
+        this._ctaIntersectionObserver.disconnect();
+
         delete this._intersectionObs;
+        delete this._ctaIntersectionObserver;
+
         break;
     }
   },
@@ -1281,6 +1295,14 @@ AboutReader.prototype = {
 
     elDismissCta?.addEventListener(`click`, e => {
       this._doc.querySelector("#pocket-cta-container").hidden = true;
+
+      Services.telemetry.recordEvent(
+        "readermode",
+        "pocket_cta",
+        "close_cta",
+        null,
+        {}
+      );
     });
   },
 
@@ -1296,6 +1318,14 @@ AboutReader.prototype = {
       if (isClosed) {
         elPocketRecs.classList.add(`closed`);
         elCollapseRecs.classList.add(`closed`);
+
+        Services.telemetry.recordEvent(
+          "readermode",
+          "pocket_cta",
+          "minimize_recs_click",
+          null,
+          {}
+        );
       } else {
         elPocketRecs.classList.remove(`closed`);
         elCollapseRecs.classList.remove(`closed`);
@@ -1328,6 +1358,18 @@ AboutReader.prototype = {
     elMetadata.classList.add(`pocket-rec-meta`);
 
     elTop.setAttribute(`href`, url);
+
+    elTop.addEventListener(`click`, e => {
+      Services.telemetry.recordEvent(
+        "readermode",
+        "pocket_cta",
+        "rec_click",
+        null,
+        {
+          url,
+        }
+      );
+    });
 
     elThumb.classList.add(`pocket-rec-thumb`);
     elThumb.setAttribute(`loading`, `lazy`);
@@ -1390,6 +1432,20 @@ AboutReader.prototype = {
     });
   },
 
+  _pocketCTAObserved(entries) {
+    if (entries && entries[0]?.isIntersecting) {
+      this._ctaIntersectionObserver.disconnect();
+
+      Services.telemetry.recordEvent(
+        "readermode",
+        "pocket_cta",
+        "cta_seen",
+        null,
+        {}
+      );
+    }
+  },
+
   async _setupPocketCTA() {
     let ctaVersion = NimbusFeatures.readerMode.getAllVariables()
       ?.pocketCTAVersion;
@@ -1412,6 +1468,24 @@ AboutReader.prototype = {
 
       elPocketCTAWrapper.hidden = false;
       elPocketCTAWrapper.classList.add(`pocket-cta-container-${ctaVersion}`);
+
+      // Set up tracking for sign up buttons
+      this._doc.querySelectorAll(`.pocket-sign-up`).forEach(el => {
+        el.addEventListener(`click`, e => {
+          Services.telemetry.recordEvent(
+            "readermode",
+            "pocket_cta",
+            "sign_up_click",
+            null,
+            {}
+          );
+        });
+      });
+
+      // Set up tracking for user seeing CTA
+      this._ctaIntersectionObserver.observe(
+        this._doc.querySelector(`#pocket-cta-container`)
+      );
     }
   },
 };
