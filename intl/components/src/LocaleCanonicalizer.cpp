@@ -11,7 +11,7 @@ namespace mozilla::intl {
 /* static */
 ICUResult LocaleCanonicalizer::CanonicalizeICULevel1(
     const char* aLocaleIn, LocaleCanonicalizer::Vector& aLocaleOut) {
-  auto result = FillVectorWithICUCall(
+  auto result = FillBufferWithICUCall(
       aLocaleOut,
       [&aLocaleIn](char* target, int32_t length, UErrorCode* status) {
         return uloc_canonicalize(aLocaleIn, target, length, status);

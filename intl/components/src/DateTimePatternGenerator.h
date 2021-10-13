@@ -77,25 +77,6 @@ class DateTimePatternGenerator final {
   }
 
   /**
-   * Given a skeleton (a string with unordered datetime fields), get a best
-   * pattern that will fit for that locale. This pattern will be filled into the
-   * buffer. e.g. The skeleton "yMd" would return the pattern "M/d/y" for en-US,
-   * or "dd/MM/y" for en-GB.
-   */
-  template <size_t S>
-  ICUResult GetBestPattern(Span<const char16_t> aSkeleton,
-                           Vector<char16_t, S>& aVector,
-                           EnumSet<PatternMatchOption> options = {}) {
-    return FillVectorWithICUCall(
-        aVector, [&](UChar* target, int32_t length, UErrorCode* status) {
-          return udatpg_getBestPatternWithOptions(
-              mGenerator.GetMut(), aSkeleton.data(),
-              static_cast<int32_t>(aSkeleton.Length()),
-              toUDateTimePatternMatchOptions(options), target, length, status);
-        });
-  }
-
-  /**
    * Get a skeleton (a string with unordered datetime fields) from a pattern.
    * For example, both "MMM-dd" and "dd/MMM" produce the skeleton "MMMdd".
    */
@@ -105,23 +86,6 @@ class DateTimePatternGenerator final {
     // now it is valid to pass in a nullptr.
     return FillBufferWithICUCall(
         aBuffer, [&](UChar* target, int32_t length, UErrorCode* status) {
-          return udatpg_getSkeleton(nullptr, aPattern.data(),
-                                    static_cast<int32_t>(aPattern.Length()),
-                                    target, length, status);
-        });
-  }
-
-  /**
-   * Get a skeleton (a string with unordered datetime fields) from a pattern.
-   * For example, both "MMM-dd" and "dd/MMM" produce the skeleton "MMMdd".
-   */
-  template <typename V, size_t N, typename A>
-  static ICUResult GetSkeleton(Span<const char16_t> aPattern,
-                               Vector<V, N, A>& aVector) {
-    // At one time udatpg_getSkeleton required a UDateTimePatternGenerator*, but
-    // now it is valid to pass in a nullptr.
-    return FillVectorWithICUCall(
-        aVector, [&](UChar* target, int32_t length, UErrorCode* status) {
           return udatpg_getSkeleton(nullptr, aPattern.data(),
                                     static_cast<int32_t>(aPattern.Length()),
                                     target, length, status);
