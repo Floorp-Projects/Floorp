@@ -33,6 +33,7 @@ using namespace mozilla::image;
   if (x) {          \
     volatile int v; \
     v = 0;          \
+    (void)v;        \
   }
 
 class DecodeToSurfaceRunnableFuzzing : public Runnable {
