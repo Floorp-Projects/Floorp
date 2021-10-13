@@ -1199,6 +1199,13 @@ sealed class HistoryMetadataAction : BrowserAction() {
         val tabId: String,
         val historyMetadataKey: HistoryMetadataKey
     ) : HistoryMetadataAction()
+
+    /**
+     * Removes [searchTerm] (and referrer) from any history metadata associated with tabs.
+     */
+    data class DisbandSearchGroupAction(
+        val searchTerm: String
+    ) : HistoryMetadataAction()
 }
 
 /**
