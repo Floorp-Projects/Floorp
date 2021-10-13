@@ -389,14 +389,14 @@ class MOZ_STACK_CLASS ContentEventHandler {
   // doesn't check if aFrame should cause line break in non-debug build.
   FrameRelativeRect GetLineBreakerRectBefore(nsIFrame* aFrame);
 
-  // Returns a line breaker rect after aTextContent as there is a line breaker
-  // immediately after aTextContent.  This is useful when following block
+  // Returns a line breaker rect after aTextNode as there is a line breaker
+  // immediately after aTextNode.  This is useful when following block
   // element causes a line break before it and it needs to compute the line
   // breaker's rect.  For example, if there is |<p>abc</p><p>def</p>|, the
   // rect of 2nd <p>'s line breaker should be at right of "c" in the first
   // <p>, not the start of 2nd <p>.  The result is relative to the last text
-  // frame which represents the last character of aTextContent.
-  FrameRelativeRect GuessLineBreakerRectAfter(nsIContent* aTextContent);
+  // frame which represents the last character of aTextNode.
+  FrameRelativeRect GuessLineBreakerRectAfter(const dom::Text& aTextNode);
 
   // Returns a guessed first rect.  I.e., it may be different from actual
   // caret when selection is collapsed at start of aFrame.  For example, this
