@@ -87,7 +87,11 @@ object ViewUtils {
      */
     fun showBrandedSnackbar(view: View?, @StringRes resId: Int, delayMillis: Int) {
         val context = view!!.context
-        val snackbar = FocusSnackbar.make(view, Snackbar.LENGTH_LONG)
+        val snackbar = FocusSnackbar.make(
+            view,
+            false,
+            Snackbar.LENGTH_LONG
+        )
         snackbar.setText(context.getString(resId))
 
         view.postDelayed({ snackbar.show() }, delayMillis.toLong())

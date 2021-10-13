@@ -489,6 +489,7 @@ class BrowserFragment :
 
         val snackbar = FocusSnackbar.make(
             requireView(),
+            (requireView().findViewById(R.id.tabs) as? FloatingSessionsButton)?.visibility == View.VISIBLE,
             Snackbar.LENGTH_LONG
         )
 

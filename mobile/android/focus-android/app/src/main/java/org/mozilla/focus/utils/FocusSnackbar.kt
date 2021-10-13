@@ -10,9 +10,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.updatePadding
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.ContentViewCallback
 import com.google.android.material.snackbar.Snackbar
+import org.mozilla.focus.R
 import org.mozilla.focus.databinding.FocusSnackbarBinding
 
 class FocusSnackbar private constructor(
@@ -50,6 +52,7 @@ class FocusSnackbar private constructor(
          */
         fun make(
             view: View,
+            isFabVisible: Boolean,
             duration: Int = LENGTH_LONG,
         ): FocusSnackbar {
             val parent = findSuitableParent(view) ?: run {
@@ -70,8 +73,18 @@ class FocusSnackbar private constructor(
 
             val callback = FocusSnackbarCallback(binding.root)
 
+            val bottomPadding = if (isFabVisible) {
+                view.context.resources.getDimensionPixelSize(R.dimen.floating_action_button_size) +
+                    view.context.resources.getDimensionPixelSize(R.dimen.floating_action_button_margin)
+            } else {
+                0
+            }
+
             return FocusSnackbar(parent, binding, callback).also {
                 it.duration = durationOrAccessibleDuration
+                it.view.updatePadding(
+                    bottom = bottomPadding
+                )
             }
         }
 
