@@ -103,6 +103,8 @@ add_task(async function test() {
       "Asterisk was in the thread text input"
     );
 
+    is(styleThreadCheckbox.disabled, true, "The Style Thread is now disabled.");
+
     // Remove the asterisk
     setReactFriendlyInputValue(
       threadTextEl,
@@ -111,6 +113,7 @@ add_task(async function test() {
     threadTextEl.dispatchEvent(new Event("blur", { bubbles: true }));
 
     ok(!allThreadsCheckbox.checked, "The all threads checkbox is not checked.");
+    is(styleThreadCheckbox.disabled, false, "The Style Thread is now enabled.");
   });
 });
 
