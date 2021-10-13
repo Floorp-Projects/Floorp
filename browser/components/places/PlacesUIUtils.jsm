@@ -461,8 +461,8 @@ var PlacesUIUtils = {
    * @returns {PlacesController} a places controller
    */
   getControllerForCommand(win, command) {
-    // A context menu may be built for non-focusable views.  Thus, we first try
-    // to look for a view associated with document.popupNode
+    // If we're building a context menu for a non-focusable view, for example
+    // a menupopup, we must return the view that triggered the context menu.
     let popupNode = PlacesUIUtils.lastContextMenuTriggerNode;
     if (popupNode) {
       let isManaged = !!popupNode.closest("#managed-bookmarks");
