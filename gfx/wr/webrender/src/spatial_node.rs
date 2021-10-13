@@ -24,13 +24,9 @@ pub enum SpatialNodeUidKind {
     /// The root node of the entire spatial tree
     Root,
     /// Internal scroll frame created during scene building for each iframe
-    InternalScrollFrame {
-        pipeline_id: PipelineId,
-    },
+    InternalScrollFrame,
     /// Internal reference frame created during scene building for each iframe
-    InternalReferenceFrame {
-        pipeline_id: PipelineId,
-    },
+    InternalReferenceFrame,
     /// A normal spatial node uid, defined by a caller provided unique key
     External {
         key: SpatialTreeItemKey,
@@ -44,12 +40,15 @@ pub enum SpatialNodeUidKind {
 pub struct SpatialNodeUid {
     /// The unique key for a given pipeline for this uid
     pub kind: SpatialNodeUidKind,
+    /// Pipeline id to namespace key kinds
+    pub pipeline_id: PipelineId,
 }
 
 impl SpatialNodeUid {
     pub fn root() -> Self {
         SpatialNodeUid {
             kind: SpatialNodeUidKind::Root,
+            pipeline_id: PipelineId::dummy(),
         }
     }
 
@@ -57,9 +56,8 @@ impl SpatialNodeUid {
         pipeline_id: PipelineId,
     ) -> Self {
         SpatialNodeUid {
-            kind: SpatialNodeUidKind::InternalScrollFrame {
-                pipeline_id,
-            },
+            kind: SpatialNodeUidKind::InternalScrollFrame,
+            pipeline_id,
         }
     }
 
@@ -67,24 +65,39 @@ impl SpatialNodeUid {
         pipeline_id: PipelineId,
     ) -> Self {
         SpatialNodeUid {
-            kind: SpatialNodeUidKind::InternalReferenceFrame {
-                pipeline_id,
-            },
+            kind: SpatialNodeUidKind::InternalReferenceFrame,
+            pipeline_id,
         }
     }
 
     pub fn external(
         key: SpatialTreeItemKey,
+        pipeline_id: PipelineId,
     ) -> Self {
         SpatialNodeUid {
             kind: SpatialNodeUidKind::External {
                 key,
             },
+            pipeline_id,
         }
     }
 }
 
-#[derive(Clone)]
+/// Defines the content of a spatial node. If the values in the descriptor don't
+/// change, that means the rest of the fields in a spatial node will end up with
+/// the same result
+#[derive(Clone, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct SpatialNodeDescriptor {
+    /// The type of this node and any data associated with that node type.
+    pub node_type: SpatialNodeType,
+
+    /// Pipeline that this layer belongs to
+    pub pipeline_id: PipelineId,
+}
+
+#[derive(Clone, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum SpatialNodeType {
@@ -111,10 +124,6 @@ pub struct SpatialNodeInfo<'a> {
     /// Parent spatial node. If this is None, we are the root node.
     pub parent: Option<SpatialNodeIndex>,
 
-    /// If true, this spatial node is known to exist in the root coordinate
-    /// system in all cases (it has no animated or complex transforms)
-    pub is_root_coord_system: bool,
-
     /// Snapping scale/offset relative to the coordinate system. If None, then
     /// we should not snap entities bound to this spatial node.
     pub snapping_transform: Option<ScaleOffset>,
@@ -125,9 +134,6 @@ pub struct SpatialNodeInfo<'a> {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct SceneSpatialNode {
-    /// Child nodes
-    children: Vec<SpatialNodeIndex>,
-
     /// Snapping scale/offset relative to the coordinate system. If None, then
     /// we should not snap entities bound to this spatial node.
     pub snapping_transform: Option<ScaleOffset>,
@@ -135,11 +141,8 @@ pub struct SceneSpatialNode {
     /// Parent spatial node. If this is None, we are the root node.
     pub parent: Option<SpatialNodeIndex>,
 
-    /// The type of this node and any data associated with that node type.
-    pub node_type: SpatialNodeType,
-
-    /// Pipeline that this layer belongs to
-    pipeline_id: PipelineId,
+    /// Descriptor describing how this spatial node behaves
+    pub descriptor: SpatialNodeDescriptor,
 
     /// If true, this spatial node is known to exist in the root coordinate
     /// system in all cases (it has no animated or complex transforms)
@@ -155,12 +158,14 @@ impl SceneSpatialNode {
         origin_in_parent_reference_frame: LayoutVector2D,
         pipeline_id: PipelineId,
         is_root_coord_system: bool,
+        is_pipeline_root: bool,
     ) -> Self {
         let info = ReferenceFrameInfo {
             transform_style,
             source_transform,
             kind,
             origin_in_parent_reference_frame,
+            is_pipeline_root,
         };
         Self::new(
             pipeline_id,
@@ -214,62 +219,6 @@ impl SceneSpatialNode {
         )
     }
 
-    pub fn add_child(&mut self, child: SpatialNodeIndex) {
-        self.children.push(child);
-    }
-
-    pub fn update_snapping(
-        &mut self,
-        parent: Option<&SceneSpatialNode>,
-    ) {
-        // Reset in case of an early return.
-        self.snapping_transform = None;
-
-        // We need to incorporate the parent scale/offset with the child.
-        // If the parent does not have a scale/offset, then we know we are
-        // not 2d axis aligned and thus do not need to snap its children
-        // either.
-        let parent_scale_offset = match parent {
-            Some(parent) => {
-                match parent.snapping_transform {
-                    Some(scale_offset) => scale_offset,
-                    None => return,
-                }
-            },
-            _ => ScaleOffset::identity(),
-        };
-
-        let scale_offset = match self.node_type {
-            SpatialNodeType::ReferenceFrame(ref info) => {
-                match info.source_transform {
-                    PropertyBinding::Value(ref value) => {
-                        // We can only get a ScaleOffset if the transform is 2d axis
-                        // aligned.
-                        match ScaleOffset::from_transform(value) {
-                            Some(scale_offset) => {
-                                let origin_offset = info.origin_in_parent_reference_frame;
-                                ScaleOffset::from_offset(origin_offset.to_untyped())
-                                    .accumulate(&scale_offset)
-                            }
-                            None => return,
-                        }
-                    }
-
-                    // Assume animations start at the identity transform for snapping purposes.
-                    // We still want to incorporate the reference frame offset however.
-                    // TODO(aosmond): Is there a better known starting point?
-                    PropertyBinding::Binding(..) => {
-                        let origin_offset = info.origin_in_parent_reference_frame;
-                        ScaleOffset::from_offset(origin_offset.to_untyped())
-                    }
-                }
-            }
-            _ => ScaleOffset::identity(),
-        };
-
-        self.snapping_transform = Some(parent_scale_offset.accumulate(&scale_offset));
-    }
-
     fn new(
         pipeline_id: PipelineId,
         parent_index: Option<SpatialNodeIndex>,
@@ -278,11 +227,12 @@ impl SceneSpatialNode {
     ) -> Self {
         SceneSpatialNode {
             parent: parent_index,
-            children: Vec::new(),
-            node_type,
+            descriptor: SpatialNodeDescriptor {
+                pipeline_id,
+                node_type,
+            },
             snapping_transform: None,
             is_root_coord_system,
-            pipeline_id,
         }
     }
 }
@@ -334,32 +284,6 @@ pub struct SpatialNode {
     /// This is calculated in update(). This will be used to decide whether
     /// to override corresponding picture's raster space as an optimisation.
     pub is_ancestor_or_self_zooming: bool,
-
-    /// If true, this spatial node is known to exist in the root coordinate
-    /// system in all cases (it has no animated or complex transforms)
-    pub is_root_coord_system: bool,
-}
-
-impl From<&SceneSpatialNode> for SpatialNode {
-    /// Construct a complete spatial node from the lightweight scene building
-    /// spatial node representation
-    fn from(node: &SceneSpatialNode) -> Self {
-        SpatialNode {
-            viewport_transform: ScaleOffset::identity(),
-            content_transform: ScaleOffset::identity(),
-            snapping_transform: node.snapping_transform,
-            coordinate_system_id: CoordinateSystemId(0),
-            transform_kind: TransformedRectKind::AxisAligned,
-            parent: node.parent,
-            children: node.children.clone(),
-            pipeline_id: node.pipeline_id,
-            node_type: node.node_type.clone(),
-            invertible: true,
-            is_async_zooming: false,
-            is_ancestor_or_self_zooming: false,
-            is_root_coord_system: node.is_root_coord_system,
-        }
-    }
 }
 
 /// Snap an offset to be incorporated into a transform, where the local space
@@ -381,6 +305,10 @@ fn snap_offset<OffsetUnits, ScaleUnits>(
 }
 
 impl SpatialNode {
+    pub fn add_child(&mut self, child: SpatialNodeIndex) {
+        self.children.push(child);
+    }
+
     pub fn set_scroll_origin(&mut self, origin: &LayoutPoint, clamp: ScrollClamping) -> bool {
         let scrolling = match self.node_type {
             SpatialNodeType::ScrollFrame(ref mut scrolling) => scrolling,
@@ -871,7 +799,7 @@ impl SpatialNode {
 
 /// Defines whether we have an implicit scroll frame for a pipeline root,
 /// or an explicitly defined scroll frame from the display list.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum ScrollFrameKind {
@@ -881,7 +809,7 @@ pub enum ScrollFrameKind {
     Explicit,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ScrollFrameInfo {
@@ -942,7 +870,7 @@ impl ScrollFrameInfo {
 }
 
 /// Contains information about reference frames.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ReferenceFrameInfo {
@@ -958,9 +886,13 @@ pub struct ReferenceFrameInfo {
     /// origin of this reference frame. This is already rolled into the `transform' property, but
     /// we also store it here to properly transform the viewport for sticky positioning.
     pub origin_in_parent_reference_frame: LayoutVector2D,
+
+    /// True if this is the root reference frame for a given pipeline. This is only used
+    /// by the hit-test code, perhaps we can change the interface to not require this.
+    pub is_pipeline_root: bool,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct StickyFrameInfo {
@@ -1020,7 +952,7 @@ fn test_cst_perspective_relative_scroll() {
         },
         LayoutVector2D::zero(),
         pipeline_id,
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 0)),
+        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 0), PipelineId::dummy()),
     );
 
     let scroll_frame_1 = cst.add_scroll_frame(
@@ -1031,7 +963,7 @@ fn test_cst_perspective_relative_scroll() {
         &LayoutSize::new(100.0, 500.0),
         ScrollFrameKind::Explicit,
         LayoutVector2D::zero(),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1)),
+        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1), PipelineId::dummy()),
     );
 
     let scroll_frame_2 = cst.add_scroll_frame(
@@ -1042,7 +974,7 @@ fn test_cst_perspective_relative_scroll() {
         &LayoutSize::new(100.0, 500.0),
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 50.0),
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 3)),
+        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 3), PipelineId::dummy()),
     );
 
     let ref_frame = cst.add_reference_frame(
@@ -1054,7 +986,7 @@ fn test_cst_perspective_relative_scroll() {
         },
         LayoutVector2D::zero(),
         pipeline_id,
-        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 4)),
+        SpatialNodeUid::external(SpatialTreeItemKey::new(0, 4), PipelineId::dummy()),
     );
 
     let mut st = SpatialTree::new();
