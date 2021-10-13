@@ -16,6 +16,7 @@
 #include "nsIRedirectResultListener.h"
 #include "nsStringStream.h"
 #include "nsStreamUtils.h"
+#include "nsQueryObject.h"
 
 namespace mozilla {
 namespace net {

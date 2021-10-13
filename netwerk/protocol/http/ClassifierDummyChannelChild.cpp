@@ -10,6 +10,12 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "nsIURI.h"
 #include "mozilla/AntiTrackingUtils.h"
+#include "nsIHttpChannelInternal.h"
+#include "nsIHttpChannel.h"
+#include "mozilla/net/NeckoChannelParams.h"
+#include "mozilla/net/NeckoChild.h"
+#include "mozilla/net/HttpBaseChannel.h"
+#include "nsQueryObject.h"
 
 namespace mozilla {
 namespace net {
