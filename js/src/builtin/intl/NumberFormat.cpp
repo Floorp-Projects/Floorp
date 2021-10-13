@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/intl/Locale.h"
 #include "mozilla/intl/MeasureUnit.h"
 #include "mozilla/intl/NumberFormat.h"
 #include "mozilla/intl/NumberingSystem.h"
@@ -31,6 +32,7 @@
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/DecimalNumber.h"
+#include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/MeasureUnitGenerated.h"
 #include "builtin/intl/RelativeTimeFormat.h"
@@ -288,14 +290,14 @@ static UniqueChars NumberFormatLocale(JSContext* cx, HandleObject internals) {
 
   // ICU expects numberingSystem as a Unicode locale extensions on locale.
 
-  intl::LanguageTag tag(cx);
+  mozilla::intl::Locale tag;
   {
-    JSLinearString* locale = value.toString()->ensureLinear(cx);
+    RootedLinearString locale(cx, value.toString()->ensureLinear(cx));
     if (!locale) {
       return nullptr;
     }
 
-    if (!intl::LanguageTagParser::parse(cx, locale, tag)) {
+    if (!intl::ParseLocale(cx, locale, tag)) {
       return nullptr;
     }
   }
@@ -326,7 +328,12 @@ static UniqueChars NumberFormatLocale(JSContext* cx, HandleObject internals) {
     return nullptr;
   }
 
-  return tag.toStringZ(cx);
+  intl::FormatBuffer<char> buffer(cx);
+  if (auto result = tag.toString(buffer); result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
+    return nullptr;
+  }
+  return buffer.extractStringZ();
 }
 
 struct NumberFormatOptions : public mozilla::intl::NumberRangeFormatOptions {
