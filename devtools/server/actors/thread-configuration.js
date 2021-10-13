@@ -9,11 +9,11 @@ const {
   threadConfigurationSpec,
 } = require("devtools/shared/specs/thread-configuration");
 const {
-  WatchedDataHelpers,
-} = require("devtools/server/actors/watcher/WatchedDataHelpers.jsm");
+  SessionDataHelpers,
+} = require("devtools/server/actors/watcher/SessionDataHelpers.jsm");
 const {
   SUPPORTED_DATA: { THREAD_CONFIGURATION },
-} = WatchedDataHelpers;
+} = SessionDataHelpers;
 
 // List of options supported by this thread configuration actor.
 const SUPPORTED_OPTIONS = {

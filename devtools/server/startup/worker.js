@@ -104,10 +104,10 @@ this.addEventListener("message", async function(event) {
       );
 
       // We might receive data to watch.
-      if (packet.options?.watchedData) {
+      if (packet.options?.sessionData) {
         const promises = [];
         for (const [type, entries] of Object.entries(
-          packet.options.watchedData
+          packet.options.sessionData
         )) {
           promises.push(workerTargetActor.addWatcherDataEntry(type, entries));
         }

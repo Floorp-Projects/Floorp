@@ -4,7 +4,7 @@
 
 "use strict";
 
-// Because this function is used from WatchedDataHelpers.jsm,
+// Because this function is used from SessionDataHelpers.jsm,
 // this has to be a JSM.
 
 var EXPORTED_SYMBOLS = ["validateBreakpointLocation"];

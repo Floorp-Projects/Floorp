@@ -32,10 +32,10 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { ActorManagerParent } = ChromeUtils.import(
   "resource://gre/modules/ActorManagerParent.jsm"
 );
-const { WatchedDataHelpers } = ChromeUtils.import(
-  "resource://devtools/server/actors/watcher/WatchedDataHelpers.jsm"
+const { SessionDataHelpers } = ChromeUtils.import(
+  "resource://devtools/server/actors/watcher/SessionDataHelpers.jsm"
 );
-const { SUPPORTED_DATA } = WatchedDataHelpers;
+const { SUPPORTED_DATA } = SessionDataHelpers;
 
 // Define the Map that will be saved in `sharedData`.
 // It is keyed by WatcherActor ID and values contains following attributes:
@@ -50,7 +50,7 @@ const { SUPPORTED_DATA } = WatchedDataHelpers;
 // Unfortunately, `sharedData` is subject to race condition and may have side effect
 // when read/written from multiple places in the same process,
 // which is why this map should be considered as the single source of truth.
-const watchedDataByWatcherActor = new Map();
+const sessionDataByWatcherActor = new Map();
 
 // In parallel to the previous map, keep all the WatcherActor keyed by the same WatcherActor ID,
 // the WatcherActor ID. We don't (and can't) propagate the WatcherActor instances to the content
@@ -67,7 +67,7 @@ const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
  * in order to start listening to the expected resource types.
  */
 function persistMapToSharedData() {
-  Services.ppmm.sharedData.set(SHARED_DATA_KEY_NAME, watchedDataByWatcherActor);
+  Services.ppmm.sharedData.set(SHARED_DATA_KEY_NAME, sessionDataByWatcherActor);
   // Request to immediately flush the data to the content processes in order to prevent
   // races (bug 1644649). Otherwise content process may have outdated sharedData
   // and try to create targets for Watcher actor that already stopped watching for targets.
@@ -86,15 +86,15 @@ const WatcherRegistry = {
    *         Returns true if already watching.
    */
   isWatchingTargets(watcher, targetType) {
-    const watchedData = this.getWatchedData(watcher);
-    return watchedData && watchedData.targets.includes(targetType);
+    const sessionData = this.getSessionData(watcher);
+    return sessionData && sessionData.targets.includes(targetType);
   },
 
   /**
    * Retrieve the data saved into `sharedData` that is used to know
    * about which type of targets and resources we care listening about.
-   * `watchedDataByWatcherActor` is saved into `sharedData` after each mutation,
-   * but `watchedDataByWatcherActor` is the source of truth.
+   * `sessionDataByWatcherActor` is saved into `sharedData` after each mutation,
+   * but `sessionDataByWatcherActor` is the source of truth.
    *
    * @param WatcherActor watcher
    *               The related WatcherActor which starts/stops observing.
@@ -103,14 +103,14 @@ const WatcherRegistry = {
    *               If this attribute is set to true, we create the data structure in the Map
    *               if none exists for this prefix.
    */
-  getWatchedData(watcher, { createData = false } = {}) {
+  getSessionData(watcher, { createData = false } = {}) {
     // Use WatcherActor ID as a key as we may have multiple clients willing to watch for targets.
     // For example, a Browser Toolbox debugging everything and a Content Toolbox debugging
     // just one tab. We might also have multiple watchers, on the same connection when using about:debugging.
     const watcherActorID = watcher.actorID;
-    let watchedData = watchedDataByWatcherActor.get(watcherActorID);
-    if (!watchedData && createData) {
-      watchedData = {
+    let sessionData = sessionDataByWatcherActor.get(watcherActorID);
+    if (!sessionData && createData) {
+      sessionData = {
         // The Browser ID will be helpful to identify which BrowsingContext should be considered
         // when running code in the content process. Browser ID, compared to BrowsingContext ID won't change
         // if we navigate to the parent process or if a new BrowsingContext is used for the <browser> element
@@ -126,12 +126,12 @@ const WatcherRegistry = {
       };
       // Define empty default array for all data
       for (const name of Object.values(SUPPORTED_DATA)) {
-        watchedData[name] = [];
+        sessionData[name] = [];
       }
-      watchedDataByWatcherActor.set(watcherActorID, watchedData);
+      sessionDataByWatcherActor.set(watcherActorID, sessionData);
       watcherActors.set(watcherActorID, watcher);
     }
-    return watchedData;
+    return sessionData;
   },
 
   /**
@@ -174,15 +174,15 @@ const WatcherRegistry = {
    *               The values to be added to this type of data
    */
   addWatcherDataEntry(watcher, type, entries) {
-    const watchedData = this.getWatchedData(watcher, {
+    const sessionData = this.getSessionData(watcher, {
       createData: true,
     });
 
-    if (!(type in watchedData)) {
+    if (!(type in sessionData)) {
       throw new Error(`Unsupported watcher data type: ${type}`);
     }
 
-    WatchedDataHelpers.addWatchedDataEntry(watchedData, type, entries);
+    SessionDataHelpers.addSessionDataEntry(sessionData, type, entries);
 
     // Register the JS Window Actor the first time we start watching for something (e.g. resource, target, …).
     registerJSWindowActor();
@@ -199,26 +199,26 @@ const WatcherRegistry = {
    *         True if we such entry was already registered, for this watcher actor.
    */
   removeWatcherDataEntry(watcher, type, entries) {
-    const watchedData = this.getWatchedData(watcher);
-    if (!watchedData) {
+    const sessionData = this.getSessionData(watcher);
+    if (!sessionData) {
       return false;
     }
 
-    if (!(type in watchedData)) {
+    if (!(type in sessionData)) {
       throw new Error(`Unsupported watcher data type: ${type}`);
     }
 
     if (
-      !WatchedDataHelpers.removeWatchedDataEntry(watchedData, type, entries)
+      !SessionDataHelpers.removeSessionDataEntry(sessionData, type, entries)
     ) {
       return false;
     }
 
     const isWatchingSomething = Object.values(SUPPORTED_DATA).some(
-      dataType => watchedData[dataType].length > 0
+      dataType => sessionData[dataType].length > 0
     );
     if (!isWatchingSomething) {
-      watchedDataByWatcherActor.delete(watcher.actorID);
+      sessionDataByWatcherActor.delete(watcher.actorID);
       watcherActors.delete(watcher.actorID);
     }
 
@@ -236,7 +236,7 @@ const WatcherRegistry = {
    * So here, we force clearing any reference to the watcher actor when it destroys.
    */
   unregisterWatcher(watcher) {
-    watchedDataByWatcherActor.delete(watcher.actorID);
+    sessionDataByWatcherActor.delete(watcher.actorID);
     watcherActors.delete(watcher.actorID);
     this.maybeUnregisteringJSWindowActor();
   },
@@ -299,7 +299,7 @@ const WatcherRegistry = {
    * Unregister the JS Window Actor if there is no more DevTools code observing any target/resource.
    */
   maybeUnregisteringJSWindowActor() {
-    if (watchedDataByWatcherActor.size == 0) {
+    if (sessionDataByWatcherActor.size == 0) {
       unregisterJSWindowActor();
     }
   },

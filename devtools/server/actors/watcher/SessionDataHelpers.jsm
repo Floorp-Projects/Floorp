@@ -5,11 +5,11 @@
 "use strict";
 
 /**
- * Helper module alongside WatcherRegistry, which focus on updating the "watchedData" object.
+ * Helper module alongside WatcherRegistry, which focus on updating the "sessionData" object.
  * This object is shared across processes and threads and have to be maintained in all these runtimes.
  */
 
-var EXPORTED_SYMBOLS = ["WatchedDataHelpers"];
+var EXPORTED_SYMBOLS = ["SessionDataHelpers"];
 
 if (typeof module == "object") {
   // Allow this JSM to also be loaded as a CommonJS module
@@ -46,7 +46,7 @@ if (typeof module == "object") {
   });
 }
 
-// List of all arrays stored in `watchedData`, which are replicated across processes and threads
+// List of all arrays stored in `sessionData`, which are replicated across processes and threads
 const SUPPORTED_DATA = {
   BREAKPOINTS: "breakpoints",
   XHR_BREAKPOINTS: "xhr-breakpoints",
@@ -111,24 +111,24 @@ function idFunction(v) {
   return v;
 }
 
-const WatchedDataHelpers = {
+const SessionDataHelpers = {
   SUPPORTED_DATA,
 
   /**
-   * Add new values to the shared "watchedData" object.
+   * Add new values to the shared "sessionData" object.
    *
-   * @param Object watchedData
+   * @param Object sessionData
    *               The data object to update.
    * @param string type
    *               The type of data to be added
    * @param Array<Object> entries
    *               The values to be added to this type of data
    */
-  addWatchedDataEntry(watchedData, type, entries) {
+  addSessionDataEntry(sessionData, type, entries) {
     const toBeAdded = [];
     const keyFunction = DATA_KEY_FUNCTION[type] || idFunction;
     for (const entry of entries) {
-      const existingIndex = watchedData[type].findIndex(existingEntry => {
+      const existingIndex = sessionData[type].findIndex(existingEntry => {
         return keyFunction(existingEntry) === keyFunction(entry);
       });
       if (existingIndex === -1) {
@@ -138,16 +138,16 @@ const WatchedDataHelpers = {
         // Existing entry, update the value. This is relevant if the data-entry
         // is not a primitive data-type, and the value can change for the same
         // key.
-        watchedData[type][existingIndex] = entry;
+        sessionData[type][existingIndex] = entry;
       }
     }
-    watchedData[type].push(...toBeAdded);
+    sessionData[type].push(...toBeAdded);
   },
 
   /**
-   * Remove values from the shared "watchedData" object.
+   * Remove values from the shared "sessionData" object.
    *
-   * @param Object watchedData
+   * @param Object sessionData
    *               The data object to update.
    * @param string type
    *               The type of data to be remove
@@ -157,15 +157,15 @@ const WatchedDataHelpers = {
    *               True, if at least one entries existed and has been removed.
    *               False, if none of the entries existed and none has been removed.
    */
-  removeWatchedDataEntry(watchedData, type, entries) {
+  removeSessionDataEntry(sessionData, type, entries) {
     let includesAtLeastOne = false;
     const keyFunction = DATA_KEY_FUNCTION[type] || idFunction;
     for (const entry of entries) {
-      const idx = watchedData[type].findIndex(existingEntry => {
+      const idx = sessionData[type].findIndex(existingEntry => {
         return keyFunction(existingEntry) === keyFunction(entry);
       });
       if (idx !== -1) {
-        watchedData[type].splice(idx, 1);
+        sessionData[type].splice(idx, 1);
         includesAtLeastOne = true;
       }
     }
@@ -181,5 +181,5 @@ const WatchedDataHelpers = {
 // Because this module is used from the worker thread,
 // (via target-actor-mixin), and workers can't load JSMs.
 if (typeof module == "object") {
-  module.exports.WatchedDataHelpers = WatchedDataHelpers;
+  module.exports.SessionDataHelpers = SessionDataHelpers;
 }
