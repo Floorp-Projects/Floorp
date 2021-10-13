@@ -654,7 +654,6 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
   NSRunLoop* currentRunLoop = [NSRunLoop currentRunLoop];
 
   EventQueueRef currentEventQueue = GetCurrentEventQueue();
-  EventTargetRef eventDispatcherTarget = GetEventDispatcherTarget();
 
   if (aMayWait) {
     mozilla::BackgroundHangMonitor().NotifyWait();
@@ -687,6 +686,23 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
         eventProcessed = true;
       }
     } else {
+      // In at least 10.15, AcquireFirstMatchingEventInQueue will move 1
+      // CGEvent from the CGEvent queue into the Carbon event queue. Unfortunately,
+      // once an event has been moved to the Carbon event queue it's no longer a
+      // candidate for coalescing. This means that even if we don't remove the
+      // event from the queue, just calling AcquireFirstMatchingEventInQueue can
+      // cause behaviour change. Prior to bug 1690687 landing, the event that we got
+      // from AcquireFirstMatchingEventInQueue was often our own ApplicationDefined
+      // event. However, once we stopped posting that event on every Gecko
+      // event we're much more likely to get a CGEvent. When we have a high
+      // amount of load on the main thread, we end up alternating between Gecko
+      // events and native events.  Without CGEvent coalescing, the native
+      // event events can accumulate in the Carbon event queue which will
+      // manifest as laggy scrolling.
+#ifdef EARLY_BETA_OR_EARLIER
+      eventProcessed = false;
+      break;
+#else
       // AcquireFirstMatchingEventInQueue() doesn't spin the (native) event
       // loop, though it does queue up any newly available events from the
       // window server.
@@ -721,11 +737,13 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
       // RemoveEventFromQueue() below.
       RetainEvent(currentEvent);
       RemoveEventFromQueue(currentEventQueue, currentEvent);
+      EventTargetRef eventDispatcherTarget = GetEventDispatcherTarget();
       SendEventToEventTarget(currentEvent, eventDispatcherTarget);
       // This call to ReleaseEvent() matches a call to RetainEvent() in
       // AcquireFirstMatchingEventInQueue() above.
       ReleaseEvent(currentEvent);
       eventProcessed = true;
+#endif
     }
   } while (mRunningEventLoop);
 
