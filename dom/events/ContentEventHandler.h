@@ -305,7 +305,7 @@ class MOZ_STACK_CLASS ContentEventHandler {
                                          LineBreakType aLineBreakType,
                                          bool aExpandToClusterBoundaries,
                                          uint32_t* aNewOffset = nullptr,
-                                         nsIContent** aLastTextNode = nullptr);
+                                         dom::Text** aLastTextNode = nullptr);
   // If the aCollapsedRawRange isn't in text node but next to a text node,
   // this method modifies it in the text node.  Otherwise, not modified.
   nsresult AdjustCollapsedRangeMaybeIntoTextNode(RawRange& aCollapsedRawRange);
