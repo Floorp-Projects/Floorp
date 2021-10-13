@@ -4,6 +4,8 @@
 
 "use strict";
 
+const longStringStubs = require("devtools/client/shared/components/test/node/stubs/reps/long-string");
+
 const stubs = new Map();
 stubs.set("testRendering", {
   class: "Text",
@@ -35,6 +37,26 @@ stubs.set("testRenderingWithEOL", {
     nodeType: 3,
     nodeName: "#text",
     textContent: "hello\nworld",
+  },
+});
+stubs.set("testRenderingWithDoubleQuote", {
+  class: "Text",
+  actor: "server1.conn1.child1/obj50",
+  preview: {
+    kind: "DOMNode",
+    nodeType: 3,
+    nodeName: "#text",
+    textContent: 'hello"world',
+  },
+});
+stubs.set("testRenderingWithLongString", {
+  class: "Text",
+  actor: "server1.conn1.child1/obj50",
+  preview: {
+    kind: "DOMNode",
+    nodeType: 3,
+    nodeName: "#text",
+    textContent: longStringStubs.get("testMultiline"),
   },
 });
 
