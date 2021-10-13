@@ -121,6 +121,10 @@ class AntiTrackingUtils final {
   // Otherwise, it will continue to check if the window is third-party.
   static bool IsThirdPartyWindow(nsPIDOMWindowInner* aWindow, nsIURI* aURI);
 
+  // Given a browsing context, this function determines if this browsing context
+  // is considered as a third party in respect to the top-level context.
+  static bool IsThirdPartyContext(dom::BrowsingContext* aBrowsingContext);
+
   static nsCString GrantedReasonToString(
       ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason);
 
