@@ -975,3 +975,23 @@ size_t js::TenuringTracer::moveBigIntToTenured(JS::BigInt* dst, JS::BigInt* src,
 
   return size;
 }
+
+MinorSweepingTracer::MinorSweepingTracer(JSRuntime* rt)
+    : GenericTracerImpl(rt, JS::TracerKind::MinorSweeping,
+                        JS::WeakMapTraceAction::TraceKeysAndValues) {
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
+  MOZ_ASSERT(JS::RuntimeHeapIsMinorCollecting());
+}
+
+template <typename T>
+inline T* MinorSweepingTracer::onEdge(T* thing) {
+  if (thing->isTenured()) {
+    return thing;
+  }
+
+  if (IsForwarded(thing)) {
+    return Forwarded(thing);
+  }
+
+  return nullptr;
+}

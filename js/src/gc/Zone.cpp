@@ -266,6 +266,10 @@ static void SweepEphemeronEdgesWhileMinorSweeping(
 void Zone::sweepAfterMinorGC(JSTracer* trc) {
   sweepEphemeronTablesAfterMinorGC();
   crossZoneStringWrappers().sweepAfterMinorGC(trc);
+
+  for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next()) {
+    comp->sweepAfterMinorGC(trc);
+  }
 }
 
 void Zone::sweepEphemeronTablesAfterMinorGC() {

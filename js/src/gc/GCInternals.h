@@ -288,6 +288,16 @@ struct SweepingTracer final : public GenericTracerImpl<SweepingTracer> {
   friend class GenericTracerImpl<SweepingTracer>;
 };
 
+struct MinorSweepingTracer final
+    : public GenericTracerImpl<MinorSweepingTracer> {
+  explicit MinorSweepingTracer(JSRuntime* rt);
+
+ private:
+  template <typename T>
+  T* onEdge(T* thingp);
+  friend class GenericTracerImpl<MinorSweepingTracer>;
+};
+
 extern void DelayCrossCompartmentGrayMarking(JSObject* src);
 
 inline bool IsOOMReason(JS::GCReason reason) {
