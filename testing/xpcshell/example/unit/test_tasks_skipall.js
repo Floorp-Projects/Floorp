@@ -1,5 +1,7 @@
 "use strict";
 
+/* eslint-disable mozilla/reject-addtask-only */
+
 add_task(async function skipMe1() {
   Assert.ok(false, "Not skipped after all.");
 });
