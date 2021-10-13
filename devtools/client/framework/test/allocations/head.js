@@ -106,6 +106,9 @@ async function startRecordingAllocations({
         await tracker.startRecordingAllocations(debug_allocations);
       }
     );
+    // Trigger a GC in the parent process as this additional ContentTask
+    // seems to make harder to release objects created before we start recording.
+    await tracker.doGC();
   }
 
   await tracker.startRecordingAllocations(DEBUG_ALLOCATIONS);
