@@ -103,6 +103,33 @@ describe("Multistage AboutWelcome module", () => {
       );
     });
 
+    it("should use default when activeTheme is alpenglow", () => {
+      const wrapper = shallow(<Colorways {...COLORWAY_SCREEN_PROPS} />);
+      wrapper.setProps({ activeTheme: "alpenglow" });
+
+      const colorwaysOptionIcons = wrapper.find(
+        ".tiles-theme-section .theme .icon"
+      );
+      assert.strictEqual(colorwaysOptionIcons.length, 2);
+
+      // Default automatic theme is selected when unsupported in colorway alpenglow theme is active
+      assert.strictEqual(
+        colorwaysOptionIcons
+          .first()
+          .prop("className")
+          .includes("selected"),
+        true
+      );
+
+      assert.strictEqual(
+        colorwaysOptionIcons
+          .first()
+          .prop("className")
+          .includes("default"),
+        true
+      );
+    });
+
     it("should render colorways options", () => {
       const wrapper = shallow(<Colorways {...COLORWAY_SCREEN_PROPS} />);
 
