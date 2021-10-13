@@ -294,7 +294,7 @@ bool PointerEvent::ShouldResistFingerprinting(CallerType aCallerType) {
 
   nsCOMPtr<Document> doc = GetDocument();
 
-  return doc && !nsContentUtils::IsChromeDoc(doc);
+  return nsContentUtils::ShouldResistFingerprinting(doc);
 }
 
 }  // namespace mozilla::dom
