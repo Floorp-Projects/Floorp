@@ -15,7 +15,6 @@
     --button-color: rgb(21,20,26);
 
     --focus-outline-color: var(--button-primary-bgcolor);
-    --focus-outline-offset: 2px;
 
     --checkbox-border-color: var(--input-border-color);
     --checkbox-unchecked-bgcolor: var(--button-bgcolor);

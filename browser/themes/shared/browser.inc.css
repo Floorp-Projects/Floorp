@@ -66,7 +66,7 @@
   --lwt-additional-images: none;
   --lwt-background-alignment: right top;
   --lwt-background-tiling: no-repeat;
-  --lwt-popup-brighttext-url-color: #74c0ff;
+  --lwt-brighttext-url-color: #00ddff;
 }
 
 @media (prefers-contrast) {
@@ -99,6 +99,7 @@
   --focus-outline-width: 2px;
   --focus-outline-color: currentColor;
   --focus-outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  --focus-outline-offset: 2px;
 }
 
 @media not (prefers-contrast) {
@@ -109,10 +110,6 @@
   :root:-moz-lwtheme-brighttext {
     --focus-outline-color: #00DDFF;
   }
-}
-
-:root[lwt-toolbar-field-focus-brighttext] {
-  --lwt-popup-brighttext-url-color: #00ddff;
 }
 
 /* Increase the contrast of urlbar boxes in brighttext LWT.
@@ -143,20 +140,21 @@
   }
 }
 
-/* Increase contrast of UI links on dark themes */
+/* Set link color with proper contrast for WebExt themes */
 
-:root[lwt-popup-brighttext] panel .text-link {
-  color: var(--lwt-popup-brighttext-url-color);
-}
-
-#PersonalToolbar:-moz-lwtheme .text-link,
-#nav-bar:-moz-lwtheme .text-link {
+toolbar .text-link:-moz-lwtheme,
+panel .text-link:-moz-lwtheme {
   color: #0060df;
 }
 
-#PersonalToolbar[brighttext]:-moz-lwtheme .text-link,
-#nav-bar[brighttext]:-moz-lwtheme .text-link {
-  color: #45a1ff;
+toolbar[brighttext] .text-link:-moz-lwtheme,
+:root[lwt-popup-brighttext] panel .text-link {
+  color: var(--lwt-brighttext-url-color);
+}
+
+toolbar .text-link:-moz-lwtheme:not(:hover),
+panel .text-link:-moz-lwtheme:not(:hover) {
+  text-decoration: none;
 }
 
 /* Toolbar / content area border */
