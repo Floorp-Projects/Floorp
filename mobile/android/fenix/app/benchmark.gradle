@@ -53,16 +53,15 @@ ext.maybeConfigForJetpackBenchmark = { android ->
         // WARNING: the benchmark framework warns you if you're running the test in a configuration
         // that will compromise the accuracy of the results. Unfortunately, I couldn't get everything
         // working so I had to suppress some things.
-        //
-        // - ACTIVITY-MISSING: we're supposed to use the test instrumentation runner,
-        // "androidx.benchmark.junit4.AndroidBenchmarkRunner". However, when I do so, I get an error
-        // that we're unable to launch the activity. My understanding is that this runner will use an
-        // "IsolationActivity" to reduce the impact of other work on the device from affecting the benchmark
-        // and to opt into a lower-max CPU frequency on unrooted devices that support it
-        // - UNLOCKED: ./gradlew lockClocks, which locks the CPU frequency, fails on my device. See
-        // https://issuetracker.google.com/issues/176836267 for potential workarounds.
-
         testInstrumentationRunnerArguments = [
+
+                // - ACTIVITY-MISSING: we're supposed to use the test instrumentation runner,
+                // "androidx.benchmark.junit4.AndroidBenchmarkRunner". However, when I do so, I get an error
+                // that we're unable to launch the activity. My understanding is that this runner will use an
+                // "IsolationActivity" to reduce the impact of other work on the device from affecting the benchmark
+                // and to opt into a lower-max CPU frequency on unrooted devices that support it
+                // - UNLOCKED: ./gradlew lockClocks, which locks the CPU frequency, fails on my device. See
+                // https://issuetracker.google.com/issues/176836267 for potential workarounds.
                 'androidx.benchmark.suppressErrors' : 'ACTIVITY-MISSING,UNLOCKED',
 
                 // The tests don't always output a JSON file with the data. To make sure it does, we have to
@@ -72,10 +71,10 @@ ext.maybeConfigForJetpackBenchmark = { android ->
                 // We set the the output directory simply for simplicity since the benchmark_runner.py script
                 // can't know the name of the phone in the /build/outputs/ directory. The system defaults to
                 // {phone_name} which can be troublesome finding in some case.
-
-                //NOTE: Jetpack Benchmark outputs to Logcat too. However, the output in the logcat is
-                //the min of the several repeats, for more statistics. Therefore, to get more stats,
-                //we refer to the JSON file.
+                //
+                // NOTE: Jetpack Benchmark outputs to Logcat too. However, the output in the logcat is
+                // the min of the several repeats, for more statistics. Therefore, to get more stats,
+                // we refer to the JSON file.
                 additionalTestOutputDir : '/storage/emulated/0/benchmark'
         ]
     }

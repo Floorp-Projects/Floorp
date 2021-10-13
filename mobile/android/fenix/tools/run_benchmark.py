@@ -37,9 +37,9 @@ def run_benchmark(class_to_test):
 def fetch_benchmark_results():
     subprocess.run(
         ['adb', 'pull', "{path}{file}".format(path=output_path, file=output_file)],
-        cwd=target_directory,check=True, text=True)
-    print("The benchmark results can be seen here: {file_path}"
-                .format(file_path=os.path.abspath("./{file}".format(file=file_url))))
+        cwd=target_directory, check=True, text=True)
+    print("The benchmark results can be seen here: {file_path}".format(
+         file_path=os.path.abspath("./{file}".format(file=file_url))))
 
 
 def open_in_browser():
