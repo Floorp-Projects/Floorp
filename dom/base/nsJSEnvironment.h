@@ -69,19 +69,22 @@ class nsJSContext : public nsIScriptContext {
                                 IsShrinking aShrinking = NonShrinkingGC,
                                 int64_t aSliceMillis = 0);
 
-  static void CycleCollectNow(nsICycleCollectorListener* aListener = nullptr);
+  static void CycleCollectNow(mozilla::CCReason aReason,
+                              nsICycleCollectorListener* aListener = nullptr);
 
   // Finish up any in-progress incremental GC.
-  static void PrepareForCycleCollectionSlice(mozilla::TimeStamp aDeadline);
+  static void PrepareForCycleCollectionSlice(mozilla::CCReason aReason,
+                                             mozilla::TimeStamp aDeadline);
 
   // Run a cycle collector slice, using a heuristic to decide how long to run
   // it.
-  static void RunCycleCollectorSlice(mozilla::TimeStamp aDeadline);
+  static void RunCycleCollectorSlice(mozilla::CCReason aReason,
+                                     mozilla::TimeStamp aDeadline);
 
   // Run a cycle collector slice, using the given work budget.
   static void RunCycleCollectorWorkSlice(int64_t aWorkBudget);
 
-  static void BeginCycleCollectionCallback();
+  static void BeginCycleCollectionCallback(mozilla::CCReason aReason);
   static void EndCycleCollectionCallback(
       mozilla::CycleCollectorResults& aResults);
 
