@@ -159,11 +159,11 @@ class VectorToBufferAdaptor {
 };
 
 /**
- * A variant of FillBufferWithICUCall that accepts a mozilla::Vector rather than
- * a Buffer.
+ * An overload of FillBufferWithICUCall that accepts a mozilla::Vector rather
+ * than a Buffer.
  */
 template <typename ICUStringFunction, size_t InlineSize, typename CharType>
-static ICUResult FillVectorWithICUCall(Vector<CharType, InlineSize>& vector,
+static ICUResult FillBufferWithICUCall(Vector<CharType, InlineSize>& vector,
                                        const ICUStringFunction& strFn) {
   VectorToBufferAdaptor buffer(vector);
   return FillBufferWithICUCall(buffer, strFn);
