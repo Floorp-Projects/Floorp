@@ -20,6 +20,10 @@ async function testScript(tab) {
   await new Promise(resolve => setTimeout(resolve, 1000));
 
   await toolbox.destroy();
+
+  // Spin the event loop to ensure toolbox destroy is fully completed
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, 0));
 }
 
 add_task(async function() {
