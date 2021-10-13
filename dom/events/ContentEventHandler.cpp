@@ -1301,7 +1301,7 @@ nsresult ContentEventHandler::HandleQueryContentEvent(
 
 // Similar to nsFrameSelection::GetFrameForNodeOffset,
 // but this is more flexible for OnQueryTextRect to use
-static nsresult GetFrameForTextRect(nsINode* aNode, int32_t aNodeOffset,
+static nsresult GetFrameForTextRect(const nsINode* aNode, int32_t aNodeOffset,
                                     bool aHint, nsIFrame** aReturnFrame) {
   NS_ENSURE_TRUE(aNode && aNode->IsContent(), NS_ERROR_UNEXPECTED);
   nsIFrame* frame = aNode->AsContent()->GetPrimaryFrame();
@@ -1728,21 +1728,18 @@ ContentEventHandler::GetLineBreakerRectBefore(nsIFrame* aFrame) {
 }
 
 ContentEventHandler::FrameRelativeRect
-ContentEventHandler::GuessLineBreakerRectAfter(nsIContent* aTextContent) {
-  // aTextContent should be a text node.
-  MOZ_ASSERT(aTextContent->IsText());
-
+ContentEventHandler::GuessLineBreakerRectAfter(const Text& aTextNode) {
   FrameRelativeRect result;
-  int32_t length = static_cast<int32_t>(aTextContent->Length());
+  const int32_t length = static_cast<int32_t>(aTextNode.TextLength());
   if (NS_WARN_IF(length < 0)) {
     return result;
   }
-  // Get the last nsTextFrame which is caused by aTextContent.  Note that
+  // Get the last nsTextFrame which is caused by aTextNode.  Note that
   // a text node can cause multiple text frames, e.g., the text is too long
   // and wrapped by its parent block or the text has line breakers and its
   // white-space property respects the line breakers (e.g., |pre|).
   nsIFrame* lastTextFrame = nullptr;
-  nsresult rv = GetFrameForTextRect(aTextContent, length, true, &lastTextFrame);
+  nsresult rv = GetFrameForTextRect(&aTextNode, length, true, &lastTextFrame);
   if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!lastTextFrame)) {
     return result;
   }
@@ -1968,7 +1965,7 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
       // the queried range if there is a text node.
       else if (!firstFrame->IsBrFrame() && lastTextNode) {
         FrameRelativeRect brRectRelativeToLastTextFrame =
-            GuessLineBreakerRectAfter(lastTextNode);
+            GuessLineBreakerRectAfter(*lastTextNode);
         if (NS_WARN_IF(!brRectRelativeToLastTextFrame.IsValid())) {
           return NS_ERROR_FAILURE;
         }
@@ -2143,12 +2140,11 @@ nsresult ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent) {
 
   LineBreakType lineBreakType = GetLineBreakType(aEvent);
   RawRange rawRange;
-  RefPtr<Text> lastTextContent;
+  RefPtr<Text> lastTextNode;
   uint32_t startOffset = 0;
   if (NS_WARN_IF(NS_FAILED(SetRawRangeFromFlatTextOffset(
           &rawRange, aEvent->mInput.mOffset, aEvent->mInput.mLength,
-          lineBreakType, true, &startOffset,
-          getter_AddRefs(lastTextContent))))) {
+          lineBreakType, true, &startOffset, getter_AddRefs(lastTextNode))))) {
     return NS_ERROR_FAILURE;
   }
   nsString string;
@@ -2209,7 +2205,11 @@ nsresult ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent) {
       }
       // If there is a text frame at the end, use its information.
       else if (lastFrame->IsTextFrame()) {
-        relativeRect = GuessLineBreakerRectAfter(lastFrame->GetContent());
+        const Text* textNode = Text::FromNode(lastFrame->GetContent());
+        MOZ_ASSERT(textNode);
+        if (textNode) {
+          relativeRect = GuessLineBreakerRectAfter(*textNode);
+        }
       }
       // If there is an empty frame which is neither a text frame nor a <br>
       // frame at the end, guess caret rect in it.
@@ -2307,9 +2307,9 @@ nsresult ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent) {
   // Therefore, if the first frame isn't a <br> frame and there is a text
   // node before the first node in the queried range, we should compute the
   // first rect with the previous character's rect.
-  else if (!firstFrame->IsBrFrame() && lastTextContent) {
+  else if (!firstFrame->IsBrFrame() && lastTextNode) {
     FrameRelativeRect brRectAfterLastChar =
-        GuessLineBreakerRectAfter(lastTextContent);
+        GuessLineBreakerRectAfter(*lastTextNode);
     if (NS_WARN_IF(!brRectAfterLastChar.IsValid())) {
       return NS_ERROR_FAILURE;
     }
