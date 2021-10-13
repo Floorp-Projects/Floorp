@@ -562,21 +562,6 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun addToHomescreenShortcutEvent() {
-        TelemetryEvent.create(
-            Category.ACTION,
-            Method.CLICK,
-            Object.ADD_TO_HOMESCREEN_DIALOG,
-            Value.ADD_TO_HOMESCREEN
-        ).queue()
-    }
-
-    @JvmStatic
-    fun cancelAddToHomescreenShortcutEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.ADD_TO_HOMESCREEN_DIALOG, Value.CANCEL).queue()
-    }
-
-    @JvmStatic
     fun eraseShortcutEvent() {
         withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.SHORTCUT, Value.ERASE))
             .queue()

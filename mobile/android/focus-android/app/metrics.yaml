@@ -470,3 +470,45 @@ app_opened:
         description: |
           Can be "Launch" if Focus was not already opened or "Resume" if it was.
         type: string
+
+add_to_home_screen:
+  dialog_displayed:
+    type: event
+    description: The dialog for adding home screen shorcut was displayed.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5548
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5598
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  add_button_tapped:
+    type: event
+    description: The add(yes) option from add to home dialog was tapped.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5548
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5598
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      has_edited_title:
+        description: Did the user edit the default title provided by the app?
+        type: boolean
+  cancel_button_tapped:
+    type: event
+    description: The cancel(no) option from add to home dialog was tapped.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5548
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/?
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
