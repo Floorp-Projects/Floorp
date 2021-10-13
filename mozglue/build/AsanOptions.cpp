@@ -161,6 +161,7 @@ extern "C" const char* __lsan_default_suppressions() {
          "leak:libdricore.so\n"
          "leak:libdricore9.2.1.so\n"
          "leak:libGL.so\n"
+         "leak:libEGL_mesa.so\n"
          "leak:libglib-2.0.so\n"
          "leak:libglsl.so\n"
          "leak:libp11-kit.so\n"
