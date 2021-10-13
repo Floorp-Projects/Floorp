@@ -255,10 +255,6 @@ class MOZ_STACK_CLASS ContentEventHandler {
   // Get the native text length of aTextNode.
   static uint32_t GetNativeTextLength(const dom::Text& aTextNode,
                                       uint32_t aMaxLength = UINT32_MAX);
-  // Get the native text length which is inserted before aContent.
-  // aContent should be an element.
-  static uint32_t GetNativeTextLengthBefore(nsIContent* aContent,
-                                            nsINode* aRootNode);
 
  protected:
   // Get the text length of aTextNode.
