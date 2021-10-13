@@ -162,9 +162,8 @@ the appropriate APZC instance needs to handle the input.
 
 This hit detection is done by APZCTreeManager in collaboration with
 WebRender, which has more detailed information about the structure of
-the page content than is stored in APZ directly.
-
-FIXME: Reference section with more details about WR hit-testing
+the page content than is stored in APZ directly. See
+:ref:`this section <wr-hit-test-details>` for more details.
 
 Also note that for some types of input (e.g. when the user puts two
 fingers down to do a pinch) we do not want the input to be “split”
@@ -603,6 +602,8 @@ The main sources of complexity in this code come from:
    scrollframes without duplications).
 2. The deferred-transform optimization that is described in more detail
    at the declaration of `StackingContextHelper::mDeferredTransformItem`.
+
+.. _wr-hit-test-details:
 
 Hit-testing
 ^^^^^^^^^^^
