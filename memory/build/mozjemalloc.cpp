@@ -52,40 +52,57 @@
 //
 // Allocation requests are rounded up to the nearest size class, and no record
 // of the original request size is maintained.  Allocations are broken into
-// categories according to size class.  Assuming runtime defaults, 4 kB pages
-// and a 16 byte quantum on a 32-bit system, the size classes in each category
-// are as follows:
+// categories according to size class.  Assuming runtime defaults, the size
+// classes in each category are as follows (for x86, x86_64 and Apple Silicon):
 //
-//   |=====================================|
-//   | Category | Subcategory    |    Size |
-//   |=====================================|
-//   | Small    | Tiny           |       4 |
-//   |          |                |       8 |
-//   |          |----------------+---------|
-//   |          | Quantum-spaced |      16 |
-//   |          |                |      32 |
-//   |          |                |      48 |
-//   |          |                |     ... |
-//   |          |                |     480 |
-//   |          |                |     496 |
-//   |          |                |     512 |
-//   |          |----------------+---------|
-//   |          | Sub-page       |    1 kB |
-//   |          |                |    2 kB |
-//   |=====================================|
-//   | Large                     |    4 kB |
-//   |                           |    8 kB |
-//   |                           |   12 kB |
-//   |                           |     ... |
-//   |                           | 1012 kB |
-//   |                           | 1016 kB |
-//   |                           | 1020 kB |
-//   |=====================================|
-//   | Huge                      |    1 MB |
-//   |                           |    2 MB |
-//   |                           |    3 MB |
-//   |                           |     ... |
-//   |=====================================|
+//   |===============================================================|
+//   | Category | Subcategory    |     x86 |  x86_64 | Apple Silicon |
+//   |---------------------------+---------+---------+---------------+
+//   | Word size                 |  32 bit |  64 bit |        64 bit |
+//   | Page size                 |    4 Kb |    4 Kb |         16 Kb |
+//   |===============================================================|
+//   | Small    | Tiny           |     4/- |       - |             - |
+//   |          |                |       8 |     8/- |             8 |
+//   |          |----------------+---------|---------|---------------|
+//   |          | Quantum-spaced |      16 |      16 |            16 |
+//   |          |                |      32 |      32 |            32 |
+//   |          |                |      48 |      48 |            48 |
+//   |          |                |     ... |     ... |           ... |
+//   |          |                |     480 |     480 |           480 |
+//   |          |                |     496 |     496 |           496 |
+//   |          |----------------+---------|---------|---------------|
+//   |          | Quantum-wide-  |     512 |     512 |           512 |
+//   |          | spaced         |     768 |     768 |           768 |
+//   |          |                |     ... |     ... |           ... |
+//   |          |                |    3584 |    3584 |          3584 |
+//   |          |                |    3840 |    3840 |          3840 |
+//   |          |----------------+---------|---------|---------------|
+//   |          | Sub-page       |       - |       - |          4096 |
+//   |          |                |       - |       - |          8 kB |
+//   |===============================================================|
+//   | Large                     |    4 kB |    4 kB |             - |
+//   |                           |    8 kB |    8 kB |             - |
+//   |                           |   12 kB |   12 kB |             - |
+//   |                           |   16 kB |   16 kB |         16 kB |
+//   |                           |     ... |     ... |             - |
+//   |                           |   32 kB |   32 kB |         32 kB |
+//   |                           |     ... |     ... |           ... |
+//   |                           | 1008 kB | 1008 kB |       1008 kB |
+//   |                           | 1012 kB | 1012 kB |             - |
+//   |                           | 1016 kB | 1012 kB |             - |
+//   |                           | 1020 kB | 1020 kB |             - |
+//   |===============================================================|
+//   | Huge                      |    1 MB |    1 MB |          1 MB |
+//   |                           |    2 MB |    2 MB |          2 MB |
+//   |                           |    3 MB |    3 MB |          3 MB |
+//   |                           |     ... |     ... |           ... |
+//   |===============================================================|
+//
+// Legend:
+//   n:   Size class exists for this platform.
+//   n/-: This size class doesn't exist on Windows (see kMinTinyClass).
+//   -:   This size class doesn't exist for this platform.
+//   ...: Size classes follow a pattern here.
 //
 // NOTE: Due to Mozilla bug 691003, we cannot reserve less than one word for an
 // allocation on Linux or Mac.  So on 32-bit *nix, the smallest bucket size is
@@ -377,6 +394,10 @@ struct arena_chunk_t {
 // negatively affect performance.
 static const size_t kCacheLineSize = 64;
 
+// Our size classes are inclusive ranges of memory sizes.  By describing the
+// minimums and how memory is allocated in each range the maximums can be
+// calculated.
+
 // Smallest size class to support.  On Windows the smallest allocation size
 // must be 8 bytes on 32-bit, 16 bytes on 64-bit.  On Linux and Mac, even
 // malloc(1) must reserve a word's worth of memory (see Mozilla bug 691003).
@@ -389,28 +410,47 @@ static const size_t kMinTinyClass = sizeof(void*);
 // Maximum tiny size class.
 static const size_t kMaxTinyClass = 8;
 
-// Amount (quantum) separating quantum-spaced size classes.
-static const size_t kQuantum = 16;
-static const size_t kQuantumMask = kQuantum - 1;
-
 // Smallest quantum-spaced size classes. It could actually also be labelled a
 // tiny allocation, and is spaced as such from the largest tiny size class.
 // Tiny classes being powers of 2, this is twice as large as the largest of
 // them.
 static const size_t kMinQuantumClass = kMaxTinyClass * 2;
+static const size_t kMinQuantumWideClass = 512;
+static const size_t kMinSubPageClass = 4_KiB;
 
-// Largest quantum-spaced size classes.
-static const size_t kMaxQuantumClass = 512;
+// Amount (quantum) separating quantum-spaced size classes.
+static const size_t kQuantum = 16;
+static const size_t kQuantumMask = kQuantum - 1;
+static const size_t kQuantumWide = 256;
+static const size_t kQuantumWideMask = kQuantumWide - 1;
+
+static const size_t kMaxQuantumClass = kMinQuantumWideClass - kQuantum;
+static const size_t kMaxQuantumWideClass = kMinSubPageClass - kQuantumWide;
+
+// We can optimise some divisions to shifts if these are powers of two.
+static_assert(mozilla::IsPowerOfTwo(kQuantum),
+              "kQuantum is not a power of two");
+static_assert(mozilla::IsPowerOfTwo(kQuantumWide),
+              "kQuantumWide is not a power of two");
 
 static_assert(kMaxQuantumClass % kQuantum == 0,
               "kMaxQuantumClass is not a multiple of kQuantum");
+static_assert(kMaxQuantumWideClass % kQuantumWide == 0,
+              "kMaxQuantumWideClass is not a multiple of kQuantumWide");
+static_assert(kQuantum < kQuantumWide,
+              "kQuantum must be smaller than kQuantumWide");
+static_assert(mozilla::IsPowerOfTwo(kMinSubPageClass),
+              "kMinSubPageClass is not a power of two");
 
 // Number of (2^n)-spaced tiny classes.
 static const size_t kNumTinyClasses =
-    LOG2(kMinQuantumClass) - LOG2(kMinTinyClass);
+    LOG2(kMaxTinyClass) - LOG2(kMinTinyClass) + 1;
 
 // Number of quantum-spaced classes.
-static const size_t kNumQuantumClasses = kMaxQuantumClass / kQuantum;
+static const size_t kNumQuantumClasses =
+    (kMaxQuantumClass - kMinQuantumClass) / kQuantum + 1;
+static const size_t kNumQuantumWideClasses =
+    (kMaxQuantumWideClass - kMinQuantumWideClass) / kQuantumWide + 1;
 
 // Size and alignment of memory chunks that are allocated by the OS's virtual
 // memory system.
@@ -443,6 +483,7 @@ static size_t gPageSize;
 #  define END_GLOBALS
 #  define DEFINE_GLOBAL(type) static const type
 #  define GLOBAL_LOG2 LOG2
+#  define GLOBAL_LOG2_OR_0 LOG2_OR_0
 #  define GLOBAL_ASSERT_HELPER1(x) static_assert(x, #  x)
 #  define GLOBAL_ASSERT_HELPER2(x, y) static_assert(x, y)
 #  define GLOBAL_ASSERT(...)                                               \
@@ -455,6 +496,7 @@ static size_t gPageSize;
 #  define END_GLOBALS }
 #  define DEFINE_GLOBAL(type)
 #  define GLOBAL_LOG2 FloorLog2
+#  define GLOBAL_LOG2_OR_0 FloorLog2
 #  define GLOBAL_ASSERT MOZ_RELEASE_ASSERT
 #endif
 
@@ -467,15 +509,21 @@ DECLARE_GLOBAL(size_t, gChunkHeaderNumPages)
 DECLARE_GLOBAL(size_t, gMaxLargeClass)
 
 DEFINE_GLOBALS
-// Largest sub-page size class.
-DEFINE_GLOBAL(size_t) gMaxSubPageClass = gPageSize / 2;
+
+// Largest sub-page size class, or zero if there are none
+DEFINE_GLOBAL(size_t)
+gMaxSubPageClass = gPageSize / 2 >= kMinSubPageClass ? gPageSize / 2 : 0;
 
 // Max size class for bins.
-#define gMaxBinClass gMaxSubPageClass
+#define gMaxBinClass \
+  (gMaxSubPageClass ? gMaxSubPageClass : kMaxQuantumWideClass)
 
-// Number of (2^n)-spaced sub-page bins.
+// Number of sub-page bins.
 DEFINE_GLOBAL(uint8_t)
-gNumSubPageClasses = GLOBAL_LOG2(gMaxSubPageClass) - LOG2(kMaxQuantumClass);
+gNumSubPageClasses =
+    static_cast<uint8_t>(gMaxSubPageClass ? GLOBAL_LOG2_OR_0(gMaxSubPageClass) -
+                                                LOG2(kMinSubPageClass) + 1
+                                          : 0);
 
 DEFINE_GLOBAL(uint8_t) gPageSize2Pow = GLOBAL_LOG2(gPageSize);
 DEFINE_GLOBAL(size_t) gPageSizeMask = gPageSize - 1;
@@ -500,9 +548,16 @@ gMaxLargeClass =
 GLOBAL_ASSERT(1ULL << gPageSize2Pow == gPageSize,
               "Page size is not a power of two");
 GLOBAL_ASSERT(kQuantum >= sizeof(void*));
-GLOBAL_ASSERT(kQuantum <= gPageSize);
+GLOBAL_ASSERT(kQuantum <= kQuantumWide);
+GLOBAL_ASSERT(kQuantumWide <= (kMinSubPageClass - kMaxQuantumClass));
+
+GLOBAL_ASSERT(kQuantumWide <= kMaxQuantumClass);
+
+GLOBAL_ASSERT(gMaxSubPageClass >= kMinSubPageClass || gMaxSubPageClass == 0);
+GLOBAL_ASSERT(gMaxLargeClass >= gMaxSubPageClass);
 GLOBAL_ASSERT(kChunkSize >= gPageSize);
 GLOBAL_ASSERT(kQuantum * 4 <= kChunkSize);
+
 END_GLOBALS
 
 // Recycle at most 128 MiB of chunks. This means we retain at most
@@ -526,13 +581,19 @@ static size_t opt_dirty_max = DIRTY_MAX_DEFAULT;
 
 // Return the smallest quantum multiple that is >= a.
 #define QUANTUM_CEILING(a) (((a) + (kQuantumMask)) & ~(kQuantumMask))
+#define QUANTUM_WIDE_CEILING(a) \
+  (((a) + (kQuantumWideMask)) & ~(kQuantumWideMask))
+
+// Return the smallest sub page-size  that is >= a.
+#define SUBPAGE_CEILING(a) (RoundUpPow2(a))
 
 // Return the smallest pagesize multiple that is >= s.
 #define PAGE_CEILING(s) (((s) + gPageSizeMask) & ~gPageSizeMask)
 
 // Number of all the small-allocated classes
-#define NUM_SMALL_CLASSES \
-  (kNumTinyClasses + kNumQuantumClasses + gNumSubPageClasses)
+#define NUM_SMALL_CLASSES                                          \
+  (kNumTinyClasses + kNumQuantumClasses + kNumQuantumWideClasses + \
+   gNumSubPageClasses)
 
 // ***************************************************************************
 // MALLOC_DECOMMIT and MALLOC_DOUBLE_PURGE are mutually exclusive.
@@ -658,6 +719,7 @@ class SizeClass {
   enum ClassType {
     Tiny,
     Quantum,
+    QuantumWide,
     SubPage,
     Large,
   };
@@ -669,9 +731,12 @@ class SizeClass {
     } else if (aSize <= kMaxQuantumClass) {
       mType = Quantum;
       mSize = QUANTUM_CEILING(aSize);
+    } else if (aSize <= kMaxQuantumWideClass) {
+      mType = QuantumWide;
+      mSize = QUANTUM_WIDE_CEILING(aSize);
     } else if (aSize <= gMaxSubPageClass) {
       mType = SubPage;
-      mSize = RoundUpPow2(aSize);
+      mSize = SUBPAGE_CEILING(aSize);
     } else if (aSize <= gMaxLargeClass) {
       mType = Large;
       mSize = PAGE_CEILING(aSize);
@@ -878,7 +943,10 @@ struct arena_bin_t {
   //   304  12 KiB    320  12 KiB    336   4 KiB    352   8 KiB
   //   368   4 KiB    384   8 KiB    400  20 KiB    416  16 KiB
   //   432  12 KiB    448   4 KiB    464  16 KiB    480   8 KiB
-  //   496  20 KiB    512  32 KiB   1024  64 KiB   2048 128 KiB
+  //   496  20 KiB    512  32 KiB    768  16 KiB   1024  64 KiB
+  //  1280  24 KiB   1536  32 KiB   1792  16 KiB   2048 128 KiB
+  //  2304  16 KiB   2560  48 KiB   2816  36 KiB   3072  64 KiB
+  //  3328  36 KiB   3584  32 KiB   3840  64 KiB
   inline void Init(SizeClass aSizeClass);
 };
 
@@ -972,8 +1040,12 @@ struct arena_t {
   //       33  |  496 |
   //       34  |  512 |
   //   --------+------+
-  //       35  | 1024 |
-  //       36  | 2048 |
+  //       35  |  768 |
+  //       36  | 1024 |
+  //           :      :
+  //           :      :
+  //       46  | 3584 |
+  //       47  | 3840 |
   //   --------+------+
   arena_bin_t mBins[1];  // Dynamically sized.
 
@@ -2821,11 +2893,21 @@ void* arena_t::MallocSmall(size_t aSize, bool aZero) {
       bin = &mBins[FloorLog2(aSize / kMinTinyClass)];
       break;
     case SizeClass::Quantum:
-      bin = &mBins[kNumTinyClasses + (aSize / kQuantum) - 1];
+      // Although we divide 2 things by kQuantum, the compiler will
+      // reduce `kMinQuantumClass / kQuantum` and `kNumTinyClasses` to a
+      // single constant.
+      bin = &mBins[kNumTinyClasses + (aSize / kQuantum) -
+                   (kMinQuantumClass / kQuantum)];
+      break;
+    case SizeClass::QuantumWide:
+      bin =
+          &mBins[kNumTinyClasses + kNumQuantumClasses + (aSize / kQuantumWide) -
+                 (kMinQuantumWideClass / kQuantumWide)];
       break;
     case SizeClass::SubPage:
-      bin = &mBins[kNumTinyClasses + kNumQuantumClasses +
-                   (FloorLog2(aSize / kMaxQuantumClass) - 1)];
+      bin =
+          &mBins[kNumTinyClasses + kNumQuantumClasses + kNumQuantumWideClasses +
+                 (FloorLog2(aSize) - LOG2(kMinSubPageClass))];
       break;
     default:
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected size class type");
@@ -3558,8 +3640,8 @@ arena_t::arena_t(arena_params_t* aParams, bool aIsPrivate) {
     arena_bin_t& bin = mBins[i];
     bin.Init(sizeClass);
 
-    // SizeClass doesn't want sizes larger than gMaxSubPageClass for now.
-    if (sizeClass.Size() == gMaxSubPageClass) {
+    // SizeClass doesn't want sizes larger than gMaxBinClass for now.
+    if (sizeClass.Size() == gMaxBinClass) {
       break;
     }
     sizeClass = sizeClass.Next();
@@ -4253,6 +4335,9 @@ inline void MozJemalloc::jemalloc_stats_internal(
   aStats->opt_zero = opt_zero;
   aStats->quantum = kQuantum;
   aStats->quantum_max = kMaxQuantumClass;
+  aStats->quantum_wide = kQuantumWide;
+  aStats->quantum_wide_max = kMaxQuantumWideClass;
+  aStats->subpage_max = gMaxSubPageClass;
   aStats->large_max = gMaxLargeClass;
   aStats->chunksize = kChunkSize;
   aStats->page_size = gPageSize;

@@ -20,6 +20,20 @@ struct Log2 : mozilla::tl::CeilingLog2<N> {
 };
 #define LOG2(N) Log2<N>::value
 
+// Like Log2, but ignores 0.
+template <size_t N>
+struct Log2Or0 : mozilla::tl::CeilingLog2<N> {
+  using mozilla::tl::CeilingLog2<N>::value;
+  static_assert(1ULL << value == N, "Number is not a power of 2");
+};
+template <>
+struct Log2Or0<0> {
+  // This makes no sense but neither does any other value.  It's just enough
+  // that this can be used on the unused side of a conditional expression.
+  static const size_t value = 0;
+};
+#define LOG2_OR_0(N) Log2Or0<N>::value
+
 enum class Order {
   eLess = -1,
   eEqual = 0,
