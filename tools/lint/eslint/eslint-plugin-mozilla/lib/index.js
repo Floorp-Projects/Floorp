@@ -53,6 +53,7 @@ module.exports = {
     "no-useless-run-test": require("../lib/rules/no-useless-run-test"),
     "prefer-boolean-length-check": require("../lib/rules/prefer-boolean-length-check"),
     "prefer-formatValues": require("../lib/rules/prefer-formatValues"),
+    "reject-addtask-only": require("../lib/rules/reject-addtask-only"),
     "reject-chromeutils-import-params": require("../lib/rules/reject-chromeutils-import-params"),
     "reject-importGlobalProperties": require("../lib/rules/reject-importGlobalProperties"),
     "reject-osfile": require("../lib/rules/reject-osfile"),
