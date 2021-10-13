@@ -30,6 +30,7 @@
 #include "nsURLHelper.h"
 #include "prio.h"
 #include "SimpleChannel.h"
+#include "nsICancelable.h"
 
 #define PAGE_THUMB_HOST "thumbnails"
 #define PAGE_THUMB_SCHEME "moz-page-thumb"
