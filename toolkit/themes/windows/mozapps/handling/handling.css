@@ -23,3 +23,9 @@ richlistbox {
 .description {
   color: GrayText;
 }
+
+@media (prefers-contrast) {
+  richlistitem[selected] .description {
+    color: inherit;
+  }
+}
