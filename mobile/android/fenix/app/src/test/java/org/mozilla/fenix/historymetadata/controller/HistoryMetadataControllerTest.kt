@@ -14,6 +14,8 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
+import mozilla.components.browser.state.action.HistoryMetadataAction
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.DocumentType
 import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.HistoryMetadataKey
@@ -24,9 +26,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
-import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
+import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentDirections
+import org.mozilla.fenix.home.HomeFragmentStore
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HistoryMetadataControllerTest {
@@ -38,6 +41,8 @@ class HistoryMetadataControllerTest {
 
     private val navController = mockk<NavController>(relaxed = true)
     private lateinit var storage: HistoryMetadataStorage
+    private lateinit var homeFragmentStore: HomeFragmentStore
+    private lateinit var store: BrowserStore
     private val scope = TestCoroutineScope()
 
     private lateinit var controller: DefaultHistoryMetadataController
@@ -48,9 +53,13 @@ class HistoryMetadataControllerTest {
             every { id } returns R.id.homeFragment
         }
         storage = mockk(relaxed = true)
+        homeFragmentStore = mockk(relaxed = true)
+        store = mockk(relaxed = true)
 
         controller = spyk(
             DefaultHistoryMetadataController(
+                homeStore = homeFragmentStore,
+                store = store,
                 navController = navController,
                 scope = scope,
                 storage = storage
@@ -126,14 +135,15 @@ class HistoryMetadataControllerTest {
         controller.handleRemoveGroup(historyGroup.title)
 
         testDispatcher.advanceUntilIdle()
+        verify {
+            store.dispatch(HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = historyGroup.title))
+        }
+        verify {
+            homeFragmentStore.dispatch(HomeFragmentAction.DisbandSearchGroupAction(searchTerm = historyGroup.title))
+        }
 
         coVerify {
             storage.deleteHistoryMetadata(historyGroup.title)
-        }
-        verify {
-            navController.navigate(
-                BrowserFragmentDirections.actionGlobalHome()
-            )
         }
     }
 }
