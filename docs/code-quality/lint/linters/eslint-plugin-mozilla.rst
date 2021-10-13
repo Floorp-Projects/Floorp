@@ -40,6 +40,7 @@ The plugin implements the following rules:
    eslint-plugin-mozilla/no-useless-parameters
    eslint-plugin-mozilla/no-useless-removeEventListener
    eslint-plugin-mozilla/no-useless-run-test
+   eslint-plugin-mozilla/reject-addtask-only
    eslint-plugin-mozilla/reject-chromeutils-import-params
    eslint-plugin-mozilla/reject-importGlobalProperties
    eslint-plugin-mozilla/reject-osfile
