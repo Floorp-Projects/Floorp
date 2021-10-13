@@ -89,7 +89,8 @@ class HistoryMetadataMiddleware(
                     }
                 }
             }
-            is EngineAction.LoadUrlAction -> {
+            is EngineAction.LoadUrlAction,
+            is EngineAction.OptimizedLoadUrlTriggeredAction -> {
                 // This isn't an ideal fix as we shouldn't have to hold any state in the middleware:
                 // https://github.com/mozilla-mobile/android-components/issues/11034
                 directLoadTriggered = true

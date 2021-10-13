@@ -243,6 +243,62 @@ class HistoryMetadataMiddlewareTest {
     }
 
     @Test
+    fun `GIVEN tab with search terms WHEN subsequent optimized direct load occurs THEN search terms are not retained`() {
+        service = TestingMetadataService()
+        middleware = HistoryMetadataMiddleware(service)
+        store = BrowserStore(
+            middleware = listOf(middleware) + EngineMiddleware.create(engine = mockk()),
+            initialState = BrowserState()
+        )
+        setupGoogleSearchEngine()
+
+        val parentTab = createTab("https://google.com?q=mozilla+website", searchTerms = "mozilla website")
+        val tab = createTab("https://google.com?url=https://mozilla.org", parent = parentTab)
+        store.dispatch(TabListAction.AddTabAction(parentTab, select = true)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+
+        with((service as TestingMetadataService).createdMetadata) {
+            assertEquals(2, this.count())
+            assertEquals("https://google.com?q=mozilla+website", this[0].url)
+            assertNull(this[0].searchTerm)
+            assertNull(this[0].referrerUrl)
+
+            assertEquals("https://google.com?url=https://mozilla.org", this[1].url)
+            assertEquals("mozilla website", this[1].searchTerm)
+            assertEquals("https://google.com?q=mozilla+website", this[1].referrerUrl)
+        }
+
+        // Both tabs load.
+        store.dispatch(ContentAction.UpdateHistoryStateAction(parentTab.id, listOf(HistoryItem("Google - mozilla website", "https://google.com?q=mozilla+website")), 0)).joinBlocking()
+        store.dispatch(ContentAction.UpdateHistoryStateAction(tab.id, listOf(HistoryItem("", "https://google.com?url=mozilla+website")), currentIndex = 0)).joinBlocking()
+        with((service as TestingMetadataService).createdMetadata) {
+            assertEquals(2, this.count())
+        }
+
+        // Direct load occurs on child tab. Search terms should be cleared.
+        store.dispatch(EngineAction.OptimizedLoadUrlTriggeredAction(tab.id, "https://firefox.com")).joinBlocking()
+        store.dispatch(ContentAction.UpdateUrlAction(tab.id, "https://firefox.com")).joinBlocking()
+        store.dispatch(ContentAction.UpdateHistoryStateAction(tab.id, listOf(HistoryItem("", "https://google.com?url=mozilla+website"), HistoryItem("Firefox", "https://firefox.com")), 1)).joinBlocking()
+        with((service as TestingMetadataService).createdMetadata) {
+            assertEquals(3, this.count())
+            assertEquals("https://firefox.com", this[2].url)
+            assertNull(this[2].searchTerm)
+            assertNull(this[2].referrerUrl)
+        }
+
+        // Direct load occurs on parent tab. Search terms should be cleared.
+        store.dispatch(EngineAction.OptimizedLoadUrlTriggeredAction(parentTab.id, "https://firefox.com")).joinBlocking()
+        store.dispatch(ContentAction.UpdateUrlAction(parentTab.id, "https://firefox.com")).joinBlocking()
+        store.dispatch(ContentAction.UpdateHistoryStateAction(parentTab.id, listOf(HistoryItem("Google - mozilla website", "https://google.com?q=mozilla+website"), HistoryItem("Firefox", "https://firefox.com")), 1)).joinBlocking()
+        with((service as TestingMetadataService).createdMetadata) {
+            assertEquals(4, this.count())
+            assertEquals("https://firefox.com", this[3].url)
+            assertNull(this[3].searchTerm)
+            assertNull(this[3].referrerUrl)
+        }
+    }
+
+    @Test
     fun `GIVEN normal tab has parent WHEN url is the same THEN nothing happens`() {
         val parentTab = createTab("https://mozilla.org", searchTerms = "mozilla website")
         val tab = createTab("https://mozilla.org", parent = parentTab)
