@@ -735,11 +735,9 @@ void CanonicalBrowsingContext::CallOnAllTopDescendants(
   }
 }
 
-void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
-                                                    const nsID& aChangeID,
-                                                    uint32_t aLoadType,
-                                                    bool aPersist,
-                                                    bool aCloneEntryChildren) {
+void CanonicalBrowsingContext::SessionHistoryCommit(
+    uint64_t aLoadId, const nsID& aChangeID, uint32_t aLoadType, bool aPersist,
+    bool aCloneEntryChildren, bool aChannelExpired) {
   MOZ_LOG(gSHLog, LogLevel::Verbose,
           ("CanonicalBrowsingContext::SessionHistoryCommit %p %" PRIu64, this,
            aLoadId));
@@ -753,6 +751,10 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
       }
 
       RefPtr<SessionHistoryEntry> newActiveEntry = mLoadingEntries[i].mEntry;
+
+      if (aChannelExpired) {
+        newActiveEntry->SharedInfo()->mExpired = true;
+      }
 
       bool loadFromSessionHistory = !newActiveEntry->ForInitialLoad();
       newActiveEntry->SetForInitialLoad(false);
