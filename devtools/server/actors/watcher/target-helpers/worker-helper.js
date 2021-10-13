@@ -76,13 +76,13 @@ async function destroyTargets(watcher) {
  * @param Array<Object> entries
  *        The values to be added to this type of data
  */
-async function addWatcherDataEntry({ watcher, type, entries }) {
+async function addSessionDataEntry({ watcher, type, entries }) {
   const browsingContexts = getFilteredBrowsingContext(watcher.browserElement);
   const promises = [];
   for (const browsingContext of browsingContexts) {
     const promise = browsingContext.currentWindowGlobal
       .getActor(DEVTOOLS_WORKER_JS_WINDOW_ACTOR_NAME)
-      .addWatcherDataEntry({
+      .addSessionDataEntry({
         watcherActorID: watcher.actorID,
         browserId: watcher.browserId,
         type,
@@ -97,14 +97,14 @@ async function addWatcherDataEntry({ watcher, type, entries }) {
 /**
  * Notify all existing frame targets that some data entries have been removed
  *
- * See addWatcherDataEntry for argument documentation.
+ * See addSessionDataEntry for argument documentation.
  */
-function removeWatcherDataEntry({ watcher, type, entries }) {
+function removeSessionDataEntry({ watcher, type, entries }) {
   const browsingContexts = getFilteredBrowsingContext(watcher.browserElement);
   for (const browsingContext of browsingContexts) {
     browsingContext.currentWindowGlobal
       .getActor(DEVTOOLS_WORKER_JS_WINDOW_ACTOR_NAME)
-      .removeWatcherDataEntry({
+      .removeSessionDataEntry({
         watcherActorID: watcher.actorID,
         browserId: watcher.browserId,
         type,
@@ -139,6 +139,6 @@ function getFilteredBrowsingContext(browserElement) {
 module.exports = {
   createTargets,
   destroyTargets,
-  addWatcherDataEntry,
-  removeWatcherDataEntry,
+  addSessionDataEntry,
+  removeSessionDataEntry,
 };

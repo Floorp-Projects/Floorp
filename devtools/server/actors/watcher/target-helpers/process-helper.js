@@ -240,7 +240,7 @@ function destroyTargets(watcher) {
  * @param {Array<Object>} options.entries
  *        The values to be added to this type of data
  */
-async function addWatcherDataEntry({ watcher, type, entries }) {
+async function addSessionDataEntry({ watcher, type, entries }) {
   let expectedCount = Services.ppmm.childCount - 1;
   if (expectedCount == 0) {
     return;
@@ -255,7 +255,7 @@ async function addWatcherDataEntry({ watcher, type, entries }) {
       maybeResolve();
     };
     Services.ppmm.addMessageListener(
-      "debug:add-watcher-data-entry-done",
+      "debug:add-session-data-entry-done",
       listener
     );
     const onContentProcessClosed = (messageManager, topic, data) => {
@@ -265,7 +265,7 @@ async function addWatcherDataEntry({ watcher, type, entries }) {
     const maybeResolve = () => {
       if (count == expectedCount) {
         Services.ppmm.removeMessageListener(
-          "debug:add-watcher-data-entry-done",
+          "debug:add-session-data-entry-done",
           listener
         );
         Services.obs.removeObserver(
@@ -278,7 +278,7 @@ async function addWatcherDataEntry({ watcher, type, entries }) {
     Services.obs.addObserver(onContentProcessClosed, "message-manager-close");
   });
 
-  Services.ppmm.broadcastAsyncMessage("debug:add-watcher-data-entry", {
+  Services.ppmm.broadcastAsyncMessage("debug:add-session-data-entry", {
     watcherActorID: watcher.actorID,
     type,
     entries,
@@ -290,10 +290,10 @@ async function addWatcherDataEntry({ watcher, type, entries }) {
 /**
  * Notify all existing content processes that some data entries have been removed
  *
- * See addWatcherDataEntry for argument documentation.
+ * See addSessionDataEntry for argument documentation.
  */
-function removeWatcherDataEntry({ watcher, type, entries }) {
-  Services.ppmm.broadcastAsyncMessage("debug:remove-watcher-data-entry", {
+function removeSessionDataEntry({ watcher, type, entries }) {
+  Services.ppmm.broadcastAsyncMessage("debug:remove-session-data-entry", {
     watcherActorID: watcher.actorID,
     type,
     entries,
@@ -303,6 +303,6 @@ function removeWatcherDataEntry({ watcher, type, entries }) {
 module.exports = {
   createTargets,
   destroyTargets,
-  addWatcherDataEntry,
-  removeWatcherDataEntry,
+  addSessionDataEntry,
+  removeSessionDataEntry,
 };

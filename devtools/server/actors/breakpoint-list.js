@@ -16,7 +16,7 @@ const { BREAKPOINTS, XHR_BREAKPOINTS, EVENT_BREAKPOINTS } = SUPPORTED_DATA;
  * This actor manages the breakpoints list.
  *
  * Breakpoints should be available as early as possible to new targets and
- * will be forwarded to the WatcherActor to populate the shared watcher data available to
+ * will be forwarded to the WatcherActor to populate the shared session data available to
  * all DevTools targets.
  *
  * @constructor

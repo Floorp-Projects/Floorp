@@ -336,7 +336,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
       if (!Array.isArray(entries) || entries.length == 0) {
         continue;
       }
-      targetActor.addWatcherDataEntry(type, entries, isDocumentCreation);
+      targetActor.addSessionDataEntry(type, entries, isDocumentCreation);
     }
   }
 
@@ -491,18 +491,18 @@ class DevToolsFrameChild extends JSWindowActorChild {
         const { watcherActorID } = message.data;
         return this._destroyTargetActor(watcherActorID);
       }
-      case "DevToolsFrameParent:addWatcherDataEntry": {
+      case "DevToolsFrameParent:addSessionDataEntry": {
         const { watcherActorID, browserId, type, entries } = message.data;
-        return this._addWatcherDataEntry(
+        return this._addSessionDataEntry(
           watcherActorID,
           browserId,
           type,
           entries
         );
       }
-      case "DevToolsFrameParent:removeWatcherDataEntry": {
+      case "DevToolsFrameParent:removeSessionDataEntry": {
         const { watcherActorID, browserId, type, entries } = message.data;
-        return this._removeWatcherDataEntry(
+        return this._removeSessionDataEntry(
           watcherActorID,
           browserId,
           type,
@@ -565,7 +565,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
     return targetActor;
   }
 
-  _addWatcherDataEntry(watcherActorID, browserId, type, entries) {
+  _addSessionDataEntry(watcherActorID, browserId, type, entries) {
     // /!\ We may have an issue here as there could be multiple targets for a given
     // (watcherActorID,browserId) pair.
     // This should be clarified as part of Bug 1725623.
@@ -579,10 +579,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
         `No target actor for this Watcher Actor ID:"${watcherActorID}" / BrowserId:${browserId}`
       );
     }
-    return targetActor.addWatcherDataEntry(type, entries);
+    return targetActor.addSessionDataEntry(type, entries);
   }
 
-  _removeWatcherDataEntry(watcherActorID, browserId, type, entries) {
+  _removeSessionDataEntry(watcherActorID, browserId, type, entries) {
     // /!\ We may have an issue here as there could be multiple targets for a given
     // (watcherActorID,browserId) pair.
     // This should be clarified as part of Bug 1725623.
@@ -592,7 +592,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
     });
     // By the time we are calling this, the target may already have been destroyed.
     if (targetActor) {
-      return targetActor.removeWatcherDataEntry(type, entries);
+      return targetActor.removeSessionDataEntry(type, entries);
     }
     return null;
   }

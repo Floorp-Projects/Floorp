@@ -109,27 +109,27 @@ this.addEventListener("message", async function(event) {
         for (const [type, entries] of Object.entries(
           packet.options.sessionData
         )) {
-          promises.push(workerTargetActor.addWatcherDataEntry(type, entries));
+          promises.push(workerTargetActor.addSessionDataEntry(type, entries));
         }
         await Promise.all(promises);
       }
 
       break;
 
-    case "add-watcher-data-entry":
+    case "add-session-data-entry":
       await connections
         .get(packet.forwardingPrefix)
-        .workerTargetActor.addWatcherDataEntry(
+        .workerTargetActor.addSessionDataEntry(
           packet.dataEntryType,
           packet.entries
         );
-      postMessage(JSON.stringify({ type: "watcher-data-entry-added" }));
+      postMessage(JSON.stringify({ type: "session-data-entry-added" }));
       break;
 
-    case "remove-watcher-data-entry":
+    case "remove-session-data-entry":
       await connections
         .get(packet.forwardingPrefix)
-        .workerTargetActor.removeWatcherDataEntry(
+        .workerTargetActor.removeSessionDataEntry(
           packet.dataEntryType,
           packet.entries
         );

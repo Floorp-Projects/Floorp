@@ -76,9 +76,9 @@ class DevToolsFrameParent extends JSWindowActorParent {
   /**
    * Communicate to the content process that some data have been added.
    */
-  async addWatcherDataEntry({ watcherActorID, browserId, type, entries }) {
+  async addSessionDataEntry({ watcherActorID, browserId, type, entries }) {
     try {
-      await this.sendQuery("DevToolsFrameParent:addWatcherDataEntry", {
+      await this.sendQuery("DevToolsFrameParent:addSessionDataEntry", {
         watcherActorID,
         browserId,
         type,
@@ -86,7 +86,7 @@ class DevToolsFrameParent extends JSWindowActorParent {
       });
     } catch (e) {
       console.warn(
-        "Failed to add watcher data entry for frame targets in browsing context",
+        "Failed to add session data entry for frame targets in browsing context",
         this.browsingContext.id
       );
       console.warn(e);
@@ -96,8 +96,8 @@ class DevToolsFrameParent extends JSWindowActorParent {
   /**
    * Communicate to the content process that some data have been removed.
    */
-  removeWatcherDataEntry({ watcherActorID, browserId, type, entries }) {
-    this.sendAsyncMessage("DevToolsFrameParent:removeWatcherDataEntry", {
+  removeSessionDataEntry({ watcherActorID, browserId, type, entries }) {
+    this.sendAsyncMessage("DevToolsFrameParent:removeSessionDataEntry", {
       watcherActorID,
       browserId,
       type,
