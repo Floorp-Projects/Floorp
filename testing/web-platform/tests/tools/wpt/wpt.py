@@ -202,7 +202,7 @@ def main(prog=None, argv=None):
         extras = ()
         kwargs = {}
 
-    if venv is not None:
+    if venv is not None and not main_args.skip_venv_setup:
         requirements = props["conditional_requirements"].get("commandline_flag")
         if requirements is not None:
             install_command_flag_requirements(venv, kwargs, requirements)
