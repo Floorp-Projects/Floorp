@@ -2001,7 +2001,8 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
       //   (mPopupAnchored).
       // - Popup isn't anchored but it has toplevel as parent, i.e.
       //   it's first popup.
-      useMoveToRect = (popup->mPopupAnchored ||
+      useMoveToRect = (mPopupType == ePopupTypeTooltip) ||
+                      (popup->mPopupAnchored ||
                        (!popup->mPopupAnchored &&
                         popup->mWaylandPopupPrev->mWaylandToplevel == nullptr));
     }
@@ -2354,8 +2355,9 @@ void nsWindow::WaylandPopupMove() {
   }
 
   if (!mPopupUseMoveToRect) {
-    if (mNeedsShow) {
+    if (mNeedsShow && mPopupType != ePopupTypeTooltip) {
       // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/4308
+      // Tooltips are created as subsurfaces with relative position.
       LOG_POPUP("  use gtk_window_move(%d, %d) for hidden widget\n",
                 mPopupPosition.x + mRelativePopupOffset.x,
                 mPopupPosition.y + mRelativePopupOffset.y);
@@ -2363,7 +2365,7 @@ void nsWindow::WaylandPopupMove() {
                       mPopupPosition.x + mRelativePopupOffset.x,
                       mPopupPosition.y + mRelativePopupOffset.y);
     } else {
-      LOG_POPUP("  use gtk_window_move(%d, %d)\n",
+      LOG_POPUP("  use gtk_window_move(%d, %d) for visible widget\n",
                 mRelativePopupPosition.x + mRelativePopupOffset.x,
                 mRelativePopupPosition.y + mRelativePopupOffset.y);
       gtk_window_move(GTK_WINDOW(mShell),
