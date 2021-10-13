@@ -12,7 +12,6 @@
 #include "nsIStreamListener.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsIChannel.h"
 
 class nsIAsyncOutputStream;
 class nsIInputStream;

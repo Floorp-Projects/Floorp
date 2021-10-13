@@ -7,7 +7,6 @@
 
 #include "mozilla/net/AltDataOutputStreamParent.h"
 #include "mozilla/Unused.h"
-#include "nsIAsyncOutputStream.h"
 
 namespace mozilla {
 namespace net {
