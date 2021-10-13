@@ -9,7 +9,6 @@
 #include "DNS.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Mutex.h"
 #include "nsString.h"
 #include "nsIDNSListener.h"
 #include "nsIObserver.h"
@@ -58,7 +57,7 @@ class ODoHService : public nsIDNSListener,
   nsresult UpdateODoHConfigFromHTTPSRR();
   nsresult UpdateODoHConfigFromURI();
 
-  mozilla::Mutex mLock;
+  Mutex mLock;
   Atomic<bool, Relaxed> mQueryODoHConfigInProgress;
   nsCString mODoHProxyURI;
   nsCString mODoHTargetHost;

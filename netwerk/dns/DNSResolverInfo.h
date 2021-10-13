@@ -6,7 +6,6 @@
 #define mozilla_net_DNSResolverInfo_h__
 
 #include "nsIDNSResolverInfo.h"
-#include "nsString.h"
 
 namespace mozilla {
 namespace net {

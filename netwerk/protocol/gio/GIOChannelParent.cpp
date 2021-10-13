@@ -18,8 +18,6 @@
 #include "nsISecureBrowserUI.h"
 #include "nsQueryObject.h"
 #include "mozilla/Logging.h"
-#include "mozilla/net/ChannelEventQueue.h"
-#include "mozilla/ipc/URIUtils.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
