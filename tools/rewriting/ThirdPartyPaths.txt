@@ -99,6 +99,7 @@ js/src/vtune/jitprofiling.c
 js/src/vtune/jitprofiling.h
 js/src/vtune/legacy/
 js/src/zydis/
+layout/docs/css-gap-decorations/
 media/ffvpx/
 media/kiss_fft/
 media/libaom/

@@ -1,0 +1,80 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>Examples of 'column-rule-extent' on a grid container</title>
+
+<style>
+html,body {
+  color:black; background-color:white; font:20px/1 monospace;
+}
+
+.grid {
+  position: relative;
+  display: inline-grid;
+  grid: auto auto / repeat(7, 2ch);
+  gap: 10px 3px;
+
+  row-rule: 4px solid purple;
+
+  border: 2px solid;
+  margin-right: 10px;
+  margin-bottom: 30px;
+  background: lightgrey;
+}
+.segment { row-rule-extent: segment; }
+.segment-allow-overlap { row-rule-extent: segment allow-overlap; }
+.short-allow-overlap { row-rule-extent: short allow-overlap; }
+.short { row-rule-extent: short; }
+.long-allow-overlap { row-rule-extent: long allow-overlap; }
+.long { row-rule-extent: long; }
+.start { row-rule-extent: start; }
+.end { row-rule-extent: end; }
+.all-long-allow-overlap { row-rule-extent: all-long allow-overlap; }
+.all-long { row-rule-extent: all-long; }
+
+x {
+  background: grey;
+  opacity: .5;
+}
+x:nth-child(1) { grid-column: span 2; }
+x:nth-child(3) { grid-row: 1 / span 2; grid-column: 4;}
+x:nth-child(4) { grid-column: span 2; }
+x:nth-child(6) { }
+x:nth-child(7) { grid-row: 2; grid-column: 2 / span 3; }
+x:nth-child(8) { grid-column: span 3; }
+
+.grid::after {
+  position: absolute;
+  bottom: -1.5em;
+  font-size: 10px;
+  vertical-align: top;
+  content: attr(test);
+}
+pre { font-size: 10px; }
+</style>
+
+<pre>Test of various 'row-rule-extent' values:</pre>
+
+<div class="grid segment-allow-overlap"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div>
+<div class="grid segment"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div><br>
+<div class="grid short-allow-overlap"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div>
+<div class="grid short"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div><br>
+<div class="grid long-allow-overlap"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div>
+<div class="grid long"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div><br>
+<div class="grid start"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div>
+<div class="grid end"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div><br>
+<div class="grid all-long-allow-overlap"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div>
+<div class="grid all-long"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x><x>6</x><x>7</x><x>8</x></div><br>
+
+<script>
+window.onload = function() {
+  [...document.querySelectorAll('.grid')].forEach(function(elm) {
+    const cs = window.getComputedStyle(elm);
+    elm.setAttribute("test", 
+      "'" + cs.rowRuleExtent + "'"
+    );
+  });
+}
+</script>
