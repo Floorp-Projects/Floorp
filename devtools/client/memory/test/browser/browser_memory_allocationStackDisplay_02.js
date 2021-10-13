@@ -16,7 +16,7 @@ const { viewState } = require("devtools/client/memory/constants");
 const { changeView } = require("devtools/client/memory/actions/view");
 
 const TEST_URL =
-  "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
+  "https://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
 
 this.test = makeMemoryTest("about:blank", async function({ tab, panel }) {
   const heapWorker = panel.panelWin.gHeapAnalysesClient;

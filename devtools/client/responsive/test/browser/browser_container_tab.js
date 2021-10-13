@@ -5,7 +5,7 @@
 
 // Verify RDM opens for a container tab.
 
-const TEST_URL = "http://example.com/";
+const TEST_URL = "https://example.com/";
 
 addRDMTask(
   null,
