@@ -37,14 +37,18 @@ fun AwesomeBar(
     onAutoComplete: (AwesomeBar.Suggestion) -> Unit,
     onScroll: () -> Unit = {}
 ) {
-    AwesomeBar(
-        text = text,
-        colors = colors,
-        groups = listOf(
+    val groups = remember(providers) {
+        listOf(
             AwesomeBar.SuggestionProviderGroup(
                 providers = providers
             )
-        ),
+        )
+    }
+
+    AwesomeBar(
+        text = text,
+        colors = colors,
+        groups = groups,
         orientation = orientation,
         onSuggestionClicked = { _, suggestion -> onSuggestionClicked(suggestion) },
         onAutoComplete = { _, suggestion -> onAutoComplete(suggestion) },
