@@ -472,6 +472,7 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
             volatile uint8_t rawMemByte = 0;
             rawMemByte += rawMemory[0];
             rawMemByte += rawMemory[byteLen - 1];
+            (void)rawMemByte;
           }
         }
 
