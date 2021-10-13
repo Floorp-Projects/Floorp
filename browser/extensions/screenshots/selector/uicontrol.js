@@ -856,7 +856,6 @@ this.uicontrol = (function() {
     try {
       sendEvent("internal", "deactivate");
       setState("cancel");
-      callBackground("closeSelector");
       selectorLoader.unloadModules();
     } catch (e) {
       log.error("Error in deactivate", e);

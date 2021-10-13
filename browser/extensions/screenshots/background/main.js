@@ -35,23 +35,10 @@ this.main = (function() {
     }
   }
 
-  function setIconActive(active) {
-    let windowIDPromise = browser.windows.getLastFocused().then(windowInfo => {
-      return windowInfo.id;
-    });
-    windowIDPromise.then(id => {
-      return browser.experiments.screenshots.setIcon(active, id);
-    });
-  }
-
   function toggleSelector(tab) {
     return analytics
       .refreshTelemetryPref()
       .then(() => selectorLoader.toggle(tab.id))
-      .then(active => {
-        setIconActive(active);
-        return active;
-      })
       .catch(error => {
         if (
           error.message &&
@@ -253,10 +240,6 @@ this.main = (function() {
           downloadId = id;
         });
     });
-  });
-
-  communication.register("closeSelector", sender => {
-    setIconActive(false);
   });
 
   communication.register("abortStartShot", () => {

@@ -49,10 +49,10 @@ add_task(async function test_disabledMultiWindow() {
         "The screenshots button was added to the nav bar"
       );
 
-      Assert.equal(
-        screenshotBtn.disabled,
-        true,
-        "Screenshots button is now disabled"
+      info("Waiting for the preselect UI");
+      await helper.waitForUIContent(
+        helper.selector.preselectIframe,
+        helper.selector.fullPageButton
       );
 
       let newWin = await BrowserTestUtils.openNewBrowserWindow();

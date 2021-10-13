@@ -35,13 +35,6 @@ this.screenshots = class extends ExtensionAPI {
           isHistoryEnabled() {
             return Services.prefs.getBoolPref("places.history.enabled", true);
           },
-          setIcon: (isActive, windowId) => {
-            Services.obs.notifyObservers(
-              Services.wm.getOuterWindowWithId(windowId),
-              "toggle-screenshot-disable",
-              isActive
-            );
-          },
           onScreenshotCommand: new EventManager({
             context,
             name: "experiments.screenshots.onScreenshotCommand",
