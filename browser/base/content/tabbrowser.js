@@ -383,7 +383,15 @@
             oa
           );
         } else {
-          remoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
+          // If we reach here, we don't have the url to load. This means that
+          // `uriToLoad` is most likely a promise which is waiting on SessionStore
+          // initialization. We can't delay setting up the browser here, as that
+          // would mean that `gBrowser.selectedBrowser` might not always exist,
+          // which is the current assumption.
+
+          // In this case we default to the privileged about process as that's
+          // the best guess we can make, and we'll likely need it eventually.
+          remoteType = E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
         }
       }
 
