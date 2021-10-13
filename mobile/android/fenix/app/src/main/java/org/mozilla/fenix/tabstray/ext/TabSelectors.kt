@@ -48,11 +48,13 @@ fun BrowserState.getNormalTrayTabs(
 ): List<TabSessionState> {
     return normalTabs.run {
         if (searchTermTabGroupsAreEnabled && inactiveTabsEnabled) {
-            filter { it.isNormalTabActiveWithoutSearchTerm(maxActiveTime) }
+            val remainderTabs = toSearchGroup().second
+            filter { it.isNormalTabActiveWithoutSearchTerm(maxActiveTime) } + remainderTabs
         } else if (inactiveTabsEnabled) {
             filter { it.isNormalTabActive(maxActiveTime) }
         } else if (searchTermTabGroupsAreEnabled) {
-            filter { it.isNormalTabWithSearchTerm() }
+            val remainderTabs = toSearchGroup().second
+            filter { it.isNormalTabWithSearchTerm() } + remainderTabs
         } else {
             this
         }
@@ -65,7 +67,7 @@ fun BrowserState.getNormalTrayTabs(
 fun BrowserState.getSearchTabGroups(
     searchTermTabGroupsAreEnabled: Boolean
 ): List<TabGroup> = if (searchTermTabGroupsAreEnabled) {
-    normalTabs.toSearchGroup().filter { it.tabs.size > 1 }
+    normalTabs.toSearchGroup().first
 } else {
     emptyList()
 }
