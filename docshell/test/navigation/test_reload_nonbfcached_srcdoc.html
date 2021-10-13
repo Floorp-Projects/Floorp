@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test srcdoc handling when reloading a page.</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    // The old session history implementation asserts in
+    // https://searchfox.org/mozilla-central/rev/b822a27de3947d3f4898defac6164e52caf1451b/docshell/shistory/nsSHEntry.cpp#670-672
+    SimpleTest.expectAssertions(0, 1);
+    SimpleTest.waitForExplicitFinish();
+
+    var win;
+    function test() {
+      window.onmessage = function(event) {
+        if (event.data == "pageload:") {
+          // Trigger a similar reload as what the reload button does.
+          SpecialPowers.wrap(win)
+                       .docShell
+                       .QueryInterface(SpecialPowers.Ci.nsIWebNavigation)
+                       .sessionHistory
+                       .reload(0);
+        } else if (event.data == "pageload:second") {
+          ok(true, "srcdoc iframe was updated.");
+          win.close();
+          SimpleTest.finish();
+        }
+      }
+      win = window.open("file_reload_nonbfcached_srcdoc.sjs");
+    }
+
+  </script>
+</head>
+<body onload="test()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
