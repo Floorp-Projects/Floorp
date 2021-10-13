@@ -115,6 +115,15 @@ If you aren't modifying the Firefox backend, then then select one of the
 :ref:`Artifact Mode <Understanding Artifact Builds>` options. If you are
 building Firefox for Android, you should also see the :ref:`GeckoView Contributor Guide`.
 
+Cleanup
+~~~~~~~
+
+After finishing the bootstrap process, ``bootstrap.py`` can be removed.
+
+.. code-block:: shell
+
+    rm bootstrap.py
+
 3. Build
 --------
 
@@ -122,7 +131,6 @@ Now that your system is bootstrapped, you should be able to build!
 
 .. code-block:: shell
 
-    rm bootstrap.py
     cd mozilla-unified
     ./mach build
     ./mach run
