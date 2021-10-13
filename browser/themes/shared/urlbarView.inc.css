@@ -33,7 +33,7 @@
 }
 
 :root[lwt-toolbar-field-focus-brighttext] {
-  --urlbar-popup-url-color: var(--lwt-popup-brighttext-url-color);
+  --urlbar-popup-url-color: var(--lwt-brighttext-url-color);
   --urlbar-popup-action-color: #30e60b;
 }
 

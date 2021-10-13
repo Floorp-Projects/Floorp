@@ -70,7 +70,7 @@
       <hbox class="popup-notification-header-container"></hbox>
       <hbox align="start" class="popup-notification-body-container">
         <image class="popup-notification-icon"/>
-        <vbox flex="1" pack="start" class="popup-notification-body">
+        <vbox class="popup-notification-body">
           <hbox align="start">
             <vbox flex="1">
               <label class="popup-notification-origin header" crop="center"></label>
@@ -82,11 +82,11 @@
             </vbox>
             <toolbarbutton class="messageCloseButton close-icon popup-notification-closebutton tabbable" tooltiptext="&closeNotification.tooltip;"></toolbarbutton>
           </hbox>
-          <hbox class="popup-notification-learnmore-link-container">
+          <vbox class="popup-notification-bottom-content" align="start">
             <label class="popup-notification-learnmore-link" is="text-link">&learnMoreNoEllipsis;</label>
-          </hbox>
-          <checkbox class="popup-notification-checkbox" oncommand="PopupNotifications._onCheckboxCommand(event)"></checkbox>
-          <description class="popup-notification-warning"></description>
+            <checkbox class="popup-notification-checkbox" oncommand="PopupNotifications._onCheckboxCommand(event)"/>
+            <description class="popup-notification-warning"/>
+          </vbox>
         </vbox>
       </hbox>
       <hbox class="popup-notification-footer-container"></hbox>
@@ -150,10 +150,7 @@
     }
 
     appendNotificationContent(el) {
-      let nextSibling = this.querySelector(
-        ".popup-notification-body > .popup-notification-learnmore-link-container"
-      );
-      nextSibling.before(el);
+      this.querySelector(".popup-notification-bottom-content").before(el);
     }
   }
 
