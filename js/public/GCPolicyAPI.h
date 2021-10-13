@@ -111,18 +111,6 @@ struct GCPointerPolicy {
     // marking.
     UnsafeTraceRoot(trc, vp, name);
   }
-  static bool needsSweep(T* vp) {
-    if (*vp) {
-      return js::gc::IsAboutToBeFinalizedUnbarriered(vp);
-    }
-    return false;
-  }
-  static bool traceWeak(JSTracer* trc, T* vp) {
-    if (*vp) {
-      return js::TraceManuallyBarrieredWeakEdge(trc, vp, "traceWeak");
-    }
-    return true;
-  }
   static bool isTenured(T v) { return !js::gc::IsInsideNursery(v); }
   static bool isValid(T v) { return js::gc::IsCellPointerValidOrNull(v); }
 };
@@ -164,12 +152,6 @@ struct GCPolicy<JS::Heap<T>> {
   }
   static bool needsSweep(JS::Heap<T>* thingp) {
     return *thingp && js::gc::EdgeNeedsSweep(thingp);
-  }
-  static bool traceWeak(JSTracer* trc, JS::Heap<T>* thingp) {
-    if (*thingp) {
-      return js::TraceWeakEdge(trc, thingp, "traceWeak");
-    }
-    return true;
   }
 };
 
