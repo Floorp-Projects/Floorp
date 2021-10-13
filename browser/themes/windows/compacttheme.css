@@ -77,10 +77,6 @@
     :root[tabsintitlebar]:-moz-window-inactive {
       color: InactiveCaptionText;
     }
-
-    :root[tabsintitlebar] #main-menubar > menu {
-      color: inherit;
-    }
   }
 }
 
