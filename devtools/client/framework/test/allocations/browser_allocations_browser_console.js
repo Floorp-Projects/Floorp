@@ -33,6 +33,11 @@ async function testScript() {
 
   // Close
   await BrowserConsoleManager.toggleBrowserConsole();
+
+  // Browser console still cleanup stuff after the resolution of toggleBrowserConsole.
+  // So wait for a little while to ensure it completes all cleanups.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, 500));
 }
 
 add_task(async function() {

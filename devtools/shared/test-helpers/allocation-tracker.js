@@ -186,8 +186,30 @@ exports.allocationTracker = function({
         this.flushAllocations();
       }
 
+      // In the content process we watch for all globals.
+      // Disable allocation record immediately, as we get some allocation reported by the allocation-tracker itself.
+      if (watchAllGlobals) {
+        dbg.memory.allocationSamplingProbability = 0.0;
+      }
+
       // Before computing allocations, re-do some GCs in order to free all what is to-be-freed.
       await this.doGC();
+
+      // If we are in the parent process, we watch only for devtools globals.
+      // So we can more safely assert that no allocation occured while doing the GCs.
+      // If means that the test we are recording is having pending operation which aren't properly recorded.
+      if (!watchAllGlobals) {
+        const allocations = dbg.memory.drainAllocationsLog();
+        if (allocations.length > 0) {
+          this.logAllocationLog(
+            allocations,
+            "Allocation that happened during the GC"
+          );
+          console.error(
+            "Allocation happened during the GC. Are you waiting correctly before calling stopRecordingAllocations?"
+          );
+        }
+      }
 
       const memory = this.getAllocatedMemory();
       const objects = this.stillAllocatedObjects();
@@ -379,11 +401,15 @@ exports.allocationTracker = function({
      * Reported allocations may have been freed.
      * Use `logAllocationSitesDiff` to know what hasn't been freed.
      */
-    logAllocationLog() {
-      const allocations = dbg.memory.drainAllocationsLog();
+    logAllocationLog(allocations, msg = "") {
+      if (!allocations) {
+        allocations = dbg.memory.drainAllocationsLog();
+      }
       const sources = this.allocationsToSources(allocations);
       return this.logAllocationSites(
-        "all allocations (which may be freed or are still allocated)",
+        msg
+          ? msg
+          : "all allocations (which may be freed or are still allocated)",
         sources
       );
     },
