@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html class="reftest-paged">
+  <title>CSS Reference: fieldset fragmentation</title>
+  <link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
+  <link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1735375">
+  <meta name="flags" content="paged">
+  <style>
+  @page { size:5in 3in; margin:0.5in; }
+  html,body {
+    color:black; background-color:white; font:0.5in/1 monospace; padding:0; margin:0;
+  }
+  .flexbox {
+    display: flex;
+  }
+  .fieldset {
+    padding: 0;
+    margin: 0;
+    border: 1em solid black;
+  }
+  </style>
+
+  <div class="flexbox">
+    <div>
+      <div>BEFORE</div>
+      <div class="fieldset">A<br>B<br>C</div>
+    </div>
+  </div>
+</html>
