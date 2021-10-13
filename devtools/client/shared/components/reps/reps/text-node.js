@@ -22,6 +22,10 @@ define(function(require, exports, module) {
   const {
     MODE,
   } = require("devtools/client/shared/components/reps/reps/constants");
+  const {
+    rep: StringRep,
+    isLongString,
+  } = require("devtools/client/shared/components/reps/reps/string");
 
   /**
    * Renders DOM #text node.
@@ -51,7 +55,11 @@ define(function(require, exports, module) {
     return span(
       config,
       getTitle(grip),
-      span({ className: "nodeValue" }, " ", `"${getTextContent(grip)}"`),
+      " ",
+      StringRep({
+        className: "nodeValue",
+        object: grip.preview.textContent,
+      }),
       inspectIcon ? inspectIcon : null
     );
   }
@@ -92,7 +100,8 @@ define(function(require, exports, module) {
   }
 
   function getTextContent(grip) {
-    return cropString(grip.preview.textContent);
+    const text = grip.preview.textContent;
+    return cropString(isLongString(text) ? text.initial : text);
   }
 
   function getInspectIcon(opts) {

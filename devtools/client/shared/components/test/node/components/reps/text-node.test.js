@@ -20,6 +20,13 @@ const stubs = require("devtools/client/shared/components/test/node/stubs/reps/te
 const {
   expectActorAttribute,
 } = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
+const {
+  ELLIPSIS,
+} = require("devtools/client/shared/components/reps/reps/rep-utils");
+
+function quoteNewlines(text) {
+  return text.split("\n").join("\\n");
+}
 
 describe("TextNode", () => {
   it("selects TextNode Rep as expected", () => {
@@ -57,11 +64,73 @@ describe("TextNode", () => {
     const object = stubs.get("testRenderingWithEOL");
     const renderRep = props => shallow(TextNode.rep({ object, ...props }));
 
-    const defaultOutput = '#text "hello\nworld"';
-    expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
-    expect(renderRep({ mode: MODE.TINY }).text()).toBe("#text");
-    expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
-    expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
+    const defaultOutput = quoteNewlines('#text "hello\nworld"');
+    const defaultTooltip = '#text "hello\nworld"';
+
+    let component = renderRep({ shouldRenderTooltip: true, mode: undefined });
+    expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe(defaultTooltip);
+
+    component = renderRep({ shouldRenderTooltip: true, mode: MODE.TINY });
+    expect(component.text()).toBe("#text");
+    expect(component.prop("title")).toBe(defaultTooltip);
+
+    component = renderRep({ shouldRenderTooltip: true, mode: MODE.SHORT });
+    expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe(defaultTooltip);
+
+    component = renderRep({ shouldRenderTooltip: true, mode: MODE.LONG });
+    expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe(defaultTooltip);
+  });
+
+  it("renders as expected with double quote", () => {
+    const object = stubs.get("testRenderingWithDoubleQuote");
+    const renderRep = props => shallow(TextNode.rep({ object, ...props }));
+
+    const defaultOutput = '#text "hello\\"world"';
+    const defaultTooltip = '#text "hello"world"';
+
+    let component = renderRep({ shouldRenderTooltip: true, mode: undefined });
+    expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe(defaultTooltip);
+
+    component = renderRep({ shouldRenderTooltip: true, mode: MODE.TINY });
+    expect(component.text()).toBe("#text");
+    expect(component.prop("title")).toBe(defaultTooltip);
+
+    component = renderRep({ shouldRenderTooltip: true, mode: MODE.SHORT });
+    expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe(defaultTooltip);
+
+    component = renderRep({ shouldRenderTooltip: true, mode: MODE.LONG });
+    expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe(defaultTooltip);
+  });
+
+  it("renders as expected with long string", () => {
+    const object = stubs.get("testRenderingWithLongString");
+    const renderRep = props => shallow(TextNode.rep({ object, ...props }));
+    const initialString = object.preview.textContent.initial;
+
+    const defaultOutput = `#text "${quoteNewlines(initialString)}${ELLIPSIS}"`;
+    const defaultTooltip = `#text "${initialString}"`;
+
+    let component = renderRep({ shouldRenderTooltip: true, mode: undefined });
+    expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe(defaultTooltip);
+
+    component = renderRep({ shouldRenderTooltip: true, mode: MODE.TINY });
+    expect(component.text()).toBe("#text");
+    expect(component.prop("title")).toBe(defaultTooltip);
+
+    component = renderRep({ shouldRenderTooltip: true, mode: MODE.SHORT });
+    expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe(defaultTooltip);
+
+    component = renderRep({ shouldRenderTooltip: true, mode: MODE.LONG });
+    expect(component.text()).toBe(defaultOutput);
+    expect(component.prop("title")).toBe(defaultTooltip);
   });
 
   it("calls the expected function on mouseover", () => {
