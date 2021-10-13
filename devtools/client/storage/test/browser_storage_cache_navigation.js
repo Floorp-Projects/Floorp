@@ -6,25 +6,7 @@
 
 "use strict";
 
-// test without target switching
 add_task(async function() {
-  // We have to disable target switching in this first task otherwise the test times out
-  // on the navigation to example.net. With a "cold" server side target switching, the
-  // storage actor gets created very early while the cache isn't created yet, and cache items
-  // are not displayed (See Bug 1712757).
-  // But the second task runs fine with this setup, as it appears that the cache gets
-  // created faster.
-  await pushPref("devtools.target-switching.server.enabled", false);
-  await testNavigation();
-});
-
-// test with target switching enabled
-add_task(async function() {
-  enableTargetSwitching();
-  await testNavigation();
-});
-
-async function testNavigation() {
   const URL1 = buildURLWithContent(
     "example.com",
     `<h1>example.com</h1>` +
@@ -70,6 +52,10 @@ async function testNavigation() {
 
   // Check second domain
   await navigateTo(URL2);
+
+  // Select the Cache view in order to force updating it
+  await selectTreeItem(["Cache", "http://example.net"]);
+
   // wait for storage tree refresh, and check host
   info("Waiting for storage tree to update…");
   await waitUntil(() => isInTree(doc, ["Cache", "http://example.net", "foo"]));
@@ -89,7 +75,7 @@ async function testNavigation() {
     "Cache Storage",
     "Cache item is properly displayed"
   );
-}
+});
 
 function checkCacheData(url, status) {
   is(
