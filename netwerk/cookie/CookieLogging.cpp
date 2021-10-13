@@ -5,6 +5,7 @@
 
 #include "CookieLogging.h"
 #include "Cookie.h"
+#include "nsIConsoleReportCollector.h"
 
 constexpr auto TIME_STRING_LENGTH = 40;
 
