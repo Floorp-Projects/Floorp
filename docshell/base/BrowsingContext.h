@@ -781,7 +781,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void SessionHistoryCommit(const LoadingSessionHistoryInfo& aInfo,
                             uint32_t aLoadType, bool aHadActiveEntry,
-                            bool aPersist, bool aCloneEntryChildren);
+                            bool aPersist, bool aCloneEntryChildren,
+                            bool aChannelExpired);
 
   // Set a new active entry on this browsing context. This is used for
   // implementing history.pushState/replaceState and same document navigations.
