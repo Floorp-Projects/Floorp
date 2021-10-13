@@ -37,6 +37,7 @@
 #include "nsUnicharUtils.h"
 #include "mozilla/net/HttpAuthUtils.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/net/DNS.h"
 
 namespace mozilla {
 namespace net {
