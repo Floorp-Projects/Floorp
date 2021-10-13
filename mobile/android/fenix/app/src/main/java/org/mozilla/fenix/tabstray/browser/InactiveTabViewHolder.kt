@@ -47,7 +47,6 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
                     inactiveTabsInteractor.onHeaderClicked(newState)
 
                     it.isActivated = newState
-                    binding.chevron.rotation = ROTATION_DEGREE
 
                     correctHeaderBorder(isActivated)
                 }
@@ -69,7 +68,6 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
 
         companion object {
             const val LAYOUT_ID = R.layout.inactive_header_item
-            private const val ROTATION_DEGREE = 180F
         }
     }
 
