@@ -941,24 +941,22 @@ nsresult ContentEventHandler::GenerateFlatFontRanges(
   return NS_OK;
 }
 
-nsresult ContentEventHandler::ExpandToClusterBoundary(nsIContent* aContent,
-                                                      bool aForward,
-                                                      uint32_t* aXPOffset) {
+nsresult ContentEventHandler::ExpandToClusterBoundary(
+    Text& aTextNode, bool aForward, uint32_t* aXPOffset) const {
   // XXX This method assumes that the frame boundaries must be cluster
   // boundaries. It's false, but no problem now, maybe.
-  if (!aContent->IsText() || *aXPOffset == 0 ||
-      *aXPOffset == aContent->TextLength()) {
+  if (*aXPOffset == 0 || *aXPOffset == aTextNode.TextLength()) {
     return NS_OK;
   }
 
-  NS_ASSERTION(*aXPOffset <= aContent->TextLength(), "offset is out of range.");
+  NS_ASSERTION(*aXPOffset <= aTextNode.TextLength(), "offset is out of range.");
 
   MOZ_DIAGNOSTIC_ASSERT(mDocument->GetPresShell());
   int32_t offsetInFrame;
   CaretAssociationHint hint =
       aForward ? CARET_ASSOCIATE_BEFORE : CARET_ASSOCIATE_AFTER;
   nsIFrame* frame = nsFrameSelection::GetFrameForNodeOffset(
-      aContent, int32_t(*aXPOffset), hint, &offsetInFrame);
+      &aTextNode, int32_t(*aXPOffset), hint, &offsetInFrame);
   if (frame) {
     auto [startOffset, endOffset] = frame->GetOffsets();
     if (*aXPOffset == static_cast<uint32_t>(startOffset) ||
@@ -986,9 +984,8 @@ nsresult ContentEventHandler::ExpandToClusterBoundary(nsIContent* aContent,
   }
 
   // If the frame isn't available, we only can check surrogate pair...
-  const nsTextFragment* text = &aContent->AsText()->TextFragment();
-  NS_ENSURE_TRUE(text, NS_ERROR_FAILURE);
-  if (text->IsLowSurrogateFollowingHighSurrogateAt(*aXPOffset)) {
+  if (aTextNode.TextFragment().IsLowSurrogateFollowingHighSurrogateAt(
+          *aXPOffset)) {
     *aXPOffset += aForward ? 1 : -1;
   }
   return NS_OK;
@@ -1061,7 +1058,7 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
 
         if (aExpandToClusterBoundaries) {
           uint32_t oldXPOffset = xpOffset;
-          nsresult rv = ExpandToClusterBoundary(textNode, false, &xpOffset);
+          nsresult rv = ExpandToClusterBoundary(*textNode, false, &xpOffset);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -1142,7 +1139,7 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
           }
         }
         if (aExpandToClusterBoundaries) {
-          nsresult rv = ExpandToClusterBoundary(textNode, true, &xpOffset);
+          nsresult rv = ExpandToClusterBoundary(*textNode, true, &xpOffset);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
