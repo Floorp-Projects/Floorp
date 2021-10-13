@@ -173,11 +173,11 @@ bool CreateAlias(JSContext* cx, const char* dstName,
 enum class ScriptKind { Script, ScriptStencil, DecodeScript, Module };
 
 class NonshrinkingGCObjectVector
-    : public GCVector<JSObject*, 0, SystemAllocPolicy> {
+    : public GCVector<HeapPtrObject, 0, SystemAllocPolicy> {
  public:
   void sweep() {
-    for (JSObject*& obj : *this) {
-      if (JS::GCPolicy<JSObject*>::needsSweep(&obj)) {
+    for (HeapPtrObject& obj : *this) {
+      if (JS::GCPolicy<HeapPtrObject>::needsSweep(&obj)) {
         obj = nullptr;
       }
     }
