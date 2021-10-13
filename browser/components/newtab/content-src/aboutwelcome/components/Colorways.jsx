@@ -59,10 +59,12 @@ export const VariationsCircle = props => {
 };
 
 // Return colorway as "default" for default theme variations Automatic, Light, Dark
+// and Alpenglow theme which is not supported in Colorway picker
 // For themes other then default, theme names exist in
 // format colorway-variationId inside LIGHT_WEIGHT_THEMES in AboutWelcomeParent
 export function computeColorWay(themeName, systemVariations) {
   return !themeName ||
+    themeName === "alpenglow" ||
     systemVariations.find(variation => themeName === variation.id)
     ? "default"
     : themeName.split("-")[0];
