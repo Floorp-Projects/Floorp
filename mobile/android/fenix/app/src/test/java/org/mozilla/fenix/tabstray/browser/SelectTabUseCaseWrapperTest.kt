@@ -7,6 +7,7 @@ package org.mozilla.fenix.tabstray.browser
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.feature.tabs.TabsUseCases
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
@@ -18,25 +19,27 @@ class SelectTabUseCaseWrapperTest {
 
     @Test
     fun `WHEN invoked with no source name THEN metrics with unknown source, use case and callback are triggered`() {
-        val onSelect: (String) -> Unit = mockk(relaxed = true)
+        var invoked = ""
+        val onSelect: (String) -> Unit = { invoked = it }
         val wrapper = SelectTabUseCaseWrapper(metricController, selectUseCase, onSelect)
 
         wrapper("123")
 
         verify { metricController.track(Event.OpenedExistingTab("unknown")) }
         verify { selectUseCase("123") }
-        verify { onSelect("123") }
+        assertEquals("123", invoked)
     }
 
     @Test
     fun `WHEN invoked with a source name THEN metrics, use case and callback are triggered`() {
-        val onSelect: (String) -> Unit = mockk(relaxed = true)
+        var invoked = ""
+        val onSelect: (String) -> Unit = { invoked = it }
         val wrapper = SelectTabUseCaseWrapper(metricController, selectUseCase, onSelect)
 
         wrapper("123", "Test")
 
         verify { metricController.track(Event.OpenedExistingTab("Test")) }
         verify { selectUseCase("123") }
-        verify { onSelect("123") }
+        assertEquals("123", invoked)
     }
 }
