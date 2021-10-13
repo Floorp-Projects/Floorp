@@ -31,9 +31,7 @@ namespace js {
 class ObjectWrapperMap {
   static const size_t InitialInnerMapSize = 4;
 
-  using InnerMap =
-      NurseryAwareHashMap<JSObject*, JSObject*, DefaultHasher<JSObject*>,
-                          ZoneAllocPolicy>;
+  using InnerMap = NurseryAwareHashMap<JSObject*, JSObject*, ZoneAllocPolicy>;
   using OuterMap = GCHashMap<JS::Compartment*, InnerMap,
                              DefaultHasher<JS::Compartment*>, ZoneAllocPolicy>;
 
@@ -247,8 +245,8 @@ class ObjectWrapperMap {
 };
 
 using StringWrapperMap =
-    NurseryAwareHashMap<JSString*, JSString*, DefaultHasher<JSString*>,
-                        ZoneAllocPolicy, DuplicatesPossible>;
+    NurseryAwareHashMap<JSString*, JSString*, ZoneAllocPolicy,
+                        DuplicatesPossible>;
 
 }  // namespace js
 
