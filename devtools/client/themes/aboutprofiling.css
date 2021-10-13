@@ -104,7 +104,6 @@ h2 {
 }
 
 .perf-settings-thread-columns {
-  margin-bottom: 20px;
   display: flex;
   line-height: 1.3;
 }
@@ -114,6 +113,10 @@ h2 {
 }
 
 .perf-settings-thread-label {
+  margin-block: 12px;
+}
+
+.perf-settings-all-threads {
   margin-block: 12px;
 }
 
