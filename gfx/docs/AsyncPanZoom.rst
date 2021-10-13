@@ -278,31 +278,57 @@ touch-based panning. As we saw in a previous section, the input event
 needs to be untransformed by the APZ code before it can be delivered to
 content. But, because of the preventDefault problem, we cannot fully
 process the touch event in the APZ code until content has had a chance
-to handle it. Web browsers in general solve this problem by inserting a
-delay of up to 300ms before processing the input - that is, web content
-is allowed up to 300ms to process the event and call preventDefault on
-it. If web content takes longer than 300ms, or if it completes handling
-of the event without calling preventDefault, then the browser
-immediately starts processing the events.
+to handle it.
 
-The way the APZ implementation deals with this is that upon receiving a
-touch event, it immediately returns an untransformed version that can be
-dispatched to content. It also schedules a 400ms timeout (600ms on
-Android) during which content is allowed to prevent scrolling. There is
-an API that allows the main-thread event dispatching code to notify the
-APZ as to whether or not the default action should be prevented. If the
-APZ content response timeout expires, or if the main-thread event
-dispatching code notifies the APZ of the preventDefault status, then the
-APZ continues with the processing of the events (which may involve
-discarding the events).
+To balance the needs of correctness (which calls for allowing web content
+to successfully prevent default handling of events if it wishes to) and
+responsiveness (which calls for avoiding blocking on web content
+Javascript for a potentially-unbounded amount of time before reacting to
+an event), APZ gives web content a "deadline" to process the event and
+tell APZ whether preventDefault() was called on the event. The deadline
+is 400ms from the time APZ receives the event on desktop, and 600ms on
+mobile. If web content is able to process the event before this deadline,
+the decision to preventDefault() the event or not will be respected. If
+web content fails to process the event before the deadline, APZ assumes
+preventDefault() will not be called and goes ahead and processes the
+event.
 
-The touch-action CSS property from the pointer-events spec is intended
-to allow eliminating this 400ms delay in many cases (although for
-backwards compatibility it will still be needed for a while). Note that
-even with touch-action implemented, there may be cases where the APZ
-code does not know the touch-action behaviour of the point the user
-touched. In such cases, the APZ code will still wait up to 400ms for the
-main thread to provide it with the touch-action behaviour information.
+To implement this, upon receiving a touch event, APZ immediately returns
+an untransformed version that can be dispatched to content. It also
+schedules the 400ms or 600ms timeout. There is an API that allows the
+main-thread event dispatching code to notify APZ as to whether or not the
+default action should be prevented. If the APZ content response timeout
+expires, or if the main-thread event dispatching code notifies the APZ of
+the preventDefault status, then the APZ continues with the processing of
+the events (which may involve discarding the events).
+
+To limit the responsiveness impact of this round-trip to content, APZ
+tries to identify cases where it can rule out preventDefault() as a
+possible outcome. To this end, the hit-testing information sent to the
+compositor includes information about which regions of the page are
+occupied by elements that have a touch event listener. If an event
+targets an area outside of these regions, preventDefault() can be ruled
+out, and the round-trip skipped.
+
+Additionally, recent enhancements to web standards have given page
+authors new tools that can further limit the responsiveness impact of
+preventDefault():
+
+1. Event listeners can be registered as "passive", which means they
+   are not allowed to call preventDefault(). Authors can use this flag
+   when writing listeners that only need to observe the events, not alter
+   their behaviour via preventDefault(). The presence of passive event
+   listeners does not cause APZ to perform the content round-trip.
+2. If page authors wish to disable certain types of touch interactions
+   completely, they can use the `touch-action` CSS property from the
+   pointer-events spec to do so declaratively, instead of registering
+   event listeners that call preventDefault(). Touch-action flags are
+   also included in the hit-test information sent to the compositor, and
+   APZ uses this information to respect `touch-action`. (Note that the
+   touch-action information sent to the compositor is not always 100%
+   accurate, and sometimes APZ needs to fall back on asking the main
+   thread for touch-action information, which again involves a
+   round-trip.)
 
 Technical details
 -----------------
