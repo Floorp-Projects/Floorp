@@ -5,7 +5,6 @@
 
 #include "mozilla/chrome/RegistryMessageUtils.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Unused.h"
 
 #include "nsResProtocolHandler.h"

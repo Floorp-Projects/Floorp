@@ -13,8 +13,6 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "mozilla/net/WebSocketConnectionBase.h"
-#include "nsTArray.h"
-#include "nsISocketTransport.h"
 
 class nsISocketTransport;
 

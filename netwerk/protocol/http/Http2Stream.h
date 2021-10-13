@@ -15,7 +15,6 @@
 #include "nsISupportsPriority.h"
 #include "SimpleBuffer.h"
 #include "nsISupportsImpl.h"
-#include "nsIURI.h"
 
 class nsIInputStream;
 class nsIOutputStream;

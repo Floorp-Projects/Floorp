@@ -13,7 +13,6 @@
 #include "nsIProtocolProxyService2.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
-#include "nsIChannel.h"
 
 namespace mozilla {
 namespace net {
