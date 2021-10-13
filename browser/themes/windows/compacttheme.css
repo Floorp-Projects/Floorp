@@ -86,11 +86,23 @@
 
 /* Restored windows get an artificial border on windows, because the lwtheme background
  * overlaps the regular window border. That isn't the case for us, so we avoid painting
- * over the native border with our custom borders: */
-#navigator-toolbox {
-  /* These are !important to avoid specificity-wars with the selectors that add borders here. */
-  background-image: none !important;
-  border-top: none !important;
-  box-shadow: none !important;
-  padding-top: 0 !important;
+ * over the native border with our custom borders. These are !important to avoid
+ * specificity-wars with the selectors that add these borders. */
+@media (-moz-windows-classic),
+       (-moz-windows-compositor: 0) and (-moz-windows-default-theme) {
+  #navigator-toolbox {
+    background-image: none !important;
+  }
+}
+@media (-moz-windows-glass) {
+  #navigator-toolbox {
+    border-top: none !important;
+    box-shadow: none !important;
+    padding-top: 0 !important;
+  }
+}
+@media (-moz-os-version: windows-win8) {
+  #navigator-toolbox {
+    border-top: none !important;
+  }
 }
