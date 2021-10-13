@@ -319,11 +319,11 @@ preventDefault():
    their behaviour via preventDefault(). The presence of passive event
    listeners does not cause APZ to perform the content round-trip.
 2. If page authors wish to disable certain types of touch interactions
-   completely, they can use the `touch-action` CSS property from the
+   completely, they can use the ``touch-action`` CSS property from the
    pointer-events spec to do so declaratively, instead of registering
    event listeners that call preventDefault(). Touch-action flags are
    also included in the hit-test information sent to the compositor, and
-   APZ uses this information to respect `touch-action`. (Note that the
+   APZ uses this information to respect ``touch-action``. (Note that the
    touch-action information sent to the compositor is not always 100%
    accurate, and sometimes APZ needs to fall back on asking the main
    thread for touch-action information, which again involves a
@@ -586,10 +586,10 @@ same traversal of the Gecko display list that is used to build the
 WebRender display list. As of this writing, the architecture for this is
 that, as we walk the Gecko display list, we query it to see if it
 contains any information that APZ might need to know (e.g. CSS
-transforms) via a call to `nsDisplayItem::UpdateScrollData(nullptr,
-nullptr)`. If this call returns true, we create a
+transforms) via a call to ``nsDisplayItem::UpdateScrollData(nullptr,
+nullptr)``. If this call returns true, we create a
 WebRenderLayerScrollData instance for the item, and populate it with the
-necessary information in `WebRenderLayerScrollData::Initialize`. We also
+necessary information in ``WebRenderLayerScrollData::Initialize``. We also
 create WebRenderLayerScrollData instances if we detect (via ASR changes)
 that we are now processing a Gecko display item that is in a different
 scrollframe than the previous item.
@@ -601,7 +601,7 @@ The main sources of complexity in this code come from:
    WebRenderLayerScrollData node to the root has a consistent ordering of
    scrollframes without duplications).
 2. The deferred-transform optimization that is described in more detail
-   at the declaration of `StackingContextHelper::mDeferredTransformItem`.
+   at the declaration of ``StackingContextHelper::mDeferredTransformItem``.
 
 .. _wr-hit-test-details:
 
@@ -613,8 +613,8 @@ with the WebRender backend (see previous section), this section describes
 how hit-testing actually works with WebRender.
 
 The Gecko display list contains display items
-(`nsDisplayCompositorHitTestInfo`) that store hit-testing state. These
-items implement the `CreateWebRenderCommands` method and generate a "hit-test
+(``nsDisplayCompositorHitTestInfo``) that store hit-testing state. These
+items implement the ``CreateWebRenderCommands`` method and generate a "hit-test
 item" into the WebRender display list. This is basically just a rectangle
 item in the WebRender display list that is no-op for painting purposes,
 but contains information that should be returned by the hit-test (specifically
@@ -628,9 +628,9 @@ taking into account the current clips and transforms, adjusted for the
 most recent async scroll/zoom, and determines which hit-test item(s) are under
 the target point, and returns those items. APZ can then take the frontmost
 item from that list (or skip over it if it happens to be inside a OOP
-subdocument that's `pointer-events:none`) and use that as the hit target.
+subdocument that's ``pointer-events:none``) and use that as the hit target.
 Note that the hit-test uses the last transform provided by the
-`SampleForWebRender` API (see next section) which generally reflects the
+``SampleForWebRender`` API (see next section) which generally reflects the
 last composite, and doesn't take into account further changes to the
 transforms that have occurred since then. In practice, we should be
 compositing frequently enough that this doesn't matter much.
@@ -659,8 +659,8 @@ Sampling
 
 The compositing step needs to read the latest async transforms from APZ
 in order to ensure scrollframes are rendered at the right position. The API for this is
-exposed via the `APZSampler` class. When WebRender is ready to do a composite,
-it invokes `APZSampler::SampleForWebRender`. In here, APZ gathers all async
+exposed via the ``APZSampler`` class. When WebRender is ready to do a composite,
+it invokes ``APZSampler::SampleForWebRender``. In here, APZ gathers all async
 transforms that WebRender needs to know about, including transforms to apply
 to scrolled content, fixed and sticky content, and scrollbar thumbs.
 
