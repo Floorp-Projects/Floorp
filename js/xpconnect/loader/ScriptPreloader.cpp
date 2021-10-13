@@ -537,7 +537,9 @@ Result<Ok, nsresult> ScriptPreloader::InitCacheInternal(
       MOZ_RELEASE_ASSERT(script);
 
       auto scriptData = data + script->mOffset;
-      MOZ_RELEASE_ASSERT(JS::IsTranscodingBytecodeAligned(scriptData.get()));
+      if (!JS::IsTranscodingBytecodeAligned(scriptData.get())) {
+        return Err(NS_ERROR_UNEXPECTED);
+      }
 
       if (scriptData + script->mSize > end) {
         return Err(NS_ERROR_UNEXPECTED);
