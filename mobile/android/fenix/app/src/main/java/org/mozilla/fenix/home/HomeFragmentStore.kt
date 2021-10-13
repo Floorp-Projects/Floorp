@@ -97,6 +97,7 @@ sealed class HomeFragmentAction : Action {
     data class RecentTabsChange(val recentTabs: List<RecentTab>) : HomeFragmentAction()
     data class RecentBookmarksChange(val recentBookmarks: List<BookmarkNode>) : HomeFragmentAction()
     data class HistoryMetadataChange(val historyMetadata: List<HistoryMetadataGroup>) : HomeFragmentAction()
+    data class DisbandSearchGroupAction(val searchTerm: String) : HomeFragmentAction()
     data class SelectPocketStoriesCategory(val categoryName: String) : HomeFragmentAction()
     data class DeselectPocketStoriesCategory(val categoryName: String) : HomeFragmentAction()
     data class PocketStoriesShown(val storiesShown: List<PocketRecommendedStory>) : HomeFragmentAction()
@@ -150,6 +151,9 @@ private fun homeFragmentStateReducer(
         is HomeFragmentAction.RecentTabsChange -> state.copy(recentTabs = action.recentTabs)
         is HomeFragmentAction.RecentBookmarksChange -> state.copy(recentBookmarks = action.recentBookmarks)
         is HomeFragmentAction.HistoryMetadataChange -> state.copy(historyMetadata = action.historyMetadata)
+        is HomeFragmentAction.DisbandSearchGroupAction -> state.copy(
+            historyMetadata = state.historyMetadata.filter { it.title.lowercase() != action.searchTerm.lowercase() }
+        )
         is HomeFragmentAction.SelectPocketStoriesCategory -> {
             val updatedCategoriesState = state.copy(
                 pocketStoriesCategoriesSelections =

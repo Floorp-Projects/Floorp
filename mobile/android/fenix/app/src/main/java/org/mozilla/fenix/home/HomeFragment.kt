@@ -349,8 +349,10 @@ class HomeFragment : Fragment() {
             ),
             historyMetadataController = DefaultHistoryMetadataController(
                 navController = findNavController(),
+                homeStore = homeFragmentStore,
                 storage = components.core.historyStorage,
-                scope = viewLifecycleOwner.lifecycleScope
+                scope = viewLifecycleOwner.lifecycleScope,
+                store = components.core.store
             ),
             pocketStoriesController = DefaultPocketStoriesController(
                 homeActivity = activity,
