@@ -20,6 +20,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -128,5 +129,12 @@ class EngineActionTest {
 
         store.dispatch(EngineAction.UpdateEngineSessionInitializingAction(tab.id, true)).joinBlocking()
         assertTrue(engineState().initializing)
+    }
+
+    @Test
+    fun `OptimizedLoadUrlTriggeredAction - State is not changed`() {
+        val state = store.state
+        store.dispatch(EngineAction.OptimizedLoadUrlTriggeredAction(tab.id, "https://mozilla.org")).joinBlocking()
+        assertSame(store.state, state)
     }
 }

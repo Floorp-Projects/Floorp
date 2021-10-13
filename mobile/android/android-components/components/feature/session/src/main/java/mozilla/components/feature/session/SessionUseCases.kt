@@ -97,6 +97,14 @@ class SessionUseCases(
                     flags = flags,
                     additionalHeaders = additionalHeaders
                 )
+                store.dispatch(
+                    EngineAction.OptimizedLoadUrlTriggeredAction(
+                        loadSessionId,
+                        url,
+                        flags,
+                        additionalHeaders
+                    )
+                )
             } else {
                 store.dispatch(
                     EngineAction.LoadUrlAction(

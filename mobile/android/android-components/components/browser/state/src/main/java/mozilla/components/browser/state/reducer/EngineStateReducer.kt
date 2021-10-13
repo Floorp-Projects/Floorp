@@ -42,6 +42,9 @@ internal object EngineStateReducer {
         is EngineAction.UpdateEngineSessionInitializingAction -> state.copyWithEngineState(action.tabId) {
             it.copy(initializing = action.initializing)
         }
+        is EngineAction.OptimizedLoadUrlTriggeredAction -> {
+            state
+        }
         is EngineAction.SuspendEngineSessionAction,
         is EngineAction.CreateEngineSessionAction,
         is EngineAction.LoadDataAction,

@@ -72,24 +72,34 @@ class SessionUseCasesTest {
     fun loadUrlWithEngineSession() {
         useCases.loadUrl("https://getpocket.com")
         store.waitUntilIdle()
-
         middleware.assertNotDispatched(EngineAction.LoadUrlAction::class)
         verify(engineSession).loadUrl(url = "https://getpocket.com")
+        middleware.assertLastAction(EngineAction.OptimizedLoadUrlTriggeredAction::class) { action ->
+            assertEquals("mozilla", action.tabId)
+            assertEquals("https://getpocket.com", action.url)
+        }
 
         useCases.loadUrl("https://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
         store.waitUntilIdle()
-
         middleware.assertNotDispatched(EngineAction.LoadUrlAction::class)
         verify(engineSession).loadUrl(
             url = "https://www.mozilla.org",
             flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL)
         )
+        middleware.assertLastAction(EngineAction.OptimizedLoadUrlTriggeredAction::class) { action ->
+            assertEquals("mozilla", action.tabId)
+            assertEquals("https://www.mozilla.org", action.url)
+            assertEquals(LoadUrlFlags.select(LoadUrlFlags.EXTERNAL), action.flags)
+        }
 
         useCases.loadUrl("https://firefox.com", store.state.selectedTabId)
         store.waitUntilIdle()
-
         middleware.assertNotDispatched(EngineAction.LoadUrlAction::class)
         verify(engineSession).loadUrl(url = "https://firefox.com")
+        middleware.assertLastAction(EngineAction.OptimizedLoadUrlTriggeredAction::class) { action ->
+            assertEquals("mozilla", action.tabId)
+            assertEquals("https://firefox.com", action.url)
+        }
 
         useCases.loadUrl.invoke(
             "https://developer.mozilla.org",
@@ -97,24 +107,31 @@ class SessionUseCasesTest {
             LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY)
         )
         store.waitUntilIdle()
-
         middleware.assertNotDispatched(EngineAction.LoadUrlAction::class)
         verify(engineSession).loadUrl(
             url = "https://developer.mozilla.org",
             flags = LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY)
         )
+        middleware.assertLastAction(EngineAction.OptimizedLoadUrlTriggeredAction::class) { action ->
+            assertEquals("mozilla", action.tabId)
+            assertEquals("https://developer.mozilla.org", action.url)
+            assertEquals(LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY), action.flags)
+        }
 
         useCases.loadUrl.invoke(
             "https://www.mozilla.org/en-CA/firefox/browsers/mobile/",
             "bugzilla"
         )
         store.waitUntilIdle()
-
         middleware.assertNotDispatched(EngineAction.LoadUrlAction::class)
         verify(childEngineSession).loadUrl(
             url = "https://www.mozilla.org/en-CA/firefox/browsers/mobile/",
             parent = engineSession
         )
+        middleware.assertLastAction(EngineAction.OptimizedLoadUrlTriggeredAction::class) { action ->
+            assertEquals("bugzilla", action.tabId)
+            assertEquals("https://www.mozilla.org/en-CA/firefox/browsers/mobile/", action.url)
+        }
     }
 
     @Test
