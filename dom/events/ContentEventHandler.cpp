@@ -751,26 +751,21 @@ static FontRange* AppendFontRange(nsTArray<FontRange>& aFontRanges,
 
 /* static */
 uint32_t ContentEventHandler::GetTextLengthInRange(
-    nsIContent* aContent, uint32_t aXPStartOffset, uint32_t aXPEndOffset,
+    const Text& aTextNode, uint32_t aXPStartOffset, uint32_t aXPEndOffset,
     LineBreakType aLineBreakType) {
-  MOZ_ASSERT(aContent->IsText());
-
   return aLineBreakType == LINE_BREAK_TYPE_NATIVE
-             ? GetNativeTextLength(*aContent->AsText(), aXPStartOffset,
-                                   aXPEndOffset)
+             ? GetNativeTextLength(aTextNode, aXPStartOffset, aXPEndOffset)
              : aXPEndOffset - aXPStartOffset;
 }
 
 /* static */
 void ContentEventHandler::AppendFontRanges(FontRangeArray& aFontRanges,
-                                           nsIContent* aContent,
+                                           const Text& aTextNode,
                                            uint32_t aBaseOffset,
                                            uint32_t aXPStartOffset,
                                            uint32_t aXPEndOffset,
                                            LineBreakType aLineBreakType) {
-  MOZ_ASSERT(aContent->IsText());
-
-  nsIFrame* frame = aContent->GetPrimaryFrame();
+  nsIFrame* frame = aTextNode.GetPrimaryFrame();
   if (!frame) {
     // It is a non-rendered content, create an empty range for it.
     AppendFontRange(aFontRanges, aBaseOffset);
@@ -826,7 +821,7 @@ void ContentEventHandler::AppendFontRanges(FontRangeArray& aFontRanges,
       if (startXPOffset > lastXPEndOffset) {
         // Create range for skipped leading chars.
         AppendFontRange(aFontRanges, baseOffset);
-        baseOffset += GetTextLengthInRange(aContent, lastXPEndOffset,
+        baseOffset += GetTextLengthInRange(aTextNode, lastXPEndOffset,
                                            startXPOffset, aLineBreakType);
       }
 
@@ -848,7 +843,7 @@ void ContentEventHandler::AppendFontRanges(FontRangeArray& aFontRanges,
       uint32_t endXPOffset =
           iter.ConvertSkippedToOriginal(runIter.GetStringEnd());
       endXPOffset = std::min(frameXPEnd, endXPOffset);
-      baseOffset += GetTextLengthInRange(aContent, startXPOffset, endXPOffset,
+      baseOffset += GetTextLengthInRange(aTextNode, startXPOffset, endXPOffset,
                                          aLineBreakType);
       lastXPEndOffset = endXPOffset;
     }
@@ -856,7 +851,7 @@ void ContentEventHandler::AppendFontRanges(FontRangeArray& aFontRanges,
       // Create range for skipped trailing chars. It also handles case
       // that the whole frame contains only skipped chars.
       AppendFontRange(aFontRanges, baseOffset);
-      baseOffset += GetTextLengthInRange(aContent, lastXPEndOffset, frameXPEnd,
+      baseOffset += GetTextLengthInRange(aTextNode, lastXPEndOffset, frameXPEnd,
                                          aLineBreakType);
     }
 
@@ -880,7 +875,7 @@ nsresult ContentEventHandler::GenerateFlatFontRanges(
   }
 
   // baseOffset is the flattened offset of each content node.
-  int32_t baseOffset = 0;
+  uint32_t baseOffset = 0;
   PreContentIterator preOrderIter;
   nsresult rv =
       preOrderIter.Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
@@ -897,14 +892,15 @@ nsresult ContentEventHandler::GenerateFlatFontRanges(
     }
     nsIContent* content = node->AsContent();
 
-    if (content->IsText()) {
-      uint32_t startOffset = content != startNode ? 0 : aRawRange.StartOffset();
-      uint32_t endOffset =
-          content != endNode ? content->TextLength() : aRawRange.EndOffset();
-      AppendFontRanges(aFontRanges, content, baseOffset, startOffset, endOffset,
-                       aLineBreakType);
-      baseOffset +=
-          GetTextLengthInRange(content, startOffset, endOffset, aLineBreakType);
+    if (const Text* textNode = Text::FromNode(content)) {
+      const uint32_t startOffset =
+          textNode != startNode ? 0 : aRawRange.StartOffset();
+      const uint32_t endOffset =
+          textNode != endNode ? textNode->TextLength() : aRawRange.EndOffset();
+      AppendFontRanges(aFontRanges, *textNode, baseOffset, startOffset,
+                       endOffset, aLineBreakType);
+      baseOffset += GetTextLengthInRange(*textNode, startOffset, endOffset,
+                                         aLineBreakType);
     } else if (ShouldBreakLineBefore(*content, mRootContent)) {
       if (aFontRanges.IsEmpty()) {
         MOZ_ASSERT(baseOffset == 0);
