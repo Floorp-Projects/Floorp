@@ -21,6 +21,7 @@ private const val HEIGHT = 6
 private const val STROKE_WIDTH = 3
 private const val ITEM_LENGTH = 3
 private const val ITEM_PADDING = 12
+private const val INACTIVE_DOT_ALPHA = 255 * 0.4
 
 class DotPagerIndicatorDecoration : RecyclerView.ItemDecoration() {
     private val dp = Resources.getSystem().displayMetrics.density
@@ -108,7 +109,9 @@ class DotPagerIndicatorDecoration : RecyclerView.ItemDecoration() {
         indicatorPosY: Float,
         itemCount: Int
     ) {
-        paint.color = ContextCompat.getColor(context, R.color.inactive_dot_background)
+        paint.color = ContextCompat.getColor(context, R.color.tip_dot_background)
+        paint.alpha = INACTIVE_DOT_ALPHA.toInt()
+
         val itemWidth = indicatorItemLengthInDp + indicatorItemPaddingInDp
         var start = indicatorStartX
 
@@ -127,7 +130,7 @@ class DotPagerIndicatorDecoration : RecyclerView.ItemDecoration() {
         highlightPosition: Int,
         progress: Float
     ) {
-        paint.color = ContextCompat.getColor(context, R.color.active_dot_background)
+        paint.color = ContextCompat.getColor(context, R.color.tip_dot_background)
         val itemWidth = indicatorItemLengthInDp + indicatorItemPaddingInDp
 
         if (progress == 0f) {
