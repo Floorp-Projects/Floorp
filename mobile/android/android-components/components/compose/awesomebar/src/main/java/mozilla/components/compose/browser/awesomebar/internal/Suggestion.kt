@@ -35,6 +35,10 @@ import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.compose.browser.awesomebar.R
 import mozilla.components.concept.awesomebar.AwesomeBar
 
+// We only show one row of text, covering at max screen width.
+// Limit bigger texts that could cause slowdowns or even crashes.
+private const val SUGGESTION_TEXT_MAX_LENGTH = 100
+
 @Composable
 internal fun Suggestion(
     suggestion: AwesomeBar.Suggestion,
@@ -58,8 +62,8 @@ internal fun Suggestion(
             )
         }
         SuggestionTitleAndDescription(
-            title = suggestion.title,
-            description = suggestion.description,
+            title = suggestion.title?.take(SUGGESTION_TEXT_MAX_LENGTH),
+            description = suggestion.description?.take(SUGGESTION_TEXT_MAX_LENGTH),
             colors = colors,
             modifier = Modifier
                 .weight(1f)
