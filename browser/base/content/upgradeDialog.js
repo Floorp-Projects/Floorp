@@ -180,6 +180,20 @@ function onLoad(ready) {
     dispatchEvent(new CustomEvent("variations"));
   }
 
+  // Watch for fluent-dom translating variation inputs to set aria-label. This
+  // is because using the textContent as the label for an <input type="radio">
+  // is non-standard and not exposed by a11y. The correct fix is to change the
+  // l10n strings to include aria-label, but we don't want to change the l10n
+  // strings in beta. We can't manually set aria-label too early because Fluent
+  // will clobber it, so we watch for mutation.
+  new MutationObserver(list =>
+    list.forEach(({ target }) => {
+      if (target.type === "radio" && !target.hasAttribute("aria-label")) {
+        target.setAttribute("aria-label", target.textContent);
+      }
+    })
+  ).observe(variations, { attributes: true, subtree: true });
+
   // Prepare showing the colorways screen.
   function showColorways() {
     // Prepare random theme selection that's not (first) default.
