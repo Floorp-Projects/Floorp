@@ -1,0 +1,83 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>Examples of 'row-rule-align' values.</title>
+<style>
+html,body {
+  color:black; background-color:white; font:20px/1 monospace;
+}
+
+.grid {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: 1ch 2ch 2ch;
+  gap: 10px 30px;
+  block-size: calc(2em + 30px);
+  inline-size: calc(10ch + 30px);
+  place-content: center;
+
+  column-rule: 6px solid cyan;
+  column-rule-extent: all-long;
+  column-rule-lateral-inset-start: 20%;
+
+  row-rule: 6px solid purple;
+  row-rule-longitudinal-inset: 1px;
+
+  border: 2px solid;
+  margin-right: 15px;
+  margin-bottom: 30px;
+  background: lightgrey;
+}
+
+.test1 { row-rule-align: gap-center; }
+.test2 { row-rule-align: gap gap-over; }
+.test3 { row-rule-align: rule; }
+.test4 { row-rule-align: rule-center; }
+.test5 { row-rule-align: gap rule-over; }
+.test6 { row-rule-align: gap-over gap; }
+
+x {
+  background: grey;
+}
+x:nth-child(3) {
+  grid-row: span 2;
+}
+
+.grid::after {
+  position: absolute;
+  bottom: -1.5em;
+  width: 400px;
+  font-size: 10px;
+  vertical-align: top;
+  content: attr(test);
+}
+pre { font-size: 10px; }
+</style>
+
+<pre>Note that the row rules all have a 1px longitudinal inset
+to separate the individual rule segments. ('rule-center',
+for example, would otherwise look like one long rule)
+
+Note also that the column rule is intentionally not centered in
+the gap (to separate 'rule-center' from 'gap-center').
+</pre>
+
+<div class="grid test1"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div>
+<div class="grid test2"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div><br>
+<div class="grid test3"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div>
+<div class="grid test4"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div><br>
+<div class="grid test5"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div>
+<div class="grid test6"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div><br>
+
+<script>
+window.onload = function() {
+  [...document.querySelectorAll('div')].forEach(function(elm) {
+    const cs = window.getComputedStyle(elm);
+    elm.setAttribute("test", 
+      "row-rule-align:" + cs.rowRuleAlign
+    );
+  });
+}
+</script>
