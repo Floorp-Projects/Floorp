@@ -928,11 +928,12 @@ const VariationsCircle = props => {
     className: `text variation-button ${activeTheme !== null && activeTheme !== void 0 && activeTheme.includes(id) ? " selected" : ""}`
   }))))));
 }; // Return colorway as "default" for default theme variations Automatic, Light, Dark
+// and Alpenglow theme which is not supported in Colorway picker
 // For themes other then default, theme names exist in
 // format colorway-variationId inside LIGHT_WEIGHT_THEMES in AboutWelcomeParent
 
 function computeColorWay(themeName, systemVariations) {
-  return !themeName || systemVariations.find(variation => themeName === variation.id) ? "default" : themeName.split("-")[0];
+  return !themeName || themeName === "alpenglow" || systemVariations.find(variation => themeName === variation.id) ? "default" : themeName.split("-")[0];
 }
 function Colorways(props) {
   var _colorways$find;
