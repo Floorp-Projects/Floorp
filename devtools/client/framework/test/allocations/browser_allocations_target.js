@@ -22,6 +22,10 @@ async function testScript(tab) {
 
   // destroy the commands to also destroy the dedicated client.
   await commands.destroy();
+
+  // Spin the event loop to ensure commands destruction is fully completed
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, 0));
 }
 
 add_task(async function() {
