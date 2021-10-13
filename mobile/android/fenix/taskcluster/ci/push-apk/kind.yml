@@ -37,6 +37,7 @@ job-template:
                 beta: fennec-beta
                 release: fennec-production
                 nightly: production
+        google-play-track: alpha
         dep:
             by-level:
                 '3': false
