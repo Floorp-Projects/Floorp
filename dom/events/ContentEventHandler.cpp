@@ -542,20 +542,20 @@ static uint32_t CountNewlinesInXPLength(const Text& aTextNode,
   return newlines;
 }
 
-static uint32_t CountNewlinesInNativeLength(Text* aText,
+static uint32_t CountNewlinesInNativeLength(const Text& aTextNode,
                                             uint32_t aNativeLength) {
-  const nsTextFragment* text = &aText->TextFragment();
+  const nsTextFragment& textFragment = aTextNode.TextFragment();
   // For automated tests, we should abort on debug build.
-  MOZ_ASSERT(
-      (aNativeLength == UINT32_MAX || aNativeLength <= text->GetLength() * 2),
-      "aNativeLength is unexpected value");
-  const uint32_t xpLength = text->GetLength();
+  MOZ_ASSERT((aNativeLength == UINT32_MAX ||
+              aNativeLength <= textFragment.GetLength() * 2),
+             "aNativeLength is unexpected value");
+  const uint32_t xpLength = textFragment.GetLength();
   uint32_t newlines = 0;
   for (uint32_t i = 0, nativeOffset = 0;
        i < xpLength && nativeOffset < aNativeLength; ++i, ++nativeOffset) {
     // For automated tests, we should abort on debug build.
-    MOZ_ASSERT(i < text->GetLength(), "i is out-of-bounds");
-    if (text->CharAt(i) == '\n') {
+    MOZ_ASSERT(i < xpLength, "i is out-of-bounds");
+    if (textFragment.CharAt(i) == '\n') {
       ++newlines;
       ++nativeOffset;
     }
@@ -615,14 +615,13 @@ uint32_t ContentEventHandler::GetTextLength(const Text& aTextNode,
   return length + textLengthDifference;
 }
 
-static uint32_t ConvertToXPOffset(nsIContent* aContent,
+static uint32_t ConvertToXPOffset(const Text& aTextNode,
                                   uint32_t aNativeOffset) {
 #if defined(XP_WIN)
   // On Windows, the length of a native newline ("\r\n") is twice the length of
   // the XP newline ("\n"), so XP offset is equal to the length of the native
   // offset minus the number of newlines encountered in the string.
-  return aNativeOffset -
-         CountNewlinesInNativeLength(aContent->AsText(), aNativeOffset);
+  return aNativeOffset - CountNewlinesInNativeLength(aTextNode, aNativeOffset);
 #else
   // On other platforms, the native and XP newlines are the same.
   return aNativeOffset;
@@ -1057,16 +1056,16 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
     if (!startSet && aOffset <= offset + textLength) {
       nsINode* startNode = nullptr;
       int32_t startNodeOffset = -1;
-      if (content->IsText()) {
+      if (Text* textNode = Text::FromNode(content)) {
         // Rule #1.1: [textNode or text[Node or textNode[
         uint32_t xpOffset = aOffset - offset;
         if (aLineBreakType == LINE_BREAK_TYPE_NATIVE) {
-          xpOffset = ConvertToXPOffset(content, xpOffset);
+          xpOffset = ConvertToXPOffset(*textNode, xpOffset);
         }
 
         if (aExpandToClusterBoundaries) {
           uint32_t oldXPOffset = xpOffset;
-          rv = ExpandToClusterBoundary(content, false, &xpOffset);
+          nsresult rv = ExpandToClusterBoundary(textNode, false, &xpOffset);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -1075,7 +1074,7 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
             *aNewOffset -= (oldXPOffset - xpOffset);
           }
         }
-        startNode = content;
+        startNode = textNode;
         startNodeOffset = static_cast<int32_t>(xpOffset);
       } else if (aOffset < offset + textLength) {
         // Rule #1.2 [<element>
@@ -1128,14 +1127,14 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
     // range.
     if (endOffset <= offset + textLength) {
       MOZ_ASSERT(startSet, "The start of the range should've been set already");
-      if (content->IsText()) {
+      if (Text* textNode = Text::FromNode(content)) {
         // Rule #2.1: ]textNode or text]Node or textNode]
         uint32_t xpOffset = endOffset - offset;
         if (aLineBreakType == LINE_BREAK_TYPE_NATIVE) {
-          uint32_t xpOffsetCurrent = ConvertToXPOffset(content, xpOffset);
+          uint32_t xpOffsetCurrent = ConvertToXPOffset(*textNode, xpOffset);
           if (xpOffset && GetBRLength(aLineBreakType) > 1) {
             MOZ_ASSERT(GetBRLength(aLineBreakType) == 2);
-            uint32_t xpOffsetPre = ConvertToXPOffset(content, xpOffset - 1);
+            uint32_t xpOffsetPre = ConvertToXPOffset(*textNode, xpOffset - 1);
             // If previous character's XP offset is same as current character's,
             // it means that the end offset is between \r and \n.  So, the
             // range end should be after the \n.
@@ -1147,13 +1146,13 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
           }
         }
         if (aExpandToClusterBoundaries) {
-          rv = ExpandToClusterBoundary(content, true, &xpOffset);
+          nsresult rv = ExpandToClusterBoundary(textNode, true, &xpOffset);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
         }
         NS_ASSERTION(xpOffset <= INT32_MAX, "The end node offset is too large");
-        rv = aRawRange->SetEnd(content, xpOffset);
+        nsresult rv = aRawRange->SetEnd(textNode, xpOffset);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
