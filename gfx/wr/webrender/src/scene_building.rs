@@ -80,7 +80,6 @@ use crate::scene::{Scene, ScenePipeline, BuiltScene, SceneStats, StackingContext
 use crate::scene_builder_thread::Interners;
 use crate::space::SpaceSnapper;
 use crate::spatial_node::{StickyFrameInfo, ScrollFrameKind, SpatialNodeUid};
-use crate::spatial_tree::SpatialNodeContainer;
 use crate::tile_cache::TileCacheBuilder;
 use euclid::approxeq::ApproxEq;
 use std::{f32, mem, usize};
@@ -853,7 +852,7 @@ impl<'a> SceneBuilder<'a> {
             transform,
             info.reference_frame.kind,
             info.origin.to_vector(),
-            SpatialNodeUid::external(info.reference_frame.key),
+            SpatialNodeUid::external(info.reference_frame.key, pipeline_id),
         );
     }
 
@@ -877,7 +876,7 @@ impl<'a> SceneBuilder<'a> {
             &content_size,
             ScrollFrameKind::Explicit,
             info.external_scroll_offset,
-            SpatialNodeUid::external(info.key),
+            SpatialNodeUid::external(info.key, pipeline_id),
         );
     }
 
@@ -2045,7 +2044,7 @@ impl<'a> SceneBuilder<'a> {
         if stacking_context.flags.contains(StackingContextFlags::IS_BLEND_CONTAINER) &&
            self.sc_stack.is_empty() &&
            self.tile_cache_builder.can_add_container_tile_cache() &&
-           self.spatial_tree.get_node_info(stacking_context.spatial_node_index).is_root_coord_system
+           self.spatial_tree.is_root_coord_system(stacking_context.spatial_node_index)
         {
             self.tile_cache_builder.add_tile_cache(
                 stacking_context.prim_list,
