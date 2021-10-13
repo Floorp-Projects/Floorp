@@ -435,6 +435,7 @@ class nsFrameSelection final {
    * that frame.
    *
    * @param aNode input parameter for the node to look at
+   *              TODO: Make this `const nsIContent*` for `ContentEventHandler`.
    * @param aOffset offset into above node.
    * @param aReturnOffset will contain offset into frame.
    */
