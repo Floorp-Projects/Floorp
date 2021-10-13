@@ -8,8 +8,8 @@ const { ActorClassWithSpec } = require("devtools/shared/protocol");
 
 const Resources = require("devtools/server/actors/resources/index");
 const {
-  WatchedDataHelpers,
-} = require("devtools/server/actors/watcher/WatchedDataHelpers.jsm");
+  SessionDataHelpers,
+} = require("devtools/server/actors/watcher/SessionDataHelpers.jsm");
 const { STATES: THREAD_STATES } = require("devtools/server/actors/thread");
 const {
   RESOURCES,
@@ -18,7 +18,7 @@ const {
   THREAD_CONFIGURATION,
   XHR_BREAKPOINTS,
   EVENT_BREAKPOINTS,
-} = WatchedDataHelpers.SUPPORTED_DATA;
+} = SessionDataHelpers.SUPPORTED_DATA;
 
 loader.lazyRequireGetter(
   this,

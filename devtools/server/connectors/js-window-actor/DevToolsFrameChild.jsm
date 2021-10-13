@@ -156,20 +156,20 @@ class DevToolsFrameChild extends JSWindowActorChild {
    */
   instantiate({ isBFCache = false } = {}) {
     const { sharedData } = Services.cpmm;
-    const watchedDataByWatcherActor = sharedData.get(SHARED_DATA_KEY_NAME);
-    if (!watchedDataByWatcherActor) {
+    const sessionDataByWatcherActor = sharedData.get(SHARED_DATA_KEY_NAME);
+    if (!sessionDataByWatcherActor) {
       throw new Error(
         "Request to instantiate the target(s) for the BrowsingContext, but `sharedData` is empty about watched targets"
       );
     }
 
     // Create one Target actor for each prefix/client which listen to frames
-    for (const [watcherActorID, watchedData] of watchedDataByWatcherActor) {
+    for (const [watcherActorID, sessionData] of sessionDataByWatcherActor) {
       const {
         connectionPrefix,
         browserId,
         isServerTargetSwitchingEnabled,
-      } = watchedData;
+      } = sessionData;
       // Always create new targets when server targets are enabled as we create targets for all the WindowGlobal's,
       // including all WindowGlobal's of the top target.
       // For bfcache navigations, we only create new targets when bfcacheInParent is enabled,
@@ -179,7 +179,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
         isServerTargetSwitchingEnabled ||
         (isBFCache && this.isBfcacheInParentEnabled);
       if (
-        watchedData.targets.includes("frame") &&
+        sessionData.targets.includes("frame") &&
         shouldNotifyWindowGlobal(this.manager, browserId, {
           acceptTopLevelTarget,
         })
@@ -227,7 +227,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
         this._createTargetActor({
           watcherActorID,
           parentConnectionPrefix: connectionPrefix,
-          watchedData,
+          sessionData,
           isDocumentCreation: true,
         });
       }
@@ -243,7 +243,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
    * @param String options.parentConnectionPrefix
    *        The prefix of the DevToolsServerConnection of the Watcher Actor.
    *        This is used to compute a unique ID for the target actor.
-   * @param Object options.watchedData
+   * @param Object options.sessionData
    *        All data managed by the Watcher Actor and WatcherRegistry.jsm, containing
    *        target types, resources types to be listened as well as breakpoints and any
    *        other data meant to be shared across processes and threads.
@@ -257,7 +257,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
   _createTargetActor({
     watcherActorID,
     parentConnectionPrefix,
-    watchedData,
+    sessionData,
     isDocumentCreation,
     fromInstantiateAlreadyAvailable,
   }) {
@@ -301,7 +301,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
     const browsingContext = this.manager.browsingContext;
     const isTopLevelTarget =
       !browsingContext.parent &&
-      browsingContext.browserId == watchedData.browserId;
+      browsingContext.browserId == sessionData.browserId;
 
     const { connection, targetActor } = this._createConnectionAndActor(
       forwardingPrefix,
@@ -320,7 +320,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // were queued, we don't have to wait for anything around this sendAsyncMessage call.
     // In theory, the WindowGlobalTargetActor may emit events in its constructor.
     // If it does, such RDP packets may be lost.
-    // The important point here is to send this message before processing the watchedData,
+    // The important point here is to send this message before processing the sessionData,
     // which will start the Watcher and start emitting resources on the target actor.
     this.sendAsyncMessage("DevToolsFrameChild:connectFromContent", {
       watcherActorID,
@@ -329,10 +329,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
     });
 
     // Pass initialization data to the target actor
-    for (const type in watchedData) {
-      // `watchedData` will also contain `browserId` and `watcherTraits`,
+    for (const type in sessionData) {
+      // `sessionData` will also contain `browserId` and `watcherTraits`,
       // as well as entries with empty arrays, which shouldn't be processed.
-      const entries = watchedData[type];
+      const entries = sessionData[type];
       if (!Array.isArray(entries) || entries.length == 0) {
         continue;
       }
@@ -478,12 +478,12 @@ class DevToolsFrameChild extends JSWindowActorChild {
     }
     switch (message.name) {
       case "DevToolsFrameParent:instantiate-already-available": {
-        const { watcherActorID, connectionPrefix, watchedData } = message.data;
+        const { watcherActorID, connectionPrefix, sessionData } = message.data;
 
         return this._createTargetActor({
           watcherActorID,
           parentConnectionPrefix: connectionPrefix,
-          watchedData,
+          sessionData,
           fromInstantiateAlreadyAvailable: true,
         });
       }
@@ -644,8 +644,8 @@ class DevToolsFrameChild extends JSWindowActorChild {
       // We have to unregister it from the TargetActorRegistry, otherwise,
       // if we navigate back to it, the next DOMWindowCreated won't create a new target for it.
       const { sharedData } = Services.cpmm;
-      const watchedDataByWatcherActor = sharedData.get(SHARED_DATA_KEY_NAME);
-      if (!watchedDataByWatcherActor) {
+      const sessionDataByWatcherActor = sharedData.get(SHARED_DATA_KEY_NAME);
+      if (!sessionDataByWatcherActor) {
         throw new Error(
           "Request to instantiate the target(s) for the BrowsingContext, but `sharedData` is empty about watched targets"
         );
@@ -655,8 +655,8 @@ class DevToolsFrameChild extends JSWindowActorChild {
       // A flag to know if the following for loop ended up destroying all the actors.
       // It may not be the case if one Watcher isn't having server target switching enabled.
       let allActorsAreDestroyed = true;
-      for (const [watcherActorID, watchedData] of watchedDataByWatcherActor) {
-        const { browserId, isServerTargetSwitchingEnabled } = watchedData;
+      for (const [watcherActorID, sessionData] of sessionDataByWatcherActor) {
+        const { browserId, isServerTargetSwitchingEnabled } = sessionData;
 
         // /!\ We may have an issue here as there could be multiple targets for a given
         // (watcherActorID,browserId) pair.
