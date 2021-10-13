@@ -99,6 +99,7 @@ import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentDir
 import org.mozilla.fenix.library.recentlyclosed.RecentlyClosedFragmentDirections
 import org.mozilla.fenix.onboarding.DefaultBrowserNotificationWorker
 import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
+import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.perf.Performance
 import org.mozilla.fenix.perf.PerformanceInflater
 import org.mozilla.fenix.perf.ProfilerMarkers
@@ -187,6 +188,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         val startTimeProfiler = components.core.engine.profiler?.getProfilerTime()
 
         components.strictMode.attachListenerToDisablePenaltyDeath(supportFragmentManager)
+        MarkersFragmentLifecycleCallbacks.register(supportFragmentManager, components.core.engine)
+
         // There is disk read violations on some devices such as samsung and pixel for android 9/10
         components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             // Theme setup should always be called before super.onCreate
