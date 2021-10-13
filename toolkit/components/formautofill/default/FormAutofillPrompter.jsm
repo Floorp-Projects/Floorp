@@ -163,10 +163,9 @@ const CONTENT = {
             : null;
         },
         callback(event) {
-          let {
-            secondaryButton,
-            menubutton,
-          } = event.target.parentNode.parentNode.parentNode;
+          let { secondaryButton, menubutton } = event.target.closest(
+            "popupnotification"
+          );
           let checked = event.target.checked;
           Services.prefs.setBoolPref(
             "services.sync.engine.creditcards",

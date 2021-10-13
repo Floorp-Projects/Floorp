@@ -142,6 +142,11 @@ xul|label[disabled="true"] {
   text-decoration: underline;
 }
 
+.text-link:-moz-lwtheme {
+  color: inherit;
+  text-decoration: underline;
+}
+
 /* Textbox context menu */
 
 .textbox-contextmenu:-moz-locale-dir(rtl) {
