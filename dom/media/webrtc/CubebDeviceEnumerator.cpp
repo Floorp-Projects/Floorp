@@ -256,7 +256,8 @@ void CubebDeviceEnumerator::EnumerateAudioDevices(
     name = u"Default audio output device"_ns;
   }
 
-  if (devices.IsEmpty()) {
+  if (devices.IsEmpty() || manualInvalidation) {
+    devices.Clear();
     // Bug 1473346: enumerating devices is not supported on Android in cubeb,
     // simply state that there is a single sink, that it is the default, and has
     // a single channel. All the other values are made up and are not to be
