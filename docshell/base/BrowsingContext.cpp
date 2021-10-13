@@ -3443,7 +3443,8 @@ bool BrowsingContext::IsPopupAllowed() {
 
 void BrowsingContext::SessionHistoryCommit(
     const LoadingSessionHistoryInfo& aInfo, uint32_t aLoadType,
-    bool aHadActiveEntry, bool aPersist, bool aCloneEntryChildren) {
+    bool aHadActiveEntry, bool aPersist, bool aCloneEntryChildren,
+    bool aChannelExpired) {
   nsID changeID = {};
   if (XRE_IsContentProcess()) {
     RefPtr<ChildSHistory> rootSH = Top()->GetChildSessionHistory();
@@ -3468,12 +3469,13 @@ void BrowsingContext::SessionHistoryCommit(
       }
     }
     ContentChild* cc = ContentChild::GetSingleton();
-    mozilla::Unused << cc->SendHistoryCommit(this, aInfo.mLoadId, changeID,
-                                             aLoadType, aPersist,
-                                             aCloneEntryChildren);
+    mozilla::Unused << cc->SendHistoryCommit(
+        this, aInfo.mLoadId, changeID, aLoadType, aPersist, aCloneEntryChildren,
+        aChannelExpired);
   } else {
     Canonical()->SessionHistoryCommit(aInfo.mLoadId, changeID, aLoadType,
-                                      aPersist, aCloneEntryChildren);
+                                      aPersist, aCloneEntryChildren,
+                                      aChannelExpired);
   }
 }
 
