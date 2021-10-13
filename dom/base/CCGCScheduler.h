@@ -166,38 +166,17 @@ class CCGCScheduler {
   void SetWantMajorGC(JS::GCReason aReason) {
     MOZ_ASSERT(aReason != JS::GCReason::NO_REASON);
 
-    // If the GC being requested is not a shrinking GC set this flag.
-    // If/when the shrinking GC timer fires but the user is active we check
-    // this flag before canceling the GC, so as not to cancel the
-    // non-shrinking GC being requested here.
-    if (aReason != JS::GCReason::USER_INACTIVE) {
+    if (mMajorGCReason != JS::GCReason::NO_REASON &&
+        mMajorGCReason != JS::GCReason::USER_INACTIVE &&
+        aReason != JS::GCReason::USER_INACTIVE) {
       mWantAtLeastRegularGC = true;
     }
+    mMajorGCReason = aReason;
 
     // Force full GCs when called from reftests so that we collect dead zones
     // that have not been scheduled for collection.
     if (aReason == JS::GCReason::DOM_WINDOW_UTILS) {
       SetNeedsFullGC();
-    }
-
-    // USER_INACTIVE trumps everything,
-    // FULL_GC_TIMER trumps everything except USER_INACTIVE,
-    // all other reasons just use the latest reason.
-    switch (aReason) {
-      case JS::GCReason::USER_INACTIVE:
-        mMajorGCReason = aReason;
-        break;
-      case JS::GCReason::FULL_GC_TIMER:
-        if (mMajorGCReason != JS::GCReason::USER_INACTIVE) {
-          mMajorGCReason = aReason;
-        }
-        break;
-      default:
-        if (mMajorGCReason != JS::GCReason::USER_INACTIVE &&
-            mMajorGCReason != JS::GCReason::FULL_GC_TIMER) {
-          mMajorGCReason = aReason;
-        }
-        break;
     }
   }
 
@@ -408,10 +387,6 @@ class CCGCScheduler {
   // An incremental GC is in progress, which blocks the CC from running for its
   // duration (or until it goes too long and is finished synchronously.)
   bool mInIncrementalGC = false;
-
-  // We've asked the parent process if now is a good time to GC (do not ask
-  // again).
-  bool mHaveAskedParent = false;
 
   // The parent process is ready for us to do a major GC.
   bool mReadyForMajorGC = false;
