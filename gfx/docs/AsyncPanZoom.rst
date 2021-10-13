@@ -441,6 +441,7 @@ e.g. steps 6 and 8 involve IPC, not just "stack unwinding").
 
 If the CSS touch-action property is enabled, the above steps are
 modified as follows: 
+
 * In step 4, the APZC also requires the allowed touch-action behaviours
   for the input event. This might have been determined as part of the
   hit-test in APZCTreeManager; if not, the events are queued.
