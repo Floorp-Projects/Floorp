@@ -2180,6 +2180,27 @@ StorageActors.createActor(
 
     async getValuesForHost(host, name) {
       if (!name) {
+        // if we get here, we most likely clicked on the refresh button
+        // which called getStoreObjects, itself calling this method,
+        // all that, without having selected any particular cache name.
+        //
+        // Try to detect if a new cache has been added and notify the client
+        // asynchronously, via a RDP event.
+        const previousCaches = [...this.hostVsStores.get(host).keys()];
+        await this.preListStores();
+        const updatedCaches = [...this.hostVsStores.get(host).keys()];
+        const newCaches = updatedCaches.filter(
+          cacheName => !previousCaches.includes(cacheName)
+        );
+        newCaches.forEach(cacheName =>
+          this.onItemUpdated("added", host, [cacheName])
+        );
+        const removedCaches = previousCaches.filter(
+          cacheName => !updatedCaches.includes(cacheName)
+        );
+        removedCaches.forEach(cacheName =>
+          this.onItemUpdated("deleted", host, [cacheName])
+        );
         return [];
       }
       // UI is weird and expect a JSON stringified array... and pass it back :/
