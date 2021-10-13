@@ -76,6 +76,9 @@ async function doesNotDelegateFor(browser, uriString, hashChange = false) {
  * are no longer prevented.
  */
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_first", false]],
+  });
   await BrowserTestUtils.withNewTab("http://example.com", async browser => {
     ChromeUtils.registerWindowActor(ACTOR_NAME, {
       child: {
