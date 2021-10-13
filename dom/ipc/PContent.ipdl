@@ -1720,7 +1720,8 @@ parent:
 
     async HistoryCommit(MaybeDiscardedBrowsingContext aContext,
                         uint64_t aLoadID, nsID aChangeID, uint32_t aLoadType,
-                        bool aPersist, bool aCloneEntryChildren);
+                        bool aPersist, bool aCloneEntryChildren,
+                        bool aChannelExpired);
 
     async HistoryGo(MaybeDiscardedBrowsingContext aContext, int32_t aOffset,
                     uint64_t aHistoryEpoch, bool aRequireUserInteraction,

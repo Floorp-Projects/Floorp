@@ -5568,7 +5568,8 @@ nsresult nsDocShell::RefreshURIFromQueue() {
 
 nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
                            WindowGlobalChild* aWindowActor,
-                           bool aIsTransientAboutBlank, bool aPersist) {
+                           bool aIsTransientAboutBlank, bool aPersist,
+                           nsIRequest* aRequest) {
   // Save the LayoutHistoryState of the previous document, before
   // setting up new document
   PersistLayoutHistoryState();
@@ -5593,8 +5594,20 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
   }
 
   if (!aIsTransientAboutBlank && mozilla::SessionHistoryInParent()) {
+    bool expired = false;
+    nsCOMPtr<nsICacheInfoChannel> cacheChannel = do_QueryInterface(aRequest);
+    if (cacheChannel) {
+      // Check if the page has expired from cache
+      uint32_t expTime = 0;
+      cacheChannel->GetCacheTokenExpirationTime(&expTime);
+      uint32_t now = PRTimeToSeconds(PR_Now());
+      if (expTime <= now) {
+        expired = true;
+      }
+    }
+
     MOZ_LOG(gSHLog, LogLevel::Debug, ("document %p Embed", this));
-    MoveLoadingToActiveEntry(aPersist);
+    MoveLoadingToActiveEntry(aPersist, expired);
   }
 
   bool updateHistory = true;
@@ -6641,7 +6654,7 @@ nsresult nsDocShell::CreateAboutBlankContentViewer(
       // hook 'em up
       if (viewer) {
         viewer->SetContainer(this);
-        rv = Embed(viewer, aActor, true, false);
+        rv = Embed(viewer, aActor, true, false, nullptr);
         NS_ENSURE_SUCCESS(rv, rv);
 
         SetCurrentURI(blankDoc->GetDocumentURI(), nullptr,
@@ -7887,7 +7900,8 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
   }
 
   NS_ENSURE_SUCCESS(Embed(viewer, nullptr, false,
-                          ShouldAddToSessionHistory(finalURI, aOpenedChannel)),
+                          ShouldAddToSessionHistory(finalURI, aOpenedChannel),
+                          aOpenedChannel),
                     NS_ERROR_FAILURE);
 
   if (!mBrowsingContext->GetHasLoadedNonInitialDocument()) {
@@ -8891,8 +8905,10 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
            this, mLoadingEntry->mInfo.GetURI()->GetSpecOrDefault().get()));
       bool hadActiveEntry = !!mActiveEntry;
       mActiveEntry = MakeUnique<SessionHistoryInfo>(mLoadingEntry->mInfo);
-      mBrowsingContext->SessionHistoryCommit(*mLoadingEntry, mLoadType,
-                                             hadActiveEntry, true, true);
+      mBrowsingContext->SessionHistoryCommit(
+          *mLoadingEntry, mLoadType, hadActiveEntry, true, true,
+          /* No expiration update on the same document loads*/
+          false);
       // FIXME Need to set postdata.
       SetCacheKeyOnHistoryEntry(nullptr, cacheKey);
 
@@ -13382,7 +13398,7 @@ void nsDocShell::SetLoadingSessionHistoryInfo(
   mLoadingEntry = MakeUnique<LoadingSessionHistoryInfo>(aLoadingInfo);
 }
 
-void nsDocShell::MoveLoadingToActiveEntry(bool aPersist) {
+void nsDocShell::MoveLoadingToActiveEntry(bool aPersist, bool aExpired) {
   MOZ_ASSERT(mozilla::SessionHistoryInParent());
 
   MOZ_LOG(gSHLog, LogLevel::Debug,
@@ -13409,8 +13425,8 @@ void nsDocShell::MoveLoadingToActiveEntry(bool aPersist) {
     MOZ_ASSERT(loadingEntry);
     uint32_t loadType =
         mLoadType == LOAD_ERROR_PAGE ? mFailedLoadType : mLoadType;
-    mBrowsingContext->SessionHistoryCommit(*loadingEntry, loadType,
-                                           hadActiveEntry, aPersist, false);
+    mBrowsingContext->SessionHistoryCommit(
+        *loadingEntry, loadType, hadActiveEntry, aPersist, false, aExpired);
   }
 }
 

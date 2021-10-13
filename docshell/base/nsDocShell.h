@@ -978,7 +978,8 @@ class nsDocShell final : public nsDocLoader,
   void RefreshURIToQueue();
   nsresult Embed(nsIContentViewer* aContentViewer,
                  mozilla::dom::WindowGlobalChild* aWindowActor,
-                 bool aIsTransientAboutBlank, bool aPersist);
+                 bool aIsTransientAboutBlank, bool aPersist,
+                 nsIRequest* aRequest);
   nsPresContext* GetEldestPresContext();
   nsresult CheckLoadingPermissions();
   nsresult LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType,
@@ -1074,7 +1075,8 @@ class nsDocShell final : public nsDocLoader,
 
   // Sets the active entry to the current loading entry. aPersist is used in the
   // case a new session history entry is added to the session history.
-  void MoveLoadingToActiveEntry(bool aPersist);
+  // aExpired is true if the relevant nsIChannel has its cache token expired.
+  void MoveLoadingToActiveEntry(bool aPersist, bool aExpired);
 
   void ActivenessMaybeChanged();
 
