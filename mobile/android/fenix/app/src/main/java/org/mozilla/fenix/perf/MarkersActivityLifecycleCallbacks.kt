@@ -17,7 +17,7 @@ import org.mozilla.fenix.android.DefaultActivityLifecycleCallbacks
  * our implementation (e.g. [org.mozilla.fenix.HomeActivity.onCreate]) rather than at the beginning
  * or end of that method.
  */
-class MarkersLifecycleCallbacks(
+class MarkersActivityLifecycleCallbacks(
     private val engine: Engine,
 ) : DefaultActivityLifecycleCallbacks {
 

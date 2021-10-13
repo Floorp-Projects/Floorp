@@ -20,7 +20,7 @@ import org.mozilla.fenix.components.getType
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.perf.MarkersLifecycleCallbacks
+import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.shortcut.NewTabShortcutIntentProcessor
 
@@ -47,7 +47,7 @@ class IntentReceiverActivity : Activity() {
         processIntent(intent)
 
         components.core.engine.profiler?.addMarker(
-            MarkersLifecycleCallbacks.MARKER_NAME, startTimeProfiler, "IntentReceiverActivity.onCreate"
+            MarkersActivityLifecycleCallbacks.MARKER_NAME, startTimeProfiler, "IntentReceiverActivity.onCreate"
         )
         StartupTimeline.onActivityCreateEndIntentReceiver() // DO NOT MOVE ANYTHING BELOW HERE.
     }

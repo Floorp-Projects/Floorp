@@ -80,7 +80,7 @@ import org.mozilla.fenix.components.Core
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
-import org.mozilla.fenix.perf.MarkersLifecycleCallbacks
+import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -197,7 +197,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
         visibilityLifecycleCallback = VisibilityLifecycleCallback(getSystemService())
         registerActivityLifecycleCallbacks(visibilityLifecycleCallback)
-        registerActivityLifecycleCallbacks(MarkersLifecycleCallbacks(components.core.engine))
+        registerActivityLifecycleCallbacks(MarkersActivityLifecycleCallbacks(components.core.engine))
 
         // Storage maintenance disabled, for now, as it was interfering with background migrations.
         // See https://github.com/mozilla-mobile/fenix/issues/7227 for context.

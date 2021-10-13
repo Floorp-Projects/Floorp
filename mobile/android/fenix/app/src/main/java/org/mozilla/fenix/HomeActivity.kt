@@ -98,7 +98,7 @@ import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentDirections
 import org.mozilla.fenix.library.recentlyclosed.RecentlyClosedFragmentDirections
 import org.mozilla.fenix.onboarding.DefaultBrowserNotificationWorker
-import org.mozilla.fenix.perf.MarkersLifecycleCallbacks
+import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
 import org.mozilla.fenix.perf.Performance
 import org.mozilla.fenix.perf.PerformanceInflater
 import org.mozilla.fenix.perf.ProfilerMarkers
@@ -275,7 +275,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         }
 
         components.core.engine.profiler?.addMarker(
-            MarkersLifecycleCallbacks.MARKER_NAME, startTimeProfiler, "HomeActivity.onCreate"
+            MarkersActivityLifecycleCallbacks.MARKER_NAME, startTimeProfiler, "HomeActivity.onCreate"
         )
         StartupTimeline.onActivityCreateEndHome(this) // DO NOT MOVE ANYTHING BELOW HERE.
     }
@@ -340,7 +340,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         ProfilerMarkers.homeActivityOnStart(binding.rootContainer, components.core.engine.profiler)
         components.core.engine.profiler?.addMarker(
-            MarkersLifecycleCallbacks.MARKER_NAME, startProfilerTime, "HomeActivity.onStart"
+            MarkersActivityLifecycleCallbacks.MARKER_NAME, startProfilerTime, "HomeActivity.onStart"
         ) // DO NOT MOVE ANYTHING BELOW THIS addMarker CALL.
     }
 
