@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.concept.engine.Engine
+import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.home.HomeFragment
 
 /**
@@ -83,7 +84,8 @@ class MarkersFragmentLifecycleCallbacks(
     override fun onFragmentViewCreated(fm: FragmentManager, f: Fragment, v: View, savedInstanceState: Bundle?) {
         if (shouldSkip() ||
             // These methods are manually instrumented with duration.
-            f is HomeFragment
+            f is HomeFragment ||
+            f is BrowserFragment // instrumented in BaseBrowserFragment.
         ) {
             return
         }

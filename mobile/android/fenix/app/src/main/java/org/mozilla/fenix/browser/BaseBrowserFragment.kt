@@ -134,6 +134,7 @@ import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.components.toolbar.interactor.DefaultBrowserToolbarInteractor
 import org.mozilla.fenix.databinding.FragmentBrowserBinding
 import org.mozilla.fenix.ext.secure
+import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.settings.biometric.BiometricPromptFeature
 import mozilla.components.feature.session.behavior.ToolbarPosition as MozacToolbarPosition
 
@@ -212,6 +213,9 @@ abstract class BaseBrowserFragment :
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // DO NOT ADD ANYTHING ABOVE THIS getProfilerTime CALL!
+        val profilerStartTime = requireComponents.core.engine.profiler?.getProfilerTime()
+
         customTabSessionId = requireArguments().getString(EXTRA_SESSION_ID)
 
         // Diagnostic breadcrumb for "Display already aquired" crash:
@@ -234,10 +238,17 @@ abstract class BaseBrowserFragment :
             )
         }
 
+        // DO NOT MOVE ANYTHING BELOW THIS addMarker CALL!
+        requireComponents.core.engine.profiler?.addMarker(
+            MarkersFragmentLifecycleCallbacks.MARKER_NAME, profilerStartTime, "BaseBrowserFragment.onCreateView",
+        )
         return binding.root
     }
 
     final override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        // DO NOT ADD ANYTHING ABOVE THIS getProfilerTime CALL!
+        val profilerStartTime = requireComponents.core.engine.profiler?.getProfilerTime()
+
         initializeUI(view)
 
         if (customTabSessionId == null) {
@@ -254,6 +265,11 @@ abstract class BaseBrowserFragment :
         }
 
         requireContext().accessibilityManager.addAccessibilityStateChangeListener(this)
+
+        // DO NOT MOVE ANYTHING BELOW THIS addMarker CALL!
+        requireComponents.core.engine.profiler?.addMarker(
+            MarkersFragmentLifecycleCallbacks.MARKER_NAME, profilerStartTime, "BaseBrowserFragment.onViewCreated",
+        )
     }
 
     private fun initializeUI(view: View) {
