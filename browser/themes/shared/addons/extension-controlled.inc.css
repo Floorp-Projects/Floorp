@@ -26,7 +26,7 @@
   margin: 0 -1px 1px;
 }
 
-.extension-controlled-notification > .popup-notification-body-container > .popup-notification-body > .popup-notification-warning,
+.extension-controlled-notification > .popup-notification-body-container > .popup-notification-body > .popup-notification-bottom-content > .popup-notification-warning,
 .extension-controlled-notification > .popup-notification-body-container > .popup-notification-icon {
   display: none;
 }

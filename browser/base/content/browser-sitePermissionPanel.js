@@ -985,7 +985,6 @@ var gPermissionPanel = {
 
     MozXULElement.insertFTLIfNeeded("browser/sitePermissions.ftl");
     let text = document.createXULElement("label", { is: "text-link" });
-    text.setAttribute("flex", "1");
     text.setAttribute("class", "permission-popup-permission-label");
     text.setAttribute("data-l10n-id", "site-permissions-open-blocked-popups");
     text.setAttribute(
