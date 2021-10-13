@@ -155,23 +155,26 @@ StoragePrincipalHelper::PrepareEffectiveStoragePrincipalOriginAttributes(
 }
 
 // static
-bool StoragePrincipalHelper::VerifyValidStoragePrincipalInfoForPrincipalInfo(
-    const mozilla::ipc::PrincipalInfo& aStoragePrincipalInfo,
-    const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
-  if (aStoragePrincipalInfo.type() != aPrincipalInfo.type()) {
+bool StoragePrincipalHelper::
+    VerifyValidPartitionedPrincipalInfoForPrincipalInfo(
+        const mozilla::ipc::PrincipalInfo& aPartitionedPrincipalInfo,
+        const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+        bool aIgnoreSpecForContentPrincipal) {
+  if (aPartitionedPrincipalInfo.type() != aPrincipalInfo.type()) {
     return false;
   }
 
-  if (aStoragePrincipalInfo.type() ==
+  if (aPartitionedPrincipalInfo.type() ==
       mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) {
     const mozilla::ipc::ContentPrincipalInfo& spInfo =
-        aStoragePrincipalInfo.get_ContentPrincipalInfo();
+        aPartitionedPrincipalInfo.get_ContentPrincipalInfo();
     const mozilla::ipc::ContentPrincipalInfo& pInfo =
         aPrincipalInfo.get_ContentPrincipalInfo();
 
-    if (!spInfo.attrs().EqualsIgnoringFPD(pInfo.attrs()) ||
+    if (!spInfo.attrs().EqualsIgnoringPartitionKey(pInfo.attrs()) ||
         spInfo.originNoSuffix() != pInfo.originNoSuffix() ||
-        spInfo.spec() != pInfo.spec() || spInfo.domain() != pInfo.domain() ||
+        (!aIgnoreSpecForContentPrincipal && spInfo.spec() != pInfo.spec()) ||
+        spInfo.domain() != pInfo.domain() ||
         spInfo.baseDomain() != pInfo.baseDomain()) {
       return false;
     }
@@ -179,31 +182,31 @@ bool StoragePrincipalHelper::VerifyValidStoragePrincipalInfoForPrincipalInfo(
     return true;
   }
 
-  if (aStoragePrincipalInfo.type() ==
+  if (aPartitionedPrincipalInfo.type() ==
       mozilla::ipc::PrincipalInfo::TSystemPrincipalInfo) {
     // Nothing to check here.
     return true;
   }
 
-  if (aStoragePrincipalInfo.type() ==
+  if (aPartitionedPrincipalInfo.type() ==
       mozilla::ipc::PrincipalInfo::TNullPrincipalInfo) {
     const mozilla::ipc::NullPrincipalInfo& spInfo =
-        aStoragePrincipalInfo.get_NullPrincipalInfo();
+        aPartitionedPrincipalInfo.get_NullPrincipalInfo();
     const mozilla::ipc::NullPrincipalInfo& pInfo =
         aPrincipalInfo.get_NullPrincipalInfo();
 
     return spInfo.spec() == pInfo.spec() &&
-           spInfo.attrs().EqualsIgnoringFPD(pInfo.attrs());
+           spInfo.attrs().EqualsIgnoringPartitionKey(pInfo.attrs());
   }
 
-  if (aStoragePrincipalInfo.type() ==
+  if (aPartitionedPrincipalInfo.type() ==
       mozilla::ipc::PrincipalInfo::TExpandedPrincipalInfo) {
     const mozilla::ipc::ExpandedPrincipalInfo& spInfo =
-        aStoragePrincipalInfo.get_ExpandedPrincipalInfo();
+        aPartitionedPrincipalInfo.get_ExpandedPrincipalInfo();
     const mozilla::ipc::ExpandedPrincipalInfo& pInfo =
         aPrincipalInfo.get_ExpandedPrincipalInfo();
 
-    if (!spInfo.attrs().EqualsIgnoringFPD(pInfo.attrs())) {
+    if (!spInfo.attrs().EqualsIgnoringPartitionKey(pInfo.attrs())) {
       return false;
     }
 
@@ -212,8 +215,9 @@ bool StoragePrincipalHelper::VerifyValidStoragePrincipalInfoForPrincipalInfo(
     }
 
     for (uint32_t i = 0; i < spInfo.allowlist().Length(); ++i) {
-      if (!VerifyValidStoragePrincipalInfoForPrincipalInfo(
-              spInfo.allowlist()[i], pInfo.allowlist()[i])) {
+      if (!VerifyValidPartitionedPrincipalInfoForPrincipalInfo(
+              spInfo.allowlist()[i], pInfo.allowlist()[i],
+              aIgnoreSpecForContentPrincipal)) {
         return false;
       }
     }
