@@ -900,6 +900,9 @@ static BaseNamePartsResult BaseNameParts(const CharT* baseName, size_t length) {
     languageLength = length;
   }
 
+  // Tell the analysis the |IsStructurallyValid*Tag| functions can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
   IndexAndLength language{0, languageLength};
   MOZ_ASSERT(
       mozilla::intl::IsStructurallyValidLanguageTag(language.spanOf(baseName)));
