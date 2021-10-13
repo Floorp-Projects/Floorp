@@ -30,7 +30,7 @@ async function createTargets(watcher) {
         watcherActorID: watcher.actorID,
         connectionPrefix: watcher.conn.prefix,
         browserId: watcher.browserId,
-        watchedData: watcher.watchedData,
+        sessionData: watcher.sessionData,
       });
     promises.push(promise);
   }

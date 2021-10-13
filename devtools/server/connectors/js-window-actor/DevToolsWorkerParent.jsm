@@ -55,7 +55,7 @@ class DevToolsWorkerParent extends JSWindowActorParent {
     watcherActorID,
     connectionPrefix,
     browserId,
-    watchedData,
+    sessionData,
   }) {
     try {
       await this.sendQuery(
@@ -64,7 +64,7 @@ class DevToolsWorkerParent extends JSWindowActorParent {
           watcherActorID,
           connectionPrefix,
           browserId,
-          watchedData,
+          sessionData,
         }
       );
     } catch (e) {

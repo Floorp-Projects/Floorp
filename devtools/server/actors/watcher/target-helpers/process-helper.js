@@ -215,7 +215,7 @@ async function createTargets(watcher) {
   Services.ppmm.broadcastAsyncMessage("debug:instantiate-already-available", {
     watcherActorID: watcher.actorID,
     connectionPrefix: watcher.conn.prefix,
-    watchedData: watcher.watchedData,
+    sessionData: watcher.sessionData,
   });
 
   await onTargetsCreated;

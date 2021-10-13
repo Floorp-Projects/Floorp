@@ -134,7 +134,7 @@ async function createTargetForBrowsingContext({
         watcherActorID: watcher.actorID,
         connectionPrefix: watcher.conn.prefix,
         browserId: watcher.browserId,
-        watchedData: watcher.watchedData,
+        sessionData: watcher.sessionData,
       });
   } catch (e) {
     console.warn(

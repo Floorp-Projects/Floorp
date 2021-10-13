@@ -128,8 +128,8 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    * @return Array<String>
    *         Returns the list of currently watched resource types.
    */
-  get watchedData() {
-    return WatcherRegistry.getWatchedData(this);
+  get sessionData() {
+    return WatcherRegistry.getSessionData(this);
   },
 
   form() {
@@ -654,7 +654,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    * @param {String} type
    *        Data type to retrieve.
    */
-  getWatchedData(type) {
-    return this.watchedData?.[type];
+  getSessionDataForType(type) {
+    return this.sessionData?.[type];
   },
 });
