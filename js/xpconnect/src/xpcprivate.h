@@ -2245,6 +2245,7 @@ struct GlobalProperties {
   bool URLSearchParams : 1;
   bool XMLHttpRequest : 1;
   bool WebSocket : 1;
+  bool Window : 1;
   bool XMLSerializer : 1;
 
   // Ad-hoc property names we implement.

@@ -63,6 +63,7 @@ const debuggerSandbox = (exports.internalSandbox = Cu.Sandbox(systemPrincipal, {
     "TextDecoder",
     "TextEncoder",
     "URL",
+    "Window",
     "XMLHttpRequest",
   ],
 }));
@@ -87,6 +88,7 @@ const {
   TextDecoder,
   TextEncoder,
   URL,
+  Window,
   XMLHttpRequest,
 } = debuggerSandbox;
 
@@ -280,6 +282,7 @@ exports.globals = {
   TextDecoder,
   TextEncoder,
   URL,
+  Window,
   XMLHttpRequest,
 };
 // DevTools loader copy globals property descriptors on each module global

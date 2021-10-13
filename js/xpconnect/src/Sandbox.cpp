@@ -79,6 +79,7 @@
 #include "mozilla/dom/URLSearchParamsBinding.h"
 #include "mozilla/dom/XMLHttpRequest.h"
 #include "mozilla/dom/WebSocketBinding.h"
+#include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/XMLSerializerBinding.h"
 #include "mozilla/dom/FormDataBinding.h"
 #include "mozilla/dom/nsCSPContext.h"
@@ -946,6 +947,8 @@ bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {
       XMLHttpRequest = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "WebSocket")) {
       WebSocket = true;
+    } else if (JS_LinearStringEqualsLiteral(nameStr, "Window")) {
+      Window = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "XMLSerializer")) {
       XMLSerializer = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "atob")) {
@@ -1098,6 +1101,8 @@ bool xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj) {
 
   if (WebSocket && !dom::WebSocket_Binding::GetConstructorObject(cx))
     return false;
+
+  if (Window && !dom::Window_Binding::GetConstructorObject(cx)) return false;
 
   if (XMLSerializer && !dom::XMLSerializer_Binding::GetConstructorObject(cx))
     return false;
