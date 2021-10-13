@@ -406,7 +406,7 @@
                         hidden="true"
                         oncommand="gSync.openSignInAgainPage('menubar');" data-l10n-id="menu-tools-fxa-re-auth"/>
               <menuseparator id="devToolsSeparator"/>
-              <menu id="webDeveloperMenu" data-l10n-id="menu-tools-browser-tools">
+              <menu id="browserToolsMenu" data-l10n-id="menu-tools-browser-tools">
                 <menupopup id="menuWebDeveloperPopup">
                   <menuitem id="menu_taskManager"
                             oncommand="switchToTabHavingURI('about:performance', true)"
