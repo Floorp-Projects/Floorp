@@ -153,7 +153,6 @@ class BrowserToolbarIntegration(
             fragment.context?.theme
         )
         toolbar.display.setUrlBackground(urlBackground)
-        toolbar.edit.setUrlBackground(urlBackground)
     }
 
     override fun start() {
