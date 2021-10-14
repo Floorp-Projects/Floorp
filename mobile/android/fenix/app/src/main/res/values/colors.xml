@@ -334,7 +334,7 @@
 
     <!-- Search Widget -->
     <color name="search_widget_background">@color/white_color</color>
-    <color name="search_widget_mic_fill_color">#FF000000</color>
+    <color name="search_widget_mic_fill_color">@color/photonBlack</color>
     <color name="search_widget_text">@color/photonGrey50</color>
 
     <!-- Private Browsing Mode Persistent Notification -->
