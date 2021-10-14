@@ -12,7 +12,6 @@ const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { MigrationUtils, MigratorPrototype } = ChromeUtils.import(
   "resource:///modules/MigrationUtils.jsm"
 );
@@ -202,18 +201,6 @@ Bookmarks.prototype = {
 
       if (toolbarBMs.length) {
         let parentGuid = PlacesUtils.bookmarks.toolbarGuid;
-        if (
-          !Services.prefs.getBoolPref("browser.toolbars.bookmarks.2h2020") &&
-          !MigrationUtils.isStartupMigration &&
-          PlacesUtils.getChildCountForFolder(
-            PlacesUtils.bookmarks.toolbarGuid
-          ) > PlacesUIUtils.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
-        ) {
-          parentGuid = await MigrationUtils.createImportedBookmarksFolder(
-            "360se",
-            parentGuid
-          );
-        }
         await MigrationUtils.insertManyBookmarksWrapper(toolbarBMs, parentGuid);
         PlacesUIUtils.maybeToggleBookmarkToolbarVisibilityAfterMigration();
       }
