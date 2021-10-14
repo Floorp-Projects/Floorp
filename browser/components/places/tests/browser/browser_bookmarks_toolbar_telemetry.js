@@ -9,7 +9,6 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 );
 
 const SCALAR_NAME = "browser.ui.customized_widgets";
-const BOOKMARKS_H2_2020_PREF = "browser.toolbars.bookmarks.2h2020";
 const bookmarksInfo = [
   {
     title: "firefox",
@@ -28,10 +27,7 @@ const bookmarksInfo = [
 // Setup.
 add_task(async function test_bookmarks_toolbar_telemetry() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [BOOKMARKS_H2_2020_PREF, true],
-      ["browser.toolbars.bookmarks.visibility", "newtab"],
-    ],
+    set: [["browser.toolbars.bookmarks.visibility", "newtab"]],
   });
 
   // This is added during startup

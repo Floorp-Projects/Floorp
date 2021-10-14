@@ -259,10 +259,7 @@ PlacesViewBase.prototype = {
     window.updateCommands("places");
 
     // Ensure that an existing "Show Other Bookmarks" item is removed before adding it
-    // again. This item should only be added when gBookmarksToolbar2h2020 is true, but
-    // its possible the pref could be toggled off in the same window. This results in
-    // the "Show Other Bookmarks" menu item still being visible even when the pref is
-    // set to false.
+    // again.
     let existingOtherBookmarksItem = aPopup.querySelector(
       "#show-other-bookmarks_PersonalToolbar"
     );
@@ -273,33 +270,26 @@ PlacesViewBase.prototype = {
     );
     // Add the View menu for the Bookmarks Toolbar and "Show Other Bookmarks" menu item
     // if the click originated from the Bookmarks Toolbar.
-    if (gBookmarksToolbar2h2020) {
-      let existingSubmenu = aPopup.querySelector("#toggle_PersonalToolbar");
-      existingSubmenu?.remove();
-      let bookmarksToolbar = document.getElementById("PersonalToolbar");
-      if (bookmarksToolbar?.contains(aPopup.triggerNode)) {
-        manageBookmarksMenu.removeAttribute("hidden");
+    let existingSubmenu = aPopup.querySelector("#toggle_PersonalToolbar");
+    existingSubmenu?.remove();
+    let bookmarksToolbar = document.getElementById("PersonalToolbar");
+    if (bookmarksToolbar?.contains(aPopup.triggerNode)) {
+      manageBookmarksMenu.removeAttribute("hidden");
 
-        let menu = BookmarkingUI.buildBookmarksToolbarSubmenu(bookmarksToolbar);
-        aPopup.insertBefore(menu, manageBookmarksMenu);
+      let menu = BookmarkingUI.buildBookmarksToolbarSubmenu(bookmarksToolbar);
+      aPopup.insertBefore(menu, manageBookmarksMenu);
 
-        if (
-          aPopup.triggerNode.id === "OtherBookmarks" ||
-          aPopup.triggerNode.id === "PlacesChevron" ||
-          aPopup.triggerNode.id === "PlacesToolbarItems" ||
-          aPopup.triggerNode.parentNode.id === "PlacesToolbarItems"
-        ) {
-          let otherBookmarksMenuItem = BookmarkingUI.buildShowOtherBookmarksMenuItem();
+      if (
+        aPopup.triggerNode.id === "OtherBookmarks" ||
+        aPopup.triggerNode.id === "PlacesChevron" ||
+        aPopup.triggerNode.id === "PlacesToolbarItems" ||
+        aPopup.triggerNode.parentNode.id === "PlacesToolbarItems"
+      ) {
+        let otherBookmarksMenuItem = BookmarkingUI.buildShowOtherBookmarksMenuItem();
 
-          if (otherBookmarksMenuItem) {
-            aPopup.insertBefore(
-              otherBookmarksMenuItem,
-              menu.nextElementSibling
-            );
-          }
+        if (otherBookmarksMenuItem) {
+          aPopup.insertBefore(otherBookmarksMenuItem, menu.nextElementSibling);
         }
-      } else {
-        manageBookmarksMenu.setAttribute("hidden", "true");
       }
     } else {
       manageBookmarksMenu.setAttribute("hidden", "true");

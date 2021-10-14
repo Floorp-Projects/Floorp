@@ -1539,17 +1539,7 @@ var PlacesUIUtils = {
     if (!Services.policies.isAllowed("profileImport")) {
       return;
     }
-    // Check if the experiment is running. If not, wait for it to run.
-    const kPref = "browser.toolbars.bookmarks.2h2020";
-    if (!Services.prefs.getBoolPref(kPref, false)) {
-      Services.prefs.addObserver(kPref, function obs() {
-        Services.prefs.removeObserver(kPref, obs);
-        Services.tm.dispatchToMainThread(() =>
-          PlacesUIUtils.maybeAddImportButton()
-        );
-      });
-      return;
-    }
+
     let numberOfBookmarks = await PlacesUtils.withConnectionWrapper(
       "PlacesUIUtils: maybeAddImportButton",
       async db => {
@@ -1599,20 +1589,6 @@ var PlacesUIUtils = {
     };
     Services.obs.addObserver(obs, "Migration:ItemAfterMigrate");
     Services.obs.addObserver(obs, "Migration:ItemError");
-  },
-
-  get _nonPrefDefaultParentGuid() {
-    let { unfiledGuid, toolbarGuid } = PlacesUtils.bookmarks;
-    return this._2020h2bookmarks ? toolbarGuid : unfiledGuid;
-  },
-
-  get defaultParentGuid() {
-    if (!PlacesUIUtils._2020h2bookmarks) {
-      return PlacesUtils.bookmarks.unfiledGuid;
-    }
-    // Defined via a lazy pref getter below, see the comment there about the
-    // reason for this (temporary) setup.
-    return this._defaultParentGuid;
   },
 };
 
@@ -1674,28 +1650,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   PlacesUIUtils,
-  "_2020h2bookmarks",
-  "browser.toolbars.bookmarks.2h2020",
-  false
-);
-
-/**
- * This value should be accessed through the defaultParentGuid getter,
- * which will only access this pref if the browser.toolbars.bookmarks.2h2020
- * pref is true. We can't put that check directly in the pref transformation
- * callback below, because then the resulting value doesn't update if the
- * 2h2020 pref updates, breaking tests and potentially real-world behaviour
- * if the 2h2020 pref is flipped at runtime.
- */
-XPCOMUtils.defineLazyPreferenceGetter(
-  PlacesUIUtils,
-  "_defaultParentGuid",
+  "defaultParentGuid",
   "browser.bookmarks.defaultLocation",
   "", // Avoid eagerly loading PlacesUtils.
   null,
   prefValue => {
     if (!prefValue) {
-      return PlacesUIUtils._nonPrefDefaultParentGuid;
+      return PlacesUtils.bookmarks.toolbarGuid;
     }
     if (["toolbar", "menu", "unfiled"].includes(prefValue)) {
       return PlacesUtils.bookmarks[prefValue + "Guid"];
@@ -1703,7 +1664,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
     return PlacesUtils.bookmarks
       .fetch({ guid: prefValue })
       .then(bm => bm.guid)
-      .catch(() => PlacesUIUtils._nonPrefDefaultParentGuid);
+      .catch(() => PlacesUtils.bookmarks.toolbarGuid);
   }
 );
 

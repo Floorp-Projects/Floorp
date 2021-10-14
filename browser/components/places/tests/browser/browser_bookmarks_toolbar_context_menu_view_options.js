@@ -4,10 +4,6 @@
 "use strict";
 
 add_task(async function testPopup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.toolbars.bookmarks.2h2020", true]],
-  });
-
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     url: "http://example.com",
