@@ -37,6 +37,7 @@
 #include "Layers.h"
 #include "nsAnimationManager.h"
 #include "nsBlockFrame.h"
+#include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSRendering.h"
@@ -1262,7 +1263,6 @@ static inline void MaybeDealWithScrollbarChange(nsStyleChangeData& aData,
     return;
   }
   aData.mHint &= ~nsChangeHint_ScrollbarChange;
-  bool doReconstruct = true;  // assume the worst
 
   // Only bother with this if we're html/body, since:
   //  (a) It'd be *expensive* to reframe these particular nodes.  They're
@@ -1301,14 +1301,24 @@ static inline void MaybeDealWithScrollbarChange(nsStyleChangeData& aData,
         // change only impacts the root viewport's scrollframe, which
         // already exists, so we can simply reflow instead of reframing.
         aData.mHint |= nsChangeHint_ReflowHintsForScrollbarChange;
-        doReconstruct = false;
+        return;
       }
     }
   }
 
-  if (doReconstruct) {
-    aData.mHint |= nsChangeHint_ReconstructFrame;
+  if (nsIScrollableFrame* sf = do_QueryFrame(aData.mFrame)) {
+    if (aData.mFrame->StyleDisplay()->IsScrollableOverflow() &&
+        sf->HasAllNeededScrollbars()) {
+      // Once we've created scrollbars for a frame, don't bother reconstructing
+      // it just to remove them if we still need a scroll frame.
+      aData.mHint |= nsChangeHint_ReflowHintsForScrollbarChange;
+      return;
+    }
   }
+
+  // Oh well, we couldn't optimize it out, just reconstruct frames for the
+  // subtree.
+  aData.mHint |= nsChangeHint_ReconstructFrame;
 }
 
 void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
