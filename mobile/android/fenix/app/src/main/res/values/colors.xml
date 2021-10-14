@@ -27,7 +27,7 @@
     <color name="dark_grey_90_gradient_end">#0015141A</color>
     <color name="synced_tabs_separator_light_theme">@color/photonLightGrey30</color>
     <color name="top_site_title_text_light_theme">@color/photonDarkGrey90</color>
-    <color name="collection_icon_color_violet_light_theme">#7542E5</color>
+    <color name="collection_icon_color_violet_light_theme">@color/photonViolet60</color>
     <color name="collection_icon_color_blue_light_theme">#0250BB</color>
     <color name="collection_icon_color_pink_light_theme">#E31587</color>
     <color name="collection_icon_color_green_light_theme">#2AC3A2</color>
@@ -169,7 +169,7 @@
     <color name="sync_disconnected_icon_fill_private_theme">#C45A27</color>
     <color name="sync_disconnected_background_private_theme">#5B5846</color>
     <color name="swipe_delete_background_private_theme">@color/accent_light_theme</color>
-    <color name="onboarding_card_background_start_gradient_private_theme">#7542E5</color>
+    <color name="onboarding_card_background_start_gradient_private_theme">@color/photonViolet60</color>
     <color name="onboarding_card_background_end_gradient_private_theme">#B833E1</color>
     <color name="onboarding_illustration_selected_private_theme">@color/accent_private_theme</color>
     <color name="onboarding_illustration_deselected_private_theme">@color/onboarding_illustration_deselected_dark_theme</color>
