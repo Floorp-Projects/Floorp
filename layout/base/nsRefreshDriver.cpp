@@ -2257,13 +2257,6 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
 
   gfxPlatform::GetPlatform()->SchedulePaintIfDeviceReset();
 
-  // We want to process any pending APZ metrics ahead of their positions
-  // in the queue. This will prevent us from spending precious time
-  // painting a stale displayport.
-  if (StaticPrefs::apz_peek_messages_enabled()) {
-    DisplayPortUtils::UpdateDisplayPortMarginsFromPendingMessages();
-  }
-
   FlushForceNotifyContentfulPaintPresContext();
 
   AutoTArray<nsCOMPtr<nsIRunnable>, 16> earlyRunners = std::move(mEarlyRunners);
