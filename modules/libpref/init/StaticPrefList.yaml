@@ -6532,6 +6532,11 @@
   value: 15
   mirror: always
 
+- name: layers.iosurfaceimage.use-nv12
+  type: bool
+  value: false
+  mirror: once
+
 #---------------------------------------------------------------------------
 # Prefs starting with "layout."
 #---------------------------------------------------------------------------
