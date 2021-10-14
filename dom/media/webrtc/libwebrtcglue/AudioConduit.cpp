@@ -815,7 +815,7 @@ webrtc::SdpAudioFormat WebrtcAudioConduit::CodecConfigToLibwebrtcFormat(
       parameters[kCodecParamMaxPTime] = std::to_string(aConfig.mMaxFrameSizeMs);
     }
     if (aConfig.mCbrEnabled) {
-      parameters["cbr"] = kParamValueTrue;
+      parameters[kCodecParamCbr] = kParamValueTrue;
     }
   }
 
