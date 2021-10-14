@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1731940
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1731940 - implement id member</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="common.js"></script>
+  <script>
+  /**
+   * Manifest id member
+   * https://w3c.github.io/manifest/#id-member
+   **/
+  for (const type of typeTests) {
+    data.jsonText = JSON.stringify({
+      id: type,
+    });
+    const result = processor.process(data);
+    is(
+      result.id.toString(),
+      result.start_url.toString(),
+      `Expect non-string id to fall back to start_url: ${typeof type}.`
+    );
+  }
+
+  // Invalid URLs
+  const invalidURLs = [
+    "https://foo:65536",
+    "https://foo\u0000/",
+    "//invalid:65555",
+    "file:///passwords",
+    "about:blank",
+    "data:text/html,<html><script>alert('lol')<\/script></html>",
+  ];
+
+  for (const url of invalidURLs) {
+    data.jsonText = JSON.stringify({
+      id: url,
+    });
+    const result = processor.process(data);
+    is(
+      result.id.toString(),
+      result.start_url.toString(),
+      "Expect invalid id URL to fall back to start_url."
+    );
+  }
+
+  // Not same origin
+  data.jsonText = JSON.stringify({
+    id: "http://not-same-origin",
+  });
+  var result = processor.process(data);
+  is(
+    result.id.toString(),
+    result.start_url,
+    "Expect different origin id to fall back to start_url."
+  );
+
+  // Empty string test
+  data.jsonText = JSON.stringify({
+    id: "",
+  });
+  result = processor.process(data);
+  is(
+    result.id.toString(),
+    result.start_url.toString(),
+    `Expect empty string for id to use start_url.`
+  );
+
+  // Resolve URLs relative to the start_url's origin
+  const URLs = [
+    "path",
+    "/path",
+    "../../path",
+    "./path",
+    `${whiteSpace}path${whiteSpace}`,
+    `${whiteSpace}/path`,
+    `${whiteSpace}../../path`,
+    `${whiteSpace}./path`,
+  ];
+
+  for (const url of URLs) {
+    data.jsonText = JSON.stringify({
+      id: url,
+      start_url: "/path/some.html",
+    });
+    result = processor.process(data);
+    const baseOrigin = new URL(result.start_url.toString()).origin;
+    const expectedUrl = new URL(url, baseOrigin).toString();
+    is(
+      result.id.toString(),
+      expectedUrl,
+      "Expected id to be resolved relative to start_url's origin."
+    );
+  }
+
+  // Handles unicode encoded URLs
+  const specialCases = [
+    ["😀", "%F0%9F%98%80"],
+    [
+      "this/is/ok?query_is_ok=😀#keep_hash",
+      "this/is/ok?query_is_ok=%F0%9F%98%80#keep_hash",
+    ],
+  ];
+  for (const [id, expected] of specialCases) {
+    data.jsonText = JSON.stringify({
+      id,
+      start_url: "/my-app/",
+    });
+    result = processor.process(data);
+    const baseOrigin = new URL(result.start_url.toString()).origin;
+    const expectedUrl = new URL(expected, baseOrigin).toString();
+    is(
+      result.id.toString(),
+      expectedUrl,
+      `Expect id to be encoded/decoded per URL spec.`
+    );
+  }
+  </script>
+</head>
