@@ -40,9 +40,11 @@ data.jsonText = JSON.stringify({
 result = processor.process(data);
 is(result.start_url.toString(), docURL.toString(), expected);
 
-
-// Resolve URLs relative to manfiest
-var URLs = ["path", "/path", "../../path",
+// Resolve URLs relative to manifest
+var URLs = [
+  "path",
+  "/path",
+  "../../path",
   `${whiteSpace}path${whiteSpace}`,
   `${whiteSpace}/path`,
   `${whiteSpace}../../path`,
@@ -58,5 +60,24 @@ URLs.forEach((url) => {
   is(result.start_url.toString(), absURL, expected);
 });
 
-  </script>
-</head>
+// It retains the fragment
+var startURL = "./path?query=123#fragment";
+data.jsonText = JSON.stringify({
+  start_url: startURL,
+});
+var absURL = new URL(startURL, manifestURL).href;
+result = processor.process(data);
+is(result.start_url.toString(), absURL, "Retains fragment");
+
+// It retains the fragment on the document's location too.
+window.location = "#here";
+data.jsonText = JSON.stringify({});
+result = processor.process(data);
+is(
+  window.location.href,
+  result.start_url.toString(),
+  `Retains the fragment of document's location`
+);
+</script>
+  </head>
+</html>

@@ -112,6 +112,25 @@ const options = {...data, checkConformance: true } ;
     },
     warn: "icons item at index 1 includes repeated purpose(s): any maskable.",
   },
+  // testing dom.properties: ManifestIdIsInvalid
+  {
+    func() {
+      return (options.jsonText = JSON.stringify({
+        id: "http://test:65536/foo",
+      }));
+    },
+    warn: "The id member did not resolve to a valid URL.",
+  },
+  // testing dom.properties ManifestIdNotSameOrigin
+  {
+    func() {
+      return (options.jsonText = JSON.stringify({
+        id: "https://other.com",
+        start_url: "/this/place"
+      }));
+    },
+    warn: "The id member must have the same origin as the start_url member.",
+  }
 ].forEach((test, index) => {
   test.func();
   const result = processor.process(options);
