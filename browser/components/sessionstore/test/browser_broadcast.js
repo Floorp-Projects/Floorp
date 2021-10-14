@@ -21,7 +21,7 @@ add_task(async function flush_on_tabclose() {
     {
       state: { storage },
     },
-  ] = JSON.parse(ss.getClosedTabData(window));
+  ] = ss.getClosedTabData(window);
   is(
     storage["http://example.com"].test,
     "on-tab-close",
@@ -46,7 +46,7 @@ add_task(async function flush_on_duplicate() {
     {
       state: { storage },
     },
-  ] = JSON.parse(ss.getClosedTabData(window));
+  ] = ss.getClosedTabData(window);
   is(
     storage["http://example.com"].test,
     "on-duplicate",
@@ -133,7 +133,7 @@ add_task(async function flush_on_tabclose_racy() {
     {
       state: { storage },
     },
-  ] = JSON.parse(ss.getClosedTabData(window));
+  ] = ss.getClosedTabData(window);
   is(
     storage["http://example.com"].test,
     "on-tab-close-racy",

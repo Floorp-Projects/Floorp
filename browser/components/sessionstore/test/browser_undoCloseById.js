@@ -49,7 +49,7 @@ add_task(async function test_undoCloseById() {
   );
 
   // Record the first closedId created.
-  let initialClosedId = SessionStore.getClosedTabData(win, false)[0].closedId;
+  let initialClosedId = SessionStore.getClosedTabData(win)[0].closedId;
 
   // Open and close another window.
   let win2 = await openWindow("about:mozilla");

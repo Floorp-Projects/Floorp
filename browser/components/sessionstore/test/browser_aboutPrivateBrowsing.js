@@ -19,6 +19,6 @@ add_task(async function() {
   ss.setCustomTabValue(tab, "foobar", r);
 
   await promiseRemoveTabAndSessionState(tab);
-  let closedTabData = ss.getClosedTabData(window);
+  let closedTabData = JSON.stringify(ss.getClosedTabData(window));
   ok(!closedTabData.includes(r), "tab not stored in _closedTabs");
 });

@@ -40,7 +40,7 @@ async function preparePendingTab(aCallback) {
   BrowserTestUtils.removeTab(tab);
   await sessionUpdatePromise;
 
-  let [{ state }] = JSON.parse(SessionStore.getClosedTabData(window));
+  let [{ state }] = SessionStore.getClosedTabData(window);
 
   tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
