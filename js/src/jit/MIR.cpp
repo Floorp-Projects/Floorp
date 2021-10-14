@@ -10,7 +10,11 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
+
+#include <array>
+#include <utility>
 
 #include "jslibmath.h"
 #include "jsmath.h"
@@ -3772,67 +3776,105 @@ bool MCompare::tryFoldEqualOperands(bool* result) {
   return true;
 }
 
-bool MCompare::tryFoldTypeOf(bool* result) {
-  if (!lhs()->isTypeOfName() && !rhs()->isTypeOfName()) {
-    return false;
-  }
-  if (!lhs()->isConstant() && !rhs()->isConstant()) {
-    return false;
-  }
-
-  MTypeOfName* typeOfName =
-      lhs()->isTypeOfName() ? lhs()->toTypeOfName() : rhs()->toTypeOfName();
-  if (!typeOfName->input()->isTypeOf()) {
-    return false;
-  }
-
-  MTypeOf* typeOf = typeOfName->input()->toTypeOf();
-
-  MConstant* constant =
-      lhs()->isConstant() ? lhs()->toConstant() : rhs()->toConstant();
-
-  if (constant->type() != MIRType::String) {
-    return false;
-  }
-
-  if (!IsEqualityOp(jsop())) {
-    return false;
-  }
+static JSType TypeOfName(JSString* str) {
+  static constexpr std::array types = {
+      JSTYPE_UNDEFINED, JSTYPE_OBJECT,  JSTYPE_FUNCTION, JSTYPE_STRING,
+      JSTYPE_NUMBER,    JSTYPE_BOOLEAN, JSTYPE_SYMBOL,   JSTYPE_BIGINT,
+  };
+  static_assert(types.size() == JSTYPE_LIMIT);
 
   const JSAtomState& names = GetJitContext()->runtime->names();
-  if (constant->toString() == TypeName(JSTYPE_BOOLEAN, names)) {
-    if (!typeOf->input()->mightBeType(MIRType::Boolean)) {
-      *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
-      return true;
+  for (auto type : types) {
+    if (str == TypeName(type, names)) {
+      return type;
     }
-  } else if (constant->toString() == TypeName(JSTYPE_NUMBER, names)) {
-    if (!typeOf->input()->mightBeType(MIRType::Int32) &&
-        !typeOf->input()->mightBeType(MIRType::Float32) &&
-        !typeOf->input()->mightBeType(MIRType::Double)) {
-      *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
-      return true;
-    }
-  } else if (constant->toString() == TypeName(JSTYPE_STRING, names)) {
-    if (!typeOf->input()->mightBeType(MIRType::String)) {
-      *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
-      return true;
-    }
-  } else if (constant->toString() == TypeName(JSTYPE_SYMBOL, names)) {
-    if (!typeOf->input()->mightBeType(MIRType::Symbol)) {
-      *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
-      return true;
-    }
-  } else if (constant->toString() == TypeName(JSTYPE_BIGINT, names)) {
-    if (!typeOf->input()->mightBeType(MIRType::BigInt)) {
-      *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
-      return true;
-    }
-  } else if (constant->toString() == TypeName(JSTYPE_OBJECT, names)) {
-    if (!typeOf->input()->mightBeType(MIRType::Object) &&
-        !typeOf->input()->mightBeType(MIRType::Null)) {
-      *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
-      return true;
-    }
+  }
+  return JSTYPE_LIMIT;
+}
+
+static mozilla::Maybe<std::pair<MTypeOfName*, JSType>> IsTypeOfCompare(
+    MCompare* ins) {
+  if (!IsEqualityOp(ins->jsop())) {
+    return mozilla::Nothing();
+  }
+
+  auto* lhs = ins->lhs();
+  auto* rhs = ins->rhs();
+
+  if (!lhs->isTypeOfName() && !rhs->isTypeOfName()) {
+    return mozilla::Nothing();
+  }
+  if (!lhs->isConstant() && !rhs->isConstant()) {
+    return mozilla::Nothing();
+  }
+
+  MOZ_ASSERT(ins->compareType() == MCompare::Compare_String);
+  MOZ_ASSERT(ins->type() == MIRType::Boolean);
+  MOZ_ASSERT(lhs->type() == MIRType::String);
+  MOZ_ASSERT(rhs->type() == MIRType::String);
+
+  auto* typeOfName =
+      lhs->isTypeOfName() ? lhs->toTypeOfName() : rhs->toTypeOfName();
+  MOZ_ASSERT(typeOfName->input()->isTypeOf());
+
+  auto* constant = lhs->isConstant() ? lhs->toConstant() : rhs->toConstant();
+
+  JSType type = TypeOfName(constant->toString());
+  return mozilla::Some(std::pair(typeOfName, type));
+}
+
+bool MCompare::tryFoldTypeOf(bool* result) {
+  auto typeOfPair = IsTypeOfCompare(this);
+  if (!typeOfPair) {
+    return false;
+  }
+  auto [typeOfName, type] = *typeOfPair;
+  auto* typeOf = typeOfName->input()->toTypeOf();
+
+  switch (type) {
+    case JSTYPE_BOOLEAN:
+      if (!typeOf->input()->mightBeType(MIRType::Boolean)) {
+        *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
+        return true;
+      }
+      break;
+    case JSTYPE_NUMBER:
+      if (!typeOf->input()->mightBeType(MIRType::Int32) &&
+          !typeOf->input()->mightBeType(MIRType::Float32) &&
+          !typeOf->input()->mightBeType(MIRType::Double)) {
+        *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
+        return true;
+      }
+      break;
+    case JSTYPE_STRING:
+      if (!typeOf->input()->mightBeType(MIRType::String)) {
+        *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
+        return true;
+      }
+      break;
+    case JSTYPE_SYMBOL:
+      if (!typeOf->input()->mightBeType(MIRType::Symbol)) {
+        *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
+        return true;
+      }
+      break;
+    case JSTYPE_BIGINT:
+      if (!typeOf->input()->mightBeType(MIRType::BigInt)) {
+        *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
+        return true;
+      }
+      break;
+    case JSTYPE_OBJECT:
+      if (!typeOf->input()->mightBeType(MIRType::Object) &&
+          !typeOf->input()->mightBeType(MIRType::Null)) {
+        *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
+        return true;
+      }
+      break;
+    case JSTYPE_UNDEFINED:
+    case JSTYPE_FUNCTION:
+    case JSTYPE_LIMIT:
+      break;
   }
 
   return false;
