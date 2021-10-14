@@ -312,7 +312,7 @@ class SyncableLoginsStorage(
                 // Set the new version regardless of if the migration
                 // succeeded.  If it failed, it's just going to fail until we
                 // update the code and bump the version number.
-                plaintextPrefs.edit().putInt(SQL_CIPHER_MIGRATION, 1).commit()
+                plaintextPrefs.edit().putInt(SQL_CIPHER_MIGRATION, 1).apply()
             }
         }
     }
