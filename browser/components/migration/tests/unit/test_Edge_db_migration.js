@@ -545,12 +545,6 @@ add_task(async function() {
   );
   Assert.ok(bookmarksMigrator.exists, "Should recognize db we just created");
 
-  let source = await MigrationUtils.getLocalizedString("source-name-edge");
-  let sourceLabel = await MigrationUtils.getLocalizedString(
-    "imported-bookmarks-source",
-    { source }
-  );
-
   let seenBookmarks = [];
   let listener = events => {
     for (let event of events) {
@@ -598,9 +592,9 @@ add_task(async function() {
     "Should have seen 5 items being bookmarked."
   );
   Assert.equal(
-    seenBookmarks.filter(bm => bm.title != sourceLabel).length,
+    seenBookmarks.length,
     MigrationUtils._importQuantities.bookmarks,
-    "Telemetry should have items except for 'From Microsoft Edge' folders"
+    "Telemetry should have items"
   );
 
   let menuParents = seenBookmarks.filter(
@@ -631,15 +625,10 @@ add_task(async function() {
     .filter(item => item.ParentId == "921dc8a0-6c83-40ef-8df1-9bd1c5c56aaf")
     .map(item => item.Title);
 
-  let importParentFolderName = sourceLabel;
-
   for (let bookmark of seenBookmarks) {
     let shouldBeInMenu = expectedTitlesInMenu.includes(bookmark.title);
     let shouldBeInToolbar = expectedTitlesInToolbar.includes(bookmark.title);
-    if (
-      bookmark.title == "Folder" ||
-      bookmark.title == importParentFolderName
-    ) {
+    if (bookmark.title == "Folder") {
       Assert.equal(
         bookmark.itemType,
         PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -694,11 +683,6 @@ add_task(async function() {
       someItem => bookmark.title == someItem.Title
     );
     if (!dbItem) {
-      Assert.equal(
-        bookmark.title,
-        importParentFolderName,
-        "Only the extra layer of folders isn't in the input we stuck in the DB."
-      );
       Assert.ok(
         [menuParentGuid, toolbarParentGuid].includes(bookmark.guid),
         "This item should be one of the containers"
@@ -762,9 +746,9 @@ add_task(async function() {
     "Should have seen 3 items being bookmarked (2 items + 1 folder)."
   );
   Assert.equal(
-    seenBookmarks.filter(bm => bm.title != sourceLabel).length,
+    seenBookmarks.length,
     MigrationUtils._importQuantities.bookmarks,
-    "Telemetry should have items except for 'From Microsoft Edge' folders"
+    "Telemetry should have items"
   );
   let readingListContainerLabel = await MigrationUtils.getLocalizedString(
     "imported-edge-reading-list"

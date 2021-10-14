@@ -42,7 +42,7 @@ add_task(async function setup_initialBookmarks() {
   });
 });
 
-async function testBookmarks(migratorKey, subDirs, folderName) {
+async function testBookmarks(migratorKey, subDirs) {
   if (AppConstants.platform == "macosx") {
     subDirs.unshift("Application Support");
   } else if (AppConstants.platform == "win") {
@@ -117,23 +117,13 @@ async function testBookmarks(migratorKey, subDirs, folderName) {
   Assert.ok(await migrator.isSourceAvailable());
 
   let itemsSeen = { bookmarks: 0, folders: 0 };
-  let gotImportedFolderWrapper = false;
   let listener = events => {
     for (let event of events) {
-      // "From " comes from the string `importedBookmarksFolder`
-      if (
-        event.title.startsWith("From ") &&
+      itemsSeen[
         event.itemType == PlacesUtils.bookmarks.TYPE_FOLDER
-      ) {
-        Assert.equal(event.title, folderName, "Bookmark folder name");
-        gotImportedFolderWrapper = true;
-      } else {
-        itemsSeen[
-          event.itemType == PlacesUtils.bookmarks.TYPE_FOLDER
-            ? "folders"
-            : "bookmarks"
-        ]++;
-      }
+          ? "folders"
+          : "bookmarks"
+      ]++;
     }
   };
 
@@ -167,11 +157,6 @@ async function testBookmarks(migratorKey, subDirs, folderName) {
   Assert.equal(itemsSeen.bookmarks, 200, "Should have seen 200 bookmarks.");
   Assert.equal(itemsSeen.folders, 10, "Should have seen 10 folders.");
   Assert.equal(
-    gotImportedFolderWrapper,
-    !Services.prefs.getBoolPref("browser.toolbars.bookmarks.2h2020"),
-    "Should only get a 'From BrowserX' folder when the 2h2020 pref is disabled"
-  );
-  Assert.equal(
     MigrationUtils._importQuantities.bookmarks,
     itemsSeen.bookmarks + itemsSeen.folders,
     "Telemetry reporting correct."
@@ -182,7 +167,7 @@ async function testBookmarks(migratorKey, subDirs, folderName) {
 add_task(async function test_Chrome() {
   let subDirs =
     AppConstants.platform == "linux" ? ["google-chrome"] : ["Google", "Chrome"];
-  await testBookmarks("chrome", subDirs, "From Google Chrome");
+  await testBookmarks("chrome", subDirs);
 });
 
 add_task(async function test_ChromiumEdge() {
@@ -194,5 +179,5 @@ add_task(async function test_ChromiumEdge() {
     AppConstants.platform == "macosx"
       ? ["Microsoft Edge"]
       : ["Microsoft", "Edge"];
-  await testBookmarks("chromium-edge", subDirs, "From Microsoft Edge");
+  await testBookmarks("chromium-edge", subDirs);
 });
