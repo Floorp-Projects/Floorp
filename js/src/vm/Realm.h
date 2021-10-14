@@ -494,9 +494,6 @@ class JS::Realm : public JS::shadow::Realm {
     return global_.unbarrieredGet();
   }
 
-  /* True if a global object exists, but it's being collected. */
-  inline bool globalIsAboutToBeFinalized();
-
   /* True if a global exists and it's not being collected. */
   inline bool hasLiveGlobal() const;
 
