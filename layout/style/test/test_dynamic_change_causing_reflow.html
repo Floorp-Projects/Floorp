@@ -16,7 +16,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1131371
   </div>
   <div id="elemWithAbsPosChild"><div style="position:absolute"></div></div>
   <div id="elemWithFixedPosChild"><div style="position:fixed"></div></div>
-  <div id="elemWithScrollbars" style="overflow: scroll"></div>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -26,7 +25,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1131371
 
 const elemWithAbsPosChild = document.getElementById("elemWithAbsPosChild");
 const elemWithFixedPosChild = document.getElementById("elemWithFixedPosChild");
-const elemWithScrollbars = document.getElementById("elemWithScrollbars");
 
 /**
  * This test verifies that certain style changes do or don't cause reflow
@@ -219,6 +217,9 @@ const gTestcases = [
     expectReflow: true,
   },
 
+  // * FIXME(emilio, bug 1590247): Changes to or from hidden
+  // reconstruct, as we optimize out the scrollbars completely in the overflow:
+  // hidden case, but we could do better.
   {
     beforeStyle: "overflow: hidden",
     afterStyle:  "overflow: auto",
@@ -228,7 +229,7 @@ const gTestcases = [
   {
     beforeStyle: "overflow: auto",
     afterStyle:  "overflow: hidden",
-    expectConstruction: false,
+    expectConstruction: true,
     expectReflow: true,
   },
   {
@@ -240,14 +241,7 @@ const gTestcases = [
   {
     beforeStyle: "overflow: scroll",
     afterStyle:  "overflow: hidden",
-    expectConstruction: false,
-    expectReflow: true,
-  },
-  {
-    elem: elemWithScrollbars,
-    beforeStyle: "overflow: hidden",
-    afterStyle:  "overflow: scroll",
-    expectConstruction: false,
+    expectConstruction: true,
     expectReflow: true,
   },
   // * Changing 'display' should cause frame construction and reflow.
@@ -370,10 +364,15 @@ function runOneTest(aTestcase)
   }
 
   // Figure out which element we'll be tweaking (defaulting to gElem)
-  let elem = aTestcase.elem ? aTestcase.elem : gElem;
+  let elem = aTestcase.elem ?
+    aTestcase.elem : gElem;
 
   // Verify that 'style' attribute is unset (avoid causing ourselves trouble):
-  const oldStyle = elem.getAttribute("style");
+  if (elem.hasAttribute("style")) {
+    ok(false,
+       "test element has 'style' attribute already set! We're going to stomp " +
+       "on whatever's there when we clean up...");
+  }
 
   // Set the "before" style, and compose the first part of the message
   // to be used in our "is"/"isnot" invocations:
@@ -403,13 +402,7 @@ function runOneTest(aTestcase)
                   "reflow");
 
   // Clean up!
-  if (oldStyle) {
-    elem.setAttribute("style", oldStyle);
-  } else {
-    elem.removeAttribute("style");
-  }
-
-  unusedVal = elem.offsetHeight; // flush layout
+  elem.removeAttribute("style");
 }
 
 gTestcases.forEach(runOneTest);

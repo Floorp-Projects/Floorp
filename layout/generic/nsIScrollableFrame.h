@@ -85,12 +85,6 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual bool IsForTextControlWithNoScrollbars() const = 0;
 
   /**
-   * Returns whether we have either all the needed scrollbars, or a superset
-   * thereof.
-   */
-  virtual bool HasAllNeededScrollbars() const = 0;
-
-  /**
    * Get the overscroll-behavior styles.
    */
   virtual mozilla::layers::OverscrollBehaviorInfo GetOverscrollBehaviorInfo()
