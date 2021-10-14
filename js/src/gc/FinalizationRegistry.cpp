@@ -75,18 +75,20 @@ static FinalizationRecordObject* UnwrapFinalizationRecord(JSObject* obj) {
   return &obj->as<FinalizationRecordObject>();
 }
 
-void GCRuntime::sweepFinalizationRegistries(Zone* zone) {
+void GCRuntime::traceWeakFinalizationRegistryEdges(JSTracer* trc, Zone* zone) {
   // Sweep finalization registry data and queue finalization records for cleanup
   // for any entries whose target is dying and remove them from the map.
 
   Zone::FinalizationRegistrySet& set = zone->finalizationRegistries();
   for (Zone::FinalizationRegistrySet::Enum e(set); !e.empty(); e.popFront()) {
-    if (IsAboutToBeFinalized(&e.mutableFront())) {
-      e.front()->as<FinalizationRegistryObject>().queue()->setHasRegistry(
-          false);
+    auto result = TraceWeakEdge(trc, &e.mutableFront(), "FinalizationRegistry");
+    if (result.isDead()) {
+      auto* registry =
+          &result.initialTarget()->as<FinalizationRegistryObject>();
+      registry->queue()->setHasRegistry(false);
       e.removeFront();
     } else {
-      e.front()->as<FinalizationRegistryObject>().sweep();
+      result.finalTarget()->as<FinalizationRegistryObject>().sweep();
     }
   }
 
@@ -106,7 +108,8 @@ void GCRuntime::sweepFinalizationRegistries(Zone* zone) {
     });
 
     // Queue finalization records for targets that are dying.
-    if (IsAboutToBeFinalized(&e.front().mutableKey())) {
+    if (!TraceWeakEdge(trc, &e.front().mutableKey(),
+                       "FinalizationRecord target")) {
       for (JSObject* obj : records) {
         FinalizationRecordObject* record = UnwrapFinalizationRecord(obj);
         FinalizationQueueObject* queue = record->queue();

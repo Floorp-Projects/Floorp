@@ -1263,9 +1263,10 @@ void GCRuntime::sweepFinalizationRegistriesOnMainThread() {
   gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP_COMPARTMENTS);
   gcstats::AutoPhase ap2(stats(),
                          gcstats::PhaseKind::SWEEP_FINALIZATION_REGISTRIES);
+  SweepingTracer trc(rt);
   AutoLockStoreBuffer lock(&storeBuffer());
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
-    sweepFinalizationRegistries(zone);
+    traceWeakFinalizationRegistryEdges(&trc, zone);
   }
 }
 
