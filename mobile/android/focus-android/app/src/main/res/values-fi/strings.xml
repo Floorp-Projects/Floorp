@@ -162,8 +162,8 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">Yleiset</string>
 
-    <!-- Preference summary for General Settings category; the three things users can find in this category -->
-    <string name="preference_general_summary">Oletusselain, välilehdet, kieli</string>
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">Oletusselain, kieli</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Tietojen kerääminen &amp; käyttö</string>
@@ -794,4 +794,17 @@
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">Tallennettuja ja jaettuja kuvia &lt;b&gt;ei poisteta&lt;/b&gt; kun tyhjennät %1$sin historian</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Teema</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Vaalea</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Tumma</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Asetettu virransäästön toimesta</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Seuraa laitteen teemaa</string>
+
 </resources>

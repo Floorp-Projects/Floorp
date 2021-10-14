@@ -815,4 +815,17 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">A mentett és megosztott képek &lt;b&gt;nem kerülnek&lt;/b&gt; törlésre, ha törli a %1$s előzményeit.</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Téma</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Világos</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Sötét</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Energiagazdálkodás által beállítva</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Az eszköz témájának követése</string>
+
 </resources>
