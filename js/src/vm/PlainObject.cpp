@@ -40,12 +40,13 @@ PlainObject* js::CreateThisForFunction(JSContext* cx,
     return nullptr;
   }
 
+  js::gc::AllocKind allocKind = NewObjectGCKind();
+
   PlainObject* res;
   if (proto) {
-    js::gc::AllocKind allocKind = NewObjectGCKind();
     res = NewPlainObjectWithProtoAndAllocKind(cx, proto, allocKind, newKind);
   } else {
-    res = NewPlainObject(cx, newKind);
+    res = NewPlainObjectWithAllocKind(cx, allocKind, newKind);
   }
 
   MOZ_ASSERT_IF(res, res->nonCCWRealm() == callee->realm());
