@@ -71,11 +71,6 @@ class AtomStateEntry {
   }
 
   JSAtom* asPtr(JSContext* cx) const;
-
-  bool needsSweep() {
-    JSAtom* atom = asPtrUnbarriered();
-    return gc::IsAboutToBeFinalizedUnbarriered(&atom);
-  }
 };
 
 struct AtomHasher {
