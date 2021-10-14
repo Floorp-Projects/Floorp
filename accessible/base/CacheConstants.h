@@ -17,7 +17,7 @@ class CacheDomain {
   static constexpr uint64_t Bounds = ((uint64_t)0x1) << 2;
   static constexpr uint64_t Resolution = ((uint64_t)0x1) << 3;
   static constexpr uint64_t Text = ((uint64_t)0x1) << 4;
-  static constexpr uint64_t DOMNodeID = ((uint64_t)0x1) << 4;
+  static constexpr uint64_t DOMNodeID = ((uint64_t)0x1) << 5;
   static constexpr uint64_t All = ~((uint64_t)0x0);
 };
 
