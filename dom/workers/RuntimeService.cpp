@@ -837,7 +837,8 @@ class WorkerJSRuntime final : public mozilla::CycleCollectedJSRuntime {
 
   virtual void PrepareForForgetSkippable() override {}
 
-  virtual void BeginCycleCollectionCallback() override {}
+  virtual void BeginCycleCollectionCallback(
+      mozilla::CCReason aReason) override {}
 
   virtual void EndCycleCollectionCallback(
       CycleCollectorResults& aResults) override {}
@@ -858,7 +859,8 @@ class WorkerJSRuntime final : public mozilla::CycleCollectedJSRuntime {
     mWorkerPrivate->AssertIsOnWorkerThread();
 
     if (aStatus == JSGC_END) {
-      bool collectedAnything = nsCycleCollector_collect(nullptr);
+      bool collectedAnything =
+          nsCycleCollector_collect(CCReason::GC_FINISHED, nullptr);
       mWorkerPrivate->SetCCCollectedAnything(collectedAnything);
     }
   }

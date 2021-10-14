@@ -106,6 +106,21 @@ static inline bool IsManualCCReason(CCReason reason) {
   return reason >= CCReason::FIRST_MANUAL_REASON;
 }
 
+static inline const char* CCReasonToString(CCReason aReason) {
+  switch (aReason) {
+#define SET_REASON_STR(name) \
+  case CCReason::name:       \
+    return #name;            \
+    break;
+    FOR_EACH_CCREASON(SET_REASON_STR)
+#undef SET_REASON_STR
+  default:
+    return "<unknown-reason>";
+  }
+}
+
+}  // namespace mozilla
+
 /**
  * Just holds the IID so NS_GET_IID works.
  */

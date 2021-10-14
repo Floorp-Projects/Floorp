@@ -205,7 +205,7 @@ static int FuzzingRunNetworkWebsocket(const uint8_t* data, size_t size) {
   // Wait for the channel to be destroyed
   SpinEventLoopUntil(
       "FuzzingRunNetworkWebsocket(channel == nullptr)"_ns, [&]() -> bool {
-        nsCycleCollector_collect(nullptr);
+        nsCycleCollector_collect(CCReason::API, nullptr);
         nsCOMPtr<nsIWebSocketChannel> channel = do_QueryReferent(channelRef);
         return channel == nullptr;
       });
