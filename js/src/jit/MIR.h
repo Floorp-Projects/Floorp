@@ -3815,7 +3815,7 @@ class MBitNot : public MUnaryInstruction, public BitwisePolicy::Data {
 class MTypeOf : public MUnaryInstruction,
                 public BoxExceptPolicy<0, MIRType::Object>::Data {
   explicit MTypeOf(MDefinition* def) : MUnaryInstruction(classOpcode, def) {
-    setResultType(MIRType::String);
+    setResultType(MIRType::Int32);
     setMovable();
   }
   TypeDataList observed_;
