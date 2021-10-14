@@ -10,7 +10,7 @@
     <color name="caption_text_light_theme">@color/photonLightGrey90</color>
     <color name="foundation_light_theme">@color/photonLightGrey20</color>
     <color name="inset_light_theme">@color/photonLightGrey30</color>
-    <color name="above_light_theme">#FFF</color>
+    <color name="above_light_theme">@color/photonWhite</color>
     <color name="accent_light_theme">@color/photonInk20</color>
     <color name="accent_bright_light_theme">@color/photonViolet70</color>
     <color name="about_link_normal_theme">@color/photonViolet70</color>
@@ -43,7 +43,7 @@
     <color name="onboarding_illustration_selected_light_theme">@color/accent_bright_light_theme</color>
     <color name="onboarding_illustration_deselected_light_theme">#9915141A</color>
     <color name="add_on_private_browsing_exterior_circle_background_light_theme">@color/accent_bright_light_theme</color>
-    <color name="add_on_private_browsing_interior_icon_background_light_theme">#FFFFFF</color>
+    <color name="add_on_private_browsing_interior_icon_background_light_theme">@color/photonWhite</color>
     <color name="prompt_login_edit_text_cursor_color_light_theme">#312a64</color>
     <color name="readermode_start_gradient_normal_theme">#FF9059ff</color>
     <color name="readermode_end_gradient_normal_theme">#FF0250bb</color>
@@ -113,7 +113,7 @@
     <color name="onboarding_illustration_selected_dark_theme">@color/accent_dark_theme</color>
     <color name="onboarding_illustration_deselected_dark_theme">#99FBFBFE</color>
     <color name="add_on_private_browsing_exterior_circle_background_dark_theme">@color/accent_dark_theme</color>
-    <color name="add_on_private_browsing_interior_icon_background_dark_theme">#FFFFFF</color>
+    <color name="add_on_private_browsing_interior_icon_background_dark_theme">@color/photonWhite</color>
     <color name="prompt_login_edit_text_cursor_color_dark_theme">#9059ff</color>
     <color name="search_suggestion_indicator_icon_color_dark_theme">#2ac3a2</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_dark_theme">#0090ed</color>
@@ -174,7 +174,7 @@
     <color name="onboarding_illustration_selected_private_theme">@color/accent_private_theme</color>
     <color name="onboarding_illustration_deselected_private_theme">@color/onboarding_illustration_deselected_dark_theme</color>
     <color name="add_on_private_browsing_exterior_circle_background_private_theme">@color/accent_private_theme</color>
-    <color name="add_on_private_browsing_interior_icon_background_private_theme">#FFFFFF</color>
+    <color name="add_on_private_browsing_interior_icon_background_private_theme">@color/photonWhite</color>
     <color name="prompt_login_edit_text_cursor_color_private_theme">#9059ff</color>
 
     <color name="mozac_widget_favicon_background_private_theme">@color/photonInk50</color>
@@ -311,7 +311,7 @@
 
     <!-- Onboarding colors -->
     <color name="onboarding_padded_background_color">#1F000000</color>
-    <color name="onboarding_card_primary_text_dark">#FFFFFF</color>
+    <color name="onboarding_card_primary_text_dark">@color/photonWhite</color>
     <color name="onboarding_card_button_background_dark">@color/photonLightGrey10</color>
     <color name="onboarding_card_button_text_dark">@color/photonInk20</color>
 
