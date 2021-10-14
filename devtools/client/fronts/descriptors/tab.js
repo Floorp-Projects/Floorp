@@ -249,7 +249,9 @@ class TabDescriptorFront extends DescriptorMixin(
       this._resolveTargetFrontPromise(targetFront);
     }
   }
-
+  getCachedTarget() {
+    return this._targetFront;
+  }
   async getTarget() {
     if (this._targetFront && !this._targetFront.isDestroyed()) {
       return this._targetFront;

@@ -160,6 +160,24 @@ class WatcherFront extends FrontClassWithSpec(watcherSpec) {
     return null;
   }
 
+  getWindowGlobalTargetByInnerWindowId(innerWindowId) {
+    for (const front of this.poolChildren()) {
+      if (front.innerWindowId == innerWindowId) {
+        return front;
+      }
+    }
+    // Use getCachedTarget in order to have a fully synchronous method
+    // as the callsite in ResourceCommand benefit from being synchronous.
+    // Here we care only about already existing resource and do not need to
+    // wait for the next target to come.
+    const topLevelTarget = this.parentFront.getCachedTarget();
+    if (topLevelTarget?.innerWindowId == innerWindowId) {
+      return topLevelTarget;
+    }
+    console.error("Unable to find target with innerWindowId:" + innerWindowId);
+    return null;
+  }
+
   /**
    * Memoized getter for the "networkParent" actor
    */

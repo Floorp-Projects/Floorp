@@ -820,7 +820,7 @@ class ResourceCommand {
   // (`targetFront` will be null as the watcher is in the parent process
   // and targets are in distinct processes)
   _getTargetForWatcherResource(resource) {
-    const { browsingContextID, resourceType } = resource;
+    const { browsingContextID, innerWindowId, resourceType } = resource;
 
     // Some privileged resources aren't related to any BrowsingContext
     // and so aren't bound to any Target Front.
@@ -830,15 +830,20 @@ class ResourceCommand {
       return null;
     }
 
-    // Resource emitted from the Watcher Actor should all have a
-    // browsingContextID attribute
-    if (!browsingContextID) {
-      console.error(
-        `Resource of ${resourceType} is missing a browsingContextID attribute`
+    if (
+      innerWindowId &&
+      this.targetCommand.descriptorFront.isServerTargetSwitchingEnabled()
+    ) {
+      return this.watcherFront.getWindowGlobalTargetByInnerWindowId(
+        innerWindowId
       );
-      return null;
+    } else if (browsingContextID) {
+      return this.watcherFront.getWindowGlobalTarget(browsingContextID);
     }
-    return this.watcherFront.getWindowGlobalTarget(browsingContextID);
+    console.error(
+      `Resource of ${resourceType} is missing a browsingContextID or innerWindowId attribute`
+    );
+    return null;
   }
 
   _onWillNavigate(targetFront) {

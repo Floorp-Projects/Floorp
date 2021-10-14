@@ -34,6 +34,7 @@ class WindowGlobalTargetFront extends TargetMixin(
   form(json) {
     this.actorID = json.actor;
     this.browsingContextID = json.browsingContextID;
+    this.innerWindowId = json.innerWindowId;
 
     // Save the full form for Target class usage.
     // Do not use `form` name to avoid colliding with protocol.js's `form` method
