@@ -52,9 +52,7 @@ add_task(async function test_open_add_bookmark_for_frame() {
     Assert.ok(!namepicker.readOnly, "Name field is writable");
     Assert.equal(namepicker.value, "Left frame", "Name field is correct.");
 
-    let expectedFolder = gBookmarksToolbar2h2020
-      ? "BookmarksToolbarFolderTitle"
-      : "OtherBookmarksFolderTitle";
+    let expectedFolder = "BookmarksToolbarFolderTitle";
     let expectedFolderName = PlacesUtils.getString(expectedFolder);
 
     let folderPicker = dialogWin.document.getElementById(
@@ -76,9 +74,7 @@ add_task(async function test_move_bookmark_whilst_add_bookmark_open() {
   );
   await withAddBookmarkForFrame(async dialogWin => {
     let expectedGuid = await PlacesUIUtils.defaultParentGuid;
-    let expectedFolder = gBookmarksToolbar2h2020
-      ? "BookmarksToolbarFolderTitle"
-      : "OtherBookmarksFolderTitle";
+    let expectedFolder = "BookmarksToolbarFolderTitle";
     let expectedFolderName = PlacesUtils.getString(expectedFolder);
     let bookmarksMenuFolderName = PlacesUtils.getString(
       "BookmarksMenuFolderTitle"

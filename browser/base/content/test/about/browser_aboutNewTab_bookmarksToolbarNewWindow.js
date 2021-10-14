@@ -7,36 +7,18 @@ requestLongerTimeout(2);
 
 const testCases = [
   {
-    name: "bookmarks_toolbar_shown_on_newtab_featureEnabled_newTabEnabled",
-    featureEnabled: true,
+    name: "bookmarks_toolbar_shown_on_newtab_newTabEnabled",
     newTabEnabled: true,
   },
   {
     name: "bookmarks_toolbar_shown_on_newtab",
-    featureEnabled: false,
-    newTabEnabled: false,
-  },
-  {
-    name: "bookmarks_toolbar_shown_on_newtab_newTabEnabled",
-    featureEnabled: false,
-    newTabEnabled: true,
-  },
-  {
-    name: "bookmarks_toolbar_shown_on_newtab_featureEnabled",
-    featureEnabled: true,
     newTabEnabled: false,
   },
 ];
 
-async function test_bookmarks_toolbar_visibility({
-  featureEnabled,
-  newTabEnabled,
-}) {
+async function test_bookmarks_toolbar_visibility({ newTabEnabled }) {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.toolbars.bookmarks.2h2020", featureEnabled],
-      ["browser.newtabpage.enabled", newTabEnabled],
-    ],
+    set: [["browser.newtabpage.enabled", newTabEnabled]],
   });
 
   // Ensure the toolbar doesnt become visible at any point before the tab finishes loading

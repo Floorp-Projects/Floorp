@@ -7,7 +7,6 @@
 /**
  *  Test removing bookmarks from the Bookmarks Toolbar and Library.
  */
-const BOOKMARKS_H2_2020_PREF = "browser.toolbars.bookmarks.2h2020";
 const SECOND_BOOKMARK_TITLE = "Second Bookmark Title";
 const bookmarksInfo = [
   {
@@ -74,9 +73,6 @@ let OptionsMatchExpected = (contextMenu, expectedOptionItems) => {
 };
 
 let checkContextMenu = async (cbfunc, optionItems, doc = document) => {
-  await SpecialPowers.pushPrefEnv({
-    set: [[BOOKMARKS_H2_2020_PREF, true]],
-  });
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     title: SECOND_BOOKMARK_TITLE,
