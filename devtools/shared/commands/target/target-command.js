@@ -734,7 +734,7 @@ class TargetCommand extends EventEmitter {
     if (!Array.isArray(targetTypes) || !targetTypes?.length) {
       throw new Error("getAllFronts expects a non-empty array of target types");
     }
-    const fronts = [];
+    const promises = [];
     const targets = this.getAllTargets(targetTypes);
     for (const target of targets) {
       // For still-attaching worker targets, the threadFront may not yet be available,
@@ -743,10 +743,9 @@ class TargetCommand extends EventEmitter {
         continue;
       }
 
-      const front = await target.getFront(frontType);
-      fronts.push(front);
+      promises.push(target.getFront(frontType));
     }
-    return fronts;
+    return Promise.all(promises);
   }
 
   /**
