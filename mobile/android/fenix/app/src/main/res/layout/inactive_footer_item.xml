@@ -15,37 +15,11 @@
     android:paddingEnd="1dp"
     android:paddingBottom="1dp">
 
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/rounded_bottom_corners"
         android:paddingBottom="8dp">
-
-        <View
-            android:id="@+id/top_divider"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="?neutralFaded"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/inactive_description"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingStart="16dp"
-            android:paddingTop="8dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="8dp"
-            android:textColor="?secondaryText"
-            android:textSize="12sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/top_divider"
-            tools:text="@string/inactive_tabs_description" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

@@ -5,7 +5,6 @@
 package org.mozilla.fenix.tabstray.browser
 
 import android.view.View
-import androidx.annotation.StringRes
 import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.toolbar.MAX_URI_LENGTH
@@ -20,10 +19,6 @@ import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.topsites.dpToPx
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
-import org.mozilla.fenix.tabstray.browser.AutoCloseInterval.Manual
-import org.mozilla.fenix.tabstray.browser.AutoCloseInterval.OneDay
-import org.mozilla.fenix.tabstray.browser.AutoCloseInterval.OneMonth
-import org.mozilla.fenix.tabstray.browser.AutoCloseInterval.OneWeek
 
 sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
@@ -135,38 +130,12 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
 
     class FooterHolder(itemView: View) : InactiveTabViewHolder(itemView) {
 
-        val binding = InactiveFooterItemBinding.bind(itemView)
-
-        fun bind(interval: AutoCloseInterval) {
-            val context = itemView.context
-            val stringRes = when (interval) {
-                Manual, OneDay -> {
-                    binding.inactiveDescription.visibility = View.GONE
-                    binding.topDivider.visibility = View.GONE
-                    null
-                }
-                OneWeek -> {
-                    context.getString(interval.description)
-                }
-                OneMonth -> {
-                    context.getString(interval.description)
-                }
-            }
-            if (stringRes != null) {
-                binding.inactiveDescription.text =
-                    context.getString(R.string.inactive_tabs_description, stringRes)
-            }
+        init {
+            InactiveFooterItemBinding.bind(itemView)
         }
 
         companion object {
             const val LAYOUT_ID = R.layout.inactive_footer_item
         }
     }
-}
-
-enum class AutoCloseInterval(@StringRes val description: Int) {
-    Manual(0),
-    OneDay(0),
-    OneWeek(R.string.inactive_tabs_7_days),
-    OneMonth(R.string.inactive_tabs_30_days)
 }

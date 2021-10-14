@@ -19,7 +19,6 @@ import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.AutoCloseDialogH
 import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.FooterHolder
 import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.HeaderHolder
 import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.TabViewHolder
-import org.mozilla.fenix.tabstray.ext.autoCloseInterval
 import org.mozilla.fenix.utils.Settings
 import mozilla.components.support.base.observer.Observable as ComponentObservable
 
@@ -73,11 +72,8 @@ class InactiveTabsAdapter(
                 val item = getItem(position) as Item.Tab
                 holder.bind(item.tab)
             }
-            is FooterHolder -> {
-                val item = getItem(position) as Item.Footer
-                holder.bind(item.interval)
-            }
-            is HeaderHolder, is AutoCloseDialogHolder -> {
+
+            is FooterHolder, is HeaderHolder, is AutoCloseDialogHolder -> {
                 // do nothing.
             }
         }
@@ -112,7 +108,7 @@ class InactiveTabsAdapter(
         }
 
         val items = tabs.list.map { Item.Tab(it) }
-        val footer = Item.Footer(context.autoCloseInterval)
+        val footer = Item.Footer
         val headerItems = if (settings.shouldShowInactiveTabsAutoCloseDialog(items.size)) {
             listOf(Item.Header, Item.AutoCloseMessage)
         } else {
@@ -162,6 +158,6 @@ class InactiveTabsAdapter(
          * A footer for the inactive tab section. This may be seen only
          * when at least one inactive tab is present.
          */
-        data class Footer(val interval: AutoCloseInterval) : Item()
+        object Footer : Item()
     }
 }
