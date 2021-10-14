@@ -107,16 +107,16 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       this._updateStatePreAdd(result, state);
     }
 
-    // Determine the buckets to use for this sort.  In search mode with an
-    // engine, show search suggestions first.
-    let rootBucket = context.searchMode?.engineName
-      ? UrlbarPrefs.makeResultBuckets({ showSearchSuggestionsFirst: true })
+    // Determine the result groups to use for this sort.  In search mode with
+    // an engine, show search suggestions first.
+    let rootGroup = context.searchMode?.engineName
+      ? UrlbarPrefs.makeResultGroups({ showSearchSuggestionsFirst: true })
       : UrlbarPrefs.get("resultGroups");
-    logger.debug(`Buckets: ${rootBucket}`);
+    logger.debug(`Groups: ${rootGroup}`);
 
     // Fill the root group.
     let [sortedResults] = this._fillGroup(
-      rootBucket,
+      rootGroup,
       { availableSpan: state.availableResultSpan, maxResultCount: Infinity },
       state
     );
@@ -573,7 +573,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
   }
 
   /**
-   * Returns whether a result can be added to its bucket given the current sort
+   * Returns whether a result can be added to its group given the current sort
    * state.
    *
    * @param {UrlbarResult} result
@@ -811,9 +811,9 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
 
     // Heuristic results must always be the first result.  If this result is a
     // heuristic but we've already added results, discard it.  Normally this
-    // should never happen because the standard result buckets are set up so
+    // should never happen because the standard result groups are set up so
     // that there's always at most one heuristic and it's always first, but
-    // since result buckets are stored in a pref and can therefore be modified
+    // since result groups are stored in a pref and can therefore be modified
     // by the user, we perform this check.
     if (result.heuristic && state.usedResultSpan) {
       return false;

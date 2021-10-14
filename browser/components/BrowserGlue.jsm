@@ -3892,7 +3892,7 @@ BrowserGlue.prototype = {
       // 115 (bug 1713322): Move TAIL_SUGGESTION group and rename properties
       // 116 (bug 1717509): Remove HEURISTIC_UNIFIED_COMPLETE group
       // 117 (bug 1710518): Add GENERAL_PARENT group
-      UrlbarPrefs.migrateResultBuckets();
+      UrlbarPrefs.migrateResultGroups();
     }
 
     if (currentUIVersion < 119 && AppConstants.NIGHTLY_BUILD) {

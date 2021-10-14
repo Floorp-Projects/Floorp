@@ -39,10 +39,10 @@ add_task(function test() {
   );
 });
 
-// Tests UrlbarPrefs.makeResultBuckets({ showSearchSuggestionsFirst: true }).
-add_task(function makeResultBuckets_true() {
+// Tests UrlbarPrefs.makeResultGroups({ showSearchSuggestionsFirst: true }).
+add_task(function makeResultGroups_true() {
   Assert.deepEqual(
-    UrlbarPrefs.makeResultBuckets({ showSearchSuggestionsFirst: true }),
+    UrlbarPrefs.makeResultGroups({ showSearchSuggestionsFirst: true }),
     {
       children: [
         // heuristic
@@ -66,7 +66,7 @@ add_task(function makeResultBuckets_true() {
           group: UrlbarUtils.RESULT_GROUP.OMNIBOX,
           availableSpan: UrlbarUtils.MAX_OMNIBOX_RESULT_COUNT - 1,
         },
-        // main bucket
+        // main group
         {
           flexChildren: true,
           children: [
@@ -134,10 +134,10 @@ add_task(function makeResultBuckets_true() {
   );
 });
 
-// Tests UrlbarPrefs.makeResultBuckets({ showSearchSuggestionsFirst: false }).
-add_task(function makeResultBuckets_false() {
+// Tests UrlbarPrefs.makeResultGroups({ showSearchSuggestionsFirst: false }).
+add_task(function makeResultGroups_false() {
   Assert.deepEqual(
-    UrlbarPrefs.makeResultBuckets({ showSearchSuggestionsFirst: false }),
+    UrlbarPrefs.makeResultGroups({ showSearchSuggestionsFirst: false }),
 
     {
       children: [
@@ -162,7 +162,7 @@ add_task(function makeResultBuckets_false() {
           group: UrlbarUtils.RESULT_GROUP.OMNIBOX,
           availableSpan: UrlbarUtils.MAX_OMNIBOX_RESULT_COUNT - 1,
         },
-        // main bucket
+        // main group
         {
           flexChildren: true,
           children: [
@@ -252,7 +252,7 @@ add_task(function showSearchSuggestionsFirst_resultGroups() {
   );
   Assert.deepEqual(
     JSON.parse(Services.prefs.getCharPref("browser.urlbar.resultGroups")),
-    UrlbarPrefs.makeResultBuckets({ showSearchSuggestionsFirst: false }),
+    UrlbarPrefs.makeResultGroups({ showSearchSuggestionsFirst: false }),
     "resultGroups is updated after setting showSearchSuggestionsFirst = false"
   );
 
@@ -260,7 +260,7 @@ add_task(function showSearchSuggestionsFirst_resultGroups() {
   UrlbarPrefs.set("showSearchSuggestionsFirst", true);
   Assert.deepEqual(
     JSON.parse(Services.prefs.getCharPref("browser.urlbar.resultGroups")),
-    UrlbarPrefs.makeResultBuckets({ showSearchSuggestionsFirst: true }),
+    UrlbarPrefs.makeResultGroups({ showSearchSuggestionsFirst: true }),
     "resultGroups is updated after setting showSearchSuggestionsFirst = true"
   );
 
@@ -268,7 +268,7 @@ add_task(function showSearchSuggestionsFirst_resultGroups() {
   UrlbarPrefs.set("showSearchSuggestionsFirst", false);
   Assert.deepEqual(
     JSON.parse(Services.prefs.getCharPref("browser.urlbar.resultGroups")),
-    UrlbarPrefs.makeResultBuckets({ showSearchSuggestionsFirst: false }),
+    UrlbarPrefs.makeResultGroups({ showSearchSuggestionsFirst: false }),
     "resultGroups is updated after setting showSearchSuggestionsFirst = false"
   );
 
@@ -276,7 +276,7 @@ add_task(function showSearchSuggestionsFirst_resultGroups() {
   Services.prefs.clearUserPref("browser.urlbar.showSearchSuggestionsFirst");
   Assert.deepEqual(
     JSON.parse(Services.prefs.getCharPref("browser.urlbar.resultGroups")),
-    UrlbarPrefs.makeResultBuckets({ showSearchSuggestionsFirst: true }),
+    UrlbarPrefs.makeResultGroups({ showSearchSuggestionsFirst: true }),
     "resultGroups is updated immediately after clearing showSearchSuggestionsFirst"
   );
   Assert.equal(
@@ -286,22 +286,22 @@ add_task(function showSearchSuggestionsFirst_resultGroups() {
   );
   Assert.deepEqual(
     JSON.parse(Services.prefs.getCharPref("browser.urlbar.resultGroups")),
-    UrlbarPrefs.makeResultBuckets({ showSearchSuggestionsFirst: true }),
+    UrlbarPrefs.makeResultGroups({ showSearchSuggestionsFirst: true }),
     "resultGroups remains correct after getting showSearchSuggestionsFirst"
   );
 });
 
 // Tests UrlbarPrefs.initializeShowSearchSuggestionsFirstPref() and the
-// interaction between matchBuckets, showSearchSuggestionsFirst, and
+// interaction between matchGroups, showSearchSuggestionsFirst, and
 // resultGroups.  It's a little complex, but the flow is:
 //
-// 1. The old matchBuckets pref has some value
+// 1. The old matchGroups pref has some value
 // 2. UrlbarPrefs.initializeShowSearchSuggestionsFirstPref() is called to
-//    translate matchBuckets into the newer showSearchSuggestionsFirst pref
+//    translate matchGroups into the newer showSearchSuggestionsFirst pref
 // 3. The update to showSearchSuggestionsFirst causes the new resultGroups
 //    pref to be set
 add_task(function initializeShowSearchSuggestionsFirstPref() {
-  // Each value in `tests`: [matchBuckets, expectedShowSearchSuggestionsFirst]
+  // Each value in `tests`: [matchGroups, expectedShowSearchSuggestionsFirst]
   let tests = [
     ["suggestion:4,general:Infinity", true],
     ["suggestion:4,general:5", true],
@@ -328,15 +328,15 @@ add_task(function initializeShowSearchSuggestionsFirstPref() {
     ["foo:5,general:5", false],
 
     ["", true],
-    ["bogus buckets", true],
+    ["bogus groups", true],
   ];
 
-  for (let [matchBuckets, expectedValue] of tests) {
-    info("Running test: " + JSON.stringify({ matchBuckets, expectedValue }));
+  for (let [matchGroups, expectedValue] of tests) {
+    info("Running test: " + JSON.stringify({ matchGroups, expectedValue }));
     Services.prefs.clearUserPref("browser.urlbar.showSearchSuggestionsFirst");
 
-    // Set matchBuckets.
-    Services.prefs.setCharPref("browser.urlbar.matchBuckets", matchBuckets);
+    // Set matchGroups.
+    Services.prefs.setCharPref("browser.urlbar.matchGroups", matchGroups);
 
     // Call initializeShowSearchSuggestionsFirstPref.
     UrlbarPrefs.initializeShowSearchSuggestionsFirstPref();
@@ -349,12 +349,12 @@ add_task(function initializeShowSearchSuggestionsFirstPref() {
     );
     Assert.deepEqual(
       JSON.parse(Services.prefs.getCharPref("browser.urlbar.resultGroups")),
-      UrlbarPrefs.makeResultBuckets({
+      UrlbarPrefs.makeResultGroups({
         showSearchSuggestionsFirst: expectedValue,
       }),
       "resultGroups should be updated with the appropriate default"
     );
   }
 
-  Services.prefs.clearUserPref("browser.urlbar.matchBuckets");
+  Services.prefs.clearUserPref("browser.urlbar.matchGroups");
 });
