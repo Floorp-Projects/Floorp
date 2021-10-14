@@ -629,13 +629,13 @@ function Focus()
 {
     var fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
     fm.focusedWindow = g.containingWindow;
-#ifdef XP_MACOSX
+
     try {
         var dock = Cc["@mozilla.org/widget/macdocksupport;1"].getService(Ci.nsIMacDockSupport);
         dock.activateApplication(true);
     } catch(ex) {
     }
-#endif // XP_MACOSX
+
     return true;
 }
 
