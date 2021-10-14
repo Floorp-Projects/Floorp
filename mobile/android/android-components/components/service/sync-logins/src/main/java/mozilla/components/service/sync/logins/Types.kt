@@ -8,8 +8,11 @@ import mozilla.components.concept.storage.EncryptedLogin
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 
-// Convert between application-services data classes and the ones in
-// concept.storage.
+// Convert between application-services data classes and the ones in concept.storage.
+
+/**
+ * Convert A-S EncryptedLogin into A-C [EncryptedLogin].
+ */
 fun mozilla.appservices.logins.EncryptedLogin.toEncryptedLogin() = EncryptedLogin(
     guid = record.id,
     origin = fields.origin,
@@ -24,6 +27,9 @@ fun mozilla.appservices.logins.EncryptedLogin.toEncryptedLogin() = EncryptedLogi
     secFields = secFields,
 )
 
+/**
+ * Convert A-S Login into A-C [Login].
+ */
 fun mozilla.appservices.logins.Login.toLogin() = Login(
     guid = record.id,
     origin = fields.origin,
@@ -39,6 +45,9 @@ fun mozilla.appservices.logins.Login.toLogin() = Login(
     timePasswordChanged = record.timePasswordChanged,
 )
 
+/**
+ * Convert A-C [LoginEntry] into A-S LoginEntry.
+ */
 fun LoginEntry.toLoginEntry() = mozilla.appservices.logins.LoginEntry(
     fields = mozilla.appservices.logins.LoginFields(
         origin = origin,
@@ -53,6 +62,9 @@ fun LoginEntry.toLoginEntry() = mozilla.appservices.logins.LoginEntry(
     ),
 )
 
+/**
+ * Convert A-C [Login] into A-S Login.
+ */
 fun Login.toLogin() = mozilla.appservices.logins.Login(
     record = mozilla.appservices.logins.RecordFields(
         id = guid,

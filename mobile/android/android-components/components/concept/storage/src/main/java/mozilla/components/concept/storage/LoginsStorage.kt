@@ -65,6 +65,9 @@ data class Login(
      */
     val timePasswordChanged: Long = 0L,
 ) {
+    /**
+     * Converts [Login] into a [LoginEntry].
+     */
     fun toEntry() = LoginEntry(
         origin = origin,
         formActionOrigin = formActionOrigin,

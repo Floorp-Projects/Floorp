@@ -209,7 +209,12 @@ class SyncableLoginsStorage(
      * @throws [LoginsStorageException] if the storage is locked, and on unexpected
      *              errors (IO failure, rust panics, etc)
      */
-    @Throws(CryptoException::class, NoSuchRecordException::class, InvalidRecordException::class, LoginsStorageException::class)
+    @Throws(
+        CryptoException::class,
+        NoSuchRecordException::class,
+        InvalidRecordException::class,
+        LoginsStorageException::class
+    )
     override suspend fun update(guid: String, entry: LoginEntry) = withContext(coroutineContext) {
         conn.getStorage().update(guid, entry.toLoginEntry(), crypto.key().key).toEncryptedLogin()
     }

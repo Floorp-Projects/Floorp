@@ -38,6 +38,9 @@ class LoginsCrypto(
     private val logger = Logger("LoginsCrypto")
     private val plaintextPrefs by lazy { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
 
+    /**
+     * Decrypts ciphertext fields within [login], producing a plaintext [Login].
+     */
     fun decryptLogin(login: EncryptedLogin): Login {
         val secFields = decryptFields(login.secFields, key().key)
         // Note: The autofill code catches errors on decryptFields and returns
@@ -128,7 +131,8 @@ class LoginsCrypto(
                 ManagedKey(generateAndStoreKey(), KeyGenerationReason.New)
             }
 
-            // The above cases seem exhaustive, but Kotlin doesn't think so.  Throw IllegalStateException if we get here.
+            // The above cases seem exhaustive, but Kotlin doesn't think so.
+            // Throw IllegalStateException if we get here.
             else -> throw IllegalStateException()
         }
     }
