@@ -799,7 +799,6 @@ var FormAutofillContent = {
       this.debug("No control is removed or inserted since last collection.");
       return;
     }
-
     let validDetails = formHandler.collectFormFields();
 
     this._formsDetails.set(formHandler.form.rootElement, formHandler);

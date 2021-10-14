@@ -609,6 +609,83 @@ const TESTCASES = [
     ids: ["cc-number", "cc-exp-month", "cc-exp-year"],
   },
   {
+    description: "A valid credit card form with multiple cc-number fields",
+    document: `<form>
+                <input id="cc-number1" maxlength="4">
+                <input id="cc-number2" maxlength="4">
+                <input id="cc-number3" maxlength="4">
+                <input id="cc-number4" maxlength="4">
+                <input id="cc-exp-month" autocomplete="cc-exp-month">
+                <input id="cc-exp-year" autocomplete="cc-exp-year">
+                </form>`,
+    sections: [
+      [
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-number",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-number",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-number",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-number",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-exp-month",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-exp-year",
+        },
+      ],
+    ],
+    validFieldDetails: [
+      { section: "", addressType: "", contactType: "", fieldName: "cc-number" },
+      { section: "", addressType: "", contactType: "", fieldName: "cc-number" },
+      { section: "", addressType: "", contactType: "", fieldName: "cc-number" },
+      { section: "", addressType: "", contactType: "", fieldName: "cc-number" },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "cc-exp-month",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "cc-exp-year",
+      },
+    ],
+    ids: [
+      "cc-number1",
+      "cc-number2",
+      "cc-number3",
+      "cc-number4",
+      "cc-exp-month",
+      "cc-exp-year",
+    ],
+  },
+  {
     description: "Three sets of adjacent phone number fields",
     document: `<form>
                  <input id="shippingAC" name="phone" maxlength="3">

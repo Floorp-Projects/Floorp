@@ -61,6 +61,29 @@ const TESTCASES = [
     targetElementId: "cc-number",
     expectedResult: ["cc-number", "cc-name", "cc-exp-month", "cc-exp-year"],
   },
+  {
+    description:
+      "Form containing multiple cc-number fields without autocomplete attributes.",
+    document: `<form>
+                <input id="cc-number1" maxlength="4">
+                <input id="cc-number2" maxlength="4">
+                <input id="cc-number3" maxlength="4">
+                <input id="cc-number4" maxlength="4">
+                <input id="cc-name">
+                <input id="cc-exp-month">
+                <input id="cc-exp-year">
+               </form>`,
+    targetElementId: "cc-number1",
+    expectedResult: [
+      "cc-number1",
+      "cc-number2",
+      "cc-number3",
+      "cc-number4",
+      "cc-name",
+      "cc-exp-month",
+      "cc-exp-year",
+    ],
+  },
 ];
 
 let markedFieldId = [];
