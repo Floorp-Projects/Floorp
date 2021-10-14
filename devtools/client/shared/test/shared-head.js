@@ -94,6 +94,10 @@ const URL_ROOT_NET = CHROME_URL_ROOT.replace(
   "chrome://mochitests/content/",
   "http://example.net/"
 );
+const URL_ROOT_NET_SSL = CHROME_URL_ROOT.replace(
+  "chrome://mochitests/content/",
+  "https://example.net/"
+);
 // mochi.test:8888 is the actual primary location where files are served.
 const URL_ROOT_MOCHI_8888 = CHROME_URL_ROOT.replace(
   "chrome://mochitests/content/",
