@@ -1288,6 +1288,7 @@ void GCRuntime::joinTask(GCParallelTask& task,
 }
 
 void GCRuntime::sweepDebuggerOnMainThread(JSFreeOp* fop) {
+  SweepingTracer trc(rt);
   AutoLockStoreBuffer lock(&storeBuffer());
 
   // Detach unreachable debuggers and global objects from each other.
@@ -1302,7 +1303,7 @@ void GCRuntime::sweepDebuggerOnMainThread(JSFreeOp* fop) {
   {
     gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::SWEEP_MISC);
     for (SweepGroupRealmsIter r(rt); !r.done(); r.next()) {
-      r->sweepDebugEnvironments();
+      r->traceWeakDebugEnvironmentEdges(&trc);
     }
   }
 }

@@ -474,7 +474,7 @@ void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
     r->traceWeakRegExps(trc);
     r->traceWeakSavedStacks(trc);
     r->traceWeakGlobalEdge(trc);
-    r->sweepDebugEnvironments();
+    r->traceWeakDebugEnvironmentEdges(trc);
     r->traceWeakEdgesInJitRealm(trc);
     r->traceWeakObjectRealm(trc);
   }

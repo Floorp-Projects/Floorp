@@ -519,7 +519,7 @@ class JS::Realm : public JS::shadow::Realm {
   void finishRoots();
 
   void sweepAfterMinorGC();
-  void sweepDebugEnvironments();
+  void traceWeakDebugEnvironmentEdges(JSTracer* trc);
   void traceWeakObjectRealm(JSTracer* trc);
   void traceWeakRegExps(JSTracer* trc);
 
