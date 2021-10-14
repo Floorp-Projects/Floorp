@@ -936,11 +936,10 @@ class LiveEnvironmentVal {
       : frame_(ei.initialFrame()), scope_(ei.maybeScope()) {}
 
   AbstractFramePtr frame() const { return frame_; }
-  Scope* scope() const { return scope_; }
 
   void updateFrame(AbstractFramePtr frame) { frame_ = frame; }
 
-  bool needsSweep();
+  bool traceWeak(JSTracer* trc);
 };
 
 /****************************************************************************/
@@ -1096,7 +1095,7 @@ class DebugEnvironments {
 
  public:
   void trace(JSTracer* trc);
-  void sweep();
+  void traceWeak(JSTracer* trc);
   void finish();
 #ifdef JS_GC_ZEAL
   void checkHashTablesAfterMovingGC();

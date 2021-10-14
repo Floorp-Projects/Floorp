@@ -364,9 +364,9 @@ void Realm::traceWeakRegExps(JSTracer* trc) {
   regExps.traceWeak(trc);
 }
 
-void Realm::sweepDebugEnvironments() {
+void Realm::traceWeakDebugEnvironmentEdges(JSTracer* trc) {
   if (debugEnvs_) {
-    debugEnvs_->sweep();
+    debugEnvs_->traceWeak(trc);
   }
 }
 
