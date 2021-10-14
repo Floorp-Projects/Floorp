@@ -11,7 +11,7 @@ const path = "/tests/dom/security/test/csp/";
 const testFile = `${path}file_web_manifest.html`;
 const mixedContentFile = `${path}file_web_manifest_mixed_content.html`;
 const server = `${path}file_testserver.sjs`;
-const defaultURL = new URL(`http://example.org${server}`);
+const defaultURL = new URL(`https://example.org${server}`);
 const mixedURL = new URL(`http://mochi.test:8888${server}`);
 
 // Enable web manifest processing.
