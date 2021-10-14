@@ -112,6 +112,7 @@ namespace jit {
   _(RegExpTester)                 \
   _(StringReplace)                \
   _(TypeOf)                       \
+  _(TypeOfName)                   \
   _(ToDouble)                     \
   _(ToFloat32)                    \
   _(TruncateToInt32)              \
@@ -695,6 +696,14 @@ class RStringReplace final : public RInstruction {
 class RTypeOf final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(TypeOf, 1)
+
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
+};
+
+class RTypeOfName final : public RInstruction {
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(TypeOfName, 1)
 
   [[nodiscard]] bool recover(JSContext* cx,
                              SnapshotIterator& iter) const override;

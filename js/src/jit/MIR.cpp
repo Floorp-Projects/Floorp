@@ -3245,8 +3245,24 @@ MDefinition* MTypeOf::foldsTo(TempAllocator& alloc) {
       return this;
   }
 
-  return MConstant::New(
-      alloc, StringValue(TypeName(type, GetJitContext()->runtime->names())));
+  return MConstant::New(alloc, Int32Value(static_cast<int32_t>(type)));
+}
+
+MDefinition* MTypeOfName::foldsTo(TempAllocator& alloc) {
+  MOZ_ASSERT(input()->type() == MIRType::Int32);
+
+  if (!input()->isConstant()) {
+    return this;
+  }
+
+  static_assert(JSTYPE_UNDEFINED == 0);
+
+  int32_t type = input()->toConstant()->toInt32();
+  MOZ_ASSERT(JSTYPE_UNDEFINED <= type && type < JSTYPE_LIMIT);
+
+  JSString* name =
+      TypeName(static_cast<JSType>(type), GetJitContext()->runtime->names());
+  return MConstant::New(alloc, StringValue(name));
 }
 
 MUrsh* MUrsh::NewWasm(TempAllocator& alloc, MDefinition* left,
@@ -3757,14 +3773,21 @@ bool MCompare::tryFoldEqualOperands(bool* result) {
 }
 
 bool MCompare::tryFoldTypeOf(bool* result) {
-  if (!lhs()->isTypeOf() && !rhs()->isTypeOf()) {
+  if (!lhs()->isTypeOfName() && !rhs()->isTypeOfName()) {
     return false;
   }
   if (!lhs()->isConstant() && !rhs()->isConstant()) {
     return false;
   }
 
-  MTypeOf* typeOf = lhs()->isTypeOf() ? lhs()->toTypeOf() : rhs()->toTypeOf();
+  MTypeOfName* typeOfName =
+      lhs()->isTypeOfName() ? lhs()->toTypeOfName() : rhs()->toTypeOfName();
+  if (!typeOfName->input()->isTypeOf()) {
+    return false;
+  }
+
+  MTypeOf* typeOf = typeOfName->input()->toTypeOf();
+
   MConstant* constant =
       lhs()->isConstant() ? lhs()->toConstant() : rhs()->toConstant();
 
