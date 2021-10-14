@@ -686,10 +686,6 @@ JS_PUBLIC_API void gc::TraceRealm(JSTracer* trc, JS::Realm* realm,
   realm->traceGlobalData(trc);
 }
 
-JS_PUBLIC_API bool gc::RealmNeedsSweep(JS::Realm* realm) {
-  return realm->globalIsAboutToBeFinalized();
-}
-
 JS_PUBLIC_API JS::Realm* JS::GetCurrentRealmOrNull(JSContext* cx) {
   return cx->realm();
 }
