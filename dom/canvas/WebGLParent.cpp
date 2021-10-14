@@ -33,6 +33,10 @@ using IPCResult = mozilla::ipc::IPCResult;
 
 IPCResult WebGLParent::RecvDispatchCommands(Shmem&& rawShmem,
                                             const uint64_t cmdsByteSize) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   auto shmem = webgl::RaiiShmem(this, std::move(rawShmem));
 
   const auto& gl = mHost->mContext->GL();
@@ -86,6 +90,10 @@ IPCResult WebGLParent::RecvGetFrontBufferSnapshot(
     webgl::FrontBufferSnapshotIpc* const ret) {
   *ret = {};
 
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   const auto maybeSize = mHost->FrontBufferSnapshotInto({});
   if (maybeSize) {
     const auto& surfSize = *maybeSize;
@@ -116,6 +124,10 @@ IPCResult WebGLParent::RecvGetBufferSubData(const GLenum target,
                                             const uint64_t srcByteOffset,
                                             const uint64_t byteSize,
                                             Shmem* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   const auto allocSize = 1 + byteSize;
   auto shmem = webgl::RaiiShmem::Alloc(
       this, allocSize,
@@ -142,6 +154,10 @@ IPCResult WebGLParent::RecvReadPixels(const webgl::ReadPixelsDesc& desc,
                                       webgl::ReadPixelsResultIpc* const ret) {
   *ret = {};
 
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   const auto allocSize = std::max<uint64_t>(1, byteSize);
   auto shmem = webgl::RaiiShmem::Alloc(
       this, allocSize,
@@ -162,12 +178,20 @@ IPCResult WebGLParent::RecvReadPixels(const webgl::ReadPixelsDesc& desc,
 
 IPCResult WebGLParent::RecvCheckFramebufferStatus(GLenum target,
                                                   GLenum* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->CheckFramebufferStatus(target);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvClientWaitSync(ObjectId id, GLbitfield flags,
                                           GLuint64 timeout, GLenum* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->ClientWaitSync(id, flags, timeout);
   return IPC_OK();
 }
@@ -175,33 +199,57 @@ IPCResult WebGLParent::RecvClientWaitSync(ObjectId id, GLbitfield flags,
 IPCResult WebGLParent::RecvCreateOpaqueFramebuffer(
     const ObjectId id, const OpaqueFramebufferOptions& options,
     bool* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->CreateOpaqueFramebuffer(id, options);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvDrawingBufferSize(uvec2* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->DrawingBufferSize();
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvFinish() {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   mHost->Finish();
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvGetBufferParameter(GLenum target, GLenum pname,
                                               Maybe<double>* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetBufferParameter(target, pname);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvGetCompileResult(ObjectId id,
                                             webgl::CompileResult* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetCompileResult(id);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvGetError(GLenum* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetError();
   return IPC_OK();
 }
@@ -209,24 +257,40 @@ IPCResult WebGLParent::RecvGetError(GLenum* const ret) {
 IPCResult WebGLParent::RecvGetFragDataLocation(ObjectId id,
                                                const std::string& name,
                                                GLint* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetFragDataLocation(id, name);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvGetFramebufferAttachmentParameter(
     ObjectId id, GLenum attachment, GLenum pname, Maybe<double>* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetFramebufferAttachmentParameter(id, attachment, pname);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvGetFrontBuffer(
     ObjectId fb, const bool vr, Maybe<layers::SurfaceDescriptor>* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetFrontBuffer(fb, vr);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvGetIndexedParameter(GLenum target, GLuint index,
                                                Maybe<double>* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetIndexedParameter(target, index);
   return IPC_OK();
 }
@@ -234,35 +298,59 @@ IPCResult WebGLParent::RecvGetIndexedParameter(GLenum target, GLuint index,
 IPCResult WebGLParent::RecvGetInternalformatParameter(
     const GLenum target, const GLuint format, const GLuint pname,
     Maybe<std::vector<int32_t>>* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetInternalformatParameter(target, format, pname);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvGetLinkResult(ObjectId id,
                                          webgl::LinkResult* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetLinkResult(id);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvGetNumber(GLenum pname, Maybe<double>* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetNumber(pname);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvGetQueryParameter(ObjectId id, GLenum pname,
                                              Maybe<double>* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetQueryParameter(id, pname);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvGetRenderbufferParameter(ObjectId id, GLenum pname,
                                                     Maybe<double>* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetRenderbufferParameter(id, pname);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvGetSamplerParameter(ObjectId id, GLenum pname,
                                                Maybe<double>* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetSamplerParameter(id, pname);
   return IPC_OK();
 }
@@ -270,45 +358,77 @@ IPCResult WebGLParent::RecvGetSamplerParameter(ObjectId id, GLenum pname,
 IPCResult WebGLParent::RecvGetShaderPrecisionFormat(
     GLenum shaderType, GLenum precisionType,
     Maybe<webgl::ShaderPrecisionFormat>* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetShaderPrecisionFormat(shaderType, precisionType);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvGetString(GLenum pname,
                                      Maybe<std::string>* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetString(pname);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvGetTexParameter(ObjectId id, GLenum pname,
                                            Maybe<double>* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetTexParameter(id, pname);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvGetUniform(ObjectId id, uint32_t loc,
                                       webgl::GetUniformData* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetUniform(id, loc);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvGetVertexAttrib(GLuint index, GLenum pname,
                                            Maybe<double>* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->GetVertexAttrib(index, pname);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvIsEnabled(GLenum cap, bool* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->IsEnabled(cap);
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvOnMemoryPressure() {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   mHost->OnMemoryPressure();
   return IPC_OK();
 }
 
 IPCResult WebGLParent::RecvValidateProgram(ObjectId id, bool* const ret) {
+  if (!mHost) {
+    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+  }
+
   *ret = mHost->ValidateProgram(id);
   return IPC_OK();
 }
