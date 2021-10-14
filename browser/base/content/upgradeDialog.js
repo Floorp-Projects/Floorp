@@ -311,12 +311,20 @@ function onLoad(ready) {
   }
 
   // Update the screen content and handle actions.
+  let busy = false;
   let current = -1;
   (async function advance({ target } = {}) {
     // Record which button was clicked.
     if (target) {
-      recordEvent("button", target.dataset.l10nId);
+      recordEvent("button", (busy ? "busy:" : "") + target.dataset.l10nId);
     }
+
+    // Disallow multiple concurrent advances, e.g., double click while the
+    // first callback is still busy awaiting.
+    if (busy) {
+      return;
+    }
+    busy = true;
 
     // Set the correct target for keyboard focus.
     let toFocus = primary;
@@ -406,6 +414,8 @@ function onLoad(ready) {
 
     // Record which screen was shown identified by the primary button.
     recordEvent("show", primary.dataset.l10nId);
+
+    busy = false;
   })();
 }
 
