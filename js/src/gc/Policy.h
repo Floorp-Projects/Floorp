@@ -52,6 +52,9 @@ struct GCPolicy<js::HeapPtr<T>> {
   static void trace(JSTracer* trc, js::HeapPtr<T>* thingp, const char* name) {
     js::TraceNullableEdge(trc, thingp, name);
   }
+  static bool traceWeak(JSTracer* trc, js::HeapPtr<T>* thingp) {
+    return js::TraceWeakEdge(trc, thingp, "HeapPtr");
+  }
   static bool needsSweep(js::HeapPtr<T>* thingp) {
     return js::InternalBarrierMethods<T>::isMarkable(thingp->get()) &&
            js::gc::IsAboutToBeFinalized(thingp);
