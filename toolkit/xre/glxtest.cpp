@@ -868,6 +868,15 @@ static bool x11_egltest(int pci_count) {
   }
   XSetErrorHandler(x_error_handler);
 
+  // Bug 1667621: 30bit "Deep Color" is broken on EGL on Mesa (as of 2021/10).
+  // Disable all non-standard depths for the initial EGL roleout.
+  int screenCount = ScreenCount(dpy);
+  for (int idx = 0; idx < screenCount; idx++) {
+    if (DefaultDepth(dpy, idx) != 24) {
+      return false;
+    }
+  }
+
   // On at least amdgpu open source driver, eglInitialize fails unless
   // a valid XDisplay pointer is passed as the native display.
   if (!get_egl_status(dpy, true, pci_count != 1)) {
