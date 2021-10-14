@@ -43,6 +43,11 @@ class ParentProcessDocumentEventWatcher {
     this.watcherActor = watcherActor;
     this.onAvailable = onAvailable;
 
+    // List of listeners keyed by innerWindowId.
+    // Listeners are called as soon as we emitted the will-navigate
+    // resource for the related WindowGlobal.
+    this._onceWillNavigate = new Map();
+
     // Get all the BrowsingContext to be watched by this toolbox
     const allBrowsingContexts = this.watcherActor.browserElement
       ? [this.watcherActor.browserElement.browsingContext]
@@ -73,6 +78,31 @@ class ParentProcessDocumentEventWatcher {
     });
   }
 
+  /**
+   * Wait for the emission of will-navigate for a given WindowGlobal
+   *
+   * @param Number innerWindowId
+   *        WindowGlobal's id we want to track
+   * @return Promise
+   *         Resolves immediatly if the WindowGlobal isn't tracked by any target
+   *         -or- resolve later, once the WindowGlobal navigates to another document
+   *         and will-navigate has been emitted.
+   */
+  onceWillNavigateIsEmitted(innerWindowId) {
+    // Only delay the target-destroyed event if the target is for BrowsingContext for which we will emit will-navigate
+    const isTracked = this.webProgresses.find(
+      webProgress =>
+        webProgress.browsingContext.currentWindowGlobal.innerWindowId ==
+        innerWindowId
+    );
+    if (isTracked) {
+      return new Promise(resolve => {
+        this._onceWillNavigate.set(innerWindowId, resolve);
+      });
+    }
+    return Promise.resolve();
+  }
+
   onStateChange(progress, request, flag, status) {
     const isStart = flag & Ci.nsIWebProgressListener.STATE_START;
     const isDocument = flag & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
@@ -90,7 +120,17 @@ class ParentProcessDocumentEventWatcher {
         return;
       }
 
+      // Ignore remote iframe targets which are restoring from the bfcache.
+      // onStateChange is called before the related target is instantiated
+      // and this isn't quite a navigation, we will respawn a new target.
+      const isTopLevel = browsingContext.top == browsingContext;
+      const isRestoring = flag & Ci.nsIWebProgressListener.STATE_RESTORING;
+      if (!isTopLevel && isRestoring) {
+        return;
+      }
+
       const newURI = request instanceof Ci.nsIChannel ? request.URI.spec : null;
+      const { innerWindowId } = browsingContext.currentWindowGlobal;
       this.onAvailable([
         {
           browsingContextID: browsingContext.id,
@@ -101,6 +141,11 @@ class ParentProcessDocumentEventWatcher {
           newURI,
         },
       ]);
+      const callback = this._onceWillNavigate.get(innerWindowId);
+      if (callback) {
+        this._onceWillNavigate.delete(innerWindowId);
+        callback();
+      }
     }
   }
 
