@@ -598,11 +598,11 @@ Obsolete histograms
 
 FX_URLBAR_SELECTED_RESULT_INDEX (OBSOLETE)
   This probe tracked the indexes of picked results in the results list.
-  It was an enumerated histogram with 17 buckets.
+  It was an enumerated histogram with 17 groups.
 
 FX_URLBAR_SELECTED_RESULT_TYPE and FX_URLBAR_SELECTED_RESULT_TYPE_2 (from Firefox 78 on) (OBSOLETE)
   This probe tracked the types of picked results.
-  It was an enumerated histogram with 17 buckets:
+  It was an enumerated histogram with 17 groups:
 
     0. autofill
     1. bookmark

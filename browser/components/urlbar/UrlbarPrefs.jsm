@@ -143,12 +143,12 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Controls the composition of results.  The default value is computed by
   // calling:
-  //   makeResultBuckets({
+  //   makeResultGroups({
   //     showSearchSuggestionsFirst: UrlbarPrefs.get(
   //       "showSearchSuggestionsFirst"
   //     ),
   //   });
-  // The value of this pref is a JSON string of the root bucket.  See below.
+  // The value of this pref is a JSON string of the root group.  See below.
   ["resultGroups", ""],
 
   // If true, we show tail suggestions when available.
@@ -287,45 +287,45 @@ const PREF_TYPES = new Map([
 ]);
 
 /**
- * Builds the standard result buckets and returns the root bucket.  Result
- * buckets determine the composition of results in the muxer, i.e., how they're
- * grouped and sorted.  Each bucket is an object that looks like this:
+ * Builds the standard result groups and returns the root group.  Result
+ * groups determine the composition of results in the muxer, i.e., how they're
+ * grouped and sorted.  Each group is an object that looks like this:
  *
  * {
  *   {UrlbarUtils.RESULT_GROUP} [group]
- *     This is defined only on buckets without children, and it determines the
- *     result group that the bucket will contain.
+ *     This is defined only on groups without children, and it determines the
+ *     result group that the group will contain.
  *   {number} [maxResultCount]
- *     An optional maximum number of results the bucket can contain.  If it's
- *     not defined and the parent bucket does not define `flexChildren: true`,
- *     then the max is the parent's max.  If the parent bucket defines
+ *     An optional maximum number of results the group can contain.  If it's
+ *     not defined and the parent group does not define `flexChildren: true`,
+ *     then the max is the parent's max.  If the parent group defines
  *     `flexChildren: true`, then `maxResultCount` is ignored.
  *   {boolean} [flexChildren]
- *     If true, then child buckets are "flexed", similar to flex in HTML.  Each
- *     child bucket should define the `flex` property (or, if they don't, `flex`
+ *     If true, then child groups are "flexed", similar to flex in HTML.  Each
+ *     child group should define the `flex` property (or, if they don't, `flex`
  *     is assumed to be zero).  `flex` is a number that defines the ratio of a
  *     child's result count to the total result count of all children.  More
  *     specifically, `flex: X` on a child means that the initial maximum result
  *     count of the child is `parentMaxResultCount * (X / N)`, where `N` is the
- *     sum of the `flex` values of all children.  If there are any child buckets
+ *     sum of the `flex` values of all children.  If there are any child groups
  *     that cannot be completely filled, then the muxer will attempt to overfill
  *     the children that were completely filled, while still respecting their
  *     relative `flex` values.
  *   {number} [flex]
- *     The flex value of the bucket.  This should be defined only on buckets
+ *     The flex value of the group.  This should be defined only on groups
  *     where the parent defines `flexChildren: true`.  See `flexChildren` for a
  *     discussion of flex.
  *   {array} [children]
- *     An array of child bucket objects.
+ *     An array of child group objects.
  * }
  *
  * @param {boolean} showSearchSuggestionsFirst
- *   If true, the suggestions bucket will come before the general bucket.
+ *   If true, the suggestions group will come before the general group.
  * @returns {object}
- *   The root bucket.
+ *   The root group.
  */
-function makeResultBuckets({ showSearchSuggestionsFirst }) {
-  let rootBucket = {
+function makeResultGroups({ showSearchSuggestionsFirst }) {
+  let rootGroup = {
     children: [
       // heuristic
       {
@@ -351,8 +351,8 @@ function makeResultBuckets({ showSearchSuggestionsFirst }) {
     ],
   };
 
-  // Prepare the parent bucket for suggestions and general.
-  let mainBucket = {
+  // Prepare the parent group for suggestions and general.
+  let mainGroup = {
     flexChildren: true,
     children: [
       // suggestions
@@ -417,13 +417,13 @@ function makeResultBuckets({ showSearchSuggestionsFirst }) {
     ],
   };
   if (!showSearchSuggestionsFirst) {
-    mainBucket.children.reverse();
+    mainGroup.children.reverse();
   }
-  mainBucket.children[0].flex = 2;
-  mainBucket.children[1].flex = 1;
-  rootBucket.children.push(mainBucket);
+  mainGroup.children[0].flex = 2;
+  mainGroup.children[1].flex = 1;
+  rootGroup.children.push(mainGroup);
 
-  return rootBucket;
+  return rootGroup;
 }
 
 /**
@@ -505,27 +505,27 @@ class Preferences {
   }
 
   /**
-   * Builds the standard result buckets.  See makeResultBuckets.
+   * Builds the standard result groups.  See makeResultGroups.
    *
    * @param {object} options
-   *   See makeResultBuckets.
+   *   See makeResultGroups.
    * @returns {object}
-   *   The root bucket.
+   *   The root group.
    */
-  makeResultBuckets(options) {
-    return makeResultBuckets(options);
+  makeResultGroups(options) {
+    return makeResultGroups(options);
   }
 
   /**
-   * Sets the value of the resultGroups pref to the current default buckets.
-   * This should be called from BrowserGlue._migrateUI when the default buckets
+   * Sets the value of the resultGroups pref to the current default groups.
+   * This should be called from BrowserGlue._migrateUI when the default groups
    * are modified.
    */
-  migrateResultBuckets() {
+  migrateResultGroups() {
     this.set(
       "resultGroups",
       JSON.stringify(
-        makeResultBuckets({
+        makeResultGroups({
           showSearchSuggestionsFirst: this.get("showSearchSuggestionsFirst"),
         })
       )
@@ -725,7 +725,7 @@ class Preferences {
         this.set(
           "resultGroups",
           JSON.stringify(
-            makeResultBuckets({ showSearchSuggestionsFirst: this.get(pref) })
+            makeResultGroups({ showSearchSuggestionsFirst: this.get(pref) })
           )
         );
         return;
@@ -801,7 +801,7 @@ class Preferences {
         try {
           return JSON.parse(this._readPref(pref));
         } catch (ex) {}
-        return makeResultBuckets({
+        return makeResultGroups({
           showSearchSuggestionsFirst: this.get("showSearchSuggestionsFirst"),
         });
       case "shouldHandOffToSearchMode":
@@ -884,22 +884,22 @@ class Preferences {
   }
 
   /**
-   * Initializes the showSearchSuggestionsFirst pref based on the matchBuckets
+   * Initializes the showSearchSuggestionsFirst pref based on the matchGroups
    * pref.  This function can be removed when the corresponding UI migration in
    * BrowserGlue.jsm is no longer needed.
    */
   initializeShowSearchSuggestionsFirstPref() {
-    let matchBuckets = [];
-    let pref = Services.prefs.getCharPref("browser.urlbar.matchBuckets", "");
+    let matchGroups = [];
+    let pref = Services.prefs.getCharPref("browser.urlbar.matchGroups", "");
     try {
-      matchBuckets = pref.split(",").map(v => {
-        let bucket = v.split(":");
-        return [bucket[0].trim().toLowerCase(), Number(bucket[1])];
+      matchGroups = pref.split(",").map(v => {
+        let group = v.split(":");
+        return [group[0].trim().toLowerCase(), Number(group[1])];
       });
     } catch (ex) {}
-    let bucketNames = matchBuckets.map(bucket => bucket[0]);
-    let suggestionIndex = bucketNames.indexOf("suggestion");
-    let generalIndex = bucketNames.indexOf("general");
+    let groupNames = matchGroups.map(group => group[0]);
+    let suggestionIndex = groupNames.indexOf("suggestion");
+    let generalIndex = groupNames.indexOf("general");
     let showSearchSuggestionsFirst =
       generalIndex < 0 ||
       (suggestionIndex >= 0 && suggestionIndex < generalIndex);
@@ -912,7 +912,7 @@ class Preferences {
     );
 
     // Pref observers aren't called when a pref is set to its current value, but
-    // we always want to set matchBuckets to the appropriate default value via
+    // we always want to set matchGroups to the appropriate default value via
     // onPrefChanged, so call it now if necessary.  This is really only
     // necessary for tests since the only time this function is called outside
     // of tests is by a UI migration in BrowserGlue.

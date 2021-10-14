@@ -258,7 +258,7 @@ async function doTestPermutations(callback) {
  *   True to run with a bunch of history, false to run with no history.
  * @param {number} generalIndex
  *   The value to set as the relevant index pref, i.e., the index within the
- *   general bucket of the quick suggest result.
+ *   general group of the quick suggest result.
  * @param {number} expectedResultCount
  *   The expected total result count for sanity checking.
  * @param {number} expectedIndex

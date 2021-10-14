@@ -287,7 +287,7 @@ add_task(async function test_deduplicate_for_unitConversion() {
   Assert.deepEqual(context.results, [unitConversionSuggestion]);
 });
 
-// These results are used in the badHeuristicBuckets tests below.  The order of
+// These results are used in the badHeuristicGroups tests below.  The order of
 // the results in the array isn't important because they all get added at the
 // same time.  It's the resultGroups in each test that is important.
 const BAD_HEURISTIC_RESULTS = [
@@ -329,10 +329,10 @@ const BAD_HEURISTIC_RESULTS_GENERAL = [
   BAD_HEURISTIC_RESULTS[3],
 ];
 
-add_task(async function test_badHeuristicBuckets_multiple_0() {
-  await doBadHeuristicBucketsTest(
+add_task(async function test_badHeuristicGroups_multiple_0() {
+  await doBadHeuristicGroupsTest(
     [
-      // 2 heuristics with child buckets
+      // 2 heuristics with child groups
       {
         maxResultCount: 2,
         children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
@@ -346,10 +346,10 @@ add_task(async function test_badHeuristicBuckets_multiple_0() {
   );
 });
 
-add_task(async function test_badHeuristicBuckets_multiple_1() {
-  await doBadHeuristicBucketsTest(
+add_task(async function test_badHeuristicGroups_multiple_1() {
+  await doBadHeuristicGroupsTest(
     [
-      // infinite heuristics with child buckets
+      // infinite heuristics with child groups
       {
         children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
       },
@@ -362,8 +362,8 @@ add_task(async function test_badHeuristicBuckets_multiple_1() {
   );
 });
 
-add_task(async function test_badHeuristicBuckets_multiple_2() {
-  await doBadHeuristicBucketsTest(
+add_task(async function test_badHeuristicGroups_multiple_2() {
+  await doBadHeuristicGroupsTest(
     [
       // 2 heuristics
       {
@@ -379,8 +379,8 @@ add_task(async function test_badHeuristicBuckets_multiple_2() {
   );
 });
 
-add_task(async function test_badHeuristicBuckets_multiple_3() {
-  await doBadHeuristicBucketsTest(
+add_task(async function test_badHeuristicGroups_multiple_3() {
+  await doBadHeuristicGroupsTest(
     [
       // infinite heuristics
       {
@@ -395,10 +395,10 @@ add_task(async function test_badHeuristicBuckets_multiple_3() {
   );
 });
 
-add_task(async function test_badHeuristicBuckets_multiple_4() {
-  await doBadHeuristicBucketsTest(
+add_task(async function test_badHeuristicGroups_multiple_4() {
+  await doBadHeuristicGroupsTest(
     [
-      // 1 heuristic with child buckets
+      // 1 heuristic with child groups
       {
         maxResultCount: 1,
         children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
@@ -407,7 +407,7 @@ add_task(async function test_badHeuristicBuckets_multiple_4() {
       {
         group: UrlbarUtils.RESULT_GROUP.GENERAL,
       },
-      // 1 heuristic with child buckets
+      // 1 heuristic with child groups
       {
         maxResultCount: 1,
         children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
@@ -417,10 +417,10 @@ add_task(async function test_badHeuristicBuckets_multiple_4() {
   );
 });
 
-add_task(async function test_badHeuristicBuckets_multiple_5() {
-  await doBadHeuristicBucketsTest(
+add_task(async function test_badHeuristicGroups_multiple_5() {
+  await doBadHeuristicGroupsTest(
     [
-      // infinite heuristics with child buckets
+      // infinite heuristics with child groups
       {
         children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
       },
@@ -428,7 +428,7 @@ add_task(async function test_badHeuristicBuckets_multiple_5() {
       {
         group: UrlbarUtils.RESULT_GROUP.GENERAL,
       },
-      // infinite heuristics with child buckets
+      // infinite heuristics with child groups
       {
         children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
       },
@@ -437,8 +437,8 @@ add_task(async function test_badHeuristicBuckets_multiple_5() {
   );
 });
 
-add_task(async function test_badHeuristicBuckets_multiple_6() {
-  await doBadHeuristicBucketsTest(
+add_task(async function test_badHeuristicGroups_multiple_6() {
+  await doBadHeuristicGroupsTest(
     [
       // 1 heuristic
       {
@@ -459,8 +459,8 @@ add_task(async function test_badHeuristicBuckets_multiple_6() {
   );
 });
 
-add_task(async function test_badHeuristicBuckets_multiple_7() {
-  await doBadHeuristicBucketsTest(
+add_task(async function test_badHeuristicGroups_multiple_7() {
+  await doBadHeuristicGroupsTest(
     [
       // infinite heuristics
       {
@@ -479,14 +479,14 @@ add_task(async function test_badHeuristicBuckets_multiple_7() {
   );
 });
 
-add_task(async function test_badHeuristicsBuckets_notFirst_0() {
-  await doBadHeuristicBucketsTest(
+add_task(async function test_badHeuristicsGroups_notFirst_0() {
+  await doBadHeuristicGroupsTest(
     [
       // infinite general first
       {
         group: UrlbarUtils.RESULT_GROUP.GENERAL,
       },
-      // 1 heuristic with child buckets second
+      // 1 heuristic with child groups second
       {
         maxResultCount: 1,
         children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
@@ -496,14 +496,14 @@ add_task(async function test_badHeuristicsBuckets_notFirst_0() {
   );
 });
 
-add_task(async function test_badHeuristicsBuckets_notFirst_1() {
-  await doBadHeuristicBucketsTest(
+add_task(async function test_badHeuristicsGroups_notFirst_1() {
+  await doBadHeuristicGroupsTest(
     [
       // infinite general first
       {
         group: UrlbarUtils.RESULT_GROUP.GENERAL,
       },
-      // infinite heuristics with child buckets second
+      // infinite heuristics with child groups second
       {
         children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
       },
@@ -512,8 +512,8 @@ add_task(async function test_badHeuristicsBuckets_notFirst_1() {
   );
 });
 
-add_task(async function test_badHeuristicsBuckets_notFirst_2() {
-  await doBadHeuristicBucketsTest(
+add_task(async function test_badHeuristicsGroups_notFirst_2() {
+  await doBadHeuristicGroupsTest(
     [
       // infinite general first
       {
@@ -529,8 +529,8 @@ add_task(async function test_badHeuristicsBuckets_notFirst_2() {
   );
 });
 
-add_task(async function test_badHeuristicsBuckets_notFirst_3() {
-  await doBadHeuristicBucketsTest(
+add_task(async function test_badHeuristicsGroups_notFirst_3() {
+  await doBadHeuristicGroupsTest(
     [
       // infinite general first
       {
@@ -545,8 +545,8 @@ add_task(async function test_badHeuristicsBuckets_notFirst_3() {
   );
 });
 
-add_task(async function test_badHeuristicsBuckets_notFirst_4() {
-  await doBadHeuristicBucketsTest(
+add_task(async function test_badHeuristicsGroups_notFirst_4() {
+  await doBadHeuristicGroupsTest(
     [
       // 1 general first
       {
@@ -568,18 +568,18 @@ add_task(async function test_badHeuristicsBuckets_notFirst_4() {
 
 /**
  * Sets the resultGroups pref, performs a search, and then checks the results.
- * Regardless of the buckets, the muxer should include at most one heuristic in
+ * Regardless of the groups, the muxer should include at most one heuristic in
  * its results and it should always be the first result.
  *
- * @param {array} resultBuckets
- *   The result buckets.
+ * @param {array} resultGroups
+ *   The result groups.
  * @param {array} expectedResults
  *   The expected results.
  */
-async function doBadHeuristicBucketsTest(resultBuckets, expectedResults) {
+async function doBadHeuristicGroupsTest(resultGroups, expectedResults) {
   Services.prefs.setCharPref(
     "browser.urlbar.resultGroups",
-    JSON.stringify({ children: resultBuckets })
+    JSON.stringify({ children: resultGroups })
   );
 
   let provider = registerBasicTestProvider(BAD_HEURISTIC_RESULTS);

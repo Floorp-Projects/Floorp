@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests the muxer's result groups composition logic: child buckets,
+// Tests the muxer's result groups composition logic: child groups,
 // `availableSpan`, `maxResultCount`, flex, etc. The purpose of this test is to
 // check the composition logic, not every possible result type or group.
 

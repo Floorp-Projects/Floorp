@@ -1023,28 +1023,28 @@ Search.prototype = {
     }
 
     let index = 0;
-    if (!this._buckets) {
-      this._buckets = [];
-      this._makeBuckets(UrlbarPrefs.get("resultGroups"), this._maxResults);
+    if (!this._groups) {
+      this._groups = [];
+      this._makeGroups(UrlbarPrefs.get("resultGroups"), this._maxResults);
     }
 
     let replace = 0;
-    for (let bucket of this._buckets) {
-      // Move to the next bucket if the match type is incompatible, or if there
+    for (let group of this._groups) {
+      // Move to the next group if the match type is incompatible, or if there
       // is no available space or if the frecency is below the threshold.
-      if (match.type != bucket.type || !bucket.available) {
-        index += bucket.count;
+      if (match.type != group.type || !group.available) {
+        index += group.count;
         continue;
       }
 
-      index += bucket.insertIndex;
-      bucket.available--;
-      if (bucket.insertIndex < bucket.count) {
+      index += group.insertIndex;
+      group.available--;
+      if (group.insertIndex < group.count) {
         replace = true;
       } else {
-        bucket.count++;
+        group.count++;
       }
-      bucket.insertIndex++;
+      group.insertIndex++;
       break;
     }
     this._usedURLs[index] = {
@@ -1057,10 +1057,10 @@ Search.prototype = {
     return { index, replace };
   },
 
-  _makeBuckets(resultBucket, maxResultCount) {
-    if (!resultBucket.children) {
+  _makeGroups(resultGroup, maxResultCount) {
+    if (!resultGroup.children) {
       let type;
-      switch (resultBucket.group) {
+      switch (resultGroup.group) {
         case UrlbarUtils.RESULT_GROUP.FORM_HISTORY:
         case UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION:
         case UrlbarUtils.RESULT_GROUP.TAIL_SUGGESTION:
@@ -1082,18 +1082,18 @@ Search.prototype = {
           type = MATCH_TYPE.GENERAL;
           break;
       }
-      if (this._buckets.length) {
-        let last = this._buckets[this._buckets.length - 1];
+      if (this._groups.length) {
+        let last = this._groups[this._groups.length - 1];
         if (last.type == type) {
           return;
         }
       }
-      // - `available` is the number of available slots in the bucket
-      // - `insertIndex` is the index of the first available slot in the bucket
-      // - `count` is the number of matches in the bucket, note that it also
+      // - `available` is the number of available slots in the group
+      // - `insertIndex` is the index of the first available slot in the group
+      // - `count` is the number of matches in the group, note that it also
       //   accounts for matches from the previous search, while `available` and
       //   `insertIndex` don't.
-      this._buckets.push({
+      this._groups.push({
         type,
         available: maxResultCount,
         insertIndex: 0,
@@ -1103,16 +1103,16 @@ Search.prototype = {
     }
 
     let initialMaxResultCount;
-    if (typeof resultBucket.maxResultCount == "number") {
-      initialMaxResultCount = resultBucket.maxResultCount;
-    } else if (typeof resultBucket.availableSpan == "number") {
-      initialMaxResultCount = resultBucket.availableSpan;
+    if (typeof resultGroup.maxResultCount == "number") {
+      initialMaxResultCount = resultGroup.maxResultCount;
+    } else if (typeof resultGroup.availableSpan == "number") {
+      initialMaxResultCount = resultGroup.availableSpan;
     } else {
       initialMaxResultCount = this._maxResults;
     }
     let childMaxResultCount = Math.min(initialMaxResultCount, maxResultCount);
-    for (let child of resultBucket.children) {
-      this._makeBuckets(child, childMaxResultCount);
+    for (let child of resultGroup.children) {
+      this._makeGroups(child, childMaxResultCount);
     }
   },
 

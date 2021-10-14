@@ -61,7 +61,7 @@ var uri3 = Services.io.newURI("http://aaaaaaaaaa/1");
 var uri4 = Services.io.newURI("http://aaaaaaaaaa/2");
 
 // d1 is younger (should show up higher) than d2 (PRTime is in usecs not msec)
-// Make sure the dates fall into different frecency buckets
+// Make sure the dates fall into different frecency groups
 var d1 = new Date(Date.now() - 1000 * 60 * 60) * 1000;
 var d2 = new Date(Date.now() - 1000 * 60 * 60 * 24 * 10) * 1000;
 // c1 is larger (should show up higher) than c2

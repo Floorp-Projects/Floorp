@@ -167,7 +167,7 @@ class ProviderRemoteTabs extends UrlbarProvider {
         // many very stale tabs. Those very stale tabs will push out more recent
         // tabs from staler clients. This provider first returns tabs from the
         // last 72 hours, sorted by client recency. Then, it adds remaining
-        // tabs. We are not concerned about filling the remote tabs bucket with
+        // tabs. We are not concerned about filling the remote tabs group with
         // stale tabs, because the muxer ensures remote tabs flex with other
         // results. It will only show the stale tabs if it has nothing else
         // to show.
