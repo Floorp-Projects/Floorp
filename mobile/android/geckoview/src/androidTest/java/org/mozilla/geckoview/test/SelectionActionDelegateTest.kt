@@ -30,7 +30,7 @@ import org.mozilla.geckoview.GeckoSession
 
 @MediumTest
 @RunWith(Parameterized::class)
-@WithDisplay(width = 100, height = 100)
+@WithDisplay(width = 400, height = 400)
 class SelectionActionDelegateTest : BaseSessionTest() {
     enum class ContentType {
         DIV, EDITABLE_ELEMENT, IFRAME
