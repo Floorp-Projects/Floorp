@@ -168,14 +168,14 @@ static mozilla::intl::RelativeTimeFormat* NewRelativeTimeFormatter(
 
   // ICU expects numberingSystem as a Unicode locale extensions on locale.
 
-  mozilla::intl::Locale tag;
+  intl::LanguageTag tag(cx);
   {
-    RootedLinearString locale(cx, value.toString()->ensureLinear(cx));
+    JSLinearString* locale = value.toString()->ensureLinear(cx);
     if (!locale) {
       return nullptr;
     }
 
-    if (!intl::ParseLocale(cx, locale, tag)) {
+    if (!intl::LanguageTagParser::parse(cx, locale, tag)) {
       return nullptr;
     }
   }
@@ -206,13 +206,7 @@ static mozilla::intl::RelativeTimeFormat* NewRelativeTimeFormatter(
     return nullptr;
   }
 
-  intl::FormatBuffer<char> buffer(cx);
-  if (auto result = tag.toString(buffer); result.isErr()) {
-    intl::ReportInternalError(cx, result.unwrapErr());
-    return nullptr;
-  }
-
-  UniqueChars locale = buffer.extractStringZ();
+  UniqueChars locale = tag.toStringZ(cx);
   if (!locale) {
     return nullptr;
   }

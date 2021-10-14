@@ -4,7 +4,7 @@ build/clang-plugin/.*
 config/gcc-stl-wrapper.template.h
 config/msvc-stl-wrapper.template.h
 # Generated code
-intl/components/src/LocaleGenerated.cpp
+js/src/builtin/intl/LanguageTagGenerated.cpp
 js/src/builtin/intl/TimeZoneDataGenerated.h
 
 # Don't want to reformat irregexp (third-party code)

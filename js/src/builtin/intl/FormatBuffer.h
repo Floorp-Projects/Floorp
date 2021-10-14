@@ -8,6 +8,7 @@
 #define builtin_intl_FormatBuffer_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Range.h"
 #include "mozilla/Span.h"
 
 #include <stddef.h>
@@ -15,7 +16,6 @@
 
 #include "gc/Allocator.h"
 #include "js/AllocPolicy.h"
-#include "js/CharacterEncoding.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
@@ -89,7 +89,8 @@ class FormatBuffer {
                   std::is_same_v<CharT, char>) {
       // Handle the UTF-8 encoding case.
       return NewStringCopyUTF8N<CanGC>(
-          cx, JS::UTF8Chars(buffer_.begin(), buffer_.length()));
+          cx, mozilla::Range(reinterpret_cast<unsigned char>(buffer_.begin()),
+                             buffer_.length()));
     } else {
       // Handle the UTF-16 encoding case.
       static_assert(std::is_same_v<CharT, char16_t>);
