@@ -12,6 +12,8 @@
 #include "nsIOService.h"
 #include "nsIObserverService.h"
 #include "ProfilerParent.h"
+#include "nsNetUtil.h"
+#include "mozilla/ipc/Endpoint.h"
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxBroker.h"
