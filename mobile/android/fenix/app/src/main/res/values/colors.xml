@@ -341,7 +341,7 @@
     <color name="pbm_notification_color">@color/photonViolet70</color>
 
     <!-- Notification Color -->
-    <color name="whats_new_notification_color">#00B3F4</color>
+    <color name="whats_new_notification_color">@color/photonBlue30</color>
 
     <!-- Static Shortcut Background Color -->
     <color name="static_shortcut_background">#F5F5F5</color>
