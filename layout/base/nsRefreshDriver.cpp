@@ -2269,6 +2269,11 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
   AutoTArray<nsCOMPtr<nsIRunnable>, 16> earlyRunners = std::move(mEarlyRunners);
   for (auto& runner : earlyRunners) {
     runner->Run();
+    // Early runners might destroy this pres context.
+    if (!mPresContext || !mPresContext->GetPresShell()) {
+      StopTimer();
+      return;
+    }
   }
 
   // Resize events should be fired before layout flushes or
