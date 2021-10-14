@@ -7,11 +7,11 @@ package org.mozilla.focus.searchsuggestions
 import android.content.Context
 import androidx.preference.PreferenceManager
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.Settings
 
 class SearchSuggestionsPreferences(private val context: Context) {
-    private val settings = Settings.getInstance(context)
+    private val settings = context.settings
     private val preferences = PreferenceManager.getDefaultSharedPreferences(context)
 
     fun searchSuggestionsEnabled(): Boolean = settings.shouldShowSearchSuggestions()

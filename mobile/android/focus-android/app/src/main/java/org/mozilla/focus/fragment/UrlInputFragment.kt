@@ -38,6 +38,7 @@ import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.home.HomeScreen
 import org.mozilla.focus.input.InputToolbarIntegration
 import org.mozilla.focus.menu.home.HomeMenu
@@ -356,7 +357,7 @@ class UrlInputFragment :
         super.onStart()
 
         activity?.let {
-            if (Settings.getInstance(it.applicationContext).shouldShowFirstrun()) return@onStart
+            if (requireContext().settings.shouldShowFirstrun()) return@onStart
         }
     }
 

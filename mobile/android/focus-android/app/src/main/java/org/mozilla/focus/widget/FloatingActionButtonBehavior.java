@@ -14,6 +14,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import android.util.AttributeSet;
 import android.view.View;
 
+import org.mozilla.focus.ext.ContextKt;
+import org.mozilla.focus.utils.ContextUtilsKt;
 import org.mozilla.focus.utils.Settings;
 
 /**
@@ -60,7 +62,7 @@ public class FloatingActionButtonBehavior extends FloatingSessionsButton.Behavio
 
     @Override
     public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-        if ((verticalOffset == 0 && !visible) || Settings.getInstance(appBarLayout.getContext()).isAccessibilityEnabled()) {
+        if ((verticalOffset == 0 && !visible) || ContextKt.getSettings(appBarLayout.getContext()).isAccessibilityEnabled()) {
             showButton();
         } else if (Math.abs(verticalOffset) >= appBarLayout.getTotalScrollRange() && visible) {
             hideButton();

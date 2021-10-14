@@ -20,6 +20,7 @@ import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.ktx.android.content.isMainProcess
 import mozilla.components.support.webextensions.WebExtensionSupport
 import org.mozilla.focus.biometrics.LockObserver
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.locale.LocaleAwareApplication
 import org.mozilla.focus.navigation.StoreLink
 import org.mozilla.focus.session.VisibilityLifeCycleCallback
@@ -28,7 +29,6 @@ import org.mozilla.focus.telemetry.ProfilerMarkerFactProcessor
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AdjustHelper
 import org.mozilla.focus.utils.AppConstants
-import org.mozilla.focus.utils.Settings
 import kotlin.coroutines.CoroutineContext
 
 open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
@@ -77,7 +77,7 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
     }
 
     private fun setTheme(context: Context) {
-        val settings = Settings.getInstance(context)
+        val settings = context.settings
         when {
             settings.lightThemeSelected -> {
                 AppCompatDelegate.setDefaultNightMode(

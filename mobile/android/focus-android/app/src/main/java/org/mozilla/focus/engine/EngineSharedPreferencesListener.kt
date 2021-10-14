@@ -9,7 +9,7 @@ import androidx.preference.Preference
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.utils.Settings
+import org.mozilla.focus.ext.settings
 
 /**
  * SharedPreference listener that will update the engine whenever the user changes settings.
@@ -44,7 +44,7 @@ class EngineSharedPreferencesListener(
         tracker: String? = null,
         isEnabled: Boolean = false
     ) {
-        val policy = Settings.getInstance(context).createTrackingProtectionPolicy()
+        val policy = context.settings.createTrackingProtectionPolicy()
         val components = context.components
 
         components.engineDefaultSettings.trackingProtectionPolicy = policy
@@ -62,7 +62,7 @@ class EngineSharedPreferencesListener(
     }
 
     private fun updateSafeBrowsingPolicy(newValue: Boolean) {
-        Settings.getInstance(context).setupSafeBrowsing(context.components.engine, newValue)
+        context.settings.setupSafeBrowsing(context.components.engine, newValue)
     }
 
     private fun updateJavaScriptSetting(newValue: Boolean) {

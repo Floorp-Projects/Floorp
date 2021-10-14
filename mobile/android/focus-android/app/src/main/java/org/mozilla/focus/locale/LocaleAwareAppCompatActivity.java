@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
 
+import org.mozilla.focus.ext.ContextKt;
 import org.mozilla.focus.utils.Settings;
 
 import java.util.Locale;
@@ -37,7 +38,7 @@ public abstract class LocaleAwareAppCompatActivity
         LocaleManager.getInstance().updateConfiguration(this, mLastLocale);
 
 
-        if (Settings.getInstance(this).shouldUseSecureMode()) {
+        if (ContextKt.getSettings(this).shouldUseSecureMode()) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
 
@@ -90,7 +91,7 @@ public abstract class LocaleAwareAppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        if (Settings.getInstance(this).shouldUseSecureMode()) {
+        if (ContextKt.getSettings(this).shouldUseSecureMode()) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         } else {
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);

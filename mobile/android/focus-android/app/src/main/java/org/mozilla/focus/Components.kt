@@ -54,6 +54,7 @@ import org.mozilla.focus.engine.SanityCheckMiddleware
 import org.mozilla.focus.engine.TabsFeatureMiddleware
 import org.mozilla.focus.exceptions.ExceptionMigrationMiddleware
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.locale.LocaleManager
 import org.mozilla.focus.notification.PrivateNotificationMiddleware
 import org.mozilla.focus.search.SearchFilterMiddleware
@@ -84,9 +85,9 @@ class Components(
         )
     }
 
-    val engineDefaultSettings by lazy {
-        val settings = Settings.getInstance(context)
+    val settings by lazy { Settings(context) }
 
+    val engineDefaultSettings by lazy {
         DefaultSettings(
             requestInterceptor = AppContentInterceptor(context),
             trackingProtectionPolicy = settings.createTrackingProtectionPolicy(),
@@ -98,7 +99,7 @@ class Components(
 
     val engine: Engine by lazy {
         engineOverride ?: EngineProvider.createEngine(context, engineDefaultSettings).apply {
-            Settings.getInstance(context).setupSafeBrowsing(this)
+            this@Components.settings.setupSafeBrowsing(this)
             WebCompatFeature.install(this)
             WebCompatReporterFeature.install(this, "focus")
         }
@@ -183,7 +184,7 @@ class Components(
             context,
             interceptLinkClicks = true,
             launchInApp = {
-                Settings.getInstance(context).openLinksInExternalApp
+                context.settings.openLinksInExternalApp
             }
         )
     }

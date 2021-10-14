@@ -32,11 +32,11 @@ import mozilla.components.feature.search.ext.createSearchEngine
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.search.ManualAddSearchEnginePreference
 import org.mozilla.focus.shortcut.IconGenerator
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
@@ -234,7 +234,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
                 )
 
                 Snackbar.make(requireView(), R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show()
-                Settings.getInstance(requireActivity()).setDefaultSearchEngineByName(engineName)
+                requireActivity().settings.setDefaultSearchEngineByName(engineName)
 
                 requireComponents.appStore.dispatch(
                     AppAction.NavigateUp(requireComponents.store.state.selectedTabId)

@@ -69,6 +69,7 @@ import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.ext.isCustomTab
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.ext.titleOrDomain
 import org.mozilla.focus.menu.browser.DefaultBrowserMenu
 import org.mozilla.focus.open.OpenWithFragment
@@ -262,7 +263,7 @@ class BrowserFragment :
                 store = components.store,
                 sessionId = tabId,
                 fragmentManager = parentFragmentManager,
-                launchInApp = { Settings.getInstance(requireContext()).openLinksInExternalApp },
+                launchInApp = { requireContext().settings.openLinksInExternalApp },
                 loadUrlUseCase = requireContext().components.sessionUseCases.loadUrl
             ),
             owner = this,
@@ -806,7 +807,7 @@ class BrowserFragment :
             tabUrl = tab.content.url,
             isTrackingProtectionOn = tab.trackingProtection.ignoredOnTrackingProtection.not(),
             isConnectionSecure = tab.content.securityInfo.secure,
-            blockedTrackersCount = Settings.getInstance(requireContext())
+            blockedTrackersCount = requireContext().settings
                 .getTotalBlockedTrackersCount(),
             toggleTrackingProtection = ::toggleTrackingProtection,
             updateTrackingProtectionPolicy = { tracker, isEnabled ->

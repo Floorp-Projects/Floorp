@@ -7,6 +7,7 @@ package org.mozilla.focus.ext
 import android.content.Context
 import org.mozilla.focus.Components
 import org.mozilla.focus.FocusApplication
+import org.mozilla.focus.utils.Settings
 import java.text.DateFormat
 
 /**
@@ -20,6 +21,12 @@ val Context.application: FocusApplication
  */
 val Context.components: Components
     get() = application.components
+
+/**
+ * Get the settings of this application.
+ */
+val Context.settings: Settings
+    get() = application.components.settings
 
 /**
  * Get the app install date.

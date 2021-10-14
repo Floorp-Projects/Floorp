@@ -10,7 +10,7 @@ import android.app.KeyguardManager
 import android.content.Context
 import android.os.Build
 import androidx.core.hardware.fingerprint.FingerprintManagerCompat
-import org.mozilla.focus.utils.Settings
+import org.mozilla.focus.ext.settings
 
 object Biometrics {
     fun hasFingerprintHardware(context: Context): Boolean {
@@ -28,7 +28,7 @@ object Biometrics {
 
     fun isBiometricsEnabled(context: Context): Boolean {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-            Settings.getInstance(context).shouldUseBiometrics() &&
+            context.settings.shouldUseBiometrics() &&
             hasFingerprintHardware(context)
     }
 }

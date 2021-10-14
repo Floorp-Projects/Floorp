@@ -9,7 +9,7 @@ import android.content.SharedPreferences
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.feature.search.ext.parseLegacySearchEngine
 import mozilla.components.feature.search.middleware.SearchMiddleware
-import org.mozilla.focus.utils.Settings
+import org.mozilla.focus.ext.settings
 import org.xmlpull.v1.XmlPullParserException
 import java.io.BufferedInputStream
 import java.io.IOException
@@ -34,7 +34,7 @@ class SearchMigration(
         @Suppress("DEPRECATION")
         val values = SearchMiddleware.Migration.MigrationValues(
             customSearchEngines = loadCustomSearchEngines(preferences),
-            defaultSearchEngineName = Settings.getInstance(context).defaultSearchEngineName
+            defaultSearchEngineName = context.settings.defaultSearchEngineName
         )
 
         preferences.edit()

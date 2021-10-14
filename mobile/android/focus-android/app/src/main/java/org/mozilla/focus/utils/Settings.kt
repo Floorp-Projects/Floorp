@@ -20,21 +20,9 @@ import org.mozilla.focus.searchsuggestions.SearchSuggestionsPreferences
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
  */
 @Suppress("TooManyFunctions", "LargeClass") // This class is designed to have a lot of (simple) functions
-class Settings private constructor(
+class Settings(
     private val context: Context
 ) {
-    companion object {
-        private var instance: Settings? = null
-
-        @JvmStatic
-        @Synchronized
-        fun getInstance(context: Context): Settings {
-            if (instance == null) {
-                instance = Settings(context.applicationContext)
-            }
-            return instance ?: throw AssertionError("Instance cleared")
-        }
-    }
 
     private val accessibilityManager =
         context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager?

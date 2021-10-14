@@ -29,6 +29,7 @@ import org.mozilla.focus.GleanMetrics.Preferences
 import org.mozilla.focus.GleanMetrics.Shortcuts
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.telemetry.TelemetryWrapper.isTelemetryEnabled
 import org.mozilla.focus.topsites.DefaultTopSitesStorage.Companion.TOP_SITES_MAX_LIMIT
 import org.mozilla.focus.utils.Settings
@@ -47,7 +48,7 @@ class GleanMetricsService(context: Context) : MetricsService {
     @OptIn(DelicateCoroutinesApi::class)
     override fun initialize(context: Context) {
         val components = context.components
-        val settings = Settings.getInstance(context)
+        val settings = context.settings
         val telemetryEnabled = isTelemetryEnabled(context)
 
         Glean.initialize(

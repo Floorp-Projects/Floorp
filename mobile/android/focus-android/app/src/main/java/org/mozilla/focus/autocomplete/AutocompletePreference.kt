@@ -10,7 +10,7 @@ import android.widget.TextView
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import org.mozilla.focus.R
-import org.mozilla.focus.utils.Settings
+import org.mozilla.focus.ext.settings
 
 /**
  * Autocomplete preference that will show a sub screen to configure the autocomplete behavior.
@@ -21,7 +21,7 @@ class AutocompletePreference(context: Context?, attrs: AttributeSet?) : Preferen
     override fun onBindViewHolder(holder: PreferenceViewHolder?) {
         super.onBindViewHolder(holder)
 
-        val settings = Settings.getInstance(context)
+        val settings = context.settings
 
         summaryView = holder!!.findViewById(android.R.id.summary) as TextView
         summaryView?.setText(

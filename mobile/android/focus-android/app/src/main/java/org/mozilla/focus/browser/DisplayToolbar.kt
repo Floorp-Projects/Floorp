@@ -12,7 +12,7 @@ import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_
 import com.google.android.material.appbar.AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP
 import kotlinx.android.synthetic.main.browser_display_toolbar.view.browserToolbar
 import kotlinx.android.synthetic.main.browser_display_toolbar.view.urlbar
-import org.mozilla.focus.utils.Settings
+import org.mozilla.focus.ext.settings
 
 /**
  * The toolbar of the BrowserFragment; displaying the URL and other controls.
@@ -29,7 +29,7 @@ class DisplayToolbar(
     @Suppress("MagicNumber") // A mathematical expression - No need to add constants for 100% and 50%.
     override fun onOffsetChanged(appBarLayout: AppBarLayout, verticalOffset: Int) {
 
-        if (Settings.getInstance(context).isAccessibilityEnabled()) {
+        if (context.settings.isAccessibilityEnabled()) {
             (urlbar.layoutParams as LayoutParams).scrollFlags = LayoutParams.SCROLL_FLAG_NO_SCROLL
             browserToolbar.alpha = 1f
             return

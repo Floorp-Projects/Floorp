@@ -13,8 +13,8 @@ import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.fragment.UrlInputFragment
-import org.mozilla.focus.utils.Settings
 
 class InputToolbarIntegration(
     toolbar: BrowserToolbar,
@@ -22,7 +22,7 @@ class InputToolbarIntegration(
     shippedDomainsProvider: ShippedDomainsProvider,
     customDomainsProvider: CustomDomainsProvider
 ) : LifecycleAwareFeature {
-    private val settings = Settings.getInstance(toolbar.context)
+    private val settings = toolbar.context.settings
 
     private var useShippedDomainProvider: Boolean = false
     private var useCustomDomainProvider: Boolean = false

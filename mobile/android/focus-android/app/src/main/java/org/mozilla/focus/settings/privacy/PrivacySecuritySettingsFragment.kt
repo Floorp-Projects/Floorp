@@ -13,11 +13,11 @@ import org.mozilla.focus.R
 import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.engine.EngineSharedPreferencesListener
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.widget.CookiesPreference
 
 class PrivacySecuritySettingsFragment :
@@ -109,7 +109,7 @@ class PrivacySecuritySettingsFragment :
     }
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
-        val settings = Settings.getInstance(requireContext())
+        val settings = requireContext().settings
         val engineSharedPreferencesListener = EngineSharedPreferencesListener(requireContext())
         when (preference.key) {
             resources.getString(R.string.pref_key_screen_exceptions) -> {

@@ -18,7 +18,7 @@ import org.mozilla.focus.databinding.DialogTrackingProtectionSheetBinding
 import org.mozilla.focus.engine.EngineSharedPreferencesListener.TrackerChanged
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.installedDate
-import org.mozilla.focus.utils.Settings
+import org.mozilla.focus.ext.settings
 
 @SuppressWarnings("LongParameterList")
 class TrackingProtectionPanel(
@@ -111,7 +111,7 @@ class TrackingProtectionPanel(
     }
 
     private fun updateTrackersState() {
-        val settings = Settings.getInstance(context)
+        val settings = context.settings
 
         with(binding) {
             advertising.isVisible = isTrackingProtectionOn

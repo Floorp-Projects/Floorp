@@ -11,7 +11,7 @@ import android.view.View
 import androidx.core.view.isVisible
 import androidx.preference.ListPreference
 import androidx.preference.PreferenceViewHolder
-import org.mozilla.focus.utils.Settings
+import org.mozilla.focus.ext.settings
 
 /**
  * Autocomplete preference that will show a sub screen to configure the autocomplete behavior.
@@ -30,7 +30,7 @@ class CookiesPreference(context: Context?, attrs: AttributeSet?) : ListPreferenc
     }
 
     fun updateSummary() {
-        val settings = Settings.getInstance(context)
+        val settings = context.settings
         super.setSummary(settings.shouldBlockCookiesValue())
     }
 

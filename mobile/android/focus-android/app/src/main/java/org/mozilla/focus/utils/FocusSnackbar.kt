@@ -16,6 +16,7 @@ import com.google.android.material.snackbar.ContentViewCallback
 import com.google.android.material.snackbar.Snackbar
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.FocusSnackbarBinding
+import org.mozilla.focus.ext.settings
 
 class FocusSnackbar private constructor(
     parent: ViewGroup,
@@ -66,7 +67,7 @@ class FocusSnackbar private constructor(
             val binding = FocusSnackbarBinding.inflate(inflater, parent, false)
 
             val durationOrAccessibleDuration =
-                if (Settings.getInstance(parent.context).isAccessibilityEnabled()) {
+                if (parent.context.settings.isAccessibilityEnabled()) {
                     LENGTH_ACCESSIBLE
                 } else {
                     duration

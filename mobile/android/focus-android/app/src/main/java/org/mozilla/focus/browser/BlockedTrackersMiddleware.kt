@@ -12,7 +12,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import org.mozilla.focus.R
-import org.mozilla.focus.utils.Settings
+import org.mozilla.focus.ext.settings
 
 /**
  * [Middleware] to record the number of blocked trackers in response to [BrowserAction]s.
@@ -22,7 +22,7 @@ class BlockedTrackersMiddleware(
     private val context: Context
 ) : Middleware<BrowserState, BrowserAction> {
 
-    private val settings = Settings.getInstance(context)
+    private val settings = context.settings
     private val preferences = PreferenceManager.getDefaultSharedPreferences(context)
 
     override fun invoke(
