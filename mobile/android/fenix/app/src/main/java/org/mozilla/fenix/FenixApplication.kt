@@ -64,6 +64,7 @@ import org.mozilla.fenix.telemetry.TelemetryLifecycleObserver
 import org.mozilla.fenix.utils.BrowsersCache
 import java.util.concurrent.TimeUnit
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.feature.autofill.AutofillUseCases
 import mozilla.components.feature.search.ext.buildSearchUrl
 import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
@@ -247,6 +248,19 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                         components.core.bookmarksStorage.warmUp()
                         components.core.passwordsStorage.warmUp()
                         components.core.autofillStorage.warmUp()
+
+                        // Populate the top site cache to improve initial load experience
+                        // of the home fragment when the app is launched to a tab. The actual
+                        // database call is not expensive. However, the additional context
+                        // switches delay rendering top sites when the cache is empty, which
+                        // we can prevent with this.
+                        components.core.topSitesStorage.getTopSites(
+                            components.settings.topSitesMaxLimit,
+                            if (components.settings.showTopFrecentSites)
+                                FrecencyThresholdOption.SKIP_ONE_TIME_PAGES
+                            else
+                                null
+                        )
 
                         // This service uses `historyStorage`, and so we can only touch it when we know
                         // it's safe to touch `historyStorage. By 'safe', we mainly mean that underlying
