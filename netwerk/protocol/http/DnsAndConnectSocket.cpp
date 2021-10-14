@@ -12,12 +12,17 @@
 #include "nsIClassOfService.h"
 #include "nsIDNSRecord.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsSocketTransportService2.h"
 #include "nsDNSService2.h"
 #include "nsQueryObject.h"
 #include "nsURLHelper.h"
 #include "mozilla/Components.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/SyncRunnable.h"
+#include "nsHttpHandler.h"
+#include "ConnectionEntry.h"
+#include "HttpConnectionUDP.h"
+#include "nsServiceManagerUtils.h"
 
 // Log on level :5, instead of default :4.
 #undef LOG

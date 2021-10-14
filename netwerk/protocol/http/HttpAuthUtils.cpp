@@ -7,6 +7,8 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 namespace mozilla {
 namespace net {

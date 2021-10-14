@@ -10,6 +10,7 @@
 #include "mozilla/Unused.h"
 #include "nsIPrincipal.h"
 #include "nsNetUtil.h"
+#include "ClassifierDummyChannel.h"
 
 namespace mozilla {
 namespace net {

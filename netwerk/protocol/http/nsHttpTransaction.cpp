@@ -59,8 +59,6 @@
 
 //-----------------------------------------------------------------------------
 
-static NS_DEFINE_CID(kMultiplexInputStream, NS_MULTIPLEXINPUTSTREAM_CID);
-
 // Place a limit on how much non-compliant HTTP can be skipped while
 // looking for a response header
 #define MAX_INVALID_RESPONSE_BODY_SIZE (1024 * 128)
@@ -1326,12 +1324,14 @@ void nsHttpTransaction::MaybeReportFailedSVCDomain(
 }
 
 bool nsHttpTransaction::ShouldRestartOn0RttError(nsresult reason) {
-  LOG(("nsHttpTransaction::ShouldRestartOn0RttError [this=%p, "
-       "mEarlyDataWasAvailable=%d error=%" PRIx32 "]\n", this,
-       mEarlyDataWasAvailable, static_cast<uint32_t>(reason)));
+  LOG(
+      ("nsHttpTransaction::ShouldRestartOn0RttError [this=%p, "
+       "mEarlyDataWasAvailable=%d error=%" PRIx32 "]\n",
+       this, mEarlyDataWasAvailable, static_cast<uint32_t>(reason)));
   return StaticPrefs::network_http_early_data_disable_on_error() &&
          mEarlyDataWasAvailable &&
-         (reason == psm::GetXPCOMFromNSSError(SSL_ERROR_PROTOCOL_VERSION_ALERT));
+         (reason ==
+          psm::GetXPCOMFromNSSError(SSL_ERROR_PROTOCOL_VERSION_ALERT));
 }
 
 void nsHttpTransaction::Close(nsresult reason) {
@@ -1467,7 +1467,6 @@ void nsHttpTransaction::Close(nsresult reason) {
       (!(mCaps & NS_HTTP_STICKY_CONNECTION) ||
        (mCaps & NS_HTTP_CONNECTION_RESTARTABLE) ||
        (mEarlyDataDisposition == EARLY_425))) {
-
     if (mForceRestart) {
       SetRestartReason(TRANSACTION_RESTART_FORCED);
       if (NS_SUCCEEDED(Restart())) {
@@ -1506,8 +1505,7 @@ void nsHttpTransaction::Close(nsresult reason) {
 
     if (reason ==
             psm::GetXPCOMFromNSSError(SSL_ERROR_DOWNGRADE_WITH_EARLY_DATA) ||
-        reason ==
-            psm::GetXPCOMFromNSSError(SSL_ERROR_PROTOCOL_VERSION_ALERT) ||
+        reason == psm::GetXPCOMFromNSSError(SSL_ERROR_PROTOCOL_VERSION_ALERT) ||
         (!mReceivedData && ((mRequestHead && mRequestHead->IsSafeMethod()) ||
                             !reallySentData || connReused)) ||
         shouldRestartTransactionForHTTPSRR) {
@@ -1548,8 +1546,8 @@ void nsHttpTransaction::Close(nsresult reason) {
       } else if (reason == psm::GetXPCOMFromNSSError(
                                SSL_ERROR_DOWNGRADE_WITH_EARLY_DATA)) {
         SetRestartReason(TRANSACTION_RESTART_DOWNGRADE_WITH_EARLY_DATA);
-      } else if (reason == psm::GetXPCOMFromNSSError(
-                               SSL_ERROR_PROTOCOL_VERSION_ALERT)) {
+      } else if (reason ==
+                 psm::GetXPCOMFromNSSError(SSL_ERROR_PROTOCOL_VERSION_ALERT)) {
         SetRestartReason(TRANSACTION_RESTART_PROTOCOL_VERSION_ALERT);
       }
       // if restarting fails, then we must proceed to close the pipe,
@@ -1693,10 +1691,10 @@ void nsHttpTransaction::Close(nsresult reason) {
 
   if (isHttp2or3 &&
       reason == psm::GetXPCOMFromNSSError(SSL_ERROR_PROTOCOL_VERSION_ALERT)) {
-      // Change reason to NS_ERROR_ABORT, so we avoid showing a missleading
-      // error page tthat TLS1.0 is disabled. H2 or H3 is used here so the
-      // TLS version is not a problem.
-      reason = NS_ERROR_ABORT;
+    // Change reason to NS_ERROR_ABORT, so we avoid showing a missleading
+    // error page tthat TLS1.0 is disabled. H2 or H3 is used here so the
+    // TLS version is not a problem.
+    reason = NS_ERROR_ABORT;
   }
   mStatus = reason;
   mTransactionDone = true;  // forcibly flag the transaction as complete
