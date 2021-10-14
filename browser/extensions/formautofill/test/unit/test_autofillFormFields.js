@@ -386,6 +386,34 @@ const TESTCASES = [
       "cc-exp-year": "25",
     },
   },
+  {
+    description:
+      "Fill credit card number fields in a form with multiple cc-number inputs",
+    document: `<form>
+                <input id="cc-number1" maxlength="4">
+                <input id="cc-number2" maxlength="4">
+                <input id="cc-number3" maxlength="4">
+                <input id="cc-number4" maxlength="4">
+                <input id="cc-exp-month" autocomplete="cc-exp-month">
+                <input id="cc-exp-year" autocomplete="cc-exp-year">
+                </form>`,
+    focusedInputId: "cc-number1",
+    profileData: {
+      guid: "123",
+      "cc-number": "371449635398431",
+      "cc-exp-month": 6,
+      "cc-exp-year": 25,
+    },
+    expectedResult: {
+      guid: "123",
+      "cc-number1": "3714",
+      "cc-number2": "4963",
+      "cc-number3": "5398",
+      "cc-number4": "431",
+      "cc-exp-month": "6",
+      "cc-exp-year": "25",
+    },
+  },
 ];
 
 const TESTCASES_INPUT_UNCHANGED = [
