@@ -172,16 +172,6 @@ class CommonBackend(BuildBackend):
             self._binaries.shared_libraries.append(obj)
             return False
 
-        elif isinstance(obj, SandboxedWasmLibrary):
-            self._handle_generated_sources(
-                [
-                    mozpath.join(
-                        obj.relobjdir, f"{obj.lib_name}.{obj._obj_suffix()}.c"
-                    ),
-                ]
-            )
-            return False
-
         elif isinstance(obj, (GeneratedSources, HostGeneratedSources)):
             self._handle_generated_sources(obj.files)
             return False
