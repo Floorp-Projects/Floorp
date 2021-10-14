@@ -25,7 +25,10 @@ exports.ScreenshotContentActor = ActorClassWithSpec(screenshotContentSpec, {
   },
 
   _getRectForNode(node) {
-    return getRect(node.ownerGlobal.top, node, node.ownerGlobal);
+    const originWindow = this.targetActor.ignoreSubFrames
+      ? node.ownerGlobal
+      : node.ownerGlobal.top;
+    return getRect(originWindow, node, node.ownerGlobal);
   },
 
   /**
