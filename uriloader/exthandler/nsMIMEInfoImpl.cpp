@@ -87,7 +87,8 @@ nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aType, HandlerClass aClass)
       mClass(aClass),
       mPreferredAction(nsIMIMEInfo::saveToDisk),
       mAlwaysAskBeforeHandling(
-          !StaticPrefs::browser_download_improvements_to_download_panel()) {}
+          !StaticPrefs::browser_download_improvements_to_download_panel() ||
+          aClass != eMIMEInfo) {}
 
 nsMIMEInfoBase::~nsMIMEInfoBase() {}
 
