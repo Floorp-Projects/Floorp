@@ -630,9 +630,6 @@ bool shell::enableIteratorHelpers = false;
 bool shell::enablePrivateClassFields = false;
 bool shell::enablePrivateClassMethods = false;
 bool shell::enableErgonomicBrandChecks = true;
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-bool shell::enableChangeArrayByCopy = false;
-#endif
 bool shell::useOffThreadParseGlobal = true;
 bool shell::enableClassStaticBlocks = true;
 #ifdef JS_GC_ZEAL
@@ -11325,9 +11322,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enablePrivateClassMethods = !op.getBoolOption("disable-private-methods");
   enableErgonomicBrandChecks =
       !op.getBoolOption("disable-ergonomic-brand-checks");
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-  enableChangeArrayByCopy = op.getBoolOption("enable-change-array-by-copy");
-#endif
   enableClassStaticBlocks = !op.getBoolOption("disable-class-static-blocks");
   useOffThreadParseGlobal = op.getBoolOption("off-thread-parse-global");
   useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
@@ -11360,9 +11354,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setPrivateClassFields(enablePrivateClassFields)
       .setPrivateClassMethods(enablePrivateClassMethods)
       .setErgnomicBrandChecks(enableErgonomicBrandChecks)
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-      .setChangeArrayByCopy(enableChangeArrayByCopy)
-#endif
       .setClassStaticBlocks(enableClassStaticBlocks);
 
   JS::SetUseOffThreadParseGlobal(useOffThreadParseGlobal);
@@ -12313,12 +12304,6 @@ int main(int argc, char** argv) {
       !op.addBoolOption(
           '\0', "disable-ergonomic-brand-checks",
           "Disable ergonomic brand checks for private class fields") ||
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-      !op.addBoolOption('\0', "enable-change-array-by-copy",
-                        "Enable change-array-by-copy methods") ||
-      !op.addBoolOption('\0', "disable-change-array-by-copy",
-                        "Disable change-array-by-copy methods") ||
-#endif
       !op.addBoolOption('\0', "enable-top-level-await",
                         "Enable top-level await") ||
       !op.addBoolOption('\0', "disable-class-static-blocks",
