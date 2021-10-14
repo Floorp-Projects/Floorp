@@ -16,8 +16,7 @@ async function stillNoStorageAccess() {
 }
 
 async function callRequestStorageAccess(callback, expectFail) {
-  let dwu = SpecialPowers.getDOMWindowUtils(window);
-  let helper = dwu.setHandlingUserInput(true);
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
 
   let origin = new URL(location.href).origin;
 
@@ -47,23 +46,23 @@ async function callRequestStorageAccess(callback, expectFail) {
         p = document.requestStorageAccess();
       } catch (e) {
         threw = true;
-      } finally {
-        helper.destruct();
       }
       ok(!threw, "requestStorageAccess should not throw");
       try {
         if (callback) {
           if (expectFail) {
-            await p.catch(_ => callback(dwu));
+            await p.catch(_ => callback());
             success = false;
           } else {
-            await p.then(_ => callback(dwu));
+            await p.then(_ => callback());
           }
         } else {
           await p;
         }
       } catch (e) {
         success = false;
+      } finally {
+        SpecialPowers.wrap(document).clearUserGestureActivation();
       }
       ok(!success, "Should not have worked without user interaction");
 
@@ -71,7 +70,7 @@ async function callRequestStorageAccess(callback, expectFail) {
 
       await interactWithTracker();
 
-      helper = dwu.setHandlingUserInput(true);
+      SpecialPowers.wrap(document).notifyUserGestureActivation();
     }
     if (
       effectiveCookieBehavior ==
@@ -81,10 +80,10 @@ async function callRequestStorageAccess(callback, expectFail) {
       try {
         if (callback) {
           if (expectFail) {
-            await document.requestStorageAccess().catch(_ => callback(dwu));
+            await document.requestStorageAccess().catch(_ => callback());
             success = false;
           } else {
-            await document.requestStorageAccess().then(_ => callback(dwu));
+            await document.requestStorageAccess().then(_ => callback());
           }
         } else {
           await document.requestStorageAccess();
@@ -92,7 +91,7 @@ async function callRequestStorageAccess(callback, expectFail) {
       } catch (e) {
         success = false;
       } finally {
-        helper.destruct();
+        SpecialPowers.wrap(document).clearUserGestureActivation();
       }
       ok(success, "Should not have thrown");
 
@@ -100,7 +99,7 @@ async function callRequestStorageAccess(callback, expectFail) {
 
       await interactWithTracker();
 
-      helper = dwu.setHandlingUserInput(true);
+      SpecialPowers.wrap(document).notifyUserGestureActivation();
     }
   }
 
@@ -110,23 +109,23 @@ async function callRequestStorageAccess(callback, expectFail) {
     p = document.requestStorageAccess();
   } catch (e) {
     threw = true;
-  } finally {
-    helper.destruct();
   }
   let rejected = false;
   try {
     if (callback) {
       if (expectFail) {
-        await p.catch(_ => callback(dwu));
+        await p.catch(_ => callback());
         rejected = true;
       } else {
-        await p.then(_ => callback(dwu));
+        await p.then(_ => callback());
       }
     } else {
       await p;
     }
   } catch (e) {
     rejected = true;
+  } finally {
+    SpecialPowers.wrap(document).clearUserGestureActivation();
   }
 
   success = !threw && !rejected;
