@@ -5,8 +5,69 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsID.h"
-#include "nsMemory.h"
+
+#include <limits.h>
+
+#include "mozilla/Assertions.h"
+#include "mozilla/RandomNum.h"
 #include "mozilla/Sprintf.h"
+#include "nss.h"
+#include "ScopedNSSTypes.h"
+
+[[nodiscard]] static bool GenerateRandomBytesFromNSS(void* aBuffer,
+                                                     size_t aLength) {
+  MOZ_ASSERT(aBuffer);
+
+  // Bounds check that we can safely truncate size_t `aLength` to an int.
+  if (aLength == 0 || aLength > INT_MAX) {
+    MOZ_ASSERT_UNREACHABLE("Bad aLength");
+    return false;
+  }
+  int len = static_cast<int>(aLength);
+
+  if (!NSS_IsInitialized()) {
+    return false;
+  }
+
+  mozilla::UniquePK11SlotInfo slot(PK11_GetInternalSlot());
+  if (!slot) {
+    MOZ_ASSERT_UNREACHABLE("Null slot");
+    return false;
+  }
+
+  SECStatus srv = PK11_GenerateRandomOnSlot(
+      slot.get(), static_cast<unsigned char*>(aBuffer), len);
+  MOZ_ASSERT(srv == SECSuccess);
+  return (srv == SECSuccess);
+}
+
+nsresult nsID::GenerateUUIDInPlace(nsID& aId) {
+  // Firefox needs to generate some UUIDs before NSS has been initialized. We
+  // prefer NSS's RNG, but if NSS is not available yet or returns an error, fall
+  // back to MFBT's GenerateRandomBytes().
+  if (!GenerateRandomBytesFromNSS(&aId, sizeof(nsID)) &&
+      !mozilla::GenerateRandomBytesFromOS(&aId, sizeof(nsID))) {
+    MOZ_ASSERT_UNREACHABLE("GenerateRandomBytesFromOS() failed");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // Put in the version
+  aId.m2 &= 0x0fff;
+  aId.m2 |= 0x4000;
+
+  // Put in the variant
+  aId.m3[0] &= 0x3f;
+  aId.m3[0] |= 0x80;
+
+  return NS_OK;
+}
+
+nsID nsID::GenerateUUID() {
+  nsID uuid;
+  nsresult rv = GenerateUUIDInPlace(uuid);
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+  return uuid;
+}
 
 void nsID::Clear() {
   m0 = 0;
