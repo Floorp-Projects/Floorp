@@ -10,12 +10,10 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/intl/Collator.h"
-#include "mozilla/intl/Locale.h"
 #include "mozilla/Span.h"
 
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
-#include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/SharedIntlData.h"
@@ -243,12 +241,9 @@ static mozilla::intl::Collator* NewIntlCollator(
     }
     if (StringEqualsLiteral(usage, "search")) {
       // ICU expects search as a Unicode locale extension on locale.
-      mozilla::intl::Locale tag;
-      if (mozilla::intl::LocaleParser::tryParse(
-              mozilla::MakeStringSpan(locale.get()), tag)
-              .isErr()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_INVALID_LANGUAGE_TAG, locale.get());
+      intl::LanguageTag tag(cx);
+      if (!intl::LanguageTagParser::parse(
+              cx, mozilla::MakeStringSpan(locale.get()), tag)) {
         return nullptr;
       }
 
@@ -266,13 +261,7 @@ static mozilla::intl::Collator* NewIntlCollator(
         return nullptr;
       }
 
-      intl::FormatBuffer<char> buffer(cx);
-      if (auto result = tag.toString(buffer); result.isErr()) {
-        intl::ReportInternalError(cx, result.unwrapErr());
-        return nullptr;
-      }
-
-      locale = buffer.extractStringZ();
+      locale = tag.toStringZ(cx);
       if (!locale) {
         return nullptr;
       }
