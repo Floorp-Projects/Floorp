@@ -168,9 +168,6 @@ check_and_add_gcc_warning("-Wno-error=atomic-alignment")
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1515356
 check_and_add_gcc_warning("-Wno-error=deprecated-copy")
 
-# new in clang-trunk/13, turned on by -Wall, but we have many occurances of this in our code.
-check_and_add_gcc_warning("-Wno-error=unused-but-set-variable")
-
 # catches format/argument mismatches with printf
 c_format_warning, cxx_format_warning = check_and_add_gcc_warning(
     "-Wformat", when=depends(target)(lambda t: t.kernel != "WINNT")
