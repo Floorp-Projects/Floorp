@@ -192,8 +192,7 @@ nsresult JSExecutionContext::Decode(mozilla::Vector<uint8_t>& aBytecodeBuf,
   // These errors are external parameters which should be handled before the
   // decoding phase, and which are the only reasons why you might want to
   // fallback on decoding failures.
-  MOZ_ASSERT(tr != JS::TranscodeResult::Failure_BadBuildId &&
-             tr != JS::TranscodeResult::Failure_WrongCompileOption);
+  MOZ_ASSERT(tr != JS::TranscodeResult::Failure_BadBuildId);
   if (tr != JS::TranscodeResult::Ok) {
     mSkip = true;
     mRv = NS_ERROR_DOM_JS_DECODING_ERROR;
