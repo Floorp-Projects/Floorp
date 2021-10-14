@@ -55,6 +55,8 @@ class CheckOverRecursedFailure;
 class OutOfLineUnboxFloatingPoint;
 class OutOfLineStoreElementHole;
 class OutOfLineTypeOfV;
+class OutOfLineTypeOfIsNonPrimitiveV;
+class OutOfLineTypeOfIsNonPrimitiveO;
 class OutOfLineUpdateCache;
 class OutOfLineICFallback;
 class OutOfLineCallPostWriteBarrier;
@@ -115,6 +117,9 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                        Label* done, Label* oolObject);
   void emitTypeOfJSType(JSValueType type, Register output);
   void emitTypeOfObject(Register obj, Register output, Label* done);
+  void emitTypeOfIsObject(MTypeOfIs* mir, Register obj, Register output,
+                          Label* success, Label* fail, Label* slowCheck);
+  void emitTypeOfIsObjectOOL(MTypeOfIs* mir, Register obj, Register output);
 
   template <typename Fn, Fn fn, class ArgSeq, class StoreOutputTo>
   void visitOutOfLineCallVM(
@@ -129,6 +134,8 @@ class CodeGenerator final : public CodeGeneratorSpecific {
       OutOfLineRegExpInstanceOptimizable* ool);
 
   void visitOutOfLineTypeOfV(OutOfLineTypeOfV* ool);
+  void visitOutOfLineTypeOfIsNonPrimitiveV(OutOfLineTypeOfIsNonPrimitiveV* ool);
+  void visitOutOfLineTypeOfIsNonPrimitiveO(OutOfLineTypeOfIsNonPrimitiveO* ool);
 
   template <SwitchTableType tableType>
   void visitOutOfLineSwitch(OutOfLineSwitch<tableType>* ool);
