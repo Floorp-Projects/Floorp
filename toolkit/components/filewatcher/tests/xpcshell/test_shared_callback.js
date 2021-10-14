@@ -31,7 +31,7 @@ add_task(async function test_watch_with_shared_callback() {
 
   // Instantiate and initialize the native watcher.
   let watcher = makeWatcher();
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
 
   // Watch both directories using the same callbacks.
   await promiseAddPath(

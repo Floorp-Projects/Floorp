@@ -5,7 +5,9 @@
 "use strict";
 
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 
 function makeWatcher() {
   let watcher = Cc[

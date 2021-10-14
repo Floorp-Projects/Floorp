@@ -4,7 +4,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Promise.jsm", this);
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -370,7 +372,7 @@ add_task(async function testUpdateButton() {
     let item = getAddonCard(win, addon.id);
 
     gInstalledAddonId = "";
-    gInstallDeferred = Promise.defer();
+    gInstallDeferred = PromiseUtils.defer();
 
     let loaded = waitForViewLoad(win);
     item.querySelector("[action=expand]").click();

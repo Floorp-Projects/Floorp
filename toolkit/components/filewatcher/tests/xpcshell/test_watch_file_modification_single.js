@@ -29,7 +29,7 @@ add_task(async function test_watch_single_path_file_modification() {
 
   // Instantiate and initialize the native watcher.
   let watcher = makeWatcher();
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
 
   // Create a file within the directory to be watched. We do this
   // before watching the directory so we do not get the creation notification.

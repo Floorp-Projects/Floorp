@@ -5,7 +5,9 @@
 var testnum = 0;
 var dbConnection; // used for deleted table tests
 
-const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
 
 function countDeletedEntries(expected) {
   return new Promise((resolve, reject) => {
@@ -108,7 +110,7 @@ add_task(async function() {
     dbFile.append("formhistory.sqlite");
     dbConnection = Services.storage.openUnsharedDatabase(dbFile);
 
-    let deferred = Promise.defer();
+    let deferred = PromiseUtils.defer();
 
     let stmt = dbConnection.createAsyncStatement(
       "DELETE FROM moz_deleted_formhistory"
@@ -140,7 +142,7 @@ add_task(async function() {
     // Cannot use promiseCountEntries when name and value are null
     // because it treats null values as not set
     // and here a search should be done explicity for null.
-    deferred = Promise.defer();
+    deferred = PromiseUtils.defer();
     await FormHistory.count(
       { fieldname: null, value: null },
       {

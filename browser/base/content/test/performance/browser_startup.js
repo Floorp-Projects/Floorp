@@ -67,7 +67,6 @@ const startupPhases = {
         "resource://gre/modules/NewTabUtils.jsm",
         "resource://gre/modules/PageThumbs.jsm",
         "resource://gre/modules/PlacesUtils.jsm",
-        "resource://gre/modules/Promise.jsm", // imported by devtools during _delayedStartup
         "resource://gre/modules/Preferences.jsm",
         "resource://gre/modules/Sqlite.jsm",
       ]),

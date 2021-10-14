@@ -4,7 +4,7 @@
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Promise: "resource://gre/modules/Promise.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
 });
 
@@ -104,7 +104,7 @@ add_task(async function test_selector_basic_get() {
 add_task(async function test_selector_get_reentry() {
   const listenerSpy = sinon.spy();
   const engineSelector = new SearchEngineSelector(listenerSpy);
-  let promise = Promise.defer();
+  let promise = PromiseUtils.defer();
   getStub.resetHistory();
   getStub.onFirstCall().returns(promise.promise);
   delete engineSelector._configuration;
