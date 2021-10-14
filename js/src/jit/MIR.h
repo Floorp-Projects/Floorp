@@ -2641,6 +2641,7 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
  private:
   [[nodiscard]] bool tryFoldEqualOperands(bool* result);
   [[nodiscard]] bool tryFoldTypeOf(bool* result);
+  [[nodiscard]] MDefinition* tryFoldTypeOf(TempAllocator& alloc);
   [[nodiscard]] MDefinition* tryFoldCharCompare(TempAllocator& alloc);
   [[nodiscard]] MDefinition* tryFoldStringCompare(TempAllocator& alloc);
 
