@@ -12746,8 +12746,9 @@ void CodeGenerator::visitTypeOfV(LTypeOfV* lir) {
     }
     remaining -= type;
 
-    if (remaining.isEmpty()) {
-      // We can skip the check for the last remaining type.
+    if (remaining.isEmpty() && type != JSVAL_TYPE_OBJECT) {
+      // We can skip the check for the last remaining type, unless the type is
+      // JSVAL_TYPE_OBJECT, which may have to go through the OOL path.
 #ifdef DEBUG
       emitTypeOfCheck(type, tag, output, &done, ool->entry());
       masm.assumeUnreachable("Unexpected Value type in visitTypeOfV");
