@@ -343,7 +343,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     // maxHistoricalSearchSuggestions used to determine the initial number of
     // form history results, with the special case where zero means to never
     // show form history at all.  With the introduction of flexed result
-    // buckets, we now use it only as a boolean: Zero means don't show form
+    // groups, we now use it only as a boolean: Zero means don't show form
     // history at all (as before), non-zero means show it.
     if (UrlbarPrefs.get("maxHistoricalSearchSuggestions")) {
       for (let entry of fetchData.local) {
