@@ -7,6 +7,7 @@
 #include "WebSocketEventService.h"
 #include "WebSocketEventListenerParent.h"
 #include "mozilla/Unused.h"
+#include "WebSocketFrame.h"
 
 namespace mozilla {
 namespace net {
