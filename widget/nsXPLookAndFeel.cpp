@@ -641,10 +641,10 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
 #endif
       color = NS_RGB(251, 251, 254);
       break;
-#ifndef XP_WIN
     case ColorID::Graytext:  // --in-content-deemphasized-text
       color = NS_RGB(191, 191, 201);
       break;
+#ifndef XP_WIN
     case ColorID::Selecteditem:  // --in-content-primary-button-background /
                                  // --in-content-item-selected
       color = NS_RGB(0, 221, 255);
