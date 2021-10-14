@@ -92,14 +92,14 @@ class SavedLoginsStorageControllerTest {
             httpRealm = "httpRealm",
             formActionOrigin = ""
         )
-        coEvery { passwordsStorage.list() } returns listOf(login)
+        coEvery { passwordsStorage.get("id") } returns login
 
         controller.fetchLoginDetails(login.guid)
 
         val expectedLogin = login.mapToSavedLogin()
 
         coVerify {
-            passwordsStorage.list()
+            passwordsStorage.get("id")
             loginsFragmentStore.dispatch(
                 LoginsAction.UpdateCurrentLogin(
                     expectedLogin

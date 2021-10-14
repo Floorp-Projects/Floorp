@@ -167,7 +167,7 @@ class LoginsFragmentStoreTest {
         store.dispatch(LoginsAction.LoginSelected(mockk())).joinBlocking()
 
         assertTrue(store.state.isLoading)
-        assertTrue(store.state.loginList.isEmpty())
-        assertTrue(store.state.filteredItems.isEmpty())
+        assertTrue(store.state.loginList.isNotEmpty())
+        assertTrue(store.state.filteredItems.isNotEmpty())
     }
 }

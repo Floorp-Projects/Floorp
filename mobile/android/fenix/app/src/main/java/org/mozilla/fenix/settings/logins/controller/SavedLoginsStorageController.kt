@@ -203,35 +203,31 @@ open class SavedLoginsStorageController(
         loginsFragmentStore.dispatch(LoginsAction.DuplicateLogin(dupe))
     }
 
-    fun fetchLoginDetails(loginId: String) {
-        var deferredLogin: Deferred<List<Login>>? = null
-        val fetchLoginJob = lifecycleScope.launch(ioDispatcher) {
-            deferredLogin = async {
-                passwordsStorage.list()
-            }
-            val fetchedLoginList = deferredLogin?.await()
-
-            fetchedLoginList?.let {
-                withContext(Dispatchers.Main) {
-                    val login = fetchedLoginList.filter {
-                        it.guid == loginId
-                    }.first()
-                    loginsFragmentStore.dispatch(
-                        LoginsAction.UpdateCurrentLogin(
-                            login.mapToSavedLogin()
-                        )
+    fun fetchLoginDetails(loginId: String) = lifecycleScope.launch(ioDispatcher) {
+        val fetchedLogin = passwordsStorage.get(loginId)
+        withContext(Dispatchers.Main) {
+            if (fetchedLogin != null) {
+                loginsFragmentStore.dispatch(
+                    LoginsAction.UpdateCurrentLogin(
+                        fetchedLogin.mapToSavedLogin()
                     )
-                }
-            }
-        }
-        fetchLoginJob.invokeOnCompletion {
-            if (it is CancellationException) {
-                deferredLogin?.cancel()
+                )
+            } else {
+                navController.popBackStack()
             }
         }
     }
 
     fun handleLoadAndMapLogins() {
+        // Don't touch the store if we already have the logins loaded.
+        // This has a slight downside of possibly being out of date with the storage if, say, Sync
+        // ran in the meantime, but that's fairly unlikely and the speedy UI is worth it.
+        if (loginsFragmentStore.state.loginList.isNotEmpty()) {
+            lifecycleScope.launch(Dispatchers.Main) {
+                loginsFragmentStore.dispatch(LoginsAction.LoginsListUpToDate)
+            }
+            return
+        }
         var deferredLogins: Deferred<List<Login>>? = null
         val fetchLoginsJob = lifecycleScope.launch(ioDispatcher) {
             deferredLogins = async {

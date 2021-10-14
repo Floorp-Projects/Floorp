@@ -53,6 +53,7 @@ class LoginsFragmentStore(initialState: LoginsListState) :
 sealed class LoginsAction : Action {
     data class FilterLogins(val newText: String?) : LoginsAction()
     data class UpdateLoginsList(val list: List<SavedLogin>) : LoginsAction()
+    object LoginsListUpToDate : LoginsAction()
     data class UpdateCurrentLogin(val item: SavedLogin) : LoginsAction()
     data class SortLogins(val sortingStrategy: SortingStrategy) : LoginsAction()
     data class DuplicateLogin(val dupe: SavedLogin?) : LoginsAction()
@@ -97,6 +98,9 @@ private fun savedLoginsStateReducer(
     action: LoginsAction
 ): LoginsListState {
     return when (action) {
+        is LoginsAction.LoginsListUpToDate -> {
+            state.copy(isLoading = false)
+        }
         is LoginsAction.UpdateLoginsList -> {
             state.copy(
                 isLoading = false,
@@ -125,9 +129,7 @@ private fun savedLoginsStateReducer(
         }
         is LoginsAction.LoginSelected -> {
             state.copy(
-                isLoading = true,
-                loginList = emptyList(),
-                filteredItems = emptyList()
+                isLoading = true
             )
         }
         is LoginsAction.DuplicateLogin -> {
