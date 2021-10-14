@@ -2748,6 +2748,11 @@
     input: BoxedValue
   mir_op: true
 
+- name: GuardIsNotObject
+  operands:
+    input: BoxedValue
+  mir_op: true
+
 - name: GuardFunctionFlags
   operands:
     function: WordSized

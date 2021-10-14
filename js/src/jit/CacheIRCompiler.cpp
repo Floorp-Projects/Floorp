@@ -2035,6 +2035,29 @@ bool CacheIRCompiler::emitGuardDynamicSlotIsSpecificObject(
   return true;
 }
 
+bool CacheIRCompiler::emitGuardDynamicSlotIsNotObject(ObjOperandId objId,
+                                                      uint32_t slotOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register obj = allocator.useRegister(masm, objId);
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Guard that the slot isn't an object.
+  StubFieldOffset slot(slotOffset, StubField::Type::RawInt32);
+  masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch1);
+  emitLoadStubField(slot, scratch2);
+  BaseObjectSlotIndex expectedSlot(scratch1, scratch2);
+  masm.branchTestObject(Assembler::Equal, expectedSlot, failure->label());
+
+  return true;
+}
+
 bool CacheIRCompiler::emitGuardFixedSlotValue(ObjOperandId objId,
                                               uint32_t offsetOffset,
                                               uint32_t valOffset) {

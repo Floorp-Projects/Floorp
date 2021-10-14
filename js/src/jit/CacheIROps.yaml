@@ -581,6 +581,15 @@
     expected: ObjId
     slot: RawInt32Field
 
+# Guard obj[slot] is not an object.
+- name: GuardDynamicSlotIsNotObject
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    obj: ObjId
+    slot: RawInt32Field
+
 - name: GuardFixedSlotValue
   shared: true
   transpile: true

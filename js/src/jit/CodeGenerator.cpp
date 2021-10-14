@@ -4686,6 +4686,14 @@ void CodeGenerator::visitGuardNullOrUndefined(LGuardNullOrUndefined* lir) {
   masm.bind(&done);
 }
 
+void CodeGenerator::visitGuardIsNotObject(LGuardIsNotObject* lir) {
+  ValueOperand input = ToValue(lir, LGuardIsNotObject::InputIndex);
+
+  Label bail;
+  masm.branchTestObject(Assembler::Equal, input, &bail);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 void CodeGenerator::visitGuardFunctionFlags(LGuardFunctionFlags* lir) {
   Register function = ToRegister(lir->function());
 

@@ -9350,20 +9350,9 @@ ScriptedThisResult CallIRGenerator::getThisForScripted(
 
   // Only attach a stub if the newTarget is a function with a
   // nonconfigurable prototype.
-  RootedValue protov(cx_);
   RootedObject newTarget(cx_, &newTarget_.toObject());
   if (!newTarget->is<JSFunction>() ||
       !newTarget->as<JSFunction>().hasNonConfigurablePrototypeDataProperty()) {
-    return ScriptedThisResult::NoAction;
-  }
-
-  if (!GetProperty(cx_, newTarget, newTarget, cx_->names().prototype,
-                   &protov)) {
-    cx_->clearPendingException();
-    return ScriptedThisResult::NoAction;
-  }
-
-  if (!protov.isObject()) {
     return ScriptedThisResult::NoAction;
   }
 
@@ -9454,15 +9443,23 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
       uint32_t slot = prop->slot();
       MOZ_ASSERT(slot >= newTarget->numFixedSlots(),
                  "Stub code relies on this");
-      JSObject* prototypeObject = &newTarget->getSlot(slot).toObject();
 
       ValOperandId newTargetValId = writer.loadArgumentDynamicSlot(
           ArgumentKind::NewTarget, argcId, flags);
       ObjOperandId newTargetObjId = writer.guardToObject(newTargetValId);
       writer.guardShape(newTargetObjId, newTarget->shape());
-      ObjOperandId protoId = writer.loadObject(prototypeObject);
-      writer.guardDynamicSlotIsSpecificObject(
-          newTargetObjId, protoId, slot - newTarget->numFixedSlots());
+
+      const Value& value = newTarget->getSlot(slot);
+      if (value.isObject()) {
+        JSObject* prototypeObject = &value.toObject();
+
+        ObjOperandId protoId = writer.loadObject(prototypeObject);
+        writer.guardDynamicSlotIsSpecificObject(
+            newTargetObjId, protoId, slot - newTarget->numFixedSlots());
+      } else {
+        writer.guardDynamicSlotIsNotObject(newTargetObjId,
+                                           slot - newTarget->numFixedSlots());
+      }
 
       // Call metaScriptedTemplateObject before emitting the call, so that Warp
       // can use this template object before transpiling the call.
