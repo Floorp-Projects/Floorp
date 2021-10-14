@@ -1936,6 +1936,23 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(arm, arm64, x86_shared);
 
  public:
+  template <typename T>
+  inline void testNumberSet(Condition cond, const T& src,
+                            Register dest) PER_SHARED_ARCH;
+  template <typename T>
+  inline void testBooleanSet(Condition cond, const T& src,
+                             Register dest) PER_SHARED_ARCH;
+  template <typename T>
+  inline void testStringSet(Condition cond, const T& src,
+                            Register dest) PER_SHARED_ARCH;
+  template <typename T>
+  inline void testSymbolSet(Condition cond, const T& src,
+                            Register dest) PER_SHARED_ARCH;
+  template <typename T>
+  inline void testBigIntSet(Condition cond, const T& src,
+                            Register dest) PER_SHARED_ARCH;
+
+ public:
   // The fallibleUnbox* methods below combine a Value type check with an unbox.
   // Especially on 64-bit platforms this can be implemented more efficiently
   // than a separate branch + unbox.
