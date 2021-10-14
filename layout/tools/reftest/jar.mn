@@ -57,7 +57,7 @@ reftest.jar:
   res/input.css (../../../editor/reftests/xul/input.css)
   res/progress.css (../../../layout/reftests/forms/progress/style.css)
 *  res/manifest.jsm (manifest.jsm)
-*  res/reftest.jsm (reftest.jsm)
+  res/reftest.jsm (reftest.jsm)
 
 # Android doesn't ship global.css
 # Accessing missing non-test chrome:// files crashes, to avoid relying on
