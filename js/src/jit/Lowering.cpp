@@ -1169,6 +1169,14 @@ void LIRGenerator::visitTypeOf(MTypeOf* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitTypeOfName(MTypeOfName* ins) {
+  MDefinition* input = ins->input();
+  MOZ_ASSERT(input->type() == MIRType::Int32);
+
+  auto* lir = new (alloc()) LTypeOfName(useRegister(input));
+  define(lir, ins);
+}
+
 void LIRGenerator::visitToAsyncIter(MToAsyncIter* ins) {
   LToAsyncIter* lir = new (alloc()) LToAsyncIter(
       useRegisterAtStart(ins->iterator()), useBoxAtStart(ins->nextMethod()));

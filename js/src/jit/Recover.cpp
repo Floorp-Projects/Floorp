@@ -1417,10 +1417,26 @@ bool MTypeOf::writeRecoverData(CompactBufferWriter& writer) const {
 RTypeOf::RTypeOf(CompactBufferReader& reader) {}
 
 bool RTypeOf::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue v(cx, iter.read());
+  JS::Value v = iter.read();
 
-  RootedValue result(cx, StringValue(TypeOfOperation(v, cx->runtime())));
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(Int32Value(TypeOfValue(v)));
+  return true;
+}
+
+bool MTypeOfName::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_TypeOfName));
+  return true;
+}
+
+RTypeOfName::RTypeOfName(CompactBufferReader& reader) {}
+
+bool RTypeOfName::recover(JSContext* cx, SnapshotIterator& iter) const {
+  int32_t type = iter.read().toInt32();
+  MOZ_ASSERT(JSTYPE_UNDEFINED <= type && type < JSTYPE_LIMIT);
+
+  JSString* name = TypeName(JSType(type), *cx->runtime()->commonNames);
+  iter.storeInstructionResult(StringValue(name));
   return true;
 }
 

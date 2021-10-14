@@ -1628,8 +1628,11 @@ bool WarpBuilder::build_Typeof(BytecodeLocation loc) {
   MDefinition* input = current->pop();
 
   if (const auto* typesSnapshot = getOpSnapshot<WarpPolymorphicTypes>(loc)) {
-    auto* ins = MTypeOf::New(alloc(), input);
-    ins->setObservedTypes(typesSnapshot->list());
+    auto* typeOf = MTypeOf::New(alloc(), input);
+    typeOf->setObservedTypes(typesSnapshot->list());
+    current->add(typeOf);
+
+    auto* ins = MTypeOfName::New(alloc(), typeOf);
     current->add(ins);
     current->push(ins);
     return true;
@@ -3280,7 +3283,10 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
     case CacheKind::TypeOf: {
       // Note: Warp does not have a TypeOf IC, it just inlines the operation.
       MOZ_ASSERT(numInputs == 1);
-      auto* ins = MTypeOf::New(alloc(), getInput(0));
+      auto* typeOf = MTypeOf::New(alloc(), getInput(0));
+      current->add(typeOf);
+
+      auto* ins = MTypeOfName::New(alloc(), typeOf);
       current->add(ins);
       current->push(ins);
       return true;
