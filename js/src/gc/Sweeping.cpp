@@ -1211,7 +1211,7 @@ void GCRuntime::sweepMisc() {
   SweepingTracer trc(rt);
   for (SweepGroupRealmsIter r(this); !r.done(); r.next()) {
     AutoSetThreadIsSweeping threadIsSweeping(r->zone());
-    r->traceWeakObjects(&trc);
+    r->traceWeakGlobalEdge(&trc);
     r->traceWeakSavedStacks(&trc);
     r->traceWeakObjectRealm(&trc);
     r->traceWeakRegExps(&trc);
