@@ -170,7 +170,7 @@
     <color name="sync_disconnected_background_private_theme">#5B5846</color>
     <color name="swipe_delete_background_private_theme">@color/accent_light_theme</color>
     <color name="onboarding_card_background_start_gradient_private_theme">@color/photonViolet60</color>
-    <color name="onboarding_card_background_end_gradient_private_theme">#B833E1</color>
+    <color name="onboarding_card_background_end_gradient_private_theme">@color/photonPurple50</color>
     <color name="onboarding_illustration_selected_private_theme">@color/accent_private_theme</color>
     <color name="onboarding_illustration_deselected_private_theme">@color/onboarding_illustration_deselected_dark_theme</color>
     <color name="add_on_private_browsing_exterior_circle_background_private_theme">@color/accent_private_theme</color>
