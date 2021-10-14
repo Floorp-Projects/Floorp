@@ -503,24 +503,23 @@ async function testTabFrames(mainRoot) {
     );
     is(
       destroyedTargets[0].targetFront,
-      targets[0].targetFront,
-      "The first destroyed should be the previous top level one"
+      targets[1].targetFront,
+      "The first destroyed should be the iframe one"
     );
     is(
       destroyedTargets[0].isTargetSwitching,
-      true,
-      "the target destruction is flagged as target switching"
+      false,
+      "the target destruction is not flagged as target switching for iframes"
     );
-
     is(
       destroyedTargets[1].targetFront,
-      targets[1].targetFront,
-      "The second destroyed should be the iframe one"
+      targets[0].targetFront,
+      "The second destroyed should be the previous top level one (because it is delayed to be fired *after* will-navigate)"
     );
     is(
       destroyedTargets[1].isTargetSwitching,
-      false,
-      "the target destruction is not flagged as target switching for iframes"
+      true,
+      "the target destruction is flagged as target switching"
     );
   } else if (isServerTargetSwitchingEnabled()) {
     await waitFor(
