@@ -49,11 +49,11 @@ const global = this;
 // The sha384 sum can be computed with the following command (tested on macOS):
 // shasum -b -a 384 profiler_get_symbols_wasm_bg.wasm | awk '{ print $1 }' | xxd -r -p | base64
 
-// Generated from https://github.com/mstange/profiler-get-symbols/commit/007c254385f74ed0538f6e915c73c5055f194a8c
+// Generated from https://github.com/mstange/profiler-get-symbols/commit/aa88b56c26a0cbb31d5540b335fe1ea7fc404e2d
 const WASM_MODULE_URL =
-  "https://storage.googleapis.com/firefox-profiler-get-symbols/007c254385f74ed0538f6e915c73c5055f194a8c.wasm";
+  "https://storage.googleapis.com/firefox-profiler-get-symbols/aa88b56c26a0cbb31d5540b335fe1ea7fc404e2d.wasm";
 const WASM_MODULE_INTEGRITY =
-  "sha384-HtoagTJzW8MQ8Bc4QfYfWBOxxSlOrKopxf6Nx0eskn9RduB0HssVNX5Ev2OsMkza";
+  "sha384-W6GNVjq2X/Z7JZSPH7DRHpKOZJsffxKdtRXssilB8KLtm739U2jMgr3AzbzvwehO";
 
 const EXPIRY_TIME_IN_MS = 5 * 60 * 1000; // 5 minutes
 
