@@ -879,7 +879,7 @@ static bool CallLikelySubtags(const LocaleId& localeId, LocaleId& result) {
   // Ensure there's enough room for the result.
   MOZ_ALWAYS_TRUE(result.resize(LocaleId::InlineLength));
 
-  if (FillVectorWithICUCall(result, [&localeId](char* chars, int32_t size,
+  if (FillBufferWithICUCall(result, [&localeId](char* chars, int32_t size,
                                                 UErrorCode* status) {
         return likelySubtagsFn(localeId.begin(), chars, size, status);
       }).isErr()) {
