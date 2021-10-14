@@ -583,6 +583,9 @@
   alias_set: none
   can_recover: true
 
+- name: TypeOfIs
+  gen_boilerplate: false
+
 - name: ToAsyncIter
   operands:
     iterator: Object
