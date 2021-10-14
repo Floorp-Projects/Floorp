@@ -85,7 +85,7 @@ The 'column-rule-image-source' and 'row-rule-image-source' Properties {#column-r
     These properties specifies an <<image>> to use in place of the rendering specified
     by the ''column-rule-style''/''row-rule-style'' properties.
 
-    As for borders, a rule image is not rendered if the ''column-rule-style''/''row-rule-style'' is ''column-rule-style/none''.
+    As for borders, a rule image is not rendered when the corresponding ''column-rule-style''/''row-rule-style'' is ''column-rule-style/none''.
 
 The 'column-rule-image-slice' and 'row-rule-image-slice' Properties {#column-rule-image-slice}
 ----------------------------------------------------------------------------------------------
@@ -398,7 +398,7 @@ The Rule Longitudinal Inset Properties {#column-rule-longitudinal-inset-start}
         which itself depends on the <a href="#column-rule-align">rule's alignment</a> in its longitudinal axis.
         Note that the longitudinal insets in this example are definite and not animated. The reason
         they follow the animated lateral position of the rule in the orthogonal axis is that they have
-        ''column-rule-align/rule'' alignment.
+        <a href="#column-rule-align">''column-rule-align/rule'' alignment</a>.
         <figure>
             <video src="media/grid-longitudinal-002.webm" autoplay loop></video>
             <figcaption>
@@ -578,14 +578,15 @@ The 'column-rule-edge-align' and 'row-rule-edge-align' Properties {#column-rule-
     is used for both start and end.  (Attachment points for the interior rule edges are
     specified with the <a href=#column-rule-align>'*-rule-align'</a> properties above.)
 
-    Note: The ''column-rule-align/rule''/''column-rule-align/rule-center''/''column-rule-align/rule-over'' keywords are omitted here (compared with
+    Note: The ''column-rule-align/rule''/''column-rule-align/rule-center''/''column-rule-align/rule-over''
+    keywords are omitted here (compared with
     ''column-rule-align'') since there are no rules in the edge gutters.
 
 
-    Below is an illustration of the alignment values.
-    The red values are used for the top column border's start edge and the yellow
-    values are used for its end edge.
-    The yellow values are also used for the bottom column border's start edge. However, in this
+    Thge figure below illustrates the alignment values.
+    The red values are used for the top column rule's start edge and the yellow
+    values are used for its end edge. The yellow values are also used for the bottom
+    column rule's start edge. However, in this
     case the roles of ''column-rule-align/gap'' / ''column-rule-align/gap-over'' and
     ''column-rule-align/rule'' / ''column-rule-align/rule-over'' are swapped.  It's only the
     center values that are shared.  Also note that ''column-rule-align/gap-center''
@@ -593,6 +594,10 @@ The 'column-rule-edge-align' and 'row-rule-edge-align' Properties {#column-rule-
     aligned because the row rule (purple) is using a lateral start inset.  The cyan colored
     values are used for the bottom column border's end edge. (If the top border were to
     stretch over the entire grid, then they would be used for its end edge.)
+
+    ''column-rule-edge-align'' controls which of the red and cyan colored
+    attachment points should be used.  ''column-rule-edge-align'' the yellow colored
+    ones (and all other interior edges if there were more rows).
 
     <figure>
         <img src="media/rule-alignment-values.png">
@@ -616,7 +621,7 @@ The 'column-rule-edge-align' and 'row-rule-edge-align' Properties {#column-rule-
     so they align with the inline axis gap edges.
 
     ISSUE: Are there use cases for other box-related edge attachment points?
-    e.g. 'padding | padding-center | padding-over | border... | outline... | margin... | viewport'
+    e.g. 'padding | padding-center | padding-over | border...'
 
 
 Rule Extent {#column-rule-extent}
@@ -1008,8 +1013,6 @@ The 'column-rule-extent' and 'row-rule-extent' Properties {#column-rule-extent}
     <a spec=css-tables>table-cell</a> in a row.  Collapsed <a spec=css-tables>table-rows</a> are treated as if they don't exist.
     Collapsed <a spec=css-tables>table-columns</a> are treated as if they don't exist.
     
-    ISSUE: sort out what to do with collapsed table-cells
-    
     Row rules (between <a spec=css-tables>table-rows</a>) collide with cells that have
     a row <a spec=css-tables>span</a> crossing it.
     Column rules (between <a spec=css-tables>table-cells</a>) collide with cells that have
@@ -1028,6 +1031,8 @@ The 'column-rule-extent' and 'row-rule-extent' Properties {#column-rule-extent}
             </figcaption>
         </figure>
     </aside>
+    
+    ''visibility:collapse'' on <a>table-cells</a> does not affect the rules in any way.
     
 
 ### Multi-Column Containers ### {#rule-extent-multicol}
@@ -1125,7 +1130,7 @@ Rule Painting Order {#rule-painting-order}
     the <a href="#column-rule-extent">rule extent</a> algorithms described above.
     Typically from the logical start to the end of the axis.
 
-    For table layout, all the <a spec=css-tables>table container</a> rules (in both axes)
+    For table layout, all the <a spec=css-tables>table</a> rules (in both axes)
     are painted before the rules for the row-groups.  The painting order between
     multiple row-groups is whatever the <a href="https://drafts.csswg.org/css-tables">table spec</a>
     specifies.  For an individual row-group, the rules are painted in logical
