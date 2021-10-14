@@ -277,11 +277,38 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   /**
    * Called by a Watcher module, whenever a target has been destroyed
    */
-  notifyTargetDestroyed(actor) {
+  async notifyTargetDestroyed(actor) {
     if (this._earlyIframeTargets[actor.innerWindowId]) {
       delete this._earlyIframeTargets[actor.innerWindowId];
     }
     this._currentTopLevelWindowGlobalTargets.delete(actor.innerWindowId);
+    const documentEventWatcher = Resources.getResourceWatcher(
+      this,
+      Resources.TYPES.DOCUMENT_EVENT
+    );
+    // If we have a Watcher class instantiated, ensure that target-destroyed is sent
+    // *after* DOCUMENT_EVENT's will-navigate. Otherwise this resource will have an undefined
+    // `targetFront` attribute, as it is associated with the target from which we navigate
+    // and not the one we navigate to.
+    //
+    // About documentEventWatcher check: We won't have any watcher class if we aren't
+    // using server side Watcher classes.
+    // i.e. when we are using the legacy listener for DOCUMENT_EVENT.
+    // This is still the case for all toolboxes but the one for local and remote tabs.
+    //
+    // About isServerTargetSwitchingEnabled check: if we are using the watcher class
+    // we may still use client side target, which will still use legacy listeners for
+    // will-navigate and so will-navigate will be emitted by the target actor itself.
+    //
+    // About isTopLevelTarget check: only top level targets emit will-navigate,
+    // so there is no reason to delay target-destroy for remote iframes.
+    if (
+      documentEventWatcher &&
+      this.isServerTargetSwitchingEnabled &&
+      actor.isTopLevelTarget
+    ) {
+      await documentEventWatcher.onceWillNavigateIsEmitted(actor.innerWindowId);
+    }
     this.emit("target-destroyed-form", actor);
   },
 
