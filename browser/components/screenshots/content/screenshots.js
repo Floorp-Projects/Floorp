@@ -50,6 +50,7 @@ class ScreenshotsUI extends HTMLElement {
     let browsingContext = BrowsingContext.get(browsingContextId);
     let win = browsingContext.top.embedderElement.ownerGlobal;
     Services.obs.notifyObservers(win, "toggle-screenshot-disable", "false");
+    URL.revokeObjectURL(document.getElementById("placeholder-image").src);
     window.close();
   }
 
@@ -102,10 +103,11 @@ class ScreenshotsUI extends HTMLElement {
       // add the download to the download list in the Downloads list in the Browser UI
       list.add(download);
 
-      this.close();
-
       // Await successful completion of the save via the download manager
       await download.start();
+
+      // need to close after download because blob url is revoked on close
+      this.close();
     } catch (ex) {}
   }
 
@@ -203,8 +205,15 @@ class ScreenshotsUI extends HTMLElement {
 
     context.drawImage(snapshot, 0, 0);
 
-    let imgEle = this.ownerDocument.getElementById("placeholder-image");
-    imgEle.src = canvas.toDataURL();
+    canvas.toBlob(function(blob) {
+      let newImg = document.createElement("img");
+      let url = URL.createObjectURL(blob);
+
+      newImg.setAttribute("id", "placeholder-image");
+
+      newImg.src = url;
+      document.getElementById("preview-image-div").appendChild(newImg);
+    });
 
     snapshot.close();
   }
