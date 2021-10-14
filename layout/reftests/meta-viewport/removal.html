@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width">
+<!-- This should still have an effect after removal -->
+<meta name="viewport" content="width=980">
+<script>document.querySelector('meta + meta').remove()</script>
+<style>
+#box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100px;
+  height: 100px;
+  background: green;
+}
+</style>
+<div id="box"></div>
