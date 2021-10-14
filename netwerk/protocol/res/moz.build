@@ -38,5 +38,3 @@ LOCAL_INCLUDES += [
     "/netwerk/base",
     "/xpcom/base",
 ]
-
-REQUIRES_UNIFIED_BUILD = True
