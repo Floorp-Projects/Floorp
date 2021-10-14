@@ -110,7 +110,8 @@ class DebugAPI {
   // The garbage collector calls this after everything has been marked, but
   // before anything has been finalized. We use this to clear Debugger /
   // debuggee edges at a point where the parties concerned are all still
-  // initialized.
+  // initialized. This does not update edges to moved GC things which is handled
+  // via the other trace methods.
   static void sweepAll(JSFreeOp* fop);
 
   // Add sweep group edges due to the presence of any debuggers.
