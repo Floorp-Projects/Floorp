@@ -344,6 +344,7 @@
   MACRO_(noStack, noStack, "noStack")                                          \
   MACRO_(notation, notation, "notation")                                       \
   MACRO_(notes, notes, "notes")                                                \
+  MACRO_(null, null, "null")                                                   \
   MACRO_(numberingSystem, numberingSystem, "numberingSystem")                  \
   MACRO_(numeric, numeric, "numeric")                                          \
   MACRO_(objectArguments, objectArguments, "[object Arguments]")               \
@@ -558,7 +559,6 @@
   MACRO_(string, string, "string")                                             \
   MACRO_(number, number, "number")                                             \
   MACRO_(boolean, boolean, "boolean")                                          \
-  MACRO_(null, null, "null")                                                   \
   MACRO_(symbol, symbol, "symbol")                                             \
   MACRO_(bigint, bigint, "bigint")
 
