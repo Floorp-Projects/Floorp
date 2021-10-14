@@ -2454,6 +2454,13 @@ nsChangeHint nsStyleDisplay::CalcDifference(
         // since ScrollFrameHelper::CreateAnonymousContent avoids creating
         // scrollbars altogether for overflow: hidden. That seems it could
         // create some interesting perf cliffs...
+        //
+        // We reframe when non-hidden -> hidden too, for now.
+        //
+        // FIXME(bug 1590247): Seems we could avoid reframing once we've created
+        // scrollbars, which should get us the optimization for elements that
+        // have toggled scrollbars, but would prevent the cliff of toggling
+        // overflow causing jank.
         hint |= nsChangeHint_ScrollbarChange;
       } else {
         // Otherwise, for changes where both overflow values are scrollable,
