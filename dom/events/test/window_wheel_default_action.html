@@ -91,6 +91,13 @@ const kDefaultActionOverrideXScroll     = kDefaultActionScroll;
 const kDefaultActionOverrideXHistory    = kDefaultActionHistory;
 const kDefaultActionOverrideXZoom       = kDefaultActionZoom;
 
+// We sometimes rely on the scroll position not getting preserved across tests.
+function resetScrollPosition(element) {
+  element.style.display = "none";
+  element.offsetTop;
+  element.style.display = "";
+}
+
 function is()
 {
   window.opener.is.apply(window.opener, arguments);
@@ -1873,6 +1880,7 @@ function doTestAutoDirScroll2(aSettings, aAutoDirTrait,
       prepare (cb) {
                  gScrollableElement.style.overflowX = "auto";
                  gScrollableElement.style.overflowY = "hidden";
+                 resetScrollPosition(gScrollableElement);
                  cb();
                } },
     { description: "auto-dir scroll to " + kAdjustedForDown.desc +
@@ -1961,6 +1969,7 @@ function doTestAutoDirScroll2(aSettings, aAutoDirTrait,
       prepare (cb) {
                  gScrollableElement.style.overflowX = "hidden";
                  gScrollableElement.style.overflowY = "auto";
+                 resetScrollPosition(gScrollableElement);
                  cb();
                } },
     { description: "auto-dir scroll to bottom by pixel scroll when lineOrPageDelta is 1, " +
@@ -2051,6 +2060,7 @@ function doTestAutoDirScroll2(aSettings, aAutoDirTrait,
       prepare (cb) {
                  gScrollableElement.style.overflowX = "auto";
                  gScrollableElement.style.overflowY = "hidden";
+                 resetScrollPosition(gScrollableElement);
                  cb();
                } },
     { description: "auto-dir scroll to " + kAdjustedForDown.desc +
@@ -2139,6 +2149,7 @@ function doTestAutoDirScroll2(aSettings, aAutoDirTrait,
       prepare (cb) {
                  gScrollableElement.style.overflowX = "hidden";
                  gScrollableElement.style.overflowY = "auto";
+                 resetScrollPosition(gScrollableElement);
                  cb();
                } },
     { description: "auto-dir scroll to bottom by line scroll when lineOrPageDelta is 1, " +
@@ -2229,6 +2240,7 @@ function doTestAutoDirScroll2(aSettings, aAutoDirTrait,
       prepare (cb) {
                  gScrollableElement.style.overflowX = "auto";
                  gScrollableElement.style.overflowY = "hidden";
+                 resetScrollPosition(gScrollableElement);
                  cb();
                } },
     { description: "auto-dir scroll to " + kAdjustedForDown.desc +
@@ -2317,6 +2329,7 @@ function doTestAutoDirScroll2(aSettings, aAutoDirTrait,
       prepare (cb) {
                  gScrollableElement.style.overflowX = "hidden";
                  gScrollableElement.style.overflowY = "auto";
+                 resetScrollPosition(gScrollableElement);
                  cb();
                } },
     { description: "auto-dir scroll to bottom by page scroll even if lineOrPageDelta is 0, " +
