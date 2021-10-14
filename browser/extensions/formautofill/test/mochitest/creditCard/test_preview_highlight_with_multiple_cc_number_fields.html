@@ -1,0 +1,162 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test form autofill - preview and highlight with multiple cc number fields</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="../formautofill_common.js"></script>
+  <script type="text/javascript" src="../../../../../../toolkit/components/satchel/test/satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form autofill test: preview and highlight multiple cc number fields
+
+<script>
+"use strict";
+
+const MOCK_STORAGE = [{
+  "cc-name": "Test Name",
+  "cc-number": "4929001587121045",
+  "cc-exp-month": 4,
+  "cc-exp-year": 2017,
+}, {
+  "cc-name": "Timothy Berners-Lee",
+  "cc-number": "5103059495477870",
+  "cc-exp-month": 12,
+  "cc-exp-year": 2022,
+}];
+
+const MOCK_STORAGE_PREVIEW = [{
+  "cc-name": "Test Name",
+  "cc-number": "************1045",
+  "cc-exp-month": "4",
+  "cc-exp-year": "2017",
+}, {
+  "cc-name": "Timothy Berners-Lee",
+  "cc-number": "************7870",
+  "cc-exp-month": "12",
+  "cc-exp-year": "2022",
+}];
+
+
+/*
+  This function is similar to checkFormFieldsStyle in formautofill_common.js, but deals with the case
+  when one value is spread across multiple fields.
+
+  This function is needed because of the multiple cc-number filling behavior introduced in Bug 1688607.
+  Since the cc-number is stored as a whole value in the profile,
+  there has to be specific handling in the test to assert the correct fillable value.
+  Otherwise, we would try to grab a value out of profile["cc-number1"] which doesn't exist.
+*/
+async function checkMultipleCCNumberFormStyle(profile, isPreviewing = true) {
+  const elements = document.querySelectorAll("input, select");
+  for (const element of elements) {
+    let fillableValue;
+    if (element.id.includes("cc-number") && isPreviewing) {
+      fillableValue = profile["cc-number"].slice(-8);
+    } else if (element.id.includes("cc-number")) {
+      fillableValue = profile["cc-number"];
+    } else {
+      fillableValue = profile[element.id];
+    }
+    let previewValue = (isPreviewing && fillableValue) || "";
+    await checkFieldHighlighted(element, !!fillableValue);
+    await checkFieldPreview(element, previewValue);
+
+  }
+}
+
+/*
+  This function sets up 'change' event listeners so that we can safely
+  assert an element's value after autofilling has occurred.
+  This is essentially a barebones copy of triggerAutofillAndCheckProfile
+  that exists in formautofill_common.js.
+
+  We can't use triggerAutofillAndCheckProfile because "cc-number1" through "cc-number4"
+  do not exist in the profile.
+  Again, we store the whole cc-number in the profile, not its subsections.
+  So if we tried to grab the element by ID using "cc-number", this element would not exist in the doc,
+  causing triggerAutofillAndCheckProfile to throw an exception.
+*/
+async function setupListeners(elements, profile) {
+  for (const element of elements) {
+    let id = element.id;
+    element.addEventListener("change", () => {
+      let filledValue;
+      if (id == "cc-number1") {
+      filledValue = profile["cc-number"].slice(0, 4);
+    } else if (id == "cc-number2") {
+      filledValue = profile["cc-number"].slice(4, 8);
+    } else if (id == "cc-number3") {
+      filledValue = profile["cc-number"].slice(8, 12);
+    } else if (id == "cc-number4") {
+      filledValue = profile["cc-number"].slice(12, 16);
+    } else {
+      filledValue = profile[element.id];
+    }
+    checkFieldValue(element, filledValue);
+    }, {once: true})
+  }
+
+}
+
+initPopupListener();
+
+add_task(async function setup_storage() {
+  await addCreditCard(MOCK_STORAGE[0]);
+  await addCreditCard(MOCK_STORAGE[1]);
+});
+
+add_task(async function check_preview() {
+  let canTest = await canTestOSKeyStoreLogin();
+  if (!canTest) {
+    todo(canTest, "Cannot test OS key store login on official builds.");
+    return;
+  }
+  let popup = expectPopup();
+  const focusedInput = await setInput("#cc-name", "");
+  await popup;
+  for (let i = 0; i < MOCK_STORAGE_PREVIEW.length; i++) {
+    synthesizeKey("KEY_ArrowDown");
+    await notifySelectedIndex(i);
+    await checkMultipleCCNumberFormStyle(MOCK_STORAGE_PREVIEW[i]);
+  }
+
+  focusedInput.blur();
+});
+
+add_task(async function check_filled_highlight() {
+  let canTest = await canTestOSKeyStoreLogin();
+  if (!canTest) {
+    todo(canTest, "Cannot test OS key store login on official builds.");
+    return;
+  }
+  await triggerPopupAndHoverItem("#cc-name", 0);
+  let osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
+  // filled 1st credit card option
+  synthesizeKey("KEY_Enter");
+  await osKeyStoreLoginShown;
+  let elements = document.querySelectorAll("input, select");
+  let profile = MOCK_STORAGE[0];
+  await setupListeners(elements, profile);
+  await checkMultipleCCNumberFormStyle(profile, false);
+});
+</script>
+<p id="display"></p>
+<div id="content">
+
+  <form id="form1">
+    <p>This is a basic credit card form.</p>
+    <p>card number subsection 1: <input id="cc-number1" maxlength="4"></p>
+    <p>card number subsection 2: <input id="cc-number2" maxlength="4"></p>
+    <p>card number subsection 3: <input id="cc-number3" maxlength="4"></p>
+    <p>card number subsection 4: <input id="cc-number4" maxlength="4"></p>
+    <p>cardholder name: <input id="cc-name" autocomplete="cc-name"></p>
+    <p>expiration month: <input id="cc-exp-month" autocomplete="cc-exp-month"></p>
+    <p>expiration year: <input id="cc-exp-year" autocomplete="cc-exp-year"></p>
+  </form>
+</div>
+<pre id="test"></pre>
+</body>
+</html>

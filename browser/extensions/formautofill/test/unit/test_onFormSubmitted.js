@@ -7,9 +7,7 @@ add_task(async function setup() {
   ));
 });
 
-const MOCK_DOC = MockDocument.createTestDocument(
-  "http://localhost:8080/test/",
-  `<form id="form1">
+const DEFAULT_TEST_DOC = `<form id="form1">
                       <input id="street-addr" autocomplete="street-address">
                       <select id="address-level1" autocomplete="address-level1">
                         <option value=""></option>
@@ -39,14 +37,15 @@ const MOCK_DOC = MockDocument.createTestDocument(
                         <option value="amex">American Express</option>
                       </select>
                       <input id="submit" type="submit">
-                    </form>`
-);
+                    </form>`;
 const TARGET_ELEMENT_ID = "street-addr";
 
 const TESTCASES = [
   {
     description:
       "Should not trigger address saving if the number of fields is less than 3",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "street-addr": "331 E. Evelyn Avenue",
       tel: "1-650-903-0800",
@@ -57,6 +56,8 @@ const TESTCASES = [
   },
   {
     description: "Should not trigger credit card saving if number is empty",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "cc-name": "John Doe",
       "cc-exp-month": 12,
@@ -67,7 +68,68 @@ const TESTCASES = [
     },
   },
   {
+    description:
+      "Should not trigger credit card saving if there are more than four cc-number fields",
+    document: `<form id="form1">
+                <input id="cc-type" autocomplete="cc-type">
+                <input id="cc-name" autocomplete="cc-name">
+                <input id="cc-number1" maxlength="4">
+                <input id="cc-number2" maxlength="4">
+                <input id="cc-number3" maxlength="4">
+                <input id="cc-number4" maxlength="4">
+                <input id="cc-number5" maxlength="4">
+                <input id="cc-exp-month" autocomplete="cc-exp-month">
+                <input id="cc-exp-year" autocomplete="cc-exp-year">
+                <input id="submit" type="submit">
+              </form>
+    `,
+    targetElementId: "cc-name",
+    formValue: {
+      "cc-name": "John Doe",
+      "cc-number1": "3714",
+      "cc-number2": "4963",
+      "cc-number3": "5398",
+      "cc-number4": "431",
+      "cc-exp-month": 12,
+      "cc-exp-year": 2000,
+      "cc-type": "amex",
+    },
+    expectedResult: {
+      formSubmission: false,
+    },
+  },
+  {
+    description:
+      "Should not trigger credit card saving if there is more than one cc-number field but less than four fields",
+    document: `<form id="form1">
+                <input id="cc-type" autocomplete="cc-type">
+                <input id="cc-name" autocomplete="cc-name">
+                <input id="cc-number1" maxlength="4">
+                <input id="cc-number2" maxlength="4">
+                <input id="cc-number3" maxlength="4">
+                <input id="cc-exp-month" autocomplete="cc-exp-month">
+                <input id="cc-exp-year" autocomplete="cc-exp-year">
+                <input id="submit" type="submit">
+              </form>
+    `,
+    targetElementId: "cc-name",
+    formValue: {
+      "cc-name": "John Doe",
+      "cc-number1": "3714",
+      "cc-number2": "4963",
+      "cc-number3": "5398",
+      "cc-exp-month": 12,
+      "cc-exp-year": 2000,
+      "cc-type": "amex",
+    },
+    expectedResult: {
+      formSubmission: false,
+    },
+  },
+  {
     description: "Trigger address saving",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "street-addr": "331 E. Evelyn Avenue",
       country: "US",
@@ -96,6 +158,8 @@ const TESTCASES = [
   },
   {
     description: "Trigger credit card saving",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: "cc-type",
     formValue: {
       "cc-name": "John Doe",
       "cc-number": "5105105105105100",
@@ -124,7 +188,53 @@ const TESTCASES = [
     },
   },
   {
+    description: "Trigger credit card saving using multiple cc-number fields",
+    document: `<form id="form1">
+                <input id="cc-type" autocomplete="cc-type">
+                <input id="cc-name" autocomplete="cc-name">
+                <input id="cc-number1" maxlength="4">
+                <input id="cc-number2" maxlength="4">
+                <input id="cc-number3" maxlength="4">
+                <input id="cc-number4" maxlength="4">
+                <input id="cc-exp-month" autocomplete="cc-exp-month">
+                <input id="cc-exp-year" autocomplete="cc-exp-year">
+                <input id="submit" type="submit">
+              </form>`,
+    targetElementId: "cc-type",
+    formValue: {
+      "cc-name": "John Doe",
+      "cc-number1": "3714",
+      "cc-number2": "4963",
+      "cc-number3": "5398",
+      "cc-number4": "431",
+      "cc-exp-month": 12,
+      "cc-exp-year": 2000,
+      "cc-type": "amex",
+    },
+    expectedResult: {
+      formSubmission: true,
+      records: {
+        address: [],
+        creditCard: [
+          {
+            guid: null,
+            record: {
+              "cc-name": "John Doe",
+              "cc-number": "371449635398431",
+              "cc-exp-month": 12,
+              "cc-exp-year": 2000,
+              "cc-type": "amex",
+            },
+            untouchedFields: [],
+          },
+        ],
+      },
+    },
+  },
+  {
     description: "Trigger address and credit card saving",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "street-addr": "331 E. Evelyn Avenue",
       country: "US",
@@ -170,6 +280,8 @@ const TESTCASES = [
   },
   {
     description: "Profile saved with trimmed string",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "street-addr": "331 E. Evelyn Avenue  ",
       country: "US",
@@ -198,6 +310,8 @@ const TESTCASES = [
   },
   {
     description: "Eliminate the field that is empty after trimmed",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "street-addr": "331 E. Evelyn Avenue",
       country: "US",
@@ -227,6 +341,8 @@ const TESTCASES = [
   },
   {
     description: "Save state with regular select option",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "address-level1": "CA",
       "street-addr": "331 E. Evelyn Avenue",
@@ -255,6 +371,8 @@ const TESTCASES = [
   },
   {
     description: "Save state with lowercase value",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "address-level1": "ca",
       "street-addr": "331 E. Evelyn Avenue",
@@ -283,6 +401,8 @@ const TESTCASES = [
   },
   {
     description: "Save state with a country code prefixed to the label",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "address-level1": "AR",
       "street-addr": "331 E. Evelyn Avenue",
@@ -311,6 +431,8 @@ const TESTCASES = [
   },
   {
     description: "Save state with a country code prefixed to the value",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "address-level1": "US-CA",
       "street-addr": "331 E. Evelyn Avenue",
@@ -340,6 +462,8 @@ const TESTCASES = [
   {
     description:
       "Save state with a country code prefixed to the value and label",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "address-level1": "US-AZ",
       "street-addr": "331 E. Evelyn Avenue",
@@ -369,6 +493,8 @@ const TESTCASES = [
   {
     description:
       "Should save select label instead when failed to abbreviate the value",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "address-level1": "Ariz",
       "street-addr": "331 E. Evelyn Avenue",
@@ -397,6 +523,8 @@ const TESTCASES = [
   },
   {
     description: "Shouldn't save select with multiple selections",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "address-level1": ["AL", "AK", "AP"],
       "street-addr": "331 E. Evelyn Avenue",
@@ -426,6 +554,8 @@ const TESTCASES = [
   },
   {
     description: "Shouldn't save select with empty value",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "address-level1": "",
       "street-addr": "331 E. Evelyn Avenue",
@@ -455,6 +585,8 @@ const TESTCASES = [
   },
   {
     description: "Shouldn't save tel whose length is too short",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "street-addr": "331 E. Evelyn Avenue",
       "address-level1": "CA",
@@ -484,6 +616,8 @@ const TESTCASES = [
   },
   {
     description: "Shouldn't save tel whose length is too long",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "street-addr": "331 E. Evelyn Avenue",
       "address-level1": "CA",
@@ -513,6 +647,8 @@ const TESTCASES = [
   },
   {
     description: "Shouldn't save tel which contains invalid characters",
+    document: DEFAULT_TEST_DOC,
+    targetElementId: TARGET_ELEMENT_ID,
     formValue: {
       "street-addr": "331 E. Evelyn Avenue",
       "address-level1": "CA",
@@ -544,7 +680,11 @@ const TESTCASES = [
 
 add_task(async function handle_invalid_form() {
   info("Starting testcase: Test an invalid form element");
-  let fakeForm = MOCK_DOC.createElement("form");
+  let doc = MockDocument.createTestDocument(
+    "http://localhost:8080/test",
+    DEFAULT_TEST_DOC
+  );
+  let fakeForm = doc.createElement("form");
   sinon.spy(FormAutofillContent, "_onFormSubmit");
 
   FormAutofillContent.formSubmitted(fakeForm, null);
@@ -553,7 +693,11 @@ add_task(async function handle_invalid_form() {
 });
 
 add_task(async function autofill_disabled() {
-  let form = MOCK_DOC.getElementById("form1");
+  let doc = MockDocument.createTestDocument(
+    "http://localhost:8080/test",
+    DEFAULT_TEST_DOC
+  );
+  let form = doc.getElementById("form1");
   form.reset();
 
   let testcase = {
@@ -563,11 +707,11 @@ add_task(async function autofill_disabled() {
     "cc-number": "1111222233334444",
   };
   for (let key in testcase) {
-    let input = MOCK_DOC.getElementById(key);
+    let input = doc.getElementById(key);
     input.value = testcase[key];
   }
 
-  let element = MOCK_DOC.getElementById(TARGET_ELEMENT_ID);
+  let element = doc.getElementById(TARGET_ELEMENT_ID);
   FormAutofillContent.identifyAutofillFields(element);
 
   sinon.stub(FormAutofillContent, "_onFormSubmit");
@@ -642,13 +786,15 @@ TESTCASES.forEach(testcase => {
       "extensions.formautofill.creditCards.enabled",
       true
     );
-
-    let form = MOCK_DOC.getElementById("form1");
+    let doc = MockDocument.createTestDocument(
+      "http://localhost:8080/test/",
+      testcase.document
+    );
+    let form = doc.getElementById("form1");
     form.reset();
     for (let key in testcase.formValue) {
-      let input = MOCK_DOC.getElementById(key);
+      let input = doc.getElementById(key);
       let value = testcase.formValue[key];
-
       if (ChromeUtils.getClassName(input) === "HTMLSelectElement" && value) {
         input.multiple = Array.isArray(value);
         [...input.options].forEach(option => {
@@ -660,7 +806,7 @@ TESTCASES.forEach(testcase => {
     }
     sinon.stub(FormAutofillContent, "_onFormSubmit");
 
-    let element = MOCK_DOC.getElementById(TARGET_ELEMENT_ID);
+    let element = doc.getElementById(testcase.targetElementId);
     FormAutofillContent.identifyAutofillFields(element);
     FormAutofillContent.formSubmitted(form, null);
 
