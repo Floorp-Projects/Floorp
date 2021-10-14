@@ -2,27 +2,25 @@
 <meta charset=utf-8>
 <title>Test for logical properties of input type=color in the UA stylesheet</title>
 <style>
+:root { color-scheme: light }
+
 .v-rl { writing-mode: vertical-rl; }
 .ltr, .rtl, .v-rl { border: 1px solid blue; }
-.a { -moz-appearance: none; }
+.a { appearance: none; }
+
+input[type=color] {
+  padding: 4px;
+}
 
 .ltr input[type="color"],
 .rtl input[type="color"] {
   width: 64px;
   height: 23px;
-  padding: 1px 8px;
 }
 
 .v-rl input[type="color"] {
   height: 64px;
   width: 23px;
-  padding: 8px 1px;
-}
-
-@supports -moz-bool-pref("widget.non-native-theme.enabled") {
-  :is(.ltr, .rtl, .v-rl) input[type="color"] {
-    padding: 4px;
-  }
 }
 </style>
 <div class=ltr>
