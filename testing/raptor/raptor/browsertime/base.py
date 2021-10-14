@@ -397,8 +397,13 @@ class Browsertime(Perftest):
 
         # In this code block we check if any priority 1 arguments are in conflict with a
         # priority 2/3/4 argument
+        MULTI_OPTS = [
+            "--firefox.android.intentArgument",
+        ]
         for index, argument in list(enumerate(priority1_options)):
-            if argument.startswith("--"):
+            if argument in MULTI_OPTS:
+                browsertime_options.extend([argument, priority1_options[index + 1]])
+            elif argument.startswith("--"):
                 if index == len(priority1_options) - 1:
                     if argument not in browsertime_options:
                         browsertime_options.append(argument)
