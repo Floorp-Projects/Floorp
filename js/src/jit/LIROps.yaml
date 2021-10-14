@@ -320,6 +320,12 @@
     object: WordSized
   mir_op: TypeOf
 
+- name: TypeOfName
+  result_type: WordSized
+  operands:
+    input: WordSized
+  mir_op: true
+
 - name: ToAsyncIter
   result_type: WordSized
   operands:

@@ -113,7 +113,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   void emitTypeOfCheck(JSValueType type, Register tag, Register output,
                        Label* done, Label* oolObject);
-  void emitTypeOfName(JSValueType type, Register output);
+  void emitTypeOfJSType(JSValueType type, Register output);
   void emitTypeOfObject(Register obj, Register output, Label* done);
 
   template <typename Fn, Fn fn, class ArgSeq, class StoreOutputTo>

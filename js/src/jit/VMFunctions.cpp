@@ -2156,7 +2156,7 @@ void HandleCodeCoverageAtPrologue(BaselineFrame* frame) {
   }
 }
 
-JSString* TypeOfObject(JSObject* obj, JSRuntime* rt) {
+JSString* TypeOfNameObject(JSObject* obj, JSRuntime* rt) {
   AutoUnsafeCallWithABI unsafe;
   JSType type = js::TypeOfObject(obj);
   return TypeName(type, *rt->commonNames);
