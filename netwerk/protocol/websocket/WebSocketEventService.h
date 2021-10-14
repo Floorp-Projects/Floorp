@@ -16,8 +16,11 @@
 #include "nsIObserver.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
+#include "nsIWeakReferenceUtils.h"
+#include "nsTHashMap.h"
 
 class nsIWebSocketImpl;
+class nsIEventTarget;
 
 namespace mozilla {
 namespace net {
