@@ -145,21 +145,8 @@ const DEFAULT_WELCOME_CONTENT = {
           action: {
             theme: "<event>",
           },
-          defaultVariationId: "soft",
-          systemDefaultVariationId: "automatic",
+          defaultVariationIndex: 1,
           systemVariations: [
-            {
-              id: "automatic",
-              label: {
-                string_id: "mr2-onboarding-theme-label-auto",
-              },
-              tooltip: {
-                string_id: "mr1-onboarding-theme-tooltip-system",
-              },
-              description: {
-                string_id: "mr1-onboarding-theme-description-system",
-              },
-            },
             {
               id: "light",
               label: {
@@ -170,6 +157,18 @@ const DEFAULT_WELCOME_CONTENT = {
               },
               description: {
                 string_id: "mr1-onboarding-theme-description-light",
+              },
+            },
+            {
+              id: "automatic",
+              label: {
+                string_id: "mr2-onboarding-theme-label-auto",
+              },
+              tooltip: {
+                string_id: "mr1-onboarding-theme-tooltip-system",
+              },
+              description: {
+                string_id: "mr1-onboarding-theme-description-system",
               },
             },
             {

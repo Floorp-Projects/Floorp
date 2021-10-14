@@ -62,6 +62,7 @@ body.confetti #title {
   body {
     --rotate: 90deg;
     --scale: 0.6;
+    --translate: 10px;
   }
 
   @keyframes shine {
@@ -79,6 +80,7 @@ body.confetti #title {
   body {
     --rotate: 0deg;
     --scale: 1;
+    translate: 0;
   }
 }
 
@@ -309,12 +311,19 @@ body.confetti #title {
   color: var(--in-content-page-color);
   background-color: var(--in-content-page-background);
   margin-inline: auto;
-  transition: .4s opacity;
+  transition: .4s opacity, .4s translate;
   opacity: 1;
 }
 
-.variations.start > * {
+.variations:is(.in, .start) > * {
   opacity: 0;
+  transition: none;
+  translate: 0 calc(-1 * var(--translate));
+}
+
+.variations.out > * {
+  opacity: 0;
+  translate: 0 var(--translate);
 }
 
 /* Make these variation radio buttons appear like regular buttons. */
@@ -330,6 +339,18 @@ body.confetti #title {
 
 .variations > input:checked {
   background-image: none;
+}
+
+.variations > input:nth-of-type(1) {
+  transition-delay: .1s;
+}
+
+.variations > input:nth-of-type(2) {
+  transition-delay: .2s;
+}
+
+.variations > input:nth-of-type(3) {
+  transition-delay: .3s;
 }
 
 .checkbox {

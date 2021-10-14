@@ -331,6 +331,28 @@ body[lwt-newtab-brighttext] {
   border-radius: 2px;
   color: #FFF;
 }
+.onboardingContainer .colorway-variations .colorway-text,
+.onboardingContainer .colorway-variations .variation-button {
+  transition: 0.4s opacity, 0.4s translate;
+}
+.onboardingContainer .colorway-variations.in :is(.colorway-text, .variation-button) {
+  opacity: 0;
+  transition: none;
+  translate: 0 calc(var(--translate) / -3);
+}
+.onboardingContainer .colorway-variations.out :is(.colorway-text, .variation-button) {
+  opacity: 0;
+  translate: 0 calc(var(--translate) / 3);
+}
+.onboardingContainer .colorway-variations .colorway:nth-of-type(1) .variation-button {
+  transition-delay: 0.1s;
+}
+.onboardingContainer .colorway-variations .colorway:nth-of-type(2) .variation-button {
+  transition-delay: 0.2s;
+}
+.onboardingContainer .colorway-variations .colorway:nth-of-type(3) .variation-button {
+  transition-delay: 0.3s;
+}
 .onboardingContainer .tiles-theme-section {
   border: 0;
   display: flex;
