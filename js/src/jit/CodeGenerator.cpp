@@ -12,6 +12,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/EnumeratedRange.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/Latin1.h"
 #include "mozilla/MathAlgorithms.h"
@@ -1504,40 +1505,36 @@ void CodeGenerator::testValueTruthyKernel(
   ScratchTagScope tag(masm, value);
   masm.splitTagForTest(value, tag);
 
-  const uint32_t NumTypes = 9;
   const auto& defaultOrder = {
       JSVAL_TYPE_UNDEFINED, JSVAL_TYPE_NULL,   JSVAL_TYPE_BOOLEAN,
       JSVAL_TYPE_INT32,     JSVAL_TYPE_OBJECT, JSVAL_TYPE_STRING,
       JSVAL_TYPE_DOUBLE,    JSVAL_TYPE_SYMBOL, JSVAL_TYPE_BIGINT};
-  MOZ_ASSERT(defaultOrder.size() == NumTypes);
 
-  Vector<JSValueType, NumTypes, SystemAllocPolicy> remaining;
-  MOZ_ALWAYS_TRUE(remaining.reserve(defaultOrder.size()));
-  remaining.infallibleAppend(defaultOrder.begin(), defaultOrder.end());
-
-  uint32_t numRemaining = remaining.length();
+  mozilla::EnumSet<JSValueType, uint32_t> remaining(defaultOrder);
 
   // Generate tests for previously observed types first.
   // The TypeDataList is sorted by descending frequency.
   for (auto& observed : observedTypes) {
     JSValueType type = observed.type();
+    remaining -= type;
 
     testValueTruthyForType(type, tag, value, scratch1Reg, scratch2Reg, fr,
                            ifTruthy, ifFalsy, ool, /*skipTypeTest*/ false);
-    MOZ_ASSERT(std::count(remaining.begin(), remaining.end(), type) == 1);
-    remaining.eraseIfEqual(type);
-    numRemaining--;
   }
 
   // Generate tests for remaining types.
-  for (auto type : remaining) {
+  for (auto type : defaultOrder) {
+    if (!remaining.contains(type)) {
+      continue;
+    }
+    remaining -= type;
+
     // We don't need a type test for the last possible type.
-    bool skipTypeTest = numRemaining == 1;
+    bool skipTypeTest = remaining.isEmpty();
     testValueTruthyForType(type, tag, value, scratch1Reg, scratch2Reg, fr,
                            ifTruthy, ifFalsy, ool, skipTypeTest);
-    numRemaining--;
   }
-  MOZ_ASSERT(numRemaining == 0);
+  MOZ_ASSERT(remaining.isEmpty());
 
   // We fall through if the final test is truthy.
 }
@@ -12720,18 +12717,12 @@ void CodeGenerator::visitTypeOfV(LTypeOfV* lir) {
   auto* ool = new (alloc()) OutOfLineTypeOfV(lir);
   addOutOfLineCode(ool, lir->mir());
 
-  const uint32_t NumTypes = 8;
   const auto& defaultOrder = {JSVAL_TYPE_OBJECT,    JSVAL_TYPE_DOUBLE,
                               JSVAL_TYPE_UNDEFINED, JSVAL_TYPE_NULL,
                               JSVAL_TYPE_BOOLEAN,   JSVAL_TYPE_STRING,
                               JSVAL_TYPE_SYMBOL,    JSVAL_TYPE_BIGINT};
-  MOZ_ASSERT(defaultOrder.size() == NumTypes);
 
-  Vector<JSValueType, NumTypes, SystemAllocPolicy> remaining;
-  MOZ_ALWAYS_TRUE(remaining.reserve(defaultOrder.size()));
-  remaining.infallibleAppend(defaultOrder.begin(), defaultOrder.end());
-
-  uint32_t numRemaining = remaining.length();
+  mozilla::EnumSet<JSValueType, uint32_t> remaining(defaultOrder);
 
   // Generate checks for previously observed types first.
   // The TypeDataList is sorted by descending frequency.
@@ -12743,15 +12734,19 @@ void CodeGenerator::visitTypeOfV(LTypeOfV* lir) {
       type = JSVAL_TYPE_DOUBLE;
     }
 
+    remaining -= type;
+
     emitTypeOfCheck(type, tag, output, &done, ool->entry());
-    MOZ_ASSERT(std::count(remaining.begin(), remaining.end(), type) == 1);
-    remaining.eraseIfEqual(type);
-    numRemaining--;
   }
 
   // Generate checks for remaining types.
-  for (auto type : remaining) {
-    if (numRemaining == 1) {
+  for (auto type : defaultOrder) {
+    if (!remaining.contains(type)) {
+      continue;
+    }
+    remaining -= type;
+
+    if (remaining.isEmpty()) {
       // We can skip the check for the last remaining type.
 #ifdef DEBUG
       emitTypeOfCheck(type, tag, output, &done, ool->entry());
@@ -12762,9 +12757,8 @@ void CodeGenerator::visitTypeOfV(LTypeOfV* lir) {
     } else {
       emitTypeOfCheck(type, tag, output, &done, ool->entry());
     }
-    numRemaining--;
   }
-  MOZ_ASSERT(numRemaining == 0);
+  MOZ_ASSERT(remaining.isEmpty());
 
   masm.bind(&done);
   masm.bind(ool->rejoin());
