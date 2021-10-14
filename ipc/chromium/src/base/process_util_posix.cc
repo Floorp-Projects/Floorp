@@ -34,6 +34,10 @@
 #include "prenv.h"
 #include "prmem.h"
 
+#ifdef MOZ_ENABLE_FORKSERVER
+#  include "mozilla/ipc/ForkServiceChild.h"
+#endif
+
 const int kMicrosecondsPerSecond = 1000000;
 
 namespace base {
@@ -208,20 +212,22 @@ void CloseSuperfluousFds(void* aCtx, bool (*aShouldPreserve)(void*, int)) {
 
 bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
 #ifdef MOZ_ENABLE_FORKSERVER
-  // We only know if a process exists, but not if it has crashed.
-  //
-  // Since content processes are not direct children of the chrome
-  // process any more, it is impossible to use |waitpid()| to wait for
-  // them.
-  const int r = kill(handle, 0);
-  if (r < 0 && errno == ESRCH) {
-    if (child_exited) *child_exited = true;
-  } else {
-    if (child_exited) *child_exited = false;
-  }
+  if (mozilla::ipc::ForkServiceChild::Get()) {
+    // We only know if a process exists, but not if it has crashed.
+    //
+    // Since content processes are not direct children of the chrome
+    // process any more, it is impossible to use |waitpid()| to wait for
+    // them.
+    const int r = kill(handle, 0);
+    if (r < 0 && errno == ESRCH) {
+      if (child_exited) *child_exited = true;
+    } else {
+      if (child_exited) *child_exited = false;
+    }
 
-  return false;
-#else
+    return false;
+  }
+#endif
   int status;
   const int result = HANDLE_EINTR(waitpid(handle, &status, WNOHANG));
   if (result == -1) {
@@ -263,7 +269,6 @@ bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
   if (WIFEXITED(status)) return WEXITSTATUS(status) != 0;
 
   return false;
-#endif  // MOZ_ENABLE_FORKSERVER
 }
 
 void FreeEnvVarsArray::operator()(char** array) {
