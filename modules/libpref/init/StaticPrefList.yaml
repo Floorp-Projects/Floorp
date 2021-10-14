@@ -1871,6 +1871,11 @@
   value: false
   mirror: always
 
+- name: dom.crypto.randomUUID.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Is support for CSSPseudoElement enabled?
 - name: dom.css_pseudo_element.enabled
   type: bool
