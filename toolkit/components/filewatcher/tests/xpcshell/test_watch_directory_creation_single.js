@@ -29,7 +29,7 @@ add_task(async function test_watch_single_path_directory_creation() {
 
   // Instantiate and initialize the native watcher.
   let watcher = makeWatcher();
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
 
   // Add the profile directory to the watch list and wait for the file watcher
   // to start watching.

@@ -39,9 +39,9 @@ add_task(async function test_watch_multi_paths() {
   let watchedResources = 0;
   let unwatchedResources = 0;
 
-  let deferredChanges = Promise.defer();
-  let deferredSuccesses = Promise.defer();
-  let deferredShutdown = Promise.defer();
+  let deferredChanges = PromiseUtils.defer();
+  let deferredSuccesses = PromiseUtils.defer();
+  let deferredShutdown = PromiseUtils.defer();
 
   // Define the change callback function.
   let changeCallback = function(changed) {

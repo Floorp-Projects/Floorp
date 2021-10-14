@@ -10,7 +10,7 @@ const kExtensionID = "searchignore@mozilla.com";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   IgnoreLists: "resource://gre/modules/IgnoreLists.jsm",
-  Promise: "resource://gre/modules/Promise.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
@@ -49,7 +49,7 @@ add_task(async function test_ignoreList_basic_get() {
 });
 
 add_task(async function test_ignoreList_reentry() {
-  let promise = Promise.defer();
+  let promise = PromiseUtils.defer();
   getStub.resetHistory();
   getStub.onFirstCall().returns(promise.promise);
 

@@ -13,11 +13,6 @@ const { PromiseTestUtils } = ChromeUtils.import(
 PromiseTestUtils.disableUncaughtRejectionObserverForSelfTest();
 
 add_task(async function test_globals() {
-  Assert.equal(
-    Promise.defer || undefined,
-    undefined,
-    "We are testing DOM Promise."
-  );
   Assert.notEqual(
     PromiseDebugging,
     undefined,

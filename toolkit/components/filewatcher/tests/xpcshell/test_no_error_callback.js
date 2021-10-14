@@ -48,7 +48,7 @@ add_task(async function test_watch_single_path_file_creation_no_error_cb() {
 
   // Instantiate and initialize the native watcher.
   let watcher = makeWatcher();
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
 
   // Watch the profile directory but do not pass an error callback.
   await promiseAddPath(watcher, watchedDir, deferred.resolve);

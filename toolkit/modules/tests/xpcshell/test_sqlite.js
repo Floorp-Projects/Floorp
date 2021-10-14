@@ -2,7 +2,6 @@
 
 const PROFILE_DIR = do_get_profile().path;
 
-const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
@@ -464,7 +463,7 @@ add_task(async function test_execute_transaction_success() {
 add_task(async function test_execute_transaction_rollback() {
   let c = await getDummyDatabase("execute_transaction_rollback");
 
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
 
   c.executeTransaction(async function transaction(conn) {
     await conn.execute("INSERT INTO dirs (path) VALUES ('foo')");
@@ -993,7 +992,7 @@ add_task(async function test_direct() {
   let begin = db.createAsyncStatement("BEGIN DEFERRED TRANSACTION");
   let end = db.createAsyncStatement("COMMIT TRANSACTION");
 
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
   begin.executeAsync({
     handleCompletion(reason) {
       deferred.resolve();
@@ -1003,7 +1002,7 @@ add_task(async function test_direct() {
 
   statement.bindParameters(params);
 
-  deferred = Promise.defer();
+  deferred = PromiseUtils.defer();
   print("Executing async.");
   statement.executeAsync({
     handleResult(resultSet) {},
@@ -1024,7 +1023,7 @@ add_task(async function test_direct() {
 
   await deferred.promise;
 
-  deferred = Promise.defer();
+  deferred = PromiseUtils.defer();
   end.executeAsync({
     handleCompletion(reason) {
       deferred.resolve();
@@ -1036,7 +1035,7 @@ add_task(async function test_direct() {
   begin.finalize();
   end.finalize();
 
-  deferred = Promise.defer();
+  deferred = PromiseUtils.defer();
   db.asyncClose(function() {
     deferred.resolve();
   });
@@ -1186,7 +1185,7 @@ add_task(async function test_warning_message_on_finalization() {
   failTestsOnAutoClose(false);
   let c = await getDummyDatabase("warning_message_on_finalization");
   let identifier = c._connectionData._identifier;
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
 
   let listener = {
     observe(msg) {
@@ -1214,7 +1213,7 @@ add_task(async function test_warning_message_on_finalization() {
 
 add_task(async function test_error_message_on_unknown_finalization() {
   failTestsOnAutoClose(false);
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
 
   let listener = {
     observe(msg) {

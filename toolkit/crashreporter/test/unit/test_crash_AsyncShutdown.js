@@ -14,7 +14,9 @@ function setup_crash() {
   const { Services } = ChromeUtils.import(
     "resource://gre/modules/Services.jsm"
   );
-  const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
+  const { PromiseUtils } = ChromeUtils.import(
+    "resource://gre/modules/PromiseUtils.jsm"
+  );
 
   Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 10);
@@ -23,7 +25,7 @@ function setup_crash() {
   let phase = AsyncShutdown._getPhase(TOPIC);
   phase.addBlocker("A blocker that is never satisfied", function() {
     dump("Installing blocker\n");
-    let deferred = Promise.defer();
+    let deferred = PromiseUtils.defer();
     return deferred.promise;
   });
 
@@ -50,14 +52,16 @@ function setup_osfile_crash_noerror() {
     "resource://gre/modules/Services.jsm"
   );
   const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-  const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
+  const { PromiseUtils } = ChromeUtils.import(
+    "resource://gre/modules/PromiseUtils.jsm"
+  );
 
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 1);
   Services.prefs.setBoolPref("toolkit.osfile.native", false);
 
   OS.File.profileBeforeChange.addBlocker(
     "Adding a blocker that will never be resolved",
-    () => Promise.defer().promise
+    () => PromiseUtils.defer().promise
   );
   OS.File.getCurrentDirectory();
 
@@ -88,14 +92,16 @@ function setup_osfile_crash_exn() {
     "resource://gre/modules/Services.jsm"
   );
   const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-  const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
+  const { PromiseUtils } = ChromeUtils.import(
+    "resource://gre/modules/PromiseUtils.jsm"
+  );
 
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 1);
   Services.prefs.setBoolPref("toolkit.osfile.native", false);
 
   OS.File.profileBeforeChange.addBlocker(
     "Adding a blocker that will never be resolved",
-    () => Promise.defer().promise
+    () => PromiseUtils.defer().promise
   );
   OS.File.read("I do not exist");
 
