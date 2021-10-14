@@ -42,7 +42,17 @@ class LoginsCrypto(
      * Decrypts ciphertext fields within [login], producing a plaintext [Login].
      */
     fun decryptLogin(login: EncryptedLogin): Login {
-        val secFields = decryptFields(login.secFields, key().key)
+        return decryptLogin(login, key())
+    }
+
+    /**
+     * Decrypts ciphertext fields within [login], producing a plaintext [Login].
+     *
+     * This version inputs a ManagedKey.  Use this for operations that
+     * decrypt multiple logins to avoid constructing the key multiple times.
+     */
+    fun decryptLogin(login: EncryptedLogin, key: ManagedKey): Login {
+        val secFields = decryptFields(login.secFields, key.key)
         // Note: The autofill code catches errors on decryptFields and returns
         // null, but it's not as easy to recover in this case since the code
         // almost certainly going to need to a [Login], so we just throw in

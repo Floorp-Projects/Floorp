@@ -169,7 +169,7 @@ class SyncableLoginsStorage(
      */
     @Throws(LoginsStorageException::class)
     override suspend fun get(guid: String): Login? = withContext(coroutineContext) {
-        conn.getStorage().get(guid)?.toEncryptedLogin()?.let { decryptLogin(it) }
+        conn.getStorage().get(guid)?.toEncryptedLogin()?.let { crypto.decryptLogin(it) }
     }
 
     /**
@@ -188,7 +188,8 @@ class SyncableLoginsStorage(
      */
     @Throws(LoginsStorageException::class)
     override suspend fun list(): List<Login> = withContext(coroutineContext) {
-        conn.getStorage().list().map { decryptLogin(it.toEncryptedLogin()) }
+        val key = crypto.key()
+        conn.getStorage().list().map { crypto.decryptLogin(it.toEncryptedLogin(), key) }
     }
 
     /**
@@ -253,7 +254,8 @@ class SyncableLoginsStorage(
      */
     @Throws(LoginsStorageException::class)
     override suspend fun getByBaseDomain(origin: String): List<Login> = withContext(coroutineContext) {
-        conn.getStorage().getByBaseDomain(origin).map { decryptLogin(it.toEncryptedLogin()) }
+        val key = crypto.key()
+        conn.getStorage().getByBaseDomain(origin).map { crypto.decryptLogin(it.toEncryptedLogin(), key) }
     }
 
     /**
