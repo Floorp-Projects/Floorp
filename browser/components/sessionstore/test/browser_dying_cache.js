@@ -64,7 +64,7 @@ function checkWindowState(window) {
         entries: [{ url }],
       },
     },
-  ] = JSON.parse(ss.getClosedTabData(window));
+  ] = ss.getClosedTabData(window);
   is(url, "about:robots", "the closed tab is about:robots");
 
   is(ss.getCustomWindowValue(window, "foo"), "bar", "correct extData value");

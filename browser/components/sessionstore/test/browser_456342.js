@@ -56,7 +56,7 @@ async function test_restore_nonstandard_input_values(aURL) {
 
   // Remove tab and check collected form data.
   await promiseRemoveTabAndSessionState(tab);
-  let undoItems = JSON.parse(ss.getClosedTabData(window));
+  let undoItems = ss.getClosedTabData(window);
   let savedFormData = undoItems[0].state.formdata;
 
   let foundIds = 0;

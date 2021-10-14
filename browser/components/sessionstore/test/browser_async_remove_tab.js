@@ -16,11 +16,11 @@ async function createTabWithRandomValue(url) {
 }
 
 function isValueInClosedData(rval) {
-  return ss.getClosedTabData(window).includes(rval);
+  return JSON.stringify(ss.getClosedTabData(window)).includes(rval);
 }
 
 function restoreClosedTabWithValue(rval) {
-  let closedTabData = JSON.parse(ss.getClosedTabData(window));
+  let closedTabData = ss.getClosedTabData(window);
   let index = closedTabData.findIndex(function(data) {
     return (data.state.extData && data.state.extData.foobar) == rval;
   });

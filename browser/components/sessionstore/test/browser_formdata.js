@@ -43,7 +43,7 @@ add_task(async function test_formdata() {
     {
       state: { formdata },
     },
-  ] = JSON.parse(ss.getClosedTabData(window));
+  ] = ss.getClosedTabData(window);
   is(formdata.id.txt, OUTER_VALUE, "outer value is correct");
   is(formdata.children[0].id.txt, INNER_VALUE, "inner value is correct");
 
@@ -55,7 +55,7 @@ add_task(async function test_formdata() {
     {
       state: { formdata },
     },
-  ] = JSON.parse(ss.getClosedTabData(window));
+  ] = ss.getClosedTabData(window);
   is(formdata.id.txt, OUTER_VALUE, "outer value is correct");
   ok(!formdata.children, "inner value was *not* stored");
 
@@ -67,7 +67,7 @@ add_task(async function test_formdata() {
     {
       state: { formdata },
     },
-  ] = JSON.parse(ss.getClosedTabData(window));
+  ] = ss.getClosedTabData(window);
   ok(!formdata, "form data has *not* been stored");
 
   // Restore the default privacy level.
@@ -158,7 +158,7 @@ add_task(async function test_nested() {
     {
       state: { formdata },
     },
-  ] = JSON.parse(ss.getClosedTabData(window));
+  ] = ss.getClosedTabData(window);
   is(
     JSON.stringify(formdata),
     JSON.stringify(FORM_DATA),
