@@ -70,12 +70,19 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     // mostly when doing bfcache navigations, lets cache the early iframes targets and
     // flush them after the top-level target is available. See Bug 1726568 for details.
     this._earlyIframeTargets = {};
-    // A set of the current top-level targets that are available
-    // This helps to determine if the iframe targets are early or not.
-    // Mostly there is just one top-level window target at a time,
-    // but there are certain case when a new target is available before the
+
+    // All currently available WindowGlobal target's form, keyed by `innerWindowId`.
+    //
+    // This helps to:
+    // - determine if the iframe targets are early or not.
+    //   i.e. if it is notified before its parent target is available.
+    // - notify the destruction of all children targets when a parent is destroyed.
+    //   i.e. have a reliable order of destruction between parent and children.
+    //
+    // Note that there should be just one top-level window target at a time,
+    // but there are certain cases when a new target is available before the
     // old target is destroyed.
-    this._currentTopLevelWindowGlobalTargets = new Set();
+    this._currentWindowGlobalTargets = new Map();
 
     this.notifyResourceAvailable = this.notifyResourceAvailable.bind(this);
     this.notifyResourceDestroyed = this.notifyResourceDestroyed.bind(this);
@@ -242,12 +249,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    * Called by a Watcher module, whenever a new target is available
    */
   notifyTargetAvailable(actor) {
-    // The top-level is always the same for the browser-toolbox
-    if (!this.browserId) {
-      this.emit("target-available-form", actor);
-      return;
-    }
-
     // Emit immediately for worker, process & extension targets
     // as they don't have a parent browsing context.
     if (!actor.traits?.isBrowsingContext) {
@@ -255,14 +256,21 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       return;
     }
 
+    // If isBrowsingContext trait is true, we are processing a WindowGlobalTarget.
+    // (this trait should be renamed)
+    this._currentWindowGlobalTargets.set(actor.innerWindowId, actor);
+
+    // The top-level is always the same for the browser-toolbox
+    if (!this.browserId) {
+      this.emit("target-available-form", actor);
+      return;
+    }
+
     if (actor.isTopLevelTarget) {
       this.emit("target-available-form", actor);
-      this._currentTopLevelWindowGlobalTargets.add(actor.innerWindowId);
       // Flush any existing early iframe targets
       this._flushIframeTargets(actor.innerWindowId);
-    } else if (
-      this._currentTopLevelWindowGlobalTargets.has(actor.topInnerWindowId)
-    ) {
+    } else if (this._currentWindowGlobalTargets.has(actor.topInnerWindowId)) {
       // Emit the event immediately if the top-level target is already available
       this.emit("target-available-form", actor);
     } else if (this._earlyIframeTargets[actor.topInnerWindowId]) {
@@ -278,10 +286,29 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    * Called by a Watcher module, whenever a target has been destroyed
    */
   async notifyTargetDestroyed(actor) {
+    // Emit immediately for worker, process & extension targets
+    // as they don't have a parent browsing context.
+    if (!actor.innerWindowId) {
+      this.emit("target-destroyed-form", actor);
+      return;
+    }
+    // Flush all iframe targets if we are destroying a top level target.
+    if (actor.isTopLevelTarget) {
+      // First compute the list of children actors, as notifyTargetDestroy will mutate _currentWindowGlobalTargets
+      const childrenActors = [
+        ...this._currentWindowGlobalTargets.values(),
+      ].filter(
+        form =>
+          form.topInnerWindowId == actor.innerWindowId &&
+          // Ignore the top level target itself, because its topInnerWindowId will be its innerWindowId
+          form.innerWindowId != actor.innerWindowId
+      );
+      childrenActors.map(form => this.notifyTargetDestroyed(form));
+    }
     if (this._earlyIframeTargets[actor.innerWindowId]) {
       delete this._earlyIframeTargets[actor.innerWindowId];
     }
-    this._currentTopLevelWindowGlobalTargets.delete(actor.innerWindowId);
+    this._currentWindowGlobalTargets.delete(actor.innerWindowId);
     const documentEventWatcher = Resources.getResourceWatcher(
       this,
       Resources.TYPES.DOCUMENT_EVENT
