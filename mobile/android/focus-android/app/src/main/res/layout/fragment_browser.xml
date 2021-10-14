@@ -6,7 +6,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:mozac="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <LinearLayout
@@ -90,12 +89,10 @@
                 android:elevation="10dp"
                 android:layout_height="56dp"
                 android:padding="4dp"
-                android:background="@color/find_in_page_background"
-                mozac:findInPageNoMatchesTextColor="@color/find_in_page_no_matches_color"
-                mozac:findInPageQueryTextColor="@color/find_in_page_query_color"
-                mozac:findInPageQueryHintTextColor="@color/find_in_page_query_hint_color"
-                mozac:findInPageResultCountTextColor="@color/find_in_page_results_color"
-                app:findInPageButtonsTint="@color/find_in_page_buttons_tint"
+                android:background="@color/colorPrimary"
+                app:findInPageNoMatchesTextColor="@color/error"
+                app:findInPageButtonsTint="@color/primaryText"
+                app:findInPageResultCountTextColor="@color/primaryText"
                 android:visibility="gone" />
 
         </org.mozilla.focus.widget.ResizableKeyboardCoordinatorLayout>

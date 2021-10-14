@@ -92,17 +92,6 @@
     <!-- Launcher Icon Background-->
     <color name="add_to_homescreen_icon_background">@color/photonInk60</color>
 
-    <!-- Dialogs -->
-
-
-    <!-- Find in Page -->
-    <color name="find_in_page_background">@color/photonBlack</color>
-    <color name="find_in_page_buttons_tint">@color/enabled_button_tint</color>
-    <color name="find_in_page_no_matches_color">#ffFFFFFF</color>
-    <color name="find_in_page_query_color">#ffFFFFFF</color>
-    <color name="find_in_page_query_hint_color">#ffFFFFFF</color>
-    <color name="find_in_page_results_color">#ffFFFFFF</color>
-
     <color name="firefoxInstallHint">@color/focusContrastPink</color>
 
     <color name="scrollbarThumb">#b2b2b2b2</color>
