@@ -43,12 +43,8 @@ add_task(async function test_selectChoose() {
   let menuList = win.document.getElementById("editBMPanel_folderMenuList");
   let folderTreeRow = win.document.getElementById("editBMPanel_folderTreeRow");
 
-  let expectedFolder = gBookmarksToolbar2h2020
-    ? "BookmarksToolbarFolderTitle"
-    : "OtherBookmarksFolderTitle";
-  let expectedGuid = gBookmarksToolbar2h2020
-    ? PlacesUtils.bookmarks.toolbarGuid
-    : PlacesUtils.bookmarks.unfiledGuid;
+  let expectedFolder = "BookmarksToolbarFolderTitle";
+  let expectedGuid = PlacesUtils.bookmarks.toolbarGuid;
 
   Assert.equal(
     menuList.label,

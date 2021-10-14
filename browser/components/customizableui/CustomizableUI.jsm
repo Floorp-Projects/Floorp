@@ -31,13 +31,6 @@ XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
   return Services.strings.createBundle(kUrl);
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gBookmarksToolbar2h2020",
-  "browser.toolbars.bookmarks.2h2020",
-  false
-);
-
 const kDefaultThemeID = "default-theme@mozilla.org";
 
 const kSpecialWidgetPfx = "customizableui-special-";
@@ -294,7 +287,7 @@ var CustomizableUIInternal = {
       {
         type: CustomizableUI.TYPE_TOOLBAR,
         defaultPlacements: ["personal-bookmarks"],
-        defaultCollapsed: gBookmarksToolbar2h2020 ? "newtab" : true,
+        defaultCollapsed: "newtab",
       },
       true
     );
@@ -3451,10 +3444,7 @@ var CustomizableUIInternal = {
           let collapsed = null;
           let defaultCollapsed = props.get("defaultCollapsed");
           let nondefaultState = false;
-          if (
-            areaId == CustomizableUI.AREA_BOOKMARKS &&
-            gBookmarksToolbar2h2020
-          ) {
+          if (areaId == CustomizableUI.AREA_BOOKMARKS) {
             collapsed = Services.prefs.getCharPref(
               "browser.toolbars.bookmarks.visibility"
             );

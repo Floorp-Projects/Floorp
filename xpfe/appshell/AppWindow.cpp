@@ -1883,8 +1883,7 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
                          bookmarksVisibility);
   settings.bookmarksToolbarShown =
       bookmarksVisibility.EqualsLiteral("always") ||
-      (Preferences::GetBool("browser.toolbars.bookmarks.2h2020", false) &&
-       bookmarksVisibility.EqualsLiteral("newtab"));
+      bookmarksVisibility.EqualsLiteral("newtab");
 
   Element* menubar = doc->GetElementById(u"toolbar-menubar"_ns);
   menubar->GetAttribute(u"autohide"_ns, attributeValue);

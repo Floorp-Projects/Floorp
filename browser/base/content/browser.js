@@ -493,12 +493,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "gBookmarksToolbar2h2020",
-  "browser.toolbars.bookmarks.2h2020",
-  false
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
   "gBookmarksToolbarVisibility",
   "browser.toolbars.bookmarks.visibility",
   "newtab"
@@ -1603,9 +1597,7 @@ var gBrowserInit = {
     BookmarkingUI.updateEmptyToolbarMessage();
     setToolbarVisibility(
       BookmarkingUI.toolbar,
-      gBookmarksToolbar2h2020
-        ? gBookmarksToolbarVisibility
-        : gBookmarksToolbarVisibility == "always",
+      gBookmarksToolbarVisibility,
       false,
       false
     );
@@ -5404,7 +5396,7 @@ var XULBrowserWindow = {
 
     BookmarkingUI.onLocationChange();
     // If we've actually changed document, update the toolbar visibility.
-    if (gBookmarksToolbar2h2020 && !isSameDocument) {
+    if (!isSameDocument) {
       let bookmarksToolbar = gNavToolbox.querySelector("#PersonalToolbar");
       setToolbarVisibility(
         bookmarksToolbar,
@@ -6473,7 +6465,7 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
       continue;
     }
 
-    if (toolbar.id == "PersonalToolbar" && gBookmarksToolbar2h2020) {
+    if (toolbar.id == "PersonalToolbar") {
       let menu = BookmarkingUI.buildBookmarksToolbarSubmenu(toolbar);
       popup.insertBefore(menu, firstMenuItem);
     } else {
