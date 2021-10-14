@@ -13,7 +13,6 @@
 #include "mozilla/intl/Calendar.h"
 #include "mozilla/intl/DateTimeFormat.h"
 #include "mozilla/intl/DateTimePatternGenerator.h"
-#include "mozilla/intl/Locale.h"
 #include "mozilla/intl/TimeZone.h"
 #include "mozilla/Range.h"
 #include "mozilla/Span.h"
@@ -521,14 +520,14 @@ static UniqueChars DateTimeFormatLocale(
   // ICU expects calendar, numberingSystem, and hourCycle as Unicode locale
   // extensions on locale.
 
-  mozilla::intl::Locale tag;
+  intl::LanguageTag tag(cx);
   {
-    RootedLinearString locale(cx, value.toString()->ensureLinear(cx));
+    JSLinearString* locale = value.toString()->ensureLinear(cx);
     if (!locale) {
       return nullptr;
     }
 
-    if (!intl::ParseLocale(cx, locale, tag)) {
+    if (!intl::LanguageTagParser::parse(cx, locale, tag)) {
       return nullptr;
     }
   }
@@ -596,12 +595,7 @@ static UniqueChars DateTimeFormatLocale(
     return nullptr;
   }
 
-  FormatBuffer<char> buffer(cx);
-  if (auto result = tag.toString(buffer); result.isErr()) {
-    intl::ReportInternalError(cx, result.unwrapErr());
-    return nullptr;
-  }
-  return buffer.extractStringZ();
+  return tag.toStringZ(cx);
 }
 
 static bool AssignTextComponent(
