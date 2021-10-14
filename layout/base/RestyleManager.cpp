@@ -1300,6 +1300,12 @@ static inline void MaybeDealWithScrollbarChange(nsStyleChangeData& aData,
         // Under these conditions, we're OK to assume that this "overflow"
         // change only impacts the root viewport's scrollframe, which
         // already exists, so we can simply reflow instead of reframing.
+        if (nsIScrollableFrame* sf = do_QueryFrame(aData.mFrame)) {
+          sf->MarkScrollbarsDirtyForReflow();
+        } else if (nsIScrollableFrame* sf =
+                       aPc->PresShell()->GetRootScrollFrameAsScrollable()) {
+          sf->MarkScrollbarsDirtyForReflow();
+        }
         aData.mHint |= nsChangeHint_ReflowHintsForScrollbarChange;
         return;
       }
@@ -1309,6 +1315,7 @@ static inline void MaybeDealWithScrollbarChange(nsStyleChangeData& aData,
   if (nsIScrollableFrame* sf = do_QueryFrame(aData.mFrame)) {
     if (aData.mFrame->StyleDisplay()->IsScrollableOverflow() &&
         sf->HasAllNeededScrollbars()) {
+      sf->MarkScrollbarsDirtyForReflow();
       // Once we've created scrollbars for a frame, don't bother reconstructing
       // it just to remove them if we still need a scroll frame.
       aData.mHint |= nsChangeHint_ReflowHintsForScrollbarChange;
