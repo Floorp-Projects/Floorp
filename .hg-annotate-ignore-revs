@@ -423,3 +423,4 @@ e28c911d36db5524416becf1781c231a058e6c21 - Noemi Erli - Backed out changeset 5f5
 b747274f1da3e93a8bed6b8c8df6299ceb354417 - Butkovits Atila - Backed out changeset 510dd46a9de7 (bug 1696251) for causing Android build bustages.
 53b1fa0faa6d78f7cf72f9cbe3dc85221a04eea3 - Alex Lopez - Bug 1696251: Allow mach commands as stand-alone functions and adapt existing commands. r=mhentges,webdriver-reviewers,perftest-reviewers,sparky,whimboo
 c38d34be7c3f757510f037fef5a78ea08af32980 - Butkovits Atila - Backed out changeset 53b1fa0faa6d (bug 1696251) for breaking the static-analysis integration. a=backout
+1fa64c7fe170ab629768d6ed27c5840555773709 - Agi Sferro - Bug 1571899 - Format Java codebase with google-java-formatter. r=owlish
