@@ -415,7 +415,8 @@ TextLeafPoint TextLeafPoint::FindPrevLineStartSameLocalAcc(
   }
   nsIFrame* frame = acc->GetFrame();
   if (!frame) {
-    MOZ_ASSERT_UNREACHABLE("No frame");
+    // This can happen if this is an empty element with display: contents. In
+    // that case, this Accessible contains no lines.
     return TextLeafPoint();
   }
   if (!frame->IsTextFrame()) {
@@ -461,7 +462,8 @@ TextLeafPoint TextLeafPoint::FindNextLineStartSameLocalAcc(
   }
   nsIFrame* frame = acc->GetFrame();
   if (!frame) {
-    MOZ_ASSERT_UNREACHABLE("No frame");
+    // This can happen if this is an empty element with display: contents. In
+    // that case, this Accessible contains no lines.
     return TextLeafPoint();
   }
   if (!frame->IsTextFrame()) {
