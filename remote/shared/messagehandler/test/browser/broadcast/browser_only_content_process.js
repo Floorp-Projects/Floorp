@@ -8,7 +8,7 @@ add_task(async function test_broadcasting_only_content_process() {
   const tab1 = gBrowser.selectedTab;
   await loadURL(
     tab1.linkedBrowser,
-    "http://example.com/document-builder.sjs?html=tab"
+    "https://example.com/document-builder.sjs?html=tab"
   );
   const browsingContext1 = tab1.linkedBrowser.browsingContext;
 

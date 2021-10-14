@@ -50,7 +50,7 @@ async function addTab(url) {
  */
 function createFrame(domain) {
   return createFrameForUri(
-    `http://${domain}/document-builder.sjs?html=frame-${domain}`
+    `https://${domain}/document-builder.sjs?html=frame-${domain}`
   );
 }
 
@@ -73,14 +73,16 @@ function createFrameForUri(uri) {
 function createTestMarkupWithFrames() {
   // Create the markup for an example.net frame nested in an example.com frame.
   const NESTED_FRAME_MARKUP = createFrameForUri(
-    `http://example.org/document-builder.sjs?html=${createFrame("example.net")}`
+    `https://example.org/document-builder.sjs?html=${createFrame(
+      "example.net"
+    )}`
   );
 
   // Combine the nested frame markup created above with an example.com frame.
   const TEST_URI_MARKUP = `${NESTED_FRAME_MARKUP}${createFrame("example.com")}`;
 
   // Create the test page URI on example.org.
-  return `http://example.org/document-builder.sjs?html=${encodeURI(
+  return `https://example.org/document-builder.sjs?html=${encodeURI(
     TEST_URI_MARKUP
   )}`;
 }
