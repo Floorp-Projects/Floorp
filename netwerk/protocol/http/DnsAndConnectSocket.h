@@ -169,8 +169,6 @@ class DnsAndConnectSocket final : public nsIOutputStreamCallback,
     void SetConnecting();
     void MaybeSetConnectingDone();
 
-    explicit TransportSetup(bool isBackup);
-
     nsresult Init(DnsAndConnectSocket* dnsAndSock);
     void CancelDnsResolution();
     void Abandon();
@@ -184,6 +182,17 @@ class DnsAndConnectSocket final : public nsIOutputStreamCallback,
     nsresult OnLookupComplete(DnsAndConnectSocket* dnsAndSock,
                               nsIDNSRecord* rec, nsresult status);
     nsresult CheckConnectedResult(DnsAndConnectSocket* dnsAndSock);
+
+   protected:
+    explicit TransportSetup(bool isBackup);
+  };
+
+  struct PrimaryTransportSetup final : TransportSetup {
+    PrimaryTransportSetup() : TransportSetup(false) {}
+  };
+
+  struct BackupTransportSetup final : TransportSetup {
+    BackupTransportSetup() : TransportSetup(true) {}
   };
 
   nsresult SetupConn(bool isPrimary, nsresult status);
@@ -210,7 +219,7 @@ class DnsAndConnectSocket final : public nsIOutputStreamCallback,
   RefPtr<nsAHttpTransaction> mTransaction;
   bool mDispatchedMTransaction = false;
 
-  TransportSetup mPrimaryTransport;
+  PrimaryTransportSetup mPrimaryTransport;
   uint32_t mCaps;
 
   // mSpeculative is set if the socket was created from
@@ -247,7 +256,7 @@ class DnsAndConnectSocket final : public nsIOutputStreamCallback,
 
   RefPtr<nsHttpConnectionInfo> mConnInfo;
   nsCOMPtr<nsITimer> mSynTimer;
-  TransportSetup mBackupTransport;
+  BackupTransportSetup mBackupTransport;
 
   bool mIsHttp3;
 
