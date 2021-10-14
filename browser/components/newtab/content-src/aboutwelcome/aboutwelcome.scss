@@ -378,6 +378,34 @@ body {
         color: #FFF;
       }
     }
+
+    .colorway-text,
+    .variation-button {
+      transition: 0.4s opacity, 0.4s translate;
+    }
+
+    &.in :is(.colorway-text, .variation-button) {
+      opacity: 0;
+      transition: none;
+      translate: 0 calc(var(--translate) / -3);
+    }
+
+    &.out :is(.colorway-text, .variation-button) {
+      opacity: 0;
+      translate: 0 calc(var(--translate) / 3);
+    }
+
+    .colorway:nth-of-type(1) .variation-button {
+      transition-delay: 0.1s;
+    }
+
+    .colorway:nth-of-type(2) .variation-button {
+      transition-delay: 0.2s;
+    }
+
+    .colorway:nth-of-type(3) .variation-button {
+      transition-delay: 0.3s;
+    }
   }
 
   .tiles-theme-section {
