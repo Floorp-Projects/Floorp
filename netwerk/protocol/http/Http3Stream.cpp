@@ -11,6 +11,9 @@
 #include "nsHttpRequestHead.h"
 #include "nsISocketTransport.h"
 #include "nsSocketTransportService2.h"
+#include "mozilla/Telemetry.h"
+#include "nsIOService.h"
+#include "nsHttpHandler.h"
 
 #include <stdio.h>
 

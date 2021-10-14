@@ -28,6 +28,7 @@
 
 class nsISocketTransport;
 class nsISSLSocketControl;
+class nsIDNSRecord;
 
 namespace mozilla {
 namespace net {

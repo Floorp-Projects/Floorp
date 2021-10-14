@@ -5,7 +5,7 @@
 #ifndef HttpWinUtils_h__
 #define HttpWinUtils_h__
 
-class nsIURI;
+class nsHttpChannel;
 
 namespace mozilla {
 namespace net {

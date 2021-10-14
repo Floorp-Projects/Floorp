@@ -42,6 +42,7 @@
 #include "sslt.h"
 #include "NSSErrorsService.h"
 #include "TunnelUtils.h"
+#include "mozilla/StaticPrefs_network.h"
 
 namespace mozilla {
 namespace net {
@@ -1804,8 +1805,7 @@ nsresult nsHttpConnection::OnSocketWritable() {
     // transaction->readsegments() processing can proceed because we need to
     // know how to format the request differently for http/1, http/2, spdy,
     // etc.. and that is negotiated with NPN/ALPN in the SSL handshake.
-    if (mConnInfo->UsingHttpsProxy() &&
-        !EnsureNPNComplete()) {
+    if (mConnInfo->UsingHttpsProxy() && !EnsureNPNComplete()) {
       MOZ_DIAGNOSTIC_ASSERT(!EarlyDataAvailable());
       mSocketOutCondition = NS_BASE_STREAM_WOULD_BLOCK;
     } else if (mProxyConnectStream) {
@@ -1817,8 +1817,8 @@ nsresult nsHttpConnection::OnSocketWritable() {
                                              &transactionBytes);
     } else if (!EnsureNPNComplete() &&
                (!EarlyDataUsed() || mTlsHandshakeComplitionPending)) {
-      // The handshake is not done and we cannot write 0RTT data or nss has already
-      // finished 0RTT data.
+      // The handshake is not done and we cannot write 0RTT data or nss has
+      // already finished 0RTT data.
       mSocketOutCondition = NS_BASE_STREAM_WOULD_BLOCK;
     } else if (!mTransaction) {
       rv = NS_ERROR_FAILURE;
@@ -1875,8 +1875,8 @@ nsresult nsHttpConnection::OnSocketWritable() {
           rv = mTLSFilter->NudgeTunnel(this);
         } else if (mEarlyDataState != EarlyData::CANNOT_BE_USED) {
           // continue writing
-          // We are not going to poll for write if the handshake is in progress, but
-          // early data cannot be used.
+          // We are not going to poll for write if the handshake is in progress,
+          // but early data cannot be used.
           rv = mSocketOut->AsyncWait(this, 0, 0, nullptr);
         }
       } else {
@@ -2549,8 +2549,7 @@ nsHttpConnection::HandshakeDone() {
   // nss locks.
   RefPtr<nsHttpConnection> self(this);
   NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-      "nsHttpConnection::HandshakeDoneInternal",
-      [self{std::move(self)}]() {
+      "nsHttpConnection::HandshakeDoneInternal", [self{std::move(self)}]() {
         if (self->mTlsHandshakeComplitionPending) {
           self->HandshakeDoneInternal();
           self->mTlsHandshakeComplitionPending = false;
@@ -2601,8 +2600,9 @@ void nsHttpConnection::HandshakeDoneInternal() {
          static_cast<uint32_t>(rv)));
 
     if (NS_FAILED(rvEarlyData) ||
-        (mTransaction && NS_FAILED(mTransaction->Finish0RTT(
-            !earlyDataAccepted, negotiatedNPN != mEarlyNegotiatedALPN)))) {
+        (mTransaction &&
+         NS_FAILED(mTransaction->Finish0RTT(
+             !earlyDataAccepted, negotiatedNPN != mEarlyNegotiatedALPN)))) {
       LOG(
           ("nsHttpConection::HandshakeDone [this=%p] closing transaction "
            "%p",
