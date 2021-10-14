@@ -3,7 +3,7 @@
 
 "use strict";
 
-const TEST_PAGE = "http://example.com/document-builder.sjs?html=tab";
+const TEST_PAGE = "https://example.com/document-builder.sjs?html=tab";
 
 add_task(async function test_broadcasting_two_tabs_command() {
   info("Navigate the initial tab to the test URL");

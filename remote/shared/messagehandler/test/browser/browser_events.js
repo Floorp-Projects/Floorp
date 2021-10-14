@@ -21,7 +21,7 @@ const { WindowGlobalMessageHandler } = ChromeUtils.import(
 add_task(async function test_event() {
   const tab = BrowserTestUtils.addTab(
     gBrowser,
-    "http://example.com/document-builder.sjs?html=tab"
+    "https://example.com/document-builder.sjs?html=tab"
   );
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   const browsingContext = tab.linkedBrowser.browsingContext;
@@ -96,7 +96,7 @@ add_task(async function test_root_event() {
 add_task(async function test_windowglobal_in_root_event() {
   const tab = BrowserTestUtils.addTab(
     gBrowser,
-    "http://example.com/document-builder.sjs?html=tab"
+    "https://example.com/document-builder.sjs?html=tab"
   );
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   const browsingContext = tab.linkedBrowser.browsingContext;
@@ -139,7 +139,7 @@ add_task(async function test_windowglobal_in_root_event() {
 add_task(async function test_event_multisession() {
   const tab = BrowserTestUtils.addTab(
     gBrowser,
-    "http://example.com/document-builder.sjs?html=tab"
+    "https://example.com/document-builder.sjs?html=tab"
   );
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   const browsingContextId = tab.linkedBrowser.browsingContext.id;
