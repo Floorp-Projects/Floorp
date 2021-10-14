@@ -105,10 +105,10 @@ void TestCC::MaybePokeCC() {
   // nsJSContext::MaybePokeCC
 
   // In all tests so far, we will be running this just after a GC.
-  mozilla::CCReason reason = mScheduler.ShouldScheduleCC(Now(), SuspectedCCObjects());
+  CCReason reason = mScheduler.ShouldScheduleCC(Now(), SuspectedCCObjects());
   EXPECT_EQ(reason, CCReason::GC_FINISHED);
 
-  mScheduler.InitCCRunnerStateMachine(CCRunnerState::ReducePurple);
+  mScheduler.InitCCRunnerStateMachine(CCRunnerState::ReducePurple, reason);
   EXPECT_TRUE(mScheduler.IsEarlyForgetSkippable());
 }
 
@@ -184,9 +184,8 @@ void TestCC::EndCycleCollectionCallback() {
 
 void TestCC::KillCCRunner() {
   // nsJSContext::KillCCRunner
-  mScheduler.UnblockCC();
-  mScheduler.DeactivateCCRunner();
   mScheduler.NoteCCEnd(Now());
+  mScheduler.KillCCRunner();
 }
 
 class TestIdleCC : public TestCC {
