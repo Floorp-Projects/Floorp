@@ -13,6 +13,7 @@ use audioipc::{
     messages::{self, CallbackReq, CallbackResp, ClientMessage, ServerMessage},
 };
 use cubeb_backend::{ffi, DeviceRef, Error, Result, Stream, StreamOps};
+use fallible_collections::FallibleVec;
 use futures::Future;
 use futures_cpupool::{CpuFuture, CpuPool};
 use std::ffi::{CStr, CString};
@@ -197,14 +198,32 @@ impl rpc::Server for CallbackServer {
                 })
             }
             CallbackReq::SharedMem(mut handle, shm_area_size) => {
-                let shm = unsafe {
-                    SharedMem::from(handle.take_handle(), shm_area_size)
-                        .expect("Client failed to set up shmem")
+                self.shm = match unsafe { SharedMem::from(handle.take_handle(), shm_area_size) } {
+                    Ok(shm) => Some(shm),
+                    Err(e) => {
+                        warn!(
+                            "sharedmem client mapping failed (size={}, err={:?})",
+                            shm_area_size, e
+                        );
+                        return self
+                            .cpu_pool
+                            .spawn_fn(move || Ok(CallbackResp::Error(ffi::CUBEB_ERROR)));
+                    }
                 };
-                self.shm = Some(shm);
 
                 self.duplex_input = if let StreamDirection::Duplex = self.dir {
-                    Some(Vec::with_capacity(shm_area_size))
+                    match Vec::try_with_capacity(shm_area_size) {
+                        Ok(duplex_input) => Some(duplex_input),
+                        Err(e) => {
+                            warn!(
+                                "duplex_input allocation failed (size={}, err={:?})",
+                                shm_area_size, e
+                            );
+                            return self
+                                .cpu_pool
+                                .spawn_fn(move || Ok(CallbackResp::Error(ffi::CUBEB_ERROR)));
+                        }
+                    }
                 } else {
                     None
                 };

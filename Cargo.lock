@@ -184,7 +184,7 @@ dependencies = [
 [[package]]
 name = "audioipc"
 version = "0.2.5"
-source = "git+https://github.com/mozilla/audioipc-2?rev=fce878ff15f4e1dba1e5b54f82460af605fb4d14#fce878ff15f4e1dba1e5b54f82460af605fb4d14"
+source = "git+https://github.com/mozilla/audioipc-2?rev=8381f3812354d8d1df972c2c3ea596b70caa9a84#8381f3812354d8d1df972c2c3ea596b70caa9a84"
 dependencies = [
  "ashmem",
  "audio_thread_priority",
@@ -213,11 +213,12 @@ dependencies = [
 [[package]]
 name = "audioipc-client"
 version = "0.4.0"
-source = "git+https://github.com/mozilla/audioipc-2?rev=fce878ff15f4e1dba1e5b54f82460af605fb4d14#fce878ff15f4e1dba1e5b54f82460af605fb4d14"
+source = "git+https://github.com/mozilla/audioipc-2?rev=8381f3812354d8d1df972c2c3ea596b70caa9a84#8381f3812354d8d1df972c2c3ea596b70caa9a84"
 dependencies = [
  "audio_thread_priority",
  "audioipc",
  "cubeb-backend",
+ "fallible_collections",
  "futures 0.1.31",
  "futures-cpupool",
  "log",
@@ -227,7 +228,7 @@ dependencies = [
 [[package]]
 name = "audioipc-server"
 version = "0.2.3"
-source = "git+https://github.com/mozilla/audioipc-2?rev=fce878ff15f4e1dba1e5b54f82460af605fb4d14#fce878ff15f4e1dba1e5b54f82460af605fb4d14"
+source = "git+https://github.com/mozilla/audioipc-2?rev=8381f3812354d8d1df972c2c3ea596b70caa9a84#8381f3812354d8d1df972c2c3ea596b70caa9a84"
 dependencies = [
  "audio_thread_priority",
  "audioipc",
