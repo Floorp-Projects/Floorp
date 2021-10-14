@@ -1391,10 +1391,7 @@ bool WarpCacheIRTranspiler::emitLoadConstantStringResult(uint32_t strOffset) {
 
 bool WarpCacheIRTranspiler::emitLoadTypeOfObjectResult(ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
-  auto* typeOf = MTypeOf::New(alloc(), obj);
-  add(typeOf);
-
-  auto* ins = MTypeOfName::New(alloc(), typeOf);
+  auto* ins = MTypeOf::New(alloc(), obj);
   add(ins);
   pushResult(ins);
   return true;
