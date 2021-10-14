@@ -254,6 +254,8 @@ void Http3Session::Shutdown() {
       stream->Close(NS_ERROR_NET_PARTIAL_TRANSFER);
     } else if (mError == NS_ERROR_NET_HTTP3_PROTOCOL_ERROR) {
       stream->Close(NS_ERROR_NET_HTTP3_PROTOCOL_ERROR);
+    } else if (mError == NS_ERROR_NET_RESET) {
+      stream->Close(NS_ERROR_NET_RESET);
     } else {
       stream->Close(NS_ERROR_ABORT);
     }
