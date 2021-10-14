@@ -13,6 +13,8 @@
 #include "nsSerializationHelper.h"
 #include "nsThreadUtils.h"
 #include "WebSocketConnection.h"
+#include "nsNetCID.h"
+#include "nsSocketTransportService2.h"
 
 namespace mozilla {
 namespace net {

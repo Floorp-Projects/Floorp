@@ -17,8 +17,11 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/net/ChannelEventQueue.h"
 #include "SerializedLoadContext.h"
+#include "mozilla/dom/ContentChild.h"
+#include "nsITransportProvider.h"
 
 using namespace mozilla::ipc;
+using mozilla::dom::ContentChild;
 
 namespace mozilla {
 namespace net {
