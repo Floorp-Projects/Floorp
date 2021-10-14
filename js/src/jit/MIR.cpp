@@ -3872,9 +3872,21 @@ bool MCompare::tryFoldTypeOf(bool* result) {
       }
       break;
     case JSTYPE_UNDEFINED:
-    case JSTYPE_FUNCTION:
-    case JSTYPE_LIMIT:
+      if (!typeOf->input()->mightBeType(MIRType::Object) &&
+          !typeOf->input()->mightBeType(MIRType::Undefined)) {
+        *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
+        return true;
+      }
       break;
+    case JSTYPE_FUNCTION:
+      if (!typeOf->input()->mightBeType(MIRType::Object)) {
+        *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
+        return true;
+      }
+      break;
+    case JSTYPE_LIMIT:
+      *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
+      return true;
   }
 
   return false;
