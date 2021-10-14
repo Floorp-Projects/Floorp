@@ -47,7 +47,7 @@ var UrlbarUtils = {
 
   // Results are categorized into groups to help the muxer compose them.  See
   // UrlbarUtils.getResultGroup.  Since result groups are stored in result
-  // buckets and result buckets are stored in prefs, additions and changes to
+  // groups and result groups are stored in prefs, additions and changes to
   // result groups may require adding UI migrations to BrowserGlue.  Be careful
   // about making trivial changes to existing groups, like renaming them,
   // because we don't want to make downgrades unnecessarily hard.
@@ -128,7 +128,7 @@ var UrlbarUtils = {
   },
 
   /**
-   * Buckets used for logging telemetry to the FX_URLBAR_SELECTED_RESULT_TYPE_2
+   * Groups used for logging telemetry to the FX_URLBAR_SELECTED_RESULT_TYPE_2
    * histogram.
    */
   SELECTED_RESULT_TYPES: {
