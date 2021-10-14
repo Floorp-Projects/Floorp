@@ -672,7 +672,24 @@ impl CubebServer {
 
         let (ipc_server, ipc_client) = MessageStream::anonymous_ipc_pair()?;
         debug!("Created callback pair: {:?}-{:?}", ipc_server, ipc_client);
-        let shm = SharedMem::new(&get_shm_id(), self.shm_area_size)?;
+
+        // Estimate a safe shmem size for this stream configuration.  If the server was configured with a fixed
+        // shm_area_size override, use that instead.
+        // TODO: Add a new cubeb API to query the precise buffer size required for a given stream config.
+        // https://github.com/mozilla/audioipc-2/issues/124
+        let shm_area_size = if self.shm_area_size == 0 {
+            let frame_size = output_frame_size.max(input_frame_size) as u32;
+            let in_rate = params.input_stream_params.map(|p| p.rate).unwrap_or(0);
+            let out_rate = params.output_stream_params.map(|p| p.rate).unwrap_or(0);
+            let rate = out_rate.max(in_rate);
+            // 1s of audio, rounded up to the nearest 64kB.
+            (((rate * frame_size) + 0xffff) & !0xffff) as usize
+        } else {
+            self.shm_area_size
+        };
+        debug!("shm_area_size = {}", shm_area_size);
+
+        let shm = SharedMem::new(&get_shm_id(), shm_area_size)?;
 
         // This code is currently running on the Client/Server RPC
         // handling thread.  We need to move the registration of the
@@ -698,7 +715,7 @@ impl CubebServer {
         let shm_handle = unsafe { shm.make_handle().unwrap() };
         let shm_setup = Some(rpc.call(CallbackReq::SharedMem(
             SerializableHandle::new(shm_handle, self.remote_pid.unwrap()),
-            self.shm_area_size,
+            shm_area_size,
         )));
 
         let cbs = Box::new(ServerStreamCallbacks {
