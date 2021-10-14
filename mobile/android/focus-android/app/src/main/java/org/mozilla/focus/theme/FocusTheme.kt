@@ -72,8 +72,12 @@ private fun lightColorPalette(): FocusColors = FocusColors(
  */
 private fun darkColorsMaterial(): Colors = darkColors(
     surface = PhotonColors.Ink60,
+    onSurface = PhotonColors.LightGrey05,
+    onBackground = PhotonColors.LightGrey05
 )
 
 private fun lightColorsMaterial(): Colors = lightColors(
-    surface = PhotonColors.Violet05
+    surface = PhotonColors.Violet05,
+    onSurface = PhotonColors.Ink50,
+    onBackground = PhotonColors.Ink50
 )

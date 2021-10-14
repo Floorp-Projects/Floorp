@@ -228,7 +228,7 @@ private fun SearchSuggestions(
             AwesomeBar(
                 text = text,
                 colors = AwesomeBarDefaults.colors(
-                    background = focusColors.surface,
+                    background = focusColors.surface
                 ),
                 providers = listOf(provider),
                 onSuggestionClicked = onSuggestionClicked,
