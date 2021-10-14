@@ -1382,6 +1382,11 @@ void nsJSContext::PrepareForCycleCollectionSlice(TimeStamp aDeadline) {
     FinishAnyIncrementalGC();
     afterGCTime = TimeStamp::Now();
   }
+
+  if (!sScheduler.IsCollectingCycles()) {
+    sScheduler.NoteCCBegin(beginTime);
+  }
+
   sCCStats.AfterPrepareForCycleCollectionSlice(aDeadline, beginTime,
                                                afterGCTime);
 }
