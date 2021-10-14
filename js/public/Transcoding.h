@@ -44,11 +44,8 @@ enum class TranscodeResult : uint8_t {
   // A warning message, is set to the message out-param.
   Failure = 0x10,
   Failure_BadBuildId = Failure | 0x1,
-  Failure_RunOnceNotSupported = Failure | 0x2,
-  Failure_AsmJSNotSupported = Failure | 0x3,
-  Failure_BadDecode = Failure | 0x4,
-  Failure_WrongCompileOption = Failure | 0x5,
-  Failure_NotInterpretedFun = Failure | 0x6,
+  Failure_AsmJSNotSupported = Failure | 0x2,
+  Failure_BadDecode = Failure | 0x3,
 
   // There is a pending exception on the context.
   Throw = 0x20
