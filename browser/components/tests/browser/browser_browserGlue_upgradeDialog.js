@@ -179,7 +179,7 @@ add_task(async function all_3_screens() {
     ["content", "button", "upgrade-dialog-start-primary-button"],
     ["content", "show", "random-1"],
     ["content", "show", "upgrade-dialog-colorway-primary-button"],
-    ["content", "theme", "balanced"],
+    ["content", "theme", "variant-1"],
     ["content", "button", "upgrade-dialog-colorway-secondary-button"],
     ["content", "show", "upgrade-dialog-thankyou-primary-button"],
     ["content", "close", "external"]
