@@ -247,6 +247,20 @@ class TabDescriptorFront extends DescriptorMixin(
 
     if (this.isServerTargetSwitchingEnabled()) {
       this._resolveTargetFrontPromise(targetFront);
+
+      // Set a new promise in order to:
+      // 1) Avoid leaking the targetFront we just resolved into the previous promise.
+      // 2) Never return an empty target from `getTarget`
+      //
+      // About the second point:
+      // There is a race condition where we call `onTargetDestroyed` (which clears `this.targetFront`)
+      // a bit before calling `setTarget`. So that `this.targetFront` could be null,
+      // while we now a new target will eventually come when calling `setTarget`.
+      // Setting a new promise will help wait for the next target while `_targetFront` is null.
+      // Note that `getTarget` first look into `_targetFront` before checking for `_targetFrontPromise`.
+      this._targetFrontPromise = new Promise(
+        r => (this._resolveTargetFrontPromise = r)
+      );
     }
   }
   getCachedTarget() {
