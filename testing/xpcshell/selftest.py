@@ -40,16 +40,6 @@ function run_test() {
 }
 """
 
-SIMPLE_UNCAUGHT_REJECTION_JSM_TEST = """
-Components.utils.import("resource://gre/modules/Promise.jsm");
-
-Promise.reject(new Error("Test rejection."));
-
-function run_test() {
-  Assert.ok(true);
-}
-"""
-
 ADD_TEST_SIMPLE = """
 function run_test() { run_next_test(); }
 
@@ -69,17 +59,6 @@ add_test(function test_failing() {
 """
 
 ADD_TEST_UNCAUGHT_REJECTION = """
-function run_test() { run_next_test(); }
-
-add_test(function test_uncaught_rejection() {
-  Promise.reject(new Error("Test rejection."));
-  run_next_test();
-});
-"""
-
-ADD_TEST_UNCAUGHT_REJECTION_JSM = """
-Components.utils.import("resource://gre/modules/Promise.jsm");
-
 function run_test() { run_next_test(); }
 
 add_test(function test_uncaught_rejection() {
@@ -148,8 +127,6 @@ add_test(function test_unicode_print () {
 """
 
 ADD_TASK_SINGLE = """
-Components.utils.import("resource://gre/modules/Promise.jsm");
-
 function run_test() { run_next_test(); }
 
 add_task(async function test_task() {
@@ -159,8 +136,6 @@ add_task(async function test_task() {
 """
 
 ADD_TASK_MULTIPLE = """
-Components.utils.import("resource://gre/modules/Promise.jsm");
-
 function run_test() { run_next_test(); }
 
 add_task(async function test_task() {
@@ -173,8 +148,6 @@ add_task(async function test_2() {
 """
 
 ADD_TASK_REJECTED = """
-Components.utils.import("resource://gre/modules/Promise.jsm");
-
 function run_test() { run_next_test(); }
 
 add_task(async function test_failing() {
@@ -183,8 +156,6 @@ add_task(async function test_failing() {
 """
 
 ADD_TASK_FAILURE_INSIDE = """
-Components.utils.import("resource://gre/modules/Promise.jsm");
-
 function run_test() { run_next_test(); }
 
 add_task(async function test() {
@@ -205,8 +176,6 @@ add_task(function () {
 """
 
 ADD_TASK_STACK_TRACE = """
-Components.utils.import("resource://gre/modules/Promise.jsm", this);
-
 function run_test() { run_next_test(); }
 
 add_task(async function this_test_will_fail() {
@@ -326,7 +295,7 @@ function run_test () {
 # A test for asynchronous cleanup functions
 ASYNC_CLEANUP = """
 function run_test() {
-  Components.utils.import("resource://gre/modules/Promise.jsm", this);
+  let { PromiseUtils } = Components.utils.import("resource://gre/modules/PromiseUtils.jsm", this);
 
   // The list of checkpoints in the order we encounter them.
   let checkpoints = [];
@@ -353,7 +322,7 @@ function run_test() {
   });
 
   registerCleanupFunction(function async_cleanup_2() {
-    let deferred = Promise.defer();
+    let deferred = PromiseUtils.defer();
     executeSoon(deferred.resolve);
     return deferred.promise.then(function() {
       checkpoints.push(3);
@@ -365,7 +334,7 @@ function run_test() {
   });
 
   registerCleanupFunction(function async_cleanup() {
-    let deferred = Promise.defer();
+    let deferred = PromiseUtils.defer();
     executeSoon(deferred.resolve);
     return deferred.promise.then(function() {
       checkpoints.push(1);
@@ -422,8 +391,6 @@ add_task(function no_run_test_add_task_fail() {
 """
 
 NO_RUN_TEST_ADD_TASK_MULTIPLE = """
-Components.utils.import("resource://gre/modules/Promise.jsm");
-
 add_task(async function test_task() {
   await Promise.resolve(true);
 });
@@ -1020,23 +987,6 @@ add_test({
         self.assertEquals(0, self.x.passCount)
         self.assertEquals(1, self.x.failCount)
 
-    def testUncaughtRejectionJSM(self):
-        """
-        Ensure a simple test with an uncaught rejection from Promise.jsm is reported.
-        """
-        self.writeFile(
-            "test_simple_uncaught_rejection_jsm.js", SIMPLE_UNCAUGHT_REJECTION_JSM_TEST
-        )
-        self.writeManifest(["test_simple_uncaught_rejection_jsm.js"])
-
-        self.assertTestResult(False)
-        self.assertInLog(TEST_FAIL_STRING)
-        self.assertInLog("test_simple_uncaught_rejection_jsm.js:4:16")
-        self.assertInLog("Test rejection.")
-        self.assertEquals(1, self.x.testCount)
-        self.assertEquals(0, self.x.passCount)
-        self.assertEquals(1, self.x.failCount)
-
     def testAddTestSimple(self):
         """
         Ensure simple add_test() works.
@@ -1096,20 +1046,6 @@ add_test({
             "test_add_test_uncaught_rejection.js", ADD_TEST_UNCAUGHT_REJECTION
         )
         self.writeManifest(["test_add_test_uncaught_rejection.js"])
-
-        self.assertTestResult(False)
-        self.assertEquals(1, self.x.testCount)
-        self.assertEquals(0, self.x.passCount)
-        self.assertEquals(1, self.x.failCount)
-
-    def testAddTestUncaughtRejectionJSM(self):
-        """
-        Ensure add_test() with an uncaught rejection from Promise.jsm is reported.
-        """
-        self.writeFile(
-            "test_add_test_uncaught_rejection_jsm.js", ADD_TEST_UNCAUGHT_REJECTION_JSM
-        )
-        self.writeManifest(["test_add_test_uncaught_rejection_jsm.js"])
 
         self.assertTestResult(False)
         self.assertEquals(1, self.x.testCount)

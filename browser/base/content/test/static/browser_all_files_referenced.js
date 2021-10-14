@@ -207,8 +207,6 @@ var whitelist = [
   { file: "resource://gre/modules/Manifest.jsm" },
   // Bug 1356045
   { file: "chrome://global/content/test-ipc.xhtml" },
-  // Bug 1378173 (warning: still used by devtools)
-  { file: "resource://gre/modules/Promise.jsm" },
   // Bug 1494170
   // (The references to these files are dynamically generated, so the test can't
   // find the references)

@@ -23,7 +23,7 @@ add_task(async function test_watch_single_path_directory_deletion() {
 
   // Instantiate and initialize the native watcher.
   let watcher = makeWatcher();
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
 
   // Create a directory within the watched directory.
   await OS.File.makeDir(tmpDirPath);

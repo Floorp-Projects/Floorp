@@ -33,7 +33,7 @@ add_task(async function test_watch_recursively() {
 
   // Instantiate and initialize the native watcher.
   let watcher = makeWatcher();
-  let deferred = Promise.defer();
+  let deferred = PromiseUtils.defer();
 
   let tmpFilePath = OS.Path.join(subdirectory, tempFileName);
 

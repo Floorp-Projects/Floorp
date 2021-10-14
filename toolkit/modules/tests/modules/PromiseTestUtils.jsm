@@ -13,10 +13,6 @@ var EXPORTED_SYMBOLS = ["PromiseTestUtils"];
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
 
-// Keep "JSMPromise" separate so "Promise" still refers to DOM Promises.
-let JSMPromise = ChromeUtils.import("resource://gre/modules/Promise.jsm", {})
-  .Promise;
-
 var PromiseTestUtils = {
   /**
    * Array of objects containing the details of the Promise rejections that are
@@ -65,12 +61,6 @@ var PromiseTestUtils = {
 
     PromiseDebugging.addUncaughtRejectionObserver(this);
 
-    // Promise.jsm rejections are only reported to this observer when requested,
-    // so we don't have to store a key to remove them when consumed.
-    JSMPromise.Debugging.addUncaughtErrorObserver(rejection =>
-      this._rejections.push(rejection)
-    );
-
     this._initialized = true;
   },
   _initialized: false,
@@ -84,7 +74,6 @@ var PromiseTestUtils = {
     }
 
     PromiseDebugging.removeUncaughtRejectionObserver(this);
-    JSMPromise.Debugging.clearUncaughtErrorObservers();
 
     this._initialized = false;
   },
@@ -256,9 +245,6 @@ var PromiseTestUtils = {
    * This is called by the test suite at the end of each test function.
    */
   assertNoUncaughtRejections() {
-    // Ask Promise.jsm to report all uncaught rejections to the observer now.
-    JSMPromise.Debugging.flushUncaughtErrors();
-
     // If there is any uncaught rejection left at this point, the test fails.
     while (this._rejections.length) {
       let rejection = this._rejections.shift();

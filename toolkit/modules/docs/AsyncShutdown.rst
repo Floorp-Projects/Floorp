@@ -152,8 +152,8 @@ Example 4: A service with both internal and external dependencies
 
     // Module FooService2
 
-    Components.utils.import("resource://gre/modules/AsyncShutdown.jsm", this);
-    Components.utils.import("resource://gre/modules/Promise.jsm", this);
+    let { AsyncShutdown } = Components.utils.import("resource://gre/modules/AsyncShutdown.jsm");
+    let { PromiseUtils } = Components.utils.import("resource://gre/modules/PromiseUtils.jsm");
 
     this.exports = ["FooService2"];
 
@@ -172,7 +172,7 @@ Example 4: A service with both internal and external dependencies
         throw new Error("FooService2 is closed");
       }
 
-      let deferred = Promise.defer();
+      let deferred = PromiseUtils.defer();
       connections.client.addBlocker("FooService2: Waiting for connection " + name + " to close",  deferred.promise);
 
       // ...

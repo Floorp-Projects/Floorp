@@ -419,8 +419,7 @@ add_task(async function format_errors() {
     // lineNumber:columnNumber.
     Assert.ok(str.includes(":1:11)"));
     // Make sure that we use human-readable stack traces
-    // Check that the error doesn't contain any reference to "Promise.jsm" or "Task.jsm"
-    Assert.ok(!str.includes("Promise.jsm"));
+    // Check that the error doesn't contain any reference to "Task.jsm"
     Assert.ok(!str.includes("Task.jsm"));
     Assert.ok(str.includes("format_errors"));
   }
