@@ -37,29 +37,42 @@ const SCREEN_STRINGS = [
 
 // Themes that can be selected by the button with matching index.
 const THEME_IDS = [
-  "default-theme@mozilla.org",
-  "abstract-soft-colorway@mozilla.org",
-  "cheers-soft-colorway@mozilla.org",
-  "foto-soft-colorway@mozilla.org",
-  "lush-soft-colorway@mozilla.org",
-  "graffiti-soft-colorway@mozilla.org",
-  "elemental-soft-colorway@mozilla.org",
+  [
+    "firefox-compact-light@mozilla.org",
+    "default-theme@mozilla.org",
+    "firefox-compact-dark@mozilla.org",
+  ],
+  [
+    "abstract-soft-colorway@mozilla.org",
+    "abstract-balanced-colorway@mozilla.org",
+    "abstract-bold-colorway@mozilla.org",
+  ],
+  [
+    "cheers-soft-colorway@mozilla.org",
+    "cheers-balanced-colorway@mozilla.org",
+    "cheers-bold-colorway@mozilla.org",
+  ],
+  [
+    "foto-soft-colorway@mozilla.org",
+    "foto-balanced-colorway@mozilla.org",
+    "foto-bold-colorway@mozilla.org",
+  ],
+  [
+    "lush-soft-colorway@mozilla.org",
+    "lush-balanced-colorway@mozilla.org",
+    "lush-bold-colorway@mozilla.org",
+  ],
+  [
+    "graffiti-soft-colorway@mozilla.org",
+    "graffiti-balanced-colorway@mozilla.org",
+    "graffiti-bold-colorway@mozilla.org",
+  ],
+  [
+    "elemental-soft-colorway@mozilla.org",
+    "elemental-balanced-colorway@mozilla.org",
+    "elemental-bold-colorway@mozilla.org",
+  ],
 ];
-
-// Theme variations selected by key (that match last l10n-id part).
-const VARIATION_IDS = {
-  auto: "default-theme@mozilla.org",
-  light: "firefox-compact-light@mozilla.org",
-  dark: "firefox-compact-dark@mozilla.org",
-
-  // Colorway entries dynamically added.
-  soft: "",
-  balanced: "",
-  bold: "",
-};
-function variantFromId(l10nId) {
-  return l10nId.split("-").slice(-1)[0];
-}
 
 // Callbacks to run when the dialog closes (both from this file or externally).
 const CLEANUP = [];
@@ -76,7 +89,7 @@ let gPrevTheme = AddonManager.getAddonsByTypes(["theme"]).then(addons => {
   }
 
   // If there were no active themes, the default will be selected.
-  return { id: THEME_IDS[0] };
+  return { id: THEME_IDS[0][1] };
 });
 
 // Helper to switch themes.
@@ -145,17 +158,11 @@ function onLoad(ready) {
         "upgrade-dialog-colorway-variation-bold",
       ];
       themeName = colorwayName.toLowerCase();
-
-      // Save which add-on ids to activate for each colorway variant.
-      l10nIds.forEach(id => {
-        const variant = variantFromId(id);
-        VARIATION_IDS[variant] = `${themeName}-${variant}-colorway@mozilla.org`;
-      });
     } else {
       l10nIds = [
         "upgrade-dialog-colorway-default-theme",
-        "upgrade-dialog-colorway-theme-auto",
         "upgrade-dialog-theme-light",
+        "upgrade-dialog-colorway-theme-auto",
         "upgrade-dialog-theme-dark",
       ];
       themeName = "default";
@@ -163,9 +170,6 @@ function onLoad(ready) {
 
     // Show the appropriate variation options and header text too.
     l10nIds.reduceRight((node, l10nId) => {
-      // The first option is selected by default.
-      node.checked = true;
-
       // Clear the previous id as textContent might have changed.
       node.dataset.l10nId = "";
       document.l10n.setAttributes(node, l10nId);
@@ -196,6 +200,20 @@ function onLoad(ready) {
 
   // Prepare showing the colorways screen.
   function showColorways() {
+    // Use bold variant (index 2) if current theme is dark; otherwise soft (0).
+    variations.querySelectorAll("input")[
+      2 * matchMedia("(-moz-toolbar-prefers-color-scheme: dark)").matches
+    ].checked = true;
+
+    // Enable the theme and variant based on the current selection.
+    const getVariantIndex = () =>
+      [...variations.children].indexOf(variations.querySelector(":checked")) -
+      1;
+    const enableVariant = () =>
+      enableTheme(
+        THEME_IDS[variations.getAttribute("next")][getVariantIndex()]
+      );
+
     // Prepare random theme selection that's not (first) default.
     const random = Math.floor(Math.random() * (THEME_IDS.length - 1)) + 1;
     const selected = themes.children[random];
@@ -205,7 +223,7 @@ function onLoad(ready) {
     // Transition in the starting random theme.
     triggerTransition(() => variations.setAttribute("next", random));
     setTimeout(() => {
-      enableTheme(THEME_IDS[random]);
+      enableVariant();
       showVariations(selected);
     }, 400);
 
@@ -213,21 +231,18 @@ function onLoad(ready) {
     variations.addEventListener("click", ({ target: button }) => {
       // Ignore clicks of whitespace / not-radio-button.
       if (button.type === "radio") {
-        const variant = variantFromId(button.dataset.l10nId);
-        enableTheme(VARIATION_IDS[variant]);
-        recordEvent("theme", variant);
+        enableVariant();
+        recordEvent("theme", `variant-${getVariantIndex()}`);
       }
     });
 
     // Wait for theme button clicks.
     let nextButton;
     themes.addEventListener("click", ({ target: button }) => {
-      const indexOf = node => [...themes.children].indexOf(node);
-
       // Ignore clicks on whitespace of the container around theme buttons.
       if (button.parentNode === themes) {
         // Cover up content with the next color circle.
-        variations.setAttribute("next", indexOf(button));
+        variations.setAttribute("next", [...themes.children].indexOf(button));
 
         // Start a transition out while avoiding duplicate transitions.
         if (!nextButton) {
@@ -235,10 +250,9 @@ function onLoad(ready) {
           setTimeout(() => {
             variations.classList.remove("out");
 
-            // Enable the theme of the corresponding button position.
-            const index = indexOf(nextButton);
-            enableTheme(THEME_IDS[index]);
-            recordEvent("theme", index);
+            // Enable the theme of the now-selected (next) color.
+            enableVariant();
+            recordEvent("theme", `theme-${variations.getAttribute("next")}`);
 
             // Transition in the next variations.
             showVariations(nextButton);
