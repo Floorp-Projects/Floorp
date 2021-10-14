@@ -20,31 +20,19 @@ assertDeepEq(desc2, {
 
 let keys = Reflect.ownKeys(Array_unscopables);
 
-let expectedKeys = ["at",
-		    "copyWithin",
-		    "entries",
-		    "fill",
-		    "find",
-		    "findIndex",
-		    "flat",
-		    "flatMap",
-		    "includes",
-		    "keys",
-		    "values"];
-
-if (typeof getBuildConfiguration === "undefined") {
-  var getBuildConfiguration = SpecialPowers.Cu.getJSTestingFunctions().getBuildConfiguration;
-}
-
-if (typeof getRealmConfiguration === "undefined") {
-  var getRealmConfiguration = SpecialPowers.Cu.getJSTestingFunctions().getRealmConfiguration;
-}
-
-if (getBuildConfiguration()['change-array-by-copy'] && getRealmConfiguration()['change-array-by-copy']) {
-    expectedKeys.push("withAt", "withReversed", "withSorted", "withSpliced");
-}
-
-assertDeepEq(keys, expectedKeys);
+assertDeepEq(keys, [
+    "at",
+    "copyWithin",
+    "entries",
+    "fill",
+    "find",
+    "findIndex",
+    "flat",
+    "flatMap",
+    "includes",
+    "keys",
+    "values"
+]);
 
 for (let key of keys)
     assertEq(Array_unscopables[key], true);
