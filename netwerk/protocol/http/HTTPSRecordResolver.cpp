@@ -11,6 +11,8 @@
 #include "nsIDNSService.h"
 #include "nsHttpConnectionInfo.h"
 #include "nsNetCID.h"
+#include "nsAHttpTransaction.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 namespace net {

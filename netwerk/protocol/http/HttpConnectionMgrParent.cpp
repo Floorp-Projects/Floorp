@@ -12,6 +12,7 @@
 #include "mozilla/net/HttpTransactionParent.h"
 #include "mozilla/net/WebSocketConnectionParent.h"
 #include "nsHttpConnectionInfo.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsISpeculativeConnect.h"
