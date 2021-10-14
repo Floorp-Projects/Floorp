@@ -11,6 +11,22 @@ add_task(async function open_close_dialog() {
   Assert.ok(true, "Upgrade dialog opened and closed");
 });
 
+add_task(async function double_click() {
+  await showAndWaitForDialog(async win => {
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.document.getElementById("primary").click();
+
+    // Don't wait for ready to click "too fast" and trigger exception.
+    const secondary = win.document.getElementById("secondary");
+    secondary.click();
+    secondary.click();
+
+    win.close();
+  });
+
+  Assert.ok(true, "Incorrectly handling clicks would have triggered exception");
+});
+
 add_task(async function theme_change() {
   const theme = await AddonManager.getAddonByID(
     "foto-soft-colorway@mozilla.org"
