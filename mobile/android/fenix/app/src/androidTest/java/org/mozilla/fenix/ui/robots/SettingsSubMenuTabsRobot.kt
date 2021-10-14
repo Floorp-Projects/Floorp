@@ -16,6 +16,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers.allOf
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
 
@@ -27,6 +28,8 @@ class SettingsSubMenuTabsRobot {
     fun verifyTabViewOptions() = assertTabViewOptions()
 
     fun verifyCloseTabsOptions() = assertCloseTabsOptions()
+
+    fun verifyMoveOldTabsToInactiveOptions() = assertMoveOldTabsToInactiveOptions()
 
     fun clickAlwaysStartOnHomeToggle() {
         scrollToElementByText("Move old tabs to inactive")
@@ -55,10 +58,14 @@ private fun assertTabViewOptions() {
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     searchTermTabGroupsToggle()
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    searchGroupsDescription()
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun assertCloseTabsOptions() {
     closeTabsHeading()
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    neverToggle()
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     afterOneDayToggle()
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -66,6 +73,13 @@ private fun assertCloseTabsOptions() {
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     afterOneMonthToggle()
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+}
+
+private fun assertMoveOldTabsToInactiveOptions() {
+    moveOldTabsToInactiveHeading()
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    moveOldTabsToInactiveToggle()
+        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
 private fun tabViewHeading() = onView(withText("Tab view"))
@@ -76,9 +90,13 @@ private fun gridToggle() = onView(withText("Grid"))
 
 private fun searchTermTabGroupsToggle() = onView(withText("Search groups"))
 
+private fun searchGroupsDescription() = onView(withText("Group related sites together"))
+
 private fun closeTabsHeading() = onView(withText("Close tabs"))
 
 private fun manuallyToggle() = onView(withText("Manually"))
+
+private fun neverToggle() = onView(withText("Never"))
 
 private fun afterOneDayToggle() = onView(withText("After one day"))
 
@@ -93,6 +111,11 @@ private fun afterFourHoursToggle() = onView(withText("After four hours"))
 private fun alwaysStartOnHomeToggle() = onView(withText("Always"))
 
 private fun neverStartOnHomeToggle() = onView(withText("Never"))
+
+private fun moveOldTabsToInactiveHeading() = onView(withText("Move old tabs to inactive"))
+
+private fun moveOldTabsToInactiveToggle() =
+    onView(withText(R.string.preferences_inactive_tabs_title))
 
 private fun goBackButton() =
     onView(allOf(ViewMatchers.withContentDescription("Navigate up")))

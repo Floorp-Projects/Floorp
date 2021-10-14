@@ -1432,6 +1432,7 @@ class SmokeTest {
         }.openTabsSubMenu {
             verifyTabViewOptions()
             verifyCloseTabsOptions()
+            verifyMoveOldTabsToInactiveOptions()
         }
     }
 
