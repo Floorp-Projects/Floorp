@@ -25,6 +25,7 @@ class FocusSnackbar private constructor(
 
     init {
         view.setBackgroundColor(Color.TRANSPARENT)
+        view.setPadding(0, 0, 0, 0)
     }
 
     fun setText(text: String) = this.apply {
