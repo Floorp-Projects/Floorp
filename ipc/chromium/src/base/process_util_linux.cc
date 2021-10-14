@@ -172,7 +172,14 @@ void AppProcessBuilder::InitAppProcess(int* argcp, char*** argvp) {
   ReplaceArguments(argcp, argvp);
 }
 
-static void handle_sigchld(int s) { waitpid(-1, nullptr, WNOHANG); }
+static void handle_sigchld(int s) {
+  while (true) {
+    if (waitpid(-1, nullptr, WNOHANG) <= 0) {
+      // On error, or no process changed state.
+      break;
+    }
+  }
+}
 
 static void InstallChildSignalHandler() {
   // Since content processes are not children of the chrome process
