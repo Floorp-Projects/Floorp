@@ -33,12 +33,21 @@ async function sendTextToInput(browser, text) {
       "#form1 > input[name='search']"
     );
     input.focus();
+    input.value = ""; // Reset to later verify that the provided text matches the value
   });
 
   for (let char of text) {
     await EventUtils.sendString(char);
-    await TestUtils.waitForTick();
   }
+
+  await SpecialPowers.spawn(browser, [{ text }], async function(args) {
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.document.querySelector("#form1 > input[name='search']").value ==
+        args.text,
+      "Text has been set on input"
+    );
+  });
 }
 
 add_task(async function test_load_and_navigate_away_no_keypresses() {
@@ -79,14 +88,8 @@ add_task(async function test_load_type_and_navigate_away() {
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     await sendTextToInput(browser, sentence);
 
-    // Reducing the intermittent rate for Bug 1717218 while this is being debugged
-    await TestUtils.waitForTick();
-    await TestUtils.waitForTick();
-
     BrowserTestUtils.loadURI(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
-
-    await TestUtils.waitForTick();
 
     await assertDatabaseValues([
       {
