@@ -5486,6 +5486,19 @@ MDefinition* MGuardNullOrUndefined::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+MDefinition* MGuardIsNotObject::foldsTo(TempAllocator& alloc) {
+  MDefinition* input = value();
+  if (input->isBox()) {
+    input = input->toBox()->input();
+  }
+
+  if (!input->mightBeType(MIRType::Object)) {
+    return value();
+  }
+
+  return this;
+}
+
 MDefinition* MGuardObjectIdentity::foldsTo(TempAllocator& alloc) {
   if (object()->isConstant() && expected()->isConstant()) {
     JSObject* obj = &object()->toConstant()->toObject();

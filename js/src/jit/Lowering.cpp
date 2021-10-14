@@ -4301,6 +4301,14 @@ void LIRGenerator::visitGuardNullOrUndefined(MGuardNullOrUndefined* ins) {
   redefine(ins, ins->value());
 }
 
+void LIRGenerator::visitGuardIsNotObject(MGuardIsNotObject* ins) {
+  MOZ_ASSERT(ins->value()->type() == MIRType::Value);
+  auto* lir = new (alloc()) LGuardIsNotObject(useBox(ins->value()));
+  assignSnapshot(lir, ins->bailoutKind());
+  add(lir, ins);
+  redefine(ins, ins->value());
+}
+
 void LIRGenerator::visitGuardFunctionFlags(MGuardFunctionFlags* ins) {
   MOZ_ASSERT(ins->function()->type() == MIRType::Object);
 
