@@ -1360,22 +1360,20 @@ void CycleCollectorStats::MaybeNotifyStats(
 }
 
 // static
-void nsJSContext::CycleCollectNow(CCReason aReason,
-                                  nsICycleCollectorListener* aListener) {
+void nsJSContext::CycleCollectNow(nsICycleCollectorListener* aListener) {
   if (!NS_IsMainThread()) {
     return;
   }
 
   AUTO_PROFILER_LABEL("nsJSContext::CycleCollectNow", GCCC);
 
-  PrepareForCycleCollectionSlice(aReason, TimeStamp());
-  nsCycleCollector_collect(aReason, aListener);
+  PrepareForCycleCollectionSlice(TimeStamp());
+  nsCycleCollector_collect(aListener);
   sCCStats.AfterCycleCollectionSlice();
 }
 
 // static
-void nsJSContext::PrepareForCycleCollectionSlice(CCReason aReason,
-                                                 TimeStamp aDeadline) {
+void nsJSContext::PrepareForCycleCollectionSlice(TimeStamp aDeadline) {
   TimeStamp beginTime = TimeStamp::Now();
 
   // Before we begin the cycle collection, make sure there is no active GC.
@@ -1384,18 +1382,12 @@ void nsJSContext::PrepareForCycleCollectionSlice(CCReason aReason,
     FinishAnyIncrementalGC();
     afterGCTime = TimeStamp::Now();
   }
-
-  if (!sScheduler.IsCollectingCycles()) {
-    sScheduler.NoteCCBegin(aReason, beginTime);
-  }
-
   sCCStats.AfterPrepareForCycleCollectionSlice(aDeadline, beginTime,
                                                afterGCTime);
 }
 
 // static
-void nsJSContext::RunCycleCollectorSlice(CCReason aReason,
-                                         TimeStamp aDeadline) {
+void nsJSContext::RunCycleCollectorSlice(TimeStamp aDeadline) {
   if (!NS_IsMainThread()) {
     return;
   }
@@ -1405,7 +1397,7 @@ void nsJSContext::RunCycleCollectorSlice(CCReason aReason,
 
   AUTO_PROFILER_LABEL("nsJSContext::RunCycleCollectorSlice", GCCC);
 
-  PrepareForCycleCollectionSlice(aReason, aDeadline);
+  PrepareForCycleCollectionSlice(aDeadline);
 
   // Decide how long we want to budget for this slice.
   if (sIncrementalCC) {
@@ -1413,10 +1405,10 @@ void nsJSContext::RunCycleCollectorSlice(CCReason aReason,
     js::SliceBudget budget = sScheduler.ComputeCCSliceBudget(
         aDeadline, sCCStats.mBeginTime, sCCStats.mEndSliceTime,
         TimeStamp::Now(), &preferShorterSlices);
-    nsCycleCollector_collectSlice(budget, aReason, preferShorterSlices);
+    nsCycleCollector_collectSlice(budget, preferShorterSlices);
   } else {
     js::SliceBudget budget = js::SliceBudget::unlimited();
-    nsCycleCollector_collectSlice(budget, aReason, false);
+    nsCycleCollector_collectSlice(budget, false);
   }
 
   sCCStats.AfterCycleCollectionSlice();
@@ -1430,10 +1422,10 @@ void nsJSContext::RunCycleCollectorWorkSlice(int64_t aWorkBudget) {
 
   AUTO_PROFILER_LABEL("nsJSContext::RunCycleCollectorWorkSlice", GCCC);
 
-  PrepareForCycleCollectionSlice(CCReason::API, TimeStamp());
+  PrepareForCycleCollectionSlice(TimeStamp());
 
   js::SliceBudget budget = js::SliceBudget(js::WorkBudget(aWorkBudget));
-  nsCycleCollector_collectSlice(budget, CCReason::API);
+  nsCycleCollector_collectSlice(budget);
 
   sCCStats.AfterCycleCollectionSlice();
 }
@@ -1447,7 +1439,7 @@ uint32_t nsJSContext::GetMaxCCSliceTimeSinceClear() {
 }
 
 // static
-void nsJSContext::BeginCycleCollectionCallback(CCReason aReason) {
+void nsJSContext::BeginCycleCollectionCallback() {
   MOZ_ASSERT(NS_IsMainThread());
 
   TimeStamp startTime = TimeStamp::Now();
@@ -1469,7 +1461,7 @@ void nsJSContext::BeginCycleCollectionCallback(CCReason aReason) {
   }
 
   sScheduler.InitCCRunnerStateMachine(
-      mozilla::CCGCScheduler::CCRunnerState::CycleCollecting, aReason);
+      mozilla::CCGCScheduler::CCRunnerState::CycleCollecting);
   sScheduler.EnsureCCRunner(kICCIntersliceDelay, kIdleICCSliceBudget);
 }
 
@@ -1551,7 +1543,7 @@ bool CCGCScheduler::CCRunnerFired(TimeStamp aDeadline) {
 
       case CCRunnerAction::CycleCollect:
         // Cycle collection slice.
-        nsJSContext::RunCycleCollectorSlice(step.mCCReason, aDeadline);
+        nsJSContext::RunCycleCollectorSlice(aDeadline);
         break;
 
       case CCRunnerAction::StopRunning:
@@ -1644,7 +1636,7 @@ void nsJSContext::DoLowMemoryGC() {
   nsJSContext::GarbageCollectNow(JS::GCReason::MEM_PRESSURE,
                                  nsJSContext::NonIncrementalGC,
                                  nsJSContext::ShrinkingGC);
-  nsJSContext::CycleCollectNow(CCReason::MEM_PRESSURE);
+  nsJSContext::CycleCollectNow();
   if (sScheduler.NeedsGCAfterCC()) {
     nsJSContext::GarbageCollectNow(JS::GCReason::MEM_PRESSURE,
                                    nsJSContext::NonIncrementalGC,
@@ -1719,8 +1711,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
         sScheduler.KillFullGCTimer();
       }
 
-      if (sScheduler.IsCCNeeded(now, nsCycleCollector_suspectedCount()) !=
-          CCReason::NO_REASON) {
+      if (sScheduler.IsCCNeeded(now, nsCycleCollector_suspectedCount())) {
         nsCycleCollector_dispatchDeferredDeletion();
       }
 
@@ -1746,8 +1737,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
       }
 
       if (sScheduler.IsCCNeeded(TimeStamp::Now(),
-                                nsCycleCollector_suspectedCount()) !=
-          CCReason::NO_REASON) {
+                                nsCycleCollector_suspectedCount())) {
         nsCycleCollector_dispatchDeferredDeletion();
       }
 
