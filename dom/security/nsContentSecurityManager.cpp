@@ -658,7 +658,7 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
 }
 
 static void LogHTTPSOnlyInfo(nsILoadInfo* aLoadInfo) {
-  MOZ_LOG(sCSMLog, LogLevel::Verbose, ("  - https-only/https-first flags:"));
+  MOZ_LOG(sCSMLog, LogLevel::Verbose, ("  httpsOnlyFirstStatus:"));
   uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
 
   if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_UNINITIALIZED) {
@@ -731,9 +731,15 @@ static void LogPrincipal(nsIPrincipal* aPrincipal,
     }
     nsAutoCString principalSpec;
     aPrincipal->GetAsciiSpec(principalSpec);
-    MOZ_LOG(sCSMLog, LogLevel::Debug,
-            ("%s%s: %s\n", aIndentationString.get(),
-             NS_ConvertUTF16toUTF8(aPrincipalName).get(), principalSpec.get()));
+    if (aPrincipalName.IsEmpty()) {
+      MOZ_LOG(sCSMLog, LogLevel::Debug,
+              ("%s - \"%s\"\n", aIndentationString.get(), principalSpec.get()));
+    } else {
+      MOZ_LOG(
+          sCSMLog, LogLevel::Debug,
+          ("%s%s: \"%s\"\n", aIndentationString.get(),
+           NS_ConvertUTF16toUTF8(aPrincipalName).get(), principalSpec.get()));
+    }
     return;
   }
   MOZ_LOG(sCSMLog, LogLevel::Debug,
@@ -799,7 +805,7 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
     MOZ_LOG(sCSMLog, LogLevel::Verbose, ("doContentSecurityCheck:\n"));
 
     MOZ_LOG(sCSMLog, LogLevel::Verbose,
-            ("  - channelURI: %s\n", channelSpec.get()));
+            ("  channelURI: \"%s\"\n", channelSpec.get()));
 
     // Log HTTP-specific things
     if (httpChannel) {
@@ -807,45 +813,44 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
       rv = httpChannel->GetRequestMethod(channelMethod);
       if (!NS_FAILED(rv)) {
         MOZ_LOG(sCSMLog, LogLevel::Verbose,
-                ("  - httpMethod: %s\n", channelMethod.get()));
+                ("  httpMethod: %s\n", channelMethod.get()));
       }
     }
 
     // Log Principals
     nsCOMPtr<nsIPrincipal> requestPrincipal = aLoadInfo->TriggeringPrincipal();
-    LogPrincipal(aLoadInfo->GetLoadingPrincipal(), u"- loadingPrincipal"_ns, 1);
-    LogPrincipal(requestPrincipal, u"- triggeringPrincipal"_ns, 1);
-    LogPrincipal(aLoadInfo->PrincipalToInherit(), u"- principalToInherit"_ns,
-                 1);
+    LogPrincipal(aLoadInfo->GetLoadingPrincipal(), u"loadingPrincipal"_ns, 1);
+    LogPrincipal(requestPrincipal, u"triggeringPrincipal"_ns, 1);
+    LogPrincipal(aLoadInfo->PrincipalToInherit(), u"principalToInherit"_ns, 1);
 
     // Log Redirect Chain
-    MOZ_LOG(sCSMLog, LogLevel::Verbose, ("  - redirectChain:\n"));
+    MOZ_LOG(sCSMLog, LogLevel::Verbose, ("  redirectChain:\n"));
     for (nsIRedirectHistoryEntry* redirectHistoryEntry :
          aLoadInfo->RedirectChain()) {
       nsCOMPtr<nsIPrincipal> principal;
       redirectHistoryEntry->GetPrincipal(getter_AddRefs(principal));
-      LogPrincipal(principal, u"-"_ns, 2);
+      LogPrincipal(principal, u""_ns, 2);
     }
 
     MOZ_LOG(sCSMLog, LogLevel::Verbose,
-            ("  - internalContentPolicyType: %s\n",
+            ("  internalContentPolicyType: %s\n",
              NS_CP_ContentTypeName(aLoadInfo->InternalContentPolicyType())));
     MOZ_LOG(sCSMLog, LogLevel::Verbose,
-            ("  - externalContentPolicyType: %s\n",
+            ("  externalContentPolicyType: %s\n",
              NS_CP_ContentTypeName(aLoadInfo->GetExternalContentPolicyType())));
     MOZ_LOG(sCSMLog, LogLevel::Verbose,
-            ("  - upgradeInsecureRequests: %s\n",
+            ("  upgradeInsecureRequests: %s\n",
              aLoadInfo->GetUpgradeInsecureRequests() ? "true" : "false"));
     MOZ_LOG(sCSMLog, LogLevel::Verbose,
-            ("  - initialSecurityChecksDone: %s\n",
+            ("  initialSecurityChecksDone: %s\n",
              aLoadInfo->GetInitialSecurityCheckDone() ? "true" : "false"));
     MOZ_LOG(sCSMLog, LogLevel::Verbose,
-            ("  - allowDeprecatedSystemRequests: %s\n",
+            ("  allowDeprecatedSystemRequests: %s\n",
              aLoadInfo->GetAllowDeprecatedSystemRequests() ? "true" : "false"));
 
     // Log CSPrequestPrincipal
     nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadInfo->GetCsp();
-    MOZ_LOG(sCSMLog, LogLevel::Debug, ("  - CSP:"));
+    MOZ_LOG(sCSMLog, LogLevel::Debug, ("  CSP:"));
     if (csp) {
       nsAutoString parsedPolicyStr;
       uint32_t count = 0;
@@ -856,14 +861,13 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
         // with CSP directives
         // no need to escape quote marks in the parsed policy string, as URLs in
         // there are already encoded
-        MOZ_LOG(
-            sCSMLog, LogLevel::Debug,
-            ("    - \"%s\"\n", NS_ConvertUTF16toUTF8(parsedPolicyStr).get()));
+        MOZ_LOG(sCSMLog, LogLevel::Debug,
+                ("  - \"%s\"\n", NS_ConvertUTF16toUTF8(parsedPolicyStr).get()));
       }
     }
 
     // Security Flags
-    MOZ_LOG(sCSMLog, LogLevel::Verbose, ("  - securityFlags:"));
+    MOZ_LOG(sCSMLog, LogLevel::Verbose, ("  securityFlags:"));
     LogSecurityFlags(aLoadInfo->GetSecurityFlags());
     LogHTTPSOnlyInfo(aLoadInfo);
     MOZ_LOG(sCSMLog, LogLevel::Debug, ("\n#DebugDoContentSecurityCheck End\n"));
