@@ -10579,11 +10579,11 @@ ViewportMetaData Document::GetViewportMetaData() const {
                                    : ViewportMetaData();
 }
 
-void Document::AddMetaViewportElement(HTMLMetaElement* aElement,
+void Document::AddMetaViewportElement(HTMLMetaElement& aElement,
                                       ViewportMetaData&& aData) {
   for (size_t i = 0; i < mMetaViewports.Length(); i++) {
     MetaViewportElementAndData& viewport = mMetaViewports[i];
-    if (viewport.mElement == aElement) {
+    if (viewport.mElement == &aElement) {
       if (viewport.mData == aData) {
         return;
       }
@@ -10594,7 +10594,7 @@ void Document::AddMetaViewportElement(HTMLMetaElement* aElement,
     }
   }
 
-  mMetaViewports.AppendElement(MetaViewportElementAndData{aElement, aData});
+  mMetaViewports.AppendElement(MetaViewportElementAndData{&aElement, aData});
   // Trigger recomputation of the nsViewportInfo the next time it's queried.
   mViewportType = Unknown;
 
@@ -10604,9 +10604,9 @@ void Document::AddMetaViewportElement(HTMLMetaElement* aElement,
   asyncDispatcher->RunDOMEventWhenSafe();
 }
 
-void Document::RemoveMetaViewportElement(HTMLMetaElement* aElement) {
+void Document::RemoveMetaViewportElement(HTMLMetaElement& aElement) {
   for (MetaViewportElementAndData& viewport : mMetaViewports) {
-    if (viewport.mElement == aElement) {
+    if (viewport.mElement == &aElement) {
       mMetaViewports.RemoveElement(viewport);
       // Trigger recomputation of the nsViewportInfo the next time it's queried.
       mViewportType = Unknown;
