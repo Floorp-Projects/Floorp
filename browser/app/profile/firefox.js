@@ -700,8 +700,6 @@ pref("browser.bookmarks.openInTabClosesMenu", true);
 // Where new bookmarks go by default.
 // Use PlacesUIUtils.defaultParentGuid to read this; do NOT read the pref
 // directly.
-// The pref is ignored if the browser.toolbars.bookmarks.2h2020 pref is false,
-// in which case bookmarks always go in the "Other bookmarks" folder.
 // The value is one of:
 // - a bookmarks guid
 // - "toolbar", "menu" or "unfiled" for those folders.
@@ -2128,11 +2126,6 @@ pref("browser.toolbars.bookmarks.visibility", "newtab");
 // Visibility of the "Show Other Bookmarks" menuitem in the
 // bookmarks toolbar contextmenu.
 pref("browser.toolbars.bookmarks.showOtherBookmarks", true);
-
-// When true, this pref will always show the bookmarks bar on
-// the New Tab Page, and other functionality to improve the usage of the
-// Bookmarks Toolbar.
-pref("browser.toolbars.bookmarks.2h2020", true);
 
 // Prefs to control the Firefox Account toolbar menu.
 // This pref will surface existing Firefox Account information
