@@ -123,6 +123,8 @@ pub unsafe extern "C" fn audioipc_server_start(
     }
 }
 
+// A `shm_area_size` of 0 allows the server to calculate an appropriate shm size for each stream.
+// A non-zero `shm_area_size` forces all allocations to the specified size.
 #[no_mangle]
 pub extern "C" fn audioipc_server_new_client(
     p: *mut c_void,
