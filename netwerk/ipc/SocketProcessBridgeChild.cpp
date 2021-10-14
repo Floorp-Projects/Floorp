@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/net/NeckoChild.h"
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"
