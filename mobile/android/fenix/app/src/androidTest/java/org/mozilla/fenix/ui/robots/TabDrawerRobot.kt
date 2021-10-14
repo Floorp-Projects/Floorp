@@ -314,7 +314,11 @@ class TabDrawerRobot {
 
         fun openTab(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.waitNotNull(findObject(text(title)))
-            tab(title).click()
+            mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/mozac_browser_tabstray_title")
+                    .textContains(title)
+            ).click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
