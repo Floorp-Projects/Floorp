@@ -1716,7 +1716,8 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
         sScheduler.KillFullGCTimer();
       }
 
-      if (sScheduler.IsCCNeeded(now, nsCycleCollector_suspectedCount())) {
+      if (sScheduler.IsCCNeeded(now, nsCycleCollector_suspectedCount()) !=
+          CCReason::NO_REASON) {
         nsCycleCollector_dispatchDeferredDeletion();
       }
 
@@ -1742,7 +1743,8 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
       }
 
       if (sScheduler.IsCCNeeded(TimeStamp::Now(),
-                                nsCycleCollector_suspectedCount())) {
+                                nsCycleCollector_suspectedCount()) !=
+          CCReason::NO_REASON) {
         nsCycleCollector_dispatchDeferredDeletion();
       }
 
