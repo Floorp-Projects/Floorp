@@ -263,8 +263,8 @@ class SyncableLoginsStorage(
      * @throws [LoginsStorageException] On unexpected errors (IO failure, rust panics, etc)
      */
     @Throws(LoginsStorageException::class)
-    override fun findLoginToUpdate(entry: LoginEntry): Login? {
-        return conn.getStorage().findLoginToUpdate(entry.toLoginEntry(), crypto.key().key)?.toLogin()
+    override suspend fun findLoginToUpdate(entry: LoginEntry): Login? = withContext(coroutineContext) {
+        conn.getStorage().findLoginToUpdate(entry.toLoginEntry(), crypto.key().key)?.toLogin()
     }
 
     /**
