@@ -10,7 +10,7 @@
   <link href="../csslogo.ico" rel="shortcut icon" type="image/x-icon">
   <link href="https://www.w3.org/StyleSheets/TR/2016/W3C-ED" rel="stylesheet" type="text/css">
   <meta content="Bikeshed version d7036035b, updated Fri Oct 8 17:07:11 2021 -0700" name="generator">
-  <meta content="9c53a314c5651119cf22534250cee5faa134b92d" name="document-revision">
+  <meta content="8e27fe76645b992566c8fe35bed8d6a37b0ecdb8" name="document-revision">
 <style>/* style-autolinks */
 
 .css.css, .property.property, .descriptor.descriptor {
@@ -702,7 +702,7 @@ dd:not(:last-child) > .wpt-tests-block:not([open]):last-child {
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2016/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">CSS Gap Decorations</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Editor’s Draft, <time class="dt-updated" datetime="2021-10-13">13 October 2021</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Editor’s Draft, <time class="dt-updated" datetime="2021-10-14">14 October 2021</time></span></h2>
    <details>
     <summary>Specification Metadata</summary>
     <div data-fill-with="spec-metadata">
@@ -895,7 +895,7 @@ on screen, on paper, etc.
    </table>
    <p>These properties specifies an <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-images-3/#typedef-image" id="ref-for-typedef-image②">&lt;image></a> to use in place of the rendering specified
     by the <span class="css">column-rule-style</span>/<span class="css">row-rule-style</span> properties.</p>
-   <p>As for borders, a rule image is not rendered if the <span class="css">column-rule-style</span>/<span class="css">row-rule-style</span> is <span class="css">none</span>.</p>
+   <p>As for borders, a rule image is not rendered when the corresponding <span class="css">column-rule-style</span>/<span class="css">row-rule-style</span> is <span class="css">none</span>.</p>
    <h3 class="heading settled" data-level="2.2" id="column-rule-image-slice"><span class="secno">2.2. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-column-rule-image-slice" id="ref-for-propdef-column-rule-image-slice">column-rule-image-slice</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-image-slice" id="ref-for-propdef-row-rule-image-slice">row-rule-image-slice</a> Properties</span><a class="self-link" href="#column-rule-image-slice"></a></h3>
    <table class="def propdef" data-link-for-hint="column-rule-image-slice">
     <tbody>
@@ -1334,7 +1334,7 @@ on screen, on paper, etc.
         that the inset properties can be animated and that they are relative the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①①⓪">rule containing rectangle</a>,
         which itself depends on the <a href="#column-rule-align">rule’s alignment</a> in its longitudinal axis.
         Note that the longitudinal insets in this example are definite and not animated. The reason
-        they follow the animated lateral position of the rule in the orthogonal axis is that they have <span class="css">rule</span> alignment. 
+        they follow the animated lateral position of the rule in the orthogonal axis is that they have <a href="#column-rule-align"><span class="css">rule</span> alignment</a>. 
     <figure>
      <video autoplay loop src="media/grid-longitudinal-002.webm"></video>
      <figcaption> Example of rule alignment and animated inset values. </figcaption>
@@ -1692,15 +1692,18 @@ on screen, on paper, etc.
     is used for both start and end.  (Attachment points for the interior rule edges are
     specified with the <a href="#column-rule-align"><a class="property" data-link-type="propdesc">*-rule-align</a></a> properties above.)</p>
    <p class="note" role="note"><span>Note:</span> The <span class="css">rule</span>/<span class="css">rule-center</span>/<span class="css">rule-over</span> keywords are omitted here (compared with <span class="css">column-rule-align</span>) since there are no rules in the edge gutters.</p>
-   <p>Below is an illustration of the alignment values.
-    The red values are used for the top column border’s start edge and the yellow
-    values are used for its end edge.
-    The yellow values are also used for the bottom column border’s start edge. However, in this
+   <p>Thge figure below illustrates the alignment values.
+    The red values are used for the top column rule’s start edge and the yellow
+    values are used for its end edge. The yellow values are also used for the bottom
+    column rule’s start edge. However, in this
     case the roles of <span class="css">gap</span> / <span class="css">gap-over</span> and <span class="css">rule</span> / <span class="css">rule-over</span> are swapped.  It’s only the
     center values that are shared.  Also note that <span class="css">gap-center</span> isn’t necessarily aligned with <span class="css">rule-center</span>. In this case they aren’t
     aligned because the row rule (purple) is using a lateral start inset.  The cyan colored
     values are used for the bottom column border’s end edge. (If the top border were to
     stretch over the entire grid, then they would be used for its end edge.)</p>
+   <p><span class="css">column-rule-edge-align</span> controls which of the red and cyan colored
+    attachment points should be used. <span class="css">column-rule-edge-align</span> the yellow colored
+    ones (and all other interior edges if there were more rows).</p>
    <figure>
      <img height="585" src="media/rule-alignment-values.png" width="621"> 
     <figcaption> Illustration of rule alignment values. </figcaption>
@@ -1716,8 +1719,8 @@ on screen, on paper, etc.
    <p>The alignment points follow the same pattern in the other axis for the row rules.
     In this case the row rule is using the initial values (<span class="css">gap</span>)
     so they align with the inline axis gap edges.</p>
-   <p class="issue" id="issue-77c8a0d8"><a class="self-link" href="#issue-77c8a0d8"></a> Are there use cases for other box-related edge attachment points?
-    e.g. 'padding | padding-center | padding-over | border... | outline... | margin... | viewport'</p>
+   <p class="issue" id="issue-13842b6f"><a class="self-link" href="#issue-13842b6f"></a> Are there use cases for other box-related edge attachment points?
+    e.g. 'padding | padding-center | padding-over | border...'</p>
    <h2 class="heading settled" data-level="6" id="column-rule-extent"><span class="secno">6. </span><span class="content">Rule Extent</span><a class="self-link" href="#column-rule-extent"></a></h2>
    <h3 class="heading settled" data-level="6.1" id="column-rule-extent①"><span class="secno">6.1. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-column-rule-extent" id="ref-for-propdef-column-rule-extent">column-rule-extent</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-extent" id="ref-for-propdef-row-rule-extent">row-rule-extent</a> Properties</span><a class="self-link" href="#column-rule-extent①"></a></h3>
    <table class="def propdef" data-link-for-hint="column-rule-extent">
@@ -2027,7 +2030,6 @@ on screen, on paper, etc.
    <h4 class="heading settled" data-level="6.1.4" id="rule-extent-table-row-group"><span class="secno">6.1.4. </span><span class="content">Table Row Group Containers</span><a class="self-link" href="#rule-extent-table-row-group"></a></h4>
    <p>A <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table-row-group" id="ref-for-table-row-group②⓪">table-row-group</a> container creates rules between its <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table-row" id="ref-for-table-row">table-rows</a> and between each <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table-cell" id="ref-for-table-cell">table-cell</a> in a row.  Collapsed <span id="ref-for-table-row①">table-rows</span> are treated as if they don’t exist.
     Collapsed <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table-column" id="ref-for-table-column">table-columns</a> are treated as if they don’t exist.</p>
-   <p class="issue" id="issue-92af5c6d"><a class="self-link" href="#issue-92af5c6d"></a> sort out what to do with collapsed table-cells</p>
    <p>Row rules (between <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table-row" id="ref-for-table-row②">table-rows</a>) collide with cells that have
     a row <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#span" id="ref-for-span">span</a> crossing it.
     Column rules (between <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table-cell" id="ref-for-table-cell①">table-cells</a>) collide with cells that have
@@ -2042,6 +2044,7 @@ on screen, on paper, etc.
      <figcaption> Example of table row and cell rules. </figcaption>
     </figure>
    </aside>
+   <p><span class="css">visibility:collapse</span> on <a data-link-type="dfn">table-cells</a> does not affect the rules in any way.</p>
    <h4 class="heading settled" data-level="6.1.5" id="rule-extent-multicol"><span class="secno">6.1.5. </span><span class="content">Multi-Column Containers</span><a class="self-link" href="#rule-extent-multicol"></a></h4>
    <p><a data-link-type="dfn" href="https://drafts.csswg.org/css-multicol-1/#multi-column-container" id="ref-for-multi-column-container①⑥">Multi-column containers</a> already support rendering column rules between its columns.
     That’s now extended with all the new features described above.  The changes described
@@ -2100,7 +2103,7 @@ on screen, on paper, etc.
     The rules for an axis are painted in the order they were generated by
     the <a href="#column-rule-extent">rule extent</a> algorithms described above.
     Typically from the logical start to the end of the axis.</p>
-   <p>For table layout, all the <a data-link-type="dfn">table container</a> rules (in both axes)
+   <p>For table layout, all the <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table" id="ref-for-table①⑦">table</a> rules (in both axes)
     are painted before the rules for the row-groups.  The painting order between
     multiple row-groups is whatever the <a href="https://drafts.csswg.org/css-tables">table spec</a> specifies.  For an individual row-group, the rules are painted in logical
     start to end order in both axes.</p>
@@ -2535,6 +2538,7 @@ on screen, on paper, etc.
     <li><a href="#ref-for-table①④">5.2. The column-rule-edge-align and row-rule-edge-align Properties</a>
     <li><a href="#ref-for-table①⑤">6.1. The column-rule-extent and row-rule-extent Properties</a>
     <li><a href="#ref-for-table①⑥">6.1.3. Table Containers</a>
+    <li><a href="#ref-for-table①⑦">8. Rule Painting Order</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-table-cell">
@@ -3224,12 +3228,11 @@ on screen, on paper, etc.
     As usual, we have to be careful with the separator though, to make it
     forward-compatible with any changes we might want to make... <a class="issue-return" href="#issue-53073ff7" title="Jump to section">↵</a></div>
    <div class="issue"> Are there use cases for other box-related edge attachment points?
-    e.g. 'padding | padding-center | padding-over | border... | outline... | margin... | viewport' <a class="issue-return" href="#issue-77c8a0d8" title="Jump to section">↵</a></div>
+    e.g. 'padding | padding-center | padding-over | border...' <a class="issue-return" href="#issue-13842b6f" title="Jump to section">↵</a></div>
    <div class="issue"> perhaps make <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-box-4/#valdef-margin-trim-all">all</a> a separate keyword? like so: <span class="css">[segment | [[start | end | short | long] all?] ] allow-overlap?</span> <a class="issue-return" href="#issue-70dc1ba4" title="Jump to section">↵</a></div>
    <div class="issue"> TODO: add definition list and algorithm here... <a class="issue-return" href="#issue-b6f1d65c" title="Jump to section">↵</a></div>
    <div class="issue"> is it useful to be able to create a rule extent for the <i>intersection</i> or <i>union</i> between two tracks, like so: <img height="435" src="media/masonry-all-shorter.png" style="display:block" width="701">It’s pretty easy to implement, fwiw... (I accidently implemented <span class="css">short</span>/<span class="css">long</span> like that before I realized it was inconsistent with how they work elsewhere). I think it’s a case that is unique to a masonry axis though, at least <i>currently</i>... <a class="issue-return" href="#issue-3e9abc31" title="Jump to section">↵</a></div>
    <div class="issue"> sort out if non-collapsed column-groups that only contains collapsed columns should generate rules, ditto row-groups/rows <a class="issue-return" href="#issue-96acb267" title="Jump to section">↵</a></div>
-   <div class="issue"> sort out what to do with collapsed table-cells <a class="issue-return" href="#issue-92af5c6d" title="Jump to section">↵</a></div>
    <div class="issue"> this proposal makes the assumption that the parallel proposal that <span class="css">row-gap</span> should apply to multi-column containers is also adopted (issue #XXX). <a class="issue-return" href="#issue-b4c69802" title="Jump to section">↵</a></div>
   </div>
   <aside class="dfn-panel" data-for="propdef-column-rule-image-source">
