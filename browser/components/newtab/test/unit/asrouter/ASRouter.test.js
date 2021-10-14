@@ -1727,6 +1727,59 @@ describe("ASRouter", () => {
     });
   });
 
+  describe("#reachEvent", () => {
+    let experimentAPIStub;
+    let messageGroups = ["cfr", "moments-page", "infobar", "spotlight"];
+    beforeEach(() => {
+      let getExperimentStub = sandbox.stub();
+      let getAllBranchesStub = sandbox.stub();
+      messageGroups.forEach(feature => {
+        getExperimentStub.withArgs({ featureId: feature }).returns({
+          slug: `slug-${feature}`,
+          branch: {
+            slug: `branch-${feature}`,
+            feature: { value: null, enabled: true },
+          },
+        });
+        getAllBranchesStub.withArgs(`slug-${feature}`).resolves([
+          {
+            slug: `other-branch-${feature}`,
+            feature: { value: { trigger: "unit-test" }, enabled: true },
+          },
+        ]);
+      });
+      experimentAPIStub = {
+        ready: sandbox.stub().resolves(),
+        getExperiment: getExperimentStub,
+        getAllBranches: getAllBranchesStub,
+      };
+      globals.set("ExperimentAPI", experimentAPIStub);
+    });
+    afterEach(() => {
+      sandbox.restore();
+    });
+    it("should tag `forReachEvent`/`forExposureEvent` for all the expected message types", async () => {
+      // This should match the `providers.messaging-experiments`
+      let response = await MessageLoaderUtils.loadMessagesForProvider({
+        type: "remote-experiments",
+        messageGroups,
+      });
+
+      assert.calledOnce(experimentAPIStub.ready);
+      // 1 message for reach 1 for expose
+      assert.property(response, "messages");
+      assert.lengthOf(response.messages, messageGroups.length * 2);
+      assert.lengthOf(
+        response.messages.filter(m => m.forReachEvent),
+        messageGroups.length
+      );
+      assert.lengthOf(
+        response.messages.filter(m => m.forExposureEvent),
+        messageGroups.length
+      );
+    });
+  });
+
   describe("#sendTriggerMessage", () => {
     it("should pass the trigger to ASRouterTargeting when sending trigger message", async () => {
       await Router.setState({
