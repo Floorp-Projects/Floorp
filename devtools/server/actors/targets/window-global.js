@@ -278,6 +278,9 @@ const windowGlobalTargetPrototype = {
     }
     this.docShell = docShell;
 
+    // Save references to the original document we attached to
+    this._originalWindow = this.window;
+
     this.followWindowGlobalLifeCycle = followWindowGlobalLifeCycle;
     this.isTopLevelTarget = !!isTopLevelTarget;
     this.ignoreSubFrames = ignoreSubFrames;
@@ -683,9 +686,6 @@ const windowGlobalTargetPrototype = {
     this._createThreadActor();
 
     this._progressListener = new DebuggerProgressListener(this);
-
-    // Save references to the original document we attached to
-    this._originalWindow = this.window;
 
     this._docShellsObserved = false;
 
