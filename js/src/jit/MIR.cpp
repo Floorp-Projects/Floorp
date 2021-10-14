@@ -4092,6 +4092,22 @@ bool MCompare::evaluateConstantOperands(TempAllocator& alloc, bool* result) {
   return false;
 }
 
+MDefinition* MCompare::tryFoldTypeOf(TempAllocator& alloc) {
+  auto typeOfPair = IsTypeOfCompare(this);
+  if (!typeOfPair) {
+    return this;
+  }
+  auto [typeOfName, type] = *typeOfPair;
+  auto* typeOf = typeOfName->input()->toTypeOf();
+
+  MOZ_ASSERT(type != JSTYPE_LIMIT, "unknown typeof strings folded earlier");
+
+  MConstant* cst = MConstant::New(alloc, Int32Value(type));
+  block()->insertBefore(this, cst);
+
+  return MCompare::New(alloc, typeOf, cst, jsop(), MCompare::Compare_Int32);
+}
+
 MDefinition* MCompare::tryFoldCharCompare(TempAllocator& alloc) {
   if (compareType() != Compare_String) {
     return this;
@@ -4205,6 +4221,10 @@ MDefinition* MCompare::foldsTo(TempAllocator& alloc) {
 
     MOZ_ASSERT(type() == MIRType::Boolean);
     return MConstant::New(alloc, BooleanValue(result));
+  }
+
+  if (MDefinition* folded = tryFoldTypeOf(alloc); folded != this) {
+    return folded;
   }
 
   if (MDefinition* folded = tryFoldCharCompare(alloc); folded != this) {
