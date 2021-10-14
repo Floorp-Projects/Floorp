@@ -3,12 +3,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #ifndef mozilla_dom_Crypto_h
 #define mozilla_dom_Crypto_h
 
 #include "mozilla/dom/SubtleCrypto.h"
 #include "nsIGlobalObject.h"
-
+#include "nsString.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/TypedArray.h"
 
@@ -30,6 +31,8 @@ class Crypto final : public nsISupports, public nsWrapperCache {
 
   void GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
                        JS::MutableHandle<JSObject*> aRetval, ErrorResult& aRv);
+
+  void RandomUUID(nsAString& aRetVal);
 
   SubtleCrypto* Subtle();
 
