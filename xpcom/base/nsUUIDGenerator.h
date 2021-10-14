@@ -7,31 +7,16 @@
 #ifndef _NSUUIDGENERATOR_H_
 #define _NSUUIDGENERATOR_H_
 
-#include "mozilla/Attributes.h"
-#include "mozilla/Mutex.h"
-
 #include "nsIUUIDGenerator.h"
 
 class nsUUIDGenerator final : public nsIUUIDGenerator {
  public:
-  nsUUIDGenerator();
-
   NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_DECL_NSIUUIDGENERATOR
 
-  nsresult Init();
-
  private:
   ~nsUUIDGenerator();
-
- protected:
-  mozilla::Mutex mLock;
-#if !defined(XP_WIN) && !defined(XP_MACOSX) && !defined(HAVE_ARC4RANDOM)
-  char mState[128];
-  char* mSavedState;
-  uint8_t mRBytes;
-#endif
 };
 
 #define NS_UUID_GENERATOR_CONTRACTID "@mozilla.org/uuid-generator;1"
