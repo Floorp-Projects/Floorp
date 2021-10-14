@@ -1986,6 +1986,7 @@ gboolean nsDragService::RunScheduledTask() {
   // Don't run RunScheduledTask() twice. As we use it in main thread only
   // we don't need to be thread safe here.
   if (mScheduledTaskIsRunning) {
+    LOGDRAGSERVICE(("  sheduled task is already running, quit."));
     return FALSE;
   }
   AutoRestore<bool> guard(mScheduledTaskIsRunning);
@@ -2018,7 +2019,8 @@ gboolean nsDragService::RunScheduledTask() {
   mTargetWindowPoint = mPendingWindowPoint;
 
   if (task == eDragTaskLeave || task == eDragTaskSourceEnd) {
-    LOGDRAGSERVICE(("  quit, task %s\n", GetDragServiceTaskName(task)));
+    LOGDRAGSERVICE(
+        ("  quit, selected task %s\n", GetDragServiceTaskName(task)));
     if (task == eDragTaskSourceEnd) {
       // Dispatch drag end events.
       EndDragSession(true, GetCurrentModifiers());

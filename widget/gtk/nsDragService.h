@@ -105,7 +105,6 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
 
   // set the drag icon during drag-begin
   void SetDragIcon(GdkDragContext* aContext);
-  gboolean IsDragActive() { return mScheduledTask != eDragTaskNone; }
 
   // Reply to drag_motion event according to recent DragService state.
   // We need that on Wayland to reply immediately as it's requested
