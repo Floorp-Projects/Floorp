@@ -184,7 +184,7 @@ open class SavedLoginsStorageController(
         }
     }
 
-    private fun findDuplicate(entry: LoginEntry, currentGuid: String? = null) {
+    private suspend fun findDuplicate(entry: LoginEntry, currentGuid: String? = null) {
         // Ensure that we have a valid, non-blank password.  The value doesn't
         // matter for dupe-checking and we want to make sure that
         // findLoginToUpdate() doesn't throw an error because the [LoginEntry]
