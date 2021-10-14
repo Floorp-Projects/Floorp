@@ -1055,6 +1055,36 @@ void MacroAssembler::branchTestMagic(Condition cond, const BaseIndex& address,
   branchTestMagic(cond, tag, label);
 }
 
+template <typename T>
+void MacroAssembler::testNumberSet(Condition cond, const T& src,
+                                   Register dest) {
+  MOZ_CRASH("NYI");
+}
+
+template <typename T>
+void MacroAssembler::testBooleanSet(Condition cond, const T& src,
+                                    Register dest) {
+  MOZ_CRASH("NYI");
+}
+
+template <typename T>
+void MacroAssembler::testStringSet(Condition cond, const T& src,
+                                   Register dest) {
+  MOZ_CRASH("NYI");
+}
+
+template <typename T>
+void MacroAssembler::testSymbolSet(Condition cond, const T& src,
+                                   Register dest) {
+  MOZ_CRASH("NYI");
+}
+
+template <typename T>
+void MacroAssembler::testBigIntSet(Condition cond, const T& src,
+                                   Register dest) {
+  MOZ_CRASH("NYI");
+}
+
 void MacroAssembler::branchToComputedAddress(const BaseIndex& addr) {
   loadPtr(addr, ScratchRegister);
   branch(ScratchRegister);
