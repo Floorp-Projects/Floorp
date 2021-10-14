@@ -273,6 +273,7 @@ pub enum CallbackResp {
     State,
     DeviceChange,
     SharedMem,
+    Error(c_int),
 }
 
 #[derive(Debug, Deserialize, Serialize)]
