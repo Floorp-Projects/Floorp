@@ -203,6 +203,16 @@ class CCGCScheduler {
   // A timer fired, but then decided not to run a GC.
   void NoteWontGC();
 
+  // This is invoked when we reach the actual cycle collection portion of the
+  // overall cycle collection.
+  void NoteCCBegin(TimeStamp aWhen);
+
+  // This is invoked when the whole process of collection is done -- i.e., CC
+  // preparation (eg ForgetSkippables) in addition to the CC itself. There
+  // really ought to be a separate name for the overall CC as opposed to the
+  // actual cycle collection portion.
+  void NoteCCEnd(TimeStamp aWhen);
+
   void NoteGCSliceEnd(TimeDuration aSliceDuration) {
     if (mMajorGCReason == JS::GCReason::NO_REASON) {
       // Internally-triggered GCs do not wait for the parent's permission to
@@ -261,17 +271,8 @@ class CCGCScheduler {
     mCCollectedZonesWaitingForGC += aResults.mFreedJSZones;
   }
 
-  // This is invoked when the whole process of collection is done -- i.e., CC
-  // preparation (eg ForgetSkippables), the CC itself, and the optional
-  // followup GC. There really ought to be a separate name for the overall CC
-  // as opposed to the actual cycle collection portion.
-  void NoteCCEnd(TimeStamp aWhen) {
-    mLastCCEndTime = aWhen;
-    mNeedsFullCC = false;
-
-    // The GC for this CC has already been requested.
-    mNeedsGCAfterCC = false;
-  }
+  // Test if we are in the NoteCCBegin .. NoteCCEnd interval.
+  bool IsCollectingCycles() const { return mIsCollectingCycles; }
 
   // The CC was abandoned without running a slice, so we only did forget
   // skippables. Prevent running another cycle soon.
@@ -432,6 +433,7 @@ class CCGCScheduler {
   JS::GCReason mMajorGCReason = JS::GCReason::NO_REASON;
 
   bool mIsCompactingOnUserInactive = false;
+  bool mIsCollectingCycles = false;
   bool mUserIsActive = true;
 
  public:
