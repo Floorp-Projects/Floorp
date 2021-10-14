@@ -12649,34 +12649,32 @@ class OutOfLineTypeOfV : public OutOfLineCodeBase<CodeGenerator> {
   LTypeOfV* ins() const { return ins_; }
 };
 
-void CodeGenerator::emitTypeOfName(JSValueType type, Register output) {
-  const JSAtomState& names = gen->runtime->names();
-
+void CodeGenerator::emitTypeOfJSType(JSValueType type, Register output) {
   switch (type) {
     case JSVAL_TYPE_OBJECT:
-      masm.movePtr(ImmGCPtr(names.object), output);
+      masm.move32(Imm32(JSTYPE_OBJECT), output);
       break;
     case JSVAL_TYPE_DOUBLE:
     case JSVAL_TYPE_INT32:
-      masm.movePtr(ImmGCPtr(names.number), output);
+      masm.move32(Imm32(JSTYPE_NUMBER), output);
       break;
     case JSVAL_TYPE_BOOLEAN:
-      masm.movePtr(ImmGCPtr(names.boolean), output);
+      masm.move32(Imm32(JSTYPE_BOOLEAN), output);
       break;
     case JSVAL_TYPE_UNDEFINED:
-      masm.movePtr(ImmGCPtr(names.undefined), output);
+      masm.move32(Imm32(JSTYPE_UNDEFINED), output);
       break;
     case JSVAL_TYPE_NULL:
-      masm.movePtr(ImmGCPtr(names.object), output);
+      masm.move32(Imm32(JSTYPE_OBJECT), output);
       break;
     case JSVAL_TYPE_STRING:
-      masm.movePtr(ImmGCPtr(names.string), output);
+      masm.move32(Imm32(JSTYPE_STRING), output);
       break;
     case JSVAL_TYPE_SYMBOL:
-      masm.movePtr(ImmGCPtr(names.symbol), output);
+      masm.move32(Imm32(JSTYPE_SYMBOL), output);
       break;
     case JSVAL_TYPE_BIGINT:
-      masm.movePtr(ImmGCPtr(names.bigint), output);
+      masm.move32(Imm32(JSTYPE_BIGINT), output);
       break;
     default:
       MOZ_CRASH("Unsupported JSValueType");
@@ -12702,7 +12700,7 @@ void CodeGenerator::emitTypeOfCheck(JSValueType type, Register tag,
       break;
   }
 
-  emitTypeOfName(type, output);
+  emitTypeOfJSType(type, output);
   masm.jump(done);
   masm.bind(&notMatch);
 }
@@ -12753,7 +12751,7 @@ void CodeGenerator::visitTypeOfV(LTypeOfV* lir) {
       emitTypeOfCheck(type, tag, output, &done, ool->entry());
       masm.assumeUnreachable("Unexpected Value type in visitTypeOfV");
 #else
-      emitTypeOfName(type, output);
+      emitTypeOfJSType(type, output);
 #endif
     } else {
       emitTypeOfCheck(type, tag, output, &done, ool->entry());
@@ -12767,34 +12765,30 @@ void CodeGenerator::visitTypeOfV(LTypeOfV* lir) {
 
 void CodeGenerator::emitTypeOfObject(Register obj, Register output,
                                      Label* done) {
-  const JSAtomState& names = gen->runtime->names();
-
   Label slowCheck, isObject, isCallable, isUndefined;
   masm.typeOfObject(obj, output, &slowCheck, &isObject, &isCallable,
                     &isUndefined);
 
   masm.bind(&isCallable);
-  masm.movePtr(ImmGCPtr(names.function), output);
+  masm.move32(Imm32(JSTYPE_FUNCTION), output);
   masm.jump(done);
 
   masm.bind(&isUndefined);
-  masm.movePtr(ImmGCPtr(names.undefined), output);
+  masm.move32(Imm32(JSTYPE_UNDEFINED), output);
   masm.jump(done);
 
   masm.bind(&isObject);
-  masm.movePtr(ImmGCPtr(names.object), output);
+  masm.move32(Imm32(JSTYPE_OBJECT), output);
   masm.jump(done);
 
   masm.bind(&slowCheck);
 
   saveVolatile(output);
-  using Fn = JSString* (*)(JSObject * obj, JSRuntime * rt);
+  using Fn = JSType (*)(JSObject*);
   masm.setupUnalignedABICall(output);
   masm.passABIArg(obj);
-  masm.movePtr(ImmPtr(gen->runtime), output);
-  masm.passABIArg(output);
-  masm.callWithABI<Fn, TypeOfObject>();
-  masm.storeCallPointerResult(output);
+  masm.callWithABI<Fn, js::TypeOfObject>();
+  masm.storeCallInt32Result(output);
   restoreVolatile(output);
 }
 
@@ -12817,6 +12811,23 @@ void CodeGenerator::visitTypeOfO(LTypeOfO* lir) {
   Label done;
   emitTypeOfObject(obj, output, &done);
   masm.bind(&done);
+}
+
+void CodeGenerator::visitTypeOfName(LTypeOfName* lir) {
+  Register input = ToRegister(lir->input());
+  Register output = ToRegister(lir->output());
+
+#ifdef DEBUG
+  Label ok;
+  masm.branch32(Assembler::Below, input, Imm32(JSTYPE_LIMIT), &ok);
+  masm.assumeUnreachable("bad JSType");
+  masm.bind(&ok);
+#endif
+
+  static_assert(JSTYPE_UNDEFINED == 0);
+
+  masm.movePtr(ImmPtr(&gen->runtime->names().undefined), output);
+  masm.loadPtr(BaseIndex(output, input, ScalePointer), output);
 }
 
 void CodeGenerator::visitToAsyncIter(LToAsyncIter* lir) {
