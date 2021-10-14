@@ -6,8 +6,8 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<iframe src="http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_navigation_redirect_same_origin.html"></iframe>
-<iframe src="http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_navigation_redirect_cross_origin.html"></iframe>
+<iframe id="redirect_same_origin_frame"></iframe>
+<iframe id="redirect_cross_origin_frame"></iframe>
 
 <script class="testbody" type="text/javascript">
 
@@ -51,6 +51,16 @@ function receiveMessage(event) {
   }
   checkFinished();
 }
+
+function startTest() {
+  document.getElementById("redirect_same_origin_frame").src =
+    "http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_navigation_redirect_same_origin.html";
+  document.getElementById("redirect_cross_origin_frame").src =
+    "http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_navigation_redirect_cross_origin.html";
+}
+
+// do not upgrade tests by https-first, only by UIR for this test
+SpecialPowers.pushPrefEnv({ set: [["dom.security.https_first", false]]}, startTest);
 
 </script>
 </body>
