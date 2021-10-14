@@ -11,8 +11,8 @@
 #include "ScopedNSSTypes.h"
 #include "nsClassHashtable.h"
 #include "nsIDNSService.h"
-#include "mozilla/net/HTTPSSVC.h"
-#include "nsIDNSByTypeRecord.h"
+#include "DNS.h"
+#include "DNSByTypeRecord.h"
 
 namespace mozilla {
 namespace net {
