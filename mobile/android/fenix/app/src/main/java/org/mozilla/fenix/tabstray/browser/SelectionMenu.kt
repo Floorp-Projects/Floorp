@@ -7,6 +7,7 @@ package org.mozilla.fenix.tabstray.browser
 import android.content.Context
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 
@@ -45,7 +46,7 @@ class SelectionMenu(
                 onItemTapped.invoke(Item.MakeInactive)
             }.apply {
                 // We only want this menu option visible when in debug mode for testing.
-                visible = { context.components.settings.showSecretDebugMenuThisSession }
+                visible = { Config.channel.isDebug || context.components.settings.showSecretDebugMenuThisSession }
             }
         )
     }
