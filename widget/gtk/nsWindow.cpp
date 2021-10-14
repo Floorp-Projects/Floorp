@@ -1094,15 +1094,11 @@ void nsWindow::ApplySizeConstraints(void) {
       }
       AddCSDDecorationSize(&geometry.min_width, &geometry.min_height);
       hints |= GDK_HINT_MIN_SIZE;
-      LOG("nsWindow::ApplySizeConstraints [%p] min size %d %d\n", (void*)this,
-          geometry.min_width, geometry.min_height);
     }
     if (mSizeConstraints.mMaxSize !=
         LayoutDeviceIntSize(NS_MAXSIZE, NS_MAXSIZE)) {
       AddCSDDecorationSize(&geometry.max_width, &geometry.max_height);
       hints |= GDK_HINT_MAX_SIZE;
-      LOG("nsWindow::ApplySizeConstraints [%p] max size %d %d\n", (void*)this,
-          geometry.max_width, geometry.max_height);
     }
 
     if (mAspectRatio != 0.0f) {
@@ -7077,7 +7073,6 @@ void nsWindow::PerformFullscreenTransition(FullscreenTransitionStage aStage,
 }
 
 already_AddRefed<nsIScreen> nsWindow::GetWidgetScreen() {
-  LOG("nsWindow::GetWidgetScreen() [%p]", this);
   // Wayland can read screen directly
   if (GdkIsWaylandDisplay()) {
     RefPtr<nsIScreen> screen = ScreenHelperGTK::GetScreenForWindow(this);
@@ -7086,7 +7081,6 @@ already_AddRefed<nsIScreen> nsWindow::GetWidgetScreen() {
     }
   }
 
-  LOG("  fallback to Gtk code");
   nsCOMPtr<nsIScreenManager> screenManager;
   screenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
   if (!screenManager) {
