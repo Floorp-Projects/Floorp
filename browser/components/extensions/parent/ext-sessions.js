@@ -41,7 +41,7 @@ const getRecentlyClosed = (maxResults, extension) => {
     if (!extension.canAccessWindow(window)) {
       continue;
     }
-    let closedTabData = SessionStore.getClosedTabData(window, false);
+    let closedTabData = SessionStore.getClosedTabData(window);
     for (let tab of closedTabData) {
       recentlyClosed.push({
         lastModified: tab.closedAt,
@@ -125,7 +125,7 @@ this.sessions = class extends ExtensionAPI {
         async forgetClosedTab(windowId, sessionId) {
           await SessionStore.promiseInitialized;
           let window = windowTracker.getWindow(windowId, context);
-          let closedTabData = SessionStore.getClosedTabData(window, false);
+          let closedTabData = SessionStore.getClosedTabData(window);
 
           let closedTabIndex = closedTabData.findIndex(closedTab => {
             return closedTab.closedId === parseInt(sessionId, 10);
@@ -174,7 +174,7 @@ this.sessions = class extends ExtensionAPI {
             // so we must find the tab in which case we can just use its closedId.
             let recentlyClosedTabs = [];
             for (let window of windowTracker.browserWindows()) {
-              let closedTabData = SessionStore.getClosedTabData(window, false);
+              let closedTabData = SessionStore.getClosedTabData(window);
               for (let tab of closedTabData) {
                 recentlyClosedTabs.push(tab);
               }

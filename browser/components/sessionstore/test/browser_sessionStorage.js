@@ -206,7 +206,7 @@ add_task(async function respect_privacy_level() {
     {
       state: { storage },
     },
-  ] = JSON.parse(ss.getClosedTabData(window));
+  ] = ss.getClosedTabData(window);
   is(
     storage[OUTER_ORIGIN].test,
     OUTER_VALUE,
@@ -230,7 +230,7 @@ add_task(async function respect_privacy_level() {
     {
       state: { storage },
     },
-  ] = JSON.parse(ss.getClosedTabData(window));
+  ] = ss.getClosedTabData(window);
   is(
     storage[OUTER_ORIGIN].test,
     OUTER_VALUE,
@@ -256,7 +256,7 @@ add_task(async function respect_privacy_level() {
     {
       state: { storage },
     },
-  ] = JSON.parse(ss.getClosedTabData(window));
+  ] = ss.getClosedTabData(window);
   ok(!storage, "sessionStorage data has *not* been saved");
 
   // Remove all closed tabs before continuing with the next test.
@@ -275,7 +275,7 @@ add_task(async function respect_privacy_level() {
     {
       state: { storage },
     },
-  ] = JSON.parse(ss.getClosedTabData(window));
+  ] = ss.getClosedTabData(window);
   is(
     storage[OUTER_ORIGIN].test,
     OUTER_VALUE,

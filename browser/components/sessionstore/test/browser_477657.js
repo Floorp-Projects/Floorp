@@ -44,7 +44,7 @@ add_task(async function test_sizemodeDefaults() {
   is(newWin.windowState, newWin.STATE_MAXIMIZED, "the window was maximized");
 
   is(
-    JSON.parse(ss.getClosedTabData(newWin)).length,
+    ss.getClosedTabData(newWin).length,
     1,
     "the closed tab was added before the window was overwritten"
   );
@@ -55,7 +55,7 @@ add_task(async function test_sizemodeDefaults() {
   await new Promise(resolve => newWin.setTimeout(resolve, 0));
 
   is(
-    JSON.parse(ss.getClosedTabData(newWin)).length,
+    ss.getClosedTabData(newWin).length,
     0,
     "closed tabs were implicitly cleared"
   );

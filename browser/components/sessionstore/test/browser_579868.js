@@ -19,7 +19,7 @@ function test() {
 
     // Close and restore tab
     gBrowser.removeTab(tab1);
-    let savedState = JSON.parse(ss.getClosedTabData(window))[0].state;
+    let savedState = ss.getClosedTabData(window)[0].state;
     isnot(savedState.pinned, true, "Pinned should not be true");
     tab1 = ss.undoCloseTab(window, 0);
 
