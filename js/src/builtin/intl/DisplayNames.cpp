@@ -10,7 +10,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/intl/DateTimePatternGenerator.h"
-#include "mozilla/intl/Locale.h"
 #include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 
@@ -22,11 +21,9 @@
 #include "jspubtd.h"
 
 #include "builtin/intl/CommonFunctions.h"
-#include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/SharedIntlData.h"
-#include "builtin/intl/StringAsciiChars.h"
 #include "builtin/String.h"
 #include "gc/AllocKind.h"
 #include "gc/FreeOp.h"
@@ -72,8 +69,6 @@ using namespace js;
 
 using js::intl::CallICU;
 using js::intl::IcuLocale;
-
-using mozilla::intl::LocaleParser;
 
 const JSClassOps DisplayNamesObject::classOps_ = {nullptr, /* addProperty */
                                                   nullptr, /* delProperty */
@@ -337,54 +332,27 @@ static void ReportInvalidOptionError(JSContext* cx, const char* type,
   }
 }
 
-static bool TryParseBaseName(JSContext* cx, HandleLinearString languageStr,
-                             mozilla::intl::Locale& tag) {
-  if (StringIsAscii(languageStr)) {
-    intl::StringAsciiChars chars(languageStr);
-    if (!chars.init(cx)) {
-      return false;
-    }
-
-    if (LocaleParser::tryParseBaseName(chars, tag).isOk()) {
-      return true;
-    }
-  }
-
-  ReportInvalidOptionError(cx, "language", languageStr);
-  return false;
-}
-
 static JSString* GetLanguageDisplayName(
     JSContext* cx, Handle<DisplayNamesObject*> displayNames, const char* locale,
     DisplayNamesStyle displayStyle, DisplayNamesLanguageDisplay languageDisplay,
     DisplayNamesFallback fallback, HandleLinearString languageStr) {
-  mozilla::intl::Locale tag;
-  if (!TryParseBaseName(cx, languageStr, tag)) {
+  bool ok;
+  intl::LanguageTag tag(cx);
+  JS_TRY_VAR_OR_RETURN_NULL(
+      cx, ok, intl::LanguageTagParser::tryParseBaseName(cx, languageStr, tag));
+  if (!ok) {
+    ReportInvalidOptionError(cx, "language", languageStr);
     return nullptr;
   }
 
   // ICU always canonicalizes the input locale, but since we know that ICU's
   // canonicalization is incomplete, we need to perform our own canonicalization
   // to ensure consistent result.
-  if (auto result = tag.canonicalizeBaseName(); result.isErr()) {
-    if (result.unwrapErr() ==
-        mozilla::intl::Locale::CanonicalizationError::DuplicateVariant) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_DUPLICATE_VARIANT_SUBTAG);
-    } else {
-      intl::ReportInternalError(cx);
-    }
-
+  if (!tag.canonicalizeBaseName(cx)) {
     return nullptr;
   }
 
-  intl::FormatBuffer<char> buffer(cx);
-  if (auto result = tag.toString(buffer); result.isErr()) {
-    intl::ReportInternalError(cx, result.unwrapErr());
-    return nullptr;
-  }
-
-  UniqueChars languageChars = buffer.extractStringZ();
+  UniqueChars languageChars = tag.toStringZ(cx);
   if (!languageChars) {
     return nullptr;
   }
@@ -426,24 +394,22 @@ static JSString* GetScriptDisplayName(JSContext* cx,
                                       DisplayNamesStyle displayStyle,
                                       DisplayNamesFallback fallback,
                                       HandleLinearString scriptStr) {
-  mozilla::intl::ScriptSubtag script;
+  intl::ScriptSubtag script;
   if (!intl::ParseStandaloneScriptTag(scriptStr, script)) {
     ReportInvalidOptionError(cx, "script", scriptStr);
     return nullptr;
   }
 
-  mozilla::intl::Locale tag;
+  intl::LanguageTag tag(cx);
   tag.setLanguage("und");
   tag.setScript(script);
 
   // ICU always canonicalizes the input locale, but since we know that ICU's
   // canonicalization is incomplete, we need to perform our own canonicalization
   // to ensure consistent result.
-  if (tag.canonicalizeBaseName().isErr()) {
-    intl::ReportInternalError(cx);
+  if (!tag.canonicalizeBaseName(cx)) {
     return nullptr;
   }
-
   MOZ_ASSERT(tag.script().present());
 
   // |uldn_scriptDisplayName| doesn't use the stand-alone form for script
@@ -453,13 +419,7 @@ static JSString* GetScriptDisplayName(JSContext* cx,
   // ICU bug: https://unicode-org.atlassian.net/browse/ICU-9301
   if (displayStyle == DisplayNamesStyle::Long) {
     // |uloc_getDisplayScript| expects a full locale identifier as its input.
-    intl::FormatBuffer<char> buffer(cx);
-    if (auto result = tag.toString(buffer); result.isErr()) {
-      intl::ReportInternalError(cx, result.unwrapErr());
-      return nullptr;
-    }
-
-    UniqueChars scriptChars = buffer.extractStringZ();
+    UniqueChars scriptChars = tag.toStringZ(cx);
     if (!scriptChars) {
       return nullptr;
     }
@@ -492,9 +452,9 @@ static JSString* GetScriptDisplayName(JSContext* cx,
   }
 
   // Note: ICU requires the script subtag to be in canonical case.
-  const mozilla::intl::ScriptSubtag& canonicalScript = tag.script();
+  const intl::ScriptSubtag& canonicalScript = tag.script();
 
-  char scriptChars[mozilla::intl::LanguageTagLimits::ScriptLength + 1] = {};
+  char scriptChars[intl::LanguageTagLimits::ScriptLength + 1] = {};
   std::copy_n(canonicalScript.span().data(), canonicalScript.length(),
               scriptChars);
 
@@ -535,30 +495,28 @@ static JSString* GetRegionDisplayName(JSContext* cx,
                                       DisplayNamesStyle displayStyle,
                                       DisplayNamesFallback fallback,
                                       HandleLinearString regionStr) {
-  mozilla::intl::RegionSubtag region;
+  intl::RegionSubtag region;
   if (!intl::ParseStandaloneRegionTag(regionStr, region)) {
     ReportInvalidOptionError(cx, "region", regionStr);
     return nullptr;
   }
 
-  mozilla::intl::Locale tag;
+  intl::LanguageTag tag(cx);
   tag.setLanguage("und");
   tag.setRegion(region);
 
   // ICU always canonicalizes the input locale, but since we know that ICU's
   // canonicalization is incomplete, we need to perform our own canonicalization
   // to ensure consistent result.
-  if (tag.canonicalizeBaseName().isErr()) {
-    intl::ReportInternalError(cx);
+  if (!tag.canonicalizeBaseName(cx)) {
     return nullptr;
   }
-
   MOZ_ASSERT(tag.region().present());
 
   // Note: ICU requires the region subtag to be in canonical case.
-  const mozilla::intl::RegionSubtag& canonicalRegion = tag.region();
+  const intl::RegionSubtag& canonicalRegion = tag.region();
 
-  char regionChars[mozilla::intl::LanguageTagLimits::RegionLength + 1] = {};
+  char regionChars[intl::LanguageTagLimits::RegionLength + 1] = {};
   std::copy_n(canonicalRegion.span().data(), canonicalRegion.length(),
               regionChars);
 
@@ -655,26 +613,21 @@ static JSString* GetCalendarDisplayName(
     DisplayNamesStyle displayStyle, DisplayNamesFallback fallback,
     HandleLinearString calendarStr) {
   // Report an error if the input can't be parsed as a Unicode type nonterminal.
-  if (calendarStr->empty() || !StringIsAscii(calendarStr)) {
+  if (calendarStr->empty() ||
+      !intl::LanguageTagParser::canParseUnicodeExtensionType(calendarStr)) {
     ReportInvalidOptionError(cx, "calendar", calendarStr);
     return nullptr;
   }
+
+  MOZ_ASSERT(StringIsAscii(calendarStr), "Unicode extension types are ASCII");
 
   UniqueChars calendar = EncodeAscii(cx, calendarStr);
   if (!calendar) {
     return nullptr;
   }
 
-  if (LocaleParser::canParseUnicodeExtensionType(
-          mozilla::Span(calendar.get(), calendarStr->length()))
-          .isErr()) {
-    ReportInvalidOptionError(cx, "calendar", calendarStr);
-    return nullptr;
-  }
-
   // Convert into canonical case before searching for replacements.
-  mozilla::intl::AsciiToLowerCase(calendar.get(), calendarStr->length(),
-                                  calendar.get());
+  intl::AsciiToLowerCase(calendar.get(), calendarStr->length(), calendar.get());
 
   auto key = mozilla::MakeStringSpan("ca");
   auto type = mozilla::Span(calendar.get(), calendarStr->length());
@@ -682,7 +635,7 @@ static JSString* GetCalendarDisplayName(
   // Search if there's a replacement for the Unicode calendar keyword.
   const char* canonicalCalendar = calendar.get();
   if (const char* replacement =
-          mozilla::intl::Locale::replaceUnicodeExtensionType(key, type)) {
+          intl::LanguageTag::replaceUnicodeExtensionType(key, type)) {
     canonicalCalendar = replacement;
   }
 
@@ -779,10 +732,9 @@ static ListObject* GetDateTimeDisplayNames(
     return names;
   }
 
-  mozilla::intl::Locale tag;
-  if (LocaleParser::tryParse(mozilla::MakeStringSpan(locale), tag).isErr()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_INVALID_LANGUAGE_TAG, locale);
+  intl::LanguageTag tag(cx);
+  if (!intl::LanguageTagParser::parse(cx, mozilla::MakeStringSpan(locale),
+                                      tag)) {
     return nullptr;
   }
 
@@ -795,12 +747,7 @@ static ListObject* GetDateTimeDisplayNames(
     return nullptr;
   }
 
-  intl::FormatBuffer<char> buffer(cx);
-  if (auto result = tag.toString(buffer); result.isErr()) {
-    intl::ReportInternalError(cx, result.unwrapErr());
-    return nullptr;
-  }
-  UniqueChars localeWithCalendar = buffer.extractStringZ();
+  UniqueChars localeWithCalendar = tag.toStringZ(cx);
   if (!localeWithCalendar) {
     return nullptr;
   }

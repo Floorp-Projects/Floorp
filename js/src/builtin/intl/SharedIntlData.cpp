@@ -377,7 +377,7 @@ bool js::intl::SharedIntlData::getAvailableLocales(
     // + 4 * Alphanum script subtag
     // + 1 separator
     // + 2 * Alpha region subtag
-    using namespace mozilla::intl::LanguageTagLimits;
+    using namespace intl::LanguageTagLimits;
     static constexpr size_t MinLanguageLength = 2;
     static constexpr size_t MinLengthForScriptAndRegion =
         MinLanguageLength + 1 + ScriptLength + 1 + AlphaRegionLength;
@@ -407,8 +407,7 @@ bool js::intl::SharedIntlData::getAvailableLocales(
 
     // Continue with the next locale if we didn't find a script subtag.
     size_t scriptLength = sep - script;
-    if (!mozilla::intl::IsStructurallyValidScriptTag<char>(
-            {script, scriptLength})) {
+    if (!IsStructurallyValidScriptTag<char>({script, scriptLength})) {
       continue;
     }
 
@@ -420,8 +419,7 @@ bool js::intl::SharedIntlData::getAvailableLocales(
 
     // Continue with the next locale if we didn't find a region subtag.
     size_t regionLength = (sep ? sep : lang.end()) - region;
-    if (!mozilla::intl::IsStructurallyValidRegionTag<char>(
-            {region, regionLength})) {
+    if (!IsStructurallyValidRegionTag<char>({region, regionLength})) {
       continue;
     }
 
