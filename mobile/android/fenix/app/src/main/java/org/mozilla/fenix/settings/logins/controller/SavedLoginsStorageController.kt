@@ -26,7 +26,6 @@ import org.mozilla.fenix.settings.logins.LoginsFragmentStore
 import org.mozilla.fenix.settings.logins.fragment.EditLoginFragmentDirections
 import org.mozilla.fenix.settings.logins.fragment.AddLoginFragmentDirections
 import org.mozilla.fenix.settings.logins.mapToSavedLogin
-import org.mozilla.fenix.settings.logins.SavedLogin
 
 /**
  * Controller for all saved logins interactions with the password storage component
@@ -185,12 +184,12 @@ open class SavedLoginsStorageController(
         }
     }
 
-    suspend fun findDuplicate(entry: LoginEntry, currentGuid: String? = null) {
+    private fun findDuplicate(entry: LoginEntry, currentGuid: String? = null) {
         // Ensure that we have a valid, non-blank password.  The value doesn't
         // matter for dupe-checking and we want to make sure that
         // findLoginToUpdate() doesn't throw an error because the [LoginEntry]
         // is invalid
-        val validEntry = if (entry.password.isNotEmpty()) entry else entry.copy(password="password")
+        val validEntry = if (entry.password.isNotEmpty()) entry else entry.copy(password = "password")
         var dupe = try {
             passwordsStorage.findLoginToUpdate(validEntry)?.mapToSavedLogin()
         } catch (e: LoginsStorageException) {

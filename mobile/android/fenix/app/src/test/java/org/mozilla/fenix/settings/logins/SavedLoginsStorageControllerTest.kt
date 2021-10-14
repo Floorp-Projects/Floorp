@@ -189,13 +189,15 @@ class SavedLoginsStorageControllerTest {
 
         coVerify {
             passwordsStorage.get(login.guid)
-            passwordsStorage.findLoginToUpdate(LoginEntry(
-                origin = login.origin,
-                httpRealm = login.httpRealm,
-                formActionOrigin = login.formActionOrigin,
-                username = login2.username,
-                password = login.password
-            ))
+            passwordsStorage.findLoginToUpdate(
+                LoginEntry(
+                    origin = login.origin,
+                    httpRealm = login.httpRealm,
+                    formActionOrigin = login.formActionOrigin,
+                    username = login2.username,
+                    password = login.password
+                )
+            )
             loginsFragmentStore.dispatch(
                 LoginsAction.DuplicateLogin(login2.mapToSavedLogin())
             )
@@ -223,13 +225,15 @@ class SavedLoginsStorageControllerTest {
 
         coVerify {
             passwordsStorage.get(login.guid)
-            passwordsStorage.findLoginToUpdate(LoginEntry(
-                origin = login.origin,
-                httpRealm = login.httpRealm,
-                formActionOrigin = login.formActionOrigin,
-                username = "new-username",
-                password = login.password
-            ))
+            passwordsStorage.findLoginToUpdate(
+                LoginEntry(
+                    origin = login.origin,
+                    httpRealm = login.httpRealm,
+                    formActionOrigin = login.formActionOrigin,
+                    username = "new-username",
+                    password = login.password
+                )
+            )
             loginsFragmentStore.dispatch(
                 LoginsAction.DuplicateLogin(null)
             )
@@ -255,13 +259,15 @@ class SavedLoginsStorageControllerTest {
         controller.findDuplicateForAdd(login.origin, login.username, "new-password")
 
         coVerify {
-            passwordsStorage.findLoginToUpdate(LoginEntry(
-                origin = login.origin,
-                httpRealm = login.origin,
-                formActionOrigin = null,
-                username = login.username,
-                password = "new-password",
-            ))
+            passwordsStorage.findLoginToUpdate(
+                LoginEntry(
+                    origin = login.origin,
+                    httpRealm = login.origin,
+                    formActionOrigin = null,
+                    username = login.username,
+                    password = "new-password",
+                )
+            )
             loginsFragmentStore.dispatch(
                 LoginsAction.DuplicateLogin(login.mapToSavedLogin())
             )
@@ -279,13 +285,15 @@ class SavedLoginsStorageControllerTest {
         controller.findDuplicateForAdd(origin, "username", "password")
 
         coVerify {
-            passwordsStorage.findLoginToUpdate(LoginEntry(
-                origin = origin,
-                httpRealm = origin,
-                formActionOrigin = null,
-                username = "username",
-                password = "password",
-            ))
+            passwordsStorage.findLoginToUpdate(
+                LoginEntry(
+                    origin = origin,
+                    httpRealm = origin,
+                    formActionOrigin = null,
+                    username = "username",
+                    password = "password",
+                )
+            )
             loginsFragmentStore.dispatch(
                 LoginsAction.DuplicateLogin(null)
             )
@@ -303,13 +311,15 @@ class SavedLoginsStorageControllerTest {
         controller.findDuplicateForAdd(origin, "username", "password")
 
         coVerify {
-            passwordsStorage.findLoginToUpdate(LoginEntry(
-                origin = origin,
-                httpRealm = origin,
-                formActionOrigin = null,
-                username = "username",
-                password = "password",
-            ))
+            passwordsStorage.findLoginToUpdate(
+                LoginEntry(
+                    origin = origin,
+                    httpRealm = origin,
+                    formActionOrigin = null,
+                    username = "username",
+                    password = "password",
+                )
+            )
             loginsFragmentStore.dispatch(
                 LoginsAction.DuplicateLogin(null)
             )
@@ -330,13 +340,15 @@ class SavedLoginsStorageControllerTest {
         controller.findDuplicateForAdd(origin, "username", "")
 
         coVerify {
-            passwordsStorage.findLoginToUpdate(LoginEntry(
-                origin = origin,
-                httpRealm = origin,
-                formActionOrigin = null,
-                username = "username",
-                password = "password",
-            ))
+            passwordsStorage.findLoginToUpdate(
+                LoginEntry(
+                    origin = origin,
+                    httpRealm = origin,
+                    formActionOrigin = null,
+                    username = "username",
+                    password = "password",
+                )
+            )
         }
     }
 }
