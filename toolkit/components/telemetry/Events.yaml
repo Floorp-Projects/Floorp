@@ -1188,10 +1188,9 @@ messaging_experiments:
   reach:
     objects: [
       "cfr",
-      "whats_new_panel",
       "moments_page",
-      "snippets",
-      "cfr_fxa"
+      "infobar",
+      "spotlight"
     ]
     methods: ["reach"]
     release_channel_collection: opt-out
