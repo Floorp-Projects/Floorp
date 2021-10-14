@@ -11,8 +11,12 @@ import java.util.UUID
  * Helper for writing tests that need a [Tab].
  */
 fun createTab(
-    tabId: String = UUID.randomUUID().toString()
+    tabId: String = UUID.randomUUID().toString(),
+    lastAccess: Long = 0L,
+    searchTerm: String = ""
 ) = Tab(
-    tabId,
-    "https://mozilla.org"
+    id = tabId,
+    url = "https://mozilla.org",
+    lastAccess = lastAccess,
+    searchTerm = searchTerm
 )

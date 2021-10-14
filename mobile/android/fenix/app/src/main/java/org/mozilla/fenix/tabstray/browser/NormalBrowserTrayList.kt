@@ -38,7 +38,7 @@ class NormalBrowserTrayList @JvmOverloads constructor(
 
     private val swipeDelegate = SwipeToDeleteDelegate()
     private val concatAdapter by lazy { adapter as ConcatAdapter }
-    private val tabSorter by lazy { TabSorter(context, concatAdapter, context.components.core.store) }
+    private val tabSorter by lazy { TabSorter(context.settings(), concatAdapter, context.components.core.store) }
     private val inactiveTabsFilter: (TabSessionState) -> Boolean = filter@{
         if (!context.settings().inactiveTabsAreEnabled) {
             return@filter false
