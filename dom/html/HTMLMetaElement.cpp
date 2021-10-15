@@ -148,10 +148,7 @@ void HTMLMetaElement::MetaAddedOrChanged(Document& aDoc,
   const bool hasContent = GetAttr(nsGkAtoms::content, content);
   if (aName.Equals(nsGkAtoms::viewport, eIgnoreCase)) {
     if (hasContent) {
-      aDoc.SetHeaderData(nsGkAtoms::viewport, content);
-      aDoc.AddMetaViewportElement(*this, ViewportMetaData(content));
-    } else if (aFromChange == FromChange::Yes) {
-      aDoc.RemoveMetaViewportElement(*this);
+      aDoc.SetMetaViewportData(MakeUnique<ViewportMetaData>(content));
     }
     return;
   }
@@ -166,11 +163,8 @@ void HTMLMetaElement::MetaAddedOrChanged(Document& aDoc,
 
 void HTMLMetaElement::MetaRemoved(Document& aDoc, const nsAttrValue& aName,
                                   FromChange aFromChange) {
-  if (aName.Equals(nsGkAtoms::viewport, eIgnoreCase)) {
-    return aDoc.RemoveMetaViewportElement(*this);
-  }
-  // FIXME: referrer doesn't do anything on removal or when its name changes to
-  // something else?
+  // TODO(emilio): We probably want to deal with <meta name=color-scheme> and co
+  // here.
 }
 
 }  // namespace mozilla::dom
