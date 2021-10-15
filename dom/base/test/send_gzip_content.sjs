@@ -1,14 +1,15 @@
 function gzipCompressString(string, obs) {
-
-  let scs = Cc["@mozilla.org/streamConverters;1"]
-           .getService(Ci.nsIStreamConverterService);
-  let listener = Cc["@mozilla.org/network/stream-loader;1"]
-                .createInstance(Ci.nsIStreamLoader);
+  let scs = Cc["@mozilla.org/streamConverters;1"].getService(
+    Ci.nsIStreamConverterService
+  );
+  let listener = Cc["@mozilla.org/network/stream-loader;1"].createInstance(
+    Ci.nsIStreamLoader
+  );
   listener.init(obs);
-  let converter = scs.asyncConvertData("uncompressed", "gzip",
-                                        listener, null);
-  let stringStream = Cc["@mozilla.org/io/string-input-stream;1"]
-                    .createInstance(Ci.nsIStringInputStream);
+  let converter = scs.asyncConvertData("uncompressed", "gzip", listener, null);
+  let stringStream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
   stringStream.data = string;
   converter.onStartRequest(null, null);
   converter.onDataAvailable(null, stringStream, 0, string.length);
@@ -16,16 +17,16 @@ function gzipCompressString(string, obs) {
 }
 
 function produceData() {
-  var chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+";
-  var result = '';
+  var chars =
+    "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+";
+  var result = "";
   for (var i = 0; i < 100000; ++i) {
     result += chars;
   }
   return result;
 }
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   response.processAsync();
 
   // Generate data
@@ -34,12 +35,12 @@ function handleRequest(request, response)
   response.setHeader("Content-Encoding", "gzip", false);
 
   let observer = {
-    onStreamComplete: function(loader, context, status, length, result) {
+    onStreamComplete(loader, context, status, length, result) {
       buffer = String.fromCharCode.apply(this, result);
-      response.setHeader("Content-Length", ""+buffer.length, false);
+      response.setHeader("Content-Length", "" + buffer.length, false);
       response.write(buffer);
       response.finish();
-    }
+    },
   };
   gzipCompressString(strings_to_send, observer);
 }

@@ -1,13 +1,16 @@
 function parseQuery(request, key) {
-  var params = request.queryString.split('&');
+  var params = request.queryString.split("&");
   for (var j = 0; j < params.length; ++j) {
     var p = params[j];
-	if (p == key)
-	  return true;
-    if (p.indexOf(key + "=") == 0)
-	  return p.substring(key.length + 1);
-	if (p.indexOf("=") < 0 && key == "")
-	  return p;
+    if (p == key) {
+      return true;
+    }
+    if (p.indexOf(key + "=") == 0) {
+      return p.substring(key.length + 1);
+    }
+    if (p.indexOf("=") < 0 && key == "") {
+      return p;
+    }
   }
   return false;
 }
@@ -16,18 +19,18 @@ function push32BE(array, input) {
   array.push(String.fromCharCode((input >> 24) & 0xff));
   array.push(String.fromCharCode((input >> 16) & 0xff));
   array.push(String.fromCharCode((input >> 8) & 0xff));
-  array.push(String.fromCharCode((input) & 0xff));
+  array.push(String.fromCharCode(input & 0xff));
 }
 
 function push32LE(array, input) {
-  array.push(String.fromCharCode((input) & 0xff));
+  array.push(String.fromCharCode(input & 0xff));
   array.push(String.fromCharCode((input >> 8) & 0xff));
   array.push(String.fromCharCode((input >> 16) & 0xff));
   array.push(String.fromCharCode((input >> 24) & 0xff));
 }
 
 function push16LE(array, input) {
-  array.push(String.fromCharCode((input) & 0xff));
+  array.push(String.fromCharCode(input & 0xff));
   array.push(String.fromCharCode((input >> 8) & 0xff));
 }
 
@@ -60,19 +63,26 @@ function buildWave(samples, sample_rate) {
 
 const CC = Components.Constructor;
 const Timer = CC("@mozilla.org/timer;1", "nsITimer", "initWithCallback");
-const BinaryOutputStream = CC("@mozilla.org/binaryoutputstream;1",
-                             "nsIBinaryOutputStream",
-                             "setOutputStream");
+const BinaryOutputStream = CC(
+  "@mozilla.org/binaryoutputstream;1",
+  "nsIBinaryOutputStream",
+  "setOutputStream"
+);
 
 function poll(f) {
   if (f()) {
     return;
   }
-  new Timer(function() { poll(f); }, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+  new Timer(
+    function() {
+      poll(f);
+    },
+    100,
+    Ci.nsITimer.TYPE_ONE_SHOT
+  );
 }
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   var cancel = parseQuery(request, "cancelkey");
   if (cancel) {
     setState(cancel[1], "cancelled");
@@ -89,47 +99,46 @@ function handleRequest(request, response)
 
   var key = parseQuery(request, "key");
   response.setHeader("Content-Type", "audio/x-wav");
-  response.setHeader("Content-Length", ""+bytes.length, false);
+  response.setHeader("Content-Length", "" + bytes.length, false);
 
   var out = new BinaryOutputStream(response.bodyOutputStream);
 
-  var start = 0, end = bytes.length - 1;
-  if (request.hasHeader("Range"))
-  {
+  var start = 0,
+    end = bytes.length - 1;
+  if (request.hasHeader("Range")) {
     var rangeMatch = request.getHeader("Range").match(/^bytes=(\d+)?-(\d+)?$/);
 
-    if (rangeMatch[1] !== undefined)
+    if (rangeMatch[1] !== undefined) {
       start = parseInt(rangeMatch[1], 10);
+    }
 
-    if (rangeMatch[2] !== undefined)
+    if (rangeMatch[2] !== undefined) {
       end = parseInt(rangeMatch[2], 10);
+    }
 
     // No start given, so the end is really the count of bytes from the
     // end of the file.
-    if (start === undefined)
-    {
+    if (start === undefined) {
       start = Math.max(0, bytes.length - end);
-      end   = bytes.length - 1;
+      end = bytes.length - 1;
     }
 
     // start and end are inclusive
-    if (end === undefined || end >= bytes.length)
+    if (end === undefined || end >= bytes.length) {
       end = bytes.length - 1;
+    }
 
-    if (end < start)
-    {
+    if (end < start) {
       response.setStatusLine(request.httpVersion, 200, "OK");
       start = 0;
       end = bytes.length - 1;
-    }
-    else
-    {
+    } else {
       response.setStatusLine(request.httpVersion, 206, "Partial Content");
       var contentRange = "bytes " + start + "-" + end + "/" + bytes.length;
       response.setHeader("Content-Range", contentRange);
     }
   }
-  
+
   if (start > 0) {
     // Send all requested data
     out.write(bytes.slice(start, end + 1), end + 1 - start);

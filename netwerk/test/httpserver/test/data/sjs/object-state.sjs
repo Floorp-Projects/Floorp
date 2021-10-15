@@ -1,13 +1,12 @@
-function parseQueryString(str)
-{
+function parseQueryString(str) {
   var paramArray = str.split("&");
   var regex = /^([^=]+)=(.*)$/;
   var params = {};
-  for (var i = 0, sz = paramArray.length; i < sz; i++)
-  {
+  for (var i = 0, sz = paramArray.length; i < sz; i++) {
     var match = regex.exec(paramArray[i]);
-    if (!match)
+    if (!match) {
       throw "Bad parameter in queryString!  '" + paramArray[i] + "'";
+    }
     params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
   }
 
@@ -22,10 +21,9 @@ function parseQueryString(str)
  * best of my knowledge there's no way to force data flow at all those levels,
  * so this is the best we can do.
  */
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   response.setHeader("Cache-Control", "no-cache", false);
-  
+
   /*
    * NB: A Content-Type header is *necessary* to avoid content-sniffing, which
    *     will delay onStartRequest past the the point where the entire head of
@@ -35,31 +33,21 @@ function handleRequest(request, response)
 
   var params = parseQueryString(request.queryString);
 
-  switch (params.state)
-  {
+  switch (params.state) {
     case "initial":
       response.processAsync();
       response.write("do");
-      var state =
-        {
-          QueryInterface: function(iid)
-          {
-            if (iid.equals(Components.interfaces.nsISupports))
-              return this;
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-          },
-          end: function()
-          {
-            response.write("ne");
-            response.finish();
-          }
-        };
+      var state = {
+        QueryInterface: ChromeUtils.generateQI([]),
+        end() {
+          response.write("ne");
+          response.finish();
+        },
+      };
       state.wrappedJSObject = state;
       setObjectState("object-state-test", state);
-      getObjectState("object-state-test", function(obj)
-      {
-        if (obj !== state)
-        {
+      getObjectState("object-state-test", function(obj) {
+        if (obj !== state) {
           response.write("FAIL bad state save");
           response.finish();
         }
@@ -72,8 +60,7 @@ function handleRequest(request, response)
 
     case "trigger":
       response.write("trigger");
-      getObjectState("object-state-test", function(obj)
-      {
+      getObjectState("object-state-test", function(obj) {
         obj.wrappedJSObject.end();
         setObjectState("object-state-test", null);
       });

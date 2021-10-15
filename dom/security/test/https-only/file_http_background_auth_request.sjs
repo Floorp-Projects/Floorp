@@ -7,7 +7,7 @@ function handleRequest(request, response) {
   if (request.scheme === "https") {
     response.setHeader("Content-Type", "text/html;charset=utf-8", false);
     response.setStatusLine(request.httpVersion, 401, "Unauthorized");
-    response.setHeader("WWW-Authenticate", "Basic realm=\"bug1665062\"");
+    response.setHeader("WWW-Authenticate", 'Basic realm="bug1665062"');
     return;
   }
 

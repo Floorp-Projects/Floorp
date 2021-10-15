@@ -9,12 +9,15 @@ const SCRIPT = `
     parent.parent.postMessage({result: &quot;allowed&quot;}, &quot;*&quot;);
   </script>`;
 
-const SIMPLE_IFRAME_SRCDOC = `
+const SIMPLE_IFRAME_SRCDOC =
+  `
   <!DOCTYPE html>
   <html>
   <head><meta charset="utf-8"></head>
   <body>
-    <iframe sandbox="allow-scripts" srcdoc="` + SCRIPT + `"></iframe>
+    <iframe sandbox="allow-scripts" srcdoc="` +
+  SCRIPT +
+  `"></iframe>
   </body>
   </html>`;
 
@@ -24,15 +27,17 @@ const INNER_SRCDOC_IFRAME = `
     </script>'>
   </iframe>`;
 
-const NESTED_IFRAME_SRCDOC = `
+const NESTED_IFRAME_SRCDOC =
+  `
   <!DOCTYPE html>
   <html>
   <head><meta charset="utf-8"></head>
   <body>
-    <iframe sandbox="allow-scripts" srcdoc="` + INNER_SRCDOC_IFRAME + `"></iframe>
+    <iframe sandbox="allow-scripts" srcdoc="` +
+  INNER_SRCDOC_IFRAME +
+  `"></iframe>
   </body>
   </html>`;
-
 
 const INNER_DATAURI_IFRAME = `
   <iframe sandbox='allow-scripts' src='data:text/html,<script>
@@ -40,12 +45,15 @@ const INNER_DATAURI_IFRAME = `
     </script>'>
   </iframe>`;
 
-const NESTED_IFRAME_SRCDOC_DATAURI = `
+const NESTED_IFRAME_SRCDOC_DATAURI =
+  `
   <!DOCTYPE html>
   <html>
   <head><meta charset="utf-8"></head>
   <body>
-    <iframe sandbox="allow-scripts" srcdoc="` + INNER_DATAURI_IFRAME + `"></iframe>
+    <iframe sandbox="allow-scripts" srcdoc="` +
+  INNER_DATAURI_IFRAME +
+  `"></iframe>
   </body>
   </html>`;
 

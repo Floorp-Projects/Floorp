@@ -55,7 +55,7 @@ var gSlowDownloadTimer;
 var gSlowCheckTimer;
 
 function handleRequest(aRequest, aResponse) {
-  let params = { };
+  let params = {};
   if (aRequest.queryString) {
     params = parseQueryString(aRequest.queryString);
   }
@@ -83,33 +83,39 @@ function handleRequest(aRequest, aResponse) {
 
     let retries = 0;
     gSlowDownloadTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    gSlowDownloadTimer.initWithCallback(function(aTimer) {
-      let continueFile = getTestDataFile(CONTINUE_DOWNLOAD);
-      retries++;
-      if (continueFile.exists() || retries == MAX_SLOW_RESPONSE_RETRIES) {
-        try {
-          // If the continue file is in use try again the next time the timer
-          // fires unless the retries has reached the value defined by
-          // MAX_SLOW_RESPONSE_RETRIES in which case let the test remove the
-          // continue file.
-          if (retries < MAX_SLOW_RESPONSE_RETRIES) {
-            continueFile.remove(false);
-          }
-          gSlowDownloadTimer.cancel();
-          aResponse.write(readFileBytes(getTestDataFile(FILE_SIMPLE_MAR)));
-          aResponse.finish();
-        } catch (e) {
+    gSlowDownloadTimer.initWithCallback(
+      function(aTimer) {
+        let continueFile = getTestDataFile(CONTINUE_DOWNLOAD);
+        retries++;
+        if (continueFile.exists() || retries == MAX_SLOW_RESPONSE_RETRIES) {
+          try {
+            // If the continue file is in use try again the next time the timer
+            // fires unless the retries has reached the value defined by
+            // MAX_SLOW_RESPONSE_RETRIES in which case let the test remove the
+            // continue file.
+            if (retries < MAX_SLOW_RESPONSE_RETRIES) {
+              continueFile.remove(false);
+            }
+            gSlowDownloadTimer.cancel();
+            aResponse.write(readFileBytes(getTestDataFile(FILE_SIMPLE_MAR)));
+            aResponse.finish();
+          } catch (e) {}
         }
-      }
-    }, SLOW_RESPONSE_INTERVAL, Ci.nsITimer.TYPE_REPEATING_SLACK);
+      },
+      SLOW_RESPONSE_INTERVAL,
+      Ci.nsITimer.TYPE_REPEATING_SLACK
+    );
     return;
   }
 
   if (params.uiURL) {
-    aResponse.write("<html><head><meta http-equiv=\"content-type\" content=" +
-                    "\"text/html; charset=utf-8\"></head><body>" +
-                    params.uiURL + "<br><br>this is a test mar that will not " +
-                    "affect your build.</body></html>");
+    aResponse.write(
+      '<html><head><meta http-equiv="content-type" content=' +
+        '"text/html; charset=utf-8"></head><body>' +
+        params.uiURL +
+        "<br><br>this is a test mar that will not " +
+        "affect your build.</body></html>"
+    );
     return;
   }
 
@@ -125,10 +131,13 @@ function handleRequest(aRequest, aResponse) {
 
   if (params.unsupported) {
     let detailsURL = params.detailsURL ? params.detailsURL : URL_HOST;
-    let unsupportedXML = getRemoteUpdatesXMLString("  <update type=\"major\" " +
-                                                   "unsupported=\"true\" " +
-                                                   "detailsURL=\"" + detailsURL +
-                                                   "\"></update>\n");
+    let unsupportedXML = getRemoteUpdatesXMLString(
+      '  <update type="major" ' +
+        'unsupported="true" ' +
+        'detailsURL="' +
+        detailsURL +
+        '"></update>\n'
+    );
     respond(aResponse, params, unsupportedXML);
     return;
   }
@@ -143,17 +152,13 @@ function handleRequest(aRequest, aResponse) {
   }
   if (!params.partialPatchOnly) {
     size = SIZE_SIMPLE_MAR + (params.invalidCompleteSize ? "1" : "");
-    let patchProps = {type: "complete",
-                      url,
-                      size};
+    let patchProps = { type: "complete", url, size };
     patches += getRemotePatchString(patchProps);
   }
 
   if (!params.completePatchOnly) {
     size = SIZE_SIMPLE_MAR + (params.invalidPartialSize ? "1" : "");
-    let patchProps = {type: "partial",
-                      url,
-                      size};
+    let patchProps = { type: "partial", url, size };
     patches += getRemotePatchString(patchProps);
   }
 
@@ -196,25 +201,28 @@ function respond(aResponse, aParams, aResponseString) {
     let retries = 0;
     aResponse.processAsync();
     gSlowCheckTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    gSlowCheckTimer.initWithCallback(function(aTimer) {
-      retries++;
-      let continueFile = getTestDataFile(CONTINUE_CHECK);
-      if (continueFile.exists() || retries == MAX_SLOW_RESPONSE_RETRIES) {
-        try {
-          // If the continue file is in use try again the next time the timer
-          // fires unless the retries has reached the value defined by
-          // MAX_SLOW_RESPONSE_RETRIES in which case let the test remove the
-          // continue file.
-          if (retries < MAX_SLOW_RESPONSE_RETRIES) {
-            continueFile.remove(false);
-          }
-          gSlowCheckTimer.cancel();
-          aResponse.write(aResponseString);
-          aResponse.finish();
-        } catch (e) {
+    gSlowCheckTimer.initWithCallback(
+      function(aTimer) {
+        retries++;
+        let continueFile = getTestDataFile(CONTINUE_CHECK);
+        if (continueFile.exists() || retries == MAX_SLOW_RESPONSE_RETRIES) {
+          try {
+            // If the continue file is in use try again the next time the timer
+            // fires unless the retries has reached the value defined by
+            // MAX_SLOW_RESPONSE_RETRIES in which case let the test remove the
+            // continue file.
+            if (retries < MAX_SLOW_RESPONSE_RETRIES) {
+              continueFile.remove(false);
+            }
+            gSlowCheckTimer.cancel();
+            aResponse.write(aResponseString);
+            aResponse.finish();
+          } catch (e) {}
         }
-      }
-    }, SLOW_RESPONSE_INTERVAL, Ci.nsITimer.TYPE_REPEATING_SLACK);
+      },
+      SLOW_RESPONSE_INTERVAL,
+      Ci.nsITimer.TYPE_REPEATING_SLACK
+    );
   } else {
     aResponse.write(aResponseString);
   }
@@ -238,7 +246,8 @@ function parseQueryString(aQueryString) {
     if (!match) {
       throw Components.Exception(
         "Bad parameter in queryString! '" + paramArray[i] + "'",
-        Cr.NS_ERROR_ILLEGAL_VALUE);
+        Cr.NS_ERROR_ILLEGAL_VALUE
+      );
     }
     params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
   }

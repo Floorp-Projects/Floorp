@@ -3,8 +3,7 @@
  * Used in browser_referrer_*.js, bug 1113431.
  * Arguments: ?scheme=http://&policy=origin&rel=noreferrer
  */
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   Components.utils.importGlobalProperties(["URLSearchParams"]);
   let query = new URLSearchParams(request.queryString);
 
@@ -14,12 +13,13 @@ function handleRequest(request, response)
   let cross = query.get("cross");
 
   let host = cross ? "example.com" : "test1.example.com";
-  let linkUrl = scheme + host +
-                "/browser/browser/base/content/test/referrer/" +
-                "file_referrer_testserver.sjs";
+  let linkUrl =
+    scheme +
+    host +
+    "/browser/browser/base/content/test/referrer/" +
+    "file_referrer_testserver.sjs";
 
-  let referrerPolicy =
-      policy ? `referrerpolicy="${policy}"` : "";
+  let referrerPolicy = policy ? `referrerpolicy="${policy}"` : "";
 
   let html = `<!DOCTYPE HTML>
               <html>
@@ -28,7 +28,9 @@ function handleRequest(request, response)
               <title>Test referrer</title>
               </head>
               <body>
-              <a id='testlink' href='${linkUrl}' ${referrerPolicy} ${rel ? ` rel='${rel}'` : ""}>
+              <a id='testlink' href='${linkUrl}' ${referrerPolicy} ${
+    rel ? ` rel='${rel}'` : ""
+  }>
               referrer test link</a>
               </body>
               </html>`;

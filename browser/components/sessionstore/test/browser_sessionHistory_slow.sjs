@@ -11,8 +11,12 @@ function handleRequest(req, resp) {
   resp.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
   timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  timer.init(() => {
-    resp.write("hi");
-    resp.finish();
-  }, DELAY_MS, Ci.nsITimer.TYPE_ONE_SHOT);
+  timer.init(
+    () => {
+      resp.write("hi");
+      resp.finish();
+    },
+    DELAY_MS,
+    Ci.nsITimer.TYPE_ONE_SHOT
+  );
 }

@@ -55,8 +55,7 @@ const WORKER = `
   };
   `;
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   Components.utils.importGlobalProperties(["URLSearchParams"]);
   let query = new URLSearchParams(request.queryString);
 
