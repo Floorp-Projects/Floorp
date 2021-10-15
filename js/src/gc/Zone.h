@@ -42,7 +42,7 @@ class ZoneList;
 using ZoneComponentFinder = ComponentFinder<JS::Zone>;
 
 struct UniqueIdGCPolicy {
-  static bool needsSweep(Cell** cell, uint64_t* value);
+  static bool traceWeak(JSTracer* trc, Cell** keyp, uint64_t* valuep);
 };
 
 // Maps a Cell* to a unique, 64bit id.

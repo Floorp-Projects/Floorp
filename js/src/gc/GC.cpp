@@ -1817,21 +1817,6 @@ void GCRuntime::queueBuffersForFreeAfterMinorGC(Nursery::BufferSet& buffers) {
   std::swap(buffersToFreeAfterMinorGC.ref(), buffers);
 }
 
-/* static */
-bool UniqueIdGCPolicy::needsSweep(Cell** cellp, uint64_t*) {
-  Cell* cell = *cellp;
-  return MapGCThingTyped(cell, cell->getTraceKind(), [](auto t) {
-    mozilla::DebugOnly<const Cell*> prior = t;
-    bool result = IsAboutToBeFinalizedUnbarriered(&t);
-    // Sweep should not have to deal with moved pointers, since moving GC
-    // handles updating the UID table manually.
-    MOZ_ASSERT(t == prior);
-    return result;
-  });
-}
-
-void JS::Zone::sweepUniqueIds() { uniqueIds().sweep(); }
-
 void Realm::destroy(JSFreeOp* fop) {
   JSRuntime* rt = fop->runtime();
   if (auto callback = rt->destroyRealmCallback) {
