@@ -248,7 +248,7 @@ private fun assertCustomTrackingProtectionSettings() {
 
 private fun cookiesCheckbox() = onView(withText("Cookies"))
 
-private fun cookiesDropDownMenuDefault() = onView(withText("All cookies (will cause websites to break)"))
+private fun cookiesDropDownMenuDefault() = onView(withText("Cross-site and social media trackers"))
 
 private fun trackingContentCheckbox() = onView(withText("Tracking content"))
 

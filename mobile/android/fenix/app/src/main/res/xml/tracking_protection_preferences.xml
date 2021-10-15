@@ -39,7 +39,7 @@
         android:layout="@layout/checkbox_left_preference_etp"
         android:title="@string/preference_enhanced_tracking_protection_custom_cookies" />
     <org.mozilla.fenix.settings.DropDownListPreference
-        android:defaultValue="@string/all"
+        android:defaultValue="@string/social"
         android:dependency="@string/pref_key_tracking_protection_custom_cookies"
         android:entries="@array/cookies_options_entries"
         android:entryValues="@array/cookies_options_entry_values"
