@@ -4491,11 +4491,7 @@ pref("services.common.log.logger.tokenserverclient", "Debug");
 pref("devtools.jsonview.enabled", true);
 
 // Default theme ("auto", "dark" or "light").
-#ifdef MOZ_DEV_EDITION
-  pref("devtools.theme", "dark", sticky);
-#else
-  pref("devtools.theme", "light", sticky);
-#endif
+pref("devtools.theme", "auto", sticky);
 
 // Completely disable DevTools entry points, as well as all DevTools command
 // line arguments This should be merged with devtools.enabled, see Bug 1440675.
