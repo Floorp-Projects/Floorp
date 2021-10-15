@@ -11,6 +11,9 @@
 #include <glib.h>
 #include "nsBaseAppShell.h"
 #include "nsCOMPtr.h"
+#ifdef MOZ_ENABLE_DBUS
+#  include <dbus/dbus-glib.h>
+#endif
 
 class nsAppShell : public nsBaseAppShell {
  public:
@@ -20,15 +23,23 @@ class nsAppShell : public nsBaseAppShell {
   nsresult Init();
   virtual void ScheduleNativeEventCallback() override;
   virtual bool ProcessNextNativeEvent(bool mayWait) override;
+#ifdef MOZ_ENABLE_DBUS
+  void StartDBusListening();
+  void StopDBusListening();
+#endif
 
  private:
   virtual ~nsAppShell();
 
   static gboolean EventProcessorCallback(GIOChannel* source,
                                          GIOCondition condition, gpointer data);
-
   int mPipeFDs[2];
   unsigned mTag;
+
+#ifdef MOZ_ENABLE_DBUS
+  DBusGConnection* mDBusConnection = nullptr;
+  DBusGProxy* mLogin1Proxy = nullptr;
+#endif
 };
 
 #endif /* nsAppShell_h__ */
