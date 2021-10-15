@@ -248,6 +248,10 @@ reftest-snapshot:
                     linux1804-64-qr/debug: ['trunk']
                     default: []
             default: []
+    tier:
+        by-variant:
+            fission: 1
+            default: default
     chunks: 8
     mozharness:
         chunked: true
