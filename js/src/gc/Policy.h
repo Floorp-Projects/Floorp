@@ -86,6 +86,23 @@ struct GCPolicy<js::WeakHeapPtr<T>> {
   }
 };
 
+template <typename T>
+struct GCPolicy<js::UnsafeBarePtr<T>> {
+  static bool needsSweep(js::UnsafeBarePtr<T>* vp) {
+    if (*vp) {
+      return js::gc::IsAboutToBeFinalizedUnbarriered(vp->unbarrieredAddress());
+    }
+    return false;
+  }
+  static bool traceWeak(JSTracer* trc, js::UnsafeBarePtr<T>* vp) {
+    if (*vp) {
+      return js::TraceManuallyBarrieredWeakEdge(trc, vp->unbarrieredAddress(),
+                                                "UnsafeBarePtr");
+    }
+    return true;
+  }
+};
+
 template <>
 struct GCPolicy<JS::GCCellPtr> {
   static void trace(JSTracer* trc, JS::GCCellPtr* thingp, const char* name) {

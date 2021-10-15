@@ -521,7 +521,7 @@ bool CreateWasmBuffer32(JSContext* cx, const wasm::MemoryDesc& memory,
 // and the views that use their storage.
 class InnerViewTable {
  public:
-  typedef Vector<JSObject*, 1, ZoneAllocPolicy> ViewVector;
+  using ViewVector = GCVector<UnsafeBarePtr<JSObject*>, 1, ZoneAllocPolicy>;
 
   friend class ArrayBufferObject;
 
