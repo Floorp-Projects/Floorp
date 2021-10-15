@@ -668,6 +668,48 @@ bool AntiTrackingUtils::IsThirdPartyWindow(nsPIDOMWindowInner* aWindow,
 }
 
 /* static */
+bool AntiTrackingUtils::IsThirdPartyContext(BrowsingContext* aBrowsingContext) {
+  MOZ_ASSERT(aBrowsingContext);
+  MOZ_ASSERT(aBrowsingContext->IsInProcess());
+
+  if (aBrowsingContext->IsTopContent()) {
+    return false;
+  }
+
+  // If the top browsing context is not in the same process, it's cross-origin.
+  if (!aBrowsingContext->Top()->IsInProcess()) {
+    return true;
+  }
+
+  nsIDocShell* docShell = aBrowsingContext->GetDocShell();
+  if (!docShell) {
+    return true;
+  }
+  Document* doc = docShell->GetExtantDocument();
+  if (!doc) {
+    return true;
+  }
+  nsIPrincipal* principal = doc->NodePrincipal();
+
+  nsIDocShell* topDocShell = aBrowsingContext->Top()->GetDocShell();
+  if (!topDocShell) {
+    return true;
+  }
+  Document* topDoc = topDocShell->GetDocument();
+  if (!topDoc) {
+    return true;
+  }
+  nsIPrincipal* topPrincipal = topDoc->NodePrincipal();
+
+  auto* topBasePrin = BasePrincipal::Cast(topPrincipal);
+  bool isThirdParty = true;
+
+  topBasePrin->IsThirdPartyPrincipal(principal, &isThirdParty);
+
+  return isThirdParty;
+}
+
+/* static */
 nsCString AntiTrackingUtils::GrantedReasonToString(
     ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason) {
   switch (aReason) {
