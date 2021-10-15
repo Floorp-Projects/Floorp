@@ -1631,7 +1631,7 @@ nsXPCComponents_Utils::ForceGC(JSContext* aCx) {
 
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForceCC(nsICycleCollectorListener* listener) {
-  nsJSContext::CycleCollectNow(listener);
+  nsJSContext::CycleCollectNow(CCReason::API, listener);
   return NS_OK;
 }
 

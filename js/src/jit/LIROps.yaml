@@ -320,6 +320,31 @@
     object: WordSized
   mir_op: TypeOf
 
+- name: TypeOfName
+  result_type: WordSized
+  operands:
+    input: WordSized
+  mir_op: true
+
+- name: TypeOfIsNonPrimitiveV
+  result_type: WordSized
+  operands:
+    input: BoxedValue
+  num_temps: 1
+  mir_op: TypeOfIs
+
+- name: TypeOfIsNonPrimitiveO
+  result_type: WordSized
+  operands:
+    input: WordSized
+  mir_op: TypeOfIs
+
+- name: TypeOfIsPrimitive
+  result_type: WordSized
+  operands:
+    input: BoxedValue
+  mir_op: TypeOfIs
+
 - name: ToAsyncIter
   result_type: WordSized
   operands:

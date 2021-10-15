@@ -1969,3 +1969,6 @@ a8e7083c849eef5c4c978b537ac555c8000ac9ae # cinnabar
 # c38d34be7c3f757510f037fef5a78ea08af32980 - Butkovits Atila - Backed out changeset 53b1fa0faa6d (bug 1696251) for breaking the static-analysis integration. a=backout
 eb735ac57e701c05a1deac60d563150c33a6a0e7 # cinnabar
 547e78004bf51e90cf4efcc6fe2a899f01ffa302 # gecko-dev
+# 1fa64c7fe170ab629768d6ed27c5840555773709 - Agi Sferro - Bug 1571899 - Format Java codebase with google-java-formatter. r=owlish
+2f6419a88cd8f752fa0913d58960b5c10d42bc59 # cinnabar
+e8e0f7e153bd672200afa3c4997869a13cc99ee5 # gecko-dev

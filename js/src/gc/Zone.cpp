@@ -854,48 +854,22 @@ void Zone::fixupScriptMapsAfterMovingGC(JSTracer* trc) {
   // script pointers here in case they are moved by the GC.
 
   if (scriptCountsMap) {
-    for (ScriptCountsMap::Enum e(*scriptCountsMap); !e.empty(); e.popFront()) {
-      BaseScript* script = e.front().key();
-      TraceManuallyBarrieredEdge(trc, &script, "Realm::scriptCountsMap::key");
-      if (script != e.front().key()) {
-        e.rekeyFront(script);
-      }
-    }
+    scriptCountsMap->traceWeak(trc);
   }
 
   if (scriptLCovMap) {
-    for (ScriptLCovMap::Enum e(*scriptLCovMap); !e.empty(); e.popFront()) {
-      BaseScript* script = e.front().key();
-      if (!IsAboutToBeFinalizedUnbarriered(&script) &&
-          script != e.front().key()) {
-        e.rekeyFront(script);
-      }
-    }
+    scriptLCovMap->traceWeak(trc);
   }
 
 #ifdef MOZ_VTUNE
   if (scriptVTuneIdMap) {
-    for (ScriptVTuneIdMap::Enum e(*scriptVTuneIdMap); !e.empty();
-         e.popFront()) {
-      BaseScript* script = e.front().key();
-      if (!IsAboutToBeFinalizedUnbarriered(&script) &&
-          script != e.front().key()) {
-        e.rekeyFront(script);
-      }
-    }
+    scriptVTuneIdMap->traceWeak(trc);
   }
 #endif
 
 #ifdef JS_CACHEIR_SPEW
   if (scriptFinalWarmUpCountMap) {
-    for (ScriptFinalWarmUpCountMap::Enum e(*scriptFinalWarmUpCountMap);
-         !e.empty(); e.popFront()) {
-      BaseScript* script = e.front().key();
-      if (!IsAboutToBeFinalizedUnbarriered(&script) &&
-          script != e.front().key()) {
-        e.rekeyFront(script);
-      }
-    }
+    scriptFinalWarmUpCountMap->traceWeak(trc);
   }
 #endif
 }

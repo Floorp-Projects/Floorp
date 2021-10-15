@@ -105,7 +105,13 @@ function run_test() {
   Assert.equal(handlerInfo.preferredAction, Ci.nsIHandlerInfo.saveToDisk);
   Assert.equal(handlerInfo.preferredApplicationHandler, null);
   Assert.equal(handlerInfo.possibleApplicationHandlers.length, 0);
-  Assert.ok(handlerInfo.alwaysAskBeforeHandling);
+  Assert.equal(
+    handlerInfo.alwaysAskBeforeHandling,
+    !prefSvc.getBoolPref(
+      "browser.download.improvements_to_download_panel",
+      false
+    )
+  );
 
   // These properties are initialized to default values by the service,
   // so we might as well make sure they're initialized to the right defaults.
@@ -142,6 +148,12 @@ function run_test() {
   prefSvc.setBoolPref(kExternalWarningPrefPrefix + "http", false);
   protoInfo = protoSvc.getProtocolHandlerInfo("http");
   Assert.equal(0, protoInfo.possibleApplicationHandlers.length);
+  // NOTE: this assertion will fail if the system executing the test does not
+  // have a handler registered for the http protocol. This is very unlikely to
+  // actually happen except on certain configurations of Linux, but one of
+  // those configurations is the default WSL Ubuntu install. So, if you are
+  // running this test locally and seeing a failure here, it might not be
+  // anything to really worry about.
   Assert.ok(!protoInfo.alwaysAskBeforeHandling);
 
   // OS default exists, injected default does not exist,
@@ -467,7 +479,12 @@ function run_test() {
     handlerInfo = mimeSvc.getFromTypeAndExtension("text/plain", null);
     Assert.equal(
       handlerInfo.preferredAction,
-      Ci.nsIHandlerInfo.useSystemDefault
+      prefSvc.getBoolPref(
+        "browser.download.improvements_to_download_panel",
+        false
+      )
+        ? Ci.nsIHandlerInfo.saveToDisk
+        : Ci.nsIHandlerInfo.useSystemDefault
     );
     Assert.equal(handlerInfo.defaultDescription, "sed");
   }

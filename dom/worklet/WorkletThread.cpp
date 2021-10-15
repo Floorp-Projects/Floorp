@@ -73,7 +73,8 @@ class WorkletJSRuntime final : public mozilla::CycleCollectedJSRuntime {
 
   virtual void PrepareForForgetSkippable() override {}
 
-  virtual void BeginCycleCollectionCallback() override {}
+  virtual void BeginCycleCollectionCallback(
+      mozilla::CCReason aReason) override {}
 
   virtual void EndCycleCollectionCallback(
       CycleCollectorResults& aResults) override {}
@@ -91,7 +92,7 @@ class WorkletJSRuntime final : public mozilla::CycleCollectedJSRuntime {
     // call can be skipped in this GC as ~CycleCollectedJSContext removes the
     // context from |this|.
     if (aStatus == JSGC_END && GetContext()) {
-      nsCycleCollector_collect(nullptr);
+      nsCycleCollector_collect(CCReason::GC_FINISHED, nullptr);
     }
   }
 };
