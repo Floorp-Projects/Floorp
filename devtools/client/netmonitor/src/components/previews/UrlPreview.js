@@ -84,9 +84,9 @@ class UrlPreview extends Component {
 
   renderRow(props) {
     const {
-      member: { name },
+      member: { name, level },
     } = props;
-    if (name == "query" || name == "remote") {
+    if ((name == "query" || name == "remote") && level == 1) {
       return tr(
         { key: name, className: "treeRow stringRow" },
         td(
