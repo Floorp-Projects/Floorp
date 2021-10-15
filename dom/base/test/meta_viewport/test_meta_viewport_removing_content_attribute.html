@@ -10,7 +10,7 @@
   <script src="viewport_helpers.js"></script>
 </head>
 <body>
-  <script type="application/javascript">
+  <script>
     "use strict";
 
     add_task(async function multiple_viewport_tags() {
@@ -25,9 +25,8 @@
       secondMeta.removeAttribute("content");
 
       info = getViewportInfo(800, 480);
-      // The latter meta viewport tag no longer has a valid content, the first
-      // one should be used.
-      is(info.width, 400, "width should be 400");
+      // The latter meta viewport tag is still used.
+      is(info.width, 800, "width should be 800");
     });
   </script>
 </body>
