@@ -53,7 +53,7 @@
     --organizer-pane-field-border-color: color-mix(in srgb, currentColor 41%, transparent);
   }
 
-  @media (-moz-toolbar-prefers-color-scheme: dark) {
+  @media (prefers-color-scheme: dark) {
     :root {
       --organizer-color: rgb(251,251,254);
       --organizer-deemphasized-color: rgb(191,191,201);

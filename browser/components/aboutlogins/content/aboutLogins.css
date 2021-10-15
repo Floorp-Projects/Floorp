@@ -77,7 +77,7 @@ login-item {
   fill: #20123a;
 }
 
-@media (-moz-toolbar-prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
   #branding-logo {
     fill: #fff;
   }

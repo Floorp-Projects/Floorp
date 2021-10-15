@@ -8,7 +8,7 @@ body {
   --warning-color: #ffa436;
 }
 
-@media (-moz-toolbar-prefers-color-scheme: dark)  {
+@media (prefers-color-scheme: dark)  {
   body {
     --warning-color: #ffbd4f;
   }

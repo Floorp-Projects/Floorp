@@ -6,7 +6,7 @@
 
 /* On Mac, the autocomplete panel changes color in system dark mode. We need
    to change the contrast on warning-background-color accordingly. */
-@media (-moz-toolbar-prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
     .autofill-item-box {
       --warning-background-color: rgba(248,232,28,.6);
     }

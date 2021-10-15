@@ -202,7 +202,7 @@ function onLoad(ready) {
   function showColorways() {
     // Use bold variant (index 2) if current theme is dark; otherwise soft (0).
     variations.querySelectorAll("input")[
-      2 * matchMedia("(-moz-toolbar-prefers-color-scheme: dark)").matches
+      2 * matchMedia("(prefers-color-scheme: dark)").matches
     ].checked = true;
 
     // Enable the theme and variant based on the current selection.
