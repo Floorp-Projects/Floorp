@@ -4,7 +4,7 @@
 "use strict";
 
 add_task(async function testThemeDeterminesToolbarQuery() {
-  let darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  let darkModeQuery = window.matchMedia("(-moz-system-dark-theme)");
   let darkToolbarQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
   let darkExtension = ExtensionTestUtils.loadExtension({
