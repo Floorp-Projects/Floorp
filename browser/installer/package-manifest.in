@@ -109,9 +109,6 @@
 @BINPATH@/@DLL_PREFIX@mozwayland@DLL_SUFFIX@
 #endif
 #endif
-#ifdef MOZ_USING_WASM_SANDBOXING
-@BINPATH@/@DLL_PREFIX@rlbox@DLL_SUFFIX@
-#endif
 
 ; We don't have a complete view of which dlls to expect when doing an artifact
 ; build because we haven't run the relevant parts of configure, so we guess
