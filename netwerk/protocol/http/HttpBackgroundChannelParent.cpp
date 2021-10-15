@@ -146,7 +146,8 @@ void HttpBackgroundChannelParent::OnChannelClosed() {
 bool HttpBackgroundChannelParent::OnStartRequest(
     const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
     const nsHttpHeaderArray& aRequestHeaders,
-    const HttpChannelOnStartRequestArgs& aArgs) {
+    const HttpChannelOnStartRequestArgs& aArgs,
+    const nsCOMPtr<nsICacheEntry>& aAltDataSource) {
   LOG(("HttpBackgroundChannelParent::OnStartRequest [this=%p]\n", this));
   AssertIsInMainProcess();
 
@@ -157,12 +158,12 @@ bool HttpBackgroundChannelParent::OnStartRequest(
   if (!IsOnBackgroundThread()) {
     MutexAutoLock lock(mBgThreadMutex);
     nsresult rv = mBackgroundThread->Dispatch(
-        NewRunnableMethod<const nsHttpResponseHead, const bool,
-                          const nsHttpHeaderArray,
-                          const HttpChannelOnStartRequestArgs>(
+        NewRunnableMethod<
+            const nsHttpResponseHead, const bool, const nsHttpHeaderArray,
+            const HttpChannelOnStartRequestArgs, const nsCOMPtr<nsICacheEntry>>(
             "net::HttpBackgroundChannelParent::OnStartRequest", this,
             &HttpBackgroundChannelParent::OnStartRequest, aResponseHead,
-            aUseResponseHead, aRequestHeaders, aArgs),
+            aUseResponseHead, aRequestHeaders, aArgs, aAltDataSource),
         NS_DISPATCH_NORMAL);
 
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
@@ -170,8 +171,25 @@ bool HttpBackgroundChannelParent::OnStartRequest(
     return NS_SUCCEEDED(rv);
   }
 
+  HttpChannelAltDataStream altData;
+  ipc::AutoIPCStream altDataInputStream(true /* delay start */);
+  if (aAltDataSource) {
+    nsAutoCString altDataType;
+    Unused << aAltDataSource->GetAltDataType(altDataType);
+
+    if (!altDataType.IsEmpty()) {
+      nsCOMPtr<nsIInputStream> inputStream;
+      nsresult rv = aAltDataSource->OpenAlternativeInputStream(
+          altDataType, getter_AddRefs(inputStream));
+      if (NS_SUCCEEDED(rv)) {
+        Unused << altDataInputStream.Serialize(inputStream, Manager());
+      }
+    }
+  }
+  altData.altDataInputStream() = altDataInputStream.TakeOptionalValue();
+
   return SendOnStartRequest(aResponseHead, aUseResponseHead, aRequestHeaders,
-                            aArgs);
+                            aArgs, altData);
 }
 
 bool HttpBackgroundChannelParent::OnTransportAndData(
