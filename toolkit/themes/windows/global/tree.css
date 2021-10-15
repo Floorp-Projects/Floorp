@@ -20,7 +20,7 @@ treecol[sortDirection="descending"]:not([hideheader="true"]) > .treecol-sortdire
   list-style-image: url("chrome://global/skin/tree/sort-dsc.svg");
 }
 
-@media (-moz-toolbar-prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
   treecol,
   treecolpicker {
     appearance: none;
