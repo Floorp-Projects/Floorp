@@ -1,78 +1,96 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+package org.mozilla.focus.widget
 
-package org.mozilla.focus.widget;
+import android.app.role.RoleManager
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
+import android.util.AttributeSet
+import androidx.core.os.bundleOf
+import androidx.preference.Preference
+import androidx.preference.PreferenceViewHolder
+import com.google.android.material.switchmaterial.SwitchMaterial
+import org.mozilla.focus.R
+import org.mozilla.focus.utils.Browsers
+import org.mozilla.focus.utils.SupportUtils.openDefaultBrowserSumoPage
+import org.mozilla.focus.utils.asActivity
 
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Build;
-import androidx.preference.Preference;
-import androidx.preference.PreferenceViewHolder;
-import android.util.AttributeSet;
-import android.widget.Switch;
+class DefaultBrowserPreference @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : Preference(context, attrs, defStyleAttr) {
 
-import org.mozilla.focus.R;
-import org.mozilla.focus.telemetry.TelemetryWrapper;
-import org.mozilla.focus.utils.Browsers;
-import org.mozilla.focus.utils.SupportUtils;
+    private var switchView: SwitchMaterial? = null
 
-public class DefaultBrowserPreference extends Preference {
-    private Switch switchView;
-
-    @SuppressWarnings("unused") // Instantiated from XML
-    public DefaultBrowserPreference(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init();
+    init {
+        widgetLayoutResource = R.layout.preference_default_browser
+        val appName = context.resources.getString(R.string.app_name)
+        val title = context.resources.getString(R.string.preference_default_browser2, appName)
+        setTitle(title)
     }
 
-    @SuppressWarnings("unused") // Instantiated from XML
-    public DefaultBrowserPreference(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
+    override fun onBindViewHolder(holder: PreferenceViewHolder) {
+        super.onBindViewHolder(holder)
+        switchView = holder.findViewById(R.id.switch_widget) as SwitchMaterial
+        update()
     }
 
-    private void init() {
-        setWidgetLayoutResource(R.layout.preference_default_browser);
-
-        final String appName = getContext().getResources().getString(R.string.app_name);
-        final String title = getContext().getResources().getString(R.string.preference_default_browser2, appName);
-
-        setTitle(title);
-    }
-
-    @Override
-    public void onBindViewHolder(PreferenceViewHolder holder) {
-        super.onBindViewHolder(holder);
-
-        switchView = (Switch) holder.findViewById(R.id.switch_widget);
-
-        update();
-    }
-
-    public void update() {
+    fun update() {
         if (switchView != null) {
-            final Browsers browsers = new Browsers(getContext(), Browsers.TRADITIONAL_BROWSER_URL);
-            switchView.setChecked(browsers.isDefaultBrowser(getContext()));
+            val browsers = Browsers(context, Browsers.TRADITIONAL_BROWSER_URL)
+            switchView!!.isChecked = browsers.isDefaultBrowser(context)
         }
     }
 
-    @Override
-    public void onClick() {
-        final Context context = getContext();
-        final Browsers browsers = new Browsers(getContext(), Browsers.TRADITIONAL_BROWSER_URL);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            SupportUtils.INSTANCE.openDefaultAppsSettings(context);
-            TelemetryWrapper.makeDefaultBrowserSettings();
-        } else if (!browsers.hasDefaultBrowser(context)) {
-            Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(SupportUtils.OPEN_WITH_DEFAULT_BROWSER_URL));
-            i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            getContext().startActivity(i);
-            TelemetryWrapper.makeDefaultBrowserOpenWith();
-        } else {
-            SupportUtils.INSTANCE.openDefaultBrowserSumoPage(context);
+    public override fun onClick() {
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
+                context.getSystemService(RoleManager::class.java).also {
+                    if (it.isRoleAvailable(RoleManager.ROLE_BROWSER) && !it.isRoleHeld(
+                            RoleManager.ROLE_BROWSER
+                        )
+                    ) {
+                        context.asActivity()?.startActivityForResult(
+                            it.createRequestRoleIntent(RoleManager.ROLE_BROWSER),
+                            REQUEST_CODE_BROWSER_ROLE
+                        )
+                    } else {
+                        navigateToDefaultBrowserAppsSettings()
+                    }
+                }
+            }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> {
+                navigateToDefaultBrowserAppsSettings()
+            }
+            else -> {
+                openDefaultBrowserSumoPage(context)
+            }
         }
+    }
+
+    private fun navigateToDefaultBrowserAppsSettings() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val intent = Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
+            intent.putExtra(
+                SETTINGS_SELECT_OPTION_KEY,
+                DEFAULT_BROWSER_APP_OPTION
+            )
+            intent.putExtra(
+                SETTINGS_SHOW_FRAGMENT_ARGS,
+                bundleOf(SETTINGS_SELECT_OPTION_KEY to DEFAULT_BROWSER_APP_OPTION)
+            )
+            context.startActivity(intent)
+        }
+    }
+
+    companion object {
+        const val REQUEST_CODE_BROWSER_ROLE = 1
+        const val SETTINGS_SELECT_OPTION_KEY = ":settings:fragment_args_key"
+        const val SETTINGS_SHOW_FRAGMENT_ARGS = ":settings:show_fragment_args"
+        const val DEFAULT_BROWSER_APP_OPTION = "default_browser"
     }
 }
