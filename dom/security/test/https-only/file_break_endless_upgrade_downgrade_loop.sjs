@@ -37,7 +37,7 @@ function handleRequest(request, response) {
   // get upgraded, then we rather fall through and display unexpected content.
   if (request.scheme === "https") {
     let query = request.queryString;
-   
+
     if (query === "test1a") {
       response.write(REDIRECT_META);
       return;
@@ -63,5 +63,5 @@ function handleRequest(request, response) {
 
   // we should never get here, just in case,
   // let's return something unexpected
-  response.write("<html><body>DO NOT DISPLAY THIS</body></html>")
+  response.write("<html><body>DO NOT DISPLAY THIS</body></html>");
 }

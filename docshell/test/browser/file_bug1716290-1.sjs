@@ -1,7 +1,10 @@
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   if (getState("reloaded") == "reloaded") {
-    response.setHeader("Content-Type", "text/html; charset=windows-1254", false);
+    response.setHeader(
+      "Content-Type",
+      "text/html; charset=windows-1254",
+      false
+    );
     response.write("\u00E4");
   } else {
     response.setHeader("Content-Type", "text/html; charset=Shift_JIS", false);

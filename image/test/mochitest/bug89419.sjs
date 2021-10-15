@@ -1,5 +1,4 @@
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   var redirectstate = "/image/test/mochitest/bug89419.sjs";
   response.setStatusLine("1.1", 302, "Found");
   if (getState(redirectstate) == "") {

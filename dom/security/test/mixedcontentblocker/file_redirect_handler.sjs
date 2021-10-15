@@ -9,15 +9,21 @@ function handleRequest(request, response) {
 
   if (queryStr === "https-to-https-redirect") {
     response.setStatusLine("1.1", 302, "Found");
-    response.setHeader("Location",
-      "https://" + URL_PATH + "file_redirect_handler.sjs?load", false);
+    response.setHeader(
+      "Location",
+      "https://" + URL_PATH + "file_redirect_handler.sjs?load",
+      false
+    );
     return;
   }
 
   if (queryStr === "https-to-http-redirect") {
     response.setStatusLine("1.1", 302, "Found");
-    response.setHeader("Location",
-      "http://" + URL_PATH + "file_redirect_handler.sjs?load", false);
+    response.setHeader(
+      "Location",
+      "http://" + URL_PATH + "file_redirect_handler.sjs?load",
+      false
+    );
     return;
   }
 

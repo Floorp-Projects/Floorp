@@ -7,7 +7,8 @@ const CSS = "body { background-color: green; }";
 // small red image
 const IMG = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12" +
-  "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==");
+    "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+);
 
 function handleRequest(request, response) {
   const query = new URLSearchParams(request.queryString);

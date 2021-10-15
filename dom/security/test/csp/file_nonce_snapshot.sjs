@@ -1,7 +1,6 @@
 "use strict";
 
-const TEST_FRAME =
-  `<!DOCTYPE HTML>
+const TEST_FRAME = `<!DOCTYPE HTML>
    <html>
    <body>
    <script id='myScript' nonce='123456789' type='application/javascript'></script>
@@ -17,15 +16,18 @@ const TEST_FRAME =
 
 const SCRIPT = "window.parent.postMessage('script-loaded', '*');";
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
- 
+
   let queryString = request.queryString;
 
   if (queryString === "load-frame") {
-    response.setHeader("Content-Security-Policy", "script-src 'nonce-123456789'", false);
+    response.setHeader(
+      "Content-Security-Policy",
+      "script-src 'nonce-123456789'",
+      false
+    );
     response.setHeader("Content-Type", "text/html", false);
     response.write(TEST_FRAME);
     return;
@@ -33,7 +35,11 @@ function handleRequest(request, response)
 
   if (queryString === "redir-script") {
     response.setStatusLine("1.1", 302, "Found");
-    response.setHeader("Location", "file_nonce_snapshot.sjs?load-script", false);
+    response.setHeader(
+      "Location",
+      "file_nonce_snapshot.sjs?load-script",
+      false
+    );
     return;
   }
 

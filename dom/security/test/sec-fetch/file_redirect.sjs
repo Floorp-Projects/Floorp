@@ -1,4 +1,4 @@
-const SITE_META_REDIRECT=`
+const SITE_META_REDIRECT = `
 <html>
   <head>
     <meta http-equiv="refresh" content="0; url='https://example.com/tests/dom/security/test/sec-fetch/file_redirect.sjs?redirect302'">
@@ -9,7 +9,8 @@ const SITE_META_REDIRECT=`
 </html>
 `;
 
-const REDIRECT_302 = "https://example.com/tests/dom/security/test/sec-fetch/file_redirect.sjs?pageC"
+const REDIRECT_302 =
+  "https://example.com/tests/dom/security/test/sec-fetch/file_redirect.sjs?pageC";
 
 function handleRequest(req, res) {
   // avoid confusing cache behaviour

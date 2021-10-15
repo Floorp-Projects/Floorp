@@ -1,43 +1,40 @@
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   var exstr, qid;
 
   response.setStatusLine(request.httpVersion, 500, "FAIL");
 
   var passed = false;
-  try
-  {
+  try {
     qid = request.QueryInterface(Ci.nsIHttpRequest);
     passed = qid === request;
-  }
-  catch (e)
-  {
+  } catch (e) {
     exstr = ("" + e).split(/[\x09\x20-\x7f\x81-\xff]+/)[0];
-    response.setStatusLine(request.httpVersion, 500,
-                           "request doesn't QI: " + exstr);
+    response.setStatusLine(
+      request.httpVersion,
+      500,
+      "request doesn't QI: " + exstr
+    );
     return;
   }
-  if (!passed)
-  {
+  if (!passed) {
     response.setStatusLine(request.httpVersion, 500, "request QI'd wrongly?");
     return;
   }
 
   passed = false;
-  try
-  {
+  try {
     qid = response.QueryInterface(Ci.nsIHttpResponse);
     passed = qid === response;
-  }
-  catch (e)
-  {
+  } catch (e) {
     exstr = ("" + e).split(/[\x09\x20-\x7f\x81-\xff]+/)[0];
-    response.setStatusLine(request.httpVersion, 500,
-                           "response doesn't QI: " + exstr);
+    response.setStatusLine(
+      request.httpVersion,
+      500,
+      "response doesn't QI: " + exstr
+    );
     return;
   }
-  if (!passed)
-  {
+  if (!passed) {
     response.setStatusLine(request.httpVersion, 500, "response QI'd wrongly?");
     return;
   }

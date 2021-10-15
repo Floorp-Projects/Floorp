@@ -22,7 +22,7 @@ function createUrl(aRequestType, aPolicy) {
 
   return url + searchParams.toString();
 }
-function createWorker (aRequestType, aPolicy) {
+function createWorker(aRequestType, aPolicy) {
   return `
     onmessage = function() {
       fetch("${createUrl(aRequestType, aPolicy)}").then(function () {
@@ -97,5 +97,3 @@ function handleRequest(request, response) {
     return;
   }
 }
-
-

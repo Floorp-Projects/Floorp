@@ -1,6 +1,6 @@
 "use strict";
 
-Cu.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 const CC = Components.Constructor;
 const BinaryInputStream = CC(
@@ -23,7 +23,7 @@ async function handleRequest(request, response) {
   if (request.method !== "POST") {
     message = "bad";
   } else {
-    log("Reading request")
+    log("Reading request");
     let available = 0;
     let inputStream = new BinaryInputStream(request.bodyInputStream);
     while ((available = inputStream.available()) > 0) {
@@ -31,10 +31,12 @@ async function handleRequest(request, response) {
     }
   }
 
-  log("Setting Headers")
+  log("Setting Headers");
   response.setHeader("Content-Type", "text/html", false);
   response.setStatusLine(request.httpVersion, "200", "OK");
   log("Writing body");
-  response.write('<script>"use strict"; let target = opener ? opener : parent; target.postMessage("done", "*");</script>');
-  log("Done")
+  response.write(
+    '<script>"use strict"; let target = opener ? opener : parent; target.postMessage("done", "*");</script>'
+  );
+  log("Done");
 }

@@ -4,13 +4,17 @@
 
 // A 1x1 PNG image.
 // Source: https://commons.wikimedia.org/wiki/File:1x1.png (Public Domain)
-const IMAGE = atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
-                   "ACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=");
+const IMAGE = atob(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
+    "ACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII="
+);
 
 function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, 200);
-  if (request.queryString &&
-      request.queryString.includes("type=image-no-cookie")) {
+  if (
+    request.queryString &&
+    request.queryString.includes("type=image-no-cookie")
+  ) {
     response.setHeader("Content-Type", "image/png", false);
     response.write(IMAGE);
   } else {

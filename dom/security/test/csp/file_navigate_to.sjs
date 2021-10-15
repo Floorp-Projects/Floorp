@@ -38,12 +38,21 @@ function handleRequest(request, response) {
 
   // We need meta to set multiple CSP headers.
   if (query.get("csp")) {
-    response.write("<meta http-equiv=\"Content-Security-Policy\" content=\""+query.get("csp")+"\">");
+    response.write(
+      '<meta http-equiv="Content-Security-Policy" content="' +
+        query.get("csp") +
+        '">'
+    );
   }
   if (query.get("csp2")) {
-    response.write("<meta http-equiv=\"Content-Security-Policy\" content=\""+query.get("csp2")+"\">");
+    response.write(
+      '<meta http-equiv="Content-Security-Policy" content="' +
+        query.get("csp2") +
+        '">'
+    );
   }
 
-  response.write(TEST_NAVIGATION_AFTER_META + query.get("target") + TEST_NAVIGATION_FOOT);
-
+  response.write(
+    TEST_NAVIGATION_AFTER_META + query.get("target") + TEST_NAVIGATION_FOOT
+  );
 }

@@ -3,7 +3,11 @@
 
 function handleRequest(request, response) {
   // let's enjoy the amazing CSP setting
-  response.setHeader("Content-Security-Policy", "frame-ancestors 'self'", false);
+  response.setHeader(
+    "Content-Security-Policy",
+    "frame-ancestors 'self'",
+    false
+  );
 
   // let's avoid caching issues
   response.setHeader("Pragma", "no-cache");
@@ -18,8 +22,8 @@ function handleRequest(request, response) {
   let cookie = request.hasHeader("Cookie")
     ? request.getHeader("Cookie")
     : "<html><body>" +
-    "<h2 id='strictCookie'>No same site strict cookie header</h2>" +
-    "</body></html>";
+      "<h2 id='strictCookie'>No same site strict cookie header</h2>" +
+      "</body></html>";
   response.write(cookie);
 
   if (!request.hasHeader("Cookie")) {

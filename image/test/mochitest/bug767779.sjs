@@ -7,8 +7,8 @@ var partTimer = timer.createInstance(Components.interfaces.nsITimer);
 
 function getFileAsInputStream(aFilename) {
   var file = Components.classes["@mozilla.org/file/directory_service;1"]
-             .getService(Components.interfaces.nsIProperties)
-             .get("CurWorkD", Components.interfaces.nsIFile);
+    .getService(Components.interfaces.nsIProperties)
+    .get("CurWorkD", Components.interfaces.nsIFile);
 
   file.append("tests");
   file.append("image");
@@ -16,14 +16,14 @@ function getFileAsInputStream(aFilename) {
   file.append("mochitest");
   file.append(aFilename);
 
-  var fileStream = Components.classes['@mozilla.org/network/file-input-stream;1']
-                   .createInstance(Components.interfaces.nsIFileInputStream);
+  var fileStream = Components.classes[
+    "@mozilla.org/network/file-input-stream;1"
+  ].createInstance(Components.interfaces.nsIFileInputStream);
   fileStream.init(file, 1, 0, false);
   return fileStream;
 }
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   response.setHeader("Content-Type", "image/gif", false);
   response.setHeader("Cache-Control", "no-cache", false);
   response.setStatusLine(request.httpVersion, 200, "OK");
@@ -38,12 +38,15 @@ function handleRequest(request, response)
 
 function sendParts(inputStream, response) {
   // 3744 left, send in 8 chunks of 468 each
-  partTimer.initWithCallback(getSendNextPart(inputStream, response), 500,
-                             Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+  partTimer.initWithCallback(
+    getSendNextPart(inputStream, response),
+    500,
+    Components.interfaces.nsITimer.TYPE_ONE_SHOT
+  );
 }
 
 function getSendNextPart(inputStream, response) {
-  return function () {
+  return function() {
     response.bodyOutputStream.writeFrom(inputStream, 468);
     if (!inputStream.available()) {
       inputStream.close();
@@ -53,4 +56,3 @@ function getSendNextPart(inputStream, response) {
     }
   };
 }
-
