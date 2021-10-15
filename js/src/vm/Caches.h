@@ -49,12 +49,15 @@ struct EvalCacheEntry {
   JSScript* callerScript;
   jsbytecode* pc;
 
-  // We sweep this cache before a nursery collection to remove entries with
-  // string keys in the nursery.
+  // We sweep this cache after a nursery collection to update entries with
+  // string keys that have been tenured.
   //
   // The entire cache is purged on a major GC, so we don't need to sweep it
   // then.
-  bool needsSweep() { return !str->isTenured(); }
+  bool traceWeak(JSTracer* trc) {
+    MOZ_ASSERT(trc->kind() == JS::TracerKind::MinorSweeping);
+    return TraceManuallyBarrieredWeakEdge(trc, &str, "EvalCacheEntry::str");
+  }
 };
 
 struct EvalCacheLookup {
@@ -71,8 +74,8 @@ struct EvalCacheHashPolicy {
   static bool match(const EvalCacheEntry& entry, const EvalCacheLookup& l);
 };
 
-typedef GCHashSet<EvalCacheEntry, EvalCacheHashPolicy, SystemAllocPolicy>
-    EvalCache;
+using EvalCache =
+    GCHashSet<EvalCacheEntry, EvalCacheHashPolicy, SystemAllocPolicy>;
 
 // Cache for AtomizeString, mapping JSLinearString* to the corresponding
 // JSAtom*. Also used by nursery GC to de-duplicate strings to atoms.
@@ -122,7 +125,10 @@ class RuntimeCaches {
   js::EvalCache evalCache;
   js::StringToAtomCache stringToAtomCache;
 
-  void purgeForMinorGC(JSRuntime* rt) { evalCache.sweep(); }
+  void sweepAfterMinorGC(JSTracer* trc) { evalCache.traceWeak(trc); }
+#ifdef JSGC_HASH_TABLE_CHECKS
+  void checkEvalCacheAfterMinorGC();
+#endif
 
   void purgeForCompaction() {
     evalCache.clear();

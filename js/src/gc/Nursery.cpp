@@ -1273,6 +1273,7 @@ js::Nursery::CollectionResult js::Nursery::doCollection(JS::GCReason reason) {
   startProfile(ProfileKey::CheckHashTables);
 #ifdef JS_GC_ZEAL
   if (gc->hasZealMode(ZealMode::CheckHashTablesOnMinorGC)) {
+    runtime()->caches().checkEvalCacheAfterMinorGC();
     gc->checkHashTablesAfterMovingGC();
   }
 #endif
@@ -1452,6 +1453,8 @@ void js::Nursery::sweep() {
   }
 
   sweepMapAndSetObjects();
+
+  runtime()->caches().sweepAfterMinorGC(&trc);
 }
 
 void js::Nursery::clear() {
