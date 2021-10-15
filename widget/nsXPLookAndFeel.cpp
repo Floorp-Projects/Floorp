@@ -1046,55 +1046,19 @@ static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
   return false;
 }
 
-static bool ShouldRespectSystemColorSchemeForChromeDoc() {
-#ifdef XP_MACOSX
-  // macOS follows the global toolbar theme, not the system theme.
-  // (If the global toolbar theme is set to System, then it *that* follows the
-  // system theme.)
-  return false;
-#else
-  // GTK historically has behaved like this. Other platforms don't have support
-  // for light / dark color schemes yet so it doesn't matter for them.
-  return true;
-#endif
-}
-
 LookAndFeel::ColorScheme LookAndFeel::ColorSchemeForChrome() {
-  if (StaticPrefs::widget_color_scheme_follow_firefox_theme()) {
-    switch (StaticPrefs::browser_theme_toolbar_theme()) {
-      case 0:  // Dark
-        return ColorScheme::Dark;
-      case 1:  // Light
-        return ColorScheme::Light;
-      case 2:  // System
-        return SystemColorScheme();
-      default:
-        break;
-    }
+  switch (StaticPrefs::browser_theme_toolbar_theme()) {
+    case 0:  // Dark
+      return ColorScheme::Dark;
+    case 1:  // Light
+      return ColorScheme::Light;
+    default:
+      break;
   }
-  if (ShouldRespectSystemColorSchemeForChromeDoc()) {
-    return SystemColorScheme();
-  }
-  return ColorScheme::Light;
+  return SystemColorScheme();
 }
 
-static LookAndFeel::ColorScheme ColorSchemeForDocument(
-    const dom::Document& aDoc, bool aContentSupportsDark) {
-  if (nsContentUtils::IsChromeDoc(&aDoc)) {
-    return LookAndFeel::ColorSchemeForChrome();
-  }
-#ifdef MOZ_WIDGET_GTK
-  if (StaticPrefs::widget_content_allow_gtk_dark_theme()) {
-    // If users manually tweak allow-gtk-dark-theme, allow content to use the
-    // system color scheme rather than forcing it to light.
-    return LookAndFeel::SystemColorScheme();
-  }
-#endif
-  return aContentSupportsDark ? LookAndFeel::SystemColorScheme()
-                              : LookAndFeel::ColorScheme::Light;
-}
-
-LookAndFeel::ColorScheme LookAndFeel::ColorSchemeForStyle(
+ColorScheme LookAndFeel::ColorSchemeForStyle(
     const dom::Document& aDoc, const StyleColorSchemeFlags& aFlags) {
   StyleColorSchemeFlags style(aFlags);
   if (!style) {
@@ -1102,13 +1066,35 @@ LookAndFeel::ColorScheme LookAndFeel::ColorSchemeForStyle(
   }
   const bool supportsDark = bool(style & StyleColorSchemeFlags::DARK);
   const bool supportsLight = bool(style & StyleColorSchemeFlags::LIGHT);
-  if (supportsDark && !supportsLight) {
-    return ColorScheme::Dark;
+  if (supportsLight && supportsDark) {
+    // Both color-schemes are explicitly supported, use the preferred one.
+    return aDoc.PreferredColorScheme();
   }
-  if (supportsLight && !supportsDark) {
-    return ColorScheme::Light;
+  if (supportsDark || supportsLight) {
+    // One color-scheme is explicitly supported and one isn't, so use the one
+    // the content supports.
+    return supportsDark ? ColorScheme::Dark : ColorScheme::Light;
   }
-  return ColorSchemeForDocument(aDoc, supportsDark);
+  // No value specified. Chrome docs always supports both, so use the chrome
+  // color-scheme.
+  if (nsContentUtils::IsChromeDoc(&aDoc)) {
+    return ColorSchemeForChrome();
+  }
+  // As an special-case, use the system color-scheme if allow-gtk-dark-theme is
+  // set.
+  //
+  // TODO(emilio): Once we ship the color-scheme property and meta tag I think
+  // this can go. The use case for this is sidebars and such (bug 1721359),
+  // which will be able to just use <meta name=color-scheme value="light dark">
+  // to state that they support light and dark color schemes (taking the
+  // PreferredColorScheme codepath above).
+#ifdef MOZ_WIDGET_GTK
+  if (StaticPrefs::widget_content_allow_gtk_dark_theme()) {
+    return SystemColorScheme();
+  }
+#endif
+  // Default content to light.
+  return ColorScheme::Light;
 }
 
 LookAndFeel::ColorScheme LookAndFeel::ColorSchemeForFrame(

@@ -33,7 +33,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_apz.h"
-#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_font.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -5302,15 +5301,18 @@ nscolor PresShell::GetDefaultBackgroundColorToDraw() {
 
   // Use a dark background for top-level about:blank that is inaccessible to
   // content JS.
+  //
+  // TODO(emilio): We should make this work for content-accessible documents
+  // based on the `<meta name=color-scheme>` meta tag.
   Document* doc = GetDocument();
   BrowsingContext* bc = doc->GetBrowsingContext();
   if (bc && bc->IsTop() && !bc->HasOpener() && doc->GetDocumentURI() &&
       NS_IsAboutBlank(doc->GetDocumentURI()) &&
-      doc->PrefersColorScheme(Document::IgnoreRFP::Yes) ==
-          StylePrefersColorScheme::Dark) {
-    // Use --in-content-page-background for prefers-color-scheme: dark.
-    return StaticPrefs::browser_proton_enabled() ? NS_RGB(0x1C, 0x1B, 0x22)
-                                                 : NS_RGB(0x2A, 0x2A, 0x2E);
+      doc->PreferredColorScheme(Document::IgnoreRFP::Yes) ==
+          ColorScheme::Dark) {
+    auto color = LookAndFeel::ColorID::WindowBackground;
+    return LookAndFeel::Color(color, ColorScheme::Dark,
+                              LookAndFeel::ShouldUseStandins(*doc, color));
   }
 
   return backgroundColor;
