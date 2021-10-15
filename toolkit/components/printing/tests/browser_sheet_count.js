@@ -191,6 +191,76 @@ add_task(async function testSheetCountDuplex() {
   });
 });
 
+// Test that enabling duplex printing with multiple copies updates the
+// sheet count accordingly.
+add_task(async function testSheetCountDuplexWithCopies() {
+  // Use different scale values to exercise printing of different page counts
+  for (let scale of [2, 3, 4, 5]) {
+    await TestDuplexNumCopiesAtScale(scale);
+  }
+});
+
+// Enable duplex and numCopies=2 with the provided scale value and check
+// that the sheet count is correct.
+async function TestDuplexNumCopiesAtScale(scale) {
+  await PrintHelper.withTestPage(async helper => {
+    const mockPrinterName = "DuplexCapablePrinter";
+    const printer = helper.addMockPrinter(mockPrinterName);
+    printer.supportsDuplex = Promise.resolve(true);
+
+    await helper.startPrint();
+    await helper.dispatchSettingsChange({ printerName: mockPrinterName });
+
+    // Set scale and shinkToFit to make the document
+    // bigger so that it spans multiple pages.
+    await helper.waitForPreview(() =>
+      helper.dispatchSettingsChange({
+        shrinkToFit: false,
+        scaling: scale,
+        duplex: Ci.nsIPrintSettings.kDuplexNone,
+      })
+    );
+    await BrowserTestUtils.waitForCondition(
+      () => helper.sheetCount != 1,
+      "Wait for sheet count to update"
+    );
+    let singleSidedSheets = helper.sheetCount;
+
+    // Chnage to two copies
+    await helper.waitForSettingsEvent(() =>
+      helper.dispatchSettingsChange({
+        numCopies: 2,
+      })
+    );
+    await BrowserTestUtils.waitForCondition(
+      () => helper.sheetCount != singleSidedSheets,
+      "Wait for sheet count to update"
+    );
+    let twoCopiesSheetCount = helper.sheetCount;
+
+    // Turn on duplex printing.
+    await helper.waitForSettingsEvent(() =>
+      helper.dispatchSettingsChange({
+        duplex: Ci.nsIPrintSettings.kDuplexFlipOnLongEdge,
+      })
+    );
+    await BrowserTestUtils.waitForCondition(
+      () => helper.sheetCount != twoCopiesSheetCount,
+      "Wait for sheet count to update"
+    );
+    let duplexTwoCopiesSheetCount = helper.sheetCount;
+
+    // Check sheet count accounts for duplex and numCopies.
+    is(
+      duplexTwoCopiesSheetCount,
+      Math.ceil(singleSidedSheets / 2) * 2,
+      "Duplex with 2 copies sheet count is correct"
+    );
+
+    await helper.closeDialog();
+  });
+}
+
 add_task(async function testPagesPerSheetCount() {
   await PrintHelper.withTestPage(async helper => {
     let mockPrinterName = "A real printer!";
