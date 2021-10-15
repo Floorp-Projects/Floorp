@@ -698,7 +698,7 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
       // events and native events.  Without CGEvent coalescing, the native
       // event events can accumulate in the Carbon event queue which will
       // manifest as laggy scrolling.
-#ifdef EARLY_BETA_OR_EARLIER
+#if 1
       eventProcessed = false;
       break;
 #else
