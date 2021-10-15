@@ -16,7 +16,7 @@
   --download-progress-fill-color: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,97,224));
 }
 
-@media (-moz-toolbar-prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
   :root:-moz-lwtheme {
     --download-progress-fill-color: var(--lwt-toolbarbutton-icon-fill-attention, rgb(0,221,255));
   }

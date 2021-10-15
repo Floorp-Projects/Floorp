@@ -17475,7 +17475,7 @@ ColorScheme Document::PreferredColorScheme(IgnoreRFP aIgnoreRFP) const {
   }
 
   if (nsContentUtils::IsChromeDoc(this)) {
-    return LookAndFeel::SystemColorScheme();
+    return LookAndFeel::ColorSchemeForChrome();
   }
 
   switch (StaticPrefs::layout_css_prefers_color_scheme_content_override()) {

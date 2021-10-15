@@ -158,7 +158,7 @@
     fill: var(--in-content-icon-color);
   }
 
-  @media (-moz-toolbar-prefers-color-scheme: dark) {
+  @media (prefers-color-scheme: dark) {
     /* Don't set the background in prefers-contrast mode or macOS can end up
      * with black on black text. */
     .container.infobar {
@@ -272,7 +272,7 @@ strong {
   color: rgb(226,40,80);
 }
 
-@media (-moz-toolbar-prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
   :host([type=info]) .icon {
     color: rgb(128,235,255);
   }

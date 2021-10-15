@@ -1453,7 +1453,7 @@ printpreview-pagination:focus-within,
   opacity: 0;
 }
 
-@media (-moz-toolbar-prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
   .previewStack {
     background-color: #2A2A2E;
     color: rgb(249, 249, 250);
