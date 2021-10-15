@@ -339,6 +339,10 @@ class CrashInfo(object):
         ):
 
             command = [self.stackwalk_binary, path, self.symbols_path]
+            # Fallback to the symbols server for unknown symbols on automation
+            # (mostly for system libraries).
+            if "MOZ_AUTOMATION" in os.environ:
+                command.append("https://symbols.mozilla.org/")
             self.logger.info(u"Copy/paste: {}".format(" ".join(command)))
             # run minidump_stackwalk
             p = subprocess.Popen(
