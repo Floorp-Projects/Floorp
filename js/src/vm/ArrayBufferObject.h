@@ -526,22 +526,16 @@ class InnerViewTable {
   friend class ArrayBufferObject;
 
  private:
-  struct MapGCPolicy {
-    static bool needsSweep(JSObject** key, ViewVector* value) {
-      return InnerViewTable::sweepEntry(key, *value);
-    }
-  };
-
   // This key is a raw pointer and not a WeakHeapPtr because the post-barrier
   // would hold nursery-allocated entries live unconditionally. It is a very
   // common pattern in low-level and performance-oriented JavaScript to create
   // hundreds or thousands of very short lived temporary views on a larger
-  // buffer; having to tenured all of these would be a catastrophic performance
+  // buffer; having to tenure all of these would be a catastrophic performance
   // regression. Thus, it is vital that nursery pointers in this map not be held
   // live. Special support is required in the minor GC, implemented in
   // sweepAfterMinorGC.
-  using Map = GCHashMap<JSObject*, ViewVector, MovableCellHasher<JSObject*>,
-                        ZoneAllocPolicy, MapGCPolicy>;
+  using Map = GCHashMap<UnsafeBarePtr<JSObject*>, ViewVector,
+                        MovableCellHasher<JSObject*>, ZoneAllocPolicy>;
 
   // For all objects sharing their storage with some other view, this maps
   // the object to the list of such views. All entries in this map are weak.
@@ -556,9 +550,6 @@ class InnerViewTable {
 
   // Whether nurseryKeys is a complete list.
   bool nurseryKeysValid;
-
-  // Sweep an entry during GC, returning whether the entry should be removed.
-  static bool sweepEntry(JSObject** pkey, ViewVector& views);
 
   bool addView(JSContext* cx, ArrayBufferObject* buffer, JSObject* view);
   ViewVector* maybeViewsUnbarriered(ArrayBufferObject* obj);
