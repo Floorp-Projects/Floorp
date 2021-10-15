@@ -20,6 +20,28 @@ treecol[sortDirection="descending"]:not([hideheader="true"]) > .treecol-sortdire
   list-style-image: url("chrome://global/skin/tree/sort-dsc.svg");
 }
 
+@media (-moz-toolbar-prefers-color-scheme: dark) {
+  treecol,
+  treecolpicker {
+    appearance: none;
+    background-color: ButtonFace;
+    color: ButtonText;
+    border-inline-start: 1px solid ThreeDLightShadow;
+    box-shadow: inset 0 -1px ThreeDLightShadow;
+  }
+  treecol:where([ordinal="1"]) {
+    border-inline-start: none;
+  }
+  :is(treecol, treecolpicker):where(:hover) {
+    background-color: -moz-ButtonHoverFace;
+    color: -moz-ButtonHoverText;
+  }
+  :is(treecol, treecolpicker):where(:hover:active) {
+    background-color: -moz-ButtonActiveFace;
+    color: -moz-ButtonActiveText;
+  }
+}
+
 @media (-moz-windows-classic) {
   treecol,
   treecolpicker {
@@ -28,11 +50,11 @@ treecol[sortDirection="descending"]:not([hideheader="true"]) > .treecol-sortdire
     border-inline-end-color: ThreeDShadow;
     border-bottom-color: ThreeDShadow;
     border-inline-start-color: ThreeDHighlight;
+    box-shadow: none;
     background-color: -moz-Dialog;
   }
 
-  treecol:hover:active,
-  treecolpicker:hover:active {
+  :is(treecol, treecolpicker):where(:hover:active) {
     border-top-color: ThreeDShadow;
     border-inline-end-color: ThreeDHighlight;
     border-bottom-color: ThreeDHighlight;
