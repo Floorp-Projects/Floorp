@@ -650,13 +650,25 @@ var WasmDisassembler = /** @class */ (function () {
             case 12 /* br */:
             case 13 /* br_if */:
             case 212 /* br_on_null */:
+            case 214 /* br_on_non_null */:
             case 64322 /* br_on_cast */:
+            case 64323 /* br_on_cast_fail */:
             case 64352 /* br_on_func */:
+            case 64355 /* br_on_non_func */:
             case 64353 /* br_on_data */:
+            case 64356 /* br_on_non_data */:
             case 64354 /* br_on_i31 */:
+            case 64357 /* br_on_non_i31 */:
                 this.appendBuffer(" ");
                 this.appendBuffer(this.useLabel(operator.brDepth));
                 break;
+            case 64326 /* br_on_cast_static */:
+            case 64327 /* br_on_cast_static_fail */: {
+                var label = this.useLabel(operator.brDepth);
+                var refType = this._nameResolver.getTypeName(operator.refType, true);
+                this.appendBuffer(" " + label + " " + refType);
+                break;
+            }
             case 14 /* br_table */:
                 for (var i = 0; i < operator.brTable.length; i++) {
                     this.appendBuffer(" ");
@@ -690,6 +702,11 @@ var WasmDisassembler = /** @class */ (function () {
             case 19 /* return_call_indirect */:
                 this.printFuncType(operator.typeIndex);
                 break;
+            case 28 /* select_with_type */: {
+                var selectType = this.typeToString(operator.selectType);
+                this.appendBuffer(" " + selectType);
+                break;
+            }
             case 32 /* local_get */:
             case 33 /* local_set */:
             case 34 /* local_tee */:
@@ -892,9 +909,16 @@ var WasmDisassembler = /** @class */ (function () {
             }
             case 64304 /* rtt_canon */:
             case 64305 /* rtt_sub */:
+            case 64306 /* rtt_fresh_sub */:
+            case 64324 /* ref_test_static */:
+            case 64325 /* ref_cast_static */:
+            case 64264 /* struct_new_default */:
             case 64258 /* struct_new_default_with_rtt */:
+            case 64263 /* struct_new */:
             case 64257 /* struct_new_with_rtt */:
+            case 64284 /* array_new_default */:
             case 64274 /* array_new_default_with_rtt */:
+            case 64283 /* array_new */:
             case 64273 /* array_new_with_rtt */:
             case 64275 /* array_get */:
             case 64276 /* array_get_s */:
@@ -903,6 +927,19 @@ var WasmDisassembler = /** @class */ (function () {
             case 64279 /* array_len */: {
                 var refType = this._nameResolver.getTypeName(operator.refType, true);
                 this.appendBuffer(" " + refType);
+                break;
+            }
+            case 64280 /* array_copy */: {
+                var dstType = this._nameResolver.getTypeName(operator.refType, true);
+                var srcType = this._nameResolver.getTypeName(operator.srcType, true);
+                this.appendBuffer(" " + dstType + " " + srcType);
+                break;
+            }
+            case 64281 /* array_init */:
+            case 64282 /* array_init_static */: {
+                var refType = this._nameResolver.getTypeName(operator.refType, true);
+                var length_1 = operator.brDepth; // Overloaded field.
+                this.appendBuffer(" " + refType + " " + length_1);
                 break;
             }
         }
@@ -1047,7 +1084,7 @@ var WasmDisassembler = /** @class */ (function () {
                     if (this._exportMetadata !== null) {
                         for (var _i = 0, _a = this._exportMetadata.getMemoryExportNames(memoryIndex); _i < _a.length; _i++) {
                             var exportName = _a[_i];
-                            this.appendBuffer(" (export \"" + exportName + "\")");
+                            this.appendBuffer(" (export " + JSON.stringify(exportName) + ")");
                         }
                     }
                     this.appendBuffer(" " + limitsToString(memoryInfo.limits));
@@ -1065,7 +1102,7 @@ var WasmDisassembler = /** @class */ (function () {
                     if (this._exportMetadata !== null) {
                         for (var _b = 0, _c = this._exportMetadata.getEventExportNames(eventIndex); _b < _c.length; _b++) {
                             var exportName = _c[_b];
-                            this.appendBuffer(" (export \"" + exportName + "\")");
+                            this.appendBuffer(" (export " + JSON.stringify(exportName) + ")");
                         }
                     }
                     this.printFuncType(eventInfo.typeIndex);
@@ -1080,7 +1117,7 @@ var WasmDisassembler = /** @class */ (function () {
                     if (this._exportMetadata !== null) {
                         for (var _d = 0, _e = this._exportMetadata.getTableExportNames(tableIndex); _d < _e.length; _d++) {
                             var exportName = _e[_d];
-                            this.appendBuffer(" (export \"" + exportName + "\")");
+                            this.appendBuffer(" (export " + JSON.stringify(exportName) + ")");
                         }
                     }
                     this.appendBuffer(" " + limitsToString(tableInfo.limits) + " " + this.typeToString(tableInfo.elementType) + ")");
@@ -1133,7 +1170,7 @@ var WasmDisassembler = /** @class */ (function () {
                             if (this._exportMetadata !== null) {
                                 for (var _f = 0, _g = this._exportMetadata.getFunctionExportNames(funcIndex); _f < _g.length; _f++) {
                                     var exportName = _g[_f];
-                                    this.appendBuffer(" (export \"" + exportName + "\")");
+                                    this.appendBuffer(" (export " + JSON.stringify(exportName) + ")");
                                 }
                             }
                             this.appendBuffer(" (import ");
@@ -1150,7 +1187,7 @@ var WasmDisassembler = /** @class */ (function () {
                             if (this._exportMetadata !== null) {
                                 for (var _h = 0, _j = this._exportMetadata.getGlobalExportNames(globalIndex); _h < _j.length; _h++) {
                                     var exportName = _j[_h];
-                                    this.appendBuffer(" (export \"" + exportName + "\")");
+                                    this.appendBuffer(" (export " + JSON.stringify(exportName) + ")");
                                 }
                             }
                             this.appendBuffer(" (import ");
@@ -1165,7 +1202,7 @@ var WasmDisassembler = /** @class */ (function () {
                             if (this._exportMetadata !== null) {
                                 for (var _k = 0, _l = this._exportMetadata.getMemoryExportNames(memoryIndex); _k < _l.length; _k++) {
                                     var exportName = _l[_k];
-                                    this.appendBuffer(" (export \"" + exportName + "\")");
+                                    this.appendBuffer(" (export " + JSON.stringify(exportName) + ")");
                                 }
                             }
                             this.appendBuffer(" (import ");
@@ -1184,7 +1221,7 @@ var WasmDisassembler = /** @class */ (function () {
                             if (this._exportMetadata !== null) {
                                 for (var _m = 0, _o = this._exportMetadata.getTableExportNames(tableIndex); _m < _o.length; _m++) {
                                     var exportName = _o[_m];
-                                    this.appendBuffer(" (export \"" + exportName + "\")");
+                                    this.appendBuffer(" (export " + JSON.stringify(exportName) + ")");
                                 }
                             }
                             this.appendBuffer(" (import ");
@@ -1199,7 +1236,7 @@ var WasmDisassembler = /** @class */ (function () {
                             if (this._exportMetadata !== null) {
                                 for (var _p = 0, _q = this._exportMetadata.getEventExportNames(eventIndex); _p < _q.length; _p++) {
                                     var exportName = _q[_p];
-                                    this.appendBuffer(" (export \"" + exportName + "\")");
+                                    this.appendBuffer(" (export " + JSON.stringify(exportName) + ")");
                                 }
                             }
                             this.appendBuffer(" (import ");
@@ -1248,7 +1285,7 @@ var WasmDisassembler = /** @class */ (function () {
                     if (this._exportMetadata !== null) {
                         for (var _r = 0, _s = this._exportMetadata.getGlobalExportNames(globalIndex); _r < _s.length; _r++) {
                             var exportName = _s[_r];
-                            this.appendBuffer(" (export \"" + exportName + "\")");
+                            this.appendBuffer(" (export " + JSON.stringify(exportName) + ")");
                         }
                     }
                     this.appendBuffer(" " + this.globalTypeToString(globalInfo.type));
@@ -1263,20 +1300,39 @@ var WasmDisassembler = /** @class */ (function () {
                     this._types.push(typeEntry);
                     if (!this._skipTypes) {
                         var typeName = this._nameResolver.getTypeName(typeIndex, false);
+                        var superTypeName = undefined;
+                        if (typeEntry.supertype !== undefined) {
+                            superTypeName = this.typeIndexToString(typeEntry.supertype);
+                        }
                         if (typeEntry.form === -32 /* func */) {
                             this.appendBuffer("  (type " + typeName + " (func");
                             this.printFuncType(typeIndex);
                             this.appendBuffer("))");
+                        }
+                        else if (typeEntry.form === -35 /* func_subtype */) {
+                            this.appendBuffer("  (type " + typeName + " (func_subtype");
+                            this.printFuncType(typeIndex);
+                            this.appendBuffer(" (supertype " + superTypeName + ")))");
                         }
                         else if (typeEntry.form === -33 /* struct */) {
                             this.appendBuffer("  (type " + typeName + " (struct");
                             this.printStructType(typeIndex);
                             this.appendBuffer("))");
                         }
+                        else if (typeEntry.form === -36 /* struct_subtype */) {
+                            this.appendBuffer("  (type " + typeName + " (struct_subtype");
+                            this.printStructType(typeIndex);
+                            this.appendBuffer(" (supertype " + superTypeName + ")))");
+                        }
                         else if (typeEntry.form === -34 /* array */) {
                             this.appendBuffer("  (type " + typeName + " (array");
                             this.printArrayType(typeIndex);
                             this.appendBuffer("))");
+                        }
+                        else if (typeEntry.form === -37 /* array_subtype */) {
+                            this.appendBuffer("  (type " + typeName + " (array_subtype");
+                            this.printArrayType(typeIndex);
+                            this.appendBuffer(") (supertype " + superTypeName + ")))");
                         }
                         else {
                             throw new Error("Unknown type form: " + typeEntry.form);
@@ -1349,7 +1405,7 @@ var WasmDisassembler = /** @class */ (function () {
                     if (this._exportMetadata !== null) {
                         for (var _t = 0, _u = this._exportMetadata.getFunctionExportNames(this._funcIndex); _t < _u.length; _t++) {
                             var exportName = _u[_t];
-                            this.appendBuffer(" (export \"" + exportName + "\")");
+                            this.appendBuffer(" (export " + JSON.stringify(exportName) + ")");
                         }
                     }
                     for (var i = 0; i < type.params.length; i++) {
