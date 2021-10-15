@@ -165,7 +165,7 @@ Maybe<InlinableOpData> FindInlinableOpData(ICCacheIRStub* stub,
       return call;
     }
   }
-  if (loc.isGetPropOp()) {
+  if (loc.isGetPropOp() || loc.isGetElemOp()) {
     Maybe<InlinableGetterData> getter = FindInlinableGetterData(stub);
     if (getter.isSome()) {
       return getter;
@@ -410,6 +410,7 @@ Maybe<InlinableSetterData> FindInlinableSetterData(ICCacheIRStub* stub) {
 static uint32_t GetCalleeNumActuals(BytecodeLocation loc) {
   switch (loc.getOp()) {
     case JSOp::GetProp:
+    case JSOp::GetElem:
       // Getters do not pass arguments.
       return 0;
 
@@ -652,7 +653,7 @@ bool TrialInliner::maybeInlineCall(ICEntry& entry, ICFallbackStub* fallback,
 }
 
 bool TrialInliner::maybeInlineGetter(ICEntry& entry, ICFallbackStub* fallback,
-                                     BytecodeLocation loc) {
+                                     BytecodeLocation loc, CacheKind kind) {
   ICCacheIRStub* stub = maybeSingleStub(entry);
   if (!stub) {
     return true;
@@ -679,17 +680,21 @@ bool TrialInliner::maybeInlineGetter(ICEntry& entry, ICFallbackStub* fallback,
 
   CacheIRWriter writer(cx());
   ValOperandId valId(writer.setInputOperandId(0));
+  if (kind == CacheKind::GetElem) {
+    // Register the key operand.
+    writer.setInputOperandId(1);
+  }
   cloneSharedPrefix(stub, data->endOfSharedPrefix, writer);
 
   writer.callInlinedGetterResult(data->receiverOperand, data->target,
                                  newICScript, data->sameRealm);
   writer.returnFromIC();
 
-  return replaceICStub(entry, fallback, writer, CacheKind::GetProp);
+  return replaceICStub(entry, fallback, writer, kind);
 }
 
 bool TrialInliner::maybeInlineSetter(ICEntry& entry, ICFallbackStub* fallback,
-                                     BytecodeLocation loc) {
+                                     BytecodeLocation loc, CacheKind kind) {
   ICCacheIRStub* stub = maybeSingleStub(entry);
   if (!stub) {
     return true;
@@ -723,7 +728,7 @@ bool TrialInliner::maybeInlineSetter(ICEntry& entry, ICFallbackStub* fallback,
                            data->rhsOperand, newICScript, data->sameRealm);
   writer.returnFromIC();
 
-  return replaceICStub(entry, fallback, writer, CacheKind::SetProp);
+  return replaceICStub(entry, fallback, writer, kind);
 }
 
 bool TrialInliner::tryInlining() {
@@ -748,13 +753,18 @@ bool TrialInliner::tryInlining() {
         }
         break;
       case JSOp::GetProp:
-        if (!maybeInlineGetter(entry, fallback, loc)) {
+        if (!maybeInlineGetter(entry, fallback, loc, CacheKind::GetProp)) {
+          return false;
+        }
+        break;
+      case JSOp::GetElem:
+        if (!maybeInlineGetter(entry, fallback, loc, CacheKind::GetElem)) {
           return false;
         }
         break;
       case JSOp::SetProp:
       case JSOp::StrictSetProp:
-        if (!maybeInlineSetter(entry, fallback, loc)) {
+        if (!maybeInlineSetter(entry, fallback, loc, CacheKind::SetProp)) {
           return false;
         }
         break;
