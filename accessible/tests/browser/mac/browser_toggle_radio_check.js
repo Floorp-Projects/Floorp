@@ -138,3 +138,32 @@ addAccessibleTask(
     is(huey.getAttributeValue("AXValue"), 0, "Correct checked value for huey");
   }
 );
+
+/**
+ * Test role=switch
+ */
+addAccessibleTask(
+  `<div role="switch" aria-checked="false" id="sw">hello</div>`,
+  async (browser, accDoc) => {
+    let sw = getNativeInterface(accDoc, "sw");
+    is(sw.getAttributeValue("AXValue"), 0, "Initially, switch is off");
+    is(sw.getAttributeValue("AXRole"), "AXCheckBox", "Has correct role");
+    is(sw.getAttributeValue("AXSubrole"), "AXSwitch", "Has correct subrole");
+
+    let stateChanged = Promise.all([
+      waitForMacEvent("AXValueChanged", "sw"),
+      waitForStateChange("sw", STATE_CHECKED, true),
+    ]);
+
+    // We should get a state change event, and a value change.
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document
+        .getElementById("sw")
+        .setAttribute("aria-checked", "true");
+    });
+
+    await stateChanged;
+
+    is(sw.getAttributeValue("AXValue"), 1, "Switch is now on");
+  }
+);
