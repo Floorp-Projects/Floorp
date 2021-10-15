@@ -821,11 +821,11 @@ nsresult FetchDriver::HttpFetch(
   } else {
     // Integrity check cannot be done on alt-data yet.
     if (mRequest->GetIntegrity().IsEmpty()) {
+      MOZ_ASSERT(!FetchUtil::WasmAltDataType.IsEmpty());
       nsCOMPtr<nsICacheInfoChannel> cic = do_QueryInterface(chan);
       if (cic) {
         cic->PreferAlternativeDataType(
-            nsLiteralCString(WASM_ALT_DATA_TYPE_V1),
-            nsLiteralCString(WASM_CONTENT_TYPE),
+            FetchUtil::WasmAltDataType, nsLiteralCString(WASM_CONTENT_TYPE),
             nsICacheInfoChannel::PreferredAlternativeDataDeliveryType::
                 SERIALIZE);
       }
@@ -1079,8 +1079,8 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
       }
     } else if (!cic->PreferredAlternativeDataTypes().IsEmpty()) {
       MOZ_ASSERT(cic->PreferredAlternativeDataTypes().Length() == 1);
-      MOZ_ASSERT(cic->PreferredAlternativeDataTypes()[0].type().EqualsLiteral(
-          WASM_ALT_DATA_TYPE_V1));
+      MOZ_ASSERT(cic->PreferredAlternativeDataTypes()[0].type().Equals(
+          FetchUtil::WasmAltDataType));
       MOZ_ASSERT(
           cic->PreferredAlternativeDataTypes()[0].contentType().EqualsLiteral(
               WASM_CONTENT_TYPE));

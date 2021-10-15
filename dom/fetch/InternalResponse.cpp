@@ -52,7 +52,8 @@ InternalResponse::InternalResponse(uint16_t aStatus,
       mBodySize(UNKNOWN_BODY_SIZE),
       mPaddingSize(UNKNOWN_PADDING_SIZE),
       mErrorCode(NS_OK),
-      mCredentialsMode(aCredentialsMode) {}
+      mCredentialsMode(aCredentialsMode),
+      mCloned(false) {}
 
 /* static */ RefPtr<InternalResponse> InternalResponse::FromIPC(
     const IPCInternalResponse& aIPCResponse) {
@@ -164,6 +165,7 @@ void InternalResponse::ToIPC(
 already_AddRefed<InternalResponse> InternalResponse::Clone(
     CloneType aCloneType) {
   RefPtr<InternalResponse> clone = CreateIncompleteCopy();
+  clone->mCloned = (mCloned = true);
 
   clone->mHeaders = new InternalHeaders(*mHeaders);
 
