@@ -211,11 +211,6 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
 - (nsresult)setMacCursor:(nsMacCursor*)aMacCursor {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  // Some plugins mess with our cursors and set a cursor that even
-  // [NSCursor currentCursor] doesn't know about. In case that happens, just
-  // reset the state.
-  [[NSCursor currentCursor] set];
-
   nsCursor oldType = [mCurrentMacCursor type];
   nsCursor newType = [aMacCursor type];
   if (oldType != newType) {
@@ -245,7 +240,6 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
 
   // As the user moves the mouse, this gets called repeatedly with the same aCursorImage
   if (sCurrentCursor == aCursor && sCurrentCursorScaleFactor == scaleFactor && mCurrentMacCursor) {
-    [self setMacCursor:mCurrentMacCursor];
     return NS_OK;
   }
 
