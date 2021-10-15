@@ -123,7 +123,7 @@
 
 /* Dark Theme variables */
 
-@media  (-moz-toolbar-prefers-color-scheme: dark) {
+@media  (prefers-color-scheme: dark) {
   :root {
     --bg-color: rgb(28, 27, 34); /* --in-content-background-color */
     --text-color: #eee; /* --in-content-text-color */

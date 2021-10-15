@@ -113,7 +113,7 @@
   accent-color: var(--in-content-accent-color);
 }
 
-@media (-moz-toolbar-prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
   :host,
   :root {
     /* Keep these in sync with layout/base/PresShell.cpp, plaintext.css,

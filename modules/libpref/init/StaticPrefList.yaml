@@ -1202,7 +1202,7 @@
   value: false
   mirror: always
 
-# Controls @media -moz-toolbar-prefers-color-scheme.
+# Communicates the toolbar color to platform (for e.g., prefers-color-scheme).
 #
 # Returns whether the toolbar is dark (0), light (1), or system (2).
 #

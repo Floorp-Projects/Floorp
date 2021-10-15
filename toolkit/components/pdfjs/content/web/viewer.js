@@ -591,7 +591,7 @@ const PDFViewerApplication = {
     try {
       const styleSheet = document.styleSheets[0];
       const cssRules = styleSheet?.cssRules || [];
-      const mediaMatcher = "-moz-toolbar-prefers-color-scheme";
+      const mediaMatcher = "prefers-color-scheme";
       const mediaRule = `(${mediaMatcher}: dark)`;
       const mediaRegex = new RegExp(`^@media \\(${mediaMatcher}: dark\\) {\\n\\s*([\\w\\s-.,:;/\\\\{}()]+)\\n}$`);
 
