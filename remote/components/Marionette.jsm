@@ -25,6 +25,8 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
   Log.get(Log.TYPES.MARIONETTE)
 );
 
+XPCOMUtils.defineLazyGetter(this, "textEncoder", () => new TextEncoder());
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "env",
@@ -68,6 +70,7 @@ const isRemote =
 class MarionetteParentProcess {
   constructor() {
     this.server = null;
+    this._marionetteActivePortPath;
 
     this.classID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
     this.helpInfo = "  --marionette       Enable remote control server.\n";
@@ -126,7 +129,7 @@ class MarionetteParentProcess {
     cmdLine.handleFlag("marionette", false);
   }
 
-  observe(subject, topic) {
+  async observe(subject, topic) {
     if (this.enabled) {
       logger.trace(`Received observer notification ${topic}`);
     }
@@ -172,7 +175,7 @@ class MarionetteParentProcess {
           Services.obs.addObserver(this, "quit-application");
 
           this.finalUIStartup = true;
-          this.init();
+          await this.init();
         }
         break;
 
@@ -184,13 +187,13 @@ class MarionetteParentProcess {
       case "toplevel-window-ready":
         subject.addEventListener(
           "load",
-          ev => {
+          async ev => {
             if (ev.target.documentElement.namespaceURI == XMLURI_PARSE_ERROR) {
               Services.obs.removeObserver(this, topic);
 
               let parserError = ev.target.querySelector("parsererror");
               logger.fatal(parserError.textContent);
-              this.uninit();
+              await this.uninit();
               Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
             }
           },
@@ -225,14 +228,14 @@ class MarionetteParentProcess {
           Services.obs.addObserver(this, "quit-application");
 
           this.finalUIStartup = true;
-          this.init();
+          await this.init();
         }
 
         break;
 
       case "quit-application":
         Services.obs.removeObserver(this, "quit-application");
-        this.uninit();
+        await this.uninit();
         break;
     }
   }
@@ -254,7 +257,7 @@ class MarionetteParentProcess {
     );
   }
 
-  init(quit = true) {
+  async init(quit = true) {
     if (this.running || !this.enabled || !this.finalUIStartup) {
       logger.debug(
         `Init aborted (running=${this.running}, ` +
@@ -282,7 +285,7 @@ class MarionetteParentProcess {
         this.server.start();
       } catch (e) {
         logger.fatal("Remote protocol server failed to start", e);
-        this.uninit();
+        await this.uninit();
         if (quit) {
           Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
         }
@@ -292,14 +295,41 @@ class MarionetteParentProcess {
       env.set(ENV_ENABLED, "1");
       Services.obs.notifyObservers(this, NOTIFY_LISTENING, true);
       logger.debug("Marionette is listening");
+
+      // Write Marionette port to MarionetteActivePort file within the profile.
+      const profileDir = await PathUtils.getProfileDir();
+      this._marionetteActivePortPath = PathUtils.join(
+        profileDir,
+        "MarionetteActivePort"
+      );
+
+      const data = `${this.server.port}`;
+      try {
+        await IOUtils.write(
+          this._marionetteActivePortPath,
+          textEncoder.encode(data)
+        );
+      } catch (e) {
+        logger.warn(
+          `Failed to create ${this._marionetteActivePortPath} (${e.message})`
+        );
+      }
     });
   }
 
-  uninit() {
+  async uninit() {
     if (this.running) {
       this.server.stop();
       Services.obs.notifyObservers(this, NOTIFY_LISTENING);
       logger.debug("Marionette stopped listening");
+
+      try {
+        await IOUtils.remove(this._marionetteActivePortPath);
+      } catch (e) {
+        logger.warn(
+          `Failed to remove ${this._marionetteActivePortPath} (${e.message})`
+        );
+      }
     }
   }
 
