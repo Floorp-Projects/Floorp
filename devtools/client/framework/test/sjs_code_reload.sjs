@@ -13,12 +13,12 @@ function handleRequest(request, response) {
   response.setHeader("Access-Control-Allow-Origin", "*", false);
 
   // Redirect to a different file each time.
-  const counter = 1 + (+getState("counter") % 2);
+  let counter = 1 + (+getState("counter") % 2);
 
-  const index = request.path.lastIndexOf("/");
-  const newPath =
-    request.path.substr(0, index + 1) + "code_bundle_reload_" + counter + ".js";
-  const newUrl = request.scheme + "://" + request.host + newPath;
+  let index = request.path.lastIndexOf("/");
+  let newPath = request.path.substr(0, index + 1) +
+      "code_bundle_reload_" + counter + ".js";
+  let newUrl = request.scheme + "://" + request.host + newPath;
 
   response.setStatusLine(request.httpVersion, 302, "Found");
   response.setHeader("Location", newUrl);

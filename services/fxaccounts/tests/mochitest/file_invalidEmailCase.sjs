@@ -21,11 +21,9 @@
  */
 
 const CC = Components.Constructor;
-const BinaryInputStream = CC(
-  "@mozilla.org/binaryinputstream;1",
-  "nsIBinaryInputStream",
-  "setInputStream"
-);
+const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
+                             "nsIBinaryInputStream",
+                             "setInputStream");
 
 const goodEmail = "Greta.Garbo@gmail.COM";
 const badEmail = "greta.garbo@gmail.com";
@@ -79,3 +77,4 @@ function handleRequest(request, response) {
   messageStr = JSON.stringify(message);
   response.bodyOutputStream.write(messageStr, messageStr.length);
 }
+

@@ -25,12 +25,8 @@ function handleRequest(req, resp) {
 
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   resp.write(AUTOPLAY_HTML);
-  timer.init(
-    () => {
-      resp.write("");
-      resp.finish();
-    },
-    DELAY_MS,
-    Ci.nsITimer.TYPE_ONE_SHOT
-  );
+  timer.init(() => {
+    resp.write("");
+    resp.finish();
+  }, DELAY_MS, Ci.nsITimer.TYPE_ONE_SHOT);
 }

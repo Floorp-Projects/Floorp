@@ -1,14 +1,18 @@
-function handleRequest(request, response) {
-  var body = "loaded";
-  var origin = "localhost";
-  try {
-    var origin = request.getHeader("Origin");
-  } catch (e) {}
 
-  response.setHeader("Access-Control-Allow-Origin", origin, false);
-  response.setHeader("Access-Control-Allow-Credentials", "true", false);
-  response.setHeader("Access-Control-Allow-Methods", "XMETHOD", false);
-  response.setHeader("Connection", "Keep-alive", false);
+function handleRequest(request, response)
+{
+    var body = "loaded";
+    var origin = "localhost";
+    try {
+        var origin = request.getHeader("Origin");
+     } catch(e) {}
+    
+    response.setHeader("Access-Control-Allow-Origin",
+                        origin,
+                        false);
+    response.setHeader("Access-Control-Allow-Credentials", "true", false);
+    response.setHeader("Access-Control-Allow-Methods", "XMETHOD", false);
+    response.setHeader("Connection", "Keep-alive", false);
 
-  response.bodyOutputStream.write(body, body.length);
+    response.bodyOutputStream.write(body, body.length);
 }

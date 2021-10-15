@@ -1,4 +1,5 @@
-function handleRequest(request, response) {
+function handleRequest(request, response)
+{
   try {
     reallyHandleRequest(request, response);
   } catch (e) {
@@ -7,26 +8,24 @@ function handleRequest(request, response) {
   }
 }
 
+
 function reallyHandleRequest(request, response) {
-  let match;
-  let requestAuth = true;
+  var match;
+  var requestAuth = true;
 
   // XXX I bet this doesn't work for POST requests.
-  let query = request.queryString;
+  var query = request.queryString;
 
-  let user = null,
-    pass = null;
+  var user = null, pass = null;
   // user=xxx
   match = /user(?:name)?=([^&]*)/.exec(query);
-  if (match) {
+  if (match)
     user = match[1];
-  }
 
   // pass=xxx
   match = /pass(?:word)?=([^&]*)/.exec(query);
-  if (match) {
+  if (match)
     pass = match[1];
-  }
 
   response.setStatusLine("1.0", 200, "OK");
 
