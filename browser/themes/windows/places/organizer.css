@@ -43,7 +43,7 @@
     --organizer-outline-color: rgb(0,97,224);
 
     --organizer-separator-color: var(--organizer-pane-field-border-color);
-    --organizer-border-color: hsla(210,4%,10%,.14);
+    --organizer-border-color: ThreeDLightShadow;
 
     --organizer-toolbar-field-background: rgb(240,240,244);
     --organizer-toolbar-field-background-focused: Field;
@@ -65,8 +65,6 @@
       --organizer-hover-background: rgb(82,82,94);
       --organizer-selected-background: rgb(91,91,102);
       --organizer-outline-color: rgb(0,221,255);
-
-      --organizer-border-color: rgba(249,249,250,.1);
 
       --organizer-toolbar-field-background: rgb(28,27,34);
       --organizer-toolbar-field-background-focused: rgb(66,65,77);
@@ -225,24 +223,11 @@
 /* Tree */
 
 #contentView treecol {
-  appearance: none;
-  background-color: var(--organizer-toolbar-background);
-  color: var(--organizer-color);
-  border-inline-end: 1px solid var(--organizer-border-color);
   padding: 4px;
   /* Use box-shadow to draw a bottom border instead of border-bottom
    * because otherwise the items on contentView won't be perfectly
    * aligned with the items on the sidebar. */
   box-shadow: inset 0 -1px var(--organizer-border-color)
-}
-
-#contentView treecol:hover {
-  background-color: var(--organizer-hover-background);
-  color: var(--organizer-hover-color);
-}
-
-#contentView treecol:hover:active {
-  background-color: var(--organizer-selected-background);
 }
 
 tree {
