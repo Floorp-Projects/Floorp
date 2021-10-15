@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 
+import os
 import socket
 import time
 
@@ -31,6 +32,28 @@ class TestMarionette(MarionetteTestCase):
         start_time = time.time()
         self.assertRaises(socket.timeout, self.marionette.raise_for_port, timeout=5)
         self.assertLess(time.time() - start_time, 5)
+
+    @run_if_manage_instance("Only runnable if Marionette manages the instance")
+    def test_marionette_active_port_file(self):
+        active_port_file = os.path.join(
+            self.marionette.instance.profile.profile, "MarionetteActivePort"
+        )
+        self.assertTrue(
+            os.path.exists(active_port_file), "MarionetteActivePort file written"
+        )
+        with open(active_port_file, "r") as fp:
+            lines = fp.readlines()
+        self.assertEqual(len(lines), 1, "MarionetteActivePort file contains two lines")
+        self.assertEqual(
+            int(lines[0]),
+            self.marionette.port,
+            "MarionetteActivePort file contains port",
+        )
+
+        self.marionette.quit(in_app=True)
+        self.assertFalse(
+            os.path.exists(active_port_file), "MarionetteActivePort file removed"
+        )
 
     def test_single_active_session(self):
         self.assertEqual(1, self.marionette.execute_script("return 1"))
