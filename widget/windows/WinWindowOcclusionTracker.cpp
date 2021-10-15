@@ -342,11 +342,7 @@ RefPtr<WinWindowOcclusionTracker> WinWindowOcclusionTracker::Get() {
 /* static */
 void WinWindowOcclusionTracker::Start() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!sTracker);
-
-  if (!gfx::gfxConfig::IsEnabled(gfx::Feature::WINDOW_OCCLUSION)) {
-    return;
-  }
+  MOZ_RELEASE_ASSERT(!sTracker);
 
   LOG(LogLevel::Info, "WinWindowOcclusionTracker::Start()");
 
