@@ -109,9 +109,9 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">Descartar</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">Abas que você não vê há duas semanas são movidas para cá.</string>
+    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">Abas que você não abre há duas semanas são movidas para cá. Você pode</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">Desativar nas configurações</string>
+    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">desativar nas configurações</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
