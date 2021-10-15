@@ -110,22 +110,11 @@ nsLookAndFeel::nsLookAndFeel() {
     g_signal_connect_after(settings, setting.get(),
                            G_CALLBACK(settings_changed_cb), nullptr);
   }
-
-  Preferences::RegisterCallback(
-      FirefoxThemeChanged,
-      nsDependentCString(
-          StaticPrefs::GetPrefName_widget_color_scheme_follow_firefox_theme()),
-      this);
 }
 
 nsLookAndFeel::~nsLookAndFeel() {
   g_signal_handlers_disconnect_by_func(
       gtk_settings_get_default(), FuncToGpointer(settings_changed_cb), nullptr);
-  Preferences::UnregisterCallback(
-      FirefoxThemeChanged,
-      nsDependentCString(
-          StaticPrefs::GetPrefName_widget_color_scheme_follow_firefox_theme()),
-      this);
 }
 
 // Modifies color |*aDest| as if a pattern of color |aSource| was painted with
@@ -1329,10 +1318,6 @@ bool nsLookAndFeel::MatchFirefoxThemeIfNeeded() {
   AutoRestore<bool> restoreIgnoreSettings(sIgnoreChangedSettings);
   sIgnoreChangedSettings = true;
 
-  if (!StaticPrefs::widget_color_scheme_follow_firefox_theme()) {
-    return false;
-  }
-
   const bool matchesSystem =
       (ColorSchemeForChrome() == ColorScheme::Dark) == mSystemTheme.mIsDark;
   const bool usingSystem = !mSystemThemeOverridden;
@@ -1365,14 +1350,6 @@ bool nsLookAndFeel::MatchFirefoxThemeIfNeeded() {
     moz_gtk_refresh();
   }
   return true;
-}
-
-void nsLookAndFeel::FirefoxThemeChanged(const char*, void* aInstance) {
-  auto* lnf = static_cast<nsLookAndFeel*>(aInstance);
-  if (lnf->MatchFirefoxThemeIfNeeded()) {
-    LookAndFeel::NotifyChangedAllWindows(
-        widget::ThemeChangeKind::StyleAndLayout);
-  }
 }
 
 void nsLookAndFeel::GetGtkContentTheme(LookAndFeelTheme& aTheme) {

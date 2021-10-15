@@ -17450,19 +17450,18 @@ void Document::RemoveToplevelLoadingDocument(Document* aDoc) {
   }
 }
 
-StylePrefersColorScheme Document::PrefersColorScheme(
-    IgnoreRFP aIgnoreRFP) const {
+ColorScheme Document::PreferredColorScheme(IgnoreRFP aIgnoreRFP) const {
   if (aIgnoreRFP == IgnoreRFP::No &&
       nsContentUtils::ShouldResistFingerprinting(this)) {
-    return StylePrefersColorScheme::Light;
+    return ColorScheme::Light;
   }
 
   if (auto* bc = GetBrowsingContext()) {
     switch (bc->Top()->PrefersColorSchemeOverride()) {
       case dom::PrefersColorSchemeOverride::Dark:
-        return StylePrefersColorScheme::Dark;
+        return ColorScheme::Dark;
       case dom::PrefersColorSchemeOverride::Light:
-        return StylePrefersColorScheme::Light;
+        return ColorScheme::Light;
       case dom::PrefersColorSchemeOverride::None:
       case dom::PrefersColorSchemeOverride::EndGuard_:
         break;
@@ -17471,30 +17470,24 @@ StylePrefersColorScheme Document::PrefersColorScheme(
 
   if (nsPresContext* pc = GetPresContext()) {
     if (pc->IsPrintingOrPrintPreview()) {
-      return StylePrefersColorScheme::Light;
+      return ColorScheme::Light;
     }
   }
 
-  auto preferredColorScheme = [&] {
-    if (nsContentUtils::IsChromeDoc(this)) {
+  if (nsContentUtils::IsChromeDoc(this)) {
+    return LookAndFeel::SystemColorScheme();
+  }
+
+  switch (StaticPrefs::layout_css_prefers_color_scheme_content_override()) {
+    case 0:
+      return ColorScheme::Dark;
+    case 1:
+      return ColorScheme::Light;
+    case 2:
       return LookAndFeel::SystemColorScheme();
-    }
-
-    switch (StaticPrefs::layout_css_prefers_color_scheme_content_override()) {
-      case 0:
-        return ColorScheme::Dark;
-      case 1:
-        return ColorScheme::Light;
-      case 2:
-        return LookAndFeel::SystemColorScheme();
-      default:
-        return LookAndFeel::ColorSchemeForChrome();
-    }
-  }();
-
-  return preferredColorScheme == ColorScheme::Dark
-             ? StylePrefersColorScheme::Dark
-             : StylePrefersColorScheme::Light;
+    default:
+      return LookAndFeel::ColorSchemeForChrome();
+  }
 }
 
 bool Document::HasRecentlyStartedForegroundLoads() {
