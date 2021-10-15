@@ -21,7 +21,10 @@
 #include "GeckoProfiler.h"
 #include "nsIPowerManagerService.h"
 #ifdef MOZ_ENABLE_DBUS
+#  include <dbus/dbus-glib-lowlevel.h>
+#  include <gio/gio.h>
 #  include "WakeLockListener.h"
+#  include "nsIObserverService.h"
 #endif
 #include "gfxPlatform.h"
 #include "ScreenHelperGTK.h"
@@ -107,12 +110,110 @@ gboolean nsAppShell::EventProcessorCallback(GIOChannel* source,
 }
 
 nsAppShell::~nsAppShell() {
+  StopDBusListening();
+
   mozilla::hal::Shutdown();
 
   if (mTag) g_source_remove(mTag);
   if (mPipeFDs[0]) close(mPipeFDs[0]);
   if (mPipeFDs[1]) close(mPipeFDs[1]);
 }
+
+#ifdef MOZ_ENABLE_DBUS
+static void SessionSleepCallback(DBusGProxy* aProxy, gboolean aSuspend,
+                                 gpointer data) {
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+  if (!observerService) {
+    return;
+  }
+
+  if (aSuspend) {
+    // Post sleep_notification
+    observerService->NotifyObservers(nullptr, NS_WIDGET_SLEEP_OBSERVER_TOPIC,
+                                     nullptr);
+  } else {
+    // Post wake_notification
+    observerService->NotifyObservers(nullptr, NS_WIDGET_WAKE_OBSERVER_TOPIC,
+                                     nullptr);
+  }
+}
+
+static DBusHandlerResult ConnectionSignalFilter(DBusConnection* aConnection,
+                                                DBusMessage* aMessage,
+                                                void* aData) {
+  if (dbus_message_is_signal(aMessage, DBUS_INTERFACE_LOCAL, "Disconnected")) {
+    auto* appShell = static_cast<nsAppShell*>(aData);
+    appShell->StopDBusListening();
+    // We do not return DBUS_HANDLER_RESULT_HANDLED here because the connection
+    // might be shared and some other filters might want to do something.
+  }
+
+  return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+}
+
+// Based on
+// https://github.com/lcp/NetworkManager/blob/240f47c892b4e935a3e92fc09eb15163d1fa28d8/src/nm-sleep-monitor-systemd.c
+// Use login1 to signal sleep and wake notifications.
+void nsAppShell::StartDBusListening() {
+  GError* error = nullptr;
+  mDBusConnection = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
+  if (!mDBusConnection) {
+    NS_WARNING(nsPrintfCString("gds: Failed to open connection to bus %s\n",
+                               error->message)
+                   .get());
+    g_error_free(error);
+    return;
+  }
+
+  DBusConnection* dbusConnection =
+      dbus_g_connection_get_connection(mDBusConnection);
+
+  // Make sure we do not exit the entire program if DBus connection gets
+  // lost.
+  dbus_connection_set_exit_on_disconnect(dbusConnection, false);
+
+  // Listening to signals the DBus connection is going to get so we will
+  // know when it is lost and we will be able to disconnect cleanly.
+  dbus_connection_add_filter(dbusConnection, ConnectionSignalFilter, this,
+                             nullptr);
+
+  mLogin1Proxy = dbus_g_proxy_new_for_name(
+      mDBusConnection, "org.freedesktop.login1", "/org/freedesktop/login1",
+      "org.freedesktop.login1.Manager");
+
+  if (!mLogin1Proxy) {
+    NS_WARNING("gds: error-no dbus proxy\n");
+    return;
+  }
+
+  dbus_g_proxy_add_signal(mLogin1Proxy, "PrepareForSleep", G_TYPE_BOOLEAN,
+                          G_TYPE_INVALID);
+  dbus_g_proxy_connect_signal(mLogin1Proxy, "PrepareForSleep",
+                              G_CALLBACK(SessionSleepCallback), this, nullptr);
+}
+
+void nsAppShell::StopDBusListening() {
+  // If mDBusConnection isn't initialized, that means we are not really
+  // listening.
+  if (!mDBusConnection) {
+    return;
+  }
+  dbus_connection_remove_filter(
+      dbus_g_connection_get_connection(mDBusConnection), ConnectionSignalFilter,
+      this);
+
+  if (mLogin1Proxy) {
+    dbus_g_proxy_disconnect_signal(mLogin1Proxy, "PrepareForSleep",
+                                   G_CALLBACK(SessionSleepCallback), this);
+    g_object_unref(mLogin1Proxy);
+    mLogin1Proxy = nullptr;
+  }
+  dbus_g_connection_unref(mDBusConnection);
+  mDBusConnection = nullptr;
+}
+
+#endif
 
 nsresult nsAppShell::Init() {
   mozilla::hal::Init();
@@ -129,6 +230,8 @@ nsresult nsAppShell::Init() {
       NS_WARNING(
           "Failed to retrieve PowerManagerService, wakelocks will be broken!");
     }
+
+    StartDBusListening();
   }
 #endif
 
