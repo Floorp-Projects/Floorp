@@ -1,11 +1,12 @@
 const CC = Components.Constructor;
 
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
-                              "nsIBinaryInputStream",
-                              "setInputStream");
+const BinaryInputStream = CC(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
 
-function parseHeaders(data, start)
-{
+function parseHeaders(data, start) {
   let headers = {};
 
   while (true) {
@@ -17,20 +18,20 @@ function parseHeaders(data, start)
     }
     let line = data.substring(start, end);
     start = end + 2;
-    if (line == "")
+    if (line == "") {
       // empty line, we're done
       break;
+    }
 
     //XXX: this doesn't handle multi-line headers. do we care?
-    let [name, value] = line.split(':');
+    let [name, value] = line.split(":");
     //XXX: not normalized, should probably use nsHttpHeaders or something
     headers[name] = value.trimLeft();
   }
   return [headers, start];
 }
 
-function parseMultipartForm(request)
-{
+function parseMultipartForm(request) {
   let boundary = null;
   // See if this is a multipart/form-data request, and if so, find the
   // boundary string
@@ -48,8 +49,9 @@ function parseMultipartForm(request)
       }
     }
   }
-  if (boundary == null)
+  if (boundary == null) {
     return null;
+  }
 
   let body = new BinaryInputStream(request.bodyInputStream);
   let avail;
@@ -103,16 +105,18 @@ function parseMultipartForm(request)
     start = end + 2;
 
     if ("Content-Disposition" in headers) {
-      let bits = headers["Content-Disposition"].split(';');
-      if (bits[0] == 'form-data') {
+      let bits = headers["Content-Disposition"].split(";");
+      if (bits[0] == "form-data") {
         for (let i = 0; i < bits.length; i++) {
           let b = bits[i].trimLeft();
-          if (b.indexOf('name=') == 0) {
+          if (b.indexOf("name=") == 0) {
             //TODO: handle non-ascii here?
             let name = b.substring(6, b.length - 1);
             //TODO: handle multiple-value properties?
-            if (("Content-Type" in headers) &&
-                (headers["Content-Type"] == "application/json")) {
+            if (
+              "Content-Type" in headers &&
+              headers["Content-Type"] == "application/json"
+            ) {
               formData = Object.assign(formData, JSON.parse(part));
             } else {
               formData[name] = part;
@@ -127,56 +131,52 @@ function parseMultipartForm(request)
   return formData;
 }
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   if (request.method == "GET") {
     let id = null;
-    for (let p of request.queryString.split('&')) {
-      let [key, value] = p.split('=');
-      if (key == 'id')
+    for (let p of request.queryString.split("&")) {
+      let [key, value] = p.split("=");
+      if (key == "id") {
         id = value;
+      }
     }
     if (id == null) {
       response.setStatusLine(request.httpVersion, 400, "Bad Request");
       response.write("Missing id parameter");
-    }
-    else {
+    } else {
       let data = getState(id);
       if (data == "") {
         response.setStatusLine(request.httpVersion, 404, "Not Found");
         response.write("Not Found");
-      }
-      else {
+      } else {
         response.setHeader("Content-Type", "text/plain", false);
         response.write(data);
       }
     }
-  }
-  else if (request.method == "POST") {
+  } else if (request.method == "POST") {
     let formData = parseMultipartForm(request);
 
-    if (formData && 'upload_file_minidump' in formData) {
+    if (formData && "upload_file_minidump" in formData) {
       response.setHeader("Content-Type", "text/plain", false);
 
-      let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
-        .getService(Ci.nsIUUIDGenerator);
+      let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
+        Ci.nsIUUIDGenerator
+      );
       let uuid = uuidGenerator.generateUUID().toString();
       // ditch the {}, add bp- prefix
-      uuid = 'bp-' + uuid.substring(1,uuid.length-1);
+      uuid = "bp-" + uuid.substring(1, uuid.length - 1);
 
       let d = JSON.stringify(formData);
       //dump('saving crash report ' + uuid + ': ' + d + '\n');
       setState(uuid, d);
 
       response.write("CrashID=" + uuid + "\n");
-    }
-    else {
-      dump('*** crashreport.sjs: Malformed request?\n');
+    } else {
+      dump("*** crashreport.sjs: Malformed request?\n");
       response.setStatusLine(request.httpVersion, 400, "Bad Request");
       response.write("Missing minidump file");
     }
-  }
-  else {
+  } else {
     response.setStatusLine(request.httpVersion, 405, "Method not allowed");
     response.write("Can't handle HTTP method " + request.method);
   }

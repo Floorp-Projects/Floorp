@@ -14,11 +14,21 @@ const IFRAME_CONTENT =
   "</body>" +
   "</html>";
 
-const expectedQueries = [ "script", "style", "img", "iframe", "form", "xhr",
-                          "media", "object", "font", "img-redir", "nested-img"];
+const expectedQueries = [
+  "script",
+  "style",
+  "img",
+  "iframe",
+  "form",
+  "xhr",
+  "media",
+  "object",
+  "font",
+  "img-redir",
+  "nested-img",
+];
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
   var queryString = request.queryString;
@@ -50,7 +60,7 @@ function handleRequest(request, response)
   }
 
   // make sure all the requested queries are indeed https
-  queryString += (request.scheme == "https") ? "-ok" : "-error";
+  queryString += request.scheme == "https" ? "-ok" : "-error";
 
   var receivedQueries = getState("receivedQueries");
 
@@ -83,7 +93,7 @@ function handleRequest(request, response)
   // the iframe context in case of an error so we
   // can test both, using upgrade-insecure as well
   // as the base case of not using upgrade-insecure.
-  if ((queryString == "iframe-ok") || (queryString == "iframe-error")) {
+  if (queryString == "iframe-ok" || queryString == "iframe-error") {
     response.write(IFRAME_CONTENT);
   }
 

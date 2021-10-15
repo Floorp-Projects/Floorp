@@ -25,17 +25,16 @@ const HTML_BODY =
   "</html>";
 
 const META_CSP_BLOCK_IMG =
-  "<meta http-equiv=\"Content-Security-Policy\" content=\"img-src 'none'\">";
+  '<meta http-equiv="Content-Security-Policy" content="img-src \'none\'">';
 
 const META_CSP_ALLOW_IMG =
-  "<meta http-equiv=\"Content-Security-Policy\" content=\"img-src http://mochi.test:8888;\">";
+  '<meta http-equiv="Content-Security-Policy" content="img-src http://mochi.test:8888;">';
 
 const HEADER_CSP_BLOCK_IMG = "img-src 'none';";
 
 const HEADER_CSP_ALLOW_IMG = "img-src http://mochi.test:8888";
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
   response.setHeader("Content-Type", "text/html", false);
@@ -82,13 +81,17 @@ function handleRequest(request, response)
 
   if (queryString === "test7") {
     /* load image where meta1 allows but meta2 blocks */
-    response.write(HTML_HEAD + META_CSP_ALLOW_IMG + META_CSP_BLOCK_IMG + HTML_BODY);
+    response.write(
+      HTML_HEAD + META_CSP_ALLOW_IMG + META_CSP_BLOCK_IMG + HTML_BODY
+    );
     return;
   }
 
   if (queryString === "test8") {
     /* load image where meta1 allows and meta2 allows */
-    response.write(HTML_HEAD + META_CSP_ALLOW_IMG + META_CSP_ALLOW_IMG + HTML_BODY);
+    response.write(
+      HTML_HEAD + META_CSP_ALLOW_IMG + META_CSP_ALLOW_IMG + HTML_BODY
+    );
     return;
   }
 

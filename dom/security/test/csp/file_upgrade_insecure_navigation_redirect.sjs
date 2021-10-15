@@ -36,8 +36,10 @@ function handleRequest(request, response) {
     return;
   }
 
-  if (query === "finaldoc_same_origin_redirect" ||
-      query === "finaldoc_cross_origin_redirect") {
+  if (
+    query === "finaldoc_same_origin_redirect" ||
+    query === "finaldoc_cross_origin_redirect"
+  ) {
     response.write(FINAL_DOCUMENT);
     return;
   }

@@ -3,8 +3,7 @@
  * Bug 1280692 - navigator.sendBeacon() should not send origin header
  */
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   response.setHeader("Cache-Control", "no-cache", false);
   response.setHeader("Content-Type", "text/plain", false);
 
@@ -29,12 +28,10 @@ function handleRequest(request, response)
   var header = "reset";
   try {
     header = request.getHeader("origin");
-  }
-  catch(e) {
+  } catch (e) {
     header = "no-header";
   }
   setState("originHeader", header);
-
 
   // if there is an xhr-request waiting, return the header now.
   getObjectState("xhr-response", function(xhrResponse) {

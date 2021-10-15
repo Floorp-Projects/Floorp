@@ -5,7 +5,7 @@ function handleRequest(request, response) {
   }
 
   response.seizePower();
-  response.write("HTTP/1.1 200 OK\r\n")
+  response.write("HTTP/1.1 200 OK\r\n");
   var count = 10;
   response.write("Content-Length: " + body.length * count + "\r\n");
   response.write("Content-Type: text/plain; charset=utf-8\r\n");
@@ -16,5 +16,5 @@ function handleRequest(request, response) {
     response.write(body);
   }
 
-  throw Components.results.NS_BINDING_ABORTED;
+  throw Components.Exception("", Components.results.NS_BINDING_ABORTED);
 }

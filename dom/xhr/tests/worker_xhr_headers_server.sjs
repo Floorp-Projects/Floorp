@@ -9,7 +9,7 @@ function handleRequest(request, response) {
     case "POST":
       try {
         var optionsHost = request.getHeader("options-host");
-      } catch(e) { }
+      } catch (e) {}
 
       var headerFound = false;
       if (optionsHost) {
@@ -20,7 +20,7 @@ function handleRequest(request, response) {
 
       try {
         var emptyHeader = "nada" + request.getHeader("empty");
-      } catch(e) { }
+      } catch (e) {}
 
       if (emptyHeader && emptyHeader == "nada") {
         setState("emptyHeader", "nada");
@@ -28,16 +28,16 @@ function handleRequest(request, response) {
       }
       if (headerFound) {
         return;
-      } else {
-        break;
       }
+      break;
 
     case "OPTIONS":
       if (getState("optionsHost") == request.host) {
         try {
-          var optionsHeader =
-            request.getHeader("Access-Control-Request-Headers");
-        } catch(e) { }
+          var optionsHeader = request.getHeader(
+            "Access-Control-Request-Headers"
+          );
+        } catch (e) {}
         setState("optionsHeader", "'" + optionsHeader + "'");
       }
       break;
@@ -46,12 +46,15 @@ function handleRequest(request, response) {
       response.setHeader("Cache-Control", "no-cache", false);
       response.setHeader("Content-Type", "text/plain", false);
 
-      if (getState("postHost") == request.host &&
-          getState("emptyHeader") == "nada") {
+      if (
+        getState("postHost") == request.host &&
+        getState("emptyHeader") == "nada"
+      ) {
         var result = getState("optionsHeader");
         if (result) {
-          response.write("Success: expected OPTIONS request with " + result +
-                         " header");
+          response.write(
+            "Success: expected OPTIONS request with " + result + " header"
+          );
         } else if (getState("badGet") == 1) {
           response.write("Error: unexpected GET request");
         }
