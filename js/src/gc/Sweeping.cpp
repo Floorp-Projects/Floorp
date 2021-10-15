@@ -1257,6 +1257,19 @@ void GCRuntime::sweepUniqueIds() {
   }
 }
 
+void JS::Zone::sweepUniqueIds() {
+  SweepingTracer trc(runtimeFromAnyThread());
+  uniqueIds().traceWeak(&trc);
+}
+
+/* static */
+bool UniqueIdGCPolicy::traceWeak(JSTracer* trc, Cell** keyp, uint64_t* valuep) {
+  // Since this is only ever used for sweeping, we can optimize it for that
+  // case. (Compacting GC updates this table manually when it moves a cell.)
+  MOZ_ASSERT(trc->kind() == JS::TracerKind::Sweeping);
+  return (*keyp)->isMarkedAny();
+}
+
 void GCRuntime::sweepWeakRefs() {
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
     AutoSetThreadIsSweeping threadIsSweeping(zone);
