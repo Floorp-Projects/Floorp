@@ -1948,11 +1948,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Close all inactive tabs</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description" moz:removedIn="93" tools:ignore="UnusedResources">Tabs are available here for %s. After that time, tabs will be automatically closed.</string>
+    <string name="inactive_tabs_description" moz:removedIn="95" tools:ignore="UnusedResources">Tabs are available here for %s. After that time, tabs will be automatically closed.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days" moz:removedIn="93" tools:ignore="UnusedResources">30 days</string>
+    <string name="inactive_tabs_30_days" moz:removedIn="95" tools:ignore="UnusedResources">30 days</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days" moz:removedIn="93" tools:ignore="UnusedResources">1 week</string>
+    <string name="inactive_tabs_7_days" moz:removedIn="95" tools:ignore="UnusedResources">1 week</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
