@@ -10,7 +10,6 @@
 :root {
   --toolbar-field-border-color: hsla(240,5%,5%,.25);
   --toolbar-field-focus-border-color: var(--focus-outline-color);
-  --toolbar-field-icon-fill-attention: var(--lwt-toolbar-field-icon-fill-attention, var(--toolbarbutton-icon-fill-attention));
   --urlbar-container-padding: 1px;
 }
 
