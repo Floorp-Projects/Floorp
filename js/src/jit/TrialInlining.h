@@ -127,9 +127,9 @@ class MOZ_RAII TrialInliner {
   [[nodiscard]] bool maybeInlineCall(ICEntry& entry, ICFallbackStub* fallback,
                                      BytecodeLocation loc);
   [[nodiscard]] bool maybeInlineGetter(ICEntry& entry, ICFallbackStub* fallback,
-                                       BytecodeLocation loc);
+                                       BytecodeLocation loc, CacheKind kind);
   [[nodiscard]] bool maybeInlineSetter(ICEntry& entry, ICFallbackStub* fallback,
-                                       BytecodeLocation loc);
+                                       BytecodeLocation loc, CacheKind kind);
 
   static bool canInline(JSFunction* target, HandleScript caller,
                         BytecodeLocation loc);
