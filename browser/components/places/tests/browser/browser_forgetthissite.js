@@ -8,6 +8,10 @@
 const { PromptTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromptTestUtils.jsm"
 );
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { ForgetAboutSite } = ChromeUtils.import(
+  "resource://gre/modules/ForgetAboutSite.jsm"
+);
 
 const TEST_URIs = [
   { title: "0", uri: "http://example.com" },
@@ -17,6 +21,11 @@ const TEST_URIs = [
 ];
 
 async function setup() {
+  registerCleanupFunction(async function() {
+    // Clean up any leftover stubs.
+    sinon.restore();
+  });
+
   let places = [];
   let transition = PlacesUtils.history.TRANSITION_TYPED;
   TEST_URIs.forEach(({ title, uri }) =>
@@ -38,8 +47,16 @@ async function teardown(organizer) {
 async function testForgetAboutThisSite(
   sitesToSelect,
   shouldForget,
-  removedEntries
+  removedEntries,
+  cancelConfirmWithEsc = false
 ) {
+  if (cancelConfirmWithEsc) {
+    ok(
+      !shouldForget,
+      "If cancelConfirmWithEsc is set we don't expect to clear entries."
+    );
+  }
+
   ok(PlacesUtils, "checking PlacesUtils, running in chrome context?");
   await setup();
   let organizer = await promiseHistoryView();
@@ -95,25 +112,72 @@ async function testForgetAboutThisSite(
     await teardown(organizer);
     return;
   }
-  let promptPromise = PromptTestUtils.handleNextPrompt(
-    organizer,
-    { modalType: Services.prompt.MODAL_TYPE_WINDOW, promptType: "confirmEx" },
-    { buttonNumClick: shouldForget ? 1 : 0 }
-  );
-  let deletedPromise;
+
+  // Resolves once the confirmation prompt has been closed.
+  let promptPromise;
+
+  // Cancel prompt via esc key. We have to get the prompt closed promise
+  // ourselves.
+  if (cancelConfirmWithEsc) {
+    promptPromise = PromptTestUtils.waitForPrompt(organizer, {
+      modalType: Services.prompt.MODAL_TYPE_WINDOW,
+      promptType: "confirmEx",
+    }).then(dialog => {
+      let dialogWindow = dialog.ui.prompt;
+      let dialogClosedPromise = BrowserTestUtils.waitForEvent(
+        dialogWindow.opener,
+        "DOMModalDialogClosed"
+      );
+      EventUtils.synthesizeKey("KEY_Escape", undefined, dialogWindow);
+
+      return dialogClosedPromise;
+    });
+  } else {
+    // Close prompt via buttons. PromptTestUtils supplies the closed promise.
+    promptPromise = PromptTestUtils.handleNextPrompt(
+      organizer,
+      { modalType: Services.prompt.MODAL_TYPE_WINDOW, promptType: "confirmEx" },
+      { buttonNumClick: shouldForget ? 0 : 1 }
+    );
+  }
+
+  // If we cancel the prompt, create stubs to check that none of the clear
+  // methods are called.
+  if (!shouldForget) {
+    sinon.stub(ForgetAboutSite, "removeDataFromBaseDomain").resolves();
+    sinon.stub(ForgetAboutSite, "removeDataFromDomain").resolves();
+  }
+
+  let pageRemovedEventPromise;
   if (shouldForget) {
-    deletedPromise = PlacesTestUtils.waitForNotification(
+    pageRemovedEventPromise = PlacesTestUtils.waitForNotification(
       "page-removed",
       null,
       "places"
     );
   }
-  // Execute the delete command and check bookmark has been removed.
+
+  // Execute the delete command.
   contextmenu.activateItem(forgetThisSite);
+
+  // Wait for prompt to be handled.
   await promptPromise;
-  if (shouldForget) {
-    await deletedPromise;
+
+  // If we expect to remove items, wait the page-removed event to fire. If we
+  // don't wait, we may test the list before any items have been removed.
+  await pageRemovedEventPromise;
+
+  if (!shouldForget) {
+    ok(
+      ForgetAboutSite.removeDataFromBaseDomain.notCalled &&
+        ForgetAboutSite.removeDataFromDomain.notCalled,
+      "Should not call ForgetAboutSite when the confirmation prompt is cancelled."
+    );
+    // Remove the stubs.
+    sinon.restore();
   }
+
+  // Check that the entries have been removed.
   await Promise.all(
     removedEntries.map(async ({ uri }) => {
       Assert.ok(
@@ -190,4 +254,10 @@ add_task(async function forgettingIPAddress() {
 // This test makes sure that forgetting file URLs works
 add_task(async function dontAlwaysForget() {
   await testForgetAboutThisSite([0], false, []);
+});
+
+// When cancelling the confirmation prompt via ESC key, no entries should be
+// cleared.
+add_task(async function cancelConfirmWithEsc() {
+  await testForgetAboutThisSite([0], false, [], true);
 });
