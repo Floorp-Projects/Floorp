@@ -2613,13 +2613,15 @@ class PageCount extends PrintUIControlMixin(HTMLElement) {
       return;
     }
 
-    let sheetCount = this.sheetCount * this.numCopies;
+    let sheetCount = this.sheetCount;
 
     // When printing to a printer (not to a file) update
     // the sheet count to account for duplex printing.
     if (!this.printToFile && this.duplex != Ci.nsIPrintSettings.kDuplexNone) {
       sheetCount = Math.ceil(sheetCount / 2);
     }
+
+    sheetCount *= this.numCopies;
 
     document.l10n.setAttributes(this, "printui-sheets-count", {
       sheetCount,
