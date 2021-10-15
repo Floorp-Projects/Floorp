@@ -5,7 +5,7 @@ package org.mozilla.focus.screenshots
 
 import android.os.SystemClock
 import androidx.test.rule.ActivityTestRule
-import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.activity.MainActivity
@@ -15,16 +15,17 @@ import tools.fastlane.screengrab.Screengrab
 import tools.fastlane.screengrab.locale.LocaleTestRule
 
 class FirstRunScreenshots : ScreenshotTest() {
-    @Rule @JvmField
+    @Rule
+    @JvmField
     var mActivityTestRule: ActivityTestRule<MainActivity> =
         object : MainActivityFirstrunTestRule(true, true) {
         }
 
-    companion object {
-        @get: ClassRule
-        val localeTestRule = LocaleTestRule()
-    }
+    @Rule
+    @JvmField
+    val localeTestRule = LocaleTestRule()
 
+    @Ignore
     @Test
     fun takeScreenshotsOfFirstrun() {
         homeScreen {

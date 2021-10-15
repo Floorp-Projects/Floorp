@@ -70,8 +70,6 @@ class FirstRunDialogueTest {
 
         homeScreen {
             skipFirstRun()
-            verifyHomeScreenTipIsDisplayed(true)
-            // hide the keyboard to have a scrollable tips carousel
             closeSoftKeyboard()
             verifyHomeScreenTipIsDisplayed(true)
             scrollLeftTipsCarousel()
@@ -80,6 +78,7 @@ class FirstRunDialogueTest {
         searchScreen {
         }.loadPage(pageUrl) {
         }.clearBrowsingData {
+            closeSoftKeyboard()
             verifyHomeScreenTipIsDisplayed(true)
         }
     }

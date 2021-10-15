@@ -139,6 +139,16 @@ class BrowserRobot {
         mDevice.findObject(UiSelector().textContains("OK")).click()
     }
 
+    fun waitForSiteSecurityIconShown() {
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().resourceId(
+                    "$packageName:id/mozac_browser_toolbar_tracking_protection_indicator"
+                )
+            ).waitForExists(waitingTime)
+        )
+    }
+
     fun verifySiteSecurityIconShown(): ViewInteraction = securityIcon.check(matches(isDisplayed()))
 
     fun verifySiteSecurityIndicatorShown(): ViewInteraction = site_security_indicator.check(matches(isDisplayed()))
@@ -202,6 +212,13 @@ class BrowserRobot {
 
             ThreeDotMainMenuRobot().interact()
             return ThreeDotMainMenuRobot.Transition()
+        }
+
+        fun openSiteSettingsMenu(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            securityIcon.perform(click())
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
         }
     }
 }

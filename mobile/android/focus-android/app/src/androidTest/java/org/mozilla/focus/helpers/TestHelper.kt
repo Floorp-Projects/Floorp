@@ -39,7 +39,7 @@ import java.nio.charset.StandardCharsets
 object TestHelper {
     @JvmField
     var mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    const val waitingTime = DateUtils.SECOND_IN_MILLIS * 4
+    const val waitingTime = DateUtils.SECOND_IN_MILLIS * 15
     const val webPageLoadwaitingTime = DateUtils.SECOND_IN_MILLIS * 15
 
     @JvmStatic

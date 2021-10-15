@@ -9,6 +9,7 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiSelector
 import junit.framework.TestCase.assertFalse
 import org.junit.Assert.assertTrue
@@ -28,20 +29,19 @@ class HomeScreenRobot {
     fun skipFirstRun() = onView(withId(R.id.skip)).perform(click())
 
     fun verifyOnboardingFirstSlide() {
-        assertTrue(firstSlide.waitForExists(waitingTime))
+        firstSlide.check(matches(isDisplayed()))
     }
 
     fun verifyOnboardingSecondSlide() {
-        assertTrue(secondSlide.waitForExists(waitingTime))
+        secondSlide.check(matches(isDisplayed()))
     }
 
     fun verifyOnboardingThirdSlide() {
-        assertTrue(thirdSlide.waitForExists(waitingTime))
+        thirdSlide.check(matches(isDisplayed()))
     }
 
     fun verifyOnboardingLastSlide() {
-        assertTrue(lastSlide.waitForExists(waitingTime))
-        assertTrue(finishBtn.text == "OK, GOT IT!")
+        lastSlide.check(matches(isDisplayed()))
     }
 
     fun clickOnboardingNextBtn() = nextBtn.click()
@@ -58,7 +58,7 @@ class HomeScreenRobot {
 
     fun scrollLeftTipsCarousel() {
         assertTrue(homeScreenTips.isScrollable)
-        homeScreenTips.swipeLeft(2)
+        homeScreenTips.swipeLeft(4)
     }
 
     class Transition {
@@ -87,25 +87,13 @@ private val editURLBar =
 private val mainMenu = onView(withId(R.id.menuView))
 
 /********* First Run Locators  */
-private val firstSlide = mDevice.findObject(
-    UiSelector()
-        .text("Power up your privacy")
-)
+private val firstSlide = onView(withText(R.string.firstrun_defaultbrowser_title))
 
-private val secondSlide = mDevice.findObject(
-    UiSelector()
-        .text("Your search, your way")
-)
+private val secondSlide = onView(withText(R.string.firstrun_search_title))
 
-private val thirdSlide = mDevice.findObject(
-    UiSelector()
-        .text("Add shortcuts to your home screen")
-)
+private val thirdSlide = onView(withText(R.string.firstrun_shortcut_title))
 
-private val lastSlide = mDevice.findObject(
-    UiSelector()
-        .text("Make privacy a habit")
-)
+private val lastSlide = onView(withText(R.string.firstrun_privacy_title))
 
 private val nextBtn = mDevice.findObject(
     UiSelector()

@@ -14,6 +14,8 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiSelector
 import junit.framework.TestCase.assertTrue
 import org.hamcrest.Matchers.allOf
+import org.mozilla.focus.R
+import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
@@ -55,7 +57,7 @@ class ThreeDotMainMenuRobot {
 
     class Transition {
         fun openSettings(
-            localizedText: String = "Settings",
+            localizedText: String = getStringResource(R.string.menu_settings),
             interact: SettingsRobot.() -> Unit
         ): SettingsRobot.Transition {
             mDevice.findObject(UiSelector().text(localizedText)).waitForExists(waitingTime)
