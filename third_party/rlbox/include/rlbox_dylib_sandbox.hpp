@@ -8,28 +8,39 @@
 #endif
 #include <utility>
 
+#if defined(_WIN32)
+// Ensure the min/max macro in the header doesn't collide with functions in
+// std::
+#  ifndef NOMINMAX
+#    define NOMINMAX
+#  endif
+#  include <windows.h>
+#else
+#  include <dlfcn.h>
+#endif
+
 #include "rlbox_helpers.hpp"
 
 namespace rlbox {
 
-class rlbox_noop_sandbox;
+class rlbox_dylib_sandbox;
 
-struct rlbox_noop_sandbox_thread_data
+struct rlbox_dylib_sandbox_thread_data
 {
-  rlbox_noop_sandbox* sandbox;
+  rlbox_dylib_sandbox* sandbox;
   uint32_t last_callback_invoked;
 };
 
 #ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
 
-rlbox_noop_sandbox_thread_data* get_rlbox_noop_sandbox_thread_data();
-#  define RLBOX_NOOP_SANDBOX_STATIC_VARIABLES()                                \
-    thread_local rlbox::rlbox_noop_sandbox_thread_data                         \
-      rlbox_noop_sandbox_thread_info{ 0, 0 };                                  \
+rlbox_dylib_sandbox_thread_data* get_rlbox_dylib_sandbox_thread_data();
+#  define RLBOX_DYLIB_SANDBOX_STATIC_VARIABLES()                               \
+    thread_local rlbox::rlbox_dylib_sandbox_thread_data                        \
+      rlbox_dylib_sandbox_thread_info{ 0, 0 };                                 \
     namespace rlbox {                                                          \
-      rlbox_noop_sandbox_thread_data* get_rlbox_noop_sandbox_thread_data()     \
+      rlbox_dylib_sandbox_thread_data* get_rlbox_dylib_sandbox_thread_data()   \
       {                                                                        \
-        return &rlbox_noop_sandbox_thread_info;                                \
+        return &rlbox_dylib_sandbox_thread_info;                               \
       }                                                                        \
     }                                                                          \
     static_assert(true, "Enforce semi-colon")
@@ -41,7 +52,7 @@ rlbox_noop_sandbox_thread_data* get_rlbox_noop_sandbox_thread_data();
  * provide any isolation and only serves as a stepping stone towards migrating
  * an application to use the RLBox API.
  */
-class rlbox_noop_sandbox
+class rlbox_dylib_sandbox
 {
 public:
   // Stick with the system defaults
@@ -53,22 +64,27 @@ public:
   // no-op sandbox can transfer buffers as there is no sandboxings
   // Thus transfer is a noop
   using can_grant_deny_access = void;
+  // if this plugin uses a separate function to lookup internal callbacks
+  using needs_internal_lookup_symbol = void;
 
 private:
+  void* sandbox = nullptr;
+
   RLBOX_SHARED_LOCK(callback_mutex);
   static inline const uint32_t MAX_CALLBACKS = 64;
   void* callback_unique_keys[MAX_CALLBACKS]{ 0 };
   void* callbacks[MAX_CALLBACKS]{ 0 };
 
 #ifndef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
-  thread_local static inline rlbox_noop_sandbox_thread_data thread_data{ 0, 0 };
+  thread_local static inline rlbox_dylib_sandbox_thread_data thread_data{ 0,
+                                                                          0 };
 #endif
 
   template<uint32_t N, typename T_Ret, typename... T_Args>
   static T_Ret callback_trampoline(T_Args... params)
   {
 #ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
-    auto& thread_data = *get_rlbox_noop_sandbox_thread_data();
+    auto& thread_data = *get_rlbox_dylib_sandbox_thread_data();
 #endif
     thread_data.last_callback_invoked = N;
     using T_Func = T_Ret (*)(T_Args...);
@@ -84,9 +100,58 @@ private:
   }
 
 protected:
-  inline void impl_create_sandbox() {}
 
-  inline void impl_destroy_sandbox() {}
+  #if defined(_WIN32)
+  using path_buf = const LPCWSTR;
+  #else
+  using path_buf = const char*;
+  #endif
+
+  inline void impl_create_sandbox(path_buf path)
+  {
+#if defined(_WIN32)
+    sandbox = (void*)LoadLibraryW(path);
+#else
+    sandbox = dlopen(path, RTLD_LAZY | RTLD_LOCAL);
+#endif
+
+    if (!sandbox) {
+      std::string error_msg = "Could not load dynamic library: ";
+#if defined(_WIN32)
+      DWORD errorMessageID = GetLastError();
+      if (errorMessageID != 0) {
+        LPSTR messageBuffer = nullptr;
+        // The api creates the buffer that holds the message
+        size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                                       FORMAT_MESSAGE_FROM_SYSTEM |
+                                       FORMAT_MESSAGE_IGNORE_INSERTS,
+                                     NULL,
+                                     errorMessageID,
+                                     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                                     (LPSTR)&messageBuffer,
+                                     0,
+                                     NULL);
+        // Copy the error message into a std::string.
+        std::string message(messageBuffer, size);
+        error_msg += message;
+        LocalFree(messageBuffer);
+      }
+#else
+      error_msg += dlerror();
+#endif
+      detail::dynamic_check(false, error_msg.c_str());
+    }
+  }
+
+  inline void impl_destroy_sandbox()
+  {
+#if defined(_WIN32)
+    FreeLibrary((HMODULE)sandbox);
+#else
+    dlclose(sandbox);
+#endif
+    sandbox = nullptr;
+  }
 
   template<typename T>
   inline void* impl_get_unsandboxed_pointer(T_PointerType p) const
@@ -104,8 +169,8 @@ protected:
   static inline void* impl_get_unsandboxed_pointer_no_ctx(
     T_PointerType p,
     const void* /* example_unsandboxed_ptr */,
-    rlbox_noop_sandbox* (* // Func ptr
-                         /* param: expensive_sandbox_finder */)(
+    rlbox_dylib_sandbox* (* // Func ptr
+                          /* param: expensive_sandbox_finder */)(
       const void* example_unsandboxed_ptr))
   {
     return p;
@@ -115,8 +180,8 @@ protected:
   static inline T_PointerType impl_get_sandboxed_pointer_no_ctx(
     const void* p,
     const void* /* example_unsandboxed_ptr */,
-    rlbox_noop_sandbox* (* // Func ptr
-                         /* param: expensive_sandbox_finder */)(
+    rlbox_dylib_sandbox* (* // Func ptr
+                          /* param: expensive_sandbox_finder */)(
       const void* example_unsandboxed_ptr))
   {
     return const_cast<T_PointerType>(p);
@@ -145,38 +210,34 @@ protected:
 
   inline void* impl_get_memory_location()
   {
-    // There isn't any sandbox memory for the noop_sandbox as we just redirect
+    // There isn't any sandbox memory for the dylib_sandbox as we just redirect
     // to the app. Also, this is mostly used for pointer swizzling or sandbox
     // bounds checks which is also not present/not required. So we can just
     // return null
     return nullptr;
   }
 
-  // adding a template so that we can use static_assert to fire only if this
-  // function is invoked
-  template<typename T = void>
-  void* impl_lookup_symbol(const char* /* func_name */)
+  void* impl_lookup_symbol(const char* func_name)
   {
-    // Will fire if this impl_lookup_symbol is ever called for the static
-    // sandbox
-    constexpr bool fail = std::is_same_v<T, void>;
-    rlbox_detail_static_fail_because(
-      fail,
-      "The no_op_sandbox uses static calls and thus developers should add\n\n"
-      "#define RLBOX_USE_STATIC_CALLS() rlbox_noop_sandbox_lookup_symbol\n\n"
-      "to their code, to ensure that static calls are handled correctly.");
-
-    return nullptr;
+#if defined(_WIN32)
+    void* ret = GetProcAddress((HMODULE)sandbox, func_name);
+#else
+    void* ret = dlsym(sandbox, func_name);
+#endif
+    detail::dynamic_check(ret != nullptr, "Symbol not found");
+    return ret;
   }
 
-#define rlbox_noop_sandbox_lookup_symbol(func_name)                            \
-  reinterpret_cast<void*>(&func_name) /* NOLINT */
+  void* impl_internal_lookup_symbol(const char* func_name)
+  {
+    return impl_lookup_symbol(func_name);
+  }
 
   template<typename T, typename T_Converted, typename... T_Args>
   auto impl_invoke_with_func_ptr(T_Converted* func_ptr, T_Args&&... params)
   {
 #ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
-    auto& thread_data = *get_rlbox_noop_sandbox_thread_data();
+    auto& thread_data = *get_rlbox_dylib_sandbox_thread_data();
 #endif
     thread_data.sandbox = this;
     return (*func_ptr)(params...);
@@ -203,11 +264,11 @@ protected:
     return reinterpret_cast<T_PointerType>(chosen_trampoline);
   }
 
-  static inline std::pair<rlbox_noop_sandbox*, void*>
+  static inline std::pair<rlbox_dylib_sandbox*, void*>
   impl_get_executed_callback_sandbox_and_key()
   {
 #ifdef RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
-    auto& thread_data = *get_rlbox_noop_sandbox_thread_data();
+    auto& thread_data = *get_rlbox_dylib_sandbox_thread_data();
 #endif
     auto sandbox = thread_data.sandbox;
     auto callback_num = thread_data.last_callback_invoked;
