@@ -10186,6 +10186,7 @@ class MWasmLoadLaneSimd128
         laneIndex_(laneIndex),
         memoryBaseIndex_(memoryBaseIndex) {
     MOZ_ASSERT(!access_.isAtomic());
+    setGuard();
     setResultType(MIRType::Simd128);
   }
 
@@ -10246,6 +10247,7 @@ class MWasmStoreLaneSimd128 : public MVariadicInstruction,
         laneIndex_(laneIndex),
         memoryBaseIndex_(memoryBaseIndex) {
     MOZ_ASSERT(!access_.isAtomic());
+    setGuard();
     setResultType(MIRType::Simd128);
   }
 
