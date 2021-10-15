@@ -92,6 +92,7 @@ add_task(async function() {
   await performRequestsInContent([
     { url: "sjs_content-type-test-server.sjs?a=3&a=45&a=60" },
     { url: "sjs_content-type-test-server.sjs?x=5&a=3&a=4&a=3&b=3" },
+    { url: "sjs_content-type-test-server.sjs?x=5&a=3&a=4&a=3&query=3" },
   ]);
   await netWorkEvent;
 
@@ -117,6 +118,30 @@ add_task(async function() {
   ok(
     urlPreviewValue.endsWith("?x=5&a=3&a=4&a=3&b=3"),
     "The parameters in the url preview match."
+  );
+
+  urlPreview = waitForDOM(document, "#headers-panel .url-preview", 1);
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[2]
+  );
+
+  urlPreviewValue = (await urlPreview)[0].textContent;
+  ok(
+    urlPreviewValue.endsWith("?x=5&a=3&a=4&a=3&query=3"),
+    "The parameters in the url preview match."
+  );
+
+  // Expand preview
+  await toggleUrlPreview(true, document, monitor);
+
+  // Check if the expanded preview contains the "query" parameter
+  is(
+    document.querySelector(
+      "#headers-panel .url-preview tr#\\/GET\\/query\\/query .treeLabelCell"
+    ).textContent,
+    "query",
+    "Contains the query parameter"
   );
 
   return teardown(monitor);
