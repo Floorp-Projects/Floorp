@@ -122,7 +122,6 @@ pub fn strip_red_zone<T: Poke>(bytes: &mut Vec<u8>) {
     assert!(bytes.len() >= T::max_size());
     unsafe {
         let end_ptr = bytes.as_end_mut_ptr();
-        end_ptr.write_bytes(0, T::max_size());
         bytes.set_end_ptr(end_ptr.sub(T::max_size()));
     }
 }
