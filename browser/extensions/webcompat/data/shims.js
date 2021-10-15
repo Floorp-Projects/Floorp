@@ -484,6 +484,33 @@ const AVAILABLE_SHIMS = [
       "*://videos.vidible.tv/prod/*.ts*",
     ],
   },
+  {
+    id: "Kinja",
+    platform: "all",
+    name: "Kinja",
+    bug: "1656171",
+    contentScripts: [
+      {
+        js: "kinja.js",
+        matches: [
+          "*://www.avclub.com/*",
+          "*://deadspin.com/*",
+          "*://gizmodo.com/*",
+          "*://jalopnik.com/*",
+          "*://jezebel.com/*",
+          "*://kotaku.com/*",
+          "*://lifehacker.com/*",
+          "*://www.theonion.com/*",
+          "*://www.theroot.com/*",
+          "*://thetakeout.com/*",
+          "*://theinventory.com/*",
+        ],
+        runAt: "document_start",
+        allFrames: true,
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
 ];
 
 module.exports = AVAILABLE_SHIMS;
