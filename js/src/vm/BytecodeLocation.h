@@ -206,8 +206,10 @@ class BytecodeLocation {
   bool isInvokeOp() const { return IsInvokeOp(getOp()); }
 
   bool isGetPropOp() const { return IsGetPropOp(getOp()); }
+  bool isGetElemOp() const { return IsGetElemOp(getOp()); }
 
   bool isSetPropOp() const { return IsSetPropOp(getOp()); }
+  bool isSetElemOp() const { return IsSetElemOp(getOp()); }
 
   AsyncFunctionResolveKind getAsyncFunctionResolveKind() {
     return AsyncFunctionResolveKind(GET_UINT8(rawBytecode_));
