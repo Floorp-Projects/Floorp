@@ -9,10 +9,19 @@ UNIFIED_SOURCES = [
     "TestTouchResampler.cpp",
 ]
 
+if CONFIG["OS_ARCH"] == "WINNT":
+    UNIFIED_SOURCES += [
+        "MockWinWidget.cpp",
+        "TestWinWindowOcclusionTracker.cpp",
+        "TestWinWindowOcclusionTrackerInteractive.cpp",
+    ]
+
 FINAL_LIBRARY = "xul-gtest"
 
 LOCAL_INCLUDES += [
     "/widget",
 ]
+
+DisableStlWrapping()
 
 REQUIRES_UNIFIED_BUILD = True

@@ -124,6 +124,8 @@ class ScriptCounts {
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
+  bool traceWeak(JSTracer* trc) { return true; }
+
  private:
   friend class ::JSScript;
   friend struct ScriptAndCounts;
@@ -162,25 +164,28 @@ class ScriptCounts {
 // TODO: Clean this up by either aggregating coverage results in some other
 // way, or by tweaking sweep ordering.
 using UniqueScriptCounts = js::UniquePtr<ScriptCounts>;
-using ScriptCountsMap = HashMap<BaseScript*, UniqueScriptCounts,
-                                DefaultHasher<BaseScript*>, SystemAllocPolicy>;
+using ScriptCountsMap =
+    GCRekeyableHashMap<HeapPtr<BaseScript*>, UniqueScriptCounts,
+                       DefaultHasher<HeapPtr<BaseScript*>>, SystemAllocPolicy>;
 
 // The 'const char*' for the function name is a pointer within the LCovSource's
 // LifoAlloc and will be discarded at the same time.
 using ScriptLCovEntry = mozilla::Tuple<coverage::LCovSource*, const char*>;
-using ScriptLCovMap = HashMap<BaseScript*, ScriptLCovEntry,
-                              DefaultHasher<BaseScript*>, SystemAllocPolicy>;
+using ScriptLCovMap =
+    GCRekeyableHashMap<HeapPtr<BaseScript*>, ScriptLCovEntry,
+                       DefaultHasher<HeapPtr<BaseScript*>>, SystemAllocPolicy>;
 
 #ifdef MOZ_VTUNE
-using ScriptVTuneIdMap = HashMap<BaseScript*, uint32_t,
-                                 DefaultHasher<BaseScript*>, SystemAllocPolicy>;
+using ScriptVTuneIdMap =
+    GCRekeyableHashMap<HeapPtr<BaseScript*>, uint32_t,
+                       DefaultHasher<HeapPtr<BaseScript*>>, SystemAllocPolicy>;
 #endif
 #ifdef JS_CACHEIR_SPEW
 using ScriptFinalWarmUpCountEntry =
     mozilla::Tuple<uint32_t, SharedImmutableString>;
 using ScriptFinalWarmUpCountMap =
-    HashMap<BaseScript*, ScriptFinalWarmUpCountEntry,
-            DefaultHasher<BaseScript*>, SystemAllocPolicy>;
+    GCRekeyableHashMap<HeapPtr<BaseScript*>, ScriptFinalWarmUpCountEntry,
+                       DefaultHasher<HeapPtr<BaseScript*>>, SystemAllocPolicy>;
 #endif
 
 class ScriptSource;
@@ -2205,6 +2210,17 @@ void FillImmutableFlagsFromCompileOptionsForFunction(
 } /* namespace js */
 
 namespace JS {
+
+template <>
+struct GCPolicy<js::ScriptLCovEntry>
+    : public IgnoreGCPolicy<js::ScriptLCovEntry> {};
+
+#ifdef JS_CACHEIR_SPEW
+template <>
+struct GCPolicy<js::ScriptFinalWarmUpCountEntry>
+    : public IgnoreGCPolicy<js::ScriptFinalWarmUpCountEntry> {};
+#endif
+
 namespace ubi {
 
 template <>

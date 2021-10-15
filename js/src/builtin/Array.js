@@ -152,10 +152,6 @@ SetIsInlinableLargeFunction(ArraySome);
 // ES2018 draft rev 3bbc87cd1b9d3bf64c3e68ca2fe9c5a3f2c304c0
 // 22.1.3.25 Array.prototype.sort ( comparefn )
 function ArraySort(comparefn) {
-    return SortArray(this, comparefn);
-}
-
-function SortArray(obj, comparefn) {
     // Step 1.
     if (comparefn !== undefined) {
         if (!IsCallable(comparefn))
@@ -163,7 +159,7 @@ function SortArray(obj, comparefn) {
     }
 
     // Step 2.
-    var O = ToObject(obj);
+    var O = ToObject(this);
 
     // First try to sort the array in native code, if that fails, indicated by
     // returning |false| from ArrayNativeSort, sort it in self-hosted code.
@@ -1186,67 +1182,3 @@ function ArrayAt(index) {
 }
 // This function is only barely too long for normal inlining.
 SetIsInlinableLargeFunction(ArrayAt);
-
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-
-// https://github.com/tc39/proposal-change-array-by-copy
-// Array.prototype.withReversed()
-function ArrayWithReversed() {
-
-    /* Step 1. */
-    var O = ToObject(this);
-
-    /* Step 2. */
-    var len = ToLength(O.length);
-
-    /* Step 3. */
-    var A = std_Array(len);
-
-    /* Steps 4-5. */
-    for (var k = 0; k < len; k++) {
-        /* Step 5a. */
-        var from = len - k - 1;
-        /* Step 5b - not necessary. */
-        /* Step 5c. */
-        var fromValue = O[from];
-        /* Step 5d. */
-        DefineDataProperty(A, k, fromValue);
-    }
-
-    /* Step 6. */
-    return A;
-}
-
-// https://github.com/tc39/proposal-change-array-by-copy
-// Array.prototype.withSorted()
-function ArrayWithSorted(comparefn) {
-
-    /* Step 1. */
-
-    if (comparefn !== undefined && !IsCallable(comparefn)) {
-        ThrowTypeError(JSMSG_BAD_WITHSORTED_ARG);
-    }
-
-    /* Step 2. */
-    var O = ToObject(this);
-
-    /* Step 3. */
-    var len = ToLength(O.length);
-
-    /* Step 4. */
-    var items = std_Array(len);
-
-    /* Steps 5-6. */
-    for(var k = 0; k < len; k++) {
-        DefineDataProperty(items, k, O[k]);
-    }
-
-    /* Step 7. */
-    SortArray(items, comparefn);
-
-    /* Steps 8-10 unnecessary */
-    /* Step 11. */
-    return items;
-}
-
-#endif

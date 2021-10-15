@@ -505,7 +505,7 @@ license file's hash.
         subprocess.check_call([cargo, "update", "-p", "gkrust"], cwd=self.topsrcdir)
 
         output = subprocess.check_output(
-            [cargo, "vendor", vendor_dir], stderr=subprocess.STDOUT, cwd=self.topsrcdir
+            [cargo, "vendor", vendor_dir], cwd=self.topsrcdir
         ).decode("UTF-8")
 
         # Get the snippet of configuration that cargo vendor outputs, and

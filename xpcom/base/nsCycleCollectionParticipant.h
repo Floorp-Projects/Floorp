@@ -42,6 +42,85 @@
     }                                                \
   }
 
+namespace mozilla {
+enum class CCReason : uint8_t {
+  NO_REASON,
+
+  // Purple buffer "overflow": enough objects are suspected to be cycle
+  // collectable to trigger an immediate CC.
+  MANY_SUSPECTED,
+
+  // The previous collection was kCCForced ago, and there are at least
+  // kCCForcedPurpleLimit objects suspected of being cycle collectable.
+  TIMED,
+
+  // Run a CC after a GC has completed.
+  GC_FINISHED,
+
+  // Run a slice of a collection.
+  SLICE,
+
+  // Manual reasons are explicitly triggered with a custom listener (as opposed
+  // to exceeding some internal threshold.) If a CC is already in progress,
+  // continue it. Otherwise, start a new one.
+  FIRST_MANUAL_REASON = 128,
+
+  // We want to GC, but must finish any ongoing cycle collection first.
+  GC_WAITING = FIRST_MANUAL_REASON,
+
+  // CC requested via an API. Used by tests.
+  API,
+
+  // Collecting in order to dump the heap.
+  DUMP_HEAP,
+
+  // Low memory situation detected.
+  MEM_PRESSURE,
+
+  // IPC message to a content process to trigger a CC. The original reason is not
+  // tracked.
+  IPC_MESSAGE,
+
+  // Cycle collection on a worker. The triggering reason is not tracked.
+  WORKER,
+
+  // Used for finding leaks.
+  SHUTDOWN
+};
+
+#define FOR_EACH_CCREASON(MACRO) \
+  MACRO(NO_REASON)               \
+  MACRO(MANY_SUSPECTED)          \
+  MACRO(TIMED)                   \
+  MACRO(GC_FINISHED)             \
+  MACRO(SLICE)                   \
+  MACRO(GC_WAITING)              \
+  MACRO(API)                     \
+  MACRO(DUMP_HEAP)               \
+  MACRO(MEM_PRESSURE)            \
+  MACRO(IPC_MESSAGE)             \
+  MACRO(WORKER)                  \
+  MACRO(SHUTDOWN)
+
+static inline bool IsManualCCReason(CCReason reason) {
+  return reason >= CCReason::FIRST_MANUAL_REASON;
+}
+
+static inline const char* CCReasonToString(CCReason aReason) {
+  switch (aReason) {
+#define SET_REASON_STR(name) \
+  case CCReason::name:       \
+    return #name;            \
+    break;
+    FOR_EACH_CCREASON(SET_REASON_STR)
+#undef SET_REASON_STR
+  default:
+    return "<unknown-reason>";
+  }
+}
+
+}  // namespace mozilla
+
 /**
  * Just holds the IID so NS_GET_IID works.
  */

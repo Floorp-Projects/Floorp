@@ -1169,6 +1169,53 @@ void LIRGenerator::visitTypeOf(MTypeOf* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitTypeOfName(MTypeOfName* ins) {
+  MDefinition* input = ins->input();
+  MOZ_ASSERT(input->type() == MIRType::Int32);
+
+  auto* lir = new (alloc()) LTypeOfName(useRegister(input));
+  define(lir, ins);
+}
+
+void LIRGenerator::visitTypeOfIs(MTypeOfIs* ins) {
+  MDefinition* input = ins->input();
+
+  MOZ_ASSERT(input->type() == MIRType::Object ||
+             input->type() == MIRType::Value);
+
+  switch (ins->jstype()) {
+    case JSTYPE_UNDEFINED:
+    case JSTYPE_OBJECT:
+    case JSTYPE_FUNCTION: {
+      if (input->type() == MIRType::Object) {
+        auto* lir = new (alloc()) LTypeOfIsNonPrimitiveO(useRegister(input));
+        define(lir, ins);
+      } else {
+        auto* lir =
+            new (alloc()) LTypeOfIsNonPrimitiveV(useBox(input), tempToUnbox());
+        define(lir, ins);
+      }
+      return;
+    }
+
+    case JSTYPE_STRING:
+    case JSTYPE_NUMBER:
+    case JSTYPE_BOOLEAN:
+    case JSTYPE_SYMBOL:
+    case JSTYPE_BIGINT: {
+      MOZ_ASSERT(input->type() == MIRType::Value);
+
+      auto* lir = new (alloc()) LTypeOfIsPrimitive(useBoxAtStart(input));
+      define(lir, ins);
+      return;
+    }
+
+    case JSTYPE_LIMIT:
+      break;
+  }
+  MOZ_CRASH("Unhandled JSType");
+}
+
 void LIRGenerator::visitToAsyncIter(MToAsyncIter* ins) {
   LToAsyncIter* lir = new (alloc()) LToAsyncIter(
       useRegisterAtStart(ins->iterator()), useBoxAtStart(ins->nextMethod()));

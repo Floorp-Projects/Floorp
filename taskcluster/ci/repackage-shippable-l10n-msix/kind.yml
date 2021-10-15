@@ -48,7 +48,7 @@ job-template:
                     - repackage/base.py
                     - repackage/win64-aarch64_sfx_stub.py
                     - repackage/win64_signed.py
-    package-formats: [msix]
+    package-formats: [msix, msix-store]
     fetches:
         toolchain:
             - linux64-msix-packaging
@@ -63,7 +63,36 @@ job-template:
                 release.*: official
                 esr.*: official
                 default: nightly
+        identity-name:
+            by-package-format:
+                msix:
+                    by-release-type:
+                        nightly.*: MozillaFirefoxNightly
+                        beta.*:
+                            by-shipping-product:
+                                devedition: MozillaFirefoxDevedition
+                                default: MozillaFirefoxBeta
+                        release.*: MozillaFirefox
+                        esr.*: MozillaFirefox
+                        default: MozillaFirefoxNightly
+                msix-store:
+                    by-release-type:
+                        nightly.*: FirefoxNightly
+                        beta.*:
+                            by-shipping-product:
+                                devedition: FirefoxDevedition
+                                default: FirefoxBeta
+                        release.*: Firefox
+                        esr.*: Firefox
+                        default: FirefoxNightly
         publisher:
-            by-level:
-                "3": "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
-                default: "CN=Mozilla Fake SPC"
+            by-package-format:
+                msix:
+                    by-level:
+                        "3": "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
+                        default: "CN=Mozilla Fake SPC"
+                msix-store: "CN=082E9164-EE6C-4EC8-B62C-441FAE7BEFA1"
+        publisher-display-name:
+            by-package-format:
+                msix: "Mozilla Corporation"
+                msix-store: "Mozilla"

@@ -533,7 +533,7 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
       nsCycleCollectionNoteRootCallback& cb) override;
   void UnmarkSkippableJSHolders();
   void PrepareForForgetSkippable() override;
-  void BeginCycleCollectionCallback() override;
+  void BeginCycleCollectionCallback(mozilla::CCReason aReason) override;
   void EndCycleCollectionCallback(
       mozilla::CycleCollectorResults& aResults) override;
   void DispatchDeferredDeletion(bool aContinuation,

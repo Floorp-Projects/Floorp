@@ -983,9 +983,8 @@ class TreeMetadataEmitter(LoggingMixin):
                     "different value.",
                     context,
                 )
-            lib = SandboxedWasmLibrary(context, libname, real_name=wasm_lib)
+            lib = SandboxedWasmLibrary(context, wasm_lib)
             self._libs[libname].append(lib)
-            self._linkage.append((context, lib, "USE_LIBS"))
             wasm_linkables.append(lib)
             self._wasm_compile_dirs.add(context.objdir)
 

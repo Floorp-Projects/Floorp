@@ -161,9 +161,13 @@ def messages(jsmsg):
         match = re.match("MSG_DEF\((JSMSG_(\w+))", line)
         if match:
             defines.append("#define %s %i" % (match.group(1), len(defines)))
-        else:
-            # Make sure that MSG_DEF isn't preceded by whitespace
-            assert not line.strip().startswith("MSG_DEF")
+            continue
+
+        # Make sure that MSG_DEF isn't preceded by whitespace
+        assert not line.strip().startswith("MSG_DEF")
+
+        # This script doesn't support preprocessor
+        assert not line.strip().startswith("#")
     return "\n".join(defines)
 
 

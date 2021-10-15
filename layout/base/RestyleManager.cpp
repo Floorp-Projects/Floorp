@@ -37,6 +37,7 @@
 #include "Layers.h"
 #include "nsAnimationManager.h"
 #include "nsBlockFrame.h"
+#include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSRendering.h"
@@ -1256,6 +1257,77 @@ static inline bool CanSkipOverflowUpdates(const nsIFrame* aFrame) {
                                  NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
+static inline void MaybeDealWithScrollbarChange(nsStyleChangeData& aData,
+                                                nsPresContext* aPc) {
+  if (!(aData.mHint & nsChangeHint_ScrollbarChange)) {
+    return;
+  }
+  aData.mHint &= ~nsChangeHint_ScrollbarChange;
+
+  // Only bother with this if we're html/body, since:
+  //  (a) It'd be *expensive* to reframe these particular nodes.  They're
+  //      at the root, so reframing would mean rebuilding the world.
+  //  (b) It's often *unnecessary* to reframe for "overflow" changes on
+  //      these particular nodes.  In general, the only reason we reframe
+  //      for "overflow" changes is so we can construct (or destroy) a
+  //      scrollframe & scrollbars -- and the html/body nodes often don't
+  //      need their own scrollframe/scrollbars because they coopt the ones
+  //      on the viewport (which always exist). So depending on whether
+  //      that's happening, we can skip the reframe for these nodes.
+  if (aData.mContent->IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::html)) {
+    // If the restyled element provided/provides the scrollbar styles for
+    // the viewport before and/or after this restyle, AND it's not coopting
+    // that responsibility from some other element (which would need
+    // reconstruction to make its own scrollframe now), THEN: we don't need
+    // to reconstruct - we can just reflow, because no scrollframe is being
+    // added/removed.
+    nsIContent* prevOverrideNode =
+        aPc->GetViewportScrollStylesOverrideElement();
+    nsIContent* newOverrideNode = aPc->UpdateViewportScrollStylesOverride();
+
+    if (aData.mContent == prevOverrideNode ||
+        aData.mContent == newOverrideNode) {
+      // If we get here, the restyled element provided the scrollbar styles
+      // for viewport before this restyle, OR it will provide them after.
+      if (!prevOverrideNode || !newOverrideNode ||
+          prevOverrideNode == newOverrideNode) {
+        // If we get here, the restyled element is NOT replacing (or being
+        // replaced by) some other element as the viewport's
+        // scrollbar-styles provider. (If it were, we'd potentially need to
+        // reframe to create a dedicated scrollframe for whichever element
+        // is being booted from providing viewport scrollbar styles.)
+        //
+        // Under these conditions, we're OK to assume that this "overflow"
+        // change only impacts the root viewport's scrollframe, which
+        // already exists, so we can simply reflow instead of reframing.
+        if (nsIScrollableFrame* sf = do_QueryFrame(aData.mFrame)) {
+          sf->MarkScrollbarsDirtyForReflow();
+        } else if (nsIScrollableFrame* sf =
+                       aPc->PresShell()->GetRootScrollFrameAsScrollable()) {
+          sf->MarkScrollbarsDirtyForReflow();
+        }
+        aData.mHint |= nsChangeHint_ReflowHintsForScrollbarChange;
+        return;
+      }
+    }
+  }
+
+  if (nsIScrollableFrame* sf = do_QueryFrame(aData.mFrame)) {
+    if (aData.mFrame->StyleDisplay()->IsScrollableOverflow() &&
+        sf->HasAllNeededScrollbars()) {
+      sf->MarkScrollbarsDirtyForReflow();
+      // Once we've created scrollbars for a frame, don't bother reconstructing
+      // it just to remove them if we still need a scroll frame.
+      aData.mHint |= nsChangeHint_ReflowHintsForScrollbarChange;
+      return;
+    }
+  }
+
+  // Oh well, we couldn't optimize it out, just reconstruct frames for the
+  // subtree.
+  aData.mHint |= nsChangeHint_ReconstructFrame;
+}
+
 void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "Someone forgot a script blocker");
@@ -1305,61 +1377,10 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
   nsPresContext* presContext = PresContext();
   nsCSSFrameConstructor* frameConstructor = presContext->FrameConstructor();
 
-  // Handle nsChangeHint_ScrollbarChange, by either updating the
-  // scrollbars on the viewport, or upgrading the change hint to
-  // frame-reconstruct.
+  // Handle nsChangeHint_ScrollbarChange, by either updating the scrollbars on
+  // the viewport, or upgrading the change hint to frame-reconstruct.
   for (nsStyleChangeData& data : aChangeList) {
-    if (data.mHint & nsChangeHint_ScrollbarChange) {
-      data.mHint &= ~nsChangeHint_ScrollbarChange;
-      bool doReconstruct = true;  // assume the worst
-
-      // Only bother with this if we're html/body, since:
-      //  (a) It'd be *expensive* to reframe these particular nodes.  They're
-      //      at the root, so reframing would mean rebuilding the world.
-      //  (b) It's often *unnecessary* to reframe for "overflow" changes on
-      //      these particular nodes.  In general, the only reason we reframe
-      //      for "overflow" changes is so we can construct (or destroy) a
-      //      scrollframe & scrollbars -- and the html/body nodes often don't
-      //      need their own scrollframe/scrollbars because they coopt the ones
-      //      on the viewport (which always exist). So depending on whether
-      //      that's happening, we can skip the reframe for these nodes.
-      if (data.mContent->IsAnyOfHTMLElements(nsGkAtoms::body,
-                                             nsGkAtoms::html)) {
-        // If the restyled element provided/provides the scrollbar styles for
-        // the viewport before and/or after this restyle, AND it's not coopting
-        // that responsibility from some other element (which would need
-        // reconstruction to make its own scrollframe now), THEN: we don't need
-        // to reconstruct - we can just reflow, because no scrollframe is being
-        // added/removed.
-        nsIContent* prevOverrideNode =
-            presContext->GetViewportScrollStylesOverrideElement();
-        nsIContent* newOverrideNode =
-            presContext->UpdateViewportScrollStylesOverride();
-
-        if (data.mContent == prevOverrideNode ||
-            data.mContent == newOverrideNode) {
-          // If we get here, the restyled element provided the scrollbar styles
-          // for viewport before this restyle, OR it will provide them after.
-          if (!prevOverrideNode || !newOverrideNode ||
-              prevOverrideNode == newOverrideNode) {
-            // If we get here, the restyled element is NOT replacing (or being
-            // replaced by) some other element as the viewport's
-            // scrollbar-styles provider. (If it were, we'd potentially need to
-            // reframe to create a dedicated scrollframe for whichever element
-            // is being booted from providing viewport scrollbar styles.)
-            //
-            // Under these conditions, we're OK to assume that this "overflow"
-            // change only impacts the root viewport's scrollframe, which
-            // already exists, so we can simply reflow instead of reframing.
-            data.mHint |= nsChangeHint_ReflowHintsForScrollbarChange;
-            doReconstruct = false;
-          }
-        }
-      }
-      if (doReconstruct) {
-        data.mHint |= nsChangeHint_ReconstructFrame;
-      }
-    }
+    MaybeDealWithScrollbarChange(data, presContext);
   }
 
   bool didUpdateCursor = false;

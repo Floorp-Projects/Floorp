@@ -638,7 +638,6 @@ class RecursiveMakeBackend(MakeBackend):
 
         elif isinstance(obj, SandboxedWasmLibrary):
             self._process_sandboxed_wasm_library(obj, backend_file)
-            self._process_linked_libraries(obj, backend_file)
             self._no_skip["syms"].add(backend_file.relobjdir)
 
         elif isinstance(obj, HostLibrary):
@@ -1374,7 +1373,7 @@ class RecursiveMakeBackend(MakeBackend):
             backend_file.write("NO_EXPAND_LIBS := 1\n")
 
     def _process_sandboxed_wasm_library(self, libdef, backend_file):
-        backend_file.write("WASM_LIBRARY := %s\n" % libdef.lib_name)
+        backend_file.write("WASM_ARCHIVE := %s\n" % libdef.basename)
 
     def _process_rust_library(self, libdef, backend_file):
         backend_file.write_once(

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsClipboard.h"
-#include <ole2.h>
+
 #include <shlobj.h>
 #include <intshcut.h>
 
@@ -15,14 +15,16 @@
 #include <thread>
 #include <chrono>
 
+#include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_clipboard.h"
 #include "nsArrayUtils.h"
 #include "nsCOMPtr.h"
+#include "nsComponentManagerUtils.h"
 #include "nsDataObj.h"
 #include "nsString.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsIInputStream.h"
 #include "nsITransferable.h"
-#include "nsCOMPtr.h"
 #include "nsXPCOM.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -492,8 +494,8 @@ nsresult nsClipboard::GetGlobalData(HGLOBAL aHGBL, void** aData,
   nsresult result = NS_ERROR_FAILURE;
   if (aHGBL != nullptr) {
     LPSTR lpStr = (LPSTR)GlobalLock(aHGBL);
-    CheckedInt<uint32_t> allocSize =
-        CheckedInt<uint32_t>(GlobalSize(aHGBL)) + 3;
+    mozilla::CheckedInt<uint32_t> allocSize =
+        mozilla::CheckedInt<uint32_t>(GlobalSize(aHGBL)) + 3;
     if (!allocSize.isValid()) {
       return NS_ERROR_INVALID_ARG;
     }

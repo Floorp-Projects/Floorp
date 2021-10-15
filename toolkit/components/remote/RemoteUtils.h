@@ -7,11 +7,21 @@
 #define TOOLKIT_COMPONENTS_REMOTE_REMOTEUTILS_H_
 
 #include "nsString.h"
+#if defined XP_WIN
+#  include "WinUtils.h"
+#endif
 
 #if defined XP_WIN || defined XP_MACOSX
 static void BuildClassName(const char* aProgram, const char* aProfile,
                            nsString& aClassName) {
-  aClassName.AppendPrintf("Mozilla_%s_%s_RemoteWindow", aProgram, aProfile);
+  aClassName.AppendPrintf("Mozilla_%s", aProgram);
+#  if defined XP_WIN
+  nsString pfn = mozilla::widget::WinUtils::GetPackageFamilyName();
+  if (!pfn.IsEmpty()) {
+    aClassName.AppendPrintf("_%s", pfn.get());
+  }
+#  endif
+  aClassName.AppendPrintf("_%s_RemoteWindow", aProfile);
 }
 #endif
 

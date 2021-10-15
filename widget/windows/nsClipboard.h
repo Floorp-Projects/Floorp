@@ -9,6 +9,8 @@
 #include "nsBaseClipboard.h"
 #include "nsIObserver.h"
 #include "nsIURI.h"
+
+#include <ole2.h>
 #include <windows.h>
 
 class nsITransferable;
