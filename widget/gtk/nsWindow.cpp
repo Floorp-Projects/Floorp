@@ -5912,10 +5912,11 @@ void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
   GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mBounds.Size());
   GdkPoint topLeft = DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
 
-  LOG("nsWindow::NativeMoveResize [%p] %d,%d -> %d x %d\n", (void*)this,
-      topLeft.x, topLeft.y, size.width, size.height);
+  LOG("nsWindow::NativeMoveResize [%p] move %d resize %d to %d,%d -> %d x %d\n",
+      (void*)this, aMoved, aResized, topLeft.x, topLeft.y, size.width,
+      size.height);
 
-  if (!AreBoundsSane()) {
+  if (aResized && !AreBoundsSane()) {
     LOG("  bounds are insane, hidding the window");
     // We have been resized but to incorrect size.
     // If someone has set this so that the needs show flag is false
@@ -5948,8 +5949,12 @@ void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
   } else {
     if (mIsTopLevel) {
       // x and y give the position of the window manager frame top-left.
-      gtk_window_move(GTK_WINDOW(mShell), topLeft.x, topLeft.y);
-      gtk_window_resize(GTK_WINDOW(mShell), size.width, size.height);
+      if (aMoved) {
+        gtk_window_move(GTK_WINDOW(mShell), topLeft.x, topLeft.y);
+      }
+      if (aResized) {
+        gtk_window_resize(GTK_WINDOW(mShell), size.width, size.height);
+      }
     } else if (mContainer) {
       GtkAllocation allocation;
       allocation.x = topLeft.x;
@@ -5970,7 +5975,7 @@ void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
   }
 
   // Does it need to be shown because bounds were previously insane?
-  if (mNeedsShow && mIsShown) {
+  if (mNeedsShow && mIsShown && aResized) {
     NativeShow(true);
   }
 }
