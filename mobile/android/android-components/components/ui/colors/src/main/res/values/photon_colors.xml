@@ -68,11 +68,11 @@
 	<color name="photonRed10">#ffffbdc5</color>
 	<color name="photonRed20">#ffff9aa2</color>
 	<color name="photonRed30">#ffff848b</color>
-	<color name="photonRed50">#ffff6a75</color>
-	<color name="photonRed60">#ffff4f5e</color>
-	<color name="photonRed70">#ffe22850</color>
-	<color name="photonRed80">#ffc50042</color>
-	<color name="photonRed90">#ff810220</color>
+	<color name="photonRed50">#ffff4f5e</color>
+	<color name="photonRed60">#ffe22850</color>
+	<color name="photonRed70">#ffc50042</color>
+	<color name="photonRed80">#ff810220</color>
+	<color name="photonRed90">#ff440306</color>
 
 	<!-- Yellow -->
 	<color name="photonYellow05">#ffffffcc</color>
@@ -129,7 +129,7 @@
 	<color name="photonInk40">#ff2b2156</color>
 	<color name="photonInk50">#ff291d4f</color>
 	<color name="photonInk60">#ff271948</color>
-	<color name="photonInk70">#ff251541</color>
+	<color name="photonInk70">#ff241541</color>
 	<color name="photonInk80">#ff20123a</color>
 	<color name="photonInk90">#ff1d1133</color>
 

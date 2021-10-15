@@ -29,7 +29,7 @@ object PhotonColors {
 
     // Green is primarily used for positive / success / update status in user interface.
     val Green05 = Color(0xFFE3FFF3)
-    val Green10 = Color(0xFFD1FEEE)
+    val Green10 = Color(0xFFD1FFEE)
     val Green20 = Color(0xFFB3FFE3)
     val Green30 = Color(0xFF87FFD1)
     val Green40 = Color(0xFF54FFBD)
