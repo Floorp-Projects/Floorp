@@ -103,6 +103,7 @@ http://prefixexample.com:80
 # The first HTTPS location is used to generate the Common Name (CN) value of the
 # certificate's Issued To field.
 https://example.com:443                privileged
+https://www.example.com:443            privileged
 https://test1.example.com:443          privileged
 https://test2.example.com:443          privileged
 https://example.org:443                privileged
