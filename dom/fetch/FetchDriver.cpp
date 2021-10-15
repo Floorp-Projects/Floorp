@@ -808,8 +808,9 @@ nsresult FetchDriver::HttpFetch(
   if (!aPreferredAlternativeDataType.IsEmpty()) {
     nsCOMPtr<nsICacheInfoChannel> cic = do_QueryInterface(chan);
     if (cic) {
-      cic->PreferAlternativeDataType(aPreferredAlternativeDataType, ""_ns,
-                                     true);
+      cic->PreferAlternativeDataType(
+          aPreferredAlternativeDataType, ""_ns,
+          nsICacheInfoChannel::PreferredAlternativeDataDeliveryType::ASYNC);
       MOZ_ASSERT(!mAltDataListener);
       mAltDataListener = new AlternativeDataStreamListener(
           this, chan, aPreferredAlternativeDataType);
@@ -822,9 +823,11 @@ nsresult FetchDriver::HttpFetch(
     if (mRequest->GetIntegrity().IsEmpty()) {
       nsCOMPtr<nsICacheInfoChannel> cic = do_QueryInterface(chan);
       if (cic) {
-        cic->PreferAlternativeDataType(nsLiteralCString(WASM_ALT_DATA_TYPE_V1),
-                                       nsLiteralCString(WASM_CONTENT_TYPE),
-                                       false);
+        cic->PreferAlternativeDataType(
+            nsLiteralCString(WASM_ALT_DATA_TYPE_V1),
+            nsLiteralCString(WASM_CONTENT_TYPE),
+            nsICacheInfoChannel::PreferredAlternativeDataDeliveryType::
+                SERIALIZE);
       }
     }
 

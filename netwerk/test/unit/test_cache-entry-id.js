@@ -69,7 +69,11 @@ function fetch(preferredDataType = null) {
 
     if (preferredDataType) {
       var cc = chan.QueryInterface(Ci.nsICacheInfoChannel);
-      cc.preferAlternativeDataType(altContentType, "", true);
+      cc.preferAlternativeDataType(
+        altContentType,
+        "",
+        Ci.nsICacheInfoChannel.ASYNC
+      );
     }
 
     chan.asyncOpen(

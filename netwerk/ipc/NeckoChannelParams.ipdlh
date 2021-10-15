@@ -19,6 +19,7 @@ include ProtocolTypes;
 include "mozilla/dom/PropertyBagUtils.h";
 include "mozilla/dom/ReferrerInfoUtils.h";
 include "mozilla/ipc/URIUtils.h";
+include "mozilla/net/CacheInfoIPCTypes.h";
 include "mozilla/AntiTrackingIPCUtils.h";
 
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
@@ -29,6 +30,7 @@ using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 [RefCounted] using class nsIPropertyBag2 from "nsIPropertyBag2.h";
 [RefCounted] using class nsDOMNavigationTiming from "nsDOMNavigationTiming.h";
 using nsContentPolicyType from "nsIContentPolicy.h";
+using mozilla::net::PreferredAlternativeDataDeliveryTypeIPC from "nsICacheInfoChannel.h";
 using nsILoadInfo::CrossOriginEmbedderPolicy from "nsILoadInfo.h";
 using nsILoadInfo::StoragePermissionState from "nsILoadInfo.h";
 using class mozilla::dom::LoadingSessionHistoryInfo from "mozilla/dom/SessionHistoryEntry.h";
@@ -65,7 +67,7 @@ struct PreferredAlternativeDataTypeParams
 {
   nsCString type;
   nsCString contentType;
-  bool deliverAltData;
+  PreferredAlternativeDataDeliveryTypeIPC deliverAltData;
 };
 
 //-----------------------------------------------------------------------------
