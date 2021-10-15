@@ -10,12 +10,15 @@
 #include "nsCRT.h"
 #include "nsError.h"
 #include "nsIAsyncInputStream.h"
+#include "nsICloneableInputStream.h"
 #include "nsIHttpChannel.h"
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
+#include "js/BuildId.h"
 #include "mozilla/dom/Document.h"
 
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/Response.h"
@@ -162,6 +165,41 @@ nsresult FetchUtil::SetRequestReferrer(nsIPrincipal* aPrincipal, Document* aDoc,
   return NS_OK;
 }
 
+class StoreOptimizedEncodingRunnable final : public Runnable {
+  nsMainThreadPtrHandle<nsICacheInfoChannel> mCache;
+  JS::UniqueOptimizedEncodingBytes mBytes;
+
+ public:
+  StoreOptimizedEncodingRunnable(
+      nsMainThreadPtrHandle<nsICacheInfoChannel>&& aCache,
+      JS::UniqueOptimizedEncodingBytes&& aBytes)
+      : Runnable("StoreOptimizedEncodingRunnable"),
+        mCache(std::move(aCache)),
+        mBytes(std::move(aBytes)) {}
+
+  NS_IMETHOD Run() override {
+    nsresult rv;
+
+    nsCOMPtr<nsIAsyncOutputStream> stream;
+    rv = mCache->OpenAlternativeOutputStream(
+        FetchUtil::WasmAltDataType, mBytes->length(), getter_AddRefs(stream));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    auto closeStream = MakeScopeExit([&]() { stream->CloseWithStatus(rv); });
+
+    uint32_t written;
+    rv = stream->Write((char*)mBytes->begin(), mBytes->length(), &written);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    MOZ_RELEASE_ASSERT(mBytes->length() == written);
+    return NS_OK;
+  };
+};
+
 class WindowStreamOwner final : public nsIObserver,
                                 public nsSupportsWeakReference {
   // Read from any thread but only set/cleared on the main thread. The lifecycle
@@ -302,17 +340,25 @@ class WorkerStreamOwner final {
   RefPtr<WeakWorkerRef> mWorkerRef;
 };
 
-class JSStreamConsumer final : public nsIInputStreamCallback {
+class JSStreamConsumer final : public nsIInputStreamCallback,
+                               public JS::OptimizedEncodingListener {
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
   RefPtr<WindowStreamOwner> mWindowStreamOwner;
   RefPtr<WorkerStreamOwner> mWorkerStreamOwner;
+  nsMainThreadPtrHandle<nsICacheInfoChannel> mCache;
+  const bool mOptimizedEncoding;
+  Vector<uint8_t> mOptimizedEncodingBytes;
   JS::StreamConsumer* mConsumer;
   bool mConsumerAborted;
 
   JSStreamConsumer(already_AddRefed<WindowStreamOwner> aWindowStreamOwner,
-                   nsIGlobalObject* aGlobal, JS::StreamConsumer* aConsumer)
+                   nsIGlobalObject* aGlobal, JS::StreamConsumer* aConsumer,
+                   nsMainThreadPtrHandle<nsICacheInfoChannel>&& aCache,
+                   bool aOptimizedEncoding)
       : mOwningEventTarget(aGlobal->EventTargetFor(TaskCategory::Other)),
         mWindowStreamOwner(aWindowStreamOwner),
+        mCache(std::move(aCache)),
+        mOptimizedEncoding(aOptimizedEncoding),
         mConsumer(aConsumer),
         mConsumerAborted(false) {
     MOZ_DIAGNOSTIC_ASSERT(mWindowStreamOwner);
@@ -320,9 +366,13 @@ class JSStreamConsumer final : public nsIInputStreamCallback {
   }
 
   JSStreamConsumer(RefPtr<WorkerStreamOwner> aWorkerStreamOwner,
-                   nsIGlobalObject* aGlobal, JS::StreamConsumer* aConsumer)
+                   nsIGlobalObject* aGlobal, JS::StreamConsumer* aConsumer,
+                   nsMainThreadPtrHandle<nsICacheInfoChannel>&& aCache,
+                   bool aOptimizedEncoding)
       : mOwningEventTarget(aGlobal->EventTargetFor(TaskCategory::Other)),
         mWorkerStreamOwner(std::move(aWorkerStreamOwner)),
+        mCache(std::move(aCache)),
+        mOptimizedEncoding(aOptimizedEncoding),
         mConsumer(aConsumer),
         mConsumerAborted(false) {
     MOZ_DIAGNOSTIC_ASSERT(mWorkerStreamOwner);
@@ -352,11 +402,19 @@ class JSStreamConsumer final : public nsIInputStreamCallback {
     JSStreamConsumer* self = reinterpret_cast<JSStreamConsumer*>(aClosure);
     MOZ_DIAGNOSTIC_ASSERT(!self->mConsumerAborted);
 
-    // This callback can be called on any thread which is explicitly allowed by
-    // this particular JS API call.
-    if (!self->mConsumer->consumeChunk((const uint8_t*)aFromSegment, aCount)) {
-      self->mConsumerAborted = true;
-      return NS_ERROR_UNEXPECTED;
+    if (self->mOptimizedEncoding) {
+      if (!self->mOptimizedEncodingBytes.append((const uint8_t*)aFromSegment,
+                                                aCount)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+    } else {
+      // This callback can be called on any thread which is explicitly allowed
+      // by this particular JS API call.
+      if (!self->mConsumer->consumeChunk((const uint8_t*)aFromSegment,
+                                         aCount)) {
+        self->mConsumerAborted = true;
+        return NS_ERROR_UNEXPECTED;
+      }
     }
 
     *aWriteCount = aCount;
@@ -366,9 +424,10 @@ class JSStreamConsumer final : public nsIInputStreamCallback {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  static bool Start(nsCOMPtr<nsIInputStream>&& aStream,
-                    JS::StreamConsumer* aConsumer, nsIGlobalObject* aGlobal,
-                    WorkerPrivate* aMaybeWorker) {
+  static bool Start(nsCOMPtr<nsIInputStream> aStream, nsIGlobalObject* aGlobal,
+                    WorkerPrivate* aMaybeWorker, JS::StreamConsumer* aConsumer,
+                    nsMainThreadPtrHandle<nsICacheInfoChannel>&& aCache,
+                    bool aOptimizedEncoding) {
     nsCOMPtr<nsIAsyncInputStream> asyncStream;
     nsresult rv = NS_MakeAsyncNonBlockingInputStream(
         aStream.forget(), getter_AddRefs(asyncStream));
@@ -384,7 +443,8 @@ class JSStreamConsumer final : public nsIInputStreamCallback {
         return false;
       }
 
-      consumer = new JSStreamConsumer(std::move(owner), aGlobal, aConsumer);
+      consumer = new JSStreamConsumer(std::move(owner), aGlobal, aConsumer,
+                                      std::move(aCache), aOptimizedEncoding);
     } else {
       RefPtr<WindowStreamOwner> owner =
           WindowStreamOwner::Create(asyncStream, aGlobal);
@@ -392,7 +452,8 @@ class JSStreamConsumer final : public nsIInputStreamCallback {
         return false;
       }
 
-      consumer = new JSStreamConsumer(owner.forget(), aGlobal, aConsumer);
+      consumer = new JSStreamConsumer(owner.forget(), aGlobal, aConsumer,
+                                      std::move(aCache), aOptimizedEncoding);
     }
 
     // This AsyncWait() creates a ref-cycle between asyncStream and consumer:
@@ -421,7 +482,16 @@ class JSStreamConsumer final : public nsIInputStreamCallback {
     }
 
     if (rv == NS_BASE_STREAM_CLOSED) {
-      mConsumer->streamEnd();
+      if (mOptimizedEncoding) {
+        mConsumer->consumeOptimizedEncoding(mOptimizedEncodingBytes.begin(),
+                                            mOptimizedEncodingBytes.length());
+      } else {
+        // If there is cache entry associated with this stream, then listen for
+        // an optimized encoding so we can store it in the alt data. By JS API
+        // contract, the compilation process will hold a refcount to 'this'
+        // until it's done, optionally calling storeOptimizedEncoding().
+        mConsumer->streamEnd(mCache ? this : nullptr);
+      }
       return NS_OK;
     }
 
@@ -450,9 +520,41 @@ class JSStreamConsumer final : public nsIInputStreamCallback {
 
     return NS_OK;
   }
+
+  // JS::OptimizedEncodingListener
+
+  void storeOptimizedEncoding(JS::UniqueOptimizedEncodingBytes bytes) override {
+    MOZ_ASSERT(mCache, "we only listen if there's a cache entry");
+
+    NS_DispatchToMainThread(new StoreOptimizedEncodingRunnable(
+        std::move(mCache), std::move(bytes)));
+  }
 };
 
 NS_IMPL_ISUPPORTS(JSStreamConsumer, nsIInputStreamCallback)
+
+// static
+const nsCString FetchUtil::WasmAltDataType;
+
+// static
+void FetchUtil::InitWasmAltDataType() {
+  nsCString& type = const_cast<nsCString&>(WasmAltDataType);
+  MOZ_ASSERT(type.IsEmpty());
+
+  RunOnShutdown([]() {
+    // Avoid nsStringBuffer leak tests failures.
+    const_cast<nsCString&>(WasmAltDataType).Truncate();
+  });
+
+  type.Append(nsLiteralCString("wasm-"));
+
+  JS::BuildIdCharVector buildId;
+  if (!JS::GetOptimizedEncodingBuildId(&buildId)) {
+    MOZ_CRASH("build id oom");
+  }
+
+  type.Append(buildId.begin(), buildId.length());
+}
 
 static bool ThrowException(JSContext* aCx, unsigned errorNumber) {
   JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr, errorNumber);
@@ -464,6 +566,7 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::HandleObject aObj,
                                    JS::MimeType aMimeType,
                                    JS::StreamConsumer* aConsumer,
                                    WorkerPrivate* aMaybeWorker) {
+  MOZ_ASSERT(!WasmAltDataType.IsEmpty());
   MOZ_ASSERT(!aMaybeWorker == NS_IsMainThread());
 
   RefPtr<Response> response;
@@ -529,12 +632,46 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::HandleObject aObj,
     return ThrowException(aCx, JSMSG_OUT_OF_MEMORY);
   }
 
-  nsCOMPtr<nsIInputStream> body;
-  ir->GetUnfilteredBody(getter_AddRefs(body));
-  if (!body) {
-    aConsumer->streamEnd();
-    return true;
+  nsCOMPtr<nsIInputStream> stream;
+
+  nsMainThreadPtrHandle<nsICacheInfoChannel> cache;
+  bool optimizedEncoding = false;
+  if (ir->HasCacheInfoChannel()) {
+    cache = ir->TakeCacheInfoChannel();
+
+    nsAutoCString altDataType;
+    if (NS_SUCCEEDED(cache->GetAlternativeDataType(altDataType)) &&
+        WasmAltDataType.Equals(altDataType)) {
+      optimizedEncoding = true;
+      rv = cache->GetAlternativeDataInputStream(getter_AddRefs(stream));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return ThrowException(aCx, JSMSG_OUT_OF_MEMORY);
+      }
+      if (ir->HasBeenCloned()) {
+        // If `Response` is cloned, clone alternative data stream instance.
+        // The cache entry does not clone automatically, and multiple
+        // JSStreamConsumer instances will collide during read if not cloned.
+        nsCOMPtr<nsICloneableInputStream> original = do_QueryInterface(stream);
+        if (NS_WARN_IF(!original)) {
+          return ThrowException(aCx, JSMSG_OUT_OF_MEMORY);
+        }
+        rv = original->Clone(getter_AddRefs(stream));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return ThrowException(aCx, JSMSG_OUT_OF_MEMORY);
+        }
+      }
+    }
   }
+
+  if (!optimizedEncoding) {
+    ir->GetUnfilteredBody(getter_AddRefs(stream));
+    if (!stream) {
+      aConsumer->streamEnd();
+      return true;
+    }
+  }
+
+  MOZ_ASSERT(stream);
 
   IgnoredErrorResult error;
   response->SetBodyUsed(aCx, error);
@@ -544,8 +681,8 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::HandleObject aObj,
 
   nsIGlobalObject* global = xpc::NativeGlobal(js::UncheckedUnwrap(aObj));
 
-  if (!JSStreamConsumer::Start(std::move(body), aConsumer, global,
-                               aMaybeWorker)) {
+  if (!JSStreamConsumer::Start(stream, global, aMaybeWorker, aConsumer,
+                               std::move(cache), optimizedEncoding)) {
     return ThrowException(aCx, JSMSG_OUT_OF_MEMORY);
   }
 
