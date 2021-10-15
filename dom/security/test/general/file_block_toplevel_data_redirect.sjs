@@ -4,7 +4,8 @@
 var DATA_URI =
   "<body>toplevel data: URI navigations after redirect should be blocked</body>";
 
-function handleRequest(request, response) {
+function handleRequest(request, response)
+{
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 

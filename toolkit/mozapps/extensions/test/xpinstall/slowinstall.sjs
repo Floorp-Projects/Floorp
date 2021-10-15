@@ -1,8 +1,8 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
-const RELATIVE_PATH = "browser/toolkit/mozapps/extensions/test/xpinstall";
+const RELATIVE_PATH = "browser/toolkit/mozapps/extensions/test/xpinstall"
 const NOTIFICATION_TOPIC = "slowinstall-complete";
 
 /**
@@ -20,9 +20,8 @@ function parseQueryString(aQueryString) {
   var params = {};
   for (var i = 0, sz = paramArray.length; i < sz; i++) {
     var match = regex.exec(paramArray[i]);
-    if (!match) {
+    if (!match)
       throw "Bad parameter in queryString!  '" + paramArray[i] + "'";
-    }
     params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
   }
 
@@ -39,10 +38,9 @@ function handleRequest(aRequest, aResponse) {
 
   aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
 
-  var params = {};
-  if (aRequest.queryString) {
+  var params = { };
+  if (aRequest.queryString)
     params = parseQueryString(aRequest.queryString);
-  }
 
   if (params.file) {
     let xpiFile = "";
@@ -56,16 +54,16 @@ function handleRequest(aRequest, aResponse) {
         // nsIOutputStream so here we are.
         let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
         file.initWithPath(xpiFile);
-        let stream = Cc[
-          "@mozilla.org/network/file-input-stream;1"
-        ].createInstance(Ci.nsIFileInputStream);
+        let stream = Cc["@mozilla.org/network/file-input-stream;1"].
+                     createInstance(Ci.nsIFileInputStream);
         stream.init(file, -1, -1, stream.DEFER_OPEN + stream.CLOSE_ON_EOF);
 
         NetUtil.asyncCopy(stream, aResponse.bodyOutputStream, () => {
           LOG("Download complete");
           aResponse.finish();
         });
-      } catch (e) {
+      }
+      catch (e) {
         LOG("Exception " + e);
       }
     }
@@ -76,7 +74,7 @@ function handleRequest(aRequest, aResponse) {
         resolve();
       }
 
-      Services.obs.addObserver(complete, NOTIFICATION_TOPIC);
+      Services.obs.addObserver(complete, NOTIFICATION_TOPIC, false);
     });
 
     aResponse.processAsync();
@@ -93,10 +91,9 @@ function handleRequest(aRequest, aResponse) {
         waitForComplete.then(complete_download);
       });
     });
-  } else if (params.continue) {
-    dump(
-      "slowinstall.sjs: Received signal to complete all current downloads.\n"
-    );
-    Services.obs.notifyObservers(null, NOTIFICATION_TOPIC);
+  }
+  else if (params.continue) {
+    dump("slowinstall.sjs: Received signal to complete all current downloads.\n");
+    Services.obs.notifyObservers(null, NOTIFICATION_TOPIC, null);
   }
 }

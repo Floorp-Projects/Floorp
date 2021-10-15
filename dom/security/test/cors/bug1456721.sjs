@@ -1,3 +1,4 @@
+
 function handleRequest(request, response) {
   response.setHeader("Cache-Control", "no-cache", false);
   let queryStr = request.queryString;

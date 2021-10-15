@@ -1,4 +1,5 @@
-function handleRequest(request, response) {
+function handleRequest(request, response)
+{
   if (getState("reloaded") == "reloaded") {
     response.setHeader("Content-Type", "text/html", false);
     response.write("\u00FE\u00FF\u00E4");

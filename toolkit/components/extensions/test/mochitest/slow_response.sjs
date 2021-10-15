@@ -4,15 +4,11 @@
 
 /* eslint-disable no-unused-vars */
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 const DELAY = AppConstants.DEBUG ? 4000 : 800;
 
-let nsTimer = Components.Constructor(
-  "@mozilla.org/timer;1",
-  "nsITimer",
-  "initWithCallback"
-);
+let nsTimer = Components.Constructor("@mozilla.org/timer;1", "nsITimer", "initWithCallback");
 
 let timer;
 function delay() {
@@ -56,3 +52,4 @@ async function handleRequest(request, response) {
 
   response.finish();
 }
+

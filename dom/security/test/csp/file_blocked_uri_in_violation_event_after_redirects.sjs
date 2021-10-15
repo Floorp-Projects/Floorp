@@ -5,7 +5,8 @@
 let REDIRECT_302_URI =
   "http://test1.example.com/tests/dom/security/test/csp/file_blocked_uri_in_violation_event_after_redirects.sjs?test1b#ref1b";
 
-let JS_REDIRECT = `<html>
+let JS_REDIRECT =
+  `<html>
    <body>
    <script>
      var url= "http://test2.example.com/tests/dom/security/test/csp/file_blocked_uri_in_violation_event_after_redirects.sjs?test2b#ref2b";
@@ -14,7 +15,8 @@ let JS_REDIRECT = `<html>
    </body>
    </html>`;
 
-let LINK_CLICK_NAVIGATION = `<html>
+let LINK_CLICK_NAVIGATION =
+  `<html>
    <body>
    <a id="navlink" href="http://test3.example.com/tests/dom/security/test/csp/file_blocked_uri_in_violation_event_after_redirects.sjs?test3b#ref3b">click me</a>
    <script>
@@ -23,7 +25,8 @@ let LINK_CLICK_NAVIGATION = `<html>
    </body>
    </html>`;
 
-function handleRequest(request, response) {
+function handleRequest(request, response)
+{
   response.setHeader("Cache-Control", "no-cache", false);
 
   let query = request.queryString;

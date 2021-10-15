@@ -1,5 +1,4 @@
-var data =
-  '<!DOCTYPE HTML>\n\
+var data = '<!DOCTYPE HTML>\n\
 <html>\n\
 <head>\n\
 <script>\n\
@@ -85,7 +84,7 @@ function post(e, res) {\n\
   e.source.postMessage(JSON.stringify(res), "*");\n\
 }\n\
 function trimString(stringValue) {\n\
-  return stringValue.replace("/^s+|s+$/g","");\n\
+  return stringValue.replace("/^\s+|\s+$/g","");\n\
 };\n\
 \n\
 </script>\n\
@@ -93,9 +92,10 @@ function trimString(stringValue) {\n\
 <body>\n\
 Inner page\n\
 </body>\n\
-</html>';
+</html>'
 
-function handleRequest(request, response) {
+function handleRequest(request, response)
+{
   response.setStatusLine(null, 302, "Follow me");
   response.setHeader("Location", "data:text/html," + escape(data));
   response.setHeader("Content-Type", "text/plain");
