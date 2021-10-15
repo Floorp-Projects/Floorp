@@ -69,6 +69,9 @@ void URIUtils::ResetWithSource(Document* aNewDoc, nsINode* aSourceNode) {
   aNewDoc->Reset(channel, loadGroup);
   aNewDoc->SetPrincipals(sourcePrincipal, sourcePartitionedPrincipal);
   aNewDoc->SetBaseURI(sourceDoc->GetDocBaseURI());
+  aNewDoc->SetSandboxFlags(sourceDoc->GetSandboxFlags());
+  aNewDoc->SetReferrerInfo(sourceDoc->GetReferrerInfo());
+  aNewDoc->SetEmbedderPolicy(sourceDoc->GetEmbedderPolicy());
 
   // Inherit the csp if there is one
   nsCOMPtr<nsIContentSecurityPolicy> csp = sourceDoc->GetCsp();
