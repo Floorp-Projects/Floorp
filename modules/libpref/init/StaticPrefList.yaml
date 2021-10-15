@@ -11869,11 +11869,6 @@
   type: RelaxedAtomicBool
   value: true
   mirror: always
-
-- name: widget.macos.support-dark-appearance
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
 #endif
 
 # Whether to allow gtk dark themes in content.
