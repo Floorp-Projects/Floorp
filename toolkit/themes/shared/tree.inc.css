@@ -123,8 +123,8 @@ treecolpicker {
   padding: 0 4px;
 }
 
-treecol:hover,
-treecolpicker:hover {
+treecol:where(:hover),
+treecolpicker:where(:hover) {
   color: -moz-ColHeaderHoverText;
 }
 
