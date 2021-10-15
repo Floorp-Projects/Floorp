@@ -80,6 +80,9 @@ class WinWindowOcclusionTracker final
   }
 
  private:
+  friend class ::WinWindowOcclusionTrackerTest;
+  friend class ::WinWindowOcclusionTrackerInteractiveTest;
+
   explicit WinWindowOcclusionTracker(base::Thread* aThread);
 
   // This class computes the occlusion state of the tracked windows.
