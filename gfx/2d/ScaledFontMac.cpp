@@ -658,7 +658,9 @@ static CFDictionaryRef CreateVariationTagDictionaryOrNull(
 CGFontRef UnscaledFontMac::CreateCGFontWithVariations(
     CGFontRef aFont, CFArrayRef& aAxesCache, uint32_t aVariationCount,
     const FontVariation* aVariations) {
-  MOZ_ASSERT(aVariationCount > 0);
+  if (!aVariationCount) {
+    return nullptr;
+  }
   MOZ_ASSERT(aVariations);
 
   AutoRelease<CFDictionaryRef> varDict(CreateVariationDictionaryOrNull(
