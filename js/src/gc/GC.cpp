@@ -1982,8 +1982,6 @@ void GCRuntime::purgeRuntimeForMinorGC() {
   for (ZonesIter zone(this, SkipAtoms); !zone.done(); zone.next()) {
     zone->functionToStringCache().purge();
   }
-
-  rt->caches().purgeForMinorGC(rt);
 }
 
 void GCRuntime::purgeRuntime() {
