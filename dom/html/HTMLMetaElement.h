@@ -30,7 +30,7 @@ class HTMLMetaElement final : public nsGenericHTMLElement {
                                 nsIPrincipal* aSubjectPrincipal,
                                 bool aNotify) override;
 
-  void CreateAndDispatchEvent(Document&, const nsAString& aEventName);
+  void CreateAndDispatchEvent(Document* aDoc, const nsAString& aEventName);
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
@@ -62,11 +62,9 @@ class HTMLMetaElement final : public nsGenericHTMLElement {
   virtual ~HTMLMetaElement();
 
  private:
-  enum class FromChange : bool { No, Yes };
-  void MetaRemoved(Document& aDoc, const nsAttrValue& aName,
-                   FromChange aFromChange);
-  void MetaAddedOrChanged(Document& aDoc, const nsAttrValue& aName,
-                          FromChange aFromChange);
+  void SetMetaReferrer(Document* aDocument);
+  void ProcessViewportContent(Document* aDocument);
+  void DiscardViewportContent(Document* aDocument);
 };
 
 }  // namespace dom
