@@ -65,6 +65,8 @@ class GCHashMap : public js::HashMap<Key, Value, HashPolicy, AllocPolicy> {
   using Base = js::HashMap<Key, Value, HashPolicy, AllocPolicy>;
 
  public:
+  using SweepPolicy = MapSweepPolicy;
+
   explicit GCHashMap(AllocPolicy a = AllocPolicy()) : Base(std::move(a)) {}
   explicit GCHashMap(size_t length) : Base(length) {}
   GCHashMap(AllocPolicy a, size_t length) : Base(std::move(a), length) {}
