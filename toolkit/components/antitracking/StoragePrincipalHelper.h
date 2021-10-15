@@ -285,6 +285,12 @@ class StoragePrincipalHelper final {
                                PrincipalType aPrincipalType,
                                nsIPrincipal** aPrincipal);
 
+  // Check if we need to use the partitioned principal for the service worker of
+  // the given docShell. Please do not use this API unless you cannot get the
+  // foreign partitioned principal, e.g. creating the inital about:blank page.
+  static bool ShouldUsePartitionPrincipalForServiceWorker(
+      nsIDocShell* aDocShell);
+
   /**
    * Extract the right OriginAttributes from the channel's triggering
    * principal.
