@@ -964,15 +964,6 @@ int32_t LineBreaker::Next(const char16_t* aText, uint32_t aLen, uint32_t aPos) {
   return WordMove(aText, aLen, aPos, 1);
 }
 
-int32_t LineBreaker::Prev(const char16_t* aText, uint32_t aLen, uint32_t aPos) {
-  NS_ASSERTION(aText, "aText shouldn't be null");
-  NS_ASSERTION(aLen >= aPos && aPos > 0,
-               "Bad position passed to nsJISx4051LineBreaker::Prev");
-
-  int32_t prevPos = WordMove(aText, aLen, aPos, -1);
-  return prevPos > 0 ? prevPos : NS_LINEBREAKER_NEED_MORE_TEXT;
-}
-
 static bool SuppressBreakForKeepAll(uint32_t aPrev, uint32_t aCh) {
   auto affectedByKeepAll = [](uint8_t aLBClass) {
     switch (aLBClass) {

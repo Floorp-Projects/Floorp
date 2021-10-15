@@ -40,10 +40,6 @@ class LineBreaker {
   // NS_LINEBREAKER_NEED_MORE_TEXT.
   int32_t Next(const char16_t* aText, uint32_t aLen, uint32_t aPos);
 
-  // Bug 1733009: Please do not add new callers to Prev(). This method will be
-  // removed.
-  int32_t Prev(const char16_t* aText, uint32_t aLen, uint32_t aPos);
-
   // Call this on a word with whitespace at either end. We will apply JISx4051
   // rules to find breaks inside the word. aBreakBefore is set to the break-
   // before status of each character; aBreakBefore[0] will always be false
