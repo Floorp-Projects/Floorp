@@ -40,39 +40,47 @@ function initTestHandlers() {
 async function runTest() {
   initTestHandlers();
 
-  for (let page of Pages) {
-    await BrowserTestUtils.withNewTab(page, async function(aBrowser) {
-      await SpecialPowers.spawn(aBrowser, [], async () => {
-        let h = content.document.createElement("h1");
-        ok(h);
-        h.innerHTML = "My heading";
-        h.id = "my-heading";
-        content.document.body.append(h);
-        is(content.document.getElementById("my-heading"), h, "h exists");
-
-        let a = content.document.createElement("a");
-        ok(a);
-        a.innerHTML = "my link";
-        a.id = "my-link";
-        content.document.body.append(a);
-      });
-
-      await SpecialPowers.spawn(aBrowser, [], async () => {
-        let url = "test-proto://some-thing";
-
-        let a = content.document.getElementById("my-link");
-        ok(a);
-        a.href = url;
-        a.click();
-      });
-
-      await SpecialPowers.spawn(aBrowser, [], async () => {
-        ok(
-          content.document.getElementById("my-heading"),
-          "Page contents not erased"
-        );
-      });
+  for (let downloadPrefValue of [false, true]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.download.improvements_to_download_panel", downloadPrefValue],
+      ],
     });
+    for (let page of Pages) {
+      await BrowserTestUtils.withNewTab(page, async function(aBrowser) {
+        await SpecialPowers.spawn(aBrowser, [], async () => {
+          let h = content.document.createElement("h1");
+          ok(h);
+          h.innerHTML = "My heading";
+          h.id = "my-heading";
+          content.document.body.append(h);
+          is(content.document.getElementById("my-heading"), h, "h exists");
+
+          let a = content.document.createElement("a");
+          ok(a);
+          a.innerHTML = "my link";
+          a.id = "my-link";
+          content.document.body.append(a);
+        });
+
+        await SpecialPowers.spawn(aBrowser, [], async () => {
+          let url = "test-proto://some-thing";
+
+          let a = content.document.getElementById("my-link");
+          ok(a);
+          a.href = url;
+          a.click();
+        });
+
+        await SpecialPowers.spawn(aBrowser, [], async () => {
+          ok(
+            content.document.getElementById("my-heading"),
+            "Page contents not erased"
+          );
+        });
+      });
+    }
+    await SpecialPowers.popPrefEnv();
   }
 }
 
