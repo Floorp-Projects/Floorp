@@ -350,7 +350,7 @@ class TestAbsoluteSymlinkFile(TestWithTmpDir):
         self.assertEqual(link, source)
 
     def test_noop(self):
-        if not hasattr(os, "symlink"):
+        if not hasattr(os, "symlink") or sys.platform == "win32":
             return
 
         source = self.tmppath("source")

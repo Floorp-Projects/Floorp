@@ -1013,7 +1013,7 @@ class ConfigureSandbox(dict):
 
         def wrap(function):
             def wrapper(*args, **kwargs):
-                if kwargs.get("env") is None:
+                if kwargs.get("env") is None and self._environ:
                     kwargs["env"] = dict(self._environ)
 
                 return function(*args, **kwargs)
