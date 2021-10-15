@@ -1207,11 +1207,18 @@ void GCRuntime::sweepCCWrappers() {
   }
 }
 
-void GCRuntime::sweepMisc() {
+void GCRuntime::sweepRealmGlobals() {
   SweepingTracer trc(rt);
   for (SweepGroupRealmsIter r(this); !r.done(); r.next()) {
     AutoSetThreadIsSweeping threadIsSweeping(r->zone());
     r->traceWeakGlobalEdge(&trc);
+  }
+}
+
+void GCRuntime::sweepMisc() {
+  SweepingTracer trc(rt);
+  for (SweepGroupRealmsIter r(this); !r.done(); r.next()) {
+    AutoSetThreadIsSweeping threadIsSweeping(r->zone());
     r->traceWeakSavedStacks(&trc);
     r->traceWeakObjectRealm(&trc);
     r->traceWeakRegExps(&trc);
@@ -1417,6 +1424,28 @@ static void SweepAllWeakCachesOnMainThread(JSRuntime* rt) {
   });
 }
 
+void GCRuntime::sweepEmbeddingWeakPointers(JSFreeOp* fop) {
+  using namespace gcstats;
+
+  AutoLockStoreBuffer lock(&storeBuffer());
+
+  AutoPhase ap(stats(), PhaseKind::FINALIZE_START);
+  callFinalizeCallbacks(fop, JSFINALIZE_GROUP_PREPARE);
+  {
+    AutoPhase ap2(stats(), PhaseKind::WEAK_ZONES_CALLBACK);
+    callWeakPointerZonesCallbacks();
+  }
+  {
+    AutoPhase ap2(stats(), PhaseKind::WEAK_COMPARTMENT_CALLBACK);
+    for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
+      for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
+        callWeakPointerCompartmentCallbacks(comp);
+      }
+    }
+  }
+  callFinalizeCallbacks(fop, JSFINALIZE_GROUP_START);
+}
+
 IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
                                                        SliceBudget& budget) {
   /*
@@ -1454,26 +1483,6 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
   cellsToAssertNotGray.ref().clearAndFree();
 #endif
 
-  {
-    AutoLockStoreBuffer lock(&storeBuffer());
-
-    AutoPhase ap(stats(), PhaseKind::FINALIZE_START);
-    callFinalizeCallbacks(fop, JSFINALIZE_GROUP_PREPARE);
-    {
-      AutoPhase ap2(stats(), PhaseKind::WEAK_ZONES_CALLBACK);
-      callWeakPointerZonesCallbacks();
-    }
-    {
-      AutoPhase ap2(stats(), PhaseKind::WEAK_COMPARTMENT_CALLBACK);
-      for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
-        for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
-          callWeakPointerCompartmentCallbacks(comp);
-        }
-      }
-    }
-    callFinalizeCallbacks(fop, JSFINALIZE_GROUP_START);
-  }
-
   // Updating the atom marking bitmaps. This marks atoms referenced by
   // uncollected zones so cannot be done in parallel with the other sweeping
   // work below.
@@ -1484,7 +1493,13 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
 
   AutoSetThreadIsSweeping threadIsSweeping;
 
+  // This must happen before sweeping realm globals.
   sweepDebuggerOnMainThread(fop);
+
+  // This must happen before updating embedding weak pointers.
+  sweepRealmGlobals();
+
+  sweepEmbeddingWeakPointers(fop);
 
   {
     AutoLockHelperThreadState lock;

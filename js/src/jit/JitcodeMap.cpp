@@ -634,7 +634,7 @@ void JitcodeGlobalTable::traceWeak(JSRuntime* rt, JSTracer* trc) {
             "JitcodeGlobalTable::JitcodeGlobalEntry::jitcode_")) {
       e.removeFront();
     } else {
-      entry->sweepChildren(rt);
+      entry->traceWeak(trc);
     }
   }
 }
@@ -662,8 +662,9 @@ bool JitcodeGlobalEntry::BaselineEntry::trace(JSTracer* trc) {
   return false;
 }
 
-void JitcodeGlobalEntry::BaselineEntry::sweepChildren() {
-  MOZ_ALWAYS_FALSE(IsAboutToBeFinalizedUnbarriered(&script_));
+void JitcodeGlobalEntry::BaselineEntry::traceWeak(JSTracer* trc) {
+  MOZ_ALWAYS_TRUE(
+      TraceManuallyBarrieredWeakEdge(trc, &script_, "BaselineEntry::script_"));
 }
 
 bool JitcodeGlobalEntry::IonEntry::trace(JSTracer* trc) {
@@ -681,10 +682,11 @@ bool JitcodeGlobalEntry::IonEntry::trace(JSTracer* trc) {
   return tracedAny;
 }
 
-void JitcodeGlobalEntry::IonEntry::sweepChildren() {
+void JitcodeGlobalEntry::IonEntry::traceWeak(JSTracer* trc) {
   for (unsigned i = 0; i < numScripts(); i++) {
-    MOZ_ALWAYS_FALSE(
-        IsAboutToBeFinalizedUnbarriered(&sizedScriptList()->pairs[i].script));
+    JSScript** scriptp = &sizedScriptList()->pairs[i].script;
+    MOZ_ALWAYS_TRUE(
+        TraceManuallyBarrieredWeakEdge(trc, scriptp, "IonEntry script"));
   }
 }
 

@@ -12,6 +12,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/EnumeratedRange.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/Latin1.h"
 #include "mozilla/MathAlgorithms.h"
@@ -1504,40 +1505,36 @@ void CodeGenerator::testValueTruthyKernel(
   ScratchTagScope tag(masm, value);
   masm.splitTagForTest(value, tag);
 
-  const uint32_t NumTypes = 9;
-  const auto& defaultOrder = {
+  const std::initializer_list<JSValueType> defaultOrder = {
       JSVAL_TYPE_UNDEFINED, JSVAL_TYPE_NULL,   JSVAL_TYPE_BOOLEAN,
       JSVAL_TYPE_INT32,     JSVAL_TYPE_OBJECT, JSVAL_TYPE_STRING,
       JSVAL_TYPE_DOUBLE,    JSVAL_TYPE_SYMBOL, JSVAL_TYPE_BIGINT};
-  MOZ_ASSERT(defaultOrder.size() == NumTypes);
 
-  Vector<JSValueType, NumTypes, SystemAllocPolicy> remaining;
-  MOZ_ALWAYS_TRUE(remaining.reserve(defaultOrder.size()));
-  remaining.infallibleAppend(defaultOrder.begin(), defaultOrder.end());
-
-  uint32_t numRemaining = remaining.length();
+  mozilla::EnumSet<JSValueType, uint32_t> remaining(defaultOrder);
 
   // Generate tests for previously observed types first.
   // The TypeDataList is sorted by descending frequency.
   for (auto& observed : observedTypes) {
     JSValueType type = observed.type();
+    remaining -= type;
 
     testValueTruthyForType(type, tag, value, scratch1Reg, scratch2Reg, fr,
                            ifTruthy, ifFalsy, ool, /*skipTypeTest*/ false);
-    MOZ_ASSERT(std::count(remaining.begin(), remaining.end(), type) == 1);
-    remaining.eraseIfEqual(type);
-    numRemaining--;
   }
 
   // Generate tests for remaining types.
-  for (auto type : remaining) {
+  for (auto type : defaultOrder) {
+    if (!remaining.contains(type)) {
+      continue;
+    }
+    remaining -= type;
+
     // We don't need a type test for the last possible type.
-    bool skipTypeTest = numRemaining == 1;
+    bool skipTypeTest = remaining.isEmpty();
     testValueTruthyForType(type, tag, value, scratch1Reg, scratch2Reg, fr,
                            ifTruthy, ifFalsy, ool, skipTypeTest);
-    numRemaining--;
   }
-  MOZ_ASSERT(numRemaining == 0);
+  MOZ_ASSERT(remaining.isEmpty());
 
   // We fall through if the final test is truthy.
 }
@@ -12652,34 +12649,32 @@ class OutOfLineTypeOfV : public OutOfLineCodeBase<CodeGenerator> {
   LTypeOfV* ins() const { return ins_; }
 };
 
-void CodeGenerator::emitTypeOfName(JSValueType type, Register output) {
-  const JSAtomState& names = gen->runtime->names();
-
+void CodeGenerator::emitTypeOfJSType(JSValueType type, Register output) {
   switch (type) {
     case JSVAL_TYPE_OBJECT:
-      masm.movePtr(ImmGCPtr(names.object), output);
+      masm.move32(Imm32(JSTYPE_OBJECT), output);
       break;
     case JSVAL_TYPE_DOUBLE:
     case JSVAL_TYPE_INT32:
-      masm.movePtr(ImmGCPtr(names.number), output);
+      masm.move32(Imm32(JSTYPE_NUMBER), output);
       break;
     case JSVAL_TYPE_BOOLEAN:
-      masm.movePtr(ImmGCPtr(names.boolean), output);
+      masm.move32(Imm32(JSTYPE_BOOLEAN), output);
       break;
     case JSVAL_TYPE_UNDEFINED:
-      masm.movePtr(ImmGCPtr(names.undefined), output);
+      masm.move32(Imm32(JSTYPE_UNDEFINED), output);
       break;
     case JSVAL_TYPE_NULL:
-      masm.movePtr(ImmGCPtr(names.object), output);
+      masm.move32(Imm32(JSTYPE_OBJECT), output);
       break;
     case JSVAL_TYPE_STRING:
-      masm.movePtr(ImmGCPtr(names.string), output);
+      masm.move32(Imm32(JSTYPE_STRING), output);
       break;
     case JSVAL_TYPE_SYMBOL:
-      masm.movePtr(ImmGCPtr(names.symbol), output);
+      masm.move32(Imm32(JSTYPE_SYMBOL), output);
       break;
     case JSVAL_TYPE_BIGINT:
-      masm.movePtr(ImmGCPtr(names.bigint), output);
+      masm.move32(Imm32(JSTYPE_BIGINT), output);
       break;
     default:
       MOZ_CRASH("Unsupported JSValueType");
@@ -12705,7 +12700,7 @@ void CodeGenerator::emitTypeOfCheck(JSValueType type, Register tag,
       break;
   }
 
-  emitTypeOfName(type, output);
+  emitTypeOfJSType(type, output);
   masm.jump(done);
   masm.bind(&notMatch);
 }
@@ -12720,18 +12715,12 @@ void CodeGenerator::visitTypeOfV(LTypeOfV* lir) {
   auto* ool = new (alloc()) OutOfLineTypeOfV(lir);
   addOutOfLineCode(ool, lir->mir());
 
-  const uint32_t NumTypes = 8;
-  const auto& defaultOrder = {JSVAL_TYPE_OBJECT,    JSVAL_TYPE_DOUBLE,
-                              JSVAL_TYPE_UNDEFINED, JSVAL_TYPE_NULL,
-                              JSVAL_TYPE_BOOLEAN,   JSVAL_TYPE_STRING,
-                              JSVAL_TYPE_SYMBOL,    JSVAL_TYPE_BIGINT};
-  MOZ_ASSERT(defaultOrder.size() == NumTypes);
+  const std::initializer_list<JSValueType> defaultOrder = {
+      JSVAL_TYPE_OBJECT, JSVAL_TYPE_DOUBLE,  JSVAL_TYPE_UNDEFINED,
+      JSVAL_TYPE_NULL,   JSVAL_TYPE_BOOLEAN, JSVAL_TYPE_STRING,
+      JSVAL_TYPE_SYMBOL, JSVAL_TYPE_BIGINT};
 
-  Vector<JSValueType, NumTypes, SystemAllocPolicy> remaining;
-  MOZ_ALWAYS_TRUE(remaining.reserve(defaultOrder.size()));
-  remaining.infallibleAppend(defaultOrder.begin(), defaultOrder.end());
-
-  uint32_t numRemaining = remaining.length();
+  mozilla::EnumSet<JSValueType, uint32_t> remaining(defaultOrder);
 
   // Generate checks for previously observed types first.
   // The TypeDataList is sorted by descending frequency.
@@ -12743,28 +12732,32 @@ void CodeGenerator::visitTypeOfV(LTypeOfV* lir) {
       type = JSVAL_TYPE_DOUBLE;
     }
 
+    remaining -= type;
+
     emitTypeOfCheck(type, tag, output, &done, ool->entry());
-    MOZ_ASSERT(std::count(remaining.begin(), remaining.end(), type) == 1);
-    remaining.eraseIfEqual(type);
-    numRemaining--;
   }
 
   // Generate checks for remaining types.
-  for (auto type : remaining) {
-    if (numRemaining == 1) {
-      // We can skip the check for the last remaining type.
+  for (auto type : defaultOrder) {
+    if (!remaining.contains(type)) {
+      continue;
+    }
+    remaining -= type;
+
+    if (remaining.isEmpty() && type != JSVAL_TYPE_OBJECT) {
+      // We can skip the check for the last remaining type, unless the type is
+      // JSVAL_TYPE_OBJECT, which may have to go through the OOL path.
 #ifdef DEBUG
       emitTypeOfCheck(type, tag, output, &done, ool->entry());
       masm.assumeUnreachable("Unexpected Value type in visitTypeOfV");
 #else
-      emitTypeOfName(type, output);
+      emitTypeOfJSType(type, output);
 #endif
     } else {
       emitTypeOfCheck(type, tag, output, &done, ool->entry());
     }
-    numRemaining--;
   }
-  MOZ_ASSERT(numRemaining == 0);
+  MOZ_ASSERT(remaining.isEmpty());
 
   masm.bind(&done);
   masm.bind(ool->rejoin());
@@ -12772,34 +12765,30 @@ void CodeGenerator::visitTypeOfV(LTypeOfV* lir) {
 
 void CodeGenerator::emitTypeOfObject(Register obj, Register output,
                                      Label* done) {
-  const JSAtomState& names = gen->runtime->names();
-
   Label slowCheck, isObject, isCallable, isUndefined;
   masm.typeOfObject(obj, output, &slowCheck, &isObject, &isCallable,
                     &isUndefined);
 
   masm.bind(&isCallable);
-  masm.movePtr(ImmGCPtr(names.function), output);
+  masm.move32(Imm32(JSTYPE_FUNCTION), output);
   masm.jump(done);
 
   masm.bind(&isUndefined);
-  masm.movePtr(ImmGCPtr(names.undefined), output);
+  masm.move32(Imm32(JSTYPE_UNDEFINED), output);
   masm.jump(done);
 
   masm.bind(&isObject);
-  masm.movePtr(ImmGCPtr(names.object), output);
+  masm.move32(Imm32(JSTYPE_OBJECT), output);
   masm.jump(done);
 
   masm.bind(&slowCheck);
 
   saveVolatile(output);
-  using Fn = JSString* (*)(JSObject * obj, JSRuntime * rt);
+  using Fn = JSType (*)(JSObject*);
   masm.setupUnalignedABICall(output);
   masm.passABIArg(obj);
-  masm.movePtr(ImmPtr(gen->runtime), output);
-  masm.passABIArg(output);
-  masm.callWithABI<Fn, TypeOfObject>();
-  masm.storeCallPointerResult(output);
+  masm.callWithABI<Fn, js::TypeOfObject>();
+  masm.storeCallInt32Result(output);
   restoreVolatile(output);
 }
 
@@ -12822,6 +12811,229 @@ void CodeGenerator::visitTypeOfO(LTypeOfO* lir) {
   Label done;
   emitTypeOfObject(obj, output, &done);
   masm.bind(&done);
+}
+
+void CodeGenerator::visitTypeOfName(LTypeOfName* lir) {
+  Register input = ToRegister(lir->input());
+  Register output = ToRegister(lir->output());
+
+#ifdef DEBUG
+  Label ok;
+  masm.branch32(Assembler::Below, input, Imm32(JSTYPE_LIMIT), &ok);
+  masm.assumeUnreachable("bad JSType");
+  masm.bind(&ok);
+#endif
+
+  static_assert(JSTYPE_UNDEFINED == 0);
+
+  masm.movePtr(ImmPtr(&gen->runtime->names().undefined), output);
+  masm.loadPtr(BaseIndex(output, input, ScalePointer), output);
+}
+
+class OutOfLineTypeOfIsNonPrimitiveV : public OutOfLineCodeBase<CodeGenerator> {
+  LTypeOfIsNonPrimitiveV* ins_;
+
+ public:
+  explicit OutOfLineTypeOfIsNonPrimitiveV(LTypeOfIsNonPrimitiveV* ins)
+      : ins_(ins) {}
+
+  void accept(CodeGenerator* codegen) override {
+    codegen->visitOutOfLineTypeOfIsNonPrimitiveV(this);
+  }
+  auto* ins() const { return ins_; }
+};
+
+class OutOfLineTypeOfIsNonPrimitiveO : public OutOfLineCodeBase<CodeGenerator> {
+  LTypeOfIsNonPrimitiveO* ins_;
+
+ public:
+  explicit OutOfLineTypeOfIsNonPrimitiveO(LTypeOfIsNonPrimitiveO* ins)
+      : ins_(ins) {}
+
+  void accept(CodeGenerator* codegen) override {
+    codegen->visitOutOfLineTypeOfIsNonPrimitiveO(this);
+  }
+  auto* ins() const { return ins_; }
+};
+
+void CodeGenerator::emitTypeOfIsObjectOOL(MTypeOfIs* mir, Register obj,
+                                          Register output) {
+  saveVolatile(output);
+  using Fn = JSType (*)(JSObject*);
+  masm.setupUnalignedABICall(output);
+  masm.passABIArg(obj);
+  masm.callWithABI<Fn, js::TypeOfObject>();
+  masm.storeCallInt32Result(output);
+  restoreVolatile(output);
+
+  auto cond = JSOpToCondition(mir->jsop(), /* isSigned = */ false);
+  masm.cmp32Set(cond, output, Imm32(mir->jstype()), output);
+}
+
+void CodeGenerator::visitOutOfLineTypeOfIsNonPrimitiveV(
+    OutOfLineTypeOfIsNonPrimitiveV* ool) {
+  auto* ins = ool->ins();
+  ValueOperand input = ToValue(ins, LTypeOfIsNonPrimitiveV::InputIndex);
+  Register output = ToRegister(ins->output());
+  Register temp = ToTempUnboxRegister(ins->temp0());
+
+  Register obj = masm.extractObject(input, temp);
+
+  emitTypeOfIsObjectOOL(ins->mir(), obj, output);
+
+  masm.jump(ool->rejoin());
+}
+
+void CodeGenerator::visitOutOfLineTypeOfIsNonPrimitiveO(
+    OutOfLineTypeOfIsNonPrimitiveO* ool) {
+  auto* ins = ool->ins();
+  Register input = ToRegister(ins->input());
+  Register output = ToRegister(ins->output());
+
+  emitTypeOfIsObjectOOL(ins->mir(), input, output);
+
+  masm.jump(ool->rejoin());
+}
+
+void CodeGenerator::emitTypeOfIsObject(MTypeOfIs* mir, Register obj,
+                                       Register output, Label* success,
+                                       Label* fail, Label* slowCheck) {
+  Label* isObject = fail;
+  Label* isFunction = fail;
+  Label* isUndefined = fail;
+
+  switch (mir->jstype()) {
+    case JSTYPE_UNDEFINED:
+      isUndefined = success;
+      break;
+
+    case JSTYPE_OBJECT:
+      isObject = success;
+      break;
+
+    case JSTYPE_FUNCTION:
+      isFunction = success;
+      break;
+
+    case JSTYPE_STRING:
+    case JSTYPE_NUMBER:
+    case JSTYPE_BOOLEAN:
+    case JSTYPE_SYMBOL:
+    case JSTYPE_BIGINT:
+    case JSTYPE_LIMIT:
+      MOZ_CRASH("Primitive type");
+  }
+
+  masm.typeOfObject(obj, output, slowCheck, isObject, isFunction, isUndefined);
+
+  auto op = mir->jsop();
+
+  Label done;
+  masm.bind(fail);
+  masm.move32(Imm32(op == JSOp::Ne || op == JSOp::StrictNe), output);
+  masm.jump(&done);
+  masm.bind(success);
+  masm.move32(Imm32(op == JSOp::Eq || op == JSOp::StrictEq), output);
+  masm.bind(&done);
+}
+
+void CodeGenerator::visitTypeOfIsNonPrimitiveV(LTypeOfIsNonPrimitiveV* lir) {
+  ValueOperand input = ToValue(lir, LTypeOfIsNonPrimitiveV::InputIndex);
+  Register output = ToRegister(lir->output());
+  Register temp = ToTempUnboxRegister(lir->temp0());
+
+  auto* mir = lir->mir();
+
+  auto* ool = new (alloc()) OutOfLineTypeOfIsNonPrimitiveV(lir);
+  addOutOfLineCode(ool, mir);
+
+  Label success, fail;
+
+  switch (mir->jstype()) {
+    case JSTYPE_UNDEFINED: {
+      ScratchTagScope tag(masm, input);
+      masm.splitTagForTest(input, tag);
+
+      masm.branchTestUndefined(Assembler::Equal, tag, &success);
+      masm.branchTestObject(Assembler::NotEqual, tag, &fail);
+      break;
+    }
+
+    case JSTYPE_OBJECT: {
+      ScratchTagScope tag(masm, input);
+      masm.splitTagForTest(input, tag);
+
+      masm.branchTestNull(Assembler::Equal, tag, &success);
+      masm.branchTestObject(Assembler::NotEqual, tag, &fail);
+      break;
+    }
+
+    case JSTYPE_FUNCTION: {
+      masm.branchTestObject(Assembler::NotEqual, input, &fail);
+      break;
+    }
+
+    case JSTYPE_STRING:
+    case JSTYPE_NUMBER:
+    case JSTYPE_BOOLEAN:
+    case JSTYPE_SYMBOL:
+    case JSTYPE_BIGINT:
+    case JSTYPE_LIMIT:
+      MOZ_CRASH("Primitive type");
+  }
+
+  Register obj = masm.extractObject(input, temp);
+
+  emitTypeOfIsObject(mir, obj, output, &success, &fail, ool->entry());
+
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitTypeOfIsNonPrimitiveO(LTypeOfIsNonPrimitiveO* lir) {
+  Register input = ToRegister(lir->input());
+  Register output = ToRegister(lir->output());
+
+  auto* mir = lir->mir();
+
+  auto* ool = new (alloc()) OutOfLineTypeOfIsNonPrimitiveO(lir);
+  addOutOfLineCode(ool, mir);
+
+  Label success, fail;
+  emitTypeOfIsObject(mir, input, output, &success, &fail, ool->entry());
+
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitTypeOfIsPrimitive(LTypeOfIsPrimitive* lir) {
+  ValueOperand input = ToValue(lir, LTypeOfIsPrimitive::InputIndex);
+  Register output = ToRegister(lir->output());
+
+  auto* mir = lir->mir();
+  auto cond = JSOpToCondition(mir->jsop(), /* isSigned = */ false);
+
+  switch (mir->jstype()) {
+    case JSTYPE_STRING:
+      masm.testStringSet(cond, input, output);
+      break;
+    case JSTYPE_NUMBER:
+      masm.testNumberSet(cond, input, output);
+      break;
+    case JSTYPE_BOOLEAN:
+      masm.testBooleanSet(cond, input, output);
+      break;
+    case JSTYPE_SYMBOL:
+      masm.testSymbolSet(cond, input, output);
+      break;
+    case JSTYPE_BIGINT:
+      masm.testBigIntSet(cond, input, output);
+      break;
+
+    case JSTYPE_UNDEFINED:
+    case JSTYPE_OBJECT:
+    case JSTYPE_FUNCTION:
+    case JSTYPE_LIMIT:
+      MOZ_CRASH("Non-primitive type");
+  }
 }
 
 void CodeGenerator::visitToAsyncIter(LToAsyncIter* lir) {

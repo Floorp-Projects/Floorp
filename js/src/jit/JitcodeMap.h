@@ -287,7 +287,7 @@ class JitcodeGlobalEntry {
     uint64_t lookupRealmID(void* ptr) const;
 
     bool trace(JSTracer* trc);
-    void sweepChildren();
+    void traceWeak(JSTracer* trc);
   };
 
   struct BaselineEntry : public BaseEntry {
@@ -320,7 +320,7 @@ class JitcodeGlobalEntry {
     uint64_t lookupRealmID() const;
 
     bool trace(JSTracer* trc);
-    void sweepChildren();
+    void traceWeak(JSTracer* trc);
   };
 
   struct BaselineInterpreterEntry : public BaseEntry {
@@ -653,13 +653,13 @@ class JitcodeGlobalEntry {
     return tracedAny;
   }
 
-  void sweepChildren(JSRuntime* rt) {
+  void traceWeak(JSTracer* trc) {
     switch (kind()) {
       case Ion:
-        ionEntry().sweepChildren();
+        ionEntry().traceWeak(trc);
         break;
       case Baseline:
-        baselineEntry().sweepChildren();
+        baselineEntry().traceWeak(trc);
         break;
       case BaselineInterpreter:
       case Dummy:

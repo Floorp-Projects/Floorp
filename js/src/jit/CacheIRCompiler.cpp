@@ -5926,7 +5926,7 @@ bool CacheIRCompiler::emitLoadTypeOfObjectResult(ObjOperandId objId) {
     masm.passABIArg(obj);
     masm.movePtr(ImmPtr(cx_->runtime()), scratch);
     masm.passABIArg(scratch);
-    masm.callWithABI<Fn, TypeOfObject>();
+    masm.callWithABI<Fn, TypeOfNameObject>();
     masm.mov(ReturnReg, scratch);
 
     LiveRegisterSet ignore;

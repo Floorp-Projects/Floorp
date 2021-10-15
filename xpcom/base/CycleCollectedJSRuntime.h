@@ -305,7 +305,7 @@ class CycleCollectedJSRuntime {
       CycleCollectedJSContext::DeferredFinalizeType aType);
 
   virtual void PrepareForForgetSkippable() = 0;
-  virtual void BeginCycleCollectionCallback() = 0;
+  virtual void BeginCycleCollectionCallback(mozilla::CCReason aReason) = 0;
   virtual void EndCycleCollectionCallback(CycleCollectorResults& aResults) = 0;
   virtual void DispatchDeferredDeletion(bool aContinuation,
                                         bool aPurge = false) = 0;
