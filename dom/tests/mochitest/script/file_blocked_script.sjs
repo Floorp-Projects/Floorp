@@ -4,18 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function setGlobalState(data, key) {
-  x = {
-    data,
-    QueryInterface(iid) {
-      return this;
-    },
-  };
+function setGlobalState(data, key)
+{
+  x = { data: data, QueryInterface: function(iid) { return this } };
   x.wrappedJSObject = x;
   setObjectState(key, x);
 }
 
-function getGlobalState(key) {
+function getGlobalState(key)
+{
   var data;
   getObjectState(key, function(x) {
     data = x && x.wrappedJSObject.data;
@@ -23,7 +20,8 @@ function getGlobalState(key) {
   return data;
 }
 
-function finishBlockedRequest(request, response, query) {
+function finishBlockedRequest(request, response, query)
+{
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.setHeader("Cache-Control", "no-cache", false);
   response.setHeader("Content-Type", "application/javascript", false);
@@ -33,8 +31,9 @@ function finishBlockedRequest(request, response, query) {
   setGlobalState(undefined, query[1]);
 }
 
-function handleRequest(request, response) {
-  var query = request.queryString.split("&");
+function handleRequest(request, response)
+{
+  var query = request.queryString.split('&');
   switch (query[0]) {
     case "blocked":
       var alreadyUnblocked = getGlobalState(query[1]);

@@ -1,6 +1,7 @@
 "use strict";
 
 function handleRequest(request, response) {
+
   response.setHeader("Cache-Control", "no-cache", false);
   response.setHeader("Content-Type", "text/html", false);
 
@@ -12,11 +13,7 @@ function handleRequest(request, response) {
   }
 
   if (query === "csp") {
-    response.setHeader(
-      "content-security-policy",
-      "frame-ancestors 'none'",
-      false
-    );
+    response.setHeader("content-security-policy", "frame-ancestors 'none'", false);
     response.write("<html>csp test loaded</html>");
     return;
   }

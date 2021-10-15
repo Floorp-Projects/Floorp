@@ -2,11 +2,13 @@ Components.utils.importGlobalProperties(["URLSearchParams"]);
 
 const SJS = "http://mochi.test:8888/tests/dom/security/test/csp/worker.sjs";
 
-function createFetchWorker(url) {
-  return `fetch("${url}");`;
+function createFetchWorker(url)
+{
+    return `fetch("${url}");`;
 }
 
-function createXHRWorker(url) {
+function createXHRWorker(url)
+{
   return `
     try {
       var xhr = new XMLHttpRequest();
@@ -16,7 +18,8 @@ function createXHRWorker(url) {
   `;
 }
 
-function createImportScriptsWorker(url) {
+function createImportScriptsWorker(url)
+{
   return `
     try {
       importScripts("${url}");
@@ -24,12 +27,14 @@ function createImportScriptsWorker(url) {
   `;
 }
 
-function createChildWorkerURL(params) {
+function createChildWorkerURL(params)
+{
   let url = SJS + "?" + params.toString();
   return `new Worker("${url}");`;
 }
 
-function createChildWorkerBlob(params) {
+function createChildWorkerBlob(params)
+{
   let url = SJS + "?" + params.toString();
   return `
     try {
@@ -43,7 +48,8 @@ function createChildWorkerBlob(params) {
   `;
 }
 
-function handleRequest(request, response) {
+function handleRequest(request, response)
+{
   let params = new URLSearchParams(request.queryString);
 
   let id = params.get("id");
@@ -55,12 +61,8 @@ function handleRequest(request, response) {
   response.setHeader("Content-Type", "application/javascript");
 
   // Deliver the CSP policy encoded in the URL
-  if (params.has("csp")) {
-    response.setHeader(
-      "Content-Security-Policy",
-      unescape(params.get("csp")),
-      false
-    );
+  if(params.has("csp")) {
+    response.setHeader("Content-Security-Policy", unescape(params.get("csp")), false);
   }
 
   if (child) {

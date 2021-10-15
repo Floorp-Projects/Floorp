@@ -1,6 +1,7 @@
 "use strict";
 
-const TESTFRAME_QUERY_LARGE_ALLOCATION_WITH_NO_CSP = `<!DOCTYPE HTML>
+const TESTFRAME_QUERY_LARGE_ALLOCATION_WITH_NO_CSP =
+ `<!DOCTYPE HTML>
   <html>
   <head>
     <title>Bug 1555050 - Test CSP Navigation using ReloadInFreshProcess</title>
@@ -15,7 +16,8 @@ const TESTFRAME_QUERY_LARGE_ALLOCATION_WITH_NO_CSP = `<!DOCTYPE HTML>
   </body>
   </html>`;
 
-const TESTFRAME_QUERY_LARGE_ALLOCATION_WITH_CSP = `<!DOCTYPE HTML>
+const TESTFRAME_QUERY_LARGE_ALLOCATION_WITH_CSP =
+ `<!DOCTYPE HTML>
   <html>
   <head>
     <title>Bug 1555050 - Test CSP Navigation using ReloadInFreshProcess</title>
@@ -30,7 +32,8 @@ const TESTFRAME_QUERY_LARGE_ALLOCATION_WITH_CSP = `<!DOCTYPE HTML>
   </body>
   </html>`;
 
-const LARGE_ALLOCATION = `<!DOCTYPE HTML>
+const LARGE_ALLOCATION = 
+ `<!DOCTYPE HTML>
   <html>
   <head>
     <title>Bug 1555050 - Test CSP Navigation using ReloadInFreshProcess</title>
@@ -43,18 +46,15 @@ const LARGE_ALLOCATION = `<!DOCTYPE HTML>
   </body>
   </html>`;
 
-function handleRequest(request, response) {
+function handleRequest(request, response)
+{
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
-
+ 
   var queryString = request.queryString;
 
   if (queryString == "testframe_with_csp") {
-    response.setHeader(
-      "Content-Security-Policy",
-      "upgrade-insecure-requests",
-      false
-    );
+    response.setHeader("Content-Security-Policy", "upgrade-insecure-requests", false);     
     response.write(TESTFRAME_QUERY_LARGE_ALLOCATION_WITH_NO_CSP);
     return;
   }
@@ -65,11 +65,7 @@ function handleRequest(request, response) {
   }
 
   if (queryString == "largeAllocation_with_csp") {
-    response.setHeader(
-      "Content-Security-Policy",
-      "upgrade-insecure-requests",
-      false
-    );
+    response.setHeader("Content-Security-Policy", "upgrade-insecure-requests", false);   
     response.setHeader("Large-Allocation", "0", false);
     response.write(LARGE_ALLOCATION);
     return;

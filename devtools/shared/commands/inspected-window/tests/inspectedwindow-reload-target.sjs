@@ -1,9 +1,9 @@
 Components.utils.importGlobalProperties(["URLSearchParams"]);
 
 function handleRequest(request, response) {
-  const params = new URLSearchParams(request.queryString);
+  let params = new URLSearchParams(request.queryString);
 
-  switch (params.get("test")) {
+  switch(params.get("test")) {
     case "cache":
       handleCacheTestRequest(request, response);
       break;
@@ -22,9 +22,7 @@ function handleCacheTestRequest(request, response) {
   response.setHeader("Content-Type", "text/plain; charset=UTF-8", false);
 
   if (request.hasHeader("pragma") && request.hasHeader("cache-control")) {
-    response.write(
-      `${request.getHeader("pragma")}:${request.getHeader("cache-control")}`
-    );
+    response.write(`${request.getHeader("pragma")}:${request.getHeader("cache-control")}`);
   } else {
     response.write("empty cache headers");
   }
@@ -49,12 +47,11 @@ function handleInjectedScriptTestRequest(request, response, params) {
   if (frames > 0) {
     // Output an iframe in seamless mode, so that there is an higher chance that in case
     // of test failures we get a screenshot where the nested iframes are all visible.
-    content = `<iframe seamless src="?test=injected-script&frames=${frames -
-      1}"></iframe>`;
+    content = `<iframe seamless src="?test=injected-script&frames=${frames - 1}"></iframe>`;
   } else {
     // Output an about:srcdoc frame to be sure that inspectedWindow.eval is able to
     // evaluate js code into it.
-    const srcdoc = `
+    let srcdoc = `
       <pre>injected script NOT executed</pre>
       <script>window.pageScriptExecutedFirst = true</script>
     `;
