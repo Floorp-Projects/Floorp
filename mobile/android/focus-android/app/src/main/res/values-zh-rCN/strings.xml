@@ -822,4 +822,17 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">清除 %1$s 的历史记录时，&lt;b&gt;将不会&lt;/b&gt;删除保存和分享的图像。</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">主题</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">浅色</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">深色</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">依系统省电模式设置</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">跟随设备主题</string>
+
 </resources>
