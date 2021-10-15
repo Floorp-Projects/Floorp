@@ -68,6 +68,9 @@
  * WeakHeapPtr   Provides read and post-write barriers, for use with weak
  *               pointers.
  *
+ * UnsafeBarePtr Provides no barriers. Don't add new uses of this, or only if
+ *               you really know what you are doing.
+ *
  * The following classes are implemented in js/RootingAPI.h (in the JS
  * namespace):
  *
@@ -93,12 +96,17 @@
  *             Can your object be destroyed outside of a GC?
  *               Yes => Use HeapPtr<T>
  *               No => Use GCPtr<T> (optimization)
- *           No, I'll do this myself => Use PreBarriered<T>
+ *           No, I'll do this myself =>
+ *             Do you want pre-barriers so incremental marking works?
+ *               Yes, of course => Use PreBarriered<T>
+ *               No, and I'll fix all the bugs myself => Use UnsafeBarePtr<T>
  *       Weak => Use WeakHeapPtr<T>
  *   No, it's external =>
  *     Can your pointer refer to nursery objects?
  *       Yes => Use JS::Heap<T>
  *       Never => Use JS::TenuredHeap<T> (optimization)
+ *
+ * If in doubt, use HeapPtr<T>.
  *
  * Write barriers
  * ==============
@@ -829,6 +837,20 @@ class WeakHeapPtr : public ReadBarriered<T>,
   }
 };
 
+// A wrapper for a bare pointer, with no barriers.
+//
+// This should only be necessary in a limited number of cases. Please don't add
+// more uses of this if at all possible.
+template <typename T>
+class UnsafeBarePtr : public BarrieredBase<T> {
+ public:
+  UnsafeBarePtr() : BarrieredBase<T>(JS::SafelyInitialized<T>()) {}
+  MOZ_IMPLICIT UnsafeBarePtr(T v) : BarrieredBase<T>(v) {}
+  const T& get() const { return this->value; }
+  void set(T newValue) { this->value = newValue; }
+  DECLARE_POINTER_CONSTREF_OPS(T);
+};
+
 }  // namespace js
 
 namespace JS {
@@ -1085,6 +1107,16 @@ struct WeakHeapPtrHasher {
   }
 };
 
+template <class T>
+struct UnsafeBarePtrHasher {
+  using Key = UnsafeBarePtr<T>;
+  using Lookup = T;
+
+  static HashNumber hash(const Lookup& l) { return DefaultHasher<T>::hash(l); }
+  static bool match(const Key& k, Lookup l) { return k.get() == l; }
+  static void rekey(Key& k, const Key& newKey) { k.set(newKey.get()); }
+};
+
 }  // namespace js
 
 namespace mozilla {
@@ -1103,6 +1135,9 @@ struct DefaultHasher<js::PreBarriered<T>> : js::PreBarrieredHasher<T> {};
 
 template <class T>
 struct DefaultHasher<js::WeakHeapPtr<T>> : js::WeakHeapPtrHasher<T> {};
+
+template <class T>
+struct DefaultHasher<js::UnsafeBarePtr<T>> : js::UnsafeBarePtrHasher<T> {};
 
 }  // namespace mozilla
 
