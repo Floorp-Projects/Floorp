@@ -452,26 +452,27 @@ this.browserSettings = class extends ExtensionAPI {
               let prefValue = Services.prefs.getIntPref(
                 "layout.css.prefers-color-scheme.content-override"
               );
-              if (prefValue === 0) {
-                return "dark";
-              } else if (prefValue === 1) {
-                return "light";
+              switch (prefValue) {
+                case 0:
+                  return "dark";
+                case 1:
+                  return "light";
+                case 2:
+                  return "system";
+                default:
+                  return "browser";
               }
-              return "system";
             },
           }),
           {
             set: details => {
-              if (!["light", "dark", "system"].includes(details.value)) {
+              let prefValue = ["dark", "light", "system", "browser"].indexOf(
+                details.value
+              );
+              if (prefValue === -1) {
                 throw new ExtensionError(
                   `${details.value} is not a valid value for overrideContentColorScheme.`
                 );
-              }
-              let prefValue = 2; // initialize to 2 - system colors
-              if (details.value === "light") {
-                prefValue = 1;
-              } else if (details.value === "dark") {
-                prefValue = 0;
               }
               return ExtensionPreferencesManager.setSetting(
                 extension.id,

@@ -17475,20 +17475,26 @@ StylePrefersColorScheme Document::PrefersColorScheme(
     }
   }
 
-  if (!nsContentUtils::IsChromeDoc(this)) {
+  auto preferredColorScheme = [&] {
+    if (nsContentUtils::IsChromeDoc(this)) {
+      return LookAndFeel::SystemColorScheme();
+    }
+
     switch (StaticPrefs::layout_css_prefers_color_scheme_content_override()) {
       case 0:
-        return StylePrefersColorScheme::Dark;
+        return ColorScheme::Dark;
       case 1:
-        return StylePrefersColorScheme::Light;
+        return ColorScheme::Light;
+      case 2:
+        return LookAndFeel::SystemColorScheme();
       default:
-        break;
+        return LookAndFeel::ColorSchemeForChrome();
     }
-  }
+  }();
 
-  const bool dark =
-      !!LookAndFeel::GetInt(LookAndFeel::IntID::SystemUsesDarkTheme, 0);
-  return dark ? StylePrefersColorScheme::Dark : StylePrefersColorScheme::Light;
+  return preferredColorScheme == ColorScheme::Dark
+             ? StylePrefersColorScheme::Dark
+             : StylePrefersColorScheme::Light;
 }
 
 bool Document::HasRecentlyStartedForegroundLoads() {
