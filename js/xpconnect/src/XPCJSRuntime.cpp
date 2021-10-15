@@ -64,6 +64,7 @@
 #include "mozilla/dom/GeneratedAtomList.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/FetchUtil.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
@@ -3022,7 +3023,10 @@ void XPCJSRuntime::Initialize(JSContext* cx) {
   JS::SetXrayJitInfo(&gXrayJitInfo);
   JS::SetProcessLargeAllocationFailureCallback(
       OnLargeAllocationFailureCallback);
+
+  // The WasmAltDataType is build by the JS engine from the build id.
   JS::SetProcessBuildIdOp(GetBuildId);
+  FetchUtil::InitWasmAltDataType();
 
   // The JS engine needs to keep the source code around in order to implement
   // Function.prototype.toSource(). It'd be nice to not have to do this for

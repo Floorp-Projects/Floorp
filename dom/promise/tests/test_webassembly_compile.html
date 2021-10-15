@@ -10,13 +10,17 @@
 </head>
 <body>
 <script>
-const wasmIsSupported = SpecialPowers.Cu.getJSTestingFunctions().wasmIsSupported;
+const testingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
+const wasmIsSupported = SpecialPowers.unwrap(testingFunctions.wasmIsSupported);
+const wasmHasTier2CompilationCompleted = SpecialPowers.unwrap(testingFunctions.wasmHasTier2CompilationCompleted);
+const wasmLoadedFromCache = SpecialPowers.unwrap(testingFunctions.wasmLoadedFromCache);
 
 // The test_webassembly_compile_sample.wasm is a medium-sized module with 100
 // functions that call each other recursively, returning a computed sum.
 // Any other non-trivial module could be generated and used.
 var sampleCode;
 const sampleURL = "test_webassembly_compile_sample.wasm";
+const sampleURLWithRandomQuery = () => sampleURL + "?id=" + String(Math.ceil(Math.random()*100000));
 const sampleExportName = "run";
 const sampleResult = 1275;
 
@@ -219,6 +223,78 @@ function compileStreamingFetch() {
   .catch(err => { ok(false, String(err)); });
 }
 
+function compileCachedBasic() {
+  const url = sampleURLWithRandomQuery();
+  WebAssembly.compileStreaming(fetch(url))
+  .then(module => {
+    checkSampleModule(module);
+    ok(!wasmLoadedFromCache(module), "not cached yet");
+    while(!wasmHasTier2CompilationCompleted(module));
+    return WebAssembly.compileStreaming(fetch(url));
+  })
+  .then(module => {
+    checkSampleModule(module);
+    ok(wasmLoadedFromCache(module), "loaded from cache");
+  })
+  .then(() => runTest())
+  .catch(err => { ok(false, String(err)) });
+}
+
+const Original = "original";
+const Clone = "clone";
+
+function compileCachedBothClonesHitCache(which) {
+  const url = sampleURLWithRandomQuery();
+  WebAssembly.compileStreaming(fetch(url))
+  .then(module => {
+    checkSampleModule(module);
+    ok(!wasmLoadedFromCache(module), "not cached yet");
+    while(!wasmHasTier2CompilationCompleted(module));
+    return fetch(url);
+  })
+  .then(original => {
+    let clone = original.clone();
+    if (which === Clone) [clone, original] = [original, clone];
+    return Promise.all([
+      WebAssembly.compileStreaming(original),
+      WebAssembly.compileStreaming(clone)
+    ]);
+  })
+  .then(([m1, m2]) => {
+    checkSampleModule(m1);
+    ok(wasmLoadedFromCache(m1), "clone loaded from cache");
+    checkSampleModule(m2);
+    ok(wasmLoadedFromCache(m2), "original loaded from cache");
+  })
+  .then(() => runTest())
+  .catch(err => { ok(false, String(err)) });
+}
+
+function compileCachedCacheThroughClone(which) {
+  const url = sampleURLWithRandomQuery();
+  fetch(url)
+  .then(original => {
+    ok(true, "fun time");
+    let clone = original.clone();
+    if (which === Clone) [clone, original] = [original, clone];
+    return Promise.all([
+      WebAssembly.compileStreaming(original),
+      clone.arrayBuffer()
+    ]);
+  })
+  .then(([module, buffer]) => {
+    ok(!wasmLoadedFromCache(module), "not cached yet");
+    ok(buffer instanceof ArrayBuffer);
+    while(!wasmHasTier2CompilationCompleted(module));
+    return WebAssembly.compileStreaming(fetch(url));
+  })
+  .then(m => {
+    ok(wasmLoadedFromCache(m), "cache hit of " + which);
+  })
+  .then(() => runTest())
+  .catch(err => { ok(false, String(err)) });
+}
+
 function instantiateStreamingFetch() {
   WebAssembly.instantiateStreaming(fetch(sampleURL))
   .then(({module, instance}) => { checkSampleModule(module); checkSampleInstance(instance); runTest(); })
@@ -277,6 +353,11 @@ var tests = [ propertiesExist,
               compileStreamingDoubleUseFail,
               compileStreamingNullBody,
               compileStreamingFetch,
+              compileCachedBasic,
+              compileCachedBothClonesHitCache.bind(Original),
+              compileCachedBothClonesHitCache.bind(Clone),
+              compileCachedCacheThroughClone.bind(Original),
+              compileCachedCacheThroughClone.bind(Clone),
               instantiateStreamingFetch,
               compileManyStreamingFetch,
               runWorkerTests,
