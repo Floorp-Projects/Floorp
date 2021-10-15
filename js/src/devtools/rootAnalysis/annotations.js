@@ -289,6 +289,11 @@ var ignoreFunctions = {
     // nsIEventTarget.IsOnCurrentThreadInfallible does not get resolved, and
     // this is called on non-JS threads so cannot use AutoSuppressGCAnalysis.
     "uint8 nsAutoOwningEventTarget::IsCurrentThread() const": true,
+
+    // ~JSStreamConsumer calls 2 ~RefCnt/~nsCOMPtr destructors for its fields,
+    // but the body of the destructor is written so that all Releases
+    // are proxied, and the members will all be empty at destruction time.
+    "void mozilla::dom::JSStreamConsumer::~JSStreamConsumer() [[base_dtor]]": true,
 };
 
 function extraGCFunctions() {
