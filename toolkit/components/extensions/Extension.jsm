@@ -61,7 +61,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   Log: "resource://gre/modules/Log.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
@@ -586,27 +585,35 @@ class ExtensionData {
     return `moz-extension://${this.uuid}/${path}`;
   }
 
-  async readDirectory(path) {
+  /**
+   * Discovers the file names within a directory or JAR file.
+   *
+   * @param {Ci.nsIFileURL|Ci.nsIJARURI} path
+   *   The path to the directory or jar file to look at.
+   * @param {boolean} [directoriesOnly]
+   *   If true, this will return only the directories present within the directory.
+   * @returns {string[]}
+   *   An array of names of files/directories (only the name, not the path).
+   */
+  async _readDirectory(path, directoriesOnly = false) {
     if (this.rootURI instanceof Ci.nsIFileURL) {
       let uri = Services.io.newURI("./" + path, null, this.rootURI);
       let fullPath = uri.QueryInterface(Ci.nsIFileURL).file.path;
 
-      let iter = new OS.File.DirectoryIterator(fullPath);
       let results = [];
-
       try {
-        await iter.forEach(entry => {
-          results.push(entry);
-        });
-      } catch (e) {
-        // Always return a list, even if the directory does not exist (or is
-        // not a directory) for symmetry with the ZipReader behavior.
-        if (!e.becauseNoSuchFile) {
-          Cu.reportError(e);
+        let children = await IOUtils.getChildren(fullPath);
+        for (let child of children) {
+          if (
+            !directoriesOnly ||
+            (await IOUtils.stat(child)).type == "directory"
+          ) {
+            results.push(PathUtils.filename(child));
+          }
         }
+      } catch (ex) {
+        // Fall-through, return what we have.
       }
-      iter.close();
-
       return results;
     }
 
@@ -629,11 +636,12 @@ class ExtensionData {
       // Trim off the leading path, and filter out entries from
       // subdirectories.
       name = name.slice(entry.length);
-      if (name && !/\/./.test(name)) {
-        results.push({
-          name: name.replace("/", ""),
-          isDir: name.endsWith("/"),
-        });
+      if (
+        name &&
+        !/\/./.test(name) &&
+        (!directoriesOnly || name.endsWith("/"))
+      ) {
+        results.push(name.replace("/", ""));
       }
     }
 
@@ -1220,7 +1228,7 @@ class ExtensionData {
 
       // Check if there's a root directory `/localization` in the langpack.
       // If there is one, add it with the name `toolkit` as a FileSource.
-      const entries = await this.readDirectory("localization");
+      const entries = await this._readDirectory("localization");
       if (entries.length) {
         l10nRegistrySources.toolkit = "";
       }
@@ -1255,10 +1263,7 @@ class ExtensionData {
         let leafName = OSPath.basename(path);
         let affixPath = leafName.slice(0, -3) + "aff";
 
-        let entries = Array.from(
-          await this.readDirectory(dir),
-          entry => entry.name
-        );
+        let entries = await this._readDirectory(dir);
         if (!entries.includes(leafName)) {
           this.manifestError(
             `Invalid dictionary path specified for '${lang}': ${path}`
@@ -1450,12 +1455,10 @@ class ExtensionData {
   async _promiseLocaleMap() {
     let locales = new Map();
 
-    let entries = await this.readDirectory("_locales");
-    for (let file of entries) {
-      if (file.isDir) {
-        let locale = this.normalizeLocaleCode(file.name);
-        locales.set(locale, file.name);
-      }
+    let entries = await this._readDirectory("_locales", true);
+    for (let name of entries) {
+      let locale = this.normalizeLocaleCode(name);
+      locales.set(locale, name);
     }
 
     return locales;
