@@ -535,3 +535,19 @@ JS_PUBLIC_API bool JS::IsJSMEnvironment(JSObject* obj) {
   // created for reasons other than the JSM loader.
   return obj->is<NonSyntacticVariablesObject>();
 }
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+void RuntimeCaches::checkEvalCacheAfterMinorGC() {
+  JSContext* cx = TlsContext.get();
+  for (auto r = evalCache.all(); !r.empty(); r.popFront()) {
+    const EvalCacheEntry& entry = r.front();
+    CheckGCThingAfterMovingGC(entry.str);
+    EvalCacheLookup lookup(cx);
+    lookup.str = entry.str;
+    lookup.callerScript = entry.callerScript;
+    lookup.pc = entry.pc;
+    auto ptr = evalCache.lookup(lookup);
+    MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
+  }
+}
+#endif
