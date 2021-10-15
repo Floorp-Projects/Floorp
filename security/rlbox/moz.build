@@ -20,7 +20,7 @@ SOURCES += [
     "/third_party/wasm2c/wasm2c/wasm-rt-wasi.c",
 ]
 
-GeckoSharedLibrary("rlbox", linkage=None)
+FINAL_LIBRARY = "xul"
 
 NoVisibilityFlags()
 
