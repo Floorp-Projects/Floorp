@@ -16,6 +16,7 @@
 #include "nsContentUtils.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
+#include "nsContainerFrame.h"
 #include "nsTArray.h"
 #include "mozilla/dom/Text.h"
 
@@ -153,24 +154,33 @@ void nsCounterList::SetScope(nsCounterNode* aNode) {
   // their descendants) in reverse document order.
   if (aNode->mType != nsCounterNode::USE &&
       StaticPrefs::layout_css_counter_ancestor_scope_enabled()) {
-    nsIContent* const counterNode = aNode->mPseudoFrame->GetContent();
-    nsCounterNode* lastPrev = nullptr;
-    for (nsCounterNode* prev = Prev(aNode); prev; prev = prev->mScopePrev) {
-      if (prev->mType == nsCounterNode::RESET) {
-        if (aNode->mPseudoFrame == prev->mPseudoFrame) {
+    for (auto* p = aNode->mPseudoFrame; p; p = p->GetParent()) {
+      // This relies on the fact that a RESET node is always the first
+      // CounterNode for a frame if it has any.
+      auto* counter = GetFirstNodeFor(p);
+      if (!counter || counter->mType != nsCounterNode::RESET) {
+        continue;
+      }
+      if (p == aNode->mPseudoFrame) {
+        break;
+      }
+      aNode->mScopeStart = counter;
+      aNode->mScopePrev = counter;
+      for (nsCounterNode* prev = Prev(aNode); prev;
+           prev = prev->mScopePrev) {
+        if (prev->mScopeStart == counter) {
+          aNode->mScopePrev =
+              prev->mType == nsCounterNode::RESET ? prev->mScopePrev : prev;
           break;
         }
-        // FIXME(bug 1477524): should use flattened tree here:
-        nsIContent* resetNode = prev->mPseudoFrame->GetContent();
-        if (counterNode->IsInclusiveDescendantOf(resetNode)) {
-          aNode->mScopeStart = prev;
-          aNode->mScopePrev = lastPrev ? lastPrev : prev;
-          return;
+        if (prev->mType != nsCounterNode::RESET) {
+          prev = prev->mScopeStart;
+          if (!prev) {
+            break;
+          }
         }
-        lastPrev = prev->mScopePrev;
-      } else if (!lastPrev) {
-        lastPrev = prev;
       }
+      return;
     }
   }
 
