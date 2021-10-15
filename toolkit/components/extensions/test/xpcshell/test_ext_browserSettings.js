@@ -48,7 +48,7 @@ add_task(async function test_browser_settings() {
     "browser.tabs.insertRelatedAfterCurrent": true,
     "browser.tabs.insertAfterCurrent": false,
     "browser.display.document_color_use": 1,
-    "layout.css.prefers-color-scheme.content-override": 2,
+    "layout.css.prefers-color-scheme.content-override": 3,
     "browser.display.use_document_fonts": 1,
     "browser.zoom.full": true,
     "browser.zoom.siteSpecific": true,
@@ -280,6 +280,9 @@ add_task(async function test_browser_settings() {
   });
   await testSetting("overrideContentColorScheme", "system", {
     "layout.css.prefers-color-scheme.content-override": 2,
+  });
+  await testSetting("overrideContentColorScheme", "browser", {
+    "layout.css.prefers-color-scheme.content-override": 3,
   });
 
   await testSetting("useDocumentFonts", false, {
