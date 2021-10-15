@@ -242,8 +242,17 @@ class StoragePrincipalHelper final {
   static nsresult PrepareEffectiveStoragePrincipalOriginAttributes(
       nsIChannel* aChannel, OriginAttributes& aOriginAttributes);
 
+  // A helper function to verify storage principal info with the principal info.
   static bool VerifyValidStoragePrincipalInfoForPrincipalInfo(
       const mozilla::ipc::PrincipalInfo& aStoragePrincipalInfo,
+      const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
+
+  // A helper function to verify client principal info with the principal info.
+  //
+  // Note that the client principal refers the principal of the client, which is
+  // supposed to be the foreign partitioned principal.
+  static bool VerifyValidClientPrincipalInfoForPrincipalInfo(
+      const mozilla::ipc::PrincipalInfo& aClientPrincipalInfo,
       const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
   enum PrincipalType {
