@@ -1597,20 +1597,14 @@ template <typename OkT, typename Fn>
 RefPtr<IOUtils::IOPromise<OkT>> IOUtils::EventQueue::Dispatch(Fn aFunc) {
   MOZ_RELEASE_ASSERT(mBackgroundEventTarget);
 
-  auto promise =
-      MakeRefPtr<typename IOUtils::IOPromise<OkT>::Private>(__func__);
-  mBackgroundEventTarget->Dispatch(
-      NS_NewRunnableFunction("IOUtils::EventQueue::Dispatch",
-                             [promise, func = std::move(aFunc)] {
-                               Result<OkT, IOError> result = func();
-                               if (result.isErr()) {
-                                 promise->Reject(result.unwrapErr(), __func__);
-                               } else {
-                                 promise->Resolve(result.unwrap(), __func__);
-                               }
-                             }),
-      NS_DISPATCH_EVENT_MAY_BLOCK);
-  return promise;
+  return InvokeAsync(
+      mBackgroundEventTarget, __func__, [func = std::move(aFunc)]() {
+        Result<OkT, IOError> result = func();
+        if (result.isErr()) {
+          return IOPromise<OkT>::CreateAndReject(result.unwrapErr(), __func__);
+        }
+        return IOPromise<OkT>::CreateAndResolve(result.unwrap(), __func__);
+      });
 };
 
 Result<already_AddRefed<nsIAsyncShutdownClient>, nsresult>
