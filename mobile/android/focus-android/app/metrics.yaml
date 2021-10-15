@@ -512,6 +512,58 @@ add_to_home_screen:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-11-01"
+set_default_browser:
+  from_app_settings:
+    type: event
+    description: |
+      The user has changed default browser from the app.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5636
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5637
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      is_default:
+        description: Shows if Focus was already default.
+        type: boolean
+  from_os_settings:
+    type: event
+    description: |
+      The user has opened the OS settings to set default browser.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5636
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5637
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      is_default:
+        description: Shows if Focus was already default.
+        type: boolean
+  learn_more_opened:
+    type: event
+    description: |
+      The user has opened the learn more link.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5636
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/?
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      is_default:
+        description: Shows if Focus was already default.
+        type: boolean
 
 tab_count:
   session_button_tapped:

@@ -843,16 +843,6 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun makeDefaultBrowserOpenWith() {
-        TelemetryEvent.create(Category.ACTION, Method.SHOW, Object.MAKE_DEFAULT_BROWSER_OPEN_WITH).queue()
-    }
-
-    @JvmStatic
-    fun makeDefaultBrowserSettings() {
-        TelemetryEvent.create(Category.ACTION, Method.SHOW, Object.MAKE_DEFAULT_BROWSER_SETTINGS).queue()
-    }
-
-    @JvmStatic
     fun dayPassedSinceLastUpload(context: Context): Boolean {
         val dateOfLastPing = PreferenceManager
             .getDefaultSharedPreferences(context).getLong(LAST_MOBILE_METRICS_PINGS, 0)

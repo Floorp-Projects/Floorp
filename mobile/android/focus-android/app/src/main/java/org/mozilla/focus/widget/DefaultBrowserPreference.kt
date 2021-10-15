@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.focus.widget
 
 import android.app.role.RoleManager
@@ -13,6 +14,7 @@ import androidx.core.os.bundleOf
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.google.android.material.switchmaterial.SwitchMaterial
+import org.mozilla.focus.GleanMetrics.SetDefaultBrowser
 import org.mozilla.focus.R
 import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.SupportUtils.openDefaultBrowserSumoPage
@@ -25,6 +27,7 @@ class DefaultBrowserPreference @JvmOverloads constructor(
 ) : Preference(context, attrs, defStyleAttr) {
 
     private var switchView: SwitchMaterial? = null
+    private val browsers = Browsers(context, Browsers.TRADITIONAL_BROWSER_URL)
 
     init {
         widgetLayoutResource = R.layout.preference_default_browser
@@ -40,13 +43,11 @@ class DefaultBrowserPreference @JvmOverloads constructor(
     }
 
     fun update() {
-        if (switchView != null) {
-            val browsers = Browsers(context, Browsers.TRADITIONAL_BROWSER_URL)
-            switchView!!.isChecked = browsers.isDefaultBrowser(context)
-        }
+        switchView?.isChecked = browsers.isDefaultBrowser(context)
     }
 
     public override fun onClick() {
+        val isDefault = browsers.isDefaultBrowser(context)
         when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
                 context.getSystemService(RoleManager::class.java).also {
@@ -58,21 +59,31 @@ class DefaultBrowserPreference @JvmOverloads constructor(
                             it.createRequestRoleIntent(RoleManager.ROLE_BROWSER),
                             REQUEST_CODE_BROWSER_ROLE
                         )
+                        SetDefaultBrowser.fromAppSettings.record(
+                            SetDefaultBrowser.FromAppSettingsExtra(
+                                isDefault
+                            )
+                        )
                     } else {
-                        navigateToDefaultBrowserAppsSettings()
+                        navigateToDefaultBrowserAppsSettings(isDefault)
                     }
                 }
             }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> {
-                navigateToDefaultBrowserAppsSettings()
+                navigateToDefaultBrowserAppsSettings(isDefault)
             }
             else -> {
                 openDefaultBrowserSumoPage(context)
+                SetDefaultBrowser.learnMoreOpened.record(
+                    SetDefaultBrowser.LearnMoreOpenedExtra(
+                        isDefault
+                    )
+                )
             }
         }
     }
 
-    private fun navigateToDefaultBrowserAppsSettings() {
+    private fun navigateToDefaultBrowserAppsSettings(isDefault: Boolean) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             val intent = Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
             intent.putExtra(
@@ -83,7 +94,9 @@ class DefaultBrowserPreference @JvmOverloads constructor(
                 SETTINGS_SHOW_FRAGMENT_ARGS,
                 bundleOf(SETTINGS_SELECT_OPTION_KEY to DEFAULT_BROWSER_APP_OPTION)
             )
+
             context.startActivity(intent)
+            SetDefaultBrowser.fromOsSettings.record(SetDefaultBrowser.FromOsSettingsExtra(isDefault))
         }
     }
 
