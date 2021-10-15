@@ -340,6 +340,7 @@ void NativeLayerRootCA::Representation::Commit(WhichRepresentation aRepresentati
     // them and isolate a single video layer. It's important to do this *after* the
     // sublayers have been set, because we need the relationships there to do the
     // bounds checking of layer spaces against each other.
+    // Bug 1731821 should eliminate this entire if block.
     if (aWindowIsFullscreen && aRepresentation == WhichRepresentation::ONSCREEN &&
         StaticPrefs::gfx_core_animation_specialize_video()) {
       CALayer* isolatedLayer = FindVideoLayerToIsolate(aRepresentation, aSublayers);
@@ -1299,13 +1300,14 @@ void NativeLayerCA::Representation::ApplyChanges(
 
   if (mMutatedFrontSurface) {
     bool isEnqueued = false;
-    if (aSpecializeVideo) {
+    IOSurfaceRef surface = aFrontSurface.get();
+    if (aSpecializeVideo && CanSpecializeSurface(surface)) {
       // Attempt to enqueue this as a video frame. If we fail, we'll fall back to image case.
-      isEnqueued = EnqueueSurface(aFrontSurface.get());
+      isEnqueued = EnqueueSurface(surface);
     }
 
     if (!isEnqueued) {
-      mContentCALayer.contents = (id)aFrontSurface.get();
+      mContentCALayer.contents = (id)surface;
     }
   }
 
@@ -1339,6 +1341,15 @@ bool NativeLayerCA::Representation::HasUpdate() {
   return mMutatedPosition || mMutatedTransform || mMutatedDisplayRect || mMutatedClipRect ||
          mMutatedBackingScale || mMutatedSize || mMutatedSurfaceIsFlipped || mMutatedFrontSurface ||
          mMutatedSamplingFilter || mMutatedSpecializeVideo;
+}
+
+bool NativeLayerCA::Representation::CanSpecializeSurface(IOSurfaceRef surface) {
+  // Software decoded videos can't achieve detached mode. Until Bug 1731691 is fixed,
+  // there's no benefit to specializing these videos. For now, only allow 420v or 420f,
+  // which we get from hardware decode.
+  OSType pixelFormat = IOSurfaceGetPixelFormat(surface);
+  return (pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange ||
+          pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange);
 }
 
 // Called when mMutex is already being held by the current thread.
