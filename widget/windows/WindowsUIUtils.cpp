@@ -23,7 +23,6 @@
 #include "nsString.h"
 #include "nsIWidget.h"
 #include "nsIWindowMediator.h"
-#include "nsIWindowsRegKey.h"
 #include "nsPIDOMWindow.h"
 #include "nsWindowGfx.h"
 #include "Units.h"
@@ -208,13 +207,19 @@ WindowsUIUtils::GetInTabletMode(bool* aResult) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+WindowsUIUtils::UpdateTabletModeState() {
 #ifndef __MINGW32__
+  if (!IsWin10OrLater()) {
+    return NS_OK;
+  }
 
-static Result<UserInteractionMode, nsresult> GetUserInteractionMode() {
   nsresult rv;
   nsCOMPtr<nsIWindowMediator> winMediator(
       do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, Err(rv));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   nsCOMPtr<nsIWidget> widget;
   nsCOMPtr<mozIDOMWindowProxy> navWin;
@@ -228,7 +233,7 @@ static Result<UserInteractionMode, nsresult> GetUserInteractionMode() {
 
     rv = appShell->GetHiddenDOMWindow(getter_AddRefs(navWin));
     if (NS_FAILED(rv) || !navWin) {
-      return Err(rv);
+      return rv;
     }
   }
 
@@ -236,7 +241,7 @@ static Result<UserInteractionMode, nsresult> GetUserInteractionMode() {
   widget = widget::WidgetUtils::DOMWindowToWidget(win);
 
   if (!widget) {
-    return Err(NS_ERROR_FAILURE);
+    return NS_ERROR_FAILURE;
   }
 
   HWND winPtr = (HWND)widget->GetNativeData(NS_NATIVE_WINDOW);
@@ -254,78 +259,21 @@ static Result<UserInteractionMode, nsresult> GetUserInteractionMode() {
       UserInteractionMode mode;
       hr = uiViewSettings->get_UserInteractionMode(&mode);
       if (SUCCEEDED(hr)) {
-        return mode;
+        TabletModeState oldTabletModeState = mInTabletMode;
+        mInTabletMode = (mode == UserInteractionMode_Touch) ? eTabletModeOn
+                                                            : eTabletModeOff;
+        if (mInTabletMode != oldTabletModeState) {
+          nsCOMPtr<nsIObserverService> observerService =
+              mozilla::services::GetObserverService();
+          observerService->NotifyObservers(
+              nullptr, "tablet-mode-change",
+              ((mInTabletMode == eTabletModeOn) ? u"tablet-mode"
+                                                : u"normal-mode"));
+        }
       }
     }
   }
-
-  return Err(NS_ERROR_FAILURE);
-}
-
-#endif  // !__MINGW32__
-
-// See
-// https://docs.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/microsoft-windows-gpiobuttons-convertibleslatemode
-// for a description of what's going on here. In short if the
-// HKLM\System\CurrentControlSet\Control\PriorityControl\ConvertibleSlateMode
-// registry key is 0 then the machine doesn't have a keyboard attached.
-// Note: this is a hack because it depends on the vendor having implemented this
-// appropriately according to Microsoft guidelines, additionally it does not
-// cover weird corner cases like a desktop with a touch screen and no keyboard.
-// A proper implementation of this would enumerate all keyboard devices to
-// ensure that at least one is present. While it may sound overkill Chrome does
-// it and that's probably the only completely reliable way to implement this.
-static Result<bool, nsresult> IsKeyboardAttached() {
-  nsresult rv;
-  nsCOMPtr<nsIWindowsRegKey> regKey(
-      do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv));
-  NS_ENSURE_SUCCESS(rv, Err(rv));
-
-  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
-                    u"System\\CurrentControlSet\\Control\\PriorityControl"_ns,
-                    nsIWindowsRegKey::ACCESS_QUERY_VALUE);
-  NS_ENSURE_SUCCESS(rv, Err(rv));
-
-  uint32_t value;
-  rv = regKey->ReadIntValue(u"ConvertibleSlateMode"_ns, &value);
-  NS_ENSURE_SUCCESS(rv, Err(rv));
-
-  return value != 0;
-}
-
-NS_IMETHODIMP
-WindowsUIUtils::UpdateTabletModeState() {
-  if (!IsWin10OrLater()) {
-    return NS_OK;
-  }
-
-  TabletModeState oldTabletModeState = mInTabletMode;
-  auto keyboardAttachedRes = IsKeyboardAttached();
-
-  if (IsWin11OrLater() && !keyboardAttachedRes.isErr()) {
-    mInTabletMode =
-        keyboardAttachedRes.unwrap() ? eTabletModeOff : eTabletModeOn;
-  } else {
-#ifndef __MINGW32__
-    auto modeRes = GetUserInteractionMode();
-
-    if (!modeRes.isErr()) {
-      mInTabletMode = modeRes.unwrap() == UserInteractionMode_Touch
-                          ? eTabletModeOn
-                          : eTabletModeOff;
-    } else {
-      return NS_ERROR_FAILURE;
-    }
-#endif  // !__MINGW32__
-  }
-
-  if (mInTabletMode != oldTabletModeState) {
-    nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
-    observerService->NotifyObservers(
-        nullptr, "tablet-mode-change",
-        ((mInTabletMode == eTabletModeOn) ? u"tablet-mode" : u"normal-mode"));
-  }
+#endif
 
   return NS_OK;
 }
