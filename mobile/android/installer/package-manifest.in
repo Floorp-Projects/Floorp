@@ -78,10 +78,6 @@
 @BINPATH@/@DLL_PREFIX@gvr@DLL_SUFFIX@
 #endif
 
-#ifdef MOZ_USING_WASM_SANDBOXING
-@BINPATH@/@DLL_PREFIX@rlbox@DLL_SUFFIX@
-#endif
-
 [xpcom]
 @BINPATH@/package-name.txt
 
