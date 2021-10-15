@@ -1291,7 +1291,9 @@ class Document : public nsINode,
    */
   nsViewportInfo GetViewportInfo(const ScreenIntSize& aDisplaySize);
 
-  void SetMetaViewportData(UniquePtr<ViewportMetaData> aData);
+  void AddMetaViewportElement(HTMLMetaElement* aElement,
+                              ViewportMetaData&& aData);
+  void RemoveMetaViewportElement(HTMLMetaElement* aElement);
 
   // Returns a ViewportMetaData for this document.
   ViewportMetaData GetViewportMetaData() const;
@@ -5173,9 +5175,9 @@ class Document : public nsINode,
   // 2)  We haven't had Destroy() called on us yet.
   nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
 
-  // The parsed viewport metadata of the last modified <meta name=viewport>
-  // element.
-  UniquePtr<ViewportMetaData> mLastModifiedViewportMetaData;
+  struct MetaViewportElementAndData;
+  // An array of <meta name="viewport"> elements and their data.
+  nsTArray<MetaViewportElementAndData> mMetaViewports;
 
   // These member variables cache information about the viewport so we don't
   // have to recalculate it each time.
