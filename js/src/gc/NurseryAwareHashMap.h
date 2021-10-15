@@ -16,28 +16,6 @@
 namespace js {
 
 namespace detail {
-// A wrapper for a bare pointer, with no barriers. The only user should be for
-// NurseryAwareHashMap; it is defined externally because we need a GCPolicy for
-// its use in the contained map.
-template <typename T>
-class UnsafeBarePtr : public BarrieredBase<T> {
- public:
-  UnsafeBarePtr() : BarrieredBase<T>(JS::SafelyInitialized<T>()) {}
-  MOZ_IMPLICIT UnsafeBarePtr(T v) : BarrieredBase<T>(v) {}
-  const T& get() const { return this->value; }
-  void set(T newValue) { this->value = newValue; }
-  DECLARE_POINTER_CONSTREF_OPS(T);
-};
-
-template <class T>
-struct UnsafeBarePtrHasher {
-  using Key = UnsafeBarePtr<T>;
-  using Lookup = T;
-
-  static HashNumber hash(const Lookup& l) { return DefaultHasher<T>::hash(l); }
-  static bool match(const Key& k, Lookup l) { return k.get() == l; }
-  static void rekey(Key& k, const Key& newKey) { k.set(newKey.get()); }
-};
 
 // This class only handles the incremental case and does not deal with nursery
 // pointers. The only users should be for NurseryAwareHashMap; it is defined
@@ -94,7 +72,7 @@ template <typename Key, typename Value,
           typename AllocPolicy = TempAllocPolicy,
           bool AllowDuplicates = DuplicatesNotPossible>
 class NurseryAwareHashMap {
-  using MapKey = detail::UnsafeBarePtr<Key>;
+  using MapKey = UnsafeBarePtr<Key>;
   using MapValue = detail::UnsafeBareWeakHeapPtr<Value>;
   using HashPolicy = DefaultHasher<MapKey>;
   using MapType = GCRekeyableHashMap<MapKey, MapValue, HashPolicy, AllocPolicy>;
@@ -213,23 +191,6 @@ class NurseryAwareHashMap {
 namespace JS {
 
 template <typename T>
-struct GCPolicy<js::detail::UnsafeBarePtr<T>> {
-  static bool needsSweep(js::detail::UnsafeBarePtr<T>* vp) {
-    if (*vp) {
-      return js::gc::IsAboutToBeFinalizedUnbarriered(vp->unbarrieredAddress());
-    }
-    return false;
-  }
-  static bool traceWeak(JSTracer* trc, js::detail::UnsafeBarePtr<T>* vp) {
-    if (*vp) {
-      return js::TraceManuallyBarrieredWeakEdge(trc, vp->unbarrieredAddress(),
-                                                "UnsafeBarePtr");
-    }
-    return true;
-  }
-};
-
-template <typename T>
 struct GCPolicy<js::detail::UnsafeBareWeakHeapPtr<T>> {
   static void trace(JSTracer* trc, js::detail::UnsafeBareWeakHeapPtr<T>* thingp,
                     const char* name) {
@@ -243,10 +204,6 @@ struct GCPolicy<js::detail::UnsafeBareWeakHeapPtr<T>> {
 }  // namespace JS
 
 namespace mozilla {
-
-template <class T>
-struct DefaultHasher<js::detail::UnsafeBarePtr<T>>
-    : js::detail::UnsafeBarePtrHasher<T> {};
 
 }  // namespace mozilla
 
