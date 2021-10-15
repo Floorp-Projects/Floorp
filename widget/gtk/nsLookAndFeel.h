@@ -164,7 +164,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   void EnsureInit();
 
-  static void FirefoxThemeChanged(const char*, void* aInstance);
   void RestoreSystemTheme();
   bool MatchFirefoxThemeIfNeeded();
 };
