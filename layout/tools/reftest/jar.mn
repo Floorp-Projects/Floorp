@@ -7,7 +7,6 @@ reftest.jar:
   content/box-shadow (../../reftests/box-shadow/*)
   content/bugs (../../reftests/bugs/*)
   content/css-display (../../reftests/css-display/*)
-  content/forms/input/color (../../reftests/forms/input/color/*)
   content/forms/input/file (../../reftests/forms/input/file/*)
   content/forms/input/text (../../reftests/forms/input/text/*)
   content/forms/placeholder (../../reftests/forms/placeholder/*)
