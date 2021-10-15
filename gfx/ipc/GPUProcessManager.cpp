@@ -473,7 +473,7 @@ void GPUProcessManager::SimulateDeviceReset() {
 
   if (mProcess) {
     GPUDeviceData data;
-    if (mGPUChild->SendSimulateDeviceReset(&data)) {
+    if (mGPUChild && mGPUChild->SendSimulateDeviceReset(&data)) {
       gfxPlatform::GetPlatform()->ImportGPUDeviceData(data);
     }
     OnRemoteProcessDeviceReset(mProcess);
