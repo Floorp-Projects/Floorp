@@ -2842,6 +2842,7 @@ ServerHandler.prototype = {
         s.importFunction(dump, "dump");
         s.importFunction(atob, "atob");
         s.importFunction(btoa, "btoa");
+        s.importFunction(ChromeUtils, "ChromeUtils");
 
         // Define a basic key-value state-preservation API across requests, with
         // keys initially corresponding to the empty string.
