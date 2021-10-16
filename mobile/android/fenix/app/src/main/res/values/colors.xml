@@ -47,7 +47,7 @@
     <color name="prompt_login_edit_text_cursor_color_light_theme">@color/photonInk20</color>
     <color name="readermode_start_gradient_normal_theme">@color/photonViolet50</color>
     <color name="readermode_end_gradient_normal_theme">@color/photonBlue60</color>
-    <color name="search_suggestion_indicator_icon_color_light_theme">#008787</color>
+    <color name="search_suggestion_indicator_icon_color_light_theme">@color/photonGreen70</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_light_theme">#0060df</color>
     <color name="preference_section_header_normal_theme">@color/accent_bright_light_theme</color>
     <color name="menu_item_button_light_theme">@color/accent_bright_light_theme</color>
