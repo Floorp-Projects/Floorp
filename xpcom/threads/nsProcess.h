@@ -44,6 +44,7 @@ class nsProcess final : public nsIProcess, public nsIObserver {
 
  private:
   ~nsProcess();
+  PRThread* CreateMonitorThread();
   static void Monitor(void* aArg);
   void ProcessComplete();
   nsresult CopyArgsAndRunProcess(bool aBlocking, const char** aArgs,
