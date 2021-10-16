@@ -98,7 +98,7 @@
     <color name="top_site_title_text_dark_theme">@color/photonLightGrey05</color>
     <color name="collection_icon_color_violet_dark_theme">@color/photonViolet40</color>
     <color name="collection_icon_color_blue_dark_theme">@color/photonBlue30</color>
-    <color name="collection_icon_color_pink_dark_theme">#FF6BBA</color>
+    <color name="collection_icon_color_pink_dark_theme">@color/photonPink30</color>
     <color name="collection_icon_color_green_dark_theme">#88FFD1</color>
     <color name="collection_icon_color_yellow_dark_theme">#FFDE67</color>
     <color name="toolbar_start_gradient_dark_theme">@color/foundation_dark_theme</color>
