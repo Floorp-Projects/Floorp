@@ -1470,13 +1470,13 @@ WindowRenderer* nsBaseWidget::GetWindowRenderer() {
     }
 
     if (!mWindowRenderer) {
-      mWindowRenderer = CreateBasicLayerManager();
+      mWindowRenderer = CreateFallbackRenderer();
     }
   }
   return mWindowRenderer;
 }
 
-WindowRenderer* nsBaseWidget::CreateBasicLayerManager() {
+WindowRenderer* nsBaseWidget::CreateFallbackRenderer() {
   return new FallbackRenderer;
 }
 
