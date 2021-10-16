@@ -19,7 +19,7 @@
     <color name="neutral_light_theme">@color/photonGrey30</color>
     <color name="neutral_faded_light_theme">@color/photonGrey20</color>
     <color name="shadow_light_theme">#1F000000</color>
-    <color name="destructive_light_theme">#C50042</color>
+    <color name="destructive_light_theme">@color/photonRed70</color>
     <color name="disabled_light_theme">#6620123A</color>
     <color name="scrimStart_light_theme">#F515141A</color>
     <color name="scrimEnd_light_theme">#F542414D</color>
