@@ -186,7 +186,10 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
         current_tab = self.marionette.current_window_handle
         [other_tab] = filter(lambda handle: handle != current_tab, window_handles)
 
-        self.assertEqual(self.marionette.get_url(), second_page)
+        Wait(self.marionette, timeout=5).until(
+            lambda _: self.marionette.get_url() == second_page,
+            message="Expected URL in the second tab has been loaded",
+        )
 
         self.marionette.switch_to_window(other_tab)
         Wait(self.marionette, timeout=5).until(
