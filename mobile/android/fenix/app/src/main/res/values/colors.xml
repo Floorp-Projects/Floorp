@@ -6,7 +6,6 @@
     <!-- Light theme color palette -->
     <color name="primary_text_light_theme">@color/photonInk80</color>
     <color name="contrast_text_light_theme">@color/primary_text_dark_theme</color>
-    <color name="caption_text_light_theme">@color/photonLightGrey90</color>
     <color name="foundation_light_theme">@color/photonLightGrey20</color>
     <color name="inset_light_theme">@color/photonLightGrey30</color>
     <color name="above_light_theme">@color/photonWhite</color>
@@ -160,7 +159,7 @@
     <color name="primary_text_normal_theme">@color/primary_text_light_theme</color>
     <color name="secondary_text_normal_theme">@color/photonGrey50</color>
     <color name="contrast_text_normal_theme">@color/contrast_text_light_theme</color>
-    <color name="caption_text_normal_theme">@color/caption_text_light_theme</color>
+    <color name="caption_text_normal_theme">@color/photonLightGrey90</color>
     <color name="foundation_normal_theme">@color/foundation_light_theme</color>
     <color name="above_normal_theme">@color/above_light_theme</color>
     <color name="inset_normal_theme">@color/inset_light_theme</color>
