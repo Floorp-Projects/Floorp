@@ -198,7 +198,7 @@ function gzipCompressString(string) {
 
 const STANDALONE_PING_TIMEOUT = 30 * 1000; // 30 seconds
 
-function sendStandalonePing(endpoint, payload) {
+function sendStandalonePing(endpoint, payload, extraHeaders = {}) {
   return new Promise((resolve, reject) => {
     let request = new ServiceRequest({ mozAnon: true });
     request.mozBackgroundRequest = true;
@@ -209,6 +209,9 @@ function sendStandalonePing(endpoint, payload) {
     request.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
     request.setRequestHeader("Content-Encoding", "gzip");
     request.setRequestHeader("Date", new Date().toUTCString());
+    for (let header in extraHeaders) {
+      request.setRequestHeader(header, extraHeaders[header]);
+    }
 
     request.onload = event => {
       if (request.status !== 200) {
