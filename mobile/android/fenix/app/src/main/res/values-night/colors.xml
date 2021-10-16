@@ -10,7 +10,7 @@
     <color name="caption_text_normal_theme">@color/photonLightGrey70</color>
     <color name="foundation_normal_theme">@color/foundation_dark_theme</color>
     <color name="above_normal_theme">@color/above_dark_theme</color>
-    <color name="inset_normal_theme">@color/inset_dark_theme</color>
+    <color name="inset_normal_theme">@color/photonDarkGrey50</color>
     <color name="accent_normal_theme">@color/accent_dark_theme</color>
     <color name="accent_bright_normal_theme">@color/accent_bright_dark_theme</color>
     <color name="accent_high_contrast_normal_theme">@color/accent_high_contrast_dark_theme</color>
@@ -96,7 +96,7 @@
     <color name="home_show_all_button_text">@color/photonViolet40</color>
 
     <!-- Search Widget -->
-    <color name="search_widget_background">@color/inset_dark_theme</color>
+    <color name="search_widget_background">@color/inset_normal_theme</color>
     <color name="search_widget_mic_fill_color">@color/primary_text_dark_theme</color>
     <color name="search_widget_text">@color/primary_text_dark_theme</color>
 

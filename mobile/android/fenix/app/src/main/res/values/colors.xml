@@ -59,7 +59,6 @@
     <!-- Dark theme color palette -->
     <color name="primary_text_dark_theme">@color/photonLightGrey05</color>
     <color name="foundation_dark_theme">@color/photonDarkGrey80</color>
-    <color name="inset_dark_theme">@color/photonDarkGrey50</color>
     <color name="above_dark_theme">@color/photonDarkGrey50</color>
     <color name="accent_dark_theme">@color/photonViolet50</color>
     <color name="accent_bright_dark_theme">@color/photonViolet70</color>
