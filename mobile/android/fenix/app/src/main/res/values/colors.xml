@@ -301,7 +301,7 @@
     <color name="neutral_text">@color/white_color</color>
     <color name="text_scale_example_text_color">#232749</color>
     <color name="sync_error_background_color">#FFF36E</color>
-    <color name="sync_error_text_color">#960E18</color>
+    <color name="sync_error_text_color">@color/photonYellow90</color>
     <color name="bottom_bar_shadow">#1A000000</color>
     <color name="snackbar_error_color">#B52645</color>
 
