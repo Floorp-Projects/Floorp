@@ -767,7 +767,7 @@ static Formatter* NewNumberFormat(JSContext* cx,
     return result.unwrap().release();
   }
 
-  intl::ReportInternalError(cx);
+  intl::ReportInternalError(cx, result.unwrapErr());
   return nullptr;
 }
 
@@ -1197,7 +1197,7 @@ bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (result.isErr()) {
-    intl::ReportInternalError(cx);
+    intl::ReportInternalError(cx, result.unwrapErr());
     return false;
   }
 
@@ -1540,7 +1540,7 @@ bool js::intl_FormatNumberRange(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (result.isErr()) {
-    intl::ReportInternalError(cx);
+    intl::ReportInternalError(cx, result.unwrapErr());
     return false;
   }
 
