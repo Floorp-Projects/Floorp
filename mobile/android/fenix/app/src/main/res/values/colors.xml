@@ -90,7 +90,7 @@
     <color name="neutral_dark_theme">@color/photonGrey20</color>
     <color name="neutral_faded_dark_theme">#1FFBFBFE</color>
     <color name="shadow_dark_theme">#050505</color>
-    <color name="destructive_dark_theme">#FF6A75</color>
+    <color name="destructive_dark_theme">@color/photonRed40</color>
     <color name="disabled_dark_theme">#66FBFBFE</color>
     <color name="scrimStart_dark_theme">#F520123A</color>
     <color name="scrimEnd_dark_theme">#F515141A</color>
@@ -154,7 +154,7 @@
     <color name="neutral_private_theme">@color/photonGrey20</color>
     <color name="neutral_faded_private_theme">#1FFBFBFE</color>
     <color name="shadow_private_theme">#2B1067</color>
-    <color name="destructive_private_theme">#FF6A75</color>
+    <color name="destructive_private_theme">@color/photonRed40</color>
     <color name="disabled_private_theme">#66FBFBFE</color>
     <color name="scrimStart_private_theme">#F520123A</color>
     <color name="scrimEnd_private_theme">#F515141A</color>
