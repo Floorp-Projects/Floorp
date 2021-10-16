@@ -408,7 +408,8 @@ UNumberFormatter* NumberFormatterSkeleton::toFormatter(
 
   UErrorCode status = U_ZERO_ERROR;
   UNumberFormatter* nf = unumf_openForSkeletonAndLocale(
-      mVector.begin(), mVector.length(), locale.data(), &status);
+      mVector.begin(), mVector.length(), AssertNullTerminatedString(locale),
+      &status);
   if (U_FAILURE(status)) {
     return nullptr;
   }
@@ -462,8 +463,8 @@ UNumberRangeFormatter* NumberFormatterSkeleton::toRangeFormatter(
   UNumberRangeFormatter* nrf =
       unumrf_openForSkeletonWithCollapseAndIdentityFallback(
           mVector.begin(), mVector.length(), ToUNumberRangeCollapse(collapse),
-          ToUNumberRangeIdentityFallback(identity), locale.data(), perror,
-          &status);
+          ToUNumberRangeIdentityFallback(identity),
+          AssertNullTerminatedString(locale), perror, &status);
   if (U_FAILURE(status)) {
     return nullptr;
   }

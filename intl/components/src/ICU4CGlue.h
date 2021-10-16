@@ -10,13 +10,16 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
+#include "mozilla/Span.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/Vector.h"
 #include "mozilla/intl/ICUError.h"
 
+#include <cstring>
 #include <iterator>
 #include <stddef.h>
 #include <stdint.h>
+#include <string_view>
 
 namespace mozilla::intl {
 
@@ -26,6 +29,28 @@ static inline const char* IcuLocale(const char* aLocale) {
     locale = "";
   }
   return locale;
+}
+
+static inline const char* AssertNullTerminatedString(Span<const char> aSpan) {
+  // Intentionally check one past the last character, because we expect that the
+  // NUL character isn't part of the string.
+  MOZ_ASSERT(*(aSpan.data() + aSpan.size()) == '\0');
+
+  // Also ensure there aren't any other NUL characters within the string.
+  MOZ_ASSERT(std::strlen(aSpan.data()) == aSpan.size());
+
+  return aSpan.data();
+}
+
+static inline const char* AssertNullTerminatedString(std::string_view aView) {
+  // Intentionally check one past the last character, because we expect that the
+  // NUL character isn't part of the string.
+  MOZ_ASSERT(*(aView.data() + aView.size()) == '\0');
+
+  // Also ensure there aren't any other NUL characters within the string.
+  MOZ_ASSERT(std::strlen(aView.data()) == aView.size());
+
+  return aView.data();
 }
 
 using ICUResult = Result<Ok, ICUError>;
