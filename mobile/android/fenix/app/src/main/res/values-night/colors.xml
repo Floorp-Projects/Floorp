@@ -17,7 +17,7 @@
     <color name="about_link_normal_theme">@color/photonViolet40</color>
     <color name="tab_ring_normal_theme">@color/accent_dark_theme</color>
     <color name="neutral_normal_theme">@color/photonGrey20</color>
-    <color name="neutral_faded_normal_theme">@color/neutral_faded_dark_theme</color>
+    <color name="neutral_faded_normal_theme">#1FFBFBFE</color>
     <color name="shadow_normal_theme">@color/shadow_dark_theme</color>
     <color name="destructive_normal_theme">@color/photonRed40</color>
     <color name="disabled_normal_theme">@color/disabled_dark_theme</color>
