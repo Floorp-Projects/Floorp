@@ -5483,19 +5483,19 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
     // 2. currentZoom is equal to mZoomConstraints.mMaxZoom and user still
     // double-tapping it
     // Treat these cases as a request to zoom out as much as possible
-    // unless we were passed the ZOOM_IN_IF_CANT_ZOOM_OUT flag and currentZoom
+    // unless cantZoomOutBehavior == ZoomIn and currentZoom
     // is equal to localMinZoom and user still double-tapping it, then try to
     // zoom in a small amount to provide feedback to the user.
     bool zoomOut = false;
     // True if we are already zoomed out and we are asked to either stay there
-    // or zoom out more and the ZOOM_IN_IF_CANT_ZOOM_OUT flag was passed.
+    // or zoom out more and cantZoomOutBehavior == ZoomIn.
     bool zoomInDefaultAmount = false;
     if (aFlags & DISABLE_ZOOM_OUT) {
       zoomOut = false;
     } else {
       if (rect.IsEmpty()) {
         if (currentZoom == localMinZoom &&
-            (aFlags & ZOOM_IN_IF_CANT_ZOOM_OUT) &&
+            aZoomTarget.cantZoomOutBehavior == CantZoomOutBehavior::ZoomIn &&
             (defaultZoomInAmount != 1.f)) {
           zoomInDefaultAmount = true;
         } else {
@@ -5508,7 +5508,8 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
 
     // already at min zoom and asked to zoom out further
     if (!zoomOut && currentZoom == localMinZoom && targetZoom <= localMinZoom &&
-        (aFlags & ZOOM_IN_IF_CANT_ZOOM_OUT) && (defaultZoomInAmount != 1.f)) {
+        aZoomTarget.cantZoomOutBehavior == CantZoomOutBehavior::ZoomIn &&
+        (defaultZoomInAmount != 1.f)) {
       zoomInDefaultAmount = true;
     }
     MOZ_ASSERT(!(zoomInDefaultAmount && zoomOut));

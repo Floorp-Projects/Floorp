@@ -19,10 +19,16 @@ class Document;
 
 namespace layers {
 
+enum class CantZoomOutBehavior : int8_t { Nothing = 0, ZoomIn };
+
 struct ZoomTarget {
   // The preferred target rect that we'd like to zoom in on, if possible. An
   // empty rect means the browser should zoom out.
   CSSRect targetRect;
+
+  // If we are asked to zoom out but cannot (due to zoom constraints, etc), then
+  // zoom in some small amount to provide feedback to the user.
+  CantZoomOutBehavior cantZoomOutBehavior = CantZoomOutBehavior::Nothing;
 
   // If zooming all the way in on |targetRect| is not possible (for example, due
   // to a max zoom constraint), |elementBoundingRect| may be used to inform a

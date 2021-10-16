@@ -988,11 +988,19 @@ struct ParamTraits<mozilla::RayReferenceData> {
 };
 
 template <>
+struct ParamTraits<mozilla::layers::CantZoomOutBehavior>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::layers::CantZoomOutBehavior,
+          mozilla::layers::CantZoomOutBehavior::Nothing,
+          mozilla::layers::CantZoomOutBehavior::ZoomIn> {};
+
+template <>
 struct ParamTraits<mozilla::layers::ZoomTarget> {
   typedef mozilla::layers::ZoomTarget paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.targetRect);
+    WriteParam(aMsg, aParam.cantZoomOutBehavior);
     WriteParam(aMsg, aParam.elementBoundingRect);
     WriteParam(aMsg, aParam.documentRelativePointerPosition);
   }
@@ -1000,6 +1008,7 @@ struct ParamTraits<mozilla::layers::ZoomTarget> {
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     return (ReadParam(aMsg, aIter, &aResult->targetRect) &&
+            ReadParam(aMsg, aIter, &aResult->cantZoomOutBehavior) &&
             ReadParam(aMsg, aIter, &aResult->elementBoundingRect) &&
             ReadParam(aMsg, aIter, &aResult->documentRelativePointerPosition));
   }
