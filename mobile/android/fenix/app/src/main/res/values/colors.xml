@@ -72,7 +72,6 @@
     <color name="disabled_dark_theme">#66FBFBFE</color>
     <color name="scrimStart_dark_theme">#F520123A</color>
     <color name="scrimEnd_dark_theme">#F515141A</color>
-    <color name="top_site_title_text_dark_theme">@color/photonLightGrey05</color>
     <color name="toolbar_start_gradient_dark_theme">@color/foundation_dark_theme</color>
     <color name="toolbar_center_gradient_dark_theme">@color/foundation_dark_theme</color>
     <color name="toolbar_end_gradient_dark_theme">@color/foundation_dark_theme</color>

@@ -76,7 +76,7 @@
     <color name="tab_history_item_selected_background_normal_theme">@color/tab_tray_item_selected_background_dark_theme</color>
 
     <!--Top site colors -->
-    <color name="top_site_title_text">@color/top_site_title_text_dark_theme</color>
+    <color name="top_site_title_text">@color/photonLightGrey05</color>
     <color name="top_site_pager_dot">@color/photonDarkGrey40</color>
     <color name="top_site_pager_dot_selected">@color/photonDarkGrey05</color>
     <color name="top_site_pin_icon_color">@color/foundation_light_theme</color>
