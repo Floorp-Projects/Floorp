@@ -855,6 +855,8 @@ DesktopToLayoutDeviceScale nsWindow::GetDesktopToDeviceScaleByScreen() {
 }
 
 void nsWindow::SetParent(nsIWidget* aNewParent) {
+  LOG("nsWindow::SetParent [%p] parent %p\n", (void*)this, aNewParent);
+
   if (!mGdkWindow) {
     MOZ_ASSERT_UNREACHABLE("The native window has already been destroyed");
     return;
@@ -2869,18 +2871,27 @@ guint32 nsWindow::GetLastUserInputTime() {
   return timestamp;
 }
 
+// Request activation of this window or give focus to this widget.
+// aRaise means whether we should request activation of this widget's
+// toplevel window.
 void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
   // Make sure that our owning widget has focus.  If it doesn't try to
   // grab it.  Note that we don't set our focus flag in this case.
 
-  LOG("  SetFocus %d [%p]\n", aRaise == Raise::Yes, (void*)this);
+  LOG("nsWindow::SetFocus [%p] Raise %d\n", (void*)this, aRaise == Raise::Yes);
 
   GtkWidget* owningWidget = GetMozContainerWidget();
-  if (!owningWidget) return;
+  if (!owningWidget) {
+    return;
+  }
+
+  LOG("  Gtk widget (owningWidget) [%p]\n", owningWidget);
 
   // Raise the window if someone passed in true and the prefs are
   // set properly.
   GtkWidget* toplevelWidget = gtk_widget_get_toplevel(owningWidget);
+
+  LOG("  Toplevel widget [%p]\n", toplevelWidget);
 
   if (gRaiseWindows && aRaise == Raise::Yes && toplevelWidget &&
       !gtk_widget_has_focus(owningWidget) &&
@@ -2894,7 +2905,10 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
   }
 
   RefPtr<nsWindow> owningWindow = get_window_for_gtk_widget(owningWidget);
-  if (!owningWindow) return;
+  if (!owningWindow) {
+    LOG("  missing nsWindow, quit\n");
+    return;
+  }
 
   if (aRaise == Raise::Yes) {
     // means request toplevel activation.
@@ -5136,24 +5150,6 @@ bool nsWindow::IsToplevelWindowTransparent() {
   return sTransparentMainWindow;
 }
 
-static GdkWindow* CreateGdkWindow(GdkWindow* parent, GtkWidget* widget) {
-  GdkWindowAttr attributes;
-  gint attributes_mask = GDK_WA_VISUAL;
-
-  attributes.event_mask = kEvents;
-
-  attributes.width = 1;
-  attributes.height = 1;
-  attributes.wclass = GDK_INPUT_OUTPUT;
-  attributes.visual = gtk_widget_get_visual(widget);
-  attributes.window_type = GDK_WINDOW_CHILD;
-
-  GdkWindow* window = gdk_window_new(parent, &attributes, attributes_mask);
-  gdk_window_set_user_data(window, widget);
-
-  return window;
-}
-
 #ifdef MOZ_X11
 // Configure GL visual on X11.
 bool nsWindow::ConfigureX11GLVisual() {
@@ -5267,7 +5263,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                                 (aInitData && aInitData->mSupportTranslucency));
 
   // Figure out our parent window - only used for eWindowType_child
-  GtkWidget* parentMozContainer = nullptr;
   GtkContainer* parentGtkContainer = nullptr;
   GdkWindow* parentGdkWindow = nullptr;
   nsWindow* parentnsWindow = nullptr;
@@ -5278,30 +5273,29 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   } else if (aNativeParent && GDK_IS_WINDOW(aNativeParent)) {
     parentGdkWindow = GDK_WINDOW(aNativeParent);
     parentnsWindow = get_window_for_gdk_window(parentGdkWindow);
-    if (!parentnsWindow) return NS_ERROR_FAILURE;
-
+    if (!parentnsWindow) {
+      return NS_ERROR_FAILURE;
+    }
   } else if (aNativeParent && GTK_IS_CONTAINER(aNativeParent)) {
     parentGtkContainer = GTK_CONTAINER(aNativeParent);
   }
 
-  if (parentGdkWindow) {
-    // get the widget for the window - it should be a moz container
-    parentMozContainer = parentnsWindow->GetMozContainerWidget();
-    if (!parentMozContainer) return NS_ERROR_FAILURE;
-  }
-  // ^^ only used for eWindowType_child
-
-  if (GdkIsWaylandDisplay()) {
-    if (mWindowType == eWindowType_child) {
-      // eWindowType_child is not supported on Wayland. Just switch to toplevel
-      // as a workaround.
-      mWindowType = eWindowType_toplevel;
-    } else if (mWindowType == eWindowType_popup && !aNativeParent && !aParent) {
-      // mIsWaylandPanelWindow is a special toplevel window on Wayland which
-      // emulates X11 popup window without parent.
-      mIsWaylandPanelWindow = true;
-      mWindowType = eWindowType_toplevel;
+  if (mWindowType == eWindowType_child) {
+    mWindowType = eWindowType_popup;
+    if (!parentnsWindow && parentGtkContainer) {
+      parentnsWindow =
+          get_window_for_gtk_widget(GTK_WIDGET(parentGtkContainer));
     }
+    LOG("  child widget, switch to popup. parent nsWindow %p\n",
+        parentnsWindow);
+  }
+
+  if (GdkIsWaylandDisplay() && mWindowType == eWindowType_popup &&
+      !aNativeParent && !aParent) {
+    // mIsWaylandPanelWindow is a special toplevel window on Wayland which
+    // emulates X11 popup window without parent.
+    mIsWaylandPanelWindow = true;
+    mWindowType = eWindowType_toplevel;
   }
 
   mAlwaysOnTop = aInitData && aInitData->mAlwaysOnTop;
@@ -5616,30 +5610,9 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     case eWindowType_plugin_ipc_content:
       MOZ_ASSERT_UNREACHABLE("Unexpected eWindowType_plugin*");
       return NS_ERROR_FAILURE;
-
-    case eWindowType_child: {
-      if (parentMozContainer) {
-        mGdkWindow = CreateGdkWindow(parentGdkWindow, parentMozContainer);
-        mHasMappedToplevel = parentnsWindow->mHasMappedToplevel;
-      } else if (parentGtkContainer) {
-        // This MozContainer has its own window for drawing and receives
-        // events because there is no mShell widget (corresponding to this
-        // nsWindow).
-        GtkWidget* container = moz_container_new();
-        mContainer = MOZ_CONTAINER(container);
-        eventWidget = container;
-        gtk_widget_add_events(eventWidget, kEvents);
-        gtk_container_add(parentGtkContainer, container);
-        gtk_widget_realize(container);
-
-        mGdkWindow = gtk_widget_get_window(container);
-      } else {
-        NS_WARNING(
-            "Warning: tried to create a new child widget with no parent!");
-        return NS_ERROR_FAILURE;
-      }
-    } break;
     default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected eWindowType");
+      return NS_ERROR_FAILURE;
       break;
   }
 
@@ -6913,9 +6886,13 @@ GtkWidget* nsWindow::GetToplevelWidget() {
 }
 
 GtkWidget* nsWindow::GetMozContainerWidget() {
-  if (!mGdkWindow) return nullptr;
+  if (!mGdkWindow) {
+    return nullptr;
+  }
 
-  if (mContainer) return GTK_WIDGET(mContainer);
+  if (mContainer) {
+    return GTK_WIDGET(mContainer);
+  }
 
   GtkWidget* owningWidget = get_gtk_widget_for_gdk_window(mGdkWindow);
   return owningWidget;
@@ -6931,6 +6908,8 @@ nsWindow* nsWindow::GetContainerWindow() {
 }
 
 void nsWindow::SetUrgencyHint(GtkWidget* top_window, bool state) {
+  LOG("  nsWindow::SetUrgencyHint [%p] widget %p\n", this, top_window);
+
   if (!top_window) return;
 
   gdk_window_set_urgency_hint(gtk_widget_get_window(top_window), state);
