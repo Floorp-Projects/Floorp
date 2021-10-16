@@ -14,7 +14,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/migration_icon_description"
-            app:tint="@color/collection_icon_color_violet_light_theme"
+            app:tint="@color/photonViolet60"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/mozac_ic_check"

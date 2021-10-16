@@ -86,11 +86,11 @@
     <color name="synced_tabs_separator">@color/synced_tabs_separator_dark_theme</color>
 
     <!-- Collection icons-->
-    <color name="collection_icon_color_violet">@color/collection_icon_color_violet_dark_theme</color>
-    <color name="collection_icon_color_blue">@color/collection_icon_color_blue_dark_theme</color>
-    <color name="collection_icon_color_pink">@color/collection_icon_color_pink_dark_theme</color>
-    <color name="collection_icon_color_green">@color/collection_icon_color_green_dark_theme</color>
-    <color name="collection_icon_color_yellow">@color/collection_icon_color_yellow_dark_theme</color>
+    <color name="collection_icon_color_violet">@color/photonViolet40</color>
+    <color name="collection_icon_color_blue">@color/photonBlue30</color>
+    <color name="collection_icon_color_pink">@color/photonPink30</color>
+    <color name="collection_icon_color_green">#88FFD1</color>
+    <color name="collection_icon_color_yellow">#FFDE67</color>
 
     <!-- Home screen -->
     <color name="home_show_all_button_text">@color/photonViolet40</color>

@@ -27,11 +27,6 @@
     <color name="dark_grey_90_gradient_end">#0015141A</color>
     <color name="synced_tabs_separator_light_theme">@color/photonLightGrey30</color>
     <color name="top_site_title_text_light_theme">@color/photonDarkGrey90</color>
-    <color name="collection_icon_color_violet_light_theme">@color/photonViolet60</color>
-    <color name="collection_icon_color_blue_light_theme">@color/photonBlue60</color>
-    <color name="collection_icon_color_pink_light_theme">@color/photonPink60</color>
-    <color name="collection_icon_color_green_light_theme">@color/photonGreen60</color>
-    <color name="collection_icon_color_yellow_light_theme">@color/photonYellow60</color>
     <color name="toolbar_start_gradient_light_theme">@color/foundation_light_theme</color>
     <color name="toolbar_center_gradient_light_theme">@color/foundation_light_theme</color>
     <color name="toolbar_end_gradient_light_theme">@color/foundation_light_theme</color>
@@ -79,11 +74,6 @@
     <color name="scrimEnd_dark_theme">#F515141A</color>
     <color name="synced_tabs_separator_dark_theme">@color/photonDarkGrey10</color>
     <color name="top_site_title_text_dark_theme">@color/photonLightGrey05</color>
-    <color name="collection_icon_color_violet_dark_theme">@color/photonViolet40</color>
-    <color name="collection_icon_color_blue_dark_theme">@color/photonBlue30</color>
-    <color name="collection_icon_color_pink_dark_theme">@color/photonPink30</color>
-    <color name="collection_icon_color_green_dark_theme">#88FFD1</color>
-    <color name="collection_icon_color_yellow_dark_theme">#FFDE67</color>
     <color name="toolbar_start_gradient_dark_theme">@color/foundation_dark_theme</color>
     <color name="toolbar_center_gradient_dark_theme">@color/foundation_dark_theme</color>
     <color name="toolbar_end_gradient_dark_theme">@color/foundation_dark_theme</color>
@@ -250,11 +240,11 @@
     <color name="synced_tabs_separator">@color/synced_tabs_separator_light_theme</color>
 
     <!-- Collection icons-->
-    <color name="collection_icon_color_violet">@color/collection_icon_color_violet_light_theme</color>
-    <color name="collection_icon_color_blue">@color/collection_icon_color_blue_light_theme</color>
-    <color name="collection_icon_color_pink">@color/collection_icon_color_pink_light_theme</color>
-    <color name="collection_icon_color_green">@color/collection_icon_color_green_light_theme</color>
-    <color name="collection_icon_color_yellow">@color/collection_icon_color_yellow_light_theme</color>
+    <color name="collection_icon_color_violet">@color/photonViolet60</color>
+    <color name="collection_icon_color_blue">@color/photonBlue60</color>
+    <color name="collection_icon_color_pink">@color/photonPink60</color>
+    <color name="collection_icon_color_green">@color/photonGreen60</color>
+    <color name="collection_icon_color_yellow">@color/photonYellow60</color>
     <array name="collection_icon_colors">
         <item>@color/collection_icon_color_violet</item>
         <item>@color/collection_icon_color_blue</item>
