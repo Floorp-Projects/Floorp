@@ -101,7 +101,7 @@ jobs:
             upstream_kind: repackage-signing
             upstream_artifact: target.installer.exe
             binary: core/firefox.exe
-        worker-type: t-win10-64-source
+        worker-type: win10-64-2004-source
         shipping-product: firefox
         attributes:
             build_platform: win32-shippable
@@ -118,7 +118,7 @@ jobs:
             upstream_kind: repackage-signing
             upstream_artifact: target.installer.exe
             binary: core/firefox.exe
-        worker-type: t-win10-64-source
+        worker-type: win10-64-2004-source
         shipping-product: firefox
         attributes:
             build_platform: win64-shippable
