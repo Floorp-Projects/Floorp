@@ -96,8 +96,9 @@ TEST(IntlDateTimeFormat, Skeleton_enUS_utf8_in)
 
   UniquePtr<DateTimeFormat> dtFormat =
       DateTimeFormat::TryCreateFromSkeleton(
-          "en-US", MakeStringSpan("yMdhhmmss"), dateTimePatternGenerator.get(),
-          Nothing(), Some(MakeStringSpan("GMT+3")))
+          MakeStringSpan("en-US"), MakeStringSpan("yMdhhmmss"),
+          dateTimePatternGenerator.get(), Nothing(),
+          Some(MakeStringSpan("GMT+3")))
           .unwrap();
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
@@ -113,8 +114,9 @@ TEST(IntlDateTimeFormat, Skeleton_enUS_utf16_in)
 
   UniquePtr<DateTimeFormat> dtFormat =
       DateTimeFormat::TryCreateFromSkeleton(
-          "en-US", MakeStringSpan(u"yMdhhmmss"), dateTimePatternGenerator.get(),
-          Nothing(), Some(MakeStringSpan(u"GMT+3")))
+          MakeStringSpan("en-US"), MakeStringSpan(u"yMdhhmmss"),
+          dateTimePatternGenerator.get(), Nothing(),
+          Some(MakeStringSpan(u"GMT+3")))
           .unwrap();
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
@@ -178,9 +180,9 @@ TEST(IntlDateTimePatternGenerator, GetSkeleton)
 }
 
 // A utility function to help test the DateTimeFormat::ComponentsBag.
-[[nodiscard]] bool FormatComponents(TestBuffer<char16_t>& aBuffer,
-                                    DateTimeFormat::ComponentsBag& aComponents,
-                                    Span<const char> aLocale = "en-US") {
+[[nodiscard]] bool FormatComponents(
+    TestBuffer<char16_t>& aBuffer, DateTimeFormat::ComponentsBag& aComponents,
+    Span<const char> aLocale = MakeStringSpan("en-US")) {
   UniquePtr<DateTimePatternGenerator> gen = nullptr;
   auto dateTimePatternGenerator =
       DateTimePatternGenerator::TryCreate(aLocale.data()).unwrap();
@@ -232,7 +234,7 @@ TEST(IntlDateTimeFormat, Components_es_ES)
   components.second = Some(DateTimeFormat::Numeric::TwoDigit);
 
   TestBuffer<char16_t> buffer;
-  ASSERT_TRUE(FormatComponents(buffer, components, "es-ES"));
+  ASSERT_TRUE(FormatComponents(buffer, components, MakeStringSpan("es-ES")));
   ASSERT_TRUE(buffer.verboseMatches(u"23/9/2002 20:07:30"));
 }
 
@@ -352,7 +354,7 @@ template <typename T>
 [[nodiscard]] bool ResolveComponentsBag(
     DateTimeFormat::ComponentsBag& aComponentsIn,
     DateTimeFormat::ComponentsBag* aComponentsOut,
-    Span<const char> aLocale = "en-US") {
+    Span<const char> aLocale = MakeStringSpan("en-US")) {
   UniquePtr<DateTimePatternGenerator> gen = nullptr;
   auto dateTimePatternGenerator =
       DateTimePatternGenerator::TryCreate("en").unwrap();

@@ -48,8 +48,8 @@ Result<UniquePtr<PluralRules>, ICUError> PluralRules::TryCreate(
   auto pluralType = aOptions.mPluralType == PluralRules::Type::Cardinal
                         ? UPLURAL_TYPE_CARDINAL
                         : UPLURAL_TYPE_ORDINAL;
-  UPluralRules* pluralRules =
-      uplrules_openForType(aLocale.data(), pluralType, &status);
+  UPluralRules* pluralRules = uplrules_openForType(
+      AssertNullTerminatedString(aLocale), pluralType, &status);
 
   if (U_FAILURE(status)) {
     return Err(ToICUError(status));

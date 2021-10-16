@@ -13,7 +13,8 @@ namespace mozilla::intl {
 TEST(IntlListFormat, FormatDefault)
 {
   ListFormat::Options options;
-  UniquePtr<ListFormat> lf = ListFormat::TryCreate("en-US", options).unwrap();
+  UniquePtr<ListFormat> lf =
+      ListFormat::TryCreate(MakeStringSpan("en-US"), options).unwrap();
   ListFormat::StringList list;
   MOZ_RELEASE_ASSERT(list.append(MakeStringSpan(u"Alice")));
   MOZ_RELEASE_ASSERT(list.append(MakeStringSpan(u"Bob")));
@@ -22,7 +23,8 @@ TEST(IntlListFormat, FormatDefault)
   ASSERT_TRUE(lf->Format(list, buf16).isOk());
   ASSERT_EQ(buf16.get_string_view(), u"Alice, Bob, and Charlie");
 
-  UniquePtr<ListFormat> lfDe = ListFormat::TryCreate("de", options).unwrap();
+  UniquePtr<ListFormat> lfDe =
+      ListFormat::TryCreate(MakeStringSpan("de"), options).unwrap();
   ASSERT_TRUE(lfDe->Format(list, buf16).isOk());
   ASSERT_EQ(buf16.get_string_view(), u"Alice, Bob und Charlie");
 }
@@ -32,7 +34,8 @@ TEST(IntlListFormat, FormatConjunction)
 {
   ListFormat::Options options{ListFormat::Type::Conjunction,
                               ListFormat::Style::Narrow};
-  UniquePtr<ListFormat> lf = ListFormat::TryCreate("en-US", options).unwrap();
+  UniquePtr<ListFormat> lf =
+      ListFormat::TryCreate(MakeStringSpan("en-US"), options).unwrap();
   ListFormat::StringList list;
   MOZ_RELEASE_ASSERT(list.append(MakeStringSpan(u"Alice")));
   MOZ_RELEASE_ASSERT(list.append(MakeStringSpan(u"Bob")));
@@ -44,7 +47,7 @@ TEST(IntlListFormat, FormatConjunction)
   ListFormat::Options optionsSh{ListFormat::Type::Conjunction,
                                 ListFormat::Style::Short};
   UniquePtr<ListFormat> lfSh =
-      ListFormat::TryCreate("en-US", optionsSh).unwrap();
+      ListFormat::TryCreate(MakeStringSpan("en-US"), optionsSh).unwrap();
   ASSERT_TRUE(lfSh->Format(list, buf16).isOk());
   ASSERT_EQ(buf16.get_string_view(), u"Alice, Bob, & Charlie");
 }
@@ -56,7 +59,8 @@ TEST(IntlListFormat, FormatDisjunction)
   // style for most locales, so simply test with Style::Long.
   ListFormat::Options options{ListFormat::Type::Disjunction,
                               ListFormat::Style::Long};
-  UniquePtr<ListFormat> lf = ListFormat::TryCreate("en-US", options).unwrap();
+  UniquePtr<ListFormat> lf =
+      ListFormat::TryCreate(MakeStringSpan("en-US"), options).unwrap();
   ListFormat::StringList list;
   MOZ_RELEASE_ASSERT(list.append(MakeStringSpan(u"Alice")));
   MOZ_RELEASE_ASSERT(list.append(MakeStringSpan(u"Bob")));
@@ -72,7 +76,8 @@ TEST(IntlListFormat, FormatUnit)
   ListFormat::Options options{ListFormat::Type::Unit, ListFormat::Style::Long};
   // For locale "en", Style::Long and Style::Short have the same result, so just
   // test Style::Long here.
-  UniquePtr<ListFormat> lf = ListFormat::TryCreate("en-US", options).unwrap();
+  UniquePtr<ListFormat> lf =
+      ListFormat::TryCreate(MakeStringSpan("en-US"), options).unwrap();
   ListFormat::StringList list;
   MOZ_RELEASE_ASSERT(list.append(MakeStringSpan(u"Alice")));
   MOZ_RELEASE_ASSERT(list.append(MakeStringSpan(u"Bob")));
@@ -84,7 +89,7 @@ TEST(IntlListFormat, FormatUnit)
   ListFormat::Options optionsNa{ListFormat::Type::Unit,
                                 ListFormat::Style::Narrow};
   UniquePtr<ListFormat> lfNa =
-      ListFormat::TryCreate("en-US", optionsNa).unwrap();
+      ListFormat::TryCreate(MakeStringSpan("en-US"), optionsNa).unwrap();
   ASSERT_TRUE(lfNa->Format(list, buf16).isOk());
   ASSERT_EQ(buf16.get_string_view(), u"Alice Bob Charlie");
 }
@@ -94,7 +99,8 @@ TEST(IntlListFormat, FormatUnit)
 TEST(IntlListFormat, FormatBufferLength)
 {
   ListFormat::Options options;
-  UniquePtr<ListFormat> lf = ListFormat::TryCreate("en-US", options).unwrap();
+  UniquePtr<ListFormat> lf =
+      ListFormat::TryCreate(MakeStringSpan("en-US"), options).unwrap();
   ListFormat::StringList list;
   MOZ_RELEASE_ASSERT(list.append(MakeStringSpan(u"Alice")));
   MOZ_RELEASE_ASSERT(list.append(MakeStringSpan(u"Bob")));
@@ -114,7 +120,8 @@ TEST(IntlListFormat, FormatBufferLength)
 TEST(IntlListFormat, FormatToParts)
 {
   ListFormat::Options options;
-  UniquePtr<ListFormat> lf = ListFormat::TryCreate("en-US", options).unwrap();
+  UniquePtr<ListFormat> lf =
+      ListFormat::TryCreate(MakeStringSpan("en-US"), options).unwrap();
   ListFormat::StringList list;
   MOZ_RELEASE_ASSERT(list.append(MakeStringSpan(u"Alice")));
   MOZ_RELEASE_ASSERT(list.append(MakeStringSpan(u"Bob")));
