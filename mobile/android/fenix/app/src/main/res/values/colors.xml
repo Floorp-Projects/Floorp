@@ -25,7 +25,6 @@
 
     <!-- Dark theme color palette -->
     <color name="primary_text_dark_theme">@color/photonLightGrey05</color>
-    <color name="foundation_dark_theme">@color/photonDarkGrey80</color>
     <color name="above_dark_theme">@color/photonDarkGrey50</color>
     <color name="accent_dark_theme">@color/photonViolet50</color>
     <color name="accent_bright_dark_theme">@color/photonViolet70</color>
@@ -162,7 +161,7 @@
     <color name="top_site_title_text">@color/photonDarkGrey90</color>
     <color name="top_site_pager_dot">@color/photonLightGrey30</color>
     <color name="top_site_pager_dot_selected">@color/photonLightGrey50</color>
-    <color name="top_site_pin_icon_color">@color/foundation_dark_theme</color>
+    <color name="top_site_pin_icon_color">@color/photonDarkGrey80</color>
     <color name="top_sites_border_color">@color/photonLightGrey30</color>
 
     <!-- Synced tabs colors-->

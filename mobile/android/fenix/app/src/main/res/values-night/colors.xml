@@ -8,7 +8,7 @@
     <color name="secondary_text_normal_theme">#A7A2B7</color>
     <color name="contrast_text_normal_theme">@color/primary_text_normal_theme</color>
     <color name="caption_text_normal_theme">@color/photonLightGrey70</color>
-    <color name="foundation_normal_theme">@color/foundation_dark_theme</color>
+    <color name="foundation_normal_theme">@color/photonDarkGrey80</color>
     <color name="above_normal_theme">@color/above_dark_theme</color>
     <color name="inset_normal_theme">@color/photonDarkGrey50</color>
     <color name="accent_normal_theme">@color/accent_dark_theme</color>
@@ -27,9 +27,9 @@
     <color name="toggle_off_track_normal_theme">@color/toggle_off_track_dark_theme</color>
     <color name="snackbar_normal_theme">@color/accent_bright_dark_theme</color>
     <color name="accent_on_dark_background_normal_theme">@color/accent_high_contrast_dark_theme</color>
-    <color name="toolbar_start_gradient_normal_theme">@color/foundation_dark_theme</color>
-    <color name="toolbar_center_gradient_normal_theme">@color/foundation_dark_theme</color>
-    <color name="toolbar_end_gradient_normal_theme">@color/foundation_dark_theme</color>
+    <color name="toolbar_start_gradient_normal_theme">@color/foundation_normal_theme</color>
+    <color name="toolbar_center_gradient_normal_theme">@color/foundation_normal_theme</color>
+    <color name="toolbar_end_gradient_normal_theme">@color/foundation_normal_theme</color>
     <color name="toolbar_divider_color_normal_theme">@color/photonDarkGrey10</color>
     <color name="fill_link_from_clipboard_normal_theme">@color/accent_on_dark_background_normal_theme</color>
     <color name="menu_category_normal_theme">@color/primary_text_normal_theme</color>
