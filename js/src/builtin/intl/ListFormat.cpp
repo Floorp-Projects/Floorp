@@ -15,7 +15,6 @@
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/FormatBuffer.h"
-#include "builtin/intl/ScopedICUObject.h"
 #include "gc/FreeOp.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
@@ -33,9 +32,6 @@
 
 using namespace js;
 
-using mozilla::CheckedInt;
-
-using js::intl::CallICU;
 using js::intl::IcuLocale;
 
 const JSClassOps ListFormatObject::classOps_ = {

@@ -30,9 +30,6 @@
 
 using namespace js;
 
-using js::intl::CallICU;
-using js::intl::IcuLocale;
-
 /**************** RelativeTimeFormat *****************/
 
 const JSClassOps RelativeTimeFormatObject::classOps_ = {
