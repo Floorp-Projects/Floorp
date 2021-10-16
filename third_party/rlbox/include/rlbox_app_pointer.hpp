@@ -32,13 +32,13 @@ private:
     for (T_PointerTypeUnsigned i = counter; i < max_val; i++) {
       if (pointer_map.find(i) == pointer_map.end()) {
         counter = i + 1;
-        return (T_PointerType)i;
+        return reinterpret_cast<T_PointerType>(i);
       }
     }
     for (T_PointerTypeUnsigned i = min_val; i < counter; i++) {
       if (pointer_map.find(i) == pointer_map.end()) {
         counter = i + 1;
-        return (T_PointerType)i;
+        return reinterpret_cast<T_PointerType>(i);
       }
     }
     detail::dynamic_check(false, "Could not find free app pointer slot");
@@ -57,7 +57,8 @@ public:
   {
     RLBOX_ACQUIRE_UNIQUE_GUARD(lock, map_mutex);
     T_PointerType idx = get_unused_index();
-    T_PointerTypeUnsigned idx_int = (T_PointerTypeUnsigned)idx;
+    T_PointerTypeUnsigned idx_int =
+      reinterpret_cast<T_PointerTypeUnsigned>(idx);
     pointer_map[idx_int] = ptr;
     return idx;
   }
@@ -65,7 +66,8 @@ public:
   void remove_app_ptr(T_PointerType idx)
   {
     RLBOX_ACQUIRE_UNIQUE_GUARD(lock, map_mutex);
-    T_PointerTypeUnsigned idx_int = (T_PointerTypeUnsigned)idx;
+    T_PointerTypeUnsigned idx_int =
+      reinterpret_cast<T_PointerTypeUnsigned>(idx);
     auto it = pointer_map.find(idx_int);
     detail::dynamic_check(it != pointer_map.end(),
                           "Error: removing a non-existing app pointer");
@@ -75,7 +77,8 @@ public:
   void* lookup_index(T_PointerType idx)
   {
     RLBOX_ACQUIRE_SHARED_GUARD(lock, map_mutex);
-    T_PointerTypeUnsigned idx_int = (T_PointerTypeUnsigned)idx;
+    T_PointerTypeUnsigned idx_int =
+      reinterpret_cast<T_PointerTypeUnsigned>(idx);
     auto it = pointer_map.find(idx_int);
     detail::dynamic_check(it != pointer_map.end(),
                           "Error: looking up a non-existing app pointer");
