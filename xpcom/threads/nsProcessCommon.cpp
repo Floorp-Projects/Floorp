@@ -25,7 +25,6 @@
 #include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Services.h"
-#include "GeckoProfiler.h"
 
 #include <stdlib.h>
 
@@ -113,12 +112,6 @@ nsProcess::Init(nsIFile* aExecutable) {
 void nsProcess::Monitor(void* aArg) {
   RefPtr<nsProcess> process = dont_AddRef(static_cast<nsProcess*>(aArg));
 
-#ifdef MOZ_GECKO_PROFILER
-  Maybe<AutoProfilerRegisterThread> registerThread;
-  if (!process->mBlocking) {
-    registerThread.emplace("RunProcess");
-  }
-#endif
   if (!process->mBlocking) {
     NS_SetCurrentThreadName("RunProcess");
   }
