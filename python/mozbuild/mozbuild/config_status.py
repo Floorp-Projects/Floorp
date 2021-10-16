@@ -40,11 +40,11 @@ ANDROID_IDE_ADVERTISEMENT = """
 =============
 ADVERTISEMENT
 
-You are building Firefox for Android. After your build completes, you can open
+You are building GeckoView. After your build completes, you can open
 the top source directory in Android Studio directly and build using Gradle.
 See the documentation at
 
-https://developer.mozilla.org/en-US/docs/Simple_Firefox_for_Android_build
+https://firefox-source-docs.mozilla.org/mobile/android/geckoview/contributor/geckoview-quick-start.html#build-using-android-studio
 =============
 """.strip()
 
