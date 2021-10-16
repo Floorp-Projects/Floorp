@@ -1846,10 +1846,17 @@ bool EventListenerManager::IsApzAwareListener(Listener* aListener) {
          IsApzAwareEvent(aListener->mTypeAtom);
 }
 
-bool EventListenerManager::IsApzAwareEvent(nsAtom* aEvent) {
+static bool IsWheelEventType(nsAtom* aEvent) {
   if (aEvent == nsGkAtoms::onwheel || aEvent == nsGkAtoms::onDOMMouseScroll ||
       aEvent == nsGkAtoms::onmousewheel ||
       aEvent == nsGkAtoms::onMozMousePixelScroll) {
+    return true;
+  }
+  return false;
+}
+
+bool EventListenerManager::IsApzAwareEvent(nsAtom* aEvent) {
+  if (IsWheelEventType(aEvent)) {
     return true;
   }
   // In theory we should schedule a repaint if the touch event pref changes,
@@ -1861,6 +1868,18 @@ bool EventListenerManager::IsApzAwareEvent(nsAtom* aEvent) {
   if (aEvent == nsGkAtoms::ontouchstart || aEvent == nsGkAtoms::ontouchmove) {
     return TouchEvent::PrefEnabled(
         nsContentUtils::GetDocShellForEventTarget(mTarget));
+  }
+  return false;
+}
+
+bool EventListenerManager::HasNonPassiveWheelListener() {
+  MOZ_ASSERT(NS_IsMainThread());
+  uint32_t count = mListeners.Length();
+  for (uint32_t i = 0; i < count; ++i) {
+    Listener* listener = &mListeners.ElementAt(i);
+    if (!listener->mFlags.mPassive && IsWheelEventType(listener->mTypeAtom)) {
+      return true;
+    }
   }
   return false;
 }
