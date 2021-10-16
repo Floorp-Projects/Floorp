@@ -56,11 +56,6 @@ static inline const char* AssertNullTerminatedString(std::string_view aView) {
 using ICUResult = Result<Ok, ICUError>;
 
 /**
- * Convert a UErrorCode to ICUResult.
- */
-ICUError ToICUError(UErrorCode status);
-
-/**
  * Convert a UErrorCode to ICUError. This will correctly apply the OutOfMemory
  * case.
  */
