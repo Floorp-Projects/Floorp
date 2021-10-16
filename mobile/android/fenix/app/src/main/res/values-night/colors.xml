@@ -41,7 +41,7 @@
     <color name="onboarding_illustration_selected_normal_theme">@color/accent_dark_theme</color>
     <color name="onboarding_illustration_deselected_normal_theme">@color/onboarding_illustration_deselected_dark_theme</color>
     <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/accent_dark_theme</color>
-    <color name="add_on_private_browsing_interior_icon_background_normal_theme">@color/add_on_private_browsing_interior_icon_background_dark_theme</color>
+    <color name="add_on_private_browsing_interior_icon_background_normal_theme">@color/photonWhite</color>
     <color name="prompt_login_edit_text_cursor_color_normal_theme">@color/prompt_login_edit_text_cursor_color_dark_theme</color>
     <color name="readermode_start_gradient_normal_theme">@color/photonViolet30</color>
     <color name="readermode_end_gradient_normal_theme">@color/photonBlue30</color>
