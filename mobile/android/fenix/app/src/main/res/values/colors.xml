@@ -23,9 +23,6 @@
     <!-- Tab Tray -->
     <color name="tab_tray_item_media_stroke">@color/photonWhite</color>
 
-    <!-- Tab History -->
-    <color name="tab_history_item_selected_background_light_theme">@color/tab_tray_item_selected_background_normal_theme</color>
-
     <!-- Dark theme color palette -->
     <color name="primary_text_dark_theme">@color/photonLightGrey05</color>
     <color name="foundation_dark_theme">@color/photonDarkGrey80</color>
@@ -190,7 +187,7 @@
     <color name="tab_tray_selected_mask_normal_theme">@color/photonViolet70A12</color>
 
     <!-- Tab History -->
-    <color name="tab_history_item_selected_background_normal_theme">@color/tab_history_item_selected_background_light_theme</color>
+    <color name="tab_history_item_selected_background_normal_theme">@color/tab_tray_item_selected_background_normal_theme</color>
 
     <!-- Bookmark buttons -->
     <color name="bookmark_favicon_background">#DFDFE3</color>
