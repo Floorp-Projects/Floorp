@@ -263,7 +263,7 @@ static bool DefaultCalendar(JSContext* cx, const UniqueChars& locale,
     return false;
   }
 
-  JSString* str = NewStringCopyZ<CanGC>(cx, type.unwrap());
+  JSString* str = NewStringCopy<CanGC>(cx, type.unwrap());
   if (!str) {
     return false;
   }
