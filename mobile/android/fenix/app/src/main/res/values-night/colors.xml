@@ -14,7 +14,7 @@
     <color name="accent_normal_theme">@color/accent_dark_theme</color>
     <color name="accent_bright_normal_theme">@color/accent_bright_dark_theme</color>
     <color name="accent_high_contrast_normal_theme">@color/accent_high_contrast_dark_theme</color>
-    <color name="about_link_normal_theme">@color/about_link_dark_theme</color>
+    <color name="about_link_normal_theme">@color/photonViolet40</color>
     <color name="tab_ring_normal_theme">@color/tab_ring_dark_theme</color>
     <color name="neutral_normal_theme">@color/neutral_dark_theme</color>
     <color name="neutral_faded_normal_theme">@color/neutral_faded_dark_theme</color>

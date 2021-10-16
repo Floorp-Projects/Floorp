@@ -58,7 +58,6 @@
     <color name="above_dark_theme">@color/photonDarkGrey50</color>
     <color name="accent_dark_theme">@color/photonViolet50</color>
     <color name="accent_bright_dark_theme">@color/photonViolet70</color>
-    <color name="about_link_dark_theme">@color/photonViolet40</color>
     <color name="accent_high_contrast_dark_theme">@color/photonViolet40</color>
     <color name="tab_ring_dark_theme">@color/accent_dark_theme</color>
     <color name="neutral_dark_theme">@color/photonGrey20</color>
