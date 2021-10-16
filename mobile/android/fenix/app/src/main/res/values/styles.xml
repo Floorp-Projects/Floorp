@@ -270,7 +270,7 @@
         <item name="awesomeBarIndicatorBookmarkColor">@color/search_suggestion_indicator_icon_bookmark_color_dark_theme</item>
         <item name="selectLoginHeaderTextColor">@color/accent_high_contrast_private_theme</item>
         <item name="selectCreditCardHeaderTextColor">@color/accent_high_contrast_private_theme</item>
-        <item name="preferenceSectionHeader">@color/preference_section_header_dark_theme</item>
+        <item name="preferenceSectionHeader">@color/accent_high_contrast_dark_theme</item>
         <item name="menuItemButtonTintColor">@color/accent_high_contrast_private_theme</item>
 
         <!-- Shared widget colors -->
