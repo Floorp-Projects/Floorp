@@ -31,7 +31,7 @@ Result<UniquePtr<Calendar>, ICUError> Calendar::TryCreate(
   return MakeUnique<Calendar>(calendar);
 }
 
-Result<const char*, ICUError> Calendar::GetBcp47Type() {
+Result<Span<const char>, ICUError> Calendar::GetBcp47Type() {
   UErrorCode status = U_ZERO_ERROR;
   const char* oldType = ucal_getType(mCalendar, &status);
   if (U_FAILURE(status)) {
@@ -43,7 +43,7 @@ Result<const char*, ICUError> Calendar::GetBcp47Type() {
     return Err(ICUError::InternalError);
   }
 
-  return bcp47Type;
+  return MakeStringSpan(bcp47Type);
 }
 
 static Weekday WeekdayFromDaysOfWeek(UCalendarDaysOfWeek weekday) {

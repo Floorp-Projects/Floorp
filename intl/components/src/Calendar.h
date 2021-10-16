@@ -58,7 +58,7 @@ class Calendar final {
    * Get the BCP 47 keyword value string designating the calendar type. For
    * instance "gregory", "chinese", "islamic-civil", etc.
    */
-  Result<const char*, ICUError> GetBcp47Type();
+  Result<Span<const char>, ICUError> GetBcp47Type();
 
   /**
    * Return the set of weekdays which are considered as part of the weekend.
