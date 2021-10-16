@@ -79,7 +79,7 @@ TEST(IntlCalendar, GetBcp47Type)
 {
   auto calendar =
       Calendar::TryCreate("en-US", Some(MakeStringSpan(u"GMT+3"))).unwrap();
-  ASSERT_STREQ(calendar->GetBcp47Type().unwrap(), "gregory");
+  ASSERT_STREQ(calendar->GetBcp47Type().unwrap().data(), "gregory");
 }
 
 TEST(IntlCalendar, SetTimeInMs)
