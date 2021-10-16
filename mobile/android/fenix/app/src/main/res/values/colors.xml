@@ -76,7 +76,6 @@
 
     <!-- Dark theme color palette -->
     <color name="primary_text_dark_theme">@color/photonLightGrey05</color>
-    <color name="secondary_text_dark_theme">#A7A2B7</color>
     <color name="contrast_text_dark_theme">@color/primary_text_dark_theme</color>
     <color name="caption_text_dark_theme">@color/photonLightGrey70</color>
     <color name="foundation_dark_theme">@color/photonDarkGrey80</color>
