@@ -36,7 +36,6 @@
     <color name="mozac_widget_favicon_border_dark_theme">@color/photonDarkGrey10</color>
 
     <!-- Tab Tray -->
-    <color name="tab_tray_item_url_dark_theme">@color/photonLightGrey60</color>
     <color name="tab_tray_item_background_dark_theme">@color/photonDarkGrey80</color>
     <color name="tab_tray_item_selected_background_dark_theme">#412E69</color>
     <color name="tab_tray_toolbar_background_dark_theme">@color/photonDarkGrey50</color>
