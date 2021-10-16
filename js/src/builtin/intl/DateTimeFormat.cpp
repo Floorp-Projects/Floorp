@@ -859,8 +859,8 @@ static mozilla::intl::DateTimeFormat* NewDateTimeFormat(
     }
 
     auto dfResult = mozilla::intl::DateTimeFormat::TryCreateFromPattern(
-        mozilla::MakeStringSpan(IcuLocale(locale.get())),
-        pattern.twoByteRange(), mozilla::Some(timeZoneChars));
+        mozilla::MakeStringSpan(locale.get()), pattern.twoByteRange(),
+        mozilla::Some(timeZoneChars));
     if (dfResult.isErr()) {
       intl::ReportInternalError(cx, dfResult.unwrapErr());
       return nullptr;
@@ -895,7 +895,7 @@ static mozilla::intl::DateTimeFormat* NewDateTimeFormat(
       return nullptr;
     }
     auto dfResult = mozilla::intl::DateTimeFormat::TryCreateFromStyle(
-        mozilla::MakeStringSpan(IcuLocale(locale.get())), style, gen,
+        mozilla::MakeStringSpan(locale.get()), style, gen,
         mozilla::Some(timeZoneChars));
     if (dfResult.isErr()) {
       intl::ReportInternalError(cx, dfResult.unwrapErr());
@@ -966,7 +966,7 @@ static mozilla::intl::DateTimeFormat* NewDateTimeFormat(
     }
 
     auto dfResult = mozilla::intl::DateTimeFormat::TryCreateFromComponents(
-        mozilla::MakeStringSpan(IcuLocale(locale.get())), bag, dtpg,
+        mozilla::MakeStringSpan(locale.get()), bag, dtpg,
         mozilla::Some(timeZoneChars));
     if (dfResult.isErr()) {
       intl::ReportInternalError(cx, dfResult.unwrapErr());

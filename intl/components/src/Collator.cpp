@@ -20,7 +20,7 @@ Collator::~Collator() {
 
 Result<UniquePtr<Collator>, ICUError> Collator::TryCreate(const char* aLocale) {
   UErrorCode status = U_ZERO_ERROR;
-  UCollator* collator = ucol_open(aLocale, &status);
+  UCollator* collator = ucol_open(IcuLocale(aLocale), &status);
   if (U_FAILURE(status)) {
     return Err(ToICUError(status));
   }
