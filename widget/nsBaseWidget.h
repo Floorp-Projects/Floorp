@@ -588,7 +588,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
     return nsIWidget::CreateChildWindow();
   }
 
-  WindowRenderer* CreateBasicLayerManager();
+  WindowRenderer* CreateFallbackRenderer();
 
   nsPopupType PopupType() const { return mPopupType; }
 

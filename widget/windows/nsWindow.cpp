@@ -4128,7 +4128,7 @@ WindowRenderer* nsWindow::GetWindowRenderer() {
     mBasicLayersSurface =
         new InProcessWinCompositorWidget(initData, options, this);
     mCompositorWidgetDelegate = mBasicLayersSurface;
-    mWindowRenderer = CreateBasicLayerManager();
+    mWindowRenderer = CreateFallbackRenderer();
   }
 
   NS_ASSERTION(mWindowRenderer, "Couldn't provide a valid window renderer.");
