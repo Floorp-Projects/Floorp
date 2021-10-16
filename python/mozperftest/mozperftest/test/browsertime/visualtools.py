@@ -95,6 +95,10 @@ NUMPY = {
         "69/89/d8fc61a51ded540bd4b8859510b4ae44a0762c8b61dd81eb2c36f5e853ef/"
         "numpy-1.19.2-cp38-cp38-win_amd64.whl"
     ),
+    ("win64", "3.9"): (
+        "cc/bd/5779abe299afb562cdd434e8229a69a71802cc131ea6d811a8bf05937745/"
+        "numpy-1.20.0-cp39-cp39-win_amd64.whl"
+    ),
 }
 
 
@@ -134,6 +138,10 @@ SCIPY = {
     ("win64", "3.8"): (
         "9e/66/57d6cfa52dacd9a57d0289f8b8a614b2b4f9c401c2ac154d6b31ed8257d6/"
         "numpy-1.19.2-cp38-cp38-win_amd64.whl"
+    ),
+    ("win64", "3.9"): (
+        "a5/6c/30c838130f75f3aaf65fdf72cc357967d7d2b569bf52c7eb788e6f1eb8c3/"
+        "scipy-1.5.4-cp39-cp39-win_amd64.whl"
     ),
 }
 
