@@ -284,7 +284,7 @@ static mozilla::intl::PluralRules* NewPluralRules(
 
   auto result = PluralRules::TryCreate(locale.get(), options);
   if (result.isErr()) {
-    intl::ReportInternalError(cx);
+    intl::ReportInternalError(cx, result.unwrapErr());
     return nullptr;
   }
 
@@ -316,7 +316,7 @@ bool js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp) {
 
   auto keywordResult = pr->Select(x);
   if (keywordResult.isErr()) {
-    intl::ReportInternalError(cx);
+    intl::ReportInternalError(cx, keywordResult.unwrapErr());
     return false;
   }
 
@@ -361,7 +361,7 @@ bool js::intl_SelectPluralRuleRange(JSContext* cx, unsigned argc, Value* vp) {
 
   auto keywordResult = pr->SelectRange(x, y);
   if (keywordResult.isErr()) {
-    intl::ReportInternalError(cx);
+    intl::ReportInternalError(cx, keywordResult.unwrapErr());
     return false;
   }
 
@@ -398,7 +398,7 @@ bool js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp) {
 
   auto categoriesResult = pr->Categories();
   if (categoriesResult.isErr()) {
-    intl::ReportInternalError(cx);
+    intl::ReportInternalError(cx, categoriesResult.unwrapErr());
     return false;
   }
   auto categories = categoriesResult.unwrap();

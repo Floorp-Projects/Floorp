@@ -253,13 +253,13 @@ static bool DefaultCalendar(JSContext* cx, const UniqueChars& locale,
                             MutableHandleValue rval) {
   auto calendar = mozilla::intl::Calendar::TryCreate(locale.get());
   if (calendar.isErr()) {
-    intl::ReportInternalError(cx);
+    intl::ReportInternalError(cx, calendar.unwrapErr());
     return false;
   }
 
   auto type = calendar.unwrap()->GetBcp47Type();
   if (type.isErr()) {
-    intl::ReportInternalError(cx);
+    intl::ReportInternalError(cx, type.unwrapErr());
     return false;
   }
 
@@ -417,7 +417,7 @@ bool js::intl_defaultTimeZone(JSContext* cx, unsigned argc, Value* vp) {
   FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> timeZone(cx);
   auto result = mozilla::intl::TimeZone::GetDefaultTimeZone(timeZone);
   if (result.isErr()) {
-    intl::ReportInternalError(cx);
+    intl::ReportInternalError(cx, result.unwrapErr());
     return false;
   }
 
@@ -436,13 +436,13 @@ bool js::intl_defaultTimeZoneOffset(JSContext* cx, unsigned argc, Value* vp) {
 
   auto timeZone = mozilla::intl::TimeZone::TryCreate();
   if (timeZone.isErr()) {
-    intl::ReportInternalError(cx);
+    intl::ReportInternalError(cx, timeZone.unwrapErr());
     return false;
   }
 
   auto offset = timeZone.unwrap()->GetRawOffsetMs();
   if (offset.isErr()) {
-    intl::ReportInternalError(cx);
+    intl::ReportInternalError(cx, offset.unwrapErr());
     return false;
   }
 
