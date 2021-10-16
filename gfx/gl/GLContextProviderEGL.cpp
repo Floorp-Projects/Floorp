@@ -124,7 +124,7 @@ void DeleteWaylandGLSurface(EGLSurface surface) {
 
 static bool CreateConfigScreen(EglDisplay&, EGLConfig* const aConfig,
                                const bool aEnableDepthBuffer,
-                               const bool aUseGles, int aVisual = 0);
+                               const bool aUseGles);
 
 // append three zeros at the end of attribs list to work around
 // EGL implementation bugs that iterate until they find 0, instead of
@@ -249,22 +249,6 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
     return nullptr;
   }
 
-  int visualID = 0;
-#ifdef MOZ_X11
-  GdkDisplay* gdkDisplay = gdk_display_get_default();
-  if (GdkIsX11Display(gdkDisplay) && aWindow) {
-    auto* display = GDK_DISPLAY_XDISPLAY(gdkDisplay);
-    if (display) {
-      XWindowAttributes windowAttrs;
-      if (!XGetWindowAttributes(display, (Window)aWindow, &windowAttrs)) {
-        NS_WARNING("[EGL] XGetWindowAttributes() failed");
-        return nullptr;
-      }
-      visualID = XVisualIDFromVisual(windowAttrs.visual);
-    }
-  }
-#endif
-
   bool doubleBuffered = true;
 
   EGLConfig config;
@@ -278,14 +262,13 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
     }
   } else if (aHardwareWebRender && (kIsWayland || kIsX11)) {
     const int bpp = 32;
-    if (!CreateConfig(*egl, &config, bpp, false, aUseGles, visualID)) {
+    if (!CreateConfig(*egl, &config, bpp, false, aUseGles)) {
       gfxCriticalNote << "Failed to create EGLConfig for WebRender!";
       return nullptr;
     }
   } else {
     if (!CreateConfigScreen(*egl, &config,
-                            /* aEnableDepthBuffer */ false, aUseGles,
-                            visualID)) {
+                            /* aEnableDepthBuffer */ false, aUseGles)) {
       gfxCriticalNote << "Failed to create EGLConfig!";
       return nullptr;
     }
@@ -875,13 +858,13 @@ static const EGLint kEGLConfigAttribsRGBA32[] = {
     LOCAL_EGL_BLUE_SIZE,    8,
     LOCAL_EGL_ALPHA_SIZE,   8};
 
-bool CreateConfig(EglDisplay& egl, EGLConfig* aConfig, int32_t depth,
-                  bool aEnableDepthBuffer, bool aUseGles, int aVisual) {
+bool CreateConfig(EglDisplay& aEgl, EGLConfig* aConfig, int32_t aDepth,
+                  bool aEnableDepthBuffer, bool aUseGles, bool aAllowFallback) {
   EGLConfig configs[64];
   std::vector<EGLint> attribs;
   EGLint ncfg = ArrayLength(configs);
 
-  switch (depth) {
+  switch (aDepth) {
     case 16:
       for (const auto& cur : kEGLConfigAttribsRGB16) {
         attribs.push_back(cur);
@@ -910,7 +893,7 @@ bool CreateConfig(EglDisplay& egl, EGLConfig* aConfig, int32_t depth,
     attribs.push_back(cur);
   }
 
-  if (!egl.fChooseConfig(attribs.data(), configs, ncfg, &ncfg) || ncfg < 1) {
+  if (!aEgl.fChooseConfig(attribs.data(), configs, ncfg, &ncfg) || ncfg < 1) {
     return false;
   }
 
@@ -919,38 +902,49 @@ bool CreateConfig(EglDisplay& egl, EGLConfig* aConfig, int32_t depth,
   for (int j = 0; j < ncfg; ++j) {
     EGLConfig config = configs[j];
     EGLint r, g, b, a;
-    if (egl.fGetConfigAttrib(config, LOCAL_EGL_RED_SIZE, &r) &&
-        egl.fGetConfigAttrib(config, LOCAL_EGL_GREEN_SIZE, &g) &&
-        egl.fGetConfigAttrib(config, LOCAL_EGL_BLUE_SIZE, &b) &&
-        egl.fGetConfigAttrib(config, LOCAL_EGL_ALPHA_SIZE, &a) &&
-        ((depth == 16 && r == 5 && g == 6 && b == 5) ||
-         (depth == 24 && r == 8 && g == 8 && b == 8) ||
-         (depth == 32 && r == 8 && g == 8 && b == 8 && a == 8))) {
+    if (aEgl.fGetConfigAttrib(config, LOCAL_EGL_RED_SIZE, &r) &&
+        aEgl.fGetConfigAttrib(config, LOCAL_EGL_GREEN_SIZE, &g) &&
+        aEgl.fGetConfigAttrib(config, LOCAL_EGL_BLUE_SIZE, &b) &&
+        aEgl.fGetConfigAttrib(config, LOCAL_EGL_ALPHA_SIZE, &a) &&
+        ((aDepth == 16 && r == 5 && g == 6 && b == 5) ||
+         (aDepth == 24 && r == 8 && g == 8 && b == 8) ||
+         (aDepth == 32 && r == 8 && g == 8 && b == 8 && a == 8))) {
       EGLint z;
       if (aEnableDepthBuffer) {
-        if (!egl.fGetConfigAttrib(config, LOCAL_EGL_DEPTH_SIZE, &z) ||
+        if (!aEgl.fGetConfigAttrib(config, LOCAL_EGL_DEPTH_SIZE, &z) ||
             z != 24) {
           continue;
         }
       }
-      if (kIsX11 && aVisual) {
-        int vis;
-        if (!egl.fGetConfigAttrib(config, LOCAL_EGL_NATIVE_VISUAL_ID, &vis) ||
-            aVisual != vis) {
-          if (!fallbackConfig) {
+#ifdef MOZ_X11
+      if (GdkIsX11Display()) {
+        int configVisualID;
+        if (!aEgl.fGetConfigAttrib(config, LOCAL_EGL_NATIVE_VISUAL_ID,
+                                   &configVisualID)) {
+          continue;
+        }
+
+        XVisualInfo visual_info_template, *visual_info;
+        int num_visuals;
+
+        visual_info_template.visualid = configVisualID;
+        visual_info =
+            XGetVisualInfo(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()),
+                           VisualIDMask, &visual_info_template, &num_visuals);
+
+        if (!visual_info || visual_info->depth != aDepth) {
+          if (aAllowFallback && !fallbackConfig) {
             fallbackConfig = Some(config);
           }
           continue;
         }
       }
+#endif
       *aConfig = config;
       return true;
     }
   }
 
-  // We don't have a frame buffer X11 visual which matches the EGL visual
-  // from GLContextEGL::FindVisual(). Let's try to use the fallback one and hope
-  // we're not on NVIDIA (Bug 1478454) as it causes X11 BadMatch error there.
   if (kIsX11 && fallbackConfig) {
     *aConfig = fallbackConfig.value();
     return true;
@@ -964,13 +958,11 @@ bool CreateConfig(EglDisplay& egl, EGLConfig* aConfig, int32_t depth,
 //
 // NB: It's entirely legal for the returned EGLConfig to be valid yet
 // have the value null.
-// aVisual is used in Linux only.
 static bool CreateConfigScreen(EglDisplay& egl, EGLConfig* const aConfig,
                                const bool aEnableDepthBuffer,
-                               const bool aUseGles, int aVisual) {
+                               const bool aUseGles) {
   int32_t depth = gfxVars::ScreenDepth();
-  if (CreateConfig(egl, aConfig, depth, aEnableDepthBuffer, aUseGles,
-                   aVisual)) {
+  if (CreateConfig(egl, aConfig, depth, aEnableDepthBuffer, aUseGles)) {
     return true;
   }
 #ifdef MOZ_WIDGET_ANDROID
@@ -1122,9 +1114,9 @@ bool GLContextEGL::FindVisual(int* const out_visualId) {
   EGLConfig config;
   const int bpp = 32;
   if (!CreateConfig(*egl, &config, bpp, /* aEnableDepthBuffer */ false,
-                    /* aUseGles */ false)) {
-    gfxCriticalNote
-        << "GLContextEGL::FindVisual(): Failed to create EGLConfig!";
+                    /* aUseGles */ false, /* aAllowFallback */ false)) {
+    // We are on a buggy driver. Do not return a visual so a fallback path can
+    // be used. See https://gitlab.freedesktop.org/mesa/mesa/-/issues/149
     return false;
   }
   if (egl->fGetConfigAttrib(config, LOCAL_EGL_NATIVE_VISUAL_ID, out_visualId)) {
