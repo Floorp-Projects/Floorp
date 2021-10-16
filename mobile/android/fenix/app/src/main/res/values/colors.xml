@@ -84,8 +84,8 @@
     <color name="above_dark_theme">#32313C</color>
     <color name="accent_dark_theme">@color/photonViolet50</color>
     <color name="accent_bright_dark_theme">@color/photonViolet70</color>
-    <color name="about_link_dark_theme">#AB71FF</color>
-    <color name="accent_high_contrast_dark_theme">#AB71FF</color>
+    <color name="about_link_dark_theme">@color/photonViolet40</color>
+    <color name="accent_high_contrast_dark_theme">@color/photonViolet40</color>
     <color name="tab_ring_dark_theme">@color/accent_dark_theme</color>
     <color name="neutral_dark_theme">@color/photonGrey20</color>
     <color name="neutral_faded_dark_theme">#1FFBFBFE</color>
@@ -96,7 +96,7 @@
     <color name="scrimEnd_dark_theme">#F515141A</color>
     <color name="synced_tabs_separator_dark_theme">@color/photonDarkGrey10</color>
     <color name="top_site_title_text_dark_theme">@color/photonLightGrey05</color>
-    <color name="collection_icon_color_violet_dark_theme">#AB71FF</color>
+    <color name="collection_icon_color_violet_dark_theme">@color/photonViolet40</color>
     <color name="collection_icon_color_blue_dark_theme">#00B3F4</color>
     <color name="collection_icon_color_pink_dark_theme">#FF6BBA</color>
     <color name="collection_icon_color_green_dark_theme">#88FFD1</color>
@@ -148,7 +148,7 @@
     <color name="above_private_theme">@color/photonInk50</color>
     <color name="accent_private_theme">@color/photonViolet50</color>
     <color name="accent_bright_private_theme">@color/photonViolet70</color>
-    <color name="about_link_private_theme">#AB71FF</color>
+    <color name="about_link_private_theme">@color/photonViolet40</color>
     <color name="accent_high_contrast_private_theme">#AA71FF</color>
     <color name="tab_ring_private_theme">#F565FF</color>
     <color name="neutral_private_theme">@color/photonGrey20</color>
