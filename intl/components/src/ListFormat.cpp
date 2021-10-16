@@ -5,8 +5,6 @@
 
 #include "ScopedICUObject.h"
 
-#include "ScopedICUObject.h"
-
 namespace mozilla::intl {
 
 /*static*/ Result<UniquePtr<ListFormat>, ICUError> ListFormat::TryCreate(
