@@ -39,7 +39,6 @@
     <color name="tab_tray_item_selected_background_dark_theme">#412E69</color>
     <color name="tab_tray_heading_icon_dark_theme">@color/photonViolet50</color>
     <color name="tab_tray_heading_icon_inactive_dark_theme">@color/photonLightGrey05</color>
-    <color name="tab_tray_item_thumbnail_background_dark_theme">@color/photonDarkGrey50</color>
     <color name="tab_tray_item_thumbnail_icon_dark_theme">@color/photonDarkGrey05</color>
     <color name="tab_tray_selected_mask_dark_theme">@color/photonViolet50A32</color>
 
