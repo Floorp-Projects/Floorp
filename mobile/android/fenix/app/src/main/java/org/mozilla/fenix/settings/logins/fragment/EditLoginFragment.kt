@@ -233,7 +233,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
                 layout.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
                 layout.setErrorIconTintList(
                     ColorStateList.valueOf(
-                        ContextCompat.getColor(requireContext(), R.color.design_error)
+                        ContextCompat.getColor(requireContext(), R.color.destructive_normal_theme)
                     )
                 )
                 clearButton.isVisible = false
@@ -250,7 +250,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
             layout.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
             layout.setErrorIconTintList(
                 ColorStateList.valueOf(
-                    ContextCompat.getColor(requireContext(), R.color.design_error)
+                    ContextCompat.getColor(requireContext(), R.color.destructive_normal_theme)
                 )
             )
         }
