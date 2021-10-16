@@ -23,7 +23,7 @@
     <color name="disabled_light_theme">#6620123A</color>
     <color name="scrimStart_light_theme">#F515141A</color>
     <color name="scrimEnd_light_theme">#F542414D</color>
-    <color name="dark_grey_90_gradient_start">#FF15141A</color>
+    <color name="dark_grey_90_gradient_start">@color/photonDarkGrey90</color>
     <color name="dark_grey_90_gradient_end">#0015141A</color>
     <color name="synced_tabs_separator_light_theme">@color/photonLightGrey30</color>
     <color name="top_site_title_text_light_theme">@color/photonDarkGrey90</color>
