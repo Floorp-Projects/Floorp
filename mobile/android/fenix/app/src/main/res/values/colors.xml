@@ -11,7 +11,6 @@
     <color name="accent_light_theme">@color/photonInk20</color>
     <color name="accent_bright_light_theme">@color/photonViolet70</color>
     <color name="about_link_normal_theme">@color/photonViolet70</color>
-    <color name="accent_high_contrast_light_theme">@color/accent_light_theme</color>
     <color name="tab_ring_light_theme">@color/accent_light_theme</color>
     <color name="neutral_light_theme">@color/photonGrey30</color>
     <color name="neutral_faded_light_theme">@color/photonGrey20</color>
@@ -163,7 +162,7 @@
     <color name="inset_normal_theme">@color/inset_light_theme</color>
     <color name="accent_normal_theme">@color/accent_light_theme</color>
     <color name="accent_bright_normal_theme">@color/accent_bright_light_theme</color>
-    <color name="accent_high_contrast_normal_theme">@color/accent_high_contrast_light_theme</color>
+    <color name="accent_high_contrast_normal_theme">@color/accent_light_theme</color>
     <color name="tab_ring_normal_theme">@color/tab_ring_light_theme</color>
     <color name="neutral_normal_theme">@color/neutral_light_theme</color>
     <color name="neutral_faded_normal_theme">@color/neutral_faded_light_theme</color>
