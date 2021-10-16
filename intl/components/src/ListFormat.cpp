@@ -15,8 +15,8 @@ namespace mozilla::intl {
   UListFormatterWidth uwidth = ToUListFormatterWidth(aOptions.mStyle);
 
   UErrorCode status = U_ZERO_ERROR;
-  UListFormatter* fmt =
-      ulistfmt_openForType(aLocale.data(), utype, uwidth, &status);
+  UListFormatter* fmt = ulistfmt_openForType(
+      AssertNullTerminatedString(aLocale), utype, uwidth, &status);
   if (U_FAILURE(status)) {
     return Err(ICUError::InternalError);
   }
