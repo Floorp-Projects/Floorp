@@ -16,7 +16,6 @@
     <color name="readermode_start_gradient_normal_theme">@color/photonViolet50</color>
     <color name="readermode_end_gradient_normal_theme">@color/photonBlue60</color>
     <color name="preference_section_header_normal_theme">@color/accent_bright_light_theme</color>
-    <color name="menu_item_button_light_theme">@color/accent_bright_light_theme</color>
 
     <color name="mozac_widget_favicon_background_light_theme">@color/photonWhite</color>
     <color name="mozac_widget_favicon_border_light_theme">@color/photonLightGrey30</color>
@@ -172,7 +171,7 @@
     <color name="mozac_widget_favicon_background_normal_theme">@color/mozac_widget_favicon_background_light_theme</color>
     <color name="mozac_widget_favicon_border_normal_theme">@color/mozac_widget_favicon_border_light_theme</color>
     <color name="notification_accent_color_normal_theme">@color/accent_bright_light_theme</color>
-    <color name="menu_item_button_normal_theme">@color/menu_item_button_light_theme</color>
+    <color name="menu_item_button_normal_theme">@color/accent_bright_light_theme</color>
     <color name="recently_used_share_theme">@color/inset_light_theme</color>
 
     <!-- Tab tray -->
