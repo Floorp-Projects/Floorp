@@ -311,7 +311,6 @@ struct DIGroup {
                                 // containers applied
   Maybe<wr::BlobImageKey> mKey;
   std::vector<RefPtr<ScaledFont>> mFonts;
-  bool mSuppressInvalidations = false;
 
   DIGroup()
       : mAppUnitsPerDevPixel(0),
@@ -319,9 +318,6 @@ struct DIGroup {
         mHitInfo(CompositorHitTestInvisibleToHit) {}
 
   void InvalidateRect(const IntRect& aRect) {
-    if (mSuppressInvalidations) {
-      return;
-    }
     auto r = aRect.Intersect(mPreservedRect);
     // Empty rects get dropped
     if (!r.IsEmpty()) {
@@ -1308,18 +1304,14 @@ bool Grouper::ConstructItemInsideInactive(
     // entire item to be within the invalid region.
     Matrix m = mTransform;
     mTransform = Matrix();
-    bool old = aGroup->mSuppressInvalidations;
-    aGroup->mSuppressInvalidations = true;
     sIndent++;
     if (ConstructGroupInsideInactive(aCommandBuilder, aBuilder, aResources,
                                      aGroup, children, aSc)) {
       data->mInvalid = true;
-      aGroup->mSuppressInvalidations = old;
       aGroup->InvalidateRect(data->mRect);
       invalidated = true;
     }
     sIndent--;
-    aGroup->mSuppressInvalidations = old;
     mTransform = m;
   } else if (aItem->GetType() == DisplayItemType::TYPE_TRANSFORM) {
     Matrix m = mTransform;
@@ -1331,8 +1323,6 @@ bool Grouper::ConstructItemInsideInactive(
       // If ConstructGroupInsideInactive finds any change, we invalidate the
       // entire container item. This is needed because blob merging requires the
       // entire item to be within the invalid region.
-      bool old = aGroup->mSuppressInvalidations;
-      aGroup->mSuppressInvalidations = true;
       mTransform = Matrix();
       sIndent++;
       if (ConstructGroupInsideInactive(aCommandBuilder, aBuilder, aResources,
@@ -1342,7 +1332,6 @@ bool Grouper::ConstructItemInsideInactive(
         invalidated = true;
       }
       sIndent--;
-      aGroup->mSuppressInvalidations = old;
     } else {
       GP("t2d: %f %f\n", t2d._31, t2d._32);
       mTransform.PreMultiply(t2d);
