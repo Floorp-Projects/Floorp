@@ -128,17 +128,17 @@ add_task(function test_createStructuredIngestionPing() {
 
 add_task(function test_sendStructuredIngestionPing_disabled() {
   _setUp();
-  sandbox.stub(PingCentre, "_sendInGzip").resolves();
+  sandbox.stub(PingCentre, "_sendStandalonePing").resolves();
   Services.prefs.setBoolPref(PingCentreConstants.TELEMETRY_PREF, false);
   pingCentre.sendStructuredIngestionPing(FAKE_PING, FAKE_ENDPOINT);
 
-  Assert.ok(PingCentre._sendInGzip.notCalled, "Should not be sent");
+  Assert.ok(PingCentre._sendStandalonePing.notCalled, "Should not be sent");
 });
 
 add_task(function test_sendStructuredIngestionPing_success() {
   _setUp();
-  sandbox.stub(PingCentre, "_sendInGzip").resolves();
+  sandbox.stub(PingCentre, "_sendStandalonePing").resolves();
   pingCentre.sendStructuredIngestionPing(FAKE_PING, FAKE_ENDPOINT);
 
-  Assert.equal(PingCentre._sendInGzip.callCount, 1, "Should be sent");
+  Assert.equal(PingCentre._sendStandalonePing.callCount, 1, "Should be sent");
 });
