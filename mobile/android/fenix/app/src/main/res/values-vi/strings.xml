@@ -283,7 +283,7 @@
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_title_2">Có gì mới trong Firefox</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Giờ đây, việc quay lại nơi bạn đã dừng lại trở nên dễ dàng hơn.</string>
+    <string name="onboarding_home_screen_description_2">Giờ đây, việc tiếp tục nơi bạn đã dừng lại sẽ trở nên dễ dàng hơn.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_section_home_title_2">Trang chủ Firefox được cá nhân hóa</string>
     <!-- Onboarding home screen dialog description text for the home section. -->

@@ -452,9 +452,14 @@
     <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Recently saved</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string moz:removedIn="94" name="customize_toggle_recently_bookmarked" tools:ignore="UnusedResources">Recently bookmarked</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">Recent bookmarks</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string moz:removedIn="94" name="customize_toggle_recently_visited" tools:ignore="UnusedResources">Recently visited</string>
+    <!-- Title for the customize home screen settings section for recent searches. Recent searches
+     is a section where users see a list of groups of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recent_searches">Recent searches</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
@@ -670,6 +675,10 @@
     <string name="tab_view_list">List</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Grid</string>
+    <!-- Option for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups">Search groups</string>
+    <!-- Summary text for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups_summary">Group related sites together</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Close tabs</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -680,6 +689,9 @@
     <string name="close_tabs_after_one_week">After one week</string>
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">After one month</string>
+
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Auto-close open tabs</string>
 
     <!-- Start on Home -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
@@ -698,6 +710,12 @@
     <string name="close_tabs_after_one_week_summary">Close after one week</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Close after one month</string>
+
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">Move old tabs to inactive</string>
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">Tabs you haven’t viewed for two weeks get moved to the inactive section.</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -818,6 +836,11 @@
 
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string name="tab_tray_save_to_collection">Save</string>
+
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string moz:removedIn="94" name="tab_tray_header_title" tools:ignore="UnusedResources">Other</string>
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title_1">Other tabs</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -1523,6 +1546,12 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Clears cookies set by redirects to known tracking websites.</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Some trackers marked below have been partially unblocked on this page because you interacted with them *.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Learn more</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Support</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1589,6 +1618,9 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Fill usernames and passwords in other apps on your device.</string>
 
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Add login</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sync logins</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1651,6 +1683,8 @@
     <string name="saved_login_copy_username">Copy username</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">Clear username</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Clear hostname</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">Copy site</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1818,6 +1852,10 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Toggle <b>%1$s</b> to ON]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection_2">Connection is secure</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection_2">Connection is not secure</string>
+    <!-- Label that indicates a site is using a secure connection -->
     <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Secure Connection</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Insecure Connection</string>
@@ -1860,8 +1898,14 @@
     <string name="discard_changes">Discard changes</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Edit</string>
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Add new login</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Password required</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Username required</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Hostname required</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Voice search</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1869,6 +1913,15 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">A login with that username already exists</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">Web address must contain &quot;https://&quot; or &quot;http://&quot;</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">Web address must contain &quot;https://&quot; or &quot;http://&quot;</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Valid hostname required</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1895,6 +1948,8 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, Got It</string>
 
+    <!-- Label for the show most visited top sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites_2">Show most visited top sites</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Show most visited sites</string>
 
@@ -1910,12 +1965,38 @@
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
     <string name="inactive_tabs_title">Inactive tabs</string>
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">Close all inactive tabs</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
     <string name="inactive_tabs_description">Tabs are available here for %s. After that time, tabs will be automatically closed.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
     <string name="inactive_tabs_30_days">30 days</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
     <string name="inactive_tabs_7_days">1 week</string>
+
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Auto-close after one month?</string>
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox can close tabs you haven’t viewed over the past month.</string>
+    <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">TURN ON AUTO CLOSE</string>
+
+    <!-- Inactive tabs survey -->
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Please help us to improve</string>
+    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
+    <string name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Why did you disable inactive tabs?</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_not_interested_option" tools:ignore="UnusedResources">Not interested in the feature</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Time to inactive is too long</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Time to inactive is too short</string>
+    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
+    <string name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Send</string>
+    <!-- Content description for inactive tabs survey close button -->
+    <string name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Close</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Set links from websites, emails, and messages to open automatically in Firefox.</string>
@@ -1932,4 +2013,19 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Close</string>
 
-    </resources>
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string moz:removedIn="94" name="pocket_stories_header" tools:ignore="UnusedResources">Thought provoking stories</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">Thought-provoking stories</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_categories_header">Stories by topic</string>
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">Discover more</string>
+    <!-- Title of an app feature. Smaller than a heading.-->
+    <string name="pocket_stories_feature_title">Powered by Pocket.</string>
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">Part of the Firefox family. %s</string>
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">Learn more</string>
+</resources>

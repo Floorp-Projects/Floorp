@@ -23,7 +23,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 pestaña abierta. Toca para cambiar de pestaña.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s pestañas abiertas. Toca para cambiar de pestaña.</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s pestañas abiertas. Toca para cambiar de pestaña.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d seleccionadas</string>
@@ -108,9 +108,19 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">Ocultar</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">Las pestañas que no ha visto durante dos semanas se mueven aquí.</string>
+    <string name="tab_tray_inactive_onboarding_message">Las pestañas que no ha visto durante dos semanas se mueven aquí.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">Desactivar en ajustes</string>
+    <string name="tab_tray_inactive_onboarding_button_text">Desactivar en ajustes</string>
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">¿Cerrar automáticamente después de un mes?</string>
+
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox puede cerrar pestañas que no has visto durante el último mes.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Cerrar</string>
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button">Activar cierre automático</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -119,7 +129,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">Nueva pestaña privada</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Sitios frecuentes</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Sitios frecuentes</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -166,7 +176,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Detener</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Añadir marcador</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Añadir marcador</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Editar marcador</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -377,7 +387,9 @@
     <string name="preferences_theme">Tema</string>
 
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">Inicio</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Inicio</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Página de inicio</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Gestos</string>
     <!-- Preference for settings related to visual options -->
@@ -571,7 +583,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Activar la sincronización</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Escanea el código de emparejamiento en Firefox para escritorio</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Escanea el código de emparejamiento en Firefox para escritorio</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Conectarse</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -695,15 +707,23 @@
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Cerrar automáticamente pestañas</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">Empezar en la pantalla de inicio</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Empezar en la pantalla de inicio</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Pantalla de apertura</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">Tras cuatro horas</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Tras cuatro horas</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Página de inicio</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">Siempre</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Siempre</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Última pestaña</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">Nunca</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Nunca</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Página de inicio después de cuatro horas de inactividad</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Cerrar manualmente</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -761,13 +781,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Guardar en la colección</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">Seleccionar</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Seleccionar</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Compartir todas las pestañas</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Pestañas cerradas recientemente</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">Cerrados recientemente</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Cerrados recientemente</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Ajustes de la cuenta</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -890,10 +910,6 @@
     <string name="history_empty_message">Sin historial aquí</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">Eliminar descargas</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">¿De verdad quieres limpiar tus descargas?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Descargas removidas</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -934,7 +950,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Menú de marcadores</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Editar marcador</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Editar marcador</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Seleccionar carpeta</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1960,8 +1976,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, ¡ya caché!</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">Sitios frecuentes más visitados</string>
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">Mostrar los sitios frecuentes más visitados</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Mostrar los sitios frecuentes más visitados</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Mostrar los sitios más visitados</string>
 
@@ -1980,11 +1998,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Cerrar todas las pestañas inactivas</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">Las pestañas están disponibles aquí por %s. Después de ese tiempo, las pestañas se cerrarán automáticamente.</string>
+    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Las pestañas están disponibles aquí por %s. Después de ese tiempo, las pestañas se cerrarán automáticamente.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 días</string>
+    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 días</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">1 semana</string>
+    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 semana</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
