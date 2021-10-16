@@ -29,7 +29,7 @@
     <color name="top_site_title_text_light_theme">@color/photonDarkGrey90</color>
     <color name="collection_icon_color_violet_light_theme">@color/photonViolet60</color>
     <color name="collection_icon_color_blue_light_theme">@color/photonBlue60</color>
-    <color name="collection_icon_color_pink_light_theme">#E31587</color>
+    <color name="collection_icon_color_pink_light_theme">@color/photonPink60</color>
     <color name="collection_icon_color_green_light_theme">#2AC3A2</color>
     <color name="collection_icon_color_yellow_light_theme">#E27F2E</color>
     <color name="toolbar_start_gradient_light_theme">@color/foundation_light_theme</color>
