@@ -516,6 +516,8 @@ class EventListenerManager final : public EventListenerManagerBase {
   bool IsApzAwareListener(Listener* aListener);
   bool IsApzAwareEvent(nsAtom* aEvent);
 
+  bool HasNonPassiveWheelListener();
+
   // Return true if aListener is a non-chrome-privileged click event listner
   bool IsNonChromeClickListener(Listener* aListener);
   /**
