@@ -260,7 +260,7 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
       gfxCriticalNote << "Failed to create EGLConfig for WebRender ANGLE!";
       return nullptr;
     }
-  } else if (aHardwareWebRender && (kIsWayland || kIsX11)) {
+  } else if (kIsWayland || kIsX11) {
     const int bpp = 32;
     if (!CreateConfig(*egl, &config, bpp, false, aUseGles)) {
       gfxCriticalNote << "Failed to create EGLConfig for WebRender!";
