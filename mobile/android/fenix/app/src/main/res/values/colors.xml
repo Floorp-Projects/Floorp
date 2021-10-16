@@ -261,12 +261,10 @@
     <color name="quick_action_reader_appearance_icon">#482166</color>
 
     <!-- Toggle Colors -->
-    <color name="toggle_off_knob_light_theme">@color/photonGrey10</color>
-    <color name="toggle_off_track_light_theme">@color/photonDarkGrey90</color>
     <color name="toggle_off_knob_dark_theme">@color/photonLightGrey05</color>
     <color name="toggle_off_track_dark_theme">@color/photonLightGrey05</color>
-    <color name="toggle_off_knob_normal_theme">@color/toggle_off_knob_light_theme</color>
-    <color name="toggle_off_track_normal_theme">@color/toggle_off_track_light_theme</color>
+    <color name="toggle_off_knob_normal_theme">@color/photonGrey10</color>
+    <color name="toggle_off_track_normal_theme">@color/photonDarkGrey90</color>
 
     <!-- Misc colors applied universally-->
     <color name="suggestion_highlight_color">#5C592ACB</color>
