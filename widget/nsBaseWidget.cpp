@@ -1869,7 +1869,7 @@ void nsBaseWidget::ZoomToRect(const uint32_t& aPresShellId,
           "layers::IAPZCTreeManager::ZoomToRect", mAPZC,
           &IAPZCTreeManager::ZoomToRect,
           ScrollableLayerGuid(layerId, aPresShellId, aViewId),
-          ZoomTarget{aRect, Nothing()}, aFlags));
+          ZoomTarget{aRect}, aFlags));
 }
 
 #ifdef ACCESSIBILITY
