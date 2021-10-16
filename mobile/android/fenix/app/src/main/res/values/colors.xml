@@ -31,7 +31,7 @@
     <color name="collection_icon_color_blue_light_theme">@color/photonBlue60</color>
     <color name="collection_icon_color_pink_light_theme">@color/photonPink60</color>
     <color name="collection_icon_color_green_light_theme">@color/photonGreen60</color>
-    <color name="collection_icon_color_yellow_light_theme">#E27F2E</color>
+    <color name="collection_icon_color_yellow_light_theme">@color/photonYellow60</color>
     <color name="toolbar_start_gradient_light_theme">@color/foundation_light_theme</color>
     <color name="toolbar_center_gradient_light_theme">@color/foundation_light_theme</color>
     <color name="toolbar_end_gradient_light_theme">@color/foundation_light_theme</color>
