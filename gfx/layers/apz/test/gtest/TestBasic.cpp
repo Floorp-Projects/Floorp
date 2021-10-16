@@ -380,7 +380,7 @@ TEST_F(APZCBasicTester, ZoomAndScrollableRectChangeAfterZoomChange) {
   MakeApzcZoomable();
 
   // Zoom to right side.
-  ZoomTarget zoomTarget{CSSRect(75, 25, 25, 25), Nothing()};
+  ZoomTarget zoomTarget{CSSRect(75, 25, 25, 25)};
   apzc->ZoomToRect(zoomTarget, 0);
 
   // Run the animation to completion, should take 250ms/16.67ms = 15 frames, but
@@ -392,7 +392,7 @@ TEST_F(APZCBasicTester, ZoomAndScrollableRectChangeAfterZoomChange) {
   EXPECT_FALSE(apzc->IsAsyncZooming());
 
   // Zoom out.
-  ZoomTarget zoomTarget2{CSSRect(0, 0, 100, 100), Nothing()};
+  ZoomTarget zoomTarget2{CSSRect(0, 0, 100, 100)};
   apzc->ZoomToRect(zoomTarget2, 0);
 
   // Run the animation a few times to get it going.
@@ -449,7 +449,7 @@ TEST_F(APZCBasicTester, ZoomToRectAndCompositionBoundsChange) {
   MakeApzcZoomable();
 
   // Start a zoom to a rect.
-  ZoomTarget zoomTarget{CSSRect(25, 25, 25, 25), Nothing()};
+  ZoomTarget zoomTarget{CSSRect(25, 25, 25, 25)};
   apzc->ZoomToRect(zoomTarget, 0);
 
   // Run the animation a few times to get it going.

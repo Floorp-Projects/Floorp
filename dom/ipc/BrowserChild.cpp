@@ -1432,7 +1432,8 @@ void BrowserChild::HandleDoubleTap(const CSSPoint& aPoint,
       mApzcTreeManager) {
     ScrollableLayerGuid guid(mLayersId, presShellId, viewId);
 
-    mApzcTreeManager->ZoomToRect(guid, zoomTarget, ZOOM_IN_IF_CANT_ZOOM_OUT);
+    mApzcTreeManager->ZoomToRect(guid, zoomTarget,
+                                 ZoomToRectBehavior::DEFAULT_BEHAVIOR);
   }
 }
 
@@ -1535,7 +1536,7 @@ void BrowserChild::ZoomToRect(const uint32_t& aPresShellId,
   ScrollableLayerGuid guid(mLayersId, aPresShellId, aViewId);
 
   if (mApzcTreeManager) {
-    mApzcTreeManager->ZoomToRect(guid, ZoomTarget{aRect, Nothing()}, aFlags);
+    mApzcTreeManager->ZoomToRect(guid, ZoomTarget{aRect}, aFlags);
   }
 }
 
