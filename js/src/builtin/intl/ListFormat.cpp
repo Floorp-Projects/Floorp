@@ -32,8 +32,6 @@
 
 using namespace js;
 
-using js::intl::IcuLocale;
-
 const JSClassOps ListFormatObject::classOps_ = {
     nullptr,                     // addProperty
     nullptr,                     // delProperty
@@ -202,7 +200,7 @@ static mozilla::intl::ListFormat* NewListFormat(
   }
 
   auto result = mozilla::intl::ListFormat::TryCreate(
-      mozilla::MakeStringSpan(IcuLocale(locale.get())), options);
+      mozilla::MakeStringSpan(locale.get()), options);
 
   if (result.isOk()) {
     return result.unwrap().release();
