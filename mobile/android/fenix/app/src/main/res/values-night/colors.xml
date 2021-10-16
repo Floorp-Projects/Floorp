@@ -7,7 +7,7 @@
     <color name="primary_text_normal_theme">@color/primary_text_dark_theme</color>
     <color name="secondary_text_normal_theme">#A7A2B7</color>
     <color name="contrast_text_normal_theme">@color/primary_text_normal_theme</color>
-    <color name="caption_text_normal_theme">@color/caption_text_dark_theme</color>
+    <color name="caption_text_normal_theme">@color/photonLightGrey70</color>
     <color name="foundation_normal_theme">@color/foundation_dark_theme</color>
     <color name="above_normal_theme">@color/above_dark_theme</color>
     <color name="inset_normal_theme">@color/inset_dark_theme</color>
