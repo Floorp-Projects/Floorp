@@ -56,23 +56,10 @@
     <color name="mozac_widget_favicon_border_light_theme">@color/photonLightGrey30</color>
 
     <!-- Tab Tray -->
-    <color name="tab_tray_item_text_light_theme">@color/photonInk80</color>
-    <color name="tab_tray_item_url_light_theme">@color/photonDarkGrey05</color>
-    <color name="tab_tray_item_background_light_theme">@color/photonLightGrey10</color>
-    <color name="tab_tray_item_selected_background_light_theme">#E5DFF4</color>
-    <color name="tab_tray_toolbar_background_light_theme">@color/photonLightGrey10</color>
-    <color name="tab_tray_item_divider_light_theme">@color/photonLightGrey30</color>
     <color name="tab_tray_item_media_stroke">@color/photonWhite</color>
-    <color name="tab_tray_item_media_background_light_theme">@color/photonInk20</color>
-    <color name="tab_tray_heading_icon_light_theme">@color/photonInk20</color>
-    <color name="tab_tray_heading_icon_inactive_light_theme">@color/photonInk20A48</color>
-    <color name="tab_tray_heading_icon_menu_light_theme">@color/accent_normal_theme</color>
-    <color name="tab_tray_item_thumbnail_background_light_theme">@color/photonLightGrey10</color>
-    <color name="tab_tray_item_thumbnail_icon_light_theme">@color/photonLightGrey60</color>
-    <color name="tab_tray_selected_mask_light_theme">@color/photonViolet70A12</color>
 
     <!-- Tab History -->
-    <color name="tab_history_item_selected_background_light_theme">@color/tab_tray_item_selected_background_light_theme</color>
+    <color name="tab_history_item_selected_background_light_theme">@color/tab_tray_item_selected_background_normal_theme</color>
 
     <!-- Dark theme color palette -->
     <color name="primary_text_dark_theme">@color/photonLightGrey05</color>
@@ -232,19 +219,19 @@
     <color name="recently_used_share_theme">@color/inset_light_theme</color>
 
     <!-- Tab tray -->
-    <color name="tab_tray_item_text_normal_theme">@color/tab_tray_item_text_light_theme</color>
-    <color name="tab_tray_item_url_normal_theme">@color/tab_tray_item_url_light_theme</color>
-    <color name="tab_tray_item_background_normal_theme">@color/tab_tray_item_background_light_theme</color>
-    <color name="tab_tray_item_selected_background_normal_theme">@color/tab_tray_item_selected_background_light_theme</color>
-    <color name="tab_tray_toolbar_background_normal_theme">@color/tab_tray_toolbar_background_light_theme</color>
-    <color name="tab_tray_item_divider_normal_theme">@color/tab_tray_item_divider_light_theme</color>
-    <color name="tab_tray_item_media_background_normal_theme">@color/tab_tray_item_media_background_light_theme</color>
-    <color name="tab_tray_heading_icon_normal_theme">@color/tab_tray_heading_icon_light_theme</color>
-    <color name="tab_tray_heading_icon_inactive_normal_theme">@color/tab_tray_heading_icon_inactive_light_theme</color>
-    <color name="tab_tray_heading_icon_menu_normal_theme">@color/tab_tray_heading_icon_menu_light_theme</color>
-    <color name="tab_tray_item_thumbnail_background_normal_theme">@color/tab_tray_item_thumbnail_background_light_theme</color>
-    <color name="tab_tray_item_thumbnail_icon_normal_theme">@color/tab_tray_item_thumbnail_icon_light_theme</color>
-    <color name="tab_tray_selected_mask_normal_theme">@color/tab_tray_selected_mask_light_theme</color>
+    <color name="tab_tray_item_text_normal_theme">@color/photonInk80</color>
+    <color name="tab_tray_item_url_normal_theme">@color/photonDarkGrey05</color>
+    <color name="tab_tray_item_background_normal_theme">@color/photonLightGrey10</color>
+    <color name="tab_tray_item_selected_background_normal_theme">#E5DFF4</color>
+    <color name="tab_tray_toolbar_background_normal_theme">@color/photonLightGrey10</color>
+    <color name="tab_tray_item_divider_normal_theme">@color/photonLightGrey30</color>
+    <color name="tab_tray_item_media_background_normal_theme">@color/photonInk20</color>
+    <color name="tab_tray_heading_icon_normal_theme">@color/photonInk20</color>
+    <color name="tab_tray_heading_icon_inactive_normal_theme">@color/photonInk20A48</color>
+    <color name="tab_tray_heading_icon_menu_normal_theme">@color/accent_normal_theme</color>
+    <color name="tab_tray_item_thumbnail_background_normal_theme">@color/photonLightGrey10</color>
+    <color name="tab_tray_item_thumbnail_icon_normal_theme">@color/photonLightGrey60</color>
+    <color name="tab_tray_selected_mask_normal_theme">@color/photonViolet70A12</color>
 
     <!-- Tab History -->
     <color name="tab_history_item_selected_background_normal_theme">@color/tab_history_item_selected_background_light_theme</color>
