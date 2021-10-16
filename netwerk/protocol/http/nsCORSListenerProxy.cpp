@@ -59,15 +59,6 @@ using namespace mozilla::net;
 // 5 seconds is chosen to be compatible with Chromium.
 #define PREFLIGHT_DEFAULT_EXPIRY_SECONDS 5
 
-static inline nsAutoString GetStatusCodeAsString(nsIHttpChannel* aHttp) {
-  nsAutoString result;
-  uint32_t code;
-  if (NS_SUCCEEDED(aHttp->GetResponseStatus(&code))) {
-    result.AppendInt(code);
-  }
-  return result;
-}
-
 static void LogBlockedRequest(nsIRequest* aRequest, const char* aProperty,
                               const char16_t* aParam, uint32_t aBlockingReason,
                               nsIHttpChannel* aCreatingChannel) {
@@ -568,8 +559,7 @@ nsresult nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest) {
   rv = http->GetResponseHeader("Access-Control-Allow-Origin"_ns,
                                allowedOriginHeader);
   if (NS_FAILED(rv)) {
-    auto statusCode = GetStatusCodeAsString(http);
-    LogBlockedRequest(aRequest, "CORSMissingAllowOrigin2", statusCode.get(),
+    LogBlockedRequest(aRequest, "CORSMissingAllowOrigin", nullptr,
                       nsILoadInfo::BLOCKING_REASON_CORSMISSINGALLOWORIGIN,
                       topChannel);
     return rv;
@@ -1067,8 +1057,7 @@ nsresult nsCORSListenerProxy::CheckPreflightNeeded(nsIChannel* aChannel,
 
   nsCOMPtr<nsIHttpChannelInternal> internal = do_QueryInterface(http);
   if (!internal) {
-    auto statusCode = GetStatusCodeAsString(http);
-    LogBlockedRequest(aChannel, "CORSDidNotSucceed2", statusCode.get(),
+    LogBlockedRequest(aChannel, "CORSDidNotSucceed", nullptr,
                       nsILoadInfo::BLOCKING_REASON_CORSDIDNOTSUCCEED,
                       mHttpChannel);
     return NS_ERROR_DOM_BAD_URI;
@@ -1311,8 +1300,7 @@ nsresult nsCORSPreflightListener::CheckPreflightRequestApproved(
   bool succeedded;
   rv = http->GetRequestSucceeded(&succeedded);
   if (NS_FAILED(rv) || !succeedded) {
-    auto statusCode = GetStatusCodeAsString(http);
-    LogBlockedRequest(aRequest, "CORSPreflightDidNotSucceed3", statusCode.get(),
+    LogBlockedRequest(aRequest, "CORSPreflightDidNotSucceed2", nullptr,
                       nsILoadInfo::BLOCKING_REASON_CORSPREFLIGHTDIDNOTSUCCEED,
                       parentHttpChannel);
     return NS_ERROR_DOM_BAD_URI;
