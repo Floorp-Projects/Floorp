@@ -13,7 +13,6 @@
     <color name="about_link_normal_theme">@color/photonViolet70</color>
     <color name="dark_grey_90_gradient_start">@color/photonDarkGrey90</color>
     <color name="dark_grey_90_gradient_end">#0015141A</color>
-    <color name="prompt_login_edit_text_cursor_color_light_theme">@color/photonInk20</color>
     <color name="readermode_start_gradient_normal_theme">@color/photonViolet50</color>
     <color name="readermode_end_gradient_normal_theme">@color/photonBlue60</color>
     <color name="search_suggestion_indicator_icon_color_light_theme">@color/photonGreen70</color>
@@ -167,7 +166,7 @@
     <color name="onboarding_illustration_deselected_normal_theme">#9915141A</color>
     <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/accent_bright_light_theme</color>
     <color name="add_on_private_browsing_interior_icon_background_normal_theme">@color/photonWhite</color>
-    <color name="prompt_login_edit_text_cursor_color_normal_theme">@color/prompt_login_edit_text_cursor_color_light_theme</color>
+    <color name="prompt_login_edit_text_cursor_color_normal_theme">@color/photonInk20</color>
     <color name="search_suggestion_indicator_icon_color_normal_theme">@color/search_suggestion_indicator_icon_color_light_theme</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_normal_theme">@color/search_suggestion_indicator_icon_bookmark_color_light_theme</color>
     <color name="select_login_header_normal_theme">@color/accent_bright_light_theme</color>
