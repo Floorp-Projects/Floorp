@@ -34,7 +34,7 @@
     <color name="fill_link_from_clipboard_normal_theme">@color/accent_on_dark_background_normal_theme</color>
     <color name="menu_category_normal_theme">@color/primary_text_normal_theme</color>
     <color name="sync_disconnected_icon_fill_normal_theme">#FFF36E</color>
-    <color name="sync_disconnected_background_normal_theme">@color/sync_disconnected_background_dark_theme</color>
+    <color name="sync_disconnected_background_normal_theme">#5B5846</color>
     <color name="swipe_delete_background_normal_theme">@color/photonDarkGrey20</color>
     <color name="onboarding_card_background_start_gradient_normal_theme">@color/accent_bright_dark_theme</color>
     <color name="onboarding_card_background_end_gradient_normal_theme">@color/accent_high_contrast_dark_theme</color>

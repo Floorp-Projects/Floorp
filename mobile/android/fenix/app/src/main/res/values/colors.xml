@@ -30,7 +30,6 @@
     <color name="accent_dark_theme">@color/photonViolet50</color>
     <color name="accent_bright_dark_theme">@color/photonViolet70</color>
     <color name="accent_high_contrast_dark_theme">@color/photonViolet40</color>
-    <color name="sync_disconnected_background_dark_theme">#5B5846</color>
     <color name="onboarding_illustration_deselected_dark_theme">#99FBFBFE</color>
     <color name="add_on_private_browsing_exterior_circle_background_dark_theme">@color/accent_dark_theme</color>
     <color name="add_on_private_browsing_interior_icon_background_dark_theme">@color/photonWhite</color>
