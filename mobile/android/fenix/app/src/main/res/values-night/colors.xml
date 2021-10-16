@@ -30,7 +30,7 @@
     <color name="toolbar_start_gradient_normal_theme">@color/toolbar_start_gradient_dark_theme</color>
     <color name="toolbar_center_gradient_normal_theme">@color/toolbar_center_gradient_dark_theme</color>
     <color name="toolbar_end_gradient_normal_theme">@color/toolbar_end_gradient_dark_theme</color>
-    <color name="toolbar_divider_color_normal_theme">@color/toolbar_divider_color_dark_theme</color>
+    <color name="toolbar_divider_color_normal_theme">@color/photonDarkGrey10</color>
     <color name="fill_link_from_clipboard_normal_theme">@color/accent_on_dark_background_normal_theme</color>
     <color name="menu_category_normal_theme">@color/primary_text_normal_theme</color>
     <color name="sync_disconnected_icon_fill_normal_theme">@color/sync_disconnected_icon_fill_dark_theme</color>
