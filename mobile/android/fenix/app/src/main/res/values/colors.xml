@@ -107,7 +107,7 @@
     <color name="toolbar_divider_color_dark_theme">@color/photonDarkGrey10</color>
     <color name="sync_disconnected_icon_fill_dark_theme">#FFF36E</color>
     <color name="sync_disconnected_background_dark_theme">#5B5846</color>
-    <color name="swipe_delete_background_dark_theme">#4A4A55</color>
+    <color name="swipe_delete_background_dark_theme">@color/photonDarkGrey20</color>
     <color name="onboarding_card_background_start_gradient_dark_theme">@color/accent_bright_dark_theme</color>
     <color name="onboarding_card_background_end_gradient_dark_theme">@color/accent_high_contrast_dark_theme</color>
     <color name="onboarding_illustration_selected_dark_theme">@color/accent_dark_theme</color>
