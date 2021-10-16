@@ -609,7 +609,7 @@ WindowRenderer* PuppetWidget::GetWindowRenderer() {
     // can do drawing in this process.
     MOZ_ASSERT(!mBrowserChild ||
                mBrowserChild->IsLayersConnected() != Some(true));
-    mWindowRenderer = CreateBasicLayerManager();
+    mWindowRenderer = CreateFallbackRenderer();
   }
 
   return mWindowRenderer;
