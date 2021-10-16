@@ -67,3 +67,5 @@ user_pref("browser.cache.offline.enable", true);
 // Enable blocking access to storage from tracking resources by default.
 // We don't want to run WPT using BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN (5 - aka Dynamic First Party Isolation) yet.
 user_pref("network.cookie.cookieBehavior", 4);
+// Force a light color scheme unless explicitly overriden by pref.
+user_pref("layout.css.prefers-color-scheme.content-override", 1);
