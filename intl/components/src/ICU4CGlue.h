@@ -24,9 +24,10 @@
 namespace mozilla::intl {
 
 static inline const char* IcuLocale(const char* aLocale) {
+  // Return the empty string if the input is exactly equal to the string "und".
   const char* locale = aLocale;
-  if (!strncmp(locale, "und", 3)) {
-    locale = "";
+  if (!std::strcmp(locale, "und")) {
+    locale = "";  // ICU root locale
   }
   return locale;
 }
