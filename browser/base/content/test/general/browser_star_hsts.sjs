@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   let page = "<!DOCTYPE html><html><body><p>HSTS page</p></body></html>";
   response.setStatusLine(request.httpVersion, "200", "OK");
   response.setHeader("Strict-Transport-Security", "max-age=60");

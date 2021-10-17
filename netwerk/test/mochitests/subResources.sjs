@@ -1,12 +1,23 @@
 const kTwoDays = 2 * 24 * 60 * 60;
-const kInTwoDays = (new Date().getTime() + kTwoDays * 1000);
+const kInTwoDays = new Date().getTime() + kTwoDays * 1000;
 
-function getDateInTwoDays()
-{
+function getDateInTwoDays() {
   let date2 = new Date(kInTwoDays);
   let days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
-                "Nov", "Dec"];
+  let months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   let day = date2.getUTCDate();
   if (day < 10) {
     day = "0" + day;
@@ -25,8 +36,22 @@ function getDateInTwoDays()
   if (second < 10) {
     second = "0" + second;
   }
-  return days[date2.getUTCDay()] + ", " + day + "-" + month + "-" +
-         year + " " + hour + ":" + minute + ":" + second + " GMT";
+  return (
+    days[date2.getUTCDay()] +
+    ", " +
+    day +
+    "-" +
+    month +
+    "-" +
+    year +
+    " " +
+    hour +
+    ":" +
+    minute +
+    ":" +
+    second +
+    " GMT"
+  );
 }
 
 function handleRequest(aRequest, aResponse) {
@@ -35,11 +60,17 @@ function handleRequest(aRequest, aResponse) {
   let suffix = " path=/; domain:.mochi.test";
 
   if (aRequest.queryString.includes("3")) {
-    aResponse.setHeader("Set-Cookie", "test3=value3; expires=Fri, 02-Jan-2037 00:00:01 GMT;" + suffix);
+    aResponse.setHeader(
+      "Set-Cookie",
+      "test3=value3; expires=Fri, 02-Jan-2037 00:00:01 GMT;" + suffix
+    );
   } else if (aRequest.queryString.includes("4")) {
     let date2 = getDateInTwoDays();
 
-    aResponse.setHeader("Set-Cookie", "test4=value4; expires=" + date2 + ";" + suffix);
+    aResponse.setHeader(
+      "Set-Cookie",
+      "test4=value4; expires=" + date2 + ";" + suffix
+    );
   }
 
   aResponse.setHeader("Content-Type", "text/javascript", false);

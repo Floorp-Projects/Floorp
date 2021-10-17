@@ -7,6 +7,8 @@ Cu.importGlobalProperties(["URLSearchParams"]);
 
 function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, 302, "Moved Temporarily");
-  response.setHeader("Location", new URLSearchParams(request.queryString).get("uri"));
+  response.setHeader(
+    "Location",
+    new URLSearchParams(request.queryString).get("uri")
+  );
 }
-

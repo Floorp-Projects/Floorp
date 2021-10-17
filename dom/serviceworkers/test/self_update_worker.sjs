@@ -17,8 +17,8 @@ onactivate = function(event) {
 `;
 
 function handleRequest(request, response) {
-  if (request.queryString == 'clearcounter') {
-    setState('count', "1");
+  if (request.queryString == "clearcounter") {
+    setState("count", "1");
     response.write("ok");
     return;
   }
@@ -40,4 +40,3 @@ function handleRequest(request, response) {
   response.write(worker);
   setState("count", "" + (count + 1));
 }
-

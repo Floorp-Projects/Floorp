@@ -44,10 +44,11 @@ function handleRequest(aRequest, aResponse) {
     // second request - this will be done by the b/g service.
     // We always return a red background, but depending on the query string we
     // return either a 200 or 401 response.
-    if (aRequest.queryString == "fail")
+    if (aRequest.queryString == "fail") {
       aResponse.setStatusLine(aRequest.httpVersion, 401, "Oh no you don't");
-    else
+    } else {
       aResponse.setStatusLine(aRequest.httpVersion, 200, "OK - It's red");
+    }
     aResponse.write("<html><body bgcolor=ff0000></body></html>");
     // reset the error state incase this ends up being reused for the
     // same url and querystring.

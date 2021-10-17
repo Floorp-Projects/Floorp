@@ -4,10 +4,10 @@ function handleRequest(request, response) {
 
   if (request.queryString == "expectAuth=true") {
     if (request.hasHeader("Authorization")) {
-      headers["authorization"] = request.getHeader("Authorization");
+      headers.authorization = request.getHeader("Authorization");
     } else {
       response.setStatusLine(null, 401, "Authentication required");
-      response.setHeader("WWW-Authenticate", "basic realm=\"testrealm\"", true);
+      response.setHeader("WWW-Authenticate", 'basic realm="testrealm"', true);
     }
   } else {
     invalidHeaders.push("Authorization");

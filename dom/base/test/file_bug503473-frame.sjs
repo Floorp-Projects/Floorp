@@ -5,19 +5,18 @@ function handleRequest(request, response) {
   response.setHeader("Cache-Control", "no-cache", false);
 
   response.write(
-    '<!DOCTYPE html>' +
-    '<div></div>' +
-    '<script>' +
-    'function doWrite() {' +
-    '  document.write("<p></p>");' +
-    '  parent.done();' +
-    '  document.close();' +
-    '}' +
-    'setTimeout(doWrite, 0);' +
-    '</script>' 
+    "<!DOCTYPE html>" +
+      "<div></div>" +
+      "<script>" +
+      "function doWrite() {" +
+      '  document.write("<p></p>");' +
+      "  parent.done();" +
+      "  document.close();" +
+      "}" +
+      "setTimeout(doWrite, 0);" +
+      "</script>"
   );
 
   response.bodyOutputStream.flush();
   // leave the stream open
 }
-

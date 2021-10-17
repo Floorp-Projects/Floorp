@@ -1,17 +1,17 @@
 var pages = [
   "<!DOCTYPE html>" +
-  "<html><body>" +
-  "<form>" +
-  "<input name='a' type='radio' checked><input name='a' type='radio'><input name='a' type='radio'>" +
-  "</form>" +
-  "</body></html>",
+    "<html><body>" +
+    "<form>" +
+    "<input name='a' type='radio' checked><input name='a' type='radio'><input name='a' type='radio'>" +
+    "</form>" +
+    "</body></html>",
   "<!DOCTYPE html>" +
-  "<html><body>" +
-  "<form>" +
-  "<input name='a' type='radio'><input name='a' type='radio' checked><input name='a' type='radio'>" +
-  "</form>" +
-  "</body></html>",
-  ];
+    "<html><body>" +
+    "<form>" +
+    "<input name='a' type='radio'><input name='a' type='radio' checked><input name='a' type='radio'>" +
+    "</form>" +
+    "</body></html>",
+];
 
 /**
  * This SJS is going to send the same page the two first times it will be called
@@ -21,8 +21,7 @@ var pages = [
  * once.
  */
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   var counter = +getState("counter"); // convert to number; +"" === 0
 
   response.setStatusLine(request.httpVersion, 200, "Ok");
@@ -47,4 +46,3 @@ function handleRequest(request, response)
     setState("counter", "" + ++counter);
   }
 }
-

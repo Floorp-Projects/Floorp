@@ -13,40 +13,43 @@ function loadContentFromFile(path) {
   // Load the content to return in the response from file.
   // Since it's relative to the cwd of the test runner, we start there and
   // append to get to the actual path of the file.
-  var testContentFile =
-    Components.classes["@mozilla.org/file/directory_service;1"].
-    getService(Components.interfaces.nsIProperties).
-    get("CurWorkD", Components.interfaces.nsIFile);
+  var testContentFile = Components.classes[
+    "@mozilla.org/file/directory_service;1"
+  ]
+    .getService(Components.interfaces.nsIProperties)
+    .get("CurWorkD", Components.interfaces.nsIFile);
   var dirs = path.split("/");
   for (var i = 0; i < dirs.length; i++) {
     testContentFile.append(dirs[i]);
   }
-  var testContentFileStream =
-    Components.classes["@mozilla.org/network/file-input-stream;1"].
-    createInstance(Components.interfaces.nsIFileInputStream);
+  var testContentFileStream = Components.classes[
+    "@mozilla.org/network/file-input-stream;1"
+  ].createInstance(Components.interfaces.nsIFileInputStream);
   testContentFileStream.init(testContentFile, -1, 0, 0);
-  var testContent = NetUtil.readInputStreamToString(testContentFileStream, testContentFileStream.available());
+  var testContent = NetUtil.readInputStreamToString(
+    testContentFileStream,
+    testContentFileStream.available()
+  );
   return testContent;
 }
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   const { scheme, host, path } = request;
   // get the Content-Type to serve from the query string
   var contentType = null;
   var uniqueID = null;
   var showLastRequest = false;
-  request.queryString.split('&').forEach(function (val) {
-     var [name, value] = val.split('=');
-       if (name == "type") {
-         contentType = unescape(value);
-       }
-       if (name == "uniqueID") {
-         uniqueID = unescape(value);
-       }
-       if (name == "lastRequest") {
-         showLastRequest = true;
-       }
+  request.queryString.split("&").forEach(function(val) {
+    var [name, value] = val.split("=");
+    if (name == "type") {
+      contentType = unescape(value);
+    }
+    if (name == "uniqueID") {
+      uniqueID = unescape(value);
+    }
+    if (name == "lastRequest") {
+      showLastRequest = true;
+    }
   });
 
   // avoid confusing cache behaviors
@@ -73,18 +76,23 @@ function handleRequest(request, response)
     return;
   }
 
-  setState("lastRequest", JSON.stringify({
-    scheme,
-    host,
-    path,
-    uniqueID,
-    contentType: contentType || "other",
-  }));
+  setState(
+    "lastRequest",
+    JSON.stringify({
+      scheme,
+      host,
+      path,
+      uniqueID,
+      contentType: contentType || "other",
+    })
+  );
 
   switch (contentType) {
     case "img":
       response.setHeader("Content-Type", "image/png", false);
-      response.write(loadContentFromFile("tests/image/test/mochitest/blue.png"));
+      response.write(
+        loadContentFromFile("tests/image/test/mochitest/blue.png")
+      );
       break;
 
     case "media":
@@ -109,7 +117,7 @@ function handleRequest(request, response)
       response.setHeader("Content-Type", "application/x-test-match", false);
       break;
 
-   case "xhr":
+    case "xhr":
       response.setHeader("Content-Type", "text/xml", false);
       response.setHeader("Access-Control-Allow-Origin", "https://example.com");
       response.write('<?xml version="1.0" encoding="UTF-8" ?><test></test>');

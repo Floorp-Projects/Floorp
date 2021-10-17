@@ -1,5 +1,4 @@
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, 200, "Ok");
   response.setHeader("Content-Type", "text/html");
   response.setHeader("Cache-Control", "no-cache");

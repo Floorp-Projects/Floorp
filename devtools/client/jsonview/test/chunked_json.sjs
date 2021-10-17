@@ -7,12 +7,14 @@ function setResponse(response) {
 }
 function getResponse() {
   let response;
-  getObjectState(key, v => { response = v });
+  getObjectState(key, v => {
+    response = v;
+  });
   return response;
 }
 
 function handleRequest(request, response) {
-  let {queryString} = request;
+  const { queryString } = request;
   if (!queryString) {
     response.processAsync();
     setResponse(response);
@@ -21,7 +23,7 @@ function handleRequest(request, response) {
     response.write(" ");
     return;
   }
-  let [command, value] = queryString.split('=');
+  const [command, value] = queryString.split("=");
   switch (command) {
     case "write":
       getResponse().write(value);

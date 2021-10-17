@@ -7,15 +7,19 @@ function handleRequest(request, response) {
   // Get the nsIFile for frameStoragePrevented.html
   var file;
   getObjectState("SERVER_ROOT", function(serverRoot) {
-    file = serverRoot.getFile("/tests/dom/tests/mochitest/general/frameStoragePrevented.html");
+    file = serverRoot.getFile(
+      "/tests/dom/tests/mochitest/general/frameStoragePrevented.html"
+    );
   });
 
   // Set up the file streams to read in the file as UTF-8
-  let fstream = Components.classes["@mozilla.org/network/file-input-stream;1"].
-      createInstance(Components.interfaces.nsIFileInputStream);
+  let fstream = Components.classes[
+    "@mozilla.org/network/file-input-stream;1"
+  ].createInstance(Components.interfaces.nsIFileInputStream);
   fstream.init(file, -1, 0, 0);
-  let cstream = Components.classes["@mozilla.org/intl/converter-input-stream;1"].
-      createInstance(Components.interfaces.nsIConverterInputStream);
+  let cstream = Components.classes[
+    "@mozilla.org/intl/converter-input-stream;1"
+  ].createInstance(Components.interfaces.nsIConverterInputStream);
   cstream.init(fstream, "UTF-8", 0, 0);
 
   // Read in the file, and concatenate it onto the data string
@@ -28,6 +32,9 @@ function handleRequest(request, response) {
   } while (read != 0);
 
   // Write out the file as a data: URI, and redirect to it
-  response.setStatusLine('1.1', 302, 'Found');
-  response.setHeader('Location', 'data:text/html,' + encodeURIComponent(data) + "#nullprincipal");
+  response.setStatusLine("1.1", 302, "Found");
+  response.setHeader(
+    "Location",
+    "data:text/html," + encodeURIComponent(data) + "#nullprincipal"
+  );
 }

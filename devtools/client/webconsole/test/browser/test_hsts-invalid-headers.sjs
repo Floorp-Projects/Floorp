@@ -1,14 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   response.setHeader("Content-Type", "text/plain; charset=utf-8", false);
 
   let issue;
   switch (request.queryString) {
     case "badSyntax":
-      response.setHeader("Strict-Transport-Security", "\"");
+      response.setHeader("Strict-Transport-Security", '"');
       issue = "is not syntactically correct.";
       break;
     case "noMaxAge":
@@ -24,13 +23,17 @@ function handleRequest(request, response)
       issue = "includes an invalid max-age directive.";
       break;
     case "multipleIncludeSubDomains":
-      response.setHeader("Strict-Transport-Security",
-                         "includeSubDomains; includeSubDomains");
+      response.setHeader(
+        "Strict-Transport-Security",
+        "includeSubDomains; includeSubDomains"
+      );
       issue = "includes multiple includeSubDomains directives.";
       break;
     case "multipleMaxAge":
-      response.setHeader("Strict-Transport-Security",
-                         "max-age=444; max-age=999");
+      response.setHeader(
+        "Strict-Transport-Security",
+        "max-age=444; max-age=999"
+      );
       issue = "includes multiple max-age directives.";
       break;
   }

@@ -2,8 +2,7 @@
 // the | character. Anything before is included as the X-Target-Digest header
 // the latter part is used as the url to redirect to
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   let pos = request.queryString.indexOf("|");
   let header = request.queryString.substring(0, pos);
   let url = request.queryString.substring(pos + 1);

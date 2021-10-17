@@ -1,13 +1,14 @@
 const CC = Components.Constructor;
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
-                             "nsIBinaryInputStream",
-                             "setInputStream");
+const BinaryInputStream = CC(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   var query = {};
-  request.queryString.split('&').forEach(function (val) {
-    var idx = val.indexOf('=');
+  request.queryString.split("&").forEach(function(val) {
+    var idx = val.indexOf("=");
     query[val.slice(0, idx)] = unescape(val.slice(idx + 1));
   });
 
@@ -17,10 +18,10 @@ function handleRequest(request, response)
     // 1. All the full hashes for a given list
     // 2. All the lists we have right now
     // data is separate by '\n'
-    let list = query["list"];
+    let list = query.list;
     let hashes = getState(list);
 
-    let hash = base64ToString(query["fullhash"]);
+    let hash = base64ToString(query.fullhash);
     hashes += hash + "\n";
     setState(list, hashes);
 
@@ -48,26 +49,29 @@ function handleRequest(request, response)
 }
 
 function parseV2Request(bytes) {
-  var table = String.fromCharCode.apply(this, bytes).slice(0,-2);
+  var table = String.fromCharCode.apply(this, bytes).slice(0, -2);
 
   var ret = "";
-  getState("lists").split("\n").forEach(function(list) {
-    if (list == table) {
-      var completions = getState(list).split("\n");
-      ret += "n:1000\n"
-      ret += "i:" + list + "\n";
-      ret += "a:1:32:" + 32*(completions.length - 1) + "\n";
+  getState("lists")
+    .split("\n")
+    .forEach(function(list) {
+      if (list == table) {
+        var completions = getState(list).split("\n");
+        ret += "n:1000\n";
+        ret += "i:" + list + "\n";
+        ret += "a:1:32:" + 32 * (completions.length - 1) + "\n";
 
-      for (var completion of completions) {
-        ret += completion;
+        for (var completion of completions) {
+          ret += completion;
+        }
       }
-    }
-  });
+    });
 
   return ret;
 }
 
 /* Convert Base64 data to a string */
+/* eslint-disable prettier/prettier */
 const toBinaryTable = [
     -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
     -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
@@ -78,37 +82,42 @@ const toBinaryTable = [
     -1,26,27,28, 29,30,31,32, 33,34,35,36, 37,38,39,40,
     41,42,43,44, 45,46,47,48, 49,50,51,-1, -1,-1,-1,-1
 ];
-const base64Pad = '=';
+/* eslint-enable prettier/prettier */
+const base64Pad = "=";
 
 function base64ToString(data) {
-    var result = '';
-    var leftbits = 0; // number of bits decoded, but yet to be appended
-    var leftdata = 0; // bits decoded, but yet to be appended
+  var result = "";
+  var leftbits = 0; // number of bits decoded, but yet to be appended
+  var leftdata = 0; // bits decoded, but yet to be appended
 
-    // Convert one by one.
-    for (var i = 0; i < data.length; i++) {
-        var c = toBinaryTable[data.charCodeAt(i) & 0x7f];
-        var padding = (data[i] == base64Pad);
-        // Skip illegal characters and whitespace
-        if (c == -1) continue;
-
-        // Collect data into leftdata, update bitcount
-        leftdata = (leftdata << 6) | c;
-        leftbits += 6;
-
-        // If we have 8 or more bits, append 8 bits to the result
-        if (leftbits >= 8) {
-            leftbits -= 8;
-            // Append if not padding.
-            if (!padding)
-                result += String.fromCharCode((leftdata >> leftbits) & 0xff);
-            leftdata &= (1 << leftbits) - 1;
-        }
+  // Convert one by one.
+  for (var i = 0; i < data.length; i++) {
+    var c = toBinaryTable[data.charCodeAt(i) & 0x7f];
+    var padding = data[i] == base64Pad;
+    // Skip illegal characters and whitespace
+    if (c == -1) {
+      continue;
     }
 
-    // If there are any bits left, the base64 string was corrupted
-    if (leftbits)
-        throw Components.Exception('Corrupted base64 string');
+    // Collect data into leftdata, update bitcount
+    leftdata = (leftdata << 6) | c;
+    leftbits += 6;
 
-    return result;
+    // If we have 8 or more bits, append 8 bits to the result
+    if (leftbits >= 8) {
+      leftbits -= 8;
+      // Append if not padding.
+      if (!padding) {
+        result += String.fromCharCode((leftdata >> leftbits) & 0xff);
+      }
+      leftdata &= (1 << leftbits) - 1;
+    }
+  }
+
+  // If there are any bits left, the base64 string was corrupted
+  if (leftbits) {
+    throw Components.Exception("Corrupted base64 string");
+  }
+
+  return result;
 }

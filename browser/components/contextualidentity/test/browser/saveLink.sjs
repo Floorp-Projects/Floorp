@@ -1,6 +1,7 @@
 const HTTP_ORIGIN = "http://example.com";
 const HTTPS_ORIGIN = "https://example.com";
-const URI_PATH = "/browser/browser/components/contextualidentity/test/browser/saveLink.sjs";
+const URI_PATH =
+  "/browser/browser/components/contextualidentity/test/browser/saveLink.sjs";
 
 Components.utils.importGlobalProperties(["URLSearchParams"]);
 
@@ -11,7 +12,12 @@ function handleRequest(aRequest, aResponse) {
   if (params.has("UCI")) {
     aResponse.setStatusLine(aRequest.httpVersion, 200);
     aResponse.setHeader("Set-Cookie", "UCI=" + params.get("UCI"));
-    aResponse.write("<html><body><a href='" + HTTPS_ORIGIN + URI_PATH + "?redirect=1' id='fff'>this is a link</a></body></html>");
+    aResponse.write(
+      "<html><body><a href='" +
+        HTTPS_ORIGIN +
+        URI_PATH +
+        "?redirect=1' id='fff'>this is a link</a></body></html>"
+    );
     return;
   }
 
@@ -19,7 +25,11 @@ function handleRequest(aRequest, aResponse) {
   // if we are able to follow it.
   if (params.has("redirect")) {
     aResponse.setStatusLine(aRequest.httpVersion, 302, "Found");
-    aResponse.setHeader("Location", HTTP_ORIGIN + URI_PATH + "?download=1", false);
+    aResponse.setHeader(
+      "Location",
+      HTTP_ORIGIN + URI_PATH + "?download=1",
+      false
+    );
     aResponse.write("Redirect!");
     return;
   }
