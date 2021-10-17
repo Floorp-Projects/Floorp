@@ -164,7 +164,6 @@
     <color name="mozac_widget_favicon_border_private_theme">@color/photonInk50</color>
 
     <!-- Tab Tray -->
-    <color name="tab_tray_toolbar_background_private_theme">@color/photonInk50</color>
     <color name="tab_tray_item_media_background_private_theme">@color/photonViolet50</color>
 
     <!-- Tab History -->
@@ -221,7 +220,6 @@
     <color name="tab_tray_item_url_normal_theme">@color/photonDarkGrey05</color>
     <color name="tab_tray_item_background_normal_theme">@color/photonLightGrey10</color>
     <color name="tab_tray_item_selected_background_normal_theme">#E5DFF4</color>
-    <color name="tab_tray_toolbar_background_normal_theme">@color/photonLightGrey10</color>
     <color name="tab_tray_item_divider_normal_theme">@color/photonLightGrey30</color>
     <color name="tab_tray_item_media_background_normal_theme">@color/photonInk20</color>
     <color name="tab_tray_heading_icon_normal_theme">@color/photonInk20</color>
