@@ -29,8 +29,7 @@ const GET_COOKIE_FRAME = `
   </body>
   </html>`;
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 

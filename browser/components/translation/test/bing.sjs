@@ -5,9 +5,11 @@
 "use strict";
 
 const CC = Components.Constructor;
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
-                             "nsIBinaryInputStream",
-                             "setInputStream");
+const BinaryInputStream = CC(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
 Cu.importGlobalProperties(["DOMParser"]);
 
 function handleRequest(req, res) {
@@ -33,7 +35,7 @@ const statusCodes = {
   405: "Method Not Allowed",
   500: "Internal Server Error",
   501: "Not Implemented",
-  503: "Service Unavailable"
+  503: "Service Unavailable",
 };
 
 function HTTPError(code = 500, message) {
@@ -46,8 +48,10 @@ HTTPError.prototype.constructor = HTTPError;
 
 function sendError(res, err) {
   if (!(err instanceof HTTPError)) {
-    err = new HTTPError(typeof err == "number" ? err : 500,
-                        err.message || typeof err == "string" ? err : "");
+    err = new HTTPError(
+      typeof err == "number" ? err : 500,
+      err.message || typeof err == "string" ? err : ""
+    );
   }
   res.setStatusLine("1.1", err.code, err.name);
   res.write(err.message);
@@ -57,8 +61,9 @@ function parseQuery(query) {
   let ret = {};
   for (let param of query.replace(/^[?&]/, "").split("&")) {
     param = param.split("=");
-    if (!param[0])
+    if (!param[0]) {
       continue;
+    }
     ret[unescape(param[0])] = unescape(param[1]);
   }
   return ret;
@@ -69,22 +74,23 @@ function getRequestBody(req) {
   let bytes = [];
   let body = new BinaryInputStream(req.bodyInputStream);
 
-  while ((avail = body.available()) > 0)
+  while ((avail = body.available()) > 0) {
     Array.prototype.push.apply(bytes, body.readByteArray(avail));
+  }
 
   return String.fromCharCode.apply(null, bytes);
 }
 
 function sha1(str) {
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  let converter = Cc[
+    "@mozilla.org/intl/scriptableunicodeconverter"
+  ].createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
   // `result` is an out parameter, `result.value` will contain the array length.
   let result = {};
   // `data` is an array of bytes.
   let data = converter.convertToByteArray(str, result);
-  let ch = Cc["@mozilla.org/security/hash;1"]
-             .createInstance(Ci.nsICryptoHash);
+  let ch = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
   ch.init(ch.SHA1);
   ch.update(data, data.length);
   let hash = ch.finish(false);
@@ -101,19 +107,22 @@ function sha1(str) {
 function parseXml(body) {
   let parser = new DOMParser();
   let xml = parser.parseFromString(body, "text/xml");
-  if (xml.documentElement.localName == "parsererror")
+  if (xml.documentElement.localName == "parsererror") {
     throw new Error("Invalid XML");
+  }
   return xml;
 }
 
 function getInputStream(path) {
   let file = Cc["@mozilla.org/file/directory_service;1"]
-               .getService(Ci.nsIProperties)
-               .get("CurWorkD", Ci.nsIFile);
-  for (let part of path.split("/"))
+    .getService(Ci.nsIProperties)
+    .get("CurWorkD", Ci.nsIFile);
+  for (let part of path.split("/")) {
     file.append(part);
-  let fileStream  = Cc["@mozilla.org/network/file-input-stream;1"]
-                      .createInstance(Ci.nsIFileInputStream);
+  }
+  let fileStream = Cc[
+    "@mozilla.org/network/file-input-stream;1"
+  ].createInstance(Ci.nsIFileInputStream);
   fileStream.init(file, 1, 0, false);
   return fileStream;
 }
@@ -122,25 +131,33 @@ function checkAuth(req) {
   let err = new Error("Authorization failed");
   err.code = 401;
 
-  if (!req.hasHeader("Authorization"))
+  if (!req.hasHeader("Authorization")) {
     throw new HTTPError(401, "No Authorization header provided.");
+  }
 
   let auth = req.getHeader("Authorization");
-  if (!auth.startsWith("Bearer "))
-    throw new HTTPError(401, "Invalid Authorization header content: '" + auth + "'");
+  if (!auth.startsWith("Bearer ")) {
+    throw new HTTPError(
+      401,
+      "Invalid Authorization header content: '" + auth + "'"
+    );
+  }
 
   // Rejecting inactive subscriptions.
   if (auth.includes("inactive")) {
-    const INACTIVE_STATE_RESPONSE = "<html><body><h1>TranslateApiException</h1><p>Method: TranslateArray()</p><p>Message: The Azure Market Place Translator Subscription associated with the request credentials is not in an active state.</p><code></code><p>message id=5641.V2_Rest.TranslateArray.48CC6470</p></body></html>";
+    const INACTIVE_STATE_RESPONSE =
+      "<html><body><h1>TranslateApiException</h1><p>Method: TranslateArray()</p><p>Message: The Azure Market Place Translator Subscription associated with the request credentials is not in an active state.</p><code></code><p>message id=5641.V2_Rest.TranslateArray.48CC6470</p></body></html>";
     throw new HTTPError(401, INACTIVE_STATE_RESPONSE);
   }
-
 }
 
 function reallyHandleRequest(req, res) {
   log("method: " + req.method);
   if (req.method != "POST") {
-    sendError(res, "Bing only deals with POST requests, not '" + req.method + "'.");
+    sendError(
+      res,
+      "Bing only deals with POST requests, not '" + req.method + "'."
+    );
     return;
   }
 
@@ -148,7 +165,9 @@ function reallyHandleRequest(req, res) {
   log("body: " + body);
 
   // First, we'll see if we're dealing with an XML body:
-  let contentType = req.hasHeader("Content-Type") ? req.getHeader("Content-Type") : null;
+  let contentType = req.hasHeader("Content-Type")
+    ? req.getHeader("Content-Type")
+    : null;
   log("contentType: " + contentType);
 
   if (contentType.startsWith("text/xml")) {
@@ -161,10 +180,11 @@ function reallyHandleRequest(req, res) {
       let method = xml.documentElement.localName;
       log("invoking method: " + method);
       // If the requested method is supported, delegate it to its handler.
-      if (methodHandlers[method])
+      if (methodHandlers[method]) {
         methodHandlers[method](res, xml);
-      else
+      } else {
         throw new HTTPError(501);
+      }
     } catch (ex) {
       sendError(res, ex, ex.code);
     }
@@ -173,15 +193,16 @@ function reallyHandleRequest(req, res) {
     let params = parseQuery(body);
 
     // Delegate an authentication request to the correct handler.
-    if ("grant_type" in params && params.grant_type == "client_credentials")
+    if ("grant_type" in params && params.grant_type == "client_credentials") {
       methodHandlers.authenticate(res, params);
-    else
+    } else {
       sendError(res, 501);
+    }
   }
 }
 
 const methodHandlers = {
-  authenticate: function(res, params) {
+  authenticate(res, params) {
     // Validate a few required parameters.
     if (params.scope != "http://api.microsofttranslator.com") {
       sendError(res, "Invalid scope.");
@@ -198,16 +219,16 @@ const methodHandlers = {
 
     // Defines the tokens for certain client ids.
     const TOKEN_MAP = {
-      'testInactive'  : 'inactive',
-      'testClient'    : 'test'
+      testInactive: "inactive",
+      testClient: "test",
     };
-    let token = 'test'; // Default token.
-    if((params.client_id in TOKEN_MAP)){
+    let token = "test"; // Default token.
+    if (params.client_id in TOKEN_MAP) {
       token = TOKEN_MAP[params.client_id];
     }
     let content = JSON.stringify({
       access_token: token,
-      expires_in: 600
+      expires_in: 600,
     });
 
     res.setStatusLine("1.1", 200, "OK");
@@ -216,9 +237,9 @@ const methodHandlers = {
     res.write(content);
   },
 
-  TranslateArrayRequest: function(res, xml, body) {
+  TranslateArrayRequest(res, xml, body) {
     let from = xml.querySelector("From").firstChild.nodeValue;
-    let to = xml.querySelector("To").firstChild.nodeValue
+    let to = xml.querySelector("To").firstChild.nodeValue;
     log("translating from '" + from + "' to '" + to + "'");
 
     res.setStatusLine("1.1", 200, "OK");
@@ -227,8 +248,11 @@ const methodHandlers = {
     let hash = sha1(body).substr(0, 10);
     log("SHA1 hash of content: " + hash);
     let inputStream = getInputStream(
-      "browser/browser/components/translation/test/fixtures/result-" + hash + ".txt");
+      "browser/browser/components/translation/test/fixtures/result-" +
+        hash +
+        ".txt"
+    );
     res.bodyOutputStream.writeFrom(inputStream, inputStream.available());
     inputStream.close();
-  }
+  },
 };

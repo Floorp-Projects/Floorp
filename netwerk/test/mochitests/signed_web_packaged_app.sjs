@@ -1,5 +1,4 @@
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   response.setHeader("Content-Type", "application/package", false);
   response.write(signedPackage);
 }

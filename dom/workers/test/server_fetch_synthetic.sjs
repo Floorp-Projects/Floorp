@@ -38,7 +38,7 @@ async function handleRequest(request, response) {
     blobContents = extractBlobFromMultipartFormData(requestBodyContents);
   }
 
-  log("Setting Headers")
+  log("Setting Headers");
   response.setHeader("Content-Type", "text/html", false);
   response.setStatusLine(request.httpVersion, "200", "OK");
   response.write(`<!DOCTYPE HTML><head><meta charset="utf-8"/></head><body>

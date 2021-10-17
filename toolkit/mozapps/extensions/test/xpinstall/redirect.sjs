@@ -2,36 +2,30 @@
 // parameters from the query string configure the redirection. If the mode is
 // "redirect" then a redirect is returned
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   let parts = request.queryString.split("&");
   let settings = {};
 
   parts.forEach(function(aString) {
     let [k, v] = aString.split("=");
     settings[k] = decodeURIComponent(v);
-  })
+  });
 
   if (settings.mode == "setup") {
     delete settings.mode;
 
     // Object states must be an nsISupports
     var state = {
-      settings: settings,
-      QueryInterface: function(aIid) {
-        if (aIid.equals(Components.interfaces.nsISupports))
-          return settings;
-        throw Components.results.NS_ERROR_NO_INTERFACE;
-      }
-    }
+      settings,
+      QueryInterface: ChromeUtils.generateQI([]),
+    };
     state.wrappedJSObject = state;
 
     setObjectState("xpinstall-redirect-settings", state);
     response.setStatusLine(request.httpVersion, 200, "Ok");
     response.setHeader("Content-Type", "text/plain");
     response.write("Setup complete");
-  }
-  else if (settings.mode == "redirect") {
+  } else if (settings.mode == "redirect") {
     getObjectState("xpinstall-redirect-settings", function(aObject) {
       settings = aObject.wrappedJSObject.settings;
     });

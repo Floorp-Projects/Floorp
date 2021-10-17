@@ -6,7 +6,7 @@ const LINK_PATH = `${URI_PATH}file_saveAs.sjs`;
 const VIDEO_PATH = `${URI_PATH}file_thirdPartyChild.video.ogv`;
 // Reusing existing png file for testing.
 const IMAGE_PATH = `${URI_PATH}file_favicon.png`;
-const FRAME_PATH = `${SECOND_ORIGIN}${URI_PATH}file_saveAs.sjs?image=1`
+const FRAME_PATH = `${SECOND_ORIGIN}${URI_PATH}file_saveAs.sjs?image=1`;
 
 Components.utils.importGlobalProperties(["URLSearchParams"]);
 

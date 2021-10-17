@@ -11,10 +11,11 @@ function handleRequest(request, response) {
 
   var cookie = "name=value";
   var title = "No Cookie";
-  if (request.hasHeader("Cookie") && request.getHeader("Cookie") == cookie)
+  if (request.hasHeader("Cookie") && request.getHeader("Cookie") == cookie) {
     title = "Cookie";
-  else
+  } else {
     response.setHeader("Set-Cookie", cookie, false);
+  }
 
   response.write("<html><head><title>");
   response.write(title);

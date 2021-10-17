@@ -1,9 +1,11 @@
-const BinaryOutputStream =
-  Components.Constructor("@mozilla.org/binaryoutputstream;1",
-                         "nsIBinaryOutputStream",
-                         "setOutputStream");
+const BinaryOutputStream = Components.Constructor(
+  "@mozilla.org/binaryoutputstream;1",
+  "nsIBinaryOutputStream",
+  "setOutputStream"
+);
 
 // this is simply a hex dump of a red square .PNG image
+/* eslint-disable prettier/prettier */
 const RED_SQUARE =
   [
     0x89,  0x50,  0x4E,  0x47,  0x0D,  0x0A,  0x1A,  0x0A,  0x00,  0x00,
@@ -19,11 +21,11 @@ const RED_SQUARE =
     0x00,  0x00,  0x49,  0x45,  0x4E,  0x44,  0xAE,  0x42,  0x60,  0x82
   ];
 
-function handleRequest(request, response)
-{
+/* eslint-enable prettier/prettier */
+function handleRequest(request, response) {
   var query = {};
-  request.queryString.split('&').forEach(function (val) {
-    var [name, value] = val.split('=');
+  request.queryString.split("&").forEach(function(val) {
+    var [name, value] = val.split("=");
     query[name] = unescape(value);
   });
 
@@ -36,23 +38,23 @@ function handleRequest(request, response)
 
   var stream = new BinaryOutputStream(response.bodyOutputStream);
 
-  if (query["q"] == "init") {
+  if (query.q == "init") {
     log = "init"; // initialize the log, and return a PNG image
     response.setHeader("Content-Type", "image/png", false);
     stream.writeByteArray(RED_SQUARE);
-  } else if (query["q"] == "image") {
-    log = log + ";" + query["q"];
+  } else if (query.q == "image") {
+    log = log + ";" + query.q;
     response.setHeader("Content-Type", "image/png", false);
     stream.writeByteArray(RED_SQUARE);
-  } else if (query["q"] == "font") {
-    log = log + ";" + query["q"];
+  } else if (query.q == "font") {
+    log = log + ";" + query.q;
     // we don't provide a real font; that's ok, OTS will just reject it
     response.write("Junk");
-  } else if (query["q"] == "report") {
+  } else if (query.q == "report") {
     // don't include the actual "report" request in the log we return
     response.write(log);
   } else {
-    log = log + ";" + query["q"];
+    log = log + ";" + query.q;
     response.setStatusLine(request.httpVersion, 404, "Not Found");
   }
 

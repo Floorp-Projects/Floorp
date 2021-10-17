@@ -20,5 +20,4 @@ function handleRequest(request, response) {
   }
   // in this test there should not be a secure connection to a site without www.
   response.write("This page should not be reached");
-  return;
 }

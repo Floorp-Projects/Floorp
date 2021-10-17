@@ -1,6 +1,8 @@
-function handleRequest(request, response)
-{
-  response.setHeader("Set-Cookie", "cookie="+ request.host + "~" + Math.random());
+function handleRequest(request, response) {
+  response.setHeader(
+    "Set-Cookie",
+    "cookie=" + request.host + "~" + Math.random()
+  );
   response.setHeader("Content-Type", "text/plain", false);
   response.setHeader("Cache-Control", "no-cache", false);
 
