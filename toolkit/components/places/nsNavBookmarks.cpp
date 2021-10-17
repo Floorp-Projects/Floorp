@@ -10,6 +10,7 @@
 #include "Helpers.h"
 
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsITaggingService.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
@@ -73,6 +74,18 @@ inline int32_t DetermineInitialSyncStatus(uint16_t aSource) {
 // needs a tombstone on deletion.
 inline bool NeedsTombstone(const BookmarkData& aBookmark) {
   return aBookmark.syncStatus == nsINavBookmarksService::SYNC_STATUS_NORMAL;
+}
+
+inline nsresult GetTags(nsIURI* aURI, nsTArray<nsString>& aResult) {
+  nsresult rv;
+  nsCOMPtr<nsITaggingService> taggingService =
+      do_GetService("@mozilla.org/browser/tagging-service;1", &rv);
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return taggingService->GetTagsForURI(aURI, aResult);
 }
 
 }  // namespace
@@ -454,6 +467,10 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder, nsIURI* aURI, int32_t aIndex,
     rv = GetBookmarksForURI(aURI, bookmarks);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsTArray<nsString> tags;
+    rv = GetTags(aURI, tags);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
       // Check that bookmarks doesn't include the current tag itemId.
       MOZ_ASSERT(bookmarks[i].id != *aNewBookmarkId);
@@ -463,6 +480,7 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder, nsIURI* aURI, int32_t aIndex,
       tagsChanged->mUrl.Assign(NS_ConvertUTF8toUTF16(utf8spec));
       tagsChanged->mGuid = bookmarks[i].guid;
       tagsChanged->mParentGuid = bookmarks[i].parentGuid;
+      tagsChanged->mTags.Assign(tags);
       tagsChanged->mLastModified = bookmarks[i].lastModified / 1000;
       tagsChanged->mSource = aSource;
       tagsChanged->mIsTagging = false;
@@ -590,6 +608,10 @@ nsNavBookmarks::RemoveItem(int64_t aItemId, uint16_t aSource) {
     nsAutoCString utf8spec;
     uri->GetSpec(utf8spec);
 
+    nsTArray<nsString> tags;
+    rv = GetTags(uri, tags);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
       RefPtr<PlacesBookmarkTags> tagsChanged = new PlacesBookmarkTags();
       tagsChanged->mId = bookmarks[i].id;
@@ -597,6 +619,7 @@ nsNavBookmarks::RemoveItem(int64_t aItemId, uint16_t aSource) {
       tagsChanged->mUrl.Assign(NS_ConvertUTF8toUTF16(utf8spec));
       tagsChanged->mGuid = bookmarks[i].guid;
       tagsChanged->mParentGuid = bookmarks[i].parentGuid;
+      tagsChanged->mTags.Assign(tags);
       tagsChanged->mLastModified = bookmarks[i].lastModified / 1000;
       tagsChanged->mSource = aSource;
       tagsChanged->mIsTagging = false;
@@ -904,6 +927,10 @@ nsresult nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId,
       nsAutoCString utf8spec;
       uri->GetSpec(utf8spec);
 
+      nsTArray<nsString> tags;
+      rv = GetTags(uri, tags);
+      NS_ENSURE_SUCCESS(rv, rv);
+
       for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
         RefPtr<PlacesBookmarkTags> tagsChanged = new PlacesBookmarkTags();
         tagsChanged->mId = bookmarks[i].id;
@@ -911,6 +938,7 @@ nsresult nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId,
         tagsChanged->mUrl.Assign(NS_ConvertUTF8toUTF16(utf8spec));
         tagsChanged->mGuid = bookmarks[i].guid;
         tagsChanged->mParentGuid = bookmarks[i].parentGuid;
+        tagsChanged->mTags.Assign(tags);
         tagsChanged->mLastModified = bookmarks[i].lastModified / 1000;
         tagsChanged->mSource = aSource;
         tagsChanged->mIsTagging = false;

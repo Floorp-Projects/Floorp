@@ -24,6 +24,7 @@ class PlacesBookmarkTags final : public PlacesBookmarkChanged {
     event->mUrl = aInitDict.mUrl;
     event->mGuid = aInitDict.mGuid;
     event->mParentGuid = aInitDict.mParentGuid;
+    event->mTags = aInitDict.mTags;
     event->mLastModified = aInitDict.mLastModified;
     event->mSource = aInitDict.mSource;
     event->mIsTagging = aInitDict.mIsTagging;
@@ -38,6 +39,10 @@ class PlacesBookmarkTags final : public PlacesBookmarkChanged {
   const PlacesBookmarkTags* AsPlacesBookmarkTags() const override {
     return this;
   }
+
+  void GetTags(nsTArray<nsString>& aTags) const { aTags.Assign(mTags); }
+
+  nsTArray<nsString> mTags;
 
  private:
   ~PlacesBookmarkTags() = default;

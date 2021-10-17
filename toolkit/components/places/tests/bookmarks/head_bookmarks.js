@@ -131,6 +131,7 @@ function expectPlacesObserverNotifications(
             url: event.url,
             guid: event.guid,
             parentGuid: event.parentGuid,
+            tags: event.tags,
             lastModified: new Date(event.lastModified),
             source: event.source,
             isTagging: event.isTagging,
