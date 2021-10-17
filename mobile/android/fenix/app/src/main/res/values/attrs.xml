@@ -64,7 +64,6 @@
     <attr name="tabTrayThumbnailItemBackground" format="reference" />
     <attr name="tabTrayThumbnailIcon" format="reference" />
     <!-- Note - these are currently unused, but they are for if/when we add private UI to tabs tray -->
-    <attr name="tabTrayItemSelectedBackground" format="reference" />
     <attr name="tabTrayToolbarBackground" format="reference" />
 
     <!-- Tab History -->

@@ -164,7 +164,6 @@
     <color name="mozac_widget_favicon_border_private_theme">@color/photonInk50</color>
 
     <!-- Tab Tray -->
-    <color name="tab_tray_item_selected_background_private_theme">#422875</color>
     <color name="tab_tray_toolbar_background_private_theme">@color/photonInk50</color>
     <color name="tab_tray_item_media_background_private_theme">@color/photonViolet50</color>
 
