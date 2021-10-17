@@ -753,23 +753,15 @@ void ShadowRoot::MaybeUnslotHostChild(nsIContent& aChild) {
   slot->EnqueueSlotChangeEvent();
 }
 
-Element* ShadowRoot::GetFirstFocusable(bool aWithMouse) const {
-  for (nsIContent* child = GetFirstChild(); child;
-       child = child->GetNextNode()) {
-    if (auto* slot = HTMLSlotElement::FromNode(child)) {
-      const nsTArray<RefPtr<nsINode>>& assignedNodes = slot->AssignedNodes();
-      for (const auto& node : assignedNodes) {
-        if (node->IsElement()) {
-          Element* assignedElement = node->AsElement();
-          if (nsIFrame* frame = assignedElement->GetPrimaryFrame()) {
-            if (frame->IsFocusable(aWithMouse)) {
-              return assignedElement;
-            }
-          }
-        }
-      }
-    }
+// Use aParent as the root element and loop through this tree (including slot
+// assigned elements, nested shadow trees) to find the first focusable
+// element.
+static Element* GetFirstFocusableForParent(nsIContent* aParent,
+                                           bool aWithMouse) {
+  FlattenedChildIterator iter(aParent);
 
+  for (nsIContent* child = iter.GetNextChild(); child;
+       child = iter.GetNextChild()) {
     if (child->IsElement()) {
       if (nsIFrame* frame = child->GetPrimaryFrame()) {
         if (frame->IsFocusable(aWithMouse)) {
@@ -778,14 +770,17 @@ Element* ShadowRoot::GetFirstFocusable(bool aWithMouse) const {
       }
     }
 
-    if (ShadowRoot* root = child->GetShadowRoot()) {
-      if (Element* firstFocusable = root->GetFirstFocusable(aWithMouse)) {
-        return firstFocusable;
-      }
+    if (Element* firstFocusable =
+            GetFirstFocusableForParent(child, aWithMouse)) {
+      return firstFocusable;
     }
   }
 
   return nullptr;
+}
+
+Element* ShadowRoot::GetFirstFocusable(bool aWithMouse) const {
+  return GetFirstFocusableForParent(Host(), aWithMouse);
 }
 
 void ShadowRoot::MaybeSlotHostChild(nsIContent& aChild) {
