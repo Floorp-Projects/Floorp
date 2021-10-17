@@ -141,13 +141,13 @@ top-level page, and we would like both the page and the iframe to scroll
 responsively. This means that we want independent asynchronous panning
 for both the top-level page and the iframe. In addition to iframes,
 elements that have the overflow:scroll CSS property set are also
-scrollable. In the scrollable elements are arranged in a tree structure,
-and in the APZ code we have a matching tree of AsyncPanZoomController
-(APZC) objects, one for each scrollable element. To manage this tree of
-APZC instances, we have a single APZCTreeManager object. Each APZC is
-relatively independent and handles the scrolling for its associated
-scrollable element, but there are some cases in which they need to
-interact; these cases are described in the sections below.
+scrollable. In the display list, scrollable elements are arranged in a
+tree structure, and in the APZ code we have a matching tree of
+AsyncPanZoomController (APZC) objects, one for each scrollable element.
+To manage this tree of APZC instances, we have a single APZCTreeManager
+object. Each APZC is relatively independent and handles the scrolling for
+its associated scrollable element, but there are some cases in which they
+need to interact; these cases are described in the sections below.
 
 Hit detection
 ~~~~~~~~~~~~~
@@ -579,7 +579,7 @@ WebRenderScrollData. The relevant types here are:
   metadata applying to a subtree of such layers). In the Layers backend,
   such content would be rendered into a single texture which could then
   be moved asynchronously at composite time. Since a layer of content can
-  be scrolled by multiple scroll (nested) scroll frames, a
+  be scrolled by multiple (nested) scroll frames, a
   WebRenderLayerScrollData may contain scroll metadata for more than one
   scroll frame.
 * WebRenderScrollDataWrapper, which wraps WebRenderLayerScrollData
@@ -588,7 +588,7 @@ WebRenderScrollData. The relevant types here are:
   1:1 correspondence with HitTestingTreeNodes.
 
 It's not clear whether the distinction between WebRenderLayerScrollData
-and WebRenderScrollDataWrapper still useful in a WebRender-only world.
+and WebRenderScrollDataWrapper is still useful in a WebRender-only world.
 The code could potentially be revised such that we directly build and
 store nodes of a single type with the behaviour of
 WebRenderScrollDataWrapper.
@@ -733,11 +733,11 @@ Respecting the ordering means the following:
 **The lock ordering is as follows**:
 
 1. UI main
-2. GPU main              (only if GPU enabled)
+2. GPU main (only if GPU process enabled)
 3. Compositor thread
-4. SceneBuilder thread   (only if WR enabled)
+4. SceneBuilder thread
 5. **APZ tree lock**
-6. RenderBackend thread  (only if WR enabled)
+6. RenderBackend thread
 7. **APZC map lock**
 8. **APZC instance lock**
 9. **APZ test lock**
