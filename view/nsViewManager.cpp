@@ -24,6 +24,7 @@
 #include "nsLayoutUtils.h"
 #include "Layers.h"
 #include "gfxPlatform.h"
+#include "WindowRenderer.h"
 
 /**
    XXX TODO XXX

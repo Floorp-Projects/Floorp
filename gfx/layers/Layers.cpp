@@ -78,10 +78,6 @@ void WriteSnapshotToDumpFile_internal(T* aObj, DataSourceSurface* aSurf) {
   }
 }
 
-void WriteSnapshotToDumpFile(LayerManager* aManager, DataSourceSurface* aSurf) {
-  WriteSnapshotToDumpFile_internal(aManager, aSurf);
-}
-
 void WriteSnapshotToDumpFile(Compositor* aCompositor, DrawTarget* aTarget) {
   RefPtr<SourceSurface> surf = aTarget->Snapshot();
   RefPtr<DataSourceSurface> dSurf = surf->GetDataSurface();
