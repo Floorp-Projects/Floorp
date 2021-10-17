@@ -32,4 +32,5 @@ function handleRequest(request, response) {
     queryResponse.write("1");
     queryResponse.finish();
   });
+  return;
 }

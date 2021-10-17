@@ -1,7 +1,8 @@
 // Custom *.sjs file specifically for the needs of Bug:
 // Bug 1447784 - Implement CSP upgrade-insecure-requests directive
 
-function handleRequest(request, response) {
+function handleRequest(request, response)
+{
   response.setHeader("Access-Control-Allow-Headers", "content-type", false);
   response.setHeader("Access-Control-Allow-Methods", "GET", false);
   response.setHeader("Access-Control-Allow-Origin", "*", false);

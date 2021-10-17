@@ -1,11 +1,11 @@
 function handleRequest(request, response) {
-  const Etag = '"4d881ab-b03-435f0a0f9ef00"';
-  const IfNoneMatch = request.hasHeader("If-None-Match")
-    ? request.getHeader("If-None-Match")
-    : "";
+  let Etag = '"4d881ab-b03-435f0a0f9ef00"';
+  let IfNoneMatch = request.hasHeader("If-None-Match")
+                    ? request.getHeader("If-None-Match")
+                    : "";
 
   var counter = getState("cache-counter") || 1;
-  const page = "<script>var jsValue = '" + counter + "';</script>" + counter;
+  let page = "<script>var jsValue = '" + counter + "';</script>" + counter;
 
   setState("cache-counter", "" + (parseInt(counter) + 1));
 

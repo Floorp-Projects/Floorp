@@ -9,35 +9,24 @@ function handleRequest(aRequest, aResponse) {
   }
 
   if (parts.includes("fetch")) {
-    setState(
-      "data",
-      JSON.stringify({ type: "fetch", hasCookie: aRequest.hasHeader("Cookie") })
-    );
+    setState("data", JSON.stringify({type: "fetch", hasCookie: aRequest.hasHeader("Cookie") }));
     aResponse.write("Hello world!");
     return;
   }
 
   if (parts.includes("xhr")) {
-    setState(
-      "data",
-      JSON.stringify({ type: "xhr", hasCookie: aRequest.hasHeader("Cookie") })
-    );
+    setState("data", JSON.stringify({type: "xhr", hasCookie: aRequest.hasHeader("Cookie") }));
     aResponse.write("Hello world!");
     return;
   }
 
   if (parts.includes("image")) {
-    setState(
-      "data",
-      JSON.stringify({ type: "image", hasCookie: aRequest.hasHeader("Cookie") })
-    );
+    setState("data", JSON.stringify({type: "image", hasCookie: aRequest.hasHeader("Cookie") }));
 
     // A 1x1 PNG image.
     // Source: https://commons.wikimedia.org/wiki/File:1x1.png (Public Domain)
-    const IMAGE = atob(
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
-        "ACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII="
-    );
+    const IMAGE = atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
+                       "ACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=");
 
     aResponse.setHeader("Content-Type", "image/png", false);
     aResponse.write(IMAGE);
@@ -45,13 +34,7 @@ function handleRequest(aRequest, aResponse) {
   }
 
   if (parts.includes("script")) {
-    setState(
-      "data",
-      JSON.stringify({
-        type: "script",
-        hasCookie: aRequest.hasHeader("Cookie"),
-      })
-    );
+    setState("data", JSON.stringify({type: "script", hasCookie: aRequest.hasHeader("Cookie") }));
 
     aResponse.setHeader("Content-Type", "text/javascript", false);
     aResponse.write("window.scriptLoaded();");
@@ -59,13 +42,7 @@ function handleRequest(aRequest, aResponse) {
   }
 
   if (parts.includes("worker")) {
-    setState(
-      "data",
-      JSON.stringify({
-        type: "worker",
-        hasCookie: aRequest.hasHeader("Cookie"),
-      })
-    );
+    setState("data", JSON.stringify({type: "worker", hasCookie: aRequest.hasHeader("Cookie") }));
 
     function w() {
       onmessage = e => {
@@ -76,9 +53,7 @@ function handleRequest(aRequest, aResponse) {
         }
 
         if (e.data == "fetch") {
-          fetch("cookie.sjs?fetch&" + Math.random())
-            .then(r => r.text())
-            .then(_ => postMessage(42));
+          fetch("cookie.sjs?fetch&" + Math.random()).then(r => r.text()).then(_ => postMessage(42));
           return;
         }
 
@@ -90,7 +65,7 @@ function handleRequest(aRequest, aResponse) {
         }
       };
       postMessage(42);
-    }
+    };
 
     aResponse.setHeader("Content-Type", "text/javascript", false);
     aResponse.write(w.toString() + "; w();");
@@ -98,26 +73,14 @@ function handleRequest(aRequest, aResponse) {
   }
 
   if (parts.includes("subworker")) {
-    setState(
-      "data",
-      JSON.stringify({
-        type: "subworker",
-        hasCookie: aRequest.hasHeader("Cookie"),
-      })
-    );
+    setState("data", JSON.stringify({type: "subworker", hasCookie: aRequest.hasHeader("Cookie") }));
     aResponse.setHeader("Content-Type", "text/javascript", false);
     aResponse.write("42");
     return;
   }
 
   if (parts.includes("sharedworker")) {
-    setState(
-      "data",
-      JSON.stringify({
-        type: "sharedworker",
-        hasCookie: aRequest.hasHeader("Cookie"),
-      })
-    );
+    setState("data", JSON.stringify({type: "sharedworker", hasCookie: aRequest.hasHeader("Cookie") }));
 
     function w() {
       onconnect = e => {
@@ -129,9 +92,7 @@ function handleRequest(aRequest, aResponse) {
           }
 
           if (evt.data == "fetch") {
-            fetch("cookie.sjs?fetch&" + Math.random())
-              .then(r => r.text())
-              .then(_ => e.ports[0].postMessage(42));
+            fetch("cookie.sjs?fetch&" + Math.random()).then(r => r.text()).then(_ => e.ports[0].postMessage(42));
             return;
           }
 
@@ -144,7 +105,7 @@ function handleRequest(aRequest, aResponse) {
         };
         e.ports[0].postMessage(42);
       };
-    }
+    };
 
     aResponse.setHeader("Content-Type", "text/javascript", false);
     aResponse.write(w.toString() + "; w();");
