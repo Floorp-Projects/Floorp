@@ -412,6 +412,7 @@ class SpecialPowersParent extends JSWindowActorParent {
     for (let pref of actions) {
       requiresRefresh =
         requiresRefresh ||
+        pref.name == "layout.css.prefers-color-scheme.content-override" ||
         pref.name.startsWith("ui.") ||
         pref.name.startsWith("browser.display.") ||
         pref.name.startsWith("font.");
