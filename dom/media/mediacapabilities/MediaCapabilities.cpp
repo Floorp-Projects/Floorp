@@ -32,6 +32,7 @@
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/layers/KnowsCompositor.h"
 #include "nsContentUtils.h"
+#include "WindowRenderer.h"
 
 static mozilla::LazyLogModule sMediaCapabilitiesLog("MediaCapabilities");
 

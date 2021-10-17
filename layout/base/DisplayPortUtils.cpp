@@ -26,6 +26,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "RetainedDisplayListBuilder.h"
+#include "WindowRenderer.h"
 
 #include <ostream>
 

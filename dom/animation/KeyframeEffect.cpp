@@ -39,6 +39,7 @@
 #include "nsPresContextInlines.h"
 #include "nsRefreshDriver.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
+#include "WindowRenderer.h"
 
 namespace mozilla {
 

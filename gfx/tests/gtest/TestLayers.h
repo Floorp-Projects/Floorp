@@ -24,25 +24,4 @@ class TestSurfaceAllocator final : public ISurfaceAllocator {
 }  // namespace layers
 }  // namespace mozilla
 
-/* Create layer tree from a simple layer tree description syntax.
- * Each index is either the first letter of the layer type or
- * a '(',')' to indicate the start/end of the child layers.
- * The aim of this function is to remove hard to read
- * layer tree creation code.
- *
- * Example "c(c(c(tt)t))" would yield:
- *          c
- *          |
- *          c
- *         / \
- *        c   t
- *       / \
- *      t   t
- */
-already_AddRefed<mozilla::layers::Layer> CreateLayerTree(
-    const char* aLayerTreeDescription, nsIntRegion* aVisibleRegions,
-    const mozilla::gfx::Matrix4x4* aTransforms,
-    RefPtr<mozilla::layers::LayerManager>& aLayerManager,
-    nsTArray<RefPtr<mozilla::layers::Layer> >& aLayersOut);
-
 #endif
