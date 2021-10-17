@@ -9,6 +9,7 @@
 #include "MediaDataDecoderProxy.h"
 #include "PDMFactory.h"
 #include "VideoUtils.h"
+#include "ImageContainer.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/media/MediaUtils.h"
 #include "webrtc/rtc_base/keep_ref_until_done.h"
@@ -19,7 +20,7 @@ WebrtcMediaDataDecoder::WebrtcMediaDataDecoder(nsACString& aCodecMimeType)
     : mThreadPool(GetMediaThreadPool(MediaThreadType::SUPERVISOR)),
       mTaskQueue(new TaskQueue(do_AddRef(mThreadPool),
                                "WebrtcMediaDataDecoder::mTaskQueue")),
-      mImageContainer(layers::LayerManager::CreateImageContainer(
+      mImageContainer(MakeAndAddRef<layers::ImageContainer>(
           layers::ImageContainer::ASYNCHRONOUS)),
       mFactory(new PDMFactory()),
       mTrackType(TrackInfo::kUndefinedTrack),
