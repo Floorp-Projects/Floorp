@@ -28,7 +28,6 @@
     <color name="above_dark_theme">@color/photonDarkGrey50</color>
     <color name="accent_bright_dark_theme">@color/photonViolet70</color>
     <color name="accent_high_contrast_dark_theme">@color/photonViolet40</color>
-    <color name="search_suggestion_indicator_icon_color_dark_theme">@color/photonGreen60</color>
 
     <color name="mozac_widget_favicon_background_dark_theme">@color/photonDarkGrey50</color>
     <color name="mozac_widget_favicon_border_dark_theme">@color/photonDarkGrey10</color>

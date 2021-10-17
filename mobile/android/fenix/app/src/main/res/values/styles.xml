@@ -266,7 +266,7 @@
         <item name="addOnPrivateBrowsingExteriorCircleBackground">@color/add_on_private_browsing_exterior_circle_background_private_theme</item>
         <item name="addOnPrivateBrowsingInteriorIconBackground">@color/add_on_private_browsing_interior_icon_background_private_theme</item>
         <item name="mozacPromptLoginEditTextCursorColor">@color/prompt_login_edit_text_cursor_color_private_theme</item>
-        <item name="awesomeBarIndicatorColor">@color/search_suggestion_indicator_icon_color_dark_theme</item>
+        <item name="awesomeBarIndicatorColor">@color/photonGreen60</item>
         <item name="awesomeBarIndicatorBookmarkColor">@color/photonBlue40</item>
         <item name="selectLoginHeaderTextColor">@color/accent_high_contrast_private_theme</item>
         <item name="selectCreditCardHeaderTextColor">@color/accent_high_contrast_private_theme</item>
