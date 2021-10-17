@@ -335,6 +335,11 @@ nsresult nsAppShell::Init() {
   // NSApplicationMain() is running).
   NSAutoreleasePool* localPool = [[NSAutoreleasePool alloc] init];
 
+  char* mozAppNoDock = PR_GetEnv("MOZ_APP_NO_DOCK");
+  if (mozAppNoDock && strcmp(mozAppNoDock, "") != 0) {
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
+  }
+
   // mAutoreleasePools is used as a stack of NSAutoreleasePool objects created
   // by |this|.  CFArray is used instead of NSArray because NSArray wants to
   // retain each object you add to it, and you can't retain an

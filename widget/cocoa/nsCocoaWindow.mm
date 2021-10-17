@@ -798,6 +798,14 @@ void nsCocoaWindow::Show(bool bState) {
       (parentWidget) ? (NSWindow*)parentWidget->GetNativeData(NS_NATIVE_WINDOW) : nil;
 
   if (bState && !mBounds.IsEmpty()) {
+    // If we had set the activationPolicy to accessory, then right now we won't
+    // have a dock icon. Make sure that we undo that and show a dock icon now that
+    // we're going to show a window.
+    if ([NSApp activationPolicy] != NSApplicationActivationPolicyRegular) {
+      [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+      PR_SetEnv("MOZ_APP_NO_DOCK=");
+    }
+
     // Don't try to show a popup when the parent isn't visible or is minimized.
     if (mWindowType == eWindowType_popup && nativeParentWindow) {
       if (![nativeParentWindow isVisible] || [nativeParentWindow isMiniaturized]) {
