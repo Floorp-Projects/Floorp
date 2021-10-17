@@ -7,6 +7,7 @@ function handleRequest(request, response) {
   // This header is necessary for making this script able to be loaded.
   response.setHeader("Content-Type", "application/javascript");
 
-  var body = "/* " + Date.now() + " */";
+  var body = '/* ' + Date.now() + ' */';
   response.write(body);
 }
+

@@ -15,4 +15,5 @@ function handleRequest(request, response) {
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.write("Page was accessed over HTTPS!");
   }
+
 }

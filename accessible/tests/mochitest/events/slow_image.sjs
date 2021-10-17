@@ -12,10 +12,7 @@ const IMG_BYTES = atob(
 
 // stolen from file_blocked_script.sjs
 function setGlobalState(data, key) {
-  x = {
-    data,
-    QueryInterface: ChromeUtils.generateQI([]),
-  };
+  x = { data: data, QueryInterface: function(iid) { return this } };
   x.wrappedJSObject = x;
   setObjectState(key, x);
 }

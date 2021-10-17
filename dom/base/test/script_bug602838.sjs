@@ -1,10 +1,5 @@
 function setOurState(data) {
-  x = {
-    data,
-    QueryInterface(iid) {
-      return this;
-    },
-  };
+  x = { data: data, QueryInterface: function(iid) { return this } };
   x.wrappedJSObject = x;
   setObjectState("bug602838", x);
 }
@@ -20,10 +15,11 @@ function getOurState() {
   return data;
 }
 
-function handleRequest(request, response) {
+function handleRequest(request, response)
+{
   if (request.queryString) {
     let blockedResponse = getOurState();
-    if (typeof blockedResponse == "object") {
+    if (typeof(blockedResponse) == "object") {
       blockedResponse.finish();
       setOurState(null);
     } else {
@@ -33,9 +29,7 @@ function handleRequest(request, response) {
   }
   response.setHeader("Cache-Control", "no-cache", false);
   response.setHeader("Content-Type", "text/javascript", false);
-  response.write(
-    "ok(asyncRan, 'Async script should have run first.'); firstRan = true;"
-  );
+  response.write("ok(asyncRan, 'Async script should have run first.'); firstRan = true;");
   if (getOurState() != "unblocked") {
     response.processAsync();
     setOurState(response);

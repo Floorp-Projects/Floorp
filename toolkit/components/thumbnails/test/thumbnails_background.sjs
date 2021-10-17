@@ -14,7 +14,8 @@ function handleRequest(req, resp) {
   let opts = {};
   try {
     opts = JSON.parse(decodeURIComponent(req.queryString));
-  } catch (err) {}
+  }
+  catch (err) {}
 
   let setCookieScript = "";
   if (opts.setRedCookie) {
@@ -41,30 +42,16 @@ function handleRequest(req, resp) {
     `;
   }
 
-  if (
-    req.hasHeader("Cookie") &&
-    req
-      .getHeader("Cookie")
-      .split(";")
-      .indexOf("red") >= 0
-  ) {
-    resp.write(
-      '<html style="background: #f00;">' + setCookieScript + "</html>"
-    );
+  if (req.hasHeader("Cookie") &&
+      req.getHeader("Cookie").split(";").indexOf("red") >= 0) {
+    resp.write('<html style="background: #f00;">' + setCookieScript + '</html>');
     resp.finish();
     return;
   }
 
-  if (
-    req.hasHeader("Cookie") &&
-    req
-      .getHeader("Cookie")
-      .split(";")
-      .indexOf("green") >= 0
-  ) {
-    resp.write(
-      '<html style="background: #0f0;">' + setCookieScript + "</html>"
-    );
+  if (req.hasHeader("Cookie") &&
+      req.getHeader("Cookie").split(";").indexOf("green") >= 0) {
+    resp.write('<html style="background: #0f0;">' + setCookieScript + '</html>');
     resp.finish();
     return;
   }
@@ -78,22 +65,15 @@ function handleRequest(req, resp) {
 
   if (opts.wait) {
     resp.write("Waiting " + opts.wait + " ms... ");
-    timer = Components.classes["@mozilla.org/timer;1"].createInstance(
-      Components.interfaces.nsITimer
-    );
-    timer.init(
-      function ding() {
-        resp.write("OK!");
-        resp.finish();
-      },
-      opts.wait,
-      Components.interfaces.nsITimer.TYPE_ONE_SHOT
-    );
+    timer = Components.classes["@mozilla.org/timer;1"].
+            createInstance(Components.interfaces.nsITimer);
+    timer.init(function ding() {
+      resp.write("OK!");
+      resp.finish();
+    }, opts.wait, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
     return;
   }
 
-  resp.write(
-    "<pre>" + JSON.stringify(opts, undefined, 2) + "</pre>" + setCookieScript
-  );
+  resp.write("<pre>" + JSON.stringify(opts, undefined, 2) + "</pre>" + setCookieScript);
   resp.finish();
 }

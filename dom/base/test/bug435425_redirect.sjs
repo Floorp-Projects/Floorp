@@ -1,4 +1,6 @@
-function handleRequest(request, response) {
+function handleRequest(request, response)
+{
   response.setStatusLine(null, 302, "Moved");
   response.setHeader("Location", "http://nosuchdomain.localhost", false);
 }
+
