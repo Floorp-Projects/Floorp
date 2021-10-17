@@ -352,6 +352,9 @@ int main(int argc, char* argv[], char* envp[]) {
     // even if the last window is closed.
     ::putenv(const_cast<char*>("MOZ_APP_ALLOW_WINDOWLESS=1"));
 #  endif
+#  if defined(XP_MACOSX)
+    ::putenv(const_cast<char*>("MOZ_APP_NO_DOCK=1"));
+#  endif
   }
 #endif
 
