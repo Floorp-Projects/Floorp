@@ -66,7 +66,8 @@ internal fun normalModeAdapterItems(
 
     if (recentBookmarks.isNotEmpty()) {
         shouldShowCustomizeHome = true
-        items.add(AdapterItem.RecentBookmarks(recentBookmarks))
+        items.add(AdapterItem.RecentBookmarksHeader)
+        items.add(AdapterItem.RecentBookmarks)
     }
 
     if (historyMetadata.isNotEmpty()) {

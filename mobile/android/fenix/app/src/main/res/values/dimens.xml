@@ -80,18 +80,6 @@
     <dimen name="home_item_elevation">5dp</dimen>
     <dimen name="home_item_horizontal_margin">16dp</dimen>
 
-    <!-- Home - Recently saved bookmarks -->
-    <dimen name="recent_bookmark_header_margin_top">40dp</dimen>
-    <dimen name="recent_bookmark_item_width">164dp</dimen>
-    <dimen name="recent_bookmark_item_card_width">156dp</dimen>
-    <dimen name="recent_bookmark_item_card_padding_top">16dp</dimen>
-    <dimen name="recent_bookmark_item_card_padding_bottom">8dp</dimen>
-    <dimen name="recent_bookmark_item_card_elevation">6dp</dimen>
-    <dimen name="recent_bookmark_item_favicon_height">96dp</dimen>
-    <dimen name="recent_bookmark_item_favicon_elevation">0dp</dimen>
-    <dimen name="recent_bookmark_item_favicon_corner_size">8dp</dimen>
-    <dimen name="recent_bookmark_item_text_padding_horizontal">4dp</dimen>
-
     <!-- Browser Fragment -->
     <!--The size of the gap between the tab preview and content layout.-->
     <dimen name="browser_fragment_gesture_preview_offset">48dp</dimen>

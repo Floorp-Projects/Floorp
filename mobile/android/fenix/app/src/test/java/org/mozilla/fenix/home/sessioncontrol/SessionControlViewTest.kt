@@ -15,8 +15,8 @@ import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -155,8 +155,9 @@ class SessionControlViewTest {
         )
 
         assertTrue(results[0] is AdapterItem.TopPlaceholderItem)
-        assertTrue(results[1] is AdapterItem.RecentBookmarks)
-        assertTrue(results[2] is AdapterItem.CustomizeHomeButton)
+        assertTrue(results[1] is AdapterItem.RecentBookmarksHeader)
+        assertTrue(results[2] is AdapterItem.RecentBookmarks)
+        assertTrue(results[3] is AdapterItem.CustomizeHomeButton)
     }
 
     @Test
