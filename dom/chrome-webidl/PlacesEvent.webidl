@@ -312,6 +312,7 @@ dictionary PlacesBookmarkTagsInit {
   DOMString? url = null;
   required ByteString guid;
   required ByteString parentGuid;
+  required sequence<DOMString> tags;
   required long long lastModified;
   required unsigned short source;
   required boolean isTagging;
@@ -320,6 +321,12 @@ dictionary PlacesBookmarkTagsInit {
 [ChromeOnly, Exposed=Window]
 interface PlacesBookmarkTags : PlacesBookmarkChanged {
   constructor(PlacesBookmarkTagsInit initDict);
+
+  /**
+   * Tags the bookmark has currently.
+   */
+  [Constant,Cached]
+  readonly attribute sequence<DOMString> tags;
 };
 
 dictionary PlacesBookmarkTimeInit {
