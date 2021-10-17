@@ -24,7 +24,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 otvorena kartica. Dodirni za prebacivanje kartica.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s otvorene kartice. Dodirni za prebacivanje kartica.</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s otvorene kartice. Dodirni za prebacivanje kartica.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">Odabrano: %1$d</string>
@@ -108,9 +108,18 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">Odbaci</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">Ovdje premještamo kartice koje niste otvorili dva tjedna.</string>
+    <string name="tab_tray_inactive_onboarding_message">Ovdje premještamo kartice koje niste otvorili dva tjedna.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">Isključi u postavkama</string>
+    <string name="tab_tray_inactive_onboarding_button_text">Isključi u postavkama</string>
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Automatski zatvoriti nakon jednog mjeseca?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox može zatvoriti kartice koje nisu otvorene posljednjih mjesec dana.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Zatvori</string>
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button">Uključi automatsko zatvaranje</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -119,7 +128,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">Nova privatna kartica</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Omiljene stranice</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Omiljene stranice</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -166,7 +175,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Zaustavi</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Zabilješka</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Zabilješka</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Uredi zabilješku</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -377,7 +386,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">Početna</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Početna</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Početna stranica</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Geste</string>
     <!-- Preference for settings related to visual options -->
@@ -574,7 +585,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Uključi sinkronizaciju</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Skeniraj kôd za uparivanje u Firefoxu za računalo</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Skeniraj kôd za uparivanje u Firefoxu za računalo</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Prijavi se</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -696,15 +707,23 @@
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Automatski zatvaraj otvorene kartice</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">Počni na početnoj stranici</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Počni na početnoj stranici</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Zaslon kod otvaranja aplikacije</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">Nakon četiri sata</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Nakon četiri sata</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Početna stranica</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">Uvijek</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Uvijek</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Posljednja kartica</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">Nikad</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Nikad</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Početna stranica nakon četiri sata neaktivnosti</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Zatvori ručno</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -762,13 +781,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Spremi u zbirku</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">Odaberi</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Odaberi</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Podijeli sve kartice</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Nedavno zatvorene kartice</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">Nedavno zatvoreno</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Nedavno zatvoreno</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Postavke računa</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -893,10 +912,6 @@
     <string name="history_empty_message">Nema povijesti</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">Izbriši preuzimanja</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">Sigurno želiš očistiti svoja preuzimanja?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Uklonjena preuzimanja</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -938,7 +953,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Izbornik za zabilješke</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Uredi zabilješku</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Uredi zabilješku</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Odaberi mapu</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1976,8 +1991,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">U redu, shvaćam</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">Naposjećenije omiljene stranice</string>
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">Prikaži najposjećenije omiljene stranice</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Prikaži najposjećenije omiljene stranice</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Prikaži najposjećenije stranice</string>
 
@@ -1996,11 +2013,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Zatvori sve neaktivne kartice</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">Kartice su dostupne ovdje %s. Nakon tog vremena, kartice će automatski biti zatvorene.</string>
+    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Kartice su dostupne ovdje %s. Nakon tog vremena, kartice će automatski biti zatvorene.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 dana</string>
+    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 dana</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">1 tjedan</string>
+    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 tjedan</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->

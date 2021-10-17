@@ -27,7 +27,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">打开了 1 个标签页，点击即可切换。</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">打开了 %1$s 个标签页，点击即可切换。</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">打开了 %1$s 个标签页，点击即可切换。</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">已选择 %1$d 个标签页</string>
@@ -113,9 +113,19 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">知道了</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">两周内未查看的标签页将移至此处。</string>
+    <string name="tab_tray_inactive_onboarding_message">两周内未查看的标签页将移至此处。</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">在设置中关闭</string>
+    <string name="tab_tray_inactive_onboarding_button_text">在设置中关闭</string>
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">要一个月后自动关闭吗？</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox 可自动关闭您一个月内未曾查看的标签页。</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">关闭</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button">开启“自动关闭”</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -124,7 +134,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">新建隐私标签页</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">常用网站</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">常用网站</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -171,7 +181,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">停止</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">书签</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">书签</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">编辑书签</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -307,7 +317,7 @@
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string name="onboarding_home_screen_section_useful_history_title_2">最近的搜索</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">从主页和标签页再次访问您的上次搜索。</string>
+    <string name="onboarding_home_screen_section_useful_history_description_2">从主页和标签页快速访问您的上次搜索。</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">个性化的 Firefox 主页，让您可以更轻松地从上次中断的地方继续浏览。快速找到您最近打开的标签页、书签和搜索结果。</string>
@@ -391,7 +401,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">主题</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">主页</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">主页</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">主页</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">手势</string>
     <!-- Preference for settings related to visual options -->
@@ -590,7 +602,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">开启同步</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">扫描桌面 Firefox 中的配对二维码</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">扫描桌面 Firefox 中的配对二维码</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">登录</string>
 
@@ -717,15 +729,21 @@
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">自动关闭打开的标签页</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">启动后进入主屏幕</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">启动后进入主屏幕</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">4 小时后</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">4 小时后</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">主页</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">总是</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">总是</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">最后打开的标签页</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">永不</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">永不</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">四小时未使用即回到主页</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">手动关闭</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -784,13 +802,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">保存到收藏集</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">选择</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">选择</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">分享所有标签页</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">最近关闭的标签页</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">最近关闭</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">最近关闭</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">账户设置</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -914,10 +932,6 @@
     <string name="history_empty_message">无历史记录</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">清空下载记录</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">您确定要清空下载记录吗？</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">下载记录已清除</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -959,7 +973,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">书签菜单</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">编辑书签</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">编辑书签</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">选择文件夹</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -2012,8 +2026,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">我知道了</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">最常访问的网站</string>
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">显示最常访问的网站</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">显示最常访问的网站</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">显示最常访问的网站</string>
 
@@ -2032,15 +2048,15 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">关闭所有休眠标签页</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">标签页将在此处保留 %s，之后将自动关闭。</string>
+    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">标签页将在此处保留 %s，之后将自动关闭。</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 天</string>
+    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 天</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">1 周</string>
+    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 周</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
-    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">是否一个月后自动关闭？</string>
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">要一个月后自动关闭吗？</string>
     <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
     <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox 可自动关闭您一个月内未曾查看的标签页。</string>
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->

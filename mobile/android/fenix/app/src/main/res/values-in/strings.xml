@@ -26,7 +26,7 @@
     <string name="open_tab_tray_single">1 tab terbuka. Ketuk untuk beralih tab.</string>
 
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s tab terbuka. Ketuk untuk beralih tab.</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s tab terbuka. Ketuk untuk beralih tab.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d terpilih</string>
@@ -111,9 +111,18 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">Tutup</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">Tab yang belum Anda lihat selama dua minggu dipindahkan ke sini.</string>
+    <string name="tab_tray_inactive_onboarding_message">Tab yang belum Anda lihat selama dua minggu dipindahkan ke sini.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">Matikan di pengaturan</string>
+    <string name="tab_tray_inactive_onboarding_button_text">Matikan di pengaturan</string>
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Tutup otomatis setelah satu bulan?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox dapat menutup tab yang belum Anda lihat selama sebulan terakhir.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Tutup</string>
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button">Nyalakan Tutup-Otomatis</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -122,7 +131,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">Tab pribadi baru</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Situs teratas</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Situs teratas</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -168,7 +177,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Hentikan</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Markah</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Markah</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Edit markah</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -386,7 +395,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">Beranda</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Beranda</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Beranda</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Gestur</string>
     <!-- Preference for settings related to visual options -->
@@ -584,7 +595,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Aktifkan Sinkronisasi</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Pindai kode pemasangan di Firefox desktop</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Pindai kode pemasangan di Firefox desktop</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Masuk</string>
 
@@ -709,15 +720,23 @@
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Tutup otomatis tab terbuka</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">Mulai dari Beranda</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Mulai dari Beranda</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Layar pembuka</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">Setelah empat jam</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Setelah empat jam</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Beranda</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">Selalu</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Selalu</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Tab terakhir</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">Tidak Pernah</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Tidak Pernah</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Beranda setelah empat jam tidak aktif</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Tutup secara manual</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -773,13 +792,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Simpan ke koleksi</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">Pilih</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Pilih</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Bagikan semua tab</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Tab yang baru saja ditutup</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">Baru saja ditutup</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Baru saja ditutup</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Setelan akun</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -902,10 +921,6 @@
     <string name="history_empty_message">Tidak ada riwayat di sini</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">Hapus unduhan</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">Yakin akan membersihkan unduhan Anda?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Unduhan Dihapus</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -947,7 +962,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Menu markah</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Edit markah</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Edit markah</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Pilih folder</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1976,8 +1991,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Oke, Paham!</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">Situs teratas yang paling banyak dikunjungi</string>
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">Tampilkan situs teratas yang paling sering dikunjungi</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Tampilkan situs teratas yang paling sering dikunjungi</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Tampilkan situs yang paling sering dikunjungi</string>
 
@@ -1996,11 +2013,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Hapus semua tab nonaktif</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">Tab tersedia di sini selama %s. Setelah itu, tab akan otomatis ditutup.</string>
+    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Tab tersedia di sini selama %s. Setelah itu, tab akan otomatis ditutup.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 hari</string>
+    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 hari</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">1 pekan</string>
+    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 pekan</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->

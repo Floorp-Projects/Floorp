@@ -24,7 +24,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">Irekitako fitxa bat. Sakatu fitxaz aldatzeko.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">Irekitako %1$s fitxa. Sakatu fitxaz aldatzeko.</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">Irekitako %1$s fitxa. Sakatu fitxaz aldatzeko.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d hautatuta</string>
@@ -111,9 +111,18 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">Baztertu</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">Azken bi asteetan ikusi ez dituzun fitxak hona eramaten dira.</string>
+    <string name="tab_tray_inactive_onboarding_message">Azken bi asteetan ikusi ez dituzun fitxak hona eramaten dira.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">Desaktibatu ezarpenetan</string>
+    <string name="tab_tray_inactive_onboarding_button_text">Desaktibatu ezarpenetan</string>
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Automatikoki itxi hilabete ondoren?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Azken hilabetean ikusi ez dituzun fitxak itxi ditzake Firefoxek.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Itxi</string>
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button">Aktibatu automatikoki ixtea</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -122,7 +131,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">Fitxa pribatu berria</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Gune erabilienak</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Gune erabilienak</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -168,7 +177,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Gelditu</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Egin laster-marka</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Egin laster-marka</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Editatu laster-marka</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -382,7 +391,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Itxura</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">Hasierako pantaila</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Hasierako pantaila</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Hasiera-orria</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Keinuak</string>
     <!-- Preference for settings related to visual options -->
@@ -581,7 +592,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Gaitu sinkronizazioa</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Eskaneatu parekatzeko kodea mahaigaineko Firefoxen</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Eskaneatu parekatzeko kodea mahaigaineko Firefoxen</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Hasi saioa</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -706,15 +717,23 @@
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Automatikoki itxi irekitako fitxak</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">Hasi hasierako pantailan</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Hasi hasierako pantailan</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Irekitze-pantaila</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">Lau ordu ondoren</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Lau ordu ondoren</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Hasiera-orria</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">Beti</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Beti</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Azken fitxa</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">Inoiz ez</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Inoiz ez</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Hasiera-orria, lau orduz inaktibo egon ondoren</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Itxi eskuz</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -770,13 +789,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Gorde bilduman</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">Hautatu</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Hautatu</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Partekatu fitxa guztiak</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Itxitako azken fitxak</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">Itxitako azkenak</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Itxitako azkenak</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Kontu-ezarpenak</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -898,10 +917,6 @@
     <string name="history_empty_message">Historiarik ez hemen</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">Ezabatu deskargak</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">Ziur zaude zure deskargak garbitu nahi dituzula?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Deskargak kenduta</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -943,7 +958,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Laster-marken menua</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Editatu laster-marka</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Editatu laster-marka</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Hautatu karpeta</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1974,8 +1989,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ados, ulertuta</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">Gehien bisitatutako guneak</string>
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">Erakutsi gehien bisitatutako guneak</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Erakutsi gehien bisitatutako guneak</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Erakutsi gehien bisitatutako guneak</string>
 
@@ -1994,11 +2011,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Itxi fitxa inaktibo guztiak</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">Fitxak %s egongo dira erabilgarri. Denbora horren ondoren, automatikoki itxiko dira.</string>
+    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Fitxak %s egongo dira erabilgarri. Denbora horren ondoren, automatikoki itxiko dira.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 egunez</string>
+    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 egunez</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">astebetez</string>
+    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">astebetez</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->

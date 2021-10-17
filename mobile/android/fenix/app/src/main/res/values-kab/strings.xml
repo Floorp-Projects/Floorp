@@ -24,7 +24,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 yiccer i yeldin. Sit akken ad tbeddleḍ iccer.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s waccaren yeldin. Sit akken ad tettbeddileḍ gar waccaren.</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s waccaren yeldin. Sit akken ad tettbeddileḍ gar waccaren.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d yettwafren</string>
@@ -112,9 +112,18 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="tab_tray_close_tabs_banner_negative_button_text">Zgel</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">Accaren ur tesneqdeḍ ara snat ledwaṛ ad ttusnekzen ɣer da.</string>
+    <string name="tab_tray_inactive_onboarding_message">Accaren ur tesneqdeḍ ara snat ledwaṛ ad ttusnekzen ɣer da.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">Sens-it deg yiɣewwaren</string>
+    <string name="tab_tray_inactive_onboarding_button_text">Sens-it deg yiɣewwaren</string>
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Amdal awurman seld yiwen wayyur?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox izmer ad imdel accaren i twalaḍ aggur iɛeddan.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Mdel</string>
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button"></string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -123,7 +132,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="home_screen_shortcut_open_new_private_tab_2">Iccer uslig amaynut</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Ismal ufrinen</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Ismal ufrinen</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -170,7 +179,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Seḥbes</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Creḍ asebter-agi</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Creḍ asebter-agi</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Beddel tacreḍt n usebter</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -384,7 +393,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Asentel</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">Asebter agejdan</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Asebter agejdan</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Isillifen</string>
     <!-- Preference for settings related to visual options -->
@@ -582,7 +591,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Rmed Synch</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Ḍumm-d tangalt n uciddi seg Firefox i uselkim</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Ḍumm-d tangalt n uciddi seg Firefox i uselkim</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Qqen</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -707,15 +716,15 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Amdal awurman n waccaren yeldin</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">Bdu seg ugilal agejdan</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Bdu seg ugilal agejdan</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">Seld rebεa n yisragen</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Seld rebεa n yisragen</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">Yal tikkelt</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Yal tikkelt</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">Urǧin</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Urǧin</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Mdel s ufus</string>
 
@@ -775,13 +784,13 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Sekles ɣer tagrumma</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">Fren</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Fren</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Bḍu akk accaren</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Iccaren imedlen melmi kan</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">Yettwamdel melmi kan</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Yettwamdel melmi kan</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Iɣewwaṛen n umiḍan</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -904,10 +913,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="history_empty_message">Ulac amazray dagi</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">Kkes isadaren</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">D tidet tebɣiḍ ad tsefḍeḍ isadaren?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Isadaren ttwakksen</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -949,7 +954,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Umuɣ n ticraḍ n isebtar</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Beddel tacreḍt n usebter</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Beddel tacreḍt n usebter</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Fren akaram</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1985,7 +1990,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="top_sites_max_limit_confirmation_button">IH, awi-t-id</string>
 
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">Sken ismal yemmeẓren s waṭas</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Sken ismal yemmeẓren s waṭas</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Sken-d ismal ittwarzan aṭas</string>
 
@@ -2004,11 +2009,11 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Mdel akk accaren irurmiden</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">Accaren llan da i %s. Seld aya, accaren ad uɣalen ad medlen s wudem awurman.</string>
+    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Accaren llan da i %s. Seld aya, accaren ad uɣalen ad medlen s wudem awurman.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 wussan</string>
+    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 wussan</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">1dduṛt</string>
+    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1dduṛt</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->

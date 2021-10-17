@@ -23,7 +23,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">לשונית אחת פתוחה. יש להקיש כדי להחליף לשוניות.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s לשוניות פתוחות. יש להקיש כדי להחליף לשוניות.</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s לשוניות פתוחות. יש להקיש כדי להחליף לשוניות.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d נבחרו</string>
@@ -111,9 +111,18 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">סגירה</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">לשוניות שלא צפית בהם במשך שבועיים עוברות לכאן.</string>
+    <string name="tab_tray_inactive_onboarding_message">לשוניות שלא צפית בהם במשך שבועיים עוברות לכאן.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">כיבוי בהגדרות</string>
+    <string name="tab_tray_inactive_onboarding_button_text">כיבוי בהגדרות</string>
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">לסגור באופן אוטומטי לאחר חודש אחד?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">‏Firefox יכול לסגור לשוניות שלא נצפו במהלך החודש האחרון.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">סגירה</string>
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button">הפעלת סגירה אוטומטית</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -122,7 +131,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">לשונית פרטית חדשה</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">אתרים מובילים</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">אתרים מובילים</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -161,7 +170,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">עצירה</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">הוספה לסימניות</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">הוספה לסימניות</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">עריכת סימנייה</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -279,10 +288,15 @@
     <string name="onboarding_home_screen_description_2">עכשיו קל יותר לחזור למקום שבו הפסקת.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_section_home_title_2">מסך בית מותאם אישית של Firefox</string>
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description_2">ניתן לעבור ללשוניות הפתוחות שלך, לסימניות ולהיסטוריית הגלישה שלך.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
     <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">לשוניות נקיות ומאורגנות</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string name="onboarding_home_screen_section_useful_history_title_2">חיפושים אחרונים</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">כעת קל יותר להמשיך מהמקום שבו הפסקת, במסך הבית של Firefox המותאם אישית שלך. ניתן למצוא את הלשוניות האחרונות, הסימניות ותוצאות החיפוש שלך.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -362,7 +376,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">ערכת נושא</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">בית</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">בית</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">מסך הבית</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">מחוות</string>
     <!-- Preference for settings related to visual options -->
@@ -559,7 +575,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">הפעלת Sync</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">סריקת קוד צימוד ב־Firefox לשולחן העבודה</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">סריקת קוד צימוד ב־Firefox לשולחן העבודה</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">כניסה</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -681,15 +697,23 @@
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">סגירה אוטומטית של לשוניות פתוחות</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">להתחיל ממסך הבית</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">להתחיל ממסך הבית</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">מסך הפתיחה</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">לאחר 4 שעות</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">לאחר 4 שעות</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">דף הבית</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">תמיד</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">תמיד</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">הלשונית האחרונה</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">לעולם לא</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">לעולם לא</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">מסך הבית לאחר 4 שעות של חוסר פעילות</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">סגירה באופן ידני</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -748,13 +772,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">שמירה לאוסף</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">בחירה</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">בחירה</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">שיתוף כל הלשוניות</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">לשוניות שנסגרו לאחרונה</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">נסגרו לאחרונה</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">נסגרו לאחרונה</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">הגדרות חשבון</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -876,10 +900,6 @@
     <string name="history_empty_message">אין היסטוריה כאן</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">מחיקת הורדות</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">האם ברצונך לנקות את ההורדות שלך?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">ההורדות הוסרו</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -920,7 +940,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">תפריט סימניות</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">עריכת סימנייה</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">עריכת סימנייה</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">בחירת תיקייה</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1951,8 +1971,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">בסדר, הבנתי</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">האתרים הנצפים ביותר</string>
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">הצגת רוב האתרים הנצפים ביותר</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">הצגת האתרים הנצפים ביותר</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">הצגת האתרים הנצפים ביותר</string>
 
@@ -1971,11 +1993,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">סגירת כל הלשוניות שאינן פעילות</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">לשוניות זמינות כאן למשך %s. לאחר משך זמן זה, לשוניות ייסגרו באופן אוטומטי.</string>
+    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">לשוניות זמינות כאן למשך %s. לאחר משך זמן זה, לשוניות ייסגרו באופן אוטומטי.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 ימים</string>
+    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 ימים</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">שבוע אחד</string>
+    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">שבוע אחד</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->

@@ -27,7 +27,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">開啟了 1 個分頁，點擊即可切換分頁。</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">開啟了 %1$s 個分頁，點擊即可切換分頁。</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">開啟了 %1$s 個分頁，點擊即可切換分頁。</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">已選擇 %1$d 個分頁</string>
@@ -110,9 +110,19 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">知道了！</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">超過兩週沒有檢視過的分頁，將移動至此處。</string>
+    <string name="tab_tray_inactive_onboarding_message">超過兩週沒有檢視過的分頁，將移動至此處。</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">到設定中關閉</string>
+    <string name="tab_tray_inactive_onboarding_button_text">到設定中關閉</string>
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">等一個月後再自動關閉？</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox 可自動關閉您超過一個月未檢視的分頁。</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">關閉</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button">開啟「分頁自動關閉」功能</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -121,7 +131,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">開新隱私分頁</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">熱門網站</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">熱門網站</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -168,7 +178,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">停止</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">書籤</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">書籤</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">編輯書籤</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -383,7 +393,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">佈景主題</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">主畫面</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">主畫面</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">首頁</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">手勢</string>
     <!-- Preference for settings related to visual options -->
@@ -581,7 +593,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">開啟 Sync</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">使用桌面版 Firefox 掃描配對碼</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">使用桌面版 Firefox 掃描配對碼</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">登入</string>
 
@@ -706,15 +718,23 @@
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">自動關閉分頁</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">啟動時，直接進入主畫面</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">啟動時，直接進入主畫面</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">開啟畫面</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">4 小時後</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">4 小時後</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">首頁</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">總是</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">總是</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">最後開啟的分頁</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">永不</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">永不</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">超過四個小時未使用就回到首頁</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">手動關閉</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -772,13 +792,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">儲存至收藏集</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">選擇</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">選擇</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">分享所有分頁</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">最近關閉的分頁</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">最近關閉的分頁</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">最近關閉的分頁</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">帳號設定</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -902,10 +922,6 @@
     <string name="history_empty_message">沒有紀錄</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">清除下載紀錄</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">您確定要清除下載紀錄？</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">已移除下載紀錄</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -947,7 +963,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">書籤選單</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">編輯書籤</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">編輯書籤</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">選擇資料夾</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1993,8 +2009,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">好，知道了！</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">最常造訪的熱門網站</string>
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">顯示最常造訪的網站</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">顯示最常造訪的網站</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">顯示最常造訪的網站</string>
 
@@ -2013,11 +2031,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">關閉所有閒置分頁</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">分頁將於此處停留 %s，超過之後將自動關閉。</string>
+    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">分頁將於此處停留 %s，超過之後將自動關閉。</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 天</string>
+    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 天</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">1 週</string>
+    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 週</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
