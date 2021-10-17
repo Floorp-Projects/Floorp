@@ -23,8 +23,9 @@ add_task(async function() {
   // add a tag
   document.getElementById("editBMPanel_tagsField").value = testTag;
   let promiseNotification = PlacesTestUtils.waitForNotification(
-    "onItemChanged",
-    (id, property) => property == "tags"
+    "bookmark-tags-changed",
+    () => true,
+    "places"
   );
   gEditItemOverlay.onTagsFieldChange();
   await promiseNotification;

@@ -73,8 +73,9 @@ add_task(async function test_tags() {
     );
 
     let promiseNotification = PlacesTestUtils.waitForNotification(
-      "onItemChanged",
-      (id, property) => property == "tags"
+      "bookmark-tags-changed",
+      () => true,
+      "places"
     );
 
     ContentTree.view.controller.doCommand("cmd_delete");
