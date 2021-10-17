@@ -809,6 +809,7 @@ BookmarksTracker.prototype = {
         "bookmark-added",
         "bookmark-removed",
         "bookmark-moved",
+        "bookmark-tags-changed",
         "bookmark-time-changed",
         "bookmark-title-changed",
         "bookmark-url-changed",
@@ -827,6 +828,7 @@ BookmarksTracker.prototype = {
         "bookmark-added",
         "bookmark-removed",
         "bookmark-moved",
+        "bookmark-tags-changed",
         "bookmark-time-changed",
         "bookmark-title-changed",
         "bookmark-url-changed",
@@ -886,6 +888,7 @@ BookmarksTracker.prototype = {
         case "bookmark-removed":
         case "bookmark-moved":
         case "bookmark-guid-changed":
+        case "bookmark-tags-changed":
         case "bookmark-time-changed":
         case "bookmark-title-changed":
         case "bookmark-url-changed":

@@ -22,6 +22,7 @@
 #include "mozilla/dom/PlacesVisitRemoved.h"
 #include "mozilla/dom/PlacesVisitTitle.h"
 #include "mozilla/dom/PlacesBookmarkMoved.h"
+#include "mozilla/dom/PlacesBookmarkTags.h"
 #include "mozilla/dom/PlacesBookmarkTime.h"
 #include "mozilla/dom/PlacesBookmarkTitle.h"
 #include "mozilla/dom/PlacesBookmarkUrl.h"
@@ -2483,25 +2484,6 @@ nsNavHistoryQueryResultNode::OnItemChanged(
     return Refresh();
   }
 
-  // Some node could observe both bookmarks and history.  But a node observing
-  // only history should never get a bookmark notification.
-  NS_WARNING_ASSERTION(
-      mResult && mResult->mIsBookmarksObserver,
-      "history observers should not get OnItemChanged, but should get the "
-      "corresponding history notifications instead");
-
-  // Tags in history queries are a special case since tags are per uri and
-  // we filter tags based on searchterms.
-  if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK &&
-      aProperty.EqualsLiteral("tags")) {
-    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-    NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = bookmarks->GetBookmarkURI(aItemId, getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = NotifyIfTagsChanged(uri);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
   return NS_OK;
 }
 
@@ -2519,6 +2501,19 @@ nsresult nsNavHistoryQueryResultNode::OnItemMoved(
       !aNewParentGUID.Equals(aOldParentGUID)) {
     return Refresh();
   }
+  return NS_OK;
+}
+
+nsresult nsNavHistoryQueryResultNode::OnItemTagsChanged(int64_t aItemId,
+                                                        const nsAString& aURL) {
+  nsresult rv = nsNavHistoryResultNode::OnItemTagsChanged(aItemId, aURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), aURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = NotifyIfTagsChanged(uri);
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
@@ -3193,6 +3188,24 @@ nsresult nsNavHistoryFolderResultNode::OnItemRemoved(
   return RemoveChildAt(index);
 }
 
+nsresult nsNavHistoryResultNode::OnItemTagsChanged(int64_t aItemId,
+                                                   const nsAString& aURL) {
+  if (aItemId != mItemId) {
+    return NS_OK;
+  }
+
+  mTags.SetIsVoid(true);
+
+  bool shouldNotify = !mParent || mParent->AreChildrenVisible();
+  if (shouldNotify) {
+    nsNavHistoryResult* result = GetResult();
+    NS_ENSURE_STATE(result);
+    NOTIFY_RESULT_OBSERVERS(result, NodeTagsChanged(this));
+  }
+
+  return NS_OK;
+}
+
 nsresult nsNavHistoryResultNode::OnItemTimeChanged(int64_t aItemId,
                                                    const nsACString& aGUID,
                                                    PRTime aDateAdded,
@@ -3305,9 +3318,6 @@ nsNavHistoryResultNode::OnItemChanged(
       NOTIFY_RESULT_OBSERVERS(
           result, NodeHistoryDetailsChanged(this, oldTime, mAccessCount));
     }
-  } else if (aProperty.EqualsLiteral("tags")) {
-    mTags.SetIsVoid(true);
-    if (shouldNotify) NOTIFY_RESULT_OBSERVERS(result, NodeTagsChanged(this));
   } else if (aProperty.EqualsLiteral("keyword")) {
     if (shouldNotify)
       NOTIFY_RESULT_OBSERVERS(result, NodeKeywordChanged(this, aNewValue));
@@ -3583,7 +3593,7 @@ nsNavHistoryResult::~nsNavHistoryResult() {
 }
 
 void nsNavHistoryResult::StopObserving() {
-  AutoTArray<PlacesEventType, 10> events;
+  AutoTArray<PlacesEventType, 11> events;
   events.AppendElement(PlacesEventType::Favicon_changed);
   if (mIsBookmarksObserver) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
@@ -3594,6 +3604,7 @@ void nsNavHistoryResult::StopObserving() {
     events.AppendElement(PlacesEventType::Bookmark_added);
     events.AppendElement(PlacesEventType::Bookmark_removed);
     events.AppendElement(PlacesEventType::Bookmark_moved);
+    events.AppendElement(PlacesEventType::Bookmark_tags_changed);
     events.AppendElement(PlacesEventType::Bookmark_time_changed);
     events.AppendElement(PlacesEventType::Bookmark_title_changed);
     events.AppendElement(PlacesEventType::Bookmark_url_changed);
@@ -3717,10 +3728,11 @@ void nsNavHistoryResult::EnsureIsObservingBookmarks() {
     return;
   }
   bookmarks->AddObserver(this, true);
-  AutoTArray<PlacesEventType, 7> events;
+  AutoTArray<PlacesEventType, 8> events;
   events.AppendElement(PlacesEventType::Bookmark_added);
   events.AppendElement(PlacesEventType::Bookmark_removed);
   events.AppendElement(PlacesEventType::Bookmark_moved);
+  events.AppendElement(PlacesEventType::Bookmark_tags_changed);
   events.AppendElement(PlacesEventType::Bookmark_time_changed);
   events.AppendElement(PlacesEventType::Bookmark_title_changed);
   events.AppendElement(PlacesEventType::Bookmark_url_changed);
@@ -4289,6 +4301,18 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
             OnItemMoved(item->mId, item->mOldIndex, item->mIndex,
                         item->mItemType, item->mGuid, item->mOldParentGuid,
                         item->mParentGuid, item->mSource, url));
+        break;
+      }
+      case PlacesEventType::Bookmark_tags_changed: {
+        const dom::PlacesBookmarkTags* tagsEvent =
+            event->AsPlacesBookmarkTags();
+        if (NS_WARN_IF(!tagsEvent)) {
+          continue;
+        }
+
+        ENUMERATE_BOOKMARK_CHANGED_OBSERVERS(
+            tagsEvent->mParentGuid, tagsEvent->mId,
+            OnItemTagsChanged(tagsEvent->mId, tagsEvent->mUrl));
         break;
       }
       case PlacesEventType::Bookmark_time_changed: {

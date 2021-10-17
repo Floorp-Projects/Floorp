@@ -457,14 +457,6 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder, nsIURI* aURI, int32_t aIndex,
     for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
       // Check that bookmarks doesn't include the current tag itemId.
       MOZ_ASSERT(bookmarks[i].id != *aNewBookmarkId);
-
-      NOTIFY_BOOKMARKS_OBSERVERS(
-          mCanNotify, mObservers,
-          OnItemChanged(bookmarks[i].id, "tags"_ns, false, ""_ns,
-                        bookmarks[i].lastModified, TYPE_BOOKMARK,
-                        bookmarks[i].parentId, bookmarks[i].guid,
-                        bookmarks[i].parentGuid, ""_ns, aSource));
-
       RefPtr<PlacesBookmarkTags> tagsChanged = new PlacesBookmarkTags();
       tagsChanged->mId = bookmarks[i].id;
       tagsChanged->mItemType = TYPE_BOOKMARK;
@@ -599,13 +591,6 @@ nsNavBookmarks::RemoveItem(int64_t aItemId, uint16_t aSource) {
     uri->GetSpec(utf8spec);
 
     for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
-      NOTIFY_BOOKMARKS_OBSERVERS(
-          mCanNotify, mObservers,
-          OnItemChanged(bookmarks[i].id, "tags"_ns, false, ""_ns,
-                        bookmarks[i].lastModified, TYPE_BOOKMARK,
-                        bookmarks[i].parentId, bookmarks[i].guid,
-                        bookmarks[i].parentGuid, ""_ns, aSource));
-
       RefPtr<PlacesBookmarkTags> tagsChanged = new PlacesBookmarkTags();
       tagsChanged->mId = bookmarks[i].id;
       tagsChanged->mItemType = TYPE_BOOKMARK;
@@ -920,13 +905,6 @@ nsresult nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId,
       uri->GetSpec(utf8spec);
 
       for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
-        NOTIFY_BOOKMARKS_OBSERVERS(
-            mCanNotify, mObservers,
-            OnItemChanged(bookmarks[i].id, "tags"_ns, false, ""_ns,
-                          bookmarks[i].lastModified, TYPE_BOOKMARK,
-                          bookmarks[i].parentId, bookmarks[i].guid,
-                          bookmarks[i].parentGuid, ""_ns, aSource));
-
         RefPtr<PlacesBookmarkTags> tagsChanged = new PlacesBookmarkTags();
         tagsChanged->mId = bookmarks[i].id;
         tagsChanged->mItemType = TYPE_BOOKMARK;

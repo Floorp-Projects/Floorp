@@ -34,11 +34,15 @@ add_task(async function() {
   );
 
   let promiseTagResetNotification = PlacesTestUtils.waitForNotification(
-    "onItemChanged",
-    (itemId, prop) => {
-      let tags = PlacesUtils.tagging.getTagsForURI(uri);
-      return prop == "tags" && tags.length == 1 && tags[0] == "tag1";
-    }
+    "bookmark-tags-changed",
+    events =>
+      events.some(event => {
+        const tags = PlacesUtils.tagging.getTagsForURI(
+          Services.io.newURI(event.url)
+        );
+        return tags.length === 1 && tags[0] === "tag1";
+      }),
+    "places"
   );
 
   await withBookmarksDialog(
@@ -60,11 +64,15 @@ add_task(async function() {
       Assert.ok(!namepicker.readOnly, "Name field should not be read-only");
       Assert.equal(namepicker.value, "tag1", "Node title is correct");
       let promiseTagChangeNotification = PlacesTestUtils.waitForNotification(
-        "onItemChanged",
-        (itemId, prop) => {
-          let tags = PlacesUtils.tagging.getTagsForURI(uri);
-          return prop == "tags" && tags.length == 1 && tags[0] == "tag2";
-        }
+        "bookmark-tags-changed",
+        events =>
+          events.some(event => {
+            const tags = PlacesUtils.tagging.getTagsForURI(
+              Services.io.newURI(event.url)
+            );
+            return tags.length === 1 && tags[0] === "tag2";
+          }),
+        "places"
       );
 
       let promiseTagRemoveNotification = PlacesTestUtils.waitForNotification(
