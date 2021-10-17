@@ -1,4 +1,5 @@
-function handleRequest(request, response) {
+function handleRequest(request, response)
+{
   response.setHeader("Cache-Control", "no-cache, must-revalidate", false);
 
   if (request.queryString === "verify") {

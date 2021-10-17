@@ -8,7 +8,8 @@ function handleRequest(request, response) {
 
   if (gpc === "1") {
     response.write("true");
-  } else {
+  }
+  else {
     response.write("false");
   }
 }

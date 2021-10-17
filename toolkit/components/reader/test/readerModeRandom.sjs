@@ -17,7 +17,6 @@ let readerModeText = `<!DOCTYPE html>
 function handleRequest(aRequest, aResponse) {
   aResponse.setStatusLine(aRequest.httpVersion, 200);
   aResponse.setHeader("Content-Type", "text/html", false);
-  aResponse.write(
-    readerModeText + "<p id='rnd'>" + Date.now() + "," + Math.random() + "</p>"
-  );
+  aResponse.write(readerModeText + "<p id='rnd'>" + Date.now() + "," + Math.random() + "</p>");
 }
+ 

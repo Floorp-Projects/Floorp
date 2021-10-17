@@ -2,10 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function handleRequest(request, response) {
-  const params = request.queryString.split("&");
-  const limit = (params.filter(s => s.includes("limit="))[0] || "").split(
-    "="
-  )[1];
+  let params = request.queryString.split("&");
+  let limit = (params.filter((s) => s.includes("limit="))[0] || "").split("=")[1];
 
   response.setStatusLine(request.httpVersion, 200, "Och Aye");
 

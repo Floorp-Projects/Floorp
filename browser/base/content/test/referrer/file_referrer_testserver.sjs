@@ -2,7 +2,8 @@
  * Renders the HTTP Referer header up to the second path slash.
  * Used in browser_referrer_*.js, bug 1113431.
  */
-function handleRequest(request, response) {
+function handleRequest(request, response)
+{
   let referrer = "";
   try {
     referrer = request.getHeader("referer");
@@ -11,10 +12,7 @@ function handleRequest(request, response) {
   }
 
   // Strip it past the first path slash. Makes tests easier to read.
-  referrer = referrer
-    .split("/")
-    .slice(0, 4)
-    .join("/");
+  referrer = referrer.split("/").slice(0, 4).join("/");
 
   let html = `<!DOCTYPE HTML>
              <html>
