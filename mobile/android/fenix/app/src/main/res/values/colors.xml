@@ -26,7 +26,6 @@
     <!-- Dark theme color palette -->
     <color name="primary_text_dark_theme">@color/photonLightGrey05</color>
     <color name="above_dark_theme">@color/photonDarkGrey50</color>
-    <color name="accent_dark_theme">@color/photonViolet50</color>
     <color name="accent_bright_dark_theme">@color/photonViolet70</color>
     <color name="accent_high_contrast_dark_theme">@color/photonViolet40</color>
     <color name="search_suggestion_indicator_icon_color_dark_theme">@color/photonGreen60</color>

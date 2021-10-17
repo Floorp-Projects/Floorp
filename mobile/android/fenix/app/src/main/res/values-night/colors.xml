@@ -11,11 +11,11 @@
     <color name="foundation_normal_theme">@color/photonDarkGrey80</color>
     <color name="above_normal_theme">@color/above_dark_theme</color>
     <color name="inset_normal_theme">@color/photonDarkGrey50</color>
-    <color name="accent_normal_theme">@color/accent_dark_theme</color>
+    <color name="accent_normal_theme">@color/photonViolet50</color>
     <color name="accent_bright_normal_theme">@color/accent_bright_dark_theme</color>
     <color name="accent_high_contrast_normal_theme">@color/accent_high_contrast_dark_theme</color>
     <color name="about_link_normal_theme">@color/photonViolet40</color>
-    <color name="tab_ring_normal_theme">@color/accent_dark_theme</color>
+    <color name="tab_ring_normal_theme">@color/accent_normal_theme</color>
     <color name="neutral_normal_theme">@color/photonGrey20</color>
     <color name="neutral_faded_normal_theme">#1FFBFBFE</color>
     <color name="shadow_normal_theme">#050505</color>
@@ -38,9 +38,9 @@
     <color name="swipe_delete_background_normal_theme">@color/photonDarkGrey20</color>
     <color name="onboarding_card_background_start_gradient_normal_theme">@color/accent_bright_dark_theme</color>
     <color name="onboarding_card_background_end_gradient_normal_theme">@color/accent_high_contrast_dark_theme</color>
-    <color name="onboarding_illustration_selected_normal_theme">@color/accent_dark_theme</color>
+    <color name="onboarding_illustration_selected_normal_theme">@color/accent_normal_theme</color>
     <color name="onboarding_illustration_deselected_normal_theme">#99FBFBFE</color>
-    <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/accent_dark_theme</color>
+    <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/accent_normal_theme</color>
     <color name="add_on_private_browsing_interior_icon_background_normal_theme">@color/photonWhite</color>
     <color name="prompt_login_edit_text_cursor_color_normal_theme">@color/photonViolet50</color>
     <color name="readermode_start_gradient_normal_theme">@color/photonViolet30</color>
