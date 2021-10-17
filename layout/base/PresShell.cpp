@@ -6374,8 +6374,8 @@ void PresShell::PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags) {
 
       if (renderer->EndEmptyTransaction(
               (aFlags & PaintInternalFlags::PaintComposite)
-                  ? LayerManager::END_DEFAULT
-                  : LayerManager::END_NO_COMPOSITE)) {
+                  ? WindowRenderer::END_DEFAULT
+                  : WindowRenderer::END_NO_COMPOSITE)) {
         frame->UpdatePaintCountForPaintedPresShells();
         return;
       }

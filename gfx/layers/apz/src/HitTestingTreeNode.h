@@ -13,8 +13,8 @@
 #include "mozilla/layers/LayersTypes.h"          // for EventRegions
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid
 #include "mozilla/Maybe.h"                       // for Maybe
+#include "mozilla/RecursiveMutex.h"              // for RecursiveMutexAutoLock
 #include "mozilla/RefPtr.h"                      // for nsRefPtr
-
 namespace mozilla {
 namespace layers {
 

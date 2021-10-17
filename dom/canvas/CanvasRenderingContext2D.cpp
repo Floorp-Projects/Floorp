@@ -124,6 +124,7 @@
 #include "mozilla/layers/CanvasClient.h"
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/layers/WebRenderCanvasRenderer.h"
+#include "WindowRenderer.h"
 
 #undef free  // apparently defined by some windows header, clashing with a
              // free() method in SkTypes.h

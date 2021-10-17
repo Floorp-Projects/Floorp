@@ -16,7 +16,6 @@ UNIFIED_SOURCES += [
     "TestConfigManager.cpp",
     "TestCoord.cpp",
     "TestGfxWidgets.cpp",
-    "TestLayers.cpp",
     "TestMatrix.cpp",
     "TestMoz2D.cpp",
     "TestPolygon.cpp",

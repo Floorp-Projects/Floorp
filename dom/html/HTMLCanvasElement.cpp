@@ -51,6 +51,7 @@
 #include "CanvasUtils.h"
 #include "VRManagerChild.h"
 #include "ClientWebGLContext.h"
+#include "WindowRenderer.h"
 
 using namespace mozilla::layers;
 using namespace mozilla::gfx;

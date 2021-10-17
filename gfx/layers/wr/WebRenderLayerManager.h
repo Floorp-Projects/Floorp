@@ -23,12 +23,12 @@
 #include "mozilla/layers/CompositorTypes.h"   // for TextureFactoryIdentifier
 #include "mozilla/layers/DisplayItemCache.h"  // for DisplayItemCache
 #include "mozilla/layers/FocusTarget.h"       // for FocusTarget
-#include "mozilla/layers/LayerManager.h"  // for DidCompositeObserver (ptr only), LayerManager::END_DEFAULT, LayerManager::En...
 #include "mozilla/layers/LayersTypes.h"  // for TransactionId, LayersBackend, CompositionPayload (ptr only), LayersBackend::...
 #include "mozilla/layers/RenderRootStateManager.h"  // for RenderRootStateManager
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid, ScrollableLayerGuid::ViewID
 #include "mozilla/layers/WebRenderCommandBuilder.h"  // for WebRenderCommandBuilder
 #include "mozilla/layers/WebRenderScrollData.h"      // for WebRenderScrollData
+#include "WindowRenderer.h"
 #include "nsHashKeys.h"                              // for nsRefPtrHashKey
 #include "nsRegion.h"                                // for nsIntRegion
 #include "nsStringFwd.h"                             // for nsCString, nsAString
@@ -52,6 +52,12 @@ class Layer;
 class PCompositorBridgeChild;
 class WebRenderBridgeChild;
 class WebRenderParentCommand;
+class TransactionIdAllocator;
+class LayerUserData;
+class DidCompositeObserver {
+ public:
+  virtual void DidComposite() = 0;
+};
 
 class WebRenderLayerManager final : public WindowRenderer {
   typedef nsTArray<RefPtr<Layer>> LayerRefArray;

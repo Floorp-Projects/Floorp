@@ -32,7 +32,6 @@
 #include "mozilla/gfx/UserData.h"  // for UserData, UserDataKey (ptr only)
 #include "mozilla/layers/AnimationInfo.h"  // for AnimationInfo
 #include "mozilla/layers/LayerAttributes.h"  // for SimpleLayerAttributes, ScrollbarData (ptr only)
-#include "mozilla/layers/LayerManager.h"  // for LayerManager
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid, ScrollableLayerGuid::ViewID
 #include "mozilla/layers/BSPTree.h"
 #include "nsISupports.h"    // for NS_INLINE_DECL_REFCOUNTING
@@ -124,8 +123,6 @@ void SetAntialiasingFlags(Layer* aLayer, gfx::DrawTarget* aTarget);
 
 #ifdef MOZ_DUMP_PAINTING
 void WriteSnapshotToDumpFile(Layer* aLayer, gfx::DataSourceSurface* aSurf);
-void WriteSnapshotToDumpFile(LayerManager* aManager,
-                             gfx::DataSourceSurface* aSurf);
 void WriteSnapshotToDumpFile(Compositor* aCompositor, gfx::DrawTarget* aTarget);
 #endif
 

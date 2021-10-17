@@ -31,6 +31,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsDocShell.h"
 #include "nsServiceManagerUtils.h"
+#include "WindowRenderer.h"
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/BrowsingContext.h"

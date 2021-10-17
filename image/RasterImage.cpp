@@ -50,6 +50,7 @@
 #include "nsProperties.h"
 #include "prenv.h"
 #include "prsystem.h"
+#include "WindowRenderer.h"
 
 namespace mozilla {
 
