@@ -392,7 +392,6 @@ UNIFIED_SOURCES += [
     "ipc/UiCompositorControllerParent.cpp",
     "ipc/VideoBridgeChild.cpp",
     "ipc/VideoBridgeParent.cpp",
-    "LayerManager.cpp",
     "Layers.cpp",
     "LayersTypes.cpp",
     "MemoryPressureObserver.cpp",

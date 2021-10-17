@@ -15,6 +15,7 @@
 #include "Tracing.h"
 #include "VideoFrameUtils.h"
 #include "VideoUtils.h"
+#include "ImageContainer.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 
@@ -247,7 +248,7 @@ void MediaEngineRemoteVideoSource::SetTrack(const RefPtr<MediaTrack>& aTrack,
   MOZ_ASSERT(aTrack->AsSourceTrack());
 
   if (!mImageContainer) {
-    mImageContainer = layers::LayerManager::CreateImageContainer(
+    mImageContainer = MakeAndAddRef<layers::ImageContainer>(
         layers::ImageContainer::ASYNCHRONOUS);
   }
 

@@ -2389,8 +2389,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
 
       imageData->CreateImageClientIfNeeded();
       RefPtr<ImageClient> imageClient = imageData->GetImageClient();
-      RefPtr<ImageContainer> imageContainer =
-          LayerManager::CreateImageContainer();
+      RefPtr<ImageContainer> imageContainer = MakeAndAddRef<ImageContainer>();
 
       {
         UpdateImageHelper helper(imageContainer, imageClient,

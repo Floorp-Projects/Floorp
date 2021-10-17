@@ -2252,7 +2252,7 @@ void nsIWidget::CaptureRegisteredPlugins(uintptr_t aOwnerWidget) {
 
 uint64_t nsBaseWidget::CreateScrollCaptureContainer() {
   mScrollCaptureContainer =
-      LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS);
+      MakeAndAddRef<ImageContainer>(ImageContainer::ASYNCHRONOUS);
   if (!mScrollCaptureContainer) {
     NS_WARNING("Failed to create ImageContainer for widget image capture.");
     return ImageContainer::sInvalidAsyncContainerId;

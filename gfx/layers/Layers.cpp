@@ -92,68 +92,7 @@ void WriteSnapshotToDumpFile(Compositor* aCompositor, DrawTarget* aTarget) {
 //--------------------------------------------------
 // LayerManager
 
-void LayerManager::Log(const char* aPrefix) {
-  if (!IsLogEnabled()) return;
-
-  LogSelf(aPrefix);
-
-  nsAutoCString pfx(aPrefix);
-  pfx += "  ";
-  if (!GetRoot()) {
-    MOZ_LAYERS_LOG(("%s(null)", pfx.get()));
-    return;
-  }
-
-}
-
-void LayerManager::LogSelf(const char* aPrefix) {
-  nsAutoCString str;
-  std::stringstream ss;
-  PrintInfo(ss, aPrefix);
-  MOZ_LAYERS_LOG(("%s", ss.str().c_str()));
-}
-
-void LayerManager::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
-  aStream << aPrefix
-          << nsPrintfCString("%sLayerManager (0x%p)", Name(), this).get();
-}
-
-/*static*/
-bool LayerManager::IsLogEnabled() {
-  return MOZ_LOG_TEST(GetLog(), LogLevel::Debug);
-}
-
-bool LayerManager::AddPendingScrollUpdateForNextTransaction(
-    ScrollableLayerGuid::ViewID aScrollId,
-    const ScrollPositionUpdate& aUpdateInfo) {
-  return true;
-}
-
-Maybe<nsTArray<ScrollPositionUpdate>> LayerManager::GetPendingScrollInfoUpdate(
-    ScrollableLayerGuid::ViewID aScrollId) {
-  auto p = mPendingScrollUpdates.Lookup(aScrollId);
-  if (!p) {
-    return Nothing();
-  }
-  // We could have this function return a CopyableTArray or something, but it
-  // seems better to avoid implicit copies and just do the one explicit copy
-  // where we need it, here.
-  nsTArray<ScrollPositionUpdate> copy;
-  copy.AppendElements(p.Data());
-  return Some(std::move(copy));
-}
-
-std::unordered_set<ScrollableLayerGuid::ViewID>
-LayerManager::ClearPendingScrollInfoUpdate() {
-  std::unordered_set<ScrollableLayerGuid::ViewID> scrollIds(
-      mPendingScrollUpdates.Keys().cbegin(),
-      mPendingScrollUpdates.Keys().cend());
-  mPendingScrollUpdates.Clear();
-  return scrollIds;
-}
-
-void SetAntialiasingFlags(Layer* aLayer, DrawTarget* aTarget) {
-}
+void SetAntialiasingFlags(Layer* aLayer, DrawTarget* aTarget) {}
 
 IntRect ToOutsideIntRect(const gfxRect& aRect) {
   return IntRect::RoundOut(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());

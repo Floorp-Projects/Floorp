@@ -1559,7 +1559,7 @@ class MediaPipelineReceiveVideo::PipelineListener
                    const PrincipalHandle& aPrincipalHandle)
       : GenericReceiveListener(std::move(aMainThread), aTrack),
         mImageContainer(
-            LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS)),
+            MakeAndAddRef<ImageContainer>(ImageContainer::ASYNCHRONOUS)),
         mMutex("MediaPipelineReceiveVideo::PipelineListener::mMutex"),
         mPrincipalHandle(aPrincipalHandle) {}
 
