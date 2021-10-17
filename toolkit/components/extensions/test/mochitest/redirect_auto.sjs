@@ -14,7 +14,9 @@ function handleRequest(request, response) {
     } else {
       response.setStatusLine(request.httpVersion, 302, "Moved Temporarily");
     }
-    let url = new URL(params.get("redirect_uri") || params.get("default_redirect"));
+    let url = new URL(
+      params.get("redirect_uri") || params.get("default_redirect")
+    );
     url.searchParams.set("access_token", "here ya go");
     response.setHeader("Location", url.href);
   }

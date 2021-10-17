@@ -2,7 +2,8 @@
 
 const IMG_BYTES = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAA" +
-  "DUlEQVQImWNgY2P7DwABOgESJhRQtgAAAABJRU5ErkJggg==");
+    "DUlEQVQImWNgY2P7DwABOgESJhRQtgAAAABJRU5ErkJggg=="
+);
 
 function handleRequest(request, response) {
   response.processAsync();
@@ -11,10 +12,14 @@ function handleRequest(request, response) {
     if (obj == null) {
       ctx = {
         QueryInterface: function(iid) {
-          if (iid.equals(Components.interfaces.nsISupports))
+          if (iid.equals(Components.interfaces.nsISupports)) {
             return this;
-          throw Components.results.NS_ERROR_NO_INTERFACE;
-        }
+          }
+          throw Components.Exception(
+            "",
+            Components.results.NS_ERROR_NO_INTERFACE
+          );
+        },
       };
       ctx.wrappedJSObject = ctx;
 

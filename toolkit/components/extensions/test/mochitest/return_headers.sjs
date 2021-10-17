@@ -17,4 +17,3 @@ function handleRequest(request, response) {
 
   response.write(JSON.stringify(headers));
 }
-

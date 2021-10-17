@@ -3,9 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const CC = Components.Constructor;
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
+const BinaryInputStream = CC(
+  "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream",
-  "setInputStream");
+  "setInputStream"
+);
 
 function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, 200, "Och Aye");
@@ -14,12 +16,18 @@ function handleRequest(request, response) {
   var body = "";
   if (request.method == "POST") {
     var bodyStream = new BinaryInputStream(request.bodyInputStream);
-    var bytes = [], avail = 0;
+    var bytes = [],
+      avail = 0;
     while ((avail = bodyStream.available()) > 0) {
-      body += String.fromCharCode.apply(String, bodyStream.readByteArray(avail));
+      body += String.fromCharCode.apply(
+        String,
+        bodyStream.readByteArray(avail)
+      );
     }
   }
-  var contentType = request.hasHeader("content-type") ? request.getHeader("content-type") : ""
+  var contentType = request.hasHeader("content-type")
+    ? request.getHeader("content-type")
+    : "";
   var bodyOutput = [request.method, contentType, body].join("\n");
 
   response.bodyOutputStream.write(bodyOutput, bodyOutput.length);

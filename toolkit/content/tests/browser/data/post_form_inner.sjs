@@ -3,21 +3,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const CC = Components.Constructor;
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
-                             "nsIBinaryInputStream",
-                             "setInputStream");
+const BinaryInputStream = CC(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
 
-function handleRequest(request, response)
-{
-  var body =
-   '<html>\
+function handleRequest(request, response) {
+  var body = "<html>\
     <body>\
-    Inner POST data: ';
+    Inner POST data: ";
 
   var bodyStream = new BinaryInputStream(request.bodyInputStream);
-  var bytes = [], avail = 0;
-  while ((avail = bodyStream.available()) > 0)
-   body += String.fromCharCode.apply(String, bodyStream.readByteArray(avail));
+  var bytes = [],
+    avail = 0;
+  while ((avail = bodyStream.available()) > 0) {
+    body += String.fromCharCode.apply(String, bodyStream.readByteArray(avail));
+  }
 
   body +=
     '<form id="postForm" action="post_form_inner.sjs" method="post">\

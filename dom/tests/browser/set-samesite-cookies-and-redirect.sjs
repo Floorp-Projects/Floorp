@@ -7,8 +7,16 @@ function handleRequest(request, response) {
   // Set cookies and redirect for .org:
   if (request.host.endsWith(".org")) {
     response.setHeader("Set-Cookie", "normalCookie=true; path=/;", true);
-    response.setHeader("Set-Cookie", "laxHeader=true; path=/; SameSite=Lax", true);
-    response.setHeader("Set-Cookie", "strictHeader=true; path=/; SameSite=Strict", true);
+    response.setHeader(
+      "Set-Cookie",
+      "laxHeader=true; path=/; SameSite=Lax",
+      true
+    );
+    response.setHeader(
+      "Set-Cookie",
+      "strictHeader=true; path=/; SameSite=Strict",
+      true
+    );
     response.write(`
       <head>
         <meta http-equiv='set-cookie' content='laxMeta=true; path=/; SameSite=Lax'>
@@ -22,7 +30,9 @@ function handleRequest(request, response) {
         </script>
       </body>`);
   } else {
-    let baseURI = "https://example.org/" + request.path.replace(/[a-z-]*\.sjs/, "mimeme.sjs?type=");
+    let baseURI =
+      "https://example.org/" +
+      request.path.replace(/[a-z-]*\.sjs/, "mimeme.sjs?type=");
     response.write(`
       <link rel="stylesheet" type="text/css" href="${baseURI}css">
       <iframe src="${baseURI}html"></iframe>

@@ -4,14 +4,18 @@
 
 const IMG_BYTES = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAA" +
-  "DUlEQVQImWNgY2P7DwABOgESJhRQtgAAAABJRU5ErkJggg==");
+    "DUlEQVQImWNgY2P7DwABOgESJhRQtgAAAABJRU5ErkJggg=="
+);
 
 const PAGE = "<!DOCTYPE html><html><body><p>HSTS page</p></body></html>";
 
 function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, "200", "OK");
   if (request.queryString == "includeSub") {
-    response.setHeader("Strict-Transport-Security", "max-age=60; includeSubDomains");
+    response.setHeader(
+      "Strict-Transport-Security",
+      "max-age=60; includeSubDomains"
+    );
   } else {
     response.setHeader("Strict-Transport-Security", "max-age=60");
   }

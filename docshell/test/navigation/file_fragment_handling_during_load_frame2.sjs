@@ -7,7 +7,7 @@ function handleRequest(request, response) {
   response.setHeader("Cache-Control", "no-cache", false);
   // Wait a bit.
   var s = Date.now();
-  while (Date.now() - s < 1000);
+  while (Date.now() - s < 1000) {}
 
   response.write(`<!DOCTYPE HTML>
   <html>

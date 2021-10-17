@@ -1,14 +1,16 @@
-
 // stolen from file_blocked_script.sjs
-function setGlobalState(data, key)
-{
-  x = { data: data, QueryInterface: function(iid) { return this } };
+function setGlobalState(data, key) {
+  x = {
+    data,
+    QueryInterface(iid) {
+      return this;
+    },
+  };
   x.wrappedJSObject = x;
   setObjectState(key, x);
 }
 
-function getGlobalState(key)
-{
+function getGlobalState(key) {
   var data;
   getObjectState(key, function(x) {
     data = x && x.wrappedJSObject.data;
@@ -16,8 +18,7 @@ function getGlobalState(key)
   return data;
 }
 
-function completeBlockingRequest(response)
-{
+function completeBlockingRequest(response) {
   response.write("42");
   response.finish();
 }
@@ -35,8 +36,7 @@ const COUNT_KEY = "multie10s-update-count";
  * .sjs is fetched.  This allows us to avoid using a timer, which slows down the
  * tests and is brittle under slow hardware.
  */
-function handleBlockingRequest(request, response)
-{
+function handleBlockingRequest(request, response) {
   response.processAsync();
   response.setHeader("Content-Type", "application/javascript", false);
 
@@ -58,8 +58,7 @@ function handleBlockingRequest(request, response)
   }
 }
 
-function handleReleaseRequest(request, response)
-{
+function handleReleaseRequest(request, response) {
   const blockingResponse = getGlobalState(BLOCKING_KEY);
   if (blockingResponse) {
     completeBlockingRequest(blockingResponse);
@@ -72,20 +71,24 @@ function handleReleaseRequest(request, response)
   response.write(JSON.stringify({ released: true }));
 }
 
-function handleCountRequest(request, response)
-{
+function handleCountRequest(request, response) {
   const count = getGlobalState(COUNT_KEY) || 0;
   // --verify requires that we clear this so the test can be re-run.
   setGlobalState(0, COUNT_KEY);
 
   response.setHeader("Content-Type", "application/json", false);
-  response.write(JSON.stringify({ count: count }));
+  response.write(JSON.stringify({ count }));
 }
 
 Components.utils.importGlobalProperties(["URLSearchParams"]);
 function handleRequest(request, response) {
-  dump("server_multie10s_update.sjs: processing request for " + request.path +
-       "?" + request.queryString + "\n");
+  dump(
+    "server_multie10s_update.sjs: processing request for " +
+      request.path +
+      "?" +
+      request.queryString +
+      "\n"
+  );
   const query = new URLSearchParams(request.queryString);
   if (query.has("release")) {
     handleReleaseRequest(request, response);

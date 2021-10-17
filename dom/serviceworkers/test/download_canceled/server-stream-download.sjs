@@ -5,15 +5,18 @@ Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // stolen from file_blocked_script.sjs
-function setGlobalState(data, key)
-{
-  x = { data: data, QueryInterface: function(iid) { return this } };
+function setGlobalState(data, key) {
+  x = {
+    data,
+    QueryInterface(iid) {
+      return this;
+    },
+  };
   x.wrappedJSObject = x;
   setObjectState(key, x);
 }
 
-function getGlobalState(key)
-{
+function getGlobalState(key) {
   var data;
   getObjectState(key, function(x) {
     data = x && x.wrappedJSObject.data;
@@ -63,13 +66,16 @@ function handleStreamRequest(request, response) {
 
   // Create some payload to send.
   let strChunk =
-    'Static routes are the future of ServiceWorkers! So say we all!\n';
+    "Static routes are the future of ServiceWorkers! So say we all!\n";
   while (strChunk.length < 1024) {
     strChunk += strChunk;
   }
 
   response.setHeader("Content-Disposition", `attachment; filename="${name}"`);
-  response.setHeader("Content-Type", `application/octet-stream; name="${name}"`);
+  response.setHeader(
+    "Content-Type",
+    `application/octet-stream; name="${name}"`
+  );
   response.setHeader("Content-Length", `${strChunk.length * MAX_TICK_COUNT}`);
   response.setStatusLine(request.httpVersion, 200, "Found");
 
@@ -101,7 +107,7 @@ function handleStreamRequest(request, response) {
         return;
       }
       response.write(strChunk);
-    } catch(e) {
+    } catch (e) {
       closeStream("canceled", e.message);
     }
   }
@@ -110,8 +116,13 @@ function handleStreamRequest(request, response) {
 
 Components.utils.importGlobalProperties(["URLSearchParams"]);
 function handleRequest(request, response) {
-  dump("server-stream-download.js: processing request for " + request.path +
-       "?" + request.queryString + "\n");
+  dump(
+    "server-stream-download.js: processing request for " +
+      request.path +
+      "?" +
+      request.queryString +
+      "\n"
+  );
   const query = new URLSearchParams(request.queryString);
   if (query.has("monitor")) {
     handleMonitorRequest(request, response);

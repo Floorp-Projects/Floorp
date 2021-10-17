@@ -5,7 +5,8 @@
 const IFRAME_URL =
   "http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_docwrite_iframe.sjs?docwriteframe";
 
-const TEST_FRAME = `
+const TEST_FRAME =
+  `
   <!DOCTYPE HTML>
   <html><head><meta charset="utf-8">
   <title>TEST_FRAME</title>
@@ -13,11 +14,12 @@ const TEST_FRAME = `
   </head>
   <body>
   <script type="text/javascript">
-    document.write('<iframe src="` + IFRAME_URL + `"/>');
+    document.write('<iframe src="` +
+  IFRAME_URL +
+  `"/>');
   </script>
   </body>
   </html>`;
-
 
 // doc.write(iframe) sends a post message to the parent indicating the current
 // location so the parent can make sure the request was upgraded to *https*.
@@ -30,8 +32,7 @@ const DOC_WRITE_FRAME = `
   </body>
   </html>`;
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
   response.setHeader("Content-Type", "text/html", false);

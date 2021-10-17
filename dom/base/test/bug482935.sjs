@@ -3,7 +3,7 @@ function handleRequest(request, response) {
 
   try {
     body = request.getHeader("X-Request");
-  } catch(e) {
+  } catch (e) {
     body = "request.getHeader() failed! Exception: " + e;
   }
 

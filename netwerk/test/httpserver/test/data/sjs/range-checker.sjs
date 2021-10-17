@@ -1,3 +1,1 @@
-function handleRequest(request, response)
-{
-}
+function handleRequest(request, response) {}
