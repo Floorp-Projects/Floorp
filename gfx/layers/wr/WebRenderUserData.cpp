@@ -409,7 +409,7 @@ void WebRenderCanvasData::SetImageContainer(ImageContainer* aImageContainer) {
 
 ImageContainer* WebRenderCanvasData::GetImageContainer() {
   if (!mContainer) {
-    mContainer = LayerManager::CreateImageContainer();
+    mContainer = MakeAndAddRef<ImageContainer>();
   }
   return mContainer;
 }
