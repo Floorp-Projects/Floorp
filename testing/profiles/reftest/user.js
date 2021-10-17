@@ -98,3 +98,5 @@ user_pref("dom.push.serverURL", "");
 user_pref("toolkit.telemetry.initDelay", 99999999);
 // Setting this pref to true for usercss reftests, since it relies on userContent.css
 user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
+// Use a light color-scheme unless explicitly overriden.
+user_pref("layout.css.prefers-color-scheme.content-override", 1);
