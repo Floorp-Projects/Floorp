@@ -404,46 +404,40 @@ menuitem.bookmark-item {
 
   /* Render titlebar command buttons according to system config.
    * Use full scale icons here as the Gtk+ does. */
-  @media (-moz-gtk-csd-minimize-button) {
-    .titlebar-min {
-      appearance: auto;
-      -moz-default-appearance: -moz-window-button-minimize;
-    }
+  .titlebar-min {
+    appearance: auto;
+    -moz-default-appearance: -moz-window-button-minimize;
   }
-  @media (-moz-gtk-csd-minimize-button: 0) {
+  .titlebar-max {
+    appearance: auto;
+    -moz-default-appearance: -moz-window-button-maximize;
+  }
+  .titlebar-restore {
+    appearance: auto;
+    -moz-default-appearance: -moz-window-button-restore;
+  }
+  .titlebar-close {
+    appearance: auto;
+    -moz-default-appearance: -moz-window-button-close;
+  }
+
+  @media not (-moz-gtk-csd-minimize-button) {
     .titlebar-min {
       display: none;
     }
   }
-
-  @media (-moz-gtk-csd-maximize-button) {
-    .titlebar-max {
-      appearance: auto;
-      -moz-default-appearance: -moz-window-button-maximize;
-    }
-    .titlebar-restore {
-      appearance: auto;
-      -moz-default-appearance: -moz-window-button-restore;
-    }
-  }
-  @media (-moz-gtk-csd-maximize-button: 0) {
+  @media not (-moz-gtk-csd-maximize-button) {
     .titlebar-restore,
     .titlebar-max {
       display: none;
     }
   }
-
-  @media (-moz-gtk-csd-close-button) {
-    .titlebar-close {
-      appearance: auto;
-      -moz-default-appearance: -moz-window-button-close;
-    }
-  }
-  @media (-moz-gtk-csd-close-button: 0) {
+  @media not (-moz-gtk-csd-close-button) {
     .titlebar-close {
       display: none;
     }
   }
+
   @media (-moz-gtk-csd-reversed-placement) {
     .titlebar-buttonbox-container,
     .titlebar-close {
