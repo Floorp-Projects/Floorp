@@ -29,6 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1314912
     "history.back": () => win.history.back(),
     "history.forward": () => win.history.forward(),
     "history.go": () => win.history.go(-1),
+    "location.href": () => win.location.href = win.location.href + "",
     "location.hash": () => win.location.hash = inc++,
     "location.host": () => win.location.host = win.location.host + "",
     "location.hostname": () => win.location.hostname = win.location.hostname + "",
@@ -36,6 +37,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1314912
     "location.port": () => win.location.port = win.location.port + "",
     "location.protocol": () => win.location.protocol = win.location.protocol + "",
     "location.search": () => win.location.search = win.location.search + "",
+    "location.assign": () => win.location.assign(`${win.location.href}#${inc++}`),
+    "location.replace": () => win.location.replace(`${win.location.href}#${inc++}`),
+    "location.reload": () => win.location.reload(),
   });
 
   async function test() {
