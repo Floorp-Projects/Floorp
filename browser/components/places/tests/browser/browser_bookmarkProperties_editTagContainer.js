@@ -36,12 +36,7 @@ add_task(async function() {
   let promiseTagResetNotification = PlacesTestUtils.waitForNotification(
     "bookmark-tags-changed",
     events =>
-      events.some(event => {
-        const tags = PlacesUtils.tagging.getTagsForURI(
-          Services.io.newURI(event.url)
-        );
-        return tags.length === 1 && tags[0] === "tag1";
-      }),
+      events.some(({ tags }) => tags.length === 1 && tags[0] === "tag1"),
     "places"
   );
 
@@ -66,12 +61,7 @@ add_task(async function() {
       let promiseTagChangeNotification = PlacesTestUtils.waitForNotification(
         "bookmark-tags-changed",
         events =>
-          events.some(event => {
-            const tags = PlacesUtils.tagging.getTagsForURI(
-              Services.io.newURI(event.url)
-            );
-            return tags.length === 1 && tags[0] === "tag2";
-          }),
+          events.some(({ tags }) => tags.length === 1 && tags[0] === "tag2"),
         "places"
       );
 
