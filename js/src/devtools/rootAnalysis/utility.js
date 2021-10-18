@@ -8,19 +8,22 @@
 
 loadRelativeToScript('dumpCFG.js');
 
-// Limit inset bits - each call edge may carry a set of 'limit' bits, saying eg
+// Attribute bits - each call edge may carry a set of 'attrs' bits, saying eg
 // that the edge takes place within a scope where GC is suppressed, for
 // example.
-var LIMIT_NONE = 0;
-var LIMIT_CANNOT_GC = 1;
-var LIMIT_ALL = 1;
+var ATTR_GC_SUPPRESSED     = 1;
+var ATTR_CANSCRIPT_BOUNDED = 2; // Unimplemented
+var ATTR_DOM_ITERATING     = 4; // Unimplemented
+
+var ATTRS_NONE             = 0;
+var ATTRS_ALL              = 7; // All possible bits set
 
 // The traversal algorithms we run will recurse into children if you change any
-// limit bit to zero. Use all bits set to maximally limited, including
+// attrs bit to zero. Use all bits set to maximally attributed, including
 // additional bits that all just mean "unvisited", so that the first time we
-// see a node with this limit, we're guaranteed to turn at least one bit off
+// see a node with this attrs, we're guaranteed to turn at least one bit off
 // and thereby keep going.
-var LIMIT_UNVISITED = 0xffff;
+var ATTRS_UNVISITED = 0xffff;
 
 // gcc appends this to mangled function names for "not in charge"
 // constructors/destructors.
