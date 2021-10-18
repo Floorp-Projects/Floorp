@@ -96,6 +96,9 @@ void BaseCompiler::bceCheckLocal(MemoryAccessDesc* access, AccessCheck* check,
   uint32_t offsetGuardLimit =
       GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
 
+  // 64-bit offset will be supported later.
+  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
+
   if ((bceSafe_ & (BCESet(1) << local)) &&
       access->offset() < offsetGuardLimit) {
     check->omitBoundsCheck = true;
@@ -123,43 +126,93 @@ void BaseCompiler::bceLocalIsUpdated(uint32_t local) {
 // (In addition, alignment checking of the pointer can be omitted if the pointer
 // has been checked in dominating code, but we don't do that yet.)
 
-RegI32 BaseCompiler::popMemory32Access(MemoryAccessDesc* access,
-                                       AccessCheck* check) {
-  check->onlyPointerAlignment =
-      (access->offset() & (access->byteSize() - 1)) == 0;
-
+template <>
+RegI32 BaseCompiler::popConstMemoryAccess<RegI32>(MemoryAccessDesc* access,
+                                                  AccessCheck* check) {
   int32_t addrTemp;
-  if (popConst(&addrTemp)) {
-    uint32_t addr = addrTemp;
+  MOZ_ALWAYS_TRUE(popConst(&addrTemp));
+  uint32_t addr = addrTemp;
 
-    uint32_t offsetGuardLimit =
-        GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
+  uint32_t offsetGuardLimit =
+      GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
 
-    uint64_t ea = uint64_t(addr) + uint64_t(access->offset());
-    uint64_t limit = moduleEnv_.memory->initialLength32() + offsetGuardLimit;
+  // 64-bit offset will be supported later.
+  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
 
+  uint64_t ea = uint64_t(addr) + uint64_t(access->offset());
+  uint64_t limit = moduleEnv_.memory->initialLength32() + offsetGuardLimit;
+
+  check->omitBoundsCheck = ea < limit;
+  check->omitAlignmentCheck = (ea & (access->byteSize() - 1)) == 0;
+
+  // Fold the offset into the pointer if we can, as this is always
+  // beneficial.
+  if (ea <= UINT32_MAX) {
+    addr = uint32_t(ea);
+    access->clearOffset();
+  }
+
+  RegI32 r = needI32();
+  moveImm32(int32_t(addr), r);
+  return r;
+}
+
+template <>
+RegI64 BaseCompiler::popConstMemoryAccess<RegI64>(MemoryAccessDesc* access,
+                                                  AccessCheck* check) {
+  int64_t addrTemp;
+  MOZ_ALWAYS_TRUE(popConst(&addrTemp));
+  uint64_t addr = addrTemp;
+
+  uint32_t offsetGuardLimit =
+      GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
+
+  // 64-bit offset will be supported later.
+  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
+
+  uint64_t ea = addr + uint64_t(access->offset());
+  bool overflow = ea < addr;
+  uint64_t limit = moduleEnv_.memory->initialLength64() + offsetGuardLimit;
+
+  if (!overflow) {
     check->omitBoundsCheck = ea < limit;
     check->omitAlignmentCheck = (ea & (access->byteSize() - 1)) == 0;
 
     // Fold the offset into the pointer if we can, as this is always
     // beneficial.
-
-    if (ea <= UINT32_MAX) {
-      addr = uint32_t(ea);
-      access->clearOffset();
-    }
-
-    RegI32 r = needI32();
-    moveImm32(int32_t(addr), r);
-    return r;
+    addr = uint64_t(ea);
+    access->clearOffset();
   }
 
+  RegI64 r = needI64();
+  moveImm64(int64_t(addr), r);
+  return r;
+}
+
+template <typename RegType>
+RegType BaseCompiler::popMemoryAccess(MemoryAccessDesc* access,
+                                      AccessCheck* check) {
+  check->onlyPointerAlignment =
+      (access->offset() & (access->byteSize() - 1)) == 0;
+
+  // If there's a constant it will have the correct type for RegType.
+  if (hasConst()) {
+    return popConstMemoryAccess<RegType>(access, check);
+  }
+
+  // If there's a local it will have the correct type for RegType.
   uint32_t local;
-  if (peekLocalI32(&local)) {
+  if (peekLocal(&local)) {
     bceCheckLocal(access, check, local);
   }
 
-  return popI32();
+  return pop<RegType>();
+}
+
+// This is temporary, it will disappear once the atomics are all done.
+RegI32 BaseCompiler::popMemory32Access(MemoryAccessDesc* access,
+                                       AccessCheck* check) {
+  return popMemoryAccess<RegI32>(access, check);
 }
 
 #ifdef JS_64BIT
@@ -195,18 +248,105 @@ void BaseCompiler::pushHeapBase() {
 }
 #endif
 
+void BaseCompiler::branchAddNoOverflow(Imm32 offset, RegI32 ptr, Label* ok) {
+  masm.branchAdd32(Assembler::CarryClear, offset, ptr, ok);
+}
+
+void BaseCompiler::branchAddNoOverflow(Imm32 offset, RegI64 ptr, Label* ok) {
+#if defined(JS_64BIT)
+  masm.branchAddPtr(Assembler::CarryClear, offset, Register64(ptr).reg, ok);
+#else
+  masm.branchAdd64(Assembler::CarryClear, offset, ptr, ok);
+#endif
+}
+
+void BaseCompiler::branchTestLowZero(RegI32 ptr, Imm32 mask, Label* ok) {
+  masm.branchTest32(Assembler::Zero, ptr, mask, ok);
+}
+
+void BaseCompiler::branchTestLowZero(RegI64 ptr, Imm32 mask, Label* ok) {
+#ifdef JS_64BIT
+  masm.branchTestPtr(Assembler::Zero, Register64(ptr).reg, mask, ok);
+#else
+  masm.branchTestPtr(Assembler::Zero, ptr.low, mask, ok);
+#endif
+}
+
+void BaseCompiler::boundsCheck4GBOrLargerAccess(RegPtr tls, RegI32 ptr,
+                                                Label* ok) {
+#ifdef JS_64BIT
+  // Extend the value to 64 bits, check the 64-bit value against the 64-bit
+  // bound, then chop back to 32 bits.  On most platform the extending and
+  // chopping are no-ops.  It's important that the value we end up with has
+  // flowed through the Spectre mask
+
+  // Note, ptr and ptr64 are the same register.
+  RegI64 ptr64 = fromI32(ptr);
+
+  // In principle there may be non-zero bits in the upper bits of the
+  // register; clear them.
+#  ifdef RABALDR_ZERO_EXTENDS
+  masm.assertCanonicalInt32(ptr);
+#  else
+  MOZ_CRASH("Platform code needed here");
+#  endif
+
+  boundsCheck4GBOrLargerAccess(tls, ptr64, ok);
+
+  // Restore the value to the canonical form for a 32-bit value in a
+  // 64-bit register and/or the appropriate form for further use in the
+  // indexing instruction.
+#  ifdef RABALDR_ZERO_EXTENDS
+  // The canonical value is zero-extended; we already have that.
+#  else
+  MOZ_CRASH("Platform code needed here");
+#  endif
+#else
+  // No support needed, we have max 2GB heap on 32-bit
+  MOZ_CRASH("No 32-bit support");
+#endif
+}
+
+void BaseCompiler::boundsCheckBelow4GBAccess(RegPtr tls, RegI32 ptr,
+                                             Label* ok) {
+  // If the memory's max size is known to be smaller than 64K pages exactly,
+  // we can use a 32-bit check and avoid extension and wrapping.
+  masm.wasmBoundsCheck32(Assembler::Below, ptr,
+                         Address(tls, offsetof(TlsData, boundsCheckLimit)), ok);
+}
+
+void BaseCompiler::boundsCheck4GBOrLargerAccess(RegPtr tls, RegI64 ptr,
+                                                Label* ok) {
+  // Any Spectre mitigation will appear to update the ptr64 register.
+  masm.wasmBoundsCheck64(Assembler::Below, ptr,
+                         Address(tls, offsetof(TlsData, boundsCheckLimit)), ok);
+}
+
+void BaseCompiler::boundsCheckBelow4GBAccess(RegPtr tls, RegI64 ptr,
+                                             Label* ok) {
+  // The bounds check limit is valid to 64 bits, so there's no sense in doing
+  // anything complicated here.  There may be optimization paths here in the
+  // future and they may differ on 32-bit and 64-bit.
+  boundsCheck4GBOrLargerAccess(tls, ptr, ok);
+}
+
+// RegIndexType is RegI32 for Memory32 and RegI64 for Memory64.
+template <typename RegIndexType>
 void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
                                        AccessCheck* check, RegPtr tls,
-                                       RegI32 ptr) {
+                                       RegIndexType ptr) {
   uint32_t offsetGuardLimit =
       GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
+
+  // 64-bit offset will be supported later.
+  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
 
   // Fold offset if necessary for further computations.
   if (access->offset() >= offsetGuardLimit ||
       (access->isAtomic() && !check->omitAlignmentCheck &&
        !check->onlyPointerAlignment)) {
     Label ok;
-    masm.branchAdd32(Assembler::CarryClear, Imm32(access->offset()), ptr, &ok);
+    branchAddNoOverflow(Imm32(access->offset()), ptr, &ok);
     masm.wasmTrap(Trap::OutOfBounds, bytecodeOffset());
     masm.bind(&ok);
     access->clearOffset();
@@ -219,7 +359,7 @@ void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
     MOZ_ASSERT(check->onlyPointerAlignment);
     // We only care about the low pointer bits here.
     Label ok;
-    masm.branchTest32(Assembler::Zero, ptr, Imm32(access->byteSize() - 1), &ok);
+    branchTestLowZero(ptr, Imm32(access->byteSize() - 1), &ok);
     masm.wasmTrap(Trap::UnalignedAccess, bytecodeOffset());
     masm.bind(&ok);
   }
@@ -241,63 +381,35 @@ void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
   if (!moduleEnv_.hugeMemoryEnabled() && !check->omitBoundsCheck) {
     Label ok;
 #ifdef JS_64BIT
-    // If the bounds check uses the full 64 bits of the bounds check limit,
-    // then the index must be zero-extended to 64 bits before checking and
-    // wrapped back to 32-bits after Spectre masking.  (And it's important
-    // that the value we end up with has flowed through the Spectre mask.)
-    //
-    // If the memory's max size is known to be smaller than 64K pages exactly,
-    // we can use a 32-bit check and avoid extension and wrapping.
+    // The checking depends on how many bits are in the pointer and how many
+    // bits are in the bound.
     if (!moduleEnv_.memory->boundsCheckLimitIs32Bits() &&
         ArrayBufferObject::maxBufferByteLength() >= 0x100000000) {
-      // Note, ptr and ptr64 are the same register.
-      RegI64 ptr64 = fromI32(ptr);
-
-      // In principle there may be non-zero bits in the upper bits of the
-      // register; clear them.
-#  ifdef RABALDR_ZERO_EXTENDS
-      masm.assertCanonicalInt32(ptr);
-#  else
-      MOZ_CRASH("Platform code needed here");
-#  endif
-
-      // Any Spectre mitigation will appear to update the ptr64 register.
-      masm.wasmBoundsCheck64(Assembler::Below, ptr64,
-                             Address(tls, offsetof(TlsData, boundsCheckLimit)),
-                             &ok);
-
-      // Restore the value to the canonical form for a 32-bit value in a
-      // 64-bit register and/or the appropriate form for further use in the
-      // indexing instruction.
-#  ifdef RABALDR_ZERO_EXTENDS
-      // The canonical value is zero-extended; we already have that.
-#  else
-      MOZ_CRASH("Platform code needed here");
-#  endif
+      boundsCheck4GBOrLargerAccess(tls, ptr, &ok);
     } else {
-      masm.wasmBoundsCheck32(Assembler::Below, ptr,
-                             Address(tls, offsetof(TlsData, boundsCheckLimit)),
-                             &ok);
+      boundsCheckBelow4GBAccess(tls, ptr, &ok);
     }
 #else
-    masm.wasmBoundsCheck32(Assembler::Below, ptr,
-                           Address(tls, offsetof(TlsData, boundsCheckLimit)),
-                           &ok);
+    boundsCheckBelow4GBAccess(tls, ptr, &ok);
 #endif
     masm.wasmTrap(Trap::OutOfBounds, bytecodeOffset());
     masm.bind(&ok);
   }
 }
 
+template <typename RegIndexType>
 void BaseCompiler::computeEffectiveAddress(MemoryAccessDesc* access) {
+  // 64-bit offset will be supported later.
+  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
+
   if (access->offset()) {
     Label ok;
-    RegI32 ptr = popI32();
-    masm.branchAdd32(Assembler::CarryClear, Imm32(access->offset()), ptr, &ok);
+    RegIndexType ptr = pop<RegIndexType>();
+    branchAddNoOverflow(Imm32(access->offset()), ptr, &ok);
     masm.wasmTrap(Trap::OutOfBounds, bytecodeOffset());
     masm.bind(&ok);
     access->clearOffset();
-    pushI32(ptr);
+    push(ptr);
   }
 }
 
@@ -332,11 +444,11 @@ RegPtr BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check,
 //
 // Load and store.
 
-// ptr and dest may be the same iff dest is I32.
-// This may destroy ptr even if ptr and dest are not the same.
-void BaseCompiler::load(MemoryAccessDesc* access, AccessCheck* check,
-                        RegPtr tls, RegI32 ptr, AnyReg dest, RegI32 temp) {
-  prepareMemoryAccess(access, check, tls, ptr);
+void BaseCompiler::executeLoad(MemoryAccessDesc* access, AccessCheck* check,
+                               RegPtr tls, RegI32 ptr, AnyReg dest,
+                               RegI32 temp) {
+  // 64-bit offset will be supported later.
+  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
 
 #if defined(JS_CODEGEN_X64)
   MOZ_ASSERT(temp.isInvalid());
@@ -404,11 +516,41 @@ void BaseCompiler::load(MemoryAccessDesc* access, AccessCheck* check,
 #endif
 }
 
-// ptr and src must not be the same register.
-// This may destroy ptr and src.
-void BaseCompiler::store(MemoryAccessDesc* access, AccessCheck* check,
-                         RegPtr tls, RegI32 ptr, AnyReg src, RegI32 temp) {
+// ptr and dest may be the same iff dest is I32.
+// This may destroy ptr even if ptr and dest are not the same.
+void BaseCompiler::load(MemoryAccessDesc* access, AccessCheck* check,
+                        RegPtr tls, RegI32 ptr, AnyReg dest, RegI32 temp) {
   prepareMemoryAccess(access, check, tls, ptr);
+  executeLoad(access, check, tls, ptr, dest, temp);
+}
+
+#ifdef ENABLE_WASM_MEMORY64
+void BaseCompiler::load(MemoryAccessDesc* access, AccessCheck* check,
+                        RegPtr tls, RegI64 ptr, AnyReg dest, RegI64 temp) {
+  prepareMemoryAccess(access, check, tls, ptr);
+
+#  if !defined(JS_64BIT)
+  // On 32-bit systems we have a maximum 2GB heap and bounds checking has
+  // been applied to ensure that the 64-bit pointer is valid.
+  return executeLoad(access, check, tls, RegI32(ptr.low), dest,
+                     maybeFromI64(temp));
+#  elif defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64)
+  // On x64 and arm64 the 32-bit code simply assumes that the high bits of the
+  // 64-bit pointer register are zero and performs a 64-bit add.  Thus the code
+  // generated is the same for the 64-bit and the 32-bit case.
+  return executeLoad(access, check, tls, RegI32(ptr.reg), dest,
+                     maybeFromI64(temp));
+#  else
+  MOZ_CRASH("Missing platform hook");
+#  endif
+}
+#endif
+
+void BaseCompiler::executeStore(MemoryAccessDesc* access, AccessCheck* check,
+                                RegPtr tls, RegI32 ptr, AnyReg src,
+                                RegI32 temp) {
+  // 64-bit offset will be supported later.
+  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
 
   // Emit the store
 #if defined(JS_CODEGEN_X64)
@@ -488,65 +630,93 @@ void BaseCompiler::store(MemoryAccessDesc* access, AccessCheck* check,
 #endif
 }
 
-void BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
-                              ValType type) {
+// ptr and src must not be the same register.
+// This may destroy ptr and src.
+void BaseCompiler::store(MemoryAccessDesc* access, AccessCheck* check,
+                         RegPtr tls, RegI32 ptr, AnyReg src, RegI32 temp) {
+  prepareMemoryAccess(access, check, tls, ptr);
+  executeStore(access, check, tls, ptr, src, temp);
+}
+
+#ifdef ENABLE_WASM_MEMORY64
+void BaseCompiler::store(MemoryAccessDesc* access, AccessCheck* check,
+                         RegPtr tls, RegI64 ptr, AnyReg src, RegI64 temp) {
+  prepareMemoryAccess(access, check, tls, ptr);
+  // See comments in load()
+#  if !defined(JS_64BIT)
+  return executeStore(access, check, tls, RegI32(ptr.low), src,
+                      maybeFromI64(temp));
+#  elif defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64)
+  return executeStore(access, check, tls, RegI32(ptr.reg), src,
+                      maybeFromI64(temp));
+#  else
+  MOZ_CRASH("Missing platform hook");
+#  endif
+}
+#endif
+
+template <typename RegType>
+void BaseCompiler::doLoadCommon(MemoryAccessDesc* access, AccessCheck check,
+                                ValType type) {
   RegPtr tls;
-  RegI32 temp;
+  RegType temp;
 #if defined(JS_CODEGEN_MIPS64)
-  temp = needI32();
+  temp = need<RegType>();
 #endif
 
   switch (type.kind()) {
     case ValType::I32: {
-      RegI32 rp = popMemory32Access(access, &check);
+      RegType rp = popMemoryAccess<RegType>(access, &check);
+      RegI32 rv = needI32();
       tls = maybeLoadTlsForAccess(check);
-      load(access, &check, tls, rp, AnyReg(rp), temp);
-      pushI32(rp);
+      load(access, &check, tls, rp, AnyReg(rv), temp);
+      push(rv);
+      free(rp);
       break;
     }
     case ValType::I64: {
       RegI64 rv;
-      RegI32 rp;
+      RegType rp;
 #ifdef JS_CODEGEN_X86
       rv = specific_.abiReturnRegI64;
       needI64(rv);
-      rp = popMemory32Access(access, &check);
+      rp = popMemoryAccess<RegType>(access, &check);
 #else
-      rp = popMemory32Access(access, &check);
+      rp = popMemoryAccess<RegType>(access, &check);
       rv = needI64();
 #endif
       tls = maybeLoadTlsForAccess(check);
       load(access, &check, tls, rp, AnyReg(rv), temp);
-      pushI64(rv);
-      freeI32(rp);
+      push(rv);
+      free(rp);
       break;
     }
     case ValType::F32: {
-      RegI32 rp = popMemory32Access(access, &check);
+      RegType rp = popMemoryAccess<RegType>(access, &check);
       RegF32 rv = needF32();
       tls = maybeLoadTlsForAccess(check);
       load(access, &check, tls, rp, AnyReg(rv), temp);
-      pushF32(rv);
-      freeI32(rp);
+      push(rv);
+      free(rp);
       break;
     }
     case ValType::F64: {
-      RegI32 rp = popMemory32Access(access, &check);
+      RegType rp = popMemoryAccess<RegType>(access, &check);
       RegF64 rv = needF64();
       tls = maybeLoadTlsForAccess(check);
       load(access, &check, tls, rp, AnyReg(rv), temp);
-      pushF64(rv);
-      freeI32(rp);
+      push(rv);
+      free(rp);
       break;
     }
 #ifdef ENABLE_WASM_SIMD
     case ValType::V128: {
-      RegI32 rp = popMemory32Access(access, &check);
+      RegType rp = popMemoryAccess<RegType>(access, &check);
       RegV128 rv = needV128();
       tls = maybeLoadTlsForAccess(check);
       load(access, &check, tls, rp, AnyReg(rv), temp);
-      pushV128(rv);
-      freeI32(rp);
+      push(rv);
+      free(rp);
       break;
     }
 #endif
@@ -559,59 +729,73 @@ void BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
   maybeFree(temp);
 }
 
-void BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
-                               ValType resultType) {
+void BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
+                              ValType type) {
+  if (isMem32()) {
+    doLoadCommon<RegI32>(access, check, type);
+  } else {
+#ifdef ENABLE_WASM_MEMORY64
+    doLoadCommon<RegI64>(access, check, type);
+#else
+    MOZ_CRASH("Memory64 not enabled / supported on this platform");
+#endif
+  }
+}
+
+template <typename RegType>
+void BaseCompiler::doStoreCommon(MemoryAccessDesc* access, AccessCheck check,
+                                 ValType resultType) {
   RegPtr tls;
-  RegI32 temp;
+  RegType temp;
 #if defined(JS_CODEGEN_MIPS64)
-  temp = needI32();
+  temp = need<RegType>();
 #endif
 
   switch (resultType.kind()) {
     case ValType::I32: {
       RegI32 rv = popI32();
-      RegI32 rp = popMemory32Access(access, &check);
+      RegType rp = popMemoryAccess<RegType>(access, &check);
       tls = maybeLoadTlsForAccess(check);
       store(access, &check, tls, rp, AnyReg(rv), temp);
-      freeI32(rp);
-      freeI32(rv);
+      free(rp);
+      free(rv);
       break;
     }
     case ValType::I64: {
       RegI64 rv = popI64();
-      RegI32 rp = popMemory32Access(access, &check);
+      RegType rp = popMemoryAccess<RegType>(access, &check);
       tls = maybeLoadTlsForAccess(check);
       store(access, &check, tls, rp, AnyReg(rv), temp);
-      freeI32(rp);
-      freeI64(rv);
+      free(rp);
+      free(rv);
       break;
     }
     case ValType::F32: {
       RegF32 rv = popF32();
-      RegI32 rp = popMemory32Access(access, &check);
+      RegType rp = popMemoryAccess<RegType>(access, &check);
       tls = maybeLoadTlsForAccess(check);
       store(access, &check, tls, rp, AnyReg(rv), temp);
-      freeI32(rp);
-      freeF32(rv);
+      free(rp);
+      free(rv);
       break;
     }
     case ValType::F64: {
       RegF64 rv = popF64();
-      RegI32 rp = popMemory32Access(access, &check);
+      RegType rp = popMemoryAccess<RegType>(access, &check);
       tls = maybeLoadTlsForAccess(check);
       store(access, &check, tls, rp, AnyReg(rv), temp);
-      freeI32(rp);
-      freeF64(rv);
+      free(rp);
+      free(rv);
       break;
     }
 #ifdef ENABLE_WASM_SIMD
     case ValType::V128: {
       RegV128 rv = popV128();
-      RegI32 rp = popMemory32Access(access, &check);
+      RegType rp = popMemoryAccess<RegType>(access, &check);
       tls = maybeLoadTlsForAccess(check);
       store(access, &check, tls, rp, AnyReg(rv), temp);
-      freeI32(rp);
-      freeV128(rv);
+      free(rp);
+      free(rv);
       break;
     }
 #endif
@@ -622,6 +806,19 @@ void BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
 
   maybeFree(tls);
   maybeFree(temp);
+}
+
+void BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
+                               ValType type) {
+  if (isMem32()) {
+    doStoreCommon<RegI32>(access, check, type);
+  } else {
+#ifdef ENABLE_WASM_MEMORY64
+    doStoreCommon<RegI64>(access, check, type);
+#else
+    MOZ_CRASH("Memory64 not enabled / supported on this platform");
+#endif
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -641,6 +838,9 @@ void BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
 BaseIndex BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                                   AccessCheck* check,
                                                   RegPtr tls, RegI32 ptr) {
+  // 64-bit offset will be supported later.
+  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
+
   MOZ_ASSERT(needTlsForAccess(*check) == tls.isValid());
   prepareMemoryAccess(access, check, tls, ptr);
   return BaseIndex(HeapReg, ptr, TimesOne, access->offset());
@@ -653,6 +853,9 @@ BaseIndex BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
 Address BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                                 AccessCheck* check, RegPtr tls,
                                                 RegI32 ptr) {
+  // 64-bit offset will be supported later.
+  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
+
   MOZ_ASSERT(needTlsForAccess(*check) == tls.isValid());
   prepareMemoryAccess(access, check, tls, ptr);
   masm.addPtr(Address(tls, offsetof(TlsData, memoryBase)), ptr);
@@ -716,6 +919,7 @@ void BaseCompiler::atomicLoad(MemoryAccessDesc* access, ValType type) {
     return;
   }
 
+  MOZ_ASSERT(isMem32());
   MOZ_ASSERT(type == ValType::I64 && Scalar::byteSize(viewType) == 8);
 
 #if !defined(JS_64BIT)
@@ -723,7 +927,7 @@ void BaseCompiler::atomicLoad(MemoryAccessDesc* access, ValType type) {
   atomic_load64::Allocate(this, &rd, &temp);
 
   AccessCheck check;
-  RegI32 rp = popMemory32Access(access, &check);
+  RegI32 rp = popMemoryAccess<RegI32>(access, &check);
 
 #  ifdef RABALDR_HAS_HEAPREG
   RegPtr tls = maybeLoadTlsForAccess(check);
@@ -752,6 +956,7 @@ void BaseCompiler::atomicStore(MemoryAccessDesc* access, ValType type) {
     return;
   }
 
+  MOZ_ASSERT(isMem32());
   MOZ_ASSERT(type == ValType::I64 && Scalar::byteSize(viewType) == 8);
 
 #ifdef JS_64BIT
@@ -1664,7 +1869,7 @@ bool BaseCompiler::atomicWait(ValType type, MemoryAccessDesc* access,
       RegI32 val = popI32();
 
       MOZ_ASSERT(isMem32());
-      computeEffectiveAddress(access);
+      computeEffectiveAddress<RegI32>(access);
 
       pushI32(val);
       pushI64(timeout);
@@ -1679,7 +1884,7 @@ bool BaseCompiler::atomicWait(ValType type, MemoryAccessDesc* access,
       RegI64 val = popI64();
 
       MOZ_ASSERT(isMem32());
-      computeEffectiveAddress(access);
+      computeEffectiveAddress<RegI32>(access);
 
       pushI64(val);
       pushI64(timeout);
@@ -1701,7 +1906,7 @@ bool BaseCompiler::atomicWake(MemoryAccessDesc* access,
   RegI32 count = popI32();
 
   MOZ_ASSERT(isMem32());
-  computeEffectiveAddress(access);
+  computeEffectiveAddress<RegI32>(access);
 
   pushI32(count);
   return emitInstanceCall(lineOrBytecode, SASigWake);
