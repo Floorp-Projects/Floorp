@@ -33,6 +33,8 @@ const TypeIdDesc& BaseCompiler::funcTypeId() const {
   return *moduleEnv_.funcs[func_.index].typeId;
 }
 
+bool BaseCompiler::usesMemory() const { return moduleEnv_.usesMemory(); }
+
 bool BaseCompiler::usesSharedMemory() const {
   return moduleEnv_.usesSharedMemory();
 }
@@ -51,6 +53,14 @@ uint32_t BaseCompiler::readCallSiteLineOrBytecode() {
 
 BytecodeOffset BaseCompiler::bytecodeOffset() const {
   return iter_.bytecodeOffset();
+}
+
+bool BaseCompiler::isMem32() const {
+  return moduleEnv_.memory->indexType() == IndexType::I32;
+}
+
+bool BaseCompiler::isMem64() const {
+  return moduleEnv_.memory->indexType() == IndexType::I64;
 }
 
 }  // namespace wasm
