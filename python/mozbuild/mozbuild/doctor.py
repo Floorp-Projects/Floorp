@@ -168,6 +168,16 @@ def ssh(**kwargs):
                     "hg.mozilla.org.".format(username)
                 ],
             )
+
+        return DoctorCheck(
+            name="ssh",
+            status=CheckStatus.WARNING,
+            display_text=[
+                "Unexpected output from `ssh hg.mozilla.org`:",
+                proc.stdout,
+            ],
+        )
+
     except subprocess.CalledProcessError:
         return DoctorCheck(
             name="ssh",
