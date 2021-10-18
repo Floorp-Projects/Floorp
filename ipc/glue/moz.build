@@ -161,6 +161,7 @@ UNIFIED_SOURCES += [
     "BrowserProcessSubThread.cpp",
     "CrashReporterClient.cpp",
     "CrashReporterHost.cpp",
+    "Endpoint.cpp",
     "FileDescriptor.cpp",
     "FileDescriptorUtils.cpp",
     "IdleSchedulerChild.cpp",

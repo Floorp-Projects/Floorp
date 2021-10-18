@@ -14,6 +14,7 @@
 #include "chrome/common/ipc_message_utils.h"
 #include "ipc/EnumSerializer.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/Transport.h"
 
@@ -37,6 +38,11 @@ template <>
 struct ParamTraits<Channel::Mode>
     : ContiguousEnumSerializerInclusive<Channel::Mode, Channel::MODE_SERVER,
                                         Channel::MODE_CLIENT> {};
+
+template <>
+struct ParamTraits<IPCMessageStart>
+    : ContiguousEnumSerializer<IPCMessageStart, IPCMessageStart(0),
+                               LastMsgIndex> {};
 
 template <>
 struct ParamTraits<mozilla::ipc::ActorHandle> {
@@ -83,32 +89,35 @@ struct ParamTraits<mozilla::ipc::Endpoint<PFooSide>> {
   }
 };
 
-template <class PFooSide>
-struct ParamTraits<mozilla::ipc::ManagedEndpoint<PFooSide>> {
-  typedef mozilla::ipc::ManagedEndpoint<PFooSide> paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    IPC::WriteParam(aMsg, aParam.mId);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    MOZ_RELEASE_ASSERT(aResult->mId == 0);
-
-    if (!IPC::ReadParam(aMsg, aIter, &aResult->mId)) {
-      return false;
-    }
-    return true;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog) {
-    aLog->append(StringPrintf(L"ManagedEndpoint"));
-  }
-};
-
 }  // namespace IPC
 
 namespace mozilla::ipc {
+
+template <>
+struct IPDLParamTraits<UntypedManagedEndpoint> {
+  using paramType = UntypedManagedEndpoint;
+
+  static void Write(IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam);
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, paramType* aResult);
+};
+
+template <class PFooSide>
+struct IPDLParamTraits<ManagedEndpoint<PFooSide>> {
+  using paramType = ManagedEndpoint<PFooSide>;
+
+  static void Write(IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam) {
+    IPDLParamTraits<UntypedManagedEndpoint>::Write(aMsg, aActor,
+                                                   std::move(aParam));
+  }
+
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, paramType* aResult) {
+    return IPDLParamTraits<UntypedManagedEndpoint>::Read(aMsg, aIter, aActor,
+                                                         aResult);
+  }
+};
+
 template <>
 struct IPDLParamTraits<FileDescriptor> {
   typedef FileDescriptor paramType;
