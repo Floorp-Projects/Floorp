@@ -564,6 +564,8 @@ void CodeGeneratorX64::emitWasmLoad(T* ins) {
   uint32_t offset = mir->access().offset();
   MOZ_ASSERT(offset < masm.wasmMaxOffsetGuardLimit());
 
+  // ptr is a GPR and is either a 32-bit value zero-extended to 64-bit, or a
+  // true 64-bit value.
   const LAllocation* ptr = ins->ptr();
   Operand srcAddr = ptr->isBogus()
                         ? Operand(HeapReg, offset)
