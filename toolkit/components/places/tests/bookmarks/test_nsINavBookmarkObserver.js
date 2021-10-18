@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests that each nsINavBookmarksObserver method gets the correct input.
+// Tests that each bookmark event gets the correct input.
 
 var gUnfiledFolderId;
 
@@ -35,34 +35,9 @@ var gBookmarksObserver = {
     }
   },
 
-  validate(aMethodName, aArguments) {
-    Assert.equal(this.expected[0].name, aMethodName);
-
-    let args = this.expected.shift().args;
-    Assert.equal(aArguments.length, args.length);
-    for (let i = 0; i < aArguments.length; i++) {
-      Assert.ok(
-        args[i].check(aArguments[i]),
-        aMethodName + "(args[" + i + "]: " + args[i].name + ")"
-      );
-    }
-
-    if (this.expected.length === 0) {
-      this.deferred.resolve();
-    }
-  },
-
   handlePlacesEvents(events) {
     this.validateEvents(events);
   },
-
-  // nsINavBookmarkObserver
-  onItemChanged() {
-    return this.validate("onItemChanged", arguments);
-  },
-
-  // nsISupports
-  QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
 };
 
 var gBookmarkSkipObserver = {
@@ -88,29 +63,12 @@ var gBookmarkSkipObserver = {
     }
   },
 
-  validate(aMethodName) {
-    Assert.equal(this.expected.shift(), aMethodName);
-    if (this.expected.length === 0) {
-      this.deferred.resolve();
-    }
-  },
-
   handlePlacesEvents(events) {
     this.validateEvents(events);
   },
-
-  // nsINavBookmarkObserver
-  onItemChanged() {
-    return this.validate("onItemChanged", arguments);
-  },
-
-  // nsISupports
-  QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
 };
 
 add_task(async function setup() {
-  PlacesUtils.bookmarks.addObserver(gBookmarksObserver);
-  PlacesUtils.bookmarks.addObserver(gBookmarkSkipObserver);
   gUnfiledFolderId = await PlacesUtils.promiseItemId(
     PlacesUtils.bookmarks.unfiledGuid
   );
@@ -125,6 +83,7 @@ add_task(async function setup() {
       "bookmark-added",
       "bookmark-removed",
       "bookmark-moved",
+      "bookmark-tags-changed",
       "bookmark-title-changed",
     ],
     gBookmarksObserver.handlePlacesEvents
@@ -134,6 +93,7 @@ add_task(async function setup() {
       "bookmark-added",
       "bookmark-removed",
       "bookmark-moved",
+      "bookmark-tags-changed",
       "bookmark-title-changed",
     ],
     gBookmarkSkipObserver.handlePlacesEvents
@@ -268,7 +228,7 @@ add_task(async function bookmarkItemAdded_folder() {
   await promise;
 });
 
-add_task(async function onItemChanged_title_bookmark() {
+add_task(async function bookmarkTitleChanged() {
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     index: 0,
@@ -304,7 +264,7 @@ add_task(async function onItemChanged_title_bookmark() {
   await promise;
 });
 
-add_task(async function onItemChanged_tags_bookmark() {
+add_task(async function bookmarkTagsChanged() {
   let bm = await PlacesUtils.bookmarks.fetch({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     index: 0,
@@ -312,7 +272,10 @@ add_task(async function onItemChanged_tags_bookmark() {
   let uri = Services.io.newURI(bm.url.href);
   const TAG = "tag";
   let promise = Promise.all([
-    gBookmarkSkipObserver.setup(["onItemChanged", "onItemChanged"]),
+    gBookmarkSkipObserver.setup([
+      "bookmark-tags-changed",
+      "bookmark-tags-changed",
+    ]),
     gBookmarksObserver.setup([
       {
         eventType: "bookmark-added", // This is the tag folder.
@@ -371,18 +334,13 @@ add_task(async function onItemChanged_tags_bookmark() {
         ],
       },
       {
-        name: "onItemChanged",
+        eventType: "bookmark-tags-changed",
         args: [
-          { name: "itemId", check: v => typeof v == "number" && v > 0 },
-          { name: "property", check: v => v === "tags" },
-          { name: "isAnno", check: v => v === false },
-          { name: "newValue", check: v => v === "" },
-          { name: "lastModified", check: v => typeof v == "number" && v > 0 },
+          { name: "id", check: v => typeof v == "number" && v > 0 },
           {
             name: "itemType",
             check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK,
           },
-          { name: "parentId", check: v => v === gUnfiledFolderId },
           {
             name: "guid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
@@ -391,11 +349,15 @@ add_task(async function onItemChanged_tags_bookmark() {
             name: "parentGuid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
           },
-          { name: "oldValue", check: v => typeof v == "string" },
+          { name: "lastModified", check: v => typeof v == "number" && v > 0 },
           {
             name: "source",
             check: v =>
               Object.values(PlacesUtils.bookmarks.SOURCES).includes(v),
+          },
+          {
+            name: "isTagging",
+            check: v => v === false,
           },
         ],
       },
@@ -425,20 +387,14 @@ add_task(async function onItemChanged_tags_bookmark() {
           },
         ],
       },
-
       {
-        name: "onItemChanged",
+        eventType: "bookmark-tags-changed",
         args: [
-          { name: "itemId", check: v => typeof v == "number" && v > 0 },
-          { name: "property", check: v => v === "tags" },
-          { name: "isAnno", check: v => v === false },
-          { name: "newValue", check: v => v === "" },
-          { name: "lastModified", check: v => typeof v == "number" && v > 0 },
+          { name: "id", check: v => typeof v == "number" && v > 0 },
           {
             name: "itemType",
             check: v => v === PlacesUtils.bookmarks.TYPE_BOOKMARK,
           },
-          { name: "parentId", check: v => v === gUnfiledFolderId },
           {
             name: "guid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
@@ -447,11 +403,15 @@ add_task(async function onItemChanged_tags_bookmark() {
             name: "parentGuid",
             check: v => typeof v == "string" && PlacesUtils.isValidGuid(v),
           },
-          { name: "oldValue", check: v => typeof v == "string" },
+          { name: "lastModified", check: v => typeof v == "number" && v > 0 },
           {
             name: "source",
             check: v =>
               Object.values(PlacesUtils.bookmarks.SOURCES).includes(v),
+          },
+          {
+            name: "isTagging",
+            check: v => v === false,
           },
         ],
       },
@@ -952,14 +912,24 @@ add_task(async function bookmarkItemRemoved_folder_recursive() {
 });
 
 add_task(function cleanup() {
-  PlacesUtils.bookmarks.removeObserver(gBookmarksObserver);
-  PlacesUtils.bookmarks.removeObserver(gBookmarkSkipObserver);
   PlacesUtils.observers.removeListener(
-    ["bookmark-added"],
+    [
+      "bookmark-added",
+      "bookmark-removed",
+      "bookmark-moved",
+      "bookmark-tags-changed",
+      "bookmark-title-changed",
+    ],
     gBookmarksObserver.handlePlacesEvents
   );
   PlacesUtils.observers.removeListener(
-    ["bookmark-added"],
+    [
+      "bookmark-added",
+      "bookmark-removed",
+      "bookmark-moved",
+      "bookmark-tags-changed",
+      "bookmark-title-changed",
+    ],
     gBookmarkSkipObserver.handlePlacesEvents
   );
 });
