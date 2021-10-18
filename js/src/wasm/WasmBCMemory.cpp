@@ -767,6 +767,7 @@ void BaseCompiler::atomicStore(MemoryAccessDesc* access, ValType type) {
 
 void BaseCompiler::atomicRMW(MemoryAccessDesc* access, ValType type,
                              AtomicOp op) {
+  MOZ_ASSERT(isMem32());
   Scalar::Type viewType = access->type();
   if (Scalar::byteSize(viewType) <= 4) {
     atomicRMW32(access, type, op);
@@ -1100,6 +1101,7 @@ void BaseCompiler::atomicRMW64(MemoryAccessDesc* access, ValType type,
 // Atomic exchange (also used for atomic store in some cases).
 
 void BaseCompiler::atomicXchg(MemoryAccessDesc* access, ValType type) {
+  MOZ_ASSERT(isMem32());
   Scalar::Type viewType = access->type();
   if (Scalar::byteSize(viewType) <= 4) {
     atomicXchg32(access, type);
@@ -1357,6 +1359,7 @@ void BaseCompiler::atomicXchg64(MemoryAccessDesc* access,
 // Atomic compare-exchange.
 
 void BaseCompiler::atomicCmpXchg(MemoryAccessDesc* access, ValType type) {
+  MOZ_ASSERT(isMem32());
   Scalar::Type viewType = access->type();
   if (Scalar::byteSize(viewType) <= 4) {
     atomicCmpXchg32(access, type);
@@ -1660,6 +1663,7 @@ bool BaseCompiler::atomicWait(ValType type, MemoryAccessDesc* access,
       RegI64 timeout = popI64();
       RegI32 val = popI32();
 
+      MOZ_ASSERT(isMem32());
       computeEffectiveAddress(access);
 
       pushI32(val);
@@ -1674,6 +1678,7 @@ bool BaseCompiler::atomicWait(ValType type, MemoryAccessDesc* access,
       RegI64 timeout = popI64();
       RegI64 val = popI64();
 
+      MOZ_ASSERT(isMem32());
       computeEffectiveAddress(access);
 
       pushI64(val);
@@ -1695,6 +1700,7 @@ bool BaseCompiler::atomicWake(MemoryAccessDesc* access,
                               uint32_t lineOrBytecode) {
   RegI32 count = popI32();
 
+  MOZ_ASSERT(isMem32());
   computeEffectiveAddress(access);
 
   pushI32(count);
