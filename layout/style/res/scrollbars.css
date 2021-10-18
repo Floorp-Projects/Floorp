@@ -31,6 +31,9 @@ scrollbar[root="true"] {
     pointer-events: none;
     opacity: 0;
   }
+  scrollcorner {
+    pointer-events: none;
+  }
 }
 
 slider {
