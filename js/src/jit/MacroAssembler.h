@@ -1549,6 +1549,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchNeg32(Condition cond, Register reg,
                           Label* label) PER_SHARED_ARCH;
 
+  inline void branchAdd64(Condition cond, Imm32 imm, Register64 dest,
+                          Label* label) DEFINED_ON(x86, arm);
+
   template <typename T>
   inline void branchAddPtr(Condition cond, T src, Register dest,
                            Label* label) PER_SHARED_ARCH;
@@ -3641,7 +3644,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   std::pair<CodeOffset, uint32_t> wasmReserveStackChecked(
       uint32_t amount, wasm::BytecodeOffset trapOffset);
 
-  // Emit a bounds check against the wasm heap limit, jumping to 'label' if
+  // Emit a bounds check against the wasm heap limit, jumping to 'ok' if
   // 'cond' holds. If JitOptions.spectreMaskIndex is true, in speculative
   // executions 'index' is saturated in-place to 'boundsCheckLimit'.
   //
@@ -3651,20 +3654,20 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // limited to something much larger.
 
   void wasmBoundsCheck32(Condition cond, Register index,
-                         Register boundsCheckLimit, Label* label)
+                         Register boundsCheckLimit, Label* ok)
       DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 
   void wasmBoundsCheck32(Condition cond, Register index,
-                         Address boundsCheckLimit, Label* label)
+                         Address boundsCheckLimit, Label* ok)
       DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 
   void wasmBoundsCheck64(Condition cond, Register64 index,
-                         Register64 boundsCheckLimit, Label* label)
-      DEFINED_ON(arm64, mips64, x64);
+                         Register64 boundsCheckLimit, Label* ok)
+      DEFINED_ON(arm64, mips64, x64, x86, arm);
 
   void wasmBoundsCheck64(Condition cond, Register64 index,
-                         Address boundsCheckLimit, Label* label)
-      DEFINED_ON(arm64, mips64, x64);
+                         Address boundsCheckLimit, Label* ok)
+      DEFINED_ON(arm64, mips64, x64, x86, arm);
 
   // Each wasm load/store instruction appends its own wasm::Trap::OutOfBounds.
   void wasmLoad(const wasm::MemoryAccessDesc& access, Operand srcAddr,
