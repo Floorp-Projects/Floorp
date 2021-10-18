@@ -3556,7 +3556,7 @@ static bool EmitWait(FunctionCompiler& f, ValType type, uint32_t byteSize) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
   const SymbolicAddressSignature& callee =
-      type == ValType::I32 ? SASigWaitI32 : SASigWaitI64;
+      type == ValType::I32 ? SASigWaitI32M32 : SASigWaitI64M32;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -3615,7 +3615,7 @@ static bool EmitFence(FunctionCompiler& f) {
 static bool EmitWake(FunctionCompiler& f) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  const SymbolicAddressSignature& callee = SASigWake;
+  const SymbolicAddressSignature& callee = SASigWakeM32;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;

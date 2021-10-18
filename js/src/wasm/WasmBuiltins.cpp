@@ -122,18 +122,34 @@ const SymbolicAddressSignature SASigMemorySizeM32 = {
     SymbolicAddress::MemorySizeM32, _I32, _Infallible, 1, {_PTR, _END}};
 const SymbolicAddressSignature SASigMemorySizeM64 = {
     SymbolicAddress::MemorySizeM64, _I64, _Infallible, 1, {_PTR, _END}};
-const SymbolicAddressSignature SASigWaitI32 = {SymbolicAddress::WaitI32,
-                                               _I32,
-                                               _FailOnNegI32,
-                                               4,
-                                               {_PTR, _I32, _I32, _I64, _END}};
-const SymbolicAddressSignature SASigWaitI64 = {SymbolicAddress::WaitI64,
-                                               _I32,
-                                               _FailOnNegI32,
-                                               4,
-                                               {_PTR, _I32, _I64, _I64, _END}};
-const SymbolicAddressSignature SASigWake = {
-    SymbolicAddress::Wake, _I32, _FailOnNegI32, 3, {_PTR, _I32, _I32, _END}};
+const SymbolicAddressSignature SASigWaitI32M32 = {
+    SymbolicAddress::WaitI32M32,
+    _I32,
+    _FailOnNegI32,
+    4,
+    {_PTR, _I32, _I32, _I64, _END}};
+const SymbolicAddressSignature SASigWaitI32M64 = {
+    SymbolicAddress::WaitI32M64,
+    _I32,
+    _FailOnNegI32,
+    4,
+    {_PTR, _I64, _I32, _I64, _END}};
+const SymbolicAddressSignature SASigWaitI64M32 = {
+    SymbolicAddress::WaitI64M32,
+    _I32,
+    _FailOnNegI32,
+    4,
+    {_PTR, _I32, _I64, _I64, _END}};
+const SymbolicAddressSignature SASigWaitI64M64 = {
+    SymbolicAddress::WaitI64M64,
+    _I32,
+    _FailOnNegI32,
+    4,
+    {_PTR, _I64, _I64, _I64, _END}};
+const SymbolicAddressSignature SASigWakeM32 = {
+    SymbolicAddress::WakeM32, _I32, _FailOnNegI32, 3, {_PTR, _I32, _I32, _END}};
+const SymbolicAddressSignature SASigWakeM64 = {
+    SymbolicAddress::WakeM64, _I32, _FailOnNegI32, 3, {_PTR, _I64, _I32, _END}};
 const SymbolicAddressSignature SASigMemCopyM32 = {
     SymbolicAddress::MemCopyM32,
     _VOID,
@@ -1129,18 +1145,30 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_Int64_General;
       MOZ_ASSERT(*abiType == ToABIType(SASigMemorySizeM64));
       return FuncCast(Instance::memorySize_m64, *abiType);
-    case SymbolicAddress::WaitI32:
+    case SymbolicAddress::WaitI32M32:
       *abiType = Args_Int32_GeneralInt32Int32Int64;
-      MOZ_ASSERT(*abiType == ToABIType(SASigWaitI32));
-      return FuncCast(Instance::wait_i32, *abiType);
-    case SymbolicAddress::WaitI64:
+      MOZ_ASSERT(*abiType == ToABIType(SASigWaitI32M32));
+      return FuncCast(Instance::wait_i32_m32, *abiType);
+    case SymbolicAddress::WaitI32M64:
+      *abiType = Args_Int32_GeneralInt64Int32Int64;
+      MOZ_ASSERT(*abiType == ToABIType(SASigWaitI32M64));
+      return FuncCast(Instance::wait_i32_m64, *abiType);
+    case SymbolicAddress::WaitI64M32:
       *abiType = Args_Int32_GeneralInt32Int64Int64;
-      MOZ_ASSERT(*abiType == ToABIType(SASigWaitI64));
-      return FuncCast(Instance::wait_i64, *abiType);
-    case SymbolicAddress::Wake:
+      MOZ_ASSERT(*abiType == ToABIType(SASigWaitI64M32));
+      return FuncCast(Instance::wait_i64_m32, *abiType);
+    case SymbolicAddress::WaitI64M64:
+      *abiType = Args_Int32_GeneralInt64Int64Int64;
+      MOZ_ASSERT(*abiType == ToABIType(SASigWaitI64M64));
+      return FuncCast(Instance::wait_i64_m64, *abiType);
+    case SymbolicAddress::WakeM32:
       *abiType = Args_Int32_GeneralInt32Int32;
-      MOZ_ASSERT(*abiType == ToABIType(SASigWake));
-      return FuncCast(Instance::wake, *abiType);
+      MOZ_ASSERT(*abiType == ToABIType(SASigWakeM32));
+      return FuncCast(Instance::wake_m32, *abiType);
+    case SymbolicAddress::WakeM64:
+      *abiType = Args_Int32_GeneralInt64Int32;
+      MOZ_ASSERT(*abiType == ToABIType(SASigWakeM64));
+      return FuncCast(Instance::wake_m64, *abiType);
     case SymbolicAddress::MemCopyM32:
       *abiType = Args_Int32_GeneralInt32Int32Int32General;
       MOZ_ASSERT(*abiType == ToABIType(SASigMemCopyM32));
@@ -1388,9 +1416,12 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::MemoryGrowM64:
     case SymbolicAddress::MemorySizeM32:
     case SymbolicAddress::MemorySizeM64:
-    case SymbolicAddress::WaitI32:
-    case SymbolicAddress::WaitI64:
-    case SymbolicAddress::Wake:
+    case SymbolicAddress::WaitI32M32:
+    case SymbolicAddress::WaitI32M64:
+    case SymbolicAddress::WaitI64M32:
+    case SymbolicAddress::WaitI64M64:
+    case SymbolicAddress::WakeM32:
+    case SymbolicAddress::WakeM64:
     case SymbolicAddress::CoerceInPlace_JitEntry:
     case SymbolicAddress::ReportV128JSCall:
     case SymbolicAddress::MemCopyM32:

@@ -242,11 +242,18 @@ class Instance {
                            uint32_t srcOffset, uint32_t len, uint32_t segIndex,
                            uint32_t tableIndex);
   static int32_t elemDrop(Instance* instance, uint32_t segIndex);
-  static int32_t wait_i32(Instance* instance, uint32_t byteOffset,
-                          int32_t value, int64_t timeout);
-  static int32_t wait_i64(Instance* instance, uint32_t byteOffset,
-                          int64_t value, int64_t timeout);
-  static int32_t wake(Instance* instance, uint32_t byteOffset, int32_t count);
+  static int32_t wait_i32_m32(Instance* instance, uint32_t byteOffset,
+                              int32_t value, int64_t timeout);
+  static int32_t wait_i32_m64(Instance* instance, uint64_t byteOffset,
+                              int32_t value, int64_t timeout);
+  static int32_t wait_i64_m32(Instance* instance, uint32_t byteOffset,
+                              int64_t value, int64_t timeout);
+  static int32_t wait_i64_m64(Instance* instance, uint64_t byteOffset,
+                              int64_t value, int64_t timeout);
+  static int32_t wake_m32(Instance* instance, uint32_t byteOffset,
+                          int32_t count);
+  static int32_t wake_m64(Instance* instance, uint64_t byteOffset,
+                          int32_t count);
   static void* refFunc(Instance* instance, uint32_t funcIndex);
   static void preBarrierFiltering(Instance* instance, gc::Cell** location);
   static void postBarrier(Instance* instance, gc::Cell** location);
