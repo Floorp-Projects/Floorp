@@ -15,7 +15,9 @@ if (scriptArgs[0] == '--function' || scriptArgs[0] == '-f') {
 }
 
 var typeInfo_filename = scriptArgs[0] || "typeInfo.txt";
-var callgraphOut_filename = scriptArgs[1] || "callgraph.txt";
+var callgraphOut_filename = scriptArgs[1] || "rawcalls.txt";
+var batch = (scriptArgs[2]|0) || 1;
+var numBatches = (scriptArgs[3]|0) || 1;
 
 var origOut = os.file.redirect(callgraphOut_filename);
 
@@ -388,7 +390,10 @@ function process(functionName, functionBodies)
         printOnce(`D ${functionId("(js-code)")} ${functionId(functionName)}`);
 }
 
-for (var nameIndex = minStream; nameIndex <= maxStream; nameIndex++) {
+var start = batchStart(batch, numBatches, minStream, maxStream);
+var end = batchLast(batch, numBatches, minStream, maxStream);
+
+for (var nameIndex = start; nameIndex <= end; nameIndex++) {
     var name = xdb.read_key(nameIndex);
     var data = xdb.read_entry(name);
     process(name.readString(), JSON.parse(data.readString()));

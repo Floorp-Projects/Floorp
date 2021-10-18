@@ -14,23 +14,25 @@ import argparse
 import os
 import subprocess
 import sys
-import re
 
 try:
     from shlex import quote
 except ImportError:
     from pipes import quote
 
-# Python 2/3 version independence polyfills
 
-anystring_t = str if sys.version_info[0] > 2 else basestring
+def execfile(thefile, globals):
+    exec(compile(open(thefile).read(), filename=thefile, mode="exec"), globals)
 
-try:
-    execfile
-except Exception:
 
-    def execfile(thefile, globals):
-        exec(compile(open(thefile).read(), filename=thefile, mode="exec"), globals)
+# Label a string as an output.
+class Output(str):
+    pass
+
+
+# Label a string as a pattern for multiple inputs.
+class MultiInput(str):
+    pass
 
 
 def env(config):
@@ -45,19 +47,28 @@ def env(config):
 
 
 def fill(command, config):
-    try:
-        return tuple(s % config for s in command)
-    except Exception:
-        print("Substitution failed:")
-        problems = []
-        for fragment in command:
-            try:
-                fragment % config
-            except Exception:
-                problems.append(fragment)
-        raise Exception(
-            "\n".join(["Substitution failed:"] + ["  %s" % s for s in problems])
-        )
+    filled = []
+    for s in command:
+        try:
+            rep = s.format(**config)
+        except KeyError:
+            print("Substitution failed: %s" % s)
+            filled = None
+            break
+
+        if isinstance(s, Output):
+            filled.append(Output(rep))
+        elif isinstance(s, MultiInput):
+            N = int(config["jobs"])
+            for i in range(1, N + 1):
+                filled.append(rep.format(i=i, n=N))
+        else:
+            filled.append(rep)
+
+    if filled is None:
+        raise Exception("substitution failure")
+
+    return tuple(filled)
 
 
 def print_command(command, outfile=None, env=None):
@@ -85,172 +96,215 @@ def print_command(command, outfile=None, env=None):
 
     print(output)
 
+JOBS = {
+    'dbs': {
+        'command': [
+            '{analysis_scriptdir}/run_complete',
+            '--foreground',
+            '--no-logs',
+            '--build-root={objdir}',
+            '--wrap-dir={sixgill}/scripts/wrap_gcc',
+            '--work-dir=work',
+            '-b', '{sixgill_bin}',
+            '--buildcommand={buildcommand}',
+            '.'
+        ],
+        'outputs': []
+    },
 
-def generate_hazards(config, outfilename):
-    jobs = []
-    for i in range(int(config["jobs"])):
-        command = fill(
-            (
-                "%(js)s",
-                "%(analysis_scriptdir)s/analyzeRoots.js",
-                "%(gcFunctions_list)s",
-                "%(gcEdges)s",
-                "%(limitedFunctions_list)s",
-                "%(gcTypes)s",
-                "%(typeInfo)s",
-                str(i + 1),
-                "%(jobs)s",
-                "tmp.%s" % (i + 1,),
-            ),
-            config,
-        )
-        outfile = "rootingHazards.%s" % (i + 1,)
-        output = open(outfile, "w")
-        if config["verbose"]:
-            print_command(command, outfile=outfile, env=env(config))
-        jobs.append((command, Popen(command, stdout=output, env=env(config))))
+    'list-dbs': {
+        'command': ['ls', '-l']
+    },
+
+    'rawcalls': {
+        'command': [
+            '{js}',
+            '{analysis_scriptdir}/computeCallgraph.js',
+            '{typeInfo}',
+            Output('rawcalls'),
+            '{i}', '{n}'
+        ],
+        'multi-output': True,
+        'outputs': ['rawcalls.{i}.of.{n}']
+    },
+
+    'gcFunctions': {
+        'command': [
+            '{js}', '{analysis_scriptdir}/computeGCFunctions.js', MultiInput('{rawcalls}'),
+            '--outputs',
+            Output('callgraph'),
+            Output('gcFunctions'),
+            Output('gcFunctions_list'),
+            Output('gcEdges'),
+            Output('limitedFunctions_list')
+        ],
+        'outputs': [
+            'callgraph.txt',
+            'gcFunctions.txt',
+            'gcFunctions.lst',
+            'gcEdges.txt',
+            'limitedFunctions.lst'
+        ],
+    },
+
+    'gcTypes': {
+        'command': [
+            '{js}', '{analysis_scriptdir}/computeGCTypes.js',
+            Output('gcTypes'), Output('typeInfo')
+        ],
+        'outputs': ['gcTypes.txt', 'typeInfo.txt']
+    },
+
+    'allFunctions': {
+        'command': ['{sixgill_bin}/xdbkeys', 'src_body.xdb'],
+        'redirect-output': 'allFunctions.txt'
+    },
+
+    'hazards': {
+        'command': [
+            '{js}',
+            '{analysis_scriptdir}/analyzeRoots.js',
+            '{gcFunctions_list}',
+            '{gcEdges}',
+            '{limitedFunctions_list}',
+            '{gcTypes}',
+            '{typeInfo}',
+            '{i}', '{n}',
+            'tmp.{i}.of.{n}'
+        ],
+        'multi-output': True,
+        'redirect-output': 'rootingHazards.{i}.of.{n}'
+    },
+
+    'gather-hazards': {
+        'command': ['cat', MultiInput('{hazards}')],
+        'redirect-output': 'rootingHazards.txt'
+    },
+
+    'explain': {
+        'command': [
+            sys.executable,
+            '{analysis_scriptdir}/explain.py',
+            '{gather-hazards}',
+            '{gcFunctions}',
+            Output('explained_hazards'), Output('unnecessary'), Output('refs')
+        ],
+        'outputs': ['hazards.txt', 'unnecessary.txt', 'refs.txt']
+    },
+
+    'heapwrites': {
+        'command': ['{js}', '{analysis_scriptdir}/analyzeHeapWrites.js'],
+        'redirect-output': 'heapWriteHazards.txt'
+    }
+}
+
+
+# Generator of (i, j, item) tuples:
+#  - i is just the index of the yielded tuple (a la enumerate())
+#  - j is the index of the item in the command list
+#  - item is command[j]
+def out_indexes(command):
+    i = 0
+    for (j, fragment) in enumerate(command):
+        if isinstance(fragment, Output):
+            yield (i, j, fragment)
+            i += 1
+
+
+def run_job(name, config):
+    job = JOBS[name]
+    outs = job.get("outputs") or job.get("redirect-output")
+    print("Running " + name + " to generate " + str(outs))
+    if "function" in job:
+        job["function"](config, job["redirect-output"])
+        return
+
+    N = int(config["jobs"]) if job.get("multi-output") else 1
+    config["n"] = N
+    jobs = {}
+    for i in range(1, N + 1):
+        config["i"] = i
+        cmd = fill(job["command"], config)
+        info = spawn_command(cmd, job, name, config)
+        jobs[info["proc"].pid] = info
 
     final_status = 0
     while jobs:
         pid, status = os.wait()
-        jobs = [job for job in jobs if job[1].pid != pid]
         final_status = final_status or status
+        info = jobs[pid]
+        del jobs[pid]
+        if "redirect" in info:
+            info["redirect"].close()
 
-    if final_status:
-        raise subprocess.CalledProcessError(final_status, "analyzeRoots.js")
-
-    with open(outfilename, "w") as output:
-        command = ["cat"] + [
-            "rootingHazards.%s" % (i + 1,) for i in range(int(config["jobs"]))
-        ]
-        if config["verbose"]:
-            print_command(command, outfile=outfilename)
-        subprocess.call(command, stdout=output)
-
-
-JOBS = {
-    "dbs": (
-        (
-            "%(analysis_scriptdir)s/run_complete",
-            "--foreground",
-            "--no-logs",
-            "--build-root=%(objdir)s",
-            "--wrap-dir=%(sixgill)s/scripts/wrap_gcc",
-            "--work-dir=work",
-            "-b",
-            "%(sixgill_bin)s",
-            "--buildcommand=%(buildcommand)s",
-            ".",
-        ),
-        (),
-    ),
-    "list-dbs": (("ls", "-l"), ()),
-    "callgraph": (
-        (
-            "%(js)s",
-            "%(analysis_scriptdir)s/computeCallgraph.js",
-            "%(typeInfo)s",
-            "[callgraph]",
-        ),
-        ("callgraph.txt",),
-    ),
-    "gcFunctions": (
-        (
-            "%(js)s",
-            "%(analysis_scriptdir)s/computeGCFunctions.js",
-            "%(callgraph)s",
-            "[gcFunctions]",
-            "[gcFunctions_list]",
-            "[gcEdges]",
-            "[limitedFunctions_list]",
-        ),
-        ("gcFunctions.txt", "gcFunctions.lst", "gcEdges.txt", "limitedFunctions.lst"),
-    ),
-    "gcTypes": (
-        (
-            "%(js)s",
-            "%(analysis_scriptdir)s/computeGCTypes.js",
-            "[gcTypes]",
-            "[typeInfo]",
-        ),
-        ("gcTypes.txt", "typeInfo.txt"),
-    ),
-    "allFunctions": (
-        (
-            "%(sixgill_bin)s/xdbkeys",
-            "src_body.xdb",
-        ),
-        "allFunctions.txt",
-    ),
-    "hazards": (generate_hazards, "rootingHazards.txt"),
-    "explain": (
-        (
-            sys.executable,
-            "%(analysis_scriptdir)s/explain.py",
-            "%(hazards)s",
-            "%(gcFunctions)s",
-            "[explained_hazards]",
-            "[unnecessary]",
-            "[refs]",
-        ),
-        ("hazards.txt", "unnecessary.txt", "refs.txt"),
-    ),
-    "heapwrites": (
-        ("%(js)s", "%(analysis_scriptdir)s/analyzeHeapWrites.js"),
-        "heapWriteHazards.txt",
-    ),
-}
-
-
-def out_indexes(command):
-    for i in range(len(command)):
-        m = re.match(r"^\[(.*)\]$", command[i])
-        if m:
-            yield (i, m.group(1))
-
-
-def run_job(name, config):
-    cmdspec, outfiles = JOBS[name]
-    print("Running " + name + " to generate " + str(outfiles))
-    if hasattr(cmdspec, "__call__"):
-        cmdspec(config, outfiles)
-    else:
-        temp_map = {}
-        cmdspec = fill(cmdspec, config)
-        if isinstance(outfiles, anystring_t):
-            stdout_filename = "%s.tmp" % name
-            temp_map[stdout_filename] = outfiles
-            if config["verbose"]:
-                print_command(cmdspec, outfile=outfiles, env=env(config))
-        else:
-            stdout_filename = None
-            pc = list(cmdspec)
-            outfile = 0
-            for (i, name) in out_indexes(cmdspec):
-                pc[i] = outfiles[outfile]
-                outfile += 1
-            if config["verbose"]:
-                print_command(pc, env=env(config))
-
-        command = list(cmdspec)
-        outfile = 0
-        for (i, name) in out_indexes(cmdspec):
-            command[i] = "%s.tmp" % name
-            temp_map[command[i]] = outfiles[outfile]
-            outfile += 1
-
-        sys.stdout.flush()
-        if stdout_filename is None:
-            subprocess.check_call(command, env=env(config))
-        else:
-            with open(stdout_filename, "w") as output:
-                subprocess.check_call(command, stdout=output, env=env(config))
-        for (temp, final) in temp_map.items():
+        # Rename the temporary files to their final names.
+        for (temp, final) in info["rename_map"].items():
             try:
+                if config["verbose"]:
+                    print("Renaming %s -> %s" % (temp, final))
                 os.rename(temp, final)
             except OSError:
                 print("Error renaming %s -> %s" % (temp, final))
                 raise
+
+    if final_status != 0:
+        raise Exception("job {} returned status {}".format(name, final_status))
+
+
+def spawn_command(cmdspec, job, name, config):
+    rename_map = {}
+
+    if "redirect-output" in job:
+        stdout_filename = "{}.tmp{}".format(name, config.get("i", ""))
+        final_outfile = job["redirect-output"].format(**config)
+        rename_map[stdout_filename] = final_outfile
+        command = cmdspec
+        if config["verbose"]:
+            print_command(cmdspec, outfile=final_outfile, env=env(config))
+    else:
+        outfiles = job["outputs"]
+        outfiles = fill(outfiles, config)
+        stdout_filename = None
+
+        # To print the supposedly-executed command, replace the Outputs in the
+        # command with final output file names. (The actual command will be
+        # using temporary files that get renamed at the end.)
+        if config["verbose"]:
+            pc = list(cmdspec)
+            for (i, j, name) in out_indexes(cmdspec):
+                pc[j] = outfiles[i]
+            print_command(pc, env=env(config))
+
+        # Replace the Outputs with temporary filenames, and record a mapping
+        # from those temp names to their actual final names that will be used
+        # if the command succeeds.
+        command = list(cmdspec)
+        for (i, j, name) in out_indexes(cmdspec):
+            command[j] = "{}.tmp{}".format(name, config.get("i", ""))
+            rename_map[command[j]] = outfiles[i]
+
+    sys.stdout.flush()
+    info = {"rename_map": rename_map}
+    if stdout_filename:
+        info["redirect"] = open(stdout_filename, "w")
+        info["proc"] = Popen(command, stdout=info["redirect"], env=env(config))
+    else:
+        info["proc"] = Popen(command, env=env(config))
+
+    if config["verbose"]:
+        print("Spawned process {}".format(info["proc"].pid))
+
+    return info
+
+
+# Default to conservatively assuming 4GB/job.
+def max_parallel_jobs(job_size=4 * 2 ** 30):
+    """Return the max number of parallel jobs we can run without overfilling
+    memory, assuming heavyweight jobs."""
+    from_cores = int(subprocess.check_output(["nproc", "--ignore=1"]).strip())
+    mem_bytes = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
+    from_mem = round(mem_bytes / job_size)
+    return min(from_cores, from_mem)
 
 
 config = {"analysis_scriptdir": os.path.dirname(__file__)}
@@ -264,7 +318,7 @@ parser = argparse.ArgumentParser(
     description="Statically analyze build tree for rooting hazards."
 )
 parser.add_argument(
-    "step", metavar="STEP", type=str, nargs="?", help="run starting from this step"
+    "step", metavar="STEP", type=str, nargs="?", help="run only step STEP"
 )
 parser.add_argument(
     "--source", metavar="SOURCE", type=str, nargs="?", help="source code to analyze"
@@ -284,7 +338,14 @@ parser.add_argument(
     help="full path to ctypes-capable JS shell",
 )
 parser.add_argument(
-    "--upto", metavar="UPTO", type=str, nargs="?", help="last step to execute"
+    "--first",
+    metavar="STEP",
+    type=str,
+    nargs="?",
+    help="execute all jobs starting with STEP",
+)
+parser.add_argument(
+    "--last", metavar="STEP", type=str, nargs="?", help="stop at step STEP"
 )
 parser.add_argument(
     "--jobs",
@@ -350,14 +411,14 @@ if args.tag and not args.buildcommand:
 if args.jobs is not None:
     data["jobs"] = args.jobs
 if not data.get("jobs"):
-    data["jobs"] = int(subprocess.check_output(["nproc", "--ignore=1"]).strip())
+    data["jobs"] = max_parallel_jobs()
 
 if args.buildcommand:
     data["buildcommand"] = args.buildcommand
 elif "BUILD" in os.environ:
     data["buildcommand"] = os.environ["BUILD"]
 else:
-    data["buildcommand"] = "make -j4 -s"
+    data["buildcommand"] = "make -j{} -s".format(data["jobs"])
 
 if "ANALYZED_OBJDIR" in os.environ:
     data["objdir"] = os.environ["ANALYZED_OBJDIR"]
@@ -370,45 +431,56 @@ if "SOURCE" in os.environ:
 steps = [
     "dbs",
     "gcTypes",
-    "callgraph",
+    "rawcalls",
     "gcFunctions",
     "allFunctions",
     "hazards",
+    "gather-hazards",
     "explain",
     "heapwrites",
 ]
 
 if args.list:
     for step in steps:
-        command, outfilename = JOBS[step]
-        if outfilename:
-            print("%s -> %s" % (step, outfilename))
+        job = JOBS[step]
+        outfiles = job.get("outputs") or job.get("redirect-output")
+        if outfiles:
+            print(
+                "%s\n    ->%s %s"
+                % (step, "*" if job.get("multi-output") else "", outfiles)
+            )
         else:
             print(step)
     sys.exit(0)
 
 for step in steps:
-    command, outfiles = JOBS[step]
-    if isinstance(outfiles, anystring_t):
-        data[step] = outfiles
-    else:
-        outfile = 0
-        for (i, name) in out_indexes(command):
-            data[name] = outfiles[outfile]
-            outfile += 1
+    job = JOBS[step]
+    if "redirect-output" in job:
+        data[step] = job["redirect-output"]
+    elif "outputs" in job and "command" in job:
+        outfiles = job["outputs"]
+        for (i, j, name) in out_indexes(job["command"]):
+            data[name] = outfiles[i]
+        num_outputs = len(list(out_indexes(job["command"])))
         assert (
-            len(outfiles) == outfile
-        ), "step '%s': mismatched number of output files (%d) and params (%d)" % (
+            len(outfiles) == num_outputs
+        ), 'step "%s": mismatched number of output files (%d) and params (%d)' % (
             step,
-            outfile,
+            num_outputs,
             len(outfiles),
         )  # NOQA: E501
 
 if args.step:
-    steps = steps[steps.index(args.step) :]
-
-if args.upto:
-    steps = steps[: steps.index(args.upto) + 1]
+    if args.first or args.last:
+        raise Exception(
+            "--first and --last cannot be used when a step argument is given"
+        )
+    steps = [args.step]
+else:
+    if args.first:
+        steps = steps[steps.index(args.first) :]
+    if args.last:
+        steps = steps[: steps.index(args.last) + 1]
 
 for step in steps:
     run_job(step, data)

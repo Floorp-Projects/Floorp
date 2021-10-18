@@ -40,8 +40,8 @@ function indirectCallCannotGC(fullCaller, fullVariable)
 
     // This is usually a simple variable name, but sometimes a full name gets
     // passed through. And sometimes that name is truncated. Examples:
-    //   _ZL13gAbortHandler|mozalloc_oom.cpp:void (* gAbortHandler)(size_t)
-    //   _ZL14pMutexUnlockFn|umutex.cpp:void (* pMutexUnlockFn)(const void*
+    //   _ZL13gAbortHandler$mozalloc_oom.cpp:void (* gAbortHandler)(size_t)
+    //   _ZL14pMutexUnlockFn$umutex.cpp:void (* pMutexUnlockFn)(const void*
     var name = readable(fullVariable);
 
     if (name in ignoreIndirectCalls)
@@ -296,7 +296,7 @@ var ignoreFunctions = {
     "void mozilla::dom::JSStreamConsumer::~JSStreamConsumer() [[base_dtor]]": true,
 };
 
-function extraGCFunctions() {
+function extraGCFunctions(readableNames) {
     return ["ffi_call"].filter(f => f in readableNames);
 }
 
@@ -323,7 +323,7 @@ function isICU(name)
            name.match(/u(prv_malloc|prv_realloc|prv_free|case_toFullLower)_\d+/)
 }
 
-function ignoreGCFunction(mangled)
+function ignoreGCFunction(mangled, readableNames)
 {
     // Field calls will not be in readableNames
     if (!(mangled in readableNames))

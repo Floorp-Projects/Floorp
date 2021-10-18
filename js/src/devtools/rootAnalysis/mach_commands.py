@@ -267,8 +267,6 @@ def gather_hazard_data(command_context, **kwargs):
         sys.executable,
         os.path.join(script_dir(command_context), "analyze.py"),
         "dbs",
-        "--upto",
-        "dbs",
         "-v",
         "--buildcommand=" + buildscript,
     ]
@@ -378,6 +376,7 @@ def analyze(command_context, application, shell_objdir, work_dir, extra):
         args += extra
     else:
         args += [
+            "--first",
             "gcTypes",
             "-v",
         ]
