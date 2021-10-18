@@ -1106,10 +1106,9 @@ static bool InstantiateAtoms(JSContext* cx, CompilationAtomCache& atomCache,
   return InstantiateMarkedAtoms(cx, stencil.parserAtomData, atomCache);
 }
 
-static bool InstantiateScriptSourceObject(JSContext* cx,
-                                          CompilationInput& input,
-                                          const CompilationStencil& stencil,
-                                          CompilationGCOutput& gcOutput) {
+static bool InstantiateScriptSourceObject(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    const CompilationStencil& stencil, CompilationGCOutput& gcOutput) {
   MOZ_ASSERT(stencil.source);
 
   gcOutput.sourceObject = ScriptSourceObject::create(cx, stencil.source.get());
@@ -1128,7 +1127,7 @@ static bool InstantiateScriptSourceObject(JSContext* cx,
   // until after we've merged compartments.
   if (!cx->isHelperThreadContext()) {
     Rooted<ScriptSourceObject*> sourceObject(cx, gcOutput.sourceObject);
-    if (!ScriptSourceObject::initFromOptions(cx, sourceObject, input.options)) {
+    if (!ScriptSourceObject::initFromOptions(cx, sourceObject, options)) {
       return false;
     }
   }
@@ -1537,7 +1536,7 @@ bool CompilationStencil::instantiateStencils(JSContext* cx,
                                              CompilationInput& input,
                                              const CompilationStencil& stencil,
                                              CompilationGCOutput& gcOutput) {
-  if (!prepareForInstantiate(cx, input, stencil, gcOutput)) {
+  if (!prepareForInstantiate(cx, input.atomCache, stencil, gcOutput)) {
     return false;
   }
 
@@ -1553,14 +1552,16 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
   bool isInitialParse = stencil.isInitialStencil();
   MOZ_ASSERT(stencil.isInitialStencil() == input.isInitialStencil());
 
+  CompilationAtomCache& atomCache = input.atomCache;
+
   // Phase 1: Instantiate JSAtom/JSStrings.
-  if (!InstantiateAtoms(cx, input.atomCache, stencil)) {
+  if (!InstantiateAtoms(cx, atomCache, stencil)) {
     return false;
   }
 
   // Phase 2: Instantiate ScriptSourceObject, ModuleObject, JSFunctions.
   if (isInitialParse) {
-    if (!InstantiateScriptSourceObject(cx, input, stencil, gcOutput)) {
+    if (!InstantiateScriptSourceObject(cx, input.options, stencil, gcOutput)) {
       return false;
     }
 
@@ -1572,12 +1573,12 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
       MOZ_ASSERT(input.enclosingScope->environmentChainLength() ==
                  ModuleScope::EnclosingEnvironmentChainLength);
 
-      if (!InstantiateModuleObject(cx, input.atomCache, stencil, gcOutput)) {
+      if (!InstantiateModuleObject(cx, atomCache, stencil, gcOutput)) {
         return false;
       }
     }
 
-    if (!InstantiateFunctions(cx, input.atomCache, stencil, gcOutput)) {
+    if (!InstantiateFunctions(cx, atomCache, stencil, gcOutput)) {
       return false;
     }
   } else {
@@ -1605,7 +1606,7 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
 
   // Phase 4: Instantiate (inner) BaseScripts.
   if (isInitialParse) {
-    if (!InstantiateScriptStencils(cx, input.atomCache, stencil, gcOutput)) {
+    if (!InstantiateScriptStencils(cx, atomCache, stencil, gcOutput)) {
       return false;
     }
   }
@@ -1619,7 +1620,7 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
 
   // Phase 6: Update lazy scripts.
   if (stencil.canLazilyParse) {
-    UpdateEmittedInnerFunctions(cx, input.atomCache, stencil, gcOutput);
+    UpdateEmittedInnerFunctions(cx, atomCache, stencil, gcOutput);
 
     if (isInitialParse) {
       LinkEnclosingLazyScript(stencil, gcOutput);
@@ -1825,15 +1826,15 @@ bool CompilationStencil::delazifySelfHostedFunction(
 
 /* static */
 bool CompilationStencil::prepareForInstantiate(
-    JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
-    CompilationGCOutput& gcOutput) {
+    JSContext* cx, CompilationAtomCache& atomCache,
+    const CompilationStencil& stencil, CompilationGCOutput& gcOutput) {
   // Reserve the `gcOutput` vectors.
   if (!gcOutput.ensureReserved(cx, stencil.scriptData.size(),
                                stencil.scopeData.size())) {
     return false;
   }
 
-  return input.atomCache.allocate(cx, stencil.parserAtomData.size());
+  return atomCache.allocate(cx, stencil.parserAtomData.size());
 }
 
 bool CompilationStencil::serializeStencils(JSContext* cx,
