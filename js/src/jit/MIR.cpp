@@ -1385,6 +1385,8 @@ void MNearbyInt::printOpcode(GenericPrinter& out) const {
 }
 #endif
 
+AliasSet MRandom::getAliasSet() const { return AliasSet::Store(AliasSet::RNG); }
+
 MDefinition* MSign::foldsTo(TempAllocator& alloc) {
   MDefinition* input = getOperand(0);
   if (!input->isConstant() ||
