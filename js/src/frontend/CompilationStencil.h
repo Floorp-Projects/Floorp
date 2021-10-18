@@ -748,8 +748,8 @@ struct CompilationStencil {
       CompilationGCOutput& gcOutput);
 
   [[nodiscard]] static bool prepareForInstantiate(
-      JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
-      CompilationGCOutput& gcOutput);
+      JSContext* cx, CompilationAtomCache& atomCache,
+      const CompilationStencil& stencil, CompilationGCOutput& gcOutput);
 
   [[nodiscard]] static bool instantiateStencils(
       JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
