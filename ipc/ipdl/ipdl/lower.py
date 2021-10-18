@@ -467,6 +467,7 @@ class _DestroyReason:
     NormalShutdown = ExprVar("NormalShutdown")
     AbnormalShutdown = ExprVar("AbnormalShutdown")
     FailedConstructor = ExprVar("FailedConstructor")
+    ManagedEndpointDropped = ExprVar("ManagedEndpointDropped")
 
 
 class _ResponseRejectReason:
@@ -4004,6 +4005,40 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             if toplevel.isInterrupt():
                 self.interruptSwitch = StmtSwitch(msgtype)
 
+        # Add a handler for the MANAGED_ENDPOINT_BOUND and
+        # MANAGED_ENDPOINT_DROPPED message types for managed actors.
+        if not ptype.isToplevel():
+            clearawaitingmanagedendpointbind = """
+                if (!mAwaitingManagedEndpointBind) {
+                    NS_WARNING("Unexpected managed endpoint lifecycle message after actor bound!");
+                    return MsgNotAllowed;
+                }
+                mAwaitingManagedEndpointBind = false;
+                """
+            self.asyncSwitch.addcase(
+                CaseLabel("MANAGED_ENDPOINT_BOUND_MESSAGE_TYPE"),
+                StmtBlock(
+                    [
+                        StmtCode(clearawaitingmanagedendpointbind),
+                        StmtReturn(_Result.Processed),
+                    ]
+                ),
+            )
+            self.asyncSwitch.addcase(
+                CaseLabel("MANAGED_ENDPOINT_DROPPED_MESSAGE_TYPE"),
+                StmtBlock(
+                    [
+                        StmtCode(clearawaitingmanagedendpointbind),
+                        *self.destroyActor(
+                            None,
+                            ExprVar.THIS,
+                            why=_DestroyReason.ManagedEndpointDropped,
+                        ),
+                        StmtReturn(_Result.Processed),
+                    ]
+                ),
+            )
+
         # implement Send*() methods and add dispatcher cases to
         # message switch()es
         for md in p.messageDecls:
@@ -4199,6 +4234,17 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         # or we're toplevel
         self.cls.addstmts([clearsubtree, Whitespace.NL])
 
+        if not ptype.isToplevel():
+            self.cls.addstmts(
+                [
+                    StmtDecl(
+                        Decl(Type.BOOL, "mAwaitingManagedEndpointBind"),
+                        init=ExprLiteral.FALSE,
+                    ),
+                    Whitespace.NL,
+                ]
+            )
+
         for managed in ptype.manages:
             self.cls.addstmts(
                 [
@@ -4232,7 +4278,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         openmeth.addcode(
             """
             $*{bind}
-            return ${thereEp}(mozilla::ipc::PrivateIPDLInterface(), aActor->Id());
+            // Mark our actor as awaiting the other side to be bound. This will
+            // be cleared when a `MANAGED_ENDPOINT_{DROPPED,BOUND}` message is
+            // received.
+            aActor->mAwaitingManagedEndpointBind = true;
+            return ${thereEp}(mozilla::ipc::PrivateIPDLInterface(), aActor);
             """,
             bind=self.bindManagedActor(actor, errfn=ExprCall(ExprVar(thereEp))),
             thereEp=thereEp,
@@ -4251,13 +4301,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         )
         bindmeth.addcode(
             """
-            MOZ_RELEASE_ASSERT(aEndpoint.ActorId(), "Invalid Endpoint!");
-            $*{bind}
-            return true;
+            return aEndpoint.Bind(mozilla::ipc::PrivateIPDLInterface(), aActor, this, ${container});
             """,
-            bind=self.bindManagedActor(
-                actor, errfn=ExprLiteral.FALSE, idexpr=ExprCode("*aEndpoint.ActorId()")
-            ),
+            container=self.protocol.managedVar(managed, self.side),
         )
 
         self.cls.addstmts([openmeth, bindmeth, Whitespace.NL])
@@ -4749,7 +4795,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return method
 
     def destroyActor(self, md, actorexpr, why=_DestroyReason.Deletion):
-        if md.decl.type.isCtor():
+        if md and md.decl.type.isCtor():
             destroyedType = md.decl.type.constructedType()
         else:
             destroyedType = self.protocol.decl.type
@@ -4757,11 +4803,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return [
             StmtCode(
                 """
-            IProtocol* mgr = ${actor}->Manager();
-            ${actor}->DestroySubtree(${why});
-            ${actor}->ClearSubtree();
-            mgr->RemoveManagee(${protoId}, ${actor});
-            """,
+                IProtocol* mgr = ${actor}->Manager();
+                ${actor}->DestroySubtree(${why});
+                ${actor}->ClearSubtree();
+                mgr->RemoveManagee(${protoId}, ${actor});
+                """,
                 actor=actorexpr,
                 why=why,
                 protoId=_protocolId(destroyedType),

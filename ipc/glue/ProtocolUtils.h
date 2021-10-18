@@ -59,13 +59,15 @@ namespace {
 // starts approaching its 65,536th message.
 enum {
   // Message types used by NodeChannel
-  ACCEPT_INVITE_MESSAGE_TYPE = kuint16max - 14,
-  REQUEST_INTRODUCTION_MESSAGE_TYPE = kuint16max - 13,
-  INTRODUCE_MESSAGE_TYPE = kuint16max - 12,
-  BROADCAST_MESSAGE_TYPE = kuint16max - 11,
-  EVENT_MESSAGE_TYPE = kuint16max - 10,
+  ACCEPT_INVITE_MESSAGE_TYPE = kuint16max - 16,
+  REQUEST_INTRODUCTION_MESSAGE_TYPE = kuint16max - 15,
+  INTRODUCE_MESSAGE_TYPE = kuint16max - 14,
+  BROADCAST_MESSAGE_TYPE = kuint16max - 13,
+  EVENT_MESSAGE_TYPE = kuint16max - 12,
 
   // Message types used by MessageChannel
+  MANAGED_ENDPOINT_DROPPED_MESSAGE_TYPE = kuint16max - 11,
+  MANAGED_ENDPOINT_BOUND_MESSAGE_TYPE = kuint16max - 10,
   IMPENDING_SHUTDOWN_MESSAGE_TYPE = kuint16max - 9,
   BUILD_IDS_MATCH_MESSAGE_TYPE = kuint16max - 8,
   BUILD_ID_MESSAGE_TYPE = kuint16max - 7,  // unused
@@ -175,6 +177,7 @@ class IToplevelProtocol;
 class ActorLifecycleProxy;
 class WeakActorLifecycleProxy;
 class IPDLResolverInner;
+class UntypedManagedEndpoint;
 
 class IProtocol : public HasResultCodes {
  public:
@@ -183,7 +186,8 @@ class IProtocol : public HasResultCodes {
     Deletion,
     AncestorDeletion,
     NormalShutdown,
-    AbnormalShutdown
+    AbnormalShutdown,
+    ManagedEndpointDropped
   };
 
   typedef base::ProcessId ProcessId;
@@ -246,6 +250,7 @@ class IProtocol : public HasResultCodes {
   IProtocol* Manager() const { return mManager; }
 
   ActorLifecycleProxy* GetLifecycleProxy() { return mLifecycleProxy; }
+  WeakActorLifecycleProxy* GetWeakLifecycleProxy();
 
   Side GetSide() const { return mSide; }
   bool CanSend() const { return mLinkStatus == LinkStatus::Connected; }
@@ -283,6 +288,7 @@ class IProtocol : public HasResultCodes {
   friend class IToplevelProtocol;
   friend class ActorLifecycleProxy;
   friend class IPDLResolverInner;
+  friend class UntypedManagedEndpoint;
 
   void SetId(int32_t aId);
 
