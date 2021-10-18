@@ -15,6 +15,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/MessageLink.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/ipc/NodeController.h"
 #include "mozilla/ipc/ScopedPort.h"
@@ -118,6 +119,51 @@ nsresult CreateEndpoints(const PrivateIPDLInterface& aPrivate,
   return NS_OK;
 }
 
+class UntypedManagedEndpoint {
+ public:
+  bool IsValid() const { return mInner.isSome(); }
+
+  UntypedManagedEndpoint(const UntypedManagedEndpoint&) = delete;
+  UntypedManagedEndpoint& operator=(const UntypedManagedEndpoint&) = delete;
+
+ protected:
+  UntypedManagedEndpoint() = default;
+  explicit UntypedManagedEndpoint(IProtocol* aActor);
+
+  UntypedManagedEndpoint(UntypedManagedEndpoint&& aOther) noexcept
+      : mInner(std::move(aOther.mInner)) {
+    aOther.mInner = Nothing();
+  }
+  UntypedManagedEndpoint& operator=(UntypedManagedEndpoint&& aOther) noexcept {
+    this->~UntypedManagedEndpoint();
+    new (this) UntypedManagedEndpoint(std::move(aOther));
+    return *this;
+  }
+
+  ~UntypedManagedEndpoint() noexcept;
+
+  bool BindCommon(IProtocol* aActor, IProtocol* aManager);
+
+ private:
+  friend struct IPDLParamTraits<UntypedManagedEndpoint>;
+
+  struct Inner {
+    // Pointers to the toplevel actor which will manage this connection. When
+    // created, only `mOtherSide` will be set, and will reference the
+    // toplevel actor which the other side is managed by. After being sent over
+    // IPC, only `mToplevel` will be set, and will be the toplevel actor for the
+    // channel which received the IPC message.
+    RefPtr<WeakActorLifecycleProxy> mOtherSide;
+    RefPtr<WeakActorLifecycleProxy> mToplevel;
+
+    int32_t mId = 0;
+    ProtocolId mType = LastMsgIndex;
+    int32_t mManagerId = 0;
+    ProtocolId mManagerType = LastMsgIndex;
+  };
+  Maybe<Inner> mInner;
+};
+
 /**
  * A managed endpoint represents one end of a partially initialized managed
  * IPDL actor. It is used for situations where the usual IPDL Constructor
@@ -140,39 +186,28 @@ nsresult CreateEndpoints(const PrivateIPDLInterface& aPrivate,
  * a browser crash.
  */
 template <class PFooSide>
-class ManagedEndpoint {
+class ManagedEndpoint : public UntypedManagedEndpoint {
  public:
-  ManagedEndpoint() : mId(0) {}
+  ManagedEndpoint() = default;
+  ManagedEndpoint(ManagedEndpoint&&) noexcept = default;
+  ManagedEndpoint& operator=(ManagedEndpoint&&) noexcept = default;
 
-  ManagedEndpoint(const PrivateIPDLInterface&, int32_t aId) : mId(aId) {}
+  ManagedEndpoint(const PrivateIPDLInterface&, IProtocol* aActor)
+      : UntypedManagedEndpoint(aActor) {}
 
-  ManagedEndpoint(ManagedEndpoint&& aOther) : mId(aOther.mId) {
-    aOther.mId = 0;
+  bool Bind(const PrivateIPDLInterface&, PFooSide* aActor, IProtocol* aManager,
+            ManagedContainer<PFooSide>& aContainer) {
+    if (!BindCommon(aActor, aManager)) {
+      return false;
+    }
+    aContainer.Insert(aActor);
+    return true;
   }
 
-  ManagedEndpoint& operator=(ManagedEndpoint&& aOther) {
-    mId = aOther.mId;
-    aOther.mId = 0;
-    return *this;
+  // Only invalid ManagedEndpoints can be equal, as valid endpoints are unique.
+  bool operator==(const ManagedEndpoint& _o) const {
+    return !IsValid() && !_o.IsValid();
   }
-
-  bool IsValid() const { return mId != 0; }
-
-  Maybe<int32_t> ActorId() const { return IsValid() ? Some(mId) : Nothing(); }
-
-  bool operator==(const ManagedEndpoint& _o) const { return mId == _o.mId; }
-
- private:
-  friend struct IPC::ParamTraits<ManagedEndpoint<PFooSide>>;
-
-  ManagedEndpoint(const ManagedEndpoint&) = delete;
-  ManagedEndpoint& operator=(const ManagedEndpoint&) = delete;
-
-  // The routing ID for the to-be-created endpoint.
-  int32_t mId;
-
-  // XXX(nika): Might be nice to have other info for assertions?
-  // e.g. mManagerId, mManagerType, etc.
 };
 
 }  // namespace ipc

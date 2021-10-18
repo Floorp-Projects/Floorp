@@ -293,6 +293,10 @@ IProtocol* WeakActorLifecycleProxy::Get() const {
   return mProxy ? mProxy->Get() : nullptr;
 }
 
+WeakActorLifecycleProxy* IProtocol::GetWeakLifecycleProxy() {
+  return mLifecycleProxy ? mLifecycleProxy->GetWeakProxy() : nullptr;
+}
+
 IProtocol::~IProtocol() {
   // If the actor still has a lifecycle proxy when it is being torn down, it
   // means that IPC was not given control over the lifecycle of the actor
