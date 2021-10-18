@@ -10,9 +10,9 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_IDLE
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.TabTouchCallback
-import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.support.base.observer.Observable
+import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.getDrawableWithTint
 import mozilla.components.support.ktx.android.util.dpToPx
@@ -37,10 +37,11 @@ typealias OnViewHolderToDraw = (RecyclerView.ViewHolder) -> Boolean
  * @param onViewHolderTouched See [OnViewHolderTouched].
  */
 class TabsTouchHelper(
-    observable: Observable<TabsTray.Observer>,
+    interactionDelegate: TabsTray.Delegate,
     onViewHolderTouched: OnViewHolderTouched = { true },
     onViewHolderDraw: OnViewHolderToDraw = { true },
-    delegate: Callback = TouchCallback(observable, onViewHolderTouched, onViewHolderDraw)
+    featureNameHolder: FeatureNameHolder,
+    delegate: Callback = TouchCallback(interactionDelegate, onViewHolderTouched, onViewHolderDraw, featureNameHolder),
 ) : ItemTouchHelper(delegate)
 
 /**
@@ -49,10 +50,12 @@ class TabsTouchHelper(
  * @param onViewHolderTouched invoked when a tab is about to be swiped. See [OnViewHolderTouched].
  */
 class TouchCallback(
-    observable: Observable<TabsTray.Observer>,
+    delegate: TabsTray.Delegate,
     private val onViewHolderTouched: OnViewHolderTouched,
-    private val onViewHolderDraw: OnViewHolderToDraw
-) : TabTouchCallback(observable) {
+    private val onViewHolderDraw: OnViewHolderToDraw,
+    featureNameHolder: FeatureNameHolder,
+    onRemove: (TabSessionState) -> Unit = { delegate.onTabClosed(it, featureNameHolder.featureName) }
+) : TabTouchCallback(onRemove) {
 
     override fun getMovementFlags(
         recyclerView: RecyclerView,

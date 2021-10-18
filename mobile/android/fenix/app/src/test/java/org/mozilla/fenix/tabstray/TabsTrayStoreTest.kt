@@ -4,12 +4,12 @@
 
 package org.mozilla.fenix.tabstray
 
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mozilla.fenix.tabstray.browser.createTab
 
 class TabsTrayStoreTest {
 
@@ -24,7 +24,7 @@ class TabsTrayStoreTest {
         assertTrue(store.state.mode.selectedTabs.isEmpty())
         assertTrue(store.state.mode is TabsTrayState.Mode.Select)
 
-        store.dispatch(TabsTrayAction.AddSelectTab(createTab()))
+        store.dispatch(TabsTrayAction.AddSelectTab(createTab(url = "url")))
 
         store.dispatch(TabsTrayAction.ExitSelectMode)
         store.dispatch(TabsTrayAction.EnterSelectMode)
@@ -56,7 +56,7 @@ class TabsTrayStoreTest {
     fun `WHEN adding a tab to selection THEN it is added to the selectedTabs`() {
         val store = TabsTrayStore()
 
-        store.dispatch(TabsTrayAction.AddSelectTab(createTab("tab1")))
+        store.dispatch(TabsTrayAction.AddSelectTab(createTab(url = "url", id = "tab1")))
 
         store.waitUntilIdle()
 
@@ -66,10 +66,10 @@ class TabsTrayStoreTest {
     @Test
     fun `WHEN removing a tab THEN it is removed from the selectedTabs`() {
         val store = TabsTrayStore()
-        val tabForRemoval = createTab("tab1")
+        val tabForRemoval = createTab(url = "url", id = "tab1")
 
         store.dispatch(TabsTrayAction.AddSelectTab(tabForRemoval))
-        store.dispatch(TabsTrayAction.AddSelectTab(createTab("tab2")))
+        store.dispatch(TabsTrayAction.AddSelectTab(createTab(url = "url", id = "tab2")))
 
         store.waitUntilIdle()
 

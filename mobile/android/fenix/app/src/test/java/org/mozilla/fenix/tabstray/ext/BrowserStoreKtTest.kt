@@ -7,11 +7,10 @@ package org.mozilla.fenix.tabstray.ext
 import io.mockk.mockk
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.tabstray.Tab
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.mozilla.fenix.tabstray.browser.createTab
 
 class BrowserStoreKtTest {
 
@@ -26,9 +25,9 @@ class BrowserStoreKtTest {
             )
         )
 
-        val tabs = listOf<Tab>(
-            createTab("tab1"),
-            createTab("tab2")
+        val tabs = listOf(
+            createTab(url = "url", id = "tab1"),
+            createTab(url = "url", id = "tab2"),
         )
 
         val result = store.getTabSessionState(tabs)
@@ -47,9 +46,9 @@ class BrowserStoreKtTest {
             )
         )
 
-        val tabs = listOf<Tab>(
-            createTab("tab1"),
-            createTab("tab2")
+        val tabs = listOf(
+            createTab(url = "url", id = "tab1"),
+            createTab(url = "url", id = "tab2"),
         )
 
         val result = store.getTabSessionState(tabs)

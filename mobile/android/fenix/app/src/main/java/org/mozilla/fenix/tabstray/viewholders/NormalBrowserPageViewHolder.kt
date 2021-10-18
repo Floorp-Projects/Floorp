@@ -10,8 +10,8 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.state.selector.selectedNormalTab
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.tabstray.Tab
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.selection.SelectionHolder
@@ -39,7 +39,7 @@ class NormalBrowserPageViewHolder(
     private val tabsTrayStore: TabsTrayStore,
     private val browserStore: BrowserStore,
     interactor: TabsTrayInteractor,
-) : AbstractBrowserPageViewHolder(containerView, tabsTrayStore, interactor), SelectionHolder<Tab> {
+) : AbstractBrowserPageViewHolder(containerView, tabsTrayStore, interactor), SelectionHolder<TabSessionState> {
 
     /**
      * Holds the list of selected tabs.
@@ -47,7 +47,7 @@ class NormalBrowserPageViewHolder(
      * Implementation notes: we do this here because we only want the normal tabs list to be able
      * to select tabs.
      */
-    override val selectedItems: Set<Tab>
+    override val selectedItems: Set<TabSessionState>
         get() = tabsTrayStore.state.mode.selectedTabs
 
     override val emptyStringText: String

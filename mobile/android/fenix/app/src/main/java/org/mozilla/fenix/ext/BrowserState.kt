@@ -76,7 +76,9 @@ val BrowserState.lastSearchGroup: RecentTab.SearchGroup?
  * Returns a pair containing a list of search term groups sorted by last access time, and "remainder" tabs that have
  * search terms but should not be in groups (because the group is of size one).
  */
-fun List<TabSessionState>.toSearchGroup(): Pair<List<TabGroup>, List<TabSessionState>> {
+fun List<TabSessionState>.toSearchGroup(
+    groupSet: Set<String> = emptySet()
+): Pair<List<TabGroup>, List<TabSessionState>> {
     val data = filter {
         it.isNormalTabActiveWithSearchTerm(maxActiveTime)
     }.groupBy {
@@ -100,7 +102,9 @@ fun List<TabSessionState>.toSearchGroup(): Pair<List<TabGroup>, List<TabSessionS
         )
     }
 
-    val groups = groupings.filter { it.tabs.size > 1 }.sortedBy { it.lastAccess }
+    val groups = groupings
+        .filter { it.tabs.size > 1 || groupSet.contains(it.searchTerm) }
+        .sortedBy { it.lastAccess }
     val remainderTabs = (groupings - groups).flatMap { it.tabs }
 
     return groups to remainderTabs

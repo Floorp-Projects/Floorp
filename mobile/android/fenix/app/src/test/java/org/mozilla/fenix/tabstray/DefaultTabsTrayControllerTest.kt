@@ -19,9 +19,9 @@ import io.mockk.verifyOrder
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.profiler.Profiler
-import mozilla.components.concept.tabstray.Tab
 import mozilla.components.feature.tabs.TabsUseCases
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -268,9 +268,8 @@ class DefaultTabsTrayControllerTest {
             )
         )
 
-        val privateTab: Tab = mockk {
-            every { private } returns true
-        }
+        val privateTab = createTab(url = "url", private = true)
+
         every { browserStore.state } returns mockk()
         try {
             mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
@@ -297,9 +296,9 @@ class DefaultTabsTrayControllerTest {
                 }
             )
         )
-        val normalTab: Tab = mockk {
-            every { private } returns false
-        }
+
+        val normalTab = createTab(url = "url", private = false)
+
         every { browserStore.state } returns mockk()
         try {
             mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
@@ -319,10 +318,8 @@ class DefaultTabsTrayControllerTest {
     fun `WHEN handleMultipleTabsDeletion is called to close some private tabs THEN that it uses tabsUseCases#removeTabs and shows an undo snackbar`() {
         var showUndoSnackbarForTabInvoked = false
         val controller = spyk(createController(showUndoSnackbarForTab = { showUndoSnackbarForTabInvoked = true }))
-        val privateTab: Tab = mockk {
-            every { private } returns true
-            every { id } returns "42"
-        }
+        val privateTab = createTab(id = "42", url = "url", private = true)
+
         every { browserStore.state } returns mockk()
         try {
             mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
@@ -342,10 +339,8 @@ class DefaultTabsTrayControllerTest {
     fun `WHEN handleMultipleTabsDeletion is called to close some normal tabs THEN that it uses tabsUseCases#removeTabs and shows an undo snackbar`() {
         var showUndoSnackbarForTabInvoked = false
         val controller = spyk(createController(showUndoSnackbarForTab = { showUndoSnackbarForTabInvoked = true }))
-        val privateTab: Tab = mockk {
-            every { private } returns false
-            every { id } returns "24"
-        }
+        val privateTab = createTab(id = "24", url = "url", private = false)
+
         every { browserStore.state } returns mockk()
         try {
             mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")

@@ -9,13 +9,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_HIGHLIGHT_SELECTED_ITEM
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
-import mozilla.components.concept.tabstray.Tab
-import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.support.base.observer.Observable
-import mozilla.components.support.base.observer.ObserverRegistry
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.databinding.TabTrayGridItemBinding
 import org.mozilla.fenix.databinding.TabTrayItemBinding
@@ -30,15 +27,13 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
  * @param interactor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
  * @param store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
  * @param featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
- * @param delegate [Observable]<[TabsTray.Observer]> for observing tabs tray changes. Defaults to [ObserverRegistry].
  */
 class BrowserTabsAdapter(
     private val context: Context,
-    private val interactor: BrowserTrayInteractor,
+    val interactor: BrowserTrayInteractor,
     private val store: TabsTrayStore,
-    private val featureName: String,
-    delegate: Observable<TabsTray.Observer> = ObserverRegistry()
-) : TabsAdapter<AbstractBrowserTabViewHolder>(delegate) {
+    override val featureName: String
+) : TabsAdapter<AbstractBrowserTabViewHolder>(interactor), FeatureNameHolder {
 
     /**
      * The layout types for the tabs.
@@ -51,7 +46,7 @@ class BrowserTabsAdapter(
     /**
      * Tracks the selected tabs in multi-select mode.
      */
-    var selectionHolder: SelectionHolder<Tab>? = null
+    var selectionHolder: SelectionHolder<TabSessionState>? = null
 
     private val selectedItemAdapterBinding = SelectedItemAdapterBinding(store, this)
     private val imageLoader = ThumbnailLoader(context.components.core.thumbnailStorage)
@@ -113,7 +108,8 @@ class BrowserTabsAdapter(
             return
         }
 
-        if (position == selectedIndex) {
+        val tab = getItem(position)
+        if (tab.id == selectedTabId) {
             if (payloads.contains(PAYLOAD_HIGHLIGHT_SELECTED_ITEM)) {
                 holder.updateSelectedTabIndicator(true)
             } else if (payloads.contains(PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM)) {

@@ -20,12 +20,17 @@ import org.mozilla.fenix.tabstray.viewholders.SyncedTabsPageViewHolder
 @RunWith(FenixRobolectricTestRunner::class)
 class TabsTouchHelperTest {
 
+    private val featureName = object : FeatureNameHolder {
+        override val featureName: String
+            get() = "featureName"
+    }
+
     @Test
     fun `movement flags remain unchanged if onSwipeToDelete is true`() {
         val recyclerView = RecyclerView(testContext)
         val layout = FrameLayout(testContext)
         val viewHolder = SyncedTabsPageViewHolder(layout, mockk())
-        val callback = TouchCallback(mockk(), { true }, { false })
+        val callback = TouchCallback(mockk(), { true }, { false }, featureName)
 
         assertEquals(0, callback.getDragDirs(recyclerView, viewHolder))
         assertEquals(
@@ -44,7 +49,7 @@ class TabsTouchHelperTest {
         val recyclerView = RecyclerView(testContext)
         val layout = FrameLayout(testContext)
         val viewHolder = SyncedTabsPageViewHolder(layout, mockk())
-        val callback = TouchCallback(mockk(), { false }, { false })
+        val callback = TouchCallback(mockk(), { false }, { false }, featureName)
 
         assertEquals(0, callback.getDragDirs(recyclerView, viewHolder))
         assertEquals(

@@ -6,8 +6,7 @@ package org.mozilla.fenix.tabstray.browser
 
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.feature.tabs.ext.toTabs
+import mozilla.components.browser.tabstray.TabsTray
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.Event
 
@@ -31,8 +30,7 @@ class InactiveTabsController(
             }
         )
 
-        val tabs = browserStore.state.toTabs { tabFilter.invoke(it) }
-
-        tray.updateTabs(tabs)
+        val tabs = browserStore.state.tabs.filter(tabFilter)
+        tray.updateTabs(tabs, browserStore.state.selectedTabId)
     }
 }

@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.tabstray
 
-import mozilla.components.concept.tabstray.Tab
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.State
@@ -33,7 +33,7 @@ data class TabsTrayState(
         /**
          * A set of selected tabs which we would want to perform an action on.
          */
-        open val selectedTabs = emptySet<Tab>()
+        open val selectedTabs = emptySet<TabSessionState>()
 
         /**
          * The default mode the tabs list is in.
@@ -44,7 +44,7 @@ data class TabsTrayState(
          * The multi-select mode that the tabs list is in containing the set of currently
          * selected tabs.
          */
-        data class Select(override val selectedTabs: Set<Tab>) : Mode()
+        data class Select(override val selectedTabs: Set<TabSessionState>) : Mode()
     }
 }
 
@@ -95,14 +95,14 @@ sealed class TabsTrayAction : Action {
     object ExitSelectMode : TabsTrayAction()
 
     /**
-     * Added a new [Tab] to the selection set.
+     * Added a new [TabSessionState] to the selection set.
      */
-    data class AddSelectTab(val tab: Tab) : TabsTrayAction()
+    data class AddSelectTab(val tab: TabSessionState) : TabsTrayAction()
 
     /**
-     * Removed a [Tab] from the selection set.
+     * Removed a [TabSessionState] from the selection set.
      */
-    data class RemoveSelectTab(val tab: Tab) : TabsTrayAction()
+    data class RemoveSelectTab(val tab: TabSessionState) : TabsTrayAction()
 
     /**
      * The active page in the tray that is now in focus.

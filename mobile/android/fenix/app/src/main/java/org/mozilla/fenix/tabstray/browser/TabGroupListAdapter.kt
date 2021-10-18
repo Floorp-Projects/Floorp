@@ -11,13 +11,11 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_HIGHLIGHT_SELECTED_ITEM
 import mozilla.components.browser.tabstray.TabsTrayStyling
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
-import mozilla.components.concept.tabstray.Tab
-import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.support.base.observer.Observable
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.TabTrayGridItemBinding
 import org.mozilla.fenix.databinding.TabTrayItemBinding
@@ -33,17 +31,15 @@ import org.mozilla.fenix.tabstray.ext.MIN_COLUMN_WIDTH_DP
  * @param context [Context] used for various platform interactions or accessing [Components]
  * @param interactor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
  * @param store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
- * @param delegate [Observable]<[TabsTray.Observer]> for observing tabs tray changes. Defaults to [ObserverRegistry].
  * @param featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
  */
 class TabGroupListAdapter(
     private val context: Context,
     private val interactor: BrowserTrayInteractor,
     private val store: TabsTrayStore,
-    private val delegate: Observable<TabsTray.Observer>,
-    private val selectionHolder: SelectionHolder<Tab>?,
+    private val selectionHolder: SelectionHolder<TabSessionState>?,
     private val featureName: String,
-) : ListAdapter<Tab, AbstractBrowserTabViewHolder>(DiffCallback) {
+) : ListAdapter<TabSessionState, AbstractBrowserTabViewHolder>(DiffCallback) {
 
     private val selectedItemAdapterBinding = SelectedItemAdapterBinding(store, this)
     private val imageLoader = ThumbnailLoader(context.components.core.thumbnailStorage)
@@ -67,7 +63,7 @@ class TabGroupListAdapter(
     override fun onBindViewHolder(holder: AbstractBrowserTabViewHolder, position: Int) {
         val tab = getItem(position)
         val selectedTabId = context.components.core.store.state.selectedTabId
-        holder.bind(tab, tab.id == selectedTabId, TabsTrayStyling(), delegate)
+        holder.bind(tab, tab.id == selectedTabId, TabsTrayStyling(), interactor)
         holder.tab?.let { holderTab ->
             when {
                 context.components.settings.gridTabView -> {
@@ -147,8 +143,8 @@ class TabGroupListAdapter(
         selectedItemAdapterBinding.stop()
     }
 
-    private object DiffCallback : DiffUtil.ItemCallback<Tab>() {
-        override fun areItemsTheSame(oldItem: Tab, newItem: Tab) = oldItem.id == newItem.id
-        override fun areContentsTheSame(oldItem: Tab, newItem: Tab) = oldItem == newItem
+    private object DiffCallback : DiffUtil.ItemCallback<TabSessionState>() {
+        override fun areItemsTheSame(oldItem: TabSessionState, newItem: TabSessionState) = oldItem.id == newItem.id
+        override fun areContentsTheSame(oldItem: TabSessionState, newItem: TabSessionState) = oldItem == newItem
     }
 }

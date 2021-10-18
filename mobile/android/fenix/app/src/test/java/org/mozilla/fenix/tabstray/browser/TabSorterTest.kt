@@ -7,9 +7,7 @@ package org.mozilla.fenix.tabstray.browser
 import androidx.recyclerview.widget.ConcatAdapter
 import io.mockk.every
 import io.mockk.mockk
-import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.tabstray.Tabs
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -43,26 +41,19 @@ class TabSorterTest {
 
     @Test
     fun `WHEN updated with one normal tab THEN adapter have only one normal tab and no header`() {
-        val store = BrowserStore(
-            BrowserState(
-                tabs = emptyList()
-            )
-        )
         val adapter = ConcatAdapter(
             InactiveTabsAdapter(context, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
             TabGroupAdapter(context, mock(), mock(), TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, mock(), mock(), TABS_TRAY_FEATURE_NAME)
         )
-        val tabSorter = TabSorter(settings, metrics, adapter, store)
+        val tabSorter = TabSorter(settings, metrics, adapter)
 
         tabSorter.updateTabs(
-            Tabs(
-                list = listOf(
-                    createTab("tab1", System.currentTimeMillis())
-                ),
-                selectedIndex = 0
-            )
+            listOf(
+                createTab(url = "url", id = "tab1", lastAccess = System.currentTimeMillis())
+            ),
+            selectedTabId = "tab1"
         )
 
         assertEquals(adapter.itemCount, 1)
@@ -74,28 +65,31 @@ class TabSorterTest {
 
     @Test
     fun `WHEN updated with one normal tab and two search term tab THEN adapter have normal tab and a search group`() {
-        val store = BrowserStore(
-            BrowserState(
-                tabs = emptyList()
-            )
-        )
         val adapter = ConcatAdapter(
             InactiveTabsAdapter(context, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
             TabGroupAdapter(context, mock(), mock(), TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, mock(), mock(), TABS_TRAY_FEATURE_NAME)
         )
-        val tabSorter = TabSorter(settings, metrics, adapter, store)
+        val tabSorter = TabSorter(settings, metrics, adapter)
 
         tabSorter.updateTabs(
-            Tabs(
-                list = listOf(
-                    createTab("tab1", System.currentTimeMillis()),
-                    createTab("tab2", System.currentTimeMillis(), searchTerm = "mozilla"),
-                    createTab("tab3", System.currentTimeMillis(), searchTerm = "mozilla")
+            listOf(
+                createTab(url = "url", id = "tab1", lastAccess = System.currentTimeMillis()),
+                createTab(
+                    url = "url",
+                    id = "tab2",
+                    lastAccess = System.currentTimeMillis(),
+                    searchTerms = "mozilla"
                 ),
-                selectedIndex = 0
-            )
+                createTab(
+                    url = "url",
+                    id = "tab3",
+                    lastAccess = System.currentTimeMillis(),
+                    searchTerms = "mozilla"
+                )
+            ),
+            selectedTabId = "tab1"
         )
 
         assertEquals(adapter.itemCount, 3)
@@ -107,29 +101,37 @@ class TabSorterTest {
 
     @Test
     fun `WHEN updated with one normal tab, one inactive tab and two search term tab THEN adapter have normal tab, inactive tab and a search group`() {
-        val store = BrowserStore(
-            BrowserState(
-                tabs = emptyList()
-            )
-        )
         val adapter = ConcatAdapter(
             InactiveTabsAdapter(context, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
             TabGroupAdapter(context, mock(), mock(), TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, mock(), mock(), TABS_TRAY_FEATURE_NAME)
         )
-        val tabSorter = TabSorter(settings, metrics, adapter, store)
+        val tabSorter = TabSorter(settings, metrics, adapter)
 
         tabSorter.updateTabs(
-            Tabs(
-                list = listOf(
-                    createTab("tab1", System.currentTimeMillis()),
-                    createTab("tab2", inactiveTimestamp),
-                    createTab("tab3", System.currentTimeMillis(), searchTerm = "mozilla"),
-                    createTab("tab4", System.currentTimeMillis(), searchTerm = "mozilla")
+            listOf(
+                createTab(url = "url", id = "tab1", lastAccess = System.currentTimeMillis()),
+                createTab(
+                    url = "url",
+                    id = "tab2",
+                    lastAccess = inactiveTimestamp,
+                    createdAt = inactiveTimestamp
                 ),
-                selectedIndex = 0
-            )
+                createTab(
+                    url = "url",
+                    id = "tab3",
+                    lastAccess = System.currentTimeMillis(),
+                    searchTerms = "mozilla"
+                ),
+                createTab(
+                    url = "url",
+                    id = "tab4",
+                    lastAccess = System.currentTimeMillis(),
+                    searchTerms = "mozilla"
+                )
+            ),
+            selectedTabId = "tab1"
         )
 
         assertEquals(adapter.itemCount, 4)
@@ -142,29 +144,37 @@ class TabSorterTest {
     @Test
     fun `WHEN inactive tabs is off THEN adapter have no inactive tab`() {
         every { settings.inactiveTabsAreEnabled }.answers { false }
-        val store = BrowserStore(
-            BrowserState(
-                tabs = emptyList()
-            )
-        )
         val adapter = ConcatAdapter(
             InactiveTabsAdapter(context, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
             TabGroupAdapter(context, mock(), mock(), TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, mock(), mock(), TABS_TRAY_FEATURE_NAME)
         )
-        val tabSorter = TabSorter(settings, metrics, adapter, store)
+        val tabSorter = TabSorter(settings, metrics, adapter)
 
         tabSorter.updateTabs(
-            Tabs(
-                list = listOf(
-                    createTab("tab1", System.currentTimeMillis()),
-                    createTab("tab2", inactiveTimestamp),
-                    createTab("tab3", System.currentTimeMillis(), searchTerm = "mozilla"),
-                    createTab("tab4", System.currentTimeMillis(), searchTerm = "mozilla")
+            listOf(
+                createTab(url = "url", id = "tab1", lastAccess = System.currentTimeMillis()),
+                createTab(
+                    url = "url",
+                    id = "tab2",
+                    lastAccess = inactiveTimestamp,
+                    createdAt = inactiveTimestamp
                 ),
-                selectedIndex = 0
-            )
+                createTab(
+                    url = "url",
+                    id = "tab3",
+                    lastAccess = System.currentTimeMillis(),
+                    searchTerms = "mozilla"
+                ),
+                createTab(
+                    url = "url",
+                    id = "tab4",
+                    lastAccess = System.currentTimeMillis(),
+                    searchTerms = "mozilla"
+                )
+            ),
+            selectedTabId = "tab1"
         )
 
         assertEquals(adapter.itemCount, 4)
@@ -177,29 +187,37 @@ class TabSorterTest {
     @Test
     fun `WHEN search term tabs is off THEN adapter have no search term group`() {
         every { settings.searchTermTabGroupsAreEnabled }.answers { false }
-        val store = BrowserStore(
-            BrowserState(
-                tabs = emptyList()
-            )
-        )
         val adapter = ConcatAdapter(
             InactiveTabsAdapter(context, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
             TabGroupAdapter(context, mock(), mock(), TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, mock(), mock(), TABS_TRAY_FEATURE_NAME)
         )
-        val tabSorter = TabSorter(settings, metrics, adapter, store)
+        val tabSorter = TabSorter(settings, metrics, adapter)
 
         tabSorter.updateTabs(
-            Tabs(
-                list = listOf(
-                    createTab("tab1", System.currentTimeMillis()),
-                    createTab("tab2", inactiveTimestamp),
-                    createTab("tab3", System.currentTimeMillis(), searchTerm = "mozilla"),
-                    createTab("tab4", System.currentTimeMillis(), searchTerm = "mozilla")
+            listOf(
+                createTab(url = "url", id = "tab1", lastAccess = System.currentTimeMillis()),
+                createTab(
+                    url = "url",
+                    id = "tab2",
+                    lastAccess = inactiveTimestamp,
+                    createdAt = inactiveTimestamp
                 ),
-                selectedIndex = 0
-            )
+                createTab(
+                    url = "url",
+                    id = "tab3",
+                    lastAccess = System.currentTimeMillis(),
+                    searchTerms = "mozilla"
+                ),
+                createTab(
+                    url = "url",
+                    id = "tab4",
+                    lastAccess = System.currentTimeMillis(),
+                    searchTerms = "mozilla"
+                )
+            ),
+            selectedTabId = "tab1"
         )
 
         assertEquals(adapter.itemCount, 4)
@@ -213,29 +231,36 @@ class TabSorterTest {
     fun `WHEN both inactive tabs and search term tabs are off THEN adapter have only normal tabs`() {
         every { settings.inactiveTabsAreEnabled }.answers { false }
         every { settings.searchTermTabGroupsAreEnabled }.answers { false }
-        val store = BrowserStore(
-            BrowserState(
-                tabs = emptyList()
-            )
-        )
         val adapter = ConcatAdapter(
             InactiveTabsAdapter(context, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
             TabGroupAdapter(context, mock(), mock(), TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, mock(), mock(), TABS_TRAY_FEATURE_NAME)
         )
-        val tabSorter = TabSorter(settings, metrics, adapter, store)
+        val tabSorter = TabSorter(settings, metrics, adapter)
 
         tabSorter.updateTabs(
-            Tabs(
-                list = listOf(
-                    createTab("tab1", System.currentTimeMillis()),
-                    createTab("tab2", inactiveTimestamp),
-                    createTab("tab3", System.currentTimeMillis(), searchTerm = "mozilla"),
-                    createTab("tab4", System.currentTimeMillis(), searchTerm = "mozilla")
+            listOf(
+                createTab(url = "url", id = "tab1", lastAccess = System.currentTimeMillis()),
+                createTab(
+                    url = "url",
+                    id = "tab2",
+                    lastAccess = inactiveTimestamp
                 ),
-                selectedIndex = 0
-            )
+                createTab(
+                    url = "url",
+                    id = "tab3",
+                    lastAccess = System.currentTimeMillis(),
+                    searchTerms = "mozilla"
+                ),
+                createTab(
+                    url = "url",
+                    id = "tab4",
+                    lastAccess = System.currentTimeMillis(),
+                    searchTerms = "mozilla"
+                )
+            ),
+            selectedTabId = "tab1"
         )
 
         assertEquals(adapter.itemCount, 4)
@@ -247,26 +272,22 @@ class TabSorterTest {
 
     @Test
     fun `WHEN only one search term tab THEN there is no search group`() {
-        val store = BrowserStore(
-            BrowserState(
-                tabs = emptyList()
-            )
-        )
         val adapter = ConcatAdapter(
             InactiveTabsAdapter(context, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
             TabGroupAdapter(context, mock(), mock(), TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, mock(), mock(), TABS_TRAY_FEATURE_NAME)
         )
-        val tabSorter = TabSorter(settings, metrics, adapter, store)
+        val tabSorter = TabSorter(settings, metrics, adapter)
 
         tabSorter.updateTabs(
-            Tabs(
-                list = listOf(
-                    createTab("tab1", System.currentTimeMillis(), searchTerm = "mozilla")
-                ),
-                selectedIndex = 0
-            )
+            listOf(
+                createTab(
+                    url = "url", id = "tab1", lastAccess = System.currentTimeMillis(),
+                    searchTerms = "mozilla"
+                )
+            ),
+            selectedTabId = "tab1"
         )
 
         assertEquals(adapter.itemCount, 1)
@@ -278,27 +299,26 @@ class TabSorterTest {
 
     @Test
     fun `WHEN remove second last one search term tab THEN search group is kept even if there's only one tab`() {
-        val store = BrowserStore(
-            BrowserState(
-                tabs = emptyList()
-            )
-        )
         val adapter = ConcatAdapter(
             InactiveTabsAdapter(context, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
             TabGroupAdapter(context, mock(), mock(), TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, mock(), mock(), TABS_TRAY_FEATURE_NAME)
         )
-        val tabSorter = TabSorter(settings, metrics, adapter, store)
+        val tabSorter = TabSorter(settings, metrics, adapter)
 
         tabSorter.updateTabs(
-            Tabs(
-                list = listOf(
-                    createTab("tab1", System.currentTimeMillis(), searchTerm = "mozilla"),
-                    createTab("tab2", System.currentTimeMillis(), searchTerm = "mozilla")
+            listOf(
+                createTab(
+                    url = "url", id = "tab1", lastAccess = System.currentTimeMillis(),
+                    searchTerms = "mozilla"
                 ),
-                selectedIndex = 0
-            )
+                createTab(
+                    url = "url", id = "tab2", lastAccess = System.currentTimeMillis(),
+                    searchTerms = "mozilla"
+                )
+            ),
+            selectedTabId = "tab1"
         )
 
         assertEquals(adapter.itemCount, 1)
@@ -308,12 +328,13 @@ class TabSorterTest {
         assertEquals(adapter.browserAdapter.itemCount, 0)
 
         tabSorter.updateTabs(
-            Tabs(
-                list = listOf(
-                    createTab("tab1", System.currentTimeMillis(), searchTerm = "mozilla")
-                ),
-                selectedIndex = 0
-            )
+            listOf(
+                createTab(
+                    url = "url", id = "tab1", lastAccess = System.currentTimeMillis(),
+                    searchTerms = "mozilla"
+                )
+            ),
+            selectedTabId = "tab1"
         )
 
         assertEquals(adapter.itemCount, 1)

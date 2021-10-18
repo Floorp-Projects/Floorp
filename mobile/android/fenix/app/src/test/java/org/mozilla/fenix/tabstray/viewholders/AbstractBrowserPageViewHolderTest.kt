@@ -9,8 +9,8 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.TextView
 import io.mockk.mockk
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -22,7 +22,6 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.browser.AbstractBrowserTrayList
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
-import org.mozilla.fenix.tabstray.browser.createTab
 
 @RunWith(FenixRobolectricTestRunner::class)
 class AbstractBrowserPageViewHolderTest {
@@ -43,14 +42,7 @@ class AbstractBrowserPageViewHolderTest {
         viewHolder.bind(adapter)
         viewHolder.attachedToWindow()
 
-        adapter.updateTabs(
-            Tabs(
-                list = listOf(
-                    createTab("tab1")
-                ),
-                selectedIndex = 0
-            )
-        )
+        adapter.updateTabs(listOf(createTab(url = "url", id = "tab1")), "tab1")
 
         assertTrue(trayList.visibility == VISIBLE)
         assertTrue(emptyList.visibility == GONE)
@@ -67,12 +59,7 @@ class AbstractBrowserPageViewHolderTest {
         viewHolder.bind(adapter)
         viewHolder.attachedToWindow()
 
-        adapter.updateTabs(
-            Tabs(
-                list = emptyList(),
-                selectedIndex = 0
-            )
-        )
+        adapter.updateTabs(emptyList(), "")
 
         assertTrue(trayList.visibility == GONE)
         assertTrue(emptyList.visibility == VISIBLE)

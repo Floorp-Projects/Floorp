@@ -36,7 +36,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import mozilla.components.browser.state.state.createTab as createStateTab
 import mozilla.components.browser.storage.sync.Tab as SyncTab
-import org.mozilla.fenix.tabstray.browser.createTab as createTrayTab
 
 class NavigationInteractorTest {
     private lateinit var store: BrowserStore
@@ -148,7 +147,7 @@ class NavigationInteractorTest {
             showBookmarkSnackbar = {
                 showBookmarkSnackbarInvoked = true
             }
-        ).onSaveToBookmarks(listOf(createTrayTab()))
+        ).onSaveToBookmarks(listOf(createStateTab("url")))
 
         coVerify(exactly = 1) { bookmarksUseCase.addBookmark(any(), any(), any()) }
         assertTrue(showBookmarkSnackbarInvoked)

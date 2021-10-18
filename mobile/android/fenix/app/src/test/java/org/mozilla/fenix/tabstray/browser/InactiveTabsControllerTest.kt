@@ -10,8 +10,7 @@ import io.mockk.verify
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.tabstray.Tabs
-import mozilla.components.concept.tabstray.TabsTray
+import mozilla.components.browser.tabstray.TabsTray
 import org.junit.Assert.assertEquals
 import mozilla.components.browser.state.state.createTab as createTabState
 import org.junit.Test
@@ -32,15 +31,15 @@ class InactiveTabsControllerTest {
             )
         )
         val tray: TabsTray = mockk(relaxed = true)
-        val tabsSlot = slot<Tabs>()
+        val tabsSlot = slot<List<TabSessionState>>()
         val controller = InactiveTabsController(store, filter, tray, mockk(relaxed = true))
 
         controller.updateCardExpansion(true)
 
-        verify { tray.updateTabs(capture(tabsSlot)) }
+        verify { tray.updateTabs(capture(tabsSlot), any()) }
 
-        assertEquals(2, tabsSlot.captured.list.size)
-        assertEquals("1", tabsSlot.captured.list.first().id)
+        assertEquals(2, tabsSlot.captured.size)
+        assertEquals("1", tabsSlot.captured.first().id)
     }
 
     @Test

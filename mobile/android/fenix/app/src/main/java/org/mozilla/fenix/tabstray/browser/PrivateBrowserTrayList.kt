@@ -21,19 +21,16 @@ class PrivateBrowserTrayList @JvmOverloads constructor(
         // NB: The use cases here are duplicated because there isn't a nicer
         // way to share them without a better dependency injection solution.
         TabsFeature(
-            adapter as TabsAdapter,
+            adapter as BrowserTabsAdapter,
             context.components.core.store,
-            selectTabUseCase,
-            removeTabUseCase,
-            { it.content.private },
-            { }
-        )
+        ) { it.content.private }
     }
     private val touchHelper by lazy {
         TabsTouchHelper(
-            observable = adapter as TabsAdapter,
+            interactionDelegate = (adapter as BrowserTabsAdapter).delegate,
             onViewHolderTouched = { swipeToDelete.isSwipeable },
-            onViewHolderDraw = { context.components.settings.gridTabView.not() }
+            onViewHolderDraw = { context.components.settings.gridTabView.not() },
+            featureNameHolder = (adapter as BrowserTabsAdapter)
         )
     }
 

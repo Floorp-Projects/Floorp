@@ -9,10 +9,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
-import mozilla.components.concept.tabstray.Tab as TabsTrayTab
-import mozilla.components.concept.tabstray.Tabs
-import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.support.base.observer.ObserverRegistry
+import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.tabstray.TabsTray
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.AutoCloseDialogHolder
@@ -20,7 +18,6 @@ import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.FooterHolder
 import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.HeaderHolder
 import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.TabViewHolder
 import org.mozilla.fenix.utils.Settings
-import mozilla.components.support.base.observer.Observable as ComponentObservable
 
 /**
  * A convenience alias for readability.
@@ -28,26 +25,19 @@ import mozilla.components.support.base.observer.Observable as ComponentObservabl
 private typealias Adapter = ListAdapter<InactiveTabsAdapter.Item, InactiveTabViewHolder>
 
 /**
- * A convenience alias for readability.
- */
-private typealias Observable = ComponentObservable<TabsTray.Observer>
-
-/**
  * The [ListAdapter] for displaying the list of inactive tabs.
  *
  * @param context [Context] used for various platform interactions or accessing [Components]
  * @param browserTrayInteractor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
  * @param featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
- * @param delegate [Observable]<[TabsTray.Observer]> for observing tabs tray changes. Defaults to [ObserverRegistry].
  */
 class InactiveTabsAdapter(
     private val context: Context,
     private val browserTrayInteractor: BrowserTrayInteractor,
     private val tabsTrayInteractor: TabsTrayInteractor,
-    private val featureName: String,
+    override val featureName: String,
     private val settings: Settings,
-    delegate: Observable = ObserverRegistry()
-) : Adapter(DiffCallback), TabsTray, Observable by delegate {
+) : Adapter(DiffCallback), TabsTray, FeatureNameHolder {
 
     internal lateinit var inactiveTabsInteractor: InactiveTabsInteractor
     internal lateinit var inactiveTabsAutoCloseDialogInteractor: InactiveTabsAutoCloseDialogInteractor
@@ -92,11 +82,11 @@ class InactiveTabsAdapter(
         }
     }
 
-    override fun updateTabs(tabs: Tabs) {
-        inActiveTabsCount = tabs.list.size
+    override fun updateTabs(tabs: List<TabSessionState>, selectedTabId: String?) {
+        inActiveTabsCount = tabs.size
 
         // Early return with an empty list to remove the header/footer items.
-        if (tabs.list.isEmpty()) {
+        if (tabs.isEmpty()) {
             submitList(emptyList())
             return
         }
@@ -107,7 +97,7 @@ class InactiveTabsAdapter(
             return
         }
 
-        val items = tabs.list.map { Item.Tab(it) }
+        val items = tabs.map { Item.Tab(it) }
         val footer = Item.Footer
         val headerItems = if (settings.shouldShowInactiveTabsAutoCloseDialog(items.size)) {
             listOf(Item.Header, Item.AutoCloseMessage)
@@ -116,8 +106,6 @@ class InactiveTabsAdapter(
         }
         submitList(headerItems + items + listOf(footer))
     }
-
-    override fun isTabSelected(tabs: Tabs, position: Int): Boolean = false
 
     private object DiffCallback : DiffUtil.ItemCallback<Item>() {
         override fun areItemsTheSame(oldItem: Item, newItem: Item): Boolean {
@@ -147,7 +135,7 @@ class InactiveTabsAdapter(
         /**
          * A tab that is now considered inactive.
          */
-        data class Tab(val tab: TabsTrayTab) : Item()
+        data class Tab(val tab: TabSessionState) : Item()
 
         /**
          * A dialog for when the inactive tabs section reach 20 tabs.

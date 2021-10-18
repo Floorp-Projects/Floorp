@@ -11,10 +11,10 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.Tab as SyncTab
 import mozilla.components.concept.engine.prompt.ShareData
-import mozilla.components.concept.tabstray.Tab
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -44,9 +44,9 @@ interface NavigationInteractor {
     fun onAccountSettingsClicked()
 
     /**
-     * Called when sharing a list of [Tab]s.
+     * Called when sharing a list of [TabSessionState]s.
      */
-    fun onShareTabs(tabs: Collection<Tab>)
+    fun onShareTabs(tabs: Collection<TabSessionState>)
 
     /**
      * Called when clicking the share tabs button.
@@ -71,12 +71,12 @@ interface NavigationInteractor {
     /**
      * Used when opening the add-to-collections user flow.
      */
-    fun onSaveToCollections(tabs: Collection<Tab>)
+    fun onSaveToCollections(tabs: Collection<TabSessionState>)
 
     /**
-     * Used when adding [Tab]s as bookmarks.
+     * Used when adding [TabSessionState]s as bookmarks.
      */
-    fun onSaveToBookmarks(tabs: Collection<Tab>)
+    fun onSaveToBookmarks(tabs: Collection<TabSessionState>)
 
     /**
      * Called when clicking on a SyncedTab item.
@@ -138,9 +138,9 @@ class DefaultNavigationInteractor(
         metrics.track(Event.RecentlyClosedTabsOpened)
     }
 
-    override fun onShareTabs(tabs: Collection<Tab>) {
+    override fun onShareTabs(tabs: Collection<TabSessionState>) {
         val data = tabs.map {
-            ShareData(url = it.url, title = it.title)
+            ShareData(url = it.content.url, title = it.content.title)
         }
         val directions = TabsTrayFragmentDirections.actionGlobalShareFragment(
             data = data.toTypedArray()
@@ -170,7 +170,7 @@ class DefaultNavigationInteractor(
         dismissTabTrayAndNavigateHome(sessionsToClose)
     }
 
-    override fun onSaveToCollections(tabs: Collection<Tab>) {
+    override fun onSaveToCollections(tabs: Collection<TabSessionState>) {
         metrics.track(Event.TabsTraySaveToCollectionPressed)
         tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
 
@@ -195,13 +195,13 @@ class DefaultNavigationInteractor(
         ).show(context)
     }
 
-    override fun onSaveToBookmarks(tabs: Collection<Tab>) {
+    override fun onSaveToBookmarks(tabs: Collection<TabSessionState>) {
         tabs.forEach { tab ->
             // We don't combine the context with lifecycleScope so that our jobs are not cancelled
             // if we leave the fragment, i.e. we still want the bookmarks to be added if the
             // tabs tray closes before the job is done.
             CoroutineScope(ioDispatcher).launch {
-                bookmarksUseCase.addBookmark(tab.url, tab.title)
+                bookmarksUseCase.addBookmark(tab.content.url, tab.content.title)
             }
         }
 

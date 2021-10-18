@@ -9,12 +9,9 @@ import android.util.AttributeSet
 import androidx.recyclerview.widget.ConcatAdapter
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.TabViewHolder
-import mozilla.components.concept.tabstray.Tab
-import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.TABS_TRAY_FEATURE_NAME
 import org.mozilla.fenix.tabstray.ext.browserAdapter
 import org.mozilla.fenix.tabstray.ext.inactiveTabsAdapter
 import org.mozilla.fenix.tabstray.ext.isNormalTabInactive
@@ -36,14 +33,12 @@ class NormalBrowserTrayList @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : AbstractBrowserTrayList(context, attrs, defStyleAttr) {
 
-    private val swipeDelegate = SwipeToDeleteDelegate()
     private val concatAdapter by lazy { adapter as ConcatAdapter }
     private val tabSorter by lazy {
         TabSorter(
             context.settings(),
             context.components.analytics.metrics,
-            concatAdapter,
-            context.components.core.store
+            concatAdapter
         )
     }
     private val inactiveTabsFilter: (TabSessionState) -> Boolean = filter@{
@@ -79,20 +74,18 @@ class NormalBrowserTrayList @JvmOverloads constructor(
         TabsFeature(
             tabSorter,
             context.components.core.store,
-            selectTabUseCase,
-            removeTabUseCase,
             { !it.content.private },
-            {}
         )
     }
 
     private val touchHelper by lazy {
         TabsTouchHelper(
-            observable = concatAdapter.browserAdapter,
+            interactionDelegate = concatAdapter.browserAdapter.interactor,
             onViewHolderTouched = {
                 it is TabViewHolder && swipeToDelete.isSwipeable
             },
-            onViewHolderDraw = { context.components.settings.gridTabView.not() }
+            onViewHolderDraw = { context.components.settings.gridTabView.not() },
+            featureNameHolder = concatAdapter.browserAdapter
         )
     }
 
@@ -104,8 +97,6 @@ class NormalBrowserTrayList @JvmOverloads constructor(
 
         tabsFeature.start()
 
-        concatAdapter.browserAdapter.register(swipeDelegate)
-
         touchHelper.attachToRecyclerView(this)
     }
 
@@ -114,21 +105,6 @@ class NormalBrowserTrayList @JvmOverloads constructor(
 
         tabsFeature.stop()
 
-        concatAdapter.browserAdapter.unregister(swipeDelegate)
-
         touchHelper.attachToRecyclerView(null)
-    }
-
-    /**
-     * A delegate for handling open/selected events from swipe-to-delete gestures.
-     */
-    inner class SwipeToDeleteDelegate : TabsTray.Observer {
-        override fun onTabClosed(tab: Tab) {
-            removeTabUseCase.invoke(tab.id, TABS_TRAY_FEATURE_NAME)
-        }
-
-        override fun onTabSelected(tab: Tab) {
-            selectTabUseCase.invoke(tab.id)
-        }
     }
 }

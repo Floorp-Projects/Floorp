@@ -12,7 +12,7 @@ import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.tabstray.TabsTray
+import mozilla.components.browser.tabstray.TabsTray
 import org.junit.Test
 import org.mozilla.fenix.utils.Settings
 

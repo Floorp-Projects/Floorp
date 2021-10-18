@@ -6,7 +6,7 @@ package org.mozilla.fenix.tabstray.ext
 
 import mozilla.components.browser.state.state.TabSessionState
 
-private fun TabSessionState.isActive(maxActiveTime: Long): Boolean {
+fun TabSessionState.isActive(maxActiveTime: Long): Boolean {
     val lastActiveTime = maxOf(lastAccess, createdAt)
     val now = System.currentTimeMillis()
     return (now - lastActiveTime <= maxActiveTime)
@@ -15,7 +15,7 @@ private fun TabSessionState.isActive(maxActiveTime: Long): Boolean {
 /**
  * Returns true if the [TabSessionState] has a search term.
  */
-private fun TabSessionState.hasSearchTerm(): Boolean {
+fun TabSessionState.hasSearchTerm(): Boolean {
     return content.searchTerms.isNotEmpty() || !historyMetadata?.searchTerm.isNullOrBlank()
 }
 

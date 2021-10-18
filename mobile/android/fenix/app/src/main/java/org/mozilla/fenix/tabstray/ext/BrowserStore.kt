@@ -7,12 +7,11 @@ package org.mozilla.fenix.tabstray.ext
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.tabstray.Tab
 
 /**
  * Find and extract a list [TabSessionState] from the [BrowserStore] using the IDs from [tabs].
  */
-fun BrowserStore.getTabSessionState(tabs: Collection<Tab>): List<TabSessionState> {
+fun BrowserStore.getTabSessionState(tabs: Collection<TabSessionState>): List<TabSessionState> {
     return tabs.mapNotNull {
         state.findTab(it.id)
     }

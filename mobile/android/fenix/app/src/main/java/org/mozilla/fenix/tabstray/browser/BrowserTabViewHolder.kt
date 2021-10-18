@@ -9,11 +9,10 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.browser.tabstray.TabsTrayStyling
 import mozilla.components.concept.base.images.ImageLoader
-import mozilla.components.concept.tabstray.Tab
-import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.support.base.observer.Observable
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.TabTrayGridItemBinding
 import org.mozilla.fenix.ext.increaseTapArea
@@ -28,7 +27,8 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
      * @param imageLoader [ImageLoader] used to load tab thumbnails.
      * @param browserTrayInteractor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
      * @param store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
-     * @param selectionHolder [SelectionHolder]<[Tab]> for helping with selecting any number of displayed [Tab]s.
+     * @param selectionHolder [SelectionHolder]<[TabSessionState]> for helping with selecting
+     * any number of displayed [TabSessionState]s.
      * @param itemView [View] that displays a "tab".
      * @param featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
      */
@@ -36,7 +36,7 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
         imageLoader: ImageLoader,
         override val browserTrayInteractor: BrowserTrayInteractor,
         store: TabsTrayStore,
-        selectionHolder: SelectionHolder<Tab>? = null,
+        selectionHolder: SelectionHolder<TabSessionState>? = null,
         itemView: View,
         featureName: String
     ) : AbstractBrowserTabViewHolder(itemView, imageLoader, store, selectionHolder, featureName) {
@@ -60,12 +60,12 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
         }
 
         override fun bind(
-            tab: Tab,
+            tab: TabSessionState,
             isSelected: Boolean,
             styling: TabsTrayStyling,
-            observable: Observable<TabsTray.Observer>
+            delegate: TabsTray.Delegate
         ) {
-            super.bind(tab, isSelected, styling, observable)
+            super.bind(tab, isSelected, styling, delegate)
 
             closeButton.increaseTapArea(GRID_ITEM_CLOSE_BUTTON_EXTRA_DPS)
         }
@@ -81,7 +81,8 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
      * @param imageLoader [ImageLoader] used to load tab thumbnails.
      * @param browserTrayInteractor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
      * @param store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
-     * @param selectionHolder [SelectionHolder]<[Tab]> for helping with selecting any number of displayed [Tab]s.
+     * @param selectionHolder [SelectionHolder]<[TabSessionState]> for helping with selecting
+     * any number of displayed [TabSessionState]s.
      * @param itemView [View] that displays a "tab".
      * @param featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
      */
@@ -89,7 +90,7 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
         imageLoader: ImageLoader,
         override val browserTrayInteractor: BrowserTrayInteractor,
         store: TabsTrayStore,
-        selectionHolder: SelectionHolder<Tab>? = null,
+        selectionHolder: SelectionHolder<TabSessionState>? = null,
         itemView: View,
         featureName: String
     ) : AbstractBrowserTabViewHolder(itemView, imageLoader, store, selectionHolder, featureName) {
