@@ -467,10 +467,12 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   mozilla::Maybe<wasm::Pages> wasmSourceMaxPages() const;
 
   [[nodiscard]] static bool wasmGrowToPagesInPlace(
-      wasm::Pages newPages, Handle<ArrayBufferObject*> oldBuf,
+      wasm::IndexType t, wasm::Pages newPages,
+      Handle<ArrayBufferObject*> oldBuf,
       MutableHandle<ArrayBufferObject*> newBuf, JSContext* cx);
   [[nodiscard]] static bool wasmMovingGrowToPages(
-      wasm::Pages newPages, Handle<ArrayBufferObject*> oldBuf,
+      wasm::IndexType t, wasm::Pages newPages,
+      Handle<ArrayBufferObject*> oldBuf,
       MutableHandle<ArrayBufferObject*> newBuf, JSContext* cx);
 
   static void finalize(JSFreeOp* fop, JSObject* obj);
@@ -514,9 +516,10 @@ using RootedArrayBufferObject = Rooted<ArrayBufferObject*>;
 using HandleArrayBufferObject = Handle<ArrayBufferObject*>;
 using MutableHandleArrayBufferObject = MutableHandle<ArrayBufferObject*>;
 
-// Create a buffer for a 32-bit wasm memory.
-bool CreateWasmBuffer32(JSContext* cx, const wasm::MemoryDesc& memory,
-                        MutableHandleArrayBufferObjectMaybeShared buffer);
+// Create a buffer for a wasm memory, whose type is determined by
+// memory.indexType().
+bool CreateWasmBuffer(JSContext* cx, const wasm::MemoryDesc& memory,
+                      MutableHandleArrayBufferObjectMaybeShared buffer);
 
 // Per-compartment table that manages the relationship between array buffers
 // and the views that use their storage.
