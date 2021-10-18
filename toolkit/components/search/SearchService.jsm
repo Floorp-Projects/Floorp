@@ -521,7 +521,7 @@ SearchService.prototype = {
 
     // Something unexpected as happened. In order to recover the original
     // default engine, use the first visible engine which is the best we can do.
-    return this._getSortedEngines(false)[0];
+    return this._sortedVisibleEngines[0];
   },
 
   /**
@@ -1090,7 +1090,7 @@ SearchService.prototype = {
     // use the user's order information stored in settings.
     this._settings.setAttribute("useSavedOrder", true);
 
-    var engines = this._getSortedEngines(true);
+    var engines = this._sortedEngines;
 
     for (var i = 0; i < engines.length; ++i) {
       engines[i].setAttr("order", i + 1);
@@ -1223,21 +1223,15 @@ SearchService.prototype = {
   },
 
   /**
-   * Get a sorted array of engines.
-   *
-   * @param {boolean} withHidden
-   *   True if hidden plugins should be included in the result.
+   * Get a sorted array of the visible engines.
    * @returns {Array<SearchEngine>}
-   *   The sorted array.
    */
-  _getSortedEngines(withHidden) {
-    if (withHidden) {
-      return this._sortedEngines;
-    }
 
-    return this._sortedEngines.filter(function(engine) {
-      return !engine.hidden;
-    });
+  get _sortedVisibleEngines() {
+    this.__sortedVisibleEngines = this._sortedEngines.filter(
+      engine => !engine.hidden
+    );
+    return this.__sortedVisibleEngines;
   },
 
   // nsISearchService
@@ -1422,13 +1416,13 @@ SearchService.prototype = {
   async getEngines() {
     await this.init();
     logConsole.debug("getEngines: getting all engines");
-    return this._getSortedEngines(true);
+    return this._sortedEngines;
   },
 
   async getVisibleEngines() {
     await this.init(true);
     logConsole.debug("getVisibleEngines: getting all visible engines");
-    return this._getSortedEngines(false);
+    return this._sortedVisibleEngines;
   },
 
   async getAppProvidedEngines() {
@@ -1446,7 +1440,7 @@ SearchService.prototype = {
 
   _getEnginesByExtensionID(extensionID) {
     logConsole.debug("getEngines: getting all engines for", extensionID);
-    var engines = this._getSortedEngines(true).filter(function(engine) {
+    var engines = this._sortedEngines.filter(function(engine) {
       return engine._extensionID == extensionID;
     });
     return engines;
@@ -1999,7 +1993,7 @@ SearchService.prototype = {
     //
     // This could be further simplified by having our caller pass in
     // newIndexEngine directly instead of newIndex.
-    var newIndexEngine = this._getSortedEngines(false)[newIndex];
+    var newIndexEngine = this._sortedVisibleEngines[newIndex];
     if (!newIndexEngine) {
       throw Components.Exception(
         "moveEngine: Can't find engine to replace!",
@@ -2079,7 +2073,7 @@ SearchService.prototype = {
       newDefault.hidden ||
       newDefault.name == excludeEngineName
     ) {
-      let sortedEngines = this._getSortedEngines(false);
+      let sortedEngines = this._sortedVisibleEngines;
       let generalSearchEngines = sortedEngines.filter(
         e => e.isGeneralPurposeEngine
       );
@@ -2103,7 +2097,7 @@ SearchService.prototype = {
       // even if the name is the same as the excluded one (should never happen).
       if (!newDefault) {
         if (!firstVisible) {
-          sortedEngines = this._getSortedEngines(true);
+          sortedEngines = this._sortedEngines;
           firstVisible = sortedEngines.find(e => e.isGeneralPurposeEngine);
           if (!firstVisible) {
             firstVisible = sortedEngines[0];
