@@ -23,7 +23,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 ашық бет. Беттерді ауыстыру үшін шертіңіз.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s ашық бет. Беттерді ауыстыру үшін шертіңіз.</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s ашық бет. Беттерді ауыстыру үшін шертіңіз.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d таңдалды</string>
@@ -108,7 +108,18 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">Тайдыру</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">Сіз екі апта бойы қарамаған беттер осында жылжытылады.</string>
+    <string name="tab_tray_inactive_onboarding_message">Сіз екі апта бойы қарамаған беттер осында жылжытылады.</string>
+
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">Баптауларда сөндіру</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Бір айдан кейін автожабу керек пе?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox соңғы айда қаралмаған беттерді жаба алады.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Жабу</string>
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button">Автожабуды іске қосу</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -116,7 +127,7 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Жаңа жекелік беті</string>
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Үздік сайттар</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Үздік сайттар</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -124,6 +135,11 @@
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Барлығын көрсету</string>
 
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description">Барлық соңғы беттерді көрсету батырмасы</string>
+    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
+        The first parameter is the search term that the user used. (for example: your search for "cat")-->
+    <string name="recent_tabs_search_term">\&quot;%1$s\&quot; бойынша іздеуіңіз</string>
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         The first parameter is the count for number of sites in the group.  This number will always be more than one. -->
     <string name="recent_tabs_search_term_count">Сайттар: %1$s</string>
@@ -155,7 +171,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Тоқтату</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Бетбелгілерге қосу</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Бетбелгілерге қосу</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Бетбелгіні түзету</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -218,6 +234,8 @@
 
     <!-- Browser menu button that opens the Customize menu -->
     <string name="browser_menu_customize_home">Үй бетін баптау</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">Үй бетін баптау</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Бастапқы экран</string>
@@ -263,6 +281,10 @@
     <string name="search_engine_suggestions_title">%s ішінен іздеу</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Адрестік жолақтан тікелей іздеу</string>
+
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_title_2">Firefox ішінде не жаңалық</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -342,7 +364,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Тема</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">Үйге</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Үйге</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Үй парағы</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Ым қимылдар</string>
     <!-- Preference for settings related to visual options -->
@@ -534,7 +558,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Синхрондауды іске қосу</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Жұмыс үстеліндегі Firefox-та жұптау кодын сканерлеңіз</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Жұмыс үстеліндегі Firefox-та жұптау кодын сканерлеңіз</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Кіру</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -650,15 +674,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Бір айдан кейін</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">Бастапқы экраннан бастау</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Бастапқы экраннан бастау</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">Төрт сағаттан кейін</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Төрт сағаттан кейін</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">Әрқашан</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Әрқашан</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">Ешқашан</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Ешқашан</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Қолмен жабу</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -709,13 +733,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Жинаққа сақтау</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">Таңдау</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Таңдау</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Барлық беттермен бөлісу</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Жуырда жабылған беттер</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">Жақында жабылған</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Жақында жабылған</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Тіркелгі баптаулары</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -834,10 +858,6 @@
     <string name="history_empty_message">Осында тарих жоқ</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">Жүктемелерді тазарту</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">Жүктемелеріңізді өшіруді шынымен қалайсыз ба?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Жүктемелер өшірілді</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -878,7 +898,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Бетбелгілер мәзірі</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Бетбелгіні түзету</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Бетбелгіні түзету</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Буманы таңдау</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1911,7 +1931,7 @@
     <string name="top_sites_max_limit_confirmation_button">Жақсы, түсіндім</string>
 
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">Ең көп қаралған үздік сайттарды көрсету</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Ең көп қаралған үздік сайттарды көрсету</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Ең көп қаралған сайттарды көрсету</string>
 
@@ -1928,11 +1948,11 @@
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
     <string name="inactive_tabs_title">Белсенді емес беттер</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">Беттер осында %s ішінде қолжетімді. Осы уақыттан кейін беттер автоматты түрде жабылады.</string>
+    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Беттер осында %s ішінде қолжетімді. Осы уақыттан кейін беттер автоматты түрде жабылады.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 күн</string>
+    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 күн</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">1 апта</string>
+    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 апта</string>
 
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
     <string name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Жіберу</string>

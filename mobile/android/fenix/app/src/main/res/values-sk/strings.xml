@@ -25,7 +25,7 @@
     <string name="open_tab_tray_single">1 otvorená karta. Ťuknutím prepnete karty.</string>
 
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">1 otvorených kariet. Ťuknutím prepnete karty.</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">1 otvorených kariet. Ťuknutím prepnete karty.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">Počet vybraných položiek: %1$d</string>
@@ -110,9 +110,18 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">Zavrieť</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">Tu sa presunú karty, ktoré ste dva týždne nevideli.</string>
+    <string name="tab_tray_inactive_onboarding_message">Tu sa presunú karty, ktoré ste dva týždne nevideli.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">Vypnúť v nastaveniach</string>
+    <string name="tab_tray_inactive_onboarding_button_text">Vypnúť v nastaveniach</string>
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Automaticky zavrieť po jednom mesiaci?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox môže zavrieť karty, ktoré ste za posledný mesiac nevideli.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Zavrieť</string>
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button">Zapnúť automatické zatváranie</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -121,7 +130,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">Nová súkromná karta</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Top stránky</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Top stránky</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -168,7 +177,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Zastaviť</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Pridať medzi záložky</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Pridať medzi záložky</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Upraviť záložku</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -384,7 +393,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Téma vzhľadu</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">Domov</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Domov</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Domovská stránka</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Gestá</string>
     <!-- Preference for settings related to visual options -->
@@ -582,7 +593,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Zapnúť synchronizáciu</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Naskenujte párovací kód zobrazený vo Firefoxe na počítači</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Naskenujte párovací kód zobrazený vo Firefoxe na počítači</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Prihlásiť sa</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -706,15 +717,23 @@
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Automatické zatváranie otvorených kariet</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">Pri spustení zobraziť úvodnú obrazovku</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Pri spustení zobraziť úvodnú obrazovku</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Otváracia obrazovka</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">Po štyroch hodinách</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Po štyroch hodinách</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Domovská stránka</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">Vždy</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Vždy</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Posledná karta</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">Nikdy</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Nikdy</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Domovská stránka po štyroch hodinách nečinnosti</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Zavrieť ručne</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -770,13 +789,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Uložiť do kolekcie</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">Vybrať</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Vybrať</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Zobraziť všetky karty</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Nedávno zatvorené karty</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">Nedávno zatvorené</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Nedávno zatvorené</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Nastavenia účtu</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -900,10 +919,6 @@
     <string name="history_empty_message">Nemáte žiadnu históriu prehliadania</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">Vymazať zoznam stiahnutých súborov</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">Naozaj chcete vymazať svoju históriu sťahovania?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Stiahnuté súbory boli odstránené</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -944,7 +959,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Ponuka záložiek</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Úprava záložky</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Úprava záložky</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Výber priečinku</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1971,8 +1986,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, rozumiem</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">Najnavštevovanejšie stránky</string>
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">Zobraziť najnavštevovanejšie stránky</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Zobraziť najnavštevovanejšie stránky</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Zobraziť najnavštevovanejšie stránky</string>
 
@@ -1991,11 +2008,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Zavrieť všetky neaktívne karty</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">Karty sú tu k dispozícii %s. Po uplynutí tejto doby sa karty automaticky zatvoria.</string>
+    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Karty sú tu k dispozícii %s. Po uplynutí tejto doby sa karty automaticky zatvoria.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 dní</string>
+    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 dní</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">1 týždeň</string>
+    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 týždeň</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
