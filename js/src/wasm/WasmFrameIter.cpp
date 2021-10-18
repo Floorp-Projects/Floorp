@@ -1462,48 +1462,30 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to asm.js native f64 Math.pow";
     case SymbolicAddress::ATan2D:
       return "call to asm.js native f64 Math.atan2";
-    case SymbolicAddress::MemoryGrowM32:
-      return "call to native memory.grow m32 (in wasm)";
-    case SymbolicAddress::MemoryGrowM64:
-      return "call to native memory.grow m64 (in wasm)";
-    case SymbolicAddress::MemorySizeM32:
-      return "call to native memory.size m32 (in wasm)";
-    case SymbolicAddress::MemorySizeM64:
-      return "call to native memory.size m64 (in wasm)";
-    case SymbolicAddress::WaitI32M32:
-      return "call to native i32.wait m32 (in wasm)";
-    case SymbolicAddress::WaitI32M64:
-      return "call to native i32.wait m64 (in wasm)";
-    case SymbolicAddress::WaitI64M32:
-      return "call to native i64.wait m32 (in wasm)";
-    case SymbolicAddress::WaitI64M64:
-      return "call to native i64.wait m64 (in wasm)";
-    case SymbolicAddress::WakeM32:
-      return "call to native wake m32 (in wasm)";
-    case SymbolicAddress::WakeM64:
-      return "call to native wake m64 (in wasm)";
+    case SymbolicAddress::MemoryGrow:
+      return "call to native memory.grow (in wasm)";
+    case SymbolicAddress::MemorySize:
+      return "call to native memory.size (in wasm)";
+    case SymbolicAddress::WaitI32:
+      return "call to native i32.wait (in wasm)";
+    case SymbolicAddress::WaitI64:
+      return "call to native i64.wait (in wasm)";
+    case SymbolicAddress::Wake:
+      return "call to native wake (in wasm)";
     case SymbolicAddress::CoerceInPlace_JitEntry:
       return "out-of-line coercion for jit entry arguments (in wasm)";
     case SymbolicAddress::ReportV128JSCall:
       return "jit call to v128 wasm function";
-    case SymbolicAddress::MemCopyM32:
-    case SymbolicAddress::MemCopySharedM32:
-      return "call to native memory.copy m32 function";
-    case SymbolicAddress::MemCopyM64:
-    case SymbolicAddress::MemCopySharedM64:
-      return "call to native memory.copy m64 function";
+    case SymbolicAddress::MemCopy32:
+    case SymbolicAddress::MemCopyShared32:
+      return "call to native memory.copy function";
     case SymbolicAddress::DataDrop:
       return "call to native data.drop function";
-    case SymbolicAddress::MemFillM32:
-    case SymbolicAddress::MemFillSharedM32:
-      return "call to native memory.fill m32 function";
-    case SymbolicAddress::MemFillM64:
-    case SymbolicAddress::MemFillSharedM64:
-      return "call to native memory.fill m64 function";
-    case SymbolicAddress::MemInitM32:
-      return "call to native memory.init m32 function";
-    case SymbolicAddress::MemInitM64:
-      return "call to native memory.init m64 function";
+    case SymbolicAddress::MemFill32:
+    case SymbolicAddress::MemFillShared32:
+      return "call to native memory.fill function";
+    case SymbolicAddress::MemInit32:
+      return "call to native memory.init function";
     case SymbolicAddress::TableCopy:
       return "call to native table.copy function";
     case SymbolicAddress::TableFill:

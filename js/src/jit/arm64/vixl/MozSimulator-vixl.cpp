@@ -581,21 +581,6 @@ typedef int32_t (*Prototype_Int32_GeneralGeneralInt32Int32)(int64_t,
                                                             int64_t,
                                                             int32_t,
                                                             int32_t);
-typedef int32_t (*Prototype_Int32_GeneralInt64Int32Int32Int32)(int64_t, int64_t,
-                                                               int32_t, int32_t,
-                                                               int32_t);
-typedef int32_t (*Prototype_Int32_GeneralInt64Int32)(int64_t, int64_t,
-                                                     int32_t);
-typedef int32_t (*Prototype_Int32_GeneralInt64Int32Int64)(int64_t, int64_t,
-                                                          int32_t, int64_t);
-typedef int32_t (*Prototype_Int32_GeneralInt64Int32Int64General)(int64_t, int64_t,
-                                                                 int32_t, int64_t,
-                                                                 int64_t);
-typedef int32_t (*Prototype_Int32_GeneralInt64Int64Int64)(int64_t, int64_t,
-                                                                 int64_t, int64_t);
-typedef int32_t (*Prototype_Int32_GeneralInt64Int64Int64General)(int64_t, int64_t,
-                                                                 int64_t, int64_t,
-                                                                 int64_t);
 typedef int64_t (*Prototype_General_GeneralInt32)(int64_t, int32_t);
 typedef int64_t (*Prototype_General_GeneralInt32Int32)(int64_t,
                                                        int32_t,
@@ -603,8 +588,6 @@ typedef int64_t (*Prototype_General_GeneralInt32Int32)(int64_t,
 typedef int64_t (*Prototype_General_GeneralInt32General)(int64_t,
                                                          int32_t,
                                                          int64_t);
-typedef int64_t (*Prototype_Int64_General)(int64_t);
-typedef int64_t (*Prototype_Int64_GeneralInt64)(int64_t, int64_t);
 
 // Simulator support for callWithABI().
 void
@@ -900,42 +883,6 @@ Simulator::VisitCallRedirection(const Instruction* instr)
       setGPR32Result(ret);
       break;
     }
-    case js::jit::Args_Int32_GeneralInt64Int32Int32Int32: {
-      int32_t ret = reinterpret_cast<Prototype_Int32_GeneralInt64Int32Int32Int32>(
-          nativeFn)(x0, x1, x2, x3, x4);
-      setGPR32Result(ret);
-      break;
-    }
-    case js::jit::Args_Int32_GeneralInt64Int32: {
-      int32_t ret = reinterpret_cast<Prototype_Int32_GeneralInt64Int32>(
-          nativeFn)(x0, x1, x2);
-      setGPR32Result(ret);
-      break;
-    }
-    case js::jit::Args_Int32_GeneralInt64Int32Int64: {
-      int32_t ret = reinterpret_cast<Prototype_Int32_GeneralInt64Int32Int64>(
-          nativeFn)(x0, x1, x2, x3);
-      setGPR32Result(ret);
-      break;
-    }
-    case js::jit::Args_Int32_GeneralInt64Int32Int64General: {
-      int32_t ret = reinterpret_cast<Prototype_Int32_GeneralInt64Int32Int64General>(
-          nativeFn)(x0, x1, x2, x3, x4);
-      setGPR32Result(ret);
-      break;
-    }
-    case js::jit::Args_Int32_GeneralInt64Int64Int64: {
-      int32_t ret = reinterpret_cast<Prototype_Int32_GeneralInt64Int64Int64>(
-          nativeFn)(x0, x1, x2, x3);
-      setGPR32Result(ret);
-      break;
-    }
-    case js::jit::Args_Int32_GeneralInt64Int64Int64General: {
-      int32_t ret = reinterpret_cast<Prototype_Int32_GeneralInt64Int64Int64General>(
-          nativeFn)(x0, x1, x2, x3, x4);
-      setGPR32Result(ret);
-      break;
-    }
     case js::jit::Args_General_GeneralInt32: {
       int64_t ret =
           reinterpret_cast<Prototype_General_GeneralInt32>(nativeFn)(x0, x1);
@@ -952,20 +899,6 @@ Simulator::VisitCallRedirection(const Instruction* instr)
       int64_t ret =
           reinterpret_cast<Prototype_General_GeneralInt32General>(
               nativeFn)(x0, x1, x2);
-      setGPR64Result(ret);
-      break;
-    }
-    case js::jit::Args_Int64_General: {
-      int64_t ret =
-          reinterpret_cast<Prototype_Int64_General>(
-              nativeFn)(x0);
-      setGPR64Result(ret);
-      break;
-    }
-    case js::jit::Args_Int64_GeneralInt64: {
-      int64_t ret =
-          reinterpret_cast<Prototype_Int64_GeneralInt64>(
-              nativeFn)(x0, x1);
       setGPR64Result(ret);
       break;
     }

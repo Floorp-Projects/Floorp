@@ -182,14 +182,14 @@ struct BD_ValType {
 // ToSymbolicAddress in WasmCraneliftCompile.
 
 enum class BD_SymbolicAddress : uint32_t {
-  MemoryGrow = 0,   /* MemoryGrowM32 */
-  MemorySize,       /* MemorySizeM32 */
-  MemoryCopy,       /* MemoryCopyM32 */
-  MemoryCopyShared, /* MemoryCopySharedM32 */
+  MemoryGrow = 0,
+  MemorySize,
+  MemoryCopy,
+  MemoryCopyShared,
   DataDrop,
-  MemoryFill,       /* MemoryFillM32 */
-  MemoryFillShared, /* MemoryFillSharedM32 */
-  MemoryInit,       /* MemoryInitM32 */
+  MemoryFill,
+  MemoryFillShared,
+  MemoryInit,
   TableSize,
   TableGrow,
   TableGet,
@@ -209,9 +209,9 @@ enum class BD_SymbolicAddress : uint32_t {
   TruncF64,
   PreBarrier,
   PostBarrier,
-  WaitI32, /* WaitI32M32 */
-  WaitI64, /* WaitI64M32 */
-  Wake,    /* WakeM32 */
+  WaitI32,
+  WaitI64,
+  Wake,
   Limit
 };
 
