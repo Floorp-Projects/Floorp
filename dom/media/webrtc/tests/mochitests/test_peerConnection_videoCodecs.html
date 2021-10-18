@@ -77,26 +77,26 @@
     for (let codec of codecs) {
       info(`Testing video for codec ${codec.name} offset ${codec.offset}`);
       try {
-        // Force fake GMP codec for H.264 mode 0 because not all platforms
-        // support slice size control. Re-enable this after SW encoder fallback
-        // support (bug 1726617) and returning valid bitstream from fake GMP
-        // encoder (bug 1509012).
-        let disablePlatformCodec = codec.name == "H264" && codec.offset;
         let enc = SpecialPowers.getBoolPref('media.webrtc.platformencoder');
         let dec = SpecialPowers.getBoolPref('media.navigator.mediadatadecoder_h264_enabled');
-        if (disablePlatformCodec) {
-          await pushPrefs(
-            ['media.webrtc.platformencoder', false],
-            ['media.navigator.mediadatadecoder_h264_enabled', false],
-          );
+        if (codec.name == "H264") {
+          await matchPlatformH264CodecPrefs();
+          if (codec.offset == 1) {
+            // Force fake GMP codec for H.264 mode 0 because not all platforms
+            // support slice size control. Re-enable it after
+            // a. SW encoder fallback support (bug 1726617), and
+            // b. returning valid bitstream from fake GMP encoder (bug 1509012).
+            await pushPrefs(
+              ['media.webrtc.platformencoder', false],
+              ['media.navigator.mediadatadecoder_h264_enabled', false],
+            );
+          }
         }
         await testVideoCodec(options, codec);
-        if (disablePlatformCodec) {
-          await pushPrefs(
-            ['media.webrtc.platformencoder', enc],
-            ['media.navigator.mediadatadecoder_h264_enabled', dec],
-          );
-        }
+        await pushPrefs(
+          ['media.webrtc.platformencoder', enc],
+          ['media.navigator.mediadatadecoder_h264_enabled', dec],
+        );
       } catch(e) {
         ok(false, `Error in test for codec ${codec.name}: ${e}\n${e.stack}`);
       }

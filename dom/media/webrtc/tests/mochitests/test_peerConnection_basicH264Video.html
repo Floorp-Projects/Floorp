@@ -13,11 +13,7 @@
 
   var test;
   runNetworkTest(async function (options) {
-    const alwaysHasHW264 =
-      navigator.userAgent.includes("Android") ||
-      navigator.userAgent.includes("Mac OS X");
-    await pushPrefs(["media.webrtc.platformencoder", alwaysHasHW264]);
-
+    matchPlatformH264CodecPrefs();
     options = options || { };
     options.h264 = true;
     test = new PeerConnectionTest(options);
