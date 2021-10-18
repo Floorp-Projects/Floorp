@@ -87,7 +87,6 @@ FeatureArgs FeatureArgs::build(JSContext* cx, const FeatureOptions& options) {
 
   features.sharedMemory =
       wasm::ThreadsAvailable(cx) ? Shareable::True : Shareable::False;
-  features.hugeMemory = wasm::IsHugeMemoryEnabled();
 
   // See comments in WasmConstants.h regarding the meaning of the wormhole
   // options.

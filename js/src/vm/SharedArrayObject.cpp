@@ -74,7 +74,8 @@ SharedArrayRawBuffer* SharedArrayRawBuffer::AllocateInternal(
   uint64_t mappedSizeWithHeader = computedMappedSize + gc::SystemPageSize();
   uint64_t accessibleSizeWithHeader = accessibleSize + gc::SystemPageSize();
 
-  void* p = MapBufferMemory(mappedSizeWithHeader, accessibleSizeWithHeader);
+  void* p = MapBufferMemory(wasmIndexType, mappedSizeWithHeader,
+                            accessibleSizeWithHeader);
   if (!p) {
     return nullptr;
   }
@@ -198,7 +199,7 @@ void SharedArrayRawBuffer::dropReference() {
   size_t mappedSizeWithHeader = mappedSize_ + gc::SystemPageSize();
 
   // This was the final reference, so release the buffer.
-  UnmapBufferMemory(basePointer(), mappedSizeWithHeader);
+  UnmapBufferMemory(wasmIndexType(), basePointer(), mappedSizeWithHeader);
 }
 
 static bool IsSharedArrayBuffer(HandleValue v) {

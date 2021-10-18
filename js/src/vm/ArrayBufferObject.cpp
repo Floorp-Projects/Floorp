@@ -151,13 +151,16 @@ bool js::ArrayBufferObject::supportLargeBuffers = true;
   return true;
 }
 
-void* js::MapBufferMemory(size_t mappedSize, size_t initialCommittedSize) {
+void* js::MapBufferMemory(wasm::IndexType t, size_t mappedSize,
+                          size_t initialCommittedSize) {
   MOZ_ASSERT(mappedSize % gc::SystemPageSize() == 0);
   MOZ_ASSERT(initialCommittedSize % gc::SystemPageSize() == 0);
   MOZ_ASSERT(initialCommittedSize <= mappedSize);
 
   auto decrement = mozilla::MakeScopeExit([&] { liveBufferCount--; });
-  if (wasm::IsHugeMemoryEnabled()) {
+  // Testing just IsHugeMemoryEnabled() here will overestimate the number of
+  // live buffers, as asm.js buffers are not huge.  This is OK in practice.
+  if (wasm::IsHugeMemoryEnabled(t)) {
     liveBufferCount++;
   } else {
     decrement.release();
@@ -271,7 +274,7 @@ bool js::ExtendBufferMapping(void* dataPointer, size_t mappedSize,
 #endif
 }
 
-void js::UnmapBufferMemory(void* base, size_t mappedSize) {
+void js::UnmapBufferMemory(wasm::IndexType t, void* base, size_t mappedSize) {
   MOZ_ASSERT(mappedSize % gc::SystemPageSize() == 0);
 
 #ifdef XP_WIN
@@ -288,9 +291,12 @@ void js::UnmapBufferMemory(void* base, size_t mappedSize) {
                                                 mappedSize);
 #endif
 
-  if (wasm::IsHugeMemoryEnabled()) {
+  if (wasm::IsHugeMemoryEnabled(t)) {
     // Decrement the buffer counter at the end -- otherwise, a race condition
     // could enable the creation of unlimited buffers.
+    //
+    // Also see comment in MapBufferMemory about overestimation due to the
+    // imprecision of the above guard.
     --liveBufferCount;
   }
 }
@@ -695,8 +701,8 @@ WasmArrayRawBuffer* WasmArrayRawBuffer::AllocateWasm(
   uint64_t mappedSizeWithHeader = mappedSize + gc::SystemPageSize();
   uint64_t numBytesWithHeader = numBytes + gc::SystemPageSize();
 
-  void* data =
-      MapBufferMemory((size_t)mappedSizeWithHeader, (size_t)numBytesWithHeader);
+  void* data = MapBufferMemory(indexType, (size_t)mappedSizeWithHeader,
+                               (size_t)numBytesWithHeader);
   if (!data) {
     return nullptr;
   }
@@ -717,7 +723,8 @@ void WasmArrayRawBuffer::Release(void* mem) {
   MOZ_RELEASE_ASSERT(header->mappedSize() <= SIZE_MAX - gc::SystemPageSize());
   size_t mappedSizeWithHeader = header->mappedSize() + gc::SystemPageSize();
 
-  UnmapBufferMemory(header->basePointer(), mappedSizeWithHeader);
+  UnmapBufferMemory(header->indexType(), header->basePointer(),
+                    mappedSizeWithHeader);
 }
 
 WasmArrayRawBuffer* ArrayBufferObject::BufferContents::wasmBuffer() const {
@@ -729,8 +736,7 @@ template <typename ObjT, typename RawbufT>
 static bool CreateSpecificWasmBuffer32(
     JSContext* cx, const wasm::MemoryDesc& memory,
     MutableHandleArrayBufferObjectMaybeShared maybeSharedObject) {
-  bool useHugeMemory =
-      memory.indexType() == IndexType::I32 && wasm::IsHugeMemoryEnabled();
+  bool useHugeMemory = wasm::IsHugeMemoryEnabled(memory.indexType());
   Pages initialPages = memory.initialPages();
   Maybe<Pages> sourceMaxPages = memory.maximumPages();
   Pages clampedMaxPages =

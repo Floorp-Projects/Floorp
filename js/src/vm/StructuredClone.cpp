@@ -1397,7 +1397,7 @@ bool JSStructuredCloneWriter::writeSharedWasmMemory(HandleObject obj) {
   }
 
   // If this changes, might need to change what we write.
-  MOZ_ASSERT(WasmMemoryObject::RESERVED_SLOTS == 2);
+  MOZ_ASSERT(WasmMemoryObject::RESERVED_SLOTS == 3);
 
   Rooted<WasmMemoryObject*> memoryObj(context(),
                                       &obj->unwrapAs<WasmMemoryObject>());
@@ -1405,6 +1405,7 @@ bool JSStructuredCloneWriter::writeSharedWasmMemory(HandleObject obj) {
       context(), &memoryObj->buffer().as<SharedArrayBufferObject>());
 
   return out.writePair(SCTAG_SHARED_WASM_MEMORY_OBJECT, 0) &&
+         out.writePair(SCTAG_BOOLEAN, memoryObj->isHuge()) &&
          writeSharedArrayBuffer(sab);
 }
 
@@ -2448,6 +2449,12 @@ bool JSStructuredCloneReader::readSharedWasmMemory(uint32_t nbytes,
     return false;
   }
 
+  // Read the isHuge flag
+  RootedValue isHuge(cx);
+  if (!startRead(&isHuge)) {
+    return false;
+  }
+
   // Read the SharedArrayBuffer object.
   RootedValue payload(cx);
   if (!startRead(&payload)) {
@@ -2466,7 +2473,8 @@ bool JSStructuredCloneReader::readSharedWasmMemory(uint32_t nbytes,
 
   // Construct the memory.
   RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmMemory));
-  RootedObject memory(cx, WasmMemoryObject::create(cx, sab, proto));
+  RootedObject memory(
+      cx, WasmMemoryObject::create(cx, sab, isHuge.toBoolean(), proto));
   if (!memory) {
     return false;
   }
