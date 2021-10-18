@@ -163,6 +163,7 @@ using ProfilingStateChangeCallback = std::function<void(ProfilingState)>;
 #ifndef MOZ_GECKO_PROFILER
 
 [[nodiscard]] inline bool profiler_is_active() { return false; }
+[[nodiscard]] inline bool profiler_is_active_and_unpaused() { return false; }
 [[nodiscard]] inline bool profiler_can_accept_markers() { return false; }
 [[nodiscard]] inline bool profiler_feature_active(uint32_t aFeature) {
   return false;
@@ -299,6 +300,11 @@ class RacyFeatures {
 // calls.
 [[nodiscard]] inline bool profiler_is_active() {
   return mozilla::profiler::detail::RacyFeatures::IsActive();
+}
+
+// Same as profiler_is_active(), but also checks if the profiler is not paused.
+[[nodiscard]] inline bool profiler_is_active_and_unpaused() {
+  return mozilla::profiler::detail::RacyFeatures::IsActiveAndUnpaused();
 }
 
 // Same as profiler_is_active(), but with the same extra checks that determine
