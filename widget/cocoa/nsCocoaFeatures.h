@@ -23,6 +23,7 @@ class nsCocoaFeatures {
   static bool OnMojaveOrLater();
   static bool OnCatalinaOrLater();
   static bool OnBigSurOrLater();
+  static bool OnMontereyOrLater();
 
   static bool IsAtLeastVersion(int32_t aMajor, int32_t aMinor,
                                int32_t aBugFix = 0);
