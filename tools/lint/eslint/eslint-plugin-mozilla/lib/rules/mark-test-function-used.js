@@ -32,6 +32,10 @@ module.exports = function(context) {
       if (testType == "xpcshell") {
         context.markVariableAsUsed("run_test");
       }
+
+      if (helpers.getIsSjs(context)) {
+        context.markVariableAsUsed("handleRequest");
+      }
     },
   };
 };
