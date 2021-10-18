@@ -425,7 +425,7 @@ bool IsAppRunningFromDmg() {
     return false;
   }
   const char* imageClass =
-      nsCocoaFeatures::macOSVersionMajor() >= 12 ? "AppleDiskImageDevice" : "IOHDIXHDDrive";
+      nsCocoaFeatures::OnMontereyOrLater() ? "AppleDiskImageDevice" : "IOHDIXHDDrive";
   for (imageDrive = media; imageDrive; imageDrive = IOIteratorNext(iter)) {
     if (IOObjectConformsTo(imageDrive, imageClass)) {
       break;
