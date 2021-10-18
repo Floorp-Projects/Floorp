@@ -41,17 +41,13 @@ namespace intl {
  *
  * Example:
  *
- *     Locale loc = Locale("de-at");
+ *     MozLocale loc = MozLocale("de-at");
  *
  *     ASSERT_TRUE(loc.GetLanguage().Equals("de"));
  *     ASSERT_TRUE(loc.GetScript().IsEmpty());
  *     ASSERT_TRUE(loc.GetRegion().Equals("AT")); // canonicalized to upper case
- *
- *
- * Note: The file name is `MozLocale` to avoid compilation problems on
- * case-insensitive Windows. The class name is `Locale`.
  */
-class Locale {
+class MozLocale {
  public:
   /**
    * The constructor expects the input to be a well-formed BCP47-style locale
@@ -66,8 +62,9 @@ class Locale {
    * created with its flag `mWellFormed` set to false which will make the Locale
    * never match.
    */
-  explicit Locale(const nsACString& aLocale);
-  explicit Locale(const char* aLocale) : Locale(nsDependentCString(aLocale)){};
+  explicit MozLocale(const nsACString& aLocale);
+  explicit MozLocale(const char* aLocale)
+      : MozLocale(nsDependentCString(aLocale)){};
 
   const nsDependentCSubstring GetLanguage() const;
   const nsDependentCSubstring GetScript() const;
@@ -102,7 +99,8 @@ class Locale {
    * locale is being treated as a range and matches any region field
    * value including "US" of the other locale.
    */
-  bool Matches(const Locale& aOther, bool aThisRange, bool aOtherRange) const;
+  bool Matches(const MozLocale& aOther, bool aThisRange,
+               bool aOtherRange) const;
 
   /**
    * This operation uses CLDR data to build a more specific version
@@ -133,14 +131,14 @@ class Locale {
   /**
    * Compares two locales expecting all fields to match each other.
    */
-  bool operator==(const Locale& aOther) {
+  bool operator==(const MozLocale& aOther) {
     // Note: non-well-formed Locale objects are never
     // treated as equal to anything
     // (even other non-well-formed ones).
     return Matches(aOther, false, false);
   }
 
-  Locale(Locale&& aOther)
+  MozLocale(MozLocale&& aOther)
       : mIsWellFormed(aOther.mIsWellFormed), mRaw(std::move(aOther.mRaw)) {}
 
   ffi::LanguageIdentifier* Raw() { return mRaw.get(); }
@@ -157,6 +155,6 @@ class Locale {
 }  // namespace intl
 }  // namespace mozilla
 
-MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::intl::Locale)
+MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::intl::MozLocale)
 
 #endif /* mozilla_intl_MozLocale_h__ */
