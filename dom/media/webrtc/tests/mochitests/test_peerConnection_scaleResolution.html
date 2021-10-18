@@ -78,12 +78,10 @@
   }
 
   runNetworkTest(async () => {
+    await matchPlatformH264CodecPrefs();
     await pushPrefs(['media.peerconnection.video.lock_scaling', true]);
     await testScale("VP8");
-    if (!navigator.appVersion.includes("Android")) {
-      // No support for H.264 on Android in automation, see Bug 1355786
-      await testScale("H264");
-    }
+    await testScale("H264");
   });
 </script>
 </pre>
