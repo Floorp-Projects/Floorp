@@ -1439,13 +1439,13 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitAtomicXchg(ValType type, Scalar::Type viewType);
   [[nodiscard]] bool emitMemInit();
   [[nodiscard]] bool emitMemCopy();
-  [[nodiscard]] bool emitMemCopyCall(uint32_t lineOrBytecode);
-  void emitMemCopyInline();
+  [[nodiscard]] bool memCopyCall(uint32_t lineOrBytecode);
+  void memCopyInlineM32();
   [[nodiscard]] bool emitTableCopy();
   [[nodiscard]] bool emitDataOrElemDrop(bool isData);
   [[nodiscard]] bool emitMemFill();
-  [[nodiscard]] bool emitMemFillCall(uint32_t lineOrBytecode);
-  void emitMemFillInline();
+  [[nodiscard]] bool memFillCall(uint32_t lineOrBytecode);
+  void memFillInlineM32();
   [[nodiscard]] bool emitTableInit();
   [[nodiscard]] bool emitTableFill();
   [[nodiscard]] bool emitTableGet();

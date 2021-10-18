@@ -1711,7 +1711,7 @@ bool BaseCompiler::atomicWake(MemoryAccessDesc* access,
 //
 // Bulk memory.
 
-void BaseCompiler::emitMemCopyInline() {
+void BaseCompiler::memCopyInlineM32() {
   MOZ_ASSERT(MaxInlineMemoryCopyLength != 0);
 
   int32_t signedLength;
@@ -1916,7 +1916,7 @@ void BaseCompiler::emitMemCopyInline() {
   freeI32(src);
 }
 
-void BaseCompiler::emitMemFillInline() {
+void BaseCompiler::memFillInlineM32() {
   MOZ_ASSERT(MaxInlineMemoryFillLength != 0);
 
   int32_t signedLength;
