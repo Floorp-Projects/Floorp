@@ -481,6 +481,22 @@ void CodeGenerator::visitWasmAddOffset(LWasmAddOffset* lir) {
   masm.bind(&ok);
 }
 
+void CodeGenerator::visitWasmAddOffset64(LWasmAddOffset64* lir) {
+  MWasmAddOffset* mir = lir->mir();
+  Register64 base = ToRegister64(lir->base());
+  Register64 out = ToOutRegister64(lir);
+
+  if (base != out) {
+    masm.move64(base, out);
+  }
+  masm.add64(Imm64(mir->offset()), out);
+
+  Label ok;
+  masm.j(Assembler::CarryClear, &ok);
+  masm.wasmTrap(wasm::Trap::OutOfBounds, mir->bytecodeOffset());
+  masm.bind(&ok);
+}
+
 void CodeGenerator::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir) {
   FloatRegister input = ToFloatRegister(lir->input());
   Register output = ToRegister(lir->output());
