@@ -842,7 +842,13 @@ gov.cu
 inf.cu
 
 // cv : https://en.wikipedia.org/wiki/.cv
+// cv : http://www.dns.cv/tldcv_portal/do?com=DS;5446457100;111;+PAGE(4000018)+K-CAT-CODIGO(RDOM)+RCNT(100); <- registration rules
 cv
+com.cv
+edu.cv
+int.cv
+nome.cv
+org.cv
 
 // cw : http://www.una.cw/cw_registry/
 // Confirmed by registry <registry@una.net> 2013-03-26
@@ -1179,6 +1185,7 @@ org.gu
 web.gu
 
 // gw : https://en.wikipedia.org/wiki/.gw
+// gw : https://nic.gw/regras/
 gw
 
 // gy : https://en.wikipedia.org/wiki/.gy
@@ -5853,7 +5860,7 @@ com.ps
 org.ps
 net.ps
 
-// pt : http://online.dns.pt/dns/start_dns
+// pt : https://www.dns.pt/en/domain/pt-terms-and-conditions-registration-rules/
 pt
 net.pt
 gov.pt
@@ -10791,6 +10798,10 @@ tele.amune.org
 // Submitted by Apigee Security Team <security@apigee.com>
 apigee.io
 
+// Apphud : https://apphud.com
+// Submitted by Alexander Selivanov <alex@apphud.com>
+siiites.com
+
 // Appspace : https://www.appspace.com
 // Submitted by Appspace Security Team <security@appspace.com>
 appspacehosted.com
@@ -11664,10 +11675,6 @@ tuleap-partners.com
 // Submitted by <frc1533@ecgrobotics.org>
 onred.one
 staging.onred.one
-
-// One.com: https://www.one.com/
-// Submitted by Jacob Bunk Nielsen <jbn@one.com>
-service.one
 
 // EU.org https://eu.org/
 // Submitted by Pierre Beyssac <hostmaster@eu.org>
@@ -12912,6 +12919,10 @@ cloudycluster.net
 // Submitted by Vicary Archangel <vicary@omniwe.com>
 omniwe.site
 
+// One.com: https://www.one.com/
+// Submitted by Jacob Bunk Nielsen <jbn@one.com>
+service.one
+
 // One Fold Media : http://www.onefoldmedia.com/
 // Submitted by Eddie Jones <eddie@onefoldmedia.com>
 nid.io
@@ -13465,6 +13476,11 @@ tabitorder.co.il
 // TAIFUN Software AG : http://taifun-software.de
 // Submitted by Bjoern Henke <dev-server@taifun-software.de>
 taifun-dns.de
+
+// Tailscale Inc. : https://www.tailscale.com
+// Submitted by David Anderson <danderson@tailscale.com>
+beta.tailscale.net
+ts.net
 
 // TASK geographical domains (www.task.gda.pl/uslugi/dns)
 gda.pl
