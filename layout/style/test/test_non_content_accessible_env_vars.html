@@ -1,0 +1,22 @@
+<!doctype html>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div></div>
+<script>
+const NON_CONTENT_ACCESSIBLE_ENV_VARS = [
+  "-moz-gtk-csd-titlebar-radius",
+];
+
+const div = document.querySelector("div");
+for (const envVar of NON_CONTENT_ACCESSIBLE_ENV_VARS) {
+  test(function() {
+    div.style.setProperty("--foo", `env(${envVar},FALLBACK_VALUE)`);
+
+    assert_equals(
+      getComputedStyle(div).getPropertyValue("--foo"),
+      "FALLBACK_VALUE",
+      `${envVar} shouldn't be exposed to content`
+    );
+  });
+}
+</script>

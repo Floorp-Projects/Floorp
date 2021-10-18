@@ -31,6 +31,7 @@
 #include "jsapi.h"
 #include "jstypes.h"
 
+#include "frontend/BytecodeCompilation.h"  // frontend::FireOnNewScript
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
@@ -770,7 +771,7 @@ ScriptSourceObject* ScriptSourceObject::create(JSContext* cx,
 
 [[nodiscard]] static bool MaybeValidateFilename(
     JSContext* cx, HandleScriptSourceObject sso,
-    const ReadOnlyCompileOptions& options) {
+    const JS::InstantiateOptions& options) {
   // When parsing off-thread we want to do filename validation on the main
   // thread. This makes off-thread parsing more pure and is simpler because we
   // can't easily throw exceptions off-thread.
@@ -781,7 +782,7 @@ ScriptSourceObject* ScriptSourceObject::create(JSContext* cx,
   }
 
   const char* filename = sso->source()->filename();
-  if (!filename || options.skipFilenameValidation()) {
+  if (!filename || options.skipFilenameValidation) {
     return true;
   }
 
@@ -803,7 +804,7 @@ ScriptSourceObject* ScriptSourceObject::create(JSContext* cx,
 /* static */
 bool ScriptSourceObject::initFromOptions(
     JSContext* cx, HandleScriptSourceObject source,
-    const ReadOnlyCompileOptions& options) {
+    const JS::InstantiateOptions& options) {
   cx->releaseCheck(source);
   MOZ_ASSERT(
       source->getReservedSlot(ELEMENT_PROPERTY_SLOT).isMagic(JS_GENERIC_MAGIC));

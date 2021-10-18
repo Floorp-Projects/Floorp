@@ -227,7 +227,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
         r => r.providerName == this.name
       );
       if (resultIndex < 0) {
-        Cu.reportError(`Could not find quick suggest result`);
+        this.logger.error(`Could not find quick suggest result`);
         return;
       }
       result = queryContext.results[resultIndex];
@@ -346,7 +346,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     try {
       this._merinoFetchController?.abort();
     } catch (error) {
-      Cu.reportError(error);
+      this.logger.error(error);
     }
     this._merinoFetchController = null;
   }
@@ -382,7 +382,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     } catch (error) {
       TelemetryStopwatch.cancel(TELEMETRY_MERINO_LATENCY, queryContext);
       if (error.name != "AbortError") {
-        Cu.reportError(error);
+        this.logger.error(error);
       }
     } finally {
       if (controller == this._merinoFetchController) {
@@ -402,7 +402,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
         return null;
       }
     } catch (error) {
-      Cu.reportError(error);
+      this.logger.error(error);
     }
 
     if (!body?.suggestions?.length) {
@@ -411,7 +411,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     let { suggestions } = body;
     if (!Array.isArray(suggestions)) {
-      Cu.reportError("Unexpected Merino response: " + JSON.stringify(body));
+      this.logger.error("Unexpected Merino response: " + JSON.stringify(body));
       return null;
     }
 

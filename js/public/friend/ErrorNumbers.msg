@@ -583,7 +583,7 @@ MSG_DEF(JSMSG_TRACELOGGER_ENABLE_FAIL, 1, JSEXN_ERR, "enabling tracelogger faile
 
 // Intl
 MSG_DEF(JSMSG_DATE_NOT_FINITE,         2, JSEXN_RANGEERR, "date value is not finite in {0}.{1}()")
-MSG_DEF(JSMSG_DUPLICATE_VARIANT_SUBTAG, 1, JSEXN_RANGEERR, "duplicate variant subtag: {0}")
+MSG_DEF(JSMSG_DUPLICATE_VARIANT_SUBTAG, 0, JSEXN_RANGEERR, "duplicate variant subtag")
 MSG_DEF(JSMSG_INTERNAL_INTL_ERROR,     0, JSEXN_ERR, "internal error while computing Intl data")
 MSG_DEF(JSMSG_INVALID_CURRENCY_CODE,   1, JSEXN_RANGEERR, "invalid currency code in NumberFormat(): {0}")
 MSG_DEF(JSMSG_INVALID_UNIT_IDENTIFIER, 1, JSEXN_RANGEERR, "invalid unit identifier in NumberFormat(): {0}")

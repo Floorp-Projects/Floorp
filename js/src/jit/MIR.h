@@ -349,10 +349,13 @@ class AliasSet {
     // Hash table of a Map or Set object.
     MapOrSetHashTable = 1 << 15,
 
-    Last = MapOrSetHashTable,
+    // Internal state of the random number generator
+    RNG = 1 << 16,
+
+    Last = RNG,
     Any = Last | (Last - 1),
 
-    NumCategories = 16,
+    NumCategories = 17,
 
     // Indicates load or store.
     Store_ = 1 << 31

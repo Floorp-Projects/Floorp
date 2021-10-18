@@ -61,7 +61,9 @@ class WeakCacheBase : public mozilla::LinkedListElement<WeakCacheBase> {
   virtual ~WeakCacheBase() = default;
 
   virtual size_t sweep(js::gc::StoreBuffer* sbToLock) = 0;
-  virtual bool needsSweep() = 0;
+
+  // Sweeping will be skipped if the cache is empty already.
+  virtual bool empty() = 0;
 
   virtual bool setNeedsIncrementalBarrier(bool needs) {
     // Derived classes do not support incremental barriers by default.
@@ -109,7 +111,7 @@ class WeakCache : protected detail::WeakCacheBase,
     return 0;
   }
 
-  bool needsSweep() override { return cache.needsSweep(); }
+  bool empty() override { return cache.empty(); }
 } JS_HAZ_NON_GC_POINTER;
 
 }  // namespace JS

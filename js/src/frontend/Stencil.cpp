@@ -1107,7 +1107,7 @@ static bool InstantiateAtoms(JSContext* cx, CompilationAtomCache& atomCache,
 }
 
 static bool InstantiateScriptSourceObject(JSContext* cx,
-                                          CompilationInput& input,
+                                          const JS::InstantiateOptions& options,
                                           const CompilationStencil& stencil,
                                           CompilationGCOutput& gcOutput) {
   MOZ_ASSERT(stencil.source);
@@ -1128,7 +1128,7 @@ static bool InstantiateScriptSourceObject(JSContext* cx,
   // until after we've merged compartments.
   if (!cx->isHelperThreadContext()) {
     Rooted<ScriptSourceObject*> sourceObject(cx, gcOutput.sourceObject);
-    if (!ScriptSourceObject::initFromOptions(cx, sourceObject, input.options)) {
+    if (!ScriptSourceObject::initFromOptions(cx, sourceObject, options)) {
       return false;
     }
   }
@@ -1537,7 +1537,7 @@ bool CompilationStencil::instantiateStencils(JSContext* cx,
                                              CompilationInput& input,
                                              const CompilationStencil& stencil,
                                              CompilationGCOutput& gcOutput) {
-  if (!prepareForInstantiate(cx, input, stencil, gcOutput)) {
+  if (!prepareForInstantiate(cx, input.atomCache, stencil, gcOutput)) {
     return false;
   }
 
@@ -1553,14 +1553,17 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
   bool isInitialParse = stencil.isInitialStencil();
   MOZ_ASSERT(stencil.isInitialStencil() == input.isInitialStencil());
 
+  CompilationAtomCache& atomCache = input.atomCache;
+  const JS::InstantiateOptions options(input.options);
+
   // Phase 1: Instantiate JSAtom/JSStrings.
-  if (!InstantiateAtoms(cx, input.atomCache, stencil)) {
+  if (!InstantiateAtoms(cx, atomCache, stencil)) {
     return false;
   }
 
   // Phase 2: Instantiate ScriptSourceObject, ModuleObject, JSFunctions.
   if (isInitialParse) {
-    if (!InstantiateScriptSourceObject(cx, input, stencil, gcOutput)) {
+    if (!InstantiateScriptSourceObject(cx, options, stencil, gcOutput)) {
       return false;
     }
 
@@ -1572,12 +1575,12 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
       MOZ_ASSERT(input.enclosingScope->environmentChainLength() ==
                  ModuleScope::EnclosingEnvironmentChainLength);
 
-      if (!InstantiateModuleObject(cx, input.atomCache, stencil, gcOutput)) {
+      if (!InstantiateModuleObject(cx, atomCache, stencil, gcOutput)) {
         return false;
       }
     }
 
-    if (!InstantiateFunctions(cx, input.atomCache, stencil, gcOutput)) {
+    if (!InstantiateFunctions(cx, atomCache, stencil, gcOutput)) {
       return false;
     }
   } else {
@@ -1605,7 +1608,7 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
 
   // Phase 4: Instantiate (inner) BaseScripts.
   if (isInitialParse) {
-    if (!InstantiateScriptStencils(cx, input.atomCache, stencil, gcOutput)) {
+    if (!InstantiateScriptStencils(cx, atomCache, stencil, gcOutput)) {
       return false;
     }
   }
@@ -1619,7 +1622,7 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
 
   // Phase 6: Update lazy scripts.
   if (stencil.canLazilyParse) {
-    UpdateEmittedInnerFunctions(cx, input.atomCache, stencil, gcOutput);
+    UpdateEmittedInnerFunctions(cx, atomCache, stencil, gcOutput);
 
     if (isInitialParse) {
       LinkEnclosingLazyScript(stencil, gcOutput);
@@ -1825,15 +1828,15 @@ bool CompilationStencil::delazifySelfHostedFunction(
 
 /* static */
 bool CompilationStencil::prepareForInstantiate(
-    JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
-    CompilationGCOutput& gcOutput) {
+    JSContext* cx, CompilationAtomCache& atomCache,
+    const CompilationStencil& stencil, CompilationGCOutput& gcOutput) {
   // Reserve the `gcOutput` vectors.
   if (!gcOutput.ensureReserved(cx, stencil.scriptData.size(),
                                stencil.scopeData.size())) {
     return false;
   }
 
-  return input.atomCache.allocate(cx, stencil.parserAtomData.size());
+  return atomCache.allocate(cx, stencil.parserAtomData.size());
 }
 
 bool CompilationStencil::serializeStencils(JSContext* cx,
@@ -4050,16 +4053,12 @@ already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
   return CompileModuleScriptToStencilImpl(cx, options, srcBuf);
 }
 
-JSScript* JS::InstantiateGlobalStencil(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    JS::Stencil* stencil) {
-  if (stencil->canLazilyParse != CanLazilyParse(options)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_STENCIL_OPTIONS_MISMATCH);
-    return nullptr;
-  }
-
-  Rooted<CompilationInput> input(cx, CompilationInput(options));
+JSScript* JS::InstantiateGlobalStencil(JSContext* cx,
+                                       const JS::InstantiateOptions& options,
+                                       JS::Stencil* stencil) {
+  CompileOptions compileOptions(cx);
+  options.copyTo(compileOptions);
+  Rooted<CompilationInput> input(cx, CompilationInput(compileOptions));
   Rooted<CompilationGCOutput> gcOutput(cx);
   if (!InstantiateStencils(cx, input.get(), *stencil, gcOutput.get())) {
     return nullptr;
@@ -4076,19 +4075,14 @@ JS_PUBLIC_API bool JS::StencilCanLazilyParse(Stencil* stencil) {
   return stencil->canLazilyParse;
 }
 
-JSObject* JS::InstantiateModuleStencil(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& optionsInput,
-    JS::Stencil* stencil) {
-  JS::CompileOptions options(cx, optionsInput);
-  options.setModule();
+JSObject* JS::InstantiateModuleStencil(JSContext* cx,
+                                       const JS::InstantiateOptions& options,
+                                       JS::Stencil* stencil) {
+  CompileOptions compileOptions(cx);
+  options.copyTo(compileOptions);
+  compileOptions.setModule();
 
-  if (stencil->canLazilyParse != CanLazilyParse(options)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_STENCIL_OPTIONS_MISMATCH);
-    return nullptr;
-  }
-
-  Rooted<CompilationInput> input(cx, CompilationInput(options));
+  Rooted<CompilationInput> input(cx, CompilationInput(compileOptions));
   Rooted<CompilationGCOutput> gcOutput(cx);
   if (!InstantiateStencils(cx, input.get(), *stencil, gcOutput.get())) {
     return nullptr;

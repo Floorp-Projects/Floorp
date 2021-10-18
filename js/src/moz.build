@@ -478,7 +478,6 @@ if CONFIG["JS_HAS_INTL_API"]:
         "builtin/intl/DisplayNames.cpp",
         "builtin/intl/IntlObject.cpp",
         "builtin/intl/LanguageTag.cpp",
-        "builtin/intl/LanguageTagGenerated.cpp",
         "builtin/intl/ListFormat.cpp",
         "builtin/intl/Locale.cpp",
         "builtin/intl/NumberFormat.cpp",

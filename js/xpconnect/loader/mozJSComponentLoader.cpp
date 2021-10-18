@@ -819,7 +819,9 @@ nsresult mozJSComponentLoader::ObjectForLocation(
     }
   }
 
-  RootedScript script(cx, JS::InstantiateGlobalStencil(cx, options, stencil));
+  JS::InstantiateOptions instantiateOptions(options);
+  RootedScript script(
+      cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil));
   if (!script) {
     // Propagate the exception, if one exists. Also, don't leave the stale
     // exception on this context.

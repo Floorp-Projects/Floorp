@@ -422,10 +422,9 @@ JS_PUBLIC_API void JS::ExposeScriptToDebugger(JSContext* cx,
 }
 
 JS_PUBLIC_API bool JS::UpdateDebugMetadata(
-    JSContext* cx, Handle<JSScript*> script,
-    const ReadOnlyCompileOptions& options, HandleValue privateValue,
-    HandleString elementAttributeName, HandleScript introScript,
-    HandleScript scriptOrModule) {
+    JSContext* cx, Handle<JSScript*> script, const InstantiateOptions& options,
+    HandleValue privateValue, HandleString elementAttributeName,
+    HandleScript introScript, HandleScript scriptOrModule) {
   RootedScriptSourceObject sso(cx, script->sourceObject());
 
   if (!ScriptSourceObject::initElementProperties(cx, sso,

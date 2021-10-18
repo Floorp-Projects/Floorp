@@ -131,8 +131,9 @@ static bool EvalStencil(JSContext* cx, HandleObject targetObj,
                         JS::Stencil* stencil) {
   MOZ_ASSERT(!js::IsWrapper(targetObj));
 
-  JS::RootedScript script(cx,
-                          JS::InstantiateGlobalStencil(cx, options, stencil));
+  JS::InstantiateOptions instantiateOptions(options);
+  JS::RootedScript script(
+      cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil));
   if (!script) {
     return false;
   }

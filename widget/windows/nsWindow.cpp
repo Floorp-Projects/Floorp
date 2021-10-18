@@ -4487,7 +4487,8 @@ bool nsWindow::TouchEventShouldStartDrag(EventMessage aEventMessage,
 bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
                                   LPARAM lParam, bool aIsContextMenuKey,
                                   int16_t aButton, uint16_t aInputSource,
-                                  WinPointerInfo* aPointerInfo) {
+                                  WinPointerInfo* aPointerInfo,
+                                  bool aIgnoreAPZ) {
   bool result = false;
 
   UserActivity();
@@ -4511,7 +4512,7 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
     sLastMouseMovePoint.y = mpScreen.y;
   }
 
-  if (WinUtils::GetIsMouseFromTouch(aEventMessage)) {
+  if (!aIgnoreAPZ && WinUtils::GetIsMouseFromTouch(aEventMessage)) {
     if (mTouchWindow) {
       // If mTouchWindow is true, then we must have APZ enabled and be
       // feeding it raw touch events. In that case we only want to
@@ -5950,7 +5951,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       if (IsWindowButton(wParam) && mCustomNonClient && !mWindowButtonsRect) {
         DispatchMouseEvent(eMouseDown, wParamFromGlobalMouseState(),
                            lParamToClient(lParam), false, MouseButton::ePrimary,
-                           MOUSE_INPUT_SOURCE());
+                           MOUSE_INPUT_SOURCE(), nullptr, true);
         DispatchPendingEvents();
         result = true;
       }

@@ -1526,7 +1526,7 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
       .setNoScriptRval(false)
       .setIntroductionInfo(introducerFilename, introductionType, lineno,
                            pcOffset)
-      .setdeferDebugMetadata();
+      .setDeferDebugMetadata();
 
   JSStringBuilder sb(cx);
 
@@ -1663,8 +1663,10 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
 
   RootedValue undefValue(cx);
   RootedScript funScript(cx, JS_GetFunctionScript(cx, fun));
-  if (funScript && !UpdateDebugMetadata(cx, funScript, options, undefValue,
-                                        nullptr, maybeScript, maybeScript)) {
+  JS::InstantiateOptions instantiateOptions(options);
+  if (funScript &&
+      !UpdateDebugMetadata(cx, funScript, instantiateOptions, undefValue,
+                           nullptr, maybeScript, maybeScript)) {
     return false;
   }
 

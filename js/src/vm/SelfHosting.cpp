@@ -2823,7 +2823,9 @@ ScriptSourceObject* GlobalObject::getOrCreateSelfHostingScriptSourceObject(
     return nullptr;
   }
 
-  if (!ScriptSourceObject::initFromOptions(cx, sourceObject, options)) {
+  JS::InstantiateOptions instantiateOptions(options);
+  if (!ScriptSourceObject::initFromOptions(cx, sourceObject,
+                                           instantiateOptions)) {
     return nullptr;
   }
 
