@@ -32,21 +32,12 @@ enum class AnonymousContentKey : uint8_t {
 
   // all
   Type_ScrollCorner              = 0x01,
-  Type_Resizer                   = 0x02,
-  Type_Scrollbar                 = 0x03,
-  Type_ScrollbarButton           = 0x04,
-  Type_Slider                    = 0x05,
+  Type_Scrollbar                 = 0x02,
+  Type_ScrollbarButton           = 0x03,
+  Type_Slider                    = 0x04,
 
   // scrollbar, scrollbarbutton, slider
   Flag_Vertical                  = 0x08,
-
-  // resizer
-  // 3-bit bitfield in 0x38 storing dir="" and flip=""
-  Flag_Resizer_Right             = 0x08,
-  Flag_Resizer_Bottom            = 0x10,
-  Flag_Resizer_BottomLeft        = 0x18,
-  Flag_Resizer_BottomRight       = 0x20,
-  Flag_Resizer_Bottom_Flip       = 0x28,
 
   // scrollbarbutton
   Flag_ScrollbarButton_Down      = 0x10,
