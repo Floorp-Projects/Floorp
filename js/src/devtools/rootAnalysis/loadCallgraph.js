@@ -34,9 +34,6 @@ loadRelativeToScript('callgraph.js');
 // are FieldCalls, not just function names.
 
 var readableNames = {}; // map from mangled name => list of readable names
-var calleesOf = {}; // map from mangled => list of tuples of {'callee':mangled, 'any':intset, 'all':intset}
-var callersOf; // map from mangled => list of tuples of {'caller':mangled, 'any':intset, 'all':intset}
-var gcFunctions = {}; // map from mangled callee => reason
 var limitedFunctions = {}; // set of mangled names (map from mangled name => [any,all intsets])
 var gcEdges = {};
 
@@ -47,7 +44,7 @@ var mangledToId = {};
 
 // Returns whether the function was added. (It will be refused if it was
 // already there, or if attrs or annotations say it shouldn't be added.)
-function addGCFunction(caller, reason, functionAttrs)
+function addGCFunction(caller, reason, gcFunctions, functionAttrs)
 {
     if (functionAttrs[caller] && functionAttrs[caller][1] & ATTR_GC_SUPPRESSED)
         return false;
@@ -73,10 +70,11 @@ function addGCFunction(caller, reason, functionAttrs)
 // original order.
 //
 // During the same scan, build callersOf from calleesOf.
-function merge_repeated_calls(calleesOf) {
-    const callersOf = Object.create(null);
+function generate_callgraph(rawCallees) {
+    const callersOf = new Map();
+    const calleesOf = new Map();
 
-    for (const [caller_prop, callee_attrs] of Object.entries(calleesOf)) {
+    for (const [caller_prop, callee_attrs] of Object.entries(rawCallees)) {
         const caller = caller_prop|0;
         const ordered_callees = [];
 
@@ -104,16 +102,19 @@ function merge_repeated_calls(calleesOf) {
         for (const callee of ordered_callees) {
             const any = callee2any.get(callee);
             const all = callee2all.get(callee);
-            callee_attrs.push({callee, any, all});
-            if (!(callee in callersOf))
-                callersOf[callee] = [];
-            callersOf[callee].push({caller, any, all});
+            if (!calleesOf.has(caller))
+                calleesOf.set(caller, new Map());
+            calleesOf.get(caller).set(callee, {any, all});
+            if (!callersOf.has(callee))
+                callersOf.set(callee, new Map());
+            callersOf.get(callee).set(caller, {any, all});
         }
     }
 
-    return callersOf;
+    return {callersOf, calleesOf};
 }
 
+// Returns object mapping mangled => reason for GCing
 function loadCallgraph(file)
 {
     const fieldCallAttrs = {};
@@ -122,7 +123,10 @@ function loadCallgraph(file)
     // set of mangled names (map from mangled name => [any,all])
     var functionAttrs = {};
 
-    let numGCCalls = 0;
+    const gcCalls = [];
+    const indirectCalls = [];
+
+    const rawCallees = {}; // map from mangled => list of tuples of {'callee':mangled, 'any':intset, 'all':intset}
 
     for (let line of readFileLines_gen(file)) {
         line = line.replace(/\n/, "");
@@ -161,13 +165,9 @@ function loadCallgraph(file)
         if (match = tag == 'I' && /^I (\d+) VARIABLE ([^\,]*)/.exec(line)) {
             const caller = match[1]|0;
             const name = match[2];
-            if (!indirectCallCannotGC(functionNames[caller], name) &&
-                !(attrs & ATTR_GC_SUPPRESSED))
-            {
-                // FIXME: Should emit this regardless, with attrs saying it
-                // cannot GC.
-                addGCFunction(caller, "IndirectCall: " + name, functionAttrs);
-            }
+            if (indirectCallCannotGC(functionNames[caller], name))
+                attrs |= ATTR_GC_SUPPRESSED;
+            indirectCalls.push([caller, "IndirectCall: " + name, attrs]);
         } else if (match = tag == 'F' && /^F (\d+) (\d+) CLASS (.*?) FIELD (.*)/.exec(line)) {
             const caller = match[1]|0;
             const fullfield = match[2]|0;
@@ -176,39 +176,38 @@ function loadCallgraph(file)
             assert(functionNames[fullfield] == fullfield_str);
             if (attrs)
                 fieldCallAttrs[fullfield] = attrs;
-            addToKeyedList(calleesOf, caller, {callee:fullfield, any:attrs, all:attrs});
+            addToKeyedList(rawCallees, caller, {callee:fullfield, any:attrs, all:attrs});
             fieldCallCSU.set(fullfield, csu);
+
+            if (fieldCallCannotGC(csu, fullfield_str))
+                addToKeyedList(rawCallees, fullfield, {callee:ID.nogcfunc, any:0, all:0});
+            else
+                addToKeyedList(rawCallees, fullfield, {callee:ID.anyfunc, any:0, all:0});
         } else if (match = tag == 'V' && /^V (\d+) (\d+) CLASS (.*?) FIELD (.*)/.exec(line)) {
             // V tag is no longer used, but we are still emitting it becasue it
             // can be helpful to understand what's going on.
         } else if (match = tag == 'D' && /^D (\d+) (\d+)/.exec(line)) {
             const caller = match[1]|0;
             const callee = match[2]|0;
-            addToKeyedList(calleesOf, caller, {callee, any:attrs, all:attrs});
+            addToKeyedList(rawCallees, caller, {callee, any:attrs, all:attrs});
         } else if (match = tag == 'R' && /^R (\d+) (\d+)/.exec(line)) {
             assert(false, "R tag is no longer used");
         } else if (match = tag == 'T' && /^T (\d+) (.*)/.exec(line)) {
             const id = match[1]|0;
             let tag = match[2];
-            if (tag == 'GC Call') {
-                addGCFunction(id, "GC", functionAttrs);
-                numGCCalls++;
-            }
+            if (tag == 'GC Call')
+                gcCalls.push(id);
         } else {
             assert(false, "Invalid format in callgraph line: " + line);
         }
     }
 
-    // Callers have a list of callees, with duplicates (if the same function is
-    // called more than once.) Merge the repeated calls, maintaining 'any' and
-    // 'all'. Also, generate the callersOf table at the same time.
-    callersOf = merge_repeated_calls(calleesOf);
     assert(ID.jscode == mangledToId["(js-code)"]);
     assert(ID.anyfunc == mangledToId["(any-function)"]);
     assert(ID.nogcfunc == mangledToId["(nogc-function)"]);
     assert(ID.gc == mangledToId["(GC)"]);
 
-    addToKeyedList(calleesOf, mangledToId["(any-function)"], {callee:ID.gc, any:0, all:0});
+    addToKeyedList(rawCallees, mangledToId["(any-function)"], {callee:ID.gc, any:0, all:0});
 
     // Compute functionAttrs: it should contain the set of functions that
     // are *always* called within some sort of limited context (eg GC
@@ -217,19 +216,35 @@ function loadCallgraph(file)
     // Initialize to field calls with attrs set.
     for (var [name, attrs] of Object.entries(fieldCallAttrs))
         functionAttrs[name] = [attrs, attrs];
-    functionAttrs[ID.gc] = [0, 0];
-    addGCFunction(ID.gc, "annotation", functionAttrs);
+
+    // map from ID => reason
+    const gcFunctions = { [ID.gc]: 'internal' };
 
     // Add in any extra functions at the end. (If we did this early, it would
     // mess up the id <-> name correspondence. Also, we need to know if the
     // functions even exist in the first place.)
     for (var func of extraGCFunctions()) {
-        addGCFunction(mangledToId[func], "annotation", functionAttrs);
+        addGCFunction(mangledToId[func], "annotation", gcFunctions, functionAttrs);
     }
-    const unknown = mangledToId['(unknown-definition)'];
-    if (unknown) {
-        addGCFunction(unknown, "internal", functionAttrs);
+
+    for (const func of gcCalls)
+        addToKeyedList(rawCallees, func, {callee:ID.gc, any:0, all:0});
+    for (const [caller, indirect, attrs] of indirectCalls) {
+        const id = functionNames.length;
+        functionNames.push(indirect);
+        mangledToId[indirect] = id;
+        addToKeyedList(rawCallees, caller, {callee:id, any:attrs, all:attrs});
+        addToKeyedList(rawCallees, id, {callee:ID.anyfunc, any:0, all:0});
     }
+
+    // Callers have a list of callees, with duplicates (if the same function is
+    // called more than once.) Merge the repeated calls, only keeping attrs
+    // that are in force for *every* callsite of that callee. Also, generate
+    // the callersOf table at the same time.
+    //
+    // calleesOf : map from mangled => {mangled callee => {'any':intset, 'all':intset}}
+    // callersOf : map from mangled => {mangled caller => {'any':intset, 'all':intset}}
+    const {callersOf, calleesOf} = generate_callgraph(rawCallees);
 
     // Compute functionAttrs: it should contain the set of functions that
     // are *always* called within some sort of limited context (eg GC
@@ -242,7 +257,7 @@ function loadCallgraph(file)
     // Initialize functionAttrs to the set of all functions, where each one is
     // maximally attributed, and return a worklist containing all simple roots
     // (nodes with no callers).
-    const simple_roots = gather_simple_roots(functionAttrs, callersOf);
+    const simple_roots = gather_simple_roots(functionAttrs, calleesOf, callersOf);
 
     // Traverse the graph, spreading the attrs down from the roots.
     propagate_attrs(simple_roots, functionAttrs, calleesOf);
@@ -280,10 +295,10 @@ function loadCallgraph(file)
     // GC Calls. This is mostly a check to be sure the earlier processing
     // succeeded (as opposed to, say, running on empty xdb files because you
     // didn't actually compile anything interesting.)
-    assert(numGCCalls > 0, "No GC functions found!");
+    assert(gcCalls.length > 0, "No GC functions found!");
 
     // Initialize the worklist to all known gcFunctions.
-    const worklist = Object.keys(gcFunctions);
+    const worklist = [ID.gc];
 
     // Include all field calls (but not virtual method calls).
     for (const [name, csuName] of fieldCallCSU) {
@@ -299,11 +314,11 @@ function loadCallgraph(file)
     while (worklist.length) {
         name = worklist.shift();
         assert(name in gcFunctions, "gcFunctions does not contain " + name);
-        if (!(name in callersOf))
+        if (!callersOf.has(name))
             continue;
-        for (const {caller, any, all} of callersOf[name]) {
+        for (const [caller, {any, all}] of callersOf.get(name)) {
             if (!(all & ATTR_GC_SUPPRESSED)) {
-                if (addGCFunction(caller, name, functionAttrs))
+                if (addGCFunction(caller, name, gcFunctions, functionAttrs))
                     worklist.push(caller);
             }
         }
@@ -321,22 +336,25 @@ function loadCallgraph(file)
         s.recursive_root = true;
     }
 
-    // The above code uses integer ids for efficiency. External code uses
-    // mangled names. Rewrite the various data structures to convert ids to
-    // mangled names.
-    remap_ids_to_mangled_names();
+    // Remap ids to mangled names and return the gcFunctions table.
+    const namedGCFunctions = {};
+    for (const [caller, reason] of Object.entries(gcFunctions)) {
+        namedGCFunctions[functionNames[caller]] = functionNames[reason] || reason;
+    }
+
+    return namedGCFunctions;
 }
 
 // Return a worklist of functions with no callers, and also initialize
 // functionAttrs to the set of all functions, each mapped to
 // [ATTRS_NONE, ATTRS_UNVISITED].
-function gather_simple_roots(functionAttrs, callersOf) {
+function gather_simple_roots(functionAttrs, calleesOf, callersOf) {
     const roots = [];
-    for (let callee in callersOf)
+    for (const callee of callersOf.keys())
         functionAttrs[callee] = [ATTRS_NONE, ATTRS_UNVISITED];
-    for (let caller in calleesOf) {
+    for (const caller of calleesOf.keys()) {
         functionAttrs[caller] = [ATTRS_NONE, ATTRS_UNVISITED];
-        if (!(caller in callersOf))
+        if (!callersOf.has(caller))
             roots.push([caller, ATTRS_NONE, 'root']);
     }
 
@@ -362,7 +380,7 @@ function propagate_attrs(roots, functionAttrs, calleesOf) {
             // Update function attrs, then recurse to the children if anything
             // was updated.
             functionAttrs[caller] = [new_any, new_all];
-            for (const {callee, any, all} of (calleesOf[caller] || []))
+            for (const [callee, {any, all}] of (calleesOf.get(caller) || new Map))
                 worklist[top++] = [callee, all | edge_attrs, caller];
         }
     }
@@ -389,7 +407,8 @@ function gather_recursive_roots(functionAttrs, calleesOf, callersOf) {
 
         // We should only be looking at nodes with callers, since otherwise
         // they would have been handled in the previous pass!
-        assert(callersOf[func].length > 0);
+        assert(callersOf.has(func));
+        assert(callersOf.get(func).size > 0);
 
         if (seen.has(func))
             continue;
@@ -397,7 +416,9 @@ function gather_recursive_roots(functionAttrs, calleesOf, callersOf) {
         const work = [func];
         while (work.length > 0) {
             const f = work.pop();
-            for (const callee of (calleesOf[f] || []).map(o => o.callee)) {
+            if (!calleesOf.has(f)) continue;
+            for (const callee of calleesOf.get(f).keys()) {
+                if (!functionAttrs[callee]) debugger;
                 if (!seen.has(callee) &&
                     callee != func &&
                     functionAttrs[callee][1] == ATTRS_UNVISITED)
@@ -410,7 +431,7 @@ function gather_recursive_roots(functionAttrs, calleesOf, callersOf) {
 
         assert(!seen.has(func));
         seen.add(func);
-        if (callersOf[func].findIndex(o => !seen.has(o.caller)) == -1) {
+        if ([...callersOf.get(func).keys()].findIndex(f => !seen.has(f)) == -1) {
             // No unmarked incoming edges, including self-edges, so this is a
             // (recursive) root.
             roots.push([func, ATTRS_NONE, 'recursive-root']);
@@ -418,11 +439,21 @@ function gather_recursive_roots(functionAttrs, calleesOf, callersOf) {
     }
 
     return roots;
-}
 
-function remap_ids_to_mangled_names() {
-    var tmp = gcFunctions;
-    gcFunctions = {};
-    for (const [caller, reason] of Object.entries(tmp))
-        gcFunctions[functionNames[caller]] = functionNames[reason] || reason;
+    tmp = calleesOf;
+    calleesOf = {};
+    for (const [callerId, callees] of Object.entries(calleesOf)) {
+        const caller = functionNames[callerId];
+        for (const {calleeId, limits} of callees)
+            calleesOf[caller][functionNames[calleeId]] = limits;
+    }
+
+    tmp = callersOf;
+    callersOf = {};
+    for (const [calleeId, callers] of Object.entries(callersOf)) {
+        const callee = functionNames[calleeId];
+        callersOf[callee] = {};
+        for (const {callerId, limits} of callers)
+            callersOf[callee][functionNames[caller]] = limits;
+    }
 }
