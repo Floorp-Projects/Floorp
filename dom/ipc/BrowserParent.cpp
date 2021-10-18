@@ -672,12 +672,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvEnsureLayersConnected(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::Recv__delete__() {
-  Manager()->NotifyTabDestroyed(mTabId, mMarkedDestroying);
-  return IPC_OK();
-}
-
 void BrowserParent::ActorDestroy(ActorDestroyReason why) {
+  Manager()->NotifyTabDestroyed(mTabId, mMarkedDestroying);
+
   ContentProcessManager::GetSingleton()->UnregisterRemoteFrame(mTabId);
 
   if (mRemoteLayerTreeOwner.IsInitialized()) {
@@ -749,12 +746,22 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
     if (why == AbnormalShutdown) {
       frameLoader->MaybeNotifyCrashed(mBrowsingContext, Manager()->ChildID(),
                                       GetIPCChannel());
+    } else if (why == ManagedEndpointDropped) {
+      // If we instead failed due to a constructor error, don't include process
+      // information, as the process did not crash.
+      frameLoader->MaybeNotifyCrashed(mBrowsingContext, ContentParentId{},
+                                      nullptr);
     }
   }
 
   mFrameLoader = nullptr;
 
-  mBrowsingContext->BrowserParentDestroyed(this, why == AbnormalShutdown);
+  // If we were destroyed due to our ManagedEndpoints being dropped, make a
+  // point of showing the subframe crashed UI. We don't fire the full
+  // `MaybeNotifyCrashed` codepath, as the entire process hasn't crashed on us,
+  // and it may confuse the frontend.
+  mBrowsingContext->BrowserParentDestroyed(
+      this, why == AbnormalShutdown || why == ManagedEndpointDropped);
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvMoveFocus(
