@@ -7,9 +7,7 @@ package mozilla.components.browser.tabstray
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import junit.framework.TestCase
-import mozilla.components.concept.tabstray.Tab
-import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.support.base.observer.Observable
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.support.test.expectException
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
@@ -21,12 +19,12 @@ class TabViewHolderTest : TestCase() {
     @Test
     fun `updateSelectedTabIndicator needs to have a provided implementation`() {
         val simpleTabViewHolder = object : TabViewHolder(View(testContext)) {
-            override var tab: Tab? = null
+            override var tab: TabSessionState? = null
             override fun bind(
-                tab: Tab,
+                tab: TabSessionState,
                 isSelected: Boolean,
                 styling: TabsTrayStyling,
-                observable: Observable<TabsTray.Observer>
+                delegate: TabsTray.Delegate
             ) { /* noop */ }
         }
 
@@ -38,12 +36,12 @@ class TabViewHolderTest : TestCase() {
     @Test
     fun `updateSelectedTabIndicator with a provided implementation just works`() {
         val tabViewHolder = object : TabViewHolder(View(testContext)) {
-            override var tab: Tab? = null
+            override var tab: TabSessionState? = null
             override fun bind(
-                tab: Tab,
+                tab: TabSessionState,
                 isSelected: Boolean,
                 styling: TabsTrayStyling,
-                observable: Observable<TabsTray.Observer>
+                delegate: TabsTray.Delegate
             ) { /* noop */ }
             override fun updateSelectedTabIndicator(showAsSelected: Boolean) { /* noop */ }
         }

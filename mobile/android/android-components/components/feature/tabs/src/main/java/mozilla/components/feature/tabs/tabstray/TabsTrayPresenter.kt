@@ -8,12 +8,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.tabstray.Tabs
-import mozilla.components.concept.tabstray.TabsTray
+import mozilla.components.browser.tabstray.TabsTray
+import mozilla.components.feature.tabs.ext.toTabList
 import mozilla.components.feature.tabs.ext.toTabs
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
@@ -25,10 +24,8 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 class TabsTrayPresenter(
     private val tabsTray: TabsTray,
     private val store: BrowserStore,
-    internal var tabsFilter: (TabSessionState) -> Boolean,
-    private val closeTabsTray: () -> Unit
+    internal var tabsFilter: (TabSessionState) -> Boolean
 ) {
-    private var tabs: Tabs? = null
     private var scope: CoroutineScope? = null
 
     fun start() {
@@ -40,17 +37,10 @@ class TabsTrayPresenter(
     }
 
     private suspend fun collect(flow: Flow<BrowserState>) {
-        flow.map { it.toTabs(tabsFilter) }
-            .ifChanged()
-            .collect { tabs ->
-                // Do not invoke the callback on start if this is the initial state.
-                if (tabs.list.isEmpty() && this.tabs != null) {
-                    closeTabsTray.invoke()
-                }
-
-                tabsTray.updateTabs(tabs)
-
-                this.tabs = tabs
+        flow.ifChanged { it.toTabs(tabsFilter) }
+            .collect { state ->
+                val (tabs, selectedTabId) = state.toTabList(tabsFilter)
+                tabsTray.updateTabs(tabs, selectedTabId)
             }
     }
 }

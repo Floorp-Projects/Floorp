@@ -7,12 +7,10 @@ package mozilla.components.browser.tabstray
 import android.view.View
 import android.widget.FrameLayout
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_HIGHLIGHT_SELECTED_ITEM
-import mozilla.components.concept.tabstray.Tab
-import mozilla.components.concept.tabstray.Tabs
-import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -25,15 +23,17 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 private class TestTabViewHolder(view: View) : TabViewHolder(view) {
-    override var tab: Tab? = null
+    override var tab: TabSessionState? = null
     override fun bind(
-        tab: Tab,
+        tab: TabSessionState,
         isSelected: Boolean,
         styling: TabsTrayStyling,
-        observable: Observable<TabsTray.Observer>
-    ) { /* noop */ }
+        delegate: TabsTray.Delegate
+    ) { /* noop */
+    }
 
-    override fun updateSelectedTabIndicator(showAsSelected: Boolean) { /* noop */ }
+    override fun updateSelectedTabIndicator(showAsSelected: Boolean) { /* noop */
+    }
 }
 
 @RunWith(AndroidJUnit4::class)
@@ -41,7 +41,7 @@ class TabsAdapterTest {
 
     @Test
     fun `onCreateViewHolder will create a DefaultTabViewHolder`() {
-        val adapter = TabsAdapter()
+        val adapter = TabsAdapter(delegate = mock())
 
         val type = adapter.onCreateViewHolder(FrameLayout(testContext), 0)
 
@@ -50,7 +50,10 @@ class TabsAdapterTest {
 
     @Test
     fun `onCreateViewHolder will create whatever TabViewHolder is provided`() {
-        val adapter = TabsAdapter(viewHolderProvider = { _ -> TestTabViewHolder(View(testContext)) })
+        val adapter = TabsAdapter(
+            viewHolderProvider = { _ -> TestTabViewHolder(View(testContext)) },
+            delegate = mock()
+        )
 
         val type = adapter.onCreateViewHolder(FrameLayout(testContext), 0)
 
@@ -59,67 +62,46 @@ class TabsAdapterTest {
 
     @Test
     fun `itemCount will reflect number of sessions`() {
-        val adapter = TabsAdapter()
+        val adapter = TabsAdapter(delegate = mock())
         assertEquals(0, adapter.itemCount)
 
         adapter.updateTabs(
-            Tabs(
-                list = listOf(
-                    Tab("A", "https://www.mozilla.org"),
-                    Tab("B", "https://www.firefox.com")
-                ),
-                selectedIndex = 0
-            )
+            listOf(
+                createTab(id = "A", url = "https://www.mozilla.org"),
+                createTab(id = "B", url = "https://www.firefox.com")
+            ),
+            selectedTabId = "A"
         )
         assertEquals(2, adapter.itemCount)
     }
 
     @Test
     fun `onBindViewHolder calls bind on matching holder`() {
-        val adapter = TabsAdapter()
+        val styling = TabsTrayStyling()
+        val delegate = mock<TabsTray.Delegate>()
+        val adapter = TabsAdapter(delegate = delegate, styling = styling)
 
         val holder: TabViewHolder = mock()
 
-        val tab = Tab("A", "https://www.mozilla.org")
+        val tab = createTab(id = "A", url = "https://www.mozilla.org")
 
         adapter.updateTabs(
-            Tabs(
-                list = listOf(tab),
-                selectedIndex = 0
-            )
+            listOf(tab),
+            "A"
         )
 
         adapter.onBindViewHolder(holder, 0)
 
-        verify(holder).bind(tab, true, adapter.styling, adapter)
-    }
-
-    @Test
-    fun `tabs updated notifies observers`() {
-        val adapter = TabsAdapter()
-        val observer: TabsTray.Observer = mock()
-
-        adapter.register(observer)
-
-        adapter.updateTabs(
-            Tabs(
-                list = listOf(
-                    Tab("A", "https://www.mozilla.org"),
-                    Tab("B", "https://www.firefox.com"),
-                    Tab("C", "https://getpocket.com")
-                ),
-                selectedIndex = 0
-            )
-        )
-
-        verify(observer).onTabsUpdated()
+        verify(holder).bind(tab, true, styling, delegate)
     }
 
     @Test
     fun `onBindViewHolder will use payloads to indicate if this item is selected`() {
-        val adapter = TabsAdapter()
+        val adapter = TabsAdapter(delegate = mock())
         val holder = spy(TestTabViewHolder(View(testContext)))
-        adapter.updateTabs(Tabs(listOf(mock(), mock()), selectedIndex = 1))
+        val tab = createTab(id = "A", url = "https://www.mozilla.org")
+
+        adapter.updateTabs(listOf(mock(), tab), selectedTabId = "A")
 
         adapter.onBindViewHolder(holder, 0, listOf(PAYLOAD_HIGHLIGHT_SELECTED_ITEM))
         verify(holder, never()).updateSelectedTabIndicator(ArgumentMatchers.anyBoolean())
@@ -130,9 +112,10 @@ class TabsAdapterTest {
 
     @Test
     fun `onBindViewHolder will use payloads to indicate if this item is not selected`() {
-        val adapter = TabsAdapter()
+        val adapter = TabsAdapter(delegate = mock())
         val holder = spy(TestTabViewHolder(View(testContext)))
-        adapter.updateTabs(Tabs(listOf(mock(), mock()), selectedIndex = 1))
+        val tab = createTab(id = "A", url = "https://www.mozilla.org")
+        adapter.updateTabs(listOf(mock(), tab), selectedTabId = "A")
 
         adapter.onBindViewHolder(holder, 0, listOf(PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM))
         verify(holder, never()).updateSelectedTabIndicator(ArgumentMatchers.anyBoolean())
@@ -143,7 +126,7 @@ class TabsAdapterTest {
 
     @Test
     fun `onBindViewHolder with payloads will return early if there are currently no open tabs`() {
-        val adapter = TabsAdapter()
+        val adapter = TabsAdapter(delegate = mock())
         val holder = TestTabViewHolder(View(testContext))
         val payloads = spy(arrayListOf(PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM))
 
@@ -152,7 +135,7 @@ class TabsAdapterTest {
         verify(payloads, never()).isEmpty()
         verify(payloads, never()).contains(ArgumentMatchers.anyInt())
 
-        adapter.updateTabs(Tabs(emptyList(), selectedIndex = 0))
+        adapter.updateTabs(emptyList(), selectedTabId = null)
         adapter.onBindViewHolder(holder, 0, payloads)
         // verify that calls we expect further down are not happening after the null check
         verify(payloads, never()).isEmpty()
@@ -161,10 +144,11 @@ class TabsAdapterTest {
 
     @Test
     fun `onBindViewHolder with empty payloads will call onBindViewHolder and return early for a full bind`() {
-        val adapter = TabsAdapter()
+        val adapter = TabsAdapter(delegate = mock())
         val holder = TestTabViewHolder(View(testContext))
         val emptyPayloads = spy(arrayListOf<String>())
-        adapter.updateTabs(Tabs(listOf(mock()), selectedIndex = 0))
+
+        adapter.updateTabs(listOf(mock()), selectedTabId = null)
 
         adapter.onBindViewHolder(holder, 0, emptyPayloads)
 

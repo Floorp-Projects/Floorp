@@ -7,9 +7,8 @@ package mozilla.components.feature.tabs.tabstray
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.feature.tabs.TabsUseCases
-import mozilla.components.feature.tabs.ext.toTabs
+import mozilla.components.browser.tabstray.TabsTray
+import mozilla.components.feature.tabs.ext.toTabList
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 
 /**
@@ -22,35 +21,21 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 class TabsFeature(
     private val tabsTray: TabsTray,
     private val store: BrowserStore,
-    selectTabUseCase: TabsUseCases.SelectTabUseCase,
-    removeTabUseCase: TabsUseCases.RemoveTabUseCase,
-    private val defaultTabsFilter: (TabSessionState) -> Boolean = { true },
-    closeTabsTray: () -> Unit
+    private val defaultTabsFilter: (TabSessionState) -> Boolean = { true }
 ) : LifecycleAwareFeature {
     @VisibleForTesting
     internal var presenter = TabsTrayPresenter(
         tabsTray,
         store,
-        defaultTabsFilter,
-        closeTabsTray
-    )
-
-    @VisibleForTesting
-    internal var interactor = TabsTrayInteractor(
-        tabsTray,
-        selectTabUseCase,
-        removeTabUseCase,
-        closeTabsTray
+        defaultTabsFilter
     )
 
     override fun start() {
         presenter.start()
-        interactor.start()
     }
 
     override fun stop() {
         presenter.stop()
-        interactor.stop()
     }
 
     /**
@@ -63,6 +48,8 @@ class TabsFeature(
         presenter.tabsFilter = tabsFilter
 
         val state = store.state
-        tabsTray.updateTabs(state.toTabs(tabsFilter))
+        val (tabs, selectedTabId) = state.toTabList(tabsFilter)
+
+        tabsTray.updateTabs(tabs, selectedTabId)
     }
 }

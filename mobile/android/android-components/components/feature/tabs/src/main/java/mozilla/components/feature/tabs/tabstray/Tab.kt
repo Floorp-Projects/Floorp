@@ -2,13 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.concept.tabstray
+package mozilla.components.feature.tabs.tabstray
 
 import android.graphics.Bitmap
+import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.concept.engine.mediasession.MediaSession
 
 /**
- * Data class representing a tab to be displayed in a [TabsTray].
+ *
+ * An internal only data class that is used for collecting the values to observe in the [TabsTray].
  *
  * @property id Unique ID of the tab.
  * @property url Current URL of the tab.
@@ -23,11 +25,7 @@ import mozilla.components.concept.engine.mediasession.MediaSession
  * @property searchTerm the last used search term for this tab or from the originating tab, or an
  * empty string if no search was executed.
  */
-@Deprecated(
-    "This will be removed in a future release",
-    ReplaceWith("TabSessionState", "mozilla.components.browser.state.state")
-)
-data class Tab(
+internal data class Tab(
     val id: String,
     val url: String,
     val title: String = "",

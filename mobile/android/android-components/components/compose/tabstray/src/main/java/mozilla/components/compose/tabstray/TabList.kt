@@ -7,15 +7,12 @@ package mozilla.components.compose.tabstray
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.tabstray.Tab
-import mozilla.components.concept.tabstray.Tabs
-import mozilla.components.feature.tabs.ext.toTabs
 import mozilla.components.lib.state.ext.observeAsComposableState
 
 /**
@@ -32,15 +29,17 @@ fun TabList(
     store: BrowserStore,
     modifier: Modifier = Modifier,
     tabsFilter: (TabSessionState) -> Boolean = { true },
-    onTabSelected: (Tab) -> Unit = {},
-    onTabClosed: (Tab) -> Unit = {}
+    onTabSelected: (TabSessionState) -> Unit = {},
+    onTabClosed: (TabSessionState) -> Unit = {}
 ) {
-    val tabs = store.observeAsComposableState { state -> state.toTabs(tabsFilter) }
+    val tabs = store.observeAsComposableState { state -> state.tabs.filter(tabsFilter) }
+    val selectedTabId = store.observeAsComposableState { state -> state.selectedTabId }
     TabList(
-        tabs.value ?: Tabs(emptyList(), selectedIndex = -1),
+        tabs.value ?: emptyList(),
+        modifier,
+        selectedTabId.value,
         onTabSelected,
         onTabClosed,
-        modifier
     )
 }
 
@@ -48,26 +47,28 @@ fun TabList(
  * Renders the given list of [tabs].
  *
  * @param tabs The list of tabs to render.
+ * @param selectedTabId the currently selected tab ID.
  * @param modifier The modifier to apply to this layout.
  * @param onTabClosed Gets invoked when the user closes a tab.
  * @param onTabSelected Gets invoked when the user selects a tab.
  */
 @Composable
 fun TabList(
-    tabs: Tabs,
-    onTabSelected: (Tab) -> Unit,
-    onTabClosed: (Tab) -> Unit,
-    modifier: Modifier = Modifier
+    tabs: List<TabSessionState>,
+    modifier: Modifier = Modifier,
+    selectedTabId: String? = null,
+    onTabSelected: (TabSessionState) -> Unit,
+    onTabClosed: (TabSessionState) -> Unit
 ) {
     LazyColumn(
         modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colors.surface)
     ) {
-        itemsIndexed(tabs.list) { index, tab ->
+        items(tabs) { tab ->
             Tab(
                 tab,
-                selected = tabs.selectedIndex == index,
+                selected = selectedTabId == tab.id,
                 onClick = { onTabSelected(tab) },
                 onClose = { onTabClosed(tab) }
             )

@@ -32,6 +32,7 @@ dependencies {
     implementation project(':ui-icons')
     implementation project(':ui-colors')
     implementation project(':concept-base')
+    implementation project(':browser-state')
     implementation project(':support-images')
     implementation project(':support-ktx')
 

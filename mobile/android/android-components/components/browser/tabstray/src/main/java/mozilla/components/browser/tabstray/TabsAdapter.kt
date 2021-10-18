@@ -8,12 +8,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.concept.base.images.ImageLoader
-import mozilla.components.concept.tabstray.Tab
-import mozilla.components.concept.tabstray.Tabs
-import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.support.base.observer.Observable
-import mozilla.components.support.base.observer.ObserverRegistry
 
 /**
  * Function responsible for creating a `TabViewHolder` in the `TabsAdapter`.
@@ -21,11 +17,13 @@ import mozilla.components.support.base.observer.ObserverRegistry
 typealias ViewHolderProvider = (ViewGroup) -> TabViewHolder
 
 /**
- * RecyclerView adapter implementation to display a list/grid of tabs.
+ * RecyclerView adapter implementation to display a list of tabs.
  *
  * @param thumbnailLoader an implementation of an [ImageLoader] for loading thumbnail images in the tabs tray.
- * @param viewHolderProvider a function that creates a `TabViewHolder`.
- * @param delegate TabsTray.Observer registry to allow `TabsAdapter` to conform to `Observable<TabsTray.Observer>`.
+ * @param viewHolderProvider a function that creates a [TabViewHolder].
+ * @param styling the default styling for the [TabsTrayStyling].
+ * @param delegate a delegate to handle interactions in the tabs tray.
+ * @param onCloseTray a callback invoked when the last tab is closed.
  */
 open class TabsAdapter(
     thumbnailLoader: ImageLoader? = null,
@@ -35,20 +33,22 @@ open class TabsAdapter(
             thumbnailLoader
         )
     },
-    delegate: Observable<TabsTray.Observer> = ObserverRegistry()
-) : ListAdapter<Tab, TabViewHolder>(DiffCallback), TabsTray, Observable<TabsTray.Observer> by delegate {
-    private var tabs: Tabs? = null
+    private val styling: TabsTrayStyling = TabsTrayStyling(),
+    private val delegate: TabsTray.Delegate,
+    private val onCloseTray: () -> Unit = {}
+) : ListAdapter<TabSessionState, TabViewHolder>(DiffCallback), TabsTray {
 
-    var styling: TabsTrayStyling = TabsTrayStyling()
+    private var previouslyOpened: Boolean = false
+    private var selectedTabId: String? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabViewHolder {
         return viewHolderProvider.invoke(parent)
     }
 
     override fun onBindViewHolder(holder: TabViewHolder, position: Int) {
-        val tabs = tabs ?: return
+        val tab = getItem(position)
 
-        holder.bind(tabs.list[position], isTabSelected(tabs, position), styling, this)
+        holder.bind(tab, tab.id == selectedTabId, styling, delegate)
     }
 
     override fun onBindViewHolder(
@@ -56,31 +56,34 @@ open class TabsAdapter(
         position: Int,
         payloads: List<Any>
     ) {
-        tabs?.let { tabs ->
-            if (tabs.list.isEmpty()) return
+        val tabs = currentList
+        if (tabs.isEmpty()) return
 
-            if (payloads.isEmpty()) {
-                onBindViewHolder(holder, position)
-                return
-            }
+        if (payloads.isEmpty()) {
+            onBindViewHolder(holder, position)
+            return
+        }
 
-            if (payloads.contains(PAYLOAD_HIGHLIGHT_SELECTED_ITEM) && position == tabs.selectedIndex) {
-                holder.updateSelectedTabIndicator(true)
-            } else if (payloads.contains(PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM) && position == tabs.selectedIndex) {
-                holder.updateSelectedTabIndicator(false)
-            }
+        val tab = getItem(position)
+
+        if (payloads.contains(PAYLOAD_HIGHLIGHT_SELECTED_ITEM) && tab.id == selectedTabId) {
+            holder.updateSelectedTabIndicator(true)
+        } else if (payloads.contains(PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM) && tab.id == selectedTabId) {
+            holder.updateSelectedTabIndicator(false)
         }
     }
 
-    override fun updateTabs(tabs: Tabs) {
-        this.tabs = tabs
+    override fun updateTabs(tabs: List<TabSessionState>, selectedTabId: String?) {
+        if (tabs.isEmpty() && previouslyOpened) {
+            onCloseTray.invoke()
+            return
+        }
 
-        submitList(tabs.list)
+        this.selectedTabId = selectedTabId
+        this.previouslyOpened = true
 
-        notifyObservers { onTabsUpdated() }
+        submitList(tabs)
     }
-
-    override fun isTabSelected(tabs: Tabs, position: Int) = tabs.selectedIndex == position
 
     companion object {
         /**
@@ -98,12 +101,12 @@ open class TabsAdapter(
         val PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM: Int = R.id.payload_dont_highlight_selected_item
     }
 
-    private object DiffCallback : DiffUtil.ItemCallback<Tab>() {
-        override fun areItemsTheSame(oldItem: Tab, newItem: Tab): Boolean {
+    private object DiffCallback : DiffUtil.ItemCallback<TabSessionState>() {
+        override fun areItemsTheSame(oldItem: TabSessionState, newItem: TabSessionState): Boolean {
             return oldItem.id == newItem.id
         }
 
-        override fun areContentsTheSame(oldItem: Tab, newItem: Tab): Boolean {
+        override fun areContentsTheSame(oldItem: TabSessionState, newItem: TabSessionState): Boolean {
             return oldItem == newItem
         }
     }

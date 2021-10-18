@@ -4,8 +4,6 @@
 
 package mozilla.components.feature.tabs.tabstray
 
-import android.view.View
-import androidx.lifecycle.LifecycleOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -14,24 +12,19 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.tabstray.Tabs
-import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.feature.tabs.ext.toTabs
+import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.support.test.ext.joinBlocking
-import mozilla.components.support.test.mock
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 
 @RunWith(AndroidJUnit4::class)
@@ -66,8 +59,7 @@ class TabsTrayPresenterTest {
         val presenter = TabsTrayPresenter(
             tabsTray,
             store,
-            tabsFilter = { true },
-            closeTabsTray = mock()
+            tabsFilter = { true }
         )
 
         verifyNoMoreInteractions(tabsTray)
@@ -78,10 +70,10 @@ class TabsTrayPresenterTest {
 
         assertNotNull(tabsTray.updateTabs)
 
-        assertEquals(0, tabsTray.updateTabs!!.selectedIndex)
-        assertEquals(2, tabsTray.updateTabs!!.list.size)
-        assertEquals("https://www.mozilla.org", tabsTray.updateTabs!!.list[0].url)
-        assertEquals("https://getpocket.com", tabsTray.updateTabs!!.list[1].url)
+        assertEquals("a", tabsTray.selectedTabId!!)
+        assertEquals(2, tabsTray.updateTabs!!.size)
+        assertEquals("https://www.mozilla.org", tabsTray.updateTabs!![0].content.url)
+        assertEquals("https://getpocket.com", tabsTray.updateTabs!![1].content.url)
 
         presenter.stop()
     }
@@ -102,15 +94,14 @@ class TabsTrayPresenterTest {
         val presenter = TabsTrayPresenter(
             tabsTray,
             store,
-            tabsFilter = { true },
-            closeTabsTray = mock()
+            tabsFilter = { true }
         )
 
         presenter.start()
 
         testDispatcher.advanceUntilIdle()
 
-        assertEquals(2, tabsTray.updateTabs!!.list.size)
+        assertEquals(2, tabsTray.updateTabs!!.size)
 
         store.dispatch(
             TabListAction.AddTabAction(
@@ -118,7 +109,7 @@ class TabsTrayPresenterTest {
             )
         ).joinBlocking()
 
-        assertEquals(3, tabsTray.updateTabs!!.list.size)
+        assertEquals(3, tabsTray.updateTabs!!.size)
 
         presenter.stop()
     }
@@ -139,25 +130,24 @@ class TabsTrayPresenterTest {
         val presenter = TabsTrayPresenter(
             tabsTray,
             store,
-            tabsFilter = { true },
-            closeTabsTray = mock()
+            tabsFilter = { true }
         )
 
         presenter.start()
 
         testDispatcher.advanceUntilIdle()
 
-        assertEquals(2, tabsTray.updateTabs!!.list.size)
+        assertEquals(2, tabsTray.updateTabs!!.size)
 
         store.dispatch(TabListAction.RemoveTabAction("a")).joinBlocking()
         testDispatcher.advanceUntilIdle()
 
-        assertEquals(1, tabsTray.updateTabs!!.list.size)
+        assertEquals(1, tabsTray.updateTabs!!.size)
 
         store.dispatch(TabListAction.RemoveTabAction("b")).joinBlocking()
         testDispatcher.advanceUntilIdle()
 
-        assertEquals(0, tabsTray.updateTabs!!.list.size)
+        assertEquals(0, tabsTray.updateTabs!!.size)
 
         presenter.stop()
     }
@@ -178,20 +168,19 @@ class TabsTrayPresenterTest {
         val presenter = TabsTrayPresenter(
             tabsTray,
             store,
-            tabsFilter = { true },
-            closeTabsTray = mock()
+            tabsFilter = { true }
         )
 
         presenter.start()
 
         testDispatcher.advanceUntilIdle()
 
-        assertEquals(2, tabsTray.updateTabs!!.list.size)
+        assertEquals(2, tabsTray.updateTabs!!.size)
 
         store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
         testDispatcher.advanceUntilIdle()
 
-        assertEquals(0, tabsTray.updateTabs!!.list.size)
+        assertEquals(0, tabsTray.updateTabs!!.size)
 
         presenter.stop()
     }
@@ -215,134 +204,20 @@ class TabsTrayPresenterTest {
         val presenter = TabsTrayPresenter(
             tabsTray,
             store,
-            tabsFilter = { true },
-            closeTabsTray = mock()
+            tabsFilter = { true }
         )
 
         presenter.start()
         testDispatcher.advanceUntilIdle()
 
-        assertEquals(5, tabsTray.updateTabs!!.list.size)
-        assertEquals(0, tabsTray.updateTabs!!.selectedIndex)
+        assertEquals(5, tabsTray.updateTabs!!.size)
+        assertEquals("a", tabsTray.selectedTabId)
 
         store.dispatch(TabListAction.SelectTabAction("d")).joinBlocking()
         testDispatcher.advanceUntilIdle()
 
         println("Selection: " + store.state.selectedTabId)
-        assertEquals(3, tabsTray.updateTabs!!.selectedIndex)
-    }
-
-    @Test
-    fun `presenter will close tabs tray when all sessions get removed`() {
-        val store = BrowserStore(
-            BrowserState(
-                tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b"),
-                    createTab("https://developer.mozilla.org", id = "c"),
-                    createTab("https://www.firefox.com", id = "d"),
-                    createTab("https://www.google.com", id = "e")
-                ),
-                selectedTabId = "a"
-            )
-        )
-
-        var closed = false
-
-        val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(
-            tabsTray,
-            store,
-            tabsFilter = { true },
-            closeTabsTray = { closed = true }
-        )
-
-        presenter.start()
-        testDispatcher.advanceUntilIdle()
-
-        assertFalse(closed)
-
-        store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
-        testDispatcher.advanceUntilIdle()
-
-        assertTrue(closed)
-
-        presenter.stop()
-    }
-
-    @Test
-    fun `presenter will close tabs tray when last session gets removed`() {
-        val store = BrowserStore(
-            BrowserState(
-                tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b")
-                ),
-                selectedTabId = "a"
-            )
-        )
-
-        var closed = false
-
-        val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(
-            tabsTray,
-            store,
-            tabsFilter = { true },
-            closeTabsTray = { closed = true }
-        )
-
-        presenter.start()
-        testDispatcher.advanceUntilIdle()
-
-        assertFalse(closed)
-
-        store.dispatch(TabListAction.RemoveTabAction("a")).joinBlocking()
-        testDispatcher.advanceUntilIdle()
-
-        assertFalse(closed)
-
-        store.dispatch(TabListAction.RemoveTabAction("b")).joinBlocking()
-        testDispatcher.advanceUntilIdle()
-
-        assertTrue(closed)
-
-        presenter.stop()
-    }
-
-    @Test
-    fun `presenter calls update and display sessions when calculating diff`() {
-        val store = BrowserStore(
-            BrowserState(
-                tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "a"),
-                    createTab("https://getpocket.com", id = "b")
-                ),
-                selectedTabId = "a"
-            )
-        )
-
-        val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(
-            tabsTray,
-            store,
-            tabsFilter = { true },
-            closeTabsTray = mock()
-        )
-
-        presenter.start()
-        testDispatcher.advanceUntilIdle()
-
-        val tabs = BrowserState(
-            tabs = listOf(
-                createTab("https://www.firefox.com", id = "c")
-            )
-        ).toTabs()
-
-        tabsTray.updateTabs(tabs)
-        testDispatcher.advanceUntilIdle()
-
-        verify(tabsTray).updateTabs(tabs)
+        assertEquals("d", tabsTray.selectedTabId)
     }
 
     @Test
@@ -361,69 +236,22 @@ class TabsTrayPresenterTest {
         val presenter = TabsTrayPresenter(
             tabsTray,
             store,
-            tabsFilter = { it.content.private },
-            closeTabsTray = mock()
+            tabsFilter = { it.content.private }
         )
 
         presenter.start()
         testDispatcher.advanceUntilIdle()
 
-        assertTrue(tabsTray.updateTabs?.list?.size == 1)
-    }
-
-    @Test
-    fun `tabs tray should not invoke the close callback on start`() {
-        val store = BrowserStore(
-            BrowserState(
-                tabs = emptyList(),
-                selectedTabId = null
-            )
-        )
-
-        var invoked = false
-        val tabsTray: MockedTabsTray = spy(MockedTabsTray())
-        val presenter = TabsTrayPresenter(
-            tabsTray,
-            store,
-            tabsFilter = { it.content.private },
-            closeTabsTray = { invoked = true }
-        )
-
-        presenter.start()
-        testDispatcher.advanceUntilIdle()
-
-        assertFalse(invoked)
+        assertTrue(tabsTray.updateTabs?.size == 1)
     }
 }
 
 private class MockedTabsTray : TabsTray {
-    var updateTabs: Tabs? = null
+    var updateTabs: List<TabSessionState>? = null
+    var selectedTabId: String? = null
 
-    override fun updateTabs(tabs: Tabs) {
+    override fun updateTabs(tabs: List<TabSessionState>, selectedTabId: String?) {
         updateTabs = tabs
+        this.selectedTabId = selectedTabId
     }
-
-    override fun register(observer: TabsTray.Observer) {}
-
-    override fun register(observer: TabsTray.Observer, owner: LifecycleOwner, autoPause: Boolean) {}
-
-    override fun register(observer: TabsTray.Observer, view: View) {}
-
-    override fun unregister(observer: TabsTray.Observer) {}
-
-    override fun unregisterObservers() {}
-
-    override fun notifyObservers(block: TabsTray.Observer.() -> Unit) {}
-
-    override fun notifyAtLeastOneObserver(block: TabsTray.Observer.() -> Unit) {}
-
-    override fun <R> wrapConsumers(block: TabsTray.Observer.(R) -> Boolean): List<(R) -> Boolean> = emptyList()
-
-    override fun isObserved(): Boolean = false
-
-    override fun pauseObserver(observer: TabsTray.Observer) {}
-
-    override fun resumeObserver(observer: TabsTray.Observer) {}
-
-    override fun isTabSelected(tabs: Tabs, position: Int): Boolean = false
 }

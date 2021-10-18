@@ -7,19 +7,20 @@ package mozilla.components.browser.tabstray
 import android.graphics.Canvas
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.support.base.observer.Observable
+import mozilla.components.browser.state.state.TabSessionState
 
 /**
  * An [ItemTouchHelper.Callback] for support gestures on tabs in the tray.
+ *
+ * @param onRemoveTab A callback invoked when a tab is removed.
  */
 open class TabTouchCallback(
-    private val observable: Observable<TabsTray.Observer>
+    private val onRemoveTab: (TabSessionState) -> Unit,
 ) : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         with(viewHolder as TabViewHolder) {
-            tab?.let { observable.notifyObservers { onTabClosed(it) } }
+            tab?.let { onRemoveTab(it) }
         }
     }
 

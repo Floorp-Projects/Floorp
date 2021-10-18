@@ -28,11 +28,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.compose.browser.tabstray.R
-import mozilla.components.concept.tabstray.Tab
 
 /**
- * Renders a single [Tab] as a list item.
+ * Renders a single [TabSessionState] as a list item.
  *
  * @param tab The tab to render.
  * @param selected Whether this tab is selected or not.
@@ -41,7 +41,7 @@ import mozilla.components.concept.tabstray.Tab
  */
 @Composable
 fun Tab(
-    tab: Tab,
+    tab: TabSessionState,
     selected: Boolean = false,
     onClick: (String) -> Unit = {},
     onClose: (String) -> Unit = {}
@@ -66,14 +66,14 @@ fun Tab(
                     .padding(8.dp)
             ) {
                 Text(
-                    text = tab.title,
+                    text = tab.content.title,
                     fontWeight = FontWeight.Bold,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                     color = Color.White
                 )
                 Text(
-                    text = tab.url,
+                    text = tab.content.url,
                     style = MaterialTheme.typography.body2,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,

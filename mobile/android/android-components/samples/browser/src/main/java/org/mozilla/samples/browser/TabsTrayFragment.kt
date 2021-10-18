@@ -11,7 +11,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.snackbar.Snackbar
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.TabsAdapter
+import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.tabs.tabstray.TabsFeature
@@ -49,7 +51,7 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
             true
         }
 
-        val tabsAdapter = createTabsAdapter()
+        val tabsAdapter = createTabsAdapter(view)
         binding.tabsTray.adapter = tabsAdapter
         binding.tabsTray.layoutManager = GridLayoutManager(context, 2)
 
@@ -57,13 +59,6 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
             feature = TabsFeature(
                 tabsTray = tabsAdapter,
                 store = components.store,
-                selectTabUseCase = components.tabsUseCases.selectTab,
-                removeTabUseCase = RemoveTabWithUndoUseCase(
-                    components.tabsUseCases.removeTab,
-                    view,
-                    components.tabsUseCases.undo
-                ),
-                closeTabsTray = ::closeTabsTray
             ),
             owner = this,
             view = view
@@ -82,9 +77,28 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
         }
     }
 
-    private fun createTabsAdapter(): TabsAdapter {
-        val thumbnailLoader = ThumbnailLoader(components.thumbnailStorage)
-        return TabsAdapter(thumbnailLoader)
+    private fun createTabsAdapter(view: View): TabsAdapter {
+        val removeUseCase = RemoveTabWithUndoUseCase(
+            components.tabsUseCases.removeTab,
+            view,
+            components.tabsUseCases.undo
+        )
+        return TabsAdapter(
+            thumbnailLoader = ThumbnailLoader(components.thumbnailStorage),
+            delegate = object : TabsTray.Delegate {
+                override fun onTabSelected(tab: TabSessionState, source: String?) {
+                    components.tabsUseCases.selectTab(tab.id)
+                    closeTabsTray()
+                }
+
+                override fun onTabClosed(tab: TabSessionState, source: String?) {
+                    removeUseCase.invoke(tab.id)
+                }
+            },
+            onCloseTray = {
+                closeTabsTray()
+            }
+        )
     }
 }
 

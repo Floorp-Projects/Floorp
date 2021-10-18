@@ -13,12 +13,10 @@ import androidx.annotation.Dimension.DP
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
 import mozilla.components.concept.base.images.ImageLoadRequest
 import mozilla.components.concept.base.images.ImageLoader
-import mozilla.components.concept.tabstray.Tab
-import mozilla.components.concept.tabstray.TabsTray
-import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 
@@ -26,19 +24,20 @@ import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
  * An abstract ViewHolder implementation for "tab" items.
  */
 abstract class TabViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-    abstract var tab: Tab?
+    abstract var tab: TabSessionState?
 
     /**
      * Binds the ViewHolder to the `Tab`.
      * @param tab the `Tab` used to bind the viewHolder.
      * @param isSelected boolean to describe whether or not the `Tab` is selected.
      * @param observable message bus to pass events to Observers of the TabsTray.
+     * // TODO fix comment
      */
     abstract fun bind(
-        tab: Tab,
+        tab: TabSessionState,
         isSelected: Boolean,
         styling: TabsTrayStyling,
-        observable: Observable<TabsTray.Observer>
+        delegate: TabsTray.Delegate
     )
 
     /**
@@ -70,7 +69,7 @@ class DefaultTabViewHolder(
     private val thumbnailView: TabThumbnailView = itemView.findViewById(R.id.mozac_browser_tabstray_thumbnail)
     private val urlView: TextView? = itemView.findViewById(R.id.mozac_browser_tabstray_url)
 
-    override var tab: Tab? = null
+    override var tab: TabSessionState? = null
     @VisibleForTesting
     internal var styling: TabsTrayStyling? = null
 
@@ -78,45 +77,45 @@ class DefaultTabViewHolder(
      * Displays the data of the given session and notifies the given observable about events.
      */
     override fun bind(
-        tab: Tab,
+        tab: TabSessionState,
         isSelected: Boolean,
         styling: TabsTrayStyling,
-        observable: Observable<TabsTray.Observer>
+        delegate: TabsTray.Delegate
     ) {
         this.tab = tab
         this.styling = styling
 
-        val title = if (tab.title.isNotEmpty()) {
-            tab.title
+        val title = if (tab.content.title.isNotEmpty()) {
+            tab.content.title
         } else {
-            tab.url
+            tab.content.url
         }
 
         titleView.text = title
-        urlView?.text = tab.url.tryGetHostFromUrl()
+        urlView?.text = tab.content.url.tryGetHostFromUrl()
 
         itemView.setOnClickListener {
-            observable.notifyObservers { onTabSelected(tab) }
+            delegate.onTabSelected(tab)
         }
 
         closeView.setOnClickListener {
-            observable.notifyObservers { onTabClosed(tab) }
+            delegate.onTabClosed(tab)
         }
 
         updateSelectedTabIndicator(isSelected)
 
         // In the final else case, we have no cache or fresh screenshot; do nothing instead of clearing the image.
-        if (thumbnailLoader != null && tab.thumbnail == null) {
+        if (thumbnailLoader != null && tab.content.thumbnail == null) {
             val thumbnailSize = THUMBNAIL_SIZE.dpToPx(thumbnailView.context.resources.displayMetrics)
             thumbnailLoader.loadIntoView(
                 thumbnailView,
                 ImageLoadRequest(id = tab.id, size = thumbnailSize)
             )
-        } else if (tab.thumbnail != null) {
-            thumbnailView.setImageBitmap(tab.thumbnail)
+        } else if (tab.content.thumbnail != null) {
+            thumbnailView.setImageBitmap(tab.content.thumbnail)
         }
 
-        iconView?.setImageBitmap(tab.icon)
+        iconView?.setImageBitmap(tab.content.icon)
     }
 
     override fun updateSelectedTabIndicator(showAsSelected: Boolean) {

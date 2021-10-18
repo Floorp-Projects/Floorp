@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.browser.tabstray.R
-import mozilla.components.feature.tabs.ext.toTabs
 import mozilla.components.lib.state.ext.observeAsComposableState
 
 private const val MAX_VISIBLE_TABS = 99
@@ -42,7 +41,7 @@ fun TabCounterButton(
     ) {
         val backgroundColor = MaterialTheme.colors.primarySurface
         val foregroundColor = contentColorFor(backgroundColor)
-        val tabs = store.observeAsComposableState { state -> state.toTabs(tabsFilter).list }
+        val tabs = store.observeAsComposableState { state -> state.tabs.filter(tabsFilter) }
         val count = tabs.value?.size ?: 0
 
         Image(
