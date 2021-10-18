@@ -2123,7 +2123,7 @@ void TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
              aSamples.Length(), aTrackData.mInfo->mMimeType.get(),
              aIntervals.GetStart().ToMicroseconds(),
              aIntervals.GetEnd().ToMicroseconds());
-  if (profiler_can_accept_markers()) {
+  if (profiler_thread_is_being_profiled()) {
     nsPrintfCString markerString(
         "Processing %zu %s frames(start:%" PRId64 " end:%" PRId64 ")",
         aSamples.Length(), aTrackData.mInfo->mMimeType.get(),
@@ -2348,7 +2348,7 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
             lastRemovedIndex - firstRemovedIndex.ref() + 1,
             removedIntervals.GetStart().ToSeconds(),
             removedIntervals.GetEnd().ToSeconds());
-  if (profiler_can_accept_markers()) {
+  if (profiler_thread_is_being_profiled()) {
     nsPrintfCString markerString(
         "Removing frames from:%u (frames:%u) ([%f, %f))",
         firstRemovedIndex.ref(), lastRemovedIndex - firstRemovedIndex.ref() + 1,

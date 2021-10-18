@@ -49,7 +49,7 @@ static void profiler_add_js_marker(const char* aMarkerName,
 }
 
 static void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
-  if (!profiler_can_accept_markers()) {
+  if (!profiler_thread_is_being_profiled()) {
     return;
   }
 

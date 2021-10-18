@@ -330,7 +330,7 @@ void Performance::Mark(const nsAString& aName, ErrorResult& aRv) {
       new PerformanceMark(GetParentObject(), aName, Now());
   InsertUserEntry(performanceMark);
 
-  if (profiler_can_accept_markers()) {
+  if (profiler_thread_is_being_profiled()) {
     Maybe<uint64_t> innerWindowId;
     if (GetOwner()) {
       innerWindowId = Some(GetOwner()->WindowID());
@@ -408,7 +408,7 @@ void Performance::Measure(const nsAString& aName,
       new PerformanceMeasure(GetParentObject(), aName, startTime, endTime);
   InsertUserEntry(performanceMeasure);
 
-  if (profiler_can_accept_markers()) {
+  if (profiler_thread_is_being_profiled()) {
     TimeStamp startTimeStamp =
         CreationTimeStamp() + TimeDuration::FromMilliseconds(startTime);
     TimeStamp endTimeStamp =

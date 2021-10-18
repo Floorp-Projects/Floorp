@@ -52,7 +52,7 @@ struct AnimationEventInfo {
         nsCSSPseudoElements::PseudoTypeAsString(aTarget.mPseudoType);
 
     if ((aMessage == eAnimationCancel || aMessage == eAnimationEnd) &&
-        profiler_can_accept_markers()) {
+        profiler_thread_is_being_profiled()) {
       nsCString markerText;
       aAnimationName->ToUTF8String(markerText);
       PROFILER_MARKER_TEXT(
@@ -89,7 +89,7 @@ struct AnimationEventInfo {
         nsCSSPseudoElements::PseudoTypeAsString(aTarget.mPseudoType);
 
     if ((aMessage == eTransitionEnd || aMessage == eTransitionCancel) &&
-        profiler_can_accept_markers()) {
+        profiler_thread_is_being_profiled()) {
       nsCString markerText;
       markerText.Assign(nsCSSProps::GetStringValue(aProperty));
       if (aMessage == eTransitionCancel) {

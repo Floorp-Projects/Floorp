@@ -193,7 +193,7 @@ void ChromeUtils::AddProfilerMarker(
     GlobalObject& aGlobal, const nsACString& aName,
     const ProfilerMarkerOptionsOrDouble& aOptions,
     const Optional<nsACString>& aText) {
-  if (!profiler_can_accept_markers()) {
+  if (!profiler_thread_is_being_profiled()) {
     return;
   }
 

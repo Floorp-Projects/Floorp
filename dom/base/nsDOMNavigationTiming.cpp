@@ -170,7 +170,7 @@ void nsDOMNavigationTiming::NotifyLoadEventEnd() {
                   Tracing, "Navigation");
 
   if (IsTopLevelContentDocumentInContentProcess()) {
-    if (profiler_can_accept_markers() || PAGELOAD_LOG_ENABLED()) {
+    if (profiler_thread_is_being_profiled() || PAGELOAD_LOG_ENABLED()) {
       TimeDuration elapsed = mLoadEventEnd - mNavigationStart;
       TimeDuration duration = mLoadEventEnd - mLoadEventStart;
       nsAutoCString spec;
@@ -368,7 +368,7 @@ void nsDOMNavigationTiming::TTITimeout(nsITimer* aTimer) {
 
   mTTITimer = nullptr;
 
-  if (profiler_can_accept_markers() || PAGELOAD_LOG_ENABLED()) {
+  if (profiler_thread_is_being_profiled() || PAGELOAD_LOG_ENABLED()) {
     TimeDuration elapsed = mTTFI - mNavigationStart;
     MOZ_ASSERT(elapsed.ToMilliseconds() > 0);
     TimeDuration elapsedLongTask =
@@ -447,7 +447,7 @@ void nsDOMNavigationTiming::NotifyContentfulCompositeForRootContentDocument(
 
   mContentfulComposite = aCompositeEndTime;
 
-  if (profiler_can_accept_markers() || PAGELOAD_LOG_ENABLED()) {
+  if (profiler_thread_is_being_profiled() || PAGELOAD_LOG_ENABLED()) {
     TimeDuration elapsed = mContentfulComposite - mNavigationStart;
     nsAutoCString spec;
     if (mLoadedURI) {
