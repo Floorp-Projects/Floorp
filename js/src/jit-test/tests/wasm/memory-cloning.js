@@ -1,12 +1,25 @@
-// |jit-test| skip-if: !wasmThreadsEnabled()
+// |jit-test| --wasm-memory64; skip-if: !wasmThreadsEnabled()
 
 // Basic structured cloning tests (specific to SpiderMonkey shell)
+
+var memtypes = wasmMemory64Enabled() ? ['i32', 'i64'] : [''];
+
+function makeMemoryDesc(memtype, d) {
+    if (memtype != '') {
+        d.index = memtype;
+    }
+    return d;
+}
+
+function Zero(memtype) {
+    return memtype == 'i64' ? 0n : 0;
+}
 
 // Should *not* be possible to serialize and deserialize memories that are not
 // shared, whether we transfer them or not.
 
-{
-    let mem1 = new WebAssembly.Memory({initial: 2, maximum: 4});
+for ( let memtype of memtypes ) {
+    let mem1 = new WebAssembly.Memory(makeMemoryDesc(memtype, {initial: 2, maximum: 4}));
     assertErrorMessage(() => serialize(mem1),
 		       TypeError,
 		       /unsupported type for structured data/);
@@ -18,8 +31,9 @@
 // Should be possible to serialize and deserialize memories that are shared, and
 // observe shared effects.
 
-{
-    let mem1 = new WebAssembly.Memory({initial: 2, maximum: 4, shared: true});
+for ( let memtype of memtypes ) {
+    let ptrtype = memtype == 'i64' ? memtype : 'i32';
+    let mem1 = new WebAssembly.Memory(makeMemoryDesc(memtype, {initial: 2, maximum: 4, shared: true}));
     let buf1 = mem1.buffer;
 
     // Serialization and deserialization of shared memories work:
@@ -31,6 +45,9 @@
 
     assertEq(buf1 !== buf2, true);
     assertEq(buf1.byteLength, buf2.byteLength);
+    if (memtype != '' && mem2.type) {
+        assertEq(mem2.type().index, memtype);
+    }
 
     // Effects to one buffer must be reflected in the other:
 
@@ -44,9 +61,9 @@
 
     let index = 2*65536 + 200;
     let access = wasmEvalText(`(module
-				(memory (import "" "memory") 2 4 shared)
-				(func (export "l") (result i32)
-				 (i32.load (i32.const ${index}))))`,
+				(memory (import "" "memory") ${memtype} 2 4 shared)
+				(func (export "l") (result ${ptrtype})
+				 (${ptrtype}.load (${ptrtype}.const ${index}))))`,
 			      {"": {memory: mem2}}).exports.l;
 
     // initially mem2 cannot be accessed at index
@@ -54,18 +71,18 @@
 
     // then we grow mem1
     wasmEvalText(`(module
-		   (memory (import "" "memory") 2 4 shared)
-		   (func (export "g") (drop (memory.grow (i32.const 1)))))`,
+		   (memory (import "" "memory") ${memtype} 2 4 shared)
+		   (func (export "g") (drop (memory.grow (${ptrtype}.const 1)))))`,
 		 {"": {memory: mem1}}).exports.g();
 
     // after growing mem1, mem2 can be accessed at index
-    assertEq(access(), 0);
+    assertEq(access(), Zero(memtype));
 }
 
 // Should not be possible to transfer a shared memory
 
-{
-    let mem1 = new WebAssembly.Memory({initial: 2, maximum: 4, shared: true});
+for ( let memtype of memtypes ) {
+    let mem1 = new WebAssembly.Memory(makeMemoryDesc(memtype, {initial: 2, maximum: 4, shared: true}));
     assertErrorMessage(() => serialize(mem1, [mem1]),
 		       TypeError,
 		       /Shared memory objects must not be in the transfer list/);
@@ -76,8 +93,8 @@
 // of the SAB should not change even if the memory was grown after serialization
 // and before deserialization.
 
-{
-    let mem = new WebAssembly.Memory({initial: 2, maximum: 4, shared: true});
+for ( let memtype of memtypes ) {
+    let mem = new WebAssembly.Memory(makeMemoryDesc(memtype, {initial: 2, maximum: 4, shared: true}));
     let buf = mem.buffer;
     let clonedbuf = serialize(buf, [], {SharedArrayBuffer: 'allow'});
     mem.grow(1);
