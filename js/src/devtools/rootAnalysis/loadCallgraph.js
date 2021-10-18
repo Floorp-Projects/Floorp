@@ -7,6 +7,7 @@
 "use strict";
 
 loadRelativeToScript('utility.js');
+loadRelativeToScript('callgraph.js');
 
 // Functions come out of sixgill in the form "mangled$readable". The mangled
 // name is Truth. One mangled name might correspond to multiple readable names,
@@ -202,6 +203,22 @@ function loadCallgraph(file)
     // called more than once.) Merge the repeated calls, maintaining 'any' and
     // 'all'. Also, generate the callersOf table at the same time.
     callersOf = merge_repeated_calls(calleesOf);
+    assert(ID.jscode == mangledToId["(js-code)"]);
+    assert(ID.anyfunc == mangledToId["(any-function)"]);
+    assert(ID.nogcfunc == mangledToId["(nogc-function)"]);
+    assert(ID.gc == mangledToId["(GC)"]);
+
+    addToKeyedList(calleesOf, mangledToId["(any-function)"], {callee:ID.gc, any:0, all:0});
+
+    // Compute functionAttrs: it should contain the set of functions that
+    // are *always* called within some sort of limited context (eg GC
+    // suppression).
+
+    // Initialize to field calls with attrs set.
+    for (var [name, attrs] of Object.entries(fieldCallAttrs))
+        functionAttrs[name] = [attrs, attrs];
+    functionAttrs[ID.gc] = [0, 0];
+    addGCFunction(ID.gc, "annotation", functionAttrs);
 
     // Add in any extra functions at the end. (If we did this early, it would
     // mess up the id <-> name correspondence. Also, we need to know if the
@@ -214,8 +231,9 @@ function loadCallgraph(file)
         addGCFunction(unknown, "internal", functionAttrs);
     }
 
-    // Compute functionAttrs: it should contain the set of functions that are
-    // *always* called within some sort of context (eg GC suppression).
+    // Compute functionAttrs: it should contain the set of functions that
+    // are *always* called within some sort of limited context (eg GC
+    // suppression).
 
     // Initialize to field calls with attrs set.
     for (var [name, attrs] of Object.entries(fieldCallAttrs))
@@ -265,11 +283,9 @@ function loadCallgraph(file)
     assert(numGCCalls > 0, "No GC functions found!");
 
     // Initialize the worklist to all known gcFunctions.
-    var worklist = [];
-    for (const name in gcFunctions)
-        worklist.push(name);
+    const worklist = Object.keys(gcFunctions);
 
-    // Add all field calls (but not virtual method calls) to gcFunctions.
+    // Include all field calls (but not virtual method calls).
     for (const [name, csuName] of fieldCallCSU) {
         const fullFieldName = functionNames[name];
         if (!fieldCallCannotGC(csuName, fullFieldName)) {
@@ -337,6 +353,7 @@ function propagate_attrs(roots, functionAttrs, calleesOf) {
         // Consider caller where (graph) -> caller -> (0 or more callees)
         // 'callercaller' is for debugging.
         const [caller, edge_attrs, callercaller] = worklist[--top];
+        assert(caller in functionAttrs);
         const [prev_any, prev_all] = functionAttrs[caller];
         assert(prev_any !== undefined);
         assert(prev_all !== undefined);
