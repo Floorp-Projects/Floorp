@@ -14,7 +14,7 @@ add_task(async () => {
   const filename = "test_marker_fileio";
   const profile = await startProfilerAndTriggerFileIO({
     features: ["fileioall"],
-    threadsFilter: ["GeckoMain", "BackgroundThreadPool"],
+    threadsFilter: ["GeckoMain", "BgIOThreadPool"],
     filename,
   });
 
@@ -25,7 +25,7 @@ add_task(async () => {
   let backgroundThreadFileIO;
   for (const thread of threads) {
     // Check for FileIO in any of the background threads.
-    if (thread.name.startsWith("BackgroundThreadPool")) {
+    if (thread.name.startsWith("BgIOThreadPool")) {
       const markers = getInflatedFileIOMarkers(thread, filename);
       if (markers.length > 0) {
         backgroundThread = thread;
