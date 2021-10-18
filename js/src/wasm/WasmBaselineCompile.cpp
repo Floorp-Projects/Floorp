@@ -4919,7 +4919,6 @@ bool BaseCompiler::emitLoad(ValType type, Scalar::Type viewType) {
   if (deadCode_) {
     return true;
   }
-  MOZ_ASSERT(isMem32());
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
   loadCommon(&access, AccessCheck(), type);
   return true;
@@ -4935,7 +4934,6 @@ bool BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType) {
   if (deadCode_) {
     return true;
   }
-  MOZ_ASSERT(isMem32());
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
   storeCommon(&access, AccessCheck(), resultType);
   return true;
@@ -5326,7 +5324,6 @@ bool BaseCompiler::emitAtomicLoad(ValType type, Scalar::Type viewType) {
   if (deadCode_) {
     return true;
   }
-  MOZ_ASSERT(isMem32());
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
                           Synchronization::Load());
   atomicLoad(&access, type);
@@ -5360,7 +5357,6 @@ bool BaseCompiler::emitAtomicStore(ValType type, Scalar::Type viewType) {
   if (deadCode_) {
     return true;
   }
-  MOZ_ASSERT(isMem32());
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
                           Synchronization::Store());
   atomicStore(&access, type);
@@ -7499,7 +7495,6 @@ bool BaseCompiler::emitLoadSplat(Scalar::Type viewType) {
   if (deadCode_) {
     return true;
   }
-  MOZ_ASSERT(isMem32());
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
   loadSplat(&access);
   return true;
@@ -7514,7 +7509,6 @@ bool BaseCompiler::emitLoadZero(Scalar::Type viewType) {
   if (deadCode_) {
     return true;
   }
-  MOZ_ASSERT(isMem32());
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
   loadZero(&access);
   return true;
@@ -7528,7 +7522,6 @@ bool BaseCompiler::emitLoadExtend(Scalar::Type viewType) {
   if (deadCode_) {
     return true;
   }
-  MOZ_ASSERT(isMem32());
   MemoryAccessDesc access(Scalar::Int64, addr.align, addr.offset,
                           bytecodeOffset());
   loadExtend(&access, viewType);
@@ -7562,7 +7555,6 @@ bool BaseCompiler::emitLoadLane(uint32_t laneSize) {
     default:
       MOZ_CRASH("unsupported laneSize");
   }
-  MOZ_ASSERT(isMem32());
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
   loadLane(&access, laneIndex);
   return true;
@@ -7595,7 +7587,6 @@ bool BaseCompiler::emitStoreLane(uint32_t laneSize) {
     default:
       MOZ_CRASH("unsupported laneSize");
   }
-  MOZ_ASSERT(isMem32());
   MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
   storeLane(&access, laneIndex);
   return true;
