@@ -529,12 +529,7 @@ nsresult nsView::CreateWidget(nsWidgetInitData* aWidgetInitData,
       "Use CreateWidgetForPopup");
 
   DefaultWidgetInitData defaultInitData;
-  bool initDataPassedIn = !!aWidgetInitData;
   aWidgetInitData = aWidgetInitData ? aWidgetInitData : &defaultInitData;
-  defaultInitData.mListenForResizes =
-      (!initDataPassedIn && GetParent() &&
-       GetParent()->GetViewManager() != mViewManager);
-
   LayoutDeviceIntRect trect = CalcWidgetBounds(aWidgetInitData->mWindowType);
 
   nsIWidget* parentWidget =
