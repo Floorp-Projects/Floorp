@@ -133,23 +133,23 @@ function processBody(functionName, body)
         if (edge.Kind != "Call")
             continue;
 
-        // The limits (eg LIMIT_CANNOT_GC) are determined by whatever RAII
+        // The attrs (eg ATTR_GC_SUPPRESSED) are determined by whatever RAII
         // scopes might be active, which have been computed previously for all
         // points in the body.
-        var edgeLimited = body.limits[edge.Index[0]] | 0;
+        var edgeAttrs = body.attrs[edge.Index[0]] | 0;
 
         for (var callee of getCallees(edge)) {
-            // Individual callees may have additional limits. The only such
-            // limit currently is that nsISupports.{AddRef,Release} are assumed
+            // Individual callees may have additional attrs. The only such
+            // bit currently is that nsISupports.{AddRef,Release} are assumed
             // to never GC.
-            const limits = edgeLimited | callee.limits;
-            let prologue = limits ? `/${limits} ` : "";
+            const attrs = edgeAttrs | callee.attrs;
+            let prologue = attrs ? `/${attrs} ` : "";
             prologue += functionId(functionName) + " ";
             if (callee.kind == 'direct') {
-                const prev_limits = seen.has(callee.name) ? seen.get(callee.name) : LIMIT_UNVISITED;
-                if (prev_limits & ~limits) {
+                const prev_attrs = seen.has(callee.name) ? seen.get(callee.name) : ATTRS_UNVISITED;
+                if (prev_attrs & ~attrs) {
                     // Only output an edge if it loosens a limit.
-                    seen.set(callee.name, prev_limits & limits);
+                    seen.set(callee.name, prev_attrs & attrs);
                     printOnce("D " + prologue + functionId(callee.name));
                 }
             } else if (callee.kind == 'field') {
@@ -159,9 +159,9 @@ function processBody(functionName, body)
                 printOnce(`${tag} ${prologue}${getId(fullfield)} CLASS ${csu} FIELD ${field}`);
             } else if (callee.kind == 'resolved-field') {
                 // Fully-resolved field (virtual method) call. Record the
-                // callgraph edges. Do not consider limits, since they are
-                // local to this callsite and we are writing out a global
-                // record here.
+                // callgraph edges. Do not consider attrs, since they are local
+                // to this callsite and we are writing out a global record
+                // here.
                 //
                 // Any field call that does *not* have an R entry must be
                 // assumed to call anything.
@@ -254,11 +254,11 @@ if (theFunctionNameToFind) {
 function process(functionName, functionBodies)
 {
     for (var body of functionBodies)
-        body.limits = [];
+        body.attrs = [];
 
     for (var body of functionBodies) {
-        for (var [pbody, id, limits] of allRAIIGuardedCallPoints(typeInfo, functionBodies, body, isLimitConstructor)) {
-            pbody.limits[id] = limits;
+        for (var [pbody, id, attrs] of allRAIIGuardedCallPoints(typeInfo, functionBodies, body, isLimitConstructor)) {
+            pbody.attrs[id] = attrs;
         }
     }
 

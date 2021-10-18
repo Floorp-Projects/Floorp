@@ -51,4 +51,4 @@ rroots = set(
 )
 assert len(set([node[1], node[2]]) & rroots) == 1
 assert len(set([node[4], node[5]]) & rroots) == 1
-assert len(rroots) == 4  # n1, n4, f, self_recursive
+assert len(rroots) == 4, "rroots = {}".format(rroots)  # n1, n4, f, self_recursive

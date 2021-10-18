@@ -408,7 +408,7 @@ function isUnsafeStorage(typeName)
     return typeName.startsWith('UniquePtr<');
 }
 
-// If edgeType is a constructor type, return whatever limits it implies for its
+// If edgeType is a constructor type, return whatever bits it implies for its
 // scope (or zero if not matching).
 function isLimitConstructor(typeInfo, edgeType, varName)
 {
@@ -422,9 +422,9 @@ function isLimitConstructor(typeInfo, edgeType, varName)
 
     // Check whether the type is a known suppression type.
     var type = edgeType.TypeFunctionCSU.Type.Name;
-    let limit = 0;
+    let attrs = 0;
     if (type in typeInfo.GCSuppressors)
-        limit = limit | LIMIT_CANNOT_GC;
+        attrs = attrs | ATTR_GC_SUPPRESSED;
 
     // And now make sure this is the constructor, not some other method on a
     // suppression type. varName[0] contains the qualified name.
@@ -438,7 +438,7 @@ function isLimitConstructor(typeInfo, edgeType, varName)
     if (m[1] != type_stem)
         return 0;
 
-    return limit;
+    return attrs;
 }
 
 // nsISupports subclasses' methods may be scriptable (or overridden
