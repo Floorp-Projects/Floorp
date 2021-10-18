@@ -898,17 +898,44 @@ set_define("ENABLE_WASM_MOZ_INTGEMM", wasm_moz_intgemm)
 # Support for WebAssembly Memory64.
 # ===========================
 
+
+@depends(milestone.is_nightly, "--enable-cranelift", "--enable-simulator", target)
+def default_wasm_memory64(is_nightly, cranelift, simulator, target):
+    if cranelift:
+        return
+
+    if target.cpu == "mips32" or target.cpu == "mips64":
+        return
+
+    if simulator and (simulator[0] == "mips32" or simulator[0] == "mips64"):
+        return
+
+    if is_nightly:
+        return True
+
+
 option(
     "--enable-wasm-memory64",
-    default=False,
+    default=default_wasm_memory64,
     help="{Enable|Disable} WebAssembly Memory64",
 )
 
 
-@depends("--enable-wasm-memory64")
-def wasm_memory64(value):
-    if value:
-        return True
+@depends("--enable-wasm-memory64", "--enable-cranelift", "--enable-simulator", target)
+def wasm_memory64(value, cranelift, simulator, target):
+    if not value:
+        return
+
+    if cranelift:
+        die("Memory64 is incompatible with Cranelift")
+
+    if target.cpu == "mips32" or target.cpu == "mips64":
+        die("Memory64 is incompatible with MIPS target")
+
+    if simulator and (simulator[0] == "mips32" or simulator[0] == "mips64"):
+        die("Memory64 is incompatible with MIPS simulator")
+
+    return True
 
 
 set_config("ENABLE_WASM_MEMORY64", wasm_memory64)
