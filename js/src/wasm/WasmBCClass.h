@@ -458,15 +458,20 @@ struct BaseCompiler final {
   // Return the 32-bit low part of the 64-bit register, do not free anything.
   inline RegI32 fromI64(RegI64 r);
 
+  // If r is valid, return fromI64(r), otherwise an invalid RegI32.
+  inline RegI32 maybeFromI64(RegI64 r);
+
 #ifdef JS_PUNBOX64
   // On 64-bit systems, reinterpret r as 64-bit.
   inline RegI64 fromI32(RegI32 r);
 #endif
 
   // Widen r to 64 bits; this may allocate another register to form a pair.
+  // Note this does not generate code for sign/zero extension.
   inline RegI64 widenI32(RegI32 r);
 
-  // Narrow r to 32 bits; this may free part of a pair.
+  // Narrow r to 32 bits; this may free part of a pair.  Note this does not
+  // generate code to canonicalize the value on 64-bit systems.
   inline RegI32 narrowI64(RegI64 r);
   inline RegI32 narrowRef(RegRef r);
 
@@ -690,6 +695,7 @@ struct BaseCompiler final {
 
   // Constant poppers will return true and pop the value if the stack top is a
   // constant of the appropriate type; otherwise pop nothing and return false.
+  [[nodiscard]] inline bool hasConst() const;
   [[nodiscard]] inline bool popConst(int32_t* c);
   [[nodiscard]] inline bool popConst(int64_t* c);
   [[nodiscard]] inline bool peekConst(int32_t* c);
@@ -740,8 +746,9 @@ struct BaseCompiler final {
   // register.
   inline void peekRefAt(uint32_t depth, RegRef dest);
 
-  // DOCUMENTME
-  [[nodiscard]] inline bool peekLocalI32(uint32_t* local);
+  // Peek at the value on the top of the stack and return true if it is a Local
+  // of any type.
+  [[nodiscard]] inline bool peekLocal(uint32_t* local);
 
   ////////////////////////////////////////////////////////////////////////////
   //
@@ -1061,8 +1068,22 @@ struct BaseCompiler final {
   void bceCheckLocal(MemoryAccessDesc* access, AccessCheck* check,
                      uint32_t local);
   void bceLocalIsUpdated(uint32_t local);
+
+  // Fold offsets into ptr and bounds check as necessary.  The tls will be valid
+  // in cases where it's needed.
+  template <typename RegIndexType>
   void prepareMemoryAccess(MemoryAccessDesc* access, AccessCheck* check,
-                           RegPtr tls, RegI32 ptr);
+                           RegPtr tls, RegIndexType ptr);
+
+  void branchAddNoOverflow(Imm32 offset, RegI32 ptr, Label* ok);
+  void branchTestLowZero(RegI32 ptr, Imm32 mask, Label* ok);
+  void boundsCheck4GBOrLargerAccess(RegPtr tls, RegI32 ptr, Label* ok);
+  void boundsCheckBelow4GBAccess(RegPtr tls, RegI32 ptr, Label* ok);
+
+  void branchAddNoOverflow(Imm32 offset, RegI64 ptr, Label* ok);
+  void branchTestLowZero(RegI64 ptr, Imm32 mask, Label* ok);
+  void boundsCheck4GBOrLargerAccess(RegPtr tls, RegI64 ptr, Label* ok);
+  void boundsCheckBelow4GBAccess(RegPtr tls, RegI64 ptr, Label* ok);
 
 #if defined(RABALDR_HAS_HEAPREG)
   BaseIndex prepareAtomicMemoryAccess(MemoryAccessDesc* access,
@@ -1074,20 +1095,43 @@ struct BaseCompiler final {
   Address prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                     AccessCheck* check, RegPtr tls, RegI32 ptr);
 #endif
+
+  template <typename RegIndexType>
   void computeEffectiveAddress(MemoryAccessDesc* access);
+
   [[nodiscard]] bool needTlsForAccess(const AccessCheck& check);
 
   // ptr and dest may be the same iff dest is I32.
   // This may destroy ptr even if ptr and dest are not the same.
+  void executeLoad(MemoryAccessDesc* access, AccessCheck* check, RegPtr tls,
+                   RegI32 ptr, AnyReg dest, RegI32 temp);
   void load(MemoryAccessDesc* access, AccessCheck* check, RegPtr tls,
             RegI32 ptr, AnyReg dest, RegI32 temp);
+#ifdef ENABLE_WASM_MEMORY64
+  void load(MemoryAccessDesc* access, AccessCheck* check, RegPtr tls,
+            RegI64 ptr, AnyReg dest, RegI64 temp);
+#endif
+
+  template <typename RegType>
+  void doLoadCommon(MemoryAccessDesc* access, AccessCheck check, ValType type);
+
+  void loadCommon(MemoryAccessDesc* access, AccessCheck check, ValType type);
 
   // ptr and src must not be the same register.
   // This may destroy ptr and src.
+  void executeStore(MemoryAccessDesc* access, AccessCheck* check, RegPtr tls,
+                    RegI32 ptr, AnyReg src, RegI32 temp);
   void store(MemoryAccessDesc* access, AccessCheck* check, RegPtr tls,
              RegI32 ptr, AnyReg src, RegI32 temp);
+#ifdef ENABLE_WASM_MEMORY64
+  void store(MemoryAccessDesc* access, AccessCheck* check, RegPtr tls,
+             RegI64 ptr, AnyReg src, RegI64 temp);
+#endif
 
-  void loadCommon(MemoryAccessDesc* access, AccessCheck check, ValType type);
+  template <typename RegType>
+  void doStoreCommon(MemoryAccessDesc* access, AccessCheck check,
+                     ValType resultType);
+
   void storeCommon(MemoryAccessDesc* access, AccessCheck check,
                    ValType resultType);
 
@@ -1103,7 +1147,13 @@ struct BaseCompiler final {
   void atomicCmpXchg32(MemoryAccessDesc* access, ValType type);
   void atomicCmpXchg64(MemoryAccessDesc* access, ValType type);
 
+  template <typename RegType>
+  RegType popConstMemoryAccess(MemoryAccessDesc* access, AccessCheck* check);
+  template <typename RegType>
+  RegType popMemoryAccess(MemoryAccessDesc* access, AccessCheck* check);
+
   RegI32 popMemory32Access(MemoryAccessDesc* access, AccessCheck* check);
+
   void pushHeapBase();
 
   ////////////////////////////////////////////////////////////////////////////
