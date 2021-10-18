@@ -2322,7 +2322,7 @@ TEST(GeckoProfiler, Markers)
   std::thread registeredThread([]() {
     AUTO_PROFILER_REGISTER_THREAD("Marker test sub-thread");
     // Marker in non-profiled thread won't be stored.
-    EXPECT_TRUE(profiler_add_marker(
+    EXPECT_FALSE(profiler_add_marker(
         "Text in registered thread with stack", geckoprofiler::category::OTHER,
         MarkerStack::Capture(), geckoprofiler::markers::TextMarker{}, ""));
     // Marker will be stored in main thread, with stack from registered thread.
@@ -2336,10 +2336,10 @@ TEST(GeckoProfiler, Markers)
 
   std::thread unregisteredThread([]() {
     // Marker in unregistered thread won't be stored.
-    EXPECT_TRUE(profiler_add_marker("Text in unregistered thread with stack",
-                                    geckoprofiler::category::OTHER,
-                                    MarkerStack::Capture(),
-                                    geckoprofiler::markers::TextMarker{}, ""));
+    EXPECT_FALSE(profiler_add_marker("Text in unregistered thread with stack",
+                                     geckoprofiler::category::OTHER,
+                                     MarkerStack::Capture(),
+                                     geckoprofiler::markers::TextMarker{}, ""));
     // Marker will be stored in main thread, but stack cannot be captured in an
     // unregistered thread.
     EXPECT_TRUE(profiler_add_marker(
