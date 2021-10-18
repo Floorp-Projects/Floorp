@@ -137,8 +137,7 @@ void nsHistory::GetState(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
   aResult.setNull();
 }
 
-void nsHistory::Go(int32_t aDelta, nsIPrincipal& aSubjectPrincipal,
-                   ErrorResult& aRv) {
+void nsHistory::Go(int32_t aDelta, CallerType aCallerType, ErrorResult& aRv) {
   LOG(("nsHistory::Go(%d)", aDelta));
   nsCOMPtr<nsPIDOMWindowInner> win(do_QueryReferent(mInnerWindow));
   if (!win || !win->HasActiveDocument()) {
@@ -150,7 +149,7 @@ void nsHistory::Go(int32_t aDelta, nsIPrincipal& aSubjectPrincipal,
     // "When the go(delta) method is invoked, if delta is zero, the user agent
     // must act as if the location.reload() method was called instead."
     RefPtr<Location> location = win->Location();
-    return location->Reload(false, aSubjectPrincipal, aRv);
+    return location->Reload(false, aRv);
   }
 
   RefPtr<ChildSHistory> session_history = GetSessionHistory();
@@ -164,16 +163,12 @@ void nsHistory::Go(int32_t aDelta, nsIPrincipal& aSubjectPrincipal,
           ? win->GetWindowContext()->HasValidTransientUserGestureActivation()
           : false;
 
-  CallerType callerType = aSubjectPrincipal.IsSystemPrincipal()
-                              ? CallerType::System
-                              : CallerType::NonSystem;
-
   // Ignore the return value from Go(), since returning errors from Go() can
   // lead to exceptions and a possible leak of history length
   // AsyncGo throws if we hit the location change rate limit.
   if (StaticPrefs::dom_window_history_async()) {
     session_history->AsyncGo(aDelta, /* aRequireUserInteraction = */ false,
-                             userActivation, callerType, aRv);
+                             userActivation, aCallerType, aRv);
   } else {
     session_history->Go(aDelta, /* aRequireUserInteraction = */ false,
                         userActivation, IgnoreErrors());

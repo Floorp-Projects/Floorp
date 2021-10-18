@@ -548,13 +548,7 @@ void Location::SetSearch(const nsAString& aSearch,
   SetURI(uri, aSubjectPrincipal, aRv);
 }
 
-void Location::Reload(bool aForceget, nsIPrincipal& aSubjectPrincipal,
-                      ErrorResult& aRv) {
-  if (!CallerSubsumes(&aSubjectPrincipal)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
+void Location::Reload(bool aForceget, ErrorResult& aRv) {
   nsCOMPtr<nsIDocShell> docShell(GetDocShell());
   if (!docShell) {
     return aRv.Throw(NS_ERROR_FAILURE);
@@ -580,21 +574,6 @@ void Location::Reload(bool aForceget, nsIPrincipal& aSubjectPrincipal,
     }
   }
 
-  RefPtr<BrowsingContext> bc = GetBrowsingContext();
-  if (!bc || bc->IsDiscarded()) {
-    return;
-  }
-
-  CallerType callerType = aSubjectPrincipal.IsSystemPrincipal()
-                              ? CallerType::System
-                              : CallerType::NonSystem;
-
-  nsresult rv = bc->CheckLocationChangeRateLimit(callerType);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return;
-  }
-
   uint32_t reloadFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
 
   if (aForceget) {
@@ -602,7 +581,7 @@ void Location::Reload(bool aForceget, nsIPrincipal& aSubjectPrincipal,
                   nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY;
   }
 
-  rv = nsDocShell::Cast(docShell)->Reload(reloadFlags);
+  nsresult rv = nsDocShell::Cast(docShell)->Reload(reloadFlags);
   if (NS_FAILED(rv) && rv != NS_BINDING_ABORTED) {
     // NS_BINDING_ABORTED is returned when we attempt to reload a POST result
     // and the user says no at the "do you want to reload?" prompt.  Don't
