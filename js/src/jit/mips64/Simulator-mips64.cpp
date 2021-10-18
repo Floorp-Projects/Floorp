@@ -1984,8 +1984,13 @@ typedef int32_t (*Prototype_Int32_GeneralGeneralInt32Int32)(int64_t, int64_t,
 typedef int32_t (*Prototype_Int32_GeneralInt64Int32Int32Int32)(int64_t, int64_t,
                                                                int32_t, int32_t,
                                                                int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt64Int32)(int64_t, int64_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt64Int32Int64)(int64_t, int64_t,
+                                                          int32_t, int64_t);
 typedef int32_t (*Prototype_Int32_GeneralInt64Int32Int64General)(
     int64_t, int64_t, int32_t, int64_t, int64_t);
+typedef int32_t (*Prototype_Int32_GeneralInt64Int64Int64)(int64_t, int64_t,
+                                                          int64_t, int64_t);
 typedef int32_t (*Prototype_Int32_GeneralInt64Int64Int64General)(
     int64_t, int64_t, int64_t, int64_t, int64_t);
 typedef int64_t (*Prototype_General_GeneralInt32)(int64_t, int32_t);
@@ -2060,7 +2065,7 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
         Prototype_General3 target =
             reinterpret_cast<Prototype_General3>(external);
         int64_t result = target(arg0, arg1, arg2);
-        if (external == intptr_t(&js::wasm::Instance::wake)) {
+        if (external == intptr_t(&js::wasm::Instance::wake_m32)) {
           result = int32_t(result);
         }
         setCallResult(result);
@@ -2126,7 +2131,7 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
         Prototype_GeneralGeneralGeneralInt64 target =
             reinterpret_cast<Prototype_GeneralGeneralGeneralInt64>(external);
         int64_t result = target(arg0, arg1, arg2, arg3);
-        if (external == intptr_t(&js::wasm::Instance::wait_i32)) {
+        if (external == intptr_t(&js::wasm::Instance::wait_i32_m32)) {
           result = int32_t(result);
         }
         setRegister(v0, result);
@@ -2136,7 +2141,7 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
         Prototype_GeneralGeneralInt64Int64 target =
             reinterpret_cast<Prototype_GeneralGeneralInt64Int64>(external);
         int64_t result = target(arg0, arg1, arg2, arg3);
-        if (external == intptr_t(&js::wasm::Instance::wait_i64)) {
+        if (external == intptr_t(&js::wasm::Instance::wait_i64_m32)) {
           result = int32_t(result);
         }
         setRegister(v0, result);
@@ -2363,10 +2368,28 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
         setRegister(v0, I64(ret));
         break;
       }
+      case js::jit::Args_Int32_GeneralInt64Int32: {
+        int32_t ret = reinterpret_cast<Prototype_Int32_GeneralInt64Int32>(
+            nativeFn)(arg0, arg1, I32(arg2));
+        setRegister(v0, I64(ret));
+        break;
+      }
+      case js::jit::Args_Int32_GeneralInt64Int32Int64: {
+        int32_t ret = reinterpret_cast<Prototype_Int32_GeneralInt64Int32Int64>(
+            nativeFn)(arg0, arg1, I32(arg2), arg3);
+        setRegister(v0, I64(ret));
+        break;
+      }
       case js::jit::Args_Int32_GeneralInt64Int32Int64General: {
         int32_t ret =
             reinterpret_cast<Prototype_Int32_GeneralInt64Int32Int64General>(
                 nativeFn)(arg0, arg1, I32(arg2), arg3, arg4);
+        setRegister(v0, I64(ret));
+        break;
+      }
+      case js::jit::Args_Int32_GeneralInt64Int64Int64: {
+        int32_t ret = reinterpret_cast<Prototype_Int32_GeneralInt64Int64Int64>(
+            nativeFn)(arg0, arg1, arg2, arg3);
         setRegister(v0, I64(ret));
         break;
       }
