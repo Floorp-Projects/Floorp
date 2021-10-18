@@ -123,6 +123,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     nscolor mThemedScrollbarThumbInactive = kBlack;
 
     float mCaretRatio = 0.0f;
+    float mTitlebarRadius = 0.0f;
     char16_t mInvisibleCharacter = 0;
     bool mMenuSupportsDrag = false;
 
@@ -145,6 +146,10 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   const PerThemeData& DarkTheme() const {
     return mSystemTheme.mIsDark ? mSystemTheme : mAltTheme;
+  }
+
+  const PerThemeData& EffectiveTheme() const {
+    return mSystemThemeOverridden ? mAltTheme : mSystemTheme;
   }
 
   int32_t mCaretBlinkTime = 0;

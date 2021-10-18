@@ -403,6 +403,9 @@ class LookAndFeel {
     // GTK text scale factor.
     TextScaleFactor,
 
+    // GTK titlebar radius.
+    TitlebarRadius,
+
     // Not an ID; used to define the range of valid IDs.  Must be last.
     End,
   };
