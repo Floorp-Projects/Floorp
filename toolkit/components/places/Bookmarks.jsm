@@ -336,26 +336,11 @@ var Bookmarks = Object.freeze({
         }),
       ];
 
-      // If it's a tag, notify OnItemChanged to all bookmarks for this URL.
+      // If it's a tag, notify bookmark-tags-changed event to all bookmarks for this URL.
       if (isTagging) {
-        let observers = PlacesUtils.bookmarks.getObservers();
         for (let entry of await fetchBookmarksByURL(item, {
           concurrent: true,
         })) {
-          notify(observers, "onItemChanged", [
-            entry._id,
-            "tags",
-            false,
-            "",
-            PlacesUtils.toPRTime(entry.lastModified),
-            entry.type,
-            entry._parentId,
-            entry.guid,
-            entry.parentGuid,
-            "",
-            item.source,
-          ]);
-
           notifications.push(
             new PlacesBookmarkTags({
               id: entry._id,
@@ -868,9 +853,6 @@ var Bookmarks = Object.freeze({
 
           const notifications = [];
 
-          // Notify onItemChanged to listeners.
-          let observers = PlacesUtils.bookmarks.getObservers();
-
           // For lastModified, we only care about the original input, since we
           // should not notify implicit lastModified changes.
           if (
@@ -934,20 +916,6 @@ var Bookmarks = Object.freeze({
                 { tags: [updatedItem.title] },
                 { concurrent: true }
               )) {
-                notify(observers, "onItemChanged", [
-                  entry._id,
-                  "tags",
-                  false,
-                  "",
-                  PlacesUtils.toPRTime(entry.lastModified),
-                  entry.type,
-                  entry._parentId,
-                  entry.guid,
-                  entry.parentGuid,
-                  "",
-                  updatedItem.source,
-                ]);
-
                 notifications.push(
                   new PlacesBookmarkTags({
                     id: entry._id,
@@ -1342,7 +1310,6 @@ var Bookmarks = Object.freeze({
       let notifications = [];
 
       for (let item of removeItems) {
-        let observers = PlacesUtils.bookmarks.getObservers();
         let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
         let url = "";
         if (item.type == Bookmarks.TYPE_BOOKMARK) {
@@ -1368,20 +1335,6 @@ var Bookmarks = Object.freeze({
           for (let entry of await fetchBookmarksByURL(item, {
             concurrent: true,
           })) {
-            notify(observers, "onItemChanged", [
-              entry._id,
-              "tags",
-              false,
-              "",
-              PlacesUtils.toPRTime(entry.lastModified),
-              entry.type,
-              entry._parentId,
-              entry.guid,
-              entry.parentGuid,
-              "",
-              options.source,
-            ]);
-
             notifications.push(
               new PlacesBookmarkTags({
                 id: entry._id,
@@ -1896,38 +1849,6 @@ var Bookmarks = Object.freeze({
 });
 
 // Globals.
-
-/**
- * Sends a bookmarks notification through the given observers.
- *
- * @param {Array} observers
- *        array of nsINavBookmarkObserver objects.
- * @param {String} notification
- *        the notification name.
- * @param {Array} [args]
- *        array of arguments to pass to the notification.
- * @param {Object} [information]
- *        Information about the notification, so we can filter based
- *        based on the observer's preferences.
- */
-function notify(observers, notification, args = [], information = {}) {
-  for (let observer of observers) {
-    if (information.isTagging && observer.skipTags) {
-      continue;
-    }
-
-    if (
-      information.isDescendantRemoval &&
-      !PlacesUtils.bookmarks.userContentRoots.includes(information.parentGuid)
-    ) {
-      continue;
-    }
-
-    try {
-      observer[notification](...args);
-    } catch (ex) {}
-  }
-}
 
 // Update implementation.
 
@@ -3330,7 +3251,6 @@ var removeFoldersContents = async function(db, folderGuids, options) {
 
   // Notify listeners in reverse order to serve children before parents.
   let { source = Bookmarks.SOURCES.DEFAULT } = options;
-  let observers = PlacesUtils.bookmarks.getObservers();
   let notifications = [];
   for (let item of itemsRemoved.reverse()) {
     let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
@@ -3357,20 +3277,6 @@ var removeFoldersContents = async function(db, folderGuids, options) {
 
     if (isUntagging) {
       for (let entry of await fetchBookmarksByURL(item, true)) {
-        notify(observers, "onItemChanged", [
-          entry._id,
-          "tags",
-          false,
-          "",
-          PlacesUtils.toPRTime(entry.lastModified),
-          entry.type,
-          entry._parentId,
-          entry.guid,
-          entry.parentGuid,
-          "",
-          source,
-        ]);
-
         notifications.push(
           new PlacesBookmarkTags({
             id: entry._id,

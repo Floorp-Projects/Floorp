@@ -150,15 +150,16 @@ add_task(async function insert_bookmark_tag_notification() {
     url: new URL("http://tag.example.com/"),
   });
   let itemId = await PlacesUtils.promiseItemId(bm.guid);
-  let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
 
   let tagFolder = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     parentGuid: PlacesUtils.bookmarks.tagsGuid,
     title: "tag",
   });
-  let placesObserver = expectPlacesObserverNotifications(["bookmark-added"]);
-  let bookmarksObserver = expectNotifications();
+  const observer = expectPlacesObserverNotifications([
+    "bookmark-added",
+    "bookmark-tags-changed",
+  ]);
   let tag = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     parentGuid: tagFolder.guid,
@@ -167,7 +168,7 @@ add_task(async function insert_bookmark_tag_notification() {
   let tagId = await PlacesUtils.promiseItemId(tag.guid);
   let tagParentId = await PlacesUtils.promiseItemId(tag.parentGuid);
 
-  placesObserver.check([
+  observer.check([
     {
       type: "bookmark-added",
       id: tagId,
@@ -182,24 +183,16 @@ add_task(async function insert_bookmark_tag_notification() {
       source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
       isTagging: true,
     },
-  ]);
-
-  bookmarksObserver.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        itemId,
-        "tags",
-        false,
-        "",
-        PlacesUtils.toPRTime(bm.lastModified),
-        bm.type,
-        parentId,
-        bm.guid,
-        bm.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-tags-changed",
+      id: itemId,
+      itemType: bm.type,
+      url: bm.url,
+      guid: bm.guid,
+      parentGuid: bm.parentGuid,
+      lastModified: bm.lastModified,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
 });
@@ -545,7 +538,6 @@ add_task(async function remove_bookmark_tag_notification() {
     url: new URL("http://untag.example.com/"),
   });
   let itemId = await PlacesUtils.promiseItemId(bm.guid);
-  let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
 
   let tagFolder = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -560,11 +552,13 @@ add_task(async function remove_bookmark_tag_notification() {
   let tagId = await PlacesUtils.promiseItemId(tag.guid);
   let tagParentId = await PlacesUtils.promiseItemId(tag.parentGuid);
 
-  let placesObserver = expectPlacesObserverNotifications(["bookmark-removed"]);
-  let observer = expectNotifications();
+  const observer = expectPlacesObserverNotifications([
+    "bookmark-removed",
+    "bookmark-tags-changed",
+  ]);
   await PlacesUtils.bookmarks.remove(tag.guid);
 
-  placesObserver.check([
+  observer.check([
     {
       type: "bookmark-removed",
       id: tagId,
@@ -577,23 +571,16 @@ add_task(async function remove_bookmark_tag_notification() {
       itemType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
       isTagging: true,
     },
-  ]);
-  observer.check([
     {
-      name: "onItemChanged",
-      arguments: [
-        itemId,
-        "tags",
-        false,
-        "",
-        PlacesUtils.toPRTime(bm.lastModified),
-        bm.type,
-        parentId,
-        bm.guid,
-        bm.parentGuid,
-        "",
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-tags-changed",
+      id: itemId,
+      itemType: bm.type,
+      url: bm.url,
+      guid: bm.guid,
+      parentGuid: bm.parentGuid,
+      lastModified: bm.lastModified,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      isTagging: false,
     },
   ]);
 });
@@ -993,35 +980,3 @@ add_task(async function update_notitle_notification() {
     },
   ]);
 });
-
-function expectNotifications() {
-  let notifications = [];
-  let observer = new Proxy(NavBookmarkObserver, {
-    get(target, name) {
-      if (name == "check") {
-        PlacesUtils.bookmarks.removeObserver(observer);
-        return expectedNotifications =>
-          Assert.deepEqual(notifications, expectedNotifications);
-      }
-
-      if (name.startsWith("onItem")) {
-        return (...origArgs) => {
-          let args = Array.from(origArgs, arg => {
-            if (arg && arg instanceof Ci.nsIURI) {
-              return new URL(arg.spec);
-            }
-            return arg;
-          });
-          notifications.push({ name, arguments: args });
-        };
-      }
-
-      if (name in target) {
-        return target[name];
-      }
-      return undefined;
-    },
-  });
-  PlacesUtils.bookmarks.addObserver(observer);
-  return observer;
-}

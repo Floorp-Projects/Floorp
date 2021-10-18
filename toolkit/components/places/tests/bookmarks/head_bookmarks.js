@@ -123,6 +123,19 @@ function expectPlacesObserverNotifications(
             isTagging: event.isTagging,
           });
           break;
+        case "bookmark-tags-changed":
+          notifications.push({
+            type: event.type,
+            id: event.id,
+            itemType: event.itemType,
+            url: event.url,
+            guid: event.guid,
+            parentGuid: event.parentGuid,
+            lastModified: new Date(event.lastModified),
+            source: event.source,
+            isTagging: event.isTagging,
+          });
+          break;
         case "bookmark-time-changed":
           notifications.push({
             type: event.type,
