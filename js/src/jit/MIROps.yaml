@@ -669,7 +669,7 @@
 
 - name: Random
   result_type: Double
-  alias_set: none
+  alias_set: custom
   possibly_calls: true
   compute_range: custom
   can_recover: custom
