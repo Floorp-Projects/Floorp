@@ -8,8 +8,9 @@ function handleRequest(aRequest, aResponse) {
 
   // Set Cache-Control header.
   let value = aRequest.queryString;
-  if (value)
+  if (value) {
     aResponse.setHeader("Cache-Control", value);
+  }
 
   // Set the response body.
   aResponse.write("<!DOCTYPE html><html><body></body></html>");

@@ -5,22 +5,28 @@ const nsITimer = Components.interfaces.nsITimer;
 function attemptUnblock(s) {
   try {
     let blockedResponse = null;
-    getObjectState("bug503481_" + s, function(x) {blockedResponse = x.wrappedJSObject.r});
+    getObjectState("bug503481_" + s, function(x) {
+      blockedResponse = x.wrappedJSObject.r;
+    });
     blockedResponse.finish();
     setObjectState("bug503481_" + s, null);
-  } catch(e) {
+  } catch (e) {
     dump("unable to unblock " + s + "retrying in half a second\n");
-    timer = Components.classes["@mozilla.org/timer;1"]
-                      .createInstance(nsITimer);
-    timer.initWithCallback(function () { attemptUnblock(s) }, 500, nsITimer.TYPE_ONE_SHOT);
+    timer = Components.classes["@mozilla.org/timer;1"].createInstance(nsITimer);
+    timer.initWithCallback(
+      function() {
+        attemptUnblock(s);
+      },
+      500,
+      nsITimer.TYPE_ONE_SHOT
+    );
   }
 }
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   var query = {};
-  request.queryString.split('&').forEach(function (val) {
-    var [name, value] = val.split('=');
+  request.queryString.split("&").forEach(function(val) {
+    var [name, value] = val.split("=");
     query[name] = unescape(value);
   });
 
@@ -32,7 +38,12 @@ function handleRequest(request, response)
 
   if (query.blockOn) {
     response.processAsync();
-    x = { r: response, QueryInterface: function(iid) { return this } };
+    x = {
+      r: response,
+      QueryInterface(iid) {
+        return this;
+      },
+    };
     x.wrappedJSObject = x;
     setObjectState("bug503481_" + query.blockOn, x);
   }

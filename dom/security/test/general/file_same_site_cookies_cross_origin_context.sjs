@@ -3,7 +3,8 @@
 // small red image
 const IMG_BYTES = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12" +
-  "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==");
+    "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+);
 
 const FRAME = `
   <!DOCTYPE html>
@@ -21,13 +22,16 @@ const FRAME = `
   </body>
   </html>`;
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
   if (request.queryString.includes("setSameSiteCookie")) {
-    response.setHeader("Set-Cookie", "myKey=strictSameSiteCookie; samesite=strict", true);
+    response.setHeader(
+      "Set-Cookie",
+      "myKey=strictSameSiteCookie; samesite=strict",
+      true
+    );
     response.setHeader("Content-Type", "image/png");
     response.write(IMG_BYTES);
     return;

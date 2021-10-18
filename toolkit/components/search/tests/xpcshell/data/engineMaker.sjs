@@ -16,7 +16,8 @@ function handleRequest(request, response) {
   }
 
   engineData.name = engineData.name || "Generated test engine";
-  engineData.description = engineData.description || "Generated test engine description";
+  engineData.description =
+    engineData.description || "Generated test engine description";
   engineData.method = engineData.method || "GET";
 
   response.setStatusLine(request.httpVersion, 200, "OK");
@@ -27,7 +28,8 @@ function handleRequest(request, response) {
  * Create an OpenSearch engine for the given base URL.
  */
 function createOpenSearchEngine(response, engineData) {
-  let params = "", queryString = "";
+  let params = "",
+    queryString = "";
   if (engineData.method == "POST") {
     params = "<Param name='q' value='{searchTerms}'/>";
   } else {

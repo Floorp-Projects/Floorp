@@ -1,7 +1,7 @@
 "use strict";
 
 /* eslint-disable-next-line mozilla/use-chromeutils-import */
-let {setTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
+let { setTimeout } = Cu.import("resource://gre/modules/Timer.jsm", {});
 
 // A tall 1x1000 black png.
 const IMG_BYTES = atob(

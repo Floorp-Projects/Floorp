@@ -2,13 +2,13 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 var trailerServerTiming = [
-  {metric:"metric3", duration:"99789.11", description:"time3"},
-  {metric:"metric4", duration:"1112.13", description:"time4"}
+  { metric: "metric3", duration: "99789.11", description: "time3" },
+  { metric: "metric4", duration: "1112.13", description: "time4" },
 ];
 
 var responseServerTiming = [
-  {metric:"metric1", duration:"123.4", description:"time1"},
-  {metric:"metric2", duration:"0", description:"time2"}
+  { metric: "metric1", duration: "123.4", description: "time1" },
+  { metric: "metric2", duration: "0", description: "time2" },
 ];
 
 function handleRequest(request, response) {
@@ -29,9 +29,16 @@ function handleRequest(request, response) {
 function createServerTimingHeader(headerData) {
   var header = "";
   for (var i = 0; i < headerData.length; i++) {
-    header += "Server-Timing: " + headerData[i].metric + ";" +
-      "dur=" + headerData[i].duration + ";" +
-      "desc=" + headerData[i].description + "\r\n";
+    header +=
+      "Server-Timing: " +
+      headerData[i].metric +
+      ";" +
+      "dur=" +
+      headerData[i].duration +
+      ";" +
+      "desc=" +
+      headerData[i].description +
+      "\r\n";
   }
   return header;
 }

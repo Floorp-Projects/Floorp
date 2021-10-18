@@ -6,8 +6,7 @@
 const TIGHT_POLICY = "default-src 'self'";
 const LOOSE_POLICY = "default-src 'self' 'unsafe-inline'";
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
@@ -17,9 +16,8 @@ function handleRequest(request, response)
   if (request.queryString == "tight") {
     // script execution will be *blocked*
     csp = TIGHT_POLICY + ", " + LOOSE_POLICY;
-  }
-  else {
-        // script execution will be *allowed*
+  } else {
+    // script execution will be *allowed*
     csp = LOOSE_POLICY + ", " + LOOSE_POLICY;
   }
   response.setHeader("Content-Security-Policy", csp, false);
@@ -29,18 +27,19 @@ function handleRequest(request, response)
 
   // generate an html file that contains a div container which is updated
   // in case the inline script is *not* blocked by CSP.
-  var html = "<!DOCTYPE HTML>" +
-             "<html>" +
-             "<head>" +
-             "<title>Testpage for Bug 1036399</title>" +
-             "</head>" +
-             "<body>" +
-             "<div id='testdiv'>blocked</div>" +
-             "<script type='text/javascript'>" +
-             "document.getElementById('testdiv').innerHTML = 'allowed';" +
-             "</script>" +
-             "</body>" +
-             "</html>";
+  var html =
+    "<!DOCTYPE HTML>" +
+    "<html>" +
+    "<head>" +
+    "<title>Testpage for Bug 1036399</title>" +
+    "</head>" +
+    "<body>" +
+    "<div id='testdiv'>blocked</div>" +
+    "<script type='text/javascript'>" +
+    "document.getElementById('testdiv').innerHTML = 'allowed';" +
+    "</script>" +
+    "</body>" +
+    "</html>";
 
   response.write(html);
 }

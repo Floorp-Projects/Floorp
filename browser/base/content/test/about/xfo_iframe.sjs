@@ -13,7 +13,8 @@ function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, 200);
 
   response.setHeader("Content-Type", "text/html", false);
-  let txt = "<html><head><title>XFO page</title></head>" +
+  let txt =
+    "<html><head><title>XFO page</title></head>" +
     "<body><h1>" +
     "XFO blocked page opened in new window!" +
     "</h1></body></html>";
@@ -22,8 +23,8 @@ function handleRequest(request, response) {
   let cookie = request.hasHeader("Cookie")
     ? request.getHeader("Cookie")
     : "<html><body>" +
-    "<h2 id='strictCookie'>No same site strict cookie header</h2></body>" +
-    "</html>";
+      "<h2 id='strictCookie'>No same site strict cookie header</h2></body>" +
+      "</html>";
   response.write(cookie);
 
   if (!request.hasHeader("Cookie")) {

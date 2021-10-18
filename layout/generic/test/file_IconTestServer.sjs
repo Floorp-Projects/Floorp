@@ -1,7 +1,6 @@
 const TIMEOUT_INTERVAL_MS = 100;
 
 function handleRequest(request, response) {
-
   // Allow us to asynchronously construct the response with timeouts
   // rather than forcing us to make the whole thing in one call. See
   // bug 396226.
@@ -10,23 +9,24 @@ function handleRequest(request, response) {
   // Figure out whether the client wants to load the image, or just
   // to tell us to finish the previous load
   var query = {};
-  request.queryString.split('&').forEach(function (val) {
-    var [name, value] = val.split('=');
+  request.queryString.split("&").forEach(function(val) {
+    var [name, value] = val.split("=");
     query[name] = unescape(value);
   });
-  if (query["continue"] == "true") {
-
+  if (query.continue == "true") {
     // Debugging information so we can figure out the hang
     dump("file_IconTestServer.js DEBUG - Got continue command\n");
 
     // Get the context structure and finish the old request
     getObjectState("context", function(obj) {
-
       // magic or goop, depending on how you look at it
       savedCtx = obj.wrappedJSObject;
 
       // Write the rest of the data
-      savedCtx.ostream.writeFrom(savedCtx.istream, savedCtx.istream.available());
+      savedCtx.ostream.writeFrom(
+        savedCtx.istream,
+        savedCtx.istream.available()
+      );
 
       // Close the streams
       savedCtx.ostream.close();
@@ -47,10 +47,11 @@ function handleRequest(request, response) {
   // Context structure - we need to set this up properly to pass to setObjectState
   var ctx = {
     QueryInterface: function(iid) {
-      if (iid.equals(Components.interfaces.nsISupports))
+      if (iid.equals(Components.interfaces.nsISupports)) {
         return this;
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    }
+      }
+      throw Components.Exception("", Components.results.NS_ERROR_NO_INTERFACE);
+    },
   };
   ctx.wrappedJSObject = ctx;
 
@@ -64,18 +65,19 @@ function handleRequest(request, response) {
   ctx.ostream = response.bodyOutputStream;
 
   // Ugly hack, but effective - copied from dom/media/test/contentDuration1.sjs
-  var pngFile = Components.classes["@mozilla.org/file/directory_service;1"].
-                           getService(Components.interfaces.nsIProperties).
-                           get("CurWorkD", Components.interfaces.nsIFile);
+  var pngFile = Components.classes["@mozilla.org/file/directory_service;1"]
+    .getService(Components.interfaces.nsIProperties)
+    .get("CurWorkD", Components.interfaces.nsIFile);
   var paths = "tests/layout/generic/test/file_Dolske.png";
   var split = paths.split("/");
-  for(var i = 0; i < split.length; ++i) {
+  for (var i = 0; i < split.length; ++i) {
     pngFile.append(split[i]);
   }
 
   // Get an input stream for the png data
-  ctx.istream = Cc["@mozilla.org/network/file-input-stream;1"].
-                      createInstance(Components.interfaces.nsIFileInputStream);
+  ctx.istream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+    Components.interfaces.nsIFileInputStream
+  );
   ctx.istream.init(pngFile, -1, 0, 0);
 
   // Write the first 10 bytes, which is just boilerplate/magic bytes
@@ -89,4 +91,3 @@ function handleRequest(request, response) {
   // Debugging information so we can figure out the hang
   dump("file_IconTestServer.js DEBUG - Playing the waiting game\n");
 }
-

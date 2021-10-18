@@ -18,15 +18,19 @@ function handleRequest(req, resp) {
     return memo;
   }, {});
 
-  let timeout = parseInt(params["timeout"]);
+  let timeout = parseInt(params.timeout);
   if (timeout) {
     // Write the response after a timeout.
     resp.processAsync();
     gTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    gTimer.init(() => {
-      writeResponse(params, resp);
-      resp.finish();
-    }, timeout, Ci.nsITimer.TYPE_ONE_SHOT);
+    gTimer.init(
+      () => {
+        writeResponse(params, resp);
+        resp.finish();
+      },
+      timeout,
+      Ci.nsITimer.TYPE_ONE_SHOT
+    );
     return;
   }
 
@@ -36,14 +40,14 @@ function handleRequest(req, resp) {
 function writeResponse(params, resp) {
   // Echo back the search string with "foo" and "bar" appended.
   let suffixes = ["foo", "bar"];
-  if (params["count"]) {
+  if (params.count) {
     // Add more suffixes.
     let serial = 0;
-    while (suffixes.length < params["count"]) {
+    while (suffixes.length < params.count) {
       suffixes.push(++serial);
     }
   }
-  let data = [params["query"], suffixes.map(s => params["query"] + s)];
+  let data = [params.query, suffixes.map(s => params.query + s)];
   resp.setHeader("Content-Type", "application/json", false);
   resp.write(JSON.stringify(data));
 }

@@ -20,10 +20,8 @@ const RESPONSE_HTTP_SCHEME = `
   </html>`;
 
 function handleRequest(request, response) {
-  let response_content = request.scheme === "https"
-    ? RESPONSE_HTTPS_SCHEME
-    : RESPONSE_HTTP_SCHEME;
+  let response_content =
+    request.scheme === "https" ? RESPONSE_HTTPS_SCHEME : RESPONSE_HTTP_SCHEME;
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.write(response_content);
-  return;
 }

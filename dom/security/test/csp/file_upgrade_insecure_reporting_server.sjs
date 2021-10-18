@@ -6,35 +6,38 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 // small red image
 const IMG_BYTES = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12" +
-  "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==");
+    "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+);
 
-const REPORT_URI = "https://example.com/tests/dom/security/test/csp/file_upgrade_insecure_reporting_server.sjs?report";
+const REPORT_URI =
+  "https://example.com/tests/dom/security/test/csp/file_upgrade_insecure_reporting_server.sjs?report";
 const POLICY = "upgrade-insecure-requests; default-src https: 'unsafe-inline'";
-const POLICY_RO = "default-src https: 'unsafe-inline'; report-uri " + REPORT_URI;
+const POLICY_RO =
+  "default-src https: 'unsafe-inline'; report-uri " + REPORT_URI;
 
 function loadHTMLFromFile(path) {
   // Load the HTML to return in the response from file.
   // Since it's relative to the cwd of the test runner, we start there and
   // append to get to the actual path of the file.
-  var testHTMLFile =
-    Components.classes["@mozilla.org/file/directory_service;1"].
-    getService(Components.interfaces.nsIProperties).
-    get("CurWorkD", Components.interfaces.nsIFile);
+  var testHTMLFile = Components.classes["@mozilla.org/file/directory_service;1"]
+    .getService(Components.interfaces.nsIProperties)
+    .get("CurWorkD", Components.interfaces.nsIFile);
   var dirs = path.split("/");
   for (var i = 0; i < dirs.length; i++) {
     testHTMLFile.append(dirs[i]);
   }
-  var testHTMLFileStream =
-    Components.classes["@mozilla.org/network/file-input-stream;1"].
-    createInstance(Components.interfaces.nsIFileInputStream);
+  var testHTMLFileStream = Components.classes[
+    "@mozilla.org/network/file-input-stream;1"
+  ].createInstance(Components.interfaces.nsIFileInputStream);
   testHTMLFileStream.init(testHTMLFile, -1, 0, 0);
-  var testHTML = NetUtil.readInputStreamToString(testHTMLFileStream, testHTMLFileStream.available());
+  var testHTML = NetUtil.readInputStreamToString(
+    testHTMLFileStream,
+    testHTMLFileStream.available()
+  );
   return testHTML;
 }
 
-
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
@@ -50,8 +53,12 @@ function handleRequest(request, response)
     response.setHeader("Content-Security-Policy", POLICY, false);
     response.setHeader("Content-Security-Policy-Report-Only", POLICY_RO, false);
     response.setHeader("Content-Type", "text/html", false);
-    response.write(loadHTMLFromFile("tests/dom/security/test/csp/file_upgrade_insecure_reporting.html"));
-  	return;
+    response.write(
+      loadHTMLFromFile(
+        "tests/dom/security/test/csp/file_upgrade_insecure_reporting.html"
+      )
+    );
+    return;
   }
 
   // (3) Return the image back to the client
