@@ -703,6 +703,12 @@ int32_t Gecko_GetLookAndFeelInt(int32_t aId) {
   return LookAndFeel::GetInt(intId);
 }
 
+float Gecko_GetLookAndFeelFloat(int32_t aId) {
+  auto id = static_cast<LookAndFeel::FloatID>(aId);
+  AutoWriteLock guard(*sServoFFILock);
+  return LookAndFeel::GetFloat(id);
+}
+
 bool Gecko_MatchLang(const Element* aElement, nsAtom* aOverrideLang,
                      bool aHasOverrideLang, const char16_t* aValue) {
   MOZ_ASSERT(!(aOverrideLang && !aHasOverrideLang),
