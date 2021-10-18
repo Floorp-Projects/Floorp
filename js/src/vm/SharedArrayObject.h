@@ -153,7 +153,8 @@ class SharedArrayRawBuffer {
 
   void tryGrowMaxPagesInPlace(wasm::Pages deltaMaxPages);
 
-  bool wasmGrowToPagesInPlace(const Lock&, wasm::Pages newPages);
+  bool wasmGrowToPagesInPlace(const Lock&, wasm::IndexType t,
+                              wasm::Pages newPages);
 
   uint32_t refcount() const { return refcount_; }
 

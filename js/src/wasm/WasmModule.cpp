@@ -772,7 +772,7 @@ bool Module::instantiateMemory(JSContext* cx,
     }
 
     if (!CheckLimits(cx, desc.initialPages(), desc.maximumPages(),
-                     /* defaultMax */ MaxMemoryPages(),
+                     /* defaultMax */ MaxMemoryPages(desc.indexType()),
                      /* actualLength */
                      memory->volatilePages(), memory->sourceMaxPages(),
                      metadata().isAsmJS(), "Memory")) {
@@ -785,14 +785,14 @@ bool Module::instantiateMemory(JSContext* cx,
   } else {
     MOZ_ASSERT(!metadata().isAsmJS());
 
-    if (desc.initialPages() > MaxMemoryPages()) {
+    if (desc.initialPages() > MaxMemoryPages(desc.indexType())) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_WASM_MEM_IMP_LIMIT);
       return false;
     }
 
     RootedArrayBufferObjectMaybeShared buffer(cx);
-    if (!CreateWasmBuffer32(cx, desc, &buffer)) {
+    if (!CreateWasmBuffer(cx, desc, &buffer)) {
       return false;
     }
 
