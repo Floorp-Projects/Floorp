@@ -37,13 +37,10 @@ body.sepia .pocket-cta {
 
 .pocket-cta-header {
   font-weight: 900;
-  font-size: 20px;
-  line-height: 1.2;
 }
 
 .pocket-cta-subhead {
   margin: 4px 0 24px;
-  line-height: 1.5;
 }
 
 .pocket-btn {
@@ -54,7 +51,6 @@ body.sepia .pocket-cta {
   font-size: 16px;
   padding: 12px 24px;
   text-decoration: none;
-  text-align: center;
 }
 
 .pocket-btn:hover,
@@ -76,8 +72,7 @@ body.sepia .pocket-cta {
 }
 
 .pocket-btn-add {
-  background: no-repeat left center url("chrome://browser/skin/pocket-outline.svg");
-  fill: #5B5B66;
+  background: no-repeat left center url("chrome://global/skin/icons/pocket-outline.svg");
   background-size: 16px;
   border: 0;
   padding-inline-start: 20px;
@@ -86,18 +81,7 @@ body.sepia .pocket-cta {
   cursor: pointer;
 }
 
-body.dark .pocket-btn-add {
-  fill: #eee;
-  color: #eee;
-}
-
-.pocket-btn-add:hover,
-body.dark .pocket-btn-add:hover {
-  fill: #EF4056;
-}
-
-.pocket-btn-add.saved,
-body.dark .pocket-btn-add.saved {
+.pocket-btn-add.saved {
   background-image: url("chrome://global/skin/icons/pocket.svg");
 }
 
@@ -120,13 +104,12 @@ body.dark .pocket-btn-add.saved {
 }
 
 .pocket-recs-top .col:nth-child(2) {
-  padding-inline-start: 8px;
+  padding-inline-start: 68px;
 }
 
 .pocket-recs {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 14px;
 }
 
 .pocket-recs.closed {
@@ -138,7 +121,7 @@ body.dark .pocket-btn-add.saved {
 }
 
 .pocket-rec {
-  padding: 16px 0;
+  padding: 30px 0;
   width: 31%;
 }
 
@@ -147,7 +130,7 @@ body.dark .pocket-btn-add.saved {
   text-decoration: none;
 }
 
-.pocket-sign-up-wrapper {
+.pocket-sign-up {
   text-align: center;
 }
 
@@ -156,7 +139,7 @@ body.dark .pocket-btn-add.saved {
   font-weight: bold;
   font-size: 16px;
   line-height: 24px;
-  color: var(--main-foreground);
+  color: #000000;
 }
 
 .pocket-rec .pocket-rec-thumb {
@@ -165,11 +148,6 @@ body.dark .pocket-btn-add.saved {
   filter: drop-shadow(0px 2px 6px rgba(58, 57, 68, 0.2));
   border-radius: 4px;
   margin-inline-start: 16px;
-  visibility: hidden;
-}
-
-.pocket-rec .pocket-rec-thumb.pocket-rec-thumb-loaded {
-  visibility: visible;
 }
 
 .pocket-rec .pocket-rec-meta {
@@ -178,15 +156,6 @@ body.dark .pocket-btn-add.saved {
   font-size: 14px;
   line-height: 20px;
   color: #5B5B66;
-}
-
-body.dark .pocket-rec .pocket-rec-meta {
-  color: #eee;
-}
-
-.pocket-cta-container-logged-in #pocket-cta-only .pocket-sign-up,
-.pocket-cta-container-logged-out #pocket-cta-only .pocket-discover-more {
-  display: none;
 }
 
 /* Medium breakpoint */
@@ -203,7 +172,7 @@ body.dark .pocket-rec .pocket-rec-meta {
     width: 48%;
   }
 
-  .pocket-rec:nth-child(3) {
+  .pocket-rec:nth-child(2) {
     display: none;
   }
 }
