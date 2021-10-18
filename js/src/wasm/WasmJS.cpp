@@ -2612,7 +2612,7 @@ bool WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (Pages(limits.initial) > MaxMemoryPages()) {
+  if (Pages(limits.initial) > MaxMemoryPages(limits.indexType)) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_MEM_IMP_LIMIT);
     return false;
@@ -2620,7 +2620,7 @@ bool WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   MemoryDesc memory(limits);
 
   RootedArrayBufferObjectMaybeShared buffer(cx);
-  if (!CreateWasmBuffer32(cx, memory, &buffer)) {
+  if (!CreateWasmBuffer(cx, memory, &buffer)) {
     return false;
   }
 
@@ -2850,7 +2850,7 @@ size_t WasmMemoryObject::boundsCheckLimit() const {
   MOZ_ASSERT(mappedSize >= wasm::GuardSize);
   MOZ_ASSERT(wasm::IsValidBoundsCheckImmediate(mappedSize - wasm::GuardSize));
   size_t limit = mappedSize - wasm::GuardSize;
-  MOZ_ASSERT(limit <= MaxMemoryBoundsCheckLimit());
+  MOZ_ASSERT(limit <= MaxMemoryBoundsCheckLimit(indexType()));
   return limit;
 }
 
@@ -2883,7 +2883,7 @@ uint32_t WasmMemoryObject::growShared(HandleWasmMemoryObject memory,
     return -1;
   }
 
-  if (!rawBuf->wasmGrowToPagesInPlace(lock, newPages)) {
+  if (!rawBuf->wasmGrowToPagesInPlace(lock, memory->indexType(), newPages)) {
     return -1;
   }
   // New buffer objects will be created lazily in all agents (including in
@@ -2907,10 +2907,8 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
   // TODO (large ArrayBuffer): For Cranelift, limit the memory size to something
   // that fits in a uint32_t.  See more information at the definition of
   // MaxMemoryBytes().
-  //
-  // TODO: Turn this into a static_assert, if we are able to make
-  // MaxMemoryBytes() constexpr once the dust settles for the 4GB heaps.
-  MOZ_ASSERT(MaxMemoryBytes() <= UINT32_MAX, "Avoid 32-bit overflows");
+  MOZ_ASSERT(MaxMemoryBytes(memory->indexType()) <= UINT32_MAX,
+             "Avoid 32-bit overflows");
 #endif
 
   Pages oldNumPages = oldBuf->wasmPages();
@@ -2923,12 +2921,12 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
 
   if (memory->movingGrowable()) {
     MOZ_ASSERT(!memory->isHuge());
-    if (!ArrayBufferObject::wasmMovingGrowToPages(newPages, oldBuf, &newBuf,
-                                                  cx)) {
+    if (!ArrayBufferObject::wasmMovingGrowToPages(memory->indexType(), newPages,
+                                                  oldBuf, &newBuf, cx)) {
       return -1;
     }
-  } else if (!ArrayBufferObject::wasmGrowToPagesInPlace(newPages, oldBuf,
-                                                        &newBuf, cx)) {
+  } else if (!ArrayBufferObject::wasmGrowToPagesInPlace(
+                 memory->indexType(), newPages, oldBuf, &newBuf, cx)) {
     return -1;
   }
 

@@ -57,7 +57,7 @@ extern const char* ToString(IndexType indexType);
 // We represent byte lengths using the native word size, as it is assumed that
 // consumers of this API will only need byte lengths once it is time to
 // allocate memory, at which point the pages will be checked against the
-// implementation limits `MaxMemory32Pages()` and will then be guaranteed to
+// implementation limits `MaxMemoryPages()` and will then be guaranteed to
 // fit in a native word.
 struct Pages {
  private:
@@ -120,19 +120,19 @@ struct Pages {
 };
 
 // The largest number of pages the application can request.
-extern Pages MaxMemoryPages();
+extern Pages MaxMemoryPages(IndexType t);
 
-// The byte value of MaxMemoryPages().
-static inline size_t MaxMemoryBytes() { return MaxMemoryPages().byteLength(); }
+// The byte value of MaxMemoryPages(t).
+static inline size_t MaxMemoryBytes(IndexType t) {
+  return MaxMemoryPages(t).byteLength();
+}
 
-// A value at least as large as MaxMemoryBytes() representing the largest valid
+// A value at least as large as MaxMemoryBytes(t) representing the largest valid
 // bounds check limit on the system.  (It can be larger than MaxMemoryBytes()
 // because bounds check limits are rounded up to fit formal requirements on some
 // platforms.  Also see ComputeMappedSize().)
-extern size_t MaxMemoryBoundsCheckLimit();
+extern size_t MaxMemoryBoundsCheckLimit(IndexType t);
 
-// The largest value allowed for the 'maximum' field of a memory of the given
-// type.
 static inline uint64_t MaxMemoryLimitField(IndexType indexType) {
   return indexType == IndexType::I32 ? MaxMemory32LimitField
                                      : MaxMemory64LimitField;
@@ -140,7 +140,7 @@ static inline uint64_t MaxMemoryLimitField(IndexType indexType) {
 
 // Compute the 'clamped' maximum size of a memory. See
 // 'WASM Linear Memory structure' in ArrayBufferObject.cpp for background.
-extern Pages ClampedMaxPages(Pages initialPages,
+extern Pages ClampedMaxPages(IndexType t, Pages initialPages,
                              const mozilla::Maybe<Pages>& sourceMaxPages,
                              bool useHugeMemory);
 
