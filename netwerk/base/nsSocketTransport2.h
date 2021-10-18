@@ -303,6 +303,9 @@ class nsSocketTransport final : public nsASocketHandler,
     return (!mProxyHost.IsEmpty() && !mProxyTransparent) ? mProxyHost : mHost;
   }
 
+  Atomic<bool> mInputClosed{true};
+  Atomic<bool> mOutputClosed{true};
+
   //-------------------------------------------------------------------------
   // members accessible only on the socket transport thread:
   //  (the exception being initialization/shutdown time)
@@ -311,8 +314,6 @@ class nsSocketTransport final : public nsASocketHandler,
   // socket state vars:
   uint32_t mState{STATE_CLOSED};  // STATE_??? flags
   bool mAttached{false};
-  bool mInputClosed{true};
-  bool mOutputClosed{true};
 
   // this flag is used to determine if the results of a host lookup arrive
   // recursively or not.  this flag is not protected by any lock.
