@@ -47,9 +47,6 @@ class PlacesEvent : public nsWrapperCache {
   virtual const PlacesBookmarkGuid* AsPlacesBookmarkGuid() const {
     return nullptr;
   }
-  virtual const PlacesBookmarkTags* AsPlacesBookmarkTags() const {
-    return nullptr;
-  }
   virtual const PlacesBookmarkTime* AsPlacesBookmarkTime() const {
     return nullptr;
   }

@@ -56,9 +56,8 @@ add_task(async function test_remove_tags_from_BookmarkStar() {
   );
 
   let promiseTagsChange = PlacesTestUtils.waitForNotification(
-    "bookmark-tags-changed",
-    () => true,
-    "places"
+    "onItemChanged",
+    (id, property) => property === "tags"
   );
 
   // Update the "tags" field.
@@ -120,9 +119,8 @@ add_task(async function test_remove_tags_from_Toolbar() {
       );
 
       let promiseTagsChange = PlacesTestUtils.waitForNotification(
-        "bookmark-tags-changed",
-        () => true,
-        "places"
+        "onItemChanged",
+        (id, property) => property === "tags"
       );
 
       // Update the "tags" field.
@@ -176,9 +174,8 @@ add_task(async function test_remove_tags_from_Sidebar() {
         );
 
         let promiseTagsChange = PlacesTestUtils.waitForNotification(
-          "bookmark-tags-changed",
-          () => true,
-          "places"
+          "onItemChanged",
+          (id, property) => property === "tags"
         );
 
         // Update the "tags" field.
