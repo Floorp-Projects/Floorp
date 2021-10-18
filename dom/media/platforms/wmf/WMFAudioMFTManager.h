@@ -39,6 +39,9 @@ class WMFAudioMFTManager : public MFTManager {
  private:
   HRESULT UpdateOutputType();
 
+  bool IsPartialOutput(const media::TimeUnit& aNewOutputDuration,
+                       const bool aIsRateChangedToHigher) const;
+
   uint32_t mAudioChannels;
   AudioConfig::ChannelLayout::ChannelMap mChannelsMap;
   uint32_t mAudioRate;
@@ -49,6 +52,9 @@ class WMFAudioMFTManager : public MFTManager {
 
   const GUID& GetMFTGUID();
   const GUID& GetMediaSubtypeGUID();
+
+  media::TimeUnit mLastInputTime = media::TimeUnit::Zero();
+  media::TimeUnit mLastOutputDuration = media::TimeUnit::Zero();
 
   bool mFirstFrame = true;
 };

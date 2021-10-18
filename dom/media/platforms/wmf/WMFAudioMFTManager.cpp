@@ -185,6 +185,7 @@ bool WMFAudioMFTManager::Init() {
 
 HRESULT
 WMFAudioMFTManager::Input(MediaRawData* aSample) {
+  mLastInputTime = aSample->mTime;
   return mDecoder->Input(aSample->Data(), uint32_t(aSample->Size()),
                          aSample->mTime.ToMicroseconds(),
                          aSample->mDuration.ToMicroseconds());
@@ -222,6 +223,7 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
   RefPtr<IMFSample> sample;
   HRESULT hr;
   int typeChangeCount = 0;
+  const auto oldAudioRate = mAudioRate;
   while (true) {
     hr = mDecoder->Output(&sample);
     if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
@@ -285,6 +287,11 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
     return S_OK;
   }
 
+  if (oldAudioRate != mAudioRate) {
+    LOG("Audio rate changed from %" PRIu32 " to %" PRIu32, oldAudioRate,
+        mAudioRate);
+  }
+
   AlignedAudioBuffer audioData(numSamples);
   if (!audioData) {
     return E_OUTOFMEMORY;
@@ -297,9 +304,18 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
   TimeUnit duration = FramesToTimeUnit(numFrames, mAudioRate);
   NS_ENSURE_TRUE(duration.IsValid(), E_FAIL);
 
+  const bool isAudioRateChangedToHigher = oldAudioRate < mAudioRate;
+  if (IsPartialOutput(duration, isAudioRateChangedToHigher)) {
+    LOG("Encounter a partial frame?! duration shrinks from %" PRId64
+        " to %" PRId64,
+        mLastOutputDuration.ToMicroseconds(), duration.ToMicroseconds());
+    return MF_E_TRANSFORM_NEED_MORE_INPUT;
+  }
+
   aOutData = new AudioData(aStreamOffset, pts, std::move(audioData),
                            mAudioChannels, mAudioRate, mChannelsMap);
   MOZ_DIAGNOSTIC_ASSERT(duration == aOutData->mDuration, "must be equal");
+  mLastOutputDuration = aOutData->mDuration;
 
 #ifdef LOG_SAMPLE_DECODE
   LOG("Decoded audio sample! timestamp=%lld duration=%lld currentLength=%u",
@@ -307,6 +323,26 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
 #endif
 
   return S_OK;
+}
+
+bool WMFAudioMFTManager::IsPartialOutput(
+    const media::TimeUnit& aNewOutputDuration,
+    const bool aIsRateChangedToHigher) const {
+  // This issue was found in Windows11, where AAC MFT decoder would incorrectly
+  // output partial output samples to us, even if MS's documentation said it
+  // won't happen [1]. More details are described in bug 1731430 comment 26.
+  // If the audio rate isn't changed to higher, which would result in shorter
+  // duration, but the new output duration is still shorter than the last one,
+  // then new output is possible an incorrect partial output.
+  // [1]
+  // https://docs.microsoft.com/en-us/windows/win32/medfound/mft-message-command-drain
+  if (mStreamType != AAC) {
+    return false;
+  }
+  if (mLastOutputDuration > aNewOutputDuration && !aIsRateChangedToHigher) {
+    return true;
+  }
+  return false;
 }
 
 void WMFAudioMFTManager::Shutdown() { mDecoder = nullptr; }
