@@ -1,19 +1,21 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Structured representation of Unicode locale IDs used with Intl functions. */
 
-#ifndef builtin_intl_LanguageTag_h
-#define builtin_intl_LanguageTag_h
+#ifndef intl_components_Locale_h
+#define intl_components_Locale_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/intl/ICUError.h"
+#include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/Variant.h"
+#include "mozilla/Vector.h"
+#include "mozilla/Result.h"
 
 #include <algorithm>
 #include <stddef.h>
@@ -21,21 +23,9 @@
 #include <string.h>
 #include <utility>
 
-#include "js/AllocPolicy.h"
-#include "js/GCAPI.h"
-#include "js/Result.h"
-#include "js/RootingAPI.h"
-#include "js/Utility.h"
-#include "js/Vector.h"
+#include "unicode/uloc.h"
 
-struct JS_PUBLIC_API JSContext;
-class JSLinearString;
-class JS_PUBLIC_API JSString;
-class JS_PUBLIC_API JSTracer;
-
-namespace js {
-
-namespace intl {
+namespace mozilla::intl {
 
 /**
  * Return true if |language| is a valid language subtag.
@@ -88,18 +78,12 @@ char AsciiToUpperCase(CharT c) {
 
 template <typename CharT>
 void AsciiToLowerCase(CharT* chars, size_t length, char* dest) {
-  // Tell the analysis the |std::transform| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
   char (&fn)(CharT) = AsciiToLowerCase;
   std::transform(chars, chars + length, dest, fn);
 }
 
 template <typename CharT>
 void AsciiToUpperCase(CharT* chars, size_t length, char* dest) {
-  // Tell the analysis the |std::transform| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
   char (&fn)(CharT) = AsciiToUpperCase;
   std::transform(chars, chars + length, dest, fn);
 }
@@ -134,7 +118,7 @@ static constexpr size_t TransformKeyLength = 2;
 
 }  // namespace LanguageTagLimits
 
-// Fixed size language subtag which is stored inline in LanguageTag.
+// Fixed size language subtag which is stored inline in Locale.
 template <size_t Length>
 class LanguageTagSubtag final {
   uint8_t length_ = 0;
@@ -186,30 +170,41 @@ using LanguageSubtag = LanguageTagSubtag<LanguageTagLimits::LanguageLength>;
 using ScriptSubtag = LanguageTagSubtag<LanguageTagLimits::ScriptLength>;
 using RegionSubtag = LanguageTagSubtag<LanguageTagLimits::RegionLength>;
 
+using Latin1Char = unsigned char;
+using UniqueChars = UniquePtr<char[]>;
+
 /**
- * Object representing a language tag.
+ * Object representing a Unicode BCP 47 locale identifier.
  *
  * All subtags are already in canonicalized case.
  */
-class MOZ_STACK_CLASS LanguageTag final {
+class MOZ_STACK_CLASS Locale final {
   LanguageSubtag language_ = {};
   ScriptSubtag script_ = {};
   RegionSubtag region_ = {};
 
-  using VariantsVector = Vector<JS::UniqueChars, 2>;
-  using ExtensionsVector = Vector<JS::UniqueChars, 2>;
+  using VariantsVector = Vector<UniqueChars, 2>;
+  using ExtensionsVector = Vector<UniqueChars, 2>;
 
   VariantsVector variants_;
   ExtensionsVector extensions_;
-  JS::UniqueChars privateuse_ = nullptr;
+  UniqueChars privateuse_ = nullptr;
 
-  friend class LanguageTagParser;
+  friend class LocaleParser;
 
-  bool canonicalizeUnicodeExtension(JSContext* cx,
-                                    JS::UniqueChars& unicodeExtension);
+ public:
+  enum class CanonicalizationError : uint8_t {
+    DuplicateVariant,
+    InternalError,
+    OutOfMemory,
+  };
 
-  bool canonicalizeTransformExtension(JSContext* cx,
-                                      JS::UniqueChars& transformExtension);
+ private:
+  Result<Ok, CanonicalizationError> canonicalizeUnicodeExtension(
+      UniqueChars& unicodeExtension);
+
+  Result<Ok, CanonicalizationError> canonicalizeTransformExtension(
+      UniqueChars& transformExtension);
 
  public:
   static bool languageMapping(LanguageSubtag& language);
@@ -222,9 +217,9 @@ class MOZ_STACK_CLASS LanguageTag final {
 
   void performComplexLanguageMappings();
   void performComplexRegionMappings();
-  [[nodiscard]] bool performVariantMappings(JSContext* cx);
+  [[nodiscard]] bool performVariantMappings();
 
-  [[nodiscard]] bool updateLegacyMappings(JSContext* cx);
+  [[nodiscard]] bool updateLegacyMappings();
 
   static bool signLanguageMapping(LanguageSubtag& language,
                                   const RegionSubtag& region);
@@ -245,10 +240,9 @@ class MOZ_STACK_CLASS LanguageTag final {
       mozilla::Span<const char> key, mozilla::Span<const char> type);
 
  public:
-  explicit LanguageTag(JSContext* cx) : variants_(cx), extensions_(cx) {}
-
-  LanguageTag(const LanguageTag&) = delete;
-  LanguageTag& operator=(const LanguageTag&) = delete;
+  Locale() = default;
+  Locale(const Locale&) = delete;
+  Locale& operator=(const Locale&) = delete;
 
   const LanguageSubtag& language() const { return language_; }
   const ScriptSubtag& script() const { return script_; }
@@ -331,36 +325,25 @@ class MOZ_STACK_CLASS LanguageTag final {
    * Set the Unicode extension subtag. The input must be a valid Unicode
    * extension subtag.
    */
-  bool setUnicodeExtension(JS::UniqueChars extension);
+  [[nodiscard]] bool setUnicodeExtension(const char* extension);
 
   /**
    * Remove any Unicode extension subtag if present.
    */
   void clearUnicodeExtension();
 
-  /**
-   * Set the private-use subtag. The input must be a valid private-use subtag
-   * or nullptr.
-   */
-  void setPrivateuse(JS::UniqueChars privateuse) {
-    MOZ_ASSERT(!privateuse ||
-               IsStructurallyValidPrivateUseTag(
-                   {privateuse.get(), strlen(privateuse.get())}));
-    privateuse_ = std::move(privateuse);
-  }
-
   /** Canonicalize the base-name (language, script, region, variant) subtags. */
-  bool canonicalizeBaseName(JSContext* cx);
+  Result<Ok, CanonicalizationError> canonicalizeBaseName();
 
   /**
    * Canonicalize all extension subtags.
    */
-  bool canonicalizeExtensions(JSContext* cx);
+  Result<Ok, CanonicalizationError> canonicalizeExtensions();
 
   /**
    * Canonicalizes the given structurally valid Unicode BCP 47 locale
    * identifier, including regularized case of subtags. For example, the
-   * language tag Zh-haNS-bu-variant2-Variant1-u-ca-chinese-t-Zh-laTN-x-PRIVATE,
+   * locale Zh-haNS-bu-variant2-Variant1-u-ca-chinese-t-Zh-laTN-x-PRIVATE,
    * where
    *
    *     Zh             ; 2*3ALPHA
@@ -376,38 +359,50 @@ class MOZ_STACK_CLASS LanguageTag final {
    *
    * Spec: ECMAScript Internationalization API Specification, 6.2.3.
    */
-  bool canonicalize(JSContext* cx) {
-    return canonicalizeBaseName(cx) && canonicalizeExtensions(cx);
+  Result<Ok, CanonicalizationError> canonicalize() {
+    MOZ_TRY(canonicalizeBaseName());
+    return canonicalizeExtensions();
   }
 
   /**
-   * Return the string representation of this language tag.
+   * Fill the buffer with a string representation of the locale.
    */
-  JSString* toString(JSContext* cx) const;
+  template <typename B>
+  Result<Ok, ICUError> toString(B& buffer) const {
+    static_assert(std::is_same_v<typename B::CharType, char>);
+
+    size_t capacity = toStringCapacity();
+
+    // Attempt to reserve needed capacity
+    if (!buffer.reserve(capacity)) {
+      return Err(ICUError::OutOfMemory);
+    }
+
+    size_t offset = toStringAppend(buffer.data());
+
+    MOZ_ASSERT(capacity == offset);
+    buffer.written(offset);
+
+    return Ok();
+  }
 
   /**
-   * Return the string representation of this language tag as a null-terminated
-   * C-string.
-   */
-  JS::UniqueChars toStringZ(JSContext* cx) const;
-
-  /**
-   * Add likely-subtags to the language tag.
+   * Add likely-subtags to the locale.
    *
    * Spec: <https://www.unicode.org/reports/tr35/#Likely_Subtags>
    */
-  bool addLikelySubtags(JSContext* cx);
+  [[nodiscard]] bool addLikelySubtags();
 
   /**
-   * Remove likely-subtags from the language tag.
+   * Remove likely-subtags from the locale.
    *
    * Spec: <https://www.unicode.org/reports/tr35/#Likely_Subtags>
    */
-  bool removeLikelySubtags(JSContext* cx);
+  [[nodiscard]] bool removeLikelySubtags();
 
   /**
    * Returns the default locale as an ICU locale identifier. The returned string
-   * is NOT a valid BCP 47 language tag!
+   * is NOT a valid BCP 47 locale!
    *
    * Also see <https://unicode-org.github.io/icu/userguide/locale>.
    */
@@ -425,6 +420,11 @@ class MOZ_STACK_CLASS LanguageTag final {
     return AvailableLocalesEnumeration<uloc_countAvailable,
                                        uloc_getAvailable>();
   }
+
+ private:
+  static UniqueChars DuplicateStringToUniqueChars(const char* s);
+  size_t toStringCapacity() const;
+  size_t toStringAppend(char* buffer) const;
 };
 
 /**
@@ -432,8 +432,15 @@ class MOZ_STACK_CLASS LanguageTag final {
  *
  * <https://unicode.org/reports/tr35/#Unicode_Language_and_Locale_Identifiers>
  */
-class MOZ_STACK_CLASS LanguageTagParser final {
+class MOZ_STACK_CLASS LocaleParser final {
  public:
+  enum class ParserError : uint8_t {
+    // Input was not parseable as a locale, subtag or extension.
+    NotParseable,
+    // Unable to allocate memory for the parser to operate.
+    OutOfMemory,
+  };
+
   // Exposed as |public| for |MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS|.
   enum class TokenKind : uint8_t {
     None = 0b000,
@@ -464,56 +471,34 @@ class MOZ_STACK_CLASS LanguageTagParser final {
     bool isAlphaDigit() const { return kind_ == TokenKind::AlphaDigit; }
   };
 
-  using LocaleChars = mozilla::Variant<const JS::Latin1Char*, const char16_t*>;
-
-  const LocaleChars& locale_;
+  const char* locale_;
   size_t length_;
   size_t index_ = 0;
 
-  LanguageTagParser(const LocaleChars& locale, size_t length)
-      : locale_(locale), length_(length) {}
+  explicit LocaleParser(Span<const char> locale)
+      : locale_(locale.data()), length_(locale.size()) {}
 
-  char16_t charAtUnchecked(size_t index) const {
-    if (locale_.is<const JS::Latin1Char*>()) {
-      return locale_.as<const JS::Latin1Char*>()[index];
-    }
-    return locale_.as<const char16_t*>()[index];
-  }
-
-  char charAt(size_t index) const {
-    char16_t c = charAtUnchecked(index);
-    MOZ_ASSERT(mozilla::IsAscii(c));
-    return c;
-  }
+  char charAt(size_t index) const { return locale_[index]; }
 
   // Copy the token characters into |subtag|.
   template <size_t N>
   void copyChars(const Token& tok, LanguageTagSubtag<N>& subtag) const {
-    size_t index = tok.index();
-    size_t length = tok.length();
-    if (locale_.is<const JS::Latin1Char*>()) {
-      using T = const JS::Latin1Char;
-      subtag.set(mozilla::Span(locale_.as<T*>() + index, length));
-    } else {
-      using T = const char16_t;
-      subtag.set(mozilla::Span(locale_.as<T*>() + index, length));
-    }
+    subtag.set(mozilla::Span(locale_ + tok.index(), tok.length()));
   }
 
   // Create a string copy of |length| characters starting at |index|.
-  JS::UniqueChars chars(JSContext* cx, size_t index, size_t length) const;
+  UniqueChars chars(size_t index, size_t length) const;
 
   // Create a string copy of the token characters.
-  JS::UniqueChars chars(JSContext* cx, const Token& tok) const {
-    return chars(cx, tok.index(), tok.length());
+  UniqueChars chars(const Token& tok) const {
+    return chars(tok.index(), tok.length());
   }
 
-  JS::UniqueChars extension(JSContext* cx, const Token& start,
-                            const Token& end) const {
+  UniqueChars extension(const Token& start, const Token& end) const {
     MOZ_ASSERT(start.index() < end.index());
 
     size_t length = end.index() - 1 - start.index();
-    return chars(cx, start.index(), length);
+    return chars(start.index(), length);
   }
 
   Token nextToken();
@@ -618,16 +603,15 @@ class MOZ_STACK_CLASS LanguageTagParser final {
 
   // Helper function for use in |parseBaseName| and
   // |parseTlangInTransformExtension|.  Do not use this directly!
-  static JS::Result<bool> internalParseBaseName(JSContext* cx,
-                                                LanguageTagParser& ts,
-                                                LanguageTag& tag, Token& tok);
+  static Result<Ok, ParserError> internalParseBaseName(LocaleParser& ts,
+                                                       Locale& tag, Token& tok);
 
   // Parse the `unicode_language_id` production, i.e. the
-  // language/script/region/variants portion of a language tag, into |tag|.
+  // language/script/region/variants portion of a locale, into |tag|.
   // |tok| must be the current token.
-  static JS::Result<bool> parseBaseName(JSContext* cx, LanguageTagParser& ts,
-                                        LanguageTag& tag, Token& tok) {
-    return internalParseBaseName(cx, ts, tag, tok);
+  static Result<Ok, ParserError> parseBaseName(LocaleParser& ts, Locale& tag,
+                                               Token& tok) {
+    return internalParseBaseName(ts, tag, tok);
   }
 
   // Parse the `tlang` production within a parsed 't' transform extension.
@@ -642,16 +626,13 @@ class MOZ_STACK_CLASS LanguageTagParser final {
   // there was no `tlang`, then |tag.language().missing()|. But if there was a
   // `tlang`, then |tag| is filled with subtags exactly as they appeared in the
   // parse input.
-  static JS::Result<JS::Ok> parseTlangInTransformExtension(
-      JSContext* cx, LanguageTagParser& ts, LanguageTag& tag, Token& tok) {
+  static Result<Ok, ParserError> parseTlangInTransformExtension(
+      LocaleParser& ts, Locale& tag, Token& tok) {
     MOZ_ASSERT(ts.isLanguage(tok));
-    return internalParseBaseName(cx, ts, tag, tok).map([](bool parsed) {
-      MOZ_ASSERT(parsed);
-      return JS::Ok();
-    });
+    return internalParseBaseName(ts, tag, tok);
   }
 
-  friend class LanguageTag;
+  friend class Locale;
 
   class Range final {
     size_t begin_;
@@ -668,126 +649,44 @@ class MOZ_STACK_CLASS LanguageTagParser final {
     size_t length() const { return length_; }
   };
 
-  using TFieldVector = js::Vector<Range, 8>;
-  using AttributesVector = js::Vector<Range, 8>;
-  using KeywordsVector = js::Vector<Range, 8>;
+  using TFieldVector = Vector<Range, 8>;
+  using AttributesVector = Vector<Range, 8>;
+  using KeywordsVector = Vector<Range, 8>;
 
   // Parse |extension|, which must be a validated, fully lowercase
   // `transformed_extensions` subtag, and fill |tag| and |fields| from the
   // `tlang` and `tfield` components. Data in |tag| is lowercase, consistent
   // with |extension|.
-  static JS::Result<bool> parseTransformExtension(
-      JSContext* cx, mozilla::Span<const char> extension, LanguageTag& tag,
-      TFieldVector& fields);
+  static Result<Ok, ParserError> parseTransformExtension(
+      mozilla::Span<const char> extension, Locale& tag, TFieldVector& fields);
 
   // Parse |extension|, which must be a validated, fully lowercase
   // `unicode_locale_extensions` subtag, and fill |attributes| and |keywords|
   // from the `attribute` and `keyword` components.
-  static JS::Result<bool> parseUnicodeExtension(
-      JSContext* cx, mozilla::Span<const char> extension,
-      AttributesVector& attributes, KeywordsVector& keywords);
-
-  static JS::Result<bool> tryParse(JSContext* cx, LocaleChars& localeChars,
-                                   size_t localeLength, LanguageTag& tag);
+  static Result<Ok, ParserError> parseUnicodeExtension(
+      mozilla::Span<const char> extension, AttributesVector& attributes,
+      KeywordsVector& keywords);
 
  public:
-  // Parse the input string as a language tag. Reports an error to the context
-  // if the input can't be parsed completely.
-  static bool parse(JSContext* cx, JSLinearString* locale, LanguageTag& tag);
-
-  // Parse the input string as a language tag. Reports an error to the context
-  // if the input can't be parsed completely.
-  static bool parse(JSContext* cx, mozilla::Span<const char> locale,
-                    LanguageTag& tag);
-
-  // Parse the input string as a language tag. Returns Ok(true) if the input
-  // could be completely parsed, Ok(false) if the input couldn't be parsed,
-  // or Err() in case of internal error.
-  static JS::Result<bool> tryParse(JSContext* cx, JSLinearString* locale,
-                                   LanguageTag& tag);
-
-  // Parse the input string as a language tag. Returns Ok(true) if the input
-  // could be completely parsed, Ok(false) if the input couldn't be parsed,
-  // or Err() in case of internal error.
-  static JS::Result<bool> tryParse(JSContext* cx,
-                                   mozilla::Span<const char> locale,
-                                   LanguageTag& tag);
+  // Parse the input string as a locale.
+  static Result<Ok, ParserError> tryParse(Span<const char> locale, Locale& tag);
 
   // Parse the input string as the base-name parts (language, script, region,
-  // variants) of a language tag. Ignores any trailing characters.
-  static bool parseBaseName(JSContext* cx, mozilla::Span<const char> locale,
-                            LanguageTag& tag);
+  // variants) of a locale.
+  static Result<Ok, ParserError> tryParseBaseName(Span<const char> locale,
+                                                  Locale& tag);
 
-  // Parse the input string as the base-name parts (language, script, region,
-  // variants) of a language tag. Returns Ok(true) if the input could be
-  // completely parsed, Ok(false) if the input couldn't be parsed, or Err() in
-  // case of internal error.
-  static JS::Result<bool> tryParseBaseName(JSContext* cx,
-                                           JSLinearString* locale,
-                                           LanguageTag& tag);
+  // Return Ok() iff |extension| can be parsed as a Unicode extension subtag.
+  static Result<Ok, ParserError> canParseUnicodeExtension(
+      Span<const char> extension);
 
-  // Return true iff |extension| can be parsed as a Unicode extension subtag.
-  static bool canParseUnicodeExtension(mozilla::Span<const char> extension);
-
-  // Return true iff |unicodeType| can be parsed as a Unicode extension type.
-  static bool canParseUnicodeExtensionType(JSLinearString* unicodeType);
+  // Return Ok() iff |unicodeType| can be parsed as a Unicode extension type.
+  static Result<Ok, ParserError> canParseUnicodeExtensionType(
+      Span<const char> unicodeType);
 };
 
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LanguageTagParser::TokenKind)
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LocaleParser::TokenKind)
 
-/**
- * Parse a string as a standalone |language| tag. If |str| is a standalone
- * language tag, store it in |result| and return true. Otherwise return false.
- */
-[[nodiscard]] bool ParseStandaloneLanguageTag(JS::Handle<JSLinearString*> str,
-                                              LanguageSubtag& result);
+}  // namespace mozilla::intl
 
-/**
- * Parse a string as a standalone |script| tag. If |str| is a standalone script
- * tag, store it in |result| and return true. Otherwise return false.
- */
-[[nodiscard]] bool ParseStandaloneScriptTag(JS::Handle<JSLinearString*> str,
-                                            ScriptSubtag& result);
-
-/**
- * Parse a string as a standalone |region| tag. If |str| is a standalone region
- * tag, store it in |result| and return true. Otherwise return false.
- */
-[[nodiscard]] bool ParseStandaloneRegionTag(JS::Handle<JSLinearString*> str,
-                                            RegionSubtag& result);
-
-/**
- * Parse a string as an ISO-639 language code. Return |nullptr| in the result if
- * the input could not be parsed or the canonical form of the resulting language
- * tag contains more than a single language subtag.
- */
-JS::Result<JSString*> ParseStandaloneISO639LanguageTag(
-    JSContext* cx, JS::Handle<JSLinearString*> str);
-
-class UnicodeExtensionKeyword final {
-  char key_[LanguageTagLimits::UnicodeKeyLength];
-  JSLinearString* type_;
-
- public:
-  using UnicodeKey = const char (&)[LanguageTagLimits::UnicodeKeyLength + 1];
-  using UnicodeKeySpan =
-      mozilla::Span<const char, LanguageTagLimits::UnicodeKeyLength>;
-
-  UnicodeExtensionKeyword(UnicodeKey key, JSLinearString* type)
-      : key_{key[0], key[1]}, type_(type) {}
-
-  UnicodeKeySpan key() const { return {key_, sizeof(key_)}; }
-  JSLinearString* type() const { return type_; }
-
-  void trace(JSTracer* trc);
-};
-
-[[nodiscard]] extern bool ApplyUnicodeExtensionToTag(
-    JSContext* cx, LanguageTag& tag,
-    JS::HandleVector<UnicodeExtensionKeyword> keywords);
-
-}  // namespace intl
-
-}  // namespace js
-
-#endif /* builtin_intl_LanguageTag_h */
+#endif /* intl_components_Locale_h */
