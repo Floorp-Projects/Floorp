@@ -54,7 +54,7 @@ const Quotes* QuotesForLang(const nsAtom* aLang) {
   // Try parsing lang as a Locale (which will also canonicalize case of the
   // subtags), then see if we can match it with region or script subtags,
   // if present, or just the primary language tag.
-  Locale loc(langStr);
+  MozLocale loc(langStr);
   if (!loc.IsWellFormed()) {
     return nullptr;
   }

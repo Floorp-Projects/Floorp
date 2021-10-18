@@ -893,7 +893,7 @@ void EditorSpellCheck::SetFallbackDictionary(DictionaryFetcher* aFetcher) {
 
     // Required dictionary was not available. Try to get a dictionary
     // matching at least language part of dictName.
-    mozilla::intl::Locale loc = mozilla::intl::Locale(dictName);
+    mozilla::intl::MozLocale loc = mozilla::intl::MozLocale(dictName);
     nsAutoCString langCode(loc.GetLanguage());
 
     // Try dictionary.spellchecker preference, if it starts with langCode,
@@ -916,7 +916,8 @@ void EditorSpellCheck::SetFallbackDictionary(DictionaryFetcher* aFetcher) {
       // equlas applocation locale language.
       LocaleService::GetInstance()->GetAppLocaleAsBCP47(appLocaleStr);
       if (!appLocaleStr.IsEmpty()) {
-        mozilla::intl::Locale appLoc = mozilla::intl::Locale(appLocaleStr);
+        mozilla::intl::MozLocale appLoc =
+            mozilla::intl::MozLocale(appLocaleStr);
         if (langCode.Equals(appLoc.GetLanguage())) {
           BuildDictionaryList(appLocaleStr, dictList,
                               DICT_COMPARE_CASE_INSENSITIVE, tryDictList);
@@ -928,7 +929,8 @@ void EditorSpellCheck::SetFallbackDictionary(DictionaryFetcher* aFetcher) {
       nsAutoCString sysLocaleStr;
       OSPreferences::GetInstance()->GetSystemLocale(sysLocaleStr);
       if (!sysLocaleStr.IsEmpty()) {
-        mozilla::intl::Locale sysLoc = mozilla::intl::Locale(sysLocaleStr);
+        mozilla::intl::MozLocale sysLoc =
+            mozilla::intl::MozLocale(sysLocaleStr);
         if (langCode.Equals(sysLoc.GetLanguage())) {
           BuildDictionaryList(sysLocaleStr, dictList,
                               DICT_COMPARE_CASE_INSENSITIVE, tryDictList);

@@ -8,24 +8,24 @@
 
 using namespace mozilla::intl;
 
-TEST(Intl_Locale_Locale, Locale)
+TEST(Intl_MozLocale_MozLocale, MozLocale)
 {
-  Locale loc = Locale("en-US");
+  MozLocale loc = MozLocale("en-US");
 
   ASSERT_TRUE(loc.GetLanguage().Equals("en"));
   ASSERT_TRUE(loc.GetRegion().Equals("US"));
 }
 
-TEST(Intl_Locale_Locale, AsString)
+TEST(Intl_MozLocale_MozLocale, AsString)
 {
-  Locale loc = Locale("ja-jp-windows");
+  MozLocale loc = MozLocale("ja-jp-windows");
 
   ASSERT_TRUE(loc.AsString().Equals("ja-JP-windows"));
 }
 
-TEST(Intl_Locale_Locale, GetSubTags)
+TEST(Intl_MozLocale_MozLocale, GetSubTags)
 {
-  Locale loc = Locale("en-latn-us-macos");
+  MozLocale loc = MozLocale("en-latn-us-macos");
 
   ASSERT_TRUE(loc.GetLanguage().Equals("en"));
   ASSERT_TRUE(loc.GetScript().Equals("Latn"));
@@ -37,32 +37,32 @@ TEST(Intl_Locale_Locale, GetSubTags)
   ASSERT_TRUE(variants[0].Equals("macos"));
 }
 
-TEST(Intl_Locale_Locale, Matches)
+TEST(Intl_MozLocale_MozLocale, Matches)
 {
-  Locale loc = Locale("en-US");
+  MozLocale loc = MozLocale("en-US");
 
-  Locale loc2 = Locale("en-GB");
+  MozLocale loc2 = MozLocale("en-GB");
   ASSERT_FALSE(loc == loc2);
 
-  Locale loc3 = Locale("en-US");
+  MozLocale loc3 = MozLocale("en-US");
   ASSERT_TRUE(loc == loc3);
 
-  Locale loc4 = Locale("En_us");
+  MozLocale loc4 = MozLocale("En_us");
   ASSERT_TRUE(loc == loc4);
 }
 
-TEST(Intl_Locale_Locale, MatchesRange)
+TEST(Intl_MozLocale_MozLocale, MatchesRange)
 {
-  Locale loc = Locale("en-US");
+  MozLocale loc = MozLocale("en-US");
 
-  Locale loc2 = Locale("en-Latn-US");
+  MozLocale loc2 = MozLocale("en-Latn-US");
   ASSERT_FALSE(loc == loc2);
   ASSERT_TRUE(loc.Matches(loc2, true, false));
   ASSERT_FALSE(loc.Matches(loc2, false, true));
   ASSERT_FALSE(loc.Matches(loc2, false, false));
   ASSERT_TRUE(loc.Matches(loc2, true, true));
 
-  Locale loc3 = Locale("en");
+  MozLocale loc3 = MozLocale("en");
   ASSERT_FALSE(loc == loc3);
   ASSERT_TRUE(loc.Matches(loc3, false, true));
   ASSERT_FALSE(loc.Matches(loc3, true, false));
@@ -70,46 +70,46 @@ TEST(Intl_Locale_Locale, MatchesRange)
   ASSERT_TRUE(loc.Matches(loc3, true, true));
 }
 
-TEST(Intl_Locale_Locale, Variants)
+TEST(Intl_MozLocale_MozLocale, Variants)
 {
-  Locale loc = Locale("en-US-UniFon-BasicEng");
+  MozLocale loc = MozLocale("en-US-UniFon-BasicEng");
 
   // Make sure that we canonicalize and sort variant tags
   ASSERT_TRUE(loc.AsString().Equals("en-US-basiceng-unifon"));
 }
 
-TEST(Intl_Locale_Locale, InvalidLocale)
+TEST(Intl_MozLocale_MozLocale, InvalidMozLocale)
 {
-  Locale loc = Locale("en-verylongsubtag");
+  MozLocale loc = MozLocale("en-verylongsubtag");
   ASSERT_FALSE(loc.IsWellFormed());
 
-  Locale loc2 = Locale("p-te");
+  MozLocale loc2 = MozLocale("p-te");
   ASSERT_FALSE(loc2.IsWellFormed());
 }
 
-TEST(Intl_Locale_Locale, ClearRegion)
+TEST(Intl_MozLocale_MozLocale, ClearRegion)
 {
-  Locale loc = Locale("en-US");
+  MozLocale loc = MozLocale("en-US");
   loc.ClearRegion();
   ASSERT_TRUE(loc.AsString().Equals("en"));
 }
 
-TEST(Intl_Locale_Locale, ClearVariants)
+TEST(Intl_MozLocale_MozLocale, ClearVariants)
 {
-  Locale loc = Locale("en-US-windows");
+  MozLocale loc = MozLocale("en-US-windows");
   loc.ClearVariants();
   ASSERT_TRUE(loc.AsString().Equals("en-US"));
 }
 
-TEST(Intl_Locale_Locale, jaJPmac)
+TEST(Intl_MozLocale_MozLocale, jaJPmac)
 {
-  Locale loc = Locale("ja-JP-mac");
+  MozLocale loc = MozLocale("ja-JP-mac");
   ASSERT_TRUE(loc.AsString().Equals("ja-JP-macos"));
 }
 
-TEST(Intl_Locale_Locale, Maximize)
+TEST(Intl_MozLocale_MozLocale, Maximize)
 {
-  Locale loc = Locale("en");
+  MozLocale loc = MozLocale("en");
 
   ASSERT_TRUE(loc.GetLanguage().Equals("en"));
   ASSERT_TRUE(loc.GetScript().IsEmpty());

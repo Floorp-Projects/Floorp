@@ -303,8 +303,8 @@ LocaleService::Observe(nsISupports* aSubject, const char* aTopic,
 
 bool LocaleService::LanguagesMatch(const nsACString& aRequested,
                                    const nsACString& aAvailable) {
-  Locale requested = Locale(aRequested);
-  Locale available = Locale(aAvailable);
+  MozLocale requested = MozLocale(aRequested);
+  MozLocale available = MozLocale(aAvailable);
   return requested.GetLanguage().Equals(available.GetLanguage());
 }
 
@@ -528,7 +528,7 @@ LocaleService::NegotiateLanguages(const nsTArray<nsCString>& aRequested,
   }
 
   MOZ_ASSERT(
-      aDefaultLocale.IsEmpty() || Locale(aDefaultLocale).IsWellFormed(),
+      aDefaultLocale.IsEmpty() || MozLocale(aDefaultLocale).IsWellFormed(),
       "If specified, default locale must be a well-formed BCP47 language tag.");
 
   if (aStrategy == kLangNegStrategyLookup && aDefaultLocale.IsEmpty()) {
