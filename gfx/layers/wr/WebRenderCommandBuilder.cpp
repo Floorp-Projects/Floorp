@@ -97,8 +97,6 @@ struct BlobItemData {
   // during invalidations.
   std::vector<RefPtr<SourceSurface>> mExternalSurfaces;
 
-  IntRect mImageRect;
-
   BlobItemData(DIGroup* aGroup, nsDisplayItem* aItem)
       : mUsed(false), mGroup(aGroup) {
     mInvalid = false;
@@ -543,7 +541,6 @@ struct DIGroup {
     }
     mActualBounds.OrWith(aData->mRect);
     aData->mClip = clip;
-    aData->mImageRect = mClippedImageBounds;
     GP("post mInvalidRect: %d %d %d %d\n", mInvalidRect.x, mInvalidRect.y,
        mInvalidRect.width, mInvalidRect.height);
     return invalidated;
