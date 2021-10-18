@@ -187,7 +187,7 @@ nsStaticAtom* nsLanguageAtomService::GetUncachedLanguageGroup(
       langStr.Truncate(start.get() - langStr.BeginReading());
     }
 
-    Locale loc(langStr);
+    MozLocale loc(langStr);
     if (loc.IsWellFormed()) {
       // Fill in script subtag if not present.
       if (loc.GetScript().IsEmpty()) {
