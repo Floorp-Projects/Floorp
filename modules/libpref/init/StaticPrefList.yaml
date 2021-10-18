@@ -8841,7 +8841,9 @@
 
 - name: media.webrtc.platformencoder
   type: bool
-#if defined(MOZ_WIDGET_ANDROID) || defined(NIGHTLY_BUILD)
+#if defined(MOZ_WIDGET_ANDROID)
+  value: true
+#elif defined(NIGHTLY_BUILD) && !defined(MOZ_WIDGET_GTK)
   value: true
 #else
   value: false

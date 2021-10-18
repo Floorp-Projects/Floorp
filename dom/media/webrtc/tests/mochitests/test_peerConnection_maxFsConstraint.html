@@ -88,6 +88,7 @@
   runNetworkTest(async () => {
     await pushPrefs(['media.peerconnection.video.lock_scaling', true]);
     if (await checkForH264Support()) {
+      await matchPlatformH264CodecPrefs();
       await testScale("H264");
     }
 
