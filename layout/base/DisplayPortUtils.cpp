@@ -555,15 +555,9 @@ bool DisplayPortUtils::HasNonMinimalNonZeroDisplayPort(nsIContent* aContent) {
 bool DisplayPortUtils::GetDisplayPortForVisibilityTesting(nsIContent* aContent,
                                                           nsRect* aResult) {
   MOZ_ASSERT(aResult);
-  // Since the base rect might not have been updated very recently, it's
-  // possible to end up with an extra-large displayport at this point, if the
-  // zoom level is changed by a lot. Instead of using the default behaviour of
-  // asserting, we can just ignore the displayport if that happens, as this
-  // call site is best-effort.
-  return GetDisplayPortImpl(aContent, aResult, 1.0f,
-                            DisplayPortOptions()
-                                .With(MaxSizeExceededBehaviour::Drop)
-                                .With(DisplayportRelativeTo::ScrollFrame));
+  return GetDisplayPortImpl(
+      aContent, aResult, 1.0f,
+      DisplayPortOptions().With(DisplayportRelativeTo::ScrollFrame));
 }
 
 void DisplayPortUtils::InvalidateForDisplayPortChange(
