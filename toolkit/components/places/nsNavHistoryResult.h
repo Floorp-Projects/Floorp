@@ -314,6 +314,7 @@ class nsNavHistoryResultNode : public nsINavHistoryResultNode {
 
   virtual void OnRemoving();
 
+  nsresult OnItemTagsChanged(int64_t aItemId, const nsAString& aURL);
   nsresult OnItemTimeChanged(int64_t aItemId, const nsACString& aGUID,
                              PRTime aDateAdded, PRTime aLastModified);
   nsresult OnItemTitleChanged(int64_t aItemId, const nsACString& aGUID,
@@ -700,6 +701,7 @@ class nsNavHistoryQueryResultNode final
                        const nsACString& aOldParentGUID,
                        const nsACString& aNewParentGUID, uint16_t aSource,
                        const nsACString& aURI);
+  nsresult OnItemTagsChanged(int64_t aItemId, const nsAString& aURL);
   nsresult OnItemUrlChanged(int64_t aItemId, const nsACString& aGUID,
                             const nsACString& aURL, PRTime aLastModified);
 

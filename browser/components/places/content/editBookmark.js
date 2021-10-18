@@ -343,7 +343,12 @@ var gEditItemOverlay = {
       PlacesUtils.bookmarks.addObserver(this);
       this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
       PlacesUtils.observers.addListener(
-        ["bookmark-moved", "bookmark-title-changed", "bookmark-url-changed"],
+        [
+          "bookmark-moved",
+          "bookmark-tags-changed",
+          "bookmark-title-changed",
+          "bookmark-url-changed",
+        ],
         this.handlePlacesEvents
       );
       window.addEventListener("unload", this);
@@ -561,7 +566,12 @@ var gEditItemOverlay = {
     if (this._observersAdded) {
       PlacesUtils.bookmarks.removeObserver(this);
       PlacesUtils.observers.removeListener(
-        ["bookmark-moved", "bookmark-title-changed", "bookmark-url-changed"],
+        [
+          "bookmark-moved",
+          "bookmark-tags-changed",
+          "bookmark-title-changed",
+          "bookmark-url-changed",
+        ],
         this.handlePlacesEvents
       );
       window.removeEventListener("unload", this);
@@ -1154,6 +1164,11 @@ var gEditItemOverlay = {
             bm.title
           );
           break;
+        case "bookmark-tags-changed":
+          if (this._paneInfo.visibleRows.has("tagsRow")) {
+            this._onTagsChange(event.guid).catch(Cu.reportError);
+          }
+          break;
         case "bookmark-title-changed":
           if (this._paneInfo.isItem || this._paneInfo.isTag) {
             // This also updates titles of folders in the folder menu list.
@@ -1291,11 +1306,6 @@ var gEditItemOverlay = {
     aParentId,
     aGuid
   ) {
-    if (aProperty == "tags" && this._paneInfo.visibleRows.has("tagsRow")) {
-      this._onTagsChange(aGuid).catch(Cu.reportError);
-      return;
-    }
-
     if (!this._paneInfo.isItem || this._paneInfo.itemId != aItemId) {
       return;
     }
