@@ -9,6 +9,7 @@ import android.os.Build
 import android.view.View
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineView
@@ -18,17 +19,26 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.focus.ext.disableDynamicBehavior
 import org.mozilla.focus.ext.enableDynamicBehavior
+import org.mozilla.focus.ext.hide
+import org.mozilla.focus.ext.showAsFixed
+import org.mozilla.focus.utils.Settings
+import org.mozilla.focus.widget.FloatingEraseButton
+import org.mozilla.focus.widget.FloatingSessionsButton
 
 class FullScreenIntegration(
     val activity: Activity,
     val store: BrowserStore,
     tabId: String?,
     sessionUseCases: SessionUseCases,
+    private val settings: Settings,
     private val toolbarView: BrowserToolbar,
     private val statusBar: View,
-    private val engineView: EngineView
+    private val engineView: EngineView,
+    private val eraseFab: FloatingEraseButton,
+    private val sessionsFab: FloatingSessionsButton
 ) : LifecycleAwareFeature, UserInteractionHandler {
-    private val feature = FullScreenFeature(
+    @VisibleForTesting
+    internal var feature = FullScreenFeature(
         store,
         sessionUseCases,
         tabId,
@@ -44,17 +54,16 @@ class FullScreenIntegration(
         feature.stop()
     }
 
-    private fun fullScreenChanged(enabled: Boolean) {
+    @VisibleForTesting
+    internal fun fullScreenChanged(enabled: Boolean) {
         if (enabled) {
-            toolbarView.collapse()
-            toolbarView.disableDynamicBehavior(engineView)
+            enterBrowserFullscreen()
             statusBar.visibility = View.GONE
 
             switchToImmersiveMode()
         } else {
             statusBar.visibility = View.VISIBLE
-            toolbarView.enableDynamicBehavior(activity, engineView)
-            toolbarView.expand()
+            exitBrowserFullscreen()
 
             exitImmersiveModeIfNeeded()
         }
@@ -64,8 +73,9 @@ class FullScreenIntegration(
         return feature.onBackPressed()
     }
 
+    @VisibleForTesting
     @RequiresApi(Build.VERSION_CODES.P)
-    private fun viewportFitChanged(viewportFit: Int) {
+    internal fun viewportFitChanged(viewportFit: Int) {
         activity.window.attributes.layoutInDisplayCutoutMode = viewportFit
     }
 
@@ -74,7 +84,8 @@ class FullScreenIntegration(
      * the top of the screen. These transient system bars will overlay app’s content, may have some
      * degree of transparency, and will automatically hide after a short timeout.
      */
-    private fun switchToImmersiveMode() {
+    @VisibleForTesting
+    internal fun switchToImmersiveMode() {
         val window = activity.window
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/5016
@@ -101,5 +112,29 @@ class FullScreenIntegration(
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/5016
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+    }
+
+    @VisibleForTesting
+    internal fun enterBrowserFullscreen() {
+        if (settings.isAccessibilityEnabled()) {
+            toolbarView.hide(engineView)
+            eraseFab.visibility = View.GONE
+            sessionsFab.visibility = View.GONE
+        } else {
+            toolbarView.collapse()
+            toolbarView.disableDynamicBehavior(engineView)
+        }
+    }
+
+    @VisibleForTesting
+    internal fun exitBrowserFullscreen() {
+        if (settings.isAccessibilityEnabled()) {
+            toolbarView.showAsFixed(activity, engineView)
+            eraseFab.visibility = View.VISIBLE
+            sessionsFab.visibility = View.VISIBLE
+        } else {
+            toolbarView.enableDynamicBehavior(activity, engineView)
+            toolbarView.expand()
+        }
     }
 }

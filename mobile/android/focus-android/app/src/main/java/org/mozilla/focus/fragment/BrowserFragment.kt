@@ -63,6 +63,7 @@ import org.mozilla.focus.contextmenu.ContextMenuCandidates
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.EngineSharedPreferencesListener
 import org.mozilla.focus.exceptions.ExceptionDomains
+import org.mozilla.focus.ext.accessibilityManager
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.disableDynamicBehavior
 import org.mozilla.focus.ext.enableDynamicBehavior
@@ -70,6 +71,7 @@ import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.ext.isCustomTab
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.settings
+import org.mozilla.focus.ext.showAsFixed
 import org.mozilla.focus.ext.titleOrDomain
 import org.mozilla.focus.menu.browser.DefaultBrowserMenu
 import org.mozilla.focus.open.OpenWithFragment
@@ -105,6 +107,8 @@ class BrowserFragment :
 
     private lateinit var engineView: EngineView
     private lateinit var toolbar: BrowserToolbar
+    private lateinit var eraseFab: FloatingEraseButton
+    private lateinit var sessionsFab: FloatingSessionsButton
 
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val fullScreenIntegration = ViewBoundFeatureWrapper<FullScreenIntegration>()
@@ -145,6 +149,8 @@ class BrowserFragment :
 
         popupTint = view.findViewById(R.id.popup_tint)
 
+        requireContext().accessibilityManager.addAccessibilityStateChangeListener(this)
+
         return view
     }
 
@@ -154,6 +160,8 @@ class BrowserFragment :
 
         engineView = (view.findViewById<View>(R.id.engineView) as EngineView)
         toolbar = view.findViewById(R.id.browserToolbar)
+        eraseFab = view.findViewById(R.id.erase)
+        sessionsFab = view.findViewById(R.id.tabs)
 
         findInPageIntegration.set(
             FindInPageIntegration(
@@ -170,9 +178,12 @@ class BrowserFragment :
                 components.store,
                 tab.id,
                 components.sessionUseCases,
+                requireContext().settings,
                 toolbar,
                 statusBar!!,
-                engineView
+                engineView,
+                eraseFab,
+                sessionsFab
             ),
             this, view
         )
@@ -285,7 +296,7 @@ class BrowserFragment :
 
         val customTabConfig = tab.ifCustomTab()?.config
         if (customTabConfig != null) {
-            initialiseCustomTabUi(view, customTabConfig)
+            initialiseCustomTabUi(customTabConfig)
 
             // TODO Add custom tabs window feature support
             // We to add support for Custom Tabs here, however in order to send the window request
@@ -306,8 +317,11 @@ class BrowserFragment :
     }
 
     override fun onAccessibilityStateChanged(enabled: Boolean) = when (enabled) {
-        true -> toolbar.enableDynamicBehavior(requireContext(), engineView)
-        false -> toolbar.disableDynamicBehavior(engineView)
+        false -> toolbar.enableDynamicBehavior(requireContext(), engineView)
+        true -> {
+            toolbar.disableDynamicBehavior(engineView)
+            toolbar.showAsFixed(requireContext(), engineView)
+        }
     }
 
     private fun getAdditionalNote(hitResult: HitResult): String? {
@@ -368,6 +382,8 @@ class BrowserFragment :
     private fun initialiseNormalBrowserUi(view: View) {
         if (!requireContext().settings.isAccessibilityEnabled()) {
             toolbar.enableDynamicBehavior(requireContext(), engineView)
+        } else {
+            toolbar.showAsFixed(requireContext(), engineView)
         }
 
         val eraseButton = view.findViewById<FloatingEraseButton>(R.id.erase)
@@ -387,23 +403,28 @@ class BrowserFragment :
         )
     }
 
-    private fun initialiseCustomTabUi(view: View, customTabConfig: CustomTabConfig) {
+    private fun initialiseCustomTabUi(customTabConfig: CustomTabConfig) {
         // Unfortunately there's no simpler way to have the FAB only in normal-browser mode.
         // - ViewStub: requires splitting attributes for the FAB between the ViewStub, and actual FAB layout file.
         //             Moreover, the layout behaviour just doesn't work unless you set it programatically.
         // - View.GONE: doesn't work because the layout-behaviour makes the FAB visible again when scrolling.
         // - Adding at runtime: works, but then we need to use a separate layout file (and you need
         //   to set some attributes programatically, same as ViewStub).
-        val erase = view.findViewById<FloatingEraseButton>(R.id.erase)
-        val eraseContainer = erase.parent as ViewGroup
-        eraseContainer.removeView(erase)
+        val eraseContainer = eraseFab.parent as ViewGroup
+        eraseContainer.removeView(eraseFab)
 
-        val sessions = view.findViewById<FloatingSessionsButton>(R.id.tabs)
-        eraseContainer.removeView(sessions)
+        eraseContainer.removeView(sessionsFab)
 
         if (customTabConfig.enableUrlbarHiding && !requireContext().settings.isAccessibilityEnabled()) {
             toolbar.enableDynamicBehavior(requireContext(), engineView)
+        } else {
+            toolbar.showAsFixed(requireContext(), engineView)
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        requireContext().accessibilityManager.removeAccessibilityStateChangeListener(this)
     }
 
     override fun onDestroy() {

@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.ext
 
+import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import mozilla.components.browser.engine.gecko.GeckoEngineView
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -36,10 +37,14 @@ internal class BrowserToolbarTest {
 
     @Test
     fun `GIVEN a BrowserToolbar WHEN enableDynamicBehavior THEN set custom behaviors for the toolbar and engineView`() {
+        // Simulate previously having a fixed toolbar
+        (engineView.layoutParams as? CoordinatorLayout.LayoutParams)?.topMargin = 222
+
         toolbar.enableDynamicBehavior(testContext, engineView)
 
         assertTrue((toolbar.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior is BrowserToolbarBehavior)
         assertTrue((engineView.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior is EngineViewBrowserToolbarBehavior)
+        assertEquals(0, (engineView.layoutParams as? CoordinatorLayout.LayoutParams)?.topMargin)
         verify(engineView).setDynamicToolbarMaxHeight(toolbarHeight)
     }
 
@@ -53,5 +58,23 @@ internal class BrowserToolbarTest {
         assertNull((engineView.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior)
         assertEquals(0f, engineView.asView().translationY)
         verify(engineView).setDynamicToolbarMaxHeight(0)
+    }
+
+    @Test
+    fun `GIVEN a BrowserToolbar WHEN showAsFixed is called THEN show the toolbar with the engineView below it`() {
+        toolbar.showAsFixed(testContext, engineView)
+
+        verify(toolbar).visibility = View.VISIBLE
+        verify(engineView).setDynamicToolbarMaxHeight(0)
+        assertEquals(toolbarHeight, (engineView.layoutParams as? CoordinatorLayout.LayoutParams)?.topMargin)
+    }
+
+    @Test
+    fun `GIVEN a BrowserToolbar WHEN hide is called THEN show the toolbar with the engineView below it`() {
+        toolbar.hide(engineView)
+
+        verify(toolbar).visibility = View.GONE
+        verify(engineView).setDynamicToolbarMaxHeight(0)
+        assertEquals(0, (engineView.layoutParams as? CoordinatorLayout.LayoutParams)?.topMargin)
     }
 }
