@@ -309,7 +309,9 @@ class ProviderTabToSearch extends UrlbarProvider {
       // is likely because your test showed a tab-to-search result but did not
       // start and end the engagement in which it was shown. Be sure to fire an
       // input event to start an engagement and blur the Urlbar to end it.
-      Cu.reportError(`Exception while recording TabToSearch telemetry: ${ex})`);
+      this.logger.error(
+        `Exception while recording TabToSearch telemetry: ${ex})`
+      );
     } finally {
       // Even if there's an exception, we want to clear these Sets. Otherwise,
       // we might get into a state where we repeatedly run the same engines

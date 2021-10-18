@@ -1408,7 +1408,7 @@ class ProviderPlaces extends UrlbarProvider {
         return conn;
       })().catch(ex => {
         dump("Couldn't get database handle: " + ex + "\n");
-        Cu.reportError(ex);
+        this.logger.error(ex);
       });
     }
     return this._promiseDatabase;
@@ -1529,7 +1529,7 @@ class ProviderPlaces extends UrlbarProvider {
       .then(conn => search.execute(conn))
       .catch(ex => {
         dump(`Query failed: ${ex}\n`);
-        Cu.reportError(ex);
+        this.logger.error(ex);
       })
       .then(() => {
         if (search == this._currentSearch) {

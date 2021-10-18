@@ -482,7 +482,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         while (summedFillableLimit != fillableLimit) {
           if (!fractionalDataArray.length) {
             // This shouldn't happen, but don't let it break us.
-            Cu.reportError("fractionalDataArray is empty!");
+            logger.error("fractionalDataArray is empty!");
             break;
           }
           let data = flexDataArray[fractionalDataArray.shift().index];

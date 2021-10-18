@@ -378,7 +378,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       }
 
       if (entry.tail && entry.tailOffsetIndex < 0) {
-        Cu.reportError(
+        this.logger.error(
           `Error in tail suggestion parsing. Value: ${entry.value}, tail: ${entry.tail}.`
         );
         continue;
@@ -393,7 +393,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       }
 
       if (!tail) {
-        await tailTimer.fire().catch(Cu.reportError);
+        await tailTimer.fire().catch(ex => this.logger.error(ex));
       }
 
       try {
@@ -415,7 +415,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
           )
         );
       } catch (err) {
-        Cu.reportError(err);
+        this.logger.error(err);
         continue;
       }
     }

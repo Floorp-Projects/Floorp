@@ -203,9 +203,10 @@ class UrlbarProviderExtension extends UrlbarProvider {
     let extResults = await this._notifyListener("resultsRequested", context);
     if (extResults) {
       for (let extResult of extResults) {
-        let result = await this._makeUrlbarResult(context, extResult).catch(
-          Cu.reportError
-        );
+        let result = await this._makeUrlbarResult(
+          context,
+          extResult
+        ).catch(ex => this.logger.error(ex));
         if (result) {
           addCallback(this, result);
         }
@@ -282,7 +283,7 @@ class UrlbarProviderExtension extends UrlbarProvider {
     try {
       result = listener(...args);
     } catch (error) {
-      Cu.reportError(error);
+      this.logger.error(error);
       return undefined;
     }
     if (result.catch) {
@@ -296,7 +297,7 @@ class UrlbarProviderExtension extends UrlbarProvider {
       });
       result = await Promise.race([
         timer.promise,
-        result.catch(Cu.reportError),
+        result.catch(ex => this.logger.error(ex)),
       ]);
       timer.cancel();
     }

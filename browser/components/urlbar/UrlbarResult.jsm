@@ -296,7 +296,7 @@ class UrlbarResult {
    */
   static addDynamicResultType(name, type = {}) {
     if (/[^a-z0-9_-]/i.test(name)) {
-      Cu.reportError(`Illegal dynamic type name: ${name}`);
+      this.logger.error(`Illegal dynamic type name: ${name}`);
       return;
     }
     this._dynamicResultTypesByName.set(name, type);

@@ -169,8 +169,8 @@ class ProviderOmnibox extends UrlbarProvider {
       time: MAXIMUM_ALLOWED_EXTENSION_TIME_MS,
       logger: this.logger,
     }).promise;
-    await Promise.race([timeoutPromise, this._resultsPromise]).catch(
-      Cu.reportError
+    await Promise.race([timeoutPromise, this._resultsPromise]).catch(ex =>
+      this.logger.error(ex)
     );
   }
 }

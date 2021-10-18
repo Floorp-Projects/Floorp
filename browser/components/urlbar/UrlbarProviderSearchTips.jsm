@@ -323,7 +323,7 @@ class ProviderSearchTips extends UrlbarProvider {
       return;
     }
 
-    this._maybeShowTipForUrl(uri.spec).catch(Cu.reportError);
+    this._maybeShowTipForUrl(uri.spec).catch(ex => this.logger.error(ex));
   }
 
   /**
