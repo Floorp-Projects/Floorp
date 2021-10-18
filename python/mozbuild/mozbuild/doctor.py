@@ -169,6 +169,18 @@ def ssh(**kwargs):
                 ],
             )
 
+        if "Mercurial access is currently disabled on your account" in proc.stdout:
+            return DoctorCheck(
+                name="ssh",
+                status=CheckStatus.FATAL,
+                display_text=[
+                    "You previously had push access to hgmo, but due to inactivity",
+                    "your access was revoked. Please file a bug in Bugzilla under",
+                    "`Infrastructure & Operations :: Infrastructure: LDAP` to request",
+                    "access.",
+                ],
+            )
+
         return DoctorCheck(
             name="ssh",
             status=CheckStatus.WARNING,
