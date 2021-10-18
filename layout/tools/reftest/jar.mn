@@ -55,7 +55,7 @@ reftest.jar:
   res/PerTestCoverageUtils.jsm (../../../tools/code-coverage/PerTestCoverageUtils.jsm)
   res/input.css (../../../editor/reftests/xul/input.css)
   res/progress.css (../../../layout/reftests/forms/progress/style.css)
-*  res/manifest.jsm (manifest.jsm)
+  res/manifest.jsm (manifest.jsm)
   res/reftest.jsm (reftest.jsm)
 
 # Android doesn't ship global.css
