@@ -627,10 +627,7 @@ class FormAutofillSection {
       data.flowId = this.flowId;
     }
     let condensedDetails = this.fieldDetails;
-    // This NIGHTLY_BUILD statement should be removed as part of Bug 1735562 once the feature is stable
-    if (AppConstants.NIGHTLY_BUILD) {
-      this._condenseMultipleCCNumberFields(condensedDetails);
-    }
+    this._condenseMultipleCCNumberFields(condensedDetails);
 
     condensedDetails.forEach(detail => {
       let element = detail.elementWeakRef.get();
