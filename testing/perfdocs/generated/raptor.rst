@@ -3311,9 +3311,10 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-live-office.manifest
-   * **playback version**: 5.1.1
-   * **test url**: `<https://office.live.com/start/Word.aspx?omkt=en-US>`__
+   * **playback pageset manifest**: mitm6-linux-firefox-live-office.manifest
+   * **playback version**: 6.0.2
+   * **secondary url**: `<https://www.office.com/>`__
+   * **test url**: `<https://www.office.com/launch/word>`__
    * **type**: pageload
    * **unit**: ms
    * **use live sites**: false
