@@ -457,7 +457,7 @@ class nsSocketTransport final : public nsASocketHandler,
   int32_t mKeepaliveRetryIntervalS{-1};
   int32_t mKeepaliveProbeCount{-1};
 
-  bool mDoNotRetryToConnect{false};
+  Atomic<bool> mDoNotRetryToConnect{false};
 
   // Whether the port remapping has already been applied.  We definitely want to
   // prevent duplicate calls in case of chaining remapping.
