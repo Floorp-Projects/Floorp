@@ -4082,6 +4082,8 @@ void TestProfiler() {
     printf("baseprofiler_pause()...\n");
     baseprofiler::profiler_pause();
 
+    MOZ_RELEASE_ASSERT(!baseprofiler::profiler_thread_is_being_profiled());
+
     Maybe<baseprofiler::ProfilerBufferInfo> info =
         baseprofiler::profiler_get_buffer_info();
     MOZ_RELEASE_ASSERT(info.isSome());
