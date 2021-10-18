@@ -40,7 +40,9 @@ namespace intl {
 
 bool ParseStandaloneLanguageTag(HandleLinearString str,
                                 mozilla::intl::LanguageSubtag& result) {
-  JS::AutoCheckCannotGC nogc;
+  // Tell the analysis the |IsStructurallyValidLanguageTag| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
   if (str->hasLatin1Chars()) {
     if (!mozilla::intl::IsStructurallyValidLanguageTag<Latin1Char>(
             str->latin1Range(nogc))) {
@@ -59,7 +61,9 @@ bool ParseStandaloneLanguageTag(HandleLinearString str,
 
 bool ParseStandaloneScriptTag(HandleLinearString str,
                               mozilla::intl::ScriptSubtag& result) {
-  JS::AutoCheckCannotGC nogc;
+  // Tell the analysis the |IsStructurallyValidScriptTag| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
   if (str->hasLatin1Chars()) {
     if (!mozilla::intl::IsStructurallyValidScriptTag<Latin1Char>(
             str->latin1Range(nogc))) {
@@ -78,7 +82,9 @@ bool ParseStandaloneScriptTag(HandleLinearString str,
 
 bool ParseStandaloneRegionTag(HandleLinearString str,
                               mozilla::intl::RegionSubtag& result) {
-  JS::AutoCheckCannotGC nogc;
+  // Tell the analysis the |IsStructurallyValidRegionTag| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
   if (str->hasLatin1Chars()) {
     if (!mozilla::intl::IsStructurallyValidRegionTag<Latin1Char>(
             str->latin1Range(nogc))) {
