@@ -20,7 +20,7 @@ var gcFunctionsList_filename = scriptArgs[2] || "gcFunctions.lst";
 var gcEdges_filename = scriptArgs[3] || "gcEdges.txt";
 var limitedFunctionsList_filename = scriptArgs[4] || "limitedFunctions.lst";
 
-loadCallgraph(callgraph_filename);
+var gcFunctions = loadCallgraph(callgraph_filename);
 
 printErr("Writing " + gcFunctions_filename);
 redirect(gcFunctions_filename);
@@ -33,7 +33,9 @@ for (var name in gcFunctions) {
         let current = name;
         do {
             current = gcFunctions[current];
-            if (current in readableNames)
+            if (current === 'internal')
+                ; // Hit the end
+            else if (current in readableNames)
                 print("    " + readableNames[current][0]);
             else
                 print("    " + current);
