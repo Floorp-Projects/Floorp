@@ -2550,6 +2550,12 @@
     base: WordSized
   mir_op: true
 
+- name: WasmAddOffset64
+  result_type: Int64
+  operands:
+    base: Int64
+  mir_op: WasmAddOffset
+
 - name: WasmBoundsCheck
   result_type: WordSized
   operands:
@@ -2576,6 +2582,11 @@
   operands:
     ptr: WordSized
   mir_op: true
+
+- name: WasmAlignmentCheck64
+  operands:
+    ptr: Int64
+  mir_op: WasmAlignmentCheck
 
 - name: WasmLoadTls
   result_type: WordSized

@@ -2295,8 +2295,11 @@ void CodeGenerator::visitWasmHeapBase(LWasmHeapBase* ins) {
 
 static Maybe<uint64_t> IsAbsoluteAddress(const LAllocation* ptr,
                                          const wasm::MemoryAccessDesc& access) {
-  if (ptr->isConstant()) {
-    uint64_t base_address = uint32_t(ToInt32(ptr));
+  if (ptr->isConstantValue()) {
+    const MConstant* c = ptr->toConstant();
+    uint64_t base_address = c->type() == MIRType::Int32
+                                ? uint64_t(uint32_t(c->toInt32()))
+                                : uint64_t(c->toInt64());
     uint64_t offset = access.offset();
     return Some(base_address + offset);
   }
@@ -2312,6 +2315,8 @@ void CodeGenerator::visitWasmLoad(LWasmLoad* lir) {
     return;
   }
 
+  // ptr is a GPR and is either a 32-bit value zero-extended to 64-bit, or a
+  // true 64-bit value.
   masm.wasmLoad(mir->access(), HeapReg, ToRegister(lir->ptr()),
                 ToAnyRegister(lir->output()));
 }
@@ -2550,6 +2555,20 @@ void CodeGenerator::visitWasmAddOffset(LWasmAddOffset* lir) {
   Register out = ToRegister(lir->output());
 
   masm.Adds(ARMRegister(out, 32), ARMRegister(base, 32),
+            Operand(mir->offset()));
+
+  Label ok;
+  masm.j(Assembler::CarryClear, &ok);
+  masm.wasmTrap(wasm::Trap::OutOfBounds, mir->bytecodeOffset());
+  masm.bind(&ok);
+}
+
+void CodeGenerator::visitWasmAddOffset64(LWasmAddOffset64* lir) {
+  MWasmAddOffset* mir = lir->mir();
+  Register64 base = ToRegister64(lir->base());
+  Register64 out = ToOutRegister64(lir);
+
+  masm.Adds(ARMRegister(out.reg, 64), ARMRegister(base.reg, 64),
             Operand(mir->offset()));
 
   Label ok;
