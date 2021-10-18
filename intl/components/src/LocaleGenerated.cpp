@@ -13,16 +13,14 @@
 #include <string>
 #include <type_traits>
 
-#include "builtin/intl/LanguageTag.h"
-#include "util/Text.h"
-#include "vm/JSContext.h"
+#include "mozilla/intl/Locale.h"
 
-using namespace js::intl::LanguageTagLimits;
+using namespace mozilla::intl::LanguageTagLimits;
 
 template <size_t Length, size_t TagLength, size_t SubtagLength>
 static inline bool HasReplacement(
     const char (&subtags)[Length][TagLength],
-    const js::intl::LanguageTagSubtag<SubtagLength>& subtag) {
+    const mozilla::intl::LanguageTagSubtag<SubtagLength>& subtag) {
   MOZ_ASSERT(subtag.length() == TagLength - 1,
              "subtag must have the same length as the list of subtags");
 
@@ -36,7 +34,7 @@ static inline bool HasReplacement(
 template <size_t Length, size_t TagLength, size_t SubtagLength>
 static inline const char* SearchReplacement(
     const char (&subtags)[Length][TagLength], const char* (&aliases)[Length],
-    const js::intl::LanguageTagSubtag<SubtagLength>& subtag) {
+    const mozilla::intl::LanguageTagSubtag<SubtagLength>& subtag) {
   MOZ_ASSERT(subtag.length() == TagLength - 1,
              "subtag must have the same length as the list of subtags");
 
@@ -61,35 +59,23 @@ static bool IsAsciiLowercaseAlphanumericOrDash(char c) {
 }
 
 static bool IsCanonicallyCasedLanguageTag(mozilla::Span<const char> span) {
-  // Tell the analysis the |std::all_of| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
   return std::all_of(span.begin(), span.end(),
                      mozilla::IsAsciiLowercaseAlpha<char>);
 }
 
 static bool IsCanonicallyCasedScriptTag(mozilla::Span<const char> span) {
-  // Tell the analysis the |std::all_of| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
   return mozilla::IsAsciiUppercaseAlpha(span[0]) &&
          std::all_of(span.begin() + 1, span.end(),
                      mozilla::IsAsciiLowercaseAlpha<char>);
 }
 
 static bool IsCanonicallyCasedRegionTag(mozilla::Span<const char> span) {
-  // Tell the analysis the |std::all_of| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
   return std::all_of(span.begin(), span.end(),
                      mozilla::IsAsciiUppercaseAlpha<char>) ||
          std::all_of(span.begin(), span.end(), mozilla::IsAsciiDigit<char>);
 }
 
 static bool IsCanonicallyCasedVariantTag(mozilla::Span<const char> span) {
-  // Tell the analysis the |std::all_of| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
   return std::all_of(span.begin(), span.end(), IsAsciiLowercaseAlphanumeric);
 }
 
@@ -115,20 +101,19 @@ static bool IsCanonicallyCasedTransformType(mozilla::Span<const char> type) {
 // Mappings from language subtags to preferred values.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-bool js::intl::LanguageTag::languageMapping(LanguageSubtag& language) {
+bool mozilla::intl::Locale::languageMapping(LanguageSubtag& language) {
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language.span()));
   MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language.span()));
 
   if (language.length() == 2) {
     static const char languages[8][3] = {
-        "bh", "in", "iw", "ji", "jw", "mo", "tl", "tw",
+      "bh", "in", "iw", "ji", "jw", "mo", "tl", "tw",
     };
     static const char* aliases[8] = {
-        "bho", "id", "he", "yi", "jv", "ro", "fil", "ak",
+      "bho", "id", "he", "yi", "jv", "ro", "fil", "ak",
     };
 
-    if (const char* replacement =
-            SearchReplacement(languages, aliases, language)) {
+    if (const char* replacement = SearchReplacement(languages, aliases, language)) {
       language.set(mozilla::MakeStringSpan(replacement));
       return true;
     }
@@ -137,94 +122,93 @@ bool js::intl::LanguageTag::languageMapping(LanguageSubtag& language) {
 
   if (language.length() == 3) {
     static const char languages[401][4] = {
-        "aam", "aar", "abk", "adp", "afr", "agp", "ais", "aju", "aka", "alb",
-        "als", "amh", "ara", "arb", "arg", "arm", "asd", "asm", "aue", "ava",
-        "ave", "aym", "ayr", "ayx", "aze", "azj", "bak", "bam", "baq", "baz",
-        "bcc", "bcl", "bel", "ben", "bgm", "bhk", "bih", "bis", "bjd", "bjq",
-        "bkb", "bod", "bos", "bre", "btb", "bul", "bur", "bxk", "bxr", "cat",
-        "ccq", "ces", "cha", "che", "chi", "chu", "chv", "cjr", "cka", "cld",
-        "cmk", "cmn", "cor", "cos", "coy", "cqu", "cre", "cwd", "cym", "cze",
-        "daf", "dan", "dap", "deu", "dgo", "dhd", "dik", "diq", "dit", "div",
-        "djl", "dkl", "drh", "drr", "dud", "duj", "dut", "dwl", "dzo", "ekk",
-        "ell", "elp", "emk", "eng", "epo", "esk", "est", "eus", "ewe", "fao",
-        "fas", "fat", "fij", "fin", "fra", "fre", "fry", "fuc", "ful", "gav",
-        "gaz", "gbc", "gbo", "geo", "ger", "gfx", "ggn", "ggo", "ggr", "gio",
-        "gla", "gle", "glg", "gli", "glv", "gno", "gre", "grn", "gti", "gug",
-        "guj", "guv", "gya", "hat", "hau", "hdn", "hea", "heb", "her", "him",
-        "hin", "hmo", "hrr", "hrv", "hun", "hye", "ibi", "ibo", "ice", "ido",
-        "iii", "ike", "iku", "ile", "ill", "ilw", "ina", "ind", "ipk", "isl",
-        "ita", "izi", "jar", "jav", "jeg", "jpn", "kal", "kan", "kas", "kat",
-        "kau", "kaz", "kdv", "kgc", "kgd", "kgh", "khk", "khm", "kik", "kin",
-        "kir", "kmr", "knc", "kng", "knn", "koj", "kom", "kon", "kor", "kpp",
-        "kpv", "krm", "ktr", "kua", "kur", "kvs", "kwq", "kxe", "kxl", "kzh",
-        "kzj", "kzt", "lao", "lat", "lav", "lbk", "leg", "lii", "lim", "lin",
-        "lit", "llo", "lmm", "ltz", "lub", "lug", "lvs", "mac", "mah", "mal",
-        "mao", "mar", "may", "meg", "mgx", "mhr", "mkd", "mlg", "mlt", "mnk",
-        "mnt", "mof", "mol", "mon", "mri", "msa", "mst", "mup", "mwd", "mwj",
-        "mya", "myd", "myt", "nad", "nau", "nav", "nbf", "nbl", "nbx", "ncp",
-        "nde", "ndo", "nep", "nld", "nln", "nlr", "nno", "nns", "nnx", "nob",
-        "noo", "nor", "npi", "nts", "nxu", "nya", "oci", "ojg", "oji", "ori",
-        "orm", "ory", "oss", "oun", "pan", "pbu", "pcr", "per", "pes", "pli",
-        "plt", "pmc", "pmu", "pnb", "pol", "por", "ppa", "ppr", "pry", "pus",
-        "puz", "que", "quz", "rmr", "rmy", "roh", "ron", "rum", "run", "rus",
-        "sag", "san", "sap", "sca", "scc", "scr", "sgl", "sin", "skk", "slk",
-        "slo", "slv", "sme", "smo", "sna", "snd", "som", "sot", "spa", "spy",
-        "sqi", "src", "srd", "srp", "ssw", "sul", "sum", "sun", "swa", "swe",
-        "swh", "tah", "tam", "tat", "tdu", "tel", "tgg", "tgk", "tgl", "tha",
-        "thc", "thw", "thx", "tib", "tid", "tie", "tir", "tkk", "tlw", "tmp",
-        "tne", "ton", "tsf", "tsn", "tso", "ttq", "tuk", "tur", "twi", "uig",
-        "ukr", "umu", "unp", "uok", "urd", "uzb", "uzn", "ven", "vie", "vol",
-        "wel", "wgw", "wit", "wiw", "wln", "wol", "xba", "xho", "xia", "xkh",
-        "xpe", "xrq", "xsj", "xsl", "ybd", "ydd", "yen", "yid", "yiy", "yma",
-        "ymt", "yor", "yos", "yuu", "zai", "zha", "zho", "zir", "zsm", "zul",
-        "zyb",
+      "aam", "aar", "abk", "adp", "afr", "agp", "ais", "aju", "aka", "alb",
+      "als", "amh", "ara", "arb", "arg", "arm", "asd", "asm", "aue", "ava",
+      "ave", "aym", "ayr", "ayx", "aze", "azj", "bak", "bam", "baq", "baz",
+      "bcc", "bcl", "bel", "ben", "bgm", "bhk", "bih", "bis", "bjd", "bjq",
+      "bkb", "bod", "bos", "bre", "btb", "bul", "bur", "bxk", "bxr", "cat",
+      "ccq", "ces", "cha", "che", "chi", "chu", "chv", "cjr", "cka", "cld",
+      "cmk", "cmn", "cor", "cos", "coy", "cqu", "cre", "cwd", "cym", "cze",
+      "daf", "dan", "dap", "deu", "dgo", "dhd", "dik", "diq", "dit", "div",
+      "djl", "dkl", "drh", "drr", "dud", "duj", "dut", "dwl", "dzo", "ekk",
+      "ell", "elp", "emk", "eng", "epo", "esk", "est", "eus", "ewe", "fao",
+      "fas", "fat", "fij", "fin", "fra", "fre", "fry", "fuc", "ful", "gav",
+      "gaz", "gbc", "gbo", "geo", "ger", "gfx", "ggn", "ggo", "ggr", "gio",
+      "gla", "gle", "glg", "gli", "glv", "gno", "gre", "grn", "gti", "gug",
+      "guj", "guv", "gya", "hat", "hau", "hdn", "hea", "heb", "her", "him",
+      "hin", "hmo", "hrr", "hrv", "hun", "hye", "ibi", "ibo", "ice", "ido",
+      "iii", "ike", "iku", "ile", "ill", "ilw", "ina", "ind", "ipk", "isl",
+      "ita", "izi", "jar", "jav", "jeg", "jpn", "kal", "kan", "kas", "kat",
+      "kau", "kaz", "kdv", "kgc", "kgd", "kgh", "khk", "khm", "kik", "kin",
+      "kir", "kmr", "knc", "kng", "knn", "koj", "kom", "kon", "kor", "kpp",
+      "kpv", "krm", "ktr", "kua", "kur", "kvs", "kwq", "kxe", "kxl", "kzh",
+      "kzj", "kzt", "lao", "lat", "lav", "lbk", "leg", "lii", "lim", "lin",
+      "lit", "llo", "lmm", "ltz", "lub", "lug", "lvs", "mac", "mah", "mal",
+      "mao", "mar", "may", "meg", "mgx", "mhr", "mkd", "mlg", "mlt", "mnk",
+      "mnt", "mof", "mol", "mon", "mri", "msa", "mst", "mup", "mwd", "mwj",
+      "mya", "myd", "myt", "nad", "nau", "nav", "nbf", "nbl", "nbx", "ncp",
+      "nde", "ndo", "nep", "nld", "nln", "nlr", "nno", "nns", "nnx", "nob",
+      "noo", "nor", "npi", "nts", "nxu", "nya", "oci", "ojg", "oji", "ori",
+      "orm", "ory", "oss", "oun", "pan", "pbu", "pcr", "per", "pes", "pli",
+      "plt", "pmc", "pmu", "pnb", "pol", "por", "ppa", "ppr", "pry", "pus",
+      "puz", "que", "quz", "rmr", "rmy", "roh", "ron", "rum", "run", "rus",
+      "sag", "san", "sap", "sca", "scc", "scr", "sgl", "sin", "skk", "slk",
+      "slo", "slv", "sme", "smo", "sna", "snd", "som", "sot", "spa", "spy",
+      "sqi", "src", "srd", "srp", "ssw", "sul", "sum", "sun", "swa", "swe",
+      "swh", "tah", "tam", "tat", "tdu", "tel", "tgg", "tgk", "tgl", "tha",
+      "thc", "thw", "thx", "tib", "tid", "tie", "tir", "tkk", "tlw", "tmp",
+      "tne", "ton", "tsf", "tsn", "tso", "ttq", "tuk", "tur", "twi", "uig",
+      "ukr", "umu", "unp", "uok", "urd", "uzb", "uzn", "ven", "vie", "vol",
+      "wel", "wgw", "wit", "wiw", "wln", "wol", "xba", "xho", "xia", "xkh",
+      "xpe", "xrq", "xsj", "xsl", "ybd", "ydd", "yen", "yid", "yiy", "yma",
+      "ymt", "yor", "yos", "yuu", "zai", "zha", "zho", "zir", "zsm", "zul",
+      "zyb",
     };
     static const char* aliases[401] = {
-        "aas", "aa",  "ab",  "dz",  "af",  "apf", "ami", "jrb", "ak",  "sq",
-        "sq",  "am",  "ar",  "ar",  "an",  "hy",  "snz", "as",  "ktz", "av",
-        "ae",  "ay",  "ay",  "nun", "az",  "az",  "ba",  "bm",  "eu",  "nvo",
-        "bal", "bik", "be",  "bn",  "bcg", "fbl", "bho", "bi",  "drl", "bzc",
-        "ebk", "bo",  "bs",  "br",  "beb", "bg",  "my",  "luy", "bua", "ca",
-        "rki", "cs",  "ch",  "ce",  "zh",  "cu",  "cv",  "mom", "cmr", "syr",
-        "xch", "zh",  "kw",  "co",  "pij", "quh", "cr",  "cr",  "cy",  "cs",
-        "dnj", "da",  "njz", "de",  "doi", "mwr", "din", "zza", "dif", "dv",
-        "dze", "aqd", "mn",  "kzk", "uth", "dwu", "nl",  "dbt", "dz",  "et",
-        "el",  "amq", "man", "en",  "eo",  "ik",  "et",  "eu",  "ee",  "fo",
-        "fa",  "ak",  "fj",  "fi",  "fr",  "fr",  "fy",  "ff",  "ff",  "dev",
-        "om",  "wny", "grb", "ka",  "de",  "vaj", "gvr", "esg", "gtu", "aou",
-        "gd",  "ga",  "gl",  "kzk", "gv",  "gon", "el",  "gn",  "nyc", "gn",
-        "gu",  "duz", "gba", "ht",  "ha",  "hai", "hmn", "he",  "hz",  "srx",
-        "hi",  "ho",  "jal", "hr",  "hu",  "hy",  "opa", "ig",  "is",  "io",
-        "ii",  "iu",  "iu",  "ie",  "ilm", "gal", "ia",  "id",  "ik",  "is",
-        "it",  "eza", "jgk", "jv",  "oyb", "ja",  "kl",  "kn",  "ks",  "ka",
-        "kr",  "kk",  "zkd", "tdf", "ncq", "kml", "mn",  "km",  "ki",  "rw",
-        "ky",  "ku",  "kr",  "kg",  "kok", "kwv", "kv",  "kg",  "ko",  "jkm",
-        "kv",  "bmf", "dtp", "kj",  "ku",  "gdj", "yam", "tvd", "kru", "dgl",
-        "dtp", "dtp", "lo",  "la",  "lv",  "bnc", "enl", "raq", "li",  "ln",
-        "lt",  "ngt", "rmx", "lb",  "lu",  "lg",  "lv",  "mk",  "mh",  "ml",
-        "mi",  "mr",  "ms",  "cir", "jbk", "chm", "mk",  "mg",  "mt",  "man",
-        "wnn", "xnt", "ro",  "mn",  "mi",  "ms",  "mry", "raj", "dmw", "vaj",
-        "my",  "aog", "mry", "xny", "na",  "nv",  "nru", "nr",  "ekc", "kdz",
-        "nd",  "ng",  "ne",  "nl",  "azd", "nrk", "nn",  "nbr", "ngv", "nb",
-        "dtd", "no",  "ne",  "pij", "bpp", "ny",  "oc",  "oj",  "oj",  "or",
-        "om",  "or",  "os",  "vaj", "pa",  "ps",  "adx", "fa",  "fa",  "pi",
-        "mg",  "huw", "phr", "lah", "pl",  "pt",  "bfy", "lcq", "prt", "ps",
-        "pub", "qu",  "qu",  "emx", "rom", "rm",  "ro",  "ro",  "rn",  "ru",
-        "sg",  "sa",  "aqt", "hle", "sr",  "hr",  "isk", "si",  "oyb", "sk",
-        "sk",  "sl",  "se",  "sm",  "sn",  "sd",  "so",  "st",  "es",  "kln",
-        "sq",  "sc",  "sc",  "sr",  "ss",  "sgd", "ulw", "su",  "sw",  "sv",
-        "sw",  "ty",  "ta",  "tt",  "dtp", "te",  "bjp", "tg",  "fil", "th",
-        "tpo", "ola", "oyb", "bo",  "itd", "ras", "ti",  "twm", "weo", "tyj",
-        "kak", "to",  "taj", "tn",  "ts",  "tmh", "tk",  "tr",  "ak",  "ug",
-        "uk",  "del", "wro", "ema", "ur",  "uz",  "uz",  "ve",  "vi",  "vo",
-        "cy",  "wgb", "nol", "nwo", "wa",  "wo",  "cax", "xh",  "acn", "waw",
-        "kpe", "dmw", "suj", "den", "rki", "yi",  "ynq", "yi",  "yrm", "lrr",
-        "mtm", "yo",  "zom", "yug", "zap", "za",  "zh",  "scv", "ms",  "zu",
-        "za",
+      "aas",  "aa",  "ab",  "dz",  "af", "apf", "ami", "jrb",  "ak",  "sq",
+       "sq",  "am",  "ar",  "ar",  "an",  "hy", "snz",  "as", "ktz",  "av",
+       "ae",  "ay",  "ay", "nun",  "az",  "az",  "ba",  "bm",  "eu", "nvo",
+      "bal", "bik",  "be",  "bn", "bcg", "fbl", "bho",  "bi", "drl", "bzc",
+      "ebk",  "bo",  "bs",  "br", "beb",  "bg",  "my", "luy", "bua",  "ca",
+      "rki",  "cs",  "ch",  "ce",  "zh",  "cu",  "cv", "mom", "cmr", "syr",
+      "xch",  "zh",  "kw",  "co", "pij", "quh",  "cr",  "cr",  "cy",  "cs",
+      "dnj",  "da", "njz",  "de", "doi", "mwr", "din", "zza", "dif",  "dv",
+      "dze", "aqd",  "mn", "kzk", "uth", "dwu",  "nl", "dbt",  "dz",  "et",
+       "el", "amq", "man",  "en",  "eo",  "ik",  "et",  "eu",  "ee",  "fo",
+       "fa",  "ak",  "fj",  "fi",  "fr",  "fr",  "fy",  "ff",  "ff", "dev",
+       "om", "wny", "grb",  "ka",  "de", "vaj", "gvr", "esg", "gtu", "aou",
+       "gd",  "ga",  "gl", "kzk",  "gv", "gon",  "el",  "gn", "nyc",  "gn",
+       "gu", "duz", "gba",  "ht",  "ha", "hai", "hmn",  "he",  "hz", "srx",
+       "hi",  "ho", "jal",  "hr",  "hu",  "hy", "opa",  "ig",  "is",  "io",
+       "ii",  "iu",  "iu",  "ie", "ilm", "gal",  "ia",  "id",  "ik",  "is",
+       "it", "eza", "jgk",  "jv", "oyb",  "ja",  "kl",  "kn",  "ks",  "ka",
+       "kr",  "kk", "zkd", "tdf", "ncq", "kml",  "mn",  "km",  "ki",  "rw",
+       "ky",  "ku",  "kr",  "kg", "kok", "kwv",  "kv",  "kg",  "ko", "jkm",
+       "kv", "bmf", "dtp",  "kj",  "ku", "gdj", "yam", "tvd", "kru", "dgl",
+      "dtp", "dtp",  "lo",  "la",  "lv", "bnc", "enl", "raq",  "li",  "ln",
+       "lt", "ngt", "rmx",  "lb",  "lu",  "lg",  "lv",  "mk",  "mh",  "ml",
+       "mi",  "mr",  "ms", "cir", "jbk", "chm",  "mk",  "mg",  "mt", "man",
+      "wnn", "xnt",  "ro",  "mn",  "mi",  "ms", "mry", "raj", "dmw", "vaj",
+       "my", "aog", "mry", "xny",  "na",  "nv", "nru",  "nr", "ekc", "kdz",
+       "nd",  "ng",  "ne",  "nl", "azd", "nrk",  "nn", "nbr", "ngv",  "nb",
+      "dtd",  "no",  "ne", "pij", "bpp",  "ny",  "oc",  "oj",  "oj",  "or",
+       "om",  "or",  "os", "vaj",  "pa",  "ps", "adx",  "fa",  "fa",  "pi",
+       "mg", "huw", "phr", "lah",  "pl",  "pt", "bfy", "lcq", "prt",  "ps",
+      "pub",  "qu",  "qu", "emx", "rom",  "rm",  "ro",  "ro",  "rn",  "ru",
+       "sg",  "sa", "aqt", "hle",  "sr",  "hr", "isk",  "si", "oyb",  "sk",
+       "sk",  "sl",  "se",  "sm",  "sn",  "sd",  "so",  "st",  "es", "kln",
+       "sq",  "sc",  "sc",  "sr",  "ss", "sgd", "ulw",  "su",  "sw",  "sv",
+       "sw",  "ty",  "ta",  "tt", "dtp",  "te", "bjp",  "tg", "fil",  "th",
+      "tpo", "ola", "oyb",  "bo", "itd", "ras",  "ti", "twm", "weo", "tyj",
+      "kak",  "to", "taj",  "tn",  "ts", "tmh",  "tk",  "tr",  "ak",  "ug",
+       "uk", "del", "wro", "ema",  "ur",  "uz",  "uz",  "ve",  "vi",  "vo",
+       "cy", "wgb", "nol", "nwo",  "wa",  "wo", "cax",  "xh", "acn", "waw",
+      "kpe", "dmw", "suj", "den", "rki",  "yi", "ynq",  "yi", "yrm", "lrr",
+      "mtm",  "yo", "zom", "yug", "zap",  "za",  "zh", "scv",  "ms",  "zu",
+       "za",
     };
 
-    if (const char* replacement =
-            SearchReplacement(languages, aliases, language)) {
+    if (const char* replacement = SearchReplacement(languages, aliases, language)) {
       language.set(mozilla::MakeStringSpan(replacement));
       return true;
     }
@@ -237,8 +221,7 @@ bool js::intl::LanguageTag::languageMapping(LanguageSubtag& language) {
 // Language subtags with complex mappings.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-bool js::intl::LanguageTag::complexLanguageMapping(
-    const LanguageSubtag& language) {
+bool mozilla::intl::Locale::complexLanguageMapping(const LanguageSubtag& language) {
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language.span()));
   MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language.span()));
 
@@ -248,7 +231,7 @@ bool js::intl::LanguageTag::complexLanguageMapping(
 
   if (language.length() == 3) {
     static const char languages[6][4] = {
-        "cnr", "drw", "hbs", "prs", "swc", "tnf",
+      "cnr", "drw", "hbs", "prs", "swc", "tnf",
     };
 
     return HasReplacement(languages, language);
@@ -260,7 +243,7 @@ bool js::intl::LanguageTag::complexLanguageMapping(
 // Mappings from script subtags to preferred values.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-bool js::intl::LanguageTag::scriptMapping(ScriptSubtag& script) {
+bool mozilla::intl::Locale::scriptMapping(ScriptSubtag& script) {
   MOZ_ASSERT(IsStructurallyValidScriptTag(script.span()));
   MOZ_ASSERT(IsCanonicallyCasedScriptTag(script.span()));
 
@@ -276,18 +259,20 @@ bool js::intl::LanguageTag::scriptMapping(ScriptSubtag& script) {
 // Mappings from region subtags to preferred values.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-bool js::intl::LanguageTag::regionMapping(RegionSubtag& region) {
+bool mozilla::intl::Locale::regionMapping(RegionSubtag& region) {
   MOZ_ASSERT(IsStructurallyValidRegionTag(region.span()));
   MOZ_ASSERT(IsCanonicallyCasedRegionTag(region.span()));
 
   if (region.length() == 2) {
     static const char regions[23][3] = {
-        "BU", "CS", "CT", "DD", "DY", "FQ", "FX", "HV", "JT", "MI", "NH", "NQ",
-        "PU", "PZ", "QU", "RH", "TP", "UK", "VD", "WK", "YD", "YU", "ZR",
+      "BU", "CS", "CT", "DD", "DY", "FQ", "FX", "HV", "JT", "MI",
+      "NH", "NQ", "PU", "PZ", "QU", "RH", "TP", "UK", "VD", "WK",
+      "YD", "YU", "ZR",
     };
     static const char* aliases[23] = {
-        "MM", "RS", "KI", "DE", "BJ", "AQ", "FR", "BF", "UM", "UM", "VU", "AQ",
-        "UM", "PA", "EU", "ZW", "TL", "GB", "VN", "UM", "YE", "RS", "CD",
+      "MM", "RS", "KI", "DE", "BJ", "AQ", "FR", "BF", "UM", "UM",
+      "VU", "AQ", "UM", "PA", "EU", "ZW", "TL", "GB", "VN", "UM",
+      "YE", "RS", "CD",
     };
 
     if (const char* replacement = SearchReplacement(regions, aliases, region)) {
@@ -299,63 +284,68 @@ bool js::intl::LanguageTag::regionMapping(RegionSubtag& region) {
 
   {
     static const char regions[300][4] = {
-        "004", "008", "010", "012", "016", "020", "024", "028", "031", "032",
-        "036", "040", "044", "048", "050", "051", "052", "056", "060", "062",
-        "064", "068", "070", "072", "074", "076", "084", "086", "090", "092",
-        "096", "100", "104", "108", "112", "116", "120", "124", "132", "136",
-        "140", "144", "148", "152", "156", "158", "162", "166", "170", "174",
-        "175", "178", "180", "184", "188", "191", "192", "196", "203", "204",
-        "208", "212", "214", "218", "222", "226", "230", "231", "232", "233",
-        "234", "238", "239", "242", "246", "248", "249", "250", "254", "258",
-        "260", "262", "266", "268", "270", "275", "276", "278", "280", "288",
-        "292", "296", "300", "304", "308", "312", "316", "320", "324", "328",
-        "332", "334", "336", "340", "344", "348", "352", "356", "360", "364",
-        "368", "372", "376", "380", "384", "388", "392", "398", "400", "404",
-        "408", "410", "414", "417", "418", "422", "426", "428", "430", "434",
-        "438", "440", "442", "446", "450", "454", "458", "462", "466", "470",
-        "474", "478", "480", "484", "492", "496", "498", "499", "500", "504",
-        "508", "512", "516", "520", "524", "528", "531", "533", "534", "535",
-        "540", "548", "554", "558", "562", "566", "570", "574", "578", "580",
-        "581", "583", "584", "585", "586", "591", "598", "600", "604", "608",
-        "612", "616", "620", "624", "626", "630", "634", "638", "642", "643",
-        "646", "652", "654", "659", "660", "662", "663", "666", "670", "674",
-        "678", "682", "686", "688", "690", "694", "702", "703", "704", "705",
-        "706", "710", "716", "720", "724", "728", "729", "732", "736", "740",
-        "744", "748", "752", "756", "760", "762", "764", "768", "772", "776",
-        "780", "784", "788", "792", "795", "796", "798", "800", "804", "807",
-        "818", "826", "830", "831", "832", "833", "834", "840", "850", "854",
-        "858", "860", "862", "876", "882", "886", "887", "891", "894", "958",
-        "959", "960", "962", "963", "964", "965", "966", "967", "968", "969",
-        "970", "971", "972", "973", "974", "975", "976", "977", "978", "979",
-        "980", "981", "982", "983", "984", "985", "986", "987", "988", "989",
-        "990", "991", "992", "993", "994", "995", "996", "997", "998", "999",
+      "004", "008", "010", "012", "016", "020", "024", "028", "031", "032",
+      "036", "040", "044", "048", "050", "051", "052", "056", "060", "062",
+      "064", "068", "070", "072", "074", "076", "084", "086", "090", "092",
+      "096", "100", "104", "108", "112", "116", "120", "124", "132", "136",
+      "140", "144", "148", "152", "156", "158", "162", "166", "170", "174",
+      "175", "178", "180", "184", "188", "191", "192", "196", "203", "204",
+      "208", "212", "214", "218", "222", "226", "230", "231", "232", "233",
+      "234", "238", "239", "242", "246", "248", "249", "250", "254", "258",
+      "260", "262", "266", "268", "270", "275", "276", "278", "280", "288",
+      "292", "296", "300", "304", "308", "312", "316", "320", "324", "328",
+      "332", "334", "336", "340", "344", "348", "352", "356", "360", "364",
+      "368", "372", "376", "380", "384", "388", "392", "398", "400", "404",
+      "408", "410", "414", "417", "418", "422", "426", "428", "430", "434",
+      "438", "440", "442", "446", "450", "454", "458", "462", "466", "470",
+      "474", "478", "480", "484", "492", "496", "498", "499", "500", "504",
+      "508", "512", "516", "520", "524", "528", "531", "533", "534", "535",
+      "540", "548", "554", "558", "562", "566", "570", "574", "578", "580",
+      "581", "583", "584", "585", "586", "591", "598", "600", "604", "608",
+      "612", "616", "620", "624", "626", "630", "634", "638", "642", "643",
+      "646", "652", "654", "659", "660", "662", "663", "666", "670", "674",
+      "678", "682", "686", "688", "690", "694", "702", "703", "704", "705",
+      "706", "710", "716", "720", "724", "728", "729", "732", "736", "740",
+      "744", "748", "752", "756", "760", "762", "764", "768", "772", "776",
+      "780", "784", "788", "792", "795", "796", "798", "800", "804", "807",
+      "818", "826", "830", "831", "832", "833", "834", "840", "850", "854",
+      "858", "860", "862", "876", "882", "886", "887", "891", "894", "958",
+      "959", "960", "962", "963", "964", "965", "966", "967", "968", "969",
+      "970", "971", "972", "973", "974", "975", "976", "977", "978", "979",
+      "980", "981", "982", "983", "984", "985", "986", "987", "988", "989",
+      "990", "991", "992", "993", "994", "995", "996", "997", "998", "999",
     };
     static const char* aliases[300] = {
-        "AF", "AL", "AQ", "DZ", "AS", "AD", "AO", "AG",  "AZ", "AR", "AU", "AT",
-        "BS", "BH", "BD", "AM", "BB", "BE", "BM", "034", "BT", "BO", "BA", "BW",
-        "BV", "BR", "BZ", "IO", "SB", "VG", "BN", "BG",  "MM", "BI", "BY", "KH",
-        "CM", "CA", "CV", "KY", "CF", "LK", "TD", "CL",  "CN", "TW", "CX", "CC",
-        "CO", "KM", "YT", "CG", "CD", "CK", "CR", "HR",  "CU", "CY", "CZ", "BJ",
-        "DK", "DM", "DO", "EC", "SV", "GQ", "ET", "ET",  "ER", "EE", "FO", "FK",
-        "GS", "FJ", "FI", "AX", "FR", "FR", "GF", "PF",  "TF", "DJ", "GA", "GE",
-        "GM", "PS", "DE", "DE", "DE", "GH", "GI", "KI",  "GR", "GL", "GD", "GP",
-        "GU", "GT", "GN", "GY", "HT", "HM", "VA", "HN",  "HK", "HU", "IS", "IN",
-        "ID", "IR", "IQ", "IE", "IL", "IT", "CI", "JM",  "JP", "KZ", "JO", "KE",
-        "KP", "KR", "KW", "KG", "LA", "LB", "LS", "LV",  "LR", "LY", "LI", "LT",
-        "LU", "MO", "MG", "MW", "MY", "MV", "ML", "MT",  "MQ", "MR", "MU", "MX",
-        "MC", "MN", "MD", "ME", "MS", "MA", "MZ", "OM",  "NA", "NR", "NP", "NL",
-        "CW", "AW", "SX", "BQ", "NC", "VU", "NZ", "NI",  "NE", "NG", "NU", "NF",
-        "NO", "MP", "UM", "FM", "MH", "PW", "PK", "PA",  "PG", "PY", "PE", "PH",
-        "PN", "PL", "PT", "GW", "TL", "PR", "QA", "RE",  "RO", "RU", "RW", "BL",
-        "SH", "KN", "AI", "LC", "MF", "PM", "VC", "SM",  "ST", "SA", "SN", "RS",
-        "SC", "SL", "SG", "SK", "VN", "SI", "SO", "ZA",  "ZW", "YE", "ES", "SS",
-        "SD", "EH", "SD", "SR", "SJ", "SZ", "SE", "CH",  "SY", "TJ", "TH", "TG",
-        "TK", "TO", "TT", "AE", "TN", "TR", "TM", "TC",  "TV", "UG", "UA", "MK",
-        "EG", "GB", "JE", "GG", "JE", "IM", "TZ", "US",  "VI", "BF", "UY", "UZ",
-        "VE", "WF", "WS", "YE", "YE", "RS", "ZM", "AA",  "QM", "QN", "QP", "QQ",
-        "QR", "QS", "QT", "EU", "QV", "QW", "QX", "QY",  "QZ", "XA", "XB", "XC",
-        "XD", "XE", "XF", "XG", "XH", "XI", "XJ", "XK",  "XL", "XM", "XN", "XO",
-        "XP", "XQ", "XR", "XS", "XT", "XU", "XV", "XW",  "XX", "XY", "XZ", "ZZ",
+       "AF",  "AL",  "AQ",  "DZ",  "AS",  "AD",  "AO",  "AG",  "AZ",  "AR",
+       "AU",  "AT",  "BS",  "BH",  "BD",  "AM",  "BB",  "BE",  "BM", "034",
+       "BT",  "BO",  "BA",  "BW",  "BV",  "BR",  "BZ",  "IO",  "SB",  "VG",
+       "BN",  "BG",  "MM",  "BI",  "BY",  "KH",  "CM",  "CA",  "CV",  "KY",
+       "CF",  "LK",  "TD",  "CL",  "CN",  "TW",  "CX",  "CC",  "CO",  "KM",
+       "YT",  "CG",  "CD",  "CK",  "CR",  "HR",  "CU",  "CY",  "CZ",  "BJ",
+       "DK",  "DM",  "DO",  "EC",  "SV",  "GQ",  "ET",  "ET",  "ER",  "EE",
+       "FO",  "FK",  "GS",  "FJ",  "FI",  "AX",  "FR",  "FR",  "GF",  "PF",
+       "TF",  "DJ",  "GA",  "GE",  "GM",  "PS",  "DE",  "DE",  "DE",  "GH",
+       "GI",  "KI",  "GR",  "GL",  "GD",  "GP",  "GU",  "GT",  "GN",  "GY",
+       "HT",  "HM",  "VA",  "HN",  "HK",  "HU",  "IS",  "IN",  "ID",  "IR",
+       "IQ",  "IE",  "IL",  "IT",  "CI",  "JM",  "JP",  "KZ",  "JO",  "KE",
+       "KP",  "KR",  "KW",  "KG",  "LA",  "LB",  "LS",  "LV",  "LR",  "LY",
+       "LI",  "LT",  "LU",  "MO",  "MG",  "MW",  "MY",  "MV",  "ML",  "MT",
+       "MQ",  "MR",  "MU",  "MX",  "MC",  "MN",  "MD",  "ME",  "MS",  "MA",
+       "MZ",  "OM",  "NA",  "NR",  "NP",  "NL",  "CW",  "AW",  "SX",  "BQ",
+       "NC",  "VU",  "NZ",  "NI",  "NE",  "NG",  "NU",  "NF",  "NO",  "MP",
+       "UM",  "FM",  "MH",  "PW",  "PK",  "PA",  "PG",  "PY",  "PE",  "PH",
+       "PN",  "PL",  "PT",  "GW",  "TL",  "PR",  "QA",  "RE",  "RO",  "RU",
+       "RW",  "BL",  "SH",  "KN",  "AI",  "LC",  "MF",  "PM",  "VC",  "SM",
+       "ST",  "SA",  "SN",  "RS",  "SC",  "SL",  "SG",  "SK",  "VN",  "SI",
+       "SO",  "ZA",  "ZW",  "YE",  "ES",  "SS",  "SD",  "EH",  "SD",  "SR",
+       "SJ",  "SZ",  "SE",  "CH",  "SY",  "TJ",  "TH",  "TG",  "TK",  "TO",
+       "TT",  "AE",  "TN",  "TR",  "TM",  "TC",  "TV",  "UG",  "UA",  "MK",
+       "EG",  "GB",  "JE",  "GG",  "JE",  "IM",  "TZ",  "US",  "VI",  "BF",
+       "UY",  "UZ",  "VE",  "WF",  "WS",  "YE",  "YE",  "RS",  "ZM",  "AA",
+       "QM",  "QN",  "QP",  "QQ",  "QR",  "QS",  "QT",  "EU",  "QV",  "QW",
+       "QX",  "QY",  "QZ",  "XA",  "XB",  "XC",  "XD",  "XE",  "XF",  "XG",
+       "XH",  "XI",  "XJ",  "XK",  "XL",  "XM",  "XN",  "XO",  "XP",  "XQ",
+       "XR",  "XS",  "XT",  "XU",  "XV",  "XW",  "XX",  "XY",  "XZ",  "ZZ",
     };
 
     if (const char* replacement = SearchReplacement(regions, aliases, region)) {
@@ -369,18 +359,20 @@ bool js::intl::LanguageTag::regionMapping(RegionSubtag& region) {
 // Region subtags with complex mappings.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-bool js::intl::LanguageTag::complexRegionMapping(const RegionSubtag& region) {
+bool mozilla::intl::Locale::complexRegionMapping(const RegionSubtag& region) {
   MOZ_ASSERT(IsStructurallyValidRegionTag(region.span()));
   MOZ_ASSERT(IsCanonicallyCasedRegionTag(region.span()));
 
   if (region.length() == 2) {
-    return region.equalTo("AN") || region.equalTo("NT") ||
-           region.equalTo("PC") || region.equalTo("SU");
+    return region.equalTo("AN") ||
+           region.equalTo("NT") ||
+           region.equalTo("PC") ||
+           region.equalTo("SU");
   }
 
   {
     static const char regions[8][4] = {
-        "172", "200", "530", "532", "536", "582", "810", "890",
+      "172", "200", "530", "532", "536", "582", "810", "890",
     };
 
     return HasReplacement(regions, region);
@@ -390,7 +382,7 @@ bool js::intl::LanguageTag::complexRegionMapping(const RegionSubtag& region) {
 // Language subtags with complex mappings.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-void js::intl::LanguageTag::performComplexLanguageMappings() {
+void mozilla::intl::Locale::performComplexLanguageMappings() {
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language().span()));
   MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
 
@@ -399,18 +391,23 @@ void js::intl::LanguageTag::performComplexLanguageMappings() {
     if (region().missing()) {
       setRegion("ME");
     }
-  } else if (language().equalTo("drw") || language().equalTo("prs") ||
-             language().equalTo("tnf")) {
+  }
+  else if (language().equalTo("drw") ||
+           language().equalTo("prs") ||
+           language().equalTo("tnf")) {
     setLanguage("fa");
     if (region().missing()) {
       setRegion("AF");
     }
-  } else if (language().equalTo("hbs") || language().equalTo("sh")) {
+  }
+  else if (language().equalTo("hbs") ||
+           language().equalTo("sh")) {
     setLanguage("sr");
     if (script().missing()) {
       setScript("Latn");
     }
-  } else if (language().equalTo("swc")) {
+  }
+  else if (language().equalTo("swc")) {
     setLanguage("sw");
     if (region().missing()) {
       setRegion("CD");
@@ -421,7 +418,7 @@ void js::intl::LanguageTag::performComplexLanguageMappings() {
 // Region subtags with complex mappings.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-void js::intl::LanguageTag::performComplexRegionMappings() {
+void mozilla::intl::Locale::performComplexRegionMappings() {
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language().span()));
   MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
   MOZ_ASSERT(IsStructurallyValidRegionTag(region().span()));
@@ -431,139 +428,203 @@ void js::intl::LanguageTag::performComplexRegionMappings() {
     if (language().equalTo("hy") ||
         (language().equalTo("und") && script().equalTo("Armn"))) {
       setRegion("AM");
-    } else if (language().equalTo("az") || language().equalTo("tkr") ||
-               language().equalTo("tly") || language().equalTo("ttt")) {
+    }
+    else if (language().equalTo("az") ||
+             language().equalTo("tkr") ||
+             language().equalTo("tly") ||
+             language().equalTo("ttt")) {
       setRegion("AZ");
-    } else if (language().equalTo("be")) {
+    }
+    else if (language().equalTo("be")) {
       setRegion("BY");
-    } else if (language().equalTo("ab") || language().equalTo("ka") ||
-               (language().equalTo("ku") && script().equalTo("Yezi")) ||
-               language().equalTo("os") ||
-               (language().equalTo("und") && script().equalTo("Geor")) ||
-               (language().equalTo("und") && script().equalTo("Yezi")) ||
-               language().equalTo("xmf")) {
+    }
+    else if (language().equalTo("ab") ||
+             language().equalTo("ka") ||
+             (language().equalTo("ku") && script().equalTo("Yezi")) ||
+             language().equalTo("os") ||
+             (language().equalTo("und") && script().equalTo("Geor")) ||
+             (language().equalTo("und") && script().equalTo("Yezi")) ||
+             language().equalTo("xmf")) {
       setRegion("GE");
-    } else if (language().equalTo("ky")) {
+    }
+    else if (language().equalTo("ky")) {
       setRegion("KG");
-    } else if (language().equalTo("kk") ||
-               (language().equalTo("ug") && script().equalTo("Cyrl"))) {
+    }
+    else if (language().equalTo("kk") ||
+             (language().equalTo("ug") && script().equalTo("Cyrl"))) {
       setRegion("KZ");
-    } else if (language().equalTo("gag")) {
+    }
+    else if (language().equalTo("gag")) {
       setRegion("MD");
-    } else if (language().equalTo("tg")) {
+    }
+    else if (language().equalTo("tg")) {
       setRegion("TJ");
-    } else if (language().equalTo("tk")) {
+    }
+    else if (language().equalTo("tk")) {
       setRegion("TM");
-    } else if (language().equalTo("crh") || language().equalTo("got") ||
-               language().equalTo("ji") || language().equalTo("rue") ||
-               language().equalTo("uk") ||
-               (language().equalTo("und") && script().equalTo("Goth"))) {
+    }
+    else if (language().equalTo("crh") ||
+             language().equalTo("got") ||
+             language().equalTo("ji") ||
+             language().equalTo("rue") ||
+             language().equalTo("uk") ||
+             (language().equalTo("und") && script().equalTo("Goth"))) {
       setRegion("UA");
-    } else if (language().equalTo("kaa") || language().equalTo("sog") ||
-               (language().equalTo("und") && script().equalTo("Chrs")) ||
-               (language().equalTo("und") && script().equalTo("Sogd")) ||
-               (language().equalTo("und") && script().equalTo("Sogo")) ||
-               language().equalTo("uz") || language().equalTo("xco")) {
+    }
+    else if (language().equalTo("kaa") ||
+             language().equalTo("sog") ||
+             (language().equalTo("und") && script().equalTo("Chrs")) ||
+             (language().equalTo("und") && script().equalTo("Sogd")) ||
+             (language().equalTo("und") && script().equalTo("Sogo")) ||
+             language().equalTo("uz") ||
+             language().equalTo("xco")) {
       setRegion("UZ");
-    } else {
+    }
+    else {
       setRegion("RU");
     }
-  } else if (region().equalTo("200")) {
+  }
+  else if (region().equalTo("200")) {
     if (language().equalTo("sk")) {
       setRegion("SK");
-    } else {
+    }
+    else {
       setRegion("CZ");
     }
-  } else if (region().equalTo("530") || region().equalTo("532") ||
-             region().equalTo("AN")) {
+  }
+  else if (region().equalTo("530") ||
+           region().equalTo("532") ||
+           region().equalTo("AN")) {
     if (language().equalTo("vic")) {
       setRegion("SX");
-    } else {
+    }
+    else {
       setRegion("CW");
     }
-  } else if (region().equalTo("536") || region().equalTo("NT")) {
-    if (language().equalTo("akk") || language().equalTo("ckb") ||
+  }
+  else if (region().equalTo("536") ||
+           region().equalTo("NT")) {
+    if (language().equalTo("akk") ||
+        language().equalTo("ckb") ||
         (language().equalTo("ku") && script().equalTo("Arab")) ||
         language().equalTo("syr") ||
         (language().equalTo("und") && script().equalTo("Syrc")) ||
         (language().equalTo("und") && script().equalTo("Xsux"))) {
       setRegion("IQ");
-    } else {
+    }
+    else {
       setRegion("SA");
     }
-  } else if (region().equalTo("582") || region().equalTo("PC")) {
+  }
+  else if (region().equalTo("582") ||
+           region().equalTo("PC")) {
     if (language().equalTo("mh")) {
       setRegion("MH");
-    } else if (language().equalTo("pau")) {
+    }
+    else if (language().equalTo("pau")) {
       setRegion("PW");
-    } else {
+    }
+    else {
       setRegion("FM");
     }
-  } else if (region().equalTo("810") || region().equalTo("SU")) {
+  }
+  else if (region().equalTo("810") ||
+           region().equalTo("SU")) {
     if (language().equalTo("hy") ||
         (language().equalTo("und") && script().equalTo("Armn"))) {
       setRegion("AM");
-    } else if (language().equalTo("az") || language().equalTo("tkr") ||
-               language().equalTo("tly") || language().equalTo("ttt")) {
+    }
+    else if (language().equalTo("az") ||
+             language().equalTo("tkr") ||
+             language().equalTo("tly") ||
+             language().equalTo("ttt")) {
       setRegion("AZ");
-    } else if (language().equalTo("be")) {
+    }
+    else if (language().equalTo("be")) {
       setRegion("BY");
-    } else if (language().equalTo("et") || language().equalTo("vro")) {
+    }
+    else if (language().equalTo("et") ||
+             language().equalTo("vro")) {
       setRegion("EE");
-    } else if (language().equalTo("ab") || language().equalTo("ka") ||
-               (language().equalTo("ku") && script().equalTo("Yezi")) ||
-               language().equalTo("os") ||
-               (language().equalTo("und") && script().equalTo("Geor")) ||
-               (language().equalTo("und") && script().equalTo("Yezi")) ||
-               language().equalTo("xmf")) {
+    }
+    else if (language().equalTo("ab") ||
+             language().equalTo("ka") ||
+             (language().equalTo("ku") && script().equalTo("Yezi")) ||
+             language().equalTo("os") ||
+             (language().equalTo("und") && script().equalTo("Geor")) ||
+             (language().equalTo("und") && script().equalTo("Yezi")) ||
+             language().equalTo("xmf")) {
       setRegion("GE");
-    } else if (language().equalTo("ky")) {
+    }
+    else if (language().equalTo("ky")) {
       setRegion("KG");
-    } else if (language().equalTo("kk") ||
-               (language().equalTo("ug") && script().equalTo("Cyrl"))) {
+    }
+    else if (language().equalTo("kk") ||
+             (language().equalTo("ug") && script().equalTo("Cyrl"))) {
       setRegion("KZ");
-    } else if (language().equalTo("lt") || language().equalTo("sgs")) {
+    }
+    else if (language().equalTo("lt") ||
+             language().equalTo("sgs")) {
       setRegion("LT");
-    } else if (language().equalTo("ltg") || language().equalTo("lv")) {
+    }
+    else if (language().equalTo("ltg") ||
+             language().equalTo("lv")) {
       setRegion("LV");
-    } else if (language().equalTo("gag")) {
+    }
+    else if (language().equalTo("gag")) {
       setRegion("MD");
-    } else if (language().equalTo("tg")) {
+    }
+    else if (language().equalTo("tg")) {
       setRegion("TJ");
-    } else if (language().equalTo("tk")) {
+    }
+    else if (language().equalTo("tk")) {
       setRegion("TM");
-    } else if (language().equalTo("crh") || language().equalTo("got") ||
-               language().equalTo("ji") || language().equalTo("rue") ||
-               language().equalTo("uk") ||
-               (language().equalTo("und") && script().equalTo("Goth"))) {
+    }
+    else if (language().equalTo("crh") ||
+             language().equalTo("got") ||
+             language().equalTo("ji") ||
+             language().equalTo("rue") ||
+             language().equalTo("uk") ||
+             (language().equalTo("und") && script().equalTo("Goth"))) {
       setRegion("UA");
-    } else if (language().equalTo("kaa") || language().equalTo("sog") ||
-               (language().equalTo("und") && script().equalTo("Chrs")) ||
-               (language().equalTo("und") && script().equalTo("Sogd")) ||
-               (language().equalTo("und") && script().equalTo("Sogo")) ||
-               language().equalTo("uz") || language().equalTo("xco")) {
+    }
+    else if (language().equalTo("kaa") ||
+             language().equalTo("sog") ||
+             (language().equalTo("und") && script().equalTo("Chrs")) ||
+             (language().equalTo("und") && script().equalTo("Sogd")) ||
+             (language().equalTo("und") && script().equalTo("Sogo")) ||
+             language().equalTo("uz") ||
+             language().equalTo("xco")) {
       setRegion("UZ");
-    } else {
+    }
+    else {
       setRegion("RU");
     }
-  } else if (region().equalTo("890")) {
+  }
+  else if (region().equalTo("890")) {
     if (language().equalTo("bs")) {
       setRegion("BA");
-    } else if (language().equalTo("hr")) {
+    }
+    else if (language().equalTo("hr")) {
       setRegion("HR");
-    } else if (language().equalTo("mk")) {
+    }
+    else if (language().equalTo("mk")) {
       setRegion("MK");
-    } else if (language().equalTo("sl")) {
+    }
+    else if (language().equalTo("sl")) {
       setRegion("SI");
-    } else {
+    }
+    else {
       setRegion("RS");
     }
   }
 }
 
-static const char* ToCharPointer(const char* str) { return str; }
+static const char* ToCharPointer(const char* str) {
+  return str;
+}
 
-static const char* ToCharPointer(const js::UniqueChars& str) {
+static const char* ToCharPointer(const mozilla::intl::UniqueChars& str) {
   return str.get();
 }
 
@@ -575,7 +636,7 @@ static bool IsLessThan(const T& a, const U& b) {
 // Mappings from variant subtags to preferred values.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-bool js::intl::LanguageTag::performVariantMappings(JSContext* cx) {
+bool mozilla::intl::Locale::performVariantMappings() {
   // The variant subtags need to be sorted for binary search.
   MOZ_ASSERT(std::is_sorted(variants_.begin(), variants_.end(),
                             IsLessThan<decltype(variants_)::ElementType>));
@@ -595,10 +656,7 @@ bool js::intl::LanguageTag::performVariantMappings(JSContext* cx) {
     }
 
     // Insert the preferred variant in sort order.
-    auto preferred = DuplicateString(cx, variant);
-    if (!preferred) {
-      return false;
-    }
+    auto preferred = DuplicateStringToUniqueChars(variant);
     return !!variants_.insert(p, std::move(preferred));
   };
 
@@ -606,25 +664,33 @@ bool js::intl::LanguageTag::performVariantMappings(JSContext* cx) {
     const char* variant = variants_[i].get();
     MOZ_ASSERT(IsCanonicallyCasedVariantTag(mozilla::MakeStringSpan(variant)));
 
-    if (strcmp(variant, "arevela") == 0 || strcmp(variant, "arevmda") == 0 ||
-        strcmp(variant, "bokmal") == 0 || strcmp(variant, "hakka") == 0 ||
-        strcmp(variant, "lojban") == 0 || strcmp(variant, "nynorsk") == 0 ||
-        strcmp(variant, "saaho") == 0 || strcmp(variant, "xiang") == 0) {
+    if (strcmp(variant, "arevela") == 0 ||
+        strcmp(variant, "arevmda") == 0 ||
+        strcmp(variant, "bokmal") == 0 ||
+        strcmp(variant, "hakka") == 0 ||
+        strcmp(variant, "lojban") == 0 ||
+        strcmp(variant, "nynorsk") == 0 ||
+        strcmp(variant, "saaho") == 0 ||
+        strcmp(variant, "xiang") == 0) {
       removeVariantAt(i);
-    } else if (strcmp(variant, "aaland") == 0) {
+    }
+    else if (strcmp(variant, "aaland") == 0) {
       removeVariantAt(i);
       setRegion("AX");
-    } else if (strcmp(variant, "heploc") == 0) {
+    }
+    else if (strcmp(variant, "heploc") == 0) {
       removeVariantAt(i);
       if (!insertVariantSortedIfNotPresent("alalc97")) {
         return false;
       }
-    } else if (strcmp(variant, "polytoni") == 0) {
+    }
+    else if (strcmp(variant, "polytoni") == 0) {
       removeVariantAt(i);
       if (!insertVariantSortedIfNotPresent("polyton")) {
         return false;
       }
-    } else {
+    }
+    else {
       i++;
     }
   }
@@ -634,7 +700,7 @@ bool js::intl::LanguageTag::performVariantMappings(JSContext* cx) {
 // Canonicalize legacy locale identifiers.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-bool js::intl::LanguageTag::updateLegacyMappings(JSContext* cx) {
+bool mozilla::intl::Locale::updateLegacyMappings() {
   // We're mapping legacy tags to non-legacy form here.
   // Other tags remain unchanged.
   //
@@ -660,9 +726,9 @@ bool js::intl::LanguageTag::updateLegacyMappings(JSContext* cx) {
                             IsLessThan<decltype(variants_)::ElementType>));
 
   auto findVariant = [this](const char* variant) {
-    auto* p = std::lower_bound(
-        variants_.begin(), variants_.end(), variant,
-        IsLessThan<decltype(variants_)::ElementType, decltype(variant)>);
+    auto* p = std::lower_bound(variants_.begin(), variants_.end(), variant,
+                               IsLessThan<decltype(variants_)::ElementType,
+                                          decltype(variant)>);
 
     if (p != variants_.end() && strcmp(p->get(), variant) == 0) {
       return p;
@@ -671,9 +737,9 @@ bool js::intl::LanguageTag::updateLegacyMappings(JSContext* cx) {
   };
 
   auto insertVariantSortedIfNotPresent = [&](const char* variant) {
-    auto* p = std::lower_bound(
-        variants_.begin(), variants_.end(), variant,
-        IsLessThan<decltype(variants_)::ElementType, decltype(variant)>);
+    auto* p = std::lower_bound(variants_.begin(), variants_.end(), variant,
+                               IsLessThan<decltype(variants_)::ElementType,
+                                          decltype(variant)>);
 
     // Don't insert the replacement when already present.
     if (p != variants_.end() && strcmp(p->get(), variant) == 0) {
@@ -681,10 +747,7 @@ bool js::intl::LanguageTag::updateLegacyMappings(JSContext* cx) {
     }
 
     // Insert the preferred variant in sort order.
-    auto preferred = DuplicateString(cx, variant);
-    if (!preferred) {
-      return false;
-    }
+    auto preferred = DuplicateStringToUniqueChars(variant);
     return !!variants_.insert(p, std::move(preferred));
   };
 
@@ -718,29 +781,38 @@ bool js::intl::LanguageTag::updateLegacyMappings(JSContext* cx) {
     if (region().present() && signLanguageMapping(language_, region())) {
       region_.set(mozilla::MakeStringSpan(""));
     }
-  } else if (language().equalTo("aa") || language().equalTo("aar")) {
+  }
+  else if (language().equalTo("aa") ||
+           language().equalTo("aar")) {
     if (auto* saaho = findVariant("saaho")) {
       removeVariant(saaho);
       setLanguage("ssy");
     }
-  } else if (language().equalTo("arm") || language().equalTo("hy") ||
-             language().equalTo("hye")) {
+  }
+  else if (language().equalTo("arm") ||
+           language().equalTo("hy") ||
+           language().equalTo("hye")) {
     if (auto* arevmda = findVariant("arevmda")) {
       removeVariant(arevmda);
       setLanguage("hyw");
     }
-  } else if (language().equalTo("art")) {
+  }
+  else if (language().equalTo("art")) {
     if (auto* lojban = findVariant("lojban")) {
       removeVariant(lojban);
       setLanguage("jbo");
     }
-  } else if (language().equalTo("cel")) {
+  }
+  else if (language().equalTo("cel")) {
     if (auto* gaulish = findVariant("gaulish")) {
       removeVariant(gaulish);
       setLanguage("xtg");
     }
-  } else if (language().equalTo("chi") || language().equalTo("cmn") ||
-             language().equalTo("zh") || language().equalTo("zho")) {
+  }
+  else if (language().equalTo("chi") ||
+           language().equalTo("cmn") ||
+           language().equalTo("zh") ||
+           language().equalTo("zho")) {
     if (auto* guoyu = findVariant("guoyu")) {
       if (auto* hakka = findVariant("hakka")) {
         removeVariants(guoyu, hakka);
@@ -758,18 +830,23 @@ bool js::intl::LanguageTag::updateLegacyMappings(JSContext* cx) {
     if (auto* guoyu = findVariant("guoyu")) {
       removeVariant(guoyu);
       setLanguage("zh");
-    } else if (auto* hakka = findVariant("hakka")) {
+    }
+    else if (auto* hakka = findVariant("hakka")) {
       removeVariant(hakka);
       setLanguage("hak");
-    } else if (auto* xiang = findVariant("xiang")) {
+    }
+    else if (auto* xiang = findVariant("xiang")) {
       removeVariant(xiang);
       setLanguage("hsn");
     }
-  } else if (language().equalTo("no") || language().equalTo("nor")) {
+  }
+  else if (language().equalTo("no") ||
+           language().equalTo("nor")) {
     if (auto* bokmal = findVariant("bokmal")) {
       removeVariant(bokmal);
       setLanguage("nb");
-    } else if (auto* nynorsk = findVariant("nynorsk")) {
+    }
+    else if (auto* nynorsk = findVariant("nynorsk")) {
       removeVariant(nynorsk);
       setLanguage("nn");
     }
@@ -781,7 +858,7 @@ bool js::intl::LanguageTag::updateLegacyMappings(JSContext* cx) {
 // Mappings from legacy sign languages.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-bool js::intl::LanguageTag::signLanguageMapping(LanguageSubtag& language,
+bool mozilla::intl::Locale::signLanguageMapping(LanguageSubtag& language,
                                                 const RegionSubtag& region) {
   MOZ_ASSERT(language.equalTo("sgn"));
   MOZ_ASSERT(IsStructurallyValidRegionTag(region.span()));
@@ -789,13 +866,14 @@ bool js::intl::LanguageTag::signLanguageMapping(LanguageSubtag& language,
 
   if (region.length() == 2) {
     static const char regions[22][3] = {
-        "BR", "CO", "DD", "DE", "DK", "ES", "FR", "FX", "GB", "GR", "IE",
-        "IT", "JP", "MX", "NI", "NL", "NO", "PT", "SE", "UK", "US", "ZA",
+      "BR", "CO", "DD", "DE", "DK", "ES", "FR", "FX", "GB", "GR",
+      "IE", "IT", "JP", "MX", "NI", "NL", "NO", "PT", "SE", "UK",
+      "US", "ZA",
     };
     static const char* aliases[22] = {
-        "bzs", "csn", "gsg", "gsg", "dsl", "ssp", "fsl", "fsl",
-        "bfi", "gss", "isg", "ise", "jsl", "mfs", "ncs", "dse",
-        "nsi", "psr", "swl", "bfi", "ase", "sfs",
+      "bzs", "csn", "gsg", "gsg", "dsl", "ssp", "fsl", "fsl", "bfi", "gss",
+      "isg", "ise", "jsl", "mfs", "ncs", "dse", "nsi", "psr", "swl", "bfi",
+      "ase", "sfs",
     };
 
     if (const char* replacement = SearchReplacement(regions, aliases, region)) {
@@ -807,14 +885,14 @@ bool js::intl::LanguageTag::signLanguageMapping(LanguageSubtag& language,
 
   {
     static const char regions[22][4] = {
-        "076", "170", "208", "249", "250", "276", "278", "280",
-        "300", "372", "380", "392", "484", "528", "558", "578",
-        "620", "710", "724", "752", "826", "840",
+      "076", "170", "208", "249", "250", "276", "278", "280", "300", "372",
+      "380", "392", "484", "528", "558", "578", "620", "710", "724", "752",
+      "826", "840",
     };
     static const char* aliases[22] = {
-        "bzs", "csn", "dsl", "fsl", "fsl", "gsg", "gsg", "gsg",
-        "gss", "isg", "ise", "jsl", "mfs", "dse", "ncs", "nsi",
-        "psr", "sfs", "ssp", "swl", "bfi", "ase",
+      "bzs", "csn", "dsl", "fsl", "fsl", "gsg", "gsg", "gsg", "gss", "isg",
+      "ise", "jsl", "mfs", "dse", "ncs", "nsi", "psr", "sfs", "ssp", "swl",
+      "bfi", "ase",
     };
 
     if (const char* replacement = SearchReplacement(regions, aliases, region)) {
@@ -826,16 +904,14 @@ bool js::intl::LanguageTag::signLanguageMapping(LanguageSubtag& language,
 }
 
 template <size_t Length>
-static inline bool IsUnicodeKey(mozilla::Span<const char> key,
-                                const char (&str)[Length]) {
+static inline bool IsUnicodeKey(mozilla::Span<const char> key, const char (&str)[Length]) {
   static_assert(Length == UnicodeKeyLength + 1,
                 "Unicode extension key is two characters long");
   return memcmp(key.data(), str, Length - 1) == 0;
 }
 
 template <size_t Length>
-static inline bool IsUnicodeType(mozilla::Span<const char> type,
-                                 const char (&str)[Length]) {
+static inline bool IsUnicodeType(mozilla::Span<const char> type, const char (&str)[Length]) {
   static_assert(Length > UnicodeKeyLength + 1,
                 "Unicode extension type contains more than two characters");
   return type.size() == (Length - 1) &&
@@ -863,8 +939,9 @@ static int32_t CompareUnicodeType(const char* a, mozilla::Span<const char> b) {
 
 template <size_t Length>
 static inline const char* SearchUnicodeReplacement(
-    const char* (&types)[Length], const char* (&aliases)[Length],
-    mozilla::Span<const char> type) {
+  const char* (&types)[Length], const char* (&aliases)[Length],
+  mozilla::Span<const char> type) {
+
   auto p = std::lower_bound(std::begin(types), std::end(types), type,
                             [](const auto& a, const auto& b) {
                               return CompareUnicodeType(a, b) < 0;
@@ -879,11 +956,10 @@ static inline const char* SearchUnicodeReplacement(
  * Mapping from deprecated BCP 47 Unicode extension types to their preferred
  * values.
  *
- * Spec:
- * https://www.unicode.org/reports/tr35/#Unicode_Locale_Extension_Data_Files
+ * Spec: https://www.unicode.org/reports/tr35/#Unicode_Locale_Extension_Data_Files
  * Spec: https://www.unicode.org/reports/tr35/#t_Extension
  */
-const char* js::intl::LanguageTag::replaceUnicodeExtensionType(
+const char* mozilla::intl::Locale::replaceUnicodeExtensionType(
     mozilla::Span<const char> key, mozilla::Span<const char> type) {
   MOZ_ASSERT(key.size() == UnicodeKeyLength);
   MOZ_ASSERT(IsCanonicallyCasedUnicodeKey(key));
@@ -898,81 +974,93 @@ const char* js::intl::LanguageTag::replaceUnicodeExtensionType(
     if (IsUnicodeType(type, "islamicc")) {
       return "islamic-civil";
     }
-  } else if (IsUnicodeKey(key, "kb") || IsUnicodeKey(key, "kc") ||
-             IsUnicodeKey(key, "kh") || IsUnicodeKey(key, "kk") ||
-             IsUnicodeKey(key, "kn")) {
+  }
+  else if (IsUnicodeKey(key, "kb") ||
+           IsUnicodeKey(key, "kc") ||
+           IsUnicodeKey(key, "kh") ||
+           IsUnicodeKey(key, "kk") ||
+           IsUnicodeKey(key, "kn")) {
     if (IsUnicodeType(type, "yes")) {
       return "true";
     }
-  } else if (IsUnicodeKey(key, "ks")) {
+  }
+  else if (IsUnicodeKey(key, "ks")) {
     if (IsUnicodeType(type, "primary")) {
       return "level1";
     }
     if (IsUnicodeType(type, "tertiary")) {
       return "level3";
     }
-  } else if (IsUnicodeKey(key, "ms")) {
+  }
+  else if (IsUnicodeKey(key, "ms")) {
     if (IsUnicodeType(type, "imperial")) {
       return "uksystem";
     }
-  } else if (IsUnicodeKey(key, "rg") || IsUnicodeKey(key, "sd")) {
+  }
+  else if (IsUnicodeKey(key, "rg") ||
+           IsUnicodeKey(key, "sd")) {
     static const char* types[144] = {
-        "cn11",  "cn12",  "cn13",  "cn14",  "cn15",  "cn21",  "cn22",  "cn23",
-        "cn31",  "cn32",  "cn33",  "cn34",  "cn35",  "cn36",  "cn37",  "cn41",
-        "cn42",  "cn43",  "cn44",  "cn45",  "cn46",  "cn50",  "cn51",  "cn52",
-        "cn53",  "cn54",  "cn61",  "cn62",  "cn63",  "cn64",  "cn65",  "cn71",
-        "cn91",  "cn92",  "cz10a", "cz10b", "cz10c", "cz10d", "cz10e", "cz10f",
-        "cz611", "cz612", "cz613", "cz614", "cz615", "cz621", "cz622", "cz623",
-        "cz624", "cz626", "cz627", "czjc",  "czjm",  "czka",  "czkr",  "czli",
-        "czmo",  "czol",  "czpa",  "czpl",  "czpr",  "czst",  "czus",  "czvy",
-        "czzl",  "fi01",  "fra",   "frb",   "frbl",  "frc",   "frcp",  "frd",
-        "fre",   "frf",   "frg",   "frgf",  "frgp",  "frh",   "fri",   "frj",
-        "frk",   "frl",   "frm",   "frmf",  "frmq",  "frn",   "frnc",  "fro",
-        "frp",   "frpf",  "frpm",  "frq",   "frr",   "frre",  "frs",   "frt",
-        "frtf",  "fru",   "frv",   "frwf",  "fryt",  "laxn",  "lud",   "lug",
-        "lul",   "mrnkc", "nlaw",  "nlcw",  "nlsx",  "no23",  "nzn",   "nzs",
-        "omba",  "omsh",  "plds",  "plkp",  "pllb",  "plld",  "pllu",  "plma",
-        "plmz",  "plop",  "plpd",  "plpk",  "plpm",  "plsk",  "plsl",  "plwn",
-        "plwp",  "plzp",  "shta",  "tteto", "ttrcm", "ttwto", "twkhq", "twtnq",
-        "twtpq", "twtxq", "usas",  "usgu",  "usmp",  "uspr",  "usum",  "usvi",
+         "cn11" ,  "cn12" ,  "cn13" ,  "cn14" ,  "cn15" ,  "cn21" ,  "cn22" ,
+         "cn23" ,  "cn31" ,  "cn32" ,  "cn33" ,  "cn34" ,  "cn35" ,  "cn36" ,
+         "cn37" ,  "cn41" ,  "cn42" ,  "cn43" ,  "cn44" ,  "cn45" ,  "cn46" ,
+         "cn50" ,  "cn51" ,  "cn52" ,  "cn53" ,  "cn54" ,  "cn61" ,  "cn62" ,
+         "cn63" ,  "cn64" ,  "cn65" ,  "cn71" ,  "cn91" ,  "cn92" , "cz10a" ,
+        "cz10b" , "cz10c" , "cz10d" , "cz10e" , "cz10f" , "cz611" , "cz612" ,
+        "cz613" , "cz614" , "cz615" , "cz621" , "cz622" , "cz623" , "cz624" ,
+        "cz626" , "cz627" ,  "czjc" ,  "czjm" ,  "czka" ,  "czkr" ,  "czli" ,
+         "czmo" ,  "czol" ,  "czpa" ,  "czpl" ,  "czpr" ,  "czst" ,  "czus" ,
+         "czvy" ,  "czzl" ,  "fi01" ,  "fra"  ,  "frb"  ,  "frbl" ,  "frc"  ,
+         "frcp" ,  "frd"  ,  "fre"  ,  "frf"  ,  "frg"  ,  "frgf" ,  "frgp" ,
+         "frh"  ,  "fri"  ,  "frj"  ,  "frk"  ,  "frl"  ,  "frm"  ,  "frmf" ,
+         "frmq" ,  "frn"  ,  "frnc" ,  "fro"  ,  "frp"  ,  "frpf" ,  "frpm" ,
+         "frq"  ,  "frr"  ,  "frre" ,  "frs"  ,  "frt"  ,  "frtf" ,  "fru"  ,
+         "frv"  ,  "frwf" ,  "fryt" ,  "laxn" ,  "lud"  ,  "lug"  ,  "lul"  ,
+        "mrnkc" ,  "nlaw" ,  "nlcw" ,  "nlsx" ,  "no23" ,  "nzn"  ,  "nzs"  ,
+         "omba" ,  "omsh" ,  "plds" ,  "plkp" ,  "pllb" ,  "plld" ,  "pllu" ,
+         "plma" ,  "plmz" ,  "plop" ,  "plpd" ,  "plpk" ,  "plpm" ,  "plsk" ,
+         "plsl" ,  "plwn" ,  "plwp" ,  "plzp" ,  "shta" , "tteto" , "ttrcm" ,
+        "ttwto" , "twkhq" , "twtnq" , "twtpq" , "twtxq" ,  "usas" ,  "usgu" ,
+         "usmp" ,  "uspr" ,  "usum" ,  "usvi" ,
     };
     static const char* aliases[144] = {
-        "cnbj",   "cntj",   "cnhe",   "cnsx",   "cnmn",   "cnln",   "cnjl",
-        "cnhl",   "cnsh",   "cnjs",   "cnzj",   "cnah",   "cnfj",   "cnjx",
-        "cnsd",   "cnha",   "cnhb",   "cnhn",   "cngd",   "cngx",   "cnhi",
-        "cncq",   "cnsc",   "cngz",   "cnyn",   "cnxz",   "cnsn",   "cngs",
-        "cnqh",   "cnnx",   "cnxj",   "twzzzz", "hkzzzz", "mozzzz", "cz110",
-        "cz111",  "cz112",  "cz113",  "cz114",  "cz115",  "cz663",  "cz632",
-        "cz633",  "cz634",  "cz635",  "cz641",  "cz642",  "cz643",  "cz644",
-        "cz646",  "cz647",  "cz31",   "cz64",   "cz41",   "cz52",   "cz51",
-        "cz80",   "cz71",   "cz53",   "cz32",   "cz10",   "cz20",   "cz42",
-        "cz63",   "cz72",   "axzzzz", "frges",  "frnaq",  "blzzzz", "frara",
-        "cpzzzz", "frbfc",  "frbre",  "frcvl",  "frges",  "gfzzzz", "gpzzzz",
-        "frcor",  "frbfc",  "fridf",  "frocc",  "frnaq",  "frges",  "mfzzzz",
-        "mqzzzz", "frocc",  "nczzzz", "frhdf",  "frnor",  "pfzzzz", "pmzzzz",
-        "frnor",  "frpdl",  "rezzzz", "frhdf",  "frnaq",  "tfzzzz", "frpac",
-        "frara",  "wfzzzz", "ytzzzz", "laxs",   "lucl",   "luec",   "luca",
-        "mr13",   "awzzzz", "cwzzzz", "sxzzzz", "no50",   "nzauk",  "nzcan",
-        "ombj",   "omsj",   "pl02",   "pl04",   "pl08",   "pl10",   "pl06",
-        "pl12",   "pl14",   "pl16",   "pl20",   "pl18",   "pl22",   "pl26",
-        "pl24",   "pl28",   "pl30",   "pl32",   "tazzzz", "tttob",  "ttmrc",
-        "tttob",  "twkhh",  "twtnn",  "twnwt",  "twtxg",  "aszzzz", "guzzzz",
+         "cnbj" ,  "cntj" ,  "cnhe" ,  "cnsx" ,  "cnmn" ,  "cnln" ,  "cnjl" ,
+         "cnhl" ,  "cnsh" ,  "cnjs" ,  "cnzj" ,  "cnah" ,  "cnfj" ,  "cnjx" ,
+         "cnsd" ,  "cnha" ,  "cnhb" ,  "cnhn" ,  "cngd" ,  "cngx" ,  "cnhi" ,
+         "cncq" ,  "cnsc" ,  "cngz" ,  "cnyn" ,  "cnxz" ,  "cnsn" ,  "cngs" ,
+         "cnqh" ,  "cnnx" ,  "cnxj" , "twzzzz", "hkzzzz", "mozzzz", "cz110" ,
+        "cz111" , "cz112" , "cz113" , "cz114" , "cz115" , "cz663" , "cz632" ,
+        "cz633" , "cz634" , "cz635" , "cz641" , "cz642" , "cz643" , "cz644" ,
+        "cz646" , "cz647" ,  "cz31" ,  "cz64" ,  "cz41" ,  "cz52" ,  "cz51" ,
+         "cz80" ,  "cz71" ,  "cz53" ,  "cz32" ,  "cz10" ,  "cz20" ,  "cz42" ,
+         "cz63" ,  "cz72" , "axzzzz", "frges" , "frnaq" , "blzzzz", "frara" ,
+        "cpzzzz", "frbfc" , "frbre" , "frcvl" , "frges" , "gfzzzz", "gpzzzz",
+        "frcor" , "frbfc" , "fridf" , "frocc" , "frnaq" , "frges" , "mfzzzz",
+        "mqzzzz", "frocc" , "nczzzz", "frhdf" , "frnor" , "pfzzzz", "pmzzzz",
+        "frnor" , "frpdl" , "rezzzz", "frhdf" , "frnaq" , "tfzzzz", "frpac" ,
+        "frara" , "wfzzzz", "ytzzzz",  "laxs" ,  "lucl" ,  "luec" ,  "luca" ,
+         "mr13" , "awzzzz", "cwzzzz", "sxzzzz",  "no50" , "nzauk" , "nzcan" ,
+         "ombj" ,  "omsj" ,  "pl02" ,  "pl04" ,  "pl08" ,  "pl10" ,  "pl06" ,
+         "pl12" ,  "pl14" ,  "pl16" ,  "pl20" ,  "pl18" ,  "pl22" ,  "pl26" ,
+         "pl24" ,  "pl28" ,  "pl30" ,  "pl32" , "tazzzz", "tttob" , "ttmrc" ,
+        "tttob" , "twkhh" , "twtnn" , "twnwt" , "twtxg" , "aszzzz", "guzzzz",
         "mpzzzz", "przzzz", "umzzzz", "vizzzz",
     };
     return SearchUnicodeReplacement(types, aliases, type);
-  } else if (IsUnicodeKey(key, "tz")) {
+  }
+  else if (IsUnicodeKey(key, "tz")) {
     static const char* types[28] = {
-        "aqams",  "cnckg",  "cnhrb",    "cnkhg",    "cuba",  "egypt",
-        "eire",   "est",    "gmt0",     "hongkong", "hst",   "iceland",
-        "iran",   "israel", "jamaica",  "japan",    "libya", "mst",
-        "navajo", "poland", "portugal", "prc",      "roc",   "rok",
-        "turkey", "uct",    "usnavajo", "zulu",
+         "aqams"  ,  "cnckg"  ,  "cnhrb"  ,  "cnkhg"  ,   "cuba"  ,  "egypt"  ,
+          "eire"  ,   "est"   ,   "gmt0"  , "hongkong",   "hst"   , "iceland" ,
+          "iran"  ,  "israel" , "jamaica" ,  "japan"  ,  "libya"  ,   "mst"   ,
+         "navajo" ,  "poland" , "portugal",   "prc"   ,   "roc"   ,   "rok"   ,
+         "turkey" ,   "uct"   , "usnavajo",   "zulu"  ,
     };
     static const char* aliases[28] = {
-        "nzakl",  "cnsha", "cnsha", "cnurc",  "cuhav", "egcai", "iedub",
-        "utcw05", "gmt",   "hkhkg", "utcw10", "isrey", "irthr", "jeruslm",
-        "jmkin",  "jptyo", "lytip", "utcw07", "usden", "plwaw", "ptlis",
-        "cnsha",  "twtpe", "krsel", "trist",  "utc",   "usden", "utc",
+         "nzakl"  ,  "cnsha"  ,  "cnsha"  ,  "cnurc"  ,  "cuhav"  ,  "egcai"  ,
+         "iedub"  ,  "utcw05" ,   "gmt"   ,  "hkhkg"  ,  "utcw10" ,  "isrey"  ,
+         "irthr"  , "jeruslm" ,  "jmkin"  ,  "jptyo"  ,  "lytip"  ,  "utcw07" ,
+         "usden"  ,  "plwaw"  ,  "ptlis"  ,  "cnsha"  ,  "twtpe"  ,  "krsel"  ,
+         "trist"  ,   "utc"   ,  "usden"  ,   "utc"   ,
     };
     return SearchUnicodeReplacement(types, aliases, type);
   }
@@ -980,16 +1068,14 @@ const char* js::intl::LanguageTag::replaceUnicodeExtensionType(
 }
 
 template <size_t Length>
-static inline bool IsTransformKey(mozilla::Span<const char> key,
-                                  const char (&str)[Length]) {
+static inline bool IsTransformKey(mozilla::Span<const char> key, const char (&str)[Length]) {
   static_assert(Length == TransformKeyLength + 1,
                 "Transform extension key is two characters long");
   return memcmp(key.data(), str, Length - 1) == 0;
 }
 
 template <size_t Length>
-static inline bool IsTransformType(mozilla::Span<const char> type,
-                                   const char (&str)[Length]) {
+static inline bool IsTransformType(mozilla::Span<const char> type, const char (&str)[Length]) {
   static_assert(Length > TransformKeyLength + 1,
                 "Transform extension type contains more than two characters");
   return type.size() == (Length - 1) &&
@@ -1000,11 +1086,10 @@ static inline bool IsTransformType(mozilla::Span<const char> type,
  * Mapping from deprecated BCP 47 Transform extension types to their preferred
  * values.
  *
- * Spec:
- * https://www.unicode.org/reports/tr35/#Unicode_Locale_Extension_Data_Files
+ * Spec: https://www.unicode.org/reports/tr35/#Unicode_Locale_Extension_Data_Files
  * Spec: https://www.unicode.org/reports/tr35/#t_Extension
  */
-const char* js::intl::LanguageTag::replaceTransformExtensionType(
+const char* mozilla::intl::Locale::replaceTransformExtensionType(
     mozilla::Span<const char> key, mozilla::Span<const char> type) {
   MOZ_ASSERT(key.size() == TransformKeyLength);
   MOZ_ASSERT(IsCanonicallyCasedTransformKey(key));
@@ -1016,7 +1101,8 @@ const char* js::intl::LanguageTag::replaceTransformExtensionType(
     if (IsTransformType(type, "name")) {
       return "charname";
     }
-  } else if (IsTransformKey(key, "m0")) {
+  }
+  else if (IsTransformKey(key, "m0")) {
     if (IsTransformType(type, "names")) {
       return "prprname";
     }
