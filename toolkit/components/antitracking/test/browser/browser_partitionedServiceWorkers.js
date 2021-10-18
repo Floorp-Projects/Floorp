@@ -69,13 +69,7 @@ PartitionedStorageHelper.runTest(
     win1stParty.sw.postMessage(win3rdParty.location.href);
     let msg = await msgPromise;
 
-    // The service worker will always be partitioned. So, the first party window
-    // won't have control on the third-party window.
-    is(
-      false,
-      msg,
-      "We won't have the 3rd party window controlled regardless of StorageAccess."
-    );
+    is(allowed, msg, "We want to have the 3rd party window controlled.");
   },
 
   async _ => {

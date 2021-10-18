@@ -82,7 +82,6 @@
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StorageAccess.h"
-#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/TaskCategory.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryHistogramEnums.h"
@@ -1851,12 +1850,6 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
     }
   }
 
-  nsCOMPtr<nsIPrincipal> foreignPartitionedPrincipal;
-  nsresult rv = StoragePrincipalHelper::GetPrincipal(
-      this, StoragePrincipalHelper::eForeignPartitionedPrincipal,
-      getter_AddRefs(foreignPartitionedPrincipal));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Verify the final ClientSource principal matches the final document
   // principal.  The ClientChannelHelper handles things like network
   // redirects, but there are other ways the document principal can change.
@@ -1873,8 +1866,7 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
     auto principalOrErr = mClientSource->Info().GetPrincipal();
     nsCOMPtr<nsIPrincipal> clientPrincipal =
         principalOrErr.isOk() ? principalOrErr.unwrap() : nullptr;
-    if (!clientPrincipal ||
-        !clientPrincipal->Equals(foreignPartitionedPrincipal)) {
+    if (!clientPrincipal || !clientPrincipal->Equals(mDoc->NodePrincipal())) {
       mClientSource.reset();
     }
   }
@@ -1898,7 +1890,7 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
   if (!mClientSource) {
     mClientSource = ClientManager::CreateSource(
         ClientType::Window, EventTargetFor(TaskCategory::Other),
-        foreignPartitionedPrincipal);
+        mDoc->NodePrincipal());
     MOZ_DIAGNOSTIC_ASSERT(mClientSource);
     newClientSource = true;
 
@@ -1937,7 +1929,7 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
       mClientSource.reset();
       mClientSource = ClientManager::CreateSource(
           ClientType::Window, EventTargetFor(TaskCategory::Other),
-          foreignPartitionedPrincipal);
+          mDoc->NodePrincipal());
       MOZ_DIAGNOSTIC_ASSERT(mClientSource);
       newClientSource = true;
     }
