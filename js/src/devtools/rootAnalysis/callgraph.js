@@ -37,6 +37,13 @@ var virtualDeclarations = new Map();
 
 var virtualResolutionsSeen = new Set();
 
+var ID = {
+    jscode: 1,
+    anyfunc: 2,
+    nogcfunc: 3,
+    gc: 4,
+};
+
 // map is a map from names to sets of entries.
 function addToNamedSet(map, name, entry)
 {
