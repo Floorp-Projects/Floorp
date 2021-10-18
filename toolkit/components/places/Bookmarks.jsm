@@ -338,6 +338,8 @@ var Bookmarks = Object.freeze({
 
       // If it's a tag, notify bookmark-tags-changed event to all bookmarks for this URL.
       if (isTagging) {
+        const tags = PlacesUtils.tagging.getTagsForURI(NetUtil.newURI(url));
+
         for (let entry of await fetchBookmarksByURL(item, {
           concurrent: true,
         })) {
@@ -348,6 +350,7 @@ var Bookmarks = Object.freeze({
               url,
               guid: entry.guid,
               parentGuid: entry.parentGuid,
+              tags,
               lastModified: entry.lastModified,
               source: item.source,
               isTagging: false,
@@ -916,6 +919,9 @@ var Bookmarks = Object.freeze({
                 { tags: [updatedItem.title] },
                 { concurrent: true }
               )) {
+                const tags = PlacesUtils.tagging.getTagsForURI(
+                  NetUtil.newURI(entry.url)
+                );
                 notifications.push(
                   new PlacesBookmarkTags({
                     id: entry._id,
@@ -923,6 +929,7 @@ var Bookmarks = Object.freeze({
                     url: entry.url,
                     guid: entry.guid,
                     parentGuid: entry.parentGuid,
+                    tags,
                     lastModified: entry.lastModified,
                     source: updatedItem.source,
                     isTagging: false,
@@ -1332,6 +1339,7 @@ var Bookmarks = Object.freeze({
         );
 
         if (isUntagging) {
+          const tags = PlacesUtils.tagging.getTagsForURI(NetUtil.newURI(url));
           for (let entry of await fetchBookmarksByURL(item, {
             concurrent: true,
           })) {
@@ -1342,6 +1350,7 @@ var Bookmarks = Object.freeze({
                 url,
                 guid: entry.guid,
                 parentGuid: entry.parentGuid,
+                tags,
                 lastModified: entry.lastModified,
                 source: options.source,
                 isTagging: false,
@@ -3276,6 +3285,7 @@ var removeFoldersContents = async function(db, folderGuids, options) {
     );
 
     if (isUntagging) {
+      const tags = PlacesUtils.tagging.getTagsForURI(NetUtil.newURI(url));
       for (let entry of await fetchBookmarksByURL(item, true)) {
         notifications.push(
           new PlacesBookmarkTags({
@@ -3284,6 +3294,7 @@ var removeFoldersContents = async function(db, folderGuids, options) {
             url,
             guid: entry.guid,
             parentGuid: entry.parentGuid,
+            tags,
             lastModified: entry.lastModified,
             source,
             isTagging: false,
