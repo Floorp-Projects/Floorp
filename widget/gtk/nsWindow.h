@@ -136,7 +136,6 @@ class nsWindow final : public nsBaseWidget {
   mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() override;
   mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScaleByScreen()
       override;
-  virtual void SetParent(nsIWidget* aNewParent) override;
   virtual void SetModal(bool aModal) override;
   virtual bool IsVisible() const override;
   virtual void ConstrainPosition(bool aAllowSlop, int32_t* aX,
@@ -301,8 +300,6 @@ class nsWindow final : public nsBaseWidget {
                                                 uint8_t* aAlphas,
                                                 int32_t aStride);
   void UpdateTitlebarTransparencyBitmap();
-
-  virtual void ReparentNativeWidget(nsIWidget* aNewParent) override;
 
   virtual nsresult SynthesizeNativeMouseEvent(
       LayoutDeviceIntPoint aPoint, NativeMouseMessage aNativeMessage,
@@ -495,7 +492,6 @@ class nsWindow final : public nsBaseWidget {
 
   void WaylandStartVsync();
   void WaylandStopVsync();
-  void DestroyChildWindows();
   GtkWidget* GetToplevelWidget();
   nsWindow* GetContainerWindow();
   void SetUrgencyHint(GtkWidget* top_window, bool state);
