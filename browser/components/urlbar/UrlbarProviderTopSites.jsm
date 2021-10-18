@@ -282,7 +282,7 @@ class ProviderTopSites extends UrlbarProvider {
           break;
         }
         default:
-          Cu.reportError(`Unknown Top Site type: ${site.type}`);
+          this.logger.error(`Unknown Top Site type: ${site.type}`);
           break;
       }
     }
