@@ -209,9 +209,9 @@ enum class BD_SymbolicAddress : uint32_t {
   TruncF64,
   PreBarrier,
   PostBarrier,
-  WaitI32,
-  WaitI64,
-  Wake,
+  WaitI32, /* WaitI32M32 */
+  WaitI64, /* WaitI64M32 */
+  Wake,    /* WakeM32 */
   Limit
 };
 
