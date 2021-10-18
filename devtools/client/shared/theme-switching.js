@@ -15,7 +15,6 @@
 
   const {
     getTheme,
-    getAutoTheme,
     addThemeObserver,
     removeThemeObserver,
   } = require("devtools/client/shared/theme");
@@ -67,7 +66,7 @@
     // The theme might not be available anymore (e.g. uninstalled)
     // Use the default one.
     if (!newThemeDef) {
-      newThemeDef = gDevTools.getThemeDefinition(getAutoTheme());
+      newThemeDef = gDevTools.getThemeDefinition("light");
     }
 
     // Store the sheets in a WeakMap for access later when the theme gets
