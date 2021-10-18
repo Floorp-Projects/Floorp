@@ -11,6 +11,6 @@ fuzzy(0-5,0-20155) == default-subregion.svg default-subregion-ref.svg
 == intersecting-filter-regions.svg intersecting-filter-regions-ref.svg
 fuzzy-if(!useDrawSnapshot,9-9,5168-5536) fuzzy-if(!useDrawSnapshot&&swgl,7-7,13184-13184) == long-chain.svg simple-chain-ref.svg
 fuzzy-if(!useDrawSnapshot,9-9,5168-5536) fuzzy-if(!useDrawSnapshot&&swgl,7-7,13184-13184) == multiple-primitives-per-filter.svg simple-chain-ref.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-173) fuzzy-if(!useDrawSnapshot,9-9,5128-5494) fuzzy-if(!useDrawSnapshot&&swgl,7-7,12836-12836) == second-filter-uses-SourceAlpha.svg second-filter-uses-SourceAlpha-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-173) fuzzy-if(!useDrawSnapshot||(winWidget&&isCoverageBuild),9-9,5128-5496) fuzzy-if(!useDrawSnapshot&&swgl,7-7,12836-12836) == second-filter-uses-SourceAlpha.svg second-filter-uses-SourceAlpha-ref.svg
 fuzzy-if(!useDrawSnapshot,9-9,5168-5536) fuzzy-if(!useDrawSnapshot&&swgl,7-7,13184-13184) == second-filter-uses-SourceGraphic.svg simple-chain-ref.svg
 == simple-chain.svg simple-chain-ref.svg
