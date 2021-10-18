@@ -168,7 +168,8 @@ bool Module::finishTier2(const LinkData& linkData2,
   // Install the data in the data structures. They will not be visible
   // until commitTier2().
 
-  if (!code().setTier2(std::move(code2), linkData2)) {
+  const CodeTier* borrowedTier2;
+  if (!code().setAndBorrowTier2(std::move(code2), linkData2, &borrowedTier2)) {
     return false;
   }
 
@@ -186,7 +187,7 @@ bool Module::finishTier2(const LinkData& linkData2,
     const MetadataTier& metadataTier1 = metadata(Tier::Baseline);
 
     auto stubs1 = code().codeTier(Tier::Baseline).lazyStubs().lock();
-    auto stubs2 = code().codeTier(Tier::Optimized).lazyStubs().lock();
+    auto stubs2 = borrowedTier2->lazyStubs().lock();
 
     MOZ_ASSERT(stubs2->empty());
 
@@ -204,10 +205,8 @@ bool Module::finishTier2(const LinkData& linkData2,
       }
     }
 
-    const CodeTier& tier2 = code().codeTier(Tier::Optimized);
-
     Maybe<size_t> stub2Index;
-    if (!stubs2->createTier2(funcExportIndices, tier2, &stub2Index)) {
+    if (!stubs2->createTier2(funcExportIndices, *borrowedTier2, &stub2Index)) {
       return false;
     }
 

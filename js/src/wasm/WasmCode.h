@@ -741,8 +741,27 @@ using MutableCode = RefPtr<Code>;
 
 class Code : public ShareableBase<Code> {
   UniqueCodeTier tier1_;
-  mutable UniqueConstCodeTier tier2_;  // Access only when hasTier2() is true
+
+  // [SMDOC] Tier-2 data
+  //
+  // hasTier2_ and tier2_ implement a three-state protocol for broadcasting
+  // tier-2 data; this also amounts to a single-writer/multiple-reader setup.
+  //
+  // Initially hasTier2_ is false and tier2_ is null.
+  //
+  // While hasTier2_ is false, *no* thread may read tier2_, but one thread may
+  // make tier2_ non-null (this will be the tier-2 compiler thread).  That same
+  // thread must then later set hasTier2_ to true to broadcast the tier2_ value
+  // and its availability.  Note that the writing thread may not itself read
+  // tier2_ before setting hasTier2_, in order to simplify reasoning about
+  // global invariants.
+  //
+  // Once hasTier2_ is true, *no* thread may write tier2_ and *no* thread may
+  // read tier2_ without having observed hasTier2_ as true first.  Once
+  // hasTier2_ is true, it stays true.
+  mutable UniqueConstCodeTier tier2_;
   mutable Atomic<bool> hasTier2_;
+
   SharedMetadata metadata_;
   ExclusiveData<CacheableCharsVector> profilingLabels_;
   JumpTables jumpTables_;
@@ -770,7 +789,12 @@ class Code : public ShareableBase<Code> {
   }
   uint32_t getFuncIndex(JSFunction* fun) const;
 
-  bool setTier2(UniqueCodeTier tier2, const LinkData& linkData) const;
+  // Install the tier2 code without committing it.  To maintain the invariant
+  // that tier2_ is never accessed without the tier having been committed, this
+  // returns a pointer to the installed tier that the caller can use for
+  // subsequent operations.
+  bool setAndBorrowTier2(UniqueCodeTier tier2, const LinkData& linkData,
+                         const CodeTier** borrowedTier) const;
   void commitTier2() const;
 
   bool hasTier2() const { return hasTier2_; }
