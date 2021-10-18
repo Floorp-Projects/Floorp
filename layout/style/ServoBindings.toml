@@ -72,6 +72,7 @@ rusty-enums = [
     "mozilla::dom::Document_DocumentTheme",
     "mozilla::dom::Document_Type",
     "mozilla::LookAndFeel_IntID",
+    "mozilla::LookAndFeel_FloatID",
     "nsCSSUnit",
     "nsCSSFontDesc",
     "nsCSSPropertyID",

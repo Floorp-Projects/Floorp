@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ReadbackManagerD3D11.h"
-#include "ReadbackLayer.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/gfx/2D.h"
 

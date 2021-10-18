@@ -1984,10 +1984,8 @@ nsresult nsXULPrototypeScript::InstantiateScript(
 
   JS::CompileOptions options(aCx);
   FillCompileOptions(options);
-  // We don't need setIntroductionType and setFileAndLine here, unlike
-  // nsXULPrototypeScript::Compile.
-  // mStencil already contains the information.
-  aScript.set(JS::InstantiateGlobalStencil(aCx, options, mStencil));
+  JS::InstantiateOptions instantiateOptions(options);
+  aScript.set(JS::InstantiateGlobalStencil(aCx, instantiateOptions, mStencil));
   if (!aScript) {
     JS_ClearPendingException(aCx);
     return NS_ERROR_OUT_OF_MEMORY;

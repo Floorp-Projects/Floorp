@@ -231,12 +231,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1606803
          "race:ipv6_is_present\n"
 
-         // Bug 1606864
-         "race:nsSocketTransport::Close\n"
-         "race:nsSocketTransport::OnSocketDetached\n"
-         "race:nsSocketTransport::OnMsgInputClosed\n"
-         "race:nsSocketTransport::OpenOutputStream\n"
-
          // Bug 1615017
          "race:CacheFileMetadata::SetHash\n"
          "race:CacheFileMetadata::OnDataWritten\n"

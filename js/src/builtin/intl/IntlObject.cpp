@@ -32,6 +32,7 @@
 #include "builtin/intl/PluralRules.h"
 #include "builtin/intl/RelativeTimeFormat.h"
 #include "builtin/intl/SharedIntlData.h"
+#include "builtin/intl/StringAsciiChars.h"
 #include "ds/Sort.h"
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
@@ -260,29 +261,54 @@ bool js::intl_BestAvailableLocale(JSContext* cx, unsigned argc, Value* vp) {
 
 #ifdef DEBUG
   {
-    intl::LanguageTag tag(cx);
-    bool ok;
-    JS_TRY_VAR_OR_RETURN_FALSE(
-        cx, ok, intl::LanguageTagParser::tryParse(cx, locale, tag));
-    MOZ_ASSERT(ok, "locale is a structurally valid language tag");
+    MOZ_ASSERT(StringIsAscii(locale), "language tags are ASCII-only");
+
+    // |locale| is a structurally valid language tag.
+    mozilla::intl::Locale tag;
+
+    using ParserError = mozilla::intl::LocaleParser::ParserError;
+    mozilla::Result<mozilla::Ok, ParserError> parse_result = Ok();
+    {
+      intl::StringAsciiChars chars(locale);
+      if (!chars.init(cx)) {
+        return false;
+      }
+
+      parse_result = mozilla::intl::LocaleParser::tryParse(chars, tag);
+    }
+
+    if (parse_result.isErr()) {
+      MOZ_ASSERT(parse_result.unwrapErr() == ParserError::OutOfMemory,
+                 "locale is a structurally valid language tag");
+
+      intl::ReportInternalError(cx);
+      return false;
+    }
 
     MOZ_ASSERT(!tag.unicodeExtension(),
                "locale must contain no Unicode extensions");
 
-    if (!tag.canonicalize(cx)) {
+    if (auto result = tag.canonicalize(); result.isErr()) {
+      MOZ_ASSERT(
+          result.unwrapErr() !=
+          mozilla::intl::Locale::CanonicalizationError::DuplicateVariant);
+      intl::ReportInternalError(cx);
       return false;
     }
 
-    JSString* tagStr = tag.toString(cx);
+    intl::FormatBuffer<char, intl::INITIAL_CHAR_BUFFER_SIZE> buffer(cx);
+    if (auto result = tag.toString(buffer); result.isErr()) {
+      intl::ReportInternalError(cx, result.unwrapErr());
+      return false;
+    }
+
+    JSLinearString* tagStr = buffer.toString(cx);
     if (!tagStr) {
       return false;
     }
 
-    bool canonical;
-    if (!EqualStrings(cx, locale, tagStr, &canonical)) {
-      return false;
-    }
-    MOZ_ASSERT(canonical, "locale is a canonicalized language tag");
+    MOZ_ASSERT(EqualStrings(locale, tagStr),
+               "locale is a canonicalized language tag");
   }
 #endif
 
@@ -318,39 +344,47 @@ bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
     return false;
   }
 
-  intl::LanguageTag tag(cx);
-  bool ok;
-  JS_TRY_VAR_OR_RETURN_FALSE(
-      cx, ok, intl::LanguageTagParser::tryParse(cx, locale, tag));
+  mozilla::intl::Locale tag;
+  bool canParseLocale = false;
+  if (StringIsAscii(locale)) {
+    intl::StringAsciiChars chars(locale);
+    if (!chars.init(cx)) {
+      return false;
+    }
+
+    // Tell the analysis the |tag.canonicalize()| method can't GC.
+    JS::AutoSuppressGCAnalysis nogc;
+
+    canParseLocale = mozilla::intl::LocaleParser::tryParse(chars, tag).isOk() &&
+                     tag.canonicalize().isOk();
+  }
 
   RootedLinearString candidate(cx);
-  if (!ok) {
+  if (!canParseLocale) {
     candidate = NewStringCopyZ<CanGC>(cx, intl::LastDitchLocale());
     if (!candidate) {
       return false;
     }
   } else {
-    if (!tag.canonicalize(cx)) {
-      return false;
-    }
-
     // The default locale must be in [[AvailableLocales]], and that list must
     // not contain any locales with Unicode extension sequences, so remove any
     // present in the candidate.
     tag.clearUnicodeExtension();
 
-    JSString* canonical = tag.toString(cx);
-    if (!canonical) {
+    intl::FormatBuffer<char, intl::INITIAL_CHAR_BUFFER_SIZE> buffer(cx);
+    if (auto result = tag.toString(buffer); result.isErr()) {
+      intl::ReportInternalError(cx, result.unwrapErr());
       return false;
     }
 
-    candidate = canonical->ensureLinear(cx);
+    candidate = buffer.toString(cx);
     if (!candidate) {
       return false;
     }
 
-    // Certain old-style language tags lack a script code, but in current usage
-    // they *would* include a script code. Map these over to modern forms.
+    // Certain old-style language tags lack a script code, but in current
+    // usage they *would* include a script code. Map these over to modern
+    // forms.
     for (const auto& mapping : js::intl::oldStyleLanguageTagMappings) {
       const char* oldStyle = mapping.oldStyle;
       const char* modernStyle = mapping.modernStyle;
@@ -370,8 +404,8 @@ bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
   // - [[AvailableLocales]] is a List [...]. The list must include the value
   //   returned by the DefaultLocale abstract operation (6.2.4), [...].
   //
-  // That implies we must ignore any candidate which isn't supported by all Intl
-  // service constructors.
+  // That implies we must ignore any candidate which isn't supported by all
+  // Intl service constructors.
 
   RootedLinearString supportedCollator(cx);
   JS_TRY_VAR_OR_RETURN_FALSE(
@@ -387,8 +421,8 @@ bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
 
 #ifdef DEBUG
   // Note: We don't test the supported locales of the remaining Intl service
-  // constructors, because the set of supported locales is exactly equal to the
-  // set of supported locales of Intl.DateTimeFormat.
+  // constructors, because the set of supported locales is exactly equal to
+  // the set of supported locales of Intl.DateTimeFormat.
   for (auto kind :
        {SupportedLocaleKind::DisplayNames, SupportedLocaleKind::ListFormat,
         SupportedLocaleKind::NumberFormat, SupportedLocaleKind::PluralRules,
@@ -558,9 +592,10 @@ static ArrayObject* AvailableCalendars(JSContext* cx) {
   Rooted<StringList> list(cx, StringList(cx));
 
   {
-    // Hazard analysis complains that the mozilla::Result destructor calls a GC
-    // function, which is unsound when returning an unrooted value. Work around
-    // this issue by restricting the lifetime of |keywords| to a separate block.
+    // Hazard analysis complains that the mozilla::Result destructor calls a
+    // GC function, which is unsound when returning an unrooted value. Work
+    // around this issue by restricting the lifetime of |keywords| to a
+    // separate block.
     auto keywords = mozilla::intl::Calendar::GetBcp47KeywordValuesForLocale("");
     if (keywords.isErr()) {
       intl::ReportInternalError(cx, keywords.unwrapErr());
@@ -599,9 +634,10 @@ static ArrayObject* AvailableCollations(JSContext* cx) {
   Rooted<StringList> list(cx, StringList(cx));
 
   {
-    // Hazard analysis complains that the mozilla::Result destructor calls a GC
-    // function, which is unsound when returning an unrooted value. Work around
-    // this issue by restricting the lifetime of |keywords| to a separate block.
+    // Hazard analysis complains that the mozilla::Result destructor calls a
+    // GC function, which is unsound when returning an unrooted value. Work
+    // around this issue by restricting the lifetime of |keywords| to a
+    // separate block.
     auto keywords = mozilla::intl::Collator::GetBcp47KeywordValues();
     if (keywords.isErr()) {
       intl::ReportInternalError(cx, keywords.unwrapErr());
@@ -617,13 +653,15 @@ static ArrayObject* AvailableCollations(JSContext* cx) {
 
   // |ucol_getKeywordValues| returns the possible collations for all installed
   // locales. The root locale is excluded in the list of installed locales, so
-  // we have to explicitly request the available collations of the root locale.
+  // we have to explicitly request the available collations of the root
+  // locale.
   //
   // https://unicode-org.atlassian.net/browse/ICU-21641
   {
-    // Hazard analysis complains that the mozilla::Result destructor calls a GC
-    // function, which is unsound when returning an unrooted value. Work around
-    // this issue by restricting the lifetime of |keywords| to a separate block.
+    // Hazard analysis complains that the mozilla::Result destructor calls a
+    // GC function, which is unsound when returning an unrooted value. Work
+    // around this issue by restricting the lifetime of |keywords| to a
+    // separate block.
     auto keywords = mozilla::intl::Collator::GetBcp47KeywordValuesForLocale("");
     if (keywords.isErr()) {
       intl::ReportInternalError(cx, keywords.unwrapErr());
@@ -677,9 +715,10 @@ static ArrayObject* AvailableCurrencies(JSContext* cx) {
   Rooted<StringList> list(cx, StringList(cx));
 
   {
-    // Hazard analysis complains that the mozilla::Result destructor calls a GC
-    // function, which is unsound when returning an unrooted value. Work around
-    // this issue by restricting the lifetime of |keywords| to a separate block.
+    // Hazard analysis complains that the mozilla::Result destructor calls a
+    // GC function, which is unsound when returning an unrooted value. Work
+    // around this issue by restricting the lifetime of |keywords| to a
+    // separate block.
     auto currencies = mozilla::intl::Currency::GetISOCurrencies();
     if (currencies.isErr()) {
       intl::ReportInternalError(cx, currencies.unwrapErr());
@@ -723,7 +762,8 @@ static ArrayObject* AvailableNumberingSystems(JSContext* cx) {
  * AvailableTimeZones ( )
  */
 static ArrayObject* AvailableTimeZones(JSContext* cx) {
-  // Unsorted list of canonical time zone names, possibly containing duplicates.
+  // Unsorted list of canonical time zone names, possibly containing
+  // duplicates.
   Rooted<StringList> timeZones(cx, StringList(cx));
 
   intl::SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
@@ -740,8 +780,8 @@ static ArrayObject* AvailableTimeZones(JSContext* cx) {
 
     // Canonicalize the time zone before adding it to the result array.
 
-    // Some time zone names are canonicalized differently by ICU -- handle those
-    // first.
+    // Some time zone names are canonicalized differently by ICU -- handle
+    // those first.
     ianaTimeZone.set(nullptr);
     if (!sharedIntlData.tryCanonicalizeTimeZoneConsistentWithIANA(
             cx, validatedTimeZone, &ianaTimeZone)) {

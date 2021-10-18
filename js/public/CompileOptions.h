@@ -52,6 +52,7 @@
 #ifndef js_CompileOptions_h
 #define js_CompileOptions_h
 
+#include "mozilla/Assertions.h"       // MOZ_ASSERT
 #include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
 
 #include <stddef.h>  // size_t
@@ -70,6 +71,8 @@ enum class AsmJSOption : uint8_t {
   DisabledByNoWasmCompiler,
   DisabledByDebugger,
 };
+
+class JS_PUBLIC_API InstantiateOptions;
 
 /**
  * The common base class for the CompileOptions hierarchy.
@@ -114,6 +117,17 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // See also SetFilenameValidationCallback.
   bool skipFilenameValidation_ = false;
 
+  bool hideScriptFromDebugger_ = false;
+
+  // If set, this script will be hidden from the debugger. The requirement
+  // is that once compilation is finished, a call to UpdateDebugMetadata will
+  // be made, which will update the SSO with the appropiate debug metadata,
+  // and expose the script to the debugger (if hideScriptFromDebugger_ isn't
+  // set)
+  bool deferDebugMetadata_ = false;
+
+  friend class JS_PUBLIC_API InstantiateOptions;
+
  public:
   // POD options.
   bool selfHostingMode = false;
@@ -123,17 +137,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool discardSource = false;
   bool sourceIsLazy = false;
   bool allowHTMLComments = true;
-  bool hideScriptFromDebugger = false;
-
-  // If set, this script will be hidden from the debugger. The requirement
-  // is that once compilation is finished, a call to UpdateDebugMetadata will
-  // be made, which will update the SSO with the appropiate debug metadata,
-  // and expose the script to the debugger (if hideScriptFromDebugger isn't set)
-  bool deferDebugMetadata = false;
-
-  bool hideFromNewScriptInitial() const {
-    return deferDebugMetadata || hideScriptFromDebugger;
-  }
 
   bool nonSyntacticScope = false;
   bool privateClassFields = false;
@@ -196,7 +199,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool mutedErrors() const { return mutedErrors_; }
   bool forceFullParse() const { return forceFullParse_; }
   bool forceStrictMode() const { return forceStrictMode_; }
-  bool skipFilenameValidation() const { return skipFilenameValidation_; }
   bool sourcePragmas() const { return sourcePragmas_; }
   const char* filename() const { return filename_; }
   const char* introducerFilename() const { return introducerFilename_; }
@@ -391,8 +393,13 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     return *this;
   }
 
-  CompileOptions& setdeferDebugMetadata(bool v = true) {
-    deferDebugMetadata = v;
+  CompileOptions& setDeferDebugMetadata(bool v = true) {
+    deferDebugMetadata_ = v;
+    return *this;
+  }
+
+  CompileOptions& setHideScriptFromDebugger(bool v = true) {
+    hideScriptFromDebugger_ = v;
     return *this;
   }
 
@@ -437,6 +444,45 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
 
   CompileOptions(const CompileOptions& rhs) = delete;
   CompileOptions& operator=(const CompileOptions& rhs) = delete;
+};
+
+/**
+ * Subset of CompileOptions fields used while instantiating Stencils.
+ */
+class JS_PUBLIC_API InstantiateOptions {
+ public:
+  bool skipFilenameValidation = false;
+  bool hideScriptFromDebugger = false;
+  bool deferDebugMetadata = false;
+
+  InstantiateOptions() = default;
+
+  explicit InstantiateOptions(const ReadOnlyCompileOptions& options)
+      : skipFilenameValidation(options.skipFilenameValidation_),
+        hideScriptFromDebugger(options.hideScriptFromDebugger_),
+        deferDebugMetadata(options.deferDebugMetadata_) {}
+
+  void copyTo(CompileOptions& options) const {
+    options.skipFilenameValidation_ = skipFilenameValidation;
+    options.hideScriptFromDebugger_ = hideScriptFromDebugger;
+    options.deferDebugMetadata_ = deferDebugMetadata;
+  }
+
+  bool hideFromNewScriptInitial() const {
+    return deferDebugMetadata || hideScriptFromDebugger;
+  }
+
+#ifdef DEBUG
+  // Assert that all fields have default value.
+  //
+  // This can be used when instantiation is performed as separate step than
+  // compile-to-stencil, and CompileOptions isn't available there.
+  void assertDefault() const {
+    MOZ_ASSERT(skipFilenameValidation == false);
+    MOZ_ASSERT(hideScriptFromDebugger == false);
+    MOZ_ASSERT(deferDebugMetadata == false);
+  }
+#endif
 };
 
 }  // namespace JS

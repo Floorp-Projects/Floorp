@@ -13,8 +13,8 @@
 
 #include <algorithm>
 
-#include "frontend/BytecodeCompilation.h"
-#include "frontend/BytecodeCompiler.h"
+#include "frontend/BytecodeCompilation.h"  // frontend::{CompileGlobalScriptToExtensibleStencil, FireOnNewScript, FireOnNewScripts}
+#include "frontend/BytecodeCompiler.h"  // frontend::ParseModuleToExtensibleStencil
 #include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil, CompilationInput, CompilationGCOutput, BorrowingCompilationStencil}
 #include "frontend/ParserAtom.h"          // frontend::ParserAtomsTable
 #include "gc/GC.h"                        // gc::MergeRealms
@@ -2066,7 +2066,8 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
     for (auto& sourceObject : parseTask->sourceObjects) {
       RootedScriptSourceObject sso(cx, sourceObject);
 
-      if (!ScriptSourceObject::initFromOptions(cx, sso, parseTask->options)) {
+      const JS::InstantiateOptions instantiateOptions(parseTask->options);
+      if (!ScriptSourceObject::initFromOptions(cx, sso, instantiateOptions)) {
         return nullptr;
       }
 
@@ -2191,9 +2192,8 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
 
     // The Debugger only needs to be told about the topmost script that was
     // compiled.
-    if (!parseTask->options.hideFromNewScriptInitial()) {
-      DebugAPI::onNewScript(cx, script);
-    }
+    const JS::InstantiateOptions instantiateOptions(parseTask->options);
+    frontend::FireOnNewScript(cx, instantiateOptions, script);
   } else {
     MOZ_ASSERT(parseTask->stencil_.get() ||
                parseTask->extensibleStencil_.get());

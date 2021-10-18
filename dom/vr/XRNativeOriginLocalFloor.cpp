@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/StaticPrefs_dom.h"
 #include "XRNativeOriginLocalFloor.h"
 #include "VRDisplayClient.h"
 
@@ -15,13 +16,11 @@ XRNativeOriginLocalFloor::XRNativeOriginLocalFloor(
     : mDisplay(aDisplay), mInitialPositionValid(false) {
   MOZ_ASSERT(aDisplay);
 
-  // To avoid fingerprinting, we offset the floor height by 5cm.
-  // This will always result in the floor being lower than the
+  // To avoid fingerprinting, we offset the floor height.
+  // This should result in the floor being higher than the
   // real floor in order to avoid breaking content that expects
   // you to pick objects up off the floor.
-  //
-  // TODO (Bug 1616394) - Convert this constant to a pref.
-  const double kFloorFuzz = 0.05f;  // Meters
+  const double kFloorFuzz = StaticPrefs::dom_vr_webxr_quantization();  // Meters
   mFloorRandom = double(rand()) / double(RAND_MAX) * kFloorFuzz;
 }
 

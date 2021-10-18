@@ -14,7 +14,7 @@
 #include "mozilla/intl/MozLocale.h"
 
 using mozilla::intl::LineBreaker;
-using mozilla::intl::Locale;
+using mozilla::intl::MozLocale;
 
 nsLineBreaker::nsLineBreaker()
     : mCurrentWordLanguage(nullptr),
@@ -471,7 +471,7 @@ void nsLineBreaker::UpdateCurrentWordLanguage(nsAtom* aHyphenationLanguage) {
     mScriptIsChineseOrJapanese = false;
   } else {
     if (aHyphenationLanguage && !mCurrentWordLanguage) {
-      Locale loc = Locale(nsAtomCString(aHyphenationLanguage));
+      MozLocale loc = MozLocale(nsAtomCString(aHyphenationLanguage));
       if (loc.GetScript().IsEmpty()) {
         loc.Maximize();
       }

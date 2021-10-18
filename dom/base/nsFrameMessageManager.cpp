@@ -1202,14 +1202,9 @@ void nsMessageManagerScriptExecutor::LoadScriptInternal(
   if (stencil) {
     JS::CompileOptions options(cx);
     FillCompileOptionsForCachedStencil(options);
-
-    if (JS::StencilCanLazilyParse(stencil)) {
-      // See TryCacheLoadAndCompileScript.
-      options.setSourceIsLazy(false);
-    }
-
+    JS::InstantiateOptions instantiateOptions(options);
     JS::Rooted<JSScript*> script(
-        cx, JS::InstantiateGlobalStencil(cx, options, stencil));
+        cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil));
 
     if (script) {
       if (aRunInUniqueScope) {

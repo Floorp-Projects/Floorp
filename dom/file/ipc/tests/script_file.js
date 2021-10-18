@@ -14,7 +14,7 @@ addMessageListener("file.open", function(e) {
   outStream.init(
     testFile,
     0x02 | 0x08 | 0x20, // write, create, truncate
-    0666,
+    0o666,
     0
   );
 
@@ -41,7 +41,7 @@ addMessageListener("emptyfile.open", function(e) {
   outStream.init(
     testFile,
     0x02 | 0x08 | 0x20, // write, create, truncate
-    0666,
+    0o666,
     0
   );
 

@@ -301,7 +301,7 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
     options.setIsRunOnce(true)
         .setNoScriptRval(false)
         .setMutedErrors(mutedErrors)
-        .setdeferDebugMetadata();
+        .setDeferDebugMetadata();
 
     RootedScript introScript(cx);
 
@@ -342,8 +342,9 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
     }
 
     RootedValue undefValue(cx);
-    if (!JS::UpdateDebugMetadata(cx, script, options, undefValue, nullptr,
-                                 introScript, maybeScript)) {
+    JS::InstantiateOptions instantiateOptions(options);
+    if (!JS::UpdateDebugMetadata(cx, script, instantiateOptions, undefValue,
+                                 nullptr, introScript, maybeScript)) {
       return false;
     }
 

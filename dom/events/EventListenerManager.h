@@ -407,10 +407,15 @@ class EventListenerManager final : public EventListenerManagerBase {
   bool HasMutationListeners();
 
   /**
-   * Allows us to quickly determine whether we have unload or beforeunload
-   * listeners registered.
+   * Allows us to quickly determine whether we have unload listeners registered.
    */
   bool HasUnloadListeners();
+
+  /**
+   * Allows us to quickly determine whether we have beforeunload listeners
+   * registered.
+   */
+  bool HasBeforeUnloadListeners();
 
   /**
    * Returns the mutation bits depending on which mutation listeners are

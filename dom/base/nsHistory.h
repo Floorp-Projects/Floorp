@@ -45,7 +45,7 @@ class nsHistory final : public nsISupports, public nsWrapperCache {
                             mozilla::ErrorResult& aRv);
   void GetState(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
                 mozilla::ErrorResult& aRv) const;
-  void Go(int32_t aDelta, mozilla::dom::CallerType aCallerType,
+  void Go(int32_t aDelta, nsIPrincipal& aSubjectPrincipal,
           mozilla::ErrorResult& aRv);
   void Back(mozilla::dom::CallerType aCallerType, mozilla::ErrorResult& aRv);
   void Forward(mozilla::dom::CallerType aCallerType, mozilla::ErrorResult& aRv);

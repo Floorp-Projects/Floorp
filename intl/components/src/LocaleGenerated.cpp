@@ -13,39 +13,36 @@
 #include <string>
 #include <type_traits>
 
-#include "builtin/intl/LanguageTag.h"
-#include "util/Text.h"
-#include "vm/JSContext.h"
+#include "mozilla/intl/Locale.h"
 
-using namespace js::intl::LanguageTagLimits;
+using namespace mozilla::intl::LanguageTagLimits;
 
 template <size_t Length, size_t TagLength, size_t SubtagLength>
 static inline bool HasReplacement(
     const char (&subtags)[Length][TagLength],
-    const js::intl::LanguageTagSubtag<SubtagLength>& subtag) {
+    const mozilla::intl::LanguageTagSubtag<SubtagLength>& subtag) {
   MOZ_ASSERT(subtag.length() == TagLength - 1,
              "subtag must have the same length as the list of subtags");
 
   const char* ptr = subtag.span().data();
   return std::binary_search(std::begin(subtags), std::end(subtags), ptr,
                             [](const char* a, const char* b) {
-    return memcmp(a, b, TagLength - 1) < 0;
-  });
+                              return memcmp(a, b, TagLength - 1) < 0;
+                            });
 }
 
 template <size_t Length, size_t TagLength, size_t SubtagLength>
 static inline const char* SearchReplacement(
-    const char (&subtags)[Length][TagLength],
-    const char* (&aliases)[Length],
-    const js::intl::LanguageTagSubtag<SubtagLength>& subtag) {
+    const char (&subtags)[Length][TagLength], const char* (&aliases)[Length],
+    const mozilla::intl::LanguageTagSubtag<SubtagLength>& subtag) {
   MOZ_ASSERT(subtag.length() == TagLength - 1,
              "subtag must have the same length as the list of subtags");
 
   const char* ptr = subtag.span().data();
   auto p = std::lower_bound(std::begin(subtags), std::end(subtags), ptr,
                             [](const char* a, const char* b) {
-    return memcmp(a, b, TagLength - 1) < 0;
-  });
+                              return memcmp(a, b, TagLength - 1) < 0;
+                            });
   if (p != std::end(subtags) && memcmp(*p, ptr, TagLength - 1) == 0) {
     return aliases[std::distance(std::begin(subtags), p)];
   }
@@ -62,32 +59,23 @@ static bool IsAsciiLowercaseAlphanumericOrDash(char c) {
 }
 
 static bool IsCanonicallyCasedLanguageTag(mozilla::Span<const char> span) {
-  // Tell the analysis the |std::all_of| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
-  return std::all_of(span.begin(), span.end(), mozilla::IsAsciiLowercaseAlpha<char>);
+  return std::all_of(span.begin(), span.end(),
+                     mozilla::IsAsciiLowercaseAlpha<char>);
 }
 
 static bool IsCanonicallyCasedScriptTag(mozilla::Span<const char> span) {
-  // Tell the analysis the |std::all_of| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
   return mozilla::IsAsciiUppercaseAlpha(span[0]) &&
-         std::all_of(span.begin() + 1, span.end(), mozilla::IsAsciiLowercaseAlpha<char>);
+         std::all_of(span.begin() + 1, span.end(),
+                     mozilla::IsAsciiLowercaseAlpha<char>);
 }
 
 static bool IsCanonicallyCasedRegionTag(mozilla::Span<const char> span) {
-  // Tell the analysis the |std::all_of| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
-  return std::all_of(span.begin(), span.end(), mozilla::IsAsciiUppercaseAlpha<char>) ||
+  return std::all_of(span.begin(), span.end(),
+                     mozilla::IsAsciiUppercaseAlpha<char>) ||
          std::all_of(span.begin(), span.end(), mozilla::IsAsciiDigit<char>);
 }
 
 static bool IsCanonicallyCasedVariantTag(mozilla::Span<const char> span) {
-  // Tell the analysis the |std::all_of| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
   return std::all_of(span.begin(), span.end(), IsAsciiLowercaseAlphanumeric);
 }
 
@@ -96,7 +84,8 @@ static bool IsCanonicallyCasedUnicodeKey(mozilla::Span<const char> key) {
 }
 
 static bool IsCanonicallyCasedUnicodeType(mozilla::Span<const char> type) {
-  return std::all_of(type.begin(), type.end(), IsAsciiLowercaseAlphanumericOrDash);
+  return std::all_of(type.begin(), type.end(),
+                     IsAsciiLowercaseAlphanumericOrDash);
 }
 
 static bool IsCanonicallyCasedTransformKey(mozilla::Span<const char> key) {
@@ -104,14 +93,15 @@ static bool IsCanonicallyCasedTransformKey(mozilla::Span<const char> key) {
 }
 
 static bool IsCanonicallyCasedTransformType(mozilla::Span<const char> type) {
-  return std::all_of(type.begin(), type.end(), IsAsciiLowercaseAlphanumericOrDash);
+  return std::all_of(type.begin(), type.end(),
+                     IsAsciiLowercaseAlphanumericOrDash);
 }
 #endif
 
 // Mappings from language subtags to preferred values.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-bool js::intl::LanguageTag::languageMapping(LanguageSubtag& language) {
+bool mozilla::intl::Locale::languageMapping(LanguageSubtag& language) {
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language.span()));
   MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language.span()));
 
@@ -231,7 +221,7 @@ bool js::intl::LanguageTag::languageMapping(LanguageSubtag& language) {
 // Language subtags with complex mappings.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-bool js::intl::LanguageTag::complexLanguageMapping(const LanguageSubtag& language) {
+bool mozilla::intl::Locale::complexLanguageMapping(const LanguageSubtag& language) {
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language.span()));
   MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language.span()));
 
@@ -253,7 +243,7 @@ bool js::intl::LanguageTag::complexLanguageMapping(const LanguageSubtag& languag
 // Mappings from script subtags to preferred values.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-bool js::intl::LanguageTag::scriptMapping(ScriptSubtag& script) {
+bool mozilla::intl::Locale::scriptMapping(ScriptSubtag& script) {
   MOZ_ASSERT(IsStructurallyValidScriptTag(script.span()));
   MOZ_ASSERT(IsCanonicallyCasedScriptTag(script.span()));
 
@@ -269,7 +259,7 @@ bool js::intl::LanguageTag::scriptMapping(ScriptSubtag& script) {
 // Mappings from region subtags to preferred values.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-bool js::intl::LanguageTag::regionMapping(RegionSubtag& region) {
+bool mozilla::intl::Locale::regionMapping(RegionSubtag& region) {
   MOZ_ASSERT(IsStructurallyValidRegionTag(region.span()));
   MOZ_ASSERT(IsCanonicallyCasedRegionTag(region.span()));
 
@@ -369,7 +359,7 @@ bool js::intl::LanguageTag::regionMapping(RegionSubtag& region) {
 // Region subtags with complex mappings.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-bool js::intl::LanguageTag::complexRegionMapping(const RegionSubtag& region) {
+bool mozilla::intl::Locale::complexRegionMapping(const RegionSubtag& region) {
   MOZ_ASSERT(IsStructurallyValidRegionTag(region.span()));
   MOZ_ASSERT(IsCanonicallyCasedRegionTag(region.span()));
 
@@ -392,7 +382,7 @@ bool js::intl::LanguageTag::complexRegionMapping(const RegionSubtag& region) {
 // Language subtags with complex mappings.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-void js::intl::LanguageTag::performComplexLanguageMappings() {
+void mozilla::intl::Locale::performComplexLanguageMappings() {
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language().span()));
   MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
 
@@ -428,7 +418,7 @@ void js::intl::LanguageTag::performComplexLanguageMappings() {
 // Region subtags with complex mappings.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-void js::intl::LanguageTag::performComplexRegionMappings() {
+void mozilla::intl::Locale::performComplexRegionMappings() {
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language().span()));
   MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
   MOZ_ASSERT(IsStructurallyValidRegionTag(region().span()));
@@ -634,7 +624,7 @@ static const char* ToCharPointer(const char* str) {
   return str;
 }
 
-static const char* ToCharPointer(const js::UniqueChars& str) {
+static const char* ToCharPointer(const mozilla::intl::UniqueChars& str) {
   return str.get();
 }
 
@@ -646,7 +636,7 @@ static bool IsLessThan(const T& a, const U& b) {
 // Mappings from variant subtags to preferred values.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-bool js::intl::LanguageTag::performVariantMappings(JSContext* cx) {
+bool mozilla::intl::Locale::performVariantMappings() {
   // The variant subtags need to be sorted for binary search.
   MOZ_ASSERT(std::is_sorted(variants_.begin(), variants_.end(),
                             IsLessThan<decltype(variants_)::ElementType>));
@@ -656,9 +646,9 @@ bool js::intl::LanguageTag::performVariantMappings(JSContext* cx) {
   };
 
   auto insertVariantSortedIfNotPresent = [&](const char* variant) {
-    auto* p = std::lower_bound(variants_.begin(), variants_.end(), variant,
-                               IsLessThan<decltype(variants_)::ElementType,
-                                          decltype(variant)>);
+    auto* p = std::lower_bound(
+        variants_.begin(), variants_.end(), variant,
+        IsLessThan<decltype(variants_)::ElementType, decltype(variant)>);
 
     // Don't insert the replacement when already present.
     if (p != variants_.end() && strcmp(p->get(), variant) == 0) {
@@ -666,14 +656,11 @@ bool js::intl::LanguageTag::performVariantMappings(JSContext* cx) {
     }
 
     // Insert the preferred variant in sort order.
-    auto preferred = DuplicateString(cx, variant);
-    if (!preferred) {
-      return false;
-    }
+    auto preferred = DuplicateStringToUniqueChars(variant);
     return !!variants_.insert(p, std::move(preferred));
   };
 
-  for (size_t i = 0; i < variants_.length(); ) {
+  for (size_t i = 0; i < variants_.length();) {
     const char* variant = variants_[i].get();
     MOZ_ASSERT(IsCanonicallyCasedVariantTag(mozilla::MakeStringSpan(variant)));
 
@@ -713,7 +700,7 @@ bool js::intl::LanguageTag::performVariantMappings(JSContext* cx) {
 // Canonicalize legacy locale identifiers.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-bool js::intl::LanguageTag::updateLegacyMappings(JSContext* cx) {
+bool mozilla::intl::Locale::updateLegacyMappings() {
   // We're mapping legacy tags to non-legacy form here.
   // Other tags remain unchanged.
   //
@@ -728,8 +715,10 @@ bool js::intl::LanguageTag::updateLegacyMappings(JSContext* cx) {
   }
 
   for ([[maybe_unused]] const auto& variant : variants()) {
-    MOZ_ASSERT(IsStructurallyValidVariantTag(mozilla::MakeStringSpan(variant.get())));
-    MOZ_ASSERT(IsCanonicallyCasedVariantTag(mozilla::MakeStringSpan(variant.get())));
+    MOZ_ASSERT(
+        IsStructurallyValidVariantTag(mozilla::MakeStringSpan(variant.get())));
+    MOZ_ASSERT(
+        IsCanonicallyCasedVariantTag(mozilla::MakeStringSpan(variant.get())));
   }
 
   // The variant subtags need to be sorted for binary search.
@@ -758,10 +747,7 @@ bool js::intl::LanguageTag::updateLegacyMappings(JSContext* cx) {
     }
 
     // Insert the preferred variant in sort order.
-    auto preferred = DuplicateString(cx, variant);
-    if (!preferred) {
-      return false;
-    }
+    auto preferred = DuplicateStringToUniqueChars(variant);
     return !!variants_.insert(p, std::move(preferred));
   };
 
@@ -872,7 +858,7 @@ bool js::intl::LanguageTag::updateLegacyMappings(JSContext* cx) {
 // Mappings from legacy sign languages.
 // Derived from CLDR Supplemental Data, version 39.
 // https://unicode.org/Public/cldr/39/core.zip
-bool js::intl::LanguageTag::signLanguageMapping(LanguageSubtag& language,
+bool mozilla::intl::Locale::signLanguageMapping(LanguageSubtag& language,
                                                 const RegionSubtag& region) {
   MOZ_ASSERT(language.equalTo("sgn"));
   MOZ_ASSERT(IsStructurallyValidRegionTag(region.span()));
@@ -918,16 +904,14 @@ bool js::intl::LanguageTag::signLanguageMapping(LanguageSubtag& language,
 }
 
 template <size_t Length>
-static inline bool IsUnicodeKey(
-  mozilla::Span<const char> key, const char (&str)[Length]) {
+static inline bool IsUnicodeKey(mozilla::Span<const char> key, const char (&str)[Length]) {
   static_assert(Length == UnicodeKeyLength + 1,
                 "Unicode extension key is two characters long");
   return memcmp(key.data(), str, Length - 1) == 0;
 }
 
 template <size_t Length>
-static inline bool IsUnicodeType(
-  mozilla::Span<const char> type, const char (&str)[Length]) {
+static inline bool IsUnicodeType(mozilla::Span<const char> type, const char (&str)[Length]) {
   static_assert(Length > UnicodeKeyLength + 1,
                 "Unicode extension type contains more than two characters");
   return type.size() == (Length - 1) &&
@@ -960,8 +944,8 @@ static inline const char* SearchUnicodeReplacement(
 
   auto p = std::lower_bound(std::begin(types), std::end(types), type,
                             [](const auto& a, const auto& b) {
-    return CompareUnicodeType(a, b) < 0;
-  });
+                              return CompareUnicodeType(a, b) < 0;
+                            });
   if (p != std::end(types) && CompareUnicodeType(*p, type) == 0) {
     return aliases[std::distance(std::begin(types), p)];
   }
@@ -975,7 +959,7 @@ static inline const char* SearchUnicodeReplacement(
  * Spec: https://www.unicode.org/reports/tr35/#Unicode_Locale_Extension_Data_Files
  * Spec: https://www.unicode.org/reports/tr35/#t_Extension
  */
-const char* js::intl::LanguageTag::replaceUnicodeExtensionType(
+const char* mozilla::intl::Locale::replaceUnicodeExtensionType(
     mozilla::Span<const char> key, mozilla::Span<const char> type) {
   MOZ_ASSERT(key.size() == UnicodeKeyLength);
   MOZ_ASSERT(IsCanonicallyCasedUnicodeKey(key));
@@ -1016,67 +1000,67 @@ const char* js::intl::LanguageTag::replaceUnicodeExtensionType(
   else if (IsUnicodeKey(key, "rg") ||
            IsUnicodeKey(key, "sd")) {
     static const char* types[144] = {
-        "cn11",   "cn12",   "cn13",   "cn14",   "cn15",   "cn21",   "cn22",
-        "cn23",   "cn31",   "cn32",   "cn33",   "cn34",   "cn35",   "cn36",
-        "cn37",   "cn41",   "cn42",   "cn43",   "cn44",   "cn45",   "cn46",
-        "cn50",   "cn51",   "cn52",   "cn53",   "cn54",   "cn61",   "cn62",
-        "cn63",   "cn64",   "cn65",   "cn71",   "cn91",   "cn92",  "cz10a",
-       "cz10b",  "cz10c",  "cz10d",  "cz10e",  "cz10f",  "cz611",  "cz612",
-       "cz613",  "cz614",  "cz615",  "cz621",  "cz622",  "cz623",  "cz624",
-       "cz626",  "cz627",   "czjc",   "czjm",   "czka",   "czkr",   "czli",
-        "czmo",   "czol",   "czpa",   "czpl",   "czpr",   "czst",   "czus",
-        "czvy",   "czzl",   "fi01",    "fra",    "frb",   "frbl",    "frc",
-        "frcp",    "frd",    "fre",    "frf",    "frg",   "frgf",   "frgp",
-         "frh",    "fri",    "frj",    "frk",    "frl",    "frm",   "frmf",
-        "frmq",    "frn",   "frnc",    "fro",    "frp",   "frpf",   "frpm",
-         "frq",    "frr",   "frre",    "frs",    "frt",   "frtf",    "fru",
-         "frv",   "frwf",   "fryt",   "laxn",    "lud",    "lug",    "lul",
-       "mrnkc",   "nlaw",   "nlcw",   "nlsx",   "no23",    "nzn",    "nzs",
-        "omba",   "omsh",   "plds",   "plkp",   "pllb",   "plld",   "pllu",
-        "plma",   "plmz",   "plop",   "plpd",   "plpk",   "plpm",   "plsk",
-        "plsl",   "plwn",   "plwp",   "plzp",   "shta",  "tteto",  "ttrcm",
-       "ttwto",  "twkhq",  "twtnq",  "twtpq",  "twtxq",   "usas",   "usgu",
-        "usmp",   "uspr",   "usum",   "usvi",
+         "cn11" ,  "cn12" ,  "cn13" ,  "cn14" ,  "cn15" ,  "cn21" ,  "cn22" ,
+         "cn23" ,  "cn31" ,  "cn32" ,  "cn33" ,  "cn34" ,  "cn35" ,  "cn36" ,
+         "cn37" ,  "cn41" ,  "cn42" ,  "cn43" ,  "cn44" ,  "cn45" ,  "cn46" ,
+         "cn50" ,  "cn51" ,  "cn52" ,  "cn53" ,  "cn54" ,  "cn61" ,  "cn62" ,
+         "cn63" ,  "cn64" ,  "cn65" ,  "cn71" ,  "cn91" ,  "cn92" , "cz10a" ,
+        "cz10b" , "cz10c" , "cz10d" , "cz10e" , "cz10f" , "cz611" , "cz612" ,
+        "cz613" , "cz614" , "cz615" , "cz621" , "cz622" , "cz623" , "cz624" ,
+        "cz626" , "cz627" ,  "czjc" ,  "czjm" ,  "czka" ,  "czkr" ,  "czli" ,
+         "czmo" ,  "czol" ,  "czpa" ,  "czpl" ,  "czpr" ,  "czst" ,  "czus" ,
+         "czvy" ,  "czzl" ,  "fi01" ,  "fra"  ,  "frb"  ,  "frbl" ,  "frc"  ,
+         "frcp" ,  "frd"  ,  "fre"  ,  "frf"  ,  "frg"  ,  "frgf" ,  "frgp" ,
+         "frh"  ,  "fri"  ,  "frj"  ,  "frk"  ,  "frl"  ,  "frm"  ,  "frmf" ,
+         "frmq" ,  "frn"  ,  "frnc" ,  "fro"  ,  "frp"  ,  "frpf" ,  "frpm" ,
+         "frq"  ,  "frr"  ,  "frre" ,  "frs"  ,  "frt"  ,  "frtf" ,  "fru"  ,
+         "frv"  ,  "frwf" ,  "fryt" ,  "laxn" ,  "lud"  ,  "lug"  ,  "lul"  ,
+        "mrnkc" ,  "nlaw" ,  "nlcw" ,  "nlsx" ,  "no23" ,  "nzn"  ,  "nzs"  ,
+         "omba" ,  "omsh" ,  "plds" ,  "plkp" ,  "pllb" ,  "plld" ,  "pllu" ,
+         "plma" ,  "plmz" ,  "plop" ,  "plpd" ,  "plpk" ,  "plpm" ,  "plsk" ,
+         "plsl" ,  "plwn" ,  "plwp" ,  "plzp" ,  "shta" , "tteto" , "ttrcm" ,
+        "ttwto" , "twkhq" , "twtnq" , "twtpq" , "twtxq" ,  "usas" ,  "usgu" ,
+         "usmp" ,  "uspr" ,  "usum" ,  "usvi" ,
     };
     static const char* aliases[144] = {
-        "cnbj",   "cntj",   "cnhe",   "cnsx",   "cnmn",   "cnln",   "cnjl",
-        "cnhl",   "cnsh",   "cnjs",   "cnzj",   "cnah",   "cnfj",   "cnjx",
-        "cnsd",   "cnha",   "cnhb",   "cnhn",   "cngd",   "cngx",   "cnhi",
-        "cncq",   "cnsc",   "cngz",   "cnyn",   "cnxz",   "cnsn",   "cngs",
-        "cnqh",   "cnnx",   "cnxj", "twzzzz", "hkzzzz", "mozzzz",  "cz110",
-       "cz111",  "cz112",  "cz113",  "cz114",  "cz115",  "cz663",  "cz632",
-       "cz633",  "cz634",  "cz635",  "cz641",  "cz642",  "cz643",  "cz644",
-       "cz646",  "cz647",   "cz31",   "cz64",   "cz41",   "cz52",   "cz51",
-        "cz80",   "cz71",   "cz53",   "cz32",   "cz10",   "cz20",   "cz42",
-        "cz63",   "cz72", "axzzzz",  "frges",  "frnaq", "blzzzz",  "frara",
-      "cpzzzz",  "frbfc",  "frbre",  "frcvl",  "frges", "gfzzzz", "gpzzzz",
-       "frcor",  "frbfc",  "fridf",  "frocc",  "frnaq",  "frges", "mfzzzz",
-      "mqzzzz",  "frocc", "nczzzz",  "frhdf",  "frnor", "pfzzzz", "pmzzzz",
-       "frnor",  "frpdl", "rezzzz",  "frhdf",  "frnaq", "tfzzzz",  "frpac",
-       "frara", "wfzzzz", "ytzzzz",   "laxs",   "lucl",   "luec",   "luca",
-        "mr13", "awzzzz", "cwzzzz", "sxzzzz",   "no50",  "nzauk",  "nzcan",
-        "ombj",   "omsj",   "pl02",   "pl04",   "pl08",   "pl10",   "pl06",
-        "pl12",   "pl14",   "pl16",   "pl20",   "pl18",   "pl22",   "pl26",
-        "pl24",   "pl28",   "pl30",   "pl32", "tazzzz",  "tttob",  "ttmrc",
-       "tttob",  "twkhh",  "twtnn",  "twnwt",  "twtxg", "aszzzz", "guzzzz",
-      "mpzzzz", "przzzz", "umzzzz", "vizzzz",
+         "cnbj" ,  "cntj" ,  "cnhe" ,  "cnsx" ,  "cnmn" ,  "cnln" ,  "cnjl" ,
+         "cnhl" ,  "cnsh" ,  "cnjs" ,  "cnzj" ,  "cnah" ,  "cnfj" ,  "cnjx" ,
+         "cnsd" ,  "cnha" ,  "cnhb" ,  "cnhn" ,  "cngd" ,  "cngx" ,  "cnhi" ,
+         "cncq" ,  "cnsc" ,  "cngz" ,  "cnyn" ,  "cnxz" ,  "cnsn" ,  "cngs" ,
+         "cnqh" ,  "cnnx" ,  "cnxj" , "twzzzz", "hkzzzz", "mozzzz", "cz110" ,
+        "cz111" , "cz112" , "cz113" , "cz114" , "cz115" , "cz663" , "cz632" ,
+        "cz633" , "cz634" , "cz635" , "cz641" , "cz642" , "cz643" , "cz644" ,
+        "cz646" , "cz647" ,  "cz31" ,  "cz64" ,  "cz41" ,  "cz52" ,  "cz51" ,
+         "cz80" ,  "cz71" ,  "cz53" ,  "cz32" ,  "cz10" ,  "cz20" ,  "cz42" ,
+         "cz63" ,  "cz72" , "axzzzz", "frges" , "frnaq" , "blzzzz", "frara" ,
+        "cpzzzz", "frbfc" , "frbre" , "frcvl" , "frges" , "gfzzzz", "gpzzzz",
+        "frcor" , "frbfc" , "fridf" , "frocc" , "frnaq" , "frges" , "mfzzzz",
+        "mqzzzz", "frocc" , "nczzzz", "frhdf" , "frnor" , "pfzzzz", "pmzzzz",
+        "frnor" , "frpdl" , "rezzzz", "frhdf" , "frnaq" , "tfzzzz", "frpac" ,
+        "frara" , "wfzzzz", "ytzzzz",  "laxs" ,  "lucl" ,  "luec" ,  "luca" ,
+         "mr13" , "awzzzz", "cwzzzz", "sxzzzz",  "no50" , "nzauk" , "nzcan" ,
+         "ombj" ,  "omsj" ,  "pl02" ,  "pl04" ,  "pl08" ,  "pl10" ,  "pl06" ,
+         "pl12" ,  "pl14" ,  "pl16" ,  "pl20" ,  "pl18" ,  "pl22" ,  "pl26" ,
+         "pl24" ,  "pl28" ,  "pl30" ,  "pl32" , "tazzzz", "tttob" , "ttmrc" ,
+        "tttob" , "twkhh" , "twtnn" , "twnwt" , "twtxg" , "aszzzz", "guzzzz",
+        "mpzzzz", "przzzz", "umzzzz", "vizzzz",
     };
     return SearchUnicodeReplacement(types, aliases, type);
   }
   else if (IsUnicodeKey(key, "tz")) {
     static const char* types[28] = {
-         "aqams",    "cnckg",    "cnhrb",    "cnkhg",     "cuba",    "egypt",
-          "eire",      "est",     "gmt0", "hongkong",      "hst",  "iceland",
-          "iran",   "israel",  "jamaica",    "japan",    "libya",      "mst",
-        "navajo",   "poland", "portugal",      "prc",      "roc",      "rok",
-        "turkey",      "uct", "usnavajo",     "zulu",
+         "aqams"  ,  "cnckg"  ,  "cnhrb"  ,  "cnkhg"  ,   "cuba"  ,  "egypt"  ,
+          "eire"  ,   "est"   ,   "gmt0"  , "hongkong",   "hst"   , "iceland" ,
+          "iran"  ,  "israel" , "jamaica" ,  "japan"  ,  "libya"  ,   "mst"   ,
+         "navajo" ,  "poland" , "portugal",   "prc"   ,   "roc"   ,   "rok"   ,
+         "turkey" ,   "uct"   , "usnavajo",   "zulu"  ,
     };
     static const char* aliases[28] = {
-         "nzakl",    "cnsha",    "cnsha",    "cnurc",    "cuhav",    "egcai",
-         "iedub",   "utcw05",      "gmt",    "hkhkg",   "utcw10",    "isrey",
-         "irthr",  "jeruslm",    "jmkin",    "jptyo",    "lytip",   "utcw07",
-         "usden",    "plwaw",    "ptlis",    "cnsha",    "twtpe",    "krsel",
-         "trist",      "utc",    "usden",      "utc",
+         "nzakl"  ,  "cnsha"  ,  "cnsha"  ,  "cnurc"  ,  "cuhav"  ,  "egcai"  ,
+         "iedub"  ,  "utcw05" ,   "gmt"   ,  "hkhkg"  ,  "utcw10" ,  "isrey"  ,
+         "irthr"  , "jeruslm" ,  "jmkin"  ,  "jptyo"  ,  "lytip"  ,  "utcw07" ,
+         "usden"  ,  "plwaw"  ,  "ptlis"  ,  "cnsha"  ,  "twtpe"  ,  "krsel"  ,
+         "trist"  ,   "utc"   ,  "usden"  ,   "utc"   ,
     };
     return SearchUnicodeReplacement(types, aliases, type);
   }
@@ -1084,16 +1068,14 @@ const char* js::intl::LanguageTag::replaceUnicodeExtensionType(
 }
 
 template <size_t Length>
-static inline bool IsTransformKey(
-  mozilla::Span<const char> key, const char (&str)[Length]) {
+static inline bool IsTransformKey(mozilla::Span<const char> key, const char (&str)[Length]) {
   static_assert(Length == TransformKeyLength + 1,
                 "Transform extension key is two characters long");
   return memcmp(key.data(), str, Length - 1) == 0;
 }
 
 template <size_t Length>
-static inline bool IsTransformType(
-  mozilla::Span<const char> type, const char (&str)[Length]) {
+static inline bool IsTransformType(mozilla::Span<const char> type, const char (&str)[Length]) {
   static_assert(Length > TransformKeyLength + 1,
                 "Transform extension type contains more than two characters");
   return type.size() == (Length - 1) &&
@@ -1107,7 +1089,7 @@ static inline bool IsTransformType(
  * Spec: https://www.unicode.org/reports/tr35/#Unicode_Locale_Extension_Data_Files
  * Spec: https://www.unicode.org/reports/tr35/#t_Extension
  */
-const char* js::intl::LanguageTag::replaceTransformExtensionType(
+const char* mozilla::intl::Locale::replaceTransformExtensionType(
     mozilla::Span<const char> key, mozilla::Span<const char> type) {
   MOZ_ASSERT(key.size() == TransformKeyLength);
   MOZ_ASSERT(IsCanonicallyCasedTransformKey(key));

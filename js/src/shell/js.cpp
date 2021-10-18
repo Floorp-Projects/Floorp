@@ -2298,7 +2298,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
 
   options.setIntroductionType("js shell evaluate")
       .setFileAndLine("@evaluate", 1)
-      .setdeferDebugMetadata();
+      .setDeferDebugMetadata();
 
   options.borrowBuffer = true;
 
@@ -2497,7 +2497,8 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
           return false;
         }
 
-        script = JS::InstantiateGlobalStencil(cx, options, stencil);
+        JS::InstantiateOptions instantiateOptions(options);
+        script = JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil);
         if (!script) {
           return false;
         }
@@ -2548,7 +2549,8 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    if (!JS::UpdateDebugMetadata(cx, script, options, privateValue,
+    JS::InstantiateOptions instantiateOptions(options);
+    if (!JS::UpdateDebugMetadata(cx, script, instantiateOptions, privateValue,
                                  elementAttributeName, nullptr, nullptr)) {
       return false;
     }
@@ -5334,7 +5336,7 @@ static bool Compile(JSContext* cx, unsigned argc, Value* vp) {
       .setFileAndLine("<string>", 1)
       .setIsRunOnce(true)
       .setNoScriptRval(true)
-      .setdeferDebugMetadata();
+      .setDeferDebugMetadata();
   RootedValue privateValue(cx);
   RootedString elementAttributeName(cx);
 
@@ -5365,7 +5367,8 @@ static bool Compile(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!JS::UpdateDebugMetadata(cx, script, options, privateValue,
+  JS::InstantiateOptions instantiateOptions(options);
+  if (!JS::UpdateDebugMetadata(cx, script, instantiateOptions, privateValue,
                                elementAttributeName, nullptr, nullptr)) {
     return false;
   }
@@ -6227,7 +6230,7 @@ static bool OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp) {
   CompileOptions options(cx);
   options.setIntroductionType("js shell offThreadCompileScript")
       .setFileAndLine("<string>", 1)
-      .setdeferDebugMetadata();
+      .setDeferDebugMetadata();
 
   if (args.length() >= 2) {
     if (args[1].isPrimitive()) {
@@ -6340,8 +6343,10 @@ static bool runOffThreadScript(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   CompileOptions dummyOptions(cx);
-  if (!JS::UpdateDebugMetadata(cx, script, dummyOptions, privateValue,
-                               elementAttributeName, nullptr, nullptr)) {
+  JS::InstantiateOptions dummyInstantiateOptions(dummyOptions);
+  if (!JS::UpdateDebugMetadata(cx, script, dummyInstantiateOptions,
+                               privateValue, elementAttributeName, nullptr,
+                               nullptr)) {
     return false;
   }
 
@@ -6370,7 +6375,7 @@ static bool OffThreadCompileToStencil(JSContext* cx, unsigned argc, Value* vp) {
   CompileOptions options(cx);
   options.setIntroductionType("js shell offThreadCompileToStencil")
       .setFileAndLine("<string>", 1)
-      .setdeferDebugMetadata();
+      .setDeferDebugMetadata();
 
   if (args.length() >= 2) {
     if (args[1].isPrimitive()) {

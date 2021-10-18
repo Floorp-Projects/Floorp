@@ -567,7 +567,7 @@ class InnerViewTable {
   void sweep();
   void sweepAfterMinorGC();
 
-  bool needsSweep() const { return map.needsSweep(); }
+  bool empty() const { return map.empty(); }
 
   bool needsSweepAfterMinorGC() const {
     return !nurseryKeys.empty() || !nurseryKeysValid;
