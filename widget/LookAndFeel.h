@@ -254,12 +254,6 @@ class LookAndFeel {
 
     /*
      * A boolean value indicating whether client-side decorations should
-     * have transparent background.
-     */
-    GTKCSDTransparentBackground,
-
-    /*
-     * A boolean value indicating whether client-side decorations should
      * contain a minimize button.
      */
     GTKCSDMinimizeButton,

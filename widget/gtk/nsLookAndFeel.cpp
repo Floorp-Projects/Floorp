@@ -805,15 +805,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       EnsureInit();
       aResult = mCSDCloseButton;
       break;
-    case IntID::GTKCSDTransparentBackground: {
-      // Enable transparent titlebar corners for titlebar mode.
-      GdkScreen* screen = gdk_screen_get_default();
-      aResult = gdk_screen_is_composited(screen)
-                    ? (nsWindow::GtkWindowDecoration() !=
-                       nsWindow::GTK_DECORATION_NONE)
-                    : false;
-      break;
-    }
     case IntID::GTKCSDReversedPlacement:
       EnsureInit();
       aResult = mCSDReversedPlacement;
