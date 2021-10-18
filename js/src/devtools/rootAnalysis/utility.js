@@ -289,7 +289,56 @@ function addToKeyedList(collection, key, entry)
     return collection[key];
 }
 
+function addToMappedList(map, key, entry)
+{
+    if (!map.has(key))
+        map.set(key, []);
+    map.get(key).push(entry);
+    return map.get(key);
+}
+
 function loadTypeInfo(filename)
 {
     return JSON.parse(os.file.readFile(filename));
+}
+
+// Given the range `first` .. `last`, break it down into `count` batches and
+// return the start of the (1-based) `num` batch.
+function batchStart(num, count, first, last) {
+  const N = (last - first) + 1;
+  return Math.floor((num - 1) / count * N) + first;
+}
+
+// As above, but return the last value in the (1-based) `num` batch.
+function batchLast(num, count, first, last) {
+  const N = (last - first) + 1;
+  return Math.floor(num / count * N) + first - 1;
+}
+
+// Debugging tool. See usage below.
+function PropertyTracer(traced_prop, check) {
+    return {
+        matches(prop, value) {
+            if (prop != traced_prop)
+                return false;
+            if ('value' in check)
+                return value == check.value;
+            return true;
+        },
+
+        // Also called when defining a property.
+        set(obj, prop, value) {
+            if (this.matches(prop, value))
+                debugger;
+            return Reflect.set(...arguments);
+        },
+    };
+}
+
+// Usage: var myobj = traced({}, 'name', {value: 'Bob'})
+//
+// This will execute a `debugger;` statement when myobj['name'] is defined or
+// set to 'Bob'.
+function traced(obj, traced_prop, check) {
+  return new Proxy(obj, PropertyTracer(traced_prop, check));
 }

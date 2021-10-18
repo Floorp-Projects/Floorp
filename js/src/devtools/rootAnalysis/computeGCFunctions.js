@@ -9,24 +9,43 @@ loadRelativeToScript('utility.js');
 loadRelativeToScript('annotations.js');
 loadRelativeToScript('loadCallgraph.js');
 
+function usage() {
+  throw "Usage: computeGCFunctions.js <rawcalls1.txt> <rawcalls2.txt>... --outputs <out:callgraph.txt> <out:gcFunctions.txt> <out:gcFunctions.lst> <out:gcEdges.txt> <out:limitedFunctions.lst>";
+}
+
 if (typeof scriptArgs[0] != 'string')
-    throw "Usage: computeGCFunctions.js <callgraph.txt> <out:gcFunctions.txt> <out:gcFunctions.lst> <out:gcEdges.txt> <out:limitedFunctions.lst>";
+  usage();
 
 var start = "Time: " + new Date;
 
-var callgraph_filename = scriptArgs[0];
-var gcFunctions_filename = scriptArgs[1] || "gcFunctions.txt";
-var gcFunctionsList_filename = scriptArgs[2] || "gcFunctions.lst";
-var gcEdges_filename = scriptArgs[3] || "gcEdges.txt";
+var rawcalls_filenames = [];
+while (scriptArgs.length) {
+  const arg = scriptArgs.shift();
+  if (arg == '--outputs')
+    break;
+  rawcalls_filenames.push(arg);
+}
+if (scriptArgs.length == 0)
+  usage();
+
+var callgraph_filename            = scriptArgs[0] || "callgraph.txt";
+var gcFunctions_filename          = scriptArgs[1] || "gcFunctions.txt";
+var gcFunctionsList_filename      = scriptArgs[2] || "gcFunctions.lst";
+var gcEdges_filename              = scriptArgs[3] || "gcEdges.txt";
 var limitedFunctionsList_filename = scriptArgs[4] || "limitedFunctions.lst";
 
-var gcFunctions = loadCallgraph(callgraph_filename);
+var {
+  gcFunctions,
+  functions,
+  calleesOf,
+  limitedFunctions
+} = loadCallgraph(rawcalls_filenames);
 
 printErr("Writing " + gcFunctions_filename);
 redirect(gcFunctions_filename);
 
 for (var name in gcFunctions) {
-    for (const readable of (readableNames[name] || [name])) {
+    for (let readable of (functions.readableName[name] || [name])) {
         print("");
         const fullname = (name == readable) ? name : name + "$" + readable;
         print("GC Function: " + fullname);
@@ -35,8 +54,8 @@ for (var name in gcFunctions) {
             current = gcFunctions[current];
             if (current === 'internal')
                 ; // Hit the end
-            else if (current in readableNames)
-                print("    " + readableNames[current][0]);
+            else if (current in functions.readableName)
+                print("    " + functions.readableName[current][0]);
             else
                 print("    " + current);
         } while (current in gcFunctions);
@@ -46,8 +65,8 @@ for (var name in gcFunctions) {
 printErr("Writing " + gcFunctionsList_filename);
 redirect(gcFunctionsList_filename);
 for (var name in gcFunctions) {
-    if (name in readableNames) {
-        for (var readable of readableNames[name])
+    if (name in functions.readableName) {
+        for (var readable of functions.readableName[name])
             print(name + "$" + readable);
     } else {
         print(name);
@@ -75,3 +94,7 @@ for (var block in gcEdges) {
 printErr("Writing " + limitedFunctionsList_filename);
 redirect(limitedFunctionsList_filename);
 print(JSON.stringify(limitedFunctions, null, 4));
+
+printErr("Writing " + callgraph_filename);
+redirect(callgraph_filename);
+saveCallgraph(functions, calleesOf);
