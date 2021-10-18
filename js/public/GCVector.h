@@ -182,7 +182,10 @@ class GCVector {
     return !empty();
   }
 
-  bool needsSweep() const { return !this->empty(); }
+  bool needsSweep() {
+    sweep();
+    return this->empty();
+  }
 
   void sweep() {
     T* src = begin();
