@@ -419,6 +419,14 @@ async function openContextMenuInSidebar(selector = "body") {
     contentAreaContextMenu,
     "popupshown"
   );
+
+  // Wait for the layout to be flushed, otherwise this test may
+  // fail intermittently if synthesizeMouseAtCenter is being called
+  // while the sidebar is still opening and the browser window layout
+  // being recomputed.
+  await SidebarUI.browser.contentWindow.promiseDocumentFlushed(() => {});
+
+  info("Opening context menu in sidebarAction panel");
   await BrowserTestUtils.synthesizeMouseAtCenter(
     selector,
     { type: "mousedown", button: 2 },
