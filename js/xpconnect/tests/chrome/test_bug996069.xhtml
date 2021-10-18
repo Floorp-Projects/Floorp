@@ -42,11 +42,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=996069
     };
 
     var newWin = Cu.evalInSandbox(
-      "window.open('http://example.org/chrome/js/xpconnect/tests/chrome/file_bug996069.html');",
+      "window.open('https://example.org/chrome/js/xpconnect/tests/chrome/file_bug996069.html');",
       sb);
   }
 
   ]]>
   </script>
-  <iframe id="ifr" onload="loaded();" type="content" src="http://example.org/chrome/js/xpconnect/tests/chrome/file_bug996069.html" />
+  <iframe id="ifr" onload="loaded();" type="content" src="https://example.org/chrome/js/xpconnect/tests/chrome/file_bug996069.html" />
 </window>
