@@ -258,8 +258,8 @@ windows10-64-2004-ccov-tests:
     - web-platform-tests-reftest
     - web-platform-tests-print-reftest
     - web-platform-tests-wdspec
-    # - jittest  # Bug 1733505
-    # - xpcshell  # Bug 1733505
+    - jittest
+    - xpcshell
 
 windows10-64-2004-failure-tests:
     - mochitest-browser-chrome-failures

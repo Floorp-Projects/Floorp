@@ -98,9 +98,6 @@ fuzzy(0-25,0-3940) fuzzy-if(gtkWidget,0-0,0-0) skip-if(Android) fuzzy-if(appleSi
 == downscale-16px.html?ff-0RGB.ico downscale-16px.html?ff-0RGB.png
 fuzzy(0-1,0-1) fuzzy-if(gtkWidget&&swgl,1-1,1-1) == downscale-16px.html?ff-ARGB.ico downscale-16px.html?ff-ARGB.png
 
-# Upside-down (negative height) BMP
-== downscale-8px.html?top-to-bottom-16x16-24bpp.bmp downscale-8px.html?bmp-size-16x16-24bpp.png
-
 # Test downscaling from all supported formats from 256 to 32.
 == downscale-32px.html?.bmp downscale-32px-ref.html
 == downscale-32px.html?.gif downscale-32px-ref.html

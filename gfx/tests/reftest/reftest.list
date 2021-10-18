@@ -28,7 +28,7 @@ skip-if(!asyncPan||Android) fuzzy-if(winWidget,54-94,2713-3419) fuzzy-if(cocoaWi
 pref(apz.allow_zooming,true) fails-if(useDrawSnapshot) == 1662062-1-no-blurry.html 1662062-1-ref.html
 # Bug 1715676: nsBulletFrame has been removed and the new rendering does not use PushRoundedRect that this test is for:
 # == 1681610.html 1681610-ref.html
-skip-if(geckoview) fuzzy-if(!useDrawSnapshot,0-255,0-667) fuzzy-if(useDrawSnapshot,0-255,0-3601) == 1687157-1.html 1687157-1-ref.html
+skip-if(geckoview) fuzzy-if(!useDrawSnapshot,0-255,0-897) fuzzy-if(useDrawSnapshot,0-255,0-3601) == 1687157-1.html 1687157-1-ref.html
 fuzzy(64-99,512-523) == 1696439-1.html 1696439-1-ref.html
 random-if(gtkWidget) == 1722689-1.html 1722689-1-ref.html
 fuzzy-if(useDrawSnapshot,255-255,5-5) == 1724901-1.html 1724901-1-ref.html

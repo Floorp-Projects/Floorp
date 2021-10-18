@@ -32,8 +32,8 @@ skip-if(!asyncPan) == frame-reconstruction-scroll-clamping.html frame-reconstruc
 
 # Test that position:fixed and position:sticky elements are attached to the
 # layout viewport.
-pref(apz.allow_zooming,true) == pinch-zoom-position-fixed.html pinch-zoom-position-fixed-ref.html
-pref(apz.allow_zooming,true) == pinch-zoom-position-sticky.html pinch-zoom-position-sticky-ref.html
+fuzzy-if(winWidget&&isCoverageBuild,1-1,24-24) pref(apz.allow_zooming,true) == pinch-zoom-position-fixed.html pinch-zoom-position-fixed-ref.html
+fuzzy-if(winWidget&&isCoverageBuild,1-1,24-24) pref(apz.allow_zooming,true) == pinch-zoom-position-sticky.html pinch-zoom-position-sticky-ref.html
 
 pref(apz.allow_zooming,true) == iframe-zoomed.html iframe-zoomed-ref.html
 pref(apz.allow_zooming,true) == scaled-iframe-zoomed.html scaled-iframe-zoomed-ref.html
