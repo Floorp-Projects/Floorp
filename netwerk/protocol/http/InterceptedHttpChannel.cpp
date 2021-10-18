@@ -92,7 +92,7 @@ void InterceptedHttpChannel::AsyncOpenInternal() {
   // We save this timestamp from outside of the if block in case we enable the
   // profiler after AsyncOpen().
   mLastStatusReported = TimeStamp::Now();
-  if (profiler_can_accept_markers()) {
+  if (profiler_thread_is_being_profiled()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
 
@@ -505,7 +505,7 @@ InterceptedHttpChannel::Cancel(nsresult aStatus) {
 
   mCanceled = true;
 
-  if (mLastStatusReported && profiler_can_accept_markers()) {
+  if (mLastStatusReported && profiler_thread_is_being_profiled()) {
     // These do allocations/frees/etc; avoid if not active
     // mLastStatusReported can be null if Cancel is called before we added the
     // start marker.
@@ -675,7 +675,7 @@ InterceptedHttpChannel::ResetInterception(bool aBypass) {
                             mLoadFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (profiler_can_accept_markers()) {
+  if (profiler_thread_is_being_profiled()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
 
@@ -1043,7 +1043,7 @@ InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   // Register entry to the PerformanceStorage resource timing
   MaybeReportTimingData();
 
-  if (profiler_can_accept_markers()) {
+  if (profiler_thread_is_being_profiled()) {
     // These do allocations/frees/etc; avoid if not active
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);

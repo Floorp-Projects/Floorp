@@ -1762,7 +1762,6 @@ TEST(GeckoProfiler, Pause)
   const char* filters[] = {"GeckoMain", "Profiled GeckoProfiler.Pause"};
 
   ASSERT_TRUE(!profiler_is_paused());
-  ASSERT_TRUE(!profiler_can_accept_markers());
   ASSERT_TRUE(!profiler_thread_is_being_profiled());
   ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
   ASSERT_TRUE(!profiler_thread_is_being_profiled(profiler_current_thread_id()));
@@ -1803,7 +1802,6 @@ TEST(GeckoProfiler, Pause)
                  filters, MOZ_ARRAY_LENGTH(filters), 0);
 
   ASSERT_TRUE(!profiler_is_paused());
-  ASSERT_TRUE(profiler_can_accept_markers());
   ASSERT_TRUE(profiler_thread_is_being_profiled());
   ASSERT_TRUE(profiler_thread_is_being_profiled(ProfilerThreadId{}));
   ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_current_thread_id()));
@@ -1851,7 +1849,6 @@ TEST(GeckoProfiler, Pause)
   profiler_pause();
 
   ASSERT_TRUE(profiler_is_paused());
-  ASSERT_TRUE(!profiler_can_accept_markers());
   ASSERT_TRUE(!profiler_thread_is_being_profiled());
   ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
   ASSERT_TRUE(!profiler_thread_is_being_profiled(profiler_current_thread_id()));
@@ -1905,7 +1902,6 @@ TEST(GeckoProfiler, Pause)
   profiler_resume();
 
   ASSERT_TRUE(!profiler_is_paused());
-  ASSERT_TRUE(profiler_can_accept_markers());
   ASSERT_TRUE(profiler_thread_is_being_profiled());
   ASSERT_TRUE(profiler_thread_is_being_profiled(ProfilerThreadId{}));
   ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_current_thread_id()));
@@ -1941,7 +1937,6 @@ TEST(GeckoProfiler, Pause)
   profiler_stop();
 
   ASSERT_TRUE(!profiler_is_paused());
-  ASSERT_TRUE(!profiler_can_accept_markers());
   ASSERT_TRUE(!profiler_thread_is_being_profiled());
   ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
   ASSERT_TRUE(!profiler_thread_is_being_profiled(profiler_current_thread_id()));

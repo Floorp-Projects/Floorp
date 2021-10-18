@@ -454,7 +454,7 @@ void WorkerGlobalScope::ImportScripts(JSContext* aCx,
   {
     AUTO_PROFILER_MARKER_TEXT(
         "ImportScripts", JS, MarkerStack::Capture(),
-        profiler_can_accept_markers()
+        profiler_thread_is_being_profiled()
             ? StringJoin(","_ns, aScriptURLs,
                          [](nsACString& dest, const auto& scriptUrl) {
                            AppendUTF16toUTF8(scriptUrl, dest);

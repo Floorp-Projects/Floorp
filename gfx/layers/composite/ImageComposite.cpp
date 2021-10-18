@@ -44,7 +44,8 @@ void ImageComposite::UpdateBias(size_t aImageIndex, bool aFrameChanged) {
                                 ? mImages[aImageIndex + 1].mTimeStamp
                                 : TimeStamp();
 
-  if (profiler_can_accept_markers() && compositedImageTime && nextImageTime) {
+  if (profiler_thread_is_being_profiled() && compositedImageTime &&
+      nextImageTime) {
     TimeDuration offsetCurrent = compositedImageTime - compositionTime;
     TimeDuration offsetNext = nextImageTime - compositionTime;
     nsPrintfCString str("current %.2lfms, next %.2lfms",
@@ -181,7 +182,7 @@ void ImageComposite::SetImages(nsTArray<TimedImage>&& aNewImages) {
     // will never be shown.
     CountSkippedFrames(&aNewImages[0]);
 
-    if (profiler_can_accept_markers()) {
+    if (profiler_thread_is_being_profiled()) {
       int len = aNewImages.Length();
       const auto& first = aNewImages[0];
       const auto& last = aNewImages.LastElement();
@@ -208,7 +209,7 @@ bool ImageComposite::UpdateCompositedFrame(
                      "Should only be called during a composition");
 
   nsCString descr;
-  if (profiler_can_accept_markers()) {
+  if (profiler_thread_is_being_profiled()) {
     nsCString relativeTimeString;
     if (image.mTimeStamp) {
       relativeTimeString.AppendPrintf(
@@ -253,7 +254,7 @@ bool ImageComposite::UpdateCompositedFrame(
 
   if (dropped > 0) {
     mDroppedFrames += dropped;
-    if (profiler_can_accept_markers()) {
+    if (profiler_thread_is_being_profiled()) {
       const char* frameOrFrames = dropped == 1 ? "frame" : "frames";
       nsPrintfCString text("%" PRId32 " %s dropped: %" PRId32 " -> %" PRId32
                            " (producer %" PRId32 ")",
@@ -346,7 +347,7 @@ void ImageComposite::CountSkippedFrames(const TimedImage* aImage) {
 }
 
 void ImageComposite::DetectTimeStampJitter(const TimedImage* aNewImage) {
-  if (!profiler_can_accept_markers() || aNewImage->mTimeStamp.IsNull()) {
+  if (!profiler_thread_is_being_profiled() || aNewImage->mTimeStamp.IsNull()) {
     return;
   }
 

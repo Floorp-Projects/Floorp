@@ -451,7 +451,7 @@ class ImageResource : public Image {
     explicit AutoProfilerImagePaintMarker(ImageResource* self)
         : mStartTime(TimeStamp::Now()) {
       nsAutoCString spec;
-      if (self->mURI && profiler_can_accept_markers()) {
+      if (self->mURI && profiler_thread_is_being_profiled()) {
         static const size_t sMaxTruncatedLength = 1024;
         self->mURI->GetSpec(mSpec);
         if (mSpec.Length() >= sMaxTruncatedLength) {

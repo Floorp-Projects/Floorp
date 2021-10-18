@@ -138,7 +138,7 @@ void TimeoutManager::MoveIdleToActive() {
     }
     timeout->remove();
     mTimeouts.InsertFront(timeout);
-    if (profiler_can_accept_markers()) {
+    if (profiler_thread_is_being_profiled()) {
       if (num == 0) {
         now = TimeStamp::Now();
       }

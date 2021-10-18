@@ -14,8 +14,7 @@
 #include <string>              // for char_traits, string, basic_string
 #include <type_traits>         // for remove_reference<>::type
 #include "CompositableHost.h"  // for CompositableHost
-#include "GeckoProfiler.h"  // for profiler_can_accept_markers, PROFILER_MARKER_TEXT
-#include "LayerUserData.h"  // for LayerUserData
+#include "LayerUserData.h"     // for LayerUserData
 #include "TreeTraversal.h"  // for ForwardIterator, ForEachNode, DepthFirstSearch, TraversalFlag, TraversalFl...
 #include "UnitTransforms.h"  // for ViewAs, PixelCastJustification, PixelCastJustification::RenderTargetIsPare...
 #include "apz/src/AsyncPanZoomController.h"  // for AsyncPanZoomController
@@ -24,9 +23,9 @@
 #include "gfxMatrix.h"              // for gfxMatrix
 #include "gfxUtils.h"               // for gfxUtils, gfxUtils::sDumpPaintFile
 #include "mozilla/ArrayIterator.h"  // for ArrayIterator
-#include "mozilla/BaseProfilerMarkersPrerequisites.h"  // for MarkerTiming
-#include "mozilla/DebugOnly.h"                         // for DebugOnly
+#include "mozilla/DebugOnly.h"      // for DebugOnly
 #include "mozilla/Logging.h"  // for LogLevel, LogLevel::Debug, MOZ_LOG_TEST
+#include "mozilla/ProfilerMarkers.h"  // for profiler_thread_is_being_profiled, PROFILER_MARKER_TEXT
 #include "mozilla/ScrollPositionUpdate.h"  // for ScrollPositionUpdate
 #include "mozilla/Telemetry.h"             // for AccumulateTimeDelta
 #include "mozilla/TelemetryHistogramEnums.h"  // for KEYPRESS_PRESENT_LATENCY, SCROLL_PRESENT_LATENCY
@@ -99,7 +98,7 @@ void RecordCompositionPayloadsPresented(
   if (aPayloads.Length()) {
     TimeStamp presented = aCompositionEndTime;
     for (const CompositionPayload& payload : aPayloads) {
-      if (profiler_can_accept_markers()) {
+      if (profiler_thread_is_being_profiled()) {
         MOZ_RELEASE_ASSERT(payload.mType <= kHighestCompositionPayloadType);
         nsAutoCString name(
             kCompositionPayloadTypeNames[uint8_t(payload.mType)]);

@@ -315,17 +315,6 @@ MFBT_API bool IsThreadBeingProfiled();
   return baseprofiler::detail::RacyFeatures::IsActiveAndUnpaused();
 }
 
-// Same as profiler_is_active(), but with the same extra checks that determine
-// if the profiler would currently store markers. So this should be used before
-// doing some potentially-expensive work that's used in a marker. E.g.:
-//
-//   if (profiler_can_accept_markers()) {
-//     BASE_PROFILER_MARKER(name, OTHER, SomeMarkerType, expensivePayload);
-//   }
-[[nodiscard]] inline bool profiler_can_accept_markers() {
-  return baseprofiler::detail::RacyFeatures::IsActiveAndUnpaused();
-}
-
 // Is the profiler active and unpaused, and is the current thread being
 // profiled? (Same caveats and recommented usage as profiler_is_active().)
 [[nodiscard]] inline bool profiler_thread_is_being_profiled() {
