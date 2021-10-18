@@ -76,7 +76,7 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
   uint32_t features = *maybeFeatures;
 
   if (!profiler_thread_is_being_profiled(profiler_main_thread_id()) &&
-      !profiler_can_accept_markers()) {
+      !profiler_thread_is_being_profiled()) {
     return;
   }
 

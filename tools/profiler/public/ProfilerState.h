@@ -164,7 +164,6 @@ using ProfilingStateChangeCallback = std::function<void(ProfilingState)>;
 
 [[nodiscard]] inline bool profiler_is_active() { return false; }
 [[nodiscard]] inline bool profiler_is_active_and_unpaused() { return false; }
-[[nodiscard]] inline bool profiler_can_accept_markers() { return false; }
 [[nodiscard]] inline bool profiler_feature_active(uint32_t aFeature) {
   return false;
 }
@@ -304,18 +303,6 @@ class RacyFeatures {
 
 // Same as profiler_is_active(), but also checks if the profiler is not paused.
 [[nodiscard]] inline bool profiler_is_active_and_unpaused() {
-  return mozilla::profiler::detail::RacyFeatures::IsActiveAndUnpaused();
-}
-
-// Same as profiler_is_active(), but with the same extra checks that determine
-// if the profiler would currently store markers. So this should be used before
-// doing some potentially-expensive work that's used in a marker. E.g.:
-//
-//   if (profiler_can_accept_markers()) {
-//     ExpensiveMarkerPayload expensivePayload = CreateExpensivePayload();
-//     BASE_PROFILER_ADD_MARKER_WITH_PAYLOAD(name, OTHER, expensivePayload);
-//   }
-[[nodiscard]] inline bool profiler_can_accept_markers() {
   return mozilla::profiler::detail::RacyFeatures::IsActiveAndUnpaused();
 }
 

@@ -599,7 +599,7 @@ class LogModuleManager {
       charsWritten = strlen(buffToWrite);
     }
 
-    if (mAddProfilerMarker && profiler_can_accept_markers()) {
+    if (mAddProfilerMarker && profiler_thread_is_being_profiled()) {
       struct LogMarker {
         static constexpr Span<const char> MarkerTypeName() {
           return MakeStringSpan("Log");

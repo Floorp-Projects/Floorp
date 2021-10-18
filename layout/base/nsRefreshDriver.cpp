@@ -1253,7 +1253,7 @@ bool nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver* aObserver,
     return false;
   }
 
-  if (profiler_can_accept_markers()) {
+  if (profiler_thread_is_being_profiled()) {
     auto& data = array.ElementAt(index);
     nsPrintfCString str("%s [%s]", data.mDescription,
                         kFlushTypeNames[aFlushType]);
@@ -1361,7 +1361,7 @@ void nsRefreshDriver::AddImageRequest(imgIRequest* aRequest) {
 
   EnsureTimerStarted();
 
-  if (profiler_can_accept_markers()) {
+  if (profiler_thread_is_being_profiled()) {
     nsCOMPtr<nsIURI> uri;
     aRequest->GetURI(getter_AddRefs(uri));
     nsAutoCString uristr;
@@ -1386,7 +1386,7 @@ void nsRefreshDriver::RemoveImageRequest(imgIRequest* aRequest) {
     }
   }
 
-  if (removed && profiler_can_accept_markers()) {
+  if (removed && profiler_thread_is_being_profiled()) {
     nsCOMPtr<nsIURI> uri;
     aRequest->GetURI(getter_AddRefs(uri));
     nsAutoCString uristr;
@@ -1573,7 +1573,7 @@ void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
 
     if (!mHasStartedTimerAtLeastOnce) {
       mHasStartedTimerAtLeastOnce = true;
-      if (profiler_can_accept_markers()) {
+      if (profiler_thread_is_being_profiled()) {
         nsCString text = "initial timer start "_ns;
         if (mPresContext->Document()->GetDocumentURI()) {
           text.Append(
@@ -2233,7 +2233,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
   AUTO_PROFILER_LABEL("nsRefreshDriver::Tick", LAYOUT);
 
   nsAutoCString profilerStr;
-  if (profiler_can_accept_markers()) {
+  if (profiler_thread_is_being_profiled()) {
     profilerStr.AppendLiteral("Tick reasons:");
     AppendTickReasonsToString(tickReasons, profilerStr);
   }
@@ -2492,7 +2492,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
   if (mViewManagerFlushIsPending) {
     AutoRecordPhase paintRecord(&phasePaint);
     nsCString transactionId;
-    if (profiler_can_accept_markers()) {
+    if (profiler_thread_is_being_profiled()) {
       transactionId.AppendLiteral("Transaction ID: ");
       transactionId.AppendInt((uint64_t)mNextTransactionId);
     }

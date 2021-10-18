@@ -221,7 +221,7 @@ class SceneBuiltNotification : public wr::NotificationHandler {
     CompositorThread()->Dispatch(NS_NewRunnableFunction(
         "SceneBuiltNotificationRunnable", [parent, epoch, startTime]() {
           auto endTime = TimeStamp::Now();
-          if (profiler_can_accept_markers()) {
+          if (profiler_thread_is_being_profiled()) {
             PROFILER_MARKER("CONTENT_FULL_PAINT_TIME", GRAPHICS,
                             MarkerTiming::Interval(startTime, endTime),
                             ContentBuildMarker);
