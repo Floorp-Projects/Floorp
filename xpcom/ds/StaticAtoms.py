@@ -2227,7 +2227,6 @@ STATIC_ATOMS = [
     Atom("_moz_gtk_csd_available", "-moz-gtk-csd-available"),
     Atom("_moz_gtk_csd_hide_titlebar_by_default", "-moz-gtk-csd-hide-titlebar-by-default"),
     Atom("_moz_gtk_csd_titlebar_radius", "-moz-gtk-csd-titlebar-radius"),
-    Atom("_moz_gtk_csd_transparent_background", "-moz-gtk-csd-transparent-background"),
     Atom("_moz_gtk_csd_minimize_button", "-moz-gtk-csd-minimize-button"),
     Atom("_moz_gtk_csd_maximize_button", "-moz-gtk-csd-maximize-button"),
     Atom("_moz_gtk_csd_close_button", "-moz-gtk-csd-close-button"),
