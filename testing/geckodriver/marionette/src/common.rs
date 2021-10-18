@@ -135,7 +135,6 @@ pub struct Timeouts {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Window {
-    pub name: String,
     pub handle: String,
 }
 
