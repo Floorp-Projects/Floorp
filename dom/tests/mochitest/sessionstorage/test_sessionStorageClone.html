@@ -39,7 +39,7 @@ function doNextTest()
       slave.close();
       // Open a window from a different origin and check data
       // are NOT copied and not modified on our side
-      slaveOrigin = "http://example.com";
+      slaveOrigin = "https://example.com";
       slave = window.open(slaveOrigin + slavePath + "frameNotEqual.html");
       break;
 

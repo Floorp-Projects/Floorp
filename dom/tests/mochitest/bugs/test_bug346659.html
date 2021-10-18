@@ -192,12 +192,15 @@ wins[6] = window.open('bug346659-parent.html?{"write":6}');
 
 is(location.host, "mochi.test:8888", "Unexpected host");
 
-var baseurl = window.location.href.replace(/mochi\.test:8888/, "example.com");
-wins[7] = window.open(r(baseurl, 'bug346659-opener.html?{"load":7}'));
-wins[9] = window.open(r(baseurl, 'bug346659-parent.html?{"load":9}'));
+SpecialPowers.pushPrefEnv({"set": [["dom.security.https_first", false]]}, function() {
+  var baseurl = window.location.href.replace(/mochi\.test:8888/, "example.com");
+  wins[7] = window.open(r(baseurl, 'bug346659-opener.html?{"load":7}'));
+  wins[9] = window.open(r(baseurl, 'bug346659-parent.html?{"load":9}'));
 
-wins[11] = window.open(r(baseurl, 'bug346659-opener.html?{"load":11,"xsite":true}'));
-wins[12] = window.open(r(baseurl, 'bug346659-parent.html?{"load":12,"xsite":true}'));
+  wins[11] = window.open(r(baseurl, 'bug346659-opener.html?{"load":11,"xsite":true}'));
+  wins[12] = window.open(r(baseurl, 'bug346659-parent.html?{"load":12,"xsite":true}'));
+});
+
 </script>
 </pre>
 </body>

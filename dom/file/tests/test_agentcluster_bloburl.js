@@ -14,6 +14,9 @@ CookieXPCShellUtils.init(this);
 add_task(async () => {
   do_get_profile();
 
+  // CookieXPCShellUtils.createServer does not support https
+  Services.prefs.setBoolPref("dom.security.https_first", false);
+
   Services.prefs.setBoolPref(
     "privacy.partition.bloburl_per_agent_cluster",
     true
@@ -56,6 +59,9 @@ add_task(async () => {
 // Same agent cluster: frames
 add_task(async () => {
   do_get_profile();
+
+  // CookieXPCShellUtils.createServer does not support https
+  Services.prefs.setBoolPref("dom.security.https_first", false);
 
   const server = CookieXPCShellUtils.createServer({ hosts: ["example.org"] });
 

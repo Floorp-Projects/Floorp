@@ -3,7 +3,7 @@
  * time (depending on "dom.allow_mulitple_popups" preference value).
  */
 
-const TEST_DOMAIN = "http://example.net";
+const TEST_DOMAIN = "https://example.net";
 const TEST_PATH = "/browser/dom/base/test/";
 const CHROME_DOMAIN = "chrome://mochitests/content";
 
