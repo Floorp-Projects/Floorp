@@ -26,35 +26,18 @@ class PresShell;
 // For GetDisplayPort
 enum class DisplayportRelativeTo { ScrollPort, ScrollFrame };
 
-enum class MaxSizeExceededBehaviour {
-  // Ask GetDisplayPort to assert if the calculated displayport exceeds
-  // the maximum allowed size.
-  Assert,
-  // Ask GetDisplayPort to pretend like there's no displayport at all, if
-  // the calculated displayport exceeds the maximum allowed size.
-  Drop,
-};
-
 // Is the displayport being applied to scrolled content or fixed content?
 enum class ContentGeometryType { Scrolled, Fixed };
 
 struct DisplayPortOptions {
   // The default options.
   DisplayportRelativeTo mRelativeTo = DisplayportRelativeTo::ScrollPort;
-  MaxSizeExceededBehaviour mMaxSizeExceededBehaviour =
-      MaxSizeExceededBehaviour::Assert;
   ContentGeometryType mGeometryType = ContentGeometryType::Scrolled;
 
   // Fluent interface for changing the defaults.
   DisplayPortOptions With(DisplayportRelativeTo aRelativeTo) const {
     DisplayPortOptions result = *this;
     result.mRelativeTo = aRelativeTo;
-    return result;
-  }
-  DisplayPortOptions With(
-      MaxSizeExceededBehaviour aMaxSizeExceededBehaviour) const {
-    DisplayPortOptions result = *this;
-    result.mMaxSizeExceededBehaviour = aMaxSizeExceededBehaviour;
     return result;
   }
   DisplayPortOptions With(ContentGeometryType aGeometryType) const {
