@@ -1309,6 +1309,7 @@ AboutReader.prototype = {
   _enableRecShowHide() {
     let elPocketRecs = this._doc.querySelector(`.pocket-recs`);
     let elCollapseRecs = this._doc.querySelector(`.pocket-collapse-recs`);
+    let elSignUp = this._doc.querySelector(`div.pocket-sign-up-wrapper`);
 
     let toggleRecsVisibility = () => {
       let isClosed = elPocketRecs.classList.contains(`closed`);
@@ -1318,6 +1319,7 @@ AboutReader.prototype = {
       if (isClosed) {
         elPocketRecs.classList.add(`closed`);
         elCollapseRecs.classList.add(`closed`);
+        elSignUp.setAttribute(`hidden`, true);
 
         Services.telemetry.recordEvent(
           "readermode",
@@ -1329,6 +1331,7 @@ AboutReader.prototype = {
       } else {
         elPocketRecs.classList.remove(`closed`);
         elCollapseRecs.classList.remove(`closed`);
+        elSignUp.removeAttribute(`hidden`);
       }
     };
 
@@ -1373,6 +1376,9 @@ AboutReader.prototype = {
 
     elThumb.classList.add(`pocket-rec-thumb`);
     elThumb.setAttribute(`loading`, `lazy`);
+    elThumb.addEventListener(`load`, () => {
+      elThumb.classList.add(`pocket-rec-thumb-loaded`);
+    });
     elThumb.setAttribute(
       `src`,
       `https://img-getpocket.cdn.mozilla.net/132x132/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${thumb}`
@@ -1468,6 +1474,9 @@ AboutReader.prototype = {
 
       elPocketCTAWrapper.hidden = false;
       elPocketCTAWrapper.classList.add(`pocket-cta-container-${ctaVersion}`);
+      elPocketCTAWrapper.classList.add(
+        `pocket-cta-container-${isLoggedInUser ? `logged-in` : `logged-out`}`
+      );
 
       // Set up tracking for sign up buttons
       this._doc.querySelectorAll(`.pocket-sign-up`).forEach(el => {
