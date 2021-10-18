@@ -2884,30 +2884,28 @@ bool WasmMemoryObject::addMovingGrowObserver(JSContext* cx,
 }
 
 /* static */
-uint32_t WasmMemoryObject::growShared(HandleWasmMemoryObject memory,
-                                      uint32_t delta) {
+uint64_t WasmMemoryObject::growShared(HandleWasmMemoryObject memory,
+                                      uint64_t delta) {
   SharedArrayRawBuffer* rawBuf = memory->sharedArrayRawBuffer();
   SharedArrayRawBuffer::Lock lock(rawBuf);
 
   Pages oldNumPages = rawBuf->volatileWasmPages();
   Pages newPages = oldNumPages;
   if (!newPages.checkedIncrement(Pages(delta))) {
-    return -1;
+    return uint64_t(int64_t(-1));
   }
 
   if (!rawBuf->wasmGrowToPagesInPlace(lock, memory->indexType(), newPages)) {
-    return -1;
+    return uint64_t(int64_t(-1));
   }
   // New buffer objects will be created lazily in all agents (including in
   // this agent) by bufferGetterImpl, above, so no more work to do here.
 
-  // It is safe to cast to uint32_t, as oldNumPages was within our
-  // implementation limits of MaxMemoryPages(), which is within uint32_t.
-  return uint32_t(oldNumPages.value());
+  return oldNumPages.value();
 }
 
 /* static */
-uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
+uint64_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint64_t delta,
                                 JSContext* cx) {
   if (memory->isShared()) {
     return growShared(memory, delta);
@@ -2926,7 +2924,7 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
   Pages oldNumPages = oldBuf->wasmPages();
   Pages newPages = oldNumPages;
   if (!newPages.checkedIncrement(Pages(delta))) {
-    return -1;
+    return uint64_t(int64_t(-1));
   }
 
   RootedArrayBufferObject newBuf(cx);
@@ -2935,11 +2933,11 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
     MOZ_ASSERT(!memory->isHuge());
     if (!ArrayBufferObject::wasmMovingGrowToPages(memory->indexType(), newPages,
                                                   oldBuf, &newBuf, cx)) {
-      return -1;
+      return uint64_t(int64_t(-1));
     }
   } else if (!ArrayBufferObject::wasmGrowToPagesInPlace(
                  memory->indexType(), newPages, oldBuf, &newBuf, cx)) {
-    return -1;
+    return uint64_t(int64_t(-1));
   }
 
   memory->setReservedSlot(BUFFER_SLOT, ObjectValue(*newBuf));
@@ -2953,9 +2951,7 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
     }
   }
 
-  // It is safe to cast to uint32_t, as oldNumPages was within our
-  // implementation limits of MaxMemoryPages(), which is within uint32_t.
-  return uint32_t(oldNumPages.value());
+  return oldNumPages.value();
 }
 
 bool js::wasm::IsSharedWasmMemoryObject(JSObject* obj) {
