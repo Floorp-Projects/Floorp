@@ -1407,7 +1407,7 @@ static bool PrepareWeakCacheTasks(JSRuntime* rt,
 
   bool ok =
       IterateWeakCaches(rt, [&](JS::detail::WeakCacheBase* cache, Zone* zone) {
-        if (!cache->needsSweep()) {
+        if (cache->empty()) {
           return true;
         }
 
