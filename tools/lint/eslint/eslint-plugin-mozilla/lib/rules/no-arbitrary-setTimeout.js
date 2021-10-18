@@ -29,16 +29,16 @@ module.exports = {
   //  --------------------------------------------------------------------------
 
   create(context) {
+    // We don't want to run this on mochitest plain as it already
+    // prevents flaky setTimeout at runtime. This check is built-in
+    // to the rule itself as sometimes other tests can live alongside
+    // plain mochitests and so it can't be configured via eslintrc.
+    if (!testTypes.has(helpers.getTestType(context))) {
+      return {};
+    }
+
     return {
       CallExpression(node) {
-        // We don't want to run this on mochitest plain as it already
-        // prevents flaky setTimeout at runtime. This check is built-in
-        // to the rule itself as sometimes other tests can live alongside
-        // plain mochitests and so it can't be configured via eslintrc.
-        if (!testTypes.has(helpers.getTestType(context))) {
-          return;
-        }
-
         let callee = node.callee;
         if (callee.type === "MemberExpression") {
           if (
