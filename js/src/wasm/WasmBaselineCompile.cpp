@@ -291,31 +291,6 @@ void BaseCompiler::tableSwitch(Label* theTable, RegI32 switchValue,
 #endif
 }
 
-#ifdef JS_CODEGEN_X86
-void BaseCompiler::stashI64(RegPtr regForTls, RegI64 r) {
-  MOZ_ASSERT(sizeof(TlsData::baselineScratch) >= 8);
-  MOZ_ASSERT(regForTls != r.low && regForTls != r.high);
-  fr.loadTlsPtr(regForTls);
-  masm.store32(r.low, Address(regForTls, offsetof(TlsData, baselineScratch)));
-  masm.store32(r.high,
-               Address(regForTls, offsetof(TlsData, baselineScratch) + 4));
-}
-
-void BaseCompiler::unstashI64(RegPtr regForTls, RegI64 r) {
-  MOZ_ASSERT(sizeof(TlsData::baselineScratch) >= 8);
-  fr.loadTlsPtr(regForTls);
-  if (regForTls == r.low) {
-    masm.load32(Address(regForTls, offsetof(TlsData, baselineScratch) + 4),
-                r.high);
-    masm.load32(Address(regForTls, offsetof(TlsData, baselineScratch)), r.low);
-  } else {
-    masm.load32(Address(regForTls, offsetof(TlsData, baselineScratch)), r.low);
-    masm.load32(Address(regForTls, offsetof(TlsData, baselineScratch) + 4),
-                r.high);
-  }
-}
-#endif
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // Function entry and exit
@@ -5451,22 +5426,20 @@ bool BaseCompiler::emitFence() {
 // Bulk memory operations.
 
 bool BaseCompiler::emitMemoryGrow() {
-  return emitInstanceCallOp(
-      !usesMemory() || isMem32() ? SASigMemoryGrowM32 : SASigMemoryGrowM64,
-      [this]() -> bool {
-        Nothing arg;
-        return iter_.readMemoryGrow(&arg);
-      });
+  return emitInstanceCallOp(SASigMemoryGrow, [this]() -> bool {
+    Nothing arg;
+    return iter_.readMemoryGrow(&arg);
+  });
 }
 
 bool BaseCompiler::emitMemorySize() {
   return emitInstanceCallOp(
-      !usesMemory() || isMem32() ? SASigMemorySizeM32 : SASigMemorySizeM64,
-      [this]() -> bool { return iter_.readMemorySize(); });
+      SASigMemorySize, [this]() -> bool { return iter_.readMemorySize(); });
 }
 
 bool BaseCompiler::emitMemCopy() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   uint32_t dstMemOrTableIndex = 0;
   uint32_t srcMemOrTableIndex = 0;
   Nothing nothing;
@@ -5474,68 +5447,63 @@ bool BaseCompiler::emitMemCopy() {
                                 &srcMemOrTableIndex, &nothing, &nothing)) {
     return false;
   }
+
   if (deadCode_) {
     return true;
   }
 
-  if (isMem32()) {
-    int32_t signedLength;
-    if (peekConst(&signedLength) && signedLength != 0 &&
-        uint32_t(signedLength) <= MaxInlineMemoryCopyLength) {
-      memCopyInlineM32();
-      return true;
-    }
+  int32_t signedLength;
+  if (peekConst(&signedLength) && signedLength != 0 &&
+      uint32_t(signedLength) <= MaxInlineMemoryCopyLength) {
+    emitMemCopyInline();
+    return true;
   }
 
-  return memCopyCall(lineOrBytecode);
+  return emitMemCopyCall(lineOrBytecode);
 }
 
-bool BaseCompiler::memCopyCall(uint32_t lineOrBytecode) {
+bool BaseCompiler::emitMemCopyCall(uint32_t lineOrBytecode) {
   pushHeapBase();
-  return emitInstanceCall(
-      lineOrBytecode,
-      usesSharedMemory()
-          ? (isMem32() ? SASigMemCopySharedM32 : SASigMemCopySharedM64)
-          : (isMem32() ? SASigMemCopyM32 : SASigMemCopyM64));
+  return emitInstanceCall(lineOrBytecode, usesSharedMemory()
+                                              ? SASigMemCopyShared32
+                                              : SASigMemCopy32);
 }
 
 bool BaseCompiler::emitMemFill() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
   Nothing nothing;
   if (!iter_.readMemFill(&nothing, &nothing, &nothing)) {
     return false;
   }
+
   if (deadCode_) {
     return true;
   }
 
-  if (isMem32()) {
-    int32_t signedLength;
-    int32_t signedValue;
-    if (peek2xConst(&signedLength, &signedValue) && signedLength != 0 &&
-        uint32_t(signedLength) <= MaxInlineMemoryFillLength) {
-      memFillInlineM32();
-      return true;
-    }
+  int32_t signedLength;
+  int32_t signedValue;
+  if (peek2xConst(&signedLength, &signedValue) && signedLength != 0 &&
+      uint32_t(signedLength) <= MaxInlineMemoryFillLength) {
+    emitMemFillInline();
+    return true;
   }
-  return memFillCall(lineOrBytecode);
+  return emitMemFillCall(lineOrBytecode);
 }
 
-bool BaseCompiler::memFillCall(uint32_t lineOrBytecode) {
+bool BaseCompiler::emitMemFillCall(uint32_t lineOrBytecode) {
   pushHeapBase();
-  return emitInstanceCall(
-      lineOrBytecode,
-      usesSharedMemory()
-          ? (isMem32() ? SASigMemFillSharedM32 : SASigMemFillSharedM64)
-          : (isMem32() ? SASigMemFillM32 : SASigMemFillM64));
+  return emitInstanceCall(lineOrBytecode, usesSharedMemory()
+                                              ? SASigMemFillShared32
+                                              : SASigMemFill32);
 }
 
 bool BaseCompiler::emitMemInit() {
   return emitInstanceCallOp<uint32_t>(
-      (!usesMemory() || isMem32() ? SASigMemInitM32 : SASigMemInitM64),
-      [this](uint32_t* segIndex) -> bool {
+      SASigMemInit32, [this](uint32_t* segIndex) -> bool {
+        uint32_t dstTableIndex;
         Nothing nothing;
-        if (iter_.readMemOrTableInit(/*isMem*/ true, segIndex, nullptr,
+        if (iter_.readMemOrTableInit(/*isMem*/ true, segIndex, &dstTableIndex,
                                      &nothing, &nothing, &nothing)) {
           return true;
         }
@@ -9745,9 +9713,6 @@ BaseCompiler::~BaseCompiler() {
 }
 
 bool BaseCompiler::init() {
-  // We may lift this restriction in the future.
-  MOZ_ASSERT_IF(usesMemory() && isMem64(), !moduleEnv_.hugeMemoryEnabled());
-
   ra.init(this);
 
   if (!SigD_.append(ValType::F64)) {

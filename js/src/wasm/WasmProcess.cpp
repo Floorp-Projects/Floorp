@@ -334,50 +334,25 @@ static const size_t MinVirtualMemoryLimitForHugeMemory =
     size_t(1) << MinAddressBitsForHugeMemory;
 #endif
 
-ExclusiveData<ReadLockFlag> sHugeMemoryEnabled32(
-    mutexid::WasmHugeMemoryEnabled);
-ExclusiveData<ReadLockFlag> sHugeMemoryEnabled64(
-    mutexid::WasmHugeMemoryEnabled);
+ExclusiveData<ReadLockFlag> sHugeMemoryEnabled(mutexid::WasmHugeMemoryEnabled);
 
-static bool IsHugeMemoryEnabledHelper32() {
-  auto state = sHugeMemoryEnabled32.lock();
+static bool IsHugeMemoryEnabledHelper() {
+  auto state = sHugeMemoryEnabled.lock();
   return state->get();
 }
 
-static bool IsHugeMemoryEnabledHelper64() {
-  auto state = sHugeMemoryEnabled64.lock();
-  return state->get();
-}
-
-bool wasm::IsHugeMemoryEnabled(wasm::IndexType t) {
-  static bool enabled32 = IsHugeMemoryEnabledHelper32();
-  static bool enabled64 = IsHugeMemoryEnabledHelper64();
-  return t == IndexType::I32 ? enabled32 : enabled64;
+bool wasm::IsHugeMemoryEnabled() {
+  static bool enabled = IsHugeMemoryEnabledHelper();
+  return enabled;
 }
 
 bool wasm::DisableHugeMemory() {
-  bool ok = true;
-  {
-    auto state = sHugeMemoryEnabled64.lock();
-    ok = ok && state->set(false);
-  }
-  {
-    auto state = sHugeMemoryEnabled32.lock();
-    ok = ok && state->set(false);
-  }
-  return ok;
+  auto state = sHugeMemoryEnabled.lock();
+  return state->set(false);
 }
 
 void ConfigureHugeMemory() {
 #ifdef WASM_SUPPORTS_HUGE_MEMORY
-  bool ok = true;
-
-  {
-    // Currently no huge memory for IndexType::I64, so always set to false.
-    auto state = sHugeMemoryEnabled64.lock();
-    ok = ok && state->set(false);
-  }
-
   if (gc::SystemAddressBits() < MinAddressBitsForHugeMemory) {
     return;
   }
@@ -387,12 +362,9 @@ void ConfigureHugeMemory() {
     return;
   }
 
-  {
-    auto state = sHugeMemoryEnabled32.lock();
-    ok = ok && state->set(true);
-  }
-
-  MOZ_RELEASE_ASSERT(ok);
+  auto state = sHugeMemoryEnabled.lock();
+  bool set = state->set(true);
+  MOZ_RELEASE_ASSERT(set);
 #endif
 }
 

@@ -47,21 +47,21 @@ static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
     case BD_SymbolicAddress::RefFunc:
       return SymbolicAddress::RefFunc;
     case BD_SymbolicAddress::MemoryGrow:
-      return SymbolicAddress::MemoryGrowM32;
+      return SymbolicAddress::MemoryGrow;
     case BD_SymbolicAddress::MemorySize:
-      return SymbolicAddress::MemorySizeM32;
+      return SymbolicAddress::MemorySize;
     case BD_SymbolicAddress::MemoryCopy:
-      return SymbolicAddress::MemCopyM32;
+      return SymbolicAddress::MemCopy32;
     case BD_SymbolicAddress::MemoryCopyShared:
-      return SymbolicAddress::MemCopySharedM32;
+      return SymbolicAddress::MemCopyShared32;
     case BD_SymbolicAddress::DataDrop:
       return SymbolicAddress::DataDrop;
     case BD_SymbolicAddress::MemoryFill:
-      return SymbolicAddress::MemFillM32;
+      return SymbolicAddress::MemFill32;
     case BD_SymbolicAddress::MemoryFillShared:
-      return SymbolicAddress::MemFillSharedM32;
+      return SymbolicAddress::MemFillShared32;
     case BD_SymbolicAddress::MemoryInit:
-      return SymbolicAddress::MemInitM32;
+      return SymbolicAddress::MemInit32;
     case BD_SymbolicAddress::TableCopy:
       return SymbolicAddress::TableCopy;
     case BD_SymbolicAddress::ElemDrop:
@@ -99,11 +99,11 @@ static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
     case BD_SymbolicAddress::PostBarrier:
       return SymbolicAddress::PostBarrierFiltering;
     case BD_SymbolicAddress::WaitI32:
-      return SymbolicAddress::WaitI32M32;
+      return SymbolicAddress::WaitI32;
     case BD_SymbolicAddress::WaitI64:
-      return SymbolicAddress::WaitI64M32;
+      return SymbolicAddress::WaitI64;
     case BD_SymbolicAddress::Wake:
-      return SymbolicAddress::WakeM32;
+      return SymbolicAddress::Wake;
     case BD_SymbolicAddress::Limit:
       break;
   }

@@ -199,9 +199,8 @@ void EffectiveAddressAnalysis::analyzeAsmJSHeapAccess(AsmJSMemoryAccess* ins) {
   MDefinition* base = ins->base();
 
   if (base->isConstant()) {
-    // If the index is within the minimum heap length, we can optimize away the
-    // bounds check.  Asm.js accesses always have an int32 base, the memory is
-    // always a memory32.
+    // If the index is within the minimum heap length, we can optimize
+    // away the bounds check.
     int32_t imm = base->toConstant()->toInt32();
     if (imm >= 0) {
       int32_t end = (uint32_t)imm + ins->byteSize();

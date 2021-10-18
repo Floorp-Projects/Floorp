@@ -1052,23 +1052,6 @@ RegF32 BaseCompiler::popF32(RegF32 specific) {
   return specific;
 }
 
-bool BaseCompiler::hasConst() const {
-  const Stk& v = stk_.back();
-  switch (v.kind()) {
-    case Stk::ConstI32:
-    case Stk::ConstI64:
-    case Stk::ConstF32:
-    case Stk::ConstF64:
-#ifdef ENABLE_WASM_SIMD
-    case Stk::ConstV128:
-#endif
-    case Stk::ConstRef:
-      return true;
-    default:
-      return false;
-  }
-}
-
 bool BaseCompiler::popConst(int32_t* c) {
   Stk& v = stk_.back();
   if (v.kind() != Stk::ConstI32) {
@@ -1213,10 +1196,9 @@ RegI32 BaseCompiler::popI64ToSpecificI32(RegI32 specific) {
   return narrowI64(rd);
 }
 
-bool BaseCompiler::peekLocal(uint32_t* local) {
+bool BaseCompiler::peekLocalI32(uint32_t* local) {
   Stk& v = stk_.back();
-  // See hasLocal() for documentation of this logic.
-  if (v.kind() <= Stk::MemLast || v.kind() > Stk::LocalLast) {
+  if (v.kind() != Stk::LocalI32) {
     return false;
   }
   *local = v.slot();

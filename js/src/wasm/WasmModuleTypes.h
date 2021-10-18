@@ -517,11 +517,6 @@ struct MemoryDesc {
     return limits.initial * PageSize;
   }
 
-  uint64_t initialLength64() const {
-    MOZ_ASSERT(indexType() == IndexType::I64);
-    return limits.initial * PageSize;
-  }
-
   MemoryDesc() = default;
   explicit MemoryDesc(Limits limits) : limits(limits) {}
 };

@@ -1494,18 +1494,19 @@ void MacroAssembler::patchNearAddressMove(CodeLocationLabel loc,
 }
 
 void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
-                                       Register64 boundsCheckLimit, Label* ok) {
+                                       Register64 boundsCheckLimit,
+                                       Label* label) {
   cmpPtr(index.reg, boundsCheckLimit.reg);
-  j(cond, ok);
+  j(cond, label);
   if (JitOptions.spectreIndexMasking) {
     cmovCCq(cond, Operand(boundsCheckLimit.reg), index.reg);
   }
 }
 
 void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
-                                       Address boundsCheckLimit, Label* ok) {
+                                       Address boundsCheckLimit, Label* label) {
   cmpPtr(index.reg, Operand(boundsCheckLimit));
-  j(cond, ok);
+  j(cond, label);
   if (JitOptions.spectreIndexMasking) {
     cmovCCq(cond, Operand(boundsCheckLimit), index.reg);
   }

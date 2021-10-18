@@ -661,8 +661,7 @@ void LIRGenerator::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins) {
 
 void LIRGenerator::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins) {
   MDefinition* base = ins->base();
-  // See comment in visitWasmLoad re the type of 'base'.
-  MOZ_ASSERT(base->type() == MIRType::Int32 || base->type() == MIRType::Int64);
+  MOZ_ASSERT(base->type() == MIRType::Int32);
 
   // Note, the access type may be Int64 here.
 
@@ -675,8 +674,7 @@ void LIRGenerator::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins) {
 
 void LIRGenerator::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins) {
   MDefinition* base = ins->base();
-  // See comment in visitWasmLoad re the type of 'base'.
-  MOZ_ASSERT(base->type() == MIRType::Int32 || base->type() == MIRType::Int64);
+  MOZ_ASSERT(base->type() == MIRType::Int32);
 
   // Note, the access type may be Int64 here.
 
@@ -687,8 +685,7 @@ void LIRGenerator::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins) {
 
 void LIRGenerator::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins) {
   MDefinition* base = ins->base();
-  // See comment in visitWasmLoad re the type of 'base'.
-  MOZ_ASSERT(base->type() == MIRType::Int32 || base->type() == MIRType::Int64);
+  MOZ_ASSERT(base->type() == MIRType::Int32);
 
   // Note, the access type may be Int64 here.
 
@@ -909,9 +906,7 @@ void LIRGenerator::visitWasmHeapBase(MWasmHeapBase* ins) {
 
 void LIRGenerator::visitWasmLoad(MWasmLoad* ins) {
   MDefinition* base = ins->base();
-  // 'base' is a GPR but may be of either type.  If it is 32-bit it is
-  // zero-extended and can act as 64-bit.
-  MOZ_ASSERT(base->type() == MIRType::Int32 || base->type() == MIRType::Int64);
+  MOZ_ASSERT(base->type() == MIRType::Int32);
 
   LAllocation ptr = useRegisterOrConstantAtStart(base);
 
@@ -926,8 +921,7 @@ void LIRGenerator::visitWasmLoad(MWasmLoad* ins) {
 
 void LIRGenerator::visitWasmStore(MWasmStore* ins) {
   MDefinition* base = ins->base();
-  // See comment in visitWasmLoad re the type of 'base'.
-  MOZ_ASSERT(base->type() == MIRType::Int32 || base->type() == MIRType::Int64);
+  MOZ_ASSERT(base->type() == MIRType::Int32);
 
   MDefinition* value = ins->value();
 
@@ -1374,9 +1368,6 @@ void LIRGenerator::visitWasmReduceSimd128(MWasmReduceSimd128* ins) {
 
 void LIRGenerator::visitWasmLoadLaneSimd128(MWasmLoadLaneSimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
-  // On 64-bit systems, the base pointer can be 32 bits or 64 bits.  Either way,
-  // it fits in a GPR so we can ignore the Register/Register64 distinction here.
-
   // Optimal allocation here reuses the value input for the output register
   // because codegen otherwise has to copy the input to the output; this is
   // because load-lane is implemented as load + replace-lane.  Bug 1706106 may
@@ -1394,8 +1385,6 @@ void LIRGenerator::visitWasmLoadLaneSimd128(MWasmLoadLaneSimd128* ins) {
 
 void LIRGenerator::visitWasmStoreLaneSimd128(MWasmStoreLaneSimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
-  // See comment above about the base pointer.
-
   LUse base = useRegisterAtStart(ins->base());
   LUse input = useRegisterAtStart(ins->value());
   MOZ_ASSERT(!ins->hasMemoryBase());
