@@ -34,12 +34,12 @@ const FRAME = `
   </body>
   </html>`;
 
-const SAME_ORIGIN = "http://mochi.test:8888/"
+const SAME_ORIGIN = "http://mochi.test:8888/";
 const CROSS_ORIGIN = "http://example.com/";
-const PATH = "tests/dom/security/test/general/file_same_site_cookies_redirect.sjs";
+const PATH =
+  "tests/dom/security/test/general/file_same_site_cookies_redirect.sjs";
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
@@ -49,7 +49,11 @@ function handleRequest(request, response)
   }
 
   if (request.queryString === "loadWinAndSetCookie") {
-    response.setHeader("Set-Cookie", "myKey=laxSameSiteCookie; samesite=lax", true);
+    response.setHeader(
+      "Set-Cookie",
+      "myKey=laxSameSiteCookie; samesite=lax",
+      true
+    );
     response.write(DUMMY_WIN);
     return;
   }

@@ -1,5 +1,4 @@
-function handleRequest(aRequest, aResponse)
-{
+function handleRequest(aRequest, aResponse) {
   var url = aRequest.queryString.match(/\burl=([^#&]*)/);
   if (!url) {
     aResponse.setStatusLine(aRequest.httpVersion, 404, "Not Found");

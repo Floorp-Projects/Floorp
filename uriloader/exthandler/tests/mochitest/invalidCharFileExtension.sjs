@@ -5,10 +5,14 @@
 function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, 200, "OK");
 
-  if (!request.queryString.match(/^name=/))
+  if (!request.queryString.match(/^name=/)) {
     return;
+  }
   var name = decodeURIComponent(request.queryString.substring(5));
 
-  response.setHeader("Content-Type", "image/png; name=\"" + name + "\"");
-  response.setHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
+  response.setHeader("Content-Type", 'image/png; name="' + name + '"');
+  response.setHeader(
+    "Content-Disposition",
+    'attachment; filename="' + name + '"'
+  );
 }

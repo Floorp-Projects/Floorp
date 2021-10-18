@@ -2,11 +2,12 @@ const CC = Components.Constructor;
 
 // Context structure - we need to set this up properly to pass to setObjectState
 const ctx = {
-  QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsISupports))
+  QueryInterface(iid) {
+    if (iid.equals(Components.interfaces.nsISupports)) {
       return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  }
+    }
+    throw Components.Exception("", Components.results.NS_ERROR_NO_INTERFACE);
+  },
 };
 
 function setRequest(request) {
@@ -14,7 +15,9 @@ function setRequest(request) {
 }
 function getRequest() {
   let request;
-  getObjectState(v => { request = v });
+  getObjectState(v => {
+    request = v;
+  });
   return request;
 }
 
@@ -40,8 +43,14 @@ function handleRequest(request, response) {
       response.finish();
     });
     return;
-  } else if (request.queryString == "malformedresult=1" || request.queryString == "emptyresult=1") {
-    jsonOK = request.queryString == "malformedresult=1" ? '{"status":"ok","dat' : '{"status":"ok","data":[]}'
+  } else if (
+    request.queryString == "malformedresult=1" ||
+    request.queryString == "emptyresult=1"
+  ) {
+    jsonOK =
+      request.queryString == "malformedresult=1"
+        ? '{"status":"ok","dat'
+        : '{"status":"ok","data":[]}';
     response.setHeader("Content-Length", String(jsonOK.length), false);
     response.setHeader("Content-Type", "application/json", false);
     response.setHeader("Access-Control-Allow-Origin", "*", false);
@@ -60,8 +69,7 @@ function handleRequest(request, response) {
     response.setStatusLine(request.httpVersion, 400, "Bad Request");
     response.write(jsonOK, jsonOK.length);
     response.finish();
-  }
-  else {
+  } else {
     ctx.wrappedJSObject = ctx;
     ctx.request = request;
     setObjectState("context", ctx);

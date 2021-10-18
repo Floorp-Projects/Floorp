@@ -1,7 +1,9 @@
 const CC = Components.Constructor;
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
-                             "nsIBinaryInputStream",
-                             "setInputStream");
+const BinaryInputStream = CC(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
 
 function readStream(inputStream) {
   let available = 0;
@@ -10,11 +12,10 @@ function readStream(inputStream) {
     result.push(inputStream.readBytes(available));
   }
 
-  return result.join('');
+  return result.join("");
 }
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   if (request.method != "POST") {
     response.setStatusLine(request.httpVersion, 405, "Method Not Allowed");
     return;

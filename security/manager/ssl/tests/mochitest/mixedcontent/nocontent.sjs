@@ -1,4 +1,3 @@
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, 204, "No Content");
 }

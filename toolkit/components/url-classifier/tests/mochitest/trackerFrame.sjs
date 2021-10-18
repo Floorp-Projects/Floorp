@@ -11,8 +11,7 @@ const stateTrackersWithoutCookie = "trackers-without-cookie";
 const stateReceivedTrackers = "received-trackers";
 const stateResponseType = "response-tracker-with-cookie";
 
-function reset()
-{
+function reset() {
   setState(stateCallback, "");
   setState(stateTrackersWithCookie, "");
   setState(stateTrackersWithoutCookie, "");
@@ -20,8 +19,7 @@ function reset()
   setState(stateResponseType, "");
 }
 
-function handleRequest(aRequest, aResponse)
-{
+function handleRequest(aRequest, aResponse) {
   let params = new URLSearchParams(aRequest.queryString);
 
   // init the server and tell the server the total number requests to process
@@ -34,16 +32,24 @@ function handleRequest(aRequest, aResponse)
 
     // Prepare the cookie
     aResponse.setHeader("Set-Cookie", "cookie=1234");
-    aResponse.setHeader("Access-Control-Allow-Origin", aRequest.getHeader("Origin"), false);
-    aResponse.setHeader("Access-Control-Allow-Credentials","true", false);
+    aResponse.setHeader(
+      "Access-Control-Allow-Origin",
+      aRequest.getHeader("Origin"),
+      false
+    );
+    aResponse.setHeader("Access-Control-Allow-Credentials", "true", false);
     aResponse.write("begin-test");
-  // register the callback response, the response will be fired after receiving
-  // all the request
+    // register the callback response, the response will be fired after receiving
+    // all the request
   } else if (params.has("callback")) {
     aResponse.processAsync();
     aResponse.setHeader("Content-Type", "text/plain", false);
-    aResponse.setHeader("Access-Control-Allow-Origin", aRequest.getHeader("Origin"), false);
-    aResponse.setHeader("Access-Control-Allow-Credentials","true", false);
+    aResponse.setHeader(
+      "Access-Control-Allow-Origin",
+      aRequest.getHeader("Origin"),
+      false
+    );
+    aResponse.setHeader("Access-Control-Allow-Credentials", "true", false);
 
     setState(stateResponseType, params.get("callback"));
     setObjectState(stateCallback, aResponse);

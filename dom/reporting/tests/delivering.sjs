@@ -1,7 +1,9 @@
 const CC = Components.Constructor;
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
-                             "nsIBinaryInputStream",
-                             "setInputStream");
+const BinaryInputStream = CC(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
 
 Components.utils.importGlobalProperties(["URLSearchParams"]);
 
@@ -22,12 +24,15 @@ function handleRequest(aRequest, aResponse) {
 
     let body = {
       max_age: 1,
-      endpoints: [{
-        url: "https://example.org/tests/dom/reporting/tests/delivering.sjs" +
-               (extraParams.length ? "?" + extraParams.join("&") : ""),
-        priority: 1,
-        weight: 1,
-      }]
+      endpoints: [
+        {
+          url:
+            "https://example.org/tests/dom/reporting/tests/delivering.sjs" +
+            (extraParams.length ? "?" + extraParams.join("&") : ""),
+          priority: 1,
+          weight: 1,
+        },
+      ],
     };
 
     aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
@@ -68,26 +73,30 @@ function handleRequest(aRequest, aResponse) {
     var bytes = [];
     while ((avail = body.available()) > 0) {
       Array.prototype.push.apply(bytes, body.readByteArray(avail));
-     }
+    }
 
-     let reports = getState("report");
-     if (!reports) {
-       reports = [];
-     } else {
-       reports = JSON.parse(reports);
-     }
+    let reports = getState("report");
+    if (!reports) {
+      reports = [];
+    } else {
+      reports = JSON.parse(reports);
+    }
 
-     const incoming_reports = JSON.parse(String.fromCharCode.apply(null, bytes));
-     for (let report of incoming_reports) {
+    const incoming_reports = JSON.parse(String.fromCharCode.apply(null, bytes));
+    for (let report of incoming_reports) {
       let data = {
         contentType: aRequest.getHeader("content-type"),
         origin: aRequest.getHeader("origin"),
         body: report,
-        url: aRequest.scheme + "://" + aRequest.host + aRequest.path +
-               (aRequest.queryString ? "&" + aRequest.queryString : ""),
-      }
+        url:
+          aRequest.scheme +
+          "://" +
+          aRequest.host +
+          aRequest.path +
+          (aRequest.queryString ? "&" + aRequest.queryString : ""),
+      };
       reports.push(data);
-     }
+    }
 
     setState("report", JSON.stringify(reports));
 

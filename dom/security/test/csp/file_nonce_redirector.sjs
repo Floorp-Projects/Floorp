@@ -9,8 +9,11 @@ function handleRequest(request, response) {
 
   if (queryStr === "redirect") {
     response.setStatusLine("1.1", 302, "Found");
-    response.setHeader("Location",
-      "https://" + URL_PATH + "file_nonce_redirector.sjs?load", false);
+    response.setHeader(
+      "Location",
+      "https://" + URL_PATH + "file_nonce_redirector.sjs?load",
+      false
+    );
     return;
   }
 

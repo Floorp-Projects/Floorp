@@ -17,6 +17,9 @@ function handleRequest(request, response) {
 
   response.setStatusLine(request.httpVersion, 302, "Moved Temporarily");
   response.setHeader("Set-Cookie", `faviconCookie=${++state}`);
-  response.setHeader("Location", "http://example.com/browser/browser/base/content/test/favicons/moz.png");
+  response.setHeader(
+    "Location",
+    "http://example.com/browser/browser/base/content/test/favicons/moz.png"
+  );
   setState("cache_cookie", `${state}`);
 }

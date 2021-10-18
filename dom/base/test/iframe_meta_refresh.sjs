@@ -1,11 +1,11 @@
 /*
-* Test server for iframe refresh from meta http-equiv
-*/
+ * Test server for iframe refresh from meta http-equiv
+ */
 
-const SHARED_KEY="iframe_meta_refresh";
-const DEFAULT_STATE = {'count': 0, 'referrers': []};
+const SHARED_KEY = "iframe_meta_refresh";
+const DEFAULT_STATE = { count: 0, referrers: [] };
 const REFRESH_PAGE =
-"http://example.com/tests/dom/base/test/iframe_meta_refresh.sjs?action=test";
+  "http://example.com/tests/dom/base/test/iframe_meta_refresh.sjs?action=test";
 
 function createContent(refresh) {
   let metaRefresh = "";
@@ -35,16 +35,15 @@ function createContent(refresh) {
          </html>`;
 }
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   Components.utils.importGlobalProperties(["URLSearchParams"]);
   let query = new URLSearchParams(request.queryString);
 
   let action = query.get("action");
 
   var referrerLevel = "none";
-  if (request.hasHeader('Referer')) {
-    let referrer = request.getHeader('Referer');
+  if (request.hasHeader("Referer")) {
+    let referrer = request.getHeader("Referer");
     if (referrer.indexOf("test_meta_refresh_referrer") > 0) {
       referrerLevel = "full";
     } else if (referrer == "http://mochi.test:8888/") {
@@ -53,7 +52,7 @@ function handleRequest(request, response)
   }
 
   var state = getSharedState(SHARED_KEY);
-  if (state === '') {
+  if (state === "") {
     state = DEFAULT_STATE;
   } else {
     state = JSON.parse(state);
@@ -64,20 +63,20 @@ function handleRequest(request, response)
   //avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
-  if (action === 'results') {
+  if (action === "results") {
     response.setHeader("Content-Type", "text/plain", false);
     response.write(JSON.stringify(state));
     return;
   }
 
-  if (action === 'reset') {
+  if (action === "reset") {
     //reset server state
     setSharedState(SHARED_KEY, JSON.stringify(DEFAULT_STATE));
     response.write("");
     return;
   }
 
-  if (action === 'test') {
+  if (action === "test") {
     let load = query.get("load");
     state.count++;
     if (state.referrers.indexOf(referrerLevel) < 0) {

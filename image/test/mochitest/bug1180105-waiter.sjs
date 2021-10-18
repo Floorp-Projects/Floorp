@@ -18,7 +18,12 @@ function waitForFinish(response) {
     response.write("done");
     response.finish();
   } else {
-    waitTimer.initWithCallback(function() {waitForFinish(response);}, 10,
-                               Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+    waitTimer.initWithCallback(
+      function() {
+        waitForFinish(response);
+      },
+      10,
+      Components.interfaces.nsITimer.TYPE_ONE_SHOT
+    );
   }
 }
