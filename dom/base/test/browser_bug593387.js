@@ -13,6 +13,7 @@ add_task(async function test() {
     set: [
       ["security.csp.enable", false],
       ["dom.security.skip_about_page_has_csp_assert", true],
+      ["dom.security.https_first", false],
     ],
   });
 

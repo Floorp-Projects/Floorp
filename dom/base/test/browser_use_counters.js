@@ -2,7 +2,7 @@
 
 requestLongerTimeout(2);
 
-const gHttpTestRoot = "http://example.com/browser/dom/base/test/";
+const gHttpTestRoot = "https://example.com/browser/dom/base/test/";
 
 /**
  * Enable local telemetry recording for the duration of the tests.
