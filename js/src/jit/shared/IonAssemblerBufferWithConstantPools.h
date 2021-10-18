@@ -1083,6 +1083,9 @@ struct AssemblerBufferWithConstantPools
       JitSpew(JitSpew_Pools, "[%d] No-Pool instruction(%zu) caused a spill.",
               id, sizeExcludingCurrentPool());
       finishPool(maxInst * InstSize);
+      if (this->oom()) {
+        return;
+      }
       MOZ_ASSERT(hasSpaceForInsts(maxInst, 0));
     }
 
