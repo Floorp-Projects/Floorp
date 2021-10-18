@@ -1051,7 +1051,7 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   // Use line 0 to make the function body starts from line 1.
   options.setIntroductionType("eventHandler")
       .setFileAndLine(url.get(), 0)
-      .setdeferDebugMetadata(true);
+      .setDeferDebugMetadata(true);
 
   JS::Rooted<JSObject*> handler(cx);
   result = nsJSUtils::CompileFunction(jsapi, scopeChain, options,

@@ -13,8 +13,8 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/CompileOptions.h"  // JS::CompileOptions, JS::ReadOnlyCompileOptions
-#include "js/RootingAPI.h"      // JS::Handle, JS::MutableHandle
+#include "js/CompileOptions.h"  // JS::CompileOptions, JS::ReadOnlyCompileOptions, JS::InstantiateOptions
+#include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle
 #include "js/Value.h"  // JS::Value and specializations of JS::*Handle-related types
 
 struct JS_PUBLIC_API JSContext;
@@ -247,10 +247,9 @@ extern JS_PUBLIC_API void ExposeScriptToDebugger(JSContext* cx,
  * the debug metadata is provided by the UpdateDebugMetadata call.
  */
 extern JS_PUBLIC_API bool UpdateDebugMetadata(
-    JSContext* cx, Handle<JSScript*> script,
-    const ReadOnlyCompileOptions& options, HandleValue privateValue,
-    HandleString elementAttributeName, HandleScript introScript,
-    HandleScript scriptOrModule);
+    JSContext* cx, Handle<JSScript*> script, const InstantiateOptions& options,
+    HandleValue privateValue, HandleString elementAttributeName,
+    HandleScript introScript, HandleScript scriptOrModule);
 
 // The debugger API exposes an optional "element" property on DebuggerSource
 // objects.  The callback defined here provides that value.  SpiderMonkey

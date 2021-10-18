@@ -9,11 +9,12 @@
 
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
-#include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
-#include "js/SourceText.h"      // JS::SourceText
-#include "js/TypeDecls.h"       // JS::Handle (fwd)
-#include "js/UniquePtr.h"       // js::UniquePtr
-#include "vm/ScopeKind.h"       // js::ScopeKind
+#include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions, JS::InstantiateOptions
+#include "js/GCVector.h"        // JS::GCVector
+#include "js/SourceText.h"  // JS::SourceText
+#include "js/TypeDecls.h"   // JS::Handle (fwd)
+#include "js/UniquePtr.h"   // js::UniquePtr
+#include "vm/ScopeKind.h"   // js::ScopeKind
 
 namespace js {
 
@@ -82,6 +83,12 @@ inline bool CanLazilyParse(const JS::ReadOnlyCompileOptions& options) {
   return !options.discardSource && !options.sourceIsLazy &&
          !options.forceFullParse();
 }
+
+void FireOnNewScript(JSContext* cx, const JS::InstantiateOptions& options,
+                     JS::Handle<JSScript*> script);
+
+void FireOnNewScripts(JSContext* cx, const JS::InstantiateOptions& options,
+                      JS::Handle<JS::GCVector<JSScript*>> scripts);
 
 }  // namespace frontend
 
