@@ -1,9 +1,0 @@
-[
-  {
-    "algorithm": "sha512",
-    "digest": "36cd7c235b116a39a11082fe14b89434aace368cc7304654852e2f077ac9b024f7c663ff6f81c5012aca4fcf04d4b0f96e5abd1d5bb3f3a1f7ae0113ddf75c01",
-    "filename": "mitm5-linux-firefox-live-office.zip",
-    "size": 11077445,
-    "visibility": "public"
-  }
-]
