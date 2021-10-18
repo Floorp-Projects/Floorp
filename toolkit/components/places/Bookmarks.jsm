@@ -320,20 +320,21 @@ var Bookmarks = Object.freeze({
         url = item.url.href;
       }
 
-      let notification = new PlacesBookmarkAddition({
-        id: itemId,
-        url,
-        itemType: item.type,
-        parentId: parent._id,
-        index: item.index,
-        title: item.title,
-        dateAdded: item.dateAdded,
-        guid: item.guid,
-        parentGuid: item.parentGuid,
-        source: item.source,
-        isTagging: isTagging || isTagsFolder,
-      });
-      PlacesObservers.notifyListeners([notification]);
+      const notifications = [
+        new PlacesBookmarkAddition({
+          id: itemId,
+          url,
+          itemType: item.type,
+          parentId: parent._id,
+          index: item.index,
+          title: item.title,
+          dateAdded: item.dateAdded,
+          guid: item.guid,
+          parentGuid: item.parentGuid,
+          source: item.source,
+          isTagging: isTagging || isTagsFolder,
+        }),
+      ];
 
       // If it's a tag, notify OnItemChanged to all bookmarks for this URL.
       if (isTagging) {
@@ -354,8 +355,23 @@ var Bookmarks = Object.freeze({
             "",
             item.source,
           ]);
+
+          notifications.push(
+            new PlacesBookmarkTags({
+              id: entry._id,
+              itemType: entry.type,
+              url,
+              guid: entry.guid,
+              parentGuid: entry.parentGuid,
+              lastModified: entry.lastModified,
+              source: item.source,
+              isTagging: false,
+            })
+          );
         }
       }
+
+      PlacesObservers.notifyListeners(notifications);
 
       // Remove non-enumerable properties.
       delete item.source;
@@ -931,6 +947,19 @@ var Bookmarks = Object.freeze({
                   "",
                   updatedItem.source,
                 ]);
+
+                notifications.push(
+                  new PlacesBookmarkTags({
+                    id: entry._id,
+                    itemType: entry.type,
+                    url: entry.url,
+                    guid: entry.guid,
+                    parentGuid: entry.parentGuid,
+                    lastModified: entry.lastModified,
+                    source: updatedItem.source,
+                    isTagging: false,
+                  })
+                );
               }
             }
           }
@@ -1352,6 +1381,19 @@ var Bookmarks = Object.freeze({
               "",
               options.source,
             ]);
+
+            notifications.push(
+              new PlacesBookmarkTags({
+                id: entry._id,
+                itemType: entry.type,
+                url,
+                guid: entry.guid,
+                parentGuid: entry.parentGuid,
+                lastModified: entry.lastModified,
+                source: options.source,
+                isTagging: false,
+              })
+            );
           }
         }
       }
@@ -3328,6 +3370,19 @@ var removeFoldersContents = async function(db, folderGuids, options) {
           "",
           source,
         ]);
+
+        notifications.push(
+          new PlacesBookmarkTags({
+            id: entry._id,
+            itemType: entry.type,
+            url,
+            guid: entry.guid,
+            parentGuid: entry.parentGuid,
+            lastModified: entry.lastModified,
+            source,
+            isTagging: false,
+          })
+        );
       }
     }
   }
