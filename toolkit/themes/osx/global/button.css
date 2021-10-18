@@ -23,12 +23,6 @@ button:where([default="true"]:not(:-moz-window-inactive)) {
   color: -moz-mac-defaultbuttontext;
 }
 
-/* Likewise, when active (mousedown) but not hovering, the default button
- * background isn't drawn, override the previous selector for that case: */
-button:where([default="true"]:active:not(:hover)) {
-  color: ButtonText;
-}
-
 .button-text {
   margin-block: 1px;
   margin-inline: 3px 2px;
