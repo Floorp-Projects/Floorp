@@ -39,7 +39,8 @@ runNetworkTest(async function (options) {
                     // Android platform encoders don't support small (e.g.,
                     // 80x60) or non-even (e.g., 20x15) resolutions.
                     // [TODO] re-enable after SW fallback is implemented.
-                    ["media.webrtc.platformencoder", false]);
+                    ["media.webrtc.platformencoder", false],
+                    ["media.navigator.mediadatadecoder_h264_enabled", false]);
   }
 
   let test = new PeerConnectionTest(options);
