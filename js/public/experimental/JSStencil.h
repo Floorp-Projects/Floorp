@@ -81,7 +81,7 @@ extern JS_PUBLIC_API already_AddRefed<Stencil> FinishOffThreadStencil(
 
 // Instantiate the Stencil into current Realm and return the JSScript.
 extern JS_PUBLIC_API JSScript* InstantiateGlobalStencil(
-    JSContext* cx, const ReadOnlyCompileOptions& options, Stencil* stencil);
+    JSContext* cx, const InstantiateOptions& options, Stencil* stencil);
 
 // Return true if the stencil relies on external data as a result of XDR
 // decoding.
@@ -93,7 +93,7 @@ extern JS_PUBLIC_API bool StencilCanLazilyParse(Stencil* stencil);
 // Instantiate a module Stencil and return the associated object. Inside the
 // engine this is a js::ModuleObject.
 extern JS_PUBLIC_API JSObject* InstantiateModuleStencil(
-    JSContext* cx, const ReadOnlyCompileOptions& options, Stencil* stencil);
+    JSContext* cx, const InstantiateOptions& options, Stencil* stencil);
 
 // Serialize the Stencil into the transcode buffer.
 extern JS_PUBLIC_API TranscodeResult

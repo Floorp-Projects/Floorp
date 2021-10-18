@@ -2306,8 +2306,8 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   introductionLineno = rhs.introductionLineno;
   introductionOffset = rhs.introductionOffset;
   hasIntroductionInfo = rhs.hasIntroductionInfo;
-  hideScriptFromDebugger = rhs.hideScriptFromDebugger;
-  deferDebugMetadata = rhs.deferDebugMetadata;
+  hideScriptFromDebugger_ = rhs.hideScriptFromDebugger_;
+  deferDebugMetadata_ = rhs.deferDebugMetadata_;
   nonSyntacticScope = rhs.nonSyntacticScope;
   privateClassFields = rhs.privateClassFields;
   privateClassMethods = rhs.privateClassMethods;

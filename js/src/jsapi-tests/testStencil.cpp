@@ -48,8 +48,9 @@ bool basic_test(const CharT* chars) {
       JS::CompileGlobalScriptToStencil(cx, options, srcBuf);
   CHECK(stencil);
 
-  JS::RootedScript script(cx,
-                          JS::InstantiateGlobalStencil(cx, options, stencil));
+  JS::InstantiateOptions instantiateOptions(options);
+  JS::RootedScript script(
+      cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil));
   CHECK(script);
 
   JS::RootedValue rval(cx);
@@ -88,8 +89,9 @@ bool basic_test(const CharT* chars) {
       JS::CompileModuleScriptToStencil(cx, options, srcBuf);
   CHECK(stencil);
 
+  JS::InstantiateOptions instantiateOptions(options);
   JS::RootedObject moduleObject(
-      cx, JS::InstantiateModuleStencil(cx, options, stencil));
+      cx, JS::InstantiateModuleStencil(cx, instantiateOptions, stencil));
   CHECK(moduleObject);
 
   // Link and evaluate the module graph. The link step used to be call
@@ -122,8 +124,9 @@ BEGIN_TEST(testStencil_NonSyntactic) {
       JS::CompileGlobalScriptToStencil(cx, options, srcBuf);
   CHECK(stencil);
 
-  JS::RootedScript script(cx,
-                          JS::InstantiateGlobalStencil(cx, options, stencil));
+  JS::InstantiateOptions instantiateOptions(options);
+  JS::RootedScript script(
+      cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil));
   CHECK(script);
 
   JS::RootedObject obj(cx, JS_NewPlainObject(cx));
@@ -178,9 +181,9 @@ bool RunInNewGlobal(JSContext* cx, RefPtr<JS::Stencil> stencil) {
 
   JSAutoRealm ar(cx, otherGlobal);
 
-  JS::CompileOptions options(cx);
-  JS::RootedScript script(cx,
-                          JS::InstantiateGlobalStencil(cx, options, stencil));
+  JS::InstantiateOptions instantiateOptions;
+  JS::RootedScript script(
+      cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil));
   CHECK(script);
 
   JS::RootedValue rval(cx);
@@ -215,8 +218,9 @@ BEGIN_TEST(testStencil_Transcode) {
     CHECK(!buffer.empty());
 
     // Instantiate and Run
-    JS::RootedScript script(cx,
-                            JS::InstantiateGlobalStencil(cx, options, stencil));
+    JS::InstantiateOptions instantiateOptions(options);
+    JS::RootedScript script(
+        cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil));
     JS::RootedValue rval(cx);
     CHECK(script);
     CHECK(JS_ExecuteScript(cx, script, &rval));
@@ -250,8 +254,9 @@ BEGIN_TEST(testStencil_Transcode) {
     buffer.clear();
 
     // Instantiate and Run
-    JS::RootedScript script(cx,
-                            JS::InstantiateGlobalStencil(cx, options, stencil));
+    JS::InstantiateOptions instantiateOptions(options);
+    JS::RootedScript script(
+        cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil));
     stencil = nullptr;
     JS::RootedValue rval(cx);
     CHECK(script);
@@ -301,7 +306,8 @@ BEGIN_TEST(testStencil_TranscodeBorrowing) {
         JS::DecodeStencil(cx, options, range, getter_AddRefs(stencil));
     CHECK(res == JS::TranscodeResult::Ok);
 
-    script = JS::InstantiateGlobalStencil(cx, options, stencil);
+    JS::InstantiateOptions instantiateOptions(options);
+    script = JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil);
     CHECK(script);
   }
 
@@ -350,8 +356,9 @@ BEGIN_TEST(testStencil_OffThread) {
   RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(cx, token);
   CHECK(stencil);
 
-  JS::RootedScript script(cx,
-                          JS::InstantiateGlobalStencil(cx, options, stencil));
+  JS::InstantiateOptions instantiateOptions(options);
+  JS::RootedScript script(
+      cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil));
   CHECK(script);
 
   JS::RootedValue rval(cx);
@@ -399,8 +406,9 @@ BEGIN_TEST(testStencil_OffThreadModule) {
   RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(cx, token);
   CHECK(stencil);
 
+  JS::InstantiateOptions instantiateOptions(options);
   JS::RootedObject moduleObject(
-      cx, JS::InstantiateModuleStencil(cx, options, stencil));
+      cx, JS::InstantiateModuleStencil(cx, instantiateOptions, stencil));
   CHECK(moduleObject);
 
   JS::RootedValue rval(cx);
