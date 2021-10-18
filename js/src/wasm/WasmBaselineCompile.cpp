@@ -291,6 +291,31 @@ void BaseCompiler::tableSwitch(Label* theTable, RegI32 switchValue,
 #endif
 }
 
+#ifdef JS_CODEGEN_X86
+void BaseCompiler::stashI64(RegPtr regForTls, RegI64 r) {
+  MOZ_ASSERT(sizeof(TlsData::baselineScratch) >= 8);
+  MOZ_ASSERT(regForTls != r.low && regForTls != r.high);
+  fr.loadTlsPtr(regForTls);
+  masm.store32(r.low, Address(regForTls, offsetof(TlsData, baselineScratch)));
+  masm.store32(r.high,
+               Address(regForTls, offsetof(TlsData, baselineScratch) + 4));
+}
+
+void BaseCompiler::unstashI64(RegPtr regForTls, RegI64 r) {
+  MOZ_ASSERT(sizeof(TlsData::baselineScratch) >= 8);
+  fr.loadTlsPtr(regForTls);
+  if (regForTls == r.low) {
+    masm.load32(Address(regForTls, offsetof(TlsData, baselineScratch) + 4),
+                r.high);
+    masm.load32(Address(regForTls, offsetof(TlsData, baselineScratch)), r.low);
+  } else {
+    masm.load32(Address(regForTls, offsetof(TlsData, baselineScratch)), r.low);
+    masm.load32(Address(regForTls, offsetof(TlsData, baselineScratch) + 4),
+                r.high);
+  }
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Function entry and exit
