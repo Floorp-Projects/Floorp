@@ -265,21 +265,24 @@ bool js::intl_BestAvailableLocale(JSContext* cx, unsigned argc, Value* vp) {
 
     // |locale| is a structurally valid language tag.
     mozilla::intl::Locale tag;
+
+    using ParserError = mozilla::intl::LocaleParser::ParserError;
+    mozilla::Result<mozilla::Ok, ParserError> parse_result = Ok();
     {
       intl::StringAsciiChars chars(locale);
       if (!chars.init(cx)) {
         return false;
       }
 
-      if (auto result = mozilla::intl::LocaleParser::tryParse(chars, tag);
-          result.isErr()) {
-        using ParserError = mozilla::intl::LocaleParser::ParserError;
-        MOZ_ASSERT(result.unwrapErr() == ParserError::OutOfMemory,
-                   "locale is a structurally valid language tag");
+      parse_result = mozilla::intl::LocaleParser::tryParse(chars, tag);
+    }
 
-        intl::ReportInternalError(cx);
-        return false;
-      }
+    if (parse_result.isErr()) {
+      MOZ_ASSERT(parse_result.unwrapErr() == ParserError::OutOfMemory,
+                 "locale is a structurally valid language tag");
+
+      intl::ReportInternalError(cx);
+      return false;
     }
 
     MOZ_ASSERT(!tag.unicodeExtension(),
@@ -348,6 +351,9 @@ bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
     if (!chars.init(cx)) {
       return false;
     }
+
+    // Tell the analysis the |tag.canonicalize()| method can't GC.
+    JS::AutoSuppressGCAnalysis nogc;
 
     canParseLocale = mozilla::intl::LocaleParser::tryParse(chars, tag).isOk() &&
                      tag.canonicalize().isOk();
