@@ -509,6 +509,7 @@ nscolor Gecko_GetLookAndFeelSystemColor(int32_t color_id,
                                         const mozilla::StyleColorScheme*);
 
 int32_t Gecko_GetLookAndFeelInt(int32_t int_id);
+float Gecko_GetLookAndFeelFloat(int32_t float_id);
 
 void Gecko_AddPropertyToSet(nsCSSPropertyIDSet*, nsCSSPropertyID);
 
