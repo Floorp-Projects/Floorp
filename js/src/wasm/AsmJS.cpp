@@ -6918,7 +6918,8 @@ static bool TryInstantiate(JSContext* cx, CallArgs args, const Module& module,
       return false;
     }
 
-    imports.get().memory = WasmMemoryObject::create(cx, buffer, nullptr);
+    imports.get().memory =
+        WasmMemoryObject::create(cx, buffer, /* hugeMemory= */ false, nullptr);
     if (!imports.get().memory) {
       return false;
     }
