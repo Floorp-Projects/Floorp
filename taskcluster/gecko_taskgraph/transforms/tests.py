@@ -164,12 +164,12 @@ WINDOWS_WORKER_TYPES = {
         "virtual-with-gpu": "win10-64-2004-gpu",
     },
     "windows10-64-2004-ccov": {
-        "virtual": "win10-64-2004",
-        "virtual-with-gpu": "win10-64-2004-gpu",
+        "virtual": "win10-64-2004-ssd",
+        "virtual-with-gpu": "win10-64-2004-ssd",
     },
     "windows10-64-2004-ccov-qr": {
-        "virtual": "win10-64-2004",
-        "virtual-with-gpu": "win10-64-2004-gpu",
+        "virtual": "win10-64-2004-ssd",
+        "virtual-with-gpu": "win10-64-2004-ssd",
     },
     "windows10-64-2004-devedition": {
         "virtual": "win10-64-2004",
