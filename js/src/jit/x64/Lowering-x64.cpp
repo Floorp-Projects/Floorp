@@ -262,7 +262,9 @@ void LIRGenerator::visitWasmHeapBase(MWasmHeapBase* ins) {
 
 void LIRGenerator::visitWasmLoad(MWasmLoad* ins) {
   MDefinition* base = ins->base();
-  MOZ_ASSERT(base->type() == MIRType::Int32);
+  // 'base' is a GPR but may be of either type.  If it is 32-bit it is
+  // zero-extended and can act as 64-bit.
+  MOZ_ASSERT(base->type() == MIRType::Int32 || base->type() == MIRType::Int64);
 
   if (ins->type() != MIRType::Int64) {
     auto* lir = new (alloc()) LWasmLoad(useRegisterOrZeroAtStart(base));
@@ -276,7 +278,8 @@ void LIRGenerator::visitWasmLoad(MWasmLoad* ins) {
 
 void LIRGenerator::visitWasmStore(MWasmStore* ins) {
   MDefinition* base = ins->base();
-  MOZ_ASSERT(base->type() == MIRType::Int32);
+  // See comment in visitWasmLoad re the type of 'base'.
+  MOZ_ASSERT(base->type() == MIRType::Int32 || base->type() == MIRType::Int64);
 
   MDefinition* value = ins->value();
   LAllocation valueAlloc;
@@ -322,7 +325,8 @@ void LIRGenerator::visitWasmStore(MWasmStore* ins) {
 
 void LIRGenerator::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins) {
   MDefinition* base = ins->base();
-  MOZ_ASSERT(base->type() == MIRType::Int32);
+  // See comment in visitWasmLoad re the type of 'base'.
+  MOZ_ASSERT(base->type() == MIRType::Int32 || base->type() == MIRType::Int64);
 
   // The output may not be used but will be clobbered regardless, so
   // pin the output to eax.
@@ -339,7 +343,9 @@ void LIRGenerator::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins) {
 }
 
 void LIRGenerator::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins) {
-  MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
+  // See comment in visitWasmLoad re the type of 'base'.
+  MOZ_ASSERT(ins->base()->type() == MIRType::Int32 ||
+             ins->base()->type() == MIRType::Int64);
 
   const LAllocation base = useRegister(ins->base());
   const LAllocation value = useRegister(ins->value());
@@ -355,7 +361,8 @@ void LIRGenerator::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins) {
 
 void LIRGenerator::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins) {
   MDefinition* base = ins->base();
-  MOZ_ASSERT(base->type() == MIRType::Int32);
+  // See comment in visitWasmLoad re the type of 'base'.
+  MOZ_ASSERT(base->type() == MIRType::Int32 || base->type() == MIRType::Int64);
 
   // No support for 64-bit operations with constants at the masm level.
 
