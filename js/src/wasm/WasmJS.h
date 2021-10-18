@@ -365,6 +365,7 @@ class WasmInstanceObject : public NativeObject {
 class WasmMemoryObject : public NativeObject {
   static const unsigned BUFFER_SLOT = 0;
   static const unsigned OBSERVERS_SLOT = 1;
+  static const unsigned ISHUGE_SLOT = 2;
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;
   static void finalize(JSFreeOp* fop, JSObject* obj);
@@ -385,7 +386,7 @@ class WasmMemoryObject : public NativeObject {
   InstanceSet* getOrCreateObservers(JSContext* cx);
 
  public:
-  static const unsigned RESERVED_SLOTS = 2;
+  static const unsigned RESERVED_SLOTS = 3;
   static const JSClass class_;
   static const JSClass& protoClass_;
   static const JSPropertySpec properties[];
@@ -395,7 +396,7 @@ class WasmMemoryObject : public NativeObject {
 
   static WasmMemoryObject* create(JSContext* cx,
                                   Handle<ArrayBufferObjectMaybeShared*> buffer,
-                                  HandleObject proto);
+                                  bool isHuge, HandleObject proto);
 
   // `buffer()` returns the current buffer object always.  If the buffer
   // represents shared memory then `buffer().byteLength()` never changes, and

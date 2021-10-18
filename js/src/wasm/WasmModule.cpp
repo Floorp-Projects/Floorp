@@ -424,7 +424,7 @@ bool wasm::GetOptimizedEncodingBuildId(JS::BuildIdCharVector* buildId) {
   uint32_t cpu = ObservedCPUFeatures();
 
   if (!buildId->reserve(buildId->length() +
-                        12 /* "()" + 8 nibbles + "m[+-]" */)) {
+                        13 /* "()" + 8 nibbles + "m[+-][+-]" */)) {
     return false;
   }
 
@@ -436,7 +436,10 @@ bool wasm::GetOptimizedEncodingBuildId(JS::BuildIdCharVector* buildId) {
   buildId->infallibleAppend(')');
 
   buildId->infallibleAppend('m');
-  buildId->infallibleAppend(wasm::IsHugeMemoryEnabled() ? '+' : '-');
+  buildId->infallibleAppend(wasm::IsHugeMemoryEnabled(IndexType::I32) ? '+'
+                                                                      : '-');
+  buildId->infallibleAppend(wasm::IsHugeMemoryEnabled(IndexType::I64) ? '+'
+                                                                      : '-');
 
   return true;
 }
@@ -794,7 +797,8 @@ bool Module::instantiateMemory(JSContext* cx,
     }
 
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmMemory));
-    memory.set(WasmMemoryObject::create(cx, buffer, proto));
+    memory.set(WasmMemoryObject::create(
+        cx, buffer, IsHugeMemoryEnabled(desc.indexType()), proto));
     if (!memory) {
       return false;
     }

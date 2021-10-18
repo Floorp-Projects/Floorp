@@ -28,6 +28,7 @@
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmCompileArgs.h"
 #include "wasm/WasmModuleTypes.h"
+#include "wasm/WasmProcess.h"
 #include "wasm/WasmTypeDef.h"
 
 namespace js {
@@ -97,8 +98,8 @@ struct ModuleEnvironment {
 #undef WASM_FEATURE
   Shareable sharedMemoryEnabled() const { return features.sharedMemory; }
   bool hugeMemoryEnabled() const {
-    return !isAsmJS() && features.hugeMemory && usesMemory() &&
-           memory->indexType() == IndexType::I32;
+    return !isAsmJS() && usesMemory() &&
+           IsHugeMemoryEnabled(memory->indexType());
   }
   bool simdWormholeEnabled() const { return features.simdWormhole; }
   bool intrinsicsEnabled() const { return features.intrinsics; }
