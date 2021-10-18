@@ -377,14 +377,6 @@ static_assert(HugeOffsetGuardLimit < UINT32_MAX,
 #    error "Not an expected configuration"
 #  endif
 
-// TODO: We want this static_assert back, but it reqires MaxMemory32Bytes to be
-// a constant or constexpr function, not a regular function as now.
-//
-// The assert is also present in WasmMemoryObject::isHuge and
-// WasmMemoryObject::grow, so it's OK to comment out here for now.
-
-// static_assert(MaxMemory32Bytes < HugeMappedSize(),
-//               "Normal array buffer could be confused with huge memory");
 #endif
 
 // On !WASM_SUPPORTS_HUGE_MEMORY platforms:
