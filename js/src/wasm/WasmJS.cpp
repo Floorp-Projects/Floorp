@@ -1142,6 +1142,7 @@ static JSObject* TableTypeToObject(JSContext* cx, RefType type,
 }
 
 static JSObject* MemoryTypeToObject(JSContext* cx, bool shared,
+                                    wasm::IndexType indexType,
                                     wasm::Pages minPages,
                                     Maybe<wasm::Pages> maxPages) {
   Rooted<IdValueVector> props(cx, IdValueVector(cx));
@@ -1160,6 +1161,16 @@ static JSObject* MemoryTypeToObject(JSContext* cx, bool shared,
     ReportOutOfMemory(cx);
     return nullptr;
   }
+
+#  ifdef ENABLE_WASM_MEMORY64
+  RootedString it(
+      cx, JS_NewStringCopyZ(cx, indexType == IndexType::I32 ? "i32" : "i64"));
+  if (!props.append(
+          IdValuePair(NameToId(cx->names().index), StringValue(it)))) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+#  endif
 
   if (!props.append(
           IdValuePair(NameToId(cx->names().shared), BooleanValue(shared)))) {
@@ -1446,8 +1457,8 @@ bool WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp) {
         MOZ_ASSERT(memoryIndex == 0);
         const MemoryDesc& memory = *metadata.memory;
         typeObj =
-            MemoryTypeToObject(cx, memory.isShared(), memory.initialPages(),
-                               memory.maximumPages());
+            MemoryTypeToObject(cx, memory.isShared(), memory.indexType(),
+                               memory.initialPages(), memory.maximumPages());
         break;
       }
       case DefinitionKind::Global: {
@@ -1553,8 +1564,8 @@ bool WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp) {
       case DefinitionKind::Memory: {
         const MemoryDesc& memory = *metadata.memory;
         typeObj =
-            MemoryTypeToObject(cx, memory.isShared(), memory.initialPages(),
-                               memory.maximumPages());
+            MemoryTypeToObject(cx, memory.isShared(), memory.indexType(),
+                               memory.initialPages(), memory.maximumPages());
         break;
       }
       case DefinitionKind::Global: {
@@ -2745,9 +2756,10 @@ SharedArrayRawBuffer* WasmMemoryObject::sharedArrayRawBuffer() const {
 bool WasmMemoryObject::typeImpl(JSContext* cx, const CallArgs& args) {
   RootedWasmMemoryObject memoryObj(
       cx, &args.thisv().toObject().as<WasmMemoryObject>());
-  RootedObject typeObj(cx, MemoryTypeToObject(cx, memoryObj->isShared(),
-                                              memoryObj->volatilePages(),
-                                              memoryObj->sourceMaxPages()));
+  RootedObject typeObj(
+      cx, MemoryTypeToObject(cx, memoryObj->isShared(), memoryObj->indexType(),
+                             memoryObj->volatilePages(),
+                             memoryObj->sourceMaxPages()));
   if (!typeObj) {
     return false;
   }
