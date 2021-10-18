@@ -6,10 +6,12 @@ package mozilla.components.service.sync.logins
 
 import android.content.Context
 import android.content.SharedPreferences
+import mozilla.appservices.logins.KeyRegenerationEventReason
 import mozilla.appservices.logins.checkCanary
 import mozilla.appservices.logins.createCanary
 import mozilla.appservices.logins.createKey
 import mozilla.appservices.logins.decryptFields
+import mozilla.appservices.logins.recordKeyRegenerationEvent
 import mozilla.components.concept.storage.EncryptedLogin
 import mozilla.components.concept.storage.KeyGenerationReason
 import mozilla.components.concept.storage.KeyProvider
@@ -84,12 +86,15 @@ class LoginsCrypto(
         when (managedKey.wasGenerated) {
             is KeyGenerationReason.RecoveryNeeded.Lost -> {
                 logger.warn("Key lost")
+                recordKeyRegenerationEvent(KeyRegenerationEventReason.Lost)
             }
             is KeyGenerationReason.RecoveryNeeded.Corrupt -> {
                 logger.warn("Key corrupted")
+                recordKeyRegenerationEvent(KeyRegenerationEventReason.Corrupt)
             }
             is KeyGenerationReason.RecoveryNeeded.AbnormalState -> {
                 logger.warn("Abnormal state while reading the key")
+                recordKeyRegenerationEvent(KeyRegenerationEventReason.Other)
             }
             null, KeyGenerationReason.New -> {
                 // All good! Got either a brand new key or read a valid key.
