@@ -254,10 +254,15 @@ set(new Float32Array(mem), 4, [0, 2.3, -3.4, 100000]);
 ins.exports.from32s();
 var result = get(new Int32Array(mem), 0, 4);
 assertSame(result, [0, 2, -3, 100000]);
+
 set(new Float32Array(mem), 4, [0, 3.3, 0x80000000, 200000]);
 ins.exports.from32u();
 var result = get(new Uint32Array(mem), 0, 4);
 assertSame(result, [0, 3, 0x80000000, 200000]);
+set(new Float32Array(mem), 4, [0, 0x80000100, 0x80000101, 0xFFFFFF00]);
+ins.exports.from32u();
+var result = get(new Uint32Array(mem), 0, 4);
+assertSame(result, [0, 0x80000100, 0x80000100, 0xFFFFFF00]);
 
 set(new Float64Array(mem), 2, [200000.3, -3.4]);
 ins.exports.from64s();
