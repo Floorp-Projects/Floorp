@@ -1476,6 +1476,13 @@ void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128* ins) {
 
 void LIRGenerator::visitWasmLoadLaneSimd128(MWasmLoadLaneSimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
+  // A trick: On 32-bit systems, the base pointer is 32 bits (it was bounds
+  // checked and then chopped).  On 64-bit systems, it can be 32 bits or 64
+  // bits.  Either way, it fits in a GPR so we can ignore the
+  // Register/Register64 distinction here.
+#  ifndef JS_64BIT
+  MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
+#  endif
   LUse base = useRegisterAtStart(ins->base());
   LUse inputUse = useRegisterAtStart(ins->value());
   LAllocation memoryBase = ins->hasMemoryBase()
@@ -1491,6 +1498,10 @@ void LIRGenerator::visitWasmLoadLaneSimd128(MWasmLoadLaneSimd128* ins) {
 
 void LIRGenerator::visitWasmStoreLaneSimd128(MWasmStoreLaneSimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
+  // See comment above.
+#  ifndef JS_64BIT
+  MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
+#  endif
   LUse base = useRegisterAtStart(ins->base());
   LUse input = useRegisterAtStart(ins->value());
   LAllocation memoryBase = ins->hasMemoryBase()

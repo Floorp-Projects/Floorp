@@ -14851,14 +14851,9 @@ void CodeGenerator::visitWasmBoundsCheck(LWasmBoundsCheck* ins) {
 void CodeGenerator::visitWasmBoundsCheck64(LWasmBoundsCheck64* ins) {
   const MWasmBoundsCheck* mir = ins->mir();
   Label ok;
-#ifdef JS_64BIT
   Register64 ptr = ToRegister64(ins->ptr());
   Register64 boundsCheckLimit = ToRegister64(ins->boundsCheckLimit());
   masm.wasmBoundsCheck64(Assembler::Below, ptr, boundsCheckLimit, &ok);
-#else
-  // 64-bit bounds checks are used only on 64-bit systems.
-  MOZ_CRASH("Should not happen");
-#endif
   masm.wasmTrap(wasm::Trap::OutOfBounds, mir->bytecodeOffset());
   masm.bind(&ok);
 }
@@ -14868,6 +14863,20 @@ void CodeGenerator::visitWasmAlignmentCheck(LWasmAlignmentCheck* ins) {
   Register ptr = ToRegister(ins->ptr());
   Label ok;
   masm.branchTest32(Assembler::Zero, ptr, Imm32(mir->byteSize() - 1), &ok);
+  masm.wasmTrap(wasm::Trap::UnalignedAccess, mir->bytecodeOffset());
+  masm.bind(&ok);
+}
+
+void CodeGenerator::visitWasmAlignmentCheck64(LWasmAlignmentCheck64* ins) {
+  const MWasmAlignmentCheck* mir = ins->mir();
+  Register64 ptr = ToRegister64(ins->ptr());
+#ifdef JS_64BIT
+  Register r = ptr.reg;
+#else
+  Register r = ptr.low;
+#endif
+  Label ok;
+  masm.branchTestPtr(Assembler::Zero, r, Imm32(mir->byteSize() - 1), &ok);
   masm.wasmTrap(wasm::Trap::UnalignedAccess, mir->bytecodeOffset());
   masm.bind(&ok);
 }

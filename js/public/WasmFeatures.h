@@ -139,7 +139,8 @@
   EXPERIMENTAL(/* capitalized name   */ Memory64,                             \
                /* lower case name    */ memory64,                             \
                /* compile predicate  */ WASM_MEMORY64_ENABLED,                \
-               /* compiler predicate */ BaselineAvailable(cx),                \
+               /* compiler predicate */ BaselineAvailable(cx) ||              \
+                  IonAvailable(cx),                                           \
                /* flag predicate     */ !IsFuzzingIon(cx) &&                  \
                    !IsFuzzingCranelift(cx),                                   \
                /* shell flag         */ "memory64",                           \

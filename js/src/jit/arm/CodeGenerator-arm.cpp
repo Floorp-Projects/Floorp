@@ -2044,6 +2044,23 @@ void CodeGenerator::visitWasmAddOffset(LWasmAddOffset* lir) {
   masm.bind(&ok);
 }
 
+void CodeGenerator::visitWasmAddOffset64(LWasmAddOffset64* lir) {
+  MWasmAddOffset* mir = lir->mir();
+  Register64 base = ToRegister64(lir->base());
+  Register64 out = ToOutRegister64(lir);
+  MOZ_ASSERT(base.low != out.high && base.high != out.low);
+
+  ScratchRegisterScope scratch(masm);
+  masm.ma_add(base.low, Imm32(mir->offset()), out.low, scratch, SetCC);
+  masm.xor32(scratch, scratch);
+  masm.ma_adc(base.high, scratch, out.high, SetCC);
+
+  Label ok;
+  masm.ma_b(&ok, Assembler::CarryClear);
+  masm.wasmTrap(wasm::Trap::OutOfBounds, mir->bytecodeOffset());
+  masm.bind(&ok);
+}
+
 template <typename T>
 void CodeGeneratorARM::emitWasmStore(T* lir) {
   const MWasmStore* mir = lir->mir();
@@ -2670,8 +2687,10 @@ void CodeGenerator::visitWasmExtendU32Index(LWasmExtendU32Index*) {
   MOZ_CRASH("64-bit only");
 }
 
-void CodeGenerator::visitWasmWrapU32Index(LWasmWrapU32Index*) {
-  MOZ_CRASH("64-bit only");
+void CodeGenerator::visitWasmWrapU32Index(LWasmWrapU32Index* lir) {
+  // Generates no code on this platform because we just return the low part of
+  // the input register pair.
+  MOZ_ASSERT(ToRegister(lir->input()) == ToRegister(lir->output()));
 }
 
 void CodeGenerator::visitDivOrModI64(LDivOrModI64* lir) {
