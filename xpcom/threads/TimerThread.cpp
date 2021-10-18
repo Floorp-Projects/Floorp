@@ -139,7 +139,7 @@ class nsTimerEvent final : public CancelableRunnable {
     sAllocatorUsers++;
 
     if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug) ||
-        profiler_can_accept_markers()) {
+        profiler_thread_is_being_profiled(mTimerThreadId)) {
       mInitTime = TimeStamp::Now();
     }
   }
@@ -250,7 +250,7 @@ nsTimerEvent::Run() {
              (now - mInitTime).ToMilliseconds()));
   }
 
-  if (profiler_can_accept_markers()) {
+  if (profiler_thread_is_being_profiled(mTimerThreadId)) {
     nsAutoCString name;
     mTimer->GetName(name);
     PROFILER_MARKER_TEXT(
@@ -524,7 +524,7 @@ nsresult TimerThread::AddTimer(nsTimerImpl* aTimer,
     mMonitor.Notify();
   }
 
-  if (profiler_can_accept_markers()) {
+  if (profiler_thread_is_being_profiled(mProfilerThreadId)) {
     struct TimerMarker {
       static constexpr Span<const char> MarkerTypeName() {
         return MakeStringSpan("Timer");
@@ -590,7 +590,7 @@ nsresult TimerThread::RemoveTimer(nsTimerImpl* aTimer,
     mMonitor.Notify();
   }
 
-  if (profiler_can_accept_markers()) {
+  if (profiler_thread_is_being_profiled(mProfilerThreadId)) {
     nsAutoCString name;
     aTimer->GetName(name, aProofOfLock);
 
