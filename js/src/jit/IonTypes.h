@@ -912,6 +912,23 @@ enum ABIFunctionType : uint32_t {
       ArgType_General, {ArgType_General, ArgType_Int32, ArgType_Int32}),
   Args_General_GeneralInt32General = detail::MakeABIFunctionType(
       ArgType_General, {ArgType_General, ArgType_Int32, ArgType_General}),
+  Args_Int32_GeneralInt64Int32Int32Int32 = detail::MakeABIFunctionType(
+      ArgType_Int32, {ArgType_General, ArgType_Int64, ArgType_Int32,
+                      ArgType_Int32, ArgType_Int32}),
+  Args_Int32_GeneralInt64Int32Int64General = detail::MakeABIFunctionType(
+      ArgType_Int32, {ArgType_General, ArgType_Int64, ArgType_Int32,
+                      ArgType_Int64, ArgType_General}),
+  Args_Int32_GeneralInt64Int64Int64General = detail::MakeABIFunctionType(
+      ArgType_Int32, {ArgType_General, ArgType_Int64, ArgType_Int64,
+                      ArgType_Int64, ArgType_General}),
+
+  // Functions that return Int64 are tricky because SpiderMonkey's ReturnRegI64
+  // does not match the ABI int64 return register on x86.  Wasm only!
+  Args_Int64_General = detail::MakeABIFunctionType(
+      ArgType_Int64, {ArgType_General}),
+  Args_Int64_GeneralInt64 = detail::MakeABIFunctionType(
+      ArgType_Int64, {ArgType_General, ArgType_Int64}),
+
 };
 
 static constexpr ABIFunctionType MakeABIFunctionType(
