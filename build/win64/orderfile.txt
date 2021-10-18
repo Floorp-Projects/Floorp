@@ -13261,7 +13261,6 @@ ZN5style10properties9longhands11caret_color16cascade_property17hc6f704988876f49c
 ?GetEffectiveOperator@layers@mozilla@@YA?AW4CompositionOp@gfx@2@PEAVLayer@12@@Z
 ?HasMultipleChildren@ContainerLayer@layers@mozilla@@QEAA_NXZ
 ?ComputeEffectiveTransformsForChildren@ContainerLayer@layers@mozilla@@IEAAXAEBV?$Matrix4x4Typed@UUnknownUnits@gfx@mozilla@@U123@M@gfx@3@@Z
-??_GReadbackLayer@layers@mozilla@@UEAAPEAXI@Z
 ?GetClipExtents@gfxContext@@QEBA?AU?$RectTyped@UUnknownUnits@gfx@mozilla@@N@gfx@mozilla@@W4ClipExtentsSpace@1@@Z
 ?GetRect@DrawTarget@gfx@mozilla@@UEBA?AU?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@23@XZ
 ?ToOutsideIntRect@layers@mozilla@@YA?AU?$IntRectTyped@UUnknownUnits@gfx@mozilla@@@gfx@2@AEBU?$RectTyped@UUnknownUnits@gfx@mozilla@@N@42@@Z
