@@ -11,6 +11,7 @@ Cu.import("resource://reftest/globals.jsm", this);
 Cu.import("resource://reftest/reftest.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 const NS_SCRIPTSECURITYMANAGER_CONTRACTID = "@mozilla.org/scriptsecuritymanager;1";
 const NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX = "@mozilla.org/network/protocol;1?name=";
@@ -549,39 +550,16 @@ function BuildConditionSandbox(aURL) {
 
     sandbox.MinGW = sandbox.winWidget && sysInfo.getPropertyAsBool("isMinGW");
 
-#if MOZ_ASAN
-    sandbox.AddressSanitizer = true;
-#else
-    sandbox.AddressSanitizer = false;
-#endif
-
-#if MOZ_TSAN
-    sandbox.ThreadSanitizer = true;
-#else
-    sandbox.ThreadSanitizer = false;
-#endif
-
-#if MOZ_WEBRTC
-    sandbox.webrtc = true;
-#else
-    sandbox.webrtc = false;
-#endif
-
-#if MOZ_JXL
-    sandbox.jxl = true;
-#else
-    sandbox.jxl = false;
-#endif
+    sandbox.AddressSanitizer = AppConstants.ASAN;
+    sandbox.ThreadSanitizer = AppConstants.TSAN;
+    sandbox.webrtc = AppConstants.MOZ_WEBRTC;
+    sandbox.jxl = AppConstants.MOZ_JXL;
 
     let retainedDisplayListsEnabled = prefs.getBoolPref("layout.display-list.retain", false);
     sandbox.retainedDisplayLists = retainedDisplayListsEnabled && !g.compareRetainedDisplayLists && !sandbox.useDrawSnapshot;
     sandbox.compareRetainedDisplayLists = g.compareRetainedDisplayLists;
 
-#ifdef RELEASE_OR_BETA
-    sandbox.release_or_beta = true;
-#else
-    sandbox.release_or_beta = false;
-#endif
+    sandbox.release_or_beta = AppConstants.RELEASE_OR_BETA;
 
     var hh = Cc[NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX + "http"].
                  getService(Ci.nsIHttpProtocolHandler);
