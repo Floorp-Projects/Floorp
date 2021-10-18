@@ -56,6 +56,7 @@
 #include <wayland-egl.h>
 
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "nsGtkUtils.h"
 #include "nsWaylandDisplay.h"
 #include "base/task.h"
@@ -170,7 +171,7 @@ void moz_container_wayland_init(MozContainerWayland* container) {
   container->viewport = nullptr;
   container->ready_to_draw = false;
   container->opaque_region_needs_updates = false;
-  container->opaque_region_subtract_corners = false;
+  container->opaque_region_corner_radius = 0;
   container->opaque_region_used = false;
   container->subsurface_dx = 0;
   container->subsurface_dy = 0;
@@ -392,15 +393,14 @@ void moz_container_wayland_size_allocate(GtkWidget* widget,
 }
 
 static wl_region* moz_container_wayland_create_opaque_region(
-    int aX, int aY, int aWidth, int aHeight, bool aSubtractCorners) {
+    int aX, int aY, int aWidth, int aHeight, int aCornerRadius) {
   struct wl_compositor* compositor = WaylandDisplayGet()->GetCompositor();
   wl_region* region = wl_compositor_create_region(compositor);
   wl_region_add(region, aX, aY, aWidth, aHeight);
-  if (aSubtractCorners) {
-    wl_region_subtract(region, aX, aY, TITLEBAR_SHAPE_MASK_HEIGHT,
-                       TITLEBAR_SHAPE_MASK_HEIGHT);
-    wl_region_subtract(region, aX + aWidth - TITLEBAR_SHAPE_MASK_HEIGHT, aY,
-                       TITLEBAR_SHAPE_MASK_HEIGHT, TITLEBAR_SHAPE_MASK_HEIGHT);
+  if (aCornerRadius) {
+    wl_region_subtract(region, aX, aY, aCornerRadius, aCornerRadius);
+    wl_region_subtract(region, aX + aWidth - aCornerRadius, aY, aCornerRadius,
+                       aCornerRadius);
   }
   return region;
 }
@@ -423,7 +423,7 @@ static void moz_container_wayland_set_opaque_region_locked(
 
   wl_region* region = moz_container_wayland_create_opaque_region(
       0, 0, allocation.width, allocation.height,
-      wl_container->opaque_region_subtract_corners);
+      wl_container->opaque_region_corner_radius);
   wl_surface_set_opaque_region(wl_container->surface, region);
   wl_region_destroy(region);
   wl_container->opaque_region_needs_updates = false;
@@ -627,10 +627,10 @@ gboolean moz_container_wayland_has_egl_window(MozContainer* container) {
 }
 
 void moz_container_wayland_update_opaque_region(MozContainer* container,
-                                                bool aSubtractCorners) {
+                                                int corner_radius) {
   MozContainerWayland* wl_container = &container->wl_container;
   wl_container->opaque_region_needs_updates = true;
-  wl_container->opaque_region_subtract_corners = aSubtractCorners;
+  wl_container->opaque_region_corner_radius = corner_radius;
 
   // When GL compositor / WebRender is used,
   // moz_container_wayland_get_egl_window() is called only once when window

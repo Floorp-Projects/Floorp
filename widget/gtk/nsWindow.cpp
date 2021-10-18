@@ -6106,20 +6106,28 @@ void nsWindow::UpdateWindowDraggingRegion(
   }
 }
 
+LayoutDeviceIntCoord nsWindow::GetTitlebarRadius() {
+  int32_t cssCoord =
+      std::ceil(LookAndFeel::GetFloat(LookAndFeel::FloatID::TitlebarRadius));
+  return GdkCoordToDevicePixels(cssCoord);
+}
+
 // See subtract_corners_from_region() at gtk/gtkwindow.c
 // We need to subtract corners from toplevel window opaque region
 // to draw transparent corners of default Gtk titlebar.
 // Both implementations (cairo_region_t and wl_region) needs to be synced.
 static void SubtractTitlebarCorners(cairo_region_t* aRegion, int aX, int aY,
-                                    int aWindowWidth) {
-  cairo_rectangle_int_t rect = {aX, aY, TITLEBAR_SHAPE_MASK_HEIGHT,
-                                TITLEBAR_SHAPE_MASK_HEIGHT};
+                                    int aWindowWidth, int aTitlebarRadius) {
+  if (!aTitlebarRadius) {
+    return;
+  }
+  cairo_rectangle_int_t rect = {aX, aY, aTitlebarRadius, aTitlebarRadius};
   cairo_region_subtract_rectangle(aRegion, &rect);
   rect = {
-      aX + aWindowWidth - TITLEBAR_SHAPE_MASK_HEIGHT,
+      aX + aWindowWidth - aTitlebarRadius,
       aY,
-      TITLEBAR_SHAPE_MASK_HEIGHT,
-      TITLEBAR_SHAPE_MASK_HEIGHT,
+      aTitlebarRadius,
+      aTitlebarRadius,
   };
   cairo_region_subtract_rectangle(aRegion, &rect);
 }
@@ -6150,10 +6158,8 @@ void nsWindow::UpdateTopLevelOpaqueRegion(void) {
   cairo_rectangle_int_t rect = {x, y, width, height};
   cairo_region_union_rectangle(region, &rect);
 
-  bool subtractCorners = DoDrawTilebarCorners();
-  if (subtractCorners) {
-    SubtractTitlebarCorners(region, x, y, width);
-  }
+  int radius = DoDrawTilebarCorners() ? int(GetTitlebarRadius()) : 0;
+  SubtractTitlebarCorners(region, x, y, width, radius);
 
   gdk_window_set_opaque_region(window, region);
 
@@ -6161,7 +6167,7 @@ void nsWindow::UpdateTopLevelOpaqueRegion(void) {
 
 #ifdef MOZ_WAYLAND
   if (GdkIsWaylandDisplay()) {
-    moz_container_wayland_update_opaque_region(mContainer, subtractCorners);
+    moz_container_wayland_update_opaque_region(mContainer, radius);
   }
 #endif
 }
@@ -6429,7 +6435,7 @@ LayoutDeviceIntRect nsWindow::GetTitlebarRect() {
     return LayoutDeviceIntRect();
   }
 
-  return LayoutDeviceIntRect(0, 0, mBounds.width, TITLEBAR_SHAPE_MASK_HEIGHT);
+  return LayoutDeviceIntRect(0, 0, mBounds.width, GetTitlebarRadius());
 }
 
 void nsWindow::UpdateTitlebarTransparencyBitmap() {
@@ -6448,9 +6454,10 @@ void nsWindow::UpdateTitlebarTransparencyBitmap() {
   bool maskUpdate =
       !mTransparencyBitmap || mBounds.width != mTransparencyBitmapWidth;
 
+  LayoutDeviceIntCoord radius = GetTitlebarRadius();
   if (maskCreate) {
     delete[] mTransparencyBitmap;
-    int32_t size = GetBitmapStride(mBounds.width) * TITLEBAR_SHAPE_MASK_HEIGHT;
+    int32_t size = GetBitmapStride(mBounds.width) * radius;
     mTransparencyBitmap = new gchar[size];
     mTransparencyBitmapWidth = mBounds.width;
   } else {
@@ -6460,15 +6467,14 @@ void nsWindow::UpdateTitlebarTransparencyBitmap() {
 
   if (maskUpdate) {
     cairo_surface_t* surface = cairo_image_surface_create(
-        CAIRO_FORMAT_A8, mTransparencyBitmapWidth, TITLEBAR_SHAPE_MASK_HEIGHT);
+        CAIRO_FORMAT_A8, mTransparencyBitmapWidth, radius);
     if (!surface) return;
 
     cairo_t* cr = cairo_create(surface);
 
     GtkWidgetState state;
     memset((void*)&state, 0, sizeof(state));
-    GdkRectangle rect = {0, 0, mTransparencyBitmapWidth,
-                         TITLEBAR_SHAPE_MASK_HEIGHT};
+    GdkRectangle rect = {0, 0, mTransparencyBitmapWidth, radius};
 
     moz_gtk_widget_paint(MOZ_GTK_HEADER_BAR, cr, &rect, &state, 0,
                          GTK_TEXT_DIR_NONE);
@@ -6477,13 +6483,11 @@ void nsWindow::UpdateTitlebarTransparencyBitmap() {
     cairo_surface_mark_dirty(surface);
     cairo_surface_flush(surface);
 
-    UpdateMaskBits(
-        mTransparencyBitmap, mTransparencyBitmapWidth,
-        TITLEBAR_SHAPE_MASK_HEIGHT,
-        nsIntRect(0, 0, mTransparencyBitmapWidth, TITLEBAR_SHAPE_MASK_HEIGHT),
-        cairo_image_surface_get_data(surface),
-        cairo_format_stride_for_width(CAIRO_FORMAT_A8,
-                                      mTransparencyBitmapWidth));
+    UpdateMaskBits(mTransparencyBitmap, mTransparencyBitmapWidth, radius,
+                   nsIntRect(0, 0, mTransparencyBitmapWidth, radius),
+                   cairo_image_surface_get_data(surface),
+                   cairo_format_stride_for_width(CAIRO_FORMAT_A8,
+                                                 mTransparencyBitmapWidth));
 
     cairo_surface_destroy(surface);
   }
@@ -6492,20 +6496,18 @@ void nsWindow::UpdateTitlebarTransparencyBitmap() {
     Display* xDisplay = GDK_WINDOW_XDISPLAY(mGdkWindow);
     Window xDrawable = GDK_WINDOW_XID(mGdkWindow);
 
-    Pixmap maskPixmap = XCreateBitmapFromData(
-        xDisplay, xDrawable, mTransparencyBitmap, mTransparencyBitmapWidth,
-        TITLEBAR_SHAPE_MASK_HEIGHT);
+    Pixmap maskPixmap =
+        XCreateBitmapFromData(xDisplay, xDrawable, mTransparencyBitmap,
+                              mTransparencyBitmapWidth, radius);
 
     XShapeCombineMask(xDisplay, xDrawable, ShapeBounding, 0, 0, maskPixmap,
                       ShapeSet);
 
-    if (mTransparencyBitmapHeight > TITLEBAR_SHAPE_MASK_HEIGHT) {
+    if (mTransparencyBitmapHeight > radius) {
       XRectangle rect = {0, 0, (unsigned short)mTransparencyBitmapWidth,
-                         (unsigned short)(mTransparencyBitmapHeight -
-                                          TITLEBAR_SHAPE_MASK_HEIGHT)};
-      XShapeCombineRectangles(xDisplay, xDrawable, ShapeBounding, 0,
-                              TITLEBAR_SHAPE_MASK_HEIGHT, &rect, 1, ShapeUnion,
-                              0);
+                         (unsigned short)(mTransparencyBitmapHeight - radius)};
+      XShapeCombineRectangles(xDisplay, xDrawable, ShapeBounding, 0, radius,
+                              &rect, 1, ShapeUnion, 0);
     }
 
     XFreePixmap(xDisplay, maskPixmap);

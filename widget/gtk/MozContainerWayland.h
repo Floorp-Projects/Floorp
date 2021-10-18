@@ -40,7 +40,7 @@ struct MozContainerWayland {
   struct wl_callback* frame_callback_handler;
   struct wp_viewport* viewport;
   gboolean opaque_region_needs_updates;
-  gboolean opaque_region_subtract_corners;
+  int opaque_region_corner_radius;
   gboolean opaque_region_used;
   gboolean ready_to_draw;
   gboolean commit_to_parent;
@@ -82,7 +82,7 @@ void moz_container_wayland_add_initial_draw_callback(
     MozContainer* container, const std::function<void(void)>& initial_draw_cb);
 wl_surface* moz_gtk_widget_get_wl_surface(GtkWidget* aWidget);
 void moz_container_wayland_update_opaque_region(MozContainer* container,
-                                                bool aSubtractCorners);
+                                                int corner_radius);
 gboolean moz_container_wayland_can_draw(MozContainer* container);
 double moz_container_wayland_get_scale(MozContainer* container);
 void moz_container_wayland_set_commit_to_parent(MozContainer* container);
