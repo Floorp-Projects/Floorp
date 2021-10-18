@@ -244,6 +244,19 @@ class ThreadRegistry {
     }
   }
 
+  template <typename F, typename FallbackReturn>
+  [[nodiscard]] static auto WithOffThreadRefOr(ProfilerThreadId aThreadId,
+                                               F&& aF,
+                                               FallbackReturn&& aFallbackReturn)
+      -> decltype(std::forward<F>(aF)(std::declval<OffThreadRef>())) {
+    for (OffThreadRef thread : LockedRegistry{}) {
+      if (thread.UnlockedConstReaderCRef().Info().ThreadId() == aThreadId) {
+        return std::forward<F>(aF)(thread);
+      }
+    }
+    return std::forward<FallbackReturn>(aFallbackReturn);
+  }
+
   static size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) {
     LockedRegistry lockedRegistry;
     // "Ex" because we don't count static objects, but we count whatever they

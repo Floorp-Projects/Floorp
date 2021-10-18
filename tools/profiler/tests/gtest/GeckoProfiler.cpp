@@ -929,6 +929,14 @@ TEST(GeckoProfiler, ThreadRegistry_DataAccess)
       });
       EXPECT_EQ(ranTest, 1);
 
+      EXPECT_TRUE(TRy::WithOffThreadRefOr(
+          testThreadId,
+          [&](TRy::OffThreadRef aOffThreadRef) {
+            TestOffThreadRef(aOffThreadRef);
+            return true;
+          },
+          false));
+
       ranTest = 0;
       EXPECT_FALSE(TRy::IsRegistryMutexLockedOnCurrentThread());
       for (TRy::OffThreadRef offThreadRef : TRy::LockedRegistry{}) {
@@ -966,6 +974,22 @@ TEST(GeckoProfiler, ThreadRegistry_DataAccess)
     std::thread otherThread([&]() {
       ASSERT_NE(profiler_current_thread_id(), testThreadId);
       testThroughRegistry();
+
+      // Test that this unregistered thread is really not registered.
+      int ranTest = 0;
+      TRy::WithOffThreadRef(
+          profiler_current_thread_id(),
+          [&](TRy::OffThreadRef aOffThreadRef) { ++ranTest; });
+      EXPECT_EQ(ranTest, 0);
+
+      EXPECT_FALSE(TRy::WithOffThreadRefOr(
+          profiler_current_thread_id(),
+          [&](TRy::OffThreadRef aOffThreadRef) {
+            ++ranTest;
+            return true;
+          },
+          false));
+      EXPECT_EQ(ranTest, 0);
     });
     otherThread.join();
   });
