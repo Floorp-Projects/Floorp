@@ -6208,7 +6208,7 @@
 #if defined(ENABLE_WASM_MEMORY64)
 -   name: javascript.options.wasm_memory64
     type: bool
-    value: false
+    value: true
     mirror: always
 #endif  // defined(ENABLE_WASM_MEMORY64)
 

@@ -424,7 +424,7 @@ bool wasm::GetOptimizedEncodingBuildId(JS::BuildIdCharVector* buildId) {
   uint32_t cpu = ObservedCPUFeatures();
 
   if (!buildId->reserve(buildId->length() +
-                        13 /* "()" + 8 nibbles + "m[+-][+-]" */)) {
+                        12 /* "()" + 8 nibbles + "m[+-]" */)) {
     return false;
   }
 
@@ -436,10 +436,7 @@ bool wasm::GetOptimizedEncodingBuildId(JS::BuildIdCharVector* buildId) {
   buildId->infallibleAppend(')');
 
   buildId->infallibleAppend('m');
-  buildId->infallibleAppend(wasm::IsHugeMemoryEnabled(IndexType::I32) ? '+'
-                                                                      : '-');
-  buildId->infallibleAppend(wasm::IsHugeMemoryEnabled(IndexType::I64) ? '+'
-                                                                      : '-');
+  buildId->infallibleAppend(wasm::IsHugeMemoryEnabled() ? '+' : '-');
 
   return true;
 }
@@ -772,7 +769,7 @@ bool Module::instantiateMemory(JSContext* cx,
     }
 
     if (!CheckLimits(cx, desc.initialPages(), desc.maximumPages(),
-                     /* defaultMax */ MaxMemoryPages(desc.indexType()),
+                     /* defaultMax */ MaxMemoryPages(),
                      /* actualLength */
                      memory->volatilePages(), memory->sourceMaxPages(),
                      metadata().isAsmJS(), "Memory")) {
@@ -785,20 +782,19 @@ bool Module::instantiateMemory(JSContext* cx,
   } else {
     MOZ_ASSERT(!metadata().isAsmJS());
 
-    if (desc.initialPages() > MaxMemoryPages(desc.indexType())) {
+    if (desc.initialPages() > MaxMemoryPages()) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_WASM_MEM_IMP_LIMIT);
       return false;
     }
 
     RootedArrayBufferObjectMaybeShared buffer(cx);
-    if (!CreateWasmBuffer(cx, desc, &buffer)) {
+    if (!CreateWasmBuffer32(cx, desc, &buffer)) {
       return false;
     }
 
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmMemory));
-    memory.set(WasmMemoryObject::create(
-        cx, buffer, IsHugeMemoryEnabled(desc.indexType()), proto));
+    memory.set(WasmMemoryObject::create(cx, buffer, proto));
     if (!memory) {
       return false;
     }

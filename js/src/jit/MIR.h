@@ -9006,14 +9006,13 @@ class MWasmHeapBase : public MUnaryInstruction, public NoTypePolicy::Data {
   AliasSet getAliasSet() const override { return aliases_; }
 };
 
-// For memory32, bounds check nodes are of type Int32 on 32-bit systems for both
-// wasm and asm.js code, as well as on 64-bit systems for asm.js code and for
-// wasm code that is known to have a bounds check limit that fits into 32 bits.
-// They are of type Int64 only on 64-bit systems for wasm code with 4GB heaps.
-// There is no way for nodes of both types to be present in the same function.
-// Should this change, then BCE must be updated to take type into account.
-//
-// For memory64, bounds check nodes are always of type Int64.
+// Bounds check nodes are of type Int32 on 32-bit systems for both wasm and
+// asm.js code, as well as on 64-bit systems for asm.js code and for wasm code
+// that is known to have a bounds check limit that fits into 32 bits.  They are
+// of type Int64 only on 64-bit systems for wasm code with 4GB (or larger)
+// heaps.  There is no way for nodes of both types to be present in the same
+// function.  Should this change, then BCE must be updated to take type into
+// account.
 
 class MWasmBoundsCheck : public MBinaryInstruction, public NoTypePolicy::Data {
   wasm::BytecodeOffset bytecodeOffset_;
@@ -9022,8 +9021,6 @@ class MWasmBoundsCheck : public MBinaryInstruction, public NoTypePolicy::Data {
                             wasm::BytecodeOffset bytecodeOffset)
       : MBinaryInstruction(classOpcode, index, boundsCheckLimit),
         bytecodeOffset_(bytecodeOffset) {
-    MOZ_ASSERT(index->type() == boundsCheckLimit->type());
-
     // Bounds check is effectful: it throws for OOB.
     setGuard();
 
@@ -9056,9 +9053,7 @@ class MWasmAddOffset : public MUnaryInstruction, public NoTypePolicy::Data {
         offset_(offset),
         bytecodeOffset_(bytecodeOffset) {
     setGuard();
-    MOZ_ASSERT(base->type() == MIRType::Int32 ||
-               base->type() == MIRType::Int64);
-    setResultType(base->type());
+    setResultType(MIRType::Int32);
   }
 
  public:

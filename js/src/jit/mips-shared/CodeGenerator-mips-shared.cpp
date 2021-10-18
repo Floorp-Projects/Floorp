@@ -2071,10 +2071,6 @@ void CodeGenerator::visitWasmAddOffset(LWasmAddOffset* lir) {
   masm.bind(&ok);
 }
 
-void CodeGenerator::visitWasmAddOffset64(LWasmAddOffset64* lir) {
-  MOZ_CRASH("NYI");
-}
-
 void CodeGenerator::visitAtomicTypedArrayElementBinop(
     LAtomicTypedArrayElementBinop* lir) {
   MOZ_ASSERT(!lir->mir()->isForEffect());

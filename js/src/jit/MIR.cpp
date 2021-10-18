@@ -4650,22 +4650,16 @@ MDefinition* MWasmAddOffset::foldsTo(TempAllocator& alloc) {
     return this;
   }
 
-  if (baseArg->type() == MIRType::Int32) {
-    CheckedInt<uint32_t> ptr = baseArg->toConstant()->toInt32();
-    ptr += offset();
-    if (!ptr.isValid()) {
-      return this;
-    }
-    return MConstant::New(alloc, Int32Value(ptr.value()));
-  }
+  MOZ_ASSERT(baseArg->type() == MIRType::Int32);
+  CheckedInt<uint32_t> ptr = baseArg->toConstant()->toInt32();
 
-  MOZ_ASSERT(baseArg->type() == MIRType::Int64);
-  CheckedInt<uint64_t> ptr = baseArg->toConstant()->toInt64();
   ptr += offset();
+
   if (!ptr.isValid()) {
     return this;
   }
-  return MConstant::NewInt64(alloc, ptr.value());
+
+  return MConstant::New(alloc, Int32Value(ptr.value()));
 }
 
 bool MWasmAlignmentCheck::congruentTo(const MDefinition* ins) const {

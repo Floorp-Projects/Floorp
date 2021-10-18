@@ -193,42 +193,31 @@ class Instance {
  public:
   // Functions to be called directly from wasm code.
   static int32_t callImport_general(Instance*, int32_t, int32_t, uint64_t*);
-  static uint32_t memoryGrow_m32(Instance* instance, uint32_t delta);
-  static uint64_t memoryGrow_m64(Instance* instance, uint64_t delta);
-  static uint32_t memorySize_m32(Instance* instance);
-  static uint64_t memorySize_m64(Instance* instance);
-  static int32_t memCopy_m32(Instance* instance, uint32_t dstByteOffset,
-                             uint32_t srcByteOffset, uint32_t len,
-                             uint8_t* memBase);
-  static int32_t memCopyShared_m32(Instance* instance, uint32_t dstByteOffset,
-                                   uint32_t srcByteOffset, uint32_t len,
-                                   uint8_t* memBase);
-  static int32_t memCopy_m64(Instance* instance, uint64_t dstByteOffset,
-                             uint64_t srcByteOffset, uint64_t len,
-                             uint8_t* memBase);
-  static int32_t memCopyShared_m64(Instance* instance, uint64_t dstByteOffset,
-                                   uint64_t srcByteOffset, uint64_t len,
-                                   uint8_t* memBase);
-  static int32_t memFill_m32(Instance* instance, uint32_t byteOffset,
-                             uint32_t value, uint32_t len, uint8_t* memBase);
-  static int32_t memFillShared_m32(Instance* instance, uint32_t byteOffset,
-                                   uint32_t value, uint32_t len,
-                                   uint8_t* memBase);
-  static int32_t memFill_m64(Instance* instance, uint64_t byteOffset,
-                             uint32_t value, uint64_t len, uint8_t* memBase);
-  static int32_t memFillShared_m64(Instance* instance, uint64_t byteOffset,
-                                   uint32_t value, uint64_t len,
-                                   uint8_t* memBase);
-  static int32_t memInit_m32(Instance* instance, uint32_t dstOffset,
-                             uint32_t srcOffset, uint32_t len,
-                             uint32_t segIndex);
-  static int32_t memInit_m64(Instance* instance, uint64_t dstOffset,
-                             uint32_t srcOffset, uint32_t len,
-                             uint32_t segIndex);
+  static uint32_t memoryGrow_i32(Instance* instance, uint32_t delta);
+  static uint32_t memorySize_i32(Instance* instance);
+  static int32_t wait_i32(Instance* instance, uint32_t byteOffset,
+                          int32_t value, int64_t timeout);
+  static int32_t wait_i64(Instance* instance, uint32_t byteOffset,
+                          int64_t value, int64_t timeout);
+  static int32_t wake(Instance* instance, uint32_t byteOffset, int32_t count);
+  static int32_t memCopy32(Instance* instance, uint32_t dstByteOffset,
+                           uint32_t srcByteOffset, uint32_t len,
+                           uint8_t* memBase);
+  static int32_t memCopyShared32(Instance* instance, uint32_t dstByteOffset,
+                                 uint32_t srcByteOffset, uint32_t len,
+                                 uint8_t* memBase);
   static int32_t dataDrop(Instance* instance, uint32_t segIndex);
+  static int32_t memFill32(Instance* instance, uint32_t byteOffset,
+                           uint32_t value, uint32_t len, uint8_t* memBase);
+  static int32_t memFillShared32(Instance* instance, uint32_t byteOffset,
+                                 uint32_t value, uint32_t len,
+                                 uint8_t* memBase);
+  static int32_t memInit32(Instance* instance, uint32_t dstOffset,
+                           uint32_t srcOffset, uint32_t len, uint32_t segIndex);
   static int32_t tableCopy(Instance* instance, uint32_t dstOffset,
                            uint32_t srcOffset, uint32_t len,
                            uint32_t dstTableIndex, uint32_t srcTableIndex);
+  static int32_t elemDrop(Instance* instance, uint32_t segIndex);
   static int32_t tableFill(Instance* instance, uint32_t start, void* value,
                            uint32_t len, uint32_t tableIndex);
   static void* tableGet(Instance* instance, uint32_t index,
@@ -241,19 +230,6 @@ class Instance {
   static int32_t tableInit(Instance* instance, uint32_t dstOffset,
                            uint32_t srcOffset, uint32_t len, uint32_t segIndex,
                            uint32_t tableIndex);
-  static int32_t elemDrop(Instance* instance, uint32_t segIndex);
-  static int32_t wait_i32_m32(Instance* instance, uint32_t byteOffset,
-                              int32_t value, int64_t timeout);
-  static int32_t wait_i32_m64(Instance* instance, uint64_t byteOffset,
-                              int32_t value, int64_t timeout);
-  static int32_t wait_i64_m32(Instance* instance, uint32_t byteOffset,
-                              int64_t value, int64_t timeout);
-  static int32_t wait_i64_m64(Instance* instance, uint64_t byteOffset,
-                              int64_t value, int64_t timeout);
-  static int32_t wake_m32(Instance* instance, uint32_t byteOffset,
-                          int32_t count);
-  static int32_t wake_m64(Instance* instance, uint64_t byteOffset,
-                          int32_t count);
   static void* refFunc(Instance* instance, uint32_t funcIndex);
   static void preBarrierFiltering(Instance* instance, gc::Cell** location);
   static void postBarrier(Instance* instance, gc::Cell** location);

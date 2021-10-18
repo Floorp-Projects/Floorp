@@ -34,8 +34,7 @@ struct MemoryDesc;
 // of size `initialCommittedSize`.  Both arguments denote bytes and must be
 // multiples of the page size, with `initialCommittedSize` <= `mappedSize`.
 // Returns nullptr on failure.
-void* MapBufferMemory(wasm::IndexType, size_t mappedSize,
-                      size_t initialCommittedSize);
+void* MapBufferMemory(size_t mappedSize, size_t initialCommittedSize);
 
 // Commit additional memory in an existing mapping.  `dataEnd` must be the
 // correct value for the end of the existing committed area, and `delta` must be
@@ -53,7 +52,7 @@ bool ExtendBufferMapping(void* dataStart, size_t mappedSize,
 
 // Remove an existing mapping.  `dataStart` must be the pointer to the start of
 // the mapping, and `mappedSize` the size of that mapping.
-void UnmapBufferMemory(wasm::IndexType t, void* dataStart, size_t mappedSize);
+void UnmapBufferMemory(void* dataStart, size_t mappedSize);
 
 // Return the number of currently live mapped buffers.
 int32_t LiveMappedBufferCount();
@@ -467,12 +466,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   mozilla::Maybe<wasm::Pages> wasmSourceMaxPages() const;
 
   [[nodiscard]] static bool wasmGrowToPagesInPlace(
-      wasm::IndexType t, wasm::Pages newPages,
-      Handle<ArrayBufferObject*> oldBuf,
+      wasm::Pages newPages, Handle<ArrayBufferObject*> oldBuf,
       MutableHandle<ArrayBufferObject*> newBuf, JSContext* cx);
   [[nodiscard]] static bool wasmMovingGrowToPages(
-      wasm::IndexType t, wasm::Pages newPages,
-      Handle<ArrayBufferObject*> oldBuf,
+      wasm::Pages newPages, Handle<ArrayBufferObject*> oldBuf,
       MutableHandle<ArrayBufferObject*> newBuf, JSContext* cx);
 
   static void finalize(JSFreeOp* fop, JSObject* obj);
@@ -516,10 +513,9 @@ using RootedArrayBufferObject = Rooted<ArrayBufferObject*>;
 using HandleArrayBufferObject = Handle<ArrayBufferObject*>;
 using MutableHandleArrayBufferObject = MutableHandle<ArrayBufferObject*>;
 
-// Create a buffer for a wasm memory, whose type is determined by
-// memory.indexType().
-bool CreateWasmBuffer(JSContext* cx, const wasm::MemoryDesc& memory,
-                      MutableHandleArrayBufferObjectMaybeShared buffer);
+// Create a buffer for a 32-bit wasm memory.
+bool CreateWasmBuffer32(JSContext* cx, const wasm::MemoryDesc& memory,
+                        MutableHandleArrayBufferObjectMaybeShared buffer);
 
 // Per-compartment table that manages the relationship between array buffers
 // and the views that use their storage.

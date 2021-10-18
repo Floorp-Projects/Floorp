@@ -6918,8 +6918,7 @@ static bool TryInstantiate(JSContext* cx, CallArgs args, const Module& module,
       return false;
     }
 
-    imports.get().memory =
-        WasmMemoryObject::create(cx, buffer, /* hugeMemory= */ false, nullptr);
+    imports.get().memory = WasmMemoryObject::create(cx, buffer, nullptr);
     if (!imports.get().memory) {
       return false;
     }
@@ -7351,8 +7350,8 @@ bool js::IsValidAsmJSHeapLength(size_t length) {
     return false;
   }
 
-  // The heap length is limited by what a wasm memory32 can handle.
-  if (length > MaxMemoryBytes(IndexType::I32)) {
+  // The heap length is limited by what wasm can handle.
+  if (length > MaxMemoryBytes()) {
     return false;
   }
 
