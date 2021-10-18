@@ -102,6 +102,10 @@ struct TlsData {
   // baseline-compiled function.
   void** jumpTable;
 
+  // General scratch storage for the baseline compiler, which can't always use
+  // the stack for this.
+  uint32_t baselineScratch[2];
+
   // The globalArea must be the last field.  Globals for the module start here
   // and are inline in this structure.  16-byte alignment is required for SIMD
   // data.
