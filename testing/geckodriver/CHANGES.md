@@ -8,6 +8,10 @@ All notable changes to this program are documented in this file.
 
 ### Known problems
 
+- geckodriver restricts connections to local IP addresses. This can interfere
+  with deployments in which geckodriver is running on a different network node
+  to the tests e.g. some container or virtual-machine based setups.
+
 - _macOS 10.15 (Catalina) and later:_
 
   Due to the requirement from Apple that all programs must be
