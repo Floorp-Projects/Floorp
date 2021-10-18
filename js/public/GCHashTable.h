@@ -78,8 +78,6 @@ class GCHashMap : public js::HashMap<Key, Value, HashPolicy, AllocPolicy> {
     }
   }
 
-  bool needsSweep() const { return !this->empty(); }
-
   void sweep() {
     typename Base::Enum e(*this);
     sweepEntries(e);
@@ -277,8 +275,6 @@ class GCHashSet : public js::HashSet<T, HashPolicy, AllocPolicy> {
     }
   }
 
-  bool needsSweep() const { return !this->empty(); }
-
   void sweep() {
     typename Base::Enum e(*this);
     sweepEntries(e);
@@ -428,7 +424,7 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
         needsBarrier(false) {}
   ~WeakCache() { MOZ_ASSERT(!needsBarrier); }
 
-  bool needsSweep() override { return map.needsSweep(); }
+  bool empty() override { return map.empty(); }
 
   size_t sweep(js::gc::StoreBuffer* sbToLock) override {
     size_t steps = map.count();
@@ -647,7 +643,7 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
     return steps;
   }
 
-  bool needsSweep() override { return set.needsSweep(); }
+  bool empty() override { return set.empty(); }
 
   bool setNeedsIncrementalBarrier(bool needs) override {
     MOZ_ASSERT(needsBarrier != needs);
