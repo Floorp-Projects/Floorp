@@ -12026,7 +12026,6 @@ ARGBSetRow_X86
 ?HasMultipleChildren@ContainerLayer@layers@mozilla@@QAE_NXZ
 ?GetEffectiveOpacity@Layer@layers@mozilla@@QAEMXZ
 ?ComputeEffectiveTransformsForChildren@ContainerLayer@layers@mozilla@@IAEXABV?$Matrix4x4Typed@UUnknownUnits@gfx@mozilla@@U123@M@gfx@3@@Z
-??_GReadbackLayer@layers@mozilla@@UAEPAXI@Z
 ?JS_GetFunctionDisplayId@@YAPAVJSString@@PAVJSFunction@@@Z
 ??1ReadbackProcessor@layers@mozilla@@QAE@XZ
 ?GetClipExtents@gfxContext@@QBE?AU?$RectTyped@UUnknownUnits@gfx@mozilla@@N@gfx@mozilla@@W4ClipExtentsSpace@1@@Z
@@ -17447,7 +17446,6 @@ FluentBuiltInDateTimeFormatterFormat
 ?Unlink@cycleCollection@DOMEventTargetHelper@mozilla@@UAGXPAX@Z
 ?nsCycleCollector_doDeferredDeletion@@YA_NXZ
 ?WriteToFile@nsINIParser_internal@@QAE?AW4nsresult@@PAVnsIFile@@@Z
-?GetType@ReadbackLayer@layers@mozilla@@UBE?AW4LayerType@Layer@23@XZ
 ?functionBodyString@ScriptSource@js@@QAEPAVJSLinearString@@PAUJSContext@@@Z
 ??0Compressor@js@@QAE@PBEI@Z
 ?init@Compressor@js@@QAE_NXZ
