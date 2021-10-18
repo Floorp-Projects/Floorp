@@ -10,7 +10,6 @@
 #include "Helpers.h"
 
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsITaggingService.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
@@ -20,7 +19,6 @@
 #include "mozilla/storage.h"
 #include "mozilla/dom/PlacesBookmarkAddition.h"
 #include "mozilla/dom/PlacesBookmarkRemoved.h"
-#include "mozilla/dom/PlacesBookmarkTags.h"
 #include "mozilla/dom/PlacesBookmarkTime.h"
 #include "mozilla/dom/PlacesBookmarkTitle.h"
 #include "mozilla/dom/PlacesObservers.h"
@@ -74,18 +72,6 @@ inline int32_t DetermineInitialSyncStatus(uint16_t aSource) {
 // needs a tombstone on deletion.
 inline bool NeedsTombstone(const BookmarkData& aBookmark) {
   return aBookmark.syncStatus == nsINavBookmarksService::SYNC_STATUS_NORMAL;
-}
-
-inline nsresult GetTags(nsIURI* aURI, nsTArray<nsString>& aResult) {
-  nsresult rv;
-  nsCOMPtr<nsITaggingService> taggingService =
-      do_GetService("@mozilla.org/browser/tagging-service;1", &rv);
-
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  return taggingService->GetTagsForURI(aURI, aResult);
 }
 
 }  // namespace
@@ -435,28 +421,28 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder, nsIURI* aURI, int32_t aIndex,
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mCanNotify) {
-    return NS_OK;
+  if (mCanNotify) {
+    Sequence<OwningNonNull<PlacesEvent>> events;
+    nsAutoCString utf8spec;
+    aURI->GetSpec(utf8spec);
+
+    RefPtr<PlacesBookmarkAddition> bookmark = new PlacesBookmarkAddition();
+    bookmark->mItemType = TYPE_BOOKMARK;
+    bookmark->mId = *aNewBookmarkId;
+    bookmark->mParentId = aFolder;
+    bookmark->mIndex = index;
+    bookmark->mUrl.Assign(NS_ConvertUTF8toUTF16(utf8spec));
+    bookmark->mTitle.Assign(NS_ConvertUTF8toUTF16(title));
+    bookmark->mDateAdded = dateAdded / 1000;
+    bookmark->mGuid.Assign(guid);
+    bookmark->mParentGuid.Assign(folderGuid);
+    bookmark->mSource = aSource;
+    bookmark->mIsTagging = grandParentId == mDB->GetTagsFolderId();
+    bool success = !!events.AppendElement(bookmark.forget(), fallible);
+    MOZ_RELEASE_ASSERT(success);
+
+    PlacesObservers::NotifyListeners(events);
   }
-
-  Sequence<OwningNonNull<PlacesEvent>> notifications;
-  nsAutoCString utf8spec;
-  aURI->GetSpec(utf8spec);
-
-  RefPtr<PlacesBookmarkAddition> bookmark = new PlacesBookmarkAddition();
-  bookmark->mItemType = TYPE_BOOKMARK;
-  bookmark->mId = *aNewBookmarkId;
-  bookmark->mParentId = aFolder;
-  bookmark->mIndex = index;
-  bookmark->mUrl.Assign(NS_ConvertUTF8toUTF16(utf8spec));
-  bookmark->mTitle.Assign(NS_ConvertUTF8toUTF16(title));
-  bookmark->mDateAdded = dateAdded / 1000;
-  bookmark->mGuid.Assign(guid);
-  bookmark->mParentGuid.Assign(folderGuid);
-  bookmark->mSource = aSource;
-  bookmark->mIsTagging = grandParentId == mDB->GetTagsFolderId();
-  bool success = !!notifications.AppendElement(bookmark.forget(), fallible);
-  MOZ_RELEASE_ASSERT(success);
 
   // If the bookmark has been added to a tag container, notify all
   // bookmark-folder result nodes which contain a bookmark for the new
@@ -467,29 +453,18 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder, nsIURI* aURI, int32_t aIndex,
     rv = GetBookmarksForURI(aURI, bookmarks);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsTArray<nsString> tags;
-    rv = GetTags(aURI, tags);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
       // Check that bookmarks doesn't include the current tag itemId.
       MOZ_ASSERT(bookmarks[i].id != *aNewBookmarkId);
-      RefPtr<PlacesBookmarkTags> tagsChanged = new PlacesBookmarkTags();
-      tagsChanged->mId = bookmarks[i].id;
-      tagsChanged->mItemType = TYPE_BOOKMARK;
-      tagsChanged->mUrl.Assign(NS_ConvertUTF8toUTF16(utf8spec));
-      tagsChanged->mGuid = bookmarks[i].guid;
-      tagsChanged->mParentGuid = bookmarks[i].parentGuid;
-      tagsChanged->mTags.Assign(tags);
-      tagsChanged->mLastModified = bookmarks[i].lastModified / 1000;
-      tagsChanged->mSource = aSource;
-      tagsChanged->mIsTagging = false;
-      success = !!notifications.AppendElement(tagsChanged.forget(), fallible);
-      MOZ_RELEASE_ASSERT(success);
+
+      NOTIFY_BOOKMARKS_OBSERVERS(
+          mCanNotify, mObservers,
+          OnItemChanged(bookmarks[i].id, "tags"_ns, false, ""_ns,
+                        bookmarks[i].lastModified, TYPE_BOOKMARK,
+                        bookmarks[i].parentId, bookmarks[i].guid,
+                        bookmarks[i].parentGuid, ""_ns, aSource));
     }
   }
-
-  PlacesObservers::NotifyListeners(notifications);
 
   return NS_OK;
 }
@@ -575,28 +550,27 @@ nsNavBookmarks::RemoveItem(int64_t aItemId, uint16_t aSource) {
     NS_WARNING_ASSERTION(uri, "Invalid URI in RemoveItem");
   }
 
-  if (!mCanNotify) {
-    return NS_OK;
-  }
+  if (mCanNotify) {
+    Sequence<OwningNonNull<PlacesEvent>> events;
+    RefPtr<PlacesBookmarkRemoved> bookmarkRef = new PlacesBookmarkRemoved();
+    bookmarkRef->mItemType = bookmark.type;
+    bookmarkRef->mId = bookmark.id;
+    bookmarkRef->mParentId = bookmark.parentId;
+    bookmarkRef->mIndex = bookmark.position;
+    if (bookmark.type == TYPE_BOOKMARK) {
+      bookmarkRef->mUrl.Assign(NS_ConvertUTF8toUTF16(bookmark.url));
+    }
+    bookmarkRef->mGuid.Assign(bookmark.guid);
+    bookmarkRef->mParentGuid.Assign(bookmark.parentGuid);
+    bookmarkRef->mSource = aSource;
+    bookmarkRef->mIsTagging =
+        bookmark.parentId == tagsRootId || bookmark.grandParentId == tagsRootId;
+    bookmarkRef->mIsDescendantRemoval = false;
+    bool success = !!events.AppendElement(bookmarkRef.forget(), fallible);
+    MOZ_RELEASE_ASSERT(success);
 
-  Sequence<OwningNonNull<PlacesEvent>> notifications;
-  RefPtr<PlacesBookmarkRemoved> bookmarkRef = new PlacesBookmarkRemoved();
-  bookmarkRef->mItemType = bookmark.type;
-  bookmarkRef->mId = bookmark.id;
-  bookmarkRef->mParentId = bookmark.parentId;
-  bookmarkRef->mIndex = bookmark.position;
-  if (bookmark.type == TYPE_BOOKMARK) {
-    bookmarkRef->mUrl.Assign(NS_ConvertUTF8toUTF16(bookmark.url));
+    PlacesObservers::NotifyListeners(events);
   }
-  bookmarkRef->mGuid.Assign(bookmark.guid);
-  bookmarkRef->mParentGuid.Assign(bookmark.parentGuid);
-  bookmarkRef->mSource = aSource;
-  bookmarkRef->mIsTagging =
-      bookmark.parentId == tagsRootId || bookmark.grandParentId == tagsRootId;
-  bookmarkRef->mIsDescendantRemoval = false;
-  bool success = !!notifications.AppendElement(bookmarkRef.forget(), fallible);
-  MOZ_RELEASE_ASSERT(success);
-
   if (bookmark.type == TYPE_BOOKMARK && bookmark.grandParentId == tagsRootId &&
       uri) {
     // If the removed bookmark was child of a tag container, notify a tags
@@ -605,30 +579,15 @@ nsNavBookmarks::RemoveItem(int64_t aItemId, uint16_t aSource) {
     rv = GetBookmarksForURI(uri, bookmarks);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoCString utf8spec;
-    uri->GetSpec(utf8spec);
-
-    nsTArray<nsString> tags;
-    rv = GetTags(uri, tags);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
-      RefPtr<PlacesBookmarkTags> tagsChanged = new PlacesBookmarkTags();
-      tagsChanged->mId = bookmarks[i].id;
-      tagsChanged->mItemType = TYPE_BOOKMARK;
-      tagsChanged->mUrl.Assign(NS_ConvertUTF8toUTF16(utf8spec));
-      tagsChanged->mGuid = bookmarks[i].guid;
-      tagsChanged->mParentGuid = bookmarks[i].parentGuid;
-      tagsChanged->mTags.Assign(tags);
-      tagsChanged->mLastModified = bookmarks[i].lastModified / 1000;
-      tagsChanged->mSource = aSource;
-      tagsChanged->mIsTagging = false;
-      success = !!notifications.AppendElement(tagsChanged.forget(), fallible);
-      MOZ_RELEASE_ASSERT(success);
+      NOTIFY_BOOKMARKS_OBSERVERS(
+          mCanNotify, mObservers,
+          OnItemChanged(bookmarks[i].id, "tags"_ns, false, ""_ns,
+                        bookmarks[i].lastModified, TYPE_BOOKMARK,
+                        bookmarks[i].parentId, bookmarks[i].guid,
+                        bookmarks[i].parentGuid, ""_ns, aSource));
     }
   }
-
-  PlacesObservers::NotifyListeners(notifications);
 
   return NS_OK;
 }
@@ -897,24 +856,21 @@ nsresult nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId,
       NS_WARNING_ASSERTION(uri, "Invalid URI in RemoveFolderChildren");
     }
 
-    if (!mCanNotify) {
-      return NS_OK;
+    if (mCanNotify) {
+      RefPtr<PlacesBookmarkRemoved> bookmark = new PlacesBookmarkRemoved();
+      bookmark->mItemType = TYPE_BOOKMARK;
+      bookmark->mId = child.id;
+      bookmark->mParentId = child.parentId;
+      bookmark->mIndex = child.position;
+      bookmark->mUrl.Assign(NS_ConvertUTF8toUTF16(child.url));
+      bookmark->mGuid.Assign(child.guid);
+      bookmark->mParentGuid.Assign(child.parentGuid);
+      bookmark->mSource = aSource;
+      bookmark->mIsTagging = (child.grandParentId == tagsRootId);
+      bookmark->mIsDescendantRemoval = (child.grandParentId != tagsRootId);
+      bool success = !!notifications.AppendElement(bookmark.forget(), fallible);
+      MOZ_RELEASE_ASSERT(success);
     }
-
-    RefPtr<PlacesBookmarkRemoved> bookmark = new PlacesBookmarkRemoved();
-    bookmark->mItemType = TYPE_BOOKMARK;
-    bookmark->mId = child.id;
-    bookmark->mParentId = child.parentId;
-    bookmark->mIndex = child.position;
-    bookmark->mUrl.Assign(NS_ConvertUTF8toUTF16(child.url));
-    bookmark->mGuid.Assign(child.guid);
-    bookmark->mParentGuid.Assign(child.parentGuid);
-    bookmark->mSource = aSource;
-    bookmark->mIsTagging = (child.grandParentId == tagsRootId);
-    bookmark->mIsDescendantRemoval = (child.grandParentId != tagsRootId);
-    bool success = !!notifications.AppendElement(bookmark.forget(), fallible);
-    MOZ_RELEASE_ASSERT(success);
-
     if (child.type == TYPE_BOOKMARK && child.grandParentId == tagsRootId &&
         uri) {
       // If the removed bookmark was a child of a tag container, notify all
@@ -924,31 +880,18 @@ nsresult nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId,
       rv = GetBookmarksForURI(uri, bookmarks);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsAutoCString utf8spec;
-      uri->GetSpec(utf8spec);
-
-      nsTArray<nsString> tags;
-      rv = GetTags(uri, tags);
-      NS_ENSURE_SUCCESS(rv, rv);
-
       for (uint32_t i = 0; i < bookmarks.Length(); ++i) {
-        RefPtr<PlacesBookmarkTags> tagsChanged = new PlacesBookmarkTags();
-        tagsChanged->mId = bookmarks[i].id;
-        tagsChanged->mItemType = TYPE_BOOKMARK;
-        tagsChanged->mUrl.Assign(NS_ConvertUTF8toUTF16(utf8spec));
-        tagsChanged->mGuid = bookmarks[i].guid;
-        tagsChanged->mParentGuid = bookmarks[i].parentGuid;
-        tagsChanged->mTags.Assign(tags);
-        tagsChanged->mLastModified = bookmarks[i].lastModified / 1000;
-        tagsChanged->mSource = aSource;
-        tagsChanged->mIsTagging = false;
-        success = !!notifications.AppendElement(tagsChanged.forget(), fallible);
-        MOZ_RELEASE_ASSERT(success);
+        NOTIFY_BOOKMARKS_OBSERVERS(
+            mCanNotify, mObservers,
+            OnItemChanged(bookmarks[i].id, "tags"_ns, false, ""_ns,
+                          bookmarks[i].lastModified, TYPE_BOOKMARK,
+                          bookmarks[i].parentId, bookmarks[i].guid,
+                          bookmarks[i].parentGuid, ""_ns, aSource));
       }
     }
   }
 
-  if (notifications.Length()) {
+  if (notifications.Length() > 0) {
     PlacesObservers::NotifyListeners(notifications);
   }
 
