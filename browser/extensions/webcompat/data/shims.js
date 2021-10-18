@@ -486,7 +486,7 @@ const AVAILABLE_SHIMS = [
   },
   {
     id: "Kinja",
-    platform: "all",
+    platform: "desktop",
     name: "Kinja",
     bug: "1656171",
     contentScripts: [
