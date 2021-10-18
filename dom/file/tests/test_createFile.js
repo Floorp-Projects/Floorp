@@ -17,7 +17,7 @@ add_task(async function() {
   outStream.init(
     existingFile,
     0x02 | 0x08 | 0x20, // write, create, truncate
-    0666,
+    0o666,
     0
   );
 
