@@ -622,7 +622,7 @@
 
 
   <!-- Checkbox menu item text to request desktop site -->
-    <string name="preference_performance_request_desktop_site">Полная версия сайта</string>
+    <string name="preference_performance_request_desktop_site">Запросить версию для компьютера</string>
 
     <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site2">Версия для компьютера</string>
@@ -712,8 +712,28 @@ The new line here must be kept as the second half of the string is clickable for
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Открывайте ссылки в новых вкладках\n Произведите долгое нажатие на любую ссылку на странице</string>
 
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Хотите увидеть полную версию сайта?\n
+        Переключитесь на версию для компьютера в меню %1$</string>
+
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Отключить советы на домашнем экране</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist3">Хотите отключить Улучшенную защиту от отслеживания для сайта, которому доверяете?\n
+        Добавьте его в список разрешённых в Настройках
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Почему бы и нет, у нас действительно новый внешний вид!\n Узнайте больше об этом и других обновлениях %1$s.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Создайте ярлыки на сайты, которые наиболее часто посещаете:\n
+    Выберите Добавить в ярлыки в меню %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Открыта новая вкладка</string>
@@ -796,4 +816,17 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">Сохранённые и отправленные фотографии &lt;b&gt;не будут&lt;/b&gt; удалены, когда вы сотрёте историю %1$s</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Тема</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Светлая</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Тёмная</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Учитывать режим экономии батареи</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Использовать тему устройства</string>
+
 </resources>
