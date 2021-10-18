@@ -64,9 +64,9 @@ bool OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList) {
                 // language code with no region subtag, but the
                 // GlobalizationPreferences API may give us one (e.g. "ja").
                 // So if there's no hyphen in the string at this point, we use
-                // Locale::Maximize to get a suitable region code to
+                // MozLocale::Maximize to get a suitable region code to
                 // go with it.
-                Locale locale(loc);
+                MozLocale locale(loc);
                 if (locale.Maximize() && !locale.GetRegion().IsEmpty()) {
                   loc.Append('-');
                   loc.Append(locale.GetRegion());

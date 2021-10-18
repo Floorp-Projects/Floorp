@@ -168,6 +168,28 @@ def ssh(**kwargs):
                     "hg.mozilla.org.".format(username)
                 ],
             )
+
+        if "Mercurial access is currently disabled on your account" in proc.stdout:
+            return DoctorCheck(
+                name="ssh",
+                status=CheckStatus.FATAL,
+                display_text=[
+                    "You previously had push access to hgmo, but due to inactivity",
+                    "your access was revoked. Please file a bug in Bugzilla under",
+                    "`Infrastructure & Operations :: Infrastructure: LDAP` to request",
+                    "access.",
+                ],
+            )
+
+        return DoctorCheck(
+            name="ssh",
+            status=CheckStatus.WARNING,
+            display_text=[
+                "Unexpected output from `ssh hg.mozilla.org`:",
+                proc.stdout,
+            ],
+        )
+
     except subprocess.CalledProcessError:
         return DoctorCheck(
             name="ssh",

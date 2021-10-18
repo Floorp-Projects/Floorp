@@ -17,10 +17,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"
 );
-// This AppConstants import can be removed as part of Bug 1735562
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
+
 ChromeUtils.defineModuleGetter(
   this,
   "FormAutofillUtils",
@@ -226,9 +223,7 @@ class FieldScanner {
       );
     }
     // This NIGHTLY_BUILD statement should be removed as part of Bug 1735562 once the feature is stable
-    if (AppConstants.NIGHTLY_BUILD) {
-      this._classifyMultipleCCNumberFields();
-    }
+    this._classifyMultipleCCNumberFields();
   }
 
   /**

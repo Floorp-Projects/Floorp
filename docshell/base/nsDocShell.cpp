@@ -6806,6 +6806,8 @@ void nsDocShell::ReportBFCacheComboTelemetry(uint16_t aCombo) {
   enum BFCacheStatusCombo : uint16_t {
     BFCACHE_SUCCESS,
     NOT_ONLY_TOPLEVEL = mozilla::dom::BFCacheStatus::NOT_ONLY_TOPLEVEL_IN_BCG,
+    // If both unload and beforeunload listeners are presented, it'll be
+    // recorded as unload
     UNLOAD = mozilla::dom::BFCacheStatus::UNLOAD_LISTENER,
     UNLOAD_REQUEST = mozilla::dom::BFCacheStatus::UNLOAD_LISTENER |
                      mozilla::dom::BFCacheStatus::REQUEST,
@@ -6826,9 +6828,15 @@ void nsDocShell::ReportBFCacheComboTelemetry(uint16_t aCombo) {
         mozilla::dom::BFCacheStatus::UNLOAD_LISTENER |
         mozilla::dom::BFCacheStatus::REQUEST |
         mozilla::dom::BFCacheStatus::ACTIVE_PEER_CONNECTION,
-    REMOTE_SUBFRAMES = mozilla::dom::BFCacheStatus::CONTAINS_REMOTE_SUBFRAMES
+    REMOTE_SUBFRAMES = mozilla::dom::BFCacheStatus::CONTAINS_REMOTE_SUBFRAMES,
+    BEFOREUNLOAD = mozilla::dom::BFCacheStatus::BEFOREUNLOAD_LISTENER,
   };
 
+  // Beforeunload is recorded as a blocker only if it is the only one to block
+  // bfcache.
+  if (aCombo != mozilla::dom::BFCacheStatus::BEFOREUNLOAD_LISTENER) {
+    aCombo &= ~mozilla::dom::BFCacheStatus::BEFOREUNLOAD_LISTENER;
+  }
   switch (aCombo) {
     case BFCACHE_SUCCESS:
       Telemetry::AccumulateCategorical(
@@ -6847,6 +6855,10 @@ void nsDocShell::ReportBFCacheComboTelemetry(uint16_t aCombo) {
       break;
     case UNLOAD:
       Telemetry::AccumulateCategorical(Telemetry::LABELS_BFCACHE_COMBO::Unload);
+      break;
+    case BEFOREUNLOAD:
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_BFCACHE_COMBO::Beforeunload);
       break;
     case UNLOAD_REQUEST:
       Telemetry::AccumulateCategorical(

@@ -396,9 +396,8 @@ bool frontend::InstantiateStencils(JSContext* cx, CompilationInput& input,
     }
 
     Rooted<JSScript*> script(cx, gcOutput.script);
-    if (!input.options.hideFromNewScriptInitial()) {
-      DebugAPI::onNewScript(cx, script);
-    }
+    const JS::InstantiateOptions instantiateOptions(input.options);
+    FireOnNewScript(cx, instantiateOptions, script);
   }
 
   return true;
@@ -410,7 +409,7 @@ bool frontend::PrepareForInstantiate(JSContext* cx, CompilationInput& input,
   AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
                                      JS::ProfilingCategoryPair::JS_Parsing);
 
-  return CompilationStencil::prepareForInstantiate(cx, input, stencil,
+  return CompilationStencil::prepareForInstantiate(cx, input.atomCache, stencil,
                                                    gcOutput);
 }
 
@@ -1220,10 +1219,9 @@ static JSFunction* CompileStandaloneFunction(
 
     MOZ_ASSERT(!cx->isHelperThreadContext());
 
+    const JS::InstantiateOptions instantiateOptions(options);
     Rooted<JSScript*> script(cx, gcOutput.get().script);
-    if (!options.hideFromNewScriptInitial()) {
-      DebugAPI::onNewScript(cx, script);
-    }
+    FireOnNewScript(cx, instantiateOptions, script);
   }
 
   assertException.reset();
@@ -1276,4 +1274,26 @@ JSFunction* frontend::CompileStandaloneFunctionInNonSyntacticScope(
                                    syntaxKind, GeneratorKind::NotGenerator,
                                    FunctionAsyncKind::SyncFunction,
                                    enclosingScope);
+}
+
+void frontend::FireOnNewScript(JSContext* cx,
+                               const JS::InstantiateOptions& options,
+                               JS::Handle<JSScript*> script) {
+  if (!options.hideFromNewScriptInitial()) {
+    DebugAPI::onNewScript(cx, script);
+  }
+}
+
+void frontend::FireOnNewScripts(JSContext* cx,
+                                const JS::InstantiateOptions& options,
+                                JS::Handle<JS::GCVector<JSScript*>> scripts) {
+  if (!options.hideFromNewScriptInitial()) {
+    JS::Rooted<JSScript*> rootedScript(cx);
+    for (auto& script : scripts) {
+      MOZ_ASSERT(script->isGlobalCode());
+
+      rootedScript = script;
+      DebugAPI::onNewScript(cx, rootedScript);
+    }
+  }
 }

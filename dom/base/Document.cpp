@@ -11060,11 +11060,19 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest,
   nsCOMPtr<EventTarget> piTarget = do_QueryInterface(mScriptGlobalObject);
   if (!allowUnloadListeners && piTarget) {
     EventListenerManager* manager = piTarget->GetExistingListenerManager();
-    if (manager && manager->HasUnloadListeners()) {
-      MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
-              ("Save of %s blocked due to unload handlers", uri.get()));
-      aBFCacheCombo |= BFCacheStatus::UNLOAD_LISTENER;
-      ret = false;
+    if (manager) {
+      if (manager->HasUnloadListeners()) {
+        MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
+                ("Save of %s blocked due to unload handlers", uri.get()));
+        aBFCacheCombo |= BFCacheStatus::UNLOAD_LISTENER;
+        ret = false;
+      }
+      if (manager->HasBeforeUnloadListeners()) {
+        MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
+                ("Save of %s blocked due to beforeUnload handlers", uri.get()));
+        aBFCacheCombo |= BFCacheStatus::BEFOREUNLOAD_LISTENER;
+        ret = false;
+      }
     }
   }
 

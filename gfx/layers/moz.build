@@ -25,7 +25,6 @@ EXPORTS += [
     "LayerUserData.h",
     "opengl/OGLShaderConfig.h",
     "opengl/OGLShaderProgram.h",
-    "ReadbackLayer.h",
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":

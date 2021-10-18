@@ -230,7 +230,7 @@ Use ``make_intl_data.py``\ ’s ``langtags`` mode to update language tag informa
    $ export PYTHONPATH="$topsrcdir/third_party/python/PyYAML/lib3/"
    $ python3 ./make_intl_data.py langtags
 
-The CLDR version used will be printed in the header of CLDR-sensitive generated files. For example, ``js/src/builtin/intl/LanguageTagGenerated.cpp`` currently begins with:
+The CLDR version used will be printed in the header of CLDR-sensitive generated files. For example, ``intl/components/src/LocaleGenerated.cpp`` currently begins with:
 
 .. code:: cpp
 

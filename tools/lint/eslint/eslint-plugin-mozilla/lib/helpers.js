@@ -706,6 +706,15 @@ module.exports = {
     return !!this.getTestType(scope);
   },
 
+  /*
+   * Check if this is an .sjs file.
+   */
+  getIsSjs(scope) {
+    let filepath = this.cleanUpPath(scope.getFilename());
+
+    return path.extname(filepath) == ".sjs";
+  },
+
   /**
    * Gets the type of test or null if this isn't a test.
    *

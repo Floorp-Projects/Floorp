@@ -367,4 +367,17 @@ impl Device {
             bindings::Gecko_IsSupportedImageMimeType(mime_type.as_ptr(), mime_type.len() as u32)
         }
     }
+
+    /// Returns the gtk titlebar radius in CSS pixels.
+    pub fn titlebar_radius(&self) -> f32 {
+        unsafe {
+            bindings::Gecko_GetLookAndFeelFloat(bindings::LookAndFeel_FloatID::TitlebarRadius as i32)
+        }
+    }
+
+    /// Return whether the document is a chrome document.
+    #[inline]
+    pub fn is_chrome_document(&self) -> bool {
+        self.pref_sheet_prefs().mIsChrome
+    }
 }

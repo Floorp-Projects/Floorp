@@ -687,8 +687,10 @@ nsresult ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
     if (module) {
       JS::RootedValue privateValue(cx);
       JS::RootedScript moduleScript(cx, JS::GetModuleScript(module));
-      if (!JS::UpdateDebugMetadata(cx, moduleScript, options, privateValue,
-                                   nullptr, introductionScript, nullptr)) {
+      JS::InstantiateOptions instantiateOptions(options);
+      if (!JS::UpdateDebugMetadata(cx, moduleScript, instantiateOptions,
+                                   privateValue, nullptr, introductionScript,
+                                   nullptr)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
@@ -2935,10 +2937,10 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
   }
 
   if (aRequest->IsModuleRequest()) {
-    aOptions->hideScriptFromDebugger = true;
+    aOptions->setHideScriptFromDebugger(true);
   }
 
-  aOptions->setdeferDebugMetadata(true);
+  aOptions->setDeferDebugMetadata(true);
 
   aOptions->borrowBuffer = true;
 

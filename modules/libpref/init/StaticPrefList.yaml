@@ -3753,6 +3753,14 @@
   value: false
   mirror: always
 
+# Points in the native bounds geometry are required to be quantized
+# sufficiently to prevent fingerprinting. The WebXR spec suggests 
+# quantizing to the nearest 5 centimeters.
+- name: dom.vr.webxr.quantization
+  type: AtomicFloat
+  value: 0.05f
+  mirror: always
+
 #ifdef XP_WIN
   # Control firing WidgetMouseEvent by handling Windows pointer messages or
   # mouse messages.

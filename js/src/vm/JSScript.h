@@ -1084,7 +1084,7 @@ class ScriptSourceObject : public NativeObject {
   // Initialize those properties of this ScriptSourceObject whose values
   // are provided by |options|, re-wrapping as necessary.
   static bool initFromOptions(JSContext* cx, HandleScriptSourceObject source,
-                              const JS::ReadOnlyCompileOptions& options);
+                              const JS::InstantiateOptions& options);
 
   static bool initElementProperties(JSContext* cx,
                                     HandleScriptSourceObject source,

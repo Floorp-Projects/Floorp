@@ -304,6 +304,7 @@ enum BFCacheStatus {
   NOT_ONLY_TOPLEVEL_IN_BCG = 1 << 12,    // Status 12
   ABOUT_PAGE = 1 << 13,                  // Status 13
   RESTORING = 1 << 14,                   // Status 14
+  BEFOREUNLOAD_LISTENER = 1 << 15,       // Status 15
 };
 
 }  // namespace dom

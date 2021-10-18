@@ -1469,7 +1469,6 @@ impl ToMarionette<MarionetteFrame> for SwitchToFrameParameters {
 impl ToMarionette<Window> for SwitchToWindowParameters {
     fn to_marionette(&self) -> WebDriverResult<Window> {
         Ok(Window {
-            name: self.handle.clone(),
             handle: self.handle.clone(),
         })
     }
