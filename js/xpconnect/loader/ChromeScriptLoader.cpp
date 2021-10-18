@@ -290,10 +290,13 @@ PrecompiledScript::PrecompiledScript(nsISupports* aParent,
     : mParent(aParent),
       mStencil(aStencil),
       mURL(aOptions.filename()),
-      mHasReturnValue(!aOptions.noScriptRval),
-      mLazilyParse(!aOptions.forceFullParse()) {
+      mHasReturnValue(!aOptions.noScriptRval) {
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(aStencil);
+#ifdef DEBUG
+  JS::InstantiateOptions options(aOptions);
+  options.assertDefault();
+#endif
 };
 
 void PrecompiledScript::ExecuteInGlobal(JSContext* aCx, HandleObject aGlobal,
@@ -303,13 +306,8 @@ void PrecompiledScript::ExecuteInGlobal(JSContext* aCx, HandleObject aGlobal,
     RootedObject targetObj(aCx, JS_FindCompilationScope(aCx, aGlobal));
     JSAutoRealm ar(aCx, targetObj);
 
-    CompileOptions options(aCx);
-    if (!mLazilyParse) {
-      // See AsyncScriptCompiler::Start.
-      options.setForceFullParse();
-    }
-    // mHasReturnValue (noScriptRval) is unused during instantiation.
-
+    // See assertion in constructor.
+    JS::InstantiateOptions options;
     Rooted<JSScript*> script(
         aCx, JS::InstantiateGlobalStencil(aCx, options, mStencil));
     if (!script) {

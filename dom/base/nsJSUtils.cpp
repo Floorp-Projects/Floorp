@@ -90,7 +90,8 @@ nsresult nsJSUtils::UpdateFunctionDebugMetadata(
     return NS_OK;
   }
 
-  if (!JS::UpdateDebugMetadata(cx, script, aOptions, aPrivateValue,
+  JS::InstantiateOptions instantiateOptions(aOptions);
+  if (!JS::UpdateDebugMetadata(cx, script, instantiateOptions, aPrivateValue,
                                aElementAttributeName, nullptr, nullptr)) {
     return NS_ERROR_FAILURE;
   }

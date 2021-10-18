@@ -1106,9 +1106,10 @@ static bool InstantiateAtoms(JSContext* cx, CompilationAtomCache& atomCache,
   return InstantiateMarkedAtoms(cx, stencil.parserAtomData, atomCache);
 }
 
-static bool InstantiateScriptSourceObject(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    const CompilationStencil& stencil, CompilationGCOutput& gcOutput) {
+static bool InstantiateScriptSourceObject(JSContext* cx,
+                                          const JS::InstantiateOptions& options,
+                                          const CompilationStencil& stencil,
+                                          CompilationGCOutput& gcOutput) {
   MOZ_ASSERT(stencil.source);
 
   gcOutput.sourceObject = ScriptSourceObject::create(cx, stencil.source.get());
@@ -1553,6 +1554,7 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
   MOZ_ASSERT(stencil.isInitialStencil() == input.isInitialStencil());
 
   CompilationAtomCache& atomCache = input.atomCache;
+  const JS::InstantiateOptions options(input.options);
 
   // Phase 1: Instantiate JSAtom/JSStrings.
   if (!InstantiateAtoms(cx, atomCache, stencil)) {
@@ -1561,7 +1563,7 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
 
   // Phase 2: Instantiate ScriptSourceObject, ModuleObject, JSFunctions.
   if (isInitialParse) {
-    if (!InstantiateScriptSourceObject(cx, input.options, stencil, gcOutput)) {
+    if (!InstantiateScriptSourceObject(cx, options, stencil, gcOutput)) {
       return false;
     }
 
@@ -4051,16 +4053,12 @@ already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
   return CompileModuleScriptToStencilImpl(cx, options, srcBuf);
 }
 
-JSScript* JS::InstantiateGlobalStencil(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    JS::Stencil* stencil) {
-  if (stencil->canLazilyParse != CanLazilyParse(options)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_STENCIL_OPTIONS_MISMATCH);
-    return nullptr;
-  }
-
-  Rooted<CompilationInput> input(cx, CompilationInput(options));
+JSScript* JS::InstantiateGlobalStencil(JSContext* cx,
+                                       const JS::InstantiateOptions& options,
+                                       JS::Stencil* stencil) {
+  CompileOptions compileOptions(cx);
+  options.copyTo(compileOptions);
+  Rooted<CompilationInput> input(cx, CompilationInput(compileOptions));
   Rooted<CompilationGCOutput> gcOutput(cx);
   if (!InstantiateStencils(cx, input.get(), *stencil, gcOutput.get())) {
     return nullptr;
@@ -4077,19 +4075,14 @@ JS_PUBLIC_API bool JS::StencilCanLazilyParse(Stencil* stencil) {
   return stencil->canLazilyParse;
 }
 
-JSObject* JS::InstantiateModuleStencil(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& optionsInput,
-    JS::Stencil* stencil) {
-  JS::CompileOptions options(cx, optionsInput);
-  options.setModule();
+JSObject* JS::InstantiateModuleStencil(JSContext* cx,
+                                       const JS::InstantiateOptions& options,
+                                       JS::Stencil* stencil) {
+  CompileOptions compileOptions(cx);
+  options.copyTo(compileOptions);
+  compileOptions.setModule();
 
-  if (stencil->canLazilyParse != CanLazilyParse(options)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_STENCIL_OPTIONS_MISMATCH);
-    return nullptr;
-  }
-
-  Rooted<CompilationInput> input(cx, CompilationInput(options));
+  Rooted<CompilationInput> input(cx, CompilationInput(compileOptions));
   Rooted<CompilationGCOutput> gcOutput(cx);
   if (!InstantiateStencils(cx, input.get(), *stencil, gcOutput.get())) {
     return nullptr;

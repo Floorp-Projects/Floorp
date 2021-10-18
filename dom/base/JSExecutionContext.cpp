@@ -199,7 +199,9 @@ nsresult JSExecutionContext::Decode(mozilla::Vector<uint8_t>& aBytecodeBuf,
     return mRv;
   }
 
-  mScript = JS::InstantiateGlobalStencil(mCx, options, stencil);
+  JS::InstantiateOptions instantiateOptions(options);
+
+  mScript = JS::InstantiateGlobalStencil(mCx, instantiateOptions, stencil);
   if (!mScript) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -212,12 +214,13 @@ nsresult JSExecutionContext::Decode(mozilla::Vector<uint8_t>& aBytecodeBuf,
 }
 
 bool JSExecutionContext::UpdateDebugMetadata() {
-  if (!mCompileOptions.deferDebugMetadata) {
+  JS::InstantiateOptions options(mCompileOptions);
+
+  if (!options.deferDebugMetadata) {
     return true;
   }
-  return JS::UpdateDebugMetadata(mCx, mScript, mCompileOptions,
-                                 mDebuggerPrivateValue, nullptr,
-                                 mDebuggerIntroductionScript, nullptr);
+  return JS::UpdateDebugMetadata(mCx, mScript, options, mDebuggerPrivateValue,
+                                 nullptr, mDebuggerIntroductionScript, nullptr);
 }
 
 nsresult JSExecutionContext::JoinDecode(JS::OffThreadToken** aOffThreadToken) {
