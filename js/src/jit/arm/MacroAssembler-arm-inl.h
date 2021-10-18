@@ -1740,6 +1740,14 @@ void MacroAssembler::branchNeg32(Condition cond, Register reg, Label* label) {
   j(cond, label);
 }
 
+void MacroAssembler::branchAdd64(Condition cond, Imm32 imm, Register64 dest,
+                                 Label* label) {
+  ScratchRegisterScope scratch(*this);
+  ma_add(imm, dest.low, scratch, SetCC);
+  as_adc(dest.high, dest.high, Imm8(0), SetCC);
+  j(cond, label);
+}
+
 template <typename T>
 void MacroAssembler::branchAddPtr(Condition cond, T src, Register dest,
                                   Label* label) {

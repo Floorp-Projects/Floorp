@@ -2302,16 +2302,15 @@ template void MacroAssembler::storeUnboxedValue(
 void MacroAssembler::PushBoxed(FloatRegister reg) { Push(reg); }
 
 void MacroAssembler::wasmBoundsCheck32(Condition cond, Register index,
-                                       Register boundsCheckLimit,
-                                       Label* label) {
-  ma_b(index, boundsCheckLimit, label, cond);
+                                       Register boundsCheckLimit, Label* ok) {
+  ma_b(index, boundsCheckLimit, ok, cond);
 }
 
 void MacroAssembler::wasmBoundsCheck32(Condition cond, Register index,
-                                       Address boundsCheckLimit, Label* label) {
+                                       Address boundsCheckLimit, Label* ok) {
   SecondScratchRegisterScope scratch2(*this);
   load32(boundsCheckLimit, SecondScratchReg);
-  ma_b(index, SecondScratchReg, label, cond);
+  ma_b(index, SecondScratchReg, ok, cond);
 }
 
 void MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input,

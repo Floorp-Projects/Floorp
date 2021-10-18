@@ -212,6 +212,13 @@ void BaseCompiler::need2xI64(RegI64 r0, RegI64 r1) {
 
 RegI32 BaseCompiler::fromI64(RegI64 r) { return RegI32(lowPart(r)); }
 
+RegI32 BaseCompiler::maybeFromI64(RegI64 r) {
+  if (!r.isValid()) {
+    return RegI32::Invalid();
+  }
+  return fromI64(r);
+}
+
 #ifdef JS_PUNBOX64
 RegI64 BaseCompiler::fromI32(RegI32 r) { return RegI64(Register64(r)); }
 #endif
