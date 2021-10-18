@@ -1208,7 +1208,8 @@ bool Code::initialize(const LinkData& linkData) {
   return true;
 }
 
-bool Code::setTier2(UniqueCodeTier tier2, const LinkData& linkData) const {
+bool Code::setAndBorrowTier2(UniqueCodeTier tier2, const LinkData& linkData,
+                             const CodeTier** borrowedTier) const {
   MOZ_RELEASE_ASSERT(!hasTier2());
   MOZ_RELEASE_ASSERT(tier2->tier() == Tier::Optimized &&
                      tier1_->tier() == Tier::Baseline);
@@ -1218,15 +1219,20 @@ bool Code::setTier2(UniqueCodeTier tier2, const LinkData& linkData) const {
   }
 
   tier2_ = std::move(tier2);
+  *borrowedTier = &*tier2_;
 
   return true;
 }
 
 void Code::commitTier2() const {
   MOZ_RELEASE_ASSERT(!hasTier2());
-  MOZ_RELEASE_ASSERT(tier2_.get());
   hasTier2_ = true;
   MOZ_ASSERT(hasTier2());
+
+  // To maintain the invariant that tier2_ is never read without the tier having
+  // been committed, this checks tier2_ here instead of before setting hasTier2_
+  // (as would be natural).  See comment in WasmCode.h.
+  MOZ_RELEASE_ASSERT(tier2_.get());
 }
 
 uint32_t Code::getFuncIndex(JSFunction* fun) const {
@@ -1273,11 +1279,13 @@ const CodeTier& Code::codeTier(Tier tier) const {
         MOZ_ASSERT(tier1_->initialized());
         return *tier1_;
       }
-      if (tier2_) {
-        MOZ_ASSERT(tier2_->initialized());
-        return *tier2_;
-      }
-      MOZ_CRASH("No code segment at this tier");
+      // It is incorrect to ask for the optimized tier without there being such
+      // a tier and the tier having been committed.  The guard here could
+      // instead be `if (hasTier2()) ... ` but codeTier(t) should not be called
+      // in contexts where that test is necessary.
+      MOZ_RELEASE_ASSERT(hasTier2());
+      MOZ_ASSERT(tier2_->initialized());
+      return *tier2_;
   }
   MOZ_CRASH();
 }
