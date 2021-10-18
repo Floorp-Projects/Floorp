@@ -1025,6 +1025,16 @@ struct BaseCompiler final {
   inline void branchTo(Assembler::Condition c, RegRef lhs, ImmWord rhs,
                        Label* l);
 
+#ifdef JS_CODEGEN_X86
+  // Store r in tls scratch storage after first loading the tls from the frame
+  // into the regForTls.  regForTls must be neither of the registers in r.
+  void stashI64(RegPtr regForTls, RegI64 r);
+
+  // Load r from the tls scratch storage after first loading the tls from the
+  // frame into the regForTls.  regForTls can be one of the registers in r.
+  void unstashI64(RegPtr regForTls, RegI64 r);
+#endif
+
   //////////////////////////////////////////////////////////////////////
   //
   // Code generators for actual operations.
@@ -1086,14 +1096,17 @@ struct BaseCompiler final {
   void boundsCheckBelow4GBAccess(RegPtr tls, RegI64 ptr, Label* ok);
 
 #if defined(RABALDR_HAS_HEAPREG)
+  template <typename RegIndexType>
   BaseIndex prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                       AccessCheck* check, RegPtr tls,
-                                      RegI32 ptr);
+                                      RegIndexType ptr);
 #else
   // Some consumers depend on the returned Address not incorporating tls, as tls
   // may be the scratch register.
+  template <typename RegIndexType>
   Address prepareAtomicMemoryAccess(MemoryAccessDesc* access,
-                                    AccessCheck* check, RegPtr tls, RegI32 ptr);
+                                    AccessCheck* check, RegPtr tls,
+                                    RegIndexType ptr);
 #endif
 
   template <typename RegIndexType>
@@ -1136,23 +1149,35 @@ struct BaseCompiler final {
                    ValType resultType);
 
   void atomicLoad(MemoryAccessDesc* access, ValType type);
+#if !defined(JS_64BIT)
+  template <typename RegIndexType>
+  void atomicLoad64(MemoryAccessDesc* desc);
+#endif
+
   void atomicStore(MemoryAccessDesc* access, ValType type);
+
   void atomicRMW(MemoryAccessDesc* access, ValType type, AtomicOp op);
+  template <typename RegIndexType>
   void atomicRMW32(MemoryAccessDesc* access, ValType type, AtomicOp op);
+  template <typename RegIndexType>
   void atomicRMW64(MemoryAccessDesc* access, ValType type, AtomicOp op);
+
   void atomicXchg(MemoryAccessDesc* desc, ValType type);
+  template <typename RegIndexType>
   void atomicXchg64(MemoryAccessDesc* access, WantResult wantResult);
+  template <typename RegIndexType>
   void atomicXchg32(MemoryAccessDesc* access, ValType type);
+
   void atomicCmpXchg(MemoryAccessDesc* access, ValType type);
+  template <typename RegIndexType>
   void atomicCmpXchg32(MemoryAccessDesc* access, ValType type);
+  template <typename RegIndexType>
   void atomicCmpXchg64(MemoryAccessDesc* access, ValType type);
 
   template <typename RegType>
   RegType popConstMemoryAccess(MemoryAccessDesc* access, AccessCheck* check);
   template <typename RegType>
   RegType popMemoryAccess(MemoryAccessDesc* access, AccessCheck* check);
-
-  RegI32 popMemory32Access(MemoryAccessDesc* access, AccessCheck* check);
 
   void pushHeapBase();
 

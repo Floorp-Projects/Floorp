@@ -91,9 +91,12 @@ enum class SymbolicAddress {
   MemoryGrowM64,
   MemorySizeM32,
   MemorySizeM64,
-  WaitI32,
-  WaitI64,
-  Wake,
+  WaitI32M32,
+  WaitI32M64,
+  WaitI64M32,
+  WaitI64M64,
+  WakeM32,
+  WakeM64,
   MemCopyM32,
   MemCopySharedM32,
   MemCopyM64,
@@ -214,9 +217,12 @@ extern const SymbolicAddressSignature SASigMemoryGrowM32;
 extern const SymbolicAddressSignature SASigMemoryGrowM64;
 extern const SymbolicAddressSignature SASigMemorySizeM32;
 extern const SymbolicAddressSignature SASigMemorySizeM64;
-extern const SymbolicAddressSignature SASigWaitI32;
-extern const SymbolicAddressSignature SASigWaitI64;
-extern const SymbolicAddressSignature SASigWake;
+extern const SymbolicAddressSignature SASigWaitI32M32;
+extern const SymbolicAddressSignature SASigWaitI32M64;
+extern const SymbolicAddressSignature SASigWaitI64M32;
+extern const SymbolicAddressSignature SASigWaitI64M64;
+extern const SymbolicAddressSignature SASigWakeM32;
+extern const SymbolicAddressSignature SASigWakeM64;
 extern const SymbolicAddressSignature SASigMemCopyM32;
 extern const SymbolicAddressSignature SASigMemCopySharedM32;
 extern const SymbolicAddressSignature SASigMemCopyM64;

@@ -99,11 +99,11 @@ static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
     case BD_SymbolicAddress::PostBarrier:
       return SymbolicAddress::PostBarrierFiltering;
     case BD_SymbolicAddress::WaitI32:
-      return SymbolicAddress::WaitI32;
+      return SymbolicAddress::WaitI32M32;
     case BD_SymbolicAddress::WaitI64:
-      return SymbolicAddress::WaitI64;
+      return SymbolicAddress::WaitI64M32;
     case BD_SymbolicAddress::Wake:
-      return SymbolicAddress::Wake;
+      return SymbolicAddress::WakeM32;
     case BD_SymbolicAddress::Limit:
       break;
   }
