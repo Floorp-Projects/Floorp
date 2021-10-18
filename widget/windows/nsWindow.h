@@ -272,7 +272,8 @@ class nsWindow final : public nsWindowBase {
                                   WPARAM wParam, LPARAM lParam,
                                   bool aIsContextMenuKey, int16_t aButton,
                                   uint16_t aInputSource,
-                                  WinPointerInfo* aPointerInfo = nullptr);
+                                  WinPointerInfo* aPointerInfo = nullptr,
+                                  bool aIgnoreAPZ = false);
   virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent,
                                    nsEventStatus& aStatus);
   void DispatchPendingEvents();
