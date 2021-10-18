@@ -136,7 +136,7 @@ mozilla::ProfileBufferBlockIndex profiler_add_marker(
 #ifndef MOZ_GECKO_PROFILER
   return {};
 #else
-  if (!profiler_can_accept_markers()) {
+  if (!profiler_thread_is_being_profiled(aOptions.ThreadId().ThreadId())) {
     return {};
   }
   return ::AddMarkerToBuffer(profiler_markers_detail::CachedCoreBuffer(), aName,

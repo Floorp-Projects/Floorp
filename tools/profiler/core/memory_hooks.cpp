@@ -71,7 +71,7 @@ namespace mozilla::profiler {
 // or not.
 static bool profiler_add_native_allocation_marker(int64_t aSize,
                                                   uintptr_t aMemoryAddress) {
-  if (!profiler_can_accept_markers()) {
+  if (!profiler_thread_is_being_profiled(profiler_main_thread_id())) {
     return false;
   }
 

@@ -89,7 +89,12 @@ ProfileBufferBlockIndex AddMarker(
 #ifndef MOZ_GECKO_PROFILER
   return {};
 #else
-  if (!baseprofiler::profiler_can_accept_markers()) {
+  if ((aOptions.ThreadId().IsUnspecified() ||
+       aOptions.ThreadId().ThreadId() == profiler_current_thread_id())
+          ? !baseprofiler::profiler_thread_is_being_profiled()
+          // If targetting another thread, we can only check if the profiler
+          // is active&unpaused.
+          : !baseprofiler::detail::RacyFeatures::IsActiveAndUnpaused()) {
     return {};
   }
   return ::mozilla::baseprofiler::AddMarkerToBuffer(
