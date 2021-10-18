@@ -1,5 +1,4 @@
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   response.setHeader("Content-Type", "text/html");
 
   if (request.queryString == "redirect") {

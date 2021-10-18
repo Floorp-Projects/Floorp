@@ -11,7 +11,11 @@ const URL = "file_slowed_document.sjs";
 
 const DELAY = 2 * 1000; // Delay one second before completing the request.
 
-let nsTimer = Components.Constructor("@mozilla.org/timer;1", "nsITimer", "initWithCallback");
+const nsTimer = Components.Constructor(
+  "@mozilla.org/timer;1",
+  "nsITimer",
+  "initWithCallback"
+);
 
 let timer;
 
@@ -31,11 +35,15 @@ function handleRequest(request, response) {
 
   // Note: We need to store a reference to the timer to prevent it from being
   // canceled when it's GCed.
-  timer = new nsTimer(() => {
-    if (request.queryString.includes("with-iframe")) {
-      response.write(`<iframe src="${URL}?r=${Math.random()}"></iframe>`);
-    }
-    response.write(`</body></html>`);
-    response.finish();
-  }, DELAY, Ci.nsITimer.TYPE_ONE_SHOT);
+  timer = new nsTimer(
+    () => {
+      if (request.queryString.includes("with-iframe")) {
+        response.write(`<iframe src="${URL}?r=${Math.random()}"></iframe>`);
+      }
+      response.write(`</body></html>`);
+      response.finish();
+    },
+    DELAY,
+    Ci.nsITimer.TYPE_ONE_SHOT
+  );
 }

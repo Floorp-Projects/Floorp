@@ -20,7 +20,10 @@ function handleRequest(request, response) {
     setState("sessionhistory_do_redirect", "");
 
     response.setStatusLine("1.1", 302, "Found");
-    response.setHeader("Location",
-      "file_session_history_on_redirect_2.html", false);
+    response.setHeader(
+      "Location",
+      "file_session_history_on_redirect_2.html",
+      false
+    );
   }
 }

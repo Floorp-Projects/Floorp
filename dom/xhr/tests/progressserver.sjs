@@ -1,7 +1,9 @@
 const CC = Components.Constructor;
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
-                             "nsIBinaryInputStream",
-                             "setInputStream");
+const BinaryInputStream = CC(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
 
 function setReq(req) {
   setObjectState("dom/xhr/tests/progressserver", req);
@@ -15,25 +17,28 @@ function getReq() {
   return req;
 }
 
-function handleRequest(request, response)
-{
-  var pairs = request.queryString.split('&');
+function handleRequest(request, response) {
+  var pairs = request.queryString.split("&");
   var command = pairs.shift();
   dump("received '" + command + "' command\n");
 
   var bodyStream = new BinaryInputStream(request.bodyInputStream);
   var body = "";
   var bodyAvail;
-  while ((bodyAvail = bodyStream.available()) > 0)
-    body += String.fromCharCode.apply(null, bodyStream.readByteArray(bodyAvail));
+  while ((bodyAvail = bodyStream.available()) > 0) {
+    body += String.fromCharCode.apply(
+      null,
+      bodyStream.readByteArray(bodyAvail)
+    );
+  }
 
   if (command == "open") {
     response.processAsync();
     setReq(response);
 
     response.setHeader("Cache-Control", "no-cache", false);
-    pairs.forEach(function (val) {
-      var [name, value] = val.split('=');
+    pairs.forEach(function(val) {
+      var [name, value] = val.split("=");
       response.setHeader(name, unescape(value), false);
     });
     response.write(body);
@@ -42,8 +47,7 @@ function handleRequest(request, response)
 
   if (command == "send") {
     getReq().write(body);
-  }
-  else if (command == "close") {
+  } else if (command == "close") {
     getReq().finish();
     setReq(null);
   }

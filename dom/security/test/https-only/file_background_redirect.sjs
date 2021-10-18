@@ -1,7 +1,7 @@
 // Custom *.sjs file specifically for the needs of Bug 1683015
 "use strict";
 
-Cu.import("resource://gre/modules/Timer.jsm");
+let { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 async function handleRequest(request, response) {
   // avoid confusing cache behaviour
@@ -16,7 +16,9 @@ async function handleRequest(request, response) {
     response.processAsync();
     setTimeout(() => {
       response.setStatusLine("1.1", 200, "OK");
-      response.write("<html><body>Test Page for Bug 1683015 loaded</body></html>");
+      response.write(
+        "<html><body>Test Page for Bug 1683015 loaded</body></html>"
+      );
       response.finish();
     }, 5000); /* wait 5 seconds */
     return;

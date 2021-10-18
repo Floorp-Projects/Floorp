@@ -40,11 +40,13 @@ const TESTS = [
   },
   {
     ct: "application/xhtml+xml",
-    val: '<html xmlns="http://www.w3.org/1999/xhtml"><body contenteditable="true">fooz bar</body></html>',
+    val:
+      '<html xmlns="http://www.w3.org/1999/xhtml"><body contenteditable="true">fooz bar</body></html>',
   },
   {
     ct: "application/xhtml+xml",
-    val: '<html xmlns="http://www.w3.org/1999/xhtml" contenteditable="true"><body>fooz bar</body></html>',
+    val:
+      '<html xmlns="http://www.w3.org/1999/xhtml" contenteditable="true"><body>fooz bar</body></html>',
   },
   {
     ct: "text/html",
@@ -52,175 +54,189 @@ const TESTS = [
   },
   {
     ct: "text/html",
-    val: '<html><script>' +
-          'onload = function() {' +
-            'var old = document.body;' +
-            'old.parentNode.removeChild(old);' +
-            'var r = document.documentElement;' +
-            'var b = document.createElement("body");' +
-            'r.appendChild(b);' +
-            'b.appendChild(document.createTextNode("fooz bar"));' +
-            'b.contentEditable = "true";' +
-         '};' +
-        '<\/script><body></body></html>',
+    val:
+      "<html><script>" +
+      "onload = function() {" +
+      "var old = document.body;" +
+      "old.parentNode.removeChild(old);" +
+      "var r = document.documentElement;" +
+      'var b = document.createElement("body");' +
+      "r.appendChild(b);" +
+      'b.appendChild(document.createTextNode("fooz bar"));' +
+      'b.contentEditable = "true";' +
+      "};" +
+      "</script><body></body></html>",
   },
   {
     ct: "text/html",
-    val: '<html><script>' +
-           'onload = function() {' +
-             'var old = document.body;' +
-             'old.parentNode.removeChild(old);' +
-             'var r = document.documentElement;' +
-             'var b = document.createElement("body");' +
-             'b.appendChild(document.createTextNode("fooz bar"));' +
-             'b.contentEditable = "true";' +
-             'r.appendChild(b);' +
-           '};' +
-         '<\/script><body></body></html>',
+    val:
+      "<html><script>" +
+      "onload = function() {" +
+      "var old = document.body;" +
+      "old.parentNode.removeChild(old);" +
+      "var r = document.documentElement;" +
+      'var b = document.createElement("body");' +
+      'b.appendChild(document.createTextNode("fooz bar"));' +
+      'b.contentEditable = "true";' +
+      "r.appendChild(b);" +
+      "};" +
+      "</script><body></body></html>",
   },
   {
     ct: "text/html",
-    val: '<html><script>' +
-          'onload = function() {' +
-            'var old = document.body;' +
-            'old.parentNode.removeChild(old);' +
-            'var r = document.documentElement;' +
-            'var b = document.createElement("body");' +
-            'r.appendChild(b);' +
-            'b.appendChild(document.createTextNode("fooz bar"));' +
-            'b.setAttribute("contenteditable", "true");' +
-          '};' +
-         '<\/script><body></body></html>',
+    val:
+      "<html><script>" +
+      "onload = function() {" +
+      "var old = document.body;" +
+      "old.parentNode.removeChild(old);" +
+      "var r = document.documentElement;" +
+      'var b = document.createElement("body");' +
+      "r.appendChild(b);" +
+      'b.appendChild(document.createTextNode("fooz bar"));' +
+      'b.setAttribute("contenteditable", "true");' +
+      "};" +
+      "</script><body></body></html>",
   },
   {
     ct: "text/html",
-    val: '<html><script>' +
-          'onload = function() {' +
-            'var old = document.body;' +
-            'old.parentNode.removeChild(old);' +
-            'var r = document.documentElement;' +
-            'var b = document.createElement("body");' +
-            'b.appendChild(document.createTextNode("fooz bar"));' +
-            'b.setAttribute("contenteditable", "true");' +
-            'r.appendChild(b);' +
-          '};' +
-         '<\/script><body></body></html>',
+    val:
+      "<html><script>" +
+      "onload = function() {" +
+      "var old = document.body;" +
+      "old.parentNode.removeChild(old);" +
+      "var r = document.documentElement;" +
+      'var b = document.createElement("body");' +
+      'b.appendChild(document.createTextNode("fooz bar"));' +
+      'b.setAttribute("contenteditable", "true");' +
+      "r.appendChild(b);" +
+      "};" +
+      "</script><body></body></html>",
   },
   {
     ct: "text/html",
-    val: '<html><script>' +
-           'onload = function() {' +
-             'var old = document.body;' +
-             'old.parentNode.removeChild(old);' +
-             'var r = document.documentElement;' +
-             'var b = document.createElement("body");' +
-             'r.appendChild(b);' +
-             'b.contentEditable = "true";' +
-             'b.appendChild(document.createTextNode("fooz bar"));' +
-           '};' +
-          '<\/script><body></body></html>',
+    val:
+      "<html><script>" +
+      "onload = function() {" +
+      "var old = document.body;" +
+      "old.parentNode.removeChild(old);" +
+      "var r = document.documentElement;" +
+      'var b = document.createElement("body");' +
+      "r.appendChild(b);" +
+      'b.contentEditable = "true";' +
+      'b.appendChild(document.createTextNode("fooz bar"));' +
+      "};" +
+      "</script><body></body></html>",
   },
   {
     ct: "text/html",
-    val: '<html><script>' +
-          'onload = function() {' +
-            'var old = document.body;' +
-            'old.parentNode.removeChild(old);' +
-            'var r = document.documentElement;' +
-            'var b = document.createElement("body");' +
-            'b.contentEditable = "true";' +
-            'r.appendChild(b);' +
-            'b.appendChild(document.createTextNode("fooz bar"));' +
-          '};' +
-         '<\/script><body></body></html>',
+    val:
+      "<html><script>" +
+      "onload = function() {" +
+      "var old = document.body;" +
+      "old.parentNode.removeChild(old);" +
+      "var r = document.documentElement;" +
+      'var b = document.createElement("body");' +
+      'b.contentEditable = "true";' +
+      "r.appendChild(b);" +
+      'b.appendChild(document.createTextNode("fooz bar"));' +
+      "};" +
+      "</script><body></body></html>",
   },
   {
     ct: "text/html",
-    val: '<html><script>' +
-          'onload = function() {' +
-            'var old = document.body;' +
-            'old.parentNode.removeChild(old);' +
-            'var r = document.documentElement;' +
-            'var b = document.createElement("body");' +
-            'r.appendChild(b);' +
-            'b.setAttribute("contenteditable", "true");' +
-            'b.appendChild(document.createTextNode("fooz bar"));' +
-          '};' +
-         '<\/script><body></body></html>',
+    val:
+      "<html><script>" +
+      "onload = function() {" +
+      "var old = document.body;" +
+      "old.parentNode.removeChild(old);" +
+      "var r = document.documentElement;" +
+      'var b = document.createElement("body");' +
+      "r.appendChild(b);" +
+      'b.setAttribute("contenteditable", "true");' +
+      'b.appendChild(document.createTextNode("fooz bar"));' +
+      "};" +
+      "</script><body></body></html>",
   },
   {
     ct: "text/html",
-    val: '<html><script>' +
-          'onload = function() {' +
-            'var old = document.body;' +
-            'old.parentNode.removeChild(old);' +
-            'var r = document.documentElement;' +
-            'var b = document.createElement("body");' +
-            'b.setAttribute("contenteditable", "true");' +
-            'r.appendChild(b);' +
-            'b.appendChild(document.createTextNode("fooz bar"));' +
-          '};' +
-         '<\/script><body></body></html>',
+    val:
+      "<html><script>" +
+      "onload = function() {" +
+      "var old = document.body;" +
+      "old.parentNode.removeChild(old);" +
+      "var r = document.documentElement;" +
+      'var b = document.createElement("body");' +
+      'b.setAttribute("contenteditable", "true");' +
+      "r.appendChild(b);" +
+      'b.appendChild(document.createTextNode("fooz bar"));' +
+      "};" +
+      "</script><body></body></html>",
   },
   {
     ct: "text/html",
-    val: '<html><script>' +
-          'onload = function() {' +
-            'document.open();' +
-            'document.write("<body contenteditable>fooz bar</body>");' +
-            'document.close();' +
-          '};' +
-         '<\/script><body></body></html>',
+    val:
+      "<html><script>" +
+      "onload = function() {" +
+      "document.open();" +
+      'document.write("<body contenteditable>fooz bar</body>");' +
+      "document.close();" +
+      "};" +
+      "</script><body></body></html>",
   },
   {
     ct: "text/html",
-    val: 'data:text/html,<html><script>' +
-          'onload = function() {' +
-            'document.open();' +
-            'document.write("<body contenteditable><div>fooz bar</div></body>");' +
-            'document.close();' +
-          '};' +
-         '<\/script><body></body></html>',
+    val:
+      "data:text/html,<html><script>" +
+      "onload = function() {" +
+      "document.open();" +
+      'document.write("<body contenteditable><div>fooz bar</div></body>");' +
+      "document.close();" +
+      "};" +
+      "</script><body></body></html>",
   },
   {
     ct: "text/html",
-    val: '<html><script>' +
-          'onload = function() {' +
-            'document.open();' +
-            'document.write("<body contenteditable><span>fooz bar</span></body>");' +
-            'document.close();' +
-          '};' +
-         '<\/script><body></body></html>',
+    val:
+      "<html><script>" +
+      "onload = function() {" +
+      "document.open();" +
+      'document.write("<body contenteditable><span>fooz bar</span></body>");' +
+      "document.close();" +
+      "};" +
+      "</script><body></body></html>",
   },
   {
     ct: "text/html",
-    val: '<html><script>' +
-          'onload = function() {' +
-            'document.open();' +
-            'document.write("<p contenteditable style=\\"outline: none\\">fooz bar</p>");' +
-            'document.close();' +
-           '};' +
-         '<\/script><body></body></html>',
+    val:
+      "<html><script>" +
+      "onload = function() {" +
+      "document.open();" +
+      'document.write("<p contenteditable style=\\"outline: none\\">fooz bar</p>");' +
+      "document.close();" +
+      "};" +
+      "</script><body></body></html>",
   },
   {
     ct: "text/html",
-    val: '<html><script>' +
-          'onload = function() {' +
-            'document.open();' +
-            'document.write("<html contenteditable>fooz bar</html>");' +
-            'document.close();' +
-          '};' +
-         '<\/script><body></body></html>',
+    val:
+      "<html><script>" +
+      "onload = function() {" +
+      "document.open();" +
+      'document.write("<html contenteditable>fooz bar</html>");' +
+      "document.close();" +
+      "};" +
+      "</script><body></body></html>",
   },
   {
     ct: "text/html",
-    val: '<html><script>' +
-          'onload = function() {' +
-            'document.open();' +
-            'document.write("<html contenteditable><body>fooz bar</body></html>");' +
-            'document.close();' +
-          '};' +
-         '<\/script><body></body></html>',
+    val:
+      "<html><script>" +
+      "onload = function() {" +
+      "document.open();" +
+      'document.write("<html contenteditable><body>fooz bar</body></html>");' +
+      "document.close();" +
+      "};" +
+      "</script><body></body></html>",
   },
 ];
 

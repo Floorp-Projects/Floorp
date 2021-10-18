@@ -1,15 +1,20 @@
 const CC = Components.Constructor;
 
-Cu.import("resource://gre/modules/Timer.jsm");
+let { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-const LocalFile = CC("@mozilla.org/file/local;1", "nsIFile",
-                     "initWithPath");
+const LocalFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 
-const FileInputStream = CC("@mozilla.org/network/file-input-stream;1",
-                           "nsIFileInputStream", "init");
+const FileInputStream = CC(
+  "@mozilla.org/network/file-input-stream;1",
+  "nsIFileInputStream",
+  "init"
+);
 
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
-                             "nsIBinaryInputStream", "setInputStream");
+const BinaryInputStream = CC(
+  "@mozilla.org/binaryinputstream;1",
+  "nsIBinaryInputStream",
+  "setInputStream"
+);
 
 function handleRequest(request, response) {
   let params = parseQueryString(request.queryString);
@@ -21,9 +26,12 @@ function handleRequest(request, response) {
   // loaded anonymously.
   if (params.has("c")) {
     let expectedValue = parseInt(params.get("c"), 10);
-    let actualValue = !request.hasHeader("Cookie") ? 0 :
-                      parseInt(request.getHeader("Cookie")
-                                      .replace(/^counter=(\d+)/, "$1"), 10);
+    let actualValue = !request.hasHeader("Cookie")
+      ? 0
+      : parseInt(
+          request.getHeader("Cookie").replace(/^counter=(\d+)/, "$1"),
+          10
+        );
     if (actualValue != expectedValue) {
       response.setStatusLine(request.httpVersion, 400, "Wrong counter value");
       return;
@@ -68,8 +76,8 @@ function writeFile(name, response) {
   file.append(name);
 
   let mimeType = Cc["@mozilla.org/uriloader/external-helper-app-service;1"]
-                   .getService(Ci.nsIMIMEService)
-                   .getTypeFromFile(file);
+    .getService(Ci.nsIMIMEService)
+    .getTypeFromFile(file);
 
   let fileStream = new FileInputStream(file, 1, 0, false);
   let binaryStream = new BinaryInputStream(fileStream);

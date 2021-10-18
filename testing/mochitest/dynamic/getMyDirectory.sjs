@@ -1,8 +1,6 @@
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   var file;
-  getObjectState("SERVER_ROOT", function(serverRoot)
-  {
+  getObjectState("SERVER_ROOT", function(serverRoot) {
     var ref = request.getHeader("Referer").split("?")[0];
     // 8 is "https://".length which is the longest string before the host.
     var pathStart = ref.indexOf("/", 8) + 1;
@@ -11,5 +9,5 @@ function handleRequest(request, response)
   });
 
   response.setHeader("Content-Type", "text/plain", false);
-  response.write(file.path.substr(0, file.path.length-1));
+  response.write(file.path.substr(0, file.path.length - 1));
 }

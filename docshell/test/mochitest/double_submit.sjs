@@ -2,7 +2,8 @@
 
 let self = this;
 
-Cu.import("resource://gre/modules/Timer.jsm");
+// eslint-disable-next-line mozilla/use-chromeutils-import
+let { setTimeout } = Cu.import("resource://gre/modules/Timer.jsm");
 
 const CC = Components.Constructor;
 const BinaryInputStream = CC(
@@ -18,7 +19,7 @@ const BinaryOutputStream = CC(
 );
 
 function log(str) {
-//  dump(`LOG: ${str}\n`);
+  //  dump(`LOG: ${str}\n`);
 }
 
 function* generateBody(fragments, size) {
@@ -26,7 +27,7 @@ function* generateBody(fragments, size) {
   let chunkSize = (size / fragments) | 0;
   let remaining = size;
 
-  log(`Chunk size ${chunkSize}`)
+  log(`Chunk size ${chunkSize}`);
   while (remaining > 0) {
     let data = new Uint8Array(Math.min(remaining, chunkSize));
     for (let i = 0; i < data.length; ++i) {
@@ -35,7 +36,7 @@ function* generateBody(fragments, size) {
     }
 
     yield data;
-    log(`Remaining to chunk ${remaining}`)
+    log(`Remaining to chunk ${remaining}`);
     remaining -= data.length;
   }
 }
@@ -47,7 +48,7 @@ function readStream(inputStream) {
     result.push(inputStream.readBytes(available));
   }
 
-  return result.join('');
+  return result.join("");
 }
 
 function now() {
@@ -68,7 +69,9 @@ async function handleRequest(request, response) {
     message = "bad";
   } else {
     log("Read POST body");
-    let body = new URLSearchParams(readStream(new BinaryInputStream(request.bodyInputStream)));
+    let body = new URLSearchParams(
+      readStream(new BinaryInputStream(request.bodyInputStream))
+    );
     message = body.get("token") || "bad";
     log(`The result was ${message}`);
   }
@@ -81,17 +84,21 @@ async function handleRequest(request, response) {
   let header = "<!doctype html><!-- ";
   let footer = ` --><script>"use strict"; let target = (opener || parent); target.postMessage('${message}', '*');</script>`;
 
-  log("Set headers")
+  log("Set headers");
   response.setHeader("Content-Type", "text/html", false);
-  response.setHeader("Content-Length", `${size + header.length + footer.length}`, false);
+  response.setHeader(
+    "Content-Length",
+    `${size + header.length + footer.length}`,
+    false
+  );
   response.setStatusLine(request.httpVersion, "200", "OK");
 
   response.processAsync();
   log("Write header");
   response.write(header);
-  log("Write body")
+  log("Write body");
   for (let data of generateBody(fragments, size)) {
-    delay = Math.max(0, delayUntil - now())
+    delay = Math.max(0, delayUntil - now());
     log(`Delay sending fragment for ${delay / fragments}`);
     let failed = false;
     await new Promise(resolve => {
@@ -112,10 +119,10 @@ async function handleRequest(request, response) {
     }
 
     fragments = Math.max(--fragments, 1);
-    log(`Fragments left ${fragments}`)
+    log(`Fragments left ${fragments}`);
   }
 
-  log("Write footer")
+  log("Write footer");
   response.write(footer);
 
   response.finish();

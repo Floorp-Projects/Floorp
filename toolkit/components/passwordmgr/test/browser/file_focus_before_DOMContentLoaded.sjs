@@ -7,7 +7,7 @@
 const DELAY = 2 * 1000; // Delay two seconds before completing the request.
 
 /* eslint-disable-next-line mozilla/use-chromeutils-import */
-let {setTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
+let { setTimeout } = Cu.import("resource://gre/modules/Timer.jsm", {});
 
 function handleRequest(request, response) {
   response.processAsync();

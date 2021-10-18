@@ -1,5 +1,5 @@
 "use strict";
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
+let { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, 200);
@@ -8,7 +8,9 @@ function handleRequest(request, response) {
   response.setHeader("Content-Type", "application/json", false);
 
   // CORS stuff
-  const origin = request.hasHeader("Origin") ? request.getHeader("Origin") : null;
+  const origin = request.hasHeader("Origin")
+    ? request.getHeader("Origin")
+    : null;
   if (origin) {
     response.setHeader("Access-Control-Allow-Origin", origin);
     response.setHeader("Access-Control-Allow-Credentials", "true");

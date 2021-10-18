@@ -3,7 +3,8 @@
 // small red image
 const IMG_BYTES = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12" +
-  "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==");
+    "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+);
 
 const FRAME = `
   <!DOCTYPE html>
@@ -31,20 +32,27 @@ const WIN = `
   </body>
   </html>`;
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
   if (request.queryString.includes("setStrictSameSiteCookie")) {
-    response.setHeader("Set-Cookie", "myKey=strictSameSiteCookie; samesite=strict", true);
+    response.setHeader(
+      "Set-Cookie",
+      "myKey=strictSameSiteCookie; samesite=strict",
+      true
+    );
     response.setHeader("Content-Type", "image/png");
     response.write(IMG_BYTES);
     return;
   }
 
   if (request.queryString.includes("setLaxSameSiteCookie")) {
-    response.setHeader("Set-Cookie", "myKey=laxSameSiteCookie; samesite=lax", true);
+    response.setHeader(
+      "Set-Cookie",
+      "myKey=laxSameSiteCookie; samesite=lax",
+      true
+    );
     response.setHeader("Content-Type", "image/png");
     response.write(IMG_BYTES);
     return;
@@ -67,8 +75,7 @@ function handleRequest(request, response)
     var cookie = "unitialized";
     if (request.hasHeader("Cookie")) {
       cookie = request.getHeader("Cookie");
-    }
-    else {
+    } else {
       cookie = "myKey=noCookie";
     }
     response.write(WIN);

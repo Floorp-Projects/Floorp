@@ -2,8 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   response.setHeader("Content-Type", "text/plain", false);
   response.setHeader("Cache-Control", "no-cache", false);
   response.setStatusLine(request.httpVersion, 200, "OK");
@@ -12,4 +11,3 @@ function handleRequest(request, response)
   setSharedState("next-part", partName);
   response.write("OK!");
 }
-

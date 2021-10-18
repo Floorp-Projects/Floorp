@@ -1,5 +1,7 @@
 function handleRequest(request, response) {
-  const cookies = request.hasHeader("Cookie") ? request.getHeader("Cookie") : "";
+  const cookies = request.hasHeader("Cookie")
+    ? request.getHeader("Cookie")
+    : "";
   response.write(`
     <!DOCTYPE html>
     <html>

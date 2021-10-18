@@ -6,7 +6,6 @@ function handleRequest(request, response) {
   let metaReferrerPolicy = params.get("meta") || "";
   let showReferrer = params.has("show");
 
-
   if (referrerPolicyHeader) {
     response.setHeader("Referrer-Policy", referrerPolicyHeader, false);
   }
@@ -20,7 +19,9 @@ function handleRequest(request, response) {
 
   if (showReferrer) {
     if (request.hasHeader("Referer")) {
-      resultString = `Referer Header: <a id="result">${request.getHeader("Referer")}</a>`;
+      resultString = `Referer Header: <a id="result">${request.getHeader(
+        "Referer"
+      )}</a>`;
     } else {
       resultString = `Referer Header: <a id="result"></a>`;
     }
@@ -35,5 +36,6 @@ function handleRequest(request, response) {
      <body>
        ${resultString}
      </body>
-     </html>`);
+     </html>`
+  );
 }

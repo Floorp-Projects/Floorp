@@ -3,19 +3,22 @@
 // small red image
 const IMG_BYTES = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12" +
-  "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==");
+    "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+);
 
-const IFRAME_INC =
-  `<iframe src='http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_about.sjs?inclusion'></iframe>`;
+const IFRAME_INC = `<iframe src='http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_about.sjs?inclusion'></iframe>`;
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
   // using startsWith and discard the math random
   if (request.queryString.startsWith("setSameSiteCookie")) {
-    response.setHeader("Set-Cookie", "myKey=mySameSiteAboutCookie; samesite=strict", true);
+    response.setHeader(
+      "Set-Cookie",
+      "myKey=mySameSiteAboutCookie; samesite=strict",
+      true
+    );
     response.setHeader("Content-Type", "image/png");
     response.write(IMG_BYTES);
     return;
@@ -42,22 +45,27 @@ function handleRequest(request, response)
 
   // inclusion tets
   if (request.queryString.includes("loadsrcdocframeInc")) {
-    response.write("<iframe srcdoc=\"" + IFRAME_INC + "\"></iframe>");
+    response.write('<iframe srcdoc="' + IFRAME_INC + '"></iframe>');
     return;
   }
 
   if (request.queryString.includes("loadblankframeInc")) {
-    let FRAME = `
+    let FRAME =
+      `
       <iframe id="blankframe" src="about:blank"></iframe>
       <script>
-        document.getElementById("blankframe").contentDocument.write(\"` + IFRAME_INC +`\");
+        document.getElementById("blankframe").contentDocument.write(\"` +
+      IFRAME_INC +
+      `\");
       <\/script>`;
     response.write(FRAME);
     return;
   }
 
   if (request.queryString.includes("navigation")) {
-    const cookies = request.hasHeader("Cookie") ? request.getHeader("Cookie") : "";
+    const cookies = request.hasHeader("Cookie")
+      ? request.getHeader("Cookie")
+      : "";
     response.write(`
       <!DOCTYPE html>
       <html>
@@ -71,7 +79,9 @@ function handleRequest(request, response)
   }
 
   if (request.queryString.includes("inclusion")) {
-    const cookies = request.hasHeader("Cookie") ? request.getHeader("Cookie") : "";
+    const cookies = request.hasHeader("Cookie")
+      ? request.getHeader("Cookie")
+      : "";
     response.write(`
       <!DOCTYPE html>
       <html>

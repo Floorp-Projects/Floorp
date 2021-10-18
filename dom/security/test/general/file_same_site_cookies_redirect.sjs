@@ -3,7 +3,8 @@
 // small red image
 const IMG_BYTES = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12" +
-  "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==");
+    "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+);
 
 const FRAME = `
   <!DOCTYPE html>
@@ -21,29 +22,41 @@ const FRAME = `
   </body>
   </html>`;
 
-const SAME_ORIGIN = "http://mochi.test:8888/"
+const SAME_ORIGIN = "http://mochi.test:8888/";
 const CROSS_ORIGIN = "http://example.com/";
-const PATH = "tests/dom/security/test/general/file_same_site_cookies_redirect.sjs";
+const PATH =
+  "tests/dom/security/test/general/file_same_site_cookies_redirect.sjs";
 
-const FRAME_META_REFRESH_SAME = `
+const FRAME_META_REFRESH_SAME =
+  `
   <html><head>
   <meta http-equiv="refresh" content="0;
-   url='` + SAME_ORIGIN + PATH + `?loadFrame'">
+   url='` +
+  SAME_ORIGIN +
+  PATH +
+  `?loadFrame'">
   </head></html>`;
 
-const FRAME_META_REFRESH_CROSS = `
+const FRAME_META_REFRESH_CROSS =
+  `
   <html><head>
   <meta http-equiv="refresh" content="0;
-   url='` + CROSS_ORIGIN + PATH + `?loadFrame'">
+   url='` +
+  CROSS_ORIGIN +
+  PATH +
+  `?loadFrame'">
   </head></html>`;
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
   if (request.queryString === "setSameSiteCookie") {
-    response.setHeader("Set-Cookie", "myKey=strictSameSiteCookie; samesite=strict", true);
+    response.setHeader(
+      "Set-Cookie",
+      "myKey=strictSameSiteCookie; samesite=strict",
+      true
+    );
     response.setHeader("Content-Type", "image/png");
     response.write(IMG_BYTES);
     return;

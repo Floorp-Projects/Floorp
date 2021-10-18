@@ -3,7 +3,8 @@
 // small red image
 const IMG_BYTES = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12" +
-  "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==");
+    "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+);
 
 const NESTED_IFRAME_NAVIGATION = `
   <html>
@@ -31,14 +32,17 @@ const NESTED_IFRAME_INCLUSION = `
   </body>
   </html>`;
 
-function handleRequest(request, response)
-{
+function handleRequest(request, response) {
   // avoid confusing cache behaviors
   response.setHeader("Cache-Control", "no-cache", false);
 
   // using startsWith and discard the math random
   if (request.queryString.startsWith("setSameSiteCookie")) {
-    response.setHeader("Set-Cookie", "myKey=mySameSiteIframeTestCookie; samesite=strict", true);
+    response.setHeader(
+      "Set-Cookie",
+      "myKey=mySameSiteIframeTestCookie; samesite=strict",
+      true
+    );
     response.setHeader("Content-Type", "image/png");
     response.write(IMG_BYTES);
     return;
@@ -51,7 +55,11 @@ function handleRequest(request, response)
   }
 
   if (request.queryString === "nestedSandboxIframeNavigation") {
-    response.setHeader("Content-Security-Policy", "sandbox allow-scripts", false);
+    response.setHeader(
+      "Content-Security-Policy",
+      "sandbox allow-scripts",
+      false
+    );
     response.write(NESTED_IFRAME_NAVIGATION);
     return;
   }
@@ -63,12 +71,18 @@ function handleRequest(request, response)
   }
 
   if (request.queryString === "nestedSandboxIframeInclusion") {
-    response.setHeader("Content-Security-Policy", "sandbox allow-scripts", false);
+    response.setHeader(
+      "Content-Security-Policy",
+      "sandbox allow-scripts",
+      false
+    );
     response.write(NESTED_IFRAME_INCLUSION);
     return;
   }
 
-  const cookies = request.hasHeader("Cookie") ? request.getHeader("Cookie") : "";
+  const cookies = request.hasHeader("Cookie")
+    ? request.getHeader("Cookie")
+    : "";
   response.write(`
     <!DOCTYPE html>
     <html>

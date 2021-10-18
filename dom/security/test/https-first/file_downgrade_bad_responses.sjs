@@ -1,4 +1,4 @@
-// Custom *.sjs file specifically for the needs of Bug 1709552 
+// Custom *.sjs file specifically for the needs of Bug 1709552
 "use strict";
 
 const RESPONSE_SUCCESS = `

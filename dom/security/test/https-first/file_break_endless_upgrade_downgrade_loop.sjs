@@ -1,7 +1,9 @@
 "use strict";
 
-const REDIRECT_URI = "http://example.com/tests/dom/security/test/https-first/file_break_endless_upgrade_downgrade_loop.sjs?verify";
-const DOWNGRADE_URI = "http://example.com/tests/dom/security/test/https-first/file_downgrade_with_different_path.sjs";
+const REDIRECT_URI =
+  "http://example.com/tests/dom/security/test/https-first/file_break_endless_upgrade_downgrade_loop.sjs?verify";
+const DOWNGRADE_URI =
+  "http://example.com/tests/dom/security/test/https-first/file_downgrade_with_different_path.sjs";
 const RESPONSE_ERROR = "unexpected-query";
 
 // An onload postmessage to window opener
@@ -46,9 +48,8 @@ function handleRequest(request, response) {
 
   // Check if scheme is http:// or https://
   if (query == "verify") {
-    let response_content = request.scheme === "https"
-      ? RESPONSE_HTTPS_SCHEME
-      : RESPONSE_HTTP_SCHEME;
+    let response_content =
+      request.scheme === "https" ? RESPONSE_HTTPS_SCHEME : RESPONSE_HTTP_SCHEME;
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.write(response_content);
     return;
