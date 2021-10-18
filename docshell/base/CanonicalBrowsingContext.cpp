@@ -2477,8 +2477,7 @@ static void LogBFCacheBlockingForDoc(BrowsingContext* aBrowsingContext,
     MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug, (" * suspended Window"));
   }
   if (aBFCacheCombo & BFCacheStatus::UNLOAD_LISTENER) {
-    MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-            (" * beforeunload or unload listener"));
+    MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug, (" * unload listener"));
   }
   if (aBFCacheCombo & BFCacheStatus::REQUEST) {
     MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug, (" * requests in the loadgroup"));
@@ -2500,6 +2499,9 @@ static void LogBFCacheBlockingForDoc(BrowsingContext* aBrowsingContext,
   }
   if (aBFCacheCombo & BFCacheStatus::HAS_USED_VR) {
     MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug, (" * used VR"));
+  }
+  if (aBFCacheCombo & BFCacheStatus::BEFOREUNLOAD_LISTENER) {
+    MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug, (" * beforeunload listener"));
   }
 }
 

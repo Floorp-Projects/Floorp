@@ -1674,8 +1674,18 @@ bool EventListenerManager::HasUnloadListeners() {
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {
     Listener* listener = &mListeners.ElementAt(i);
-    if (listener->mEventMessage == eUnload ||
-        listener->mEventMessage == eBeforeUnload) {
+    if (listener->mEventMessage == eUnload) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool EventListenerManager::HasBeforeUnloadListeners() {
+  uint32_t count = mListeners.Length();
+  for (uint32_t i = 0; i < count; ++i) {
+    Listener* listener = &mListeners.ElementAt(i);
+    if (listener->mEventMessage == eBeforeUnload) {
       return true;
     }
   }
