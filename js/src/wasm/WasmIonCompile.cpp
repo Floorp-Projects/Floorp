@@ -3417,7 +3417,9 @@ static bool EmitBinaryMathBuiltinCall(FunctionCompiler& f,
 static bool EmitMemoryGrow(FunctionCompiler& f) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  const SymbolicAddressSignature& callee = SASigMemoryGrow;
+  const SymbolicAddressSignature& callee =
+      !f.moduleEnv().usesMemory() || f.isMem32() ? SASigMemoryGrowM32
+                                                 : SASigMemoryGrowM64;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -3446,7 +3448,9 @@ static bool EmitMemoryGrow(FunctionCompiler& f) {
 static bool EmitMemorySize(FunctionCompiler& f) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  const SymbolicAddressSignature& callee = SASigMemorySize;
+  const SymbolicAddressSignature& callee =
+      !f.moduleEnv().usesMemory() || f.isMem32() ? SASigMemorySizeM32
+                                                 : SASigMemorySizeM64;
   CallCompileState args;
 
   if (!f.iter().readMemorySize()) {
@@ -3677,8 +3681,9 @@ static bool EmitMemCopyCall(FunctionCompiler& f, MDefinition* dst,
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
   const SymbolicAddressSignature& callee =
-      (f.moduleEnv().usesSharedMemory() ? SASigMemCopyShared32
-                                        : SASigMemCopy32);
+      (f.moduleEnv().usesSharedMemory()
+           ? (f.isMem32() ? SASigMemCopySharedM32 : SASigMemCopySharedM64)
+           : (f.isMem32() ? SASigMemCopyM32 : SASigMemCopyM64));
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -3704,8 +3709,8 @@ static bool EmitMemCopyCall(FunctionCompiler& f, MDefinition* dst,
   return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
 }
 
-static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
-                              MDefinition* src, MDefinition* len) {
+static bool EmitMemCopyInlineM32(FunctionCompiler& f, MDefinition* dst,
+                                 MDefinition* src, MDefinition* len) {
   MOZ_ASSERT(MaxInlineMemoryCopyLength != 0);
 
   MOZ_ASSERT(len->isConstant() && len->type() == MIRType::Int32);
@@ -3854,11 +3859,12 @@ static bool EmitMemCopy(FunctionCompiler& f) {
     return true;
   }
 
-  MOZ_ASSERT(f.isMem32());
-  if (len->isConstant() && len->type() == MIRType::Int32 &&
-      len->toConstant()->toInt32() != 0 &&
-      uint32_t(len->toConstant()->toInt32()) <= MaxInlineMemoryCopyLength) {
-    return EmitMemCopyInline(f, dst, src, len);
+  if (f.isMem32()) {
+    if (len->isConstant() && len->type() == MIRType::Int32 &&
+        len->toConstant()->toInt32() != 0 &&
+        uint32_t(len->toConstant()->toInt32()) <= MaxInlineMemoryCopyLength) {
+      return EmitMemCopyInlineM32(f, dst, src, len);
+    }
   }
   return EmitMemCopyCall(f, dst, src, len);
 }
@@ -3951,7 +3957,9 @@ static bool EmitMemFillCall(FunctionCompiler& f, MDefinition* start,
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
   const SymbolicAddressSignature& callee =
-      f.moduleEnv().usesSharedMemory() ? SASigMemFillShared32 : SASigMemFill32;
+      (f.moduleEnv().usesSharedMemory()
+           ? (f.isMem32() ? SASigMemFillSharedM32 : SASigMemFillSharedM64)
+           : (f.isMem32() ? SASigMemFillM32 : SASigMemFillM64));
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -3978,8 +3986,8 @@ static bool EmitMemFillCall(FunctionCompiler& f, MDefinition* start,
   return f.builtinInstanceMethodCall(callee, lineOrBytecode, args);
 }
 
-static bool EmitMemFillInline(FunctionCompiler& f, MDefinition* start,
-                              MDefinition* val, MDefinition* len) {
+static bool EmitMemFillInlineM32(FunctionCompiler& f, MDefinition* start,
+                                 MDefinition* val, MDefinition* len) {
   MOZ_ASSERT(MaxInlineMemoryFillLength != 0);
 
   MOZ_ASSERT(len->isConstant() && len->type() == MIRType::Int32 &&
@@ -4083,12 +4091,13 @@ static bool EmitMemFill(FunctionCompiler& f) {
     return true;
   }
 
-  MOZ_ASSERT(f.isMem32());
-  if (len->isConstant() && len->type() == MIRType::Int32 &&
-      len->toConstant()->toInt32() != 0 &&
-      uint32_t(len->toConstant()->toInt32()) <= MaxInlineMemoryFillLength &&
-      val->isConstant() && val->type() == MIRType::Int32) {
-    return EmitMemFillInline(f, start, val, len);
+  if (f.isMem32()) {
+    if (len->isConstant() && len->type() == MIRType::Int32 &&
+        len->toConstant()->toInt32() != 0 &&
+        uint32_t(len->toConstant()->toInt32()) <= MaxInlineMemoryFillLength &&
+        val->isConstant() && val->type() == MIRType::Int32) {
+      return EmitMemFillInlineM32(f, start, val, len);
+    }
   }
   return EmitMemFillCall(f, start, val, len);
 }
@@ -4105,11 +4114,11 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
     return true;
   }
 
-  MOZ_ASSERT_IF(isMem, f.isMem32());
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
   const SymbolicAddressSignature& callee =
-      isMem ? SASigMemInit32 : SASigTableInit;
+      isMem ? (f.isMem32() ? SASigMemInitM32 : SASigMemInitM64)
+            : SASigTableInit;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
