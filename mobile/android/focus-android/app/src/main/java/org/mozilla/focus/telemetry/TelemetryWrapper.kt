@@ -45,7 +45,6 @@ import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.collections.HashSet
 
 @Suppress(
     // Yes, this a large class with a lot of functions. But it's very simple and still easy to read.
@@ -124,7 +123,6 @@ object TelemetryWrapper {
         val DOWNLOAD_DIALOG = "download_dialog"
         val ADD_TO_HOMESCREEN_DIALOG = "add_to_homescreen_dialog"
         val HOMESCREEN_SHORTCUT = "homescreen_shortcut"
-        val TABS_TRAY = "tabs_tray"
         val RECENT_APPS = "recent_apps"
         val APP_ICON = "app_icon"
         val AUTOCOMPLETE_DOMAIN = "autocomplete_domain"
@@ -500,12 +498,6 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun eraseEvent() {
-        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.ERASE_BUTTON))
-            .queue()
-    }
-
-    @JvmStatic
     fun eraseBackToHomeEvent() {
         withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.BACK_BUTTON, Value.ERASE_TO_HOME))
             .queue()
@@ -617,12 +609,6 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun openLinkInNewTabEvent() {
-        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.BROWSER_CONTEXTMENU, Value.TAB))
-            .queue()
-    }
-
-    @JvmStatic
     fun openLinkInFullBrowserFromCustomTabEvent() {
         withSessionCounts(
             TelemetryEvent.create(
@@ -726,30 +712,8 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun openTabsTrayEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.SHOW, Object.TABS_TRAY).queue()
-    }
-
-    @JvmStatic
     fun findInPageMenuEvent() {
         TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.FIND_IN_PAGE).queue()
-    }
-
-    @JvmStatic
-    fun closeTabsTrayEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.HIDE, Object.TABS_TRAY).queue()
-    }
-
-    @JvmStatic
-    fun switchTabInTabsTrayEvent() {
-        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.TABS_TRAY, Value.TAB))
-            .queue()
-    }
-
-    @JvmStatic
-    fun eraseInTabsTrayEvent() {
-        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.TABS_TRAY, Value.ERASE))
-            .queue()
     }
 
     @JvmStatic

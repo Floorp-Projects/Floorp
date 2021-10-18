@@ -17,12 +17,13 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import mozilla.components.browser.state.selector.privateTabs
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.flowScoped
+import org.mozilla.focus.GleanMetrics.TabCount
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.locale.LocaleAwareFragment
 import org.mozilla.focus.state.AppAction
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
 
 class TabSheetFragment : LocaleAwareFragment(), View.OnClickListener {
@@ -32,6 +33,8 @@ class TabSheetFragment : LocaleAwareFragment(), View.OnClickListener {
     private var isAnimating: Boolean = false
 
     private var scope: CoroutineScope? = null
+
+    private lateinit var store: BrowserStore
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_sessionssheet, container, false)
@@ -45,7 +48,7 @@ class TabSheetFragment : LocaleAwareFragment(), View.OnClickListener {
             true
         }
 
-        val store = view.context.components.store
+        store = view.context.components.store
 
         val sessionsAdapter = TabsAdapter(this, store.state.privateTabs)
 
@@ -124,7 +127,9 @@ class TabSheetFragment : LocaleAwareFragment(), View.OnClickListener {
     fun onBackPressed(): Boolean {
         animateAndDismiss()
 
-        TelemetryWrapper.closeTabsTrayEvent()
+        val openedTabs = store.state.tabs.size
+        TabCount.sessionListClosed.record(TabCount.SessionListClosedExtra(openedTabs))
+
         return true
     }
 
@@ -140,7 +145,8 @@ class TabSheetFragment : LocaleAwareFragment(), View.OnClickListener {
             R.id.background -> {
                 animateAndDismiss()
 
-                TelemetryWrapper.closeTabsTrayEvent()
+                val openedTabs = store.state.tabs.size
+                TabCount.sessionListClosed.record(TabCount.SessionListClosedExtra(openedTabs))
             }
 
             else -> throw IllegalStateException("Unhandled view in onClick()")

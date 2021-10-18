@@ -512,3 +512,89 @@ add_to_home_screen:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-11-01"
+
+tab_count:
+  session_button_tapped:
+    type: event
+    description: The session button has been tapped to see session list.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5583
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5644
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      opened_tabs:
+        description: Number of currently opened tabs
+        type: quantity
+  session_list_item_tapped:
+    type: event
+    description: The user has switched to a tab from the session list.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5583
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5644
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      opened_tabs:
+        description: Number of currently opened tabs
+        type: quantity
+  session_list_closed:
+    type: event
+    description: The user has closed the session list.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5583
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5644
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      opened_tabs:
+        description: Number of currently opened tabs
+        type: quantity
+  erase_button_tapped:
+    type: event
+    description: The erease button has been tapped to close opened sessions.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5583
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5644
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      opened_tabs:
+        description: Number of currently opened tabs
+        type: quantity
+  new_tab_opened:
+    type: event
+    description: A new tab has opened.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5583
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5644
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      opened_tabs:
+        description: Number of currently opened tabs
+        type: quantity
+      source:
+        description: |
+          Tab opened from "custom tab", "context menu" or from "Window.open()"
+        type: string

@@ -51,6 +51,7 @@ import mozilla.components.feature.top.sites.TopSitesFeature
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
+import org.mozilla.focus.GleanMetrics.TabCount
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.InstallFirefoxActivity
@@ -697,17 +698,17 @@ class BrowserFragment :
 
     @Suppress("ComplexMethod")
     override fun onClick(view: View) {
+        val openedTabs = view.context.components.store.state.tabs.size
         when (view.id) {
             R.id.erase -> {
-                TelemetryWrapper.eraseEvent()
-
+                TabCount.eraseButtonTapped.record(TabCount.EraseButtonTappedExtra(openedTabs))
                 erase()
             }
 
             R.id.tabs -> {
                 requireComponents.appStore.dispatch(AppAction.ShowTabs)
 
-                TelemetryWrapper.openTabsTrayEvent()
+                TabCount.sessionButtonTapped.record(TabCount.SessionButtonTappedExtra(openedTabs))
             }
 
             R.id.open_in_firefox_focus -> {

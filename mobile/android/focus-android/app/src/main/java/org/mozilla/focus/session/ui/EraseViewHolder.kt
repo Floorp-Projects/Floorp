@@ -10,9 +10,10 @@ import android.view.View
 import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.RecyclerView
+import org.mozilla.focus.GleanMetrics.TabCount
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requireComponents
-import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class EraseViewHolder(
     private val fragment: TabSheetFragment,
@@ -27,7 +28,8 @@ class EraseViewHolder(
     }
 
     override fun onClick(view: View) {
-        TelemetryWrapper.eraseInTabsTrayEvent()
+        val openedTabs = view.context.components.store.state.tabs.size
+        TabCount.eraseButtonTapped.record(TabCount.EraseButtonTappedExtra(openedTabs))
 
         fragment.animateAndDismiss().addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
