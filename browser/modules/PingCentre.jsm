@@ -21,7 +21,7 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "TelemetrySend",
+  "sendStandalonePing",
   "resource://gre/modules/TelemetrySend.jsm"
 );
 
@@ -109,7 +109,7 @@ class PingCentre {
 
   // We route through this helper because it gets hooked in testing.
   static _sendStandalonePing(endpoint, payload) {
-    return TelemetrySend.sendStandalonePing(endpoint, payload);
+    return sendStandalonePing(endpoint, payload);
   }
 
   /**
