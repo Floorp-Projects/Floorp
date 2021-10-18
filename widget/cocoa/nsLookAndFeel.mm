@@ -201,13 +201,19 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       // Thanks to mpt26@student.canterbury.ac.nz for the hardcoded values that form the defaults
       //  if querying the Appearance Manager fails ;)
       //
-    case ColorID::MozButtonactivetext:
     case ColorID::MozMacDefaultbuttontext:
       color = NS_RGB(0xFF, 0xFF, 0xFF);
       break;
     case ColorID::Buttontext:
     case ColorID::MozButtonhovertext:
       color = GetColorFromNSColor(NSColor.controlTextColor);
+      break;
+    case ColorID::MozButtonactivetext:
+      // Pre-macOS 12, pressed buttons were filled with the highlight color and the text was white.
+      // Starting with macOS 12, pressed (non-default) buttons are filled with medium gray and the
+      // text color is the same as in the non-pressed state.
+      color = nsCocoaFeatures::OnMontereyOrLater() ? GetColorFromNSColor(NSColor.controlTextColor)
+                                                   : NS_RGB(0xFF, 0xFF, 0xFF);
       break;
     case ColorID::Captiontext:
     case ColorID::Menutext:
