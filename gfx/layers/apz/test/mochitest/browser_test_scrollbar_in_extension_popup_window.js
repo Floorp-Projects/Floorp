@@ -68,10 +68,6 @@ add_task(async () => {
 
   await extension.startup();
 
-  registerCleanupFunction(() => {
-    SpecialPowers.clearUserPref("apz.popups.enabled");
-  });
-
   async function takeSnapshot(browserWin) {
     let browser = await openBrowserActionPanel(extension, browserWin, true);
 
@@ -121,13 +117,13 @@ add_task(async () => {
 
   // First, take a snapshot with disabling APZ in the popup window, we assume
   // scrollbars are rendered properly there.
-  await SpecialPowers.setBoolPref("apz.popups.enabled", false);
+  await SpecialPowers.pushPrefEnv({ set: [["apz.popups.enabled", false]] });
   const newWin = await BrowserTestUtils.openNewBrowserWindow();
   const reference = await takeSnapshot(newWin);
   await BrowserTestUtils.closeWindow(newWin);
 
   // Then take a snapshot with enabling APZ.
-  await SpecialPowers.setBoolPref("apz.popups.enabled", true);
+  await SpecialPowers.pushPrefEnv({ set: [["apz.popups.enabled", true]] });
   const anotherWin = await BrowserTestUtils.openNewBrowserWindow();
   const test = await takeSnapshot(anotherWin);
   await BrowserTestUtils.closeWindow(anotherWin);
