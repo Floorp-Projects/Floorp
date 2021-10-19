@@ -149,64 +149,7 @@ build_libcxx() {
   # other options.
   DEBUG_FLAGS="-g -gcodeview"
 
-  mkdir libunwind
-  pushd libunwind
-  cmake \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_INSTALL_PREFIX=$CROSS_PREFIX_DIR \
-      -DCMAKE_C_COMPILER=$CC \
-      -DCMAKE_CXX_COMPILER=$CXX \
-      -DCMAKE_CROSSCOMPILING=TRUE \
-      -DCMAKE_SYSROOT=$CROSS_PREFIX_DIR \
-      -DCMAKE_SYSTEM_NAME=Windows \
-      -DCMAKE_C_COMPILER_WORKS=TRUE \
-      -DCMAKE_CXX_COMPILER_WORKS=TRUE \
-      -DLLVM_COMPILER_CHECKED=TRUE \
-      -DCMAKE_AR=$INSTALL_DIR/bin/llvm-ar \
-      -DCMAKE_RANLIB=$INSTALL_DIR/bin/llvm-ranlib \
-      -DLLVM_NO_OLD_LIBSTDCXX=TRUE \
-      -DCXX_SUPPORTS_CXX11=TRUE \
-      -DCXX_SUPPORTS_CXX_STD=TRUE \
-      -DLIBUNWIND_USE_COMPILER_RT=TRUE \
-      -DLIBUNWIND_ENABLE_THREADS=TRUE \
-      -DLIBUNWIND_ENABLE_SHARED=FALSE \
-      -DLIBUNWIND_ENABLE_CROSS_UNWINDING=FALSE \
-      -DCMAKE_CXX_FLAGS="${DEBUG_FLAGS} -Wno-dll-attribute-on-redeclaration -nostdinc++ -I$TOOLCHAIN_DIR/libcxx/include -DPSAPI_VERSION=2" \
-      -DCMAKE_C_FLAGS="-Wno-dll-attribute-on-redeclaration" \
-      $MOZ_FETCHES_DIR/libunwind
-  make $make_flags
-  make $make_flags install
-  popd
-
-  mkdir libcxxabi
-  pushd libcxxabi
-  cmake \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_INSTALL_PREFIX=$CROSS_PREFIX_DIR \
-      -DCMAKE_C_COMPILER=$CC \
-      -DCMAKE_CXX_COMPILER=$CXX \
-      -DCMAKE_CROSSCOMPILING=TRUE \
-      -DCMAKE_SYSTEM_NAME=Windows \
-      -DCMAKE_C_COMPILER_WORKS=TRUE \
-      -DCMAKE_CXX_COMPILER_WORKS=TRUE \
-      -DCMAKE_SYSROOT=$CROSS_PREFIX_DIR \
-      -DLLVM_COMPILER_CHECKED=TRUE \
-      -DCMAKE_AR=$INSTALL_DIR/bin/llvm-ar \
-      -DCMAKE_RANLIB=$INSTALL_DIR/bin/llvm-ranlib \
-      -DLIBCXXABI_USE_COMPILER_RT=ON \
-      -DLIBCXXABI_ENABLE_EXCEPTIONS=ON \
-      -DLIBCXXABI_ENABLE_THREADS=ON \
-      -DLIBCXXABI_TARGET_TRIPLE=$machine-w64-mingw32 \
-      -DLIBCXXABI_ENABLE_SHARED=OFF \
-      -DLIBCXXABI_LIBCXX_INCLUDES=$TOOLCHAIN_DIR/libcxx/include \
-      -DLLVM_NO_OLD_LIBSTDCXX=TRUE \
-      -DCXX_SUPPORTS_CXX11=TRUE \
-      -DCXX_SUPPORTS_CXX_STD=TRUE \
-      -DCMAKE_CXX_FLAGS="${DEBUG_FLAGS} -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS -D_LIBCPP_HAS_THREAD_API_WIN32" \
-      $TOOLCHAIN_DIR/libcxxabi
-  make $make_flags VERBOSE=1
-  popd
-
+  # First configure libcxx
   mkdir libcxx
   pushd libcxx
   cmake \
@@ -238,6 +181,67 @@ build_libcxx() {
       -DLIBCXX_CXX_ABI_LIBRARY_PATH=../libcxxabi/lib \
       -DCMAKE_CXX_FLAGS="${DEBUG_FLAGS} -D_LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS" \
       $TOOLCHAIN_DIR/libcxx
+  popd
+
+  mkdir libunwind
+  pushd libunwind
+  cmake \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=$CROSS_PREFIX_DIR \
+      -DCMAKE_C_COMPILER=$CC \
+      -DCMAKE_CXX_COMPILER=$CXX \
+      -DCMAKE_CROSSCOMPILING=TRUE \
+      -DCMAKE_SYSROOT=$CROSS_PREFIX_DIR \
+      -DCMAKE_SYSTEM_NAME=Windows \
+      -DCMAKE_C_COMPILER_WORKS=TRUE \
+      -DCMAKE_CXX_COMPILER_WORKS=TRUE \
+      -DLLVM_COMPILER_CHECKED=TRUE \
+      -DCMAKE_AR=$INSTALL_DIR/bin/llvm-ar \
+      -DCMAKE_RANLIB=$INSTALL_DIR/bin/llvm-ranlib \
+      -DLLVM_NO_OLD_LIBSTDCXX=TRUE \
+      -DCXX_SUPPORTS_CXX11=TRUE \
+      -DCXX_SUPPORTS_CXX_STD=TRUE \
+      -DLIBUNWIND_USE_COMPILER_RT=TRUE \
+      -DLIBUNWIND_ENABLE_THREADS=TRUE \
+      -DLIBUNWIND_ENABLE_SHARED=FALSE \
+      -DLIBUNWIND_ENABLE_CROSS_UNWINDING=FALSE \
+      -DCMAKE_CXX_FLAGS="${DEBUG_FLAGS} -Wno-dll-attribute-on-redeclaration -nostdinc++ -I$TOOLCHAIN_DIR/build/libcxx/include/c++/v1 -DPSAPI_VERSION=2" \
+      -DCMAKE_C_FLAGS="-Wno-dll-attribute-on-redeclaration" \
+      $MOZ_FETCHES_DIR/libunwind
+  make $make_flags
+  make $make_flags install
+  popd
+
+  mkdir libcxxabi
+  pushd libcxxabi
+  cmake \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=$CROSS_PREFIX_DIR \
+      -DCMAKE_C_COMPILER=$CC \
+      -DCMAKE_CXX_COMPILER=$CXX \
+      -DCMAKE_CROSSCOMPILING=TRUE \
+      -DCMAKE_SYSTEM_NAME=Windows \
+      -DCMAKE_C_COMPILER_WORKS=TRUE \
+      -DCMAKE_CXX_COMPILER_WORKS=TRUE \
+      -DCMAKE_SYSROOT=$CROSS_PREFIX_DIR \
+      -DLLVM_COMPILER_CHECKED=TRUE \
+      -DCMAKE_AR=$INSTALL_DIR/bin/llvm-ar \
+      -DCMAKE_RANLIB=$INSTALL_DIR/bin/llvm-ranlib \
+      -DLIBCXXABI_USE_COMPILER_RT=ON \
+      -DLIBCXXABI_ENABLE_EXCEPTIONS=ON \
+      -DLIBCXXABI_ENABLE_THREADS=ON \
+      -DLIBCXXABI_TARGET_TRIPLE=$machine-w64-mingw32 \
+      -DLIBCXXABI_ENABLE_SHARED=OFF \
+      -DLIBCXXABI_LIBCXX_INCLUDES=$TOOLCHAIN_DIR/libcxx/include/ \
+      -DLLVM_NO_OLD_LIBSTDCXX=TRUE \
+      -DCXX_SUPPORTS_CXX11=TRUE \
+      -DCXX_SUPPORTS_CXX_STD=TRUE \
+      -DCMAKE_CXX_FLAGS="${DEBUG_FLAGS} -I$TOOLCHAIN_DIR/build/libcxx/include/c++/v1 -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS -D_LIBCPP_HAS_THREAD_API_WIN32" \
+      $TOOLCHAIN_DIR/libcxxabi
+  make $make_flags VERBOSE=1
+  popd
+
+  pushd libcxx
   make $make_flags VERBOSE=1
   make $make_flags install
 

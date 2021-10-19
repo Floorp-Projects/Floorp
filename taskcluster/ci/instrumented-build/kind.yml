@@ -169,6 +169,8 @@ jobs:
                 - android-gradle-dependencies
                 - android-ndk-linux
                 - android-sdk-linux
+                # Workaround issues in binutils from the ndk with the compiler-rt from clang-13
+                - linux64-binutils
                 - linux64-clang-android-cross
                 - linux64-rust-android
                 - linux64-rust-size

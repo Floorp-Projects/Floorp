@@ -1,20 +1,20 @@
 diff --git a/clang-tools-extra/clang-tidy/ClangTidy.cpp b/clang-tools-extra/clang-tidy/ClangTidy.cpp
-index d6913dfd3c07..d031a163fdd7 100644
+index 73d66b980a5e..3b18de2176ba 100644
 --- a/clang-tools-extra/clang-tidy/ClangTidy.cpp
 +++ b/clang-tools-extra/clang-tidy/ClangTidy.cpp
-@@ -418,6 +418,7 @@ ClangTidyASTConsumerFactory::CreateASTConsumer(
-     if (!Check->isLanguageVersionSupported(Context.getLangOpts()))
-       continue;
+@@ -432,6 +432,7 @@ ClangTidyASTConsumerFactory::CreateASTConsumer(
+
+   for (auto &Check : Checks) {
      Check->registerMatchers(&*Finder);
 +    Check->registerPPCallbacks(Compiler);
      Check->registerPPCallbacks(*SM, PP, ModuleExpanderPP);
    }
 
 diff --git a/clang-tools-extra/clang-tidy/ClangTidyCheck.h b/clang-tools-extra/clang-tidy/ClangTidyCheck.h
-index 54b725126752..200780e86804 100644
+index 20e9b8e47e6f..aded1f2e196c 100644
 --- a/clang-tools-extra/clang-tidy/ClangTidyCheck.h
 +++ b/clang-tools-extra/clang-tidy/ClangTidyCheck.h
-@@ -130,6 +130,9 @@ public:
+@@ -70,6 +70,9 @@ public:
      return true;
    }
 
