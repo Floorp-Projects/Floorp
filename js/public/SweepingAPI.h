@@ -65,7 +65,9 @@ class WeakCacheBase : public mozilla::LinkedListElement<WeakCacheBase> {
   // Sweeping will be skipped if the cache is empty already.
   virtual bool empty() = 0;
 
-  virtual bool setNeedsIncrementalBarrier(bool needs) {
+  // Enable/disable read barrier during incremental sweeping and set the tracer
+  // to use.
+  virtual bool setIncrementalBarrierTracer(JSTracer* trc) {
     // Derived classes do not support incremental barriers by default.
     return false;
   }

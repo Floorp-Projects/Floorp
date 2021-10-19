@@ -370,6 +370,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       stats_(this),
       marker(rt),
       barrierTracer(rt),
+      sweepingTracer(rt),
       heapSize(nullptr),
       helperThreadRatio(TuningDefaults::HelperThreadRatio),
       maxHelperThreads(TuningDefaults::MaxHelperThreads),
