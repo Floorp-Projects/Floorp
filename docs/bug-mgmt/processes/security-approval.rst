@@ -71,9 +71,15 @@ Developing the Patch
    non-security work, in the same area.
 
 Request review of the patch in the same process as normal. After the
-patch has received an r+ you will request sec-approval. See
+patch has been reviewed you will request sec-approval as needed. See
 :ref:`Fixing Security Bugs`
 for more examples/details of these points.
+
+Preparing the patch for landing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+See :ref:`Fixing Security Bugs`
+for more details.
 
 On Requesting sec-approval
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -91,48 +97,17 @@ explicit approval if:
 | **B)** The bug is a recent regression on mozilla-central. This means
 
 -  A specific regressing check-in has been identified
--  The developer can (**and has**) marked the status flags for ESR,
-   Beta, and Aurora as "unaffected"
+-  The developer can (**and has**) marked the status flags for ESR and
+   Beta as "unaffected"
 -  We have not shipped this vulnerability in anything other than a
    nightly build
 
-If it meets the above criteria, check that patch in.
+If it meets the above criteria, developers do not need to ask for sec-approval.
 
-Otherwise, if the bug has a patch \*and\* is sec-high or sec-critical,
-the developer should prepare the patch for sec-approval. This entails:
-
--  Commit should occur without specific mention of security, security
-   bugs, or sec-approvers if possible. While comprehensive commit
-   messages are generally encouraged; they should be omitted for
-   security bugs and instead be posted in the bug (which will eventually
-   become public.)
--  Separate out tests into a separate commit. **Do not commit tests when
-   checking in** when the security bug fix is initially checked-in.
-   **Remember we don’t want to 0-day ourselves!**
-
-   -  Tests should only be checked in later, after an official Firefox
-      release that contains the fix has gone live and not for at least
-      four weeks following that release. For example, if Firefox 53
-      contains a fix for a security issue that affects the world and is
-      then fixed in 54, tests for this fix should not be checked in
-      until four weeks after 54 goes live. The exception to this is if
-      there is a security issue that hasn’t shipped in a release build
-      and it is being fixed on multiple development branches (such as
-      mozilla-central and beta). Since the security problem was never
-      released to the world, once the bug is fixed in all affected
-      places, tests can be checked in to the various branches.
-   -  There are two main techniques for remembering to check in the
-      tests later:
-
-      -  clone the sec bug into a hidden "task" bug "land tests for bug
-         xxxxx" and assign to yourself. It should get a "sec-other"
-         keyword rating.
-      -  Or, set the "in-testsuite" flag to "?", and later set it to "+"
-         when the tests get checked in.
-
-Following that, set the sec-approval flag to '?' on the patch when it is
-ready to be checked into mozilla-central (or elsewhere if it is branch
-only).
+In all other cases, developers should ask for sec-approval. 
+Set the sec-approval flag to '?' on the patch when it is ready to be landed.
+You will find these flags in Bugzilla using the "Details" links in the
+Bugzilla attachment table (not directly on phabricator at time of writing).
 
 If developers are unsure about a bug and it has a patch ready, just
 request sec-approval anyway and move on. Don't overthink it!
@@ -215,5 +190,7 @@ multiple axes:
 -  reverse engineering risk
 -  stability risk
 
-The most common choice is: not much stability risk, not an immediate RE
-risk, moderate to high difficulty of exploitation: "land whenever"
+The most common choice is: not much stability risk, not an immediate
+reverse engineering risk, moderate to high difficulty of exploitation:
+"land whenever".
+
