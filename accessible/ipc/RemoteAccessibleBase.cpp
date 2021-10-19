@@ -113,7 +113,7 @@ int32_t RemoteAccessibleBase<Derived>::IndexOfEmbeddedChild(
 }
 
 template <class Derived>
-Derived* RemoteAccessibleBase<Derived>::EmbeddedChildAt(size_t aChildIdx) {
+Accessible* RemoteAccessibleBase<Derived>::EmbeddedChildAt(uint32_t aChildIdx) {
   size_t index = 0, kids = mChildren.Length();
   for (size_t i = 0; i < kids; i++) {
     if (!mChildren[i]->IsEmbeddedObject()) {

@@ -737,7 +737,7 @@ AtkObject* refChildCB(AtkObject* aAtkObj, gint aChildIndex) {
       return nullptr;
     }
 
-    LocalAccessible* accChild = accWrap->GetEmbeddedChildAt(aChildIndex);
+    LocalAccessible* accChild = accWrap->EmbeddedChildAt(aChildIndex);
     if (accChild) {
       childAtkObj = AccessibleWrap::GetAtkObject(accChild);
     } else {
@@ -752,8 +752,10 @@ AtkObject* refChildCB(AtkObject* aAtkObj, gint aChildIndex) {
       return nullptr;
     }
 
-    RemoteAccessible* child = proxy->EmbeddedChildAt(aChildIndex);
-    if (child) childAtkObj = GetWrapperFor(child);
+    Accessible* child = proxy->EmbeddedChildAt(aChildIndex);
+    if (child) {
+      childAtkObj = GetWrapperFor(child->AsRemote());
+    }
   } else {
     return nullptr;
   }
