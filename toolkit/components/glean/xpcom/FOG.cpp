@@ -194,6 +194,64 @@ FOG::SetExperimentInactive(const nsACString& aExperimentId) {
 }
 
 NS_IMETHODIMP
+FOG::TestGetExperimentData(const nsACString& aExperimentId, JSContext* aCx,
+                           JS::MutableHandleValue aResult) {
+#ifdef MOZ_GLEAN_ANDROID
+  NS_WARNING("Don't test experiments from Gecko in Android. Throwing.");
+  aResult.set(JS::UndefinedValue());
+  return NS_ERROR_FAILURE;
+#else
+  if (!glean::impl::fog_test_is_experiment_active(&aExperimentId)) {
+    aResult.set(JS::UndefinedValue());
+    return NS_OK;
+  }
+
+  // We could struct-up the branch and extras and do what
+  // EventMetric::TestGetValue does... but keeping allocation on this side feels
+  // cleaner to me at the moment.
+  nsCString branch;
+  nsTArray<nsCString> extraKeys;
+  nsTArray<nsCString> extraValues;
+
+  glean::impl::fog_test_get_experiment_data(&aExperimentId, &branch, &extraKeys,
+                                            &extraValues);
+  MOZ_ASSERT(extraKeys.Length() == extraValues.Length());
+
+  JS::RootedObject jsExperimentDataObj(aCx, JS_NewPlainObject(aCx));
+  if (NS_WARN_IF(!jsExperimentDataObj)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JS::RootedValue jsBranchStr(aCx);
+  if (!dom::ToJSValue(aCx, branch, &jsBranchStr) ||
+      !JS_DefineProperty(aCx, jsExperimentDataObj, "branch", jsBranchStr,
+                         JSPROP_ENUMERATE)) {
+    NS_WARNING("Failed to define branch for experiment data object.");
+    return NS_ERROR_FAILURE;
+  }
+
+  JS::RootedObject jsExtraObj(aCx, JS_NewPlainObject(aCx));
+  if (!JS_DefineProperty(aCx, jsExperimentDataObj, "extra", jsExtraObj,
+                         JSPROP_ENUMERATE)) {
+    NS_WARNING("Failed to define extra for experiment data object.");
+    return NS_ERROR_FAILURE;
+  }
+
+  for (unsigned int i = 0; i < extraKeys.Length(); i++) {
+    JS::RootedValue jsValueStr(aCx);
+    if (!dom::ToJSValue(aCx, extraValues[i], &jsValueStr) ||
+        !JS_DefineProperty(aCx, jsExtraObj, extraKeys[i].Data(), jsValueStr,
+                           JSPROP_ENUMERATE)) {
+      NS_WARNING("Failed to define extra property for experiment data object.");
+      return NS_ERROR_FAILURE;
+    }
+  }
+  aResult.setObject(*jsExperimentDataObj);
+  return NS_OK;
+#endif
+}
+
+NS_IMETHODIMP
 FOG::TestFlushAllChildren(JSContext* aCx, mozilla::dom::Promise** aOutPromise) {
   NS_ENSURE_ARG(aOutPromise);
   *aOutPromise = nullptr;
