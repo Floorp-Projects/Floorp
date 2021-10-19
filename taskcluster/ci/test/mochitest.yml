@@ -490,11 +490,10 @@ mochitest-media:
                     default: built-projects
             webgl-ipc:
                 by-test-platform:
-                    .*-tsan-qr/opt: ['trunk']
-                    windows10-64-2004-asan-qr/opt: ['trunk']
-                    (linux.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['trunk']
-                    (linux|windows10-64-2004|macos)(?!.*-qr).*: []
-                    default: built-projects
+                    linux.*-64.*: ["trunk"]
+                    mac.*: ["trunk"]
+                    win.*: ["trunk"]
+                    default: []
             default:
                 by-test-platform:
                     android-hw-.*/opt: []
@@ -663,11 +662,19 @@ mochitest-webgl1-core:
             macosx.*64-ccov.*/.*: 7200
             default: 1800
     run-on-projects:
-        by-test-platform:
-            .*-tsan-qr/opt: ['trunk']
-            android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
-            android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
-            default: built-projects
+        by-variant:
+            webgl-ipc:
+                by-test-platform:
+                    linux.*-64.*: ["trunk"]
+                    mac.*: ["trunk"]
+                    win.*: ["trunk"]
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan-qr/opt: ['trunk']
+                    android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                    android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
+                    default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
     mozharness:
@@ -699,11 +706,19 @@ mochitest-webgl1-ext:
     loopback-video: true
     max-run-time: 2700
     run-on-projects:
-        by-test-platform:
-            .*-tsan-qr/opt: ['trunk']
-            android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
-            android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
-            default: built-projects
+        by-variant:
+            webgl-ipc:
+                by-test-platform:
+                    linux.*-64.*: ["trunk"]
+                    mac.*: ["trunk"]
+                    win.*: ["trunk"]
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan-qr/opt: ['trunk']
+                    android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                    android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
+                    default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
     mozharness:
@@ -734,11 +749,19 @@ mochitest-webgl2-core:
     loopback-video: true
     max-run-time: 1800
     run-on-projects:
-        by-test-platform:
-            .*-tsan-qr/opt: ['trunk']
-            android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
-            android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
-            default: built-projects
+        by-variant:
+            webgl-ipc:
+                by-test-platform:
+                    linux.*-64.*: ["trunk"]
+                    mac.*: ["trunk"]
+                    win.*: ["trunk"]
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan-qr/opt: ['trunk']
+                    android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                    android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
+                    default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
     mozharness:
@@ -758,6 +781,15 @@ mochitest-webgl2-ext:
             linux.*64(-shippable)?-(qr|asan)?/opt: ['fission', 'fission-webgl-ipc', 'webgl-ipc', 'wayland']
             windows10-64-2004(-shippable)?-qr/(opt|debug): ['fission', 'fission-webgl-ipc', 'webgl-ipc']
             default: ['webgl-ipc']
+    run-on-projects:
+        by-variant:
+            webgl-ipc:
+                by-test-platform:
+                    linux.*-64.*: ["trunk"]
+                    mac.*: ["trunk"]
+                    win.*: ["trunk"]
+                    default: []
+            default: built-projects
     chunks: 4
     e10s: true
     test-manifest-loader: null  # don't load tests in the taskgraph
