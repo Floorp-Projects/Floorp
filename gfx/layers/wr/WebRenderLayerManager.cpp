@@ -602,11 +602,6 @@ void WebRenderLayerManager::DidComposite(
       mTransactionIdAllocator->NotifyTransactionCompleted(aTransactionId);
     }
   }
-
-  // These observers fire whether or not we were in a transaction.
-  for (size_t i = 0; i < mDidCompositeObservers.Length(); i++) {
-    mDidCompositeObservers[i]->DidComposite();
-  }
 }
 
 void WebRenderLayerManager::ClearCachedResources() {
@@ -671,18 +666,6 @@ void WebRenderLayerManager::SetTransactionIdAllocator(
 
 TransactionId WebRenderLayerManager::GetLastTransactionId() {
   return mLatestTransactionId;
-}
-
-void WebRenderLayerManager::AddDidCompositeObserver(
-    DidCompositeObserver* aObserver) {
-  if (!mDidCompositeObservers.Contains(aObserver)) {
-    mDidCompositeObservers.AppendElement(aObserver);
-  }
-}
-
-void WebRenderLayerManager::RemoveDidCompositeObserver(
-    DidCompositeObserver* aObserver) {
-  mDidCompositeObservers.RemoveElement(aObserver);
 }
 
 void WebRenderLayerManager::FlushRendering(wr::RenderReasons aReasons) {
