@@ -97,12 +97,14 @@ static const char* const kTestFileExtensions[] = {
     ".hqx",            // Mac archive
     ".hta",            // HTML trusted application
     ".htm", ".html",
-    ".htt",                // MS HTML template
-    ".img",                // Mac disk image
-    ".imgpart",            // Mac disk image
-    ".inf",                // Windows installer
-    ".ini",                // Generic config file
-    ".ins",                // IIS config
+    ".htt",      // MS HTML template
+    ".img",      // Mac disk image
+    ".imgpart",  // Mac disk image
+    ".inetloc",  // Apple finder internet location data file (ignored for app
+                 // rep)
+    ".inf",      // Windows installer
+    ".ini",      // Generic config file
+    ".ins",      // IIS config
     ".internetconnect",    // Configuration file for Apple system
     ".iso",                // CD image
     ".isp",                // IIS config
