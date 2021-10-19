@@ -177,12 +177,31 @@ class CCGCScheduler {
     if (aReason != JS::GCReason::USER_INACTIVE) {
       mWantAtLeastRegularGC = true;
     }
-    mMajorGCReason = aReason;
 
     // Force full GCs when called from reftests so that we collect dead zones
     // that have not been scheduled for collection.
     if (aReason == JS::GCReason::DOM_WINDOW_UTILS) {
       SetNeedsFullGC();
+    }
+
+    // USER_INACTIVE trumps everything,
+    // FULL_GC_TIMER trumps everything except USER_INACTIVE,
+    // all other reasons just use the latest reason.
+    switch (aReason) {
+      case JS::GCReason::USER_INACTIVE:
+        mMajorGCReason = aReason;
+        break;
+      case JS::GCReason::FULL_GC_TIMER:
+        if (mMajorGCReason != JS::GCReason::USER_INACTIVE) {
+          mMajorGCReason = aReason;
+        }
+        break;
+      default:
+        if (mMajorGCReason != JS::GCReason::USER_INACTIVE &&
+            mMajorGCReason != JS::GCReason::FULL_GC_TIMER) {
+          mMajorGCReason = aReason;
+        }
+        break;
     }
   }
 
