@@ -5,9 +5,9 @@
 
 // Test switching for the top-level target.
 
-const EXAMPLE_COM_URL = "http://example.com/document-builder.sjs?html=testcom";
-const EXAMPLE_NET_URL = "http://example.net/document-builder.sjs?html=testnet";
-const REQUEST_URL = SEARCH_SJS + "?value=test";
+const EXAMPLE_COM_URL = "https://example.com/document-builder.sjs?html=testcom";
+const EXAMPLE_NET_URL = "https://example.net/document-builder.sjs?html=testnet";
+const REQUEST_URL = HTTPS_SEARCH_SJS + "?value=test";
 const PARENT_PROCESS_URL = "about:blank";
 
 add_task(async function() {

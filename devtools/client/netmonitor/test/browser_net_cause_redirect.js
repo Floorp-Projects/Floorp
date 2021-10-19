@@ -9,6 +9,9 @@
  */
 
 add_task(async function() {
+  // This test explicitly checks http->https redirects and should not force https.
+  await pushPref("dom.security.https_first", false);
+
   const EXPECTED_REQUESTS = [
     // Request to HTTP URL, redirects to HTTPS
     { status: 302 },

@@ -9,6 +9,9 @@
  */
 
 add_task(async function() {
+  // This test explicitly asserts some insecure domains.
+  await pushPref("dom.security.https_first", false);
+
   const EXPECTED_SECURITY_STATES = {
     "test1.example.com": "security-state-insecure",
     "example.com": "security-state-secure",

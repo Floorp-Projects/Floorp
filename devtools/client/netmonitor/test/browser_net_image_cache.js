@@ -40,7 +40,7 @@ add_task(async function() {
   is(requests.length, 4, "There should be 4 requests");
 
   const requestData = {
-    uri: EXAMPLE_URL + "test-image.png",
+    uri: HTTPS_EXAMPLE_URL + "test-image.png",
     details: {
       status: 200,
       statusText: "OK (cached)",

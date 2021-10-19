@@ -8,7 +8,7 @@ const { UrlClassifierTestUtils } = ChromeUtils.import(
 );
 
 const TEST_URI =
-  "http://example.com/browser/devtools/client/" +
+  "https://example.com/browser/devtools/client/" +
   "netmonitor/test/html_tracking-protection.html";
 
 registerCleanupFunction(function() {
