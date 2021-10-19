@@ -292,7 +292,7 @@ NullHttpChannel::GetEncodedBodySize(uint64_t* aEncodedBodySize) {
 
 NS_IMETHODIMP
 NullHttpChannel::GetOriginalURI(nsIURI** aOriginalURI) {
-  NS_IF_ADDREF(*aOriginalURI = mOriginalURI);
+  *aOriginalURI = do_AddRef(mOriginalURI).take();
   return NS_OK;
 }
 
@@ -304,7 +304,7 @@ NullHttpChannel::SetOriginalURI(nsIURI* aOriginalURI) {
 
 NS_IMETHODIMP
 NullHttpChannel::GetURI(nsIURI** aURI) {
-  NS_IF_ADDREF(*aURI = mURI);
+  *aURI = do_AddRef(mURI).take();
   return NS_OK;
 }
 

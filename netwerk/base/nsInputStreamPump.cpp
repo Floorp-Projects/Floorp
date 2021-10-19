@@ -256,7 +256,7 @@ NS_IMETHODIMP
 nsInputStreamPump::GetLoadGroup(nsILoadGroup** aLoadGroup) {
   RecursiveMutexAutoLock lock(mMutex);
 
-  NS_IF_ADDREF(*aLoadGroup = mLoadGroup);
+  *aLoadGroup = do_AddRef(mLoadGroup).take();
   return NS_OK;
 }
 

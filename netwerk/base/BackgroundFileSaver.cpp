@@ -121,8 +121,7 @@ nsresult BackgroundFileSaver::Init() {
 NS_IMETHODIMP
 BackgroundFileSaver::GetObserver(nsIBackgroundFileSaverObserver** aObserver) {
   NS_ENSURE_ARG_POINTER(aObserver);
-  *aObserver = mObserver;
-  NS_IF_ADDREF(*aObserver);
+  *aObserver = do_AddRef(mObserver).take();
   return NS_OK;
 }
 
