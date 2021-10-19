@@ -1603,6 +1603,7 @@ dependencies = [
  "nsstring",
  "once_cell",
  "static_prefs",
+ "thin-vec",
  "url",
  "viaduct",
  "xpcom",
