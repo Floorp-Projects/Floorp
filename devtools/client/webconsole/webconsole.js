@@ -322,6 +322,11 @@ class WebConsole {
     return null;
   }
 
+  getMappedVariables() {
+    const { toolbox } = this;
+    return toolbox?.getPanel("jsdebugger")?.getMappedVariables();
+  }
+
   get parserService() {
     if (this._parserService) {
       return this._parserService;
