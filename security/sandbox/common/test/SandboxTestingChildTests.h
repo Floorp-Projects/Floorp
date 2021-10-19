@@ -29,6 +29,10 @@
 #  include <unistd.h>
 #endif
 
+#ifdef XP_MACOSX
+#  include <CoreGraphics/CoreGraphics.h>
+#endif
+
 namespace mozilla {
 
 void RunTestsContent(SandboxTestingChild* child) {
@@ -108,6 +112,21 @@ void RunTestsContent(SandboxTestingChild* child) {
     return con_st;
   });
 #  endif  // XP_LINUX
+
+#  ifdef XP_MACOSX
+  // Test that content processes can not connect to the macOS window server.
+  // CGSessionCopyCurrentDictionary() returns NULL when a connection to the
+  // window server is not available.
+  CFDictionaryRef windowServerDict = CGSessionCopyCurrentDictionary();
+  bool gotWindowServerDetails = (windowServerDict != nullptr);
+  child->SendReportTestResults(
+      "CGSessionCopyCurrentDictionary"_ns, false, gotWindowServerDetails,
+      gotWindowServerDetails ? "Failed: dictionary unexpectedly returned"_ns
+                             : "Succeeded: no dictionary returned"_ns);
+  if (windowServerDict != nullptr) {
+    CFRelease(windowServerDict);
+  }
+#  endif
 
 #else   // XP_UNIX
   child->ReportNoTests();
