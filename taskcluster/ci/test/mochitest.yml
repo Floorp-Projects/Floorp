@@ -10,12 +10,6 @@ job-defaults:
             android-em-7.*: geckoview-androidTest.apk
             android-hw.*: geckoview-androidTest.apk
             default: null
-    variants:
-        by-test-platform:
-            linux.*64/debug: ['fission', 'wayland', 'socketprocess_networking']
-            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
-            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
-            default: ['fission']
     tier:
         by-variant:
             fission(-xorigin)?:
@@ -131,6 +125,12 @@ mochitest-a11y:
     test-manifest-loader: default  # ensure we don't run with manifest-scheduling
     loopback-video: true
     e10s: false
+    variants:
+        by-test-platform:
+            linux.*64/debug: ['fission', 'wayland', 'socketprocess_networking']
+            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            default: ['fission']
     run-on-projects:
         by-test-platform:
             .*-tsan-qr/opt: ['trunk']
@@ -234,6 +234,12 @@ mochitest-browser-chrome-failures:
     chunks: 2
     max-run-time: 2700
     e10s: true
+    variants:
+        by-test-platform:
+            linux.*64/debug: ['fission', 'wayland', 'socketprocess_networking']
+            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            default: ['fission']
     run-on-projects: ['mozilla-central']
     mozharness:
         mochitest-flavor: browser
@@ -260,6 +266,12 @@ browser-screenshots:
     treeherder-symbol: M(ss)
     loopback-video: true
     test-manifest-loader: null  # don't load tests in the taskgraph
+    variants:
+        by-test-platform:
+            linux.*64/debug: ['fission', 'wayland', 'socketprocess_networking']
+            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            default: ['fission']
     run-on-projects:
         by-variant:
             fission: []
@@ -281,6 +293,12 @@ mochitest-chrome:
     treeherder-symbol: M(c)
     schedules-component: mochitest-chrome
     loopback-video: true
+    variants:
+        by-test-platform:
+            linux.*64/debug: ['fission', 'wayland', 'socketprocess_networking']
+            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            default: ['fission']
     run-on-projects:
         by-test-platform:
             .*-tsan-qr/opt: ['trunk']
@@ -386,6 +404,12 @@ mochitest-plain-gpu:
     treeherder-symbol: M(gpu)
     schedules-component: mochitest-plain
     loopback-video: true
+    variants:
+        by-test-platform:
+            linux.*64/debug: ['fission', 'wayland', 'socketprocess_networking']
+            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            default: ['fission']
     run-on-projects:
         by-variant:
             fission: []
@@ -425,6 +449,12 @@ mochitest-chrome-gpu:
     loopback-video: true
     virtualization: virtual-with-gpu
     e10s: true
+    variants:
+        by-test-platform:
+            linux.*64/debug: ['fission', 'wayland', 'socketprocess_networking']
+            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            default: ['fission']
     run-on-projects:
         by-variant:
             fission: []
@@ -570,6 +600,12 @@ mochitest-media-failures:
         name: mochitest-media
     loopback-video: true
     allow-software-gl-layers: false
+    variants:
+        by-test-platform:
+            linux.*64/debug: ['fission', 'wayland', 'socketprocess_networking']
+            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            default: ['fission']
     run-on-projects: ['mozilla-central']
     tier: 3
     chunks:
@@ -609,6 +645,12 @@ mochitest-plain-headless:
     max-run-time: 5400
     allow-software-gl-layers: false
     tier: 2
+    variants:
+        by-test-platform:
+            linux.*64/debug: ['fission', 'wayland', 'socketprocess_networking']
+            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            default: ['fission']
     run-on-projects:
         by-variant:
             fission:
@@ -904,6 +946,12 @@ mochitest-webgpu:
     virtualization: virtual-with-gpu
     e10s: true
     loopback-video: true
+    variants:
+        by-test-platform:
+            linux.*64/debug: ['fission', 'wayland', 'socketprocess_networking']
+            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            default: ['fission']
     run-on-projects:
         by-variant:
             fission:
@@ -933,6 +981,12 @@ mochitest-remote:
         name: mochitest-remote
     treeherder-symbol: M(remote)
     loopback-video: true
+    variants:
+        by-test-platform:
+            linux.*64/debug: ['fission', 'wayland', 'socketprocess_networking']
+            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            default: ['fission']
     run-on-projects:
         by-variant:
             fission:
