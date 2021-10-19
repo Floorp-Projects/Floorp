@@ -418,13 +418,13 @@ DesktopCaptureImpl::~DesktopCaptureImpl() {
 
 void DesktopCaptureImpl::RegisterCaptureDataCallback(
     rtc::VideoSinkInterface<VideoFrame>* dataCallback) {
-  MutexLock lock(&_apiMutex);
+  rtc::CritScope lock(&_apiCs);
   _dataCallBacks.insert(dataCallback);
 }
 
 void DesktopCaptureImpl::DeRegisterCaptureDataCallback(
     rtc::VideoSinkInterface<VideoFrame>* dataCallback) {
-  MutexLock lock(&_apiMutex);
+  rtc::CritScope lock(&_apiCs);
   auto it = _dataCallBacks.find(dataCallback);
   if (it != _dataCallBacks.end()) {
     _dataCallBacks.erase(it);
@@ -469,7 +469,7 @@ int32_t DesktopCaptureImpl::IncomingFrame(
     uint8_t* videoFrame, size_t videoFrameLength,
     const VideoCaptureCapability& frameInfo, int64_t captureTime) {
   int64_t startProcessTime = rtc::TimeNanos();
-  MutexLock cs(&_apiMutex);
+  rtc::CritScope cs(&_apiCs);
 
   const int32_t width = frameInfo.width;
   const int32_t height = frameInfo.height;
@@ -523,7 +523,7 @@ int32_t DesktopCaptureImpl::IncomingFrame(
 }
 
 int32_t DesktopCaptureImpl::SetCaptureRotation(VideoRotation rotation) {
-  MutexLock lock(&_apiMutex);
+  rtc::CritScope lock(&_apiCs);
   _rotateFrame = rotation;
   return 0;
 }
@@ -569,7 +569,7 @@ uint32_t DesktopCaptureImpl::CalculateFrameRate(int64_t now_ns) {
 
 int32_t DesktopCaptureImpl::StartCapture(
     const VideoCaptureCapability& capability) {
-  MutexLock lock(&_apiMutex);
+  rtc::CritScope lock(&_apiCs);
 
   _requestedCapability = capability;
   _maxFPSNeeded = _requestedCapability.maxFPS > 0

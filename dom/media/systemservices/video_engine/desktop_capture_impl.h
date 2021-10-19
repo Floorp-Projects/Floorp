@@ -26,6 +26,7 @@
 #include "modules/video_coding/event_wrapper.h"
 #include "modules/desktop_capture/shared_memory.h"
 #include "modules/desktop_capture/desktop_and_cursor_composer.h"
+#include "rtc_base/deprecated/recursive_critical_section.h"
 
 #include "desktop_device_info.h"
 
@@ -211,7 +212,7 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   void UpdateFrameCount();
   uint32_t CalculateFrameRate(int64_t now_ns);
 
-  Mutex _apiMutex;
+  rtc::RecursiveCriticalSection _apiCs;
 
   std::set<rtc::VideoSinkInterface<VideoFrame>*> _dataCallBacks;
 
