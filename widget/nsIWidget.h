@@ -1174,7 +1174,7 @@ class nsIWidget : public nsISupports {
    * Set the preferred color-scheme for the widget.
    * Ignored on non-Mac platforms.
    */
-  virtual void SetColorScheme(mozilla::ColorScheme) {}
+  virtual void SetColorScheme(const mozilla::Maybe<mozilla::ColorScheme>&) {}
 
   /**
    * Set whether the window should ignore mouse events or not.
