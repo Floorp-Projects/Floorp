@@ -2760,15 +2760,7 @@ void BrowsingContext::DidSet(FieldIndex<IDX_PrefersColorSchemeOverride>,
   PreOrderWalk([&](BrowsingContext* aContext) {
     if (nsIDocShell* shell = aContext->GetDocShell()) {
       if (nsPresContext* pc = shell->GetPresContext()) {
-        // This is a bit of a lie, but it's the code-path that gets taken for
-        // regular system metrics changes via ThemeChanged().
-        // TODO(emilio): The JustThisDocument is a bit suspect here,
-        // prefers-color-scheme also applies to images or such, but the override
-        // means that we could need to render the same image both with "light"
-        // and "dark" appearance, so we just don't bother.
-        pc->MediaFeatureValuesChanged(
-            {MediaFeatureChangeReason::SystemMetricsChange},
-            MediaFeatureChangePropagation::JustThisDocument);
+        pc->RecomputeBrowsingContextDependentData();
       }
     }
   });

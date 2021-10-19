@@ -82,6 +82,7 @@ class ServoStyleSet;
 class StaticPresData;
 struct MediaFeatureChange;
 enum class MediaFeatureChangePropagation : uint8_t;
+enum class ColorScheme : uint8_t;
 namespace layers {
 class ContainerLayer;
 class LayerManager;
@@ -89,6 +90,7 @@ class LayerManager;
 namespace dom {
 class Document;
 class Element;
+enum class PrefersColorSchemeOverride : uint8_t;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -573,12 +575,15 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   float GetOverrideDPPX() const { return mMediaEmulationData.mDPPX; }
 
+  // Gets the forced color-scheme if any via either DevTools emulation or
+  // printing.
+  //
+  // NOTE(emilio): This might be called from an stylo thread.
+  Maybe<mozilla::ColorScheme> GetOverriddenColorScheme() const;
+
   /**
    * Recomputes the data dependent on the browsing context, like zoom and text
    * zoom.
-   *
-   * TODO(emilio): Eventually stuff like the media emulation data, overrideDPPX
-   * and such should also move here.
    */
   void RecomputeBrowsingContextDependentData();
 
@@ -876,15 +881,15 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   gfxTextPerfMetrics* GetTextPerfMetrics() { return mTextPerf.get(); }
 
-  bool IsDynamic() {
-    return (mType == eContext_PageLayout || mType == eContext_Galley);
+  bool IsDynamic() const {
+    return mType == eContext_PageLayout || mType == eContext_Galley;
   }
-  bool IsScreen() {
-    return (mMedium == nsGkAtoms::screen || mType == eContext_PageLayout ||
-            mType == eContext_PrintPreview);
+  bool IsScreen() const {
+    return mMedium == nsGkAtoms::screen || mType == eContext_PageLayout ||
+           mType == eContext_PrintPreview;
   }
-  bool IsPrintingOrPrintPreview() {
-    return (mType == eContext_Print || mType == eContext_PrintPreview);
+  bool IsPrintingOrPrintPreview() const {
+    return mType == eContext_Print || mType == eContext_PrintPreview;
   }
 
   // Is this presentation in a chrome docshell?
@@ -1373,7 +1378,10 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   unsigned mInitialized : 1;
 #endif
 
+  // FIXME(emilio): These would be better packed on top of the bitfields, but
+  // that breaks bindgen in win32.
   FontVisibility mFontVisibility = FontVisibility::Unknown;
+  mozilla::dom::PrefersColorSchemeOverride mColorSchemeOverride;
 
  protected:
   virtual ~nsPresContext();
