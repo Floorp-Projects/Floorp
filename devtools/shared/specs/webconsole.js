@@ -12,9 +12,7 @@ const {
   Arg,
 } = require("devtools/shared/protocol");
 
-types.addDictType("console.traits", {
-  evaluateJSAsync: "boolean",
-});
+types.addDictType("console.traits", {});
 
 types.addDictType("console.startlisteners", {
   startedListeners: "array:string",

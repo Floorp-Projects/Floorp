@@ -432,9 +432,6 @@ class Connector {
     if (this.hasResourceCommandSupport && this.networkFront) {
       return this.networkFront.getBlockedUrls();
     }
-    if (!this.webConsoleFront.traits.blockedUrls) {
-      return [];
-    }
     return this.webConsoleFront.getBlockedUrls();
   }
 
