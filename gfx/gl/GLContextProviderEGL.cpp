@@ -307,9 +307,8 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
   gl->MakeCurrent();
   gl->SetIsDoubleBuffered(doubleBuffered);
 
-#ifdef MOZ_GTK_WAYLAND
-  if (surface && GdkIsWaylandDisplay()) {
-    // Make eglSwapBuffers() non-blocking on wayland
+#ifdef MOZ_WIDGET_GTK
+  if (surface) {
     const int interval = gfxVars::SwapIntervalEGL() ? 1 : 0;
     egl->fSwapInterval(interval);
   }
@@ -500,10 +499,8 @@ bool GLContextEGL::RenewSurface(CompositorWidget* aWidget) {
   }
   const bool ok = MakeCurrent(true);
   MOZ_ASSERT(ok);
-#ifdef MOZ_GTK_WAYLAND
-  if (mSurface && GdkIsWaylandDisplay()) {
-    // The swap interval pref is false by default so that eglSwapBuffers()
-    // is non-blocking on wayland.
+#ifdef MOZ_WIDGET_GTK
+  if (mSurface) {
     const int interval = gfxVars::SwapIntervalEGL() ? 1 : 0;
     mEgl->fSwapInterval(interval);
   }
