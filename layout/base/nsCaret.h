@@ -9,7 +9,6 @@
 #ifndef nsCaret_h__
 #define nsCaret_h__
 
-#include "mozilla/intl/Bidi.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCoord.h"
@@ -180,8 +179,7 @@ class nsCaret final : public nsISelectionListener {
                                nsRect* aRect);
   static nsIFrame* GetCaretFrameForNodeOffset(
       nsFrameSelection* aFrameSelection, nsIContent* aContentNode,
-      int32_t aOffset, CaretAssociationHint aFrameHint,
-      mozilla::intl::Bidi::EmbeddingLevel aBidiLevel,
+      int32_t aOffset, CaretAssociationHint aFrameHint, uint8_t aBidiLevel,
       nsIFrame** aReturnUnadjustedFrame, int32_t* aReturnOffset);
   static nsRect GetGeometryForFrame(nsIFrame* aFrame, int32_t aFrameOffset,
                                     nscoord* aBidiIndicatorSize);

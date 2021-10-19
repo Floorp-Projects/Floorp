@@ -21,7 +21,6 @@
 #include "nsContainerFrame.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
-#include "mozilla/intl/Bidi.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "nsFontMetrics.h"
@@ -7118,8 +7117,7 @@ StyleDirection ScrollFrameHelper::GetScrolledFrameDir() const {
   if (mScrolledFrame->StyleTextReset()->mUnicodeBidi &
       NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
     if (nsIFrame* child = mScrolledFrame->PrincipalChildList().FirstChild()) {
-      return nsBidiPresUtils::ParagraphDirection(child) ==
-                     mozilla::intl::Bidi::Direction::LTR
+      return nsBidiPresUtils::ParagraphDirection(child) == NSBIDI_LTR
                  ? StyleDirection::Ltr
                  : StyleDirection::Rtl;
     }

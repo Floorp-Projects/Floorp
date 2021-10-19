@@ -25,7 +25,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/PathHelpers.h"
-#include "mozilla/intl/Bidi.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/ResultExtensions.h"
@@ -1698,8 +1697,7 @@ WritingMode nsIFrame::WritingModeForLine(WritingMode aSelfWM,
   WritingMode writingMode = aSelfWM;
 
   if (StyleTextReset()->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
-    mozilla::intl::Bidi::EmbeddingLevel frameLevel =
-        nsBidiPresUtils::GetFrameBaseLevel(aSubFrame);
+    nsBidiLevel frameLevel = nsBidiPresUtils::GetFrameBaseLevel(aSubFrame);
     writingMode.SetDirectionFromBidiLevel(frameLevel);
   }
 
@@ -7925,9 +7923,8 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
   }
   if (HasProperty(BidiDataProperty())) {
     FrameBidiData bidi = GetBidiData();
-    aTo += nsPrintfCString(" bidi(%d,%d,%d)", bidi.baseLevel.Value(),
-                           bidi.embeddingLevel.Value(),
-                           bidi.precedingControl.Value());
+    aTo += nsPrintfCString(" bidi(%d,%d,%d)", bidi.baseLevel,
+                           bidi.embeddingLevel, bidi.precedingControl);
   }
   if (IsTransformed()) {
     aTo += nsPrintfCString(" transformed");
@@ -8108,7 +8105,7 @@ nsresult nsIFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint) {
       bool hasBidiData;
       FrameBidiData bidiData = GetProperty(BidiDataProperty(), &hasBidiData);
       bool isRTL = hasBidiData
-                       ? bidiData.embeddingLevel.IsRTL()
+                       ? IS_LEVEL_RTL(bidiData.embeddingLevel)
                        : StyleVisibility()->mDirection == StyleDirection::Rtl;
       if ((!isRTL && inOffset > newOffset) ||
           (isRTL && inOffset <= newOffset)) {
@@ -9105,8 +9102,7 @@ Result<bool, nsresult> nsIFrame::IsVisuallyAtLineEdge(
     return true;
   }
 
-  bool frameIsRTL = (nsBidiPresUtils::FrameDirection(*framePtr) ==
-                     mozilla::intl::Bidi::Direction::RTL);
+  bool frameIsRTL = (nsBidiPresUtils::FrameDirection(*framePtr) == NSBIDI_RTL);
   if ((frameIsRTL == lineIsRTL) == (aDirection == eDirPrevious)) {
     nsIFrame::GetFirstLeaf(framePtr);
   } else {
