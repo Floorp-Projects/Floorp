@@ -222,15 +222,23 @@ add_task(async function test_pingSender_multiple_pings() {
   // Try to send them using the pingsender.
   testSendingPings(pingPaths);
 
-  // Check the pings
-  for (const d of data) {
+  // Check the pings. We don't have an ordering guarantee, so we move the
+  // elements to a new array when we find them.
+  let data2 = [];
+  while (data.length) {
     let req = await PingServer.promiseNextRequest();
     let ping = decodeRequestPayload(req);
-    Assert.equal(ping.id, d.id, "Should have received the correct ping id.");
+    let idx = data.findIndex(d => d.id == ping.id);
+    Assert.ok(
+      idx >= 0,
+      `Should have received the correct ping id: ${data[idx].id}`
+    );
+    data2.push(data[idx]);
+    data.splice(idx, 1);
   }
 
   // Check that the PingSender removed the pending pings.
-  for (const d of data) {
+  for (const d of data2) {
     await waitForPingDeletion(d.id);
   }
 });
