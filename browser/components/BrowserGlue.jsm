@@ -89,7 +89,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   TRRRacer: "resource:///modules/TRRPerformance.jsm",
   UIState: "resource://services-sync/UIState.jsm",
-  UITour: "resource:///modules/UITour.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   WebChannel: "resource://gre/modules/WebChannel.jsm",
@@ -4071,11 +4070,10 @@ BrowserGlue.prototype = {
       {
         "l10n-id": "restore-session-startup-suggestion-button",
         callback: () => {
-          UITour.getTarget(win, "history").then(historyMenu => {
-            UITour.showHighlight(win, historyMenu, "focus-outline", {
-              autohide: true,
-            });
-          });
+          win.PanelUI.selectAndMarkItem([
+            "appMenu-history-button",
+            "appMenu-restoreSession",
+          ]);
         },
       },
     ];
