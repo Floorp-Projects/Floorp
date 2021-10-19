@@ -4935,6 +4935,13 @@
   value: true
   mirror: once
 
+#if !defined(MOZ_WIDGET_ANDROID)
+- name: gfx.egl.prefer-gles.enabled
+  type: bool
+  value: false
+  mirror: once
+#endif
+
 # [Windows] Whether registry FontSubstitutes entries are used unconditionally,
 # or only if the original font is not available.
 #if defined(XP_WIN)
