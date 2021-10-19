@@ -659,8 +659,7 @@ nsViewSourceChannel::GetBaseURI(nsIURI** aBaseURI) {
       return isc->GetBaseURI(aBaseURI);
     }
   }
-  *aBaseURI = mBaseURI;
-  NS_IF_ADDREF(*aBaseURI);
+  *aBaseURI = do_AddRef(mBaseURI).take();
   return NS_OK;
 }
 

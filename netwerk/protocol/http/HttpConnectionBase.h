@@ -105,7 +105,7 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   virtual bool CanAcceptWebsocket() { return false; }
 
   void GetConnectionInfo(nsHttpConnectionInfo** ci) {
-    NS_IF_ADDREF(*ci = mConnInfo);
+    *ci = do_AddRef(mConnInfo).take();
   }
   virtual void GetSecurityInfo(nsISupports** result) = 0;
 

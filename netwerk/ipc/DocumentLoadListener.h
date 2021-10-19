@@ -289,6 +289,25 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   bool IsDocumentLoad() const { return mIsDocumentLoad; }
 
+  // Determine what process switching behavior a browser element should have.
+  enum ProcessBehavior : uint8_t {
+    // Gecko won't automatically change which process this frame, or it's
+    // subframes, are loaded in.
+    PROCESS_BEHAVIOR_DISABLED,
+
+    // If `useRemoteTabs` is enabled, Gecko will change which process this frame
+    // is loaded in automatically, without calling `performProcessSwitch`.
+    // When `useRemoteSubframes` is enabled, subframes will change processes.
+    PROCESS_BEHAVIOR_STANDARD,
+
+    // Gecko won't automatically change which process this frame is loaded, but
+    // when `useRemoteSubframes` is enabled, subframes will change processes.
+    //
+    // NOTE: This configuration is included only for backwards compatibility,
+    // and will be removed, as it can easily lead to invalid behavior.
+    PROCESS_BEHAVIOR_SUBFRAME_ONLY,
+  };
+
  protected:
   virtual ~DocumentLoadListener();
 

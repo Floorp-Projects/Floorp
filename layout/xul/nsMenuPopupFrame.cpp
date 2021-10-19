@@ -274,6 +274,14 @@ void nsMenuPopupFrame::EnsureWidget(bool aRecreate) {
   }
 }
 
+static Maybe<ColorScheme> GetWidgetColorScheme(const nsMenuPopupFrame* aFrame) {
+  const auto& scheme = aFrame->StyleUI()->mColorScheme.bits;
+  if (!scheme) {
+    return Nothing();
+  }
+  return Some(LookAndFeel::ColorSchemeForFrame(aFrame));
+}
+
 nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
   // Create a widget for ourselves.
   nsWidgetInitData widgetData;
@@ -357,7 +365,7 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
   widget->SetWindowShadowStyle(GetShadowStyle());
   widget->SetWindowOpacity(StyleUIReset()->mWindowOpacity);
   widget->SetWindowTransform(ComputeWidgetTransform());
-  widget->SetColorScheme(LookAndFeel::ColorSchemeForFrame(this));
+  widget->SetColorScheme(GetWidgetColorScheme(this));
 
   // most popups don't have a title so avoid setting the title if there isn't
   // one
@@ -507,7 +515,7 @@ void nsMenuPopupFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
 
   if (StyleUI()->mColorScheme != aOldStyle->StyleUI()->mColorScheme) {
     if (nsIWidget* widget = GetWidget()) {
-      widget->SetColorScheme(LookAndFeel::ColorSchemeForFrame(this));
+      widget->SetColorScheme(GetWidgetColorScheme(this));
     }
   }
 

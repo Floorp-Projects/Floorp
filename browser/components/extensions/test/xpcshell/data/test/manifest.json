@@ -63,6 +63,16 @@
           "name": "prefval",
           "condition": "pref",
           "pref": "code"
+        },
+        {
+          "name": "experimenter-1",
+          "condition": "pref",
+          "pref": "nimbus-key-1"
+        },
+        {
+          "name": "experimenter-2",
+          "condition": "pref",
+          "pref": "nimbus-key-2"
         }
       ]
     }

@@ -480,8 +480,14 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   void sweepAfterMinorGC(JSTracer* trc);
   void sweepUniqueIds();
-  void sweepWeakMaps();
   void sweepCompartments(JSFreeOp* fop, bool keepAtleastOne, bool lastGC);
+
+  // Remove dead weak maps from gcWeakMapList_ and remove entries from the
+  // remaining weak maps whose keys are dead.
+  void sweepWeakMaps(JSTracer* trc);
+
+  // Trace all weak maps in this zone. Used to update edges after a moving GC.
+  void traceWeakMaps(JSTracer* trc);
 
   js::gc::UniqueIdMap& uniqueIds() { return uniqueIds_.ref(); }
 

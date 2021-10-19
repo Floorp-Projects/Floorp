@@ -107,9 +107,6 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // Unmark all weak maps in a zone.
   static void unmarkZone(JS::Zone* zone);
 
-  // Trace all the weakmaps in a zone.
-  static void traceZone(JS::Zone* zone, JSTracer* tracer);
-
   // Check all weak maps in a zone that have been marked as live in this garbage
   // collection, and mark the values of all entries that have become strong
   // references to them. Return true if we marked any new values, indicating
@@ -119,10 +116,6 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
 
   // Add zone edges for weakmaps with key delegates in a different zone.
   [[nodiscard]] static bool findSweepGroupEdgesForZone(JS::Zone* zone);
-
-  // Sweep the weak maps in a zone, removing dead weak maps and removing
-  // entries of live weak maps whose keys are dead.
-  static void sweepZone(JS::Zone* zone);
 
   // Sweep the marked weak maps in a zone, updating moved keys.
   static void sweepZoneAfterMinorGC(JS::Zone* zone);
@@ -146,7 +139,7 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // override these with definitions appropriate for their Key and Value types.
   virtual void trace(JSTracer* tracer) = 0;
   virtual bool findSweepGroupEdges() = 0;
-  virtual void sweep() = 0;
+  virtual void traceWeakEdges(JSTracer* trc) = 0;
   virtual void traceMappings(WeakMapTracer* tracer) = 0;
   virtual void clearAndCompact() = 0;
 
@@ -316,7 +309,7 @@ class WeakMap
     JS::ExposeObjectToActiveJS(obj);
   }
 
-  void sweep() override;
+  void traceWeakEdges(JSTracer* trc) override;
 
   void clearAndCompact() override {
     Base::clear();

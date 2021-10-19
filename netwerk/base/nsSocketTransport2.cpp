@@ -2371,14 +2371,14 @@ nsSocketTransport::Close(nsresult reason) {
 NS_IMETHODIMP
 nsSocketTransport::GetSecurityInfo(nsISupports** secinfo) {
   MutexAutoLock lock(mLock);
-  NS_IF_ADDREF(*secinfo = mSecInfo);
+  *secinfo = do_AddRef(mSecInfo).take();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSocketTransport::GetSecurityCallbacks(nsIInterfaceRequestor** callbacks) {
   MutexAutoLock lock(mLock);
-  NS_IF_ADDREF(*callbacks = mCallbacks);
+  *callbacks = do_AddRef(mCallbacks).take();
   return NS_OK;
 }
 

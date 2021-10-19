@@ -5733,8 +5733,7 @@ nsHttpChannel::Resume() {
 NS_IMETHODIMP
 nsHttpChannel::GetSecurityInfo(nsISupports** securityInfo) {
   NS_ENSURE_ARG_POINTER(securityInfo);
-  *securityInfo = mSecurityInfo;
-  NS_IF_ADDREF(*securityInfo);
+  *securityInfo = do_AddRef(mSecurityInfo).take();
   return NS_OK;
 }
 
@@ -6552,11 +6551,10 @@ nsHttpChannel::OnProxyAvailable(nsICancelable* request, nsIChannel* channel,
 NS_IMETHODIMP
 nsHttpChannel::GetProxyInfo(nsIProxyInfo** result) {
   if (!mConnectionInfo) {
-    *result = mProxyInfo;
+    *result = do_AddRef(mProxyInfo).take();
   } else {
-    *result = mConnectionInfo->ProxyInfo();
+    *result = do_AddRef(mConnectionInfo->ProxyInfo()).take();
   }
-  NS_IF_ADDREF(*result);
   return NS_OK;
 }
 

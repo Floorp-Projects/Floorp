@@ -41,9 +41,9 @@ async function test() {
   var config = getHitTestConfig();
   var utils = config.utils;
 
-  // Subframe hit testing of overscrolled APZCs does not yet work with WebRender,
-  // so bail out early.
-  if (config.isWebRender) {
+  // Subframe hit testing of overscrolled APZCs does not yet work with WebRender
+  // (bug 1701831), so bail out early.
+  if (true) {
     SimpleTest.todo(false, "This test does not currently pass with WebRender");
     return;
   }

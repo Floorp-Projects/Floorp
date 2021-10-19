@@ -279,15 +279,6 @@ struct MovingTracer final : public GenericTracerImpl<MovingTracer> {
   friend class GenericTracerImpl<MovingTracer>;
 };
 
-struct SweepingTracer final : public GenericTracerImpl<SweepingTracer> {
-  explicit SweepingTracer(JSRuntime* rt);
-
- private:
-  template <typename T>
-  T* onEdge(T* thingp);
-  friend class GenericTracerImpl<SweepingTracer>;
-};
-
 struct MinorSweepingTracer final
     : public GenericTracerImpl<MinorSweepingTracer> {
   explicit MinorSweepingTracer(JSRuntime* rt);

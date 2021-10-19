@@ -162,8 +162,7 @@ TRRServiceChannel::Resume() {
 NS_IMETHODIMP
 TRRServiceChannel::GetSecurityInfo(nsISupports** securityInfo) {
   NS_ENSURE_ARG_POINTER(securityInfo);
-  *securityInfo = mSecurityInfo;
-  NS_IF_ADDREF(*securityInfo);
+  *securityInfo = do_AddRef(mSecurityInfo).take();
   return NS_OK;
 }
 
@@ -1339,11 +1338,10 @@ void TRRServiceChannel::DoAsyncAbort(nsresult aStatus) {
 NS_IMETHODIMP
 TRRServiceChannel::GetProxyInfo(nsIProxyInfo** result) {
   if (!mConnectionInfo) {
-    *result = mProxyInfo;
+    *result = do_AddRef(mProxyInfo).take();
   } else {
-    *result = mConnectionInfo->ProxyInfo();
+    *result = do_AddRef(mConnectionInfo->ProxyInfo()).take();
   }
-  NS_IF_ADDREF(*result);
   return NS_OK;
 }
 

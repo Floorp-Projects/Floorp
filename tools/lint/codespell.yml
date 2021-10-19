@@ -60,6 +60,7 @@ codespell:
         - devtools/docs/tools/storage/
         - tools/lint/cpp/mingw-headers.txt
         - tools/lint/test/test_codespell.py
+        - "**/package-lock.json"
     # List of extensions coming from:
     # tools/lint/{flake8,eslint}.yml
     # tools/mach_commands.py (clang-format)

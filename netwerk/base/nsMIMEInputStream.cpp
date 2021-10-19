@@ -166,8 +166,7 @@ nsMIMEInputStream::SetData(nsIInputStream* aStream) {
 NS_IMETHODIMP
 nsMIMEInputStream::GetData(nsIInputStream** aStream) {
   NS_ENSURE_ARG_POINTER(aStream);
-  *aStream = mStream;
-  NS_IF_ADDREF(*aStream);
+  *aStream = do_AddRef(mStream).take();
   return NS_OK;
 }
 

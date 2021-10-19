@@ -95,8 +95,7 @@ class WorkerDescriptorFront extends DescriptorMixin(
 
       const workerTargetForm = await super.getTarget();
 
-      // Set the console actor ID on the form to expose it to Target.attachConsole
-      // Set the ThreadActor on the target form so it is accessible by getFront
+      // Set the console and thread actor IDs on the form so it is accessible by TargetMixin.getFront
       this.targetForm.consoleActor = workerTargetForm.consoleActor;
       this.targetForm.threadActor = workerTargetForm.threadActor;
 
@@ -104,7 +103,6 @@ class WorkerDescriptorFront extends DescriptorMixin(
         return this;
       }
 
-      await this.attachConsole();
       return this;
     })();
     return this._attach;
