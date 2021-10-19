@@ -164,18 +164,7 @@ class nsGIOInputStream final : public nsIInputStream {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
 
-  explicit nsGIOInputStream(const nsCString& uriSpec)
-      : mSpec(uriSpec),
-        mChannel(nullptr),
-        mHandle(nullptr),
-        mStream(nullptr),
-        mBytesRemaining(UINT64_MAX),
-        mStatus(NS_OK),
-        mDirList(nullptr),
-        mDirListPtr(nullptr),
-        mDirBufCursor(0),
-        mDirOpen(false),
-        mMonitorMountInProgress("GIOInputStream::MountFinished") {}
+  explicit nsGIOInputStream(const nsCString& uriSpec) : mSpec(uriSpec) {}
 
   void SetChannel(nsIChannel* channel) {
     // We need to hold an owning reference to our channel.  This is done
@@ -191,7 +180,7 @@ class nsGIOInputStream final : public nsIInputStream {
     // cycle since the channel likely owns this stream.  This reference
     // cycle is broken in our Close method.
 
-    NS_ADDREF(mChannel = channel);
+    mChannel = do_AddRef(channel).take();
   }
   void SetMountResult(MountOperationResult result, gint error_code);
 
@@ -204,19 +193,19 @@ class nsGIOInputStream final : public nsIInputStream {
   nsresult DoOpenDirectory();
   nsresult DoOpenFile(GFileInfo* info);
   nsCString mSpec;
-  nsIChannel* mChannel;  // manually refcounted
-  GFile* mHandle;
-  GFileInputStream* mStream;
-  uint64_t mBytesRemaining;
-  nsresult mStatus;
-  GList* mDirList;
-  GList* mDirListPtr;
+  nsIChannel* mChannel{nullptr};  // manually refcounted
+  GFile* mHandle{nullptr};
+  GFileInputStream* mStream{nullptr};
+  uint64_t mBytesRemaining{UINT64_MAX};
+  nsresult mStatus{NS_OK};
+  GList* mDirList{nullptr};
+  GList* mDirListPtr{nullptr};
   nsCString mDirBuf;
-  uint32_t mDirBufCursor;
-  bool mDirOpen;
+  uint32_t mDirBufCursor{0};
+  bool mDirOpen{false};
   MountOperationResult mMountRes =
       MountOperationResult::MOUNT_OPERATION_SUCCESS;
-  mozilla::Monitor mMonitorMountInProgress;
+  mozilla::Monitor mMonitorMountInProgress{"GIOInputStream::MountFinished"};
   gint mMountErrorCode{};
 };
 

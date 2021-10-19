@@ -115,7 +115,7 @@ nsDirIndexParser::SetListener(nsIDirIndexListener* aListener) {
 
 NS_IMETHODIMP
 nsDirIndexParser::GetListener(nsIDirIndexListener** aListener) {
-  NS_IF_ADDREF(*aListener = mListener.get());
+  *aListener = do_AddRef(mListener).take();
   return NS_OK;
 }
 

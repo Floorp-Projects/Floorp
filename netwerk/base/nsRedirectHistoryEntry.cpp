@@ -29,13 +29,13 @@ nsRedirectHistoryEntry::GetRemoteAddress(nsACString& result) {
 
 NS_IMETHODIMP
 nsRedirectHistoryEntry::GetReferrerURI(nsIURI** referrer) {
-  NS_IF_ADDREF(*referrer = mReferrer);
+  *referrer = do_AddRef(mReferrer).take();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsRedirectHistoryEntry::GetPrincipal(nsIPrincipal** principal) {
-  NS_IF_ADDREF(*principal = mPrincipal);
+  *principal = do_AddRef(mPrincipal).take();
   return NS_OK;
 }
 

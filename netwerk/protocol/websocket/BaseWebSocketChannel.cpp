@@ -94,7 +94,7 @@ NS_IMETHODIMP
 BaseWebSocketChannel::GetNotificationCallbacks(
     nsIInterfaceRequestor** aNotificationCallbacks) {
   LOG(("BaseWebSocketChannel::GetNotificationCallbacks() %p\n", this));
-  NS_IF_ADDREF(*aNotificationCallbacks = mCallbacks);
+  *aNotificationCallbacks = do_AddRef(mCallbacks).take();
   return NS_OK;
 }
 
@@ -109,7 +109,7 @@ BaseWebSocketChannel::SetNotificationCallbacks(
 NS_IMETHODIMP
 BaseWebSocketChannel::GetLoadGroup(nsILoadGroup** aLoadGroup) {
   LOG(("BaseWebSocketChannel::GetLoadGroup() %p\n", this));
-  NS_IF_ADDREF(*aLoadGroup = mLoadGroup);
+  *aLoadGroup = do_AddRef(mLoadGroup).take();
   return NS_OK;
 }
 
@@ -129,7 +129,7 @@ BaseWebSocketChannel::SetLoadInfo(nsILoadInfo* aLoadInfo) {
 
 NS_IMETHODIMP
 BaseWebSocketChannel::GetLoadInfo(nsILoadInfo** aLoadInfo) {
-  NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
+  *aLoadInfo = do_AddRef(mLoadInfo).take();
   return NS_OK;
 }
 

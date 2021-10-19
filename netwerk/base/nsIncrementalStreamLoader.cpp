@@ -41,7 +41,7 @@ nsIncrementalStreamLoader::GetNumBytesRead(uint32_t* aNumBytes) {
 /* readonly attribute nsIRequest request; */
 NS_IMETHODIMP
 nsIncrementalStreamLoader::GetRequest(nsIRequest** aRequest) {
-  NS_IF_ADDREF(*aRequest = mRequest);
+  *aRequest = do_AddRef(mRequest).take();
   return NS_OK;
 }
 

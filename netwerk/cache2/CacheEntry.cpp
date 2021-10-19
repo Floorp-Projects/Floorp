@@ -1325,7 +1325,7 @@ nsresult CacheEntry::GetSecurityInfo(nsISupports** aSecurityInfo) {
   {
     mozilla::MutexAutoLock lock(mLock);
     if (mSecurityInfoLoaded) {
-      NS_IF_ADDREF(*aSecurityInfo = mSecurityInfo);
+      *aSecurityInfo = do_AddRef(mSecurityInfo).take();
       return NS_OK;
     }
   }
@@ -1350,7 +1350,7 @@ nsresult CacheEntry::GetSecurityInfo(nsISupports** aSecurityInfo) {
     mSecurityInfo.swap(secInfo);
     mSecurityInfoLoaded = true;
 
-    NS_IF_ADDREF(*aSecurityInfo = mSecurityInfo);
+    *aSecurityInfo = do_AddRef(mSecurityInfo).take();
   }
 
   return NS_OK;

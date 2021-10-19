@@ -16,19 +16,17 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Preferences.h"
 
-static nsIDNSService* sDNSService = nullptr;
+static mozilla::StaticRefPtr<nsIDNSService> sDNSService;
 
 nsresult nsDNSPrefetch::Initialize(nsIDNSService* aDNSService) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  NS_IF_RELEASE(sDNSService);
   sDNSService = aDNSService;
-  NS_IF_ADDREF(sDNSService);
   return NS_OK;
 }
 
 nsresult nsDNSPrefetch::Shutdown() {
-  NS_IF_RELEASE(sDNSService);
+  sDNSService = nullptr;
   return NS_OK;
 }
 
