@@ -163,3 +163,31 @@ pub extern "C" fn fog_set_experiment_active(
 pub extern "C" fn fog_set_experiment_inactive(experiment_id: &nsACString) {
     glean::set_experiment_inactive(experiment_id.to_string());
 }
+
+/// TEST ONLY FUNCTION
+///
+/// Returns true if the identified experiment is active.
+#[no_mangle]
+pub extern "C" fn fog_test_is_experiment_active(experiment_id: &nsACString) -> bool {
+    glean::test_is_experiment_active(experiment_id.to_string())
+}
+
+/// TEST ONLY FUNCTION
+///
+/// Fills `branch`, `extra_keys`, and `extra_values` with the identified experiment's data.
+/// Panics if the identified experiment isn't active.
+#[no_mangle]
+pub extern "C" fn fog_test_get_experiment_data(
+    experiment_id: &nsACString,
+    branch: &mut nsACString,
+    extra_keys: &mut ThinVec<nsCString>,
+    extra_values: &mut ThinVec<nsCString>,
+) {
+    let data = glean::test_get_experiment_data(experiment_id.to_string());
+    branch.assign(&data.branch);
+    if let Some(extra) = data.extra {
+        let (data_keys, data_values): (Vec<_>, Vec<_>) = extra.iter().unzip();
+        extra_keys.extend(data_keys.into_iter().map(|key| key.into()));
+        extra_values.extend(data_values.into_iter().map(|value| value.into()));
+    }
+}

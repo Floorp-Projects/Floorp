@@ -81,6 +81,21 @@ interface nsIFOG : nsISupports
   void setExperimentInactive(in ACString aExperimentId);
 
   /**
+   * **Test-only API**
+   *
+   * If the identified experiment was set active and hasn't been set inactive,
+   * this will give you the active branch and extra information.
+   *
+   * @param aExperimentId - The id/slug of the experiment from setExperimentActive.
+   *
+   * @return an object of the form
+   *         {branch: "branch-name", extra: {extra_key1: extra_value1, ...}}
+   *         if there is an active experiment. Undefined, otherwise.
+   */
+  [implicit_jscontext]
+  jsval testGetExperimentData(in ACString aExperimentId);
+
+  /**
    * ** Test-only Method **
    *
    * Flush all data from all child processes.

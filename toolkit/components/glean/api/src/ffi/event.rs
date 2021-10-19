@@ -182,7 +182,7 @@ pub unsafe extern "C" fn fog_event_test_get_value(
 /// SAFETY:
 /// * The pointer needs to be from a `FfiRecordedEvent` returned from `fog_event_test_get_value`
 /// * The array is assumed to be fitted, that is `len == capacity`
-/// * `nsCStringRepr` does not drop its iternal buffer on the Rust side,
+/// * `nsCStringRepr` does not drop its internal buffer on the Rust side,
 ///   this needs to happen on the C++ side.
 #[no_mangle]
 pub unsafe extern "C" fn fog_event_free_event_extra(extra: *mut nsCStringRepr, len: u32) {
