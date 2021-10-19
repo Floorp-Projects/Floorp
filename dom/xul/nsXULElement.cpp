@@ -1580,12 +1580,6 @@ nsXULPrototypeScript::nsXULPrototypeScript(uint32_t aLineNo)
 static nsresult WriteStencil(nsIObjectOutputStream* aStream, JSContext* aCx,
                              const JS::ReadOnlyCompileOptions& aOptions,
                              JS::Stencil* aStencil) {
-  uint8_t flags = 0;  // We don't have flags anymore.
-  nsresult rv = aStream->Write8(flags);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   JS::TranscodeBuffer buffer;
   JS::TranscodeResult code;
   code = JS::EncodeStencil(aCx, aOptions, aStencil, buffer);
@@ -1604,7 +1598,7 @@ static nsresult WriteStencil(nsIObjectOutputStream* aStream, JSContext* aCx,
   if (size > UINT32_MAX) {
     return NS_ERROR_FAILURE;
   }
-  rv = aStream->Write32(size);
+  nsresult rv = aStream->Write32(size);
   if (NS_SUCCEEDED(rv)) {
     // Ideally we could just pass "buffer" here.  See bug 1566574.
     rv = aStream->WriteBytes(Span(buffer.begin(), size));
@@ -1616,12 +1610,6 @@ static nsresult WriteStencil(nsIObjectOutputStream* aStream, JSContext* aCx,
 static nsresult ReadStencil(nsIObjectInputStream* aStream, JSContext* aCx,
                             const JS::ReadOnlyCompileOptions& aOptions,
                             JS::Stencil** aStencilOut) {
-  uint8_t flags;
-  nsresult rv = aStream->Read8(&flags);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   // We don't serialize mutedError-ness of scripts, which is fine as long as
   // we only serialize system and XUL-y things. We can detect this by checking
   // where the caller wants us to deserialize.
@@ -1633,7 +1621,7 @@ static nsresult ReadStencil(nsIObjectInputStream* aStream, JSContext* aCx,
                      JS::CurrentGlobalOrNull(aCx) == loaderGlobal);
 
   uint32_t size;
-  rv = aStream->Read32(&size);
+  nsresult rv = aStream->Read32(&size);
   if (NS_FAILED(rv)) {
     return rv;
   }
