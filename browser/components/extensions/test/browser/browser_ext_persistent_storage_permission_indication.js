@@ -14,6 +14,7 @@ function openPermissionPopup() {
     event => event.target == gPermissionPanel._permissionPopup
   );
   gPermissionPanel._identityPermissionBox.click();
+  info("Wait permission popup to be shown");
   return promise;
 }
 
@@ -23,6 +24,7 @@ function closePermissionPopup() {
     "popuphidden"
   );
   gPermissionPanel._permissionPopup.hidePopup();
+  info("Wait permission popup to be hidden");
   return promise;
 }
 
@@ -67,21 +69,25 @@ async function testPermissionPopup({ expectPermissionHidden }) {
 add_task(async function testPersistentStoragePermissionHidden() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
-      browser.test.sendMessage("url", browser.runtime.getURL("icon.png"));
+      browser.test.sendMessage("url", browser.runtime.getURL("testpage.html"));
     },
     manifest: {
       name: "Test Extension",
       permissions: ["unlimitedStorage"],
     },
     files: {
-      "icon.png": "",
+      "testpage.html": "<h1>Extension Test Page</h1>",
     },
   });
 
   await extension.startup();
 
   let url = await extension.awaitMessage("url");
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function() {
+  await BrowserTestUtils.withNewTab("about:blank", async browser => {
+    // Wait the tab to be fully loade, then run the test on the permission prompt.
+    let loaded = BrowserTestUtils.browserLoaded(browser, false, url);
+    BrowserTestUtils.loadURI(browser, url);
+    await loaded;
     await testPermissionPopup({ expectPermissionHidden: true });
   });
 
@@ -91,13 +97,13 @@ add_task(async function testPersistentStoragePermissionHidden() {
 add_task(async function testPersistentStoragePermissionVisible() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
-      browser.test.sendMessage("url", browser.runtime.getURL("icon.png"));
+      browser.test.sendMessage("url", browser.runtime.getURL("testpage.html"));
     },
     manifest: {
       name: "Test Extension",
     },
     files: {
-      "icon.png": "",
+      "testpage.html": "<h1>Extension Test Page</h1>",
     },
   });
 
@@ -113,7 +119,11 @@ add_task(async function testPersistentStoragePermissionVisible() {
     Services.perms.ALLOW_ACTION
   );
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function() {
+  await BrowserTestUtils.withNewTab("about:blank", async browser => {
+    // Wait the tab to be fully loade, then run the test on the permission prompt.
+    let loaded = BrowserTestUtils.browserLoaded(browser, false, url);
+    BrowserTestUtils.loadURI(browser, url);
+    await loaded;
     await testPermissionPopup({ expectPermissionHidden: false });
   });
 
