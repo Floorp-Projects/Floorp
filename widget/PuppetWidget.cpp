@@ -228,26 +228,6 @@ void PuppetWidget::Resize(double aWidth, double aHeight, bool aRepaint) {
   }
 }
 
-nsresult PuppetWidget::ConfigureChildren(
-    const nsTArray<Configuration>& aConfigurations) {
-  for (uint32_t i = 0; i < aConfigurations.Length(); ++i) {
-    const Configuration& configuration = aConfigurations[i];
-    PuppetWidget* w = static_cast<PuppetWidget*>(configuration.mChild.get());
-    NS_ASSERTION(w->GetParent() == this, "Configured widget is not a child");
-    w->SetWindowClipRegion(configuration.mClipRegion, true);
-    LayoutDeviceIntRect bounds = w->GetBounds();
-    if (bounds.Size() != configuration.mBounds.Size()) {
-      w->Resize(configuration.mBounds.X(), configuration.mBounds.Y(),
-                configuration.mBounds.Width(), configuration.mBounds.Height(),
-                true);
-    } else if (bounds.TopLeft() != configuration.mBounds.TopLeft()) {
-      w->Move(configuration.mBounds.X(), configuration.mBounds.Y());
-    }
-    w->SetWindowClipRegion(configuration.mClipRegion, false);
-  }
-  return NS_OK;
-}
-
 void PuppetWidget::SetFocus(Raise aRaise, CallerType aCallerType) {
   if (aRaise == Raise::Yes && mBrowserChild) {
     mBrowserChild->SendRequestFocus(true, aCallerType);

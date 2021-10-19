@@ -21,11 +21,6 @@ enum nsWindowType {
   eWindowType_child,      // child windows (contained inside a window on the
                           // desktop (has no border))
   eWindowType_invisible,  // windows that are invisible or offscreen
-  eWindowType_plugin,     // plugin window
-  eWindowType_plugin_ipc_chrome,   // chrome side native widget for plugins
-                                   // (e10s)
-  eWindowType_plugin_ipc_content,  // content side puppet widget for plugins
-                                   // (e10s)
 };
 
 /**
