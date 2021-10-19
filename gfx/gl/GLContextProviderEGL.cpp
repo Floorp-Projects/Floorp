@@ -322,14 +322,20 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
 
 already_AddRefed<GLContext> GLContextEGLFactory::Create(
     EGLNativeWindowType aWindow, bool aHardwareWebRender) {
-  RefPtr<GLContext> glContext;
-#if !defined(MOZ_WIDGET_ANDROID)
-  glContext = CreateImpl(aWindow, aHardwareWebRender, /* aUseGles */ false);
-#endif  // !defined(MOZ_WIDGET_ANDROID)
+  bool preferGles;
+#if defined(MOZ_WIDGET_ANDROID)
+  preferGles = true;
+#else
+  preferGles = StaticPrefs::gfx_egl_prefer_gles_enabled_AtStartup();
+#endif  // defined(MOZ_WIDGET_ANDROID)
 
+  RefPtr<GLContext> glContext =
+      CreateImpl(aWindow, aHardwareWebRender, preferGles);
+#if !defined(MOZ_WIDGET_ANDROID)
   if (!glContext) {
-    glContext = CreateImpl(aWindow, aHardwareWebRender, /* aUseGles */ true);
+    glContext = CreateImpl(aWindow, aHardwareWebRender, !preferGles);
   }
+#endif  // !defined(MOZ_WIDGET_ANDROID)
   return glContext.forget();
 }
 
@@ -1179,12 +1185,21 @@ RefPtr<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContextImpl(
 RefPtr<GLContextEGL> GLContextEGL::CreateEGLPBufferOffscreenContext(
     const std::shared_ptr<EglDisplay> display, const GLContextCreateDesc& desc,
     const mozilla::gfx::IntSize& size, nsACString* const out_failureId) {
+  bool preferGles;
+#if defined(MOZ_WIDGET_ANDROID)
+  preferGles = true;
+#else
+  preferGles = StaticPrefs::gfx_egl_prefer_gles_enabled_AtStartup();
+#endif  // defined(MOZ_WIDGET_ANDROID)
+
   RefPtr<GLContextEGL> gl = CreateEGLPBufferOffscreenContextImpl(
-      display, desc, size, /* useGles */ false, out_failureId);
+      display, desc, size, preferGles, out_failureId);
+#if !defined(MOZ_WIDGET_ANDROID)
   if (!gl) {
-    gl = CreateEGLPBufferOffscreenContextImpl(
-        display, desc, size, /* useGles */ true, out_failureId);
+    gl = CreateEGLPBufferOffscreenContextImpl(display, desc, size, !preferGles,
+                                              out_failureId);
   }
+#endif  // !defined(MOZ_WIDGET_ANDROID)
   return gl;
 }
 
