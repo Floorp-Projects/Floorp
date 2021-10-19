@@ -24,7 +24,6 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
     this._client = client;
-    this.traits = {};
     this.events = [];
 
     // Attribute name from which to retrieve the actorID out of the target actor's form
@@ -306,7 +305,6 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
   async startListeners(listeners) {
     const response = await super.startListeners(listeners);
     this.hasNativeConsoleAPI = response.nativeConsoleAPI;
-    this.traits = response.traits;
     return response;
   }
 
