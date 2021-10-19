@@ -386,20 +386,6 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun urlBarEvent(isUrl: Boolean) {
-        if (isUrl) {
-            browseEvent()
-        } else {
-            searchEnterEvent()
-        }
-    }
-
-    private fun browseEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.TYPE_URL, Object.SEARCH_BAR)
-            .queue()
-    }
-
-    @JvmStatic
     fun browseIntentEvent() {
         TelemetryEvent.create(Category.ACTION, Method.INTENT_URL, Object.APP).queue()
     }
@@ -462,16 +448,6 @@ object TelemetryWrapper {
     @JvmStatic
     fun textSelectionIntentEvent() {
         TelemetryEvent.create(Category.ACTION, Method.TEXT_SELECTION_INTENT, Object.APP).queue()
-    }
-
-    private fun searchEnterEvent() {
-        val telemetry = TelemetryHolder.get()
-
-        TelemetryEvent.create(Category.ACTION, Method.TYPE_QUERY, Object.SEARCH_BAR).queue()
-
-        val searchEngine = getDefaultSearchEngineIdentifierForTelemetry(telemetry.configuration.context)
-
-        telemetry.recordSearch(SearchesMeasurement.LOCATION_ACTIONBAR, searchEngine)
     }
 
     @JvmStatic
