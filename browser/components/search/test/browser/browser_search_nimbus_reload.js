@@ -16,7 +16,7 @@ const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 add_task(async function test_engines_reloaded_nimbus() {
   let reloadSpy = sinon.spy(SearchService.prototype, "_maybeReloadEngines");
-  let variableSpy = sinon.spy(NimbusFeatures.search, "getVariable");
+  let getVariableSpy = sinon.spy(NimbusFeatures.search, "getVariable");
 
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "search",
@@ -25,18 +25,21 @@ add_task(async function test_engines_reloaded_nimbus() {
 
   Assert.equal(reloadSpy.callCount, 1, "Called by experiment enrollment");
   await BrowserTestUtils.waitForCondition(
-    () => variableSpy.called,
+    () => getVariableSpy.calledWith("experiment"),
     "Wait for SearchService update to run"
   );
   Assert.equal(
-    variableSpy.callCount,
-    1,
-    "Called by update function to fetch engines"
+    getVariableSpy.callCount,
+    2,
+    "Called by update function to fetch engines and by ParamPreferenceCache"
   );
-  Assert.equal(
-    variableSpy.firstCall.args[0],
-    "experiment",
-    "Got `experiment` variable value"
+  Assert.ok(
+    getVariableSpy.calledWith("extraParams"),
+    "Called by ParamPreferenceCache listener"
+  );
+  Assert.ok(
+    getVariableSpy.calledWith("experiment"),
+    "Called by search service observer"
   );
   Assert.equal(
     NimbusFeatures.search.getVariable("experiment"),
@@ -49,5 +52,5 @@ add_task(async function test_engines_reloaded_nimbus() {
   Assert.equal(reloadSpy.callCount, 2, "Called by experiment unenrollment");
 
   reloadSpy.restore();
-  variableSpy.restore();
+  getVariableSpy.restore();
 });
