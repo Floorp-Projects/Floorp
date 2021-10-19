@@ -93,6 +93,28 @@ class DateTimePatternGenerator final {
   }
 
   /**
+   * Get a pattern of the form "{1} {0}" to combine separate date and time
+   * patterns into a single pattern. The "{0}" part is the placeholder for the
+   * time pattern and "{1}" is the placeholder for the date pattern.
+   *
+   * See dateTimeFormat from
+   * https://unicode.org/reports/tr35/tr35-dates.html#dateTimeFormat
+   *
+   * Note:
+   * In CLDR, it's called Date-Time Combined Format
+   * https://cldr.unicode.org/translation/date-time/datetime-patterns#h.x7ca7qwzh4m
+   *
+   * The naming 'placeholder pattern' is from ICU4X.
+   * https://unicode-org.github.io/icu4x-docs/doc/icu_pattern/index.html
+   */
+  Span<const char16_t> GetPlaceholderPattern() const {
+    int32_t length;
+    const char16_t* combined =
+        udatpg_getDateTimeFormat(mGenerator.GetConst(), &length);
+    return Span{combined, static_cast<size_t>(length)};
+  }
+
+  /**
    * TODO(Bug 1686965) - Temporarily get the underlying ICU object while
    * migrating to the unified API. This should be removed when completing the
    * migration.
