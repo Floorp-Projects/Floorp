@@ -71,7 +71,7 @@ class ClassifierDummyChannel final : public nsIChannel,
   void AddClassificationFlags(uint32_t aClassificationFlags, bool aThirdParty);
 
  private:
-  ~ClassifierDummyChannel();
+  ~ClassifierDummyChannel() = default;
 
   nsCOMPtr<nsILoadInfo> mLoadInfo;
   nsCOMPtr<nsIURI> mURI;
