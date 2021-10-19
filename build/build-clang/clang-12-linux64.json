@@ -8,6 +8,7 @@
     "cc": "/usr/bin/gcc",
     "cxx": "/usr/bin/g++",
     "as": "/usr/bin/gcc",
+    "wasi-compiler-rt": "{MOZ_FETCHES_DIR}/compiler-rt",
     "patches": [
       "static-llvm-symbolizer_clang_12.patch",
       "find_symbolizer_linux_clang_10.patch",
