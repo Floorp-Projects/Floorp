@@ -41,11 +41,11 @@ void WeakMapBase::unmarkZone(JS::Zone* zone) {
   }
 }
 
-void WeakMapBase::traceZone(JS::Zone* zone, JSTracer* tracer) {
-  MOZ_ASSERT(tracer->weakMapAction() != JS::WeakMapTraceAction::Skip);
-  for (WeakMapBase* m : zone->gcWeakMapList()) {
-    m->trace(tracer);
-    TraceNullableEdge(tracer, &m->memberOf, "memberOf");
+void Zone::traceWeakMaps(JSTracer* trc) {
+  MOZ_ASSERT(trc->weakMapAction() != JS::WeakMapTraceAction::Skip);
+  for (WeakMapBase* m : gcWeakMapList()) {
+    m->trace(trc);
+    TraceNullableEdge(trc, &m->memberOf, "memberOf");
   }
 }
 
@@ -84,20 +84,20 @@ bool WeakMapBase::findSweepGroupEdgesForZone(JS::Zone* zone) {
   return true;
 }
 
-void WeakMapBase::sweepZone(JS::Zone* zone) {
-  for (WeakMapBase* m = zone->gcWeakMapList().getFirst(); m;) {
+void Zone::sweepWeakMaps(JSTracer* trc) {
+  for (WeakMapBase* m = gcWeakMapList().getFirst(); m;) {
     WeakMapBase* next = m->getNext();
     if (m->mapColor) {
-      m->sweep();
+      m->traceWeakEdges(trc);
     } else {
       m->clearAndCompact();
-      m->removeFrom(zone->gcWeakMapList());
+      m->removeFrom(gcWeakMapList());
     }
     m = next;
   }
 
 #ifdef DEBUG
-  for (WeakMapBase* m : zone->gcWeakMapList()) {
+  for (WeakMapBase* m : gcWeakMapList()) {
     MOZ_ASSERT(m->isInList() && m->mapColor);
   }
 #endif
