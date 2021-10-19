@@ -96,12 +96,6 @@ ClassifierDummyChannel::ClassifierDummyChannel(nsIURI* aURI,
   SetLoadInfo(aLoadInfo);
 }
 
-ClassifierDummyChannel::~ClassifierDummyChannel() {
-  NS_ReleaseOnMainThread("ClassifierDummyChannel::mURI", mURI.forget());
-  NS_ReleaseOnMainThread("ClassifierDummyChannel::mTopWindowURI",
-                         mTopWindowURI.forget());
-}
-
 void ClassifierDummyChannel::AddClassificationFlags(
     uint32_t aClassificationFlags, bool aThirdParty) {
   if (aThirdParty) {
