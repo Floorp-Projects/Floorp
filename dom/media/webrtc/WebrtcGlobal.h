@@ -39,20 +39,6 @@ struct NotReallyMovableButLetsPretendItIsRTCStatsCollection
 
 namespace IPC {
 
-template <typename T>
-struct ParamTraits<mozilla::dom::Sequence<T>> {
-  typedef mozilla::dom::Sequence<T> paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, static_cast<const FallibleTArray<T>&>(aParam));
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return ReadParam(aMsg, aIter, static_cast<FallibleTArray<T>*>(aResult));
-  }
-};
-
 template <>
 struct ParamTraits<mozilla::dom::RTCStatsType>
     : public ContiguousEnumSerializer<mozilla::dom::RTCStatsType,
