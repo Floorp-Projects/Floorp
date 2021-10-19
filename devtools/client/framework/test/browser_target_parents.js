@@ -20,8 +20,9 @@ add_task(async function() {
   const tabDescriptors = await mainRoot.listTabs();
 
   await testGetTargetWithConcurrentCalls(tabDescriptors, tabTarget => {
-    // Tab Target is attached when it has a console front.
-    return !!tabTarget.getCachedFront("console");
+    // We only call BrowsingContextTargetFront.attach and not TargetMixin.attachAndInitThread.
+    // So very few things are done.
+    return !!tabTarget.traits;
   });
 
   await client.close();
@@ -40,8 +41,9 @@ add_task(async function() {
   // happens between the instantiation of ContentProcessTarget and its call to attach() from getTarget
   // function.
   await testGetTargetWithConcurrentCalls(processes, processTarget => {
-    // Content Process Target is attached when it has a console front.
-    return !!processTarget.getCachedFront("console");
+    // We only call ContentProcessTargetFront.attach and not TargetMixin.attachAndInitThread.
+    // So nothing is done for content process targets.
+    return true;
   });
 
   await client.close();
