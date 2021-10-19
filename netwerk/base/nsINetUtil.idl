@@ -157,6 +157,9 @@ interface nsINetUtil : nsISupports
   /** Skip C0 and DEL from unescaping */
   const unsigned long ESCAPE_URL_SKIP_CONTROL = 1 << 15;
 
+  /** %XX-escape external protocol handler URL */
+  const unsigned long ESCAPE_URL_EXT_HANDLER = 1 << 17;
+
   /**
    * %XX-Escape invalid chars in a URL segment.
    *
