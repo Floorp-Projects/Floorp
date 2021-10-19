@@ -284,7 +284,10 @@ ia2Accessible::get_states(AccessibleStates* aStates) {
   }
   AccessibleWrap* acc = LocalAcc();
   if (!acc) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+    // XXX Not supported for RemoteAccessible yet. However, don't return
+    // E_NOTIMPL because returning an error here will cause screen readers to
+    // assume defunct.
+    return S_OK;
   }
 
   uint64_t state;
