@@ -1512,20 +1512,17 @@ bool ArgumentsReplacer::run() {
     // Iterates over phis and instructions.
     // We do not have to visit resume points. Any resume points that capture
     // the argument object will be handled by the Sink pass.
-    for (MNodeIterator iter(*block); iter;) {
+    for (MDefinitionIterator iter(*block); iter;) {
       // Increment the iterator before visiting the instruction, as the
       // visit function might discard itself from the basic block.
-      MNode* ins = *iter++;
-      if (ins->isDefinition()) {
-        MDefinition* def = ins->toDefinition();
-        switch (def->op()) {
+      MDefinition* def = *iter++;
+      switch (def->op()) {
 #define MIR_OP(op)              \
   case MDefinition::Opcode::op: \
     visit##op(def->to##op());   \
     break;
-          MIR_OPCODE_LIST(MIR_OP)
+        MIR_OPCODE_LIST(MIR_OP)
 #undef MIR_OP
-        }
       }
     }
   }
