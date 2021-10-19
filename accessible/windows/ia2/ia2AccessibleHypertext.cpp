@@ -14,6 +14,11 @@
 
 using namespace mozilla::a11y;
 
+HyperTextAccessibleBase* ia2AccessibleHypertext::TextAcc() {
+  Accessible* acc = Acc();
+  return acc ? acc->AsHyperTextBase() : nullptr;
+}
+
 HyperTextAccessibleWrap* ia2AccessibleHypertext::LocalTextAcc() {
   AccessibleWrap* acc = LocalAcc();
   return static_cast<HyperTextAccessibleWrap*>(acc);
@@ -32,7 +37,7 @@ ia2AccessibleHypertext::QueryInterface(REFIID aIID, void** aInstancePtr) {
     if (aIID == IID_IAccessibleText) {
       *aInstancePtr =
           static_cast<IAccessibleText*>(static_cast<ia2AccessibleText*>(this));
-    } else if (aIID == IID_IAccessibleHypertext && isLocal) {
+    } else if (aIID == IID_IAccessibleHypertext) {
       *aInstancePtr = static_cast<IAccessibleHypertext*>(this);
     } else if (aIID == IID_IAccessibleHypertext2 && isLocal) {
       *aInstancePtr = static_cast<IAccessibleHypertext2*>(this);
@@ -71,19 +76,15 @@ ia2AccessibleHypertext::get_hyperlink(long aLinkIndex,
 
   *aHyperlink = nullptr;
 
-  LocalAccessible* hyperLink;
-  HyperTextAccessibleWrap* hyperText = LocalTextAcc();
+  HyperTextAccessibleBase* hyperText = TextAcc();
   if (!hyperText) {
     return CO_E_OBJNOTCONNECTED;
   }
 
-  hyperLink = hyperText->LinkAt(aLinkIndex);
+  Accessible* hyperLink = hyperText->LinkAt(aLinkIndex);
 
   if (!hyperLink) return E_FAIL;
 
-  // GetNativeInterface returns an IAccessible, but we need an
-  // IAccessibleHyperlink, so use MsaaAccessible::GetFrom instead and let
-  // RefPtr cast it.
   RefPtr<IAccessibleHyperlink> result = MsaaAccessible::GetFrom(hyperLink);
   result.forget(aHyperlink);
   return S_OK;
