@@ -328,9 +328,6 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitLambda(MLambda* ins);
   void visitLambdaArrow(MLambdaArrow* ins);
   void visitFunctionWithProto(MFunctionWithProto* ins);
-
- private:
-  void visitObjectGuard(MInstruction* ins, MDefinition* operand);
 };
 
 /* static */ const char ObjectMemoryView::phaseName[] =
@@ -622,14 +619,9 @@ void ObjectMemoryView::visitLoadDynamicSlot(MLoadDynamicSlot* ins) {
   ins->block()->discard(ins);
 }
 
-void ObjectMemoryView::visitObjectGuard(MInstruction* ins,
-                                        MDefinition* operand) {
-  MOZ_ASSERT(ins->numOperands() == 1);
-  MOZ_ASSERT(ins->getOperand(0) == operand);
-  MOZ_ASSERT(ins->type() == MIRType::Object);
-
+void ObjectMemoryView::visitGuardShape(MGuardShape* ins) {
   // Skip guards on other objects.
-  if (operand != obj_) {
+  if (ins->object() != obj_) {
     return;
   }
 
@@ -638,10 +630,6 @@ void ObjectMemoryView::visitObjectGuard(MInstruction* ins,
 
   // Remove original instruction.
   ins->block()->discard(ins);
-}
-
-void ObjectMemoryView::visitGuardShape(MGuardShape* ins) {
-  visitObjectGuard(ins, ins->object());
 }
 
 void ObjectMemoryView::visitCheckIsObj(MCheckIsObj* ins) {
