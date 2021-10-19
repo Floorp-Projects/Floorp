@@ -19,11 +19,6 @@ const FeatureManifest = {
         description:
           "Used to activate only matching configurations that contain the value in `experiment`",
       },
-      extraParams: {
-        type: "json",
-        description:
-          "Query parameters values for search engine configurations.",
-      },
     },
   },
   urlbar: {
