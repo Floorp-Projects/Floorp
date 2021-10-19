@@ -5061,6 +5061,22 @@
   value: 0
   mirror: always
 
+# SwapInterval
+- name: gfx.swap-interval.glx
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: gfx.swap-interval.egl
+  type: RelaxedAtomicBool
+  mirror: always
+#ifdef MOZ_WIDGET_ANDROID
+  value: true
+#else
+  value: false
+#endif
+
+
 # Log severe performance warnings to the error console and profiles.
 # This should be use to quickly find which slow paths are used by test cases.
 - name: gfx.perf-warnings.enabled
