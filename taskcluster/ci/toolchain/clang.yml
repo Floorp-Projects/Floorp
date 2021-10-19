@@ -46,8 +46,8 @@ linux64-clang-7:
         toolchain:
             - linux64-toolchain-sysroot
 
-linux64-clang-13-mingw-x86:
-    description: "MinGW-Clang 13 x86 toolchain build"
+linux64-clang-12-mingw-x86:
+    description: "MinGW-Clang 12 x86 toolchain build"
     treeherder:
         symbol: TMW(clang-x86)
     worker-type: b-linux
@@ -59,16 +59,16 @@ linux64-clang-13-mingw-x86:
         toolchain-artifact: public/build/clangmingw.tar.zst
     fetches:
         fetch:
-            - clang-13
+            - clang-12
             - mingw-w64
             - libunwind
             - llvm-mingw
             - gcc-9.3.0
         toolchain:
-            - linux64-clang-13
+            - linux64-clang-12
 
-linux64-clang-13-mingw-x64:
-    description: "MinGW-Clang 13 x64 toolchain build"
+linux64-clang-12-mingw-x64:
+    description: "MinGW-Clang 12 x64 toolchain build"
     treeherder:
         symbol: TMW(clang-x64)
         tier: 1
@@ -81,13 +81,13 @@ linux64-clang-13-mingw-x64:
         toolchain-artifact: public/build/clangmingw.tar.zst
     fetches:
         fetch:
-            - clang-13
+            - clang-12
             - mingw-w64
             - libunwind
             - llvm-mingw
             - gcc-9.3.0
         toolchain:
-            - linux64-clang-13
+            - linux64-clang-12
 
 linux64-clang-10:
     description: "Clang 10 toolchain build"
@@ -144,40 +144,19 @@ linux64-clang-12:
             - 'build/build-clang/clang-12-linux64.json'
         resources:
             - 'build/build-clang/clang-12-linux64.json'
+        toolchain-alias: linux64-clang
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
             - clang-12
         toolchain:
             - linux64-toolchain-sysroot
+            - wasm32-wasi-compiler-rt-12
 
-linux64-clang-13:
-    description: "Clang 13 toolchain build"
-    attributes:
-        local-toolchain: true
+linux64-clang-12-android-cross:
+    description: "Clang 12 toolchain build"
     treeherder:
-        symbol: TL(clang13)
-    run-on-projects: [trunk]
-    run:
-        using: toolchain-script
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/clang-13-linux64.json'
-        resources:
-            - 'build/build-clang/clang-13-linux64.json'
-        toolchain-alias: linux64-clang
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        fetch:
-            - clang-13
-        toolchain:
-            - linux64-toolchain-sysroot
-            - wasm32-wasi-compiler-rt-13
-
-linux64-clang-13-android-cross:
-    description: "Clang 13 toolchain build"
-    treeherder:
-        symbol: TL(clang13-android)
+        symbol: TL(clang12-android)
     run:
         using: toolchain-script
         script: repack-clang-linux-cross.sh
@@ -189,30 +168,30 @@ linux64-clang-13-android-cross:
         toolchain-alias: linux64-clang-android-cross
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
-        android-aarch64-compiler-rt-13: toolchain-android-aarch64-compiler-rt-13
-        android-arm-compiler-rt-13: toolchain-android-arm-compiler-rt-13
-        android-x86-compiler-rt-13: toolchain-android-x86-compiler-rt-13
-        android-x64-compiler-rt-13: toolchain-android-x64-compiler-rt-13
+        android-aarch64-compiler-rt-12: toolchain-android-aarch64-compiler-rt-12
+        android-arm-compiler-rt-12: toolchain-android-arm-compiler-rt-12
+        android-x86-compiler-rt-12: toolchain-android-x86-compiler-rt-12
+        android-x64-compiler-rt-12: toolchain-android-x64-compiler-rt-12
     fetches:
         toolchain:
-            - linux64-clang-13
-        android-aarch64-compiler-rt-13:
+            - linux64-clang-12
+        android-aarch64-compiler-rt-12:
             - artifact: compiler-rt.tar.zst
               dest: aarch64
-        android-arm-compiler-rt-13:
+        android-arm-compiler-rt-12:
             - artifact: compiler-rt.tar.zst
               dest: arm
-        android-x86-compiler-rt-13:
+        android-x86-compiler-rt-12:
             - artifact: compiler-rt.tar.zst
               dest: x86
-        android-x64-compiler-rt-13:
+        android-x64-compiler-rt-12:
             - artifact: compiler-rt.tar.zst
               dest: x64
 
-linux64-clang-13-aarch64-cross:
-    description: "Clang 13 toolchain build with aarch64 runtime"
+linux64-clang-12-aarch64-cross:
+    description: "Clang 12 toolchain build with aarch64 runtime"
     treeherder:
-        symbol: TL(clang13-aarch64)
+        symbol: TL(clang12-aarch64)
     worker-type: b-linux
     worker:
         max-run-time: 600
@@ -221,17 +200,17 @@ linux64-clang-13-aarch64-cross:
         toolchain-alias: linux64-clang-aarch64-cross
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
-        linux64-aarch64-compiler-rt-13: toolchain-linux64-aarch64-compiler-rt-13
+        linux64-aarch64-compiler-rt-12: toolchain-linux64-aarch64-compiler-rt-12
     fetches:
         toolchain:
-            - linux64-clang-13
-        linux64-aarch64-compiler-rt-13:
+            - linux64-clang-12
+        linux64-aarch64-compiler-rt-12:
             - artifact: compiler-rt.tar.zst
 
-linux64-clang-13-macosx-cross:
-    description: "Clang 13 toolchain repack with MacOS Compiler RT libs"
+linux64-clang-12-macosx-cross:
+    description: "Clang 12 toolchain repack with MacOS Compiler RT libs"
     treeherder:
-        symbol: TL(clang13-macosx-cross)
+        symbol: TL(clang12-macosx-cross)
     worker-type: b-linux
     worker:
         max-run-time: 600
@@ -240,23 +219,23 @@ linux64-clang-13-macosx-cross:
         toolchain-alias: linux64-clang-macosx-cross
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
-        macosx64-aarch64-compiler-rt-13: toolchain-macosx64-aarch64-compiler-rt-13
-        macosx64-x64-compiler-rt-13: toolchain-macosx64-x64-compiler-rt-13
+        macosx64-aarch64-compiler-rt-12: toolchain-macosx64-aarch64-compiler-rt-12
+        macosx64-x64-compiler-rt-12: toolchain-macosx64-x64-compiler-rt-12
     fetches:
         toolchain:
-            - linux64-cctools-port-clang-13
-            - linux64-clang-13
-        macosx64-aarch64-compiler-rt-13:
+            - linux64-cctools-port-clang-12
+            - linux64-clang-12
+        macosx64-aarch64-compiler-rt-12:
             - artifact: compiler-rt.tar.zst
               dest: aarch64
-        macosx64-x64-compiler-rt-13:
+        macosx64-x64-compiler-rt-12:
             - artifact: compiler-rt.tar.zst
               dest: x86_64
 
-linux64-clang-13-win-cross:
-    description: "Clang 13 toolchain repack with Windows Compiler RT libs"
+linux64-clang-12-win-cross:
+    description: "Clang 12 toolchain repack with Windows Compiler RT libs"
     treeherder:
-        symbol: TL(clang13-win-cross)
+        symbol: TL(clang12-win-cross)
     worker-type: b-linux
     worker:
         max-run-time: 600
@@ -265,22 +244,22 @@ linux64-clang-13-win-cross:
         toolchain-alias: linux64-clang-win-cross
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
-        win64-clang-13-2stage: toolchain-win64-clang-13-2stage
+        win64-clang-12-2stage: toolchain-win64-clang-12-2stage
     fetches:
         toolchain:
-            - linux64-clang-13
-        win64-clang-13-2stage:
+            - linux64-clang-12
+        win64-clang-12-2stage:
             # Put this into a new directory so it doesn't conflict with the linux toolchain
             - artifact: clang.tar.zst
               dest: clang-cl
               extract: false
 
-macosx64-clang-13:
-    description: "Clang 13 toolchain build"
+macosx64-clang-12:
+    description: "Clang 12 toolchain build"
     attributes:
         local-toolchain: true
     treeherder:
-        symbol: TM(clang-13)
+        symbol: TM(clang-12)
     worker-type: b-linux-large
     worker:
         max-run-time: 3600
@@ -289,26 +268,26 @@ macosx64-clang-13:
     run:
         script: build-clang.sh
         arguments:
-            - 'build/build-clang/clang-13-macosx64.json'
+            - 'build/build-clang/clang-12-macosx64.json'
         resources:
-            - 'build/build-clang/clang-13-macosx64.json'
+            - 'build/build-clang/clang-12-macosx64.json'
         toolchain-alias: macosx64-clang
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
-            - clang-13
+            - clang-12
         toolchain:
-            - linux64-cctools-port-clang-13
-            - linux64-clang-13-macosx-cross
+            - linux64-cctools-port-clang-12
+            - linux64-clang-12-macosx-cross
             - macosx64-sdk-11.0
-            - wasm32-wasi-compiler-rt-13
+            - wasm32-wasi-compiler-rt-12
 
-macosx64-aarch64-clang-13:
-    description: "Clang 13 toolchain build"
+macosx64-aarch64-clang-12:
+    description: "Clang 12 toolchain build"
     attributes:
         local-toolchain: true
     treeherder:
-        symbol: TM(clang-13-aarch64)
+        symbol: TM(clang-12-aarch64)
     worker-type: b-linux-large
     worker:
         env:
@@ -319,26 +298,26 @@ macosx64-aarch64-clang-13:
     run:
         script: build-clang.sh
         arguments:
-            - 'build/build-clang/clang-13-macosx64.json'
+            - 'build/build-clang/clang-12-macosx64.json'
         resources:
-            - 'build/build-clang/clang-13-macosx64.json'
+            - 'build/build-clang/clang-12-macosx64.json'
         toolchain-alias: macosx64-aarch64-clang
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
-            - clang-13
+            - clang-12
         toolchain:
-            - linux64-cctools-port-clang-13
-            - linux64-clang-13-macosx-cross
+            - linux64-cctools-port-clang-12
+            - linux64-clang-12-macosx-cross
             - macosx64-sdk-11.0
-            - wasm32-wasi-compiler-rt-13
+            - wasm32-wasi-compiler-rt-12
 
-win64-clang-13:
-    description: "Clang-cl 13 toolchain build"
+win64-clang-12:
+    description: "Clang-cl 12 toolchain build"
     attributes:
         local-toolchain: true
     treeherder:
-        symbol: TW64(clang-13)
+        symbol: TW64(clang-12)
     worker-type: b-win2012
     worker:
         env:
@@ -349,25 +328,25 @@ win64-clang-13:
     run:
         script: build-clang.sh
         arguments:
-            - 'build/build-clang/clang-13-win64.json'
+            - 'build/build-clang/clang-12-win64.json'
         resources:
-            - 'build/build-clang/clang-13-win64.json'
+            - 'build/build-clang/clang-12-win64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: win64-clang
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:
         fetch:
-            - clang-13
+            - clang-12
             - cmake
             - ninja
         toolchain:
-            - wasm32-wasi-compiler-rt-13
+            - wasm32-wasi-compiler-rt-12
 
-win64-clang-13-2stage:
-    description: "Clang-cl 13 toolchain 2-stage quick build"
+win64-clang-12-2stage:
+    description: "Clang-cl 12 toolchain 2-stage quick build"
     treeherder:
-        symbol: TW64(clang-13-2stage)
+        symbol: TW64(clang-12-2stage)
     worker-type: b-win2012
     worker:
         env:
@@ -375,15 +354,15 @@ win64-clang-13-2stage:
     run:
         script: build-clang.sh
         arguments:
-            - 'build/build-clang/clang-13-win64-2stage.json'
+            - 'build/build-clang/clang-12-win64-2stage.json'
         resources:
-            - 'build/build-clang/clang-13-win64-2stage.json'
+            - 'build/build-clang/clang-12-win64-2stage.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: win64-clang-2stage
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:
         fetch:
-            - clang-13
+            - clang-12
             - cmake
             - ninja
