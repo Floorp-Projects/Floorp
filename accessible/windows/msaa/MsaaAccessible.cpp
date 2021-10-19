@@ -1161,8 +1161,16 @@ MsaaAccessible::get_accState(
   if (accessible) {
     return accessible->get_accState(kVarChildIdSelf, pvarState);
   }
+
   if (mAcc->IsRemote()) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+    // XXX Not supported for RemoteAccessible yet.
+    if (mAcc->IsDoc()) {
+      // XXX We don't cache whether a document is editable yet. Most documents
+      // aren't. To facilitate testing of the cache with screen readers, always
+      // expose READONLY here.
+      pvarState->lVal |= STATE_SYSTEM_READONLY;
+    }
+    return S_OK;
   }
 
   // MSAA only has 31 states and the lowest 31 bits of our state bit mask
