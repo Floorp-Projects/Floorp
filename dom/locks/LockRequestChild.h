@@ -1,0 +1,41 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef DOM_LOCKS_LOCKREQUESTCHILD_H_
+#define DOM_LOCKS_LOCKREQUESTCHILD_H_
+
+#include "mozilla/dom/locks/PLockRequestChild.h"
+#include "mozilla/dom/Lock.h"
+
+namespace mozilla::dom::locks {
+
+struct LockRequest {
+  nsString mName;
+  RefPtr<Promise> mPromise;
+  RefPtr<LockGrantedCallback> mCallback;
+};
+
+class LockRequestChild final : public PLockRequestChild,
+                               public SupportsWeakPtr {
+  using IPCResult = mozilla::ipc::IPCResult;
+
+  NS_INLINE_DECL_REFCOUNTING(LockRequestChild)
+
+ public:
+  explicit LockRequestChild(const LockRequest& aRequest) : mRequest(aRequest){};
+
+  IPCResult RecvResolve(const LockMode& aLockMode, bool aIsAvailable);
+  IPCResult RecvAbort();
+
+ private:
+  ~LockRequestChild() = default;
+
+  LockRequest mRequest;
+};
+
+}  // namespace mozilla::dom::locks
+
+#endif  // DOM_LOCKS_LOCKREQUESTCHILD_H_

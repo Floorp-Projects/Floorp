@@ -4,12 +4,6 @@
 
 'use strict';
 
-function makePromiseAndResolveFunc() {
-  let resolve;
-  const promise = new Promise(r => { resolve = r; });
-  return [promise, resolve];
-}
-
 promise_test(async t => {
   const res = uniqueName(t);
 
@@ -39,8 +33,7 @@ promise_test(async t => {
   const res = uniqueName(t);
 
   // Grab a lock and hold it until this subtest completes.
-  const never_settled = new Promise(resolve => t.add_cleanup(resolve));
-  navigator.locks.request(res, lock => never_settled);
+  requestLockAndHold(t, res);
 
   const controller = new AbortController();
 
@@ -68,8 +61,7 @@ promise_test(async t => {
   const res = uniqueName(t);
 
   // Grab a lock and hold it until this subtest completes.
-  const never_settled = new Promise(resolve => t.add_cleanup(resolve));
-  navigator.locks.request(res, lock => never_settled);
+  requestLockAndHold(t, res);
 
   const controller = new AbortController();
 

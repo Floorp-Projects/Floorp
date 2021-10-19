@@ -10,6 +10,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/LockManagerBinding.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
@@ -19,6 +20,9 @@
 namespace mozilla::dom {
 
 class LockManager;
+namespace locks {
+class LockRequestChild;
+}
 
 class Lock final : public PromiseNativeHandler, public nsWrapperCache {
   friend class LockManager;
@@ -27,17 +31,10 @@ class Lock final : public PromiseNativeHandler, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Lock)
 
-  Lock(nsIGlobalObject* aGlobal, const RefPtr<LockManager>& aLockManager,
+  Lock(nsIGlobalObject* aGlobal,
+       const WeakPtr<locks::LockRequestChild>& aLockRequestChild,
        const nsString& aName, LockMode aMode,
        const RefPtr<Promise>& aReleasedPromise, ErrorResult& aRv);
-
-  bool operator==(const Lock& aOther) const {
-    // This operator is needed to remove released locks from the queue.
-    // This assumes each lock has a unique promise
-    MOZ_ASSERT(mReleasedPromise && aOther.mReleasedPromise,
-               "Promises are null when locks are unreleased??");
-    return mReleasedPromise == aOther.mReleasedPromise;
-  }
 
  protected:
   ~Lock() = default;
@@ -62,7 +59,7 @@ class Lock final : public PromiseNativeHandler, public nsWrapperCache {
 
  private:
   nsCOMPtr<nsIGlobalObject> mOwner;
-  RefPtr<LockManager> mLockManager;
+  WeakPtr<locks::LockRequestChild> mLockRequestChild;
 
   nsString mName;
   LockMode mMode;
