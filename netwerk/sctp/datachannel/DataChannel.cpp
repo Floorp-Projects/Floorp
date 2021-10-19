@@ -1211,6 +1211,11 @@ uint32_t DataChannelConnection::UpdateCurrentStreamIndex() {
 }
 
 uint32_t DataChannelConnection::GetCurrentStreamIndex() {
+  if (!mChannels.Get(mCurrentStream)) {
+    // The stream muse have been removed, reset
+    DC_DEBUG(("Reset mCurrentChannel"));
+    mCurrentStream = 0;
+  }
   return mCurrentStream;
 }
 
