@@ -519,8 +519,6 @@ pref("media.plugins.enabled", true);
 // 16 = Force hardware decoding
 pref("media.stagefright.omxcodec.flags", 0);
 
-pref("layers.enable-tiles", true);
-
 // Enable the dynamic toolbar
 pref("browser.chrome.dynamictoolbar", true);
 

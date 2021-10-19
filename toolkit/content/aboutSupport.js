@@ -685,7 +685,6 @@ var snapshotFormatters = {
       ["direct2DEnabled", "#Direct2D"],
       ["windowProtocol", "graphics-window-protocol"],
       ["desktopEnvironment", "graphics-desktop-environment"],
-      "usesTiling",
       "targetFrameRate",
     ];
     for (let feature of featureKeys) {

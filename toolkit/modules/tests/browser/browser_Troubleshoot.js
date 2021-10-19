@@ -617,9 +617,6 @@ const SNAPSHOT_SCHEMA = {
         directWriteVersion: {
           type: "string",
         },
-        usesTiling: {
-          type: "boolean",
-        },
         clearTypeParameters: {
           type: "string",
         },

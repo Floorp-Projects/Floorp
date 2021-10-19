@@ -1796,12 +1796,6 @@ GfxInfoBase::GetWebRenderEnabled(bool* aWebRenderEnabled) {
 }
 
 NS_IMETHODIMP
-GfxInfoBase::GetUsesTiling(bool* aUsesTiling) {
-  *aUsesTiling = gfxPlatform::GetPlatform()->UsesTiling();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 GfxInfoBase::GetTargetFrameRate(uint32_t* aTargetFrameRate) {
   *aTargetFrameRate = gfxPlatform::TargetFrameRate();
   return NS_OK;
