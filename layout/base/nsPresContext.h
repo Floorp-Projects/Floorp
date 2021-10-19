@@ -9,7 +9,6 @@
 #ifndef nsPresContext_h___
 #define nsPresContext_h___
 
-#include "mozilla/intl/Bidi.h"
 #include "mozilla/AppUnits.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumeratedArray.h"
@@ -44,6 +43,7 @@
 #include "nsThreadUtils.h"
 #include "Units.h"
 
+class nsBidi;
 class nsIPrintSettings;
 class nsDocShell;
 class nsIDocShell;
@@ -1079,7 +1079,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
     mHasWarnedAboutTooLargeDashedOrDottedRadius = true;
   }
 
-  mozilla::intl::Bidi& GetBidiEngine();
+  nsBidi& GetBidiEngine();
 
   gfxFontFeatureValueSet* GetFontFeatureValuesLookup() const {
     return mFontFeatureValuesLookup;
@@ -1207,7 +1207,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   nsCOMPtr<nsITheme> mTheme;
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
 
-  mozilla::UniquePtr<mozilla::intl::Bidi> mBidiEngine;
+  mozilla::UniquePtr<nsBidi> mBidiEngine;
 
   AutoTArray<TransactionInvalidations, 4> mTransactions;
 

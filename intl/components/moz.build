@@ -4,7 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 EXPORTS.mozilla.intl = [
-    "src/Bidi.h",
     "src/Calendar.h",
     "src/Collator.h",
     "src/Currency.h",
@@ -28,7 +27,6 @@ EXPORTS.mozilla.intl = [
 ]
 
 UNIFIED_SOURCES += [
-    "src/Bidi.cpp",
     "src/Calendar.cpp",
     "src/Collator.cpp",
     "src/Currency.cpp",

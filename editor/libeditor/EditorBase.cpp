@@ -10,23 +10,22 @@
 #include <stdio.h>   // for nullptr, stdout
 #include <string.h>  // for strcmp
 
-#include "ChangeAttributeTransaction.h"  // for ChangeAttributeTransaction
-#include "CompositionTransaction.h"      // for CompositionTransaction
-#include "CreateElementTransaction.h"    // for CreateElementTransaction
-#include "DeleteNodeTransaction.h"       // for DeleteNodeTransaction
-#include "DeleteRangeTransaction.h"      // for DeleteRangeTransaction
-#include "DeleteTextTransaction.h"       // for DeleteTextTransaction
-#include "EditAggregateTransaction.h"    // for EditAggregateTransaction
-#include "EditTransactionBase.h"         // for EditTransactionBase
-#include "EditorEventListener.h"         // for EditorEventListener
-#include "gfxFontUtils.h"                // for gfxFontUtils
-#include "HTMLEditUtils.h"               // for HTMLEditUtils
-#include "InsertNodeTransaction.h"       // for InsertNodeTransaction
-#include "InsertTextTransaction.h"       // for InsertTextTransaction
-#include "JoinNodeTransaction.h"         // for JoinNodeTransaction
-#include "PlaceholderTransaction.h"      // for PlaceholderTransaction
-#include "SplitNodeTransaction.h"        // for SplitNodeTransaction
-#include "mozilla/intl/Bidi.h"
+#include "ChangeAttributeTransaction.h"       // for ChangeAttributeTransaction
+#include "CompositionTransaction.h"           // for CompositionTransaction
+#include "CreateElementTransaction.h"         // for CreateElementTransaction
+#include "DeleteNodeTransaction.h"            // for DeleteNodeTransaction
+#include "DeleteRangeTransaction.h"           // for DeleteRangeTransaction
+#include "DeleteTextTransaction.h"            // for DeleteTextTransaction
+#include "EditAggregateTransaction.h"         // for EditAggregateTransaction
+#include "EditTransactionBase.h"              // for EditTransactionBase
+#include "EditorEventListener.h"              // for EditorEventListener
+#include "gfxFontUtils.h"                     // for gfxFontUtils
+#include "HTMLEditUtils.h"                    // for HTMLEditUtils
+#include "InsertNodeTransaction.h"            // for InsertNodeTransaction
+#include "InsertTextTransaction.h"            // for InsertTextTransaction
+#include "JoinNodeTransaction.h"              // for JoinNodeTransaction
+#include "PlaceholderTransaction.h"           // for PlaceholderTransaction
+#include "SplitNodeTransaction.h"             // for SplitNodeTransaction
 #include "mozilla/BasePrincipal.h"            // for BasePrincipal
 #include "mozilla/CheckedInt.h"               // for CheckedInt
 #include "mozilla/ComposerCommandsUpdater.h"  // for ComposerCommandsUpdater
@@ -5768,13 +5767,12 @@ EditorBase::AutoCaretBidiLevelManager::AutoCaretBidiLevelManager(
   nsPrevNextBidiLevels levels = frameSelection->GetPrevNextBidiLevels(
       aPointAtCaret.GetContainerAsContent(), aPointAtCaret.Offset(), true);
 
-  mozilla::intl::Bidi::EmbeddingLevel levelBefore = levels.mLevelBefore;
-  mozilla::intl::Bidi::EmbeddingLevel levelAfter = levels.mLevelAfter;
+  nsBidiLevel levelBefore = levels.mLevelBefore;
+  nsBidiLevel levelAfter = levels.mLevelAfter;
 
-  mozilla::intl::Bidi::EmbeddingLevel currentCaretLevel =
-      frameSelection->GetCaretBidiLevel();
+  nsBidiLevel currentCaretLevel = frameSelection->GetCaretBidiLevel();
 
-  mozilla::intl::Bidi::EmbeddingLevel levelOfDeletion;
+  nsBidiLevel levelOfDeletion;
   levelOfDeletion = (nsIEditor::eNext == aDirectionAndAmount ||
                      nsIEditor::eNextWord == aDirectionAndAmount)
                         ? levelAfter

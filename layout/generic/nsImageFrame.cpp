@@ -12,7 +12,6 @@
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxUtils.h"
-#include "mozilla/intl/Bidi.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Encoding.h"
@@ -1435,31 +1434,31 @@ void nsImageFrame::DisplayAltText(nsPresContext* aPresContext,
     nsresult rv = NS_ERROR_FAILURE;
 
     if (aPresContext->BidiEnabled()) {
-      mozilla::intl::Bidi::EmbeddingLevel level;
+      nsBidiDirection dir;
       nscoord x, y;
 
       if (isVertical) {
         x = pt.x + maxDescent;
         if (wm.IsBidiLTR()) {
           y = aRect.y;
-          level = mozilla::intl::Bidi::EmbeddingLevel::LTR();
+          dir = NSBIDI_LTR;
         } else {
           y = aRect.YMost() - strWidth;
-          level = mozilla::intl::Bidi::EmbeddingLevel::RTL();
+          dir = NSBIDI_RTL;
         }
       } else {
         y = pt.y + maxAscent;
         if (wm.IsBidiLTR()) {
           x = aRect.x;
-          level = mozilla::intl::Bidi::EmbeddingLevel::LTR();
+          dir = NSBIDI_LTR;
         } else {
           x = aRect.XMost() - strWidth;
-          level = mozilla::intl::Bidi::EmbeddingLevel::RTL();
+          dir = NSBIDI_RTL;
         }
       }
 
       rv = nsBidiPresUtils::RenderText(
-          str, maxFit, level, aPresContext, aRenderingContext,
+          str, maxFit, dir, aPresContext, aRenderingContext,
           aRenderingContext.GetDrawTarget(), *fm, x, y);
     }
     if (NS_FAILED(rv)) {

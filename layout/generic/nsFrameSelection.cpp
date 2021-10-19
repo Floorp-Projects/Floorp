@@ -10,7 +10,6 @@
 
 #include "nsFrameSelection.h"
 
-#include "mozilla/intl/Bidi.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BasePrincipal.h"
@@ -600,7 +599,7 @@ nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
 }
 
 void nsFrameSelection::SetCaretBidiLevelAndMaybeSchedulePaint(
-    mozilla::intl::Bidi::EmbeddingLevel aLevel) {
+    nsBidiLevel aLevel) {
   // If the current level is undefined, we have just inserted new text.
   // In this case, we don't want to reset the keyboard language
   mCaret.mBidiLevel = aLevel;
@@ -611,14 +610,12 @@ void nsFrameSelection::SetCaretBidiLevelAndMaybeSchedulePaint(
   }
 }
 
-mozilla::intl::Bidi::EmbeddingLevel nsFrameSelection::GetCaretBidiLevel()
-    const {
+nsBidiLevel nsFrameSelection::GetCaretBidiLevel() const {
   return mCaret.mBidiLevel;
 }
 
 void nsFrameSelection::UndefineCaretBidiLevel() {
-  mCaret.mBidiLevel = mozilla::intl::Bidi::EmbeddingLevel(mCaret.mBidiLevel |
-                                                          BIDI_LEVEL_UNDEFINED);
+  mCaret.mBidiLevel |= BIDI_LEVEL_UNDEFINED;
 }
 
 #ifdef PRINT_RANGE
@@ -665,10 +662,9 @@ static nsINode* GetClosestInclusiveTableCellAncestor(nsINode* aDomNode) {
 static nsDirection GetCaretDirection(const nsIFrame& aFrame,
                                      nsDirection aDirection,
                                      bool aVisualMovement) {
-  const mozilla::intl::Bidi::Direction paragraphDirection =
+  const nsBidiDirection paragraphDirection =
       nsBidiPresUtils::ParagraphDirection(&aFrame);
-  return (aVisualMovement &&
-          paragraphDirection == mozilla::intl::Bidi::Direction::RTL)
+  return (aVisualMovement && paragraphDirection == NSBIDI_RTL)
              ? nsDirection(1 - aDirection)
              : aDirection;
 }
@@ -932,8 +928,7 @@ nsPrevNextBidiLevels nsFrameSelection::GetPrevNextBidiLevels(
   nsDirection direction;
 
   nsPrevNextBidiLevels levels{};
-  levels.SetData(nullptr, nullptr, mozilla::intl::Bidi::EmbeddingLevel::LTR(),
-                 mozilla::intl::Bidi::EmbeddingLevel::LTR());
+  levels.SetData(nullptr, nullptr, 0, 0);
 
   currentFrame = GetFrameForNodeOffset(
       aNode, static_cast<int32_t>(aContentOffset), aHint, &currentOffset);
@@ -952,8 +947,7 @@ nsPrevNextBidiLevels nsFrameSelection::GetPrevNextBidiLevels(
   } else {
     // we are neither at the beginning nor at the end of the frame, so we have
     // no worries
-    mozilla::intl::Bidi::EmbeddingLevel currentLevel =
-        currentFrame->GetEmbeddingLevel();
+    nsBidiLevel currentLevel = currentFrame->GetEmbeddingLevel();
     levels.SetData(currentFrame, currentFrame, currentLevel, currentLevel);
     return levels;
   }
@@ -964,8 +958,8 @@ nsPrevNextBidiLevels nsFrameSelection::GetPrevNextBidiLevels(
           .mFrame;
 
   FrameBidiData currentBidi = currentFrame->GetBidiData();
-  mozilla::intl::Bidi::EmbeddingLevel currentLevel = currentBidi.embeddingLevel;
-  mozilla::intl::Bidi::EmbeddingLevel newLevel =
+  nsBidiLevel currentLevel = currentBidi.embeddingLevel;
+  nsBidiLevel newLevel =
       newFrame ? newFrame->GetEmbeddingLevel() : currentBidi.baseLevel;
 
   // If not jumping lines, disregard br frames, since they might be positioned
@@ -990,13 +984,12 @@ nsPrevNextBidiLevels nsFrameSelection::GetPrevNextBidiLevels(
   return levels;
 }
 
-nsresult nsFrameSelection::GetFrameFromLevel(
-    nsIFrame* aFrameIn, nsDirection aDirection,
-    mozilla::intl::Bidi::EmbeddingLevel aBidiLevel,
-    nsIFrame** aFrameOut) const {
+nsresult nsFrameSelection::GetFrameFromLevel(nsIFrame* aFrameIn,
+                                             nsDirection aDirection,
+                                             nsBidiLevel aBidiLevel,
+                                             nsIFrame** aFrameOut) const {
   NS_ENSURE_STATE(mPresShell);
-  mozilla::intl::Bidi::EmbeddingLevel foundLevel =
-      mozilla::intl::Bidi::EmbeddingLevel::LTR();
+  nsBidiLevel foundLevel = 0;
   nsIFrame* foundFrame = aFrameIn;
 
   nsCOMPtr<nsIFrameEnumerator> frameTraversal;
