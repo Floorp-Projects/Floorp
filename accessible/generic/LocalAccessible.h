@@ -401,7 +401,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Return embedded accessible child at the given index.
    */
-  LocalAccessible* GetEmbeddedChildAt(uint32_t aIndex);
+  virtual LocalAccessible* EmbeddedChildAt(uint32_t aIndex) override;
 
   /**
    * Return index of the given embedded accessible child.
