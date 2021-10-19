@@ -504,7 +504,7 @@ void Compartment::sweepAfterMinorGC(JSTracer* trc) {
   crossCompartmentObjectWrappers.sweepAfterMinorGC(trc);
 
   for (RealmsInCompartmentIter r(this); !r.done(); r.next()) {
-    r->sweepAfterMinorGC();
+    r->sweepAfterMinorGC(trc);
   }
 }
 

@@ -107,7 +107,7 @@ class WeakCache : protected detail::WeakCacheBase,
       lock.emplace(sbToLock);
     }
 
-    GCPolicy<T>::sweep(&cache);
+    GCPolicy<T>::traceWeak(trc, &cache);
     return 0;
   }
 
