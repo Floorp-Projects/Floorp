@@ -93,7 +93,7 @@ The 'column-rule-image-slice' and 'row-rule-image-slice' Properties {#column-rul
     <pre class=propdef>
         Name: column-rule-image-slice, row-rule-image-slice
         Value: [<<number [0,&infin;]>> | <<percentage [0,&infin;]>>]{1,2}
-        Initial: zero
+        Initial: 0
         Applies to: <a>multi-column containers</a>, <a>flex containers</a>, <a>grid containers</a>, <a spec=css-tables>table</a> and <a spec=css-tables>table-row-group</a> containers
         Inherited: no
         Percentages: refer to size of the image
@@ -101,16 +101,17 @@ The 'column-rule-image-slice' and 'row-rule-image-slice' Properties {#column-rul
         Animation type: discrete
     </pre>
 
-    These properties specify inward offsets from the top and bottom edges of the image,
-    dividing it into three regions: two edge areas and one middle area.
+    'column-rule-image-slice' specify inward offsets from the block axis
+    start and end edges of the image, dividing it into three regions:
+    two edge areas and one middle area.
 
-    When two values are specified, they set the offsets on the top and bottom sides in
-    that order. If the bottom is missing, it is the same as the top.
+    When two values are specified, they set the offsets on the start and end sides in
+    that order. If the end value is missing, it is the same as the start value.
 
     <dl dfn-for=column-rule-image-slice dfn-type=value>
       <dt><dfn><<percentage [0,&infin;]>></dfn>
-      <dd>Percentages are relative to the height of the image.
-    
+      <dd>Percentages are relative to the block-size of the image.
+
       <dt><dfn><<number [0,&infin;]>></dfn>
       <dd>Numbers represent pixels in the image (if the image is a raster
         image) or vector coordinates (if the image is a vector image).
@@ -124,7 +125,11 @@ The 'column-rule-image-slice' and 'row-rule-image-slice' Properties {#column-rul
     then it is sized using the [[css-images-3#default-sizing]]
     with no [=specified size=] and the [=rule containing rectangle=] as the [=default object size=].
 
-    For 'row-rule-image-slice', replace top/bottom above with left/right, and height with width.
+    The regions given by the 'column-rule-image-slice' values may overlap.
+    However if the sum of the start and end values is equal to or greater than
+    the size of the image, the middle part becomes empty.
+
+    'row-rule-image-slice' works the same but in the inline axis.
 
 
 The 'column-rule-image-repeat' and 'row-rule-image-repeat' Properties {#column-rule-image-repeat}
@@ -244,7 +249,7 @@ The 'column-rule-width' and 'row-rule-width' Properties {#column-rule-width}
         Initial: medium
         Applies to: <a>multi-column containers</a>, <a>flex containers</a>, <a>grid containers</a>, <a spec=css-tables>table</a> and <a spec=css-tables>table-row-group</a> containers
         Inherited: no
-        Percentages: refer to the [=rule containing rectangle's=] size in the [=lateral axis=]
+        Percentages: refer to the [=rule containing rectangle's=] size in the rule's [=lateral axis=]
         Computed value: absolute length if the specified value is <<line-width>>; ''0px'' if the column rule style is ''column-rule-style/none'' or ''column-rule-style/hidden''. Otherwise, the specified value.
         Animation type: by computed value type
     </pre>
@@ -255,7 +260,7 @@ The 'column-rule-width' and 'row-rule-width' Properties {#column-rule-width}
         Initial: medium
         Applies to: <a>multi-column containers</a>, <a>flex containers</a>, <a>grid containers</a>, <a spec=css-tables>table</a> and <a spec=css-tables>table-row-group</a> containers
         Inherited: no
-        Percentages: refer to the [=rule containing rectangle's=] size in the [=lateral axis=]
+        Percentages: refer to the [=rule containing rectangle's=] size in the rule's [=lateral axis=]
         Computed value: absolute length if the specified value is <<line-width>>; ''0px'' if the column rule style is ''row-rule-style/none'' or ''row-rule-style/hidden''. Otherwise, the specified value.
         Animation type: by computed value type
     </pre>
@@ -274,7 +279,7 @@ The 'column-rule-length' and 'row-rule-length' Properties {#column-rule-length}
         Initial: auto
         Applies to: <a>multi-column containers</a>, <a>flex containers</a>, <a>grid containers</a>, <a spec=css-tables>table</a> and <a spec=css-tables>table-row-group</a> containers
         Inherited: no
-        Percentages: refer to the [=rule containing rectangle's=] size in the [=longitudinal axis=]
+        Percentages: refer to the [=rule containing rectangle's=] size in the rule's [=longitudinal axis=]
         Computed value: the specified value
         Animation type: by computed value type
     </pre>
@@ -295,18 +300,25 @@ The Rule Lateral Inset Properties {#column-rule-lateral-inset-start}
         Initial: auto
         Applies to: <a>multi-column containers</a>, <a>flex containers</a>, <a>grid containers</a>, <a spec=css-tables>table</a> and <a spec=css-tables>table-row-group</a> containers
         Inherited: no
-        Percentages: refer to the [=rule containing rectangle's=] size in the [=lateral axis=]
+        Percentages: refer to the [=rule containing rectangle's=] size in the rule's [=lateral axis=]
         Computed value: the specified value
         Animation type: by computed value type
     </pre>
 
     These properties sets the lateral start/end offset of the rule in the column and row axis, respectively.
     A positive value moves the position inward and a negative value outward from the corresponding [=rule containing rectangle's=] edge.
-    The ''column-rule-lateral-inset'' and ''column-rule-width'' [=used values=] are calculated in a similar way to how 'left'/'right' and
-    'width' are <a href="https://www.w3.org/TR/CSS22/visudet.html#abs-non-replaced-width">calculated</a> for an absolutely positioned
-    box.  ''column-rule-width/auto'' values are resolved so that the sum of the three values equals the [=rule containing rectangle=] size in the [=lateral axis=].
 
-    Given a triplet of values: inset-start/end and a size, these are the rules for resolving them:
+    NOTE: The ''column-rule-lateral-inset'' and ''column-rule-width'' [=used values=] are calculated in a similar way to how 'left'/'right' and
+    'width' are <a href="https://www.w3.org/TR/CSS22/visudet.html#abs-non-replaced-width">calculated</a> for an absolutely positioned
+    box.  The precise algorithm is described next.
+
+
+Resolving a rule's position and size {#resolving-position-and-size-algo}
+------------------------------------------------------------------------
+
+    Given a triplet of values: inset-start/end and a size for an axis, ''column-rule-width/auto'' values
+    are resolved so that the sum of the three values equals the [=rule containing rectangle=] size in
+    the same axis.  These are the rules for resolving them:
     <ol id=rule-sizing>
         <li>if all the values are ''column-rule-width/auto'' then set both inset values to zero and solve for size
         <li>if none of the values are ''column-rule-width/auto'' then the situation is over-constrained: solve by
@@ -322,10 +334,12 @@ The Rule Lateral Inset Properties {#column-rule-lateral-inset-start}
             treating the end inset value as ''column-rule-width/auto''
     </ol>
 
-    The above rules applies to the ''column-rule-width'', ''column-rule-lateral-inset-start'', and ''column-rule-lateral-inset-end'' triplet.
-    And to ''column-rule-length'', ''column-rule-longitudinal-[edge-]inset-start'', and ''column-rule-longitudinal-[edge-]inset-end'' triplet
-    of values (see the <a href=#column-rule-longitudinal-inset-start>longitudinal</a> property
+    These rules resolves the ''column-rule-width'', ''column-rule-lateral-inset-start'', and ''column-rule-lateral-inset-end'' triplet
+    of values in a rule's lateral axis.
+
+    The same rules are also used to resolve ''column-rule-length'', ''column-rule-longitudinal-[edge-]inset-start'', and ''column-rule-longitudinal-[edge-]inset-end'' triplet of values in a rule's longitudinal axis (see the <a href=#column-rule-longitudinal-inset-start>longitudinal</a> property
     descriptions below for which of the "edge" or non-"edge" values is used).
+
     Ditto for the corresponding ''row-rule-*'' properties.
 
     <aside class=example>
@@ -365,10 +379,10 @@ The Rule Longitudinal Inset Properties {#column-rule-longitudinal-inset-start}
     <pre class=propdef>
         Name: column-rule-longitudinal-inset-start, column-rule-longitudinal-inset-end, row-rule-longitudinal-inset-start, row-rule-longitudinal-inset-end
         Value: <<length-percentage>> | auto
-        Initial: zero
+        Initial: 0
         Applies to: <a>multi-column containers</a>, <a>flex containers</a>, <a>grid containers</a>, <a spec=css-tables>table</a> and <a spec=css-tables>table-row-group</a> containers
         Inherited: no
-        Percentages: refer to the [=rule containing rectangle's=] size in the [=longitudinal axis=]
+        Percentages: refer to the [=rule containing rectangle's=] size in the rule's [=longitudinal axis=]
         Computed value: the specified value
         Animation type: by computed value type
     </pre>
@@ -384,6 +398,7 @@ The Rule Longitudinal Inset Properties {#column-rule-longitudinal-inset-start}
     <aside class=example>
         Here's a few simple <a href="examples/grid-longitudinal-001.html">examples</a> of
         the rule sizing and inset properties.
+        Note that the grid items have ''opacity: 0.5'' to show any rules underneath them.
         <figure>
             <img src="media/grid-longitudinal-001.png">
             <figcaption>
@@ -430,10 +445,10 @@ The Rule Longitudinal Edge Inset Properties {#column-rule-longitudinal-edge-inse
     <pre class=propdef>
         Name: column-rule-longitudinal-edge-inset-start, column-rule-longitudinal-edge-inset-end, row-rule-longitudinal-edge-inset-start, row-rule-longitudinal-edge-inset-end
         Value: <<length-percentage>> | auto
-        Initial: zero
+        Initial: 0
         Applies to: <a>multi-column containers</a>, <a>flex containers</a>, <a>grid containers</a>, <a spec=css-tables>table</a> and <a spec=css-tables>table-row-group</a> containers
         Inherited: no
-        Percentages: refer to the [=rule containing rectangle's=] size in the [=longitudinal axis=]
+        Percentages: refer to the [=rule containing rectangle's=] size in the rule's [=longitudinal axis=]
         Computed value: the specified value
         Animation type: by computed value type
     </pre>
@@ -490,7 +505,7 @@ The 'row-rule-style' and 'row-rule-color' Properties {#row-rule-style}
         Animation type: by computed value type
     </pre>
 
-    These properties are identical to their ''column-'' version.
+    These properties are the same as the ''column-'' properties but for the row rules.
 
 The 'row-rule' Shorthand {#row-rule}
 --------------------------------------------------
@@ -658,9 +673,9 @@ The 'column-rule-extent' and 'row-rule-extent' Properties {#column-rule-extent}
     The ''column-rule-extent/all-*'' values makes a rule extend over all segments in an axis,
     subject to not being interrupted by a span.  In grid and table layout, where the tracks/table groups/rows
     all have the same length in a rule's longitudinal axis, all the ''column-rule-extent/all-*'' have
-    the same behavior.  They are intended for flexbox and masonry layout, where flex lines and masonry tracks,
-    respectively, may have different lengths.
-    
+    the same behavior.  They are intended for flexbox and masonry layout, where the gaps may fall at different
+    positions in adjacent flex lines and masonry tracks.
+
     The lateral position of a rule is determined by its first segment.
 
     The following sub-sections will describe the rule extent for each type of layout container in more detail.
@@ -722,9 +737,12 @@ The 'column-rule-extent' and 'row-rule-extent' Properties {#column-rule-extent}
             over the gap (see the <a href="#rule-extent-grid-algorithm">algorithm</a> below)
     </dl>
 
-    The following algorithm determines the <dfn>next grid cell span</dfn>.
-    For each pair of adjacent tracks, set their <var>current cell</var> to their first
-    cell in the [=implicit grid=], then:
+    The following algorithm determines the rule segments to create in an axis and their [=extent size=].
+    For each pair of adjacent tracks, we first find the <dfn>next grid cell span</dfn> for
+    each track. Then select one of those per the property values above.
+
+    For each pair of adjacent tracks, start by setting each track's <var>current cell</var> to
+    be its first cell in the [=implicit grid=], then:
 
     <ol id="rule-extent-grid-algorithm">
        <li>if ''column-rule-extent/allow-overlap'' was not specified, and the <var>current cell</var> in
@@ -732,30 +750,31 @@ The 'column-rule-extent' and 'row-rule-extent' Properties {#column-rule-extent}
            then skip this cell and let the <var>current cell</var> of each track be the cell after it,
            then go to step 1 or exit if there are no more cells
        <li>if the ''*-rule-extent'' is one of the ''column-rule-extent/all-*'' values,
-           then [=next grid cell span=] the span of cells from the <var>current cell</var> to
+           then the [=next grid cell span=] is the span of cells from the <var>current cell</var> to
            last cell in the track (inclusive); if ''column-rule-extent/allow-overlap'' was not specified,
            then stop before the first (opposite axis) track that contains an item spanning between this
            pair of tracks
-       <li>otherwise, if a cell is empty, or ''*-rule-extent'' is ''column-rule-extent/segment'',
+       <li>otherwise, if the <var>current cell</var> is empty, or ''*-rule-extent'' is ''column-rule-extent/segment'',
            then the [=next grid cell span=] of that track is the <var>current cell</var>
        <li>otherwise, if the <var>current cell</var> contains items that are spanning in the same axis,
            then that track's [=next grid cell span=] is the longest of those spans;
            if ''column-rule-extent/allow-overlap'' was not specified, then stop before
            the first (opposite axis) track that contains an item spanning between this pair of tracks
-       <li>
+       <li>create a rule segment with the following [=extent size=]:
             <ol type="lower-alpha">
 	        <li>for ''column-rule-extent/short''(''column-rule-extent/long''),
-                    set the [=extent size=] to the length of the shortest(longest) of
+                    the [=extent size=] is the length of the shortest(longest) of
                     the two [=next grid cell spans=]
 	        <li>for ''column-rule-extent/start''(''column-rule-extent/end''),
-                    set the [=extent size=] to the length of the [=next grid cell span=]
+                    the [=extent size=] is the length of the [=next grid cell span=]
                     of the start-most(end-most) track
 	        <li>for ''column-rule-extent/all-*'',
-                    set the [=extent size=] to the length of the [=next grid cell span=]
+                    the [=extent size=] is the length of the [=next grid cell span=]
                     (which is always the same for the two tracks)
             </ol>
        <li>set the <var>current cell</var> to the next cell, in each track, that is after the last cell
-           of the [=next grid cell span=] that we picked in the steps above; exit if there are no more cells
+           of the [=next grid cell span=] that we picked in the steps above; exit if there are no more cells;
+           otherwise, go to step 1.
     </ol>
 
     <aside class=example>
@@ -1049,8 +1068,9 @@ The 'column-rule-extent' and 'row-rule-extent' Properties {#column-rule-extent}
 
     The [=segments=] are the columns and the ''margin-box'' of <a>spanners</a>.
 
-    ISSUE: this proposal makes the assumption that the parallel proposal that
-    ''row-gap'' should apply to multi-column containers is also adopted (issue #XXX).
+    ISSUE: this proposal makes the assumption that the related proposal that
+    ''row-gap'' should apply to multi-column containers is also adopted
+    (<a href=https://github.com/w3c/csswg-drafts/issues/6746>issue #6746</a>).
 
     <aside class=example>
         This <a href="examples/multicol-row-rule-001.html">example</a> illustrates rules in
@@ -1082,7 +1102,12 @@ The Rule Containing Rectangle {#rule-containing-rectangle}
 ==========================================================
 
     The <dfn>rule containing rectangle</dfn> is formed by the <a href="#column-rule-extent">rule extent</a>
-    and <a href="#column-rule-align">alignment</a> in the [=longitudinal axis=], and by the size of the gap in the [=lateral axis=].
+    and <a href="#column-rule-align">alignment</a> in the [=longitudinal axis=], and by the size of the
+    <a href="https://drafts.csswg.org/css-align/#gutter">gutter</a> in the [=lateral axis=].
+    (For clarity, the size of the gutter is calculated from the <a href="https://drafts.csswg.org/css-align/#gaps">gap</a>
+    properties plus any extra space contributed by <a href="https://drafts.csswg.org/css-align/#distribution-values">alignment distribution</a>
+    but does not include any item margins.)
+
     It is important to note that the [=rule containing rectangle's=] size in an axis isn't affected by any of
     the <a href="#column-rule-lateral-inset">inset properties</a> <i>in the same axis</i> as that would lead to a circular
     dependency when resolving inset percentage values.  (The [=rule containing rectangle=] is the percentage basis
@@ -1150,3 +1175,16 @@ Rule Overflow {#rule-overflow}
     values etc.
     For clarity, none of the properties in this spec affects layout in any way.
     Column and row rules are purely a painting effect.
+
+    <aside class=example>
+        Here's an <a href="examples/grid-longitudinal-003.html">example</a> showing
+        rules that overflow their container and how they are clipped.
+        Both grids have large negative insets to extend the rules outside of the container.
+        The right grid has ''overflow: hidden'' which clips its rules at the padding area edge.
+        <figure>
+            <img src="media/grid-longitudinal-003.png">
+            <figcaption>
+                Examples of rule overflow and clipping.
+            </figcaption>
+        </figure>
+    </aside>
