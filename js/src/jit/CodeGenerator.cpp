@@ -13081,19 +13081,22 @@ void CodeGenerator::visitLoadElementHole(LLoadElementHole* lir) {
 
   masm.loadValue(BaseObjectElementIndex(elements, index), out);
 
-  // If a hole check is needed, and the value wasn't a hole, we're done.
-  // Otherwise, we'll load undefined.
-  if (lir->mir()->needsHoleCheck()) {
-    masm.branchTestMagic(Assembler::NotEqual, out, &done);
-    masm.moveValue(UndefinedValue(), out);
-  }
-  masm.jump(&done);
+  // If the value wasn't a hole, we're done. Otherwise, we'll load undefined.
+  masm.branchTestMagic(Assembler::NotEqual, out, &done);
 
-  masm.bind(&outOfBounds);
   if (mir->needsNegativeIntCheck()) {
+    Label loadUndefined;
+    masm.jump(&loadUndefined);
+
+    masm.bind(&outOfBounds);
+
     Label negative;
     masm.branch32(Assembler::LessThan, index, Imm32(0), &negative);
     bailoutFrom(&negative, lir->snapshot());
+
+    masm.bind(&loadUndefined);
+  } else {
+    masm.bind(&outOfBounds);
   }
   masm.moveValue(UndefinedValue(), out);
 
