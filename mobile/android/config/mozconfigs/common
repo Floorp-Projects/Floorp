@@ -40,4 +40,9 @@ fi
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
 
+if [ -d "$MOZ_FETCHES_DIR/binutils/bin" ]; then
+    mk_add_options "export PATH=$MOZ_FETCHES_DIR/binutils/bin:$PATH"
+    export LDFLAGS="$LDFLAGS -B $MOZ_FETCHES_DIR/binutils/bin"
+fi
+
 JS_BINARY="$topsrcdir/mobile/android/config/js_wrapper.sh"

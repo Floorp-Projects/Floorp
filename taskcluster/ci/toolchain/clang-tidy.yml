@@ -23,7 +23,7 @@ job-defaults:
             - 'build/build-clang/build-clang.py'
     fetches:
         fetch:
-            - clang-12
+            - clang-13
 
 linux64-clang-tidy:
     index:
@@ -40,7 +40,7 @@ linux64-clang-tidy:
         - trunk
     fetches:
         toolchain:
-            - linux64-clang-12
+            - linux64-clang-13
             - linux64-toolchain-sysroot
 
 macosx64-clang-tidy:
@@ -59,8 +59,8 @@ macosx64-clang-tidy:
         - trunk
     fetches:
         toolchain:
-            - linux64-cctools-port-clang-12
-            - linux64-clang-12-macosx-cross
+            - linux64-cctools-port-clang-13
+            - linux64-clang-13-macosx-cross
             - macosx64-sdk-11.0
 
 macosx64-arch64-clang-tidy:
@@ -82,8 +82,8 @@ macosx64-arch64-clang-tidy:
         - trunk
     fetches:
         toolchain:
-            - linux64-cctools-port-clang-12
-            - linux64-clang-12-macosx-cross
+            - linux64-cctools-port-clang-13
+            - linux64-clang-13-macosx-cross
             - macosx64-sdk-11.0
 
 win64-clang-tidy:
@@ -136,5 +136,5 @@ linux64-clang-tidy-external:
         fetch:
             - civet-source
         toolchain:
-            - linux64-clang-12
+            - linux64-clang-13
             - linux64-toolchain-sysroot
