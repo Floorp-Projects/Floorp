@@ -512,7 +512,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   void dropStringWrappersOnGC();
 
-  void sweepAllCrossCompartmentWrappers();
+  void traceWeakCCWEdges(JSTracer* trc);
   static void fixupAllCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
 
   mozilla::LinkedList<detail::WeakCacheBase>& weakCaches() {
