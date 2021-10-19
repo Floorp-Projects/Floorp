@@ -191,9 +191,8 @@ bool RenderCompositorEGL::Resume() {
       const auto& gle = gl::GLContextEGL::Cast(gl());
       const auto& egl = gle->mEgl;
       MakeCurrent();
-
-      const int interval = gfxVars::SwapIntervalEGL() ? 1 : 0;
-      egl->fSwapInterval(interval);
+      // Make eglSwapBuffers() non-blocking on wayland.
+      egl->fSwapInterval(0);
     } else {
       RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
       return false;
