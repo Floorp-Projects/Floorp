@@ -399,25 +399,21 @@ namespace JS {
 template <typename Key, typename Value, typename HashPolicy,
           typename AllocPolicy, typename MapSweepPolicy>
 class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
-    : protected detail::WeakCacheBase {
+    final : protected detail::WeakCacheBase {
   using Map = GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>;
   using Self = WeakCache<Map>;
 
   Map map;
-  bool needsBarrier;
+  JSTracer* barrierTracer = nullptr;
 
  public:
   template <typename... Args>
   explicit WeakCache(Zone* zone, Args&&... args)
-      : WeakCacheBase(zone),
-        map(std::forward<Args>(args)...),
-        needsBarrier(false) {}
+      : WeakCacheBase(zone), map(std::forward<Args>(args)...) {}
   template <typename... Args>
   explicit WeakCache(JSRuntime* rt, Args&&... args)
-      : WeakCacheBase(rt),
-        map(std::forward<Args>(args)...),
-        needsBarrier(false) {}
-  ~WeakCache() { MOZ_ASSERT(!needsBarrier); }
+      : WeakCacheBase(rt), map(std::forward<Args>(args)...) {}
+  ~WeakCache() { MOZ_ASSERT(!barrierTracer); }
 
   bool empty() override { return map.empty(); }
 
@@ -440,24 +436,26 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
     return steps;
   }
 
-  bool setNeedsIncrementalBarrier(bool needs) override {
-    MOZ_ASSERT(needsBarrier != needs);
-    needsBarrier = needs;
+  bool setIncrementalBarrierTracer(JSTracer* trc) override {
+    MOZ_ASSERT(bool(barrierTracer) != bool(trc));
+    barrierTracer = trc;
     return true;
   }
 
-  bool needsIncrementalBarrier() const override { return needsBarrier; }
+  bool needsIncrementalBarrier() const override { return barrierTracer; }
 
  private:
   using Entry = typename Map::Entry;
 
-  static bool entryNeedsSweep(const Entry& prior) {
+  static bool entryNeedsSweep(JSTracer* barrierTracer, const Entry& prior) {
     Key key(prior.key());
     Value value(prior.value());
-    bool result = MapSweepPolicy::needsSweep(&key, &value);
-    MOZ_ASSERT(prior.key() == key);      // We shouldn't update here.
-    MOZ_ASSERT(prior.value() == value);  // We shouldn't update here.
-    return result;
+    bool needsSweep = !MapSweepPolicy::traceWeak(barrierTracer, &key, &value);
+    MOZ_ASSERT_IF(!needsSweep,
+                  prior.key() == key);  // We shouldn't update here.
+    MOZ_ASSERT_IF(!needsSweep,
+                  prior.value() == value);  // We shouldn't update here.
+    return needsSweep;
   }
 
  public:
@@ -465,8 +463,11 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
   using Ptr = typename Map::Ptr;
   using AddPtr = typename Map::AddPtr;
 
+  // Iterator over the whole collection.
   struct Range {
-    explicit Range(const typename Map::Range& r) : range(r) { settle(); }
+    explicit Range(Self& self) : cache(self), range(self.map.all()) {
+      settle();
+    }
     Range() = default;
 
     bool empty() const { return range.empty(); }
@@ -478,11 +479,14 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
     }
 
    private:
+    Self& cache;
     typename Map::Range range;
 
     void settle() {
-      while (!empty() && entryNeedsSweep(front())) {
-        popFront();
+      if (JSTracer* trc = cache.barrierTracer) {
+        while (!empty() && entryNeedsSweep(trc, front())) {
+          popFront();
+        }
       }
     }
   };
@@ -491,13 +495,13 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
     explicit Enum(Self& cache) : Map::Enum(cache.map) {
       // This operation is not allowed while barriers are in place as we
       // may also need to enumerate the set for sweeping.
-      MOZ_ASSERT(!cache.needsBarrier);
+      MOZ_ASSERT(!cache.barrierTracer);
     }
   };
 
   Ptr lookup(const Lookup& l) const {
     Ptr ptr = map.lookup(l);
-    if (needsBarrier && ptr && entryNeedsSweep(*ptr)) {
+    if (barrierTracer && ptr && entryNeedsSweep(barrierTracer, *ptr)) {
       const_cast<Map&>(map).remove(ptr);
       return Ptr();
     }
@@ -506,20 +510,20 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
 
   AddPtr lookupForAdd(const Lookup& l) {
     AddPtr ptr = map.lookupForAdd(l);
-    if (needsBarrier && ptr && entryNeedsSweep(*ptr)) {
+    if (barrierTracer && ptr && entryNeedsSweep(barrierTracer, *ptr)) {
       const_cast<Map&>(map).remove(ptr);
       return map.lookupForAdd(l);
     }
     return ptr;
   }
 
-  Range all() const { return Range(map.all()); }
+  Range all() const { return Range(*const_cast<Self*>(this)); }
 
   bool empty() const {
     // This operation is not currently allowed while barriers are in place
     // as it would require iterating the map and the caller expects a
     // constant time operation.
-    MOZ_ASSERT(!needsBarrier);
+    MOZ_ASSERT(!barrierTracer);
     return map.empty();
   }
 
@@ -527,7 +531,7 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
     // This operation is not currently allowed while barriers are in place
     // as it would require iterating the set and the caller expects a
     // constant time operation.
-    MOZ_ASSERT(!needsBarrier);
+    MOZ_ASSERT(!barrierTracer);
     return map.count();
   }
 
@@ -545,14 +549,14 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
   void clear() {
     // This operation is not currently allowed while barriers are in place
     // since it doesn't make sense to clear a cache while it is being swept.
-    MOZ_ASSERT(!needsBarrier);
+    MOZ_ASSERT(!barrierTracer);
     map.clear();
   }
 
   void clearAndCompact() {
     // This operation is not currently allowed while barriers are in place
     // since it doesn't make sense to clear a cache while it is being swept.
-    MOZ_ASSERT(!needsBarrier);
+    MOZ_ASSERT(!barrierTracer);
     map.clearAndCompact();
   }
 
@@ -595,27 +599,23 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
 // Specialize WeakCache for GCHashSet to provide a barriered set that does not
 // need to be swept immediately.
 template <typename T, typename HashPolicy, typename AllocPolicy>
-class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
+class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>> final
     : protected detail::WeakCacheBase {
   using Set = GCHashSet<T, HashPolicy, AllocPolicy>;
   using Self = WeakCache<Set>;
 
   Set set;
-  bool needsBarrier;
+  JSTracer* barrierTracer = nullptr;
 
  public:
   using Entry = typename Set::Entry;
 
   template <typename... Args>
   explicit WeakCache(Zone* zone, Args&&... args)
-      : WeakCacheBase(zone),
-        set(std::forward<Args>(args)...),
-        needsBarrier(false) {}
+      : WeakCacheBase(zone), set(std::forward<Args>(args)...) {}
   template <typename... Args>
   explicit WeakCache(JSRuntime* rt, Args&&... args)
-      : WeakCacheBase(rt),
-        set(std::forward<Args>(args)...),
-        needsBarrier(false) {}
+      : WeakCacheBase(rt), set(std::forward<Args>(args)...) {}
 
   size_t traceWeak(JSTracer* trc, js::gc::StoreBuffer* sbToLock) override {
     size_t steps = set.count();
@@ -640,20 +640,20 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
 
   bool empty() override { return set.empty(); }
 
-  bool setNeedsIncrementalBarrier(bool needs) override {
-    MOZ_ASSERT(needsBarrier != needs);
-    needsBarrier = needs;
+  bool setIncrementalBarrierTracer(JSTracer* trc) override {
+    MOZ_ASSERT(bool(barrierTracer) != bool(trc));
+    barrierTracer = trc;
     return true;
   }
 
-  bool needsIncrementalBarrier() const override { return needsBarrier; }
+  bool needsIncrementalBarrier() const override { return barrierTracer; }
 
  private:
-  static bool entryNeedsSweep(const Entry& prior) {
+  static bool entryNeedsSweep(JSTracer* barrierTracer, const Entry& prior) {
     Entry entry(prior);
-    bool result = GCPolicy<T>::needsSweep(&entry);
-    MOZ_ASSERT(prior == entry);  // We shouldn't update here.
-    return result;
+    bool needsSweep = !GCPolicy<T>::traceWeak(barrierTracer, &entry);
+    MOZ_ASSERT_IF(!needsSweep, prior == entry);  // We shouldn't update here.
+    return needsSweep;
   }
 
  public:
@@ -661,8 +661,11 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
   using Ptr = typename Set::Ptr;
   using AddPtr = typename Set::AddPtr;
 
+  // Iterator over the whole collection.
   struct Range {
-    explicit Range(const typename Set::Range& r) : range(r) { settle(); }
+    explicit Range(Self& self) : cache(self), range(self.set.all()) {
+      settle();
+    }
     Range() = default;
 
     bool empty() const { return range.empty(); }
@@ -674,11 +677,14 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
     }
 
    private:
+    Self& cache;
     typename Set::Range range;
 
     void settle() {
-      while (!empty() && entryNeedsSweep(front())) {
-        popFront();
+      if (JSTracer* trc = cache.barrierTracer) {
+        while (!empty() && entryNeedsSweep(trc, front())) {
+          popFront();
+        }
       }
     }
   };
@@ -687,13 +693,13 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
     explicit Enum(Self& cache) : Set::Enum(cache.set) {
       // This operation is not allowed while barriers are in place as we
       // may also need to enumerate the set for sweeping.
-      MOZ_ASSERT(!cache.needsBarrier);
+      MOZ_ASSERT(!cache.barrierTracer);
     }
   };
 
   Ptr lookup(const Lookup& l) const {
     Ptr ptr = set.lookup(l);
-    if (needsBarrier && ptr && entryNeedsSweep(*ptr)) {
+    if (barrierTracer && ptr && entryNeedsSweep(barrierTracer, *ptr)) {
       const_cast<Set&>(set).remove(ptr);
       return Ptr();
     }
@@ -702,20 +708,20 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
 
   AddPtr lookupForAdd(const Lookup& l) {
     AddPtr ptr = set.lookupForAdd(l);
-    if (needsBarrier && ptr && entryNeedsSweep(*ptr)) {
+    if (barrierTracer && ptr && entryNeedsSweep(barrierTracer, *ptr)) {
       const_cast<Set&>(set).remove(ptr);
       return set.lookupForAdd(l);
     }
     return ptr;
   }
 
-  Range all() const { return Range(set.all()); }
+  Range all() const { return Range(*const_cast<Self*>(this)); }
 
   bool empty() const {
     // This operation is not currently allowed while barriers are in place
     // as it would require iterating the set and the caller expects a
     // constant time operation.
-    MOZ_ASSERT(!needsBarrier);
+    MOZ_ASSERT(!barrierTracer);
     return set.empty();
   }
 
@@ -723,7 +729,7 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
     // This operation is not currently allowed while barriers are in place
     // as it would require iterating the set and the caller expects a
     // constant time operation.
-    MOZ_ASSERT(!needsBarrier);
+    MOZ_ASSERT(!barrierTracer);
     return set.count();
   }
 
@@ -741,14 +747,14 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
   void clear() {
     // This operation is not currently allowed while barriers are in place
     // since it doesn't make sense to clear a cache while it is being swept.
-    MOZ_ASSERT(!needsBarrier);
+    MOZ_ASSERT(!barrierTracer);
     set.clear();
   }
 
   void clearAndCompact() {
     // This operation is not currently allowed while barriers are in place
     // since it doesn't make sense to clear a cache while it is being swept.
-    MOZ_ASSERT(!needsBarrier);
+    MOZ_ASSERT(!barrierTracer);
     set.clearAndCompact();
   }
 
