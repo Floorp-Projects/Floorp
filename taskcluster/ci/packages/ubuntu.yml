@@ -34,10 +34,10 @@ ub18-python-zstandard:
         symbol: Ub18(python-zstandard)
     run:
         tarball:
-            url: https://github.com/indygreg/python-zstandard/releases/download/0.15.2/zstandard-0.15.2.tar.gz
-            sha256: 52de08355fd5cfb3ef4533891092bb96229d43c2069703d4aff04fdbedf9c92f
+            url: https://github.com/indygreg/python-zstandard/releases/download/0.16.0/zstandard-0.16.0.tar.gz
+            sha256: eaae2d3e8fdf8bfe269628385087e4b648beef85bb0c187644e7df4fb0fe9046
         name: python-zstandard
-        pre-build-command: debchange -v 0.15.2-1.ub18moz --distribution bionic "Mozilla backport for bionic"
+        pre-build-command: debchange -v 0.16.0-1.ub18moz --distribution bionic "Mozilla backport for bionic"
 
 ub18-mercurial:
     description: "Modern Mercurial for Ubuntu bionic"
@@ -59,11 +59,11 @@ ub20-python-zstandard:
         symbol: Ub20(python-zstandard)
     run:
         tarball:
-            url: https://github.com/indygreg/python-zstandard/releases/download/0.15.2/zstandard-0.15.2.tar.gz
-            sha256: 52de08355fd5cfb3ef4533891092bb96229d43c2069703d4aff04fdbedf9c92f
+            url: https://github.com/indygreg/python-zstandard/releases/download/0.16.0/zstandard-0.16.0.tar.gz
+            sha256: eaae2d3e8fdf8bfe269628385087e4b648beef85bb0c187644e7df4fb0fe9046
         name: python-zstandard
         dist: focal
-        pre-build-command: debchange -v 0.15.2-1.ub20moz --distribution bionic "Mozilla backport for focal"
+        pre-build-command: debchange -v 0.16.0-1.ub20moz --distribution bionic "Mozilla backport for focal"
 
 ub20-mercurial:
     description: "Modern Mercurial for Ubuntu focal"
