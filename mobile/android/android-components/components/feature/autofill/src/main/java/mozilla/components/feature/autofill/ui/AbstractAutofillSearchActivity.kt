@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.autofill.AutofillManager
 import android.widget.EditText
+import android.widget.inline.InlinePresentationSpec
 import androidx.annotation.RequiresApi
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.FragmentActivity
@@ -47,6 +48,7 @@ abstract class AbstractAutofillSearchActivity : FragmentActivity() {
     private lateinit var loginsDeferred: Deferred<List<Login>>
     private val scope = CoroutineScope(Dispatchers.IO)
     private val adapter = LoginsAdapter(::onLoginSelected)
+    private var imeSpec: InlinePresentationSpec? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,6 +63,7 @@ abstract class AbstractAutofillSearchActivity : FragmentActivity() {
             finish()
             return
         }
+        imeSpec = intent.getImeSpec()
 
         val parsedStructure = parseStructure(this, structure.toRawStructure())
         if (parsedStructure == null) {
@@ -92,7 +95,7 @@ abstract class AbstractAutofillSearchActivity : FragmentActivity() {
 
     private fun onLoginSelected(login: Login) {
         val builder = LoginDatasetBuilder(parsedStructure, login, needsConfirmation = false)
-        val dataset = builder.build(this, configuration)
+        val dataset = builder.build(this, configuration, imeSpec)
 
         val replyIntent = Intent()
         replyIntent.putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, dataset)

@@ -11,12 +11,14 @@ import android.service.autofill.FillCallback
 import android.service.autofill.FillRequest
 import android.service.autofill.SaveCallback
 import android.service.autofill.SaveRequest
+import android.widget.inline.InlinePresentationSpec
 import androidx.annotation.RequiresApi
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.feature.autofill.handler.FillRequestHandler
+import mozilla.components.feature.autofill.handler.MAX_LOGINS
 import mozilla.components.feature.autofill.structure.toRawStructure
 
 /**
@@ -44,8 +46,15 @@ abstract class AbstractAutofillService : AutofillService() {
             // inspect their data. So we create these intermediate objects that we can create and
             // inspect in unit tests.
             val structure = request.fillContexts.last().structure.toRawStructure()
-            val responseBuilder = fillHandler.handle(structure)
-            val response = responseBuilder?.build(this@AbstractAutofillService, configuration)
+            val responseBuilder = fillHandler.handle(
+                structure,
+                maxSuggestionCount = request.getMaxSuggestionCount()
+            )
+            val response = responseBuilder?.build(
+                this@AbstractAutofillService,
+                configuration,
+                request.getInlinePresentationSpec()
+            )
             callback.onSuccess(response)
         }
     }
@@ -57,4 +66,18 @@ abstract class AbstractAutofillService : AutofillService() {
         // and on Android systems before Q this message may be shown in a toast.
         callback.onSuccess()
     }
+}
+
+internal fun FillRequest.getInlinePresentationSpec(): InlinePresentationSpec? {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        return inlineSuggestionsRequest?.inlinePresentationSpecs?.last()
+    } else {
+        return null
+    }
+}
+
+internal fun FillRequest.getMaxSuggestionCount() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+    (inlineSuggestionsRequest?.maxSuggestionCount ?: 1) - 1 // space for search chip
+} else {
+    MAX_LOGINS
 }

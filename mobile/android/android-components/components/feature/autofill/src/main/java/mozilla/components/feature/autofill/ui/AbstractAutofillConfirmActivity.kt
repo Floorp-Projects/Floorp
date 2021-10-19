@@ -48,13 +48,13 @@ abstract class AbstractAutofillConfirmActivity : FragmentActivity() {
             cancel()
             return
         }
-
+        val imeSpec = intent.getImeSpec()
         // While the user is asked to confirm, we already try to build the fill response asynchronously.
         val rawStructure = structure?.toRawStructure()
         if (rawStructure != null) {
             dataset = lifecycleScope.async(Dispatchers.IO) {
                 val builder = fillHandler.handleConfirmation(rawStructure, loginId)
-                builder?.build(this@AbstractAutofillConfirmActivity, configuration)
+                builder?.build(this@AbstractAutofillConfirmActivity, configuration, imeSpec)
             }
         }
 

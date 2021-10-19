@@ -141,6 +141,9 @@
             <intent-filter>
                 <action android:name="android.service.autofill.AutofillService"/>
             </intent-filter>
+            <meta-data
+                android:name="android.autofill"
+                android:resource="@xml/service_configuration" />
         </service>
 
         <service

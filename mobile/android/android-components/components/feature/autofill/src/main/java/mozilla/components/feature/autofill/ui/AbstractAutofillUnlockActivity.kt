@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.service.autofill.FillResponse
 import android.view.autofill.AutofillManager
+import android.widget.inline.InlinePresentationSpec
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
@@ -21,6 +22,7 @@ import mozilla.components.feature.autofill.authenticator.Authenticator
 import mozilla.components.feature.autofill.authenticator.createAuthenticator
 import mozilla.components.feature.autofill.facts.emitAutofillLock
 import mozilla.components.feature.autofill.handler.FillRequestHandler
+import mozilla.components.feature.autofill.handler.MAX_LOGINS
 import mozilla.components.feature.autofill.structure.ParsedStructure
 
 /**
@@ -39,12 +41,13 @@ abstract class AbstractAutofillUnlockActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
 
         val parsedStructure = intent.getParcelableExtra<ParsedStructure>(EXTRA_PARSED_STRUCTURE)
-
+        val imeSpec = intent.getImeSpec()
+        val maxSuggestionCount = intent.getIntExtra(EXTRA_MAX_SUGGESTION_COUNT, MAX_LOGINS)
         // While the user is asked to authenticate, we already try to build the fill response asynchronously.
         if (parsedStructure != null) {
             fillResponse = lifecycleScope.async(Dispatchers.IO) {
-                val builder = fillHandler.handle(parsedStructure, forceUnlock = true)
-                val result = builder.build(this@AbstractAutofillUnlockActivity, configuration)
+                val builder = fillHandler.handle(parsedStructure, forceUnlock = true, maxSuggestionCount)
+                val result = builder.build(this@AbstractAutofillUnlockActivity, configuration, imeSpec)
                 result
             }
         }
@@ -98,5 +101,15 @@ abstract class AbstractAutofillUnlockActivity : FragmentActivity() {
 
     companion object {
         const val EXTRA_PARSED_STRUCTURE = "parsed_structure"
+        const val EXTRA_IME_SPEC = "ime_spec"
+        const val EXTRA_MAX_SUGGESTION_COUNT = "max_suggestion_count"
+    }
+}
+
+internal fun Intent.getImeSpec(): InlinePresentationSpec? {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        return getParcelableExtra(AbstractAutofillUnlockActivity.EXTRA_IME_SPEC)
+    } else {
+        return null
     }
 }

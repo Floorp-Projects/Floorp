@@ -6,11 +6,13 @@ package mozilla.components.feature.autofill.response.dataset
 
 import android.content.Context
 import android.service.autofill.Dataset
+import android.widget.inline.InlinePresentationSpec
 import mozilla.components.feature.autofill.AutofillConfiguration
 
 internal interface DatasetBuilder {
     fun build(
         context: Context,
-        configuration: AutofillConfiguration
+        configuration: AutofillConfiguration,
+        imeSpec: InlinePresentationSpec? = null
     ): Dataset
 }

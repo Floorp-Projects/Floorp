@@ -38,6 +38,7 @@ dependencies {
     implementation project(":support-utils")
 
     implementation Dependencies.androidx_annotation
+    implementation Dependencies.androidx_autofill
     implementation Dependencies.androidx_biometric
     implementation Dependencies.androidx_fragment
     implementation Dependencies.androidx_lifecycle_runtime

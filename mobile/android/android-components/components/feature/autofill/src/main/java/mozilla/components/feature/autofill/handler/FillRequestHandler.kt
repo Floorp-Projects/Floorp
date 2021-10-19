@@ -22,6 +22,7 @@ import mozilla.components.feature.autofill.structure.ParsedStructure
 import mozilla.components.feature.autofill.structure.RawStructure
 import mozilla.components.feature.autofill.structure.getLookupDomain
 import mozilla.components.feature.autofill.structure.parseStructure
+import kotlin.math.min
 
 internal const val EXTRA_LOGIN_ID = "loginId"
 // Maximum number of logins we are going to display in the autofill overlay.
@@ -43,19 +44,21 @@ internal class FillRequestHandler(
     @Suppress("ReturnCount")
     suspend fun handle(
         structure: RawStructure?,
-        forceUnlock: Boolean = false
+        forceUnlock: Boolean = false,
+        maxSuggestionCount: Int = MAX_LOGINS
     ): FillResponseBuilder? {
         if (structure == null) {
             return null
         }
 
         val parsedStructure = parseStructure(context, structure) ?: return null
-        return handle(parsedStructure, forceUnlock)
+        return handle(parsedStructure, forceUnlock, maxSuggestionCount)
     }
 
     suspend fun handle(
         parsedStructure: ParsedStructure,
-        forceUnlock: Boolean = false
+        forceUnlock: Boolean = false,
+        maxSuggestionCount: Int = MAX_LOGINS
     ): FillResponseBuilder {
         val lookupDomain = parsedStructure.getLookupDomain(configuration.publicSuffixList)
         val needsConfirmation = !configuration.verifier.hasCredentialRelationship(
@@ -66,10 +69,10 @@ internal class FillRequestHandler(
 
         val logins = configuration.storage
             .getByBaseDomain(lookupDomain)
-            .take(MAX_LOGINS)
+            .take(min(MAX_LOGINS, maxSuggestionCount))
 
         return if (!configuration.lock.keepUnlocked() && !forceUnlock) {
-            AuthFillResponseBuilder(parsedStructure)
+            AuthFillResponseBuilder(parsedStructure, maxSuggestionCount)
         } else {
             emitAutofillRequestFact(hasLogins = logins.isNotEmpty(), needsConfirmation)
             LoginFillResponseBuilder(parsedStructure, logins, needsConfirmation)

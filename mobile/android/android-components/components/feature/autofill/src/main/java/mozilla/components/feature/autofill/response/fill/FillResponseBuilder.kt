@@ -6,11 +6,13 @@ package mozilla.components.feature.autofill.response.fill
 
 import android.content.Context
 import android.service.autofill.FillResponse
+import android.widget.inline.InlinePresentationSpec
 import mozilla.components.feature.autofill.AutofillConfiguration
 
 internal interface FillResponseBuilder {
     fun build(
         context: Context,
-        configuration: AutofillConfiguration
+        configuration: AutofillConfiguration,
+        imeSpec: InlinePresentationSpec? = null
     ): FillResponse
 }

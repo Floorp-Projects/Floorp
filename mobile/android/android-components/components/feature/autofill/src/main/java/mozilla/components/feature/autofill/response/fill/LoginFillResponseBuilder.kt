@@ -7,6 +7,7 @@ package mozilla.components.feature.autofill.response.fill
 import android.content.Context
 import android.os.Build
 import android.service.autofill.FillResponse
+import android.widget.inline.InlinePresentationSpec
 import androidx.annotation.RequiresApi
 import mozilla.components.concept.storage.Login
 import mozilla.components.feature.autofill.AutofillConfiguration
@@ -28,7 +29,8 @@ internal data class LoginFillResponseBuilder(
 
     override fun build(
         context: Context,
-        configuration: AutofillConfiguration
+        configuration: AutofillConfiguration,
+        imeSpec: InlinePresentationSpec?
     ): FillResponse {
         val builder = FillResponse.Builder()
 
@@ -42,14 +44,15 @@ internal data class LoginFillResponseBuilder(
 
             val dataset = datasetBuilder.build(
                 context,
-                configuration
+                configuration,
+                imeSpec
             )
 
             builder.addDataset(dataset)
         }
 
         builder.addDataset(
-            searchDatasetBuilder.build(context, configuration)
+            searchDatasetBuilder.build(context, configuration, imeSpec)
         )
 
         return builder.build()
