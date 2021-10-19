@@ -11,7 +11,6 @@ const FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
 FOG.initializeFOG();
 
 add_task(function test_fog_experiment_annotations() {
-
   const id = "my-experiment-id";
   const branch = "my-branch";
   const extra = { extra_key: "extra_value" };
