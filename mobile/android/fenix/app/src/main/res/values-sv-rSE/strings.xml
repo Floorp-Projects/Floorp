@@ -244,7 +244,7 @@
     <string name="browser_menu_edit">Redigera</string>
 
     <!-- Browser menu button that opens the Customize menu -->
-    <string name="browser_menu_customize_home">Anpassa hem</string>
+    <string name="browser_menu_customize_home">Anpassa startsida</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Anpassa startsidan</string>
     <!-- Browser Toolbar -->

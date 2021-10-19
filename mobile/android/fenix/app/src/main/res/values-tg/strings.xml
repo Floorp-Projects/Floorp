@@ -22,7 +22,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 варақаи кушодашуда. Барои гузариш байни варақаҳо зарба занед.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s варақаи кушодашуда. Барои гузариш байни варақаҳо зарба занед.</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s варақаи кушодашуда. Барои гузариш байни варақаҳо зарба занед.</string>
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d интихоб шуд</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
@@ -110,9 +110,18 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">Нодида гузарондан</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">Варақаҳое, ки шумо ду ҳафта такроран надидаед, ба ин ҷо интиқол дода мешаванд.</string>
+    <string name="tab_tray_inactive_onboarding_message">Варақаҳое, ки шумо ду ҳафта такроран надидаед, ба ин ҷо интиқол дода мешаванд.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">Дар танзимот хомӯш кунед</string>
+    <string name="tab_tray_inactive_onboarding_button_text">Дар танзимот хомӯш кунед</string>
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Пас аз як моҳ ба таври худкор пӯшида шавад?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox метавонад варақаҳоеро, ки шумо дар давоми як моҳи охир надидаед, пӯшонад.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Пӯшидан</string>
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button">Фаъол кардани «Пӯшидани худкор»</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -120,7 +129,7 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Варақаи махфии нав</string>
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Сомонаҳои беҳтарин</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Сомонаҳои беҳтарин</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -167,7 +176,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Истодан</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Хатбарак</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Хатбарак</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Таҳрир кардани хатбарак</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -380,7 +389,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Мавзӯъ</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">Асосӣ</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Асосӣ</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Саҳифаи асосӣ</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Ишораҳо</string>
     <!-- Preference for settings related to visual options -->
@@ -572,7 +583,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Фаъол кардани ҳамоҳангсозӣ</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Рамзи ҷуфтро дар версияи Firefox-и мизи корӣ скан кунед</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Рамзи ҷуфтро дар версияи Firefox-и мизи корӣ скан кунед</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Ворид шудан</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -697,15 +708,23 @@
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Пӯшидани варақаҳои кушода ба таври худкор</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">Оғоз дар экрани асосӣ</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Оғоз дар экрани асосӣ</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Экрани ибтидоӣ</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">Пас аз чор соат</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Пас аз чор соат</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Саҳифаи асосӣ</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">Ҳамеша</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Ҳамеша</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Варақаи охирин</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">Ҳеҷ гоҳ</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Ҳеҷ гоҳ</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Саҳифаи асосӣ пас аз чор соати беамалӣ</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Ба таври дастӣ пӯшидан</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -764,13 +783,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Нигоҳ доштан дар маҷмӯа</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">Интихоб кардан</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Интихоб кардан</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Мубодила кардани ҳамаи варақаҳо</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Варақаҳои ба наздикӣ пӯшидашуда</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">Пӯшидашудаи охирин</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Пӯшидашудаи охирин</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Танзимоти ҳисоб</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -889,10 +908,6 @@
     <string name="history_empty_message">Ягон таърих нест</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">Нест кардани богириҳо</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">Шумо мутмаин ҳастед, ки мехоҳед боргириҳои худро нест намоед?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Боргириҳо тоза шуданд</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -935,7 +950,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Менюи хатбаракҳо</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Таҳрир кардани хатбарак</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Таҳрир кардани хатбарак</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Интихоб кардани ҷузвадон</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1968,8 +1983,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Хуб, фаҳмидам</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">Сомонаҳои дидашудаи роиҷ</string>
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">Намоиш додани сомонаҳои дидашудаи роиҷ</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Намоиш додани сомонаҳои дидашудаи роиҷ</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Намоиш додани сомонаҳои роиҷ</string>
 
@@ -1988,11 +2005,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Пӯшидани ҳамаи варақаҳои ғайрифаъол</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">Варақаҳо дар ин ҷо ба муддати %s дастрас мешаванд. Баъд аз ин вақт, варақаҳо ба таври худкор пӯшида мешаванд.</string>
+    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Варақаҳо дар ин ҷо ба муддати %s дастрас мешаванд. Баъд аз ин вақт, варақаҳо ба таври худкор пӯшида мешаванд.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 рӯз</string>
+    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 рӯз</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">1 ҳафта</string>
+    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 ҳафта</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->

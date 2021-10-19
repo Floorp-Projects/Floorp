@@ -23,7 +23,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 tab agored. Tapio i newid tabiau.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s tab agored. Tapio i newid tabiau.</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s tab agored. Tapio i newid tabiau.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d wedi’u dewis</string>
@@ -109,9 +109,18 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">Cau</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">Mae tabiau nad ydych chi wedi edrych arnyn nhw ers pythefnos yn cael eu symud yma.</string>
+    <string name="tab_tray_inactive_onboarding_message">Mae tabiau nad ydych chi wedi edrych arnyn nhw ers pythefnos yn cael eu symud yma.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">Eu diffodd yn y gosodiadau</string>
+    <string name="tab_tray_inactive_onboarding_button_text">Eu diffodd yn y gosodiadau</string>
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Autogau ar ôl mis?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Gall Firefox gau tabiau nad ydych wedi edrych arnyn nhw dros y mis diwethaf.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Cau</string>
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button">Troi autogau ymlaen</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -120,7 +129,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">Tab preifat newydd</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Hoff wefannau</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Hoff wefannau</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -167,7 +176,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Atal</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Nod Tudalen</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Nod Tudalen</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Golygu nod tudalen</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -378,7 +387,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Thema</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">Cartref</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Cartref</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Tudalen Cartref</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Ystumiau</string>
     <!-- Preference for settings related to visual options -->
@@ -573,7 +584,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Cychwyn Sync</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Sganiwch god paru yn Firefox bwrdd gwaith</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Sganiwch god paru yn Firefox bwrdd gwaith</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Mewngofnodi</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -696,15 +707,23 @@
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Awtogau tabiau agored</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">Dechrau o gartref</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Dechrau o gartref</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Sgrin agoriadol</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">Ar ôl pedair awr</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Ar ôl pedair awr</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Tudalen Cartref</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">Bob tro</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Bob tro</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Tab olaf</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">Byth</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Byth</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Tudalen cartref ar ôl pedair awr segur</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Cau â llaw</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -763,13 +782,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Cadw i Gasgliad</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">Dewis</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Dewis</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Rhannu pob tab</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Tabiau wedi’u cau’n ddiweddar</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">Caewyd yn ddiweddar</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Caewyd yn ddiweddar</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Gosodiadau cyfrif</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -891,10 +910,6 @@
     <string name="history_empty_message">Dim hanes yma</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">Dileu llwythi</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">Ydych chi’n siŵr eich bod eisiau clirio eich hanes?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Llwythi Wedi’u Tynnu</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -937,7 +952,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Dewislen nodau tudalen</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Golygu nod tudalen</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Golygu nod tudalen</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Dewis ffolder</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1965,8 +1980,10 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Iawn, Wedi deall!</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">Dangos yr hoff wefannau yr ymwelwyd â nhw amlaf</string>
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">Dangos yr Hoff wefannau yr ymwelwyd â nhw amlaf</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Dangos yr Hoff wefannau yr ymwelwyd â nhw amlaf</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Dangos y gwefannau yr ymwelwyd â nhw amlaf</string>
 
@@ -1985,11 +2002,11 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Caewch bob tab anweithredol</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">Mae tabiau ar gael yma am %s. Wedi hynny, bydd y tabiau’n cael eu cau’n awtomatig.</string>
+    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Mae tabiau ar gael yma am %s. Wedi hynny, bydd y tabiau’n cael eu cau’n awtomatig.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 diwrnod</string>
+    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 diwrnod</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">1 wythnos</string>
+    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 wythnos</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
