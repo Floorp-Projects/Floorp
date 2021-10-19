@@ -90,6 +90,7 @@
                 android:layout_height="56dp"
                 android:padding="4dp"
                 android:background="@color/colorPrimary"
+                app:findInPageQueryHintTextColor="@color/secondaryText"
                 app:findInPageNoMatchesTextColor="@color/error"
                 app:findInPageButtonsTint="@color/primaryText"
                 app:findInPageResultCountTextColor="@color/primaryText"
