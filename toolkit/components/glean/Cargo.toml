@@ -26,6 +26,7 @@ fog = { path = "./api" }
 cstr = "0.2"
 viaduct = { git = "https://github.com/mozilla/application-services", rev = "8a576fbe79199fa8664f64285524017f74ebcc5f" } # Copied from toolkit/library/rust/shared/Cargo.toml
 url = "2.1" # Copied from viaduct's deps, see https://github.com/mozilla/application-services/issues/3062
+thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 
 [features]
 # Leave data collection enabled, but disable upload.

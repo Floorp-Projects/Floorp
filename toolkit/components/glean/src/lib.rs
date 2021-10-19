@@ -22,7 +22,8 @@
 pub extern crate fog;
 
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
-use nsstring::nsACString;
+use nsstring::{nsACString, nsCString};
+use thin_vec::ThinVec;
 
 #[cfg(not(target_os = "android"))]
 #[macro_use]
@@ -122,4 +123,43 @@ pub unsafe extern "C" fn fog_set_log_pings(value: bool) -> nsresult {
 pub unsafe extern "C" fn fog_persist_ping_lifetime_data() -> nsresult {
     glean::persist_ping_lifetime_data();
     NS_OK
+}
+
+/// Indicate that an experiment is running.
+/// Glean will add an experiment annotation which is sent with pings.
+/// This information is not persisted between runs.
+///
+/// See [`glean_core::Glean::set_experiment_active`].
+#[no_mangle]
+pub extern "C" fn fog_set_experiment_active(
+    experiment_id: &nsACString,
+    branch: &nsACString,
+    extra_keys: &ThinVec<nsCString>,
+    extra_values: &ThinVec<nsCString>,
+) {
+    assert_eq!(
+        extra_keys.len(),
+        extra_values.len(),
+        "Experiment extra keys and values differ in length."
+    );
+    let extra = if extra_keys.len() == 0 {
+        None
+    } else {
+        Some(
+            extra_keys
+                .iter()
+                .zip(extra_values.iter())
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect(),
+        )
+    };
+    glean::set_experiment_active(experiment_id.to_string(), branch.to_string(), extra);
+}
+
+/// Indicate that an experiment is no longer running.
+///
+/// See [`glean_core::Glean::set_experiment_inactive`].
+#[no_mangle]
+pub extern "C" fn fog_set_experiment_inactive(experiment_id: &nsACString) {
+    glean::set_experiment_inactive(experiment_id.to_string());
 }
