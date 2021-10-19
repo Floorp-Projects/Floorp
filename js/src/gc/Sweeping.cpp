@@ -1237,6 +1237,7 @@ void GCRuntime::sweepCompressionTasks() {
 }
 
 void GCRuntime::sweepWeakMaps() {
+  SweepingTracer trc(rt);
   AutoSetThreadIsSweeping threadIsSweeping;  // This may touch any zone.
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
     /* No need to look up any more weakmap keys from this sweep group. */
@@ -1248,7 +1249,7 @@ void GCRuntime::sweepWeakMaps() {
     // Lock the storebuffer since this may access it when rehashing or resizing
     // the tables.
     AutoLockStoreBuffer lock(&storeBuffer());
-    zone->sweepWeakMaps();
+    zone->sweepWeakMaps(&trc);
   }
 }
 

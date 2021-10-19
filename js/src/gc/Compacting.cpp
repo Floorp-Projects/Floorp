@@ -459,11 +459,10 @@ void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
   traceWeakFinalizationRegistryEdges(trc, zone);
   zone->weakRefMap().sweep(&storeBuffer());
 
-  {
-    zone->sweepWeakMaps();
-    for (auto* cache : zone->weakCaches()) {
-      cache->sweep(nullptr);
-    }
+  zone->traceWeakMaps(trc);
+
+  for (auto* cache : zone->weakCaches()) {
+    cache->sweep(nullptr);
   }
 
   if (jit::JitZone* jitZone = zone->jitZone()) {
@@ -796,13 +795,6 @@ void GCRuntime::updateZonePointersToRelocatedCells(Zone* zone) {
   // them. Since updating each cell is independent we try to parallelize this
   // as much as possible.
   updateAllCellPointers(&trc, zone);
-
-  // Mark roots to update them.
-  {
-    gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_ROOTS);
-
-    WeakMapBase::traceZone(zone, &trc);
-  }
 
   // Sweep everything to fix up weak pointers.
   sweepZoneAfterCompacting(&trc, zone);
