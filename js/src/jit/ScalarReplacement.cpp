@@ -366,9 +366,7 @@ bool ObjectMemoryView::initStartingState(BlockState** pState) {
   startBlock_->insertAfter(obj_, state);
 
   // Initialize the properties of the object state.
-  if (!state->initFromTemplateObject(alloc_, undefinedVal_)) {
-    return false;
-  }
+  state->initFromTemplateObject(alloc_, undefinedVal_);
 
   // Hold out of resume point until it is visited.
   state->setInWorklist();
@@ -1040,9 +1038,7 @@ bool ArrayMemoryView::initStartingState(BlockState** pState) {
   startBlock_->insertAfter(arr_, state);
 
   // Initialize the elements of the array state.
-  if (!state->initFromTemplateObject(alloc_, undefinedVal_)) {
-    return false;
-  }
+  state->initFromTemplateObject(alloc_, undefinedVal_);
 
   // Hold out of resume point until it is visited.
   state->setInWorklist();
