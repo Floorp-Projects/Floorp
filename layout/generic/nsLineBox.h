@@ -1641,7 +1641,9 @@ class nsLineIterator final : public nsILineIterator {
       mIndex = 0;
     }
   }
-  ~nsLineIterator() = default;
+  ~nsLineIterator() {
+    MOZ_DIAGNOSTIC_ASSERT(!mMutationGuard.Mutated(0));
+  };
 
   void DisposeLineIterator() final { delete this; }
 
@@ -1710,6 +1712,9 @@ class nsLineIterator final : public nsILineIterator {
   int32_t mIndex = -1;
   mutable int32_t mNumLines = -1;
   const bool mRightToLeft;
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  nsMutationGuard mMutationGuard;
+#endif
 };
 
 #endif /* nsLineBox_h___ */
