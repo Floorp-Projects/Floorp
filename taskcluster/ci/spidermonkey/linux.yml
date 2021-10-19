@@ -430,7 +430,9 @@ sm-fuzzing-linux64/opt:
         spidermonkey-variant: fuzzing
     fetches:
         toolchain:
-            - linux64-clang
+            # Keep this with clang-12 until we move to rust 1.56 that uses the same
+            # LLVM-13 backend as clang-13
+            - linux64-clang-12
             - linux64-rust
             - linux64-cbindgen
             - linux64-dump_syms

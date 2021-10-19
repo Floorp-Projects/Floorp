@@ -95,6 +95,7 @@ case "$target" in
     -DANDROID_NATIVE_API_LEVEL=$api_level
     -DSANITIZER_ALLOW_CXXABI=OFF
     -DCOMPILER_RT_BUILD_LIBFUZZER=OFF
+    -DCOMPILER_RT_BUILD_ORC=OFF
   "
   ;;
 aarch64-unknown-linux-gnu)
