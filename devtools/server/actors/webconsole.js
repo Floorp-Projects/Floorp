@@ -199,10 +199,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       );
     }
 
-    this.traits = {
-      // Supports retrieving blocked urls
-      blockedUrls: true,
-    };
+    this.traits = {};
   },
   /**
    * Debugger instance.
