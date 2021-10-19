@@ -75,12 +75,6 @@ class HeadlessWidget : public nsBaseWidget {
   virtual void Enable(bool aState) override;
   virtual bool IsEnabled() const override;
   virtual void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override;
-  virtual nsresult ConfigureChildren(
-      const nsTArray<Configuration>& aConfigurations) override {
-    MOZ_ASSERT_UNREACHABLE(
-        "Headless widgets do not support configuring children.");
-    return NS_ERROR_FAILURE;
-  }
   virtual void Invalidate(const LayoutDeviceIntRect& aRect) override {
     // TODO: see if we need to do anything here.
   }
