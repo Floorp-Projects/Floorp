@@ -55,9 +55,9 @@ deb10-python-zstandard:
     run:
         dist: buster
         tarball:
-            url: https://github.com/indygreg/python-zstandard/releases/download/0.15.2/zstandard-0.15.2.tar.gz
-            sha256: 52de08355fd5cfb3ef4533891092bb96229d43c2069703d4aff04fdbedf9c92f
-        pre-build-command: debchange -v 0.15.2-1.deb10moz --distribution buster "Mozilla backport for buster"
+            url: https://github.com/indygreg/python-zstandard/releases/download/0.16.0/zstandard-0.16.0.tar.gz
+            sha256: eaae2d3e8fdf8bfe269628385087e4b648beef85bb0c187644e7df4fb0fe9046
+        pre-build-command: debchange -v 0.16.0-1.deb10moz --distribution buster "Mozilla backport for buster"
         name: python-zstandard
 
 deb11-python-zstandard:
@@ -68,9 +68,9 @@ deb11-python-zstandard:
         using: debian-package
         dist: bullseye
         tarball:
-            url: https://github.com/indygreg/python-zstandard/releases/download/0.15.2/zstandard-0.15.2.tar.gz
-            sha256: 52de08355fd5cfb3ef4533891092bb96229d43c2069703d4aff04fdbedf9c92f
-        pre-build-command: debchange -v 0.15.2-1.deb11moz --distribution bullseye "Mozilla backport for buster"
+            url: https://github.com/indygreg/python-zstandard/releases/download/0.16.0/zstandard-0.16.0.tar.gz
+            sha256: eaae2d3e8fdf8bfe269628385087e4b648beef85bb0c187644e7df4fb0fe9046
+        pre-build-command: debchange -v 0.16.0-1.deb11moz --distribution bullseye "Mozilla backport for buster"
         name: python-zstandard
 
 deb8-gcc-7:
