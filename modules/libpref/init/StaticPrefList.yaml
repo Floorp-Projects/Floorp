@@ -10258,11 +10258,6 @@
 # Prefs starting with "privacy."
 #---------------------------------------------------------------------------
 
-- name: privacy.file_unique_origin
-  type: bool
-  value: true
-  mirror: always
-
 - name: privacy.fuzzyfox.clockgrainus
   type: RelaxedAtomicUint32
   value: 100
