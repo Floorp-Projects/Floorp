@@ -481,13 +481,6 @@ void gfxPlatform::InitChild(const ContentDeviceData& aData) {
 
 #define WR_DEBUG_PREF "gfx.webrender.debug"
 
-static void SwapIntervalPrefChangeCallback(const char* aPrefName, void*) {
-  bool egl = Preferences::GetBool("gfx.swap-interval.egl", false);
-  bool glx = Preferences::GetBool("gfx.swap-interval.glx", false);
-  gfxVars::SetSwapIntervalEGL(egl);
-  gfxVars::SetSwapIntervalGLX(glx);
-}
-
 static void WebRendeProfilerUIPrefChangeCallback(const char* aPrefName, void*) {
   nsCString uiString;
   if (NS_SUCCEEDED(Preferences::GetCString("gfx.webrender.debug.profiler-ui",
@@ -2577,9 +2570,6 @@ void gfxPlatform::InitWebRenderConfig() {
       gfxConfig::IsEnabled(Feature::WEBRENDER_OPTIMIZED_SHADERS));
 
   gfxVars::SetUseSoftwareWebRender(!hasHardware && hasSoftware);
-
-  Preferences::RegisterPrefixCallbackAndCall(SwapIntervalPrefChangeCallback,
-                                             "gfx.swap-interval");
 
   // gfxFeature is not usable in the GPU process, so we use gfxVars to transmit
   // this feature
