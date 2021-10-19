@@ -151,14 +151,6 @@ var UITour = {
       },
     ],
     ["help", { query: "#appMenu-help-button2" }],
-    [
-      "history",
-      {
-        query: "#appMenu-history-button",
-        subItem: "restorePreviousSession",
-        level: "top",
-      },
-    ],
     ["home", { query: "#home-button" }],
     [
       "logins",
@@ -186,7 +178,6 @@ var UITour = {
       },
     ],
     ["readerMode-urlBar", { query: "#reader-mode-button" }],
-    ["restorePreviousSession", { query: "#appMenu-restoreSession" }],
     [
       "search",
       {
@@ -836,7 +827,7 @@ var UITour = {
     this.hideHighlight(aWindow);
     this.hideInfo(aWindow);
 
-    await this.removePanelListeners(aWindow, true);
+    await this.removePanelListeners(aWindow);
 
     this.noautohideMenus.clear();
 
@@ -849,7 +840,7 @@ var UITour = {
   /**
    * Remove the listeners to a panel when tearing the tour down.
    */
-  async removePanelListeners(aWindow, aHidePanels = false) {
+  async removePanelListeners(aWindow) {
     let panels = [
       {
         name: "appMenu",
@@ -858,14 +849,12 @@ var UITour = {
           ["popuphidden", this.onPanelHidden],
           ["popuphiding", this.onAppMenuHiding],
           ["ViewShowing", this.onAppMenuSubviewShowing],
-          ["ViewShown", this.onAppMenuSubviewShown],
-          ["ViewHiding", this.onAppMenuSubviewHiding],
         ],
       },
     ];
     for (let panel of panels) {
       // Ensure the menu panel is hidden and clean up panel listeners after calling hideMenu.
-      if (aHidePanels && panel.node.state != "closed") {
+      if (panel.node.state != "closed") {
         await new Promise(resolve => {
           panel.node.addEventListener("popuphidden", resolve, { once: true });
           this.hideMenu(aWindow, panel.name);
@@ -978,8 +967,6 @@ var UITour = {
             targetName: aTargetName,
             widgetName: targetObject.widgetName,
             allowAdd: targetObject.allowAdd,
-            level: targetObject.level,
-            subItem: targetObject.subItem,
           });
         })
         .catch(log.error);
@@ -1136,16 +1123,6 @@ var UITour = {
       highlighter.setAttribute("active", effect);
       highlighter.parentElement.setAttribute("targetName", aTarget.targetName);
       highlighter.parentElement.hidden = false;
-
-      if (aTarget.subItem) {
-        // This is a subitem in the app menu, so mark it as one not to hide.
-        this.noautohideMenus.add("appMenu");
-        highlighter.parentElement.setAttribute("subitem", aTarget.subItem);
-      }
-
-      if (aTarget.level) {
-        highlighter.parentElement.setAttribute("level", aTarget.level);
-      }
 
       let highlightAnchor = aAnchorEl;
       let targetRect = highlightAnchor.getBoundingClientRect();
@@ -1442,8 +1419,6 @@ var UITour = {
       menu.node = aWindow.PanelUI.panel;
       menu.onPopupHiding = this.onAppMenuHiding;
       menu.onViewShowing = this.onAppMenuSubviewShowing;
-      menu.onViewShown = this.onAppMenuSubviewShown;
-      menu.onViewHiding = this.onAppMenuSubviewHiding;
       menu.show = () => aWindow.PanelUI.show();
 
       if (!aOptions.autohide) {
@@ -1459,8 +1434,6 @@ var UITour = {
       menu.node.addEventListener("popuphidden", menu.onPanelHidden);
       menu.node.addEventListener("popuphiding", menu.onPopupHiding);
       menu.node.addEventListener("ViewShowing", menu.onViewShowing);
-      menu.node.addEventListener("ViewShown", menu.onViewShown);
-      menu.node.addEventListener("ViewHiding", menu.onViewHiding);
       menu.show();
     } else if (aMenuName == "bookmarks") {
       let menuBtn = aWindow.document.getElementById("bookmarks-menu-button");
@@ -1589,78 +1562,10 @@ var UITour = {
     UITour._hideAnnotationsForPanel(aEvent, false, UITour.targetIsInAppMenu);
   },
 
-  onAppMenuSubviewShown(aEvent) {
-    let win = aEvent.target.ownerGlobal;
-    let subItemName = UITour.getSubItem(win);
-    if (
-      subItemName &&
-      UITour.isSubItemToHighlight(win, subItemName, aEvent.target.id)
-    ) {
-      let highlighter = UITour.getHighlightAndMaybeCreate(win.document);
-      UITour.recreatePopup(highlighter.parentElement);
-
-      UITour.getTarget(win, subItemName).then(subItem => {
-        if (!subItem.node.hidden) {
-          UITour.showHighlight(win, subItem, "focus-outline", {
-            autohide: true,
-          });
-        }
-      });
-    } else if (subItemName && aEvent.target.id != "appMenu-protonMainView") {
-      UITour.stopSubViewHandling(win);
-    }
-  },
-
-  onAppMenuSubviewHiding(aEvent) {
-    let win = aEvent.target.ownerGlobal;
-
-    let subItem = UITour.getSubItem(win);
-    if (subItem) {
-      if (UITour.isSubItemToHighlight(win, subItem, aEvent.target.id)) {
-        UITour.hideHighlight(win);
-        UITour.stopSubViewHandling(win);
-      }
-    }
-  },
-
   onPanelHidden(aEvent) {
-    if (UITour.getSubItem(aEvent.target.ownerGlobal)) {
-      UITour.stopSubViewHandling(aEvent.target.ownerGlobal);
-    }
-
     aEvent.target.removeAttribute("noautohide");
     UITour.recreatePopup(aEvent.target);
     UITour.clearAvailableTargetsCache();
-  },
-
-  getSubItem(aWindow) {
-    // Get the subitem that should be highlighted in the app menu's subview.
-    let highlighter = UITour.getHighlightContainerAndMaybeCreate(
-      aWindow.document
-    );
-    return highlighter.getAttribute("subitem");
-  },
-
-  isSubItemToHighlight(aWindow, aSubItem, aExpectedId) {
-    let targetObject = UITour.targets.get(aSubItem);
-    if (targetObject) {
-      let node = UITour.getNodeFromDocument(
-        aWindow.document,
-        targetObject.query
-      );
-      return aExpectedId == node?.closest("panelview")?.id;
-    }
-
-    return false;
-  },
-
-  stopSubViewHandling(aWindow) {
-    UITour.removePanelListeners(aWindow);
-    UITour.noautohideMenus.delete("appMenu");
-
-    let highlighter = UITour.getHighlightAndMaybeCreate(aWindow.document);
-    highlighter.parentElement.removeAttribute("level");
-    highlighter.parentElement.removeAttribute("subitem");
   },
 
   recreatePopup(aPanel) {
