@@ -2875,12 +2875,12 @@ inline T* SweepingTracer::onEdge(T* thing) {
     return thing;
   }
 
-  // TODO: We should assert the zone of the tenured cell is in Sweeping state,
-  // however we need to fix atoms and JitcodeGlobalTable first.
-  // Bug 1501334 : IsAboutToBeFinalized doesn't work for atoms
-  // Bug 1071218 : Refactor Debugger::sweepAll and
-  //               JitRuntime::SweepJitcodeGlobalTable to work per sweep group
-  if (!thing->isMarkedAny()) {
+  // It would be nice if we could assert that the zone of the tenured cell is in
+  // the Sweeping state, but that isn't always true for:
+  //  - atoms
+  //  - the jitcode map
+  //  - the mark queue
+  if (thing->zoneFromAnyThread()->isGCSweeping() && !thing->isMarkedAny()) {
     return nullptr;
   }
 
