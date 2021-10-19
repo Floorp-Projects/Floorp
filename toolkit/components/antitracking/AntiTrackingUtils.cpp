@@ -651,14 +651,21 @@ bool AntiTrackingUtils::IsThirdPartyWindow(nsPIDOMWindowInner* aWindow,
   }
 
   RefPtr<Document> doc = aWindow->GetDoc();
-  if (!doc || !doc->GetChannel()) {
-    // If we can't get channel from the window, ex, about:blank, fallback to use
-    // IsThirdPartyWindow check that examine the whole hierarchy.
+  if (!doc) {
+    // If we can't get the document from the window, ex, about:blank, fallback
+    // to use IsThirdPartyWindow check that examine the whole hierarchy.
     nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
         components::ThirdPartyUtil::Service();
     Unused << thirdPartyUtil->IsThirdPartyWindow(aWindow->GetOuterWindow(),
                                                  nullptr, &thirdParty);
     return thirdParty;
+  }
+
+  if (!doc->GetChannel()) {
+    // If we can't get the channel from the document, i.e. initial about:blank
+    // page, we use the browsingContext of the document to check if it's in the
+    // third-party context.
+    return IsThirdPartyContext(doc->GetBrowsingContext());
   }
 
   // We only care whether the channel is 3rd-party with respect to
