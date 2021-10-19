@@ -155,7 +155,8 @@ class ExtensionListenerCallWorkerRunnable : public dom::WorkerRunnable {
 
  private:
   ~ExtensionListenerCallWorkerRunnable() {
-    NS_ReleaseOnMainThread(mPromiseResult.forget());
+    NS_ReleaseOnMainThread("~ExtensionListenerCallWorkerRunnable",
+                           mPromiseResult.forget());
     ReleaseArgsHolder();
     mListener = nullptr;
   }
