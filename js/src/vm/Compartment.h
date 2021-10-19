@@ -233,10 +233,10 @@ class ObjectWrapperMap {
     }
   }
 
-  void sweep() {
+  void traceWeak(JSTracer* trc) {
     for (OuterMap::Enum e(map); !e.empty(); e.popFront()) {
       InnerMap& m = e.front().value();
-      m.sweep();
+      m.traceWeak(trc);
       if (m.empty()) {
         e.removeFront();
       }
@@ -422,7 +422,7 @@ class JS::Compartment {
 
   void sweepRealms(JSFreeOp* fop, bool keepAtleastOne, bool destroyingRuntime);
   void sweepAfterMinorGC(JSTracer* trc);
-  void sweepCrossCompartmentObjectWrappers();
+  void traceCrossCompartmentObjectWrapperEdges(JSTracer* trc);
 
   void fixupCrossCompartmentObjectWrappersAfterMovingGC(JSTracer* trc);
   void fixupAfterMovingGC(JSTracer* trc);

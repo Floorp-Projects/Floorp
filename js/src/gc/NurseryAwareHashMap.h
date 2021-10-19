@@ -134,8 +134,8 @@ class NurseryAwareHashMap {
       }
 
       // Drop the entry if the value is not marked.
-      if (JS::GCPolicy<MapValue>::needsSweep(&p->value())) {
-        map.remove(key);
+      if (!JS::GCPolicy<MapValue>::traceWeak(trc, &p->value())) {
+        map.remove(p);
         continue;
       }
 
@@ -148,7 +148,7 @@ class NurseryAwareHashMap {
       // as a cache to avoid re-copying the string, and currently that entire
       // cache is flushed on major GC.
       MapKey copy(key);
-      if (JS::GCPolicy<MapKey>::needsSweep(&copy)) {
+      if (!JS::GCPolicy<MapKey>::traceWeak(trc, &copy)) {
         map.remove(p);
         continue;
       }
@@ -176,7 +176,7 @@ class NurseryAwareHashMap {
     nurseryEntries.clear();
   }
 
-  void sweep() { map.sweep(); }
+  void traceWeak(JSTracer* trc) { map.traceWeak(trc); }
 
   void clear() {
     map.clear();
@@ -195,6 +195,10 @@ struct GCPolicy<js::detail::UnsafeBareWeakHeapPtr<T>> {
   static void trace(JSTracer* trc, js::detail::UnsafeBareWeakHeapPtr<T>* thingp,
                     const char* name) {
     js::TraceEdge(trc, thingp, name);
+  }
+  static bool traceWeak(JSTracer* trc,
+                        js::detail::UnsafeBareWeakHeapPtr<T>* thingp) {
+    return js::TraceWeakEdge(trc, thingp, "UnsafeBareWeakHeapPtr");
   }
   static bool needsSweep(js::detail::UnsafeBareWeakHeapPtr<T>* thingp) {
     return js::gc::IsAboutToBeFinalized(thingp);
