@@ -139,8 +139,6 @@ class nsWindow final : public nsBaseWidget {
                                         const LayoutDeviceIntRect& aRect,
                                         nsWidgetInitData* aInitData) override;
   virtual void Destroy() override;
-  virtual nsresult ConfigureChildren(
-      const nsTArray<nsIWidget::Configuration>&) override;
   virtual void SetParent(nsIWidget* aNewParent) override;
   virtual nsIWidget* GetParent(void) override;
   virtual float GetDPI() override;

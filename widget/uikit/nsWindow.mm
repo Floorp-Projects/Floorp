@@ -491,16 +491,6 @@ void nsWindow::Destroy() {
   return NS_OK;
 }
 
-nsresult nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& config) {
-  for (uint32_t i = 0; i < config.Length(); ++i) {
-    nsWindow* childWin = (nsWindow*)config[i].mChild.get();
-    childWin->Resize(config[i].mBounds.x, config[i].mBounds.y, config[i].mBounds.width,
-                     config[i].mBounds.height, false);
-  }
-
-  return NS_OK;
-}
-
 void nsWindow::Show(bool aState) {
   if (aState != mVisible) {
     mNativeView.hidden = aState ? NO : YES;
@@ -709,10 +699,6 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
 
     case NS_NATIVE_OFFSETY:
       retVal = 0;
-      break;
-
-    case NS_NATIVE_PLUGIN_PORT:
-      // not implemented
       break;
 
     case NS_RAW_NATIVE_IME_CONTEXT:

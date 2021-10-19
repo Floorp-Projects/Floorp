@@ -53,10 +53,6 @@ class MockWinWidget : public nsBaseWidget {
   virtual void Enable(bool aState) override {}
   virtual bool IsEnabled() const override { return true; }
   virtual void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override {}
-  virtual nsresult ConfigureChildren(
-      const nsTArray<Configuration>& aConfigurations) override {
-    return NS_OK;
-  }
   virtual void Invalidate(const LayoutDeviceIntRect& aRect) override {}
   virtual nsresult SetTitle(const nsAString& title) override { return NS_OK; }
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override {

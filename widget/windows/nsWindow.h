@@ -182,8 +182,6 @@ class nsWindow final : public nsWindowBase {
   virtual LayoutDeviceIntPoint GetClientOffset() override;
   void SetBackgroundColor(const nscolor& aColor) override;
   virtual void SetCursor(const Cursor&) override;
-  virtual nsresult ConfigureChildren(
-      const nsTArray<Configuration>& aConfigurations) override;
   virtual bool PrepareForFullscreenTransition(nsISupports** aData) override;
   virtual void PerformFullscreenTransition(FullscreenTransitionStage aStage,
                                            uint16_t aDuration,
@@ -550,9 +548,6 @@ class nsWindow final : public nsWindowBase {
   void StopFlashing();
   static HWND WindowAtMouse();
   static bool IsTopLevelMouseExit(HWND aWnd);
-  virtual nsresult SetWindowClipRegion(
-      const nsTArray<LayoutDeviceIntRect>& aRects,
-      bool aIntersectWithExisting) override;
   LayoutDeviceIntRegion GetRegionToPaint(bool aForceFullRepaint, PAINTSTRUCT ps,
                                          HDC aDC);
   nsIWidgetListener* GetPaintListener();
@@ -561,24 +556,6 @@ class nsWindow final : public nsWindowBase {
       mozilla::layers::WebRenderBridgeChild* aWrBridge,
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResourceUpdates) override;
-
-  already_AddRefed<SourceSurface> CreateScrollSnapshot() override;
-
-  struct ScrollSnapshot {
-    RefPtr<gfxWindowsSurface> surface;
-    bool surfaceHasSnapshot = false;
-    RECT clip;
-  };
-
-  ScrollSnapshot* EnsureSnapshotSurface(ScrollSnapshot& aSnapshotData,
-                                        const mozilla::gfx::IntSize& aSize);
-
-  ScrollSnapshot mFullSnapshot;
-  ScrollSnapshot mPartialSnapshot;
-  ScrollSnapshot* mCurrentSnapshot = nullptr;
-
-  already_AddRefed<SourceSurface> GetFallbackScrollSnapshot(
-      const RECT& aRequiredClip);
 
   void CreateCompositor() override;
   void DestroyCompositor() override;
