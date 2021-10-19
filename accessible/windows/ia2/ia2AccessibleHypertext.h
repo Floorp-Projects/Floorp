@@ -18,6 +18,7 @@
 
 namespace mozilla {
 namespace a11y {
+class HyperTextAccessibleBase;
 class HyperTextAccessibleWrap;
 
 class ia2AccessibleHypertext : public ia2AccessibleText,
@@ -59,6 +60,7 @@ class ia2AccessibleHypertext : public ia2AccessibleText,
   using MsaaAccessible::MsaaAccessible;
 
  private:
+  HyperTextAccessibleBase* TextAcc();
   HyperTextAccessibleWrap* LocalTextAcc();
 };
 
