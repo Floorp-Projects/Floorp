@@ -211,7 +211,10 @@ subprojects {
                             // https://github.com/mozilla-mobile/android-components/issues/10641
                             'UnspecifiedImmutableFlag',
                             // https://github.com/mozilla-mobile/android-components/issues/10643
-                            'UnusedResources'
+                            'UnusedResources',
+                            // "We do not impose rules on locales"
+                            // https://github.com/mozilla-mobile/android-components/pull/11069
+                            'TypographyDashes'
                 }
 
                 packagingOptions {
