@@ -28,7 +28,7 @@ linux64-minidump-stackwalk:
         symbol: TL(stackwalk)
     fetches:
         toolchain:
-            - linux64-clang-12
+            - linux64-clang-13
             - linux64-binutils
             - linux64-rust-1.53
             - linux64-toolchain-sysroot
@@ -40,8 +40,8 @@ macosx64-minidump-stackwalk:
         arguments: ['macosx64']
     fetches:
         toolchain:
-            - linux64-cctools-port-clang-12
-            - linux64-clang-12
+            - linux64-cctools-port-clang-13
+            - linux64-clang-13
             - linux64-rust-macos-1.53
             - macosx64-sdk-11.0
 
@@ -52,8 +52,8 @@ macosx64-aarch64-minidump-stackwalk:
         arguments: ['macosx64-aarch64']
     fetches:
         toolchain:
-            - linux64-cctools-port-clang-12
-            - linux64-clang-12
+            - linux64-cctools-port-clang-13
+            - linux64-clang-13
             - linux64-rust-macos-1.53
             - macosx64-sdk-11.0
 
@@ -76,6 +76,6 @@ linux64-breakpad-injector:
         symbol: TL(injector)
     fetches:
         toolchain:
-            - linux64-clang-12
+            - linux64-clang-13
             - linux64-binutils
             - linux64-toolchain-sysroot
