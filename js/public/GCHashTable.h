@@ -277,26 +277,18 @@ class GCHashSet : public js::HashSet<T, HashPolicy, AllocPolicy> {
     }
   }
 
-  void sweep() {
-    typename Base::Enum e(*this);
-    sweepEntries(e);
-  }
-
-  void sweepEntries(typename Base::Enum& e) {
-    for (; !e.empty(); e.popFront()) {
-      if (GCPolicy<T>::needsSweep(&e.mutableFront())) {
-        e.removeFront();
-      }
-    }
-  }
-
   bool traceWeak(JSTracer* trc) {
-    for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
+    typename Base::Enum e(*this);
+    traceWeakEntries(trc, e);
+    return !this->empty();
+  }
+
+  void traceWeakEntries(JSTracer* trc, typename Base::Enum& e) {
+    for (; !e.empty(); e.popFront()) {
       if (!GCPolicy<T>::traceWeak(trc, &e.mutableFront())) {
         e.removeFront();
       }
     }
-    return !this->empty();
   }
 
   // GCHashSet is movable
@@ -632,7 +624,7 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
     // the store buffer lock yet.
     mozilla::Maybe<typename Set::Enum> e;
     e.emplace(set);
-    set.sweepEntries(e.ref());
+    set.traceWeakEntries(trc, e.ref());
 
     // Destroy the Enum, potentially rehashing or resizing the table. Since this
     // can access the store buffer, we need to take a lock for this if we're
