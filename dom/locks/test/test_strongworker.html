@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  async function run() {
+    const channel = new BroadcastChannel("strongworker");
+    await navigator.locks.request("exclusive", async () => {
+      await new Promise(resolve => {
+        let worker = new Worker("./file_strongworker.js");
+        worker.onmessage = resolve; // onload
+      });
+      const query = await navigator.locks.query();
+      is(query.pending.length, 1, "Pending request exists");
+
+      // Garbage collect the worker
+      SpecialPowers.DOMWindowUtils.garbageCollect();
+    });
+
+    channel.onmessage = async event => {
+      const query = await navigator.locks.query();
+      is(query.pending.length, 0, "No pending request");
+      SimpleTest.finish();
+    };
+  }
+  run();
+</script>
