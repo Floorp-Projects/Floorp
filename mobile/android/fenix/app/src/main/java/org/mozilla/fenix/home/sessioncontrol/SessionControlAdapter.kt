@@ -33,7 +33,6 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.CustomizeHomeButtonView
 import org.mozilla.fenix.home.sessioncontrol.viewholders.NoCollectionsMessageViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.PrivateBrowsingDescriptionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
-import org.mozilla.fenix.home.topsites.TopSitePagerViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.ExperimentDefaultBrowserCardViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingAutomaticSignInViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingFinishViewHolder
@@ -46,6 +45,7 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingTo
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingTrackingProtectionViewHolder
 import org.mozilla.fenix.home.pocket.PocketStoriesViewHolder
 import org.mozilla.fenix.home.tips.ButtonTipViewHolder
+import org.mozilla.fenix.home.topsites.TopSitePagerViewHolder
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 sealed class AdapterItem(@LayoutRes val viewType: Int) {
@@ -231,6 +231,10 @@ class SessionControlAdapter(
     @SuppressWarnings("ComplexMethod", "LongMethod", "ReturnCount")
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         when (viewType) {
+            CustomizeHomeButtonViewHolder.LAYOUT_ID -> return CustomizeHomeButtonViewHolder(
+                composeView = ComposeView(parent.context),
+                interactor = interactor
+            )
             PocketStoriesViewHolder.LAYOUT_ID -> return PocketStoriesViewHolder(
                 composeView = ComposeView(parent.context),
                 store = store,
@@ -283,7 +287,6 @@ class SessionControlAdapter(
                 view,
                 interactor
             )
-            CustomizeHomeButtonViewHolder.LAYOUT_ID -> CustomizeHomeButtonViewHolder(view, interactor)
             OnboardingFinishViewHolder.LAYOUT_ID -> OnboardingFinishViewHolder(view, interactor)
             OnboardingToolbarPositionPickerViewHolder.LAYOUT_ID -> OnboardingToolbarPositionPickerViewHolder(
                 view
@@ -303,6 +306,8 @@ class SessionControlAdapter(
 
     override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
         when (holder) {
+            is CustomizeHomeButtonViewHolder,
+            is HistoryMetadataGroupViewHolder,
             is RecentTabViewHolder,
             is PocketStoriesViewHolder -> {
                 // no op
