@@ -426,7 +426,7 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
 
   bool empty() override { return map.empty(); }
 
-  size_t sweep(js::gc::StoreBuffer* sbToLock) override {
+  size_t traceWeak(JSTracer* trc, js::gc::StoreBuffer* sbToLock) override {
     size_t steps = map.count();
 
     // Create an Enum and sweep the table entries.
@@ -622,7 +622,7 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>>
         set(std::forward<Args>(args)...),
         needsBarrier(false) {}
 
-  size_t sweep(js::gc::StoreBuffer* sbToLock) override {
+  size_t traceWeak(JSTracer* trc, js::gc::StoreBuffer* sbToLock) override {
     size_t steps = set.count();
 
     // Create an Enum and sweep the table entries. It's not necessary to take

@@ -60,7 +60,7 @@ class WeakCacheBase : public mozilla::LinkedListElement<WeakCacheBase> {
   WeakCacheBase(WeakCacheBase&& other) = default;
   virtual ~WeakCacheBase() = default;
 
-  virtual size_t sweep(js::gc::StoreBuffer* sbToLock) = 0;
+  virtual size_t traceWeak(JSTracer* trc, js::gc::StoreBuffer* sbToLock) = 0;
 
   // Sweeping will be skipped if the cache is empty already.
   virtual bool empty() = 0;
@@ -98,7 +98,7 @@ class WeakCache : protected detail::WeakCacheBase,
   const T& get() const { return cache; }
   T& get() { return cache; }
 
-  size_t sweep(js::gc::StoreBuffer* sbToLock) override {
+  size_t traceWeak(JSTracer* trc, js::gc::StoreBuffer* sbToLock) override {
     // Take the store buffer lock in case sweeping triggers any generational
     // post barriers. This is not always required and WeakCache specializations
     // may delay or skip taking the lock as appropriate.
