@@ -79,12 +79,7 @@ class GCHashMap : public js::HashMap<Key, Value, HashPolicy, AllocPolicy> {
   }
 
   void sweep() {
-    typename Base::Enum e(*this);
-    sweepEntries(e);
-  }
-
-  void sweepEntries(typename Base::Enum& e) {
-    for (; !e.empty(); e.popFront()) {
+    for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
       if (MapSweepPolicy::needsSweep(&e.front().mutableKey(),
                                      &e.front().value())) {
         e.removeFront();
@@ -93,13 +88,18 @@ class GCHashMap : public js::HashMap<Key, Value, HashPolicy, AllocPolicy> {
   }
 
   bool traceWeak(JSTracer* trc) {
+    typename Base::Enum e(*this);
+    traceWeakEntries(trc, e);
+    return !this->empty();
+  }
+
+  void traceWeakEntries(JSTracer* trc, typename Base::Enum& e) {
     for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
       if (!MapSweepPolicy::traceWeak(trc, &e.front().mutableKey(),
                                      &e.front().value())) {
         e.removeFront();
       }
     }
-    return !this->empty();
   }
 
   // GCHashMap is movable
@@ -435,7 +435,7 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
     // Create an Enum and sweep the table entries.
     mozilla::Maybe<typename Map::Enum> e;
     e.emplace(map);
-    map.sweepEntries(e.ref());
+    map.traceWeakEntries(trc, e.ref());
 
     // Potentially take a lock while the Enum's destructor is called as this can
     // rehash/resize the table and access the store buffer.
