@@ -399,6 +399,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
   switch (mWindowType) {
     case eWindowType_invisible:
     case eWindowType_child:
+    case eWindowType_plugin:
       break;
     case eWindowType_popup:
       if (aBorderStyle != eBorderStyle_default && mBorderStyle & eBorderStyle_title) {
@@ -1033,6 +1034,13 @@ bool nsCocoaWindow::NeedsRecreateToReshow() {
   // Limit the workaround to popup windows because only they need to override
   // the "Assign To" setting. i.e., to display where the parent window is.
   return (mWindowType == eWindowType_popup) && mWasShown && ([[NSScreen screens] count] > 1);
+}
+
+nsresult nsCocoaWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations) {
+  if (mPopupContentView) {
+    mPopupContentView->ConfigureChildren(aConfigurations);
+  }
+  return NS_OK;
 }
 
 WindowRenderer* nsCocoaWindow::GetWindowRenderer() {
