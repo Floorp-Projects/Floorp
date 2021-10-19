@@ -12,9 +12,26 @@ EXPORTS.mozilla.dom += [
     "LockManager.h",
 ]
 
+EXPORTS.mozilla.dom.locks += [
+    "IPCUtils.h",
+    "LockManagerChild.h",
+    "LockManagerParent.h",
+    "LockRequestChild.h",
+    "LockRequestParent.h",
+]
+
 UNIFIED_SOURCES += [
     "Lock.cpp",
     "LockManager.cpp",
+    "LockManagerChild.cpp",
+    "LockManagerParent.cpp",
+    "LockRequestChild.cpp",
+    "LockRequestParent.cpp",
+]
+
+IPDL_SOURCES += [
+    "PLockManager.ipdl",
+    "PLockRequest.ipdl",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

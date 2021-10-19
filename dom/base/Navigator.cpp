@@ -240,7 +240,13 @@ void Navigator::Invalidate() {
 
   mWebGpu = nullptr;
 
-  mLocks = nullptr;
+  if (mLocks) {
+    // Unloading a page does not immediately destruct the lock manager actor,
+    // but we want to abort the lock requests as soon as possible. Explicitly
+    // call Shutdown() to do that.
+    mLocks->Shutdown();
+    mLocks = nullptr;
+  }
 
   mSharePromise = nullptr;
 }
