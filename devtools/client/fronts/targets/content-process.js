@@ -44,11 +44,6 @@ class ContentProcessTargetFront extends TargetMixin(
   }
 
   attach() {
-    // All target actors have a console actor to attach.
-    // All but xpcshell test actors... which is using a ContentProcessTargetActor
-    if (this.targetForm.consoleActor) {
-      return this.attachConsole();
-    }
     return Promise.resolve();
   }
 
