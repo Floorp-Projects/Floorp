@@ -120,7 +120,6 @@ object TelemetryWrapper {
         val CUSTOM_TAB_CLOSE_BUTTON = "custom_tab_close_but"
         val CUSTOM_TAB_ACTION_BUTTON = "custom_tab_action_bu"
         val FIRSTRUN = "firstrun"
-        val DOWNLOAD_DIALOG = "download_dialog"
         val ADD_TO_HOMESCREEN_DIALOG = "add_to_homescreen_dialog"
         val HOMESCREEN_SHORTCUT = "homescreen_shortcut"
         val RECENT_APPS = "recent_apps"
@@ -154,7 +153,6 @@ object TelemetryWrapper {
         val SKIP = "skip"
         val FINISH = "finish"
         val OPEN = "open"
-        val DOWNLOAD = "download"
         val URL = "url"
         val SEARCH = "search"
         val CANCEL = "cancel"
@@ -418,15 +416,6 @@ object TelemetryWrapper {
         }
 
         event.queue()
-    }
-
-    @JvmStatic
-    fun downloadDialogDownloadEvent(sentToDownload: Boolean) {
-        if (sentToDownload) {
-            TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.DOWNLOAD_DIALOG, Value.DOWNLOAD).queue()
-        } else {
-            TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.DOWNLOAD_DIALOG, Value.CANCEL).queue()
-        }
     }
 
     @JvmStatic

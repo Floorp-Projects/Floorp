@@ -680,3 +680,88 @@ search_bar:
       engine_name:
         description: The name of the engine used to perform the search.
         type: string
+
+downloads:
+  download_started:
+    type: event
+    description: A download has been started.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5650
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5663
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  download_paused:
+    type: event
+    description: A download has been paused.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5650
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5663
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  download_canceled:
+    type: event
+    description: A download has been cancelled.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5650
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5663
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  download_completed:
+    type: event
+    description: A download has been completed successfully.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5650
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5663
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  download_failed:
+    type: event
+    description: The download has failed.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5650
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5663
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      file_extension:
+        description: The extension of the downloaded file.
+        type: string
+  open_button_tapped:
+    type: event
+    description: The open button from download confirmation was tapped.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5650
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5663
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      open_successful:
+        description: Did the user succeed in opening the downloaded file?
+        type: boolean
+      file_extension:
+        description: The extension of the downloaded file.
+        type: string

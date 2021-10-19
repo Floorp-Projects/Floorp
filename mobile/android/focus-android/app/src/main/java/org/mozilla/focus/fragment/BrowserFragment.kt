@@ -49,8 +49,10 @@ import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.feature.top.sites.TopSitesConfig
 import mozilla.components.feature.top.sites.TopSitesFeature
 import mozilla.components.lib.crash.Crash
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
+import org.mozilla.focus.GleanMetrics.Downloads
 import org.mozilla.focus.GleanMetrics.TabCount
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
@@ -87,11 +89,11 @@ import org.mozilla.focus.topsites.DefaultTopSitesView
 import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.FocusSnackbar
 import org.mozilla.focus.utils.FocusSnackbarDelegate
-import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.widget.FloatingEraseButton
 import org.mozilla.focus.widget.FloatingSessionsButton
+import java.net.URLEncoder
 
 /**
  * Fragment for displaying the browser UI.
@@ -267,7 +269,7 @@ class BrowserFragment :
                     }
                 },
                 onDownloadStopped = { state, _, status ->
-                    showDownloadSnackbar(state, status)
+                    handleDownloadStopped(state, status)
                 }
             ),
             this, view
@@ -512,15 +514,36 @@ class BrowserFragment :
         it.findFragmentByTag(CrashReporterFragment.FRAGMENT_TAG)?.isVisible ?: false
     }
 
-    private fun showDownloadSnackbar(
+    private fun handleDownloadStopped(
         state: DownloadState,
         status: DownloadState.Status
     ) {
-        if (status != DownloadState.Status.COMPLETED) {
-            // We currently only show an in-app snackbar for completed downloads.
-            return
-        }
+        val extension =
+            MimeTypeMap.getFileExtensionFromUrl(URLEncoder.encode(state.filePath, "utf-8"))
 
+        when (status) {
+            DownloadState.Status.FAILED -> {
+                Downloads.downloadFailed.record(Downloads.DownloadFailedExtra(extension))
+            }
+
+            DownloadState.Status.PAUSED -> {
+                Downloads.downloadPaused.record(NoExtras())
+            }
+
+            DownloadState.Status.COMPLETED -> {
+                Downloads.downloadCompleted.record(NoExtras())
+                showDownloadCompletedSnackbar(state, extension)
+            }
+
+            else -> {
+            }
+        }
+    }
+
+    private fun showDownloadCompletedSnackbar(
+        state: DownloadState,
+        extension: String?
+    ) {
         val snackbar = FocusSnackbar.make(
             requireView(),
             (requireView().findViewById(R.id.tabs) as? FloatingSessionsButton)?.visibility == View.VISIBLE,
@@ -541,8 +564,6 @@ class BrowserFragment :
             )
 
             if (!opened) {
-                val extension = MimeTypeMap.getFileExtensionFromUrl(state.filePath)
-
                 Toast.makeText(
                     context,
                     getString(
@@ -552,6 +573,10 @@ class BrowserFragment :
                     Toast.LENGTH_LONG
                 ).show()
             }
+
+            Downloads.openButtonTapped.record(
+                Downloads.OpenButtonTappedExtra(fileExtension = extension, openSuccessful = opened)
+            )
         }
 
         snackbar.show()
