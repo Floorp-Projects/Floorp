@@ -69,6 +69,7 @@
 #include "nsContentUtils.h"
 #include "nsLineBreaker.h"
 #include "nsIFrameInlines.h"
+#include "mozilla/intl/Bidi.h"
 #include "mozilla/intl/WordBreaker.h"
 #include "mozilla/ServoStyleSet.h"
 
@@ -1935,7 +1936,7 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
     Side side2 = wm.PhysicalSide(eLogicalSideIStart);
     // If the frames have an embedding level that is opposite to the writing
     // mode, we need to swap which sides we're checking.
-    if (IS_LEVEL_RTL(aFrame1->GetEmbeddingLevel()) == wm.IsBidiLTR()) {
+    if (aFrame1->GetEmbeddingLevel().IsRTL() == wm.IsBidiLTR()) {
       std::swap(side1, side2);
     }
 
@@ -2396,7 +2397,7 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
   if (flags2 & nsTextFrameUtils::Flags::HasShy) {
     flags |= gfx::ShapedTextFlags::TEXT_ENABLE_HYPHEN_BREAKS;
   }
-  if (mBidiEnabled && (IS_LEVEL_RTL(firstFrame->GetEmbeddingLevel()))) {
+  if (mBidiEnabled && (firstFrame->GetEmbeddingLevel().IsRTL())) {
     flags |= gfx::ShapedTextFlags::TEXT_IS_RTL;
   }
   if (mNextRunContextInfo & nsTextFrameUtils::INCOMING_WHITESPACE) {
