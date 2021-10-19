@@ -647,9 +647,7 @@ NativeLayerCA::~NativeLayerCA() {
 }
 
 void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
-  MutexAutoLock lock(mMutex);
-
-  bool oldSpecializeVideo = ShouldSpecializeVideo(lock);
+  bool oldSpecializeVideo = ShouldSpecializeVideo();
 
   wr::RenderMacIOSurfaceTextureHost* texture = aExternalImage->AsRenderMacIOSurfaceTextureHost();
   MOZ_ASSERT(texture);
@@ -657,7 +655,7 @@ void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
   mSize = texture->GetSize(0);
   mDisplayRect = IntRect(IntPoint{}, mSize);
 
-  bool changedSpecializeVideo = ShouldSpecializeVideo(lock) != oldSpecializeVideo;
+  bool changedSpecializeVideo = ShouldSpecializeVideo() != oldSpecializeVideo;
 
   ForAllRepresentations([&](Representation& r) {
     r.mMutatedFrontSurface = true;
@@ -668,23 +666,19 @@ void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
 }
 
 bool NativeLayerCA::IsVideo() {
-  MutexAutoLock lock(mMutex);
-
   // Anything with a texture host is considered a video source.
   return mTextureHost;
 }
 
-bool NativeLayerCA::ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock) {
+bool NativeLayerCA::ShouldSpecializeVideo() {
   return StaticPrefs::gfx_core_animation_specialize_video() && mRootWindowIsFullscreen && IsVideo();
 }
 
 void NativeLayerCA::SetRootWindowIsFullscreen(bool aFullscreen) {
-  MutexAutoLock lock(mMutex);
-
-  bool oldSpecializeVideo = ShouldSpecializeVideo(lock);
+  bool oldSpecializeVideo = ShouldSpecializeVideo();
   mRootWindowIsFullscreen = aFullscreen;
 
-  if (ShouldSpecializeVideo(lock) != oldSpecializeVideo) {
+  if (ShouldSpecializeVideo() != oldSpecializeVideo) {
     ForAllRepresentations([&](Representation& r) { r.mMutatedSpecializeVideo = true; });
   }
 }
@@ -700,6 +694,7 @@ void NativeLayerCA::SetSurfaceIsFlipped(bool aIsFlipped) {
 
 bool NativeLayerCA::SurfaceIsFlipped() {
   MutexAutoLock lock(mMutex);
+
   return mSurfaceIsFlipped;
 }
 
@@ -761,7 +756,7 @@ void NativeLayerCA::SetBackingScale(float aBackingScale) {
 }
 
 bool NativeLayerCA::IsOpaque() {
-  // mIsOpaque is const, so no need for a lock.
+  MutexAutoLock lock(mMutex);
   return mIsOpaque;
 }
 
@@ -1099,7 +1094,7 @@ void NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation) {
   }
   GetRepresentation(aRepresentation)
       .ApplyChanges(mSize, mIsOpaque, mPosition, mTransform, mDisplayRect, mClipRect, mBackingScale,
-                    mSurfaceIsFlipped, mSamplingFilter, ShouldSpecializeVideo(lock), surface);
+                    mSurfaceIsFlipped, mSamplingFilter, ShouldSpecializeVideo(), surface);
 }
 
 bool NativeLayerCA::HasUpdate(WhichRepresentation aRepresentation) {

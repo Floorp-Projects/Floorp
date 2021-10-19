@@ -240,6 +240,7 @@ class NativeLayerCA : public NativeLayer {
   void AttachExternalImage(wr::RenderTextureHost* aExternalImage) override;
 
   bool IsVideo();
+  bool ShouldSpecializeVideo();
   void SetRootWindowIsFullscreen(bool aFullscreen);
 
  protected:
@@ -295,8 +296,6 @@ class NativeLayerCA : public NativeLayer {
 
   Maybe<SurfaceWithInvalidRegion> GetUnusedSurfaceAndCleanUp(
       const MutexAutoLock& aProofOfLock);
-
-  bool ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock);
 
   // Wraps one CALayer representation of this NativeLayer.
   struct Representation {
