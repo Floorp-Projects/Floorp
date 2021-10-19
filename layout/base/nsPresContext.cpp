@@ -285,11 +285,11 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mHadNonBlankPaint(false),
       mHadContentfulPaint(false),
       mHadNonTickContentfulPaint(false),
-      mHadContentfulPaintComposite(false)
+      mHadContentfulPaintComposite(false),
 #ifdef DEBUG
-      ,
-      mInitialized(false)
+      mInitialized(false),
 #endif
+      mColorSchemeOverride(dom::PrefersColorSchemeOverride::None)
 {
 #ifdef DEBUG
   PodZero(&mLayoutPhaseCount);
@@ -935,6 +935,24 @@ void nsPresContext::AttachPresShell(mozilla::PresShell* aPresShell) {
   UpdateCharSet(doc->GetDocumentCharacterSet());
 }
 
+Maybe<ColorScheme> nsPresContext::GetOverriddenColorScheme() const {
+  if (IsPrintingOrPrintPreview()) {
+    return Some(ColorScheme::Light);
+  }
+
+  switch (mColorSchemeOverride) {
+    case dom::PrefersColorSchemeOverride::Dark:
+      return Some(ColorScheme::Dark);
+    case dom::PrefersColorSchemeOverride::Light:
+      return Some(ColorScheme::Light);
+    case dom::PrefersColorSchemeOverride::None:
+    case dom::PrefersColorSchemeOverride::EndGuard_:
+      break;
+  }
+
+  return Nothing();
+}
+
 void nsPresContext::RecomputeBrowsingContextDependentData() {
   MOZ_ASSERT(mDocument);
   dom::Document* doc = mDocument;
@@ -952,6 +970,16 @@ void nsPresContext::RecomputeBrowsingContextDependentData() {
   SetFullZoom(browsingContext->FullZoom());
   SetTextZoom(browsingContext->TextZoom());
   SetOverrideDPPX(browsingContext->OverrideDPPX());
+
+  auto oldOverride = mColorSchemeOverride;
+  mColorSchemeOverride = browsingContext->Top()->PrefersColorSchemeOverride();
+  if (oldOverride != mColorSchemeOverride) {
+    // This is a bit of a lie, but it's the code-path that gets taken for
+    // regular system metrics changes via ThemeChanged().
+    MediaFeatureValuesChanged({MediaFeatureChangeReason::SystemMetricsChange},
+                              MediaFeatureChangePropagation::JustThisDocument);
+  }
+
   if (doc == mDocument) {
     // Medium doesn't apply to resource documents, etc.
     auto* top = browsingContext->Top();

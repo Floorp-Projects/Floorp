@@ -17464,21 +17464,9 @@ ColorScheme Document::PreferredColorScheme(IgnoreRFP aIgnoreRFP) const {
     return ColorScheme::Light;
   }
 
-  if (auto* bc = GetBrowsingContext()) {
-    switch (bc->Top()->PrefersColorSchemeOverride()) {
-      case dom::PrefersColorSchemeOverride::Dark:
-        return ColorScheme::Dark;
-      case dom::PrefersColorSchemeOverride::Light:
-        return ColorScheme::Light;
-      case dom::PrefersColorSchemeOverride::None:
-      case dom::PrefersColorSchemeOverride::EndGuard_:
-        break;
-    }
-  }
-
   if (nsPresContext* pc = GetPresContext()) {
-    if (pc->IsPrintingOrPrintPreview()) {
-      return ColorScheme::Light;
+    if (auto scheme = pc->GetOverriddenColorScheme()) {
+      return *scheme;
     }
   }
 
