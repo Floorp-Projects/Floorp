@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en-US" class="reftest-wait">
+<head>
+<meta charset="utf-8">
+<title>Inline table editor should be positioned correctly even if modified the table from an input event listener</title>
+<script>
+addEventListener("load", async () => {
+  const cell = document.querySelector("td");
+  document.body.focus();
+  getSelection().collapse(cell.firstChild, 0);
+  document.execCommand("enableObjectResizing", false, "true");
+  document.execCommand("enableInlineTableEditing", false, "true");
+  const nsITableEditor =
+    SpecialPowers.wrap(window).docShell.editingSession.
+      getEditorForWindow(window).QueryInterface(SpecialPowers.Ci.nsITableEditor);
+  document.body.addEventListener("input", event => {
+    cell.nextSibling.setAttribute("style", "width:100px");
+  }, {once: true});
+  nsITableEditor.insertTableColumn(1, true);
+  requestAnimationFrame(
+    () => requestAnimationFrame(
+      () => document.documentElement.removeAttribute("class")
+    )
+  );
+}, {once: true});
+</script>
+</head>
+<body contenteditable="">
+<table border="1">
+<td>Cell</td>
+</table>
+</body>
+</html>
