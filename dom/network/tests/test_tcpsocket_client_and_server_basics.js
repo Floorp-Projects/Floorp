@@ -589,26 +589,3 @@ async function test_basics() {
 }
 
 add_task(test_basics);
-
-/**
- * Test that TCPSocket works with ipv6 address.
- */
-add_task(async function test_ipv6() {
-  const { HttpServer } = ChromeUtils.import(
-    "resource://testing-common/httpd.js"
-  );
-  let deferred = defer();
-  let serverPort = 8086;
-  let httpServer = new HttpServer();
-  httpServer.start_ipv6(serverPort);
-  let clientSocket = new TCPSocket("::1", serverPort);
-  clientSocket.onopen = () => {
-    ok(true, "Connect to ipv6 address succeeded");
-    deferred.resolve();
-  };
-  clientSocket.onerror = () => {
-    ok(false, "Connect to ipv6 address failed");
-    deferred.reject();
-  };
-  return deferred.promise;
-});
