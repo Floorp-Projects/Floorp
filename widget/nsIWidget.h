@@ -127,10 +127,13 @@ typedef void* nsNativeWidget;
 #define NS_NATIVE_REGION 5
 #define NS_NATIVE_OFFSETX 6
 #define NS_NATIVE_OFFSETY 7
+#define NS_NATIVE_PLUGIN_PORT 8
 #define NS_NATIVE_SCREEN 9
 // The toplevel GtkWidget containing this nsIWidget:
 #define NS_NATIVE_SHELLWIDGET 10
 #define NS_NATIVE_OPENGL_CONTEXT 12
+// See RegisterPluginWindowForRemoteUpdates
+#define NS_NATIVE_PLUGIN_ID 13
 // This is available only with GetNativeData() in parent process.  Anybody
 // shouldn't access this pointer as a valid pointer since the result may be
 // special value like NS_ONLY_ONE_NATIVE_IME_CONTEXT.  So, the result is just
@@ -139,6 +142,10 @@ typedef void* nsNativeWidget;
 // XP code should use nsIWidget::GetNativeIMEContext() instead of using this.
 #define NS_RAW_NATIVE_IME_CONTEXT 14
 #define NS_NATIVE_WINDOW_WEBRTC_DEVICE_ID 15
+#ifdef XP_MACOSX
+#  define NS_NATIVE_PLUGIN_PORT_QD 100
+#  define NS_NATIVE_PLUGIN_PORT_CG 101
+#endif
 #ifdef XP_WIN
 #  define NS_NATIVE_TSF_THREAD_MGR 100
 #  define NS_NATIVE_TSF_CATEGORY_MGR 101
@@ -146,6 +153,8 @@ typedef void* nsNativeWidget;
 #  define NS_NATIVE_ICOREWINDOW 103  // winrt specific
 #endif
 #if defined(MOZ_WIDGET_GTK)
+// set/get nsPluginNativeWindowGtk, e10s specific
+#  define NS_NATIVE_PLUGIN_OBJECT_PTR 104
 #  define NS_NATIVE_EGL_WINDOW 106
 #endif
 #ifdef MOZ_WIDGET_ANDROID
@@ -1017,6 +1026,15 @@ class nsIWidget : public nsISupports {
   nsWindowType WindowType() { return mWindowType; }
 
   /**
+   * Determines if this widget is one of the three types of plugin widgets.
+   */
+  bool IsPlugin() {
+    return mWindowType == eWindowType_plugin ||
+           mWindowType == eWindowType_plugin_ipc_chrome ||
+           mWindowType == eWindowType_plugin_ipc_content;
+  }
+
+  /**
    * Set the transparency mode of the top-level window containing this widget.
    * So, e.g., if you call this on the widget for an IFRAME, the top level
    * browser window containing the IFRAME actually gets set. Be careful.
@@ -1040,6 +1058,94 @@ class nsIWidget : public nsISupports {
    * widget.
    */
   virtual nsTransparencyMode GetTransparencyMode() = 0;
+
+  /**
+   * This represents a command to set the bounds and clip region of
+   * a child widget.
+   */
+  struct Configuration {
+    nsCOMPtr<nsIWidget> mChild;
+    uintptr_t mWindowID;  // e10s specific, the unique plugin port id
+    bool mVisible;        // e10s specific, widget visibility
+    LayoutDeviceIntRect mBounds;
+    CopyableTArray<LayoutDeviceIntRect> mClipRegion;
+  };
+
+  /**
+   * Sets the clip region of each mChild (which must actually be a child
+   * of this widget) to the union of the pixel rects given in
+   * mClipRegion, all relative to the top-left of the child
+   * widget. Clip regions are not implemented on all platforms and only
+   * need to actually work for children that are plugins.
+   *
+   * Also sets the bounds of each child to mBounds.
+   *
+   * This will invalidate areas of the children that have changed, but
+   * does not need to invalidate any part of this widget.
+   *
+   * Children should be moved in the order given; the array is
+   * sorted so to minimize unnecessary invalidation if children are
+   * moved in that order.
+   */
+  virtual nsresult ConfigureChildren(
+      const nsTArray<Configuration>& aConfigurations) = 0;
+  virtual nsresult SetWindowClipRegion(
+      const nsTArray<LayoutDeviceIntRect>& aRects,
+      bool aIntersectWithExisting) = 0;
+
+  /**
+   * Appends to aRects the rectangles constituting this widget's clip
+   * region. If this widget is not clipped, appends a single rectangle
+   * (0, 0, bounds.width, bounds.height).
+   */
+  virtual void GetWindowClipRegion(nsTArray<LayoutDeviceIntRect>* aRects) = 0;
+
+  /**
+   * Register or unregister native plugin widgets which receive Configuration
+   * data from the content process via the compositor.
+   *
+   * Lookups are used by the main thread via the compositor to lookup widgets
+   * based on a unique window id. On Windows and Linux this is the
+   * NS_NATIVE_PLUGIN_PORT (hwnd/XID). This tracking maintains a reference to
+   * widgets held. Consumers are responsible for removing widgets from this
+   * list.
+   */
+  virtual void RegisterPluginWindowForRemoteUpdates() = 0;
+  virtual void UnregisterPluginWindowForRemoteUpdates() = 0;
+  static nsIWidget* LookupRegisteredPluginWindow(uintptr_t aWindowID);
+
+  /**
+   * Iterates across the list of registered plugin widgets and updates thier
+   * visibility based on which plugins are included in the 'visible' list.
+   *
+   * The compositor knows little about tabs, but it does know which plugin
+   * widgets are currently included in the visible layer tree. It calls this
+   * helper to hide widgets it knows nothing about.
+   */
+  static void UpdateRegisteredPluginWindowVisibility(
+      uintptr_t aOwnerWidget, nsTArray<uintptr_t>& aPluginIds);
+
+#if defined(XP_WIN)
+  /**
+   * Iterates over the list of registered plugins and for any that are owned
+   * by aOwnerWidget and visible it takes a snapshot.
+   *
+   * @param aOwnerWidget only captures visible widgets owned by this
+   */
+  static void CaptureRegisteredPlugins(uintptr_t aOwnerWidget);
+
+  /**
+   * Take a scroll capture for this widget if possible.
+   */
+  virtual void UpdateScrollCapture() = 0;
+
+  /**
+   * Creates an async ImageContainer to hold scroll capture images that can be
+   * used if the plugin is hidden during scroll.
+   * @return the async container ID of the created ImageContainer.
+   */
+  virtual uint64_t CreateScrollCaptureContainer() = 0;
+#endif
 
   /**
    * Set the shadow style of the window.
