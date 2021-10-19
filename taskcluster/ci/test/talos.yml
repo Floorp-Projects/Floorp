@@ -559,12 +559,20 @@ talos-webgl:
             (linux1804-64|windows10-64|macosx1015-64).*-qr.*: [webgl-ipc, webrender-sw]
             default: []
     run-on-projects:
-        by-test-platform:
-            windows.*-32.*: []
-            macosx1014.*: []
-            (linux|windows10-64|macos)(?!.*shippable).*: []
-            (linux|windows10-64|macos)(?!.*-qr).*: []
-            default: [mozilla-beta, trunk]
+        by-variant:
+            webgl-ipc:
+                by-test-platform:
+                    linux.*-64.*: ["trunk"]
+                    mac.*: ["trunk"]
+                    win.*: ["trunk"]
+                    default: []
+            default:
+                by-test-platform:
+                    windows.*-32.*: []
+                    macosx1014.*: []
+                    (linux|windows10-64|macos)(?!.*shippable).*: []
+                    (linux|windows10-64|macos)(?!.*-qr).*: []
+                    default: [mozilla-beta, trunk]
     max-run-time: 2100
     mozharness:
         extra-options:
