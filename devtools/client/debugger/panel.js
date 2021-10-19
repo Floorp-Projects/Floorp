@@ -185,6 +185,19 @@ class DebuggerPanel {
     return this._actions.getMappedExpression(expression);
   }
 
+  /**
+   * Return the source-mapped variables for the current scope.
+   * @returns {{[String]: String} | null} A dictionary mapping original variable names to generated
+   * variable names if map scopes is enabled, otherwise null.
+   */
+  getMappedVariables() {
+    if (!this._selectors.isMapScopesEnabled(this._getState())) {
+      return null;
+    }
+    const thread = this._selectors.getCurrentThread(this._getState());
+    return this._selectors.getSelectedScopeMappings(this._getState(), thread);
+  }
+
   isPaused() {
     const thread = this._selectors.getCurrentThread(this._getState());
     return this._selectors.getIsPaused(this._getState(), thread);

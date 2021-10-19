@@ -76,6 +76,8 @@ devtools/client/inspector/markup/test/events_bundle.js
 devtools/client/netmonitor/test/xhr_bundle.js
 devtools/client/webconsole/test/browser/code_bundle_nosource.js
 devtools/client/webconsole/test/browser/code_bundle_invalidmap.js
+devtools/client/webconsole/test/browser/test-autocomplete-mapped.js
+devtools/client/webconsole/test/browser/test-autocomplete-mapped.src.js
 devtools/server/tests/xpcshell/setBreakpoint*
 devtools/server/tests/xpcshell/sourcemapped.js
 

@@ -26,6 +26,7 @@ GeneratedFile(
 )
 
 DevToolsModules(
+    "analyze-input-string.js",
     "js-property-provider.js",
     "network-helper.js",
     "parser-helper.js",
