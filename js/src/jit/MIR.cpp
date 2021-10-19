@@ -4454,15 +4454,14 @@ bool MObjectState::init(TempAllocator& alloc, MDefinition* obj) {
   return true;
 }
 
-bool MObjectState::initFromTemplateObject(TempAllocator& alloc,
+void MObjectState::initFromTemplateObject(TempAllocator& alloc,
                                           MDefinition* undefinedVal) {
   if (object()->isNewPlainObject()) {
     MOZ_ASSERT(object()->toNewPlainObject()->shape()->slotSpan() == numSlots());
     for (size_t i = 0; i < numSlots(); i++) {
       initSlot(i, undefinedVal);
     }
-
-    return true;
+    return;
   }
 
   JSObject* templateObject = templateObjectOf(object());
@@ -4486,8 +4485,6 @@ bool MObjectState::initFromTemplateObject(TempAllocator& alloc,
     }
     initSlot(i, def);
   }
-
-  return true;
 }
 
 MObjectState* MObjectState::New(TempAllocator& alloc, MDefinition* obj) {
@@ -4541,12 +4538,11 @@ bool MArrayState::init(TempAllocator& alloc, MDefinition* obj,
   return true;
 }
 
-bool MArrayState::initFromTemplateObject(TempAllocator& alloc,
+void MArrayState::initFromTemplateObject(TempAllocator& alloc,
                                          MDefinition* undefinedVal) {
   for (size_t i = 0; i < numElements(); i++) {
     initElement(i, undefinedVal);
   }
-  return true;
 }
 
 MArrayState* MArrayState::New(TempAllocator& alloc, MDefinition* arr,
