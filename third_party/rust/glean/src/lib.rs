@@ -52,7 +52,7 @@ pub use glean_core::{
     metrics::{Datetime, DistributionData, MemoryUnit, RecordedEvent, TimeUnit, TimerId},
     traits, CommonMetricData, Error, ErrorType, Glean, HistogramType, Lifetime, Result,
 };
-use private::RecordedExperimentData;
+pub use private::RecordedExperimentData;
 
 mod configuration;
 mod core_metrics;
@@ -646,8 +646,7 @@ pub fn handle_client_inactive() {
 
 /// TEST ONLY FUNCTION.
 /// Checks if an experiment is currently active.
-#[allow(dead_code)]
-pub(crate) fn test_is_experiment_active(experiment_id: String) -> bool {
+pub fn test_is_experiment_active(experiment_id: String) -> bool {
     block_on_dispatcher();
     with_glean(|glean| glean.test_is_experiment_active(experiment_id.to_owned()))
 }
@@ -655,8 +654,7 @@ pub(crate) fn test_is_experiment_active(experiment_id: String) -> bool {
 /// TEST ONLY FUNCTION.
 /// Returns the [`RecordedExperimentData`] for the given `experiment_id` or panics if
 /// the id isn't found.
-#[allow(dead_code)]
-pub(crate) fn test_get_experiment_data(experiment_id: String) -> RecordedExperimentData {
+pub fn test_get_experiment_data(experiment_id: String) -> RecordedExperimentData {
     block_on_dispatcher();
     with_glean(|glean| {
         let json_data = glean
