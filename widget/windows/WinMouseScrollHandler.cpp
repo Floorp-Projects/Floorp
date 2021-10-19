@@ -441,21 +441,6 @@ void MouseScrollHandler::ProcessNativeMouseWheelMessage(nsWindowBase* aWidget,
       ::SetForegroundWindow(destWindow->GetWindowHandle());
     }
 
-    // If the found window is our plugin window, it means that the message
-    // has been handled by the plugin but not consumed.  We should handle the
-    // message on its parent window.  However, note that the DOM event may
-    // cause accessing the plugin.  Therefore, we should unlock the plugin
-    // process by using PostMessage().
-    if (destWindow->IsPlugin()) {
-      destWindow = destWindow->GetParentWindowBase(false);
-      if (!destWindow) {
-        MOZ_LOG(
-            gMouseScrollLog, LogLevel::Info,
-            ("MouseScroll::ProcessNativeMouseWheelMessage: "
-             "Our window which is a parent of a plugin window is not found"));
-        return;
-      }
-    }
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
             ("MouseScroll::ProcessNativeMouseWheelMessage: Succeeded, "
              "Posting internal message to an nsWindow (%p)...",
@@ -478,33 +463,6 @@ void MouseScrollHandler::ProcessNativeMouseWheelMessage(nsWindowBase* aWidget,
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
             ("MouseScroll::ProcessNativeMouseWheelMessage: "
              "Our window is not found under the cursor"));
-    return;
-  }
-
-  // If we're a plugin window (MozillaWindowClass) and cursor in this window,
-  // the message shouldn't go to plugin's wndproc again.  So, we should handle
-  // it on parent window.  However, note that the DOM event may cause accessing
-  // the plugin.  Therefore, we should unlock the plugin process by using
-  // PostMessage().
-  if (aWidget->IsPlugin() && aWidget->GetWindowHandle() == pluginWnd) {
-    nsWindowBase* destWindow = aWidget->GetParentWindowBase(false);
-    if (!destWindow) {
-      MOZ_LOG(gMouseScrollLog, LogLevel::Info,
-              ("MouseScroll::ProcessNativeMouseWheelMessage: Our normal window "
-               "which "
-               "is a parent of this plugin window is not found"));
-      return;
-    }
-    MOZ_LOG(
-        gMouseScrollLog, LogLevel::Info,
-        ("MouseScroll::ProcessNativeMouseWheelMessage: Succeeded, "
-         "Posting internal message to an nsWindow (%p) which is parent of this "
-         "plugin window...",
-         destWindow));
-    mIsWaitingInternalMessage = true;
-    UINT internalMessage = WinUtils::GetInternalMessage(aMessage);
-    ::PostMessage(destWindow->GetWindowHandle(), internalMessage, aWParam,
-                  aLParam);
     return;
   }
 
@@ -1632,11 +1590,6 @@ void MouseScrollHandler::SynthesizingEvent::NativeMessageReceived(
       mWParam == aWParam && mLParam == aLParam) {
     mStatus = NATIVE_MESSAGE_RECEIVED;
     if (aWidget && aWidget->GetWindowHandle() == mWnd) {
-      return;
-    }
-    // If the target window is not ours and received window is our plugin
-    // window, it comes from child window of the plugin.
-    if (aWidget && aWidget->IsPlugin() && !WinUtils::GetNSWindowBasePtr(mWnd)) {
       return;
     }
     // Otherwise, the message may not be sent by us.

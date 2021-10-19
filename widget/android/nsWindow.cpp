@@ -1819,17 +1819,6 @@ void nsWindow::Destroy() {
 #endif
 }
 
-nsresult nsWindow::ConfigureChildren(
-    const nsTArray<nsIWidget::Configuration>& config) {
-  for (uint32_t i = 0; i < config.Length(); ++i) {
-    nsWindow* childWin = (nsWindow*)config[i].mChild.get();
-    childWin->Resize(config[i].mBounds.x, config[i].mBounds.y,
-                     config[i].mBounds.width, config[i].mBounds.height, false);
-  }
-
-  return NS_OK;
-}
-
 mozilla::widget::EventDispatcher* nsWindow::GetEventDispatcher() const {
   if (mAndroidView) {
     return mAndroidView->mEventDispatcher;

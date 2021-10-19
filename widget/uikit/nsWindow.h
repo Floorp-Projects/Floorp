@@ -63,7 +63,6 @@ class nsWindow final : public nsBaseWidget {
   virtual nsresult SetTitle(const nsAString& aTitle) override { return NS_OK; }
 
   virtual void Invalidate(const LayoutDeviceIntRect& aRect) override;
-  virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
   virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent, nsEventStatus& aStatus) override;
 
   void WillPaintWindow();
