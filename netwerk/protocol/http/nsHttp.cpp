@@ -49,44 +49,8 @@ enum {
 };
 #undef HTTP_ATOM
 
-class nsCaseInsentitiveHashKey : public PLDHashEntryHdr {
- public:
-  using KeyType = const nsACString&;
-  using KeyTypePointer = const nsACString*;
-
-  explicit nsCaseInsentitiveHashKey(KeyTypePointer aStr) : mStr(*aStr) {
-    // take it easy just deal HashKey
-  }
-
-  nsCaseInsentitiveHashKey(const nsCaseInsentitiveHashKey&) = delete;
-  nsCaseInsentitiveHashKey(nsCaseInsentitiveHashKey&& aToMove) noexcept
-      : PLDHashEntryHdr(std::move(aToMove)), mStr(aToMove.mStr) {}
-  ~nsCaseInsentitiveHashKey() = default;
-
-  KeyType GetKey() const { return mStr; }
-  bool KeyEquals(const KeyTypePointer aKey) const {
-    return mStr.Equals(*aKey, nsCaseInsensitiveCStringComparator);
-  }
-
-  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-  static PLDHashNumber HashKey(const KeyTypePointer aKey) {
-    nsAutoCString tmKey(*aKey);
-    ToLowerCase(tmKey);
-    return mozilla::HashString(tmKey);
-  }
-  enum { ALLOW_MEMMOVE = false };
-
-  // To avoid double-counting, only measure the string if it is unshared.
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
-    return GetKey().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-  }
-
- private:
-  const nsCString mStr;
-};
-
-static StaticDataMutex<nsTHashtable<nsCaseInsentitiveHashKey>> sAtomTable(
-    "nsHttp::sAtomTable");
+static StaticDataMutex<nsTHashtable<nsCStringASCIICaseInsensitiveHashKey>>
+    sAtomTable("nsHttp::sAtomTable");
 
 // This is set to true in DestroyAtomTable so we don't try to repopulate the
 // table if ResolveAtom gets called during shutdown for some reason.
@@ -95,7 +59,8 @@ static Atomic<bool> sTableDestroyed{false};
 // We put the atoms in a hash table for speedy lookup.. see ResolveAtom.
 namespace nsHttp {
 
-nsresult CreateAtomTable(nsTHashtable<nsCaseInsentitiveHashKey>& base) {
+nsresult CreateAtomTable(
+    nsTHashtable<nsCStringASCIICaseInsensitiveHashKey>& base) {
   if (sTableDestroyed) {
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }

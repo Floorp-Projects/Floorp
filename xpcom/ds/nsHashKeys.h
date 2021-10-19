@@ -103,37 +103,72 @@ class nsStringHashKey : public PLDHashEntryHdr {
 
 #ifdef MOZILLA_INTERNAL_API
 
+namespace mozilla::detail {
+
+template <class CharT, bool Unicode = true>
+struct comparatorTraits {};
+
+template <>
+struct comparatorTraits<char, false> {
+  static int caseInsensitiveCompare(const char* aLhs, const char* aRhs,
+                                    uint32_t aLhsLength, uint32_t aRhsLength) {
+    return nsCaseInsensitiveCStringComparator(aLhs, aRhs, aLhsLength,
+                                              aRhsLength);
+  };
+};
+
+template <>
+struct comparatorTraits<char, true> {
+  static int caseInsensitiveCompare(const char* aLhs, const char* aRhs,
+                                    uint32_t aLhsLength, uint32_t aRhsLength) {
+    return nsCaseInsensitiveUTF8StringComparator(aLhs, aRhs, aLhsLength,
+                                                 aRhsLength);
+  };
+};
+
+template <>
+struct comparatorTraits<char16_t, true> {
+  static int caseInsensitiveCompare(const char16_t* aLhs, const char16_t* aRhs,
+                                    uint32_t aLhsLength, uint32_t aRhsLength) {
+    return nsCaseInsensitiveStringComparator(aLhs, aRhs, aLhsLength,
+                                             aRhsLength);
+  };
+};
+
+}  // namespace mozilla::detail
+
 /**
- * hashkey wrapper using nsAString KeyType
- *
- * This is internal-API only because nsCaseInsensitiveStringComparator is
+ * This is internal-API only because nsCaseInsensitive{C}StringComparator is
  * internal-only.
  *
  * @see nsTHashtable::EntryType for specification
  */
-class nsStringCaseInsensitiveHashKey : public PLDHashEntryHdr {
- public:
-  typedef const nsAString& KeyType;
-  typedef const nsAString* KeyTypePointer;
 
-  explicit nsStringCaseInsensitiveHashKey(KeyTypePointer aStr) : mStr(*aStr) {
+template <typename T, bool Unicode>
+class nsTStringCaseInsensitiveHashKey : public PLDHashEntryHdr {
+ public:
+  typedef const nsTSubstring<T>& KeyType;
+  typedef const nsTSubstring<T>* KeyTypePointer;
+
+  explicit nsTStringCaseInsensitiveHashKey(KeyTypePointer aStr) : mStr(*aStr) {
     // take it easy just deal HashKey
   }
 
-  nsStringCaseInsensitiveHashKey(const nsStringCaseInsensitiveHashKey&) =
+  nsTStringCaseInsensitiveHashKey(const nsTStringCaseInsensitiveHashKey&) =
       delete;
-  nsStringCaseInsensitiveHashKey(nsStringCaseInsensitiveHashKey&& aToMove)
+  nsTStringCaseInsensitiveHashKey(nsTStringCaseInsensitiveHashKey&& aToMove)
       : PLDHashEntryHdr(std::move(aToMove)), mStr(std::move(aToMove.mStr)) {}
-  ~nsStringCaseInsensitiveHashKey() = default;
+  ~nsTStringCaseInsensitiveHashKey() = default;
 
   KeyType GetKey() const { return mStr; }
   bool KeyEquals(const KeyTypePointer aKey) const {
-    return mStr.Equals(*aKey, nsCaseInsensitiveStringComparator);
+    using comparator = typename mozilla::detail::comparatorTraits<T, Unicode>;
+    return mStr.Equals(*aKey, comparator::caseInsensitiveCompare);
   }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(const KeyTypePointer aKey) {
-    nsAutoString tmKey(*aKey);
+    nsTAutoString<T> tmKey(*aKey);
     ToLowerCase(tmKey);
     return mozilla::HashString(tmKey);
   }
@@ -145,10 +180,17 @@ class nsStringCaseInsensitiveHashKey : public PLDHashEntryHdr {
   }
 
  private:
-  const nsString mStr;
+  const nsTString<T> mStr;
 };
 
-#endif
+using nsStringCaseInsensitiveHashKey =
+    nsTStringCaseInsensitiveHashKey<char16_t, true>;
+using nsCStringASCIICaseInsensitiveHashKey =
+    nsTStringCaseInsensitiveHashKey<char, false>;
+using nsCStringUTF8CaseInsensitiveHashKey =
+    nsTStringCaseInsensitiveHashKey<char, true>;
+
+#endif  // MOZILLA_INTERNAL_API
 
 /**
  * hashkey wrapper using nsACString KeyType
