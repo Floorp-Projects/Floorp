@@ -54,9 +54,17 @@ html,body {
   row-rule-lateral-inset-end: 0px;
 }
 
+.test5 {
+  column-rule-width: 150%;
+  row-rule-width: 150%;
+  column-rule-lateral-inset-end: 0px;
+  row-rule-lateral-inset-end: 0px;
+}
+
 x {
   block-size: 48px;
   background: grey;
+  opacity: 0.5;
 }
 x:nth-child(2), x:nth-child(6) {
   grid-column: span 2;
@@ -65,17 +73,23 @@ x:nth-child(2), x:nth-child(6) {
 .grid::after {
   position: absolute;
   top: 120px;
+  width: 500px;
   font-size: 10px;
   vertical-align: top;
+  white-space: pre;
 }
+pre { font-size: 10px; }
 
-.test1::after { content: "*-rule-length: auto; longitudinal insets: 4px"; }
-.test2::after { content: "*-rule-length: 50%; longitudinal insets: auto"; }
+.test1::after { content: "*-rule-length: auto;\0Alongitudinal insets: 4px"; }
+.test2::after { content: "*-rule-length: 50%;\0Alongitudinal insets: auto"; }
 .test3::after { content: "*-rule-width: 100%"; }
-.test4::after { content: "*-rule-width: 30%; lateral end insets: 0px"; }
+.test4::after { content: "*-rule-width: 30%;\0Alateral end insets: 0px"; }
+.test5::after { content: "*-rule-width: 150%;\0Alateral end insets: 0px"; }
 </style>
-
+<pre>Note that the grid items have 'opacity: 0.5' to show
+any rules underneath them.</pre>
 <div class="grid test1"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div>
-<div class="grid test2"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div><br><br>
+<div class="grid test2"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div><br>
 <div class="grid test3"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div>
-<div class="grid test4"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div>
+<div class="grid test4"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div><br>
+<div class="grid test5"><x>1</x><x>2</x><x>3</x><x>4</x><x>5</x></div>

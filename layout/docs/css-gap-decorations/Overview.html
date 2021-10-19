@@ -10,6 +10,7 @@
   <link href="../csslogo.ico" rel="shortcut icon" type="image/x-icon">
   <link href="https://www.w3.org/StyleSheets/TR/2016/W3C-ED" rel="stylesheet" type="text/css">
   <meta content="Bikeshed version d7036035b, updated Fri Oct 8 17:07:11 2021 -0700" name="generator">
+  <meta content="0a9fde1a3d6aed077d346386a307b9d39ddb08d2" name="document-revision">
 <style>/* style-autolinks */
 
 .css.css, .property.property, .descriptor.descriptor {
@@ -490,7 +491,7 @@ dd:not(:last-child) > .wpt-tests-block:not([open]):last-child {
     display: grid;
     margin: 0;
     padding: 0;
-    grid-template-columns: 1fr max-content auto auto;
+    grid-template-columns: 1fr auto auto;
     grid-column-gap: .5em;
 }
 .wpt-tests-block hr:last-child {
@@ -504,21 +505,8 @@ dd:not(:last-child) > .wpt-tests-block:not([open]):last-child {
     border: none;
 }
 .wpt-test > .wpt-name { grid-column: 1; }
-.wpt-test > .wpt-results { grid-column: 2; }
-.wpt-test > .wpt-live { grid-column: 3; }
-.wpt-test > .wpt-source { grid-column: 4; }
-
-.wpt-test > .wpt-results {
-    display: flex;
-    gap: .1em;
-}
-.wpt-test .wpt-result {
-    display: inline-block;
-    height: 1em;
-    width: 1em;
-    border-radius: 50%;
-    position: relative;
-}
+.wpt-test > .wpt-live { grid-column: 2; }
+.wpt-test > .wpt-source { grid-column: 3; }
 </style>
 <style>/* style-darkmode */
 
@@ -714,7 +702,7 @@ dd:not(:last-child) > .wpt-tests-block:not([open]):last-child {
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2016/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">CSS Gap Decorations</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Editor’s Draft, <time class="dt-updated" datetime="2021-10-19">19 October 2021</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Editor’s Draft, <time class="dt-updated" datetime="2021-10-20">20 October 2021</time></span></h2>
    <details>
     <summary>Specification Metadata</summary>
     <div data-fill-with="spec-metadata">
@@ -779,11 +767,12 @@ on screen, on paper, etc.
       <li><a href="#column-rule-width"><span class="secno">3.1</span> <span class="content">The <span class="property">column-rule-width</span> and <span class="property">row-rule-width</span> Properties</span></a>
       <li><a href="#column-rule-length"><span class="secno">3.2</span> <span class="content">The <span class="property">column-rule-length</span> and <span class="property">row-rule-length</span> Properties</span></a>
       <li><a href="#column-rule-lateral-inset-start"><span class="secno">3.3</span> <span class="content">The Rule Lateral Inset Properties</span></a>
-      <li><a href="#column-rule-lateral-inset"><span class="secno">3.4</span> <span class="content">The <span class="property">column-rule-lateral-inset</span> and <span class="property">row-rule-lateral-inset</span> Shorthands</span></a>
-      <li><a href="#column-rule-longitudinal-inset-start"><span class="secno">3.5</span> <span class="content">The Rule Longitudinal Inset Properties</span></a>
-      <li><a href="#column-rule-longitudinal-inset"><span class="secno">3.6</span> <span class="content">The <span class="property">column-rule-longitudinal-inset</span> and <span class="property">row-rule-longitudinal-inset</span> Shorthands</span></a>
-      <li><a href="#column-rule-longitudinal-edge-inset-start"><span class="secno">3.7</span> <span class="content">The Rule Longitudinal Edge Inset Properties</span></a>
-      <li><a href="#column-rule-longitudinal-edge-inset"><span class="secno">3.8</span> <span class="content">The <span class="property">column-rule-longitudinal-edge-inset</span> and <span class="property">row-rule-longitudinal-edge-inset</span> Shorthands</span></a>
+      <li><a href="#resolving-position-and-size-algo"><span class="secno">3.4</span> <span class="content">Resolving a rule’s position and size</span></a>
+      <li><a href="#column-rule-lateral-inset"><span class="secno">3.5</span> <span class="content">The <span class="property">column-rule-lateral-inset</span> and <span class="property">row-rule-lateral-inset</span> Shorthands</span></a>
+      <li><a href="#column-rule-longitudinal-inset-start"><span class="secno">3.6</span> <span class="content">The Rule Longitudinal Inset Properties</span></a>
+      <li><a href="#column-rule-longitudinal-inset"><span class="secno">3.7</span> <span class="content">The <span class="property">column-rule-longitudinal-inset</span> and <span class="property">row-rule-longitudinal-inset</span> Shorthands</span></a>
+      <li><a href="#column-rule-longitudinal-edge-inset-start"><span class="secno">3.8</span> <span class="content">The Rule Longitudinal Edge Inset Properties</span></a>
+      <li><a href="#column-rule-longitudinal-edge-inset"><span class="secno">3.9</span> <span class="content">The <span class="property">column-rule-longitudinal-edge-inset</span> and <span class="property">row-rule-longitudinal-edge-inset</span> Shorthands</span></a>
      </ol>
     <li>
      <a href="#row-rule-props"><span class="secno">4</span> <span class="content">Row Rule Style and Color</span></a>
@@ -919,7 +908,7 @@ on screen, on paper, etc.
       <td class="prod">[<a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-values-4/#number-value" id="ref-for-number-value">&lt;number [0,∞]></a> <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one①">|</a> <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-values-4/#percentage-value" id="ref-for-percentage-value①">&lt;percentage [0,∞]></a>]<a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#mult-num-range" id="ref-for-mult-num-range">{1,2}</a> 
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#initial-values">Initial:</a>
-      <td>zero 
+      <td>0 
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#applies-to">Applies to:</a>
       <td><a data-link-type="dfn" href="https://drafts.csswg.org/css-multicol-1/#multi-column-container" id="ref-for-multi-column-container②">multi-column containers</a>, <a data-link-type="dfn" href="https://drafts.csswg.org/css-flexbox-1/#flex-container" id="ref-for-flex-container②">flex containers</a>, <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container②">grid containers</a>, <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table" id="ref-for-table②">table</a> and <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table-row-group" id="ref-for-table-row-group②">table-row-group</a> containers 
@@ -939,13 +928,14 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
       <td>discrete 
    </table>
-   <p>These properties specify inward offsets from the top and bottom edges of the image,
-    dividing it into three regions: two edge areas and one middle area.</p>
-   <p>When two values are specified, they set the offsets on the top and bottom sides in
-    that order. If the bottom is missing, it is the same as the top.</p>
+   <p><a class="property" data-link-type="propdesc" href="#propdef-column-rule-image-slice" id="ref-for-propdef-column-rule-image-slice①">column-rule-image-slice</a> specify inward offsets from the block axis
+    start and end edges of the image, dividing it into three regions:
+    two edge areas and one middle area.</p>
+   <p>When two values are specified, they set the offsets on the start and end sides in
+    that order. If the end value is missing, it is the same as the start value.</p>
    <dl>
     <dt><dfn class="css" data-dfn-for="column-rule-image-slice" data-dfn-type="value" data-export id="valdef-column-rule-image-slice-percentage-0"><a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-values-4/#percentage-value" id="ref-for-percentage-value②">&lt;percentage [0,∞]></a><a class="self-link" href="#valdef-column-rule-image-slice-percentage-0"></a></dfn> 
-    <dd>Percentages are relative to the height of the image. 
+    <dd>Percentages are relative to the block-size of the image. 
     <dt><dfn class="css" data-dfn-for="column-rule-image-slice" data-dfn-type="value" data-export id="valdef-column-rule-image-slice-number-0"><a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-values-4/#number-value" id="ref-for-number-value①">&lt;number [0,∞]></a><a class="self-link" href="#valdef-column-rule-image-slice-number-0"></a></dfn> 
     <dd>Numbers represent pixels in the image (if the image is a raster
         image) or vector coordinates (if the image is a vector image). 
@@ -955,7 +945,10 @@ on screen, on paper, etc.
    <p>If the image must be sized to determine the slices
     (for example, for SVG images with no intrinsic size),
     then it is sized using the <a href="https://www.w3.org/TR/css-images-3/#default-sizing"><cite>CSS Images 3</cite> § 4.3.1 Default Sizing Algorithm</a> with no <a data-link-type="dfn" href="https://drafts.csswg.org/css-images-3/#specified-size" id="ref-for-specified-size">specified size</a> and the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①">rule containing rectangle</a> as the <a data-link-type="dfn" href="https://drafts.csswg.org/css-images-3/#default-object-size" id="ref-for-default-object-size">default object size</a>.</p>
-   <p>For <a class="property" data-link-type="propdesc" href="#propdef-row-rule-image-slice" id="ref-for-propdef-row-rule-image-slice①">row-rule-image-slice</a>, replace top/bottom above with left/right, and height with width.</p>
+   <p>The regions given by the <a class="property" data-link-type="propdesc" href="#propdef-column-rule-image-slice" id="ref-for-propdef-column-rule-image-slice②">column-rule-image-slice</a> values may overlap.
+    However if the sum of the start and end values is equal to or greater than
+    the size of the image, the middle part becomes empty.</p>
+   <p><a class="property" data-link-type="propdesc" href="#propdef-row-rule-image-slice" id="ref-for-propdef-row-rule-image-slice①">row-rule-image-slice</a> works the same but in the inline axis.</p>
    <h3 class="heading settled" data-level="2.3" id="column-rule-image-repeat"><span class="secno">2.3. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-column-rule-image-repeat" id="ref-for-propdef-column-rule-image-repeat">column-rule-image-repeat</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-image-repeat" id="ref-for-propdef-row-rule-image-repeat">row-rule-image-repeat</a> Properties</span><a class="self-link" href="#column-rule-image-repeat"></a></h3>
    <table class="def propdef" data-link-for-hint="column-rule-image-repeat">
     <tbody>
@@ -1013,7 +1006,7 @@ on screen, on paper, etc.
       <td><dfn class="dfn-paneled css" data-dfn-type="property" data-export id="propdef-column-rule-image">column-rule-image</dfn>, <dfn class="dfn-paneled css" data-dfn-type="property" data-export id="propdef-row-rule-image">row-rule-image</dfn>
      <tr class="value">
       <th><a href="https://www.w3.org/TR/css-values/#value-defs">Value:</a>
-      <td class="prod"><a class="production" data-link-type="propdesc" href="#propdef-column-rule-image-source" id="ref-for-propdef-column-rule-image-source①">&lt;'column-rule-image-source'></a> <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-any" id="ref-for-comb-any">||</a> <a class="production" data-link-type="propdesc" href="#propdef-column-rule-image-slice" id="ref-for-propdef-column-rule-image-slice①">&lt;'column-rule-image-slice'></a> <span id="ref-for-comb-any①">||</span> <a class="production" data-link-type="propdesc" href="#propdef-column-rule-image-repeat" id="ref-for-propdef-column-rule-image-repeat①">&lt;'column-rule-image-repeat'></a> 
+      <td class="prod"><a class="production" data-link-type="propdesc" href="#propdef-column-rule-image-source" id="ref-for-propdef-column-rule-image-source①">&lt;'column-rule-image-source'></a> <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-any" id="ref-for-comb-any">||</a> <a class="production" data-link-type="propdesc" href="#propdef-column-rule-image-slice" id="ref-for-propdef-column-rule-image-slice③">&lt;'column-rule-image-slice'></a> <span id="ref-for-comb-any①">||</span> <a class="production" data-link-type="propdesc" href="#propdef-column-rule-image-repeat" id="ref-for-propdef-column-rule-image-repeat①">&lt;'column-rule-image-repeat'></a> 
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#initial-values">Initial:</a>
       <td>see individual properties 
@@ -1040,7 +1033,7 @@ on screen, on paper, etc.
     <a class="self-link" href="#example-c9ee9e2e"></a> This <a href="examples/grid-image-001.html">example</a> demonstrates the new
         rule image properties presented above in a grid layout with spanning elements. 
     <figure>
-      <img src="media/grid-image-001.png"> 
+      <img height="488" src="media/grid-image-001.png" width="608"> 
      <figcaption> Example of image rules. </figcaption>
     </figure>
    </aside>
@@ -1055,7 +1048,7 @@ on screen, on paper, etc.
    <aside class="example" id="example-746571da">
     <a class="self-link" href="#example-746571da"></a> This is a similar <a href="examples/grid-gradient-001.html">example</a> using gradients. 
     <figure>
-      <img src="media/grid-gradient-001.png"> 
+      <img height="489" src="media/grid-gradient-001.png" width="608"> 
      <figcaption> Example of gradient rules. </figcaption>
     </figure>
    </aside>
@@ -1064,7 +1057,7 @@ on screen, on paper, etc.
         support for a use case mentioned in <a href="https://github.com/w3c/csswg-drafts/issues/2748#issuecomment-621983931">issue #2748</a>.
         It’s a coupon with a perforation rendered by a semi-transparent rule image between two flex items. 
     <figure>
-      <img src="media/flexbox-coupon-rule.png"> 
+      <img height="108" src="media/flexbox-coupon-rule.png" width="253"> 
      <figcaption> An example of a semi-transparent column rule image. </figcaption>
     </figure>
    </aside>
@@ -1094,7 +1087,7 @@ on screen, on paper, etc.
       <td>no 
      <tr>
       <th><a href="https://www.w3.org/TR/css-values/#percentages">Percentages:</a>
-      <td>refer to the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①①">rule containing rectangle’s</a> size in the <a data-link-type="dfn" href="#lateral-axis" id="ref-for-lateral-axis">lateral axis</a> 
+      <td>refer to the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①①">rule containing rectangle’s</a> size in the rule’s <a data-link-type="dfn" href="#lateral-axis" id="ref-for-lateral-axis">lateral axis</a> 
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>absolute length if the specified value is <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-backgrounds-3/#typedef-line-width" id="ref-for-typedef-line-width" title="Expands to: medium | thick | thin">&lt;line-width></a>; <span class="css">0px</span> if the column rule style is <span class="css">none</span> or <span class="css">hidden</span>. Otherwise, the specified value. 
@@ -1121,7 +1114,7 @@ on screen, on paper, etc.
       <td>no 
      <tr>
       <th><a href="https://www.w3.org/TR/css-values/#percentages">Percentages:</a>
-      <td>refer to the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①②">rule containing rectangle’s</a> size in the <a data-link-type="dfn" href="#lateral-axis" id="ref-for-lateral-axis①">lateral axis</a> 
+      <td>refer to the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①②">rule containing rectangle’s</a> size in the rule’s <a data-link-type="dfn" href="#lateral-axis" id="ref-for-lateral-axis①">lateral axis</a> 
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>absolute length if the specified value is <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-backgrounds-3/#typedef-line-width" id="ref-for-typedef-line-width②" title="Expands to: medium | thick | thin">&lt;line-width></a>; <span class="css">0px</span> if the column rule style is <span class="css">none</span> or <span class="css">hidden</span>. Otherwise, the specified value. 
@@ -1155,7 +1148,7 @@ on screen, on paper, etc.
       <td>no 
      <tr>
       <th><a href="https://www.w3.org/TR/css-values/#percentages">Percentages:</a>
-      <td>refer to the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①③">rule containing rectangle’s</a> size in the <a data-link-type="dfn" href="#longitudinal-axis" id="ref-for-longitudinal-axis">longitudinal axis</a> 
+      <td>refer to the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①③">rule containing rectangle’s</a> size in the rule’s <a data-link-type="dfn" href="#longitudinal-axis" id="ref-for-longitudinal-axis">longitudinal axis</a> 
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>the specified value 
@@ -1190,7 +1183,7 @@ on screen, on paper, etc.
       <td>no 
      <tr>
       <th><a href="https://www.w3.org/TR/css-values/#percentages">Percentages:</a>
-      <td>refer to the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①④">rule containing rectangle’s</a> size in the <a data-link-type="dfn" href="#lateral-axis" id="ref-for-lateral-axis③">lateral axis</a> 
+      <td>refer to the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①④">rule containing rectangle’s</a> size in the rule’s <a data-link-type="dfn" href="#lateral-axis" id="ref-for-lateral-axis③">lateral axis</a> 
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>the specified value 
@@ -1202,10 +1195,13 @@ on screen, on paper, etc.
       <td>by computed value type 
    </table>
    <p>These properties sets the lateral start/end offset of the rule in the column and row axis, respectively.
-    A positive value moves the position inward and a negative value outward from the corresponding <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①⑤">rule containing rectangle’s</a> edge.
-    The <span class="css">column-rule-lateral-inset</span> and <span class="css">column-rule-width</span> <a data-link-type="dfn" href="https://drafts.csswg.org/css-cascade-5/#used-value" id="ref-for-used-value②">used values</a> are calculated in a similar way to how <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-position-3/#propdef-left" id="ref-for-propdef-left">left</a>/<a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-position-3/#propdef-right" id="ref-for-propdef-right">right</a> and <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-sizing-3/#propdef-width" id="ref-for-propdef-width">width</a> are <a href="https://www.w3.org/TR/CSS22/visudet.html#abs-non-replaced-width">calculated</a> for an absolutely positioned
-    box. <span class="css">auto</span> values are resolved so that the sum of the three values equals the <span id="ref-for-rule-containing-rectangle①⑥">rule containing rectangle</span> size in the <a data-link-type="dfn" href="#lateral-axis" id="ref-for-lateral-axis④">lateral axis</a>.</p>
-   <p>Given a triplet of values: inset-start/end and a size, these are the rules for resolving them:</p>
+    A positive value moves the position inward and a negative value outward from the corresponding <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①⑤">rule containing rectangle’s</a> edge.</p>
+   <p class="note" role="note"><span>NOTE:</span> The <span class="css">column-rule-lateral-inset</span> and <span class="css">column-rule-width</span> <a data-link-type="dfn" href="https://drafts.csswg.org/css-cascade-5/#used-value" id="ref-for-used-value②">used values</a> are calculated in a similar way to how <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-position-3/#propdef-left" id="ref-for-propdef-left">left</a>/<a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-position-3/#propdef-right" id="ref-for-propdef-right">right</a> and <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-sizing-3/#propdef-width" id="ref-for-propdef-width">width</a> are <a href="https://www.w3.org/TR/CSS22/visudet.html#abs-non-replaced-width">calculated</a> for an absolutely positioned
+    box.  The precise algorithm is described next.</p>
+   <h3 class="heading settled" data-level="3.4" id="resolving-position-and-size-algo"><span class="secno">3.4. </span><span class="content">Resolving a rule’s position and size</span><a class="self-link" href="#resolving-position-and-size-algo"></a></h3>
+   <p>Given a triplet of values: inset-start/end and a size for an axis, <span class="css">auto</span> values
+    are resolved so that the sum of the three values equals the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①⑥">rule containing rectangle</a> size in
+    the relevant axis.  These are the rules for resolving them:</p>
    <ol id="rule-sizing">
     <li>if all the values are <span class="css">auto</span> then set both inset values to zero and solve for size 
     <li>if none of the values are <span class="css">auto</span> then the situation is over-constrained: solve by
@@ -1219,22 +1215,22 @@ on screen, on paper, etc.
             if that makes the size negative then set the size to zero and solve again by
             treating the end inset value as <span class="css">auto</span> 
    </ol>
-   <p>The above rules applies to the <span class="css">column-rule-width</span>, <span class="css">column-rule-lateral-inset-start</span>, and <span class="css">column-rule-lateral-inset-end</span> triplet.
-    And to <span class="css">column-rule-length</span>, <span class="css">column-rule-longitudinal-[edge-]inset-start</span>, and <span class="css">column-rule-longitudinal-[edge-]inset-end</span> triplet
-    of values (see the <a href="#column-rule-longitudinal-inset-start">longitudinal</a> property
-    descriptions below for which of the "edge" or non-"edge" values is used).
-    Ditto for the corresponding <span class="css">row-rule-*</span> properties.</p>
+   <p>These rules resolves the <span class="css">column-rule-width</span>, <span class="css">column-rule-lateral-inset-start</span>, and <span class="css">column-rule-lateral-inset-end</span> triplet
+    of values in a rule’s lateral axis.</p>
+   <p>The same rules are also used to resolve <span class="css">column-rule-length</span>, <span class="css">column-rule-longitudinal-[edge-]inset-start</span>, and <span class="css">column-rule-longitudinal-[edge-]inset-end</span> triplet of values in a rule’s longitudinal axis (see the <a href="#column-rule-longitudinal-inset-start">longitudinal</a> property
+    descriptions below for which of the "edge" or non-"edge" values is used).</p>
+   <p>Ditto for the corresponding <span class="css">row-rule-*</span> properties.</p>
    <aside class="example" id="example-a31fa0e2">
     <a class="self-link" href="#example-a31fa0e2"></a> This <a href="examples/grid-lateral-001.html">example</a> demonstrates the rules above.
         Note in particular the latter two grids, which shows what happens when the sum of the
         insets are greater than the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①⑦">rule containing rectangle’s</a> size.  There’s still
         a zero-sized column rule there, which the row rule (purple) aligns to. 
     <figure>
-      <img src="media/grid-lateral-001.png"> 
+      <img height="651" src="media/grid-lateral-001.png" width="997"> 
      <figcaption> Examples of lateral rule sizing with various inset values. </figcaption>
     </figure>
    </aside>
-   <h3 class="heading settled" data-level="3.4" id="column-rule-lateral-inset"><span class="secno">3.4. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-column-rule-lateral-inset" id="ref-for-propdef-column-rule-lateral-inset">column-rule-lateral-inset</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-lateral-inset" id="ref-for-propdef-row-rule-lateral-inset">row-rule-lateral-inset</a> Shorthands</span><a class="self-link" href="#column-rule-lateral-inset"></a></h3>
+   <h3 class="heading settled" data-level="3.5" id="column-rule-lateral-inset"><span class="secno">3.5. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-column-rule-lateral-inset" id="ref-for-propdef-column-rule-lateral-inset">column-rule-lateral-inset</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-lateral-inset" id="ref-for-propdef-row-rule-lateral-inset">row-rule-lateral-inset</a> Shorthands</span><a class="self-link" href="#column-rule-lateral-inset"></a></h3>
    <table class="def propdef" data-link-for-hint="column-rule-lateral-inset">
     <tbody>
      <tr>
@@ -1297,7 +1293,7 @@ on screen, on paper, etc.
    </table>
    <p>These are shortands for specifying the corresponding start/end values.
     If one value is specified it is used for both start and end.</p>
-   <h3 class="heading settled" data-level="3.5" id="column-rule-longitudinal-inset-start"><span class="secno">3.5. </span><span class="content">The Rule Longitudinal Inset Properties</span><a class="self-link" href="#column-rule-longitudinal-inset-start"></a></h3>
+   <h3 class="heading settled" data-level="3.6" id="column-rule-longitudinal-inset-start"><span class="secno">3.6. </span><span class="content">The Rule Longitudinal Inset Properties</span><a class="self-link" href="#column-rule-longitudinal-inset-start"></a></h3>
    <table class="def propdef" data-link-for-hint="column-rule-longitudinal-inset-start">
     <tbody>
      <tr>
@@ -1308,7 +1304,7 @@ on screen, on paper, etc.
       <td class="prod"><a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-values-4/#typedef-length-percentage" id="ref-for-typedef-length-percentage②">&lt;length-percentage></a> <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one①⓪">|</a> auto 
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#initial-values">Initial:</a>
-      <td>zero 
+      <td>0 
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#applies-to">Applies to:</a>
       <td><a data-link-type="dfn" href="https://drafts.csswg.org/css-multicol-1/#multi-column-container" id="ref-for-multi-column-container⑨">multi-column containers</a>, <a data-link-type="dfn" href="https://drafts.csswg.org/css-flexbox-1/#flex-container" id="ref-for-flex-container⑨">flex containers</a>, <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container⑨">grid containers</a>, <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table" id="ref-for-table⑨">table</a> and <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table-row-group" id="ref-for-table-row-group⑨">table-row-group</a> containers 
@@ -1317,7 +1313,7 @@ on screen, on paper, etc.
       <td>no 
      <tr>
       <th><a href="https://www.w3.org/TR/css-values/#percentages">Percentages:</a>
-      <td>refer to the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①⑧">rule containing rectangle’s</a> size in the <a data-link-type="dfn" href="#longitudinal-axis" id="ref-for-longitudinal-axis①">longitudinal axis</a> 
+      <td>refer to the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①⑧">rule containing rectangle’s</a> size in the rule’s <a data-link-type="dfn" href="#longitudinal-axis" id="ref-for-longitudinal-axis①">longitudinal axis</a> 
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>the specified value 
@@ -1333,11 +1329,12 @@ on screen, on paper, etc.
     The <a href="#column-rule-longitudinal-edge-inset-start">*-rule-longitudinal-edge-inset</a> properties are used for rule edges that are on the outer edges of an axis.
     The <a data-link-type="dfn" href="https://drafts.csswg.org/css-cascade-5/#used-value" id="ref-for-used-value③">used values</a> are calculated the same as for the lateral properties above.</p>
    <p class="note" role="note"><span>Note:</span> These have a different initial value than the lateral inset properties, meaning the rule will stretch to fill the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①⑨">rule containing rectangle</a> in this axis.  The initial values as specified above are backward compatible with how column rules are sized and positioned in legacy <a data-link-type="dfn" href="https://drafts.csswg.org/css-multicol-1/#multi-column-layout" id="ref-for-multi-column-layout">multi-column layout</a>.</p>
-   <aside class="example" id="example-0ce2b88c">
-    <a class="self-link" href="#example-0ce2b88c"></a> Here’s a few simple <a href="examples/grid-longitudinal-001.html">examples</a> of
-        the rule sizing and inset properties. 
+   <aside class="example" id="example-156ca2f0">
+    <a class="self-link" href="#example-156ca2f0"></a> Here’s a few simple <a href="examples/grid-longitudinal-001.html">examples</a> of
+        the rule sizing and inset properties.
+        Note that the grid items have <a class="css" data-link-type="propdesc" href="https://drafts.csswg.org/css-color-4/#propdef-opacity" id="ref-for-propdef-opacity">opacity: 0.5</a> to show any rules underneath them. 
     <figure>
-      <img src="media/grid-longitudinal-001.png"> 
+      <img height="889" src="media/grid-longitudinal-001.png" width="629"> 
      <figcaption> Examples of rule sizing and inset values. </figcaption>
     </figure>
    </aside>
@@ -1352,7 +1349,7 @@ on screen, on paper, etc.
      <figcaption> Example of rule alignment and animated inset values. </figcaption>
     </figure>
    </aside>
-   <h3 class="heading settled" data-level="3.6" id="column-rule-longitudinal-inset"><span class="secno">3.6. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-column-rule-longitudinal-inset" id="ref-for-propdef-column-rule-longitudinal-inset">column-rule-longitudinal-inset</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-longitudinal-inset" id="ref-for-propdef-row-rule-longitudinal-inset">row-rule-longitudinal-inset</a> Shorthands</span><a class="self-link" href="#column-rule-longitudinal-inset"></a></h3>
+   <h3 class="heading settled" data-level="3.7" id="column-rule-longitudinal-inset"><span class="secno">3.7. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-column-rule-longitudinal-inset" id="ref-for-propdef-column-rule-longitudinal-inset">column-rule-longitudinal-inset</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-longitudinal-inset" id="ref-for-propdef-row-rule-longitudinal-inset">row-rule-longitudinal-inset</a> Shorthands</span><a class="self-link" href="#column-rule-longitudinal-inset"></a></h3>
    <table class="def propdef" data-link-for-hint="column-rule-longitudinal-inset">
     <tbody>
      <tr>
@@ -1414,7 +1411,7 @@ on screen, on paper, etc.
       <td>per grammar 
    </table>
    <p>These shortands specify the corresponding start/end values. If one value is specified it is used for both start/end.</p>
-   <h3 class="heading settled" data-level="3.7" id="column-rule-longitudinal-edge-inset-start"><span class="secno">3.7. </span><span class="content">The Rule Longitudinal Edge Inset Properties</span><a class="self-link" href="#column-rule-longitudinal-edge-inset-start"></a></h3>
+   <h3 class="heading settled" data-level="3.8" id="column-rule-longitudinal-edge-inset-start"><span class="secno">3.8. </span><span class="content">The Rule Longitudinal Edge Inset Properties</span><a class="self-link" href="#column-rule-longitudinal-edge-inset-start"></a></h3>
    <table class="def propdef" data-link-for-hint="column-rule-longitudinal-edge-inset-start">
     <tbody>
      <tr>
@@ -1425,7 +1422,7 @@ on screen, on paper, etc.
       <td class="prod"><a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-values-4/#typedef-length-percentage" id="ref-for-typedef-length-percentage③">&lt;length-percentage></a> <a data-link-type="grammar" href="https://drafts.csswg.org/css-values-4/#comb-one" id="ref-for-comb-one①①">|</a> auto 
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#initial-values">Initial:</a>
-      <td>zero 
+      <td>0 
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#applies-to">Applies to:</a>
       <td><a data-link-type="dfn" href="https://drafts.csswg.org/css-multicol-1/#multi-column-container" id="ref-for-multi-column-container①⓪">multi-column containers</a>, <a data-link-type="dfn" href="https://drafts.csswg.org/css-flexbox-1/#flex-container" id="ref-for-flex-container①⓪">flex containers</a>, <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-container" id="ref-for-grid-container①⓪">grid containers</a>, <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table" id="ref-for-table①⓪">table</a> and <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table-row-group" id="ref-for-table-row-group①⓪">table-row-group</a> containers 
@@ -1434,7 +1431,7 @@ on screen, on paper, etc.
       <td>no 
      <tr>
       <th><a href="https://www.w3.org/TR/css-values/#percentages">Percentages:</a>
-      <td>refer to the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①①①">rule containing rectangle’s</a> size in the <a data-link-type="dfn" href="#longitudinal-axis" id="ref-for-longitudinal-axis②">longitudinal axis</a> 
+      <td>refer to the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①①①">rule containing rectangle’s</a> size in the rule’s <a data-link-type="dfn" href="#longitudinal-axis" id="ref-for-longitudinal-axis②">longitudinal axis</a> 
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>the specified value 
@@ -1449,7 +1446,7 @@ on screen, on paper, etc.
     on the start edge of the first rule that on the container’s start edge in its <a data-link-type="dfn" href="#longitudinal-axis" id="ref-for-longitudinal-axis③">longitudinal axis</a>, and the end edge of the last rule at the end of the container.
     For interior rule edges, the <a href="#column-rule-longitudinal-inset-start">non-"edge" properties</a> are used.
     In other words, these properties are used together with the <a href="#column-rule-edge-align"><span class="css">*-rule-edge-align</span></a> properties (defined below) and the <span class="css">*-rule-longitudinal-inset</span> properties are used together with <a href="#column-rule-align"><span class="css">*-rule-align</span></a>.</p>
-   <h3 class="heading settled" data-level="3.8" id="column-rule-longitudinal-edge-inset"><span class="secno">3.8. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-column-rule-longitudinal-edge-inset" id="ref-for-propdef-column-rule-longitudinal-edge-inset">column-rule-longitudinal-edge-inset</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-longitudinal-edge-inset" id="ref-for-propdef-row-rule-longitudinal-edge-inset">row-rule-longitudinal-edge-inset</a> Shorthands</span><a class="self-link" href="#column-rule-longitudinal-edge-inset"></a></h3>
+   <h3 class="heading settled" data-level="3.9" id="column-rule-longitudinal-edge-inset"><span class="secno">3.9. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-column-rule-longitudinal-edge-inset" id="ref-for-propdef-column-rule-longitudinal-edge-inset">column-rule-longitudinal-edge-inset</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-longitudinal-edge-inset" id="ref-for-propdef-row-rule-longitudinal-edge-inset">row-rule-longitudinal-edge-inset</a> Shorthands</span><a class="self-link" href="#column-rule-longitudinal-edge-inset"></a></h3>
    <table class="def propdef" data-link-for-hint="column-rule-longitudinal-edge-inset">
     <tbody>
      <tr>
@@ -1573,7 +1570,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
       <td>by computed value type 
    </table>
-   <p>These properties are identical to their <span class="css">column-</span> version.</p>
+   <p>These properties are the same as the <span class="css">column-</span> properties but for the row rules.</p>
    <h3 class="heading settled" data-level="4.2" id="row-rule"><span class="secno">4.2. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-row-rule" id="ref-for-propdef-row-rule">row-rule</a> Shorthand</span><a class="self-link" href="#row-rule"></a></h3>
    <p>This shorthand works the same as <span class="css">column-rule</span>.</p>
    <table class="def propdef" data-link-for-hint="row-rule">
@@ -1660,7 +1657,7 @@ on screen, on paper, etc.
         the gap (to separate the <span class="css">rule-center</span> position
         from the <span class="css">gap-center</span> position)</p>
     <figure>
-      <img src="media/grid-align-001.png"> 
+      <img height="596" src="media/grid-align-001.png" width="692"> 
      <figcaption> Example of <a class="property" data-link-type="propdesc" href="#propdef-row-rule-align" id="ref-for-propdef-row-rule-align①">row-rule-align</a> in a grid container. </figcaption>
     </figure>
     <p>You might be wondering if there’s a bug in the bottom-right example.
@@ -1717,7 +1714,7 @@ on screen, on paper, etc.
     attachment points should be used. <span class="css">column-rule-edge-align</span> the yellow colored
     ones (and all other interior edges if there were more rows).</p>
    <figure>
-     <img src="media/rule-alignment-values.png"> 
+     <img height="585" src="media/rule-alignment-values.png" width="621"> 
     <figcaption> Illustration of rule alignment values. </figcaption>
    </figure>
    <p>Here’s the rule styling used for the above example:</p>
@@ -1776,8 +1773,8 @@ on screen, on paper, etc.
    <p>The <span class="css">all-*</span> values makes a rule extend over all segments in an axis,
     subject to not being interrupted by a span.  In grid and table layout, where the tracks/table groups/rows
     all have the same length in a rule’s longitudinal axis, all the <span class="css">all-*</span> have
-    the same behavior.  They are intended for flexbox and masonry layout, where flex lines and masonry tracks,
-    respectively, may have different lengths.</p>
+    the same behavior.  They are intended for flexbox and masonry layout, where the gaps may fall at different
+    positions in adjacent flex lines and masonry tracks.</p>
    <p>The lateral position of a rule is determined by its first segment.</p>
    <p>The following sub-sections will describe the rule extent for each type of layout container in more detail.</p>
    <h4 class="heading settled" data-level="6.1.1" id="rule-extent-grid"><span class="secno">6.1.1. </span><span class="content">Grid Containers</span><a class="self-link" href="#rule-extent-grid"></a></h4>
@@ -1787,7 +1784,7 @@ on screen, on paper, etc.
    <aside class="example" id="example-9ccc5773">
     <a class="self-link" href="#example-9ccc5773"></a> 
     <figure>
-      <img src="media/grid-segment-001.png"> 
+      <img height="228" src="media/grid-segment-001.png" width="312"> 
      <figcaption> Example of column and row rules with <span class="css">segment</span> extent in a grid container. </figcaption>
     </figure>
    </aside>
@@ -1799,7 +1796,7 @@ on screen, on paper, etc.
    <aside class="example" id="example-9818bbbb">
     <a class="self-link" href="#example-9818bbbb"></a> 
     <figure>
-      <img src="media/grid-segment-002.png"> 
+      <img height="228" src="media/grid-segment-002.png" width="608"> 
      <figcaption> Example of column and row rules with in a grid container with <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#collapsed-track" id="ref-for-collapsed-track①">collapsed tracks</a>. </figcaption>
     </figure>
    </aside>
@@ -1824,37 +1821,41 @@ on screen, on paper, etc.
     <dd>controls whether the <a data-link-type="dfn" href="#next-grid-cell-span" id="ref-for-next-grid-cell-span④">next grid cell span</a> stops short of a cell which has an item spanning
             over the gap (see the <a href="#rule-extent-grid-algorithm">algorithm</a> below) 
    </dl>
-   <p>The following algorithm determines the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="next-grid-cell-span">next grid cell span</dfn>.
-    For each pair of adjacent tracks, set their <var>current cell</var> to their first
-    cell in the <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#implicit-grid" id="ref-for-implicit-grid">implicit grid</a>, then:</p>
+   <p>The following algorithm determines the rule segments to create in an axis and their <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size⑦">extent size</a>.
+    For each pair of adjacent tracks, we first find the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="next-grid-cell-span">next grid cell span</dfn> for
+    each track. Then select one of those per the property values above.</p>
+   <p>For each pair of adjacent tracks, start by setting each track’s <var>current cell</var> to
+    be its first cell in the <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#implicit-grid" id="ref-for-implicit-grid">implicit grid</a>, then:</p>
    <ol id="rule-extent-grid-algorithm">
     <li>if <span class="css">allow-overlap</span> was not specified, and the <var>current cell</var> in
            the start-most of the pair of tracks contains an item that spans into the end-most of the tracks,
            then skip this cell and let the <var>current cell</var> of each track be the cell after it,
            then go to step 1 or exit if there are no more cells 
     <li>if the <span class="css">*-rule-extent</span> is one of the <span class="css">all-*</span> values,
-           then <a data-link-type="dfn" href="#next-grid-cell-span" id="ref-for-next-grid-cell-span⑤">next grid cell span</a> the span of cells from the <var>current cell</var> to
+           then the <a data-link-type="dfn" href="#next-grid-cell-span" id="ref-for-next-grid-cell-span⑤">next grid cell span</a> is the span of cells from the <var>current cell</var> to
            last cell in the track (inclusive); if <span class="css">allow-overlap</span> was not specified,
            then stop before the first (opposite axis) track that contains an item spanning between this
            pair of tracks 
-    <li>otherwise, if a cell is empty, or <span class="css">*-rule-extent</span> is <span class="css">segment</span>,
+    <li>otherwise, if the <var>current cell</var> is empty, or <span class="css">*-rule-extent</span> is <span class="css">segment</span>,
            then the <a data-link-type="dfn" href="#next-grid-cell-span" id="ref-for-next-grid-cell-span⑥">next grid cell span</a> of that track is the <var>current cell</var> 
     <li>otherwise, if the <var>current cell</var> contains items that are spanning in the same axis,
            then that track’s <a data-link-type="dfn" href="#next-grid-cell-span" id="ref-for-next-grid-cell-span⑦">next grid cell span</a> is the longest of those spans;
            if <span class="css">allow-overlap</span> was not specified, then stop before
            the first (opposite axis) track that contains an item spanning between this pair of tracks 
     <li>
+     create a rule segment with the following <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size⑧">extent size</a>: 
      <ol type="lower-alpha">
       <li>for <span class="css">short</span>(<span class="css">long</span>),
-                    set the <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size⑦">extent size</a> to the length of the shortest(longest) of
+                    the <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size⑨">extent size</a> is the length of the shortest(longest) of
                     the two <a data-link-type="dfn" href="#next-grid-cell-span" id="ref-for-next-grid-cell-span⑧">next grid cell spans</a> 
       <li>for <span class="css">start</span>(<span class="css">end</span>),
-                    set the <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size⑧">extent size</a> to the length of the <a data-link-type="dfn" href="#next-grid-cell-span" id="ref-for-next-grid-cell-span⑨">next grid cell span</a> of the start-most(end-most) track 
+                    the <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size①⓪">extent size</a> is the length of the <a data-link-type="dfn" href="#next-grid-cell-span" id="ref-for-next-grid-cell-span⑨">next grid cell span</a> of the start-most(end-most) track 
       <li>for <span class="css">all-*</span>,
-                    set the <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size⑨">extent size</a> to the length of the <a data-link-type="dfn" href="#next-grid-cell-span" id="ref-for-next-grid-cell-span①⓪">next grid cell span</a> (which is always the same for the two tracks) 
+                    the <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size①①">extent size</a> is the length of the <a data-link-type="dfn" href="#next-grid-cell-span" id="ref-for-next-grid-cell-span①⓪">next grid cell span</a> (which is always the same for the two tracks) 
      </ol>
     <li>set the <var>current cell</var> to the next cell, in each track, that is after the last cell
-           of the <a data-link-type="dfn" href="#next-grid-cell-span" id="ref-for-next-grid-cell-span①①">next grid cell span</a> that we picked in the steps above; exit if there are no more cells 
+           of the <a data-link-type="dfn" href="#next-grid-cell-span" id="ref-for-next-grid-cell-span①①">next grid cell span</a> that we picked in the steps above; exit if there are no more cells;
+           otherwise, go to step 1. 
    </ol>
    <aside class="example" id="example-a07793b6">
     <a class="self-link" href="#example-a07793b6"></a> This <a href="examples/grid-extent-001.html">example</a> demonstrates the difference between
@@ -1864,7 +1865,7 @@ on screen, on paper, etc.
         They are both forced to span into the cell in row 2, column 4 to illustrate what happens
         when items span like this. 
     <figure>
-      <img src="media/grid-extent-001.png"> 
+      <img height="811" src="media/grid-extent-001.png" width="805"> 
      <figcaption> Examples of <span class="css">row-rule-extent</span> in a grid container. </figcaption>
     </figure>
    </aside>
@@ -1891,7 +1892,7 @@ on screen, on paper, etc.
         the <a class="css" data-link-type="propdesc" href="#propdef-row-rule-align" id="ref-for-propdef-row-rule-align②">row-rule-align: rule</a> in the subgrid.  The subgrid is in fact completely
         unaware of any parent rules.</p>
     <figure>
-      <img src="media/grid-subgrid-001.png"> 
+      <img height="256" src="media/grid-subgrid-001.png" width="826"> 
      <figcaption> Example of gap rules in a subgrid. </figcaption>
     </figure>
    </aside>
@@ -1908,7 +1909,7 @@ on screen, on paper, etc.
         variations of rules in a masonry grid layout. All the grids have <a class="css" data-link-type="propdesc" href="#propdef-column-rule-edge-align" id="ref-for-propdef-column-rule-edge-align①">column-rule-edge-align: gap-over</a> to extend the edge rules out to
         the content-box edge. 
     <figure>
-      <img src="media/grid-masonry-001.png"> 
+      <img height="785" src="media/grid-masonry-001.png" width="691"> 
      <figcaption> Example of gap rules in a masonry grid. </figcaption>
     </figure>
    </aside>
@@ -1916,12 +1917,12 @@ on screen, on paper, etc.
     <a class="self-link" href="#example-a0ffc13c"></a> This <a href="examples/grid-masonry-002.html">example</a> illustrates
         some of the <a class="css" data-link-type="propdesc" href="#propdef-column-rule-extent" id="ref-for-propdef-column-rule-extent①">column-rule-extent: all-*</a> values. 
     <figure>
-      <img src="media/grid-masonry-002.png"> 
+      <img height="772" src="media/grid-masonry-002.png" width="730"> 
      <figcaption> Example of gap rules in a masonry grid. </figcaption>
     </figure>
    </aside>
    <p class="issue" id="issue-b6f1d65c"><a class="self-link" href="#issue-b6f1d65c"></a> TODO: add definition list and algorithm here...</p>
-   <p class="issue" id="issue-3e9abc31"><a class="self-link" href="#issue-3e9abc31"></a> is it useful to be able to create a rule extent for the <i>intersection</i> or <i>union</i> between two tracks, like so: <img src="media/masonry-all-shorter.png" style="display:block">It’s pretty easy to implement, fwiw... (I accidently implemented <span class="css">short</span>/<span class="css">long</span> like that before I realized it was inconsistent with how they work elsewhere). I think it’s a case that is unique to a masonry axis though, at least <i>currently</i>...</p>
+   <p class="issue" id="issue-3e9abc31"><a class="self-link" href="#issue-3e9abc31"></a> is it useful to be able to create a rule extent for the <i>intersection</i> or <i>union</i> between two tracks, like so: <img height="435" src="media/masonry-all-shorter.png" style="display:block" width="701">It’s pretty easy to implement, fwiw... (I accidently implemented <span class="css">short</span>/<span class="css">long</span> like that before I realized it was inconsistent with how they work elsewhere). I think it’s a case that is unique to a masonry axis though, at least <i>currently</i>...</p>
    <h4 class="heading settled" data-level="6.1.2" id="rule-extent-flexbox"><span class="secno">6.1.2. </span><span class="content">Flexbox Containers</span><a class="self-link" href="#rule-extent-flexbox"></a></h4>
    <p>In a <a href="https://drafts.csswg.org/css-flexbox/#valdef-flex-direction-row">row-oriented flexbox container</a>,
     the <span class="css">row-rule-*</span> properties creates rules between flex lines,
@@ -1937,7 +1938,7 @@ on screen, on paper, etc.
     typically don’t line up in a way that the gaps between items are aligned across the lines
     (unless an author is very careful to arrange that), so this is to have a safe default behavior.</p>
    <p><span class="css">all-long allow-overlap</span> can be used to override that and
-    the <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size①⓪">extent size</a> is then from the cross axis start edge of the first flex line
+    the <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size①②">extent size</a> is then from the cross axis start edge of the first flex line
     to the cross axis end edge of the last flex line (all the <span class="css">all-*</span> behave the same).
     Only the first flex line creates column rules in this case,
     and the rule’s lateral position is taken from the gap in the first line.</p>
@@ -1946,7 +1947,7 @@ on screen, on paper, etc.
                on subsequent lines overlap the rules.  It may be used when all flex items are
                guarranteed to have the exact same main axis <a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#outer-size" id="ref-for-outer-size">outer size</a> and align such that
                the gaps are aligned between all the lines.</strong></p>
-   <p>Rules are created between adjacent flex lines and their <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size①①">extent size</a> are controlled by
+   <p>Rules are created between adjacent flex lines and their <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size①③">extent size</a> are controlled by
     the <span class="css">row-rule-extent</span> values defined as follows:</p>
    <dl>
     <dt>segment
@@ -1982,7 +1983,7 @@ on screen, on paper, etc.
                    beyond the other item’s end position, then pick the start-most item and go to 2. 
       <li>otherwise, pick the item with the smallest(largest) <a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#outer-size" id="ref-for-outer-size⑤">outer size</a> for <a class="css" data-link-type="maybe" href="#valdef-row-rule-extent-short" id="ref-for-valdef-row-rule-extent-short①">short</a>(<a class="css" data-link-type="maybe" href="#valdef-row-rule-extent-long" id="ref-for-valdef-row-rule-extent-long">long</a>) 
      </ol>
-    <li>use the picked item’s <a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#outer-size" id="ref-for-outer-size⑥">outer size</a> as this rule segment’s <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size①②">extent size</a>, then change
+    <li>use the picked item’s <a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#outer-size" id="ref-for-outer-size⑥">outer size</a> as this rule segment’s <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size①④">extent size</a>, then change
            the <a data-link-type="dfn" href="#next-flex-line-item" id="ref-for-next-flex-line-item⑥">next flex line item</a> for the picked item’s line to the next item on its line 
     <li>assign the <a data-link-type="dfn" href="#next-flex-line-item" id="ref-for-next-flex-line-item⑦">next flex line item</a> for the other line to the next item on this line
            that has an inline start position that is greater than the end position of the picked item 
@@ -1993,23 +1994,23 @@ on screen, on paper, etc.
    <aside class="example" id="example-374fda56">
     <a class="self-link" href="#example-374fda56"></a> Here are a few examples to illustrate the <span class="css">row-rule-extent</span> values. 
     <figure>
-      <img src="media/flexbox-extent-start-001.png"> 
+      <img height="194" src="media/flexbox-extent-start-001.png" width="314"> 
      <figcaption> A <a class="css" data-link-type="propdesc" href="#propdef-row-rule-extent" id="ref-for-propdef-row-rule-extent①">row-rule-extent: start</a> <a href="examples/flexbox-extent-start-001.html">example</a>. </figcaption>
     </figure>
     <figure>
-      <img src="media/flexbox-extent-end-001.png"> 
+      <img height="194" src="media/flexbox-extent-end-001.png" width="314"> 
      <figcaption> A <a class="css" data-link-type="propdesc" href="#propdef-row-rule-extent" id="ref-for-propdef-row-rule-extent②">row-rule-extent: end</a> <a href="examples/flexbox-extent-end-001.html">example</a>. </figcaption>
     </figure>
     <figure>
-      <img src="media/flexbox-extent-long-001.png"> 
+      <img height="194" src="media/flexbox-extent-long-001.png" width="314"> 
      <figcaption> A <a class="css" data-link-type="propdesc" href="#propdef-row-rule-extent" id="ref-for-propdef-row-rule-extent③">row-rule-extent: long</a> <a href="examples/flexbox-extent-long-001.html">example</a>. </figcaption>
     </figure>
     <figure>
-      <img src="media/flexbox-extent-all-short-001.png"> 
+      <img height="194" src="media/flexbox-extent-all-short-001.png" width="314"> 
      <figcaption> A <a class="css" data-link-type="propdesc" href="#propdef-row-rule-extent" id="ref-for-propdef-row-rule-extent④">row-rule-extent: all-short</a> <a href="examples/flexbox-extent-all-short-001.html">example</a>. </figcaption>
     </figure>
     <figure>
-      <img src="media/flexbox-extent-all-long-001.png"> 
+      <img height="194" src="media/flexbox-extent-all-long-001.png" width="314"> 
      <figcaption> A <a class="css" data-link-type="propdesc" href="#propdef-row-rule-extent" id="ref-for-propdef-row-rule-extent⑤">row-rule-extent: all-long</a> <a href="examples/flexbox-extent-all-long-001.html">example</a>. </figcaption>
     </figure>
    </aside>
@@ -2019,7 +2020,7 @@ on screen, on paper, etc.
         used and the gaps aren’t aligned.  (The flex items are semi-transparent
         to show the column rules underneath). 
     <figure>
-      <img src="media/flexbox-extent-all-long-allow-overlap-001.png"> 
+      <img height="194" src="media/flexbox-extent-all-long-allow-overlap-001.png" width="314"> 
      <figcaption> A <a class="css" data-link-type="propdesc" href="#propdef-column-rule-extent" id="ref-for-propdef-column-rule-extent③">column-rule-extent: all-long allow-overlap</a> example. </figcaption>
     </figure>
    </aside>
@@ -2034,7 +2035,7 @@ on screen, on paper, etc.
    <aside class="example" id="example-5015561d">
     <a class="self-link" href="#example-5015561d"></a> Note, column 2 is collapsed in this example. 
     <figure>
-      <img src="media/table-rules-001.png"> 
+      <img height="346" src="media/table-rules-001.png" width="818"> 
      <figcaption> An <a href="examples/table-rules-001.html">example</a> of table rules. </figcaption>
     </figure>
    </aside>
@@ -2052,7 +2053,7 @@ on screen, on paper, etc.
         table rows and cells. And also what happens when the table rules from
         the last example is also applied. 
     <figure>
-      <img src="media/table-row-group-rules-001.png"> 
+      <img height="784" src="media/table-row-group-rules-001.png" width="879"> 
      <figcaption> Example of table row and cell rules. </figcaption>
     </figure>
    </aside>
@@ -2065,12 +2066,13 @@ on screen, on paper, etc.
    <p>The <span class="css">row-rule*</span> properties applies to <a data-link-type="dfn" href="https://drafts.csswg.org/css-multicol-1/#multi-column-container" id="ref-for-multi-column-container①⑦">multi-column containers</a> and creates
     row rules between a row of columns in the block axis and <a data-link-type="dfn" href="https://drafts.csswg.org/css-multicol-1/#spanner" id="ref-for-spanner">spanners</a>.</p>
    <p>The <a data-link-type="dfn" href="#segment" id="ref-for-segment">segments</a> are the columns and the <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-box-4/#valdef-box-margin-box" id="ref-for-valdef-box-margin-box">margin-box</a> of <a data-link-type="dfn" href="https://drafts.csswg.org/css-multicol-1/#spanner" id="ref-for-spanner①">spanners</a>.</p>
-   <p class="issue" id="issue-b4c69802"><a class="self-link" href="#issue-b4c69802"></a> this proposal makes the assumption that the parallel proposal that <span class="css">row-gap</span> should apply to multi-column containers is also adopted (issue #XXX).</p>
+   <p class="issue" id="issue-409a7220"><a class="self-link" href="#issue-409a7220"></a> this proposal makes the assumption that the related proposal that <span class="css">row-gap</span> should apply to multi-column containers is also adopted
+    (<a href="https://github.com/w3c/csswg-drafts/issues/6746">issue #6746</a>).</p>
    <aside class="example" id="example-b0c3427d">
     <a class="self-link" href="#example-b0c3427d"></a> This <a href="examples/multicol-row-rule-001.html">example</a> illustrates rules in
         a multi-column container. 
     <figure>
-      <img src="media/multicol-row-rule-001.png"> 
+      <img height="854" src="media/multicol-row-rule-001.png" width="827"> 
      <figcaption> Example of column and row rules in a multi-column. </figcaption>
     </figure>
    </aside>
@@ -2079,18 +2081,19 @@ on screen, on paper, etc.
         'column-span: <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-values-4/#integer-value" id="ref-for-integer-value">&lt;integer></a>' some time in the future,
         this is how row rules will work: 
     <figure>
-      <img src="media/multicol-colspan-2.png"> 
+      <img height="195" src="media/multicol-colspan-2.png" width="808"> 
      <figcaption> Example of <a class="css" data-link-type="propdesc" href="https://drafts.csswg.org/css-multicol-2/#propdef-column-span" id="ref-for-propdef-column-span">column-span: 2</a> in a multi-column with column and row rules. </figcaption>
     </figure>
    </aside>
    <h2 class="heading settled" data-level="7" id="rule-containing-rectangle"><span class="secno">7. </span><span class="content">The Rule Containing Rectangle</span><a class="self-link" href="#rule-containing-rectangle"></a></h2>
-   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="rule-containing-rectangle①">rule containing rectangle</dfn> is formed by the <a href="#column-rule-extent">rule extent</a> and <a href="#column-rule-align">alignment</a> in the <a data-link-type="dfn" href="#longitudinal-axis" id="ref-for-longitudinal-axis⑦">longitudinal axis</a>, and by the size of the gap in the <a data-link-type="dfn" href="#lateral-axis" id="ref-for-lateral-axis⑤">lateral axis</a>.
-    It is important to note that the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①①④">rule containing rectangle’s</a> size in an axis isn’t affected by any of
+   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="rule-containing-rectangle①">rule containing rectangle</dfn> is formed by the <a href="#column-rule-extent">rule extent</a> and <a href="#column-rule-align">alignment</a> in the <a data-link-type="dfn" href="#longitudinal-axis" id="ref-for-longitudinal-axis⑦">longitudinal axis</a>, and by the size of the <a href="https://drafts.csswg.org/css-align/#gutter">gutter</a> in the <a data-link-type="dfn" href="#lateral-axis" id="ref-for-lateral-axis④">lateral axis</a>.
+    (For clarity, the size of the gutter is calculated from the <a href="https://drafts.csswg.org/css-align/#gaps">gap</a> properties plus any extra space contributed by <a href="https://drafts.csswg.org/css-align/#distribution-values">alignment distribution</a> but does not include any item margins.)</p>
+   <p>It is important to note that the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①①④">rule containing rectangle’s</a> size in an axis isn’t affected by any of
     the <a href="#column-rule-lateral-inset">inset properties</a> <i>in the same axis</i> as that would lead to a circular
     dependency when resolving inset percentage values.  (The <span id="ref-for-rule-containing-rectangle①①⑤">rule containing rectangle</span> is the percentage basis
     for all the rule properties which take percentage values.) However, a rule that uses <a class="css" data-link-type="propdesc" href="#propdef-column-rule-align" id="ref-for-propdef-column-rule-align①">column-rule-align: rule | rule-center | rule-over</a> is affected by the <a href="#column-rule-lateral-inset">lateral inset properties</a> of the rule it aligns to in the <i>opposite axis</i>.</p>
    <p>Here’s an illustration of the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①①⑥">rule containing rectangle</a> (the dashed green rectangle) for the top blue rule.
-    This is a 2x2 grid using the default extent, so the <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size①③">extent size</a> is the row’s block size.
+    This is a 2x2 grid using the default extent, so the <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size①⑤">extent size</a> is the row’s block size.
     It has the following non-default rule properties:</p>
 <pre class="language-css highlight">      <c- k>column-rule</c-><c- p>:</c-> <c- m>14</c-><c- k>px</c-> solid blue<c- p>;</c->
       <c- k>column-rule-align</c-><c- p>:</c-> rule<c- p>;</c->
@@ -2101,7 +2104,7 @@ on screen, on paper, etc.
       <c- k>row-rule-lateral-inset-start</c-><c- p>:</c-> <c- m>20</c-><c- k>px</c-><c- p>;</c->
 </pre>
    <figure>
-     <img src="media/rule-containing-rectangle.png"> 
+     <img height="584" src="media/rule-containing-rectangle.png" width="620"> 
     <figcaption> The Rule Containing Rectangle </figcaption>
    </figure>
    <p>Note that the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①①⑦">rule containing rectangle</a> extends to the start of the black horizontal rule, which has a <span class="css">20px</span> lateral inset (making it non-centered). We align to its start with <a class="css" data-link-type="propdesc" href="#propdef-column-rule-align" id="ref-for-propdef-column-rule-align②">column-rule-align: rule</a>.  From there,
@@ -2128,6 +2131,16 @@ on screen, on paper, etc.
     values etc.
     For clarity, none of the properties in this spec affects layout in any way.
     Column and row rules are purely a painting effect.</p>
+   <aside class="example" id="example-13dcb258">
+    <a class="self-link" href="#example-13dcb258"></a> Here’s an <a href="examples/grid-longitudinal-003.html">example</a> showing
+        rules that overflow their container and how they are clipped.
+        Both grids have large negative insets to extend the rules outside of the container.
+        The right grid has <a class="css" data-link-type="propdesc" href="https://drafts.csswg.org/css-overflow-3/#propdef-overflow" id="ref-for-propdef-overflow">overflow: hidden</a> which clips its rules at the padding area edge. 
+    <figure>
+      <img height="595" src="media/grid-longitudinal-003.png" width="766"> 
+     <figcaption> Examples of rule overflow and clipping. </figcaption>
+    </figure>
+   </aside>
   </main>
   <h2 class="no-ref no-num heading settled" id="w3c-conformance"><span class="content"> Conformance</span><a class="self-link" href="#w3c-conformance"></a></h2>
   <h3 class="no-ref heading settled" id="w3c-conventions"><span class="content"> Document conventions</span><a class="self-link" href="#w3c-conventions"></a></h3>
@@ -2237,16 +2250,16 @@ on screen, on paper, etc.
    <li><a href="#propdef-column-rule-image-repeat">column-rule-image-repeat</a><span>, in § 2.3</span>
    <li><a href="#propdef-column-rule-image-slice">column-rule-image-slice</a><span>, in § 2.2</span>
    <li><a href="#propdef-column-rule-image-source">column-rule-image-source</a><span>, in § 2.1</span>
-   <li><a href="#propdef-column-rule-lateral-inset">column-rule-lateral-inset</a><span>, in § 3.4</span>
+   <li><a href="#propdef-column-rule-lateral-inset">column-rule-lateral-inset</a><span>, in § 3.5</span>
    <li><a href="#propdef-column-rule-lateral-inset-end">column-rule-lateral-inset-end</a><span>, in § 3.3</span>
    <li><a href="#propdef-column-rule-lateral-inset-start">column-rule-lateral-inset-start</a><span>, in § 3.3</span>
    <li><a href="#propdef-column-rule-length">column-rule-length</a><span>, in § 3.2</span>
-   <li><a href="#propdef-column-rule-longitudinal-edge-inset">column-rule-longitudinal-edge-inset</a><span>, in § 3.8</span>
-   <li><a href="#propdef-column-rule-longitudinal-edge-inset-end">column-rule-longitudinal-edge-inset-end</a><span>, in § 3.7</span>
-   <li><a href="#propdef-column-rule-longitudinal-edge-inset-start">column-rule-longitudinal-edge-inset-start</a><span>, in § 3.7</span>
-   <li><a href="#propdef-column-rule-longitudinal-inset">column-rule-longitudinal-inset</a><span>, in § 3.6</span>
-   <li><a href="#propdef-column-rule-longitudinal-inset-end">column-rule-longitudinal-inset-end</a><span>, in § 3.5</span>
-   <li><a href="#propdef-column-rule-longitudinal-inset-start">column-rule-longitudinal-inset-start</a><span>, in § 3.5</span>
+   <li><a href="#propdef-column-rule-longitudinal-edge-inset">column-rule-longitudinal-edge-inset</a><span>, in § 3.9</span>
+   <li><a href="#propdef-column-rule-longitudinal-edge-inset-end">column-rule-longitudinal-edge-inset-end</a><span>, in § 3.8</span>
+   <li><a href="#propdef-column-rule-longitudinal-edge-inset-start">column-rule-longitudinal-edge-inset-start</a><span>, in § 3.8</span>
+   <li><a href="#propdef-column-rule-longitudinal-inset">column-rule-longitudinal-inset</a><span>, in § 3.7</span>
+   <li><a href="#propdef-column-rule-longitudinal-inset-end">column-rule-longitudinal-inset-end</a><span>, in § 3.6</span>
+   <li><a href="#propdef-column-rule-longitudinal-inset-start">column-rule-longitudinal-inset-start</a><span>, in § 3.6</span>
    <li><a href="#valdef-row-rule-extent-end">end</a><span>, in § 6.1.1</span>
    <li><a href="#extent-size">extent size</a><span>, in § 6.1</span>
    <li><a href="#lateral-axis">lateral axis</a><span>, in § 3</span>
@@ -2267,16 +2280,16 @@ on screen, on paper, etc.
    <li><a href="#propdef-row-rule-image-repeat">row-rule-image-repeat</a><span>, in § 2.3</span>
    <li><a href="#propdef-row-rule-image-slice">row-rule-image-slice</a><span>, in § 2.2</span>
    <li><a href="#propdef-row-rule-image-source">row-rule-image-source</a><span>, in § 2.1</span>
-   <li><a href="#propdef-row-rule-lateral-inset">row-rule-lateral-inset</a><span>, in § 3.4</span>
+   <li><a href="#propdef-row-rule-lateral-inset">row-rule-lateral-inset</a><span>, in § 3.5</span>
    <li><a href="#propdef-row-rule-lateral-inset-end">row-rule-lateral-inset-end</a><span>, in § 3.3</span>
    <li><a href="#propdef-row-rule-lateral-inset-start">row-rule-lateral-inset-start</a><span>, in § 3.3</span>
    <li><a href="#propdef-row-rule-length">row-rule-length</a><span>, in § 3.2</span>
-   <li><a href="#propdef-row-rule-longitudinal-edge-inset">row-rule-longitudinal-edge-inset</a><span>, in § 3.8</span>
-   <li><a href="#propdef-row-rule-longitudinal-edge-inset-end">row-rule-longitudinal-edge-inset-end</a><span>, in § 3.7</span>
-   <li><a href="#propdef-row-rule-longitudinal-edge-inset-start">row-rule-longitudinal-edge-inset-start</a><span>, in § 3.7</span>
-   <li><a href="#propdef-row-rule-longitudinal-inset">row-rule-longitudinal-inset</a><span>, in § 3.6</span>
-   <li><a href="#propdef-row-rule-longitudinal-inset-end">row-rule-longitudinal-inset-end</a><span>, in § 3.5</span>
-   <li><a href="#propdef-row-rule-longitudinal-inset-start">row-rule-longitudinal-inset-start</a><span>, in § 3.5</span>
+   <li><a href="#propdef-row-rule-longitudinal-edge-inset">row-rule-longitudinal-edge-inset</a><span>, in § 3.9</span>
+   <li><a href="#propdef-row-rule-longitudinal-edge-inset-end">row-rule-longitudinal-edge-inset-end</a><span>, in § 3.8</span>
+   <li><a href="#propdef-row-rule-longitudinal-edge-inset-start">row-rule-longitudinal-edge-inset-start</a><span>, in § 3.8</span>
+   <li><a href="#propdef-row-rule-longitudinal-inset">row-rule-longitudinal-inset</a><span>, in § 3.7</span>
+   <li><a href="#propdef-row-rule-longitudinal-inset-end">row-rule-longitudinal-inset-end</a><span>, in § 3.6</span>
+   <li><a href="#propdef-row-rule-longitudinal-inset-start">row-rule-longitudinal-inset-start</a><span>, in § 3.6</span>
    <li><a href="#propdef-row-rule-style">row-rule-style</a><span>, in § 4.1</span>
    <li><a href="#propdef-row-rule-width">row-rule-width</a><span>, in § 3.1</span>
    <li><a href="#rule-containing-rectangle①">rule containing rectangle</a><span>, in § 7</span>
@@ -2328,13 +2341,19 @@ on screen, on paper, etc.
     <li><a href="#ref-for-used-value">3.1. The column-rule-width and row-rule-width Properties</a>
     <li><a href="#ref-for-used-value①">3.2. The column-rule-length and row-rule-length Properties</a>
     <li><a href="#ref-for-used-value②">3.3. The Rule Lateral Inset Properties</a>
-    <li><a href="#ref-for-used-value③">3.5. The Rule Longitudinal Inset Properties</a>
+    <li><a href="#ref-for-used-value③">3.6. The Rule Longitudinal Inset Properties</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-typedef-color">
    <a href="https://drafts.csswg.org/css-color-4/#typedef-color">https://drafts.csswg.org/css-color-4/#typedef-color</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-typedef-color">4.1. The row-rule-style and row-rule-color Properties</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-propdef-opacity">
+   <a href="https://drafts.csswg.org/css-color-4/#propdef-opacity">https://drafts.csswg.org/css-color-4/#propdef-opacity</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-propdef-opacity">3.6. The Rule Longitudinal Inset Properties</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-order-modified-document-order">
@@ -2354,8 +2373,8 @@ on screen, on paper, etc.
     <li><a href="#ref-for-flex-container⑤">3.1. The column-rule-width and row-rule-width Properties</a> <a href="#ref-for-flex-container⑥">(2)</a>
     <li><a href="#ref-for-flex-container⑦">3.2. The column-rule-length and row-rule-length Properties</a>
     <li><a href="#ref-for-flex-container⑧">3.3. The Rule Lateral Inset Properties</a>
-    <li><a href="#ref-for-flex-container⑨">3.5. The Rule Longitudinal Inset Properties</a>
-    <li><a href="#ref-for-flex-container①⓪">3.7. The Rule Longitudinal Edge Inset Properties</a>
+    <li><a href="#ref-for-flex-container⑨">3.6. The Rule Longitudinal Inset Properties</a>
+    <li><a href="#ref-for-flex-container①⓪">3.8. The Rule Longitudinal Edge Inset Properties</a>
     <li><a href="#ref-for-flex-container①①">4.1. The row-rule-style and row-rule-color Properties</a> <a href="#ref-for-flex-container①②">(2)</a>
     <li><a href="#ref-for-flex-container①③">5.1. The column-rule-align and row-rule-align Properties</a>
     <li><a href="#ref-for-flex-container①④">5.2. The column-rule-edge-align and row-rule-edge-align Properties</a>
@@ -2391,8 +2410,8 @@ on screen, on paper, etc.
     <li><a href="#ref-for-grid-container⑤">3.1. The column-rule-width and row-rule-width Properties</a> <a href="#ref-for-grid-container⑥">(2)</a>
     <li><a href="#ref-for-grid-container⑦">3.2. The column-rule-length and row-rule-length Properties</a>
     <li><a href="#ref-for-grid-container⑧">3.3. The Rule Lateral Inset Properties</a>
-    <li><a href="#ref-for-grid-container⑨">3.5. The Rule Longitudinal Inset Properties</a>
-    <li><a href="#ref-for-grid-container①⓪">3.7. The Rule Longitudinal Edge Inset Properties</a>
+    <li><a href="#ref-for-grid-container⑨">3.6. The Rule Longitudinal Inset Properties</a>
+    <li><a href="#ref-for-grid-container①⓪">3.8. The Rule Longitudinal Edge Inset Properties</a>
     <li><a href="#ref-for-grid-container①①">4.1. The row-rule-style and row-rule-color Properties</a> <a href="#ref-for-grid-container①②">(2)</a>
     <li><a href="#ref-for-grid-container①③">5.1. The column-rule-align and row-rule-align Properties</a>
     <li><a href="#ref-for-grid-container①④">5.2. The column-rule-edge-align and row-rule-edge-align Properties</a>
@@ -2469,8 +2488,8 @@ on screen, on paper, etc.
     <li><a href="#ref-for-multi-column-container⑤">3.1. The column-rule-width and row-rule-width Properties</a> <a href="#ref-for-multi-column-container⑥">(2)</a>
     <li><a href="#ref-for-multi-column-container⑦">3.2. The column-rule-length and row-rule-length Properties</a>
     <li><a href="#ref-for-multi-column-container⑧">3.3. The Rule Lateral Inset Properties</a>
-    <li><a href="#ref-for-multi-column-container⑨">3.5. The Rule Longitudinal Inset Properties</a>
-    <li><a href="#ref-for-multi-column-container①⓪">3.7. The Rule Longitudinal Edge Inset Properties</a>
+    <li><a href="#ref-for-multi-column-container⑨">3.6. The Rule Longitudinal Inset Properties</a>
+    <li><a href="#ref-for-multi-column-container①⓪">3.8. The Rule Longitudinal Edge Inset Properties</a>
     <li><a href="#ref-for-multi-column-container①①">4.1. The row-rule-style and row-rule-color Properties</a> <a href="#ref-for-multi-column-container①②">(2)</a>
     <li><a href="#ref-for-multi-column-container①③">5.1. The column-rule-align and row-rule-align Properties</a>
     <li><a href="#ref-for-multi-column-container①④">5.2. The column-rule-edge-align and row-rule-edge-align Properties</a>
@@ -2481,7 +2500,7 @@ on screen, on paper, etc.
   <aside class="dfn-panel" data-for="term-for-multi-column-layout">
    <a href="https://drafts.csswg.org/css-multicol-1/#multi-column-layout">https://drafts.csswg.org/css-multicol-1/#multi-column-layout</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-multi-column-layout">3.5. The Rule Longitudinal Inset Properties</a>
+    <li><a href="#ref-for-multi-column-layout">3.6. The Rule Longitudinal Inset Properties</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-spanner">
@@ -2500,6 +2519,12 @@ on screen, on paper, etc.
    <a href="https://drafts.csswg.org/css-overflow-3/#ink-overflow">https://drafts.csswg.org/css-overflow-3/#ink-overflow</a><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-ink-overflow">9. Rule Overflow</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="term-for-propdef-overflow">
+   <a href="https://drafts.csswg.org/css-overflow-3/#propdef-overflow">https://drafts.csswg.org/css-overflow-3/#propdef-overflow</a><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-propdef-overflow">9. Rule Overflow</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-propdef-left">
@@ -2543,8 +2568,8 @@ on screen, on paper, etc.
     <li><a href="#ref-for-table⑤">3.1. The column-rule-width and row-rule-width Properties</a> <a href="#ref-for-table⑥">(2)</a>
     <li><a href="#ref-for-table⑦">3.2. The column-rule-length and row-rule-length Properties</a>
     <li><a href="#ref-for-table⑧">3.3. The Rule Lateral Inset Properties</a>
-    <li><a href="#ref-for-table⑨">3.5. The Rule Longitudinal Inset Properties</a>
-    <li><a href="#ref-for-table①⓪">3.7. The Rule Longitudinal Edge Inset Properties</a>
+    <li><a href="#ref-for-table⑨">3.6. The Rule Longitudinal Inset Properties</a>
+    <li><a href="#ref-for-table①⓪">3.8. The Rule Longitudinal Edge Inset Properties</a>
     <li><a href="#ref-for-table①①">4.1. The row-rule-style and row-rule-color Properties</a> <a href="#ref-for-table①②">(2)</a>
     <li><a href="#ref-for-table①③">5.1. The column-rule-align and row-rule-align Properties</a>
     <li><a href="#ref-for-table①④">5.2. The column-rule-edge-align and row-rule-edge-align Properties</a>
@@ -2588,8 +2613,8 @@ on screen, on paper, etc.
     <li><a href="#ref-for-table-row-group⑤">3.1. The column-rule-width and row-rule-width Properties</a> <a href="#ref-for-table-row-group⑥">(2)</a>
     <li><a href="#ref-for-table-row-group⑦">3.2. The column-rule-length and row-rule-length Properties</a>
     <li><a href="#ref-for-table-row-group⑧">3.3. The Rule Lateral Inset Properties</a>
-    <li><a href="#ref-for-table-row-group⑨">3.5. The Rule Longitudinal Inset Properties</a>
-    <li><a href="#ref-for-table-row-group①⓪">3.7. The Rule Longitudinal Edge Inset Properties</a>
+    <li><a href="#ref-for-table-row-group⑨">3.6. The Rule Longitudinal Inset Properties</a>
+    <li><a href="#ref-for-table-row-group①⓪">3.8. The Rule Longitudinal Edge Inset Properties</a>
     <li><a href="#ref-for-table-row-group①①">4.1. The row-rule-style and row-rule-color Properties</a> <a href="#ref-for-table-row-group①②">(2)</a>
     <li><a href="#ref-for-table-row-group①③">5.1. The column-rule-align and row-rule-align Properties</a>
     <li><a href="#ref-for-table-row-group①④">5.2. The column-rule-edge-align and row-rule-edge-align Properties</a>
@@ -2609,8 +2634,8 @@ on screen, on paper, etc.
    <ul>
     <li><a href="#ref-for-typedef-length-percentage">3.2. The column-rule-length and row-rule-length Properties</a>
     <li><a href="#ref-for-typedef-length-percentage①">3.3. The Rule Lateral Inset Properties</a>
-    <li><a href="#ref-for-typedef-length-percentage②">3.5. The Rule Longitudinal Inset Properties</a>
-    <li><a href="#ref-for-typedef-length-percentage③">3.7. The Rule Longitudinal Edge Inset Properties</a>
+    <li><a href="#ref-for-typedef-length-percentage②">3.6. The Rule Longitudinal Inset Properties</a>
+    <li><a href="#ref-for-typedef-length-percentage③">3.8. The Rule Longitudinal Edge Inset Properties</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-number-value">
@@ -2630,9 +2655,9 @@ on screen, on paper, etc.
   <aside class="dfn-panel" data-for="term-for-mult-opt">
    <a href="https://drafts.csswg.org/css-values-4/#mult-opt">https://drafts.csswg.org/css-values-4/#mult-opt</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-mult-opt">3.4. The column-rule-lateral-inset and row-rule-lateral-inset Shorthands</a> <a href="#ref-for-mult-opt①">(2)</a>
-    <li><a href="#ref-for-mult-opt②">3.6. The column-rule-longitudinal-inset and row-rule-longitudinal-inset Shorthands</a> <a href="#ref-for-mult-opt③">(2)</a>
-    <li><a href="#ref-for-mult-opt④">3.8. The column-rule-longitudinal-edge-inset and row-rule-longitudinal-edge-inset Shorthands</a> <a href="#ref-for-mult-opt⑤">(2)</a>
+    <li><a href="#ref-for-mult-opt">3.5. The column-rule-lateral-inset and row-rule-lateral-inset Shorthands</a> <a href="#ref-for-mult-opt①">(2)</a>
+    <li><a href="#ref-for-mult-opt②">3.7. The column-rule-longitudinal-inset and row-rule-longitudinal-inset Shorthands</a> <a href="#ref-for-mult-opt③">(2)</a>
+    <li><a href="#ref-for-mult-opt④">3.9. The column-rule-longitudinal-edge-inset and row-rule-longitudinal-edge-inset Shorthands</a> <a href="#ref-for-mult-opt⑤">(2)</a>
     <li><a href="#ref-for-mult-opt⑥">6.1. The column-rule-extent and row-rule-extent Properties</a>
    </ul>
   </aside>
@@ -2653,8 +2678,8 @@ on screen, on paper, etc.
     <li><a href="#ref-for-comb-one⑤">3.1. The column-rule-width and row-rule-width Properties</a> <a href="#ref-for-comb-one⑥">(2)</a> <a href="#ref-for-comb-one⑦">(3)</a>
     <li><a href="#ref-for-comb-one⑧">3.2. The column-rule-length and row-rule-length Properties</a>
     <li><a href="#ref-for-comb-one⑨">3.3. The Rule Lateral Inset Properties</a>
-    <li><a href="#ref-for-comb-one①⓪">3.5. The Rule Longitudinal Inset Properties</a>
-    <li><a href="#ref-for-comb-one①①">3.7. The Rule Longitudinal Edge Inset Properties</a>
+    <li><a href="#ref-for-comb-one①⓪">3.6. The Rule Longitudinal Inset Properties</a>
+    <li><a href="#ref-for-comb-one①①">3.8. The Rule Longitudinal Edge Inset Properties</a>
     <li><a href="#ref-for-comb-one①②">5.1. The column-rule-align and row-rule-align Properties</a> <a href="#ref-for-comb-one①③">(2)</a> <a href="#ref-for-comb-one①④">(3)</a> <a href="#ref-for-comb-one①⑤">(4)</a> <a href="#ref-for-comb-one①⑥">(5)</a>
     <li><a href="#ref-for-comb-one①⑦">5.2. The column-rule-edge-align and row-rule-edge-align Properties</a> <a href="#ref-for-comb-one①⑧">(2)</a>
     <li><a href="#ref-for-comb-one①⑨">6.1. The column-rule-extent and row-rule-extent Properties</a> <a href="#ref-for-comb-one②⓪">(2)</a> <a href="#ref-for-comb-one②①">(3)</a> <a href="#ref-for-comb-one②②">(4)</a> <a href="#ref-for-comb-one②③">(5)</a> <a href="#ref-for-comb-one②④">(6)</a> <a href="#ref-for-comb-one②⑤">(7)</a> <a href="#ref-for-comb-one②⑥">(8)</a>
@@ -2697,6 +2722,7 @@ on screen, on paper, etc.
     <a data-link-type="biblio">[css-color-4]</a> defines the following terms:
     <ul>
      <li><span class="dfn-paneled" id="term-for-typedef-color">&lt;color></span>
+     <li><span class="dfn-paneled" id="term-for-propdef-opacity">opacity</span>
     </ul>
    <li>
     <a data-link-type="biblio">[css-display-3]</a> defines the following terms:
@@ -2749,6 +2775,7 @@ on screen, on paper, etc.
     <a data-link-type="biblio">[css-overflow-3]</a> defines the following terms:
     <ul>
      <li><span class="dfn-paneled" id="term-for-ink-overflow">ink overflow</span>
+     <li><span class="dfn-paneled" id="term-for-propdef-overflow">overflow</span>
     </ul>
    <li>
     <a data-link-type="biblio">[css-position-3]</a> defines the following terms:
@@ -2799,7 +2826,7 @@ on screen, on paper, etc.
    <dt id="biblio-css-box-4">[CSS-BOX-4]
    <dd>Elika Etemad. <a href="https://www.w3.org/TR/css-box-4/"><cite>CSS Box Model Module Level 4</cite></a>. 21 April 2020. WD. URL: <a href="https://www.w3.org/TR/css-box-4/">https://www.w3.org/TR/css-box-4/</a>
    <dt id="biblio-css-cascade-5">[CSS-CASCADE-5]
-   <dd>Elika Etemad; Miriam Suzanne; Tab Atkins Jr.. <a href="https://www.w3.org/TR/css-cascade-5/"><cite>CSS Cascading and Inheritance Level 5</cite></a>. 15 October 2021. WD. URL: <a href="https://www.w3.org/TR/css-cascade-5/">https://www.w3.org/TR/css-cascade-5/</a>
+   <dd>Elika Etemad; Miriam Suzanne; Tab Atkins Jr.. <a href="https://www.w3.org/TR/css-cascade-5/"><cite>CSS Cascading and Inheritance Level 5</cite></a>. 29 August 2021. WD. URL: <a href="https://www.w3.org/TR/css-cascade-5/">https://www.w3.org/TR/css-cascade-5/</a>
    <dt id="biblio-css-color-4">[CSS-COLOR-4]
    <dd>Tab Atkins Jr.; Chris Lilley. <a href="https://www.w3.org/TR/css-color-4/"><cite>CSS Color Module Level 4</cite></a>. 1 June 2021. WD. URL: <a href="https://www.w3.org/TR/css-color-4/">https://www.w3.org/TR/css-color-4/</a>
    <dt id="biblio-css-display-3">[CSS-DISPLAY-3]
@@ -2816,14 +2843,12 @@ on screen, on paper, etc.
    <dd>Florian Rivoal; Rachel Andrew. <a href="https://www.w3.org/TR/css-multicol-1/"><cite>CSS Multi-column Layout Module Level 1</cite></a>. 12 October 2021. CR. URL: <a href="https://www.w3.org/TR/css-multicol-1/">https://www.w3.org/TR/css-multicol-1/</a>
    <dt id="biblio-css-overflow-3">[CSS-OVERFLOW-3]
    <dd>David Baron; Elika Etemad; Florian Rivoal. <a href="https://www.w3.org/TR/css-overflow-3/"><cite>CSS Overflow Module Level 3</cite></a>. 3 June 2020. WD. URL: <a href="https://www.w3.org/TR/css-overflow-3/">https://www.w3.org/TR/css-overflow-3/</a>
-   <dt id="biblio-css-position-3">[CSS-POSITION-3]
-   <dd>Elika Etemad; et al. <a href="https://www.w3.org/TR/css-position-3/"><cite>CSS Positioned Layout Module Level 3</cite></a>. 19 May 2020. WD. URL: <a href="https://www.w3.org/TR/css-position-3/">https://www.w3.org/TR/css-position-3/</a>
    <dt id="biblio-css-sizing-3">[CSS-SIZING-3]
    <dd>Tab Atkins Jr.; Elika Etemad. <a href="https://www.w3.org/TR/css-sizing-3/"><cite>CSS Box Sizing Module Level 3</cite></a>. 17 March 2021. WD. URL: <a href="https://www.w3.org/TR/css-sizing-3/">https://www.w3.org/TR/css-sizing-3/</a>
    <dt id="biblio-css-tables-3">[CSS-TABLES-3]
    <dd>François Remy; Greg Whitworth; David Baron. <a href="https://www.w3.org/TR/css-tables-3/"><cite>CSS Table Module Level 3</cite></a>. 27 July 2019. WD. URL: <a href="https://www.w3.org/TR/css-tables-3/">https://www.w3.org/TR/css-tables-3/</a>
    <dt id="biblio-css-values-4">[CSS-VALUES-4]
-   <dd>Tab Atkins Jr.; Elika Etemad. <a href="https://www.w3.org/TR/css-values-4/"><cite>CSS Values and Units Module Level 4</cite></a>. 16 October 2021. WD. URL: <a href="https://www.w3.org/TR/css-values-4/">https://www.w3.org/TR/css-values-4/</a>
+   <dd>Tab Atkins Jr.; Elika Etemad. <a href="https://www.w3.org/TR/css-values-4/"><cite>CSS Values and Units Module Level 4</cite></a>. 30 September 2021. WD. URL: <a href="https://www.w3.org/TR/css-values-4/">https://www.w3.org/TR/css-values-4/</a>
    <dt id="biblio-css-writing-modes-4">[CSS-WRITING-MODES-4]
    <dd>Elika Etemad; Koji Ishii. <a href="https://www.w3.org/TR/css-writing-modes-4/"><cite>CSS Writing Modes Level 4</cite></a>. 30 July 2019. CR. URL: <a href="https://www.w3.org/TR/css-writing-modes-4/">https://www.w3.org/TR/css-writing-modes-4/</a>
    <dt id="biblio-rfc2119">[RFC2119]
@@ -2833,6 +2858,8 @@ on screen, on paper, etc.
   <dl>
    <dt id="biblio-css-multicol-2">[CSS-MULTICOL-2]
    <dd>CSS Multi-column Layout Module Level 2 URL: <a href="https://drafts.csswg.org/css-multicol-2/">https://drafts.csswg.org/css-multicol-2/</a>
+   <dt id="biblio-css-position-3">[CSS-POSITION-3]
+   <dd>Elika Etemad; et al. <a href="https://www.w3.org/TR/css-position-3/"><cite>CSS Positioned Layout Module Level 3</cite></a>. 19 May 2020. WD. URL: <a href="https://www.w3.org/TR/css-position-3/">https://www.w3.org/TR/css-position-3/</a>
   </dl>
   <h2 class="no-num no-ref heading settled" id="property-index"><span class="content">Property Index</span><a class="self-link" href="#property-index"></a></h2>
   <div class="big-element-wrapper">
@@ -2900,9 +2927,9 @@ on screen, on paper, etc.
       <td>per grammar
       <td>the specified keyword
      <tr>
-      <th scope="row"><a class="css" data-link-type="property" href="#propdef-column-rule-image-slice" id="ref-for-propdef-column-rule-image-slice②">column-rule-image-slice</a>
+      <th scope="row"><a class="css" data-link-type="property" href="#propdef-column-rule-image-slice" id="ref-for-propdef-column-rule-image-slice④">column-rule-image-slice</a>
       <td>[&lt;number [0,∞]> | &lt;percentage [0,∞]>]{1,2}
-      <td>zero
+      <td>0
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
       <td>refer to size of the image
@@ -2935,7 +2962,7 @@ on screen, on paper, etc.
       <td>auto
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to the rule containing rectangle’s size in the lateral axis
+      <td>refer to the rule containing rectangle’s size in the rule’s lateral axis
       <td>by computed value type
       <td>per grammar
       <td>the specified value
@@ -2945,7 +2972,7 @@ on screen, on paper, etc.
       <td>auto
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to the rule containing rectangle’s size in the lateral axis
+      <td>refer to the rule containing rectangle’s size in the rule’s lateral axis
       <td>by computed value type
       <td>per grammar
       <td>the specified value
@@ -2955,7 +2982,7 @@ on screen, on paper, etc.
       <td>auto
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to the rule containing rectangle’s size in the longitudinal axis
+      <td>refer to the rule containing rectangle’s size in the rule’s longitudinal axis
       <td>by computed value type
       <td>per grammar
       <td>the specified value
@@ -2972,20 +2999,20 @@ on screen, on paper, etc.
      <tr>
       <th scope="row"><a class="css" data-link-type="property" href="#propdef-column-rule-longitudinal-edge-inset-end" id="ref-for-propdef-column-rule-longitudinal-edge-inset-end①">column-rule-longitudinal-edge-inset-end</a>
       <td>&lt;length-percentage> | auto
-      <td>zero
+      <td>0
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to the rule containing rectangle’s size in the longitudinal axis
+      <td>refer to the rule containing rectangle’s size in the rule’s longitudinal axis
       <td>by computed value type
       <td>per grammar
       <td>the specified value
      <tr>
       <th scope="row"><a class="css" data-link-type="property" href="#propdef-column-rule-longitudinal-edge-inset-start" id="ref-for-propdef-column-rule-longitudinal-edge-inset-start①">column-rule-longitudinal-edge-inset-start</a>
       <td>&lt;length-percentage> | auto
-      <td>zero
+      <td>0
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to the rule containing rectangle’s size in the longitudinal axis
+      <td>refer to the rule containing rectangle’s size in the rule’s longitudinal axis
       <td>by computed value type
       <td>per grammar
       <td>the specified value
@@ -3002,20 +3029,20 @@ on screen, on paper, etc.
      <tr>
       <th scope="row"><a class="css" data-link-type="property" href="#propdef-column-rule-longitudinal-inset-end" id="ref-for-propdef-column-rule-longitudinal-inset-end②">column-rule-longitudinal-inset-end</a>
       <td>&lt;length-percentage> | auto
-      <td>zero
+      <td>0
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to the rule containing rectangle’s size in the longitudinal axis
+      <td>refer to the rule containing rectangle’s size in the rule’s longitudinal axis
       <td>by computed value type
       <td>per grammar
       <td>the specified value
      <tr>
       <th scope="row"><a class="css" data-link-type="property" href="#propdef-column-rule-longitudinal-inset-start" id="ref-for-propdef-column-rule-longitudinal-inset-start①">column-rule-longitudinal-inset-start</a>
       <td>&lt;length-percentage> | auto
-      <td>zero
+      <td>0
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to the rule containing rectangle’s size in the longitudinal axis
+      <td>refer to the rule containing rectangle’s size in the rule’s longitudinal axis
       <td>by computed value type
       <td>per grammar
       <td>the specified value
@@ -3092,7 +3119,7 @@ on screen, on paper, etc.
      <tr>
       <th scope="row"><a class="css" data-link-type="property" href="#propdef-row-rule-image-slice" id="ref-for-propdef-row-rule-image-slice②">row-rule-image-slice</a>
       <td>[&lt;number [0,∞]> | &lt;percentage [0,∞]>]{1,2}
-      <td>zero
+      <td>0
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
       <td>refer to size of the image
@@ -3125,7 +3152,7 @@ on screen, on paper, etc.
       <td>auto
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to the rule containing rectangle’s size in the lateral axis
+      <td>refer to the rule containing rectangle’s size in the rule’s lateral axis
       <td>by computed value type
       <td>per grammar
       <td>the specified value
@@ -3135,7 +3162,7 @@ on screen, on paper, etc.
       <td>auto
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to the rule containing rectangle’s size in the lateral axis
+      <td>refer to the rule containing rectangle’s size in the rule’s lateral axis
       <td>by computed value type
       <td>per grammar
       <td>the specified value
@@ -3145,7 +3172,7 @@ on screen, on paper, etc.
       <td>auto
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to the rule containing rectangle’s size in the longitudinal axis
+      <td>refer to the rule containing rectangle’s size in the rule’s longitudinal axis
       <td>by computed value type
       <td>per grammar
       <td>the specified value
@@ -3162,20 +3189,20 @@ on screen, on paper, etc.
      <tr>
       <th scope="row"><a class="css" data-link-type="property" href="#propdef-row-rule-longitudinal-edge-inset-end" id="ref-for-propdef-row-rule-longitudinal-edge-inset-end①">row-rule-longitudinal-edge-inset-end</a>
       <td>&lt;length-percentage> | auto
-      <td>zero
+      <td>0
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to the rule containing rectangle’s size in the longitudinal axis
+      <td>refer to the rule containing rectangle’s size in the rule’s longitudinal axis
       <td>by computed value type
       <td>per grammar
       <td>the specified value
      <tr>
       <th scope="row"><a class="css" data-link-type="property" href="#propdef-row-rule-longitudinal-edge-inset-start" id="ref-for-propdef-row-rule-longitudinal-edge-inset-start①">row-rule-longitudinal-edge-inset-start</a>
       <td>&lt;length-percentage> | auto
-      <td>zero
+      <td>0
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to the rule containing rectangle’s size in the longitudinal axis
+      <td>refer to the rule containing rectangle’s size in the rule’s longitudinal axis
       <td>by computed value type
       <td>per grammar
       <td>the specified value
@@ -3192,20 +3219,20 @@ on screen, on paper, etc.
      <tr>
       <th scope="row"><a class="css" data-link-type="property" href="#propdef-row-rule-longitudinal-inset-end" id="ref-for-propdef-row-rule-longitudinal-inset-end①">row-rule-longitudinal-inset-end</a>
       <td>&lt;length-percentage> | auto
-      <td>zero
+      <td>0
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to the rule containing rectangle’s size in the longitudinal axis
+      <td>refer to the rule containing rectangle’s size in the rule’s longitudinal axis
       <td>by computed value type
       <td>per grammar
       <td>the specified value
      <tr>
       <th scope="row"><a class="css" data-link-type="property" href="#propdef-row-rule-longitudinal-inset-start" id="ref-for-propdef-row-rule-longitudinal-inset-start①">row-rule-longitudinal-inset-start</a>
       <td>&lt;length-percentage> | auto
-      <td>zero
+      <td>0
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to the rule containing rectangle’s size in the longitudinal axis
+      <td>refer to the rule containing rectangle’s size in the rule’s longitudinal axis
       <td>by computed value type
       <td>per grammar
       <td>the specified value
@@ -3225,7 +3252,7 @@ on screen, on paper, etc.
       <td>medium
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to the rule containing rectangle’s size in the lateral axis
+      <td>refer to the rule containing rectangle’s size in the rule’s lateral axis
       <td>by computed value type
       <td>per grammar
       <td>absolute length if the specified value is &lt;line-width>; 0px if the column rule style is none or hidden. Otherwise, the specified value.
@@ -3243,9 +3270,10 @@ on screen, on paper, etc.
     e.g. 'padding | padding-center | padding-over | border...' <a class="issue-return" href="#issue-13842b6f" title="Jump to section">↵</a></div>
    <div class="issue"> perhaps make <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-box-4/#valdef-margin-trim-all">all</a> a separate keyword? like so: <span class="css">[segment | [[start | end | short | long] all?] ] allow-overlap?</span> <a class="issue-return" href="#issue-70dc1ba4" title="Jump to section">↵</a></div>
    <div class="issue"> TODO: add definition list and algorithm here... <a class="issue-return" href="#issue-b6f1d65c" title="Jump to section">↵</a></div>
-   <div class="issue"> is it useful to be able to create a rule extent for the <i>intersection</i> or <i>union</i> between two tracks, like so: <img src="media/masonry-all-shorter.png" style="display:block">It’s pretty easy to implement, fwiw... (I accidently implemented <span class="css">short</span>/<span class="css">long</span> like that before I realized it was inconsistent with how they work elsewhere). I think it’s a case that is unique to a masonry axis though, at least <i>currently</i>... <a class="issue-return" href="#issue-3e9abc31" title="Jump to section">↵</a></div>
+   <div class="issue"> is it useful to be able to create a rule extent for the <i>intersection</i> or <i>union</i> between two tracks, like so: <img height="435" src="media/masonry-all-shorter.png" style="display:block" width="701">It’s pretty easy to implement, fwiw... (I accidently implemented <span class="css">short</span>/<span class="css">long</span> like that before I realized it was inconsistent with how they work elsewhere). I think it’s a case that is unique to a masonry axis though, at least <i>currently</i>... <a class="issue-return" href="#issue-3e9abc31" title="Jump to section">↵</a></div>
    <div class="issue"> sort out if non-collapsed column-groups that only contains collapsed columns should generate rules, ditto row-groups/rows <a class="issue-return" href="#issue-96acb267" title="Jump to section">↵</a></div>
-   <div class="issue"> this proposal makes the assumption that the parallel proposal that <span class="css">row-gap</span> should apply to multi-column containers is also adopted (issue #XXX). <a class="issue-return" href="#issue-b4c69802" title="Jump to section">↵</a></div>
+   <div class="issue"> this proposal makes the assumption that the related proposal that <span class="css">row-gap</span> should apply to multi-column containers is also adopted
+    (<a href="https://github.com/w3c/csswg-drafts/issues/6746">issue #6746</a>). <a class="issue-return" href="#issue-409a7220" title="Jump to section">↵</a></div>
   </div>
   <aside class="dfn-panel" data-for="propdef-column-rule-image-source">
    <b><a href="#propdef-column-rule-image-source">#propdef-column-rule-image-source</a></b><b>Referenced in:</b>
@@ -3263,8 +3291,8 @@ on screen, on paper, etc.
   <aside class="dfn-panel" data-for="propdef-column-rule-image-slice">
    <b><a href="#propdef-column-rule-image-slice">#propdef-column-rule-image-slice</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-column-rule-image-slice">2.2. The column-rule-image-slice and row-rule-image-slice Properties</a>
-    <li><a href="#ref-for-propdef-column-rule-image-slice①">2.4. The column-rule-image and row-rule-image Shorthands</a>
+    <li><a href="#ref-for-propdef-column-rule-image-slice">2.2. The column-rule-image-slice and row-rule-image-slice Properties</a> <a href="#ref-for-propdef-column-rule-image-slice①">(2)</a> <a href="#ref-for-propdef-column-rule-image-slice②">(3)</a>
+    <li><a href="#ref-for-propdef-column-rule-image-slice③">2.4. The column-rule-image and row-rule-image Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-row-rule-image-slice">
@@ -3303,16 +3331,16 @@ on screen, on paper, etc.
    <ul>
     <li><a href="#ref-for-lateral-axis">3.1. The column-rule-width and row-rule-width Properties</a> <a href="#ref-for-lateral-axis①">(2)</a>
     <li><a href="#ref-for-lateral-axis②">3.2. The column-rule-length and row-rule-length Properties</a>
-    <li><a href="#ref-for-lateral-axis③">3.3. The Rule Lateral Inset Properties</a> <a href="#ref-for-lateral-axis④">(2)</a>
-    <li><a href="#ref-for-lateral-axis⑤">7. The Rule Containing Rectangle</a>
+    <li><a href="#ref-for-lateral-axis③">3.3. The Rule Lateral Inset Properties</a>
+    <li><a href="#ref-for-lateral-axis④">7. The Rule Containing Rectangle</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="longitudinal-axis">
    <b><a href="#longitudinal-axis">#longitudinal-axis</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-longitudinal-axis">3.2. The column-rule-length and row-rule-length Properties</a>
-    <li><a href="#ref-for-longitudinal-axis①">3.5. The Rule Longitudinal Inset Properties</a>
-    <li><a href="#ref-for-longitudinal-axis②">3.7. The Rule Longitudinal Edge Inset Properties</a> <a href="#ref-for-longitudinal-axis③">(2)</a>
+    <li><a href="#ref-for-longitudinal-axis①">3.6. The Rule Longitudinal Inset Properties</a>
+    <li><a href="#ref-for-longitudinal-axis②">3.8. The Rule Longitudinal Edge Inset Properties</a> <a href="#ref-for-longitudinal-axis③">(2)</a>
     <li><a href="#ref-for-longitudinal-axis④">5.1. The column-rule-align and row-rule-align Properties</a>
     <li><a href="#ref-for-longitudinal-axis⑤">5.2. The column-rule-edge-align and row-rule-edge-align Properties</a>
     <li><a href="#ref-for-longitudinal-axis⑥">6.1. The column-rule-extent and row-rule-extent Properties</a>
@@ -3348,110 +3376,110 @@ on screen, on paper, etc.
   <aside class="dfn-panel" data-for="propdef-column-rule-lateral-inset-start">
    <b><a href="#propdef-column-rule-lateral-inset-start">#propdef-column-rule-lateral-inset-start</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-column-rule-lateral-inset-start">3.4. The column-rule-lateral-inset and row-rule-lateral-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-column-rule-lateral-inset-start">3.5. The column-rule-lateral-inset and row-rule-lateral-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-column-rule-lateral-inset-end">
    <b><a href="#propdef-column-rule-lateral-inset-end">#propdef-column-rule-lateral-inset-end</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-column-rule-lateral-inset-end">3.4. The column-rule-lateral-inset and row-rule-lateral-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-column-rule-lateral-inset-end">3.5. The column-rule-lateral-inset and row-rule-lateral-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-row-rule-lateral-inset-start">
    <b><a href="#propdef-row-rule-lateral-inset-start">#propdef-row-rule-lateral-inset-start</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-row-rule-lateral-inset-start">3.4. The column-rule-lateral-inset and row-rule-lateral-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-row-rule-lateral-inset-start">3.5. The column-rule-lateral-inset and row-rule-lateral-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-row-rule-lateral-inset-end">
    <b><a href="#propdef-row-rule-lateral-inset-end">#propdef-row-rule-lateral-inset-end</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-row-rule-lateral-inset-end">3.4. The column-rule-lateral-inset and row-rule-lateral-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-row-rule-lateral-inset-end">3.5. The column-rule-lateral-inset and row-rule-lateral-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-column-rule-lateral-inset">
    <b><a href="#propdef-column-rule-lateral-inset">#propdef-column-rule-lateral-inset</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-column-rule-lateral-inset">3.4. The column-rule-lateral-inset and row-rule-lateral-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-column-rule-lateral-inset">3.5. The column-rule-lateral-inset and row-rule-lateral-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-row-rule-lateral-inset">
    <b><a href="#propdef-row-rule-lateral-inset">#propdef-row-rule-lateral-inset</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-row-rule-lateral-inset">3.4. The column-rule-lateral-inset and row-rule-lateral-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-row-rule-lateral-inset">3.5. The column-rule-lateral-inset and row-rule-lateral-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-column-rule-longitudinal-inset-start">
    <b><a href="#propdef-column-rule-longitudinal-inset-start">#propdef-column-rule-longitudinal-inset-start</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-column-rule-longitudinal-inset-start">3.6. The column-rule-longitudinal-inset and row-rule-longitudinal-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-column-rule-longitudinal-inset-start">3.7. The column-rule-longitudinal-inset and row-rule-longitudinal-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-column-rule-longitudinal-inset-end">
    <b><a href="#propdef-column-rule-longitudinal-inset-end">#propdef-column-rule-longitudinal-inset-end</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-column-rule-longitudinal-inset-end">3.6. The column-rule-longitudinal-inset and row-rule-longitudinal-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-column-rule-longitudinal-inset-end">3.7. The column-rule-longitudinal-inset and row-rule-longitudinal-inset Shorthands</a>
     <li><a href="#ref-for-propdef-column-rule-longitudinal-inset-end①">7. The Rule Containing Rectangle</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-row-rule-longitudinal-inset-start">
    <b><a href="#propdef-row-rule-longitudinal-inset-start">#propdef-row-rule-longitudinal-inset-start</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-row-rule-longitudinal-inset-start">3.6. The column-rule-longitudinal-inset and row-rule-longitudinal-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-row-rule-longitudinal-inset-start">3.7. The column-rule-longitudinal-inset and row-rule-longitudinal-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-row-rule-longitudinal-inset-end">
    <b><a href="#propdef-row-rule-longitudinal-inset-end">#propdef-row-rule-longitudinal-inset-end</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-row-rule-longitudinal-inset-end">3.6. The column-rule-longitudinal-inset and row-rule-longitudinal-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-row-rule-longitudinal-inset-end">3.7. The column-rule-longitudinal-inset and row-rule-longitudinal-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-column-rule-longitudinal-inset">
    <b><a href="#propdef-column-rule-longitudinal-inset">#propdef-column-rule-longitudinal-inset</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-column-rule-longitudinal-inset">3.6. The column-rule-longitudinal-inset and row-rule-longitudinal-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-column-rule-longitudinal-inset">3.7. The column-rule-longitudinal-inset and row-rule-longitudinal-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-row-rule-longitudinal-inset">
    <b><a href="#propdef-row-rule-longitudinal-inset">#propdef-row-rule-longitudinal-inset</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-row-rule-longitudinal-inset">3.6. The column-rule-longitudinal-inset and row-rule-longitudinal-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-row-rule-longitudinal-inset">3.7. The column-rule-longitudinal-inset and row-rule-longitudinal-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-column-rule-longitudinal-edge-inset-start">
    <b><a href="#propdef-column-rule-longitudinal-edge-inset-start">#propdef-column-rule-longitudinal-edge-inset-start</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-column-rule-longitudinal-edge-inset-start">3.8. The column-rule-longitudinal-edge-inset and row-rule-longitudinal-edge-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-column-rule-longitudinal-edge-inset-start">3.9. The column-rule-longitudinal-edge-inset and row-rule-longitudinal-edge-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-column-rule-longitudinal-edge-inset-end">
    <b><a href="#propdef-column-rule-longitudinal-edge-inset-end">#propdef-column-rule-longitudinal-edge-inset-end</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-column-rule-longitudinal-edge-inset-end">3.8. The column-rule-longitudinal-edge-inset and row-rule-longitudinal-edge-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-column-rule-longitudinal-edge-inset-end">3.9. The column-rule-longitudinal-edge-inset and row-rule-longitudinal-edge-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-row-rule-longitudinal-edge-inset-start">
    <b><a href="#propdef-row-rule-longitudinal-edge-inset-start">#propdef-row-rule-longitudinal-edge-inset-start</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-row-rule-longitudinal-edge-inset-start">3.8. The column-rule-longitudinal-edge-inset and row-rule-longitudinal-edge-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-row-rule-longitudinal-edge-inset-start">3.9. The column-rule-longitudinal-edge-inset and row-rule-longitudinal-edge-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-row-rule-longitudinal-edge-inset-end">
    <b><a href="#propdef-row-rule-longitudinal-edge-inset-end">#propdef-row-rule-longitudinal-edge-inset-end</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-row-rule-longitudinal-edge-inset-end">3.8. The column-rule-longitudinal-edge-inset and row-rule-longitudinal-edge-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-row-rule-longitudinal-edge-inset-end">3.9. The column-rule-longitudinal-edge-inset and row-rule-longitudinal-edge-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-column-rule-longitudinal-edge-inset">
    <b><a href="#propdef-column-rule-longitudinal-edge-inset">#propdef-column-rule-longitudinal-edge-inset</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-column-rule-longitudinal-edge-inset">3.8. The column-rule-longitudinal-edge-inset and row-rule-longitudinal-edge-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-column-rule-longitudinal-edge-inset">3.9. The column-rule-longitudinal-edge-inset and row-rule-longitudinal-edge-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-row-rule-longitudinal-edge-inset">
    <b><a href="#propdef-row-rule-longitudinal-edge-inset">#propdef-row-rule-longitudinal-edge-inset</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-row-rule-longitudinal-edge-inset">3.8. The column-rule-longitudinal-edge-inset and row-rule-longitudinal-edge-inset Shorthands</a>
+    <li><a href="#ref-for-propdef-row-rule-longitudinal-edge-inset">3.9. The column-rule-longitudinal-edge-inset and row-rule-longitudinal-edge-inset Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-row-rule-style">
@@ -3525,9 +3553,9 @@ on screen, on paper, etc.
   <aside class="dfn-panel" data-for="extent-size">
    <b><a href="#extent-size">#extent-size</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-extent-size">6.1.1. Grid Containers</a> <a href="#ref-for-extent-size①">(2)</a> <a href="#ref-for-extent-size②">(3)</a> <a href="#ref-for-extent-size③">(4)</a> <a href="#ref-for-extent-size④">(5)</a> <a href="#ref-for-extent-size⑤">(6)</a> <a href="#ref-for-extent-size⑥">(7)</a> <a href="#ref-for-extent-size⑦">(8)</a> <a href="#ref-for-extent-size⑧">(9)</a> <a href="#ref-for-extent-size⑨">(10)</a>
-    <li><a href="#ref-for-extent-size①⓪">6.1.2. Flexbox Containers</a> <a href="#ref-for-extent-size①①">(2)</a> <a href="#ref-for-extent-size①②">(3)</a>
-    <li><a href="#ref-for-extent-size①③">7. The Rule Containing Rectangle</a>
+    <li><a href="#ref-for-extent-size">6.1.1. Grid Containers</a> <a href="#ref-for-extent-size①">(2)</a> <a href="#ref-for-extent-size②">(3)</a> <a href="#ref-for-extent-size③">(4)</a> <a href="#ref-for-extent-size④">(5)</a> <a href="#ref-for-extent-size⑤">(6)</a> <a href="#ref-for-extent-size⑥">(7)</a> <a href="#ref-for-extent-size⑦">(8)</a> <a href="#ref-for-extent-size⑧">(9)</a> <a href="#ref-for-extent-size⑨">(10)</a> <a href="#ref-for-extent-size①⓪">(11)</a> <a href="#ref-for-extent-size①①">(12)</a>
+    <li><a href="#ref-for-extent-size①②">6.1.2. Flexbox Containers</a> <a href="#ref-for-extent-size①③">(2)</a> <a href="#ref-for-extent-size①④">(3)</a>
+    <li><a href="#ref-for-extent-size①⑤">7. The Rule Containing Rectangle</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="valdef-row-rule-extent-short">
@@ -3560,9 +3588,10 @@ on screen, on paper, etc.
     <li><a href="#ref-for-rule-containing-rectangle①">2.2. The column-rule-image-slice and row-rule-image-slice Properties</a>
     <li><a href="#ref-for-rule-containing-rectangle①①">3.1. The column-rule-width and row-rule-width Properties</a> <a href="#ref-for-rule-containing-rectangle①②">(2)</a>
     <li><a href="#ref-for-rule-containing-rectangle①③">3.2. The column-rule-length and row-rule-length Properties</a>
-    <li><a href="#ref-for-rule-containing-rectangle①④">3.3. The Rule Lateral Inset Properties</a> <a href="#ref-for-rule-containing-rectangle①⑤">(2)</a> <a href="#ref-for-rule-containing-rectangle①⑥">(3)</a> <a href="#ref-for-rule-containing-rectangle①⑦">(4)</a>
-    <li><a href="#ref-for-rule-containing-rectangle①⑧">3.5. The Rule Longitudinal Inset Properties</a> <a href="#ref-for-rule-containing-rectangle①⑨">(2)</a> <a href="#ref-for-rule-containing-rectangle①①⓪">(3)</a>
-    <li><a href="#ref-for-rule-containing-rectangle①①①">3.7. The Rule Longitudinal Edge Inset Properties</a>
+    <li><a href="#ref-for-rule-containing-rectangle①④">3.3. The Rule Lateral Inset Properties</a> <a href="#ref-for-rule-containing-rectangle①⑤">(2)</a>
+    <li><a href="#ref-for-rule-containing-rectangle①⑥">3.4. Resolving a rule’s position and size</a> <a href="#ref-for-rule-containing-rectangle①⑦">(2)</a>
+    <li><a href="#ref-for-rule-containing-rectangle①⑧">3.6. The Rule Longitudinal Inset Properties</a> <a href="#ref-for-rule-containing-rectangle①⑨">(2)</a> <a href="#ref-for-rule-containing-rectangle①①⓪">(3)</a>
+    <li><a href="#ref-for-rule-containing-rectangle①①①">3.8. The Rule Longitudinal Edge Inset Properties</a>
     <li><a href="#ref-for-rule-containing-rectangle①①②">5.1. The column-rule-align and row-rule-align Properties</a>
     <li><a href="#ref-for-rule-containing-rectangle①①③">5.2. The column-rule-edge-align and row-rule-edge-align Properties</a>
     <li><a href="#ref-for-rule-containing-rectangle①①④">7. The Rule Containing Rectangle</a> <a href="#ref-for-rule-containing-rectangle①①⑤">(2)</a> <a href="#ref-for-rule-containing-rectangle①①⑥">(3)</a> <a href="#ref-for-rule-containing-rectangle①①⑦">(4)</a> <a href="#ref-for-rule-containing-rectangle①①⑧">(5)</a>
@@ -3623,6 +3652,4 @@ document.body.addEventListener("click", function(e) {
     }
 
 });
-</script>
-<script>/* script-wpt */
 </script>
