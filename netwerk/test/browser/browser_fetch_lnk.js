@@ -4,10 +4,6 @@
 "use strict";
 
 add_task(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [["privacy.file_unique_origin", false]],
-  });
-
   const FILE_PAGE = Services.io.newFileURI(
     new FileUtils.File(getTestFilePath("dummy.html"))
   ).spec;
