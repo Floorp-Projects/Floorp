@@ -113,6 +113,20 @@ void nsHTTPSOnlyUtils::PotentiallyFireHttpRequestToShortenTimout(
     return;
   }
 
+  // HTTPS-First only applies to standard ports but HTTPS-Only brute forces
+  // all http connections to be https and overrules HTTPS-First. In case
+  // HTTPS-First is enabled, but HTTPS-Only is not enabled, we might return
+  // early if attempting to send a background request to a non standard port.
+  if (IsHttpsFirstModeEnabled(isPrivateWin) &&
+      !IsHttpsOnlyModeEnabled(isPrivateWin)) {
+    int32_t port = 0;
+    nsresult rv = channelURI->GetPort(&port);
+    int defaultPortforScheme = NS_GetDefaultPort("http");
+    if (NS_SUCCEEDED(rv) && port != defaultPortforScheme && port != -1) {
+      return;
+    }
+  }
+
   // Check for general exceptions
   if (OnionException(channelURI) || LoopbackOrLocalException(channelURI)) {
     return;
