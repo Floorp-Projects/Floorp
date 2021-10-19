@@ -370,11 +370,12 @@ static inline bool IS_HYPHEN(char16_t u) {
   return (u == U_HYPHEN || u == 0x2010 ||  // HYPHEN
           u == 0x2012 ||                   // FIGURE DASH
           u == 0x2013 ||                   // EN DASH
-#if ANDROID
-          /* Bug 1647377: On Android, we don't have a "platform" backend
-           * that supports Tibetan (nsRuleBreaker.cpp only knows about
-           * Thai), so instead we just treat the TSHEG like a hyphen to
-           * provide basic line-breaking possibilities.
+#if ANDROID || XP_WIN
+          /* Bug 1647377: On Android and Windows, we don't have a "platform"
+           * backend that supports Tibetan (nsRuleBreaker.cpp only knows about
+           * Thai, and ScriptBreak doesn't handle Tibetan well either), so
+           * instead we just treat the TSHEG like a hyphen to provide basic
+           * line-breaking possibilities.
            */
           u == 0x0F0B ||  // TIBETAN MARK INTERSYLLABIC TSHEG
 #endif
