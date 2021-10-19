@@ -30,8 +30,8 @@ macosx64-gn:
         script: build-gn-macosx.sh
     fetches:
         toolchain:
-            - linux64-cctools-port-clang-12
-            - linux64-clang-12
+            - linux64-cctools-port-clang-13
+            - linux64-clang-13
             - macosx64-sdk-11.0
 
 win32-gn:

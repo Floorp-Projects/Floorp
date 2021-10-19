@@ -13,15 +13,15 @@ job-defaults:
             - libtapi
             - ldid
 
-linux64-cctools-port-clang-12:
+linux64-cctools-port-clang-13:
     treeherder:
-        symbol: TL(cctools-clang-12)
+        symbol: TL(cctools-clang-13)
     run:
         script: build-cctools-port.sh
         toolchain-alias: linux64-cctools-port
         toolchain-artifact: public/build/cctools.tar.zst
     fetches:
         toolchain:
-            - linux64-clang-12
+            - linux64-clang-13
             - linux64-binutils
             - linux64-toolchain-sysroot
