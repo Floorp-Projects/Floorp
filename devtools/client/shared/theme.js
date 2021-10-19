@@ -91,7 +91,6 @@ const setTheme = (exports.setTheme = newTheme => {
  */
 const addThemeObserver = (exports.addThemeObserver = observer => {
   Services.obs.addObserver(observer, "look-and-feel-changed");
-  Services.prefs.addObserver("browser.theme.toolbar-theme", observer);
   Services.prefs.addObserver(THEME_PREF, observer);
 });
 
@@ -100,7 +99,6 @@ const addThemeObserver = (exports.addThemeObserver = observer => {
  */
 const removeThemeObserver = (exports.removeThemeObserver = observer => {
   Services.obs.removeObserver(observer, "look-and-feel-changed");
-  Services.prefs.removeObserver("browser.theme.toolbar-theme", observer);
   Services.prefs.removeObserver(THEME_PREF, observer);
 });
 /* eslint-enable */
