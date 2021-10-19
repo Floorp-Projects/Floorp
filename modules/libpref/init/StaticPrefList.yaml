@@ -6544,7 +6544,7 @@
 
 - name: layers.iosurfaceimage.use-nv12
   type: bool
-  value: false
+  value: true
   mirror: once
 
 #---------------------------------------------------------------------------
