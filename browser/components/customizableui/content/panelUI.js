@@ -717,6 +717,87 @@ const PanelUI = {
     }
   },
 
+  /**
+   * Selects and marks an item by id from the main view. The ids are an array,
+   * the first in the main view and the later ids in subsequent subviews that
+   * become marked when the user opens the subview. The subview marking is
+   * cancelled if a different subview is opened.
+   */
+  async selectAndMarkItem(itemIds) {
+    // This shouldn't really occur, but return early just in case.
+    if (document.documentElement.hasAttribute("customizing")) {
+      return;
+    }
+
+    // This function was triggered from a button while the menu was
+    // already open, so the panel should be in the process of hiding.
+    // Wait for the panel to hide first, then reopen it.
+    if (this.panel.state == "hiding") {
+      await new Promise(resolve => {
+        this.panel.addEventListener("popuphidden", resolve, { once: true });
+      });
+    }
+
+    if (this.panel.state != "open") {
+      await new Promise(resolve => {
+        this.panel.addEventListener("ViewShown", resolve, { once: true });
+        this.show();
+      });
+    }
+
+    let currentView;
+
+    let viewShownCB = event => {
+      viewHidingCB();
+
+      if (itemIds.length) {
+        let subItem = window.document.getElementById(itemIds[0]);
+        if (event.target.id == subItem?.closest("panelview")?.id) {
+          Services.tm.dispatchToMainThread(() => {
+            markItem(event.target);
+          });
+        } else {
+          itemIds = [];
+        }
+      }
+    };
+
+    let viewHidingCB = () => {
+      if (currentView) {
+        currentView.ignoreMouseMove = false;
+      }
+      currentView = null;
+    };
+
+    let popupHiddenCB = () => {
+      viewHidingCB();
+      this.panel.removeEventListener("ViewShown", viewShownCB);
+    };
+
+    let markItem = viewNode => {
+      let id = itemIds.shift();
+      let item = window.document.getElementById(id);
+      item.setAttribute("tabindex", "-1");
+
+      currentView = PanelView.forNode(viewNode);
+      currentView.selectedElement = item;
+      currentView.focusSelectedElement(true);
+
+      // Prevent the mouse from changing the highlight temporarily.
+      // This flag gets removed when the view is hidden or a key
+      // is pressed.
+      currentView.ignoreMouseMove = true;
+
+      if (itemIds.length) {
+        this.panel.addEventListener("ViewShown", viewShownCB, { once: true });
+      }
+      this.panel.addEventListener("ViewHiding", viewHidingCB, { once: true });
+    };
+
+    this.panel.addEventListener("popuphidden", popupHiddenCB, { once: true });
+    markItem(this.mainView);
+  },
+
   updateNotifications(notificationsChanged) {
     let notifications = this._notifications;
     if (!notifications || !notifications.length) {
