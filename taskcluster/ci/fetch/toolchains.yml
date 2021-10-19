@@ -380,13 +380,6 @@ clang-12:
         repo: https://github.com/llvm/llvm-project
         revision: fed41342a82f5a3a9201819a82bf7a48313e296b
 
-clang-13:
-    description: clang 13.0.0 source code
-    fetch:
-        type: git
-        repo: https://github.com/llvm/llvm-project
-        revision: d7b669b3a30345cfcdb2fde2af6f48aa4b94845d
-
 clang-trunk:
     description: clang main branch source code
     attributes:
