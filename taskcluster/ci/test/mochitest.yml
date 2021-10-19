@@ -311,17 +311,35 @@ mochitest-devtools-chrome:
     treeherder-symbol: M(dt)
     loopback-video: true
     variants:
-        by-test-platform:
-            linux.*64(-shippable)?-qr/opt: ['fission', 'a11y-checks', 'wayland']
-            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
-            default: ['fission']
+        - a11y-checks
+        - fission
+        - socketprocess_networking
+        - wayland
+        - webrender-sw
     run-on-projects:
         by-variant:
+            a11y-checks:
+                by-test-platform:
+                    linux.*64(-shippable)?-qr/opt: built-projects
+                    default: []
             fission:
                 by-test-platform:
                     linux.*64(-shippable)?-qr/(opt|debug): ['trunk']
                     windows10-64-2004(-shippable)?-qr/(opt|debug): ['trunk']
                     linux.*64-ccov-qr/opt: ["mozilla-central"]
+                    default: []
+            socketprocess_networking:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64-ccov-qr/opt: []
+                    linux.*64(-shippable)?-qr/(opt|debug): built-projects
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
                     default: []
             default:
                 by-test-platform:
