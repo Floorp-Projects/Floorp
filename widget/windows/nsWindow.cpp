@@ -1241,6 +1241,10 @@ DWORD nsWindow::WindowStyle() {
   DWORD style;
 
   switch (mWindowType) {
+    case eWindowType_child:
+      style = WS_OVERLAPPED;
+      break;
+
     case eWindowType_dialog:
       style = WS_OVERLAPPED | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_3DLOOK |
               DS_MODALFRAME | WS_CLIPCHILDREN;
@@ -1327,6 +1331,9 @@ DWORD nsWindow::WindowStyle() {
 // Return nsWindow extended styles
 DWORD nsWindow::WindowExStyle() {
   switch (mWindowType) {
+    case eWindowType_child:
+      return 0;
+
     case eWindowType_dialog:
       return WS_EX_WINDOWEDGE | WS_EX_DLGMODALFRAME;
 
