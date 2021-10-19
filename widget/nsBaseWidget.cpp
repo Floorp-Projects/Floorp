@@ -97,10 +97,6 @@ static int32_t gNumWidgets;
 #  include "nsCocoaFeatures.h"
 #endif
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-static nsRefPtrHashtable<nsVoidPtrHashKey, nsIWidget>* sPluginWidgetList;
-#endif
-
 nsIRollupListener* nsBaseWidget::gRollupListener = nullptr;
 
 using namespace mozilla::dom;
@@ -154,7 +150,6 @@ nsBaseWidget::nsBaseWidget()
       mBorderStyle(eBorderStyle_none),
       mBounds(0, 0, 0, 0),
       mOriginalBounds(nullptr),
-      mClipRectCount(0),
       mSizeMode(nsSizeMode_Normal),
       mIsTiled(false),
       mPopupLevel(ePopupLevelTop),
@@ -175,11 +170,6 @@ nsBaseWidget::nsBaseWidget()
   debug_RegisterPrefCallbacks();
 #endif
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-  if (!sPluginWidgetList) {
-    sPluginWidgetList = new nsRefPtrHashtable<nsVoidPtrHashKey, nsIWidget>();
-  }
-#endif
   mShutdownObserver = new WidgetShutdownObserver(this);
 }
 
@@ -330,12 +320,6 @@ void nsBaseWidget::Shutdown() {
   DestroyCompositor();
   FreeLocalesChangedObserver();
   FreeShutdownObserver();
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-  if (sPluginWidgetList) {
-    delete sPluginWidgetList;
-    sPluginWidgetList = nullptr;
-  }
-#endif
 }
 
 void nsBaseWidget::QuitIME() {
@@ -548,11 +532,6 @@ void nsBaseWidget::Destroy() {
   if (parent) {
     parent->RemoveChild(this);
   }
-
-#if defined(XP_WIN)
-  // Allow our scroll capture container to be cleaned up, if we have one.
-  mScrollCaptureContainer = nullptr;
-#endif
 }
 
 //-------------------------------------------------------------------------
@@ -748,72 +727,6 @@ void nsBaseWidget::SetTransparencyMode(nsTransparencyMode aMode) {}
 
 nsTransparencyMode nsBaseWidget::GetTransparencyMode() {
   return eTransparencyOpaque;
-}
-
-bool nsBaseWidget::IsWindowClipRegionEqual(
-    const nsTArray<LayoutDeviceIntRect>& aRects) {
-  return mClipRects && mClipRectCount == aRects.Length() &&
-         memcmp(mClipRects.get(), aRects.Elements(),
-                sizeof(LayoutDeviceIntRect) * mClipRectCount) == 0;
-}
-
-void nsBaseWidget::StoreWindowClipRegion(
-    const nsTArray<LayoutDeviceIntRect>& aRects) {
-  mClipRectCount = aRects.Length();
-  mClipRects = MakeUnique<LayoutDeviceIntRect[]>(mClipRectCount);
-  if (mClipRects) {
-    memcpy(mClipRects.get(), aRects.Elements(),
-           sizeof(LayoutDeviceIntRect) * mClipRectCount);
-  }
-}
-
-void nsBaseWidget::GetWindowClipRegion(nsTArray<LayoutDeviceIntRect>* aRects) {
-  if (mClipRects) {
-    aRects->AppendElements(mClipRects.get(), mClipRectCount);
-  } else {
-    aRects->AppendElement(
-        LayoutDeviceIntRect(0, 0, mBounds.Width(), mBounds.Height()));
-  }
-}
-
-const LayoutDeviceIntRegion nsBaseWidget::RegionFromArray(
-    const nsTArray<LayoutDeviceIntRect>& aRects) {
-  LayoutDeviceIntRegion region;
-  for (uint32_t i = 0; i < aRects.Length(); ++i) {
-    region.Or(region, aRects[i]);
-  }
-  return region;
-}
-
-void nsBaseWidget::ArrayFromRegion(const LayoutDeviceIntRegion& aRegion,
-                                   nsTArray<LayoutDeviceIntRect>& aRects) {
-  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
-    aRects.AppendElement(iter.Get());
-  }
-}
-
-nsresult nsBaseWidget::SetWindowClipRegion(
-    const nsTArray<LayoutDeviceIntRect>& aRects, bool aIntersectWithExisting) {
-  if (!aIntersectWithExisting) {
-    StoreWindowClipRegion(aRects);
-  } else {
-    // get current rects
-    nsTArray<LayoutDeviceIntRect> currentRects;
-    GetWindowClipRegion(&currentRects);
-    // create region from them
-    LayoutDeviceIntRegion currentRegion = RegionFromArray(currentRects);
-    // create region from new rects
-    LayoutDeviceIntRegion newRegion = RegionFromArray(aRects);
-    // intersect regions
-    LayoutDeviceIntRegion intersection;
-    intersection.And(currentRegion, newRegion);
-    // create int rect array from intersection
-    nsTArray<LayoutDeviceIntRect> rects;
-    ArrayFromRegion(intersection, rects);
-    // store
-    StoreWindowClipRegion(rects);
-  }
-  return NS_OK;
 }
 
 /* virtual */
@@ -2136,42 +2049,6 @@ void nsBaseWidget::NotifyLiveResizeStopped() {
   }
 }
 
-void nsBaseWidget::RegisterPluginWindowForRemoteUpdates() {
-#if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
-  MOZ_ASSERT_UNREACHABLE(
-      "nsBaseWidget::RegisterPluginWindowForRemoteUpdates "
-      "not implemented!");
-  return;
-#else
-  MOZ_ASSERT(NS_IsMainThread());
-  void* id = GetNativeData(NS_NATIVE_PLUGIN_ID);
-  if (!id) {
-    NS_WARNING("This is not a valid native widget!");
-    return;
-  }
-  MOZ_ASSERT(sPluginWidgetList);
-  sPluginWidgetList->InsertOrUpdate(id, RefPtr{this});
-#endif
-}
-
-void nsBaseWidget::UnregisterPluginWindowForRemoteUpdates() {
-#if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
-  MOZ_ASSERT_UNREACHABLE(
-      "nsBaseWidget::UnregisterPluginWindowForRemoteUpdates "
-      "not implemented!");
-  return;
-#else
-  MOZ_ASSERT(NS_IsMainThread());
-  void* id = GetNativeData(NS_NATIVE_PLUGIN_ID);
-  if (!id) {
-    NS_WARNING("This is not a valid native widget!");
-    return;
-  }
-  MOZ_ASSERT(sPluginWidgetList);
-  sPluginWidgetList->Remove(id);
-#endif
-}
-
 nsresult nsBaseWidget::AsyncEnableDragDrop(bool aEnable) {
   RefPtr<nsBaseWidget> kungFuDeathGrip = this;
   return NS_DispatchToCurrentThreadQueue(
@@ -2180,118 +2057,6 @@ nsresult nsBaseWidget::AsyncEnableDragDrop(bool aEnable) {
           [this, aEnable, kungFuDeathGrip]() { EnableDragDrop(aEnable); }),
       kAsyncDragDropTimeout, EventQueuePriority::Idle);
 }
-
-// static
-nsIWidget* nsIWidget::LookupRegisteredPluginWindow(uintptr_t aWindowID) {
-#if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
-  MOZ_ASSERT_UNREACHABLE(
-      "nsBaseWidget::LookupRegisteredPluginWindow "
-      "not implemented!");
-  return nullptr;
-#else
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(sPluginWidgetList);
-  return sPluginWidgetList->GetWeak((void*)aWindowID);
-#endif
-}
-
-// static
-void nsIWidget::UpdateRegisteredPluginWindowVisibility(
-    uintptr_t aOwnerWidget, nsTArray<uintptr_t>& aPluginIds) {
-#if !defined(XP_WIN) && !defined(MOZ_WIDGET_GTK)
-  MOZ_ASSERT_UNREACHABLE(
-      "nsBaseWidget::UpdateRegisteredPluginWindowVisibility"
-      " not implemented!");
-  return;
-#else
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(sPluginWidgetList);
-
-  // Our visible list is associated with a compositor which is associated with
-  // a specific top level window. We use the parent widget during iteration
-  // to skip the plugin widgets owned by other top level windows.
-  for (const auto& entry : *sPluginWidgetList) {
-    const void* windowId = entry.GetKey();
-    nsIWidget* widget = entry.GetWeak();
-
-    MOZ_ASSERT(windowId);
-    MOZ_ASSERT(widget);
-
-    if (!widget->Destroyed()) {
-      if ((uintptr_t)widget->GetParent() == aOwnerWidget) {
-        widget->Show(aPluginIds.Contains((uintptr_t)windowId));
-      }
-    }
-  }
-#endif
-}
-
-#if defined(XP_WIN)
-// static
-void nsIWidget::CaptureRegisteredPlugins(uintptr_t aOwnerWidget) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(sPluginWidgetList);
-
-  // Our visible list is associated with a compositor which is associated with
-  // a specific top level window. We use the parent widget during iteration
-  // to skip the plugin widgets owned by other top level windows.
-  for (const auto& entry : *sPluginWidgetList) {
-    DebugOnly<const void*> windowId = entry.GetKey();
-    nsIWidget* widget = entry.GetWeak();
-
-    MOZ_ASSERT(windowId);
-    MOZ_ASSERT(widget);
-
-    if (!widget->Destroyed() && widget->IsVisible()) {
-      if ((uintptr_t)widget->GetParent() == aOwnerWidget) {
-        widget->UpdateScrollCapture();
-      }
-    }
-  }
-}
-
-uint64_t nsBaseWidget::CreateScrollCaptureContainer() {
-  mScrollCaptureContainer =
-      MakeAndAddRef<ImageContainer>(ImageContainer::ASYNCHRONOUS);
-  if (!mScrollCaptureContainer) {
-    NS_WARNING("Failed to create ImageContainer for widget image capture.");
-    return ImageContainer::sInvalidAsyncContainerId;
-  }
-
-  return mScrollCaptureContainer->GetAsyncContainerHandle().Value();
-}
-
-void nsBaseWidget::UpdateScrollCapture() {
-  // Don't capture if no container or no size.
-  if (!mScrollCaptureContainer || mBounds.IsEmpty()) {
-    return;
-  }
-
-  // If the derived class cannot take a snapshot, for example due to clipping,
-  // then it is responsible for creating a fallback. If null is returned, this
-  // means that we want to keep the existing snapshot.
-  RefPtr<gfx::SourceSurface> snapshot = CreateScrollSnapshot();
-  if (!snapshot) {
-    return;
-  }
-
-  ImageContainer::NonOwningImage holder(new SourceSurfaceImage(snapshot));
-
-  AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
-  imageList.AppendElement(holder);
-
-  mScrollCaptureContainer->SetCurrentImages(imageList);
-}
-
-void nsBaseWidget::DefaultFillScrollCapture(DrawTarget* aSnapshotDrawTarget) {
-  gfx::IntSize dtSize = aSnapshotDrawTarget->GetSize();
-  aSnapshotDrawTarget->FillRect(
-      gfx::Rect(0, 0, dtSize.width, dtSize.height),
-      gfx::ColorPattern(gfx::ToDeviceColor(kScrollCaptureFillColor)),
-      gfx::DrawOptions(1.f, gfx::CompositionOp::OP_SOURCE));
-  aSnapshotDrawTarget->Flush();
-}
-#endif
 
 const IMENotificationRequests& nsIWidget::IMENotificationRequestsRef() {
   TextEventDispatcher* dispatcher = GetTextEventDispatcher();
