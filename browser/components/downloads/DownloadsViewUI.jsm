@@ -63,9 +63,9 @@ var gDownloadElementButtons = {
   },
   show: {
     commandName: "downloadsCmd_show",
-    l10nId: "downloads-cmd-show-button",
-    descriptionL10nId: "downloads-cmd-show-description",
-    panelL10nId: "downloads-cmd-show-panel",
+    l10nId: "downloads-cmd-show-button-2",
+    descriptionL10nId: "downloads-cmd-show-description-2",
+    panelL10nId: "downloads-cmd-show-panel-2",
     iconClass: "downloadIconShow",
   },
   subviewOpenOrRemoveFile: {

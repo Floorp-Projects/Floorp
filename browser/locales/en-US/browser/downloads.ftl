@@ -29,14 +29,11 @@ downloads-cmd-cancel =
 downloads-cmd-cancel-panel =
     .aria-label = Cancel
 
-# This message is only displayed on Windows and Linux devices
-downloads-cmd-show-menuitem =
-  .label = Open Containing Folder
-  .accesskey = F
-
-# This message is only displayed on macOS devices
-downloads-cmd-show-menuitem-mac =
-  .label = Show In Finder
+downloads-cmd-show-menuitem-2 =
+  .label = { PLATFORM() ->
+      [macos] Show in Finder
+     *[other] Show in Folder
+  }
   .accesskey = F
 
 downloads-cmd-use-system-default =
@@ -47,21 +44,21 @@ downloads-cmd-always-use-system-default =
   .label = Always Open In System Viewer
   .accesskey = w
 
-downloads-cmd-show-button =
+downloads-cmd-show-button-2 =
   .tooltiptext = { PLATFORM() ->
-      [macos] Show In Finder
-     *[other] Open Containing Folder
+      [macos] Show in Finder
+     *[other] Show in Folder
   }
 
-downloads-cmd-show-panel =
+downloads-cmd-show-panel-2 =
   .aria-label = { PLATFORM() ->
-      [macos] Show In Finder
-     *[other] Open Containing Folder
+      [macos] Show in Finder
+     *[other] Show in Folder
   }
-downloads-cmd-show-description =
+downloads-cmd-show-description-2 =
   .value = { PLATFORM() ->
-      [macos] Show In Finder
-     *[other] Open Containing Folder
+      [macos] Show in Finder
+     *[other] Show in Folder
   }
 
 downloads-cmd-show-downloads =
