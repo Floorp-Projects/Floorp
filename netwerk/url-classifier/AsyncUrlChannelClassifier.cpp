@@ -76,7 +76,7 @@ class URIData {
 
  private:
   URIData();
-  ~URIData();
+  ~URIData() = default;
 
   nsCOMPtr<nsIURI> mURI;
   nsCString mURISpec;
@@ -116,8 +116,6 @@ nsresult URIData::Create(nsIURI* aURI, nsIURI* aInnermostURI,
 }
 
 URIData::URIData() { MOZ_ASSERT(NS_IsMainThread()); }
-
-URIData::~URIData() { NS_ReleaseOnMainThread("URIData:mURI", mURI.forget()); }
 
 bool URIData::IsEqual(nsIURI* aURI) const {
   MOZ_ASSERT(NS_IsMainThread());

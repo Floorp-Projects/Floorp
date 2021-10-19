@@ -1208,6 +1208,16 @@ pref("dom.ipc.shims.enabledWarnings", false);
   // content process is killed when all windows are closed, so a change will
   // take effect when the 1st window is opened.
   pref("security.sandbox.content.level", 3);
+
+  // Disconnect content processes from the window server. Depends on
+  // out-of-process WebGL and non-native theming. i.e., both in-process WebGL
+  // and native theming depend on content processes having a connection to the
+  // window server. Window server disconnection is automatically disabled (and
+  // this pref overridden) if OOP WebGL is disabled. OOP WebGL is disabled
+  // for some tests.
+  #if defined(NIGHTLY_BUILD)
+    pref("security.sandbox.content.mac.disconnect-windowserver", true);
+  #endif
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)

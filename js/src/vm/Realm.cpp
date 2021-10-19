@@ -326,17 +326,17 @@ void Realm::finishRoots() {
   objects_.finishRoots();
 }
 
-void ObjectRealm::sweepAfterMinorGC() {
+void ObjectRealm::sweepAfterMinorGC(JSTracer* trc) {
   InnerViewTable& table = innerViews.get();
   if (table.needsSweepAfterMinorGC()) {
-    table.sweepAfterMinorGC();
+    table.sweepAfterMinorGC(trc);
   }
 }
 
-void Realm::sweepAfterMinorGC() {
+void Realm::sweepAfterMinorGC(JSTracer* trc) {
   globalWriteBarriered = 0;
   dtoaCache.purge();
-  objects_.sweepAfterMinorGC();
+  objects_.sweepAfterMinorGC(trc);
 }
 
 void Realm::traceWeakSavedStacks(JSTracer* trc) { savedStacks_.traceWeak(trc); }

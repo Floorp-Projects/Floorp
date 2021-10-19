@@ -5,22 +5,17 @@
 <window title="Bug 371798"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="head.js" />
 
-  <body xmlns="http://www.w3.org/1999/xhtml" />
+<body xmlns="http://www.w3.org/1999/xhtml" />
 
 <script type="application/javascript">
 <![CDATA[
 // Test the asynchronous live-updating of bookmarks query results
 SimpleTest.waitForExplicitFinish();
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-
-const {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
-const {PlacesTestUtils} = ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
-
-const TEST_URI = NetUtil.newURI("http://foo.com");
+const TEST_URI = Services.io.newURI("http://foo.com");
 
 (async function() {
   // add 2 bookmarks to the toolbar, same URI, different titles (set later)

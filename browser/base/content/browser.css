@@ -1349,15 +1349,6 @@ toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
   animation-duration: 2s;
 }
 
-/* This effectively simulates a focus outline. */
-#UITourHighlight[active="focus-outline"] {
-  background-color: transparent;
-  border: 2px solid var(--focus-outline-color);
-  border-radius: 4px;
-
-  animation-name: none;
-}
-
 /* Combined context-menu items */
 #context-navigation > .menuitem-iconic > .menu-iconic-text,
 #context-navigation > .menuitem-iconic > .menu-accel-container {

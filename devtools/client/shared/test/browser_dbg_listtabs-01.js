@@ -13,98 +13,68 @@ var { DevToolsClient } = require("devtools/client/devtools-client");
 const TAB1_URL = EXAMPLE_URL + "doc_empty-tab-01.html";
 const TAB2_URL = EXAMPLE_URL + "doc_empty-tab-02.html";
 
-var gTab1, gTab1Front, gTab2, gTab2Front, gClient;
-
-function test() {
+add_task(async function test() {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
 
   const transport = DevToolsServer.connectPipe();
-  gClient = new DevToolsClient(transport);
-  gClient.connect().then(([aType, aTraits]) => {
-    is(aType, "browser", "Root actor should identify itself as a browser.");
+  const client = new DevToolsClient(transport);
+  const [aType] = await client.connect();
+  is(aType, "browser", "Root actor should identify itself as a browser.");
 
-    Promise.resolve(null)
-      .then(testFirstTab)
-      .then(testSecondTab)
-      .then(testRemoveTab)
-      .then(testAttachRemovedTab)
-      .then(() => gClient.close())
-      .then(finish)
-      .catch(error => {
-        ok(false, "Got an error: " + error.message + "\n" + error.stack);
-      });
-  });
-}
-
-function testFirstTab() {
-  return addTab(TAB1_URL).then(tab => {
-    gTab1 = tab;
-
-    return getTargetActorForUrl(gClient, TAB1_URL).then(front => {
-      ok(front, "Should find a target actor for the first tab.");
-      gTab1Front = front;
-    });
-  });
-}
-
-function testSecondTab() {
-  return addTab(TAB2_URL).then(tab => {
-    gTab2 = tab;
-
-    return getTargetActorForUrl(gClient, TAB1_URL).then(firstFront => {
-      return getTargetActorForUrl(gClient, TAB2_URL).then(secondFront => {
-        is(firstFront, gTab1Front, "First tab's actor shouldn't have changed.");
-        ok(secondFront, "Should find a target actor for the second tab.");
-        gTab2Front = secondFront;
-      });
-    });
-  });
-}
-
-function testRemoveTab() {
-  return removeTab(gTab1).then(() => {
-    return getTargetActorForUrl(gClient, TAB1_URL).then(front => {
-      ok(!front, "Shouldn't find a target actor for the first tab anymore.");
-    });
-  });
-}
-
-function testAttachRemovedTab() {
-  return removeTab(gTab2).then(() => {
-    return new Promise((resolve, reject) => {
-      gClient.on("paused", () => {
-        ok(
-          false,
-          "Attaching to an exited target actor shouldn't generate a pause."
-        );
-        reject();
-      });
-
-      const { actorID } = gTab2Front;
-      gTab2Front.reconfigure({}).then(null, error => {
-        ok(
-          error.message.includes(
-            `Connection closed, pending request to ${actorID}, type reconfigure failed`
-          ),
-          "Actor is gone since the tab was removed."
-        );
-        resolve();
-      });
-    });
-  });
-}
-
-registerCleanupFunction(function() {
-  gTab1 = null;
-  gTab1Front = null;
-  gTab2 = null;
-  gTab2Front = null;
-  gClient = null;
+  const firstTab = await testFirstTab(client);
+  const secondTab = await testSecondTab(client, firstTab.front);
+  await testRemoveTab(client, firstTab.tab);
+  await testAttachRemovedTab(secondTab.tab, secondTab.front);
+  await client.close();
 });
 
-async function getTargetActorForUrl(client, url) {
+async function testFirstTab(client) {
+  const tab = await addTab(TAB1_URL);
+
+  const front = await getDescriptorActorForUrl(client, TAB1_URL);
+  ok(front, "Should find a target actor for the first tab.");
+  return { tab, front };
+}
+
+async function testSecondTab(client, firstTabFront) {
+  const tab = await addTab(TAB2_URL);
+
+  const firstFront = await getDescriptorActorForUrl(client, TAB1_URL);
+  const secondFront = await getDescriptorActorForUrl(client, TAB2_URL);
+  is(firstFront, firstTabFront, "First tab's actor shouldn't have changed.");
+  ok(secondFront, "Should find a target actor for the second tab.");
+  return { tab, front: secondFront };
+}
+
+async function testRemoveTab(client, firstTab) {
+  await removeTab(firstTab);
+  const front = await getDescriptorActorForUrl(client, TAB1_URL);
+  ok(!front, "Shouldn't find a target actor for the first tab anymore.");
+}
+
+async function testAttachRemovedTab(secondTab, secondTabFront) {
+  await removeTab(secondTab);
+
+  const { actorID } = secondTabFront;
+  try {
+    await secondTabFront.getFavicon({});
+    ok(
+      false,
+      "any request made to the descriptor for a closed tab should have failed"
+    );
+  } catch (error) {
+    ok(
+      error.message.includes(
+        `Connection closed, pending request to ${actorID}, type getFavicon failed`
+      ),
+      "Actor is gone since the tab was removed."
+    );
+  }
+}
+
+async function getDescriptorActorForUrl(client, url) {
   const tabDescriptors = await client.mainRoot.listTabs();
   const tabDescriptor = tabDescriptors.find(front => front.url == url);
-  return tabDescriptor?.getTarget();
+  return tabDescriptor;
 }

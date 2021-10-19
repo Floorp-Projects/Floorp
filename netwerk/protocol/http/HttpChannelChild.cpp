@@ -1886,7 +1886,7 @@ HttpChannelChild::Resume() {
 NS_IMETHODIMP
 HttpChannelChild::GetSecurityInfo(nsISupports** aSecurityInfo) {
   NS_ENSURE_ARG_POINTER(aSecurityInfo);
-  NS_IF_ADDREF(*aSecurityInfo = mSecurityInfo);
+  *aSecurityInfo = do_AddRef(mSecurityInfo).take();
   return NS_OK;
 }
 

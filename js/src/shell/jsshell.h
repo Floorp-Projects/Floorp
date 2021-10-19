@@ -175,12 +175,11 @@ enum class ScriptKind { Script, ScriptStencil, DecodeScript, Module };
 class NonshrinkingGCObjectVector
     : public GCVector<HeapPtrObject, 0, SystemAllocPolicy> {
  public:
-  void sweep() {
+  bool traceWeak(JSTracer* trc) {
     for (HeapPtrObject& obj : *this) {
-      if (JS::GCPolicy<HeapPtrObject>::needsSweep(&obj)) {
-        obj = nullptr;
-      }
+      TraceWeakEdge(trc, &obj, "NonshrinkingGCObjectVector element");
     }
+    return true;
   }
 };
 

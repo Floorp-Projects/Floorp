@@ -1467,6 +1467,21 @@ void DocumentLoadListener::SerializeRedirectData(
   }
 }
 
+DocumentLoadListener::ProcessBehavior GetProcessSwitchBehavior(
+    Element* aBrowserElement) {
+  if (aBrowserElement->HasAttribute(u"maychangeremoteness"_ns)) {
+    return DocumentLoadListener::ProcessBehavior::PROCESS_BEHAVIOR_STANDARD;
+  }
+  nsCOMPtr<nsIBrowser> browser = aBrowserElement->AsBrowser();
+  bool isRemoteBrowser = false;
+  browser->GetIsRemoteBrowser(&isRemoteBrowser);
+  if (isRemoteBrowser) {
+    return DocumentLoadListener::ProcessBehavior::
+        PROCESS_BEHAVIOR_SUBFRAME_ONLY;
+  }
+  return DocumentLoadListener::ProcessBehavior::PROCESS_BEHAVIOR_DISABLED;
+}
+
 static bool ContextCanProcessSwitch(CanonicalBrowsingContext* aBrowsingContext,
                                     WindowGlobalParent* aParentWindow) {
   if (NS_WARN_IF(!aBrowsingContext)) {
@@ -1507,26 +1522,20 @@ static bool ContextCanProcessSwitch(CanonicalBrowsingContext* aBrowsingContext,
     return false;
   }
 
-  nsIBrowser::ProcessBehavior processBehavior =
-      nsIBrowser::PROCESS_BEHAVIOR_DISABLED;
-  nsresult rv = browser->GetProcessSwitchBehavior(&processBehavior);
-  if (NS_FAILED(rv)) {
-    MOZ_ASSERT_UNREACHABLE(
-        "nsIBrowser::GetProcessSwitchBehavior shouldn't fail");
-    MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
-            ("Process Switch Abort: failed to get process switch behavior"));
-    return false;
-  }
+  DocumentLoadListener::ProcessBehavior processBehavior =
+      GetProcessSwitchBehavior(browserElement);
 
   // Check if the process switch we're considering is disabled by the
   // <browser>'s process behavior.
-  if (processBehavior == nsIBrowser::PROCESS_BEHAVIOR_DISABLED) {
+  if (processBehavior ==
+      DocumentLoadListener::ProcessBehavior::PROCESS_BEHAVIOR_DISABLED) {
     MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
             ("Process Switch Abort: switch disabled by <browser>"));
     return false;
   }
-  if (!aParentWindow &&
-      processBehavior == nsIBrowser::PROCESS_BEHAVIOR_SUBFRAME_ONLY) {
+  if (!aParentWindow && processBehavior ==
+                            DocumentLoadListener::ProcessBehavior::
+                                PROCESS_BEHAVIOR_SUBFRAME_ONLY) {
     MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
             ("Process Switch Abort: toplevel switch disabled by <browser>"));
     return false;

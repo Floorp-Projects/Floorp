@@ -184,7 +184,7 @@ const Hub = {
     address.verified = this.verifyEnv(address);
     if (actor instanceof JSWindowActorParent) {
       address.frameId = WebNavigationFrames.getFrameId(actor.browsingContext);
-      address.url = actor.browsingContext.currentURI.spec;
+      address.url = actor.manager.documentURI?.spec;
     } else {
       // Background service worker contexts do not have an associated frame
       // and there is no browsingContext to retrieve the expected url from.

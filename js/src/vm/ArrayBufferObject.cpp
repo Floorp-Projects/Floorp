@@ -1731,27 +1731,27 @@ void InnerViewTable::removeViews(ArrayBufferObject* buffer) {
   map.remove(p);
 }
 
-void InnerViewTable::sweep() { map.sweep(); }
+bool InnerViewTable::traceWeak(JSTracer* trc) { return map.traceWeak(trc); }
 
-void InnerViewTable::sweepAfterMinorGC() {
+void InnerViewTable::sweepAfterMinorGC(JSTracer* trc) {
   MOZ_ASSERT(needsSweepAfterMinorGC());
 
   if (nurseryKeysValid) {
     for (size_t i = 0; i < nurseryKeys.length(); i++) {
       JSObject* buffer = MaybeForwarded(nurseryKeys[i]);
       Map::Ptr p = map.lookup(buffer);
-      if (p && Map::SweepPolicy::needsSweep(&p->mutableKey(), &p->value())) {
+      if (p &&
+          !Map::SweepPolicy::traceWeak(trc, &p->mutableKey(), &p->value())) {
         map.remove(p);
       }
     }
-    nurseryKeys.clear();
   } else {
     // Do the required sweeping by looking at every map entry.
-    nurseryKeys.clear();
-    sweep();
-
-    nurseryKeysValid = true;
+    map.traceWeak(trc);
   }
+
+  nurseryKeys.clear();
+  nurseryKeysValid = true;
 }
 
 size_t InnerViewTable::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {

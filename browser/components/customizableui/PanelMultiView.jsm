@@ -1216,7 +1216,11 @@ var PanelMultiView = class extends AssociatedToNode {
         currentView.keyNavigation(aEvent);
         break;
       case "mousemove":
-        this.openViews.forEach(panelView => panelView.clearNavigation());
+        this.openViews.forEach(panelView => {
+          if (!panelView.ignoreMouseMove) {
+            panelView.clearNavigation();
+          }
+        });
         break;
       case "popupshowing": {
         this._viewContainer.setAttribute("panelopen", "true");
@@ -1806,6 +1810,8 @@ var PanelView = class extends AssociatedToNode {
       let popup = this.document.getElementById(context);
       return popup && popup.state == "open";
     };
+
+    this.ignoreMouseMove = false;
 
     let keyCode = event.code;
     switch (keyCode) {

@@ -198,11 +198,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
         "last-pb-context-exited"
       );
     }
-
-    this.traits = {
-      // Supports retrieving blocked urls
-      blockedUrls: true,
-    };
   },
   /**
    * Debugger instance.
@@ -238,12 +233,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * @type object
    */
   conn: null,
-
-  /**
-   * List of supported features by the console actor.
-   * @type object
-   */
-  traits: null,
 
   /**
    * The global we work with (this can be a Window, a Worker global or even a Sandbox
@@ -794,7 +783,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     return {
       startedListeners: startedListeners,
       nativeConsoleAPI: this.hasNativeConsoleAPI(this.global),
-      traits: this.traits,
     };
   },
 

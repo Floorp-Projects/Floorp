@@ -97,11 +97,11 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateIOSurface(int aWidth,
 size_t CreatePlaneDictionary(CFTypeRefPtr<CFMutableDictionaryRef>& aDict,
                              const gfx::IntSize& aSize, size_t aOffset,
                              size_t aBytesPerPixel) {
-  size_t bytesPerRow = IOSurfaceAlignProperty(kIOSurfaceBytesPerRow,
+  size_t bytesPerRow = IOSurfaceAlignProperty(kIOSurfacePlaneBytesPerRow,
                                               aSize.width * aBytesPerPixel);
   // Add a SIMD register worth of extra bytes to the end of the allocation for
   // SWGL.
-  size_t totalBytes = IOSurfaceAlignProperty(kIOSurfaceAllocSize,
+  size_t totalBytes = IOSurfaceAlignProperty(kIOSurfacePlaneSize,
                                              aSize.height * bytesPerRow + 16);
 
   aDict = CFTypeRefPtr<CFMutableDictionaryRef>::WrapUnderCreateRule(
@@ -114,7 +114,7 @@ size_t CreatePlaneDictionary(CFTypeRefPtr<CFMutableDictionaryRef>& aDict,
   AddDictionaryInt(aDict, kIOSurfacePlaneBytesPerRow, bytesPerRow);
   AddDictionaryInt(aDict, kIOSurfacePlaneOffset, aOffset);
   AddDictionaryInt(aDict, kIOSurfacePlaneSize, totalBytes);
-  AddDictionaryInt(aDict, kIOSurfaceBytesPerElement, aBytesPerPixel);
+  AddDictionaryInt(aDict, kIOSurfacePlaneBytesPerElement, aBytesPerPixel);
 
   return totalBytes;
 }
@@ -150,11 +150,15 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateNV12Surface(
   }
 
   CFTypeRefPtr<CFMutableDictionaryRef> planeProps[2];
-  size_t planeTotalBytes = CreatePlaneDictionary(planeProps[0], aYSize, 0, 1);
-  planeTotalBytes +=
-      CreatePlaneDictionary(planeProps[1], aCbCrSize, planeTotalBytes, 2);
+  size_t yPlaneBytes = CreatePlaneDictionary(planeProps[0], aYSize, 0, 1);
+  size_t cbCrOffset =
+      IOSurfaceAlignProperty(kIOSurfacePlaneOffset, yPlaneBytes);
+  size_t cbCrPlaneBytes =
+      CreatePlaneDictionary(planeProps[1], aCbCrSize, cbCrOffset, 2);
+  size_t totalBytes =
+      IOSurfaceAlignProperty(kIOSurfaceAllocSize, cbCrOffset + cbCrPlaneBytes);
 
-  AddDictionaryInt(props, kIOSurfaceAllocSize, planeTotalBytes);
+  AddDictionaryInt(props, kIOSurfaceAllocSize, totalBytes);
 
   auto array = CFTypeRefPtr<CFArrayRef>::WrapUnderCreateRule(
       CFArrayCreate(kCFAllocatorDefault, (const void**)planeProps, 2,

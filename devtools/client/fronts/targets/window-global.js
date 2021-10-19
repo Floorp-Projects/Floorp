@@ -125,12 +125,6 @@ class WindowGlobalTargetFront extends TargetMixin(
       // @backward-compat { version 93 } Remove this. All the traits are on form and can be accessed
       // using getTraits.
       this.traits = response.traits || {};
-
-      // xpcshell tests from devtools/server/tests/xpcshell/ are implementing
-      // fake WindowGlobalTargetActor which do not expose any console actor.
-      if (this.targetForm.consoleActor) {
-        await this.attachConsole();
-      }
     })();
     return this._attach;
   }
