@@ -31,6 +31,7 @@ EXPORTS.mozilla.glean.bindings += [
     "bindings/GleanPings.h",
     "bindings/MetricTypes.h",
     "bindings/private/Boolean.h",
+    "bindings/private/Common.h",
     "bindings/private/Counter.h",
     "bindings/private/CustomDistribution.h",
     "bindings/private/Datetime.h",
