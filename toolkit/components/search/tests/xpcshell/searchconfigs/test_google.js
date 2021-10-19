@@ -3,6 +3,10 @@
 
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+});
+
 const test = new SearchConfigTest({
   identifier: "google",
   aliases: ["@google"],
@@ -64,6 +68,8 @@ const test = new SearchConfigTest({
 });
 
 add_task(async function setup() {
+  sinon.spy(NimbusFeatures.search, "onUpdate");
+  sinon.stub(NimbusFeatures.search, "ready").resolves();
   await test.setup();
 });
 
@@ -111,4 +117,65 @@ add_task(async function test_searchConfig_google_with_mozparam() {
       "Should be including the correct MozParam parameter for the engine"
     );
   }
+
+  // Reset the pref values for next tests
+  for (const testData of TEST_DATA) {
+    defaultBranch.setCharPref("param." + testData.pref, "");
+  }
+});
+
+add_task(async function test_searchConfig_google_with_nimbus() {
+  let sandbox = sinon.createSandbox();
+  // Test a couple of configurations with a MozParam set up.
+  const TEST_DATA = [
+    {
+      locale: "en-US",
+      region: "US",
+      expected: "nimbus_us_param",
+    },
+    {
+      locale: "en-US",
+      region: "GB",
+      expected: "nimbus_row_param",
+    },
+  ];
+
+  Assert.ok(
+    NimbusFeatures.search.onUpdate.called,
+    "Should register an update listener for Nimbus experiments"
+  );
+  // Stub getVariable to populate the cache with our expected data
+  sandbox.stub(NimbusFeatures.search, "getVariable").returns([
+    { key: "google_channel_us", value: "nimbus_us_param" },
+    { key: "google_channel_row", value: "nimbus_row_param" },
+  ]);
+  // Set the pref cache with Nimbus values
+  NimbusFeatures.search.onUpdate.firstCall.args[0]();
+
+  for (const testData of TEST_DATA) {
+    info(`Checking region ${testData.region}, locale ${testData.locale}`);
+    const engines = await test._getEngines(testData.region, testData.locale);
+
+    Assert.ok(
+      engines[0].identifier.startsWith("google"),
+      "Should have the correct engine"
+    );
+    console.log(engines[0]);
+
+    const submission = engines[0].getSubmission("test", URLTYPE_SEARCH_HTML);
+    Assert.ok(
+      NimbusFeatures.search.ready.called,
+      "Should wait for Nimbus to get ready"
+    );
+    Assert.ok(
+      NimbusFeatures.search.getVariable,
+      "Should call NimbusFeatures.search.getVariable to populate the cache"
+    );
+    Assert.ok(
+      submission.uri.query.split("&").includes("channel=" + testData.expected),
+      "Should be including the correct MozParam parameter for the engine"
+    );
+  }
+
+  sandbox.restore();
 });
