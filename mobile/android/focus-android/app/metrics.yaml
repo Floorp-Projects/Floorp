@@ -506,7 +506,7 @@ add_to_home_screen:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/5548
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/?
+      - https://github.com/mozilla-mobile/focus-android/pull/5598
     data_sensitivity:
       - interaction
     notification_emails:
