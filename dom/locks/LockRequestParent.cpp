@@ -11,15 +11,19 @@
 
 namespace mozilla::dom::locks {
 
-mozilla::ipc::IPCResult LockRequestParent::Recv__delete__() {
+mozilla::ipc::IPCResult LockRequestParent::Recv__delete__(bool aAborted) {
   RefPtr<LockManagerParent> manager =
       static_cast<LockManagerParent*>(Manager());
   ManagedLocks& managed = manager->Locks();
 
   DebugOnly<bool> unheld = managed.mHeldLocks.RemoveElement(this);
-  MOZ_ASSERT(unheld, "No held lock?");
+  MOZ_ASSERT_IF(!aAborted, unheld);
 
   if (auto queue = managed.mQueueMap.Lookup(mRequest.name())) {
+    if (aAborted) {
+      DebugOnly<bool> dequeued = queue.Data().RemoveElement(this);
+      MOZ_ASSERT_IF(!unheld, dequeued);
+    }
     manager->ProcessRequestQueue(queue.Data());
     if (queue.Data().IsEmpty()) {
       // Remove if empty, to prevent the queue map from growing forever

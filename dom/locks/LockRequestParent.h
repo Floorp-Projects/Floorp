@@ -22,7 +22,7 @@ class LockRequestParent final : public PLockRequestParent {
 
   const IPCLockRequest& Data() { return mRequest; }
 
-  mozilla::ipc::IPCResult Recv__delete__() final;
+  mozilla::ipc::IPCResult Recv__delete__(bool aAborted);
 
  private:
   ~LockRequestParent() = default;

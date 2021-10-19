@@ -50,7 +50,7 @@ Promise& Lock::GetWaitingPromise() {
 
 void Lock::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) {
   if (mLockRequestChild) {
-    locks::PLockRequestChild::Send__delete__(mLockRequestChild);
+    locks::PLockRequestChild::Send__delete__(mLockRequestChild, false);
     mLockRequestChild = nullptr;
   }
   mReleasedPromise->MaybeResolve(aValue);
@@ -58,7 +58,7 @@ void Lock::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) {
 
 void Lock::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) {
   if (mLockRequestChild) {
-    locks::PLockRequestChild::Send__delete__(mLockRequestChild);
+    locks::PLockRequestChild::Send__delete__(mLockRequestChild, false);
     mLockRequestChild = nullptr;
   }
   mReleasedPromise->MaybeReject(aValue);

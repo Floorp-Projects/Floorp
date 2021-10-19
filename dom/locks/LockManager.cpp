@@ -125,12 +125,6 @@ already_AddRefed<Promise> LockManager::Request(const nsAString& aName,
     return nullptr;
   }
 
-  if (aOptions.mSignal.WasPassed()) {
-    // TODO(krosylight): Bug 1725941
-    aRv.ThrowNotSupportedError("AbortSignal support is not implemented yet");
-    return nullptr;
-  }
-
   if (!mActor) {
     // TODO: https://github.com/WICG/web-locks/issues/78
     aRv.ThrowInvalidStateError(
