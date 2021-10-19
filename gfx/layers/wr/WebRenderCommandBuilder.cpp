@@ -404,9 +404,7 @@ struct DIGroup {
       InvalidateRect(aData->mRect);
       aData->mInvalid = true;
       invalidated = true;
-    } else if (aData->mInvalid ||
-               /* XXX: handle image load invalidation */ (
-                   aItem->IsInvalid(invalid) && invalid.IsEmpty())) {
+    } else if (aItem->IsInvalid(invalid) && invalid.IsEmpty()) {
       UniquePtr<nsDisplayItemGeometry> geometry(
           aItem->AllocateGeometry(aBuilder));
       nsRect clippedBounds = clip.ApplyNonRoundedIntersection(
