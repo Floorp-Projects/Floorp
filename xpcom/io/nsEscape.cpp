@@ -245,40 +245,41 @@ void nsAppendEscapedHTML(const nsACString& aSrc, nsACString& aDst) {
 // parts of an URL.  The bits are the "url components" in the enum EscapeMask,
 // see nsEscape.h.
 //
-// esc_Scheme        =     1
-// esc_Username      =     2
-// esc_Password      =     4
-// esc_Host          =     8
-// esc_Directory     =    16
-// esc_FileBaseName  =    32
-// esc_FileExtension =    64
-// esc_Param         =   128
-// esc_Query         =   256
-// esc_Ref           =   512
+// esc_Scheme        =      1
+// esc_Username      =      2
+// esc_Password      =      4
+// esc_Host          =      8
+// esc_Directory     =     16
+// esc_FileBaseName  =     32
+// esc_FileExtension =     64
+// esc_Param         =    128
+// esc_Query         =    256
+// esc_Ref           =    512
+// esc_ExtHandler    = 131072
 
 static const uint32_t EscapeChars[256] =
     // clang-format off
-//   0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F
+//     0      1      2      3      4      5      6      7      8      9      A      B      C      D      E      F
 {
-     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  // 0x
-     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  // 1x
-     0,1023,   0, 512,1023,   0,1023, 624,1023,1023,1023,1023,1023,1023, 953, 784,  // 2x   !"#$%&'()*+,-./
-  1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1008,1008,   0,1008,   0, 768,  // 3x  0123456789:;<=>?
-  1008,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,  // 4x  @ABCDEFGHIJKLMNO
-  1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1008, 896,1008, 896,1023,  // 5x  PQRSTUVWXYZ[\]^_
-   384,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,  // 6x  `abcdefghijklmno
-  1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023, 896,1012, 896,1023,   0,  // 7x  pqrstuvwxyz{|}~ DEL
-     0                                                                              // 80 to FF are zero
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,  // 0x
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,  // 1x
+       0,132095,     0,131584,132095,     0,132095,131696,132095,132095,132095,132095,132095,132095,132025,131856,  // 2x   !"#$%&'()*+,-./
+  132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132080,132080,     0,132080,     0,131840,  // 3x  0123456789:;<=>?
+  132080,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,  // 4x  @ABCDEFGHIJKLMNO
+  132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132080,   896,132080,   896,132095,  // 5x  PQRSTUVWXYZ[\]^_
+     384,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,  // 6x  `abcdefghijklmno
+  132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,   896,  1012,   896,132095,     0,  // 7x  pqrstuvwxyz{|}~ DEL
+       0                                                                                                            // 80 to FF are zero
 };
 // clang-format on
 
-static uint16_t dontNeedEscape(unsigned char aChar, uint32_t aFlags) {
+static bool dontNeedEscape(unsigned char aChar, uint32_t aFlags) {
   return EscapeChars[(uint32_t)aChar] & aFlags;
 }
-static uint16_t dontNeedEscape(uint16_t aChar, uint32_t aFlags) {
+static bool dontNeedEscape(uint16_t aChar, uint32_t aFlags) {
   return aChar < mozilla::ArrayLength(EscapeChars)
              ? (EscapeChars[(uint32_t)aChar] & aFlags)
-             : 0;
+             : false;
 }
 
 //----------------------------------------------------------------------------------------
