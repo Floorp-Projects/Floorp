@@ -170,9 +170,11 @@ class CCGCScheduler {
   void SetWantMajorGC(JS::GCReason aReason) {
     MOZ_ASSERT(aReason != JS::GCReason::NO_REASON);
 
-    if (mMajorGCReason != JS::GCReason::NO_REASON &&
-        mMajorGCReason != JS::GCReason::USER_INACTIVE &&
-        aReason != JS::GCReason::USER_INACTIVE) {
+    // If the GC being requested is not a shrinking GC set this flag.
+    // If/when the shrinking GC timer fires but the user is active we check
+    // this flag before canceling the GC, so as not to cancel the
+    // non-shrinking GC being requested here.
+    if (aReason != JS::GCReason::USER_INACTIVE) {
       mWantAtLeastRegularGC = true;
     }
     mMajorGCReason = aReason;
