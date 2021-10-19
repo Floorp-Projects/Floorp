@@ -564,8 +564,8 @@ class InnerViewTable {
 
   // Remove references to dead objects in the table and update table entries
   // to reflect moved objects.
-  void sweep();
-  void sweepAfterMinorGC();
+  bool traceWeak(JSTracer* trc);
+  void sweepAfterMinorGC(JSTracer* trc);
 
   bool empty() const { return map.empty(); }
 
