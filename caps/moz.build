@@ -31,6 +31,7 @@ EXPORTS += [
 EXPORTS.mozilla = [
     "BasePrincipal.h",
     "ContentPrincipal.h",
+    "ContentPrincipalInfoHashKey.h",
     "ExpandedPrincipal.h",
     "NullPrincipal.h",
     "OriginAttributes.h",
