@@ -691,7 +691,8 @@ Toolbox.prototype = {
       // Attach to a new top-level target.
       // For now, register these event listeners only on the top level target
       targetFront.on("frame-update", this._updateFrames);
-      targetFront.on("inspect-object", this._onInspectObject);
+      const consoleFront = await targetFront.getFront("console");
+      consoleFront.on("inspectObject", this._onInspectObject);
     }
 
     // Walker listeners allow to monitor DOM Mutation breakpoint updates.
@@ -718,8 +719,9 @@ Toolbox.prototype = {
 
   _onTargetDestroyed({ targetFront }) {
     if (targetFront.isTopLevel) {
-      this.target.off("inspect-object", this._onInspectObject);
-      this.target.off("frame-update", this._updateFrames);
+      const consoleFront = targetFront.getCachedFront("console");
+      consoleFront.off("inspectObject", this._onInspectObject);
+      targetFront.off("frame-update", this._updateFrames);
     } else if (this.selection) {
       this.selection.onTargetDestroyed(targetFront);
     }
@@ -3611,10 +3613,6 @@ Toolbox.prototype = {
     }
   },
 
-  _onInspectObject: function(packet) {
-    this.inspectObjectActor(packet.objectActor, packet.inspectFromAnnotation);
-  },
-
   _onToolSelected: function() {
     this._refreshHostTitle();
 
@@ -3624,6 +3622,13 @@ Toolbox.prototype = {
 
     // Calling setToolboxButtons in case the visibility of a button changed.
     this.component.setToolboxButtons(this.toolbarButtons);
+  },
+
+  /**
+   * Listener for "inspectObject" event on console top level target actor.
+   */
+  _onInspectObject(packet) {
+    this.inspectObjectActor(packet.objectActor, packet.inspectFromAnnotation);
   },
 
   inspectObjectActor: async function(objectActor, inspectFromAnnotation) {
