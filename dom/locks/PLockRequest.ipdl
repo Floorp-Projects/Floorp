@@ -21,7 +21,7 @@ protocol PLockRequest {
   async Abort();
 
  parent:
-  async __delete__();
+  async __delete__(bool aAborted);
 };
 
 } // namespace cache

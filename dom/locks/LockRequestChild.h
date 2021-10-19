@@ -10,6 +10,7 @@
 #include "mozilla/dom/locks/PLockRequestChild.h"
 #include "mozilla/dom/Lock.h"
 #include "mozilla/dom/WorkerRef.h"
+#include "nsISupportsImpl.h"
 
 namespace mozilla::dom::locks {
 
@@ -20,16 +21,21 @@ struct LockRequest {
 };
 
 class LockRequestChild final : public PLockRequestChild,
+                               public AbortFollower,
                                public SupportsWeakPtr {
   using IPCResult = mozilla::ipc::IPCResult;
 
-  NS_INLINE_DECL_REFCOUNTING(LockRequestChild)
+  NS_DECL_ISUPPORTS
 
  public:
-  explicit LockRequestChild(const LockRequest& aRequest);
+  explicit LockRequestChild(
+      const LockRequest& aRequest,
+      const Optional<OwningNonNull<AbortSignal>>& aSignal);
 
   IPCResult RecvResolve(const LockMode& aLockMode, bool aIsAvailable);
   IPCResult RecvAbort();
+
+  void RunAbortAlgorithm() final;
 
  private:
   ~LockRequestChild() = default;
