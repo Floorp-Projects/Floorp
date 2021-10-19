@@ -10,7 +10,7 @@ const {
  */
 
 const INITIATOR_FILE_NAME = "html_cause-test-page.html";
-const INITIATOR_URL = EXAMPLE_URL + INITIATOR_FILE_NAME;
+const INITIATOR_URL = HTTPS_EXAMPLE_URL + INITIATOR_FILE_NAME;
 
 const EXPECTED_REQUESTS = [
   {
@@ -22,42 +22,42 @@ const EXPECTED_REQUESTS = [
   },
   {
     method: "GET",
-    url: EXAMPLE_URL + "stylesheet_request",
+    url: HTTPS_EXAMPLE_URL + "stylesheet_request",
     causeType: "stylesheet",
     causeUri: INITIATOR_URL,
     stack: false,
   },
   {
     method: "GET",
-    url: EXAMPLE_URL + "img_request",
+    url: HTTPS_EXAMPLE_URL + "img_request",
     causeType: "img",
     causeUri: INITIATOR_URL,
     stack: false,
   },
   {
     method: "GET",
-    url: EXAMPLE_URL + "img_srcset_request",
+    url: HTTPS_EXAMPLE_URL + "img_srcset_request",
     causeType: "imageset",
     causeUri: INITIATOR_URL,
     stack: false,
   },
   {
     method: "GET",
-    url: EXAMPLE_URL + "xhr_request",
+    url: HTTPS_EXAMPLE_URL + "xhr_request",
     causeType: "xhr",
     causeUri: INITIATOR_URL,
     stack: [{ fn: "performXhrRequestCallback", file: INITIATOR_URL, line: 32 }],
   },
   {
     method: "GET",
-    url: EXAMPLE_URL + "fetch_request",
+    url: HTTPS_EXAMPLE_URL + "fetch_request",
     causeType: "fetch",
     causeUri: INITIATOR_URL,
     stack: [{ fn: "performFetchRequest", file: INITIATOR_URL, line: 37 }],
   },
   {
     method: "GET",
-    url: EXAMPLE_URL + "promise_fetch_request",
+    url: HTTPS_EXAMPLE_URL + "promise_fetch_request",
     causeType: "fetch",
     causeUri: INITIATOR_URL,
     stack: [
@@ -76,7 +76,7 @@ const EXPECTED_REQUESTS = [
   },
   {
     method: "GET",
-    url: EXAMPLE_URL + "timeout_fetch_request",
+    url: HTTPS_EXAMPLE_URL + "timeout_fetch_request",
     causeType: "fetch",
     causeUri: INITIATOR_URL,
     stack: [
@@ -95,7 +95,7 @@ const EXPECTED_REQUESTS = [
   },
   {
     method: "GET",
-    url: EXAMPLE_URL + "favicon_request",
+    url: HTTPS_EXAMPLE_URL + "favicon_request",
     causeType: "img",
     causeUri: INITIATOR_URL,
     // the favicon request is triggered in FaviconLoader.jsm module, it should
@@ -111,21 +111,21 @@ const EXPECTED_REQUESTS = [
   },
   {
     method: "GET",
-    url: EXAMPLE_URL + "lazy_img_request",
+    url: HTTPS_EXAMPLE_URL + "lazy_img_request",
     causeType: "lazy-img",
     causeUri: INITIATOR_URL,
     stack: false,
   },
   {
     method: "GET",
-    url: EXAMPLE_URL + "lazy_img_srcset_request",
+    url: HTTPS_EXAMPLE_URL + "lazy_img_srcset_request",
     causeType: "lazy-imageset",
     causeUri: INITIATOR_URL,
     stack: false,
   },
   {
     method: "POST",
-    url: EXAMPLE_URL + "beacon_request",
+    url: HTTPS_EXAMPLE_URL + "beacon_request",
     causeType: "beacon",
     causeUri: INITIATOR_URL,
     stack: [{ fn: "performBeaconRequest", file: INITIATOR_URL, line: 82 }],

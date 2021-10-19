@@ -7,10 +7,12 @@
  * Tests if copying an image as data uri works.
  */
 
-const SVG_URL = EXAMPLE_URL + "dropmarker.svg";
+const SVG_URL = HTTPS_EXAMPLE_URL + "dropmarker.svg";
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(CURL_URL, { requestCount: 1 });
+  const { tab, monitor } = await initNetMonitor(HTTPS_CURL_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { document } = monitor.panelWin;

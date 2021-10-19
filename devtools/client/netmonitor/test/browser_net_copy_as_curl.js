@@ -10,7 +10,9 @@
 const POST_PAYLOAD = "Plaintext value as a payload";
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(CURL_URL, { requestCount: 1 });
+  const { tab, monitor } = await initNetMonitor(HTTPS_CURL_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   // Different quote chars are used for Windows and POSIX
@@ -53,8 +55,8 @@ function buildTestData(QUOTE) {
   }
 
   // Construct the expected command
-  const SIMPLE_BASE = ["curl " + quote(SIMPLE_SJS)];
-  const SLOW_BASE = ["curl " + quote(SLOW_SJS)];
+  const SIMPLE_BASE = ["curl " + quote(HTTPS_SIMPLE_SJS)];
+  const SLOW_BASE = ["curl " + quote(HTTPS_SLOW_SJS)];
   const BASE_RESULT = [
     "--compressed",
     header("User-Agent: " + navigator.userAgent),
@@ -63,10 +65,13 @@ function buildTestData(QUOTE) {
     header("X-Custom-Header-1: Custom value"),
     header("X-Custom-Header-2: 8.8.8.8"),
     header("X-Custom-Header-3: Mon, 3 Mar 2014 11:11:11 GMT"),
-    header("Referer: " + CURL_URL),
+    header("Referer: " + HTTPS_CURL_URL),
     header("Connection: keep-alive"),
     header("Pragma: no-cache"),
     header("Cache-Control: no-cache"),
+    header("Sec-Fetch-Dest: empty"),
+    header("Sec-Fetch-Mode: cors"),
+    header("Sec-Fetch-Site: same-origin"),
   ];
 
   const COOKIE_PARTIAL_RESULT = [header("Cookie: bob=true; tom=cool")];
@@ -77,7 +82,7 @@ function buildTestData(QUOTE) {
     "--data-raw " + quote(POST_PAYLOAD),
     header("Content-Type: text/plain;charset=UTF-8"),
   ];
-  const ORIGIN_RESULT = [header("Origin: http://example.com")];
+  const ORIGIN_RESULT = [header("Origin: https://example.com")];
 
   const HEAD_PARTIAL_RESULT = ["-I"];
 
@@ -123,7 +128,9 @@ async function testForPlatform(tab, monitor, testData) {
 
   // Unfinished request (bug#1378464, bug#1420513)
   const waitSlow = waitForNetworkEvents(monitor, 0);
-  await SpecialPowers.spawn(tab.linkedBrowser, [SLOW_SJS], async function(url) {
+  await SpecialPowers.spawn(tab.linkedBrowser, [HTTPS_SLOW_SJS], async function(
+    url
+  ) {
     content.wrappedJSObject.performRequest(url, "GET", null);
   });
   await waitSlow;
@@ -164,7 +171,7 @@ async function testForPlatform(tab, monitor, testData) {
       tab.linkedBrowser,
       [
         {
-          url: SIMPLE_SJS,
+          url: HTTPS_SIMPLE_SJS,
           method_: method,
           payload_: payload,
         },

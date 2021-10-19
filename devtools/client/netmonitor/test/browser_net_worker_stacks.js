@@ -7,9 +7,9 @@
 // running worker threads.
 
 const TOP_FILE_NAME = "html_worker-test-page.html";
-const TOP_URL = EXAMPLE_URL + TOP_FILE_NAME;
+const TOP_URL = HTTPS_EXAMPLE_URL + TOP_FILE_NAME;
 const WORKER_FILE_NAME = "js_worker-test.js";
-const WORKER_URL = EXAMPLE_URL + WORKER_FILE_NAME;
+const WORKER_URL = HTTPS_EXAMPLE_URL + WORKER_FILE_NAME;
 
 const EXPECTED_REQUESTS = [
   {
@@ -32,7 +32,7 @@ const EXPECTED_REQUESTS = [
   },
   {
     method: "GET",
-    url: EXAMPLE_URL + "missing1.js",
+    url: HTTPS_EXAMPLE_URL + "missing1.js",
     causeType: "script",
     causeUri: TOP_URL,
     stack: [
@@ -42,7 +42,7 @@ const EXPECTED_REQUESTS = [
   },
   {
     method: "GET",
-    url: EXAMPLE_URL + "missing2.js",
+    url: HTTPS_EXAMPLE_URL + "missing2.js",
     causeType: "script",
     causeUri: TOP_URL,
     stack: [
@@ -52,7 +52,7 @@ const EXPECTED_REQUESTS = [
   },
   {
     method: "GET",
-    url: EXAMPLE_URL + "js_worker-test2.js",
+    url: HTTPS_EXAMPLE_URL + "js_worker-test2.js",
     causeType: "script",
     causeUri: TOP_URL,
     stack: [
@@ -62,7 +62,7 @@ const EXPECTED_REQUESTS = [
   },
   {
     method: "GET",
-    url: EXAMPLE_URL + "missing.json",
+    url: HTTPS_EXAMPLE_URL + "missing.json",
     causeType: "xhr",
     causeUri: TOP_URL,
     stack: [
@@ -72,7 +72,7 @@ const EXPECTED_REQUESTS = [
   },
   {
     method: "GET",
-    url: EXAMPLE_URL + "missing.txt",
+    url: HTTPS_EXAMPLE_URL + "missing.txt",
     causeType: "fetch",
     causeUri: TOP_URL,
     stack: [

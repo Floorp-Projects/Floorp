@@ -8,7 +8,9 @@
  */
 
 add_task(async function() {
-  const { monitor } = await initNetMonitor(SIMPLE_URL, { requestCount: 1 });
+  const { monitor } = await initNetMonitor(HTTPS_SIMPLE_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { store, windowRequire, connector } = monitor.panelWin;
@@ -21,7 +23,7 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
-  const requestUrl = SIMPLE_SJS;
+  const requestUrl = HTTPS_SIMPLE_SJS;
   const requestHeaders = [
     { name: "Accept", value: "application/vnd.example+json" },
   ];

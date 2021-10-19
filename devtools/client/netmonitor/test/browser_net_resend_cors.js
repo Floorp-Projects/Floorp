@@ -9,7 +9,9 @@
  */
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(CORS_URL, { requestCount: 1 });
+  const { tab, monitor } = await initNetMonitor(HTTPS_CORS_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   const { store, windowRequire, connector } = monitor.panelWin;
@@ -20,7 +22,7 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
-  const requestUrl = "http://test1.example.com" + CORS_SJS_PATH;
+  const requestUrl = "https://test1.example.com" + CORS_SJS_PATH;
 
   info("Waiting for OPTIONS, then POST");
   const wait = waitForNetworkEvents(monitor, 2);

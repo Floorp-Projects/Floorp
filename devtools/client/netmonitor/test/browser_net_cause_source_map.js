@@ -8,7 +8,7 @@
  */
 
 const CAUSE_FILE_NAME = "html_maps-test-page.html";
-const CAUSE_URL = EXAMPLE_URL + CAUSE_FILE_NAME;
+const CAUSE_URL = HTTPS_EXAMPLE_URL + CAUSE_FILE_NAME;
 
 const N_EXPECTED_REQUESTS = 4;
 

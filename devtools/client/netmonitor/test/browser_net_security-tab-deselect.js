@@ -9,6 +9,10 @@
  */
 
 add_task(async function() {
+  // This test needs to trigger http and https requests.
+  // Disable https-first to avoid blocking the HTTP request due to mixed content.
+  await pushPref("dom.security.https_first", false);
+
   const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL, {
     requestCount: 1,
   });

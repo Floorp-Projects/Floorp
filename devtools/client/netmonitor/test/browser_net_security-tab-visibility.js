@@ -8,6 +8,9 @@
  */
 
 add_task(async function() {
+  // This test explicitly asserts some insecure domains.
+  await pushPref("dom.security.https_first", false);
+
   const TEST_DATA = [
     {
       desc: "http request",
