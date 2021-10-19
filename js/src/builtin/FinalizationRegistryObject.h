@@ -155,7 +155,7 @@ class FinalizationRegistrationsObject : public NativeObject {
   bool append(HandleFinalizationRecordObject record);
   void remove(HandleFinalizationRecordObject record);
 
-  void sweep();
+  bool traceWeak(JSTracer* trc);
 
  private:
   static const JSClassOps classOps_;
@@ -180,7 +180,7 @@ class FinalizationRegistryObject : public NativeObject {
   FinalizationQueueObject* queue() const;
   ObjectWeakMap* registrations() const;
 
-  void sweep();
+  void traceWeak(JSTracer* trc);
 
   static bool unregisterRecord(FinalizationRecordObject* record);
 
