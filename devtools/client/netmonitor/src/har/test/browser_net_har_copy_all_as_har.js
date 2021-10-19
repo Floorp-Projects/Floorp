@@ -7,6 +7,11 @@
  * Basic tests for exporting Network panel content into HAR format.
  */
 add_task(async function() {
+  // Using https-first for this test is blocked on Bug 1733420.
+  // Otherwise in https we receive the wrong headers length (12 instead of 9)
+  // and the wrong statusText (Connected instead of OK).
+  await pushPref("dom.security.https_first", false);
+
   // Disable tcp fast open, because it is setting a response header indicator
   // (bug 1352274). TCP Fast Open is not present on all platforms therefore the
   // number of response headers will vary depending on the platform.

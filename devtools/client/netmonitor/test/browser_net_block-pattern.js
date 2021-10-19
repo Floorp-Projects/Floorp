@@ -12,7 +12,7 @@
 add_task(async function() {
   await pushPref("devtools.netmonitor.features.requestBlocking", true);
 
-  const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL, {
+  const { tab, monitor } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
     requestCount: 1,
   });
   info("Starting test... ");
@@ -50,10 +50,10 @@ add_task(async function() {
   store.dispatch(Actions.toggleRequestBlockingPanel());
 
   // Execute two XHRs (the same URL) and wait till they're finished
-  const TEST_URL_1 = SEARCH_SJS + "?value=test1";
-  const TEST_URL_2 = SEARCH_SJS + "?value=test2";
-  const TEST_URL_3 = SEARCH_SJS + "test/something/test3";
-  const TEST_URL_4 = SEARCH_SJS + "test/something/test4";
+  const TEST_URL_1 = HTTPS_SEARCH_SJS + "?value=test1";
+  const TEST_URL_2 = HTTPS_SEARCH_SJS + "?value=test2";
+  const TEST_URL_3 = HTTPS_SEARCH_SJS + "test/something/test3";
+  const TEST_URL_4 = HTTPS_SEARCH_SJS + "test/something/test4";
 
   let wait = waitForNetworkEvents(monitor, 4);
   await ContentTask.spawn(tab.linkedBrowser, TEST_URL_1, async function(url) {

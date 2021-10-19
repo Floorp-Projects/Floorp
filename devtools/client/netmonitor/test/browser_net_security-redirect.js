@@ -9,6 +9,9 @@
  */
 
 add_task(async function() {
+  // This test explicitly asserts http -> https redirects.
+  await pushPref("dom.security.https_first", false);
+
   const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL, {
     requestCount: 1,
   });

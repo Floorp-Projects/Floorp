@@ -11,7 +11,7 @@
 add_task(async function() {
   await pushPref("devtools.netmonitor.features.search", true);
 
-  const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL, {
+  const { tab, monitor } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
     requestCount: 1,
   });
   info("Starting test... ");
@@ -24,7 +24,10 @@ add_task(async function() {
 
   const SEARCH_STRING = "test";
   // Execute two XHRs and wait until they are finished.
-  const URLS = [SEARCH_SJS + "?value=test1", SEARCH_SJS + "?value=test2"];
+  const URLS = [
+    HTTPS_SEARCH_SJS + "?value=test1",
+    HTTPS_SEARCH_SJS + "?value=test2",
+  ];
 
   const wait = waitForNetworkEvents(monitor, 2);
   await SpecialPowers.spawn(tab.linkedBrowser, [URLS], makeRequests);

@@ -8,12 +8,14 @@
  */
 
 add_task(async function() {
-  const { tab, monitor } = await initNetMonitor(CURL_URL, { requestCount: 1 });
+  const { tab, monitor } = await initNetMonitor(HTTPS_CURL_URL, {
+    requestCount: 1,
+  });
   info("Starting test... ");
 
   // GET request, no cookies (first request)
   await performRequest("GET");
-  await testClipboardContent(`await fetch("http://example.com/browser/devtools/client/netmonitor/test/sjs_simple-test-server.sjs", {
+  await testClipboardContent(`await fetch("https://example.com/browser/devtools/client/netmonitor/test/sjs_simple-test-server.sjs", {
     "credentials": "omit",
     "headers": {
         "User-Agent": "${navigator.userAgent}",
@@ -22,10 +24,13 @@ add_task(async function() {
         "X-Custom-Header-1": "Custom value",
         "X-Custom-Header-2": "8.8.8.8",
         "X-Custom-Header-3": "Mon, 3 Mar 2014 11:11:11 GMT",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin",
         "Pragma": "no-cache",
         "Cache-Control": "no-cache"
     },
-    "referrer": "http://example.com/browser/devtools/client/netmonitor/test/html_copy-as-curl.html",
+    "referrer": "https://example.com/browser/devtools/client/netmonitor/test/html_copy-as-curl.html",
     "method": "GET",
     "mode": "cors"
 });`);
@@ -38,7 +43,7 @@ add_task(async function() {
       tab.linkedBrowser,
       [
         {
-          url: SIMPLE_SJS,
+          url: HTTPS_SIMPLE_SJS,
           method_: method,
           payload_: payload,
         },

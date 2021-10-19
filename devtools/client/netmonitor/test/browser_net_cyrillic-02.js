@@ -9,6 +9,9 @@
  */
 
 add_task(async function() {
+  // Using https-first for this test is blocked on Bug 1733420.
+  await pushPref("dom.security.https_first", false);
+
   const { monitor } = await initNetMonitor(CYRILLIC_URL, {
     requestCount: 1,
   });
