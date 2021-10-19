@@ -50,7 +50,7 @@ python3.7 -m pip install psutil
 mkdir -p /setup
 cd /setup
 
-wget http://www.leptonica.org/source/leptonica-1.76.0.tar.gz
+wget https://github.com/DanBloomberg/leptonica/releases/download/1.76.0/leptonica-1.76.0.tar.gz
 tar xopf leptonica-1.76.0.tar.gz
 cd leptonica-1.76.0
 ./configure && make && make install
