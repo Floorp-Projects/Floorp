@@ -64,12 +64,10 @@ let config = getHitTestConfig();
 let activateAllScrollFrames = config.activateAllScrollFrames;
 
 let heightMultiplier = SpecialPowers.getCharPref("apz.y_stationary_size_multiplier");
-if (config.isWebRender) {
-  // With WebRender, the effective height multiplier can be reduced
-  // for alignment reasons. The reduction should be no more than a
-  // factor of two.
-  heightMultiplier /= 2;
-}
+// With WebRender, the effective height multiplier can be reduced
+// for alignment reasons. The reduction should be no more than a
+// factor of two.
+heightMultiplier /= 2;
 info("effective displayport height multipler is " + heightMultiplier);
 
 function hasNonZeroMarginDisplayPort(elementId, containingDoc = null) {

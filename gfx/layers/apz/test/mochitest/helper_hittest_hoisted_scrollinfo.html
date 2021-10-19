@@ -64,11 +64,8 @@ async function test() {
   utils.setDisplayPortForElement(0, 0, 300, 500, scroller, 1);
   await promiseApzFlushedRepaints();
 
-  // Inactive scrollframe flags will round-trip through the dispatch-to-content
-  // region and end up as IRREGULAR_AREA when WebRender is disabled.
-  var expectedHitFlags = config.isWebRender
-    ? APZHitResultFlags.VISIBLE | APZHitResultFlags.INACTIVE_SCROLLFRAME
-    : APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA;
+  var expectedHitFlags =
+    APZHitResultFlags.VISIBLE | APZHitResultFlags.INACTIVE_SCROLLFRAME;
   checkHitResult(hitTest(centerOf(scroller)),
                  expectedHitFlags,
                  utils.getViewId(scroller),

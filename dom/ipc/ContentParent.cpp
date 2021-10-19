@@ -2409,9 +2409,12 @@ static void CacheSandboxParams(std::vector<std::string>& aCachedParams) {
     info.hasAudio = true;
   }
 
-  // Windowserver access
+  // Window server access. If the disconnect-windowserver pref is not
+  // "true" or out-of-process WebGL is not enabled, allow window server
+  // access in the sandbox policy.
   if (!Preferences::GetBool(
-          "security.sandbox.content.mac.disconnect-windowserver")) {
+          "security.sandbox.content.mac.disconnect-windowserver") ||
+      !Preferences::GetBool("webgl.out-of-process")) {
     info.hasWindowServer = true;
   }
 

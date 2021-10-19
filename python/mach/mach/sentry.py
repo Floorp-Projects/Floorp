@@ -54,7 +54,9 @@ def register_sentry(argv, settings, topsrcdir):
 
     global _is_unmodified_mach_core_thread
     _is_unmodified_mach_core_thread = Thread(
-        target=_is_unmodified_mach_core, args=[topsrcdir]
+        target=_is_unmodified_mach_core,
+        args=[topsrcdir],
+        daemon=True,
     )
     _is_unmodified_mach_core_thread.start()
 

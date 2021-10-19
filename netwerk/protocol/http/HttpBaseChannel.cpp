@@ -434,8 +434,7 @@ HttpBaseChannel::GetStatus(nsresult* aStatus) {
 NS_IMETHODIMP
 HttpBaseChannel::GetLoadGroup(nsILoadGroup** aLoadGroup) {
   NS_ENSURE_ARG_POINTER(aLoadGroup);
-  *aLoadGroup = mLoadGroup;
-  NS_IF_ADDREF(*aLoadGroup);
+  *aLoadGroup = do_AddRef(mLoadGroup).take();
   return NS_OK;
 }
 
@@ -542,8 +541,7 @@ HttpBaseChannel::GetURI(nsIURI** aURI) {
 NS_IMETHODIMP
 HttpBaseChannel::GetOwner(nsISupports** aOwner) {
   NS_ENSURE_ARG_POINTER(aOwner);
-  *aOwner = mOwner;
-  NS_IF_ADDREF(*aOwner);
+  *aOwner = do_AddRef(mOwner).take();
   return NS_OK;
 }
 
@@ -562,7 +560,7 @@ HttpBaseChannel::SetLoadInfo(nsILoadInfo* aLoadInfo) {
 
 NS_IMETHODIMP
 HttpBaseChannel::GetLoadInfo(nsILoadInfo** aLoadInfo) {
-  NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
+  *aLoadInfo = do_AddRef(mLoadInfo).take();
   return NS_OK;
 }
 
@@ -573,8 +571,7 @@ HttpBaseChannel::GetIsDocument(bool* aIsDocument) {
 
 NS_IMETHODIMP
 HttpBaseChannel::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks) {
-  *aCallbacks = mCallbacks;
-  NS_IF_ADDREF(*aCallbacks);
+  *aCallbacks = do_AddRef(mCallbacks).take();
   return NS_OK;
 }
 
@@ -797,8 +794,7 @@ HttpBaseChannel::Open(nsIInputStream** aStream) {
 NS_IMETHODIMP
 HttpBaseChannel::GetUploadStream(nsIInputStream** stream) {
   NS_ENSURE_ARG_POINTER(stream);
-  *stream = mUploadStream;
-  NS_IF_ADDREF(*stream);
+  *stream = do_AddRef(mUploadStream).take();
   return NS_OK;
 }
 
@@ -1280,8 +1276,7 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
       if (val) LOG(("Unknown content encoding '%s', ignoring\n", val));
     }
   }
-  *aNewNextListener = nextListener;
-  NS_IF_ADDREF(*aNewNextListener);
+  *aNewNextListener = do_AddRef(nextListener).take();
   return NS_OK;
 }
 
@@ -2124,15 +2119,14 @@ nsresult HttpBaseChannel::GetTopWindowURI(nsIURI* aURIBeingLoaded,
 #endif
     }
   }
-  NS_IF_ADDREF(*aTopWindowURI = mTopWindowURI);
+  *aTopWindowURI = do_AddRef(mTopWindowURI).take();
   return rv;
 }
 
 NS_IMETHODIMP
 HttpBaseChannel::GetDocumentURI(nsIURI** aDocumentURI) {
   NS_ENSURE_ARG_POINTER(aDocumentURI);
-  *aDocumentURI = mDocumentURI;
-  NS_IF_ADDREF(*aDocumentURI);
+  *aDocumentURI = do_AddRef(mDocumentURI).take();
   return NS_OK;
 }
 
@@ -3414,7 +3408,7 @@ HttpBaseChannel::SetTlsFlags(uint32_t aTlsFlags) {
 NS_IMETHODIMP
 HttpBaseChannel::GetApiRedirectToURI(nsIURI** aResult) {
   NS_ENSURE_ARG_POINTER(aResult);
-  NS_IF_ADDREF(*aResult = mAPIRedirectToURI);
+  *aResult = do_AddRef(mAPIRedirectToURI).take();
   return NS_OK;
 }
 

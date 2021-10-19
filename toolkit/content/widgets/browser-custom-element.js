@@ -1803,25 +1803,6 @@
       return origins;
     }
 
-    get processSwitchBehavior() {
-      // If a `remotenessChangeHandler` is attached to this browser, it supports
-      // having its toplevel process switched dynamically in response to
-      // navigations.
-      if (this.hasAttribute("maychangeremoteness")) {
-        return Ci.nsIBrowser.PROCESS_BEHAVIOR_STANDARD;
-      }
-
-      // For backwards compatibility, we need to mark remote, but
-      // non-`allowremote`, frames as `PROCESS_BEHAVIOR_SUBFRAME_ONLY`, as some
-      // tests rely on it.
-      // FIXME: Remove this?
-      if (this.isRemoteBrowser) {
-        return Ci.nsIBrowser.PROCESS_BEHAVIOR_SUBFRAME_ONLY;
-      }
-      // Otherwise, don't allow gecko-initiated toplevel process switches.
-      return Ci.nsIBrowser.PROCESS_BEHAVIOR_DISABLED;
-    }
-
     // This method is replaced by frontend code in order to delay performing the
     // process switch until some async operatin is completed.
     //

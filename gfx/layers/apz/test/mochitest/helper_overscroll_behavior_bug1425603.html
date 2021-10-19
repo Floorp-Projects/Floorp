@@ -55,13 +55,11 @@ async function test() {
   await promiseAllPaintsDone();
   var scrollY = 300;
   utils.setAsyncScrollOffset(subframe, 0, scrollY);
-  if (config.isWebRender) {
-    // Tick the refresh driver once to make sure the compositor has applied the
-    // async scroll offset (for APZ hit-testing this doesn't matter, but for
-    // WebRender hit-testing we need to make sure WR has the latest info).
-    utils.advanceTimeAndRefresh(16);
-    utils.restoreNormalRefresh();
-  }
+  // Tick the refresh driver once to make sure the compositor has applied the
+  // async scroll offset (for WebRender hit-testing we need to make sure WR has
+  // the latest info).
+  utils.advanceTimeAndRefresh(16);
+  utils.restoreNormalRefresh();
 
   // Scroll over the subframe, and make sure that the page does not scroll,
   // i.e. overscroll-behavior is respected.

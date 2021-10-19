@@ -271,6 +271,15 @@ class BarrierTracer final : public GenericTracerImpl<BarrierTracer> {
   GCMarker& marker;
 };
 
+struct SweepingTracer final : public GenericTracerImpl<SweepingTracer> {
+  explicit SweepingTracer(JSRuntime* rt);
+
+ private:
+  template <typename T>
+  T* onEdge(T* thingp);
+  friend class GenericTracerImpl<SweepingTracer>;
+};
+
 class GCRuntime {
   friend GCMarker::MarkQueueProgress GCMarker::processMarkQueue();
 
@@ -912,6 +921,7 @@ class GCRuntime {
 
   GCMarker marker;
   BarrierTracer barrierTracer;
+  SweepingTracer sweepingTracer;
 
   Vector<JS::GCCellPtr, 0, SystemAllocPolicy> unmarkGrayStack;
 

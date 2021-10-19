@@ -82,7 +82,7 @@ The 'column-rule-image-source' and 'row-rule-image-source' Properties {#column-r
         Animation type: discrete
     </pre>
 
-    These properties specifies an <<image>> to use in place of the rendering specified
+    These properties specify an <<image>> to use in place of the rendering specified
     by the ''column-rule-style''/''row-rule-style'' properties.
 
     As for borders, a rule image is not rendered when the corresponding ''column-rule-style''/''row-rule-style'' is ''column-rule-style/none''.
@@ -101,7 +101,7 @@ The 'column-rule-image-slice' and 'row-rule-image-slice' Properties {#column-rul
         Animation type: discrete
     </pre>
 
-    These properties specifies inward offsets from the top and bottom edges of the image,
+    These properties specify inward offsets from the top and bottom edges of the image,
     dividing it into three regions: two edge areas and one middle area.
 
     When two values are specified, they set the offsets on the top and bottom sides in
@@ -141,7 +141,7 @@ The 'column-rule-image-repeat' and 'row-rule-image-repeat' Properties {#column-r
         Animation type: discrete
     </pre>
 
-    These properties specifies how the middle part of a sliced rule image is scaled and tiled.
+    These properties specify how the middle part of a sliced rule image is scaled and tiled.
     Values have the following meanings:
 
     <dl dfn-for=column-rule-image-repeat dfn-type=value>
@@ -530,14 +530,14 @@ The 'column-rule-align' and 'row-rule-align' Properties {#column-rule-align}
     These properties specify the start/end attachment point of the [=rule containing rectangle=]
     in the [=longitudinal axis=].  The start value is specified first, the end value second.
     If only one value is specified it is used for both start and end.
-    These properties are only used for interior the edges.  The '*-rule-edge-align' properties
-    described below specifies the alignment on the outer edges.  The initial value, ''column-rule-align/gap'',
+    These properties are only used for interior edges.  The '*-rule-edge-align' properties
+    described below specify the alignment on the outer edges.  The initial value, ''column-rule-align/gap'',
     means that, by default, a rule will stretch its longitudinal size to fill the space
     from the end of the gap "above" to the start of the gap "below" ("above" meaning the gap
     in the orthogonal axis on the rule's start side).
 
     <aside class=example>
-        This <a href="examples/grid-align-001.html">example</a> illutrates a few alignment options.
+        This <a href="examples/grid-align-001.html">example</a> illustrates a few alignment options.
         Note that the row rules all have a 1px longitudinal inset
         to separate the individual rule segments. (''column-rule-align/rule-center'',
         for example, would otherwise look like one long rule)
@@ -583,7 +583,7 @@ The 'column-rule-edge-align' and 'row-rule-edge-align' Properties {#column-rule-
     ''column-rule-align'') since there are no rules in the edge gutters.
 
 
-    Thge figure below illustrates the alignment values.
+    The figure below illustrates the alignment values.
     The red values are used for the top column rule's start edge and the yellow
     values are used for its end edge. The yellow values are also used for the bottom
     column rule's start edge. However, in this

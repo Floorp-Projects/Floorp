@@ -96,12 +96,6 @@ ClassifierDummyChannel::ClassifierDummyChannel(nsIURI* aURI,
   SetLoadInfo(aLoadInfo);
 }
 
-ClassifierDummyChannel::~ClassifierDummyChannel() {
-  NS_ReleaseOnMainThread("ClassifierDummyChannel::mURI", mURI.forget());
-  NS_ReleaseOnMainThread("ClassifierDummyChannel::mTopWindowURI",
-                         mTopWindowURI.forget());
-}
-
 void ClassifierDummyChannel::AddClassificationFlags(
     uint32_t aClassificationFlags, bool aThirdParty) {
   if (aThirdParty) {
@@ -117,7 +111,7 @@ void ClassifierDummyChannel::AddClassificationFlags(
 
 NS_IMETHODIMP
 ClassifierDummyChannel::GetOriginalURI(nsIURI** aOriginalURI) {
-  NS_IF_ADDREF(*aOriginalURI = mURI);
+  *aOriginalURI = do_AddRef(mURI).take();
   return NS_OK;
 }
 
@@ -129,7 +123,7 @@ ClassifierDummyChannel::SetOriginalURI(nsIURI* aOriginalURI) {
 
 NS_IMETHODIMP
 ClassifierDummyChannel::GetURI(nsIURI** aURI) {
-  NS_IF_ADDREF(*aURI = mURI);
+  *aURI = do_AddRef(mURI).take();
   return NS_OK;
 }
 
@@ -239,7 +233,7 @@ ClassifierDummyChannel::GetContentDispositionHeader(
 
 NS_IMETHODIMP
 ClassifierDummyChannel::GetLoadInfo(nsILoadInfo** aLoadInfo) {
-  NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
+  *aLoadInfo = do_AddRef(mLoadInfo).take();
   return NS_OK;
 }
 

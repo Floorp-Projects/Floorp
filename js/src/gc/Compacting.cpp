@@ -459,11 +459,10 @@ void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
   traceWeakFinalizationRegistryEdges(trc, zone);
   zone->weakRefMap().sweep(&storeBuffer());
 
-  {
-    zone->sweepWeakMaps();
-    for (auto* cache : zone->weakCaches()) {
-      cache->sweep(nullptr);
-    }
+  zone->traceWeakMaps(trc);
+
+  for (auto* cache : zone->weakCaches()) {
+    cache->traceWeak(trc, nullptr);
   }
 
   if (jit::JitZone* jitZone = zone->jitZone()) {
@@ -656,7 +655,7 @@ void GCRuntime::updateRttValueObjects(MovingTracer* trc, Zone* zone) {
   // need to be updated. Do not update any non-reserved slots, since they might
   // point back to unprocessed descriptor objects.
 
-  zone->rttValueObjects().sweep(nullptr);
+  zone->rttValueObjects().traceWeak(trc, nullptr);
 
   for (auto r = zone->rttValueObjects().all(); !r.empty(); r.popFront()) {
     RttValue* obj = &MaybeForwardedObjectAs<RttValue>(r.front());
@@ -797,13 +796,6 @@ void GCRuntime::updateZonePointersToRelocatedCells(Zone* zone) {
   // as much as possible.
   updateAllCellPointers(&trc, zone);
 
-  // Mark roots to update them.
-  {
-    gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_ROOTS);
-
-    WeakMapBase::traceZone(zone, &trc);
-  }
-
   // Sweep everything to fix up weak pointers.
   sweepZoneAfterCompacting(&trc, zone);
 
@@ -845,7 +837,7 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
   // Sweep everything to fix up weak pointers.
   jit::JitRuntime::TraceWeakJitcodeGlobalTable(rt, &trc);
   for (JS::detail::WeakCacheBase* cache : rt->weakCaches()) {
-    cache->sweep(nullptr);
+    cache->traceWeak(&trc, nullptr);
   }
 
   // Type inference may put more blocks here to free.

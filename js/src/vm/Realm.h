@@ -265,7 +265,7 @@ class ObjectRealm {
 
   void finishRoots();
   void trace(JSTracer* trc);
-  void sweepAfterMinorGC();
+  void sweepAfterMinorGC(JSTracer* trc);
   void traceWeakNativeIterators(JSTracer* trc);
 
   void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
@@ -518,7 +518,7 @@ class JS::Realm : public JS::shadow::Realm {
    */
   void finishRoots();
 
-  void sweepAfterMinorGC();
+  void sweepAfterMinorGC(JSTracer* trc);
   void traceWeakDebugEnvironmentEdges(JSTracer* trc);
   void traceWeakObjectRealm(JSTracer* trc);
   void traceWeakRegExps(JSTracer* trc);

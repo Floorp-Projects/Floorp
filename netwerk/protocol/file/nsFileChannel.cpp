@@ -513,6 +513,6 @@ nsFileChannel::SetUploadStream(nsIInputStream* stream,
 
 NS_IMETHODIMP
 nsFileChannel::GetUploadStream(nsIInputStream** result) {
-  NS_IF_ADDREF(*result = mUploadStream);
+  *result = do_AddRef(mUploadStream).take();
   return NS_OK;
 }
