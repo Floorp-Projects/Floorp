@@ -88,7 +88,7 @@ void GCRuntime::traceWeakFinalizationRegistryEdges(JSTracer* trc, Zone* zone) {
       registry->queue()->setHasRegistry(false);
       e.removeFront();
     } else {
-      result.finalTarget()->as<FinalizationRegistryObject>().sweep();
+      result.finalTarget()->as<FinalizationRegistryObject>().traceWeak(trc);
     }
   }
 
@@ -97,7 +97,7 @@ void GCRuntime::traceWeakFinalizationRegistryEdges(JSTracer* trc, Zone* zone) {
     FinalizationRecordVector& records = e.front().value();
 
     // Update any pointers moved by the GC.
-    records.sweep();
+    records.traceWeak(trc);
 
     // Sweep finalization records and remove records for:
     records.eraseIf([](JSObject* obj) {
