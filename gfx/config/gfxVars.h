@@ -63,6 +63,8 @@ class gfxVarReceiver;
   _(GREDirectory, nsString, nsString())                            \
   _(ProfDirectory, nsString, nsString())                           \
   _(AllowD3D11KeyedMutex, bool, false)                             \
+  _(SwapIntervalGLX, bool, false)                                  \
+  _(SwapIntervalEGL, bool, false)                                  \
   _(SystemTextQuality, int32_t, 5 /* CLEARTYPE_QUALITY */)         \
   _(SystemTextClearTypeLevel, float, 1.0f)                         \
   _(SystemTextEnhancedContrast, float, 1.0f)                       \
