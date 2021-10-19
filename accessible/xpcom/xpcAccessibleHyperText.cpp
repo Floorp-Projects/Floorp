@@ -674,15 +674,14 @@ xpcAccessibleHyperText::GetLinkAt(int32_t aIndex,
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsLocal()) {
-    NS_IF_ADDREF(*aLink = ToXPC(IntlLocal()->LinkAt(aIndex)));
-  } else {
 #if defined(XP_WIN)
+  if (mIntl->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    NS_IF_ADDREF(*aLink = ToXPC(mIntl->AsRemote()->LinkAt(aIndex)));
-#endif
   }
+#endif
+
+  NS_IF_ADDREF(*aLink = ToXPC(Intl()->LinkAt(aIndex)));
   return NS_OK;
 }
 
