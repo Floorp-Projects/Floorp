@@ -4218,10 +4218,6 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
 
   masm.branchIfFalseBool(ReturnReg, &bail);
 
-  if (JitOptions.spectreJitToCxxCalls) {
-    masm.speculationBarrier();
-  }
-
   bailoutFrom(&bail, lir->snapshot());
 }
 
@@ -4259,9 +4255,6 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
   masm.jump(&bail);
 
   masm.bind(&ok);
-  if (JitOptions.spectreJitToCxxCalls) {
-    masm.speculationBarrier();
-  }
   masm.popValue(output);
 
   bailoutFrom(&bail, lir->snapshot());
