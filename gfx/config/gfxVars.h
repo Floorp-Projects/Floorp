@@ -30,7 +30,6 @@ class gfxVarReceiver;
   _(BrowserTabsRemoteAutostart, bool, false)                       \
   _(ContentBackend, BackendType, BackendType::NONE)                \
   _(SoftwareBackend, BackendType, BackendType::NONE)               \
-  _(TileSize, IntSize, IntSize(-1, -1))                            \
   _(OffscreenFormat, gfxImageFormat,                               \
     mozilla::gfx::SurfaceFormat::X8R8G8B8_UINT32)                  \
   _(RequiresAcceleratedGLContextForCompositorOGL, bool, false)     \

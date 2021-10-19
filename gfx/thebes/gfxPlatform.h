@@ -311,7 +311,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
 
   void GetAzureBackendInfo(mozilla::widget::InfoObject& aObj);
   void GetApzSupportInfo(mozilla::widget::InfoObject& aObj);
-  void GetTilesSupportInfo(mozilla::widget::InfoObject& aObj);
   void GetFrameStats(mozilla::widget::InfoObject& aObj);
   void GetCMSSupportInfo(mozilla::widget::InfoObject& aObj);
   void GetDisplayInfo(mozilla::widget::InfoObject& aObj);
@@ -640,11 +639,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   }
 
   /**
-   * Returns whether the current process should use tiling for layers.
-   */
-  virtual bool UsesTiling() const;
-
-  /**
    * Returns a logger if one is available and logging is enabled
    */
   static mozilla::LogModule* GetLog(eGfxLog aWhichLog);
@@ -961,14 +955,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static void ShutdownCMS();
 
   /**
-   * Calling this function will compute and set the ideal tile size for the
-   * platform. This will only have an effect in the parent process; child
-   * processes should be updated via SetTileSize to match the value computed in
-   * the parent.
-   */
-  void ComputeTileSize();
-
-  /**
    * This uses nsIScreenManager to determine the screen size and color depth
    */
   void PopulateScreenInfo();
@@ -1002,7 +988,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
 
   mozilla::widget::GfxInfoCollector<gfxPlatform> mAzureCanvasBackendCollector;
   mozilla::widget::GfxInfoCollector<gfxPlatform> mApzSupportCollector;
-  mozilla::widget::GfxInfoCollector<gfxPlatform> mTilesInfoCollector;
   mozilla::widget::GfxInfoCollector<gfxPlatform> mFrameStatsCollector;
   mozilla::widget::GfxInfoCollector<gfxPlatform> mCMSInfoCollector;
   mozilla::widget::GfxInfoCollector<gfxPlatform> mDisplayInfoCollector;
