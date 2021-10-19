@@ -114,7 +114,7 @@ size_t CreatePlaneDictionary(CFTypeRefPtr<CFMutableDictionaryRef>& aDict,
   AddDictionaryInt(aDict, kIOSurfacePlaneBytesPerRow, bytesPerRow);
   AddDictionaryInt(aDict, kIOSurfacePlaneOffset, aOffset);
   AddDictionaryInt(aDict, kIOSurfacePlaneSize, totalBytes);
-  AddDictionaryInt(aDict, kIOSurfaceBytesPerElement, aBytesPerPixel);
+  AddDictionaryInt(aDict, kIOSurfacePlaneBytesPerElement, aBytesPerPixel);
 
   return totalBytes;
 }
