@@ -37,8 +37,6 @@ async function sendPing(endpoint, path) {
   }
 
   let json = await IOUtils.readUTF8(path);
-  console.log(`pingsender: read payload ${json}`);
-
   await sendStandalonePing(endpoint, json, {
     "User-Agent": "pingsender/2.0",
     "X-PingSender-Version": "2.0",
