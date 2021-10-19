@@ -431,6 +431,10 @@ class CCGCScheduler {
   // duration (or until it goes too long and is finished synchronously.)
   bool mInIncrementalGC = false;
 
+  // We've asked the parent process if now is a good time to GC (do not ask
+  // again).
+  bool mHaveAskedParent = false;
+
   // The parent process is ready for us to do a major GC.
   bool mReadyForMajorGC = false;
 

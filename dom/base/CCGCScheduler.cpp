@@ -122,6 +122,7 @@ bool CCGCScheduler::GCRunnerFired(TimeStamp aDeadline) {
       MOZ_CRASH("Unexpected GCRunnerAction");
 
     case GCRunnerAction::WaitToMajorGC: {
+      MOZ_ASSERT(!mHaveAskedParent, "GCRunner alive after asking the parent");
       RefPtr<CCGCScheduler::MayGCPromise> mbPromise =
           CCGCScheduler::MayGCNow(step.mReason);
       if (!mbPromise) {
@@ -129,10 +130,12 @@ bool CCGCScheduler::GCRunnerFired(TimeStamp aDeadline) {
         break;
       }
 
+      mHaveAskedParent = true;
       KillGCRunner();
       mbPromise->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [this](bool aMayGC) {
+            mHaveAskedParent = false;
             if (aMayGC) {
               if (!NoteReadyForMajorGC()) {
                 // Another GC started and maybe completed while waiting.
@@ -150,6 +153,7 @@ bool CCGCScheduler::GCRunnerFired(TimeStamp aDeadline) {
             }
           },
           [this](mozilla::ipc::ResponseRejectReason r) {
+            mHaveAskedParent = false;
             if (!InIncrementalGC()) {
               KillGCRunner();
               NoteWontGC();
@@ -302,7 +306,9 @@ void CCGCScheduler::PokeShrinkingGC() {
         if (!s->mUserIsActive) {
           if (!nsRefreshDriver::IsRegularRateTimerTicking()) {
             s->SetWantMajorGC(JS::GCReason::USER_INACTIVE);
-            s->EnsureGCRunner(0);
+            if (!s->mHaveAskedParent) {
+              s->EnsureGCRunner(0);
+            }
           } else {
             s->PokeShrinkingGC();
           }
@@ -324,7 +330,9 @@ void CCGCScheduler::PokeFullGC() {
           // set that we want a full GC we will get one eventually.
           s->SetNeedsFullGC();
           s->SetWantMajorGC(JS::GCReason::FULL_GC_TIMER);
-          s->EnsureGCRunner(0);
+          if (!s->mHaveAskedParent) {
+            s->EnsureGCRunner(0);
+          }
         },
         this, StaticPrefs::javascript_options_gc_delay_full(),
         nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, "FullGCTimerFired");
@@ -344,8 +352,8 @@ void CCGCScheduler::PokeGC(JS::GCReason aReason, JSObject* aObj,
     SetNeedsFullGC();
   }
 
-  if (mGCRunner) {
-    // There's already a runner for GC'ing, just return
+  if (mGCRunner || mHaveAskedParent) {
+    // There's already a GC runner, there or will be, so just return.
     return;
   }
 
@@ -420,6 +428,8 @@ void CCGCScheduler::KillFullGCTimer() {
 }
 
 void CCGCScheduler::KillGCRunner() {
+  // If we're in an incremental GC then killing the timer is only okay if
+  // we're shutting down.
   MOZ_ASSERT(!(InIncrementalGC() && !mDidShutdown));
   if (mGCRunner) {
     mGCRunner->Cancel();
