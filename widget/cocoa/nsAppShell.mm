@@ -504,19 +504,18 @@ void nsAppShell::ProcessGeckoEvents(void* aInfo) {
     self->mSkippedNativeCallback = true;
   }
 
-  if (self->mTerminated) {
-    // Still needed to avoid crashes on quit in most Mochitests.
-    [NSApp postEvent:[NSEvent otherEventWithType:NSEventTypeApplicationDefined
-                                        location:NSMakePoint(0, 0)
-                                   modifierFlags:0
-                                       timestamp:0
-                                    windowNumber:0
-                                         context:NULL
-                                         subtype:kEventSubtypeNone
-                                           data1:0
-                                           data2:0]
-             atStart:NO];
-  }
+  // Still needed to avoid crashes on quit in most Mochitests.
+  [NSApp postEvent:[NSEvent otherEventWithType:NSEventTypeApplicationDefined
+                                      location:NSMakePoint(0, 0)
+                                 modifierFlags:0
+                                     timestamp:0
+                                  windowNumber:0
+                                       context:NULL
+                                       subtype:kEventSubtypeNone
+                                         data1:0
+                                         data2:0]
+           atStart:NO];
+
   // Normally every call to ScheduleNativeEventCallback() results in
   // exactly one call to ProcessGeckoEvents().  So each Release() here
   // normally balances exactly one AddRef() in ScheduleNativeEventCallback().
