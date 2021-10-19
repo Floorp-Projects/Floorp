@@ -53,6 +53,23 @@ add_task(async function setup() {
     HELPERAPP_DIALOG_CONTRACT_ID,
     mockHelperAppService
   );
+
+  // Ensure we always prompt for these downloads.
+  const HandlerService = Cc[
+    "@mozilla.org/uriloader/handler-service;1"
+  ].getService(Ci.nsIHandlerService);
+
+  const MIMEService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+  const mimeInfo = MIMEService.getFromTypeAndExtension(
+    "application/octet-stream",
+    "bin"
+  );
+  mimeInfo.alwaysAskBeforeHandling = true;
+  HandlerService.store(mimeInfo);
+
+  registerCleanupFunction(() => {
+    HandlerService.remove(mimeInfo);
+  });
 });
 
 add_task(async function simple_navigation() {
