@@ -234,14 +234,8 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                            const ConstantOrRegister& id,
                            const ConstantOrRegister& value, bool strict);
 
-  [[nodiscard]] bool generateBranchV(const ValueOperand& value, Label* ifTrue,
-                                     Label* ifFalse, FloatRegister fr);
-
   void emitLambdaInit(Register resultReg, Register envChainReg,
                       const LambdaFunctionInfo& info);
-
-  void emitFilterArgumentsOrEval(LInstruction* lir, Register string,
-                                 Register temp1, Register temp2);
 
   template <class IteratorObject, class OrderedHashTable>
   void emitGetNextEntryForIterator(LGetNextEntryForIterator* lir);
