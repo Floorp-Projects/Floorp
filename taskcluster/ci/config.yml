@@ -65,6 +65,7 @@ treeherder:
         'M-f-spi-nw-1proc': 'Mochitest failures with networking on socket process without e10s'
         'M-f-swr': 'Mochitests failures with software webrender enabled'
         'M-f-swr-1proc': 'Mochitests failures with software webrender enabled without e10s'
+        'M-f-wayland': 'Mochitests failures with Wayland backend enabled'
         'MSI': 'Repack installers into MSIs'
         'MSIs': 'Signing of Repacked installers of MSIs'
         'MSIX': 'Repack into MSIX package'
