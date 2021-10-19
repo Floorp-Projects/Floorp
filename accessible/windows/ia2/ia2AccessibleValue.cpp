@@ -34,7 +34,7 @@ ia2AccessibleValue::QueryInterface(REFIID iid, void** ppv) {
   *ppv = nullptr;
 
   if (IID_IAccessibleValue == iid) {
-    AccessibleWrap* valueAcc = LocalAcc();
+    Accessible* valueAcc = Acc();
     if (valueAcc && valueAcc->HasNumericValue()) {
       RefPtr<IAccessibleValue> result = this;
       result.forget(ppv);
