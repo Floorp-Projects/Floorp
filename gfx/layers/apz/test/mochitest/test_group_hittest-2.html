@@ -33,6 +33,7 @@ var overscroll_prefs = [...prefs,
                        ];
 
 var subtests = [
+  {"file": "helper_hittest_deep_scene_stack.html", "prefs": prefs},
   {"file": "helper_hittest_pointerevents_svg.html", "prefs": prefs},
   {"file": "helper_hittest_clippath.html", "prefs": prefs},
   {"file": "helper_hittest_hoisted_scrollinfo.html", "prefs": prefs},
@@ -47,26 +48,10 @@ var subtests = [
   {"file": "helper_hittest_spam.html", "prefs": prefs},
 ];
 
-function addConditionalTests(tests) {
-  // Add some more tests only useful with WebRender. Note that we do this in
-  // function run after loading, because trying to read layerManagerType can
-  // throw an NS_ERROR_FAILURE if called too early.
-  var utils = SpecialPowers.getDOMWindowUtils(window);
-  var isWebRender = utils.layerManagerType.startsWith("WebRender");
-  if (isWebRender) {
-    // Add new tests at the beginning, to ensure the final test remains in
-    // the final position.
-    tests = [
-      {"file": "helper_hittest_deep_scene_stack.html", "prefs": prefs},
-    ].concat(tests);
-  }
-  return tests;
-}
-
 if (isApzEnabled()) {
   SimpleTest.waitForExplicitFinish();
   window.onload = function() {
-    runSubtestsSeriallyInFreshWindows(addConditionalTests(subtests))
+    runSubtestsSeriallyInFreshWindows(subtests)
     .then(SimpleTest.finish, SimpleTest.finishWithFailure);
   };
 }
