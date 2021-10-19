@@ -31,6 +31,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.By.text
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiObjectNotFoundException
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import mozilla.components.browser.state.selector.selectedTab
@@ -405,12 +406,38 @@ class BrowserRobot {
                 .resourceId("password")
                 .className(EditText::class.java)
         )
-        passwordField.waitForExists(waitingTime)
-        passwordField.click()
-        passwordField.clearTextField()
-        passwordField.text = password
-        // wait until the password is hidden
-        assertTrue(mDevice.findObject(UiSelector().text(password)).waitUntilGone(waitingTime))
+        try {
+            passwordField.waitForExists(waitingTime)
+            mDevice.findObject(
+                By
+                    .res("password")
+                    .clazz(EditText::class.java)
+            ).click()
+            passwordField.clearTextField()
+            passwordField.text = password
+            // wait until the password is hidden
+            assertTrue(mDevice.findObject(UiSelector().text(password)).waitUntilGone(waitingTime))
+        } catch (e: UiObjectNotFoundException) {
+            println(e)
+
+            // Lets refresh the page and try again
+            browserScreen {
+            }.openThreeDotMenu {
+            }.refreshPage {
+                mDevice.waitForIdle()
+            }
+        } finally {
+            passwordField.waitForExists(waitingTime)
+            mDevice.findObject(
+                By
+                    .res("password")
+                    .clazz(EditText::class.java)
+            ).click()
+            passwordField.clearTextField()
+            passwordField.text = password
+            // wait until the password is hidden
+            assertTrue(mDevice.findObject(UiSelector().text(password)).waitUntilGone(waitingTime))
+        }
     }
 
     fun clickMediaPlayerPlayButton() {
