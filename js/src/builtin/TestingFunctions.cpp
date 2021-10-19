@@ -4707,9 +4707,9 @@ static bool DisableTraceLogger(JSContext* cx, unsigned argc, Value* vp) {
 // ShapeSnapshot holds information about an object's properties. This is used
 // for checking object and shape changes between two points in time.
 class ShapeSnapshot {
-  GCPtr<JSObject*> object_;
-  GCPtr<Shape*> shape_;
-  GCPtr<BaseShape*> baseShape_;
+  HeapPtr<JSObject*> object_;
+  HeapPtr<Shape*> shape_;
+  HeapPtr<BaseShape*> baseShape_;
   ObjectFlags objectFlags_;
 
   GCVector<HeapPtr<Value>, 8> slots_;
