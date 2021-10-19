@@ -865,7 +865,7 @@ MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
     if (SUCCEEDED(hr)) return hr;
   }
 
-  if (!*ppv && localAcc) {
+  if (!*ppv) {
     HRESULT hr = ia2AccessibleValue::QueryInterface(iid, ppv);
     if (SUCCEEDED(hr)) return hr;
   }
