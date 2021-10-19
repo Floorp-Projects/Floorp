@@ -163,7 +163,7 @@ impl StyleStylesheetLoader for AsyncStylesheetParser {
         media: Arc<Locked<MediaList>>,
         layer: Option<ImportLayer>,
     ) -> Arc<Locked<ImportRule>> {
-        let stylesheet = ImportSheet::new_pending(self.origin, self.quirks_mode);
+        let stylesheet = ImportSheet::new_pending();
         let rule = Arc::new(lock.wrap(ImportRule {
             url: url.clone(),
             stylesheet,
