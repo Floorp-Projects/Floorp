@@ -9,6 +9,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/FOGIPC.h"
+#include "mozilla/glean/bindings/Common.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/MozPromise.h"
@@ -20,6 +21,8 @@
 #include "nsServiceManagerUtils.h"
 
 namespace mozilla {
+
+using glean::LogToBrowserConsole;
 
 #ifdef MOZ_GLEAN_ANDROID
 // Defined by `glean_ffi`. We reexport it here for later use.
@@ -117,6 +120,76 @@ FOG::SendPing(const nsACString& aPingName) {
   return NS_OK;
 #else
   return glean::impl::fog_submit_ping(&aPingName);
+#endif
+}
+
+NS_IMETHODIMP
+FOG::SetExperimentActive(const nsACString& aExperimentId,
+                         const nsACString& aBranch, JS::HandleValue aExtra,
+                         JSContext* aCx) {
+#ifdef MOZ_GLEAN_ANDROID
+  NS_WARNING("Don't set experiments from Gecko in Android. Ignoring.");
+  return NS_OK;
+#else
+  nsTArray<nsCString> extraKeys;
+  nsTArray<nsCString> extraValues;
+  if (!aExtra.isNullOrUndefined()) {
+    JS::RootedObject obj(aCx, &aExtra.toObject());
+    JS::Rooted<JS::IdVector> keys(aCx, JS::IdVector(aCx));
+    if (!JS_Enumerate(aCx, obj, &keys)) {
+      LogToBrowserConsole(nsIScriptError::warningFlag,
+                          u"Failed to enumerate experiment extras object."_ns);
+      return NS_OK;
+    }
+
+    for (size_t i = 0, n = keys.length(); i < n; i++) {
+      nsAutoJSCString jsKey;
+      if (!jsKey.init(aCx, keys[i])) {
+        LogToBrowserConsole(
+            nsIScriptError::warningFlag,
+            u"Extra dictionary should only contain string keys."_ns);
+        return NS_OK;
+      }
+
+      JS::Rooted<JS::Value> value(aCx);
+      if (!JS_GetPropertyById(aCx, obj, keys[i], &value)) {
+        LogToBrowserConsole(nsIScriptError::warningFlag,
+                            u"Failed to get experiment extra property."_ns);
+        return NS_OK;
+      }
+
+      nsAutoJSCString jsValue;
+      if (!value.isString()) {
+        LogToBrowserConsole(
+            nsIScriptError::warningFlag,
+            u"Experiment extra properties must have string values."_ns);
+        return NS_OK;
+      }
+
+      if (!jsValue.init(aCx, value)) {
+        LogToBrowserConsole(nsIScriptError::warningFlag,
+                            u"Can't extract experiment extra property"_ns);
+        return NS_OK;
+      }
+
+      extraKeys.AppendElement(jsKey);
+      extraValues.AppendElement(jsValue);
+    }
+  }
+  glean::impl::fog_set_experiment_active(&aExperimentId, &aBranch, &extraKeys,
+                                         &extraValues);
+  return NS_OK;
+#endif
+}
+
+NS_IMETHODIMP
+FOG::SetExperimentInactive(const nsACString& aExperimentId) {
+#ifdef MOZ_GLEAN_ANDROID
+  NS_WARNING("Don't unset experiments from Gecko in Android. Ignoring.");
+  return NS_OK;
+#else
+  glean::impl::fog_set_experiment_inactive(&aExperimentId);
+  return NS_OK;
 #endif
 }
 
