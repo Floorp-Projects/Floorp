@@ -49,7 +49,8 @@ object SupportUtils {
         WHATS_NEW_FOCUS("whats-new-firefox-focus-android"),
         WHATS_NEW_KLAR("whats-new-firefox-klar-android"),
         SEARCH_SUGGESTIONS("search-suggestions-focus-android"),
-        ALLOWLIST("focus-android-allowlist")
+        ALLOWLIST("focus-android-allowlist"),
+        STUDIES("studies")
     }
 
     fun getSumoURLForTopic(context: Context, topic: SumoTopic): String {

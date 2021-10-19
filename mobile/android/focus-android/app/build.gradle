@@ -238,6 +238,7 @@ dependencies {
     implementation "org.mozilla.components:service-glean:${AndroidComponents.VERSION}", {
         exclude group: 'org.mozilla.telemetry', module: 'glean-native'
     }
+    implementation "org.mozilla.components:service-nimbus:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:service-location:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:service-nimbus:${AndroidComponents.VERSION}"
 

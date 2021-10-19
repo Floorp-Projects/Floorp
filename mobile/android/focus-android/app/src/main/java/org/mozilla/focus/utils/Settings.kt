@@ -107,6 +107,14 @@ class Settings(
             false
         )
 
+    var isExperimentationEnabled: Boolean
+        get() = preferences.getBoolean(getPreferenceKey(R.string.pref_key_studies), false)
+        set(value) {
+            preferences.edit()
+                .putBoolean(getPreferenceKey(R.string.pref_key_studies), value)
+                .apply()
+        }
+
     fun shouldBlockImages(): Boolean =
         // Not shipping in v1 (#188)
             /* preferences.getBoolean(

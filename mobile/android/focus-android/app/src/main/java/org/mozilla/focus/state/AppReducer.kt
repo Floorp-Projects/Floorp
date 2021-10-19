@@ -187,6 +187,7 @@ private fun navigateUp(state: AppState, action: AppAction.NavigateUp): AppState 
 
         Screen.Settings.Page.PrivacyExceptions -> Screen.Settings(page = Screen.Settings.Page.Privacy)
         Screen.Settings.Page.PrivacyExceptionsRemove -> Screen.Settings(page = Screen.Settings.Page.PrivacyExceptions)
+        Screen.Settings.Page.Studies -> Screen.Settings(page = Screen.Settings.Page.Privacy)
 
         Screen.Settings.Page.SearchList -> Screen.Settings(page = Screen.Settings.Page.Search)
         Screen.Settings.Page.SearchRemove -> Screen.Settings(page = Screen.Settings.Page.SearchList)

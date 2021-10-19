@@ -609,6 +609,15 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Advanced</string>
 
+    <!-- Preference for studies -->
+    <string name="preference_studies">Studies</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox may install and run studies from time to time.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Learn more</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Remote debugging via USB/Wi-Fi</string>
 

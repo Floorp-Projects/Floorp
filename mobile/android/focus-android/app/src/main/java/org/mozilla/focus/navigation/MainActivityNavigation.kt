@@ -27,6 +27,7 @@ import org.mozilla.focus.settings.RemoveSearchEnginesSettingsFragment
 import org.mozilla.focus.settings.SearchSettingsFragment
 import org.mozilla.focus.settings.SettingsFragment
 import org.mozilla.focus.settings.privacy.PrivacySecuritySettingsFragment
+import org.mozilla.focus.settings.privacy.StudiesFragment
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.utils.ViewUtils
 import kotlin.collections.forEach as withEach
@@ -184,6 +185,7 @@ class MainActivityNavigation(
             Screen.Settings.Page.Mozilla -> MozillaSettingsFragment()
             Screen.Settings.Page.PrivacyExceptions -> ExceptionsListFragment()
             Screen.Settings.Page.PrivacyExceptionsRemove -> ExceptionsRemoveFragment()
+            Screen.Settings.Page.Studies -> StudiesFragment()
             Screen.Settings.Page.SearchList -> InstalledSearchEnginesSettingsFragment()
             Screen.Settings.Page.SearchRemove -> RemoveSearchEnginesSettingsFragment()
             Screen.Settings.Page.SearchAdd -> ManualAddSearchEngineSettingsFragment()
