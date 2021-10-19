@@ -994,25 +994,6 @@ static const char kExternalProtocolPrefPrefix[] =
 static const char kExternalProtocolDefaultPref[] =
     "network.protocol-handler.external-default";
 
-// static
-nsresult nsExternalHelperAppService::EscapeURI(nsIURI* aURI, nsIURI** aResult) {
-  MOZ_ASSERT(aURI);
-  MOZ_ASSERT(aResult);
-
-  nsAutoCString spec;
-  aURI->GetSpec(spec);
-
-  if (spec.Find("%00") != -1) return NS_ERROR_MALFORMED_URI;
-
-  nsAutoCString escapedSpec;
-  nsresult rv = NS_EscapeURL(spec, esc_AlwaysCopy | esc_ExtHandler, escapedSpec,
-                             fallible);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIIOService> ios(do_GetIOService());
-  return ios->NewURI(escapedSpec, nullptr, nullptr, aResult);
-}
-
 NS_IMETHODIMP
 nsExternalHelperAppService::LoadURI(nsIURI* aURI,
                                     nsIPrincipal* aTriggeringPrincipal,
@@ -1026,12 +1007,21 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIURI> escapedURI;
-  nsresult rv = EscapeURI(aURI, getter_AddRefs(escapedURI));
+  nsAutoCString spec;
+  aURI->GetSpec(spec);
+
+  if (spec.Find("%00") != -1) return NS_ERROR_MALFORMED_URI;
+
+  spec.ReplaceSubstring("\"", "%22");
+  spec.ReplaceSubstring("`", "%60");
+
+  nsCOMPtr<nsIIOService> ios(do_GetIOService());
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = ios->NewURI(spec, nullptr, nullptr, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString scheme;
-  escapedURI->GetScheme(scheme);
+  uri->GetScheme(scheme);
   if (scheme.IsEmpty()) return NS_OK;  // must have a scheme
 
   // Deny load if the prefs say to do so
@@ -1114,7 +1104,7 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
       do_CreateInstance("@mozilla.org/content-dispatch-chooser;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return chooser->HandleURI(handler, escapedURI, aTriggeringPrincipal,
+  return chooser->HandleURI(handler, uri, aTriggeringPrincipal,
                             aBrowsingContext, aTriggeredExternally);
 }
 
