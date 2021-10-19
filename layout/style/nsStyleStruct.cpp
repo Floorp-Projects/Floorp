@@ -3113,28 +3113,38 @@ void nsStyleUI::TriggerImageLoads(Document& aDocument,
 }
 
 nsChangeHint nsStyleUI::CalcDifference(const nsStyleUI& aNewData) const {
+  // SVGGeometryFrame's mRect depends on stroke _and_ on the value of
+  // pointer-events. See SVGGeometryFrame::ReflowSVG's use of GetHitTestFlags.
+  // (Only a reflow, no visual change.)
+  //
+  // pointer-events changes can change event regions overrides on layers and
+  // so needs a repaint.
+  const auto kPointerEventsHint =
+      nsChangeHint_NeedReflow |
+      nsChangeHint_NeedDirtyReflow |  // XXX remove me: bug 876085
+      nsChangeHint_SchedulePaint;
+
   nsChangeHint hint = nsChangeHint(0);
   if (mCursor != aNewData.mCursor) {
     hint |= nsChangeHint_UpdateCursor;
   }
 
   if (mPointerEvents != aNewData.mPointerEvents) {
-    // SVGGeometryFrame's mRect depends on stroke _and_ on the value
-    // of pointer-events. See SVGGeometryFrame::ReflowSVG's use of
-    // GetHitTestFlags. (Only a reflow, no visual change.)
-    hint |= nsChangeHint_NeedReflow |
-            nsChangeHint_NeedDirtyReflow |  // XXX remove me: bug 876085
-            nsChangeHint_SchedulePaint;     // pointer-events changes can change
-                                            // event regions overrides on layers
-                                            // and so needs a repaint.
+    hint |= kPointerEventsHint;
   }
 
   if (mUserModify != aNewData.mUserModify) {
     hint |= NS_STYLE_HINT_VISUAL;
   }
 
-  if (mUserFocus != aNewData.mUserFocus || mInert != aNewData.mInert ||
-      mUserInput != aNewData.mUserInput) {
+  if (mInert != aNewData.mInert) {
+    // inert affects pointer-events, user-modify, user-select, user-focus and
+    // -moz-user-input, do the union of all them (minus
+    // nsChangeHint_NeutralChange which isn't needed if there's any other hint).
+    hint |= NS_STYLE_HINT_VISUAL | kPointerEventsHint;
+  }
+
+  if (mUserFocus != aNewData.mUserFocus || mUserInput != aNewData.mUserInput) {
     hint |= nsChangeHint_NeutralChange;
   }
 
