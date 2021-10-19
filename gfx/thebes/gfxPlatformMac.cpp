@@ -230,12 +230,6 @@ BackendPrefsData gfxPlatformMac::GetBackendPrefs() const {
   return data;
 }
 
-bool gfxPlatformMac::UsesTiling() const {
-  // The non-tiling ContentClient requires CrossProcessSemaphore which
-  // isn't implemented for OSX.
-  return true;
-}
-
 bool gfxPlatformMac::CreatePlatformFontList() {
   return gfxPlatformFontList::Initialize(new gfxMacPlatformFontList);
 }
