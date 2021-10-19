@@ -18,18 +18,19 @@ cat test.txt | python pysign.py > test.txt.signature
 import base64
 import binascii
 import hashlib
-import os
+import pathlib
 import six
 import sys
 
 import ecdsa
 
-# For pykey
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# For pykey, find the relative file location and add it to path
+toolsDir = (pathlib.Path(__file__).parents[4] / "tools").resolve()
+sys.path.append(str(toolsDir))
 import pykey
 
 data = sys.stdin.buffer.read()
 
 key = pykey.ECCKey("secp384r1")
 sig = key.signRaw(b"Content-Signature:\00" + data, pykey.HASH_SHA384)
-print base64.b64encode(sig).replace("+", "-").replace("/", "_")
+print(str(base64.b64encode(sig)).replace("+", "-").replace("/", "_"))
