@@ -2315,14 +2315,14 @@ void nsCocoaWindow::SetWindowOpacity(float aOpacity) {
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-void nsCocoaWindow::SetColorScheme(ColorScheme aScheme) {
+void nsCocoaWindow::SetColorScheme(const Maybe<ColorScheme>& aScheme) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (!mWindow) {
     return;
   }
 
-  mWindow.appearance = NSAppearanceForColorScheme(aScheme);
+  mWindow.appearance = aScheme ? NSAppearanceForColorScheme(*aScheme) : nil;
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
