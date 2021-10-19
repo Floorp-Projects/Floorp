@@ -212,9 +212,7 @@ nsPartChannel::GetIsDocument(bool* aIsDocument) {
 
 NS_IMETHODIMP
 nsPartChannel::GetLoadGroup(nsILoadGroup** aLoadGroup) {
-  *aLoadGroup = mLoadGroup;
-  NS_IF_ADDREF(*aLoadGroup);
-
+  *aLoadGroup = do_AddRef(mLoadGroup).take();
   return NS_OK;
 }
 
@@ -375,8 +373,7 @@ NS_IMETHODIMP
 nsPartChannel::GetBaseChannel(nsIChannel** aReturn) {
   NS_ENSURE_ARG_POINTER(aReturn);
 
-  *aReturn = mMultipartChannel;
-  NS_IF_ADDREF(*aReturn);
+  *aReturn = do_AddRef(mMultipartChannel).take();
   return NS_OK;
 }
 
