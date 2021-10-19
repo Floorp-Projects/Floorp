@@ -223,6 +223,14 @@ class DataChannelConnection final : public net::NeckoTargetHolder
                      uint8_t set_df);
 #endif
 
+  bool InShutdown() const {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    return mShutdown;
+#else
+    return false;
+#endif
+  }
+
  protected:
   // Avoid cycles with PeerConnectionImpl
   // Use from main thread only as WeakPtr is not threadsafe
