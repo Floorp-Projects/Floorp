@@ -104,11 +104,15 @@ class DataChannelRegistry : public nsIObserver {
     if (NS_WARN_IF(!Instance())) {
       return 0;
     }
-    return Instance()->RegisterImpl(aConnection);
+    uintptr_t result = Instance()->RegisterImpl(aConnection);
+    DC_DEBUG(
+        ("Registering connection %p as ulp %p", aConnection, (void*)result));
+    return result;
   }
 
   static void Deregister(uintptr_t aId) {
     StaticMutexAutoLock lock(sInstanceMutex);
+    DC_DEBUG(("Deregistering connection ulp = %p", (void*)aId));
     if (NS_WARN_IF(!Instance())) {
       return;
     }
@@ -203,6 +207,7 @@ class DataChannelRegistry : public nsIObserver {
   RefPtr<DataChannelConnection> LookupImpl(uintptr_t aId) {
     auto it = mConnections.find(aId);
     if (NS_WARN_IF(it == mConnections.end())) {
+      DC_DEBUG(("Can't find connection ulp %p", (void*)aId));
       return nullptr;
     }
     return it->second;
@@ -215,7 +220,7 @@ class DataChannelRegistry : public nsIObserver {
                             uint8_t tos, uint8_t set_df) {
     uintptr_t id = reinterpret_cast<uintptr_t>(addr);
     RefPtr<DataChannelConnection> connection = DataChannelRegistry::Lookup(id);
-    if (NS_WARN_IF(!connection)) {
+    if (NS_WARN_IF(!connection) || connection->InShutdown()) {
       return 0;
     }
     return connection->SctpDtlsOutput(addr, buffer, length, tos, set_df);
@@ -305,7 +310,12 @@ static int receive_cb(struct socket* sock, union sctp_sockstore addr,
   uintptr_t id = reinterpret_cast<uintptr_t>(ulp_info);
   RefPtr<DataChannelConnection> connection = DataChannelRegistry::Lookup(id);
   if (!connection) {
-    MOZ_ASSERT(false);
+    // Unfortunately, we can get callbacks after calling
+    // usrsctp_close(socket), so we need to simply ignore them if we've
+    // already killed the DataChannelConnection object
+    DC_DEBUG((
+        "Ignoring receive callback for terminated Connection ulp=%p, %zu bytes",
+        ulp_info, datalen));
     return 0;
   }
   return connection->ReceiveCallback(sock, data, datalen, rcv, flags);
@@ -345,14 +355,15 @@ static int threshold_event(struct socket* sock, uint32_t sb_free) {
 
 DataChannelConnection::~DataChannelConnection() {
   DC_DEBUG(("Deleting DataChannelConnection %p", (void*)this));
-  // This may die on the MainThread, or on the STS thread
+  // This may die on the MainThread, or on the STS thread, or on an
+  // sctp thread if we were in a callback when the DOM side shut things down.
   ASSERT_WEBRTC(mState == CLOSED);
   MOZ_ASSERT(!mMasterSocket);
   MOZ_ASSERT(mPending.GetSize() == 0);
 
   if (!IsSTSThread()) {
-    ASSERT_WEBRTC(NS_IsMainThread());
-
+    // We may be on MainThread *or* on an sctp thread (being called from
+    // receive_cb() or SctpDtlsOutput())
     if (mInternalIOThread) {
       // Avoid spinning the event thread from here (which if we're mainthread
       // is in the event loop already)
@@ -398,8 +409,10 @@ void DataChannelConnection::Destroy() {
   mSocket = nullptr;
   mMasterSocket = nullptr;  // also a flag that we've Destroyed this connection
 
-  // We can't get any more new callbacks from the SCTP library
-  // All existing callbacks have refs to DataChannelConnection
+  // We can't get any more *new* callbacks from the SCTP library
+
+  // All existing callbacks have refs to DataChannelConnection - however,
+  // we need to handle their destroying the object off mainthread/STS
 
   // nsDOMDataChannel objects have refs to DataChannels that have refs to us
 }
@@ -414,6 +427,7 @@ void DataChannelConnection::DestroyOnSTS(struct socket* aMasterSocket,
       ("Deregistered %p from the SCTP stack.", reinterpret_cast<void*>(mId)));
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   mShutdown = true;
+  DC_DEBUG(("Shutting down connection %p, id %p", this, (void*)mId));
 #endif
 
   disconnect_all();
@@ -969,8 +983,6 @@ void DataChannelConnection::SendPacket(std::unique_ptr<MediaPacket>&& packet) {
 int DataChannelConnection::SctpDtlsOutput(void* addr, void* buffer,
                                           size_t length, uint8_t tos,
                                           uint8_t set_df) {
-  MOZ_DIAGNOSTIC_ASSERT(!mShutdown);
-
   if (MOZ_LOG_TEST(gSCTPLog, LogLevel::Debug)) {
     char* buf;
 
