@@ -92,13 +92,14 @@ class GCHashMap : public js::HashMap<Key, Value, HashPolicy, AllocPolicy> {
     }
   }
 
-  void traceWeak(JSTracer* trc) {
+  bool traceWeak(JSTracer* trc) {
     for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
       if (!MapSweepPolicy::traceWeak(trc, &e.front().mutableKey(),
                                      &e.front().value())) {
         e.removeFront();
       }
     }
+    return !this->empty();
   }
 
   // GCHashMap is movable
@@ -149,7 +150,7 @@ class GCRekeyableHashMap : public JS::GCHashMap<Key, Value, HashPolicy,
     }
   }
 
-  void traceWeak(JSTracer* trc) {
+  bool traceWeak(JSTracer* trc) {
     for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
       Key key(e.front().key());
       if (!MapSweepPolicy::traceWeak(trc, &key, &e.front().value())) {
@@ -158,6 +159,7 @@ class GCRekeyableHashMap : public JS::GCHashMap<Key, Value, HashPolicy,
         e.rekeyFront(key);
       }
     }
+    return !this->empty();
   }
 
   // GCRekeyableHashMap is movable
@@ -288,12 +290,13 @@ class GCHashSet : public js::HashSet<T, HashPolicy, AllocPolicy> {
     }
   }
 
-  void traceWeak(JSTracer* trc) {
+  bool traceWeak(JSTracer* trc) {
     for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
       if (!GCPolicy<T>::traceWeak(trc, &e.mutableFront())) {
         e.removeFront();
       }
     }
+    return !this->empty();
   }
 
   // GCHashSet is movable
