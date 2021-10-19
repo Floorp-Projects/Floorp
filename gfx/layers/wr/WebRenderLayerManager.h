@@ -54,10 +54,6 @@ class WebRenderBridgeChild;
 class WebRenderParentCommand;
 class TransactionIdAllocator;
 class LayerUserData;
-class DidCompositeObserver {
- public:
-  virtual void DidComposite() = 0;
-};
 
 class WebRenderLayerManager final : public WindowRenderer {
   typedef nsTArray<RefPtr<Layer>> LayerRefArray;
@@ -112,9 +108,6 @@ class WebRenderLayerManager final : public WindowRenderer {
 
   void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator);
   TransactionId GetLastTransactionId();
-
-  void AddDidCompositeObserver(DidCompositeObserver* aObserver);
-  void RemoveDidCompositeObserver(DidCompositeObserver* aObserver);
 
   void FlushRendering(wr::RenderReasons aReasons) override;
   void WaitOnTransactionProcessed() override;
@@ -233,8 +226,6 @@ class WebRenderLayerManager final : public WindowRenderer {
 
   RefPtr<TransactionIdAllocator> mTransactionIdAllocator;
   TransactionId mLatestTransactionId;
-
-  nsTArray<DidCompositeObserver*> mDidCompositeObservers;
 
   gfx::UserData mUserData;
 
