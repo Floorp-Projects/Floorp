@@ -2294,14 +2294,14 @@ void EditorBase::NotifyEditorObservers(
 
       if (!mDispatchInputEvent || IsEditActionAborted() ||
           IsEditActionCanceled()) {
-        return;
+        break;
       }
 
       DispatchInputEvent();
       break;
     case eNotifyEditorObserversOfBefore:
       if (NS_WARN_IF(mIsInEditSubAction)) {
-        break;
+        return;
       }
 
       mIsInEditSubAction = true;
@@ -2310,7 +2310,7 @@ void EditorBase::NotifyEditorObservers(
         RefPtr<IMEContentObserver> observer = mIMEContentObserver;
         observer->BeforeEditAction();
       }
-      break;
+      return;
     case eNotifyEditorObserversOfCancel:
       mIsInEditSubAction = false;
 
@@ -2326,6 +2326,19 @@ void EditorBase::NotifyEditorObservers(
     default:
       MOZ_CRASH("Handle all notifications here");
       break;
+  }
+
+  if (IsHTMLEditor() && !Destroyed()) {
+    // We may need to show resizing handles or update existing ones after
+    // all transactions are done. This way of doing is preferred to DOM
+    // mutation events listeners because all the changes the user can apply
+    // to a document may result in multiple events, some of them quite hard
+    // to listen too (in particular when an ancestor of the selection is
+    // changed but the selection itself is not changed).
+    DebugOnly<nsresult> rvIgnored =
+        MOZ_KnownLive(AsHTMLEditor())->RefreshEditingUI();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "HTMLEditor::RefreshEditingUI() failed, but ignored");
   }
 }
 
@@ -3486,21 +3499,6 @@ void EditorBase::EndUpdateViewBatch() {
 
   // Turn selection updating and notifications back on.
   SelectionRef().EndBatchChanges();
-
-  if (!IsHTMLEditor()) {
-    return;
-  }
-
-  // We may need to show resizing handles or update existing ones after
-  // all transactions are done. This way of doing is preferred to DOM
-  // mutation events listeners because all the changes the user can apply
-  // to a document may result in multiple events, some of them quite hard
-  // to listen too (in particular when an ancestor of the selection is
-  // changed but the selection itself is not changed).
-  DebugOnly<nsresult> rvIgnored =
-      MOZ_KnownLive(AsHTMLEditor())->RefreshEditingUI();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                       "HTMLEditor::RefreshEditingUI() failed, but ignored");
 }
 
 TextComposition* EditorBase::GetComposition() const { return mComposition; }
