@@ -119,6 +119,11 @@ class HyperTextAccessibleBase {
   bool IsValidOffset(int32_t aOffset);
   bool IsValidRange(int32_t aStartOffset, int32_t aEndOffset);
 
+  /**
+   * Return link accessible at the given index.
+   */
+  Accessible* LinkAt(uint32_t aIndex);
+
  protected:
   virtual const Accessible* Acc() const = 0;
   Accessible* Acc() {

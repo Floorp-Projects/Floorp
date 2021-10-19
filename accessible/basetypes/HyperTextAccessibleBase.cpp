@@ -288,4 +288,8 @@ bool HyperTextAccessibleBase::IsValidRange(int32_t aStartOffset,
          startOffset <= endOffset && endOffset <= CharacterCount();
 }
 
+Accessible* HyperTextAccessibleBase::LinkAt(uint32_t aIndex) {
+  return Acc()->EmbeddedChildAt(aIndex);
+}
+
 }  // namespace mozilla::a11y
