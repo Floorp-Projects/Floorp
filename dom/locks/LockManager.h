@@ -13,6 +13,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Lock.h"
 #include "mozilla/dom/LockManagerBinding.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
 #include "nsTHashMap.h"
@@ -59,6 +60,8 @@ class LockManager final : public nsISupports, public nsWrapperCache {
 
   nsCOMPtr<nsIGlobalObject> mOwner;
   RefPtr<locks::LockManagerChild> mActor;
+
+  RefPtr<WeakWorkerRef> mWorkerRef;
 };
 
 }  // namespace mozilla::dom

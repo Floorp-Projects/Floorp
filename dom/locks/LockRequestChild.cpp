@@ -8,6 +8,7 @@
 #include "LockRequestChild.h"
 
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 namespace mozilla::dom::locks {
 
@@ -34,6 +35,15 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY static void RunCallbackAndSettlePromise(
     rv.SuppressException();  // XXX: Why does this happen anyway?
   }
   MOZ_ASSERT(!rv.Failed());
+}
+
+LockRequestChild::LockRequestChild(const LockRequest& aRequest)
+    : mRequest(aRequest) {
+  if (!NS_IsMainThread()) {
+    mWorkerRef = StrongWorkerRef::Create(
+        GetCurrentThreadWorkerPrivate(), "LockManager",
+        [self = RefPtr(this)]() { self->mWorkerRef = nullptr; });
+  }
 }
 
 IPCResult LockRequestChild::RecvResolve(const LockMode& aLockMode,
