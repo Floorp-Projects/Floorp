@@ -148,7 +148,6 @@ class SavedLoginsFragment : Fragment() {
         (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary().setDisplayShowTitleEnabled(true)
         sortingStrategyMenu.menuController.dismiss()
         sortLoginsMenuRoot.setOnClickListener(null)
-        setHasOptionsMenu(false)
 
         redirectToReAuth(
             listOf(R.id.loginDetailFragment, R.id.addLoginFragment),
