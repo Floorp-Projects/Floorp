@@ -1696,7 +1696,7 @@ bool nsTableRowGroupFrame::GetDirection() {
 }
 
 Result<nsILineIterator::LineInfo, nsresult> nsTableRowGroupFrame::GetLine(
-    int32_t aLineNumber) const {
+    int32_t aLineNumber) {
   if ((aLineNumber < 0) || (aLineNumber >= GetRowCount())) {
     return Err(NS_ERROR_FAILURE);
   }
@@ -1750,7 +1750,7 @@ NS_IMETHODIMP
 nsTableRowGroupFrame::FindFrameAt(int32_t aLineNumber, nsPoint aPos,
                                   nsIFrame** aFrameFound,
                                   bool* aPosIsBeforeFirstFrame,
-                                  bool* aPosIsAfterLastFrame) const {
+                                  bool* aPosIsAfterLastFrame) {
   nsTableFrame* table = GetTableFrame();
   nsTableCellMap* cellMap = table->GetCellMap();
 
