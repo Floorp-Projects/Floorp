@@ -120,12 +120,6 @@ async function test() {
   var scrollId = config.utils.getViewId(document.scrollingElement);
   var layersId = config.utils.getLayersId();
 
-  // Elements with APZ aware listeners round-trip through the dispatch-to-content
-  // region and end up as IRREGULAR_AREA when WebRender is disabled.
-  var touchListenerFlag = config.isWebRender
-        ? APZHitResultFlags.APZ_AWARE_LISTENERS
-        : APZHitResultFlags.IRREGULAR_AREA;
-
   checkHitResult(
       hitTest(centerOf("taNone")),
       APZHitResultFlags.VISIBLE |
@@ -263,7 +257,7 @@ async function test() {
   checkHitResult(
       hitTest(centerOf("taInnerManipListener")),
       APZHitResultFlags.VISIBLE |
-      touchListenerFlag |
+      APZHitResultFlags.APZ_AWARE_LISTENERS |
       APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
       scrollId,
       layersId,
@@ -272,14 +266,14 @@ async function test() {
   checkHitResult(
       hitTest(centerOf("taListener")),
       APZHitResultFlags.VISIBLE |
-      touchListenerFlag,
+      APZHitResultFlags.APZ_AWARE_LISTENERS,
       scrollId,
       layersId,
       "div with touch listener");
   checkHitResult(
       hitTest(centerOf("taInnerListenerPanX")),
       APZHitResultFlags.VISIBLE |
-      touchListenerFlag |
+      APZHitResultFlags.APZ_AWARE_LISTENERS |
       APZHitResultFlags.PAN_Y_DISABLED |
       APZHitResultFlags.PINCH_ZOOM_DISABLED |
       APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
@@ -351,14 +345,9 @@ async function test() {
       "overflow:hidden div doesn't reset pan-x/pan-y from enclosing scroller");
 }
 
-if (!config.isWebRender) {
-  ok(true, "This test is WebRender-only because we get a bunch of dispatch-to-content regions without it and the test isn't very interesting.");
-  subtestDone();
-} else {
-  waitUntilApzStable()
-    .then(test)
-    .then(subtestDone, subtestFailed);
-}
+waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
 
 </script>
 </html>

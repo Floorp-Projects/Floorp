@@ -775,14 +775,12 @@ async function injectScript(aScript, aWindow = window) {
 // each time this function is called.
 // The computed information is an object with three fields:
 //   utils: the nsIDOMWindowUtils instance for this window
-//   isWebRender: true if WebRender is enabled
 //   isWindow: true if the platform is Windows
 //   activateAllScrollFrames: true if prefs indicate all scroll frames are
 //                            activated with at least a minimal display port
 function getHitTestConfig() {
   if (!("hitTestConfig" in window)) {
     var utils = SpecialPowers.getDOMWindowUtils(window);
-    var isWebRender = utils.layerManagerType.startsWith("WebRender");
     var isWindows = getPlatform() == "windows";
     let activateAllScrollFrames =
       SpecialPowers.getBoolPref("apz.wr.activate_all_scroll_frames") ||
@@ -793,7 +791,6 @@ function getHitTestConfig() {
 
     window.hitTestConfig = {
       utils,
-      isWebRender,
       isWindows,
       activateAllScrollFrames,
     };
@@ -941,27 +938,15 @@ function hitTestScrollbar(params) {
   // behaviour on different platforms which makes testing harder.
   var expectedHitInfo = APZHitResultFlags.VISIBLE | APZHitResultFlags.SCROLLBAR;
   if (params.expectThumb) {
-    // The thumb has listeners which are APZ-aware. With WebRender we are able
-    // to losslessly propagate this flag to APZ, but with non-WebRender the area
-    // ends up in the mDispatchToContentRegion which we then convert back to
-    // a IRREGULAR_AREA flag. This still works correctly since IRREGULAR_AREA
-    // will fall back to the main thread for everything.
-    if (config.isWebRender) {
-      expectedHitInfo |= APZHitResultFlags.APZ_AWARE_LISTENERS;
-      if (
-        !config.activateAllScrollFrames &&
-        params.layerState == LayerState.INACTIVE
-      ) {
-        expectedHitInfo |= APZHitResultFlags.INACTIVE_SCROLLFRAME;
-      }
-    } else {
-      expectedHitInfo |= APZHitResultFlags.IRREGULAR_AREA;
+    // The thumb has listeners which are APZ-aware.
+    expectedHitInfo |= APZHitResultFlags.APZ_AWARE_LISTENERS;
+    var expectActive =
+      config.activateAllScrollFrames || params.layerState == LayerState.ACTIVE;
+    if (!expectActive) {
+      expectedHitInfo |= APZHitResultFlags.INACTIVE_SCROLLFRAME;
     }
     // We do not generate the layers for thumbs on inactive scrollframes.
-    if (
-      params.layerState == LayerState.ACTIVE ||
-      config.activateAllScrollFrames
-    ) {
+    if (expectActive) {
       expectedHitInfo |= APZHitResultFlags.SCROLLBAR_THUMB;
     }
   }
