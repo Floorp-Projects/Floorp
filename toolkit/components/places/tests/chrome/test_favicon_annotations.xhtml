@@ -107,14 +107,14 @@ function test()
     var systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
                             .createInstance(Ci.nsIPrincipal);
     PlacesUtils.favicons.replaceFaviconDataFromDataURL(
-      NetUtil.newURI(tests[1].url),
+      Services.io.newURI(tests[1].url),
       tests[1].expectedIcon,
       (Date.now() + 86400) * 1000,
       systemPrincipal);
     info("Set favicon data");
     PlacesUtils.favicons.setAndFetchFaviconForPage(
-      NetUtil.newURI("http://example.com/favicon_annotations"),
-      NetUtil.newURI(tests[1].url),
+      Services.io.newURI("http://example.com/favicon_annotations"),
+      Services.io.newURI(tests[1].url),
       true, PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
       systemPrincipal);
 
