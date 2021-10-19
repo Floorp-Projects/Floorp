@@ -76,8 +76,8 @@ static inline bool NS_IsSpace(char16_t u) {
 
 static inline bool NS_NeedsPlatformNativeHandling(char16_t aChar) {
   return
-#if ANDROID  // Bug 1647377: no "platform native" support for Tibetan;
-             // better to just use our class-based breaker.
+#if ANDROID || XP_WIN // Bug 1647377/1736393: no "platform native" support for
+                      // Tibetan; better to just use our class-based breaker.
       (0x0e01 <= aChar && aChar <= 0x0eff) ||  // Thai, Lao
 #else
       (0x0e01 <= aChar && aChar <= 0x0fff) ||  // Thai, Lao, Tibetan
