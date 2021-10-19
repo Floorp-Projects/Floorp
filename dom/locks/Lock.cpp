@@ -8,11 +8,12 @@
 #include "mozilla/dom/LockBinding.h"
 #include "mozilla/dom/LockManager.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/locks/LockRequestChild.h"
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Lock, mOwner, mLockManager,
-                                      mWaitingPromise, mReleasedPromise)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Lock, mOwner, mWaitingPromise,
+                                      mReleasedPromise)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Lock)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Lock)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Lock)
@@ -20,16 +21,17 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Lock)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Lock::Lock(nsIGlobalObject* aGlobal, const RefPtr<LockManager>& aLockManager,
+Lock::Lock(nsIGlobalObject* aGlobal,
+           const WeakPtr<locks::LockRequestChild>& aLockRequestChild,
            const nsString& aName, LockMode aMode,
            const RefPtr<Promise>& aReleasedPromise, ErrorResult& aRv)
     : mOwner(aGlobal),
-      mLockManager(aLockManager),
+      mLockRequestChild(aLockRequestChild),
       mName(aName),
       mMode(aMode),
       mWaitingPromise(Promise::Create(aGlobal, aRv)),
       mReleasedPromise(aReleasedPromise) {
-  MOZ_ASSERT(aLockManager);
+  MOZ_ASSERT(mLockRequestChild);
   MOZ_ASSERT(aReleasedPromise);
 }
 
@@ -47,16 +49,18 @@ Promise& Lock::GetWaitingPromise() {
 }
 
 void Lock::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) {
-  RefPtr<Lock> pin = this;
-  // decrements the refcount, may delete this
-  mLockManager->ReleaseHeldLock(this);
+  if (mLockRequestChild) {
+    locks::PLockRequestChild::Send__delete__(mLockRequestChild);
+    mLockRequestChild = nullptr;
+  }
   mReleasedPromise->MaybeResolve(aValue);
 }
 
 void Lock::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) {
-  RefPtr<Lock> pin = this;
-  // decrements the refcount, may delete this
-  mLockManager->ReleaseHeldLock(this);
+  if (mLockRequestChild) {
+    locks::PLockRequestChild::Send__delete__(mLockRequestChild);
+    mLockRequestChild = nullptr;
+  }
   mReleasedPromise->MaybeReject(aValue);
 }
 

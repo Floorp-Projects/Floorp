@@ -51,6 +51,7 @@
 #include "mozilla/dom/WebAuthnTransactionParent.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
+#include "mozilla/dom/locks/LockManagerParent.h"
 #include "mozilla/dom/localstorage/ActorsParent.h"
 #include "mozilla/dom/network/UDPSocketParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
@@ -1441,6 +1442,13 @@ bool BackgroundParentImpl::DeallocPMediaTransportParent(
   delete aActor;
 #endif
   return true;
+}
+
+already_AddRefed<dom::locks::PLockManagerParent>
+BackgroundParentImpl::AllocPLockManagerParent(
+    const ContentPrincipalInfo& aPrincipalInfo, const nsID& aClientId) {
+  return MakeAndAddRef<mozilla::dom::locks::LockManagerParent>(aPrincipalInfo,
+                                                               aClientId);
 }
 
 PParentToChildStreamParent*
