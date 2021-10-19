@@ -10,7 +10,6 @@
   <link href="../csslogo.ico" rel="shortcut icon" type="image/x-icon">
   <link href="https://www.w3.org/StyleSheets/TR/2016/W3C-ED" rel="stylesheet" type="text/css">
   <meta content="Bikeshed version d7036035b, updated Fri Oct 8 17:07:11 2021 -0700" name="generator">
-  <meta content="8e27fe76645b992566c8fe35bed8d6a37b0ecdb8" name="document-revision">
 <style>/* style-autolinks */
 
 .css.css, .property.property, .descriptor.descriptor {
@@ -491,7 +490,7 @@ dd:not(:last-child) > .wpt-tests-block:not([open]):last-child {
     display: grid;
     margin: 0;
     padding: 0;
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: 1fr max-content auto auto;
     grid-column-gap: .5em;
 }
 .wpt-tests-block hr:last-child {
@@ -505,8 +504,21 @@ dd:not(:last-child) > .wpt-tests-block:not([open]):last-child {
     border: none;
 }
 .wpt-test > .wpt-name { grid-column: 1; }
-.wpt-test > .wpt-live { grid-column: 2; }
-.wpt-test > .wpt-source { grid-column: 3; }
+.wpt-test > .wpt-results { grid-column: 2; }
+.wpt-test > .wpt-live { grid-column: 3; }
+.wpt-test > .wpt-source { grid-column: 4; }
+
+.wpt-test > .wpt-results {
+    display: flex;
+    gap: .1em;
+}
+.wpt-test .wpt-result {
+    display: inline-block;
+    height: 1em;
+    width: 1em;
+    border-radius: 50%;
+    position: relative;
+}
 </style>
 <style>/* style-darkmode */
 
@@ -702,7 +714,7 @@ dd:not(:last-child) > .wpt-tests-block:not([open]):last-child {
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2016/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">CSS Gap Decorations</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Editor’s Draft, <time class="dt-updated" datetime="2021-10-14">14 October 2021</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Editor’s Draft, <time class="dt-updated" datetime="2021-10-19">19 October 2021</time></span></h2>
    <details>
     <summary>Specification Metadata</summary>
     <div data-fill-with="spec-metadata">
@@ -893,7 +905,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
       <td>discrete 
    </table>
-   <p>These properties specifies an <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-images-3/#typedef-image" id="ref-for-typedef-image②">&lt;image></a> to use in place of the rendering specified
+   <p>These properties specify an <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-images-3/#typedef-image" id="ref-for-typedef-image②">&lt;image></a> to use in place of the rendering specified
     by the <span class="css">column-rule-style</span>/<span class="css">row-rule-style</span> properties.</p>
    <p>As for borders, a rule image is not rendered when the corresponding <span class="css">column-rule-style</span>/<span class="css">row-rule-style</span> is <span class="css">none</span>.</p>
    <h3 class="heading settled" data-level="2.2" id="column-rule-image-slice"><span class="secno">2.2. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-column-rule-image-slice" id="ref-for-propdef-column-rule-image-slice">column-rule-image-slice</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-image-slice" id="ref-for-propdef-row-rule-image-slice">row-rule-image-slice</a> Properties</span><a class="self-link" href="#column-rule-image-slice"></a></h3>
@@ -927,7 +939,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
       <td>discrete 
    </table>
-   <p>These properties specifies inward offsets from the top and bottom edges of the image,
+   <p>These properties specify inward offsets from the top and bottom edges of the image,
     dividing it into three regions: two edge areas and one middle area.</p>
    <p>When two values are specified, they set the offsets on the top and bottom sides in
     that order. If the bottom is missing, it is the same as the top.</p>
@@ -975,7 +987,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
       <td>discrete 
    </table>
-   <p>These properties specifies how the middle part of a sliced rule image is scaled and tiled.
+   <p>These properties specify how the middle part of a sliced rule image is scaled and tiled.
     Values have the following meanings:</p>
    <dl>
     <dt><dfn class="css" data-dfn-for="column-rule-image-repeat" data-dfn-type="value" data-export id="valdef-column-rule-image-repeat-stretch">stretch<a class="self-link" href="#valdef-column-rule-image-repeat-stretch"></a></dfn>
@@ -1028,7 +1040,7 @@ on screen, on paper, etc.
     <a class="self-link" href="#example-c9ee9e2e"></a> This <a href="examples/grid-image-001.html">example</a> demonstrates the new
         rule image properties presented above in a grid layout with spanning elements. 
     <figure>
-      <img height="488" src="media/grid-image-001.png" width="608"> 
+      <img src="media/grid-image-001.png"> 
      <figcaption> Example of image rules. </figcaption>
     </figure>
    </aside>
@@ -1043,7 +1055,7 @@ on screen, on paper, etc.
    <aside class="example" id="example-746571da">
     <a class="self-link" href="#example-746571da"></a> This is a similar <a href="examples/grid-gradient-001.html">example</a> using gradients. 
     <figure>
-      <img height="489" src="media/grid-gradient-001.png" width="608"> 
+      <img src="media/grid-gradient-001.png"> 
      <figcaption> Example of gradient rules. </figcaption>
     </figure>
    </aside>
@@ -1052,7 +1064,7 @@ on screen, on paper, etc.
         support for a use case mentioned in <a href="https://github.com/w3c/csswg-drafts/issues/2748#issuecomment-621983931">issue #2748</a>.
         It’s a coupon with a perforation rendered by a semi-transparent rule image between two flex items. 
     <figure>
-      <img height="108" src="media/flexbox-coupon-rule.png" width="253"> 
+      <img src="media/flexbox-coupon-rule.png"> 
      <figcaption> An example of a semi-transparent column rule image. </figcaption>
     </figure>
    </aside>
@@ -1218,7 +1230,7 @@ on screen, on paper, etc.
         insets are greater than the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①⑦">rule containing rectangle’s</a> size.  There’s still
         a zero-sized column rule there, which the row rule (purple) aligns to. 
     <figure>
-      <img height="651" src="media/grid-lateral-001.png" width="997"> 
+      <img src="media/grid-lateral-001.png"> 
      <figcaption> Examples of lateral rule sizing with various inset values. </figcaption>
     </figure>
    </aside>
@@ -1325,7 +1337,7 @@ on screen, on paper, etc.
     <a class="self-link" href="#example-0ce2b88c"></a> Here’s a few simple <a href="examples/grid-longitudinal-001.html">examples</a> of
         the rule sizing and inset properties. 
     <figure>
-      <img height="648" src="media/grid-longitudinal-001.png" width="591"> 
+      <img src="media/grid-longitudinal-001.png"> 
      <figcaption> Examples of rule sizing and inset values. </figcaption>
     </figure>
    </aside>
@@ -1634,13 +1646,13 @@ on screen, on paper, etc.
    </table>
    <p>These properties specify the start/end attachment point of the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①①②">rule containing rectangle</a> in the <a data-link-type="dfn" href="#longitudinal-axis" id="ref-for-longitudinal-axis④">longitudinal axis</a>.  The start value is specified first, the end value second.
     If only one value is specified it is used for both start and end.
-    These properties are only used for interior the edges.  The <a class="property" data-link-type="propdesc">*-rule-edge-align</a> properties
-    described below specifies the alignment on the outer edges.  The initial value, <span class="css">gap</span>,
+    These properties are only used for interior edges.  The <a class="property" data-link-type="propdesc">*-rule-edge-align</a> properties
+    described below specify the alignment on the outer edges.  The initial value, <span class="css">gap</span>,
     means that, by default, a rule will stretch its longitudinal size to fill the space
     from the end of the gap "above" to the start of the gap "below" ("above" meaning the gap
     in the orthogonal axis on the rule’s start side).</p>
-   <aside class="example" id="example-07730548">
-    <a class="self-link" href="#example-07730548"></a> This <a href="examples/grid-align-001.html">example</a> illutrates a few alignment options.
+   <aside class="example" id="example-d52ec54e">
+    <a class="self-link" href="#example-d52ec54e"></a> This <a href="examples/grid-align-001.html">example</a> illustrates a few alignment options.
         Note that the row rules all have a 1px longitudinal inset
         to separate the individual rule segments. (<span class="css">rule-center</span>,
         for example, would otherwise look like one long rule) 
@@ -1648,7 +1660,7 @@ on screen, on paper, etc.
         the gap (to separate the <span class="css">rule-center</span> position
         from the <span class="css">gap-center</span> position)</p>
     <figure>
-      <img height="596" src="media/grid-align-001.png" width="692"> 
+      <img src="media/grid-align-001.png"> 
      <figcaption> Example of <a class="property" data-link-type="propdesc" href="#propdef-row-rule-align" id="ref-for-propdef-row-rule-align①">row-rule-align</a> in a grid container. </figcaption>
     </figure>
     <p>You might be wondering if there’s a bug in the bottom-right example.
@@ -1692,7 +1704,7 @@ on screen, on paper, etc.
     is used for both start and end.  (Attachment points for the interior rule edges are
     specified with the <a href="#column-rule-align"><a class="property" data-link-type="propdesc">*-rule-align</a></a> properties above.)</p>
    <p class="note" role="note"><span>Note:</span> The <span class="css">rule</span>/<span class="css">rule-center</span>/<span class="css">rule-over</span> keywords are omitted here (compared with <span class="css">column-rule-align</span>) since there are no rules in the edge gutters.</p>
-   <p>Thge figure below illustrates the alignment values.
+   <p>The figure below illustrates the alignment values.
     The red values are used for the top column rule’s start edge and the yellow
     values are used for its end edge. The yellow values are also used for the bottom
     column rule’s start edge. However, in this
@@ -1705,7 +1717,7 @@ on screen, on paper, etc.
     attachment points should be used. <span class="css">column-rule-edge-align</span> the yellow colored
     ones (and all other interior edges if there were more rows).</p>
    <figure>
-     <img height="585" src="media/rule-alignment-values.png" width="621"> 
+     <img src="media/rule-alignment-values.png"> 
     <figcaption> Illustration of rule alignment values. </figcaption>
    </figure>
    <p>Here’s the rule styling used for the above example:</p>
@@ -1775,7 +1787,7 @@ on screen, on paper, etc.
    <aside class="example" id="example-9ccc5773">
     <a class="self-link" href="#example-9ccc5773"></a> 
     <figure>
-      <img height="228" src="media/grid-segment-001.png" width="312"> 
+      <img src="media/grid-segment-001.png"> 
      <figcaption> Example of column and row rules with <span class="css">segment</span> extent in a grid container. </figcaption>
     </figure>
    </aside>
@@ -1787,7 +1799,7 @@ on screen, on paper, etc.
    <aside class="example" id="example-9818bbbb">
     <a class="self-link" href="#example-9818bbbb"></a> 
     <figure>
-      <img height="228" src="media/grid-segment-002.png" width="608"> 
+      <img src="media/grid-segment-002.png"> 
      <figcaption> Example of column and row rules with in a grid container with <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#collapsed-track" id="ref-for-collapsed-track①">collapsed tracks</a>. </figcaption>
     </figure>
    </aside>
@@ -1852,7 +1864,7 @@ on screen, on paper, etc.
         They are both forced to span into the cell in row 2, column 4 to illustrate what happens
         when items span like this. 
     <figure>
-      <img height="811" src="media/grid-extent-001.png" width="805"> 
+      <img src="media/grid-extent-001.png"> 
      <figcaption> Examples of <span class="css">row-rule-extent</span> in a grid container. </figcaption>
     </figure>
    </aside>
@@ -1879,7 +1891,7 @@ on screen, on paper, etc.
         the <a class="css" data-link-type="propdesc" href="#propdef-row-rule-align" id="ref-for-propdef-row-rule-align②">row-rule-align: rule</a> in the subgrid.  The subgrid is in fact completely
         unaware of any parent rules.</p>
     <figure>
-      <img height="256" src="media/grid-subgrid-001.png" width="826"> 
+      <img src="media/grid-subgrid-001.png"> 
      <figcaption> Example of gap rules in a subgrid. </figcaption>
     </figure>
    </aside>
@@ -1896,7 +1908,7 @@ on screen, on paper, etc.
         variations of rules in a masonry grid layout. All the grids have <a class="css" data-link-type="propdesc" href="#propdef-column-rule-edge-align" id="ref-for-propdef-column-rule-edge-align①">column-rule-edge-align: gap-over</a> to extend the edge rules out to
         the content-box edge. 
     <figure>
-      <img height="785" src="media/grid-masonry-001.png" width="691"> 
+      <img src="media/grid-masonry-001.png"> 
      <figcaption> Example of gap rules in a masonry grid. </figcaption>
     </figure>
    </aside>
@@ -1904,12 +1916,12 @@ on screen, on paper, etc.
     <a class="self-link" href="#example-a0ffc13c"></a> This <a href="examples/grid-masonry-002.html">example</a> illustrates
         some of the <a class="css" data-link-type="propdesc" href="#propdef-column-rule-extent" id="ref-for-propdef-column-rule-extent①">column-rule-extent: all-*</a> values. 
     <figure>
-      <img height="772" src="media/grid-masonry-002.png" width="730"> 
+      <img src="media/grid-masonry-002.png"> 
      <figcaption> Example of gap rules in a masonry grid. </figcaption>
     </figure>
    </aside>
    <p class="issue" id="issue-b6f1d65c"><a class="self-link" href="#issue-b6f1d65c"></a> TODO: add definition list and algorithm here...</p>
-   <p class="issue" id="issue-3e9abc31"><a class="self-link" href="#issue-3e9abc31"></a> is it useful to be able to create a rule extent for the <i>intersection</i> or <i>union</i> between two tracks, like so: <img height="435" src="media/masonry-all-shorter.png" style="display:block" width="701">It’s pretty easy to implement, fwiw... (I accidently implemented <span class="css">short</span>/<span class="css">long</span> like that before I realized it was inconsistent with how they work elsewhere). I think it’s a case that is unique to a masonry axis though, at least <i>currently</i>...</p>
+   <p class="issue" id="issue-3e9abc31"><a class="self-link" href="#issue-3e9abc31"></a> is it useful to be able to create a rule extent for the <i>intersection</i> or <i>union</i> between two tracks, like so: <img src="media/masonry-all-shorter.png" style="display:block">It’s pretty easy to implement, fwiw... (I accidently implemented <span class="css">short</span>/<span class="css">long</span> like that before I realized it was inconsistent with how they work elsewhere). I think it’s a case that is unique to a masonry axis though, at least <i>currently</i>...</p>
    <h4 class="heading settled" data-level="6.1.2" id="rule-extent-flexbox"><span class="secno">6.1.2. </span><span class="content">Flexbox Containers</span><a class="self-link" href="#rule-extent-flexbox"></a></h4>
    <p>In a <a href="https://drafts.csswg.org/css-flexbox/#valdef-flex-direction-row">row-oriented flexbox container</a>,
     the <span class="css">row-rule-*</span> properties creates rules between flex lines,
@@ -1981,23 +1993,23 @@ on screen, on paper, etc.
    <aside class="example" id="example-374fda56">
     <a class="self-link" href="#example-374fda56"></a> Here are a few examples to illustrate the <span class="css">row-rule-extent</span> values. 
     <figure>
-      <img height="194" src="media/flexbox-extent-start-001.png" width="314"> 
+      <img src="media/flexbox-extent-start-001.png"> 
      <figcaption> A <a class="css" data-link-type="propdesc" href="#propdef-row-rule-extent" id="ref-for-propdef-row-rule-extent①">row-rule-extent: start</a> <a href="examples/flexbox-extent-start-001.html">example</a>. </figcaption>
     </figure>
     <figure>
-      <img height="194" src="media/flexbox-extent-end-001.png" width="314"> 
+      <img src="media/flexbox-extent-end-001.png"> 
      <figcaption> A <a class="css" data-link-type="propdesc" href="#propdef-row-rule-extent" id="ref-for-propdef-row-rule-extent②">row-rule-extent: end</a> <a href="examples/flexbox-extent-end-001.html">example</a>. </figcaption>
     </figure>
     <figure>
-      <img height="194" src="media/flexbox-extent-long-001.png" width="314"> 
+      <img src="media/flexbox-extent-long-001.png"> 
      <figcaption> A <a class="css" data-link-type="propdesc" href="#propdef-row-rule-extent" id="ref-for-propdef-row-rule-extent③">row-rule-extent: long</a> <a href="examples/flexbox-extent-long-001.html">example</a>. </figcaption>
     </figure>
     <figure>
-      <img height="194" src="media/flexbox-extent-all-short-001.png" width="314"> 
+      <img src="media/flexbox-extent-all-short-001.png"> 
      <figcaption> A <a class="css" data-link-type="propdesc" href="#propdef-row-rule-extent" id="ref-for-propdef-row-rule-extent④">row-rule-extent: all-short</a> <a href="examples/flexbox-extent-all-short-001.html">example</a>. </figcaption>
     </figure>
     <figure>
-      <img height="194" src="media/flexbox-extent-all-long-001.png" width="314"> 
+      <img src="media/flexbox-extent-all-long-001.png"> 
      <figcaption> A <a class="css" data-link-type="propdesc" href="#propdef-row-rule-extent" id="ref-for-propdef-row-rule-extent⑤">row-rule-extent: all-long</a> <a href="examples/flexbox-extent-all-long-001.html">example</a>. </figcaption>
     </figure>
    </aside>
@@ -2007,7 +2019,7 @@ on screen, on paper, etc.
         used and the gaps aren’t aligned.  (The flex items are semi-transparent
         to show the column rules underneath). 
     <figure>
-      <img height="194" src="media/flexbox-extent-all-long-allow-overlap-001.png" width="314"> 
+      <img src="media/flexbox-extent-all-long-allow-overlap-001.png"> 
      <figcaption> A <a class="css" data-link-type="propdesc" href="#propdef-column-rule-extent" id="ref-for-propdef-column-rule-extent③">column-rule-extent: all-long allow-overlap</a> example. </figcaption>
     </figure>
    </aside>
@@ -2022,7 +2034,7 @@ on screen, on paper, etc.
    <aside class="example" id="example-5015561d">
     <a class="self-link" href="#example-5015561d"></a> Note, column 2 is collapsed in this example. 
     <figure>
-      <img height="346" src="media/table-rules-001.png" width="818"> 
+      <img src="media/table-rules-001.png"> 
      <figcaption> An <a href="examples/table-rules-001.html">example</a> of table rules. </figcaption>
     </figure>
    </aside>
@@ -2040,7 +2052,7 @@ on screen, on paper, etc.
         table rows and cells. And also what happens when the table rules from
         the last example is also applied. 
     <figure>
-      <img height="784" src="media/table-row-group-rules-001.png" width="879"> 
+      <img src="media/table-row-group-rules-001.png"> 
      <figcaption> Example of table row and cell rules. </figcaption>
     </figure>
    </aside>
@@ -2058,7 +2070,7 @@ on screen, on paper, etc.
     <a class="self-link" href="#example-b0c3427d"></a> This <a href="examples/multicol-row-rule-001.html">example</a> illustrates rules in
         a multi-column container. 
     <figure>
-      <img height="854" src="media/multicol-row-rule-001.png" width="827"> 
+      <img src="media/multicol-row-rule-001.png"> 
      <figcaption> Example of column and row rules in a multi-column. </figcaption>
     </figure>
    </aside>
@@ -2067,7 +2079,7 @@ on screen, on paper, etc.
         'column-span: <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-values-4/#integer-value" id="ref-for-integer-value">&lt;integer></a>' some time in the future,
         this is how row rules will work: 
     <figure>
-      <img height="195" src="media/multicol-colspan-2.png" width="808"> 
+      <img src="media/multicol-colspan-2.png"> 
      <figcaption> Example of <a class="css" data-link-type="propdesc" href="https://drafts.csswg.org/css-multicol-2/#propdef-column-span" id="ref-for-propdef-column-span">column-span: 2</a> in a multi-column with column and row rules. </figcaption>
     </figure>
    </aside>
@@ -2089,7 +2101,7 @@ on screen, on paper, etc.
       <c- k>row-rule-lateral-inset-start</c-><c- p>:</c-> <c- m>20</c-><c- k>px</c-><c- p>;</c->
 </pre>
    <figure>
-     <img height="584" src="media/rule-containing-rectangle.png" width="620"> 
+     <img src="media/rule-containing-rectangle.png"> 
     <figcaption> The Rule Containing Rectangle </figcaption>
    </figure>
    <p>Note that the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①①⑦">rule containing rectangle</a> extends to the start of the black horizontal rule, which has a <span class="css">20px</span> lateral inset (making it non-centered). We align to its start with <a class="css" data-link-type="propdesc" href="#propdef-column-rule-align" id="ref-for-propdef-column-rule-align②">column-rule-align: rule</a>.  From there,
@@ -2787,7 +2799,7 @@ on screen, on paper, etc.
    <dt id="biblio-css-box-4">[CSS-BOX-4]
    <dd>Elika Etemad. <a href="https://www.w3.org/TR/css-box-4/"><cite>CSS Box Model Module Level 4</cite></a>. 21 April 2020. WD. URL: <a href="https://www.w3.org/TR/css-box-4/">https://www.w3.org/TR/css-box-4/</a>
    <dt id="biblio-css-cascade-5">[CSS-CASCADE-5]
-   <dd>Elika Etemad; Miriam Suzanne; Tab Atkins Jr.. <a href="https://www.w3.org/TR/css-cascade-5/"><cite>CSS Cascading and Inheritance Level 5</cite></a>. 29 August 2021. WD. URL: <a href="https://www.w3.org/TR/css-cascade-5/">https://www.w3.org/TR/css-cascade-5/</a>
+   <dd>Elika Etemad; Miriam Suzanne; Tab Atkins Jr.. <a href="https://www.w3.org/TR/css-cascade-5/"><cite>CSS Cascading and Inheritance Level 5</cite></a>. 15 October 2021. WD. URL: <a href="https://www.w3.org/TR/css-cascade-5/">https://www.w3.org/TR/css-cascade-5/</a>
    <dt id="biblio-css-color-4">[CSS-COLOR-4]
    <dd>Tab Atkins Jr.; Chris Lilley. <a href="https://www.w3.org/TR/css-color-4/"><cite>CSS Color Module Level 4</cite></a>. 1 June 2021. WD. URL: <a href="https://www.w3.org/TR/css-color-4/">https://www.w3.org/TR/css-color-4/</a>
    <dt id="biblio-css-display-3">[CSS-DISPLAY-3]
@@ -2811,7 +2823,7 @@ on screen, on paper, etc.
    <dt id="biblio-css-tables-3">[CSS-TABLES-3]
    <dd>François Remy; Greg Whitworth; David Baron. <a href="https://www.w3.org/TR/css-tables-3/"><cite>CSS Table Module Level 3</cite></a>. 27 July 2019. WD. URL: <a href="https://www.w3.org/TR/css-tables-3/">https://www.w3.org/TR/css-tables-3/</a>
    <dt id="biblio-css-values-4">[CSS-VALUES-4]
-   <dd>Tab Atkins Jr.; Elika Etemad. <a href="https://www.w3.org/TR/css-values-4/"><cite>CSS Values and Units Module Level 4</cite></a>. 30 September 2021. WD. URL: <a href="https://www.w3.org/TR/css-values-4/">https://www.w3.org/TR/css-values-4/</a>
+   <dd>Tab Atkins Jr.; Elika Etemad. <a href="https://www.w3.org/TR/css-values-4/"><cite>CSS Values and Units Module Level 4</cite></a>. 16 October 2021. WD. URL: <a href="https://www.w3.org/TR/css-values-4/">https://www.w3.org/TR/css-values-4/</a>
    <dt id="biblio-css-writing-modes-4">[CSS-WRITING-MODES-4]
    <dd>Elika Etemad; Koji Ishii. <a href="https://www.w3.org/TR/css-writing-modes-4/"><cite>CSS Writing Modes Level 4</cite></a>. 30 July 2019. CR. URL: <a href="https://www.w3.org/TR/css-writing-modes-4/">https://www.w3.org/TR/css-writing-modes-4/</a>
    <dt id="biblio-rfc2119">[RFC2119]
@@ -3231,7 +3243,7 @@ on screen, on paper, etc.
     e.g. 'padding | padding-center | padding-over | border...' <a class="issue-return" href="#issue-13842b6f" title="Jump to section">↵</a></div>
    <div class="issue"> perhaps make <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-box-4/#valdef-margin-trim-all">all</a> a separate keyword? like so: <span class="css">[segment | [[start | end | short | long] all?] ] allow-overlap?</span> <a class="issue-return" href="#issue-70dc1ba4" title="Jump to section">↵</a></div>
    <div class="issue"> TODO: add definition list and algorithm here... <a class="issue-return" href="#issue-b6f1d65c" title="Jump to section">↵</a></div>
-   <div class="issue"> is it useful to be able to create a rule extent for the <i>intersection</i> or <i>union</i> between two tracks, like so: <img height="435" src="media/masonry-all-shorter.png" style="display:block" width="701">It’s pretty easy to implement, fwiw... (I accidently implemented <span class="css">short</span>/<span class="css">long</span> like that before I realized it was inconsistent with how they work elsewhere). I think it’s a case that is unique to a masonry axis though, at least <i>currently</i>... <a class="issue-return" href="#issue-3e9abc31" title="Jump to section">↵</a></div>
+   <div class="issue"> is it useful to be able to create a rule extent for the <i>intersection</i> or <i>union</i> between two tracks, like so: <img src="media/masonry-all-shorter.png" style="display:block">It’s pretty easy to implement, fwiw... (I accidently implemented <span class="css">short</span>/<span class="css">long</span> like that before I realized it was inconsistent with how they work elsewhere). I think it’s a case that is unique to a masonry axis though, at least <i>currently</i>... <a class="issue-return" href="#issue-3e9abc31" title="Jump to section">↵</a></div>
    <div class="issue"> sort out if non-collapsed column-groups that only contains collapsed columns should generate rules, ditto row-groups/rows <a class="issue-return" href="#issue-96acb267" title="Jump to section">↵</a></div>
    <div class="issue"> this proposal makes the assumption that the parallel proposal that <span class="css">row-gap</span> should apply to multi-column containers is also adopted (issue #XXX). <a class="issue-return" href="#issue-b4c69802" title="Jump to section">↵</a></div>
   </div>
@@ -3611,4 +3623,6 @@ document.body.addEventListener("click", function(e) {
     }
 
 });
+</script>
+<script>/* script-wpt */
 </script>
