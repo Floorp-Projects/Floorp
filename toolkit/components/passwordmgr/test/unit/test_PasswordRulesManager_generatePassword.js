@@ -225,6 +225,71 @@ add_task(async function test_generatePassword_required_special_character() {
   verifyPassword(TEST_RULES, generatedPassword);
 });
 
+add_task(
+  async function test_generatePassword_with_arbitrary_required_characters() {
+    // Force password generation to be enabled.
+    Services.prefs.setBoolPref("signon.generation.available", true);
+    Services.prefs.setBoolPref("signon.generation.enabled", true);
+    Services.prefs.setBoolPref("signon.improvedPasswordRules.enabled", true);
+    // TEST_ORIGIN emulates the browsingContext.currentWindowGlobal.documentURI variable in LoginManagerParent
+    // and so it should always be a correctly formed URI when working with
+    // the PasswordRulesParser and PasswordRulesManager modules
+    const TEST_ORIGIN = Services.io.newURI("https://example.com");
+
+    // TEST_BASE_ORIGIN is how each domain is stored in RemoteSettings, and so
+    // we need this in order to parse out the particular password rules we're verifying
+    const TEST_BASE_ORIGIN = "example.com";
+    const REQUIRED_ARBITRARY_CHARACTERS = "!#$@*()_+=";
+    // We use an extremely long password to ensure there are no invalid characters generated in the password.
+    // This ensures we exhaust all of "allRequiredCharacters" in PasswordGenerator.jsm.
+    // Otherwise, there's a small chance a "," may have been added to "allRequiredCharacters"
+    // which will generate an invalid password in this case.
+    const TEST_RULES = `required: [${REQUIRED_ARBITRARY_CHARACTERS}], upper, lower; maxlength: 255; minlength: 255;`;
+    await LoginTestUtils.remoteSettings.setupImprovedPasswordRules(
+      TEST_BASE_ORIGIN,
+      TEST_RULES
+    );
+    const records = await RemoteSettings(IMPROVED_RULES_COLLECTION).get();
+
+    let rules = getRulesForRecord(records, TEST_BASE_ORIGIN);
+
+    rules = PasswordRulesParser.parsePasswordRules(rules);
+    ok(rules.length, "Rules should exist after parsing");
+
+    let PRMP = new PasswordRulesManagerParent();
+    ok(PRMP.generatePassword, "PRMP.generatePassword exists");
+
+    let generatedPassword = await PRMP.generatePassword(TEST_ORIGIN);
+    generatedPassword = await PRMP.generatePassword(TEST_ORIGIN);
+    ok(generatedPassword, "A password was generated");
+
+    verifyPassword(TEST_RULES, generatedPassword);
+
+    let specialCharacters = PasswordGenerator._getSpecialCharacters();
+    let digits = PasswordGenerator._getDigits();
+    // Additional verification for this password case since
+    // we want to ensure no extra special characters and no digits are generated.
+    let disallowedSpecialCharacters = "";
+    for (let char of specialCharacters) {
+      if (!REQUIRED_ARBITRARY_CHARACTERS.includes(char)) {
+        disallowedSpecialCharacters += char;
+      }
+    }
+    for (let char of disallowedSpecialCharacters) {
+      ok(
+        !generatedPassword.includes(char),
+        "Password must not contain any disallowed special characters: " + char
+      );
+    }
+    for (let char of digits) {
+      ok(
+        !generatedPassword.includes(char),
+        "Password must not contain any digits: " + char
+      );
+    }
+  }
+);
+
 // Checks the "www4.prepaid.bankofamerica.com" case to ensure the rules are found
 add_task(async function test_generatePassword_subdomain_rule() {
   const testCases = [
