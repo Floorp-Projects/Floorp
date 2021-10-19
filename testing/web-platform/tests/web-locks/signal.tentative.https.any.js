@@ -190,3 +190,19 @@ promise_test(async t => {
                 'Lock released promise should not reject');
 
 }, 'Abort signaled after lock released');
+
+promise_test(async t => {
+  const res = uniqueName(t);
+
+  const controller = new AbortController();
+  const first = requestLockAndHold(t, res, { signal: controller.signal });
+  const next = navigator.locks.request(res, () => "resolved");
+  controller.abort();
+
+  await promise_rejects_dom(t, "AbortError", first, "Request should abort");
+  assert_equals(
+    await next,
+    "resolved",
+    "The next request is processed after abort"
+  );
+}, "Abort should process the next pending lock request");

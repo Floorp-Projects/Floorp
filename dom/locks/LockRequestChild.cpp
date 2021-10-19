@@ -14,6 +14,8 @@ namespace mozilla::dom::locks {
 
 using IPCResult = mozilla::ipc::IPCResult;
 
+NS_IMPL_ISUPPORTS(LockRequestChild, nsISupports)
+
 // XXX: should be MOZ_CAN_RUN_SCRIPT, but not sure how to call it from closures
 MOZ_CAN_RUN_SCRIPT_BOUNDARY static void RunCallbackAndSettlePromise(
     LockGrantedCallback& aCallback, mozilla::dom::Lock* lock,
@@ -37,8 +39,13 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY static void RunCallbackAndSettlePromise(
   MOZ_ASSERT(!rv.Failed());
 }
 
-LockRequestChild::LockRequestChild(const LockRequest& aRequest)
+LockRequestChild::LockRequestChild(
+    const LockRequest& aRequest,
+    const Optional<OwningNonNull<AbortSignal>>& aSignal)
     : mRequest(aRequest) {
+  if (aSignal.WasPassed()) {
+    Follow(&aSignal.Value());
+  }
   if (!NS_IsMainThread()) {
     mWorkerRef = StrongWorkerRef::Create(
         GetCurrentThreadWorkerPrivate(), "LockManager",
@@ -48,6 +55,8 @@ LockRequestChild::LockRequestChild(const LockRequest& aRequest)
 
 IPCResult LockRequestChild::RecvResolve(const LockMode& aLockMode,
                                         bool aIsAvailable) {
+  Unfollow();
+
   RefPtr<Lock> lock;
   RefPtr<Promise> promise;
   if (aIsAvailable) {
@@ -75,8 +84,14 @@ IPCResult LockRequestChild::RecvResolve(const LockMode& aLockMode,
 }
 
 IPCResult LockRequestChild::RecvAbort() {
+  Unfollow();
   mRequest.mPromise->MaybeRejectWithAbortError("The lock request is aborted");
   return IPC_OK();
+}
+
+void LockRequestChild::RunAbortAlgorithm() {
+  RecvAbort();
+  Send__delete__(this, true);
 }
 
 }  // namespace mozilla::dom::locks
