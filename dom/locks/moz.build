@@ -7,6 +7,8 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
+MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+
 EXPORTS.mozilla.dom += [
     "Lock.h",
     "LockManager.h",

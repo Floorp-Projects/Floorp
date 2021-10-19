@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/locks/PLockRequestChild.h"
 #include "mozilla/dom/Lock.h"
+#include "mozilla/dom/WorkerRef.h"
 
 namespace mozilla::dom::locks {
 
@@ -25,7 +26,7 @@ class LockRequestChild final : public PLockRequestChild,
   NS_INLINE_DECL_REFCOUNTING(LockRequestChild)
 
  public:
-  explicit LockRequestChild(const LockRequest& aRequest) : mRequest(aRequest){};
+  explicit LockRequestChild(const LockRequest& aRequest);
 
   IPCResult RecvResolve(const LockMode& aLockMode, bool aIsAvailable);
   IPCResult RecvAbort();
@@ -34,6 +35,7 @@ class LockRequestChild final : public PLockRequestChild,
   ~LockRequestChild() = default;
 
   LockRequest mRequest;
+  RefPtr<StrongWorkerRef> mWorkerRef;
 };
 
 }  // namespace mozilla::dom::locks
