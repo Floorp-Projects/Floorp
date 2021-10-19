@@ -14,7 +14,7 @@
 
 using namespace mozilla::a11y;
 
-HyperTextAccessibleWrap* ia2AccessibleHypertext::TextAcc() {
+HyperTextAccessibleWrap* ia2AccessibleHypertext::LocalTextAcc() {
   AccessibleWrap* acc = LocalAcc();
   return static_cast<HyperTextAccessibleWrap*>(acc);
 }
@@ -57,7 +57,7 @@ ia2AccessibleHypertext::get_nHyperlinks(long* aHyperlinkCount) {
 
   *aHyperlinkCount = 0;
 
-  HyperTextAccessibleWrap* hyperText = TextAcc();
+  HyperTextAccessibleWrap* hyperText = LocalTextAcc();
   if (!hyperText) return CO_E_OBJNOTCONNECTED;
 
   *aHyperlinkCount = hyperText->LinkCount();
@@ -72,7 +72,7 @@ ia2AccessibleHypertext::get_hyperlink(long aLinkIndex,
   *aHyperlink = nullptr;
 
   LocalAccessible* hyperLink;
-  HyperTextAccessibleWrap* hyperText = TextAcc();
+  HyperTextAccessibleWrap* hyperText = LocalTextAcc();
   if (!hyperText) {
     return CO_E_OBJNOTCONNECTED;
   }
@@ -96,7 +96,7 @@ ia2AccessibleHypertext::get_hyperlinkIndex(long aCharIndex,
 
   *aHyperlinkIndex = 0;
 
-  HyperTextAccessibleWrap* hyperAcc = TextAcc();
+  HyperTextAccessibleWrap* hyperAcc = LocalTextAcc();
   if (!hyperAcc) return CO_E_OBJNOTCONNECTED;
 
   *aHyperlinkIndex = hyperAcc->LinkIndexAtOffset(aCharIndex);
@@ -113,7 +113,7 @@ ia2AccessibleHypertext::get_hyperlinks(IAccessibleHyperlink*** aHyperlinks,
   *aHyperlinks = nullptr;
   *aNHyperlinks = 0;
 
-  HyperTextAccessibleWrap* hyperText = TextAcc();
+  HyperTextAccessibleWrap* hyperText = LocalTextAcc();
   if (!hyperText) {
     return CO_E_OBJNOTCONNECTED;
   }
