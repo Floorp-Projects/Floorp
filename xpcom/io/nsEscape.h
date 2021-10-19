@@ -104,7 +104,10 @@ enum EscapeMask {
       1u << 13, /* copy input to result buf even if escaping is unnecessary */
   esc_Colon = 1u << 14,       /* forces escape of colon */
   esc_SkipControl = 1u << 15, /* skips C0 and DEL from unescaping */
-  esc_Spaces = 1u << 16       /* forces escape of spaces */
+  esc_Spaces = 1u << 16,      /* forces escape of spaces */
+  esc_ExtHandler = 1u << 17   /* For escaping external protocol handler urls.
+                               * Escapes everything except:
+                               * a-z, 0-9 and !#$&'()*+,-./:;=?@[]_~ */
 };
 
 /**
