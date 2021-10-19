@@ -110,6 +110,11 @@ class Accessible {
    */
   bool HasGenericType(AccGenericType aType) const;
 
+  /**
+   * Return embedded accessible child at the given index.
+   */
+  virtual Accessible* EmbeddedChildAt(uint32_t aIndex) = 0;
+
   // Methods that potentially access a cache.
 
   /*

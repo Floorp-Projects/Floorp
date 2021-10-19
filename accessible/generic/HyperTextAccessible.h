@@ -82,9 +82,7 @@ class HyperTextAccessible : public AccessibleWrap,
   /**
    * Return link accessible at the given index.
    */
-  LocalAccessible* LinkAt(uint32_t aIndex) {
-    return GetEmbeddedChildAt(aIndex);
-  }
+  LocalAccessible* LinkAt(uint32_t aIndex) { return EmbeddedChildAt(aIndex); }
 
   /**
    * Return index for the given link accessible.

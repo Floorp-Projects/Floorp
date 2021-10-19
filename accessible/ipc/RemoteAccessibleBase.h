@@ -110,7 +110,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   }
   uint32_t EmbeddedChildCount() const;
   int32_t IndexOfEmbeddedChild(const Derived* aChild);
-  Derived* EmbeddedChildAt(size_t aChildIdx);
+  virtual Accessible* EmbeddedChildAt(uint32_t aChildIdx) override;
 
   void Shutdown();
 
