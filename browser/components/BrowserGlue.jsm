@@ -2188,6 +2188,39 @@ BrowserGlue.prototype = {
     Services.wm.addListener(windowListener);
   },
 
+  _monitorGPCPref() {
+    const FEATURE_PREF_ENABLED = "privacy.globalprivacycontrol.enabled";
+    const FUNCTIONALITY_PREF_ENABLED =
+      "privacy.globalprivacycontrol.functionality.enabled";
+    const PREF_WAS_ENABLED = "privacy.globalprivacycontrol.was_ever_enabled";
+    const _checkGPCPref = async () => {
+      const feature_enabled = Services.prefs.getBoolPref(
+        FEATURE_PREF_ENABLED,
+        false
+      );
+      const functionality_enabled = Services.prefs.getBoolPref(
+        FUNCTIONALITY_PREF_ENABLED,
+        false
+      );
+      const was_enabled = Services.prefs.getBoolPref(PREF_WAS_ENABLED, false);
+      let value = 0;
+      if (feature_enabled && functionality_enabled) {
+        value = 1;
+        Services.prefs.setBoolPref(PREF_WAS_ENABLED, true);
+      } else if (was_enabled) {
+        value = 2;
+      }
+      Services.telemetry.scalarSet(
+        "security.global_privacy_control_enabled",
+        value
+      );
+    };
+
+    Services.prefs.addObserver(FEATURE_PREF_ENABLED, _checkGPCPref);
+    Services.prefs.addObserver(FUNCTIONALITY_PREF_ENABLED, _checkGPCPref);
+    _checkGPCPref();
+  },
+
   // All initial windows have opened.
   _onWindowsRestored: function BG__onWindowsRestored() {
     if (this._windowsWereRestored) {
@@ -2265,6 +2298,7 @@ BrowserGlue.prototype = {
     if (AppConstants.NIGHTLY_BUILD) {
       this._monitorTranslationsPref();
     }
+    this._monitorGPCPref();
   },
 
   /**

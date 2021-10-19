@@ -1233,6 +1233,21 @@ security:
       - 'firefox'
     record_in_processes:
       - 'main'
+  global_privacy_control_enabled:
+    bug_numbers:
+      - 1734185
+    description: >
+      Measures user retention of the Global Privacy Control.
+      0 = never enabled, 1 = enabled, 2 = disabled (but was enabled)
+    expires: never
+    kind: uint
+    notification_emails:
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
 
 pwmgr:
   potentially_breached_passwords:
