@@ -467,6 +467,12 @@ async function parseJsonManifest(uri) {
     return uri;
   }
 
+  if (data.background?.scripts) {
+    for (let bgscript of data.background.scripts) {
+      gReferencesFromCode.set(uri.resolve(bgscript), null);
+    }
+  }
+
   if (data.icons) {
     for (let icon of Object.values(data.icons)) {
       gReferencesFromCode.set(uri.resolve(icon), null);
@@ -478,6 +484,10 @@ async function parseJsonManifest(uri) {
       if (api.parent && api.parent.script) {
         let script = uri.resolve(api.parent.script);
         gReferencesFromCode.set(script, null);
+      }
+
+      if (api.schema) {
+        gReferencesFromCode.set(uri.resolve(api.schema), null);
       }
     }
   }
