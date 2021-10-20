@@ -24,6 +24,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
@@ -34,7 +35,6 @@ import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.search.ManualAddSearchEnginePreference
-import org.mozilla.focus.shortcut.IconGenerator
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.SupportUtils
@@ -229,7 +229,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
                     createSearchEngine(
                         engineName,
                         query.toSearchUrl(),
-                        IconGenerator.generateSearchEngineIcon(requireContext())
+                        requireComponents.icons.loadIcon(IconRequest(query, isPrivate = true)).await().bitmap
                     )
                 )
 
