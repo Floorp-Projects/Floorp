@@ -6102,8 +6102,7 @@ void nsWindow::UpdateWindowDraggingRegion(
 }
 
 LayoutDeviceIntCoord nsWindow::GetTitlebarRadius() {
-  int32_t cssCoord =
-      std::ceil(LookAndFeel::GetFloat(LookAndFeel::FloatID::TitlebarRadius));
+  int32_t cssCoord = LookAndFeel::GetInt(LookAndFeel::IntID::TitlebarRadius);
   return GdkCoordToDevicePixels(cssCoord);
 }
 
@@ -6359,7 +6358,8 @@ LayoutDeviceIntRect nsWindow::GetTitlebarRect() {
     return LayoutDeviceIntRect();
   }
 
-  return LayoutDeviceIntRect(0, 0, mBounds.width, GetTitlebarRadius());
+  int radius = DoDrawTilebarCorners() ? int(GetTitlebarRadius()) : 0;
+  return LayoutDeviceIntRect(0, 0, mBounds.width, radius);
 }
 
 void nsWindow::UpdateTitlebarTransparencyBitmap() {
