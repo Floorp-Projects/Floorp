@@ -513,6 +513,7 @@ ${RemoveDefaultBrowserAgentShortcut}
   ${AddAssociationIfNoneExist} ".webm" "FirefoxHTML$5"
   ${AddAssociationIfNoneExist} ".svg" "FirefoxHTML$5"
   ${AddAssociationIfNoneExist} ".webp"  "FirefoxHTML$5"
+  ${AddAssociationIfNoneExist} ".avif" "FirefoxHTML$5"
 
   ; An empty string is used for the 5th param because FirefoxHTML is not a
   ; protocol handler
@@ -604,6 +605,7 @@ ${RemoveDefaultBrowserAgentShortcut}
   WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".xhtml" "FirefoxHTML$2"
   WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".svg"   "FirefoxHTML$2"
   WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".webp"  "FirefoxHTML$2"
+  WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".avif"  "FirefoxHTML$2"
 
   WriteRegStr ${RegKey} "$0\Capabilities\StartMenu" "StartMenuInternet" "$1"
 
@@ -673,6 +675,7 @@ ${RemoveDefaultBrowserAgentShortcut}
     ${WriteApplicationsSupportedType} ${RegKey} ".svg"
     ${WriteApplicationsSupportedType} ${RegKey} ".webm"
     ${WriteApplicationsSupportedType} ${RegKey} ".webp"
+    ${WriteApplicationsSupportedType} ${RegKey} ".avif"
     ${WriteApplicationsSupportedType} ${RegKey} ".xht"
     ${WriteApplicationsSupportedType} ${RegKey} ".xhtml"
     ${WriteApplicationsSupportedType} ${RegKey} ".xml"
@@ -1621,6 +1624,8 @@ Function SetAsDefaultAppUserHKCU
     AppAssocReg::SetAppAsDefault "$R9" ".shtml" "file"
     Pop $0
     AppAssocReg::SetAppAsDefault "$R9" ".webp" "file"
+    Pop $0
+    AppAssocReg::SetAppAsDefault "$R9" ".avif" "file"
     Pop $0
     AppAssocReg::SetAppAsDefault "$R9" ".xht" "file"
     Pop $0
