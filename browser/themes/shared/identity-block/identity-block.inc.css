@@ -74,9 +74,9 @@
   border-radius: var(--urlbar-icon-border-radius);
 }
 
-#urlbar[focused="true"] #identity-box[pageproxystate="valid"].notSecureText > .identity-box-button,
-#urlbar[focused="true"] #identity-box[pageproxystate="valid"].chromeUI > .identity-box-button,
-#urlbar[focused="true"] #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button,
+#urlbar[focused="true"] #identity-box[pageproxystate="valid"].notSecureText > .identity-box-button:not(:hover, [open=true]),
+#urlbar[focused="true"] #identity-box[pageproxystate="valid"].chromeUI > .identity-box-button:not(:hover, [open=true]),
+#urlbar[focused="true"] #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button:not(:hover, [open=true]),
 #urlbar[focused="true"] #urlbar-label-box {
   background-color: var(--urlbar-box-focus-bgcolor);
 }
@@ -85,6 +85,7 @@
 #identity-box[pageproxystate="valid"].chromeUI > .identity-box-button:hover:not([open]),
 #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button:hover:not([open]) {
   background-color: var(--urlbar-box-hover-bgcolor);
+  color: var(--urlbar-box-hover-text-color);
 }
 
 #identity-box[pageproxystate="valid"].notSecureText > .identity-box-button:hover:active,
@@ -94,6 +95,7 @@
 #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button:hover:active,
 #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button[open=true] {
   background-color: var(--urlbar-box-active-bgcolor);
+  color: var(--urlbar-box-hover-text-color);
 }
 
 #urlbar[searchmode]:not([focused="true"]) > #urlbar-input-container > #urlbar-search-mode-indicator,
