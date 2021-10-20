@@ -798,7 +798,15 @@ add_task(async function test_old_bootstrap_pref() {
 
 add_task(async function test_padding() {
   setModeAndURI(Ci.nsIDNSService.MODE_TRRONLY, `doh`);
-  async function CheckPadding(request, none, ecs, padding, ecsPadding) {
+  async function CheckPadding(
+    pad_length,
+    request,
+    none,
+    ecs,
+    padding,
+    ecsPadding
+  ) {
+    Services.prefs.setIntPref("network.trr.padding.length", pad_length);
     dns.clearCache(true);
     Services.prefs.setBoolPref("network.trr.padding", false);
     Services.prefs.setBoolPref("network.trr.disable-ECS", false);
@@ -821,19 +829,61 @@ add_task(async function test_padding() {
   }
 
   // short domain name
-  await CheckPadding("a.pd", "2.2.0.22", "2.2.0.41", "1.1.0.48", "1.1.0.48");
+  await CheckPadding(
+    16,
+    "a.pd",
+    "2.2.0.22",
+    "2.2.0.41",
+    "1.1.0.48",
+    "1.1.0.48"
+  );
+  await CheckPadding(256, "a.pd", "2.2.0.22", "2.2.0.41", "1.1.1.0", "1.1.1.0");
 
   // medium domain name
   await CheckPadding(
+    16,
     "has-padding.pd",
     "2.2.0.32",
     "2.2.0.51",
     "1.1.0.48",
     "1.1.0.64"
   );
+  await CheckPadding(
+    128,
+    "has-padding.pd",
+    "2.2.0.32",
+    "2.2.0.51",
+    "1.1.0.128",
+    "1.1.0.128"
+  );
+  await CheckPadding(
+    80,
+    "has-padding.pd",
+    "2.2.0.32",
+    "2.2.0.51",
+    "1.1.0.80",
+    "1.1.0.80"
+  );
 
   // long domain name
   await CheckPadding(
+    16,
+    "abcdefghijklmnopqrstuvwxyz0123456789.abcdefghijklmnopqrstuvwxyz0123456789.abcdefghijklmnopqrstuvwxyz0123456789.pd",
+    "2.2.0.131",
+    "2.2.0.150",
+    "1.1.0.160",
+    "1.1.0.160"
+  );
+  await CheckPadding(
+    128,
+    "abcdefghijklmnopqrstuvwxyz0123456789.abcdefghijklmnopqrstuvwxyz0123456789.abcdefghijklmnopqrstuvwxyz0123456789.pd",
+    "2.2.0.131",
+    "2.2.0.150",
+    "1.1.1.0",
+    "1.1.1.0"
+  );
+  await CheckPadding(
+    80,
     "abcdefghijklmnopqrstuvwxyz0123456789.abcdefghijklmnopqrstuvwxyz0123456789.abcdefghijklmnopqrstuvwxyz0123456789.pd",
     "2.2.0.131",
     "2.2.0.150",
