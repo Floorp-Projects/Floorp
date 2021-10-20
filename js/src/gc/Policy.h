@@ -55,10 +55,6 @@ struct GCPolicy<js::HeapPtr<T>> {
   static bool traceWeak(JSTracer* trc, js::HeapPtr<T>* thingp) {
     return js::TraceWeakEdge(trc, thingp, "HeapPtr");
   }
-  static bool needsSweep(js::HeapPtr<T>* thingp) {
-    return js::InternalBarrierMethods<T>::isMarkable(thingp->get()) &&
-           js::gc::IsAboutToBeFinalized(thingp);
-  }
 };
 
 template <typename T>
@@ -66,9 +62,6 @@ struct GCPolicy<js::PreBarriered<T>> {
   static void trace(JSTracer* trc, js::PreBarriered<T>* thingp,
                     const char* name) {
     js::TraceNullableEdge(trc, thingp, name);
-  }
-  static bool needsSweep(js::PreBarriered<T>* thingp) {
-    return js::gc::IsAboutToBeFinalized(thingp);
   }
 };
 
@@ -78,9 +71,6 @@ struct GCPolicy<js::WeakHeapPtr<T>> {
                     const char* name) {
     js::TraceEdge(trc, thingp, name);
   }
-  static bool needsSweep(js::WeakHeapPtr<T>* thingp) {
-    return js::gc::IsAboutToBeFinalized(thingp);
-  }
   static bool traceWeak(JSTracer* trc, js::WeakHeapPtr<T>* thingp) {
     return js::TraceWeakEdge(trc, thingp, "traceWeak");
   }
@@ -88,12 +78,6 @@ struct GCPolicy<js::WeakHeapPtr<T>> {
 
 template <typename T>
 struct GCPolicy<js::UnsafeBarePtr<T>> {
-  static bool needsSweep(js::UnsafeBarePtr<T>* vp) {
-    if (*vp) {
-      return js::gc::IsAboutToBeFinalizedUnbarriered(vp->unbarrieredAddress());
-    }
-    return false;
-  }
   static bool traceWeak(JSTracer* trc, js::UnsafeBarePtr<T>* vp) {
     if (*vp) {
       return js::TraceManuallyBarrieredWeakEdge(trc, vp->unbarrieredAddress(),
