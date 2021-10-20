@@ -232,15 +232,17 @@ reftest:
 reftest-qr:
     description: "Reftest webrender run"
     treeherder-symbol: R(R)
-    variants:
-        by-test-platform:
-            android-hw-p2-8-0-android-aarch64-qr/debug: ['webrender-sw']
-            default: []
     chunks: 2
     e10s: true
+    variants:
+        - webrender-sw
     run-on-projects:
         by-variant:
             fission: []
+            webrender-sw:
+                by-test-platform:
+                    android-hw-p2-8-0-android-aarch64-qr/debug: built-projects
+                    default: []
             default: built-projects
     max-run-time: 2400
     mozharness:
@@ -253,10 +255,8 @@ reftest-snapshot:
     treeherder-symbol: R(Rs)
     virtualization: virtual
     variants:
-        by-test-platform:
-            linux1804-64-qr/debug: ['fission', 'webrender-sw']
-            linux1804-64-asan-qr/opt: ['fission', 'webrender-sw']
-            default: []
+        - fission
+        - webrender-sw
     run-on-projects:
         by-variant:
             fission:
@@ -266,7 +266,10 @@ reftest-snapshot:
             default: []
     tier:
         by-variant:
-            fission: 1
+            fission:
+                by-test-platform:
+                    .*ccov.*: 2
+                    default: 1
             default: default
     chunks: 8
     mozharness:
