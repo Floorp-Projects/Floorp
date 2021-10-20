@@ -222,7 +222,6 @@ class FieldScanner {
         fieldDetail
       );
     }
-    // This NIGHTLY_BUILD statement should be removed as part of Bug 1735562 once the feature is stable
     this._classifyMultipleCCNumberFields();
   }
 
