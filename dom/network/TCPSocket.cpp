@@ -893,9 +893,12 @@ nsresult TCPSocket::ResolveProxy() {
 
   nsCOMPtr<nsIURI> uri;
   nsCString spec = mSsl ? "https://"_ns : "http://"_ns;
+  bool maybeIPv6 = mHost.FindChar(':') != -1;
+  if (maybeIPv6) spec.Append('[');
   if (!AppendUTF16toUTF8(mHost, spec, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  if (maybeIPv6) spec.Append(']');
   rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
            .SetSpec(spec)
            .SetPort(mPort)
