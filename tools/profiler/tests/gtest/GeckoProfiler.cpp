@@ -1235,6 +1235,45 @@ static void JSONRootCheck(const Json::Value& aRoot,
 
   EXPECT_HAS_JSON(aRoot["profilerOverhead"], Object);
 
+  // "counters" is only present if there is any data to report.
+  // Test that expect "counters" should test for its presence first.
+  if (aRoot.isMember("counters")) {
+    // We have "counters", test their overall validity.
+    GET_JSON(counters, aRoot["counters"], Array);
+    for (const Json::Value& counter : counters) {
+      ASSERT_TRUE(counter.isObject());
+      EXPECT_HAS_JSON(counter["name"], String);
+      EXPECT_HAS_JSON(counter["category"], String);
+      EXPECT_HAS_JSON(counter["description"], String);
+      GET_JSON(sampleGroups, counter["sample_groups"], Array);
+      for (const Json::Value& sampleGroup : sampleGroups) {
+        ASSERT_TRUE(sampleGroup.isObject());
+        EXPECT_HAS_JSON(sampleGroup["id"], UInt);
+
+        GET_JSON(samples, sampleGroup["samples"], Object);
+        GET_JSON(samplesSchema, samples["schema"], Object);
+        EXPECT_GE(samplesSchema.size(), 3u);
+        GET_JSON_VALUE(samplesTime, samplesSchema["time"], UInt);
+        GET_JSON_VALUE(samplesNumber, samplesSchema["number"], UInt);
+        GET_JSON_VALUE(samplesCount, samplesSchema["count"], UInt);
+        GET_JSON(samplesData, samples["data"], Array);
+        double previousTime = 0.0;
+        for (const Json::Value& sample : samplesData) {
+          ASSERT_TRUE(sample.isArray());
+          GET_JSON_VALUE(time, sample[samplesTime], Double);
+          EXPECT_GE(time, previousTime);
+          previousTime = time;
+          if (sample.isValidIndex(samplesNumber)) {
+            EXPECT_HAS_JSON(sample[samplesNumber], UInt64);
+          }
+          if (sample.isValidIndex(samplesCount)) {
+            EXPECT_HAS_JSON(sample[samplesCount], Int64);
+          }
+        }
+      }
+    }
+  }
+
   GET_JSON(threads, aRoot["threads"], Array);
   const Json::ArrayIndex threadCount = threads.size();
   for (Json::ArrayIndex i = 0; i < threadCount; ++i) {
@@ -1334,6 +1373,22 @@ void JSONOutputCheck(const char* aOutput,
   JSONRootCheck(parsedRoot);
 
   std::forward<JSONCheckFunction>(aJSONCheckFunction)(parsedRoot);
+}
+
+// Returns `static_cast<SamplingState>(-1)` if callback could not be installed.
+static SamplingState WaitForSamplingState() {
+  Atomic<int> samplingState{-1};
+
+  if (!profiler_callback_after_sampling([&](SamplingState aSamplingState) {
+        samplingState = static_cast<int>(aSamplingState);
+      })) {
+    return static_cast<SamplingState>(-1);
+  }
+
+  while (samplingState == -1) {
+  }
+
+  return static_cast<SamplingState>(static_cast<int>(samplingState));
 }
 
 typedef Vector<const char*> StrVec;
@@ -3131,41 +3186,128 @@ PROFILER_DEFINE_COUNT_TOTAL(TestCounter2, COUNTER_NAME2, COUNTER_DESCRIPTION2);
 TEST(GeckoProfiler, Counters)
 {
   uint32_t features = ProfilerFeature::Threads;
-  const char* filters[] = {"GeckoMain", "Compositor"};
+  const char* filters[] = {"GeckoMain"};
+
+  // We will record some counter values, and check that they're present (and no
+  // other) when expected.
+
+  struct NumberAndCount {
+    uint64_t mNumber;
+    int64_t mCount;
+  };
+
+  int64_t testCounters[] = {10, 7, -17};
+  NumberAndCount expectedTestCounters[] = {{1u, 10}, {1u, 7}, {1u, -17}};
+  constexpr size_t expectedTestCountersCount =
+      MOZ_ARRAY_LENGTH(expectedTestCounters);
+
+  bool expectCounter2 = false;
+  int64_t testCounters2[] = {10};
+  NumberAndCount expectedTestCounters2[] = {{1u, 10}};
+  constexpr size_t expectedTestCounters2Count =
+      MOZ_ARRAY_LENGTH(expectedTestCounters2);
+
+  auto checkCountersInJSON = [&](const Json::Value& aRoot) {
+    size_t nextExpectedTestCounter = 0u;
+    size_t nextExpectedTestCounter2 = 0u;
+
+    GET_JSON(counters, aRoot["counters"], Array);
+    for (const Json::Value& counter : counters) {
+      ASSERT_TRUE(counter.isObject());
+      GET_JSON_VALUE(name, counter["name"], String);
+      if (name == "TestCounter") {
+        EXPECT_EQ_JSON(counter["category"], String, COUNTER_NAME);
+        EXPECT_EQ_JSON(counter["description"], String, COUNTER_DESCRIPTION);
+        GET_JSON(sampleGroups, counter["sample_groups"], Array);
+        for (const Json::Value& sampleGroup : sampleGroups) {
+          ASSERT_TRUE(sampleGroup.isObject());
+          EXPECT_EQ_JSON(sampleGroup["id"], UInt, 0u);
+
+          GET_JSON(samples, sampleGroup["samples"], Object);
+          GET_JSON(samplesSchema, samples["schema"], Object);
+          EXPECT_GE(samplesSchema.size(), 3u);
+          GET_JSON_VALUE(samplesNumber, samplesSchema["number"], UInt);
+          GET_JSON_VALUE(samplesCount, samplesSchema["count"], UInt);
+          GET_JSON(samplesData, samples["data"], Array);
+          for (const Json::Value& sample : samplesData) {
+            ASSERT_TRUE(sample.isArray());
+            ASSERT_LT(nextExpectedTestCounter, expectedTestCountersCount);
+            EXPECT_EQ_JSON(
+                sample[samplesNumber], UInt64,
+                expectedTestCounters[nextExpectedTestCounter].mNumber);
+            EXPECT_EQ_JSON(
+                sample[samplesCount], Int64,
+                expectedTestCounters[nextExpectedTestCounter].mCount);
+            ++nextExpectedTestCounter;
+          }
+        }
+      } else if (name == "TestCounter2") {
+        EXPECT_TRUE(expectCounter2);
+
+        EXPECT_EQ_JSON(counter["category"], String, COUNTER_NAME2);
+        EXPECT_EQ_JSON(counter["description"], String, COUNTER_DESCRIPTION2);
+        GET_JSON(sampleGroups, counter["sample_groups"], Array);
+        for (const Json::Value& sampleGroup : sampleGroups) {
+          ASSERT_TRUE(sampleGroup.isObject());
+          EXPECT_EQ_JSON(sampleGroup["id"], UInt, 0u);
+
+          GET_JSON(samples, sampleGroup["samples"], Object);
+          GET_JSON(samplesSchema, samples["schema"], Object);
+          EXPECT_GE(samplesSchema.size(), 3u);
+          GET_JSON_VALUE(samplesNumber, samplesSchema["number"], UInt);
+          GET_JSON_VALUE(samplesCount, samplesSchema["count"], UInt);
+          GET_JSON(samplesData, samples["data"], Array);
+          for (const Json::Value& sample : samplesData) {
+            ASSERT_TRUE(sample.isArray());
+            ASSERT_LT(nextExpectedTestCounter2, expectedTestCounters2Count);
+            EXPECT_EQ_JSON(
+                sample[samplesNumber], UInt64,
+                expectedTestCounters2[nextExpectedTestCounter2].mNumber);
+            EXPECT_EQ_JSON(
+                sample[samplesCount], Int64,
+                expectedTestCounters2[nextExpectedTestCounter2].mCount);
+            ++nextExpectedTestCounter2;
+          }
+        }
+      }
+    }
+
+    EXPECT_EQ(nextExpectedTestCounter, expectedTestCountersCount);
+    if (expectCounter2) {
+      EXPECT_EQ(nextExpectedTestCounter2, expectedTestCounters2Count);
+    }
+  };
 
   // Inactive -> Active
   profiler_ensure_started(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                           features, filters, MOZ_ARRAY_LENGTH(filters), 0);
 
-  AUTO_PROFILER_COUNT_TOTAL(TestCounter, 10);
-  PR_Sleep(PR_MillisecondsToInterval(200));
-  AUTO_PROFILER_COUNT_TOTAL(TestCounter, 7);
-  PR_Sleep(PR_MillisecondsToInterval(200));
-  AUTO_PROFILER_COUNT_TOTAL(TestCounter, -17);
-  PR_Sleep(PR_MillisecondsToInterval(200));
+  // Output all "TestCounter"s, with increasing delays (to test different
+  // number of counter samplings).
+  int samplingWaits = 2;
+  for (int64_t counter : testCounters) {
+    AUTO_PROFILER_COUNT_TOTAL(TestCounter, counter);
+    for (int i = 0; i < samplingWaits; ++i) {
+      ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
+    }
+    ++samplingWaits;
+  }
 
-  // Verify we got counters in the output
-  SpliceableChunkedJSONWriter w;
-  ASSERT_TRUE(::profiler_stream_json_for_this_process(w));
+  // Verify we got "TestCounter" in the output, but not "TestCounter2" yet.
+  UniquePtr<char[]> profile = profiler_get_profile();
+  JSONOutputCheck(profile.get(), checkCountersInJSON);
 
-  UniquePtr<char[]> profile = w.ChunkedWriteFunc().CopyData();
+  // Now introduce TestCounter2.
+  expectCounter2 = true;
+  for (int64_t counter2 : testCounters2) {
+    AUTO_PROFILER_COUNT_TOTAL(TestCounter2, counter2);
+    ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
+    ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
+  }
 
-  // counter name and description should appear as is.
-  ASSERT_TRUE(strstr(profile.get(), COUNTER_NAME));
-  ASSERT_TRUE(strstr(profile.get(), COUNTER_DESCRIPTION));
-  ASSERT_FALSE(strstr(profile.get(), COUNTER_NAME2));
-  ASSERT_FALSE(strstr(profile.get(), COUNTER_DESCRIPTION2));
-
-  AUTO_PROFILER_COUNT_TOTAL(TestCounter2, 10);
-  PR_Sleep(PR_MillisecondsToInterval(200));
-
-  ASSERT_TRUE(::profiler_stream_json_for_this_process(w));
-
-  profile = w.ChunkedWriteFunc().CopyData();
-  ASSERT_TRUE(strstr(profile.get(), COUNTER_NAME));
-  ASSERT_TRUE(strstr(profile.get(), COUNTER_DESCRIPTION));
-  ASSERT_TRUE(strstr(profile.get(), COUNTER_NAME2));
-  ASSERT_TRUE(strstr(profile.get(), COUNTER_DESCRIPTION2));
+  // Verify we got both "TestCounter" and "TestCounter2" in the output.
+  profile = profiler_get_profile();
+  JSONOutputCheck(profile.get(), checkCountersInJSON);
 
   profiler_stop();
 }
@@ -3432,22 +3574,6 @@ TEST(GeckoProfiler, SuspendAndSample)
   profiler_stop();
 
   ASSERT_TRUE(!profiler_is_active());
-}
-
-// Returns `static_cast<SamplingState>(-1)` if callback could not be installed.
-static SamplingState WaitForSamplingState() {
-  Atomic<int> samplingState{-1};
-
-  if (!profiler_callback_after_sampling([&](SamplingState aSamplingState) {
-        samplingState = static_cast<int>(aSamplingState);
-      })) {
-    return static_cast<SamplingState>(-1);
-  }
-
-  while (samplingState == -1) {
-  }
-
-  return static_cast<SamplingState>(static_cast<int>(samplingState));
 }
 
 TEST(GeckoProfiler, PostSamplingCallback)
