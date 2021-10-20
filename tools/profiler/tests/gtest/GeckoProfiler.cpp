@@ -3197,13 +3197,14 @@ TEST(GeckoProfiler, Counters)
   };
 
   int64_t testCounters[] = {10, 7, -17};
-  NumberAndCount expectedTestCounters[] = {{1u, 10}, {1u, 7}, {1u, -17}};
+  NumberAndCount expectedTestCounters[] = {{1u, 10}, {0u, 0},   {1u, 7},
+                                           {0u, 0},  {1u, -17}, {0u, 0}};
   constexpr size_t expectedTestCountersCount =
       MOZ_ARRAY_LENGTH(expectedTestCounters);
 
   bool expectCounter2 = false;
   int64_t testCounters2[] = {10};
-  NumberAndCount expectedTestCounters2[] = {{1u, 10}};
+  NumberAndCount expectedTestCounters2[] = {{1u, 10}, {0u, 0}};
   constexpr size_t expectedTestCounters2Count =
       MOZ_ARRAY_LENGTH(expectedTestCounters2);
 
