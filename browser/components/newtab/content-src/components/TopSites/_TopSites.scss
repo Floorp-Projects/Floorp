@@ -297,6 +297,10 @@ $letter-fallback-color: $white;
 }
 
 .edit-topsites-wrapper {
+  .top-site-inner > .top-site-button > .tile {
+    border: 1px solid var(--newtab-border-color);
+  }
+
   .modal {
     box-shadow: $shadow-secondary;
     left: 0;

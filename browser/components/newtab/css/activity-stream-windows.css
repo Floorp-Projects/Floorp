@@ -760,6 +760,9 @@ main.has-snippet {
   visibility: hidden;
 }
 
+.edit-topsites-wrapper .top-site-inner > .top-site-button > .tile {
+  border: 1px solid var(--newtab-border-color);
+}
 .edit-topsites-wrapper .modal {
   box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
   left: 0;
