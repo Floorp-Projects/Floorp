@@ -15,6 +15,7 @@ EXPORTS += [
     "HitTestInfo.h",
     "LayerState.h",
     "MatrixStack.h",
+    "nsCSSRendering.h",
     "nsCSSRenderingBorders.h",
     "nsCSSRenderingGradients.h",
     "nsDisplayItemTypes.h",
