@@ -55,6 +55,7 @@
   --urlbar-box-hover-bgcolor: var(--button-hover-bgcolor);
   --urlbar-box-active-bgcolor: var(--button-active-bgcolor);
   --urlbar-box-text-color: inherit;
+  --urlbar-box-hover-text-color: var(--urlbar-box-text-color);
   --urlbar-min-height: 32px;
   --urlbar-icon-fill-opacity: 0.9;
   --urlbar-icon-padding: 6px; /* (32px - 2px border - 2px padding - 16px icon) / 2 */
@@ -74,6 +75,10 @@
     --autocomplete-popup-separator-color: color-mix(in srgb, currentColor 86%, transparent);
     --urlbar-icon-fill-opacity: 1;
     --checkbox-checked-border-color: var(--checkbox-checked-bgcolor);
+
+    --urlbar-box-hover-bgcolor: SelectedItem;
+    --urlbar-box-active-bgcolor: SelectedItem;
+    --urlbar-box-hover-text-color: SelectedItemText;
   }
 }
 
