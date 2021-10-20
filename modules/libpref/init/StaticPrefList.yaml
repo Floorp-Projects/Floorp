@@ -1211,6 +1211,17 @@
   type: RelaxedAtomicUint32
   value: 2
   mirror: always
+
+# Communicates the preferred content theme color to platform (for e.g.,
+# prefers-color-scheme).
+#
+# dark (0), light (1), or toolbar (2).
+#
+# Default to "toolbar", the theming code sets it appropriately.
+- name: browser.theme.content-theme
+  type: RelaxedAtomicUint32
+  value: 2
+  mirror: always
   rust: true
 
 # Enable Proton restyle. Requires restart.

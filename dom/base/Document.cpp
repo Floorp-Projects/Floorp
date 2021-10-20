@@ -17470,20 +17470,13 @@ ColorScheme Document::PreferredColorScheme(IgnoreRFP aIgnoreRFP) const {
     }
   }
 
-  if (nsContentUtils::IsChromeDoc(this)) {
+  // NOTE(emilio): We use IsInChromeDocShell rather than IsChromeDoc
+  // intentionally, to make chrome documents in content docshells (like about
+  // pages) use the content color scheme.
+  if (IsInChromeDocShell()) {
     return LookAndFeel::ColorSchemeForChrome();
   }
-
-  switch (StaticPrefs::layout_css_prefers_color_scheme_content_override()) {
-    case 0:
-      return ColorScheme::Dark;
-    case 1:
-      return ColorScheme::Light;
-    case 2:
-      return LookAndFeel::SystemColorScheme();
-    default:
-      return LookAndFeel::ColorSchemeForChrome();
-  }
+  return LookAndFeel::PreferredColorSchemeForContent();
 }
 
 bool Document::HasRecentlyStartedForegroundLoads() {

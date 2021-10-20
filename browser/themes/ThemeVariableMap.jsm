@@ -187,8 +187,16 @@ const ThemeVariableMap = [
       lwtProperty: "ntp_background",
       processColor(rgbaChannels) {
         if (!rgbaChannels) {
+          Services.prefs.setIntPref("browser.theme.content-theme", 2);
           return null;
         }
+
+        const { r, g, b } = rgbaChannels;
+        Services.prefs.setIntPref(
+          "browser.theme.content-theme",
+          _isColorDark(r, g, b) ? 0 : 1
+        );
+
         if (!Services.prefs.getBoolPref("browser.newtabpage.enabled")) {
           // We only set the tabpanel background to the new tab background color
           // if the user uses about:home for new tabs. Otherwise, we flash a
@@ -198,7 +206,6 @@ const ThemeVariableMap = [
           // window-open animation.
           return null;
         }
-        const { r, g, b } = rgbaChannels;
         // Drop alpha channel
         return `rgb(${r}, ${g}, ${b})`;
       },
