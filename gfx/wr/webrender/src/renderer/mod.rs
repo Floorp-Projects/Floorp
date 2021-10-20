@@ -4272,6 +4272,7 @@ impl Renderer {
                     ExternalTexture::new(
                         texture_id,
                         texture_target,
+                        Swizzle::default(),
                         image.uv,
                     )
                 }
@@ -4286,6 +4287,7 @@ impl Renderer {
                     ExternalTexture::new(
                         0,
                         texture_target,
+                        Swizzle::default(),
                         image.uv,
                     )
                 }
