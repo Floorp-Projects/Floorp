@@ -1076,6 +1076,14 @@ class FunctionCompiler {
   bool isMem32() { return moduleEnv_.memory->indexType() == IndexType::I32; }
   bool isMem64() { return moduleEnv_.memory->indexType() == IndexType::I64; }
 
+  // Sometimes, we need to determine the memory type before the opcode reader
+  // that will reject a memory opcode in the presence of no-memory gets a chance
+  // to do so. This predicate is safe.
+  bool isNoMemOrMem32() {
+    return !moduleEnv_.usesMemory() ||
+           moduleEnv_.memory->indexType() == IndexType::I32;
+  }
+
   // Add the offset into the pointer to yield the EA; trap on overflow.
   MDefinition* computeEffectiveAddress(MDefinition* base,
                                        MemoryAccessDesc* access) {
@@ -3469,8 +3477,7 @@ static bool EmitMemoryGrow(FunctionCompiler& f) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
   const SymbolicAddressSignature& callee =
-      !f.moduleEnv().usesMemory() || f.isMem32() ? SASigMemoryGrowM32
-                                                 : SASigMemoryGrowM64;
+      f.isNoMemOrMem32() ? SASigMemoryGrowM32 : SASigMemoryGrowM64;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -3500,8 +3507,7 @@ static bool EmitMemorySize(FunctionCompiler& f) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
   const SymbolicAddressSignature& callee =
-      !f.moduleEnv().usesMemory() || f.isMem32() ? SASigMemorySizeM32
-                                                 : SASigMemorySizeM64;
+      f.isNoMemOrMem32() ? SASigMemorySizeM32 : SASigMemorySizeM64;
   CallCompileState args;
 
   if (!f.iter().readMemorySize()) {
@@ -3603,8 +3609,9 @@ static bool EmitWait(FunctionCompiler& f, ValType type, uint32_t byteSize) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
   const SymbolicAddressSignature& callee =
-      f.isMem32() ? (type == ValType::I32 ? SASigWaitI32M32 : SASigWaitI64M32)
-                  : (type == ValType::I32 ? SASigWaitI32M64 : SASigWaitI64M64);
+      f.isNoMemOrMem32()
+          ? (type == ValType::I32 ? SASigWaitI32M32 : SASigWaitI64M32)
+          : (type == ValType::I32 ? SASigWaitI32M64 : SASigWaitI64M64);
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -3663,7 +3670,7 @@ static bool EmitWake(FunctionCompiler& f) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
   const SymbolicAddressSignature& callee =
-      f.isMem32() ? SASigWakeM32 : SASigWakeM64;
+      f.isNoMemOrMem32() ? SASigWakeM32 : SASigWakeM64;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
