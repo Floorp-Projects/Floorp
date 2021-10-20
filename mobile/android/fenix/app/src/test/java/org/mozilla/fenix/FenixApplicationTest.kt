@@ -138,6 +138,7 @@ class FenixApplicationTest {
         every { settings.historyMetadataUIFeature } returns true
         every { settings.showPocketRecommendationsFeature } returns true
         every { settings.showPocketRecommendationsFeature } returns true
+        every { settings.searchTermTabGroupsAreEnabled } returns true
         every { application.reportHomeScreenMetrics(settings) } just Runs
         every { settings.inactiveTabsAreEnabled } returns true
 
@@ -172,6 +173,7 @@ class FenixApplicationTest {
         assertEquals(true, Preferences.voiceSearchEnabled.testGetValue())
         assertEquals(true, Preferences.openLinksInAppEnabled.testGetValue())
         assertEquals(true, Preferences.signedInSync.testGetValue())
+        assertEquals(true, Preferences.searchTermGroupsEnabled.testGetValue())
         assertEquals(emptyList<String>(), Preferences.syncItems.testGetValue())
         assertEquals("fixed_top", Preferences.toolbarPositionSetting.testGetValue())
         assertEquals("standard", Preferences.enhancedTrackingProtection.testGetValue())

@@ -24,6 +24,7 @@ import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
+import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
@@ -662,6 +663,18 @@ sealed class Event {
         override val extras: Map<Events.tabViewChangedKeys, String>?
             get() = mapOf(Events.tabViewChangedKeys.type to type.toString().lowercase(Locale.ROOT))
     }
+
+    data class SearchTermGroupCount(val count: Int) : Event() {
+        override val extras: Map<SearchTerms.numberOfSearchTermGroupKeys, String>
+            get() = hashMapOf(SearchTerms.numberOfSearchTermGroupKeys.count to count.toString())
+    }
+
+    data class AverageTabsPerSearchTermGroup(val averageSize: Double) : Event() {
+        override val extras: Map<SearchTerms.averageTabsPerGroupKeys, String>
+            get() = hashMapOf(SearchTerms.averageTabsPerGroupKeys.count to averageSize.toString())
+    }
+
+    object JumpBackInGroupTapped : Event()
 
     sealed class Search
 

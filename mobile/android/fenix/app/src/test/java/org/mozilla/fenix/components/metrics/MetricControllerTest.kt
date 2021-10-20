@@ -510,4 +510,27 @@ class MetricControllerTest {
             assertEquals(message, expectedEvent, controller.factToEvent(fact))
         }
     }
+
+    @Test
+    fun `search term group events should be sent to enabled service`() {
+        val controller = ReleaseMetricController(
+            listOf(dataService1),
+            isDataTelemetryEnabled = { true },
+            isMarketingDataTelemetryEnabled = { true },
+            mockk()
+        )
+        every { dataService1.shouldTrack(Event.SearchTermGroupCount(5)) } returns true
+        every { dataService1.shouldTrack(Event.AverageTabsPerSearchTermGroup(2.5)) } returns true
+        every { dataService1.shouldTrack(Event.JumpBackInGroupTapped) } returns true
+
+        controller.start(MetricServiceType.Data)
+
+        controller.track(Event.SearchTermGroupCount(5))
+        controller.track(Event.AverageTabsPerSearchTermGroup(2.5))
+        controller.track(Event.JumpBackInGroupTapped)
+
+        verify { dataService1.track(Event.SearchTermGroupCount(5)) }
+        verify { dataService1.track(Event.AverageTabsPerSearchTermGroup(2.5)) }
+        verify { dataService1.track(Event.JumpBackInGroupTapped) }
+    }
 }

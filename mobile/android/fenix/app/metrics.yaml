@@ -1795,6 +1795,19 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+  search_term_groups_enabled:
+    type: boolean
+    description: |
+      Is search term group in tabs tray on?
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22057
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22058
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
 
 search.default_engine:
   code:
@@ -6002,3 +6015,52 @@ credit_cards:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-09-01"
+
+search_terms:
+  number_of_search_term_group:
+    type: event
+    description: |
+      Number of search term group when tabs tray is opened.
+    extra_keys:
+      count:
+        description: |
+          The number of tabs per search group
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22057
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22058
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  average_tabs_per_group:
+    type: event
+    description: |
+      Number of search term tabs per group when tabs tray is opened.
+    extra_keys:
+      count:
+        description: |
+          The average number of tabs per search group
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22057
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22058
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  jump_back_in_group_tapped:
+    type: event
+    description: |
+      User tapped on the jump back in search term group.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22057
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22058
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"

@@ -62,6 +62,12 @@ class TabSorter(
             if (settings.inactiveTabsAreEnabled) {
                 metrics.track(Event.TabsTrayHasInactiveTabs(inactiveTabs.size))
             }
+
+            if (groups.isNotEmpty()) {
+                val averageTabsPerGroup = groups.map { it.tabs.size }.average()
+                metrics.track(Event.AverageTabsPerSearchTermGroup(averageTabsPerGroup))
+            }
+            metrics.track(Event.SearchTermGroupCount(groups.size))
         }
     }
 }
