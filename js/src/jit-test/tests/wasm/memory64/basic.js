@@ -1,3 +1,5 @@
+// |jit-test| allow-oom
+
 // Basic tests around creating and linking memories with i64 indices
 
 const MaxMemory64Field = 0x1_0000_0000_0000; // pages
