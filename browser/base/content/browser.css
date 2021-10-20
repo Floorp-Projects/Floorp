@@ -236,7 +236,7 @@ panelview[mainview] > .panel-header {
 %endif
 
 #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] {
-  position: fixed !important;
+  position: absolute !important;
   display: block;
 }
 
