@@ -129,6 +129,7 @@ class FenixApplicationTest {
         every { settings.showPocketRecommendationsFeature } returns true
         every { settings.showPocketRecommendationsFeature } returns true
         every { application.reportHomeScreenMetrics(settings) } just Runs
+        every { settings.inactiveTabsAreEnabled } returns true
 
         application.setStartupMetrics(browserStore, settings, browsersCache, mozillaProductDetector)
 
@@ -164,6 +165,7 @@ class FenixApplicationTest {
         assertEquals("fixed_top", Preferences.toolbarPositionSetting.testGetValue())
         assertEquals("standard", Preferences.enhancedTrackingProtection.testGetValue())
         assertEquals(listOf("switch", "touch exploration"), Preferences.accessibilityServices.testGetValue())
+        assertEquals(true, Preferences.inactiveTabsEnabled.testGetValue())
 
         // Verify that search engine defaults are NOT set. This test does
         // not mock most of the objects telemetry is collected from.

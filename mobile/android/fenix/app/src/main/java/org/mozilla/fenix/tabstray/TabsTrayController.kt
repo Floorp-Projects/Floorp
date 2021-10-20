@@ -219,6 +219,7 @@ class DefaultTabsTrayController(
     }
 
     override fun handleDeleteAllInactiveTabs() {
+        metrics.track(Event.TabsTrayCloseAllInactiveTabs)
         browserStore.state.inactiveTabs.map { it.id }.let {
             tabsUseCases.removeTabs(it)
         }

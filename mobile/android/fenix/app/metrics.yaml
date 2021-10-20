@@ -310,7 +310,7 @@ events:
     expires: "2021-12-01"
   synced_tab_opened:
     type: event
-    description: >
+    description: |
       An event that indicates that a synced tab was opened.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/15369
@@ -1252,7 +1252,7 @@ metrics:
 customize_home:
   most_visited_sites:
     type: boolean
-    description: >
+    description: |
       An indication of whether the most visited sites
       are enabled to be displayed
     send_in_pings:
@@ -1269,7 +1269,7 @@ customize_home:
     expires: "2022-09-20"
   jump_back_in:
     type: boolean
-    description: >
+    description: |
       An indication of whether the Jump back
       in section is enabled to be displayed
     send_in_pings:
@@ -1286,7 +1286,7 @@ customize_home:
     expires: "2022-09-20"
   recently_saved:
     type: boolean
-    description: >
+    description: |
       An indication of whether the recently
       saved section is enabled to be displayed
     send_in_pings:
@@ -1303,7 +1303,7 @@ customize_home:
     expires: "2022-09-20"
   recently_visited:
     type: boolean
-    description: >
+    description: |
       An indication of whether the Recently
       visited section is enabled to be displayed
     send_in_pings:
@@ -1320,7 +1320,7 @@ customize_home:
     expires: "2022-09-20"
   pocket:
     type: boolean
-    description: >
+    description: |
       An indication of whether Pocket is enabled to be displayed
     send_in_pings:
       - metrics
@@ -1336,7 +1336,7 @@ customize_home:
     expires: "2022-09-20"
   preference_toggled:
     type: event
-    description: >
+    description: |
       A user toggles the preference for the home screen items.
     extra_keys:
       preference_key:
@@ -1362,7 +1362,7 @@ customize_home:
 preferences:
   search_suggestions_enabled:
     type: boolean
-    description: >
+    description: |
       Whether or not the user has search suggestions enabled
       default: true
     send_in_pings:
@@ -1381,7 +1381,7 @@ preferences:
     expires: "2022-02-01"
   remote_debugging_enabled:
     type: boolean
-    description: >
+    description: |
       Whether or not the user has remote debugging enabled
       default: false
     send_in_pings:
@@ -1400,7 +1400,7 @@ preferences:
     expires: "2022-02-01"
   telemetry_enabled:
     type: boolean
-    description: >
+    description: |
       Whether or not the user has telemetry enabled. Note we should
       never receive a "false" value for this since telemetry would
       not send in that case.
@@ -1421,7 +1421,7 @@ preferences:
     expires: "2022-02-01"
   enhanced_tracking_protection:
     type: string
-    description: >
+    description: |
       What type of enhanced tracking protection the user has enabled.
       "standard," "strict," "custom," or "" (if disabled)
       default: "standard"
@@ -1441,7 +1441,7 @@ preferences:
     expires: "2022-02-01"
   bookmarks_suggestion:
     type: boolean
-    description: >
+    description: |
       Whether or not the user has enabled bookmark search suggestions
       default: true
     send_in_pings:
@@ -1460,7 +1460,7 @@ preferences:
     expires: "2022-02-01"
   browsing_history_suggestion:
     type: boolean
-    description: >
+    description: |
       Whether or not the user has enabled browsing history suggestions.
       default: true
     send_in_pings:
@@ -1479,7 +1479,7 @@ preferences:
     expires: "2022-02-01"
   clipboard_suggestions_enabled:
     type: boolean
-    description: >
+    description: |
       Whether or not the user has enabled clipboard search suggestions.
       default: true
     send_in_pings:
@@ -1498,7 +1498,7 @@ preferences:
     expires: "2022-02-01"
   search_shortcuts_enabled:
     type: boolean
-    description: >
+    description: |
       Whether or not the user has enabled search shortcuts.
       default: true
     send_in_pings:
@@ -1517,7 +1517,7 @@ preferences:
     expires: "2022-02-01"
   signed_in_sync:
     type: boolean
-    description: >
+    description: |
       Whether or not the user is signed into FxA
       default: false
     send_in_pings:
@@ -1536,7 +1536,7 @@ preferences:
     expires: "2022-02-01"
   sync_items:
     type: string_list
-    description: >
+    description: |
       The list of items the user has chosen to sync with FxA.
       default: "" if the user is signed out. Otherwise defaults to
       whatever is set in their FxA account. New accounts set:
@@ -1557,7 +1557,7 @@ preferences:
     expires: "2022-02-01"
   voice_search_enabled:
     type: boolean
-    description: >
+    description: |
       Whether or not the user has enabled the voice search button.
       default: true
     send_in_pings:
@@ -1576,7 +1576,7 @@ preferences:
     expires: "2022-02-01"
   toolbar_position_setting:
     type: string
-    description: >
+    description: |
       The position of the toolbar
       default: bottom (defaults to top if the user has accessibility services)
     send_in_pings:
@@ -1595,7 +1595,7 @@ preferences:
     expires: "2022-02-01"
   accessibility_services:
     type: string_list
-    description: >
+    description: |
       Whether or not the user has touch exploration or switch services enabled.
       These are built into the Android OS, not Fenix prefs.
       default: ""
@@ -1615,7 +1615,7 @@ preferences:
     expires: "2022-02-01"
   open_links_in_app_enabled:
     type: boolean
-    description: >
+    description: |
       Whether or not the user has the open links in apps feature enabled.
       default: false
     send_in_pings:
@@ -1634,7 +1634,7 @@ preferences:
     expires: "2022-02-01"
   user_theme:
     type: string
-    description: >
+    description: |
       The theme the user has enabled. "light," "dark," "system," or "battery"
       default: "system" for API 28+, else "light"
     send_in_pings:
@@ -1651,6 +1651,22 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+  inactive_tabs_enabled:
+    type: boolean
+    description: |
+      Whether or not the user has the inactive tabs feature enabled.
+      default: true
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21903
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21908
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
 
 search.default_engine:
   code:
@@ -2784,6 +2800,61 @@ tabs_tray:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-08-01"
+  has_inactive_tabs:
+    type: event
+    description: |
+      A boolean that indicates if the user has any INACTIVE tabs.
+    extra_keys:
+      inactive_tabs_count:
+        description: "The number of inactive tabs the user currently has."
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21903
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21908
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  close_all_inactive_tabs:
+    type: event
+    description: |
+      A user tapped the close all inactive tabs button in the the tabs tray
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21903
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21908
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  close_inactive_tab:
+    type: counter
+    description: |
+      A counter that indicates how many INACTIVE tabs a user has closed.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21903
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21908
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  open_inactive_tab:
+    type: counter
+    description: |
+      A counter that indicates how many INACTIVE tabs a user has opened.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21903
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/21908
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
 
 collections:
   renamed:
@@ -4275,7 +4346,7 @@ perf.awesomebar:
       - metrics
     type: timing_distribution
     time_unit: millisecond
-    description: >
+    description: |
       Duration of a history awesomebar suggestion query.
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/4992
@@ -4295,7 +4366,7 @@ perf.awesomebar:
       - metrics
     type: timing_distribution
     time_unit: millisecond
-    description: >
+    description: |
       Duration of a bookmarks awesomebar suggestion query.
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/4992
@@ -4315,7 +4386,7 @@ perf.awesomebar:
       - metrics
     type: timing_distribution
     time_unit: millisecond
-    description: >
+    description: |
       Duration of a search engine awesomebar suggestion query.
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/4992
@@ -4335,7 +4406,7 @@ perf.awesomebar:
       - metrics
     type: timing_distribution
     time_unit: millisecond
-    description: >
+    description: |
       Duration of a session awesomebar suggestion query.
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/4992
@@ -4355,7 +4426,7 @@ perf.awesomebar:
       - metrics
     type: timing_distribution
     time_unit: millisecond
-    description: >
+    description: |
       Duration of a synced tabs awesomebar suggestion query.
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/4992
@@ -4375,7 +4446,7 @@ perf.awesomebar:
       - metrics
     type: timing_distribution
     time_unit: millisecond
-    description: >
+    description: |
       Duration of a clipboard awesomebar suggestion query.
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/4992
@@ -4395,7 +4466,7 @@ perf.awesomebar:
       - metrics
     type: timing_distribution
     time_unit: millisecond
-    description: >
+    description: |
       Duration of a shortcuts awesomebar suggestion query.
     bugs:
       - https://github.com/mozilla-mobile/android-components/issues/4992
@@ -4453,7 +4524,7 @@ storage.stats:
     send_in_pings:
       - metrics
     type: timing_distribution
-    description: >
+    description: |
       How long it took to query the device for the StorageStats that contain the
       file size information. The docs say it may be expensive so we want to
       ensure it's not too expensive.  This value is only available on Android
@@ -4477,7 +4548,7 @@ storage.stats:
     send_in_pings:
       - metrics
     type: memory_distribution
-    description: >
+    description: |
       The size of the app's APK and related files as installed: this is expected
       to be larger than download size. This is the output of
       [StorageStats.getAppBytes](https://developer.android.com/reference/android/app/usage/StorageStats#getAppBytes())
@@ -4504,7 +4575,7 @@ storage.stats:
     send_in_pings:
       - metrics
     type: memory_distribution
-    description: >
+    description: |
       The size of all cached data in the app. This is the output of
       [StorageStats.getCacheBytes](https://developer.android.com/reference/android/app/usage/StorageStats#getCacheBytes())
       so see that for details. This value is only available on Android 8+.
@@ -4528,7 +4599,7 @@ storage.stats:
     send_in_pings:
       - metrics
     type: memory_distribution
-    description: >
+    description: |
       The size of all data minus `cache_bytes`. This is the output of
       [StorageStats.getDataBytes](https://developer.android.com/reference/android/app/usage/StorageStats#getDataBytes())
       except we subtract the value of `cache_bytes` so the cache is not measured

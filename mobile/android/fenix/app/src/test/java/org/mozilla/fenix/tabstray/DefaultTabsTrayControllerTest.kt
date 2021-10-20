@@ -431,6 +431,29 @@ class DefaultTabsTrayControllerTest {
         }
     }
 
+    @Test
+    fun `WHEN handleDeleteAllInactiveTabs is called THEN Event#TabsTrayCloseAllInactiveTabs and Event#TabsTrayCloseInactiveTab are added to telemetry`() {
+        val inactiveTab: TabSessionState = mockk {
+            every { lastAccess } returns maxActiveTime
+            every { createdAt } returns 0
+            every { id } returns "24"
+            every { content } returns mockk {
+                every { private } returns false
+            }
+        }
+        every { browserStore.state } returns mockk()
+        try {
+            mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
+            every { browserStore.state.inactiveTabs } returns listOf(inactiveTab)
+
+            createController().handleDeleteAllInactiveTabs()
+
+            verify { metrics.track(Event.TabsTrayCloseAllInactiveTabs) }
+        } finally {
+            unmockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
+        }
+    }
+
     private fun createController(
         navigateToHomeAndDeleteSession: (String) -> Unit = { },
         selectTabPosition: (Int, Boolean) -> Unit = { _, _ -> },

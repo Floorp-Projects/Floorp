@@ -194,6 +194,12 @@ sealed class Event {
     object TabsTrayRecentlyClosedPressed : Event()
     object TabsTrayInactiveTabsExpanded : Event()
     object TabsTrayInactiveTabsCollapsed : Event()
+    data class TabsTrayHasInactiveTabs(val count: Int) : Event() {
+        override val extras = mapOf(TabsTray.hasInactiveTabsKeys.inactiveTabsCount to count.toString())
+    }
+    object TabsTrayCloseAllInactiveTabs : Event()
+    data class TabsTrayCloseInactiveTab(val amountClosed: Int = 1) : Event()
+    object TabsTrayOpenInactiveTab : Event()
 
     object ProgressiveWebAppOpenFromHomescreenTap : Event()
     object ProgressiveWebAppInstallAsShortcut : Event()
