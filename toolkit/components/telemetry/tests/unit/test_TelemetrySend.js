@@ -9,14 +9,8 @@
 const { TelemetryController } = ChromeUtils.import(
   "resource://gre/modules/TelemetryController.jsm"
 );
-const { ContentTaskUtils } = ChromeUtils.import(
-  "resource://testing-common/ContentTaskUtils.jsm"
-);
 const { MockRegistrar } = ChromeUtils.import(
   "resource://testing-common/MockRegistrar.jsm"
-);
-const { TelemetrySession } = ChromeUtils.import(
-  "resource://gre/modules/TelemetrySession.jsm"
 );
 const { TelemetrySend } = ChromeUtils.import(
   "resource://gre/modules/TelemetrySend.jsm"
@@ -47,7 +41,7 @@ function countPingTypes(pings) {
 
 function setPingLastModified(id, timestamp) {
   const path = OS.Path.join(TelemetryStorage.pingDirectoryPath, id);
-  return OS.File.setDates(path, null, timestamp);
+  return IOUtils.touch(path, timestamp);
 }
 
 // Mock out the send timer activity.
@@ -95,7 +89,7 @@ var checkPingsSaved = async function(pingIds) {
     const path = OS.Path.join(TelemetryStorage.pingDirectoryPath, id);
     let exists = false;
     try {
-      exists = await OS.File.exists(path);
+      exists = await IOUtils.exists(path);
     } catch (ex) {}
 
     if (!exists) {
@@ -805,13 +799,14 @@ add_task(
 
     TelemetrySend.flushPingSenderBatch();
 
+    // Pings don't have to be sent in the order they're submitted.
     const ping = await PingServer.promiseNextPing();
-    Assert.equal(ping.type, TEST_TYPE);
-    Assert.equal(ping.id, id);
-
     const ping2 = await PingServer.promiseNextPing();
+    Assert.ok(
+      (ping.id == id && ping2.id == id2) || (ping.id == id2 && ping2.id == id)
+    );
+    Assert.equal(ping.type, TEST_TYPE);
     Assert.equal(ping2.type, TEST_TYPE);
-    Assert.equal(ping2.id, id2);
 
     await TelemetryStorage.reset();
     Assert.equal(
