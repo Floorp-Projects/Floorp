@@ -79,10 +79,9 @@ void nsLookAndFeel::NativeInit() {
 }
 
 void nsLookAndFeel::RefreshImpl() {
-  nsXPLookAndFeel::RefreshImpl();
-
   mInitializedSystemColors = false;
   mInitializedShowPassword = false;
+  nsXPLookAndFeel::RefreshImpl();
 }
 
 nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
