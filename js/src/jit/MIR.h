@@ -1342,6 +1342,9 @@ class MConstant : public MNullaryInstruction {
   bool isInt32(int32_t i) const {
     return type() == MIRType::Int32 && payload_.i32 == i;
   }
+  bool isInt64(int64_t i) const {
+    return type() == MIRType::Int64 && payload_.i64 == i;
+  }
   const double& toDouble() const {
     MOZ_ASSERT(type() == MIRType::Double);
     return payload_.d;
