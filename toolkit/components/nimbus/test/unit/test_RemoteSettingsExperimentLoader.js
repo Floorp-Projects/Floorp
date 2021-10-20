@@ -134,6 +134,41 @@ add_task(async function test_updateRecipes() {
   );
 });
 
+add_task(async function test_updateRecipes_someMismatch() {
+  const loader = ExperimentFakes.rsLoader();
+
+  const PASS_FILTER_RECIPE = ExperimentFakes.recipe("foo", {
+    targeting: "true",
+  });
+  const FAIL_FILTER_RECIPE = ExperimentFakes.recipe("foo", {
+    targeting: "false",
+  });
+  sinon.stub(loader, "setTimer");
+  sinon.spy(loader, "updateRecipes");
+
+  sinon
+    .stub(loader.remoteSettingsClient, "get")
+    .resolves([PASS_FILTER_RECIPE, FAIL_FILTER_RECIPE]);
+  sinon.stub(loader.manager, "onRecipe").resolves();
+  sinon.stub(loader.manager, "onFinalize");
+
+  Services.prefs.setBoolPref(ENABLED_PREF, true);
+  await loader.init();
+  ok(loader.updateRecipes.calledOnce, "should call .updateRecipes");
+  equal(
+    loader.manager.onRecipe.callCount,
+    1,
+    "should call .onRecipe only for recipes that pass"
+  );
+  ok(loader.manager.onFinalize.calledOnce, "Should call onFinalize.");
+  ok(
+    loader.manager.onFinalize.calledWith("rs-loader", {
+      recipeMismatches: [FAIL_FILTER_RECIPE.slug],
+    }),
+    "should call .onFinalize with the recipes that failed targeting"
+  );
+});
+
 add_task(async function test_updateRecipes_forFirstStartup() {
   const loader = ExperimentFakes.rsLoader();
   const PASS_FILTER_RECIPE = ExperimentFakes.recipe("foo", {
