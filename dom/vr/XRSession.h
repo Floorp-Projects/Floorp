@@ -64,7 +64,7 @@ class XRSession final : public DOMEventTargetHelper, public nsARefreshObserver {
                        JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL Attributes
-  XRVisibilityState VisibilityState();
+  XRVisibilityState VisibilityState() const;
   XRRenderState* RenderState();
   XRInputSourceArray* InputSources();
 
@@ -98,6 +98,7 @@ class XRSession final : public DOMEventTargetHelper, public nsARefreshObserver {
   void ExitPresent();
   RefPtr<XRViewerPose> PooledViewerPose(const gfx::Matrix4x4Double& aTransform,
                                         bool aEmulatedPosition);
+  bool CanReportPoses() const;
 
   // nsARefreshObserver
   MOZ_CAN_RUN_SCRIPT
