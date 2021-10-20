@@ -411,7 +411,14 @@ class LookAndFeel {
                                               : ColorScheme::Light;
   }
 
-  static ColorScheme ColorSchemeForChrome();
+  enum class ChromeColorSchemeSetting { Light, Dark, System };
+  static ChromeColorSchemeSetting ColorSchemeSettingForChrome();
+
+  static ColorScheme ColorSchemeForChrome() { return sChromeColorScheme; }
+  static ColorScheme PreferredColorSchemeForContent() {
+    return sContentColorScheme;
+  }
+
   static ColorScheme ColorSchemeForStyle(const dom::Document&,
                                          const StyleColorSchemeFlags&);
   static ColorScheme ColorSchemeForFrame(const nsIFrame*);
@@ -529,6 +536,10 @@ class LookAndFeel {
 
   static void SetData(widget::FullLookAndFeel&& aTables);
   static void NotifyChangedAllWindows(widget::ThemeChangeKind);
+
+  static void RecomputeColorSchemes();
+  static ColorScheme sChromeColorScheme;
+  static ColorScheme sContentColorScheme;
 };
 
 }  // namespace mozilla

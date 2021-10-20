@@ -436,6 +436,8 @@ static constexpr struct {
     // This affects not only the media query, but also the native theme, so we
     // need to re-layout.
     {"browser.theme.toolbar-theme"_ns, widget::ThemeChangeKind::AllBits},
+    {"browser.theme.content-theme"_ns},
+    {"layout.css.color-scheme.content-override"_ns},
 };
 
 // Read values from the user's preferences.
@@ -448,6 +450,8 @@ void nsXPLookAndFeel::Init() {
   // Say we're already initialized, and take the chance that it might fail;
   // protects against some other process writing to our static variables.
   sInitialized = true;
+
+  RecomputeColorSchemes();
 
   // XXX If we could reorganize the pref names, we should separate the branch
   //     for each types.  Then, we could reduce the unnecessary loop from
@@ -969,6 +973,7 @@ void nsXPLookAndFeel::RefreshImpl() {
   sFontCache.Clear();
   sFloatCache.Clear();
   sIntCache.Clear();
+  RecomputeColorSchemes();
 
   // Clear any cached FullLookAndFeel data, which is now invalid.
   if (XRE_IsParentProcess()) {
@@ -1049,16 +1054,54 @@ static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
   return false;
 }
 
-LookAndFeel::ColorScheme LookAndFeel::ColorSchemeForChrome() {
+ColorScheme LookAndFeel::sChromeColorScheme;
+ColorScheme LookAndFeel::sContentColorScheme;
+
+auto LookAndFeel::ColorSchemeSettingForChrome() -> ChromeColorSchemeSetting {
   switch (StaticPrefs::browser_theme_toolbar_theme()) {
     case 0:  // Dark
-      return ColorScheme::Dark;
+      return ChromeColorSchemeSetting::Dark;
     case 1:  // Light
-      return ColorScheme::Light;
+      return ChromeColorSchemeSetting::Light;
     default:
-      break;
+      return ChromeColorSchemeSetting::System;
   }
-  return SystemColorScheme();
+}
+
+void LookAndFeel::RecomputeColorSchemes() {
+  sChromeColorScheme = [] {
+    switch (ColorSchemeSettingForChrome()) {
+      case ChromeColorSchemeSetting::Light:
+        return ColorScheme::Light;
+      case ChromeColorSchemeSetting::Dark:
+        return ColorScheme::Dark;
+      case ChromeColorSchemeSetting::System:
+        break;
+    }
+    return SystemColorScheme();
+  }();
+
+  sContentColorScheme = [] {
+    switch (StaticPrefs::layout_css_prefers_color_scheme_content_override()) {
+      case 0:
+        return ColorScheme::Dark;
+      case 1:
+        return ColorScheme::Light;
+      case 2:
+        return SystemColorScheme();
+      default:
+        break;  // Use the browser theme.
+    }
+
+    switch (StaticPrefs::browser_theme_content_theme()) {
+      case 0:  // Dark
+        return ColorScheme::Dark;
+      case 1:  // Light
+        return ColorScheme::Light;
+      default:
+        return ColorSchemeForChrome();
+    }
+  }();
 }
 
 ColorScheme LookAndFeel::ColorSchemeForStyle(
@@ -1078,10 +1121,10 @@ ColorScheme LookAndFeel::ColorSchemeForStyle(
     // the content supports.
     return supportsDark ? ColorScheme::Dark : ColorScheme::Light;
   }
-  // No value specified. Chrome docs always supports both, so use the chrome
+  // No value specified. Chrome docs always supports both, so use the preferred
   // color-scheme.
   if (nsContentUtils::IsChromeDoc(&aDoc)) {
-    return ColorSchemeForChrome();
+    return aDoc.PreferredColorScheme();
   }
   // As an special-case, use the system color-scheme if allow-gtk-dark-theme is
   // set.
