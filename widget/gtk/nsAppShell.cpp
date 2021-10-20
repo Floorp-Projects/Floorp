@@ -110,8 +110,9 @@ gboolean nsAppShell::EventProcessorCallback(GIOChannel* source,
 }
 
 nsAppShell::~nsAppShell() {
+#ifdef MOZ_ENABLE_DBUS
   StopDBusListening();
-
+#endif
   mozilla::hal::Shutdown();
 
   if (mTag) g_source_remove(mTag);
