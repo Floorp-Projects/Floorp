@@ -99,7 +99,9 @@
 #  include "nsCocoaFeatures.h"
 #endif
 
-#include "mozilla/browser/NimbusFeatures.h"
+#if defined(MOZ_BUILD_APP_IS_BROWSER) && !defined(ANDROID)
+#  include "mozilla/browser/NimbusFeatures.h"
+#endif  // MOZ_BUILD_APP_IS_BROWSER && !ANDROID
 
 //-----------------------------------------------------------------------------
 #include "mozilla/net/HttpChannelChild.h"
@@ -127,8 +129,10 @@
 #define NS_HTTP_PROTOCOL_FLAGS \
   (URI_STD | ALLOWS_PROXY | ALLOWS_PROXY_HTTP | URI_LOADABLE_BY_ANYONE)
 
-#define UA_EXPERIMENT_NAME "firefox100"_ns
-#define UA_EXPERIMENT_VAR "firefoxVersion"_ns
+#if defined(MOZ_BUILD_APP_IS_BROWSER) && !defined(ANDROID)
+#  define UA_EXPERIMENT_NAME "firefox100"_ns
+#  define UA_EXPERIMENT_VAR "firefoxVersion"_ns
+#endif  // MOZ_BUILD_APP_IS_BROWSER && !ANDROID
 
 //-----------------------------------------------------------------------------
 
@@ -138,6 +142,7 @@ namespace mozilla::net {
 
 LazyLogModule gHttpLog("nsHttp");
 
+#if defined(MOZ_BUILD_APP_IS_BROWSER) && !defined(ANDROID)
 static void ExperimentUserAgentUpdated(const char* /* aNimbusPref */,
                                        void* aUserData) {
   MOZ_ASSERT(aUserData != nullptr);
@@ -171,6 +176,7 @@ static void ExperimentUserAgentUpdated(const char* /* aNimbusPref */,
   aExperimentUserAgent->Truncate();
   aExperimentUserAgent->AppendPrintf(uaFormat, firefoxVersion, firefoxVersion);
 }
+#endif  // MOZ_BUILD_APP_IS_BROWSER && !ANDROID
 
 #ifdef ANDROID
 static nsCString GetDeviceModelId() {
