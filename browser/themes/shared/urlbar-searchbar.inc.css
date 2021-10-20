@@ -314,20 +314,15 @@
 }
 
 #urlbar-search-mode-indicator-close:hover {
-  background-color: hsla(0,0%,70%,.2);
+  background-color: var(--urlbar-box-hover-bgcolor);
+  color: var(--urlbar-box-hover-text-color);
 }
 #urlbar-search-mode-indicator-close:hover:active {
-  background-color: hsla(0,0%,70%,.3);
+  background-color: var(--urlbar-box-active-bgcolor);
+  color: var(--urlbar-box-hover-text-color);
 }
 
-/* Use system colors for low/high contrast mode */
 @media (prefers-contrast) {
-  #urlbar-search-mode-indicator {
-    background-color: SelectedItem;
-    outline-color: SelectedItem;
-    color: SelectedItemText;
-  }
-
   #urlbar-search-mode-indicator-close {
     fill-opacity: 1.0;
   }
@@ -406,14 +401,16 @@
 .urlbar-page-action:not([disabled]):hover,
 #urlbar-go-button:hover,
 .search-go-button:hover {
-  background-color: hsla(0,0%,70%,.2);
+  background-color: var(--urlbar-box-hover-bgcolor);
+  color: var(--urlbar-box-hover-text-color);
 }
 
 .urlbar-page-action:not([disabled])[open],
 .urlbar-page-action:not([disabled]):hover:active,
 #urlbar-go-button:hover:active,
 .search-go-button:hover:active {
-  background-color: hsla(0,0%,70%,.3);
+  background-color: var(--urlbar-box-active-bgcolor);
+  color: var(--urlbar-box-hover-text-color);
 }
 
 .urlbar-page-action:-moz-focusring {
@@ -594,16 +591,18 @@
   overflow: hidden;
 }
 
-#urlbar[focused="true"] #urlbar-zoom-button {
+#urlbar[focused="true"] #urlbar-zoom-button:not(:hover) {
   background-color: var(--urlbar-box-focus-bgcolor);
 }
 
 #urlbar-zoom-button:hover {
   background-color: var(--urlbar-box-hover-bgcolor);
+  color: var(--urlbar-box-hover-text-color);
 }
 
 #urlbar-zoom-button:hover:active {
   background-color: var(--urlbar-box-active-bgcolor);
+  color: var(--urlbar-box-hover-text-color);
 }
 
 @keyframes urlbar-zoom-reset-pulse {
