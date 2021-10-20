@@ -114,7 +114,7 @@ nsNativeAppSupportCocoa::ReOpen() {
 
       nsCOMPtr<nsIWidget> widget = nullptr;
       baseWindow->GetMainWidget(getter_AddRefs(widget));
-      if (!widget) {
+      if (!widget || !widget->IsVisible()) {
         windowList->HasMoreElements(&more);
         continue;
       }
@@ -127,9 +127,14 @@ nsNativeAppSupportCocoa::ReOpen() {
     }  // end while
 
     if (!haveNonMiniaturized) {
-      // Deminiaturize the most recenty used window
+      // Prioritize browser windows for deminiaturization
       nsCOMPtr<mozIDOMWindowProxy> mru;
-      wm->GetMostRecentWindow(nullptr, getter_AddRefs(mru));
+      wm->GetMostRecentBrowserWindow(getter_AddRefs(mru));
+
+      // Failing that, deminiaturize the most recently used window
+      if (!mru) {
+        wm->GetMostRecentWindow(nullptr, getter_AddRefs(mru));
+      }
 
       if (mru) {
         NSWindow* cocoaMru = nil;
