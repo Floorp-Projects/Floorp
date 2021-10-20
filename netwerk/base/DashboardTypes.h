@@ -40,6 +40,7 @@ struct DNSCacheEntries {
   nsCString netInterface;
   bool TRR;
   nsCString originAttributesSuffix;
+  nsCString flags;
 };
 
 struct HttpConnInfo {
