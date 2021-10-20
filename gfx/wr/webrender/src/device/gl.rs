@@ -386,7 +386,6 @@ impl<T> Drop for VBO<T> {
 pub struct ExternalTexture {
     id: gl::GLuint,
     target: gl::GLuint,
-    swizzle: Swizzle,
     uv_rect: TexelRect,
 }
 
@@ -394,13 +393,11 @@ impl ExternalTexture {
     pub fn new(
         id: u32,
         target: ImageBufferKind,
-        swizzle: Swizzle,
         uv_rect: TexelRect,
     ) -> Self {
         ExternalTexture {
             id,
             target: get_gl_target(target),
-            swizzle,
             uv_rect,
         }
     }
@@ -526,7 +523,6 @@ impl Texture {
         let ext = ExternalTexture {
             id: self.id,
             target: self.target,
-            swizzle: Swizzle::default(),
             // TODO(gw): Support custom UV rect for external textures during captures
             uv_rect: TexelRect::new(
                 0.0,
