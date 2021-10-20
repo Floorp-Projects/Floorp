@@ -211,10 +211,10 @@ RefPtr<MediaDataDecoder::DecodePromise> AOMDecoder::ProcessDecode(
                                                     : ColorRange::LIMITED;
 
     RefPtr<VideoData> v;
-    v = VideoData::CreateAndCopyData(mInfo, mImageContainer, aSample->mOffset,
-                                     aSample->mTime, aSample->mDuration, b,
-                                     aSample->mKeyframe, aSample->mTimecode,
-                                     mInfo.ScaledImageRect(img->d_w, img->d_h));
+    v = VideoData::CreateAndCopyData(
+        mInfo, mImageContainer, aSample->mOffset, aSample->mTime,
+        aSample->mDuration, b, aSample->mKeyframe, aSample->mTimecode,
+        mInfo.ScaledImageRect(img->d_w, img->d_h), nullptr);
 
     if (!v) {
       LOG("Image allocation error source %ux%u display %ux%u picture %ux%u",
