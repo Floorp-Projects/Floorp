@@ -462,15 +462,17 @@ description#identity-popup-content-verifier,
 .protections-popup-category:hover,
 .protections-popup-footer-button:-moz-focusring,
 .protections-popup-footer-button:hover,
+#protections-popup-not-blocking-section-why:hover,
 #protections-popup-show-report-stack:hover > .protections-popup-footer-button {
-  background-color: var(--arrowpanel-dimmed);
+  background-color: var(--panel-item-hover-bgcolor);
   outline: none;
 }
 
 .protections-popup-category:hover:active,
 .protections-popup-footer-button:hover:active,
+#protections-popup-not-blocking-section-why:hover:active,
 #protections-popup-show-report-stack:hover:active > .protections-popup-footer-button {
-  background-color: var(--arrowpanel-dimmed-further);
+  background-color: var(--panel-item-active-bgcolor);
 }
 
 /* This subview could get filled with a lot of trackers, set a maximum size
@@ -589,9 +591,12 @@ description#identity-popup-content-verifier,
 }
 
 #protections-popup-not-blocking-section-why:hover {
-  background-color: var(--arrowpanel-dimmed);
-  outline: 4px solid var(--arrowpanel-dimmed);
+  outline: 4px solid var(--panel-item-hover-bgcolor);
   text-decoration: none;
+}
+
+#protections-popup-not-blocking-section-why:hover:active {
+  outline-color: var(--panel-item-active-bgcolor);
 }
 
 .protections-popup-category.notFound {
@@ -1003,18 +1008,6 @@ description#identity-popup-content-verifier,
 
 #protections-popup-footer-protection-type-label {
   margin-inline-end: 0;
-}
-
-.protections-popup-category:hover,
-.protections-popup-footer-button:hover,
-#protections-popup-show-report-stack:hover > .protections-popup-footer-button {
-  background-color: var(--panel-item-hover-bgcolor);
-}
-
-.protections-popup-category:hover:active,
-.protections-popup-footer-button:hover:active,
-#protections-popup-show-report-stack:hover:active > .protections-popup-footer-button {
-  background-color: var(--panel-item-active-bgcolor);
 }
 
 .protections-popup-category:focus-visible,
