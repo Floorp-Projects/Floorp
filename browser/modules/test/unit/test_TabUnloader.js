@@ -41,6 +41,10 @@ let TestTabUnloaderMethods = {
     return 3;
   },
 
+  getNow() {
+    return 100;
+  },
+
   *iterateProcesses(tab) {
     for (let process of tab.process.split(",")) {
       yield Number(process);
@@ -132,6 +136,13 @@ let unloadTests = [
       "6 selected",
     ],
     result: "2,0,3,5,1,4",
+  },
+  {
+    // Since TestTabUnloaderMethods.getNow() returns 100 and the test
+    // passes minInactiveDuration = 0 to TabUnloader.getSortedTabs(),
+    // tab 200 and 300 are excluded from the result.
+    tabs: ["300", "10", "50", "100", "200"],
+    result: "1,2,3",
   },
   {
     tabs: ["1", "2", "3", "4", "5", "6"],
@@ -407,7 +418,10 @@ add_task(async function doTests() {
     TestTabUnloaderMethods.iterateTabs = iterateTabs;
 
     let expectedOrder = "";
-    let sortedTabs = await TabUnloader.getSortedTabs(TestTabUnloaderMethods);
+    const sortedTabs = await TabUnloader.getSortedTabs(
+      0,
+      TestTabUnloaderMethods
+    );
     for (let tab of sortedTabs) {
       if (expectedOrder) {
         expectedOrder += ",";

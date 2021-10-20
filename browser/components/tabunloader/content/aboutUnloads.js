@@ -8,7 +8,7 @@ const { TabUnloader } = ChromeUtils.import(
 );
 
 async function refreshData() {
-  const sortedTabs = await TabUnloader.getSortedTabs();
+  const sortedTabs = await TabUnloader.getSortedTabs(null);
   const tabTable = document.querySelector(".tab-table > tbody");
   const getHost = uri => {
     try {
@@ -114,7 +114,7 @@ async function onLoad() {
   document
     .getElementById("button-unload")
     .addEventListener("click", async () => {
-      await TabUnloader.unloadLeastRecentlyUsedTab();
+      await TabUnloader.unloadLeastRecentlyUsedTab(null);
       await refreshData();
     });
   await refreshData();
