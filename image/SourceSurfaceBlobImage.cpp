@@ -169,8 +169,8 @@ Maybe<BlobImageKeyData> SourceSurfaceBlobImage::RecordDrawing(
             fonts = std::move(aScaledFonts);
           });
 
-  RefPtr<DrawTarget> dummyDt = Factory::CreateDrawTarget(
-      BackendType::SKIA, IntSize(1, 1), SurfaceFormat::OS_RGBA);
+  RefPtr<DrawTarget> dummyDt =
+      gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
   RefPtr<DrawTarget> dt =
       Factory::CreateRecordingDrawTarget(recorder, dummyDt, imageRectOrigin);
 
