@@ -16,6 +16,10 @@
   display: none;
 }
 
+#sanitizeDurationLabel[value=""] + #sanitizeDurationChoice {
+  margin-inline-start: 0;
+}
+
 /* Sanitize everything warning box */
 #sanitizeEverythingWarningBox {
   /* Fallback colors are used when the dialog is open outside of in-content prefs */
