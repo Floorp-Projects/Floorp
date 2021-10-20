@@ -924,7 +924,7 @@ void XPCJSRuntime::FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status,
 }
 
 /* static */
-void XPCJSRuntime::WeakPointerZonesCallback(JSContext* cx, void* data) {
+void XPCJSRuntime::WeakPointerZonesCallback(JSTracer* trc, void* data) {
   // Called before each sweeping slice -- after processing any final marking
   // triggered by barriers -- to clear out any references to things that are
   // about to be finalized and update any pointers to moved GC things.
@@ -943,7 +943,7 @@ void XPCJSRuntime::WeakPointerZonesCallback(JSContext* cx, void* data) {
 }
 
 /* static */
-void XPCJSRuntime::WeakPointerCompartmentCallback(JSContext* cx,
+void XPCJSRuntime::WeakPointerCompartmentCallback(JSTracer* trc,
                                                   JS::Compartment* comp,
                                                   void* data) {
   // Called immediately after the ZoneGroup weak pointer callback, but only

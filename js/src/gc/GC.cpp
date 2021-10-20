@@ -1288,10 +1288,9 @@ void GCRuntime::removeWeakPointerZonesCallback(
   EraseCallback(updateWeakPointerZonesCallbacks.ref(), callback);
 }
 
-void GCRuntime::callWeakPointerZonesCallbacks() const {
-  JSContext* cx = rt->mainContextFromOwnThread();
+void GCRuntime::callWeakPointerZonesCallbacks(JSTracer* trc) const {
   for (auto const& p : updateWeakPointerZonesCallbacks.ref()) {
-    p.op(cx, p.data);
+    p.op(trc, p.data);
   }
 }
 
@@ -1307,10 +1306,9 @@ void GCRuntime::removeWeakPointerCompartmentCallback(
 }
 
 void GCRuntime::callWeakPointerCompartmentCallbacks(
-    JS::Compartment* comp) const {
-  JSContext* cx = rt->mainContextFromOwnThread();
+    JSTracer* trc, JS::Compartment* comp) const {
   for (auto const& p : updateWeakPointerCompartmentCallbacks.ref()) {
-    p.op(cx, comp, p.data);
+    p.op(trc, comp, p.data);
   }
 }
 

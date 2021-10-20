@@ -547,8 +547,8 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   static void DoCycleCollectionCallback(JSContext* cx);
   static void FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status,
                                void* data);
-  static void WeakPointerZonesCallback(JSContext* cx, void* data);
-  static void WeakPointerCompartmentCallback(JSContext* cx,
+  static void WeakPointerZonesCallback(JSTracer* trc, void* data);
+  static void WeakPointerCompartmentCallback(JSTracer* trc,
                                              JS::Compartment* comp, void* data);
 
   inline void AddVariantRoot(XPCTraceableVariant* variant);
