@@ -1634,87 +1634,55 @@ nsLineList_const_reverse_iterator::operator=(
 
 class nsLineIterator final : public nsILineIterator {
  public:
-  nsLineIterator(const nsLineList& aLines, bool aRightToLeft)
-      : mLines(aLines), mRightToLeft(aRightToLeft) {
-    mIter = mLines.begin();
-    if (mIter != mLines.end()) {
-      mIndex = 0;
-    }
-  }
-  ~nsLineIterator() {
-    MOZ_DIAGNOSTIC_ASSERT(!mMutationGuard.Mutated(0));
-  };
+  nsLineIterator(nsLineList& aLines, bool aRightToLeft);
+  ~nsLineIterator();
 
-  void DisposeLineIterator() final { delete this; }
+  virtual void DisposeLineIterator() override;
 
-  int32_t GetNumLines() const final {
-    if (mNumLines < 0) {
-      mNumLines = int32_t(mLines.size());  // This is O(N) in number of lines!
-    }
-    return mNumLines;
-  }
+  virtual int32_t GetNumLines() const override;
+  virtual bool GetDirection() override;
 
-  bool GetDirection() final { return mRightToLeft; }
-
-  // Note that this updates the iterator's current position!
-  mozilla::Result<LineInfo, nsresult> GetLine(int32_t aLineNumber) final;
-
-  int32_t FindLineContaining(nsIFrame* aFrame, int32_t aStartLine = 0) final;
-
+  mozilla::Result<LineInfo, nsresult> GetLine(
+      int32_t aLineNumber) const override;
+  virtual int32_t FindLineContaining(nsIFrame* aFrame,
+                                     int32_t aStartLine = 0) override;
   NS_IMETHOD FindFrameAt(int32_t aLineNumber, nsPoint aPos,
                          nsIFrame** aFrameFound, bool* aPosIsBeforeFirstFrame,
-                         bool* aPosIsAfterLastFrame) final;
+                         bool* aPosIsAfterLastFrame) const override;
 
   NS_IMETHOD CheckLineOrder(int32_t aLine, bool* aIsReordered,
                             nsIFrame** aFirstVisual,
-                            nsIFrame** aLastVisual) final;
+                            nsIFrame** aLastVisual) override;
 
  private:
   nsLineIterator() = delete;
   nsLineIterator(const nsLineIterator& aOther) = delete;
 
-  const nsLineBox* NextLine() {
-    if (mIter == mLines.end()) {
+  nsLineBox* PrevLine() {
+    if (0 == mIndex) {
       return nullptr;
     }
-    ++mIter;
-    ++mIndex;
-    return mIter.get();
+    return mLines[--mIndex];
   }
 
-  // Note that this updates the iterator's current position!
-  const nsLineBox* GetLineAt(int32_t aIndex) {
-    if (aIndex < 0 || mIndex < 0) {
+  nsLineBox* NextLine() {
+    if (mIndex >= mNumLines - 1) {
       return nullptr;
     }
-    if (mIndex == aIndex) {
-      return mIter.get();
-    }
-    while (mIndex > aIndex) {
-      if (!mIndex) {
-        return nullptr;
-      }
-      --mIter;
-      --mIndex;
-    }
-    while (mIndex < aIndex) {
-      if (mIter == mLines.end()) {
-        return nullptr;
-      }
-      ++mIter;
-      ++mIndex;
-    }
-    return mIter.get();
+    return mLines[++mIndex];
   }
 
-  const nsLineList& mLines;
-  nsLineList_const_iterator mIter;
-  int32_t mIndex = -1;
-  mutable int32_t mNumLines = -1;
-  const bool mRightToLeft;
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  nsMutationGuard mMutationGuard;
-#endif
+  nsLineBox* LineAt(int32_t aIndex) {
+    if ((aIndex < 0) || (aIndex >= mNumLines)) {
+      return nullptr;
+    }
+    return mLines[aIndex];
+  }
+
+  nsLineBox** mLines;
+  int32_t mIndex;
+  int32_t mNumLines;
+  bool mRightToLeft;
 };
 
 #endif /* nsLineBox_h___ */
