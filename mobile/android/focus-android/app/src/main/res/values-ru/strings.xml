@@ -692,7 +692,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">На сайте отсутствует cодержимое или он ведет себя странно?\n¶
+    <string name="tip_disable_tracking_protection3">На сайте отсутствует cодержимое или он ведет себя странно?\n
  · Попробуйте отключить Улучшенную защиту от отслеживания</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen

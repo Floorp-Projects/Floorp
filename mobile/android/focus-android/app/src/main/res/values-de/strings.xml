@@ -632,6 +632,9 @@
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">Entwicklerwerkzeuge</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Links in Apps öffnen</string>
+
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Erweitert</string>
 

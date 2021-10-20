@@ -150,8 +150,8 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">Гомуми</string>
 
-    <!-- Preference summary for General Settings category; the three things users can find in this category -->
-    <string name="preference_general_summary">Стандарт браузер, таблар, тел</string>
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">Стандарт браузер, тел</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Мәгълүмат туплау һәм аны куллану</string>
@@ -548,7 +548,12 @@
 
 
 
-  <!-- Text shown in prompts for GeckoView -->
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s Сезгә <a href="%2$s">Mozilla Public License</a> һәм башка ачык чыганак лицензияләренең шартлары белән тәкъдим ителә.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Кулланучы исеме</string>
     <string name="gv_prompt_password_hint">Серсүз</string>
     <string name="gv_prompt_clear">Чистарту</string>
@@ -633,6 +638,10 @@
     <!-- Title for the prompt to enable search suggestions -->
     <string name="enable_search_suggestion_title2">Эзләү тәкъдимнәре күрсәтелсенме?</string>
 
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Тәкъдимнәрен алыр өчен, %1$s Сез адрес юлында язганнарны эзләү системасына җибәрергә тиеш.</string>
+
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Юк</string>
 
@@ -650,6 +659,11 @@
     <!-- Tip displayed on home view explaining how to disable tracking protection
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Сайт көтелгәнчә эшләмиме?\nКүзәтүчеләрдән саклауны сүндереп карагыз</string>
+
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection3">Сайтта нидер төшеп калган яки сәер кебекме?\n
+    Күзәтүдән көчәйтелгән сакны сүндереп карагыз</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
