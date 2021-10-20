@@ -1276,7 +1276,7 @@ bool UniqueIdGCPolicy::traceWeak(JSTracer* trc, Cell** keyp, uint64_t* valuep) {
 void GCRuntime::sweepWeakRefs() {
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
     AutoSetThreadIsSweeping threadIsSweeping(zone);
-    zone->weakRefMap().sweep(&storeBuffer());
+    zone->weakRefMap().traceWeak(&sweepingTracer, &storeBuffer());
   }
 }
 
