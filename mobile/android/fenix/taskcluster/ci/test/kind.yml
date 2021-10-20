@@ -43,15 +43,8 @@ jobs:
                 - ['java', '-version']
             gradlew:
                 - 'clean'
-                - '-Pcoverage'
-                - 'jacocoDebugTestReport'
+                - 'testDebugUnitTest'
                 - 'githubTestDetails'
-            post-gradlew:
-                - ['automation/taskcluster/upload_coverage_report.sh']
-            secrets:
-                - name: project/mobile/fenix/public-tokens
-                  key: codecov
-                  path: .cc_token
         treeherder:
             platform: 'android-all/opt'
             symbol: debug(T)
