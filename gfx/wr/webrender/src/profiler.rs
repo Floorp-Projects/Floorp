@@ -1429,6 +1429,9 @@ pub struct Counter {
     /// Incremented when the counter changes.
     change_indicator: u8,
 
+    /// Only used to check that the constants match the real index.
+    index: usize,
+
     graph: Option<Graph>,
 }
 
@@ -1439,6 +1442,7 @@ impl Counter {
             unit: descriptor.unit,
             show_as: descriptor.show_as,
             expected: descriptor.expected.clone(),
+            index: descriptor.index,
             value: std::f64::NAN,
             num_samples: 0,
             sum: 0.0,
