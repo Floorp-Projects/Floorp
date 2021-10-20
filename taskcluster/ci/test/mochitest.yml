@@ -504,14 +504,26 @@ mochitest-chrome-gpu:
     virtualization: virtual-with-gpu
     e10s: true
     variants:
-        by-test-platform:
-            linux.*64/debug: ['fission', 'wayland', 'socketprocess_networking']
-            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
-            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
-            default: ['fission']
+        - fission
+        - socketprocess_networking
+        - wayland
+        - webrender-sw
     run-on-projects:
         by-variant:
             fission: []
+            socketprocess_networking:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
+                    linux.*64-qr/debug: built-projects
+                    default: []
             default:
                 by-test-platform:
                     .*-tsan-qr/opt: ['trunk']
