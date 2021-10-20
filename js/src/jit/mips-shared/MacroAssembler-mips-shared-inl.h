@@ -1058,31 +1058,47 @@ void MacroAssembler::branchTestMagic(Condition cond, const BaseIndex& address,
 template <typename T>
 void MacroAssembler::testNumberSet(Condition cond, const T& src,
                                    Register dest) {
-  MOZ_CRASH("NYI");
+  MOZ_ASSERT(cond == Equal || cond == NotEqual);
+  SecondScratchRegisterScope scratch2(*this);
+  Register tag = extractTag(src, scratch2);
+  ma_cmp_set(dest, tag, ImmTag(JS::detail::ValueUpperInclNumberTag),
+             cond == Equal ? BelowOrEqual : Above);
 }
 
 template <typename T>
 void MacroAssembler::testBooleanSet(Condition cond, const T& src,
                                     Register dest) {
-  MOZ_CRASH("NYI");
+  MOZ_ASSERT(cond == Equal || cond == NotEqual);
+  SecondScratchRegisterScope scratch2(*this);
+  Register tag = extractTag(src, scratch2);
+  ma_cmp_set(dest, tag, ImmTag(JSVAL_TAG_BOOLEAN), cond);
 }
 
 template <typename T>
 void MacroAssembler::testStringSet(Condition cond, const T& src,
                                    Register dest) {
-  MOZ_CRASH("NYI");
+  MOZ_ASSERT(cond == Equal || cond == NotEqual);
+  SecondScratchRegisterScope scratch2(*this);
+  Register tag = extractTag(src, scratch2);
+  ma_cmp_set(dest, tag, ImmTag(JSVAL_TAG_STRING), cond);
 }
 
 template <typename T>
 void MacroAssembler::testSymbolSet(Condition cond, const T& src,
                                    Register dest) {
-  MOZ_CRASH("NYI");
+  MOZ_ASSERT(cond == Equal || cond == NotEqual);
+  SecondScratchRegisterScope scratch2(*this);
+  Register tag = extractTag(src, scratch2);
+  ma_cmp_set(dest, tag, ImmTag(JSVAL_TAG_SYMBOL), cond);
 }
 
 template <typename T>
 void MacroAssembler::testBigIntSet(Condition cond, const T& src,
                                    Register dest) {
-  MOZ_CRASH("NYI");
+  MOZ_ASSERT(cond == Equal || cond == NotEqual);
+  SecondScratchRegisterScope scratch2(*this);
+  Register tag = extractTag(src, scratch2);
+  ma_cmp_set(dest, tag, ImmTag(JSVAL_TAG_BIGINT), cond);
 }
 
 void MacroAssembler::branchToComputedAddress(const BaseIndex& addr) {
