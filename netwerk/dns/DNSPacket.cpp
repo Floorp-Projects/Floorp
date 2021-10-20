@@ -411,7 +411,8 @@ nsresult DNSPacket::EncodeRequest(nsCString& aBody, const nsACString& aHost,
     // calculate padding length
     unsigned int paddingLen = 0;
     unsigned int rdlen = 0;
-    if (StaticPrefs::network_trr_padding()) {
+    bool padding = StaticPrefs::network_trr_padding();
+    if (padding) {
       // always add padding specified in rfc 7830 when this config is enabled
       // to allow the reponse to be padded as well
 
@@ -421,8 +422,17 @@ nsresult DNSPacket::EncodeRequest(nsCString& aBody, const nsACString& aHost,
         // 8 bytes for disabling ecs
         packetLen += 8;
       }
-      // pad to 16 byte
-      paddingLen = (16 - (packetLen & 15)) & 15;
+
+      // clamp the padding length, because the padding extension only allows up
+      // to 2^16 - 1 bytes padding and adding too much padding wastes resources
+      uint32_t padTo = std::clamp<uint32_t>(
+          StaticPrefs::network_trr_padding_length(), 0, 1024);
+
+      // Calculate number of padding bytes. The second '%'-operator is necessary
+      // because we prefer to add 0 bytes padding rather than padTo bytes
+      if (padTo > 0) {
+        paddingLen = (padTo - (packetLen % padTo)) % padTo;
+      }
       // padding header + padding length
       rdlen += 4 + paddingLen;
     }
@@ -454,7 +464,7 @@ nsresult DNSPacket::EncodeRequest(nsCString& aBody, const nsACString& aHost,
       // ADDRESS, minimum number of octets == nothing because zero bits
     }
 
-    if (StaticPrefs::network_trr_padding()) {
+    if (padding) {
       aBody += '\0';  // upper 8 bit option OPTION-CODE PADDING
       aBody += 12;    // OPTION-CODE, 2 octets, for PADDING is 12
 
