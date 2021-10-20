@@ -46,7 +46,9 @@ class Settings(
 
     private val preferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
-    fun createTrackingProtectionPolicy(): EngineSession.TrackingProtectionPolicy {
+    fun createTrackingProtectionPolicy(
+        shouldBlockCookiesValue: String = shouldBlockCookiesValue()
+    ): EngineSession.TrackingProtectionPolicy {
         val trackingCategories: MutableList<EngineSession.TrackingProtectionPolicy.TrackingCategory> =
             mutableListOf(EngineSession.TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
 
@@ -63,7 +65,7 @@ class Settings(
             trackingCategories.add(EngineSession.TrackingProtectionPolicy.TrackingCategory.CONTENT)
         }
 
-        val cookiePolicy = when (shouldBlockCookiesValue()) {
+        val cookiePolicy = when (shouldBlockCookiesValue) {
             context.getString(R.string.preference_privacy_should_block_cookies_yes_option2) ->
                 EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE
 

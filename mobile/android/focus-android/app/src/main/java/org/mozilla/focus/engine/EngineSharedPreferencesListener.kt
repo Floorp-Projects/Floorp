@@ -21,7 +21,7 @@ class EngineSharedPreferencesListener(
     override fun onPreferenceChange(preference: Preference?, newValue: Any?): Boolean {
         when (preference?.key) {
             context.getString(R.string.pref_key_performance_enable_cookies) ->
-                updateTrackingProtectionPolicy()
+                updateTrackingProtectionPolicy(shouldBlockCookiesValue = newValue as String)
 
             context.getString(R.string.pref_key_safe_browsing) ->
                 updateSafeBrowsingPolicy(newValue as Boolean)
@@ -42,9 +42,10 @@ class EngineSharedPreferencesListener(
     internal fun updateTrackingProtectionPolicy(
         source: String? = null,
         tracker: String? = null,
-        isEnabled: Boolean = false
+        isEnabled: Boolean = false,
+        shouldBlockCookiesValue: String = context.settings.shouldBlockCookiesValue()
     ) {
-        val policy = context.settings.createTrackingProtectionPolicy()
+        val policy = context.settings.createTrackingProtectionPolicy(shouldBlockCookiesValue)
         val components = context.components
 
         components.engineDefaultSettings.trackingProtectionPolicy = policy
@@ -59,10 +60,12 @@ class EngineSharedPreferencesListener(
                 )
             )
         }
+        components.sessionUseCases.reload()
     }
 
     private fun updateSafeBrowsingPolicy(newValue: Boolean) {
         context.settings.setupSafeBrowsing(context.components.engine, newValue)
+        context.components.sessionUseCases.reload()
     }
 
     private fun updateJavaScriptSetting(newValue: Boolean) {
@@ -75,6 +78,7 @@ class EngineSharedPreferencesListener(
 
     private fun updateRemoteDebugging(newValue: Boolean) {
         context.components.engine.settings.remoteDebuggingEnabled = newValue
+        context.components.sessionUseCases.reload()
     }
 
     private fun updateWebFontsBlocking(newValue: Boolean) {
