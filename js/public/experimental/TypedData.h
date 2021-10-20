@@ -298,14 +298,14 @@ using ExternalTypeOf_t = typename ExternalTypeOf<ArrayType>::Type;
 // A class holding a JSObject referring to a buffer of data. Either an
 // ArrayBufferObject or some sort of ArrayBufferViewObject (see below).
 // Note that this will always hold an unwrapped object.
-class JS_PUBLIC_API ArrayBufferOrView {
+class MOZ_STACK_CLASS JS_PUBLIC_API ArrayBufferOrView {
  public:
   // Typed Arrays will set this to their specific element type.
   // Everything else just claims to expose things as uint8_t*.
   using DataType = uint8_t;
 
  protected:
-  Heap<JSObject*> obj;
+  JSObject* obj;
 
   explicit ArrayBufferOrView(JSObject* unwrapped) : obj(unwrapped) {}
 
@@ -327,7 +327,7 @@ class JS_PUBLIC_API ArrayBufferOrView {
 
   // Allow use as Rooted<JS::ArrayBufferOrView>.
   void trace(JSTracer* trc) {
-    TraceEdge(trc, &obj, "ArrayBufferOrView object");
+    UnsafeTraceRoot(trc, &obj, "ArrayBufferOrView object");
   }
 
   void reset() { obj = nullptr; }
