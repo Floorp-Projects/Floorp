@@ -726,11 +726,10 @@ mochitest-plain-headless:
     allow-software-gl-layers: false
     tier: 2
     variants:
-        by-test-platform:
-            linux.*64/debug: ['fission', 'wayland', 'socketprocess_networking']
-            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
-            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
-            default: ['fission']
+        - fission
+        - socketprocess_networking
+        - wayland
+        - webrender-sw
     run-on-projects:
         by-variant:
             fission:
@@ -740,6 +739,19 @@ mochitest-plain-headless:
                     linux.*64-shippable/.*: ['mozilla-central']
                     linux.*64/debug: ['mozilla-central']
                     windows10-64-shippable(-qr)?/opt: ['mozilla-central']
+                    default: []
+            socketprocess_networking:
+                by-test-platform:
+                    linux.*64-qr/debug: ['mozilla-central']
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64-qr/debug: ['mozilla-central']
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: ['mozilla-central']
+                    linux.*64-qr/debug: ['mozilla-central']
                     default: []
             default: ['mozilla-central']
     mozharness:
