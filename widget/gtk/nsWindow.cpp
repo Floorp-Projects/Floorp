@@ -184,6 +184,8 @@ static nsWindow* get_window_for_gtk_widget(GtkWidget* widget);
 static nsWindow* get_window_for_gdk_window(GdkWindow* window);
 static GtkWidget* get_gtk_widget_for_gdk_window(GdkWindow* window);
 static GdkCursor* get_gtk_cursor(nsCursor aCursor);
+static GdkWindow* get_inner_gdk_window(GdkWindow* aWindow, gint x, gint y,
+                                       gint* retx, gint* rety);
 
 static int is_parent_ungrab_enter(GdkEventCrossing* aEvent);
 static int is_parent_grab_leave(GdkEventCrossing* aEvent);
@@ -7693,13 +7695,21 @@ gboolean WindowDragMotionHandler(GtkWidget* aWidget,
   nscoord retx = 0;
   nscoord rety = 0;
 
-  LOGDRAG("WindowDragMotionHandler nsWindow %p\n", (void*)window);
+  GdkWindow* innerWindow = get_inner_gdk_window(gtk_widget_get_window(aWidget),
+                                                aX, aY, &retx, &rety);
+  RefPtr<nsWindow> innerMostWindow = get_window_for_gdk_window(innerWindow);
+
+  if (!innerMostWindow) {
+    innerMostWindow = window;
+  }
+
+  LOGDRAG("WindowDragMotionHandler nsWindow %p\n", (void*)innerMostWindow);
 
   LayoutDeviceIntPoint point = window->GdkPointToDevicePixels({retx, rety});
 
   RefPtr<nsDragService> dragService = nsDragService::GetInstance();
-  if (!dragService->ScheduleMotionEvent(window, aDragContext, aDataOffer, point,
-                                        aTime)) {
+  if (!dragService->ScheduleMotionEvent(innerMostWindow, aDragContext,
+                                        aDataOffer, point, aTime)) {
     return FALSE;
   }
   // We need to reply to drag_motion event on Wayland immediately,
@@ -7766,13 +7776,21 @@ gboolean WindowDragDropHandler(GtkWidget* aWidget, GdkDragContext* aDragContext,
   nscoord retx = 0;
   nscoord rety = 0;
 
-  LOGDRAG("WindowDragDropHandler nsWindow %p\n", (void*)window);
+  GdkWindow* innerWindow = get_inner_gdk_window(gtk_widget_get_window(aWidget),
+                                                aX, aY, &retx, &rety);
+  RefPtr<nsWindow> innerMostWindow = get_window_for_gdk_window(innerWindow);
+
+  if (!innerMostWindow) {
+    innerMostWindow = window;
+  }
+
+  LOGDRAG("WindowDragDropHandler nsWindow %p\n", (void*)innerMostWindow);
 
   LayoutDeviceIntPoint point = window->GdkPointToDevicePixels({retx, rety});
 
   RefPtr<nsDragService> dragService = nsDragService::GetInstance();
-  return dragService->ScheduleDropEvent(window, aDragContext, aDataOffer, point,
-                                        aTime);
+  return dragService->ScheduleDropEvent(innerMostWindow, aDragContext,
+                                        aDataOffer, point, aTime);
 }
 
 static gboolean drag_drop_event_cb(GtkWidget* aWidget,
@@ -7807,6 +7825,27 @@ static nsresult initialize_prefs(void) {
   }
 
   return NS_OK;
+}
+
+// TODO: Can we simplify it for mShell/mContainer only scenario?
+static GdkWindow* get_inner_gdk_window(GdkWindow* aWindow, gint x, gint y,
+                                       gint* retx, gint* rety) {
+  gint cx, cy, cw, ch;
+  GList* children = gdk_window_peek_children(aWindow);
+  for (GList* child = g_list_last(children); child;
+       child = g_list_previous(child)) {
+    auto* childWindow = (GdkWindow*)child->data;
+    if (get_window_for_gdk_window(childWindow)) {
+      gdk_window_get_geometry(childWindow, &cx, &cy, &cw, &ch);
+      if ((cx < x) && (x < (cx + cw)) && (cy < y) && (y < (cy + ch)) &&
+          gdk_window_is_visible(childWindow)) {
+        return get_inner_gdk_window(childWindow, x - cx, y - cy, retx, rety);
+      }
+    }
+  }
+  *retx = x;
+  *rety = y;
+  return aWindow;
 }
 
 static int is_parent_ungrab_enter(GdkEventCrossing* aEvent) {
