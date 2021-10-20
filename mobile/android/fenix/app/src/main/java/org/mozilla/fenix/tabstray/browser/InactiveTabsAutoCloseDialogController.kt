@@ -29,6 +29,7 @@ class InactiveTabsAutoCloseDialogController(
      * Enable the auto-close feature with the after a month setting.
      */
     fun enableAutoClosed() {
+        settings.hasInactiveTabsAutoCloseDialogBeenDismissed = true
         settings.closeTabsAfterOneMonth = true
         settings.closeTabsAfterOneWeek = false
         settings.closeTabsAfterOneDay = false

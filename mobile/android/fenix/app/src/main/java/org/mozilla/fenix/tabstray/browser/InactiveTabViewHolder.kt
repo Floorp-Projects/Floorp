@@ -11,6 +11,7 @@ import mozilla.components.browser.toolbar.MAX_URI_LENGTH
 import mozilla.components.concept.tabstray.Tab
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.databinding.InactiveFooterItemBinding
 import org.mozilla.fenix.databinding.InactiveHeaderItemBinding
 import org.mozilla.fenix.databinding.InactiveTabListItemBinding
@@ -19,6 +20,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.home.topsites.dpToPx
+import org.mozilla.fenix.tabstray.TabsTrayFragment
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 
 sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -80,7 +82,21 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
 
             binding.action.setOnClickListener {
                 interactor.onEnabledAutoCloseClicked()
+                showConfirmationSnackbar()
             }
+        }
+
+        private fun showConfirmationSnackbar() {
+            val context = binding.root.context
+            val view = binding.root
+            val text = context.getString(R.string.inactive_tabs_auto_close_message_snackbar)
+            val snackbar = FenixSnackbar.make(
+                view = view,
+                duration = FenixSnackbar.LENGTH_SHORT,
+                isDisplayedWithBrowserToolbar = true
+            ).setText(text)
+            snackbar.view.elevation = TabsTrayFragment.ELEVATION
+            snackbar.show()
         }
 
         companion object {
