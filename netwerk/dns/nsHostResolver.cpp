@@ -1773,6 +1773,8 @@ void nsHostResolver::GetDNSCacheEntries(nsTArray<DNSCacheEntries>* args) {
     }
 
     info.originAttributesSuffix = recordEntry.GetKey().originSuffix;
+    info.flags = nsPrintfCString("%u|0x%x|%u|%d|%s", rec->type, rec->flags,
+                                 rec->af, rec->pb, rec->mTrrServer.get());
 
     args->AppendElement(std::move(info));
   }
