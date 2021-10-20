@@ -32,6 +32,10 @@ import android.view.inputmethod.InputConnectionWrapper
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatEditText
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.Fact
+import mozilla.components.support.base.facts.collect
 import mozilla.components.support.utils.SafeUrl
 
 typealias OnCommitListener = () -> Unit
@@ -646,7 +650,13 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         }
 
         override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-            if (!isEnabled || settingAutoComplete) return
+            if (settingAutoComplete) return
+
+            // In this initial implementation, we do not include the changed text to minimize PII.
+            Fact(Component.UI_AUTOCOMPLETE, Action.IMPLEMENTATION_DETAIL, "onTextChanged", "InlineAutocompleteEditText")
+                .collect()
+
+            if (!isEnabled) return
 
             textChangedCount = count
         }
