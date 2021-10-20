@@ -1,4 +1,4 @@
-// |jit-test| --wasm-compiler=optimizing; --disable-wasm-huge-memory; --spectre-mitigations=off; skip-if: !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration().x64 || getBuildConfiguration().simulator || getJitCompilerOptions()["ion.check-range-analysis"]; include:codegen-x64-test.js
+// |jit-test| --wasm-memory64; --wasm-compiler=optimizing; --disable-wasm-huge-memory; --spectre-mitigations=off; skip-if: !hasDisassembler() || wasmCompileMode() != "ion" || !getBuildConfiguration().x64 || getBuildConfiguration().simulator || getJitCompilerOptions()["ion.check-range-analysis"]; include:codegen-x64-test.js
 
 // Spectre mitigation is disabled above to make the generated code simpler to
 // match; ion.check-range-analysis makes a hash of the code and makes testing
@@ -16,45 +16,54 @@
 // buffer of some kind) that certain optimizations triggered, and then check the
 // log.
 
-// Make sure the check for the second load is removed: the two load instructions
-// should appear back-to-back in the output.
-codegenTestX64_adhoc(
+var memTypes = [''];
+if (wasmMemory64Enabled()) {
+    memTypes.push('i64')
+}
+
+for ( let memType of memTypes ) {
+    let dataType = memType ? memType : 'i32';
+
+    // Make sure the check for the second load is removed: the two load
+    // instructions should appear back-to-back in the output.
+    codegenTestX64_adhoc(
 `(module
-   (memory 1)
-   (func (export "f") (param i32) (result i32)
-     (local i32)
-     (local.set 1 (i32.add (local.get 0) (i32.const 4)))
+   (memory ${memType} 1)
+   (func (export "f") (param ${dataType}) (result i32)
+     (local ${dataType})
+     (local.set 1 (${dataType}.add (local.get 0) (${dataType}.const 8)))
      (i32.load (local.get 1))
      drop
      (i32.load (local.get 1))))`,
     'f', `
-48 3b ..                  cmp %r.x, %r.x
+48 3b ..                  cmp %r.., %r..
 0f 82 02 00 00 00         jb 0x00000000000000..
 0f 0b                     ud2
 41 8b .. ..               movl \\(%r15,%r..,1\\), %e..
 41 8b .. ..               movl \\(%r15,%r..,1\\), %eax`,
-    {no_prefix:true});
+        {no_prefix:true});
 
-// Make sure constant indices below the heap minimum do not require a bounds check.
-codegenTestX64_adhoc(
+    // Make sure constant indices below the heap minimum do not require a bounds
+    // check.
+    codegenTestX64_adhoc(
 `(module
-   (memory 1)
+   (memory ${memType} 1)
    (func (export "f") (result i32)
-     (i32.load (i32.const 16))))`,
+     (i32.load (${dataType}.const 16))))`,
     'f',
-    `41 8b 47 10               movl 0x10\\(%r15\\), %eax`, {log:true});
+    `41 8b 47 10               movl 0x10\\(%r15\\), %eax`);
 
-// Ditto, even at the very limit of the known heap, extending into the guard
-// page.  This is an OOB access, of course, but it needs no explicit bounds
-// check.
-codegenTestX64_adhoc(
+    // Ditto, even at the very limit of the known heap, extending into the guard
+    // page.  This is an OOB access, of course, but it needs no explicit bounds
+    // check.
+    codegenTestX64_adhoc(
 `(module
-   (memory 1)
+   (memory ${memType} 1)
    (func (export "f") (result i32)
-     (i32.load (i32.const 65535))))`,
+     (i32.load (${dataType}.const 65535))))`,
     'f',
 `
 b8 ff ff 00 00            mov \\$0xFFFF, %eax
 41 8b 04 07               movl \\(%r15,%rax,1\\), %eax`);
-
+}
 
