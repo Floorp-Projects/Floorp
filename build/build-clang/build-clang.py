@@ -502,6 +502,7 @@ def get_tool(config, key):
 #     clang-format
 #     clang-tidy
 #     clangd
+#     run-clang-tidy
 #   include/
 #     * (nothing will be deleted here)
 #   lib/
@@ -540,6 +541,7 @@ def prune_final_dir_for_clang_tidy(final_dir, osx_cross_compile):
         "clang-tidy",
         "clangd",
         "clang-query",
+        "run-clang-tidy",
     ]
     re_clang_tidy = re.compile(r"^(" + "|".join(kept_binaries) + r")(\.exe)?$", re.I)
     for f in glob.glob("%s/bin/*" % final_dir):

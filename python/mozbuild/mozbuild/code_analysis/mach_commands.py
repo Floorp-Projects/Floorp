@@ -1262,7 +1262,7 @@ def autotest(
             "clang-apply-replacements" + config.substs.get("BIN_SUFFIX", ""),
         )
         clang_paths._run_clang_tidy_path = mozpath.join(
-            clang_tools_path, "clang-tidy", "share", "clang", "run-clang-tidy.py"
+            clang_tools_path, "clang-tidy", "bin", "run-clang-tidy"
         )
         clang_paths._clang_format_diff = mozpath.join(
             clang_tools_path, "clang-tidy", "share", "clang", "clang-format-diff.py"
@@ -2227,9 +2227,8 @@ def _set_clang_tools_paths(command_context):
     clang_paths._run_clang_tidy_path = mozpath.join(
         clang_paths._clang_tools_path,
         "clang-tidy",
-        "share",
-        "clang",
-        "run-clang-tidy.py",
+        "bin",
+        "run-clang-tidy",
     )
     clang_paths._clang_format_diff = mozpath.join(
         clang_paths._clang_tools_path,
