@@ -597,7 +597,6 @@ struct DIGroup {
       return;
     }
 
-    gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
     std::vector<RefPtr<ScaledFont>> fonts;
     bool validFonts = true;
     RefPtr<WebRenderDrawEventRecorder> recorder =
@@ -620,8 +619,8 @@ struct DIGroup {
               fonts = std::move(aScaledFonts);
             });
 
-    RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
-        gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
+    RefPtr<gfx::DrawTarget> dummyDt =
+        gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
 
     RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(
         recorder, dummyDt, mLayerBounds.ToUnknownRect());
