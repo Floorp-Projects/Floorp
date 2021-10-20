@@ -1092,15 +1092,14 @@ static bool IsItemProbablyActive(
       Matrix t2d;
       bool is2D = t.Is2D(&t2d);
       GP("active: %d\n", transformItem->MayBeAnimated(aDisplayListBuilder));
-      return transformItem->MayBeAnimated(aDisplayListBuilder, false) ||
-             !is2D ||
+      return transformItem->MayBeAnimated(aDisplayListBuilder) || !is2D ||
              HasActiveChildren(*transformItem->GetChildren(), aBuilder,
                                aResources, aSc, aManager, aDisplayListBuilder);
     }
     case DisplayItemType::TYPE_OPACITY: {
       nsDisplayOpacity* opacityItem = static_cast<nsDisplayOpacity*>(aItem);
       bool active = opacityItem->NeedsActiveLayer(aDisplayListBuilder,
-                                                  opacityItem->Frame(), false);
+                                                  opacityItem->Frame());
       GP("active: %d\n", active);
       return active ||
              HasActiveChildren(*opacityItem->GetChildren(), aBuilder,
