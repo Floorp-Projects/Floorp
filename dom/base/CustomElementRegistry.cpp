@@ -683,7 +683,8 @@ bool CustomElementRegistry::JSObjectToAtomArray(
 
   if (!iterable.isUndefined()) {
     if (!iterable.isObject()) {
-      aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(NS_ConvertUTF16toUTF8(aName));
+      aRv.ThrowTypeError<MSG_CONVERSION_ERROR>(NS_ConvertUTF16toUTF8(aName),
+                                               "sequence");
       return false;
     }
 
@@ -694,7 +695,8 @@ bool CustomElementRegistry::JSObjectToAtomArray(
     }
 
     if (!iter.valueIsIterable()) {
-      aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(NS_ConvertUTF16toUTF8(aName));
+      aRv.ThrowTypeError<MSG_CONVERSION_ERROR>(NS_ConvertUTF16toUTF8(aName),
+                                               "sequence");
       return false;
     }
 

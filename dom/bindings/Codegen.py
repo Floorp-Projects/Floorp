@@ -5835,9 +5835,13 @@ def getJSToNativeConversionInfo(
         assert not isEnforceRange and not isClamp and not isAllowShared
 
         if failureCode is None:
-            notSequence = 'cx.ThrowErrorMessage<MSG_NOT_SEQUENCE>("%s");\n' "%s" % (
-                firstCap(sourceDescription),
-                exceptionCode,
+            notSequence = (
+                'cx.ThrowErrorMessage<MSG_CONVERSION_ERROR>("%s", "sequence");\n'
+                "%s"
+                % (
+                    firstCap(sourceDescription),
+                    exceptionCode,
+                )
             )
         else:
             notSequence = failureCode
@@ -16659,7 +16663,7 @@ class CGDictionary(CGThing):
             body += dedent(
                 """
                 if (!IsConvertibleToDictionary(val)) {
-                  return cx.ThrowErrorMessage<MSG_NOT_DICTIONARY>(sourceDescription);
+                  return cx.ThrowErrorMessage<MSG_CONVERSION_ERROR>(sourceDescription, "dictionary");
                 }
 
                 """

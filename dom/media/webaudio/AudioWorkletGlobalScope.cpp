@@ -159,8 +159,8 @@ void AudioWorkletGlobalScope::RegisterProcessor(
       return;
     }
     if (!iter.valueIsIterable()) {
-      aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(
-          "AudioWorkletProcessor.parameterDescriptors");
+      aRv.ThrowTypeError<MSG_CONVERSION_ERROR>(
+          "AudioWorkletProcessor.parameterDescriptors", "sequence");
       return;
     }
     /*
