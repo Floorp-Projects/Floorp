@@ -152,17 +152,6 @@ reftest:
     description: "Reftest run"
     treeherder-symbol: R(R)
     virtualization: virtual-with-gpu
-    variants:
-        by-test-platform:
-            linux1804-64-qr/debug: ['webrender-sw', 'fission', 'wayland']
-            linux1804-64(-asan|-tsan)-qr/opt: ['webrender-sw', 'fission', 'wayland']
-            windows10-64-2004(-asan)?-qr/opt: ['webrender-sw', 'fission']
-            windows10-aarch64-qr/.*: []
-            windows10-32(?:-shippable)?-qr/opt: ['webrender-sw', 'fission']
-            windows7-32(?:-shippable)?-qr/opt: ['webrender-sw', 'fission']
-            macosx101.*64-qr/debug: ['webrender-sw', 'fission']
-            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
-            default: ['fission']
     chunks:
         by-test-platform:
             android-em-7.*: 3
@@ -178,12 +167,30 @@ reftest:
             windows10-64-2004-ccov-qr/opt: 9
             default: 8
     e10s: true
+    variants:
+        - fission
+        - wayland
+        - webrender-sw
     run-on-projects:
         by-variant:
             fission:
                 by-test-platform:
                     (linux.*64|windows10-64)(-shippable)?-qr/(debug|opt): ['trunk']
                     linux.*64-asan-qr/opt: ['trunk']
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux1804-64-qr/debug: built-projects
+                    linux1804-64(-asan|-tsan)-qr/opt: built-projects
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
+                    linux1804-64-qr/debug: built-projects
+                    linux1804-64(-asan|-tsan)-qr/opt: built-projects
+                    macosx101.*64-qr/debug: built-projects
+                    windows10-64-2004(-asan)?-qr/opt: built-projects
+                    windows7-32(?:-shippable)?-qr/opt: built-projects
                     default: []
             default:
                 by-test-platform:
