@@ -88,7 +88,7 @@ add_task(async function test_dynamic_frames() {
     const BASE_HOST = "www.example.com";
 
     let [tab] = await Promise.all([
-      browser.tabs.create({url: `http://${BASE_HOST}/`}),
+      browser.tabs.create({url: `https://${BASE_HOST}/`}),
       awaitLoad({frameId: 0}),
     ]);
 
@@ -106,20 +106,20 @@ add_task(async function test_dynamic_frames() {
       document.body.appendChild(frame);
 
       let div = document.createElement("div");
-      div.innerHTML = "<iframe src='http://test1.example.com/'></iframe>";
+      div.innerHTML = "<iframe src='https://test1.example.com/'></iframe>";
       let framelist = div.getElementsByTagName("iframe");
       browser.test.assertEq(1, framelist.length, "Found 1 frame inside div");
       framelist[0].addEventListener("load", frameLoaded, {once: true});
       document.body.appendChild(div);
 
       let div2 = document.createElement("div");
-      div2.innerHTML = "<iframe srcdoc=\"<iframe src='http://test2.example.com/'&gt;</iframe&gt;\"></iframe>";
+      div2.innerHTML = "<iframe srcdoc=\"<iframe src='https://test2.example.com/'&gt;</iframe&gt;\"></iframe>";
       framelist = div2.getElementsByTagName("iframe");
       browser.test.assertEq(1, framelist.length, "Found 1 frame inside div");
       framelist[0].addEventListener("load", frameLoaded, {once: true});
       document.body.appendChild(div2);
 
-      const URL = "http://www.example.com/tests/toolkit/components/extensions/test/mochitest/file_contentscript_iframe.html";
+      const URL = "https://www.example.com/tests/toolkit/components/extensions/test/mochitest/file_contentscript_iframe.html";
 
       let xhr = new XMLHttpRequest();
       xhr.open("GET", URL);
