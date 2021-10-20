@@ -49,8 +49,6 @@
     "patches": [
       "static-llvm-symbolizer_clang_12.patch",
       "find_symbolizer_linux_clang_10.patch",
-      "revert-llvmorg-12-init-7827-g2a078c307204.patch",
-      "revert-llvmorg-12-init-16421-gb688c5875d08.patch",
-      "revert-r362047-and-r362065_clang_12.patch"
+      "revert-ga478b0a199f4.patch"
     ]
 }
