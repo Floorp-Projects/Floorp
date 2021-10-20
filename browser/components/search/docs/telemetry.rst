@@ -51,6 +51,7 @@ SEARCH_COUNTS - SAP usage
     - ``searchbar``
     - ``system``
     - ``urlbar`` Except aliases and search mode.
+    - ``urlbar_handoff`` Used when searching from about:newtab.
     - ``urlbar-searchmode`` Used when the Urlbar is in search mode.
     - ``webextension``
 
@@ -62,6 +63,7 @@ browser.engagement.navigation.*
   Possible SAPs are:
 
     - ``urlbar``  Except search mode.
+    - ``urlbar_handoff`` Used when searching from about:newtab.
     - ``urlbar_searchmode``  Used when the Urlbar is in search mode.
     - ``searchbar``
     - ``about_home``
@@ -115,6 +117,7 @@ browser.search.content.*
   They are broken down by the originating SAP where known:
 
   - ``urlbar``  Except search mode.
+  - ``urlbar_handoff`` Used when searching from about:newtab.
   - ``urlbar_searchmode``  Used when the Urlbar is in search mode.
   - ``searchbar``
   - ``about_home``
