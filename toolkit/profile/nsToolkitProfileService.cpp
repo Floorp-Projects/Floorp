@@ -19,7 +19,6 @@
 #  include <windows.h>
 #  include <shlobj.h>
 #  include "mozilla/PolicyChecks.h"
-#  include "WinUtils.h"
 #endif
 #ifdef XP_UNIX
 #  include <unistd.h>
@@ -55,11 +54,8 @@
 #include "nsProxyRelease.h"
 #include "prinrval.h"
 #include "prthread.h"
-#include "mozilla/XREAppData.h"
 
 using namespace mozilla;
-
-extern const char gToolkitBuildID[];
 
 #define DEV_EDITION_NAME "dev-edition-default"
 #define DEFAULT_NAME "default"
@@ -1535,114 +1531,6 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
     }
   }
 
-  if (IsWinPackageEnvironment() && mIsFirstRun && !mProfiles.isEmpty()) {
-    // Unlike with Snap packages, Windows packages do use dedicated profiles,
-    // so we don't need any special behavior to create a profile for them.
-    // However, it's likely that a user of an app package was previously using
-    // a non-packaged installation, and so has a dedicated profile for that
-    // installation, or possibly a "normal" default profile, and we want that
-    // user to have some level of continuity when they make the switch. What
-    // that means is that we need to identify the profile that is most likely to
-    // be the one the user was last working in, and run a profile migration into
-    // our new dedicated profile for this installation. This code handles the
-    // first part, identifying the profile, and then hands off to the regular
-    // profile cleanup code in XREMain to run the actual migration.
-    nsCOMPtr<nsIToolkitProfile> oldProfile;
-
-    // Packages aren't really associated with any non-packaged installation, so
-    // we have no way to look up any specific dedicated profile. The next best
-    // way we have to identify the most relevant profile is to find the one
-    // that was used most recently.
-    PRTime latestTime = 0;
-
-    // We'll also check whether each profile would be a downgrade, unless
-    // downgrades are being allowed.
-    bool allowDowngrade =
-        EnvHasValue("MOZ_ALLOW_DOWNGRADE") ||
-        CheckArg(*aArgc, aArgv, "allow-downgrade",
-                 static_cast<const char**>(nullptr), CheckArgFlag::None);
-
-    for (nsCOMPtr<nsIToolkitProfile> profile : mProfiles) {
-      // Get this profile's last used time by checking the modified time on
-      // its lock file. This isn't an ideal way to decide when the profile was
-      // used last, but that time doesn't seem to be reliably written anywhere
-      // else that we can read from here.
-      nsCOMPtr<nsIFile> rootDir;
-      profile->GetRootDir(getter_AddRefs(rootDir));
-      nsCOMPtr<nsIFile> lockFile;
-      rootDir->Clone(getter_AddRefs(lockFile));
-      lockFile->Append(u"parent.lock"_ns);
-
-      PRTime lastLockTime = 0;
-      lockFile->GetLastModifiedTime(&lastLockTime);
-
-      if (lastLockTime <= latestTime) {
-        continue;
-      }
-
-      // This is (currently) the most recently used profile, but we need to
-      // make sure it hasn't been used by a newer version of the application,
-      // because if it has then we won't be able to load it. But also, this
-      // whole check is a waste of time if downgrade is enabled, so check for
-      // that condition first.
-      if (allowDowngrade) {
-        oldProfile = profile;
-        latestTime = lastLockTime;
-        continue;
-      }
-
-      nsCOMPtr<nsIFile> compatIniFile;
-      rootDir->Clone(getter_AddRefs(compatIniFile));
-      if (!compatIniFile) {
-        continue;
-      }
-
-      compatIniFile->Append(COMPAT_FILE);
-      nsINIParser compatIniParser;
-      if (NS_FAILED(compatIniParser.Init(compatIniFile))) {
-        continue;
-      }
-
-      nsAutoCString lastVersion;
-      if (NS_FAILED(compatIniParser.GetString("Compatibility", "LastVersion",
-                                              lastVersion))) {
-        continue;
-      }
-
-      nsAutoCString currentVersion;
-      if (gAppData) {
-        BuildCompatVersion(gAppData->version, gAppData->buildID,
-                           gToolkitBuildID, currentVersion);
-      } else {
-        // gAppData is the preferred way to get the app version and build ID,
-        // but xpcshell doesn't initialize it, so we need a fallback. This
-        // assumes that the app and toolkit version/build ID are the same, which
-        // is not good to assume in general, but should be fine for xpcshell.
-        BuildCompatVersion(MOZILLA_VERSION, gToolkitBuildID, gToolkitBuildID,
-                           currentVersion);
-      }
-      if (CompareCompatVersions(lastVersion, currentVersion) > 0) {
-        continue;
-      }
-
-      oldProfile = profile;
-      latestTime = lastLockTime;
-    }
-
-    // We can't invoke the migrator directly from here because the component
-    // manager isn't running yet, so signal to our caller that it should start a
-    // migration whenever possible. We need to do that before creating a new
-    // profile here because the refresh procedure will create one later.
-    if (oldProfile) {
-      mCurrent = oldProfile.forget();
-      mCurrent->GetRootDir(aRootDir);
-      mCurrent->GetLocalDir(aLocalDir);
-      NS_ADDREF(*aProfile = mCurrent);
-      mStartupReason = u"firstrun-migrated-default"_ns;
-      return NS_MIGRATE_INTO_PACKAGE;
-    }
-  }
-
   // If this is a first run then create a new profile.
   if (mIsFirstRun) {
     // If we're configured to always show the profile manager then don't create
@@ -1735,8 +1623,8 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
 
   GetDefaultProfile(getter_AddRefs(mCurrent));
 
-  // None of the profiles was marked as default (generally only happens if
-  // the user modifies profiles.ini manually). Let the user choose.
+  // None of the profiles was marked as default (generally only happens if the
+  // user modifies profiles.ini manually). Let the user choose.
   if (!mCurrent) {
     return NS_ERROR_SHOW_PROFILE_MANAGER;
   }
@@ -1790,22 +1678,14 @@ nsresult nsToolkitProfileService::CreateResetProfile(
  * default as well.
  */
 nsresult nsToolkitProfileService::ApplyResetProfile(
-    nsIToolkitProfile* aOldProfile, bool aDeleteOldProfile) {
+    nsIToolkitProfile* aOldProfile) {
   // If the old profile would have been the default for old installs then mark
   // the new profile as such.
   if (mNormalDefault == aOldProfile) {
     SetNormalDefault(mCurrent);
   }
 
-  // For a "standard" profile reset, the current dedicated profile (the one that
-  // we've just created and reset into) should match the one that we've migrated
-  // from; that means we want to make this one our new dedicated default.
-  // If they don't match, it might be because we migrated from a different
-  // installation's dedicated profile, or a non-dedicated profile; in that case
-  // we aren't deleting the old profile, but we still need to set the new one as
-  // this installation's default.
-  if (mUseDedicatedProfile &&
-      (mDedicatedProfile == aOldProfile || !aDeleteOldProfile)) {
+  if (mUseDedicatedProfile && mDedicatedProfile == aOldProfile) {
     bool wasLocked = false;
     nsCString val;
     if (NS_SUCCEEDED(
@@ -1821,31 +1701,27 @@ nsresult nsToolkitProfileService::ApplyResetProfile(
     }
   }
 
-  if (aDeleteOldProfile) {
-    nsCString name;
-    nsresult rv = aOldProfile->GetName(name);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Don't remove the old profile's files until after we've successfully
-    // flushed the profile changes to disk.
-    rv = aOldProfile->Remove(false);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Switching the name will make this the default for dev-edition if
-    // appropriate.
-    rv = mCurrent->SetName(name);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  nsresult rv = Flush();
+  nsCString name;
+  nsresult rv = aOldProfile->GetName(name);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aDeleteOldProfile) {
-    // Now that the profile changes are flushed, try to remove the old profile's
-    // files. If we fail the worst that will happen is that an orphan directory
-    // is left. Let this run in the background while we start up.
-    RemoveProfileFiles(aOldProfile, true);
-  }
+  // Don't remove the old profile's files until after we've successfully flushed
+  // the profile changes to disk.
+  rv = aOldProfile->Remove(false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Switching the name will make this the default for dev-edition if
+  // appropriate.
+  rv = mCurrent->SetName(name);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = Flush();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Now that the profile changes are flushed, try to remove the old profile's
+  // files. If we fail the worst that will happen is that an orphan directory is
+  // left. Let this run in the background while we start up.
+  RemoveProfileFiles(aOldProfile, true);
 
   return NS_OK;
 }
@@ -2056,25 +1932,6 @@ bool nsToolkitProfileService::IsSnapEnvironment() {
   // snapName as defined on e.g.
   // https://snapcraft.io/firefox or https://snapcraft.io/thunderbird
   return (strcmp(snapName, MOZ_APP_NAME) == 0);
-}
-
-/**
- * Like Snaps, Windows app packages
- * (https://docs.microsoft.com/en-us/windows/msix/overview) use a
- * different installation directory for every version of the application, but
- * we have an alternative method of obtaining a per-installation hash for such
- * packages. Because of that, we don't disable dedicated profiles for them.
- * We still need to know when we're in one though, because we have special
- * migration behavior there; see comments in SelectStartupProfile.
- */
-bool nsToolkitProfileService::IsWinPackageEnvironment() {
-#ifdef XP_WIN
-  if (EnvHasValue("MOZ_TEST_EMULATE_PACKAGE") ||
-      mozilla::widget::WinUtils::HasPackageIdentity()) {
-    return true;
-  }
-#endif
-  return false;
 }
 
 /**
