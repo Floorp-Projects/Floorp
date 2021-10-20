@@ -7,10 +7,9 @@
     android:id="@+id/private_session_description_wrapper"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="0.5dp"
+    android:layout_marginHorizontal="@dimen/home_item_horizontal_margin"
     android:importantForAccessibility="no"
-    android:orientation="vertical"
-    android:layout_marginHorizontal="@dimen/home_item_horizontal_margin">
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/private_session_description"
