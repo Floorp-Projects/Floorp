@@ -667,12 +667,26 @@ mochitest-media-failures:
     loopback-video: true
     allow-software-gl-layers: false
     variants:
-        by-test-platform:
-            linux.*64/debug: ['fission', 'wayland', 'socketprocess_networking']
-            linux.*64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'socketprocess_networking']
-            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
-            default: ['fission']
-    run-on-projects: ['mozilla-central']
+        - fission
+        - socketprocess_networking
+        - wayland
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            socketprocess_networking:
+                by-test-platform:
+                    linux.*64-qr/debug: ['mozilla-central']
+                    default: []
+            wayland:
+                by-test-platform:
+                    linux.*64-qr/debug: ['mozilla-central']
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: ['mozilla-central']
+                    linux.*64-qr/debug: ['mozilla-central']
+                    default: []
+            default: ['mozilla-central']
     tier: 3
     chunks:
         by-test-platform:
