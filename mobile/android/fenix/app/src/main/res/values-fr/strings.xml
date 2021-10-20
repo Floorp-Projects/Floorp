@@ -701,6 +701,10 @@
     <string name="tab_view_list">Liste</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Grille</string>
+    <!-- Option for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups">Groupes de recherches</string>
+    <!-- Summary text for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups_summary">Regrouper les sites liés</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Fermer les onglets</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->

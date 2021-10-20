@@ -374,6 +374,8 @@
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
     <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Domača stran</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Domača stran</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Poteze</string>
     <!-- Preference for settings related to visual options -->
@@ -681,6 +683,8 @@
     <string name="tab_view_list">Seznam</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Mreža</string>
+    <!-- Option for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups">Išči skupine</string>
     <!-- Summary text for search term tab groups -->
     <string name="tab_view_search_term_tab_groups_summary">Združi sorodna spletna mesta v skupine</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
@@ -724,6 +728,9 @@
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
     <string name="preferences_inactive_tabs">Premakni stare zavihke med nedejavne</string>
+
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">Zavihki, ki jih dva tedna niste odprli, se premaknejo v razdelek nedejavnih.</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->

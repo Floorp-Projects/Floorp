@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">%s privau</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (nav. privada)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Mas opcions</string>
@@ -22,7 +23,7 @@
     <string name="open_tab_tray_single">1 pestanya ubierta. Toca pa cambiar de pestanya.</string>
 
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s pestanyas ubiertas. Toca pa cambiar de pestanya.</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s pestanyas ubiertas. Toca pa cambiar de pestanya.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d seleccionaus</string>
@@ -70,14 +71,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">No, gracias</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Accede a Firefox mas rapido. Anyade un widget en a tuya pantalla d’inicio.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Anyadir widget</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Agora no</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string name="open_in_app_cfr_info_message">Puetz configurar Firefox pa que ubra automaticament los vinclos en as aplicacions.</string>
@@ -106,7 +99,7 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nueva pestanya privada</string>
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Puestos favoritos</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Puestos favoritos</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -120,7 +113,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Aturar</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Marcapachinas</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Marcapachinas</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Editar marcapachinas</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -149,8 +142,6 @@
     <string name="browser_menu_find_in_page">Mirar en a pachina</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Pestanya privada</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Nueva pestanya</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Alzar en a colección</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -174,6 +165,7 @@
     <string name="browser_menu_open_app_link">Ubrir en aplicación</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Apariencia</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">No se puede connectar. No se reconoix lo esquema d’URL.</string>
@@ -210,7 +202,6 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Saber-ne mas</string>
 
-    <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Buscar</string>
     <!-- Text preview for larger sized widgets -->
@@ -285,7 +276,7 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">Inicio</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Inicio</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Cenyos</string>
     <!-- Preference for settings related to visual options -->
@@ -402,9 +393,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Saber-ne mas</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Se desactivó en cheneral, veye a Achustes pa activar-lo.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetría</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -430,7 +418,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Activar Sync</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Escaniar codigo de emparejamiento en a versión d’escritorio de Firefox</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Escaniar codigo de emparejamiento en a versión d’escritorio de Firefox</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Iniciar sesión</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -492,8 +480,6 @@
     <string name="library_desktop_bookmarks_unfiled">Atros marcapachinas</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Historial</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Pestanyas sincronizadas</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Lista de lectura</string>
     <!-- Menu Item Label for Search in Library -->
@@ -518,7 +504,6 @@
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
     <string name="recently_closed_empty_message">No bi ha aquí pestanyas zarradas fa poco</string>
 
-    <!-- Tab Management -->
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Zarrar las pestanyas</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -596,7 +581,7 @@
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Ubrir pestanyas</string>
     <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">Borrar</string>
+	<string name="remove_top_site">Borrar</string>
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Borrar de l\'historial</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
@@ -617,15 +602,15 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Limpiar</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">Copiar</string>
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">Copiar</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">Compartir</string>
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">Compartir</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">Ubrir en una nueva pestanya</string>
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Ubrir en una nueva pestanya</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">Ubrir en una pestanya privada</string>
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Ubrir en una pestanya privada</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">Borrar</string>
+    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">Borrar</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d triau(s)</string>
@@ -643,12 +628,10 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">No i hai garra historial</string>
 
-    <!-- Downloads -->
-    <!-- Text shown when no download exists -->
-    <string name="download_empty_message">No bi ha descargas aquí</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d seleccionaus</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -672,7 +655,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Menú d’o marcapachinas</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Editar marcapachinas</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Editar marcapachinas</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Triar carpeta</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -683,8 +666,6 @@
     <string name="bookmark_delete_folder_snackbar">S’ha borrau %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Adhibir carpeta</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">S’ha creyau lo marcapachinas.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">S’ha alzau lo marcapachinas</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -783,15 +764,15 @@
     <string name="tracking_protection_on">Activada</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Desactivada</string>
-    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Permitir audio y vídeo</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Blocar audio y vídeo nomás con datos mobils</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">L’audio y lo vídeo se reproducirán con Wi-Fi</string>
-    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Blocar solo audio</string>
-    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">Blocar audio y vídeo</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Activau</string>
@@ -895,6 +876,8 @@
     <string name="notification_pbm_action_delete_and_open">Borrar y ubrir</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Funciona con</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Colección borrada</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -939,7 +922,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Borrar</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Cancelar</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Cancelar</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Accedendo a pantalla completa</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1026,7 +1009,7 @@
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly s’ha tresladau</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">¶
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">
  · Esta aplicación ya no va a recibir actualizacions de seguranza. Obtiene lo nuevo Nightly y deixa d’usar esta aplicación.
  · \n\nPara transferir los tuyos marcapachinas, inicios de sesión y historial a unatra aplicación, creya una cuenta Firefox.</string>
     <!-- text for firefox preview moving tip button  -->
@@ -1038,72 +1021,44 @@
     <string name="onboarding_header">Te damos la bienvenida a %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Ya tiens una cuenta?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Conoixe a %s</string>
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">Veyer las novedatz</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">Veyer las novedatz</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">Tiens preguntas sobre lo redisenyo de %s? Quiers saber qué ha cambiau?</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">Tiens preguntas sobre lo redisenyo de %s? Quiers saber qué ha cambiau?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">Obtiene respuestas aquí</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Encomienza la sincronización d\'as adrezas d\'interés, las contrasenyas y muito mas con a tuya cuenta d\'o Firefox.</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Saber-ne mas</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">Obtiene respuestas aquí</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Sí, iniciar sesión</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Iniciando sesión…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Iniciar sesión en Firefox</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Mantener-me desconnectau</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync ye activau</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Error en iniciar sesión</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Privacidat automatica</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">La configuración de privacidat y seguranza bloca los elementos de seguimiento, los programas maliciosos y las companyías que te siguen.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standard (predeterminau)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Bloca menos elementos de seguimiento. Las pachinas se cargarán con normalidat.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Estricta (recomendada)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Estricto</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Bloca mas elementos de seguimiento, anuncios y finestras emerchents. Las pachinas se cargan mas rapido, pero se puede perder bella funcionalidat.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Prene una posición</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Preba la navegación con una sola man con a barra de ferramientas inferior u mueve-la a la parte superior.</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">Navega de forma privada</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">Navega de forma privada</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">Ubre una pestanya privada una vegada: Toca l’icono %s.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">Ubre una pestanya privada una vegada: Toca l’icono %s.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">Ubre siempre pestanyas privadas: Actualiza los achustes d’o tuyo navegador.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">Ubre siempre pestanyas privadas: Actualiza los achustes d’o tuyo navegador.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">Ubrir achustes</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">Ubrir achustes</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">La tuya privacidat</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">Hemos disenyau %s pa dar-te control sobre lo que compartes
-        en linia y lo que compartes con nusatros.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Leye lo nuestro aviso de privacidat</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Zarrar</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Zarrar</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Prencipia a navegar</string>
@@ -1111,8 +1066,6 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Tría lo tuyo tema</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Cabida un poquet de batería y descansa la vista activando lo modo fosco.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Automatico</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1164,14 +1117,10 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Leyer mas</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standard (predeterminau)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Bloca menos elementos de seguimiento. Las pachinas se cargarán con normalidat.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Qué ye lo que ye blocau per la protección estandard contra lo seguimiento</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricto</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Bloca mas elementos de seguimiento, anuncios y finestras emerchents. Las pachinas se cargan mas rapido, pero se puede perder bella funcionalidat.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Qué ye lo que ye blocau per la protección estricta contra lo seguimiento </string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1203,6 +1152,7 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Criptominers</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Detectores de ditaladas</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Blocau</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Permitiu</string>
@@ -1227,7 +1177,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Bloca la carga de anuncios externos, vídeos y conteniu que contienga codigo de seguimiento. Puede afectar a la funcionalidat d’o puesto web.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Cada vegada que lo escudo ye de color morau, %s ha blocau elementos de seguimiento en bell puesto. Toca pa mas información.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Cada vegada que lo escudo ye de color morau, %s ha blocau elementos de seguimiento en bell puesto. Toca pa mas información.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Las proteccions son activadas pa este puesto</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1299,13 +1249,10 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">No alzar nunca</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Replenar automaticament</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Replenar automaticament</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Inicios de sesión sincronizaus</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Activau</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Desactivau</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Tornar a connectar</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1415,7 +1362,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Cadena de busqueda a usar</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Substituyir la consulta con “%s”. Eixemplo:\n https://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Substituyir la consulta con “%s”. Eixemplo:\n https://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">Saber-ne mas</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
@@ -1463,9 +1410,9 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Activa <b>%1$s</b>]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">Connexión segura</string>
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Connexión segura</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">Connexión insegura</string>
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Connexión insegura</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Seguro que quiers eliminar totz los permisos de totz los puestos?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1505,7 +1452,7 @@
     <string name="discard_changes">Descartar cambios</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Editar</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Fa falta clau</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Busqueda per voz</string>
@@ -1539,22 +1486,9 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Vale, entendiu</string>
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Amostrar los puestos mas visitaus</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Amostrar los puestos mas visitaus</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Eliminar</string>
-
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Quita-le lo millor provecho a %s.</string>
-
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Colecciona las cosetas que t’importan</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Agrupa busquedas, puestos y pestanyas semellants pa un acceso rapido mas tarde.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Ya has iniciau sesión como %s en unatro navegador Firefox d’este telefono. Quiers iniciar sesión con esta cuenta?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Puetz anyadir facilment este puesto web a la tuya pachina d’inicio pa tener-ie acceso instantanio y navegar rapidament como si estase una aplicación.</string>
 
     </resources>

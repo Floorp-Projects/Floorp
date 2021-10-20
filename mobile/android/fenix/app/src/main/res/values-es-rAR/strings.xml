@@ -711,7 +711,7 @@
     <string name="preferences_close_tabs">Cerrar pestañas</string>
 
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
-    <string name="close_tabs_manually">Manualmente</string>
+    <string name="close_tabs_manually">Nunca</string>
     <!-- Option for auto closing tabs that will auto close tabs after one day -->
     <string name="close_tabs_after_one_day">Después de un día</string>
     <!-- Option for auto closing tabs that will auto close tabs after one week -->
@@ -1906,9 +1906,9 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Cambiá <b>%1$s</b> a Habilitado]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection_2">Conexión segura</string>
+    <string name="quick_settings_sheet_secure_connection_2">La conexión es segura</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection_2">Conexión no segura</string>
+    <string name="quick_settings_sheet_insecure_connection_2">La conexión no es segura</string>
     <!-- Label that indicates a site is using a secure connection -->
     <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Conexión segura</string>
     <!-- Label that indicates a site is using a insecure connection -->

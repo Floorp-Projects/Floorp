@@ -112,8 +112,15 @@
     <!-- Text for the action link to go to Settings for inactive tabs. -->
     <string name="tab_tray_inactive_onboarding_button_text">Desactivar los paramètres</string>
 
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Tampadura automatica aprèp un mes ?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox pòot tampar los onglets qu’avètz pas consultats pendent lo mes passat.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Tampar</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button">Activar la tampadura auto</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -722,6 +729,8 @@
     <string name="opening_screen_last_tab">Darrièr onglet</string>
     <!-- Option for never starting on the home screen -->
     <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Jamai</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Pagina d’acuèlh aprèp quatre oras d’inactivitat</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Tampar manualament</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->

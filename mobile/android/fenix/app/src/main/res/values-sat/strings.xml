@@ -21,7 +21,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 ᱴᱮᱵᱽ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ ᱾ ᱴᱮᱵᱽ ᱵᱚᱫᱚᱞ ᱞᱟᱹᱜᱤᱫ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s ᱴᱮᱵᱽ ᱠᱚ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ ᱾ ᱴᱮᱵᱽ ᱵᱚᱫᱚᱞ ᱞᱟᱹᱜᱤᱫ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s ᱴᱮᱵᱽ ᱠᱚ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ ᱾ ᱴᱮᱵᱽ ᱵᱚᱫᱚᱞ ᱞᱟᱹᱜᱤᱫ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d ᱵᱟᱪᱷᱟᱣᱮᱱᱟ</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
@@ -50,7 +50,9 @@
     <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">ᱱᱤᱛ ᱥᱟᱺᱪᱟᱣᱟᱜ</string>
 
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_bookmarked">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
+    <string moz:removedIn="94" name="recently_bookmarked" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recent_bookmarks_title">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">ᱱᱮᱛᱚᱜ ᱜᱮ ᱥᱟᱺᱪᱟᱣ ᱟᱠᱟᱱ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -107,9 +109,12 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">ᱵᱟᱹᱰ</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱴᱮᱵ ᱚᱠᱟ ᱫᱚ ᱵᱟᱨ ᱦᱟᱴ ᱫᱷᱟᱹᱵᱤᱡ ᱵᱟᱝ ᱧᱮᱞ ᱠᱟᱱᱟ ᱚᱱᱟ ᱫᱚ ᱱᱚᱰᱮ ᱩᱪᱟᱹᱲᱚᱜᱼᱟ ᱾</string>
+    <string name="tab_tray_inactive_onboarding_message">ᱟᱢᱟᱜ ᱴᱮᱵ ᱚᱠᱟ ᱫᱚ ᱵᱟᱨ ᱦᱟᱴ ᱫᱷᱟᱹᱵᱤᱡ ᱵᱟᱝ ᱧᱮᱞ ᱠᱟᱱᱟ ᱚᱱᱟ ᱫᱚ ᱱᱚᱰᱮ ᱩᱪᱟᱹᱲᱚᱜᱼᱟ ᱾</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">ᱥᱟᱡᱟᱣ ᱠᱚ ᱨᱮ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
+    <string name="tab_tray_inactive_onboarding_button_text">ᱥᱟᱡᱟᱣ ᱠᱚ ᱨᱮ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
+
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -118,7 +123,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">ᱱᱟᱶᱟ ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵᱽ</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">ᱪᱮᱛᱟᱱ ᱨᱤᱱ ᱥᱟᱭᱤᱴ ᱠᱚ</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">ᱪᱮᱛᱟᱱ ᱨᱤᱱ ᱥᱟᱭᱤᱴ ᱠᱚ</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -142,7 +147,7 @@
 
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header_2">ᱱᱤᱛᱚᱜᱟᱜ ᱦᱤᱨᱤᱭᱟᱜ</string>
+    <string moz:removedIn="94" name="history_metadata_header_2" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜᱟᱜ ᱦᱤᱨᱤᱭᱟᱜ</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">ᱚᱪᱚᱜᱽ ᱢᱮ</string>
@@ -162,7 +167,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">ᱛᱤᱸᱜᱩ</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">ᱵᱩᱠᱢᱟᱨᱠ</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">ᱵᱩᱠᱢᱟᱨᱠ</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">ᱵᱩᱠᱢᱟᱨᱠ ᱥᱟᱯᱲᱟᱣ ᱢᱮ</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -355,7 +360,7 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">ᱩᱭᱦᱟᱹᱨ</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">ᱚᱲᱟᱜ</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">ᱚᱲᱟᱜ</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">ᱪᱤᱱᱦᱟᱹ ᱠᱚ</string>
     <!-- Preference for settings related to visual options -->
@@ -428,9 +433,10 @@
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">ᱱᱤᱛᱜᱮ ᱥᱟᱺᱪᱟᱣ ᱟᱠᱟᱱᱟ</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recently_bookmarked">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
-    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
-    <string name="customize_toggle_recently_visited">ᱱᱤᱛᱚᱜᱟᱜ ᱦᱤᱨᱤᱭᱟᱜ</string>
+    <string moz:removedIn="94" name="customize_toggle_recently_bookmarked" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string moz:removedIn="94" name="customize_toggle_recently_visited" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜᱟᱜ ᱦᱤᱨᱤᱭᱟᱜ</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">ᱯᱚᱠᱮᱴ</string>
 
@@ -543,7 +549,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">ᱥᱭᱸᱠ ᱪᱟᱹᱞᱩᱭ ᱢᱮ</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">ᱡᱚᱲᱟᱣ ᱠᱳᱰ ᱥᱠᱟᱱ ᱢᱮ ᱰᱮᱥᱠᱴᱚᱯ Firefox ᱨᱮ</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">ᱡᱚᱲᱟᱣ ᱠᱳᱰ ᱥᱠᱟᱱ ᱢᱮ ᱰᱮᱥᱠᱴᱚᱯ Firefox ᱨᱮ</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -663,15 +669,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">ᱢᱤᱫ ᱪᱟᱸᱫᱚ ᱛᱟᱭᱚᱢ</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">ᱚᱲᱟᱜ ᱠᱷᱚᱱ ᱮᱦᱚᱵᱽ ᱢᱮ</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">ᱚᱲᱟᱜ ᱠᱷᱚᱱ ᱮᱦᱚᱵᱽ ᱢᱮ</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">ᱯᱩᱱ ᱴᱟᱲᱟᱝ ᱛᱟᱭᱚᱢ</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">ᱯᱩᱱ ᱴᱟᱲᱟᱝ ᱛᱟᱭᱚᱢ</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">ᱡᱟᱣᱜᱮ</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">ᱡᱟᱣᱜᱮ</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">ᱛᱤᱥ ᱦᱚᱸ ᱵᱟᱝ</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">ᱛᱤᱥ ᱦᱚᱸ ᱵᱟᱝ</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">ᱱᱤᱡᱮ ᱛᱮ ᱵᱚᱸᱫᱽ ᱢᱮ
 </string>
@@ -724,13 +730,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">ᱛᱩᱢᱟᱹᱞ ᱨᱮ ᱥᱟᱺᱪᱟᱣ ᱢᱮ</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">ᱵᱟᱪᱷᱟᱣ</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">ᱵᱟᱪᱷᱟᱣ</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">ᱡᱷᱚᱛᱚ ᱴᱮᱵᱽ ᱠᱚ ᱦᱟᱹᱴᱧ ᱢᱮ</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">ᱱᱤᱛᱚᱜᱽᱼᱟᱜ ᱵᱚᱸᱫᱚᱼᱟᱜ ᱴᱮᱵᱽ ᱠᱚ</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">ᱱᱤᱛᱚᱜ ᱵᱚᱸᱫᱚᱼᱟᱜ</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜ ᱵᱚᱸᱫᱚᱼᱟᱜ</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">ᱠᱷᱟᱛᱟ ᱨᱮᱭᱟᱜ ᱥᱟᱡᱟᱣ ᱠᱚ</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -849,10 +855,6 @@
     <string name="history_empty_message">ᱱᱚᱰᱮ ᱱᱟᱜᱟᱢ ᱵᱚᱱᱩᱜ-ᱟ</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">ᱰᱟᱩᱱᱞᱚᱰ ᱠᱚ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">ᱟᱢ ᱡᱷᱚᱛᱚ ᱞᱮᱠᱷᱟ ᱛᱮ ᱟᱢᱟᱜ ᱰᱟᱩᱱᱞᱚᱰ ᱠᱚ ᱢᱮᱴᱟᱣ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ ᱥᱮ?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">ᱰᱟᱩᱱᱞᱚᱰᱠᱚ ᱚᱪᱚᱜᱮᱱᱟ</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -895,7 +897,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">ᱵᱩᱠᱢᱟᱨᱠ ᱢᱮᱱᱩ</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">ᱵᱩᱠᱢᱟᱨᱠ ᱥᱟᱯᱲᱣ ᱢᱮ</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">ᱵᱩᱠᱢᱟᱨᱠ ᱥᱟᱯᱲᱣ ᱢᱮ</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">ᱯᱚᱴᱚᱢ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1924,7 +1926,7 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ᱴᱷᱤᱠ, ᱵᱟᱰᱟᱭ ᱠᱮᱜᱼᱟᱹᱧ</string>
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">ᱡᱟᱹᱥᱛᱤ ᱦᱤᱨᱤ ᱟᱠᱟᱱ ᱥᱟᱭᱤᱴ ᱫᱮᱠᱷᱟᱣᱢᱮ</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">ᱡᱟᱹᱥᱛᱤ ᱦᱤᱨᱤ ᱟᱠᱟᱱ ᱥᱟᱭᱤᱴ ᱫᱮᱠᱷᱟᱣᱢᱮ</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">ᱡᱟᱹᱥᱛᱤ ᱦᱤᱨᱤ ᱟᱠᱟᱱ ᱥᱟᱭᱤᱴ ᱫᱮᱠᱷᱟᱣᱢᱮ</string>
 
@@ -1943,11 +1945,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">ᱵᱟᱝ ᱮᱠᱴᱤᱵᱷ ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">%s ᱞᱟᱹᱜᱤᱫ ᱱᱚᱰᱮ ᱴᱮᱵᱽ ᱢᱮᱱᱟᱜᱼᱟ ᱾ ᱚᱱᱟ ᱚᱠᱛᱚ ᱛᱟᱭᱚᱢ, ᱴᱮᱵᱽ ᱠᱚ ᱟᱡ ᱛᱮᱜᱮ ᱵᱚᱸᱫᱚᱜᱼᱟ ᱾</string>
+    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">%s ᱞᱟᱹᱜᱤᱫ ᱱᱚᱰᱮ ᱴᱮᱵᱽ ᱢᱮᱱᱟᱜᱼᱟ ᱾ ᱚᱱᱟ ᱚᱠᱛᱚ ᱛᱟᱭᱚᱢ, ᱴᱮᱵᱽ ᱠᱚ ᱟᱡ ᱛᱮᱜᱮ ᱵᱚᱸᱫᱚᱜᱼᱟ ᱾</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 ᱫᱤᱱ</string>
+    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 ᱫᱤᱱ</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">1 ᱦᱟᱴ</string>
+    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 ᱦᱟᱴ</string>
 
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
     <string name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">ᱠᱩᱞ ᱢᱮ</string>
