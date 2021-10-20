@@ -48,8 +48,12 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
     return nullptr;
   }
 
-  // TODO (Bug 1616390) - Validate that poses may be reported:
-  // https://immersive-web.github.io/webxr/#poses-may-be-reported
+  if (!mSession->CanReportPoses()) {
+    aRv.ThrowSecurityError(
+        "The visibilityState of the XRSpace's XRSession "
+        "that is passed to GetViewerPose must be 'visible'.");
+    return nullptr;
+  }
 
   // TODO (Bug 1616393) - Check if poses must be limited:
   // https://immersive-web.github.io/webxr/#poses-must-be-limited
@@ -145,11 +149,10 @@ already_AddRefed<XRPose> XRFrame::GetPose(const XRSpace& aSpace,
     return nullptr;
   }
 
-  // TODO (Bug 1616390) - Validate that poses may be reported:
-  // https://immersive-web.github.io/webxr/#poses-may-be-reported
-  if (aSpace.GetSession()->VisibilityState() != XRVisibilityState::Visible) {
-    aRv.ThrowInvalidStateError(
-        "An XRSpace ’s visibilityState in not 'visible'.");
+  if (!mSession->CanReportPoses()) {
+    aRv.ThrowSecurityError(
+        "The visibilityState of the XRSpace's XRSession "
+        "that is passed to GetPose must be 'visible'.");
     return nullptr;
   }
 
