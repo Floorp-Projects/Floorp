@@ -21,7 +21,7 @@ namespace JS {
 
 // Define a reasonable default GC policy for GC-aware Maps.
 template <typename Key, typename Value>
-struct DefaultMapSweepPolicy {
+struct DefaultMapEntryGCPolicy {
   static bool traceWeak(JSTracer* trc, Key* key, Value* value) {
     return GCPolicy<Key>::traceWeak(trc, key) &&
            GCPolicy<Value>::traceWeak(trc, value);
@@ -41,13 +41,13 @@ struct DefaultMapSweepPolicy {
 // define your own GCPolicy specialization, generic helpers can be found in
 // js/public/TracingAPI.h.
 //
-// The MapSweepPolicy template parameter controls how the table drops entries
-// when edges are weakly held. GCHashMap::traceWeak applies the MapSweepPolicy's
-// traceWeak method to each table entry; if it returns true, the entry is
-// dropped. The default MapSweepPolicy drops the entry if either the key or
-// value is about to be finalized, according to its GCPolicy<T>::traceWeak
-// method. (This default is almost always fine: it's hard to imagine keeping
-// such an entry around anyway.)
+// The MapEntryGCPolicy template parameter controls how the table drops entries
+// when edges are weakly held. GCHashMap::traceWeak applies the
+// MapEntryGCPolicy's traceWeak method to each table entry; if it returns true,
+// the entry is dropped. The default MapEntryGCPolicy drops the entry if either
+// the key or value is about to be finalized, according to its
+// GCPolicy<T>::traceWeak method. (This default is almost always fine: it's hard
+// to imagine keeping such an entry around anyway.)
 //
 // Note that this HashMap only knows *how* to trace, but it does not itself
 // cause tracing to be invoked. For tracing, it must be used as
@@ -56,12 +56,12 @@ struct DefaultMapSweepPolicy {
 template <typename Key, typename Value,
           typename HashPolicy = js::DefaultHasher<Key>,
           typename AllocPolicy = js::TempAllocPolicy,
-          typename MapSweepPolicy = DefaultMapSweepPolicy<Key, Value>>
+          typename MapEntryGCPolicy = DefaultMapEntryGCPolicy<Key, Value>>
 class GCHashMap : public js::HashMap<Key, Value, HashPolicy, AllocPolicy> {
   using Base = js::HashMap<Key, Value, HashPolicy, AllocPolicy>;
 
  public:
-  using SweepPolicy = MapSweepPolicy;
+  using EntryGCPolicy = MapEntryGCPolicy;
 
   explicit GCHashMap(AllocPolicy a = AllocPolicy()) : Base(std::move(a)) {}
   explicit GCHashMap(size_t length) : Base(length) {}
@@ -82,8 +82,8 @@ class GCHashMap : public js::HashMap<Key, Value, HashPolicy, AllocPolicy> {
 
   void traceWeakEntries(JSTracer* trc, typename Base::Enum& e) {
     for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
-      if (!MapSweepPolicy::traceWeak(trc, &e.front().mutableKey(),
-                                     &e.front().value())) {
+      if (!MapEntryGCPolicy::traceWeak(trc, &e.front().mutableKey(),
+                                       &e.front().value())) {
         e.removeFront();
       }
     }
@@ -114,9 +114,9 @@ namespace js {
 template <typename Key, typename Value,
           typename HashPolicy = DefaultHasher<Key>,
           typename AllocPolicy = TempAllocPolicy,
-          typename MapSweepPolicy = JS::DefaultMapSweepPolicy<Key, Value>>
+          typename MapEntryGCPolicy = JS::DefaultMapEntryGCPolicy<Key, Value>>
 class GCRekeyableHashMap : public JS::GCHashMap<Key, Value, HashPolicy,
-                                                AllocPolicy, MapSweepPolicy> {
+                                                AllocPolicy, MapEntryGCPolicy> {
   using Base = JS::GCHashMap<Key, Value, HashPolicy, AllocPolicy>;
 
  public:
@@ -129,7 +129,7 @@ class GCRekeyableHashMap : public JS::GCHashMap<Key, Value, HashPolicy,
   bool traceWeak(JSTracer* trc) {
     for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
       Key key(e.front().key());
-      if (!MapSweepPolicy::traceWeak(trc, &key, &e.front().value())) {
+      if (!MapEntryGCPolicy::traceWeak(trc, &key, &e.front().value())) {
         e.removeFront();
       } else if (!HashPolicy::match(key, e.front().key())) {
         e.rekeyFront(key);
@@ -373,10 +373,11 @@ namespace JS {
 // Specialize WeakCache for GCHashMap to provide a barriered map that does not
 // need to be swept immediately.
 template <typename Key, typename Value, typename HashPolicy,
-          typename AllocPolicy, typename MapSweepPolicy>
-class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
+          typename AllocPolicy, typename MapEntryGCPolicy>
+class WeakCache<
+    GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapEntryGCPolicy>>
     final : protected detail::WeakCacheBase {
-  using Map = GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>;
+  using Map = GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapEntryGCPolicy>;
   using Self = WeakCache<Map>;
 
   Map map;
@@ -426,7 +427,7 @@ class WeakCache<GCHashMap<Key, Value, HashPolicy, AllocPolicy, MapSweepPolicy>>
   static bool entryNeedsSweep(JSTracer* barrierTracer, const Entry& prior) {
     Key key(prior.key());
     Value value(prior.value());
-    bool needsSweep = !MapSweepPolicy::traceWeak(barrierTracer, &key, &value);
+    bool needsSweep = !MapEntryGCPolicy::traceWeak(barrierTracer, &key, &value);
     MOZ_ASSERT_IF(!needsSweep,
                   prior.key() == key);  // We shouldn't update here.
     MOZ_ASSERT_IF(!needsSweep,
