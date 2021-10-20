@@ -56,13 +56,14 @@ class ProfilerMarkerFactProcessor @VisibleForTesting(otherwise = PRIVATE) constr
         }
 
         val markerName = fact.item
+        val detailText = fact.value
 
         // Java profiler markers can only be added from the main thread so, for now, we push all
         // markers to the the main thread (which also groups all the markers together,
         // making it easier to read).
         val profiler = profilerProvider()
         if (getMyLooper() == mainHandler.looper) {
-            profiler?.addMarker(markerName)
+            profiler?.addMarker(markerName, detailText)
         } else {
             // To reduce the performance burden, we could early return if the profiler isn't active.
             // However, this would change the performance characteristics from when the profiler is
@@ -71,7 +72,7 @@ class ProfilerMarkerFactProcessor @VisibleForTesting(otherwise = PRIVATE) constr
             mainHandler.post {
                 // We set now to both start and end time because we want a marker of without duration
                 // and if end is omitted, the duration is created implicitly.
-                profiler?.addMarker(markerName, now, now, null)
+                profiler?.addMarker(markerName, now, now, detailText)
             }
         }
     }
