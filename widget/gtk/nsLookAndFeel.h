@@ -123,7 +123,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     nscolor mThemedScrollbarThumbInactive = kBlack;
 
     float mCaretRatio = 0.0f;
-    float mTitlebarRadius = 0.0f;
+    int32_t mTitlebarRadius = 0;
     char16_t mInvisibleCharacter = 0;
     bool mMenuSupportsDrag = false;
 
