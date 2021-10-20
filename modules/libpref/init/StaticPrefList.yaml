@@ -9780,6 +9780,14 @@
   value: true
   mirror: always
 
+# The block size to pad to. Capped at 1024 bytes.
+# Setting it to 0 doesn't add additional padding, but allows the server to
+# respond with padding (RFC7930 Sec 4)
+- name: network.trr.padding.length
+  type: RelaxedAtomicUint32
+  value: 128
+  mirror: always
+
 # Whether to skip the NS check for the blocked host.
 # Note this is used for test only.
 - name: network.trr.skip-check-for-blocked-host
