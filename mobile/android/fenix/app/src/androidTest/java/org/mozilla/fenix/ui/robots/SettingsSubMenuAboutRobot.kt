@@ -67,12 +67,7 @@ private fun assertFirefoxPreviewPage() {
 }
 
 private fun navigateBackToAboutPage(itemToInteract: () -> Unit) {
-    browserScreen {
-    }.openTabDrawer {
-        closeTab()
-    }
-
-    homeScreen {
+    navigationToolbar {
     }.openThreeDotMenu {
     }.openSettings {
     }.openAboutFirefoxPreview {
@@ -161,8 +156,7 @@ private fun assertSupport() {
 }
 
 private fun assertCrashes() {
-
-    browserScreen {
+    navigationToolbar {
     }.openThreeDotMenu {
     }.openSettings {
     }.openAboutFirefoxPreview {

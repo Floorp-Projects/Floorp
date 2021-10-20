@@ -27,13 +27,18 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.By.textContains
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiObject
+import androidx.test.uiautomator.UiScrollable
+import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
+import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_PLAY_SERVICES
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.isPackageInstalled
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.assertIsEnabled
 import org.mozilla.fenix.helpers.click
@@ -89,7 +94,7 @@ class SettingsRobot {
     fun verifyAboutHeading() = assertAboutHeading()
 
     fun verifyRateOnGooglePlay() = assertRateOnGooglePlay()
-    fun verifyAboutFirefoxPreview() = assertAboutFirefoxPreview()
+    fun verifyAboutFirefoxPreview() = assertTrue(aboutFirefoxHeading().waitForExists(waitingTime))
     fun verifyGooglePlayRedirect() = assertGooglePlayRedirect()
 
     class Transition {
@@ -113,7 +118,7 @@ class SettingsRobot {
         fun openAboutFirefoxPreview(interact: SettingsSubMenuAboutRobot.() -> Unit):
             SettingsSubMenuAboutRobot.Transition {
 
-            assertAboutFirefoxPreview().click()
+            aboutFirefoxHeading().click()
 
             SettingsSubMenuAboutRobot().interact()
             return SettingsSubMenuAboutRobot.Transition()
@@ -471,17 +476,20 @@ private fun assertAboutHeading(): ViewInteraction {
 }
 
 private fun assertRateOnGooglePlay(): ViewInteraction {
-    onView(withId(R.id.recycler_view))
-        .perform(RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText("Rate on Google Play"))))
+    scrollToElementByText("Rate on Google Play")
     return onView(withText("Rate on Google Play"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertAboutFirefoxPreview(): ViewInteraction {
-    onView(withId(R.id.recycler_view))
-        .perform(RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText("About $appName"))))
-    return onView(withText("About $appName"))
-        .check(matches(isDisplayed()))
+private fun aboutFirefoxHeading(): UiObject {
+    val aboutFirefoxHeading = mDevice.findObject(UiSelector().text("About $appName"))
+    scrollToElementByText("About $appName")
+    if (!aboutFirefoxHeading.exists()) {
+        settingsList().swipeUp(2)
+        aboutFirefoxHeading.waitForExists(waitingTime)
+    }
+
+    return aboutFirefoxHeading
 }
 
 fun swipeToBottom() = onView(withId(R.id.recycler_view)).perform(ViewActions.swipeUp())
@@ -502,3 +510,6 @@ private fun addonsManagerButton() = onView(withText(R.string.preferences_addons)
 
 private fun goBackButton() =
     onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
+
+private fun settingsList() =
+    UiScrollable(UiSelector().resourceId("$packageName:id/recycler_view"))
