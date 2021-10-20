@@ -938,8 +938,8 @@ void XPCJSRuntime::WeakPointerZonesCallback(JSTracer* trc, void* data) {
   AutoRestore<bool> restoreState(self->mGCIsRunning);
   self->mGCIsRunning = true;
 
-  self->mWrappedJSMap->UpdateWeakPointersAfterGC();
-  self->mUAWidgetScopeMap.sweep();
+  self->mWrappedJSMap->UpdateWeakPointersAfterGC(trc);
+  self->mUAWidgetScopeMap.traceWeak(trc);
 }
 
 /* static */
@@ -950,14 +950,14 @@ void XPCJSRuntime::WeakPointerCompartmentCallback(JSTracer* trc,
   // once for each compartment that is being swept.
   CompartmentPrivate* xpcComp = CompartmentPrivate::Get(comp);
   if (xpcComp) {
-    xpcComp->UpdateWeakPointersAfterGC();
+    xpcComp->UpdateWeakPointersAfterGC(trc);
   }
 }
 
-void CompartmentPrivate::UpdateWeakPointersAfterGC() {
-  mRemoteProxies.sweep();
-  mWrappedJSMap->UpdateWeakPointersAfterGC();
-  mScope->UpdateWeakPointersAfterGC();
+void CompartmentPrivate::UpdateWeakPointersAfterGC(JSTracer* trc) {
+  mRemoteProxies.traceWeak(trc);
+  mWrappedJSMap->UpdateWeakPointersAfterGC(trc);
+  mScope->UpdateWeakPointersAfterGC(trc);
 }
 
 void XPCJSRuntime::CustomOutOfMemoryCallback() {
