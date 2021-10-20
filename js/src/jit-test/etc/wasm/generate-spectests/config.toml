@@ -39,6 +39,7 @@ excluded_tests = []
 [[repos]]
 name = "threads"
 url = "https://github.com/WebAssembly/threads"
+branch = "main"
 parent = "spec"
 excluded_tests = [
   "atomic.wast",
@@ -64,7 +65,7 @@ excluded_tests = []
 [[repos]]
 name = "exception-handling"
 url = "https://github.com/WebAssembly/exception-handling"
-branch = "master"
+branch = "main"
 parent = "spec"
 # Skip in jit-test when it's not enabled
 directive = "; --wasm-exceptions; skip-if: !wasmExceptionsEnabled()"
