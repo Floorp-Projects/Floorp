@@ -20,7 +20,8 @@ ChromiumCDMVideoDecoder::ChromiumCDMVideoDecoder(
       mConfig(aParams.mConfig),
       mCrashHelper(aParams.mCrashHelper),
       mGMPThread(GetGMPThread()),
-      mImageContainer(aParams.mImageContainer) {}
+      mImageContainer(aParams.mImageContainer),
+      mKnowsCompositor(aParams.mKnowsCompositor) {}
 
 ChromiumCDMVideoDecoder::~ChromiumCDMVideoDecoder() = default;
 
@@ -89,10 +90,12 @@ RefPtr<MediaDataDecoder::InitPromise> ChromiumCDMVideoDecoder::Init() {
   RefPtr<gmp::ChromiumCDMParent> cdm = mCDMParent;
   VideoInfo info = mConfig;
   RefPtr<layers::ImageContainer> imageContainer = mImageContainer;
-  return InvokeAsync(
-      mGMPThread, __func__, [cdm, config, info, imageContainer]() {
-        return cdm->InitializeVideoDecoder(config, info, imageContainer);
-      });
+  RefPtr<layers::KnowsCompositor> knowsCompositor = mKnowsCompositor;
+  return InvokeAsync(mGMPThread, __func__,
+                     [cdm, config, info, imageContainer, knowsCompositor]() {
+                       return cdm->InitializeVideoDecoder(
+                           config, info, imageContainer, knowsCompositor);
+                     });
 }
 
 nsCString ChromiumCDMVideoDecoder::GetDescriptionName() const {
