@@ -13,6 +13,8 @@ const MAX_ORDINAL = 99;
 const SPLITCONSOLE_ENABLED_PREF = "devtools.toolbox.splitconsoleEnabled";
 const SPLITCONSOLE_HEIGHT_PREF = "devtools.toolbox.splitconsoleHeight";
 const DISABLE_AUTOHIDE_PREF = "ui.popup.disable_autohide";
+const FORCE_THEME_NOTIFICATION_PREF = "devtools.theme.force-auto-theme-info";
+const SHOW_THEME_NOTIFICATION_PREF = "devtools.theme.show-auto-theme-info";
 const HOST_HISTOGRAM = "DEVTOOLS_TOOLBOX_HOST";
 const CURRENT_THEME_SCALAR = "devtools.current_theme";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -747,6 +749,58 @@ Toolbox.prototype = {
     );
   },
 
+  _showAutoThemeNotification() {
+    // Skip the notification when:
+    if (
+      // - Firefox is not using a dark color scheme.
+      !Services.appinfo.chromeColorSchemeIsDark &&
+      // - The test preference to bypasse the dark-color-scheme check is false.
+      !Services.prefs.getBoolPref(FORCE_THEME_NOTIFICATION_PREF, false)
+    ) {
+      return;
+    }
+
+    // Only show the notification for users with the auto theme.
+    if (Services.prefs.getCharPref("devtools.theme") !== "auto") {
+      return;
+    }
+
+    // Do not show the notification again if it was previously dismissed.
+    if (!Services.prefs.getBoolPref(SHOW_THEME_NOTIFICATION_PREF, false)) {
+      return;
+    }
+
+    // Show the notification.
+    const box = this.getNotificationBox();
+    const brandShorterName = Services.strings
+      .createBundle("chrome://branding/locale/brand.properties")
+      .GetStringFromName("brandShorterName");
+
+    box.appendNotification(
+      L10N.getFormatStr("toolbox.autoThemeNotification", brandShorterName),
+      "auto-theme-notification",
+      "",
+      box.PRIORITY_NEW,
+      [
+        {
+          label: L10N.getStr("toolbox.autoThemeNotification.settingsButton"),
+          callback: async () => {
+            const { panelDoc } = await this.selectTool("options");
+            panelDoc.querySelector("#devtools-theme-box").scrollIntoView();
+            // Emit a test event to avoid unhandled promise rejections in tests.
+            this.emitForTests("test-theme-settings-opened");
+          },
+        },
+      ],
+      evt => {
+        if (evt === "removed") {
+          // Flip the preference when the notification is dismissed.
+          Services.prefs.setBoolPref(SHOW_THEME_NOTIFICATION_PREF, false);
+        }
+      }
+    );
+  },
+
   /**
    * Open the toolbox
    */
@@ -968,6 +1022,8 @@ Toolbox.prototype = {
       }
 
       await this.initHarAutomation();
+
+      this._showAutoThemeNotification();
 
       this.emit("ready");
       this._resolveIsOpen();
