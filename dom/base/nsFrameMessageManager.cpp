@@ -1264,7 +1264,8 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   // We don't cache data: scripts!
   nsAutoCString scheme;
   uri->GetScheme(scheme);
-  bool useScriptPreloader = !scheme.EqualsLiteral("data");
+  bool isCacheable = !scheme.EqualsLiteral("data");
+  bool useScriptPreloader = isCacheable;
 
   // If the script will be reused in this session, compile it in the compilation
   // scope instead of the current global to avoid keeping the current
@@ -1336,6 +1337,12 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     if (!stencil) {
       return nullptr;
     }
+
+    if (isCacheable && !isRunOnce) {
+      // Store into our cache only when we compile it here.
+      auto* holder = new nsMessageManagerScriptHolder(stencil);
+      sCachedScripts->InsertOrUpdate(aURL, holder);
+    }
   }
 
   MOZ_ASSERT(stencil);
@@ -1343,14 +1350,6 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   if (useScriptPreloader) {
     ScriptPreloader::GetChildSingleton().NoteStencil(url, url, stencil,
                                                      isRunOnce);
-
-    // If this script will only run once per process, only cache it in the
-    // preloader cache, not the session cache.
-    if (!isRunOnce) {
-      // Root the object also for caching.
-      auto* holder = new nsMessageManagerScriptHolder(stencil);
-      sCachedScripts->InsertOrUpdate(aURL, holder);
-    }
   }
 
   return stencil.forget();
