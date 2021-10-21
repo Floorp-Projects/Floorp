@@ -33,7 +33,6 @@ async function checkHighFrequencyContent(element) {
   await ac.resume();
   const mediaElementSource = ac.createMediaElementSource(element);
   const analyser = new AnalyserNode(ac);
-  analyser.smoothingTimeConstant = 0.0;
 
   // Undo the volume scaling applied globally during test. This is fine because
   // the audio isn't routed to an actual audio output device in this test, it's
@@ -55,7 +54,7 @@ async function checkHighFrequencyContent(element) {
   analyser.getFloatFrequencyData(spectrum);
   const indexFor15kHz =
     binIndexForFrequency(15000, analyser.fftSize, ac.sampleRate);
-  ok(spectrum[indexFor15kHz] > -50,
+  ok(spectrum[indexFor15kHz] > -60,
       `Energy present at 15kHz (bin index: ${indexFor15kHz}) when playing white
        noise encoded in HE-AAC ${spectrum[indexFor15kHz]}`);
 }
