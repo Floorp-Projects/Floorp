@@ -720,7 +720,13 @@ Toolbox.prototype = {
   _onTargetDestroyed({ targetFront }) {
     if (targetFront.isTopLevel) {
       const consoleFront = targetFront.getCachedFront("console");
-      consoleFront.off("inspectObject", this._onInspectObject);
+      // If the target has already been destroyed, its console front will
+      // also already be destroyed and so we won't be able to retrieve it.
+      // Nor is it important to clear its listener as fronts automatically clears
+      // all their listeners on destroy.
+      if (consoleFront) {
+        consoleFront.off("inspectObject", this._onInspectObject);
+      }
       targetFront.off("frame-update", this._updateFrames);
     } else if (this.selection) {
       this.selection.onTargetDestroyed(targetFront);
