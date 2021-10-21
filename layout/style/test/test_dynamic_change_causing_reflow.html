@@ -321,6 +321,13 @@ const gTestcases = [
     beforeStyle:  "position: sticky",
     expectReflow: true,
   },
+  {
+    // Even if we're a scroll frame.
+    elem: elemWithFixedPosChild,
+    afterStyle: "position: static; overflow: auto;",
+    beforeStyle:  "position: relative; overflow: auto;",
+    expectReflow: true,
+  },
 
   // These ones do though.
   {
@@ -334,6 +341,13 @@ const gTestcases = [
     elem: elemWithAbsPosChild,
     afterStyle: "position: static",
     beforeStyle:  "position: sticky",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    elem: elemWithAbsPosChild,
+    afterStyle: "position: static; overflow: auto;",
+    beforeStyle:  "position: relative; overflow: auto;",
     expectConstruction: true,
     expectReflow: true,
   },
