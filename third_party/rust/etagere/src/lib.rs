@@ -64,8 +64,8 @@
 //!
 //! Licensed under either of
 //!
-//!  * Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-//!  * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+//!  * Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or https://www.apache.org/licenses/LICENSE-2.0)
+//!  * MIT license ([LICENSE-MIT](LICENSE-MIT) or https://opensource.org/licenses/MIT)
 //!
 //! at your option.
 //!
@@ -137,10 +137,27 @@ pub struct Allocation {
 pub struct AllocId(pub(crate) u32);
 
 impl AllocId {
+    #[inline]
+    pub(crate) fn new(index: u16, gen: u16) -> Self {
+        AllocId(index as u32 | ((gen as u32) << 16))
+    }
+
+    #[inline]
+    pub(crate) fn index(&self) -> u16 {
+        self.0 as u16
+    }
+
+    #[inline]
+    pub(crate) fn generation(&self) -> u16 {
+        (self.0 >> 16) as u16
+    }
+
+    #[inline]
     pub fn serialize(&self) -> u32 {
         self.0
     }
 
+    #[inline]
     pub fn deserialize(bytes: u32) -> Self {
         AllocId(bytes)
     }
