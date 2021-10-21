@@ -465,16 +465,6 @@ void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect64(
   }
 }
 
-void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {
-  if (JitOptions.spectreIndexMasking) {
-    if (MWasmRegisterResult* mir = lir->mir()) {
-      if (mir->type() == MIRType::Int32) {
-        masm.movl(ToRegister(lir->output()), ToRegister(lir->output()));
-      }
-    }
-  }
-}
-
 void CodeGenerator::visitWasmSelectI64(LWasmSelectI64* lir) {
   MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
 
