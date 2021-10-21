@@ -43,8 +43,6 @@ that are also all in the ``mozilla::dom`` namespace and whose headers
 are all exported into ``mozilla/dom`` (placed in
 ``$OBJDIR/dist/include`` by the build process).
 
-.. _Adding_WebIDL_bindings_to_a_class:
-
 Adding WebIDL bindings to a class
 ---------------------------------
 
@@ -158,12 +156,8 @@ bindings <https://hg.mozilla.org/mozilla-central/rev/dd08c10193c6>`__.
    the WebIDL. If your object is not refcounted then the return value of
    functions that return it should return an nsAutoPtr.
 
-.. _C_reflections_of_WebIDL_constructs:
-
 C++ reflections of WebIDL constructs
 ------------------------------------
-
-.. _C_reflections_of_WebIDL_operations_methods:
 
 C++ reflections of WebIDL operations (methods)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -225,8 +219,6 @@ will require these method declarations:
      static void StaticOperation(const GlobalObject& aGlobal, JS::Value aSomething);
    }
 
-.. _C_reflections_of_WebIDL_attributes:
-
 C++ reflections of WebIDL attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -250,8 +242,6 @@ The setter's name is ``Set`` followed by the name of the attribute with
 the first letter converted to uppercase. The method signature looks just
 like an operation with a void return value and a single argument whose
 type is the attribute's type.
-
-.. _C_reflections_of_WebIDL_constructors:
 
 C++ reflections of WebIDL constructors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -290,8 +280,6 @@ will require the following declarations in ``MyClass``:
                                            uint32_t aSomeNumber,
                                            ErrorResult& rv);
    };
-
-.. _typemapping:
 
 C++ reflections of WebIDL types
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -487,8 +475,6 @@ will correspond to these C++ function declarations:
    void SetMyAttr(bool value);
    JS::Value MyMethod(const Optional<bool>& arg);
 
-.. _Integer_types:
-
 Integer types
 ^^^^^^^^^^^^^
 
@@ -510,8 +496,6 @@ will correspond to these C++ function declarations:
    int16_t MyAttr();
    void SetMyAttr(int16_t value);
    int64_t MyMethod(const Nullable<uint32_t>& arg);
-
-.. _Floating_point_types:
 
 Floating point types
 ^^^^^^^^^^^^^^^^^^^^
@@ -536,8 +520,6 @@ will correspond to these C++ function declarations:
    float MyAttr();
    void SetMyAttr(float value);
    double MyMethod(const Nullable<double>& arg);
-
-.. _DOMString:
 
 ``DOMString``
 ^^^^^^^^^^^^^
@@ -579,14 +561,10 @@ will correspond to these C++ function declarations:
    void MyMethod(const Sequence<nsString>& arg1, const nsAString& arg2,
                  const Optional<nsAString>& arg3, nsString& retval, ErrorResult& rv);
 
-.. _USVString:
-
 ``USVString``
 ^^^^^^^^^^^^^
 
 ``USVString`` is reflected just like ``DOMString``.
-
-.. _UTF8String:
 
 ``UTF8String``
 ^^^^^^^^^^^^^^
@@ -611,8 +589,6 @@ Nullable ``UTF8String``\s are represented by the same types as
 non-nullable ones, but the string will return true for ``IsVoid()``.
 Returning null as a string value can be done using ``SetIsVoid()`` on
 the out param.
-
-.. _ByteString:
 
 ``ByteString``
 ^^^^^^^^^^^^^^
@@ -672,8 +648,6 @@ will correspond to these C++ function declarations:
                  const Optional<JS::Handle<JSObject*> >& arg5,
                  JS::MutableHandle<JSObject*> retval);
 
-.. _Interface_types:
-
 Interface types
 ^^^^^^^^^^^^^^^
 
@@ -684,8 +658,6 @@ not been converted to the WebIDL bindings yet. WebIDL interfaces are
 used to represent WebIDL binding objects. "SpiderMonkey" interfaces are
 used to represent objects that are implemented natively by the
 JavaScript engine (e.g., typed arrays).
-
-.. _Callback_interfaces:
 
 Callback interfaces
 '''''''''''''''''''
@@ -806,8 +778,6 @@ A consumer of MyCallback would be able to use it like this:
      }
    }
 
-.. _External_interfaces:
-
 External interfaces
 '''''''''''''''''''
 
@@ -827,8 +797,6 @@ depends on how the type is being used.
    callee until at least the binding method has returned).
 -  External interfaces in sequences, dictionaries, owning unions, and
    variadic arguments are represented by ``RefPtr<nsIFoo>.``
-
-.. _WebIDL_interfaces:
 
 WebIDL interfaces
 '''''''''''''''''
@@ -886,8 +854,6 @@ Would correspond to these C++ function declarations:
    MyClass* SomeOtherAttr();
    MyClass* SomeYetOtherAttr(); // Don't have to return already_AddRefed!
 
-.. _SpiderMonkey_interfaces:
-
 "SpiderMonkey" interfaces
 '''''''''''''''''''''''''
 
@@ -922,8 +888,6 @@ properly.  On-stack typed arrays can be declared as
 ``RootedTypedArray<TypedArrayType>`` (e.g.
 ``RootedTypedArray<Int16Array>``).  Typed arrays on the heap need to be
 traced.
-
-.. _Dictionary_types:
 
 Dictionary types
 ^^^^^^^^^^^^^^^^
@@ -989,8 +953,6 @@ and the ``Dict`` struct will look like this:
 Note that the dictionary members are sorted in the struct in
 alphabetical order.
 
-.. _API_for_working_with_dictionaries:
-
 API for working with dictionaries
 '''''''''''''''''''''''''''''''''
 
@@ -1020,8 +982,6 @@ Example implementation using all of the above:
        mBar.Assign(aArg.mBar.Value());
      }
    }
-
-.. _Enumeration_types:
 
 Enumeration types
 ^^^^^^^^^^^^^^^^^
@@ -1069,8 +1029,6 @@ would lead to this C++ enum declaration:
    namespace MyEnumValues {
    extern const EnumEntry strings[10];
    } // namespace MyEnumValues
-
-.. _Callback_function_types:
 
 Callback function types
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -1160,10 +1118,6 @@ A consumer of MyCallback would be able to use it like this:
      }
    }
 
-.. _sect1:
-
-.. _Sequences:
-
 Sequences
 ^^^^^^^^^
 
@@ -1176,15 +1130,11 @@ appended to the argument list, where ``T`` is the return type for the
 elements of the WebIDL sequence. This comes after all IDL arguments, but
 before the ``ErrorResult&``, if any, for the method.
 
-.. _Arrays:
-
 Arrays
 ^^^^^^
 
 IDL array objects are not supported yet. The spec on these is likely to
 change drastically anyway.
-
-.. _Union_types:
 
 Union types
 ^^^^^^^^^^^
@@ -1236,15 +1186,11 @@ Owning unions used on the stack should be declared as a
 ``RootedUnion<UnionType>``, for example,
 ``RootedUnion<OwningObjectOrLong>``.
 
-.. _Date:
-
 ``Date``
 ^^^^^^^^
 
 WebIDL ``Date`` types are represented by a ``mozilla::dom::Date``
 struct.
-
-.. _C_reflections_of_WebIDL_declarations:
 
 C++ reflections of WebIDL declarations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1254,8 +1200,6 @@ properties and functions on the interface they are declared on. Each has
 a different set of helper functions it comes with. In addition, for
 iterable, there are requirements for C++ function implementation by the
 interface developer.
-
-.. _Maplike:
 
 Maplike
 ^^^^^^^
@@ -1283,8 +1227,6 @@ C++. The generated C++ API will look as follows:
    } // namespace MaplikeHelpers
    } // namespace StringToLongMapBindings
 
-.. _Setlike:
-
 Setlike
 ^^^^^^^
 
@@ -1310,8 +1252,6 @@ c++. The generated C++ API will look as follows:
    void Add(mozilla::dom::StringSet* self, const nsAString& aKey, ErrorResult& aRv);
    } // namespace SetlikeHelpers
    }
-
-.. _Iterable:
 
 Iterable
 ^^^^^^^^
@@ -1363,8 +1303,6 @@ following methods be implemented in the C++ object:
      uint32_t& GetValueAtIndex(uint32_t aIndex);
    }
 
-.. _Stringifiers:
-
 Stringifiers
 ~~~~~~~~~~~~
 
@@ -1398,8 +1336,6 @@ the corresponding C++ would be:
      void GetStringRepresentation(nsAString& aResult);
    };
 
-.. _Legacy_Callers:
-
 Legacy Callers
 ~~~~~~~~~~~~~~
 
@@ -1423,8 +1359,6 @@ the corresponding C++ would be:
    public:
      int32_t LegacyCall(JS::Handle<JS::Value> aThisVal, float aArgument);
    };
-
-.. _Named_getters:
 
 Named getters
 ~~~~~~~~~~~~~
@@ -1470,8 +1404,6 @@ the corresponding C++ would be:
      void GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames);
    };
 
-.. _Indexed_getters:
-
 Indexed getters
 ~~~~~~~~~~~~~~~
 
@@ -1505,8 +1437,6 @@ the corresponding C++ would be:
      int32_t IndexedGetter(uint32_t aIndex, bool& aFound) const;
    };
 
-.. _Throwing_exceptions_from_WebIDL_methods_getters_and_setters:
-
 Throwing exceptions from WebIDL methods, getters, and setters
 -------------------------------------------------------------
 
@@ -1519,15 +1449,11 @@ In cases when the specification calls for throwing a ``TypeError``, you
 should use ``ErrorResult::ThrowTypeError()`` instead of calling
 ``Throw()``.
 
-.. _Custom_extended_attributes:
-
 Custom extended attributes
 --------------------------
 
 Our WebIDL parser and code generator recognize several extended
 attributes that are not present in the WebIDL spec.
-
-.. _Alias:
 
 ``[Alias=propName]``
 ~~~~~~~~~~~~~~~~~~~~
@@ -1553,8 +1479,6 @@ global interface (such as ``Window``).
 Aside from regular property names, the name of an alias can be
 `Symbol.iterator </en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol#Well-known_symbols>`__.
 This is specified by writing ``[Alias="@@iterator"]``.
-
-.. _BindingAlias:
 
 ``[BindingAlias=propName]``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1583,8 +1507,6 @@ implementing ``MyInterface``.
 Multiple ``[BindingAlias]`` extended attributes can be used on a single
 attribute.
 
-.. _ChromeOnly:
-
 ``[ChromeOnly]``
 ~~~~~~~~~~~~~~~~
 
@@ -1612,8 +1534,6 @@ only appear to exist in system-privileged code.
 This extended attribute can be specified together with ``[Func]``, and
 ``[Pref]``. If more than one of these is specified, all conditions will
 need to test true for the interface or interface member to be exposed.
-
-.. _Pref:
 
 ``[Pref=prefname]``
 ~~~~~~~~~~~~~~~~~~~
@@ -1663,8 +1583,6 @@ This extended attribute can be specified together with ``[ChromeOnly]``,
 and ``[Func]``. If more than one of these is specified, all conditions
 will need to test true for the interface or interface member to be
 exposed.
-
-.. _Func:
 
 ``[Func="funcname"]``
 ~~~~~~~~~~~~~~~~~~~~~
@@ -1747,8 +1665,6 @@ the interface is using a non-deafault heder file.  If a non-default
 header file is used, that header file needs to do any header inclusions
 necessary for ``[Func]`` annotations.
 
-.. _Throws:
-
 ``[Throws]``, ``[GetterThrows]``, ``[SetterThrows]``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1765,8 +1681,6 @@ non-readonly attributes.
 For interfaces flagged with ``[JSImplementation]``, all methods and
 properties are assumed to be able to throw and do not need to be flagged
 as throwing.
-
-.. _DependsOn:
 
 ``[DependsOn]``
 ~~~~~~~~~~~~~~~
@@ -1802,8 +1716,6 @@ Values other than ``Everything``, when used in combination with
 perform loop-hoisting and common subexpression elimination on the return
 values of IDL attributes and methods.
 
-.. _Affects:
-
 ``[Affects]``
 ~~~~~~~~~~~~~
 
@@ -1832,8 +1744,6 @@ subexpression elimination on the return values of IDL attributes and
 methods, as well as code motion past DOM methods that might depend on
 system state but have no side effects.
 
-.. _Pure:
-
 ``[Pure]``
 ~~~~~~~~~~
 
@@ -1841,8 +1751,6 @@ This is an alias for ``[Affects=Nothing, DependsOn=DOMState]``.
 Attributes/methods flagged in this way promise that they will keep
 returning the same value as long as nothing that has
 ``[Affects=Everything]`` executes.
-
-.. _Constant:
 
 ``[Constant]``
 ~~~~~~~~~~~~~~
@@ -1857,8 +1765,6 @@ view.
 The spec's ``[SameObject]`` extended attribute is an alias for
 ``[Constant]``, but can only be applied to things returning objects,
 whereas ``[Constant]`` can be used for any type of return value.
-
-.. _NeedResolve:
 
 ``[NeedResolve]``
 ~~~~~~~~~~~~~~~~~
@@ -1883,8 +1789,6 @@ provide a superset of all the property names that ``DoResolve`` might
 resolve. Providing names that ``DoResolve`` won't actually resolve is
 OK.
 
-.. _HeaderFile:
-
 ``[HeaderFile="path/to/headerfile.h"]``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1892,16 +1796,12 @@ Indicates where the implementation can be found. Similar to the
 headerFile annotation in Bindings.conf.  Just like headerFile in
 Bindings.conf, should be avoided.
 
-.. _JSImplementation:
-
 ``[JSImplementation="@mozilla.org/some-contractid;1"]``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Used on an interface to provide the contractid of the `JavaScript
 component implementing the
 interface <#Implementing_WebIDL_using_Javascript>`__.
-
-.. _StoreInSlot:
 
 ``[StoreInSlot]``
 ~~~~~~~~~~~~~~~~~
@@ -1936,8 +1836,6 @@ for handling any JSAPI exception that is set by the failure.
 
 If the attribute is not readonly, setting it will automatically clear
 the cached value and reget it again before the setter returns.
-
-.. _Cached:
 
 ``[Cached]``
 ~~~~~~~~~~~~
@@ -1976,8 +1874,6 @@ JS-implemented WebIDL can clear the cached value by calling
 If the attribute is not readonly, setting it will automatically clear
 the cached value.
 
-.. _Frozen:
-
 ``[Frozen]``
 ~~~~~~~~~~~~
 
@@ -1987,8 +1883,6 @@ on the return value before returning it. This extended attribute is only
 allowed on attributes that return sequences, dictionaries and
 ``MozMap``, and corresponds to returning a frozen ``Array`` (for the
 sequence case) or ``Object`` (for the other two cases).
-
-.. _BinaryName:
 
 ``[BinaryName]``
 ~~~~~~~~~~~~~~~~
@@ -2021,8 +1915,6 @@ the corresponding C++ would be:
      void SetRenamedAttribute(int32_t);
    };
 
-.. _Deprecatedtag:
-
 ``[Deprecated="tag"]``
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2038,16 +1930,12 @@ The complete list of valid deprecation tags is maintained in
 Each new tag requires that a localized string be defined, containing the
 deprecation message to display.
 
-.. _CrossOriginReadable:
-
 ``[CrossOriginReadable]``
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Used to flag an attribute that, when read, will not have the same-origin
 constraint tested: it can be read from a context with a different
 origin.
-
-.. _CrossOriginWrite:
 
 ``[CrossOriginWrite]``
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -2056,16 +1944,12 @@ Used to flag an attribute that, when written, will not have the
 same-origin constraint tested: it can be written from a context with a
 different origin.
 
-.. _CrossOriginCallable:
-
 ``[CrossOriginCallable]``
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Used to flag a method that, when called, will not have the same-origin
 constraint tested: it can be called from a context with a different
 origin.
-
-.. _SecureContext:
 
 ``[SecureContext]``
 ~~~~~~~~~~~~~~~~~~~
@@ -2079,8 +1963,6 @@ details specific to Gecko:
    with ``[SecureContext]``.
 -  XPConnect sandboxes doesn't see ``[SecureContext]`` APIs, but this
    may change in {{bug(1273687)}}.
-
-.. _NeedsSubjectPrincipal_GetterNeedsSubjectPrincipal_SetterNeedsSubjectPrincipal:
 
 ``[NeedsSubjectPrincipal]``, ``[GetterNeedsSubjectPrincipal]``, ``[SetterNeedsSubjectPrincipal]``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2103,8 +1985,6 @@ principal. ``[GetterNeedsSubjectPrincipal]`` applies only to attributes.
 ``[SetterNeedsSubjectPrincipal]`` applies only to non-readonly
 attributes.
 
-.. _NeedsCallerType:
-
 ``[NeedsCallerType]``
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -2115,14 +1995,10 @@ worker involved is a ``ChromeWorker`` or not.  At the momen the only
 possible caller types are ``System`` (representing system-principal
 callers) and ``NonSystem``.
 
-.. _Helper_objects:
-
 Helper objects
 --------------
 
 The C++ side of the bindings uses a number of helper objects.
-
-.. _Nullable:
 
 ``Nullable<T>``
 ~~~~~~~~~~~~~~~
@@ -2142,8 +2018,6 @@ null and two setters that can be used to set it to a value:
 ``"void SetValue(T)"`` (for setting it to a given value) and
 ``"T& SetValue()"`` for directly modifying the underlying ``T&``.
 
-.. _Optional:
-
 ``Optional<T>``
 ~~~~~~~~~~~~~~~
 
@@ -2157,8 +2031,6 @@ have no default value.
 value is available. In that case, the ``Value()`` getter can be used to
 get a ``const T&`` for the value.
 
-.. _NonNull:
-
 ``NonNull<T>``
 ~~~~~~~~~~~~~~
 
@@ -2166,8 +2038,6 @@ get a ``const T&`` for the value.
 ```BindingUtils.h`` <https://searchfox.org/mozilla-central/source/dom/bindings/BindingUtils.h>`__
 and exported to ``mozilla/dom/BindingUtils.h`` that is used to represent
 non-null C++ objects. It has a conversion operator that produces ``T&``.
-
-.. _OwningNonNull:
 
 ``OwningNonNull<T>``
 ~~~~~~~~~~~~~~~~~~~~
@@ -2177,8 +2047,6 @@ non-null C++ objects. It has a conversion operator that produces ``T&``.
 and exported to ``mozilla/OwningNonNull.h`` that is used to represent
 non-null C++ objects and holds a strong reference to them. It has a
 conversion operator that produces ``T&``.
-
-.. _TypedArrays:
 
 Typed arrays, arraybuffers, array buffer views
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2193,8 +2061,6 @@ in units of ``*Data()``. So for example, ``Int32Array`` has a ``Data()``
 returning ``int32_t*`` and a ``Length()`` that returns the number of
 32-bit ints in the array..
 
-.. _Sequence:
-
 ``Sequence<T>``
 ~~~~~~~~~~~~~~~
 
@@ -2206,8 +2072,6 @@ exact kind is opaque to consumers. This allows the binding code to
 change the exact definition (e.g., to use auto arrays of different sizes
 and so forth) without having to update all the callees.
 
-.. _CallbackFunction:
-
 ``CallbackFunction``
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -2218,8 +2082,6 @@ common base class for all the generated callback function
 representations. This class inherits from ``nsISupports``, and consumers
 must make sure to cycle-collect it, since it keeps JS objects alive.
 
-.. _CallbackInterface:
-
 ``CallbackInterface``
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -2229,8 +2091,6 @@ and exported to ``mozilla/dom/CallbackInterface.h`` that is used as a
 common base class for all the generated callback interface
 representations. This class inherits from ``nsISupports``, and consumers
 must make sure to cycle-collect it, since it keeps JS objects alive.
-
-.. _DOMString-helper:
 
 ``DOMString``
 ~~~~~~~~~~~~~
@@ -2249,8 +2109,6 @@ length. This allows the binding code to avoid extra reference-counting
 of the string buffer in many cases, and allows it to take a faster
 codepath even if it does end up having to addref the ``nsStringBuffer``.
 
-.. _GlobalObject:
-
 ``GlobalObject``
 ~~~~~~~~~~~~~~~~
 
@@ -2265,8 +2123,6 @@ is available. It also has a ``Context()`` method that returns the
 ``JSContext*`` the call is happening on. A caveat: the compartment of
 the ``JSContext`` may not match the compartment of the global!
 
-.. _Date-struct:
-
 ``Date``
 ~~~~~~~~
 
@@ -2278,8 +2134,6 @@ double which represents a number of milliseconds since the epoch, as
 well as ``SetTimeStamp()`` methods that can be used to initialize it
 with a double timestamp or a JS ``Date`` object. It also has a
 ``ToDateObject()`` method that can be used to create a new JS ``Date``.
-
-.. _ErrorResult:
 
 ``ErrorResult``
 ~~~~~~~~~~~~~~~
@@ -2309,8 +2163,6 @@ exceptions in WebIDL bindings. This has the following methods:
    should only be used for legacy code that has nsresult everywhere; we
    would like to get rid of this operator at some point.
 
-.. _Events:
-
 Events
 ------
 
@@ -2319,8 +2171,6 @@ interface file to GENERATED_EVENTS_WEBIDL_FILES in the
 appropriate dom/webidl/moz.build file. You can also take a simple
 generated C++ file pair and use it to build a more complex event (i.e.,
 one that has methods).
-
-.. _Event_handler_attributes:
 
 Event handler attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2364,15 +2214,11 @@ something like:
       return rv.StealNSResult();  // Assuming the caller cares about the return code.
    }
 
-.. _Bindings.conf:
-
 ``Bindings.conf`` details
 -------------------------
 
 Write me. In particular, need to describe at least use of ``concrete``,
 ``prefable``, and ``addExternalInterface``.
-
-.. _How_to_get_a_JSContext_passed_to_a_given_method:
 
 How to get a JSContext passed to a given method
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2381,8 +2227,6 @@ In some rare cases you may need a ``JSContext*`` argument to be passed
 to a C++ method that wouldn't otherwise get such an argument. To see how
 to achieve this, search for ``implicitJSContext`` in
 `dom/bindings/Bindings.conf <#Bindings.conf>`__.
-
-.. _Implementing_WebIDL_using_Javascript:
 
 Implementing WebIDL using Javascript
 ------------------------------------
@@ -2404,16 +2248,12 @@ Workers**. When the binding occurs, two objects are created:
 Because there are two types of objects, you have to be careful about
 which object you are creating.
 
-.. _Creating_JS-implemented_WebIDL_objects:
-
 Creating JS-implemented WebIDL objects
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To create a JS-implemented WebIDL object, one must create both the
 chrome-side implementation object and the content-side page-exposed
 object. There are three ways to do this.
-
-.. _Using_the_WebIDL_constructor:
 
 Using the WebIDL constructor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2436,8 +2276,6 @@ methods on the interface.
 
 Creating many objects this way can be slow due to the createInstance
 overhead involved.
-
-.. _Using_a__create_method:
 
 Using a ``_create`` method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2464,8 +2302,6 @@ code would look more like:
 Creating the object this way will not invoke its ``__init`` method or
 ``init`` method.
 
-.. _By_returning_a_chrome-side_object_from_a_JS-implemented_WebIDL_method:
-
 By returning a chrome-side object from a JS-implemented WebIDL method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -2476,8 +2312,6 @@ WebIdL object and the content-side part will be automatically created.
 
 Creating the object this way will not invoke its ``__init`` method or
 ``init`` method.
-
-.. _Implementing_a_WebIDL_object_in_JavaScript:
 
 Implementing a WebIDL object in JavaScript
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2527,8 +2361,6 @@ content-side object will be created. Then,if there are any constructor
 arguments, the object's ``__init`` method will be invoked, with the
 constructor arguments as its arguments.
 
-.. _Static_Members:
-
 Static Members
 ~~~~~~~~~~~~~~
 
@@ -2555,8 +2387,6 @@ Rather than calling into a method on the JS implementation; calling
 ``Foo.doSomething()`` will result in calling
 ``mozilla::dom::OtherClass::DoSomething()``.
 
-.. _Checking_for_Permissions_or_Preferences:
-
 Checking for Permissions or Preferences
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2577,8 +2407,6 @@ For permissions or other kinds of checking, add an extended attribute
 function implemented in C++ that returns true if the interface should be
 enabled. This function can do whatever checking is needed. One example
 of this is ``PushManager``.
-
-.. _Example:
 
 Example
 ~~~~~~~
@@ -2616,8 +2444,6 @@ usable by the doNothing() method.
 Finally, add a component and a contract and whatever other manifest
 stuff you need to implement an XPCOM component.
 
-.. _Guarantees_provided_by_bindings:
-
 Guarantees provided by bindings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2635,8 +2461,6 @@ security bug, but otherwise they can have quite surprising behavior if
 the page is trying to be malicious. Try to avoid using these types if
 possible.
 
-.. _Accessing_the_content_object_from_the_implementation:
-
 Accessing the content object from the implementation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2646,15 +2470,11 @@ the chrome implementation object. This property only appears after the
 content-side object has been created. So it is available in ``__init``
 but not in ``init``.
 
-.. _Determining_the_principal_of_the_caller_that_invoked_the_WebIDL_API:
-
 Determining the principal of the caller that invoked the WebIDL API
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This can be done by calling
 ``Component.utils.getWebIDLCallerPrincipal()``.
-
-.. _Throwing_exceptions_from_JS-implemented_APIs:
 
 Throwing exceptions from JS-implemented APIs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2703,8 +2523,6 @@ so:
    } catch (e) {
      throw new this.contentWindow.Error(e.message);
    }
-
-.. _Inheriting_from_interfaces_implemented_in_C:
 
 Inheriting from interfaces implemented in C++
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
