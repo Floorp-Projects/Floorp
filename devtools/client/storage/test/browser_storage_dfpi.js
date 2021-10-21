@@ -14,7 +14,7 @@ const { SiteDataTestUtils } = ChromeUtils.import(
 );
 
 // Ensure iframe.src in storage-dfpi.html starts with PREFIX.
-const PREFIX = "http://sub1.test1.example";
+const PREFIX = "https://sub1.test1.example";
 const ORIGIN = `${PREFIX}.org`;
 const ORIGIN_THIRD_PARTY = `${PREFIX}.com`;
 const TEST_URL = `${ORIGIN}/${PATH}storage-dfpi.html`;

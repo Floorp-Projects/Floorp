@@ -7,29 +7,29 @@
 "use strict";
 
 add_task(async function() {
-  const URL = URL_ROOT_COM + "storage-indexeddb-iframe.html";
+  const URL = URL_ROOT_COM_SSL + "storage-indexeddb-iframe.html";
 
   // open tab
   await openTabAndSetupStorage(URL);
   const doc = gPanelWindow.document;
 
   // check that host appears in the storage tree
-  checkTree(doc, ["indexedDB", "http://example.com"]);
+  checkTree(doc, ["indexedDB", "https://example.com"]);
   // check the table for values
   await selectTreeItem([
     "indexedDB",
-    "http://example.com",
+    "https://example.com",
     "db (default)",
     "store",
   ]);
   checkStorageData("foo", JSON.stringify({ key: "foo", value: "bar" }));
 
   // check that host appears in the storage tree
-  checkTree(doc, ["indexedDB", "http://example.net"]);
+  checkTree(doc, ["indexedDB", "https://example.net"]);
   // check the table for values
   await selectTreeItem([
     "indexedDB",
-    "http://example.net",
+    "https://example.net",
     "db (default)",
     "store",
   ]);

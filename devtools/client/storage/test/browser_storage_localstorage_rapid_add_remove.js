@@ -9,8 +9,8 @@
 "use strict";
 
 add_task(async function() {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-blank.html");
-  await selectTreeItem(["localStorage", "http://test1.example.org"]);
+  await openTabAndSetupStorage(MAIN_DOMAIN_SECURED + "storage-blank.html");
+  await selectTreeItem(["localStorage", "https://test1.example.org"]);
 
   ok(isTableEmpty(), "Table empty on init");
 

@@ -9,7 +9,9 @@
 // Test deleting indexedDB database from the tree using context menu
 
 add_task(async function() {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-empty-objectstores.html");
+  await openTabAndSetupStorage(
+    MAIN_DOMAIN_SECURED + "storage-empty-objectstores.html"
+  );
 
   const contextMenu = gPanelWindow.document.getElementById(
     "storage-tree-popup"
@@ -19,13 +21,17 @@ add_task(async function() {
   info("test state before delete");
   await checkState([
     [
-      ["indexedDB", "http://test1.example.org"],
+      ["indexedDB", "https://test1.example.org"],
       ["idb1 (default)", "idb2 (default)"],
     ],
   ]);
 
   info("do the delete");
-  const deletedDb = ["indexedDB", "http://test1.example.org", "idb1 (default)"];
+  const deletedDb = [
+    "indexedDB",
+    "https://test1.example.org",
+    "idb1 (default)",
+  ];
 
   await selectTreeItem(deletedDb);
 
@@ -46,6 +52,6 @@ add_task(async function() {
 
   info("test state after delete");
   await checkState([
-    [["indexedDB", "http://test1.example.org"], ["idb2 (default)"]],
+    [["indexedDB", "https://test1.example.org"], ["idb2 (default)"]],
   ]);
 });
