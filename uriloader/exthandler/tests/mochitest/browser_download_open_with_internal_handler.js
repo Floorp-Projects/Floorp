@@ -15,6 +15,11 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "https://example.com"
 );
 
+const MimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+const HandlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
+  Ci.nsIHandlerService
+);
+
 function waitForAcceptButtonToGetEnabled(doc) {
   let dialog = doc.querySelector("#unknownContentType");
   let button = dialog.getButton("accept");
@@ -42,6 +47,25 @@ async function waitForPdfJS(browser, url) {
   return loadPromise;
 }
 
+/**
+ * This test covers which choices are presented for downloaded files and how
+ * those choices are handled. When the download improvements are enabled
+ * (browser.download.improvements_to_download_panel pref) the unknown content
+ * dialog will be skipped altogether by default when downloading.
+ * To retain coverage for the non-default scenario, each task sets `alwaysAskBeforeHandling`
+ * to true for the relevant mime-type and extensions.
+ */
+function alwaysAskForHandlingTypes(typeExtensions) {
+  let mimeInfos = [];
+  for (let [type, ext] of Object.entries(typeExtensions)) {
+    const mimeInfo = MimeSvc.getFromTypeAndExtension(type, ext);
+    mimeInfo.alwaysAskBeforeHandling = true;
+    HandlerSvc.store(mimeInfo);
+    mimeInfos.push(mimeInfo);
+  }
+  return mimeInfos;
+}
+
 add_task(async function setup() {
   // Remove the security delay for the dialog during the test.
   await SpecialPowers.pushPrefEnv({
@@ -53,18 +77,15 @@ add_task(async function setup() {
   });
 
   // Restore handlers after the whole test has run
-  const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
-  const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
-    Ci.nsIHandlerService
-  );
   const registerRestoreHandler = function(type, ext) {
-    const mimeInfo = mimeSvc.getFromTypeAndExtension(type, ext);
-    const existed = handlerSvc.exists(mimeInfo);
+    const mimeInfo = MimeSvc.getFromTypeAndExtension(type, ext);
+    const existed = HandlerSvc.exists(mimeInfo);
+
     registerCleanupFunction(() => {
       if (existed) {
-        handlerSvc.store(mimeInfo);
+        HandlerSvc.store(mimeInfo);
       } else {
-        handlerSvc.remove(mimeInfo);
+        HandlerSvc.remove(mimeInfo);
       }
     });
   };
@@ -80,6 +101,11 @@ add_task(async function setup() {
  * is clicked from pdf.js.
  */
 add_task(async function test_check_open_with_internal_handler() {
+  const mimeInfosToRestore = alwaysAskForHandlingTypes({
+    "application/pdf": "pdf",
+    "binary/octet-stream": "pdf",
+  });
+
   for (let file of [
     "file_pdf_application_pdf.pdf",
     "file_pdf_binary_octet_stream.pdf",
@@ -234,6 +260,9 @@ add_task(async function test_check_open_with_internal_handler() {
     }
     await publicList.removeFinished();
   }
+  for (let mimeInfo of mimeInfosToRestore) {
+    HandlerSvc.remove(mimeInfo);
+  }
 });
 
 /**
@@ -241,6 +270,11 @@ add_task(async function test_check_open_with_internal_handler() {
  * open the PDF into pdf.js
  */
 add_task(async function test_check_open_with_external_application() {
+  const mimeInfosToRestore = alwaysAskForHandlingTypes({
+    "application/pdf": "pdf",
+    "binary/octet-stream": "pdf",
+  });
+
   for (let file of [
     "file_pdf_application_pdf.pdf",
     "file_pdf_binary_octet_stream.pdf",
@@ -305,6 +339,9 @@ add_task(async function test_check_open_with_external_application() {
     }
     await publicList.removeFinished();
   }
+  for (let mimeInfo of mimeInfosToRestore) {
+    HandlerSvc.remove(mimeInfo);
+  }
 });
 
 /**
@@ -319,14 +356,14 @@ add_task(async function test_check_open_with_external_then_internal() {
   }
 
   // This test covers a bug that only occurs when the mimeInfo is set to Always Ask
-  const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
-  const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
-    Ci.nsIHandlerService
+  const mimeInfo = MimeSvc.getFromTypeAndExtension("application/pdf", "pdf");
+  console.log(
+    "mimeInfo.preferredAction is currently:",
+    mimeInfo.preferredAction
   );
-  const mimeInfo = mimeSvc.getFromTypeAndExtension("application/pdf", "pdf");
   mimeInfo.preferredAction = mimeInfo.alwaysAsk;
   mimeInfo.alwaysAskBeforeHandling = true;
-  handlerSvc.store(mimeInfo);
+  HandlerSvc.store(mimeInfo);
 
   for (let [file, mimeType] of [
     ["file_pdf_application_pdf.pdf", "application/pdf"],
@@ -334,7 +371,7 @@ add_task(async function test_check_open_with_external_then_internal() {
     ["file_pdf_application_unknown.pdf", "application/unknown"],
   ]) {
     info("Testing with " + file);
-    let originalMimeInfo = mimeSvc.getFromTypeAndExtension(mimeType, "pdf");
+    let originalMimeInfo = MimeSvc.getFromTypeAndExtension(mimeType, "pdf");
 
     let publicList = await Downloads.getList(Downloads.PUBLIC);
     registerCleanupFunction(async () => {
@@ -448,7 +485,7 @@ add_task(async function test_check_open_with_external_then_internal() {
     // Now trigger the dialog again and select the system
     // default option to reset the state for the next iteration of the test.
     // Reset the state for the next iteration of the test.
-    handlerSvc.store(originalMimeInfo);
+    HandlerSvc.store(originalMimeInfo);
     DownloadIntegration.launchFile = oldLaunchFile;
     let [download] = await publicList.getAll();
     if (download?.target.exists) {
@@ -469,6 +506,11 @@ add_task(async function test_check_open_with_external_then_internal() {
  */
 add_task(
   async function test_internal_handler_hidden_with_viewable_internally_type() {
+    const mimeInfosToRestore = alwaysAskForHandlingTypes({
+      "text/xml": "xml",
+      "binary/octet-stream": "xml",
+    });
+
     for (let [file, checkDefault] of [
       // The default for binary/octet-stream is changed by the PDF tests above,
       // this may change given bug 1659008, so I'm just ignoring the default for now.
@@ -502,6 +544,9 @@ add_task(
       dialog.cancelDialog();
       BrowserTestUtils.removeTab(loadingTab);
     }
+    for (let mimeInfo of mimeInfosToRestore) {
+      HandlerSvc.remove(mimeInfo);
+    }
   }
 );
 
@@ -510,6 +555,10 @@ add_task(
  * for non-PDF, non-viewable-internally types.
  */
 add_task(async function test_internal_handler_hidden_with_other_type() {
+  const mimeInfosToRestore = alwaysAskForHandlingTypes({
+    "text/plain": "txt",
+  });
+
   let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
   let loadingTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -536,6 +585,9 @@ add_task(async function test_internal_handler_hidden_with_other_type() {
   let dialog = doc.querySelector("#unknownContentType");
   dialog.cancelDialog();
   BrowserTestUtils.removeTab(loadingTab);
+  for (let mimeInfo of mimeInfosToRestore) {
+    HandlerSvc.remove(mimeInfo);
+  }
 });
 
 /**
@@ -543,6 +595,10 @@ add_task(async function test_internal_handler_hidden_with_other_type() {
  * when the feature is disabled for PDFs.
  */
 add_task(async function test_internal_handler_hidden_with_pdf_pref_disabled() {
+  const mimeInfosToRestore = alwaysAskForHandlingTypes({
+    "application/pdf": "pdf",
+    "binary/octet-stream": "pdf",
+  });
   await SpecialPowers.pushPrefEnv({
     set: [["browser.helperApps.showOpenOptionForPdfJS", false]],
   });
@@ -575,6 +631,9 @@ add_task(async function test_internal_handler_hidden_with_pdf_pref_disabled() {
     dialog.cancelDialog();
     BrowserTestUtils.removeTab(loadingTab);
   }
+  for (let mimeInfo of mimeInfosToRestore) {
+    HandlerSvc.remove(mimeInfo);
+  }
 });
 
 /**
@@ -583,6 +642,9 @@ add_task(async function test_internal_handler_hidden_with_pdf_pref_disabled() {
  */
 add_task(
   async function test_internal_handler_hidden_with_viewable_internally_pref_disabled() {
+    const mimeInfosToRestore = alwaysAskForHandlingTypes({
+      "text/xml": "xml",
+    });
     await SpecialPowers.pushPrefEnv({
       set: [["browser.helperApps.showOpenOptionForViewableInternally", false]],
     });
@@ -610,5 +672,8 @@ add_task(
     let dialog = doc.querySelector("#unknownContentType");
     dialog.cancelDialog();
     BrowserTestUtils.removeTab(loadingTab);
+    for (let mimeInfo of mimeInfosToRestore) {
+      HandlerSvc.remove(mimeInfo);
+    }
   }
 );
