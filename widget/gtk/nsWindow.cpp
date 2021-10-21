@@ -8720,29 +8720,6 @@ bool nsWindow::TitlebarUseShapeMask() {
   return useShapeMask;
 }
 
-bool nsWindow::HideTitlebarByDefault() {
-  static int hideTitlebar = []() {
-    // When user defined widget.default-hidden-titlebar don't do any
-    // heuristics and just follow it.
-    if (Preferences::HasUserValue("widget.default-hidden-titlebar")) {
-      return Preferences::GetBool("widget.default-hidden-titlebar", false);
-    }
-
-    // Don't hide titlebar when it's disabled on current desktop.
-    const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-    if (!currentDesktop ||
-        GetSystemGtkWindowDecoration() == GTK_DECORATION_NONE) {
-      return false;
-    }
-
-    // We hide system titlebar on Gnome/ElementaryOS without any restriction.
-    return ((strstr(currentDesktop, "GNOME-Flashback:GNOME") != nullptr ||
-             strstr(currentDesktop, "GNOME") != nullptr ||
-             strstr(currentDesktop, "Pantheon") != nullptr));
-  }();
-  return hideTitlebar;
-}
-
 int32_t nsWindow::RoundsWidgetCoordinatesTo() { return GdkCeiledScaleFactor(); }
 
 void nsWindow::GetCompositorWidgetInitData(

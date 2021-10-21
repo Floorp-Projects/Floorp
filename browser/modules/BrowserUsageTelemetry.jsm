@@ -497,9 +497,7 @@ let BrowserUsageTelemetry = {
           case "browser.tabs.drawInTitlebar":
             this._recordWidgetChange(
               "titlebar",
-              Services.prefs.getBoolPref("browser.tabs.drawInTitlebar")
-                ? "off"
-                : "on",
+              Services.appinfo.drawInTitlebar ? "off" : "on",
               "pref"
             );
             break;
@@ -601,12 +599,7 @@ let BrowserUsageTelemetry = {
     widgetMap.set("menu-toolbar", menuBarHidden ? "off" : "on");
 
     // Drawing in the titlebar means not showing the titlebar, hence the negation.
-    widgetMap.set(
-      "titlebar",
-      Services.prefs.getBoolPref("browser.tabs.drawInTitlebar", true)
-        ? "off"
-        : "on"
-    );
+    widgetMap.set("titlebar", Services.appinfo.drawInTitlebar ? "off" : "on");
 
     for (let area of CustomizableUI.areas) {
       if (!(area in BROWSER_UI_CONTAINER_IDS)) {
