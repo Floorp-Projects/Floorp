@@ -337,8 +337,14 @@ add_task(async function test_discardedForSizePending() {
 });
 
 add_task(async function test_usePingSenderOnShutdown() {
-  if (gIsAndroid) {
+  if (
+    gIsAndroid ||
+    (AppConstants.platform == "linux" && OS.Constants.Sys.bits == 32)
+  ) {
     // We don't support the pingsender on Android, yet, see bug 1335917.
+    // We also don't support the pingsender testing on Treeherder for
+    // Linux 32 bit (due to missing libraries). So skip it there too.
+    // See bug 1310703 comment 78.
     return;
   }
 
@@ -370,12 +376,12 @@ add_task(async function test_usePingSenderOnShutdown() {
   // Check that the health ping is sent at shutdown using the pingsender.
   Assert.equal(
     request.getHeader("User-Agent"),
-    "pingsender/2.0",
+    "pingsender/1.0",
     "Should have received the correct user agent string."
   );
   Assert.equal(
     request.getHeader("X-PingSender-Version"),
-    "2.0",
+    "1.0",
     "Should have received the correct PingSender version string."
   );
 });
