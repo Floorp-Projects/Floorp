@@ -25,6 +25,7 @@
 #include "gc/Rooting.h"                 // RootedAtom
 #include "gc/Tracer.h"                  // TraceNullableRoot
 #include "js/CallArgs.h"                // JSNative
+#include "js/CompileOptions.h"          // JS::DecodeOptions
 #include "js/experimental/JSStencil.h"  // JS::Stencil
 #include "js/GCAPI.h"                   // JS::AutoCheckCannotGC
 #include "js/RootingAPI.h"              // Rooted
@@ -1874,8 +1875,9 @@ bool CompilationStencil::deserializeStencils(JSContext* cx,
   }
   MOZ_ASSERT(parserAtomData.empty());
   XDRStencilDecoder decoder(cx, range);
+  JS::DecodeOptions options(input.options);
 
-  XDRResult res = decoder.codeStencil(input.options, *this);
+  XDRResult res = decoder.codeStencil(options, *this);
   if (res.isErr()) {
     if (JS::IsTranscodeFailureResult(res.unwrapErr())) {
       return true;
@@ -4102,15 +4104,14 @@ JS::TranscodeResult JS::EncodeStencil(JSContext* cx, JS::Stencil* stencil,
 }
 
 JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
-                                      const JS::ReadOnlyCompileOptions& options,
+                                      const JS::DecodeOptions& options,
                                       const JS::TranscodeRange& range,
                                       JS::Stencil** stencilOut) {
-  Rooted<CompilationInput> input(cx, CompilationInput(options));
-  if (!input.get().initForGlobal(cx)) {
+  RefPtr<ScriptSource> source = cx->new_<ScriptSource>();
+  if (!source) {
     return TranscodeResult::Throw;
   }
-  UniquePtr<JS::Stencil> stencil(
-      MakeUnique<CompilationStencil>(input.get().source));
+  UniquePtr<JS::Stencil> stencil(MakeUnique<CompilationStencil>(source));
   if (!stencil) {
     return TranscodeResult::Throw;
   }

@@ -883,22 +883,18 @@ void ScriptPreloader::FillCompileOptionsForCachedStencil(
   // called on functions in these scripts, the source-hook will fetch it over,
   // so using `toString` of functions should be avoided in chrome js.
   options.setSourceIsLazy(true);
+}
 
+/* static */
+void ScriptPreloader::FillDecodeOptionsForCachedStencil(
+    JS::DecodeOptions& options) {
   // ScriptPreloader's XDR buffer is alive during the entire browser lifetime.
   // The decoded stencil can borrow from it.
   options.borrowBuffer = true;
 }
 
 already_AddRefed<JS::Stencil> ScriptPreloader::GetCachedStencil(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    const nsCString& path) {
-  // Users of ScriptPreloader must agree on a standard set of compile options so
-  // that bytecode data can safely saved from one context and loaded in another.
-  MOZ_ASSERT(options.noScriptRval);
-  MOZ_ASSERT(!options.selfHostingMode);
-  MOZ_ASSERT(!options.isRunOnce);
-  MOZ_ASSERT(options.sourceIsLazy);
-
+    JSContext* cx, const JS::DecodeOptions& options, const nsCString& path) {
   // If a script is used by both the parent and the child, it's stored only
   // in the child cache.
   if (mChildCache) {
@@ -919,8 +915,7 @@ already_AddRefed<JS::Stencil> ScriptPreloader::GetCachedStencil(
 }
 
 already_AddRefed<JS::Stencil> ScriptPreloader::GetCachedStencilInternal(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    const nsCString& path) {
+    JSContext* cx, const JS::DecodeOptions& options, const nsCString& path) {
   auto* cachedScript = mScripts.Get(path);
   if (cachedScript) {
     return WaitForCachedStencil(cx, options, cachedScript);
@@ -929,8 +924,7 @@ already_AddRefed<JS::Stencil> ScriptPreloader::GetCachedStencilInternal(
 }
 
 already_AddRefed<JS::Stencil> ScriptPreloader::WaitForCachedStencil(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    CachedStencil* script) {
+    JSContext* cx, const JS::DecodeOptions& options, CachedStencil* script) {
   // Always check for finished operations so that we can move on to decoding the
   // next batch as soon as possible after the pending batch is ready. If we wait
   // until we hit an unfinished script, we wind up having at most one batch of
@@ -1175,7 +1169,7 @@ bool ScriptPreloader::CachedStencil::XDREncode(JSContext* cx) {
 }
 
 already_AddRefed<JS::Stencil> ScriptPreloader::CachedStencil::GetStencil(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options) {
+    JSContext* cx, const JS::DecodeOptions& options) {
   MOZ_ASSERT(mReadyToExecute);
   if (mStencil) {
     return do_AddRef(mStencil);

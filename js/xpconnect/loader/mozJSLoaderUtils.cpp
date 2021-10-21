@@ -34,7 +34,7 @@ static nsresult HandleTranscodeResult(JSContext* cx,
 }
 
 nsresult ReadCachedStencil(StartupCache* cache, nsACString& uri, JSContext* cx,
-                           const JS::ReadOnlyCompileOptions& options,
+                           const JS::DecodeOptions& options,
                            JS::Stencil** stencilOut) {
   const char* buf;
   uint32_t len;

@@ -238,13 +238,13 @@ BEGIN_TEST(testStencil_Transcode) {
 
   {
     // Decode the stencil into new range
-    JS::CompileOptions options(cx);
     RefPtr<JS::Stencil> stencil;
 
     {
+      JS::DecodeOptions decodeOptions;
       JS::TranscodeRange range(buffer.begin(), buffer.length());
       JS::TranscodeResult res =
-          JS::DecodeStencil(cx, options, range, getter_AddRefs(stencil));
+          JS::DecodeStencil(cx, decodeOptions, range, getter_AddRefs(stencil));
       CHECK(res == JS::TranscodeResult::Ok);
     }
 
@@ -254,7 +254,7 @@ BEGIN_TEST(testStencil_Transcode) {
     buffer.clear();
 
     // Instantiate and Run
-    JS::InstantiateOptions instantiateOptions(options);
+    JS::InstantiateOptions instantiateOptions;
     JS::RootedScript script(
         cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil));
     stencil = nullptr;
@@ -299,14 +299,14 @@ BEGIN_TEST(testStencil_TranscodeBorrowing) {
   JS::RootedScript script(cx);
   {
     JS::TranscodeRange range(buffer.begin(), buffer.length());
-    JS::CompileOptions options(cx);
-    options.borrowBuffer = true;
+    JS::DecodeOptions decodeOptions;
+    decodeOptions.borrowBuffer = true;
     RefPtr<JS::Stencil> stencil;
     JS::TranscodeResult res =
-        JS::DecodeStencil(cx, options, range, getter_AddRefs(stencil));
+        JS::DecodeStencil(cx, decodeOptions, range, getter_AddRefs(stencil));
     CHECK(res == JS::TranscodeResult::Ok);
 
-    JS::InstantiateOptions instantiateOptions(options);
+    JS::InstantiateOptions instantiateOptions;
     script = JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil);
     CHECK(script);
   }

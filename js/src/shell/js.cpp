@@ -2474,8 +2474,10 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
 
         RefPtr<JS::Stencil> stencil;
 
-        JS::TranscodeResult rv =
-            JS::DecodeStencil(cx, options, range, getter_AddRefs(stencil));
+        JS::DecodeOptions decodeOptions(options);
+
+        JS::TranscodeResult rv = JS::DecodeStencil(cx, decodeOptions, range,
+                                                   getter_AddRefs(stencil));
         if (!ConvertTranscodeResultToJSException(cx, rv)) {
           return false;
         }

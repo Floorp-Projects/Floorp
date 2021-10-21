@@ -1058,6 +1058,7 @@ class ScriptSource {
  public:
   template <XDRMode mode>
   [[nodiscard]] static XDRResult XDR(XDRState<mode>* xdr,
+                                     const JS::DecodeOptions* maybeOptions,
                                      RefPtr<ScriptSource>& source);
 };
 
