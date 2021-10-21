@@ -211,7 +211,7 @@ fun PoweredByPocketHeader(
         Row(
             Modifier
                 .fillMaxWidth()
-                .semantics(mergeDescendants = true) { },
+                .semantics(mergeDescendants = true) {},
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -249,20 +249,20 @@ private fun PocketStoriesComposablesPreview() {
                     stories = getFakePocketStories(8),
                     contentPadding = 0.dp,
                     onStoryClicked = { _, _ -> },
-                    onDiscoverMoreClicked = { }
+                    onDiscoverMoreClicked = {}
                 )
                 Spacer(Modifier.height(10.dp))
 
                 PocketStoriesCategories(
-                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor".split(" ").map {
-                        PocketRecommendedStoriesCategory(it)
-                    },
-                    emptyList(),
-                    { }
+                    categories = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor"
+                        .split(" ")
+                        .map { PocketRecommendedStoriesCategory(it) },
+                    selections = emptyList(),
+                    onCategoryClick = {}
                 )
                 Spacer(Modifier.height(10.dp))
 
-                PoweredByPocketHeader({ })
+                PoweredByPocketHeader({})
             }
         }
     }
@@ -273,7 +273,7 @@ private class PocketStoryProvider : PreviewParameterProvider<PocketRecommendedSt
     override val count = 8
 }
 
-private fun getFakePocketStories(limit: Int = 1): List<PocketRecommendedStory> {
+internal fun getFakePocketStories(limit: Int = 1): List<PocketRecommendedStory> {
     return mutableListOf<PocketRecommendedStory>().apply {
         for (index in 0 until limit) {
             val randomNumber = Random.nextInt(0, 10)

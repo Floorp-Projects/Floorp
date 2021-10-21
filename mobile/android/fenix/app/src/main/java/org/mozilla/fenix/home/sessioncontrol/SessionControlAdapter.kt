@@ -23,6 +23,8 @@ import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.TopPlaceholderViewHolder
 import org.mozilla.fenix.home.pocket.PocketStoriesViewHolder
 import org.mozilla.fenix.home.recentbookmarks.view.RecentBookmarksHeaderViewHolder
+import org.mozilla.fenix.home.pocket.PocketCategoriesViewHolder
+import org.mozilla.fenix.home.pocket.PocketRecommendationsHeaderViewHolder
 import org.mozilla.fenix.home.recentbookmarks.view.RecentBookmarksViewHolder
 import org.mozilla.fenix.home.recenttabs.view.RecentTabViewHolder
 import org.mozilla.fenix.home.recenttabs.view.RecentTabsHeaderViewHolder
@@ -165,8 +167,9 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
     object RecentBookmarksHeader : AdapterItem(RecentBookmarksHeaderViewHolder.LAYOUT_ID)
     object RecentBookmarks : AdapterItem(RecentBookmarksViewHolder.LAYOUT_ID)
 
-    object PocketStoriesItem :
-        AdapterItem(PocketStoriesViewHolder.LAYOUT_ID)
+    object PocketStoriesItem : AdapterItem(PocketStoriesViewHolder.LAYOUT_ID)
+    object PocketCategoriesItem : AdapterItem(PocketCategoriesViewHolder.LAYOUT_ID)
+    object PocketRecommendationsFooterItem : AdapterItem(PocketRecommendationsHeaderViewHolder.LAYOUT_ID)
 
     object BottomSpacer : AdapterItem(BottomSpacerViewHolder.LAYOUT_ID)
 
@@ -215,8 +218,19 @@ class SessionControlAdapter(
             )
             PocketStoriesViewHolder.LAYOUT_ID -> return PocketStoriesViewHolder(
                 composeView = ComposeView(parent.context),
-                viewLifecycleOwner,
+                viewLifecycleOwner = viewLifecycleOwner,
                 store = store,
+                interactor = interactor
+            )
+            PocketCategoriesViewHolder.LAYOUT_ID -> return PocketCategoriesViewHolder(
+                composeView = ComposeView(parent.context),
+                viewLifecycleOwner = viewLifecycleOwner,
+                store = store,
+                interactor = interactor
+            )
+            PocketRecommendationsHeaderViewHolder.LAYOUT_ID -> return PocketRecommendationsHeaderViewHolder(
+                composeView = ComposeView(parent.context),
+                viewLifecycleOwner = viewLifecycleOwner,
                 interactor = interactor
             )
             RecentBookmarksViewHolder.LAYOUT_ID -> return RecentBookmarksViewHolder(
@@ -296,6 +310,8 @@ class SessionControlAdapter(
             is RecentlyVisitedViewHolder,
             is RecentBookmarksViewHolder,
             is RecentTabViewHolder,
+            is PocketCategoriesViewHolder,
+            is PocketRecommendationsHeaderViewHolder,
             is PocketStoriesViewHolder -> {
                 // no op
                 // This previously called "composeView.disposeComposition" which would have the

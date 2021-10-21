@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home.pocket
 
 import android.view.View
-import androidx.annotation.Dimension
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,33 +16,36 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.R
+import org.mozilla.fenix.R.string
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.compose.SectionHeader
 import org.mozilla.fenix.home.HomeFragmentStore
+import org.mozilla.fenix.theme.FirefoxTheme
 
 internal const val POCKET_STORIES_TO_SHOW_COUNT = 8
-internal const val POCKET_CATEGORIES_SELECTED_AT_A_TIME_COUNT = 8
 
 /**
- * [RecyclerView.ViewHolder] that will display a list of [PocketRecommendedStory]es
- * which is to be provided in the [bind] method.
+ * [RecyclerView.ViewHolder] for displaying the list of [PocketRecommendedStory]s from [HomeFragmentStore].
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
+ * @param viewLifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
  * @param store [HomeFragmentStore] containing the list of Pocket stories to be displayed.
  * @param interactor [PocketStoriesInteractor] callback for user interaction.
  */
 class PocketStoriesViewHolder(
     composeView: ComposeView,
     viewLifecycleOwner: LifecycleOwner,
-    val store: HomeFragmentStore,
-    val interactor: PocketStoriesInteractor
+    private val store: HomeFragmentStore,
+    private val interactor: PocketStoriesInteractor
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     companion object {
@@ -52,94 +54,61 @@ class PocketStoriesViewHolder(
 
     @Composable
     override fun Content() {
-        PocketStories(
-            store,
-            interactor::onStoriesShown,
-            interactor::onStoryClicked,
-            interactor::onCategoryClicked,
-            interactor::onDiscoverMoreClicked,
-            interactor::onLearnMoreClicked,
-            with(composeView.resources) {
-                getDimensionPixelSize(R.dimen.home_item_horizontal_margin) / displayMetrics.density
+        val horizontalPadding = dimensionResource(R.dimen.home_item_horizontal_margin)
+
+        val stories = store
+            .observeAsComposableState { state -> state.pocketStories }.value
+
+        LaunchedEffect(stories) {
+            // We should report back when a certain story is actually being displayed.
+            // Cannot do it reliably so for now we'll just mass report everything as being displayed.
+            stories?.let {
+                interactor::onStoriesShown
             }
-        )
+        }
+
+        Column(modifier = Modifier.padding(top = 72.dp)) {
+            SectionHeader(
+                text = stringResource(R.string.pocket_stories_header_1),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = horizontalPadding)
+                    .wrapContentHeight(align = Alignment.Top)
+            )
+
+            Spacer(Modifier.height(17.dp))
+
+            PocketStories(
+                stories ?: emptyList(),
+                horizontalPadding,
+                interactor::onStoryClicked,
+                interactor::onDiscoverMoreClicked
+            )
+        }
     }
 }
 
 @Composable
-@Suppress("LongParameterList")
-fun PocketStories(
-    store: HomeFragmentStore,
-    onStoriesShown: (List<PocketRecommendedStory>) -> Unit,
-    onStoryClicked: (PocketRecommendedStory, Pair<Int, Int>) -> Unit,
-    onCategoryClicked: (PocketRecommendedStoriesCategory) -> Unit,
-    onDiscoverMoreClicked: (String) -> Unit,
-    onLearnMoreClicked: (String) -> Unit,
-    @Dimension horizontalPadding: Float = 0f
-) {
-    val stories = store
-        .observeAsComposableState { state -> state.pocketStories }.value
+@Preview
+fun PocketStoriesViewHolderPreview() {
+    FirefoxTheme {
+        Column {
+            SectionHeader(
+                text = stringResource(string.pocket_stories_header_1),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .wrapContentHeight(align = Alignment.Top)
+            )
 
-    val categories = store
-        .observeAsComposableState { state -> state.pocketStoriesCategories }.value
+            Spacer(Modifier.height(17.dp))
 
-    val categoriesSelections = store
-        .observeAsComposableState { state -> state.pocketStoriesCategoriesSelections }.value
-
-    LaunchedEffect(stories) {
-        // We should report back when a certain story is actually being displayed.
-        // Cannot do it reliably so for now we'll just mass report everything as being displayed.
-        stories?.let {
-            onStoriesShown(it)
+            PocketStories(
+                stories = getFakePocketStories(POCKET_STORIES_TO_SHOW_COUNT),
+                contentPadding = 0.dp,
+                onStoryClicked = { _, _ -> },
+                onDiscoverMoreClicked = {}
+            )
         }
-    }
-
-    Column(modifier = Modifier.padding(top = 72.dp)) {
-        SectionHeader(
-            text = stringResource(R.string.pocket_stories_header_1),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = horizontalPadding.dp)
-                .wrapContentHeight(align = Alignment.Top)
-        )
-
-        Spacer(Modifier.height(17.dp))
-
-        PocketStories(
-            stories ?: emptyList(),
-            horizontalPadding.dp,
-            onStoryClicked,
-            onDiscoverMoreClicked
-        )
-
-        Spacer(Modifier.height(24.dp))
-
-        SectionHeader(
-            text = stringResource(R.string.pocket_stories_categories_header),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = horizontalPadding.dp)
-                .wrapContentHeight(align = Alignment.Top)
-        )
-
-        Spacer(Modifier.height(17.dp))
-
-        PocketStoriesCategories(
-            categories = categories ?: emptyList(),
-            selections = categoriesSelections ?: emptyList(),
-            onCategoryClick = onCategoryClicked,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = horizontalPadding.dp)
-        )
-
-        Spacer(Modifier.height(24.dp))
-
-        PoweredByPocketHeader(
-            onLearnMoreClicked,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = horizontalPadding.dp)
-        )
     }
 }

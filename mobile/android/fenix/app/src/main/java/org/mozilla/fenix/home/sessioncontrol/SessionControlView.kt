@@ -87,6 +87,8 @@ internal fun normalModeAdapterItems(
     if (pocketStories.isNotEmpty()) {
         shouldShowCustomizeHome = true
         items.add(AdapterItem.PocketStoriesItem)
+        items.add(AdapterItem.PocketCategoriesItem)
+        items.add(AdapterItem.PocketRecommendationsFooterItem)
     }
 
     if (shouldShowCustomizeHome) {

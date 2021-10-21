@@ -243,7 +243,9 @@ class SessionControlViewTest {
 
         assertTrue(results[0] is AdapterItem.TopPlaceholderItem)
         assertTrue(results[1] is AdapterItem.PocketStoriesItem)
-        assertTrue(results[2] is AdapterItem.CustomizeHomeButton)
+        assertTrue(results[2] is AdapterItem.PocketCategoriesItem)
+        assertTrue(results[3] is AdapterItem.PocketRecommendationsFooterItem)
+        assertTrue(results[4] is AdapterItem.CustomizeHomeButton)
     }
 
     @Test

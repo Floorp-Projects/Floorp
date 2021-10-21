@@ -115,10 +115,18 @@ internal class DefaultPocketStoriesController(
         )
     }
 
-    override fun handleStoryClicked(storyClicked: PocketRecommendedStory, storyPosition: Pair<Int, Int>) {
+    override fun handleStoryClicked(
+        storyClicked: PocketRecommendedStory,
+        storyPosition: Pair<Int, Int>
+    ) {
         dismissSearchDialogIfDisplayed()
         homeActivity.openToBrowserAndLoad(storyClicked.url, true, BrowserDirection.FromHome)
-        metrics.track(Event.PocketHomeRecsStoryClicked(storyClicked.timesShown.inc(), storyPosition))
+        metrics.track(
+            Event.PocketHomeRecsStoryClicked(
+                storyClicked.timesShown.inc(),
+                storyPosition
+            )
+        )
     }
 
     override fun handleLearnMoreClicked(link: String) {
