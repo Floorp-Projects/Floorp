@@ -11,16 +11,14 @@ class ContentMetaParent extends JSWindowActorParent {
     if (message.name == "Meta:SetPageInfo") {
       let browser = this.manager.browsingContext.top.embedderElement;
       if (browser) {
-        let event = new browser.ownerGlobal.CustomEvent("pageinfo", {
-          bubbles: true,
-          cancelable: false,
-          detail: {
-            url: message.url,
-            description: message.description,
-            previewImageURL: message.data.previewImageURL,
-          },
-        });
-        browser.dispatchEvent(event);
+        let gBrowser = browser.ownerGlobal.gBrowser;
+        if (gBrowser) {
+          gBrowser.setPageInfo(
+            message.data.url,
+            message.data.description,
+            message.data.previewImageURL
+          );
+        }
       }
     }
   }

@@ -400,6 +400,22 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
+  // Collects description and icon information from meta tags.
+  ContentMeta: {
+    parent: {
+      moduleURI: "resource:///actors/ContentMetaParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource:///actors/ContentMetaChild.jsm",
+      events: {
+        DOMMetaAdded: {},
+      },
+    },
+
+    messageManagerGroups: ["browsers"],
+  },
+
   ContentSearch: {
     parent: {
       moduleURI: "resource:///actors/ContentSearchParent.jsm",

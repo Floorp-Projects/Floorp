@@ -189,21 +189,6 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
-  ContentMeta: {
-    parent: {
-      moduleURI: "resource://gre/actors/ContentMetaParent.jsm",
-    },
-
-    child: {
-      moduleURI: "resource://gre/actors/ContentMetaChild.jsm",
-      events: {
-        DOMMetaAdded: {},
-      },
-    },
-
-    messageManagerGroups: ["browsers"],
-  },
-
   Controllers: {
     parent: {
       moduleURI: "resource://gre/actors/ControllersParent.jsm",
