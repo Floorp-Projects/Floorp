@@ -45,10 +45,13 @@ allocatorFns = [
     "operator new(",
     "operator new[](",
     "g_slice_alloc",
-    # This one necessary to fully filter some sequences of allocation functions
-    # that happen in practice. Note that ??? entries that follow non-allocation
-    # functions won't be stripped, as explained above.
+    # This one is necessary to fully filter some sequences of allocation
+    # functions that happen in practice. Note that ??? entries that follow
+    # non-allocation functions won't be stripped, as explained above.
     "???",
+    # Match DMD internals.
+    "mozilla::dmd::AllocCallback",
+    "mozilla::dmd::StackTrace::Get",
 ]
 
 
