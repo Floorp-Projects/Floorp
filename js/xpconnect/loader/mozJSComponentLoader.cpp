@@ -845,7 +845,7 @@ nsresult mozJSComponentLoader::ObjectForLocation(
     MOZ_ASSERT(stencil);
 
     // We successfully compiled the script, so cache it.
-    rv = WriteCachedStencil(cache, cachePath, cx, options, stencil);
+    rv = WriteCachedStencil(cache, cachePath, cx, stencil);
 
     // Don't treat failure to write as fatal, since we might be working
     // with a read-only cache.

@@ -1163,11 +1163,7 @@ bool ScriptPreloader::CachedStencil::XDREncode(JSContext* cx) {
 
   mXDRData.construct<JS::TranscodeBuffer>();
 
-  JS::CompileOptions compileOptions(cx);
-  FillCompileOptionsForCachedStencil(compileOptions);
-
-  JS::TranscodeResult code =
-      JS::EncodeStencil(cx, compileOptions, mStencil, Buffer());
+  JS::TranscodeResult code = JS::EncodeStencil(cx, mStencil, Buffer());
   if (code == JS::TranscodeResult::Ok) {
     mXDRRange.emplace(Buffer().begin(), Buffer().length());
     mSize = Range().length();
