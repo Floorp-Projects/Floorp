@@ -662,7 +662,7 @@ The 'column-rule-extent' and 'row-rule-extent' Properties {#column-rule-extent}
     <dfn>segment</dfn> is an abstract term to describe the distance between two consecutive gaps.
     An extent can cover one or more segments and the <dfn>extent size</dfn> is the distance between
     the start position of the start-most of those segments and the end position of the end-most segment.
-    We'll define ''column-rule-extent/segment' in more detail in the container specific sub-sections that follow.
+    We'll define ''column-rule-extent/segment'' in more detail in the container-specific sub-sections that follow.
 
     The ''column-rule-extent/allow-overlap'' only affects rules in grid and table layout with spanning items/cells.
     It controls whether a rule should continue through such a span.
@@ -701,8 +701,8 @@ The 'column-rule-extent' and 'row-rule-extent' Properties {#column-rule-extent}
     [=Collapsed tracks=] don't count -- they don't generate gaps and thus don't have gap rules.
     They generally behave as if they don't exist as far as rules are concerned.
     The <a href="examples/grid-segment-002.html">example</a> below also
-    illustrates that the position and size of the items doesn't affect the rules, it's only the size
-    of the [=grid cells=] that counts.
+    illustrates that the position and size of the items don't affect the rules; it's only the position and size
+    of the [=grid cells=] that count.
     <aside class=example>
         <figure>
             <img src="media/grid-segment-002.png">
@@ -714,9 +714,9 @@ The 'column-rule-extent' and 'row-rule-extent' Properties {#column-rule-extent}
 
     Rules behave symmetrically in the grid axes, but a [=masonry axis=] in a
     <a href="https://drafts.csswg.org/css-grid-3">masonry grid layout</a> behaves
-    differently, we'll cover that case in a separate <a href=#rule-extent-masonry>section</a> later.
+    differently; we'll cover that case in a separate <a href=#rule-extent-masonry>section</a> later.
 
-    In a grid axis, rules are created between adjacent (non-collapsed) tracks and their [=extent size=]
+    In a grid axis, rules are created between adjacent (non-collapsed) tracks and their [=extent sizes=]
     are controlled by the ''column-rule-extent''/''row-rule-extent'' values as follows:
     <dl dfn-for=row-rule-extent dfn-type=value>
         <dt><dfn>segment</dfn></dt>
@@ -737,7 +737,7 @@ The 'column-rule-extent' and 'row-rule-extent' Properties {#column-rule-extent}
             over the gap (see the <a href="#rule-extent-grid-algorithm">algorithm</a> below)
     </dl>
 
-    The following algorithm determines the rule segments to create in an axis and their [=extent size=].
+    The following algorithm determines the rule segments to create in an axis and their [=extent sizes=].
     For each pair of adjacent tracks, we first find the <dfn>next grid cell span</dfn> for
     each track. Then select one of those per the property values above.
 
@@ -806,14 +806,14 @@ The 'column-rule-extent' and 'row-rule-extent' Properties {#column-rule-extent}
     above in the same way.
 
     ''column-rule-extent/allow-overlap'' can be used in the parent to extend its rules under
-    the subgrid.  The subgrid's rules, if any, is rendered by the subgrid and thus render
+    the subgrid.  The subgrid's rules, if any, are rendered by the subgrid and thus render
     on top of the parent, as usual.
 
     When the subgrid determines its rule extents, it does not consider any items that
     aren't its own grid items, i.e. any items in an ancestor grid that have been placed into
     the same grid cell that the subgrid occupies are not considered. Furthermore, it only uses
     its own local gap and rule metrics for positioning and sizing its rules.  It doesn't
-    consider any gaps or rules that originates outside of the subgrid.
+    consider any gaps or rules that originate outside of the subgrid.
 
     <aside class=example>
         This <a href="examples/grid-subgrid-001.html">example</a> illustrates that
@@ -870,14 +870,14 @@ The 'column-rule-extent' and 'row-rule-extent' Properties {#column-rule-extent}
 
     ISSUE: is it useful to be able to create a rule extent for the <i>intersection</i> or <i>union</i> between two tracks, like so: <img style="display:block" src="media/masonry-all-shorter.png">It's pretty easy to implement, fwiw... (I accidently implemented ''column-rule-extent/short''/''column-rule-extent/long'' like that before I realized it was inconsistent with how they work elsewhere). I think it's a case that is unique to a masonry axis though, at least <i>currently</i>...
 
-### Flexbox Containers ### {#rule-extent-flexbox}
+### Flex Containers ### {#rule-extent-flexbox}
 
-    In a <a href="https://drafts.csswg.org/css-flexbox/#valdef-flex-direction-row">row-oriented flexbox container</a>,
+    In a <a href="https://drafts.csswg.org/css-flexbox/#valdef-flex-direction-row">row-oriented flex container</a>,
     the ''row-rule-*'' properties creates rules between flex lines,
     and the ''column-rule-*'' properties creates rules between <a href=css-flexbox>flex items</a>
     within a <a href=cs-flexbox>flex line</a>.
 
-    In <a href="https://drafts.csswg.org/css-flexbox/#valdef-flex-direction-row">column-oriented flexbox container</a>,
+    In <a href="https://drafts.csswg.org/css-flexbox/#valdef-flex-direction-row">column-oriented flex container</a>,
     the roles of ''row-rule-extent'' and ''column-rule-extent'' are swapped. For the rest of this sub-section we
     will describe the row-oriented case (just swap column/row in the text below to get the column-oriented case).
 
@@ -895,13 +895,13 @@ The 'column-rule-extent' and 'row-rule-extent' Properties {#column-rule-extent}
     Only the first flex line creates column rules in this case,
     and the rule's lateral position is taken from the gap in the first line.
 
-    Advisement: Authors are adviced to <strong>not</strong> use the ''column-rule-extent/allow-overlap'' value in
-               the main axis of a multi-line flexbox container since it's likely to make items
+    Advisement: Authors are advised to <strong>not</strong> use the ''column-rule-extent/allow-overlap'' value in
+               the main axis of a multi-line flex container since it's likely to make items
                on subsequent lines overlap the rules.  It may be used when all flex items are
-               guarranteed to have the exact same main axis [=outer size=] and align such that
+               guaranteed to have the exact same main axis [=outer size=] and align such that
                the gaps are aligned between all the lines.
 
-    Rules are created between adjacent flex lines and their [=extent size=] are controlled by
+    Rules are created between adjacent flex lines, and their [=extent sizes=] are controlled by
     the ''row-rule-extent'' values defined as follows:
     <dl dfn-for=row-rule-extent dfn-type=value>
         <dt>segment</dt>
@@ -1023,7 +1023,7 @@ The 'column-rule-extent' and 'row-rule-extent' Properties {#column-rule-extent}
         </figure>
     </aside>
     
-    ISSUE:  sort out if non-collapsed column-groups that only contains collapsed columns should generate rules, ditto row-groups/rows
+    ISSUE:  sort out if non-collapsed column-groups that only contain collapsed columns should generate rules, ditto row-groups/rows
 
 
 ### Table Row Group Containers ### {#rule-extent-table-row-group}
@@ -1056,15 +1056,16 @@ The 'column-rule-extent' and 'row-rule-extent' Properties {#column-rule-extent}
 
 ### Multi-Column Containers ### {#rule-extent-multicol}
 
-    <a>Multi-column containers</a> already support rendering column rules between its columns.
+    <a>Multi-column containers</a> already support rendering column rules between their columns.
     That's now extended with all the new features described above.  The changes described
-    above is backward compatible with existing web content that use <i>valid</i> ''column-rule''
-    style values.  Some currently <i>invalid</i> ''column-rule'' values are now <i>valid</i>
+    above are backwards-compatible with existing web content that use <i>valid</i> ''column-rule''
+    style values.  Some previously <i>invalid</i> ''column-rule'' values are now <i>valid</i>
     though, which could cause problems.  For example, ''column-rule-width: 100%'', which
-    currently doesn't parse, will now start doing something.
+    previously would not parse, will now start doing something.
 
-    The ''row-rule*'' properties applies to <a>multi-column containers</a> and creates
-    row rules between a row of columns in the block axis and <a>spanners</a>.
+    The ''row-rule-*'' properties apply to <a>multi-column containers</a>, and create
+    row rules between <a href="https://drafts.csswg.org/css-multicol-1/#multi-column-line">multicol lines</a> and <a>spanners</a>,
+    separating them in the block axis.
 
     The [=segments=] are the columns and the ''margin-box'' of <a>spanners</a>.
 
