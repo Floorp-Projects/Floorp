@@ -359,7 +359,6 @@ class nsWindow final : public nsBaseWidget {
     GTK_DECORATION_SYSTEM,  // CSD including shadows
     GTK_DECORATION_CLIENT,  // CSD without shadows
     GTK_DECORATION_NONE,    // WM does not support CSD at all
-    GTK_DECORATION_UNKNOWN
   } GtkWindowDecoration;
   /**
    * Get the support of Client Side Decoration by checking
