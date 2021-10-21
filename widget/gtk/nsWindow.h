@@ -658,7 +658,7 @@ class nsWindow final : public nsBaseWidget {
   bool WaylandPopupFitsParentWindow(GdkRectangle* aSize);
   nsWindow* WaylandPopupFindLast(nsWindow* aPopup);
   GtkWindow* GetCurrentTopmostWindow();
-  nsAutoCString GetFrameTag();
+  nsAutoCString GetFrameTag() const;
   nsCString GetPopupTypeName();
   bool IsPopupDirectionRTL();
 
