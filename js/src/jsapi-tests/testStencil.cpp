@@ -213,7 +213,7 @@ BEGIN_TEST(testStencil_Transcode) {
     CHECK(stencil);
 
     // Encode Stencil to XDR
-    JS::TranscodeResult res = JS::EncodeStencil(cx, options, stencil, buffer);
+    JS::TranscodeResult res = JS::EncodeStencil(cx, stencil, buffer);
     CHECK(res == JS::TranscodeResult::Ok);
     CHECK(!buffer.empty());
 
@@ -291,7 +291,7 @@ BEGIN_TEST(testStencil_TranscodeBorrowing) {
     CHECK(stencil);
 
     // Encode Stencil to XDR
-    JS::TranscodeResult res = JS::EncodeStencil(cx, options, stencil, buffer);
+    JS::TranscodeResult res = JS::EncodeStencil(cx, stencil, buffer);
     CHECK(res == JS::TranscodeResult::Ok);
     CHECK(!buffer.empty());
   }
