@@ -8,6 +8,7 @@ import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.recover.toTabSessionStates
 import kotlin.math.max
@@ -111,7 +112,8 @@ internal object TabListReducer {
 
                     state.copy(
                         tabs = updatedTabList,
-                        selectedTabId = updatedSelection
+                        selectedTabId = updatedSelection,
+                        tabPartitions = state.tabPartitions.removeTabs(listOf(action.tabId))
                     )
                 }
             }
@@ -147,7 +149,8 @@ internal object TabListReducer {
 
                     state.copy(
                         tabs = updatedTabList,
-                        selectedTabId = updatedSelection
+                        selectedTabId = updatedSelection,
+                        tabPartitions = state.tabPartitions.removeTabs(action.tabIds)
                     )
                 }
             }
@@ -196,36 +199,41 @@ internal object TabListReducer {
             is TabListAction.RemoveAllTabsAction -> {
                 state.copy(
                     tabs = emptyList(),
-                    selectedTabId = null
+                    selectedTabId = null,
+                    tabPartitions = state.tabPartitions.removeAllTabs()
                 )
             }
 
             is TabListAction.RemoveAllPrivateTabsAction -> {
                 val selectionAffected = state.selectedTab?.content?.private == true
-                val updatedTabs = state.tabs.filterNot { it.content.private }
+                val partition = state.tabs.partition { it.content.private }
+                val normalTabs = partition.second
                 state.copy(
-                    tabs = updatedTabs,
+                    tabs = normalTabs,
                     selectedTabId = if (selectionAffected) {
                         // If the selection is affected, select the last normal tab, if available.
-                        updatedTabs.lastOrNull()?.id
+                        normalTabs.lastOrNull()?.id
                     } else {
                         state.selectedTabId
-                    }
+                    },
+                    tabPartitions = state.tabPartitions.removeTabs(partition.first.map { it.id })
                 )
             }
 
             is TabListAction.RemoveAllNormalTabsAction -> {
                 val selectionAffected = state.selectedTab?.content?.private == false
-                val updatedTabs = state.tabs.filter { it.content.private }
+                val partition = state.tabs.partition { it.content.private }
+                val privateTabs = partition.first
                 state.copy(
-                    tabs = updatedTabs,
+                    tabs = privateTabs,
                     selectedTabId = if (selectionAffected) {
                         // If the selection is affected, we'll set it to null as there's no
                         // normal tab left and NO private tab should get selected instead.
                         null
                     } else {
                         state.selectedTabId
-                    }
+                    },
+                    tabPartitions = state.tabPartitions.removeTabs(partition.second.map { it.id })
                 )
             }
         }
@@ -326,3 +334,27 @@ private fun requireUniqueTab(state: BrowserState, tab: TabSessionState) {
         "Tab with same ID already exists"
     }
 }
+
+/**
+ * Removes references to the provided tabs from all [TabPartition]s.
+ */
+private fun Map<String, TabPartition>.removeTabs(removedTabIds: List<String>) =
+    mapValues {
+        val partition = it.value
+        partition.copy(
+            tabGroups = partition.tabGroups.map { group ->
+                group.copy(tabIds = group.tabIds.filterNot { tabId -> removedTabIds.contains(tabId) })
+            }
+        )
+    }
+
+/**
+ * Removes references to the provided tabs from all [TabPartition]s.
+ */
+private fun Map<String, TabPartition>.removeAllTabs() =
+    mapValues {
+        val partition = it.value
+        partition.copy(
+            tabGroups = partition.tabGroups.map { group -> group.copy(tabIds = emptyList()) }
+        )
+    }

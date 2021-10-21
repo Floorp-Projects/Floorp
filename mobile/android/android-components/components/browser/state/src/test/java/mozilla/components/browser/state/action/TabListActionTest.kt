@@ -9,9 +9,12 @@ import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.state.TabGroup
+import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.state.getGroupById
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
@@ -178,6 +181,26 @@ class TabListActionTest {
     }
 
     @Test
+    fun `RemoveTabAction - Removes tab from partition`() {
+        val tabGroup = TabGroup("test1", tabIds = listOf("a", "b"))
+        val tabPartition = TabPartition("testPartition", tabGroups = listOf(tabGroup))
+
+        val state = BrowserState(
+            tabs = listOf(
+                createTab(id = "a", url = "https://www.mozilla.org"),
+                createTab(id = "b", url = "https://www.firefox.com")
+            ),
+            tabPartitions = mapOf(tabPartition.id to tabPartition)
+        )
+        val store = BrowserStore(state)
+
+        store.dispatch(TabListAction.RemoveTabAction("a")).joinBlocking()
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("https://www.firefox.com", store.state.tabs[0].content.url)
+        assertEquals(listOf("b"), store.state.tabPartitions[tabPartition.id]?.getGroupById(tabGroup.id)?.tabIds)
+    }
+
+    @Test
     fun `RemoveTabsAction - Removes SessionState`() {
         val state = BrowserState(
             tabs = listOf(
@@ -193,6 +216,25 @@ class TabListActionTest {
 
         assertEquals(1, store.state.tabs.size)
         assertEquals("https://www.getpocket.com", store.state.tabs[0].content.url)
+    }
+
+    @Test
+    fun `RemoveTabsAction - Removes tabs from partition`() {
+        val tabGroup = TabGroup("test1", tabIds = listOf("a", "b"))
+        val tabPartition = TabPartition("testPartition", tabGroups = listOf(tabGroup))
+
+        val state = BrowserState(
+            tabs = listOf(
+                createTab(id = "a", url = "https://www.mozilla.org"),
+                createTab(id = "b", url = "https://www.firefox.com")
+            ),
+            tabPartitions = mapOf(tabPartition.id to tabPartition)
+        )
+        val store = BrowserStore(state)
+
+        store.dispatch(TabListAction.RemoveTabsAction(listOf("a", "b"))).joinBlocking()
+        assertEquals(0, store.state.tabs.size)
+        assertEquals(0, store.state.tabPartitions[tabPartition.id]?.getGroupById(tabGroup.id)?.tabIds?.size)
     }
 
     @Test
@@ -883,6 +925,25 @@ class TabListActionTest {
     }
 
     @Test
+    fun `RemoveAllTabsAction - Removes tabs from partition`() {
+        val tabGroup = TabGroup("test1", tabIds = listOf("a", "b"))
+        val tabPartition = TabPartition("testPartition", tabGroups = listOf(tabGroup))
+
+        val state = BrowserState(
+            tabs = listOf(
+                createTab(id = "a", url = "https://www.mozilla.org"),
+                createTab(id = "b", url = "https://www.firefox.com", private = true)
+            ),
+            tabPartitions = mapOf(tabPartition.id to tabPartition)
+        )
+        val store = BrowserStore(state)
+
+        store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
+        assertEquals(0, store.state.tabs.size)
+        assertEquals(0, store.state.tabPartitions[tabPartition.id]?.getGroupById(tabGroup.id)?.tabIds?.size)
+    }
+
+    @Test
     fun `RemoveAllPrivateTabsAction - Removes only private tabs`() {
         val state = BrowserState(
             tabs = listOf(
@@ -928,6 +989,27 @@ class TabListActionTest {
 
         assertEquals(1, store.state.customTabs.size)
         assertEquals("a1", store.state.customTabs.last().id)
+    }
+
+    @Test
+    fun `RemoveAllPrivateTabsAction - Removes tabs from partition`() {
+        val normalTabGroup = TabGroup("test1", tabIds = listOf("a"))
+        val privateTabGroup = TabGroup("test2", tabIds = listOf("b"))
+        val tabPartition = TabPartition("testPartition", tabGroups = listOf(normalTabGroup, privateTabGroup))
+
+        val state = BrowserState(
+            tabs = listOf(
+                createTab(id = "a", url = "https://www.mozilla.org"),
+                createTab(id = "b", url = "https://www.firefox.com", private = true)
+            ),
+            tabPartitions = mapOf(tabPartition.id to tabPartition)
+        )
+        val store = BrowserStore(state)
+
+        store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
+        assertEquals(1, store.state.tabs.size)
+        assertEquals(1, store.state.tabPartitions[tabPartition.id]?.getGroupById(normalTabGroup.id)?.tabIds?.size)
+        assertEquals(0, store.state.tabPartitions[tabPartition.id]?.getGroupById(privateTabGroup.id)?.tabIds?.size)
     }
 
     @Test
@@ -977,6 +1059,27 @@ class TabListActionTest {
 
         assertEquals(1, store.state.customTabs.size)
         assertEquals("a1", store.state.customTabs.last().id)
+    }
+
+    @Test
+    fun `RemoveAllNormalTabsAction - Removes tabs from partition`() {
+        val normalTabGroup = TabGroup("test1", tabIds = listOf("a"))
+        val privateTabGroup = TabGroup("test2", tabIds = listOf("b"))
+        val tabPartition = TabPartition("testPartition", tabGroups = listOf(normalTabGroup, privateTabGroup))
+
+        val state = BrowserState(
+            tabs = listOf(
+                createTab(id = "a", url = "https://www.mozilla.org"),
+                createTab(id = "b", url = "https://www.firefox.com", private = true)
+            ),
+            tabPartitions = mapOf(tabPartition.id to tabPartition)
+        )
+        val store = BrowserStore(state)
+
+        store.dispatch(TabListAction.RemoveAllNormalTabsAction).joinBlocking()
+        assertEquals(1, store.state.tabs.size)
+        assertEquals(0, store.state.tabPartitions[tabPartition.id]?.getGroupById(normalTabGroup.id)?.tabIds?.size)
+        assertEquals(1, store.state.tabPartitions[tabPartition.id]?.getGroupById(privateTabGroup.id)?.tabIds?.size)
     }
 
     @Test

@@ -13,6 +13,8 @@ import java.util.Locale
  * Value type that represents the complete state of the browser/engine.
  *
  * @property tabs the list of open tabs, defaults to an empty list.
+ * @property tabPartitions a mapping of IDs to the corresponding [TabPartition]. A partition
+ * is used to store tab groups for a specific feature.
  * @property closedTabs the list of recently closed tabs if a [RecentlyClosedMiddleware] is added,
  * defaults to an empty list.
  * @property selectedTabId the ID of the currently selected (active) tab.
@@ -32,9 +34,10 @@ import java.util.Locale
  */
 data class BrowserState(
     val tabs: List<TabSessionState> = emptyList(),
+    val tabPartitions: Map<String, TabPartition> = emptyMap(),
+    val customTabs: List<CustomTabSessionState> = emptyList(),
     val closedTabs: List<RecoverableTab> = emptyList(),
     val selectedTabId: String? = null,
-    val customTabs: List<CustomTabSessionState> = emptyList(),
     val containers: Map<String, ContainerState> = emptyMap(),
     val extensions: Map<String, WebExtensionState> = emptyMap(),
     val activeWebExtensionTabId: String? = null,

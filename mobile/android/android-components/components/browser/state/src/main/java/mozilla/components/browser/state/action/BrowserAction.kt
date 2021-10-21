@@ -21,6 +21,7 @@ import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.state.TabGroup
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.TrackingProtectionState
 import mozilla.components.browser.state.state.UndoHistoryState
@@ -230,6 +231,90 @@ sealed class TabListAction : BrowserAction() {
      * Removes all non-private [TabSessionState]s.
      */
     object RemoveAllNormalTabsAction : TabListAction()
+}
+
+/**
+ * [BrowserAction] implementations related to updating tab partitions and groups inside [BrowserState].
+ */
+sealed class TabGroupAction : BrowserAction() {
+    /**
+     * Adds a new group to [BrowserState.tabPartitions]. If the corresponding partition
+     * doesn't exist it will be created.
+     *
+     * @property partition the ID of the partition the group belongs to.
+     * @property group the [TabGroup] to add.
+     */
+    data class AddTabGroupAction(
+        val partition: String,
+        val group: TabGroup
+    ) : TabGroupAction()
+
+    /**
+     * Removes a group from [BrowserState.tabPartitions]. Empty partitions will be
+     * be removed i.e., if the last group in a partition is removed, the partition
+     * is removed as well.
+     *
+     * @property partition the ID of the partition the group belongs to.
+     * @property group the ID of the group to remove.
+     */
+    data class RemoveTabGroupAction(
+        val partition: String,
+        val group: String
+    ) : TabGroupAction()
+
+    /**
+     * Adds the provided tab to a group in [BrowserState].
+     *
+     * @property partition the ID of the partition the group belongs to. If the corresponding
+     * partition doesn't exist it will be created.
+     * @property group the ID of the group.
+     * @property tabId the ID of the tab to add to the group.
+     */
+    data class AddTabAction(
+        val partition: String,
+        val group: String,
+        val tabId: String,
+    ) : TabGroupAction()
+
+    /**
+     * Adds the provided tabs to a group in [BrowserState].
+     *
+     * @property partition the ID of the partition the group belongs to. If the corresponding
+     * partition doesn't exist it will be created.
+     * @property group the ID of the group.
+     * @property tabIds the IDs of the tabs to add to the group.
+     */
+    data class AddTabsAction(
+        val partition: String,
+        val group: String,
+        val tabIds: List<String>
+    ) : TabGroupAction()
+
+    /**
+     * Removes the provided tab from a group in [BrowserState].
+     *
+     * @property partition the ID of the partition the group belongs to.
+     * @property group the ID of the group.
+     * @property tabId the ID of the tab to remove from the group.
+     */
+    data class RemoveTabAction(
+        val partition: String,
+        val group: String,
+        val tabId: String
+    ) : TabGroupAction()
+
+    /**
+     * Removes the provided tabs from a group in [BrowserState].
+     *
+     * @property partition the ID of the partition the group belongs to.
+     * @property group the ID of the group.
+     * @property tabIds the IDs of the tabs to remove from the group.
+     */
+    data class RemoveTabsAction(
+        val partition: String,
+        val group: String,
+        val tabIds: List<String>
+    ) : TabGroupAction()
 }
 
 /**
