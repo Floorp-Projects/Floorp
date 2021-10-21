@@ -2180,6 +2180,12 @@ void nsWindow::WaylandPopupMove() {
     p2a = AppUnitsPerCSSPixel() / gfxPlatformGtk::GetFontScaleFactor();
   }
 
+  // Although we have mPopupPosition / mRelativePopupPosition here
+  // we can't use it. move-to-rect needs anchor rectangle to position a popup
+  // but we have only a point from Resize().
+  //
+  // So we need to extract popup position from nsMenuPopupFrame() and duplicate
+  // the layout work here.
   nsRect anchorRectAppUnits = popupFrame->GetAnchorRect();
   anchorRect = LayoutDeviceIntRect::FromUnknownRect(
       anchorRectAppUnits.ToNearestPixels(p2a));
@@ -2304,6 +2310,8 @@ void nsWindow::WaylandPopupMove() {
         cursorOffset.MoveBy(margin.left, margin.top);
         break;
     }
+    cursorOffset.x /= p2a;
+    cursorOffset.y /= p2a;
   }
 
   if (!g_signal_handler_find(gdkWindow, G_SIGNAL_MATCH_FUNC, 0, 0, nullptr,
@@ -2312,8 +2320,8 @@ void nsWindow::WaylandPopupMove() {
                      G_CALLBACK(NativeMoveResizeCallback), this);
   }
 
-  LOG_POPUP("  popup window cursor offset x: %d y: %d\n", cursorOffset.x / p2a,
-            cursorOffset.y / p2a);
+  LOG_POPUP("  popup window cursor offset x: %d y: %d\n", cursorOffset.x,
+            cursorOffset.y);
   GdkRectangle rect = {anchorRect.x, anchorRect.y, anchorRect.width,
                        anchorRect.height};
 
@@ -2331,7 +2339,7 @@ void nsWindow::WaylandPopupMove() {
   LOG_POPUP("  move-to-rect call");
   mPopupLastAnchor = anchorRect;
   sGdkWindowMoveToRect(gdkWindow, &rect, rectAnchor, menuAnchor, hints,
-                       cursorOffset.x / p2a, cursorOffset.y / p2a);
+                       cursorOffset.x, cursorOffset.y);
 }
 
 void nsWindow::SetZIndex(int32_t aZIndex) {
