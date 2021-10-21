@@ -237,7 +237,7 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
         return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
       }
 
-      bool trimmed = false;
+      DebugOnly<bool> trimmed = false;
       if (mEncoderDelay) {
         trimmed = true;
         uint32_t toPop = std::min((uint32_t)mFrame->nb_samples, mEncoderDelay);
@@ -272,8 +272,7 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
       RefPtr<AudioData> data =
           new AudioData(samplePosition, pts, std::move(audio), numChannels,
                         samplingRate, mCodecContext->channel_layout);
-      MOZ_DIAGNOSTIC_ASSERT(duration == data->mDuration || trimmed,
-                            "must be equal");
+      MOZ_ASSERT(duration == data->mDuration || trimmed, "must be equal");
       aResults.AppendElement(std::move(data));
 
       pts = newpts;
