@@ -472,7 +472,7 @@ toolbarbutton.bookmark-item {
 }
 
 #whats-new-menu-button {
-  list-style-image: url("chrome://browser/skin/whatsnew.svg");
+  list-style-image: url("chrome://global/skin/icons/whatsnew.svg");
 }
 
 #ion-button {
