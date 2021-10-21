@@ -35,9 +35,9 @@ async function testNavigation() {
 
   // Check first domain
   // check that both host appear in the storage tree
-  checkTree(doc, ["localStorage", "http://example.com"]);
+  checkTree(doc, ["localStorage", "https://example.com"]);
   // check the table for values
-  await selectTreeItem(["localStorage", "http://example.com"]);
+  await selectTreeItem(["localStorage", "https://example.com"]);
   checkStorageData("lorem", "ipsum");
 
   // clear up local storage data before navigating
@@ -51,9 +51,9 @@ async function testNavigation() {
   await navigateTo(URL2);
   // wait for storage tree refresh, and check host
   info("Waiting for storage tree to refresh and show correct host…");
-  await waitUntil(() => isInTree(doc, ["localStorage", "http://example.net"]));
+  await waitUntil(() => isInTree(doc, ["localStorage", "https://example.net"]));
   ok(
-    !isInTree(doc, ["localStorage", "http://example.com"]),
+    !isInTree(doc, ["localStorage", "https://example.com"]),
     "example.com item is not in the tree anymore"
   );
 
@@ -61,10 +61,10 @@ async function testNavigation() {
   await reloadBrowser();
   // wait for storage tree refresh, and check host
   info("Waiting for storage tree to refresh and show correct host…");
-  await waitUntil(() => isInTree(doc, ["localStorage", "http://example.net"]));
+  await waitUntil(() => isInTree(doc, ["localStorage", "https://example.net"]));
 
   // check the table for values
-  await selectTreeItem(["localStorage", "http://example.net"]);
+  await selectTreeItem(["localStorage", "https://example.net"]);
   checkStorageData("foo", "bar");
 
   info("Check that the localStorage node still has the expected label");

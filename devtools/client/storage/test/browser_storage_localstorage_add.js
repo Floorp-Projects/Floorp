@@ -7,12 +7,14 @@
 "use strict";
 
 add_task(async function() {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-localstorage.html");
+  await openTabAndSetupStorage(
+    MAIN_DOMAIN_SECURED + "storage-localstorage.html"
+  );
   showAllColumns(true);
 
-  await performAdd(["localStorage", "http://test1.example.org"]);
-  await performAdd(["localStorage", "http://test1.example.org"]);
-  await performAdd(["localStorage", "http://test1.example.org"]);
-  await performAdd(["localStorage", "http://test1.example.org"]);
-  await performAdd(["localStorage", "http://test1.example.org"]);
+  await performAdd(["localStorage", "https://test1.example.org"]);
+  await performAdd(["localStorage", "https://test1.example.org"]);
+  await performAdd(["localStorage", "https://test1.example.org"]);
+  await performAdd(["localStorage", "https://test1.example.org"]);
+  await performAdd(["localStorage", "https://test1.example.org"]);
 });

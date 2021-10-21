@@ -7,7 +7,11 @@
 "use strict";
 
 add_task(async function() {
-  const URL1 = buildURLWithContent(
+  // Using https-first for this test is blocked on Bug 1733420.
+  // We cannot assert cache status "OK" with HTTPS requests to httpd.js.
+  await pushPref("dom.security.https_first", false);
+
+  const URL1 = buildInsecureURLWithContent(
     "example.com",
     `<h1>example.com</h1>` +
       `<script>
@@ -19,7 +23,7 @@ add_task(async function() {
         }
       </script>`
   );
-  const URL2 = buildURLWithContent(
+  const URL2 = buildInsecureURLWithContent(
     "example.net",
     `<h1>example.net</h1>` +
       `<script>
