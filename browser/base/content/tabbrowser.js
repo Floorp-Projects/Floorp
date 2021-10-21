@@ -6093,6 +6093,17 @@
           once: true,
         });
       });
+
+      this.addEventListener("pageinfo", event => {
+        let browser = event.originalTarget;
+        let tab = this.getTabForBrowser(browser);
+        if (!tab) {
+          return;
+        }
+
+        const { url, description, previewImageURL } = event.detail;
+        this.setPageInfo(url, description, previewImageURL);
+      });
     },
 
     setSuccessor(aTab, successorTab) {
