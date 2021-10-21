@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 mod guillotine;
-
+use crate::texture_cache::TextureCacheHandle;
+use crate::internal_types::FastHashMap;
 pub use guillotine::*;
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -54,6 +55,10 @@ pub trait AtlasAllocatorList<TextureParameters> {
         texture_alloc_cb: &mut dyn FnMut(DeviceIntSize, &TextureParameters) -> CacheTextureId,
     ) -> (CacheTextureId, AllocId, DeviceIntRect);
 
+    fn set_handle(&mut self, texture_id: CacheTextureId, alloc_id: AllocId, handle: &TextureCacheHandle);
+
+    fn remove_handle(&mut self, texture_id: CacheTextureId, alloc_id: AllocId);
+
     /// Deallocate a rectangle and return its size.
     fn deallocate(&mut self, texture_id: CacheTextureId, alloc_id: AllocId);
 
@@ -65,6 +70,7 @@ pub trait AtlasAllocatorList<TextureParameters> {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct TextureUnit<Allocator> {
     allocator: Allocator,
+    handles: FastHashMap<AllocId, TextureCacheHandle>,
     texture_id: CacheTextureId,
 }
 
@@ -109,6 +115,7 @@ impl<Allocator: AtlasAllocator, TextureParameters> AllocatorList<Allocator, Text
 
         self.units.push(TextureUnit {
             allocator: Allocator::new(self.size, &self.atlas_parameters),
+            handles: FastHashMap::default(),
             texture_id,
         });
 
@@ -126,6 +133,7 @@ impl<Allocator: AtlasAllocator, TextureParameters> AllocatorList<Allocator, Text
             .find(|unit| unit.texture_id == texture_id)
             .expect("Unable to find the associated texture array unit");
 
+        unit.handles.remove(&alloc_id);
         unit.allocator.deallocate(alloc_id);
     }
 
@@ -211,6 +219,22 @@ for AllocatorList<Allocator, TextureParameters> {
         texture_alloc_cb: &mut dyn FnMut(DeviceIntSize, &TextureParameters) -> CacheTextureId,
     ) -> (CacheTextureId, AllocId, DeviceIntRect) {
         self.allocate(requested_size, texture_alloc_cb)
+    }
+
+    fn set_handle(&mut self, texture_id: CacheTextureId, alloc_id: AllocId, handle: &TextureCacheHandle) {
+        let unit = self.units
+            .iter_mut()
+            .find(|unit| unit.texture_id == texture_id)
+            .expect("Unable to find the associated texture array unit");
+        unit.handles.insert(alloc_id, handle.clone());
+    }
+
+    fn remove_handle(&mut self, texture_id: CacheTextureId, alloc_id: AllocId) {
+        let unit = self.units
+            .iter_mut()
+            .find(|unit| unit.texture_id == texture_id)
+            .expect("Unable to find the associated texture array unit");
+        unit.handles.remove(&alloc_id);
     }
 
     fn deallocate(&mut self, texture_id: CacheTextureId, alloc_id: AllocId) {
@@ -301,7 +325,9 @@ fn bug_1680769() {
 
     // Make some allocations, forcing the the creation of multiple textures.
     for _ in 0..50 {
-        allocations.push(allocators.allocate(size2(256, 256), alloc_cb));
+        let alloc = allocators.allocate(size2(256, 256), alloc_cb);
+        allocators.set_handle(alloc.0, alloc.1, &TextureCacheHandle::Empty);
+        allocations.push(alloc);
     }
 
     // Deallocate everything.
