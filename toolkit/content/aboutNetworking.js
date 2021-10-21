@@ -112,6 +112,7 @@ function displayDns(data) {
   trr_url_tbody.id = "dns_trr_url";
   let trr_url = document.createElement("tr");
   trr_url.appendChild(col(gDNSService.currentTrrURI));
+  trr_url.appendChild(col(gDNSService.currentTrrMode));
   trr_url_tbody.appendChild(trr_url);
   let prevURL = document.getElementById("dns_trr_url");
   prevURL.parentNode.replaceChild(trr_url_tbody, prevURL);
@@ -136,6 +137,7 @@ function displayDns(data) {
     row.appendChild(column);
     row.appendChild(col(data.entries[i].expiration));
     row.appendChild(col(data.entries[i].originAttributesSuffix));
+    row.appendChild(col(data.entries[i].flags));
     new_cont.appendChild(row);
   }
 

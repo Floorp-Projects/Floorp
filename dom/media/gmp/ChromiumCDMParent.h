@@ -88,7 +88,8 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
   // a Close() function.
   RefPtr<MediaDataDecoder::InitPromise> InitializeVideoDecoder(
       const gmp::CDMVideoDecoderConfig& aConfig, const VideoInfo& aInfo,
-      RefPtr<layers::ImageContainer> aImageContainer);
+      RefPtr<layers::ImageContainer> aImageContainer,
+      RefPtr<layers::KnowsCompositor> aKnowsCompositor);
 
   RefPtr<MediaDataDecoder::DecodePromise> DecryptAndDecodeFrame(
       MediaRawData* aSample);
@@ -181,6 +182,7 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
   MozPromiseHolder<MediaDataDecoder::DecodePromise> mDecodePromise;
 
   RefPtr<layers::ImageContainer> mImageContainer;
+  RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   VideoInfo mVideoInfo;
   uint64_t mLastStreamOffset = 0;
 

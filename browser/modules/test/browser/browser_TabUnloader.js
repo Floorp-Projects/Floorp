@@ -86,7 +86,7 @@ async function pressure() {
     "TabBrowserDiscarded",
     true
   );
-  TabUnloader.unloadTabAsync();
+  TabUnloader.unloadTabAsync(null);
   return tabDiscarded;
 }
 
@@ -106,12 +106,12 @@ function pressureAndObserve(aExpectedTopic) {
     };
     Services.obs.addObserver(observer, aExpectedTopic);
   });
-  TabUnloader.unloadTabAsync();
+  TabUnloader.unloadTabAsync(null);
   return promise;
 }
 
 async function compareTabOrder(expectedOrder) {
-  let tabInfo = await TabUnloader.getSortedTabs();
+  let tabInfo = await TabUnloader.getSortedTabs(null);
 
   is(
     tabInfo.length,
@@ -214,7 +214,7 @@ add_task(async function test() {
   ok(pinnedSoundTab.soundPlaying, "tab is still playing sound");
 
   // There are no unloadable tabs.
-  TabUnloader.unloadTabAsync();
+  TabUnloader.unloadTabAsync(null);
   ok(soundTab.linkedPanel, "a tab playing sound is never unloaded");
 
   const histogram = TelemetryTestUtils.getAndClearHistogram(

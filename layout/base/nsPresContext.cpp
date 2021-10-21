@@ -100,7 +100,6 @@
 
 #include "nsBidiUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsBidi.h"
 
 #include "mozilla/dom/URL.h"
 #include "mozilla/ServoCSSParser.h"
@@ -289,8 +288,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
 #ifdef DEBUG
       mInitialized(false),
 #endif
-      mColorSchemeOverride(dom::PrefersColorSchemeOverride::None)
-{
+      mColorSchemeOverride(dom::PrefersColorSchemeOverride::None) {
 #ifdef DEBUG
   PodZero(&mLayoutPhaseCount);
 #endif
@@ -2683,11 +2681,11 @@ uint64_t nsPresContext::GetUndisplayedRestyleGeneration() const {
   return mRestyleManager->GetUndisplayedRestyleGeneration();
 }
 
-nsBidi& nsPresContext::GetBidiEngine() {
+mozilla::intl::Bidi& nsPresContext::GetBidiEngine() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mBidiEngine) {
-    mBidiEngine.reset(new nsBidi());
+    mBidiEngine.reset(new mozilla::intl::Bidi());
   }
   return *mBidiEngine;
 }

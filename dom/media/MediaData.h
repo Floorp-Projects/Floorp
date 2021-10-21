@@ -463,7 +463,7 @@ class VideoData : public MediaData {
       const media::TimeUnit& aTime, const media::TimeUnit& aDuration,
       const YCbCrBuffer& aBuffer, bool aKeyframe,
       const media::TimeUnit& aTimecode, const IntRect& aPicture,
-      layers::KnowsCompositor* aAllocator = nullptr);
+      layers::KnowsCompositor* aAllocator);
 
   static already_AddRefed<VideoData> CreateAndCopyData(
       const VideoInfo& aInfo, ImageContainer* aContainer, int64_t aOffset,

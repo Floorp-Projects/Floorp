@@ -116,7 +116,7 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
     }
   }
 
-  if (!script->scriptSource()->startIncrementalEncoding(cx, options,
+  if (!script->scriptSource()->startIncrementalEncoding(cx,
                                                         std::move(stencil))) {
     return nullptr;
   }

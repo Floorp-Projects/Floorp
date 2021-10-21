@@ -353,8 +353,15 @@ def repackage_msix(
         dict(section="App", value="CodeName", fallback="Name"),
         dict(section="App", value="Vendor"),
     )
+
     first = next(values)
-    displayname = displayname or "Mozilla {}".format(first)
+    if not displayname:
+        displayname = "Mozilla {}".format(first)
+
+        if channel == "beta":
+            # Release (official) and Beta share branding.  Differentiate Beta a little bit.
+            displayname += " Beta"
+
     second = next(values)
     vendor = vendor or second
 
@@ -393,6 +400,10 @@ def repackage_msix(
     _, _, brandFullName = brandFullName.partition("=")
     brandFullName = brandFullName.strip()
 
+    if channel == "beta":
+        # Release (official) and Beta share branding.  Differentiate Beta a little bit.
+        brandFullName += " Beta"
+
     # We don't have a build at repackage-time to gives us this value, and the
     # source of truth is a branding-specific `configure.sh` shell script that we
     # can't easily evaluate completely here.  Instead, we take the last value
@@ -414,11 +425,6 @@ def repackage_msix(
             get_state_dir(), "cache", "mach-msix", "msix-temp-{}".format(channel)
         )
     )
-
-    if channel == "beta":
-        # Release (official) and Beta share branding.  Differentiate Beta a little bit.
-        displayname += " Beta"
-        brandFullName += " Beta"
 
     # Like 'Firefox Package Root', 'Firefox Nightly Package Root', 'Firefox Beta
     # Package Root'.  This is `BrandFullName` in the installer, and we want to

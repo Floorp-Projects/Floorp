@@ -504,6 +504,24 @@ browser.engagement.navigation:
     record_in_processes:
       - 'main'
 
+  urlbar_handoff:
+    bug_numbers:
+      - 1732429
+    description: >
+      The count URI loads triggered in a subsession from the urlbar via handoff,
+      broken down by the originating action.
+    expires: never
+    kind: uint
+    keyed: True
+    notification_emails:
+      - fx-search@mozilla.com
+      - rev-data@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
   urlbar_searchmode:
     bug_numbers:
       - 1654680
@@ -4934,6 +4952,24 @@ browser.search.content:
     record_in_processes:
       - main
 
+  urlbar_handoff:
+    bug_numbers:
+      - 1732429
+    description: >
+      The count URI loads triggered in a subsession from the urlbar via handoff,
+      broken down by the originating action.
+    expires: never
+    kind: uint
+    keyed: True
+    notification_emails:
+      - fx-search@mozilla.com
+      - rev-data@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
   urlbar_searchmode:
     bug_numbers:
       - 1089670
@@ -5154,6 +5190,24 @@ browser.search.withads:
     record_in_processes:
       - main
 
+  urlbar_handoff:
+    bug_numbers:
+      - 1732429
+    description: >
+      The count URI loads triggered in a subsession from the urlbar via handoff,
+      broken down by the originating action.
+    expires: never
+    kind: uint
+    keyed: True
+    notification_emails:
+      - fx-search@mozilla.com
+      - rev-data@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
   urlbar_searchmode:
     bug_numbers:
       - 1664847
@@ -5341,6 +5395,24 @@ browser.search.adclicks:
       - 'firefox'
     record_in_processes:
       - main
+
+  urlbar_handoff:
+    bug_numbers:
+      - 1732429
+    description: >
+      The count URI loads triggered in a subsession from the urlbar via handoff,
+      broken down by the originating action.
+    expires: never
+    kind: uint
+    keyed: True
+    notification_emails:
+      - fx-search@mozilla.com
+      - rev-data@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
 
   urlbar_searchmode:
     bug_numbers:
@@ -5581,7 +5653,6 @@ startup:
       - 1522934
       - 1570652
       - 1623406
-      - 1709969
     description: >
       How the profile was selected during startup. One of the following reasons:
         unknown:
@@ -5612,9 +5683,6 @@ startup:
           the old default profile and created a new profile.
         firstrun-created-default:
           A first run of the application created a new profile to use.
-        firstrun-migrated-default:
-          A first run of the application created a new profile to use, based on
-          migrating an existing profile from the same application.
         default:
           The default profile was selected as normal.
     expires: "99"

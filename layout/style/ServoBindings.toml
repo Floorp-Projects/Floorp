@@ -33,7 +33,6 @@ headers = [
     "mozilla/ServoTraversalStatistics.h",
     "mozilla/SizeOfState.h",
     "nsCSSProps.h",
-    "nsContentUtils.h",
     "nsMappedAttributes.h",
     "nsNameSpaceManager.h",
 ]
@@ -180,7 +179,7 @@ whitelist-vars = [
     "kNameSpaceID_.*",
     "kGenericFont_.*",
     "kPresContext_.*",
-    "nsContentUtils_.*",
+    "nsNameSpaceManager_.*",
     "GECKO_IS_NIGHTLY",
     "NS_SAME_AS_FOREGROUND_COLOR",
     "mozilla::detail::gGkAtoms",

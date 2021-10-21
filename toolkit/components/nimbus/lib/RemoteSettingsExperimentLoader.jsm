@@ -321,6 +321,7 @@ class _RemoteSettingsExperimentLoader {
     }
 
     let matches = 0;
+    let recipeMismatches = [];
     if (recipes && !loadingError) {
       for (const r of recipes) {
         if (await this.checkTargeting(r)) {
@@ -329,11 +330,12 @@ class _RemoteSettingsExperimentLoader {
           await this.manager.onRecipe(r, "rs-loader");
         } else {
           log.debug(`${r.id} did not match due to targeting`);
+          recipeMismatches.push(r.slug);
         }
       }
 
       log.debug(`${matches} recipes matched. Finalizing ExperimentManager.`);
-      this.manager.onFinalize("rs-loader");
+      this.manager.onFinalize("rs-loader", { recipeMismatches });
     }
 
     if (trigger !== "timer") {

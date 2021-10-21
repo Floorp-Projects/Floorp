@@ -2985,11 +2985,29 @@ static void locked_profiler_stream_json_for_this_process(
     ThreadRegistry::LockedRegistry lockedRegistry;
     ActivePS::ProfiledThreadList threads =
         ActivePS::ProfiledThreads(lockedRegistry, aLock);
+
+    // Prepare the streaming context for each thread.
+    ProcessStreamingContext processStreamingContext(
+        threads.length(), CorePS::ProcessStartTime(), aSinceTime);
     for (ActivePS::ProfiledThreadListElement& thread : threads) {
-      thread.mProfiledThreadData->StreamJSON(
-          buffer, thread.mJSContext, aWriter, CorePS::ProcessName(aLock),
-          CorePS::ETLDplus1(aLock), CorePS::ProcessStartTime(), aSinceTime,
-          ActivePS::FeatureJSTracer(aLock), aService);
+      MOZ_RELEASE_ASSERT(thread.mProfiledThreadData);
+      processStreamingContext.AddThreadStreamingContext(
+          *thread.mProfiledThreadData, buffer, thread.mJSContext, aService);
+    }
+
+    // Read the buffer once, and extract all samples and markers that the
+    // context expects.
+    buffer.StreamSamplesAndMarkersToJSON(processStreamingContext);
+
+    // Stream each thread from the pre-filled context.
+    for (ThreadStreamingContext& threadStreamingContext :
+         std::move(processStreamingContext)) {
+      threadStreamingContext.FinalizeWriter();
+      threadStreamingContext.mProfiledThreadData.StreamJSON(
+          std::move(threadStreamingContext), aWriter,
+          CorePS::ProcessName(aLock), CorePS::ETLDplus1(aLock),
+          CorePS::ProcessStartTime(), ActivePS::FeatureJSTracer(aLock),
+          aService);
     }
 
 #if defined(GP_OS_android)

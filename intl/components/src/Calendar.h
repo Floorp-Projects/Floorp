@@ -121,14 +121,10 @@ class Calendar final {
 
   ~Calendar();
 
-  /**
-   * TODO(Bug 1686965) - Temporarily get the underlying ICU object while
-   * migrating to the unified API. This should be removed when completing the
-   * migration.
-   */
-  UCalendar* UnsafeGetUCalendar() const { return mCalendar; }
-
  private:
+  friend class DateIntervalFormat;
+  UCalendar* GetUCalendar() const { return mCalendar; }
+
   UCalendar* mCalendar = nullptr;
 };
 

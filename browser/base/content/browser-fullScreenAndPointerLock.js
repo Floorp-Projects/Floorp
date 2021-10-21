@@ -375,17 +375,12 @@ var FullScreen = {
     // don't need that kind of precision in our CSS.
     shiftSize = shiftSize.toFixed(2);
     let toolbox = document.getElementById("navigator-toolbox");
-    let browserEl = document.getElementById("browser");
     if (shiftSize > 0) {
       toolbox.style.setProperty("transform", `translateY(${shiftSize}px)`);
       toolbox.style.setProperty("z-index", "2");
-      toolbox.style.setProperty("position", "relative");
-      browserEl.style.setProperty("position", "relative");
     } else {
       toolbox.style.removeProperty("transform");
       toolbox.style.removeProperty("z-index");
-      toolbox.style.removeProperty("position");
-      browserEl.style.removeProperty("position");
     }
   },
 

@@ -970,7 +970,7 @@ already_AddRefed<VideoData> ChromiumCDMParent::CreateVideoFrame(
       mVideoInfo, mImageContainer, mLastStreamOffset,
       media::TimeUnit::FromMicroseconds(aFrame.mTimestamp()),
       media::TimeUnit::FromMicroseconds(aFrame.mDuration()), b, false,
-      media::TimeUnit::FromMicroseconds(-1), pictureRegion);
+      media::TimeUnit::FromMicroseconds(-1), pictureRegion, mKnowsCompositor);
 
   return v.forget();
 }
@@ -1037,7 +1037,8 @@ void ChromiumCDMParent::ActorDestroy(ActorDestroyReason aWhy) {
 
 RefPtr<MediaDataDecoder::InitPromise> ChromiumCDMParent::InitializeVideoDecoder(
     const gmp::CDMVideoDecoderConfig& aConfig, const VideoInfo& aInfo,
-    RefPtr<layers::ImageContainer> aImageContainer) {
+    RefPtr<layers::ImageContainer> aImageContainer,
+    RefPtr<layers::KnowsCompositor> aKnowsCompositor) {
   MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
   if (mIsShutdown) {
     return MediaDataDecoder::InitPromise::CreateAndReject(
@@ -1084,6 +1085,7 @@ RefPtr<MediaDataDecoder::InitPromise> ChromiumCDMParent::InitializeVideoDecoder(
 
   mVideoDecoderInitialized = true;
   mImageContainer = aImageContainer;
+  mKnowsCompositor = aKnowsCompositor;
   mVideoInfo = aInfo;
   mVideoFrameBufferSize = bufferSize;
 

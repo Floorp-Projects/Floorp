@@ -3402,6 +3402,9 @@ class Document : public nsINode,
     return !GetFullscreenError(aCallerType);
   }
 
+  MOZ_CAN_RUN_SCRIPT void GetWireframe(bool aIncludeNodes,
+                                       Nullable<Wireframe>&);
+
   Element* GetTopLayerTop();
   // Return the fullscreen element in the top layer
   Element* GetUnretargetedFullScreenElement() const;

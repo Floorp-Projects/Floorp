@@ -62,8 +62,8 @@ add_task(async function testLocalStorage() {
     await browser.browsingData.removeLocalStorage({
       hostnames: ["example.com"],
     });
-    await browser.tabs.sendMessage(tabs["http://example.com/"].id, "checkLocalStorageCleared");
-    await browser.tabs.sendMessage(tabs["http://example.net/"].id, "checkLocalStorageSet");
+    await browser.tabs.sendMessage(tabs["https://example.com/"].id, "checkLocalStorageCleared");
+    await browser.tabs.sendMessage(tabs["https://example.net/"].id, "checkLocalStorageSet");
 
     if (
       SpecialPowers.Services.domStorageManager.nextGenLocalStorageEnabled ===
@@ -73,7 +73,7 @@ add_task(async function testLocalStorage() {
       // implementation (See Bug 1595431).
       browser.test.log("Skipped assertion on nextGenLocalStorageEnabled=false");
     } else {
-      await browser.tabs.sendMessage(tabs["http://test1.example.com/"].id, "checkLocalStorageSet");
+      await browser.tabs.sendMessage(tabs["https://test1.example.com/"].id, "checkLocalStorageSet");
     }
 
     await sendMessageToTabs(tabs, "resetLocalStorage");
@@ -93,12 +93,12 @@ add_task(async function testLocalStorage() {
       await browser.browsingData.removeLocalStorage({
         cookieStoreId: "firefox-container-1",
       });
-      await browser.tabs.sendMessage(tabs["http://example.com/"].id, "checkLocalStorageSet");
-      await browser.tabs.sendMessage(tabs["http://example.net/"].id, "checkLocalStorageSet");
+      await browser.tabs.sendMessage(tabs["https://example.com/"].id, "checkLocalStorageSet");
+      await browser.tabs.sendMessage(tabs["https://example.net/"].id, "checkLocalStorageSet");
 
       // TODO: containers support is lacking on GeckoView (Bug 1643740)
       if (!navigator.userAgent.includes("Android")) {
-        await browser.tabs.sendMessage(tabs["http://test1.example.com/"].id, "checkLocalStorageCleared");
+        await browser.tabs.sendMessage(tabs["https://test1.example.com/"].id, "checkLocalStorageCleared");
       }
 
       await sendMessageToTabs(tabs, "resetLocalStorage");
@@ -167,10 +167,10 @@ add_task(async function testLocalStorage() {
     },
     async background() {
       const TABS = [
-        { url: "http://example.com" },
-        { url: "http://example.net" },
+        { url: "https://example.com" },
+        { url: "https://example.net" },
         {
-          url: "http://test1.example.com",
+          url: "https://test1.example.com",
           cookieStoreId: 'firefox-container-1',
         },
       ];
@@ -225,9 +225,9 @@ add_task(async function testLocalStorage() {
       content_scripts: [
         {
           matches: [
-            "http://example.com/",
-            "http://example.net/",
-            "http://test1.example.com/",
+            "https://example.com/",
+            "https://example.net/",
+            "https://test1.example.com/",
           ],
           js: ["content-script.js"],
           run_at: "document_end",

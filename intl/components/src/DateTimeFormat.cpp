@@ -9,6 +9,7 @@
 #include "unicode/udatpg.h"
 #include "unicode/ures.h"
 
+#include "DateTimeFormatUtils.h"
 #include "ScopedICUObject.h"
 
 #include "mozilla/EnumSet.h"
@@ -1109,4 +1110,62 @@ const char* DateTimeFormat::ToString(DateTimeFormat::HourCycle aHourCycle) {
   }
   MOZ_CRASH("Unexpected DateTimeFormat::HourCycle");
 }
+
+ICUResult DateTimeFormat::TryFormatToParts(
+    UFieldPositionIterator* aFieldPositionIterator, size_t aSpanSize,
+    DateTimePartVector& aParts) const {
+  ScopedICUObject<UFieldPositionIterator, ufieldpositer_close> toClose(
+      aFieldPositionIterator);
+
+  size_t lastEndIndex = 0;
+  auto AppendPart = [&](DateTimePartType type, size_t endIndex) {
+    // For the part defined in FormatDateTimeToParts, it doesn't have ||Source||
+    // property, we store Shared for simplicity,
+    if (!aParts.emplaceBack(type, endIndex, DateTimePartSource::Shared)) {
+      return false;
+    }
+
+    lastEndIndex = endIndex;
+    return true;
+  };
+
+  int32_t fieldInt, beginIndexInt, endIndexInt;
+  while ((fieldInt = ufieldpositer_next(aFieldPositionIterator, &beginIndexInt,
+                                        &endIndexInt)) >= 0) {
+    MOZ_ASSERT(beginIndexInt <= endIndexInt,
+               "field iterator returning invalid range");
+
+    size_t beginIndex = AssertedCast<size_t>(beginIndexInt);
+    size_t endIndex = AssertedCast<size_t>(endIndexInt);
+
+    // Technically this isn't guaranteed.  But it appears true in pratice,
+    // and http://bugs.icu-project.org/trac/ticket/12024 is expected to
+    // correct the documentation lapse.
+    MOZ_ASSERT(lastEndIndex <= beginIndex,
+               "field iteration didn't return fields in order start to "
+               "finish as expected");
+
+    DateTimePartType type =
+        ConvertUFormatFieldToPartType(static_cast<UDateFormatField>(fieldInt));
+    if (lastEndIndex < beginIndex) {
+      if (!AppendPart(DateTimePartType::Literal, beginIndex)) {
+        return Err(ICUError::InternalError);
+      }
+    }
+
+    if (!AppendPart(type, endIndex)) {
+      return Err(ICUError::InternalError);
+    }
+  }
+
+  // Append any final literal.
+  if (lastEndIndex < aSpanSize) {
+    if (!AppendPart(DateTimePartType::Literal, aSpanSize)) {
+      return Err(ICUError::InternalError);
+    }
+  }
+
+  return Ok();
+}
+
 }  // namespace mozilla::intl

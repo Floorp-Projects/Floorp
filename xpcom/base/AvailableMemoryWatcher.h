@@ -28,10 +28,11 @@ class nsAvailableMemoryWatcherBase : public nsIAvailableMemoryWatcherBase,
   static const char* const kObserverTopics[];
 
   TimeStamp mLowMemoryStart;
+
+ protected:
   uint32_t mNumOfTabUnloading;
   uint32_t mNumOfMemoryPressure;
 
- protected:
   nsCOMPtr<nsITabUnloader> mTabUnloader;
   nsCOMPtr<nsIObserverService> mObserverSvc;
   // Do not change this value off the main thread.
