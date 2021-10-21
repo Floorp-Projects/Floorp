@@ -2195,9 +2195,7 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
 
 template <XDRMode mode>
 /* static */
-XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
-                            const ReadOnlyCompileOptions* maybeOptions,
-                            RefPtr<ScriptSource>& source) {
+XDRResult ScriptSource::XDR(XDRState<mode>* xdr, RefPtr<ScriptSource>& source) {
   JSContext* cx = xdr->cx();
 
   if (mode == XDR_DECODE) {
@@ -2206,40 +2204,46 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
     if (!source) {
       return xdr->fail(JS::TranscodeResult::Throw);
     }
+  }
 
-    // We use this CompileOptions only to initialize the ScriptSourceObject.
-    // Most CompileOptions fields aren't used by ScriptSourceObject, and those
-    // that are (element; elementAttributeName) aren't preserved by XDR. So
-    // this can be simple.
-    if (!source->initFromOptions(cx, *maybeOptions)) {
-      return xdr->fail(JS::TranscodeResult::Throw);
+  static constexpr uint8_t HasFilename = 1 << 0;
+  static constexpr uint8_t HasDisplayURL = 1 << 1;
+  static constexpr uint8_t HasSourceMapURL = 1 << 2;
+  static constexpr uint8_t MutedErrors = 1 << 3;
+
+  uint8_t flags = 0;
+  if (mode == XDR_ENCODE) {
+    if (source->filename_) {
+      flags |= HasFilename;
+    }
+    if (source->hasDisplayURL()) {
+      flags |= HasDisplayURL;
+    }
+    if (source->hasSourceMapURL()) {
+      flags |= HasSourceMapURL;
+    }
+    if (source->mutedErrors()) {
+      flags |= MutedErrors;
     }
   }
 
-  MOZ_TRY(xdrData(xdr, source.get()));
+  MOZ_TRY(xdr->codeUint8(&flags));
 
-  uint8_t haveSourceMap = source->hasSourceMapURL();
-  MOZ_TRY(xdr->codeUint8(&haveSourceMap));
-
-  if (haveSourceMap) {
-    XDRTranscodeString<char16_t> chars;
+  if (flags & HasFilename) {
+    XDRTranscodeString<char> chars;
 
     if (mode == XDR_ENCODE) {
-      chars.construct<const char16_t*>(source->sourceMapURL());
+      chars.construct<const char*>(source->filename());
     }
     MOZ_TRY(xdr->codeCharsZ(chars));
     if (mode == XDR_DECODE) {
-      if (!source->setSourceMapURL(
-              cx, std::move(chars.ref<UniqueTwoByteChars>()))) {
+      if (!source->setFilename(cx, std::move(chars.ref<UniqueChars>()))) {
         return xdr->fail(JS::TranscodeResult::Throw);
       }
     }
   }
 
-  uint8_t haveDisplayURL = source->hasDisplayURL();
-  MOZ_TRY(xdr->codeUint8(&haveDisplayURL));
-
-  if (haveDisplayURL) {
+  if (flags & HasDisplayURL) {
     XDRTranscodeString<char16_t> chars;
 
     if (mode == XDR_ENCODE) {
@@ -2254,39 +2258,42 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
     }
   }
 
-  uint8_t haveFilename = !!source->filename_;
-  MOZ_TRY(xdr->codeUint8(&haveFilename));
-
-  if (haveFilename) {
-    XDRTranscodeString<char> chars;
+  if (flags & HasSourceMapURL) {
+    XDRTranscodeString<char16_t> chars;
 
     if (mode == XDR_ENCODE) {
-      chars.construct<const char*>(source->filename());
+      chars.construct<const char16_t*>(source->sourceMapURL());
     }
     MOZ_TRY(xdr->codeCharsZ(chars));
     if (mode == XDR_DECODE) {
-      if (!source->filename()) {
-        if (!source->setFilename(cx, std::move(chars.ref<UniqueChars>()))) {
-          return xdr->fail(JS::TranscodeResult::Throw);
-        }
+      if (!source->setSourceMapURL(
+              cx, std::move(chars.ref<UniqueTwoByteChars>()))) {
+        return xdr->fail(JS::TranscodeResult::Throw);
       }
-      MOZ_ASSERT(source->filename());
     }
   }
+
+  MOZ_ASSERT(source->parameterListEnd_ == 0);
+
+  if (flags & MutedErrors) {
+    if (mode == XDR_DECODE) {
+      source->mutedErrors_ = true;
+    }
+  }
+
+  MOZ_TRY(xdr->codeUint32(&source->startLine_));
+
+  MOZ_TRY(xdrData(xdr, source.get()));
 
   return Ok();
 }
 
 template /* static */
     XDRResult
-    ScriptSource::XDR(XDRState<XDR_ENCODE>* xdr,
-                      const ReadOnlyCompileOptions* maybeOptions,
-                      RefPtr<ScriptSource>& holder);
+    ScriptSource::XDR(XDRState<XDR_ENCODE>* xdr, RefPtr<ScriptSource>& holder);
 template /* static */
     XDRResult
-    ScriptSource::XDR(XDRState<XDR_DECODE>* xdr,
-                      const ReadOnlyCompileOptions* maybeOptions,
-                      RefPtr<ScriptSource>& holder);
+    ScriptSource::XDR(XDRState<XDR_DECODE>* xdr, RefPtr<ScriptSource>& holder);
 
 // Format and return a cx->pod_malloc'ed URL for a generated script like:
 //   {filename} line {lineno} > {introducer}

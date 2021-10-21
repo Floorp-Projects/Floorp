@@ -246,14 +246,13 @@ static XDRResult VersionCheck(XDRState<mode>* xdr) {
 }
 
 template <XDRMode mode>
-static XDRResult XDRStencilHeader(
-    XDRState<mode>* xdr, const JS::ReadOnlyCompileOptions* maybeOptions,
-    RefPtr<ScriptSource>& source) {
+static XDRResult XDRStencilHeader(XDRState<mode>* xdr,
+                                  RefPtr<ScriptSource>& source) {
   // The XDR-Stencil header is inserted at beginning of buffer, but it is
   // computed at the end the incremental-encoding process.
 
   MOZ_TRY(VersionCheck(xdr));
-  MOZ_TRY(ScriptSource::XDR(xdr, maybeOptions, source));
+  MOZ_TRY(ScriptSource::XDR(xdr, source));
 
   return Ok();
 }
@@ -271,8 +270,7 @@ XDRResult XDRStencilEncoder::codeStencil(
 
   MOZ_TRY(frontend::StencilXDR::checkCompilationStencil(this, stencil));
 
-  MOZ_TRY(XDRStencilHeader(this, nullptr,
-                           const_cast<RefPtr<ScriptSource>&>(source)));
+  MOZ_TRY(XDRStencilHeader(this, const_cast<RefPtr<ScriptSource>&>(source)));
   MOZ_TRY(frontend::StencilXDR::codeCompilationStencil(
       this, const_cast<frontend::CompilationStencil&>(stencil)));
 
@@ -343,7 +341,7 @@ XDRResult XDRStencilDecoder::codeStencil(
   auto resetOptions = mozilla::MakeScopeExit([&] { options_ = nullptr; });
   options_ = &options;
 
-  MOZ_TRY(XDRStencilHeader(this, options_, stencil.source));
+  MOZ_TRY(XDRStencilHeader(this, stencil.source));
   MOZ_TRY(frontend::StencilXDR::codeCompilationStencil(this, stencil));
 
   return Ok();

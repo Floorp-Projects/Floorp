@@ -13,8 +13,11 @@
 
 struct JSContext;
 class JSObject;
+class JSString;
 
 namespace js {
+
+class ScriptSource;
 
 // Populate `options` fields from `opt` object.
 //
@@ -33,6 +36,15 @@ namespace js {
                                        JS::CompileOptions& options,
                                        JS::Handle<JSObject*> opts,
                                        JS::UniqueChars* fileNameBytes);
+
+[[nodiscard]] bool ParseSourceOptions(
+    JSContext* cx, JS::Handle<JSObject*> opts,
+    JS::MutableHandle<JSString*> displayURL,
+    JS::MutableHandle<JSString*> sourceMapURL);
+
+[[nodiscard]] bool SetSourceOptions(JSContext* cx, ScriptSource* source,
+                                    JS::Handle<JSString*> displayURL,
+                                    JS::Handle<JSString*> sourceMapURL);
 
 } /* namespace js */
 
