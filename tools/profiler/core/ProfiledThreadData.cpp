@@ -53,8 +53,7 @@ void ProfiledThreadData::StreamJSON(
                                mThreadInfo.ThreadId(), aCx, jitFrameInfo);
   }
 
-  UniqueStacks uniqueStacks(std::move(jitFrameInfo));
-  uniqueStacks.mCodeAddressService = aService;
+  UniqueStacks uniqueStacks(std::move(jitFrameInfo), aService);
 
   MOZ_ASSERT(uniqueStacks.mUniqueStrings);
   aWriter.SetUniqueStrings(*uniqueStacks.mUniqueStrings);
