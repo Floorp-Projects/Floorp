@@ -5970,6 +5970,8 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   CompileOptions options(cx);
+  RootedString displayURL(cx);
+  RootedString sourceMapURL(cx);
   UniqueChars fileNameBytes;
   bool isModule = false;
   if (args.length() == 2) {
@@ -5984,8 +5986,10 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
       return false;
     }
-
     if (!ParseCompileOptionsForModule(cx, options, opts, isModule)) {
+      return false;
+    }
+    if (!js::ParseSourceOptions(cx, opts, &displayURL, &sourceMapURL)) {
       return false;
     }
   }
@@ -5997,6 +6001,10 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
     stencil = JS::CompileGlobalScriptToStencil(cx, options, srcBuf);
   }
   if (!stencil) {
+    return false;
+  }
+
+  if (!SetSourceOptions(cx, stencil->source, displayURL, sourceMapURL)) {
     return false;
   }
 
@@ -6104,6 +6112,8 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   CompileOptions options(cx);
+  RootedString displayURL(cx);
+  RootedString sourceMapURL(cx);
   UniqueChars fileNameBytes;
   bool isModule = false;
   if (args.length() == 2) {
@@ -6118,8 +6128,10 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
       return false;
     }
-
     if (!ParseCompileOptionsForModule(cx, options, opts, isModule)) {
+      return false;
+    }
+    if (!js::ParseSourceOptions(cx, opts, &displayURL, &sourceMapURL)) {
       return false;
     }
   }
@@ -6135,6 +6147,10 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
         cx, input.get(), srcBuf, ScopeKind::Global);
   }
   if (!stencil) {
+    return false;
+  }
+
+  if (!SetSourceOptions(cx, stencil->source, displayURL, sourceMapURL)) {
     return false;
   }
 

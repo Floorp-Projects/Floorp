@@ -1057,9 +1057,8 @@ class ScriptSource {
 
  public:
   template <XDRMode mode>
-  [[nodiscard]] static XDRResult XDR(
-      XDRState<mode>* xdr, const JS::ReadOnlyCompileOptions* maybeOptions,
-      RefPtr<ScriptSource>& source);
+  [[nodiscard]] static XDRResult XDR(XDRState<mode>* xdr,
+                                     RefPtr<ScriptSource>& source);
 };
 
 // [SMDOC] ScriptSourceObject
