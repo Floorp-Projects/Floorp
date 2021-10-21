@@ -50,6 +50,8 @@ FINAL_TARGET_FILES.actors += [
     "BrowserTabParent.jsm",
     "ClickHandlerChild.jsm",
     "ClickHandlerParent.jsm",
+    "ContentMetaChild.jsm",
+    "ContentMetaParent.jsm",
     "ContentSearchChild.jsm",
     "ContentSearchParent.jsm",
     "ContextMenuChild.jsm",
