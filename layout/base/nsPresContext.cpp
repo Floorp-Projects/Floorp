@@ -288,8 +288,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
 #ifdef DEBUG
       mInitialized(false),
 #endif
-      mColorSchemeOverride(dom::PrefersColorSchemeOverride::None)
-{
+      mColorSchemeOverride(dom::PrefersColorSchemeOverride::None) {
 #ifdef DEBUG
   PodZero(&mLayoutPhaseCount);
 #endif
