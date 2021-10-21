@@ -1206,7 +1206,8 @@ class JemallocHeapReporter final : public nsIMemoryReporter {
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData, bool aAnonymize) override {
     jemalloc_stats_t stats;
-    jemalloc_bin_stats_t bin_stats[JEMALLOC_MAX_STATS_BINS];
+    const size_t num_bins = jemalloc_stats_num_bins();
+    jemalloc_bin_stats_t bin_stats[num_bins];
     jemalloc_stats(&stats, bin_stats);
 
     // clang-format off
@@ -1225,9 +1226,7 @@ class JemallocHeapReporter final : public nsIMemoryReporter {
     // because KIND_HEAP memory means "counted in heap-allocated", which
     // this is not.
     for (auto& bin : bin_stats) {
-      if (!bin.size) {
-        continue;
-      }
+      MOZ_ASSERT(bin.size);
       nsPrintfCString path("explicit/heap-overhead/bin-unused/bin-%zu",
           bin.size);
       aHandleReport->Callback(EmptyCString(), path, KIND_NONHEAP, UNITS_BYTES,
