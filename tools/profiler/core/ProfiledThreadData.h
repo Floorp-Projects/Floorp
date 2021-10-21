@@ -8,19 +8,19 @@
 #define ProfiledThreadData_h
 
 #include "platform.h"
+#include "ProfileBuffer.h"
+#include "ProfileBufferEntry.h"
 
 #include "mozilla/Maybe.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/ProfilerThreadRegistrationInfo.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/RefPtr.h"
 #include "nsStringFwd.h"
 
-class ProfileBuffer;
-class ProfilerCodeAddressService;
-class UniqueStacks;
 class nsIEventTarget;
-struct JITFrameInfo;
+class ProfilerCodeAddressService;
 struct JSContext;
 
 namespace mozilla::baseprofiler {
@@ -71,6 +71,10 @@ class ProfiledThreadData final {
   }
 
   mozilla::Maybe<uint64_t>& LastSample() { return mLastSample; }
+
+  mozilla::NotNull<mozilla::UniquePtr<UniqueStacks>> PrepareUniqueStacks(
+      const ProfileBuffer& aBuffer, JSContext* aCx,
+      ProfilerCodeAddressService* aService);
 
   void StreamJSON(const ProfileBuffer& aBuffer, JSContext* aCx,
                   mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
