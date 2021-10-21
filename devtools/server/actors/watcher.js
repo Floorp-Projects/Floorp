@@ -59,53 +59,13 @@ loader.lazyRequireGetter(
 
 exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   /**
-   * Initialize a new WatcherActor which is the main entry point to debug
-   * something. The main features of this actor are to:
-   * - observe targets related to the context we are debugging.
-   *   This is done via watchTargets/unwatchTargets methods, and
-   *   target-available-form/target-destroyed-form events.
-   * - observe resources related to the observed targets.
-   *   This is done via watchResources/unwatchResources methods, and
-   *   resource-available-form/resource-updated-form/resource-destroyed-form events.
-   *   Note that these events are also emited on both the watcher actor,
-   *   for resources observed from the parent process, as well as on the
-   *   target actors, when the resources are observed from the target's process or thread.
-   *
-   * @param {DevToolsServerConnection} conn
-   *        The connection to use in order to communicate back to the client.
-   * @param {Object} context
-   *        Mandatory argument to define the debugged context of this actor.
-   *        Note that as this object is passed to other processes and thread,
-   *        this should be a serializable object.
-   * @param {String} context.type: The type of debugged context.
-   *        Can be:
-   *        - "all", to debug everything in the browser.
-   *        - "browser-element", to focus on one given <browser> element
-   *          and all its children resources (workers, iframes,...)
-   * @param {Number} context.browserId: If this is a "browser-element" context type,
-   *        the "browserId" of the <browser> element we would like to debug.
-   * @param {Object|null} config: Optional configuration object.
-   * @param {Boolean} config.isServerTargetSwitchingEnabled: Flag to to know if we should
-   *        spawn new top level targets for the debugged context.
+   * Optionally pass a `browser` in the second argument
+   * in order to focus only on targets related to a given <browser> element.
    */
-  initialize: function(conn, context, config = {}) {
+  initialize: function(conn, options) {
     protocol.Actor.prototype.initialize.call(this, conn);
-    this._context = context;
-    if (context.type == "browser-element") {
-      // Retrieve the <browser> element for the given browser ID
-      const browsingContext = BrowsingContext.getCurrentTopByBrowserId(
-        context.browserId
-      );
-      if (!browsingContext) {
-        throw new Error(
-          "Unable to retrieve the <browser> element for browserId=" +
-            context.browserId
-        );
-      }
-      this._browserElement = browsingContext.embedderElement;
-    }
-    this._config = config;
-
+    this._browser = options && options.browser;
+    this._config = options ? options.config : {};
     // Sometimes we get iframe targets before the top-level targets
     // mostly when doing bfcache navigations, lets cache the early iframes targets and
     // flush them after the top-level target is available. See Bug 1726568 for details.
@@ -129,10 +89,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     this.notifyResourceUpdated = this.notifyResourceUpdated.bind(this);
   },
 
-  get context() {
-    return this._context;
-  },
-
   /**
    * If we are debugging only one Tab or Document, returns its BrowserElement.
    * For Tabs, it will be the <browser> element used to load the web page.
@@ -142,19 +98,17 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    * - its `browsingContextID` or `browsingContext`, which helps inspecting its content.
    */
   get browserElement() {
-    return this._browserElement;
+    return this._browser;
   },
 
   /**
-   * Helper to know if the context we are debugging has been already destroyed
+   * Unique identifier, which helps designates one precise browser element, the one
+   * we may debug. This is only set if we actually debug a browser element.
+   * So, that will be typically set when we debug a tab, but not when we debug
+   * a process, or a worker.
    */
-  isContextDestroyed() {
-    if (this.context.type == "browser-element") {
-      return !this.browserElement.browsingContext;
-    } else if (this.context.type == "all") {
-      return false;
-    }
-    throw new Error("Unsupported context type: " + this.context.type);
+  get browserId() {
+    return this._browser?.browserId;
   },
 
   get isServerTargetSwitchingEnabled() {
@@ -186,7 +140,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   },
 
   form() {
-    const isBrowserElementContext = this.context.type == "browser-element";
+    const hasBrowserElement = !!this.browserElement;
 
     return {
       actor: this.actorID,
@@ -195,7 +149,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       traits: {
         [Targets.TYPES.FRAME]: true,
         [Targets.TYPES.PROCESS]: true,
-        [Targets.TYPES.WORKER]: isBrowserElementContext,
+        [Targets.TYPES.WORKER]: hasBrowserElement,
         resources: {
           // In Firefox 81 we added support for:
           // - CONSOLE_MESSAGE
@@ -209,24 +163,24 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           // content process targets yet. Bug 1620248 should help supporting
           // them and enable this more broadly.
           [Resources.TYPES.CONSOLE_MESSAGE]: true,
-          [Resources.TYPES.CSS_CHANGE]: isBrowserElementContext,
+          [Resources.TYPES.CSS_CHANGE]: hasBrowserElement,
           [Resources.TYPES.CSS_MESSAGE]: true,
-          [Resources.TYPES.DOCUMENT_EVENT]: isBrowserElementContext,
-          [Resources.TYPES.CACHE_STORAGE]: isBrowserElementContext,
-          [Resources.TYPES.COOKIE]: isBrowserElementContext,
+          [Resources.TYPES.DOCUMENT_EVENT]: hasBrowserElement,
+          [Resources.TYPES.CACHE_STORAGE]: hasBrowserElement,
+          [Resources.TYPES.COOKIE]: hasBrowserElement,
           [Resources.TYPES.ERROR_MESSAGE]: true,
-          [Resources.TYPES.INDEXED_DB]: isBrowserElementContext,
-          [Resources.TYPES.LOCAL_STORAGE]: isBrowserElementContext,
-          [Resources.TYPES.SESSION_STORAGE]: isBrowserElementContext,
+          [Resources.TYPES.INDEXED_DB]: hasBrowserElement,
+          [Resources.TYPES.LOCAL_STORAGE]: hasBrowserElement,
+          [Resources.TYPES.SESSION_STORAGE]: hasBrowserElement,
           [Resources.TYPES.PLATFORM_MESSAGE]: true,
-          [Resources.TYPES.NETWORK_EVENT]: isBrowserElementContext,
-          [Resources.TYPES.NETWORK_EVENT_STACKTRACE]: isBrowserElementContext,
+          [Resources.TYPES.NETWORK_EVENT]: hasBrowserElement,
+          [Resources.TYPES.NETWORK_EVENT_STACKTRACE]: hasBrowserElement,
           [Resources.TYPES.REFLOW]: true,
-          [Resources.TYPES.STYLESHEET]: isBrowserElementContext,
-          [Resources.TYPES.SOURCE]: isBrowserElementContext,
-          [Resources.TYPES.THREAD_STATE]: isBrowserElementContext,
-          [Resources.TYPES.SERVER_SENT_EVENT]: isBrowserElementContext,
-          [Resources.TYPES.WEBSOCKET]: isBrowserElementContext,
+          [Resources.TYPES.STYLESHEET]: hasBrowserElement,
+          [Resources.TYPES.SOURCE]: hasBrowserElement,
+          [Resources.TYPES.THREAD_STATE]: hasBrowserElement,
+          [Resources.TYPES.SERVER_SENT_EVENT]: hasBrowserElement,
+          [Resources.TYPES.WEBSOCKET]: hasBrowserElement,
         },
 
         // @backward-compat { version 93 } Starts supporting setSaveRequestAndResponseBodies on the NetworkParent actor
@@ -452,12 +406,13 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    * target helpers. (and only those which are ignored)
    */
   _getTargetActorInParentProcess() {
-    // Note: For browser-element debugging, the WindowGlobalTargetActor returned here is created
-    // for a parent process page and lives in the parent process.
-    return TargetActorRegistry.getTopLevelTargetActorForContext(
-      this.context,
-      this.conn.prefix
-    );
+    if (this.browserElement) {
+      // Note: if any, the WindowGlobalTargetActor returned here is created for a parent process
+      // page and lives in the parent process.
+      return TargetActorRegistry.getTargetActor(this.browserId);
+    }
+
+    return TargetActorRegistry.getParentProcessTargetActor();
   },
 
   /**
@@ -573,7 +528,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
 
     // Prevent trying to unwatch when the related BrowsingContext has already
     // been destroyed
-    if (!this.isContextDestroyed()) {
+    if (!this.browserElement || this.browserElement.browsingContext) {
       for (const targetType in TARGET_HELPERS) {
         // Frame target helper handles the top level target, if it runs in the content process
         // so we should always process it. It does a second check to isWatchingTargets.
