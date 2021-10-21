@@ -5,6 +5,7 @@
 
 #include "mozilla/intl/Calendar.h"
 #include "mozilla/intl/DateTimeFormat.h"
+#include "mozilla/intl/DateTimePart.h"
 #include "mozilla/intl/DateTimePatternGenerator.h"
 #include "mozilla/Span.h"
 #include "TestBuffer.h"
@@ -537,4 +538,59 @@ TEST(IntlDateTimeFormat, GetAvailableLocales)
   ASSERT_EQ(chinese, 1);
 }
 
+TEST(IntlDateTimeFormat, TryFormatToParts)
+{
+  auto dateTimePatternGenerator =
+      DateTimePatternGenerator::TryCreate("en").unwrap();
+
+  UniquePtr<DateTimeFormat> dtFormat =
+      DateTimeFormat::TryCreateFromSkeleton(
+          MakeStringSpan("en-US"), MakeStringSpan(u"yMMddHHmm"),
+          dateTimePatternGenerator.get(), Nothing(),
+          Some(MakeStringSpan(u"GMT")))
+          .unwrap();
+
+  TestBuffer<char16_t> buffer;
+  mozilla::intl::DateTimePartVector parts;
+  auto result = dtFormat->TryFormatToParts(DATE, buffer, parts);
+  ASSERT_TRUE(result.isOk());
+
+  std::u16string_view strView = buffer.get_string_view();
+  ASSERT_EQ(strView, u"09/23/2002, 17:07");
+
+  auto getSubStringView = [strView, &parts](size_t index) {
+    size_t pos = index == 0 ? 0 : parts[index - 1].mEndIndex;
+    size_t count = parts[index].mEndIndex - pos;
+    return strView.substr(pos, count);
+  };
+
+  ASSERT_EQ(parts[0].mType, DateTimePartType::Month);
+  ASSERT_EQ(getSubStringView(0), u"09");
+
+  ASSERT_EQ(parts[1].mType, DateTimePartType::Literal);
+  ASSERT_EQ(getSubStringView(1), u"/");
+
+  ASSERT_EQ(parts[2].mType, DateTimePartType::Day);
+  ASSERT_EQ(getSubStringView(2), u"23");
+
+  ASSERT_EQ(parts[3].mType, DateTimePartType::Literal);
+  ASSERT_EQ(getSubStringView(3), u"/");
+
+  ASSERT_EQ(parts[4].mType, DateTimePartType::Year);
+  ASSERT_EQ(getSubStringView(4), u"2002");
+
+  ASSERT_EQ(parts[5].mType, DateTimePartType::Literal);
+  ASSERT_EQ(getSubStringView(5), u", ");
+
+  ASSERT_EQ(parts[6].mType, DateTimePartType::Hour);
+  ASSERT_EQ(getSubStringView(6), u"17");
+
+  ASSERT_EQ(parts[7].mType, DateTimePartType::Literal);
+  ASSERT_EQ(getSubStringView(7), u":");
+
+  ASSERT_EQ(parts[8].mType, DateTimePartType::Minute);
+  ASSERT_EQ(getSubStringView(8), u"07");
+
+  ASSERT_EQ(parts.length(), 9u);
+}
 }  // namespace mozilla::intl
