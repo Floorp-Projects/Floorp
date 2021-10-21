@@ -30,11 +30,10 @@ ProfiledThreadData::~ProfiledThreadData() {
   MOZ_COUNT_DTOR(ProfiledThreadData);
 }
 
-void ProfiledThreadData::StreamJSON(
-    const ProfileBuffer& aBuffer, JSContext* aCx, SpliceableJSONWriter& aWriter,
-    const nsACString& aProcessName, const nsACString& aETLDplus1,
-    const mozilla::TimeStamp& aProcessStartTime, double aSinceTime,
-    bool JSTracerEnabled, ProfilerCodeAddressService* aService) {
+mozilla::NotNull<mozilla::UniquePtr<UniqueStacks>>
+ProfiledThreadData::PrepareUniqueStacks(const ProfileBuffer& aBuffer,
+                                        JSContext* aCx,
+                                        ProfilerCodeAddressService* aService) {
   if (mJITFrameInfoForPreviousJSContexts &&
       mJITFrameInfoForPreviousJSContexts->HasExpired(
           aBuffer.BufferRangeStart())) {
@@ -53,17 +52,27 @@ void ProfiledThreadData::StreamJSON(
                                mThreadInfo.ThreadId(), aCx, jitFrameInfo);
   }
 
-  UniqueStacks uniqueStacks(std::move(jitFrameInfo), aService);
+  return mozilla::MakeNotNull<mozilla::UniquePtr<UniqueStacks>>(
+      std::move(jitFrameInfo), aService);
+}
 
-  MOZ_ASSERT(uniqueStacks.mUniqueStrings);
-  aWriter.SetUniqueStrings(*uniqueStacks.mUniqueStrings);
+void ProfiledThreadData::StreamJSON(
+    const ProfileBuffer& aBuffer, JSContext* aCx, SpliceableJSONWriter& aWriter,
+    const nsACString& aProcessName, const nsACString& aETLDplus1,
+    const mozilla::TimeStamp& aProcessStartTime, double aSinceTime,
+    bool JSTracerEnabled, ProfilerCodeAddressService* aService) {
+  mozilla::NotNull<mozilla::UniquePtr<UniqueStacks>> uniqueStacks =
+      PrepareUniqueStacks(aBuffer, aCx, aService);
+
+  MOZ_ASSERT(uniqueStacks->mUniqueStrings);
+  aWriter.SetUniqueStrings(*uniqueStacks->mUniqueStrings);
 
   aWriter.Start();
   {
     StreamSamplesAndMarkers(mThreadInfo.Name(), mThreadInfo.ThreadId(), aBuffer,
                             aWriter, aProcessName, aETLDplus1,
                             aProcessStartTime, mThreadInfo.RegisterTime(),
-                            mUnregisterTime, aSinceTime, uniqueStacks);
+                            mUnregisterTime, aSinceTime, *uniqueStacks);
 
     aWriter.StartObjectProperty("stackTable");
     {
@@ -74,7 +83,7 @@ void ProfiledThreadData::StreamJSON(
       }
 
       aWriter.StartArrayProperty("data");
-      { uniqueStacks.SpliceStackTableElements(aWriter); }
+      { uniqueStacks->SpliceStackTableElements(aWriter); }
       aWriter.EndArray();
     }
     aWriter.EndObject();
@@ -95,14 +104,14 @@ void ProfiledThreadData::StreamJSON(
       }
 
       aWriter.StartArrayProperty("data");
-      { uniqueStacks.SpliceFrameTableElements(aWriter); }
+      { uniqueStacks->SpliceFrameTableElements(aWriter); }
       aWriter.EndArray();
     }
     aWriter.EndObject();
 
     aWriter.StartArrayProperty("stringTable");
     {
-      std::move(*uniqueStacks.mUniqueStrings)
+      std::move(*uniqueStacks->mUniqueStrings)
           .SpliceStringTableElements(aWriter);
     }
     aWriter.EndArray();
