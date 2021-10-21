@@ -377,6 +377,7 @@ public class GeckoSession {
             "GeckoView:WebAppManifest",
             "GeckoView:FirstContentfulPaint",
             "GeckoView:PaintStatusReset",
+            "GeckoView:PreviewImage",
           }) {
         @Override
         public void handleMessage(
@@ -431,6 +432,8 @@ public class GeckoSession {
             delegate.onFirstContentfulPaint(GeckoSession.this);
           } else if ("GeckoView:PaintStatusReset".equals(event)) {
             delegate.onPaintStatusReset(GeckoSession.this);
+          } else if ("GeckoView:PreviewImage".equals(event)) {
+            delegate.onPreviewImage(GeckoSession.this, message.getString("previewImageUrl"));
           }
         }
       };
@@ -2858,6 +2861,16 @@ public class GeckoSession {
      */
     @UiThread
     default void onTitleChange(@NonNull final GeckoSession session, @Nullable final String title) {}
+
+    /**
+     * A preview image was discovered in the content after the content loaded.
+     *
+     * @param session The GeckoSession that initiated the callback.
+     * @param previewImageUrl The preview image URL sent from the content.
+     */
+    @UiThread
+    default void onPreviewImage(
+        @NonNull final GeckoSession session, @NonNull final String previewImageUrl) {}
 
     /**
      * A page has requested focus. Note that window.focus() in content will not result in this being
