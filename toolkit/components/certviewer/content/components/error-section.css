@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
-  background-image: url("chrome://browser/skin/illustrations/error-malformed-url.svg");
+  background-image: url("chrome://global/skin/illustrations/error-malformed-url.svg");
   min-height: 300px;
   background-repeat: no-repeat;
   padding-inline-start: 30%;

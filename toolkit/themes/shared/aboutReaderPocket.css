@@ -76,7 +76,7 @@ body.sepia .pocket-cta {
 }
 
 .pocket-btn-add {
-  background: no-repeat left center url("chrome://browser/skin/pocket-outline.svg");
+  background: no-repeat left center url("chrome://global/skin/icons/pocket-outline.svg");
   fill: #5B5B66;
   background-size: 16px;
   border: 0;

@@ -94,7 +94,7 @@
 .changes__copy-all-changes-button {
   -moz-context-properties: fill;
   /* Use the Firefox copy icon (16px) instead of the smaller DevTools one (12px) */
-  background: url(chrome://browser/skin/edit-copy.svg) no-repeat;
+  background: url(chrome://global/skin/icons/edit-copy.svg) no-repeat;
   background-position: 4px 3px;
   background-size: 16px;
   border: none;
