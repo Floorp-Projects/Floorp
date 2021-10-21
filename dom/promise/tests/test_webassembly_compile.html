@@ -20,6 +20,7 @@ const wasmLoadedFromCache = SpecialPowers.unwrap(testingFunctions.wasmLoadedFrom
 // Any other non-trivial module could be generated and used.
 var sampleCode;
 const sampleURL = "test_webassembly_compile_sample.wasm";
+const sampleFileSize = 16053;
 const sampleURLWithRandomQuery = () => sampleURL + "?id=" + String(Math.ceil(Math.random()*100000));
 const sampleExportName = "run";
 const sampleResult = 1275;
@@ -240,6 +241,62 @@ function compileCachedBasic() {
   .catch(err => { ok(false, String(err)) });
 }
 
+function compileCachedCompressed() {
+  const url = sampleURLWithRandomQuery();
+
+  // It is a rough estimate that compilation code is about
+  // 2-4 times of the wasm file size. After it compression
+  // it will be less (about 60% ?)
+  const EstimatedCompilationArtifactSize = 2 * sampleFileSize;
+  const EstimatedCompressedArtifactSize = 0.6 * EstimatedCompilationArtifactSize;
+
+  // Set limit on cache entry so it will fail if it is not
+  // compressed.
+  const cleanup = () => {
+    SpecialPowers.clearUserPref("browser.cache.disk.max_entry_size")
+  };
+  Promise.resolve(SpecialPowers.setIntPref("browser.cache.disk.max_entry_size",
+    Math.round(EstimatedCompressedArtifactSize / 1024) /* kb */))
+  .then(() => WebAssembly.compileStreaming(fetch(url)))
+  .then(module => {
+    checkSampleModule(module);
+    ok(!wasmLoadedFromCache(module), "not cached yet");
+    while(!wasmHasTier2CompilationCompleted(module));
+    return WebAssembly.compileStreaming(fetch(url));
+  })
+  .then(module => {
+    checkSampleModule(module);
+    ok(wasmLoadedFromCache(module), "loaded from cache");
+  })
+  .then(() => { cleanup(); runTest() })
+  .catch(err => { cleanup(); ok(false, String(err)) });
+}
+
+function compileCachedTooLargeForCache() {
+  const url = sampleURLWithRandomQuery();
+  // Set unreasonable limit, caching will fail.
+  // Bug 1719508 can change name of pref, this and
+  // compileCachedCompressed tests will become invalid.
+  const cleanup = () => {
+    SpecialPowers.clearUserPref("browser.cache.disk.max_entry_size")
+  };
+  Promise.resolve(SpecialPowers.setIntPref("browser.cache.disk.max_entry_size", 1 /* kb */))
+  .then(() => WebAssembly.compileStreaming(fetch(url)))
+  .then(module => {
+    console.log(module)
+    checkSampleModule(module);
+    ok(!wasmLoadedFromCache(module), "not cached yet");
+    while(!wasmHasTier2CompilationCompleted(module));
+    return WebAssembly.compileStreaming(fetch(url));
+  })
+  .then(module => {
+    checkSampleModule(module);
+    ok(!wasmLoadedFromCache(module), "not cached (size limit)");
+  })
+  .then(() => { cleanup(); runTest() })
+  .catch(err => { cleanup(); ok(false, String(err)) });
+}
+
 const Original = "original";
 const Clone = "clone";
 
@@ -354,6 +411,8 @@ var tests = [ propertiesExist,
               compileStreamingNullBody,
               compileStreamingFetch,
               compileCachedBasic,
+              compileCachedCompressed,
+              compileCachedTooLargeForCache,
               compileCachedBothClonesHitCache.bind(Original),
               compileCachedBothClonesHitCache.bind(Clone),
               compileCachedCacheThroughClone.bind(Original),
