@@ -24,7 +24,13 @@ add_task(async function() {
   info(
     "Spawn a content task in order to be able to manipulate actors and resource watchers directly"
   );
-  await ContentTask.spawn(tab.linkedBrowser, [], function() {
+  const connectionPrefix = targetCommand.watcherFront.actorID.replace(
+    /watcher\d+$/,
+    ""
+  );
+  await ContentTask.spawn(tab.linkedBrowser, [connectionPrefix], function(
+    _connectionPrefix
+  ) {
     const { require } = ChromeUtils.import(
       "resource://devtools/shared/Loader.jsm"
     );
@@ -37,9 +43,14 @@ add_task(async function() {
     } = require("devtools/server/actors/resources/index");
 
     // Retrieve the target actor instance and its watcher for console messages
-    const targetActor = TargetActorRegistry.getTargetActor(
-      content.browsingContext.browserId
+    const targetActor = TargetActorRegistry.getTopLevelTargetActorForContext(
+      {
+        type: "browser-element",
+        browserId: content.browsingContext.browserId,
+      },
+      _connectionPrefix
     );
+    ok(targetActor, "Got the top level target actor from the content process");
     const watcher = getResourceWatcher(targetActor, TYPES.CONSOLE_MESSAGE);
 
     // Storing the target actor in the global so we can retrieve it later, even if it
