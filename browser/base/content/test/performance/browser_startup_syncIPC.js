@@ -288,6 +288,13 @@ const startupPhases = {
       ignoreIfUnused: true,
       maxCount: 2,
     },
+    // Added for the search-detection built-in add-on.
+    {
+      name: "PGPU::Msg_AddLayerTreeIdMapping",
+      condition: WIN,
+      ignoreIfUnused: true,
+      maxCount: 1,
+    },
   ],
 };
 
