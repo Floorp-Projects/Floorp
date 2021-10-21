@@ -52,6 +52,20 @@
   background-color: -moz-Dialog;
 }
 
+.notificationbox .notification[data-type="new"] {
+  color: -moz-DialogText;
+  background-color: var(--theme-selection-background-hover);
+}
+
+/**
+ * Remove button borders for notifications highlighting New features.
+ */
+.notification[data-type="new"] .notificationButton {
+  border-radius: 2px;
+  border-width: 0;
+  padding: 4px;
+}
+
 .notificationbox .notification[data-type="critical"] {
   color: white;
   background-image: linear-gradient(rgb(212,0,0), rgb(152,0,0));
@@ -70,6 +84,11 @@
 
 .notificationbox .messageImage[data-type="info"] {
   background-image: url("chrome://devtools/skin/images/info.svg");
+}
+
+.notificationbox .messageImage[data-type="new"] {
+  background-image: url("chrome://browser/skin/whatsnew.svg");
+  fill: var(--theme-highlight-blue);
 }
 
 .notificationbox .messageImage[data-type="warning"] {

@@ -371,7 +371,7 @@ DevTools.prototype = {
       !isCoreTheme &&
       theme.id == currTheme
     ) {
-      setTheme("light");
+      setTheme("auto");
 
       this.emit("theme-unregistered", theme);
     }
