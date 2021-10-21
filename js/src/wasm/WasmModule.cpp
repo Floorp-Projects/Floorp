@@ -384,14 +384,14 @@ MutableModule Module::deserialize(const uint8_t* begin, size_t size,
 
 void Module::serialize(const LinkData& linkData,
                        JS::OptimizedEncodingListener& listener) const {
-  auto bytes = MakeUnique<JS::OptimizedEncodingBytes>();
-  if (!bytes || !bytes->resize(serializedSize(linkData))) {
+  Bytes bytes;
+  if (!bytes.resizeUninitialized(serializedSize(linkData))) {
     return;
   }
 
-  serialize(linkData, bytes->begin(), bytes->length());
+  serialize(linkData, bytes.begin(), bytes.length());
 
-  listener.storeOptimizedEncoding(std::move(bytes));
+  listener.storeOptimizedEncoding(bytes.begin(), bytes.length());
 }
 
 /* virtual */
