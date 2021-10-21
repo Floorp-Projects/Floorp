@@ -95,6 +95,7 @@ struct ParamTraits<mozilla::AudioInfo> {
     WriteParam(aMsg, aParam.mProfile);
     WriteParam(aMsg, aParam.mExtendedProfile);
     WriteParam(aMsg, *aParam.mCodecSpecificConfig);
+    WriteParam(aMsg, *aParam.mExtraData);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -106,7 +107,8 @@ struct ParamTraits<mozilla::AudioInfo> {
         ReadParam(aMsg, aIter, &aResult->mBitDepth) &&
         ReadParam(aMsg, aIter, &aResult->mProfile) &&
         ReadParam(aMsg, aIter, &aResult->mExtendedProfile) &&
-        ReadParam(aMsg, aIter, aResult->mCodecSpecificConfig.get())) {
+        ReadParam(aMsg, aIter, aResult->mCodecSpecificConfig.get()) &&
+        ReadParam(aMsg, aIter, aResult->mExtraData.get())) {
       return true;
     }
     return false;
