@@ -12,3 +12,4 @@ These linked pages contain design documents for the DOM implementation in Gecko.
    scriptSecurity/xray_vision
    workersAndStorage/index
    webIdlBindings/index
+   ioutils_migration
