@@ -681,6 +681,40 @@ pref("security.allow_parent_unrestricted_js_loads", false);
 // Unload tabs when available memory is running low
 pref("browser.tabs.unloadOnLowMemory", true);
 
+#if defined(XP_MACOSX)
+  // During low memory periods, poll with this frequency (milliseconds)
+  // until memory is no longer low. Changes to the pref take effect immediately.
+  // Browser restart not required. Chosen to be consistent with the windows
+  // implementation, but otherwise the 10s value is arbitrary.
+  pref("browser.lowMemoryPollingIntervalMS", 10000);
+
+  // Pref to control the reponse taken on macOS when the OS is under memory
+  // pressure. Changes to the pref take effect immediately. Browser restart not
+  // required. The pref value is a bitmask:
+  // 0x0: No response (other than recording for telemetry, crash reporting)
+  // 0x1: Use the tab unloading feature to reduce memory use. Requires that
+  //      the above "browser.tabs.unloadOnLowMemory" pref be set to true for tab
+  //      unloading to occur.
+  // 0x2: Issue the internal "memory-pressure" notification to reduce memory use
+  // 0x3: Both 0x1 and 0x2.
+  #if defined(NIGHTLY_BUILD)
+  pref("browser.lowMemoryResponseMask", 3);
+  #else
+  pref("browser.lowMemoryResponseMask", 0);
+  #endif
+
+  // Controls which macOS memory-pressure level triggers the browser low memory
+  // response. Changes to the pref take effect immediately. Browser restart not
+  // required. By default, use the "critical" level as that occurs after "warn"
+  // and we only want to trigger the low memory reponse when necessary.
+  // The macOS system memory-pressure level is either none, "warn", or
+  // "critical". The OS notifies the browser when the level changes. A false
+  // value for the pref indicates the low memory response should occur when
+  // reaching the "critical" level. A true value indicates the response should
+  // occur when reaching the "warn" level.
+  pref("browser.lowMemoryResponseOnWarn", false);
+#endif
+
 pref("browser.ctrlTab.sortByRecentlyUsed", false);
 
 // By default, do not export HTML at shutdown.
