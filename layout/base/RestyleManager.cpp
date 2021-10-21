@@ -1359,9 +1359,7 @@ static void TryToHandleContainingBlockChange(nsChangeHint& aHint,
   if (aHint & nsChangeHint_ReconstructFrame) {
     return;
   }
-  if (!aFrame) {
-    return;
-  }
+  MOZ_ASSERT(aFrame, "If we're not reframing, we ought to have a frame");
   if (NeedToReframeToUpdateContainingBlock(aFrame) ||
       IsUnsupportedFrameForContainingBlockChangeFastPath(aFrame)) {
     // The frame has positioned children that need to be reparented, or it can't
