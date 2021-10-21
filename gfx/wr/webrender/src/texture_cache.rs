@@ -20,11 +20,7 @@ use crate::lru_cache::LRUCache;
 use crate::profiler::{self, TransactionProfile};
 use crate::resource_cache::{CacheItem, CachedImageData};
 use crate::texture_pack::{
-    AllocatorList,
-    AllocId,
-    AtlasAllocatorList,
-    ShelfAllocator,
-    ShelfAllocatorOptions,
+    AllocatorList, AllocId, AtlasAllocatorList, ShelfAllocator, ShelfAllocatorOptions,
 };
 use std::cell::Cell;
 use std::mem;
@@ -315,6 +311,7 @@ struct SharedTextures {
     color8_linear: AllocatorList<ShelfAllocator, TextureParameters>,
     color8_glyphs: AllocatorList<ShelfAllocator, TextureParameters>,
     bytes_per_texture_of_type: [i32 ; BudgetType::COUNT],
+    next_compaction_idx: usize,
 }
 
 impl SharedTextures {
@@ -436,6 +433,7 @@ impl SharedTextures {
             color8_glyphs,
             color8_nearest,
             bytes_per_texture_of_type,
+            next_compaction_idx: 0,
         }
     }
 
@@ -744,6 +742,79 @@ impl TextureCache {
         profile.set(profiler::ATLAS_ITEMS_MEM, profiler::bytes_to_mb(shared_bytes));
 
         self.now = FrameStamp::INVALID;
+    }
+
+    pub fn run_compaction(&mut self, gpu_cache: &mut GpuCache) {
+        // Use the same order as BudgetType::VALUES so that we can index self.bytes_allocated
+        // with the same index.
+        let allocator_lists = [
+            &mut self.shared_textures.color8_linear,
+            &mut self.shared_textures.color8_nearest,
+            &mut self.shared_textures.color8_glyphs,
+            &mut self.shared_textures.alpha8_linear,
+            &mut self.shared_textures.alpha8_glyphs,
+            &mut self.shared_textures.alpha16_linear,
+        ];
+
+        // Pick a texture type on which to try to run the compaction logic this frame.
+        let idx = self.shared_textures.next_compaction_idx;
+
+        // Number of moved pixels after which we stop attempting to move more items for this frame.
+        // The constant is up for adjustment, the main goal is to avoid causing frame spikes on
+        // low end GPUs.
+        let area_threshold = 512*512; 
+
+        let mut changes = Vec::new();
+        allocator_lists[idx].try_compaction(area_threshold, &mut changes);
+
+        if changes.is_empty() {
+            // Nothing to do, we'll try another texture type next frame.
+            self.shared_textures.next_compaction_idx = (self.shared_textures.next_compaction_idx + 1) % allocator_lists.len();
+        }
+
+        for change in changes {
+            let bpp = allocator_lists[idx].texture_parameters().formats.internal.bytes_per_pixel();
+
+            // While the area of the image does not change, the area it occupies in the texture
+            // atlas may (in other words the number of wasted pixels can change), so we have
+            // to keep track of that.
+            let old_bytes = (change.old_rect.area() * bpp) as usize;
+            let new_bytes = (change.new_rect.area() * bpp) as usize;
+            self.bytes_allocated[idx] -= old_bytes;
+            self.bytes_allocated[idx] += new_bytes;
+
+            let entry = match change.handle {
+                TextureCacheHandle::Auto(handle) => self.lru_cache.get_opt_mut(&handle).unwrap(),
+                TextureCacheHandle::Manual(handle) => self.manual_entries.get_opt_mut(&handle).unwrap(),
+                TextureCacheHandle::Empty => { panic!("invalid handle"); }
+            };
+            entry.texture_id = change.new_tex;
+            entry.details = EntryDetails::Cache {
+                origin: change.new_rect.min,
+                alloc_id: change.new_id,
+                allocated_size_in_bytes: new_bytes,
+            };
+
+            gpu_cache.invalidate(&entry.uv_rect_handle);
+            entry.uv_rect_handle = GpuCacheHandle::new();
+
+            let src_rect = DeviceIntRect::from_origin_and_size(change.old_rect.min, entry.size);
+            let dst_rect = DeviceIntRect::from_origin_and_size(change.new_rect.min, entry.size);
+
+            self.pending_updates.push_copy(change.old_tex, &src_rect, change.new_tex, &dst_rect);
+
+            if self.debug_flags.contains(
+                DebugFlags::TEXTURE_CACHE_DBG |
+                DebugFlags::TEXTURE_CACHE_DBG_CLEAR_EVICTED)
+            {
+                self.pending_updates.push_debug_clear(
+                    change.old_tex,
+                    src_rect.min,
+                    src_rect.width(),
+                    src_rect.height(),
+                );
+            }
+        }
     }
 
     // Request an item in the texture cache. All images that will
@@ -1535,8 +1606,8 @@ mod test_texture_cache {
         use api::{ImageDescriptor, ImageDescriptorFlags, ImageFormat, DirtyRect};
         use api::units::*;
         use euclid::size2;
-        let mut gpu_cache = GpuCache::new_for_testing();
         let mut texture_cache = TextureCache::new_for_testing(2048, ImageFormat::BGRA8);
+        let mut gpu_cache = GpuCache::new_for_testing();
 
         let sizes: &[DeviceIntSize] = &[
             size2(23, 27),
