@@ -27,14 +27,15 @@ class NodeRunner(Layer):
         """Install the Node.js package."""
         self.verify_node_install()
 
-    def node(self, args):
+    def node(self, args, line_handler=None):
         """Invoke node (interactively) with the given arguments."""
         return self.run_process(
             [self.node_path] + args,
             append_env=self.append_env(),
-            pass_thru=True,  # Allow user to run Node interactively.
+            pass_thru=False,  # Allow user to run Node interactively.
             ensure_exit_code=False,  # Don't throw on non-zero exit code.
             cwd=mozpath.join(self.topsrcdir),
+            line_handler=line_handler,
         )
 
     def append_env(self, append_path=True):
