@@ -77,6 +77,8 @@ static void settings_changed_cb(GtkSettings*, GParamSpec*, void*) {
   widget::IMContextWrapper::OnThemeChanged();
 }
 
+static bool sCSDAvailable;
+
 nsLookAndFeel::nsLookAndFeel() {
   static constexpr nsLiteralCString kObservedSettings[] = {
       // Affects system font sizes.
@@ -110,6 +112,9 @@ nsLookAndFeel::nsLookAndFeel() {
     g_signal_connect_after(settings, setting.get(),
                            G_CALLBACK(settings_changed_cb), nullptr);
   }
+
+  sCSDAvailable =
+      nsWindow::GetSystemGtkWindowDecoration() != nsWindow::GTK_DECORATION_NONE;
 }
 
 nsLookAndFeel::~nsLookAndFeel() {
@@ -786,8 +791,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 2;
       break;
     case IntID::GTKCSDAvailable:
-      EnsureInit();
-      aResult = mCSDAvailable;
+      aResult = sCSDAvailable;
       break;
     case IntID::GTKCSDMaximizeButton:
       EnsureInit();
@@ -1239,9 +1243,6 @@ void nsLookAndFeel::EnsureInit() {
   } else {
     mCaretBlinkCount = -1;
   }
-
-  mCSDAvailable =
-      nsWindow::GtkWindowDecoration() != nsWindow::GTK_DECORATION_NONE;
 
   mSystemTheme.Init();
 
@@ -1845,8 +1846,7 @@ bool nsLookAndFeel::GetDefaultDrawInTitlebar() {
 
     // Don't hide titlebar when it's disabled on current desktop.
     const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-    if (!currentDesktop || nsWindow::GetSystemGtkWindowDecoration() ==
-                               nsWindow::GTK_DECORATION_NONE) {
+    if (!currentDesktop || !sCSDAvailable) {
       return false;
     }
 

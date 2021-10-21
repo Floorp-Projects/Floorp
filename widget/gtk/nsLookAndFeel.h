@@ -44,8 +44,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   static void ConfigureTheme(const LookAndFeelTheme& aTheme);
 
-  bool IsCSDAvailable() const { return mCSDAvailable; }
-
   static const nscolor kBlack = NS_RGB(0, 0, 0);
   static const nscolor kWhite = NS_RGB(255, 255, 255);
 
@@ -156,7 +154,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   int32_t mCaretBlinkTime = 0;
   int32_t mCaretBlinkCount = -1;
-  bool mCSDAvailable = false;
   bool mCSDMaximizeButton = false;
   bool mCSDMinimizeButton = false;
   bool mCSDCloseButton = false;
