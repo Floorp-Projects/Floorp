@@ -1787,7 +1787,7 @@ void ScriptSource::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
 }
 
 bool ScriptSource::startIncrementalEncoding(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JSContext* cx,
     UniquePtr<frontend::ExtensibleCompilationStencil>&& initial) {
   // Encoding failures are reported by the xdrFinalizeEncoder function.
   if (containsAsmJS()) {
@@ -1808,7 +1808,7 @@ bool ScriptSource::startIncrementalEncoding(
       mozilla::MakeScopeExit([&] { xdrEncoder_.reset(nullptr); });
 
   XDRResult res = xdrEncoder_->setInitial(
-      cx, options,
+      cx,
       std::forward<UniquePtr<frontend::ExtensibleCompilationStencil>>(initial));
   if (res.isErr()) {
     // On encoding failure, let failureCase destroy encoder and return true

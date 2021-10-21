@@ -1029,7 +1029,7 @@ class ScriptSource {
   bool hasEncoder() const { return bool(xdrEncoder_); }
 
   [[nodiscard]] bool startIncrementalEncoding(
-      JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+      JSContext* cx,
       UniquePtr<frontend::ExtensibleCompilationStencil>&& initial);
 
   [[nodiscard]] bool addDelazificationToIncrementalEncoding(
