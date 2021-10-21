@@ -257,8 +257,7 @@ CSSFilterEditorWidget.prototype = {
     const select = this.filterSelect;
     filterList.forEach(filter => {
       const option = this.doc.createElementNS(XHTML_NS, "option");
-      // eslint-disable-next-line no-unsanitized/property
-      option.innerHTML = option.value = filter.name;
+      option.textContent = option.value = filter.name;
       select.appendChild(option);
     });
   },
