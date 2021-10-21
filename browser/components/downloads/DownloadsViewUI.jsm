@@ -33,6 +33,13 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIHandlerService"
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gReputationService",
+  "@mozilla.org/reputationservice/application-reputation-service;1",
+  Ci.nsIApplicationReputationService
+);
+
 const { Integration } = ChromeUtils.import(
   "resource://gre/modules/Integration.jsm"
 );
@@ -196,6 +203,10 @@ var DownloadsViewUI = {
       contextMenu.querySelector(".downloadUnblockMenuItem").hidden &&
       contextMenu.querySelector(".downloadShowMenuItem").hidden;
 
+    let download = element._shell.download;
+    let mimeInfo = DownloadsCommon.getMimeInfo(download);
+    let { preferredAction, useSystemDefault } = mimeInfo ? mimeInfo : {};
+
     // Hide the "use system viewer" and "always use system viewer" items
     // if the feature is disabled or this download doesn't support it:
     let useSystemViewerItem = contextMenu.querySelector(
@@ -211,16 +222,41 @@ var DownloadsViewUI = {
     alwaysUseSystemViewerItem.hidden =
       !DownloadsCommon.alwaysOpenInSystemViewerItemEnabled ||
       !canViewInternally;
-    if (!alwaysUseSystemViewerItem.hidden) {
-      let download = element._shell.download;
-      let mimeInfo = DownloadsCommon.getMimeInfo(download);
-      let { preferredAction, useSystemDefault } = mimeInfo ? mimeInfo : {};
 
-      if (preferredAction === useSystemDefault) {
-        alwaysUseSystemViewerItem.setAttribute("checked", "true");
-      } else {
-        alwaysUseSystemViewerItem.removeAttribute("checked");
-      }
+    // If non default mime-type or cannot be opened internally, display
+    // "always open similar files" item instead so that users can add a new
+    // mimetype to about:preferences table and set to open with system default.
+    // Only appear if browser.download.improvements_to_download_panel is enabled.
+    let improvementsOn = Services.prefs.getBoolPref(
+      "browser.download.improvements_to_download_panel"
+    );
+    let alwaysOpenSimilarFilesItem = contextMenu.querySelector(
+      ".downloadAlwaysOpenSimilarFilesMenuItem"
+    );
+
+    // In HelperAppDlg.jsm, we determine whether or not an "always open..." checkbox
+    // should appear in the unknownContentType window. Here, we use similar checks to
+    // determine if we should show the "always open similar files" context menu item.
+    let shouldNotRememberChoice =
+      download.contentType === "application/octet-stream" ||
+      download.contentType === "application/x-msdownload" ||
+      (download.contentType === "text/plain" &&
+        gReputationService.isBinary(download.target.path));
+
+    if (improvementsOn && !canViewInternally) {
+      alwaysOpenSimilarFilesItem.hidden =
+        state !== DOWNLOAD_FINISHED || shouldNotRememberChoice;
+    } else {
+      alwaysOpenSimilarFilesItem.hidden = true;
+    }
+
+    // Update checkbox for "always open..." options.
+    if (preferredAction === useSystemDefault) {
+      alwaysUseSystemViewerItem.setAttribute("checked", "true");
+      alwaysOpenSimilarFilesItem.setAttribute("checked", "true");
+    } else {
+      alwaysUseSystemViewerItem.removeAttribute("checked");
+      alwaysOpenSimilarFilesItem.removeAttribute("checked");
     }
   },
 };
@@ -866,6 +902,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       case "downloadsCmd_open:tab":
       case "downloadsCmd_open:tabshifted":
       case "downloadsCmd_open:window":
+      case "downloadsCmd_alwaysOpenSimilarFiles":
         // This property is false if the download did not succeed.
         return this.download.target.exists;
       case "downloadsCmd_show":
@@ -998,5 +1035,26 @@ DownloadsViewUI.DownloadElementShell.prototype = {
     }
     handlerSvc.store(mimeInfo);
     DownloadsCommon.openDownload(this.download).catch(Cu.reportError);
+  },
+
+  downloadsCmd_alwaysOpenSimilarFiles() {
+    const mimeInfo = DownloadsCommon.getMimeInfo(this.download);
+    if (!mimeInfo) {
+      throw new Error("Can't open download with unknown mime-type");
+    }
+
+    // User has selected to always open this mime-type from now on and will add this
+    // mime-type to our preferences table with the system default option. Open the
+    // file immediately after selecting the menu item like alwaysOpenInSystemViewer.
+    if (mimeInfo.preferredAction !== mimeInfo.useSystemDefault) {
+      mimeInfo.preferredAction = mimeInfo.useSystemDefault;
+      handlerSvc.store(mimeInfo);
+      DownloadsCommon.openDownload(this.download).catch(Cu.reportError);
+    } else {
+      // Otherwise, if user unchecks this option after already enabling it from the
+      // context menu, resort to saveToDisk.
+      mimeInfo.preferredAction = mimeInfo.saveToDisk;
+      handlerSvc.store(mimeInfo);
+    }
   },
 };
