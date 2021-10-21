@@ -1000,10 +1000,12 @@ static bool NeedToReframeToUpdateContainingBlock(nsIFrame* aFrame) {
   const bool isAbsPosContainingBlock =
       isFixedContainingBlock || aFrame->IsAbsPosContainingBlock();
 
+  nsIFrame* maybeChangingCB = aFrame->GetContentInsertionFrame();
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(f)) {
-    if (ContainingBlockChangeAffectsDescendants(
-            aFrame, f, isAbsPosContainingBlock, isFixedContainingBlock)) {
+    if (ContainingBlockChangeAffectsDescendants(maybeChangingCB, f,
+                                                isAbsPosContainingBlock,
+                                                isFixedContainingBlock)) {
       return true;
     }
   }
@@ -1339,7 +1341,11 @@ static bool IsUnsupportedFrameForContainingBlockChangeFastPath(
   if (aFrame->IsFieldSetFrame()) {
     return true;
   }
-  if (aFrame->GetContentInsertionFrame() != aFrame) {
+  // Generally frames with a different insertion frame are hard to deal with,
+  // but scrollframes are easy because the containing block is just the
+  // insertion frame.
+  if (aFrame->GetContentInsertionFrame() != aFrame &&
+      !aFrame->IsScrollFrame()) {
     return true;
   }
   return false;
@@ -1363,7 +1369,15 @@ static void TryToHandleContainingBlockChange(nsChangeHint& aHint,
     aHint |= nsChangeHint_ReconstructFrame;
     return;
   }
-  for (nsIFrame* cont = aFrame; cont;
+  const bool isCb = aFrame->IsAbsPosContainingBlock();
+  nsIFrame* cont = aFrame->GetContentInsertionFrame();
+
+  // The absolute container should be the content insertion frame, in cases
+  // where aFrame has a separate content-insertion frame.  Otherwise we need to
+  // fix the loop below, and NeedToReframeToUpdateContainingBlock too.
+  MOZ_ASSERT(cont == aFrame || !aFrame->IsAbsoluteContainer(),
+             "Are we updating the wrong frame?");
+  for (; cont;
        cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
     // Normally frame construction would set state bits as needed,
     // but we're not going to reconstruct the frame so we need to set
@@ -1371,7 +1385,7 @@ static void TryToHandleContainingBlockChange(nsChangeHint& aHint,
     // that we can't coalesce nsChangeHint_UpdateContainingBlock hints up
     // to ancestors (i.e. it can't be an change hint that is handled for
     // descendants).
-    if (cont->IsAbsPosContainingBlock()) {
+    if (isCb) {
       if (!cont->IsAbsoluteContainer() &&
           cont->HasAnyStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN)) {
         cont->MarkAsAbsoluteContainingBlock();
