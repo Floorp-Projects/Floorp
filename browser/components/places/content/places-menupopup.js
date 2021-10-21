@@ -31,7 +31,7 @@
         "dragend",
       ];
       for (let event_name of event_names) {
-        this.addEventListener(event_name, this);
+        this.addEventListener(event_name, ev => this[`on_${event_name}`](ev));
       }
     }
 
@@ -364,10 +364,6 @@
     }
 
     on_DOMMenuItemActive(event) {
-      if (super.on_DOMMenuItemActive) {
-        super.on_DOMMenuItemActive(event);
-      }
-
       let elt = event.target;
       if (elt.parentNode != this) {
         return;
@@ -599,7 +595,7 @@
         "popuphidden",
       ];
       for (let event_name of event_names) {
-        this.addEventListener(event_name, this);
+        this.addEventListener(event_name, ev => this[`on_${event_name}`](ev));
       }
     }
 

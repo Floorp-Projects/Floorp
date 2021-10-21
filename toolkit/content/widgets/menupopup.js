@@ -57,8 +57,6 @@
       });
 
       this.attachShadow({ mode: "open" });
-
-      this.addEventListener("DOMMenuItemActive", this);
     }
 
     connectedCallback() {
@@ -258,28 +256,6 @@
       if (this._scrollTimer) {
         this.ownerGlobal.clearInterval(this._scrollTimer);
         this._scrollTimer = 0;
-      }
-    }
-
-    on_DOMMenuItemActive(event) {
-      // Scroll buttons may overlap the active item. In that case, scroll
-      // further to stay clear of the buttons.
-      if (!this.scrollBox.hasAttribute("overflowing")) {
-        return;
-      }
-      let item = event.target;
-      if (item.parentNode != this) {
-        return;
-      }
-      let itemRect = item.getBoundingClientRect();
-      let buttonRect = this.scrollBox._scrollButtonUp.getBoundingClientRect();
-      if (buttonRect.bottom > itemRect.top) {
-        this.scrollBox.scrollByPixels(itemRect.top - buttonRect.bottom, true);
-      } else {
-        buttonRect = this.scrollBox._scrollButtonDown.getBoundingClientRect();
-        if (buttonRect.top < itemRect.bottom) {
-          this.scrollBox.scrollByPixels(itemRect.bottom - buttonRect.top, true);
-        }
       }
     }
   }
