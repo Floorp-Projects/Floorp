@@ -538,6 +538,11 @@
 /* Selected tab */
 
 .tab-background {
+  border: 1px none transparent;
+  background-clip: padding-box;
+}
+
+.tab-background {
   border-radius: var(--tab-border-radius);
   margin-block: var(--tab-block-margin);
 }
@@ -547,27 +552,28 @@
 }
 
 #TabsToolbar:not([brighttext]) #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background {
-  border: 1px solid var(--tab-line-color, rgba(128,128,142,0.9));
-  box-shadow: 0 0 4px rgba(128,128,142,0.5);
+  box-shadow: 0 0 1px var(--tab-line-color, rgba(128,128,142,0.9)),
+              0 0 4px rgba(128,128,142,0.5);
 }
 
 #TabsToolbar[brighttext] #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background:-moz-lwtheme {
-  border: 1px solid var(--tab-line-color, rgba(128,128,142,0.9));
+  box-shadow: 0 0 1px var(--tab-line-color, rgba(128,128,142,0.9));
 }
 
 /* For themes outside of Light and Dark (which are curated by Mozilla), show a thicker border
    around the tab to help themes that are dependent on tab_line to show the selected tab. */
 :root:not([lwtheme-mozlightdark]) #TabsToolbar:not([brighttext]) #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background:-moz-lwtheme {
-  border: 1px solid var(--tab-line-color, rgba(128,128,142,0.9));
-  box-shadow: 0 0 4px rgba(128,128,142,0.5);
+  box-shadow: 0 0 0 1px var(--tab-line-color, var(--tabs-border-color, rgba(128,128,142,0.9))),
+              0 0 4px rgba(128,128,142,0.5);
 }
 
 :root:not([lwtheme-mozlightdark]) #TabsToolbar[brighttext] #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background:-moz-lwtheme {
-  border: 1px solid var(--tab-line-color, var(--tabs-border-color, rgba(128,128,142,0.9)));
+  box-shadow: 0 0 0 1px var(--tab-line-color, var(--tabs-border-color, rgba(128,128,142,0.9)));
 }
 
 .tab-background[multiselected=true],
 .tab-background[selected=true] {
+  border-top-color: var(--tabs-border-color);
   background-color: var(--tab-selected-bgcolor, var(--toolbar-bgcolor));
   background-image: var(--toolbar-bgimage);
   background-repeat: repeat-x;
