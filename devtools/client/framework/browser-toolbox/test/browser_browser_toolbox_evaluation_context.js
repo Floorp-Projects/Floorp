@@ -22,7 +22,7 @@ add_task(async function() {
   // Open the test *before* opening the Browser toolbox in order to have the right target title.
   // Once created, the target won't update its title, and so would be "New Tab", instead of "Test tab"
   const tab = await addTab(
-    "http://example.com/document-builder.sjs?html=<html><title>Test tab</title></html>"
+    "https://example.com/document-builder.sjs?html=<html><title>Test tab</title></html>"
   );
 
   const ToolboxTask = await initBrowserToolboxTask({
@@ -61,7 +61,7 @@ add_task(async function() {
       const labelTexts = Array.from(labels).map(item => item.textContent);
 
       const expectedTitle = _isFissionEnabled
-        ? `(pid ${processID}) http://example.com`
+        ? `(pid ${processID}) https://example.com`
         : `(pid ${processID}) web`;
       is(
         labelTexts.includes(expectedTitle),

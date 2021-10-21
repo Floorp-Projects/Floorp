@@ -8,7 +8,7 @@
  */
 
 const EXAMPLE_NET_URI =
-  "http://example.net/document-builder.sjs?html=<div id=net>net";
+  "https://example.net/document-builder.sjs?html=<div id=net>net";
 const EXAMPLE_COM_URI =
   "https://example.com/document-builder.sjs?html=<div id=com>com";
 const EXAMPLE_ORG_URI =

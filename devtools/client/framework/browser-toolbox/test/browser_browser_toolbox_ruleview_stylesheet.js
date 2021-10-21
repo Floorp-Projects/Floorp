@@ -38,7 +38,7 @@ add_task(async function() {
   // This is a simple test page, which contains a <div> with a CSS rule `color: red`
   // coming from a dedicated stylesheet.
   const tab = await addTab(
-    `http://example.com/browser/devtools/client/framework/browser-toolbox/test/doc_browser_toolbox_ruleview_stylesheet.html`
+    `https://example.com/browser/devtools/client/framework/browser-toolbox/test/doc_browser_toolbox_ruleview_stylesheet.html`
   );
 
   // Set a custom attribute on the tab's browser, in order to easily select it in the markup view
