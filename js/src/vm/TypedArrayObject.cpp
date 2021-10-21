@@ -2773,6 +2773,9 @@ JS_FOR_EACH_TYPED_ARRAY(INSTANTIATE)
 #undef INSTANTIATE
 
 JS::ArrayBufferOrView JS::ArrayBufferOrView::unwrap(JSObject* maybeWrapped) {
+  if (!maybeWrapped) {
+    return JS::ArrayBufferOrView(nullptr);
+  }
   auto* ab = maybeWrapped->maybeUnwrapIf<ArrayBufferObjectMaybeShared>();
   if (ab) {
     return ArrayBufferOrView::fromObject(ab);
