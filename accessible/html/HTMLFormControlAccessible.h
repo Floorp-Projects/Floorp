@@ -247,6 +247,11 @@ class HTMLFormAccessible : public HyperTextAccessibleWrap {
   virtual a11y::role NativeRole() const override;
 
  protected:
+  virtual void DOMAttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                   int32_t aModType,
+                                   const nsAttrValue* aOldValue,
+                                   uint64_t aOldState) override;
+
   virtual ~HTMLFormAccessible() = default;
 };
 
