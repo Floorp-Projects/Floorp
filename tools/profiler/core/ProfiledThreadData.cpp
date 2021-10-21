@@ -10,7 +10,6 @@
 #include "ProfileBuffer.h"
 
 #include "js/TraceLoggerAPI.h"
-#include "mozilla/ProfileJSONWriter.h"
 #include "mozilla/Span.h"
 #include "nsXULAppAPI.h"
 
@@ -367,4 +366,47 @@ void ProfiledThreadData::NotifyAboutToLoseJSContext(
 
   mJITFrameInfoForPreviousJSContexts = std::move(jitFrameInfo);
   mBufferPositionWhenReceivedJSContext = mozilla::Nothing();
+}
+
+ThreadStreamingContext::ThreadStreamingContext(
+    ProfiledThreadData& aProfiledThreadData, const ProfileBuffer& aBuffer,
+    JSContext* aCx, ProfilerCodeAddressService* aService)
+    : mProfiledThreadData(aProfiledThreadData),
+      mJSContext(aCx),
+      mUniqueStacks(
+          mProfiledThreadData.PrepareUniqueStacks(aBuffer, aCx, aService)) {
+  mSamplesDataWriter.SetUniqueStrings(*mUniqueStacks->mUniqueStrings);
+  mSamplesDataWriter.StartBareList();
+  mMarkersDataWriter.SetUniqueStrings(*mUniqueStacks->mUniqueStrings);
+  mMarkersDataWriter.StartBareList();
+}
+
+void ThreadStreamingContext::FinalizeWriter() {
+  mSamplesDataWriter.EndBareList();
+  mMarkersDataWriter.EndBareList();
+}
+
+ProcessStreamingContext::ProcessStreamingContext(
+    size_t aThreadCount, const mozilla::TimeStamp& aProcessStartTime,
+    double aSinceTime)
+    : mProcessStartTime(aProcessStartTime), mSinceTime(aSinceTime) {
+  MOZ_RELEASE_ASSERT(mTIDList.initCapacity(aThreadCount));
+  MOZ_RELEASE_ASSERT(mThreadStreamingContextList.initCapacity(aThreadCount));
+}
+
+ProcessStreamingContext::~ProcessStreamingContext() {
+  MOZ_ASSERT(mTIDList.length() == mThreadStreamingContextList.length());
+  MOZ_ASSERT(mTIDList.length() == mTIDList.capacity(),
+             "Didn't pre-allocate exactly right");
+}
+
+void ProcessStreamingContext::AddThreadStreamingContext(
+    ProfiledThreadData& aProfiledThreadData, const ProfileBuffer& aBuffer,
+    JSContext* aCx, ProfilerCodeAddressService* aService) {
+  MOZ_ASSERT(mTIDList.length() == mThreadStreamingContextList.length());
+  MOZ_ASSERT(mTIDList.length() < mTIDList.capacity(),
+             "Didn't pre-allocate enough");
+  mTIDList.infallibleAppend(aProfiledThreadData.Info().ThreadId());
+  mThreadStreamingContextList.infallibleEmplaceBack(aProfiledThreadData,
+                                                    aBuffer, aCx, aService);
 }
