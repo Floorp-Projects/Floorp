@@ -198,8 +198,7 @@ static bool EvalStencil(JSContext* cx, HandleObject targetObj,
 
     if (storeIntoStartupCache) {
       JSAutoRealm ar(cx, script);
-      WriteCachedStencil(StartupCache::GetSingleton(), cachePath, cx, options,
-                         stencil);
+      WriteCachedStencil(StartupCache::GetSingleton(), cachePath, cx, stencil);
     }
   }
 

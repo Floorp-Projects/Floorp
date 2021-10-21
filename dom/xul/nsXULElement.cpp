@@ -1578,11 +1578,10 @@ nsXULPrototypeScript::nsXULPrototypeScript(uint32_t aLineNo)
       mStencil(nullptr) {}
 
 static nsresult WriteStencil(nsIObjectOutputStream* aStream, JSContext* aCx,
-                             const JS::ReadOnlyCompileOptions& aOptions,
                              JS::Stencil* aStencil) {
   JS::TranscodeBuffer buffer;
   JS::TranscodeResult code;
-  code = JS::EncodeStencil(aCx, aOptions, aStencil, buffer);
+  code = JS::EncodeStencil(aCx, aStencil, buffer);
 
   if (code != JS::TranscodeResult::Ok) {
     if (code == JS::TranscodeResult::Throw) {
@@ -1689,10 +1688,7 @@ nsresult nsXULPrototypeScript::Serialize(
   JSContext* cx = jsapi.cx();
   MOZ_ASSERT(xpc::CompilationScope() == JS::CurrentGlobalOrNull(cx));
 
-  JS::CompileOptions options(cx);
-  FillCompileOptions(options);
-
-  return WriteStencil(aStream, cx, options, mStencil);
+  return WriteStencil(aStream, cx, mStencil);
 }
 
 nsresult nsXULPrototypeScript::SerializeOutOfLine(

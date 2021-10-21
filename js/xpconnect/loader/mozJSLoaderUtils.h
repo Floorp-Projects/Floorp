@@ -25,7 +25,6 @@ nsresult ReadCachedStencil(mozilla::scache::StartupCache* cache,
 
 nsresult WriteCachedStencil(mozilla::scache::StartupCache* cache,
                             nsACString& uri, JSContext* cx,
-                            const JS::ReadOnlyCompileOptions& options,
                             JS::Stencil* stencil);
 
 #endif /* mozJSLoaderUtils_h */
