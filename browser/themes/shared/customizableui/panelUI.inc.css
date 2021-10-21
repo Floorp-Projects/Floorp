@@ -164,7 +164,8 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
 #customizationui-widget-panel,
 #identity-popup,
 #permission-popup,
-#protections-popup {
+#protections-popup,
+#appMenu-notification-popup {
   margin-top: -4px;
 }
 

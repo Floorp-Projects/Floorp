@@ -913,6 +913,7 @@ nsresult Dashboard::GetDNSCacheEntries(DnsData* dnsData) {
 
     entry.mOriginAttributesSuffix =
         NS_ConvertUTF8toUTF16(dnsData->mData[i].originAttributesSuffix);
+    entry.mFlags = NS_ConvertUTF8toUTF16(dnsData->mData[i].flags);
   }
 
   JS::RootedValue val(cx);

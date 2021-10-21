@@ -34,6 +34,7 @@ const KNOWN_SEARCH_SOURCES = new Map([
   ["searchbar", "searchbar"],
   ["system", "system"],
   ["urlbar", "urlbar"],
+  ["urlbar-handoff", "urlbar_handoff"],
   ["urlbar-searchmode", "urlbar_searchmode"],
   ["webextension", "webextension"],
 ]);
@@ -204,6 +205,7 @@ class BrowserSearchTelemetryHandler {
         case "urlbar":
         case "searchbar":
         case "urlbar-searchmode":
+        case "urlbar-handoff":
           this._handleSearchAndUrlbar(browser, engine, source, details);
           break;
         case "abouthome":

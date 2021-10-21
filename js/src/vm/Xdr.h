@@ -501,7 +501,7 @@ class XDRIncrementalStencilEncoder {
                       js::ScriptSource* ss);
 
   XDRResult setInitial(
-      JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+      JSContext* cx,
       UniquePtr<frontend::ExtensibleCompilationStencil>&& initial);
   XDRResult addDelazification(
       JSContext* cx, const frontend::CompilationStencil& delazification);

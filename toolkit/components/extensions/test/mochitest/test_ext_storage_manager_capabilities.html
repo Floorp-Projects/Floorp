@@ -44,6 +44,10 @@ add_task(async function test_backgroundScript() {
 });
 
 add_task(async function test_contentScript() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_first", false]],
+  });
+
   function contentScript() {
     // Should not access storage api in non-secure context.
     browser.test.assertEq(undefined, navigator.storage,

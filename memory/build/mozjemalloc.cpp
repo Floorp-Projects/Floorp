@@ -483,21 +483,21 @@ static size_t gPageSize;
 #  define END_GLOBALS
 #  define DEFINE_GLOBAL(type) static const type
 #  define GLOBAL_LOG2 LOG2
-#  define GLOBAL_LOG2_OR_0 LOG2_OR_0
 #  define GLOBAL_ASSERT_HELPER1(x) static_assert(x, #  x)
 #  define GLOBAL_ASSERT_HELPER2(x, y) static_assert(x, y)
 #  define GLOBAL_ASSERT(...)                                               \
     MACRO_CALL(                                                            \
         MOZ_PASTE_PREFIX_AND_ARG_COUNT(GLOBAL_ASSERT_HELPER, __VA_ARGS__), \
         (__VA_ARGS__))
+#  define GLOBAL_CONSTEXPR constexpr
 #else
 #  define DECLARE_GLOBAL(type, name) static type name;
 #  define DEFINE_GLOBALS static void DefineGlobals() {
 #  define END_GLOBALS }
 #  define DEFINE_GLOBAL(type)
 #  define GLOBAL_LOG2 FloorLog2
-#  define GLOBAL_LOG2_OR_0 FloorLog2
 #  define GLOBAL_ASSERT MOZ_RELEASE_ASSERT
+#  define GLOBAL_CONSTEXPR
 #endif
 
 DECLARE_GLOBAL(size_t, gMaxSubPageClass)
@@ -520,10 +520,12 @@ gMaxSubPageClass = gPageSize / 2 >= kMinSubPageClass ? gPageSize / 2 : 0;
 
 // Number of sub-page bins.
 DEFINE_GLOBAL(uint8_t)
-gNumSubPageClasses =
-    static_cast<uint8_t>(gMaxSubPageClass ? GLOBAL_LOG2_OR_0(gMaxSubPageClass) -
-                                                LOG2(kMinSubPageClass) + 1
-                                          : 0);
+gNumSubPageClasses = []() GLOBAL_CONSTEXPR -> uint8_t {
+  if GLOBAL_CONSTEXPR (gMaxSubPageClass != 0) {
+    return FloorLog2(gMaxSubPageClass) - LOG2(kMinSubPageClass) + 1;
+  }
+  return 0;
+}();
 
 DEFINE_GLOBAL(uint8_t) gPageSize2Pow = GLOBAL_LOG2(gPageSize);
 DEFINE_GLOBAL(size_t) gPageSizeMask = gPageSize - 1;
@@ -3964,8 +3966,6 @@ static bool malloc_init_hard() {
   gRealPageSize = gPageSize = (size_t)result;
 #endif
 
-  MOZ_RELEASE_ASSERT(JEMALLOC_MAX_STATS_BINS >= NUM_SMALL_CLASSES);
-
   // Get runtime configuration.
   if ((opts = getenv("MALLOC_OPTIONS"))) {
     for (i = 0; opts[i] != '\0'; i++) {
@@ -4324,10 +4324,7 @@ inline void MozJemalloc::jemalloc_stats_internal(
     return;
   }
   if (aBinStats) {
-    // An assertion in malloc_init_hard will guarantee that
-    // JEMALLOC_MAX_STATS_BINS >= NUM_SMALL_CLASSES.
-    memset(aBinStats, 0,
-           sizeof(jemalloc_bin_stats_t) * JEMALLOC_MAX_STATS_BINS);
+    memset(aBinStats, 0, sizeof(jemalloc_bin_stats_t) * NUM_SMALL_CLASSES);
   }
 
   // Gather runtime settings.
@@ -4451,6 +4448,11 @@ inline void MozJemalloc::jemalloc_stats_internal(
 
   MOZ_ASSERT(aStats->mapped >= aStats->allocated + aStats->waste +
                                    aStats->page_cache + aStats->bookkeeping);
+}
+
+template <>
+inline size_t MozJemalloc::jemalloc_stats_num_bins() {
+  return NUM_SMALL_CLASSES;
 }
 
 #ifdef MALLOC_DOUBLE_PURGE

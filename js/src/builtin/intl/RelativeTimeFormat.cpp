@@ -267,6 +267,26 @@ static mozilla::intl::RelativeTimeFormat* NewRelativeTimeFormatter(
   return nullptr;
 }
 
+static mozilla::intl::RelativeTimeFormat* GetOrCreateRelativeTimeFormat(
+    JSContext* cx, Handle<RelativeTimeFormatObject*> relativeTimeFormat) {
+  // Obtain a cached RelativeDateTimeFormatter object.
+  mozilla::intl::RelativeTimeFormat* rtf =
+      relativeTimeFormat->getRelativeTimeFormatter();
+  if (rtf) {
+    return rtf;
+  }
+
+  rtf = NewRelativeTimeFormatter(cx, relativeTimeFormat);
+  if (!rtf) {
+    return nullptr;
+  }
+  relativeTimeFormat->setRelativeTimeFormatter(rtf);
+
+  intl::AddICUCellMemory(relativeTimeFormat,
+                         RelativeTimeFormatObject::EstimatedMemoryUse);
+  return rtf;
+}
+
 bool js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 4);
@@ -289,18 +309,10 @@ bool js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // Obtain a cached URelativeDateTimeFormatter object.
   mozilla::intl::RelativeTimeFormat* rtf =
-      relativeTimeFormat->getRelativeTimeFormatter();
+      GetOrCreateRelativeTimeFormat(cx, relativeTimeFormat);
   if (!rtf) {
-    rtf = NewRelativeTimeFormatter(cx, relativeTimeFormat);
-    if (!rtf) {
-      return false;
-    }
-    relativeTimeFormat->setRelativeTimeFormatter(rtf);
-
-    intl::AddICUCellMemory(relativeTimeFormat,
-                           RelativeTimeFormatObject::EstimatedMemoryUse);
+    return false;
   }
 
   intl::FieldType jsUnitType;

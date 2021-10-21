@@ -26,11 +26,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozIStorageVacuumParticipant.h"
 
-#ifdef XP_WIN
-#  include "WinUtils.h"
-#  include <wincrypt.h>
-#endif
-
 #define QUERYUPDATE_TIME 0
 #define QUERYUPDATE_SIMPLE 1
 #define QUERYUPDATE_COMPLEX 2
@@ -355,17 +350,6 @@ class nsNavHistory final : public nsSupportsWeakReference,
   static void StoreLastInsertedId(const nsACString& aTable,
                                   const int64_t aLastInsertedId);
 
-#ifdef XP_WIN
-  /**
-   * Get the cached HCRYPTPROV initialized in the nsNavHistory constructor.
-   */
-  nsresult GetCryptoProvider(HCRYPTPROV& aCryptoProvider) const {
-    NS_ENSURE_STATE(mCryptoProviderInitialized);
-    aCryptoProvider = mCryptoProvider;
-    return NS_OK;
-  }
-#endif
-
   static nsresult FilterResultSet(
       nsNavHistoryQueryResultNode* aParentNode,
       const nsCOMArray<nsNavHistoryResultNode>& aSet,
@@ -490,13 +474,6 @@ class nsNavHistory final : public nsSupportsWeakReference,
 
   int64_t mLastCachedStartOfDay;
   int64_t mLastCachedEndOfDay;
-
-  // Used to cache the call to CryptAcquireContext, which is expensive
-  // when called thousands of times
-#ifdef XP_WIN
-  HCRYPTPROV mCryptoProvider;
-  bool mCryptoProviderInitialized;
-#endif
 };
 
 #define PLACES_URI_PREFIX "place:"

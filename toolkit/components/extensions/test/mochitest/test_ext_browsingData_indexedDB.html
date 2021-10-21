@@ -16,7 +16,7 @@
 
 add_task(async function testIndexedDB() {
   await SpecialPowers.pushPrefEnv({
-    set: [["privacy.userContext.enabled", true]],
+    set: [["privacy.userContext.enabled", true], ["dom.security.https_first", false]],
   });
 
   async function background() {

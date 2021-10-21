@@ -4103,6 +4103,7 @@ BrowserGlue.prototype = {
     const buttons = [
       {
         "l10n-id": "restore-session-startup-suggestion-button",
+        primary: true,
         callback: () => {
           win.PanelUI.selectAndMarkItem([
             "appMenu-history-button",

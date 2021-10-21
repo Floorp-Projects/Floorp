@@ -55,7 +55,7 @@ add_task(async function testServiceWorkers() {
     let tab = await browser.tabs.create({ url: `http://mochi.test:8888${PAGE}` });
     tabs.push(tab);
 
-    tab = await browser.tabs.create({ url: `http://example.com${PAGE}` });
+    tab = await browser.tabs.create({ url: `https://example.com${PAGE}` });
     tabs.push(tab);
   }
 
@@ -80,7 +80,7 @@ add_task(async function testServiceWorkers() {
         {
           matches: [
             "http://mochi.test/*/file_serviceWorker.html",
-            "http://example.com/*/file_serviceWorker.html",
+            "https://example.com/*/file_serviceWorker.html",
           ],
           js: ["script.js"],
           run_at: "document_start",

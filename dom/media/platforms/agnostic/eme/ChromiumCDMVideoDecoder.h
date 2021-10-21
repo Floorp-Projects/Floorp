@@ -9,6 +9,7 @@
 
 #include "ChromiumCDMParent.h"
 #include "PlatformDecoderModule.h"
+#include "mozilla/layers/KnowsCompositor.h"
 
 namespace mozilla {
 
@@ -40,6 +41,7 @@ class ChromiumCDMVideoDecoder
   RefPtr<GMPCrashHelper> mCrashHelper;
   nsCOMPtr<nsISerialEventTarget> mGMPThread;
   RefPtr<layers::ImageContainer> mImageContainer;
+  RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   MozPromiseHolder<InitPromise> mInitPromise;
   bool mConvertToAnnexB = false;
 };

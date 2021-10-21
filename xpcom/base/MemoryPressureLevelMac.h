@@ -13,6 +13,8 @@ namespace mozilla {
 // An internal representation of the Mac memory-pressure level constants.
 class MacMemoryPressureLevel {
  public:
+  // Order enum values so that higher integer values respresent higher
+  // memory pressure levels allowing comparison operators to be used.
   enum class Value {
     eUnset,
     eUnexpected,
@@ -27,6 +29,20 @@ class MacMemoryPressureLevel {
   bool operator==(const Value& aRhsValue) { return mValue == aRhsValue; }
   bool operator==(const MacMemoryPressureLevel& aRhs) {
     return mValue == aRhs.mValue;
+  }
+
+  // Implement '<' and derive the other comparators from it.
+  bool operator<(const MacMemoryPressureLevel& aRhs) const {
+    return mValue < aRhs.mValue;
+  }
+  bool operator>(const MacMemoryPressureLevel& aRhs) const {
+    return aRhs < *this;
+  }
+  bool operator<=(const MacMemoryPressureLevel& aRhs) const {
+    return !(aRhs < *this);
+  }
+  bool operator>=(const MacMemoryPressureLevel& aRhs) const {
+    return !(*this < aRhs);
   }
 
   Value GetValue() { return mValue; }

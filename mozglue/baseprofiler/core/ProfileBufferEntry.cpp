@@ -807,27 +807,24 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
     MOZ_ASSERT(static_cast<ProfileBufferEntry::KindUnderlyingType>(type) <
                static_cast<ProfileBufferEntry::KindUnderlyingType>(
                    ProfileBufferEntry::Kind::MODERN_LIMIT));
-    bool entryWasFullyRead = false;
-
     if (type == ProfileBufferEntry::Kind::Marker) {
-      entryWasFullyRead = ::mozilla::base_profiler_markers_detail::
-          DeserializeAfterKindAndStream(
-              aER, aWriter, aThreadId,
-              [&](ProfileChunkedBuffer& aChunkedBuffer) {
-                ProfilerBacktrace backtrace("", &aChunkedBuffer);
-                backtrace.StreamJSON(aWriter, TimeStamp::ProcessCreation(),
-                                     aUniqueStacks);
-              },
-              // We don't have Rust markers in the mozglue.
-              [&](mozilla::base_profiler_markers_detail::Streaming::
-                      DeserializerTag) {
-                MOZ_ASSERT_UNREACHABLE("No Rust markers in mozglue.");
-              });
-    }
-
-    if (!entryWasFullyRead) {
-      // Not a marker, or marker for another thread.
-      // We probably didn't read the whole entry, so we need to skip to the end.
+      ::mozilla::base_profiler_markers_detail::DeserializeAfterKindAndStream(
+          aER,
+          [&](const BaseProfilerThreadId& aMarkerThreadId) {
+            return (aMarkerThreadId == aThreadId) ? &aWriter : nullptr;
+          },
+          [&](ProfileChunkedBuffer& aChunkedBuffer) {
+            ProfilerBacktrace backtrace("", &aChunkedBuffer);
+            backtrace.StreamJSON(aWriter, TimeStamp::ProcessCreation(),
+                                 aUniqueStacks);
+          },
+          // We don't have Rust markers in the mozglue.
+          [&](mozilla::base_profiler_markers_detail::Streaming::
+                  DeserializerTag) {
+            MOZ_ASSERT_UNREACHABLE("No Rust markers in mozglue.");
+          });
+    } else {
+      // The entry was not a marker, we need to skip to the end.
       aER.SetRemainingBytes(0);
     }
   });

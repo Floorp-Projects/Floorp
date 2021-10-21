@@ -114,6 +114,11 @@ else:
         "TestFilePreferencesUnix.cpp",
     ]
 
+if CONFIG["OS_TARGET"] == "Darwin":
+    UNIFIED_SOURCES += [
+        "TestAvailableMemoryWatcherMac.cpp",
+    ]
+
 if (
     CONFIG["WRAP_STL_INCLUDES"]
     and CONFIG["CC_TYPE"] != "clang-cl"

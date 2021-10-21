@@ -773,7 +773,10 @@ class Replay {
     }
     mOps++;
     jemalloc_stats_t stats;
-    jemalloc_bin_stats_t bin_stats[JEMALLOC_MAX_STATS_BINS];
+    // Using a variable length array here is a GCC & Clang extension. But it
+    // allows us to place this on the stack and not alter jemalloc's profiling.
+    const size_t num_bins = ::jemalloc_stats_num_bins();
+    jemalloc_bin_stats_t bin_stats[num_bins];
     ::jemalloc_stats_internal(&stats, bin_stats);
 
 #ifdef XP_LINUX
@@ -788,7 +791,8 @@ class Replay {
     size_t large_used = 0;
     size_t huge_slop = 0;
     size_t huge_used = 0;
-    size_t bin_slop[JEMALLOC_MAX_STATS_BINS] = {0};
+    size_t bin_slop[num_bins];
+    memset(bin_slop, 0, sizeof(size_t) * num_bins);
 
     for (size_t slot_id = 0; slot_id < mNumUsedSlots; slot_id++) {
       MemSlot& slot = mSlots[slot_id];
@@ -806,7 +810,7 @@ class Replay {
             (stats.subpage_max ? stats.subpage_max : stats.quantum_wide_max)) {
           // We know that this is an inefficient linear search, but there's a
           // small number of bins and this is simple.
-          for (unsigned i = 0; i < JEMALLOC_MAX_STATS_BINS; i++) {
+          for (unsigned i = 0; i < num_bins; i++) {
             auto& bin = bin_stats[i];
             if (used == bin.size) {
               bin_slop[i] += slop;
@@ -866,23 +870,20 @@ class Replay {
              "unused (c)", "total (c)", "used (c)", "non-full (r)", "total (r)",
              "used (r)");
     for (auto& bin : bin_stats) {
-      if (bin.size) {
-        FdPrintf(mStdErr, "%8zu %8zuKiB %7zuKiB %7zu%% %12zu %9zu %7zu%%\n",
-                 bin.size, bin.bytes_unused / 1024, bin.bytes_total / 1024,
-                 percent(bin.bytes_total - bin.bytes_unused, bin.bytes_total),
-                 bin.num_non_full_runs, bin.num_runs,
-                 percent(bin.num_runs - bin.num_non_full_runs, bin.num_runs));
-      }
+      MOZ_ASSERT(bin.size);
+      FdPrintf(mStdErr, "%8zu %8zuKiB %7zuKiB %7zu%% %12zu %9zu %7zu%%\n",
+               bin.size, bin.bytes_unused / 1024, bin.bytes_total / 1024,
+               percent(bin.bytes_total - bin.bytes_unused, bin.bytes_total),
+               bin.num_non_full_runs, bin.num_runs,
+               percent(bin.num_runs - bin.num_non_full_runs, bin.num_runs));
     }
 
     FdPrintf(mStdErr, "\n%5s %8s %9s %7s\n", "bin", "slop", "used", "percent");
-    for (unsigned i = 0; i < JEMALLOC_MAX_STATS_BINS; i++) {
+    for (unsigned i = 0; i < num_bins; i++) {
       auto& bin = bin_stats[i];
-      if (bin.size) {
-        size_t used = bin.bytes_total - bin.bytes_unused;
-        FdPrintf(mStdErr, "%5zu %8zu %9zu %6zu%%\n", bin.size, bin_slop[i],
-                 used, percent(bin_slop[i], used));
-      }
+      size_t used = bin.bytes_total - bin.bytes_unused;
+      FdPrintf(mStdErr, "%5zu %8zu %9zu %6zu%%\n", bin.size, bin_slop[i], used,
+               percent(bin_slop[i], used));
     }
     FdPrintf(mStdErr, "%5s %8zu %9zu %6zu%%\n", "large", large_slop, large_used,
              percent(large_slop, large_used));
@@ -896,22 +897,21 @@ class Replay {
   /*
    * Create and print frequency distributions of memory requests.
    */
-  void print_distributions(
-      jemalloc_stats_t& stats,
-      jemalloc_bin_stats_t (&bin_stats)[JEMALLOC_MAX_STATS_BINS]) {
+  void print_distributions(jemalloc_stats_t& stats,
+                           jemalloc_bin_stats_t* bin_stats) {
+    const size_t num_bins = ::jemalloc_stats_num_bins();
+
     // We compute distributions for all of the bins for small allocations
-    // (JEMALLOC_MAX_STATS_BINS) plus two more distributions for larger
-    // allocations.
-    Distribution dists[JEMALLOC_MAX_STATS_BINS + 2];
+    // (num_bins) plus two more distributions for larger allocations.
+    Distribution dists[num_bins + 2];
 
     unsigned last_size = 0;
     unsigned num_dists = 0;
-    for (auto& bin : bin_stats) {
-      if (bin.size == 0) {
-        break;
-      }
+    for (unsigned i = 0; i < num_bins; i++) {
+      auto& bin = bin_stats[i];
       auto& dist = dists[num_dists++];
 
+      MOZ_ASSERT(bin.size);
       if (bin.size <= 16) {
         // 1 byte buckets.
         dist = Distribution(bin.size, last_size, 1);
@@ -938,7 +938,7 @@ class Replay {
         Distribution(stats.page_size * 4, stats.page_size, stats.page_size / 4);
     num_dists++;
 
-    MOZ_RELEASE_ASSERT(num_dists <= JEMALLOC_MAX_STATS_BINS + 2);
+    MOZ_RELEASE_ASSERT(num_dists <= num_bins + 2);
 
     for (size_t slot_id = 0; slot_id < mNumUsedSlots; slot_id++) {
       MemSlot& slot = mSlots[slot_id];

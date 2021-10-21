@@ -716,3 +716,25 @@ partial interface Document {
   [ChromeOnly]
   readonly attribute boolean isInitialDocument;
 };
+
+// Extension to allow chrome code to get some wireframe-like structure.
+enum WireframeRectType {
+  "image",
+  "background",
+  "text",
+  "unknown",
+};
+dictionary WireframeTaggedRect {
+  DOMRectReadOnly rect;
+  DOMString? color; /* Only relevant for "background" rects */
+  WireframeRectType type;
+  Node? node;
+};
+dictionary Wireframe {
+  DOMString canvasBackground;
+  sequence<WireframeTaggedRect> rects;
+};
+partial interface Document {
+  [ChromeOnly]
+  Wireframe? getWireframe(optional boolean aIncludeNodes = false);
+};
