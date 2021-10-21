@@ -192,9 +192,8 @@ class ParentProcessStorage {
     // If the watcher is bound to one browser element (i.e. a tab), ignore
     // windowGlobals related to other browser elements
     if (
-      this.watcherActor.context.type == "browser-element" &&
-      windowGlobal.browsingContext.browserId !=
-        this.watcherActor.context.browserId
+      this.watcherActor.browserId &&
+      windowGlobal.browsingContext.browserId != this.watcherActor.browserId
     ) {
       return;
     }
@@ -372,7 +371,7 @@ class StorageActorMock extends EventEmitter {
   }
 
   get parentActor() {
-    return { isRootActor: this.watcherActor.context.type == "all" };
+    return { isRootActor: !this.watcherActor.browserId };
   }
 
   /**
@@ -383,8 +382,8 @@ class StorageActorMock extends EventEmitter {
     // If the watcher is bound to one browser element (i.e. a tab), ignore
     // updates related to other browser elements
     if (
-      this.watcherActor.context.type == "browser-element" &&
-      subject.browsingContext.browserId != this.watcherActor.context.browserId
+      this.watcherActor.browserId &&
+      subject.browsingContext.browserId != this.watcherActor.browserId
     ) {
       return;
     }

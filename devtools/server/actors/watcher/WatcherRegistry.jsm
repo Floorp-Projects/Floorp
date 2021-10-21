@@ -41,8 +41,10 @@ const { SUPPORTED_DATA } = SessionDataHelpers;
 // It is keyed by WatcherActor ID and values contains following attributes:
 // - targets: Set of strings, refering to target types to be listened to
 // - resources: Set of strings, refering to resource types to be observed
-// - context: WatcherActor's context. Describe what the watcher should be debugging.
-//            See watcher actor constructor for more info.
+// - browserId: Optional, if set, restrict the observation to one specific Browser Element tree.
+//              It can be a tab, a top-level window or a top-level iframe (e.g. special privileged iframe)
+//              See https://searchfox.org/mozilla-central/rev/31d8600b73dc85b4cdbabf45ac3f1a9c11700d8e/dom/chrome-webidl/BrowsingContext.webidl#114-121
+//              for more information.
 // - connectionPrefix: The DevToolsConnection prefix of the watcher actor. Used to compute new actor ID in the content processes.
 //
 // Unfortunately, `sharedData` is subject to race condition and may have side effect
@@ -109,9 +111,11 @@ const WatcherRegistry = {
     let sessionData = sessionDataByWatcherActor.get(watcherActorID);
     if (!sessionData && createData) {
       sessionData = {
-        // The "context" object help understand what should be debugged and which target should be created.
-        // See WatcherActor constructor for more info.
-        context: watcher.context,
+        // The Browser ID will be helpful to identify which BrowsingContext should be considered
+        // when running code in the content process. Browser ID, compared to BrowsingContext ID won't change
+        // if we navigate to the parent process or if a new BrowsingContext is used for the <browser> element
+        // we are currently inspecting.
+        browserId: watcher.browserId,
         // The DevToolsServerConnection prefix will be used to compute actor IDs created in the content process
         connectionPrefix: watcher.conn.prefix,
         // Expose watcher traits so we can retrieve them in content process.
@@ -151,10 +155,7 @@ const WatcherRegistry = {
   getWatchersForBrowserId(browserId) {
     const watchers = [];
     for (const watcherActor of watcherActors.values()) {
-      if (
-        watcherActor.context.type == "browser-element" &&
-        watcherActor.context.browserId === browserId
-      ) {
+      if (watcherActor.browserId === browserId) {
         watchers.push(watcherActor);
       }
     }

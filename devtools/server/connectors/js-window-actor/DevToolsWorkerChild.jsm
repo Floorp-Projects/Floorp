@@ -119,10 +119,10 @@ class DevToolsWorkerChild extends JSWindowActorChild {
 
     // Create one Target actor for each prefix/client which listen to workers
     for (const [watcherActorID, sessionData] of sessionDataByWatcherActor) {
-      const { targets, connectionPrefix, context } = sessionData;
+      const { targets, connectionPrefix, browserId } = sessionData;
       if (
         targets.includes("worker") &&
-        shouldNotifyWindowGlobal(this.manager, context)
+        shouldNotifyWindowGlobal(this.manager, browserId)
       ) {
         this._watchWorkerTargets({
           watcherActorID,
@@ -141,15 +141,15 @@ class DevToolsWorkerChild extends JSWindowActorChild {
    * @param {*} message.data
    */
   receiveMessage(message) {
-    // All messages pass `context` (except packet) and are expected
+    // All messages pass `browserId` (except packet) and are expected
     // to match shouldNotifyWindowGlobal result.
     if (message.name != "DevToolsWorkerParent:packet") {
-      const { browserId } = message.data.context;
+      const { browserId } = message.data;
       // Re-check here, just to ensure that both parent and content processes agree
       // on what should or should not be watched.
       if (
         this.manager.browsingContext.browserId != browserId &&
-        !shouldNotifyWindowGlobal(this.manager, message.data.context)
+        !shouldNotifyWindowGlobal(this.manager, browserId)
       ) {
         throw new Error(
           "Mismatch between DevToolsWorkerParent and DevToolsWorkerChild  " +
@@ -193,7 +193,7 @@ class DevToolsWorkerChild extends JSWindowActorChild {
 
   /**
    * Instantiate targets for existing workers, watch for worker registration and listen
-   * for resources on those workers, for given connection and context. Targets are sent
+   * for resources on those workers, for given connection and browserId. Targets are sent
    * to the DevToolsWorkerParent via the DevToolsWorkerChild:workerTargetAvailable message.
    *
    * @param {Object} options
@@ -527,15 +527,12 @@ class DevToolsWorkerChild extends JSWindowActorChild {
 /**
  * Helper function to know if we should watch for workers on a given windowGlobal
  */
-function shouldNotifyWindowGlobal(windowGlobal, context) {
+function shouldNotifyWindowGlobal(windowGlobal, watchedBrowserId) {
   const browsingContext = windowGlobal.browsingContext;
 
   // If we are focusing only on a sub-tree of Browsing Element, ignore elements that are
   // not part of it.
-  if (
-    context.type == "browser-element" &&
-    browsingContext.browserId != context.browserId
-  ) {
+  if (watchedBrowserId && browsingContext.browserId != watchedBrowserId) {
     return false;
   }
 
