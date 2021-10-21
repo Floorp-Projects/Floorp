@@ -81,6 +81,7 @@
 
       const input = this.inputField;
       input.setAttribute("mozactionhint", "search");
+      input.autocomplete = "off"; // not applicable in XUL docs and confuses aria.
       input.addEventListener("focus", this);
       input.addEventListener("blur", this);
 
@@ -129,11 +130,11 @@
     set searchButton(val) {
       if (val) {
         this.setAttribute("searchbutton", "true");
-        this.removeAttribute("aria-autocomplete");
+        this.inputField.removeAttribute("aria-autocomplete");
         this._searchButtonIcon.setAttribute("role", "button");
       } else {
         this.removeAttribute("searchbutton");
-        this.setAttribute("aria-autocomplete", "list");
+        this.inputField.setAttribute("aria-autocomplete", "list");
         this._searchButtonIcon.setAttribute("role", "none");
       }
     }
