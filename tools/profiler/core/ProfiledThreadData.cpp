@@ -216,13 +216,23 @@ void ProfiledThreadData::StreamTraceLoggerJSON(
   aWriter.EndObject();
 }
 
-ProfilerThreadId StreamSamplesAndMarkers(
-    const char* aName, ProfilerThreadId aThreadId, const ProfileBuffer& aBuffer,
-    SpliceableJSONWriter& aWriter, const nsACString& aProcessName,
-    const nsACString& aETLDplus1, const mozilla::TimeStamp& aProcessStartTime,
+// StreamSamplesDataCallback: () -> ProfilerThreadId
+// StreamMarkersDataCallback: () -> void
+// Returns the ProfilerThreadId returned by StreamSamplesDataCallback, which
+// should be the thread id of the last sample that was processed (if any;
+// otherwise it is left unspecified). This is mostly useful when the caller
+// doesn't know where the sample comes from, e.g., when it's a backtrace in a
+// marker.
+template <typename StreamSamplesDataCallback,
+          typename StreamMarkersDataCallback>
+ProfilerThreadId DoStreamSamplesAndMarkers(
+    const char* aName, SpliceableJSONWriter& aWriter,
+    const nsACString& aProcessName, const nsACString& aETLDplus1,
+    const mozilla::TimeStamp& aProcessStartTime,
     const mozilla::TimeStamp& aRegisterTime,
-    const mozilla::TimeStamp& aUnregisterTime, double aSinceTime,
-    UniqueStacks& aUniqueStacks) {
+    const mozilla::TimeStamp& aUnregisterTime,
+    StreamSamplesDataCallback&& aStreamSamplesDataCallback,
+    StreamMarkersDataCallback&& aStreamMarkersDataCallback) {
   ProfilerThreadId processedThreadId;
 
   aWriter.StringProperty("processType",
@@ -270,8 +280,8 @@ ProfilerThreadId StreamSamplesAndMarkers(
 
     aWriter.StartArrayProperty("data");
     {
-      processedThreadId = aBuffer.StreamSamplesToJSON(
-          aWriter, aThreadId, aSinceTime, aUniqueStacks);
+      processedThreadId =
+          std::forward<StreamSamplesDataCallback>(aStreamSamplesDataCallback)();
     }
     aWriter.EndArray();
   }
@@ -290,10 +300,7 @@ ProfilerThreadId StreamSamplesAndMarkers(
     }
 
     aWriter.StartArrayProperty("data");
-    {
-      aBuffer.StreamMarkersToJSON(aWriter, aThreadId, aProcessStartTime,
-                                  aSinceTime, aUniqueStacks);
-    }
+    { std::forward<StreamMarkersDataCallback>(aStreamMarkersDataCallback)(); }
     aWriter.EndArray();
   }
   aWriter.EndObject();
@@ -305,11 +312,30 @@ ProfilerThreadId StreamSamplesAndMarkers(
   aWriter.IntProperty(
       "pid", static_cast<int64_t>(profiler_current_process_id().ToNumber()));
   aWriter.IntProperty("tid",
-                      static_cast<int64_t>(aThreadId.IsSpecified()
-                                               ? aThreadId.ToNumber()
-                                               : processedThreadId.ToNumber()));
+                      static_cast<int64_t>(processedThreadId.ToNumber()));
 
   return processedThreadId;
+}
+
+ProfilerThreadId StreamSamplesAndMarkers(
+    const char* aName, ProfilerThreadId aThreadId, const ProfileBuffer& aBuffer,
+    SpliceableJSONWriter& aWriter, const nsACString& aProcessName,
+    const nsACString& aETLDplus1, const mozilla::TimeStamp& aProcessStartTime,
+    const mozilla::TimeStamp& aRegisterTime,
+    const mozilla::TimeStamp& aUnregisterTime, double aSinceTime,
+    UniqueStacks& aUniqueStacks) {
+  return DoStreamSamplesAndMarkers(
+      aName, aWriter, aProcessName, aETLDplus1, aProcessStartTime,
+      aRegisterTime, aUnregisterTime,
+      [&]() {
+        ProfilerThreadId processedThreadId = aBuffer.StreamSamplesToJSON(
+            aWriter, aThreadId, aSinceTime, aUniqueStacks);
+        return aThreadId.IsSpecified() ? aThreadId : processedThreadId;
+      },
+      [&]() {
+        aBuffer.StreamMarkersToJSON(aWriter, aThreadId, aProcessStartTime,
+                                    aSinceTime, aUniqueStacks);
+      });
 }
 
 void ProfiledThreadData::NotifyAboutToLoseJSContext(
