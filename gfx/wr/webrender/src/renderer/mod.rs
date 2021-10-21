@@ -71,7 +71,7 @@ use crate::glyph_cache::GlyphCache;
 use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
 use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
-use crate::gpu_types::{PrimitiveInstanceData, ScalingInstance, SvgFilterInstance};
+use crate::gpu_types::{PrimitiveInstanceData, ScalingInstance, SvgFilterInstance, CopyInstance};
 use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, ZBufferId, CompositorTransform};
 use crate::internal_types::{TextureSource, ResourceCacheError, TextureCacheCategory, FrameId};
 #[cfg(any(feature = "capture", feature = "replay"))]
@@ -2251,88 +2251,40 @@ impl Renderer {
         for update_list in pending_texture_updates.drain(..) {
             // Handle copies from one texture to another.
             for ((src_tex, dst_tex), copies) in &update_list.copies {
-                let mut copy_instances = Vec::new();
 
-                let src_texture = &self.texture_resolver.texture_cache_map[&src_tex].texture;
                 let dest_texture = &self.texture_resolver.texture_cache_map[&dst_tex].texture;
+                let dst_texture_size = dest_texture.get_dimensions().to_f32();
 
-                self.device.bind_texture(
-                    TextureSampler::Color0,
-                    src_texture,
-                    Swizzle::default(),
-                );
+                let mut copy_instances = Vec::new();
+                for copy in copies {
+                    copy_instances.push(CopyInstance {
+                        src_rect: copy.src_rect.to_f32(),
+                        dst_rect: copy.dst_rect.to_f32(),
+                        dst_texture_size,
+                    });
+                }
 
-                let target_size = dest_texture.get_dimensions();
-
-                let draw_target = DrawTarget::from_texture(
-                    dest_texture,
-                    false,
-                );
+                let draw_target = DrawTarget::from_texture(dest_texture, false);
                 self.device.bind_draw_target(draw_target);
-
-                let projection = Transform3D::ortho(
-                    0.0,
-                    target_size.width as f32,
-                    0.0,
-                    target_size.height as f32,
-                    self.device.ortho_near_plane(),
-                    self.device.ortho_far_plane(),
-                );
 
                 self.shaders
                     .borrow_mut()
-                    .get_composite_shader(
-                        CompositeSurfaceFormat::Rgba,
-                        ImageBufferKind::Texture2D,
-                        CompositeFeatures::empty(),
-                    ).bind(
+                    .ps_copy
+                    .bind(
                         &mut self.device,
-                        &projection,
+                        &Transform3D::identity(),
                         None,
                         &mut self.renderer_errors,
                         &mut self.profile,
                     );
 
-                for copy in copies {
-                    let uv_rect = TexelRect::new(
-                        copy.src_rect.min.x as f32,
-                        copy.src_rect.min.y as f32,
-                        copy.src_rect.max.x as f32,
-                        copy.src_rect.max.y as f32,
-                    );
-
-                    copy_instances.push(CompositeInstance::new_rgb(
-                        copy.dst_rect.to_f32().cast_unit(),
-                        copy.dst_rect.to_f32(),
-                        PremultipliedColorF::WHITE,
-                        ZBufferId(0),
-                        uv_rect,
-                        CompositorTransform::identity(),
-                    ));
-                }
-
-                let mut dummy_stats = RendererStats {
-                    total_draw_calls: 0,
-                    alpha_target_count: 0,
-                    color_target_count: 0,
-                    texture_upload_mb: 0.0,
-                    resource_upload_time: 0.0,
-                    gpu_cache_upload_time: 0.0,
-                    gecko_display_list_time: 0.0,
-                    wr_display_list_time: 0.0,
-                    scene_build_time: 0.0,
-                    frame_build_time: 0.0,
-                    full_display_list: false,
-                    full_paint: false,
-                };
-
                 self.draw_instanced_batch(
                     &copy_instances,
-                    VertexArrayKind::Composite,
-                    // We bind the staging texture manually because it isn't known
-                    // to the texture resolver.
-                    &BatchTextures::empty(),
-                    &mut dummy_stats,
+                    VertexArrayKind::Copy,
+                    &BatchTextures::composite_rgb(
+                        TextureSource::TextureCache(*src_tex, Swizzle::default())
+                    ),
+                    &mut RendererStats::default(),
                 );
             }
 
