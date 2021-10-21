@@ -140,7 +140,7 @@ class nsView final : public nsIWidgetListener {
    * @return the view the widget belongs to, or null if the widget doesn't
    * belong to any view.
    */
-  static nsView* GetViewFor(nsIWidget* aWidget);
+  static nsView* GetViewFor(const nsIWidget* aWidget);
 
   /**
    * Destroy the view.
