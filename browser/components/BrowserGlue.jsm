@@ -1241,9 +1241,6 @@ BrowserGlue.prototype = {
     if (AppConstants.platform == "win") {
       JawsScreenReaderVersionCheck.init();
     }
-
-    // This value is to limit collecting Places telemetry once per session.
-    this._placesTelemetryGathered = false;
   },
 
   // cleanup (called on application shutdown)
@@ -1696,14 +1693,6 @@ BrowserGlue.prototype = {
     this._firstWindowLoaded();
 
     this._collectStartupConditionsTelemetry();
-
-    if (!this._placesTelemetryGathered && TelemetryUtils.isTelemetryEnabled) {
-      this._placesTelemetryGathered = true;
-      // Collect Places telemetry on the first idle.
-      Services.tm.idleDispatchToMainThread(() => {
-        PlacesDBUtils.telemetry();
-      });
-    }
 
     // Set the default favicon size for UI views that use the page-icon protocol.
     PlacesUtils.favicons.setDefaultIconURIPreferredSize(
@@ -2342,6 +2331,13 @@ BrowserGlue.prototype = {
           // We postponed loading bookmarks toolbar content until startup
           // has finished, so we can start loading it now:
           PlacesUIUtils.unblockToolbars();
+        },
+      },
+
+      {
+        condition: TelemetryUtils.isTelemetryEnabled,
+        task: () => {
+          PlacesDBUtils.telemetry().catch(console.error);
         },
       },
 
