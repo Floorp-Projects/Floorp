@@ -1789,8 +1789,9 @@ void ScriptSource::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
 bool ScriptSource::startIncrementalEncoding(
     JSContext* cx,
     UniquePtr<frontend::ExtensibleCompilationStencil>&& initial) {
+  // We don't support asm.js in XDR.
   // Encoding failures are reported by the xdrFinalizeEncoder function.
-  if (containsAsmJS()) {
+  if (initial->asmJS) {
     return true;
   }
 
