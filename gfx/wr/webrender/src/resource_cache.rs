@@ -1229,7 +1229,7 @@ impl ResourceCache {
         })
     }
 
-    pub fn begin_frame(&mut self, stamp: FrameStamp, profile: &mut TransactionProfile) {
+    pub fn begin_frame(&mut self, stamp: FrameStamp, gpu_cache: &mut GpuCache, profile: &mut TransactionProfile) {
         profile_scope!("begin_frame");
         debug_assert_eq!(self.state, State::Idle);
         self.state = State::AddResources;
@@ -1247,6 +1247,8 @@ impl ResourceCache {
         // pop the old frame and push a new one
         self.deleted_blob_keys.pop_front();
         self.deleted_blob_keys.push_back(Vec::new());
+
+        self.texture_cache.run_compaction(gpu_cache);
     }
 
     pub fn block_until_all_resources_added(
