@@ -288,8 +288,11 @@ bool UniqueStacks::FrameKey::JITFrameData::operator==(
 // ranges. The JIT frame info contains JSON which refers to strings from the
 // JIT frame info's string table, so our string table needs to have the same
 // strings at the same indices.
-UniqueStacks::UniqueStacks(JITFrameInfo&& aJITFrameInfo)
+UniqueStacks::UniqueStacks(
+    JITFrameInfo&& aJITFrameInfo,
+    ProfilerCodeAddressService* aCodeAddressService /* = nullptr */)
     : mUniqueStrings(std::move(aJITFrameInfo.mUniqueStrings)),
+      mCodeAddressService(aCodeAddressService),
       mJITInfoRanges(std::move(aJITFrameInfo.mRanges)) {
   mFrameTableWriter.StartBareList();
   mStackTableWriter.StartBareList();
