@@ -135,12 +135,12 @@ add_task(async function test_pingSender() {
 
   Assert.equal(
     req.getHeader("User-Agent"),
-    "pingsender/2.0",
+    "pingsender/1.0",
     "Should have received the correct user agent string."
   );
   Assert.equal(
     req.getHeader("X-PingSender-Version"),
-    "2.0",
+    "1.0",
     "Should have received the correct PingSender version string."
   );
   Assert.equal(
