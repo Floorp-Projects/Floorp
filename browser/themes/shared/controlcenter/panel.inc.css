@@ -718,7 +718,6 @@ description#identity-popup-content-verifier,
   padding-inline-end: 6px;
   background-color: var(--button-bgcolor);
   color: var(--button-color);
-  opacity: 0.6;
   border-radius: 4px;
 }
 
