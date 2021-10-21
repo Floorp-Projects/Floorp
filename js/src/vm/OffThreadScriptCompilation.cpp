@@ -182,6 +182,9 @@ JS_PUBLIC_API bool JS::CanDecodeOffThread(JSContext* cx,
   return CanDoOffThread(cx, options, length, OffThread::Decode);
 }
 
+// TODO: Once off-thread instantiation is removed, use JS::DecodeOptions here
+//       and split the instantiation off from the off-thread API.
+//       Until then, options here is used for both decode and instantiation.
 JS_PUBLIC_API JS::OffThreadToken* JS::DecodeOffThreadScript(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     mozilla::Vector<uint8_t>& buffer /* TranscodeBuffer& */, size_t cursor,

@@ -180,7 +180,9 @@ nsresult JSExecutionContext::Decode(mozilla::Vector<uint8_t>& aBytecodeBuf,
   }
 
   JS::CompileOptions options(mCx, mCompileOptions);
-  options.borrowBuffer = true;
+
+  JS::DecodeOptions decodeOptions(options);
+  decodeOptions.borrowBuffer = true;
 
   JS::TranscodeRange range(aBytecodeBuf.begin() + aBytecodeIndex,
                            aBytecodeBuf.length() - aBytecodeIndex);
@@ -188,7 +190,7 @@ nsresult JSExecutionContext::Decode(mozilla::Vector<uint8_t>& aBytecodeBuf,
   MOZ_ASSERT(!mWantsReturnValue);
   RefPtr<JS::Stencil> stencil;
   JS::TranscodeResult tr =
-      JS::DecodeStencil(mCx, options, range, getter_AddRefs(stencil));
+      JS::DecodeStencil(mCx, decodeOptions, range, getter_AddRefs(stencil));
   // These errors are external parameters which should be handled before the
   // decoding phase, and which are the only reasons why you might want to
   // fallback on decoding failures.

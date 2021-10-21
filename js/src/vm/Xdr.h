@@ -19,7 +19,7 @@
 #include <type_traits>  // std::enable_if_t
 
 #include "js/AllocPolicy.h"     // ReportOutOfMemory
-#include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
+#include "js/CompileOptions.h"  // JS::DecodeOptions
 #include "js/Transcoding.h"  // JS::TranscodeResult, JS::TranscodeBuffer, JS::TranscodeRange, IsTranscodingBytecodeAligned, IsTranscodingBytecodeOffsetAligned
 #include "js/TypeDecls.h"    // JS::Latin1Char
 #include "js/UniquePtr.h"    // UniquePtr
@@ -454,16 +454,16 @@ class XDRStencilDecoder : public XDRState<XDR_DECODE> {
     MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(range.begin().get()));
   }
 
-  XDRResult codeStencil(const JS::ReadOnlyCompileOptions& options,
+  XDRResult codeStencil(const JS::DecodeOptions& options,
                         frontend::CompilationStencil& stencil);
 
-  const JS::ReadOnlyCompileOptions& options() {
+  const JS::DecodeOptions& options() {
     MOZ_ASSERT(options_);
     return *options_;
   }
 
  private:
-  const JS::ReadOnlyCompileOptions* options_ = nullptr;
+  const JS::DecodeOptions* options_ = nullptr;
 };
 
 class XDRIncrementalStencilEncoder;
