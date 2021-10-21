@@ -138,10 +138,8 @@ RegI32 BaseCompiler::captureReturnedI32() {
   RegI32 r = RegI32(ReturnReg);
   MOZ_ASSERT(isAvailableI32(r));
   needI32(r);
-#if defined(JS_CODEGEN_X64)
-  if (JitOptions.spectreIndexMasking) {
-    masm.movl(r, r);
-  }
+#if defined(JS_64BIT)
+  masm.widenInt32(r);
 #endif
   return r;
 }

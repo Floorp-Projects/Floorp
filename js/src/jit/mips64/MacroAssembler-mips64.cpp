@@ -2288,6 +2288,11 @@ void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
   MOZ_CRASH("IMPLEMENTME");
 }
 
+void MacroAssembler::widenInt32(Register r) {
+  // I *think* this is correct.  It may be redundant.
+  move32To64SignExtend(r, Register64(r));
+}
+
 void MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input,
                                                 Register output,
                                                 bool isSaturating,
