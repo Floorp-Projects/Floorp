@@ -818,15 +818,6 @@ void GCMarker::markEphemeronEdges(EphemeronEdgeVector& edges) {
   // The above marking always goes through markAndPush, which will not cause
   // 'edges' to be appended to while iterating.
   MOZ_ASSERT(edges.length() == initialLength);
-
-  // This is not just an optimization. When nuking a CCW, we conservatively
-  // mark through the related edges and then lose the CCW->target connection
-  // that induces a sweep group edge. As a result, it is possible for the
-  // delegate zone to get marked later, look up an edge in this table, and
-  // then try to mark something in a Zone that is no longer marking.
-  if (color == CellColor::Black) {
-    edges.eraseIf([](auto& edge) { return edge.color == MarkColor::Black; });
-  }
 }
 
 // 'delegate' is no longer the delegate of 'key'.
@@ -2569,9 +2560,8 @@ IncrementalProgress JS::Zone::enterWeakMarkingMode(GCMarker* marker,
       r.popFront();  // Pop before any mutations happen.
       if (edges.length() > 0) {
         gc::AutoSetMarkColor autoColor(*marker, srcColor);
-        uint32_t steps = edges.length();
         marker->markEphemeronEdges(edges);
-        budget.step(steps);
+        budget.step(edges.length());
         if (budget.isOverBudget()) {
           return NotFinished;
         }
