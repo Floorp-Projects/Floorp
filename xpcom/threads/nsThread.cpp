@@ -529,6 +529,7 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
           new ThreadEventTarget(mEvents.get(), aMainThread == MAIN_THREAD)),
       mShutdownContext(nullptr),
       mScriptObserver(nullptr),
+      mThreadName("<uninitialized>"),
       mStackSize(aStackSize),
       mNestedEventLoopDepth(0),
       mShutdownRequired(false),
@@ -552,6 +553,7 @@ nsThread::nsThread()
       mEventTarget(nullptr),
       mShutdownContext(nullptr),
       mScriptObserver(nullptr),
+      mThreadName("<uninitialized>"),
       mStackSize(0),
       mNestedEventLoopDepth(0),
       mShutdownRequired(false),
@@ -592,6 +594,8 @@ nsresult nsThread::Init(const nsACString& aName) {
 
   NS_ADDREF_THIS();
 
+  SetThreadNameInternal(aName);
+
   mShutdownRequired = true;
 
   UniquePtr<ThreadInitData> initData(
@@ -626,6 +630,16 @@ nsresult nsThread::InitCurrentThread() {
 
   nsThreadManager::get().RegisterCurrentThread(*this);
   return NS_OK;
+}
+
+void nsThread::GetThreadName(nsACString& aNameBuffer) {
+  auto lock = mThreadName.Lock();
+  aNameBuffer = lock.ref();
+}
+
+void nsThread::SetThreadNameInternal(const nsACString& aName) {
+  auto lock = mThreadName.Lock();
+  lock->Assign(aName);
 }
 
 //-----------------------------------------------------------------------------
