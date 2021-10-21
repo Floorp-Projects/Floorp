@@ -792,8 +792,13 @@ nsThreadShutdownContext* nsThread::ShutdownInternal(bool aSync) {
   // events to process.
   nsCOMPtr<nsIRunnable> event =
       new nsThreadShutdownEvent(WrapNotNull(this), WrapNotNull(context));
-  // XXXroc What if posting the event fails due to OOM?
-  mEvents->PutEvent(event.forget(), EventQueuePriority::Normal);
+  if (!mEvents->PutEvent(event.forget(), EventQueuePriority::Normal)) {
+    // We do not expect this to happen. Let's collect some diagnostics.
+    nsAutoCString threadName;
+    currentThread->GetThreadName(threadName);
+    MOZ_CRASH_UNSAFE_PRINTF("Attempt to shutdown an already dead thread: %s",
+                            threadName.get());
+  }
 
   // We could still end up with other events being added after the shutdown
   // task, but that's okay because we process pending events in ThreadFunc
