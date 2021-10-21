@@ -10,12 +10,6 @@ job-defaults:
         by-test-platform:
             android-em-7.0-x86_64/debug: 7200
             default: 5400
-    variants:
-        by-test-platform:
-            linux1804-64-qr/debug: ['webrender-sw', 'fission']
-            windows10-64-2004-qr/debug: ['webrender-sw', 'fission']
-            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
-            default: ['fission']
     mozharness:
         script: web_platform_tests.py
         config:
@@ -76,6 +70,12 @@ web-platform-tests:
             android-em.*/.*: 10800
             default: 7200
     e10s: true
+    variants:
+        by-test-platform:
+            linux1804-64-qr/debug: ['webrender-sw', 'fission']
+            windows10-64-2004-qr/debug: ['webrender-sw', 'fission']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            default: ['fission']
     run-on-projects:
         by-variant:
             fission:
@@ -157,6 +157,12 @@ web-platform-tests-reftest:
             android.*: 6
             default: 4
     e10s: true
+    variants:
+        by-test-platform:
+            linux1804-64-qr/debug: ['webrender-sw', 'fission']
+            windows10-64-2004-qr/debug: ['webrender-sw', 'fission']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            default: ['fission']
     run-on-projects:
         by-variant:
             fission:
@@ -235,6 +241,12 @@ web-platform-tests-wdspec:
         extra-options:
             - --test-type=wdspec
             - --setpref=toolkit.asyncshutdown.log=true
+    variants:
+        by-test-platform:
+            linux1804-64-qr/debug: ['webrender-sw', 'fission']
+            windows10-64-2004-qr/debug: ['webrender-sw', 'fission']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            default: ['fission']
     run-on-projects:
         by-variant:
             fission:
@@ -292,6 +304,12 @@ web-platform-tests-wdspec-headless:
     schedules-component: web-platform-tests-wdspec
     treeherder-symbol: W(WdH)
     chunks: 2
+    variants:
+        by-test-platform:
+            linux1804-64-qr/debug: ['webrender-sw', 'fission']
+            windows10-64-2004-qr/debug: ['webrender-sw', 'fission']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            default: ['fission']
     run-on-projects:
         by-variant:
             fission:
@@ -402,6 +420,12 @@ web-platform-tests-print-reftest:
                     windows10-64-2004(-shippable)?-qr/opt: 1
                     default: 2
             default: default
+    variants:
+        by-test-platform:
+            linux1804-64-qr/debug: ['webrender-sw', 'fission']
+            windows10-64-2004-qr/debug: ['webrender-sw', 'fission']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            default: ['fission']
     run-on-projects:
         by-variant:
             fission:
@@ -464,6 +488,12 @@ test-coverage-wpt:
     schedules-component: test-coverage-wpt
     treeherder-symbol: TCw
     max-run-time: 10800
+    variants:
+        by-test-platform:
+            linux1804-64-qr/debug: ['webrender-sw', 'fission']
+            windows10-64-2004-qr/debug: ['webrender-sw', 'fission']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            default: ['fission']
     run-on-projects:
         by-variant:
             fission:
