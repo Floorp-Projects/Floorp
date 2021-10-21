@@ -423,6 +423,14 @@
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Colección de complementos modificada. Cerrando la aplicación para aplicar los cambios…</string>
 
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Saltar hacia atrás</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Guardados recientemente</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string moz:removedIn="94" name="customize_toggle_recently_visited" tools:ignore="UnusedResources">Visitados recientemente</string>
     <!-- Title for the customize home screen settings section for recent searches. Recent searches
      is a section where users see a list of groups of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recent_searches">Búsquedas recientes</string>
@@ -663,6 +671,8 @@
     <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Después de cuatro horas</string>
     <!-- Option for always starting on the home screen -->
     <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Siempre</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Última pestaña</string>
     <!-- Option for never starting on the home screen -->
     <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Nunca</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
@@ -1860,6 +1870,9 @@
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Ya existe un inicio de sesión con ese nombre de usuario</string>
 
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Conectar otro dispositivo.</string>
@@ -1907,6 +1920,8 @@
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
     <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 semana</string>
 
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_not_interested_option" tools:ignore="UnusedResources">No me interesa la función</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
     <string name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Enviar</string>
 
@@ -1932,6 +1947,10 @@
     <string name="pocket_stories_categories_header">Historias por tema</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Descubrir más</string>
+    <!-- Title of an app feature. Smaller than a heading.-->
+    <string name="pocket_stories_feature_title">Desarrollado por Pocket.</string>
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">Parte de la familia Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Saber más</string>
 </resources>

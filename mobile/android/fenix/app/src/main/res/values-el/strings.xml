@@ -26,7 +26,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 ανοικτή καρτέλα. Πατήστε για εναλλαγή καρτελών.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s ανοικτές καρτέλες. Πατήστε για εναλλαγή καρτελών.</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s ανοικτές καρτέλες. Πατήστε για εναλλαγή καρτελών.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d επιλογή(ές)</string>
@@ -117,9 +117,18 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">Απόρριψη</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">Οι καρτέλες που δεν έχετε προβάλει για δύο εβδομάδες μετακινούνται εδώ.</string>
+    <string name="tab_tray_inactive_onboarding_message">Οι καρτέλες που δεν έχετε προβάλει για δύο εβδομάδες μετακινούνται εδώ.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">Απενεργοποίηση στις ρυθμίσεις</string>
+    <string name="tab_tray_inactive_onboarding_button_text">Απενεργοποίηση στις ρυθμίσεις</string>
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Αυτόματο κλείσιμο μετά από έναν μήνα;</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Το Firefox μπορεί να κλείσει τις καρτέλες που δεν έχετε προβάλει τον περασμένο μήνα.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Κλείσιμο</string>
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button">Ενεργοποίηση αυτόματου κλεισίματος</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -128,7 +137,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">Νέα ιδιωτική καρτέλα</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Κορυφαίοι ιστότοποι</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Κορυφαίοι ιστότοποι</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -175,7 +184,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Διακοπή</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Αποθήκευση σελιδοδείκτη</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Αποθήκευση σελιδοδείκτη</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Επεξεργασία σελιδοδείκτη</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -389,7 +398,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Θέμα</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">Αρχική σελίδα</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Αρχική σελίδα</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Αρχική σελίδα</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Χειρονομίες</string>
     <!-- Preference for settings related to visual options -->
@@ -584,7 +595,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Ενεργοποίηση Sync</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Σάρωση κωδικού σύζευξης στο Firefox για υπολογιστή</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Σάρωση κωδικού σύζευξης στο Firefox για υπολογιστή</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Σύνδεση</string>
 
@@ -710,15 +721,23 @@
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Αυτόματο κλείσιμο ανοικτών καρτελών</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">Εκκίνηση στην αρχική οθόνη</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Εκκίνηση στην αρχική οθόνη</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Οθόνη εκκίνησης</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">Μετά από τέσσερις ώρες</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Μετά από τέσσερις ώρες</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Αρχική σελίδα</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">Πάντα</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Πάντα</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Τελευταία καρτέλα</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">Ποτέ</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Ποτέ</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Αρχική σελίδα μετά από τέσσερις ώρες αδράνειας</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Χειροκίνητο κλείσιμο</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -776,13 +795,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Αποθήκευση στη συλλογή</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">Επιλογή</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Επιλογή</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Κοινή χρήση όλων των καρτελών</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Πρόσφατα κλεισμένες καρτέλες</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">Έκλεισαν πρόσφατα</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Έκλεισαν πρόσφατα</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Ρυθμίσεις λογαριασμού</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -904,11 +923,6 @@
     <string name="history_empty_message">Δεν υπάρχει ιστορικό</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">Διαγραφή λήψεων</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">Θέλετε σίγουρα να διαγράψετε τις λήψεις σας;</string>
-
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Οι λήψεις διαγράφηκαν</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -950,7 +964,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Μενού σελιδοδεικτών</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Επεξεργασία σελιδοδείκτη</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Επεξεργασία σελιδοδείκτη</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Επιλογή φακέλου</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1992,8 +2006,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, το κατάλαβα</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">Πιο συχνοί κορυφαίοι ιστότοποι</string>
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">Εμφάνιση πιο συχνών κορυφαίων ιστοτόπων</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Εμφάνιση πιο συχνών κορυφαίων ιστοτόπων</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Εμφάνιση πιο συχνών ιστοτόπων</string>
 
@@ -2012,11 +2028,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Κλείσιμο όλων των ανενεργών καρτελών</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">Οι καρτέλες θα είναι διαθέσιμες εδώ για %s. Έπειτα, οι καρτέλες θα κλείσουν αυτόματα.</string>
+    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Οι καρτέλες θα είναι διαθέσιμες εδώ για %s. Έπειτα, οι καρτέλες θα κλείσουν αυτόματα.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 ημέρες</string>
+    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 ημέρες</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">1 εβδομάδα</string>
+    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 εβδομάδα</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->

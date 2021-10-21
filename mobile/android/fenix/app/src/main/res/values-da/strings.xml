@@ -621,7 +621,7 @@
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Bogmærker</string>
     <!-- Option in library to open Desktop Bookmarks root page -->
-    <string name="library_desktop_bookmarks_root">Skrivebords-bogmærker</string>
+    <string name="library_desktop_bookmarks_root">Bogmærker fra din computer</string>
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
     <string name="library_desktop_bookmarks_menu">Bogmærke-menu</string>
     <!-- Option in library to open Desktop Bookmarks "toolbar" page -->

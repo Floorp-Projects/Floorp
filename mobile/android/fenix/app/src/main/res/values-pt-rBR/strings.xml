@@ -392,7 +392,7 @@
     <!-- Preference for customizing the home screen -->
     <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Tela inicial</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home_2">Página inicial</string>
+    <string name="preferences_home_2">Tela inicial</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Gestos</string>
     <!-- Preference for settings related to visual options -->
@@ -741,7 +741,7 @@
     <string name="preferences_inactive_tabs">Mover abas antigas para inativas</string>
 
     <!-- Title of inactive tabs preference -->
-    <string name="preferences_inactive_tabs_title">Abas que você não vê há duas semanas são movidas para a seção de inativas.</string>
+    <string name="preferences_inactive_tabs_title">Abas que você não usa há duas semanas são movidas para a seção de inativas.</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -1484,7 +1484,7 @@
     <string name="preference_enhanced_tracking_protection_explanation_title">Navegue sem ser seguido</string>
 
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Mantenha seus dados com você. O %s te protege de muitos dos rastreadores mais comuns que tentam seguir o que você faz online.</string>
+    <string name="preference_enhanced_tracking_protection_explanation">Defenda seus dados. O %s te protege de muitos dos rastreadores mais comuns que tentam seguir o que você faz online.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Saiba mais</string>
 
@@ -1648,11 +1648,11 @@
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Preenchimento automático no %1$s</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
-    <string name="preferences_passwords_autofill_description">Preencha e salve nomes de usuário e senhas em sites ao usar o %1$s.</string>
+    <string name="preferences_passwords_autofill_description">Preencher e salvar nomes de usuário e senhas em sites ao usar o %1$s.</string>
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill">Preenchimento automático em outros aplicativos</string>
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
-    <string name="preferences_android_autofill_description">Preencha nomes de usuário e senhas em outros aplicativos no seu dispositivo.</string>
+    <string name="preferences_android_autofill_description">Preencher nomes de usuário e senhas em outros aplicativos no dispositivo.</string>
 
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Adicionar conta</string>

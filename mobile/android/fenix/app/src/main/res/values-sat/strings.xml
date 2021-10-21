@@ -113,6 +113,8 @@
     <!-- Text for the action link to go to Settings for inactive tabs. -->
     <string name="tab_tray_inactive_onboarding_button_text">ᱥᱟᱡᱟᱣ ᱠᱚ ᱨᱮ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
 
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">ᱢᱤᱫ ᱪᱟᱸᱫᱚ ᱛᱟᱭᱚᱢ ᱟᱡ ᱛᱮ ᱵᱚᱸᱫᱽ ᱟᱢ ᱥᱮ?</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
 
@@ -1950,6 +1952,9 @@
     <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 ᱫᱤᱱ</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
     <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 ᱦᱟᱴ</string>
+
+    <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">ᱟᱡ ᱛᱮ ᱵᱚᱸᱫ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮ</string>
 
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
     <string name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">ᱠᱩᱞ ᱢᱮ</string>

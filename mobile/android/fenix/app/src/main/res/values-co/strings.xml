@@ -440,7 +440,7 @@
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Compie autumaticamente l’indirizzi</string>
     <!-- Preference for open links in third party apps -->
-    <string name="preferences_open_links_in_apps">Apre i liami in appiecazioni</string>
+    <string name="preferences_open_links_in_apps">Apre i liami in l’appiecazioni</string>
 
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Ghjestiunariu esternu di scaricamentu</string>
