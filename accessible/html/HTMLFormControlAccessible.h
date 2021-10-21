@@ -111,19 +111,6 @@ class HTMLTextFieldAccessible : public HyperTextAccessibleWrap {
 
   // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
-
-  /**
-   * Return a widget element this input is part of, for example, search-textbox.
-   *
-   * FIXME: This should probably be renamed.
-   */
-  nsIContent* BindingOrWidgetParent() const {
-    if (auto* el = mContent->GetClosestNativeAnonymousSubtreeRootParent()) {
-      return el;
-    }
-    // XUL search-textbox custom element
-    return Elm()->Closest("search-textbox"_ns, IgnoreErrors());
-  }
 };
 
 /**
