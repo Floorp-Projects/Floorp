@@ -54,6 +54,35 @@ nsAtom* HTMLFormAccessible::LandmarkRole() const {
                         : nsGkAtoms::form;
 }
 
+void HTMLFormAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
+                                             nsAtom* aAttribute,
+                                             int32_t aModType,
+                                             const nsAttrValue* aOldValue,
+                                             uint64_t aOldState) {
+  HyperTextAccessibleWrap::DOMAttributeChanged(aNameSpaceID, aAttribute,
+                                               aModType, aOldValue, aOldState);
+  if (aAttribute == nsGkAtoms::autocomplete) {
+    dom::HTMLFormElement* formEl = dom::HTMLFormElement::FromNode(mContent);
+
+    nsIHTMLCollection* controls = formEl->Elements();
+    uint32_t length = controls->Length();
+    for (uint32_t i = 0; i < length; i++) {
+      if (LocalAccessible* acc = mDoc->GetAccessible(controls->Item(i))) {
+        if (acc->IsTextField() && !acc->IsPassword()) {
+          if (!acc->Elm()->HasAttr(nsGkAtoms::list_) &&
+              !acc->Elm()->AttrValueIs(kNameSpaceID_None,
+                                       nsGkAtoms::autocomplete, nsGkAtoms::OFF,
+                                       eIgnoreCase)) {
+            RefPtr<AccEvent> stateChangeEvent =
+                new AccStateChangeEvent(acc, states::SUPPORTS_AUTOCOMPLETION);
+            mDoc->FireDelayedEvent(stateChangeEvent);
+          }
+        }
+      }
+    }
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLRadioButtonAccessible
 ////////////////////////////////////////////////////////////////////////////////
@@ -319,7 +348,8 @@ void HTMLTextFieldAccessible::Value(nsString& aValue) const {
 }
 
 bool HTMLTextFieldAccessible::AttributeChangesState(nsAtom* aAttribute) {
-  if (aAttribute == nsGkAtoms::readonly) {
+  if (aAttribute == nsGkAtoms::readonly || aAttribute == nsGkAtoms::list_ ||
+      aAttribute == nsGkAtoms::autocomplete) {
     return true;
   }
 
