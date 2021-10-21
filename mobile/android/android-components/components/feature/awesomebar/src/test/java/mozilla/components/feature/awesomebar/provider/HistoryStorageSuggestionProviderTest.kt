@@ -12,10 +12,17 @@ import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.VisitType
+import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.Fact
+import mozilla.components.support.base.facts.FactProcessor
+import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
@@ -24,6 +31,11 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 class HistoryStorageSuggestionProviderTest {
+
+    @Before
+    fun setup() {
+        Facts.clearProcessors()
+    }
 
     @Test
     fun `Provider returns empty list when text is empty`() = runBlocking {
@@ -143,5 +155,39 @@ class HistoryStorageSuggestionProviderTest {
         assertEquals(1, suggestions.size)
         assertEquals("http://www.mozilla.com", suggestions[0].description)
         verify(engine, times(1)).speculativeConnect(suggestions[0].description!!)
+    }
+
+    @Test
+    fun `fact is emitted when suggestion is clicked`() = runBlocking {
+        val history = InMemoryHistoryStorage()
+        val engine: Engine = mock()
+        val provider = HistoryStorageSuggestionProvider(history, mock(), engine = engine)
+
+        var suggestions = provider.onInputChanged("")
+        assertTrue(suggestions.isEmpty())
+        verify(engine, never()).speculativeConnect(anyString())
+
+        history.recordVisit("http://www.mozilla.com", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
+
+        suggestions = provider.onInputChanged("moz")
+        assertEquals(1, suggestions.size)
+
+        val emittedFacts = mutableListOf<Fact>()
+        Facts.registerProcessor(object : FactProcessor {
+            override fun process(fact: Fact) {
+                emittedFacts.add(fact)
+            }
+        })
+
+        suggestions[0].onSuggestionClicked?.invoke()
+        assertTrue(emittedFacts.isNotEmpty())
+        assertEquals(
+            Fact(
+                Component.FEATURE_AWESOMEBAR,
+                Action.INTERACTION,
+                AwesomeBarFacts.Items.HISTORY_SUGGESTION_CLICKED
+            ),
+            emittedFacts.first()
+        )
     }
 }

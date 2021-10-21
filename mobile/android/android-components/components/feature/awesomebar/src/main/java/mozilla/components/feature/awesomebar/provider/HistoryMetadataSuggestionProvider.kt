@@ -12,6 +12,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.concept.storage.HistoryStorage
+import mozilla.components.feature.awesomebar.facts.emitHistorySuggestionClickedFact
 import mozilla.components.feature.session.SessionUseCases
 import java.util.UUID
 
@@ -72,6 +73,7 @@ internal suspend fun Iterable<HistoryMetadata>.into(
             editSuggestion = result.key.url,
             onSuggestionClicked = {
                 loadUrlUseCase.invoke(result.key.url)
+                emitHistorySuggestionClickedFact()
             }
         )
     }

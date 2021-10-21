@@ -10,10 +10,17 @@ import mozilla.components.concept.storage.DocumentType
 import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.concept.storage.HistoryMetadataStorage
+import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.Fact
+import mozilla.components.support.base.facts.FactProcessor
+import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
@@ -32,6 +39,11 @@ class HistoryMetadataSuggestionProviderTest {
         documentType = DocumentType.Regular,
         previewImageUrl = null
     )
+
+    @Before
+    fun setup() {
+        Facts.clearProcessors()
+    }
 
     @Test
     fun `provider returns empty list when text is empty`() = runBlocking {
@@ -123,5 +135,39 @@ class HistoryMetadataSuggestionProviderTest {
         suggestions = provider.onInputChanged("moz")
         assertEquals(1, suggestions.size)
         verify(engine, times(1)).speculativeConnect(historyEntry.key.url)
+    }
+
+    @Test
+    fun `fact is emitted when suggestion is clicked`() = runBlocking {
+        val storage: HistoryMetadataStorage = mock()
+        val engine: Engine = mock()
+        val provider = HistoryMetadataSuggestionProvider(storage, mock(), engine = engine)
+
+        var suggestions = provider.onInputChanged("")
+        assertTrue(suggestions.isEmpty())
+        verify(engine, never()).speculativeConnect(anyString())
+
+        whenever(storage.queryHistoryMetadata("moz", DEFAULT_METADATA_SUGGESTION_LIMIT)).thenReturn(listOf(historyEntry))
+
+        suggestions = provider.onInputChanged("moz")
+        assertEquals(1, suggestions.size)
+
+        val emittedFacts = mutableListOf<Fact>()
+        Facts.registerProcessor(object : FactProcessor {
+            override fun process(fact: Fact) {
+                emittedFacts.add(fact)
+            }
+        })
+
+        suggestions[0].onSuggestionClicked?.invoke()
+        assertTrue(emittedFacts.isNotEmpty())
+        assertEquals(
+            Fact(
+                Component.FEATURE_AWESOMEBAR,
+                Action.INTERACTION,
+                AwesomeBarFacts.Items.HISTORY_SUGGESTION_CLICKED
+            ),
+            emittedFacts.first()
+        )
     }
 }
