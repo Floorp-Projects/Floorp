@@ -24,6 +24,7 @@
 class nsIEventTarget;
 class ProfilerCodeAddressService;
 struct JSContext;
+struct ThreadStreamingContext;
 
 // This class contains information about a thread that is only relevant while
 // the profiler is running, for any threads (both alive and dead) whose thread
@@ -80,6 +81,11 @@ class ProfiledThreadData final {
                   const mozilla::TimeStamp& aProcessStartTime,
                   double aSinceTime, bool aJSTracerEnabled,
                   ProfilerCodeAddressService* aService);
+  void StreamJSON(ThreadStreamingContext&& aThreadStreamingContext,
+                  SpliceableJSONWriter& aWriter, const nsACString& aProcessName,
+                  const nsACString& aETLDplus1,
+                  const mozilla::TimeStamp& aProcessStartTime,
+                  bool aJSTracerEnabled, ProfilerCodeAddressService* aService);
 
   const mozilla::profiler::ThreadRegistrationInfo& Info() const {
     return mThreadInfo;
@@ -218,5 +224,13 @@ ProfilerThreadId StreamSamplesAndMarkers(
     const mozilla::TimeStamp& aRegisterTime,
     const mozilla::TimeStamp& aUnregisterTime, double aSinceTime,
     UniqueStacks& aUniqueStacks);
+void StreamSamplesAndMarkers(const char* aName,
+                             ThreadStreamingContext& aThreadData,
+                             SpliceableJSONWriter& aWriter,
+                             const nsACString& aProcessName,
+                             const nsACString& aETLDplus1,
+                             const mozilla::TimeStamp& aProcessStartTime,
+                             const mozilla::TimeStamp& aRegisterTime,
+                             const mozilla::TimeStamp& aUnregisterTime);
 
 #endif  // ProfiledThreadData_h

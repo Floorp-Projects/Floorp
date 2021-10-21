@@ -587,11 +587,59 @@ static void WriteSample(SpliceableJSONWriter& aWriter,
 #undef RUNNING_TIME_STREAM
 }
 
+static void StreamMarkerAfterKind(
+    ProfileBufferEntryReader& aER,
+    ProcessStreamingContext& aProcessStreamingContext) {
+  ThreadStreamingContext* threadData = nullptr;
+  mozilla::base_profiler_markers_detail::DeserializeAfterKindAndStream(
+      aER,
+      [&](ProfilerThreadId aThreadId) -> baseprofiler::SpliceableJSONWriter* {
+        threadData =
+            aProcessStreamingContext.GetThreadStreamingContext(aThreadId);
+        return threadData ? &threadData->mMarkersDataWriter : nullptr;
+      },
+      [&](ProfileChunkedBuffer& aChunkedBuffer) {
+        ProfilerBacktrace backtrace("", &aChunkedBuffer);
+        MOZ_ASSERT(threadData,
+                   "threadData should have been set before calling here");
+        backtrace.StreamJSON(threadData->mMarkersDataWriter,
+                             aProcessStreamingContext.ProcessStartTime(),
+                             *threadData->mUniqueStacks);
+      },
+      [&](mozilla::base_profiler_markers_detail::Streaming::DeserializerTag
+              aTag) {
+        MOZ_ASSERT(threadData,
+                   "threadData should have been set before calling here");
+
+        size_t payloadSize = aER.RemainingBytes();
+
+        ProfileBufferEntryReader::DoubleSpanOfConstBytes spans =
+            aER.ReadSpans(payloadSize);
+        if (MOZ_LIKELY(spans.IsSingleSpan())) {
+          // Only a single span, we can just refer to it directly
+          // instead of copying it.
+          profiler::ffi::gecko_profiler_serialize_marker_for_tag(
+              aTag, spans.mFirstOrOnly.Elements(), payloadSize,
+              &threadData->mMarkersDataWriter);
+        } else {
+          // Two spans, we need to concatenate them by copying.
+          uint8_t* payloadBuffer = new uint8_t[payloadSize];
+          spans.CopyBytesTo(payloadBuffer);
+          profiler::ffi::gecko_profiler_serialize_marker_for_tag(
+              aTag, payloadBuffer, payloadSize,
+              &threadData->mMarkersDataWriter);
+          delete[] payloadBuffer;
+        }
+      });
+}
+
 class EntryGetter {
  public:
-  explicit EntryGetter(ProfileChunkedBuffer::Reader& aReader,
-                       uint64_t aInitialReadPos = 0)
-      : mBlockIt(
+  explicit EntryGetter(
+      ProfileChunkedBuffer::Reader& aReader, uint64_t aInitialReadPos = 0,
+      ProcessStreamingContext* aStreamingContextForMarkers = nullptr)
+      : mStreamingContextForMarkers(aStreamingContextForMarkers),
+        mBlockIt(
             aReader.At(ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
                 aInitialReadPos))),
         mBlockItEnd(aReader.end()) {
@@ -655,6 +703,10 @@ class EntryGetter {
                static_cast<ProfileBufferEntry::KindUnderlyingType>(
                    ProfileBufferEntry::Kind::MODERN_LIMIT));
     if (type >= ProfileBufferEntry::Kind::LEGACY_LIMIT) {
+      if (type == ProfileBufferEntry::Kind::Marker &&
+          mStreamingContextForMarkers) {
+        StreamMarkerAfterKind(er, *mStreamingContextForMarkers);
+      }
       er.SetRemainingBytes(0);
       return false;
     }
@@ -676,6 +728,8 @@ class EntryGetter {
       ++mBlockIt;
     }
   }
+
+  ProcessStreamingContext* const mStreamingContextForMarkers;
 
   ProfileBufferEntry mEntry;
   ProfileChunkedBuffer::BlockIterator mBlockIt;
@@ -842,10 +896,11 @@ struct StreamingParametersForThread {
 // GetStreamingParametersForThreadCallback:
 //   (ProfilerThreadId) -> Maybe<StreamingParametersForThread>
 template <typename GetStreamingParametersForThreadCallback>
-ProfilerThreadId ProfileBuffer::DoStreamSamplesToJSON(
+ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
     GetStreamingParametersForThreadCallback&&
         aGetStreamingParametersForThreadCallback,
-    double aSinceTime) const {
+    double aSinceTime,
+    ProcessStreamingContext* aStreamingContextForMarkers) const {
   UniquePtr<char[]> dynStrBuf = MakeUnique<char[]>(kMaxFrameKeyLength);
 
   return mEntries.Read([&](ProfileChunkedBuffer::Reader* aReader) {
@@ -855,7 +910,8 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesToJSON(
 
     ProfilerThreadId processedThreadId;
 
-    EntryGetter e(*aReader);
+    EntryGetter e(*aReader, /* aInitialReadPos */ 0,
+                  aStreamingContextForMarkers);
 
     for (;;) {
       // This block skips entries until we find the start of the next sample.
@@ -1143,6 +1199,12 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesToJSON(
             break;
           }
 
+          if (kind == ProfileBufferEntry::Kind::Marker &&
+              aStreamingContextForMarkers) {
+            StreamMarkerAfterKind(er, *aStreamingContextForMarkers);
+            continue;
+          }
+
           MOZ_ASSERT(kind >= ProfileBufferEntry::Kind::LEGACY_LIMIT,
                      "There should be no legacy entries between "
                      "TimeBeforeCompactStack and CompactStack");
@@ -1203,6 +1265,12 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesToJSON(
             break;
           }
 
+          if (kind == ProfileBufferEntry::Kind::Marker &&
+              aStreamingContextForMarkers) {
+            StreamMarkerAfterKind(er, *aStreamingContextForMarkers);
+            continue;
+          }
+
           MOZ_ASSERT(kind >= ProfileBufferEntry::Kind::LEGACY_LIMIT,
                      "There should be no legacy entries between "
                      "TimeBeforeSameSample and SameSample");
@@ -1228,7 +1296,7 @@ ProfilerThreadId ProfileBuffer::StreamSamplesToJSON(
 #ifdef DEBUG
   int processedCount = 0;
 #endif  // DEBUG
-  return DoStreamSamplesToJSON(
+  return DoStreamSamplesAndMarkersToJSON(
       [&](ProfilerThreadId aReadThreadId) {
         Maybe<StreamingParametersForThread> streamingParameters;
 #ifdef DEBUG
@@ -1244,7 +1312,24 @@ ProfilerThreadId ProfileBuffer::StreamSamplesToJSON(
         }
         return streamingParameters;
       },
-      aSinceTime);
+      aSinceTime, /* aStreamingContextForMarkers */ nullptr);
+}
+
+void ProfileBuffer::StreamSamplesAndMarkersToJSON(
+    ProcessStreamingContext& aProcessStreamingContext) const {
+  (void)DoStreamSamplesAndMarkersToJSON(
+      [&](ProfilerThreadId aReadThreadId) {
+        Maybe<StreamingParametersForThread> streamingParameters;
+        ThreadStreamingContext* threadData =
+            aProcessStreamingContext.GetThreadStreamingContext(aReadThreadId);
+        if (threadData) {
+          streamingParameters.emplace(
+              threadData->mSamplesDataWriter, *threadData->mUniqueStacks,
+              threadData->mPreviousStackState, threadData->mPreviousStack);
+        }
+        return streamingParameters;
+      },
+      aProcessStreamingContext.GetSinceTime(), &aProcessStreamingContext);
 }
 
 void ProfileBuffer::AddJITInfoForRange(uint64_t aRangeStart,
