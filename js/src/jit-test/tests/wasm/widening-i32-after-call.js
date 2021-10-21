@@ -1,5 +1,16 @@
 // |jit-test| skip-if: !hasDisassembler() || !(wasmCompileMode() == "baseline" || wasmCompileMode() == "ion") || !(getBuildConfiguration().x64 && !getBuildConfiguration()["arm64-simulator"] && !getBuildConfiguration()["mips64-simulator"])
 
+// We widen i32 results after calls on 64-bit platforms for two reasons:
+//
+// - it's a cheap mitigation for certain spectre problems, and
+// - it makes the high bits of the 64-bit register conform to platform
+//   conventions, which they might not if the call was to C++ code
+//   especially.
+//
+// This is a whitebox test that explicit widening instructions are inserted
+// after calls on x64.  The widening is platform-specific; on x64, the upper
+// bits are zeroed.
+
 // What we can't test here is the direct-call-from-JIT path, as the generated
 // code is not available to wasmDis.
 
