@@ -3966,8 +3966,6 @@ static bool malloc_init_hard() {
   gRealPageSize = gPageSize = (size_t)result;
 #endif
 
-  MOZ_RELEASE_ASSERT(JEMALLOC_MAX_STATS_BINS >= NUM_SMALL_CLASSES);
-
   // Get runtime configuration.
   if ((opts = getenv("MALLOC_OPTIONS"))) {
     for (i = 0; opts[i] != '\0'; i++) {
@@ -4326,10 +4324,7 @@ inline void MozJemalloc::jemalloc_stats_internal(
     return;
   }
   if (aBinStats) {
-    // An assertion in malloc_init_hard will guarantee that
-    // JEMALLOC_MAX_STATS_BINS >= NUM_SMALL_CLASSES.
-    memset(aBinStats, 0,
-           sizeof(jemalloc_bin_stats_t) * JEMALLOC_MAX_STATS_BINS);
+    memset(aBinStats, 0, sizeof(jemalloc_bin_stats_t) * NUM_SMALL_CLASSES);
   }
 
   // Gather runtime settings.
@@ -4453,6 +4448,11 @@ inline void MozJemalloc::jemalloc_stats_internal(
 
   MOZ_ASSERT(aStats->mapped >= aStats->allocated + aStats->waste +
                                    aStats->page_cache + aStats->bookkeeping);
+}
+
+template <>
+inline size_t MozJemalloc::jemalloc_stats_num_bins() {
+  return NUM_SMALL_CLASSES;
 }
 
 #ifdef MALLOC_DOUBLE_PURGE

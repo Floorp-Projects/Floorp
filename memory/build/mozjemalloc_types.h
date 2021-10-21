@@ -113,9 +113,6 @@ typedef struct {
   size_t bytes_per_run;      // The number of bytes per run, including headers.
 } jemalloc_bin_stats_t;
 
-// This is the total number of bins.
-#define JEMALLOC_MAX_STATS_BINS 51
-
 enum PtrInfoTag {
   // The pointer is not currently known to the allocator.
   // 'addr', 'size', and 'arenaId' are always 0.
