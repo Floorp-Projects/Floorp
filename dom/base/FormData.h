@@ -79,6 +79,8 @@ class FormData final : public nsISupports,
 
   void Append(const nsAString& aName, Directory* aDirectory);
 
+  void Append(const FormData& aFormData);
+
   void Delete(const nsAString& aName);
 
   void Get(const nsAString& aName,
