@@ -493,6 +493,18 @@ impl SharedTextures {
     fn bytes_per_shared_texture(&self, budget_type: BudgetType) -> usize {
         self.bytes_per_texture_of_type[budget_type as usize] as usize
     }
+
+    fn has_multiple_textures(&self, budget_type: BudgetType) -> bool {
+        match budget_type {
+            BudgetType::SharedColor8Linear => self.color8_linear.allocated_textures() > 1,
+            BudgetType::SharedColor8Nearest => self.color8_nearest.allocated_textures() > 1,
+            BudgetType::SharedColor8Glyphs => self.color8_glyphs.allocated_textures() > 1,
+            BudgetType::SharedAlpha8 => self.alpha8_linear.allocated_textures() > 1,
+            BudgetType::SharedAlpha8Glyphs => self.alpha8_glyphs.allocated_textures() > 1,
+            BudgetType::SharedAlpha16 => self.alpha16_linear.allocated_textures() > 1,
+            BudgetType::Standalone => false,
+        }
+    }
 }
 
 /// Container struct for the various parameters used in cache allocation.
@@ -1087,49 +1099,104 @@ impl TextureCache {
             // to save GPU memory. Batching / draw call concerns do not apply
             // to standalone textures, because unused textures don't cause
             // extra draw calls.
-            return 16 * 1024 * 1024;
+            return 8 * 1024 * 1024;
         }
 
         // For shared textures, evicting an entry only frees up GPU memory if it
-        // causes one of the shared textures to become empty.
-        // The bigger concern for shared textures is batching: The entries that
+        // causes one of the shared textures to become empty, so we want to avoid
+        // getting slightly above the capacity of a texture.
+        // The other concern for shared textures is batching: The entries that
         // are needed in the current frame should be distributed across as few
         // shared textures as possible, to minimize the number of draw calls.
-        // Ideally we only want one or two textures per type.
-        let expected_texture_count = match budget_type {
-            BudgetType::SharedColor8Nearest | BudgetType::SharedAlpha16 => {
-                // These types are only rarely used, we don't want more than
-                // one of each.
-                1
-            },
+        // Ideally we only want one texture per type under simple workloads.
 
+        let bytes_per_texture = self.shared_textures.bytes_per_shared_texture(budget_type);
+
+        // Number of allocated bytes under which we don't bother with evicting anything
+        // from the cache. Above the threshold we consider evicting the coldest items
+        // depending on how cold they are.
+        //
+        // Above all else we want to make sure that even after a heavy workload, the
+        // shared cache settles back to a single texture atlas per type over some reasonable
+        // period of time.
+        // This is achieved by the compaction logic which will try to consolidate items that
+        // are spread over multiple textures into few ones, and by evicting old items
+        // so that the compaction logic has room to do its job.
+        //
+        // The other goal is to leave enough empty space in the texture atlases
+        // so that we are not too likely to have to allocate a new texture atlas on
+        // the next frame if we switch to a new tab or load a new page. That's why
+        // the following thresholds are rather low. Note that even when above the threshold,
+        // we only evict cold items and ramp up the eviction pressure depending on the amount
+        // of allocated memory (See should_continue_evicting).
+        let ideal_utilization = match budget_type {
+            BudgetType::SharedAlpha8Glyphs | BudgetType::SharedColor8Glyphs => {
+                // Glyphs are usually small and tightly packed so they waste very little
+                // space in the cache.
+                bytes_per_texture * 2 / 3
+            }
             _ => {
-                // For the other types, having two textures is acceptable.
-                2
-            },
+                // Other types of images come with a variety of sizes making them more
+                // prone to wasting pixels and causing fragmentation issues so we put
+                // more pressure on them.
+                bytes_per_texture / 3
+            }
         };
 
-        // The threshold that we pick here will be compared to the number of
-        // bytes that are *occupied by entries*. And we're trying to target a
-        // certain number of textures.
-        // Unfortunately, it's hard to predict the number of needed textures
-        // purely based on number of occupied bytes: Due to the different
-        // rectangular shape of each entry, and due to decisions made by the
-        // allocator, sometimes we may need a new texture even if there are
-        // still large gaps in the existing textures.
-        // Let's assume that we have an average allocator wastage of 50%.
-        let average_used_bytes_per_texture_when_full =
-            self.shared_textures.bytes_per_shared_texture(budget_type) / 2;
-
-        // Compute the threshold.
-        // Because of varying allocator wastage, we may still need to use more
-        // than the expected number of textures; that's fine. We'll also go over
-        // the expected texture count whenever a large number of entries are
-        // needed to draw a complex frame (since we don't evict entries which
-        // are needed for the current frame), or if eviction hasn't had a chance
-        // to catch up after a large allocation burst.
-        expected_texture_count * average_used_bytes_per_texture_when_full
+        ideal_utilization
     }
+
+    /// Returns whether to continue eviction and how cold an item need to be to be evicted.
+    ///
+    /// If the None is returned, stop evicting.
+    /// If the Some(n) is returned, continue evicting if the coldest item hasn't been used
+    /// for more than n frames.
+    fn should_continue_evicting(
+        &self,
+        budget_type: BudgetType,
+        eviction_count: usize,
+    ) -> Option<usize> {
+
+        let threshold = self.get_eviction_threshold(budget_type);
+        let bytes_allocated = self.bytes_allocated[budget_type as usize];
+
+        let uses_multiple_atlases = self.shared_textures.has_multiple_textures(budget_type);
+
+        // If current memory usage is below selected threshold, we can stop evicting items
+        // except when using shared texture atlases and more than one texture is in use.
+        // This is not very common but can happen due to fragmentation and the only way
+        // to get rid of that fragmentation is to continue evicting.
+        if bytes_allocated < threshold && !uses_multiple_atlases {
+            return None;
+        }
+
+        // Number of frames since last use that is considered too recent for eviction,
+        // depending on the cache pressure.
+        let age_theshold = match bytes_allocated / threshold {
+            0 => 400,
+            1 => 200,
+            2 => 100,
+            3 => 50,
+            4 => 25,
+            5 => 10,
+            6 => 5,
+            _ => 1,
+        };
+
+        // If current memory usage is significantly more than the threshold, keep evicting this frame
+        if bytes_allocated > 4 * threshold {
+            return Some(age_theshold);
+        }
+
+        // Otherwise, only allow evicting up to a certain number of items per frame. This allows evictions
+        // to be spread over a number of frames, to avoid frame spikes.
+        if eviction_count < Self::MAX_EVICTIONS_PER_FRAME {
+            return Some(age_theshold)
+        }
+
+        None
+    }
+
 
     /// Evict old items from the shared and standalone caches, if we're over a
     /// threshold memory usage value
@@ -1139,17 +1206,15 @@ impl TextureCache {
         let mut youngest_evicted = FrameId::first();
 
         for budget in BudgetType::iter() {
-            let threshold = self.get_eviction_threshold(budget);
-            while self.should_continue_evicting(
-                self.bytes_allocated[budget as usize],
-                threshold,
+            while let Some(age_threshold) = self.should_continue_evicting(
+                budget,
                 eviction_count,
             ) {
                 if let Some(entry) = self.lru_cache.peek_oldest(budget as u8) {
                     // Only evict this item if it wasn't used in the previous frame. The reason being that if it
                     // was used the previous frame then it will likely be used in this frame too, and we don't
                     // want to be continually evicting and reuploading the item every frame.
-                    if entry.last_access.frame_id() >= previous_frame_id {
+                    if entry.last_access.frame_id() + age_threshold > previous_frame_id {
                         // Since the LRU cache is ordered by frame access, we can break out of the loop here because
                         // we know that all remaining items were also used in the previous frame (or more recently).
                         break;
@@ -1178,28 +1243,6 @@ impl TextureCache {
                 self.now.frame_id().as_usize() - youngest_evicted.as_usize()
             );
         }
-    }
-
-    /// Returns true if texture cache eviction loop should continue
-    fn should_continue_evicting(
-        &self,
-        bytes_allocated: usize,
-        threshold: usize,
-        eviction_count: usize,
-    ) -> bool {
-        // If current memory usage is below selected threshold, we can stop evicting items
-        if bytes_allocated < threshold {
-            return false;
-        }
-
-        // If current memory usage is significantly more than the threshold, keep evicting this frame
-        if bytes_allocated > 4 * threshold {
-            return true;
-        }
-
-        // Otherwise, only allow evicting up to a certain number of items per frame. This allows evictions
-        // to be spread over a number of frames, to avoid frame spikes.
-        eviction_count < Self::MAX_EVICTIONS_PER_FRAME
     }
 
     // Free a cache entry from the standalone list or shared cache.
