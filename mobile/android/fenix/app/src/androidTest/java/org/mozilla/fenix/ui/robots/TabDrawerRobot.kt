@@ -527,8 +527,11 @@ private fun assertNormalBrowsingButton() {
 }
 
 private fun assertTabThumbnail() {
-    onView(withId(R.id.mozac_browser_tabstray_thumbnail))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    assertTrue(
+        mDevice.findObject(
+            UiSelector().resourceId("$packageName:id/mozac_browser_tabstray_thumbnail")
+        ).waitForExists(waitingTime)
+    )
 }
 
 private fun tab(title: String) =
