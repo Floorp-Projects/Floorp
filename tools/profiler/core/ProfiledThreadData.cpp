@@ -119,6 +119,55 @@ static void StreamTraceLoggerJSON(JSContext* aCx, SpliceableJSONWriter& aWriter,
   aWriter.EndObject();
 }
 
+static void StreamTablesAndTraceLogger(
+    UniqueStacks&& aUniqueStacks, JSContext* aCx, SpliceableJSONWriter& aWriter,
+    const mozilla::TimeStamp& aProcessStartTime, bool JSTracerEnabled) {
+  aWriter.StartObjectProperty("stackTable");
+  {
+    {
+      JSONSchemaWriter schema(aWriter);
+      schema.WriteField("prefix");
+      schema.WriteField("frame");
+    }
+
+    aWriter.StartArrayProperty("data");
+    { aUniqueStacks.SpliceStackTableElements(aWriter); }
+    aWriter.EndArray();
+  }
+  aWriter.EndObject();
+
+  aWriter.StartObjectProperty("frameTable");
+  {
+    {
+      JSONSchemaWriter schema(aWriter);
+      schema.WriteField("location");
+      schema.WriteField("relevantForJS");
+      schema.WriteField("innerWindowID");
+      schema.WriteField("implementation");
+      schema.WriteField("optimizations");
+      schema.WriteField("line");
+      schema.WriteField("column");
+      schema.WriteField("category");
+      schema.WriteField("subcategory");
+    }
+
+    aWriter.StartArrayProperty("data");
+    { aUniqueStacks.SpliceFrameTableElements(aWriter); }
+    aWriter.EndArray();
+  }
+  aWriter.EndObject();
+
+  aWriter.StartArrayProperty("stringTable");
+  {
+    std::move(*aUniqueStacks.mUniqueStrings).SpliceStringTableElements(aWriter);
+  }
+  aWriter.EndArray();
+
+  if (aCx && JSTracerEnabled) {
+    StreamTraceLoggerJSON(aCx, aWriter, aProcessStartTime);
+  }
+}
+
 mozilla::NotNull<mozilla::UniquePtr<UniqueStacks>>
 ProfiledThreadData::PrepareUniqueStacks(const ProfileBuffer& aBuffer,
                                         JSContext* aCx,
@@ -163,53 +212,9 @@ void ProfiledThreadData::StreamJSON(
                             aProcessStartTime, mThreadInfo.RegisterTime(),
                             mUnregisterTime, aSinceTime, *uniqueStacks);
 
-    aWriter.StartObjectProperty("stackTable");
-    {
-      {
-        JSONSchemaWriter schema(aWriter);
-        schema.WriteField("prefix");
-        schema.WriteField("frame");
-      }
-
-      aWriter.StartArrayProperty("data");
-      { uniqueStacks->SpliceStackTableElements(aWriter); }
-      aWriter.EndArray();
-    }
-    aWriter.EndObject();
-
-    aWriter.StartObjectProperty("frameTable");
-    {
-      {
-        JSONSchemaWriter schema(aWriter);
-        schema.WriteField("location");
-        schema.WriteField("relevantForJS");
-        schema.WriteField("innerWindowID");
-        schema.WriteField("implementation");
-        schema.WriteField("optimizations");
-        schema.WriteField("line");
-        schema.WriteField("column");
-        schema.WriteField("category");
-        schema.WriteField("subcategory");
-      }
-
-      aWriter.StartArrayProperty("data");
-      { uniqueStacks->SpliceFrameTableElements(aWriter); }
-      aWriter.EndArray();
-    }
-    aWriter.EndObject();
-
-    aWriter.StartArrayProperty("stringTable");
-    {
-      std::move(*uniqueStacks->mUniqueStrings)
-          .SpliceStringTableElements(aWriter);
-    }
-    aWriter.EndArray();
+    StreamTablesAndTraceLogger(std::move(*uniqueStacks), aCx, aWriter,
+                               aProcessStartTime, JSTracerEnabled);
   }
-
-  if (aCx && JSTracerEnabled) {
-    StreamTraceLoggerJSON(aCx, aWriter, aProcessStartTime);
-  }
-
   aWriter.End();
 
   aWriter.ResetUniqueStrings();
