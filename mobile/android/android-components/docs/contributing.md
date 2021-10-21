@@ -44,6 +44,7 @@ Before contributing, please review our [Community Participation Guidelines](http
 * [0005 - Migrate feature-sitepermissions to be compatible with the new GeckoView permission API]({{ site.baseurl }}/rfc/0005-migrate-sitepermission-ac-store-geckoview-store)
 * [0006 - Determining the set of default search engines]({{ site.baseurl }}/rfc/0006-search-defaults)
 * [0007 - Synchronizing the branching and versioning of Android Components with the Mozilla release trains]({{ site.baseurl }}/rfc/0007-synchronized-releases)
+* [0008 - Adding tab partitions (groups) to BrowserState]({{ site.baseurl }}/rfc/0008-tab-groups)
 
 ### Presentations
 
