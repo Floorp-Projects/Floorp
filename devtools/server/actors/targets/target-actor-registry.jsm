@@ -4,6 +4,8 @@
 
 "use strict";
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 var EXPORTED_SYMBOLS = ["TargetActorRegistry"];
 
 // Keep track of all WindowGlobal target actors.
@@ -33,17 +35,39 @@ var TargetActorRegistry = {
   },
 
   /**
-   * Return the first target actor matching the passed browser element id. Returns null if
+   * Return the first target actor matching the passed watcher's context. Returns null if
    * no matching target actors could be found.
    *
-   * @param {Integer} browserId: The browserId to retrieve targets for. Pass null to
-   *                             retrieve the parent process targets.
-   * @param {String} connectionPrefix: Optional prefix, in order to select only actor
+   * @param {Object} context: WatcherActor's context. To only retrieve targets related
+   *                          to the scope of this watcher actor.
+   *                          See watcher actor constructor for more info.
+   * @param {String} connectionPrefix: DevToolsServerConnection's prefix, in order to select only actor
    *                                   related to the same connection. i.e. the same client.
    * @returns {TargetActor|null}
    */
-  getTargetActor(browserId, connectionPrefix) {
-    return this.getTargetActors(browserId, connectionPrefix)[0] || null;
+  getTopLevelTargetActorForContext(context, connectionPrefix) {
+    if (context.type == "all") {
+      if (
+        Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT
+      ) {
+        // The xpcshell target actor also lives in the "parent process", even if it
+        // is an instance of ContentProcessTargetActor.
+        if (xpcShellTargetActor) {
+          return xpcShellTargetActor;
+        }
+
+        const actors = this.getTargetActors(context, connectionPrefix);
+        // In theory, there should be only one actor here.
+        return actors[0];
+      }
+      return null;
+    } else if (context.type == "browser-element") {
+      const actors = this.getTargetActors(context, connectionPrefix);
+      return actors.find(actor => {
+        return actor.isTopLevelTarget;
+      });
+    }
+    throw new Error("Unsupported context type: " + context.type);
   },
 
   /**
@@ -53,42 +77,22 @@ var TargetActorRegistry = {
    *
    * @param {Integer} browserId: The browserId to retrieve targets for. Pass null to
    *                             retrieve the parent process targets.
-   * @param {String} connectionPrefix: Optional prefix, in order to select only actor
+   * @param {String} connectionPrefix: DevToolsServerConnection's prefix, in order to select only actor
    *                                   related to the same connection. i.e. the same client.
    * @returns {Array<TargetActor>}
    */
-  getTargetActors(browserId, connectionPrefix) {
+  getTargetActors(context, connectionPrefix) {
     const actors = [];
     for (const actor of windowGlobalTargetActors) {
-      if (
-        ((!connectionPrefix || actor.actorID.startsWith(connectionPrefix)) &&
-          actor.browserId == browserId) ||
-        (browserId === null && actor.typeName === "parentProcessTarget")
-      ) {
+      const isMatchingPrefix = actor.actorID.startsWith(connectionPrefix);
+      const isMatchingContext =
+        (context.type == "all" && actor.typeName === "parentProcessTarget") ||
+        (context.type == "browser-element" &&
+          actor.browserId == context.browserId);
+      if (isMatchingPrefix && isMatchingContext) {
         actors.push(actor);
       }
     }
     return actors;
-  },
-
-  /**
-   * Return the parent process target actor. Returns null if it couldn't be found.
-   *
-   * @returns {TargetActor|null}
-   */
-  getParentProcessTargetActor() {
-    for (const actor of windowGlobalTargetActors) {
-      if (actor.typeName === "parentProcessTarget") {
-        return actor;
-      }
-    }
-
-    // The xpcshell target actor also lives in the "parent process", even if it
-    // is an instance of ContentProcessTargetActor.
-    if (xpcShellTargetActor) {
-      return xpcShellTargetActor;
-    }
-
-    return null;
   },
 };
