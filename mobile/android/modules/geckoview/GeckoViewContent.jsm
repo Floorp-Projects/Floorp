@@ -56,7 +56,6 @@ class GeckoViewContent extends GeckoViewModule {
 
     this.window.addEventListener("DOMWindowClose", this);
     this.window.addEventListener("pagetitlechanged", this);
-    this.window.addEventListener("pageinfo", this);
 
     Services.obs.addObserver(this, "oop-frameloader-crashed");
     Services.obs.addObserver(this, "ipc:content-shutdown");
@@ -81,7 +80,6 @@ class GeckoViewContent extends GeckoViewModule {
 
     this.window.removeEventListener("DOMWindowClose", this);
     this.window.removeEventListener("pagetitlechanged", this);
-    this.window.removeEventListener("pageinfo", this);
 
     Services.obs.removeObserver(this, "oop-frameloader-crashed");
     Services.obs.removeObserver(this, "ipc:content-shutdown");
@@ -209,14 +207,6 @@ class GeckoViewContent extends GeckoViewModule {
         this.eventDispatcher.sendRequest({
           type: "GeckoView:DOMWindowClose",
         });
-        break;
-      case "pageinfo":
-        if (aEvent.detail.previewImageURL) {
-          this.eventDispatcher.sendRequest({
-            type: "GeckoView:PreviewImage",
-            previewImageUrl: aEvent.detail.previewImageURL,
-          });
-        }
         break;
     }
   }
