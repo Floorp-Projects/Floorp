@@ -23,7 +23,7 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/CompileOptions.h"              // JS::ReadOnlyCompileOptions
+#include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions, JS::InstantiateOptions, JS::DecodeOptions
 #include "js/OffThreadScriptCompilation.h"  // JS::OffThreadCompileCallback
 #include "js/SourceText.h"                  // JS::SourceText
 #include "js/Transcoding.h"                 // JS::TranscodeSource
@@ -101,9 +101,10 @@ extern JS_PUBLIC_API TranscodeResult EncodeStencil(JSContext* cx,
                                                    TranscodeBuffer& buffer);
 
 // Deserialize data and create a new Stencil.
-extern JS_PUBLIC_API TranscodeResult
-DecodeStencil(JSContext* cx, const ReadOnlyCompileOptions& options,
-              const TranscodeRange& range, Stencil** stencilOut);
+extern JS_PUBLIC_API TranscodeResult DecodeStencil(JSContext* cx,
+                                                   const DecodeOptions& options,
+                                                   const TranscodeRange& range,
+                                                   Stencil** stencilOut);
 
 extern JS_PUBLIC_API size_t SizeOfStencil(Stencil* stencil,
                                           mozilla::MallocSizeOf mallocSizeOf);

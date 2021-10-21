@@ -2195,7 +2195,9 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
 
 template <XDRMode mode>
 /* static */
-XDRResult ScriptSource::XDR(XDRState<mode>* xdr, RefPtr<ScriptSource>& source) {
+XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
+                            const JS::DecodeOptions* maybeOptions,
+                            RefPtr<ScriptSource>& source) {
   JSContext* cx = xdr->cx();
 
   if (mode == XDR_DECODE) {
@@ -2283,6 +2285,18 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr, RefPtr<ScriptSource>& source) {
 
   MOZ_TRY(xdr->codeUint32(&source->startLine_));
 
+  // The introduction info doesn't persist across encode/decode.
+  if (mode == XDR_DECODE) {
+    source->introductionType_ = maybeOptions->introductionType;
+    source->setIntroductionOffset(maybeOptions->introductionOffset);
+    if (maybeOptions->introducerFilename) {
+      if (!source->setIntroducerFilename(cx,
+                                         maybeOptions->introducerFilename)) {
+        return xdr->fail(JS::TranscodeResult::Throw);
+      }
+    }
+  }
+
   MOZ_TRY(xdrData(xdr, source.get()));
 
   return Ok();
@@ -2290,10 +2304,14 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr, RefPtr<ScriptSource>& source) {
 
 template /* static */
     XDRResult
-    ScriptSource::XDR(XDRState<XDR_ENCODE>* xdr, RefPtr<ScriptSource>& holder);
+    ScriptSource::XDR(XDRState<XDR_ENCODE>* xdr,
+                      const JS::DecodeOptions* maybeOptions,
+                      RefPtr<ScriptSource>& holder);
 template /* static */
     XDRResult
-    ScriptSource::XDR(XDRState<XDR_DECODE>* xdr, RefPtr<ScriptSource>& holder);
+    ScriptSource::XDR(XDRState<XDR_DECODE>* xdr,
+                      const JS::DecodeOptions* maybeOptions,
+                      RefPtr<ScriptSource>& holder);
 
 // Format and return a cx->pod_malloc'ed URL for a generated script like:
 //   {filename} line {lineno} > {introducer}

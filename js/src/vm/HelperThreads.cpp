@@ -20,6 +20,7 @@
 #include "gc/GC.h"                        // gc::MergeRealms
 #include "jit/IonCompileTask.h"
 #include "jit/JitRuntime.h"
+#include "js/CompileOptions.h"  // JS::CompileOptions, JS::DecodeOptions, JS::ReadOnlyCompileOptions
 #include "js/ContextOptions.h"  // JS::ContextOptions
 #include "js/experimental/JSStencil.h"
 #include "js/friend/StackLimits.h"  // js::ReportOverRecursed
@@ -855,7 +856,8 @@ void ScriptDecodeTask::parse(JSContext* cx) {
   }
 
   XDRStencilDecoder decoder(cx, range);
-  XDRResult res = decoder.codeStencil(stencilInput_->options, *stencil_);
+  JS::DecodeOptions options(stencilInput_->options);
+  XDRResult res = decoder.codeStencil(options, *stencil_);
   if (!res.isOk()) {
     stencil_.reset();
     return;
@@ -866,7 +868,7 @@ void ScriptDecodeTask::parse(JSContext* cx) {
     stencil_.reset();
   }
 
-  if (options.useOffThreadParseGlobal) {
+  if (stencilInput_->options.useOffThreadParseGlobal) {
     (void)instantiateStencils(cx);
   }
 }
@@ -886,12 +888,10 @@ void MultiStencilsDecodeTask::parse(JSContext* cx) {
   }
 
   for (auto& source : *sources) {
-    CompileOptions opts(cx, options);
-    opts.setFileAndLine(source.filename, source.lineno);
-
+    JS::DecodeOptions decodeOptions(options);
     RefPtr<JS::Stencil> stencil;
-    if (JS::DecodeStencil(cx, options, source.range, getter_AddRefs(stencil)) !=
-        JS::TranscodeResult::Ok) {
+    if (JS::DecodeStencil(cx, decodeOptions, source.range,
+                          getter_AddRefs(stencil)) != JS::TranscodeResult::Ok) {
       break;
     }
 
