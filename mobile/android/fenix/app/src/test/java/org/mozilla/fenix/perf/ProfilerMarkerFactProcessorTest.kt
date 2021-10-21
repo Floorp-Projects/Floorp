@@ -39,10 +39,10 @@ class ProfilerMarkerFactProcessorTest {
     fun `GIVEN we are on the main thread WHEN a fact with an implementation detail action is received THEN a profiler marker is added now`() {
         myLooper = mainHandler.looper // main thread
 
-        val fact = newFact(Action.IMPLEMENTATION_DETAIL)
+        val fact = newFact(Action.IMPLEMENTATION_DETAIL, value = "testValue")
         processor.process(fact)
 
-        verify { profiler.addMarker(fact.item) }
+        verify { profiler.addMarker(fact.item, fact.value) }
     }
 
     @Test
@@ -51,14 +51,14 @@ class ProfilerMarkerFactProcessorTest {
         val mainThreadPostedSlot = slot<Runnable>()
         every { profiler.getProfilerTime() } returns 100.0
 
-        val fact = newFact(Action.IMPLEMENTATION_DETAIL)
+        val fact = newFact(Action.IMPLEMENTATION_DETAIL, value = "testValue")
         processor.process(fact)
 
         verify { mainHandler.post(capture(mainThreadPostedSlot)) }
         verifyProfilerAddMarkerWasNotCalled()
 
         mainThreadPostedSlot.captured.run() // call the captured function posted to the main thread.
-        verify { profiler.addMarker(fact.item, 100.0, 100.0, null) }
+        verify { profiler.addMarker(fact.item, 100.0, 100.0, fact.value) }
     }
 
     @Test
@@ -81,9 +81,11 @@ class ProfilerMarkerFactProcessorTest {
 
 private fun newFact(
     action: Action,
-    item: String = "itemName"
+    item: String = "itemName",
+    value: String? = null,
 ) = Fact(
     Component.BROWSER_STATE,
     action,
-    item
+    item,
+    value,
 )
