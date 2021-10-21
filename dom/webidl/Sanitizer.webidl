@@ -18,9 +18,9 @@ typedef record<DOMString, sequence<DOMString>> AttributeMatchList;
 interface Sanitizer {
   [Throws]
   constructor(optional SanitizerConfig sanitizerConfig = {});
-  [Throws]
+  [UseCounter, Throws]
   DocumentFragment sanitize(SanitizerInput input);
-  [Throws]
+  [UseCounter, Throws]
   Element? sanitizeFor(DOMString element, DOMString input);
 };
 

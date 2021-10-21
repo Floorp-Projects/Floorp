@@ -388,6 +388,6 @@ dictionary SetHTMLOptions {
 };
 
 partial interface Element {
-  [Throws, Pref="dom.security.sanitizer.enabled"]
+  [UseCounter, Throws, Pref="dom.security.sanitizer.enabled"]
     void setHTML(DOMString aInnerHTML, optional SetHTMLOptions options = {});
 };
