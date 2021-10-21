@@ -452,14 +452,12 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    * target helpers. (and only those which are ignored)
    */
   _getTargetActorInParentProcess() {
-    if (this.context.type == "all") {
-      return TargetActorRegistry.getParentProcessTargetActor();
-    } else if (this.context.type == "browser-element") {
-      // Note: if any, the WindowGlobalTargetActor returned here is created for a parent process
-      // page and lives in the parent process.
-      return TargetActorRegistry.getTargetActor(this.context.browserId);
-    }
-    throw new Error("Unsupported context type: " + this.context.type);
+    // Note: For browser-element debugging, the WindowGlobalTargetActor returned here is created
+    // for a parent process page and lives in the parent process.
+    return TargetActorRegistry.getTopLevelTargetActorForContext(
+      this.context,
+      this.conn.prefix
+    );
   },
 
   /**
