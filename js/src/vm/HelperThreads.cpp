@@ -2220,13 +2220,12 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
       }
 
       if (!script->scriptSource()->startIncrementalEncoding(
-              cx, parseTask->options, std::move(initial))) {
+              cx, std::move(initial))) {
         return nullptr;
       }
     } else if (parseTask->extensibleStencil_) {
       if (!script->scriptSource()->startIncrementalEncoding(
-              cx, parseTask->options,
-              std::move(parseTask->extensibleStencil_))) {
+              cx, std::move(parseTask->extensibleStencil_))) {
         return nullptr;
       }
     }

@@ -2245,7 +2245,7 @@ static bool StartIncrementalEncoding(JSContext* cx,
     return false;
   }
 
-  if (!source->startIncrementalEncoding(cx, options, std::move(initial))) {
+  if (!source->startIncrementalEncoding(cx, std::move(initial))) {
     return false;
   }
 

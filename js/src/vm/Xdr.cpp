@@ -291,7 +291,7 @@ XDRIncrementalStencilEncoder::~XDRIncrementalStencilEncoder() {
 }
 
 XDRResult XDRIncrementalStencilEncoder::setInitial(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JSContext* cx,
     UniquePtr<frontend::ExtensibleCompilationStencil>&& initial) {
   MOZ_TRY(frontend::StencilXDR::checkCompilationStencil(*initial));
 
