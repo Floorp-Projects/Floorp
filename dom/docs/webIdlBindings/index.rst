@@ -63,7 +63,7 @@ interface, you need to do the following:
    If you do need to hook up cycle collection, it will look like this in
    the common case of also inheriting from nsISupports:
 
-   .. code:: brush:
+   .. code:: cpp
 
       // Add strong pointers your class holds here. If you do, change to using
       // NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE.
@@ -180,7 +180,7 @@ methods with the same name and different signatures.
 
 For example, this webidl:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface MyInterface
    {
@@ -201,7 +201,7 @@ For example, this webidl:
 
 will require these method declarations:
 
-.. code:: brush:
+.. code:: cpp
 
    class MyClass
    {
@@ -259,7 +259,7 @@ instance of ``MyInterface``. Constructors are always allowed to throw.
 
 For example, this IDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface MyInterface {
       constructor();
@@ -268,7 +268,7 @@ For example, this IDL:
 
 will require the following declarations in ``MyClass``:
 
-.. code:: brush:
+.. code:: cpp
 
    class MyClass {
      // Various nsISupports stuff or whatnot
@@ -435,7 +435,7 @@ Methods using ``any`` always get a ``JSContext*`` argument.
 
 For example, this WebIDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface Test {
      attribute any myAttr;
@@ -444,7 +444,7 @@ For example, this WebIDL:
 
 will correspond to these C++ function declarations:
 
-.. code:: brush:
+.. code:: cpp
 
    void MyAttr(JSContext* cx, JS::MutableHandle<JS::Value> retval);
    void SetMyAttr(JSContext* cx, JS::Handle<JS::Value> value);
@@ -460,7 +460,7 @@ The ``boolean`` WebIDL type is represented as a C++ ``bool``.
 
 For example, this WebIDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface Test {
      attribute boolean myAttr;
@@ -469,7 +469,7 @@ For example, this WebIDL:
 
 will correspond to these C++ function declarations:
 
-.. code:: brush:
+.. code:: cpp
 
    bool MyAttr();
    void SetMyAttr(bool value);
@@ -482,7 +482,7 @@ Integer WebIDL types are mapped to the corresponding C99 stdint types.
 
 For example, this WebIDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface Test {
      attribute short myAttr;
@@ -491,7 +491,7 @@ For example, this WebIDL:
 
 will correspond to these C++ function declarations:
 
-.. code:: brush:
+.. code:: cpp
 
    int16_t MyAttr();
    void SetMyAttr(int16_t value);
@@ -506,7 +506,7 @@ while ``double`` and ``unrestricted double`` become a C++ ``double``.
 
 For example, this WebIDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface Test {
      float myAttr;
@@ -515,7 +515,7 @@ For example, this WebIDL:
 
 will correspond to these C++ function declarations:
 
-.. code:: brush:
+.. code:: cpp
 
    float MyAttr();
    void SetMyAttr(float value);
@@ -544,7 +544,7 @@ out param if it's an ``nsAString`` or calling ``SetNull()`` on a
 
 For example, this WebIDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface Test {
      DOMString myAttr;
@@ -554,7 +554,7 @@ For example, this WebIDL:
 
 will correspond to these C++ function declarations:
 
-.. code:: brush:
+.. code:: cpp
 
    void GetMyAttr(nsString& retval);
    void SetMyAttr(const nsAString& value);
@@ -628,7 +628,7 @@ Methods using ``object`` always get a ``JSContext*`` argument.
 
 For example, this WebIDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface Test {
      object myAttr;
@@ -638,7 +638,7 @@ For example, this WebIDL:
 
 will correspond to these C++ function declarations:
 
-.. code:: brush:
+.. code:: cpp
 
    void GetMyAttr(JSContext* cx, JS::MutableHandle<JSObject*> retval);
    void SetMyAttr(JSContext* cx, JS::Handle<JSObject*> value);
@@ -703,7 +703,7 @@ the ``ErrorResult`` was set up.
 
 For example, this WebIDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    callback interface MyCallback {
      attribute long someNumber;
@@ -721,7 +721,7 @@ For example, this WebIDL:
 will lead to these C++ class declarations in the ``mozilla::dom``
 namespace:
 
-.. code:: brush:
+.. code:: cpp
 
    class MyCallback : public CallbackInterface
    {
@@ -748,7 +748,7 @@ namespace:
 and these C++ function declarations on the implementation of
 ``MyInterface``:
 
-.. code:: notranslate
+.. code:: cpp
 
    already_AddRefed<MyCallback> GetFoo();
    void SetFoo(MyCallback&);
@@ -757,7 +757,7 @@ and these C++ function declarations on the implementation of
 
 A consumer of MyCallback would be able to use it like this:
 
-.. code:: brush:
+.. code:: cpp
 
    void
    SomeClass::DoSomethingWithCallback(MyCallback& aCallback)
@@ -829,7 +829,7 @@ representation depends on how the type is being used.
 
 For example, this WebIDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface MyInterface {
      attribute MyInterface myAttr;
@@ -843,7 +843,7 @@ For example, this WebIDL:
 
 Would correspond to these C++ function declarations:
 
-.. code:: brush:
+.. code:: cpp
 
    already_AddRefed<MyClass> MyAttr();
    void SetMyAttr(MyClass& value);
@@ -861,7 +861,7 @@ Typed array, array buffer, and array buffer view arguments are
 represented by the objects in ```TypedArray.h`` <#TypedArray>`__.  For
 example, this WebIDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface Test {
      void passTypedArrayBuffer(ArrayBuffer arg);
@@ -871,7 +871,7 @@ example, this WebIDL:
 
 will correspond to these C++ function declarations:
 
-.. code:: brush:
+.. code:: cpp
 
    void PassTypedArrayBuffer(const ArrayBuffer& arg);
    void PassTypedArray(const ArrayBufferView& arg);
@@ -922,7 +922,7 @@ is the responsibility of the caller.
 
 For example, this WebIDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    dictionary Dict {
      long foo = 5;
@@ -935,13 +935,13 @@ For example, this WebIDL:
 
 will correspond to this C++ function declaration:
 
-.. code:: brush:
+.. code:: cpp
 
    void InitSomething(const Dict& arg);
 
 and the ``Dict`` struct will look like this:
 
-.. code:: brush:
+.. code:: cpp
 
    struct Dict {
      bool Init(JSContext* aCx, JS::Handle<JS::Value> aVal, const char* aSourceDescription = "value");
@@ -971,7 +971,7 @@ members that you can use to quickly determine useful things.
 
 Example implementation using all of the above:
 
-.. code:: brush:
+.. code:: cpp
 
    void
    MyInterface::InitSomething(const Dict& aArg){
@@ -1006,7 +1006,7 @@ values.
 
 For example, this WebIDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    enum MyEnum {
      "something",
@@ -1017,7 +1017,7 @@ For example, this WebIDL:
 
 would lead to this C++ enum declaration:
 
-.. code:: brush:
+.. code:: cpp
 
    enum class MyEnum : uint8_t {
      Something,
@@ -1059,7 +1059,7 @@ stack unwinds to wherever the ``ErrorResult`` was set up.
 
 For example, this WebIDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    callback MyCallback = long (MyInterface arg1, boolean arg2);
    interface MyInterface {
@@ -1070,7 +1070,7 @@ For example, this WebIDL:
 will lead to this C++ class declaration, in the ``mozilla::dom``
 namespace:
 
-.. code:: brush:
+.. code:: cpp
 
    class MyCallback : public CallbackFunction
    {
@@ -1087,7 +1087,7 @@ namespace:
 
 and these C++ function declarations in the ``MyInterface`` class:
 
-.. code:: notranslate
+.. code:: cpp
 
    already_AddRefed<MyCallback> GetFoo();
    void SetFoo(MyCallback&);
@@ -1096,7 +1096,7 @@ and these C++ function declarations in the ``MyInterface`` class:
 
 A consumer of MyCallback would be able to use it like this:
 
-.. code:: brush:
+.. code:: cpp
 
    void
    SomeClass::DoSomethingWithCallback(MyCallback& aCallback, MyInterface& aInterfaceInstance)
@@ -1149,7 +1149,7 @@ of the struct is the concatenation of the names of the types in the
 union, with "Or" inserted between them, and for an owning struct
 "Owning" prepended. So for example, this IDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    void passUnion((object or long) arg);
    (object or long) receiveUnion();
@@ -1158,7 +1158,7 @@ union, with "Or" inserted between them, and for an owning struct
 
 would correspond to these C++ function declarations:
 
-.. code:: brush:
+.. code:: cpp
 
    void PassUnion(const ObjectOrLong& aArg);
    void ReceiveUnion(OwningObjectObjectOrLong& aArg);
@@ -1173,7 +1173,7 @@ exception is the ``object`` type, which uses a somewhat different form
 of setter where the ``JSObject*`` is passed in directly. For example,
 ``ObjectOrLong`` would have the following methods:
 
-.. code:: brush:
+.. code:: cpp
 
    bool IsObject() const;
    JSObject* GetAsObject() const;
@@ -1206,7 +1206,7 @@ Maplike
 
 Example Interface:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface StringToLongMap {
      maplike<DOMString, long>;
@@ -1216,7 +1216,7 @@ The bindings for this interface will generate the storage structure for
 the map, as well as helper functions for accessing that structure from
 C++. The generated C++ API will look as follows:
 
-.. code:: brush:
+.. code:: cpp
 
    namespace StringToLongMapBinding {
    namespace MaplikeHelpers {
@@ -1232,7 +1232,7 @@ Setlike
 
 Example Interface:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface StringSet {
      setlike<DOMString>;
@@ -1242,7 +1242,7 @@ The bindings for this interface will generate the storage structure for
 the set, as well as helper functions for accessing that structure from
 c++. The generated C++ API will look as follows:
 
-.. code:: brush:
+.. code:: cpp
 
    namespace StringSetBinding {
    namespace SetlikeHelpers {
@@ -1267,7 +1267,7 @@ single or pair value iterators.
 
 Example Interface for a single value iterator:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface LongIterable {
      iterable<long>;
@@ -1282,7 +1282,7 @@ information on building this kind of structure.
 
 Example Interface for a pair value iterator:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface StringAndLongIterable {
      iterable<DOMString, long>;
@@ -1291,7 +1291,7 @@ Example Interface for a pair value iterator:
 The bindings for this pair value iterator interface require the
 following methods be implemented in the C++ object:
 
-.. code:: brush:
+.. code:: cpp
 
    class StringAndLongIterable {
    public:
@@ -1312,7 +1312,7 @@ corresponding C++ method.
 Anonymous stringifiers in WebIDL will invoke the C++ method called
 ``Stringify``. So, for example, given this IDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface FirstInterface {
      stringifier;
@@ -1324,7 +1324,7 @@ Anonymous stringifiers in WebIDL will invoke the C++ method called
 
 the corresponding C++ would be:
 
-.. code:: notranslate
+.. code:: cpp
 
    class FirstInterface {
    public:
@@ -1345,7 +1345,7 @@ the first argument, then the arguments to the actual operation. A
 ``JSContext`` will be passed if any of the operation arguments need it.
 So for example, given this IDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface InterfaceWithCall {
      legacycaller long (float arg);
@@ -1353,7 +1353,7 @@ So for example, given this IDL:
 
 the corresponding C++ would be:
 
-.. code:: brush:
+.. code:: cpp
 
    class InterfaceWithCall {
    public:
@@ -1386,7 +1386,7 @@ supported.
 
 So for example, given this IDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface InterfaceWithNamedGetter {
      getter long(DOMString arg);
@@ -1394,7 +1394,7 @@ So for example, given this IDL:
 
 the corresponding C++ would be:
 
-.. code:: brush:
+.. code:: cpp
 
    class InterfaceWithNamedGetter
    {
@@ -1419,7 +1419,7 @@ following methods on the C++ implementation:
 
 So for example, given this IDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface InterfaceWithIndexedGetter {
      getter long(unsigned long index);
@@ -1428,7 +1428,7 @@ So for example, given this IDL:
 
 the corresponding C++ would be:
 
-.. code:: brush:
+.. code:: cpp
 
    class InterfaceWithIndexedGetter
    {
@@ -1463,7 +1463,7 @@ another property with the specified name will also appear on the
 interface prototype object and will have the same Function object value
 as the property for the method. For example:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface MyInterface {
      [Alias=performSomething] void doSomething();
@@ -1493,7 +1493,7 @@ getter/setter functions in JavaScript, so from the point of view of web
 consumers it's as if you actually had two separate attribute
 declarations on your interface. For example:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface MyInterface {
      [BindingAlias=otherAttr] readonly attribute boolean attr;
@@ -1550,7 +1550,7 @@ If specified on an interface member, the interface member involved is
 only exposed if the preference is set to ``true``. An example of how
 this can be used:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface MyInterface {
      attribute long alwaysHere;
@@ -1573,7 +1573,7 @@ with the relevant name: the dictionary member would either be
 
   An example of how this can be used:
 
-.. code:: notranslate
+.. code:: webidl
 
    [Pref="my.pref.name"]
    interface MyConditionalInterface {
@@ -1596,7 +1596,7 @@ If specified on an interface member, the interface member involved is
 only exposed if the specified function returns ``true``. An example of
 how this can be used:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface MyInterface {
      attribute long alwaysHere;
@@ -1613,7 +1613,7 @@ to select which compartment it cares about in its checks.
 
 The above IDL would also require the following C++:
 
-.. code:: brush:
+.. code:: cpp
 
    class MyClass {
      static bool StuffEnabled(JSContext* cx, JSObject* obj);
@@ -1635,7 +1635,7 @@ with the relevant name: the dictionary member would either be
 
 An example of how ``[Func]`` can be used:
 
-.. code:: notranslate
+.. code:: webidl
 
    [Func="MyClass::MyConditionalInterfaceEnabled"]
    interface MyConditionalInterface {
@@ -1644,7 +1644,7 @@ An example of how ``[Func]`` can be used:
 In this case, the C++ function is passed a ``JS::Handle<JSObject*>``. So
 the C++ in this case would look like this:
 
-.. code:: brush:
+.. code:: cpp
 
    class MyClass {
      static bool MyConditionalInterfaceEnabled(JSContext* cx, JS::Handle<JSObject*> obj);
@@ -1822,7 +1822,7 @@ used in on attributes whose getters are ```[Pure]`` <#Pure>`__ or
 
 So for example, given this IDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface MyInterface {
      [Pure, StoreInSlot] attribute long myAttribute;
@@ -1859,7 +1859,7 @@ will not immediately invoke the getter, so it does not need a
 
 So for example, given this IDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface MyInterface {
      [Pure, StoreInSlot] attribute long myAttribute;
@@ -1894,7 +1894,7 @@ attribute had instead of the one it actually has.
 
 For example, given this IDL:
 
-.. code:: notranslate
+.. code:: webidl
 
    interface InterfaceWithRenamedThings {
      [BinaryName="renamedMethod"]
@@ -1905,7 +1905,7 @@ For example, given this IDL:
 
 the corresponding C++ would be:
 
-.. code:: brush:
+.. code:: cpp
 
    class InterfaceWithRenamedThings
    {
@@ -2177,7 +2177,7 @@ Event handler attributes
 
 A lot of interfaces define event handler attributes, like:
 
-.. code:: notranslate
+.. code:: webidl
 
    attribute EventHandler onthingchange;
 
@@ -2185,20 +2185,20 @@ If you need to implement an event handler attribute for an interface, in
 the definition (header file), you use the handy
 "IMPL_EVENT_HANDLER" macro:
 
-.. code:: notranslate
+.. code:: cpp
 
    IMPL_EVENT_HANDLER(onthingchange);
 
 The "onthingchange" needs to be added to the StaticAtoms.py file:
 
-.. code:: notranslate
+.. code:: py
 
    Atom("onthingchange", "onthingchange")
 
 The actual implementation (.cpp) for firing the event would then look
 something like:
 
-.. code:: notranslate
+.. code:: cpp
 
    nsresult
    MyInterface::DispatchThingChangeEvent()
@@ -2262,7 +2262,7 @@ If the interface has a constructor, a content-side object can be created
 by getting that constructor from the relevant content window and
 invoking it. For example:
 
-.. code:: brush:
+.. code:: js
 
    var contentObject = new contentWin.RTCPeerConnection();
 
@@ -2285,7 +2285,7 @@ invoking the static ``_create`` method on the interface. This method
 takes two arguments: the content window in which to create the object
 and the chrome-side object to use. For example:
 
-.. code:: brush:
+.. code:: js
 
    var contentObject = RTCPeerConnection._create(contentWin, new
    MyPeerConnectionImpl());
@@ -2294,7 +2294,7 @@ However, if you are in a JS component, you may only be able to get to
 the correct interface object via some window object. In this case, the
 code would look more like:
 
-.. code:: brush:
+.. code:: js
 
    var contentObject = contentWin.RTCPeerConnection._create(contentWin,
    new MyPeerConnectionImpl());
@@ -2324,7 +2324,7 @@ CONTRACT_ID_STRING is the XPCOM component contract ID of the JS
 implementation -- note ";1" is just a Mozilla convention for versioning
 APIs. Here's an example:
 
-.. code:: notranslate
+.. code:: webidl
 
    [JSImplementation="@mozilla.org/my-number;1"]
    interface MyNumber {
@@ -2375,7 +2375,7 @@ full, namespace-qualified name of the class that contains an
 implementation of the named method.  The include for that class must be
 found in a directory based on its name.
 
-.. code:: notranslate
+.. code:: webidl
 
    [JSImplementation="@mozilla.org/dom/foo;1"]
    interface Foo {
@@ -2415,7 +2415,7 @@ Here's an example JS implementation of the above interface. The
 ``invisibleValue`` field will not be accessible to web content, but is
 usable by the doNothing() method.
 
-.. code:: brush:
+.. code:: js
 
    Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -2495,7 +2495,7 @@ with (the one that was passed to your ``init`` method). The binding code
 will then rethrow that exception to the web page.  An example of how
 this could work:
 
-.. code:: brush:
+.. code:: js
 
    if (!isValid(passedInObject)) {
      throw new this.contentWindow.TypeError("Object is invalid");
@@ -2503,7 +2503,7 @@ this could work:
 
 or
 
-.. code:: brush:
+.. code:: js
 
    if (!isValid(passedInObject)) {
      throw new this.contentWindow.DOMException("Object is invalid", "InvalidStateError");
@@ -2516,7 +2516,7 @@ In some cases you may need to perform operations whose exception message
 you just want to propagate to the content caller. This can be done like
 so:
 
-.. code:: brush:
+.. code:: js
 
    try {
      someOperationThatCanThrow();
@@ -2545,7 +2545,7 @@ is the C++ class to use as the parent for JS-implemented descendants; if
 For example, consider this interface that we wish to implement in
 JavaScript:
 
-.. code:: notranslate
+.. code:: webidl
 
    [JSImplementation="some-contract"]
    interface MyEventTarget : EventTarget {
@@ -2556,7 +2556,7 @@ JavaScript:
 The implementation would look something like this, ignoring most of the
 XPCOM boilerplate:
 
-.. code:: brush:
+.. code:: js
 
    function MyEventTargetImpl() {
    }
