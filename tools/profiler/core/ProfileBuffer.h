@@ -176,6 +176,14 @@ class ProfileBuffer final {
           mozilla::ProfileBufferChunk::SizeofChunkMetadata() +
           mozilla::ProfileBufferChunkManager::scExpectedMaximumStackSize)};
 
+  // GetStreamingParametersForThreadCallback:
+  //   (ProfilerThreadId) -> Maybe<StreamingParametersForThread>
+  template <typename GetStreamingParametersForThreadCallback>
+  ProfilerThreadId DoStreamSamplesToJSON(
+      GetStreamingParametersForThreadCallback&&
+          aGetStreamingParametersForThreadCallback,
+      double aSinceTime) const;
+
   double mFirstSamplingTimeUs = 0.0;
   double mLastSamplingTimeUs = 0.0;
   ProfilerStats mIntervalsUs;
