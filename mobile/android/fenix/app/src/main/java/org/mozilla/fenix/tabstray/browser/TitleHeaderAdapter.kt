@@ -10,22 +10,16 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import mozilla.components.browser.state.store.BrowserStore
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.TabTrayTitleHeaderItemBinding
-import org.mozilla.fenix.utils.Settings
 
 /**
  * A [RecyclerView.Adapter] for tab header.
  */
-class TitleHeaderAdapter(
-    browserStore: BrowserStore,
-    settings: Settings
-) : ListAdapter<TitleHeaderAdapter.Header, TitleHeaderAdapter.HeaderViewHolder>(DiffCallback) {
+class TitleHeaderAdapter :
+    ListAdapter<TitleHeaderAdapter.Header, TitleHeaderAdapter.HeaderViewHolder>(DiffCallback) {
 
     class Header
-
-    private val normalTabsHeaderBinding = TitleHeaderBinding(browserStore, settings, ::handleListChanges)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HeaderViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
@@ -34,18 +28,10 @@ class TitleHeaderAdapter(
 
     override fun getItemViewType(position: Int) = HeaderViewHolder.LAYOUT_ID
 
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        normalTabsHeaderBinding.start()
-    }
-
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-        normalTabsHeaderBinding.stop()
-    }
-
     /* Do nothing */
     override fun onBindViewHolder(holder: HeaderViewHolder, position: Int) = Unit
 
-    private fun handleListChanges(showHeader: Boolean) {
+    fun handleListChanges(showHeader: Boolean) {
         val header = if (showHeader) {
             listOf(Header())
         } else {

@@ -17,6 +17,7 @@ import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.tabstray.ext.browserAdapter
 import org.mozilla.fenix.tabstray.ext.inactiveTabsAdapter
 import org.mozilla.fenix.tabstray.ext.tabGroupAdapter
+import org.mozilla.fenix.tabstray.ext.titleHeaderAdapter
 import org.mozilla.fenix.utils.Settings
 import kotlin.math.max
 
@@ -56,6 +57,10 @@ class TabSorter(
         val totalNormalTabs = (normalTabs + remainderTabs)
         val selectedTabIndex = totalNormalTabs.findSelectedIndex(selectedTabId)
         concatAdapter.browserAdapter.updateTabs(Tabs(totalNormalTabs, selectedTabIndex))
+
+        // Normal tab title header.
+        concatAdapter.titleHeaderAdapter
+            .handleListChanges(totalNormalTabs.isNotEmpty() && groups.isNotEmpty())
 
         if (shouldReportMetrics) {
             shouldReportMetrics = false
