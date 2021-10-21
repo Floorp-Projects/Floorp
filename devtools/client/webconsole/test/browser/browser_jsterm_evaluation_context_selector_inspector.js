@@ -8,7 +8,7 @@
 // inspector actions (selecting a node, "use in console" context menu entry, …).
 
 const FILE_FOLDER = `browser/devtools/client/webconsole/test/browser`;
-const TEST_URI = `http://example.com/${FILE_FOLDER}/test-console-evaluation-context-selector.html`;
+const TEST_URI = `https://example.com/${FILE_FOLDER}/test-console-evaluation-context-selector.html`;
 const IFRAME_PATH = `${FILE_FOLDER}/test-console-evaluation-context-selector-child.html`;
 
 requestLongerTimeout(2);
@@ -17,8 +17,8 @@ add_task(async function() {
   await pushPref("devtools.contenttoolbox.webconsole.input.context", true);
 
   const hud = await openNewTabWithIframesAndConsole(TEST_URI, [
-    `http://example.org/${IFRAME_PATH}?id=iframe-1`,
-    `http://mochi.test:8888/${IFRAME_PATH}?id=iframe-2`,
+    `https://example.org/${IFRAME_PATH}?id=iframe-1`,
+    `https://example.net/${IFRAME_PATH}?id=iframe-2`,
   ]);
 
   const evaluationContextSelectorButton = hud.ui.outputNode.querySelector(
@@ -52,11 +52,11 @@ add_task(async function() {
   await selectIframeContentElement(inspector, ".iframe-2", "h2");
 
   await waitFor(() =>
-    evaluationContextSelectorButton.innerText.includes("mochi.test")
+    evaluationContextSelectorButton.innerText.includes("example.net")
   );
   ok(true, "The context was set to the selected iframe document");
 
-  await waitForEagerEvaluationResult(hud, `"mochi.test:8888"`);
+  await waitForEagerEvaluationResult(hud, `"example.net"`);
   ok(true, "The instant evaluation result is updated in the iframe context");
 
   info("Select an element in the top document");
@@ -97,7 +97,7 @@ add_task(async function() {
     `<h2 id="iframe-2">`
   );
   await waitFor(() =>
-    evaluationContextSelectorButton.innerText.includes("mochi.test:8888")
+    evaluationContextSelectorButton.innerText.includes("example.net")
   );
   ok(true, "The context selector was updated");
 

@@ -9,9 +9,9 @@ requestLongerTimeout(2);
 
 const TEST_FILE =
   "browser/devtools/client/webconsole/test/browser/test-warning-groups.html";
-const TEST_URI = "http://example.org/" + TEST_FILE;
+const TEST_URI = "https://example.org/" + TEST_FILE;
 
-const TRACKER_URL = "http://tracking.example.com/";
+const TRACKER_URL = "https://tracking.example.com/";
 const BLOCKED_URL =
   TRACKER_URL +
   "browser/devtools/client/webconsole/test/browser/test-image.png";
