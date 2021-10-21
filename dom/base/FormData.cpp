@@ -131,6 +131,12 @@ void FormData::Append(const nsAString& aName, Directory* aDirectory) {
   AddNameDirectoryPair(aName, aDirectory);
 }
 
+void FormData::Append(const FormData& aFormData) {
+  for (uint32_t i = 0; i < aFormData.mFormData.Length(); ++i) {
+    mFormData.AppendElement(aFormData.mFormData[i]);
+  }
+}
+
 void FormData::Delete(const nsAString& aName) {
   mFormData.RemoveElementsBy([&aName](const auto& formDataItem) {
     return aName.Equals(formDataItem.name);
