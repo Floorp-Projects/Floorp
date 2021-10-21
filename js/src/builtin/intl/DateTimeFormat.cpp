@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/intl/Calendar.h"
+#include "mozilla/intl/DateIntervalFormat.h"
 #include "mozilla/intl/DateTimeFormat.h"
 #include "mozilla/intl/DateTimePatternGenerator.h"
 #include "mozilla/intl/Locale.h"
@@ -35,9 +36,9 @@
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
 #include "unicode/udat.h"
-#include "unicode/udateintervalformat.h"
 #include "unicode/uenum.h"
 #include "unicode/ufieldpositer.h"
+#include "unicode/uformattedvalue.h"
 #include "unicode/uloc.h"
 #include "unicode/utypes.h"
 #include "vm/DateTime.h"
@@ -195,7 +196,8 @@ void js::DateTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
 
   auto* dateTimeFormat = &obj->as<DateTimeFormatObject>();
   mozilla::intl::DateTimeFormat* df = dateTimeFormat->getDateFormat();
-  UDateIntervalFormat* dif = dateTimeFormat->getDateIntervalFormat();
+  mozilla::intl::DateIntervalFormat* dif =
+      dateTimeFormat->getDateIntervalFormat();
 
   if (df) {
     intl::RemoveICUCellMemory(
@@ -208,7 +210,7 @@ void js::DateTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
     intl::RemoveICUCellMemory(
         fop, obj, DateTimeFormatObject::UDateIntervalFormatEstimatedMemoryUse);
 
-    udtitvfmt_close(dif);
+    delete dif;
   }
 }
 
@@ -1396,10 +1398,10 @@ bool js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
- * Returns a new UDateIntervalFormat with the locale and date-time formatting
+ * Returns a new DateIntervalFormat with the locale and date-time formatting
  * options of the given DateTimeFormat.
  */
-static UDateIntervalFormat* NewUDateIntervalFormat(
+static mozilla::intl::DateIntervalFormat* NewDateIntervalFormat(
     JSContext* cx, Handle<DateTimeFormatObject*> dateTimeFormat,
     mozilla::intl::DateTimeFormat& mozDtf) {
   RootedValue value(cx);
@@ -1443,25 +1445,25 @@ static UDateIntervalFormat* NewUDateIntervalFormat(
     return nullptr;
   }
 
-  UErrorCode status = U_ZERO_ERROR;
-  UDateIntervalFormat* dif = udtitvfmt_open(
-      IcuLocale(locale.get()), skeleton.data(), skeleton.length(),
-      timeZoneChars.data(), timeZoneChars.size(), &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
+  auto dif = mozilla::intl::DateIntervalFormat::TryCreate(
+      mozilla::MakeStringSpan(locale.get()), skeleton, timeZoneChars);
+
+  if (dif.isErr()) {
+    js::intl::ReportInternalError(cx, dif.unwrapErr());
     return nullptr;
   }
 
-  return dif;
+  return dif.unwrap().release();
 }
 
 /**
  * PartitionDateTimeRangePattern ( dateTimeFormat, x, y )
  */
-static const UFormattedValue* PartitionDateTimeRangePattern(
+static bool PartitionDateTimeRangePattern(
     JSContext* cx, const mozilla::intl::DateTimeFormat* df,
-    const UDateIntervalFormat* dif, UFormattedDateInterval* formatted,
-    ClippedTime x, ClippedTime y) {
+    const mozilla::intl::DateIntervalFormat* dif,
+    mozilla::intl::AutoFormattedDateInterval& formatted, ClippedTime x,
+    ClippedTime y, bool* equal) {
   MOZ_ASSERT(x.isValid());
   MOZ_ASSERT(y.isValid());
   MOZ_ASSERT(x.toDouble() <= y.toDouble());
@@ -1480,7 +1482,7 @@ static const UFormattedValue* PartitionDateTimeRangePattern(
   constexpr double GregorianChangeDatePlusOneDay =
       GregorianChangeDate + msPerDay;
 
-  UErrorCode status = U_ZERO_ERROR;
+  mozilla::intl::ICUResult result = Ok();
   if (x.toDouble() < GregorianChangeDatePlusOneDay) {
     // Create calendar objects for the start and end date by cloning the date
     // formatter calendar. The date formatter calendar already has the correct
@@ -1488,70 +1490,28 @@ static const UFormattedValue* PartitionDateTimeRangePattern(
     auto startCal = df->CloneCalendar(x.toDouble());
     if (startCal.isErr()) {
       intl::ReportInternalError(cx, startCal.unwrapErr());
-      return nullptr;
+      return false;
     }
 
     auto endCal = df->CloneCalendar(y.toDouble());
     if (endCal.isErr()) {
       intl::ReportInternalError(cx, endCal.unwrapErr());
-      return nullptr;
+      return false;
     }
 
-    udtitvfmt_formatCalendarToResult(
-        dif, startCal.unwrap()->UnsafeGetUCalendar(),
-        endCal.unwrap()->UnsafeGetUCalendar(), formatted, &status);
+    result = dif->TryFormatCalendar(*startCal.unwrap(), *endCal.unwrap(),
+                                    formatted, equal);
   } else {
     // The common fast path which doesn't require creating calendar objects.
-    udtitvfmt_formatToResult(dif, x.toDouble(), y.toDouble(), formatted,
-                             &status);
-  }
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return nullptr;
+    result =
+        dif->TryFormatDateTime(x.toDouble(), y.toDouble(), formatted, equal);
   }
 
-  const UFormattedValue* formattedValue =
-      udtitvfmt_resultAsValue(formatted, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return nullptr;
-  }
-
-  return formattedValue;
-}
-
-/**
- * PartitionDateTimeRangePattern ( dateTimeFormat, x, y ), steps 9-11.
- *
- * Examine the formatted value to see if any interval span field is present.
- */
-static bool DateFieldsPracticallyEqual(JSContext* cx,
-                                       const UFormattedValue* formattedValue,
-                                       bool* equal) {
-  UErrorCode status = U_ZERO_ERROR;
-  UConstrainedFieldPosition* fpos = ucfpos_open(&status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-  ScopedICUObject<UConstrainedFieldPosition, ucfpos_close> toCloseFpos(fpos);
-
-  // We're only interested in UFIELD_CATEGORY_DATE_INTERVAL_SPAN fields.
-  ucfpos_constrainCategory(fpos, UFIELD_CATEGORY_DATE_INTERVAL_SPAN, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
+  if (result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
     return false;
   }
 
-  bool hasSpan = ufmtval_nextPosition(formattedValue, fpos, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-
-  // When no date interval span field was found, both dates are "practically
-  // equal" per PartitionDateTimeRangePattern.
-  *equal = !hasSpan;
   return true;
 }
 
@@ -1560,26 +1520,17 @@ static bool DateFieldsPracticallyEqual(JSContext* cx,
  */
 static bool FormatDateTimeRange(JSContext* cx,
                                 const mozilla::intl::DateTimeFormat* df,
-                                const UDateIntervalFormat* dif, ClippedTime x,
-                                ClippedTime y, MutableHandleValue result) {
-  UErrorCode status = U_ZERO_ERROR;
-  UFormattedDateInterval* formatted = udtitvfmt_openResult(&status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-  ScopedICUObject<UFormattedDateInterval, udtitvfmt_closeResult> toClose(
-      formatted);
-
-  const UFormattedValue* formattedValue =
-      PartitionDateTimeRangePattern(cx, df, dif, formatted, x, y);
-  if (!formattedValue) {
+                                const mozilla::intl::DateIntervalFormat* dif,
+                                ClippedTime x, ClippedTime y,
+                                MutableHandleValue result) {
+  mozilla::intl::AutoFormattedDateInterval formatted;
+  if (!formatted.IsValid()) {
+    intl::ReportInternalError(cx, formatted.GetError());
     return false;
   }
 
-  // PartitionDateTimeRangePattern, steps 9-11.
   bool equal;
-  if (!DateFieldsPracticallyEqual(cx, formattedValue, &equal)) {
+  if (!PartitionDateTimeRangePattern(cx, df, dif, formatted, x, y, &equal)) {
     return false;
   }
 
@@ -1588,7 +1539,12 @@ static bool FormatDateTimeRange(JSContext* cx,
     return intl_FormatDateTime(cx, df, x, result);
   }
 
-  JSString* resultStr = intl::FormattedValueToString(cx, formattedValue);
+  auto spanResult = formatted.ToSpan();
+  if (spanResult.isErr()) {
+    intl::ReportInternalError(cx, spanResult.unwrapErr());
+    return false;
+  }
+  JSString* resultStr = NewStringCopy<CanGC>(cx, spanResult.unwrap());
   if (!resultStr) {
     return false;
   }
@@ -1600,29 +1556,18 @@ static bool FormatDateTimeRange(JSContext* cx,
 /**
  * FormatDateTimeRangeToParts ( dateTimeFormat, x, y )
  */
-static bool FormatDateTimeRangeToParts(JSContext* cx,
-                                       const mozilla::intl::DateTimeFormat* df,
-                                       const UDateIntervalFormat* dif,
-                                       ClippedTime x, ClippedTime y,
-                                       MutableHandleValue result) {
-  UErrorCode status = U_ZERO_ERROR;
-  UFormattedDateInterval* formatted = udtitvfmt_openResult(&status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-  ScopedICUObject<UFormattedDateInterval, udtitvfmt_closeResult> toClose(
-      formatted);
-
-  const UFormattedValue* formattedValue =
-      PartitionDateTimeRangePattern(cx, df, dif, formatted, x, y);
-  if (!formattedValue) {
+static bool FormatDateTimeRangeToParts(
+    JSContext* cx, const mozilla::intl::DateTimeFormat* df,
+    const mozilla::intl::DateIntervalFormat* dif, ClippedTime x, ClippedTime y,
+    MutableHandleValue result) {
+  mozilla::intl::AutoFormattedDateInterval formatted;
+  if (!formatted.IsValid()) {
+    intl::ReportInternalError(cx, formatted.GetError());
     return false;
   }
 
-  // PartitionDateTimeRangePattern, steps 9-11.
   bool equal;
-  if (!DateFieldsPracticallyEqual(cx, formattedValue, &equal)) {
+  if (!PartitionDateTimeRangePattern(cx, df, dif, formatted, x, y, &equal)) {
     return false;
   }
 
@@ -1630,6 +1575,12 @@ static bool FormatDateTimeRangeToParts(JSContext* cx,
   if (equal) {
     FieldType source = &JSAtomState::shared;
     return intl_FormatToPartsDateTime(cx, df, x, source, result);
+  }
+
+  const UFormattedValue* formattedValue = formatted.Value();
+  if (!formattedValue) {
+    intl::ReportInternalError(cx);
+    return false;
   }
 
   RootedString overallResult(cx,
@@ -1683,6 +1634,7 @@ static bool FormatDateTimeRangeToParts(JSContext* cx,
     return true;
   };
 
+  UErrorCode status = U_ZERO_ERROR;
   UConstrainedFieldPosition* fpos = ucfpos_open(&status);
   if (U_FAILURE(status)) {
     intl::ReportInternalError(cx);
@@ -1849,10 +1801,11 @@ bool js::intl_FormatDateTimeRange(JSContext* cx, unsigned argc, Value* vp) {
                            DateTimeFormatObject::UDateFormatEstimatedMemoryUse);
   }
 
-  // Obtain a cached UDateIntervalFormat object.
-  UDateIntervalFormat* dif = dateTimeFormat->getDateIntervalFormat();
+  // Obtain a cached DateIntervalFormat object.
+  mozilla::intl::DateIntervalFormat* dif =
+      dateTimeFormat->getDateIntervalFormat();
   if (!dif) {
-    dif = NewUDateIntervalFormat(cx, dateTimeFormat, *df);
+    dif = NewDateIntervalFormat(cx, dateTimeFormat, *df);
     if (!dif) {
       return false;
     }
@@ -1863,7 +1816,7 @@ bool js::intl_FormatDateTimeRange(JSContext* cx, unsigned argc, Value* vp) {
         DateTimeFormatObject::UDateIntervalFormatEstimatedMemoryUse);
   }
 
-  // Use the UDateIntervalFormat to actually format the time range.
+  // Use the DateIntervalFormat to actually format the time range.
   return formatToParts
              ? FormatDateTimeRangeToParts(cx, df, dif, x, y, args.rval())
              : FormatDateTimeRange(cx, df, dif, x, y, args.rval());
