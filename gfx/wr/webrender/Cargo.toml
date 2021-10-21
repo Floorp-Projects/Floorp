@@ -50,7 +50,7 @@ malloc_size_of = { version = "0.0.1", path = "../wr_malloc_size_of", package = "
 svg_fmt = "0.4"
 tracy-rs = "0.1.2"
 derive_more = "0.99"
-etagere = "0.2.4"
+etagere = "0.2.6"
 swgl = { path = "../swgl", optional = true }
 
 [dev-dependencies]
