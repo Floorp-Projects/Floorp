@@ -782,7 +782,7 @@ var webrtcUI = {
       }
 
       let addonPolicy = WebExtensionPolicy.getByURI(uri);
-      host = addonPolicy ? addonPolicy.name : uri.host;
+      host = addonPolicy?.name ?? uri.hostPort;
     } catch (ex) {}
 
     if (!host) {
