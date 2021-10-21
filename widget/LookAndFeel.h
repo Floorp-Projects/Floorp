@@ -247,12 +247,6 @@ class LookAndFeel {
     GTKCSDAvailable,
 
     /*
-     * A boolean value indicating whether GTK+ system titlebar should be
-     * disabled by default.
-     */
-    GTKCSDHideTitlebarByDefault,
-
-    /*
      * A boolean value indicating whether client-side decorations should
      * contain a minimize button.
      */
@@ -508,6 +502,11 @@ class LookAndFeel {
    * Otherwise, FALSE.
    */
   static bool GetEchoPassword();
+
+  /**
+   * Whether we should be drawing in the titlebar by default.
+   */
+  static bool DrawInTitlebar();
 
   /**
    * The millisecond to mask password value.

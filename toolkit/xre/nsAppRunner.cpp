@@ -23,6 +23,7 @@
 #include "mozilla/Printf.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Utf8.h"
@@ -276,7 +277,6 @@ static const char kPrefThemeId[] = "extensions.activeThemeID";
 static const char kPrefBrowserStartupBlankWindow[] =
     "browser.startup.blankWindow";
 static const char kPrefPreXulSkeletonUI[] = "browser.startup.preXulSkeletonUI";
-static const char kPrefDrawTabsInTitlebar[] = "browser.tabs.drawInTitlebar";
 #endif  // defined(XP_WIN)
 
 int gArgc;
@@ -1332,6 +1332,12 @@ nsXULAppInfo::GetChromeColorSchemeIsDark(bool* aResult) {
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetDrawInTitlebar(bool* aResult) {
+  *aResult = LookAndFeel::DrawInTitlebar();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::GetProcessStartupShortcut(nsAString& aShortcut) {
 #if defined(XP_WIN)
   if (XRE_IsParentProcess()) {
@@ -1996,7 +2002,7 @@ static void ReflectSkeletonUIPrefToRegistry(const char* aPref, void* aData) {
   bool shouldBeEnabled =
       Preferences::GetBool(kPrefPreXulSkeletonUI, false) &&
       Preferences::GetBool(kPrefBrowserStartupBlankWindow, false) &&
-      Preferences::GetBool(kPrefDrawTabsInTitlebar, false);
+      LookAndFeel::DrawInTitlebar();
   if (shouldBeEnabled && Preferences::HasUserValue(kPrefThemeId)) {
     nsCString themeId;
     Preferences::GetCString(kPrefThemeId, themeId);
@@ -2025,8 +2031,9 @@ static void SetupSkeletonUIPrefs() {
   Preferences::RegisterCallback(&ReflectSkeletonUIPrefToRegistry,
                                 kPrefBrowserStartupBlankWindow);
   Preferences::RegisterCallback(&ReflectSkeletonUIPrefToRegistry, kPrefThemeId);
-  Preferences::RegisterCallback(&ReflectSkeletonUIPrefToRegistry,
-                                kPrefDrawTabsInTitlebar);
+  Preferences::RegisterCallback(
+      &ReflectSkeletonUIPrefToRegistry,
+      nsDependentCString(StaticPrefs::GetPrefName_browser_tabs_drawInTitlebar()));
 }
 
 #  if defined(MOZ_LAUNCHER_PROCESS)

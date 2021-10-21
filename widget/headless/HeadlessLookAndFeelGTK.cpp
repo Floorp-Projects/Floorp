@@ -256,7 +256,6 @@ nsresult HeadlessLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 1;
       break;
     case IntID::GTKCSDAvailable:
-    case IntID::GTKCSDHideTitlebarByDefault:
       aResult = 0;
       break;
     case IntID::GTKCSDMinimizeButton:

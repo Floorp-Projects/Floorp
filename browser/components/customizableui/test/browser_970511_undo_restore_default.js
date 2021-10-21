@@ -142,11 +142,16 @@ add_task(async function() {
 
 // Bug 971626 - Restore Defaults should collapse the Title Bar
 add_task(async function() {
-  if (Services.appinfo.OS != "WINNT" && Services.appinfo.OS != "Darwin") {
-    return;
+  {
+    const supported = TabsInTitlebar.systemSupported;
+    is(typeof supported, "boolean");
+    info("TabsInTitlebar support: " + supported);
+    if (!supported) {
+      return;
+    }
   }
-  let prefName = "browser.tabs.drawInTitlebar";
-  let defaultValue = Services.prefs.getBoolPref(prefName);
+
+  const kDefaultValue = Services.appinfo.drawInTitlebar;
   let restoreDefaultsButton = document.getElementById(
     "customization-reset-button"
   );
@@ -166,7 +171,7 @@ add_task(async function() {
   );
   is(
     titlebarCheckbox.hasAttribute("checked"),
-    !defaultValue,
+    !kDefaultValue,
     "Title bar checkbox should reflect pref value"
   );
   is(
@@ -175,14 +180,20 @@ add_task(async function() {
     "Undo reset button should be hidden at start of test"
   );
 
-  Services.prefs.setBoolPref(prefName, !defaultValue);
+  let prefName = "browser.tabs.drawInTitlebar";
+  Services.prefs.setIntPref(prefName, !kDefaultValue);
   ok(
     !restoreDefaultsButton.disabled,
     "Restore defaults button should be enabled when pref changed"
   );
   is(
+    Services.appinfo.drawInTitlebar,
+    !kDefaultValue,
+    "Title bar checkbox should reflect changed pref value"
+  );
+  is(
     titlebarCheckbox.hasAttribute("checked"),
-    defaultValue,
+    kDefaultValue,
     "Title bar checkbox should reflect changed pref value"
   );
   ok(
@@ -202,13 +213,18 @@ add_task(async function() {
   );
   is(
     titlebarCheckbox.hasAttribute("checked"),
-    !defaultValue,
+    !kDefaultValue,
     "Title bar checkbox should reflect default value after reset"
   );
   is(
-    Services.prefs.getBoolPref(prefName),
-    defaultValue,
+    Services.prefs.getIntPref(prefName),
+    2,
     "Reset should reset drawInTitlebar"
+  );
+  is(
+    Services.appinfo.drawInTitlebar,
+    kDefaultValue,
+    "Default state should be restored"
   );
   ok(CustomizableUI.inDefaultState, "In default state after titlebar reset");
   is(
@@ -228,13 +244,13 @@ add_task(async function() {
   );
   is(
     titlebarCheckbox.hasAttribute("checked"),
-    defaultValue,
+    kDefaultValue,
     "Title bar checkbox should reflect undo-reset value"
   );
   ok(!CustomizableUI.inDefaultState, "No longer in default state after undo");
   is(
-    Services.prefs.getBoolPref(prefName),
-    !defaultValue,
+    Services.prefs.getIntPref(prefName),
+    kDefaultValue ? 0 : 1,
     "Undo-reset goes back to previous pref value"
   );
   is(

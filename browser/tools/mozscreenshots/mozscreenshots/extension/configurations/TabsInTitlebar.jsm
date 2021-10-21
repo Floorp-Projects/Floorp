@@ -17,10 +17,7 @@ var TabsInTitlebar = {
     tabsInTitlebar: {
       selectors: ["#navigator-toolbox"],
       async applyConfig() {
-        if (Services.appinfo.OS == "Linux") {
-          return "TabsInTitlebar isn't supported on Linux";
-        }
-        Services.prefs.setBoolPref(PREF_TABS_IN_TITLEBAR, true);
+        Services.prefs.setIntPref(PREF_TABS_IN_TITLEBAR, 1);
         return undefined;
       },
     },
@@ -30,7 +27,7 @@ var TabsInTitlebar = {
         Services.appinfo.OS == "Linux" ? [] : ["#titlebar"]
       ),
       async applyConfig() {
-        Services.prefs.setBoolPref(PREF_TABS_IN_TITLEBAR, false);
+        Services.prefs.setIntPref(PREF_TABS_IN_TITLEBAR, 0);
       },
     },
   },

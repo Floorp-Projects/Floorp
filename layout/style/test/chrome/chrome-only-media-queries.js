@@ -21,7 +21,6 @@ const CHROME_ONLY_TOGGLES = [
   "-moz-windows-non-native-menus",
   "-moz-swipe-animation-enabled",
   "-moz-gtk-csd-available",
-  "-moz-gtk-csd-hide-titlebar-by-default",
   "-moz-gtk-csd-minimize-button",
   "-moz-gtk-csd-maximize-button",
   "-moz-gtk-csd-close-button",

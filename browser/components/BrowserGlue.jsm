@@ -800,10 +800,7 @@ let JSWINDOWACTORS = {
   );
 
   // Hide the titlebar if the actual browser window will draw in it.
-  let hiddenTitlebar = Services.prefs.getBoolPref(
-    "browser.tabs.drawInTitlebar",
-    win.matchMedia("(-moz-gtk-csd-hide-titlebar-by-default)").matches
-  );
+  let hiddenTitlebar = Services.appinfo.drawInTitlebar;
   if (hiddenTitlebar) {
     win.windowUtils.setChromeMargin(0, 2, 2, 2);
   }

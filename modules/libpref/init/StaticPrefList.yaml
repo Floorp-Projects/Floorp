@@ -1300,6 +1300,14 @@
   value: false
   mirror: always
 
+# Whether we should draw the tabs on top of the titlebar.
+#
+# no (0), yes (1), or default (2), which is true everywhere except Linux.
+- name: browser.tabs.drawInTitlebar
+  type: int32_t
+  value: 2
+  mirror: always
+
 # If set, use DocumentChannel to directly initiate loads entirely
 # from parent-process BrowsingContexts
 - name: browser.tabs.documentchannel.parent-controlled

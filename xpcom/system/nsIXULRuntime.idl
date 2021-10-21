@@ -319,6 +319,9 @@ interface nsIXULRuntime : nsISupports
   /** Whether the chrome color-scheme is dark */
   readonly attribute boolean chromeColorSchemeIsDark;
 
+  /** Whether we should draw over the titlebar */
+  readonly attribute boolean drawInTitlebar;
+
   /**
    * The path of the shortcut used to start the current process, or "" if none.
    *
