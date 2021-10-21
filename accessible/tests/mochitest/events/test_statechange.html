@@ -297,6 +297,92 @@
         `${aID} should not be multiselectable`);
     }
 
+    async function testAutocomplete() {
+      // A text input will have autocomplete via browser's form autofill...
+      testStates("input",
+        0, EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+        0, 0,
+        "input supports autocompletion");
+      // unless it is explicitly turned off.
+      testStates("input-autocomplete-off",
+        0, 0,
+        0, EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+        "input-autocomplete-off does not support autocompletion");
+      // An input with a datalist will always have autocomplete.
+      testStates("input-list",
+        0, EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+        0, 0,
+        "input-list supports autocompletion");
+      // password fields don't get autocomplete.
+      testStates("input-password",
+        0, 0,
+        0, EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+        "input-autocomplete-off does not support autocompletion");
+
+      let p = waitForEvents({
+        expected: [
+          // Setting the form's autocomplete attribute to "off" will cause
+          // "input" to lost its autocomplete state.
+          stateChange(EXT_STATE_SUPPORTS_AUTOCOMPLETION, true, false, "input")
+        ],
+        unexpected: [
+          // "input-list" should preserve its autocomplete state regardless of
+          // forms "autocomplete" attribute
+          [EVENT_STATE_CHANGE, "input-list"],
+          // "input-autocomplete-off" already has its autocomplte off, so no state
+          // change here.
+          [EVENT_STATE_CHANGE, "input-autocomplete-off"],
+          // passwords never get autocomplete
+          [EVENT_STATE_CHANGE, "input-password"],
+        ]
+      });
+
+      getNode("form").setAttribute("autocomplete", "off");
+
+      await p;
+
+      // Same when we remove the form's autocomplete attribute.
+      p = waitForEvents({
+        expected: [stateChange(EXT_STATE_SUPPORTS_AUTOCOMPLETION, true, true, "input")],
+        unexpected: [
+          [EVENT_STATE_CHANGE, "input-list"],
+          [EVENT_STATE_CHANGE, "input-autocomplete-off"],
+          [EVENT_STATE_CHANGE, "input-password"],
+        ]
+      });
+
+      getNode("form").removeAttribute("autocomplete");
+
+      await p;
+
+      p = waitForEvents({
+        expected: [
+          // Forcing autocomplete off on an input will cause a state change
+          stateChange(EXT_STATE_SUPPORTS_AUTOCOMPLETION, true, false, "input"),
+          // Associating a datalist with an autocomplete=off input
+          // will give it an autocomplete state, regardless.
+          stateChange(EXT_STATE_SUPPORTS_AUTOCOMPLETION, true, true, "input-autocomplete-off"),
+          // XXX: datalist inputs also get a HASPOPUP state, the inconsistent
+          // use of that state is inexplicable, but lets make sure we fire state
+          // change events for it anyway.
+          stateChange(STATE_HASPOPUP, false, true, "input-autocomplete-off"),
+        ],
+        unexpected: [
+          // Forcing autocomplete off with a dataset input does nothing.
+          [EVENT_STATE_CHANGE, "input-list"],
+          // passwords never get autocomplete
+          [EVENT_STATE_CHANGE, "input-password"],
+        ]
+      });
+
+      getNode("input").setAttribute("autocomplete", "off");
+      getNode("input-list").setAttribute("autocomplete", "off");
+      getNode("input-autocomplete-off").setAttribute("list", "browsers");
+      getNode("input-password").setAttribute("autocomplete", "off");
+
+      await p;
+    }
+
     async function doTests() {
       // Test opening details objects
       await openNode("detailsOpen", "summaryOpen", true);
@@ -361,6 +447,8 @@
       await testMultiSelectable("listbox", "aria-multiselectable");
 
       await testMultiSelectable("select", "multiple");
+
+      await testAutocomplete();
 
       SimpleTest.finish();
     }
@@ -457,14 +545,20 @@
   <form id="form">
     <button id="default-button">hello</button>
     <button>world</button>
+    <input id="input">
+    <input id="input-autocomplete-off" autocomplete="off">
+    <input id="input-list" list="browsers">
+    <input id="input-password" type="password">
+    <datalist id="browsers">
+      <option value="Internet Explorer">
+      <option value="Firefox">
+      <option value="Google Chrome">
+      <option value="Opera">
+      <option value="Safari">
+    </datalist>
   </form>
 
   <div id="article" role="article">hello</div>
-
-  <form id="form">
-    <button id="default-button">hello</button>
-    <button>world</button>
-  </form>
 
   <img id="animated-image" src="../animated-gif.gif">
 
