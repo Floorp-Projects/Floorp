@@ -1503,19 +1503,6 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
 
     TryToHandleContainingBlockChange(hint, frame);
 
-    if ((hint & nsChangeHint_AddOrRemoveTransform) && frame &&
-        !(hint & nsChangeHint_ReconstructFrame)) {
-      for (nsIFrame* cont = frame; cont;
-           cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
-        if (cont->StyleDisplay()->HasTransform(cont)) {
-          cont->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
-        }
-        // Don't remove NS_FRAME_MAY_BE_TRANSFORMED since it may still be
-        // transformed by other means. It's OK to have the bit even if it's
-        // not needed.
-      }
-    }
-
     if (hint & nsChangeHint_ReconstructFrame) {
       // If we ever start passing true here, be careful of restyles
       // that involve a reframe and animations.  In particular, if the
@@ -1530,7 +1517,19 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
           content, nsCSSFrameConstructor::InsertionKind::Sync);
       frame = content->GetPrimaryFrame();
     } else {
-      NS_ASSERTION(frame, "This shouldn't happen");
+      MOZ_ASSERT(frame, "This shouldn't happen");
+
+      if (hint & nsChangeHint_AddOrRemoveTransform) {
+        for (nsIFrame* cont = frame; cont;
+            cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
+          if (cont->StyleDisplay()->HasTransform(cont)) {
+            cont->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
+          }
+          // Don't remove NS_FRAME_MAY_BE_TRANSFORMED since it may still be
+          // transformed by other means. It's OK to have the bit even if it's
+          // not needed.
+        }
+      }
 
       if (!frame->FrameMaintainsOverflow()) {
         // frame does not maintain overflow rects, so avoid calling
