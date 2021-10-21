@@ -9,6 +9,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/intl/ICUError.h"
+
+#include "mozilla/intl/DateTimePart.h"
 #include "mozilla/intl/DateTimePatternGenerator.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
@@ -354,6 +356,44 @@ class DateTimeFormat final {
   };
 
   /**
+   * Format the Unix epoch time into a DateTimePartVector.
+   *
+   * The caller has to create the buffer and the vector and pass to this method.
+   * The formatted string will be stored in the buffer and formatted parts in
+   * the vector.
+   *
+   * aUnixEpoch is the number of milliseconds since 1 January 1970, UTC.
+   *
+   * See:
+   * https://tc39.es/ecma402/#sec-formatdatetimetoparts
+   */
+  template <typename B>
+  ICUResult TryFormatToParts(double aUnixEpoch, B& aBuffer,
+                             DateTimePartVector& aParts) const {
+    static_assert(std::is_same<typename B::CharType, char16_t>::value,
+                  "Only char16_t is supported (for UTF-16 support) now.");
+
+    UErrorCode status = U_ZERO_ERROR;
+    UFieldPositionIterator* fpositer = ufieldpositer_open(&status);
+    if (U_FAILURE(status)) {
+      return Err(ToICUError(status));
+    }
+
+    auto result = FillBufferWithICUCall(
+        aBuffer, [this, aUnixEpoch, fpositer](UChar* chars, int32_t size,
+                                              UErrorCode* status) {
+          return udat_formatForFields(mDateFormat, aUnixEpoch, chars, size,
+                                      fpositer, status);
+        });
+    if (result.isErr()) {
+      ufieldpositer_close(fpositer);
+      return result.propagateErr();
+    }
+
+    return TryFormatToParts(fpositer, aBuffer.length(), aParts);
+  }
+
+  /**
    * Copies the pattern for the current DateTimeFormat to a buffer.
    *
    * Warning: This method should not be added to new code. In the near future we
@@ -424,13 +464,6 @@ class DateTimeFormat final {
   ~DateTimeFormat();
 
   /**
-   * TODO(Bug 1686965) - Temporarily get the underlying ICU object while
-   * migrating to the unified API. This should be removed when completing the
-   * migration.
-   */
-  UDateFormat* UnsafeGetUDateFormat() const { return mDateFormat; }
-
-  /**
    * Clones the Calendar from a DateTimeFormat, and sets its time with the
    * relative milliseconds since 1 January 1970, UTC.
    */
@@ -474,6 +507,9 @@ class DateTimeFormat final {
 
   ICUResult CacheSkeleton(Span<const char16_t> aSkeleton);
 
+  ICUResult TryFormatToParts(UFieldPositionIterator* aFieldPositionIterator,
+                             size_t aSpanSize,
+                             DateTimePartVector& aParts) const;
   /**
    * Replaces all hour pattern characters in |patternOrSkeleton| to use the
    * matching hour representation for |hourCycle|.
