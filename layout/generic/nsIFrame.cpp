@@ -8000,6 +8000,10 @@ nsresult nsIFrame::MakeFrameName(const nsAString& aType,
   if (mContent && !mContent->IsText()) {
     nsAutoString buf;
     mContent->NodeInfo()->NameAtom()->ToString(buf);
+    if (nsAtom* id = mContent->GetID()) {
+      buf.AppendLiteral(" id=");
+      buf.Append(nsDependentAtomString(id));
+    }
     if (IsSubDocumentFrame()) {
       nsAutoString src;
       mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
