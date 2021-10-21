@@ -581,9 +581,6 @@ class ScriptSource {
   // See: CompileOptions::mutedErrors.
   bool mutedErrors_ = false;
 
-  // Set to true if parser saw  asmjs directives.
-  bool containsAsmJS_ = false;
-
   //
   // End of fields.
   //
@@ -1021,9 +1018,6 @@ class ScriptSource {
     MOZ_ASSERT(offset <= (uint32_t)INT32_MAX);
     introductionOffset_.emplace(offset);
   }
-
-  bool containsAsmJS() const { return containsAsmJS_; }
-  void setContainsAsmJS() { containsAsmJS_ = true; }
 
   // Return wether an XDR encoder is present or not.
   bool hasEncoder() const { return bool(xdrEncoder_); }
