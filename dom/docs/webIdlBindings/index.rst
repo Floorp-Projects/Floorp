@@ -356,11 +356,11 @@ explanations.
      - ``float``
    * - interface: non-nullable
      - ``Foo&``
-     - ``already_addRefed<Foo>``
+     - ``already_AddRefed<Foo>``
      - ```OwningNonNull<Foo>`` <#OwningNonNull>`__
    * - interface: nullable
      - ``Foo*``
-     - | ``already_addRefed<Foo>``
+     - | ``already_AddRefed<Foo>``
        | ``Foo*``
      - ``RefPtr<Foo>``
    * - long
@@ -450,7 +450,7 @@ will correspond to these C++ function declarations:
    void SetMyAttr(JSContext* cx, JS::Handle<JS::Value> value);
    void MyMethod(JSContext* cx, JS::Handle<JS::Value> arg1,
                  const Sequence<JS::Value>& arg2,
-                 const Optional<JS::Handle<JS::Value> >& arg3,
+                 const Optional<JS::Handle<JS::Value>>& arg3,
                  JS::MutableHandle<JS::Value> retval);
 
 ``boolean``
@@ -644,8 +644,8 @@ will correspond to these C++ function declarations:
    void SetMyAttr(JSContext* cx, JS::Handle<JSObject*> value);
    void MyMethod(JSContext* cx, JS::Handle<JSObject*> arg1, JS::Handle<JSObject*> arg2,
                  const Sequence<JSObject*>& arg3,
-                 const Optional<JS::Handle<JSObject*> >& arg4,
-                 const Optional<JS::Handle<JSObject*> >& arg5,
+                 const Optional<JS::Handle<JSObject*>>& arg4,
+                 const Optional<JS::Handle<JSObject*>>& arg5,
                  JS::MutableHandle<JSObject*> retval);
 
 Interface types
@@ -796,7 +796,7 @@ depends on how the type is being used.
    (and so it can only be used if the return value is kept alive by the
    callee until at least the binding method has returned).
 -  External interfaces in sequences, dictionaries, owning unions, and
-   variadic arguments are represented by ``RefPtr<nsIFoo>.``
+   variadic arguments are represented by ``RefPtr<nsIFoo>``.
 
 WebIDL interfaces
 '''''''''''''''''
@@ -848,8 +848,8 @@ Would correspond to these C++ function declarations:
    already_AddRefed<MyClass> MyAttr();
    void SetMyAttr(MyClass& value);
    void PassNullable(MyClass* arg);
-   already_AddRefed<MyClass> doSomething(const Sequence<OwningNonNull<MyClass> >& arg);
-   already_AddRefed<MyClass> doTheOther(const Sequence<RefPtr<MyClass> >& arg);
+   already_AddRefed<MyClass> doSomething(const Sequence<OwningNonNull<MyClass>>& arg);
+   already_AddRefed<MyClass> doTheOther(const Sequence<RefPtr<MyClass>>& arg);
    already_Addrefed<MyClass> GetNullableAttr();
    MyClass* SomeOtherAttr();
    MyClass* SomeYetOtherAttr(); // Don't have to return already_AddRefed!
@@ -2059,7 +2059,7 @@ the relevant type (``uint8_t`` for ``ArrayBuffer`` and
 ``ArrayBufferView``) and a ``Length()`` method that returns the length
 in units of ``*Data()``. So for example, ``Int32Array`` has a ``Data()``
 returning ``int32_t*`` and a ``Length()`` that returns the number of
-32-bit ints in the array..
+32-bit ints in the array.
 
 ``Sequence<T>``
 ~~~~~~~~~~~~~~~
