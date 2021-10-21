@@ -375,7 +375,7 @@ class FloorLog2<T, 8> {
  * FloorLog2(8..15) is 3; and so on.
  */
 template <typename T>
-inline uint_fast8_t FloorLog2(const T aValue) {
+inline constexpr uint_fast8_t FloorLog2(const T aValue) {
   return detail::FloorLog2<T>::compute(aValue);
 }
 
