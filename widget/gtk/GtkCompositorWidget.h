@@ -99,10 +99,10 @@ class GtkCompositorWidget : public CompositorWidget,
 
  private:
 #if defined(MOZ_WAYLAND)
-  void ConfigureWaylandBackend(RefPtr<nsWindow> aWindow);
+  bool ConfigureWaylandBackend(RefPtr<nsWindow> aWindow);
 #endif
 #if defined(MOZ_X11)
-  void ConfigureX11Backend(Window aXWindow, bool aShaped);
+  bool ConfigureX11Backend(Window aXWindow, bool aShaped);
 #endif
 
  protected:
