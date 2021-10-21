@@ -83,10 +83,6 @@ class ProfiledThreadData final {
                   double aSinceTime, bool aJSTracerEnabled,
                   ProfilerCodeAddressService* aService);
 
-  void StreamTraceLoggerJSON(
-      JSContext* aCx, mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-      const mozilla::TimeStamp& aProcessStartTime);
-
   const mozilla::profiler::ThreadRegistrationInfo& Info() const {
     return mThreadInfo;
   }
