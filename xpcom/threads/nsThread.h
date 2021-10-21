@@ -11,6 +11,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
@@ -183,6 +184,13 @@ class nsThread : public nsIThreadInternal,
   // Initialize this as a wrapper for the current PRThread.
   nsresult InitCurrentThread();
 
+  // Get this thread's name, thread-safe.
+  void GetThreadName(nsACString& aNameBuffer);
+
+  // Set this thread's name. Consider using
+  // NS_SetCurrentThreadName if you are not sure.
+  void SetThreadNameInternal(const nsACString& aName);
+
  private:
   // Initializes the mThreadId and stack base/size members, and adds the thread
   // to the ThreadList().
@@ -320,6 +328,9 @@ class nsThread : public nsIThreadInternal,
   struct nsThreadShutdownContext* mShutdownContext;
 
   mozilla::CycleCollectedJSContext* mScriptObserver;
+
+  // Our name.
+  mozilla::DataMutex<nsCString> mThreadName;
 
   void* mStackBase = nullptr;
   uint32_t mStackSize;
