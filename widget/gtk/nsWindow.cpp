@@ -911,7 +911,7 @@ void nsWindow::Show(bool aState) {
 
   mIsShown = aState;
 
-  LOG("nsWindow::Show state %d\n", aState);
+  LOG("nsWindow::Show state %d frame %s\n", aState, GetFrameTag().get());
 
   if (aState) {
     // Now that this window is shown, mHasMappedToplevel needs to be
@@ -4982,7 +4982,7 @@ bool nsWindow::ConfigureX11GLVisual() {
 }
 #endif
 
-nsAutoCString nsWindow::GetFrameTag() {
+nsAutoCString nsWindow::GetFrameTag() const {
   if (nsIFrame* frame = GetFrame()) {
 #ifdef DEBUG_FRAME_DUMP
     return frame->ListTag();
@@ -5015,7 +5015,7 @@ nsCString nsWindow::GetPopupTypeName() {
 nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                           const LayoutDeviceIntRect& aRect,
                           nsWidgetInitData* aInitData) {
-  LOG("nsWindow::Create: creating: nodename %s\n", GetFrameTag().get());
+  LOG("nsWindow::Create\n");
 
   // only set the base parent if we're going to be a dialog or a
   // toplevel
