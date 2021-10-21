@@ -295,48 +295,61 @@ ProfileBufferBlockIndex AddMarkerToBuffer(
       aBuffer, aName, aCategory, std::move(aOptions), aTs...);
 }
 
-template <typename StackCallback, typename RustMarkerCallback>
-[[nodiscard]] bool DeserializeAfterKindAndStream(
+// Assuming aEntryReader points right after the entry type (being Marker), this
+// reads the remainder of the marker and outputs it.
+// - GetWriterForThreadCallback, called first, after the thread id is read:
+//     (ThreadId) -> SpliceableJSONWriter* or null
+//   If null, nothing will be output, but aEntryReader will still be read fully.
+// - StackCallback, only called if GetWriterForThreadCallback didn't return
+//   null, and if the marker contains a stack:
+//     (ProfileChunkedBuffer&) -> void
+// - RustMarkerCallback, only called if GetWriterForThreadCallback didn't return
+//   null, and if the marker contains a Rust payload:
+//     (DeserializerTag) -> void
+template <typename GetWriterForThreadCallback, typename StackCallback,
+          typename RustMarkerCallback>
+void DeserializeAfterKindAndStream(
     ProfileBufferEntryReader& aEntryReader,
-    baseprofiler::SpliceableJSONWriter& aWriter,
-    baseprofiler::BaseProfilerThreadId aThreadIdOrUnspecified,
+    GetWriterForThreadCallback&& aGetWriterForThreadCallback,
     StackCallback&& aStackCallback, RustMarkerCallback&& aRustMarkerCallback) {
   // Each entry is made up of the following:
   //   ProfileBufferEntry::Kind::Marker, <- already read by caller
   //   options,                          <- next location in entries
   //   name,
-  //   category,
-  //   deserializer tag,
-  //   payload type (cpp or rust)
   //   payload
   const MarkerOptions options = aEntryReader.ReadObject<MarkerOptions>();
-  if (aThreadIdOrUnspecified.IsSpecified() &&
-      options.ThreadId().ThreadId() != aThreadIdOrUnspecified) {
-    // A specific thread is being read, we're not in it.
-    return false;
+
+  baseprofiler::SpliceableJSONWriter* writer =
+      std::forward<GetWriterForThreadCallback>(aGetWriterForThreadCallback)(
+          options.ThreadId().ThreadId());
+  if (!writer) {
+    // No writer associated with this thread id, drop it.
+    aEntryReader.SetRemainingBytes(0);
+    return;
   }
+
   // Write the information to JSON with the following schema:
   // [name, startTime, endTime, phase, category, data]
-  aWriter.StartArrayElement();
+  writer->StartArrayElement();
   {
-    aWriter.UniqueStringElement(aEntryReader.ReadObject<ProfilerString8View>());
+    writer->UniqueStringElement(aEntryReader.ReadObject<ProfilerString8View>());
 
     const double startTime = options.Timing().GetStartTime();
-    aWriter.TimeDoubleMsElement(startTime);
+    writer->TimeDoubleMsElement(startTime);
 
     const double endTime = options.Timing().GetEndTime();
-    aWriter.TimeDoubleMsElement(endTime);
+    writer->TimeDoubleMsElement(endTime);
 
-    aWriter.IntElement(static_cast<int64_t>(options.Timing().MarkerPhase()));
+    writer->IntElement(static_cast<int64_t>(options.Timing().MarkerPhase()));
 
     MarkerCategory category = aEntryReader.ReadObject<MarkerCategory>();
-    aWriter.IntElement(static_cast<int64_t>(category.GetCategory()));
+    writer->IntElement(static_cast<int64_t>(category.GetCategory()));
 
     if (const auto tag =
             aEntryReader.ReadObject<mozilla::base_profiler_markers_detail::
                                         Streaming::DeserializerTag>();
         tag != 0) {
-      aWriter.StartObjectElement(JSONWriter::SingleLineStyle);
+      writer->StartObjectElement(JSONWriter::SingleLineStyle);
       {
         // Stream "common props".
 
@@ -347,7 +360,7 @@ template <typename StackCallback, typename RustMarkerCallback>
           // `nsContentUtils::GenerateProcessSpecificId`, which is specifically
           // designed to only use 53 of the 64 bits to be lossless when passed
           // into and out of JS as a double.
-          aWriter.DoubleProperty(
+          writer->DoubleProperty(
               "innerWindowID",
               static_cast<double>(options.InnerWindowId().Id()));
         }
@@ -356,9 +369,9 @@ template <typename StackCallback, typename RustMarkerCallback>
         if (ProfileChunkedBuffer* chunkedBuffer =
                 options.Stack().GetChunkedBuffer();
             chunkedBuffer) {
-          aWriter.StartObjectProperty("stack");
+          writer->StartObjectProperty("stack");
           { std::forward<StackCallback>(aStackCallback)(*chunkedBuffer); }
-          aWriter.EndObject();
+          writer->EndObject();
         }
 
         auto payloadType = static_cast<mozilla::MarkerPayloadType>(
@@ -372,24 +385,25 @@ template <typename StackCallback, typename RustMarkerCallback>
                 MarkerDataDeserializer deserializer =
                     mozilla::base_profiler_markers_detail::Streaming::
                         DeserializerForTag(tag);
-
             MOZ_RELEASE_ASSERT(deserializer);
-            deserializer(aEntryReader, aWriter);
+            deserializer(aEntryReader, *writer);
+            MOZ_ASSERT(aEntryReader.RemainingBytes() == 0u);
             break;
           }
           case mozilla::MarkerPayloadType::Rust:
             std::forward<RustMarkerCallback>(aRustMarkerCallback)(tag);
+            MOZ_ASSERT(aEntryReader.RemainingBytes() == 0u);
             break;
           default:
             MOZ_ASSERT_UNREACHABLE("Unknown payload type.");
             break;
         }
       }
-      aWriter.EndObject();
+      writer->EndObject();
     }
   }
-  aWriter.EndArray();
-  return true;
+  writer->EndArray();
+  MOZ_ASSERT(aEntryReader.RemainingBytes() == 0u);
 }
 
 }  // namespace mozilla::base_profiler_markers_detail

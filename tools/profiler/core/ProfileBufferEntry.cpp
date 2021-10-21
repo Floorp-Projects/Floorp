@@ -1279,42 +1279,38 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
     MOZ_ASSERT(static_cast<ProfileBufferEntry::KindUnderlyingType>(type) <
                static_cast<ProfileBufferEntry::KindUnderlyingType>(
                    ProfileBufferEntry::Kind::MODERN_LIMIT));
-    bool entryWasFullyRead = false;
-
     if (type == ProfileBufferEntry::Kind::Marker) {
-      entryWasFullyRead =
-          mozilla::base_profiler_markers_detail::DeserializeAfterKindAndStream(
-              aER, aWriter, aThreadId,
-              [&](ProfileChunkedBuffer& aChunkedBuffer) {
-                ProfilerBacktrace backtrace("", &aChunkedBuffer);
-                backtrace.StreamJSON(aWriter, aProcessStartTime, aUniqueStacks);
-              },
-              [&](mozilla::base_profiler_markers_detail::Streaming::
-                      DeserializerTag aTag) {
-                size_t payloadSize = aER.RemainingBytes();
+      mozilla::base_profiler_markers_detail::DeserializeAfterKindAndStream(
+          aER,
+          [&](const ProfilerThreadId& aMarkerThreadId) {
+            return (aMarkerThreadId == aThreadId) ? &aWriter : nullptr;
+          },
+          [&](ProfileChunkedBuffer& aChunkedBuffer) {
+            ProfilerBacktrace backtrace("", &aChunkedBuffer);
+            backtrace.StreamJSON(aWriter, aProcessStartTime, aUniqueStacks);
+          },
+          [&](mozilla::base_profiler_markers_detail::Streaming::DeserializerTag
+                  aTag) {
+            size_t payloadSize = aER.RemainingBytes();
 
-                ProfileBufferEntryReader::DoubleSpanOfConstBytes spans =
-                    aER.ReadSpans(payloadSize);
-                if (MOZ_LIKELY(spans.IsSingleSpan())) {
-                  // Only a single span, we can just refer to it directly
-                  // instead of copying it.
-                  profiler::ffi::gecko_profiler_serialize_marker_for_tag(
-                      aTag, spans.mFirstOrOnly.Elements(), payloadSize,
-                      &aWriter);
-                } else {
-                  // Two spans, we need to concatenate them by copying.
-                  uint8_t* payloadBuffer = new uint8_t[payloadSize];
-                  spans.CopyBytesTo(payloadBuffer);
-                  profiler::ffi::gecko_profiler_serialize_marker_for_tag(
-                      aTag, payloadBuffer, payloadSize, &aWriter);
-                  delete[] payloadBuffer;
-                }
-              });
-    }
-
-    if (!entryWasFullyRead) {
-      // The entry was not a marker, or it was a marker for another thread.
-      // We probably didn't read the whole entry, so we need to skip to the end.
+            ProfileBufferEntryReader::DoubleSpanOfConstBytes spans =
+                aER.ReadSpans(payloadSize);
+            if (MOZ_LIKELY(spans.IsSingleSpan())) {
+              // Only a single span, we can just refer to it directly
+              // instead of copying it.
+              profiler::ffi::gecko_profiler_serialize_marker_for_tag(
+                  aTag, spans.mFirstOrOnly.Elements(), payloadSize, &aWriter);
+            } else {
+              // Two spans, we need to concatenate them by copying.
+              uint8_t* payloadBuffer = new uint8_t[payloadSize];
+              spans.CopyBytesTo(payloadBuffer);
+              profiler::ffi::gecko_profiler_serialize_marker_for_tag(
+                  aTag, payloadBuffer, payloadSize, &aWriter);
+              delete[] payloadBuffer;
+            }
+          });
+    } else {
+      // The entry was not a marker, we need to skip to the end.
       aER.SetRemainingBytes(0);
     }
   });
