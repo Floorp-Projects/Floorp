@@ -6269,6 +6269,23 @@ deletion.request:
     record_into_store:
       - 'deletion-request'
 
+  context_id:
+    bug_numbers:
+      - 1729474
+    description: >
+      An identifier to identify users for Contextual Services user interaction pings.
+    expires: never
+    kind: string
+    notification_emails:
+      - najiang@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - 'deletion-request'
+
 policies:
   count:
     bug_numbers:

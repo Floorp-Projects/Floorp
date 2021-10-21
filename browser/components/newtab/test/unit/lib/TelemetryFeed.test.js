@@ -208,17 +208,22 @@ describe("TelemetryFeed", () => {
         assert.propertyVal(instance, "eventTelemetryEnabled", true);
       });
     });
-    it("should set a scalar for deletion-request", () => {
+    it("should set two scalars for deletion-request", () => {
       sandbox.spy(Services.telemetry, "scalarSet");
 
       instance.init();
 
-      assert.calledOnce(Services.telemetry.scalarSet);
-      assert.calledWith(
-        Services.telemetry.scalarSet,
-        "deletion.request.impression_id",
-        instance._impressionId
-      );
+      assert.calledTwice(Services.telemetry.scalarSet);
+
+      // impression_id
+      let [type, value] = Services.telemetry.scalarSet.firstCall.args;
+      assert.equal(type, "deletion.request.impression_id");
+      assert.equal(value, instance._impressionId);
+
+      // context_id
+      [type, value] = Services.telemetry.scalarSet.secondCall.args;
+      assert.equal(type, "deletion.request.context_id");
+      assert.equal(value, FAKE_UUID);
     });
   });
   describe("#handleEvent", () => {
