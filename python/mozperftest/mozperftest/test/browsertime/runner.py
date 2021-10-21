@@ -314,6 +314,22 @@ class BrowsertimeRunner(NodeRunner):
 
         return args_list
 
+    def _line_handler(self, line):
+        line_matcher = re.compile(r"(\[\d{4}-\d{2}-\d{2}.*\])\s+([a-zA-Z]+):\s+(.*)")
+        match = line_matcher.match(line)
+        if not match:
+            return
+
+        date, level, msg = match.groups()
+        msg = msg.replace("{", "{{").replace("}", "}}")
+        level = level.lower()
+        if "error" in level:
+            self.error("Mozperftest failed to run: ", msg)
+        elif "warning" in level:
+            self.warning(msg)
+        else:
+            self.info(msg)
+
     def run(self, metadata):
         self._test_script = metadata.script
         self.setup()
@@ -397,9 +413,9 @@ class BrowsertimeRunner(NodeRunner):
 
         if visualmetrics and self.get_arg("xvfb"):
             with xvfb():
-                exit_code = self.node(command)
+                exit_code = self.node(command, self._line_handler)
         else:
-            exit_code = self.node(command)
+            exit_code = self.node(command, self._line_handler)
 
         if exit_code != 0:
             raise NodeException(exit_code)
