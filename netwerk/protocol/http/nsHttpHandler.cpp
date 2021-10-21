@@ -99,7 +99,9 @@
 #  include "nsCocoaFeatures.h"
 #endif
 
-#include "mozilla/browser/NimbusFeatures.h"
+#if defined(MOZ_BUILD_APP_IS_BROWSER) && !defined(ANDROID)
+#  include "mozilla/browser/NimbusFeatures.h"
+#endif  // MOZ_BUILD_APP_IS_BROWSER && !ANDROID
 
 //-----------------------------------------------------------------------------
 #include "mozilla/net/HttpChannelChild.h"
@@ -127,8 +129,10 @@
 #define NS_HTTP_PROTOCOL_FLAGS \
   (URI_STD | ALLOWS_PROXY | ALLOWS_PROXY_HTTP | URI_LOADABLE_BY_ANYONE)
 
-#define UA_EXPERIMENT_NAME "firefox100"_ns
-#define UA_EXPERIMENT_VAR "firefoxVersion"_ns
+#if defined(MOZ_BUILD_APP_IS_BROWSER) && !defined(ANDROID)
+#  define UA_EXPERIMENT_NAME "firefox100"_ns
+#  define UA_EXPERIMENT_VAR "firefoxVersion"_ns
+#endif  // MOZ_BUILD_APP_IS_BROWSER && !ANDROID
 
 //-----------------------------------------------------------------------------
 
@@ -138,6 +142,7 @@ namespace mozilla::net {
 
 LazyLogModule gHttpLog("nsHttp");
 
+#if defined(MOZ_BUILD_APP_IS_BROWSER) && !defined(ANDROID)
 static void ExperimentUserAgentUpdated(const char* /* aNimbusPref */,
                                        void* aUserData) {
   MOZ_ASSERT(aUserData != nullptr);
@@ -171,6 +176,7 @@ static void ExperimentUserAgentUpdated(const char* /* aNimbusPref */,
   aExperimentUserAgent->Truncate();
   aExperimentUserAgent->AppendPrintf(uaFormat, firefoxVersion, firefoxVersion);
 }
+#endif  // MOZ_BUILD_APP_IS_BROWSER && !ANDROID
 
 #ifdef ANDROID
 static nsCString GetDeviceModelId() {
@@ -273,7 +279,9 @@ nsHttpHandler::nsHttpHandler()
 
   mUserAgentOverride.SetIsVoid(true);
 
+#if defined(MOZ_BUILD_APP_IS_BROWSER) && !defined(ANDROID)
   mExperimentUserAgent.SetIsVoid(true);
+#endif  // MOZ_BUILD_APP_IS_BROWSER && !ANDROID
 
   MOZ_ASSERT(!gHttpHandler, "HTTP handler already created!");
 
@@ -381,12 +389,14 @@ nsresult nsHttpHandler::Init() {
                                        gCallbackPrefs, this);
   PrefsChanged(nullptr);
 
+#if defined(MOZ_BUILD_APP_IS_BROWSER) && !defined(ANDROID)
   // monitor Firefox Version Experiment enrollment
   NimbusFeatures::OnUpdate(UA_EXPERIMENT_NAME, UA_EXPERIMENT_VAR,
                            ExperimentUserAgentUpdated, &mExperimentUserAgent);
 
   // Load the experiment state once for startup
   ExperimentUserAgentUpdated("", &mExperimentUserAgent);
+#endif  // MOZ_BUILD_APP_IS_BROWSER && !ANDROID
 
   Telemetry::ScalarSet(Telemetry::ScalarID::NETWORKING_HTTP3_ENABLED,
                        mHttp3Enabled);
@@ -749,11 +759,13 @@ const nsCString& nsHttpHandler::UserAgent() {
     return mUserAgentOverride;
   }
 
+#if defined(MOZ_BUILD_APP_IS_BROWSER) && !defined(ANDROID)
   if (!mExperimentUserAgent.IsVoid()) {
     LOG(("using Firefox 100 Experiment User-Agent : %s\n",
          mExperimentUserAgent.get()));
     return mExperimentUserAgent;
   }
+#endif  // MOZ_BUILD_APP_IS_BROWSER && !ANDROID
 
   if (mUserAgentIsDirty) {
     BuildUserAgent();
