@@ -102,7 +102,7 @@ git push <remote> --no-verify
 ## Test Channel on Google PlayStore
 To get Focus Nightly on your device, follow these steps:
 
-1) Visit https://groups.google.com/g/focus-klar-nightly and join the Google Group
+1) Visit https://groups.google.com/g/firefox-focus-pre-release and join the Google Group
 2) After you have joined the group opt-in to receive Nightly builds, again with the same Google account: https://play.google.com/apps/testing/org.mozilla.focus.nightly
 3) Download Firefox Focus (Nightly) from Google Play: https://play.google.com/store/apps/details?id=org.mozilla.focus.nightly
 
