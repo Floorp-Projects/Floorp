@@ -11,6 +11,7 @@ const MENU_ITEMS = {
   unblock: '[command="downloadsCmd_unblock"]',
   openInSystemViewer: '[command="downloadsCmd_openInSystemViewer"]',
   alwaysOpenInSystemViewer: '[command="downloadsCmd_alwaysOpenInSystemViewer"]',
+  alwaysOpenSimilarFiles: '[command="downloadsCmd_alwaysOpenSimilarFiles"]',
   show: '[command="downloadsCmd_show"]',
   commandsSeparator: "menuseparator,.downloadCommandsSeparator",
   openReferrer: '[command="downloadsCmd_openReferrer"]',
@@ -21,9 +22,10 @@ const MENU_ITEMS = {
   clearDownloads: '[command="downloadsCmd_clearDownloads"]',
 };
 
-const TestCases = [
+const TestCasesDefaultMimetypes = [
   {
-    name: "Completed PDF download",
+    name: "Completed PDF download with improvements pref disabled",
+    prefEnabled: false,
     downloads: [
       {
         state: DownloadsCommon.DOWNLOAD_FINISHED,
@@ -46,11 +48,103 @@ const TestCases = [
     },
   },
   {
-    name: "Canceled PDF download",
+    name: "Canceled PDF download with improvements pref disabled",
+    prefEnabled: false,
     downloads: [
       {
         state: DownloadsCommon.DOWNLOAD_CANCELED,
         contentType: "application/pdf",
+        target: {},
+      },
+    ],
+    expected: {
+      menu: [
+        MENU_ITEMS.openReferrer,
+        MENU_ITEMS.copyLocation,
+        MENU_ITEMS.separator,
+        MENU_ITEMS.delete,
+        MENU_ITEMS.clearList,
+      ],
+    },
+  },
+];
+
+const TestCasesNewMimetypesPrefDisabled = [
+  {
+    name: "Completed txt download with improvements pref disabled",
+    prefEnabled: false,
+    downloads: [
+      {
+        state: DownloadsCommon.DOWNLOAD_FINISHED,
+        contentType: "text/plain",
+        target: {},
+      },
+    ],
+    expected: {
+      menu: [
+        MENU_ITEMS.show,
+        MENU_ITEMS.commandsSeparator,
+        MENU_ITEMS.openReferrer,
+        MENU_ITEMS.copyLocation,
+        MENU_ITEMS.separator,
+        MENU_ITEMS.delete,
+        MENU_ITEMS.clearList,
+      ],
+    },
+  },
+  {
+    name: "Canceled txt download with improvements pref disabled",
+    prefEnabled: false,
+    downloads: [
+      {
+        state: DownloadsCommon.DOWNLOAD_CANCELED,
+        contentType: "text/plain",
+        target: {},
+      },
+    ],
+    expected: {
+      menu: [
+        MENU_ITEMS.openReferrer,
+        MENU_ITEMS.copyLocation,
+        MENU_ITEMS.separator,
+        MENU_ITEMS.delete,
+        MENU_ITEMS.clearList,
+      ],
+    },
+  },
+];
+
+const TestCasesNewMimetypesPrefEnabled = [
+  {
+    name: "Completed txt download with improvements pref enabled",
+    prefEnabled: true,
+    downloads: [
+      {
+        state: DownloadsCommon.DOWNLOAD_FINISHED,
+        contentType: "text/plain",
+        target: {},
+      },
+    ],
+    expected: {
+      menu: [
+        MENU_ITEMS.alwaysOpenSimilarFiles,
+        MENU_ITEMS.show,
+        MENU_ITEMS.commandsSeparator,
+        MENU_ITEMS.openReferrer,
+        MENU_ITEMS.copyLocation,
+        MENU_ITEMS.separator,
+        MENU_ITEMS.delete,
+        MENU_ITEMS.clearList,
+      ],
+    },
+  },
+  {
+    name: "Canceled txt download with improvements pref enabled",
+    prefEnabled: true,
+    downloads: [
+      {
+        state: DownloadsCommon.DOWNLOAD_CANCELED,
+        contentType: "text/plain",
         target: {},
       },
     ],
@@ -92,7 +186,7 @@ add_task(async function test_setUp() {
 });
 
 // register the tests
-for (let testData of TestCases) {
+for (let testData of TestCasesDefaultMimetypes) {
   if (testData.skip) {
     info("Skipping test:" + testData.name);
     continue;
@@ -107,7 +201,50 @@ for (let testData of TestCases) {
   add_task(tmp[testData.name]);
 }
 
-async function testDownloadContextMenu({ downloads = [], expected }) {
+// non default mimetypes with browser.download.improvements_to_download_panel disabled
+for (let testData of TestCasesNewMimetypesPrefDisabled) {
+  if (testData.skip) {
+    info("Skipping test:" + testData.name);
+    continue;
+  }
+  // use the 'name' property of each test case as the test function name
+  // so we get useful logs
+  let tmp = {
+    async [testData.name]() {
+      await testDownloadContextMenu(testData);
+    },
+  };
+  add_task(tmp[testData.name]);
+}
+
+// non default mimetypes with browser.download.improvements_to_download_panel enabled
+for (let testData of TestCasesNewMimetypesPrefEnabled) {
+  if (testData.skip) {
+    info("Skipping test:" + testData.name);
+    continue;
+  }
+  // use the 'name' property of each test case as the test function name
+  // so we get useful logs
+  let tmp = {
+    async [testData.name]() {
+      await testDownloadContextMenu(testData);
+    },
+  };
+  add_task(tmp[testData.name]);
+}
+
+async function testDownloadContextMenu({
+  downloads = [],
+  expected,
+  prefEnabled,
+}) {
+  info(
+    `Setting browser.download.improvements_to_download_panel to ${prefEnabled}`
+  );
+  SpecialPowers.setBoolPref(
+    "browser.download.improvements_to_download_panel",
+    prefEnabled
+  );
   // prepare downloads
   await prepareDownloads(downloads);
   let downloadList = await Downloads.getList(Downloads.PUBLIC);
