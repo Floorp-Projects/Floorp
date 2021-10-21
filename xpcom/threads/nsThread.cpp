@@ -855,10 +855,14 @@ nsThread::Shutdown() {
 
   NotNull<nsThreadShutdownContext*> context = WrapNotNull(maybeContext);
 
+  // If we are going to hang here we want to see the thread's name
+  nsAutoCString threadName;
+  GetThreadName(threadName);
+
   // Process events on the current thread until we receive a shutdown ACK.
   // Allows waiting; ensure no locks are held that would deadlock us!
   SpinEventLoopUntil(
-      "nsThread::Shutdown"_ns,
+      "nsThread::Shutdown: "_ns + threadName,
       [&, context]() { return !context->mAwaitingShutdownAck; },
       context->mJoiningThread);
 
