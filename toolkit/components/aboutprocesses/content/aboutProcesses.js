@@ -604,7 +604,7 @@ var View = {
             }
           }
           if (!image) {
-            image = "chrome://browser/skin/link.svg";
+            image = "chrome://global/skin/icons/link.svg";
           }
       }
       nameCell.style.backgroundImage = `url('${image}')`;

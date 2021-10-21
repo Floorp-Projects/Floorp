@@ -163,7 +163,7 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://global/skin/icons/pocket.svg");
 }
 .icon.icon-pocket-save {
-  background-image: url("chrome://browser/skin/pocket-outline.svg");
+  background-image: url("chrome://global/skin/icons/pocket-outline.svg");
 }
 .icon.icon-pocket-delete {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pocket-delete-16.svg");
@@ -200,7 +200,7 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://browser/skin/downloads/downloads.svg");
 }
 .icon.icon-copy {
-  background-image: url("chrome://browser/skin/edit-copy.svg");
+  background-image: url("chrome://global/skin/icons/edit-copy.svg");
 }
 .icon.icon-open-file {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-open-file-16.svg");
@@ -2227,7 +2227,7 @@ main.has-snippet {
   border-radius: 2px;
 }
 .asrouter-toggle .icon-devtools {
-  background-image: url("chrome://browser/skin/developer.svg");
+  background-image: url("chrome://global/skin/icons/developer.svg");
   padding: 15px;
 }
 .asrouter-toggle:dir(rtl) {
