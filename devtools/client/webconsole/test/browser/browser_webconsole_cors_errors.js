@@ -43,14 +43,17 @@ add_task(async function() {
   info("Test CORSPreflightDidNotSucceed");
   onCorsMessage = waitForMessage(
     hud,
-    `CORS preflight response did not succeed`
+    `(Reason: CORS preflight response did not succeed). Status code: `
   );
   makeFaultyCorsCall("CORSPreflightDidNotSucceed");
   message = await onCorsMessage;
   await checkCorsMessage(message, "CORSPreflightDidNotSucceed");
 
   info("Test CORS did not succeed");
-  onCorsMessage = waitForMessage(hud, "Reason: CORS request did not succeed");
+  onCorsMessage = waitForMessage(
+    hud,
+    "(Reason: CORS request did not succeed). Status code: "
+  );
   makeFaultyCorsCall("CORSDidNotSucceed");
   message = await onCorsMessage;
   await checkCorsMessage(message, "CORSDidNotSucceed");
@@ -67,7 +70,9 @@ add_task(async function() {
   info("Test CORSMissingAllowOrigin");
   onCorsMessage = waitForMessage(
     hud,
-    `Reason: CORS header ${quote("Access-Control-Allow-Origin")} missing`
+    `(Reason: CORS header ${quote(
+      "Access-Control-Allow-Origin"
+    )} missing). Status code: `
   );
   makeFaultyCorsCall("CORSMissingAllowOrigin");
   message = await onCorsMessage;
