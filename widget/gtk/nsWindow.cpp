@@ -1893,6 +1893,24 @@ void nsWindow::NativeMoveResizeWaylandPopupCallback(
   }
 
   if (needsPositionUpdate) {
+    // See Bug 1735095
+    // Font scale causes rounding errors which we can't handle by move-to-rect.
+    // The font scale should not be used, but let's handle it somehow to
+    // avoid endless move calls.
+    if (StaticPrefs::layout_css_devPixelsPerPx() > 0 ||
+        gfxPlatformGtk::GetFontScaleFactor() != 1) {
+      bool roundingError = (abs(newBounds.x - mBounds.x) < 2 &&
+                            abs(newBounds.y - mBounds.y) < 2);
+      if (roundingError) {
+        // Keep the window where it is.
+        GdkPoint topLeft = DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
+        LOG_POPUP("  apply rounding error workaround, move to %d, %d",
+                  topLeft.x, topLeft.y);
+        gtk_window_move(GTK_WINDOW(mShell), topLeft.x, topLeft.y);
+        return;
+      }
+    }
+
     LOG_POPUP("  needPositionUpdate, new bounds [%d, %d]", newBounds.x,
               newBounds.y);
     mBounds.x = newBounds.x;
