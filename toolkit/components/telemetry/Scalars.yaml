@@ -1820,7 +1820,6 @@ os.environment:
     kind: string
     notification_emails:
       - application-update-telemetry-alerts@mozilla.com
-      - agashlin@mozilla.com
       - shong@mozilla.com
     release_channel_collection: opt-out
     products:
@@ -1856,7 +1855,6 @@ os.environment:
     kind: boolean
     notification_emails:
       - application-update-telemetry-alerts@mozilla.com
-      - agashlin@mozilla.com
       - shong@mozilla.com
     release_channel_collection: opt-out
     products:
@@ -7088,7 +7086,7 @@ migration:
     expires: never
     kind: boolean
     notification_emails:
-      - agashlin@mozilla.com
+      - application-update-telemetry-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'

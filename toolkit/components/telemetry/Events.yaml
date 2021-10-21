@@ -2918,7 +2918,6 @@ installation:
     bug_numbers: [1660198, 1725295]
     notification_emails:
       - application-update-telemetry-alerts@mozilla.com
-      - agashlin@mozilla.com
       - rtestard@mozilla.com
     expiry_version: "100"
 
