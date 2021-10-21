@@ -219,6 +219,26 @@ void ProfiledThreadData::StreamJSON(
   aWriter.ResetUniqueStrings();
 }
 
+void ProfiledThreadData::StreamJSON(
+    ThreadStreamingContext&& aThreadStreamingContext,
+    SpliceableJSONWriter& aWriter, const nsACString& aProcessName,
+    const nsACString& aETLDplus1, const mozilla::TimeStamp& aProcessStartTime,
+    bool JSTracerEnabled, ProfilerCodeAddressService* aService) {
+  aWriter.Start();
+  {
+    StreamSamplesAndMarkers(mThreadInfo.Name(), aThreadStreamingContext,
+                            aWriter, aProcessName, aETLDplus1,
+                            aProcessStartTime, mThreadInfo.RegisterTime(),
+                            mUnregisterTime);
+
+    StreamTablesAndTraceLogger(
+        std::move(*aThreadStreamingContext.mUniqueStacks),
+        aThreadStreamingContext.mJSContext, aWriter, aProcessStartTime,
+        JSTracerEnabled);
+  }
+  aWriter.End();
+}
+
 // StreamSamplesDataCallback: () -> ProfilerThreadId
 // StreamMarkersDataCallback: () -> void
 // Returns the ProfilerThreadId returned by StreamSamplesDataCallback, which
@@ -338,6 +358,28 @@ ProfilerThreadId StreamSamplesAndMarkers(
       [&]() {
         aBuffer.StreamMarkersToJSON(aWriter, aThreadId, aProcessStartTime,
                                     aSinceTime, aUniqueStacks);
+      });
+}
+
+void StreamSamplesAndMarkers(const char* aName,
+                             ThreadStreamingContext& aThreadData,
+                             SpliceableJSONWriter& aWriter,
+                             const nsACString& aProcessName,
+                             const nsACString& aETLDplus1,
+                             const mozilla::TimeStamp& aProcessStartTime,
+                             const mozilla::TimeStamp& aRegisterTime,
+                             const mozilla::TimeStamp& aUnregisterTime) {
+  (void)DoStreamSamplesAndMarkers(
+      aName, aWriter, aProcessName, aETLDplus1, aProcessStartTime,
+      aRegisterTime, aUnregisterTime,
+      [&]() {
+        aWriter.TakeAndSplice(
+            aThreadData.mSamplesDataWriter.TakeChunkedWriteFunc());
+        return aThreadData.mProfiledThreadData.Info().ThreadId();
+      },
+      [&]() {
+        aWriter.TakeAndSplice(
+            aThreadData.mMarkersDataWriter.TakeChunkedWriteFunc());
       });
 }
 
