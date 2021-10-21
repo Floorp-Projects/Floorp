@@ -610,17 +610,23 @@ class EntryGetter {
 
   void Next() {
     MOZ_ASSERT(Has(), "Caller should have checked `Has()` before `Get()`");
-    for (;;) {
-      ++mBlockIt;
-      if (ReadLegacyOrEnd()) {
-        // Either we're at the end, or we could read a legacy entry -> Done.
-        break;
-      }
-      // Otherwise loop around until we hit a legacy entry or the end.
-    }
+    ++mBlockIt;
+    ReadUntilLegacyOrEnd();
   }
 
+  // Hand off the current iterator to the caller, which may be used to read
+  // any kind of entries (legacy or modern).
   ProfileChunkedBuffer::BlockIterator Iterator() const { return mBlockIt; }
+
+  // After `Iterator()` was used, we can restart from *after* its updated
+  // position.
+  void RestartAfter(const ProfileChunkedBuffer::BlockIterator& it) {
+    mBlockIt = it;
+    if (!Has()) {
+      return;
+    }
+    Next();
+  }
 
   ProfileBufferBlockIndex CurBlockIndex() const {
     return mBlockIt.CurrentBlockIndex();
@@ -658,6 +664,17 @@ class EntryGetter {
     er = *mBlockIt;
     er.ReadBytes(&mEntry, er.RemainingBytes());
     return true;
+  }
+
+  void ReadUntilLegacyOrEnd() {
+    for (;;) {
+      if (ReadLegacyOrEnd()) {
+        // Either we're at the end, or we could read a legacy entry -> Done.
+        break;
+      }
+      // Otherwise loop around until we hit a legacy entry or the end.
+      ++mBlockIt;
+    }
   }
 
   ProfileBufferEntry mEntry;
@@ -1106,7 +1123,7 @@ ProfilerThreadId ProfileBuffer::StreamSamplesToJSON(
           er.SetRemainingBytes(0);
         }
 
-        e.Next();
+        e.RestartAfter(it);
       } else if (e.Has() && e.Get().IsTimeBeforeSameSample()) {
         if (sample.mTime == 0.0) {
           // We don't have any full sample yet, we cannot duplicate a "previous"
@@ -1163,7 +1180,7 @@ ProfilerThreadId ProfileBuffer::StreamSamplesToJSON(
           er.SetRemainingBytes(0);
         }
 
-        e.Next();
+        e.RestartAfter(it);
       } else {
         ERROR_AND_CONTINUE("expected a Time entry");
       }
