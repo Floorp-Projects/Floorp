@@ -39,7 +39,7 @@ async function createTargets(watcher) {
   // TODO: We should also set the flag for the "parent process" browsing context when we're
   // in the browser toolbox. This is blocked by Bug 1675763, and should be handled as part
   // of Bug 1709529.
-  if (watcher.context.type == "browser-element") {
+  if (watcher.browserElement) {
     // The `watchedByDevTools` enables gecko behavior tied to this flag, such as:
     //  - reporting the contents of HTML loaded in the docshells
     //  - capturing stacks for the network monitor.
@@ -49,18 +49,17 @@ async function createTargets(watcher) {
   if (!browsingContextAttachedObserverByWatcher.has(watcher)) {
     // We store the browserId here as watcher.browserElement.browserId can momentary be
     // set to 0 when there's a navigation to a new browsing context.
-    const browserId = watcher.context.browserId;
+    const browserId = watcher.browserElement?.browserId;
     const onBrowsingContextAttached = browsingContext => {
       // We want to set watchedByDevTools on new top-level browsing contexts:
       // - in the case of the BrowserToolbox/BrowserConsole, that would be the browsing
       //   contexts of all the tabs we want to handle.
       // - for the regular toolbox, browsing context that are being created when navigating
       //   to a page that forces a new browsing context.
-      // Then BrowsingContext will propagate to all the tree of children BrowsingContext's.
+      // Then BrowsingContext will propagate to all the tree of children BbrowsingContext's.
       if (
         !browsingContext.parent &&
-        (watcher.context.type != "browser-element" ||
-          browserId === browsingContext.browserId)
+        (!watcher.browserElement || browserId === browsingContext.browserId)
       ) {
         browsingContext.watchedByDevTools = true;
       }
@@ -134,7 +133,7 @@ async function createTargetForBrowsingContext({
       .instantiateTarget({
         watcherActorID: watcher.actorID,
         connectionPrefix: watcher.conn.prefix,
-        context: watcher.context,
+        browserId: watcher.browserId,
         sessionData: watcher.sessionData,
       });
   } catch (e) {
@@ -168,10 +167,7 @@ function destroyTargets(watcher) {
   const browsingContexts = getFilteredRemoteBrowsingContext(
     watcher.browserElement
   );
-  if (
-    watcher.isServerTargetSwitchingEnabled &&
-    watcher.context.type == "browser-element"
-  ) {
+  if (watcher.isServerTargetSwitchingEnabled && watcher.browserElement) {
     // If server side target switching is enabled, we should also destroy the top level browsing context.
     // If it is disabled, the top level target will be destroyed from the client instead.
     browsingContexts.push(watcher.browserElement.browsingContext);
@@ -191,11 +187,11 @@ function destroyTargets(watcher) {
       .getActor("DevToolsFrame")
       .destroyTarget({
         watcherActorID: watcher.actorID,
-        context: watcher.context,
+        browserId: watcher.browserId,
       });
   }
 
-  if (watcher.context.type == "browser-element") {
+  if (watcher.browserElement) {
     watcher.browserElement.browsingContext.watchedByDevTools = false;
   }
 
@@ -231,7 +227,7 @@ async function addSessionDataEntry({ watcher, type, entries }) {
       .getActor("DevToolsFrame")
       .addSessionDataEntry({
         watcherActorID: watcher.actorID,
-        context: watcher.context,
+        browserId: watcher.browserId,
         type,
         entries,
       });
@@ -258,7 +254,7 @@ function removeSessionDataEntry({ watcher, type, entries }) {
       .getActor("DevToolsFrame")
       .removeSessionDataEntry({
         watcherActorID: watcher.actorID,
-        context: watcher.context,
+        browserId: watcher.browserId,
         type,
         entries,
       });
@@ -293,7 +289,7 @@ function getWatchingBrowsingContexts(watcher) {
     : [];
   // Even if we aren't watching additional target, we want to process the top level target.
   // The top level target isn't returned by getFilteredRemoteBrowsingContext, so add it in both cases.
-  if (watcher.context.type == "browser-element") {
+  if (browserElement) {
     const topBrowsingContext = browserElement.browsingContext;
     // Ignore if we are against a page running in the parent process,
     // which would not support JSWindowActor API

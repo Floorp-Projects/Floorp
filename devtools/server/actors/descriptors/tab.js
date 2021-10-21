@@ -181,14 +181,10 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
    */
   getWatcher(config) {
     if (!this.watcher) {
-      this.watcher = new WatcherActor(
-        this.conn,
-        {
-          type: "browser-element",
-          browserId: this._browser.browserId,
-        },
-        config
-      );
+      this.watcher = new WatcherActor(this.conn, {
+        browser: this._browser,
+        config,
+      });
       this.manage(this.watcher);
     }
     return this.watcher;

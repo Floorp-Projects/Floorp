@@ -150,9 +150,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
    */
   getWatcher() {
     if (!this.watcher) {
-      this.watcher = new WatcherActor(this.conn, {
-        type: "all",
-      });
+      this.watcher = new WatcherActor(this.conn);
       this.manage(this.watcher);
     }
     return this.watcher;
