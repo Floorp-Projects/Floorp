@@ -134,7 +134,7 @@ async function createTargetForBrowsingContext({
       .instantiateTarget({
         watcherActorID: watcher.actorID,
         connectionPrefix: watcher.conn.prefix,
-        browserId: watcher.context.browserId,
+        context: watcher.context,
         sessionData: watcher.sessionData,
       });
   } catch (e) {
@@ -191,7 +191,7 @@ function destroyTargets(watcher) {
       .getActor("DevToolsFrame")
       .destroyTarget({
         watcherActorID: watcher.actorID,
-        browserId: watcher.context.browserId,
+        context: watcher.context,
       });
   }
 
@@ -231,7 +231,7 @@ async function addSessionDataEntry({ watcher, type, entries }) {
       .getActor("DevToolsFrame")
       .addSessionDataEntry({
         watcherActorID: watcher.actorID,
-        browserId: watcher.context.browserId,
+        context: watcher.context,
         type,
         entries,
       });
@@ -258,7 +258,7 @@ function removeSessionDataEntry({ watcher, type, entries }) {
       .getActor("DevToolsFrame")
       .removeSessionDataEntry({
         watcherActorID: watcher.actorID,
-        browserId: watcher.context.browserId,
+        context: watcher.context,
         type,
         entries,
       });
