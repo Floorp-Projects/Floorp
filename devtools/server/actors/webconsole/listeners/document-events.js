@@ -55,10 +55,10 @@ exports.DocumentEventsListener = DocumentEventsListener;
 DocumentEventsListener.prototype = {
   listen() {
     // Listen to will-navigate and do not emit a fake one as we only care about upcoming navigation
-    EventEmitter.on(this.targetActor, "will-navigate", this.onWillNavigate);
+    this.targetActor.on("will-navigate", this.onWillNavigate);
 
     // Listen to window-ready and then fake one in order to notify about dom-loading for the existing document
-    EventEmitter.on(this.targetActor, "window-ready", this.onWindowReady);
+    this.targetActor.on("window-ready", this.onWindowReady);
     // If the target actor isn't attached yet, attach it so that it starts emitting window-ready event
     // Only do that if this isn't a JSWindowActor based target as this won't emit window-ready anyway.
     if (
@@ -132,6 +132,9 @@ DocumentEventsListener.prototype = {
   },
 
   onContentLoaded(event, isFrameSwitching) {
+    if (this.destroyed) {
+      return;
+    }
     // milliseconds since the UNIX epoch, when the parser finished its work
     // on the main document, that is when its Document.readyState changes to
     // 'interactive' and the corresponding readystatechange event is thrown
@@ -141,6 +144,9 @@ DocumentEventsListener.prototype = {
   },
 
   onLoad(event, isFrameSwitching) {
+    if (this.destroyed) {
+      return;
+    }
     // milliseconds since the UNIX epoch, when the parser finished its work
     // on the main document, that is when its Document.readyState changes to
     // 'complete' and the corresponding readystatechange event is thrown
@@ -180,6 +186,9 @@ DocumentEventsListener.prototype = {
   },
 
   destroy() {
-    this.listener = null;
+    // Also use a flag to silent onContentLoad and onLoad events
+    this.destroyed = true;
+    this.targetActor.off("will-navigate", this.onWillNavigate);
+    this.targetActor.off("window-ready", this.onWindowReady);
   },
 };
