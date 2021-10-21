@@ -693,4 +693,11 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Xitaá</string>
 
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Tema</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Yaa</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Ntyai</string>
     </resources>

@@ -614,6 +614,9 @@
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">כלי פיתוח</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">פתיחת קישורים ביישומונים</string>
+
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">מתקדם</string>
 

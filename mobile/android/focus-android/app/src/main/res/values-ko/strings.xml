@@ -628,6 +628,9 @@
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">개발자 도구</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">앱에서 링크 열기</string>
+
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">고급</string>
 
