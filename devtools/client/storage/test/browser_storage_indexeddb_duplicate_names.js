@@ -12,7 +12,8 @@ add_task(async function() {
     set: [["dom.indexedDB.storageOption.enabled", true]],
   });
 
-  const TESTPAGE = MAIN_DOMAIN + "storage-indexeddb-duplicate-names.html";
+  const TESTPAGE =
+    MAIN_DOMAIN_SECURED + "storage-indexeddb-duplicate-names.html";
 
   setPermission(TESTPAGE, "indexedDB");
 
@@ -20,7 +21,7 @@ add_task(async function() {
 
   await checkState([
     [
-      ["indexedDB", "http://test1.example.org"],
+      ["indexedDB", "https://test1.example.org"],
       [
         "idb1 (default)",
         "idb1 (temporary)",

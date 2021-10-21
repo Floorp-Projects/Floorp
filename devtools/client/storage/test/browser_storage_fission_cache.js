@@ -7,6 +7,10 @@
 "use strict";
 
 add_task(async function() {
+  // Using https-first for this test is blocked on Bug 1733420.
+  // We cannot assert cache status "OK" with HTTPS requests to httpd.js.
+  await pushPref("dom.security.https_first", false);
+
   // open tab
   const URL = URL_ROOT_COM + "storage-cache-basic.html";
   await openTabAndSetupStorage(URL);

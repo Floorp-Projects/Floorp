@@ -21,19 +21,19 @@
 // storage-secured-iframe.html and storage-unsecured-iframe.html
 const storeItems = [
   [
-    ["indexedDB", "http://test1.example.org"],
+    ["indexedDB", "https://test1.example.org"],
     ["idb1 (default)", "idb2 (default)"],
   ],
   [
-    ["indexedDB", "http://test1.example.org", "idb1 (default)"],
+    ["indexedDB", "https://test1.example.org", "idb1 (default)"],
     ["obj1", "obj2"],
   ],
-  [["indexedDB", "http://test1.example.org", "idb2 (default)"], []],
+  [["indexedDB", "https://test1.example.org", "idb2 (default)"], []],
   [
-    ["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
+    ["indexedDB", "https://test1.example.org", "idb1 (default)", "obj1"],
     [1, 2, 3],
   ],
-  [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj2"], [1]],
+  [["indexedDB", "https://test1.example.org", "idb1 (default)", "obj2"], [1]],
 ];
 
 /**
@@ -81,7 +81,9 @@ const testTables = async function() {
 };
 
 add_task(async function() {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-empty-objectstores.html");
+  await openTabAndSetupStorage(
+    MAIN_DOMAIN_SECURED + "storage-empty-objectstores.html"
+  );
 
   testTree();
   await testTables();

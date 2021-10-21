@@ -35,9 +35,9 @@ async function testNavigation() {
 
   // Check first domain
   // check that both host appear in the storage tree
-  checkTree(doc, ["sessionStorage", "http://example.com"]);
+  checkTree(doc, ["sessionStorage", "https://example.com"]);
   // check the table for values
-  await selectTreeItem(["sessionStorage", "http://example.com"]);
+  await selectTreeItem(["sessionStorage", "https://example.com"]);
   checkStorageData("lorem", "ipsum");
 
   // clear up session storage data before navigating
@@ -52,16 +52,16 @@ async function testNavigation() {
   // wait for storage tree refresh, and check host
   info("Waiting for storage tree to refresh and show correct host…");
   await waitUntil(() =>
-    isInTree(doc, ["sessionStorage", "http://example.net"])
+    isInTree(doc, ["sessionStorage", "https://example.net"])
   );
 
   ok(
-    !isInTree(doc, ["sessionStorage", "http://example.com"]),
+    !isInTree(doc, ["sessionStorage", "https://example.com"]),
     "example.com item is not in the tree anymore"
   );
 
   // check the table for values
-  await selectTreeItem(["sessionStorage", "http://example.net"]);
+  await selectTreeItem(["sessionStorage", "https://example.net"]);
   checkStorageData("foo", "bar");
 
   info("Check that the sessionStorage node still has the expected label");

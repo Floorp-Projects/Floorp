@@ -22,11 +22,11 @@ add_task(async function() {
   const doc = gPanelWindow.document;
 
   // check that both hosts appear in the storage tree
-  checkTree(doc, ["sessionStorage", "http://example.com"]);
+  checkTree(doc, ["sessionStorage", "https://example.com"]);
   // check the table for values
-  await selectTreeItem(["sessionStorage", "http://example.com"]);
+  await selectTreeItem(["sessionStorage", "https://example.com"]);
   await waitForStorageData("foo", "bar");
-  await selectTreeItem(["sessionStorage", "http://example.net"]);
+  await selectTreeItem(["sessionStorage", "https://example.net"]);
   await waitForStorageData("lorem", "ipsum");
 
   // add more storage data to the main wrapper
@@ -38,8 +38,8 @@ add_task(async function() {
     });
   });
   // check that the new data is shown in the table
-  await selectTreeItem(["sessionStorage", "http://example.com"]);
+  await selectTreeItem(["sessionStorage", "https://example.com"]);
   await waitForStorageData("foo2", "bar2");
-  await selectTreeItem(["sessionStorage", "http://example.net"]);
+  await selectTreeItem(["sessionStorage", "https://example.net"]);
   await waitForStorageData("lorem2", "ipsum2");
 });

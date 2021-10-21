@@ -7,7 +7,7 @@
 // Test dynamic updates in the storage inspector for sessionStorage.
 
 add_task(async function() {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-updates.html");
+  await openTabAndSetupStorage(MAIN_DOMAIN_SECURED + "storage-updates.html");
 
   gUI.tree.expandAll();
 
@@ -15,7 +15,7 @@ add_task(async function() {
 
   await checkState([
     [
-      ["sessionStorage", "http://test1.example.org"],
+      ["sessionStorage", "https://test1.example.org"],
       ["ss1", "ss2", "ss3"],
     ],
   ]);
@@ -26,7 +26,7 @@ add_task(async function() {
 
   await checkState([
     [
-      ["sessionStorage", "http://test1.example.org"],
+      ["sessionStorage", "https://test1.example.org"],
       ["ss1", "ss2", "ss3", "ss4"],
     ],
   ]);
@@ -43,7 +43,7 @@ add_task(async function() {
 
   await checkState([
     [
-      ["sessionStorage", "http://test1.example.org"],
+      ["sessionStorage", "https://test1.example.org"],
       ["ss2", "ss4"],
     ],
   ]);
@@ -70,7 +70,7 @@ add_task(async function() {
 
   await gUI.once("store-objects-cleared");
 
-  await checkState([[["sessionStorage", "http://test1.example.org"], []]]);
+  await checkState([[["sessionStorage", "https://test1.example.org"], []]]);
 });
 
 async function setSessionStorageItem(key, value) {
