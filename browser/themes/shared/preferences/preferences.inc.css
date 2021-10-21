@@ -209,7 +209,7 @@ checkbox {
 }
 
 #category-experimental > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/category-experiments.svg");
+  list-style-image: url("chrome://global/skin/icons/experiments.svg");
 }
 
 /* All panes */

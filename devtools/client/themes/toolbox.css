@@ -441,7 +441,7 @@
 }
 
 #command-button-experimental-prefs::before {
-  background-image: url("chrome://browser/skin/preferences/category-experiments.svg");
+  background-image: url("chrome://global/skin/icons/experiments.svg");
   background-size: cover;
 }
 

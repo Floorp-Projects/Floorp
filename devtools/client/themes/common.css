@@ -454,7 +454,7 @@ checkbox:-moz-focusring {
 }
 
 .devtools-button.devtools-feature-callout::after {
-  content: url("chrome://browser/skin/badge-blue.svg");
+  content: url("chrome://global/skin/icons/badge-blue.svg");
   width: 14px;
   height: 14px;
   display: block;

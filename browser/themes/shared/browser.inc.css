@@ -338,7 +338,7 @@ menupopup::part(drop-indicator) {
 }
 
 .private-browsing-indicator {
-  background-image: url("chrome://browser/skin/indicator-private-browsing.svg");
+  background-image: url("chrome://global/skin/icons/indicator-private-browsing.svg");
 }
 
 :root:not([accessibilitymode]) .accessibility-indicator,

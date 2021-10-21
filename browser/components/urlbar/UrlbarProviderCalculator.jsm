@@ -137,7 +137,7 @@ class ProviderCalculator extends UrlbarProvider {
     const viewUpdate = {
       icon: {
         attributes: {
-          src: "chrome://browser/skin/edit-copy.svg",
+          src: "chrome://global/skin/icons/edit-copy.svg",
         },
       },
       input: {
