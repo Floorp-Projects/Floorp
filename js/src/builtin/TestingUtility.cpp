@@ -103,3 +103,56 @@ bool js::ParseCompileOptions(JSContext* cx, JS::CompileOptions& options,
 
   return true;
 }
+
+bool js::ParseSourceOptions(JSContext* cx, JS::Handle<JSObject*> opts,
+                            JS::MutableHandle<JSString*> displayURL,
+                            JS::MutableHandle<JSString*> sourceMapURL) {
+  JS::Rooted<JS::Value> v(cx);
+
+  if (!JS_GetProperty(cx, opts, "displayURL", &v)) {
+    return false;
+  }
+  if (!v.isUndefined()) {
+    displayURL.set(ToString(cx, v));
+    if (!displayURL) {
+      return false;
+    }
+  }
+
+  if (!JS_GetProperty(cx, opts, "sourceMapURL", &v)) {
+    return false;
+  }
+  if (!v.isUndefined()) {
+    sourceMapURL.set(ToString(cx, v));
+    if (!sourceMapURL) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool js::SetSourceOptions(JSContext* cx, ScriptSource* source,
+                          JS::Handle<JSString*> displayURL,
+                          JS::Handle<JSString*> sourceMapURL) {
+  if (displayURL && !source->hasDisplayURL()) {
+    UniqueTwoByteChars chars = JS_CopyStringCharsZ(cx, displayURL);
+    if (!chars) {
+      return false;
+    }
+    if (!source->setDisplayURL(cx, std::move(chars))) {
+      return false;
+    }
+  }
+  if (sourceMapURL && !source->hasSourceMapURL()) {
+    UniqueTwoByteChars chars = JS_CopyStringCharsZ(cx, sourceMapURL);
+    if (!chars) {
+      return false;
+    }
+    if (!source->setSourceMapURL(cx, std::move(chars))) {
+      return false;
+    }
+  }
+
+  return true;
+}
