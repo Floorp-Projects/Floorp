@@ -256,6 +256,7 @@
 #include "nsCSSPropertyID.h"
 #include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h"
+#include "nsCSSRendering.h"
 #include "nsCanvasFrame.h"
 #include "nsCaseTreatment.h"
 #include "nsCharsetSource.h"
@@ -396,6 +397,7 @@
 #include "nsSerializationHelper.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringFlags.h"
+#include "nsStyleUtil.h"
 #include "nsStringIterator.h"
 #include "nsStyleSheetService.h"
 #include "nsStyleStruct.h"
@@ -14450,6 +14452,88 @@ Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicateFunc) {
   }
 
   return removedElement;
+}
+
+void Document::GetWireframe(bool aIncludeNodes,
+                            Nullable<Wireframe>& aWireframe) {
+  using FrameForPointOptions = nsLayoutUtils::FrameForPointOptions;
+  using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
+  FlushPendingNotifications(FlushType::Layout);
+
+  PresShell* shell = GetPresShell();
+  if (!shell) {
+    return;
+  }
+
+  nsPresContext* pc = shell->GetPresContext();
+  if (!pc) {
+    return;
+  }
+
+  auto& wireframe = aWireframe.SetValue();
+  nsStyleUtil::GetSerializedColorValue(shell->GetCanvasBackground(),
+                                       wireframe.mCanvasBackground.Construct());
+
+  FrameForPointOptions options;
+  options.mBits += FrameForPointOption::IgnoreCrossDoc;
+  options.mBits += FrameForPointOption::IgnorePaintSuppression;
+  options.mBits += FrameForPointOption::OnlyVisible;
+
+  AutoTArray<nsIFrame*, 32> frames;
+  const RelativeTo relativeTo{shell->GetRootFrame(),
+                              mozilla::ViewportType::Layout};
+  nsLayoutUtils::GetFramesForArea(relativeTo, pc->GetVisibleArea(), frames,
+                                  options);
+
+  // TODO(emilio): We could rewrite hit testing to return nsDisplayItem*s or
+  // something perhaps, but seems hard / like it'd involve at least some extra
+  // copying around, since they don't outlive GetFramesForArea.
+  auto& rects = wireframe.mRects.Construct();
+  if (!rects.SetCapacity(frames.Length(), fallible)) {
+    return;
+  }
+  for (nsIFrame* frame : frames) {
+    // Can't really fail because SetCapacity succeeded.
+    auto& taggedRect = *rects.AppendElement(fallible);
+    const auto r =
+        CSSRect::FromAppUnits(nsLayoutUtils::TransformFrameRectToAncestor(
+            frame, frame->GetRectRelativeToSelf(), relativeTo));
+    if (aIncludeNodes) {
+      if (nsIContent* c = frame->GetContent()) {
+        taggedRect.mNode.Construct(c);
+      }
+    }
+    taggedRect.mRect.Construct(MakeRefPtr<DOMRectReadOnly>(
+        ToSupports(this), r.x, r.y, r.width, r.height));
+    taggedRect.mType.Construct() = [&] {
+      if (frame->IsTextFrame()) {
+        nsStyleUtil::GetSerializedColorValue(
+            frame->StyleText()->mWebkitTextFillColor.CalcColor(frame),
+            taggedRect.mColor.Construct());
+        return WireframeRectType::Text;
+      }
+      if (frame->IsImageFrame() || frame->IsSVGOuterSVGFrame()) {
+        return WireframeRectType::Image;
+      }
+      if (frame->IsThemed()) {
+        return WireframeRectType::Background;
+      }
+      bool drawImage = false;
+      bool drawColor = false;
+      const nscolor color = nsCSSRendering::DetermineBackgroundColor(
+          pc, frame->Style(), frame, drawImage, drawColor);
+      if (drawImage &&
+          !frame->StyleBackground()->mImage.BottomLayer().mImage.IsNone()) {
+        return WireframeRectType::Image;
+      }
+      if (drawColor) {
+        nsStyleUtil::GetSerializedColorValue(color,
+                                             taggedRect.mColor.Construct());
+        return WireframeRectType::Background;
+      }
+      return WireframeRectType::Unknown;
+    }();
+  }
 }
 
 Element* Document::GetTopLayerTop() {

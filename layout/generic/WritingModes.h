@@ -9,6 +9,7 @@
 
 #include <ostream>
 
+#include "mozilla/intl/Bidi.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/EnumeratedRange.h"
 
@@ -524,8 +525,8 @@ class WritingMode {
    *
    * XXX change uint8_t to UBiDiLevel after bug 924851
    */
-  void SetDirectionFromBidiLevel(uint8_t level) {
-    if (IS_LEVEL_RTL(level) == IsBidiLTR()) {
+  void SetDirectionFromBidiLevel(mozilla::intl::Bidi::EmbeddingLevel level) {
+    if (level.IsRTL() == IsBidiLTR()) {
       mWritingMode ^= StyleWritingMode::RTL | StyleWritingMode::INLINE_REVERSED;
     }
   }

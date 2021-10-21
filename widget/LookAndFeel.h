@@ -337,6 +337,9 @@ class LookAndFeel {
     /** A boolean value to determine whether a touch device is present */
     TouchDeviceSupportPresent,
 
+    /** GTK titlebar radius */
+    TitlebarRadius,
+
     /*
      * Not an ID; used to define the range of valid IDs.  Must be last.
      */
@@ -396,9 +399,6 @@ class LookAndFeel {
 
     // GTK text scale factor.
     TextScaleFactor,
-
-    // GTK titlebar radius.
-    TitlebarRadius,
 
     // Not an ID; used to define the range of valid IDs.  Must be last.
     End,

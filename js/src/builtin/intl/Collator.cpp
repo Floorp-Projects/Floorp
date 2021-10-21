@@ -351,6 +351,24 @@ static mozilla::intl::Collator* NewIntlCollator(
   return coll.release();
 }
 
+static mozilla::intl::Collator* GetOrCreateCollator(
+    JSContext* cx, Handle<CollatorObject*> collator) {
+  // Obtain a cached mozilla::intl::Collator object.
+  mozilla::intl::Collator* coll = collator->getCollator();
+  if (coll) {
+    return coll;
+  }
+
+  coll = NewIntlCollator(cx, collator);
+  if (!coll) {
+    return nullptr;
+  }
+  collator->setCollator(coll);
+
+  intl::AddICUCellMemory(collator, CollatorObject::EstimatedMemoryUse);
+  return coll;
+}
+
 static bool intl_CompareStrings(JSContext* cx, mozilla::intl::Collator* coll,
                                 HandleString str1, HandleString str2,
                                 MutableHandleValue result) {
@@ -389,16 +407,9 @@ bool js::intl_CompareStrings(JSContext* cx, unsigned argc, Value* vp) {
   Rooted<CollatorObject*> collator(cx,
                                    &args[0].toObject().as<CollatorObject>());
 
-  // Obtain a cached mozilla::intl::Collator object.
-  mozilla::intl::Collator* coll = collator->getCollator();
+  mozilla::intl::Collator* coll = GetOrCreateCollator(cx, collator);
   if (!coll) {
-    coll = NewIntlCollator(cx, collator);
-    if (!coll) {
-      return false;
-    }
-    collator->setCollator(coll);
-
-    intl::AddICUCellMemory(collator, CollatorObject::EstimatedMemoryUse);
+    return false;
   }
 
   // Use the UCollator to actually compare the strings.

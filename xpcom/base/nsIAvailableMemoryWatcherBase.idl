@@ -17,6 +17,14 @@
 [scriptable, uuid(2e530956-6054-464f-9f4c-0ae6f8de5523)]
 interface nsITabUnloader : nsISupports
 {
+  /*
+   * Unload the least-recently-used tab.
+   * JS implementation of this interface TabUnloader.unloadTabAsync takes
+   * one parameter that defines a threshold to exclude fresh tabs from the
+   * unloading candidate tabs.  Currently the memory watcher is the only one
+   * caller of this interface and it always expects the default threshold,
+   * so this interface takes no parameter.
+   */
   void unloadTabAsync();
 };
 

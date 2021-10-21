@@ -4091,9 +4091,7 @@ JSObject* JS::InstantiateModuleStencil(JSContext* cx,
   return gcOutput.get().module;
 }
 
-JS::TranscodeResult JS::EncodeStencil(JSContext* cx,
-                                      const JS::ReadOnlyCompileOptions& options,
-                                      JS::Stencil* stencil,
+JS::TranscodeResult JS::EncodeStencil(JSContext* cx, JS::Stencil* stencil,
                                       TranscodeBuffer& buffer) {
   XDRStencilEncoder encoder(cx, buffer);
   XDRResult res = encoder.codeStencil(*stencil);

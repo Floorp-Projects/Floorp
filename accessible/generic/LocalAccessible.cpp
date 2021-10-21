@@ -646,12 +646,40 @@ nsRect LocalAccessible::ParentRelativeBounds() {
       }
     }
 
-    if (mParent) {
-      boundingFrame = mParent->GetFrame();
+    // We need to find a frame to make our bounds relative to. We'll store this
+    // in `boundingFrame`. Ultimately, we'll create screen-relative coordinates
+    // by summing the x, y offsets of our ancestors' bounds in
+    // RemoteAccessibleBase::Bounds(), so it is important that our bounding
+    // frame have a corresponding accessible.
+    if (IsDoc() &&
+        nsCoreUtils::IsTopLevelContentDocInProcess(AsDoc()->DocumentNode())) {
+      // Tab documents and OOP iframe docs won't have ancestor accessibles with
+      // frames. We'll use their presshell root frame instead.
+      // XXX bug 1736635: Should DocAccessibles return their presShell frame on
+      // GetFrame()?
+      boundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
+    }
+
+    // Iterate through ancestors to find one with a frame.
+    LocalAccessible* parent = mParent;
+    while (parent && !boundingFrame) {
+      if (parent->IsDoc()) {
+        // If we find a doc accessible, use its presshell's root frame
+        // (since doc accessibles themselves don't have frames).
+        boundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
+        break;
+      }
+
+      if ((boundingFrame = parent->GetFrame())) {
+        // Otherwise, if the parent has a frame, use that
+        break;
+      }
+
+      parent = parent->LocalParent();
     }
 
     if (!boundingFrame) {
-      // if we can't get the bounding frame, use the pres shell root
+      MOZ_ASSERT_UNREACHABLE("No ancestor with frame?");
       boundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
     }
 

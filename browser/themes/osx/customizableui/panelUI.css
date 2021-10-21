@@ -30,7 +30,8 @@ panel[type="arrow"][side="right"] {
 #customizationui-widget-panel,
 #identity-popup,
 #permission-popup,
-#protections-popup {
+#protections-popup,
+#appMenu-notification-popup {
   margin-top: -1px; /* Overrides value from panelUI.inc.css */
 }
 

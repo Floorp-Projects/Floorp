@@ -5,9 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
+    "TestBidi.cpp",
     "TestCalendar.cpp",
     "TestCollator.cpp",
     "TestCurrency.cpp",
+    "TestDateIntervalFormat.cpp",
     "TestDateTimeFormat.cpp",
     "TestListFormat.cpp",
     "TestLocale.cpp",

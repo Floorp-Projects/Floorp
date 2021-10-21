@@ -16,7 +16,7 @@ add_task(async function test_contentscript_about_blank() {
     content_scripts: [
       {
         match_about_blank: true,
-        matches: ["http://mochi.test/*/file_with_about_blank.html", "http://example.com/*"],
+        matches: ["http://mochi.test/*/file_with_about_blank.html", "https://example.com/*"],
         all_frames: true,
         css: ["all.css"],
         js: ["all.js"],
@@ -74,7 +74,7 @@ add_task(async function test_contentscript_about_blank() {
     count++;
   });
 
-  let win = window.open("http://example.com/" + PATH);
+  let win = window.open("https://example.com/" + PATH);
   await Promise.all([
     extension.awaitMessage("all:top"),
     extension.awaitMessage("all:about:blank"),

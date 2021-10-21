@@ -4208,6 +4208,13 @@ var SessionStoreInternal = {
       aWindow.__SSi
     ]._lastClosedTabGroupCount = newLastClosedTabGroupCount;
 
+    if (!this._isWindowLoaded(aWindow)) {
+      // from now on, the data will come from the actual window
+      delete this._statesToRestore[WINDOW_RESTORE_IDS.get(aWindow)];
+      WINDOW_RESTORE_IDS.delete(aWindow);
+      delete this._windows[aWindow.__SSi]._restoring;
+    }
+
     // Restore tabs, if any.
     if (winData.tabs.length) {
       this.restoreTabs(aWindow, tabs, winData.tabs, selectTab);
@@ -4401,13 +4408,6 @@ var SessionStoreInternal = {
    */
   restoreTabs(aWindow, aTabs, aTabData, aSelectTab) {
     var tabbrowser = aWindow.gBrowser;
-
-    if (!this._isWindowLoaded(aWindow)) {
-      // from now on, the data will come from the actual window
-      delete this._statesToRestore[WINDOW_RESTORE_IDS.get(aWindow)];
-      WINDOW_RESTORE_IDS.delete(aWindow);
-      delete this._windows[aWindow.__SSi]._restoring;
-    }
 
     let numTabsToRestore = aTabs.length;
     let numTabsInWindow = tabbrowser.tabs.length;

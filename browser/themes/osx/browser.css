@@ -31,8 +31,15 @@
   --arrowpanel-field-background: rgba(12,12,13,.3);
 }
 
+#browser {
+  /* #browser and #navigator-toolbox must have relative positions so that the
+     latter can slide over the former in fullscreen mode. */
+  position: relative;
+}
+
 #navigator-toolbox {
   appearance: none;
+  position: relative;
 }
 
 #navigator-toolbox:not(:-moz-lwtheme) {

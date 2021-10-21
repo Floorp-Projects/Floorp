@@ -4,26 +4,15 @@
 Visual Studio Projects
 ======================
 
-The build system contains alpha support for generating Visual Studio
-project files to aid with development.
+The build system automatically generates Visual Studio project files to aid
+with development, as part of a normal ``mach build`` from the command line.
 
-To generate Visual Studio project files, you'll need to have a configured tree::
+You can find the solution file at ``$OBJDIR/msvs/mozilla.sln``.
 
-   mach configure
+If you want to generate the project files before/without doing a full build,
+running ``./mach configure && ./mach build-backend -b VisualStudio`` will do
+so.
 
-(If you have built recently, your tree is already configured.)
-
-Then, simply generate the Visual Studio build backend::
-
-   mach build-backend -b VisualStudio
-
-If all goes well, the path to the generated Solution (``.sln``) file should be
-printed. You should be able to open that solution with Visual Studio 2010 or
-newer.
-
-Currently, output is hard-coded to the Visual Studio 2010 format. If you open
-the solution in a newer Visual Studio release, you will be prompted to upgrade
-projects. Simply click through the wizard to do that.
 
 Structure of Solution
 =====================
@@ -59,20 +48,8 @@ Libraries
 Updating Project Files
 ======================
 
-As you pull and update the source tree, your Visual Studio files may fall out
-of sync with the build configuration. The tree should still build fine from
-within Visual Studio. But source files may be missing and IntelliSense may not
-have the proper build configuration.
-
-To account for this, you'll want to periodically regenerate the Visual Studio
-project files. You can do this within Visual Studio by building the
-``Build Targets :: visual-studio`` project or by running
-``mach build-backend -b VisualStudio`` from the command line.
-
-Currently, regeneration rewrites the original project files. **If you've made
-any customizations to the solution or projects, they will likely get
-overwritten.** We would like to improve this user experience in the
-future.
+Either re-running ``./mach build`` or ``./mach build-backend -b VisualStudio``
+will update the Visual Studio files after the tree changes.
 
 Moving Project Files Around
 ===========================

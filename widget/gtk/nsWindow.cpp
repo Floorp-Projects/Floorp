@@ -6102,8 +6102,8 @@ void nsWindow::UpdateWindowDraggingRegion(
 }
 
 LayoutDeviceIntCoord nsWindow::GetTitlebarRadius() {
-  int32_t cssCoord =
-      std::ceil(LookAndFeel::GetFloat(LookAndFeel::FloatID::TitlebarRadius));
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  int32_t cssCoord = LookAndFeel::GetInt(LookAndFeel::IntID::TitlebarRadius);
   return GdkCoordToDevicePixels(cssCoord);
 }
 
@@ -6354,12 +6354,18 @@ nsresult nsWindow::UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
   return NS_OK;
 }
 
+#define TITLEBAR_HEIGHT 10
+
 LayoutDeviceIntRect nsWindow::GetTitlebarRect() {
   if (!mGdkWindow || !mDrawInTitlebar) {
     return LayoutDeviceIntRect();
   }
 
-  return LayoutDeviceIntRect(0, 0, mBounds.width, GetTitlebarRadius());
+  int height = 0;
+  if (DoDrawTilebarCorners()) {
+    height = GdkCeiledScaleFactor() * TITLEBAR_HEIGHT;
+  }
+  return LayoutDeviceIntRect(0, 0, mBounds.width, height);
 }
 
 void nsWindow::UpdateTitlebarTransparencyBitmap() {

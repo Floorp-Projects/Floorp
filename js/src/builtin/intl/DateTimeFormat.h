@@ -13,11 +13,10 @@
 #include "js/RootingAPI.h"
 #include "vm/NativeObject.h"
 
-struct UDateIntervalFormat;
-
 namespace mozilla::intl {
 class DateTimeFormat;
-}
+class DateIntervalFormat;
+}  // namespace mozilla::intl
 
 namespace js {
 
@@ -27,8 +26,8 @@ class DateTimeFormatObject : public NativeObject {
   static const JSClass& protoClass_;
 
   static constexpr uint32_t INTERNALS_SLOT = 0;
-  static constexpr uint32_t UDATE_FORMAT_SLOT = 1;
-  static constexpr uint32_t UDATE_INTERVAL_FORMAT_SLOT = 2;
+  static constexpr uint32_t DATE_FORMAT_SLOT = 1;
+  static constexpr uint32_t DATE_INTERVAL_FORMAT_SLOT = 2;
   static constexpr uint32_t SLOT_COUNT = 3;
 
   static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
@@ -42,7 +41,7 @@ class DateTimeFormatObject : public NativeObject {
   static constexpr size_t UDateIntervalFormatEstimatedMemoryUse = 133064;
 
   mozilla::intl::DateTimeFormat* getDateFormat() const {
-    const auto& slot = getFixedSlot(UDATE_FORMAT_SLOT);
+    const auto& slot = getFixedSlot(DATE_FORMAT_SLOT);
     if (slot.isUndefined()) {
       return nullptr;
     }
@@ -50,19 +49,20 @@ class DateTimeFormatObject : public NativeObject {
   }
 
   void setDateFormat(mozilla::intl::DateTimeFormat* dateFormat) {
-    setFixedSlot(UDATE_FORMAT_SLOT, PrivateValue(dateFormat));
+    setFixedSlot(DATE_FORMAT_SLOT, PrivateValue(dateFormat));
   }
 
-  UDateIntervalFormat* getDateIntervalFormat() const {
-    const auto& slot = getFixedSlot(UDATE_INTERVAL_FORMAT_SLOT);
+  mozilla::intl::DateIntervalFormat* getDateIntervalFormat() const {
+    const auto& slot = getFixedSlot(DATE_INTERVAL_FORMAT_SLOT);
     if (slot.isUndefined()) {
       return nullptr;
     }
-    return static_cast<UDateIntervalFormat*>(slot.toPrivate());
+    return static_cast<mozilla::intl::DateIntervalFormat*>(slot.toPrivate());
   }
 
-  void setDateIntervalFormat(UDateIntervalFormat* dateIntervalFormat) {
-    setFixedSlot(UDATE_INTERVAL_FORMAT_SLOT, PrivateValue(dateIntervalFormat));
+  void setDateIntervalFormat(
+      mozilla::intl::DateIntervalFormat* dateIntervalFormat) {
+    setFixedSlot(DATE_INTERVAL_FORMAT_SLOT, PrivateValue(dateIntervalFormat));
   }
 
  private:

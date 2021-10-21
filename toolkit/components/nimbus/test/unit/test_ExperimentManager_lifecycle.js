@@ -225,3 +225,51 @@ add_task(async function test_onFinalize_unenroll() {
     "should clear sessions[test]"
   );
 });
+
+add_task(async function test_onFinalize_unenroll_mismatch() {
+  const manager = ExperimentFakes.manager();
+  const sandbox = sinon.createSandbox();
+  sandbox.spy(manager, "unenroll");
+
+  await manager.onStartup();
+
+  // Add an experiment to the store without calling .onRecipe
+  // This simulates an enrollment having happened in the past.
+  let recipe0 = ExperimentFakes.experiment("foo", {
+    experimentType: "unittest",
+    userFacingName: "foo",
+    userFacingDescription: "foo",
+    lastSeen: Date.now().toLocaleString(),
+    source: "test",
+  });
+  await manager.store.addExperiment(recipe0);
+
+  const recipe1 = ExperimentFakes.recipe("bar");
+  // Unique features to prevent overlap
+  recipe1.branches[0].features[0].featureId = "red";
+  recipe1.branches[1].features[0].featureId = "red";
+  await manager.onRecipe(recipe1, "test");
+  const recipe2 = ExperimentFakes.recipe("baz");
+  recipe2.branches[0].features[0].featureId = "green";
+  recipe2.branches[1].features[0].featureId = "green";
+  await manager.onRecipe(recipe2, "test");
+
+  // Finalize
+  manager.onFinalize("test", { recipeMismatches: [recipe0.slug] });
+
+  Assert.equal(
+    manager.unenroll.callCount,
+    1,
+    "should only call unenroll for the unseen recipe"
+  );
+  Assert.equal(
+    manager.unenroll.calledWith("foo", "targeting-mismatch"),
+    true,
+    "should unenroll a experiment whose recipe wasn't seen in the current session"
+  );
+  Assert.equal(
+    manager.sessions.has("test"),
+    false,
+    "should clear sessions[test]"
+  );
+});

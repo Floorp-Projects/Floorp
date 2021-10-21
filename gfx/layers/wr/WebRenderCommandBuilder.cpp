@@ -597,7 +597,6 @@ struct DIGroup {
       return;
     }
 
-    gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
     std::vector<RefPtr<ScaledFont>> fonts;
     bool validFonts = true;
     RefPtr<WebRenderDrawEventRecorder> recorder =
@@ -620,8 +619,8 @@ struct DIGroup {
               fonts = std::move(aScaledFonts);
             });
 
-    RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
-        gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
+    RefPtr<gfx::DrawTarget> dummyDt =
+        gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
 
     RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(
         recorder, dummyDt, mLayerBounds.ToUnknownRect());
@@ -1092,15 +1091,14 @@ static bool IsItemProbablyActive(
       Matrix t2d;
       bool is2D = t.Is2D(&t2d);
       GP("active: %d\n", transformItem->MayBeAnimated(aDisplayListBuilder));
-      return transformItem->MayBeAnimated(aDisplayListBuilder, false) ||
-             !is2D ||
+      return transformItem->MayBeAnimated(aDisplayListBuilder) || !is2D ||
              HasActiveChildren(*transformItem->GetChildren(), aBuilder,
                                aResources, aSc, aManager, aDisplayListBuilder);
     }
     case DisplayItemType::TYPE_OPACITY: {
       nsDisplayOpacity* opacityItem = static_cast<nsDisplayOpacity*>(aItem);
       bool active = opacityItem->NeedsActiveLayer(aDisplayListBuilder,
-                                                  opacityItem->Frame(), false);
+                                                  opacityItem->Frame());
       GP("active: %d\n", active);
       return active ||
              HasActiveChildren(*opacityItem->GetChildren(), aBuilder,

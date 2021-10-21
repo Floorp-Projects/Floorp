@@ -11,7 +11,9 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/intl/Calendar.h"
+#include "mozilla/intl/DateIntervalFormat.h"
 #include "mozilla/intl/DateTimeFormat.h"
+#include "mozilla/intl/DateTimePart.h"
 #include "mozilla/intl/DateTimePatternGenerator.h"
 #include "mozilla/intl/Locale.h"
 #include "mozilla/intl/TimeZone.h"
@@ -34,12 +36,6 @@
 #include "js/PropertyAndElement.h"  // JS_DefineFunctions, JS_DefineProperties
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
-#include "unicode/udat.h"
-#include "unicode/udateintervalformat.h"
-#include "unicode/uenum.h"
-#include "unicode/ufieldpositer.h"
-#include "unicode/uloc.h"
-#include "unicode/utypes.h"
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
@@ -195,7 +191,8 @@ void js::DateTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
 
   auto* dateTimeFormat = &obj->as<DateTimeFormatObject>();
   mozilla::intl::DateTimeFormat* df = dateTimeFormat->getDateFormat();
-  UDateIntervalFormat* dif = dateTimeFormat->getDateIntervalFormat();
+  mozilla::intl::DateIntervalFormat* dif =
+      dateTimeFormat->getDateIntervalFormat();
 
   if (df) {
     intl::RemoveICUCellMemory(
@@ -208,7 +205,7 @@ void js::DateTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
     intl::RemoveICUCellMemory(
         fop, obj, DateTimeFormatObject::UDateIntervalFormatEstimatedMemoryUse);
 
-    udtitvfmt_close(dif);
+    delete dif;
   }
 }
 
@@ -988,6 +985,25 @@ static mozilla::intl::DateTimeFormat* NewDateTimeFormat(
   return df.release();
 }
 
+static mozilla::intl::DateTimeFormat* GetOrCreateDateTimeFormat(
+    JSContext* cx, Handle<DateTimeFormatObject*> dateTimeFormat) {
+  // Obtain a cached mozilla::intl::DateTimeFormat object.
+  mozilla::intl::DateTimeFormat* df = dateTimeFormat->getDateFormat();
+  if (df) {
+    return df;
+  }
+
+  df = NewDateTimeFormat(cx, dateTimeFormat);
+  if (!df) {
+    return nullptr;
+  }
+  dateTimeFormat->setDateFormat(df);
+
+  intl::AddICUCellMemory(dateTimeFormat,
+                         DateTimeFormatObject::UDateFormatEstimatedMemoryUse);
+  return df;
+}
+
 template <typename T>
 static bool SetResolvedProperty(JSContext* cx, HandleObject resolved,
                                 HandlePropertyName name,
@@ -1019,17 +1035,10 @@ bool js::intl_resolveDateTimeFormatComponents(JSContext* cx, unsigned argc,
 
   bool includeDateTimeFields = args[2].toBoolean();
 
-  // Obtain a cached mozilla::intl::DateTimeFormat object.
-  mozilla::intl::DateTimeFormat* df = dateTimeFormat->getDateFormat();
+  mozilla::intl::DateTimeFormat* df =
+      GetOrCreateDateTimeFormat(cx, dateTimeFormat);
   if (!df) {
-    df = NewDateTimeFormat(cx, dateTimeFormat);
-    if (!df) {
-      return false;
-    }
-    dateTimeFormat->setDateFormat(df);
-
-    intl::AddICUCellMemory(dateTimeFormat,
-                           DateTimeFormatObject::UDateFormatEstimatedMemoryUse);
+    return false;
   }
 
   auto result = df->ResolveComponents();
@@ -1135,133 +1144,79 @@ static bool intl_FormatDateTime(JSContext* cx,
 
 using FieldType = js::ImmutablePropertyNamePtr JSAtomState::*;
 
-static FieldType GetFieldTypeForFormatField(UDateFormatField fieldName) {
-  // See intl/icu/source/i18n/unicode/udat.h for a detailed field list.  This
-  // switch is deliberately exhaustive: cases might have to be added/removed
-  // if this code is compiled with a different ICU with more
-  // UDateFormatField enum initializers.  Please guard such cases with
-  // appropriate ICU version-testing #ifdefs, should cross-version divergence
-  // occur.
-  switch (fieldName) {
-    case UDAT_ERA_FIELD:
+static FieldType GetFieldTypeForPartType(mozilla::intl::DateTimePartType type) {
+  switch (type) {
+    case mozilla::intl::DateTimePartType::Literal:
+      return &JSAtomState::literal;
+    case mozilla::intl::DateTimePartType::Era:
       return &JSAtomState::era;
-
-    case UDAT_YEAR_FIELD:
-    case UDAT_YEAR_WOY_FIELD:
-    case UDAT_EXTENDED_YEAR_FIELD:
+    case mozilla::intl::DateTimePartType::Year:
       return &JSAtomState::year;
-
-    case UDAT_YEAR_NAME_FIELD:
+    case mozilla::intl::DateTimePartType::YearName:
       return &JSAtomState::yearName;
-
-    case UDAT_MONTH_FIELD:
-    case UDAT_STANDALONE_MONTH_FIELD:
-      return &JSAtomState::month;
-
-    case UDAT_DATE_FIELD:
-    case UDAT_JULIAN_DAY_FIELD:
-      return &JSAtomState::day;
-
-    case UDAT_HOUR_OF_DAY1_FIELD:
-    case UDAT_HOUR_OF_DAY0_FIELD:
-    case UDAT_HOUR1_FIELD:
-    case UDAT_HOUR0_FIELD:
-      return &JSAtomState::hour;
-
-    case UDAT_MINUTE_FIELD:
-      return &JSAtomState::minute;
-
-    case UDAT_SECOND_FIELD:
-      return &JSAtomState::second;
-
-    case UDAT_DAY_OF_WEEK_FIELD:
-    case UDAT_STANDALONE_DAY_FIELD:
-    case UDAT_DOW_LOCAL_FIELD:
-    case UDAT_DAY_OF_WEEK_IN_MONTH_FIELD:
-      return &JSAtomState::weekday;
-
-    case UDAT_AM_PM_FIELD:
-      return &JSAtomState::dayPeriod;
-
-    case UDAT_TIMEZONE_FIELD:
-    case UDAT_TIMEZONE_GENERIC_FIELD:
-    case UDAT_TIMEZONE_LOCALIZED_GMT_OFFSET_FIELD:
-      return &JSAtomState::timeZoneName;
-
-    case UDAT_FRACTIONAL_SECOND_FIELD:
-      return &JSAtomState::fractionalSecond;
-
-    case UDAT_FLEXIBLE_DAY_PERIOD_FIELD:
-      return &JSAtomState::dayPeriod;
-
-#ifndef U_HIDE_INTERNAL_API
-    case UDAT_RELATED_YEAR_FIELD:
+    case mozilla::intl::DateTimePartType::RelatedYear:
       return &JSAtomState::relatedYear;
-#endif
-
-    case UDAT_DAY_OF_YEAR_FIELD:
-    case UDAT_WEEK_OF_YEAR_FIELD:
-    case UDAT_WEEK_OF_MONTH_FIELD:
-    case UDAT_MILLISECONDS_IN_DAY_FIELD:
-    case UDAT_TIMEZONE_RFC_FIELD:
-    case UDAT_QUARTER_FIELD:
-    case UDAT_STANDALONE_QUARTER_FIELD:
-    case UDAT_TIMEZONE_SPECIAL_FIELD:
-    case UDAT_TIMEZONE_ISO_FIELD:
-    case UDAT_TIMEZONE_ISO_LOCAL_FIELD:
-    case UDAT_AM_PM_MIDNIGHT_NOON_FIELD:
-#ifndef U_HIDE_INTERNAL_API
-    case UDAT_TIME_SEPARATOR_FIELD:
-#endif
-      // These fields are all unsupported.
+    case mozilla::intl::DateTimePartType::Month:
+      return &JSAtomState::month;
+    case mozilla::intl::DateTimePartType::Day:
+      return &JSAtomState::day;
+    case mozilla::intl::DateTimePartType::Hour:
+      return &JSAtomState::hour;
+    case mozilla::intl::DateTimePartType::Minute:
+      return &JSAtomState::minute;
+    case mozilla::intl::DateTimePartType::Second:
+      return &JSAtomState::second;
+    case mozilla::intl::DateTimePartType::Weekday:
+      return &JSAtomState::weekday;
+    case mozilla::intl::DateTimePartType::DayPeriod:
+      return &JSAtomState::dayPeriod;
+    case mozilla::intl::DateTimePartType::TimeZoneName:
+      return &JSAtomState::timeZoneName;
+    case mozilla::intl::DateTimePartType::FractionalSecondDigits:
+      return &JSAtomState::fractionalSecond;
+    case mozilla::intl::DateTimePartType::Unknown:
       return &JSAtomState::unknown;
-
-#ifndef U_HIDE_DEPRECATED_API
-    case UDAT_FIELD_COUNT:
-      MOZ_ASSERT_UNREACHABLE(
-          "format field sentinel value returned by "
-          "iterator!");
-#endif
   }
 
-  MOZ_ASSERT_UNREACHABLE(
+  MOZ_CRASH(
       "unenumerated, undocumented format field returned "
       "by iterator");
-  return nullptr;
 }
 
-static bool intl_FormatToPartsDateTime(JSContext* cx,
-                                       const mozilla::intl::DateTimeFormat* df,
-                                       ClippedTime x, FieldType source,
-                                       MutableHandleValue result) {
-  MOZ_ASSERT(x.isValid());
-
-  UErrorCode status = U_ZERO_ERROR;
-  UFieldPositionIterator* fpositer = ufieldpositer_open(&status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
+static FieldType GetFieldTypeForPartSource(
+    mozilla::intl::DateTimePartSource source) {
+  switch (source) {
+    case mozilla::intl::DateTimePartSource::Shared:
+      return &JSAtomState::shared;
+    case mozilla::intl::DateTimePartSource::StartRange:
+      return &JSAtomState::startRange;
+    case mozilla::intl::DateTimePartSource::EndRange:
+      return &JSAtomState::endRange;
   }
-  ScopedICUObject<UFieldPositionIterator, ufieldpositer_close> toClose(
-      fpositer);
 
-  RootedString overallResult(cx);
-  overallResult = CallICU(cx, [df, x, fpositer](UChar* chars, int32_t size,
-                                                UErrorCode* status) {
-    return udat_formatForFields(
-        // TODO(Bug 1686965) - The use of UnsafeGetUDateFormat is a temporary
-        // migration step until the field position iterator is supported.
-        df->UnsafeGetUDateFormat(), x.toDouble(), chars, size, fpositer,
-        status);
-  });
+  MOZ_CRASH(
+      "unenumerated, undocumented format field returned "
+      "by iterator");
+}
+
+// A helper function to create an ArrayObject from DateTimePart objects.
+// When hasNoSource is true, we don't need to create the ||Source|| property for
+// the DateTimePart object.
+static bool CreateDateTimePartArray(
+    JSContext* cx, mozilla::Span<const char16_t> formattedSpan,
+    bool hasNoSource, const mozilla::intl::DateTimePartVector& parts,
+    MutableHandleValue result) {
+  RootedString overallResult(cx, NewStringCopy<CanGC>(cx, formattedSpan));
   if (!overallResult) {
     return false;
   }
 
-  RootedArrayObject partsArray(cx, NewDenseEmptyArray(cx));
+  RootedArrayObject partsArray(cx,
+                               NewDenseFullyAllocatedArray(cx, parts.length()));
   if (!partsArray) {
     return false;
   }
+  partsArray->ensureDenseInitializedLength(0, parts.length());
 
   if (overallResult->length() == 0) {
     // An empty string contains no parts, so avoid extra work below.
@@ -1269,90 +1224,67 @@ static bool intl_FormatToPartsDateTime(JSContext* cx,
     return true;
   }
 
-  size_t lastEndIndex = 0;
-
   RootedObject singlePart(cx);
   RootedValue val(cx);
 
-  auto AppendPart = [&](FieldType type, size_t beginIndex, size_t endIndex) {
+  size_t index = 0;
+  size_t beginIndex = 0;
+  for (const mozilla::intl::DateTimePart& part : parts) {
     singlePart = NewPlainObject(cx);
     if (!singlePart) {
       return false;
     }
 
+    FieldType type = GetFieldTypeForPartType(part.mType);
     val = StringValue(cx->names().*type);
     if (!DefineDataProperty(cx, singlePart, cx->names().type, val)) {
       return false;
     }
 
-    JSLinearString* partSubstr = NewDependentString(
-        cx, overallResult, beginIndex, endIndex - beginIndex);
-    if (!partSubstr) {
+    MOZ_ASSERT(part.mEndIndex > beginIndex);
+    JSLinearString* partStr = NewDependentString(cx, overallResult, beginIndex,
+                                                 part.mEndIndex - beginIndex);
+    if (!partStr) {
       return false;
     }
-
-    val = StringValue(partSubstr);
+    val = StringValue(partStr);
     if (!DefineDataProperty(cx, singlePart, cx->names().value, val)) {
       return false;
     }
 
-    if (source) {
+    if (!hasNoSource) {
+      FieldType source = GetFieldTypeForPartSource(part.mSource);
       val = StringValue(cx->names().*source);
       if (!DefineDataProperty(cx, singlePart, cx->names().source, val)) {
         return false;
       }
     }
 
-    if (!NewbornArrayPush(cx, partsArray, ObjectValue(*singlePart))) {
-      return false;
-    }
-
-    lastEndIndex = endIndex;
-    return true;
-  };
-
-  int32_t fieldInt, beginIndexInt, endIndexInt;
-  while ((fieldInt = ufieldpositer_next(fpositer, &beginIndexInt,
-                                        &endIndexInt)) >= 0) {
-    MOZ_ASSERT(beginIndexInt >= 0);
-    MOZ_ASSERT(endIndexInt >= 0);
-    MOZ_ASSERT(beginIndexInt <= endIndexInt,
-               "field iterator returning invalid range");
-
-    size_t beginIndex(beginIndexInt);
-    size_t endIndex(endIndexInt);
-
-    // Technically this isn't guaranteed.  But it appears true in pratice,
-    // and http://bugs.icu-project.org/trac/ticket/12024 is expected to
-    // correct the documentation lapse.
-    MOZ_ASSERT(lastEndIndex <= beginIndex,
-               "field iteration didn't return fields in order start to "
-               "finish as expected");
-
-    if (FieldType type = GetFieldTypeForFormatField(
-            static_cast<UDateFormatField>(fieldInt))) {
-      if (lastEndIndex < beginIndex) {
-        if (!AppendPart(&JSAtomState::literal, lastEndIndex, beginIndex)) {
-          return false;
-        }
-      }
-
-      if (!AppendPart(type, beginIndex, endIndex)) {
-        return false;
-      }
-    }
+    beginIndex = part.mEndIndex;
+    partsArray->initDenseElement(index++, ObjectValue(*singlePart));
   }
 
-  // Append any final literal.
-  if (lastEndIndex < overallResult->length()) {
-    if (!AppendPart(&JSAtomState::literal, lastEndIndex,
-                    overallResult->length())) {
-      return false;
-    }
-  }
-
+  MOZ_ASSERT(index == parts.length());
+  MOZ_ASSERT(beginIndex == formattedSpan.size());
   result.setObject(*partsArray);
   return true;
+}
+
+static bool intl_FormatToPartsDateTime(JSContext* cx,
+                                       const mozilla::intl::DateTimeFormat* df,
+                                       ClippedTime x, bool hasNoSource,
+                                       MutableHandleValue result) {
+  MOZ_ASSERT(x.isValid());
+
+  FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> buffer(cx);
+  mozilla::intl::DateTimePartVector parts;
+  auto r = df->TryFormatToParts(x.toDouble(), buffer, parts);
+  if (r.isErr()) {
+    intl::ReportInternalError(cx, r.unwrapErr());
+    return false;
+  }
+
+  return CreateDateTimePartArray(cx, buffer, hasNoSource, parts, result);
 }
 
 bool js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp) {
@@ -1375,31 +1307,23 @@ bool js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // Obtain a cached DateTimeFormat object.
-  mozilla::intl::DateTimeFormat* df = dateTimeFormat->getDateFormat();
+  mozilla::intl::DateTimeFormat* df =
+      GetOrCreateDateTimeFormat(cx, dateTimeFormat);
   if (!df) {
-    df = NewDateTimeFormat(cx, dateTimeFormat);
-    if (!df) {
-      return false;
-    }
-    dateTimeFormat->setDateFormat(df);
-
-    intl::AddICUCellMemory(dateTimeFormat,
-                           DateTimeFormatObject::UDateFormatEstimatedMemoryUse);
+    return false;
   }
 
-  // Use the UDateFormat to actually format the time stamp.
-  FieldType source = nullptr;
-  return formatToParts
-             ? intl_FormatToPartsDateTime(cx, df, x, source, args.rval())
-             : intl_FormatDateTime(cx, df, x, args.rval());
+  // Use the DateTimeFormat to actually format the time stamp.
+  return formatToParts ? intl_FormatToPartsDateTime(
+                             cx, df, x, /* hasNoSource */ true, args.rval())
+                       : intl_FormatDateTime(cx, df, x, args.rval());
 }
 
 /**
- * Returns a new UDateIntervalFormat with the locale and date-time formatting
+ * Returns a new DateIntervalFormat with the locale and date-time formatting
  * options of the given DateTimeFormat.
  */
-static UDateIntervalFormat* NewUDateIntervalFormat(
+static mozilla::intl::DateIntervalFormat* NewDateIntervalFormat(
     JSContext* cx, Handle<DateTimeFormatObject*> dateTimeFormat,
     mozilla::intl::DateTimeFormat& mozDtf) {
   RootedValue value(cx);
@@ -1443,25 +1367,47 @@ static UDateIntervalFormat* NewUDateIntervalFormat(
     return nullptr;
   }
 
-  UErrorCode status = U_ZERO_ERROR;
-  UDateIntervalFormat* dif = udtitvfmt_open(
-      IcuLocale(locale.get()), skeleton.data(), skeleton.length(),
-      timeZoneChars.data(), timeZoneChars.size(), &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
+  auto dif = mozilla::intl::DateIntervalFormat::TryCreate(
+      mozilla::MakeStringSpan(locale.get()), skeleton, timeZoneChars);
+
+  if (dif.isErr()) {
+    js::intl::ReportInternalError(cx, dif.unwrapErr());
     return nullptr;
   }
 
+  return dif.unwrap().release();
+}
+
+static mozilla::intl::DateIntervalFormat* GetOrCreateDateIntervalFormat(
+    JSContext* cx, Handle<DateTimeFormatObject*> dateTimeFormat,
+    mozilla::intl::DateTimeFormat& mozDtf) {
+  // Obtain a cached DateIntervalFormat object.
+  mozilla::intl::DateIntervalFormat* dif =
+      dateTimeFormat->getDateIntervalFormat();
+  if (dif) {
+    return dif;
+  }
+
+  dif = NewDateIntervalFormat(cx, dateTimeFormat, mozDtf);
+  if (!dif) {
+    return nullptr;
+  }
+  dateTimeFormat->setDateIntervalFormat(dif);
+
+  intl::AddICUCellMemory(
+      dateTimeFormat,
+      DateTimeFormatObject::UDateIntervalFormatEstimatedMemoryUse);
   return dif;
 }
 
 /**
  * PartitionDateTimeRangePattern ( dateTimeFormat, x, y )
  */
-static const UFormattedValue* PartitionDateTimeRangePattern(
+static bool PartitionDateTimeRangePattern(
     JSContext* cx, const mozilla::intl::DateTimeFormat* df,
-    const UDateIntervalFormat* dif, UFormattedDateInterval* formatted,
-    ClippedTime x, ClippedTime y) {
+    const mozilla::intl::DateIntervalFormat* dif,
+    mozilla::intl::AutoFormattedDateInterval& formatted, ClippedTime x,
+    ClippedTime y, bool* equal) {
   MOZ_ASSERT(x.isValid());
   MOZ_ASSERT(y.isValid());
   MOZ_ASSERT(x.toDouble() <= y.toDouble());
@@ -1480,7 +1426,7 @@ static const UFormattedValue* PartitionDateTimeRangePattern(
   constexpr double GregorianChangeDatePlusOneDay =
       GregorianChangeDate + msPerDay;
 
-  UErrorCode status = U_ZERO_ERROR;
+  mozilla::intl::ICUResult result = Ok();
   if (x.toDouble() < GregorianChangeDatePlusOneDay) {
     // Create calendar objects for the start and end date by cloning the date
     // formatter calendar. The date formatter calendar already has the correct
@@ -1488,70 +1434,28 @@ static const UFormattedValue* PartitionDateTimeRangePattern(
     auto startCal = df->CloneCalendar(x.toDouble());
     if (startCal.isErr()) {
       intl::ReportInternalError(cx, startCal.unwrapErr());
-      return nullptr;
+      return false;
     }
 
     auto endCal = df->CloneCalendar(y.toDouble());
     if (endCal.isErr()) {
       intl::ReportInternalError(cx, endCal.unwrapErr());
-      return nullptr;
+      return false;
     }
 
-    udtitvfmt_formatCalendarToResult(
-        dif, startCal.unwrap()->UnsafeGetUCalendar(),
-        endCal.unwrap()->UnsafeGetUCalendar(), formatted, &status);
+    result = dif->TryFormatCalendar(*startCal.unwrap(), *endCal.unwrap(),
+                                    formatted, equal);
   } else {
     // The common fast path which doesn't require creating calendar objects.
-    udtitvfmt_formatToResult(dif, x.toDouble(), y.toDouble(), formatted,
-                             &status);
-  }
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return nullptr;
+    result =
+        dif->TryFormatDateTime(x.toDouble(), y.toDouble(), formatted, equal);
   }
 
-  const UFormattedValue* formattedValue =
-      udtitvfmt_resultAsValue(formatted, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return nullptr;
-  }
-
-  return formattedValue;
-}
-
-/**
- * PartitionDateTimeRangePattern ( dateTimeFormat, x, y ), steps 9-11.
- *
- * Examine the formatted value to see if any interval span field is present.
- */
-static bool DateFieldsPracticallyEqual(JSContext* cx,
-                                       const UFormattedValue* formattedValue,
-                                       bool* equal) {
-  UErrorCode status = U_ZERO_ERROR;
-  UConstrainedFieldPosition* fpos = ucfpos_open(&status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-  ScopedICUObject<UConstrainedFieldPosition, ucfpos_close> toCloseFpos(fpos);
-
-  // We're only interested in UFIELD_CATEGORY_DATE_INTERVAL_SPAN fields.
-  ucfpos_constrainCategory(fpos, UFIELD_CATEGORY_DATE_INTERVAL_SPAN, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
+  if (result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
     return false;
   }
 
-  bool hasSpan = ufmtval_nextPosition(formattedValue, fpos, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-
-  // When no date interval span field was found, both dates are "practically
-  // equal" per PartitionDateTimeRangePattern.
-  *equal = !hasSpan;
   return true;
 }
 
@@ -1560,26 +1464,17 @@ static bool DateFieldsPracticallyEqual(JSContext* cx,
  */
 static bool FormatDateTimeRange(JSContext* cx,
                                 const mozilla::intl::DateTimeFormat* df,
-                                const UDateIntervalFormat* dif, ClippedTime x,
-                                ClippedTime y, MutableHandleValue result) {
-  UErrorCode status = U_ZERO_ERROR;
-  UFormattedDateInterval* formatted = udtitvfmt_openResult(&status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-  ScopedICUObject<UFormattedDateInterval, udtitvfmt_closeResult> toClose(
-      formatted);
-
-  const UFormattedValue* formattedValue =
-      PartitionDateTimeRangePattern(cx, df, dif, formatted, x, y);
-  if (!formattedValue) {
+                                const mozilla::intl::DateIntervalFormat* dif,
+                                ClippedTime x, ClippedTime y,
+                                MutableHandleValue result) {
+  mozilla::intl::AutoFormattedDateInterval formatted;
+  if (!formatted.IsValid()) {
+    intl::ReportInternalError(cx, formatted.GetError());
     return false;
   }
 
-  // PartitionDateTimeRangePattern, steps 9-11.
   bool equal;
-  if (!DateFieldsPracticallyEqual(cx, formattedValue, &equal)) {
+  if (!PartitionDateTimeRangePattern(cx, df, dif, formatted, x, y, &equal)) {
     return false;
   }
 
@@ -1588,7 +1483,12 @@ static bool FormatDateTimeRange(JSContext* cx,
     return intl_FormatDateTime(cx, df, x, result);
   }
 
-  JSString* resultStr = intl::FormattedValueToString(cx, formattedValue);
+  auto spanResult = formatted.ToSpan();
+  if (spanResult.isErr()) {
+    intl::ReportInternalError(cx, spanResult.unwrapErr());
+    return false;
+  }
+  JSString* resultStr = NewStringCopy<CanGC>(cx, spanResult.unwrap());
   if (!resultStr) {
     return false;
   }
@@ -1600,205 +1500,41 @@ static bool FormatDateTimeRange(JSContext* cx,
 /**
  * FormatDateTimeRangeToParts ( dateTimeFormat, x, y )
  */
-static bool FormatDateTimeRangeToParts(JSContext* cx,
-                                       const mozilla::intl::DateTimeFormat* df,
-                                       const UDateIntervalFormat* dif,
-                                       ClippedTime x, ClippedTime y,
-                                       MutableHandleValue result) {
-  UErrorCode status = U_ZERO_ERROR;
-  UFormattedDateInterval* formatted = udtitvfmt_openResult(&status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-  ScopedICUObject<UFormattedDateInterval, udtitvfmt_closeResult> toClose(
-      formatted);
-
-  const UFormattedValue* formattedValue =
-      PartitionDateTimeRangePattern(cx, df, dif, formatted, x, y);
-  if (!formattedValue) {
+static bool FormatDateTimeRangeToParts(
+    JSContext* cx, const mozilla::intl::DateTimeFormat* df,
+    const mozilla::intl::DateIntervalFormat* dif, ClippedTime x, ClippedTime y,
+    MutableHandleValue result) {
+  mozilla::intl::AutoFormattedDateInterval formatted;
+  if (!formatted.IsValid()) {
+    intl::ReportInternalError(cx, formatted.GetError());
     return false;
   }
 
-  // PartitionDateTimeRangePattern, steps 9-11.
   bool equal;
-  if (!DateFieldsPracticallyEqual(cx, formattedValue, &equal)) {
+  if (!PartitionDateTimeRangePattern(cx, df, dif, formatted, x, y, &equal)) {
     return false;
   }
 
   // PartitionDateTimeRangePattern, step 12.
   if (equal) {
-    FieldType source = &JSAtomState::shared;
-    return intl_FormatToPartsDateTime(cx, df, x, source, result);
+    return intl_FormatToPartsDateTime(cx, df, x, /* hasNoSource */ false,
+                                      result);
   }
 
-  RootedString overallResult(cx,
-                             intl::FormattedValueToString(cx, formattedValue));
-  if (!overallResult) {
+  mozilla::intl::DateTimePartVector parts;
+  auto r = dif->TryFormattedToParts(formatted, parts);
+  if (r.isErr()) {
+    intl::ReportInternalError(cx, r.unwrapErr());
     return false;
   }
 
-  RootedArrayObject partsArray(cx, NewDenseEmptyArray(cx));
-  if (!partsArray) {
+  auto spanResult = formatted.ToSpan();
+  if (spanResult.isErr()) {
+    intl::ReportInternalError(cx, spanResult.unwrapErr());
     return false;
   }
-
-  size_t lastEndIndex = 0;
-  RootedObject singlePart(cx);
-  RootedValue val(cx);
-
-  auto AppendPart = [&](FieldType type, size_t beginIndex, size_t endIndex,
-                        FieldType source) {
-    singlePart = NewPlainObject(cx);
-    if (!singlePart) {
-      return false;
-    }
-
-    val = StringValue(cx->names().*type);
-    if (!DefineDataProperty(cx, singlePart, cx->names().type, val)) {
-      return false;
-    }
-
-    JSLinearString* partSubstr = NewDependentString(
-        cx, overallResult, beginIndex, endIndex - beginIndex);
-    if (!partSubstr) {
-      return false;
-    }
-
-    val = StringValue(partSubstr);
-    if (!DefineDataProperty(cx, singlePart, cx->names().value, val)) {
-      return false;
-    }
-
-    val = StringValue(cx->names().*source);
-    if (!DefineDataProperty(cx, singlePart, cx->names().source, val)) {
-      return false;
-    }
-
-    if (!NewbornArrayPush(cx, partsArray, ObjectValue(*singlePart))) {
-      return false;
-    }
-
-    lastEndIndex = endIndex;
-    return true;
-  };
-
-  UConstrainedFieldPosition* fpos = ucfpos_open(&status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-  ScopedICUObject<UConstrainedFieldPosition, ucfpos_close> toCloseFpos(fpos);
-
-  size_t categoryEndIndex = 0;
-  FieldType source = &JSAtomState::shared;
-
-  while (true) {
-    bool hasMore = ufmtval_nextPosition(formattedValue, fpos, &status);
-    if (U_FAILURE(status)) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
-    if (!hasMore) {
-      break;
-    }
-
-    int32_t category = ucfpos_getCategory(fpos, &status);
-    if (U_FAILURE(status)) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
-
-    int32_t field = ucfpos_getField(fpos, &status);
-    if (U_FAILURE(status)) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
-
-    int32_t beginIndexInt, endIndexInt;
-    ucfpos_getIndexes(fpos, &beginIndexInt, &endIndexInt, &status);
-    if (U_FAILURE(status)) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
-
-    MOZ_ASSERT(beginIndexInt >= 0);
-    MOZ_ASSERT(endIndexInt >= 0);
-    MOZ_ASSERT(beginIndexInt <= endIndexInt,
-               "field iterator returning invalid range");
-
-    size_t beginIndex = size_t(beginIndexInt);
-    size_t endIndex = size_t(endIndexInt);
-
-    // Indices are guaranteed to be returned in order (from left to right).
-    MOZ_ASSERT(lastEndIndex <= beginIndex,
-               "field iteration didn't return fields in order start to "
-               "finish as expected");
-
-    if (category == UFIELD_CATEGORY_DATE_INTERVAL_SPAN) {
-      // Append any remaining literal parts before changing the source kind.
-      if (lastEndIndex < beginIndex) {
-        if (!AppendPart(&JSAtomState::literal, lastEndIndex, beginIndex,
-                        source)) {
-          return false;
-        }
-      }
-
-      // The special field category UFIELD_CATEGORY_DATE_INTERVAL_SPAN has only
-      // two allowed values (0 or 1), indicating the begin of the start- resp.
-      // end-date.
-      MOZ_ASSERT(field == 0 || field == 1,
-                 "span category has unexpected value");
-
-      source = field == 0 ? &JSAtomState::startRange : &JSAtomState::endRange;
-      categoryEndIndex = endIndex;
-      continue;
-    }
-
-    // Ignore categories other than UFIELD_CATEGORY_DATE.
-    if (category != UFIELD_CATEGORY_DATE) {
-      continue;
-    }
-
-    // Append the field if supported. If not supported, append it as part of the
-    // next literal part.
-    if (FieldType type =
-            GetFieldTypeForFormatField(static_cast<UDateFormatField>(field))) {
-      if (lastEndIndex < beginIndex) {
-        if (!AppendPart(&JSAtomState::literal, lastEndIndex, beginIndex,
-                        source)) {
-          return false;
-        }
-      }
-
-      if (!AppendPart(type, beginIndex, endIndex, source)) {
-        return false;
-      }
-    }
-
-    if (endIndex == categoryEndIndex) {
-      // Append any remaining literal parts before changing the source kind.
-      if (lastEndIndex < endIndex) {
-        if (!AppendPart(&JSAtomState::literal, lastEndIndex, endIndex,
-                        source)) {
-          return false;
-        }
-      }
-
-      source = &JSAtomState::shared;
-    }
-  }
-
-  // Append any final literal.
-  if (lastEndIndex < overallResult->length()) {
-    if (!AppendPart(&JSAtomState::literal, lastEndIndex,
-                    overallResult->length(), source)) {
-      return false;
-    }
-  }
-
-  result.setObject(*partsArray);
-  return true;
+  return CreateDateTimePartArray(cx, spanResult.unwrap(),
+                                 /* hasNoSource */ false, parts, result);
 }
 
 bool js::intl_FormatDateTimeRange(JSContext* cx, unsigned argc, Value* vp) {
@@ -1836,34 +1572,19 @@ bool js::intl_FormatDateTimeRange(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT(x.toDouble() <= y.toDouble(),
              "start date mustn't be after the end date");
 
-  // Obtain a cached mozilla::intl::DateTimeFormat object.
-  mozilla::intl::DateTimeFormat* df = dateTimeFormat->getDateFormat();
+  mozilla::intl::DateTimeFormat* df =
+      GetOrCreateDateTimeFormat(cx, dateTimeFormat);
   if (!df) {
-    df = NewDateTimeFormat(cx, dateTimeFormat);
-    if (!df) {
-      return false;
-    }
-    dateTimeFormat->setDateFormat(df);
-
-    intl::AddICUCellMemory(dateTimeFormat,
-                           DateTimeFormatObject::UDateFormatEstimatedMemoryUse);
+    return false;
   }
 
-  // Obtain a cached UDateIntervalFormat object.
-  UDateIntervalFormat* dif = dateTimeFormat->getDateIntervalFormat();
+  mozilla::intl::DateIntervalFormat* dif =
+      GetOrCreateDateIntervalFormat(cx, dateTimeFormat, *df);
   if (!dif) {
-    dif = NewUDateIntervalFormat(cx, dateTimeFormat, *df);
-    if (!dif) {
-      return false;
-    }
-    dateTimeFormat->setDateIntervalFormat(dif);
-
-    intl::AddICUCellMemory(
-        dateTimeFormat,
-        DateTimeFormatObject::UDateIntervalFormatEstimatedMemoryUse);
+    return false;
   }
 
-  // Use the UDateIntervalFormat to actually format the time range.
+  // Use the DateIntervalFormat to actually format the time range.
   return formatToParts
              ? FormatDateTimeRangeToParts(cx, df, dif, x, y, args.rval())
              : FormatDateTimeRange(cx, df, dif, x, y, args.rval());

@@ -72,7 +72,15 @@ add_task(async function setup() {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.suggest.searches", true]],
+    set: [
+      ["browser.urlbar.suggest.searches", true],
+      [
+        "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar",
+        true,
+      ],
+      // Ensure to add search suggestion telemetry as search_suggestion not search_formhistory.
+      ["browser.urlbar.maxHistoricalSearchSuggestions", 0],
+    ],
   });
   // Enable local telemetry recording for the duration of the tests.
   let oldCanRecord = Services.telemetry.canRecordExtended;
@@ -182,6 +190,50 @@ add_task(async function test_source_urlbar() {
       }
       EventUtils.sendKey("return");
       await loadPromise;
+      return tab;
+    },
+    async () => {
+      BrowserTestUtils.removeTab(tab);
+    }
+  );
+});
+
+add_task(async function test_source_urlbar_handoff() {
+  let tab;
+  await track_ad_click(
+    "urlbar-handoff",
+    "urlbar_handoff",
+    async () => {
+      tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+      BrowserTestUtils.loadURI(tab.linkedBrowser, "about:newtab");
+      await BrowserTestUtils.browserStopped(tab.linkedBrowser, "about:newtab");
+
+      info("Focus on search input in newtab content");
+      await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+        const searchInput = content.document.querySelector(".fake-editable");
+        searchInput.click();
+      });
+
+      info("Get suggestions");
+      for (const c of "searchSuggestion".split("")) {
+        EventUtils.synthesizeKey(c);
+        /* eslint-disable mozilla/no-arbitrary-setTimeout */
+        await new Promise(r => setTimeout(r, 50));
+      }
+      await TestUtils.waitForCondition(async () => {
+        const index = await getFirstSuggestionIndex();
+        return index >= 0;
+      }, "Wait until suggestions are ready");
+
+      let idx = await getFirstSuggestionIndex();
+      Assert.greaterOrEqual(idx, 0, "there should be a first suggestion");
+      const onLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+      while (idx--) {
+        EventUtils.sendKey("down");
+      }
+      EventUtils.sendKey("return");
+      await onLoaded;
+
       return tab;
     },
     async () => {
