@@ -160,7 +160,6 @@ static const char sIntPrefs[][43] = {
     "ui.contextMenuOffsetVertical",
     "ui.contextMenuOffsetHorizontal",
     "ui.GtkCSDAvailable",
-    "ui.GtkCSDHideTitlebarByDefault",
     "ui.GtkCSDMinimizeButton",
     "ui.GtkCSDMaximizeButton",
     "ui.GtkCSDCloseButton",
@@ -1264,6 +1263,18 @@ uint32_t LookAndFeel::GetPasswordMaskDelay() {
     return nsLookAndFeel::GetInstance()->GetPasswordMaskDelayImpl();
   }
   return delay;
+}
+
+bool LookAndFeel::DrawInTitlebar() {
+  switch (StaticPrefs::browser_tabs_drawInTitlebar()) {
+    case 0:
+      return false;
+    case 1:
+      return true;
+    default:
+      break;
+  }
+  return nsLookAndFeel::GetInstance()->GetDefaultDrawInTitlebar();
 }
 
 void LookAndFeel::GetThemeInfo(nsACString& aOut) {

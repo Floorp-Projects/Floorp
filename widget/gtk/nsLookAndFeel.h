@@ -32,6 +32,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   char16_t GetPasswordCharacterImpl() override;
   bool GetEchoPasswordImpl() override;
 
+  bool GetDefaultDrawInTitlebar() override;
+
   template <typename Callback>
   void WithAltThemeConfigured(const Callback&);
 
@@ -155,7 +157,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   int32_t mCaretBlinkTime = 0;
   int32_t mCaretBlinkCount = -1;
   bool mCSDAvailable = false;
-  bool mCSDHideTitlebarByDefault = false;
   bool mCSDMaximizeButton = false;
   bool mCSDMinimizeButton = false;
   bool mCSDCloseButton = false;

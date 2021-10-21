@@ -56,6 +56,8 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
 
   virtual uint32_t GetPasswordMaskDelayImpl() { return 600; }
 
+  virtual bool GetDefaultDrawInTitlebar() { return true; }
+
   static bool LookAndFeelFontToStyle(const LookAndFeelFont&, nsString& aName,
                                      gfxFontStyle&);
   static LookAndFeelFont StyleToLookAndFeelFont(const nsAString& aName,

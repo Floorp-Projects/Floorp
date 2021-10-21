@@ -1715,10 +1715,7 @@ CustomizeMode.prototype = {
   },
 
   _updateTitlebarCheckbox() {
-    let drawInTitlebar = Services.prefs.getBoolPref(
-      kDrawInTitlebarPref,
-      this.window.matchMedia("(-moz-gtk-csd-hide-titlebar-by-default)").matches
-    );
+    let drawInTitlebar = Services.appinfo.drawInTitlebar;
     let checkbox = this.$("customization-titlebar-visibility-checkbox");
     // Drawing in the titlebar means 'hiding' the titlebar.
     // We use the attribute rather than a property because if we're not in
@@ -1732,7 +1729,7 @@ CustomizeMode.prototype = {
 
   toggleTitlebar(aShouldShowTitlebar) {
     // Drawing in the titlebar means not showing the titlebar, hence the negation:
-    Services.prefs.setBoolPref(kDrawInTitlebarPref, !aShouldShowTitlebar);
+    Services.prefs.setIntPref(kDrawInTitlebarPref, !aShouldShowTitlebar);
   },
 
   _getBoundsWithoutFlushing(element) {
