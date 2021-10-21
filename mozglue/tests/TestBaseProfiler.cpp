@@ -4368,16 +4368,16 @@ void StreamMarkers(const mozilla::ProfileChunkedBuffer& aBuffer,
           aEntryReader.ReadObject<mozilla::ProfileBufferEntryKind>();
       MOZ_RELEASE_ASSERT(entryKind == mozilla::ProfileBufferEntryKind::Marker);
 
-      const bool success =
-          mozilla::base_profiler_markers_detail::DeserializeAfterKindAndStream(
-              aEntryReader, aWriter,
-              mozilla::baseprofiler::BaseProfilerThreadId{},
-              [&](mozilla::ProfileChunkedBuffer&) {
-                aWriter.StringElement("Real backtrace would be here");
-              },
-              [&](mozilla::base_profiler_markers_detail::Streaming::
-                      DeserializerTag) {});
-      MOZ_RELEASE_ASSERT(success);
+      mozilla::base_profiler_markers_detail::DeserializeAfterKindAndStream(
+          aEntryReader,
+          [&](const mozilla::baseprofiler::BaseProfilerThreadId&) {
+            return &aWriter;
+          },
+          [&](mozilla::ProfileChunkedBuffer&) {
+            aWriter.StringElement("Real backtrace would be here");
+          },
+          [&](mozilla::base_profiler_markers_detail::Streaming::
+                  DeserializerTag) {});
     });
   }
   aWriter.EndArray();
