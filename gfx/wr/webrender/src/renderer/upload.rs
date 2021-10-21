@@ -23,7 +23,7 @@ use euclid::{Transform3D, point2};
 use time::precise_time_ns;
 use malloc_size_of::MallocSizeOfOps;
 use api::units::*;
-use api::{ExternalImageSource, PremultipliedColorF, ImageBufferKind, ImageRendering, ImageFormat};
+use api::{ExternalImageSource, ImageBufferKind, ImageRendering, ImageFormat};
 use crate::renderer::{
     Renderer, VertexArrayKind, RendererStats, TextureSampler, TEXTURE_CACHE_DBG_CLEAR_COLOR
 };
@@ -35,10 +35,9 @@ use crate::device::{
     Device, UploadMethod, Texture, DrawTarget, UploadStagingBuffer, TextureFlags, TextureUploader,
     TextureFilter,
 };
-use crate::gpu_types::{ZBufferId, CompositeInstance, CompositorTransform};
+use crate::gpu_types::CopyInstance;
 use crate::batch::BatchTextures;
 use crate::texture_pack::{GuillotineAllocator, FreeRectSlice};
-use crate::composite::{CompositeFeatures, CompositeSurfaceFormat};
 use crate::profiler;
 use crate::render_api::MemoryReport;
 
@@ -527,24 +526,10 @@ fn copy_from_staging_to_cache_using_draw_calls(
     batch_upload_textures: &[Texture],
     batch_upload_copies: Vec<BatchUploadCopy>,
 ) {
-    let mut dummy_stats = RendererStats {
-        total_draw_calls: 0,
-        alpha_target_count: 0,
-        color_target_count: 0,
-        texture_upload_mb: 0.0,
-        resource_upload_time: 0.0,
-        gpu_cache_upload_time: 0.0,
-        gecko_display_list_time: 0.0,
-        wr_display_list_time: 0.0,
-        scene_build_time: 0.0,
-        frame_build_time: 0.0,
-        full_display_list: false,
-        full_paint: false,
-    };
-
     let mut copy_instances = Vec::new();
     let mut prev_src = None;
     let mut prev_dst = None;
+    let mut dst_texture_size = DeviceSize::new(0.0, 0.0);
 
     for copy in batch_upload_copies {
 
@@ -552,14 +537,13 @@ fn copy_from_staging_to_cache_using_draw_calls(
         let dst_changed = prev_dst != Some(copy.dest_texture_id);
 
         if (src_changed || dst_changed) && !copy_instances.is_empty() {
-
             renderer.draw_instanced_batch(
                 &copy_instances,
-                VertexArrayKind::Composite,
+                VertexArrayKind::Copy,
                 // We bind the staging texture manually because it isn't known
                 // to the texture resolver.
                 &BatchTextures::empty(),
-                &mut dummy_stats,
+                &mut RendererStats::default(),
             );
 
             stats.num_draw_calls += 1;
@@ -568,32 +552,17 @@ fn copy_from_staging_to_cache_using_draw_calls(
 
         if dst_changed {
             let dest_texture = &renderer.texture_resolver.texture_cache_map[&copy.dest_texture_id].texture;
-            let target_size = dest_texture.get_dimensions();
+            dst_texture_size = dest_texture.get_dimensions().to_f32();
 
-            let draw_target = DrawTarget::from_texture(
-                dest_texture,
-                false,
-            );
+            let draw_target = DrawTarget::from_texture(dest_texture, false);
             renderer.device.bind_draw_target(draw_target);
-
-            let projection = Transform3D::ortho(
-                0.0,
-                target_size.width as f32,
-                0.0,
-                target_size.height as f32,
-                renderer.device.ortho_near_plane(),
-                renderer.device.ortho_far_plane(),
-            );
 
             renderer.shaders
                 .borrow_mut()
-                .get_composite_shader(
-                    CompositeSurfaceFormat::Rgba,
-                    ImageBufferKind::Texture2D,
-                    CompositeFeatures::empty(),
-                ).bind(
+                .ps_copy
+                .bind(
                     &mut renderer.device,
-                    &projection,
+                    &Transform3D::identity(),
                     None,
                     &mut renderer.renderer_errors,
                     &mut renderer.profile,
@@ -612,36 +581,29 @@ fn copy_from_staging_to_cache_using_draw_calls(
             prev_src = Some(copy.src_texture_index)
         }
 
-        let dest_rect = DeviceRect::from_origin_and_size(
+        let src_rect = DeviceRect::from_origin_and_size(
+            copy.src_offset.to_f32(),
+            copy.size.to_f32(),
+        );
+
+        let dst_rect = DeviceRect::from_origin_and_size(
             copy.dest_offset.to_f32(),
             copy.size.to_f32(),
         );
 
-        let src_rect = TexelRect::new(
-            copy.src_offset.x as f32,
-            copy.src_offset.y as f32,
-            (copy.src_offset.x + copy.size.width) as f32,
-            (copy.src_offset.y + copy.size.height) as f32,
-        );
-
-        copy_instances.push(CompositeInstance::new_rgb(
-            dest_rect.cast_unit(),
-            dest_rect,
-            PremultipliedColorF::WHITE,
-            ZBufferId(0),
+        copy_instances.push(CopyInstance {
             src_rect,
-            CompositorTransform::identity(),
-        ));
+            dst_rect,
+            dst_texture_size,
+        });
     }
 
     if !copy_instances.is_empty() {
         renderer.draw_instanced_batch(
             &copy_instances,
-            VertexArrayKind::Composite,
-            // We bind the staging texture manually because it isn't known
-            // to the texture resolver.
+            VertexArrayKind::Copy,
             &BatchTextures::empty(),
-            &mut dummy_stats,
+            &mut RendererStats::default(),
         );
 
         stats.num_draw_calls += 1;

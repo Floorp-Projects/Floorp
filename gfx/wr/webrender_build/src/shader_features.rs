@@ -223,6 +223,8 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
 
     shaders.insert("ps_clear", vec![base_prim_features.finish()]);
 
+    shaders.insert("ps_copy", vec![base_prim_features.finish()]);
+
     if flags.contains(ShaderFeatureFlags::DEBUG) {
         for name in &["debug_color", "debug_font"] {
             shaders.insert(name, vec![String::new()]);

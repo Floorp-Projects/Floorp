@@ -57,6 +57,16 @@ impl ZBufferIdGenerator {
     }
 }
 
+#[derive(Clone, Debug)]
+#[repr(C)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct CopyInstance {
+    pub src_rect: DeviceRect,
+    pub dst_rect: DeviceRect,
+    pub dst_texture_size: DeviceSize,
+}
+
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
