@@ -690,11 +690,7 @@ nsresult txExprParser::createUnionExpr(txExprLexer& lexer,
   }
 
   UniquePtr<UnionExpr> unionExpr(new UnionExpr());
-
-  rv = unionExpr->addExpr(expr.get());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  Unused << expr.release();
+  unionExpr->addExpr(expr.release());
 
   while (lexer.peek()->mType == Token::UNION_OP) {
     lexer.nextToken();  //-- eat token
@@ -702,8 +698,7 @@ nsresult txExprParser::createUnionExpr(txExprLexer& lexer,
     rv = createPathExpr(lexer, aContext, getter_Transfers(expr));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = unionExpr->addExpr(expr.release());
-    NS_ENSURE_SUCCESS(rv, rv);
+    unionExpr->addExpr(expr.release());
   }
 
   *aResult = unionExpr.release();
