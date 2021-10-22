@@ -35,10 +35,10 @@ enum MyError {
 
 macro_rules! bail {
     ($e:expr) => {
-        return Err($crate::MyError::Msg($e.to_string()));
+        return Err($crate::MyError::Msg($e.to_string()))
     };
     ($fmt:expr, $($arg:tt)*) => {
-        return Err($crate::MyError::Msg(format!($fmt, $($arg)*)));
+        return Err($crate::MyError::Msg(format!($fmt, $($arg)*)))
     };
 }
 
