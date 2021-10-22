@@ -50,6 +50,7 @@
 }
 
 @itemFinished@[exists].hoveringMainArea:hover:active,
+@item@:is(.openWhenFinished).hoveringMainArea:hover:active,
 @item@:not([verdict]) > .downloadButton:hover:active,
 .downloadsPanelFooterButton[open="true"],
 @item@[verdict]:hover:active {
