@@ -17,8 +17,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
-import org.mozilla.fenix.helpers.click
 
 /**
  * Implementation of Robot Pattern for the settings Tabs sub menu.
@@ -30,11 +28,6 @@ class SettingsSubMenuTabsRobot {
     fun verifyCloseTabsOptions() = assertCloseTabsOptions()
 
     fun verifyMoveOldTabsToInactiveOptions() = assertMoveOldTabsToInactiveOptions()
-
-    fun clickAlwaysStartOnHomeToggle() {
-        scrollToElementByText("Move old tabs to inactive")
-        alwaysStartOnHomeToggle().click()
-    }
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -103,14 +96,6 @@ private fun afterOneDayToggle() = onView(withText("After one day"))
 private fun afterOneWeekToggle() = onView(withText("After one week"))
 
 private fun afterOneMonthToggle() = onView(withText("After one month"))
-
-private fun startOnHomeHeading() = onView(withText("Start on home"))
-
-private fun afterFourHoursToggle() = onView(withText("After four hours"))
-
-private fun alwaysStartOnHomeToggle() = onView(withText("Always"))
-
-private fun neverStartOnHomeToggle() = onView(withText("Never"))
 
 private fun moveOldTabsToInactiveHeading() = onView(withText("Move old tabs to inactive"))
 

@@ -155,6 +155,14 @@ class SettingsRobot {
             return SettingsSubMenuTabsRobot.Transition()
         }
 
+        fun openHomepageSubMenu(interact: SettingsSubMenuHomepageRobot.() -> Unit): SettingsSubMenuHomepageRobot.Transition {
+
+            onView(withText("Homepage")).click()
+
+            SettingsSubMenuHomepageRobot().interact()
+            return SettingsSubMenuHomepageRobot.Transition()
+        }
+
         fun openAccessibilitySubMenu(interact: SettingsSubMenuAccessibilityRobot.() -> Unit): SettingsSubMenuAccessibilityRobot.Transition {
             scrollToElementByText("Accessibility")
 
