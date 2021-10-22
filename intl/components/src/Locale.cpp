@@ -166,8 +166,8 @@ const char* Locale::unicodeExtension() const {
   return nullptr;
 }
 
-ICUResult Locale::setUnicodeExtension(const char* extension) {
-  MOZ_ASSERT(IsStructurallyValidUnicodeExtensionTag(MakeStringSpan(extension)));
+ICUResult Locale::setUnicodeExtension(Span<const char> extension) {
+  MOZ_ASSERT(IsStructurallyValidUnicodeExtensionTag(extension));
 
   auto duplicated = DuplicateStringToUniqueChars(extension);
 
@@ -933,6 +933,14 @@ UniqueChars Locale::DuplicateStringToUniqueChars(const char* s) {
   size_t length = strlen(s) + 1;
   auto duplicate = MakeUnique<char[]>(length);
   memcpy(duplicate.get(), s, length);
+  return duplicate;
+}
+
+UniqueChars Locale::DuplicateStringToUniqueChars(Span<const char> s) {
+  size_t length = s.size();
+  auto duplicate = MakeUnique<char[]>(length + 1);
+  memcpy(duplicate.get(), s.data(), length);
+  duplicate[length] = '\0';
   return duplicate;
 }
 

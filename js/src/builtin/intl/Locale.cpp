@@ -464,12 +464,7 @@ bool js::intl::ApplyUnicodeExtensionToTag(
     }
   }
 
-  // Null-terminate the new Unicode extension string.
-  if (!newExtension.append('\0')) {
-    return false;
-  }
-
-  if (auto res = tag.setUnicodeExtension(newExtension.begin()); res.isErr()) {
+  if (auto res = tag.setUnicodeExtension(newExtension); res.isErr()) {
     intl::ReportInternalError(cx, res.unwrapErr());
     return false;
   }
