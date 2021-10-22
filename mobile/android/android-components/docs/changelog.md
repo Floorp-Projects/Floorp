@@ -18,6 +18,9 @@ permalink: /changelog/
 * **browser-state**:
   * 🌟️ Adds a new `previewImageUrl` in `ContentState` which provides a preview image of the page (e.g. the hero image), if available.
 
+* **compose-awesomebar**
+  * `AwesomeBar` takes an optional `Profiler`. If passed in, two new profiler markers will be added: `SuggestionFetcher.fetch` and `Suggestion update`.
+
 # 94.0.0 (In Development)
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v93.0.0...v94.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/141?closed=1)
