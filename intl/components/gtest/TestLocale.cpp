@@ -16,7 +16,7 @@ TEST(IntlLocale, LocaleSettersAndGetters)
   locale.setLanguage("fr");
   locale.setRegion("CA");
   locale.setScript("Latn");
-  ASSERT_TRUE(locale.setUnicodeExtension("u-ca-gregory"));
+  ASSERT_TRUE(locale.setUnicodeExtension("u-ca-gregory").isOk());
   ASSERT_TRUE(locale.language().equalTo("fr"));
   ASSERT_TRUE(locale.region().equalTo("CA"));
   ASSERT_TRUE(locale.script().equalTo("Latn"));

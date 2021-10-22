@@ -469,8 +469,8 @@ bool js::intl::ApplyUnicodeExtensionToTag(
     return false;
   }
 
-  if (!tag.setUnicodeExtension(newExtension.begin())) {
-    intl::ReportInternalError(cx);
+  if (auto res = tag.setUnicodeExtension(newExtension.begin()); res.isErr()) {
+    intl::ReportInternalError(cx, res.unwrapErr());
     return false;
   }
 
