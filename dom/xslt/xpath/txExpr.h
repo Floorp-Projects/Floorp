@@ -700,9 +700,8 @@ class PathExpr : public Expr {
    * The ownership of the given Expr is passed over the PathExpr,
    * even on failure.
    * @param aExpr the Expr to add to this PathExpr
-   * @return nsresult indicating out of memory
    */
-  nsresult addExpr(Expr* aExpr, PathOperator pathOp);
+  void addExpr(Expr* aExpr, PathOperator pathOp);
 
   /**
    * Removes and deletes the expression at the given index.

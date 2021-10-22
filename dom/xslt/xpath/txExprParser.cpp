@@ -644,11 +644,7 @@ nsresult txExprParser::createPathExpr(txExprLexer& lexer,
 
   // We have a PathExpr containing several steps
   UniquePtr<PathExpr> pathExpr(new PathExpr());
-
-  rv = pathExpr->addExpr(expr.get(), PathExpr::RELATIVE_OP);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  Unused << expr.release();
+  pathExpr->addExpr(expr.release(), PathExpr::RELATIVE_OP);
 
   // this is ugly
   while (1) {
@@ -669,10 +665,7 @@ nsresult txExprParser::createPathExpr(txExprLexer& lexer,
     rv = createLocationStep(lexer, aContext, getter_Transfers(expr));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = pathExpr->addExpr(expr.get(), pathOp);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    Unused << expr.release();
+    pathExpr->addExpr(expr.release(), pathOp);
   }
   MOZ_ASSERT_UNREACHABLE("internal xpath parser error");
   return NS_ERROR_UNEXPECTED;
