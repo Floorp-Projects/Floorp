@@ -216,7 +216,7 @@ class ScriptPreloader : public nsIObserver,
     void FreeData() {
       // If the script data isn't mmapped, we need to release both it
       // and the Range that points to it at the same time.
-      if (!mXDRData.empty()) {
+      if (!IsMemMapped()) {
         mXDRRange.reset();
         mXDRData.destroy();
       }
@@ -275,6 +275,8 @@ class ScriptPreloader : public nsIObserver,
     }
 
     bool HasRange() { return mXDRRange.isSome(); }
+
+    bool IsMemMapped() const { return mXDRData.empty(); }
 
     nsTArray<uint8_t>& Array() {
       MOZ_ASSERT(HasArray());
@@ -397,7 +399,7 @@ class ScriptPreloader : public nsIObserver,
   // thread for quite as long.
   static constexpr int MAX_MAINTHREAD_DECODE_SIZE = 50 * 1024;
 
-  ScriptPreloader();
+  explicit ScriptPreloader(AutoMemMap* cacheData);
 
   void Cleanup();
 
@@ -513,7 +515,10 @@ class ScriptPreloader : public nsIObserver,
   nsCOMPtr<nsITimer> mSaveTimer;
 
   // The mmapped cache data from this session's cache file.
-  AutoMemMap mCacheData;
+  // The instance is held by the static variable in GetSingleton or
+  // GetChildSingleton, and its lifetime is guaranteed to be longer than
+  // ScriptPreloader instance.
+  AutoMemMap* mCacheData;
 
   Monitor mMonitor;
   Monitor mSaveMonitor;
