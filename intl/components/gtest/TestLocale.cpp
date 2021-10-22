@@ -32,10 +32,8 @@ TEST(IntlLocale, LocaleSettersAndGetters)
   ASSERT_TRUE(LocaleParser::tryParse(
                   MakeStringSpan("fr-CA-fonipa-t-es-AR-h0-hybrid"), locale2)
                   .isOk());
-  ASSERT_EQ(MakeStringSpan(locale2.variants()[0].get()),
-            MakeStringSpan("fonipa"));
-  ASSERT_EQ(MakeStringSpan(locale2.extensions()[0].get()),
-            MakeStringSpan("t-es-AR-h0-hybrid"));
+  ASSERT_EQ(locale2.variants()[0], MakeStringSpan("fonipa"));
+  ASSERT_EQ(locale2.extensions()[0], MakeStringSpan("t-es-AR-h0-hybrid"));
   locale2.clearVariants();
   ASSERT_EQ(locale2.variants().length(), 0UL);
 }

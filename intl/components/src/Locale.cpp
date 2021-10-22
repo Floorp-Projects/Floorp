@@ -574,14 +574,9 @@ static bool LocaleToString(const Locale& tag, Buffer& sb) {
     return sb.append(subtag.data(), subtag.size());
   };
 
-  auto appendSubtagZ = [&sb](const char* subtag) {
-    MOZ_ASSERT(strlen(subtag) > 0);
-    return sb.append(subtag, strlen(subtag));
-  };
-
-  auto appendSubtagsZ = [&sb, &appendSubtagZ](const auto& subtags) {
+  auto appendSubtags = [&sb, &appendSubtagSpan](const auto& subtags) {
     for (const auto& subtag : subtags) {
-      if (!sb.append('-') || !appendSubtagZ(subtag.get())) {
+      if (!sb.append('-') || !appendSubtagSpan(subtag)) {
         return false;
       }
     }
@@ -608,12 +603,12 @@ static bool LocaleToString(const Locale& tag, Buffer& sb) {
   }
 
   // Append the variant subtags if present.
-  if (!appendSubtagsZ(tag.variants())) {
+  if (!appendSubtags(tag.variants())) {
     return false;
   }
 
   // Append the extensions subtags if present.
-  if (!appendSubtagsZ(tag.extensions())) {
+  if (!appendSubtags(tag.extensions())) {
     return false;
   }
 
