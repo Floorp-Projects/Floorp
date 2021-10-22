@@ -57,6 +57,14 @@ dictionary APZHitResult {
   unsigned long long scrollId;
 };
 
+dictionary APZSampledResult {
+  float scrollOffsetX;
+  float scrollOffsetY;
+  DOMHighResTimeStamp sampledTimeStamp;
+  unsigned long long layersId;
+  unsigned long long scrollId;
+};
+
 dictionary AdditionalDataEntry {
   DOMString key;
   DOMString value;
@@ -68,6 +76,7 @@ dictionary APZTestData {
   sequence<APZBucket> paints;
   sequence<APZBucket> repaintRequests;
   sequence<APZHitResult> hitResults;
+  sequence<APZSampledResult> sampledResults;
   sequence<AdditionalDataEntry> additionalData;
 };
 
