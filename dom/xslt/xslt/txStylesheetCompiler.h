@@ -87,7 +87,7 @@ class txStylesheetCompilerState : public txIParseContext {
     eCheckParam,
     ePushNullTemplateRule
   };
-  nsresult pushHandlerTable(txHandlerTable* aTable);
+  void pushHandlerTable(txHandlerTable* aTable);
   void popHandlerTable();
   nsresult pushSorter(txPushNewContext* aSorter);
   void popSorter();
