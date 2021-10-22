@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.testTag
 import mozilla.components.compose.browser.awesomebar.internal.SuggestionFetcher
 import mozilla.components.compose.browser.awesomebar.internal.Suggestions
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.concept.base.profiler.Profiler
 
 /**
  * An awesome bar displaying suggestions from the list of provided [AwesomeBar.SuggestionProvider]s.
@@ -35,7 +36,8 @@ fun AwesomeBar(
     orientation: AwesomeBarOrientation = AwesomeBarOrientation.TOP,
     onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
     onAutoComplete: (AwesomeBar.Suggestion) -> Unit,
-    onScroll: () -> Unit = {}
+    onScroll: () -> Unit = {},
+    profiler: Profiler? = null
 ) {
     val groups = remember(providers) {
         listOf(
@@ -52,7 +54,8 @@ fun AwesomeBar(
         orientation = orientation,
         onSuggestionClicked = { _, suggestion -> onSuggestionClicked(suggestion) },
         onAutoComplete = { _, suggestion -> onAutoComplete(suggestion) },
-        onScroll = onScroll
+        onScroll = onScroll,
+        profiler = profiler
     )
 }
 
@@ -75,7 +78,8 @@ fun AwesomeBar(
     orientation: AwesomeBarOrientation = AwesomeBarOrientation.TOP,
     onSuggestionClicked: (AwesomeBar.SuggestionProviderGroup, AwesomeBar.Suggestion) -> Unit,
     onAutoComplete: (AwesomeBar.SuggestionProviderGroup, AwesomeBar.Suggestion) -> Unit,
-    onScroll: () -> Unit = {}
+    onScroll: () -> Unit = {},
+    profiler: Profiler? = null
 ) {
     Column(
         modifier = Modifier
@@ -83,7 +87,7 @@ fun AwesomeBar(
             .testTag("mozac.awesomebar")
             .background(colors.background)
     ) {
-        val fetcher = remember(groups) { SuggestionFetcher(groups) }
+        val fetcher = remember(groups) { SuggestionFetcher(groups, profiler) }
 
         LaunchedEffect(text, fetcher) {
             fetcher.fetch(text)
