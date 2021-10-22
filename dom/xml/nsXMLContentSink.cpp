@@ -496,7 +496,7 @@ nsresult nsXMLContentSink::CreateElement(
     if (!mPrettyPrintHasFactoredElements && !mPrettyPrintHasSpecialRoot &&
         mPrettyPrintXML) {
       mPrettyPrintHasFactoredElements =
-          nsContentUtils::NameSpaceManager()->HasElementCreator(
+          nsNameSpaceManager::GetInstance()->HasElementCreator(
               aNodeInfo->NamespaceID());
     }
 

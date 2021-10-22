@@ -26,6 +26,7 @@
 #include "nsErrorService.h"
 #include "nsJSUtils.h"
 #include "nsIXPConnect.h"
+#include "nsNameSpaceManager.h"
 #include "nsVariant.h"
 #include "nsTextNode.h"
 #include "mozilla/Components.h"
@@ -420,7 +421,7 @@ txMozillaXSLTProcessor::AddXSLTParam(const nsString& aName,
 
   RefPtr<nsAtom> name = NS_Atomize(aName);
   int32_t nsId = kNameSpaceID_Unknown;
-  rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespace, nsId);
+  rv = nsNameSpaceManager::GetInstance()->RegisterNameSpace(aNamespace, nsId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   txExpandedName varName(nsId, name);
@@ -809,8 +810,8 @@ nsresult txMozillaXSLTProcessor::SetParameter(const nsAString& aNamespaceURI,
   }
 
   int32_t nsId = kNameSpaceID_Unknown;
-  nsresult rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(
-      aNamespaceURI, nsId);
+  nsresult rv =
+      nsNameSpaceManager::GetInstance()->RegisterNameSpace(aNamespaceURI, nsId);
   NS_ENSURE_SUCCESS(rv, rv);
   RefPtr<nsAtom> localName = NS_Atomize(aLocalName);
   txExpandedName varName(nsId, localName);
@@ -829,8 +830,8 @@ already_AddRefed<nsIVariant> txMozillaXSLTProcessor::GetParameter(
     const nsAString& aNamespaceURI, const nsAString& aLocalName,
     ErrorResult& aRv) {
   int32_t nsId = kNameSpaceID_Unknown;
-  nsresult rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(
-      aNamespaceURI, nsId);
+  nsresult rv =
+      nsNameSpaceManager::GetInstance()->RegisterNameSpace(aNamespaceURI, nsId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return nullptr;
@@ -856,8 +857,8 @@ void txMozillaXSLTProcessor::RemoveParameter(const nsAString& aNamespaceURI,
                                              const nsAString& aLocalName,
                                              ErrorResult& aRv) {
   int32_t nsId = kNameSpaceID_Unknown;
-  nsresult rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(
-      aNamespaceURI, nsId);
+  nsresult rv =
+      nsNameSpaceManager::GetInstance()->RegisterNameSpace(aNamespaceURI, nsId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return;

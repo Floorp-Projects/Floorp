@@ -14,6 +14,7 @@
 #include "txLog.h"
 #include "nsUnicharUtils.h"
 #include "nsAttrName.h"
+#include "nsNameSpaceManager.h"
 #include "nsTArray.h"
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/CharacterData.h"
@@ -383,8 +384,8 @@ int32_t txXPathNodeUtils::getNamespaceID(const txXPathNode& aNode) {
 /* static */
 void txXPathNodeUtils::getNamespaceURI(const txXPathNode& aNode,
                                        nsAString& aURI) {
-  nsContentUtils::NameSpaceManager()->GetNameSpaceURI(getNamespaceID(aNode),
-                                                      aURI);
+  nsNameSpaceManager::GetInstance()->GetNameSpaceURI(getNamespaceID(aNode),
+                                                     aURI);
 }
 
 /* static */
@@ -639,8 +640,8 @@ nsINode* txXPathNativeNode::getNode(const txXPathNode& aNode) {
       aNode.Content()->AsElement()->GetAttrNameAt(aNode.mIndex);
 
   nsAutoString namespaceURI;
-  nsContentUtils::NameSpaceManager()->GetNameSpaceURI(name->NamespaceID(),
-                                                      namespaceURI);
+  nsNameSpaceManager::GetInstance()->GetNameSpaceURI(name->NamespaceID(),
+                                                     namespaceURI);
 
   nsCOMPtr<Element> element = do_QueryInterface(aNode.mNode);
   nsDOMAttributeMap* map = element->Attributes();

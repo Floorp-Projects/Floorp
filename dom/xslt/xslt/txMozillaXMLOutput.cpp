@@ -566,7 +566,7 @@ nsresult txMozillaXMLOutput::createTxWrapper() {
                "creating wrapper when document isn't parent");
 
   int32_t namespaceID;
-  nsresult rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(
+  nsresult rv = nsNameSpaceManager::GetInstance()->RegisterNameSpace(
       nsLiteralString(kTXNameSpaceURI), namespaceID);
   NS_ENSURE_SUCCESS(rv, rv);
 

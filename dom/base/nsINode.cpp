@@ -2022,7 +2022,7 @@ already_AddRefed<nsIHTMLCollection> nsINode::GetElementsByAttributeNS(
 
   int32_t nameSpaceId = kNameSpaceID_Wildcard;
   if (!aNamespaceURI.EqualsLiteral("*")) {
-    nsresult rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(
+    nsresult rv = nsNameSpaceManager::GetInstance()->RegisterNameSpace(
         aNamespaceURI, nameSpaceId);
     if (NS_FAILED(rv)) {
       aRv.Throw(rv);
