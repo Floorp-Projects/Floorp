@@ -1,4 +1,4 @@
-const createPage = function (msg) {
+const createPage = function(msg) {
   return `
 <html>
 <script>

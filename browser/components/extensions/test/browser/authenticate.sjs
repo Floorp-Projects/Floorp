@@ -1,14 +1,16 @@
+"use strict";
+
 function handleRequest(request, response) {
-  var match;
-  var requestAuth = true;
+  let match;
+  let requestAuth = true;
 
   // Allow the caller to drive how authentication is processed via the query.
   // Eg, http://localhost:8888/authenticate.sjs?user=foo&realm=bar
   // The extra ? allows the user/pass/realm checks to succeed if the name is
   // at the beginning of the query string.
-  var query = "?" + request.queryString;
+  let query = "?" + request.queryString;
 
-  var expected_user = "test",
+  let expected_user = "test",
     expected_pass = "testpass",
     realm = "mochitest";
 
@@ -37,19 +39,17 @@ function handleRequest(request, response) {
   // This test only supports Basic auth. The value sent by the client is
   // "username:password", obscured with base64 encoding.
 
-  var actual_user = "",
+  let actual_user = "",
     actual_pass = "",
-    authHeader,
-    authPresent = false;
+    authHeader;
   if (request.hasHeader("Authorization")) {
-    authPresent = true;
     authHeader = request.getHeader("Authorization");
     match = /Basic (.+)/.exec(authHeader);
     if (match.length != 2) {
       throw new Error("Couldn't parse auth header: " + authHeader);
     }
-
-    var userpass = base64ToString(match[1]); // no atob() :-(
+    /* eslint-disable-next-line no-use-before-define */
+    let userpass = base64ToString(match[1]); // no atob() :-(
     match = /(.*):(.*)/.exec(userpass);
     if (match.length != 3) {
       throw new Error("Couldn't decode auth header: " + userpass);
@@ -104,14 +104,14 @@ const toBinaryTable = [
 const base64Pad = "=";
 
 function base64ToString(data) {
-  var result = "";
-  var leftbits = 0; // number of bits decoded, but yet to be appended
-  var leftdata = 0; // bits decoded, but yet to be appended
+  let result = "";
+  let leftbits = 0; // number of bits decoded, but yet to be appended
+  let leftdata = 0; // bits decoded, but yet to be appended
 
   // Convert one by one.
-  for (var i = 0; i < data.length; i++) {
-    var c = toBinaryTable[data.charCodeAt(i) & 0x7f];
-    var padding = data[i] == base64Pad;
+  for (let i = 0; i < data.length; i++) {
+    let c = toBinaryTable[data.charCodeAt(i) & 0x7f];
+    let padding = data[i] == base64Pad;
     // Skip illegal characters and whitespace
     if (c == -1) {
       continue;
