@@ -10,6 +10,8 @@
   <link href="../csslogo.ico" rel="shortcut icon" type="image/x-icon">
   <link href="https://www.w3.org/StyleSheets/TR/2016/W3C-ED" rel="stylesheet" type="text/css">
   <meta content="Bikeshed version d7036035b, updated Fri Oct 8 17:07:11 2021 -0700" name="generator">
+  <link href="https://matspalmgren.github.io/css-gap-decorations/Overview.html" rel="canonical">
+  <meta content="c1e56c61b4848a0a5f07159d3f21b96236447c53" name="document-revision">
 <style>/* style-autolinks */
 
 .css.css, .property.property, .descriptor.descriptor {
@@ -701,13 +703,16 @@ dd:not(:last-child) > .wpt-tests-block:not([open]):last-child {
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2016/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">CSS Gap Decorations</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Editor’s Draft, <time class="dt-updated" datetime="2021-10-21">21 October 2021</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Editor’s Draft, <time class="dt-updated" datetime="2021-10-22">22 October 2021</time></span></h2>
    <details>
     <summary>Specification Metadata</summary>
     <div data-fill-with="spec-metadata">
      <dl>
+      <dt>This version:
+      <dd><a class="u-url" href="https://matspalmgren.github.io/css-gap-decorations/Overview.html">https://matspalmgren.github.io/css-gap-decorations/Overview.html</a>
       <dt>Issue Tracking:
       <dd><a href="https://github.com/w3c/csswg-drafts/labels/css-gap-decorations-1">CSSWG Issues Repository</a>
+      <dd><a href="https://github.com/w3c/csswg-drafts/issues/6748">CSSWG github issue #6748</a>
       <dd><a href="#issues-index">Inline In Spec</a>
       <dt class="editor">Editor:
       <dd class="editor p-author h-card vcard"><a class="p-name fn u-email email" href="mailto:mats@mozilla.com">Mats Palmgren</a> (<a class="p-org org" href="http://mozilla.com">Mozilla Corporation</a>)
@@ -780,16 +785,16 @@ on screen, on paper, etc.
       <li><a href="#row-rule"><span class="secno">4.2</span> <span class="content">The <span class="property">row-rule</span> Shorthand</span></a>
      </ol>
     <li>
-     <a href="#column-rule-align"><span class="secno">5</span> <span class="content">Rule Alignment</span></a>
+     <a href="#rule-align"><span class="secno">5</span> <span class="content">Rule Alignment</span></a>
      <ol class="toc">
-      <li><a href="#column-rule-align①"><span class="secno">5.1</span> <span class="content">The <span class="property">column-rule-align</span> and <span class="property">row-rule-align</span> Properties</span></a>
+      <li><a href="#column-rule-align"><span class="secno">5.1</span> <span class="content">The <span class="property">column-rule-align</span> and <span class="property">row-rule-align</span> Properties</span></a>
       <li><a href="#column-rule-edge-align"><span class="secno">5.2</span> <span class="content">The <span class="property">column-rule-edge-align</span> and <span class="property">row-rule-edge-align</span> Properties</span></a>
      </ol>
     <li>
-     <a href="#column-rule-extent"><span class="secno">6</span> <span class="content">Rule Extent</span></a>
+     <a href="#rule-extent"><span class="secno">6</span> <span class="content">Rule Extent</span></a>
      <ol class="toc">
       <li>
-       <a href="#column-rule-extent①"><span class="secno">6.1</span> <span class="content">The <span class="property">column-rule-extent</span> and <span class="property">row-rule-extent</span> Properties</span></a>
+       <a href="#column-rule-extent"><span class="secno">6.1</span> <span class="content">The <span class="property">column-rule-extent</span> and <span class="property">row-rule-extent</span> Properties</span></a>
        <ol class="toc">
         <li>
          <a href="#rule-extent-grid"><span class="secno">6.1.1</span> <span class="content">Grid Containers</span></a>
@@ -1340,7 +1345,7 @@ on screen, on paper, etc.
    <aside class="example" id="example-3020da77">
     <a class="self-link" href="#example-3020da77"></a> This <a href="examples/grid-longitudinal-002.html">example</a> demonstrates
         that the inset properties can be animated and that they are relative the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①①⓪">rule containing rectangle</a>,
-        which itself depends on the <a href="#column-rule-align">rule’s alignment</a> in its longitudinal axis.
+        which itself depends on the <a href="#rule-align">rule’s alignment</a> in its longitudinal axis.
         Note that the longitudinal insets in this example are definite and not animated. The reason
         they follow the animated lateral position of the rule in the orthogonal axis is that they have <a href="#column-rule-align"><span class="css">rule</span> alignment</a>. 
     <figure>
@@ -1608,8 +1613,8 @@ on screen, on paper, etc.
     both axes, like so: 'rule-foo: <span class="production">&lt;row-rule-foo></span> <span class="production">&lt;column-rule-foo></span>?'.
     As usual, we have to be careful with the separator though, to make it
     forward-compatible with any changes we might want to make...</p>
-   <h2 class="heading settled" data-level="5" id="column-rule-align"><span class="secno">5. </span><span class="content">Rule Alignment</span><a class="self-link" href="#column-rule-align"></a></h2>
-   <h3 class="heading settled" data-level="5.1" id="column-rule-align①"><span class="secno">5.1. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-column-rule-align" id="ref-for-propdef-column-rule-align">column-rule-align</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-align" id="ref-for-propdef-row-rule-align">row-rule-align</a> Properties</span><a class="self-link" href="#column-rule-align①"></a></h3>
+   <h2 class="heading settled" data-level="5" id="rule-align"><span class="secno">5. </span><span class="content">Rule Alignment</span><a class="self-link" href="#rule-align"></a></h2>
+   <h3 class="heading settled" data-level="5.1" id="column-rule-align"><span class="secno">5.1. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-column-rule-align" id="ref-for-propdef-column-rule-align">column-rule-align</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-align" id="ref-for-propdef-row-rule-align">row-rule-align</a> Properties</span><a class="self-link" href="#column-rule-align"></a></h3>
    <table class="def propdef" data-link-for-hint="column-rule-align">
     <tbody>
      <tr>
@@ -1729,8 +1734,8 @@ on screen, on paper, etc.
     so they align with the inline axis gap edges.</p>
    <p class="issue" id="issue-13842b6f"><a class="self-link" href="#issue-13842b6f"></a> Are there use cases for other box-related edge attachment points?
     e.g. 'padding | padding-center | padding-over | border...'</p>
-   <h2 class="heading settled" data-level="6" id="column-rule-extent"><span class="secno">6. </span><span class="content">Rule Extent</span><a class="self-link" href="#column-rule-extent"></a></h2>
-   <h3 class="heading settled" data-level="6.1" id="column-rule-extent①"><span class="secno">6.1. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-column-rule-extent" id="ref-for-propdef-column-rule-extent">column-rule-extent</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-extent" id="ref-for-propdef-row-rule-extent">row-rule-extent</a> Properties</span><a class="self-link" href="#column-rule-extent①"></a></h3>
+   <h2 class="heading settled" data-level="6" id="rule-extent"><span class="secno">6. </span><span class="content">Rule Extent</span><a class="self-link" href="#rule-extent"></a></h2>
+   <h3 class="heading settled" data-level="6.1" id="column-rule-extent"><span class="secno">6.1. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-column-rule-extent" id="ref-for-propdef-column-rule-extent">column-rule-extent</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-extent" id="ref-for-propdef-row-rule-extent">row-rule-extent</a> Properties</span><a class="self-link" href="#column-rule-extent"></a></h3>
    <table class="def propdef" data-link-for-hint="column-rule-extent">
     <tbody>
      <tr>
@@ -1952,9 +1957,9 @@ on screen, on paper, etc.
     <dt>segment
     <dd>behaves as <a class="css" data-link-type="maybe" href="#valdef-row-rule-extent-short" id="ref-for-valdef-row-rule-extent-short">short</a> 
     <dt>start
-    <dd>use the <a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#outer-size" id="ref-for-outer-size①">outer size</a> of the items in the flex line on the inline axis start side 
+    <dd>use the <a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#outer-size" id="ref-for-outer-size①">outer size</a> of the items in the flex line on the block axis start side 
     <dt>end
-    <dd>use the <a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#outer-size" id="ref-for-outer-size②">outer size</a> of the items in the flex line on the inline axis end side 
+    <dd>use the <a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#outer-size" id="ref-for-outer-size②">outer size</a> of the items in the flex line on the block axis end side 
     <dt>short
     <dd>use the <a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#outer-size" id="ref-for-outer-size③">outer size</a> of the <a data-link-type="dfn" href="#next-flex-line-item" id="ref-for-next-flex-line-item">next flex line item</a> which has the smaller size (see detailed algorithm below) 
     <dt>long
@@ -2086,7 +2091,7 @@ on screen, on paper, etc.
     </figure>
    </aside>
    <h2 class="heading settled" data-level="7" id="rule-containing-rectangle"><span class="secno">7. </span><span class="content">The Rule Containing Rectangle</span><a class="self-link" href="#rule-containing-rectangle"></a></h2>
-   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="rule-containing-rectangle①">rule containing rectangle</dfn> is formed by the <a href="#column-rule-extent">rule extent</a> and <a href="#column-rule-align">alignment</a> in the <a data-link-type="dfn" href="#longitudinal-axis" id="ref-for-longitudinal-axis⑦">longitudinal axis</a>, and by the size of the <a href="https://drafts.csswg.org/css-align/#gutter">gutter</a> in the <a data-link-type="dfn" href="#lateral-axis" id="ref-for-lateral-axis④">lateral axis</a>.
+   <p>The <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="rule-containing-rectangle①">rule containing rectangle</dfn> is formed by the <a href="#rule-extent">rule extent</a> and <a href="#rule-align">alignment</a> in the <a data-link-type="dfn" href="#longitudinal-axis" id="ref-for-longitudinal-axis⑦">longitudinal axis</a>, and by the size of the <a href="https://drafts.csswg.org/css-align/#gutter">gutter</a> in the <a data-link-type="dfn" href="#lateral-axis" id="ref-for-lateral-axis④">lateral axis</a>.
     (For clarity, the size of the gutter is calculated from the <a href="https://drafts.csswg.org/css-align/#gaps">gap</a> properties plus any extra space contributed by <a href="https://drafts.csswg.org/css-align/#distribution-values">alignment distribution</a> but does not include any item margins.)</p>
    <p>It is important to note that the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①①④">rule containing rectangle’s</a> size in an axis isn’t affected by any of
     the <a href="#column-rule-lateral-inset">inset properties</a> <i>in the same axis</i> as that would lead to a circular
@@ -2116,7 +2121,7 @@ on screen, on paper, etc.
     They are painted after (on top of) the element’s border.
     All column rules for an element are painted first, then all of its row rules.
     The rules for an axis are painted in the order they were generated by
-    the <a href="#column-rule-extent">rule extent</a> algorithms described above.
+    the <a href="#rule-extent">rule extent</a> algorithms described above.
     Typically from the logical start to the end of the axis.</p>
    <p>For table layout, all the <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table" id="ref-for-table①⑦">table</a> rules (in both axes)
     are painted before the rules for the row-groups.  The painting order between
@@ -2128,19 +2133,19 @@ on screen, on paper, etc.
    <h2 class="heading settled" data-level="9" id="rule-overflow"><span class="secno">9. </span><span class="content">Rule Overflow</span><a class="self-link" href="#rule-overflow"></a></h2>
    <p>The column and row rule areas contributes to a fragment’s <a data-link-type="dfn" href="https://drafts.csswg.org/css-overflow-3/#ink-overflow" id="ref-for-ink-overflow">ink overflow</a>.
     Note that they can overflow an fragment’s border-box due to negative inset
-    values etc.
-    For clarity, none of the properties in this spec affects layout in any way.
-    Column and row rules are purely a painting effect.</p>
+    values etc.</p>
    <aside class="example" id="example-13dcb258">
     <a class="self-link" href="#example-13dcb258"></a> Here’s an <a href="examples/grid-longitudinal-003.html">example</a> showing
         rules that overflow their container and how they are clipped.
         Both grids have large negative insets to extend the rules outside of the container.
         The right grid has <a class="css" data-link-type="propdesc" href="https://drafts.csswg.org/css-overflow-3/#propdef-overflow" id="ref-for-propdef-overflow">overflow: hidden</a> which clips its rules at the padding area edge. 
     <figure>
-      <img height="595" src="media/grid-longitudinal-003.png" width="766"> 
+      <img height="693" src="media/grid-longitudinal-003.png" width="760"> 
      <figcaption> Examples of rule overflow and clipping. </figcaption>
     </figure>
    </aside>
+   <p>For clarity, none of the properties in this spec affects layout in any way.
+    Column and row rules are purely a painting effect.</p>
   </main>
   <h2 class="no-ref no-num heading settled" id="w3c-conformance"><span class="content"> Conformance</span><a class="self-link" href="#w3c-conformance"></a></h2>
   <h3 class="no-ref heading settled" id="w3c-conventions"><span class="content"> Document conventions</span><a class="self-link" href="#w3c-conventions"></a></h3>
@@ -2826,7 +2831,7 @@ on screen, on paper, etc.
    <dt id="biblio-css-box-4">[CSS-BOX-4]
    <dd>Elika Etemad. <a href="https://www.w3.org/TR/css-box-4/"><cite>CSS Box Model Module Level 4</cite></a>. 21 April 2020. WD. URL: <a href="https://www.w3.org/TR/css-box-4/">https://www.w3.org/TR/css-box-4/</a>
    <dt id="biblio-css-cascade-5">[CSS-CASCADE-5]
-   <dd>Elika Etemad; Miriam Suzanne; Tab Atkins Jr.. <a href="https://www.w3.org/TR/css-cascade-5/"><cite>CSS Cascading and Inheritance Level 5</cite></a>. 15 October 2021. WD. URL: <a href="https://www.w3.org/TR/css-cascade-5/">https://www.w3.org/TR/css-cascade-5/</a>
+   <dd>Elika Etemad; Miriam Suzanne; Tab Atkins Jr.. <a href="https://www.w3.org/TR/css-cascade-5/"><cite>CSS Cascading and Inheritance Level 5</cite></a>. 29 August 2021. WD. URL: <a href="https://www.w3.org/TR/css-cascade-5/">https://www.w3.org/TR/css-cascade-5/</a>
    <dt id="biblio-css-color-4">[CSS-COLOR-4]
    <dd>Tab Atkins Jr.; Chris Lilley. <a href="https://www.w3.org/TR/css-color-4/"><cite>CSS Color Module Level 4</cite></a>. 1 June 2021. WD. URL: <a href="https://www.w3.org/TR/css-color-4/">https://www.w3.org/TR/css-color-4/</a>
    <dt id="biblio-css-display-3">[CSS-DISPLAY-3]
@@ -2848,7 +2853,7 @@ on screen, on paper, etc.
    <dt id="biblio-css-tables-3">[CSS-TABLES-3]
    <dd>François Remy; Greg Whitworth; David Baron. <a href="https://www.w3.org/TR/css-tables-3/"><cite>CSS Table Module Level 3</cite></a>. 27 July 2019. WD. URL: <a href="https://www.w3.org/TR/css-tables-3/">https://www.w3.org/TR/css-tables-3/</a>
    <dt id="biblio-css-values-4">[CSS-VALUES-4]
-   <dd>Tab Atkins Jr.; Elika Etemad. <a href="https://www.w3.org/TR/css-values-4/"><cite>CSS Values and Units Module Level 4</cite></a>. 16 October 2021. WD. URL: <a href="https://www.w3.org/TR/css-values-4/">https://www.w3.org/TR/css-values-4/</a>
+   <dd>Tab Atkins Jr.; Elika Etemad. <a href="https://www.w3.org/TR/css-values-4/"><cite>CSS Values and Units Module Level 4</cite></a>. 30 September 2021. WD. URL: <a href="https://www.w3.org/TR/css-values-4/">https://www.w3.org/TR/css-values-4/</a>
    <dt id="biblio-css-writing-modes-4">[CSS-WRITING-MODES-4]
    <dd>Elika Etemad; Koji Ishii. <a href="https://www.w3.org/TR/css-writing-modes-4/"><cite>CSS Writing Modes Level 4</cite></a>. 30 July 2019. CR. URL: <a href="https://www.w3.org/TR/css-writing-modes-4/">https://www.w3.org/TR/css-writing-modes-4/</a>
    <dt id="biblio-rfc2119">[RFC2119]
