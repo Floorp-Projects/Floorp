@@ -53,6 +53,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val INVALID_URI = "not a valid uri"
         const val LINKS_HTML_PATH = "/assets/www/links.html"
         const val LOREM_IPSUM_HTML_PATH = "/assets/www/loremIpsum.html"
+        const val METATAGS_PATH = "/assets/www/metatags.html"
         const val MOUSE_TO_RELOAD_HTML_PATH = "/assets/www/mouseToReload.html"
         const val NEW_SESSION_CHILD_HTML_PATH = "/assets/www/newSession_child.html"
         const val NEW_SESSION_HTML_PATH = "/assets/www/newSession.html"

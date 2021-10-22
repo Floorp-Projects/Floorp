@@ -274,6 +274,16 @@ class ContentDelegateTest : BaseSessionTest() {
         })
     }
 
+    @Test fun previewImage() {
+        mainSession.loadTestPath(METATAGS_PATH)
+        mainSession.waitUntilCalled(object : ContentDelegate, ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onPreviewImage(session: GeckoSession, previewImageUrl: String) {
+                assertThat("Preview image should match", previewImageUrl, equalTo("https://test.com/og-image-url"))
+            }
+        })
+    }
+
     @Test fun viewportFit() {
         mainSession.loadTestPath(VIEWPORT_PATH)
         mainSession.waitUntilCalled(object : ContentDelegate, ProgressDelegate {

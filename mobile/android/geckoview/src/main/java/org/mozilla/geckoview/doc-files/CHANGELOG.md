@@ -26,6 +26,8 @@ exclude: true
   protection permissions in private browsing).
 - Deprecated [`GeckoRuntimeSettings.Builder.enterpiseRootsEnabled`][95.7] due to typo.
 - Added [`GeckoRuntimeSettings.Builder.enterpriseRootsEnabled`][95.8] to replace [`GeckoRuntimeSettings.Builder.enterpiseRootsEnabled`][95.7].
+- Added [`GeckoSession.ContentDelegate.onPreviewImage()`][95.9] to notify
+  the application of a preview image URL.
 
 [95.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onPointerIconChange-org.mozilla.geckoview.GeckoSession-android.view.PointerIcon-
 [95.2]: {{javadoc_uri}/ContentBlockingController.html
@@ -35,6 +37,7 @@ exclude: true
 [95.6]: {{javadoc_uri}/StorageController.html#setPrivateBrowsingPermanentPermission-org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission-int-
 [95.7]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#enterpiseRootsEnabled-boolean-
 [95.8]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#enterpriseRootsEnabled-boolean-
+[95.9]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onPreviewImage-org.mozilla.geckoview.GeckoSession-java.lang.String-
 
 ## v94
 - Extended [`Autocomplete`][78.7] API to support credit card saving.
@@ -1069,4 +1072,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: efde9e11f6249cf145903d7c6e317d5c17be8d1e
+[api-version]: d44de923c2ba7fb152398b9001d26b4ed2689138
