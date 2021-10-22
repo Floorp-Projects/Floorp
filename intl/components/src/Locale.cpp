@@ -835,15 +835,12 @@ static bool CreateLocaleForLikelySubtags(const Locale& tag, LocaleId& locale) {
 // retrieve these subtags, but unfortunately these functions are rather slow, so
 // we use our own implementation.
 static bool AssignFromLocaleId(LocaleId& localeId, Locale& tag) {
-  MOZ_ASSERT(localeId.back() == '\0',
-             "Locale ID should be zero-terminated for ICU");
-
   // Replace the ICU locale ID separator.
   std::replace(localeId.begin(), localeId.end(), '_', '-');
 
   // ICU replaces "und" with the empty string, which means "und" becomes "" and
   // "und-Latn" becomes "-Latn". Handle this case separately.
-  if (localeId[0] == '\0' || localeId[0] == '-') {
+  if (localeId.empty() || localeId[0] == '-') {
     static constexpr char und[] = "und";
     constexpr size_t length = std::char_traits<char>::length(und);
 
@@ -855,11 +852,9 @@ static bool AssignFromLocaleId(LocaleId& localeId, Locale& tag) {
     memmove(localeId.begin(), und, length);
   }
 
-  Span<const char> localeSpan(localeId.begin(), localeId.length() - 1);
-
   // Retrieve the language, script, and region subtags from the locale ID
   Locale localeTag;
-  if (LocaleParser::tryParseBaseName(localeSpan, localeTag).isErr()) {
+  if (LocaleParser::tryParseBaseName(localeId, localeTag).isErr()) {
     return false;
   }
 
@@ -886,8 +881,7 @@ static bool CallLikelySubtags(const LocaleId& localeId, LocaleId& result) {
     return false;
   }
 
-  // Zero-terminated for use with ICU.
-  return result.append('\0');
+  return true;
 }
 
 // The canonical way to compute the Unicode BCP 47 locale identifier with likely
