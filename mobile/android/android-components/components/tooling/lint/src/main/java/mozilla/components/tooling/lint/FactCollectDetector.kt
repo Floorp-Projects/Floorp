@@ -5,9 +5,20 @@
 package mozilla.components.tooling.lint
 
 import com.android.tools.lint.checks.DataFlowAnalyzer
-import com.android.tools.lint.detector.api.*
+import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.Scope
+import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
-import org.jetbrains.uast.*
+import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UReturnExpression
+import org.jetbrains.uast.getParentOfType
 
 /**
  * A custom lint check that warns if [Fact.collect()] is not called on a newly created [Fact] instance
@@ -32,7 +43,7 @@ class FactCollectDetector : Detector(), SourceCodeScanner {
                 explanation = """
                 An instance of `Fact` was created but not collected. You must call 
                 `collect()` on the instance to actually process it.
-            """.trimIndent(),
+                """.trimIndent(),
                 category = Category.CORRECTNESS,
                 priority = 6,
                 severity = Severity.ERROR,

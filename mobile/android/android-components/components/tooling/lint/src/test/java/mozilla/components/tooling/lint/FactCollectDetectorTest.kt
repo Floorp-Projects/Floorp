@@ -58,7 +58,8 @@ class FactCollectDetectorTest {
                         )
                     }
                     """
-                ).indented(), factClassfileStub
+                ).indented(),
+                factClassfileStub
             )
             .issues(FactCollectDetector.ISSUE_FACT_COLLECT_CALLED)
             .run()
@@ -68,7 +69,7 @@ class FactCollectDetectorTest {
                     Fact(
                     ~~~~
                 1 errors, 0 warnings
-            """.trimIndent()
+                """.trimIndent()
             )
     }
 
@@ -98,7 +99,8 @@ class FactCollectDetectorTest {
                         ).collect()
                     }
                     """
-                ).indented(), factClassfileStub
+                ).indented(),
+                factClassfileStub
             )
             .issues(FactCollectDetector.ISSUE_FACT_COLLECT_CALLED)
             .run()
@@ -131,7 +133,8 @@ class FactCollectDetectorTest {
                         )
                     }
                     """
-                ).indented(), factClassfileStub
+                ).indented(),
+                factClassfileStub
             )
             .issues(FactCollectDetector.ISSUE_FACT_COLLECT_CALLED)
             .run()
@@ -169,7 +172,8 @@ class FactCollectDetectorTest {
                         
                     }
                     """
-                ).indented(), factClassfileStub
+                ).indented(),
+                factClassfileStub
             )
             .issues(FactCollectDetector.ISSUE_FACT_COLLECT_CALLED)
             .run()
@@ -206,7 +210,8 @@ class FactCollectDetectorTest {
                         }
                     }
                     """
-                ).indented(), factClassfileStub
+                ).indented(),
+                factClassfileStub
             )
             .issues(FactCollectDetector.ISSUE_FACT_COLLECT_CALLED)
             .run()
