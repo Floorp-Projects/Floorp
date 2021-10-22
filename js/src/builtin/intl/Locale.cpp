@@ -411,10 +411,11 @@ bool js::intl::ApplyUnicodeExtensionToTag(
 
   const char* unicodeExtensionEnd = nullptr;
   const char* unicodeExtensionKeywords = nullptr;
-  if (const char* unicodeExtension = tag.unicodeExtension()) {
-    unicodeExtensionEnd = unicodeExtension + strlen(unicodeExtension);
+  if (auto unicodeExtension = tag.unicodeExtension()) {
+    const char* unicodeExtensionBegin = unicodeExtension->data();
+    unicodeExtensionEnd = unicodeExtensionBegin + unicodeExtension->size();
 
-    SepKeywordIterator<char> iter(unicodeExtension, unicodeExtensionEnd);
+    SepKeywordIterator<char> iter(unicodeExtensionBegin, unicodeExtensionEnd);
 
     // Find the start of the first keyword.
     unicodeExtensionKeywords = iter.next();
@@ -423,7 +424,7 @@ bool js::intl::ApplyUnicodeExtensionToTag(
     const char* attributesEnd = unicodeExtensionKeywords
                                     ? unicodeExtensionKeywords
                                     : unicodeExtensionEnd;
-    if (!newExtension.append(unicodeExtension + 1, attributesEnd)) {
+    if (!newExtension.append(unicodeExtensionBegin + 1, attributesEnd)) {
       return false;
     }
   }
