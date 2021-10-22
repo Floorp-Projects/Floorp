@@ -501,6 +501,16 @@ body[lwt-newtab-brighttext] {
   background-color: #5B5B66;
   color: #E0E0E6;
 }
+@media (max-height: 570px) {
+  .onboardingContainer .secondary-cta.top button {
+    color: var(--in-content-link-color);
+  }
+  .onboardingContainer .secondary-cta.top button:hover {
+    background-color: #5B5B66;
+    color: var(--in-content-link-color-hover);
+    text-decoration: underline;
+  }
+}
 .onboardingContainer .secondary-cta span {
   color: var(--grey-subtitle-1);
   margin: 0 4px;

@@ -5,6 +5,7 @@
 @use 'sass:math';
 @import '../styles/normalize';
 
+$break-point-small: 570px;
 $break-point-medium: 610px;
 $break-point-large: 866px;
 $logo-size: 80px;
@@ -585,6 +586,16 @@ body {
         &:hover {
           background-color: #5B5B66;
           color: #E0E0E6;
+        }
+
+        @media (max-height: $break-point-small) {
+          color: var(--in-content-link-color);
+
+          &:hover {
+            background-color: #5B5B66;
+            color: var(--in-content-link-color-hover);
+            text-decoration: underline;
+          }
         }
       }
     }
