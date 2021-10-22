@@ -130,27 +130,6 @@ linux64-clang-trunk:
             - linux64-toolchain-sysroot
             - wasm32-wasi-compiler-rt
 
-linux64-clang-12:
-    description: "Clang 12 toolchain build"
-    attributes:
-        local-toolchain: true
-    treeherder:
-        symbol: TL(clang12)
-    run-on-projects: [trunk]
-    run:
-        using: toolchain-script
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/clang-12-linux64.json'
-        resources:
-            - 'build/build-clang/clang-12-linux64.json'
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        fetch:
-            - clang-12
-        toolchain:
-            - linux64-toolchain-sysroot
-
 linux64-clang-13:
     description: "Clang 13 toolchain build"
     attributes:
