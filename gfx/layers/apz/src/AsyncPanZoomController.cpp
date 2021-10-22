@@ -5064,6 +5064,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(
 
   bool scrollOffsetUpdated = false;
   bool smoothScrollRequested = false;
+  bool didCancelAnimation = false;
+  Maybe<CSSPoint> cumulativeRelativeDelta;
   for (const auto& scrollUpdate : aScrollMetadata.GetScrollUpdates()) {
     APZC_LOG("%p processing scroll update %s\n", this,
              ToString(scrollUpdate).c_str());
@@ -5147,7 +5149,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     }
 
     Maybe<CSSPoint> relativeDelta;
-
     if (scrollUpdate.GetType() == ScrollUpdateType::Relative) {
       APZC_LOG(
           "%p relative updating scroll offset from %s by %s\n", this,
@@ -5214,6 +5215,17 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       }
     }
 
+    if (relativeDelta) {
+      cumulativeRelativeDelta =
+          !cumulativeRelativeDelta
+              ? relativeDelta
+              : Some(*cumulativeRelativeDelta + *relativeDelta);
+    } else {
+      // If the scroll update is not relative, clobber the cumulative delta,
+      // i.e. later updates win.
+      cumulativeRelativeDelta.reset();
+    }
+
     // If an animation is underway, tell it about the scroll offset update.
     // Some animations can handle some scroll offset updates and continue
     // running. Those that can't will return false, and we cancel them.
@@ -5222,12 +5234,18 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       // after we update the scroll offset above. Otherwise we can be left
       // in a state where things are out of sync.
       CancelAnimation();
+      didCancelAnimation = true;
     }
   }
 
   if (scrollOffsetUpdated) {
     for (auto& sampledState : mSampledState) {
-      sampledState.UpdateScrollProperties(Metrics());
+      if (!didCancelAnimation && cumulativeRelativeDelta.isSome()) {
+        sampledState.UpdateScrollPropertiesWithRelativeDelta(
+            Metrics(), *cumulativeRelativeDelta);
+      } else {
+        sampledState.UpdateScrollProperties(Metrics());
+      }
     }
 
     // Because of the scroll generation update, any inflight paint requests
