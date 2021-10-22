@@ -1987,6 +1987,27 @@ bool TypedArrayObject::copyWithin(JSContext* cx, unsigned argc, Value* vp) {
     JS_SELF_HOSTED_FN("at", "TypedArrayAt", 1, 0),
     JS_FS_END};
 
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+const JSFunctionSpec changeArrayByCopyProtoFunctions[] = {
+    JS_SELF_HOSTED_FN("withReversed", "TypedArrayWithReversed", 0, 0),
+    JS_SELF_HOSTED_FN("withSorted", "TypedArrayWithSorted", 1, 0),
+    JS_SELF_HOSTED_FN("withAt", "TypedArrayWithAt", 2, 0),
+    JS_SELF_HOSTED_FN("withSpliced", "TypedArrayWithSpliced", 3, 0),
+
+    JS_FS_END};
+
+static bool TypedArrayProtoFinish(JSContext* cx, JS::HandleObject ctor,
+                                  JS::HandleObject proto) {
+  if (cx->options().changeArrayByCopy()) {
+    if (!js::DefineFunctions(cx, proto, changeArrayByCopyProtoFunctions,
+                             js::NotIntrinsic)) {
+      return false;
+    }
+  }
+  return true;
+}
+#endif
+
 /* static */ const JSFunctionSpec TypedArrayObject::staticFunctions[] = {
     JS_SELF_HOSTED_FN("from", "TypedArrayStaticFrom", 3, 0),
     JS_SELF_HOSTED_FN("of", "TypedArrayStaticOf", 0, 0), JS_FS_END};
@@ -2007,7 +2028,11 @@ static const ClassSpec TypedArrayObjectSharedTypedArrayPrototypeClassSpec = {
     TypedArrayObject::staticProperties,
     TypedArrayObject::protoFunctions,
     TypedArrayObject::protoAccessors,
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+    TypedArrayProtoFinish,
+#else
     nullptr,
+#endif
     ClassSpec::DontDefineConstructor};
 
 /* static */ const JSClass TypedArrayObject::sharedTypedArrayPrototypeClass = {
