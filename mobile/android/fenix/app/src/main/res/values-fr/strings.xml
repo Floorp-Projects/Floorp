@@ -2087,6 +2087,8 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="pocket_stories_categories_header">Articles par sujet</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">En découvrir davantage</string>
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">Membre de la famille Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">En savoir plus</string>
 </resources>

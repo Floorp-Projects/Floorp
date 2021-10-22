@@ -55,6 +55,8 @@
     <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">ਤਾਜ਼ਾ ਸੰਭਾਲੇ</string>
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string moz:removedIn="94" name="recently_bookmarked" tools:ignore="UnusedResources">ਤਾਜ਼ਾ ਬੁੱਕਮਾਰਕ ਕੀਤੇ</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recent_bookmarks_title">ਸੱਜਰੇ ਬੁੱਕਮਾਰਕ</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">ਤਾਜ਼ਾ ਸੰਭਾਲੇ ਬੁੱਕਮਾਰਕ</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -111,6 +113,19 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">ਖ਼ਾਰਜ ਕਰੋ</string>
 
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">ਪਿਛਲੇ ਦੋ ਹਫ਼ਤਿਆਂ ਵਿੱਚ ਤੁਹਾਡੇ ਵਲੋਂ ਨਾ ਵੇਖੀਆਂ ਟੈਬਾਂ ਨੂੰ ਇੱਥੇ ਭੇਜਿਆ ਜਾਂਦਾ ਹੈ।</string>
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਬੰਦ ਕਰੋ</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">ਇੱਕ ਮਹੀਨੇ ਬਾਅਦ ਆਪੇ ਬੰਦ ਕਰਨਾ ਹੈ?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox ਉਹਨਾਂ ਟੈਬਾਂ ਨੂੰ ਬੰਦ ਕਰ ਸਕਦਾ ਹੈ, ਜਿਨਾਂ ਨੂੰ ਤੁਸੀਂ ਪਿਛਲੇ ਮਹੀਨੇ ਭਰ ਤੋਂ ਨਹੀਂ ਵੇਖਿਆ ਹੈ।</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">ਬੰਦ ਕਰੋ</string>
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button">ਆਪੇ ਬੰਦ ਕਰਨਾ ਚਾਲੂ ਕਰੋ</string>
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">ਨਵੀਂ ਟੈਬ</string>
@@ -126,6 +141,15 @@
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">ਸਭ ਵੇਖੋ</string>
 
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description">ਸਾਰੀਆਂ ਸੱਜਰੀਆਂ ਟੈਬਾਂ ਬਟਨ ਨੂੰ ਵੇਖਾਓ</string>
+    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
+        The first parameter is the search term that the user used. (for example: your search for "cat")-->
+    <string name="recent_tabs_search_term">\&quot;%1$s\&quot; ਲਈ ਤੁਹਾਡੀ ਖੋਜ</string>
+    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
+        The first parameter is the count for number of sites in the group.  This number will always be more than one. -->
+    <string name="recent_tabs_search_term_count">ਸਾਈਟਾਂ: %1$s</string>
+
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
@@ -133,9 +157,15 @@
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
     <string moz:removedIn="94" name="history_metadata_header_2" tools:ignore="UnusedResources">ਹਾਲ ਦੇ ਖੋਲ੍ਹੀਆਂ ਗਈਆਂ</string>
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_3">ਸੱਜਰੀਆਂ ਖੋਜਾਂ</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">ਹਟਾਓ</string>
+
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description">ਸਾਰੀਆਂ ਪਿਛਲੀਆਂ ਖੋਜਾਂ ਦੇ ਬਟਨ ਨੂੰ ਵੇਖਾਓ</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -215,6 +245,8 @@
 
     <!-- Browser menu button that opens the Customize menu -->
     <string name="browser_menu_customize_home">ਘਰ ਨੂੰ ਕਸਟਮਾਈਜ਼ ਕਰੋ</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">ਮੁੱਖ-ਸਫ਼ੇ ਨੂੰ ਕਸਟਮਾਈਜ਼ ਕਰੋ</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">ਮੁੱਖ ਸਕਰੀਨ</string>
@@ -260,6 +292,27 @@
     <string name="search_engine_suggestions_title">%s ਖੋਜ</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">ਸਿਰਨਾਵਾਂ ਪੱਟੀ ਵਿੱਚੋਂ ਸਿ਼ੱਧਾ ਖੋਜੋ</string>
+
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_title_2">Firefox ਵਿੱਚ ਨਵਾਂ ਕੀ ਹੈ</string>
+    <!-- Onboarding home screen dialog description text. -->
+    <string name="onboarding_home_screen_description_2">ਜਿੱਥੇ ਤੁਸੀਂ ਛੱਡ ਕੇ ਗਈ ਸੀ, ਉਥੋਂ ਹੀ ਮੁੜ ਸ਼ੁਰੂ ਕਰਨਾ ਸੌਖਾ ਹੈ।</string>
+    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_section_home_title_2">ਆਪਣੇ ਮੁਤਾਬਕ ਢਾਲਿਆ Firefox ਮੁੱਖ-ਸਫ਼ਾ</string>
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description_2">ਆਪਣੀਆਂ ਖੋਲ੍ਹੀਆ ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕਾਂ ਅਤੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਅਤੀਤ ਉੱਤੇ ਜਾਓ।</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">ਸਾਫ਼, ਸਜਾਈਆਂ ਟੈਬਾਂ</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">ਸੁਧਾਰੇ ਖਾਕੇ ਤੇ ਆਪਣੇ-ਬੰਦ ਹੋਣ ਵਾਲੀਆਂ ਟੈਬਾਂ ਨਾਲ ਟੈਬਾਂ ਦੇ ਖਿਲਾਰੇ ਨੂੰ ਸਾਫ਼ ਕਰੋ।</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_title_2">ਸੱਜਰੀਆਂ ਖੋਜਾਂ</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_description_2">ਆਪਣੇ ਮੁੱਖ-ਸਫ਼ੇ ਅਤੇ ਟੈਬਾਂ ਤੋਂ ਆਪਣੀਆਂ ਸੱਜਰੀਆਂ ਖੋਜਾਂ ਨੂੰ ਮੁੜ-ਖੋਲ੍ਹੋ।</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ਤੁਹਾਡੇ ਆਪਣੇ ਬਣਾਏ Firefox ਮੁੱਖ-ਸਫ਼ੇ ਨੇ ਹੁਣ ਜਿੱਥੇ ਤੁਸੀਂ ਛੱਡ ਕੇ ਗਏ ਸੀ, ਉਥੋਂ ਹੀ ਸ਼ੁਰੂ ਕਰਨਾ ਸੌਖਾ ਬਣਾ ਦਿੱਤਾ ਹੈ। ਆਪਣੀਆਂ ਸੱਜਰੀਆਂ ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕ ਅਤੇ ਖੋਜ ਨਤੀਜੇ ਲੱਭੋ।</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -340,6 +393,8 @@
     <string name="preferences_theme">ਥੀਮ</string>
     <!-- Preference for customizing the home screen -->
     <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">ਮੁੱਖ ਸਫ਼ਾ</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">ਮੁੱਖ ਸਫ਼ਾ</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">ਇਸ਼ਾਰੇ</string>
     <!-- Preference for settings related to visual options -->
@@ -417,9 +472,14 @@
     <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">ਤਾਜ਼ਾ ਸੰਭਾਲੇ</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string moz:removedIn="94" name="customize_toggle_recently_bookmarked" tools:ignore="UnusedResources">ਤਾਜ਼ਾ ਬੁੱਕਮਾਰਕ ਕੀਤੇ</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">ਸੱਜਰੇ ਬੁੱਕਮਾਰਕ</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string moz:removedIn="94" name="customize_toggle_recently_visited" tools:ignore="UnusedResources">ਤਾਜ਼ਾ ਖੋਲ੍ਹੇ ਗਏ</string>
+    <!-- Title for the customize home screen settings section for recent searches. Recent searches
+     is a section where users see a list of groups of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recent_searches">ਸੱਜਰੀਆਂ ਖੋਜਾਂ</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
@@ -643,6 +703,10 @@
     <string name="tab_view_list">ਸੂਚੀ</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">ਗਰਿੱਡ</string>
+    <!-- Option for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups">ਗਰੁੱਪ ਲੱਭੋ</string>
+    <!-- Summary text for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups_summary">ਮਿਲਦੀਆਂ ਸਾਈਟਾਂ ਨੂੰ ਇਕੱਠੀਆਂ ਕਰਕੇ ਗਰੁੱਪ ਬਣਾਓ</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">ਟੈਬਾਂ ਨੂੰ ਬੰਦ ਕਰੋ</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -654,15 +718,26 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">ਇੱਕ ਮਹੀਨੇ ਬਾਅਦ</string>
 
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">ਖੁੱਲ੍ਹੀਆਂ ਟੈਬਾਂ ਲਈ ਆਪੇ-ਬੰਦ ਕਰੋ</string>
+
     <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
     <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">ਮੁੱਖ ਸਕਰੀਨ ਤੋਂ ਸ਼ੁਰੂ ਕਰੋ</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">ਸਕਰੀਨ ਖੋਲ੍ਹਣੀ</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
     <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">ਕੁਝ ਘੰਟਿਆਂ ਬਾਦ</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">ਮੁੱਖ ਸਫ਼ਾ</string>
     <!-- Option for always starting on the home screen -->
     <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">ਹਮੇਸ਼ਾਂ</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">ਪਿਛਲੀ ਟੈਬ</string>
     <!-- Option for never starting on the home screen -->
     <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">ਕਦੇ ਨਹੀਂ</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">ਚਾਰ ਘੰਟਿਆਂ ਦੀ ਨਾ-ਸਰਗਰਮੀ ਦੇ ਬਾਅਦ ਮੁੱਖ-ਸਫ਼ਾ</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">ਖੁਦ ਬੰਦ ਕਰੋ</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -671,6 +746,12 @@
     <string name="close_tabs_after_one_week_summary">ਇੱਕ ਹਫ਼ਤੇ ਬਾਅਦ ਬੰਦ ਕਰੋ</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">ਇੱਕ ਮਹੀਨੇ ਬਾਅਦ ਬੰਦ ਕਰੋ</string>
+
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">ਪੁਰਾਣੀਆਂ ਟੈਬਾਂ ਨੂੰ ਨਾ-ਸਰਗਰਮ ਵਿੱਚ ਭੇਜੋ</string>
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">ਪਿਛਲੇ ਦੋ ਹਫ਼ਤਿਆਂ ਵਿੱਚ ਤੁਹਾਡੇ ਵਲੋਂ ਨਾ ਵੇਖੀਆਂ ਟੈਬਾਂ ਨੂੰ ਨਾ-ਸਰਗਰਮ ਭਾਗ ਵਿੱਚ ਭੇਜਿਆ ਜਾਂਦਾ ਹੈ।</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -794,6 +875,9 @@
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
     <string moz:removedIn="94" name="tab_tray_header_title" tools:ignore="UnusedResources">ਹੋਰ</string>
+
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title_1">ਹੋਰ ਟੈਬਾਂ</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -1911,6 +1995,8 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ਠੀਕ ਹੈ, ਸਮਝ ਗਏ</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">ਸਭ ਤੋਂ ਵੱਧ ਖੋਲ੍ਹੀਆਂ ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ</string>
     <!-- Label for the show most visited top sites preference -->
     <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">ਸਭ ਤੋਂ ਵੱਧ ਖੋਲ੍ਹੀਆਂ ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ ਵੇਖੋ</string>
     <!-- Label for the show most visited sites preference -->
@@ -1928,12 +2014,38 @@
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
     <string name="inactive_tabs_title">ਨਾ-ਸਰਗਰਮ ਟੈਬਾਂ</string>
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">ਸਾਰੀਆਂ ਨਾ-ਸਰਗਰਮ ਟੈਬਾਂ ਬੰਦ ਕਰੋ</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
     <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">ਟੈਬਾਂ %s ਦਿਨਾਂ ਲਈ ਇੱਥੇ ਮੌਜੂਦ ਹੁੰਦੀਆਂ ਹਨ। ਉਸ ਸਮੇਂ ਬਾਅਦ, ਟੈਬਾਂ ਨੂੰ ਆਪਣੇ-ਆਪ ਬੰਦ ਕੀਤਾ ਜਾਵੇਗਾ।</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
     <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 ਦਿਨ</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
     <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 ਹਫ਼ਤਾ</string>
+
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">ਇੱਕ ਮਹੀਨੇ ਬਾਅਦ ਆਪੇ ਬੰਦ ਕਰਨਾ ਹੈ?</string>
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox ਉਹਨਾਂ ਟੈਬਾਂ ਨੂੰ ਬੰਦ ਕਰ ਸਕਦਾ ਹੈ, ਜਿਨਾਂ ਨੂੰ ਤੁਸੀਂ ਪਿਛਲੇ ਮਹੀਨੇ ਭਰ ਤੋਂ ਨਹੀਂ ਵੇਖਿਆ ਹੈ।</string>
+    <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">ਆਪੇ-ਬੰਦ ਕਰਨ ਨੂੰ ਚਾਲੂ ਕਰੋ</string>
+
+    <!-- Inactive tabs survey -->
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header" tools:ignore="UnusedResources">ਸੁਧਾਰ ਕਰਨ ਲਈ ਸਾਡੀ ਮਦਦ ਕਰੋ</string>
+    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
+    <string name="inactive_tabs_survey_content" tools:ignore="UnusedResources">ਤੁਸੀਂ ਨਾ-ਸਰਗਰਮ ਟੈਬਾਂ ਨੂੰ ਅਸਮਰੱਥ ਕਿਉਂ ਕੀਤਾ ਸੀ?</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_not_interested_option" tools:ignore="UnusedResources">ਫ਼ੀਚਰ ਵਿੱਚ ਦਿਲਚਸਪੀ ਨਹੀਂ ਹੈ</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">ਨਾ-ਸਰਗਰਮੀ ਲਈ ਸਮਾਂ ਬਹੁਤ ਜ਼ਿਆਦਾ ਹੈ</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">ਨਾ-ਸਰਗਰਮੀ ਲਈ ਸਮਾਂ ਬਹੁਤ ਘੱਟ ਹੈ</string>
+    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
+    <string name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">ਭੇਜੋ</string>
+    <!-- Content description for inactive tabs survey close button -->
+    <string name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">ਬੰਦ ਕਰੋ</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">ਵੈੱਬਸਾਈਟਾਂ, ਈਮੇਲਾਂ ਅਤੇ ਸੁਨੇਹਿਆਂ ਨੂੰ Firefox ਵਿੱਚ ਆਪਣੇ ਖੋਲ੍ਹਣ ਲਈ ਲਿੰਕ ਸੈੱਟ ਕਰੋ।</string>
@@ -1950,4 +2062,19 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">ਬੰਦ ਕਰੋ</string>
 
-    </resources>
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string moz:removedIn="94" name="pocket_stories_header" tools:ignore="UnusedResources">ਸੋਚਣ ਲਈ ਮਜ਼ਬੂਰ ਕਰਨ ਵਾਲੇ ਲੇਖ</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">ਸੋਚਣ ਲਈ ਮਜ਼ਬੂਰ ਕਰਨ ਵਾਲੇ ਲੇਖ</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_categories_header">ਵਿਸ਼ੇ ਮੁਤਾਬਕ ਲੇਖ</string>
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">ਹੋਰ ਲੱਭੋ</string>
+    <!-- Title of an app feature. Smaller than a heading.-->
+    <string name="pocket_stories_feature_title">Pocket ਵਲੋਂ ਇਖ਼ਤਿਆਰ</string>
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">Firefox ਪਰਿਵਾਰ ਦਾ ਹਿੱਸਾ। %s</string>
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">ਹੋਰ ਜਾਣੋ</string>
+</resources>
