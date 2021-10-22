@@ -172,8 +172,7 @@ nsresult txExprParser::createExprInternal(const nsAString& aExpression,
 
   txXPathOptimizer optimizer;
   Expr* newExpr = nullptr;
-  rv = optimizer.optimize(expr.get(), &newExpr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  optimizer.optimize(expr.get(), &newExpr);
 
   *aExpr = newExpr ? newExpr : expr.release();
 
