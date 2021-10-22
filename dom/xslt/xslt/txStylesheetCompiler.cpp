@@ -293,8 +293,7 @@ nsresult txStylesheetCompiler::endElement() {
   for (i = mInScopeVariables.Length() - 1; i >= 0; --i) {
     txInScopeVariable* var = mInScopeVariables[i];
     if (!--(var->mLevel)) {
-      UniquePtr<txInstruction> instr(new txRemoveVariable(var->mName));
-      addInstruction(std::move(instr));
+      addInstruction(MakeUnique<txRemoveVariable>(var->mName));
 
       mInScopeVariables.RemoveElementAt(i);
       delete var;
@@ -607,7 +606,7 @@ void txStylesheetCompilerState::closeInstructionContainer() {
   mNextInstrPtr = 0;
 }
 
-void txStylesheetCompilerState::addInstruction(
+txInstruction* txStylesheetCompilerState::addInstruction(
     UniquePtr<txInstruction>&& aInstruction) {
   MOZ_ASSERT(mNextInstrPtr, "adding instruction outside container");
 
@@ -621,6 +620,8 @@ void txStylesheetCompilerState::addInstruction(
     *mGotoTargetPointers[i] = newInstr;
   }
   mGotoTargetPointers.Clear();
+
+  return newInstr;
 }
 
 nsresult txStylesheetCompilerState::loadIncludedStylesheet(

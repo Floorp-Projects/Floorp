@@ -351,7 +351,7 @@ nsresult txStylesheet::addTemplate(txTemplateItem* aTemplate,
       aImportFrame->mMatchableTemplates.get(aTemplate->mMode);
 
   if (!templates) {
-    UniquePtr<nsTArray<MatchableTemplate> > newList(
+    UniquePtr<nsTArray<MatchableTemplate>> newList(
         new nsTArray<MatchableTemplate>);
     nsresult rv =
         aImportFrame->mMatchableTemplates.set(aTemplate->mMode, newList.get());
