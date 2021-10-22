@@ -235,7 +235,7 @@ impl AndroidHandler {
             .split_terminator('\n')
             .filter(|line| line.starts_with("package:"))
             .map(|line| line.rsplit(':').next().expect("Package name found"));
-        if packages.find(|x| x == &options.package.as_str()).is_none() {
+        if !packages.any(|x| x == options.package.as_str()) {
             return Err(AndroidError::PackageNotFound(options.package.clone()));
         }
 
