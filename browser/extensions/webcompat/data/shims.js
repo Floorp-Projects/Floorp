@@ -485,6 +485,20 @@ const AVAILABLE_SHIMS = [
     ],
   },
   {
+    id: "Hamropatro",
+    platform: "desktop",
+    name: "Hamropatro",
+    bug: "1660446",
+    contentScripts: [
+      {
+        js: "hamropatro.js",
+        matches: ["*://we.hamropatro.com/login*"],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
     id: "Kinja",
     platform: "desktop",
     name: "Kinja",
