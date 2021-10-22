@@ -1,8 +1,7 @@
 "use strict";
 
-const { ExtensionManager } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionChild.jsm",
-  null
+const { ExtensionProcessScript } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionProcessScript.jsm"
 );
 
 let experimentAPIs = {
@@ -73,7 +72,7 @@ let experimentFiles = {
 // Set the "handlingUserInput" flag for the given extension's background page.
 // Returns an RAIIHelper that should be destruct()ed eventually.
 function setHandlingUserInput(extension) {
-  let extensionChild = ExtensionManager.extensions.get(extension.extension.id);
+  let extensionChild = ExtensionProcessScript.getExtensionChild(extension.id);
   let bgwin = null;
   for (let view of extensionChild.views) {
     if (view.viewType == "background") {

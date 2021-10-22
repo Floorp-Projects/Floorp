@@ -400,6 +400,8 @@ static inline bool AllowedErrorForHTTPSRRFallback(nsresult aError) {
          aError == NS_ERROR_UNKNOWN_HOST || aError == NS_ERROR_NET_TIMEOUT;
 }
 
+bool SecurityErrorToBeHandledByTransaction(nsresult aReason);
+
 }  // namespace net
 }  // namespace mozilla
 

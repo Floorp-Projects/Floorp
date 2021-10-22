@@ -32,28 +32,18 @@ void txResultRecycler::recycle(txAExprResult* aResult) {
   RefPtr<txResultRecycler> kungFuDeathGrip;
   aResult->mRecycler.swap(kungFuDeathGrip);
 
-  nsresult rv = NS_OK;
   switch (aResult->getResultType()) {
     case txAExprResult::STRING: {
-      rv = mStringResults.push(static_cast<StringResult*>(aResult));
-      if (NS_FAILED(rv)) {
-        delete aResult;
-      }
+      mStringResults.push(static_cast<StringResult*>(aResult));
       return;
     }
     case txAExprResult::NODESET: {
       static_cast<txNodeSet*>(aResult)->clear();
-      rv = mNodeSetResults.push(static_cast<txNodeSet*>(aResult));
-      if (NS_FAILED(rv)) {
-        delete aResult;
-      }
+      mNodeSetResults.push(static_cast<txNodeSet*>(aResult));
       return;
     }
     case txAExprResult::NUMBER: {
-      rv = mNumberResults.push(static_cast<NumberResult*>(aResult));
-      if (NS_FAILED(rv)) {
-        delete aResult;
-      }
+      mNumberResults.push(static_cast<NumberResult*>(aResult));
       return;
     }
     default: {

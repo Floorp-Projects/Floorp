@@ -13,17 +13,16 @@ const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
 const {
-  cleanUpForContext,
-  CollectionKeyEncryptionRemoteTransformer,
-  CryptoCollection,
   ExtensionStorageSync,
-  idToKey,
-  keyToId,
-  KeyRingEncryptionRemoteTransformer,
-} = ChromeUtils.import(
-  "resource://gre/modules/ExtensionStorageSyncKinto.jsm",
-  null
-);
+  KintoStorageTestUtils: {
+    cleanUpForContext,
+    CollectionKeyEncryptionRemoteTransformer,
+    CryptoCollection,
+    idToKey,
+    keyToId,
+    KeyRingEncryptionRemoteTransformer,
+  },
+} = ChromeUtils.import("resource://gre/modules/ExtensionStorageSyncKinto.jsm");
 const { BulkKeyBundle } = ChromeUtils.import(
   "resource://services-sync/keys.js"
 );

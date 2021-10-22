@@ -175,7 +175,7 @@ fn read_length<R: Read>(stream: &mut R) -> Result<usize> {
 
     let response = std::str::from_utf8(&bytes)?;
 
-    Ok(usize::from_str_radix(&response, 16)?)
+    Ok(usize::from_str_radix(response, 16)?)
 }
 
 /// Reads the payload length of a device message from the stream.
@@ -471,14 +471,14 @@ impl Device {
     pub fn create_dir(&self, path: &UnixPath) -> Result<()> {
         debug!("Creating {}", path.display());
 
-        let enable_run_as = self.enable_run_as_for_path(&path);
+        let enable_run_as = self.enable_run_as_for_path(path);
         self.execute_host_shell_command_as(&format!("mkdir -p {}", path.display()), enable_run_as)?;
 
         Ok(())
     }
 
     pub fn chmod(&self, path: &UnixPath, mask: &str, recursive: bool) -> Result<()> {
-        let enable_run_as = self.enable_run_as_for_path(&path);
+        let enable_run_as = self.enable_run_as_for_path(path);
 
         let recursive = match recursive {
             true => " -R",
@@ -509,7 +509,7 @@ impl Device {
         // TODO: should we assert no bytes were read?
 
         debug!("execute_host_command: >> {:?}", &command);
-        stream.write_all(encode_message(&command)?.as_bytes())?;
+        stream.write_all(encode_message(command)?.as_bytes())?;
         let bytes = read_response(&mut stream, has_output, has_length)?;
 
         let response = std::str::from_utf8(&bytes)?;
@@ -740,11 +740,11 @@ impl Device {
         }
 
         if let Some(path) = leaf {
-            self.create_dir(&path)?;
+            self.create_dir(path)?;
         }
 
         if let Some(path) = root {
-            self.chmod(&path, "777", true)?;
+            self.chmod(path, "777", true)?;
         }
 
         let mut stream = self.host.connect()?;
@@ -861,7 +861,7 @@ impl Device {
 
         self.execute_host_shell_command_as(
             &format!("rm -rf {}", path.display()),
-            self.enable_run_as_for_path(&path),
+            self.enable_run_as_for_path(path),
         )?;
 
         Ok(())
@@ -875,7 +875,7 @@ pub(crate) fn append_components(
     let mut buf = base.to_path_buf();
 
     for component in tail.components() {
-        if let Component::Normal(ref segment) = component {
+        if let Component::Normal(segment) = component {
             let utf8 = segment.to_str().ok_or_else(|| {
                 io::Error::new(
                     io::ErrorKind::Other,

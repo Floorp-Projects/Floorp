@@ -209,14 +209,14 @@ fn set_prefs(
     })?;
 
     let backup_prefs = if custom_profile && prefs.path.exists() {
-        Some(PrefsBackup::new(&prefs)?)
+        Some(PrefsBackup::new(prefs)?)
     } else {
         None
     };
 
-    for &(ref name, ref value) in prefs::DEFAULT.iter() {
+    for &(name, ref value) in prefs::DEFAULT.iter() {
         if !custom_profile || !prefs.contains_key(name) {
-            prefs.insert((*name).to_string(), (*value).clone());
+            prefs.insert(name.to_string(), (*value).clone());
         }
     }
 

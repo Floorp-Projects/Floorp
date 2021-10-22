@@ -310,10 +310,7 @@ nsresult txStylesheet::doneCompiling() {
       itemIter.remove();  // remove() moves to the previous
       itemIter.next();
     }
-    // XXX(Bug 1631371) Check if this should use a fallible operation as it
-    // pretended earlier.
     mStripSpaceTests.AppendElements(frameStripSpaceTests);
-
     frameStripSpaceTests.Clear();
   }
 
@@ -354,7 +351,7 @@ nsresult txStylesheet::addTemplate(txTemplateItem* aTemplate,
       aImportFrame->mMatchableTemplates.get(aTemplate->mMode);
 
   if (!templates) {
-    UniquePtr<nsTArray<MatchableTemplate> > newList(
+    UniquePtr<nsTArray<MatchableTemplate>> newList(
         new nsTArray<MatchableTemplate>);
     nsresult rv =
         aImportFrame->mMatchableTemplates.set(aTemplate->mMode, newList.get());
@@ -390,8 +387,6 @@ nsresult txStylesheet::addTemplate(txTemplateItem* aTemplate,
     }
 
     MatchableTemplate* nt = templates->InsertElementAt(i);
-    NS_ENSURE_TRUE(nt, NS_ERROR_OUT_OF_MEMORY);
-
     nt->mFirstInstruction = instr;
     nt->mMatch = std::move(simple);
     nt->mPriority = priority;
@@ -442,10 +437,7 @@ nsresult txStylesheet::addStripSpace(
         break;
       }
     }
-    // XXX(Bug 1631371) Check if this should use a fallible operation as it
-    // pretended earlier.
     aFrameStripSpaceTests.InsertElementAt(i, sst);
-
     aStripSpaceItem->mStripSpaceTests.RemoveElementAt(testCount - 1);
   }
 

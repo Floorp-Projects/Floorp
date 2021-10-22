@@ -812,10 +812,10 @@ static bool DoMatch(Implementor* aElement, nsAtom* aNS, nsAtom* aName,
   if (MOZ_LIKELY(aNS)) {
     int32_t ns = aNS == nsGkAtoms::_empty
                      ? kNameSpaceID_None
-                     : nsContentUtils::NameSpaceManager()->GetNameSpaceID(
+                     : nsNameSpaceManager::GetInstance()->GetNameSpaceID(
                            aNS, aElement->IsInChromeDocument());
 
-    MOZ_ASSERT(ns == nsContentUtils::NameSpaceManager()->GetNameSpaceID(
+    MOZ_ASSERT(ns == nsNameSpaceManager::GetInstance()->GetNameSpaceID(
                          aNS, aElement->IsInChromeDocument()));
     NS_ENSURE_TRUE(ns != kNameSpaceID_Unknown, false);
     const nsAttrValue* value = aElement->GetParsedAttr(aName, ns);
