@@ -253,7 +253,6 @@ nsresult txExprParser::createBinaryExpr(UniquePtr<Expr>& left,
       MOZ_ASSERT_UNREACHABLE("operator tokens should be already checked");
       return NS_ERROR_UNEXPECTED;
   }
-  NS_ENSURE_TRUE(expr, NS_ERROR_OUT_OF_MEMORY);
 
   Unused << left.release();
   Unused << right.release();
@@ -590,8 +589,6 @@ nsresult txExprParser::createNodeTypeTest(txExprLexer& lexer,
     default:
       return NS_ERROR_XPATH_NO_NODE_TYPE_TEST;
   }
-
-  NS_ENSURE_TRUE(nodeTest, NS_ERROR_OUT_OF_MEMORY);
 
   if (nodeTok->mType == Token::PROC_INST_AND_PAREN &&
       lexer.peek()->mType == Token::LITERAL) {

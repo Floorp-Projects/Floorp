@@ -301,7 +301,6 @@ nsresult txXSLKey::testNode(const txXPathNode& aNode, txKeyValueHashKey& aKey,
 
     if (matched) {
       txSingleNodeContext* evalContext = new txSingleNodeContext(aNode, &aEs);
-      NS_ENSURE_TRUE(evalContext, NS_ERROR_OUT_OF_MEMORY);
 
       nsresult rv = aEs.pushEvalContext(evalContext);
       NS_ENSURE_SUCCESS(rv, rv);
