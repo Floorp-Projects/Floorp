@@ -16,6 +16,7 @@ import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.ThemeManager
@@ -65,7 +66,8 @@ class AwesomeBarWrapper @JvmOverloads constructor(
                 onAutoComplete = { suggestion ->
                     onEditSuggestionListener?.invoke(suggestion.editSuggestion!!)
                 },
-                onScroll = { hideKeyboard() }
+                onScroll = { hideKeyboard() },
+                profiler = context.components.core.engine.profiler,
             )
         }
     }
