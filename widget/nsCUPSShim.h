@@ -58,14 +58,19 @@ class nsCUPSShim {
   X(Optional::No, cupsGetDests)             \
   X(Optional::No, cupsGetNamedDest)         \
   X(Optional::No, cupsGetOption)            \
+  X(Optional::No, cupsServer)               \
+  X(Optional::Yes, httpAddrPort)            \
   X(Optional::No, httpClose)                \
+  X(Optional::No, httpGetHostname)          \
+  X(Optional::Yes, httpGetAddress)          \
   X(Optional::No, ippAddString)             \
   X(Optional::No, ippAddStrings)            \
   X(Optional::No, ippDelete)                \
   X(Optional::No, ippFindAttribute)         \
   X(Optional::No, ippGetCount)              \
   X(Optional::No, ippGetString)             \
-  X(Optional::No, ippNewRequest)
+  X(Optional::No, ippNewRequest)            \
+  X(Optional::No, ippPort)
 
 #ifdef CUPS_SHIM_RUNTIME_LINK
   // Define a single field which holds a function pointer.
