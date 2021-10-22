@@ -21,6 +21,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsError.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsNameSpaceManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTextFragment.h"
 #include "nsThreadUtils.h"
@@ -188,8 +189,8 @@ void nsMutationReceiver::AttributeWillChange(mozilla::dom::Element* aElement,
     if (aNameSpaceID == kNameSpaceID_None) {
       m->mAttrNamespace.SetIsVoid(true);
     } else {
-      nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID,
-                                                          m->mAttrNamespace);
+      nsNameSpaceManager::GetInstance()->GetNameSpaceURI(aNameSpaceID,
+                                                         m->mAttrNamespace);
     }
   }
 

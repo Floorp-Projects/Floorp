@@ -3347,7 +3347,7 @@ nsresult nsContentUtils::SplitQName(const nsIContent* aNamespaceResolver,
         Substring(aQName.get(), colon), nameSpace);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    *aNamespace = NameSpaceManager()->GetNameSpaceID(
+    *aNamespace = nsNameSpaceManager::GetInstance()->GetNameSpaceID(
         nameSpace, nsContentUtils::IsChromeDoc(aNamespaceResolver->OwnerDoc()));
     if (*aNamespace == kNameSpaceID_Unknown) return NS_ERROR_FAILURE;
 

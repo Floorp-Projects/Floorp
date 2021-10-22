@@ -29,6 +29,7 @@
 #include "js/PropertyAndElement.h"  // JS_GetProperty, JS_GetUCProperty
 #include "xpcprivate.h"
 #include "nsGlobalWindow.h"
+#include "nsNameSpaceManager.h"
 
 namespace mozilla::dom {
 
@@ -1219,8 +1220,8 @@ void CustomElementRegistry::Upgrade(Element* aElement,
         int32_t namespaceID = name->NamespaceID();
         nsAutoString attrValue, namespaceURI;
         info.mValue->ToString(attrValue);
-        nsContentUtils::NameSpaceManager()->GetNameSpaceURI(namespaceID,
-                                                            namespaceURI);
+        nsNameSpaceManager::GetInstance()->GetNameSpaceURI(namespaceID,
+                                                           namespaceURI);
 
         LifecycleCallbackArgs args = {
             nsDependentAtomString(attrName), VoidString(), attrValue,
