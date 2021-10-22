@@ -20,15 +20,25 @@ pub(crate) struct InitUploadPrefObserver {}
 
 #[allow(non_snake_case)]
 impl UploadPrefObserver {
-    pub(crate) unsafe fn begin_observing() -> Result<(), nsresult> {
-        let pref_obs = Self::allocate(InitUploadPrefObserver {});
-        let pref_service = xpcom::services::get_PrefService().ok_or(NS_ERROR_FAILURE)?;
-        let pref_branch: RefPtr<nsIPrefBranch> =
-            (*pref_service).query_interface().ok_or(NS_ERROR_FAILURE)?;
-        let pref_nscstr = &nsCStr::from("datareporting.healthreport.uploadEnabled") as &nsACString;
-        (*pref_branch)
-            .AddObserverImpl(pref_nscstr, pref_obs.coerce(), false)
-            .to_result()?;
+    pub(crate) fn begin_observing() -> Result<(), nsresult> {
+        // SAFETY: Everything here is self-contained.
+        //
+        // * We allocate the pref observer, created by the xpcom macro
+        // * We query the pref service and bail out if it doesn't exist.
+        // * We create a nsCStr from a static string.
+        // * We control all input to `AddObserverImpl`
+        unsafe {
+            let pref_obs = Self::allocate(InitUploadPrefObserver {});
+            let pref_service = xpcom::services::get_PrefService().ok_or(NS_ERROR_FAILURE)?;
+            let pref_branch: RefPtr<nsIPrefBranch> =
+                (*pref_service).query_interface().ok_or(NS_ERROR_FAILURE)?;
+            let pref_nscstr =
+                &nsCStr::from("datareporting.healthreport.uploadEnabled") as &nsACString;
+            (*pref_branch)
+                .AddObserverImpl(pref_nscstr, pref_obs.coerce(), false)
+                .to_result()?;
+        }
+
         Ok(())
     }
 
