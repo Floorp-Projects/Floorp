@@ -39,10 +39,9 @@ function handleRequest(request, response) {
 
   var actual_user = "",
     actual_pass = "",
-    authHeader,
-    authPresent = false;
+    authHeader;
+
   if (request.hasHeader("Authorization")) {
-    authPresent = true;
     authHeader = request.getHeader("Authorization");
     match = /Basic (.+)/.exec(authHeader);
     if (match.length != 2) {

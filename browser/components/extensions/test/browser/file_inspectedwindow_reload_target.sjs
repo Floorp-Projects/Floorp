@@ -9,14 +9,17 @@ function handleRequest(request, response) {
 
   switch (params.get("test")) {
     case "cache":
+      /* eslint-disable-next-line no-use-before-define */
       handleCacheTestRequest(request, response);
       break;
 
     case "user-agent":
+      /* eslint-disable-next-line no-use-before-define */
       handleUserAgentTestRequest(request, response);
       break;
 
     case "injected-script":
+      /* eslint-disable-next-line no-use-before-define */
       handleInjectedScriptTestRequest(request, response, params);
       break;
   }
@@ -97,7 +100,7 @@ function handleInjectedScriptTestRequest(request, response, params) {
   response.setHeader("Content-Type", "text/html; charset=UTF-8", false);
 
   let content = "";
-  const frames = parseInt(params.get("frames"));
+  const frames = parseInt(params.get("frames"), 10);
   if (frames > 0) {
     // Output an iframe in seamless mode, so that there is an higher chance that in case
     // of test failures we get a screenshot where the nested iframes are all visible.

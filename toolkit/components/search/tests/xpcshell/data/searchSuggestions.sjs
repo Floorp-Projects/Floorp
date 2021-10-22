@@ -18,8 +18,8 @@ function handleRequest(request, response) {
     return String.fromCharCode(...new TextEncoder().encode(str));
   }
 
-  function writeSuggestions(query, completions = []) {
-    let jsonString = JSON.stringify([query, completions]);
+  function writeSuggestions(q, completions = []) {
+    let jsonString = JSON.stringify([q, completions]);
 
     // This script must be evaluated as UTF-8 for this to write out the bytes of
     // the string in UTF-8.  If it's evaluated as Latin-1, the written bytes

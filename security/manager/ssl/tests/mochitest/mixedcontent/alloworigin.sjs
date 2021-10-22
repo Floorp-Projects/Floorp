@@ -1,3 +1,5 @@
+"use strict";
+
 function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.setHeader("Access-Control-Allow-Origin", "*");

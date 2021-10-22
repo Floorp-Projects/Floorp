@@ -10,16 +10,16 @@ function handleRequest(request, response) {
   if (request.method == "GET") {
     response.write(request.queryString);
   } else {
-    var body = new BinaryInputStream(request.bodyInputStream);
+    let body = new BinaryInputStream(request.bodyInputStream);
 
-    var avail;
-    var bytes = [];
+    let avail;
+    let bytes = [];
 
     while ((avail = body.available()) > 0) {
       Array.prototype.push.apply(bytes, body.readByteArray(avail));
     }
 
-    var data = String.fromCharCode.apply(null, bytes);
+    let data = String.fromCharCode.apply(null, bytes);
     response.bodyOutputStream.write(data, data.length);
   }
 }
