@@ -3835,9 +3835,16 @@ static mozilla::Maybe<std::pair<MTypeOfName*, JSType>> IsTypeOfCompare(
   if (!IsEqualityOp(ins->jsop())) {
     return mozilla::Nothing();
   }
+  if (ins->compareType() != MCompare::Compare_String) {
+    return mozilla::Nothing();
+  }
 
   auto* lhs = ins->lhs();
   auto* rhs = ins->rhs();
+
+  MOZ_ASSERT(ins->type() == MIRType::Boolean);
+  MOZ_ASSERT(lhs->type() == MIRType::String);
+  MOZ_ASSERT(rhs->type() == MIRType::String);
 
   if (!lhs->isTypeOfName() && !rhs->isTypeOfName()) {
     return mozilla::Nothing();
@@ -3845,11 +3852,6 @@ static mozilla::Maybe<std::pair<MTypeOfName*, JSType>> IsTypeOfCompare(
   if (!lhs->isConstant() && !rhs->isConstant()) {
     return mozilla::Nothing();
   }
-
-  MOZ_ASSERT(ins->compareType() == MCompare::Compare_String);
-  MOZ_ASSERT(ins->type() == MIRType::Boolean);
-  MOZ_ASSERT(lhs->type() == MIRType::String);
-  MOZ_ASSERT(rhs->type() == MIRType::String);
 
   auto* typeOfName =
       lhs->isTypeOfName() ? lhs->toTypeOfName() : rhs->toTypeOfName();
