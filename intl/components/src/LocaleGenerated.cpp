@@ -714,12 +714,12 @@ bool mozilla::intl::Locale::updateLegacyMappings() {
     return true;
   }
 
-  for ([[maybe_unused]] const auto& variant : variants()) {
-    MOZ_ASSERT(
-        IsStructurallyValidVariantTag(mozilla::MakeStringSpan(variant.get())));
-    MOZ_ASSERT(
-        IsCanonicallyCasedVariantTag(mozilla::MakeStringSpan(variant.get())));
+#ifdef DEBUG
+  for (const auto& variant : variants()) {
+    MOZ_ASSERT(IsStructurallyValidVariantTag(variant));
+    MOZ_ASSERT(IsCanonicallyCasedVariantTag(variant));
   }
+#endif
 
   // The variant subtags need to be sorted for binary search.
   MOZ_ASSERT(std::is_sorted(variants_.begin(), variants_.end(),
