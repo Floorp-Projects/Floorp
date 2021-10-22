@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-package org.mozilla.focus.settings.privacy
+package org.mozilla.focus.settings.privacy.studies
 
 import android.os.Bundle
 import android.text.SpannableStringBuilder
@@ -11,19 +11,22 @@ import android.text.style.URLSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.core.text.HtmlCompat
 import androidx.core.text.getSpans
+import androidx.lifecycle.ViewModelProvider
 import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.FragmentStudiesBinding
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.ext.settings
 import org.mozilla.focus.settings.BaseSettingsLikeFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.utils.SupportUtils
+import kotlin.system.exitProcess
 
 class StudiesFragment : BaseSettingsLikeFragment() {
     private lateinit var binding: FragmentStudiesBinding
+    private lateinit var viewModel: StudiesViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,9 +34,13 @@ class StudiesFragment : BaseSettingsLikeFragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentStudiesBinding.inflate(inflater, container, false)
+        viewModel = ViewModelProvider(
+            this
+        ).get(StudiesViewModel::class.java)
         setLearnMore()
-        setStudiesState(requireContext().settings.isExperimentationEnabled)
         setStudiesSwitch()
+        setRemoveStudyListener()
+        setObservers()
         return binding.root
     }
 
@@ -84,7 +91,7 @@ class StudiesFragment : BaseSettingsLikeFragment() {
         requireContext().components.appStore.dispatch(AppAction.OpenTab(tabId))
     }
 
-    private fun setStudiesState(switchState: Boolean) {
+    private fun setStudiesTitleByState(switchState: Boolean) {
         binding.studiesTitle.text = if (switchState) {
             getString(R.string.preference_state_on)
         } else {
@@ -93,10 +100,54 @@ class StudiesFragment : BaseSettingsLikeFragment() {
     }
 
     private fun setStudiesSwitch() {
-        binding.studiesSwitch.isChecked = requireContext().settings.isExperimentationEnabled
-        binding.studiesSwitch.setOnCheckedChangeListener { _, isChecked ->
-            setStudiesState(isChecked)
-            requireContext().settings.isExperimentationEnabled = isChecked
+        binding.studiesSwitch.setOnClickListener {
+            val builder = AlertDialog.Builder(requireContext())
+                .setPositiveButton(
+                    R.string.action_ok
+                ) { dialog, _ ->
+                    viewModel.setStudiesState(binding.studiesSwitch.isChecked)
+                    dialog.dismiss()
+                    quitTheApp()
+                }
+                .setNegativeButton(
+                    R.string.action_cancel
+                ) { dialog, _ ->
+                    binding.studiesSwitch.isChecked = !binding.studiesSwitch.isChecked
+                    setStudiesTitleByState(binding.studiesSwitch.isChecked)
+                    dialog.dismiss()
+                }
+                .setTitle(R.string.preference_studies)
+                .setMessage(R.string.studies_restart_app)
+                .setCancelable(false)
+            val alertDialog: AlertDialog = builder.create()
+            alertDialog.show()
         }
+    }
+
+    private fun quitTheApp() {
+        exitProcess(0)
+    }
+
+    private fun setRemoveStudyListener() {
+        binding.studiesList.studiesAdapter.removeStudyListener = { study ->
+            viewModel.removeStudy(study)
+        }
+    }
+
+    private fun setObservers() {
+        viewModel.exposedStudies.observe(
+            viewLifecycleOwner,
+            { studies ->
+                binding.studiesList.studiesAdapter.submitList(studies)
+            }
+        )
+
+        viewModel.studiesState.observe(
+            viewLifecycleOwner,
+            { state ->
+                binding.studiesSwitch.isChecked = state
+                setStudiesTitleByState(state)
+            }
+        )
     }
 }

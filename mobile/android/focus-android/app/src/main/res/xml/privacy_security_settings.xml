@@ -127,7 +127,7 @@
             android:summary="@string/preference_mozilla_telemetry_summary2"
             android:title="@string/preference_mozilla_telemetry2" />
 
-        <org.mozilla.focus.autocomplete.StatePreference
+        <org.mozilla.focus.settings.StatePreference
             android:key="@string/pref_key_studies"
             android:layout="@layout/focus_preference_no_icon"
             android:summary="@string/preference_state_off"

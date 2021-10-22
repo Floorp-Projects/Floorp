@@ -112,7 +112,7 @@ class Settings(
         set(value) {
             preferences.edit()
                 .putBoolean(getPreferenceKey(R.string.pref_key_studies), value)
-                .apply()
+                .commit()
         }
 
     fun shouldBlockImages(): Boolean =

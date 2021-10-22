@@ -15,7 +15,7 @@ import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.ext.settings
 
 @Suppress("TooGenericExceptionCaught")
 fun createNimbus(context: Context, url: String?): NimbusApi =
@@ -33,8 +33,7 @@ fun createNimbus(context: Context, url: String?): NimbusApi =
         // from the app unless the user does so from a UI control.
         // However, the user may have opt-ed out of making experiments already, so
         // we should respect that setting here.
-        // TODO change this to separate pref if we need a separate UI control.
-        val enabled = TelemetryWrapper.isTelemetryEnabled(context)
+        val enabled = context.settings.isExperimentationEnabled
 
         // The name "focus-android" or "klar-android" here corresponds to the app_name defined
         // for the family of apps that encompasses all of the channels for the Focus app.

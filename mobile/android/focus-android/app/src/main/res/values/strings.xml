@@ -618,6 +618,15 @@
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Learn more</string>
 
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">The application will quit to apply changes</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Remove</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Active</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Remote debugging via USB/Wi-Fi</string>
 

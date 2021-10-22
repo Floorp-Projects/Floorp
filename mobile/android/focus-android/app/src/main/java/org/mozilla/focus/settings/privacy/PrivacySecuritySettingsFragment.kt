@@ -10,12 +10,12 @@ import android.os.Bundle
 import androidx.preference.Preference
 import androidx.preference.SwitchPreferenceCompat
 import org.mozilla.focus.R
-import org.mozilla.focus.autocomplete.StatePreference
 import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.engine.EngineSharedPreferencesListener
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.settings.BaseSettingsFragment
+import org.mozilla.focus.settings.StatePreference
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
