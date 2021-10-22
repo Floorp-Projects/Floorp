@@ -113,7 +113,6 @@ class nsIURI;
 class nsIUUIDGenerator;
 class nsIWidget;
 class nsIXPConnect;
-class nsNameSpaceManager;
 class nsNodeInfoManager;
 class nsPIWindowRoot;
 class nsPresContext;
@@ -3346,8 +3345,6 @@ class nsContentUtils {
   static nsIScriptSecurityManager* sSecurityManager;
   static nsIPrincipal* sSystemPrincipal;
   static nsIPrincipal* sNullSubjectPrincipal;
-
-  static nsNameSpaceManager* sNameSpaceManager;
 
   static nsIIOService* sIOService;
   static nsIUUIDGenerator* sUUIDGenerator;
