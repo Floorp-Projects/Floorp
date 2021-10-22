@@ -150,10 +150,10 @@ ptrdiff_t Locale::unicodeExtensionIndex() const {
   // The extension subtags aren't necessarily sorted, so we can't use binary
   // search here.
   auto p = std::find_if(
-      extensions().begin(), extensions().end(),
+      extensions_.begin(), extensions_.end(),
       [](const auto& ext) { return ext[0] == 'u' || ext[0] == 'U'; });
-  if (p != extensions().end()) {
-    return std::distance(extensions().begin(), p);
+  if (p != extensions_.end()) {
+    return std::distance(extensions_.begin(), p);
   }
   return -1;
 }
@@ -161,7 +161,7 @@ ptrdiff_t Locale::unicodeExtensionIndex() const {
 Maybe<Span<const char>> Locale::unicodeExtension() const {
   ptrdiff_t index = unicodeExtensionIndex();
   if (index >= 0) {
-    return Some(MakeStringSpan(extensions()[index].get()));
+    return Some(MakeStringSpan(extensions_[index].get()));
   }
   return Nothing();
 }
@@ -268,10 +268,10 @@ Result<Ok, Locale::CanonicalizationError> Locale::canonicalizeBaseName() {
     // Reject the Locale identifier if a duplicate variant was found, e.g.
     // "en-variant-Variant".
     const UniqueChars* duplicate = std::adjacent_find(
-        variants().begin(), variants().end(), [](const auto& a, const auto& b) {
+        variants_.begin(), variants_.end(), [](const auto& a, const auto& b) {
           return strcmp(a.get(), b.get()) == 0;
         });
-    if (duplicate != variants().end()) {
+    if (duplicate != variants_.end()) {
       return Err(CanonicalizationError::DuplicateVariant);
     }
   }

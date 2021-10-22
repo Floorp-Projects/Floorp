@@ -710,7 +710,7 @@ bool mozilla::intl::Locale::updateLegacyMappings() {
 
   MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
 
-  if (!language().equalTo("sgn") && variants().length() == 0) {
+  if (!language().equalTo("sgn") && variants_.length() == 0) {
     return true;
   }
 
@@ -765,7 +765,7 @@ bool mozilla::intl::Locale::updateLegacyMappings() {
     variants_.erase(variants_.begin() + pIndex);
   };
 
-  if (variants().length() >= 2) {
+  if (variants_.length() >= 2) {
     if (auto* hepburn = findVariant("hepburn")) {
       if (auto* heploc = findVariant("heploc")) {
         removeVariants(hepburn, heploc);
