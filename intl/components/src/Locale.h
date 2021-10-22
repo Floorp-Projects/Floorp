@@ -325,7 +325,7 @@ class MOZ_STACK_CLASS Locale final {
    * Set the Unicode extension subtag. The input must be a valid Unicode
    * extension subtag.
    */
-  ICUResult setUnicodeExtension(const char* extension);
+  ICUResult setUnicodeExtension(Span<const char> extension);
 
   /**
    * Remove any Unicode extension subtag if present.
@@ -423,6 +423,7 @@ class MOZ_STACK_CLASS Locale final {
 
  private:
   static UniqueChars DuplicateStringToUniqueChars(const char* s);
+  static UniqueChars DuplicateStringToUniqueChars(Span<const char> s);
   size_t toStringCapacity() const;
   size_t toStringAppend(char* buffer) const;
 };
