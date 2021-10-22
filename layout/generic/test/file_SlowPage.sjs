@@ -19,7 +19,7 @@ function handleRequest(request, response) {
   response.write('<body onload="window.opener.fullyLoaded()">');
 
   // Send half of the content.
-  for (var i = 0; i < 100; ++i) {
+  for (let i = 0; i < 100; ++i) {
     response.write("<p>Some text.</p>");
   }
 
@@ -30,7 +30,7 @@ function handleRequest(request, response) {
   timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.init(
     () => {
-      for (var i = 0; i < 100; ++i) {
+      for (let i = 0; i < 100; ++i) {
         response.write("<p>Some text.</p>");
       }
       response.write("</body>");
