@@ -1356,6 +1356,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   void adds64(Imm32 imm, Register dest) {
     Adds(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
   }
+  void adds64(ImmWord imm, Register dest) {
+    Adds(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
+  }
   void adds64(Register src, Register dest) {
     Adds(ARMRegister(dest, 64), ARMRegister(dest, 64),
          Operand(ARMRegister(src, 64)));

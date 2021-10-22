@@ -1085,12 +1085,12 @@ struct BaseCompiler final {
   void prepareMemoryAccess(MemoryAccessDesc* access, AccessCheck* check,
                            RegPtr tls, RegIndexType ptr);
 
-  void branchAddNoOverflow(Imm32 offset, RegI32 ptr, Label* ok);
+  void branchAddNoOverflow(uint64_t offset, RegI32 ptr, Label* ok);
   void branchTestLowZero(RegI32 ptr, Imm32 mask, Label* ok);
   void boundsCheck4GBOrLargerAccess(RegPtr tls, RegI32 ptr, Label* ok);
   void boundsCheckBelow4GBAccess(RegPtr tls, RegI32 ptr, Label* ok);
 
-  void branchAddNoOverflow(Imm32 offset, RegI64 ptr, Label* ok);
+  void branchAddNoOverflow(uint64_t offset, RegI64 ptr, Label* ok);
   void branchTestLowZero(RegI64 ptr, Imm32 mask, Label* ok);
   void boundsCheck4GBOrLargerAccess(RegPtr tls, RegI64 ptr, Label* ok);
   void boundsCheckBelow4GBAccess(RegPtr tls, RegI64 ptr, Label* ok);

@@ -242,6 +242,9 @@ class MacroAssemblerARM : public Assembler {
               Condition c = Always);
   void ma_adc(Register src1, Register src2, Register dest, SBit s = LeaveCC,
               Condition c = Always);
+  void ma_adc(Register src1, Imm32 op, Register dest,
+              AutoRegisterScope& scratch, SBit s = LeaveCC,
+              Condition c = Always);
 
   // Add:
   void ma_add(Imm32 imm, Register dest, AutoRegisterScope& scratch,
