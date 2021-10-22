@@ -216,7 +216,6 @@ def doctor(command_context, fix=False, verbose=False):
     )
 
 
-NO_AUTO_LOG = True
 CLOBBER_CHOICES = {"objdir", "python", "gradle"}
 
 
@@ -224,6 +223,7 @@ CLOBBER_CHOICES = {"objdir", "python", "gradle"}
     "clobber",
     category="build",
     description="Clobber the tree (delete the object directory).",
+    no_auto_log=True,
 )
 @CommandArgument(
     "what",
@@ -332,10 +332,9 @@ def clobber(command_context, what, full=False):
     return ret
 
 
-NO_AUTO_LOG = True
-
-
-@Command("show-log", category="post-build", description="Display mach logs")
+@Command(
+    "show-log", category="post-build", description="Display mach logs", no_auto_log=True
+)
 @CommandArgument(
     "log_file",
     nargs="?",
