@@ -6,10 +6,9 @@
 // This is a kinto-specific test...
 Services.prefs.setBoolPref("webextensions.storage.sync.kinto", true);
 
-const { EncryptionRemoteTransformer } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionStorageSyncKinto.jsm",
-  null
-);
+const {
+  KintoStorageTestUtils: { EncryptionRemoteTransformer },
+} = ChromeUtils.import("resource://gre/modules/ExtensionStorageSyncKinto.jsm");
 const { CryptoUtils } = ChromeUtils.import(
   "resource://services-crypto/utils.js"
 );
