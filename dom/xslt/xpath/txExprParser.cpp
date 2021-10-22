@@ -121,13 +121,11 @@ nsresult txExprParser::createAVT(const nsAString& aAttrValue,
     } else {
       if (!concat) {
         concat = new txCoreFunctionCall(txCoreFunctionCall::CONCAT);
-        rv = concat->addParam(expr.release());
+        concat->addParam(expr.release());
         expr = WrapUnique(concat);
-        NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      rv = concat->addParam(newExpr.release());
-      NS_ENSURE_SUCCESS(rv, rv);
+      concat->addParam(newExpr.release());
     }
   }
 
@@ -287,13 +285,11 @@ nsresult txExprParser::createExpr(txExprLexer& lexer, txIParseContext* aContext,
 
     if (negations > 0) {
       if (negations % 2 == 0) {
-        FunctionCall* fcExpr =
-            new txCoreFunctionCall(txCoreFunctionCall::NUMBER);
+        auto fcExpr =
+            MakeUnique<txCoreFunctionCall>(txCoreFunctionCall::NUMBER);
 
-        rv = fcExpr->addParam(expr.get());
-        if (NS_FAILED(rv)) return rv;
-        Unused << expr.release();
-        expr = WrapUnique(fcExpr);
+        fcExpr->addParam(expr.release());
+        expr = std::move(fcExpr);
       } else {
         expr = MakeUnique<UnaryExpr>(expr.release());
       }
@@ -789,8 +785,7 @@ nsresult txExprParser::parseParameters(FunctionCall* aFnCall,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (aFnCall) {
-      rv = aFnCall->addParam(expr.release());
-      NS_ENSURE_SUCCESS(rv, rv);
+      aFnCall->addParam(expr.release());
     }
 
     switch (lexer.peek()->mType) {
