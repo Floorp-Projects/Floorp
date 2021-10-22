@@ -559,11 +559,11 @@ nsresult txPushNewContext::execute(txExecutionState& aEs) {
   return NS_OK;
 }
 
-nsresult txPushNewContext::addSort(UniquePtr<Expr>&& aSelectExpr,
-                                   UniquePtr<Expr>&& aLangExpr,
-                                   UniquePtr<Expr>&& aDataTypeExpr,
-                                   UniquePtr<Expr>&& aOrderExpr,
-                                   UniquePtr<Expr>&& aCaseOrderExpr) {
+void txPushNewContext::addSort(UniquePtr<Expr>&& aSelectExpr,
+                               UniquePtr<Expr>&& aLangExpr,
+                               UniquePtr<Expr>&& aDataTypeExpr,
+                               UniquePtr<Expr>&& aOrderExpr,
+                               UniquePtr<Expr>&& aCaseOrderExpr) {
   SortKey* key = mSortKeys.AppendElement();
   // workaround for not triggering the Copy Constructor
   key->mSelectExpr = std::move(aSelectExpr);
@@ -571,7 +571,6 @@ nsresult txPushNewContext::addSort(UniquePtr<Expr>&& aSelectExpr,
   key->mDataTypeExpr = std::move(aDataTypeExpr);
   key->mOrderExpr = std::move(aOrderExpr);
   key->mCaseOrderExpr = std::move(aCaseOrderExpr);
-  return NS_OK;
 }
 
 nsresult txPushNullTemplateRule::execute(txExecutionState& aEs) {
