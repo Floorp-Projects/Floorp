@@ -896,7 +896,7 @@ class MachCommandBase(MozbuildObject):
     without having to change everything that inherits from it.
     """
 
-    def __init__(self, context, virtualenv_name=None, metrics=None):
+    def __init__(self, context, virtualenv_name=None, metrics=None, no_auto_log=False):
         # Attempt to discover topobjdir through environment detection, as it is
         # more reliable than mozconfig when cwd is inside an objdir.
         topsrcdir = context.topdir
@@ -970,7 +970,7 @@ class MachCommandBase(MozbuildObject):
             fileno = getattr(sys.stdout, "fileno", lambda: None)()
         except io.UnsupportedOperation:
             fileno = None
-        if fileno and os.isatty(fileno) and not getattr(self, "NO_AUTO_LOG", False):
+        if fileno and os.isatty(fileno) and not no_auto_log:
             self._ensure_state_subdir_exists(".")
             logfile = self._get_state_filename("last_log.json")
             try:
