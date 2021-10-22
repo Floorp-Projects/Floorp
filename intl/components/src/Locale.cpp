@@ -166,7 +166,7 @@ const char* Locale::unicodeExtension() const {
   return nullptr;
 }
 
-bool Locale::setUnicodeExtension(const char* extension) {
+ICUResult Locale::setUnicodeExtension(const char* extension) {
   MOZ_ASSERT(IsStructurallyValidUnicodeExtensionTag(MakeStringSpan(extension)));
 
   auto duplicated = DuplicateStringToUniqueChars(extension);
@@ -175,9 +175,12 @@ bool Locale::setUnicodeExtension(const char* extension) {
   ptrdiff_t index = unicodeExtensionIndex();
   if (index >= 0) {
     extensions_[index] = std::move(duplicated);
-    return true;
+    return Ok();
   }
-  return extensions_.append(std::move(duplicated));
+  if (!extensions_.append(std::move(duplicated))) {
+    return Err(ICUError::OutOfMemory);
+  }
+  return Ok();
 }
 
 void Locale::clearUnicodeExtension() {

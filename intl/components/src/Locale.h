@@ -325,7 +325,7 @@ class MOZ_STACK_CLASS Locale final {
    * Set the Unicode extension subtag. The input must be a valid Unicode
    * extension subtag.
    */
-  [[nodiscard]] bool setUnicodeExtension(const char* extension);
+  ICUResult setUnicodeExtension(const char* extension);
 
   /**
    * Remove any Unicode extension subtag if present.
