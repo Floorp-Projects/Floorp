@@ -571,7 +571,6 @@
         "popupshowing",
         "popuppositioned",
         "popupshown",
-        "transitionend",
         "popuphiding",
         "popuphidden",
       ];
@@ -618,7 +617,6 @@
       this.setAttribute("flip", "both");
       this.setAttribute("side", "top");
       this.setAttribute("position", "bottomcenter topright");
-      this.style.pointerEvents = "none";
     }
 
     get container() {
@@ -698,6 +696,7 @@
     on_popupshowing(event) {
       if (event.target == this) {
         this.setAttribute("animate", "open");
+        this.style.pointerEvents = "none";
       }
     }
 
@@ -713,35 +712,7 @@
       }
 
       this.setAttribute("panelopen", "true");
-      let disablePointerEvents;
-      if (!this.hasAttribute("disablepointereventsfortransition")) {
-        let cs = getComputedStyle(this.container);
-        let transitionProp = cs.transitionProperty;
-        let transitionTime = parseFloat(cs.transitionDuration);
-        disablePointerEvents =
-          (transitionProp.includes("transform") || transitionProp == "all") &&
-          transitionTime > 0;
-        this.setAttribute(
-          "disablepointereventsfortransition",
-          disablePointerEvents
-        );
-      } else {
-        disablePointerEvents =
-          this.getAttribute("disablepointereventsfortransition") == "true";
-      }
-      if (!disablePointerEvents) {
-        this.style.removeProperty("pointer-events");
-      }
-    }
-
-    on_transitionend(event) {
-      if (
-        event.originalTarget.classList.contains("panel-arrowcontainer") &&
-        (event.propertyName == "transform" ||
-          event.propertyName == "-moz-window-transform")
-      ) {
-        this.style.removeProperty("pointer-events");
-      }
+      this.style.removeProperty("pointer-events");
     }
 
     on_popuphiding(event) {
@@ -753,9 +724,6 @@
     on_popuphidden(event) {
       if (event.target == this) {
         this.removeAttribute("panelopen");
-        if (this.getAttribute("disablepointereventsfortransition") == "true") {
-          this.style.pointerEvents = "none";
-        }
         this.removeAttribute("animate");
       }
     }
