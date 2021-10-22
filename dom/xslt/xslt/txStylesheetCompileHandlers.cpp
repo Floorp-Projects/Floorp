@@ -1321,8 +1321,7 @@ static nsresult txFnStartChoose(int32_t aNamespaceID, nsAtom* aLocalName,
                                 nsAtom* aPrefix, txStylesheetAttr* aAttributes,
                                 int32_t aAttrCount,
                                 txStylesheetCompilerState& aState) {
-  nsresult rv = aState.pushChooseGotoList();
-  NS_ENSURE_SUCCESS(rv, rv);
+  aState.pushChooseGotoList();
 
   aState.pushHandlerTable(gTxChooseHandler);
 
