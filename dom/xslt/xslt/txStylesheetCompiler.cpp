@@ -161,7 +161,7 @@ nsresult txStylesheetCompiler::startElementInternal(
   nsresult rv = NS_OK;
   int32_t i;
   for (i = mInScopeVariables.Length() - 1; i >= 0; --i) {
-    ++mInScopeVariables[i]->mLevel;
+    ++mInScopeVariables[i].mLevel;
   }
 
   // Update the elementcontext if we have special attributes
@@ -291,12 +291,11 @@ nsresult txStylesheetCompiler::endElement() {
 
   int32_t i;
   for (i = mInScopeVariables.Length() - 1; i >= 0; --i) {
-    txInScopeVariable* var = mInScopeVariables[i];
-    if (!--(var->mLevel)) {
-      addInstruction(MakeUnique<txRemoveVariable>(var->mName));
+    txInScopeVariable& var = mInScopeVariables[i];
+    if (!--(var.mLevel)) {
+      addInstruction(MakeUnique<txRemoveVariable>(var.mName));
 
       mInScopeVariables.RemoveElementAt(i);
-      delete var;
     }
   }
 
@@ -514,11 +513,6 @@ txStylesheetCompilerState::~txStylesheetCompilerState() {
   while (!mObjectStack.isEmpty()) {
     delete popObject();
   }
-
-  int32_t i;
-  for (i = mInScopeVariables.Length() - 1; i >= 0; --i) {
-    delete mInScopeVariables[i];
-  }
 }
 
 void txStylesheetCompilerState::pushHandlerTable(txHandlerTable* aTable) {
@@ -692,7 +686,7 @@ void txStylesheetCompilerState::addGotoTarget(txInstruction** aTargetPointer) {
 }
 
 void txStylesheetCompilerState::addVariable(const txExpandedName& aName) {
-  mInScopeVariables.AppendElement(new txInScopeVariable(aName));
+  mInScopeVariables.AppendElement(aName);
 }
 
 nsresult txStylesheetCompilerState::resolveNamespacePrefix(nsAtom* aPrefix,
