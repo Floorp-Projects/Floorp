@@ -377,7 +377,7 @@ bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
       return false;
     }
 
-    candidate = buffer.toString(cx);
+    candidate = buffer.toAsciiString(cx);
     if (!candidate) {
       return false;
     }

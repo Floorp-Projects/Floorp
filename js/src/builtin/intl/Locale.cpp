@@ -113,7 +113,7 @@ static LocaleObject* CreateLocaleObject(JSContext* cx, HandleObject prototype,
     return nullptr;
   }
 
-  RootedString tagStr(cx, buffer.toString(cx));
+  RootedString tagStr(cx, buffer.toAsciiString(cx));
   if (!tagStr) {
     return nullptr;
   }
@@ -1367,7 +1367,7 @@ bool js::intl_ValidateAndCanonicalizeLanguageTag(JSContext* cx, unsigned argc,
     return false;
   }
 
-  JSString* resultStr = buffer.toString(cx);
+  JSString* resultStr = buffer.toAsciiString(cx);
   if (!resultStr) {
     return false;
   }
@@ -1424,7 +1424,7 @@ bool js::intl_TryValidateAndCanonicalizeLanguageTag(JSContext* cx,
     return false;
   }
 
-  JSString* resultStr = buffer.toString(cx);
+  JSString* resultStr = buffer.toAsciiString(cx);
   if (!resultStr) {
     return false;
   }
