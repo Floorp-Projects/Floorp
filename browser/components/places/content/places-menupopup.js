@@ -10,10 +10,6 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
-  const { AppConstants } = ChromeUtils.import(
-    "resource://gre/modules/AppConstants.jsm"
-  );
-
   /**
    * This class handles the custom element for the places popup menu.
    */
@@ -367,21 +363,6 @@
       let elt = event.target;
       if (elt.parentNode != this) {
         return;
-      }
-
-      if (AppConstants.platform === "macosx") {
-        // XXX: The following check is a temporary hack until bug 420033 is
-        // resolved.
-        let parentElt = elt.parent;
-        while (parentElt) {
-          if (
-            parentElt.id == "bookmarksMenuPopup" ||
-            parentElt.id == "goPopup"
-          ) {
-            return;
-          }
-          parentElt = parentElt.parentNode;
-        }
       }
 
       if (window.XULBrowserWindow) {
