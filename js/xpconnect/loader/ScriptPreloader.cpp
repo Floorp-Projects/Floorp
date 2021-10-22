@@ -94,11 +94,11 @@ nsresult ScriptPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
   if (XRE_IsParentProcess()) {
     MOZ_COLLECT_REPORT("explicit/script-preloader/non-heap/memmapped-cache",
                        KIND_NONHEAP, UNITS_BYTES,
-                       mCacheData.nonHeapSizeOfExcludingThis(),
+                       mCacheData->nonHeapSizeOfExcludingThis(),
                        "The memory-mapped startup script cache file.");
   } else {
     MOZ_COLLECT_REPORT("script-preloader-memmapped-cache", KIND_NONHEAP,
-                       UNITS_BYTES, mCacheData.nonHeapSizeOfExcludingThis(),
+                       UNITS_BYTES, mCacheData->nonHeapSizeOfExcludingThis(),
                        "The memory-mapped startup script cache file.");
   }
 
@@ -106,13 +106,16 @@ nsresult ScriptPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
 }
 
 ScriptPreloader& ScriptPreloader::GetSingleton() {
+  static UniquePtr<AutoMemMap> cacheDataSingleton;
   static RefPtr<ScriptPreloader> singleton;
 
   if (!singleton) {
     if (XRE_IsParentProcess()) {
-      singleton = new ScriptPreloader();
+      cacheDataSingleton = MakeUnique<AutoMemMap>();
+      singleton = new ScriptPreloader(cacheDataSingleton.get());
       singleton->mChildCache = &GetChildSingleton();
       Unused << singleton->InitCache();
+      ClearOnShutdown(&cacheDataSingleton, ShutdownPhase::JSPostShutDown);
     } else {
       singleton = &GetChildSingleton();
     }
@@ -147,14 +150,18 @@ ScriptPreloader& ScriptPreloader::GetSingleton() {
 //  probably use the cache data written during this session if there was no
 //  previous cache file, but I'd rather do that as a follow-up.
 ScriptPreloader& ScriptPreloader::GetChildSingleton() {
+  static UniquePtr<AutoMemMap> cacheDataSingleton;
   static RefPtr<ScriptPreloader> singleton;
 
   if (!singleton) {
-    singleton = new ScriptPreloader();
+    cacheDataSingleton = MakeUnique<AutoMemMap>();
+    singleton = new ScriptPreloader(cacheDataSingleton.get());
     if (XRE_IsParentProcess()) {
       Unused << singleton->InitCache(u"scriptCache-child"_ns);
     }
+
     ClearOnShutdown(&singleton);
+    ClearOnShutdown(&cacheDataSingleton, ShutdownPhase::JSPostShutDown);
   }
 
   return *singleton;
@@ -181,7 +188,7 @@ void ScriptPreloader::InitContentChild(ContentParent& parent) {
   bool wantScriptData = !cache.mInitializedProcesses.contains(processType);
   cache.mInitializedProcesses += processType;
 
-  auto fd = cache.mCacheData.cloneFileDescriptor();
+  auto fd = cache.mCacheData->cloneFileDescriptor();
   // Don't send original cache data to new processes if the cache has been
   // invalidated.
   if (fd.IsValid() && !cache.mCacheInvalidated) {
@@ -202,8 +209,9 @@ ProcessType ScriptPreloader::GetChildProcessType(const nsACString& remoteType) {
   return ProcessType::Web;
 }
 
-ScriptPreloader::ScriptPreloader()
-    : mMonitor("[ScriptPreloader.mMonitor]"),
+ScriptPreloader::ScriptPreloader(AutoMemMap* cacheData)
+    : mCacheData(cacheData),
+      mMonitor("[ScriptPreloader.mMonitor]"),
       mSaveMonitor("[ScriptPreloader.mSaveMonitor]") {
   // We do not set the process type for child processes here because the
   // remoteType in ContentChild is not ready yet.
@@ -409,7 +417,7 @@ Result<Ok, nsresult> ScriptPreloader::OpenCache() {
     }
   }
 
-  MOZ_TRY(mCacheData.init(cacheFile));
+  MOZ_TRY(mCacheData->init(cacheFile));
 
   return Ok();
 }
@@ -486,21 +494,21 @@ Result<Ok, nsresult> ScriptPreloader::InitCache(
     return Ok();
   }
 
-  MOZ_TRY(mCacheData.init(cacheFile.ref()));
+  MOZ_TRY(mCacheData->init(cacheFile.ref()));
 
   return InitCacheInternal();
 }
 
 Result<Ok, nsresult> ScriptPreloader::InitCacheInternal(
     JS::HandleObject scope) {
-  auto size = mCacheData.size();
+  auto size = mCacheData->size();
 
   uint32_t headerSize;
   if (size < sizeof(MAGIC) + sizeof(headerSize)) {
     return Err(NS_ERROR_UNEXPECTED);
   }
 
-  auto data = mCacheData.get<uint8_t>();
+  auto data = mCacheData->get<uint8_t>();
   MOZ_RELEASE_ASSERT(JS::IsTranscodingBytecodeAligned(data.get()));
 
   auto end = data + size;
@@ -526,7 +534,7 @@ Result<Ok, nsresult> ScriptPreloader::InitCacheInternal(
     data += headerSize;
 
     // Reconstruct alignment padding if required.
-    size_t currentOffset = data - mCacheData.get<uint8_t>();
+    size_t currentOffset = data - mCacheData->get<uint8_t>();
     data += JS::AlignTranscodingBytecodeOffset(currentOffset) - currentOffset;
 
     InputBuffer buf(header);
@@ -888,8 +896,11 @@ void ScriptPreloader::FillCompileOptionsForCachedStencil(
 /* static */
 void ScriptPreloader::FillDecodeOptionsForCachedStencil(
     JS::DecodeOptions& options) {
-  // ScriptPreloader's XDR buffer is alive during the entire browser lifetime.
+  // ScriptPreloader's XDR buffer is alive during the Stencil is alive.
   // The decoded stencil can borrow from it.
+  //
+  // NOTE: The XDR buffer is alive during the entire browser lifetime only
+  //       when it's mmapped.
   options.borrowBuffer = true;
 }
 
@@ -1078,6 +1089,8 @@ void ScriptPreloader::DecodeNextBatch(size_t chunkSize,
   for (CachedStencil* next = mPendingScripts.getFirst(); next;) {
     auto* script = next;
     next = script->getNext();
+
+    MOZ_ASSERT(script->IsMemMapped());
 
     // Skip any scripts that we decoded on the main thread rather than
     // waiting for an off-thread operation to complete.
