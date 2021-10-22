@@ -332,6 +332,7 @@ static nsWindow* gFocusWindow = nullptr;
 static bool gBlockActivateEvent = false;
 static bool gGlobalsInitialized = false;
 static bool gRaiseWindows = true;
+static bool gTransparentWindows = true;
 static bool gUseAspectRatio = true;
 static uint32_t gLastTouchID = 0;
 
@@ -5333,12 +5334,12 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       eventWidget = mDrawToContainer ? container : mShell;
 
       // Prevent GtkWindow from painting a background to avoid flickering.
-      gtk_widget_set_app_paintable(eventWidget, TRUE);
+      gtk_widget_set_app_paintable(eventWidget, gTransparentWindows);
 
       gtk_widget_add_events(eventWidget, kEvents);
       if (mDrawToContainer) {
         gtk_widget_add_events(mShell, GDK_PROPERTY_CHANGE_MASK);
-        gtk_widget_set_app_paintable(mShell, TRUE);
+        gtk_widget_set_app_paintable(mShell, gTransparentWindows);
       }
       if (mTransparencyBitmapForTitlebar) {
         moz_container_force_default_visual(mContainer);
@@ -7848,6 +7849,8 @@ static void drag_data_received_event_cb(GtkWidget* aWidget,
 static nsresult initialize_prefs(void) {
   gRaiseWindows =
       Preferences::GetBool("mozilla.widget.raise-on-setfocus", true);
+  gTransparentWindows =
+      Preferences::GetBool("widget.transparent-windows", true);
 
   if (Preferences::HasUserValue("widget.use-aspect-ratio")) {
     gUseAspectRatio = Preferences::GetBool("widget.use-aspect-ratio", true);
