@@ -136,9 +136,6 @@ extern bool enableIteratorHelpers;
 extern bool enablePrivateClassFields;
 extern bool enablePrivateClassMethods;
 extern bool enableErgonomicBrandChecks;
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-extern bool enableChangeArrayByCopy;
-#endif
 extern bool enableClassStaticBlocks;
 #ifdef JS_GC_ZEAL
 extern uint32_t gZealBits;
