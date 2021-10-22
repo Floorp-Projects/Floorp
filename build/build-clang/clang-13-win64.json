@@ -15,6 +15,7 @@
       "bug47258-extract-symbols-mbcs.patch",
       "Remove-FlushViewOfFile-when-unmaping-gcda-files.patch",
       "revert-llvmorg-13-init-7827-g2a078c307204.patch",
-      "loosen-msvc-detection.patch"
+      "loosen-msvc-detection.patch",
+      "win64-no-symlink.patch"
     ]
 }
