@@ -352,7 +352,9 @@ static nsresult txFnStartElementSetIgnore(int32_t aNamespaceID,
     clearAttributes(aAttributes, aAttrCount);
   }
 
-  return aState.pushHandlerTable(gTxIgnoreHandler);
+  aState.pushHandlerTable(gTxIgnoreHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndElementSetIgnore(txStylesheetCompilerState& aState) {
@@ -396,7 +398,9 @@ static nsresult txFnStartStylesheet(int32_t aNamespaceID, nsAtom* aLocalName,
                     nsGkAtoms::version, true, &attr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return aState.pushHandlerTable(gTxImportHandler);
+  aState.pushHandlerTable(gTxImportHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndStylesheet(txStylesheetCompilerState& aState) {
@@ -434,8 +438,7 @@ static nsresult txFnStartLREStylesheet(int32_t aNamespaceID, nsAtom* aLocalName,
 
   Unused << templ.release();
 
-  rv = aState.pushHandlerTable(gTxTemplateHandler);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aState.pushHandlerTable(gTxTemplateHandler);
 
   return txFnStartLRE(aNamespaceID, aLocalName, aPrefix, aAttributes,
                       aAttrCount, aState);
@@ -493,7 +496,9 @@ static nsresult txFnStartOtherTop(int32_t aNamespaceID, nsAtom* aLocalName,
     return NS_ERROR_XSLT_PARSE_FAILURE;
   }
 
-  return aState.pushHandlerTable(gTxIgnoreHandler);
+  aState.pushHandlerTable(gTxIgnoreHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndOtherTop(txStylesheetCompilerState& aState) {
@@ -523,7 +528,9 @@ static nsresult txFnStartAttributeSet(int32_t aNamespaceID, nsAtom* aLocalName,
   rv = parseUseAttrSets(aAttributes, aAttrCount, false, aState);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return aState.pushHandlerTable(gTxAttributeSetHandler);
+  aState.pushHandlerTable(gTxAttributeSetHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndAttributeSet(txStylesheetCompilerState& aState) {
@@ -602,7 +609,9 @@ static nsresult txFnStartDecimalFormat(int32_t aNamespaceID, nsAtom* aLocalName,
   rv = aState.mStylesheet->addDecimalFormat(name, std::move(format));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return aState.pushHandlerTable(gTxIgnoreHandler);
+  aState.pushHandlerTable(gTxIgnoreHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndDecimalFormat(txStylesheetCompilerState& aState) {
@@ -632,7 +641,9 @@ static nsresult txFnStartImport(int32_t aNamespaceID, nsAtom* aLocalName,
   rv = aState.loadImportedStylesheet(absUri, importPtr->mFrame.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return aState.pushHandlerTable(gTxIgnoreHandler);
+  aState.pushHandlerTable(gTxIgnoreHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndImport(txStylesheetCompilerState& aState) {
@@ -656,7 +667,9 @@ static nsresult txFnStartInclude(int32_t aNamespaceID, nsAtom* aLocalName,
   rv = aState.loadIncludedStylesheet(absUri);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return aState.pushHandlerTable(gTxIgnoreHandler);
+  aState.pushHandlerTable(gTxIgnoreHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndInclude(txStylesheetCompilerState& aState) {
@@ -692,7 +705,9 @@ static nsresult txFnStartKey(int32_t aNamespaceID, nsAtom* aLocalName,
   rv = aState.mStylesheet->addKey(name, std::move(match), std::move(use));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return aState.pushHandlerTable(gTxIgnoreHandler);
+  aState.pushHandlerTable(gTxIgnoreHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndKey(txStylesheetCompilerState& aState) {
@@ -718,7 +733,9 @@ static nsresult txFnStartNamespaceAlias(int32_t aNamespaceID,
 
   // XXX Needs to be implemented.
 
-  return aState.pushHandlerTable(gTxIgnoreHandler);
+  aState.pushHandlerTable(gTxIgnoreHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndNamespaceAlias(txStylesheetCompilerState& aState) {
@@ -815,7 +832,9 @@ static nsresult txFnStartOutput(int32_t aNamespaceID, nsAtom* aLocalName,
 
   aState.addToplevelItem(item.release());
 
-  return aState.pushHandlerTable(gTxIgnoreHandler);
+  aState.pushHandlerTable(gTxIgnoreHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndOutput(txStylesheetCompilerState& aState) {
@@ -886,7 +905,9 @@ static nsresult txFnStartStripSpace(int32_t aNamespaceID, nsAtom* aLocalName,
 
   aState.addToplevelItem(stripItem.release());
 
-  return aState.pushHandlerTable(gTxIgnoreHandler);
+  aState.pushHandlerTable(gTxIgnoreHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndStripSpace(txStylesheetCompilerState& aState) {
@@ -927,7 +948,9 @@ static nsresult txFnStartTemplate(int32_t aNamespaceID, nsAtom* aLocalName,
   aState.openInstructionContainer(templ.get());
   aState.addToplevelItem(templ.release());
 
-  return aState.pushHandlerTable(gTxParamHandler);
+  aState.pushHandlerTable(gTxParamHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndTemplate(txStylesheetCompilerState& aState) {
@@ -965,11 +988,9 @@ static nsresult txFnStartTopVariable(int32_t aNamespaceID, nsAtom* aLocalName,
 
   if (var->mValue) {
     // XXX should be gTxErrorHandler?
-    rv = aState.pushHandlerTable(gTxIgnoreHandler);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aState.pushHandlerTable(gTxIgnoreHandler);
   } else {
-    rv = aState.pushHandlerTable(gTxTopVariableHandler);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aState.pushHandlerTable(gTxTopVariableHandler);
   }
 
   aState.addToplevelItem(var.release());
@@ -1110,7 +1131,9 @@ static nsresult txFnStartApplyImports(int32_t aNamespaceID, nsAtom* aLocalName,
   instr = MakeUnique<txApplyImportsEnd>();
   aState.addInstruction(std::move(instr));
 
-  return aState.pushHandlerTable(gTxIgnoreHandler);
+  aState.pushHandlerTable(gTxIgnoreHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndApplyImports(txStylesheetCompilerState& aState) {
@@ -1170,7 +1193,9 @@ static nsresult txFnStartApplyTemplates(int32_t aNamespaceID,
 
   Unused << pushcontext.release();
 
-  return aState.pushHandlerTable(gTxApplyTemplatesHandler);
+  aState.pushHandlerTable(gTxApplyTemplatesHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndApplyTemplates(txStylesheetCompilerState& aState) {
@@ -1233,7 +1258,9 @@ static nsresult txFnStartAttribute(int32_t aNamespaceID, nsAtom* aLocalName,
 
   // We need to push the template-handler since the current might be
   // the attributeset-handler
-  return aState.pushHandlerTable(gTxTemplateHandler);
+  aState.pushHandlerTable(gTxTemplateHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndAttribute(txStylesheetCompilerState& aState) {
@@ -1274,7 +1301,9 @@ static nsresult txFnStartCallTemplate(int32_t aNamespaceID, nsAtom* aLocalName,
 
   Unused << instr.release();
 
-  return aState.pushHandlerTable(gTxCallTemplateHandler);
+  aState.pushHandlerTable(gTxCallTemplateHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndCallTemplate(txStylesheetCompilerState& aState) {
@@ -1312,7 +1341,9 @@ static nsresult txFnStartChoose(int32_t aNamespaceID, nsAtom* aLocalName,
   nsresult rv = aState.pushChooseGotoList();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return aState.pushHandlerTable(gTxChooseHandler);
+  aState.pushHandlerTable(gTxChooseHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndChoose(txStylesheetCompilerState& aState) {
@@ -1406,7 +1437,9 @@ static nsresult txFnStartCopyOf(int32_t aNamespaceID, nsAtom* aLocalName,
   UniquePtr<txInstruction> instr(new txCopyOf(std::move(select)));
   aState.addInstruction(std::move(instr));
 
-  return aState.pushHandlerTable(gTxIgnoreHandler);
+  aState.pushHandlerTable(gTxIgnoreHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndCopyOf(txStylesheetCompilerState& aState) {
@@ -1466,7 +1499,9 @@ static nsresult txFnStartFallback(int32_t aNamespaceID, nsAtom* aLocalName,
                                   txStylesheetCompilerState& aState) {
   aState.mSearchingForFallback = false;
 
-  return aState.pushHandlerTable(gTxTemplateHandler);
+  aState.pushHandlerTable(gTxTemplateHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndFallback(txStylesheetCompilerState& aState) {
@@ -1511,7 +1546,9 @@ static nsresult txFnStartForEach(int32_t aNamespaceID, nsAtom* aLocalName,
 
   aState.addInstruction(std::move(rule));
 
-  return aState.pushHandlerTable(gTxForEachHandler);
+  aState.pushHandlerTable(gTxForEachHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndForEach(txStylesheetCompilerState& aState) {
@@ -1690,7 +1727,9 @@ static nsresult txFnStartNumber(int32_t aNamespaceID, nsAtom* aLocalName,
                    std::move(groupingSize)));
   aState.addInstruction(std::move(instr));
 
-  return aState.pushHandlerTable(gTxIgnoreHandler);
+  aState.pushHandlerTable(gTxIgnoreHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndNumber(txStylesheetCompilerState& aState) {
@@ -1709,7 +1748,9 @@ static nsresult txFnStartOtherwise(int32_t aNamespaceID, nsAtom* aLocalName,
                                    txStylesheetAttr* aAttributes,
                                    int32_t aAttrCount,
                                    txStylesheetCompilerState& aState) {
-  return aState.pushHandlerTable(gTxTemplateHandler);
+  aState.pushHandlerTable(gTxTemplateHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndOtherwise(txStylesheetCompilerState& aState) {
@@ -1753,11 +1794,9 @@ static nsresult txFnStartParam(int32_t aNamespaceID, nsAtom* aLocalName,
   UniquePtr<txSetVariable> var(new txSetVariable(name, std::move(select)));
   if (var->mValue) {
     // XXX should be gTxErrorHandler?
-    rv = aState.pushHandlerTable(gTxIgnoreHandler);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aState.pushHandlerTable(gTxIgnoreHandler);
   } else {
-    rv = aState.pushHandlerTable(gTxVariableHandler);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aState.pushHandlerTable(gTxVariableHandler);
   }
 
   rv = aState.pushObject(var.get());
@@ -1873,7 +1912,9 @@ static nsresult txFnStartSort(int32_t aNamespaceID, nsAtom* aLocalName,
                           std::move(dataType), std::move(order),
                           std::move(caseOrder));
 
-  return aState.pushHandlerTable(gTxIgnoreHandler);
+  aState.pushHandlerTable(gTxIgnoreHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndSort(txStylesheetCompilerState& aState) {
@@ -1901,7 +1942,9 @@ static nsresult txFnStartText(int32_t aNamespaceID, nsAtom* aLocalName,
 
   aState.mDOE = doe == eTrue;
 
-  return aState.pushHandlerTable(gTxTextHandler);
+  aState.pushHandlerTable(gTxTextHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndText(txStylesheetCompilerState& aState) {
@@ -1943,7 +1986,9 @@ static nsresult txFnStartValueOf(int32_t aNamespaceID, nsAtom* aLocalName,
       new txValueOf(std::move(select), doe == eTrue));
   aState.addInstruction(std::move(instr));
 
-  return aState.pushHandlerTable(gTxIgnoreHandler);
+  aState.pushHandlerTable(gTxIgnoreHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndValueOf(txStylesheetCompilerState& aState) {
@@ -1978,11 +2023,9 @@ static nsresult txFnStartVariable(int32_t aNamespaceID, nsAtom* aLocalName,
   UniquePtr<txSetVariable> var(new txSetVariable(name, std::move(select)));
   if (var->mValue) {
     // XXX should be gTxErrorHandler?
-    rv = aState.pushHandlerTable(gTxIgnoreHandler);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aState.pushHandlerTable(gTxIgnoreHandler);
   } else {
-    rv = aState.pushHandlerTable(gTxVariableHandler);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aState.pushHandlerTable(gTxVariableHandler);
   }
 
   rv = aState.pushObject(var.get());
@@ -2061,7 +2104,9 @@ static nsresult txFnStartWhen(int32_t aNamespaceID, nsAtom* aLocalName,
 
   aState.addInstruction(std::move(condGoto));
 
-  return aState.pushHandlerTable(gTxTemplateHandler);
+  aState.pushHandlerTable(gTxTemplateHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndWhen(txStylesheetCompilerState& aState) {
@@ -2107,11 +2152,9 @@ static nsresult txFnStartWithParam(int32_t aNamespaceID, nsAtom* aLocalName,
   UniquePtr<txSetParam> var(new txSetParam(name, std::move(select)));
   if (var->mValue) {
     // XXX should be gTxErrorHandler?
-    rv = aState.pushHandlerTable(gTxIgnoreHandler);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aState.pushHandlerTable(gTxIgnoreHandler);
   } else {
-    rv = aState.pushHandlerTable(gTxVariableHandler);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aState.pushHandlerTable(gTxVariableHandler);
   }
 
   rv = aState.pushObject(var.get());
@@ -2160,7 +2203,9 @@ static nsresult txFnStartUnknownInstruction(int32_t aNamespaceID,
 
   aState.mSearchingForFallback = true;
 
-  return aState.pushHandlerTable(gTxFallbackHandler);
+  aState.pushHandlerTable(gTxFallbackHandler);
+
+  return NS_OK;
 }
 
 static nsresult txFnEndUnknownInstruction(txStylesheetCompilerState& aState) {
