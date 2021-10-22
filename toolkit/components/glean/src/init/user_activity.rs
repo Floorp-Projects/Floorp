@@ -29,31 +29,38 @@ pub(crate) struct InitUserActivityObserver {
 /// for more info.
 #[allow(non_snake_case)]
 impl UserActivityObserver {
-    pub(crate) unsafe fn begin_observing() -> Result<(), nsresult> {
+    pub(crate) fn begin_observing() -> Result<(), nsresult> {
         // First and foremost, even if we can't get the ObserverService,
         // init always means client activity.
         glean::handle_client_active();
 
-        let activity_obs = Self::allocate(InitUserActivityObserver {
-            last_edge: RwLock::new(Instant::now()),
-            was_active: AtomicBool::new(false),
-        });
-        let obs_service = xpcom::services::get_ObserverService().ok_or(NS_ERROR_FAILURE)?;
-        let rv = obs_service.AddObserver(
-            activity_obs.coerce(),
-            cstr!("user-interaction-active").as_ptr(),
-            false,
-        );
-        if !rv.succeeded() {
-            return Err(rv);
-        }
-        let rv = obs_service.AddObserver(
-            activity_obs.coerce(),
-            cstr!("user-interaction-inactive").as_ptr(),
-            false,
-        );
-        if !rv.succeeded() {
-            return Err(rv);
+        // SAFETY: Everything here is self-contained.
+        //
+        // * We allocate the activity observer, created by the xpcom macro
+        // * We create cstr from a static string.
+        // * We control all input to `AddObserver`
+        unsafe {
+            let activity_obs = Self::allocate(InitUserActivityObserver {
+                last_edge: RwLock::new(Instant::now()),
+                was_active: AtomicBool::new(false),
+            });
+            let obs_service = xpcom::services::get_ObserverService().ok_or(NS_ERROR_FAILURE)?;
+            let rv = obs_service.AddObserver(
+                activity_obs.coerce(),
+                cstr!("user-interaction-active").as_ptr(),
+                false,
+            );
+            if !rv.succeeded() {
+                return Err(rv);
+            }
+            let rv = obs_service.AddObserver(
+                activity_obs.coerce(),
+                cstr!("user-interaction-inactive").as_ptr(),
+                false,
+            );
+            if !rv.succeeded() {
+                return Err(rv);
+            }
         }
         Ok(())
     }
