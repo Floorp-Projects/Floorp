@@ -391,14 +391,14 @@ class MOZ_STACK_CLASS Locale final {
    *
    * Spec: <https://www.unicode.org/reports/tr35/#Likely_Subtags>
    */
-  [[nodiscard]] bool addLikelySubtags();
+  ICUResult addLikelySubtags();
 
   /**
    * Remove likely-subtags from the locale.
    *
    * Spec: <https://www.unicode.org/reports/tr35/#Likely_Subtags>
    */
-  [[nodiscard]] bool removeLikelySubtags();
+  ICUResult removeLikelySubtags();
 
   /**
    * Returns the default locale as an ICU locale identifier. The returned string

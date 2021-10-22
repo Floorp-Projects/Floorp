@@ -62,11 +62,11 @@ TEST(IntlLocale, LikelySubtags)
 {
   Locale locale;
   ASSERT_TRUE(LocaleParser::tryParse(MakeStringSpan("zh"), locale).isOk());
-  ASSERT_TRUE(locale.addLikelySubtags());
+  ASSERT_TRUE(locale.addLikelySubtags().isOk());
   TestBuffer<char> buffer;
   ASSERT_TRUE(locale.toString(buffer).isOk());
   ASSERT_TRUE(buffer.verboseMatches("zh-Hans-CN"));
-  ASSERT_TRUE(locale.removeLikelySubtags());
+  ASSERT_TRUE(locale.removeLikelySubtags().isOk());
   buffer.clear();
   ASSERT_TRUE(locale.toString(buffer).isOk());
   ASSERT_TRUE(buffer.verboseMatches("zh"));

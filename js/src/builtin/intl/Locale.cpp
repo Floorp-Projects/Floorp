@@ -947,8 +947,8 @@ static bool Locale_maximize(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  if (!tag.addLikelySubtags()) {
-    intl::ReportInternalError(cx);
+  if (auto result = tag.addLikelySubtags(); result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
     return false;
   }
 
@@ -984,8 +984,8 @@ static bool Locale_minimize(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  if (!tag.removeLikelySubtags()) {
-    intl::ReportInternalError(cx);
+  if (auto result = tag.removeLikelySubtags(); result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
     return false;
   }
 
