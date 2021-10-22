@@ -890,14 +890,14 @@ class FunctionCompiler {
       } else {
         ptr = base->toConstant()->toInt32();
       }
-      if (((ptr + access->offset()) & (access->byteSize() - 1)) == 0) {
+      if (((ptr + access->offset64()) & (access->byteSize() - 1)) == 0) {
         return false;
       }
     }
 
     // If the offset is aligned then the EA is just the pointer, for
     // the purposes of this check.
-    *mustAdd = (access->offset() & (access->byteSize() - 1)) != 0;
+    *mustAdd = (access->offset64() & (access->byteSize() - 1)) != 0;
     return true;
   }
 
@@ -917,11 +917,11 @@ class FunctionCompiler {
         basePtr = uint64_t(int64_t((*base)->toConstant()->toInt32()));
       }
 
-      uint32_t offset = access->offset();
+      uint64_t offset = access->offset64();
 
       if (offset < offsetGuardLimit && basePtr < offsetGuardLimit - offset) {
         offset += uint32_t(basePtr);
-        access->setOffset(offset);
+        access->setOffset32(uint32_t(offset));
 
         MConstant* ins = nullptr;
         if (isMem64()) {
@@ -942,7 +942,8 @@ class FunctionCompiler {
     uint32_t offsetGuardLimit =
         GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
 
-    if (access->offset() >= offsetGuardLimit || mustAddOffset ||
+    if (access->offset64() >= offsetGuardLimit ||
+        access->offset64() > UINT32_MAX || mustAddOffset ||
         !JitOptions.wasmFoldOffsets) {
       *base = computeEffectiveAddress(*base, access);
     }
@@ -1090,11 +1091,11 @@ class FunctionCompiler {
     if (inDeadCode()) {
       return nullptr;
     }
-    if (!access->offset()) {
+    uint64_t offset = access->offset64();
+    if (offset == 0) {
       return base;
     }
-    auto* ins =
-        MWasmAddOffset::New(alloc(), base, access->offset(), bytecodeOffset());
+    auto* ins = MWasmAddOffset::New(alloc(), base, offset, bytecodeOffset());
     curBlock_->add(ins);
     access->clearOffset();
     return ins;
@@ -1109,7 +1110,7 @@ class FunctionCompiler {
     MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
     MInstruction* load = nullptr;
     if (moduleEnv_.isAsmJS()) {
-      MOZ_ASSERT(access->offset() == 0);
+      MOZ_ASSERT(access->offset64() == 0);
       MWasmLoadTls* boundsCheckLimit =
           maybeLoadBoundsCheckLimit(MIRType::Int32);
       load = MAsmJSLoadHeap::New(alloc(), memoryBase, base, boundsCheckLimit,
@@ -1137,7 +1138,7 @@ class FunctionCompiler {
     MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
     MInstruction* store = nullptr;
     if (moduleEnv_.isAsmJS()) {
-      MOZ_ASSERT(access->offset() == 0);
+      MOZ_ASSERT(access->offset64() == 0);
       MWasmLoadTls* boundsCheckLimit =
           maybeLoadBoundsCheckLimit(MIRType::Int32);
       store = MAsmJSStoreHeap::New(alloc(), memoryBase, base, boundsCheckLimit,

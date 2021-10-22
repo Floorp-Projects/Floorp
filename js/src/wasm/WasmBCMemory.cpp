@@ -96,11 +96,8 @@ void BaseCompiler::bceCheckLocal(MemoryAccessDesc* access, AccessCheck* check,
   uint32_t offsetGuardLimit =
       GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
 
-  // 64-bit offset will be supported later.
-  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
-
   if ((bceSafe_ & (BCESet(1) << local)) &&
-      access->offset() < offsetGuardLimit) {
+      access->offset64() < offsetGuardLimit) {
     check->omitBoundsCheck = true;
   }
 
@@ -136,9 +133,6 @@ RegI32 BaseCompiler::popConstMemoryAccess<RegI32>(MemoryAccessDesc* access,
   uint32_t offsetGuardLimit =
       GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
 
-  // 64-bit offset will be supported later.
-  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
-
   uint64_t ea = uint64_t(addr) + uint64_t(access->offset());
   uint64_t limit = moduleEnv_.memory->initialLength32() + offsetGuardLimit;
 
@@ -167,10 +161,7 @@ RegI64 BaseCompiler::popConstMemoryAccess<RegI64>(MemoryAccessDesc* access,
   uint32_t offsetGuardLimit =
       GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
 
-  // 64-bit offset will be supported later.
-  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
-
-  uint64_t ea = addr + uint64_t(access->offset());
+  uint64_t ea = addr + access->offset64();
   bool overflow = ea < addr;
   uint64_t limit = moduleEnv_.memory->initialLength64() + offsetGuardLimit;
 
@@ -193,7 +184,7 @@ template <typename RegType>
 RegType BaseCompiler::popMemoryAccess(MemoryAccessDesc* access,
                                       AccessCheck* check) {
   check->onlyPointerAlignment =
-      (access->offset() & (access->byteSize() - 1)) == 0;
+      (access->offset64() & (access->byteSize() - 1)) == 0;
 
   // If there's a constant it will have the correct type for RegType.
   if (hasConst()) {
@@ -242,15 +233,18 @@ void BaseCompiler::pushHeapBase() {
 }
 #endif
 
-void BaseCompiler::branchAddNoOverflow(Imm32 offset, RegI32 ptr, Label* ok) {
-  masm.branchAdd32(Assembler::CarryClear, offset, ptr, ok);
+void BaseCompiler::branchAddNoOverflow(uint64_t offset, RegI32 ptr, Label* ok) {
+  // The invariant holds because ptr is RegI32 - this is m32.
+  MOZ_ASSERT(offset <= UINT32_MAX);
+  masm.branchAdd32(Assembler::CarryClear, Imm32(uint32_t(offset)), ptr, ok);
 }
 
-void BaseCompiler::branchAddNoOverflow(Imm32 offset, RegI64 ptr, Label* ok) {
+void BaseCompiler::branchAddNoOverflow(uint64_t offset, RegI64 ptr, Label* ok) {
 #if defined(JS_64BIT)
-  masm.branchAddPtr(Assembler::CarryClear, offset, Register64(ptr).reg, ok);
+  masm.branchAddPtr(Assembler::CarryClear, ImmWord(offset), Register64(ptr).reg,
+                    ok);
 #else
-  masm.branchAdd64(Assembler::CarryClear, offset, ptr, ok);
+  masm.branchAdd64(Assembler::CarryClear, Imm64(offset), ptr, ok);
 #endif
 }
 
@@ -332,15 +326,13 @@ void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
   uint32_t offsetGuardLimit =
       GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
 
-  // 64-bit offset will be supported later.
-  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
-
   // Fold offset if necessary for further computations.
-  if (access->offset() >= offsetGuardLimit ||
+  if (access->offset64() >= offsetGuardLimit ||
+      access->offset64() > UINT32_MAX ||
       (access->isAtomic() && !check->omitAlignmentCheck &&
        !check->onlyPointerAlignment)) {
     Label ok;
-    branchAddNoOverflow(Imm32(access->offset()), ptr, &ok);
+    branchAddNoOverflow(access->offset64(), ptr, &ok);
     masm.wasmTrap(Trap::OutOfBounds, bytecodeOffset());
     masm.bind(&ok);
     access->clearOffset();
@@ -393,13 +385,10 @@ void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
 
 template <typename RegIndexType>
 void BaseCompiler::computeEffectiveAddress(MemoryAccessDesc* access) {
-  // 64-bit offset will be supported later.
-  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
-
   if (access->offset()) {
     Label ok;
     RegIndexType ptr = pop<RegIndexType>();
-    branchAddNoOverflow(Imm32(access->offset()), ptr, &ok);
+    branchAddNoOverflow(access->offset64(), ptr, &ok);
     masm.wasmTrap(Trap::OutOfBounds, bytecodeOffset());
     masm.bind(&ok);
     access->clearOffset();
@@ -441,9 +430,7 @@ RegPtr BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check,
 void BaseCompiler::executeLoad(MemoryAccessDesc* access, AccessCheck* check,
                                RegPtr tls, RegI32 ptr, AnyReg dest,
                                RegI32 temp) {
-  // 64-bit offset will be supported later.
-  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
-
+  // Emit the load.  At this point, 64-bit offsets will have been resolved.
 #if defined(JS_CODEGEN_X64)
   MOZ_ASSERT(temp.isInvalid());
   Operand srcAddr(HeapReg, ptr, TimesOne, access->offset());
@@ -543,10 +530,7 @@ void BaseCompiler::load(MemoryAccessDesc* access, AccessCheck* check,
 void BaseCompiler::executeStore(MemoryAccessDesc* access, AccessCheck* check,
                                 RegPtr tls, RegI32 ptr, AnyReg src,
                                 RegI32 temp) {
-  // 64-bit offset will be supported later.
-  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
-
-  // Emit the store
+  // Emit the store.  At this point, 64-bit offsets will have been resolved.
 #if defined(JS_CODEGEN_X64)
   MOZ_ASSERT(temp.isInvalid());
   Operand dstAddr(HeapReg, ptr, TimesOne, access->offset());
@@ -845,11 +829,9 @@ BaseIndex BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                                   AccessCheck* check,
                                                   RegPtr tls,
                                                   RegIndexType ptr) {
-  // 64-bit offset will be supported later.
-  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
-
   MOZ_ASSERT(needTlsForAccess(*check) == tls.isValid());
   prepareMemoryAccess(access, check, tls, ptr);
+  // At this point, 64-bit offsets will have been resolved.
   return BaseIndex(HeapReg, ToRegister(ptr), TimesOne, access->offset());
 }
 
@@ -863,12 +845,10 @@ template <typename RegIndexType>
 Address BaseCompiler::prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                                 AccessCheck* check, RegPtr tls,
                                                 RegIndexType ptr) {
-  // 64-bit offset will be supported later.
-  static_assert(sizeof(access->offset()) == sizeof(uint32_t));
-
   MOZ_ASSERT(needTlsForAccess(*check) == tls.isValid());
   prepareMemoryAccess(access, check, tls, ptr);
   masm.addPtr(Address(tls, offsetof(TlsData, memoryBase)), ToRegister(ptr));
+  // At this point, 64-bit offsets will have been resolved.
   return Address(ToRegister(ptr), access->offset());
 }
 

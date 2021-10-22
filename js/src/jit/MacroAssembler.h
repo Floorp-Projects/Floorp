@@ -1549,7 +1549,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchNeg32(Condition cond, Register reg,
                           Label* label) PER_SHARED_ARCH;
 
-  inline void branchAdd64(Condition cond, Imm32 imm, Register64 dest,
+  inline void branchAdd64(Condition cond, Imm64 imm, Register64 dest,
                           Label* label) DEFINED_ON(x86, arm);
 
   template <typename T>

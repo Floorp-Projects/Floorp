@@ -4807,6 +4807,7 @@ void LIRGenerator::visitWasmAddOffset(MWasmAddOffset* ins) {
   MOZ_ASSERT(ins->offset());
   if (ins->base()->type() == MIRType::Int32) {
     MOZ_ASSERT(ins->type() == MIRType::Int32);
+    MOZ_ASSERT(ins->offset() <= UINT32_MAX);  // Because memory32
     define(new (alloc()) LWasmAddOffset(useRegisterAtStart(ins->base())), ins);
   } else {
     MOZ_ASSERT(ins->type() == MIRType::Int64);
