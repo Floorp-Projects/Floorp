@@ -56,7 +56,9 @@ class SourceSurfaceSharedDataWrapper final : public DataSourceSurface {
 
   int32_t Stride() override { return mStride; }
 
-  SurfaceType GetType() const override { return SurfaceType::DATA; }
+  SurfaceType GetType() const override {
+    return SurfaceType::DATA_SHARED_WRAPPER;
+  }
   IntSize GetSize() const override { return mSize; }
   SurfaceFormat GetFormat() const override { return mFormat; }
 
