@@ -245,11 +245,69 @@ class MOZ_STACK_CLASS Locale final {
   Locale(const Locale&) = delete;
   Locale& operator=(const Locale&) = delete;
 
+  template <class Vec>
+  class SubtagIterator {
+    using Iter = decltype(std::declval<const Vec>().begin());
+
+    Iter iter_;
+
+   public:
+    explicit SubtagIterator(Iter iter) : iter_(iter) {}
+
+    // std::iterator traits.
+    using iterator_category = std::input_iterator_tag;
+    using value_type = Span<const char>;
+    using difference_type = ptrdiff_t;
+    using pointer = value_type*;
+    using reference = value_type&;
+
+    SubtagIterator& operator++() {
+      iter_++;
+      return *this;
+    }
+
+    SubtagIterator operator++(int) {
+      SubtagIterator result = *this;
+      ++(*this);
+      return result;
+    }
+
+    bool operator==(const SubtagIterator& aOther) const {
+      return iter_ == aOther.iter_;
+    }
+
+    bool operator!=(const SubtagIterator& aOther) const {
+      return !(*this == aOther);
+    }
+
+    value_type operator*() const { return MakeStringSpan(iter_->get()); }
+  };
+
+  template <size_t N>
+  class SubtagEnumeration {
+    using Vec = Vector<UniqueChars, N>;
+
+    const Vec& vector_;
+
+   public:
+    explicit SubtagEnumeration(const Vec& vector) : vector_(vector) {}
+
+    size_t length() const { return vector_.length(); }
+    bool empty() const { return vector_.empty(); }
+
+    auto begin() const { return SubtagIterator<Vec>(vector_.begin()); }
+    auto end() const { return SubtagIterator<Vec>(vector_.end()); }
+
+    Span<const char> operator[](size_t index) const {
+      return MakeStringSpan(vector_[index].get());
+    }
+  };
+
   const LanguageSubtag& language() const { return language_; }
   const ScriptSubtag& script() const { return script_; }
   const RegionSubtag& region() const { return region_; }
-  const auto& variants() const { return variants_; }
-  const auto& extensions() const { return extensions_; }
+  auto variants() const { return SubtagEnumeration(variants_); }
+  auto extensions() const { return SubtagEnumeration(extensions_); }
   Maybe<Span<const char>> privateuse() const {
     if (const char* p = privateuse_.get()) {
       return Some(MakeStringSpan(p));

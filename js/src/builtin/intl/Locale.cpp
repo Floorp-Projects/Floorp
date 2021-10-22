@@ -69,7 +69,7 @@ static size_t BaseNameLength(const mozilla::intl::Locale& tag) {
     baseNameLength += 1 + tag.region().length();
   }
   for (const auto& variant : tag.variants()) {
-    baseNameLength += 1 + strlen(variant.get());
+    baseNameLength += 1 + variant.size();
   }
   return baseNameLength;
 }
@@ -94,7 +94,7 @@ static mozilla::Maybe<IndexAndLength> UnicodeExtensionPosition(
     MOZ_ASSERT(!mozilla::IsAsciiUppercaseAlpha(extension[0]),
                "extensions are case normalized to lowercase");
 
-    size_t extensionLength = strlen(extension.get());
+    size_t extensionLength = extension.size();
     if (extension[0] == 'u') {
       return mozilla::Some(IndexAndLength{index, extensionLength});
     }
