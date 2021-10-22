@@ -4465,7 +4465,7 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
     // Save the profile on shutdown if requested.
     if (ActivePS::Exists(lock)) {
       const char* filename = getenv("MOZ_PROFILER_SHUTDOWN");
-      if (filename) {
+      if (filename && filename[0] != '\0') {
         locked_profiler_save_profile_to_file(lock, filename,
                                              preRecordedMetaInformation,
                                              /* aIsShuttingDown */ true);
@@ -4620,6 +4620,12 @@ void GetProfilerEnvVarsForChildProcess(
   }
 
   aSetEnv("MOZ_PROFILER_STARTUP", "1");
+
+  // If MOZ_PROFILER_SHUTDOWN is defined, make sure it's empty in children, so
+  // that they don't attempt to write over that file.
+  if (getenv("MOZ_PROFILER_SHUTDOWN")) {
+    aSetEnv("MOZ_PROFILER_SHUTDOWN", "");
+  }
 
   // Hidden option to stop Base Profiler, mostly due to Talos intermittents,
   // see https://bugzilla.mozilla.org/show_bug.cgi?id=1638851#c3
