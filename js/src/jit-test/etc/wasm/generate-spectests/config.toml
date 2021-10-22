@@ -74,3 +74,10 @@ excluded_tests = [
   # upstream spec, it can be removed when the repo is rebased.
   "global.wast"
 ]
+
+[[repos]]
+name = "memory64"
+url = "https://github.com/lars-t-hansen/memory64"
+branch = "test-cases"
+directive = "; --wasm-memory64; skip-if: !wasmMemory64Enabled()"
+excluded_tests = []
