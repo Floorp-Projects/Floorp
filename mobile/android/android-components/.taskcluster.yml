@@ -108,7 +108,7 @@ tasks:
             tasks_for in ["action", "cron"]
             || (tasks_for == "github-pull-request" && pullRequestAction in ["opened", "reopened", "synchronize"])
             || (tasks_for == "github-push" && head_branch[:10] != "refs/tags/" && head_branch != "staging.tmp" && head_branch != "trying.tmp") && (head_branch[:8] != "mergify/")
-            || (tasks_for == "github-release" && releaseAction == "published" && (ownerEmail != "mozilla-release-automation-bot@users.noreply.github.com") && (ownerEmail != "mozilla-release-automation-bot-staging@users.noreply.github.com"))
+            || (tasks_for == "github-release" && releaseAction == "published" && ownerEmail[:21] != "moz-releng-automation")
           then:
               $let:
                   level:
