@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/intl/ICUError.h"
 #include "mozilla/intl/ICU4CGlue.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/TypedEnumBits.h"
@@ -252,9 +253,9 @@ class MOZ_STACK_CLASS Locale final {
   const char* privateuse() const { return privateuse_.get(); }
 
   /**
-   * Return the Unicode extension subtag or nullptr if not present.
+   * Return the Unicode extension subtag or Nothing if not present.
    */
-  const char* unicodeExtension() const;
+  Maybe<Span<const char>> unicodeExtension() const;
 
  private:
   ptrdiff_t unicodeExtensionIndex() const;

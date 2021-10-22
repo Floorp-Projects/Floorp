@@ -21,8 +21,7 @@ TEST(IntlLocale, LocaleSettersAndGetters)
   ASSERT_TRUE(locale.language().equalTo("fr"));
   ASSERT_TRUE(locale.region().equalTo("CA"));
   ASSERT_TRUE(locale.script().equalTo("Latn"));
-  ASSERT_EQ(MakeStringSpan(locale.unicodeExtension()),
-            MakeStringSpan("u-ca-gregory"));
+  ASSERT_EQ(locale.unicodeExtension().value(), MakeStringSpan("u-ca-gregory"));
 
   TestBuffer<char> buffer;
   ASSERT_TRUE(locale.toString(buffer).isOk());
