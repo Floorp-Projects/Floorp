@@ -213,8 +213,6 @@ nsresult txStylesheetCompiler::startElementInternal(
         if (namespaceID == kNameSpaceID_Unknown)
           return NS_ERROR_XSLT_PARSE_FAILURE;
 
-        // XXX(Bug 1631371) Check if this should use a fallible operation as it
-        // pretended earlier.
         mElementContext->mInstructionNamespaces.AppendElement(namespaceID);
       }
 
@@ -668,8 +666,6 @@ nsresult txStylesheetCompilerState::loadIncludedStylesheet(
   // step forward before calling the observer in case of syncronous loading
   mToplevelIterator.next();
 
-  // XXX(Bug 1631371) Check if this should use a fallible operation as it
-  // pretended earlier.
   mChildCompilerList.AppendElement(compiler);
 
   nsresult rv =
@@ -699,8 +695,6 @@ nsresult txStylesheetCompilerState::loadImportedStylesheet(
   RefPtr<txStylesheetCompiler> compiler = new txStylesheetCompiler(
       aURI, mStylesheet, &iter, mReferrerPolicy, observer);
 
-  // XXX(Bug 1631371) Check if this should use a fallible operation as it
-  // pretended earlier.
   mChildCompilerList.AppendElement(compiler);
 
   nsresult rv =
@@ -714,17 +708,14 @@ nsresult txStylesheetCompilerState::loadImportedStylesheet(
 
 nsresult txStylesheetCompilerState::addGotoTarget(
     txInstruction** aTargetPointer) {
-  // XXX(Bug 1631371) Check if this should use a fallible operation as it
-  // pretended earlier, or change the return type to void.
   mGotoTargetPointers.AppendElement(aTargetPointer);
+
   return NS_OK;
 }
 
 nsresult txStylesheetCompilerState::addVariable(const txExpandedName& aName) {
-  txInScopeVariable* var = new txInScopeVariable(aName);
-  // XXX(Bug 1631371) Check if this should use a fallible operation as it
-  // pretended earlier, or change the return type to void.
-  mInScopeVariables.AppendElement(var);
+  mInScopeVariables.AppendElement(new txInScopeVariable(aName));
+
   return NS_OK;
 }
 
