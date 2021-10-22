@@ -377,6 +377,8 @@ $(3)/%: %
 	$$(INSTALL) -m 444 $$^ $(3)
 
 $(1): $$(addprefix $(3)/,$$($(2))) | $(3)/d
+
+.NOTPARALLEL: $(1)
 endif
 else
 $(1):
