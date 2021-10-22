@@ -398,7 +398,7 @@ fn origin_is_local(url_str: &str) -> WebDriverResult<bool> {
         )
     };
 
-    let url = Url::parse(&url_str).map_err(|_| make_err())?;
+    let url = Url::parse(url_str).map_err(|_| make_err())?;
     let sockets = url.socket_addrs(|| None).map_err(|_| make_err())?;
 
     Ok(!sockets.is_empty() && sockets.iter().all(|x| x.ip().is_loopback()))

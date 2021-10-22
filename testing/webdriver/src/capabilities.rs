@@ -124,7 +124,7 @@ impl SpecNewSessionParameters {
         // Filter out entries with the value `null`
         let null_entries = capabilities
             .iter()
-            .filter(|&(_, ref value)| **value == Value::Null)
+            .filter(|&(_, value)| *value == Value::Null)
             .map(|(k, _)| k.clone())
             .collect::<Vec<String>>();
         for key in null_entries {
@@ -520,7 +520,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                             let default = Map::new();
                             let proxy = value.as_object().unwrap_or(&default);
                             if !browser_capabilities
-                                .accept_proxy(&proxy, merged)
+                                .accept_proxy(proxy, merged)
                                 .unwrap_or(false)
                             {
                                 return false;
