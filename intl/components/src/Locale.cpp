@@ -377,6 +377,11 @@ Result<Ok, Locale::CanonicalizationError> Locale::canonicalizeExtensions() {
   return Ok();
 }
 
+template <size_t N>
+static inline bool AppendSpan(Vector<char, N>& vector, Span<const char> span) {
+  return vector.append(span.data(), span.size());
+}
+
 /**
  * CanonicalizeUnicodeExtension( attributes, keywords )
  *
@@ -395,12 +400,10 @@ Result<Ok, Locale::CanonicalizationError> Locale::canonicalizeExtensions() {
  */
 Result<Ok, Locale::CanonicalizationError> Locale::canonicalizeUnicodeExtension(
     UniqueChars& unicodeExtension) {
-  const char* const extension = unicodeExtension.get();
+  Span<const char> extension = MakeStringSpan(unicodeExtension.get());
   MOZ_ASSERT(extension[0] == 'u');
   MOZ_ASSERT(extension[1] == '-');
-  MOZ_ASSERT(IsStructurallyValidExtensionTag(MakeStringSpan(extension)));
-
-  size_t length = strlen(extension);
+  MOZ_ASSERT(IsStructurallyValidExtensionTag(extension));
 
   LocaleParser::AttributesVector attributes;
   LocaleParser::KeywordsVector keywords;
@@ -408,24 +411,16 @@ Result<Ok, Locale::CanonicalizationError> Locale::canonicalizeUnicodeExtension(
   using Attribute = LocaleParser::AttributesVector::ElementType;
   using Keyword = LocaleParser::KeywordsVector::ElementType;
 
-  if (LocaleParser::parseUnicodeExtension(Span(extension, length), attributes,
-                                          keywords)
+  if (LocaleParser::parseUnicodeExtension(extension, attributes, keywords)
           .isErr()) {
     MOZ_ASSERT_UNREACHABLE("unexpected invalid Unicode extension subtag");
     return Err(CanonicalizationError::InternalError);
   }
 
   auto attributesLess = [extension](const Attribute& a, const Attribute& b) {
-    const char* astr = a.begin(extension);
-    const char* bstr = b.begin(extension);
-    size_t alen = a.length();
-    size_t blen = b.length();
-
-    if (int r =
-            std::char_traits<char>::compare(astr, bstr, std::min(alen, blen))) {
-      return r < 0;
-    }
-    return alen < blen;
+    auto astr = extension.Subspan(a.begin(), a.length());
+    auto bstr = extension.Subspan(b.begin(), b.length());
+    return astr < bstr;
   };
 
   // All attributes are sorted in alphabetical order.
@@ -434,12 +429,9 @@ Result<Ok, Locale::CanonicalizationError> Locale::canonicalizeUnicodeExtension(
   }
 
   auto keywordsLess = [extension](const Keyword& a, const Keyword& b) {
-    const char* astr = a.begin(extension);
-    const char* bstr = b.begin(extension);
-    MOZ_ASSERT(a.length() >= UnicodeKeyLength);
-    MOZ_ASSERT(b.length() >= UnicodeKeyLength);
-
-    return std::char_traits<char>::compare(astr, bstr, UnicodeKeyLength) < 0;
+    auto astr = extension.Subspan(a.begin(), UnicodeKeyLength);
+    auto bstr = extension.Subspan(b.begin(), UnicodeKeyLength);
+    return astr < bstr;
   };
 
   // All keywords are sorted by alphabetical order of keys.
@@ -462,14 +454,13 @@ Result<Ok, Locale::CanonicalizationError> Locale::canonicalizeUnicodeExtension(
   // Append all Unicode extension attributes.
   for (size_t i = 0; i < attributes.length(); i++) {
     const auto& attribute = attributes[i];
+    auto span = extension.Subspan(attribute.begin(), attribute.length());
 
     // Skip duplicate attributes.
     if (i > 0) {
       const auto& lastAttribute = attributes[i - 1];
-      if (attribute.length() == lastAttribute.length() &&
-          std::char_traits<char>::compare(attribute.begin(extension),
-                                          lastAttribute.begin(extension),
-                                          attribute.length()) == 0) {
+      if (span ==
+          extension.Subspan(lastAttribute.begin(), lastAttribute.length())) {
         continue;
       }
       MOZ_ASSERT(attributesLess(lastAttribute, attribute));
@@ -478,7 +469,7 @@ Result<Ok, Locale::CanonicalizationError> Locale::canonicalizeUnicodeExtension(
     if (!sb.append('-')) {
       return Err(CanonicalizationError::OutOfMemory);
     }
-    if (!sb.append(attribute.begin(extension), attribute.length())) {
+    if (!AppendSpan(sb, span)) {
       return Err(CanonicalizationError::OutOfMemory);
     }
   }
@@ -487,43 +478,7 @@ Result<Ok, Locale::CanonicalizationError> Locale::canonicalizeUnicodeExtension(
 
   using StringSpan = Span<const char>;
 
-  static auto isTrue = [](StringSpan type) {
-    static constexpr char True[] = "true";
-    constexpr size_t TrueLength = std::char_traits<char>::length(True);
-    return type.size() == TrueLength &&
-           std::char_traits<char>::compare(type.data(), True, TrueLength) == 0;
-  };
-
-  auto appendKey = [&sb, extension](const Keyword& keyword) {
-    MOZ_ASSERT(keyword.length() == UnicodeKeyLength);
-    return sb.append(keyword.begin(extension), UnicodeKeyLength);
-  };
-
-  auto appendKeyword = [&sb, extension](const Keyword& keyword,
-                                        StringSpan type) {
-    MOZ_ASSERT(keyword.length() > UnicodeKeyLength);
-
-    // Elide the Unicode extension type "true".
-    if (isTrue(type)) {
-      return sb.append(keyword.begin(extension), UnicodeKeyLength);
-    }
-    // Otherwise append the complete Unicode extension keyword.
-    return sb.append(keyword.begin(extension), keyword.length());
-  };
-
-  auto appendReplacement = [&sb, extension](const Keyword& keyword,
-                                            StringSpan replacement) {
-    MOZ_ASSERT(keyword.length() > UnicodeKeyLength);
-
-    // Elide the type "true" if present in the replacement.
-    if (isTrue(replacement)) {
-      return sb.append(keyword.begin(extension), UnicodeKeyLength);
-    }
-    // Otherwise append the Unicode key (including the separator) and the
-    // replaced type.
-    return sb.append(keyword.begin(extension), UnicodeKeyWithSepLength) &&
-           sb.append(replacement.data(), replacement.size());
-  };
+  static constexpr StringSpan True = MakeStringSpan("true");
 
   // Append all Unicode extension keywords.
   for (size_t i = 0; i < keywords.length(); i++) {
@@ -532,9 +487,8 @@ Result<Ok, Locale::CanonicalizationError> Locale::canonicalizeUnicodeExtension(
     // Skip duplicate keywords.
     if (i > 0) {
       const auto& lastKeyword = keywords[i - 1];
-      if (std::char_traits<char>::compare(keyword.begin(extension),
-                                          lastKeyword.begin(extension),
-                                          UnicodeKeyLength) == 0) {
+      if (extension.Subspan(keyword.begin(), UnicodeKeyLength) ==
+          extension.Subspan(lastKeyword.begin(), UnicodeKeyLength)) {
         continue;
       }
       MOZ_ASSERT(keywordsLess(lastKeyword, keyword));
@@ -544,32 +498,52 @@ Result<Ok, Locale::CanonicalizationError> Locale::canonicalizeUnicodeExtension(
       return Err(CanonicalizationError::OutOfMemory);
     }
 
-    if (keyword.length() == UnicodeKeyLength) {
+    StringSpan span = extension.Subspan(keyword.begin(), keyword.length());
+    if (span.size() == UnicodeKeyLength) {
       // Keyword without type value.
-      if (!appendKey(keyword)) {
+      if (!AppendSpan(sb, span)) {
         return Err(CanonicalizationError::OutOfMemory);
       }
     } else {
-      StringSpan key(keyword.begin(extension), UnicodeKeyLength);
-      StringSpan type(keyword.begin(extension) + UnicodeKeyWithSepLength,
-                      keyword.length() - UnicodeKeyWithSepLength);
+      StringSpan key = span.To(UnicodeKeyLength);
+      StringSpan type = span.From(UnicodeKeyWithSepLength);
 
       // Search if there's a replacement for the current Unicode keyword.
       if (const char* replacement = replaceUnicodeExtensionType(key, type)) {
-        if (!appendReplacement(keyword, MakeStringSpan(replacement))) {
-          return Err(CanonicalizationError::OutOfMemory);
+        StringSpan repl = MakeStringSpan(replacement);
+        if (repl == True) {
+          // Elide the type "true" if present in the replacement.
+          if (!AppendSpan(sb, key)) {
+            return Err(CanonicalizationError::OutOfMemory);
+          }
+        } else {
+          // Otherwise append the Unicode key (including the separator) and the
+          // replaced type.
+          if (!AppendSpan(sb, span.To(UnicodeKeyWithSepLength))) {
+            return Err(CanonicalizationError::OutOfMemory);
+          }
+          if (!AppendSpan(sb, repl)) {
+            return Err(CanonicalizationError::OutOfMemory);
+          }
         }
       } else {
-        if (!appendKeyword(keyword, type)) {
-          return Err(CanonicalizationError::OutOfMemory);
+        if (type == True) {
+          // Elide the Unicode extension type "true".
+          if (!AppendSpan(sb, key)) {
+            return Err(CanonicalizationError::OutOfMemory);
+          }
+        } else {
+          // Otherwise append the complete Unicode extension keyword.
+          if (!AppendSpan(sb, span)) {
+            return Err(CanonicalizationError::OutOfMemory);
+          }
         }
       }
     }
   }
 
   // We can keep the previous extension when canonicalization didn't modify it.
-  if (sb.length() != length ||
-      std::char_traits<char>::compare(sb.begin(), extension, length) != 0) {
+  if (static_cast<Span<const char>>(sb) != extension) {
     // Null-terminate the new string and replace the previous extension.
     if (!sb.append('\0')) {
       return Err(CanonicalizationError::OutOfMemory);
@@ -661,31 +635,25 @@ static bool LocaleToString(const Locale& tag, Buffer& sb) {
  */
 Result<Ok, Locale::CanonicalizationError>
 Locale::canonicalizeTransformExtension(UniqueChars& transformExtension) {
-  const char* const extension = transformExtension.get();
+  Span<const char> extension = MakeStringSpan(transformExtension.get());
   MOZ_ASSERT(extension[0] == 't');
   MOZ_ASSERT(extension[1] == '-');
-  MOZ_ASSERT(IsStructurallyValidExtensionTag(MakeStringSpan(extension)));
-
-  size_t length = strlen(extension);
+  MOZ_ASSERT(IsStructurallyValidExtensionTag(extension));
 
   Locale tag;
   LocaleParser::TFieldVector fields;
 
   using TField = LocaleParser::TFieldVector::ElementType;
 
-  if (LocaleParser::parseTransformExtension(Span(extension, length), tag,
-                                            fields)
-          .isErr()) {
+  if (LocaleParser::parseTransformExtension(extension, tag, fields).isErr()) {
     MOZ_ASSERT_UNREACHABLE("unexpected invalid transform extension subtag");
     return Err(CanonicalizationError::InternalError);
   }
 
   auto tfieldLess = [extension](const TField& a, const TField& b) {
-    MOZ_ASSERT(a.length() > TransformKeyLength);
-    MOZ_ASSERT(b.length() > TransformKeyLength);
-    const char* astr = a.begin(extension);
-    const char* bstr = b.begin(extension);
-    return std::char_traits<char>::compare(astr, bstr, TransformKeyLength) < 0;
+    auto astr = extension.Subspan(a.begin(), TransformKeyLength);
+    auto bstr = extension.Subspan(b.begin(), TransformKeyLength);
+    return astr < bstr;
   };
 
   // All tfields are sorted by alphabetical order of their keys.
@@ -737,28 +705,27 @@ Locale::canonicalizeTransformExtension(UniqueChars& transformExtension) {
       return Err(CanonicalizationError::OutOfMemory);
     }
 
-    StringSpan key(field.begin(extension), TransformKeyLength);
-    StringSpan value(field.begin(extension) + TransformKeyWithSepLength,
-                     field.length() - TransformKeyWithSepLength);
+    StringSpan span = extension.Subspan(field.begin(), field.length());
+    StringSpan key = span.To(TransformKeyLength);
+    StringSpan value = span.From(TransformKeyWithSepLength);
 
     // Search if there's a replacement for the current transform keyword.
     if (const char* replacement = replaceTransformExtensionType(key, value)) {
-      if (!sb.append(field.begin(extension), TransformKeyWithSepLength)) {
+      if (!AppendSpan(sb, span.To(TransformKeyWithSepLength))) {
         return Err(CanonicalizationError::OutOfMemory);
       }
-      if (!sb.append(replacement, strlen(replacement))) {
+      if (!AppendSpan(sb, MakeStringSpan(replacement))) {
         return Err(CanonicalizationError::OutOfMemory);
       }
     } else {
-      if (!sb.append(field.begin(extension), field.length())) {
+      if (!AppendSpan(sb, span)) {
         return Err(CanonicalizationError::OutOfMemory);
       }
     }
   }
 
   // We can keep the previous extension when canonicalization didn't modify it.
-  if (sb.length() != length ||
-      std::char_traits<char>::compare(sb.begin(), extension, length) != 0) {
+  if (static_cast<Span<const char>>(sb) != extension) {
     // Null-terminate the new string and replace the previous extension.
     if (!sb.append('\0')) {
       return Err(CanonicalizationError::OutOfMemory);
@@ -841,15 +808,15 @@ static bool AssignFromLocaleId(LocaleId& localeId, Locale& tag) {
   // ICU replaces "und" with the empty string, which means "und" becomes "" and
   // "und-Latn" becomes "-Latn". Handle this case separately.
   if (localeId.empty() || localeId[0] == '-') {
-    static constexpr char und[] = "und";
-    constexpr size_t length = std::char_traits<char>::length(und);
+    static constexpr auto und = MakeStringSpan("und");
+    constexpr size_t length = und.size();
 
     // Insert "und" in front of the locale ID.
     if (!localeId.growBy(length)) {
       return false;
     }
     memmove(localeId.begin() + length, localeId.begin(), localeId.length());
-    memmove(localeId.begin(), und, length);
+    memmove(localeId.begin(), und.data(), length);
   }
 
   // Retrieve the language, script, and region subtags from the locale ID
