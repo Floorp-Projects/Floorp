@@ -250,7 +250,12 @@ class MOZ_STACK_CLASS Locale final {
   const RegionSubtag& region() const { return region_; }
   const auto& variants() const { return variants_; }
   const auto& extensions() const { return extensions_; }
-  const char* privateuse() const { return privateuse_.get(); }
+  Maybe<Span<const char>> privateuse() const {
+    if (const char* p = privateuse_.get()) {
+      return Some(MakeStringSpan(p));
+    }
+    return Nothing();
+  }
 
   /**
    * Return the Unicode extension subtag or Nothing if not present.
