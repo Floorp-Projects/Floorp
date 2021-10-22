@@ -272,8 +272,7 @@ nsresult txStylesheetCompiler::startElementInternal(
     }
   }
 
-  rv = pushPtr(const_cast<txElementHandler*>(handler), eElementHandler);
-  NS_ENSURE_SUCCESS(rv, rv);
+  pushPtr(const_cast<txElementHandler*>(handler), eElementHandler);
 
   mElementContext->mDepth++;
 
@@ -530,9 +529,7 @@ txStylesheetCompilerState::~txStylesheetCompilerState() {
 }
 
 nsresult txStylesheetCompilerState::pushHandlerTable(txHandlerTable* aTable) {
-  nsresult rv = pushPtr(mHandlerTable, eHandlerTable);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  pushPtr(mHandlerTable, eHandlerTable);
   mHandlerTable = aTable;
 
   return NS_OK;
@@ -543,9 +540,7 @@ void txStylesheetCompilerState::popHandlerTable() {
 }
 
 nsresult txStylesheetCompilerState::pushSorter(txPushNewContext* aSorter) {
-  nsresult rv = pushPtr(mSorter, ePushNewContext);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  pushPtr(mSorter, ePushNewContext);
   mSorter = aSorter;
 
   return NS_OK;
@@ -579,14 +574,13 @@ txObject* txStylesheetCompilerState::popObject() {
   return static_cast<txObject*>(mObjectStack.pop());
 }
 
-nsresult txStylesheetCompilerState::pushPtr(void* aPtr, enumStackType aType) {
+void txStylesheetCompilerState::pushPtr(void* aPtr, enumStackType aType) {
 #ifdef TX_DEBUG_STACK
   MOZ_LOG(txLog::xslt, LogLevel::Debug,
           ("pushPtr: 0x%x type %u\n", aPtr, aType));
 #endif
   mTypeStack.AppendElement(aType);
   mOtherStack.push(aPtr);
-  return NS_OK;
 }
 
 void* txStylesheetCompilerState::popPtr(enumStackType aType) {
