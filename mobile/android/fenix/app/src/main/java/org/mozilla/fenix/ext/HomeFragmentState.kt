@@ -32,8 +32,8 @@ fun HomeFragmentState.getFilteredStories(
 
     val oldestSortedCategories = pocketStoriesCategoriesSelections
         .sortedByDescending { it.selectionTimestamp }
-        .map { selectedCategory ->
-            pocketStoriesCategories.first {
+        .mapNotNull { selectedCategory ->
+            pocketStoriesCategories.find {
                 it.name == selectedCategory.name
             }
         }

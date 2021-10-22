@@ -258,6 +258,22 @@ class HomeFragmentStateTest {
         assertSame(firstCategory.stories[0], result[4])
         assertSame(firstCategory.stories[2], result[5])
     }
+
+    @Test
+    fun `GIVEN old selections of categories which do not exist anymore WHEN getFilteredStories is called THEN ignore not found selections`() {
+        val homeState = HomeFragmentState(
+            pocketStoriesCategories = listOf(otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategory),
+            pocketStoriesCategoriesSelections = listOf(
+                PocketRecommendedStoriesSelectedCategory("unexistent"),
+                PocketRecommendedStoriesSelectedCategory(anotherStoriesCategory.name)
+            )
+        )
+
+        val result = homeState.getFilteredStories(6)
+
+        assertEquals(3, result.size)
+        assertNull(result.firstOrNull { it.category != anotherStoriesCategory.name })
+    }
 }
 
 private fun getFakePocketStories(
