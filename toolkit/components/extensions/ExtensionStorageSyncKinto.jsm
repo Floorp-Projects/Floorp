@@ -8,9 +8,13 @@
 // TODO:
 // * find out how the Chrome implementation deals with conflicts
 
-/* exported extensionIdToCollectionId */
+// TODO bug 1637465: Remove the Kinto-based storage implementation.
 
-var EXPORTED_SYMBOLS = ["ExtensionStorageSync", "extensionStorageSync"];
+var EXPORTED_SYMBOLS = [
+  "ExtensionStorageSync",
+  "KintoStorageTestUtils",
+  "extensionStorageSync",
+];
 
 const global = this;
 
@@ -1368,3 +1372,14 @@ class ExtensionStorageSync {
 }
 this.ExtensionStorageSync = ExtensionStorageSync;
 extensionStorageSync = new ExtensionStorageSync(_fxaService);
+
+// For test use only.
+const KintoStorageTestUtils = {
+  CollectionKeyEncryptionRemoteTransformer,
+  CryptoCollection,
+  EncryptionRemoteTransformer,
+  KeyRingEncryptionRemoteTransformer,
+  cleanUpForContext,
+  idToKey,
+  keyToId,
+};
