@@ -7878,8 +7878,7 @@ void CodeGenerator::visitGetNextEntryForIterator(
 }
 
 // The point of these is to inform Ion of where these values already are; they
-// don't normally generate code.  Still, visitWasmRegisterResult is
-// per-platform.
+// don't normally generate (much) code.
 void CodeGenerator::visitWasmRegisterPairResult(LWasmRegisterPairResult* lir) {}
 void CodeGenerator::visitWasmStackResult(LWasmStackResult* lir) {}
 void CodeGenerator::visitWasmStackResult64(LWasmStackResult64* lir) {}
@@ -7899,6 +7898,16 @@ void CodeGenerator::visitWasmStackResultArea(LWasmStackResultArea* lir) {
       masm.storePtr(temp, ToAddress(iter.alloc()));
     }
   }
+}
+
+void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {
+#ifdef JS_64BIT
+  if (MWasmRegisterResult* mir = lir->mir()) {
+    if (mir->type() == MIRType::Int32) {
+      masm.widenInt32(ToRegister(lir->output()));
+    }
+  }
+#endif
 }
 
 void CodeGenerator::visitWasmCall(LWasmCall* lir) {

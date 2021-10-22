@@ -16,7 +16,7 @@ typedef record<DOMString, sequence<DOMString>> AttributeMatchList;
 
 [Exposed=Window, SecureContext, Pref="dom.security.sanitizer.enabled"]
 interface Sanitizer {
-  [Throws]
+  [Throws, UseCounter]
   constructor(optional SanitizerConfig sanitizerConfig = {});
   [UseCounter, Throws]
   DocumentFragment sanitize(SanitizerInput input);

@@ -8,10 +8,12 @@
 
 // Test that the add button is hidden for the indexedDB storage type.
 add_task(async function() {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-empty-objectstores.html");
+  await openTabAndSetupStorage(
+    MAIN_DOMAIN_SECURED + "storage-empty-objectstores.html"
+  );
 
   info("Select an indexedDB item");
-  const idbItem = ["indexedDB", "http://test1.example.org", "idb1 (default)"];
+  const idbItem = ["indexedDB", "https://test1.example.org", "idb1 (default)"];
   await selectTreeItem(idbItem);
   checkAddButtonState({ expectHidden: true });
 
@@ -19,7 +21,7 @@ add_task(async function() {
   // find the add button is not outdated. Other storage types have more detailed
   // tests focused on the add feature.
   info("Select a cookie item");
-  const cookieItem = ["cookies", "http://test1.example.org"];
+  const cookieItem = ["cookies", "https://test1.example.org"];
   await selectTreeItem(cookieItem);
   checkAddButtonState({ expectHidden: false });
 });

@@ -33,12 +33,11 @@ class nsNameSpaceManager final {
  public:
   NS_INLINE_DECL_REFCOUNTING(nsNameSpaceManager)
 
-  virtual nsresult RegisterNameSpace(const nsAString& aURI,
-                                     int32_t& aNameSpaceID);
+  nsresult RegisterNameSpace(const nsAString& aURI, int32_t& aNameSpaceID);
   nsresult RegisterNameSpace(already_AddRefed<nsAtom> aURI,
                              int32_t& aNameSpaceID);
 
-  virtual nsresult GetNameSpaceURI(int32_t aNameSpaceID, nsAString& aURI);
+  nsresult GetNameSpaceURI(int32_t aNameSpaceID, nsAString& aURI);
 
   // Returns the atom for the namespace URI associated with the given ID. The
   // ID must be within range and not be kNameSpaceID_None (i.e. zero);

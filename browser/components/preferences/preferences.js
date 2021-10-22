@@ -41,12 +41,15 @@ XPCOMUtils.defineLazyGetter(this, "gSubDialog", function() {
         "chrome://browser/skin/preferences/dialog.css",
         "chrome://browser/skin/preferences/preferences.css",
       ],
-      resizeCallback: ({ title, frame }) => {
+      resizeCallback: async ({ title, frame }) => {
         // Search within main document and highlight matched keyword.
-        gSearchResultsPane.searchWithinNode(title, gSearchResultsPane.query);
+        await gSearchResultsPane.searchWithinNode(
+          title,
+          gSearchResultsPane.query
+        );
 
         // Search within sub-dialog document and highlight matched keyword.
-        gSearchResultsPane.searchWithinNode(
+        await gSearchResultsPane.searchWithinNode(
           frame.contentDocument.firstElementChild,
           gSearchResultsPane.query
         );

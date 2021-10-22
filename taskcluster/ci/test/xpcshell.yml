@@ -4,10 +4,6 @@
 ---
 job-defaults:
     suite: xpcshell
-    variants:
-        by-test-platform:
-            linux1804-64-qr/debug: ['fission', 'socketprocess_networking']
-            default: ['fission']
     target:
         by-test-platform:
             android-em-7.*: geckoview-androidTest.apk
@@ -44,9 +40,16 @@ job-defaults:
 xpcshell:
     description: "xpcshell test run"
     treeherder-symbol: X(X)
+    variants:
+        - fission
+        - socketprocess_networking
     run-on-projects:
         by-variant:
             fission: []
+            socketprocess_networking:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
             default:
                 by-test-platform:
                     .*-tsan-qr/opt: ['trunk']

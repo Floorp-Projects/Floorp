@@ -2,10 +2,10 @@
 "use strict";
 
 add_task(async function() {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-search.html");
+  await openTabAndSetupStorage(MAIN_DOMAIN_SECURED + "storage-search.html");
 
   gUI.tree.expandAll();
-  await selectTreeItem(["localStorage", "http://test1.example.org"]);
+  await selectTreeItem(["localStorage", "https://test1.example.org"]);
 
   await focusSearchBoxUsingShortcut(gPanelWindow);
   ok(

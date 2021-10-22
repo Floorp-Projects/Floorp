@@ -794,8 +794,8 @@ struct BaseCompiler final {
   // hot enough to warrant inlining at the outermost level.
 
   inline void needResultRegisters(ResultType type, ResultRegKind which);
-#ifdef JS_CODEGEN_X64
-  inline void maskResultRegisters(ResultType type);
+#ifdef JS_64BIT
+  inline void widenInt32ResultRegisters(ResultType type);
 #endif
   inline void freeResultRegisters(ResultType type, ResultRegKind which);
   inline void needIntegerResultRegisters(ResultType type);

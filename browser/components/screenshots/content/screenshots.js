@@ -45,11 +45,6 @@ class ScreenshotsUI extends HTMLElement {
   }
 
   close() {
-    let params = new URLSearchParams(location.search);
-    let browsingContextId = parseInt(params.get("browsingContextId"), 10);
-    let browsingContext = BrowsingContext.get(browsingContextId);
-    let win = browsingContext.top.embedderElement.ownerGlobal;
-    Services.obs.notifyObservers(win, "toggle-screenshot-disable", "false");
     URL.revokeObjectURL(document.getElementById("placeholder-image").src);
     window.close();
   }

@@ -62,6 +62,7 @@ const DEBUGGERLOG_PREF = "devtools.debugger.log";
 const CACHES_ON_HTTP_PREF = "dom.caches.testing.enabled";
 const PATH = "browser/devtools/client/storage/test/";
 const MAIN_DOMAIN = "http://test1.example.org/" + PATH;
+const MAIN_DOMAIN_SECURED = "https://test1.example.org/" + PATH;
 const MAIN_DOMAIN_WITH_PORT = "http://test1.example.org:8000/" + PATH;
 const ALT_DOMAIN = "http://sectest1.example.org/" + PATH;
 const ALT_DOMAIN_SECURED = "https://sectest1.example.org:443/" + PATH;
@@ -1145,9 +1146,17 @@ function hasStorageData(name, value) {
  * Returns an URL of a page that uses the document-builder to generate its content
  * @param {String} domain
  * @param {String} html
+ * @param {String} protocol
  */
-function buildURLWithContent(domain, html) {
-  return `http://${domain}/document-builder.sjs?html=${encodeURI(html)}`;
+function buildURLWithContent(domain, html, protocol = "https") {
+  return `${protocol}://${domain}/document-builder.sjs?html=${encodeURI(html)}`;
+}
+
+/**
+ * Same as buildURLWithContent, but will use http instead of https.
+ */
+function buildInsecureURLWithContent(domain, html) {
+  return buildURLWithContent(domain, html, "http");
 }
 
 /**

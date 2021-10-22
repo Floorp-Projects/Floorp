@@ -40,8 +40,16 @@ downloads-cmd-use-system-default =
   .label = Open In System Viewer
   .accesskey = V
 
+# We can use the same accesskey as downloads-cmd-always-open-similar-files.
+# Both should not be visible in the downloads context menu at the same time.
 downloads-cmd-always-use-system-default =
   .label = Always Open In System Viewer
+  .accesskey = w
+
+# We can use the same accesskey as downloads-cmd-always-use-system-default.
+# Both should not be visible in the downloads context menu at the same time.
+downloads-cmd-always-open-similar-files =
+  .label = Always Open Similar Files
   .accesskey = w
 
 downloads-cmd-show-button-2 =

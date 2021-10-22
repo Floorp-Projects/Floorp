@@ -379,6 +379,9 @@ class JS_PUBLIC_API ArrayBufferView : public ArrayBufferOrView {
  public:
   static inline ArrayBufferView fromObject(JSObject* unwrapped);
   static ArrayBufferView unwrap(JSObject* maybeWrapped) {
+    if (!maybeWrapped) {
+      return ArrayBufferView(nullptr);
+    }
     ArrayBufferView view = fromObject(maybeWrapped);
     if (view) {
       return view;
@@ -415,6 +418,9 @@ class JS_PUBLIC_API DataView : public ArrayBufferView {
   }
 
   static DataView unwrap(JSObject* maybeWrapped) {
+    if (!maybeWrapped) {
+      return DataView(nullptr);
+    }
     DataView view = fromObject(maybeWrapped);
     if (view) {
       return view;
@@ -434,6 +440,9 @@ class JS_PUBLIC_API TypedArray_base : public ArrayBufferView {
   static TypedArray_base fromObject(JSObject* unwrapped);
 
   static TypedArray_base unwrap(JSObject* maybeWrapped) {
+    if (!maybeWrapped) {
+      return TypedArray_base(nullptr);
+    }
     TypedArray_base view = fromObject(maybeWrapped);
     if (view) {
       return view;
@@ -478,8 +487,14 @@ class JS_PUBLIC_API TypedArray : public TypedArray_base {
   }
 
   static TypedArray unwrap(JSObject* maybeWrapped) {
+    if (!maybeWrapped) {
+      return TypedArray(nullptr);
+    }
     TypedArray view = fromObject(maybeWrapped);
-    return view ? view : fromObject(js::CheckedUnwrapStatic(maybeWrapped));
+    if (view) {
+      return view;
+    }
+    return fromObject(js::CheckedUnwrapStatic(maybeWrapped));
   }
 
   // Return a pointer to the start of the data referenced by a typed array. The

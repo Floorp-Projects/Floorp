@@ -454,9 +454,6 @@ void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect64(
   masm.pop(edx);
 }
 
-// See ../CodeGenerator.cpp for more information.
-void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {}
-
 void CodeGenerator::visitWasmUint32ToDouble(LWasmUint32ToDouble* lir) {
   Register input = ToRegister(lir->input());
   Register temp = ToRegister(lir->temp());

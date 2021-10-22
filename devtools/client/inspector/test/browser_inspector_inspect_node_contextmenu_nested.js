@@ -14,27 +14,27 @@
 
 // Build the remote_frame1 hierarchy
 const NESTED_SAME_PROCESS_FRAME_URI =
-  "http://example.com/document-builder.sjs?html=" +
+  "https://example.com/document-builder.sjs?html=" +
   encodeURI(
     `<div id="in-nested_same_process_frame">in-nested_same_process_frame`
   );
 const REMOTE_FRAME1_HTML = `<iframe id="nested_same_process_frame" src="${NESTED_SAME_PROCESS_FRAME_URI}"></iframe>`;
 const REMOTE_FRAME1_URI =
-  "http://example.com/document-builder.sjs?html=" +
+  "https://example.com/document-builder.sjs?html=" +
   encodeURI(REMOTE_FRAME1_HTML);
 
 // Build the same_process_frame hierarchy
 const SAME_PROCESS_FRAME_URI =
-  "http://example.net/document-builder.sjs?html=" +
+  "https://example.net/document-builder.sjs?html=" +
   encodeURI(`<div id="in-same_process_frame">in-same_process_frame`);
 
 // Build the remote_frame2 hierarchy
 const NESTED_REMOTE_FRAME_URI =
-  "http://example.com/document-builder.sjs?html=" +
+  "https://example.com/document-builder.sjs?html=" +
   encodeURI(`<div id="in-nested_remote_frame">in-nested_remote_frame`);
 const REMOTE_FRAME2_HTML = `<iframe id="nested_remote_frame" src="${NESTED_REMOTE_FRAME_URI}"></iframe>`;
 const REMOTE_FRAME2_URI =
-  "http://example.org/document-builder.sjs?html=" +
+  "https://example.org/document-builder.sjs?html=" +
   encodeURI(REMOTE_FRAME2_HTML);
 
 // Assemble all frames in a single test page.
@@ -44,7 +44,7 @@ const HTML = `
   <iframe id="remote_frame2" src="${REMOTE_FRAME2_URI}"></iframe>
 `;
 const TEST_URI =
-  "http://example.net/document-builder.sjs?html=" + encodeURI(HTML);
+  "https://example.net/document-builder.sjs?html=" + encodeURI(HTML);
 
 add_task(async function() {
   const tab = await addTab(TEST_URI);

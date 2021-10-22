@@ -51,9 +51,10 @@ extern mozilla::LazyLogModule gWidgetLog;
 extern mozilla::LazyLogModule gWidgetDragLog;
 extern mozilla::LazyLogModule gWidgetPopupLog;
 
-#  define LOG(...)                                    \
+#  define LOG(str, ...)                               \
     MOZ_LOG(IsPopup() ? gWidgetPopupLog : gWidgetLog, \
-            mozilla::LogLevel::Debug, (__VA_ARGS__))
+            mozilla::LogLevel::Debug,                 \
+            ("%s: " str, GetDebugTag().get(), ##__VA_ARGS__))
 #  define LOGW(...) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 #  define LOGDRAG(...) \
     MOZ_LOG(gWidgetDragLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
@@ -257,11 +258,13 @@ class nsWindow final : public nsBaseWidget {
   GtkWidget* GetMozContainerWidget();
   GdkWindow* GetGdkWindow() { return mGdkWindow; }
   GtkWidget* GetGtkWidget() { return mShell; }
-  nsIFrame* GetFrame();
-  bool IsDestroyed() { return mIsDestroyed; }
-  bool IsPopup();
-  bool IsWaylandPopup();
-  bool IsPIPWindow() { return mIsPIPWindow; };
+  nsIFrame* GetFrame() const;
+  bool IsDestroyed() const { return mIsDestroyed; }
+  bool IsPopup() const;
+  bool IsWaylandPopup() const;
+  bool IsPIPWindow() const { return mIsPIPWindow; };
+
+  nsAutoCString GetDebugTag() const;
 
   void DispatchDragEvent(mozilla::EventMessage aMsg,
                          const LayoutDeviceIntPoint& aRefPoint, guint aTime);
@@ -655,7 +658,7 @@ class nsWindow final : public nsBaseWidget {
   bool WaylandPopupFitsParentWindow(GdkRectangle* aSize);
   nsWindow* WaylandPopupFindLast(nsWindow* aPopup);
   GtkWindow* GetCurrentTopmostWindow();
-  nsCString GetWindowNodeName();
+  nsAutoCString GetFrameTag() const;
   nsCString GetPopupTypeName();
   bool IsPopupDirectionRTL();
 

@@ -8,6 +8,7 @@ Library("xretest")
 
 UNIFIED_SOURCES = [
     "TestCompatVersionCompare.cpp",
+    "TestGeckoArgs.cpp",
 ]
 
 LOCAL_INCLUDES += [

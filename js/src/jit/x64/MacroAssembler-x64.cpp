@@ -1182,6 +1182,10 @@ void MacroAssembler::wasmTruncateFloat32ToUInt64(
   bind(oolRejoin);
 }
 
+void MacroAssembler::widenInt32(Register r) {
+  move32To64ZeroExtend(r, Register64(r));
+}
+
 // ========================================================================
 // Convert floating point.
 
