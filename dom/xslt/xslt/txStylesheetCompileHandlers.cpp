@@ -1167,11 +1167,7 @@ static nsresult txFnStartApplyTemplates(int32_t aNamespaceID,
                     mode);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  instr = MakeUnique<txApplyTemplates>(mode);
-  rv = aState.pushObject(instr.get());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  Unused << instr.release();
+  aState.pushObject(new txApplyTemplates(mode));
 
   UniquePtr<Expr> select;
   rv = getExprAttr(aAttributes, aAttrCount, nsGkAtoms::select, false, aState,
@@ -1186,9 +1182,7 @@ static nsresult txFnStartApplyTemplates(int32_t aNamespaceID,
   UniquePtr<txPushNewContext> pushcontext(
       new txPushNewContext(std::move(select)));
   aState.pushSorter(pushcontext.get());
-
-  rv = aState.pushObject(pushcontext.release());
-  NS_ENSURE_SUCCESS(rv, rv);
+  aState.pushObject(pushcontext.release());
 
   aState.pushHandlerTable(gTxApplyTemplatesHandler);
 
@@ -1246,12 +1240,8 @@ static nsresult txFnStartAttribute(int32_t aNamespaceID, nsAtom* aLocalName,
                   nspace);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  instr = MakeUnique<txAttribute>(std::move(name), std::move(nspace),
-                                  aState.mElementContext->mMappings);
-  rv = aState.pushObject(instr.get());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  Unused << instr.release();
+  aState.pushObject(new txAttribute(std::move(name), std::move(nspace),
+                                    aState.mElementContext->mMappings));
 
   // We need to push the template-handler since the current might be
   // the attributeset-handler
@@ -1292,11 +1282,7 @@ static nsresult txFnStartCallTemplate(int32_t aNamespaceID, nsAtom* aLocalName,
                     name);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  instr = MakeUnique<txCallTemplate>(name);
-  rv = aState.pushObject(instr.get());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  Unused << instr.release();
+  aState.pushObject(new txCallTemplate(name));
 
   aState.pushHandlerTable(gTxCallTemplateHandler);
 
@@ -1634,11 +1620,7 @@ static nsresult txFnStartMessage(int32_t aNamespaceID, nsAtom* aLocalName,
                              false, aState, term);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  instr = MakeUnique<txMessage>(term == eTrue);
-  rv = aState.pushObject(instr.get());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  Unused << instr.release();
+  aState.pushObject(new txMessage(term == eTrue));
 
   return NS_OK;
 }
@@ -1794,10 +1776,7 @@ static nsresult txFnStartParam(int32_t aNamespaceID, nsAtom* aLocalName,
     aState.pushHandlerTable(gTxVariableHandler);
   }
 
-  rv = aState.pushObject(var.get());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  Unused << var.release();
+  aState.pushObject(var.release());
 
   return NS_OK;
 }
@@ -1845,11 +1824,7 @@ static nsresult txFnStartPI(int32_t aNamespaceID, nsAtom* aLocalName,
       getAVTAttr(aAttributes, aAttrCount, nsGkAtoms::name, true, aState, name);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  instr = MakeUnique<txProcessingInstruction>(std::move(name));
-  rv = aState.pushObject(instr.get());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  Unused << instr.release();
+  aState.pushObject(new txProcessingInstruction(std::move(name)));
 
   return NS_OK;
 }
@@ -2023,10 +1998,7 @@ static nsresult txFnStartVariable(int32_t aNamespaceID, nsAtom* aLocalName,
     aState.pushHandlerTable(gTxVariableHandler);
   }
 
-  rv = aState.pushObject(var.get());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  Unused << var.release();
+  aState.pushObject(var.release());
 
   return NS_OK;
 }
@@ -2152,10 +2124,7 @@ static nsresult txFnStartWithParam(int32_t aNamespaceID, nsAtom* aLocalName,
     aState.pushHandlerTable(gTxVariableHandler);
   }
 
-  rv = aState.pushObject(var.get());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  Unused << var.release();
+  aState.pushObject(var.release());
 
   return NS_OK;
 }

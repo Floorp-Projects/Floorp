@@ -93,7 +93,7 @@ class txStylesheetCompilerState : public txIParseContext {
   void popSorter();
   nsresult pushChooseGotoList();
   void popChooseGotoList();
-  nsresult pushObject(txObject* aObject);
+  void pushObject(txObject* aObject);
   txObject* popObject();
   void pushPtr(void* aPtr, enumStackType aType);
   void* popPtr(enumStackType aType);

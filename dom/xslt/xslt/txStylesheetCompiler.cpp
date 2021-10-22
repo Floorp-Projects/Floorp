@@ -416,10 +416,7 @@ nsresult txStylesheetCompiler::ensureNewElementContext() {
   }
 
   UniquePtr<txElementContext> context(new txElementContext(*mElementContext));
-  nsresult rv = pushObject(mElementContext.get());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  Unused << mElementContext.release();
+  pushObject(mElementContext.release());
   mElementContext = std::move(context);
 
   return NS_OK;
@@ -511,8 +508,7 @@ nsresult txStylesheetCompilerState::init(const nsAString& aStylesheetURI,
   NS_ENSURE_TRUE(mElementContext->mMappings, NS_ERROR_OUT_OF_MEMORY);
 
   // Push the "old" txElementContext
-  rv = pushObject(0);
-  NS_ENSURE_SUCCESS(rv, rv);
+  pushObject(nullptr);
 
   return NS_OK;
 }
@@ -547,10 +543,7 @@ void txStylesheetCompilerState::popSorter() {
 }
 
 nsresult txStylesheetCompilerState::pushChooseGotoList() {
-  nsresult rv = pushObject(mChooseGotoList.get());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  Unused << mChooseGotoList.release();
+  pushObject(mChooseGotoList.release());
   mChooseGotoList = MakeUnique<txList>();
 
   return NS_OK;
@@ -561,9 +554,8 @@ void txStylesheetCompilerState::popChooseGotoList() {
   mChooseGotoList = WrapUnique(static_cast<txList*>(popObject()));
 }
 
-nsresult txStylesheetCompilerState::pushObject(txObject* aObject) {
+void txStylesheetCompilerState::pushObject(txObject* aObject) {
   mObjectStack.push(aObject);
-  return NS_OK;
 }
 
 txObject* txStylesheetCompilerState::popObject() {
