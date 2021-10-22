@@ -1330,8 +1330,7 @@ bool nsHttpTransaction::ShouldRestartOn0RttError(nsresult reason) {
        this, mEarlyDataWasAvailable, static_cast<uint32_t>(reason)));
   return StaticPrefs::network_http_early_data_disable_on_error() &&
          mEarlyDataWasAvailable &&
-         (reason ==
-          psm::GetXPCOMFromNSSError(SSL_ERROR_PROTOCOL_VERSION_ALERT));
+         SecurityErrorToBeHandledByTransaction(reason);
 }
 
 void nsHttpTransaction::Close(nsresult reason) {
