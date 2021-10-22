@@ -158,12 +158,12 @@ ptrdiff_t Locale::unicodeExtensionIndex() const {
   return -1;
 }
 
-const char* Locale::unicodeExtension() const {
+Maybe<Span<const char>> Locale::unicodeExtension() const {
   ptrdiff_t index = unicodeExtensionIndex();
   if (index >= 0) {
-    return extensions()[index].get();
+    return Some(MakeStringSpan(extensions()[index].get()));
   }
-  return nullptr;
+  return Nothing();
 }
 
 ICUResult Locale::setUnicodeExtension(Span<const char> extension) {
