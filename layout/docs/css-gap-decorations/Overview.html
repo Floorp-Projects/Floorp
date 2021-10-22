@@ -10,7 +10,6 @@
   <link href="../csslogo.ico" rel="shortcut icon" type="image/x-icon">
   <link href="https://www.w3.org/StyleSheets/TR/2016/W3C-ED" rel="stylesheet" type="text/css">
   <meta content="Bikeshed version d7036035b, updated Fri Oct 8 17:07:11 2021 -0700" name="generator">
-  <meta content="0a9fde1a3d6aed077d346386a307b9d39ddb08d2" name="document-revision">
 <style>/* style-autolinks */
 
 .css.css, .property.property, .descriptor.descriptor {
@@ -702,7 +701,7 @@ dd:not(:last-child) > .wpt-tests-block:not([open]):last-child {
   <div class="head">
    <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2016/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">CSS Gap Decorations</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Editor’s Draft, <time class="dt-updated" datetime="2021-10-20">20 October 2021</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Editor’s Draft, <time class="dt-updated" datetime="2021-10-21">21 October 2021</time></span></h2>
    <details>
     <summary>Specification Metadata</summary>
     <div data-fill-with="spec-metadata">
@@ -798,7 +797,7 @@ on screen, on paper, etc.
           <li><a href="#rule-extent-subgrid"><span class="secno">6.1.1.1</span> <span class="content">Subgrid</span></a>
           <li><a href="#rule-extent-masonry"><span class="secno">6.1.1.2</span> <span class="content">Masonry</span></a>
          </ol>
-        <li><a href="#rule-extent-flexbox"><span class="secno">6.1.2</span> <span class="content">Flexbox Containers</span></a>
+        <li><a href="#rule-extent-flexbox"><span class="secno">6.1.2</span> <span class="content">Flex Containers</span></a>
         <li><a href="#rule-extent-table"><span class="secno">6.1.3</span> <span class="content">Table Containers</span></a>
         <li><a href="#rule-extent-table-row-group"><span class="secno">6.1.4</span> <span class="content">Table Row Group Containers</span></a>
         <li><a href="#rule-extent-multicol"><span class="secno">6.1.5</span> <span class="content">Multi-Column Containers</span></a>
@@ -1201,7 +1200,7 @@ on screen, on paper, etc.
    <h3 class="heading settled" data-level="3.4" id="resolving-position-and-size-algo"><span class="secno">3.4. </span><span class="content">Resolving a rule’s position and size</span><a class="self-link" href="#resolving-position-and-size-algo"></a></h3>
    <p>Given a triplet of values: inset-start/end and a size for an axis, <span class="css">auto</span> values
     are resolved so that the sum of the three values equals the <a data-link-type="dfn" href="#rule-containing-rectangle①" id="ref-for-rule-containing-rectangle①⑥">rule containing rectangle</a> size in
-    the relevant axis.  These are the rules for resolving them:</p>
+    the same axis.  These are the rules for resolving them:</p>
    <ol id="rule-sizing">
     <li>if all the values are <span class="css">auto</span> then set both inset values to zero and solve for size 
     <li>if none of the values are <span class="css">auto</span> then the situation is over-constrained: solve by
@@ -1766,7 +1765,7 @@ on screen, on paper, etc.
    <p>These properties specify the extent of the rule in its <a data-link-type="dfn" href="#longitudinal-axis" id="ref-for-longitudinal-axis⑥">longitudinal axis</a>. <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="segment">segment</dfn> is an abstract term to describe the distance between two consecutive gaps.
     An extent can cover one or more segments and the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="extent-size">extent size</dfn> is the distance between
     the start position of the start-most of those segments and the end position of the end-most segment.
-    We’ll define '<a class="property" data-link-type="propdesc">segment</a> in more detail in the container specific sub-sections that follow.</p>
+    We’ll define <span class="css">segment</span> in more detail in the container-specific sub-sections that follow.</p>
    <p>The <span class="css">allow-overlap</span> only affects rules in grid and table layout with spanning items/cells.
     It controls whether a rule should continue through such a span.</p>
    <p class="note" role="note"><span>Note:</span> It’s only an item’s <a href="https://drafts.csswg.org/css-grid/#grid-span">grid span</a> that are considered when determining if an item is spanning or not, not its layout position or size.</p>
@@ -1791,8 +1790,8 @@ on screen, on paper, etc.
    <p><a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#collapsed-track" id="ref-for-collapsed-track">Collapsed tracks</a> don’t count -- they don’t generate gaps and thus don’t have gap rules.
     They generally behave as if they don’t exist as far as rules are concerned.
     The <a href="examples/grid-segment-002.html">example</a> below also
-    illustrates that the position and size of the items doesn’t affect the rules, it’s only the size
-    of the <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-cell" id="ref-for-grid-cell①">grid cells</a> that counts.</p>
+    illustrates that the position and size of the items don’t affect the rules; it’s only the position and size
+    of the <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-cell" id="ref-for-grid-cell①">grid cells</a> that count.</p>
    <aside class="example" id="example-9818bbbb">
     <a class="self-link" href="#example-9818bbbb"></a> 
     <figure>
@@ -1801,8 +1800,8 @@ on screen, on paper, etc.
     </figure>
    </aside>
    <p>Rules behave symmetrically in the grid axes, but a <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-3/#masonry-axis" id="ref-for-masonry-axis">masonry axis</a> in a <a href="https://drafts.csswg.org/css-grid-3">masonry grid layout</a> behaves
-    differently, we’ll cover that case in a separate <a href="#rule-extent-masonry">section</a> later.</p>
-   <p>In a grid axis, rules are created between adjacent (non-collapsed) tracks and their <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size">extent size</a> are controlled by the <span class="css">column-rule-extent</span>/<span class="css">row-rule-extent</span> values as follows:</p>
+    differently; we’ll cover that case in a separate <a href="#rule-extent-masonry">section</a> later.</p>
+   <p>In a grid axis, rules are created between adjacent (non-collapsed) tracks and their <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size">extent sizes</a> are controlled by the <span class="css">column-rule-extent</span>/<span class="css">row-rule-extent</span> values as follows:</p>
    <dl>
     <dt><dfn class="css" data-dfn-for="row-rule-extent" data-dfn-type="value" data-export id="valdef-row-rule-extent-segment">segment<a class="self-link" href="#valdef-row-rule-extent-segment"></a></dfn>
     <dd>the <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size①">extent size</a> is the size of <a data-link-type="dfn" href="https://drafts.csswg.org/css-grid-2/#grid-cell" id="ref-for-grid-cell②">grid cell</a> in the relevant axis 
@@ -1821,7 +1820,7 @@ on screen, on paper, etc.
     <dd>controls whether the <a data-link-type="dfn" href="#next-grid-cell-span" id="ref-for-next-grid-cell-span④">next grid cell span</a> stops short of a cell which has an item spanning
             over the gap (see the <a href="#rule-extent-grid-algorithm">algorithm</a> below) 
    </dl>
-   <p>The following algorithm determines the rule segments to create in an axis and their <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size⑦">extent size</a>.
+   <p>The following algorithm determines the rule segments to create in an axis and their <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size⑦">extent sizes</a>.
     For each pair of adjacent tracks, we first find the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="next-grid-cell-span">next grid cell span</dfn> for
     each track. Then select one of those per the property values above.</p>
    <p>For each pair of adjacent tracks, start by setting each track’s <var>current cell</var> to
@@ -1877,13 +1876,13 @@ on screen, on paper, etc.
     a regular non-subgrid item would (whether the parent is also a subgrid or not),
     i.e. its span (if any) affects the <a href="#rule-extent-grid-algorithm">algorithm</a> above in the same way.</p>
    <p><span class="css">allow-overlap</span> can be used in the parent to extend its rules under
-    the subgrid.  The subgrid’s rules, if any, is rendered by the subgrid and thus render
+    the subgrid.  The subgrid’s rules, if any, are rendered by the subgrid and thus render
     on top of the parent, as usual.</p>
    <p>When the subgrid determines its rule extents, it does not consider any items that
     aren’t its own grid items, i.e. any items in an ancestor grid that have been placed into
     the same grid cell that the subgrid occupies are not considered. Furthermore, it only uses
     its own local gap and rule metrics for positioning and sizing its rules.  It doesn’t
-    consider any gaps or rules that originates outside of the subgrid.</p>
+    consider any gaps or rules that originate outside of the subgrid.</p>
    <aside class="example" id="example-c3d8a4e8">
     <a class="self-link" href="#example-c3d8a4e8"></a> This <a href="examples/grid-subgrid-001.html">example</a> illustrates that
         a subgrid uses its own local gap and rule metrics for positioning and sizing
@@ -1923,11 +1922,11 @@ on screen, on paper, etc.
    </aside>
    <p class="issue" id="issue-b6f1d65c"><a class="self-link" href="#issue-b6f1d65c"></a> TODO: add definition list and algorithm here...</p>
    <p class="issue" id="issue-3e9abc31"><a class="self-link" href="#issue-3e9abc31"></a> is it useful to be able to create a rule extent for the <i>intersection</i> or <i>union</i> between two tracks, like so: <img height="435" src="media/masonry-all-shorter.png" style="display:block" width="701">It’s pretty easy to implement, fwiw... (I accidently implemented <span class="css">short</span>/<span class="css">long</span> like that before I realized it was inconsistent with how they work elsewhere). I think it’s a case that is unique to a masonry axis though, at least <i>currently</i>...</p>
-   <h4 class="heading settled" data-level="6.1.2" id="rule-extent-flexbox"><span class="secno">6.1.2. </span><span class="content">Flexbox Containers</span><a class="self-link" href="#rule-extent-flexbox"></a></h4>
-   <p>In a <a href="https://drafts.csswg.org/css-flexbox/#valdef-flex-direction-row">row-oriented flexbox container</a>,
+   <h4 class="heading settled" data-level="6.1.2" id="rule-extent-flexbox"><span class="secno">6.1.2. </span><span class="content">Flex Containers</span><a class="self-link" href="#rule-extent-flexbox"></a></h4>
+   <p>In a <a href="https://drafts.csswg.org/css-flexbox/#valdef-flex-direction-row">row-oriented flex container</a>,
     the <span class="css">row-rule-*</span> properties creates rules between flex lines,
     and the <span class="css">column-rule-*</span> properties creates rules between <a href="css-flexbox">flex items</a> within a <a href="cs-flexbox">flex line</a>.</p>
-   <p>In <a href="https://drafts.csswg.org/css-flexbox/#valdef-flex-direction-row">column-oriented flexbox container</a>,
+   <p>In <a href="https://drafts.csswg.org/css-flexbox/#valdef-flex-direction-row">column-oriented flex container</a>,
     the roles of <span class="css">row-rule-extent</span> and <span class="css">column-rule-extent</span> are swapped. For the rest of this sub-section we
     will describe the row-oriented case (just swap column/row in the text below to get the column-oriented case).</p>
    <p>Flex items can’t span multiple lines so there are no collisions possible for the main axis rules,
@@ -1942,12 +1941,12 @@ on screen, on paper, etc.
     to the cross axis end edge of the last flex line (all the <span class="css">all-*</span> behave the same).
     Only the first flex line creates column rules in this case,
     and the rule’s lateral position is taken from the gap in the first line.</p>
-   <p><strong class="advisement"> Authors are adviced to <strong>not</strong> use the <span class="css">allow-overlap</span> value in
-               the main axis of a multi-line flexbox container since it’s likely to make items
+   <p><strong class="advisement"> Authors are advised to <strong>not</strong> use the <span class="css">allow-overlap</span> value in
+               the main axis of a multi-line flex container since it’s likely to make items
                on subsequent lines overlap the rules.  It may be used when all flex items are
-               guarranteed to have the exact same main axis <a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#outer-size" id="ref-for-outer-size">outer size</a> and align such that
+               guaranteed to have the exact same main axis <a data-link-type="dfn" href="https://drafts.csswg.org/css-sizing-3/#outer-size" id="ref-for-outer-size">outer size</a> and align such that
                the gaps are aligned between all the lines.</strong></p>
-   <p>Rules are created between adjacent flex lines and their <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size①③">extent size</a> are controlled by
+   <p>Rules are created between adjacent flex lines, and their <a data-link-type="dfn" href="#extent-size" id="ref-for-extent-size①③">extent sizes</a> are controlled by
     the <span class="css">row-rule-extent</span> values defined as follows:</p>
    <dl>
     <dt>segment
@@ -2039,7 +2038,7 @@ on screen, on paper, etc.
      <figcaption> An <a href="examples/table-rules-001.html">example</a> of table rules. </figcaption>
     </figure>
    </aside>
-   <p class="issue" id="issue-96acb267"><a class="self-link" href="#issue-96acb267"></a> sort out if non-collapsed column-groups that only contains collapsed columns should generate rules, ditto row-groups/rows</p>
+   <p class="issue" id="issue-0ca7394a"><a class="self-link" href="#issue-0ca7394a"></a> sort out if non-collapsed column-groups that only contain collapsed columns should generate rules, ditto row-groups/rows</p>
    <h4 class="heading settled" data-level="6.1.4" id="rule-extent-table-row-group"><span class="secno">6.1.4. </span><span class="content">Table Row Group Containers</span><a class="self-link" href="#rule-extent-table-row-group"></a></h4>
    <p>A <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table-row-group" id="ref-for-table-row-group②⓪">table-row-group</a> container creates rules between its <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table-row" id="ref-for-table-row">table-rows</a> and between each <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table-cell" id="ref-for-table-cell">table-cell</a> in a row.  Collapsed <span id="ref-for-table-row①">table-rows</span> are treated as if they don’t exist.
     Collapsed <a data-link-type="dfn" href="https://drafts.csswg.org/css-tables-3/#table-column" id="ref-for-table-column">table-columns</a> are treated as if they don’t exist.</p>
@@ -2059,12 +2058,13 @@ on screen, on paper, etc.
    </aside>
    <p><span class="css">visibility:collapse</span> on <a data-link-type="dfn">table-cells</a> does not affect the rules in any way.</p>
    <h4 class="heading settled" data-level="6.1.5" id="rule-extent-multicol"><span class="secno">6.1.5. </span><span class="content">Multi-Column Containers</span><a class="self-link" href="#rule-extent-multicol"></a></h4>
-   <p><a data-link-type="dfn" href="https://drafts.csswg.org/css-multicol-1/#multi-column-container" id="ref-for-multi-column-container①⑥">Multi-column containers</a> already support rendering column rules between its columns.
+   <p><a data-link-type="dfn" href="https://drafts.csswg.org/css-multicol-1/#multi-column-container" id="ref-for-multi-column-container①⑥">Multi-column containers</a> already support rendering column rules between their columns.
     That’s now extended with all the new features described above.  The changes described
-    above is backward compatible with existing web content that use <i>valid</i> <span class="css">column-rule</span> style values.  Some currently <i>invalid</i> <span class="css">column-rule</span> values are now <i>valid</i> though, which could cause problems.  For example, <a class="css" data-link-type="propdesc" href="https://drafts.csswg.org/css-multicol-1/#propdef-column-rule-width" id="ref-for-propdef-column-rule-width④">column-rule-width: 100%</a>, which
-    currently doesn’t parse, will now start doing something.</p>
-   <p>The <span class="css">row-rule*</span> properties applies to <a data-link-type="dfn" href="https://drafts.csswg.org/css-multicol-1/#multi-column-container" id="ref-for-multi-column-container①⑦">multi-column containers</a> and creates
-    row rules between a row of columns in the block axis and <a data-link-type="dfn" href="https://drafts.csswg.org/css-multicol-1/#spanner" id="ref-for-spanner">spanners</a>.</p>
+    above are backwards-compatible with existing web content that use <i>valid</i> <span class="css">column-rule</span> style values.  Some previously <i>invalid</i> <span class="css">column-rule</span> values are now <i>valid</i> though, which could cause problems.  For example, <a class="css" data-link-type="propdesc" href="https://drafts.csswg.org/css-multicol-1/#propdef-column-rule-width" id="ref-for-propdef-column-rule-width④">column-rule-width: 100%</a>, which
+    previously would not parse, will now start doing something.</p>
+   <p>The <span class="css">row-rule-*</span> properties apply to <a data-link-type="dfn" href="https://drafts.csswg.org/css-multicol-1/#multi-column-container" id="ref-for-multi-column-container①⑦">multi-column containers</a>, and create
+    row rules between <a href="https://drafts.csswg.org/css-multicol-1/#multi-column-line">multicol lines</a> and <a data-link-type="dfn" href="https://drafts.csswg.org/css-multicol-1/#spanner" id="ref-for-spanner">spanners</a>,
+    separating them in the block axis.</p>
    <p>The <a data-link-type="dfn" href="#segment" id="ref-for-segment">segments</a> are the columns and the <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-box-4/#valdef-box-margin-box" id="ref-for-valdef-box-margin-box">margin-box</a> of <a data-link-type="dfn" href="https://drafts.csswg.org/css-multicol-1/#spanner" id="ref-for-spanner①">spanners</a>.</p>
    <p class="issue" id="issue-409a7220"><a class="self-link" href="#issue-409a7220"></a> this proposal makes the assumption that the related proposal that <span class="css">row-gap</span> should apply to multi-column containers is also adopted
     (<a href="https://github.com/w3c/csswg-drafts/issues/6746">issue #6746</a>).</p>
@@ -2359,7 +2359,7 @@ on screen, on paper, etc.
   <aside class="dfn-panel" data-for="term-for-order-modified-document-order">
    <a href="https://drafts.csswg.org/css-display-3/#order-modified-document-order">https://drafts.csswg.org/css-display-3/#order-modified-document-order</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-order-modified-document-order">6.1.2. Flexbox Containers</a> <a href="#ref-for-order-modified-document-order①">(2)</a>
+    <li><a href="#ref-for-order-modified-document-order">6.1.2. Flex Containers</a> <a href="#ref-for-order-modified-document-order①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-flex-container">
@@ -2542,7 +2542,7 @@ on screen, on paper, etc.
   <aside class="dfn-panel" data-for="term-for-outer-size">
    <a href="https://drafts.csswg.org/css-sizing-3/#outer-size">https://drafts.csswg.org/css-sizing-3/#outer-size</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-outer-size">6.1.2. Flexbox Containers</a> <a href="#ref-for-outer-size①">(2)</a> <a href="#ref-for-outer-size②">(3)</a> <a href="#ref-for-outer-size③">(4)</a> <a href="#ref-for-outer-size④">(5)</a> <a href="#ref-for-outer-size⑤">(6)</a> <a href="#ref-for-outer-size⑥">(7)</a>
+    <li><a href="#ref-for-outer-size">6.1.2. Flex Containers</a> <a href="#ref-for-outer-size①">(2)</a> <a href="#ref-for-outer-size②">(3)</a> <a href="#ref-for-outer-size③">(4)</a> <a href="#ref-for-outer-size④">(5)</a> <a href="#ref-for-outer-size⑤">(6)</a> <a href="#ref-for-outer-size⑥">(7)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="term-for-propdef-width">
@@ -2826,7 +2826,7 @@ on screen, on paper, etc.
    <dt id="biblio-css-box-4">[CSS-BOX-4]
    <dd>Elika Etemad. <a href="https://www.w3.org/TR/css-box-4/"><cite>CSS Box Model Module Level 4</cite></a>. 21 April 2020. WD. URL: <a href="https://www.w3.org/TR/css-box-4/">https://www.w3.org/TR/css-box-4/</a>
    <dt id="biblio-css-cascade-5">[CSS-CASCADE-5]
-   <dd>Elika Etemad; Miriam Suzanne; Tab Atkins Jr.. <a href="https://www.w3.org/TR/css-cascade-5/"><cite>CSS Cascading and Inheritance Level 5</cite></a>. 29 August 2021. WD. URL: <a href="https://www.w3.org/TR/css-cascade-5/">https://www.w3.org/TR/css-cascade-5/</a>
+   <dd>Elika Etemad; Miriam Suzanne; Tab Atkins Jr.. <a href="https://www.w3.org/TR/css-cascade-5/"><cite>CSS Cascading and Inheritance Level 5</cite></a>. 15 October 2021. WD. URL: <a href="https://www.w3.org/TR/css-cascade-5/">https://www.w3.org/TR/css-cascade-5/</a>
    <dt id="biblio-css-color-4">[CSS-COLOR-4]
    <dd>Tab Atkins Jr.; Chris Lilley. <a href="https://www.w3.org/TR/css-color-4/"><cite>CSS Color Module Level 4</cite></a>. 1 June 2021. WD. URL: <a href="https://www.w3.org/TR/css-color-4/">https://www.w3.org/TR/css-color-4/</a>
    <dt id="biblio-css-display-3">[CSS-DISPLAY-3]
@@ -2848,7 +2848,7 @@ on screen, on paper, etc.
    <dt id="biblio-css-tables-3">[CSS-TABLES-3]
    <dd>François Remy; Greg Whitworth; David Baron. <a href="https://www.w3.org/TR/css-tables-3/"><cite>CSS Table Module Level 3</cite></a>. 27 July 2019. WD. URL: <a href="https://www.w3.org/TR/css-tables-3/">https://www.w3.org/TR/css-tables-3/</a>
    <dt id="biblio-css-values-4">[CSS-VALUES-4]
-   <dd>Tab Atkins Jr.; Elika Etemad. <a href="https://www.w3.org/TR/css-values-4/"><cite>CSS Values and Units Module Level 4</cite></a>. 30 September 2021. WD. URL: <a href="https://www.w3.org/TR/css-values-4/">https://www.w3.org/TR/css-values-4/</a>
+   <dd>Tab Atkins Jr.; Elika Etemad. <a href="https://www.w3.org/TR/css-values-4/"><cite>CSS Values and Units Module Level 4</cite></a>. 16 October 2021. WD. URL: <a href="https://www.w3.org/TR/css-values-4/">https://www.w3.org/TR/css-values-4/</a>
    <dt id="biblio-css-writing-modes-4">[CSS-WRITING-MODES-4]
    <dd>Elika Etemad; Koji Ishii. <a href="https://www.w3.org/TR/css-writing-modes-4/"><cite>CSS Writing Modes Level 4</cite></a>. 30 July 2019. CR. URL: <a href="https://www.w3.org/TR/css-writing-modes-4/">https://www.w3.org/TR/css-writing-modes-4/</a>
    <dt id="biblio-rfc2119">[RFC2119]
@@ -3271,7 +3271,7 @@ on screen, on paper, etc.
    <div class="issue"> perhaps make <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-box-4/#valdef-margin-trim-all">all</a> a separate keyword? like so: <span class="css">[segment | [[start | end | short | long] all?] ] allow-overlap?</span> <a class="issue-return" href="#issue-70dc1ba4" title="Jump to section">↵</a></div>
    <div class="issue"> TODO: add definition list and algorithm here... <a class="issue-return" href="#issue-b6f1d65c" title="Jump to section">↵</a></div>
    <div class="issue"> is it useful to be able to create a rule extent for the <i>intersection</i> or <i>union</i> between two tracks, like so: <img height="435" src="media/masonry-all-shorter.png" style="display:block" width="701">It’s pretty easy to implement, fwiw... (I accidently implemented <span class="css">short</span>/<span class="css">long</span> like that before I realized it was inconsistent with how they work elsewhere). I think it’s a case that is unique to a masonry axis though, at least <i>currently</i>... <a class="issue-return" href="#issue-3e9abc31" title="Jump to section">↵</a></div>
-   <div class="issue"> sort out if non-collapsed column-groups that only contains collapsed columns should generate rules, ditto row-groups/rows <a class="issue-return" href="#issue-96acb267" title="Jump to section">↵</a></div>
+   <div class="issue"> sort out if non-collapsed column-groups that only contain collapsed columns should generate rules, ditto row-groups/rows <a class="issue-return" href="#issue-0ca7394a" title="Jump to section">↵</a></div>
    <div class="issue"> this proposal makes the assumption that the related proposal that <span class="css">row-gap</span> should apply to multi-column containers is also adopted
     (<a href="https://github.com/w3c/csswg-drafts/issues/6746">issue #6746</a>). <a class="issue-return" href="#issue-409a7220" title="Jump to section">↵</a></div>
   </div>
@@ -3534,14 +3534,14 @@ on screen, on paper, etc.
    <ul>
     <li><a href="#ref-for-propdef-column-rule-extent">6.1. The column-rule-extent and row-rule-extent Properties</a>
     <li><a href="#ref-for-propdef-column-rule-extent①">6.1.1.2. Masonry</a>
-    <li><a href="#ref-for-propdef-column-rule-extent②">6.1.2. Flexbox Containers</a> <a href="#ref-for-propdef-column-rule-extent③">(2)</a>
+    <li><a href="#ref-for-propdef-column-rule-extent②">6.1.2. Flex Containers</a> <a href="#ref-for-propdef-column-rule-extent③">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-row-rule-extent">
    <b><a href="#propdef-row-rule-extent">#propdef-row-rule-extent</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-propdef-row-rule-extent">6.1. The column-rule-extent and row-rule-extent Properties</a>
-    <li><a href="#ref-for-propdef-row-rule-extent①">6.1.2. Flexbox Containers</a> <a href="#ref-for-propdef-row-rule-extent②">(2)</a> <a href="#ref-for-propdef-row-rule-extent③">(3)</a> <a href="#ref-for-propdef-row-rule-extent④">(4)</a> <a href="#ref-for-propdef-row-rule-extent⑤">(5)</a>
+    <li><a href="#ref-for-propdef-row-rule-extent①">6.1.2. Flex Containers</a> <a href="#ref-for-propdef-row-rule-extent②">(2)</a> <a href="#ref-for-propdef-row-rule-extent③">(3)</a> <a href="#ref-for-propdef-row-rule-extent④">(4)</a> <a href="#ref-for-propdef-row-rule-extent⑤">(5)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="segment">
@@ -3554,20 +3554,20 @@ on screen, on paper, etc.
    <b><a href="#extent-size">#extent-size</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-extent-size">6.1.1. Grid Containers</a> <a href="#ref-for-extent-size①">(2)</a> <a href="#ref-for-extent-size②">(3)</a> <a href="#ref-for-extent-size③">(4)</a> <a href="#ref-for-extent-size④">(5)</a> <a href="#ref-for-extent-size⑤">(6)</a> <a href="#ref-for-extent-size⑥">(7)</a> <a href="#ref-for-extent-size⑦">(8)</a> <a href="#ref-for-extent-size⑧">(9)</a> <a href="#ref-for-extent-size⑨">(10)</a> <a href="#ref-for-extent-size①⓪">(11)</a> <a href="#ref-for-extent-size①①">(12)</a>
-    <li><a href="#ref-for-extent-size①②">6.1.2. Flexbox Containers</a> <a href="#ref-for-extent-size①③">(2)</a> <a href="#ref-for-extent-size①④">(3)</a>
+    <li><a href="#ref-for-extent-size①②">6.1.2. Flex Containers</a> <a href="#ref-for-extent-size①③">(2)</a> <a href="#ref-for-extent-size①④">(3)</a>
     <li><a href="#ref-for-extent-size①⑤">7. The Rule Containing Rectangle</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="valdef-row-rule-extent-short">
    <b><a href="#valdef-row-rule-extent-short">#valdef-row-rule-extent-short</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-valdef-row-rule-extent-short">6.1.2. Flexbox Containers</a> <a href="#ref-for-valdef-row-rule-extent-short①">(2)</a>
+    <li><a href="#ref-for-valdef-row-rule-extent-short">6.1.2. Flex Containers</a> <a href="#ref-for-valdef-row-rule-extent-short①">(2)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="valdef-row-rule-extent-long">
    <b><a href="#valdef-row-rule-extent-long">#valdef-row-rule-extent-long</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-valdef-row-rule-extent-long">6.1.2. Flexbox Containers</a>
+    <li><a href="#ref-for-valdef-row-rule-extent-long">6.1.2. Flex Containers</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="next-grid-cell-span">
@@ -3579,7 +3579,7 @@ on screen, on paper, etc.
   <aside class="dfn-panel" data-for="next-flex-line-item">
    <b><a href="#next-flex-line-item">#next-flex-line-item</a></b><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-next-flex-line-item">6.1.2. Flexbox Containers</a> <a href="#ref-for-next-flex-line-item①">(2)</a> <a href="#ref-for-next-flex-line-item②">(3)</a> <a href="#ref-for-next-flex-line-item③">(4)</a> <a href="#ref-for-next-flex-line-item④">(5)</a> <a href="#ref-for-next-flex-line-item⑤">(6)</a> <a href="#ref-for-next-flex-line-item⑥">(7)</a> <a href="#ref-for-next-flex-line-item⑦">(8)</a>
+    <li><a href="#ref-for-next-flex-line-item">6.1.2. Flex Containers</a> <a href="#ref-for-next-flex-line-item①">(2)</a> <a href="#ref-for-next-flex-line-item②">(3)</a> <a href="#ref-for-next-flex-line-item③">(4)</a> <a href="#ref-for-next-flex-line-item④">(5)</a> <a href="#ref-for-next-flex-line-item⑤">(6)</a> <a href="#ref-for-next-flex-line-item⑥">(7)</a> <a href="#ref-for-next-flex-line-item⑦">(8)</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="rule-containing-rectangle①">
