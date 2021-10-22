@@ -295,8 +295,8 @@ class PrevWordBreakClassWalker {
  * layout, so that's not what we want. This function determines whether this
  * is acceptable as the start of a word for our purposes.
  */
-static bool IsAcceptableWordStart(intl::WordBreaker* aBreaker, Accessible* aAcc,
-                                  const nsAutoString& aText, int32_t aOffset) {
+static bool IsAcceptableWordStart(Accessible* aAcc, const nsAutoString& aText,
+                                  int32_t aOffset) {
   PrevWordBreakClassWalker walker(aAcc, aText, aOffset);
   if (!walker.IsStartOfGroup()) {
     // If we're not at the start of a WordBreaker group, this can't be the
@@ -584,8 +584,7 @@ TextLeafPoint TextLeafPoint::FindPrevWordStartSameAcc(
       // A line start always starts a new word.
       return lineStart;
     }
-    if (IsAcceptableWordStart(breaker, mAcc, text,
-                              static_cast<int32_t>(word.mBegin))) {
+    if (IsAcceptableWordStart(mAcc, text, static_cast<int32_t>(word.mBegin))) {
       break;
     }
     if (word.mBegin == 0) {
@@ -608,7 +607,7 @@ TextLeafPoint TextLeafPoint::FindNextWordStartSameAcc(
   intl::WordBreaker* breaker = nsContentUtils::WordBreaker();
   if (aIncludeOrigin) {
     if (wordStart == 0) {
-      if (IsAcceptableWordStart(breaker, mAcc, text, 0)) {
+      if (IsAcceptableWordStart(mAcc, text, 0)) {
         return *this;
       }
     } else {
@@ -645,7 +644,7 @@ TextLeafPoint TextLeafPoint::FindNextWordStartSameAcc(
       // A line start always starts a new word.
       return lineStart;
     }
-    if (IsAcceptableWordStart(breaker, mAcc, text, wordStart)) {
+    if (IsAcceptableWordStart(mAcc, text, wordStart)) {
       break;
     }
   }
