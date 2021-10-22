@@ -5,7 +5,7 @@
 "use strict";
 
 const FILE_FOLDER = `browser/devtools/client/webconsole/test/browser`;
-const TEST_URI = `http://example.com/${FILE_FOLDER}/test-console-evaluation-context-selector.html`;
+const TEST_URI = `https://example.com/${FILE_FOLDER}/test-console-evaluation-context-selector.html`;
 const IFRAME_PATH = `${FILE_FOLDER}/test-console-evaluation-context-selector-child.html`;
 
 requestLongerTimeout(2);
@@ -14,8 +14,8 @@ add_task(async function() {
   await pushPref("devtools.contenttoolbox.webconsole.input.context", true);
 
   const hud = await openNewTabWithIframesAndConsole(TEST_URI, [
-    `http://example.org/${IFRAME_PATH}?id=iframe-1`,
-    `http://mochi.test:8888/${IFRAME_PATH}?id=iframe-2`,
+    `https://example.org/${IFRAME_PATH}?id=iframe-1`,
+    `https://example.net/${IFRAME_PATH}?id=iframe-2`,
   ]);
 
   const evaluationContextSelectorButton = hud.ui.outputNode.querySelector(
@@ -57,11 +57,11 @@ add_task(async function() {
   const expectedSeparatorItem = { separator: true };
   const expectedFirstIframeItem = {
     label: "iframe-1|example.org",
-    tooltip: `http://example.org/${IFRAME_PATH}?id=iframe-1`,
+    tooltip: `https://example.org/${IFRAME_PATH}?id=iframe-1`,
   };
   const expectedSecondIframeItem = {
-    label: "iframe-2|mochi.test:8888",
-    tooltip: `http://mochi.test:8888/${IFRAME_PATH}?id=iframe-2`,
+    label: "iframe-2|example.net",
+    tooltip: `https://example.net/${IFRAME_PATH}?id=iframe-2`,
   };
 
   await checkContextSelectorMenu(hud, [
@@ -125,7 +125,7 @@ add_task(async function() {
   selectTargetInContextSelector(hud, expectedSecondIframeItem.label);
 
   await waitFor(() =>
-    evaluationContextSelectorButton.innerText.includes("mochi.test")
+    evaluationContextSelectorButton.innerText.includes("example.net")
   );
   ok(true, "The context was set to the selected iframe document");
   is(
@@ -136,13 +136,13 @@ add_task(async function() {
     "The non-top class is applied"
   );
 
-  await waitForEagerEvaluationResult(hud, `"mochi.test:8888"`);
+  await waitForEagerEvaluationResult(hud, `"example.net"`);
   ok(true, "The instant evaluation result is updated in the iframe context");
 
   const iframe2DocumentMessage = await executeAndWaitForMessage(
     hud,
     "document.location",
-    "mochi.test",
+    "example.net",
     ".result"
   );
   setInputValue(hud, "document.location.host");
@@ -186,7 +186,7 @@ add_task(async function() {
   );
   await waitForEagerEvaluationResult(
     hud,
-    `Location http://example.org/${IFRAME_PATH}?id=iframe-1`
+    `Location https://example.org/${IFRAME_PATH}?id=iframe-1`
   );
   await waitFor(() =>
     evaluationContextSelectorButton.innerText.includes("example.org")
@@ -197,14 +197,14 @@ add_task(async function() {
     hud,
     iframe2DocumentMessage,
     "temp0",
-    "mochi.test:8888"
+    "example.net"
   );
   await waitForEagerEvaluationResult(
     hud,
-    `Location http://mochi.test:8888/${IFRAME_PATH}?id=iframe-2`
+    `Location https://example.net/${IFRAME_PATH}?id=iframe-2`
   );
   await waitFor(() =>
-    evaluationContextSelectorButton.innerText.includes("mochi.test")
+    evaluationContextSelectorButton.innerText.includes("example.net")
   );
   ok(true, "The context was set to the selected iframe document");
 

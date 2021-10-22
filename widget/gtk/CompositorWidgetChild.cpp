@@ -38,5 +38,14 @@ void CompositorWidgetChild::NotifyClientSizeChanged(
   Unused << SendNotifyClientSizeChanged(aClientSize);
 }
 
+void CompositorWidgetChild::DisableRendering() {
+  Unused << SendDisableRendering();
+}
+
+void CompositorWidgetChild::EnableRendering(const uintptr_t aXWindow,
+                                            const bool aShaped) {
+  Unused << SendEnableRendering(aXWindow, aShaped);
+}
+
 }  // namespace widget
 }  // namespace mozilla

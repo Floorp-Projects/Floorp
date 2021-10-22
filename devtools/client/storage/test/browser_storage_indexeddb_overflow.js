@@ -9,7 +9,9 @@
 const ITEMS_PER_PAGE = 50;
 
 add_task(async function() {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-overflow-indexeddb.html");
+  await openTabAndSetupStorage(
+    MAIN_DOMAIN_SECURED + "storage-overflow-indexeddb.html"
+  );
 
   info("Run the tests with short DevTools");
   await runTests();
@@ -23,7 +25,7 @@ async function runTests() {
 
   await selectTreeItem([
     "indexedDB",
-    "http://test1.example.org",
+    "https://test1.example.org",
     "database (default)",
     "store",
   ]);

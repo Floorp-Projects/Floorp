@@ -455,7 +455,9 @@ void nsBaseWidget::BaseCreate(nsIWidget* aParent, nsWidgetInitData* aInitData) {
 //
 //-------------------------------------------------------------------------
 
-nsIWidgetListener* nsBaseWidget::GetWidgetListener() { return mWidgetListener; }
+nsIWidgetListener* nsBaseWidget::GetWidgetListener() const {
+  return mWidgetListener;
+}
 
 void nsBaseWidget::SetWidgetListener(nsIWidgetListener* aWidgetListener) {
   mWidgetListener = aWidgetListener;
@@ -502,7 +504,7 @@ void nsBaseWidget::AttachViewToTopLevel(bool aUseAttachedEvents) {
   mUseAttachedEvents = aUseAttachedEvents;
 }
 
-nsIWidgetListener* nsBaseWidget::GetAttachedWidgetListener() {
+nsIWidgetListener* nsBaseWidget::GetAttachedWidgetListener() const {
   return mAttachedWidgetListener;
 }
 

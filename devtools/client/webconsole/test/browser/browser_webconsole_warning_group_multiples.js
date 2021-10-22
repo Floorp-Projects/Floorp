@@ -9,13 +9,13 @@ requestLongerTimeout(2);
 
 const TEST_FILE =
   "browser/devtools/client/webconsole/test/browser/test-warning-groups.html";
-const TEST_URI = "http://example.org/" + TEST_FILE;
+const TEST_URI = "https://example.org/" + TEST_FILE;
 
-const TRACKER_URL = "http://tracking.example.com/";
+const TRACKER_URL = "https://tracking.example.com/";
 const FILE_PATH =
   "browser/devtools/client/webconsole/test/browser/test-image.png";
 const CONTENT_BLOCKED_URL = TRACKER_URL + FILE_PATH;
-const STORAGE_BLOCKED_URL = "http://example.com/" + FILE_PATH;
+const STORAGE_BLOCKED_URL = "https://example.com/" + FILE_PATH;
 
 const COOKIE_BEHAVIOR_PREF = "network.cookie.cookieBehavior";
 const COOKIE_BEHAVIORS_REJECT_FOREIGN = 1;

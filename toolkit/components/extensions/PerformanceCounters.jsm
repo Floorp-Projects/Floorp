@@ -73,12 +73,10 @@ function _sendPerformanceCounters(childApiManagerId) {
   let counters = PerformanceCounters.flush();
   // No need to send empty counters.
   if (counters.size == 0) {
-    _performanceCountersSender.arm();
     return;
   }
   let options = { childId: childApiManagerId, counters: counters };
   Services.cpmm.sendAsyncMessage("Extension:SendPerformanceCounter", options);
-  _performanceCountersSender.arm();
 }
 
 class Counters {
@@ -132,8 +130,8 @@ class Counters {
         _performanceCountersSender = new DeferredTask(() => {
           _sendPerformanceCounters(childApiManagerId);
         }, this.maxAge);
-        _performanceCountersSender.arm();
       }
+      _performanceCountersSender.arm();
     }
   }
 

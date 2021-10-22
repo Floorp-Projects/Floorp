@@ -8,6 +8,7 @@
 #define mozilla_dom_ElementInternals_h
 
 #include "js/TypeDecls.h"
+#include "mozilla/dom/ElementInternalsBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIFormControl.h"
 #include "nsWrapperCache.h"
@@ -39,6 +40,9 @@ class ElementInternals final : public nsIFormControl, public nsWrapperCache {
 
   // WebIDL
   ShadowRoot* GetShadowRoot() const;
+  void SetFormValue(const Nullable<FileOrUSVStringOrFormData>& aValue,
+                    const Optional<Nullable<FileOrUSVStringOrFormData>>& aState,
+                    ErrorResult& aRv);
   mozilla::dom::HTMLFormElement* GetForm(ErrorResult& aRv) const;
   already_AddRefed<nsINodeList> GetLabels(ErrorResult& aRv) const;
 
@@ -78,6 +82,14 @@ class ElementInternals final : public nsIFormControl, public nsWrapperCache {
   // It's safe to use raw pointer because it will be reset via
   // CustomElementData::Unlink when mTarget is released or unlinked.
   HTMLFieldSetElement* mFieldSet;
+
+  // https://html.spec.whatwg.org/#face-submission-value
+  Nullable<OwningFileOrUSVStringOrFormData> mSubmissionValue;
+
+  // https://html.spec.whatwg.org/#face-state
+  // TODO: Bug 1734841 - Figure out how to support form restoration or
+  //       autocomplete for form-associated custom element
+  Nullable<OwningFileOrUSVStringOrFormData> mState;
 };
 
 }  // namespace dom

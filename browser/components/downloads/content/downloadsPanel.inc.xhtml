@@ -44,6 +44,8 @@
            oncommand="goDoCommand('downloadsCmd_openInSystemViewer')"/>
   <command id="downloadsCmd_alwaysOpenInSystemViewer"
            oncommand="goDoCommand('downloadsCmd_alwaysOpenInSystemViewer')"/>
+  <command id="downloadsCmd_alwaysOpenSimilarFiles"
+           oncommand="goDoCommand('downloadsCmd_alwaysOpenSimilarFiles')"/>
 </commandset>
 
 <!-- For accessibility to screen readers, we use a label on the panel instead
@@ -83,6 +85,10 @@
               type="checkbox"
               class="downloadAlwaysUseSystemDefaultMenuItem"
               data-l10n-id="downloads-cmd-always-use-system-default"/>
+    <menuitem command="downloadsCmd_alwaysOpenSimilarFiles"
+              type="checkbox"
+              class="downloadAlwaysOpenSimilarFilesMenuItem"
+              data-l10n-id="downloads-cmd-always-open-similar-files"/>
     <menuitem command="downloadsCmd_show"
               class="downloadShowMenuItem"
               data-l10n-id="downloads-cmd-show-menuitem-2"/>
