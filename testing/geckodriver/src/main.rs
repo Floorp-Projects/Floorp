@@ -111,11 +111,11 @@ impl fmt::Display for FatalError {
 
 macro_rules! usage {
     ($msg:expr) => {
-        return Err(FatalError::Usage($msg.to_string()));
+        return Err(FatalError::Usage($msg.to_string()))
     };
 
     ($fmt:expr, $($arg:tt)+) => {
-        return Err(FatalError::Usage(format!($fmt, $($arg)+)));
+        return Err(FatalError::Usage(format!($fmt, $($arg)+)))
     };
 }
 
