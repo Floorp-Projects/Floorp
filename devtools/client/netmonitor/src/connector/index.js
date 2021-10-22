@@ -440,12 +440,8 @@ class Connector {
       DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF
     );
 
-    // @backward-compat { version 93 } The network parent actor started exposing setPersist method.
-    // Once we drop support for 92, we can drop the trait, but we will have to keep the other checks
-    // until we stop using legacy listeners entirely. (bug 1689459)
-    const hasServerSupport = this.commands.targetCommand.hasTargetWatcherSupport(
-      "network-persist"
-    );
+    // Lets keep these checks until we stop using legacy listeners entirely. (bug 1689459)
+    const hasServerSupport = this.commands.targetCommand.hasTargetWatcherSupport();
     if (
       hasServerSupport &&
       this.hasResourceCommandSupport &&
