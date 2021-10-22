@@ -352,46 +352,44 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
     return FilenameTypeAndDetails(kDataUri, Nothing());
   }
 
-  if (!NS_IsMainThread()) {
-    // We can't do Regex matching off the main thread; so just report.
-    return FilenameTypeAndDetails(kOtherWorker, Nothing());
-  }
+  // Can't do regex matching off-main-thread
+  if (NS_IsMainThread()) {
+    // Extension as loaded via a file://
+    bool regexMatch;
+    nsTArray<nsString> regexResults;
+    nsresult rv = RegexEval(kExtensionRegex, fileName, /* aOnlyMatch = */ false,
+                            regexMatch, &regexResults);
+    if (NS_FAILED(rv)) {
+      return FilenameTypeAndDetails(kRegexFailure, Nothing());
+    }
+    if (regexMatch) {
+      nsCString type = StringEndsWith(regexResults[2], u"mozilla.org.xpi"_ns)
+                           ? kMozillaExtensionFile
+                           : kOtherExtensionFile;
+      const auto& extensionNameAndPath =
+          Substring(regexResults[0], ArrayLength("extensions/") - 1);
+      return FilenameTypeAndDetails(
+          type, Some(OptimizeFileName(extensionNameAndPath)));
+    }
 
-  // Extension as loaded via a file://
-  bool regexMatch;
-  nsTArray<nsString> regexResults;
-  nsresult rv = RegexEval(kExtensionRegex, fileName, /* aOnlyMatch = */ false,
-                          regexMatch, &regexResults);
-  if (NS_FAILED(rv)) {
-    return FilenameTypeAndDetails(kRegexFailure, Nothing());
-  }
-  if (regexMatch) {
-    nsCString type = StringEndsWith(regexResults[2], u"mozilla.org.xpi"_ns)
-                         ? kMozillaExtensionFile
-                         : kOtherExtensionFile;
-    auto& extensionNameAndPath =
-        Substring(regexResults[0], ArrayLength("extensions/") - 1);
-    return FilenameTypeAndDetails(type,
-                                  Some(OptimizeFileName(extensionNameAndPath)));
-  }
+    // Single File
+    rv = RegexEval(kSingleFileRegex, fileName, /* aOnlyMatch = */ true,
+                   regexMatch);
+    if (NS_FAILED(rv)) {
+      return FilenameTypeAndDetails(kRegexFailure, Nothing());
+    }
+    if (regexMatch) {
+      return FilenameTypeAndDetails(kSingleString, Some(fileName));
+    }
 
-  // Single File
-  rv = RegexEval(kSingleFileRegex, fileName, /* aOnlyMatch = */ true,
-                 regexMatch);
-  if (NS_FAILED(rv)) {
-    return FilenameTypeAndDetails(kRegexFailure, Nothing());
-  }
-  if (regexMatch) {
-    return FilenameTypeAndDetails(kSingleString, Some(fileName));
-  }
-
-  // Suspected userChromeJS script
-  rv = RegexEval(kUCJSRegex, fileName, /* aOnlyMatch = */ true, regexMatch);
-  if (NS_FAILED(rv)) {
-    return FilenameTypeAndDetails(kRegexFailure, Nothing());
-  }
-  if (regexMatch) {
-    return FilenameTypeAndDetails(kSuspectedUserChromeJS, Nothing());
+    // Suspected userChromeJS script
+    rv = RegexEval(kUCJSRegex, fileName, /* aOnlyMatch = */ true, regexMatch);
+    if (NS_FAILED(rv)) {
+      return FilenameTypeAndDetails(kRegexFailure, Nothing());
+    }
+    if (regexMatch) {
+      return FilenameTypeAndDetails(kSuspectedUserChromeJS, Nothing());
+    }
   }
 
   // Something loaded via an about:// URI.
@@ -488,6 +486,9 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
   }
 #endif
 
+  if (!NS_IsMainThread()) {
+    return FilenameTypeAndDetails(kOtherWorker, Nothing());
+  }
   return FilenameTypeAndDetails(kOther, Nothing());
 }
 
@@ -1296,16 +1297,26 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
     }
   }
 
-  auto kAllowedFilenames = {
+  auto kAllowedFilenamesExact = {
       // Allow through the injection provided by about:sync addon
       u"data:,new function() {\n  Components.utils.import(\"chrome://aboutsync/content/AboutSyncRedirector.js\");\n  AboutSyncRedirector.register();\n}"_ns,
+  };
+
+  for (auto allowedFilename : kAllowedFilenamesExact) {
+    if (filenameU == allowedFilename) {
+      return true;
+    }
+  }
+
+  auto kAllowedFilenamesPrefix = {
       // Until 371900 is fixed, we need to do something about about:downloads
       // and this is the most reasonable. See 1727770
       u"about:downloads"_ns,
       // We think this is the same problem as about:downloads
       u"about:preferences"_ns};
-  for (auto allowedFilename : kAllowedFilenames) {
-    if (filenameU == allowedFilename) {
+
+  for (auto allowedFilenamePrefix : kAllowedFilenamesPrefix) {
+    if (StringBeginsWith(filenameU, allowedFilenamePrefix)) {
       return true;
     }
   }
