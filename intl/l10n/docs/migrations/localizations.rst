@@ -38,5 +38,5 @@ for Firefox 59 would be removed when Firefox 61 is available in Nightly.
   it could be adapted to local testing.
 
   __ https://github.com/flodolo/fluent-migrations
-.. _gecko-strings-quarantine: https://hg.mozilla.org/users/axel_mozilla.com/gecko-strings-quarantine
+.. _gecko-strings-quarantine: https://hg.mozilla.org/l10n/gecko-strings-quarantine/
 .. _gecko-strings: https://hg.mozilla.org/l10n/gecko-strings

@@ -11,10 +11,10 @@
 Migrating Legacy Formats
 ========================
 
-Migrating from legacy formats is different from migrating Fluent to Fluent.
-When migrating legacy code paths, you'll need to adjust the Fluent strings
-for the quirks Mozilla uses in the legacy code paths. You'll find a number
-of specialized functionalities here.
+Migrating from legacy formats (.dtd, .properties) is different from migrating
+Fluent to Fluent. When migrating legacy code paths, you'll need to adjust the
+Fluent strings for the quirks Mozilla uses in the legacy code paths. You'll
+find a number of specialized functionalities here.
 
 Basic Migration
 ---------------

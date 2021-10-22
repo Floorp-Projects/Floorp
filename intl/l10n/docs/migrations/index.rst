@@ -47,9 +47,8 @@ Don’t hesitate to reach out to the l10n-drivers for feedback, help to test or
 write the migration recipes:
 
  - Francesco Lodolo (:flod)
- - Staś Małolepszy (:stas)
  - Zibi Braniecki (:gandalf)
- - Axel Hecht (:pike)
+ - Eemeli Aro (:eemeli)
 
 .. _Fluent: http://projectfluent.org/
 .. _Fluent Migration: https://hg.mozilla.org/l10n/fluent-migration/
