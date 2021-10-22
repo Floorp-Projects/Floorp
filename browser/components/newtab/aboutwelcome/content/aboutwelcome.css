@@ -58,6 +58,11 @@ body[lwt-newtab-brighttext] {
   --main-content-min-height: 271px;
   --transition: 0.6s opacity, 0.6s scale, 0.6s rotate, 0.6s translate;
 }
+@media (prefers-contrast: more) {
+  .onboardingContainer {
+    background-color: var(--in-content-page-background);
+  }
+}
 @media (prefers-reduced-motion: no-preference) {
   .onboardingContainer {
     --translate: 30px;
