@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
 const CC = Components.Constructor;
 const BinaryInputStream = CC(
@@ -14,11 +13,11 @@ function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, 200, "Och Aye");
   response.setHeader("Content-Type", "text/plain; charset=utf-8", false);
 
-  let body = "";
+  var body = "";
   if (request.method == "POST") {
-    const bodyStream = new BinaryInputStream(request.bodyInputStream);
-
-    let avail = 0;
+    var bodyStream = new BinaryInputStream(request.bodyInputStream);
+    var bytes = [],
+      avail = 0;
     while ((avail = bodyStream.available()) > 0) {
       body += String.fromCharCode.apply(
         String,
@@ -26,11 +25,10 @@ function handleRequest(request, response) {
       );
     }
   }
-
-  const contentType = request.hasHeader("content-type")
+  var contentType = request.hasHeader("content-type")
     ? request.getHeader("content-type")
     : "";
+  var bodyOutput = [request.method, contentType, body].join("\n");
 
-  const bodyOutput = [request.method, contentType, body].join("\n");
   response.bodyOutputStream.write(bodyOutput, bodyOutput.length);
 }

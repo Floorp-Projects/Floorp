@@ -104,7 +104,7 @@ function handleRequest(request, response) {
       if (!queryResponse) {
         return;
       }
-      receivedQueries = getState("receivedQueries");
+      var receivedQueries = getState("receivedQueries");
       queryResponse.write(receivedQueries);
       queryResponse.finish();
     });

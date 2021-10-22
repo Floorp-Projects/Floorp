@@ -16,14 +16,11 @@ const IFRAME =
 function handleRequest(aRequest, aResponse) {
   aResponse.setStatusLine(aRequest.httpVersion, 200);
 
-  let key;
-  if (aRequest.queryString.includes("what=script")) {
-    key = "script";
-  } else if (aRequest.queryString.includes("what=image")) {
-    key = "image";
-  } else {
-    key = "iframe";
-  }
+  let key = aRequest.queryString.includes("what=script")
+    ? "script"
+    : aRequest.queryString.includes("what=image")
+    ? "image"
+    : "iframe";
 
   if (aRequest.queryString.includes("result")) {
     aResponse.write(getState(key));
