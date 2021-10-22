@@ -1127,6 +1127,10 @@ void ScriptPreloader::DecodeNextBatch(size_t chunkSize,
   JS::CompileOptions options(cx);
   FillCompileOptionsForCachedStencil(options);
 
+  // All XDR buffers are mmapped and live longer than JS runtime.
+  // The bytecode can be borrowed from the buffer.
+  options.usePinnedBytecode = true;
+
   if (!JS::CanCompileOffThread(cx, options, size) ||
       !JS::DecodeMultiOffThreadStencils(cx, options, mParsingSources,
                                         OffThreadDecodeCallback,

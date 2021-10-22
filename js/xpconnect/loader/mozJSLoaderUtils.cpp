@@ -36,6 +36,9 @@ static nsresult HandleTranscodeResult(JSContext* cx,
 nsresult ReadCachedStencil(StartupCache* cache, nsACString& uri, JSContext* cx,
                            const JS::DecodeOptions& options,
                            JS::Stencil** stencilOut) {
+  MOZ_ASSERT(options.borrowBuffer);
+  MOZ_ASSERT(!options.usePinnedBytecode);
+
   const char* buf;
   uint32_t len;
   nsresult rv = cache->GetBuffer(PromiseFlatCString(uri).get(), &buf, &len);
