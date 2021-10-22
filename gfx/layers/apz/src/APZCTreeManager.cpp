@@ -749,6 +749,21 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
       }
     }
 
+    if (StaticPrefs::apz_test_logging_enabled()) {
+      MutexAutoLock lock(mTestDataLock);
+
+      ScrollableLayerGuid guid = apzc->GetGuid();
+      auto it = mTestData.find(guid.mLayersId);
+      if (it != mTestData.end()) {
+        it->second->RecordSampledResult(
+            apzc->GetCurrentAsyncScrollOffsetInCssPixels(
+                AsyncPanZoomController::eForCompositing),
+            (aSampleTime.Time() - TimeStamp::ProcessCreation(nullptr))
+                .ToMicroseconds(),
+            guid.mLayersId, guid.mScrollId);
+      }
+    }
+
     if (Maybe<uint64_t> zoomAnimationId = apzc->GetZoomAnimationId()) {
       // for now we only support zooming on root content APZCs
       MOZ_ASSERT(apzc->IsRootContent());

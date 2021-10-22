@@ -9,7 +9,8 @@
 
 #include <map>
 
-#include "nsDebug.h"  // for NS_WARNING
+#include "nsDebug.h"                // for NS_WARNING
+#include "nsDOMNavigationTiming.h"  // for DOMHighResTimeStamp
 #include "nsTArray.h"
 #include "mozilla/Assertions.h"       // for MOZ_ASSERT
 #include "mozilla/DebugOnly.h"        // for DebugOnly
@@ -79,6 +80,12 @@ class APZTestData {
                        const LayersId& aLayersId, const ViewID& aScrollId) {
     mHitResults.AppendElement(HitResult{aPoint, aResult, aLayersId, aScrollId});
   }
+  void RecordSampledResult(const CSSPoint& aScrollOffset,
+                           DOMHighResTimeStamp aSampledTimeStamp,
+                           const LayersId& aLayersId, const ViewID& aScrollId) {
+    mSampledResults.AppendElement(
+        SampledResult{aScrollOffset, aSampledTimeStamp, aLayersId, aScrollId});
+  }
   void RecordAdditionalData(const std::string& aKey,
                             const std::string& aValue) {
     mAdditionalData[aKey] = aValue;
@@ -101,11 +108,18 @@ class APZTestData {
     LayersId layersId;
     ViewID scrollId;
   };
+  struct SampledResult {
+    CSSPoint scrollOffset;
+    DOMHighResTimeStamp sampledTimeStamp;
+    LayersId layersId;
+    ViewID scrollId;
+  };
 
  private:
   DataStore mPaints;
   DataStore mRepaintRequests;
   CopyableTArray<HitResult> mHitResults;
+  CopyableTArray<SampledResult> mSampledResults;
   // Additional free-form data that's not grouped paint or scroll frame.
   std::map<std::string, std::string> mAdditionalData;
 
@@ -170,6 +184,7 @@ struct ParamTraits<mozilla::layers::APZTestData> {
     WriteParam(aMsg, aParam.mPaints);
     WriteParam(aMsg, aParam.mRepaintRequests);
     WriteParam(aMsg, aParam.mHitResults);
+    WriteParam(aMsg, aParam.mSampledResults);
     WriteParam(aMsg, aParam.mAdditionalData);
   }
 
@@ -178,6 +193,7 @@ struct ParamTraits<mozilla::layers::APZTestData> {
     return (ReadParam(aMsg, aIter, &aResult->mPaints) &&
             ReadParam(aMsg, aIter, &aResult->mRepaintRequests) &&
             ReadParam(aMsg, aIter, &aResult->mHitResults) &&
+            ReadParam(aMsg, aIter, &aResult->mSampledResults) &&
             ReadParam(aMsg, aIter, &aResult->mAdditionalData));
   }
 };
@@ -209,6 +225,26 @@ struct ParamTraits<mozilla::layers::APZTestData::HitResult> {
                    paramType* aResult) {
     return (ReadParam(aMsg, aIter, &aResult->point) &&
             ReadParam(aMsg, aIter, &aResult->result) &&
+            ReadParam(aMsg, aIter, &aResult->layersId) &&
+            ReadParam(aMsg, aIter, &aResult->scrollId));
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::layers::APZTestData::SampledResult> {
+  typedef mozilla::layers::APZTestData::SampledResult paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.scrollOffset);
+    WriteParam(aMsg, aParam.sampledTimeStamp);
+    WriteParam(aMsg, aParam.layersId);
+    WriteParam(aMsg, aParam.scrollId);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return (ReadParam(aMsg, aIter, &aResult->scrollOffset) &&
+            ReadParam(aMsg, aIter, &aResult->sampledTimeStamp) &&
             ReadParam(aMsg, aIter, &aResult->layersId) &&
             ReadParam(aMsg, aIter, &aResult->scrollId));
   }

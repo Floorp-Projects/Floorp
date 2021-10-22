@@ -51,6 +51,8 @@ struct APZTestDataToJSConverter {
                ConvertBucket);
     ConvertList(aFrom.mHitResults, aOutTo.mHitResults.Construct(),
                 ConvertHitResult);
+    ConvertList(aFrom.mSampledResults, aOutTo.mSampledResults.Construct(),
+                ConvertSampledResult);
     ConvertMap(aFrom.mAdditionalData, aOutTo.mAdditionalData.Construct(),
                ConvertAdditionalDataEntry);
   }
@@ -99,6 +101,15 @@ struct APZTestDataToJSConverter {
         static_cast<uint16_t>(aResult.result.serialize());
     aOutHitResult.mLayersId.Construct() = aResult.layersId.mId;
     aOutHitResult.mScrollId.Construct() = aResult.scrollId;
+  }
+
+  static void ConvertSampledResult(const APZTestData::SampledResult& aResult,
+                                   dom::APZSampledResult& aOutSampledResult) {
+    aOutSampledResult.mScrollOffsetX.Construct() = aResult.scrollOffset.x;
+    aOutSampledResult.mScrollOffsetY.Construct() = aResult.scrollOffset.y;
+    aOutSampledResult.mLayersId.Construct() = aResult.layersId.mId;
+    aOutSampledResult.mScrollId.Construct() = aResult.scrollId;
+    aOutSampledResult.mSampledTimeStamp.Construct() = aResult.sampledTimeStamp;
   }
 };
 
