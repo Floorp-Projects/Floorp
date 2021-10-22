@@ -1159,7 +1159,7 @@ linux64-asan-fuzzing-ccov/opt:
         mozconfig-variant: asan-fuzzing-ccov
         tooltool-downloads: public
         need-xvfb: true
-    use-sccache: true
+    use-sccache: false
     fetches:
         toolchain:
             - linux64-binutils
@@ -1201,7 +1201,7 @@ linux64-fuzzing-ccov/opt:
         mozconfig-variant: fuzzing-ccov
         tooltool-downloads: public
         need-xvfb: true
-    use-sccache: true
+    use-sccache: false
     fetches:
         toolchain:
             - linux64-binutils
@@ -1525,7 +1525,7 @@ linux64-ccov/opt:
         mozconfig-variant: code-coverage-opt
         tooltool-downloads: public
         need-xvfb: true
-    use-sccache: true
+    use-sccache: false
     fetches:
         toolchain:
             - linux64-binutils
@@ -1567,7 +1567,7 @@ linux64-ccov/debug:
         mozconfig-variant: code-coverage-debug
         tooltool-downloads: public
         need-xvfb: true
-    use-sccache: true
+    use-sccache: false
     fetches:
         toolchain:
             - linux64-binutils

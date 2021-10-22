@@ -2109,6 +2109,10 @@ void MacroAssembler::enterFakeExitFrameForWasm(Register cxreg, Register scratch,
   Str(tmp2, vixl::MemOperand(tmp, 0));
 }
 
+void MacroAssembler::widenInt32(Register r) {
+  move32To64ZeroExtend(r, Register64(r));
+}
+
 // ========================================================================
 // Convert floating point.
 

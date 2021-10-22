@@ -174,6 +174,10 @@ async function testTables(tests) {
 }
 
 add_task(async function() {
+  // storage-listings.html explicitly mixes secure and insecure frames.
+  // We should not enforce https for tests using this page.
+  await pushPref("dom.security.https_first", false);
+
   // First, open a tab with the default userContextId and setup its storages.
   const tabDefault = await openTab(MAIN_DOMAIN + "storage-listings.html");
 

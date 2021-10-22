@@ -10,12 +10,6 @@ job-defaults:
         by-test-platform:
             android-em-7.0-x86_64/debug: 7200
             default: 5400
-    variants:
-        by-test-platform:
-            linux1804-64-qr/debug: ['webrender-sw', 'fission']
-            windows10-64-2004-qr/debug: ['webrender-sw', 'fission']
-            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
-            default: ['fission']
     mozharness:
         script: web_platform_tests.py
         config:
@@ -76,6 +70,9 @@ web-platform-tests:
             android-em.*/.*: 10800
             default: 7200
     e10s: true
+    variants:
+        - fission
+        - webrender-sw
     run-on-projects:
         by-variant:
             fission:
@@ -84,6 +81,12 @@ web-platform-tests:
                     (linux.*64|windows10-64-2004)(-shippable)?-qr/opt: ['trunk']
                     linux.*64-(asan|tsan)(-qr)?/opt: ['trunk']
                     linux.*64-ccov-qr/opt: ['mozilla-central']
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
+                    linux.*64-qr/debug: built-projects
+                    windows10-64-2004-qr/debug: built-projects
                     default: []
             default:
                 by-test-platform:
@@ -111,25 +114,9 @@ web-platform-tests-backlog:
             default: 3600
     variants: []
     e10s: true
-    run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    linux.*64-qr/debug: ['trunk']
-                    linux.*64(-shippable)?-qr/opt: ['trunk']
-                    windows10-64-2004(-shippable)?-qr/opt: ['trunk']
-                    default: []
-            default: ['mozilla-central']
+    run-on-projects: ['mozilla-central']
     test-manifest-loader: null  # don't load tests in the taskgraph
-    tier:
-        by-variant:
-            fission:
-                by-test-platform:
-                    linux.*64-qr/debug: 1
-                    linux.*64(-shippable)?-qr/opt: 1
-                    windows10-64-2004(-shippable)?-qr/opt: 1
-                    default: 2
-            default: 2
+    tier: 2
     mozharness:
         chunked: true
         extra-options:
@@ -157,6 +144,9 @@ web-platform-tests-reftest:
             android.*: 6
             default: 4
     e10s: true
+    variants:
+        - fission
+        - webrender-sw
     run-on-projects:
         by-variant:
             fission:
@@ -164,6 +154,12 @@ web-platform-tests-reftest:
                     (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
                     (linux.*64|windows10-64-2004)(-shippable)?-qr/opt: ['trunk']
                     linux.*64-(asan|tsan)(-qr)?/opt: ['trunk']
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
+                    linux.*64-qr/debug: built-projects
+                    windows10-64-2004-qr/debug: built-projects
                     default: []
             default:
                 by-test-platform:
@@ -197,25 +193,9 @@ web-platform-tests-reftest-backlog:
     chunks: 1
     variants: []
     e10s: true
-    run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    linux.*64-qr/debug: ['trunk']
-                    linux.*64(-shippable)?-qr/opt: ['trunk']
-                    windows10-64-2004(-shippable)?-qr/opt: ['trunk']
-                    default: []
-            default: ['mozilla-central']
+    run-on-projects: ['mozilla-central']
     test-manifest-loader: null  # don't load tests in the taskgraph
-    tier:
-        by-variant:
-            fission:
-                by-test-platform:
-                    linux.*64-qr/debug: 1
-                    linux.*64(-shippable)?-qr/opt: 1
-                    windows10-64-2004(-shippable)?-qr/opt: 1
-                    default: 2
-            default: 2
+    tier: 2
     mozharness:
         extra-options:
             - --test-type=reftest
@@ -235,6 +215,9 @@ web-platform-tests-wdspec:
         extra-options:
             - --test-type=wdspec
             - --setpref=toolkit.asyncshutdown.log=true
+    variants:
+        - fission
+        - webrender-sw
     run-on-projects:
         by-variant:
             fission:
@@ -242,6 +225,12 @@ web-platform-tests-wdspec:
                     (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
                     (linux.*64|windows10-64-2004)(-shippable)?-qr/opt: ['trunk']
                     linux.*64-asan(-qr)?/opt: ['trunk']
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
+                    linux.*64-qr/debug: built-projects
+                    windows10-64-2004-qr/debug: built-projects
                     default: []
             default: built-projects
     tier:
@@ -292,6 +281,9 @@ web-platform-tests-wdspec-headless:
     schedules-component: web-platform-tests-wdspec
     treeherder-symbol: W(WdH)
     chunks: 2
+    variants:
+        - fission
+        - webrender-sw
     run-on-projects:
         by-variant:
             fission:
@@ -361,13 +353,8 @@ web-platform-tests-crashtest:
         extra-options:
             - --test-type=crashtest
     variants:
-        by-test-platform:
-            linux1804-64-qr/debug: ['webrender-sw', 'fission']
-            windows10-64-2004-qr/debug: ['webrender-sw', 'fission']
-            macosx101.*64-qr/debug: ['webrender-sw', 'fission']
-            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
-            linux.*64/debug: ['fission']
-            default: ['fission']
+        - fission
+        - webrender-sw
     run-on-projects:
         by-variant:
             fission:
@@ -375,6 +362,13 @@ web-platform-tests-crashtest:
                     (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
                     (linux.*64|windows10-64-2004)(-shippable)?-qr/opt: ['trunk']
                     linux.*64-asan(-qr)?/opt: ['trunk']
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
+                    linux.*64-qr/debug: built-projects
+                    macosx101.*64-qr/debug: built-projects
+                    windows10-64-2004-qr/debug: built-projects
                     default: []
             default: built-projects
     tier:
@@ -402,6 +396,9 @@ web-platform-tests-print-reftest:
                     windows10-64-2004(-shippable)?-qr/opt: 1
                     default: 2
             default: default
+    variants:
+        - fission
+        - webrender-sw
     run-on-projects:
         by-variant:
             fission:
@@ -409,6 +406,12 @@ web-platform-tests-print-reftest:
                     (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
                     (linux.*64|windows10-64-2004)(-shippable)?-qr/opt: ['trunk']
                     linux.*64-asan(-qr)?/opt: ['trunk']
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
+                    linux.*64-qr/debug: built-projects
+                    windows10-64-2004-qr/debug: built-projects
                     default: []
             default: built-projects
     mozharness:
@@ -424,34 +427,18 @@ test-verify-wpt:
     treeherder-symbol: TVw
     max-run-time: 10800
     run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    linux.*64-qr/debug: ['trunk']
-                    linux.*64(-shippable)?-qr/opt: ['trunk']
-                    windows10-64-2004(-shippable)?-qr/opt: ['trunk']
-                    default: []
-            default:
-                by-test-platform:
-                    # do not run on ccov or asan
-                    .*-ccov.*/.*: []
-                    .*-asan.*/.*: []
-                    .*shippable.*: []
-                    # do not run on beta or release: usually just confirms earlier results
-                    default: ['integration']
+        by-test-platform:
+            # do not run on ccov or asan
+            .*-ccov.*/.*: []
+            .*-asan.*/.*: []
+            .*shippable.*: []
+            # do not run on beta or release: usually just confirms earlier results
+            default: ['integration']
     built-projects-only: true
     test-manifest-loader: null  # don't load tests in the taskgraph
     optimization:
         test-verify: ["test-verify-wpt"]
-    tier:
-        by-variant:
-            fission:
-                by-test-platform:
-                    linux.*64-qr/debug: 1
-                    linux.*64(-shippable)?-qr/opt: 1
-                    windows10-64-2004(-shippable)?-qr/opt: 1
-                    default: 2
-            default: 2
+    tier: 2
     mozharness:
         extra-options:
             - --verify
@@ -464,6 +451,9 @@ test-coverage-wpt:
     schedules-component: test-coverage-wpt
     treeherder-symbol: TCw
     max-run-time: 10800
+    variants:
+        - fission
+        - webrender-sw
     run-on-projects:
         by-variant:
             fission:
@@ -471,6 +461,12 @@ test-coverage-wpt:
                     linux.*64-qr/debug: ['trunk']
                     linux.*64(-shippable)?-qr/opt: ['trunk']
                     windows10-64-2004(-shippable)?-qr/opt: ['trunk']
+                    default: []
+            webrender-sw:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug: built-projects
+                    linux.*64-qr/debug: built-projects
+                    windows10-64-2004-qr/debug: built-projects
                     default: []
             default:
                 by-test-platform:

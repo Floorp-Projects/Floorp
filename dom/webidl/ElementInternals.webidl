@@ -14,6 +14,10 @@ interface ElementInternals {
 
   // Form-associated custom elements
   [Pref="dom.webcomponents.formAssociatedCustomElement.enabled", Throws]
+  void setFormValue((File or USVString or FormData)? value,
+                    optional (File or USVString or FormData)? state);
+
+  [Pref="dom.webcomponents.formAssociatedCustomElement.enabled", Throws]
   readonly attribute HTMLFormElement? form;
 
   [Pref="dom.webcomponents.formAssociatedCustomElement.enabled", Throws]

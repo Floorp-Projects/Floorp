@@ -664,7 +664,7 @@ macosx64-ccov/opt:
         custom-build-variant-cfg: code-coverage-opt
         mozconfig-variant: code-coverage
     run-on-projects: ['mozilla-central']
-    use-sccache: true
+    use-sccache: false
     fetches:
         toolchain:
             - linux64-cctools-port

@@ -38,6 +38,7 @@ EXPORTS.mozilla += [
     "AutoSQLiteLifetime.h",
     "Bootstrap.h",
     "CmdLineAndEnvUtils.h",
+    "GeckoArgs.h",
     "MultiInstanceLock.h",
     "SafeMode.h",
 ]

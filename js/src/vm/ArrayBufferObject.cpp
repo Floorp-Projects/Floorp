@@ -2035,6 +2035,9 @@ uint8_t* JS::ArrayBuffer::getLengthAndData(size_t* length, bool* isSharedMemory,
 };
 
 JS::ArrayBuffer JS::ArrayBuffer::unwrap(JSObject* maybeWrapped) {
+  if (!maybeWrapped) {
+    return JS::ArrayBuffer(nullptr);
+  }
   auto* ab = maybeWrapped->maybeUnwrapIf<ArrayBufferObjectMaybeShared>();
   return fromObject(ab);
 }

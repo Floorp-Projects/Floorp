@@ -77,7 +77,7 @@ const testCases = [
     ],
     true,
   ],
-  [["localStorage", "http://test1.example.org"]],
+  [["localStorage", "https://test1.example.org"]],
   ["ls2", [{ name: "ls2", value: "foobar-2" }]],
   [
     "ls1",
@@ -122,7 +122,7 @@ const testCases = [
     [{ name: "ls3", value: "http://foobar.com/baz.php", dontMatch: true }],
     true,
   ],
-  [["sessionStorage", "http://test1.example.org"]],
+  [["sessionStorage", "https://test1.example.org"]],
   ["ss1", [{ name: "ss1", value: "This#is#an#array" }]],
   [
     null,
@@ -181,7 +181,7 @@ const testCases = [
     ],
     true,
   ],
-  [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"]],
+  [["indexedDB", "https://test1.example.org", "idb1 (default)", "obj1"]],
   [
     1,
     [
@@ -200,7 +200,7 @@ const testCases = [
     ],
     true,
   ],
-  [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj2"]],
+  [["indexedDB", "https://test1.example.org", "idb1 (default)", "obj2"]],
   [
     1,
     [
@@ -232,7 +232,9 @@ add_task(async function() {
     set: [["privacy.documentCookies.maxage", 0]],
   });
 
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-complex-values.html");
+  await openTabAndSetupStorage(
+    MAIN_DOMAIN_SECURED + "storage-complex-values.html"
+  );
 
   gUI.tree.expandAll();
 

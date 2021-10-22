@@ -164,7 +164,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   void CaptureMouse(bool aCapture) override {}
   void CaptureRollupEvents(nsIRollupListener* aListener,
                            bool aDoCapture) override {}
-  nsIWidgetListener* GetWidgetListener() override;
+  nsIWidgetListener* GetWidgetListener() const override;
   void SetWidgetListener(nsIWidgetListener* alistener) override;
   void Destroy() override;
   void SetParent(nsIWidget* aNewParent) override{};
@@ -298,7 +298,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
       const LayoutDeviceIntRect& aRect, nsWidgetInitData* aInitData = nullptr,
       bool aForceUseIWidgetParent = false) override;
   void AttachViewToTopLevel(bool aUseAttachedEvents) override;
-  nsIWidgetListener* GetAttachedWidgetListener() override;
+  nsIWidgetListener* GetAttachedWidgetListener() const override;
   void SetAttachedWidgetListener(nsIWidgetListener* aListener) override;
   nsIWidgetListener* GetPreviouslyAttachedWidgetListener() override;
   void SetPreviouslyAttachedWidgetListener(nsIWidgetListener*) override;

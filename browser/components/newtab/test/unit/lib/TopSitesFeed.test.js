@@ -2136,6 +2136,22 @@ describe("Top Sites Feed", () => {
       assert.ok(!feed._contile.sites.length);
     });
 
+    it("should handle empty payload properly from Contile", async () => {
+      fetchStub.resolves({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            tiles: [],
+          }),
+      });
+
+      const fetched = await feed._contile._fetchSites();
+
+      assert.ok(fetched);
+      assert.ok(!feed._contile.sites.length);
+    });
+
     it("should handle no content properly from Contile", async () => {
       fetchStub.resolves({ ok: true, status: 204 });
 

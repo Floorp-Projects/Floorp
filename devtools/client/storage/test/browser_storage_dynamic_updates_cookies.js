@@ -13,7 +13,7 @@ registerCleanupFunction(() => {
 // Test dynamic updates in the storage inspector for cookies.
 
 add_task(async function() {
-  await openTabAndSetupStorage(MAIN_DOMAIN + "storage-updates.html");
+  await openTabAndSetupStorage(MAIN_DOMAIN_SECURED + "storage-updates.html");
 
   gUI.tree.expandAll();
 
@@ -55,7 +55,7 @@ add_task(async function() {
   // Check if table shows correct initial value
   await checkState([
     [
-      ["cookies", "http://test1.example.org"],
+      ["cookies", "https://test1.example.org"],
       [
         getCookieId("c1", "test1.example.org", "/browser"),
         getCookieId("c2", "test1.example.org", "/browser"),
@@ -72,7 +72,7 @@ add_task(async function() {
 
   await checkState([
     [
-      ["cookies", "http://test1.example.org"],
+      ["cookies", "https://test1.example.org"],
       [
         getCookieId("c1", "test1.example.org", "/browser"),
         getCookieId("c2", "test1.example.org", "/browser"),
@@ -88,7 +88,7 @@ add_task(async function() {
 
   await checkState([
     [
-      ["cookies", "http://test1.example.org"],
+      ["cookies", "https://test1.example.org"],
       [
         getCookieId("c1", "test1.example.org", "/browser"),
         getCookieId("c2", "test1.example.org", "/browser"),
@@ -114,7 +114,7 @@ add_task(async function() {
 
   await checkState([
     [
-      ["cookies", "http://test1.example.org"],
+      ["cookies", "https://test1.example.org"],
       [
         getCookieId("c1", "test1.example.org", "/browser"),
         getCookieId("c2", "test1.example.org", "/browser"),
@@ -145,7 +145,7 @@ add_task(async function() {
 
   await checkState([
     [
-      ["cookies", "http://test1.example.org"],
+      ["cookies", "https://test1.example.org"],
       [
         getCookieId("c2", "test1.example.org", "/browser"),
         getCookieId(
@@ -174,7 +174,7 @@ add_task(async function() {
 
   await checkState([
     [
-      ["cookies", "http://test1.example.org"],
+      ["cookies", "https://test1.example.org"],
       [
         getCookieId("c2", "test1.example.org", "/browser"),
         getCookieId(
@@ -195,7 +195,7 @@ add_task(async function() {
 
   await checkState([
     [
-      ["cookies", "http://test1.example.org"],
+      ["cookies", "https://test1.example.org"],
       [
         getCookieId(
           "c4",
@@ -213,7 +213,7 @@ add_task(async function() {
 
   await gUI.once("store-objects-edit");
 
-  await checkState([[["cookies", "http://test1.example.org"], []]]);
+  await checkState([[["cookies", "https://test1.example.org"], []]]);
 
   ok(gUI.sidebar.hidden, "Sidebar is hidden when no rows");
 });

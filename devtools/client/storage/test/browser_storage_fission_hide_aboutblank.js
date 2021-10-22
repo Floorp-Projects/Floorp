@@ -6,12 +6,14 @@
 
 add_task(async function() {
   const html = `<h1>about:blank iframe</h1><iframe src="about:blank"></iframe>`;
-  const url = `http://example.com/document-builder.sjs?html=${encodeURI(html)}`;
+  const url = `https://example.com/document-builder.sjs?html=${encodeURI(
+    html
+  )}`;
   // open tab
   await openTabAndSetupStorage(url);
   const doc = gPanelWindow.document;
 
-  checkTree(doc, ["localStorage", "http://example.com"], true);
+  checkTree(doc, ["localStorage", "https://example.com"], true);
   checkTree(doc, ["localStorage", "about:blank"], false);
 });
 
