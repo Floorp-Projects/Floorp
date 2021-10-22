@@ -22,7 +22,7 @@ add_task(async function() {
   await testGetTargetWithConcurrentCalls(tabDescriptors, tabTarget => {
     // We only call BrowsingContextTargetFront.attach and not TargetMixin.attachAndInitThread.
     // So very few things are done.
-    return !!tabTarget.traits;
+    return !!tabTarget.targetForm?.traits;
   });
 
   await client.close();
