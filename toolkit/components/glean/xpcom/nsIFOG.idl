@@ -23,6 +23,13 @@ interface nsIFOG : nsISupports
   void initializeFOG([optional] in AUTF8String aDataPathOverride, [optional] in AUTF8String aAppIdOverride);
 
   /**
+   * Register custom pings.
+   *
+   * Ensure all custom pings are registered with Glean.
+   */
+  void registerCustomPings();
+
+  /**
    * Enable or Disable the logging of pings in the Glean SDK.
    * See https://firefox-source-docs.mozilla.org/toolkit/components/glean/testing.html
    * for details.
