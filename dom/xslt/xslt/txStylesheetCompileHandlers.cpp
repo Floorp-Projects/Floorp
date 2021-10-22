@@ -1185,13 +1185,10 @@ static nsresult txFnStartApplyTemplates(int32_t aNamespaceID,
 
   UniquePtr<txPushNewContext> pushcontext(
       new txPushNewContext(std::move(select)));
-  rv = aState.pushSorter(pushcontext.get());
-  NS_ENSURE_SUCCESS(rv, rv);
+  aState.pushSorter(pushcontext.get());
 
-  rv = aState.pushObject(pushcontext.get());
+  rv = aState.pushObject(pushcontext.release());
   NS_ENSURE_SUCCESS(rv, rv);
-
-  Unused << pushcontext.release();
 
   aState.pushHandlerTable(gTxApplyTemplatesHandler);
 
@@ -1535,9 +1532,7 @@ static nsresult txFnStartForEach(int32_t aNamespaceID, nsAtom* aLocalName,
   UniquePtr<txPushNewContext> pushcontext(
       new txPushNewContext(std::move(select)));
   aState.pushPtr(pushcontext.get(), aState.ePushNewContext);
-
-  rv = aState.pushSorter(pushcontext.get());
-  NS_ENSURE_SUCCESS(rv, rv);
+  aState.pushSorter(pushcontext.get());
 
   aState.addInstruction(std::move(pushcontext));
 
