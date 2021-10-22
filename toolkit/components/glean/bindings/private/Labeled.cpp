@@ -15,19 +15,10 @@
 
 namespace mozilla::glean {
 
-#ifdef MOZ_GLEAN_ANDROID
-// Value is one more than 2**ID_BITS from js.py
-Atomic<uint32_t, Relaxed> gNextAndroidSubmetricId((1 << 27) + 1);
-#endif
-
 namespace impl {
 template <>
 BooleanMetric Labeled<BooleanMetric>::Get(const nsACString& aLabel) const {
-#ifdef MOZ_GLEAN_ANDROID
-  auto submetricId = gNextAndroidSubmetricId++;
-#else
   auto submetricId = fog_labeled_boolean_get(mId, &aLabel);
-#endif
   // If this labeled metric is mirrored, we need to map the submetric id back
   // to the label string and mirrored scalar so we can mirror its operations.
   auto mirrorId = ScalarIdForMetric(mId);
@@ -42,11 +33,7 @@ BooleanMetric Labeled<BooleanMetric>::Get(const nsACString& aLabel) const {
 
 template <>
 CounterMetric Labeled<CounterMetric>::Get(const nsACString& aLabel) const {
-#ifdef MOZ_GLEAN_ANDROID
-  auto submetricId = gNextAndroidSubmetricId++;
-#else
   auto submetricId = fog_labeled_counter_get(mId, &aLabel);
-#endif
   // If this labeled metric is mirrored, we need to map the submetric id back
   // to the label string and mirrored scalar so we can mirror its operations.
   auto mirrorId = ScalarIdForMetric(mId);
@@ -61,11 +48,7 @@ CounterMetric Labeled<CounterMetric>::Get(const nsACString& aLabel) const {
 
 template <>
 StringMetric Labeled<StringMetric>::Get(const nsACString& aLabel) const {
-#ifdef MOZ_GLEAN_ANDROID
-  auto submetricId = gNextAndroidSubmetricId++;
-#else
   auto submetricId = fog_labeled_string_get(mId, &aLabel);
-#endif
   // Why no GIFFT map here?
   // Labeled Strings can't be mirrored. Telemetry has no compatible probe.
   return StringMetric(submetricId);
@@ -91,9 +74,6 @@ already_AddRefed<nsISupports> GleanLabeled::NamedGetter(const nsAString& aName,
   auto label = NS_ConvertUTF16toUTF8(aName);
   aFound = true;
   uint32_t submetricId = 0;
-#ifdef MOZ_GLEAN_ANDROID
-  submetricId = gNextAndroidSubmetricId++;
-#endif
   already_AddRefed<nsISupports> submetric =
       NewSubMetricFromIds(mTypeId, mId, label, &submetricId);
 
