@@ -6,9 +6,6 @@ ChromeUtils.defineModuleGetter(
 const { MacAttribution } = ChromeUtils.import(
   "resource:///modules/MacAttribution.jsm"
 );
-const { AttributionIOUtils } = ChromeUtils.import(
-  "resource:///modules/AttributionCode.jsm"
-);
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 async function assertCacheExistsAndIsEmpty() {
@@ -19,10 +16,12 @@ async function assertCacheExistsAndIsEmpty() {
   );
   histogram.clear();
 
-  ok(await AttributionIOUtils.exists(AttributionCode.attributionFile.path));
+  ok(await OS.File.exists(AttributionCode.attributionFile.path));
   Assert.deepEqual(
     "",
-    await AttributionIOUtils.readUTF8(AttributionCode.attributionFile.path)
+    new TextDecoder().decode(
+      await OS.File.read(AttributionCode.attributionFile.path)
+    )
   );
 
   AttributionCode._clearCache();
@@ -50,19 +49,21 @@ add_task(async function test_write_error() {
     "BROWSER_ATTRIBUTION_ERRORS"
   );
 
-  let oldExists = AttributionIOUtils.exists;
-  let oldWrite = AttributionIOUtils.writeUTF8;
   try {
     // Clear any existing telemetry
     histogram.clear();
 
     // Force the file to not exist and then cause a write error.  This is delicate
-    // because various background tasks may invoke `IOUtils.writeAtomic` while
+    // because various background tasks may invoke `OS.File.writeAtomic` while
     // this test is running.  Be careful to only stub the one call.
-    AttributionIOUtils.exists = () => false;
-    AttributionIOUtils.writeUTF8 = () => {
-      throw new Error("write_error");
-    };
+    const writeAtomic = sandbox.stub(OS.File, "writeAtomic");
+    writeAtomic
+      .withArgs(
+        sinon.match(AttributionCode.attributionFile.path),
+        sinon.match.any
+      )
+      .throws(() => new Error("write_error"));
+    OS.File.writeAtomic.callThrough();
 
     // Try to read the attribution code.
     let result = await AttributionCode.getAttrDataAsync();
@@ -74,8 +75,6 @@ add_task(async function test_write_error() {
 
     TelemetryTestUtils.assertHistogram(histogram, INDEX_WRITE_ERROR, 1);
   } finally {
-    AttributionIOUtils.exists = oldExists;
-    AttributionIOUtils.writeUTF8 = oldWrite;
     await AttributionCode.deleteFileAsync();
     AttributionCode._clearCache();
     histogram.clear();
@@ -215,7 +214,6 @@ add_task(async function test_broken_referrer() {
     generateQuarantineGUID(),
   ].join(";");
   let bytes = new TextEncoder().encode(string);
-  // TODO: Bug 1736331 replace OS.File.macSetXAttr with an alternative.
   await OS.File.macSetXAttr(
     MacAttribution.applicationPath,
     "com.apple.quarantine",
