@@ -796,12 +796,38 @@ static bool CreateLocaleForLikelySubtags(const Locale& tag, LocaleId& locale) {
   return locale.append('\0');
 }
 
+static ICUError ParserErrorToICUError(LocaleParser::ParserError err) {
+  using ParserError = LocaleParser::ParserError;
+
+  switch (err) {
+    case ParserError::NotParseable:
+      return ICUError::InternalError;
+    case ParserError::OutOfMemory:
+      return ICUError::OutOfMemory;
+  }
+  MOZ_CRASH("Unexpected parser error");
+}
+
+static ICUError CanonicalizationErrorToICUError(
+    Locale::CanonicalizationError err) {
+  using CanonicalizationError = Locale::CanonicalizationError;
+
+  switch (err) {
+    case CanonicalizationError::DuplicateVariant:
+    case CanonicalizationError::InternalError:
+      return ICUError::InternalError;
+    case CanonicalizationError::OutOfMemory:
+      return ICUError::OutOfMemory;
+  }
+  MOZ_CRASH("Unexpected canonicalization error");
+}
+
 // Assign the language, script, and region subtags from an ICU locale ID.
 //
 // ICU provides |uloc_getLanguage|, |uloc_getScript|, and |uloc_getCountry| to
 // retrieve these subtags, but unfortunately these functions are rather slow, so
 // we use our own implementation.
-static bool AssignFromLocaleId(LocaleId& localeId, Locale& tag) {
+static ICUResult AssignFromLocaleId(LocaleId& localeId, Locale& tag) {
   // Replace the ICU locale ID separator.
   std::replace(localeId.begin(), localeId.end(), '_', '-');
 
@@ -813,7 +839,7 @@ static bool AssignFromLocaleId(LocaleId& localeId, Locale& tag) {
 
     // Insert "und" in front of the locale ID.
     if (!localeId.growBy(length)) {
-      return false;
+      return Err(ICUError::OutOfMemory);
     }
     memmove(localeId.begin() + length, localeId.begin(), localeId.length());
     memmove(localeId.begin(), und.data(), length);
@@ -821,19 +847,18 @@ static bool AssignFromLocaleId(LocaleId& localeId, Locale& tag) {
 
   // Retrieve the language, script, and region subtags from the locale ID
   Locale localeTag;
-  if (LocaleParser::tryParseBaseName(localeId, localeTag).isErr()) {
-    return false;
-  }
+  MOZ_TRY(LocaleParser::tryParseBaseName(localeId, localeTag)
+              .mapErr(ParserErrorToICUError));
 
   tag.setLanguage(localeTag.language());
   tag.setScript(localeTag.script());
   tag.setRegion(localeTag.region());
 
-  return true;
+  return Ok();
 }
 
 template <decltype(uloc_addLikelySubtags) likelySubtagsFn>
-static bool CallLikelySubtags(const LocaleId& localeId, LocaleId& result) {
+static ICUResult CallLikelySubtags(const LocaleId& localeId, LocaleId& result) {
   // Locale ID must be zero-terminated before passing it to ICU.
   MOZ_ASSERT(localeId.back() == '\0');
   MOZ_ASSERT(result.length() == 0);
@@ -841,14 +866,10 @@ static bool CallLikelySubtags(const LocaleId& localeId, LocaleId& result) {
   // Ensure there's enough room for the result.
   MOZ_ALWAYS_TRUE(result.resize(LocaleId::InlineLength));
 
-  if (FillBufferWithICUCall(result, [&localeId](char* chars, int32_t size,
-                                                UErrorCode* status) {
+  return FillBufferWithICUCall(
+      result, [&localeId](char* chars, int32_t size, UErrorCode* status) {
         return likelySubtagsFn(localeId.begin(), chars, size, status);
-      }).isErr()) {
-    return false;
-  }
-
-  return true;
+      });
 }
 
 // The canonical way to compute the Unicode BCP 47 locale identifier with likely
@@ -866,45 +887,42 @@ static bool CallLikelySubtags(const LocaleId& localeId, LocaleId& result) {
 // calls if we implement them ourselves, see CreateLocaleForLikelySubtags() and
 // AssignFromLocaleId(). (Where "slow" means about 50% of the execution time of
 // |Intl.Locale.prototype.maximize|.)
-static bool LikelySubtags(LikelySubtags likelySubtags, Locale& tag) {
+static ICUResult LikelySubtags(LikelySubtags likelySubtags, Locale& tag) {
   // Return early if the input is already maximized/minimized.
   if (HasLikelySubtags(likelySubtags, tag)) {
-    return true;
+    return Ok();
   }
 
   // Create the locale ID for the input argument.
   LocaleId locale;
   if (!CreateLocaleForLikelySubtags(tag, locale)) {
-    return false;
+    return Err(ICUError::OutOfMemory);
   }
 
   // Either add or remove likely subtags to/from the locale ID.
   LocaleId localeLikelySubtags;
   if (likelySubtags == LikelySubtags::Add) {
-    if (!CallLikelySubtags<uloc_addLikelySubtags>(locale,
-                                                  localeLikelySubtags)) {
-      return false;
-    }
+    MOZ_TRY(
+        CallLikelySubtags<uloc_addLikelySubtags>(locale, localeLikelySubtags));
   } else {
-    if (!CallLikelySubtags<uloc_minimizeSubtags>(locale, localeLikelySubtags)) {
-      return false;
-    }
+    MOZ_TRY(
+        CallLikelySubtags<uloc_minimizeSubtags>(locale, localeLikelySubtags));
   }
 
   // Assign the language, script, and region subtags from the locale ID.
-  if (!AssignFromLocaleId(localeLikelySubtags, tag)) {
-    return false;
-  }
+  MOZ_TRY(AssignFromLocaleId(localeLikelySubtags, tag));
 
   // Update mappings in case ICU returned a non-canonical locale.
-  return tag.canonicalizeBaseName().isOk();
+  MOZ_TRY(tag.canonicalizeBaseName().mapErr(CanonicalizationErrorToICUError));
+
+  return Ok();
 }
 
-bool Locale::addLikelySubtags() {
+ICUResult Locale::addLikelySubtags() {
   return LikelySubtags(LikelySubtags::Add, *this);
 }
 
-bool Locale::removeLikelySubtags() {
+ICUResult Locale::removeLikelySubtags() {
   return LikelySubtags(LikelySubtags::Remove, *this);
 }
 
