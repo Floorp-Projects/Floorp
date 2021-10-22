@@ -84,14 +84,16 @@ add_task(async function test_ContentScriptContextChild_in_child_frame() {
   await extension.awaitMessage("contentScriptLoaded");
 
   await contentPage.spawn(extension.id, async extensionId => {
-    let { DocumentManager } = ChromeUtils.import(
-      "resource://gre/modules/ExtensionContent.jsm",
-      null
+    const { ExtensionContent } = ChromeUtils.import(
+      "resource://gre/modules/ExtensionContent.jsm"
     );
     let frame = this.content.document.querySelector(
       "iframe[src*='file_iframe.html']"
     );
-    let context = DocumentManager.getContext(extensionId, frame.contentWindow);
+    let context = ExtensionContent.getContextByExtensionId(
+      extensionId,
+      frame.contentWindow
+    );
 
     Assert.ok(context, "Got content script context");
 
@@ -134,11 +136,13 @@ add_task(async function test_ContentScriptContextChild_in_toplevel() {
   await extension.awaitMessage("contentScriptLoaded");
 
   await contentPage.spawn(extension.id, async extensionId => {
-    let { DocumentManager } = ChromeUtils.import(
-      "resource://gre/modules/ExtensionContent.jsm",
-      null
+    const { ExtensionContent } = ChromeUtils.import(
+      "resource://gre/modules/ExtensionContent.jsm"
     );
-    let context = DocumentManager.getContext(extensionId, this.content);
+    let context = ExtensionContent.getContextByExtensionId(
+      extensionId,
+      this.content
+    );
 
     Assert.ok(context, "Got content script context");
 
