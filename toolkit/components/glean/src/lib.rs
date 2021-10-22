@@ -46,6 +46,11 @@ pub extern "C" fn fog_shutdown() {
     glean::shutdown();
 }
 
+#[no_mangle]
+pub extern "C" fn fog_register_pings() {
+    fog::pings::register_pings();
+}
+
 static mut PENDING_BUF: Vec<u8> = Vec::new();
 
 // IPC serialization/deserialization methods
