@@ -249,7 +249,7 @@ pub fn firefox_binary_version(binary: &Path) -> VersionResult<Version> {
     if let Some(x) = output {
         let output_str = str::from_utf8(&*x.stdout)
             .map_err(|_| Error::VersionError("Couldn't parse version output as UTF8".into()))?;
-        parse_binary_version(&output_str)
+        parse_binary_version(output_str)
     } else {
         Err(Error::VersionError("Running binary failed".into()))
     }
