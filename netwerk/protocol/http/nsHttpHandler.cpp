@@ -152,20 +152,20 @@ static void ExperimentUserAgentUpdated(const char* /* aNimbusPref */,
   }
 
   const char uaFormat[] =
-#  ifdef XP_WIN
-#    ifdef HAVE_64BIT_BUILD
+#ifdef XP_WIN
+#  ifdef HAVE_64BIT_BUILD
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:%d.0) Gecko/20100101 "
       "Firefox/%d.0"
-#    else
+#  else
       "Mozilla/5.0 (Windows NT 10.0; rv:%d.0) Gecko/20100101 Firefox/%d.0"
-#    endif
-#  elif defined(XP_MACOSX)
+#  endif
+#elif defined(XP_MACOSX)
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:%d.0) Gecko/20100101 "
       "Firefox/%d.0"
-#  else
+#else
       // Linux, Android, FreeBSD, etc
       "Mozilla/5.0 (X11; Linux x86_64; rv:%d.0) Gecko/20100101 Firefox/%d.0"
-#  endif
+#endif
       ;
 
   aExperimentUserAgent->Truncate();
