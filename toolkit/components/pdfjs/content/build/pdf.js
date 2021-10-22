@@ -1927,7 +1927,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.12.16',
+    apiVersion: '2.12.69',
     source: {
       data: source.data,
       url: source.url,
@@ -3220,17 +3220,15 @@ class WorkerTransport {
       const fullReader = this._fullReader;
       fullReader.headersReady.then(() => {
         if (!fullReader.isStreamingSupported || !fullReader.isRangeSupported) {
-          if (this._lastProgress && loadingTask.onProgress) {
-            loadingTask.onProgress(this._lastProgress);
+          if (this._lastProgress) {
+            loadingTask.onProgress?.(this._lastProgress);
           }
 
           fullReader.onProgress = evt => {
-            if (loadingTask.onProgress) {
-              loadingTask.onProgress({
-                loaded: evt.loaded,
-                total: evt.total
-              });
-            }
+            loadingTask.onProgress?.({
+              loaded: evt.loaded,
+              total: evt.total
+            });
           };
         }
 
@@ -3341,13 +3339,10 @@ class WorkerTransport {
       return this._passwordCapability.promise;
     });
     messageHandler.on("DataLoaded", data => {
-      if (loadingTask.onProgress) {
-        loadingTask.onProgress({
-          loaded: data.length,
-          total: data.length
-        });
-      }
-
+      loadingTask.onProgress?.({
+        loaded: data.length,
+        total: data.length
+      });
       this.downloadInfoCapability.resolve(data);
     });
     messageHandler.on("StartRenderPage", data => {
@@ -3423,14 +3418,14 @@ class WorkerTransport {
     });
     messageHandler.on("obj", data => {
       if (this.destroyed) {
-        return undefined;
+        return;
       }
 
       const [id, pageIndex, type, imageData] = data;
       const pageProxy = this.pageCache[pageIndex];
 
       if (pageProxy.objs.has(id)) {
-        return undefined;
+        return;
       }
 
       switch (type) {
@@ -3451,20 +3446,16 @@ class WorkerTransport {
         default:
           throw new Error(`Got unknown object type ${type}`);
       }
-
-      return undefined;
     });
     messageHandler.on("DocProgress", data => {
       if (this.destroyed) {
         return;
       }
 
-      if (loadingTask.onProgress) {
-        loadingTask.onProgress({
-          loaded: data.loaded,
-          total: data.total
-        });
-      }
+      loadingTask.onProgress?.({
+        loaded: data.loaded,
+        total: data.total
+      });
     });
     messageHandler.on("UnsupportedFeature", this._onUnsupportedFeature.bind(this));
     messageHandler.on("FetchBuiltInCMap", data => {
@@ -3498,9 +3489,7 @@ class WorkerTransport {
       return;
     }
 
-    if (this.loadingTask.onUnsupportedFeature) {
-      this.loadingTask.onUnsupportedFeature(featureId);
-    }
+    this.loadingTask.onUnsupportedFeature?.(featureId);
   }
 
   getData() {
@@ -3941,9 +3930,9 @@ class InternalRenderTask {
 
 }
 
-const version = '2.12.16';
+const version = '2.12.69';
 exports.version = version;
-const build = '394596560';
+const build = 'e788665a2';
 exports.build = build;
 
 /***/ }),
@@ -8873,10 +8862,11 @@ class AnnotationElement {
 }
 
 class LinkAnnotationElement extends AnnotationElement {
-  constructor(parameters) {
+  constructor(parameters, options = null) {
     const isRenderable = !!(parameters.data.url || parameters.data.dest || parameters.data.action || parameters.data.isTooltipOnly || parameters.data.resetForm || parameters.data.actions && (parameters.data.actions.Action || parameters.data.actions["Mouse Up"] || parameters.data.actions["Mouse Down"]));
     super(parameters, {
       isRenderable,
+      ignoreBorder: !!options?.ignoreBorder,
       createQuadrilaterals: true
     });
   }
@@ -9716,6 +9706,12 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement {
 }
 
 class PushButtonWidgetAnnotationElement extends LinkAnnotationElement {
+  constructor(parameters) {
+    super(parameters, {
+      ignoreBorder: parameters.data.hasAppearance
+    });
+  }
+
   render() {
     const container = super.render();
     container.className = "buttonWidgetAnnotation pushButton";
@@ -10821,7 +10817,7 @@ function appendText(task, geom, styles, ctx) {
 
   if (geom.str.length > 1 || task._enhanceTextSelection && AllWhitespaceRegexp.test(geom.str)) {
     shouldScaleText = true;
-  } else if (geom.transform[0] !== geom.transform[3]) {
+  } else if (geom.str !== " " && geom.transform[0] !== geom.transform[3]) {
     const absScaleX = Math.abs(geom.transform[0]),
           absScaleY = Math.abs(geom.transform[3]);
 
@@ -12009,8 +12005,8 @@ var _svg = __w_pdfjs_require__(21);
 
 var _xfa_layer = __w_pdfjs_require__(22);
 
-const pdfjsVersion = '2.12.16';
-const pdfjsBuild = '394596560';
+const pdfjsVersion = '2.12.69';
+const pdfjsBuild = 'e788665a2';
 ;
 })();
 
