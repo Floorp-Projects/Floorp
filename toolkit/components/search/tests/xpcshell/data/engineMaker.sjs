@@ -26,9 +26,6 @@ function handleRequest(request, response) {
 
 /**
  * Create an OpenSearch engine for the given base URL.
- *
- * @param {Response} response
- * @param {object} engineData
  */
 function createOpenSearchEngine(response, engineData) {
   let params = "",

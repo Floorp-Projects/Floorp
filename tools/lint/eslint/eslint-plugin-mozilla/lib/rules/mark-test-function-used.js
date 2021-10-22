@@ -26,6 +26,7 @@ module.exports = function(context) {
       let testType = helpers.getTestType(context);
       if (testType == "browser") {
         context.markVariableAsUsed("test");
+        return;
       }
 
       if (testType == "xpcshell") {

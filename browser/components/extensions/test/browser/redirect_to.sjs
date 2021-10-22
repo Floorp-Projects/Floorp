@@ -1,5 +1,3 @@
-"use strict";
-
 function handleRequest(request, response) {
   // redirect_to.sjs?ctxmenu-image.png
   // redirects to :  ctxmenu-image.png

@@ -1,5 +1,3 @@
-"use strict";
-
 function handleRequest(request, response) {
   try {
     reallyHandleRequest(request, response);
@@ -116,7 +114,7 @@ function reallyHandleRequest(request, response) {
       throw new Error("Couldn't parse auth header: " + authHeader);
     }
 
-    let userpass = base64ToString(match[1]); // no atob() :-(
+    var userpass = base64ToString(match[1]); // no atob() :-(
     match = /(.*):(.*)/.exec(userpass);
     if (match.length != 3) {
       throw new Error("Couldn't decode auth header: " + userpass);
@@ -134,7 +132,7 @@ function reallyHandleRequest(request, response) {
       throw new Error("Couldn't parse auth header: " + authHeader);
     }
 
-    let userpass = base64ToString(match[1]); // no atob() :-(
+    var userpass = base64ToString(match[1]); // no atob() :-(
     match = /(.*):(.*)/.exec(userpass);
     if (match.length != 3) {
       throw new Error("Couldn't decode auth header: " + userpass);

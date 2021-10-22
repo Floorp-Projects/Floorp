@@ -28,12 +28,12 @@ function handleRequest(request, response) {
     request
       .getHeader("Content-Type")
       .split(/\s*\;\s*/)
-      .forEach(function(str) {
-        if (str.indexOf("=") >= 0) {
-          let [name, value] = str.split("=");
+      .forEach(function(s) {
+        if (s.indexOf("=") >= 0) {
+          let [name, value] = s.split("=");
           contentTypeParams[name] = value;
         } else {
-          contentTypeParams[""] = str;
+          contentTypeParams[""] = s;
         }
       });
 
@@ -49,9 +49,9 @@ function handleRequest(request, response) {
           let headerEnd = s.indexOf("\r\n\r\n");
           s.substr(2, headerEnd - 2)
             .split("\r\n")
-            .forEach(function(str) {
+            .forEach(function(s) {
               // We're assuming UTF8 for now
-              let [name, value] = str.split(": ");
+              let [name, value] = s.split(": ");
               headers[name] = utf8decode(value);
             });
 
