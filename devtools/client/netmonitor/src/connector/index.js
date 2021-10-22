@@ -171,8 +171,6 @@ class Connector {
     }
 
     this.webConsoleFront = null;
-
-    this.dataProvider.destroy();
     this.dataProvider = null;
   }
 
@@ -298,8 +296,6 @@ class Connector {
       if (!Services.prefs.getBoolPref(DEVTOOLS_ENABLE_PERSISTENT_LOG_PREF)) {
         this.actions.batchReset();
         this.actions.clearRequests();
-        // clean up all the dataProvider internal state
-        this.dataProvider.destroy();
       } else {
         // If the log is persistent, just clear all accumulated timing markers.
         this.actions.clearTimingMarkers();
