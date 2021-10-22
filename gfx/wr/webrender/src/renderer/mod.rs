@@ -2433,9 +2433,7 @@ impl Renderer {
     }
 
     fn check_gl_errors(&mut self) {
-        // We shouldn't have to, but make sure we don't iterate more than 50
-        // times, in case a buggy driver decides to never return gl::NO_ERROR.
-        for _ in 0..50 {
+        loop {
             let err = self.device.gl().get_error();
             if err == gl::NO_ERROR {
                 break;
