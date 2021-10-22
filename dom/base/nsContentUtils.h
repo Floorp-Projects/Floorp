@@ -113,7 +113,6 @@ class nsIURI;
 class nsIUUIDGenerator;
 class nsIWidget;
 class nsIXPConnect;
-class nsNameSpaceManager;
 class nsNodeInfoManager;
 class nsPIWindowRoot;
 class nsPresContext;
@@ -757,8 +756,6 @@ class nsContentUtils {
   // Check if a node is in the document prolog, i.e. before the document
   // element.
   static bool InProlog(nsINode* aNode);
-
-  static nsNameSpaceManager* NameSpaceManager() { return sNameSpaceManager; }
 
   static nsIIOService* GetIOService() { return sIOService; }
 
@@ -3348,8 +3345,6 @@ class nsContentUtils {
   static nsIScriptSecurityManager* sSecurityManager;
   static nsIPrincipal* sSystemPrincipal;
   static nsIPrincipal* sNullSubjectPrincipal;
-
-  static nsNameSpaceManager* sNameSpaceManager;
 
   static nsIIOService* sIOService;
   static nsIUUIDGenerator* sUUIDGenerator;

@@ -1153,13 +1153,6 @@ function buildURLWithContent(domain, html, protocol = "https") {
 }
 
 /**
- * Same as buildURLWithContent, but will use http instead of https.
- */
-function buildInsecureURLWithContent(domain, html) {
-  return buildURLWithContent(domain, html, "http");
-}
-
-/**
  * Asserts that the given cookie holds the provided value in the data table
  * @param {String} name
  * @param {String} value

@@ -29,11 +29,11 @@ of a rough ride.
 Where to get Valgrind
 ---------------------
 
-Linux: Download `Valgrind <http://valgrind.org/>`__ directly, or use
+Linux: Download `Valgrind <https://valgrind.org/>`__ directly, or use
 your distribution's package manager (if it has a recent enough version).
 
 MacOSX: `Get Valgrind trunk from
-SVN <http://valgrind.org/downloads/repository.html>`__ and build it.
+SVN <https://valgrind.org/downloads/repository.html>`__ and build it.
 Don't use 3.10.x or any other tarball.
 
 Make sure you have Valgrind 3.14 or later, version 3.16.1 is known to work,
@@ -164,7 +164,7 @@ Additional help
 The `Valgrind Quick Start
 Guide <http://www.valgrind.org/docs/manual/quick-start.html>`__ is short
 and worth reading. The `User
-Manual <http://valgrind.org/docs/manual/manual.html>`__ is also useful.
+Manual <https://valgrind.org/docs/manual/manual.html>`__ is also useful.
 
 If Valgrind asserts, crashes, doesn't do what you expect, or otherwise
 acts up, first of all read this page and make sure you have both Firefox

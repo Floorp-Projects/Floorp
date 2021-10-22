@@ -30,7 +30,7 @@ fn is_executable(_: &Path) -> bool {
 /// Determines if the path is an executable binary.  That is, if it exists, is
 /// a file, and is executable where applicable.
 pub fn is_binary(path: &Path) -> bool {
-    path.exists() && path.is_file() && is_executable(&path)
+    path.exists() && path.is_file() && is_executable(path)
 }
 
 /// Searches the system path (`PATH`) for an executable binary and returns the

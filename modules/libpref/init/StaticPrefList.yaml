@@ -6088,6 +6088,12 @@
   value: true
   mirror: always
 
+  # Experimental support for change-array-by-copy methods
+- name: javascript.options.experimental.enable_change_array_by_copy
+  type: bool
+  value: false
+  mirror: always
+
   # Experimental support for Top-level Await in JavaScript.
 -   name: javascript.options.experimental.top_level_await
     type: bool

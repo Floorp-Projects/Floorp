@@ -123,18 +123,6 @@ void UnderlyingSourceStartCallbackHelper::StartCallback(
 already_AddRefed<Promise> IDLUnderlyingSourcePullCallbackHelper::PullCallback(
     JSContext* aCx, ReadableStreamDefaultController& aController,
     ErrorResult& aRv) {
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1726595 for why all this
-  // gorp exists.
-
-  // Pre-allocate a promise which we may end up discarding or rejecting.
-  // We do this here in order to avoid having to try allocating on a
-  // failure path after the callback is called.
-  nsIGlobalObject* global = GetIncumbentGlobal();
-  RefPtr<Promise> maybeRejectPromise = Promise::Create(global, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
   JS::RootedObject thisObj(aCx, mThisObj);
 
   // Strong Ref
@@ -143,16 +131,6 @@ already_AddRefed<Promise> IDLUnderlyingSourcePullCallbackHelper::PullCallback(
       callback->Call(thisObj, aController, aRv, "UnderlyingSource.pull",
                      CallbackFunction::eRethrowExceptions);
 
-  // Inform the ErrorResult that we're handling a JS exception if it happened.
-  aRv.WouldReportJSException();
-  if (aRv.Failed()) {
-    MOZ_ASSERT(!promise);
-
-    // Use the previously allocated promise now.
-    maybeRejectPromise->MaybeReject(std::move(aRv));
-    return maybeRejectPromise.forget();
-  }
-
   return promise.forget();
 }
 
@@ -160,18 +138,6 @@ already_AddRefed<Promise>
 IDLUnderlyingSourceCancelCallbackHelper::CancelCallback(
     JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
     ErrorResult& aRv) {
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1726595 for why all this
-  // gorp exists.
-
-  // Pre-allocate a promise which we may end up discarding or rejecting.
-  // We do this here in order to avoid having to try allocating on a
-  // failure path after the callback is called.
-  nsIGlobalObject* global = GetIncumbentGlobal();
-  RefPtr<Promise> maybeRejectPromise = Promise::Create(global, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
   JS::RootedObject thisObj(aCx, mThisObj);
 
   // Strong Ref
@@ -179,16 +145,6 @@ IDLUnderlyingSourceCancelCallbackHelper::CancelCallback(
   RefPtr<Promise> promise =
       callback->Call(thisObj, aReason, aRv, "UnderlyingSource.cancel",
                      CallbackFunction::eRethrowExceptions);
-
-  // Inform the ErrorResult that we're handling a JS exception if it happened.
-  aRv.WouldReportJSException();
-  if (aRv.Failed()) {
-    MOZ_ASSERT(!promise);
-
-    // Use the previously allocated promise now.
-    maybeRejectPromise->MaybeReject(std::move(aRv));
-    return maybeRejectPromise.forget();
-  }
 
   return promise.forget();
 }

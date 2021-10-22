@@ -102,11 +102,8 @@ class txPattern {
 
 class txUnionPattern : public txPattern {
  public:
-  nsresult addPattern(txPattern* aPattern) {
-    // XXX(Bug 1631371) Check if this should use a fallible operation as it
-    // pretended earlier, or change the return type to void.
+  void addPattern(txPattern* aPattern) {
     mLocPathPatterns.AppendElement(aPattern);
-    return NS_OK;
   }
 
   TX_DECL_PATTERN;
@@ -118,7 +115,7 @@ class txUnionPattern : public txPattern {
 
 class txLocPathPattern : public txPattern {
  public:
-  nsresult addStep(txPattern* aPattern, bool isChild);
+  void addStep(txPattern* aPattern, bool isChild);
 
   TX_DECL_PATTERN;
 
