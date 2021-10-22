@@ -817,9 +817,8 @@ class txNamedAttributeStep : public Expr {
  */
 class txUnionNodeTest : public txNodeTest {
  public:
-  nsresult addNodeTest(txNodeTest* aNodeTest) {
+  void addNodeTest(txNodeTest* aNodeTest) {
     mNodeTests.AppendElement(aNodeTest);
-    return NS_OK;
   }
 
   TX_DECL_NODE_TEST
