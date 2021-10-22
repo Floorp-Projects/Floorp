@@ -368,7 +368,7 @@ class MOZ_STACK_CLASS Locale final {
    * Fill the buffer with a string representation of the locale.
    */
   template <typename B>
-  Result<Ok, ICUError> toString(B& buffer) const {
+  ICUResult toString(B& buffer) const {
     static_assert(std::is_same_v<typename B::CharType, char>);
 
     size_t capacity = toStringCapacity();
