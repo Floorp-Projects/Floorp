@@ -471,8 +471,7 @@ nsresult txMozillaXMLOutput::startElementInternal(nsAtom* aPrefix,
 
   ++mTreeDepth;
 
-  rv = mTableStateStack.push(NS_INT32_TO_PTR(mTableState));
-  NS_ENSURE_SUCCESS(rv, rv);
+  mTableStateStack.push(NS_INT32_TO_PTR(mTableState));
 
   if (!mCurrentNodeStack.AppendObject(mCurrentNode)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -653,8 +652,7 @@ nsresult txMozillaXMLOutput::startHTMLElement(nsIContent* aElement,
       return error.StealNSResult();
     }
 
-    rv = mTableStateStack.push(NS_INT32_TO_PTR(ADDED_TBODY));
-    NS_ENSURE_SUCCESS(rv, rv);
+    mTableStateStack.push(NS_INT32_TO_PTR(ADDED_TBODY));
 
     if (!mCurrentNodeStack.AppendObject(tbody)) {
       return NS_ERROR_OUT_OF_MEMORY;

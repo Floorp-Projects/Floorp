@@ -571,7 +571,8 @@ void txStylesheetCompilerState::popChooseGotoList() {
 }
 
 nsresult txStylesheetCompilerState::pushObject(txObject* aObject) {
-  return mObjectStack.push(aObject);
+  mObjectStack.push(aObject);
+  return NS_OK;
 }
 
 txObject* txStylesheetCompilerState::popObject() {
@@ -584,7 +585,8 @@ nsresult txStylesheetCompilerState::pushPtr(void* aPtr, enumStackType aType) {
           ("pushPtr: 0x%x type %u\n", aPtr, aType));
 #endif
   mTypeStack.AppendElement(aType);
-  return mOtherStack.push(aPtr);
+  mOtherStack.push(aPtr);
+  return NS_OK;
 }
 
 void* txStylesheetCompilerState::popPtr(enumStackType aType) {
