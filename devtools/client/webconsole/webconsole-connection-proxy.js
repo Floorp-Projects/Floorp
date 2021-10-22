@@ -82,18 +82,14 @@ class WebConsoleConnectionProxy {
   async _asyncConnect() {
     this.webConsoleFront = await this.target.getFront("console");
 
-    // @backward-compat { version 93 } 93 now supports setting this via the NetworkParent actor
-    //                  Once we support only server watcher for NETWORK_EVENT,
-    //                  we will be able to drop this in favor of code from WebConsoleUI._attachTargets.
-    //                  We have to wait for the fully enabling of NETWORK_EVENT watchers, especially on the Browser Toolbox.
-    //                  We can remove the trait check via hasTargetWatcherSupport once we drop support for 92.
+    // Once we support only server watcher for NETWORK_EVENT,
+    // we will be able to drop this in favor of code from WebConsoleUI._attachTargets.
+    // We have to wait for the fully enabling of NETWORK_EVENT watchers, especially on the Browser Toolbox.
     const { targetCommand, resourceCommand } = this.webConsoleUI.hud.commands;
     const hasNetworkResourceCommandSupport = resourceCommand.hasResourceCommandSupport(
       resourceCommand.TYPES.NETWORK_EVENT
     );
-    const supportsWatcherRequest = targetCommand.hasTargetWatcherSupport(
-      "saveRequestAndResponseBodies"
-    );
+    const supportsWatcherRequest = targetCommand.hasTargetWatcherSupport();
     if (!hasNetworkResourceCommandSupport || !supportsWatcherRequest) {
       // There is no way to view response bodies from the Browser Console, so do
       // not waste the memory.

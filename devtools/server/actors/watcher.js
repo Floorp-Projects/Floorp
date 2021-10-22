@@ -183,8 +183,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           [Resources.TYPES.WEBSOCKET]: hasBrowserElement,
         },
 
-        // @backward-compat { version 93 } Starts supporting setSaveRequestAndResponseBodies on the NetworkParent actor
-        saveRequestAndResponseBodies: true,
         // @backward-compat { version 93 } The network parent actor started exposing setPersist method.
         "network-persist": true,
         // @backward-compat { version 94 } Full support for event breakpoints via the watcher actor
