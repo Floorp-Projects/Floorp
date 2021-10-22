@@ -93,7 +93,7 @@ class SettingsRobot {
     // ABOUT SECTION
     fun verifyAboutHeading() = assertAboutHeading()
 
-    fun verifyRateOnGooglePlay() = assertRateOnGooglePlay()
+    fun verifyRateOnGooglePlay() = assertTrue(rateOnGooglePlayHeading().waitForExists(waitingTime))
     fun verifyAboutFirefoxPreview() = assertTrue(aboutFirefoxHeading().waitForExists(waitingTime))
     fun verifyGooglePlayRedirect() = assertGooglePlayRedirect()
 
@@ -475,10 +475,15 @@ private fun assertAboutHeading(): ViewInteraction {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertRateOnGooglePlay(): ViewInteraction {
+private fun rateOnGooglePlayHeading(): UiObject {
+    val rateOnGooglePlay = mDevice.findObject(UiSelector().text("Rate on Google Play"))
     scrollToElementByText("Rate on Google Play")
-    return onView(withText("Rate on Google Play"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    if (!rateOnGooglePlay.exists()) {
+        settingsList().swipeUp(2)
+        rateOnGooglePlay.waitForExists(waitingTime)
+    }
+
+    return rateOnGooglePlay
 }
 
 private fun aboutFirefoxHeading(): UiObject {
@@ -495,7 +500,7 @@ private fun aboutFirefoxHeading(): UiObject {
 fun swipeToBottom() = onView(withId(R.id.recycler_view)).perform(ViewActions.swipeUp())
 
 fun clickRateButtonGooglePlay() {
-    assertRateOnGooglePlay().click()
+    rateOnGooglePlayHeading().click()
 }
 
 private fun assertGooglePlayRedirect() {
