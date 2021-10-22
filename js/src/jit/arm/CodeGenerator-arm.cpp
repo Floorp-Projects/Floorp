@@ -2049,8 +2049,7 @@ void CodeGenerator::visitWasmAddOffset64(LWasmAddOffset64* lir) {
 
   ScratchRegisterScope scratch(masm);
   masm.ma_add(base.low, Imm32(mir->offset()), out.low, scratch, SetCC);
-  masm.xor32(scratch, scratch);
-  masm.ma_adc(base.high, scratch, out.high, SetCC);
+  masm.ma_adc(base.high, Imm32(mir->offset() >> 32), out.high, scratch, SetCC);
 
   Label ok;
   masm.ma_b(&ok, Assembler::CarryClear);

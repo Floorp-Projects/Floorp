@@ -554,6 +554,12 @@ void MacroAssemblerARM::ma_adc(Register src1, Register src2, Register dest,
   as_alu(dest, src1, O2Reg(src2), OpAdc, s, c);
 }
 
+void MacroAssemblerARM::ma_adc(Register src1, Imm32 op, Register dest,
+                               AutoRegisterScope& scratch, SBit s,
+                               Condition c) {
+  ma_alu(src1, op, dest, scratch, OpAdc, s, c);
+}
+
 // Add.
 void MacroAssemblerARM::ma_add(Imm32 imm, Register dest,
                                AutoRegisterScope& scratch, SBit s,

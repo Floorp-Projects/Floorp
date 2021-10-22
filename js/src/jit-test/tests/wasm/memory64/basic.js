@@ -95,12 +95,9 @@ for ( let [memType,exprType] of memTypes ) {
 }
 
 // Validate instructions using 32/64-bit pointers in 32/64-bit memories.
-//
-// Valid offsets are temporarily restricted to <= UINT32_MAX even for 64-bit
-// memories, see implementation limit in readLinearMemoryAddress in WasmOpIter.h.
 
 var validOffsets = {i32: ['', 'offset=0x10000000'],
-                    i64: ['', 'offset=0x10000000']}
+                    i64: ['', 'offset=0x10000000', 'offset=0x200000000']}
 
 // Basic load/store
 for (let [memType, ptrType] of memTypes ) {
@@ -222,9 +219,7 @@ if (wasmThreadsEnabled()) {
     }
 }
 
-// Cursorily check that invalid offsets are rejected.  One day this test will
-// start to fail for 64-bit memories, after we lift the implementation limit.
-// When that happens, rewrite this test and expand validOffsets for i64 above.
+// Cursorily check that invalid offsets are rejected.
 
 assertEq(WebAssembly.validate(wasmTextToBinary(`
 (module
@@ -232,11 +227,14 @@ assertEq(WebAssembly.validate(wasmTextToBinary(`
   (func (param $p i32)
     (drop (i32.load offset=0x100000000 (local.get $p)))))`)), false);
 
+
+// For Memory64, any valid wat-syntaxed offset is valid.
+
 assertEq(WebAssembly.validate(wasmTextToBinary(`
 (module
   (memory i64 1)
   (func (param $p i64)
-    (drop (i32.load offset=0x100000000 (local.get $p)))))`)), false);
+    (drop (i32.load offset=0x1000000000000 (local.get $p)))))`)), true);
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -268,6 +266,7 @@ if (WebAssembly.Function) {
 const SMALL = 64;  // < offsetguard everywhere
 const BIG = 131072;  // > offsetguard on 32-bit
 const HUGE = 2147483656; // > offsetguard on 64-bit
+const VAST = 0x112001300;   // > 4GB
 
 function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
     const v128Prefix =
@@ -370,6 +369,9 @@ function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
   (func (export "readi32@huge") (param $p i64) (result i32)
     (i32.load offset=${HUGE} (local.get $p)))
 
+  (func (export "readi32@vast") (param $p i64) (result i32)
+    (i32.load offset=${VAST} (local.get $p)))
+
   (func (export "readi32/const@0") (result i32)
     (i32.load (i64.const ${LOC})))
 
@@ -378,6 +380,9 @@ function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
 
   (func (export "readi32/const@big") (result i32)
     (i32.load offset=${BIG} (i64.const ${LOC})))
+
+  (func (export "readi32/const@vast") (result i32)
+    (i32.load offset=${VAST} (i64.const ${LOC})))
 
   ;; Read i64
   (func (export "readi64@0") (param $p i64) (result i64)
@@ -392,6 +397,9 @@ function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
   (func (export "readi64@huge") (param $p i64) (result i64)
     (i64.load offset=${HUGE} (local.get $p)))
 
+  (func (export "readi64@vast") (param $p i64) (result i64)
+    (i64.load offset=${VAST} (local.get $p)))
+
   (func (export "readi64/const@0") (result i64)
     (i64.load (i64.const ${LOC})))
 
@@ -400,6 +408,9 @@ function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
 
   (func (export "readi64/const@big") (result i64)
     (i64.load offset=${BIG} (i64.const ${LOC})))
+
+  (func (export "readi64/const@vast") (result i64)
+    (i64.load offset=${VAST} (i64.const ${LOC})))
 
   ;; Read v128
   ${wasmSimdEnabled() ? readV128Code : ""}
@@ -417,6 +428,9 @@ function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
   (func (export "writei32@huge") (param $p i64) (param $v i32)
     (i32.store offset=${HUGE} (local.get $p) (local.get $v)))
 
+  (func (export "writei32@vast") (param $p i64) (param $v i32)
+    (i32.store offset=${VAST} (local.get $p) (local.get $v)))
+
   (func (export "writei32/const@0") (param $v i32)
     (i32.store (i64.const ${LOC}) (local.get $v)))
 
@@ -425,6 +439,9 @@ function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
 
   (func (export "writei32/const@big") (param $v i32)
     (i32.store offset=${BIG} (i64.const ${LOC}) (local.get $v)))
+
+  (func (export "writei32/const@vast") (param $v i32)
+    (i32.store offset=${VAST} (i64.const ${LOC}) (local.get $v)))
 
   ;; write i64
   (func (export "writei64@0") (param $p i64) (param $v i64)
@@ -439,6 +456,9 @@ function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
   (func (export "writei64@huge") (param $p i64) (param $v i64)
     (i64.store offset=${HUGE} (local.get $p) (local.get $v)))
 
+  (func (export "writei64@vast") (param $p i64) (param $v i64)
+    (i64.store offset=${VAST} (local.get $p) (local.get $v)))
+
   (func (export "writei64/const@0") (param $v i64)
     (i64.store (i64.const ${LOC}) (local.get $v)))
 
@@ -447,6 +467,9 @@ function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
 
   (func (export "writei64/const@big") (param $v i64)
     (i64.store offset=${BIG} (i64.const ${LOC}) (local.get $v)))
+
+  (func (export "writei64/const@vast") (param $v i64)
+    (i64.store offset=${VAST} (i64.const ${LOC}) (local.get $v)))
 
   ;; Read v128
   ${wasmSimdEnabled() ? writeV128Code : ""}
@@ -465,6 +488,9 @@ function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
   (func (export "areadi32@huge") (param $p i64) (result i32)
     (i32.atomic.load offset=${HUGE} (local.get $p)))
 
+  (func (export "areadi32@vast") (param $p i64) (result i32)
+    (i32.atomic.load offset=${VAST} (local.get $p)))
+
   (func (export "areadi32/const@0") (result i32)
     (i32.atomic.load (i64.const ${LOC})))
 
@@ -473,6 +499,9 @@ function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
 
   (func (export "areadi32/const@big") (result i32)
     (i32.atomic.load offset=${BIG} (i64.const ${LOC})))
+
+  (func (export "areadi32/const@vast") (result i32)
+    (i32.atomic.load offset=${VAST} (i64.const ${LOC})))
 
   ;; Atomic read i64
 
@@ -488,6 +517,9 @@ function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
   (func (export "areadi64@huge") (param $p i64) (result i64)
     (i64.atomic.load offset=${HUGE} (local.get $p)))
 
+  (func (export "areadi64@vast") (param $p i64) (result i64)
+    (i64.atomic.load offset=${VAST} (local.get $p)))
+
   (func (export "areadi64/const@0") (result i64)
     (i64.atomic.load (i64.const ${LOC})))
 
@@ -496,6 +528,9 @@ function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
 
   (func (export "areadi64/const@big") (result i64)
     (i64.atomic.load offset=${BIG} (i64.const ${LOC})))
+
+  (func (export "areadi64/const@vast") (result i64)
+    (i64.atomic.load offset=${VAST} (i64.const ${LOC})))
 
   ;; Atomic write i32
 
@@ -511,6 +546,9 @@ function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
   (func (export "awritei32@huge") (param $p i64) (param $v i32)
     (i32.atomic.store offset=${HUGE} (local.get $p) (local.get $v)))
 
+  (func (export "awritei32@vast") (param $p i64) (param $v i32)
+    (i32.atomic.store offset=${VAST} (local.get $p) (local.get $v)))
+
   (func (export "awritei32/const@0") (param $v i32)
     (i32.atomic.store (i64.const ${LOC}) (local.get $v)))
 
@@ -519,6 +557,9 @@ function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
 
   (func (export "awritei32/const@big") (param $v i32)
     (i32.atomic.store offset=${BIG} (i64.const ${LOC}) (local.get $v)))
+
+  (func (export "awritei32/const@vast") (param $v i32)
+    (i32.atomic.store offset=${VAST} (i64.const ${LOC}) (local.get $v)))
 
   ;; Atomic write i64
 
@@ -534,6 +575,9 @@ function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
   (func (export "awritei64@huge") (param $p i64) (param $v i64)
     (i64.atomic.store offset=${HUGE} (local.get $p) (local.get $v)))
 
+  (func (export "awritei64@vast") (param $p i64) (param $v i64)
+    (i64.atomic.store offset=${VAST} (local.get $p) (local.get $v)))
+
   (func (export "awritei64/const@0") (param $v i64)
     (i64.atomic.store (i64.const ${LOC}) (local.get $v)))
 
@@ -542,6 +586,9 @@ function makeTest(LOC, INITIAL, MAXIMUM, SHARED) {
 
   (func (export "awritei64/const@big") (param $v i64)
     (i64.atomic.store offset=${BIG} (i64.const ${LOC}) (local.get $v)))
+
+  (func (export "awritei64/const@vast") (param $v i64)
+    (i64.atomic.store offset=${VAST} (i64.const ${LOC}) (local.get $v)))
 
   ;; xchg i32
 
@@ -958,6 +1005,13 @@ function testRead(ins, mem, LOC, prefix) {
         assertEq(ins.exports[NM + "/const@big"](), r);
     }
 
+    if (len >= LOC + VAST + SZ) {
+        r = Random(SZ);
+        mem[(LOC + VAST) / SZ] = r;
+        assertEq(ins.exports[NM + "@vast"](BigInt(LOC)), r);
+        assertEq(ins.exports[NM + "/const@vast"](), r);
+    }
+
     // Read out-of-bounds
 
     assertErrorMessage(() => ins.exports[NM + "@0"](BigInt(len)),
@@ -978,6 +1032,12 @@ function testRead(ins, mem, LOC, prefix) {
 
     if (len < HUGE) {
         assertErrorMessage(() => ins.exports[NM + "@huge"](0n),
+                           WebAssembly.RuntimeError,
+                           /out of bounds/);
+    }
+
+    if (len < VAST) {
+        assertErrorMessage(() => ins.exports[NM + "@vast"](0n),
                            WebAssembly.RuntimeError,
                            /out of bounds/);
     }
@@ -1093,6 +1153,12 @@ function testWrite(ins, mem, LOC, prefix) {
         assertEq(ins.exports[RNM + "@big"](BigInt(LOC)), r);
     }
 
+    if (len >= LOC + VAST + SZ) {
+        r = Random(SZ);
+        ins.exports[WNM + "@vast"](BigInt(LOC), r);
+        assertEq(ins.exports[RNM + "@vast"](BigInt(LOC)), r);
+    }
+
     r = Random(SZ);
     ins.exports[WNM + "@0"](BigInt(len - SZ), r); // Just barely in-bounds
     assertEq(ins.exports[RNM + "@0"](BigInt(len - SZ)), r);
@@ -1118,6 +1184,12 @@ function testWrite(ins, mem, LOC, prefix) {
 
     if (len < HUGE) {
         assertErrorMessage(() => ins.exports[WNM + "@huge"](0n, Random(SZ)),
+                           WebAssembly.RuntimeError,
+                           /out of bounds/);
+    }
+
+    if (len < VAST) {
+        assertErrorMessage(() => ins.exports[WNM + "@vast"](0n, Random(SZ)),
                            WebAssembly.RuntimeError,
                            /out of bounds/);
     }

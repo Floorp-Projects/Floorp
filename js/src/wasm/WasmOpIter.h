@@ -1827,12 +1827,6 @@ inline bool OpIter<Policy>::readLinearMemoryAddress(
     return fail("offset too large for memory type");
   }
 
-  // Temporary implementation limit on the offset, required by MemoryAddressDesc
-  // in Assembler-shared.h.
-  if (addr->offset > UINT32_MAX) {
-    return fail("temporary implementation limit");
-  }
-
   if (alignLog2 >= 32 || (uint32_t(1) << alignLog2) > byteSize) {
     return fail("greater than natural alignment");
   }

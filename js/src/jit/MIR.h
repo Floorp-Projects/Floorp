@@ -9044,10 +9044,10 @@ class MWasmBoundsCheck : public MBinaryInstruction, public NoTypePolicy::Data {
 };
 
 class MWasmAddOffset : public MUnaryInstruction, public NoTypePolicy::Data {
-  uint32_t offset_;
+  uint64_t offset_;
   wasm::BytecodeOffset bytecodeOffset_;
 
-  MWasmAddOffset(MDefinition* base, uint32_t offset,
+  MWasmAddOffset(MDefinition* base, uint64_t offset,
                  wasm::BytecodeOffset bytecodeOffset)
       : MUnaryInstruction(classOpcode, base),
         offset_(offset),
@@ -9067,7 +9067,7 @@ class MWasmAddOffset : public MUnaryInstruction, public NoTypePolicy::Data {
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
-  uint32_t offset() const { return offset_; }
+  uint64_t offset() const { return offset_; }
   wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
 };
 

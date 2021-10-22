@@ -962,7 +962,7 @@ void MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src,
   j(Assembler::Overflow, fail);
 }
 
-void MacroAssembler::branchAdd64(Condition cond, Imm32 imm, Register64 dest,
+void MacroAssembler::branchAdd64(Condition cond, Imm64 imm, Register64 dest,
                                  Label* label) {
   add64(imm, dest);
   j(cond, label);
