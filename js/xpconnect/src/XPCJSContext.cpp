@@ -989,10 +989,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
 
   bool ergnomicBrandChecksEnabled = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.ergonomic_brand_checks");
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-  bool enableChangeArrayByCopy = Preferences::GetBool(
-      JS_OPTIONS_DOT_STR "experimental.enable_change_array_by_copy");
-#endif
 
   bool classStaticBlocksEnabled = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.class_static_blocks");
@@ -1046,9 +1042,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       .setPrivateClassFields(privateFieldsEnabled)
       .setPrivateClassMethods(privateMethodsEnabled)
       .setClassStaticBlocks(classStaticBlocksEnabled)
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-      .setChangeArrayByCopy(enableChangeArrayByCopy)
-#endif
       .setErgnomicBrandChecks(ergnomicBrandChecksEnabled);
 
   JS::SetUseFdlibmForSinCosTan(
