@@ -709,8 +709,9 @@ class BrowserFragment :
 
         TelemetryWrapper.openFullBrowser()
 
+        // Close this activity (and the task) since it is no longer displaying any session
         val activity = activity
-        activity?.finish()
+        activity?.finishAndRemoveTask()
     }
 
     internal fun edit() {
