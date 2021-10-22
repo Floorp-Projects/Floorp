@@ -774,6 +774,13 @@ function startup() {
       SafeBrowsing.init();
     });
 
+    InitLater(() => {
+      // It's enough to run this once to set up FOG.
+      // (See also bug 1730026.)
+      const FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
+      FOG.registerCustomPings();
+    });
+
     // This should always go last, since the idle tasks (except for the ones with
     // timeouts) should execute in order. Note that this observer notification is
     // not guaranteed to fire, since the window could close before we get here.

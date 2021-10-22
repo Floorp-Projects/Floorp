@@ -27,7 +27,6 @@ namespace glean {
  *                    serialized payload that the Rust impl hands you.
  */
 void FlushFOGData(std::function<void(ipc::ByteBuf&&)>&& aResolver) {
-#ifndef MOZ_GLEAN_ANDROID
   ByteBuf buf;
   uint32_t ipcBufferSize = impl::fog_serialize_ipc_buf();
   bool ok = buf.Allocate(ipcBufferSize);
@@ -39,7 +38,6 @@ void FlushFOGData(std::function<void(ipc::ByteBuf&&)>&& aResolver) {
     return;
   }
   aResolver(std::move(buf));
-#endif
 }
 
 /**
@@ -49,7 +47,6 @@ void FlushFOGData(std::function<void(ipc::ByteBuf&&)>&& aResolver) {
  */
 void FlushAllChildData(
     std::function<void(nsTArray<ipc::ByteBuf>&&)>&& aResolver) {
-#ifndef MOZ_GLEAN_ANDROID
   nsTArray<ContentParent*> parents;
   ContentParent::GetAll(parents);
   if (parents.Length() == 0) {
@@ -79,7 +76,6 @@ void FlushAllChildData(
                  aResolver(std::move(results));
                }
              });
-#endif
 }
 
 /**
@@ -87,10 +83,8 @@ void FlushAllChildData(
  * @param buf - a bincoded serialized payload that the Rust impl understands.
  */
 void FOGData(ipc::ByteBuf&& buf) {
-#ifndef MOZ_GLEAN_ANDROID
   fog_ipc::buffer_sizes.Accumulate(buf.mLen);
   impl::fog_use_ipc_buf(buf.mData, buf.mLen);
-#endif
 }
 
 /**
@@ -98,7 +92,6 @@ void FOGData(ipc::ByteBuf&& buf) {
  * @param buf - a bincoded serialized payload that the Rust impl understands.
  */
 void SendFOGData(ipc::ByteBuf&& buf) {
-#ifndef MOZ_GLEAN_ANDROID
   switch (XRE_GetProcessType()) {
     case GeckoProcessType_Content:
       mozilla::dom::ContentChild::GetSingleton()->SendFOGData(std::move(buf));
@@ -106,7 +99,6 @@ void SendFOGData(ipc::ByteBuf&& buf) {
     default:
       MOZ_ASSERT_UNREACHABLE("Unsuppored process type");
   }
-#endif
 }
 
 /**

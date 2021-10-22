@@ -28,6 +28,9 @@ using glean::LogToBrowserConsole;
 // Defined by `glean_ffi`. We reexport it here for later use.
 extern "C" NS_EXPORT void glean_enable_logging(void);
 
+// Defined by `glean`. We reexport it here for use by the Glean Core SDK.
+extern "C" NS_EXPORT void rlb_flush_dispatcher(void);
+
 // Workaround to force a re-export of the `no_mangle` symbols from `glean_ffi`
 //
 // Due to how linking works and hides symbols the symbols from `glean_ffi` might
@@ -80,20 +83,18 @@ already_AddRefed<FOG> FOG::GetSingleton() {
   return do_AddRef(gFOG);
 }
 
-void FOG::Shutdown() {
-#ifndef MOZ_GLEAN_ANDROID
-  glean::impl::fog_shutdown();
-#endif
-}
+void FOG::Shutdown() { glean::impl::fog_shutdown(); }
 
 NS_IMETHODIMP
 FOG::InitializeFOG(const nsACString& aDataPathOverride,
                    const nsACString& aAppIdOverride) {
-#ifdef MOZ_GLEAN_ANDROID
-  return NS_OK;
-#else
   return glean::impl::fog_init(&aDataPathOverride, &aAppIdOverride);
-#endif
+}
+
+NS_IMETHODIMP
+FOG::RegisterCustomPings() {
+  glean::impl::fog_register_pings();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
