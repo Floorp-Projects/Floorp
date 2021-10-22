@@ -76,6 +76,18 @@ class FirefoxDataProvider {
     this.onEventReceived = this.onEventReceived.bind(this);
     this.setEventStreamFlag = this.setEventStreamFlag.bind(this);
   }
+  /*
+   * Cleans up all the internal states, this usually done before navigation
+   * (without the persist flag on), or just before the data provider is
+   * nulled out.
+   */
+
+  destroy() {
+    this.stackTraces.clear();
+    this.pendingRequests.clear();
+    this.lazyRequestData.clear();
+    this.stackTraceRequestInfoByActorID.clear();
+  }
 
   /**
    * Enable/disable firing redux actions (enabled by default).
