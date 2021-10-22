@@ -13,7 +13,7 @@ import taskcluster
 
 # Get JSON data from taskcluster secrets service
 secrets = taskcluster.Secrets({'baseUrl': 'http://taskcluster/secrets/v1'})
-data = secrets.get('project/focus/tokens')
+data = secrets.get('project/mobile/focus-android/tokens')
 
 token_file_path = os.path.join(os.path.dirname(__file__), '../../.mls_token')
 with open(token_file_path, 'w') as token_file:

@@ -55,13 +55,14 @@ def generate_build_task(apks, tag):
                  ' && python tools/taskcluster/get-adjust-token.py'
                  ' && python tools/taskcluster/get-sentry-token.py'
                  ' && python tools/taskcluster/get-mls-token.py'
+                 ' && python tools/taskcluster/get-nimbus-url.py'
                  ' && ./gradlew --no-daemon clean test ' + assemble_task),
         features = {
             "chainOfTrust": True
         },
         artifacts = artifacts,
         scopes=[
-            "secrets:get:project/focus/tokens"
+            "secrets:get:project/mobile/focus-android/tokens"
         ])
 
 def generate_signing_task(build_task_id, apks, tag):

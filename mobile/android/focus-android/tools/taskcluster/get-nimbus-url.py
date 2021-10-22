@@ -4,7 +4,7 @@
 
 """
 This script talks to the taskcluster secrets service to obtain the
-Adjust token and write it to the .adjust_token file in the root
+Nimbus endpoint and write it to the .nimbus file in the root
 directory.
 """
 
@@ -15,8 +15,8 @@ import taskcluster
 secrets = taskcluster.Secrets({'baseUrl': 'http://taskcluster/secrets/v1'})
 data = secrets.get('project/mobile/focus-android/tokens')
 
-token_file_path = os.path.join(os.path.dirname(__file__), '../../.adjust_token')
+token_file_path = os.path.join(os.path.dirname(__file__), '../../.nimbus')
 with open(token_file_path, 'w') as token_file:
-	token_file.write(data['secret']['adjustToken'])
+    token_file.write(data['secret']['nimbus'])
 
-print("Imported adjust token from secrets service")
+print("Imported Nimbus endpoint from secrets service")
