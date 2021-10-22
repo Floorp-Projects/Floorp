@@ -528,11 +528,9 @@ txStylesheetCompilerState::~txStylesheetCompilerState() {
   }
 }
 
-nsresult txStylesheetCompilerState::pushHandlerTable(txHandlerTable* aTable) {
+void txStylesheetCompilerState::pushHandlerTable(txHandlerTable* aTable) {
   pushPtr(mHandlerTable, eHandlerTable);
   mHandlerTable = aTable;
-
-  return NS_OK;
 }
 
 void txStylesheetCompilerState::popHandlerTable() {
