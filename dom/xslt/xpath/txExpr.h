@@ -222,12 +222,8 @@ class FunctionCall : public Expr {
    * The ownership of the given Expr is passed over to the FunctionCall,
    * even on failure.
    * @param aExpr the Expr to add to this FunctionCall's parameter list
-   * @return nsresult indicating out of memory
    */
-  nsresult addParam(Expr* aExpr) {
-    mParams.AppendElement(aExpr);
-    return NS_OK;
-  }
+  void addParam(Expr* aExpr) { mParams.AppendElement(aExpr); }
 
   /**
    * Check if the number of parameters falls within a range.
