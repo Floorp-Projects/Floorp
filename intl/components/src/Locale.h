@@ -641,11 +641,7 @@ class MOZ_STACK_CLASS LocaleParser final {
    public:
     Range(size_t begin, size_t length) : begin_(begin), length_(length) {}
 
-    template <typename T>
-    T* begin(T* ptr) const {
-      return ptr + begin_;
-    }
-
+    size_t begin() const { return begin_; }
     size_t length() const { return length_; }
   };
 
