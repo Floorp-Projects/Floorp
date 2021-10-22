@@ -44,7 +44,7 @@ class RecentBookmarksViewHolderTest {
 
     @Test
     fun `WHEN show all bookmarks button is clicked THEN interactor is called`() {
-        RecentBookmarksViewHolder(binding.root, interactor).bind(listOf(bookmark))
+        RecentBookmarksViewHolder(binding.root, interactor, mockk(relaxed = true)).bind(listOf(bookmark))
         binding.recentBookmarksHeader.showAllBookmarksButton.performClick()
 
         verify { interactor.onShowAllBookmarksClicked() }

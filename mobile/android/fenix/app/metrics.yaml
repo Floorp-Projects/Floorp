@@ -5767,6 +5767,19 @@ recent_tabs:
     expires: "2022-06-23"
 
 recent_bookmarks:
+  shown:
+    type: event
+    description: |
+      Recent bookmarks section was shown to the user.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22103
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22104
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
   bookmark_clicked:
     type: counter
     lifetime: application

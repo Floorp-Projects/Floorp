@@ -294,7 +294,7 @@ class SessionControlAdapter(
             ExperimentDefaultBrowserCardViewHolder.LAYOUT_ID -> ExperimentDefaultBrowserCardViewHolder(view, interactor)
             RecentTabsHeaderViewHolder.LAYOUT_ID -> RecentTabsHeaderViewHolder(view, interactor)
             RecentBookmarksViewHolder.LAYOUT_ID -> {
-                RecentBookmarksViewHolder(view, interactor)
+                RecentBookmarksViewHolder(view, interactor, components.analytics.metrics)
             }
             HistoryMetadataHeaderViewHolder.LAYOUT_ID -> HistoryMetadataHeaderViewHolder(
                 view,

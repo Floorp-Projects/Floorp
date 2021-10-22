@@ -10,6 +10,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL
 import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.databinding.ComponentRecentBookmarksBinding
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmarksItemAdapter
 import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
@@ -17,7 +19,8 @@ import org.mozilla.fenix.utils.view.ViewHolder
 
 class RecentBookmarksViewHolder(
     view: View,
-    val interactor: RecentBookmarksInteractor
+    val interactor: RecentBookmarksInteractor,
+    val metrics: MetricController
 ) : ViewHolder(view) {
 
     private val recentBookmarksAdapter = RecentBookmarksItemAdapter(interactor)
@@ -41,6 +44,10 @@ class RecentBookmarksViewHolder(
 
     fun bind(bookmarks: List<BookmarkNode>) {
         recentBookmarksAdapter.submitList(bookmarks)
+
+        if (bookmarks.isNotEmpty()) {
+            metrics.track(Event.RecentBookmarksShown)
+        }
     }
 
     private fun dismissSearchDialogIfDisplayed() {

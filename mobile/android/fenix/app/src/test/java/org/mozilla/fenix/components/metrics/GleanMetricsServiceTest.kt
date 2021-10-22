@@ -282,6 +282,10 @@ class GleanMetricsServiceTest {
 
     @Test
     fun `Home screen recent bookmarks events are correctly recorded`() {
+        assertFalse(RecentBookmarks.shown.testHasValue())
+        gleanService.track(Event.RecentBookmarksShown)
+        assertTrue(RecentBookmarks.shown.testHasValue())
+
         assertFalse(RecentBookmarks.bookmarkClicked.testHasValue())
         gleanService.track(Event.BookmarkClicked)
         assertTrue(RecentBookmarks.bookmarkClicked.testHasValue())
