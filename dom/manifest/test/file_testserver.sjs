@@ -18,9 +18,9 @@ function loadHTMLFromFile(path) {
 
   path
     .split("/")
-    .filter(path_1 => path_1)
-    .reduce((file, path_2) => {
-      testHTMLFile.append(path_2);
+    .filter(path => path)
+    .reduce((file, path) => {
+      testHTMLFile.append(path);
       return testHTMLFile;
     }, testHTMLFile);
   testHTMLFileStream.init(testHTMLFile, -1, 0, 0);

@@ -1,6 +1,4 @@
-"use strict";
-
-function handleRequest(request, response) {
-  response.setStatusLine(request.httpVersion, 302);
-  response.setHeader("Location", "./dummy_page.html");
+function handleRequest(aRequest, aResponse) {
+  aResponse.setStatusLine(aRequest.httpVersion, 302);
+  aResponse.setHeader("Location", "./dummy_page.html");
 }

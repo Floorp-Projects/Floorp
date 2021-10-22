@@ -1,5 +1,3 @@
-"use strict";
-
 Components.utils.importGlobalProperties(["URLSearchParams"]);
 
 function handleRequest(request, response) {
@@ -45,7 +43,7 @@ function handleUserAgentTestRequest(request, response) {
 function handleInjectedScriptTestRequest(request, response, params) {
   response.setHeader("Content-Type", "text/html; charset=UTF-8", false);
 
-  const frames = parseInt(params.get("frames"), 10);
+  const frames = parseInt(params.get("frames"));
   let content = "";
 
   if (frames > 0) {

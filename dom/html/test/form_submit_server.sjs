@@ -47,9 +47,9 @@ function handleRequest(request, response) {
           let headerEnd = s.indexOf("\r\n\r\n");
           s.substr(2, headerEnd - 2)
             .split("\r\n")
-            .forEach(function(str) {
+            .forEach(function(s) {
               // We're assuming UTF8 for now
-              let [name, value] = str.split(": ");
+              let [name, value] = s.split(": ");
               headers[name] = utf8decode(value);
             });
 
