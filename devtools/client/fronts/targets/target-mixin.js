@@ -272,12 +272,6 @@ function TargetMixin(parentClass) {
      * @return {Mixed}
      */
     getTrait(traitName) {
-      // @backward-compat { version 93 } All traits should be on the `targetForm`, remove
-      // this backward compatibility code.
-      if (this.traits && this.traits[traitName]) {
-        return this.traits[traitName];
-      }
-
       // If the targeted actor exposes traits and has a defined value for this
       // traits, override the root actor traits
       if (this.targetForm.traits && traitName in this.targetForm.traits) {
