@@ -18,13 +18,13 @@ class txXPathOptimizer {
    * @param aOutExpr      Resulting expression, null if optimization didn't
    *                      result in a new expression.
    */
-  nsresult optimize(Expr* aInExpr, Expr** aOutExpr);
+  void optimize(Expr* aInExpr, Expr** aOutExpr);
 
  private:
   // Helper methods for optimizing specific classes
-  nsresult optimizeStep(Expr* aInExpr, Expr** aOutExpr);
-  nsresult optimizePath(Expr* aInExpr, Expr** aOutExpr);
-  nsresult optimizeUnion(Expr* aInExpr, Expr** aOutExpr);
+  void optimizeStep(Expr* aInExpr, Expr** aOutExpr);
+  void optimizePath(Expr* aInExpr, Expr** aOutExpr);
+  void optimizeUnion(Expr* aInExpr, Expr** aOutExpr);
 };
 
 #endif

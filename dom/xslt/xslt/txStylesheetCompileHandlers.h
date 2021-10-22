@@ -18,7 +18,7 @@ using HandleStartFn = nsresult (*)(int32_t aNamespaceID, nsAtom* aLocalName,
                                    txStylesheetAttr* aAttributes,
                                    int32_t aAttrCount,
                                    txStylesheetCompilerState& aState);
-using HandleEndFn = nsresult (*)(txStylesheetCompilerState& aState);
+using HandleEndFn = void (*)(txStylesheetCompilerState& aState);
 using HandleTextFn = nsresult (*)(const nsAString& aStr,
                                   txStylesheetCompilerState& aState);
 
