@@ -1745,14 +1745,17 @@ BrowserGlue.prototype = {
   // For the initial rollout of dFPI, set the default cookieBehavior based on the pref
   // set during onboarding when the user chooses to enable protections or not.
   _setDefaultCookieBehavior() {
-    if (!Services.prefs.getBoolPref(PREF_DFPI_ENABLED_BY_DEFAULT, false)) {
+    if (!Services.prefs.prefHasUserValue(PREF_DFPI_ENABLED_BY_DEFAULT)) {
       return;
     }
+    let dFPIEnabled = Services.prefs.getBoolPref(PREF_DFPI_ENABLED_BY_DEFAULT);
 
     let defaultPrefs = Services.prefs.getDefaultBranch("");
     defaultPrefs.setIntPref(
       "network.cookie.cookieBehavior",
-      Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
+      dFPIEnabled
+        ? Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
+        : Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
     );
   },
 

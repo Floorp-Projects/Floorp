@@ -28,4 +28,14 @@ add_task(async function testdFPIRolloutPref() {
     defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF),
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
   );
+  Services.prefs.setBoolPref(PREF_DFPI_ENABLED_BY_DEFAULT, false);
+  is(
+    defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF),
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
+  );
+  Services.prefs.setBoolPref(PREF_DFPI_ENABLED_BY_DEFAULT, true);
+  is(
+    defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF),
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
+  );
 });
