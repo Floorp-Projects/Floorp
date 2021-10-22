@@ -29,7 +29,7 @@ XPathResult::XPathResult(nsINode* aParent)
 XPathResult::XPathResult(const XPathResult& aResult)
     : mParent(aResult.mParent),
       mResult(aResult.mResult),
-      mResultNodes(aResult.mResultNodes),
+      mResultNodes(aResult.mResultNodes.Clone()),
       mDocument(aResult.mDocument),
       mContextNode(aResult.mContextNode),
       mCurrentPos(0),
@@ -93,7 +93,7 @@ nsINode* XPathResult::IterateNext(ErrorResult& aRv) {
     return nullptr;
   }
 
-  return mResultNodes.SafeObjectAt(mCurrentPos++);
+  return mResultNodes.SafeElementAt(mCurrentPos++);
 }
 
 void XPathResult::NodeWillBeDestroyed(const nsINode* aNode) {
@@ -177,7 +177,7 @@ void XPathResult::SetExprResult(txAExprResult* aExprResult,
     int32_t i, count = nodeSet->size();
     for (i = 0; i < count; ++i) {
       nsINode* node = txXPathNativeNode::getNode(nodeSet->get(i));
-      mResultNodes.AppendObject(node);
+      mResultNodes.AppendElement(node);
     }
 
     if (count > 0) {
@@ -192,7 +192,7 @@ void XPathResult::SetExprResult(txAExprResult* aExprResult,
   mCurrentPos = 0;
   mInvalidIteratorState = false;
 
-  if (mResultNodes.Count() > 0) {
+  if (!mResultNodes.IsEmpty()) {
     // If we support the document() function in DOM-XPath we need to
     // observe all documents that we have resultnodes in.
     mDocument = mResultNodes[0]->OwnerDoc();
@@ -231,16 +231,12 @@ nsresult XPathResult::GetExprResult(txAExprResult** aExprResult) {
     return NS_OK;
   }
 
-  if (mResultNodes.Count() == 0) {
+  if (mResultNodes.IsEmpty()) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
   RefPtr<txNodeSet> nodeSet = new txNodeSet(nullptr);
-  if (!nodeSet) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  uint32_t i, count = mResultNodes.Count();
+  uint32_t i, count = mResultNodes.Length();
   for (i = 0; i < count; ++i) {
     UniquePtr<txXPathNode> node(
         txXPathNativeNode::createXPathNode(mResultNodes[i]));

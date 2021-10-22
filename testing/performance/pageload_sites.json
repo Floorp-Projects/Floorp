@@ -202,7 +202,8 @@
     {
       "login": false,
       "name": "google-docs",
-      "test_url": "https://docs.google.com/document/d/1US-07msg12slQtI_xchzYxcKlTs6Fp7WqIc6W5GK5M8/edit?usp=sharing"
+      "test_url": "https://docs.google.com/document/d/1US-07msg12slQtI_xchzYxcKlTs6Fp7WqIc6W5GK5M8/edit?usp=sharing",
+      "secondary_url": "https://docs.google.com/document/d/1vUnn0ePU-ynArE1OdxyEHXR2G0sl74ja_st_4OOzlgE/preview"
     },
     {
       "login": false,
@@ -251,7 +252,8 @@
     {
       "login": true,
       "name": "netflix",
-      "test_url": "https://www.netflix.com/title/80117263"
+      "test_url": "https://www.netflix.com/title/80117263",
+      "secondary_url": "https://www.netflix.com/title/699257"
     },
     {
       "login": false,

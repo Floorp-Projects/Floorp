@@ -12028,16 +12028,6 @@
     "n_buckets": 20,
     "description": "Time spent moving the cookies from one memory location to another (ms)"
   },
-  "COOKIE_SAMESITE_SET_VS_UNSET": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "bug_numbers": [1612476],
-    "releaseChannelCollection": "opt-out",
-    "expires_in_version": "86",
-    "kind": "boolean",
-    "alert_emails": ["amarchesini@mozilla.com"],
-    "description": "Cookies with SameSite attribute set vs unset"
-  },
   "NTLM_MODULE_USED_2": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

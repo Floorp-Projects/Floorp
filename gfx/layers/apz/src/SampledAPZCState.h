@@ -29,6 +29,9 @@ class SampledAPZCState {
   Maybe<CompositionPayload> TakeScrollPayload();
 
   void UpdateScrollProperties(const FrameMetrics& aMetrics);
+  void UpdateScrollPropertiesWithRelativeDelta(const FrameMetrics& aMetrics,
+                                               const CSSPoint& aRelativeDelta);
+
   void UpdateZoomProperties(const FrameMetrics& aMetrics);
 
   /**
@@ -53,6 +56,10 @@ class SampledAPZCState {
   Maybe<CompositionPayload> mScrollPayload;
 
   void RemoveFractionalAsyncDelta();
+  // A handy wrapper to call
+  // FrameMetrics::KeepLayoutViewportEnclosingVisualViewport with this
+  // SampledAPZCState and the given |aMetrics|.
+  void KeepLayoutViewportEnclosingVisualViewport(const FrameMetrics& aMetrics);
 };
 
 }  // namespace layers

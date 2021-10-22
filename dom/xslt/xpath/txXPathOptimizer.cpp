@@ -46,9 +46,8 @@ class txEarlyEvalContext : public txIEvalContext {
   txResultRecycler* mRecycler;
 };
 
-nsresult txXPathOptimizer::optimize(Expr* aInExpr, Expr** aOutExpr) {
+void txXPathOptimizer::optimize(Expr* aInExpr, Expr** aOutExpr) {
   *aOutExpr = nullptr;
-  nsresult rv = NS_OK;
 
   // First check if the expression will produce the same result
   // under any context.
@@ -61,12 +60,12 @@ nsresult txXPathOptimizer::optimize(Expr* aInExpr, Expr** aOutExpr) {
 
     // Don't throw if this fails since it could be that the expression
     // is or contains an error-expression.
-    rv = aInExpr->evaluate(&context, getter_AddRefs(exprRes));
+    nsresult rv = aInExpr->evaluate(&context, getter_AddRefs(exprRes));
     if (NS_SUCCEEDED(rv)) {
       *aOutExpr = new txLiteralExpr(exprRes);
     }
 
-    return NS_OK;
+    return;
   }
 
   // Then optimize sub expressions
@@ -74,8 +73,7 @@ nsresult txXPathOptimizer::optimize(Expr* aInExpr, Expr** aOutExpr) {
   Expr* subExpr;
   while ((subExpr = aInExpr->getSubExprAt(i))) {
     Expr* newExpr = nullptr;
-    rv = optimize(subExpr, &newExpr);
-    NS_ENSURE_SUCCESS(rv, rv);
+    optimize(subExpr, &newExpr);
     if (newExpr) {
       delete subExpr;
       aInExpr->setSubExprAt(i, newExpr);
@@ -87,22 +85,23 @@ nsresult txXPathOptimizer::optimize(Expr* aInExpr, Expr** aOutExpr) {
   // Finally see if current expression can be optimized
   switch (exprType) {
     case Expr::LOCATIONSTEP_EXPR:
-      return optimizeStep(aInExpr, aOutExpr);
+      optimizeStep(aInExpr, aOutExpr);
+      return;
 
     case Expr::PATH_EXPR:
-      return optimizePath(aInExpr, aOutExpr);
+      optimizePath(aInExpr, aOutExpr);
+      return;
 
     case Expr::UNION_EXPR:
-      return optimizeUnion(aInExpr, aOutExpr);
+      optimizeUnion(aInExpr, aOutExpr);
+      return;
 
     default:
-      break;
+      return;
   }
-
-  return NS_OK;
 }
 
-nsresult txXPathOptimizer::optimizeStep(Expr* aInExpr, Expr** aOutExpr) {
+void txXPathOptimizer::optimizeStep(Expr* aInExpr, Expr** aOutExpr) {
   LocationStep* step = static_cast<LocationStep*>(aInExpr);
 
   if (step->getAxisIdentifier() == LocationStep::ATTRIBUTE_AXIS) {
@@ -114,7 +113,7 @@ nsresult txXPathOptimizer::optimizeStep(Expr* aInExpr, Expr** aOutExpr) {
                 ->mLocalName != nsGkAtoms::_asterisk) {
       *aOutExpr = new txNamedAttributeStep(
           nameTest->mNamespace, nameTest->mPrefix, nameTest->mLocalName);
-      return NS_OK;  // return since we no longer have a step-object.
+      return;  // return since we no longer have a step-object.
     }
   }
 
@@ -127,11 +126,9 @@ nsresult txXPathOptimizer::optimizeStep(Expr* aInExpr, Expr** aOutExpr) {
     step->dropFirst();
     step->setNodeTest(predTest);
   }
-
-  return NS_OK;
 }
 
-nsresult txXPathOptimizer::optimizePath(Expr* aInExpr, Expr** aOutExpr) {
+void txXPathOptimizer::optimizePath(Expr* aInExpr, Expr** aOutExpr) {
   PathExpr* path = static_cast<PathExpr*>(aInExpr);
 
   uint32_t i;
@@ -173,7 +170,7 @@ nsresult txXPathOptimizer::optimizePath(Expr* aInExpr, Expr** aOutExpr) {
           *aOutExpr = path->getSubExprAt(1);
           path->setSubExprAt(1, nullptr);
 
-          return NS_OK;
+          return;
         }
 
         // Just delete the '.' step and leave the rest of the PathExpr
@@ -181,17 +178,14 @@ nsresult txXPathOptimizer::optimizePath(Expr* aInExpr, Expr** aOutExpr) {
       }
     }
   }
-
-  return NS_OK;
 }
 
-nsresult txXPathOptimizer::optimizeUnion(Expr* aInExpr, Expr** aOutExpr) {
+void txXPathOptimizer::optimizeUnion(Expr* aInExpr, Expr** aOutExpr) {
   UnionExpr* uni = static_cast<UnionExpr*>(aInExpr);
 
   // Check for expressions like "foo | bar" and
   // "descendant::foo | descendant::bar"
 
-  nsresult rv;
   uint32_t current;
   Expr* subExpr;
   for (current = 0; (subExpr = uni->getSubExprAt(current)); ++current) {
@@ -222,16 +216,14 @@ nsresult txXPathOptimizer::optimizeUnion(Expr* aInExpr, Expr** aOutExpr) {
       // Create a txUnionNodeTest if needed
       if (!unionTest) {
         UniquePtr<txNodeTest> owner(unionTest = new txUnionNodeTest);
-        rv = unionTest->addNodeTest(currentStep->getNodeTest());
-        NS_ENSURE_SUCCESS(rv, rv);
+        unionTest->addNodeTest(currentStep->getNodeTest());
 
         currentStep->setNodeTest(unionTest);
         Unused << owner.release();
       }
 
       // Merge the nodetest into the union
-      rv = unionTest->addNodeTest(step->getNodeTest());
-      NS_ENSURE_SUCCESS(rv, rv);
+      unionTest->addNodeTest(step->getNodeTest());
 
       step->setNodeTest(nullptr);
 
@@ -248,9 +240,7 @@ nsresult txXPathOptimizer::optimizeUnion(Expr* aInExpr, Expr** aOutExpr) {
       *aOutExpr = currentStep;
 
       // Return right away since we no longer have a union
-      return NS_OK;
+      return;
     }
   }
-
-  return NS_OK;
 }

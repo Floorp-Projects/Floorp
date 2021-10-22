@@ -82,11 +82,13 @@ add_task(async function test_contentscript_context_isolation() {
 
   // Get the content script context and check that it points to the correct window.
   await contentPage.spawn(extension.id, async extensionId => {
-    let { DocumentManager } = ChromeUtils.import(
-      "resource://gre/modules/ExtensionContent.jsm",
-      null
+    const { ExtensionContent } = ChromeUtils.import(
+      "resource://gre/modules/ExtensionContent.jsm"
     );
-    this.context = DocumentManager.getContext(extensionId, this.content);
+    this.context = ExtensionContent.getContextByExtensionId(
+      extensionId,
+      this.content
+    );
 
     Assert.ok(this.context, "Got content script context");
 

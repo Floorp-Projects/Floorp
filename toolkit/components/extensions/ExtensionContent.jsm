@@ -1107,6 +1107,11 @@ var ExtensionContent = {
     return context;
   },
 
+  // For test use only.
+  getContextByExtensionId(extensionId, window) {
+    return DocumentManager.getContext(extensionId, window);
+  },
+
   async handleDetectLanguage({ windows }) {
     let wgc = WindowGlobalChild.getByInnerWindowId(windows[0]);
     let doc = wgc.browsingContext.window.document;

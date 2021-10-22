@@ -300,15 +300,11 @@ nsresult txXSLKey::testNode(const txXPathNode& aNode, txKeyValueHashKey& aKey,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (matched) {
-      txSingleNodeContext* evalContext = new txSingleNodeContext(aNode, &aEs);
-      NS_ENSURE_TRUE(evalContext, NS_ERROR_OUT_OF_MEMORY);
-
-      nsresult rv = aEs.pushEvalContext(evalContext);
-      NS_ENSURE_SUCCESS(rv, rv);
+      aEs.pushEvalContext(new txSingleNodeContext(aNode, &aEs));
 
       RefPtr<txAExprResult> exprResult;
-      rv = mKeys[currKey].useExpr->evaluate(evalContext,
-                                            getter_AddRefs(exprResult));
+      nsresult rv = mKeys[currKey].useExpr->evaluate(
+          aEs.getEvalContext(), getter_AddRefs(exprResult));
 
       delete aEs.popEvalContext();
       NS_ENSURE_SUCCESS(rv, rv);

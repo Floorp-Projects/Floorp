@@ -48,8 +48,10 @@ add_task(async function test_contentscript_cache() {
   let origin = await extension.awaitMessage("origin");
   let scriptUrl = `${origin}/content_script.js`;
 
-  let {ExtensionManager} = SpecialPowers.Cu.import("resource://gre/modules/ExtensionChild.jsm", {});
-  let ext = ExtensionManager.extensions.get(extension.id);
+  const { ExtensionProcessScript } = SpecialPowers.Cu.import(
+    "resource://gre/modules/ExtensionProcessScript.jsm"
+  );
+  let ext = ExtensionProcessScript.getExtensionChild(extension.id);
 
   ext.staticScripts.expiryTimeout = 3000;
   is(ext.staticScripts.size, 0, "Should have no cached scripts");
@@ -68,8 +70,10 @@ add_task(async function test_contentscript_cache() {
     /* globals addMessageListener, assert */
     chromeScript = SpecialPowers.loadChromeScript(() => {
       addMessageListener("check-script-cache", extensionId => {
-        let {ExtensionManager} = ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm", null);
-        let ext = ExtensionManager.extensions.get(extensionId);
+        const { ExtensionProcessScript } = ChromeUtils.import(
+          "resource://gre/modules/ExtensionProcessScript.jsm"
+        );
+        let ext = ExtensionProcessScript.getExtensionChild(extensionId);
 
         if (ext && ext.staticScripts) {
           assert.equal(ext.staticScripts.size, 0, "Should have no cached scripts in the parent process");

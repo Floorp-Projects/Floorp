@@ -242,15 +242,7 @@ nsresult txExecutionState::getVariable(int32_t aNamespace, nsAtom* aLName,
       return rv;
     }
   } else {
-    UniquePtr<txRtfHandler> rtfHandler(new txRtfHandler);
-
-    rv = pushResultHandler(rtfHandler.get());
-    if (NS_FAILED(rv)) {
-      popAndDeleteEvalContextUntil(mInitialEvalContext);
-      return rv;
-    }
-
-    Unused << rtfHandler.release();
+    pushResultHandler(new txRtfHandler);
 
     txInstruction* prevInstr = mNextInstruction;
     // set return to nullptr to stop execution
@@ -271,7 +263,8 @@ nsresult txExecutionState::getVariable(int32_t aNamespace, nsAtom* aLName,
     popTemplateRule();
 
     mNextInstruction = prevInstr;
-    rtfHandler = WrapUnique((txRtfHandler*)popResultHandler());
+    UniquePtr<txRtfHandler> rtfHandler(
+        static_cast<txRtfHandler*>(popResultHandler()));
     rv = rtfHandler->getAsRTF(&aResult);
     if (NS_FAILED(rv)) {
       popAndDeleteEvalContextUntil(mInitialEvalContext);
@@ -305,13 +298,9 @@ void txExecutionState::receiveError(const nsAString& aMsg, nsresult aRes) {
   // XXX implement me
 }
 
-nsresult txExecutionState::pushEvalContext(txIEvalContext* aContext) {
-  nsresult rv = mEvalContextStack.push(mEvalContext);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+void txExecutionState::pushEvalContext(txIEvalContext* aContext) {
+  mEvalContextStack.push(mEvalContext);
   mEvalContext = aContext;
-
-  return NS_OK;
 }
 
 txIEvalContext* txExecutionState::popEvalContext() {
@@ -321,12 +310,7 @@ txIEvalContext* txExecutionState::popEvalContext() {
   return prev;
 }
 
-nsresult txExecutionState::pushBool(bool aBool) {
-  // XXX(Bug 1631371) Check if this should use a fallible operation as it
-  // pretended earlier, or change the return type to void.
-  mBoolStack.AppendElement(aBool);
-  return NS_OK;
-}
+void txExecutionState::pushBool(bool aBool) { mBoolStack.AppendElement(aBool); }
 
 bool txExecutionState::popBool() {
   NS_ASSERTION(mBoolStack.Length(), "popping from empty stack");
@@ -334,13 +318,9 @@ bool txExecutionState::popBool() {
   return mBoolStack.IsEmpty() ? false : mBoolStack.PopLastElement();
 }
 
-nsresult txExecutionState::pushResultHandler(txAXMLEventHandler* aHandler) {
-  nsresult rv = mResultHandlerStack.push(mResultHandler);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+void txExecutionState::pushResultHandler(txAXMLEventHandler* aHandler) {
+  mResultHandlerStack.push(mResultHandler);
   mResultHandler = aHandler;
-
-  return NS_OK;
 }
 
 txAXMLEventHandler* txExecutionState::popResultHandler() {
@@ -428,11 +408,8 @@ nsresult txExecutionState::runTemplate(txInstruction* aTemplate) {
   NS_ENSURE_TRUE(++mRecursionDepth < kMaxRecursionDepth,
                  NS_ERROR_XSLT_BAD_RECURSION);
 
-  nsresult rv = mLocalVarsStack.push(mLocalVariables);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mReturnStack.push(mNextInstruction);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mLocalVarsStack.push(mLocalVariables);
+  mReturnStack.push(mNextInstruction);
 
   mLocalVariables = nullptr;
   mNextInstruction = aTemplate;
