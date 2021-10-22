@@ -33,6 +33,7 @@ dependencies {
     implementation project(":concept-awesomebar")
     implementation project(":browser-state")
     implementation project(":support-base")
+    implementation project(":support-utils")
     implementation project(":ui-icons")
 
     implementation Dependencies.kotlin_stdlib
