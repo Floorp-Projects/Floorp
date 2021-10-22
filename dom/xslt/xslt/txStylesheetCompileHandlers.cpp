@@ -434,9 +434,7 @@ static nsresult txFnStartLREStylesheet(int32_t aNamespaceID, nsAtom* aLocalName,
   UniquePtr<txTemplateItem> templ(
       new txTemplateItem(std::move(match), nullExpr, nullExpr, prio));
   aState.openInstructionContainer(templ.get());
-  aState.addToplevelItem(templ.get());
-
-  Unused << templ.release();
+  aState.addToplevelItem(templ.release());
 
   aState.pushHandlerTable(gTxTemplateHandler);
 
@@ -521,9 +519,7 @@ static nsresult txFnStartAttributeSet(int32_t aNamespaceID, nsAtom* aLocalName,
   UniquePtr<txAttributeSetItem> attrSet(new txAttributeSetItem(name));
   aState.openInstructionContainer(attrSet.get());
 
-  aState.addToplevelItem(attrSet.get());
-
-  Unused << attrSet.release();
+  aState.addToplevelItem(attrSet.release());
 
   rv = parseUseAttrSets(aAttributes, aAttrCount, false, aState);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -627,9 +623,8 @@ static nsresult txFnStartImport(int32_t aNamespaceID, nsAtom* aLocalName,
                                 txStylesheetCompilerState& aState) {
   UniquePtr<txImportItem> import(new txImportItem);
   import->mFrame = MakeUnique<txStylesheet::ImportFrame>();
-  aState.addToplevelItem(import.get());
-
-  txImportItem* importPtr = import.release();
+  txStylesheet::ImportFrame* frame = import->mFrame.get();
+  aState.addToplevelItem(import.release());
 
   txStylesheetAttr* attr = nullptr;
   nsresult rv = getStyleAttr(aAttributes, aAttrCount, kNameSpaceID_None,
@@ -638,7 +633,7 @@ static nsresult txFnStartImport(int32_t aNamespaceID, nsAtom* aLocalName,
 
   nsAutoString absUri;
   URIUtils::resolveHref(attr->mValue, aState.mElementContext->mBaseURI, absUri);
-  rv = aState.loadImportedStylesheet(absUri, importPtr->mFrame.get());
+  rv = aState.loadImportedStylesheet(absUri, frame);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aState.pushHandlerTable(gTxIgnoreHandler);
