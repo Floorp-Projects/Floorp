@@ -164,7 +164,7 @@ nsresult txMozillaTextOutput::createResultDocument(Document* aSourceDocument,
   // observer) we only create a transformiix:result root element.
   if (!observer) {
     int32_t namespaceID;
-    rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(
+    rv = nsNameSpaceManager::GetInstance()->RegisterNameSpace(
         nsLiteralString(kTXNameSpaceURI), namespaceID);
     NS_ENSURE_SUCCESS(rv, rv);
 

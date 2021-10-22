@@ -341,7 +341,7 @@ already_AddRefed<mozilla::dom::NodeInfo> nsDOMAttributeMap::GetAttrNodeInfo(
   int32_t nameSpaceID = kNameSpaceID_None;
 
   if (!aNamespaceURI.IsEmpty()) {
-    nameSpaceID = nsContentUtils::NameSpaceManager()->GetNameSpaceID(
+    nameSpaceID = nsNameSpaceManager::GetInstance()->GetNameSpaceID(
         aNamespaceURI, nsContentUtils::IsChromeDoc(mContent->OwnerDoc()));
 
     if (nameSpaceID == kNameSpaceID_Unknown) {

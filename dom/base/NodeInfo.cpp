@@ -155,7 +155,7 @@ void NodeInfo::GetPrefix(nsAString& aPrefix) const {
 
 void NodeInfo::GetNamespaceURI(nsAString& aNameSpaceURI) const {
   if (mInner.mNamespaceID > 0) {
-    nsresult rv = nsContentUtils::NameSpaceManager()->GetNameSpaceURI(
+    nsresult rv = nsNameSpaceManager::GetInstance()->GetNameSpaceURI(
         mInner.mNamespaceID, aNameSpaceURI);
     // How can we possibly end up with a bogus namespace ID here?
     if (NS_FAILED(rv)) {
@@ -167,7 +167,7 @@ void NodeInfo::GetNamespaceURI(nsAString& aNameSpaceURI) const {
 }
 
 bool NodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const {
-  int32_t nsid = nsContentUtils::NameSpaceManager()->GetNameSpaceID(
+  int32_t nsid = nsNameSpaceManager::GetInstance()->GetNameSpaceID(
       aNamespaceURI, nsContentUtils::IsChromeDoc(mOwnerManager->GetDocument()));
 
   return mozilla::dom::NodeInfo::NamespaceEquals(nsid);

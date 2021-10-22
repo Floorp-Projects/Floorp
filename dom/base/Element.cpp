@@ -1481,7 +1481,7 @@ already_AddRefed<Attr> Element::RemoveAttributeNode(Attr& aAttribute,
 
 void Element::GetAttributeNS(const nsAString& aNamespaceURI,
                              const nsAString& aLocalName, nsAString& aReturn) {
-  int32_t nsid = nsContentUtils::NameSpaceManager()->GetNameSpaceID(
+  int32_t nsid = nsNameSpaceManager::GetInstance()->GetNameSpaceID(
       aNamespaceURI, nsContentUtils::IsChromeDoc(OwnerDoc()));
 
   if (nsid == kNameSpaceID_Unknown) {
@@ -1554,7 +1554,7 @@ void Element::RemoveAttributeNS(const nsAString& aNamespaceURI,
                                 const nsAString& aLocalName,
                                 ErrorResult& aError) {
   RefPtr<nsAtom> name = NS_AtomizeMainThread(aLocalName);
-  int32_t nsid = nsContentUtils::NameSpaceManager()->GetNameSpaceID(
+  int32_t nsid = nsNameSpaceManager::GetInstance()->GetNameSpaceID(
       aNamespaceURI, nsContentUtils::IsChromeDoc(OwnerDoc()));
 
   if (nsid == kNameSpaceID_Unknown) {
@@ -1588,8 +1588,8 @@ already_AddRefed<nsIHTMLCollection> Element::GetElementsByTagNameNS(
   int32_t nameSpaceId = kNameSpaceID_Wildcard;
 
   if (!aNamespaceURI.EqualsLiteral("*")) {
-    aError = nsContentUtils::NameSpaceManager()->RegisterNameSpace(
-        aNamespaceURI, nameSpaceId);
+    aError = nsNameSpaceManager::GetInstance()->RegisterNameSpace(aNamespaceURI,
+                                                                  nameSpaceId);
     if (aError.Failed()) {
       return nullptr;
     }
@@ -1602,7 +1602,7 @@ already_AddRefed<nsIHTMLCollection> Element::GetElementsByTagNameNS(
 
 bool Element::HasAttributeNS(const nsAString& aNamespaceURI,
                              const nsAString& aLocalName) const {
-  int32_t nsid = nsContentUtils::NameSpaceManager()->GetNameSpaceID(
+  int32_t nsid = nsNameSpaceManager::GetInstance()->GetNameSpaceID(
       aNamespaceURI, nsContentUtils::IsChromeDoc(OwnerDoc()));
 
   if (nsid == kNameSpaceID_Unknown) {
@@ -2504,7 +2504,7 @@ nsresult Element::SetAttrAndNotify(
       }
       RefPtr<nsAtom> newValueAtom = valueForAfterSetAttr.GetAsAtom();
       nsAutoString ns;
-      nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
+      nsNameSpaceManager::GetInstance()->GetNameSpaceURI(aNamespaceID, ns);
 
       LifecycleCallbackArgs args = {nsDependentAtomString(aName),
                                     aModType == MutationEvent_Binding::ADDITION
@@ -2545,7 +2545,7 @@ nsresult Element::SetAttrAndNotify(
     InternalMutationEvent mutation(true, eLegacyAttrModified);
 
     nsAutoString ns;
-    nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
+    nsNameSpaceManager::GetInstance()->GetNameSpaceURI(aNamespaceID, ns);
     Attr* attrNode =
         GetAttributeNodeNSInternal(ns, nsDependentAtomString(aName));
     mutation.mRelatedNode = attrNode;
@@ -2690,7 +2690,7 @@ nsresult Element::OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
 
     if (definition->IsInObservedAttributeList(aName)) {
       nsAutoString ns;
-      nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
+      nsNameSpaceManager::GetInstance()->GetNameSpaceURI(aNamespaceID, ns);
 
       nsAutoString value(aValue.String());
       LifecycleCallbackArgs args = {nsDependentAtomString(aName), value, value,
@@ -2767,7 +2767,7 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
   RefPtr<Attr> attrNode;
   if (hasMutationListeners) {
     nsAutoString ns;
-    nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
+    nsNameSpaceManager::GetInstance()->GetNameSpaceURI(aNameSpaceID, ns);
     attrNode = GetAttributeNodeNSInternal(ns, nsDependentAtomString(aName));
   }
 
@@ -2802,7 +2802,7 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
 
     if (definition->IsInObservedAttributeList(aName)) {
       nsAutoString ns;
-      nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
+      nsNameSpaceManager::GetInstance()->GetNameSpaceURI(aNameSpaceID, ns);
 
       RefPtr<nsAtom> oldValueAtom = oldValue.GetAsAtom();
       LifecycleCallbackArgs args = {
