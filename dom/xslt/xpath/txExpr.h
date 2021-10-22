@@ -225,8 +225,6 @@ class FunctionCall : public Expr {
    * @return nsresult indicating out of memory
    */
   nsresult addParam(Expr* aExpr) {
-    // XXX(Bug 1631371) Check if this should use a fallible operation as it
-    // pretended earlier, or change the return type to void.
     mParams.AppendElement(aExpr);
     return NS_OK;
   }
@@ -451,8 +449,6 @@ class PredicateList {
    */
   nsresult add(Expr* aExpr) {
     NS_ASSERTION(aExpr, "missing expression");
-    // XXX(Bug 1631371) Check if this should use a fallible operation as it
-    // pretended earlier, or change the return type to void.
     mPredicates.AppendElement(aExpr);
     return NS_OK;
   }
@@ -790,8 +786,6 @@ class UnionExpr : public Expr {
    * @return nsresult indicating out of memory
    */
   nsresult addExpr(Expr* aExpr) {
-    // XXX(Bug 1631371) Check if this should use a fallible operation as it
-    // pretended earlier, or change the return type to void.
     mExpressions.AppendElement(aExpr);
     return NS_OK;
   }
@@ -835,8 +829,6 @@ class txNamedAttributeStep : public Expr {
 class txUnionNodeTest : public txNodeTest {
  public:
   nsresult addNodeTest(txNodeTest* aNodeTest) {
-    // XXX(Bug 1631371) Check if this should use a fallible operation as it
-    // pretended earlier, or change the return type to void.
     mNodeTests.AppendElement(aNodeTest);
     return NS_OK;
   }
