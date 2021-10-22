@@ -3,7 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["AttributionCode"];
+var EXPORTED_SYMBOLS = ["AttributionCode", "AttributionIOUtils"];
+
+/**
+ * This is a policy object used to override behavior for testing.
+ */
+const AttributionIOUtils = {
+  writeUTF8: async (path, bytes) => IOUtils.writeUTF8(path, bytes),
+  readUTF8: async path => IOUtils.readUTF8(path),
+  exists: async path => IOUtils.exists(path),
+};
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -13,7 +22,6 @@ ChromeUtils.defineModuleGetter(
   "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
 );
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   this,
   "Services",
@@ -123,8 +131,7 @@ var AttributionCode = {
       }
       // Ignore the exception due to a directory that already exists.
     }
-    let bytes = new TextEncoder().encode(code);
-    await OS.File.writeAtomic(file.path, bytes);
+    await AttributionIOUtils.writeUTF8(file.path, code);
   },
 
   /**
@@ -259,7 +266,7 @@ var AttributionCode = {
 
     if (
       AppConstants.platform == "macosx" &&
-      !(await OS.File.exists(attributionFile.path))
+      !(await AttributionIOUtils.exists(attributionFile.path))
     ) {
       log.debug(
         `getAttrDataAsync: macOS && !exists("${attributionFile.path}")`
@@ -315,11 +322,11 @@ var AttributionCode = {
 
     log.debug(`getAttrDataAsync: !macOS || !exists("${attributionFile.path}")`);
 
-    let bytes;
+    let code;
     try {
-      bytes = await OS.File.read(attributionFile.path);
+      code = await AttributionIOUtils.readUTF8(attributionFile.path);
     } catch (ex) {
-      if (ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
+      if (ex instanceof DOMException && ex.name == "NotFoundError") {
         log.debug(
           `getAttrDataAsync: !exists("${
             attributionFile.path
@@ -331,10 +338,8 @@ var AttributionCode = {
         .getHistogramById("BROWSER_ATTRIBUTION_ERRORS")
         .add("read_error");
     }
-    if (bytes) {
+    if (code) {
       try {
-        let decoder = new TextDecoder();
-        let code = decoder.decode(bytes);
         log.debug(
           `getAttrDataAsync: ${attributionFile.path} deserializes to ${code}`
         );
@@ -379,7 +384,7 @@ var AttributionCode = {
    */
   async deleteFileAsync() {
     try {
-      await OS.File.remove(this.attributionFile.path);
+      await IOUtils.remove(this.attributionFile.path);
     } catch (ex) {
       // The attribution file may already have been deleted,
       // or it may have never been installed at all;
