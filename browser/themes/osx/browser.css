@@ -84,6 +84,11 @@
   -moz-box-align: center;
 }
 
+/* Hide window controls in fullscreen */
+:root[inFullscreen] .titlebar-buttonbox-container {
+  display: none;
+}
+
 .titlebar-buttonbox:-moz-locale-dir(ltr) {
   margin-left: 12px;
   margin-right: 0;
