@@ -80,8 +80,6 @@
 #  define KP_FLAGS p_flag
 #endif
 
-#include "mozilla/mozalloc_abort.h"
-
 static void Abort(const char* aMsg);
 
 static void RealBreak();
@@ -449,7 +447,7 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
 
 static void Abort(const char* aMsg) {
   NoteIntentionalCrash(XRE_GetProcessTypeString());
-  mozalloc_abort(aMsg);
+  MOZ_CRASH_UNSAFE(aMsg);
 }
 
 static void RealBreak() {
