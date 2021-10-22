@@ -94,8 +94,6 @@ void txUnionPattern::toString(nsAString& aDest) {
 
 nsresult txLocPathPattern::addStep(txPattern* aPattern, bool isChild) {
   Step* step = mSteps.AppendElement();
-  if (!step) return NS_ERROR_OUT_OF_MEMORY;
-
   step->pattern = WrapUnique(aPattern);
   step->isChild = isChild;
 
