@@ -236,10 +236,6 @@ nsresult XPathResult::GetExprResult(txAExprResult** aExprResult) {
   }
 
   RefPtr<txNodeSet> nodeSet = new txNodeSet(nullptr);
-  if (!nodeSet) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   uint32_t i, count = mResultNodes.Count();
   for (i = 0; i < count; ++i) {
     UniquePtr<txXPathNode> node(

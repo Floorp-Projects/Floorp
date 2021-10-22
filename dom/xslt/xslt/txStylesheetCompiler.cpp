@@ -654,7 +654,6 @@ nsresult txStylesheetCompilerState::loadIncludedStylesheet(
   NS_ENSURE_TRUE(mObserver, NS_ERROR_NOT_IMPLEMENTED);
 
   UniquePtr<txToplevelItem> item(new txDummyItem);
-  NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
 
   mToplevelIterator.addBefore(item.release());
 
@@ -665,7 +664,6 @@ nsresult txStylesheetCompilerState::loadIncludedStylesheet(
 
   RefPtr<txStylesheetCompiler> compiler = new txStylesheetCompiler(
       aURI, mStylesheet, &mToplevelIterator, mReferrerPolicy, observer);
-  NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
 
   // step forward before calling the observer in case of syncronous loading
   mToplevelIterator.next();
@@ -700,7 +698,6 @@ nsresult txStylesheetCompilerState::loadImportedStylesheet(
 
   RefPtr<txStylesheetCompiler> compiler = new txStylesheetCompiler(
       aURI, mStylesheet, &iter, mReferrerPolicy, observer);
-  NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
 
   // XXX(Bug 1631371) Check if this should use a fallible operation as it
   // pretended earlier.
