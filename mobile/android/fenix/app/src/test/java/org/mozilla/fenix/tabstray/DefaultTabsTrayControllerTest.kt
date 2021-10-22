@@ -16,7 +16,6 @@ import io.mockk.spyk
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import io.mockk.verifyOrder
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.state.TabSessionState
@@ -257,7 +256,6 @@ class DefaultTabsTrayControllerTest {
         }
     }
 
-    @ExperimentalCoroutinesApi
     @Test
     fun `WHEN handleMultipleTabsDeletion is called to close all private tabs THEN that it navigates to home where that tabs will be removed and shows undo snackbar`() {
         var showUndoSnackbarForTabInvoked = false
@@ -288,7 +286,6 @@ class DefaultTabsTrayControllerTest {
         }
     }
 
-    @ExperimentalCoroutinesApi
     @Test
     fun `WHEN handleMultipleTabsDeletion is called to close all normal tabs THEN that it navigates to home where that tabs will be removed and shows undo snackbar`() {
         var showUndoSnackbarForTabInvoked = false
@@ -318,7 +315,6 @@ class DefaultTabsTrayControllerTest {
         }
     }
 
-    @ExperimentalCoroutinesApi
     @Test
     fun `WHEN handleMultipleTabsDeletion is called to close some private tabs THEN that it uses tabsUseCases#removeTabs and shows an undo snackbar`() {
         var showUndoSnackbarForTabInvoked = false
@@ -342,7 +338,6 @@ class DefaultTabsTrayControllerTest {
         }
     }
 
-    @ExperimentalCoroutinesApi
     @Test
     fun `WHEN handleMultipleTabsDeletion is called to close some normal tabs THEN that it uses tabsUseCases#removeTabs and shows an undo snackbar`() {
         var showUndoSnackbarForTabInvoked = false
@@ -398,7 +393,6 @@ class DefaultTabsTrayControllerTest {
         assertTrue(navigateToHomeAndDeleteSessionInvoked)
     }
 
-    @ExperimentalCoroutinesApi
     @Test
     fun `WHEN deleteAllInactiveTabs is called THEN that it uses tabsUseCases#removeTabs and shows an undo snackbar`() {
         var showUndoSnackbarForTabInvoked = false

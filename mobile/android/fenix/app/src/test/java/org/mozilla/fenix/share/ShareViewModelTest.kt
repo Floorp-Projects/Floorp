@@ -19,7 +19,6 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
@@ -42,7 +41,6 @@ import org.mozilla.fenix.share.listadapters.SyncShareOption
 import org.robolectric.shadows.ShadowLooper
 
 @RunWith(FenixRobolectricTestRunner::class)
-@ExperimentalCoroutinesApi
 class ShareViewModelTest {
 
     private val packageName = "org.mozilla.fenix"

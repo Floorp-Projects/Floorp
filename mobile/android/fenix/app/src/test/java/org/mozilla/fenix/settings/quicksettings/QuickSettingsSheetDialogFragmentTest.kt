@@ -13,7 +13,6 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import junit.framework.TestCase.assertNotSame
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction.TrackerBlockedAction
@@ -33,7 +32,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
-@ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
 class QuickSettingsSheetDialogFragmentTest {
 

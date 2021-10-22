@@ -15,7 +15,6 @@ import io.mockk.mockkObject
 import io.mockk.spyk
 import io.mockk.unmockkObject
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.TabListAction
@@ -41,7 +40,6 @@ import org.mozilla.fenix.search.SearchDialogFragmentDirections.Companion.actionG
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 
-@ExperimentalCoroutinesApi
 class SearchDialogControllerTest {
 
     @MockK(relaxed = true) private lateinit var activity: HomeActivity

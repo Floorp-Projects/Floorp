@@ -9,7 +9,6 @@ import androidx.preference.Preference
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -31,7 +30,6 @@ import org.mozilla.fenix.utils.Settings
 import org.robolectric.Robolectric
 import java.io.IOException
 
-@ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
 class SettingsFragmentTest {
 

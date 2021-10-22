@@ -8,7 +8,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
@@ -25,7 +24,6 @@ import org.mozilla.fenix.utils.Settings
 /**
  * Displays the [PwaOnboardingDialogFragment] info dialog when a PWA is opened in the browser for the third time.
  */
-@ExperimentalCoroutinesApi
 class PwaOnboardingObserver(
     private val store: BrowserStore,
     private val lifecycleOwner: LifecycleOwner,

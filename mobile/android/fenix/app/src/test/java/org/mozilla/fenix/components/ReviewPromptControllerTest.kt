@@ -6,7 +6,6 @@ package org.mozilla.fenix.components
 
 import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
@@ -27,7 +26,6 @@ class TestReviewSettings(
         get() = isDefault
 }
 
-@ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
 class ReviewPromptControllerTest {
 

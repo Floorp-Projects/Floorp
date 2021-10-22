@@ -60,4 +60,4 @@ linux64-android-gradle-dependencies:
             - type: directory
               name: public/logs/nexus
               path: /opt/sonatype/nexus/logs
-    worker-type: b-android-large
+    worker-type: b-android-xlarge

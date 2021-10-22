@@ -6,7 +6,6 @@ package org.mozilla.fenix.exceptions.login
 
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.feature.logins.exceptions.LoginException
@@ -15,7 +14,6 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-@ExperimentalCoroutinesApi
 class LoginExceptionsInteractorTest {
 
     private lateinit var loginExceptionStorage: LoginExceptionStorage

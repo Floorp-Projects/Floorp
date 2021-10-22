@@ -6,13 +6,11 @@ package org.mozilla.fenix.search
 
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.search.SearchEngine
 import org.junit.Before
 import org.junit.Test
 
-@ExperimentalCoroutinesApi
 class SearchDialogInteractorTest {
 
     lateinit var searchController: SearchDialogController

@@ -12,7 +12,6 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.service.nimbus.NimbusApi
 import org.junit.Before
 import org.junit.Test
@@ -20,7 +19,6 @@ import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 
-@ExperimentalCoroutinesApi
 class DefaultStudiesInteractorTest {
     @RelaxedMockK
     private lateinit var activity: HomeActivity

@@ -7,7 +7,6 @@ package org.mozilla.fenix.components.toolbar
 import android.content.Context
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
@@ -28,7 +27,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
 
-@ExperimentalCoroutinesApi
 abstract class ToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,
@@ -77,7 +75,6 @@ abstract class ToolbarIntegration(
     }
 }
 
-@ExperimentalCoroutinesApi
 class DefaultToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,

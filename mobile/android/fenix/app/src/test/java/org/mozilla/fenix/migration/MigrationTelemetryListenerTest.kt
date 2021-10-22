@@ -8,7 +8,6 @@ import io.mockk.MockKAnnotations
 import io.mockk.impl.annotations.MockK
 import io.mockk.verify
 import io.mockk.verifyOrder
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.support.base.log.logger.Logger
@@ -23,7 +22,6 @@ import org.junit.Test
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 
-@ExperimentalCoroutinesApi
 class MigrationTelemetryListenerTest {
 
     private val testDispatcher = TestCoroutineDispatcher()

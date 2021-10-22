@@ -11,7 +11,6 @@ import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.navArgs
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
@@ -41,7 +40,6 @@ import org.mozilla.fenix.ext.settings
 /**
  * Fragment used for browsing the web within external apps.
  */
-@ExperimentalCoroutinesApi
 class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private val args by navArgs<ExternalAppBrowserFragmentArgs>()

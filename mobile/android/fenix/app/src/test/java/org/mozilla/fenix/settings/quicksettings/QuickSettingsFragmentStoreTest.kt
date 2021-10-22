@@ -11,7 +11,6 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.PermissionHighlightsState
@@ -233,7 +232,6 @@ class QuickSettingsFragmentStoreTest {
     }
 
     @Test
-    @ExperimentalCoroutinesApi
     fun `TogglePermission should only modify status and visibility of a specific WebsitePermissionsState`() =
         runBlocking {
             val initialCameraStatus = "initialCameraStatus"

@@ -21,7 +21,6 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
@@ -42,7 +41,6 @@ import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.components
 
 @Suppress("TooManyFunctions", "LargeClass")
-@ExperimentalCoroutinesApi
 class BookmarkControllerTest {
 
     private val bookmarkStore = spyk(BookmarkFragmentStore(BookmarkFragmentState(null)))

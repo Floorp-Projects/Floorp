@@ -5,13 +5,11 @@
 package org.mozilla.fenix.customtabs
 
 import android.content.Context
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.feature.toolbar.ToolbarFeature
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 
-@ExperimentalCoroutinesApi
 class CustomTabToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,

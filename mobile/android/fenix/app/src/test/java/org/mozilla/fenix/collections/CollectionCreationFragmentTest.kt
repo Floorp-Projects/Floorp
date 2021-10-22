@@ -8,7 +8,6 @@ import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
@@ -27,7 +26,6 @@ private const val SESSION_ID_MOZILLA = "0"
 private const val URL_BCC = "www.bcc.co.uk"
 private const val SESSION_ID_BCC = "1"
 
-@ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
 class CollectionCreationFragmentTest {
 

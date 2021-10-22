@@ -16,7 +16,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.state.BrowserState
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.state.content.DownloadState
@@ -141,7 +140,6 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
         )
     }
 
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 

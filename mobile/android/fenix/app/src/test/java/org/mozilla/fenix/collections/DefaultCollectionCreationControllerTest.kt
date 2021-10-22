@@ -12,7 +12,6 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyAll
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.action.TabListAction
@@ -31,7 +30,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.home.Tab
 
-@ExperimentalCoroutinesApi
 class DefaultCollectionCreationControllerTest {
 
     private val testCoroutineScope = TestCoroutineScope()

@@ -7,7 +7,6 @@ package org.mozilla.fenix.customtabs
 import android.content.Context
 import io.mockk.mockk
 import io.mockk.spyk
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.createCustomTab
@@ -17,7 +16,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
-@ExperimentalCoroutinesApi
 class CustomTabToolbarMenuTest {
 
     private lateinit var firefoxCustomTab: CustomTabSessionState

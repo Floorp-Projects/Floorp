@@ -14,7 +14,6 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.support.test.robolectric.testContext
@@ -34,7 +33,6 @@ import org.mozilla.fenix.utils.Settings
 import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
 
-@ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
 class IntentReceiverActivityTest {
 

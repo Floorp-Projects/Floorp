@@ -9,7 +9,6 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.createTab
@@ -31,7 +30,6 @@ private const val SESSION_ID_BCC = "1"
 private const val SESSION_ID_BAD_1 = "not a real session id"
 private const val SESSION_ID_BAD_2 = "definitely not a real session id"
 
-@ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
 class CollectionCreationStoreTest {
 

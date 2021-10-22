@@ -9,7 +9,6 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
@@ -27,7 +26,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.settings.creditcards.controller.DefaultCreditCardEditorController
 
-@ExperimentalCoroutinesApi
 class DefaultCreditCardEditorControllerTest {
 
     private val storage: AutofillCreditCardsAddressesStorage = mockk(relaxed = true)

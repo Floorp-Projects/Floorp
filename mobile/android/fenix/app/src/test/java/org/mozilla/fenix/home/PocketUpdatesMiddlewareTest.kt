@@ -10,7 +10,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -24,7 +23,6 @@ import org.mozilla.fenix.datastore.SelectedPocketStoriesCategories.SelectedPocke
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 
-@ExperimentalCoroutinesApi
 class PocketUpdatesMiddlewareTest {
     @Test
     fun `WHEN PocketStoriesShown is dispatched THEN update PocketStoriesService`() {

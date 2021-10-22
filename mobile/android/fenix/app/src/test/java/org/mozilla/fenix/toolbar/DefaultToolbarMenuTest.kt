@@ -12,7 +12,6 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.unmockkStatic
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
@@ -29,7 +28,6 @@ import org.junit.Test
 import org.mozilla.fenix.components.toolbar.DefaultToolbarMenu
 import org.mozilla.fenix.ext.settings
 
-@ExperimentalCoroutinesApi
 class DefaultToolbarMenuTest {
 
     private lateinit var store: BrowserStore

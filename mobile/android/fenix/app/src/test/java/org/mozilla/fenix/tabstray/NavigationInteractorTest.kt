@@ -10,19 +10,16 @@ import androidx.navigation.NavDirections
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import io.mockk.verifyOrder
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
-import mozilla.components.browser.state.state.createTab as createStateTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.TabEntry
-import mozilla.components.browser.storage.sync.Tab as SyncTab
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertTrue
@@ -37,9 +34,10 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.bookmarks.BookmarksUseCase
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import mozilla.components.browser.state.state.createTab as createStateTab
+import mozilla.components.browser.storage.sync.Tab as SyncTab
 import org.mozilla.fenix.tabstray.browser.createTab as createTrayTab
 
-@ExperimentalCoroutinesApi
 class NavigationInteractorTest {
     private lateinit var store: BrowserStore
     private lateinit var tabsTrayStore: TabsTrayStore

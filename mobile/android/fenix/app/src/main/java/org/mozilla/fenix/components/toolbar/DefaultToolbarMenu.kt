@@ -11,7 +11,6 @@ import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.core.content.ContextCompat.getColor
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
@@ -54,7 +53,6 @@ import org.mozilla.fenix.utils.BrowsersCache
  * @param bookmarksStorage Used to check if a page is bookmarked.
  */
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
-@ExperimentalCoroutinesApi
 open class DefaultToolbarMenu(
     private val context: Context,
     private val store: BrowserStore,

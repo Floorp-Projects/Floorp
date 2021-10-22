@@ -11,7 +11,6 @@ import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.SessionState
 import org.mozilla.fenix.R
@@ -19,7 +18,6 @@ import org.mozilla.fenix.android.FenixDialogFragment
 import org.mozilla.fenix.databinding.FragmentConnectionDetailsDialogBinding
 import org.mozilla.fenix.ext.requireComponents
 
-@ExperimentalCoroutinesApi
 class ConnectionPanelDialogFragment : FenixDialogFragment() {
     @VisibleForTesting
     private lateinit var connectionView: ConnectionDetailsView

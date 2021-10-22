@@ -9,7 +9,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.menu.view.MenuButton
 import org.junit.Assert
 import org.junit.Before
@@ -19,7 +18,6 @@ import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
 
-@ExperimentalCoroutinesApi
 class HomeFragmentTest {
 
     private lateinit var settings: Settings

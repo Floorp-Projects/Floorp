@@ -11,7 +11,6 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.verify
 import io.mockk.unmockkObject
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.service.fxa.manager.MigrationResult
@@ -30,7 +29,6 @@ import org.mozilla.fenix.databinding.OnboardingAutomaticSigninBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
-@ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
 class OnboardingAutomaticSignInViewHolderTest {
 

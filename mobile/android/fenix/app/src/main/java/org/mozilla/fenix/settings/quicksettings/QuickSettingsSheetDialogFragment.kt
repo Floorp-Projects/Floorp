@@ -17,7 +17,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.plus
@@ -121,7 +120,6 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
         return rootView
     }
 
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         observeTrackersChange(requireComponents.core.store)
@@ -182,7 +180,6 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
     internal fun provideTabId(): String = args.sessionId
 
     @VisibleForTesting
-    @ExperimentalCoroutinesApi
     internal fun observeTrackersChange(store: BrowserStore) {
         consumeFlow(store) { flow ->
             flow.mapNotNull { state ->

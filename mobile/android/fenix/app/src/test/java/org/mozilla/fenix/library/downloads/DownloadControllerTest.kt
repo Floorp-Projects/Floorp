@@ -7,7 +7,6 @@ package org.mozilla.fenix.library.downloads
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.state.state.content.DownloadState
 import org.junit.After
@@ -18,7 +17,6 @@ import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 
-@ExperimentalCoroutinesApi
 class DownloadControllerTest {
     private val downloadItem = DownloadItem(
         id = "0",

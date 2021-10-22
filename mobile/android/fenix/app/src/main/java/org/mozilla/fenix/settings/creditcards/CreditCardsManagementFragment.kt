@@ -11,7 +11,6 @@ import android.view.ViewGroup
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.R
@@ -61,7 +60,6 @@ class CreditCardsManagementFragment : SecureFragment() {
         return view
     }
 
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         consumeFrom(creditCardsStore) { state ->
             if (!state.isLoading && state.creditCards.isEmpty()) {

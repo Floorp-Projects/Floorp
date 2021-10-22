@@ -10,7 +10,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
@@ -30,7 +29,6 @@ import org.mozilla.fenix.utils.Settings
 /**
  * Displays an [InfoBanner] when a user visits a website that can be opened in an installed native app.
  */
-@ExperimentalCoroutinesApi
 @Suppress("LongParameterList")
 class OpenInAppOnboardingObserver(
     private val context: Context,

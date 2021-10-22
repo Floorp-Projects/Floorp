@@ -10,7 +10,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
@@ -23,7 +22,6 @@ import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.R
 
-@ExperimentalCoroutinesApi
 class ShortcutsSuggestionProviderTest {
 
     private lateinit var context: Context
