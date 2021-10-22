@@ -7,5 +7,6 @@ These linked pages contain design documents for the Networking stack implementat
    :maxdepth: 1
 
    cache2/doc
+   http/lifecycle
    http/logging
    dns/dns-over-https-trr
