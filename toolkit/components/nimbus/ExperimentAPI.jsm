@@ -292,11 +292,6 @@ const ExperimentAPI = {
 const NimbusFeatures = {};
 for (let feature in FeatureManifest) {
   XPCOMUtils.defineLazyGetter(NimbusFeatures, feature, () => {
-    if (AppConstants.MOZ_BUILD_APP !== "browser") {
-      throw new Error(
-        `NimbusFeatures.${feature} APIs are only available for browser builds.`
-      );
-    }
     return new _ExperimentFeature(feature);
   });
 }
