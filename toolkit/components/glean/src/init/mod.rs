@@ -7,48 +7,96 @@ use std::ffi::CString;
 use std::ops::DerefMut;
 use std::path::PathBuf;
 
-use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
+use nserror::{nsresult, NS_ERROR_FAILURE};
 use nsstring::{nsACString, nsCString, nsString};
-use xpcom::interfaces::{mozIViaduct, nsIFile, nsIXULAppInfo};
+#[cfg(not(target_os = "android"))]
+use xpcom::interfaces::mozIViaduct;
+use xpcom::interfaces::{nsIFile, nsIXULAppInfo};
 use xpcom::XpCom;
 
 use glean::{ClientInfoMetrics, Configuration};
 
+#[cfg(not(target_os = "android"))]
 mod upload_pref;
+#[cfg(not(target_os = "android"))]
 mod user_activity;
+#[cfg(not(target_os = "android"))]
 mod viaduct_uploader;
 
+#[cfg(not(target_os = "android"))]
 use upload_pref::UploadPrefObserver;
+#[cfg(not(target_os = "android"))]
 use user_activity::UserActivityObserver;
+#[cfg(not(target_os = "android"))]
 use viaduct_uploader::ViaductUploader;
 
 /// Project FOG's entry point.
 ///
 /// This assembles client information and the Glean configuration and then initializes the global
 /// Glean instance.
+#[cfg(not(target_os = "android"))]
 #[no_mangle]
-pub unsafe extern "C" fn fog_init(
+pub extern "C" fn fog_init(
     data_path_override: &nsACString,
     app_id_override: &nsACString,
 ) -> nsresult {
+    let upload_enabled = static_prefs::pref!("datareporting.healthreport.uploadEnabled");
+    let uploader = Some(Box::new(ViaductUploader) as Box<dyn glean::net::PingUploader>);
+
+    fog_init_internal(
+        data_path_override,
+        app_id_override,
+        upload_enabled,
+        uploader,
+    )
+    .into()
+}
+
+/// Project FOG's entry point on Android.
+///
+/// This assembles client information and the Glean configuration and then initializes the global
+/// Glean instance.
+/// It always enables upload and set no uploader.
+/// This should only be called in test scenarios.
+/// In normal use Glean should be initialized and controlled by the Glean Kotlin SDK.
+#[cfg(target_os = "android")]
+#[no_mangle]
+pub extern "C" fn fog_init(
+    data_path_override: &nsACString,
+    app_id_override: &nsACString,
+) -> nsresult {
+    // On Android always enable Glean upload.
+    let upload_enabled = true;
+    // Don't set up an uploader.
+    let uploader = None;
+
+    fog_init_internal(
+        data_path_override,
+        app_id_override,
+        upload_enabled,
+        uploader,
+    )
+    .into()
+}
+
+fn fog_init_internal(
+    data_path_override: &nsACString,
+    app_id_override: &nsACString,
+    upload_enabled: bool,
+    uploader: Option<Box<dyn glean::net::PingUploader>>,
+) -> Result<(), nsresult> {
     fog::metrics::fog::initialization.start();
 
     log::debug!("Initializing FOG.");
 
     let data_path_str = if data_path_override.is_empty() {
-        match get_data_path() {
-            Ok(dp) => dp,
-            Err(e) => return e,
-        }
+        get_data_path()?
     } else {
         data_path_override.to_utf8().to_string()
     };
     let data_path = PathBuf::from(&data_path_str);
 
-    let (app_build, app_display_version, channel) = match get_app_info() {
-        Ok(ai) => ai,
-        Err(e) => return e,
-    };
+    let (app_build, app_display_version, channel) = get_app_info()?;
 
     let client_info = ClientInfoMetrics {
         app_build,
@@ -56,21 +104,7 @@ pub unsafe extern "C" fn fog_init(
     };
     log::debug!("Client Info: {:#?}", client_info);
 
-    if let Err(e) = UploadPrefObserver::begin_observing() {
-        log::error!(
-            "Could not observe data upload pref. Abandoning FOG init due to {:?}",
-            e
-        );
-        return e;
-    }
-
-    if let Err(e) = UserActivityObserver::begin_observing() {
-        log::error!(
-            "Could not observe user activity. Abandoning FOG init due to {:?}",
-            e
-        );
-        return e;
-    }
+    setup_observers()?;
 
     const SERVER: &str = "https://incoming.telemetry.mozilla.org";
     let localhost_port = static_prefs::pref!("telemetry.fog.test.localhost_port");
@@ -88,7 +122,6 @@ pub unsafe extern "C" fn fog_init(
         app_id_override.to_utf8().to_string()
     };
 
-    let upload_enabled = static_prefs::pref!("datareporting.healthreport.uploadEnabled");
     let configuration = Configuration {
         upload_enabled,
         data_path,
@@ -97,24 +130,13 @@ pub unsafe extern "C" fn fog_init(
         delay_ping_lifetime_io: true,
         channel: Some(channel),
         server_endpoint: Some(server),
-        uploader: Some(Box::new(ViaductUploader) as Box<dyn glean::net::PingUploader>),
+        uploader,
         use_core_mps,
     };
 
     log::debug!("Configuration: {:#?}", configuration);
 
-    // Ensure Viaduct is initialized for networking unconditionally so we don't
-    // need to check again if upload is later enabled.
-    if let Some(viaduct) =
-        xpcom::create_instance::<mozIViaduct>(cstr!("@mozilla.org/toolkit/viaduct;1"))
-    {
-        let result = viaduct.EnsureInitialized();
-        if result.failed() {
-            log::error!("Failed to ensure viaduct was initialized due to {}. Ping upload may not be available.", result.error_name());
-        }
-    } else {
-        log::error!("Failed to create Viaduct via XPCOM. Ping upload may not be available.");
-    }
+    setup_viaduct();
 
     // If we're operating in automation without any specific source tags to set,
     // set the tag "automation" so any pings that escape don't clutter the tables.
@@ -131,7 +153,64 @@ pub unsafe extern "C" fn fog_init(
 
     fog::metrics::fog::initialization.stop();
 
-    NS_OK
+    Ok(())
+}
+
+#[cfg(not(target_os = "android"))]
+fn setup_observers() -> Result<(), nsresult> {
+    if let Err(e) = UploadPrefObserver::begin_observing() {
+        log::error!(
+            "Could not observe data upload pref. Abandoning FOG init due to {:?}",
+            e
+        );
+        return Err(e);
+    }
+
+    if let Err(e) = UserActivityObserver::begin_observing() {
+        log::error!(
+            "Could not observe user activity. Abandoning FOG init due to {:?}",
+            e
+        );
+        return Err(e);
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "android")]
+fn setup_observers() -> Result<(), nsresult> {
+    // No observers are set up on Android.
+    Ok(())
+}
+
+/// Ensure Viaduct is initialized for networking unconditionally so we don't
+/// need to check again if upload is later enabled.
+///
+/// Failing to initialize viaduct will log an error.
+#[cfg(not(target_os = "android"))]
+fn setup_viaduct() {
+    // SAFETY: Everything here is self-contained.
+    //
+    // * We try to create an instance of an xpcom interface
+    // * We bail out if that fails.
+    // * We call a method on it without additional inputs.
+    unsafe {
+        if let Some(viaduct) =
+            xpcom::create_instance::<mozIViaduct>(cstr!("@mozilla.org/toolkit/viaduct;1"))
+        {
+            let result = viaduct.EnsureInitialized();
+            if result.failed() {
+                log::error!("Failed to ensure viaduct was initialized due to {}. Ping upload may not be available.", result.error_name());
+            }
+        } else {
+            log::error!("Failed to create Viaduct via XPCOM. Ping upload may not be available.");
+        }
+    }
+}
+
+#[cfg(target_os = "android")]
+fn setup_viaduct() {
+    // No viaduct is setup on Android.
 }
 
 /// Construct and return the data_path from the profile dir, or return an error.
