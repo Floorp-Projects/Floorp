@@ -96,7 +96,7 @@ class HomeScreenTest {
             verifyWelcomeHeader()
         }.openThreeDotMenu {
         }.openSettings {
-            verifyBasicsHeading()
+            verifyGeneralHeading()
         }.goBack {
             verifyExistingTopSitesList()
         }

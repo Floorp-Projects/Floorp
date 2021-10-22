@@ -10,7 +10,6 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.FenixApplication
@@ -63,35 +62,34 @@ class SettingsBasicsTest {
         }
     }
 
-    @Ignore // to be fixed https://github.com/mozilla-mobile/fenix/issues/21754
     @Test
-    // Walks through settings menu and sub-menus to ensure all items are present
-    fun settingsMenuBasicsItemsTests() {
+    fun settingsGeneralItemsTests() {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
-            verifyBasicsHeading()
-            verifySearchEngineButton()
-            verifyDefaultBrowserItem()
-            verifyTabsItem()
-            // drill down to submenu
+            verifySettingsToolbar()
+            verifyGeneralHeading()
+            verifySearchButton()
+            verifyTabsButton()
+            verifyHomepageButton()
+            verifyCustomizeButton()
+            verifyLoginsAndPasswordsButton()
+            verifyCreditCardsButton()
+            verifyAccessibilityButton()
+            verifyLanguageButton()
+            verifySetAsDefaultBrowserButton()
+        }
+    }
+
+    @Test
+    fun searchSettingsItemsTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
         }.openSearchSubMenu {
+            verifySearchToolbar()
             verifyDefaultSearchEngineHeader()
             verifySearchEngineList()
-            verifyShowSearchSuggestions()
-            verifyShowSearchShortcuts()
-
-            verifyShowClipboardSuggestions()
-            verifySearchBrowsingHistory()
-            verifySearchBookmarks()
-        }.goBack {
-        }.openCustomizeSubMenu {
-            verifyThemes()
-        }.goBack {
-        }.openAccessibilitySubMenu {
-            verifyAutomaticFontSizingMenuItems()
-        }.goBack {
-            // drill down to submenu
         }
     }
 

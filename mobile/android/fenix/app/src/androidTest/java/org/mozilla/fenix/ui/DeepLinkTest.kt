@@ -99,7 +99,7 @@ class DeepLinkTest {
     @Test
     fun openSettings() {
         robot.openSettings {
-            verifyBasicsHeading()
+            verifyGeneralHeading()
             verifyAdvancedHeading()
         }
     }

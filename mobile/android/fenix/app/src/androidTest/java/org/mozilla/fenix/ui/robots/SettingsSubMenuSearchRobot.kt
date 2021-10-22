@@ -36,6 +36,7 @@ import org.mozilla.fenix.helpers.click
  * Implementation of Robot Pattern for the settings search sub menu.
  */
 class SettingsSubMenuSearchRobot {
+    fun verifySearchToolbar() = assertSearchToolbar()
     fun verifyDefaultSearchEngineHeader() = assertDefaultSearchEngineHeader()
     fun verifySearchEngineList() = assertSearchEngineList()
     fun verifyShowSearchSuggestions() = assertShowSearchSuggestions()
@@ -155,6 +156,15 @@ class SettingsSubMenuSearchRobot {
         }
     }
 }
+
+private fun assertSearchToolbar() =
+    onView(
+        allOf(
+            withId(R.id.navigationToolbar),
+            hasDescendant(withContentDescription("Navigate up")),
+            hasDescendant(withText("Search"))
+        )
+    ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertDefaultSearchEngineHeader() =
     onView(withText("Default search engine"))

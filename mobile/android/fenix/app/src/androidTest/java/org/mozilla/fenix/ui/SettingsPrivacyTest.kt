@@ -449,7 +449,7 @@ class SettingsPrivacyTest {
             confirmDeletionAndAssertSnackbar()
         }
         settingsScreen {
-            verifyBasicsHeading()
+            verifyGeneralHeading()
         }
     }
 
@@ -472,7 +472,7 @@ class SettingsPrivacyTest {
             confirmDeletionAndAssertSnackbar()
         }
         settingsScreen {
-            verifyBasicsHeading()
+            verifyGeneralHeading()
         }.openSettingsSubMenuDeleteBrowsingData {
             verifyOpenTabsDetails("0")
         }.goBack {
@@ -505,7 +505,7 @@ class SettingsPrivacyTest {
             confirmDeletionAndAssertSnackbar()
             verifyBrowsingHistoryDetails("0")
         }.goBack {
-            verifyBasicsHeading()
+            verifyGeneralHeading()
         }.goBack {
         }
         navigationToolbar {
