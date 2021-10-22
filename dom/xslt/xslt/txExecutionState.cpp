@@ -317,10 +317,7 @@ txIEvalContext* txExecutionState::popEvalContext() {
   return prev;
 }
 
-nsresult txExecutionState::pushBool(bool aBool) {
-  mBoolStack.AppendElement(aBool);
-  return NS_OK;
-}
+void txExecutionState::pushBool(bool aBool) { mBoolStack.AppendElement(aBool); }
 
 bool txExecutionState::popBool() {
   NS_ASSERTION(mBoolStack.Length(), "popping from empty stack");

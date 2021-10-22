@@ -91,7 +91,7 @@ class txExecutionState : public txIMatchContext {
    */
   void popAndDeleteEvalContextUntil(txIEvalContext* aContext);
 
-  nsresult pushBool(bool aBool);
+  void pushBool(bool aBool);
   bool popBool();
   nsresult pushResultHandler(txAXMLEventHandler* aHandler);
   txAXMLEventHandler* popResultHandler();
