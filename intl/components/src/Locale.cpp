@@ -569,6 +569,11 @@ static bool LocaleToString(const Locale& tag, Buffer& sb) {
     return sb.append(span.data(), span.size());
   };
 
+  auto appendSubtagSpan = [&sb](Span<const char> subtag) {
+    MOZ_ASSERT(!subtag.empty());
+    return sb.append(subtag.data(), subtag.size());
+  };
+
   auto appendSubtagZ = [&sb](const char* subtag) {
     MOZ_ASSERT(strlen(subtag) > 0);
     return sb.append(subtag, strlen(subtag));
@@ -613,8 +618,8 @@ static bool LocaleToString(const Locale& tag, Buffer& sb) {
   }
 
   // Append the private-use subtag if present.
-  if (tag.privateuse()) {
-    if (!sb.append('-') || !appendSubtagZ(tag.privateuse())) {
+  if (auto privateuse = tag.privateuse()) {
+    if (!sb.append('-') || !appendSubtagSpan(privateuse.value())) {
       return false;
     }
   }
