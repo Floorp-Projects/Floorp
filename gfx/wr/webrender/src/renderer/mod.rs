@@ -2433,20 +2433,12 @@ impl Renderer {
     }
 
     fn check_gl_errors(&mut self) {
-        // We shouldn't have to, but make sure we don't iterate more than 50
-        // times, in case a buggy driver decides to never return gl::NO_ERROR.
-        for _ in 0..50 {
-            let err = self.device.gl().get_error();
-            if err == gl::NO_ERROR {
-                break;
-            }
-
-            if err == gl::OUT_OF_MEMORY {
-                self.renderer_errors.push(RendererError::OutOfMemory);
-            }
-
-            // Probably should check for other errors?
+        let err = self.device.gl().get_error();
+        if err == gl::OUT_OF_MEMORY {
+            self.renderer_errors.push(RendererError::OutOfMemory);
         }
+
+        // Probably should check for other errors?
     }
 
     fn bind_textures(&mut self, textures: &BatchTextures) {
