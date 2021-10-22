@@ -58,7 +58,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   Normandy: "resource://normandy/Normandy.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   OsEnvironment: "resource://gre/modules/OsEnvironment.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
@@ -3113,7 +3112,7 @@ BrowserGlue.prototype = {
         } else {
           // We have created a new database but we don't have any backup available
           importBookmarks = true;
-          if (await OS.File.exists(BookmarkHTMLUtils.defaultPath)) {
+          if (await IOUtils.exists(BookmarkHTMLUtils.defaultPath)) {
             // If bookmarks.html is available in current profile import it...
             importBookmarksHTML = true;
           } else {
@@ -3141,8 +3140,8 @@ BrowserGlue.prototype = {
         if (restoreDefaultBookmarks) {
           // User wants to restore bookmarks.html file from default profile folder
           bookmarksUrl = "chrome://browser/locale/bookmarks.html";
-        } else if (await OS.File.exists(BookmarkHTMLUtils.defaultPath)) {
-          bookmarksUrl = OS.Path.toFileURI(BookmarkHTMLUtils.defaultPath);
+        } else if (await IOUtils.exists(BookmarkHTMLUtils.defaultPath)) {
+          bookmarksUrl = PathUtils.toFileURI(BookmarkHTMLUtils.defaultPath);
         }
 
         if (bookmarksUrl) {
@@ -3304,6 +3303,8 @@ BrowserGlue.prototype = {
     const UI_VERSION = 119;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
+    const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
       // This is a new profile, nothing to migrate.
       Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
@@ -3322,10 +3323,9 @@ BrowserGlue.prototype = {
     let xulStore = Services.xulStore;
 
     if (currentUIVersion < 64) {
-      OS.File.remove(
-        OS.Path.join(OS.Constants.Path.profileDir, "directoryLinks.json"),
-        { ignoreAbsent: true }
-      );
+      IOUtils.remove(PathUtils.join(PROFILE_DIR, "directoryLinks.json"), {
+        ignoreAbsent: true,
+      });
     }
 
     if (
@@ -3370,10 +3370,9 @@ BrowserGlue.prototype = {
 
     if (currentUIVersion < 68) {
       // Remove blocklists legacy storage, now relying on IndexedDB.
-      OS.File.remove(
-        OS.Path.join(OS.Constants.Path.profileDir, "kinto.sqlite"),
-        { ignoreAbsent: true }
-      );
+      IOUtils.remove(PathUtils.join(PROFILE_DIR, "kinto.sqlite"), {
+        ignoreAbsent: true,
+      });
     }
 
     if (currentUIVersion < 69) {
@@ -3421,21 +3420,18 @@ BrowserGlue.prototype = {
 
     if (currentUIVersion < 73) {
       // Remove blocklist JSON local dumps in profile.
-      OS.File.removeDir(
-        OS.Path.join(OS.Constants.Path.profileDir, "blocklists"),
-        { ignoreAbsent: true }
-      );
-      OS.File.removeDir(
-        OS.Path.join(OS.Constants.Path.profileDir, "blocklists-preview"),
-        { ignoreAbsent: true }
-      );
+      IOUtils.remove(PathUtils.join(PROFILE_DIR, "blocklists"), {
+        recursive: true,
+        ignoreAbsent: true,
+      });
+      IOUtils.remove(PathUtils.join(PROFILE_DIR, "blocklists-preview"), {
+        recursive: true,
+        ignoreAbsent: true,
+      });
       for (const filename of ["addons.json", "plugins.json", "gfx.json"]) {
         // Some old versions used to dump without subfolders. Clean them while we are at it.
-        const path = OS.Path.join(
-          OS.Constants.Path.profileDir,
-          `blocklists-${filename}`
-        );
-        OS.File.remove(path, { ignoreAbsent: true });
+        const path = PathUtils.join(PROFILE_DIR, `blocklists-${filename}`);
+        IOUtils.remove(path, { ignoreAbsent: true });
       }
     }
 
