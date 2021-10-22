@@ -409,12 +409,12 @@ impl FirefoxOptions {
                 )
             })?;
 
-            rv.android = FirefoxOptions::load_android(settings.android_storage, &options)?;
-            rv.args = FirefoxOptions::load_args(&options)?;
-            rv.env = FirefoxOptions::load_env(&options)?;
-            rv.log = FirefoxOptions::load_log(&options)?;
-            rv.prefs = FirefoxOptions::load_prefs(&options)?;
-            rv.profile = FirefoxOptions::load_profile(&options)?;
+            rv.android = FirefoxOptions::load_android(settings.android_storage, options)?;
+            rv.args = FirefoxOptions::load_args(options)?;
+            rv.env = FirefoxOptions::load_env(options)?;
+            rv.log = FirefoxOptions::load_log(options)?;
+            rv.prefs = FirefoxOptions::load_prefs(options)?;
+            rv.profile = FirefoxOptions::load_profile(options)?;
         }
 
         if let Some(args) = rv.args.as_ref() {
