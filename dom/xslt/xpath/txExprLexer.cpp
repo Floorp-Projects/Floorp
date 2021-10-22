@@ -319,7 +319,6 @@ nsresult txExprLexer::parse(const nsAString& aPattern) {
       }
     }
     if (isToken) {
-      NS_ENSURE_TRUE(newToken, NS_ERROR_OUT_OF_MEMORY);
       NS_ENSURE_TRUE(newToken != mLastItem, NS_ERROR_FAILURE);
       prevToken = newToken;
       addToken(newToken);

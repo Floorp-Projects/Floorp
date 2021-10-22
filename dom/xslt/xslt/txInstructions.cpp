@@ -548,8 +548,6 @@ nsresult txPushNewContext::execute(txExecutionState& aEs) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   txNodeSetContext* context = new txNodeSetContext(sortedNodes, &aEs);
-  NS_ENSURE_TRUE(context, NS_ERROR_OUT_OF_MEMORY);
-
   context->next();
 
   rv = aEs.pushEvalContext(context);

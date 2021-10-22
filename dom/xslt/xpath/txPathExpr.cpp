@@ -25,9 +25,6 @@ nsresult PathExpr::addExpr(Expr* aExpr, PathOperator aPathOp) {
   NS_ASSERTION(!mItems.IsEmpty() || aPathOp == RELATIVE_OP,
                "First step has to be relative in PathExpr");
   PathExprItem* pxi = mItems.AppendElement();
-  if (!pxi) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   pxi->expr = WrapUnique(aExpr);
   pxi->pathOp = aPathOp;
 
