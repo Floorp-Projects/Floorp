@@ -339,35 +339,85 @@ void NativeLayerRootCA::Representation::Commit(WhichRepresentation aRepresentati
   }
 
   if (mMutatedLayerStructure || mustRebuild) {
-    NSMutableArray<CALayer*>* sublayers = [NSMutableArray arrayWithCapacity:aSublayers.Length()];
-    for (auto layer : aSublayers) {
-      [sublayers addObject:layer->UnderlyingCALayer(aRepresentation)];
-    }
-    mRootCALayer.sublayers = sublayers;
+    // Bug 1731821 should eliminate this most of this logic and allow us to unconditionally
+    // accept aSublayers.
 
-    // Now that we've set these layer relationships, we check to see if we should break
-    // them and isolate a single video layer. It's important to do this *after* the
-    // sublayers have been set, because we need the relationships there to do the
-    // bounds checking of layer spaces against each other.
-    // Bug 1731821 should eliminate this entire if block.
+    // We're going to check for an opportunity to isolate the topmost video layer. We'll avoid
+    // modifying mRootCALayer.sublayers unless we absolutely must, which will avoid flickering
+    // in the CATranscation. We check aSublayers with 3 possible outcomes.
+    // 1) We can't isolate video, so accept the provided sublayers.
+    // 2) We can isolate video, and we weren't isolating that video before, so create our own
+    //    sublayers with the proper structure.
+    // 3) We can isolate video, and we were already doing that. The sublayers underneath the
+    //    video might have changed in some way that doesn't prevent isolation, so ignore them.
+    //    Leave our sublayers unchanged.
+
+    // Define a block we'll use to accept the provided sublayers if we must. In the different
+    // cases, we'll call this at different times.
+    void (^acceptProvidedSublayers)() = ^() {
+      NSMutableArray<CALayer*>* sublayers = [NSMutableArray arrayWithCapacity:aSublayers.Length()];
+      for (auto layer : aSublayers) {
+        [sublayers addObject:layer->UnderlyingCALayer(aRepresentation)];
+      }
+      mRootCALayer.sublayers = sublayers;
+    };
+
+    // See if the top layer is already rooted in our mRootCALayer. If it is, then we can check
+    // for isolation without first disrupting our sublayers.
+    bool topLayerIsRooted =
+        aSublayers.Length() &&
+        (aSublayers.LastElement()->UnderlyingCALayer(aRepresentation).superlayer == mRootCALayer);
+
+    if (!topLayerIsRooted) {
+      // We have to accept the provided sublayers. We may still isolate, but it's because the
+      // new topmost layer was not already isolated. This is an acceptable time to potentially
+      // flicker as the sublayers are changed.
+      acceptProvidedSublayers();
+    }
+
+    // Now that we've confirmed these layer relationships, we check to see if we should break
+    // them and isolate a single video layer. It's important that the topmost layer is a
+    // child of mRootCALayer for this logic to work.
+    MOZ_DIAGNOSTIC_ASSERT(
+        !aSublayers.Length() ||
+            (aSublayers.LastElement()->UnderlyingCALayer(aRepresentation).superlayer ==
+             mRootCALayer),
+        "The topmost layer must be a child of mRootCALayer.");
+
+    bool didIsolate = false;
     if (mightIsolate && aWindowIsFullscreen && !aMouseMovedRecently) {
       CALayer* isolatedLayer = FindVideoLayerToIsolate(aRepresentation, aSublayers);
       if (isolatedLayer) {
-        // Create a full coverage black layer behind the isolated layer.
-        CGFloat rootWidth = mRootCALayer.bounds.size.width;
-        CGFloat rootHeight = mRootCALayer.bounds.size.height;
+        // No matter what happens next, we did choose to isolate.
+        didIsolate = true;
 
-        // Reaching the low-power mode requires that there is a single black layer
-        // covering the entire window behind the video layer. Create that layer.
-        CALayer* blackLayer = [CALayer layer];
-        blackLayer.position = NSZeroPoint;
-        blackLayer.anchorPoint = NSZeroPoint;
-        blackLayer.bounds = CGRectMake(0, 0, rootWidth, rootHeight);
-        blackLayer.backgroundColor = [[NSColor blackColor] CGColor];
+        // We only need to change our sublayers if we weren't already isolating, or
+        // if the isolatedLayer does not match our current top layer.
+        if (!mIsIsolatingVideo || isolatedLayer != mRootCALayer.sublayers.lastObject) {
+          // Create a full coverage black layer behind the isolated layer.
+          CGFloat rootWidth = mRootCALayer.bounds.size.width;
+          CGFloat rootHeight = mRootCALayer.bounds.size.height;
 
-        mRootCALayer.sublayers = @[ blackLayer, isolatedLayer ];
+          // Reaching the low-power mode requires that there is a single black layer
+          // covering the entire window behind the video layer. Create that layer.
+          CALayer* blackLayer = [CALayer layer];
+          blackLayer.position = NSZeroPoint;
+          blackLayer.anchorPoint = NSZeroPoint;
+          blackLayer.bounds = CGRectMake(0, 0, rootWidth, rootHeight);
+          blackLayer.backgroundColor = [[NSColor blackColor] CGColor];
+
+          mRootCALayer.sublayers = @[ blackLayer, isolatedLayer ];
+        }
       }
     }
+
+    // If we didn't accept the sublayers earlier, and we decided we couldn't isolate,
+    // accept them now.
+    if (topLayerIsRooted && !didIsolate) {
+      acceptProvidedSublayers();
+    }
+
+    mIsIsolatingVideo = didIsolate;
   }
 
   mMutatedLayerStructure = false;
