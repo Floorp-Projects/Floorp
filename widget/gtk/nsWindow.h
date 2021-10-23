@@ -409,8 +409,8 @@ class nsWindow final : public nsBaseWidget {
     // WebRender compositor is paused after window creation.
     COMPOSITOR_PAUSED_INITIALLY,
     // WebRender compositor is paused because GtkWindow is hidden,
-    // we can't draw into EGLSurface.
-    COMPOSITOR_PAUSED_MISSING_EGL_WINDOW,
+    // we can't draw into GL context.
+    COMPOSITOR_PAUSED_MISSING_WINDOW,
     // WebRender compositor is paused as we're repainting whole window and
     // we're waiting for content process to update page content.
     COMPOSITOR_PAUSED_FLICKERING
