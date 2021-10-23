@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.concept.engine.Engine
-import org.mozilla.fenix.browser.BrowserFragment
+import org.mozilla.fenix.browser.BaseBrowserFragment
 import org.mozilla.fenix.home.HomeFragment
 
 /**
@@ -85,7 +85,7 @@ class MarkersFragmentLifecycleCallbacks(
         if (shouldSkip() ||
             // These methods are manually instrumented with duration.
             f is HomeFragment ||
-            f is BrowserFragment // instrumented in BaseBrowserFragment.
+            f is BaseBrowserFragment
         ) {
             return
         }
