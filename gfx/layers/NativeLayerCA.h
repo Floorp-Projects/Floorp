@@ -137,6 +137,7 @@ class NativeLayerRootCA : public NativeLayerRoot {
         WhichRepresentation aRepresentation,
         const nsTArray<RefPtr<NativeLayerCA>>& aSublayers);
     CALayer* mRootCALayer = nullptr;  // strong
+    bool mIsIsolatingVideo = false;
     bool mMutatedLayerStructure = false;
     bool mMutatedMouseMovedRecently = false;
   };
