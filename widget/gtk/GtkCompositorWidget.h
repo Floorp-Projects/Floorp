@@ -104,6 +104,9 @@ class GtkCompositorWidget : public CompositorWidget,
 #if defined(MOZ_X11)
   bool ConfigureX11Backend(Window aXWindow, bool aShaped);
 #endif
+#ifdef MOZ_LOGGING
+  bool IsPopup();
+#endif
 
  protected:
   RefPtr<nsWindow> mWidget;
