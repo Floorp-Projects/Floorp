@@ -201,8 +201,7 @@ class nsWindow final : public nsBaseWidget {
   // event callbacks
   gboolean OnExposeEvent(cairo_t* cr);
   gboolean OnConfigureEvent(GtkWidget* aWidget, GdkEventConfigure* aEvent);
-  void OnMap();
-  void OnUnrealize();
+  void OnContainerUnrealize();
   void OnSizeAllocate(GtkAllocation* aAllocation);
   void OnDeleteEvent();
   void OnEnterNotifyEvent(GdkEventCrossing* aEvent);
@@ -264,7 +263,6 @@ class nsWindow final : public nsBaseWidget {
   bool IsPopup() const;
   bool IsWaylandPopup() const;
   bool IsPIPWindow() const { return mIsPIPWindow; };
-  bool IsDragPopup() { return mIsDragPopup; };
 
   nsAutoCString GetDebugTag() const;
 
@@ -409,8 +407,8 @@ class nsWindow final : public nsBaseWidget {
     // WebRender compositor is paused after window creation.
     COMPOSITOR_PAUSED_INITIALLY,
     // WebRender compositor is paused because GtkWindow is hidden,
-    // we can't draw into GL context.
-    COMPOSITOR_PAUSED_MISSING_WINDOW,
+    // we can't draw into EGLSurface.
+    COMPOSITOR_PAUSED_MISSING_EGL_WINDOW,
     // WebRender compositor is paused as we're repainting whole window and
     // we're waiting for content process to update page content.
     COMPOSITOR_PAUSED_FLICKERING
@@ -432,25 +430,20 @@ class nsWindow final : public nsBaseWidget {
 
   virtual void RegisterTouchWindow() override;
   virtual bool CompositorInitiallyPaused() override {
+#ifdef MOZ_WAYLAND
     return mCompositorState == COMPOSITOR_PAUSED_INITIALLY;
+#else
+    return false;
+#endif
   }
   nsCOMPtr<nsIWidget> mParent;
   // Has this widget been destroyed yet?
   bool mIsDestroyed;
   // Does WindowResized need to be called on listeners?
   bool mNeedsDispatchResized;
-  // mIsShown tracks requested visible status from browser perspective, i.e.
-  // if the window should be visible or now.
+  // This flag tracks if we're hidden or shown.
   bool mIsShown;
-  // mNeedsShow is set when browser requested to show this window but we failed
-  // to do so for some reason (wrong window size for instance).
-  // In such case we set mIsShown = true and mNeedsShow = true to indicate
-  // that the window is not actually visible but we report to browser that
-  // it is visible (mIsShown == true).
   bool mNeedsShow;
-  // This track real window visibility from OS perspective.
-  // It's set by OnMap/OnUnrealize which is based on Gtk events.
-  bool mIsMapped;
   // is this widget enabled?
   bool mEnabled;
   // has the native window for this been created yet?
@@ -570,8 +563,6 @@ class nsWindow final : public nsBaseWidget {
   // parent (for instance WebRTC sharing indicator).
   bool mIsWaylandPanelWindow;
   bool mAlwaysOnTop;
-  bool mNoAutoHide;
-  bool mMouseTransparent;
 
   // The cursor cache
   static GdkCursor* gsGtkCursorCache[eCursorCount];
@@ -608,12 +599,6 @@ class nsWindow final : public nsBaseWidget {
   static bool DragInProgress(void);
 
   void DispatchMissedButtonReleases(GdkEventCrossing* aGdkEvent);
-
-  // When window widget gets mapped/unmapped we need to configure
-  // underlying GdkWindow properly. Otherwise we'll end up with
-  // rendering to released window.
-  void ConfigureGdkWindow();
-  void ReleaseGdkWindow();
 
   // nsBaseWidget
   virtual WindowRenderer* GetWindowRenderer() override;
@@ -813,6 +798,10 @@ class nsWindow final : public nsBaseWidget {
 
   static bool sTransparentMainWindow;
 
+  /* Used for software rendering
+   */
+  mozilla::widget::WindowSurfaceProvider mSurfaceProvider;
+
 #ifdef ACCESSIBILITY
   RefPtr<mozilla::a11y::LocalAccessible> mRootAccessible;
 
@@ -869,7 +858,6 @@ class nsWindow final : public nsBaseWidget {
   Window mXWindow;
   Visual* mXVisual;
   int mXDepth;
-  bool mIsShaped;
 #endif
 #ifdef MOZ_WAYLAND
   RefPtr<mozilla::gfx::VsyncSource> mWaylandVsyncSource;
@@ -877,7 +865,6 @@ class nsWindow final : public nsBaseWidget {
   zwp_locked_pointer_v1* mLockedPointer;
   zwp_relative_pointer_v1* mRelativePointer;
 #endif
-  mozilla::widget::WindowSurfaceProvider mSurfaceProvider;
 };
 
 #endif /* __nsWindow_h__ */
