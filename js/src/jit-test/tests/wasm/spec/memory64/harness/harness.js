@@ -19,6 +19,17 @@ if (!wasmIsSupported()) {
   quit();
 }
 
+function partialOobWriteMayWritePartialData() {
+    let cfg = getBuildConfiguration();
+    let arm_native = cfg["arm"] && !cfg["arm-simulator"];
+    let arm64_native = cfg["arm64"] && !cfg["arm64-simulator"];
+    return arm_native || arm64_native;
+}
+
+let cfg = getBuildConfiguration();
+let native_arm = cfg["arm"] && !cfg["arm-simulator"];
+let native_arm64 = cfg["arm64"] && !cfg["arm64-simulator"];
+
 function bytes(type, bytes) {
   var typedBuffer = new Uint8Array(bytes);
   return wasmGlobalFromArrayBuffer(type, typedBuffer.buffer);
