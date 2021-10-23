@@ -667,6 +667,10 @@
     %d is a placeholder for the number of sites in the group. -->
     <string name="history_search_group_site">%d stranica</string>
 
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d stranica</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Nedavno zatvorene kartice</string>
     <!-- Option in library to open Recently Closed Tabs page -->
