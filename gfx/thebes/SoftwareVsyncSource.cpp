@@ -11,14 +11,15 @@
 
 using namespace mozilla;
 
-SoftwareVsyncSource::SoftwareVsyncSource(bool aInit) {
+SoftwareVsyncSource::SoftwareVsyncSource() {
   MOZ_ASSERT(NS_IsMainThread());
-  if (aInit) {
-    mGlobalDisplay = new SoftwareDisplay();
-  }
+  mGlobalDisplay = new SoftwareDisplay();
 }
 
-SoftwareVsyncSource::~SoftwareVsyncSource() { MOZ_ASSERT(NS_IsMainThread()); }
+SoftwareVsyncSource::~SoftwareVsyncSource() {
+  MOZ_ASSERT(NS_IsMainThread());
+  mGlobalDisplay = nullptr;
+}
 
 SoftwareDisplay::SoftwareDisplay() : mVsyncEnabled(false) {
   // Mimic 60 fps
@@ -30,13 +31,7 @@ SoftwareDisplay::SoftwareDisplay() : mVsyncEnabled(false) {
                      "GFX: Could not start software vsync thread");
 }
 
-SoftwareDisplay::~SoftwareDisplay() {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mVsyncThread) {
-    mVsyncThread->Stop();
-    delete mVsyncThread;
-  }
-};
+SoftwareDisplay::~SoftwareDisplay() = default;
 
 void SoftwareDisplay::EnableVsync() {
   MOZ_ASSERT(mVsyncThread->IsRunning());
@@ -136,5 +131,4 @@ void SoftwareDisplay::Shutdown() {
   DisableVsync();
   mVsyncThread->Stop();
   delete mVsyncThread;
-  mVsyncThread = nullptr;
 }
