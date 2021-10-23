@@ -1445,11 +1445,15 @@ let $24 = instantiate(`(module
   )
 )`);
 
-// ./test/core/align64.wast:864
-assert_trap(
-  () => invoke($24, `store`, [65532n, -1n]),
-  `out of bounds memory access`,
-);
+// Bug 1737225 - do not observe the partial store caused by bug 1666747 on
+// some native platforms.
+if (!partialOobWriteMayWritePartialData()) {
+    // ./test/core/align64.wast:864
+    assert_trap(
+        () => invoke($24, `store`, [65532n, -1n]),
+        `out of bounds memory access`,
+    );
 
-// ./test/core/align64.wast:866
-assert_return(() => invoke($24, `load`, [65532n]), [value("i32", 0)]);
+    // ./test/core/align64.wast:866
+    assert_return(() => invoke($24, `load`, [65532n]), [value("i32", 0)]);
+}

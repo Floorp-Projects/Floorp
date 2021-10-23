@@ -1028,12 +1028,17 @@ assert_trap(
   `out of bounds memory access`,
 );
 
-// ./test/core/memory_trap64.wast:268
-assert_return(() => invoke($1, `i64.load`, [65528n]), [
-  value("i64", 7523094288207667809n),
-]);
+// Bug 1737225 - do not observe the partial store caused by bug 1666747 on
+// some native platforms.
+if (!partialOobWriteMayWritePartialData()) {
+    // ./test/core/memory_trap64.wast:268
+    assert_return(() => invoke($1, `i64.load`, [65528n]), [
+        value("i64", 7523094288207667809n),
+    ]);
 
-// ./test/core/memory_trap64.wast:269
-assert_return(() => invoke($1, `i64.load`, [0n]), [
-  value("i64", 7523094288207667809n),
-]);
+    // ./test/core/memory_trap64.wast:269
+    assert_return(() => invoke($1, `i64.load`, [0n]), [
+        value("i64", 7523094288207667809n),
+    ]);
+}
+
