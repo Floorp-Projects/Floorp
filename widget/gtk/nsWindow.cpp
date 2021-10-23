@@ -5167,6 +5167,10 @@ void nsWindow::ConfigureGdkWindow() {
     WaylandStartVsync();
   }
 
+  if (mHasMappedToplevel) {
+    EnsureGrabs();
+  }
+
   LOG("  finished, new GdkWindow %p XID 0x%lx\n", mGdkWindow,
       GdkIsX11Display() ? gdk_x11_window_get_xid(mGdkWindow) : 0);
 }
@@ -6108,6 +6112,8 @@ void nsWindow::NativeShow(bool aAction) {
 }
 
 void nsWindow::SetHasMappedToplevel(bool aState) {
+  LOG("nsWindow::SetHasMappedToplevel() [%p] state %d\n", (void*)this, aState);
+
   // Even when aState == mHasMappedToplevel (as when this method is called
   // from Show()), child windows need to have their state checked, so don't
   // return early.
@@ -6121,7 +6127,10 @@ void nsWindow::SetHasMappedToplevel(bool aState) {
   // hidden parent.  When the hidden parent gets shown, the child trees are
   // reconnected, and the state of the window being shown can be easily
   // propagated.
-  if (!mIsShown || !mGdkWindow) return;
+  if (!mIsShown || !mGdkWindow) {
+    LOG("  hidden, quit.\n");
+    return;
+  }
 
   if (aState && !oldState) {
     // Check that a grab didn't fail due to the window not being
@@ -6153,7 +6162,9 @@ LayoutDeviceIntSize nsWindow::GetSafeWindowSize(LayoutDeviceIntSize aSize) {
 }
 
 void nsWindow::EnsureGrabs(void) {
-  if (mRetryPointerGrab) GrabPointer(sRetryGrabTime);
+  if (mRetryPointerGrab) {
+    GrabPointer(sRetryGrabTime);
+  }
 }
 
 void nsWindow::CleanLayerManagerRecursive(void) {
@@ -6619,12 +6630,14 @@ void nsWindow::GrabPointer(guint32 aTime) {
   // grab.  When this window becomes visible, the grab will be
   // retried.
   if (!mHasMappedToplevel) {
-    LOG("  window not visible\n");
+    LOG("  window not visible, mHasMappedToplevel = false, mRetryPointerGrab = "
+        "true\n");
     mRetryPointerGrab = true;
     return;
   }
 
   if (!mGdkWindow) {
+    LOG("  mGdkWindow is null\n");
     return;
   }
 
