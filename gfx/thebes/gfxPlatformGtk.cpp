@@ -45,11 +45,13 @@
 
 #ifdef MOZ_X11
 #  include <gdk/gdkx.h>
+#  include <X11/extensions/Xrandr.h>
 #  include "cairo-xlib.h"
 #  include "gfxXlibSurface.h"
 #  include "GLContextGLX.h"
 #  include "GLXLibrary.h"
 #  include "mozilla/X11Util.h"
+#  include "SoftwareVsyncSource.h"
 
 /* Undefine the Status from Xlib since it will conflict with system headers on
  * OSX */
@@ -818,48 +820,139 @@ class GtkVsyncSource final : public VsyncSource {
   RefPtr<GLXDisplay> mGlobalDisplay;
 };
 
+class XrandrSoftwareVsyncSource final : public SoftwareVsyncSource {
+ public:
+  XrandrSoftwareVsyncSource() : SoftwareVsyncSource(false) {
+    MOZ_ASSERT(NS_IsMainThread());
+    mGlobalDisplay = new XrandrSoftwareDisplay();
+  }
+
+ private:
+  class XrandrSoftwareDisplay final : public SoftwareDisplay {
+   public:
+    XrandrSoftwareDisplay() {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      UpdateVsyncRate();
+
+      GdkScreen* defaultScreen = gdk_screen_get_default();
+      g_signal_connect(defaultScreen, "monitors-changed",
+                       G_CALLBACK(monitors_changed), this);
+    }
+
+   private:
+    void UpdateVsyncRate() {
+      // Request the current refresh rate via xrandr. It is hard to find the
+      // "correct" one, thus choose the highest one, assuming this will usually
+      // give the best user experience.
+
+      struct _XDisplay* dpy = gdk_x11_get_default_xdisplay();
+      Window root = gdk_x11_get_default_root_xwindow();
+      XRRScreenResources* res = XRRGetScreenResourcesCurrent(dpy, root);
+
+      // Use the default software refresh rate as lower bound. Allowing lower
+      // rates makes a bunch of tests start to fail on CI. The main goal of this
+      // VsyncSource is to support refresh rates greater than the default one.
+      double highestRefreshRate = gfxPlatform::GetSoftwareVsyncRate();
+
+      for (int i = 0; i < res->noutput; i++) {
+        XRROutputInfo* outputInfo = XRRGetOutputInfo(dpy, res, res->outputs[i]);
+        if (!outputInfo->crtc) {
+          XRRFreeOutputInfo(outputInfo);
+          continue;
+        }
+
+        XRRCrtcInfo* crtcInfo = XRRGetCrtcInfo(dpy, res, outputInfo->crtc);
+        for (int j = 0; j < res->nmode; j++) {
+          if (res->modes[j].id == crtcInfo->mode) {
+            double refreshRate = mode_refresh(&res->modes[j]);
+            if (refreshRate > highestRefreshRate) {
+              highestRefreshRate = refreshRate;
+            }
+            break;
+          }
+        }
+
+        XRRFreeCrtcInfo(crtcInfo);
+        XRRFreeOutputInfo(outputInfo);
+      }
+      XRRFreeScreenResources(res);
+
+      const double rate = 1000.0 / highestRefreshRate;
+      mVsyncRate = mozilla::TimeDuration::FromMilliseconds(rate);
+    }
+
+    static void monitors_changed(GdkScreen* aScreen, gpointer aClosure) {
+      XrandrSoftwareDisplay* self =
+          static_cast<XrandrSoftwareDisplay*>(aClosure);
+      self->UpdateVsyncRate();
+    }
+
+    // from xrandr.c
+    static double mode_refresh(const XRRModeInfo* mode_info) {
+      double rate;
+      double vTotal = mode_info->vTotal;
+
+      if (mode_info->modeFlags & RR_DoubleScan) {
+        /* doublescan doubles the number of lines */
+        vTotal *= 2;
+      }
+
+      if (mode_info->modeFlags & RR_Interlace) {
+        /* interlace splits the frame into two fields */
+        /* the field rate is what is typically reported by monitors */
+        vTotal /= 2;
+      }
+
+      if (mode_info->hTotal && vTotal) {
+        rate = ((double)mode_info->dotClock /
+                ((double)mode_info->hTotal * (double)vTotal));
+      } else {
+        rate = 0;
+      }
+      return rate;
+    }
+  };
+};
+
 already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
-#  ifdef MOZ_WAYLAND
-  if (IsWaylandDisplay()) {
-    // For wayland, we simply return the standard software vsync for now.
-    // This powers refresh drivers and the likes.
+  if (IsHeadless() || IsWaylandDisplay()) {
+    // On Wayland we can not create a global hardware based vsync source, thus
+    // use a software based one here. We create window specific ones later.
     return gfxPlatform::CreateHardwareVsyncSource();
   }
-#  endif
+
+  nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
+  nsString windowProtocol;
+  gfxInfo->GetWindowProtocol(windowProtocol);
+  bool isXwayland = windowProtocol.Find("xwayland") != -1;
+  nsString adapterDriverVendor;
+  gfxInfo->GetAdapterDriverVendor(adapterDriverVendor);
+  bool isMesa = adapterDriverVendor.Find("mesa") != -1;
 
   // Only use GLX vsync when the OpenGL compositor / WebRender is being used.
-  // The extra cost of initializing a GLX context while blocking the main
-  // thread is not worth it when using basic composition.
-  //
-  // Don't call gl::sGLXLibrary.SupportsVideoSync() when EGL is used.
-  // NVIDIA drivers refuse to use EGL GL context when GLX was initialized first
-  // and fail silently.
-  if (gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
-    bool useGlxVsync = false;
-
-    nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
-    nsString adapterDriverVendor;
-    gfxInfo->GetAdapterDriverVendor(adapterDriverVendor);
-
-    // Nvidia doesn't support GLX at the same time as EGL but Mesa does.
-    if (!gfxVars::UseEGL() || (adapterDriverVendor.Find("mesa") != -1)) {
-      useGlxVsync = gl::sGLXLibrary.SupportsVideoSync(DefaultXDisplay());
+  // The extra cost of initializing a GLX context while blocking the main thread
+  // is not worth it when using basic composition. Do not use it on Xwayland, as
+  // Xwayland will give us a software timer as we are listening for the root
+  // window, which does not have a Wayland equivalent. Don't call
+  // gl::sGLXLibrary.SupportsVideoSync() when EGL is used as NVIDIA drivers
+  // refuse to use EGL GL context when GLX was initialized first and fail
+  // silently.
+  if (gfxConfig::IsEnabled(Feature::HW_COMPOSITING) && !isXwayland &&
+      (!gfxVars::UseEGL() || isMesa) &&
+      gl::sGLXLibrary.SupportsVideoSync(DefaultXDisplay())) {
+    RefPtr<VsyncSource> vsyncSource = new GtkVsyncSource();
+    VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
+    if (!static_cast<GtkVsyncSource::GLXDisplay&>(display).Setup()) {
+      NS_WARNING("Failed to setup GLContext, falling back to software vsync.");
+      return gfxPlatform::CreateHardwareVsyncSource();
     }
-    if (useGlxVsync) {
-      RefPtr<VsyncSource> vsyncSource = new GtkVsyncSource();
-      VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
-      if (!static_cast<GtkVsyncSource::GLXDisplay&>(display).Setup()) {
-        NS_WARNING(
-            "Failed to setup GLContext, falling back to software vsync.");
-        return gfxPlatform::CreateHardwareVsyncSource();
-      }
-      return vsyncSource.forget();
-    }
-    NS_WARNING("SGI_video_sync unsupported. Falling back to software vsync.");
+    return vsyncSource.forget();
   }
-  return gfxPlatform::CreateHardwareVsyncSource();
-}
 
+  RefPtr<VsyncSource> softwareVsync = new XrandrSoftwareVsyncSource();
+  return softwareVsync.forget();
+}
 #endif
 
 void gfxPlatformGtk::BuildContentDeviceData(ContentDeviceData* aOut) {
