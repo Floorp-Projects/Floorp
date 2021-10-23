@@ -90,7 +90,7 @@ class EditToolbarTest {
     }
 
     @Test
-    fun `entering text emits commit fact`() {
+    fun `entering text emits facts`() {
         CollectionProcessor.withFactCollection { facts ->
             val toolbar = BrowserToolbar(testContext)
             toolbar.edit.views.url.onAttachedToWindow()
@@ -108,9 +108,15 @@ class EditToolbarTest {
                 )
             )
 
-            assertEquals(1, facts.size)
+            assertEquals(2, facts.size)
 
-            val fact = facts[0]
+            val factDetail = facts[0]
+            assertEquals(Component.UI_AUTOCOMPLETE, factDetail.component)
+            assertEquals(Action.IMPLEMENTATION_DETAIL, factDetail.action)
+            assertEquals("onTextChanged", factDetail.item)
+            assertEquals("InlineAutocompleteEditText", factDetail.value)
+
+            val fact = facts[1]
             assertEquals(Component.BROWSER_TOOLBAR, fact.component)
             assertEquals(Action.COMMIT, fact.action)
             assertEquals("toolbar", fact.item)
@@ -126,7 +132,7 @@ class EditToolbarTest {
     }
 
     @Test
-    fun `entering text emits commit fact with autocomplete metadata`() {
+    fun `entering text emits facts with autocomplete metadata`() {
         CollectionProcessor.withFactCollection { facts ->
             val toolbar = BrowserToolbar(testContext)
             toolbar.edit.views.url.onAttachedToWindow()
@@ -152,15 +158,21 @@ class EditToolbarTest {
                 )
             )
 
-            assertEquals(1, facts.size)
+            assertEquals(2, facts.size)
 
-            val fact = facts[0]
-            assertEquals(Component.BROWSER_TOOLBAR, fact.component)
-            assertEquals(Action.COMMIT, fact.action)
-            assertEquals("toolbar", fact.item)
-            assertNull(fact.value)
+            val factDetail = facts[0]
+            assertEquals(Component.UI_AUTOCOMPLETE, factDetail.component)
+            assertEquals(Action.IMPLEMENTATION_DETAIL, factDetail.action)
+            assertEquals("onTextChanged", factDetail.item)
+            assertEquals("InlineAutocompleteEditText", factDetail.value)
 
-            val metadata = fact.metadata
+            val factCommit = facts[1]
+            assertEquals(Component.BROWSER_TOOLBAR, factCommit.component)
+            assertEquals(Action.COMMIT, factCommit.action)
+            assertEquals("toolbar", factCommit.item)
+            assertNull(factCommit.value)
+
+            val metadata = factCommit.metadata
             assertNotNull(metadata!!)
             assertEquals(2, metadata.size)
 
