@@ -159,6 +159,9 @@
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">Өшіру</string>
 
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description">Барлық тарихты көрсету батырмасын көрсету</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Ашық беттер</string>
@@ -285,6 +288,24 @@
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_title_2">Firefox ішінде не жаңалық</string>
+
+    <!-- Onboarding home screen dialog description text. -->
+    <string name="onboarding_home_screen_description_2">Енді тоқтаған жерден жалғастыру оңайырақ.</string>
+    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_section_home_title_2">Жеке Firefox басты беті</string>
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description_2">Ашық беттер, бетбелгілер және шолу тарихына өтіңіз.</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Таза, реттелген беттер</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Беттер енді жақсартылған орналастыру және автожабуды қолдану салдарынан көбірек реттелген болды.</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_title_2">Жуырдағы іздеулер</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_description_2">Үй беті және беттерден соңғы іздеулеріңізді қайта қараңыз.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Сіздің жекелендірілген Firefox үй беті енді тоқтаған жерден жалғастыруды жеңілдетеді. Соңғы беттерді, бетбелгілерді және іздеу нәтижелерін табыңыз.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -663,6 +684,10 @@
     <string name="tab_view_list">Тізім</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Тор</string>
+    <!-- Option for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups">Іздеу топтары</string>
+    <!-- Summary text for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups_summary">Байланысқан сайттарды біріктіру</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Беттерді жабу</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -674,15 +699,26 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Бір айдан кейін</string>
 
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Ашық беттерді автожабу</string>
+
     <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
     <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Бастапқы экраннан бастау</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Бастапқы экраны</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
     <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Төрт сағаттан кейін</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Үй парағы</string>
     <!-- Option for always starting on the home screen -->
     <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Әрқашан</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Соңғы бет</string>
     <!-- Option for never starting on the home screen -->
     <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Ешқашан</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Төрт сағат әрекетсіздіктен кейін үй парағы</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Қолмен жабу</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -691,6 +727,12 @@
     <string name="close_tabs_after_one_week_summary">Бір аптадан кейін жабу</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Бір айдан кейін жабу</string>
+
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">Ескі беттерді белсенді емес күйге жылжыту</string>
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">Сіз екі апта бойы қарамаған беттер белсенді емес топқа жылжытылады.</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -814,6 +856,9 @@
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
     <string moz:removedIn="94" name="tab_tray_header_title" tools:ignore="UnusedResources">Басқа</string>
+
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title_1">Басқа беттер</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -1930,6 +1975,8 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Жақсы, түсіндім</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">Ең көп қаралған үздік сайттар</string>
     <!-- Label for the show most visited top sites preference -->
     <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Ең көп қаралған үздік сайттарды көрсету</string>
     <!-- Label for the show most visited sites preference -->
@@ -1947,6 +1994,8 @@
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
     <string name="inactive_tabs_title">Белсенді емес беттер</string>
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">Барлық белсенді емес беттерді жабу</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
     <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Беттер осында %s ішінде қолжетімді. Осы уақыттан кейін беттер автоматты түрде жабылады.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
@@ -1954,6 +2003,25 @@
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
     <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 апта</string>
 
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Бір айдан кейін автожабу керек пе?</string>
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox соңғы айда қаралмаған беттерді жаба алады.</string>
+    <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">АВТОЖАБУДЫ ІСКЕ ҚОСУ</string>
+
+    <!-- Inactive tabs survey -->
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Бізге осыны жақсартуға көмектесіңіз</string>
+    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
+    <string name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Белсенді емес беттер мүмкіндігін неліктен сөндірдіңіз?</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_not_interested_option" tools:ignore="UnusedResources">Бұл мүмкіндік мені қызықтырмайды</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Белсенді емес күйін күту уақыты тым ұзақ</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Белсенді емес күйін күту уақыты тым қысқа</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
     <string name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Жіберу</string>
     <!-- Content description for inactive tabs survey close button -->
@@ -1974,4 +2042,19 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Жабу</string>
 
-    </resources>
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string moz:removedIn="94" name="pocket_stories_header" tools:ignore="UnusedResources">Ойландыратын әңгімелер</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">Ойландыратын әңгімелер</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_categories_header">Тақырып бойынша әңгімелер</string>
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">Көбірек шолу</string>
+    <!-- Title of an app feature. Smaller than a heading.-->
+    <string name="pocket_stories_feature_title">Pocket негізінде.</string>
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">Firefox отбасының бөлігі. %s</string>
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">Көбірек білу</string>
+</resources>

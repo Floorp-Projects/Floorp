@@ -356,6 +356,8 @@
     <string name="preferences_theme">Tema</string>
     <!-- Preference for customizing the home screen -->
     <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Inicio</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Página de inicio</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Gestos</string>
     <!-- Preference for settings related to visual options -->
@@ -669,6 +671,8 @@
     <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Comenzar en la página de inicio</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
     <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Después de cuatro horas</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Página de inicio</string>
     <!-- Option for always starting on the home screen -->
     <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Siempre</string>
     <!-- Option for always opening the user's last-open tab when re-opening the app -->

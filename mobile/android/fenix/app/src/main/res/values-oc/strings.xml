@@ -719,6 +719,8 @@
     <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
     <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Començar per l’ecran d’acuèlh</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Ecran a la dubertura</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
     <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Aprèp 4 oras</string>
     <!-- Option for always opening the homepage when re-opening the app -->
