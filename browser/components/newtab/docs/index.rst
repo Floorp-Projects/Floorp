@@ -73,6 +73,17 @@ that slug turns red, these tests are what is failing.  To execute them, do this:
 These tests are not currently run by `mach test`, but there's a
 `task filed to fix that <https://bugzilla.mozilla.org/show_bug.cgi?id=1581165>`_.
 
+Windows isn't currently supported by `npm test`
+(`path/invocation difference <https://bugzilla.mozilla.org/show_bug.cgi?id=1737419>`_).
+To run newtab specific tests that aren't covered by `mach lint` and
+`mach test`:
+
+.. code-block:: shell
+
+  ./mach npm run lint:sasslint --prefix=browser/components/newtab
+  ./mach npm run testmc:build --prefix=browser/components/newtab
+  ./mach npm run testmc:unit --prefix=browser/components/newtab
+
 Mochitests and xpcshell tests run normally, using `mach test`.
 
 Code Coverage
