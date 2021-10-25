@@ -8,10 +8,8 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 
-#include "gc/Cell.h"
 #include "gc/GCRuntime.h"
 #include "js/ArrayBuffer.h"         // JS::NewArrayBuffer
-#include "js/experimental/TypedData.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetProperty
 #include "js/RootingAPI.h"
 #include "jsapi-tests/tests.h"
@@ -20,16 +18,6 @@
 #include "vm/JSContext-inl.h"
 
 using namespace js;
-
-static js::gc::CellColor GetColor(JSObject* obj) { return obj->color(); }
-static js::gc::CellColor GetColor(const JS::ArrayBufferOrView& view) {
-  return view.asObjectUnbarriered()->color();
-}
-
-static bool IsInsideNursery(gc::Cell* cell) { return !cell->isTenured(); }
-static bool IsInsideNursery(const JS::ArrayBufferOrView& view) {
-  return IsInsideNursery(view.asObjectUnbarriered());
-}
 
 // A heap-allocated structure containing one of our barriered pointer wrappers
 // to test.
@@ -46,7 +34,10 @@ struct TestStruct {
 };
 
 template <typename T>
-static T CreateNurseryGCThing(JSContext* cx) = delete;
+static T* CreateNurseryGCThing(JSContext* cx) {
+  MOZ_CRASH();
+  return nullptr;
+}
 
 template <>
 JSObject* CreateNurseryGCThing(JSContext* cx) {
@@ -65,20 +56,14 @@ JSFunction* CreateNurseryGCThing(JSContext* cx) {
    * We don't actually use the function as a function, so here we cheat and
    * cast a JSObject.
    */
-  return static_cast<JSFunction*>(CreateNurseryGCThing<JSObject*>(cx));
-}
-
-template <>
-JS::Uint8Array CreateNurseryGCThing(JSContext* cx) {
-  JS::Uint8Array arr = JS::Uint8Array::create(cx, 100);
-  JS::RootedObject obj(cx, arr.asObject());
-  JS_DefineProperty(cx, obj, "x", 42, 0);
-  MOZ_ASSERT(IsInsideNursery(obj));
-  return arr;
+  return static_cast<JSFunction*>(CreateNurseryGCThing<JSObject>(cx));
 }
 
 template <typename T>
-static T CreateTenuredGCThing(JSContext* cx) = delete;
+static T CreateTenuredGCThing(JSContext* cx) {
+  MOZ_CRASH();
+  return nullptr;
+}
 
 template <>
 JSObject* CreateTenuredGCThing(JSContext* cx) {
@@ -93,63 +78,11 @@ JSObject* CreateTenuredGCThing(JSContext* cx) {
   return obj;
 }
 
-template <>
-JS::ArrayBuffer CreateTenuredGCThing(JSContext* cx) {
-  return JS::ArrayBuffer::fromObject(CreateTenuredGCThing<JSObject*>(cx));
-}
-
-template <>
-JS::Uint8Array CreateTenuredGCThing(JSContext* cx) {
-  gc::AutoSuppressNurseryCellAlloc suppress(cx);
-  return JS::Uint8Array::create(cx, 100);
-}
-
-template <typename T>
-void* CreateHiddenTenuredGCThing(JSContext* cx) {
-  return CreateTenuredGCThing<T>(cx);
-}
-
-template <>
-void* CreateHiddenTenuredGCThing<JS::ArrayBuffer>(JSContext* cx) {
-  return CreateTenuredGCThing<JS::ArrayBuffer>(cx).asObjectUnbarriered();
-}
-
-template <>
-void* CreateHiddenTenuredGCThing<JS::Uint8Array>(JSContext* cx) {
-  return CreateTenuredGCThing<JS::Uint8Array>(cx).asObjectUnbarriered();
-}
-
-static uintptr_t UnbarrieredCastToInt(gc::Cell* cell) {
-  return reinterpret_cast<uintptr_t>(cell);
-}
-static uintptr_t UnbarrieredCastToInt(const JS::ArrayBufferOrView& view) {
-  return UnbarrieredCastToInt(view.asObjectUnbarriered());
-}
-
-template <typename T>
-T RecoverHiddenGCThing(void* ptr) {
-  return reinterpret_cast<T>(ptr);
-}
-
-template <>
-JS::ArrayBuffer RecoverHiddenGCThing(void* ptr) {
-  return JS::ArrayBuffer::fromObject(RecoverHiddenGCThing<JSObject*>(ptr));
-}
-
-template <>
-JS::Uint8Array RecoverHiddenGCThing(void* ptr) {
-  return JS::Uint8Array::fromObject(RecoverHiddenGCThing<JSObject*>(ptr));
-}
-
 static void MakeGray(JSObject* obj) {
   gc::TenuredCell* cell = &obj->asTenured();
   cell->unmark();
   cell->markIfUnmarked(gc::MarkColor::Gray);
   MOZ_ASSERT(obj->isMarkedGray());
-}
-
-static void MakeGray(const JS::ArrayBufferOrView& view) {
-  MakeGray(view.asObjectUnbarriered());
 }
 
 // Test post-barrier implementation on wrapper types. The following wrapper
@@ -163,16 +96,15 @@ BEGIN_TEST(testGCHeapPostBarriers) {
 
   /* Sanity check - objects start in the nursery and then become tenured. */
   JS_GC(cx);
-  JS::RootedObject obj(cx, CreateNurseryGCThing<JSObject*>(cx));
+  JS::RootedObject obj(cx, CreateNurseryGCThing<JSObject>(cx));
   CHECK(js::gc::IsInsideNursery(obj.get()));
   JS_GC(cx);
   CHECK(!js::gc::IsInsideNursery(obj.get()));
   JS::RootedObject tenuredObject(cx, obj);
 
   /* JSObject and JSFunction objects are nursery allocated. */
-  CHECK(TestHeapPostBarriersForType<JSObject*>());
-  CHECK(TestHeapPostBarriersForType<JSFunction*>());
-  CHECK(TestHeapPostBarriersForType<JS::Uint8Array>());
+  CHECK(TestHeapPostBarriersForType<JSObject>());
+  CHECK(TestHeapPostBarriersForType<JSFunction>());
   // Bug 1599378: Add string tests.
 
   return true;
@@ -185,9 +117,6 @@ bool CanAccessObject(JSObject* obj) {
   CHECK(value.isInt32());
   CHECK(value.toInt32() == 42);
   return true;
-}
-bool CanAccessObject(const JS::ArrayBufferOrView& view) {
-  return CanAccessObject(view.asObject());
 }
 
 template <typename T>
@@ -202,33 +131,33 @@ bool TestHeapPostBarriersForType() {
 template <template <typename> class W, typename T>
 bool TestHeapPostBarriersForMovableWrapper() {
   CHECK((TestHeapPostBarriersForWrapper<W, T>()));
-  CHECK((TestHeapPostBarrierMoveConstruction<W<T>, T>()));
-  CHECK((TestHeapPostBarrierMoveAssignment<W<T>, T>()));
+  CHECK((TestHeapPostBarrierMoveConstruction<W<T*>, T>()));
+  CHECK((TestHeapPostBarrierMoveAssignment<W<T*>, T>()));
   return true;
 }
 
 template <template <typename> class W, typename T>
 bool TestHeapPostBarriersForWrapper() {
-  CHECK((TestHeapPostBarrierConstruction<W<T>, T>()));
-  CHECK((TestHeapPostBarrierConstruction<const W<T>, T>()));
-  CHECK((TestHeapPostBarrierUpdate<W<T>, T>()));
-  if constexpr (!std::is_same_v<W<T>, GCPtr<T>>) {
+  CHECK((TestHeapPostBarrierConstruction<W<T*>, T>()));
+  CHECK((TestHeapPostBarrierConstruction<const W<T*>, T>()));
+  CHECK((TestHeapPostBarrierUpdate<W<T*>, T>()));
+  if constexpr (!std::is_same_v<W<T*>, GCPtr<T*>>) {
     // It is not allowed to delete heap memory containing GCPtrs on
     // initialization failure like this and doing so will cause an assertion to
     // fail in the GCPtr destructor (although we disable this in some places in
     // this test).
-    CHECK((TestHeapPostBarrierInitFailure<W<T>, T>()));
-    CHECK((TestHeapPostBarrierInitFailure<const W<T>, T>()));
+    CHECK((TestHeapPostBarrierInitFailure<W<T*>, T>()));
+    CHECK((TestHeapPostBarrierInitFailure<const W<T*>, T>()));
   }
   return true;
 }
 
 template <typename W, typename T>
 bool TestHeapPostBarrierConstruction() {
-  T initialObj = CreateNurseryGCThing<T>(cx);
-  CHECK(initialObj);
-  CHECK(IsInsideNursery(initialObj));
-  uintptr_t initialObjAsInt = UnbarrieredCastToInt(initialObj);
+  T* initialObj = CreateNurseryGCThing<T>(cx);
+  CHECK(initialObj != nullptr);
+  CHECK(js::gc::IsInsideNursery(initialObj));
+  uintptr_t initialObjAsInt = uintptr_t(initialObj);
 
   {
     // We don't root our structure because that would end up tracing it on minor
@@ -236,7 +165,7 @@ bool TestHeapPostBarrierConstruction() {
     // roots.
     JS::AutoSuppressGCAnalysis noAnalysis(cx);
 
-    auto* testStruct = js_new<TestStruct<W, T>>(initialObj);
+    auto* testStruct = js_new<TestStruct<W, T*>>(initialObj);
     CHECK(testStruct);
 
     auto& wrapper = testStruct->wrapper;
@@ -244,14 +173,14 @@ bool TestHeapPostBarrierConstruction() {
 
     cx->minorGC(JS::GCReason::API);
 
-    CHECK(UnbarrieredCastToInt(wrapper.get()) != initialObjAsInt);
-    CHECK(!IsInsideNursery(wrapper.get()));
+    CHECK(uintptr_t(wrapper.get()) != initialObjAsInt);
+    CHECK(!js::gc::IsInsideNursery(wrapper.get()));
     CHECK(CanAccessObject(wrapper.get()));
 
     // Disable the check that GCPtrs are only destroyed by the GC. What happens
     // on destruction isn't relevant to the test.
     mozilla::Maybe<gc::AutoSetThreadIsFinalizing> threadIsFinalizing;
-    if constexpr (std::is_same_v<std::remove_const_t<W>, GCPtr<T>>) {
+    if constexpr (std::is_same_v<std::remove_const_t<W>, GCPtr<T*>>) {
       threadIsFinalizing.emplace();
     }
 
@@ -268,10 +197,10 @@ bool TestHeapPostBarrierUpdate() {
   // Normal case - allocate a heap object, write a nursery pointer into it and
   // check that it gets updated on minor GC.
 
-  T initialObj = CreateNurseryGCThing<T>(cx);
-  CHECK(initialObj);
-  CHECK(IsInsideNursery(initialObj));
-  uintptr_t initialObjAsInt = UnbarrieredCastToInt(initialObj);
+  T* initialObj = CreateNurseryGCThing<T>(cx);
+  CHECK(initialObj != nullptr);
+  CHECK(js::gc::IsInsideNursery(initialObj));
+  uintptr_t initialObjAsInt = uintptr_t(initialObj);
 
   {
     // We don't root our structure because that would end up tracing it on minor
@@ -279,19 +208,19 @@ bool TestHeapPostBarrierUpdate() {
     // roots.
     JS::AutoSuppressGCAnalysis noAnalysis(cx);
 
-    auto* testStruct = js_new<TestStruct<W, T>>();
+    auto* testStruct = js_new<TestStruct<W, T*>>();
     CHECK(testStruct);
 
     auto& wrapper = testStruct->wrapper;
-    CHECK(!wrapper.get());
+    CHECK(wrapper.get() == nullptr);
 
     wrapper = initialObj;
     CHECK(wrapper == initialObj);
 
     cx->minorGC(JS::GCReason::API);
 
-    CHECK(UnbarrieredCastToInt(wrapper.get()) != initialObjAsInt);
-    CHECK(!IsInsideNursery(wrapper.get()));
+    CHECK(uintptr_t(wrapper.get()) != initialObjAsInt);
+    CHECK(!js::gc::IsInsideNursery(wrapper.get()));
     CHECK(CanAccessObject(wrapper.get()));
 
     // Disable the check that GCPtrs are only destroyed by the GC. What happens
@@ -311,9 +240,9 @@ bool TestHeapPostBarrierInitFailure() {
   // Failure case - allocate a heap object, write a nursery pointer into it
   // and fail to complete initialization.
 
-  T initialObj = CreateNurseryGCThing<T>(cx);
-  CHECK(initialObj);
-  CHECK(IsInsideNursery(initialObj));
+  T* initialObj = CreateNurseryGCThing<T>(cx);
+  CHECK(initialObj != nullptr);
+  CHECK(js::gc::IsInsideNursery(initialObj));
 
   {
     // We don't root our structure because that would end up tracing it on minor
@@ -321,7 +250,7 @@ bool TestHeapPostBarrierInitFailure() {
     // roots.
     JS::AutoSuppressGCAnalysis noAnalysis(cx);
 
-    auto testStruct = cx->make_unique<TestStruct<W, T>>(initialObj);
+    auto testStruct = cx->make_unique<TestStruct<W, T*>>(initialObj);
     CHECK(testStruct);
 
     auto& wrapper = testStruct->wrapper;
@@ -337,10 +266,10 @@ bool TestHeapPostBarrierInitFailure() {
 
 template <typename W, typename T>
 bool TestHeapPostBarrierMoveConstruction() {
-  T initialObj = CreateNurseryGCThing<T>(cx);
-  CHECK(initialObj);
-  CHECK(IsInsideNursery(initialObj));
-  uintptr_t initialObjAsInt = UnbarrieredCastToInt(initialObj);
+  T* initialObj = CreateNurseryGCThing<T>(cx);
+  CHECK(initialObj != nullptr);
+  CHECK(js::gc::IsInsideNursery(initialObj));
+  uintptr_t initialObjAsInt = uintptr_t(initialObj);
 
   {
     // We don't root our structure because that would end up tracing it on minor
@@ -356,9 +285,9 @@ bool TestHeapPostBarrierMoveConstruction() {
 
     cx->minorGC(JS::GCReason::API);
 
-    CHECK(UnbarrieredCastToInt(wrapper1.get()) != initialObjAsInt);
-    CHECK(UnbarrieredCastToInt(wrapper2.get()) != initialObjAsInt);
-    CHECK(!IsInsideNursery(wrapper2.get()));
+    CHECK(uintptr_t(wrapper1.get()) != initialObjAsInt);
+    CHECK(uintptr_t(wrapper2.get()) != initialObjAsInt);
+    CHECK(!js::gc::IsInsideNursery(wrapper2.get()));
     CHECK(CanAccessObject(wrapper2.get()));
   }
 
@@ -369,10 +298,10 @@ bool TestHeapPostBarrierMoveConstruction() {
 
 template <typename W, typename T>
 bool TestHeapPostBarrierMoveAssignment() {
-  T initialObj = CreateNurseryGCThing<T>(cx);
-  CHECK(initialObj);
-  CHECK(IsInsideNursery(initialObj));
-  uintptr_t initialObjAsInt = UnbarrieredCastToInt(initialObj);
+  T* initialObj = CreateNurseryGCThing<T>(cx);
+  CHECK(initialObj != nullptr);
+  CHECK(js::gc::IsInsideNursery(initialObj));
+  uintptr_t initialObjAsInt = uintptr_t(initialObj);
 
   {
     // We don't root our structure because that would end up tracing it on minor
@@ -389,9 +318,9 @@ bool TestHeapPostBarrierMoveAssignment() {
 
     cx->minorGC(JS::GCReason::API);
 
-    CHECK(UnbarrieredCastToInt(wrapper1.get()) != initialObjAsInt);
-    CHECK(UnbarrieredCastToInt(wrapper2.get()) != initialObjAsInt);
-    CHECK(!IsInsideNursery(wrapper2.get()));
+    CHECK(uintptr_t(wrapper1.get()) != initialObjAsInt);
+    CHECK(uintptr_t(wrapper2.get()) != initialObjAsInt);
+    CHECK(!js::gc::IsInsideNursery(wrapper2.get()));
     CHECK(CanAccessObject(wrapper2.get()));
   }
 
@@ -416,13 +345,9 @@ BEGIN_TEST(testGCHeapReadBarriers) {
   CHECK((TestWrapperType<JS::Heap<JSObject*>, JSObject*>()));
   CHECK((TestWrapperType<JS::TenuredHeap<JSObject*>, JSObject*>()));
   CHECK((TestWrapperType<WeakHeapPtr<JSObject*>, JSObject*>()));
-  CHECK((TestWrapperType<JS::Heap<JS::ArrayBuffer>, JS::ArrayBuffer>()));
-  CHECK((TestWrapperType<JS::Heap<JS::Uint8Array>, JS::Uint8Array>()));
 
   // JS::Heap has an additional barrier on its move and copy constructors.
   CHECK((TestConstructorBarrier<JS::Heap<JSObject*>, JSObject*>()));
-  CHECK((TestConstructorBarrier<JS::Heap<JS::ArrayBuffer>, JS::ArrayBuffer>()));
-  CHECK((TestConstructorBarrier<JS::Heap<JS::Uint8Array>, JS::Uint8Array>()));
 
   return true;
 }
@@ -457,29 +382,20 @@ bool TestWrapperType() {
 }
 
 template <typename WrapperT, typename ObjectT>
-void Access(const WrapperT& wrapper) {
-  if constexpr (std::is_base_of_v<JS::ArrayBufferOrView, ObjectT>) {
-    (void)wrapper.asObject();
-  } else {
-    (void)*wrapper;
-  }
-}
-
-template <typename WrapperT, typename ObjectT>
 bool TestReadBarrierUnmarksGray() {
   Rooted<ObjectT> obj(cx, CreateTenuredGCThing<ObjectT>(cx));
   WrapperT wrapper(obj);
 
-  CHECK(GetColor(obj) == gc::CellColor::White);
+  CHECK(obj->color() == gc::CellColor::White);
 
-  Access<WrapperT, ObjectT>(wrapper);
+  (void)*wrapper;
 
-  CHECK(GetColor(obj) == gc::CellColor::White);
+  CHECK(obj->color() == gc::CellColor::White);
 
   MakeGray(obj);
-  Access<WrapperT, ObjectT>(wrapper);
+  (void)*wrapper;
 
-  CHECK(GetColor(obj) == gc::CellColor::Black);
+  CHECK(obj->color() == gc::CellColor::Black);
 
   return true;
 }
@@ -513,24 +429,24 @@ bool TestReadBarrierMarksBlack(bool fromWhite) {
   AutoLeaveZeal noZeal(cx);
 
   // Create an object and hide it from the hazard analysis.
-  void* ptr = CreateHiddenTenuredGCThing<ObjectT>(cx);
+  void* ptr = CreateTenuredGCThing<ObjectT>(cx);
   CHECK(ptr);
 
   CallDuringIncrementalGC(9 /* YieldBeforeSweeping */, [&]() -> bool {
     CHECK(JS::IsIncrementalBarrierNeeded(cx));
 
-    auto obj = RecoverHiddenGCThing<ObjectT>(ptr);
+    auto obj = reinterpret_cast<ObjectT>(ptr);
 
     WrapperT wrapper(obj);
 
-    CHECK(GetColor(obj) == gc::CellColor::White);
+    CHECK(obj->color() == gc::CellColor::White);
     if (!fromWhite) {
       MakeGray(obj);
     }
 
-    Access<WrapperT, ObjectT>(wrapper);
+    (void)*wrapper;
 
-    CHECK(GetColor(obj) == gc::CellColor::Black);
+    CHECK(obj->color() == gc::CellColor::Black);
 
     return true;
   });
@@ -543,34 +459,34 @@ bool TestConstructorBarrier() {
   AutoLeaveZeal noZeal(cx);
 
   // Create an object and hide it from the hazard analysis.
-  void* ptr = CreateHiddenTenuredGCThing<ObjectT>(cx);
+  void* ptr = CreateTenuredGCThing<ObjectT>(cx);
   CHECK(ptr);
 
   CallDuringIncrementalGC(9 /* YieldBeforeSweeping */, [&]() -> bool {
     CHECK(JS::IsIncrementalBarrierNeeded(cx));
 
-    auto obj = RecoverHiddenGCThing<ObjectT>(ptr);
+    auto obj = reinterpret_cast<ObjectT>(ptr);
     WrapperT wrapper(obj);
-    CHECK(GetColor(obj) == gc::CellColor::White);
+    CHECK(obj->color() == gc::CellColor::White);
 
     WrapperT copiedWrapper(wrapper);
-    CHECK(GetColor(obj) == gc::CellColor::Black);
+    CHECK(obj->color() == gc::CellColor::Black);
 
     return true;
   });
 
-  ptr = CreateHiddenTenuredGCThing<ObjectT>(cx);
+  ptr = CreateTenuredGCThing<ObjectT>(cx);
   CHECK(ptr);
 
   CallDuringIncrementalGC(9 /* YieldBeforeSweeping */, [&]() -> bool {
     CHECK(JS::IsIncrementalBarrierNeeded(cx));
 
-    auto obj = RecoverHiddenGCThing<ObjectT>(ptr);
+    auto obj = reinterpret_cast<ObjectT>(ptr);
     WrapperT wrapper(obj);
-    CHECK(GetColor(obj) == gc::CellColor::White);
+    CHECK(obj->color() == gc::CellColor::White);
 
     WrapperT movedWrapper(std::move(wrapper));
-    CHECK(GetColor(obj) == gc::CellColor::Black);
+    CHECK(obj->color() == gc::CellColor::Black);
 
     return true;
   });
@@ -583,40 +499,40 @@ bool TestUnbarrieredOperations(ObjectT obj, ObjectT obj2, WrapperT& wrapper,
                                WrapperT& wrapper2) {
   (void)bool(wrapper);
   (void)bool(wrapper2);
-  CHECK(GetColor(obj) == gc::CellColor::Gray);
-  CHECK(GetColor(obj2) == gc::CellColor::Gray);
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
 
   int x = 0;
 
-  CHECK(GetColor(obj) == gc::CellColor::Gray);
-  CHECK(GetColor(obj2) == gc::CellColor::Gray);
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
   x += obj == obj2;
-  CHECK(GetColor(obj) == gc::CellColor::Gray);
-  CHECK(GetColor(obj2) == gc::CellColor::Gray);
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
   x += obj == wrapper2;
-  CHECK(GetColor(obj) == gc::CellColor::Gray);
-  CHECK(GetColor(obj2) == gc::CellColor::Gray);
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
   x += wrapper == obj2;
-  CHECK(GetColor(obj) == gc::CellColor::Gray);
-  CHECK(GetColor(obj2) == gc::CellColor::Gray);
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
   x += wrapper == wrapper2;
-  CHECK(GetColor(obj) == gc::CellColor::Gray);
-  CHECK(GetColor(obj2) == gc::CellColor::Gray);
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
 
   CHECK(x == 0);
 
   x += obj != obj2;
-  CHECK(GetColor(obj) == gc::CellColor::Gray);
-  CHECK(GetColor(obj2) == gc::CellColor::Gray);
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
   x += obj != wrapper2;
-  CHECK(GetColor(obj) == gc::CellColor::Gray);
-  CHECK(GetColor(obj2) == gc::CellColor::Gray);
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
   x += wrapper != obj2;
-  CHECK(GetColor(obj) == gc::CellColor::Gray);
-  CHECK(GetColor(obj2) == gc::CellColor::Gray);
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
   x += wrapper != wrapper2;
-  CHECK(GetColor(obj) == gc::CellColor::Gray);
-  CHECK(GetColor(obj2) == gc::CellColor::Gray);
+  CHECK(obj->isMarkedGray());
+  CHECK(obj2->isMarkedGray());
 
   CHECK(x == 4);
 
@@ -685,25 +601,25 @@ bool TestWrapper(ObjectVector& testObjects) {
 
 template <typename Wrapper>
 bool TestCopyConstruction(JSObject* obj) {
-  CHECK(GetColor(obj) == gc::CellColor::White);
+  CHECK(!obj->isMarkedAny());
 
   {
     Wrapper wrapper1(obj);
     Wrapper wrapper2(wrapper1);
     CHECK(wrapper1 == obj);
     CHECK(wrapper2 == obj);
-    CHECK(GetColor(obj) == gc::CellColor::White);
+    CHECK(!obj->isMarkedAny());
   }
 
   // Check destructor performs pre-barrier.
-  CHECK(GetColor(obj) == gc::CellColor::Black);
+  CHECK(obj->isMarkedBlack());
 
   return true;
 }
 
 template <typename Wrapper>
 bool TestMoveConstruction(JSObject* obj) {
-  CHECK(GetColor(obj) == gc::CellColor::White);
+  CHECK(!obj->isMarkedAny());
 
   {
     Wrapper wrapper1(obj);
@@ -711,19 +627,19 @@ bool TestMoveConstruction(JSObject* obj) {
     Wrapper wrapper2(std::move(wrapper1));
     CHECK(!wrapper1);
     CHECK(wrapper2 == obj);
-    CHECK(GetColor(obj) == gc::CellColor::Gray);
+    CHECK(obj->isMarkedGray());
   }
 
   // Check destructor performs pre-barrier.
-  CHECK(GetColor(obj) == gc::CellColor::Black);
+  CHECK(obj->isMarkedBlack());
 
   return true;
 }
 
 template <typename Wrapper>
 bool TestAssignment(JSObject* obj1, JSObject* obj2) {
-  CHECK(GetColor(obj1) == gc::CellColor::White);
-  CHECK(GetColor(obj2) == gc::CellColor::White);
+  CHECK(!obj1->isMarkedAny());
+  CHECK(!obj2->isMarkedAny());
 
   {
     Wrapper wrapper1(obj1);
@@ -733,20 +649,20 @@ bool TestAssignment(JSObject* obj1, JSObject* obj2) {
 
     CHECK(wrapper1 == obj1);
     CHECK(wrapper2 == obj1);
-    CHECK(GetColor(obj1) == gc::CellColor::White);  // No barrier fired.
-    CHECK(GetColor(obj2) == gc::CellColor::Black);  // Pre barrier fired.
+    CHECK(!obj1->isMarkedAny());   // No barrier fired.
+    CHECK(obj2->isMarkedBlack());  // Pre barrier fired.
   }
 
   // Check destructor performs pre-barrier.
-  CHECK(GetColor(obj1) == gc::CellColor::Black);
+  CHECK(obj1->isMarkedBlack());
 
   return true;
 }
 
 template <typename Wrapper>
 bool TestMoveAssignment(JSObject* obj1, JSObject* obj2) {
-  CHECK(GetColor(obj1) == gc::CellColor::White);
-  CHECK(GetColor(obj2) == gc::CellColor::White);
+  CHECK(!obj1->isMarkedAny());
+  CHECK(!obj2->isMarkedAny());
 
   {
     Wrapper wrapper1(obj1);
@@ -757,12 +673,12 @@ bool TestMoveAssignment(JSObject* obj1, JSObject* obj2) {
 
     CHECK(!wrapper1);
     CHECK(wrapper2 == obj1);
-    CHECK(GetColor(obj1) == gc::CellColor::Gray);   // No barrier fired.
-    CHECK(GetColor(obj2) == gc::CellColor::Black);  // Pre barrier fired.
+    CHECK(obj1->isMarkedGray());   // No barrier fired.
+    CHECK(obj2->isMarkedBlack());  // Pre barrier fired.
   }
 
   // Check destructor performs pre-barrier.
-  CHECK(GetColor(obj1) == gc::CellColor::Black);
+  CHECK(obj1->isMarkedBlack());
 
   return true;
 }
@@ -774,7 +690,7 @@ bool TestGCPtr(ObjectVector& testObjects) {
 }
 
 bool TestGCPtrCopyConstruction(JSObject* obj) {
-  CHECK(GetColor(obj) == gc::CellColor::White);
+  CHECK(!obj->isMarkedAny());
 
   {
     // Let us destroy GCPtrs ourselves for testing purposes.
@@ -784,18 +700,18 @@ bool TestGCPtrCopyConstruction(JSObject* obj) {
     GCPtrObject wrapper2(wrapper1);
     CHECK(wrapper1 == obj);
     CHECK(wrapper2 == obj);
-    CHECK(GetColor(obj) == gc::CellColor::White);
+    CHECK(!obj->isMarkedAny());
   }
 
   // GCPtr doesn't perform pre-barrier in destructor.
-  CHECK(GetColor(obj) == gc::CellColor::White);
+  CHECK(!obj->isMarkedAny());
 
   return true;
 }
 
 bool TestGCPtrAssignment(JSObject* obj1, JSObject* obj2) {
-  CHECK(GetColor(obj1) == gc::CellColor::White);
-  CHECK(GetColor(obj2) == gc::CellColor::White);
+  CHECK(!obj1->isMarkedAny());
+  CHECK(!obj2->isMarkedAny());
 
   {
     // Let us destroy GCPtrs ourselves for testing purposes.
@@ -808,12 +724,12 @@ bool TestGCPtrAssignment(JSObject* obj1, JSObject* obj2) {
 
     CHECK(wrapper1 == obj1);
     CHECK(wrapper2 == obj1);
-    CHECK(GetColor(obj1) == gc::CellColor::White);  // No barrier fired.
-    CHECK(GetColor(obj2) == gc::CellColor::Black);  // Pre barrier fired.
+    CHECK(!obj1->isMarkedAny());   // No barrier fired.
+    CHECK(obj2->isMarkedBlack());  // Pre barrier fired.
   }
 
   // GCPtr doesn't perform pre-barrier in destructor.
-  CHECK(GetColor(obj1) == gc::CellColor::White);
+  CHECK(!obj1->isMarkedAny());
 
   return true;
 }
