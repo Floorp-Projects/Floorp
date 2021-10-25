@@ -7,6 +7,7 @@
 from __future__ import absolute_import
 import sys
 import os
+import pathlib
 import shutil
 import subprocess
 import tempfile
@@ -49,22 +50,18 @@ def main():
             windows_sdk_dir is not None
         ), "WINDOWSSDKDIR should be in MOZ_CONFIGURE_OPTIONS"
 
-        ignore_dir_abs = os.path.dirname(windows_sdk_dir)
+        ignore_dir_abs = pathlib.Path(windows_sdk_dir).parent
 
         # globs passed to grcov must exist and must be relative to the source directory.
         # If it doesn't exist, maybe it has moved and we need to update the paths above.
         # If it is no longer relative to the source directory, we no longer need to ignore it and
         # this code can be removed.
-        assert os.path.isdir(ignore_dir_abs), "{} is not a directory".format(
-            ignore_dir_abs
-        )
-        assert ignore_dir_abs.startswith(
-            buildconfig.topsrcdir
-        ), "{} should start with {}".format(ignore_dir_abs, buildconfig.topsrcdir)
+        assert ignore_dir_abs.is_dir(), f"{ignore_dir_abs} is not a directory"
+        ignore_dir_rel = ignore_dir_abs.relative_to(buildconfig.topsrcdir)
 
         grcov_command += [
             "--ignore",
-            os.path.relpath(ignore_dir_abs, buildconfig.topsrcdir) + "*",
+            f"{ignore_dir_rel}*",
         ]
 
     if buildconfig.substs["OS_TARGET"] == "Linux":
