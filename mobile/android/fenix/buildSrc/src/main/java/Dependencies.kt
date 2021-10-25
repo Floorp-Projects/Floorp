@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 object Versions {
-    const val kotlin = "1.5.30"
+    const val kotlin = "1.5.31"
     const val coroutines = "1.5.2"
 
     // These versions are linked: lint should be X+23.Y.Z of gradle_plugin version, according to:
@@ -18,7 +18,7 @@ object Versions {
     const val jna = "5.6.0"
 
     const val androidx_activity_compose = "1.3.1"
-    const val androidx_compose = "1.0.3"
+    const val androidx_compose = "1.0.4"
     const val androidx_appcompat = "1.3.0"
     const val androidx_benchmark = "1.0.0"
     const val androidx_biometric = "1.1.0"
