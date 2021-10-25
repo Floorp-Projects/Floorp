@@ -630,7 +630,6 @@ bool SVGImageFrame::CreateWebRenderCommands(
   // has a fully decoded surface, then we should prefer the previous image.
   switch (drawResult) {
     case ImgDrawResult::NOT_READY:
-    case ImgDrawResult::INCOMPLETE:
     case ImgDrawResult::TEMPORARY_ERROR:
       // nothing to draw (yet)
       return true;
