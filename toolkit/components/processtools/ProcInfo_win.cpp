@@ -24,6 +24,17 @@ uint64_t ToNanoSeconds(const FILETIME& aFileTime) {
   return usec.QuadPart * 100;
 }
 
+nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult) {
+  FILETIME createTime, exitTime, kernelTime, userTime;
+  if (!GetProcessTimes(::GetCurrentProcess(), &createTime, &exitTime,
+                       &kernelTime, &userTime)) {
+    return NS_ERROR_FAILURE;
+  }
+  *aResult =
+      (ToNanoSeconds(kernelTime) + ToNanoSeconds(userTime)) / PR_NSEC_PER_MSEC;
+  return NS_OK;
+}
+
 RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
   auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();
   RefPtr<ProcInfoPromise> promise = holder->Ensure(__func__);
