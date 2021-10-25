@@ -55,7 +55,6 @@ infer-out/
 
 # Screenshots
 fastlane/
-Screengrabfile
 
 # Adjust token file
 .adjust_token
