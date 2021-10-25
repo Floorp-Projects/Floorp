@@ -46,10 +46,7 @@ job-defaults:
                 staging: dep
                 production: null
         include-version: beta
-        last-watershed:
-            by-platform:
-                win64-aarch64.*: "67.0b2"
-                default: "56.0b3"
+        last-watershed: "72.0.2"
         mar-channel-id-override: beta
         channel: "beta-localtest"
 
