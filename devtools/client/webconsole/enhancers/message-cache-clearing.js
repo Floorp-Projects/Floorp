@@ -18,6 +18,10 @@ function enableMessagesCacheClearing(webConsoleUI) {
 
       if (webConsoleUI && action.type === MESSAGES_CLEAR) {
         webConsoleUI.clearMessagesCache();
+
+        // cleans up all the network data provider internal state
+        webConsoleUI.networkDataProvider?.destroy();
+
         if (webConsoleUI.hud?.toolbox) {
           webConsoleUI.hud.toolbox.setErrorCount(0);
         }
