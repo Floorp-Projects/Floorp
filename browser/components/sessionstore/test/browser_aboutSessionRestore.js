@@ -56,7 +56,7 @@ add_task(async function() {
         },
       ],
     },
-  ] = JSON.parse(ss.getClosedWindowData());
+  ] = ss.getClosedWindowData();
   is(url, CRASH_URL, "session was restored correctly");
   ss.forgetClosedWindow(0);
 });
