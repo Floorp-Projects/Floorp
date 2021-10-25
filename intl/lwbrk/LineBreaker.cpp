@@ -14,11 +14,6 @@
 using namespace mozilla::unicode;
 using namespace mozilla::intl;
 
-/*static*/
-already_AddRefed<LineBreaker> LineBreaker::Create() {
-  return RefPtr<LineBreaker>(new LineBreaker()).forget();
-}
-
 /*
 
    Simplification of Pair Table in JIS X 4051

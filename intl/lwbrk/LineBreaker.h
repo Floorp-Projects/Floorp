@@ -6,17 +6,14 @@
 #define mozilla_intl_LineBreaker_h__
 
 #include "nscore.h"
-#include "nsISupports.h"
 
 #define NS_LINEBREAKER_NEED_MORE_TEXT -1
 
 namespace mozilla {
 namespace intl {
 
-class LineBreaker {
+class LineBreaker final {
  public:
-  NS_INLINE_DECL_REFCOUNTING(LineBreaker)
-
   enum class WordBreak : uint8_t {
     Normal = 0,    // default
     BreakAll = 1,  // break all
@@ -31,7 +28,10 @@ class LineBreaker {
     Anywhere = 4
   };
 
-  static already_AddRefed<LineBreaker> Create();
+  // LineBreaker is a utility class with only static methods. No need to
+  // instantiate it.
+  LineBreaker() = delete;
+  ~LineBreaker() = delete;
 
   // Find the next line break opportunity starting from aPos + 1. It can return
   // aLen if there's no break opportunity between [aPos + 1, aLen - 1].
@@ -54,9 +54,6 @@ class LineBreaker {
                                     WordBreak aWordBreak, Strictness aLevel,
                                     bool aIsChineseOrJapanese,
                                     uint8_t* aBreakBefore);
-
- private:
-  ~LineBreaker() = default;
 };
 
 static inline bool NS_IsSpace(char16_t u) {
@@ -75,8 +72,8 @@ static inline bool NS_IsSpace(char16_t u) {
 
 static inline bool NS_NeedsPlatformNativeHandling(char16_t aChar) {
   return
-#if ANDROID || XP_WIN // Bug 1647377/1736393: no "platform native" support for
-                      // Tibetan; better to just use our class-based breaker.
+#if ANDROID || XP_WIN  // Bug 1647377/1736393: no "platform native" support for
+                       // Tibetan; better to just use our class-based breaker.
       (0x0e01 <= aChar && aChar <= 0x0eff) ||  // Thai, Lao
 #else
       (0x0e01 <= aChar && aChar <= 0x0fff) ||  // Thai, Lao, Tibetan
