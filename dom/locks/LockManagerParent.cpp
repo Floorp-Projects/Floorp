@@ -10,6 +10,7 @@
 #include "mozilla/ContentPrincipalInfoHashKey.h"
 #include "mozilla/PrincipalHashKey.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/dom/locks/PLockManager.h"
 #include "mozilla/media/MediaUtils.h"
 #include "nsIDUtils.h"
@@ -17,7 +18,8 @@
 
 namespace mozilla::dom::locks {
 
-static nsTHashMap<ContentPrincipalInfoHashKey, WeakPtr<ManagedLocks>>
+static StaticAutoPtr<
+    nsTHashMap<ContentPrincipalInfoHashKey, WeakPtr<ManagedLocks>>>
     sManagedLocksMap;
 
 using IPCResult = mozilla::ipc::IPCResult;
@@ -27,10 +29,16 @@ LockManagerParent::LockManagerParent(
     const nsID& aClientId)
     : mClientId(NSID_TrimBracketsUTF16(aClientId)),
       mPrincipalInfo(aPrincipalInfo) {
-  mManagedLocks = sManagedLocksMap.Get(aPrincipalInfo);
+  if (!sManagedLocksMap) {
+    sManagedLocksMap =
+        new nsTHashMap<ContentPrincipalInfoHashKey, WeakPtr<ManagedLocks>>();
+  } else {
+    mManagedLocks = sManagedLocksMap->Get(aPrincipalInfo);
+  }
+
   if (!mManagedLocks) {
     mManagedLocks = new ManagedLocks();
-    sManagedLocksMap.LookupOrInsert(aPrincipalInfo, mManagedLocks);
+    sManagedLocksMap->LookupOrInsert(aPrincipalInfo, mManagedLocks);
   }
 }
 
@@ -71,8 +79,8 @@ void LockManagerParent::ActorDestroy(ActorDestroyReason aWhy) {
   mManagedLocks = nullptr;
   // We just decreased the refcount and potentially deleted it, so check whether
   // the weak pointer still points to anything and remove the entry if not.
-  if (!sManagedLocksMap.Get(mPrincipalInfo)) {
-    sManagedLocksMap.Remove(mPrincipalInfo);
+  if (!sManagedLocksMap->Get(mPrincipalInfo)) {
+    sManagedLocksMap->Remove(mPrincipalInfo);
   }
 }
 
