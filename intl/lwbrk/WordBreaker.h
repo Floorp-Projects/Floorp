@@ -6,7 +6,6 @@
 #define mozilla_intl_WordBreaker_h__
 
 #include "nscore.h"
-#include "nsISupports.h"
 
 #define NS_WORDBREAKER_NEED_MORE_TEXT -1
 
@@ -18,11 +17,12 @@ struct WordRange {
   uint32_t mEnd;
 };
 
-class WordBreaker {
+class WordBreaker final {
  public:
-  NS_INLINE_DECL_REFCOUNTING(WordBreaker)
-
-  static already_AddRefed<WordBreaker> Create();
+  // WordBreaker is a utility class with only static methods. No need to
+  // instantiate it.
+  WordBreaker() = delete;
+  ~WordBreaker() = delete;
 
   // Find the word boundary by scanning forward and backward from aPos.
   //
@@ -43,8 +43,6 @@ class WordBreaker {
   static int32_t Next(const char16_t* aText, uint32_t aLen, uint32_t aPos);
 
  private:
-  ~WordBreaker() = default;
-
   enum WordBreakClass : uint8_t {
     kWbClassSpace = 0,
     kWbClassAlphaLetter,

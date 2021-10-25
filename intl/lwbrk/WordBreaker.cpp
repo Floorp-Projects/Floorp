@@ -15,11 +15,6 @@ using mozilla::unicode::GetGenCategory;
 using mozilla::unicode::GetScriptCode;
 using mozilla::unicode::Script;
 
-/*static*/
-already_AddRefed<WordBreaker> WordBreaker::Create() {
-  return RefPtr<WordBreaker>(new WordBreaker()).forget();
-}
-
 #define IS_ASCII(c) (0 == (0xFF80 & (c)))
 #define ASCII_IS_ALPHA(c) \
   ((('a' <= (c)) && ((c) <= 'z')) || (('A' <= (c)) && ((c) <= 'Z')))
