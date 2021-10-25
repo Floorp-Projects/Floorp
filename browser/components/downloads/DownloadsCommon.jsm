@@ -37,7 +37,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  PluralForm: "resource://gre/modules/PluralForm.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   DownloadHistory: "resource://gre/modules/DownloadHistory.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
@@ -66,14 +65,15 @@ XPCOMUtils.defineLazyGetter(this, "DownloadsLogger", () => {
 const kDownloadsStringBundleUrl =
   "chrome://browser/locale/downloads/downloads.properties";
 
+const kDownloadsFluentStrings = new Localization(
+  ["browser/downloads.ftl"],
+  true
+);
+
 const kDownloadsStringsRequiringFormatting = {
   sizeWithUnits: true,
   statusSeparator: true,
   statusSeparatorBeforeNumber: true,
-};
-
-const kDownloadsStringsRequiringPluralForm = {
-  otherDownloads3: true,
 };
 
 const kMaxHistoryResultsForLimitedView = 42;
@@ -165,15 +165,6 @@ var DownloadsCommon = {
         strings[stringName] = function() {
           // Convert "arguments" to a real array before calling into XPCOM.
           return sb.formatStringFromName(stringName, Array.from(arguments));
-        };
-      } else if (stringName in kDownloadsStringsRequiringPluralForm) {
-        strings[stringName] = function(aCount) {
-          // Convert "arguments" to a real array before calling into XPCOM.
-          let formattedString = sb.formatStringFromName(
-            stringName,
-            Array.from(arguments)
-          );
-          return PluralForm.get(aCount, formattedString);
         };
       } else {
         strings[stringName] = string.value;
@@ -1541,8 +1532,13 @@ DownloadsSummaryData.prototype = {
       this._downloadsForSummary()
     );
 
-    this._description = DownloadsCommon.strings.otherDownloads3(
-      summary.numDownloading
+    // Run sync to update view right away and get correct description.
+    // See refreshView for more details.
+    this._description = kDownloadsFluentStrings.formatValueSync(
+      "downloads-more-downloading",
+      {
+        count: summary.numDownloading,
+      }
     );
     this._percentComplete = summary.percentComplete;
 
