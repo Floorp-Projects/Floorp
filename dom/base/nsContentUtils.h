@@ -182,7 +182,6 @@ class HTMLInputElement;
 class IPCDataTransfer;
 class IPCDataTransferItem;
 struct LifecycleCallbackArgs;
-struct LifecycleAdoptedCallbackArgs;
 class MessageBroadcaster;
 class NodeInfo;
 class Selection;
@@ -3018,9 +3017,7 @@ class nsContentUtils {
 
   static void EnqueueLifecycleCallback(
       mozilla::dom::ElementCallbackType aType, Element* aCustomElement,
-      mozilla::dom::LifecycleCallbackArgs* aArgs = nullptr,
-      mozilla::dom::LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs =
-          nullptr,
+      const mozilla::dom::LifecycleCallbackArgs& aArgs,
       mozilla::dom::CustomElementDefinition* aDefinition = nullptr);
 
   /**
