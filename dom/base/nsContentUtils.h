@@ -191,11 +191,6 @@ enum class ElementCallbackType;
 enum class ReferrerPolicy : uint8_t;
 }  // namespace dom
 
-namespace intl {
-class LineBreaker;
-class WordBreaker;
-}  // namespace intl
-
 namespace ipc {
 class Shmem;
 class IShmemAllocator;
@@ -856,14 +851,6 @@ class nsContentUtils {
 
   // Returns true if aDoc1 and aDoc2 have equal NodePrincipal()s.
   static bool HaveEqualPrincipals(Document* aDoc1, Document* aDoc2);
-
-  static mozilla::intl::LineBreaker* LineBreaker() {
-    return sLineBreaker.get();
-  }
-
-  static mozilla::intl::WordBreaker* WordBreaker() {
-    return sWordBreaker.get();
-  }
 
   /**
    * Regster aObserver as a shutdown observer. A strong reference is held
@@ -3358,9 +3345,6 @@ class nsContentUtils {
 
   static nsIContentPolicy* sContentPolicyService;
   static bool sTriedToGetContentPolicy;
-
-  static RefPtr<mozilla::intl::LineBreaker> sLineBreaker;
-  static RefPtr<mozilla::intl::WordBreaker> sWordBreaker;
 
   static mozilla::StaticRefPtr<nsIBidiKeyboard> sBidiKeyboard;
 
