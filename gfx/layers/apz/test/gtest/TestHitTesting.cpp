@@ -26,19 +26,6 @@ class APZHitTestingTester : public APZCTreeManagerTester {
   }
 
  protected:
-  void CreateHitTesting1LayerTree() {
-    const char* treeShape = "x(xxxx)";
-    // LayerID               0 1234
-    nsIntRegion layerVisibleRegion[] = {
-        nsIntRegion(IntRect(0, 0, 100, 100)),
-        nsIntRegion(IntRect(0, 0, 100, 100)),
-        nsIntRegion(IntRect(10, 10, 20, 20)),
-        nsIntRegion(IntRect(10, 10, 20, 20)),
-        nsIntRegion(IntRect(5, 5, 20, 20)),
-    };
-    CreateScrollData(treeShape, layerVisibleRegion);
-  }
-
   void CreateHitTesting2LayerTree() {
     const char* treeShape = "x(xx(x))";
     // LayerID               0 12 3
@@ -126,82 +113,6 @@ class APZHitTestingTesterInternal : public APZHitTestingTester {
     mHitTester = MakeUnique<InternalHitTester>();
   }
 };
-
-// A simple hit testing test that doesn't involve any transforms on layers.
-TEST_F(APZHitTestingTesterInternal, HitTesting1) {
-  CreateHitTesting1LayerTree();
-  ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
-
-  // No APZC attached so hit testing will return no APZC at (20,20)
-  RefPtr<AsyncPanZoomController> hit = GetTargetAPZC(ScreenPoint(20, 20));
-  TestAsyncPanZoomController* nullAPZC = nullptr;
-  EXPECT_EQ(nullAPZC, hit.get());
-  EXPECT_EQ(ScreenToParentLayerMatrix4x4(), transformToApzc);
-  EXPECT_EQ(ParentLayerToScreenMatrix4x4(), transformToGecko);
-
-  uint32_t paintSequenceNumber = 0;
-
-  // Now we have a root APZC that will match the page
-  SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
-                            CSSRect(0, 0, 100, 100));
-  UpdateHitTestingTree(paintSequenceNumber++);
-  hit = GetTargetAPZC(ScreenPoint(15, 15));
-  EXPECT_EQ(ApzcOf(root), hit.get());
-  // expect hit point at LayerIntPoint(15, 15)
-  EXPECT_EQ(ParentLayerPoint(15, 15),
-            transformToApzc.TransformPoint(ScreenPoint(15, 15)));
-  EXPECT_EQ(ScreenPoint(15, 15),
-            transformToGecko.TransformPoint(ParentLayerPoint(15, 15)));
-
-  // Now we have a sub APZC with a better fit
-  SetScrollableFrameMetrics(layers[3], ScrollableLayerGuid::START_SCROLL_ID + 1,
-                            CSSRect(0, 0, 100, 100));
-  UpdateHitTestingTree(paintSequenceNumber++);
-  EXPECT_NE(ApzcOf(root), ApzcOf(layers[3]));
-  hit = GetTargetAPZC(ScreenPoint(25, 25));
-  EXPECT_EQ(ApzcOf(layers[3]), hit.get());
-  // expect hit point at LayerIntPoint(25, 25)
-  EXPECT_EQ(ParentLayerPoint(25, 25),
-            transformToApzc.TransformPoint(ScreenPoint(25, 25)));
-  EXPECT_EQ(ScreenPoint(25, 25),
-            transformToGecko.TransformPoint(ParentLayerPoint(25, 25)));
-
-  // At this point, layers[4] obscures layers[3] at the point (15, 15) so
-  // hitting there should hit the root APZC
-  hit = GetTargetAPZC(ScreenPoint(15, 15));
-  EXPECT_EQ(ApzcOf(root), hit.get());
-
-  // Now test hit testing when we have two scrollable layers
-  SetScrollableFrameMetrics(layers[4], ScrollableLayerGuid::START_SCROLL_ID + 2,
-                            CSSRect(0, 0, 100, 100));
-  UpdateHitTestingTree(paintSequenceNumber++);
-  hit = GetTargetAPZC(ScreenPoint(15, 15));
-  EXPECT_EQ(ApzcOf(layers[4]), hit.get());
-  // expect hit point at LayerIntPoint(15, 15)
-  EXPECT_EQ(ParentLayerPoint(15, 15),
-            transformToApzc.TransformPoint(ScreenPoint(15, 15)));
-  EXPECT_EQ(ScreenPoint(15, 15),
-            transformToGecko.TransformPoint(ParentLayerPoint(15, 15)));
-
-  // Hit test ouside the reach of layer[3,4] but inside root
-  hit = GetTargetAPZC(ScreenPoint(90, 90));
-  EXPECT_EQ(ApzcOf(root), hit.get());
-  // expect hit point at LayerIntPoint(90, 90)
-  EXPECT_EQ(ParentLayerPoint(90, 90),
-            transformToApzc.TransformPoint(ScreenPoint(90, 90)));
-  EXPECT_EQ(ScreenPoint(90, 90),
-            transformToGecko.TransformPoint(ParentLayerPoint(90, 90)));
-
-  // Hit test ouside the reach of any layer
-  hit = GetTargetAPZC(ScreenPoint(1000, 10));
-  EXPECT_EQ(nullAPZC, hit.get());
-  EXPECT_EQ(ScreenToParentLayerMatrix4x4(), transformToApzc);
-  EXPECT_EQ(ParentLayerToScreenMatrix4x4(), transformToGecko);
-  hit = GetTargetAPZC(ScreenPoint(-1000, 10));
-  EXPECT_EQ(nullAPZC, hit.get());
-  EXPECT_EQ(ScreenToParentLayerMatrix4x4(), transformToApzc);
-  EXPECT_EQ(ParentLayerToScreenMatrix4x4(), transformToGecko);
-}
 
 // A more involved hit testing test that involves css and async transforms.
 TEST_F(APZHitTestingTesterInternal, HitTesting2) {
