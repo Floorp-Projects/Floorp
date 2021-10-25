@@ -28,9 +28,8 @@ LINUX_ARM_ANDROID_AVD = "linux64-android-avd-arm-repack"
 MACOS_X86_64_ANDROID_AVD = "linux64-android-avd-x86_64-repack"
 MACOS_ARM_ANDROID_AVD = "linux64-android-avd-arm-repack"
 
-# We don't currently support bootstrapping on Windows yet.
-# WINDOWS_X86_64_ANDROID_AVD = "linux64-android-avd-x86_64-repack"
-# WINDOWS_ARM_ANDROID_AVD = "linux64-android-avd-arm-repack"
+WINDOWS_X86_64_ANDROID_AVD = "linux64-android-avd-x86_64-repack"
+WINDOWS_ARM_ANDROID_AVD = "linux64-android-avd-arm-repack"
 
 AVD_MANIFEST_X86_64 = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "android-avds/x86_64.json")
