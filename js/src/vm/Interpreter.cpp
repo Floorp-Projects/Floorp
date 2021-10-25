@@ -1787,10 +1787,10 @@ class ReservedRooted : public RootedOperations<T, ReservedRooted<T>> {
   }
 
   explicit ReservedRooted(Rooted<T>* root) : savedRoot(root) {
-    *root = JS::SafelyInitialized<T>::create();
+    *root = JS::SafelyInitialized<T>();
   }
 
-  ~ReservedRooted() { *savedRoot = JS::SafelyInitialized<T>::create(); }
+  ~ReservedRooted() { *savedRoot = JS::SafelyInitialized<T>(); }
 
   void set(const T& p) const { *savedRoot = p; }
   operator Handle<T>() { return *savedRoot; }

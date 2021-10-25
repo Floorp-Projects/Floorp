@@ -32,8 +32,7 @@ class MOZ_RAII FakeRooted : public RootedOperations<T, FakeRooted<T>> {
  public:
   using ElementType = T;
 
-  explicit FakeRooted(JSContext* cx)
-      : ptr(JS::SafelyInitialized<T>::create()) {}
+  explicit FakeRooted(JSContext* cx) : ptr(JS::SafelyInitialized<T>()) {}
 
   FakeRooted(JSContext* cx, T initial) : ptr(initial) {}
 
