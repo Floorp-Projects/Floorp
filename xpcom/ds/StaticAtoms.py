@@ -1959,6 +1959,7 @@ STATIC_ATOMS = [
     Atom("mozillaAddons", "mozillaAddons"),
     Atom("tabs", "tabs"),
     Atom("webRequestBlocking", "webRequestBlocking"),
+    Atom("webRequestFilterResponse_serviceWorkerScript", "webRequestFilterResponse.serviceWorkerScript"),
     Atom("http", "http"),
     Atom("https", "https"),
     Atom("proxy", "proxy"),

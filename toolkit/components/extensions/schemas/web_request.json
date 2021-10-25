@@ -12,7 +12,8 @@
           "type": "string",
           "enum": [
             "webRequest",
-            "webRequestBlocking"
+            "webRequestBlocking",
+            "webRequestFilterResponse.serviceWorkerScript"
           ]
         }]
       }
