@@ -538,7 +538,6 @@ class SmokeTest {
         }.openSearch {
             verifyKeyboardVisibility()
             clickSearchEngineShortcutButton()
-            mDevice.waitForIdle()
             activityTestRule.waitForIdle()
             verifyEnginesListShortcutContains(activityTestRule, "YouTube")
         }

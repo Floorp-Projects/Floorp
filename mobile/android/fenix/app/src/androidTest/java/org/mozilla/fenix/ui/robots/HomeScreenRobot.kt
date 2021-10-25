@@ -187,12 +187,8 @@ class HomeScreenRobot {
         }
 
         fun openSearch(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/toolbar"))
-                .waitForExists(waitingTime)
-
+            navigationToolbar().waitForExists(waitingTime)
             navigationToolbar().click()
-
-            mDevice.waitForIdle()
 
             SearchRobot().interact()
             return SearchRobot.Transition()
