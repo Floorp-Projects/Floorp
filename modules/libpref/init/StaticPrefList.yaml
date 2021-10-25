@@ -3039,10 +3039,17 @@
   value: 0
   mirror: always
 
-# Force full parse on any external JS scripts that is being compiled off thread.
-- name: dom.script_loader.full_parse
-  type: bool
-  value: false
+# Maximum total size for all full parsed scripts in each ScriptLoader instance.
+# -1 implies full parse everything.  Default value is 10MB for utf8 scripts.
+- name: dom.script_loader.full_parse_max_size
+  type: int32_t
+  value: 10485760
+  mirror: always
+
+# Minimum memory, in GB, required to enable full parsing.
+- name: dom.script_loader.full_parse_min_mem
+  type: int32_t
+  value: 2
   mirror: always
 
 # Is support for decoding external (non-inline) classic or module DOM scripts

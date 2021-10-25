@@ -623,6 +623,8 @@ class ScriptLoader final : public nsISupports {
       JS::MutableHandle<JSScript*> aIntroductionScript);
 
   uint32_t NumberOfProcessors();
+  int32_t PhysicalSizeOfMemoryInGB();
+
   nsresult PrepareLoadedRequest(ScriptLoadRequest* aRequest,
                                 nsIIncrementalStreamLoader* aLoader,
                                 nsresult aStatus);
@@ -631,6 +633,7 @@ class ScriptLoader final : public nsISupports {
   void AddAsyncRequest(ScriptLoadRequest* aRequest);
   bool MaybeRemovedDeferRequests();
 
+  bool ShouldFullParse(ScriptLoadRequest* aRequest);
   bool ShouldCompileOffThread(ScriptLoadRequest* aRequest);
 
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
@@ -730,6 +733,8 @@ class ScriptLoader final : public nsISupports {
   uint32_t mParserBlockingBlockerCount;
   uint32_t mBlockerCount;
   uint32_t mNumberOfProcessors;
+  uint32_t mTotalFullParseSize;
+  int32_t mPhysicalSizeOfMemory;
   bool mEnabled;
   bool mDeferEnabled;
   bool mSpeculativeOMTParsingEnabled;
