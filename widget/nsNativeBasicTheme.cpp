@@ -424,7 +424,7 @@ sRGBColor nsNativeBasicTheme::ComputeCheckmarkColor(const EventStates& aState,
     return aColors.System(StyleSystemColor::Selecteditemtext);
   }
   if (aState.HasState(NS_EVENT_STATE_DISABLED)) {
-    return sColorWhiteAlpha80;
+    return sRGBColor::White(.8f);
   }
   return aColors.Accent().GetForeground();
 }
@@ -579,8 +579,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeThumbColors(
     return sColorGrey50;
   }();
 
-  const sRGBColor borderColor = sColorWhite;
-
+  const sRGBColor borderColor = sRGBColor::OpaqueWhite();
   return std::make_pair(backgroundColor, borderColor);
 }
 
@@ -628,9 +627,10 @@ std::array<sRGBColor, 3> nsNativeBasicTheme::ComputeFocusRectColors(
             aColors.System(StyleSystemColor::Buttontext),
             aColors.System(StyleSystemColor::TextBackground)};
   }
-
-  return {aColors.Accent().Get(), sColorWhiteAlpha80,
-          aColors.Accent().GetLight()};
+  const auto& accent = aColors.Accent();
+  const sRGBColor middle =
+      aColors.IsDark() ? sRGBColor::Black(.3f) : sRGBColor::White(.3f);
+  return {accent.Get(), middle, accent.GetLight()};
 }
 
 bool nsNativeBasicTheme::IsScrollbarTrackOpaque(nsIFrame* aFrame) {
