@@ -32,14 +32,15 @@ class WordBreaker {
   //
   // If aPos is already at the end of aText or beyond, both mBegin and mEnd
   // equals to aLen.
-  WordRange FindWord(const char16_t* aText, uint32_t aLen, uint32_t aPos);
+  static WordRange FindWord(const char16_t* aText, uint32_t aLen,
+                            uint32_t aPos);
 
   // Find the next word break opportunity starting from aPos + 1. It can return
   // aLen if there's no break opportunity between [aPos + 1, aLen - 1].
   //
   // If aPos is already at the end of aText or beyond, i.e. aPos >= aLen, return
   // NS_WORDBREAKER_NEED_MORE_TEXT.
-  int32_t Next(const char16_t* aText, uint32_t aLen, uint32_t aPos);
+  static int32_t Next(const char16_t* aText, uint32_t aLen, uint32_t aPos);
 
  private:
   ~WordBreaker() = default;

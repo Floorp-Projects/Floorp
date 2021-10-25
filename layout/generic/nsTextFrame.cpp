@@ -8168,11 +8168,10 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
     mFrag->AppendTo(str, textOffset, textLen);
     aContext.Insert(str, 0);
   }
-  mozilla::intl::WordBreaker* wordBreaker = nsContentUtils::WordBreaker();
   uint32_t nextWord = textStart > 0 ? textStart - 1 : textStart;
   while (true) {
     const int32_t scanResult =
-        wordBreaker->Next(aContext.get(), aContext.Length(), nextWord);
+        intl::WordBreaker::Next(aContext.get(), aContext.Length(), nextWord);
     if (NS_WORDBREAKER_NEED_MORE_TEXT == scanResult ||
         AssertedCast<uint32_t>(scanResult) > textStart + textLen) {
       break;

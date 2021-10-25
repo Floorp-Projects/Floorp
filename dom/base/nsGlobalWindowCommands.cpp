@@ -1045,15 +1045,7 @@ nsLookUpDictionaryCommand::DoCommandParams(const char* aCommandName,
       return NS_ERROR_FAILURE;
     }
 
-    // XXX nsIWordBreaker doesn't use contextual breaker.
-    // If OS provides it, widget should use it if contextual breaker is needed.
-    RefPtr<mozilla::intl::WordBreaker> wordBreaker =
-        nsContentUtils::WordBreaker();
-    if (NS_WARN_IF(!wordBreaker)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    mozilla::intl::WordRange range = wordBreaker->FindWord(
+    intl::WordRange range = intl::WordBreaker::FindWord(
         queryTextContentEvent.mReply->DataRef().get(),
         queryTextContentEvent.mReply->DataLength(),
         queryCharAtPointEvent.mReply->StartOffset() - offset);
