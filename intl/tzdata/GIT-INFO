@@ -1,5 +1,5 @@
-commit 2d8fe2edd38b6287429a3a66225920aa4c210e56
-Author: yumaoka <y.umaoka@gmail.com>
-Date:   Tue Sep 28 11:51:02 2021 -0400
+commit 9ead65eb4d32ce7eeef1164772d4f396c00ec7e2
+Author: Yoshito Umaoka <y.umaoka@gmail.com>
+Date:   Thu Oct 21 15:38:25 2021 -0400
 
-    ICU-21767 Adding tzdata2021a1 including 2021b changes (except pre-1970 changes) based on 2021a
+    ICU-21797 ICU time zone data 2021a2 (mostly equivalent to IANA 2021d)
