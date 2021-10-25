@@ -298,11 +298,6 @@ HTMLButtonElement::SubmitNamesValues(FormData* aFormData) {
     return NS_OK;
   }
 
-  // Disabled elements don't submit
-  if (IsDisabled()) {
-    return NS_OK;
-  }
-
   //
   // Get the name (if no name, no submit)
   //

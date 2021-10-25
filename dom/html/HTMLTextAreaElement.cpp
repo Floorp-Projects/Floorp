@@ -677,11 +677,6 @@ nsresult HTMLTextAreaElement::Reset() {
 
 NS_IMETHODIMP
 HTMLTextAreaElement::SubmitNamesValues(FormData* aFormData) {
-  // Disabled elements don't submit
-  if (IsDisabled()) {
-    return NS_OK;
-  }
-
   //
   // Get the name (if no name, no submit)
   //
