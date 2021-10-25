@@ -35,6 +35,7 @@ add_task(async () => {
         <html>
           <head>
             <meta charset="utf-8">
+            <script src="popup.js"></script>
             <style>
               * {
                 padding: 0;
@@ -73,6 +74,16 @@ add_task(async () => {
             </ul>
           </body>
         </html>`,
+      "popup.js": function() {
+        window.addEventListener(
+          "mousemove",
+          () => {
+            dump("Got a mousemove event in the popup content document\n");
+            browser.test.sendMessage("received-mousemove");
+          },
+          { once: true }
+        );
+      },
     },
   });
 
@@ -114,6 +125,20 @@ add_task(async () => {
       };
     }
   );
+
+  // Before starting autoscroll we need to make sure a mousemove event has been
+  // processed in the popup content so that subsequent mousemoves for autoscroll
+  // will be properly processed in autoscroll animation.
+  const mousemoveEventPromise = extension.awaitMessage("received-mousemove");
+
+  const nativeMouseEventPromise = promiseNativeMouseEventWithAPZ({
+    type: "mousemove",
+    target: browserForPopup,
+    offsetX: 100,
+    offsetY: 50,
+  });
+
+  await Promise.all([nativeMouseEventPromise, mousemoveEventPromise]);
 
   const scrollEventPromise = SpecialPowers.spawn(
     browserForPopup,
