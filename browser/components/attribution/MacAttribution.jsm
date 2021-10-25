@@ -54,6 +54,7 @@ function getQuarantineDatabasePath() {
  * @throws NS_ERROR_UNEXPECTED if there is a quarantine GUID, but it is malformed.
  */
 async function getQuarantineAttributes(path) {
+  // TODO: Bug 1736331 replace OS.File.macGetXAttr with an alternative.
   let bytes = await OS.File.macGetXAttr(path, "com.apple.quarantine");
   if (!bytes) {
     throw new Components.Exception(
