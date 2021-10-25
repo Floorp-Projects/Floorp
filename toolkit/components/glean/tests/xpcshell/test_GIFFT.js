@@ -4,8 +4,8 @@
 "use strict";
 
 Cu.importGlobalProperties(["Glean"]);
-const { ObjectUtils } = ChromeUtils.import(
-  "resource://gre/modules/ObjectUtils.jsm"
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
 );
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -43,8 +43,11 @@ add_task(function test_setup() {
   );
 
   // We need to initialize it once, otherwise operations will be stuck in the pre-init queue.
-  let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
-  FOG.initializeFOG();
+  // On Android FOG is set up through head.js.
+  if (AppConstants.platform != "android") {
+    let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
+    FOG.initializeFOG();
+  }
 });
 
 add_task(function test_gifft_counter() {

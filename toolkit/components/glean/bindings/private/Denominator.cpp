@@ -22,17 +22,11 @@ void DenominatorMetric::Add(int32_t aAmount) const {
   if (scalarId) {
     Telemetry::ScalarAdd(scalarId.extract(), aAmount);
   }
-#ifndef MOZ_GLEAN_ANDROID
   fog_denominator_add(mId, aAmount);
-#endif
 }
 
 Result<Maybe<int32_t>, nsCString> DenominatorMetric::TestGetValue(
     const nsACString& aPingName) const {
-#ifdef MOZ_GLEAN_ANDROID
-  Unused << mId;
-  return Maybe<int32_t>();
-#else
   nsCString err;
   if (fog_denominator_test_get_error(mId, &aPingName, &err)) {
     return Err(err);
@@ -41,7 +35,6 @@ Result<Maybe<int32_t>, nsCString> DenominatorMetric::TestGetValue(
     return Maybe<int32_t>();
   }
   return Some(fog_denominator_test_get_value(mId, &aPingName));
-#endif
 }
 
 }  // namespace impl

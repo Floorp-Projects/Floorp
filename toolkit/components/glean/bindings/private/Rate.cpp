@@ -22,9 +22,7 @@ void RateMetric::AddToNumerator(int32_t aAmount) const {
   if (scalarId) {
     Telemetry::ScalarAdd(scalarId.extract(), u"numerator"_ns, aAmount);
   }
-#ifndef MOZ_GLEAN_ANDROID
   fog_rate_add_to_numerator(mId, aAmount);
-#endif
 }
 
 void RateMetric::AddToDenominator(int32_t aAmount) const {
@@ -32,17 +30,11 @@ void RateMetric::AddToDenominator(int32_t aAmount) const {
   if (scalarId) {
     Telemetry::ScalarAdd(scalarId.extract(), u"denominator"_ns, aAmount);
   }
-#ifndef MOZ_GLEAN_ANDROID
   fog_rate_add_to_denominator(mId, aAmount);
-#endif
 }
 
 Result<Maybe<std::pair<int32_t, int32_t>>, nsCString> RateMetric::TestGetValue(
     const nsACString& aPingName) const {
-#ifdef MOZ_GLEAN_ANDROID
-  Unused << mId;
-  return Maybe<std::pair<int32_t, int32_t>>();
-#else
   nsCString err;
   if (fog_rate_test_get_error(mId, &aPingName, &err)) {
     return Err(err);
@@ -54,7 +46,6 @@ Result<Maybe<std::pair<int32_t, int32_t>>, nsCString> RateMetric::TestGetValue(
   int32_t den = 0;
   fog_rate_test_get_value(mId, &aPingName, &num, &den);
   return Some(std::make_pair(num, den));
-#endif
 }
 
 }  // namespace impl
