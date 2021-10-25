@@ -1,18 +1,19 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
-var trailerServerTiming = [
+const trailerServerTiming = [
   { metric: "metric3", duration: "99789.11", description: "time3" },
   { metric: "metric4", duration: "1112.13", description: "time4" },
 ];
 
-var responseServerTiming = [
+const responseServerTiming = [
   { metric: "metric1", duration: "123.4", description: "time1" },
   { metric: "metric2", duration: "0", description: "time2" },
 ];
 
 function handleRequest(request, response) {
-  var body = "c\r\ndata reached\r\n3\r\nhej\r\n0\r\n";
+  const body = "c\r\ndata reached\r\n3\r\nhej\r\n0\r\n";
 
   response.seizePower();
   response.write("HTTP/1.1 200 OK\r\n");
@@ -27,8 +28,8 @@ function handleRequest(request, response) {
 }
 
 function createServerTimingHeader(headerData) {
-  var header = "";
-  for (var i = 0; i < headerData.length; i++) {
+  let header = "";
+  for (let i = 0; i < headerData.length; i++) {
     header +=
       "Server-Timing: " +
       headerData[i].metric +

@@ -1,3 +1,5 @@
+"use strict";
+
 function handleRequest(request, response) {
   try {
     reallyHandleRequest(request, response);
@@ -114,7 +116,7 @@ function reallyHandleRequest(request, response) {
       throw new Error("Couldn't parse auth header: " + authHeader);
     }
 
-    var userpass = base64ToString(match[1]); // no atob() :-(
+    let userpass = base64ToString(match[1]); // no atob() :-(
     match = /(.*):(.*)/.exec(userpass);
     if (match.length != 3) {
       throw new Error("Couldn't decode auth header: " + userpass);
@@ -132,7 +134,7 @@ function reallyHandleRequest(request, response) {
       throw new Error("Couldn't parse auth header: " + authHeader);
     }
 
-    var userpass = base64ToString(match[1]); // no atob() :-(
+    let userpass = base64ToString(match[1]); // no atob() :-(
     match = /(.*):(.*)/.exec(userpass);
     if (match.length != 3) {
       throw new Error("Couldn't decode auth header: " + userpass);
@@ -165,7 +167,7 @@ function reallyHandleRequest(request, response) {
     }
   } else if (requestProxyAuth) {
     response.setStatusLine("1.0", 407, "Proxy authentication required");
-    for (i = 0; i < authHeaderCount; ++i) {
+    for (let i = 0; i < authHeaderCount; ++i) {
       response.setHeader(
         "Proxy-Authenticate",
         'basic realm="' + proxy_realm + '"',
@@ -178,7 +180,7 @@ function reallyHandleRequest(request, response) {
     } else {
       response.setStatusLine("1.0", 401, "Authentication required");
     }
-    for (i = 0; i < authHeaderCount; ++i) {
+    for (let i = 0; i < authHeaderCount; ++i) {
       response.setHeader(
         "WWW-Authenticate",
         'basic realm="' + realm + '"',
@@ -207,7 +209,7 @@ function reallyHandleRequest(request, response) {
 
   if (huge) {
     response.write("<div style='display: none'>");
-    for (i = 0; i < 100000; i++) {
+    for (let i = 0; i < 100000; i++) {
       response.write("123456789\n");
     }
     response.write("</div>");
