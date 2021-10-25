@@ -21,7 +21,7 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/Object.h"  // JS::GetClass, JS::GetReservedSlot, JS::GetMaybePtrFromReservedSlot
-#include "js/RootingAPI.h"  // JS::Handle, JS_DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE
+#include "js/RootingAPI.h"  // JS::Handle
 #include "js/ScalarType.h"  // JS::Scalar::Type
 #include "js/Wrapper.h"     // js::CheckedUnwrapStatic
 
@@ -298,7 +298,7 @@ using ExternalTypeOf_t = typename ExternalTypeOf<ArrayType>::Type;
 // A class holding a JSObject referring to a buffer of data. Either an
 // ArrayBufferObject or some sort of ArrayBufferViewObject (see below).
 // Note that this will always hold an unwrapped object.
-class JS_PUBLIC_API ArrayBufferOrView {
+class MOZ_STACK_CLASS JS_PUBLIC_API ArrayBufferOrView {
  public:
   // Typed Arrays will set this to their specific element type.
   // Everything else just claims to expose things as uint8_t*.
@@ -327,32 +327,14 @@ class JS_PUBLIC_API ArrayBufferOrView {
 
   // Allow use as Rooted<JS::ArrayBufferOrView>.
   void trace(JSTracer* trc) {
-    js::gc::TraceExternalEdge(trc, &obj, "ArrayBufferOrView object");
+    UnsafeTraceRoot(trc, &obj, "ArrayBufferOrView object");
   }
+
+  void reset() { obj = nullptr; }
 
   bool isDetached() const;
 
-  void exposeToActiveJS() const {
-    if (obj) {
-      js::BarrierMethods<JSObject*>::exposeToJS(obj);
-    }
-  }
-
-  JSObject* asObject() const {
-    exposeToActiveJS();
-    return obj;
-  }
-
-  JSObject* asObjectUnbarriered() const { return obj; }
-
-  JSObject** addressOfObject() { return &obj; }
-
-  bool operator==(const ArrayBufferOrView& other) const {
-    return obj == other.asObjectUnbarriered();
-  }
-  bool operator!=(const ArrayBufferOrView& other) const {
-    return obj != other.asObjectUnbarriered();
-  }
+  JSObject* asObject() const { return obj; }
 };
 
 class JS_PUBLIC_API ArrayBuffer : public ArrayBufferOrView {
@@ -643,63 +625,40 @@ JS_FOR_EACH_TYPED_ARRAY(JS_DECLARE_CLASS_ALIAS)
 
 namespace js {
 
-template <typename T>
-using EnableIfABOVType =
-    std::enable_if_t<std::is_base_of_v<JS::ArrayBufferOrView, T>>;
-
-template <typename T, typename Wrapper>
-class WrappedPtrOperations<T, Wrapper, EnableIfABOVType<T>> {
+template <class Wrapper>
+class WrappedPtrOperations_ABoVBase {
   auto get() const { return static_cast<const Wrapper*>(this)->get(); }
 
  public:
   explicit operator bool() const { return bool(get()); }
   JSObject* asObject() const { return get().asObject(); }
   bool isDetached() const { return get().isDetached(); }
-  bool isSharedMemory() const { return get().isSharedMemory(); }
-
-  typename T::DataType* getLengthAndData(size_t* length, bool* isSharedMemory,
-                                         const JS::AutoRequireNoGC& nogc) {
-    return get().getLengthAndData(length, isSharedMemory, nogc);
-  }
-
-  typename T::DataType* getData(bool* isSharedMemory,
-                                const JS::AutoRequireNoGC& nogc) {
-    return get().getData(isSharedMemory, nogc);
-  }
 };
 
-// Allow usage within Heap<T>.
-template <typename T>
-struct IsHeapConstructibleType<T, EnableIfABOVType<T>> : public std::true_type {
-};
+template <typename Wrapper>
+class WrappedPtrOperations<JS::ArrayBufferOrView, Wrapper>
+    : public WrappedPtrOperations_ABoVBase<Wrapper> {};
+template <typename Wrapper>
+class WrappedPtrOperations<JS::ArrayBuffer, Wrapper>
+    : public WrappedPtrOperations_ABoVBase<Wrapper> {};
+template <typename Wrapper>
+class WrappedPtrOperations<JS::ArrayBufferView, Wrapper>
+    : public WrappedPtrOperations_ABoVBase<Wrapper> {};
+template <typename Wrapper>
+class WrappedPtrOperations<JS::DataView, Wrapper>
+    : public WrappedPtrOperations_ABoVBase<Wrapper> {};
+template <typename Wrapper>
+class WrappedPtrOperations<JS::TypedArray_base, Wrapper>
+    : public WrappedPtrOperations_ABoVBase<Wrapper> {};
 
-template <typename T>
-struct BarrierMethods<T, EnableIfABOVType<T>> {
-  static gc::Cell* asGCThingOrNull(T view) {
-    return reinterpret_cast<gc::Cell*>(view.asObjectUnbarriered());
-  }
-  static void postWriteBarrier(T* viewp, T prev, T next) {
-    BarrierMethods<JSObject*>::postWriteBarrier(viewp->addressOfObject(),
-                                                prev.asObjectUnbarriered(),
-                                                next.asObjectUnbarriered());
-  }
-  static void exposeToJS(T view) { view.exposeToActiveJS(); }
-  static void readBarrier(T view) {
-    JSObject* obj = view.asObjectUnbarriered();
-    if (obj) {
-      js::gc::IncrementalReadBarrier(JS::GCCellPtr(obj));
-    }
-  }
-};
+#define DECL_TYPED_ARRAY_ROOTED_BASE(_1, _2, Name)                      \
+  template <typename Wrapper>                                           \
+  class WrappedPtrOperations<JS::TypedArray<JS::Scalar::Name>, Wrapper> \
+      : public WrappedPtrOperations_ABoVBase<Wrapper> {};
+JS_FOR_EACH_TYPED_ARRAY(DECL_TYPED_ARRAY_ROOTED_BASE)
+#undef DECL_TYPED_ARRAY_ROOTED_BASE
 
 }  // namespace js
-
-namespace JS {
-template <typename T>
-struct SafelyInitialized<T, js::EnableIfABOVType<T>> {
-  static T create() { return T::fromObject(nullptr); }
-};
-}  // namespace JS
 
 /*
  * JS_Is(type)Array(JSObject* maybeWrapped)
