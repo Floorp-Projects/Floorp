@@ -3,10 +3,9 @@
 
 "use strict";
 
-const { GlobalManager } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm",
-  null
-);
+const {
+  ExtensionParent: { GlobalManager },
+} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 
 add_task(async function test_global_manager_shutdown_cleanup() {
   equal(

@@ -191,13 +191,12 @@ add_task(async function overrideContext_permissions() {
     SidebarUI.browser.contentDocument.getElementById("webext-panels-browser"),
     [],
     () => {
-      let { withHandlingUserInput } = ChromeUtils.import(
-        "resource://gre/modules/ExtensionCommon.jsm",
-        {}
-      ).ExtensionCommon;
+      const { ExtensionCommon } = ChromeUtils.import(
+        "resource://gre/modules/ExtensionCommon.jsm"
+      );
       Cu.exportFunction(
         fn => {
-          return withHandlingUserInput(content, fn);
+          return ExtensionCommon.withHandlingUserInput(content, fn);
         },
         content,
         {

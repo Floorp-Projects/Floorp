@@ -59,11 +59,11 @@ let tests = [
 let urls = ["http://example.com/", "http://mochi.test:8888/", "about:rights"];
 
 function getId(tab) {
-  let {
+  const {
     Management: {
       global: { tabTracker },
     },
-  } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
   getId = tabTracker.getId.bind(tabTracker); // eslint-disable-line no-func-assign
   return getId(tab);
 }

@@ -26,9 +26,8 @@ Services.prefs.setBoolPref(
   true
 );
 
-let { Management } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm",
-  null
+const { Management } = ChromeUtils.import(
+  "resource://gre/modules/Extension.jsm"
 );
 
 // Crashes a <browser>'s remote process.

@@ -657,10 +657,9 @@ add_task(async function test_setup() {
 });
 
 add_task(async function test_single_initialization() {
-  // Grab access to this via the backstage pass to check if we're calling openConnection too often.
+  // Check if we're calling openConnection too often.
   const { FirefoxAdapter } = ChromeUtils.import(
-    "resource://gre/modules/ExtensionStorageSyncKinto.jsm",
-    null
+    "resource://services-common/kinto-storage-adapter.js"
   );
   const origOpenConnection = FirefoxAdapter.openConnection;
   let callCount = 0;

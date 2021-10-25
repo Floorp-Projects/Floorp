@@ -65,7 +65,7 @@ add_task(async function test_contentscript_cache() {
   }
 
   let chromeScript, chromeScriptDone;
-  let {appinfo} = SpecialPowers.Services;
+  let { appinfo } = SpecialPowers.Services;
   if (appinfo.processType === appinfo.PROCESS_TYPE_CONTENT) {
     /* globals addMessageListener, assert */
     chromeScript = SpecialPowers.loadChromeScript(() => {

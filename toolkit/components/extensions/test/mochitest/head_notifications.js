@@ -8,10 +8,7 @@ function mockServicesChromeScript() {
   );
   const ALERTS_SERVICE_CONTRACT_ID = "@mozilla.org/alerts-service;1";
 
-  const { setTimeout } = ChromeUtils.import(
-    "resource://gre/modules/Timer.jsm",
-    {}
-  );
+  const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
   const registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
   let activeNotifications = Object.create(null);

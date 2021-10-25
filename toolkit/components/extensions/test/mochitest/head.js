@@ -3,12 +3,10 @@
 /* exported AppConstants, Assert, AppTestDelegate */
 
 var { AppConstants } = SpecialPowers.Cu.import(
-  "resource://gre/modules/AppConstants.jsm",
-  {}
+  "resource://gre/modules/AppConstants.jsm"
 );
 var { AppTestDelegate } = SpecialPowers.Cu.import(
-  "resource://specialpowers/AppTestDelegate.jsm",
-  {}
+  "resource://specialpowers/AppTestDelegate.jsm"
 );
 
 let remote = SpecialPowers.getBoolPref("extensions.webextensions.remote");
@@ -85,7 +83,7 @@ function waitForLoad(win) {
 /* exported loadChromeScript */
 function loadChromeScript(fn) {
   let wrapper = `
-const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 (${fn.toString()})();`;
 
   return SpecialPowers.loadChromeScript(new Function(wrapper));

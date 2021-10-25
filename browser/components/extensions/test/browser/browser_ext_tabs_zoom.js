@@ -254,11 +254,11 @@ add_task(async function test_zoom_api() {
   });
 
   extension.onMessage("msg", (id, msg, ...args) => {
-    let {
+    const {
       Management: {
         global: { tabTracker },
       },
-    } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+    } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
 
     let resp;
     if (msg == "get-zoom") {

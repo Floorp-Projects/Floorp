@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyGetter(this, "extensionStorageSync", () => {
     ? "resource://gre/modules/ExtensionStorageSyncKinto.jsm"
     : "resource://gre/modules/ExtensionStorageSync.jsm";
 
-  const { extensionStorageSync } = ChromeUtils.import(url, {});
+  const { extensionStorageSync } = ChromeUtils.import(url);
   return extensionStorageSync;
 });
 
