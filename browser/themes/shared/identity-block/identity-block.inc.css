@@ -32,14 +32,16 @@
 
 .identity-box-button:hover:not([open=true]),
 #tracking-protection-icon-container:hover:not([open=true]) {
-  background-color: hsla(0,0%,70%,.2);
+  background-color: var(--urlbar-box-hover-bgcolor);
+  color: var(--urlbar-box-hover-text-color)
 }
 
 .identity-box-button:hover:active,
 .identity-box-button[open=true],
 #tracking-protection-icon-container:hover:active,
 #tracking-protection-icon-container[open=true] {
-  background-color: hsla(0,0%,70%,.3);
+  background-color: var(--urlbar-box-active-bgcolor);
+  color: var(--urlbar-box-hover-text-color);
 }
 
 .identity-box-button:not(:active):-moz-focusring,
