@@ -1,0 +1,194 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>A hit testing test involving a scenario with a scale transform</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    /*
+     * This test tries to approximate the layer structure of
+     * APZHitTestingTester.ComplexMultiLayerTree from TestHitTesting.cpp.
+     *
+     * Notes:
+     *   - The elements are named after the layers in the testcase
+     *     (e.g. "layer1"), but where multiple elements share an APZC,
+     *     new elements named "scroller1" etc. are introduced to be
+     *     the scroll containers.
+     *   - overflow: hidden is used to avoid spurious scrollbar layers.
+     *     To trigger APZC creation, the test code explicitly sets display
+     *     port margins.
+     *   - Perspective transforms are used to force an element to be
+     *     layerized if it otherwise wouldn't.
+     *   - One difference is that the entire contents of the APZC that
+     *     scrolls layer{4,6,8} is shifted to the right by 100px.
+     *     Otherwise, the dimensions of the layers make it such that
+     *     this APZC's composition bounds covers up layers{1,2,3}
+     *     and those cannot be hit.
+     */
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+    #scroller1 {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 250px;
+      height: 350px;
+      overflow: hidden;
+    }
+    #layer1 {
+      position: absolute;
+      left: 0px;
+      top: 0px;
+      width: 100px;
+      height: 100px;
+      background: red;
+    }
+    #layer2 {
+      position: absolute;
+      left: 50px;
+      top: 50px;
+      width: 200px;
+      height: 300px;
+      background: yellow;
+      transform: scale(1.0);
+      perspective: 10px;
+    }
+    #layer3 {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      width: 10px;
+      height: 10px;
+      background: green;
+      transform: scale(1.0);
+      perspective: 10px;
+    }
+    #scroller2 {
+      position: absolute;
+      left: 100px;
+      top: 0px;
+      width: 300px;
+      height: 400px;
+      overflow: hidden;
+    }
+    #layer4 {
+      position: absolute;
+      left: 0px;
+      top: 200px;
+      width: 100px;
+      height: 100px;
+      background: purple;
+    }
+    #layer5 {
+      position: absolute;
+      left: 200px;
+      top: 0px;
+      width: 100px;
+      height: 400px;
+      background: pink;
+      transform: scale(1.0);
+      perspective: 10px;
+    }
+    #layer6 {
+      position: absolute;
+      left: 0px;
+      top: 0px;
+      width: 100px;
+      height: 200px;
+      background: orange;
+    }
+    #layer7 {
+      position: absolute;
+      left: 0px;
+      top: 0px;
+      width: 100px;
+      height: 200px;
+      background: navy;
+      overflow: hidden;
+    }
+    #layer8 {
+      position: absolute;
+      left: 0px;
+      top: 200px;
+      width: 100px;
+      height: 100px;
+      background: lightgreen;
+      transform: scale(1.0);
+      perspective: 10px;
+    }
+    #layer9 {
+      position: absolute;
+      left: 0px;
+      top: 300px;
+      width: 100px;
+      height: 100px;
+      background: turquoise;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="scroller1">
+    <div id="layer1"></div>
+    <div id="layer2">
+      <div id="layer3"></div>
+    </div>
+  </div>
+  <div id="scroller2">
+    <div id="layer4"></div>
+    <div id="layer5">
+      <div id="layer6">
+        <div id="layer7"></div>
+      </div>
+      <div id="layer8"></div>
+      <div id="layer9"></div>
+    </div>
+  </div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  // Trigger APZC creation.
+  utils.setDisplayPortForElement(0, 0, 250, 350, scroller1, 1);
+  await promiseApzFlushedRepaints();
+  utils.setDisplayPortForElement(0, 0, 300, 400, scroller2, 1);
+  await promiseApzFlushedRepaints();
+  utils.setDisplayPortForElement(0, 0, 100, 200, layer7, 1);
+  await promiseApzFlushedRepaints();
+  utils.setDisplayPortForElement(0, 0, 100, 200, layer9, 1);
+  await promiseApzFlushedRepaints();
+
+  checkHitResult(hitTest({x: 25, y: 25}),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(scroller1),
+                 utils.getLayersId(),
+                 "scroller1");
+
+  checkHitResult(hitTest({x: 350, y: 100}),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(layer7),
+                 utils.getLayersId(),
+                 "layer7");
+
+  checkHitResult(hitTest({x: 375, y: 375}),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(layer9),
+                 utils.getLayersId(),
+                 "layer7");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>
