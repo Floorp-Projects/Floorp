@@ -25,6 +25,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/intl/Collator.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozIStorageStatement.h"
@@ -32,7 +33,6 @@
 #include "nsAlgorithm.h"
 #include "nsJSUtils.h"
 #include "ReportInternalError.h"
-#include "unicode/ucol.h"
 #include "xpcpublic.h"
 
 namespace mozilla::dom::indexedDB {
@@ -657,31 +657,21 @@ Result<Ok, nsresult> Key::EncodeLocaleString(const nsAString& aString,
   if (length == 0) {
     return Ok();
   }
-  const UChar* ustr = reinterpret_cast<const UChar*>(aString.BeginReading());
 
-  UErrorCode uerror = U_ZERO_ERROR;
-  UCollator* collator = ucol_open(aLocale.get(), &uerror);
-  if (NS_WARN_IF(U_FAILURE(uerror))) {
+  auto collResult = intl::Collator::TryCreate(aLocale.get());
+  if (collResult.isErr()) {
     return Err(NS_ERROR_FAILURE);
   }
+  auto collator = collResult.unwrap();
   MOZ_ASSERT(collator);
 
   AutoTArray<uint8_t, 128> keyBuffer;
-  int32_t sortKeyLength = ucol_getSortKey(
-      collator, ustr, length, keyBuffer.Elements(), keyBuffer.Length());
-  if (sortKeyLength > (int32_t)keyBuffer.Length()) {
-    if (!keyBuffer.SetLength(sortKeyLength, fallible)) {
-      return Err(NS_ERROR_OUT_OF_MEMORY);
-    }
-    sortKeyLength = ucol_getSortKey(collator, ustr, length,
-                                    keyBuffer.Elements(), sortKeyLength);
-  }
-
-  ucol_close(collator);
-  if (NS_WARN_IF(sortKeyLength == 0)) {
+  auto getResult = collator->GetSortKey(Span{aString}, keyBuffer);
+  if (getResult.isErr()) {
     return Err(NS_ERROR_FAILURE);
   }
 
+  size_t sortKeyLength = keyBuffer.Length();
   return EncodeString(Span{keyBuffer}.AsConst().First(sortKeyLength),
                       aTypeOffset);
 }
