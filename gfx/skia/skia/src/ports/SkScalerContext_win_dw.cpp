@@ -363,8 +363,15 @@ SkScalerContext_DW::SkScalerContext_DW(sk_sp<DWriteFontTypeface> typefaceRef,
     //    https://na.leagueoflegends.com/en/news/game-updates/patch/patch-410-notes
     // See https://crbug.com/385897
     } else {
-        fTextSizeRender = is_hinted(this, typeface) ? gdiTextSize : realTextSize;
-        fRenderingMode = DWRITE_RENDERING_MODE_NATURAL;
+        if (is_hinted(this, typeface)) {
+          fTextSizeRender = gdiTextSize;
+          fRenderingMode = DWRITE_RENDERING_MODE_NATURAL;
+        } else {
+          // Unhinted but with no gasp and below 20px defaults to symmetric for
+          // GetRecommendedRenderingMode.
+          fTextSizeRender = realTextSize;
+          fRenderingMode = DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC;
+        }
         fTextureType = DWRITE_TEXTURE_CLEARTYPE_3x1;
         fTextSizeMeasure = realTextSize;
         fMeasuringMode = DWRITE_MEASURING_MODE_NATURAL;
