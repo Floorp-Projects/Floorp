@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
+/* eslint-disable-next-line mozilla/reject-importGlobalProperties */
 Cu.importGlobalProperties(["TextEncoder"]);
 
 function gzipCompressString(string, obs) {
@@ -97,7 +100,9 @@ function handleRequest(request, response) {
   }
 
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
   timer.initWithCallback(
+    // eslint-disable-next-line complexity
     () => {
       // to avoid garbage collection
       timer = null;
@@ -316,11 +321,12 @@ function handleRequest(request, response) {
           response.setHeader("Content-Type", "text/plain", false);
           response.setHeader("Content-Encoding", "gzip\t ,gzip", false);
           setCacheHeaders();
+
           const observer = {
             onStreamComplete: function(
               loader,
               context,
-              status,
+              statusl,
               length,
               result
             ) {
