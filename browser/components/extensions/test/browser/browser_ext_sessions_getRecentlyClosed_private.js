@@ -32,11 +32,11 @@ async function run_test_extension(incognitoOverride) {
 
   await extension.startup();
 
-  let {
+  const {
     Management: {
       global: { windowTracker },
     },
-  } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
   let privateWinId = windowTracker.getId(privateWin);
 
   extension.sendMessage("check-sessions");

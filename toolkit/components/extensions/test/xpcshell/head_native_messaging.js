@@ -11,10 +11,22 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/MockRegistry.jsm"
 );
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+if (AppConstants.platform == "win") {
+  ChromeUtils.defineModuleGetter(
+    this,
+    "SubprocessImpl",
+    "resource://gre/modules/subprocess/subprocess_win.jsm"
+  );
+} else {
+  ChromeUtils.defineModuleGetter(
+    this,
+    "SubprocessImpl",
+    "resource://gre/modules/subprocess/subprocess_unix.jsm"
+  );
+}
 
-let { Subprocess, SubprocessImpl } = ChromeUtils.import(
-  "resource://gre/modules/Subprocess.jsm",
-  null
+const { Subprocess } = ChromeUtils.import(
+  "resource://gre/modules/Subprocess.jsm"
 );
 
 // It's important that we use a space in this directory name to make sure we

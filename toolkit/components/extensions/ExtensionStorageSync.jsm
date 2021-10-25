@@ -37,14 +37,11 @@ XPCOMUtils.defineLazyGetter(this, "storageSvc", () =>
 );
 
 // We might end up falling back to kinto...
-XPCOMUtils.defineLazyGetter(
+XPCOMUtils.defineLazyModuleGetter(
   this,
   "extensionStorageSyncKinto",
-  () =>
-    ChromeUtils.import(
-      "resource://gre/modules/ExtensionStorageSyncKinto.jsm",
-      {}
-    ).extensionStorageSync
+  "resource://gre/modules/ExtensionStorageSyncKinto.jsm",
+  "extensionStorageSync"
 );
 
 // The interfaces which define the callbacks used by the bridge. There's a

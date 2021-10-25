@@ -105,11 +105,11 @@ add_task(async function() {
     extension.awaitMessage("background-ready"),
   ]);
 
-  let {
+  const {
     Management: {
       global: { windowTracker },
     },
-  } = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
+  } = ChromeUtils.import("resource://gre/modules/Extension.jsm");
 
   let winId1 = windowTracker.getId(win1);
   let winId2 = windowTracker.getId(win2);
