@@ -161,8 +161,8 @@ private fun assertSearchToolbar() =
     onView(
         allOf(
             withId(R.id.navigationToolbar),
-            hasDescendant(withContentDescription("Navigate up")),
-            hasDescendant(withText("Search"))
+            hasDescendant(withContentDescription(R.string.action_bar_up_description)),
+            hasDescendant(withText(R.string.preferences_search))
         )
     ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 

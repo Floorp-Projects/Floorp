@@ -157,7 +157,8 @@ class SettingsRobot {
 
         fun openHomepageSubMenu(interact: SettingsSubMenuHomepageRobot.() -> Unit): SettingsSubMenuHomepageRobot.Transition {
 
-            onView(withText("Homepage")).click()
+            mDevice.findObject(UiSelector().textContains("Homepage")).waitForExists(waitingTime)
+            onView(withText(R.string.preferences_home_2)).click()
 
             SettingsSubMenuHomepageRobot().interact()
             return SettingsSubMenuHomepageRobot.Transition()
@@ -307,8 +308,8 @@ private fun assertSettingsToolbar() =
     onView(
         CoreMatchers.allOf(
             withId(R.id.navigationToolbar),
-            hasDescendant(ViewMatchers.withContentDescription("Navigate up")),
-            hasDescendant(withText("Settings"))
+            hasDescendant(ViewMatchers.withContentDescription(R.string.action_bar_up_description)),
+            hasDescendant(withText(R.string.settings))
         )
     ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
@@ -320,18 +321,18 @@ private fun assertGeneralHeading() {
 
 private fun assertSearchButton() {
     mDevice.wait(Until.findObject(By.text("Search")), waitingTime)
-    onView(withText("Search"))
+    onView(withText(R.string.preferences_search))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertHomepageButton() =
-    onView(withText("Homepage")).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    onView(withText(R.string.preferences_home_2)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertCreditCardsButton() =
-    onView(withText("Credit cards")).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    onView(withText(R.string.preferences_credit_cards)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertLanguageButton() =
-    onView(withText("Language")).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    onView(withText(R.string.preferences_language)).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertCustomizeButton() = onView(withText("Customize"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
@@ -365,7 +366,7 @@ private fun assertAndroidDefaultAppsMenuAppears() {
 
 private fun assertTabsButton() {
     mDevice.wait(Until.findObject(By.text("Tabs")), waitingTime)
-    onView(withText("Tabs"))
+    onView(withText(R.string.preferences_tabs))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
@@ -392,7 +393,7 @@ private fun assertEnhancedTrackingProtectionValue(state: String) {
 
 private fun assertLoginsAndPasswordsButton() {
     scrollToElementByText("Logins and passwords")
-    onView(withText("Logins and passwords"))
+    onView(withText(R.string.preferences_passwords_logins_and_passwords))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 

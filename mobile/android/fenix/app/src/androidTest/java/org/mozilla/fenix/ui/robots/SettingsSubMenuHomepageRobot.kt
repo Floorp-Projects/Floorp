@@ -18,18 +18,18 @@ class SettingsSubMenuHomepageRobot {
     class Transition
 }
 
-private fun openingScreenHeading() = onView(withText("Opening screen"))
+private fun openingScreenHeading() = onView(withText(R.string.preferences_opening_screen))
 
 private fun homepageButton() =
     onView(
         allOf(
             withId(R.id.title),
-            withText("Homepage"),
+            withText(R.string.opening_screen_homepage),
             hasSibling(withId(R.id.radio_button))
         )
     )
 
-private fun lastTabButton() = onView(withText("Last tab"))
+private fun lastTabButton() = onView(withText(R.string.opening_screen_last_tab))
 
 private fun homepageAfterFourHoursButton() =
-    onView(withText("Homepage after four hours of inactivity"))
+    onView(withText(R.string.opening_screen_after_four_hours_of_inactivity))
