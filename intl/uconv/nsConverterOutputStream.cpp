@@ -57,10 +57,8 @@ nsConverterOutputStream::Write(uint32_t aCount, const char16_t* aChars,
     uint32_t result;
     size_t read;
     size_t written;
-    bool hadErrors;
-    Tie(result, read, written, hadErrors) =
+    Tie(result, read, written, Ignore) =
         mConverter->EncodeFromUTF16(src, dst, false);
-    Unused << hadErrors;
     src = src.From(read);
     uint32_t streamWritten;
     nsresult rv = mOutStream->Write(reinterpret_cast<char*>(dst.Elements()),
@@ -97,10 +95,8 @@ nsConverterOutputStream::Flush() {
   uint32_t result;
   size_t read;
   size_t written;
-  bool hadErrors;
-  Tie(result, read, written, hadErrors) =
+  Tie(result, read, written, Ignore) =
       mConverter->EncodeFromUTF16(src, dst, true);
-  Unused << hadErrors;
   MOZ_ASSERT(result == kInputEmpty);
   uint32_t streamWritten;
   if (!written) {

@@ -124,7 +124,6 @@ nsresult TextStreamer::EncodeAndWrite() {
     uint32_t result;
     size_t read;
     size_t written;
-    bool hadErrors;
     if (mIsPlainText) {
       Tie(result, read, written) =
           mUnicodeEncoder->EncodeFromUTF16WithoutReplacement(src, dst, false);
@@ -135,10 +134,9 @@ nsresult TextStreamer::EncodeAndWrite() {
         dst[written++] = '?';
       }
     } else {
-      Tie(result, read, written, hadErrors) =
+      Tie(result, read, written, Ignore) =
           mUnicodeEncoder->EncodeFromUTF16(src, dst, false);
     }
-    Unused << hadErrors;
     src = src.From(read);
     // Sadly, we still have test cases that implement nsIOutputStream in JS, so
     // the buffer needs to be zero-terminated for XPConnect to do its thing.
