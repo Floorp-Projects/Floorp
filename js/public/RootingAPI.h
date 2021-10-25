@@ -306,7 +306,9 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapOperations<T, Heap<T>> {
     static_assert(sizeof(T) == sizeof(Heap<T>),
                   "Heap<T> must be binary compatible with T.");
   }
-  explicit Heap(const T& p) { init(p); }
+  explicit Heap(const T& p) : ptr(p) {
+    postWriteBarrier(SafelyInitialized<T>(), ptr);
+  }
 
   /*
    * For Heap, move semantics are equivalent to copy semantics. However, we want
@@ -314,8 +316,12 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapOperations<T, Heap<T>> {
    * breaks common usage of move semantics, so we need to define both, even
    * though they are equivalent.
    */
-  explicit Heap(const Heap<T>& other) { init(other.getWithoutExpose()); }
-  Heap(Heap<T>&& other) { init(other.getWithoutExpose()); }
+  explicit Heap(const Heap<T>& other) : ptr(other.getWithoutExpose()) {
+    postWriteBarrier(SafelyInitialized<T>(), ptr);
+  }
+  Heap(Heap<T>&& other) : ptr(other.getWithoutExpose()) {
+    postWriteBarrier(SafelyInitialized<T>(), ptr);
+  }
 
   Heap& operator=(Heap<T>&& other) {
     set(other.getWithoutExpose());
@@ -360,11 +366,6 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapOperations<T, Heap<T>> {
   }
 
  private:
-  void init(const T& newPtr) {
-    ptr = newPtr;
-    postWriteBarrier(SafelyInitialized<T>(), ptr);
-  }
-
   void postWriteBarrier(const T& prev, const T& next) {
     js::BarrierMethods<T>::postWriteBarrier(&ptr, prev, next);
   }
