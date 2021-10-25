@@ -78,7 +78,11 @@ fun RecentTabs(
                     RecentTabItem(
                         tabId = tab.state.id,
                         url = tab.state.content.url,
-                        title = tab.state.content.title,
+                        title = if (tab.state.content.title.isNotEmpty()) {
+                            tab.state.content.title
+                        } else {
+                            tab.state.content.url
+                        },
                         thumbnail = tab.state.content.thumbnail,
                         onRecentTabClick = onRecentTabClick
                     )
