@@ -80,14 +80,7 @@ class APZHitTestingTester : public APZCTreeManagerTester {
   }
 };
 
-class APZHitTestingTesterInternal : public APZHitTestingTester {
- public:
-  APZHitTestingTesterInternal() {
-    mHitTester = MakeUnique<InternalHitTester>();
-  }
-};
-
-TEST_F(APZHitTestingTesterInternal, ComplexMultiLayerTree) {
+TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
   CreateComplexMultiLayerTree();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
   UpdateHitTestingTree();
@@ -163,12 +156,8 @@ TEST_F(APZHitTestingTesterInternal, ComplexMultiLayerTree) {
   EXPECT_EQ(nullptr, node8->GetLastChild());
   EXPECT_EQ(nullptr, node9->GetLastChild());
 
-  RefPtr<AsyncPanZoomController> hit = GetTargetAPZC(ScreenPoint(25, 25));
-  EXPECT_EQ(ApzcOf(layers[1]), hit.get());
-  hit = GetTargetAPZC(ScreenPoint(275, 375));
-  EXPECT_EQ(ApzcOf(layers[9]), hit.get());
-  hit = GetTargetAPZC(ScreenPoint(250, 100));
-  EXPECT_EQ(ApzcOf(layers[7]), hit.get());
+  // Assertions about hit-testing have been ported to mochitest,
+  // in helper_hittest_bug1730606-4.html.
 }
 
 TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
