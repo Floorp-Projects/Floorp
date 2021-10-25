@@ -945,8 +945,8 @@ int32_t LineBreaker::Next(const char16_t* aText, uint32_t aLen, uint32_t aPos) {
     // XXX(Bug 1631371) Check if this should use a fallible operation as it
     // pretended earlier.
     breakState.AppendElements(end - begin);
-    GetJISx4051Breaks(aText + begin, end - begin, WordBreak::Normal,
-                      Strictness::Auto, false, breakState.Elements());
+    ComputeBreakPositions(aText + begin, end - begin, WordBreak::Normal,
+                          Strictness::Auto, false, breakState.Elements());
 
     ret = aPos;
     do {
@@ -985,10 +985,11 @@ static bool SuppressBreakForKeepAll(uint32_t aPrev, uint32_t aCh) {
          affectedByKeepAll(GetLineBreakClass(aCh));
 }
 
-void LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLength,
-                                    WordBreak aWordBreak, Strictness aLevel,
-                                    bool aIsChineseOrJapanese,
-                                    uint8_t* aBreakBefore) {
+void LineBreaker::ComputeBreakPositions(const char16_t* aChars,
+                                        uint32_t aLength, WordBreak aWordBreak,
+                                        Strictness aLevel,
+                                        bool aIsChineseOrJapanese,
+                                        uint8_t* aBreakBefore) {
   uint32_t cur;
   int8_t lastClass = CLASS_NONE;
   ContextState state(aChars, aLength);
@@ -1113,10 +1114,10 @@ void LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLength,
   }
 }
 
-void LineBreaker::GetJISx4051Breaks(const uint8_t* aChars, uint32_t aLength,
-                                    WordBreak aWordBreak, Strictness aLevel,
-                                    bool aIsChineseOrJapanese,
-                                    uint8_t* aBreakBefore) {
+void LineBreaker::ComputeBreakPositions(const uint8_t* aChars, uint32_t aLength,
+                                        WordBreak aWordBreak, Strictness aLevel,
+                                        bool aIsChineseOrJapanese,
+                                        uint8_t* aBreakBefore) {
   uint32_t cur;
   int8_t lastClass = CLASS_NONE;
   ContextState state(aChars, aLength);

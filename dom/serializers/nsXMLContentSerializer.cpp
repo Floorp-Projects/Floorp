@@ -1538,14 +1538,12 @@ bool nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
         if (mAllowLineBreaking) {
           MOZ_ASSERT(aPos < aEnd,
                      "We shouldn't be here if aPos reaches the end of text!");
-          mozilla::intl::LineBreaker* lineBreaker =
-              nsContentUtils::LineBreaker();
 
           // Search forward from aSequenceStart until we find the largest
           // wrap position less than or equal to aPos.
           int32_t nextWrapPosition = 0;
           while (true) {
-            nextWrapPosition = lineBreaker->Next(
+            nextWrapPosition = intl::LineBreaker::Next(
                 aSequenceStart, aEnd - aSequenceStart, wrapPosition);
             MOZ_ASSERT(nextWrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT,
                        "We should've exited the loop when reaching the end of "
