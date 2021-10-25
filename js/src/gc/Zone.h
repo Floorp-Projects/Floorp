@@ -463,7 +463,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   uint64_t gcNumber();
 
   void setNeedsIncrementalBarrier(bool needs);
-  const BarrierState* addressOfNeedsIncrementalBarrier() const {
+  const uint32_t* addressOfNeedsIncrementalBarrier() const {
     return &needsIncrementalBarrier_;
   }
 
