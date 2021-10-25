@@ -108,8 +108,7 @@ XPCOMUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
     uriFlags:
       Ci.nsIAboutModule.ALLOW_SCRIPT |
       Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT |
-      Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD |
-      Ci.nsIAboutModule.IS_SECURE_CHROME_UI,
+      Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD,
   });
 
   // Extra methods for about:study-specific behavior.
