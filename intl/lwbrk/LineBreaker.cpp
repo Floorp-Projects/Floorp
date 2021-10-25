@@ -913,34 +913,35 @@ static int8_t ContextualAnalysis(char32_t prev, char32_t cur, char32_t next,
   return GetClass(cur, aLevel, aIsChineseOrJapanese);
 }
 
-int32_t LineBreaker::WordMove(const char16_t* aText, uint32_t aLen,
-                              uint32_t aPos, int8_t aDirection) {
-  bool textNeedsJISx4051 = false;
+int32_t LineBreaker::Next(const char16_t* aText, uint32_t aLen, uint32_t aPos) {
+  MOZ_ASSERT(aText);
+
+  if (aPos >= aLen) {
+    return NS_LINEBREAKER_NEED_MORE_TEXT;
+  }
+
+  bool textNeedsComplexLineBreak = false;
   int32_t begin, end;
 
   for (begin = aPos; begin > 0 && !NS_IsSpace(aText[begin - 1]); --begin) {
     if (IS_CJK_CHAR(aText[begin]) ||
         NS_NeedsPlatformNativeHandling(aText[begin])) {
-      textNeedsJISx4051 = true;
+      textNeedsComplexLineBreak = true;
     }
   }
   for (end = aPos + 1; end < int32_t(aLen) && !NS_IsSpace(aText[end]); ++end) {
     if (IS_CJK_CHAR(aText[end]) || NS_NeedsPlatformNativeHandling(aText[end])) {
-      textNeedsJISx4051 = true;
+      textNeedsComplexLineBreak = true;
     }
   }
 
   int32_t ret;
-  AutoTArray<uint8_t, 2000> breakState;
-  if (!textNeedsJISx4051) {
+  if (!textNeedsComplexLineBreak) {
     // No complex text character, do not try to do complex line break.
     // (This is required for serializers. See Bug #344816.)
-    if (aDirection < 0) {
-      ret = (begin == int32_t(aPos)) ? begin - 1 : begin;
-    } else {
-      ret = end;
-    }
+    ret = end;
   } else {
+    AutoTArray<uint8_t, 2000> breakState;
     // XXX(Bug 1631371) Check if this should use a fallible operation as it
     // pretended earlier.
     breakState.AppendElements(end - begin);
@@ -949,20 +950,11 @@ int32_t LineBreaker::WordMove(const char16_t* aText, uint32_t aLen,
 
     ret = aPos;
     do {
-      ret += aDirection;
+      ++ret;
     } while (begin < ret && ret < end && !breakState[ret - begin]);
   }
 
   return ret;
-}
-
-int32_t LineBreaker::Next(const char16_t* aText, uint32_t aLen, uint32_t aPos) {
-  MOZ_ASSERT(aText);
-
-  if (aPos >= aLen) {
-    return NS_LINEBREAKER_NEED_MORE_TEXT;
-  }
-  return WordMove(aText, aLen, aPos, 1);
 }
 
 static bool SuppressBreakForKeepAll(uint32_t aPrev, uint32_t aCh) {
