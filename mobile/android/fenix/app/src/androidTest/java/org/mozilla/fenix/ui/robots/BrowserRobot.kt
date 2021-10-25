@@ -12,7 +12,6 @@ import android.net.Uri
 import android.os.SystemClock
 import android.widget.EditText
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
@@ -171,13 +170,12 @@ class BrowserRobot {
     fun verifyMenuButton() = assertMenuButton()
 
     fun verifyNavURLBarItems() {
-        verifyEnhancedTrackingOptions()
-        pressBack()
-        waitingTime
-        verifySecureConnectionLockIcon()
-        verifyTabCounter("1")
-        verifyNavURLBar()
+        navURLBar().waitForExists(waitingTime)
         verifyMenuButton()
+        verifyTabCounter("1")
+        verifySearchBar()
+        verifySecureConnectionLockIcon()
+        verifyHomeScreenButton()
     }
 
     fun verifyNoLinkImageContextMenuItems(containsURL: Uri) {
@@ -199,6 +197,10 @@ class BrowserRobot {
                 .waitForExists(waitingTime)
         )
     }
+
+    fun verifyHomeScreenButton() = assertHomeScreenButton()
+
+    fun verifySearchBar() = assertSearchBar()
 
     fun dismissContentContextMenu(containsURL: Uri) {
         onView(withText(containsURL.toString()))
@@ -586,6 +588,15 @@ fun browserScreen(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
 }
 
 fun navURLBar() = mDevice.findObject(UiSelector().resourceId("$packageName:id/toolbar"))
+
+fun searchBar() = onView(withId(R.id.mozac_browser_toolbar_url_view))
+
+fun homeScreenButton() = onView(withContentDescription(R.string.browser_toolbar_home))
+
+private fun assertHomeScreenButton() =
+    homeScreenButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertSearchBar() = searchBar().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertNavURLBar() = assertTrue(navURLBar().waitForExists(waitingTime))
 
