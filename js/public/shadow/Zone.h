@@ -10,6 +10,7 @@
 #define js_shadow_Zone_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Atomics.h"
 
 #include <stdint.h>  // uint8_t, uint32_t
 
@@ -23,8 +24,8 @@ namespace JS {
 namespace shadow {
 
 struct Zone {
-  enum GCState : uint8_t {
-    NoGC,
+  enum GCState : uint32_t {
+    NoGC = 0,
     Prepare,
     MarkBlackOnly,
     MarkBlackAndGray,
@@ -33,17 +34,21 @@ struct Zone {
     Compact
   };
 
+  using AtomicGCState = mozilla::Atomic<uint32_t, mozilla::Relaxed>;
+
   enum Kind : uint8_t { NormalZone, AtomsZone, SystemZone };
 
  protected:
   JSRuntime* const runtime_;
   JSTracer* const barrierTracer_;  // A pointer to the JSRuntime's |gcMarker|.
   uint32_t needsIncrementalBarrier_ = 0;
-  GCState gcState_ = NoGC;
+  AtomicGCState gcState_;
   const Kind kind_;
 
   Zone(JSRuntime* runtime, JSTracer* barrierTracerArg, Kind kind)
-      : runtime_(runtime), barrierTracer_(barrierTracerArg), kind_(kind) {}
+      : runtime_(runtime), barrierTracer_(barrierTracerArg), kind_(kind) {
+    MOZ_ASSERT(!wasGCStarted());
+  }
 
  public:
   bool needsIncrementalBarrier() const { return needsIncrementalBarrier_; }
@@ -63,22 +68,22 @@ struct Zone {
   // thread can easily lead to races. Use this method very carefully.
   JSRuntime* runtimeFromAnyThread() const { return runtime_; }
 
-  GCState gcState() const { return gcState_; }
-  bool wasGCStarted() const { return gcState_ != NoGC; }
-  bool isGCPreparing() const { return gcState_ == Prepare; }
-  bool isGCMarkingBlackOnly() const { return gcState_ == MarkBlackOnly; }
-  bool isGCMarkingBlackAndGray() const { return gcState_ == MarkBlackAndGray; }
-  bool isGCSweeping() const { return gcState_ == Sweep; }
-  bool isGCFinished() const { return gcState_ == Finished; }
-  bool isGCCompacting() const { return gcState_ == Compact; }
+  GCState gcState() const { return GCState(uint32_t(gcState_)); }
+  bool wasGCStarted() const { return gcState() != NoGC; }
+  bool isGCPreparing() const { return gcState() == Prepare; }
+  bool isGCMarkingBlackOnly() const { return gcState() == MarkBlackOnly; }
+  bool isGCMarkingBlackAndGray() const { return gcState() == MarkBlackAndGray; }
+  bool isGCSweeping() const { return gcState() == Sweep; }
+  bool isGCFinished() const { return gcState() == Finished; }
+  bool isGCCompacting() const { return gcState() == Compact; }
   bool isGCMarking() const {
     return isGCMarkingBlackOnly() || isGCMarkingBlackAndGray();
   }
   bool isGCMarkingOrSweeping() const {
-    return gcState_ >= MarkBlackOnly && gcState_ <= Sweep;
+    return gcState() >= MarkBlackOnly && gcState() <= Sweep;
   }
   bool isGCSweepingOrCompacting() const {
-    return gcState_ == Sweep || gcState_ == Compact;
+    return gcState() == Sweep || gcState() == Compact;
   }
 
   bool isAtomsZone() const { return kind_ == AtomsZone; }
