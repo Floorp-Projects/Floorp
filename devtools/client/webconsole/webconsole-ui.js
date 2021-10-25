@@ -240,6 +240,9 @@ class WebConsoleUI {
     this.proxy = null;
     this.additionalProxies = null;
 
+    this.networkDataProvider.destroy();
+    this.networkDataProvider = null;
+
     // Nullify `hud` last as it nullify also target which is used on destroy
     this.window = this.hud = this.wrapper = null;
   }
