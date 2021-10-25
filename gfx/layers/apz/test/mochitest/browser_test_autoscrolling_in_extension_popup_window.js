@@ -83,6 +83,14 @@ add_task(async () => {
           },
           { once: true }
         );
+        window.addEventListener(
+          "scroll",
+          () => {
+            dump("Got a scroll event in the popup content document\n");
+            browser.test.sendMessage("received-scroll");
+          },
+          { once: true }
+        );
       },
     },
   });
@@ -140,22 +148,7 @@ add_task(async () => {
 
   await Promise.all([nativeMouseEventPromise, mousemoveEventPromise]);
 
-  const scrollEventPromise = SpecialPowers.spawn(
-    browserForPopup,
-    [],
-    async () => {
-      return new Promise(resolve => {
-        content.window.addEventListener(
-          "scroll",
-          event => {
-            dump("Got a scroll event in the popup content document\n");
-            resolve();
-          },
-          { once: true }
-        );
-      });
-    }
-  );
+  const scrollEventPromise = extension.awaitMessage("received-scroll");
 
   // Start autoscrolling.
   ok(
