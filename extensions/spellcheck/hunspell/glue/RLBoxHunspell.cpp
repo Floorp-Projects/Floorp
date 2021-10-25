@@ -10,6 +10,7 @@
 #include "RLBoxHunspell.h"
 #include "mozHunspellRLBoxGlue.h"
 #include "mozHunspellRLBoxHost.h"
+#include "nsThread.h"
 
 using namespace rlbox;
 using namespace mozilla;
@@ -37,6 +38,7 @@ static tainted_hunspell<char*> allocStrInSandbox(
 RLBoxHunspell::RLBoxHunspell(const nsAutoCString& affpath,
                              const nsAutoCString& dpath)
     : mHandle(nullptr) {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 #ifdef MOZ_WASM_SANDBOXING_HUNSPELL
   mSandbox.create_sandbox(mozilla::ipc::GetSandboxedRLBoxPath().get());
 #else
@@ -93,6 +95,7 @@ RLBoxHunspell::RLBoxHunspell(const nsAutoCString& affpath,
 }
 
 RLBoxHunspell::~RLBoxHunspell() {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   // Call hunspell's destroy which frees mHandle
   mSandbox.invoke_sandbox_function(Hunspell_destroy, mHandle);
   mHandle = nullptr;
@@ -114,6 +117,7 @@ RLBoxHunspell::~RLBoxHunspell() {
 }
 
 int RLBoxHunspell::spell(const std::string& stdWord) {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   // Copy word into the sandbox
   tainted_hunspell<char*> t_word = allocStrInSandbox(mSandbox, stdWord);
 
@@ -132,6 +136,7 @@ const std::string& RLBoxHunspell::get_dict_encoding() const {
 }
 
 std::vector<std::string> RLBoxHunspell::suggest(const std::string& stdWord) {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   // Copy word into the sandbox
   tainted_hunspell<char*> t_word = allocStrInSandbox(mSandbox, stdWord);
 
