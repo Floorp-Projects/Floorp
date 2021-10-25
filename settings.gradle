@@ -11,7 +11,7 @@ if (System.properties['os.name'].toLowerCase().contains('windows')) {
     if (System.env.MOZILLABUILD) {
         def mozillabuild = System.env.MOZILLABUILD
         if (mozillabuild) {
-            commandLine.addAll(0, ["${mozillabuild}/python/python.exe"])
+            commandLine.addAll(0, ["${mozillabuild}/python3/python.exe"])
         }
     }
 }
