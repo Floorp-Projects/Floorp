@@ -2724,7 +2724,9 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
 
   LOG("nsWindow::SetFocus Raise %d\n", aRaise == Raise::Yes);
 
-  GtkWidget* owningWidget = GetMozContainerWidget();
+  // TODO: Fix the whole nsWindow::SetFocus() as it works with old
+  // GdkWindow hierarchy.
+  GtkWidget* owningWidget = GTK_WIDGET(mContainer);
   if (!owningWidget) {
     return;
   }
@@ -3191,12 +3193,10 @@ LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
 
 void nsWindow::CaptureMouse(bool aCapture) {
   LOG("nsWindow::CaptureMouse() [%p]\n", (void*)this);
-
-  if (!mGdkWindow) return;
-
-  if (!mContainer) return;
-
   if (aCapture) {
+    if (!mGdkWindow) {
+      return;
+    }
     gtk_grab_add(GTK_WIDGET(mContainer));
     GrabPointer(GetLastUserInputTime());
   } else {
@@ -3207,13 +3207,12 @@ void nsWindow::CaptureMouse(bool aCapture) {
 
 void nsWindow::CaptureRollupEvents(nsIRollupListener* aListener,
                                    bool aDoCapture) {
-  if (!mGdkWindow) return;
-
-  if (!mContainer) return;
-
   LOG("CaptureRollupEvents() %i\n", int(aDoCapture));
 
   if (aDoCapture) {
+    if (!mGdkWindow) {
+      return;
+    }
     gRollupListener = aListener;
     // Don't add a grab if a drag is in progress, or if the widget is a drag
     // feedback popup. (panels with type="drag").
@@ -6178,18 +6177,6 @@ void nsWindow::CleanLayerManagerRecursive(void) {
 }
 
 void nsWindow::SetTransparencyMode(nsTransparencyMode aMode) {
-  if (!mShell) {
-    // Pass the request to the toplevel window
-    GtkWidget* topWidget = GetToplevelWidget();
-    if (!topWidget) return;
-
-    nsWindow* topWindow = get_window_for_gtk_widget(topWidget);
-    if (!topWindow) return;
-
-    topWindow->SetTransparencyMode(aMode);
-    return;
-  }
-
   bool isTransparent = aMode == eTransparencyTransparent;
 
   if (mIsTransparent == isTransparent) {
@@ -6223,21 +6210,6 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode) {
 }
 
 nsTransparencyMode nsWindow::GetTransparencyMode() {
-  if (!mShell) {
-    // Pass the request to the toplevel window
-    GtkWidget* topWidget = GetToplevelWidget();
-    if (!topWidget) {
-      return eTransparencyOpaque;
-    }
-
-    nsWindow* topWindow = get_window_for_gtk_widget(topWidget);
-    if (!topWindow) {
-      return eTransparencyOpaque;
-    }
-
-    return topWindow->GetTransparencyMode();
-  }
-
   return mIsTransparent ? eTransparencyTransparent : eTransparencyOpaque;
 }
 
@@ -6485,18 +6457,6 @@ void nsWindow::ClearTransparencyBitmap() {
 nsresult nsWindow::UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                         uint8_t* aAlphas,
                                                         int32_t aStride) {
-  if (!mShell) {
-    // Pass the request to the toplevel window
-    GtkWidget* topWidget = GetToplevelWidget();
-    if (!topWidget) return NS_ERROR_FAILURE;
-
-    nsWindow* topWindow = get_window_for_gtk_widget(topWidget);
-    if (!topWindow) return NS_ERROR_FAILURE;
-
-    return topWindow->UpdateTranslucentWindowAlphaInternal(aRect, aAlphas,
-                                                           aStride);
-  }
-
   NS_ASSERTION(mIsTransparent, "Window is not transparent");
   NS_ASSERTION(!mTransparencyBitmapForTitlebar,
                "Transparency bitmap is already used for titlebar rendering");
@@ -6690,32 +6650,12 @@ void nsWindow::ReleaseGrabs(void) {
   gdk_pointer_ungrab(GDK_CURRENT_TIME);
 }
 
-GtkWidget* nsWindow::GetToplevelWidget() {
-  if (mShell) {
-    return mShell;
-  }
+GtkWidget* nsWindow::GetToplevelWidget() { return mShell; }
 
-  GtkWidget* widget = GetMozContainerWidget();
-  if (!widget) return nullptr;
-
-  return gtk_widget_get_toplevel(widget);
-}
-
-GtkWidget* nsWindow::GetMozContainerWidget() {
-  if (!mGdkWindow) {
-    return nullptr;
-  }
-
-  if (mContainer) {
-    return GTK_WIDGET(mContainer);
-  }
-
-  GtkWidget* owningWidget = get_gtk_widget_for_gdk_window(mGdkWindow);
-  return owningWidget;
-}
+GtkWidget* nsWindow::GetMozContainerWidget() { return GTK_WIDGET(mContainer); }
 
 nsWindow* nsWindow::GetContainerWindow() {
-  GtkWidget* owningWidget = GetMozContainerWidget();
+  GtkWidget* owningWidget = GTK_WIDGET(mContainer);
   if (!owningWidget) return nullptr;
 
   nsWindow* window = get_window_for_gtk_widget(owningWidget);
@@ -6966,18 +6906,6 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
 
 void nsWindow::SetWindowDecoration(nsBorderStyle aStyle) {
   LOG("nsWindow::SetWindowDecoration() Border style %x\n", aStyle);
-
-  if (!mShell) {
-    // Pass the request to the toplevel window
-    GtkWidget* topWidget = GetToplevelWidget();
-    if (!topWidget) return;
-
-    nsWindow* topWindow = get_window_for_gtk_widget(topWidget);
-    if (!topWindow) return;
-
-    topWindow->SetWindowDecoration(aStyle);
-    return;
-  }
 
   // We can't use mGdkWindow directly here as it can be
   // derived from mContainer which is not a top-level GdkWindow.
@@ -7939,12 +7867,12 @@ void WindowDragLeaveHandler(GtkWidget* aWidget) {
     return;
   }
 
-  GtkWidget* mozContainer = mostRecentDragWindow->GetMozContainerWidget();
+  GtkWidget* mozContainer = window->GetMozContainerWidget();
   if (aWidget != mozContainer) {
     // When the drag moves between widgets, GTK can send leave signal for
     // the old widget after the motion or drop signal for the new widget.
     // We'll send the leave event when the motion or drop event is run.
-    LOGDRAG("    Failed - GetMozContainerWidget()!\n");
+    LOGDRAG("    Failed - mozContainer!\n");
     return;
   }
 
