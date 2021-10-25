@@ -38,6 +38,15 @@ class Collator final {
 
   ~Collator();
 
+  /**
+   * Get a sort key with the provided UTF-16 string, and store the sort key into
+   * the provided buffer of byte array.
+   * Every sort key ends with 0x00, and the terminating 0x00 byte is counted
+   * when calculating the length of buffer. For the purpose of other byte
+   * values, check the "Special Byte Values" document from ICU.
+   *
+   * https://icu.unicode.org/design/collation/bytes
+   */
   template <typename B>
   ICUResult GetSortKey(Span<const char16_t> aString, B& aBuffer) const {
     return FillBufferWithICUCall(
