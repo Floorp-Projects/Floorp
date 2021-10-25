@@ -979,12 +979,6 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement {
    */
   virtual void FieldSetDisabledChanged(bool aNotify);
 
-  /**
-   * Check our disabled content attribute and fieldset's (if it exists) disabled
-   * state to decide whether our disabled flag should be toggled.
-   */
-  void UpdateDisabledState(bool aNotify);
-
   void FieldSetFirstLegendChanged(bool aNotify) { UpdateFieldSet(aNotify); }
 
   /**
@@ -1014,6 +1008,12 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement {
   virtual void BeforeSetForm(bool aBindToTree) {}
 
   virtual void AfterClearForm(bool aUnbindOrDelete) {}
+
+  /**
+   * Check our disabled content attribute and fieldset's (if it exists) disabled
+   * state to decide whether our disabled flag should be toggled.
+   */
+  virtual void UpdateDisabledState(bool aNotify);
 
   virtual void SetFormInternal(mozilla::dom::HTMLFormElement* aForm,
                                bool aBindToTree) {}
