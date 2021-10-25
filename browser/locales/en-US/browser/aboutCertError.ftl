@@ -115,7 +115,6 @@ unknownSocketType-title = Unexpected response from server
 nssFailure2-title = Secure Connection Failed
 csp-xfo-error-title = { -brand-short-name } Can’t Open This Page
 corruptedContentError-title = Corrupted Content Error
-remoteXUL-title = Remote XUL
 sslv3Used-title = Unable to Connect Securely
 inadequateSecurityError-title = Your connection is not secure
 blockedByPolicy-title = Blocked Page

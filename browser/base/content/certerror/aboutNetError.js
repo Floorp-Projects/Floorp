@@ -51,7 +51,6 @@ const KNOWN_ERROR_TITLE_IDS = new Set([
   "nssFailure2-title",
   "csp-xfo-error-title",
   "corruptedContentError-title",
-  "remoteXUL-title",
   "sslv3Used-title",
   "inadequateSecurityError-title",
   "blockedByPolicy-title",
@@ -367,12 +366,6 @@ function initPage() {
   // remove undisplayed errors to avoid bug 39098
   var errContainer = document.getElementById("errorContainer");
   errContainer.remove();
-
-  if (err == "remoteXUL") {
-    // Remove the "Try again" button for remote XUL errors given that
-    // it is useless.
-    document.getElementById("netErrorButtonContainer").style.display = "none";
-  }
 
   let learnMoreLink = document.getElementById("learnMoreLink");
   learnMoreLink.setAttribute("href", baseURL + "connection-not-secure");

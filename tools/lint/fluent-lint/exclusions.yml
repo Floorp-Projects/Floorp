@@ -71,7 +71,6 @@ ID01:
         - unknownSocketType-title
         - nssFailure2-title
         - corruptedContentError-title
-        - remoteXUL-title
         - sslv3Used-title
         - inadequateSecurityError-title
         - blockedByPolicy-title
