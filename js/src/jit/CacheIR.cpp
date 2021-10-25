@@ -6888,19 +6888,23 @@ AttachDecision CallIRGenerator::tryAttachMathMinMax(HandleFunction callee,
   emitNativeCalleeGuard(callee);
 
   if (allInt32) {
-    ValOperandId valId = writer.loadStandardCallArgument(0, argc_);
+    ValOperandId valId =
+        writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
     Int32OperandId resId = writer.guardToInt32(valId);
     for (size_t i = 1; i < argc_; i++) {
-      ValOperandId argId = writer.loadStandardCallArgument(i, argc_);
+      ValOperandId argId =
+          writer.loadArgumentFixedSlot(ArgumentKindForArgIndex(i), argc_);
       Int32OperandId argInt32Id = writer.guardToInt32(argId);
       resId = writer.int32MinMax(isMax, resId, argInt32Id);
     }
     writer.loadInt32Result(resId);
   } else {
-    ValOperandId valId = writer.loadStandardCallArgument(0, argc_);
+    ValOperandId valId =
+        writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
     NumberOperandId resId = writer.guardIsNumber(valId);
     for (size_t i = 1; i < argc_; i++) {
-      ValOperandId argId = writer.loadStandardCallArgument(i, argc_);
+      ValOperandId argId =
+          writer.loadArgumentFixedSlot(ArgumentKindForArgIndex(i), argc_);
       NumberOperandId argNumId = writer.guardIsNumber(argId);
       resId = writer.numberMinMax(isMax, resId, argNumId);
     }
