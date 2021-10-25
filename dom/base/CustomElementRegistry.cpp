@@ -99,10 +99,10 @@ class CustomElementCallbackReaction final : public CustomElementReaction {
 
 size_t LifecycleCallbackArgs::SizeOfExcludingThis(
     MallocSizeOf aMallocSizeOf) const {
-  size_t n = name.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-  n += oldValue.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-  n += newValue.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-  n += namespaceURI.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  size_t n = mName.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  n += mOldValue.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  n += mNewValue.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  n += mNamespaceURI.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   return n;
 }
 
@@ -118,13 +118,12 @@ void CustomElementCallback::Call() {
       break;
     case ElementCallbackType::eAdopted:
       static_cast<LifecycleAdoptedCallback*>(mCallback.get())
-          ->Call(mThisObject, mAdoptedCallbackArgs.mOldDocument,
-                 mAdoptedCallbackArgs.mNewDocument);
+          ->Call(mThisObject, mArgs.mOldDocument, mArgs.mNewDocument);
       break;
     case ElementCallbackType::eAttributeChanged:
       static_cast<LifecycleAttributeChangedCallback*>(mCallback.get())
-          ->Call(mThisObject, mArgs.name, mArgs.oldValue, mArgs.newValue,
-                 mArgs.namespaceURI);
+          ->Call(mThisObject, mArgs.mName, mArgs.mOldValue, mArgs.mNewValue,
+                 mArgs.mNamespaceURI);
       break;
     case ElementCallbackType::eGetCustomInterface:
       MOZ_ASSERT_UNREACHABLE("Don't call GetCustomInterface through callback");
@@ -153,15 +152,17 @@ size_t CustomElementCallback::SizeOfIncludingThis(
 
   n += mArgs.SizeOfExcludingThis(aMallocSizeOf);
 
-  // mAdoptedCallbackArgs doesn't really uniquely own its members.
-
   return n;
 }
 
 CustomElementCallback::CustomElementCallback(
     Element* aThisObject, ElementCallbackType aCallbackType,
-    mozilla::dom::CallbackFunction* aCallback)
-    : mThisObject(aThisObject), mCallback(aCallback), mType(aCallbackType) {}
+    mozilla::dom::CallbackFunction* aCallback,
+    const LifecycleCallbackArgs& aArgs)
+    : mThisObject(aThisObject),
+      mCallback(aCallback),
+      mType(aCallbackType),
+      mArgs(aArgs) {}
 
 //-----------------------------------------------------
 // CustomElementData
@@ -462,9 +463,7 @@ void CustomElementRegistry::UnregisterUnresolvedElement(Element* aElement,
 UniquePtr<CustomElementCallback>
 CustomElementRegistry::CreateCustomElementCallback(
     ElementCallbackType aType, Element* aCustomElement,
-    LifecycleCallbackArgs* aArgs,
-    LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs,
-    CustomElementDefinition* aDefinition) {
+    const LifecycleCallbackArgs& aArgs, CustomElementDefinition* aDefinition) {
   MOZ_ASSERT(aDefinition, "CustomElementDefinition should not be null");
   MOZ_ASSERT(aCustomElement->GetCustomElementData(),
              "CustomElementData should exist");
@@ -507,26 +506,14 @@ CustomElementRegistry::CreateCustomElementCallback(
   }
 
   // Add CALLBACK to ELEMENT's callback queue.
-  auto callback =
-      MakeUnique<CustomElementCallback>(aCustomElement, aType, func);
-
-  if (aArgs) {
-    callback->SetArgs(*aArgs);
-  }
-
-  if (aAdoptedCallbackArgs) {
-    callback->SetAdoptedCallbackArgs(*aAdoptedCallbackArgs);
-  }
-  return callback;
+  return MakeUnique<CustomElementCallback>(aCustomElement, aType, func, aArgs);
 }
 
 // https://html.spec.whatwg.org/commit-snapshots/65f39c6fc0efa92b0b2b23b93197016af6ac0de6/#enqueue-a-custom-element-callback-reaction
 /* static */
 void CustomElementRegistry::EnqueueLifecycleCallback(
     ElementCallbackType aType, Element* aCustomElement,
-    LifecycleCallbackArgs* aArgs,
-    LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs,
-    CustomElementDefinition* aDefinition) {
+    const LifecycleCallbackArgs& aArgs, CustomElementDefinition* aDefinition) {
   CustomElementDefinition* definition = aDefinition;
   if (!definition) {
     definition = aCustomElement->GetCustomElementDefinition();
@@ -541,8 +528,8 @@ void CustomElementRegistry::EnqueueLifecycleCallback(
     }
   }
 
-  auto callback = CreateCustomElementCallback(aType, aCustomElement, aArgs,
-                                              aAdoptedCallbackArgs, definition);
+  auto callback =
+      CreateCustomElementCallback(aType, aCustomElement, aArgs, definition);
   if (!callback) {
     return;
   }
@@ -553,7 +540,7 @@ void CustomElementRegistry::EnqueueLifecycleCallback(
   }
 
   if (aType == ElementCallbackType::eAttributeChanged) {
-    RefPtr<nsAtom> attrName = NS_Atomize(aArgs->name);
+    RefPtr<nsAtom> attrName = NS_Atomize(aArgs.mName);
     if (definition->mObservedAttributes.IsEmpty() ||
         !definition->mObservedAttributes.Contains(attrName)) {
       return;
@@ -1223,11 +1210,15 @@ void CustomElementRegistry::Upgrade(Element* aElement,
         nsNameSpaceManager::GetInstance()->GetNameSpaceURI(namespaceID,
                                                            namespaceURI);
 
-        LifecycleCallbackArgs args = {
-            nsDependentAtomString(attrName), VoidString(), attrValue,
-            (namespaceURI.IsEmpty() ? VoidString() : namespaceURI)};
+        LifecycleCallbackArgs args;
+        args.mName = nsDependentAtomString(attrName);
+        args.mOldValue = VoidString();
+        args.mNewValue = attrValue;
+        args.mNamespaceURI =
+            (namespaceURI.IsEmpty() ? VoidString() : namespaceURI);
+
         nsContentUtils::EnqueueLifecycleCallback(
-            ElementCallbackType::eAttributeChanged, aElement, &args, nullptr,
+            ElementCallbackType::eAttributeChanged, aElement, args,
             aDefinition);
       }
     }
@@ -1236,8 +1227,7 @@ void CustomElementRegistry::Upgrade(Element* aElement,
   // Step 5.
   if (aElement->IsInComposedDoc()) {
     nsContentUtils::EnqueueLifecycleCallback(ElementCallbackType::eConnected,
-                                             aElement, nullptr, nullptr,
-                                             aDefinition);
+                                             aElement, {}, aDefinition);
   }
 
   // Step 6.
