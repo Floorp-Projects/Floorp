@@ -44,7 +44,6 @@ void DatetimeMetric::Set(const PRExplodedTime* aValue) const {
     }
   }
 
-#ifndef MOZ_GLEAN_ANDROID
   int32_t offset =
       exploded.tm_params.tp_gmt_offset + exploded.tm_params.tp_dst_offset;
   FogDatetime dt{exploded.tm_year,
@@ -56,15 +55,10 @@ void DatetimeMetric::Set(const PRExplodedTime* aValue) const {
                  static_cast<uint32_t>(exploded.tm_usec * 1000),
                  offset};
   fog_datetime_set(mId, &dt);
-#endif
 }
 
 Result<Maybe<PRExplodedTime>, nsCString> DatetimeMetric::TestGetValue(
     const nsACString& aPingName) const {
-#ifdef MOZ_GLEAN_ANDROID
-  Unused << mId;
-  return Maybe<PRExplodedTime>();
-#else
   nsCString err;
   if (fog_datetime_test_get_error(mId, &aPingName, &err)) {
     return Err(err);
@@ -84,7 +78,6 @@ Result<Maybe<PRExplodedTime>, nsCString> DatetimeMetric::TestGetValue(
   pret.tm_usec = static_cast<PRInt32>(ret.nano / 1000);  // truncated is fine
   pret.tm_params.tp_gmt_offset = static_cast<PRInt32>(ret.offset_seconds);
   return Some(std::move(pret));
-#endif
 }
 
 }  // namespace impl

@@ -26,9 +26,7 @@ void TimespanMetric::Start() const {
     (void)NS_WARN_IF(lock.ref()->Remove(scalarId));
     lock.ref()->InsertOrUpdate(scalarId, TimeStamp::Now());
   }
-#ifndef MOZ_GLEAN_ANDROID
   fog_timespan_start(mId);
-#endif
 }
 
 void TimespanMetric::Stop() const {
@@ -43,9 +41,7 @@ void TimespanMetric::Stop() const {
       Telemetry::ScalarSet(scalarId, delta);
     }
   }
-#ifndef MOZ_GLEAN_ANDROID
   fog_timespan_stop(mId);
-#endif
 }
 
 void TimespanMetric::Cancel() const {
@@ -55,9 +51,7 @@ void TimespanMetric::Cancel() const {
     auto lock = GetTimesToStartsLock();
     lock.ref()->Remove(scalarId);
   }
-#ifndef MOZ_GLEAN_ANDROID
   fog_timespan_cancel(mId);
-#endif
 }
 
 void TimespanMetric::SetRaw(uint32_t aDuration) const {
@@ -66,22 +60,15 @@ void TimespanMetric::SetRaw(uint32_t aDuration) const {
     auto scalarId = optScalarId.extract();
     Telemetry::ScalarSet(scalarId, aDuration);
   }
-#ifndef MOZ_GLEAN_ANDROID
   fog_timespan_set_raw(mId, aDuration);
-#endif
 }
 
 Result<Maybe<uint64_t>, nsCString> TimespanMetric::TestGetValue(
     const nsACString& aPingName) const {
-#ifdef MOZ_GLEAN_ANDROID
-  Unused << mId;
-  return Maybe<uint64_t>();
-#else
   if (!fog_timespan_test_has_value(mId, &aPingName)) {
     return Maybe<uint64_t>();
   }
   return Some(fog_timespan_test_get_value(mId, &aPingName));
-#endif
 }
 
 }  // namespace impl

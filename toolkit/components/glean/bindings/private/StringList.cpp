@@ -26,9 +26,7 @@ void StringListMetric::Add(const nsACString& aValue) const {
     Telemetry::ScalarSet(scalarId.extract(), NS_ConvertUTF8toUTF16(aValue),
                          true);
   }
-#ifndef MOZ_GLEAN_ANDROID
   fog_string_list_add(mId, &aValue);
-#endif
 }
 
 void StringListMetric::Set(const nsTArray<nsCString>& aValue) const {
@@ -36,17 +34,11 @@ void StringListMetric::Set(const nsTArray<nsCString>& aValue) const {
   // We can't remove keys from the mirror scalar and handle this 'properly',
   // so you shouldn't use this operation at all.
   (void)NS_WARN_IF(ScalarIdForMetric(mId).isSome());
-#ifndef MOZ_GLEAN_ANDROID
   fog_string_list_set(mId, &aValue);
-#endif
 }
 
 Result<Maybe<nsTArray<nsCString>>, nsCString> StringListMetric::TestGetValue(
     const nsACString& aPingName) const {
-#ifdef MOZ_GLEAN_ANDROID
-  Unused << mId;
-  return Maybe<nsTArray<nsCString>>();
-#else
   nsCString err;
   if (fog_string_list_test_get_error(mId, &aPingName, &err)) {
     return Err(err);
@@ -57,7 +49,6 @@ Result<Maybe<nsTArray<nsCString>>, nsCString> StringListMetric::TestGetValue(
   nsTArray<nsCString> ret;
   fog_string_list_test_get_value(mId, &aPingName, &ret);
   return Some(std::move(ret));
-#endif
 }
 
 }  // namespace impl

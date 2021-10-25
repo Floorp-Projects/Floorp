@@ -22,17 +22,8 @@ namespace mozilla::glean {
 
 namespace impl {
 
-#ifdef MOZ_GLEAN_ANDROID
-// No Glean around to generate these for us.
-static Atomic<uint64_t> gNextTimerId(1);
-#endif
-
 TimerId TimingDistributionMetric::Start() const {
-#ifdef MOZ_GLEAN_ANDROID
-  TimerId id = gNextTimerId++;
-#else
   TimerId id = fog_timing_distribution_start(mId);
-#endif
   auto mirrorId = HistogramIdForMetric(mId);
   if (mirrorId) {
     auto lock = GetTimerIdToStartsLock();
@@ -51,9 +42,7 @@ void TimingDistributionMetric::StopAndAccumulate(const TimerId&& aId) const {
       AccumulateTimeDelta(mirrorId.extract(), optStart.extract());
     }
   }
-#ifndef MOZ_GLEAN_ANDROID
   fog_timing_distribution_stop_and_accumulate(mId, aId);
-#endif
 }
 
 void TimingDistributionMetric::Cancel(const TimerId&& aId) const {
@@ -62,17 +51,11 @@ void TimingDistributionMetric::Cancel(const TimerId&& aId) const {
     auto lock = GetTimerIdToStartsLock();
     (void)NS_WARN_IF(!lock.ref()->Remove(aId));
   }
-#ifndef MOZ_GLEAN_ANDROID
   fog_timing_distribution_cancel(mId, aId);
-#endif
 }
 
 Result<Maybe<DistributionData>, nsCString>
 TimingDistributionMetric::TestGetValue(const nsACString& aPingName) const {
-#ifdef MOZ_GLEAN_ANDROID
-  Unused << mId;
-  return Maybe<DistributionData>();
-#else
   nsCString err;
   if (fog_timing_distribution_test_get_error(mId, &aPingName, &err)) {
     return Err(err);
@@ -86,7 +69,6 @@ TimingDistributionMetric::TestGetValue(const nsACString& aPingName) const {
   fog_timing_distribution_test_get_value(mId, &aPingName, &sum, &buckets,
                                          &counts);
   return Some(DistributionData(buckets, counts, sum));
-#endif
 }
 
 }  // namespace impl

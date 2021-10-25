@@ -70,7 +70,6 @@ class EventMetric {
       }
       Telemetry::RecordEvent(id.extract(), Nothing(), telExtras);
     }
-#ifndef MOZ_GLEAN_ANDROID
     if (aExtras) {
       auto extra = aExtras->ToFfiExtra();
       fog_event_record(mId, &mozilla::Get<0>(extra), &mozilla::Get<1>(extra));
@@ -79,7 +78,6 @@ class EventMetric {
       nsTArray<nsCString> vals;
       fog_event_record(mId, &keys, &vals);
     }
-#endif
   }
 
   /**
@@ -101,10 +99,6 @@ class EventMetric {
    */
   Result<Maybe<nsTArray<RecordedEvent>>, nsCString> TestGetValue(
       const nsACString& aPingName = nsCString()) const {
-#ifdef MOZ_GLEAN_ANDROID
-    Unused << mId;
-    return Maybe<nsTArray<RecordedEvent>>();
-#else
     nsCString err;
     if (fog_event_test_get_error(mId, &aPingName, &err)) {
       return Err(err);
@@ -138,7 +132,6 @@ class EventMetric {
       fog_event_free_event_extra(event.extra, event.extra_len);
     }
     return Some(std::move(result));
-#endif
   }
 
  private:

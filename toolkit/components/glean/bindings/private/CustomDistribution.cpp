@@ -32,9 +32,7 @@ void CustomDistributionMetric::AccumulateSamples(
       Telemetry::Accumulate(id, sample);
     }
   }
-#ifndef MOZ_GLEAN_ANDROID
   fog_custom_distribution_accumulate_samples(mId, &aSamples);
-#endif
 }
 
 void CustomDistributionMetric::AccumulateSamplesSigned(
@@ -48,17 +46,11 @@ void CustomDistributionMetric::AccumulateSamplesSigned(
       Telemetry::Accumulate(id, sample);
     }
   }
-#ifndef MOZ_GLEAN_ANDROID
   fog_custom_distribution_accumulate_samples_signed(mId, &aSamples);
-#endif
 }
 
 Result<Maybe<DistributionData>, nsCString>
 CustomDistributionMetric::TestGetValue(const nsACString& aPingName) const {
-#ifdef MOZ_GLEAN_ANDROID
-  Unused << mId;
-  return Maybe<DistributionData>();
-#else
   nsCString err;
   if (fog_custom_distribution_test_get_error(mId, &aPingName, &err)) {
     return Err(err);
@@ -72,7 +64,6 @@ CustomDistributionMetric::TestGetValue(const nsACString& aPingName) const {
   fog_custom_distribution_test_get_value(mId, &aPingName, &sum, &buckets,
                                          &counts);
   return Some(DistributionData(buckets, counts, sum));
-#endif
 }
 
 }  // namespace impl
