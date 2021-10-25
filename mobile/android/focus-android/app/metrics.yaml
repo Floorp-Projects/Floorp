@@ -554,7 +554,7 @@ set_default_browser:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/5636
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/?
+      - https://github.com/mozilla-mobile/focus-android/pull/5637
     data_sensitivity:
       - interaction
     notification_emails:
