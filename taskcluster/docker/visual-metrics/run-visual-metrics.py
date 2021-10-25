@@ -187,13 +187,17 @@ def append_result(log, suites, test_name, name, result, tags, extra_options):
         },
     )["subtests"]
 
+    should_alert = SHOULD_ALERT.get(name, False)
+    if "gecko-profile" in extra_options:
+        should_alert = False
+
     if name not in subtests:
         subtests[name] = {
             "name": name,
             "replicates": [result],
             "lowerIsBetter": True,
             "unit": "ms",
-            "shouldAlert": SHOULD_ALERT.get(name, False),
+            "shouldAlert": should_alert,
         }
     else:
         subtests[name]["replicates"].append(result)
