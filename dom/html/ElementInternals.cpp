@@ -5,11 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ElementInternals.h"
+
+#include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/ElementInternalsBinding.h"
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/HTMLElement.h"
 #include "mozilla/dom/HTMLFieldSetElement.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "nsContentUtils.h"
 #include "nsGenericHTMLElement.h"
 
 namespace mozilla::dom {
@@ -137,6 +140,15 @@ void ElementInternals::ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) {
   if (mTarget) {
     mTarget->ClearForm(aRemoveFromForm, aUnbindOrDelete);
   }
+}
+
+NS_IMETHODIMP ElementInternals::Reset() {
+  if (mTarget) {
+    MOZ_ASSERT(mTarget->IsFormAssociatedElement());
+    nsContentUtils::EnqueueLifecycleCallback(ElementCallbackType::eFormReset,
+                                             mTarget, {});
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP ElementInternals::SubmitNamesValues(FormData* aFormData) {

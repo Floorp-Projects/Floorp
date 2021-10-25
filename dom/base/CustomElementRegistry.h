@@ -39,6 +39,7 @@ enum class ElementCallbackType {
   eDisconnected,
   eAdopted,
   eAttributeChanged,
+  eFormReset,
   eGetCustomInterface
 };
 
