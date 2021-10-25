@@ -5621,12 +5621,11 @@ HTMLInputElement::Reset() {
 
 NS_IMETHODIMP
 HTMLInputElement::SubmitNamesValues(FormData* aFormData) {
-  // Disabled elements don't submit
   // For type=reset, and type=button, we just never submit, period.
   // For type=image and type=button, we only submit if we were the button
   // pressed
   // For type=radio and type=checkbox, we only submit if checked=true
-  if (IsDisabled() || mType == FormControlType::InputReset ||
+  if (mType == FormControlType::InputReset ||
       mType == FormControlType::InputButton ||
       ((mType == FormControlType::InputSubmit ||
         mType == FormControlType::InputImage) &&

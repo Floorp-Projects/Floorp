@@ -1021,10 +1021,13 @@ nsresult HTMLFormElement::ConstructEntryList(FormData* aFormData) {
   // Walk the list of nodes and call SubmitNamesValues() on the controls
   //
   for (uint32_t i = 0; i < len; ++i) {
-    nsCOMPtr<nsIFormControl> fc = do_QueryInterface(sortedControls[i]);
-    MOZ_ASSERT(fc);
-    // Tell the control to submit its name/value pairs to the submission
-    fc->SubmitNamesValues(aFormData);
+    // Disabled elements don't submit
+    if (!sortedControls[i]->IsDisabled()) {
+      nsCOMPtr<nsIFormControl> fc = do_QueryInterface(sortedControls[i]);
+      MOZ_ASSERT(fc);
+      // Tell the control to submit its name/value pairs to the submission
+      fc->SubmitNamesValues(aFormData);
+    }
   }
 
   FormDataEventInit init;
