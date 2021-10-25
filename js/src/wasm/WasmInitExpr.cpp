@@ -72,7 +72,7 @@ static bool ValidateInitExpr(Decoder& d, ModuleEnvironment* env,
         }
         break;
       }
-      case uint16_t(Op::GetGlobal): {
+      case uint16_t(Op::GlobalGet): {
         uint32_t index;
         if (!iter.readGetGlobal(&index)) {
           return false;
@@ -357,7 +357,7 @@ bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
       case uint16_t(Op::End): {
         return true;
       }
-      case uint16_t(Op::GetGlobal): {
+      case uint16_t(Op::GlobalGet): {
         uint32_t index;
         if (!d.readGlobalIndex(&index)) {
           return false;

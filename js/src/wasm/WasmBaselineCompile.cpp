@@ -8004,15 +8004,15 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(emitCallIndirect());
 
       // Locals and globals
-      case uint16_t(Op::GetLocal):
+      case uint16_t(Op::LocalGet):
         CHECK_NEXT(emitGetLocal());
-      case uint16_t(Op::SetLocal):
+      case uint16_t(Op::LocalSet):
         CHECK_NEXT(emitSetLocal());
-      case uint16_t(Op::TeeLocal):
+      case uint16_t(Op::LocalTee):
         CHECK_NEXT(emitTeeLocal());
-      case uint16_t(Op::GetGlobal):
+      case uint16_t(Op::GlobalGet):
         CHECK_NEXT(emitGetGlobal());
-      case uint16_t(Op::SetGlobal):
+      case uint16_t(Op::GlobalSet):
         CHECK_NEXT(emitSetGlobal());
       case uint16_t(Op::TableGet):
         CHECK_NEXT(emitTableGet());
@@ -8050,16 +8050,16 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(dispatchBinary0(emitRemainderU32, ValType::I32));
       case uint16_t(Op::I32Eqz):
         CHECK_NEXT(dispatchConversion0(emitEqzI32, ValType::I32, ValType::I32));
-      case uint16_t(Op::I32TruncSF32):
+      case uint16_t(Op::I32TruncF32S):
         CHECK_NEXT(dispatchConversionOOM(emitTruncateF32ToI32<0>, ValType::F32,
                                          ValType::I32));
-      case uint16_t(Op::I32TruncUF32):
+      case uint16_t(Op::I32TruncF32U):
         CHECK_NEXT(dispatchConversionOOM(emitTruncateF32ToI32<TRUNC_UNSIGNED>,
                                          ValType::F32, ValType::I32));
-      case uint16_t(Op::I32TruncSF64):
+      case uint16_t(Op::I32TruncF64S):
         CHECK_NEXT(dispatchConversionOOM(emitTruncateF64ToI32<0>, ValType::F64,
                                          ValType::I32));
-      case uint16_t(Op::I32TruncUF64):
+      case uint16_t(Op::I32TruncF64U):
         CHECK_NEXT(dispatchConversionOOM(emitTruncateF64ToI32<TRUNC_UNSIGNED>,
                                          ValType::F64, ValType::I32));
       case uint16_t(Op::I32WrapI64):
@@ -8160,7 +8160,7 @@ bool BaseCompiler::emitBody() {
 #else
         CHECK_NEXT(dispatchBinary0(emitRemainderU64, ValType::I64));
 #endif
-      case uint16_t(Op::I64TruncSF32):
+      case uint16_t(Op::I64TruncF32S):
 #ifdef RABALDR_FLOAT_TO_I64_CALLOUT
         CHECK_NEXT(
             dispatchCalloutConversionOOM(emitConvertFloatingToInt64Callout,
@@ -8170,7 +8170,7 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(dispatchConversionOOM(emitTruncateF32ToI64<0>, ValType::F32,
                                          ValType::I64));
 #endif
-      case uint16_t(Op::I64TruncUF32):
+      case uint16_t(Op::I64TruncF32U):
 #ifdef RABALDR_FLOAT_TO_I64_CALLOUT
         CHECK_NEXT(dispatchCalloutConversionOOM(
             emitConvertFloatingToInt64Callout,
@@ -8180,7 +8180,7 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(dispatchConversionOOM(emitTruncateF32ToI64<TRUNC_UNSIGNED>,
                                          ValType::F32, ValType::I64));
 #endif
-      case uint16_t(Op::I64TruncSF64):
+      case uint16_t(Op::I64TruncF64S):
 #ifdef RABALDR_FLOAT_TO_I64_CALLOUT
         CHECK_NEXT(
             dispatchCalloutConversionOOM(emitConvertFloatingToInt64Callout,
@@ -8190,7 +8190,7 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(dispatchConversionOOM(emitTruncateF64ToI64<0>, ValType::F64,
                                          ValType::I64));
 #endif
-      case uint16_t(Op::I64TruncUF64):
+      case uint16_t(Op::I64TruncF64U):
 #ifdef RABALDR_FLOAT_TO_I64_CALLOUT
         CHECK_NEXT(dispatchCalloutConversionOOM(
             emitConvertFloatingToInt64Callout,
@@ -8200,10 +8200,10 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(dispatchConversionOOM(emitTruncateF64ToI64<TRUNC_UNSIGNED>,
                                          ValType::F64, ValType::I64));
 #endif
-      case uint16_t(Op::I64ExtendSI32):
+      case uint16_t(Op::I64ExtendI32S):
         CHECK_NEXT(dispatchConversion0(emitExtendI32ToI64, ValType::I32,
                                        ValType::I64));
-      case uint16_t(Op::I64ExtendUI32):
+      case uint16_t(Op::I64ExtendI32U):
         CHECK_NEXT(dispatchConversion0(emitExtendU32ToI64, ValType::I32,
                                        ValType::I64));
       case uint16_t(Op::I64ReinterpretF64):
@@ -8296,13 +8296,13 @@ bool BaseCompiler::emitBody() {
       case uint16_t(Op::F32DemoteF64):
         CHECK_NEXT(
             dispatchConversion1(ConvertF64ToF32, ValType::F64, ValType::F32));
-      case uint16_t(Op::F32ConvertSI32):
+      case uint16_t(Op::F32ConvertI32S):
         CHECK_NEXT(
             dispatchConversion1(ConvertI32ToF32, ValType::I32, ValType::F32));
-      case uint16_t(Op::F32ConvertUI32):
+      case uint16_t(Op::F32ConvertI32U):
         CHECK_NEXT(
             dispatchConversion1(ConvertU32ToF32, ValType::I32, ValType::F32));
-      case uint16_t(Op::F32ConvertSI64):
+      case uint16_t(Op::F32ConvertI64S):
 #ifdef RABALDR_I64_TO_FLOAT_CALLOUT
         CHECK_NEXT(dispatchCalloutConversionOOM(
             emitConvertInt64ToFloatingCallout, SymbolicAddress::Int64ToFloat32,
@@ -8311,7 +8311,7 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(
             dispatchConversion1(ConvertI64ToF32, ValType::I64, ValType::F32));
 #endif
-      case uint16_t(Op::F32ConvertUI64):
+      case uint16_t(Op::F32ConvertI64U):
 #ifdef RABALDR_I64_TO_FLOAT_CALLOUT
         CHECK_NEXT(dispatchCalloutConversionOOM(
             emitConvertInt64ToFloatingCallout, SymbolicAddress::Uint64ToFloat32,
@@ -8372,13 +8372,13 @@ bool BaseCompiler::emitBody() {
       case uint16_t(Op::F64PromoteF32):
         CHECK_NEXT(
             dispatchConversion1(ConvertF32ToF64, ValType::F32, ValType::F64));
-      case uint16_t(Op::F64ConvertSI32):
+      case uint16_t(Op::F64ConvertI32S):
         CHECK_NEXT(
             dispatchConversion1(ConvertI32ToF64, ValType::I32, ValType::F64));
-      case uint16_t(Op::F64ConvertUI32):
+      case uint16_t(Op::F64ConvertI32U):
         CHECK_NEXT(
             dispatchConversion1(ConvertU32ToF64, ValType::I32, ValType::F64));
-      case uint16_t(Op::F64ConvertSI64):
+      case uint16_t(Op::F64ConvertI64S):
 #ifdef RABALDR_I64_TO_FLOAT_CALLOUT
         CHECK_NEXT(dispatchCalloutConversionOOM(
             emitConvertInt64ToFloatingCallout, SymbolicAddress::Int64ToDouble,
@@ -8387,7 +8387,7 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(
             dispatchConversion1(ConvertI64ToF64, ValType::I64, ValType::F64));
 #endif
-      case uint16_t(Op::F64ConvertUI64):
+      case uint16_t(Op::F64ConvertI64U):
 #ifdef RABALDR_I64_TO_FLOAT_CALLOUT
         CHECK_NEXT(dispatchCalloutConversionOOM(
             emitConvertInt64ToFloatingCallout, SymbolicAddress::Uint64ToDouble,
@@ -8817,15 +8817,15 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorBinary(AverageUI16x8));
           case uint32_t(SimdOp::I8x16Add):
             CHECK_NEXT(dispatchVectorBinary(AddI8x16));
-          case uint32_t(SimdOp::I8x16AddSaturateS):
+          case uint32_t(SimdOp::I8x16AddSatS):
             CHECK_NEXT(dispatchVectorBinary(AddSatI8x16));
-          case uint32_t(SimdOp::I8x16AddSaturateU):
+          case uint32_t(SimdOp::I8x16AddSatU):
             CHECK_NEXT(dispatchVectorBinary(AddSatUI8x16));
           case uint32_t(SimdOp::I8x16Sub):
             CHECK_NEXT(dispatchVectorBinary(SubI8x16));
-          case uint32_t(SimdOp::I8x16SubSaturateS):
+          case uint32_t(SimdOp::I8x16SubSatS):
             CHECK_NEXT(dispatchVectorBinary(SubSatI8x16));
-          case uint32_t(SimdOp::I8x16SubSaturateU):
+          case uint32_t(SimdOp::I8x16SubSatU):
             CHECK_NEXT(dispatchVectorBinary(SubSatUI8x16));
           case uint32_t(SimdOp::I8x16MinS):
             CHECK_NEXT(dispatchVectorBinary(MinI8x16));
@@ -8837,15 +8837,15 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorBinary(MaxUI8x16));
           case uint32_t(SimdOp::I16x8Add):
             CHECK_NEXT(dispatchVectorBinary(AddI16x8));
-          case uint32_t(SimdOp::I16x8AddSaturateS):
+          case uint32_t(SimdOp::I16x8AddSatS):
             CHECK_NEXT(dispatchVectorBinary(AddSatI16x8));
-          case uint32_t(SimdOp::I16x8AddSaturateU):
+          case uint32_t(SimdOp::I16x8AddSatU):
             CHECK_NEXT(dispatchVectorBinary(AddSatUI16x8));
           case uint32_t(SimdOp::I16x8Sub):
             CHECK_NEXT(dispatchVectorBinary(SubI16x8));
-          case uint32_t(SimdOp::I16x8SubSaturateS):
+          case uint32_t(SimdOp::I16x8SubSatS):
             CHECK_NEXT(dispatchVectorBinary(SubSatI16x8));
-          case uint32_t(SimdOp::I16x8SubSaturateU):
+          case uint32_t(SimdOp::I16x8SubSatU):
             CHECK_NEXT(dispatchVectorBinary(SubSatUI16x8));
           case uint32_t(SimdOp::I16x8Mul):
             CHECK_NEXT(dispatchVectorBinary(MulI16x8));
@@ -8901,15 +8901,15 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorBinary(MinF64x2));
           case uint32_t(SimdOp::F64x2Max):
             CHECK_NEXT(dispatchVectorBinary(MaxF64x2));
-          case uint32_t(SimdOp::I8x16NarrowSI16x8):
+          case uint32_t(SimdOp::I8x16NarrowI16x8S):
             CHECK_NEXT(dispatchVectorBinary(NarrowI16x8));
-          case uint32_t(SimdOp::I8x16NarrowUI16x8):
+          case uint32_t(SimdOp::I8x16NarrowI16x8U):
             CHECK_NEXT(dispatchVectorBinary(NarrowUI16x8));
-          case uint32_t(SimdOp::I16x8NarrowSI32x4):
+          case uint32_t(SimdOp::I16x8NarrowI32x4S):
             CHECK_NEXT(dispatchVectorBinary(NarrowI32x4));
-          case uint32_t(SimdOp::I16x8NarrowUI32x4):
+          case uint32_t(SimdOp::I16x8NarrowI32x4U):
             CHECK_NEXT(dispatchVectorBinary(NarrowUI32x4));
-          case uint32_t(SimdOp::V8x16Swizzle):
+          case uint32_t(SimdOp::I8x16Swizzle):
             CHECK_NEXT(dispatchVectorBinary(Swizzle));
           case uint32_t(SimdOp::F32x4PMax):
             CHECK_NEXT(dispatchVectorBinary(PMaxF32x4));
@@ -8919,31 +8919,31 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorBinary(PMaxF64x2));
           case uint32_t(SimdOp::F64x2PMin):
             CHECK_NEXT(dispatchVectorBinary(PMinF64x2));
-          case uint32_t(SimdOp::I32x4DotSI16x8):
+          case uint32_t(SimdOp::I32x4DotI16x8S):
             CHECK_NEXT(dispatchVectorBinary(DotI16x8));
-          case uint32_t(SimdOp::I16x8ExtMulLowSI8x16):
+          case uint32_t(SimdOp::I16x8ExtmulLowI8x16S):
             CHECK_NEXT(dispatchVectorBinary(ExtMulLowI8x16));
-          case uint32_t(SimdOp::I16x8ExtMulHighSI8x16):
+          case uint32_t(SimdOp::I16x8ExtmulHighI8x16S):
             CHECK_NEXT(dispatchVectorBinary(ExtMulHighI8x16));
-          case uint32_t(SimdOp::I16x8ExtMulLowUI8x16):
+          case uint32_t(SimdOp::I16x8ExtmulLowI8x16U):
             CHECK_NEXT(dispatchVectorBinary(ExtMulLowUI8x16));
-          case uint32_t(SimdOp::I16x8ExtMulHighUI8x16):
+          case uint32_t(SimdOp::I16x8ExtmulHighI8x16U):
             CHECK_NEXT(dispatchVectorBinary(ExtMulHighUI8x16));
-          case uint32_t(SimdOp::I32x4ExtMulLowSI16x8):
+          case uint32_t(SimdOp::I32x4ExtmulLowI16x8S):
             CHECK_NEXT(dispatchVectorBinary(ExtMulLowI16x8));
-          case uint32_t(SimdOp::I32x4ExtMulHighSI16x8):
+          case uint32_t(SimdOp::I32x4ExtmulHighI16x8S):
             CHECK_NEXT(dispatchVectorBinary(ExtMulHighI16x8));
-          case uint32_t(SimdOp::I32x4ExtMulLowUI16x8):
+          case uint32_t(SimdOp::I32x4ExtmulLowI16x8U):
             CHECK_NEXT(dispatchVectorBinary(ExtMulLowUI16x8));
-          case uint32_t(SimdOp::I32x4ExtMulHighUI16x8):
+          case uint32_t(SimdOp::I32x4ExtmulHighI16x8U):
             CHECK_NEXT(dispatchVectorBinary(ExtMulHighUI16x8));
-          case uint32_t(SimdOp::I64x2ExtMulLowSI32x4):
+          case uint32_t(SimdOp::I64x2ExtmulLowI32x4S):
             CHECK_NEXT(dispatchVectorBinary(ExtMulLowI32x4));
-          case uint32_t(SimdOp::I64x2ExtMulHighSI32x4):
+          case uint32_t(SimdOp::I64x2ExtmulHighI32x4S):
             CHECK_NEXT(dispatchVectorBinary(ExtMulHighI32x4));
-          case uint32_t(SimdOp::I64x2ExtMulLowUI32x4):
+          case uint32_t(SimdOp::I64x2ExtmulLowI32x4U):
             CHECK_NEXT(dispatchVectorBinary(ExtMulLowUI32x4));
-          case uint32_t(SimdOp::I64x2ExtMulHighUI32x4):
+          case uint32_t(SimdOp::I64x2ExtmulHighI32x4U):
             CHECK_NEXT(dispatchVectorBinary(ExtMulHighUI32x4));
           case uint32_t(SimdOp::I16x8Q15MulrSatS):
             CHECK_NEXT(dispatchVectorBinary(Q15MulrSatS));
@@ -8951,37 +8951,37 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorUnary(NegI8x16));
           case uint32_t(SimdOp::I16x8Neg):
             CHECK_NEXT(dispatchVectorUnary(NegI16x8));
-          case uint32_t(SimdOp::I16x8WidenLowSI8x16):
+          case uint32_t(SimdOp::I16x8ExtendLowI8x16S):
             CHECK_NEXT(dispatchVectorUnary(WidenLowI8x16));
-          case uint32_t(SimdOp::I16x8WidenHighSI8x16):
+          case uint32_t(SimdOp::I16x8ExtendHighI8x16S):
             CHECK_NEXT(dispatchVectorUnary(WidenHighI8x16));
-          case uint32_t(SimdOp::I16x8WidenLowUI8x16):
+          case uint32_t(SimdOp::I16x8ExtendLowI8x16U):
             CHECK_NEXT(dispatchVectorUnary(WidenLowUI8x16));
-          case uint32_t(SimdOp::I16x8WidenHighUI8x16):
+          case uint32_t(SimdOp::I16x8ExtendHighI8x16U):
             CHECK_NEXT(dispatchVectorUnary(WidenHighUI8x16));
           case uint32_t(SimdOp::I32x4Neg):
             CHECK_NEXT(dispatchVectorUnary(NegI32x4));
-          case uint32_t(SimdOp::I32x4WidenLowSI16x8):
+          case uint32_t(SimdOp::I32x4ExtendLowI16x8S):
             CHECK_NEXT(dispatchVectorUnary(WidenLowI16x8));
-          case uint32_t(SimdOp::I32x4WidenHighSI16x8):
+          case uint32_t(SimdOp::I32x4ExtendHighI16x8S):
             CHECK_NEXT(dispatchVectorUnary(WidenHighI16x8));
-          case uint32_t(SimdOp::I32x4WidenLowUI16x8):
+          case uint32_t(SimdOp::I32x4ExtendLowI16x8U):
             CHECK_NEXT(dispatchVectorUnary(WidenLowUI16x8));
-          case uint32_t(SimdOp::I32x4WidenHighUI16x8):
+          case uint32_t(SimdOp::I32x4ExtendHighI16x8U):
             CHECK_NEXT(dispatchVectorUnary(WidenHighUI16x8));
-          case uint32_t(SimdOp::I32x4TruncSSatF32x4):
+          case uint32_t(SimdOp::I32x4TruncSatF32x4S):
             CHECK_NEXT(dispatchVectorUnary(ConvertF32x4ToI32x4));
-          case uint32_t(SimdOp::I32x4TruncUSatF32x4):
+          case uint32_t(SimdOp::I32x4TruncSatF32x4U):
             CHECK_NEXT(dispatchVectorUnary(ConvertF32x4ToUI32x4));
           case uint32_t(SimdOp::I64x2Neg):
             CHECK_NEXT(dispatchVectorUnary(NegI64x2));
-          case uint32_t(SimdOp::I64x2WidenLowSI32x4):
+          case uint32_t(SimdOp::I64x2ExtendLowI32x4S):
             CHECK_NEXT(dispatchVectorUnary(WidenLowI32x4));
-          case uint32_t(SimdOp::I64x2WidenHighSI32x4):
+          case uint32_t(SimdOp::I64x2ExtendHighI32x4S):
             CHECK_NEXT(dispatchVectorUnary(WidenHighI32x4));
-          case uint32_t(SimdOp::I64x2WidenLowUI32x4):
+          case uint32_t(SimdOp::I64x2ExtendLowI32x4U):
             CHECK_NEXT(dispatchVectorUnary(WidenLowUI32x4));
-          case uint32_t(SimdOp::I64x2WidenHighUI32x4):
+          case uint32_t(SimdOp::I64x2ExtendHighI32x4U):
             CHECK_NEXT(dispatchVectorUnary(WidenHighUI32x4));
           case uint32_t(SimdOp::F32x4Abs):
             CHECK_NEXT(dispatchVectorUnary(AbsF32x4));
@@ -8989,9 +8989,9 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorUnary(NegF32x4));
           case uint32_t(SimdOp::F32x4Sqrt):
             CHECK_NEXT(dispatchVectorUnary(SqrtF32x4));
-          case uint32_t(SimdOp::F32x4ConvertSI32x4):
+          case uint32_t(SimdOp::F32x4ConvertI32x4S):
             CHECK_NEXT(dispatchVectorUnary(ConvertI32x4ToF32x4));
-          case uint32_t(SimdOp::F32x4ConvertUI32x4):
+          case uint32_t(SimdOp::F32x4ConvertI32x4U):
             CHECK_NEXT(dispatchVectorUnary(ConvertUI32x4ToF32x4));
           case uint32_t(SimdOp::F32x4DemoteF64x2Zero):
             CHECK_NEXT(dispatchVectorUnary(DemoteF64x2ToF32x4));
@@ -9039,13 +9039,13 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorUnary(TruncF64x2));
           case uint32_t(SimdOp::F64x2Nearest):
             CHECK_NEXT(dispatchVectorUnary(NearestF64x2));
-          case uint32_t(SimdOp::I16x8ExtAddPairwiseI8x16S):
+          case uint32_t(SimdOp::I16x8ExtaddPairwiseI8x16S):
             CHECK_NEXT(dispatchVectorUnary(ExtAddPairwiseI8x16));
-          case uint32_t(SimdOp::I16x8ExtAddPairwiseI8x16U):
+          case uint32_t(SimdOp::I16x8ExtaddPairwiseI8x16U):
             CHECK_NEXT(dispatchVectorUnary(ExtAddPairwiseUI8x16));
-          case uint32_t(SimdOp::I32x4ExtAddPairwiseI16x8S):
+          case uint32_t(SimdOp::I32x4ExtaddPairwiseI16x8S):
             CHECK_NEXT(dispatchVectorUnary(ExtAddPairwiseI16x8));
-          case uint32_t(SimdOp::I32x4ExtAddPairwiseI16x8U):
+          case uint32_t(SimdOp::I32x4ExtaddPairwiseI16x8U):
             CHECK_NEXT(dispatchVectorUnary(ExtAddPairwiseUI16x8));
           case uint32_t(SimdOp::I8x16Shl):
             CHECK_NEXT(dispatchVectorVariableShift(ShiftLeftI8x16));
@@ -9077,7 +9077,7 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorVariableShift(ShiftRightUI64x2));
           case uint32_t(SimdOp::V128Bitselect):
             CHECK_NEXT(dispatchTernary1(BitselectV128, ValType::V128));
-          case uint32_t(SimdOp::V8x16Shuffle):
+          case uint32_t(SimdOp::I8x16Shuffle):
             CHECK_NEXT(emitVectorShuffle());
           case uint32_t(SimdOp::V128Const): {
             V128 v128;
@@ -9089,25 +9089,25 @@ bool BaseCompiler::emitBody() {
           }
           case uint32_t(SimdOp::V128Load):
             CHECK_NEXT(emitLoad(ValType::V128, Scalar::Simd128));
-          case uint32_t(SimdOp::V8x16LoadSplat):
+          case uint32_t(SimdOp::V128Load8Splat):
             CHECK_NEXT(emitLoadSplat(Scalar::Uint8));
-          case uint32_t(SimdOp::V16x8LoadSplat):
+          case uint32_t(SimdOp::V128Load16Splat):
             CHECK_NEXT(emitLoadSplat(Scalar::Uint16));
-          case uint32_t(SimdOp::V32x4LoadSplat):
+          case uint32_t(SimdOp::V128Load32Splat):
             CHECK_NEXT(emitLoadSplat(Scalar::Uint32));
-          case uint32_t(SimdOp::V64x2LoadSplat):
+          case uint32_t(SimdOp::V128Load64Splat):
             CHECK_NEXT(emitLoadSplat(Scalar::Int64));
-          case uint32_t(SimdOp::I16x8LoadS8x8):
+          case uint32_t(SimdOp::V128Load8x8S):
             CHECK_NEXT(emitLoadExtend(Scalar::Int8));
-          case uint32_t(SimdOp::I16x8LoadU8x8):
+          case uint32_t(SimdOp::V128Load8x8U):
             CHECK_NEXT(emitLoadExtend(Scalar::Uint8));
-          case uint32_t(SimdOp::I32x4LoadS16x4):
+          case uint32_t(SimdOp::V128Load16x4S):
             CHECK_NEXT(emitLoadExtend(Scalar::Int16));
-          case uint32_t(SimdOp::I32x4LoadU16x4):
+          case uint32_t(SimdOp::V128Load16x4U):
             CHECK_NEXT(emitLoadExtend(Scalar::Uint16));
-          case uint32_t(SimdOp::I64x2LoadS32x2):
+          case uint32_t(SimdOp::V128Load32x2S):
             CHECK_NEXT(emitLoadExtend(Scalar::Int32));
-          case uint32_t(SimdOp::I64x2LoadU32x2):
+          case uint32_t(SimdOp::V128Load32x2U):
             CHECK_NEXT(emitLoadExtend(Scalar::Uint32));
           case uint32_t(SimdOp::V128Load32Zero):
             CHECK_NEXT(emitLoadZero(Scalar::Float32));
@@ -9217,23 +9217,23 @@ bool BaseCompiler::emitBody() {
       // "Miscellaneous" operations
       case uint16_t(Op::MiscPrefix): {
         switch (op.b1) {
-          case uint32_t(MiscOp::I32TruncSSatF32):
+          case uint32_t(MiscOp::I32TruncSatF32S):
             CHECK_NEXT(
                 dispatchConversionOOM(emitTruncateF32ToI32<TRUNC_SATURATING>,
                                       ValType::F32, ValType::I32));
-          case uint32_t(MiscOp::I32TruncUSatF32):
+          case uint32_t(MiscOp::I32TruncSatF32U):
             CHECK_NEXT(dispatchConversionOOM(
                 emitTruncateF32ToI32<TRUNC_UNSIGNED | TRUNC_SATURATING>,
                 ValType::F32, ValType::I32));
-          case uint32_t(MiscOp::I32TruncSSatF64):
+          case uint32_t(MiscOp::I32TruncSatF64S):
             CHECK_NEXT(
                 dispatchConversionOOM(emitTruncateF64ToI32<TRUNC_SATURATING>,
                                       ValType::F64, ValType::I32));
-          case uint32_t(MiscOp::I32TruncUSatF64):
+          case uint32_t(MiscOp::I32TruncSatF64U):
             CHECK_NEXT(dispatchConversionOOM(
                 emitTruncateF64ToI32<TRUNC_UNSIGNED | TRUNC_SATURATING>,
                 ValType::F64, ValType::I32));
-          case uint32_t(MiscOp::I64TruncSSatF32):
+          case uint32_t(MiscOp::I64TruncSatF32S):
 #ifdef RABALDR_FLOAT_TO_I64_CALLOUT
             CHECK_NEXT(dispatchCalloutConversionOOM(
                 emitConvertFloatingToInt64Callout,
@@ -9244,7 +9244,7 @@ bool BaseCompiler::emitBody() {
                 dispatchConversionOOM(emitTruncateF32ToI64<TRUNC_SATURATING>,
                                       ValType::F32, ValType::I64));
 #endif
-          case uint32_t(MiscOp::I64TruncUSatF32):
+          case uint32_t(MiscOp::I64TruncSatF32U):
 #ifdef RABALDR_FLOAT_TO_I64_CALLOUT
             CHECK_NEXT(dispatchCalloutConversionOOM(
                 emitConvertFloatingToInt64Callout,
@@ -9255,7 +9255,7 @@ bool BaseCompiler::emitBody() {
                 emitTruncateF32ToI64<TRUNC_UNSIGNED | TRUNC_SATURATING>,
                 ValType::F32, ValType::I64));
 #endif
-          case uint32_t(MiscOp::I64TruncSSatF64):
+          case uint32_t(MiscOp::I64TruncSatF64S):
 #ifdef RABALDR_FLOAT_TO_I64_CALLOUT
             CHECK_NEXT(dispatchCalloutConversionOOM(
                 emitConvertFloatingToInt64Callout,
@@ -9266,7 +9266,7 @@ bool BaseCompiler::emitBody() {
                 dispatchConversionOOM(emitTruncateF64ToI64<TRUNC_SATURATING>,
                                       ValType::F64, ValType::I64));
 #endif
-          case uint32_t(MiscOp::I64TruncUSatF64):
+          case uint32_t(MiscOp::I64TruncSatF64U):
 #ifdef RABALDR_FLOAT_TO_I64_CALLOUT
             CHECK_NEXT(dispatchCalloutConversionOOM(
                 emitConvertFloatingToInt64Callout,
@@ -9277,13 +9277,13 @@ bool BaseCompiler::emitBody() {
                 emitTruncateF64ToI64<TRUNC_UNSIGNED | TRUNC_SATURATING>,
                 ValType::F64, ValType::I64));
 #endif
-          case uint32_t(MiscOp::MemCopy):
+          case uint32_t(MiscOp::MemoryCopy):
             CHECK_NEXT(emitMemCopy());
           case uint32_t(MiscOp::DataDrop):
             CHECK_NEXT(emitDataOrElemDrop(/*isData=*/true));
-          case uint32_t(MiscOp::MemFill):
+          case uint32_t(MiscOp::MemoryFill):
             CHECK_NEXT(emitMemFill());
-          case uint32_t(MiscOp::MemInit):
+          case uint32_t(MiscOp::MemoryInit):
             CHECK_NEXT(emitMemInit());
           case uint32_t(MiscOp::TableCopy):
             CHECK_NEXT(emitTableCopy());

@@ -238,23 +238,23 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         double unused;
         CHECK(iter.readF64Const(&unused));
       }
-      case uint16_t(Op::GetLocal): {
+      case uint16_t(Op::LocalGet): {
         uint32_t unused;
         CHECK(iter.readGetLocal(locals, &unused));
       }
-      case uint16_t(Op::SetLocal): {
+      case uint16_t(Op::LocalSet): {
         uint32_t unused;
         CHECK(iter.readSetLocal(locals, &unused, &nothing));
       }
-      case uint16_t(Op::TeeLocal): {
+      case uint16_t(Op::LocalTee): {
         uint32_t unused;
         CHECK(iter.readTeeLocal(locals, &unused, &nothing));
       }
-      case uint16_t(Op::GetGlobal): {
+      case uint16_t(Op::GlobalGet): {
         uint32_t unused;
         CHECK(iter.readGetGlobal(&unused));
       }
-      case uint16_t(Op::SetGlobal): {
+      case uint16_t(Op::GlobalSet): {
         uint32_t unused;
         CHECK(iter.readSetGlobal(&unused, &nothing));
       }
@@ -397,37 +397,37 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
       case uint16_t(Op::I64Eqz):
       case uint16_t(Op::I32WrapI64):
         CHECK(iter.readConversion(ValType::I64, ValType::I32, &nothing));
-      case uint16_t(Op::I32TruncSF32):
-      case uint16_t(Op::I32TruncUF32):
+      case uint16_t(Op::I32TruncF32S):
+      case uint16_t(Op::I32TruncF32U):
       case uint16_t(Op::I32ReinterpretF32):
         CHECK(iter.readConversion(ValType::F32, ValType::I32, &nothing));
-      case uint16_t(Op::I32TruncSF64):
-      case uint16_t(Op::I32TruncUF64):
+      case uint16_t(Op::I32TruncF64S):
+      case uint16_t(Op::I32TruncF64U):
         CHECK(iter.readConversion(ValType::F64, ValType::I32, &nothing));
-      case uint16_t(Op::I64ExtendSI32):
-      case uint16_t(Op::I64ExtendUI32):
+      case uint16_t(Op::I64ExtendI32S):
+      case uint16_t(Op::I64ExtendI32U):
         CHECK(iter.readConversion(ValType::I32, ValType::I64, &nothing));
-      case uint16_t(Op::I64TruncSF32):
-      case uint16_t(Op::I64TruncUF32):
+      case uint16_t(Op::I64TruncF32S):
+      case uint16_t(Op::I64TruncF32U):
         CHECK(iter.readConversion(ValType::F32, ValType::I64, &nothing));
-      case uint16_t(Op::I64TruncSF64):
-      case uint16_t(Op::I64TruncUF64):
+      case uint16_t(Op::I64TruncF64S):
+      case uint16_t(Op::I64TruncF64U):
       case uint16_t(Op::I64ReinterpretF64):
         CHECK(iter.readConversion(ValType::F64, ValType::I64, &nothing));
-      case uint16_t(Op::F32ConvertSI32):
-      case uint16_t(Op::F32ConvertUI32):
+      case uint16_t(Op::F32ConvertI32S):
+      case uint16_t(Op::F32ConvertI32U):
       case uint16_t(Op::F32ReinterpretI32):
         CHECK(iter.readConversion(ValType::I32, ValType::F32, &nothing));
-      case uint16_t(Op::F32ConvertSI64):
-      case uint16_t(Op::F32ConvertUI64):
+      case uint16_t(Op::F32ConvertI64S):
+      case uint16_t(Op::F32ConvertI64U):
         CHECK(iter.readConversion(ValType::I64, ValType::F32, &nothing));
       case uint16_t(Op::F32DemoteF64):
         CHECK(iter.readConversion(ValType::F64, ValType::F32, &nothing));
-      case uint16_t(Op::F64ConvertSI32):
-      case uint16_t(Op::F64ConvertUI32):
+      case uint16_t(Op::F64ConvertI32S):
+      case uint16_t(Op::F64ConvertI32U):
         CHECK(iter.readConversion(ValType::I32, ValType::F64, &nothing));
-      case uint16_t(Op::F64ConvertSI64):
-      case uint16_t(Op::F64ConvertUI64):
+      case uint16_t(Op::F64ConvertI64S):
+      case uint16_t(Op::F64ConvertI64U):
       case uint16_t(Op::F64ReinterpretI64):
         CHECK(iter.readConversion(ValType::I64, ValType::F64, &nothing));
       case uint16_t(Op::F64PromoteF32):
@@ -761,21 +761,21 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(SimdOp::I8x16AvgrU):
           case uint32_t(SimdOp::I16x8AvgrU):
           case uint32_t(SimdOp::I8x16Add):
-          case uint32_t(SimdOp::I8x16AddSaturateS):
-          case uint32_t(SimdOp::I8x16AddSaturateU):
+          case uint32_t(SimdOp::I8x16AddSatS):
+          case uint32_t(SimdOp::I8x16AddSatU):
           case uint32_t(SimdOp::I8x16Sub):
-          case uint32_t(SimdOp::I8x16SubSaturateS):
-          case uint32_t(SimdOp::I8x16SubSaturateU):
+          case uint32_t(SimdOp::I8x16SubSatS):
+          case uint32_t(SimdOp::I8x16SubSatU):
           case uint32_t(SimdOp::I8x16MinS):
           case uint32_t(SimdOp::I8x16MinU):
           case uint32_t(SimdOp::I8x16MaxS):
           case uint32_t(SimdOp::I8x16MaxU):
           case uint32_t(SimdOp::I16x8Add):
-          case uint32_t(SimdOp::I16x8AddSaturateS):
-          case uint32_t(SimdOp::I16x8AddSaturateU):
+          case uint32_t(SimdOp::I16x8AddSatS):
+          case uint32_t(SimdOp::I16x8AddSatU):
           case uint32_t(SimdOp::I16x8Sub):
-          case uint32_t(SimdOp::I16x8SubSaturateS):
-          case uint32_t(SimdOp::I16x8SubSaturateU):
+          case uint32_t(SimdOp::I16x8SubSatS):
+          case uint32_t(SimdOp::I16x8SubSatU):
           case uint32_t(SimdOp::I16x8Mul):
           case uint32_t(SimdOp::I16x8MinS):
           case uint32_t(SimdOp::I16x8MinU):
@@ -803,54 +803,54 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(SimdOp::F64x2Div):
           case uint32_t(SimdOp::F64x2Min):
           case uint32_t(SimdOp::F64x2Max):
-          case uint32_t(SimdOp::I8x16NarrowSI16x8):
-          case uint32_t(SimdOp::I8x16NarrowUI16x8):
-          case uint32_t(SimdOp::I16x8NarrowSI32x4):
-          case uint32_t(SimdOp::I16x8NarrowUI32x4):
-          case uint32_t(SimdOp::V8x16Swizzle):
+          case uint32_t(SimdOp::I8x16NarrowI16x8S):
+          case uint32_t(SimdOp::I8x16NarrowI16x8U):
+          case uint32_t(SimdOp::I16x8NarrowI32x4S):
+          case uint32_t(SimdOp::I16x8NarrowI32x4U):
+          case uint32_t(SimdOp::I8x16Swizzle):
           case uint32_t(SimdOp::F32x4PMax):
           case uint32_t(SimdOp::F32x4PMin):
           case uint32_t(SimdOp::F64x2PMax):
           case uint32_t(SimdOp::F64x2PMin):
-          case uint32_t(SimdOp::I32x4DotSI16x8):
-          case uint32_t(SimdOp::I16x8ExtMulLowSI8x16):
-          case uint32_t(SimdOp::I16x8ExtMulHighSI8x16):
-          case uint32_t(SimdOp::I16x8ExtMulLowUI8x16):
-          case uint32_t(SimdOp::I16x8ExtMulHighUI8x16):
-          case uint32_t(SimdOp::I32x4ExtMulLowSI16x8):
-          case uint32_t(SimdOp::I32x4ExtMulHighSI16x8):
-          case uint32_t(SimdOp::I32x4ExtMulLowUI16x8):
-          case uint32_t(SimdOp::I32x4ExtMulHighUI16x8):
-          case uint32_t(SimdOp::I64x2ExtMulLowSI32x4):
-          case uint32_t(SimdOp::I64x2ExtMulHighSI32x4):
-          case uint32_t(SimdOp::I64x2ExtMulLowUI32x4):
-          case uint32_t(SimdOp::I64x2ExtMulHighUI32x4):
+          case uint32_t(SimdOp::I32x4DotI16x8S):
+          case uint32_t(SimdOp::I16x8ExtmulLowI8x16S):
+          case uint32_t(SimdOp::I16x8ExtmulHighI8x16S):
+          case uint32_t(SimdOp::I16x8ExtmulLowI8x16U):
+          case uint32_t(SimdOp::I16x8ExtmulHighI8x16U):
+          case uint32_t(SimdOp::I32x4ExtmulLowI16x8S):
+          case uint32_t(SimdOp::I32x4ExtmulHighI16x8S):
+          case uint32_t(SimdOp::I32x4ExtmulLowI16x8U):
+          case uint32_t(SimdOp::I32x4ExtmulHighI16x8U):
+          case uint32_t(SimdOp::I64x2ExtmulLowI32x4S):
+          case uint32_t(SimdOp::I64x2ExtmulHighI32x4S):
+          case uint32_t(SimdOp::I64x2ExtmulLowI32x4U):
+          case uint32_t(SimdOp::I64x2ExtmulHighI32x4U):
           case uint32_t(SimdOp::I16x8Q15MulrSatS):
             CHECK(iter.readBinary(ValType::V128, &nothing, &nothing));
 
           case uint32_t(SimdOp::I8x16Neg):
           case uint32_t(SimdOp::I16x8Neg):
-          case uint32_t(SimdOp::I16x8WidenLowSI8x16):
-          case uint32_t(SimdOp::I16x8WidenHighSI8x16):
-          case uint32_t(SimdOp::I16x8WidenLowUI8x16):
-          case uint32_t(SimdOp::I16x8WidenHighUI8x16):
+          case uint32_t(SimdOp::I16x8ExtendLowI8x16S):
+          case uint32_t(SimdOp::I16x8ExtendHighI8x16S):
+          case uint32_t(SimdOp::I16x8ExtendLowI8x16U):
+          case uint32_t(SimdOp::I16x8ExtendHighI8x16U):
           case uint32_t(SimdOp::I32x4Neg):
-          case uint32_t(SimdOp::I32x4WidenLowSI16x8):
-          case uint32_t(SimdOp::I32x4WidenHighSI16x8):
-          case uint32_t(SimdOp::I32x4WidenLowUI16x8):
-          case uint32_t(SimdOp::I32x4WidenHighUI16x8):
-          case uint32_t(SimdOp::I32x4TruncSSatF32x4):
-          case uint32_t(SimdOp::I32x4TruncUSatF32x4):
+          case uint32_t(SimdOp::I32x4ExtendLowI16x8S):
+          case uint32_t(SimdOp::I32x4ExtendHighI16x8S):
+          case uint32_t(SimdOp::I32x4ExtendLowI16x8U):
+          case uint32_t(SimdOp::I32x4ExtendHighI16x8U):
+          case uint32_t(SimdOp::I32x4TruncSatF32x4S):
+          case uint32_t(SimdOp::I32x4TruncSatF32x4U):
           case uint32_t(SimdOp::I64x2Neg):
-          case uint32_t(SimdOp::I64x2WidenLowSI32x4):
-          case uint32_t(SimdOp::I64x2WidenHighSI32x4):
-          case uint32_t(SimdOp::I64x2WidenLowUI32x4):
-          case uint32_t(SimdOp::I64x2WidenHighUI32x4):
+          case uint32_t(SimdOp::I64x2ExtendLowI32x4S):
+          case uint32_t(SimdOp::I64x2ExtendHighI32x4S):
+          case uint32_t(SimdOp::I64x2ExtendLowI32x4U):
+          case uint32_t(SimdOp::I64x2ExtendHighI32x4U):
           case uint32_t(SimdOp::F32x4Abs):
           case uint32_t(SimdOp::F32x4Neg):
           case uint32_t(SimdOp::F32x4Sqrt):
-          case uint32_t(SimdOp::F32x4ConvertSI32x4):
-          case uint32_t(SimdOp::F32x4ConvertUI32x4):
+          case uint32_t(SimdOp::F32x4ConvertI32x4S):
+          case uint32_t(SimdOp::F32x4ConvertI32x4U):
           case uint32_t(SimdOp::F64x2Abs):
           case uint32_t(SimdOp::F64x2Neg):
           case uint32_t(SimdOp::F64x2Sqrt):
@@ -874,10 +874,10 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(SimdOp::F64x2ConvertLowI32x4U):
           case uint32_t(SimdOp::I32x4TruncSatF64x2SZero):
           case uint32_t(SimdOp::I32x4TruncSatF64x2UZero):
-          case uint32_t(SimdOp::I16x8ExtAddPairwiseI8x16S):
-          case uint32_t(SimdOp::I16x8ExtAddPairwiseI8x16U):
-          case uint32_t(SimdOp::I32x4ExtAddPairwiseI16x8S):
-          case uint32_t(SimdOp::I32x4ExtAddPairwiseI16x8U):
+          case uint32_t(SimdOp::I16x8ExtaddPairwiseI8x16S):
+          case uint32_t(SimdOp::I16x8ExtaddPairwiseI8x16U):
+          case uint32_t(SimdOp::I32x4ExtaddPairwiseI16x8S):
+          case uint32_t(SimdOp::I32x4ExtaddPairwiseI16x8U):
             CHECK(iter.readUnary(ValType::V128, &nothing));
 
           case uint32_t(SimdOp::I8x16Shl):
@@ -898,7 +898,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(
                 iter.readTernary(ValType::V128, &nothing, &nothing, &nothing));
 
-          case uint32_t(SimdOp::V8x16Shuffle): {
+          case uint32_t(SimdOp::I8x16Shuffle): {
             V128 mask;
             CHECK(iter.readVectorShuffle(&nothing, &nothing, &mask));
           }
@@ -913,40 +913,40 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readLoad(ValType::V128, 16, &addr));
           }
 
-          case uint32_t(SimdOp::V8x16LoadSplat): {
+          case uint32_t(SimdOp::V128Load8Splat): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readLoadSplat(1, &addr));
           }
 
-          case uint32_t(SimdOp::V16x8LoadSplat): {
+          case uint32_t(SimdOp::V128Load16Splat): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readLoadSplat(2, &addr));
           }
 
-          case uint32_t(SimdOp::V32x4LoadSplat): {
+          case uint32_t(SimdOp::V128Load32Splat): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readLoadSplat(4, &addr));
           }
 
-          case uint32_t(SimdOp::V64x2LoadSplat): {
+          case uint32_t(SimdOp::V128Load64Splat): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readLoadSplat(8, &addr));
           }
 
-          case uint32_t(SimdOp::I16x8LoadS8x8):
-          case uint32_t(SimdOp::I16x8LoadU8x8): {
+          case uint32_t(SimdOp::V128Load8x8S):
+          case uint32_t(SimdOp::V128Load8x8U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readLoadExtend(&addr));
           }
 
-          case uint32_t(SimdOp::I32x4LoadS16x4):
-          case uint32_t(SimdOp::I32x4LoadU16x4): {
+          case uint32_t(SimdOp::V128Load16x4S):
+          case uint32_t(SimdOp::V128Load16x4U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readLoadExtend(&addr));
           }
 
-          case uint32_t(SimdOp::I64x2LoadS32x2):
-          case uint32_t(SimdOp::I64x2LoadU32x2): {
+          case uint32_t(SimdOp::V128Load32x2S):
+          case uint32_t(SimdOp::V128Load32x2U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readLoadExtend(&addr));
           }
@@ -1056,19 +1056,19 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
 
       case uint16_t(Op::MiscPrefix): {
         switch (op.b1) {
-          case uint32_t(MiscOp::I32TruncSSatF32):
-          case uint32_t(MiscOp::I32TruncUSatF32):
+          case uint32_t(MiscOp::I32TruncSatF32S):
+          case uint32_t(MiscOp::I32TruncSatF32U):
             CHECK(iter.readConversion(ValType::F32, ValType::I32, &nothing));
-          case uint32_t(MiscOp::I32TruncSSatF64):
-          case uint32_t(MiscOp::I32TruncUSatF64):
+          case uint32_t(MiscOp::I32TruncSatF64S):
+          case uint32_t(MiscOp::I32TruncSatF64U):
             CHECK(iter.readConversion(ValType::F64, ValType::I32, &nothing));
-          case uint32_t(MiscOp::I64TruncSSatF32):
-          case uint32_t(MiscOp::I64TruncUSatF32):
+          case uint32_t(MiscOp::I64TruncSatF32S):
+          case uint32_t(MiscOp::I64TruncSatF32U):
             CHECK(iter.readConversion(ValType::F32, ValType::I64, &nothing));
-          case uint32_t(MiscOp::I64TruncSSatF64):
-          case uint32_t(MiscOp::I64TruncUSatF64):
+          case uint32_t(MiscOp::I64TruncSatF64S):
+          case uint32_t(MiscOp::I64TruncSatF64U):
             CHECK(iter.readConversion(ValType::F64, ValType::I64, &nothing));
-          case uint32_t(MiscOp::MemCopy): {
+          case uint32_t(MiscOp::MemoryCopy): {
             uint32_t unusedDestMemIndex;
             uint32_t unusedSrcMemIndex;
             CHECK(iter.readMemOrTableCopy(/*isMem=*/true, &unusedDestMemIndex,
@@ -1079,9 +1079,9 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             uint32_t unusedSegIndex;
             CHECK(iter.readDataOrElemDrop(/*isData=*/true, &unusedSegIndex));
           }
-          case uint32_t(MiscOp::MemFill):
+          case uint32_t(MiscOp::MemoryFill):
             CHECK(iter.readMemFill(&nothing, &nothing, &nothing));
-          case uint32_t(MiscOp::MemInit): {
+          case uint32_t(MiscOp::MemoryInit): {
             uint32_t unusedSegIndex;
             uint32_t unusedTableIndex;
             CHECK(iter.readMemOrTableInit(/*isMem=*/true, &unusedSegIndex,

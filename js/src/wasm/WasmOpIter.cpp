@@ -180,29 +180,29 @@ OpKind wasm::Classify(OpBytes op) {
       return OpKind::Comparison;
     case Op::I32Eqz:
     case Op::I32WrapI64:
-    case Op::I32TruncSF32:
-    case Op::I32TruncUF32:
+    case Op::I32TruncF32S:
+    case Op::I32TruncF32U:
     case Op::I32ReinterpretF32:
-    case Op::I32TruncSF64:
-    case Op::I32TruncUF64:
-    case Op::I64ExtendSI32:
-    case Op::I64ExtendUI32:
-    case Op::I64TruncSF32:
-    case Op::I64TruncUF32:
-    case Op::I64TruncSF64:
-    case Op::I64TruncUF64:
+    case Op::I32TruncF64S:
+    case Op::I32TruncF64U:
+    case Op::I64ExtendI32S:
+    case Op::I64ExtendI32U:
+    case Op::I64TruncF32S:
+    case Op::I64TruncF32U:
+    case Op::I64TruncF64S:
+    case Op::I64TruncF64U:
     case Op::I64ReinterpretF64:
     case Op::I64Eqz:
-    case Op::F32ConvertSI32:
-    case Op::F32ConvertUI32:
+    case Op::F32ConvertI32S:
+    case Op::F32ConvertI32U:
     case Op::F32ReinterpretI32:
-    case Op::F32ConvertSI64:
-    case Op::F32ConvertUI64:
+    case Op::F32ConvertI64S:
+    case Op::F32ConvertI64U:
     case Op::F32DemoteF64:
-    case Op::F64ConvertSI32:
-    case Op::F64ConvertUI32:
-    case Op::F64ConvertSI64:
-    case Op::F64ConvertUI64:
+    case Op::F64ConvertI32S:
+    case Op::F64ConvertI32U:
+    case Op::F64ConvertI64S:
+    case Op::F64ConvertI64U:
     case Op::F64ReinterpretI64:
     case Op::F64PromoteF32:
     case Op::I32Extend8S:
@@ -239,15 +239,15 @@ OpKind wasm::Classify(OpBytes op) {
     case Op::SelectNumeric:
     case Op::SelectTyped:
       return OpKind::Select;
-    case Op::GetLocal:
+    case Op::LocalGet:
       return OpKind::GetLocal;
-    case Op::SetLocal:
+    case Op::LocalSet:
       return OpKind::SetLocal;
-    case Op::TeeLocal:
+    case Op::LocalTee:
       return OpKind::TeeLocal;
-    case Op::GetGlobal:
+    case Op::GlobalGet:
       return OpKind::GetGlobal;
-    case Op::SetGlobal:
+    case Op::GlobalSet:
       return OpKind::SetGlobal;
     case Op::TableGet:
       return OpKind::TableGet;
@@ -431,21 +431,21 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::I8x16AvgrU:
         case SimdOp::I16x8AvgrU:
         case SimdOp::I8x16Add:
-        case SimdOp::I8x16AddSaturateS:
-        case SimdOp::I8x16AddSaturateU:
+        case SimdOp::I8x16AddSatS:
+        case SimdOp::I8x16AddSatU:
         case SimdOp::I8x16Sub:
-        case SimdOp::I8x16SubSaturateS:
-        case SimdOp::I8x16SubSaturateU:
+        case SimdOp::I8x16SubSatS:
+        case SimdOp::I8x16SubSatU:
         case SimdOp::I8x16MinS:
         case SimdOp::I8x16MaxS:
         case SimdOp::I8x16MinU:
         case SimdOp::I8x16MaxU:
         case SimdOp::I16x8Add:
-        case SimdOp::I16x8AddSaturateS:
-        case SimdOp::I16x8AddSaturateU:
+        case SimdOp::I16x8AddSatS:
+        case SimdOp::I16x8AddSatU:
         case SimdOp::I16x8Sub:
-        case SimdOp::I16x8SubSaturateS:
-        case SimdOp::I16x8SubSaturateU:
+        case SimdOp::I16x8SubSatS:
+        case SimdOp::I16x8SubSatU:
         case SimdOp::I16x8Mul:
         case SimdOp::I16x8MinS:
         case SimdOp::I16x8MaxS:
@@ -473,28 +473,28 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::F64x2Div:
         case SimdOp::F64x2Min:
         case SimdOp::F64x2Max:
-        case SimdOp::I8x16NarrowSI16x8:
-        case SimdOp::I8x16NarrowUI16x8:
-        case SimdOp::I16x8NarrowSI32x4:
-        case SimdOp::I16x8NarrowUI32x4:
-        case SimdOp::V8x16Swizzle:
+        case SimdOp::I8x16NarrowI16x8S:
+        case SimdOp::I8x16NarrowI16x8U:
+        case SimdOp::I16x8NarrowI32x4S:
+        case SimdOp::I16x8NarrowI32x4U:
+        case SimdOp::I8x16Swizzle:
         case SimdOp::F32x4PMin:
         case SimdOp::F32x4PMax:
         case SimdOp::F64x2PMin:
         case SimdOp::F64x2PMax:
-        case SimdOp::I32x4DotSI16x8:
-        case SimdOp::I16x8ExtMulLowSI8x16:
-        case SimdOp::I16x8ExtMulHighSI8x16:
-        case SimdOp::I16x8ExtMulLowUI8x16:
-        case SimdOp::I16x8ExtMulHighUI8x16:
-        case SimdOp::I32x4ExtMulLowSI16x8:
-        case SimdOp::I32x4ExtMulHighSI16x8:
-        case SimdOp::I32x4ExtMulLowUI16x8:
-        case SimdOp::I32x4ExtMulHighUI16x8:
-        case SimdOp::I64x2ExtMulLowSI32x4:
-        case SimdOp::I64x2ExtMulHighSI32x4:
-        case SimdOp::I64x2ExtMulLowUI32x4:
-        case SimdOp::I64x2ExtMulHighUI32x4:
+        case SimdOp::I32x4DotI16x8S:
+        case SimdOp::I16x8ExtmulLowI8x16S:
+        case SimdOp::I16x8ExtmulHighI8x16S:
+        case SimdOp::I16x8ExtmulLowI8x16U:
+        case SimdOp::I16x8ExtmulHighI8x16U:
+        case SimdOp::I32x4ExtmulLowI16x8S:
+        case SimdOp::I32x4ExtmulHighI16x8S:
+        case SimdOp::I32x4ExtmulLowI16x8U:
+        case SimdOp::I32x4ExtmulHighI16x8U:
+        case SimdOp::I64x2ExtmulLowI32x4S:
+        case SimdOp::I64x2ExtmulHighI32x4S:
+        case SimdOp::I64x2ExtmulLowI32x4U:
+        case SimdOp::I64x2ExtmulHighI32x4U:
         case SimdOp::I16x8Q15MulrSatS:
         case SimdOp::F32x4RelaxedMin:
         case SimdOp::F32x4RelaxedMax:
@@ -504,27 +504,27 @@ OpKind wasm::Classify(OpBytes op) {
           WASM_SIMD_OP(OpKind::Binary);
         case SimdOp::I8x16Neg:
         case SimdOp::I16x8Neg:
-        case SimdOp::I16x8WidenLowSI8x16:
-        case SimdOp::I16x8WidenHighSI8x16:
-        case SimdOp::I16x8WidenLowUI8x16:
-        case SimdOp::I16x8WidenHighUI8x16:
+        case SimdOp::I16x8ExtendLowI8x16S:
+        case SimdOp::I16x8ExtendHighI8x16S:
+        case SimdOp::I16x8ExtendLowI8x16U:
+        case SimdOp::I16x8ExtendHighI8x16U:
         case SimdOp::I32x4Neg:
-        case SimdOp::I32x4WidenLowSI16x8:
-        case SimdOp::I32x4WidenHighSI16x8:
-        case SimdOp::I32x4WidenLowUI16x8:
-        case SimdOp::I32x4WidenHighUI16x8:
-        case SimdOp::I32x4TruncSSatF32x4:
-        case SimdOp::I32x4TruncUSatF32x4:
+        case SimdOp::I32x4ExtendLowI16x8S:
+        case SimdOp::I32x4ExtendHighI16x8S:
+        case SimdOp::I32x4ExtendLowI16x8U:
+        case SimdOp::I32x4ExtendHighI16x8U:
+        case SimdOp::I32x4TruncSatF32x4S:
+        case SimdOp::I32x4TruncSatF32x4U:
         case SimdOp::I64x2Neg:
-        case SimdOp::I64x2WidenLowSI32x4:
-        case SimdOp::I64x2WidenHighSI32x4:
-        case SimdOp::I64x2WidenLowUI32x4:
-        case SimdOp::I64x2WidenHighUI32x4:
+        case SimdOp::I64x2ExtendLowI32x4S:
+        case SimdOp::I64x2ExtendHighI32x4S:
+        case SimdOp::I64x2ExtendLowI32x4U:
+        case SimdOp::I64x2ExtendHighI32x4U:
         case SimdOp::F32x4Abs:
         case SimdOp::F32x4Neg:
         case SimdOp::F32x4Sqrt:
-        case SimdOp::F32x4ConvertSI32x4:
-        case SimdOp::F32x4ConvertUI32x4:
+        case SimdOp::F32x4ConvertI32x4S:
+        case SimdOp::F32x4ConvertI32x4U:
         case SimdOp::F64x2Abs:
         case SimdOp::F64x2Neg:
         case SimdOp::F64x2Sqrt:
@@ -548,10 +548,10 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::F64x2ConvertLowI32x4U:
         case SimdOp::I32x4TruncSatF64x2SZero:
         case SimdOp::I32x4TruncSatF64x2UZero:
-        case SimdOp::I16x8ExtAddPairwiseI8x16S:
-        case SimdOp::I16x8ExtAddPairwiseI8x16U:
-        case SimdOp::I32x4ExtAddPairwiseI16x8S:
-        case SimdOp::I32x4ExtAddPairwiseI16x8U:
+        case SimdOp::I16x8ExtaddPairwiseI8x16S:
+        case SimdOp::I16x8ExtaddPairwiseI8x16U:
+        case SimdOp::I32x4ExtaddPairwiseI16x8S:
+        case SimdOp::I32x4ExtaddPairwiseI16x8U:
         case SimdOp::I32x4RelaxedTruncSSatF32x4:
         case SimdOp::I32x4RelaxedTruncUSatF32x4:
         case SimdOp::I32x4RelaxedTruncSatF64x2SZero:
@@ -572,21 +572,21 @@ OpKind wasm::Classify(OpBytes op) {
           WASM_SIMD_OP(OpKind::VectorShift);
         case SimdOp::V128Bitselect:
           WASM_SIMD_OP(OpKind::Ternary);
-        case SimdOp::V8x16Shuffle:
+        case SimdOp::I8x16Shuffle:
           WASM_SIMD_OP(OpKind::VectorShuffle);
         case SimdOp::V128Const:
           WASM_SIMD_OP(OpKind::V128);
         case SimdOp::V128Load:
-        case SimdOp::V8x16LoadSplat:
-        case SimdOp::V16x8LoadSplat:
-        case SimdOp::V32x4LoadSplat:
-        case SimdOp::V64x2LoadSplat:
-        case SimdOp::I16x8LoadS8x8:
-        case SimdOp::I16x8LoadU8x8:
-        case SimdOp::I32x4LoadS16x4:
-        case SimdOp::I32x4LoadU16x4:
-        case SimdOp::I64x2LoadS32x2:
-        case SimdOp::I64x2LoadU32x2:
+        case SimdOp::V128Load8Splat:
+        case SimdOp::V128Load16Splat:
+        case SimdOp::V128Load32Splat:
+        case SimdOp::V128Load64Splat:
+        case SimdOp::V128Load8x8S:
+        case SimdOp::V128Load8x8U:
+        case SimdOp::V128Load16x4S:
+        case SimdOp::V128Load16x4U:
+        case SimdOp::V128Load32x2S:
+        case SimdOp::V128Load32x2U:
         case SimdOp::V128Load32Zero:
         case SimdOp::V128Load64Zero:
           WASM_SIMD_OP(OpKind::Load);
@@ -625,24 +625,24 @@ OpKind wasm::Classify(OpBytes op) {
         case MiscOp::Limit:
           // Reject Limit for MiscPrefix encoding
           break;
-        case MiscOp::I32TruncSSatF32:
-        case MiscOp::I32TruncUSatF32:
-        case MiscOp::I32TruncSSatF64:
-        case MiscOp::I32TruncUSatF64:
-        case MiscOp::I64TruncSSatF32:
-        case MiscOp::I64TruncUSatF32:
-        case MiscOp::I64TruncSSatF64:
-        case MiscOp::I64TruncUSatF64:
+        case MiscOp::I32TruncSatF32S:
+        case MiscOp::I32TruncSatF32U:
+        case MiscOp::I32TruncSatF64S:
+        case MiscOp::I32TruncSatF64U:
+        case MiscOp::I64TruncSatF32S:
+        case MiscOp::I64TruncSatF32U:
+        case MiscOp::I64TruncSatF64S:
+        case MiscOp::I64TruncSatF64U:
           return OpKind::Conversion;
-        case MiscOp::MemCopy:
+        case MiscOp::MemoryCopy:
         case MiscOp::TableCopy:
           return OpKind::MemOrTableCopy;
         case MiscOp::DataDrop:
         case MiscOp::ElemDrop:
           return OpKind::DataOrElemDrop;
-        case MiscOp::MemFill:
+        case MiscOp::MemoryFill:
           return OpKind::MemFill;
-        case MiscOp::MemInit:
+        case MiscOp::MemoryInit:
         case MiscOp::TableInit:
           return OpKind::MemOrTableInit;
         case MiscOp::TableFill:

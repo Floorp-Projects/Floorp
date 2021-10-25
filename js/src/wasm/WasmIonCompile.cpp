@@ -4841,15 +4841,15 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         CHECK(EmitSelect(f, /*typed*/ true));
 
       // Locals and globals
-      case uint16_t(Op::GetLocal):
+      case uint16_t(Op::LocalGet):
         CHECK(EmitGetLocal(f));
-      case uint16_t(Op::SetLocal):
+      case uint16_t(Op::LocalSet):
         CHECK(EmitSetLocal(f));
-      case uint16_t(Op::TeeLocal):
+      case uint16_t(Op::LocalTee):
         CHECK(EmitTeeLocal(f));
-      case uint16_t(Op::GetGlobal):
+      case uint16_t(Op::GlobalGet):
         CHECK(EmitGetGlobal(f));
-      case uint16_t(Op::SetGlobal):
+      case uint16_t(Op::GlobalSet):
         CHECK(EmitSetGlobal(f));
       case uint16_t(Op::TableGet):
         CHECK(EmitTableGet(f));
@@ -5153,45 +5153,45 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       // Conversions
       case uint16_t(Op::I32WrapI64):
         CHECK(EmitConversion<MWrapInt64ToInt32>(f, ValType::I64, ValType::I32));
-      case uint16_t(Op::I32TruncSF32):
-      case uint16_t(Op::I32TruncUF32):
+      case uint16_t(Op::I32TruncF32S):
+      case uint16_t(Op::I32TruncF32U):
         CHECK(EmitTruncate(f, ValType::F32, ValType::I32,
-                           Op(op.b0) == Op::I32TruncUF32, false));
-      case uint16_t(Op::I32TruncSF64):
-      case uint16_t(Op::I32TruncUF64):
+                           Op(op.b0) == Op::I32TruncF32U, false));
+      case uint16_t(Op::I32TruncF64S):
+      case uint16_t(Op::I32TruncF64U):
         CHECK(EmitTruncate(f, ValType::F64, ValType::I32,
-                           Op(op.b0) == Op::I32TruncUF64, false));
-      case uint16_t(Op::I64ExtendSI32):
-      case uint16_t(Op::I64ExtendUI32):
-        CHECK(EmitExtendI32(f, Op(op.b0) == Op::I64ExtendUI32));
-      case uint16_t(Op::I64TruncSF32):
-      case uint16_t(Op::I64TruncUF32):
+                           Op(op.b0) == Op::I32TruncF64U, false));
+      case uint16_t(Op::I64ExtendI32S):
+      case uint16_t(Op::I64ExtendI32U):
+        CHECK(EmitExtendI32(f, Op(op.b0) == Op::I64ExtendI32U));
+      case uint16_t(Op::I64TruncF32S):
+      case uint16_t(Op::I64TruncF32U):
         CHECK(EmitTruncate(f, ValType::F32, ValType::I64,
-                           Op(op.b0) == Op::I64TruncUF32, false));
-      case uint16_t(Op::I64TruncSF64):
-      case uint16_t(Op::I64TruncUF64):
+                           Op(op.b0) == Op::I64TruncF32U, false));
+      case uint16_t(Op::I64TruncF64S):
+      case uint16_t(Op::I64TruncF64U):
         CHECK(EmitTruncate(f, ValType::F64, ValType::I64,
-                           Op(op.b0) == Op::I64TruncUF64, false));
-      case uint16_t(Op::F32ConvertSI32):
+                           Op(op.b0) == Op::I64TruncF64U, false));
+      case uint16_t(Op::F32ConvertI32S):
         CHECK(EmitConversion<MToFloat32>(f, ValType::I32, ValType::F32));
-      case uint16_t(Op::F32ConvertUI32):
+      case uint16_t(Op::F32ConvertI32U):
         CHECK(EmitConversion<MWasmUnsignedToFloat32>(f, ValType::I32,
                                                      ValType::F32));
-      case uint16_t(Op::F32ConvertSI64):
-      case uint16_t(Op::F32ConvertUI64):
+      case uint16_t(Op::F32ConvertI64S):
+      case uint16_t(Op::F32ConvertI64U):
         CHECK(EmitConvertI64ToFloatingPoint(f, ValType::F32, MIRType::Float32,
-                                            Op(op.b0) == Op::F32ConvertUI64));
+                                            Op(op.b0) == Op::F32ConvertI64U));
       case uint16_t(Op::F32DemoteF64):
         CHECK(EmitConversion<MToFloat32>(f, ValType::F64, ValType::F32));
-      case uint16_t(Op::F64ConvertSI32):
+      case uint16_t(Op::F64ConvertI32S):
         CHECK(EmitConversion<MToDouble>(f, ValType::I32, ValType::F64));
-      case uint16_t(Op::F64ConvertUI32):
+      case uint16_t(Op::F64ConvertI32U):
         CHECK(EmitConversion<MWasmUnsignedToDouble>(f, ValType::I32,
                                                     ValType::F64));
-      case uint16_t(Op::F64ConvertSI64):
-      case uint16_t(Op::F64ConvertUI64):
+      case uint16_t(Op::F64ConvertI64S):
+      case uint16_t(Op::F64ConvertI64U):
         CHECK(EmitConvertI64ToFloatingPoint(f, ValType::F64, MIRType::Double,
-                                            Op(op.b0) == Op::F64ConvertUI64));
+                                            Op(op.b0) == Op::F64ConvertI64U));
       case uint16_t(Op::F64PromoteF32):
         CHECK(EmitConversion<MToDouble>(f, ValType::F32, ValType::F64));
 
@@ -5266,15 +5266,15 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(SimdOp::I8x16AvgrU):
           case uint32_t(SimdOp::I16x8AvgrU):
           case uint32_t(SimdOp::I8x16Add):
-          case uint32_t(SimdOp::I8x16AddSaturateS):
-          case uint32_t(SimdOp::I8x16AddSaturateU):
+          case uint32_t(SimdOp::I8x16AddSatS):
+          case uint32_t(SimdOp::I8x16AddSatU):
           case uint32_t(SimdOp::I8x16MinS):
           case uint32_t(SimdOp::I8x16MinU):
           case uint32_t(SimdOp::I8x16MaxS):
           case uint32_t(SimdOp::I8x16MaxU):
           case uint32_t(SimdOp::I16x8Add):
-          case uint32_t(SimdOp::I16x8AddSaturateS):
-          case uint32_t(SimdOp::I16x8AddSaturateU):
+          case uint32_t(SimdOp::I16x8AddSatS):
+          case uint32_t(SimdOp::I16x8AddSatU):
           case uint32_t(SimdOp::I16x8Mul):
           case uint32_t(SimdOp::I16x8MinS):
           case uint32_t(SimdOp::I16x8MinU):
@@ -5308,38 +5308,38 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(SimdOp::F32x4Ne):
           case uint32_t(SimdOp::F64x2Eq):
           case uint32_t(SimdOp::F64x2Ne):
-          case uint32_t(SimdOp::I32x4DotSI16x8):
-          case uint32_t(SimdOp::I16x8ExtMulLowSI8x16):
-          case uint32_t(SimdOp::I16x8ExtMulHighSI8x16):
-          case uint32_t(SimdOp::I16x8ExtMulLowUI8x16):
-          case uint32_t(SimdOp::I16x8ExtMulHighUI8x16):
-          case uint32_t(SimdOp::I32x4ExtMulLowSI16x8):
-          case uint32_t(SimdOp::I32x4ExtMulHighSI16x8):
-          case uint32_t(SimdOp::I32x4ExtMulLowUI16x8):
-          case uint32_t(SimdOp::I32x4ExtMulHighUI16x8):
-          case uint32_t(SimdOp::I64x2ExtMulLowSI32x4):
-          case uint32_t(SimdOp::I64x2ExtMulHighSI32x4):
-          case uint32_t(SimdOp::I64x2ExtMulLowUI32x4):
-          case uint32_t(SimdOp::I64x2ExtMulHighUI32x4):
+          case uint32_t(SimdOp::I32x4DotI16x8S):
+          case uint32_t(SimdOp::I16x8ExtmulLowI8x16S):
+          case uint32_t(SimdOp::I16x8ExtmulHighI8x16S):
+          case uint32_t(SimdOp::I16x8ExtmulLowI8x16U):
+          case uint32_t(SimdOp::I16x8ExtmulHighI8x16U):
+          case uint32_t(SimdOp::I32x4ExtmulLowI16x8S):
+          case uint32_t(SimdOp::I32x4ExtmulHighI16x8S):
+          case uint32_t(SimdOp::I32x4ExtmulLowI16x8U):
+          case uint32_t(SimdOp::I32x4ExtmulHighI16x8U):
+          case uint32_t(SimdOp::I64x2ExtmulLowI32x4S):
+          case uint32_t(SimdOp::I64x2ExtmulHighI32x4S):
+          case uint32_t(SimdOp::I64x2ExtmulLowI32x4U):
+          case uint32_t(SimdOp::I64x2ExtmulHighI32x4U):
           case uint32_t(SimdOp::I16x8Q15MulrSatS):
             CHECK(EmitBinarySimd128(f, /* commutative= */ true, SimdOp(op.b1)));
           case uint32_t(SimdOp::V128AndNot):
           case uint32_t(SimdOp::I8x16Sub):
-          case uint32_t(SimdOp::I8x16SubSaturateS):
-          case uint32_t(SimdOp::I8x16SubSaturateU):
+          case uint32_t(SimdOp::I8x16SubSatS):
+          case uint32_t(SimdOp::I8x16SubSatU):
           case uint32_t(SimdOp::I16x8Sub):
-          case uint32_t(SimdOp::I16x8SubSaturateS):
-          case uint32_t(SimdOp::I16x8SubSaturateU):
+          case uint32_t(SimdOp::I16x8SubSatS):
+          case uint32_t(SimdOp::I16x8SubSatU):
           case uint32_t(SimdOp::I32x4Sub):
           case uint32_t(SimdOp::I64x2Sub):
           case uint32_t(SimdOp::F32x4Sub):
           case uint32_t(SimdOp::F32x4Div):
           case uint32_t(SimdOp::F64x2Sub):
           case uint32_t(SimdOp::F64x2Div):
-          case uint32_t(SimdOp::I8x16NarrowSI16x8):
-          case uint32_t(SimdOp::I8x16NarrowUI16x8):
-          case uint32_t(SimdOp::I16x8NarrowSI32x4):
-          case uint32_t(SimdOp::I16x8NarrowUI32x4):
+          case uint32_t(SimdOp::I8x16NarrowI16x8S):
+          case uint32_t(SimdOp::I8x16NarrowI16x8U):
+          case uint32_t(SimdOp::I16x8NarrowI32x4S):
+          case uint32_t(SimdOp::I16x8NarrowI32x4U):
           case uint32_t(SimdOp::I8x16LtS):
           case uint32_t(SimdOp::I8x16LtU):
           case uint32_t(SimdOp::I8x16GtS):
@@ -5376,7 +5376,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(SimdOp::F64x2Gt):
           case uint32_t(SimdOp::F64x2Le):
           case uint32_t(SimdOp::F64x2Ge):
-          case uint32_t(SimdOp::V8x16Swizzle):
+          case uint32_t(SimdOp::I8x16Swizzle):
           case uint32_t(SimdOp::F32x4PMax):
           case uint32_t(SimdOp::F32x4PMin):
           case uint32_t(SimdOp::F64x2PMax):
@@ -5395,27 +5395,27 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitSplatSimd128(f, ValType::F64, SimdOp(op.b1)));
           case uint32_t(SimdOp::I8x16Neg):
           case uint32_t(SimdOp::I16x8Neg):
-          case uint32_t(SimdOp::I16x8WidenLowSI8x16):
-          case uint32_t(SimdOp::I16x8WidenHighSI8x16):
-          case uint32_t(SimdOp::I16x8WidenLowUI8x16):
-          case uint32_t(SimdOp::I16x8WidenHighUI8x16):
+          case uint32_t(SimdOp::I16x8ExtendLowI8x16S):
+          case uint32_t(SimdOp::I16x8ExtendHighI8x16S):
+          case uint32_t(SimdOp::I16x8ExtendLowI8x16U):
+          case uint32_t(SimdOp::I16x8ExtendHighI8x16U):
           case uint32_t(SimdOp::I32x4Neg):
-          case uint32_t(SimdOp::I32x4WidenLowSI16x8):
-          case uint32_t(SimdOp::I32x4WidenHighSI16x8):
-          case uint32_t(SimdOp::I32x4WidenLowUI16x8):
-          case uint32_t(SimdOp::I32x4WidenHighUI16x8):
-          case uint32_t(SimdOp::I32x4TruncSSatF32x4):
-          case uint32_t(SimdOp::I32x4TruncUSatF32x4):
+          case uint32_t(SimdOp::I32x4ExtendLowI16x8S):
+          case uint32_t(SimdOp::I32x4ExtendHighI16x8S):
+          case uint32_t(SimdOp::I32x4ExtendLowI16x8U):
+          case uint32_t(SimdOp::I32x4ExtendHighI16x8U):
+          case uint32_t(SimdOp::I32x4TruncSatF32x4S):
+          case uint32_t(SimdOp::I32x4TruncSatF32x4U):
           case uint32_t(SimdOp::I64x2Neg):
-          case uint32_t(SimdOp::I64x2WidenLowSI32x4):
-          case uint32_t(SimdOp::I64x2WidenHighSI32x4):
-          case uint32_t(SimdOp::I64x2WidenLowUI32x4):
-          case uint32_t(SimdOp::I64x2WidenHighUI32x4):
+          case uint32_t(SimdOp::I64x2ExtendLowI32x4S):
+          case uint32_t(SimdOp::I64x2ExtendHighI32x4S):
+          case uint32_t(SimdOp::I64x2ExtendLowI32x4U):
+          case uint32_t(SimdOp::I64x2ExtendHighI32x4U):
           case uint32_t(SimdOp::F32x4Abs):
           case uint32_t(SimdOp::F32x4Neg):
           case uint32_t(SimdOp::F32x4Sqrt):
-          case uint32_t(SimdOp::F32x4ConvertSI32x4):
-          case uint32_t(SimdOp::F32x4ConvertUI32x4):
+          case uint32_t(SimdOp::F32x4ConvertI32x4S):
+          case uint32_t(SimdOp::F32x4ConvertI32x4U):
           case uint32_t(SimdOp::F64x2Abs):
           case uint32_t(SimdOp::F64x2Neg):
           case uint32_t(SimdOp::F64x2Sqrt):
@@ -5439,10 +5439,10 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(SimdOp::F64x2ConvertLowI32x4U):
           case uint32_t(SimdOp::I32x4TruncSatF64x2SZero):
           case uint32_t(SimdOp::I32x4TruncSatF64x2UZero):
-          case uint32_t(SimdOp::I16x8ExtAddPairwiseI8x16S):
-          case uint32_t(SimdOp::I16x8ExtAddPairwiseI8x16U):
-          case uint32_t(SimdOp::I32x4ExtAddPairwiseI16x8S):
-          case uint32_t(SimdOp::I32x4ExtAddPairwiseI16x8U):
+          case uint32_t(SimdOp::I16x8ExtaddPairwiseI8x16S):
+          case uint32_t(SimdOp::I16x8ExtaddPairwiseI8x16U):
+          case uint32_t(SimdOp::I32x4ExtaddPairwiseI16x8S):
+          case uint32_t(SimdOp::I32x4ExtaddPairwiseI16x8U):
             CHECK(EmitUnarySimd128(f, SimdOp(op.b1)));
           case uint32_t(SimdOp::V128AnyTrue):
           case uint32_t(SimdOp::I8x16AllTrue):
@@ -5495,22 +5495,22 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitReplaceLaneSimd128(f, ValType::F64, 2, SimdOp(op.b1)));
           case uint32_t(SimdOp::V128Bitselect):
             CHECK(EmitTernarySimd128(f, SimdOp(op.b1)));
-          case uint32_t(SimdOp::V8x16Shuffle):
+          case uint32_t(SimdOp::I8x16Shuffle):
             CHECK(EmitShuffleSimd128(f));
-          case uint32_t(SimdOp::V8x16LoadSplat):
+          case uint32_t(SimdOp::V128Load8Splat):
             CHECK(EmitLoadSplatSimd128(f, Scalar::Uint8, SimdOp::I8x16Splat));
-          case uint32_t(SimdOp::V16x8LoadSplat):
+          case uint32_t(SimdOp::V128Load16Splat):
             CHECK(EmitLoadSplatSimd128(f, Scalar::Uint16, SimdOp::I16x8Splat));
-          case uint32_t(SimdOp::V32x4LoadSplat):
+          case uint32_t(SimdOp::V128Load32Splat):
             CHECK(EmitLoadSplatSimd128(f, Scalar::Float32, SimdOp::I32x4Splat));
-          case uint32_t(SimdOp::V64x2LoadSplat):
+          case uint32_t(SimdOp::V128Load64Splat):
             CHECK(EmitLoadSplatSimd128(f, Scalar::Float64, SimdOp::I64x2Splat));
-          case uint32_t(SimdOp::I16x8LoadS8x8):
-          case uint32_t(SimdOp::I16x8LoadU8x8):
-          case uint32_t(SimdOp::I32x4LoadS16x4):
-          case uint32_t(SimdOp::I32x4LoadU16x4):
-          case uint32_t(SimdOp::I64x2LoadS32x2):
-          case uint32_t(SimdOp::I64x2LoadU32x2):
+          case uint32_t(SimdOp::V128Load8x8S):
+          case uint32_t(SimdOp::V128Load8x8U):
+          case uint32_t(SimdOp::V128Load16x4S):
+          case uint32_t(SimdOp::V128Load16x4U):
+          case uint32_t(SimdOp::V128Load32x2S):
+          case uint32_t(SimdOp::V128Load32x2U):
             CHECK(EmitLoadExtendSimd128(f, SimdOp(op.b1)));
           case uint32_t(SimdOp::V128Load32Zero):
             CHECK(EmitLoadZeroSimd128(f, Scalar::Float32, 4));
@@ -5583,29 +5583,29 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       // Miscellaneous operations
       case uint16_t(Op::MiscPrefix): {
         switch (op.b1) {
-          case uint32_t(MiscOp::I32TruncSSatF32):
-          case uint32_t(MiscOp::I32TruncUSatF32):
+          case uint32_t(MiscOp::I32TruncSatF32S):
+          case uint32_t(MiscOp::I32TruncSatF32U):
             CHECK(EmitTruncate(f, ValType::F32, ValType::I32,
-                               MiscOp(op.b1) == MiscOp::I32TruncUSatF32, true));
-          case uint32_t(MiscOp::I32TruncSSatF64):
-          case uint32_t(MiscOp::I32TruncUSatF64):
+                               MiscOp(op.b1) == MiscOp::I32TruncSatF32U, true));
+          case uint32_t(MiscOp::I32TruncSatF64S):
+          case uint32_t(MiscOp::I32TruncSatF64U):
             CHECK(EmitTruncate(f, ValType::F64, ValType::I32,
-                               MiscOp(op.b1) == MiscOp::I32TruncUSatF64, true));
-          case uint32_t(MiscOp::I64TruncSSatF32):
-          case uint32_t(MiscOp::I64TruncUSatF32):
+                               MiscOp(op.b1) == MiscOp::I32TruncSatF64U, true));
+          case uint32_t(MiscOp::I64TruncSatF32S):
+          case uint32_t(MiscOp::I64TruncSatF32U):
             CHECK(EmitTruncate(f, ValType::F32, ValType::I64,
-                               MiscOp(op.b1) == MiscOp::I64TruncUSatF32, true));
-          case uint32_t(MiscOp::I64TruncSSatF64):
-          case uint32_t(MiscOp::I64TruncUSatF64):
+                               MiscOp(op.b1) == MiscOp::I64TruncSatF32U, true));
+          case uint32_t(MiscOp::I64TruncSatF64S):
+          case uint32_t(MiscOp::I64TruncSatF64U):
             CHECK(EmitTruncate(f, ValType::F64, ValType::I64,
-                               MiscOp(op.b1) == MiscOp::I64TruncUSatF64, true));
-          case uint32_t(MiscOp::MemCopy):
+                               MiscOp(op.b1) == MiscOp::I64TruncSatF64U, true));
+          case uint32_t(MiscOp::MemoryCopy):
             CHECK(EmitMemCopy(f));
           case uint32_t(MiscOp::DataDrop):
             CHECK(EmitDataOrElemDrop(f, /*isData=*/true));
-          case uint32_t(MiscOp::MemFill):
+          case uint32_t(MiscOp::MemoryFill):
             CHECK(EmitMemFill(f));
-          case uint32_t(MiscOp::MemInit):
+          case uint32_t(MiscOp::MemoryInit):
             CHECK(EmitMemOrTableInit(f, /*isMem=*/true));
           case uint32_t(MiscOp::TableCopy):
             CHECK(EmitTableCopy(f));

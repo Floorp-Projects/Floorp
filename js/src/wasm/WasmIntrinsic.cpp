@@ -73,7 +73,7 @@ bool EncodeIntrinsicBody(const Intrinsic& intrinsic, IntrinsicOp op,
     return false;
   }
   for (uint32_t i = 0; i < intrinsic.params.size(); i++) {
-    if (!encoder.writeOp(Op::GetLocal) || !encoder.writeVarU32(i)) {
+    if (!encoder.writeOp(Op::LocalGet) || !encoder.writeVarU32(i)) {
       return false;
     }
   }
