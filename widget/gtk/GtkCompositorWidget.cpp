@@ -18,6 +18,13 @@
 #  include "mozilla/layers/NativeLayerWayland.h"
 #endif
 
+#ifdef MOZ_LOGGING
+#  undef LOG
+#  define LOG(...)                                    \
+    MOZ_LOG(IsPopup() ? gWidgetPopupLog : gWidgetLog, \
+            mozilla::LogLevel::Debug, (__VA_ARGS__))
+#endif /* MOZ_LOGGING */
+
 namespace mozilla {
 namespace widget {
 
@@ -27,7 +34,7 @@ GtkCompositorWidget::GtkCompositorWidget(
     : CompositorWidget(aOptions),
       mWidget(std::move(aWindow)),
       mClientSize("GtkCompositorWidget::mClientSize"),
-      mIsRenderingSuspended(false) {
+      mIsRenderingSuspended(true) {
 #if defined(MOZ_WAYLAND)
   if (GdkIsWaylandDisplay()) {
     ConfigureWaylandBackend(mWidget);
@@ -41,9 +48,16 @@ GtkCompositorWidget::GtkCompositorWidget(
 #endif
   auto size = mClientSize.Lock();
   *size = aInitData.InitialClientSize();
+
+  LOG("GtkCompositorWidget::GtkCompositorWidget() [%p] mXWindow %p "
+      "mIsRenderingSuspended %d\n",
+      (void*)mWidget.get(), (void*)mXWindow, !!mIsRenderingSuspended);
 }
 
-GtkCompositorWidget::~GtkCompositorWidget() { DisableRendering(); }
+GtkCompositorWidget::~GtkCompositorWidget() {
+  LOG("GtkCompositorWidget::~GtkCompositorWidget [%p]\n", (void*)mWidget.get());
+  DisableRendering();
+}
 
 already_AddRefed<gfx::DrawTarget> GtkCompositorWidget::StartRemoteDrawing() {
   return nullptr;
@@ -140,6 +154,7 @@ GtkCompositorWidget::GetNativeLayerRoot() {
 #endif
 
 void GtkCompositorWidget::DisableRendering() {
+  LOG("GtkCompositorWidget::DisableRendering [%p]\n", (void*)mWidget.get());
   mIsRenderingSuspended = true;
   mProvider.CleanupResources();
 #if defined(MOZ_X11)
@@ -182,11 +197,15 @@ bool GtkCompositorWidget::ConfigureX11Backend(Window aXWindow, bool aShaped) {
 
 void GtkCompositorWidget::EnableRendering(const uintptr_t aXWindow,
                                           const bool aShaped) {
+  LOG("GtkCompositorWidget::EnableRendering() [%p]\n", (void*)mWidget.get());
+
   if (!mIsRenderingSuspended) {
+    LOG("  quit, mIsRenderingSuspended = false\n");
     return;
   }
 #if defined(MOZ_WAYLAND)
   if (GdkIsWaylandDisplay()) {
+    LOG("  configure widget %p\n", mWidget.get());
     if (!ConfigureWaylandBackend(mWidget)) {
       return;
     }
@@ -194,6 +213,7 @@ void GtkCompositorWidget::EnableRendering(const uintptr_t aXWindow,
 #endif
 #if defined(MOZ_X11)
   if (GdkIsX11Display()) {
+    LOG("  configure XWindow %p shaped %d\n", (void*)aXWindow, aShaped);
     if (!ConfigureX11Backend((Window)aXWindow, aShaped)) {
       return;
     }
@@ -201,6 +221,11 @@ void GtkCompositorWidget::EnableRendering(const uintptr_t aXWindow,
 #endif
   mIsRenderingSuspended = false;
 }
+#ifdef MOZ_LOGGING
+bool GtkCompositorWidget::IsPopup() {
+  return mWidget ? mWidget->IsPopup() : false;
+}
+#endif
 
 }  // namespace widget
 }  // namespace mozilla
