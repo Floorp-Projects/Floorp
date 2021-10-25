@@ -2673,8 +2673,7 @@ TextServicesDocument::OffsetEntryArray::FindWordRange(
   const char16_t* str = aAllTextInBlock.BeginReading();
   uint32_t strLen = aAllTextInBlock.Length();
 
-  intl::WordBreaker* wordBreaker = nsContentUtils::WordBreaker();
-  intl::WordRange res = wordBreaker->FindWord(str, strLen, strOffset);
+  intl::WordRange res = intl::WordBreaker::FindWord(str, strLen, strOffset);
   if (res.mBegin == res.mEnd) {
     return Err(str ? NS_ERROR_ILLEGAL_VALUE : NS_ERROR_NULL_POINTER);
   }

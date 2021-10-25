@@ -22,6 +22,8 @@
 #include "nsUnicodeProperties.h"
 #include "Pivot.h"
 
+using mozilla::intl::WordBreaker;
+
 namespace mozilla::a11y {
 
 /*** Helpers ***/
@@ -548,7 +550,6 @@ TextLeafPoint TextLeafPoint::FindPrevWordStartSameAcc(
   }
   nsAutoString text;
   mAcc->AppendTextTo(text);
-  intl::WordBreaker* breaker = nsContentUtils::WordBreaker();
   TextLeafPoint lineStart = *this;
   // A word never starts with a line feed character. If there are multiple
   // consecutive line feed characters and we're after the first of them, the
@@ -568,12 +569,12 @@ TextLeafPoint TextLeafPoint::FindPrevWordStartSameAcc(
   if (mOffset == 0) {
     word.mBegin = 0;
   } else if (mOffset == static_cast<int32_t>(text.Length())) {
-    word = breaker->FindWord(text.get(), text.Length(), mOffset - 1);
+    word = WordBreaker::FindWord(text.get(), text.Length(), mOffset - 1);
   } else {
-    word = breaker->FindWord(text.get(), text.Length(), mOffset);
+    word = WordBreaker::FindWord(text.get(), text.Length(), mOffset);
   }
-  for (;;
-       word = breaker->FindWord(text.get(), text.Length(), word.mBegin - 1)) {
+  for (;; word = WordBreaker::FindWord(text.get(), text.Length(),
+                                       word.mBegin - 1)) {
     if (!aIncludeOrigin && static_cast<int32_t>(word.mBegin) == mOffset) {
       // A word possibly starts at the origin, but the caller doesn't want this
       // included.
@@ -604,7 +605,6 @@ TextLeafPoint TextLeafPoint::FindNextWordStartSameAcc(
   nsAutoString text;
   mAcc->AppendTextTo(text);
   int32_t wordStart = mOffset;
-  intl::WordBreaker* breaker = nsContentUtils::WordBreaker();
   if (aIncludeOrigin) {
     if (wordStart == 0) {
       if (IsAcceptableWordStart(mAcc, text, 0)) {
@@ -631,7 +631,7 @@ TextLeafPoint TextLeafPoint::FindNextWordStartSameAcc(
   }
   // Keep walking forward until we find an acceptable word start.
   for (;;) {
-    wordStart = breaker->Next(text.get(), text.Length(), wordStart);
+    wordStart = WordBreaker::Next(text.get(), text.Length(), wordStart);
     if (wordStart == NS_WORDBREAKER_NEED_MORE_TEXT ||
         wordStart == static_cast<int32_t>(text.Length())) {
       if (lineStart) {
