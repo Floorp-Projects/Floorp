@@ -9,7 +9,6 @@ function handleRequest(request, response) {
 
 function reallyHandleRequest(request, response) {
   let match;
-  let requestAuth = true;
 
   // XXX I bet this doesn't work for POST requests.
   let query = request.queryString;

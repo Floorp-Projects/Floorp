@@ -1,3 +1,5 @@
+"use strict";
+
 const BinaryOutputStream = Components.Constructor(
   "@mozilla.org/binaryoutputstream;1",
   "nsIBinaryOutputStream",
@@ -20,12 +22,11 @@ const RED_SQUARE =
     0xA3,  0xC4,  0x01,  0x3F,  0x58,  0x1D,  0xEF,  0x27,  0x00,  0x00,
     0x00,  0x00,  0x49,  0x45,  0x4E,  0x44,  0xAE,  0x42,  0x60,  0x82
   ];
-
 /* eslint-enable prettier/prettier */
 function handleRequest(request, response) {
-  var query = {};
+  let query = {};
   request.queryString.split("&").forEach(function(val) {
-    var [name, value] = val.split("=");
+    let [name, value] = val.split("=");
     query[name] = unescape(value);
   });
 
@@ -34,9 +35,9 @@ function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "text/plain", false);
 
-  var log = getState("bug-879963-request-log") || "";
+  let log = getState("bug-879963-request-log") || "";
 
-  var stream = new BinaryOutputStream(response.bodyOutputStream);
+  let stream = new BinaryOutputStream(response.bodyOutputStream);
 
   if (query.q == "init") {
     log = "init"; // initialize the log, and return a PNG image

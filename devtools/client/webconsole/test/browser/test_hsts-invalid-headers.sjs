@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 function handleRequest(request, response) {
   response.setHeader("Content-Type", "text/plain; charset=utf-8", false);
