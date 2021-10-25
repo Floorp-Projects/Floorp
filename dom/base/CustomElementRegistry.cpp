@@ -22,6 +22,7 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "nsContentUtils.h"
 #include "nsHTMLTags.h"
 #include "jsapi.h"
 #include "js/ForOfIterator.h"       // JS::ForOfIterator
