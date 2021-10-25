@@ -457,6 +457,44 @@ already_AddRefed<Element> ChannelWrapper::GetBrowserElement() const {
   return nullptr;
 }
 
+bool ChannelWrapper::IsServiceWorkerScript() const {
+  nsCOMPtr<nsIChannel> chan = MaybeChannel();
+  return IsServiceWorkerScript(chan);
+}
+
+// static
+bool ChannelWrapper::IsServiceWorkerScript(const nsCOMPtr<nsIChannel>& chan) {
+  nsCOMPtr<nsILoadInfo> loadInfo;
+
+  if (chan) {
+    chan->GetLoadInfo(getter_AddRefs(loadInfo));
+  }
+
+  if (loadInfo) {
+    // Not a script.
+    if (loadInfo->GetExternalContentPolicyType() !=
+        ExtContentPolicy::TYPE_SCRIPT) {
+      return false;
+    }
+
+    // Service worker main script load.
+    if (loadInfo->InternalContentPolicyType() ==
+        nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER) {
+      return true;
+    }
+
+    // Service worker import scripts load.
+    if (loadInfo->InternalContentPolicyType() ==
+        nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS) {
+      nsLoadFlags loadFlags = 0;
+      chan->GetLoadFlags(&loadFlags);
+      return loadFlags & nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
+    }
+  }
+
+  return false;
+}
+
 static inline bool IsSystemPrincipal(nsIPrincipal* aPrincipal) {
   return BasePrincipal::Cast(aPrincipal)->Is<SystemPrincipal>();
 }

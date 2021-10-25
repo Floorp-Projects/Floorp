@@ -197,6 +197,10 @@ class ChannelWrapper final : public DOMEventTargetHelper,
       dom::Nullable<nsTArray<dom::MozFrameAncestorInfo>>& aFrameAncestors,
       ErrorResult& aRv) const;
 
+  bool IsServiceWorkerScript() const;
+
+  static bool IsServiceWorkerScript(const nsCOMPtr<nsIChannel>& aChannel);
+
   bool IsSystemLoad() const;
 
   void GetOriginURL(nsCString& aRetVal) const;
