@@ -146,15 +146,17 @@ function clickJsonNode(selector) {
 function selectJsonViewContentTab(name) {
   info("Selecting tab: '" + name + "'");
 
-  const browser = gBrowser.selectedBrowser;
-  const selector = ".tabs-menu .tabs-menu-item." + name + " a";
-  const tabChanged = ContentTask.spawn(browser, null, () => {
-    return new Promise(resolve => {
+  // eslint-disable-next-line no-shadow
+  return ContentTask.spawn(gBrowser.selectedBrowser, name, async name => {
+    const selector = ".tabs-menu .tabs-menu-item." + CSS.escape(name) + " a";
+    const element = content.document.querySelector(selector);
+    is(element.getAttribute("aria-selected"), "false", "Tab not selected yet");
+    await new Promise(resolve => {
       content.addEventListener("TabChanged", resolve, { once: true });
+      element.click();
     });
+    is(element.getAttribute("aria-selected"), "true", "Tab is now selected");
   });
-  BrowserTestUtils.synthesizeMouseAtCenter(selector, {}, browser);
-  return tabChanged;
 }
 
 function getElementCount(selector) {
