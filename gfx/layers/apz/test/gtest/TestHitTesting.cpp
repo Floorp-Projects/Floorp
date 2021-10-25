@@ -87,27 +87,6 @@ class APZHitTestingTesterInternal : public APZHitTestingTester {
   }
 };
 
-TEST_F(APZHitTestingTesterInternal, HitTesting3) {
-  const char* treeShape = "x(x)";
-  // LayerID               0 1
-  nsIntRegion layerVisibleRegions[] = {nsIntRegion(IntRect(0, 0, 200, 200)),
-                                       nsIntRegion(IntRect(0, 0, 50, 50))};
-  Matrix4x4 transforms[] = {Matrix4x4(), Matrix4x4::Scaling(2, 2, 1)};
-  CreateScrollData(treeShape, layerVisibleRegions, transforms);
-  // No actual room to scroll
-  SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
-                            CSSRect(0, 0, 200, 200));
-  SetScrollableFrameMetrics(layers[1], ScrollableLayerGuid::START_SCROLL_ID + 1,
-                            CSSRect(0, 0, 50, 50));
-
-  ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
-
-  UpdateHitTestingTree();
-
-  RefPtr<AsyncPanZoomController> hit = GetTargetAPZC(ScreenPoint(75, 75));
-  EXPECT_EQ(ApzcOf(layers[1]), hit.get());
-}
-
 TEST_F(APZHitTestingTesterInternal, ComplexMultiLayerTree) {
   CreateComplexMultiLayerTree();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
