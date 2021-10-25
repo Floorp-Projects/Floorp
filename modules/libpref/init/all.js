@@ -1899,7 +1899,7 @@ pref("network.online",                      true); //online/offline
 
 // The interval in seconds to move the cookies in the child process.
 // Set to 0 to disable moving the cookies.
-pref("network.cookie.move.interval_sec",    10);
+pref("network.cookie.move.interval_sec",    0);
 
 // This pref contains the list of hostnames (such as
 // "mozilla.org,example.net"). For these hosts, firefox will treat
