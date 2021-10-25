@@ -508,8 +508,7 @@ nsresult nsAboutCache::Channel::FlushBuffer() {
 
 NS_IMETHODIMP
 nsAboutCache::GetURIFlags(nsIURI* aURI, uint32_t* result) {
-  *result = nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
-            nsIAboutModule::IS_SECURE_CHROME_UI;
+  *result = nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT;
   return NS_OK;
 }
 

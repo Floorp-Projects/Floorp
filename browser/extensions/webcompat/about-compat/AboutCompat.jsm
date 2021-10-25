@@ -19,10 +19,7 @@ function AboutCompat() {
 AboutCompat.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIAboutModule"]),
   getURIFlags() {
-    return (
-      Ci.nsIAboutModule.URI_MUST_LOAD_IN_EXTENSION_PROCESS |
-      Ci.nsIAboutModule.IS_SECURE_CHROME_UI
-    );
+    return Ci.nsIAboutModule.URI_MUST_LOAD_IN_EXTENSION_PROCESS;
   },
 
   newChannel(aURI, aLoadInfo) {

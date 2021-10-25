@@ -65,38 +65,34 @@ static const RedirEntry kRedirMap[] = {
     {"logins", "chrome://browser/content/aboutlogins/aboutLogins.html",
      nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
          nsIAboutModule::URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS |
-         nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
-         nsIAboutModule::IS_SECURE_CHROME_UI},
+         nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT},
     {"loginsimportreport",
      "chrome://browser/content/aboutlogins/aboutLoginsImportReport.html",
      nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
          nsIAboutModule::URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS |
-         nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
-         nsIAboutModule::IS_SECURE_CHROME_UI},
+         nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT},
     {"tabcrashed", "chrome://browser/content/aboutTabCrashed.xhtml",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::HIDE_FROM_ABOUTABOUT},
     {"policies", "chrome://browser/content/policies/aboutPolicies.html",
-     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI},
+     nsIAboutModule::ALLOW_SCRIPT},
     {"privatebrowsing", "chrome://browser/content/aboutPrivateBrowsing.html",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::URI_MUST_LOAD_IN_CHILD | nsIAboutModule::ALLOW_SCRIPT |
          nsIAboutModule::URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS},
     {"profiling",
      "chrome://devtools/content/performance-new/aboutprofiling/index.xhtml",
-     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI},
+     nsIAboutModule::ALLOW_SCRIPT},
     {"rights", "chrome://global/content/aboutRights.xhtml",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
-         nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI},
+         nsIAboutModule::ALLOW_SCRIPT},
     {"robots", "chrome://browser/content/aboutRobots.xhtml",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::ALLOW_SCRIPT},
     {"sessionrestore", "chrome://browser/content/aboutSessionRestore.xhtml",
-     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::HIDE_FROM_ABOUTABOUT |
-         nsIAboutModule::IS_SECURE_CHROME_UI},
+     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::HIDE_FROM_ABOUTABOUT},
     {"welcomeback", "chrome://browser/content/aboutWelcomeBack.xhtml",
-     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::HIDE_FROM_ABOUTABOUT |
-         nsIAboutModule::IS_SECURE_CHROME_UI},
+     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::HIDE_FROM_ABOUTABOUT},
     // Actual activity stream URL for home and newtab are set in channel
     // creation
     {"home", "about:blank", ACTIVITY_STREAM_FLAGS},
@@ -119,10 +115,10 @@ static const RedirEntry kRedirMap[] = {
          nsIAboutModule::URI_CAN_LOAD_IN_CHILD | nsIAboutModule::ALLOW_SCRIPT |
          nsIAboutModule::HIDE_FROM_ABOUTABOUT},
     {"preferences", "chrome://browser/content/preferences/preferences.xhtml",
-     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI},
+     nsIAboutModule::ALLOW_SCRIPT},
     {"downloads",
      "chrome://browser/content/downloads/contentAreaDownloadsView.xhtml",
-     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI},
+     nsIAboutModule::ALLOW_SCRIPT},
     {"reader", "chrome://global/content/reader/aboutReader.html",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
@@ -132,11 +128,9 @@ static const RedirEntry kRedirMap[] = {
     {"protections", "chrome://browser/content/protections.html",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::URI_MUST_LOAD_IN_CHILD | nsIAboutModule::ALLOW_SCRIPT |
-         nsIAboutModule::URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS |
-         nsIAboutModule::IS_SECURE_CHROME_UI},
+         nsIAboutModule::URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS},
     {"ion", "chrome://browser/content/ion.html",
-     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::HIDE_FROM_ABOUTABOUT |
-         nsIAboutModule::IS_SECURE_CHROME_UI},
+     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::HIDE_FROM_ABOUTABOUT},
 };
 
 static nsAutoCString GetAboutModuleName(nsIURI* aURI) {
