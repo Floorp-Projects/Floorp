@@ -196,6 +196,7 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
    * with this runtime, but will be ignored during marking.
    */
   if (IsOwnedByOtherRuntime(trc->runtime(), thing)) {
+    MOZ_ASSERT(thing->isMarkedBlack());
     return;
   }
 
@@ -2749,6 +2750,7 @@ static inline void CheckIsMarkedThing(T* thing) {
 
   // Allow any thread access to uncollected things.
   if (thing->isPermanentAndMayBeShared()) {
+    MOZ_ASSERT(thing->isMarkedBlack());
     return;
   }
 
