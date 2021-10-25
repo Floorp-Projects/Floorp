@@ -65,19 +65,23 @@ class CrashChannel final : public nsBaseChannel {
 static const RedirEntry kRedirMap[] = {
     {"about", "chrome://global/content/aboutAbout.html", 0},
     {"addons", "chrome://mozapps/content/extensions/aboutaddons.html",
-     nsIAboutModule::ALLOW_SCRIPT},
+     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI},
     {"buildconfig", "chrome://global/content/buildconfig.html",
-     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT},
+     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+         nsIAboutModule::IS_SECURE_CHROME_UI},
     {"checkerboard", "chrome://global/content/aboutCheckerboard.html",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::ALLOW_SCRIPT},
 #ifndef MOZ_WIDGET_ANDROID
-    {"config", "chrome://global/content/aboutconfig/aboutconfig.html", 0},
+    {"config", "chrome://global/content/aboutconfig/aboutconfig.html",
+     nsIAboutModule::IS_SECURE_CHROME_UI},
 #else
-    {"config", "chrome://geckoview/content/config.xhtml", 0},
+    {"config", "chrome://geckoview/content/config.xhtml",
+     nsIAboutModule::IS_SECURE_CHROME_UI},
 #endif
 #ifdef MOZ_CRASHREPORTER
-    {"crashes", "chrome://global/content/crashes.html", 0},
+    {"crashes", "chrome://global/content/crashes.html",
+     nsIAboutModule::IS_SECURE_CHROME_UI},
 #endif
     {"credits", "https://www.mozilla.org/credits/",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
@@ -87,7 +91,8 @@ static const RedirEntry kRedirMap[] = {
          nsIAboutModule::URI_CAN_LOAD_IN_CHILD | nsIAboutModule::ALLOW_SCRIPT |
          nsIAboutModule::HIDE_FROM_ABOUTABOUT},
     {"license", "chrome://global/content/license.html",
-     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT},
+     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+         nsIAboutModule::IS_SECURE_CHROME_UI},
     {"logo", "chrome://branding/content/about.png",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          // Linkable for testing reasons.
@@ -98,7 +103,8 @@ static const RedirEntry kRedirMap[] = {
      nsIAboutModule::ALLOW_SCRIPT |
          nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
-         nsIAboutModule::URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS},
+         nsIAboutModule::URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS |
+         nsIAboutModule::IS_SECURE_CHROME_UI},
     {"mozilla", "chrome://global/content/mozilla.html",
      nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT},
     {"neterror", "chrome://global/content/netError.xhtml",
@@ -108,11 +114,12 @@ static const RedirEntry kRedirMap[] = {
     {"networking", "chrome://global/content/aboutNetworking.html",
      nsIAboutModule::ALLOW_SCRIPT},
     {"performance", "chrome://global/content/aboutPerformance.html",
-     nsIAboutModule::ALLOW_SCRIPT},
+     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI},
     {"plugins", "chrome://global/content/plugins.html",
-     nsIAboutModule::URI_MUST_LOAD_IN_CHILD},
+     nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
+         nsIAboutModule::IS_SECURE_CHROME_UI},
     {"processes", "chrome://global/content/aboutProcesses.html",
-     nsIAboutModule::ALLOW_SCRIPT},
+     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI},
     // about:serviceworkers always wants to load in the parent process because
     // the only place nsIServiceWorkerManager has any data is in the parent
     // process.
@@ -125,7 +132,7 @@ static const RedirEntry kRedirMap[] = {
      nsIAboutModule::ALLOW_SCRIPT},
 #ifndef ANDROID
     {"profiles", "chrome://global/content/aboutProfiles.xhtml",
-     nsIAboutModule::ALLOW_SCRIPT},
+     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI},
 #endif
     // about:srcdoc is unresolvable by specification.  It is included here
     // because the security manager would disallow srcdoc iframes otherwise.
@@ -135,7 +142,7 @@ static const RedirEntry kRedirMap[] = {
          // Needs to be linkable so content can touch its own srcdoc frames
          nsIAboutModule::MAKE_LINKABLE | nsIAboutModule::URI_CAN_LOAD_IN_CHILD},
     {"support", "chrome://global/content/aboutSupport.xhtml",
-     nsIAboutModule::ALLOW_SCRIPT},
+     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI},
 #ifdef XP_WIN
     {"third-party", "chrome://global/content/aboutThirdParty.html",
      nsIAboutModule::ALLOW_SCRIPT},
@@ -145,7 +152,7 @@ static const RedirEntry kRedirMap[] = {
      nsIAboutModule::HIDE_FROM_ABOUTABOUT | nsIAboutModule::ALLOW_SCRIPT},
 #endif
     {"telemetry", "chrome://global/content/aboutTelemetry.xhtml",
-     nsIAboutModule::ALLOW_SCRIPT},
+     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI},
     {"url-classifier", "chrome://global/content/aboutUrlClassifier.xhtml",
      nsIAboutModule::ALLOW_SCRIPT},
     {"webrtc", "chrome://global/content/aboutwebrtc/aboutWebrtc.html",
