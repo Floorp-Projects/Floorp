@@ -2718,41 +2718,33 @@ guint32 nsWindow::GetLastUserInputTime() {
 // Request activation of this window or give focus to this widget.
 // aRaise means whether we should request activation of this widget's
 // toplevel window.
+//
+// nsWindow::SetFocus(Raise::Yes) - Raise and give focus to toplevel window.
+// nsWindow::SetFocus(Raise::No) - Give focus to this window.
 void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
-  // Make sure that our owning widget has focus.  If it doesn't try to
-  // grab it.  Note that we don't set our focus flag in this case.
-
   LOG("nsWindow::SetFocus Raise %d\n", aRaise == Raise::Yes);
-
-  // TODO: Fix the whole nsWindow::SetFocus() as it works with old
-  // GdkWindow hierarchy.
-  GtkWidget* owningWidget = GTK_WIDGET(mContainer);
-  if (!owningWidget) {
-    return;
-  }
-
-  LOG("  Gtk widget (owningWidget) [%p]\n", owningWidget);
 
   // Raise the window if someone passed in true and the prefs are
   // set properly.
-  GtkWidget* toplevelWidget = gtk_widget_get_toplevel(owningWidget);
+  GtkWidget* toplevelWidget = gtk_widget_get_toplevel(GTK_WIDGET(mContainer));
 
+  LOG("  mContainer [%p]\n", GTK_WIDGET(mContainer));
   LOG("  Toplevel widget [%p]\n", toplevelWidget);
 
+  // Make sure that our owning widget has focus.  If it doesn't try to
+  // grab it.  Note that we don't set our focus flag in this case.
   if (gRaiseWindows && aRaise == Raise::Yes && toplevelWidget &&
-      !gtk_widget_has_focus(owningWidget) &&
       !gtk_widget_has_focus(toplevelWidget)) {
-    GtkWidget* top_window = GetToplevelWidget();
-    if (top_window && (gtk_widget_get_visible(top_window))) {
-      gdk_window_show_unraised(gtk_widget_get_window(top_window));
+    if (gtk_widget_get_visible(mShell)) {
+      gdk_window_show_unraised(gtk_widget_get_window(mShell));
       // Unset the urgency hint if possible.
-      SetUrgencyHint(top_window, false);
+      SetUrgencyHint(mShell, false);
     }
   }
 
-  RefPtr<nsWindow> owningWindow = get_window_for_gtk_widget(owningWidget);
-  if (!owningWindow) {
-    LOG("  missing nsWindow, quit\n");
+  RefPtr<nsWindow> toplevelWindow = get_window_for_gtk_widget(toplevelWidget);
+  if (!toplevelWindow) {
+    LOG("  missing toplevel nsWindow, quit\n");
     return;
   }
 
@@ -2762,17 +2754,17 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
     // This is asynchronous.
     // If and when the window manager accepts the request, then the focus
     // widget will get a focus-in-event signal.
-    if (gRaiseWindows && owningWindow->mIsShown && owningWindow->mShell &&
-        !gtk_window_is_active(GTK_WINDOW(owningWindow->mShell))) {
+    if (gRaiseWindows && toplevelWindow->mIsShown && toplevelWindow->mShell &&
+        !gtk_window_is_active(GTK_WINDOW(toplevelWindow->mShell))) {
       if (GdkIsWaylandDisplay() &&
           Preferences::GetBool("widget.wayland.test-workarounds.enabled",
                                false)) {
         // Wayland does not support focus changes so we need to workaround it
         // by window hide/show sequence.
-        owningWindow->NativeShow(false);
+        toplevelWindow->NativeShow(false);
         NS_DispatchToMainThread(NS_NewRunnableFunction(
             "nsWindow::NativeShow()",
-            [self = RefPtr<nsWindow>(owningWindow)]() -> void {
+            [self = RefPtr<nsWindow>(toplevelWindow)]() -> void {
               self->NativeShow(true);
             }));
         return;
@@ -2783,10 +2775,9 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
       nsGTKToolkit* GTKToolkit = nsGTKToolkit::GetToolkit();
       if (GTKToolkit) timestamp = GTKToolkit->GetFocusTimestamp();
 
-      LOG("  requesting toplevel activation [%p]\n", (void*)this);
-      NS_ASSERTION(owningWindow->mWindowType != eWindowType_popup || mParent,
-                   "Presenting an override-redirect window");
-      gtk_window_present_with_time(GTK_WINDOW(owningWindow->mShell), timestamp);
+      LOG("  requesting toplevel activation [%p]\n", (void*)toplevelWindow);
+      gtk_window_present_with_time(GTK_WINDOW(toplevelWindow->mShell),
+                                   timestamp);
 
       if (GTKToolkit) GTKToolkit->SetFocusTimestamp(0);
     }
@@ -2796,17 +2787,18 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
   // aRaise == No means that keyboard events should be dispatched from this
   // widget.
 
-  // Ensure owningWidget is the focused GtkWidget within its toplevel window.
+  // Ensure GTK_WIDGET(mContainer) is the focused GtkWidget within its toplevel
+  // window.
   //
   // For eWindowType_popup, this GtkWidget may not actually be the one that
   // receives the key events as it may be the parent window that is active.
-  if (!gtk_widget_is_focus(owningWidget)) {
+  if (!gtk_widget_is_focus(GTK_WIDGET(mContainer))) {
     // This is synchronous.  It takes focus from a plugin or from a widget
     // in an embedder.  The focus manager already knows that this window
     // is active so gBlockActivateEvent avoids another (unnecessary)
     // activate notification.
     gBlockActivateEvent = true;
-    gtk_widget_grab_focus(owningWidget);
+    gtk_widget_grab_focus(GTK_WIDGET(mContainer));
     gBlockActivateEvent = false;
   }
 
