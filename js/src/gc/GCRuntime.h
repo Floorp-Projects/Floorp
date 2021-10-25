@@ -289,10 +289,11 @@ class GCRuntime {
   void finishRoots();
   void finish();
 
-  void freezePermanentAtoms();
-  void freezePermanentAtomsOfKind(AllocKind kind, ArenaList& arenaList);
-  void restorePermanentAtoms();
-  void restorePermanentAtomsOfKind(AllocKind kind, ArenaList& arenaList);
+  void freezePermanentSharedThings();
+  template <typename T>
+  void freezeAtomsZoneArenas(AllocKind kind, ArenaList& arenaList);
+  void restorePermanentSharedThings();
+  void restoreAtomsZoneArenas(AllocKind kind, ArenaList& arenaList);
 
   JS::HeapState heapState() const { return heapState_; }
 
@@ -942,9 +943,11 @@ class GCRuntime {
   AtomMarkingRuntime atomMarking;
 
  private:
-  // Arenas used for permanent atoms and static strings created at startup.
+  // Arenas used for permanent things created at startup and shared by child
+  // runtimes.
   MainThreadData<ArenaList> permanentAtoms;
   MainThreadData<ArenaList> permanentFatInlineAtoms;
+  MainThreadData<ArenaList> permanentWellKnownSymbols;
 
   // When chunks are empty, they reside in the emptyChunks pool and are
   // re-used as needed or eventually expired if not re-used. The emptyChunks
