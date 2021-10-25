@@ -35,13 +35,6 @@ job-defaults:
         extra-options:
             - --browsertime
             - --conditioned-profile=settled
-    variants:
-        by-app:
-            firefox:
-                by-test-platform:
-                    .*shippable-qr/.*: [fission]
-                    default: []
-            default: []
     python-3: true
 
 browsertime-tp6:
@@ -69,12 +62,14 @@ browsertime-tp6:
                         - --browsertime
                         - --conditioned-profile=settled
         raptor-test: tp6
+        variants: [fission]
         run-on-projects:
             by-variant:
                 fission:
                     by-test-platform:
                         windows.*-32.*: []
-                        default: [mozilla-central]
+                        .*shippable-qr/.*: [mozilla-central]
+                        default: []
                 default:
                     by-app:
                         firefox:
@@ -143,8 +138,8 @@ browsertime-responsiveness:
             fission:
                 by-test-platform:
                     windows.*-32.*: []
-                    .*clang.*: []
-                    default: [mozilla-central]
+                    .*shippable-qr/.*: [mozilla-central]
+                    default: []
             default:
                 by-app:
                     firefox:
@@ -155,15 +150,6 @@ browsertime-responsiveness:
                             windows10-64.*shippable.*: [mozilla-central]
                             default: []
                     default: []
-    variants:
-        by-app:
-            firefox:
-                by-test-platform:
-                    .*clang.*: []
-                    windows10-64.*shippable-qr/.*: [fission]
-                    (?!windows10-64).*shippable-qr/.*: [fission]
-                    default: []
-            default: []
     tier:
         by-app:
             firefox: 2
@@ -190,13 +176,6 @@ browsertime-tp6-essential:
                     macosx1015.*shippable.*: [trunk, mozilla-beta]
                     windows10-64.*shippable.*: [trunk, mozilla-beta]
                     macosx1100.*shippable.*: [mozilla-central, mozilla-beta]
-                    default: []
-            default: []
-    variants:
-        by-app:
-            firefox:
-                by-test-platform:
-                    .*shippable-qr/.*: [fission]
                     default: []
             default: []
     tier:
@@ -243,12 +222,14 @@ browsertime-benchmark:
                         by-subtest:
                             unity-webgl: 3
                             default: 2
+    variants: [fission]
     run-on-projects:
         by-variant:
             fission:
                 by-test-platform:
                     windows.*-32.*: []
-                    default: [mozilla-central]
+                    .*shippable-qr/.*: [mozilla-central]
+                    default: []
             default:
                 by-subtest:
                     assorted-dom:
@@ -350,13 +331,15 @@ browsertime-benchmark-wasm:
     apps: [firefox, chrome, chromium]
     treeherder-symbol: Btime()
     tier: 2
+    variants: [fission]
     run-on-projects:
         by-variant:
             fission:
                 by-test-platform:
                     windows.*-32.*: []
                     macosx1014.*: []
-                    default: [mozilla-central]
+                    .*shippable-qr/.*: [mozilla-central]
+                    default: []
             default:
                 by-app:
                     firefox:
@@ -392,12 +375,14 @@ browsertime-youtube-playback:
                 - [youtube-playback-widevine-vp9-sfr, ytp-widevine-vp9-sfr]
     apps: [firefox]
     treeherder-symbol: Btime()
+    variants: [fission]
     run-on-projects:
         by-variant:
             fission:
                 by-test-platform:
                     windows.*-32.*: []
-                    default: [mozilla-central]
+                    .*shippable-qr/.*: [mozilla-central]
+                    default: []
             default:
                 by-test-platform:
                     windows.*-32.*/opt: []
@@ -513,12 +498,14 @@ browsertime-custom:
         extra-options:
             - --chimera
     raptor-subtests: [[process-switch, ps]]
+    variants: [fission]
     run-on-projects:
         by-variant:
             fission:
                 by-test-platform:
                     windows.*-32.*: []
-                    default: [mozilla-central]
+                    .*shippable-qr/.*: [mozilla-central]
+                    default: []
             default:
                 by-test-platform:
                     (linux|windows10-64|macosx).*shippable-qr.*: [mozilla-central]
@@ -535,12 +522,14 @@ browsertime-first-install:
         extra-options:
             - --chimera
     raptor-subtests: [welcome]
+    variants: [fission]
     run-on-projects:
         by-variant:
             fission:
                 by-test-platform:
                     windows.*-32.*: []
-                    default: [mozilla-central]
+                    .*shippable-qr/.*: [mozilla-central]
+                    default: []
             default:
                 by-test-platform:
                     (linux|windows|macos)(?!.*-qr).*: []
