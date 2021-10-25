@@ -363,21 +363,12 @@ static bool ShouldTraceCrossCompartment(JSTracer* trc, JSObject* src,
          ShouldTraceCrossCompartment(trc, src, val.toGCThing());
 }
 
-static void AssertShouldMarkInZone(Cell* thing) {
-  MOZ_ASSERT(thing->asTenured().zone()->shouldMarkInZone());
-}
-
-static void AssertShouldMarkInZone(JSString* str) {
+static inline void AssertShouldMarkInZone(Cell* thing) {
 #ifdef DEBUG
-  Zone* zone = str->zone();
-  MOZ_ASSERT(zone->shouldMarkInZone() || zone->isAtomsZone());
-#endif
-}
-
-static void AssertShouldMarkInZone(JS::Symbol* sym) {
-#ifdef DEBUG
-  Zone* zone = sym->asTenured().zone();
-  MOZ_ASSERT(zone->shouldMarkInZone() || zone->isAtomsZone());
+  if (!thing->isMarkedBlack()) {
+    Zone* zone = thing->zone();
+    MOZ_ASSERT(zone->isAtomsZone() || zone->shouldMarkInZone());
+  }
 #endif
 }
 
@@ -1027,11 +1018,11 @@ void js::gc::PerformIncrementalBarrierDuringFlattening(JSString* str) {
 
 template <typename T>
 void js::GCMarker::markAndTraverse(T* thing) {
-  if (thing->isPermanentAndMayBeShared()) {
-    return;
-  }
-
   if (mark(thing)) {
+    // We only mark permanent things during initialization.
+    MOZ_ASSERT_IF(thing->isPermanentAndMayBeShared(),
+                  !runtime()->permanentAtomsPopulated());
+
     traverse(thing);
   }
 }
@@ -1174,9 +1165,7 @@ inline void GCMarker::checkTraversedEdge(S source, T* target) {
 template <typename S, typename T>
 void js::GCMarker::markAndTraverseEdge(S source, T* target) {
   checkTraversedEdge(source, target);
-  if (!target->isPermanentAndMayBeShared()) {
-    markAndTraverse(target);
-  }
+  markAndTraverse(target);
 }
 
 template <typename S, typename T>
@@ -1217,11 +1206,10 @@ bool js::GCMarker::mark(T* thing) {
   }
 
   AssertShouldMarkInZone(thing);
-  TenuredCell* cell = &thing->asTenured();
 
   MarkColor color =
       TraceKindCanBeGray<T>::value ? markColor() : MarkColor::Black;
-  bool marked = cell->markIfUnmarked(color);
+  bool marked = thing->asTenured().markIfUnmarked(color);
   if (marked) {
     markCount++;
   }
