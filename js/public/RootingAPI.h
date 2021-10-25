@@ -114,11 +114,11 @@
 
 namespace js {
 
-template <typename T>
+// The defaulted Enable parameter for the following two types is for restricting
+// specializations with std::enable_if.
+template <typename T, typename Enable = void>
 struct BarrierMethods {};
 
-// The defaulted Enable parameter is for restricting specializations
-// with std::enable_if.
 template <typename Element, typename Wrapper, typename Enable = void>
 class WrappedPtrOperations {};
 
@@ -141,18 +141,20 @@ class HeapOperations : public MutableWrappedPtrOperations<T, Wrapper> {};
 
 // Cannot use FOR_EACH_HEAP_ABLE_GC_POINTER_TYPE, as this would import too many
 // macros into scope
-template <typename T>
-struct IsHeapConstructibleType {
-  static constexpr bool value = false;
-};
-#define DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE(T) \
-  template <>                                 \
-  struct IsHeapConstructibleType<T> {         \
-    static constexpr bool value = true;       \
-  };
-JS_FOR_EACH_PUBLIC_GC_POINTER_TYPE(DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE)
-JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE)
-#undef DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE
+
+// Add a 2nd template parameter to allow conditionally enabling partial
+// specializations via std::enable_if.
+template <typename T, typename Enable = void>
+struct IsHeapConstructibleType : public std::false_type {};
+
+#define JS_DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE(T) \
+  template <>                                    \
+  struct IsHeapConstructibleType<T> : public std::true_type {};
+JS_FOR_EACH_PUBLIC_GC_POINTER_TYPE(JS_DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE)
+JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(JS_DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE)
+// Note that JS_DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE is left defined, to allow
+// declaring other types (eg from js/public/experimental/TypedData.h) to
+// be used with Heap<>.
 
 namespace gc {
 struct Cell;

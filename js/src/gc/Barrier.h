@@ -16,6 +16,7 @@
 #include "gc/Cell.h"
 #include "gc/StoreBuffer.h"
 #include "js/ComparisonOperators.h"  // JS::detail::DefineComparisonOps
+#include "js/experimental/TypedData.h"  // js::EnableIfABOVType
 #include "js/HeapAPI.h"
 #include "js/Id.h"
 #include "js/RootingAPI.h"
@@ -328,7 +329,7 @@ struct MOZ_RAII AutoTouchingGrayThings {
 #endif
 };
 
-template <typename T>
+template <typename T, typename Enable = void>
 struct InternalBarrierMethods {};
 
 template <typename T>
@@ -409,6 +410,29 @@ struct InternalBarrierMethods<jsid> {
   static void postBarrier(jsid* idp, jsid prev, jsid next) {}
 #ifdef DEBUG
   static void assertThingIsNotGray(jsid id) { JS::AssertIdIsNotGray(id); }
+#endif
+};
+
+// Specialization for JS::ArrayBufferOrView subclasses.
+template <typename T>
+struct InternalBarrierMethods<T, EnableIfABOVType<T>> {
+  using BM = BarrierMethods<T>;
+
+  static bool isMarkable(const T& thing) { return bool(thing); }
+  static void preBarrier(const T& thing) {
+    gc::PreWriteBarrier(thing.asObjectUnbarriered());
+  }
+  static void postBarrier(T* tp, const T& prev, const T& next) {
+    BM::postWriteBarrier(tp, prev, next);
+  }
+  static void readBarrier(const T& thing) { BM::readBarrier(thing); }
+#ifdef DEBUG
+  static void assertThingIsNotGray(const T& thing) {
+    JSObject* obj = thing.asObjectUnbarriered();
+    if (obj) {
+      JS::AssertValueIsNotGray(JS::ObjectValue(*obj));
+    }
+  }
 #endif
 };
 
