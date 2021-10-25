@@ -6174,13 +6174,13 @@ impl PicturePrimitive {
                     // on whether we want to zoom in high-performance or high-quality mode.
                     true
                 }
+                PictureCompositeMode::MixBlend(..) |
+                PictureCompositeMode::ComponentTransferFilter(..) |
                 PictureCompositeMode::SvgFilter(..) => {
                     // Filters must be applied before transforms, to do this, we can mark this picture as establishing a raster root.
                     true
                 }
-                PictureCompositeMode::MixBlend(..) |
                 PictureCompositeMode::Filter(..) |
-                PictureCompositeMode::ComponentTransferFilter(..) |
                 PictureCompositeMode::Blit(..) => {
                     // TODO(gw): As follow ups, individually move each of these composite modes to create raster roots.
                     surface_to_parent_transform.is_perspective()
