@@ -3000,7 +3000,7 @@ def generateTzDataTestCanonicalZones(
 
         println(
             """
-let supported = [...Intl.supportedValuesOf("timeZone")];
+let supported = Intl.supportedValuesOf("timeZone");
 
 assertEqArray(supported, zones);
 
