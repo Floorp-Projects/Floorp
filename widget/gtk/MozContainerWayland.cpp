@@ -184,14 +184,26 @@ void moz_container_wayland_init(MozContainerWayland* container) {
 
 static void moz_container_wayland_destroy(GtkWidget* widget) {
   MozContainerWayland* container = &MOZ_CONTAINER(widget)->wl_container;
+  moz_container_wayland_clear_initial_draw_callback(MOZ_CONTAINER(widget));
   delete container->container_lock;
   container->container_lock = nullptr;
-  container->initial_draw_cbs.clear();
 }
 
 void moz_container_wayland_add_initial_draw_callback(
     MozContainer* container, const std::function<void(void)>& initial_draw_cb) {
-  container->wl_container.initial_draw_cbs.push_back(initial_draw_cb);
+  MozContainerWayland* wl_container = &MOZ_CONTAINER(container)->wl_container;
+  if (wl_container->ready_to_draw) {
+    initial_draw_cb();
+  } else {
+    wl_container->initial_draw_cbs.push_back(initial_draw_cb);
+  }
+}
+
+void moz_container_wayland_clear_initial_draw_callback(
+    MozContainer* container) {
+  MozContainerWayland* wl_container = &MOZ_CONTAINER(container)->wl_container;
+  g_clear_pointer(&wl_container->frame_callback_handler, wl_callback_destroy);
+  wl_container->initial_draw_cbs.clear();
 }
 
 static void moz_container_wayland_frame_callback_handler(
@@ -279,6 +291,8 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
   LOGWAYLAND(("%s [%p]\n", __FUNCTION__,
               (void*)moz_container_get_nsWindow(container)));
 
+  moz_container_wayland_clear_initial_draw_callback(container);
+
   if (wl_container->opaque_region_used) {
     moz_gdk_wayland_window_remove_frame_callback_surface_locked(container);
   }
@@ -290,7 +304,6 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
   g_clear_pointer(&wl_container->subsurface, wl_subsurface_destroy);
   g_clear_pointer(&wl_container->surface, wl_surface_destroy);
   g_clear_pointer(&wl_container->viewport, wp_viewport_destroy);
-  g_clear_pointer(&wl_container->frame_callback_handler, wl_callback_destroy);
 
   wl_container->ready_to_draw = false;
   wl_container->buffer_scale = 1;
