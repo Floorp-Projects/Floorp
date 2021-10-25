@@ -863,7 +863,7 @@ struct JSRuntime {
   }
 
   bool initMainAtomsTables(JSContext* cx);
-  void tracePermanentAtomsDuringInit(JSTracer* trc);
+  void tracePermanentThingsDuringInit(JSTracer* trc);
 
   // Cached well-known symbols (ES6 rev 24 6.1.5.1). Like permanent atoms,
   // these are shared with the parentRuntime, if any.
