@@ -9576,16 +9576,14 @@ void nsContentUtils::EnqueueUpgradeReaction(
 /* static */
 void nsContentUtils::EnqueueLifecycleCallback(
     ElementCallbackType aType, Element* aCustomElement,
-    LifecycleCallbackArgs* aArgs,
-    LifecycleAdoptedCallbackArgs* aAdoptedCallbackArgs,
-    CustomElementDefinition* aDefinition) {
+    const LifecycleCallbackArgs& aArgs, CustomElementDefinition* aDefinition) {
   // No DocGroup means no custom element reactions stack.
   if (!aCustomElement->OwnerDoc()->GetDocGroup()) {
     return;
   }
 
-  CustomElementRegistry::EnqueueLifecycleCallback(
-      aType, aCustomElement, aArgs, aAdoptedCallbackArgs, aDefinition);
+  CustomElementRegistry::EnqueueLifecycleCallback(aType, aCustomElement, aArgs,
+                                                  aDefinition);
 }
 
 /* static */
