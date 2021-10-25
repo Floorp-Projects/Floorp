@@ -5,6 +5,7 @@
 package org.mozilla.focus.telemetry
 
 import android.content.Context
+import android.os.Build
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -105,6 +106,15 @@ class GleanMetricsService(context: Context) : MetricsService {
         val shortcutsOnHomeNumber =
             components.topSitesStorage.getTopSites(TOP_SITES_MAX_LIMIT, null).size
         Shortcuts.shortcutsOnHomeNumber.set(shortcutsOnHomeNumber.toLong())
+
+        val installSourcePackage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.packageManager.getInstallSourceInfo(context.packageName).installingPackageName
+        } else {
+            @Suppress("DEPRECATION")
+            context.packageManager.getInstallerPackageName(context.packageName)
+        }
+
+        Browser.installSource.set(installSourcePackage.orEmpty())
 
         // Fenix telemetry
         MozillaProducts.hasFenixInstalled.set(hasFenixInstalled)

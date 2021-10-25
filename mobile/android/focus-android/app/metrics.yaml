@@ -67,6 +67,19 @@ browser:
       - android-probes@mozilla.com
       - mcarare@mozilla.com
     expires: never
+  install_source:
+    type: string
+    lifetime: application
+    description: Used to identify the source the app was installed from.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5684
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5694
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
 
 legacy_ids:
   client_id:
