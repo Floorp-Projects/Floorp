@@ -1,0 +1,157 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>A more involved hit testing test that involves css and async transforms</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .scrollable-content {
+      width: 200%;
+      height: 200%;
+    }
+    #layer1 {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 100px;
+      height: 100px;
+      background: red;
+      overflow: auto;
+    }
+    #layer2 {
+      position: absolute;
+      top: 140px;
+      left: 40px;
+      width: 100px;
+      height: 100px;
+      background: green;
+      transform: scale(2.0, 1.0);
+      transform-origin: 0 0;
+    }
+    #layer3 {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      width: 100px;
+      height: 100px;
+      background: yellow;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="layer1">
+    <div class="scrollable-content"></div>
+  </div>
+  <div id="layer2">
+    <div id="layer3">
+      <div class="scrollable-content"></div>
+    </div>
+  </div>
+ <div class="scrollable-content"></div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  let subframeHitInfo = APZHitResultFlags.VISIBLE;
+  if (!config.activateAllScrollFrames) {
+    subframeHitInfo |= APZHitResultFlags.INACTIVE_SCROLLFRAME;
+  }
+
+  // Hit an area that's clearly on the root and not any of the child layers.
+  checkHitResult(hitTest({x: 150, y: 70}),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
+                 "root scroller");
+
+  // Hit an area on the root that would be on layer3 if layer2 weren't transformed.
+  checkHitResult(hitTest({x: 30, y: 190}),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
+                 "root scroller (area revealed by transform)");
+
+  // Hit an area on layer1.
+  checkHitResult(hitTest({x: 70, y: 70}),
+                 subframeHitInfo,
+                 (config.activateAllScrollFrames ? utils.getViewId(layer1)
+                                                 : utils.getViewId(document.scrollingElement)),
+                 utils.getLayersId(),
+                 "layer1");
+
+  // Hit an area on layer3.
+  checkHitResult(hitTest({x: 60, y: 190}),
+                 subframeHitInfo,
+                 (config.activateAllScrollFrames ? utils.getViewId(layer3)
+                                                 : utils.getViewId(document.scrollingElement)),
+                 utils.getLayersId(),
+                 "layer3");
+
+  // Hit an area on layer3 that would be on the root if layer2 weren't transformed.
+  checkHitResult(hitTest({x: 150, y: 190}),
+                 subframeHitInfo,
+                 (config.activateAllScrollFrames ? utils.getViewId(layer3)
+                                                 : utils.getViewId(document.scrollingElement)),
+                 utils.getLayersId(),
+                 "layer3");
+
+  // Scroll the root upwards by 120 pixels. This scrolls layer1 out of view.
+  utils.setAsyncScrollOffset(document.scrollingElement, 0, 120);
+  // Give WebRender a chance to sample the test async scroll offset.
+  utils.advanceTimeAndRefresh(16);
+  utils.restoreNormalRefresh();
+
+  // Hit where layers3 used to be. It should now hit the root.
+  checkHitResult(hitTest({x: 60, y: 190}),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
+                 "root scroller (after async scroll)");
+
+  // Hit where layers1 used to be and where layers3 should now be.
+  checkHitResult(hitTest({x: 70, y: 70}),
+                 subframeHitInfo,
+                 (config.activateAllScrollFrames ? utils.getViewId(layer3)
+                                                 : utils.getViewId(document.scrollingElement)),
+                 utils.getLayersId(),
+                 "layer3 (after async scroll)");
+
+  // Scroll the root upwards by an additional 120 pixels.
+  utils.setAsyncScrollOffset(document.scrollingElement, 0, 240);
+  // Give WebRender a chance to sample the test async scroll offset.
+  utils.advanceTimeAndRefresh(16);
+  utils.restoreNormalRefresh();
+
+  // Hit where layers3 used to be. It should now hit the root.
+  checkHitResult(hitTest({x: 60, y: 190}),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
+                 "root scroller (after second async scroll)");
+
+  // Hit where layers2 used to be. It should now hit the root.
+  checkHitResult(hitTest({x: 70, y: 70}),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
+                 "root scroller (after second async scroll)");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>
