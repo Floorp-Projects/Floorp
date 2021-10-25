@@ -637,6 +637,17 @@ class WrappedPtrOperations<T, Wrapper, EnableIfABOVType<T>> {
   explicit operator bool() const { return bool(get()); }
   JSObject* asObject() const { return get().asObject(); }
   bool isDetached() const { return get().isDetached(); }
+  bool isSharedMemory() const { return get().isSharedMemory(); }
+
+  typename T::DataType* getLengthAndData(size_t* length, bool* isSharedMemory,
+                                         const JS::AutoRequireNoGC& nogc) {
+    return get().getLengthAndData(length, isSharedMemory, nogc);
+  }
+
+  typename T::DataType* getData(bool* isSharedMemory,
+                                const JS::AutoRequireNoGC& nogc) {
+    return get().getData(isSharedMemory, nogc);
+  }
 };
 
 }  // namespace js
