@@ -133,7 +133,7 @@ struct GCPolicy<JS::Heap<T>> {
     TraceEdge(trc, thingp, name);
   }
   static bool traceWeak(JSTracer* trc, JS::Heap<T>* thingp) {
-    return *thingp && js::gc::TraceWeakEdge(trc, thingp);
+    return !*thingp || js::gc::TraceWeakEdge(trc, thingp);
   }
 };
 
