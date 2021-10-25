@@ -1215,9 +1215,7 @@ static nsresult ParserWriteFunc(nsIInputStream* in, void* closure,
     // This code was bogus when I found it. It expects the BOM or the XML
     // declaration to be entirely in the first network buffer. -- hsivonen
     const Encoding* encoding;
-    size_t bomLength;
-    Tie(encoding, bomLength) = Encoding::ForBOM(Span(buf, count));
-    Unused << bomLength;
+    Tie(encoding, Ignore) = Encoding::ForBOM(Span(buf, count));
     if (encoding) {
       // The decoder will swallow the BOM. The UTF-16 will re-sniff for
       // endianness. The value of preferred is now "UTF-8", "UTF-16LE"

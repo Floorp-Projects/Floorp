@@ -474,7 +474,7 @@ nsresult FileReader::GetAsText(Blob* aBlob, const nsACString& aCharset,
 
   auto data = Span(reinterpret_cast<const uint8_t*>(aFileData), aDataLen);
   nsresult rv;
-  Tie(rv, encoding) = encoding->Decode(data, aResult);
+  Tie(rv, Ignore) = encoding->Decode(data, aResult);
   return NS_FAILED(rv) ? rv : NS_OK;
 }
 

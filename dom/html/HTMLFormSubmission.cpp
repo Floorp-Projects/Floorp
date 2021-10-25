@@ -716,8 +716,7 @@ nsresult EncodingFormSubmission::EncodeVal(const nsAString& aStr,
                                            nsCString& aOut,
                                            EncodeType aEncodeType) {
   nsresult rv;
-  const Encoding* ignored;
-  Tie(rv, ignored) = mEncoding->Encode(aStr, aOut);
+  Tie(rv, Ignore) = mEncoding->Encode(aStr, aOut);
   if (NS_FAILED(rv)) {
     return rv;
   }
