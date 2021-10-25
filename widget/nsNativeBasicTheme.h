@@ -20,14 +20,10 @@ enum class StyleSystemColor : uint8_t;
 
 namespace widget {
 
-static constexpr gfx::sRGBColor sColorWhite(gfx::sRGBColor::OpaqueWhite());
-static constexpr gfx::sRGBColor sColorWhiteAlpha50(gfx::sRGBColor::White(0.5f));
-static constexpr gfx::sRGBColor sColorWhiteAlpha80(gfx::sRGBColor::White(0.8f));
-static constexpr gfx::sRGBColor sColorBlack(gfx::sRGBColor::OpaqueBlack());
-
 static constexpr gfx::sRGBColor sDefaultAccent(
     gfx::sRGBColor::UnusualFromARGB(0xff0060df));  // Luminance: 13.69346%
-static constexpr gfx::sRGBColor sDefaultAccentForeground(sColorWhite);
+static constexpr gfx::sRGBColor sDefaultAccentForeground(
+    gfx::sRGBColor::OpaqueWhite());
 
 static constexpr gfx::sRGBColor sColorGrey10(
     gfx::sRGBColor::UnusualFromARGB(0xffe9e9ed));
