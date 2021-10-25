@@ -202,7 +202,7 @@
     <string name="preference_switch_autocomplete_user_list">Pour les sites que vous ajoutez</string>
 
     <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
-    <string name="preference_autocomplete_user_list_summary">Activer pour compléter automatiquement plus de 450 adresses populaires dans la barre d’adresse.</string>
+    <string name="preference_autocomplete_user_list_summary">Activer pour compléter automatiquement vos adresses web favorites.</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">Gérer les sites</string>

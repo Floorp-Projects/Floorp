@@ -603,6 +603,9 @@
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">Җитештерүче кораллары</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Сылтамаларны кушымталарда ачу</string>
+
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Киңәйтелгән</string>
 
@@ -682,6 +685,119 @@ The new line here must be kept as the second half of the string is clickable for
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Сылтаманы яңа биттә ачу өчен\nСылтамага озак итеп басып торыгыз</string>
 
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Сайтның тулы версиясен күрәсегез киләме?\n
+        %1$s менюдан сайтның компьютер версиясенә күчү</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Өй экрандагы киңәшләрне сүндерү</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist3">Ышанычлы сайт өчен Күзәтүдән көчәйтелгән сакны сүндерәсез киләме?\n
+        Аны көйләүләрдә рөхсәт ителгән сайтлар исемлегенә өстәгез
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Нишләп булмасын, чынлап та безнең төс-кыяфәтебез үзгәрде! %1$s кушымтасындагы бу һәм башка яңартулар турында күбрәк укыгыз.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Сез иң күп караган сайтларга ярлыклар булдырыгыз:\n
+    %1$s менюсыннан &quot;Ярлыкларга өстәү&quot;не сайлагыз</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">Яңа таб ачылды</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">Күчү</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">Яңа табтагы сылтамага шундук күчү</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">Хәвефсез гизү</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">Куркыныч булырга мөмкин һәм ялган сайтларны блоклау</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">Шикаять ителгән ялган һәм Һөҗүмче сайтларны, зарарлы һәм кирәкмәс программалы сайтларны блоклау.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">Чыгармалар</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">Бу вебсайтлар өчен эчтәлекне блоклауны сүндердегез.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">Бетерү</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">Барлык вебсайтларны да бетерү</string>
+
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Кукиларны блоклау</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Кукиларны блокларга телисезме?</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">Таб ватылды</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">Гафу итегез, әмма бу таб белән бер проблема бар.</string>
+
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Хосусый браузер буларак, без бу табны беркайчан да сакламыйбыз һәм яңадан торгыза алмыйбыз.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">Табны ябу</string>
+
+    <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">Mozilla-га ватылу турында хәбәр җибәрү</string>
+
     <!-- Tracking protection bottom sheet -->
 
-    </resources>
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">%s көненнән башлап блокланган күзәтүчеләр</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Эчтәлек</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Реклама</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Социаль челтәрләр</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Аналитика</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Күзәтелүдән Көчәйтелгән Саклау</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Бу сайт өчен саклау СҮНГӘН</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Бу сайт өчен саклау КАБЫНГАН</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Бәйләнеш хәвефсез</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Бәйләнеш хәвефсез түгел</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Блоклау өчен трекерлар һәм скриптлар</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Кире кайту</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Бетерү</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">%1$s тарихын бетергәндә, сакланган яки уртаклашылган рәсемнәр &lt;b&gt;бетерелмәячәк&lt;/b&gt;</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Тема</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Ачык</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Караңгы</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Батареяны саклау режимын исәпкә алу</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Җиһаз темасына иярү</string>
+
+</resources>

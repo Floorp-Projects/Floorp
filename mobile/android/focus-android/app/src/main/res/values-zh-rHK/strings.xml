@@ -18,15 +18,75 @@
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">你嘅瀏覽歷史已被刪除。</string>
 
+    <string name="feedback_erase2">瀏覽歷史已被刪除</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">分享…</string>
+
     <!-- Menu item: Report an issue on the current site -->
     <string name="menu_report_site_issue">報告網站問題</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">喺%1$s中打開</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">用…打開</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">加入主螢幕</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">加入捷徑</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">從捷徑中移除</string>
 
     <string name="menu_settings">設定</string>
     <string name="menu_rights">你嘅權利</string>
 
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">已阻止追蹤器</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">攔截內容</string>
+
     <!-- Notification action to open Focus and resume the current browsing session. -->
     <string name="notification_action_open">打開</string>
 
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">私隱同安全</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">網頁內容</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">切換應用程式</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">一般</string>
+
+    <string name="preference_category_search">搜尋</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">預設值</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">搜尋引擎</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">打開</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">關閉</string>
 
     <!-- Tips displayed on the home view -->
 
