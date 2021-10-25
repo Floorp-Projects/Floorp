@@ -130,7 +130,8 @@ template <typename ICUStringFunction, typename Buffer>
 static ICUResult FillBufferWithICUCall(Buffer& buffer,
                                        const ICUStringFunction& strFn) {
   static_assert(std::is_same_v<typename Buffer::CharType, char16_t> ||
-                std::is_same_v<typename Buffer::CharType, char>);
+                std::is_same_v<typename Buffer::CharType, char> ||
+                std::is_same_v<typename Buffer::CharType, uint8_t>);
 
   UErrorCode status = U_ZERO_ERROR;
   int32_t length = strFn(buffer.data(), buffer.capacity(), &status);
