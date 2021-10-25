@@ -333,6 +333,7 @@ static bool gBlockActivateEvent = false;
 static bool gGlobalsInitialized = false;
 static bool gRaiseWindows = true;
 static bool gTransparentWindows = true;
+static bool gUseMoveToRect = true;
 static bool gUseAspectRatio = true;
 static uint32_t gLastTouchID = 0;
 
@@ -1774,7 +1775,7 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
     // We can use move_to_rect only when popups in popup hierarchy matches
     // layout hierarchy as move_to_rect request that parent/child
     // popups are adjacent.
-    bool useMoveToRect = popup->mPopupMatchesLayout;
+    bool useMoveToRect = gUseMoveToRect && popup->mPopupMatchesLayout;
     if (useMoveToRect) {
       // We use move_to_rect when:
       // - Popup is anchored, i.e. it has an anchor defined by layout
@@ -7851,6 +7852,7 @@ static nsresult initialize_prefs(void) {
       Preferences::GetBool("mozilla.widget.raise-on-setfocus", true);
   gTransparentWindows =
       Preferences::GetBool("widget.transparent-windows", true);
+  gUseMoveToRect = Preferences::GetBool("widget.use-move-to-rect", true);
 
   if (Preferences::HasUserValue("widget.use-aspect-ratio")) {
     gUseAspectRatio = Preferences::GetBool("widget.use-aspect-ratio", true);
