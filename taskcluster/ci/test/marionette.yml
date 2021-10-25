@@ -18,7 +18,14 @@ job-defaults:
                     - remove_executables.py
         extra-options:
             - --setpref=toolkit.asyncshutdown.log=true
-
+    test-manifest-loader: null  # don't load tests in the taskgraph
+    tier:
+        by-variant:
+            fission: 2
+            default: default
+    variants:
+        - fission
+        - webrender-sw
     run-on-projects:
         by-variant:
             fission:
@@ -26,16 +33,11 @@ job-defaults:
                     (linux.*64|windows10-64)(-shippable)?(-qr)?/.*: ['trunk']
                     linux.*64-asan-qr/opt: ['trunk']
                     default: []
+            webrender-sw:
+                by-test-platform:
+                    .*/debug: built-projects
+                    default: []
             default: built-projects
-    test-manifest-loader: null  # don't load tests in the taskgraph
-    tier:
-        by-variant:
-            fission: 2
-            default: default
-    variants:
-        by-test-platform:
-            .*-qr/debug: ['fission', 'webrender-sw']
-            default: ['fission']
     virtualization:
         by-test-platform:
             windows10-64.*: hardware
