@@ -49,63 +49,6 @@ nsresult txResultStringComparator::init(const nsString& aLanguage) {
   return NS_OK;
 }
 
-namespace mozilla::intl {
-
-/**
- * mozilla::intl APIs require sizeable buffers. This class abstracts over
- * the nsTArray.
- */
-class nsTArrayU8Buffer {
- public:
-  using CharType = uint8_t;
-
-  // Do not allow copy or move. Move could be added in the future if needed.
-  nsTArrayU8Buffer(const nsTArrayU8Buffer&) = delete;
-  nsTArrayU8Buffer& operator=(const nsTArrayU8Buffer&) = delete;
-
-  explicit nsTArrayU8Buffer(nsTArray<CharType>& aArray) : mArray(aArray) {}
-
-  /**
-   * Ensures the buffer has enough space to accommodate |size| elements.
-   */
-  [[nodiscard]] bool reserve(size_t size) {
-    mArray.SetCapacity(size);
-    // nsTArray::SetCapacity returns void, return true to keep the API the same
-    // as the other Buffer implementations.
-    return true;
-  }
-
-  /**
-   * Returns the raw data inside the buffer.
-   */
-  CharType* data() { return mArray.Elements(); }
-
-  /**
-   * Returns the count of elements written into the buffer.
-   */
-  size_t length() const { return mArray.Length(); }
-
-  /**
-   * Returns the buffer's overall capacity.
-   */
-  size_t capacity() const { return mArray.Capacity(); }
-
-  /**
-   * Resizes the buffer to the given amount of written elements.
-   */
-  void written(size_t amount) {
-    MOZ_ASSERT(amount <= mArray.Capacity());
-    // This sets |mArray|'s internal size so that it matches how much was
-    // written. This is necessary because the write happens across FFI
-    // boundaries.
-    mArray.SetLengthAndRetainStorage(amount);
-  }
-
- private:
-  nsTArray<CharType>& mArray;
-};
-}  // namespace mozilla::intl
-
 nsresult txResultStringComparator::createSortableValue(Expr* aExpr,
                                                        txIEvalContext* aContext,
                                                        txObject*& aResult) {
@@ -126,8 +69,7 @@ nsresult txResultStringComparator::createSortableValue(Expr* aExpr,
     return NS_OK;
   }
 
-  mozilla::intl::nsTArrayU8Buffer buffer(val->mKey);
-  auto result = mCollator->GetSortKey(nsCaseKey, buffer);
+  auto result = mCollator->GetSortKey(nsCaseKey, val->mKey);
   NS_ENSURE_TRUE(result.isOk(), NS_ERROR_FAILURE);
 
   aResult = val.release();
@@ -187,9 +129,7 @@ txResultStringComparator::StringValue::~StringValue() = default;
 
 nsresult txResultStringComparator::StringValue::initCaseKey(
     const mozilla::intl::Collator& aCollator) {
-  mozilla::intl::nsTArrayU8Buffer buffer(mCaseKey);
-
-  auto result = aCollator.GetSortKey(*mCaseKeyString, buffer);
+  auto result = aCollator.GetSortKey(*mCaseKeyString, mCaseKey);
   if (result.isErr()) {
     mCaseKey.SetLength(0);
     return NS_ERROR_FAILURE;
