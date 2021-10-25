@@ -117,7 +117,9 @@ namespace js {
 template <typename T>
 struct BarrierMethods {};
 
-template <typename Element, typename Wrapper>
+// The defaulted Enable parameter is for restricting specializations
+// with std::enable_if.
+template <typename Element, typename Wrapper, typename Enable = void>
 class WrappedPtrOperations {};
 
 template <typename Element, typename Wrapper>

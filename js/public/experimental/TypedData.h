@@ -625,8 +625,12 @@ JS_FOR_EACH_TYPED_ARRAY(JS_DECLARE_CLASS_ALIAS)
 
 namespace js {
 
-template <class Wrapper>
-class WrappedPtrOperations_ABoVBase {
+template <typename T>
+using EnableIfABOVType =
+    std::enable_if_t<std::is_base_of_v<JS::ArrayBufferOrView, T>>;
+
+template <typename T, typename Wrapper>
+class WrappedPtrOperations<T, Wrapper, EnableIfABOVType<T>> {
   auto get() const { return static_cast<const Wrapper*>(this)->get(); }
 
  public:
@@ -634,29 +638,6 @@ class WrappedPtrOperations_ABoVBase {
   JSObject* asObject() const { return get().asObject(); }
   bool isDetached() const { return get().isDetached(); }
 };
-
-template <typename Wrapper>
-class WrappedPtrOperations<JS::ArrayBufferOrView, Wrapper>
-    : public WrappedPtrOperations_ABoVBase<Wrapper> {};
-template <typename Wrapper>
-class WrappedPtrOperations<JS::ArrayBuffer, Wrapper>
-    : public WrappedPtrOperations_ABoVBase<Wrapper> {};
-template <typename Wrapper>
-class WrappedPtrOperations<JS::ArrayBufferView, Wrapper>
-    : public WrappedPtrOperations_ABoVBase<Wrapper> {};
-template <typename Wrapper>
-class WrappedPtrOperations<JS::DataView, Wrapper>
-    : public WrappedPtrOperations_ABoVBase<Wrapper> {};
-template <typename Wrapper>
-class WrappedPtrOperations<JS::TypedArray_base, Wrapper>
-    : public WrappedPtrOperations_ABoVBase<Wrapper> {};
-
-#define DECL_TYPED_ARRAY_ROOTED_BASE(_1, _2, Name)                      \
-  template <typename Wrapper>                                           \
-  class WrappedPtrOperations<JS::TypedArray<JS::Scalar::Name>, Wrapper> \
-      : public WrappedPtrOperations_ABoVBase<Wrapper> {};
-JS_FOR_EACH_TYPED_ARRAY(DECL_TYPED_ARRAY_ROOTED_BASE)
-#undef DECL_TYPED_ARRAY_ROOTED_BASE
 
 }  // namespace js
 
