@@ -1048,14 +1048,14 @@ bool MWasmBinarySimd128::specializeForConstantRhs() {
     case wasm::SimdOp::I64x2Sub:
     case wasm::SimdOp::I16x8Mul:
     case wasm::SimdOp::I32x4Mul:
-    case wasm::SimdOp::I8x16AddSaturateS:
-    case wasm::SimdOp::I8x16AddSaturateU:
-    case wasm::SimdOp::I16x8AddSaturateS:
-    case wasm::SimdOp::I16x8AddSaturateU:
-    case wasm::SimdOp::I8x16SubSaturateS:
-    case wasm::SimdOp::I8x16SubSaturateU:
-    case wasm::SimdOp::I16x8SubSaturateS:
-    case wasm::SimdOp::I16x8SubSaturateU:
+    case wasm::SimdOp::I8x16AddSatS:
+    case wasm::SimdOp::I8x16AddSatU:
+    case wasm::SimdOp::I16x8AddSatS:
+    case wasm::SimdOp::I16x8AddSatU:
+    case wasm::SimdOp::I8x16SubSatS:
+    case wasm::SimdOp::I8x16SubSatU:
+    case wasm::SimdOp::I16x8SubSatS:
+    case wasm::SimdOp::I16x8SubSatU:
     case wasm::SimdOp::I8x16MinS:
     case wasm::SimdOp::I8x16MinU:
     case wasm::SimdOp::I16x8MinS:
@@ -1091,7 +1091,7 @@ bool MWasmBinarySimd128::specializeForConstantRhs() {
     case wasm::SimdOp::F64x2Ne:
     case wasm::SimdOp::F64x2Lt:
     case wasm::SimdOp::F64x2Le:
-    case wasm::SimdOp::I32x4DotSI16x8:
+    case wasm::SimdOp::I32x4DotI16x8S:
     case wasm::SimdOp::F32x4Add:
     case wasm::SimdOp::F64x2Add:
     case wasm::SimdOp::F32x4Sub:
@@ -1100,10 +1100,10 @@ bool MWasmBinarySimd128::specializeForConstantRhs() {
     case wasm::SimdOp::F64x2Div:
     case wasm::SimdOp::F32x4Mul:
     case wasm::SimdOp::F64x2Mul:
-    case wasm::SimdOp::I8x16NarrowSI16x8:
-    case wasm::SimdOp::I8x16NarrowUI16x8:
-    case wasm::SimdOp::I16x8NarrowSI32x4:
-    case wasm::SimdOp::I16x8NarrowUI32x4:
+    case wasm::SimdOp::I8x16NarrowI16x8S:
+    case wasm::SimdOp::I8x16NarrowI16x8U:
+    case wasm::SimdOp::I16x8NarrowI32x4S:
+    case wasm::SimdOp::I16x8NarrowI32x4U:
       return true;
     default:
       return false;
@@ -1403,24 +1403,24 @@ void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128* ins) {
     case wasm::SimdOp::I16x8Abs:
     case wasm::SimdOp::I32x4Abs:
     case wasm::SimdOp::I64x2Abs:
-    case wasm::SimdOp::I32x4TruncSSatF32x4:
-    case wasm::SimdOp::F32x4ConvertUI32x4:
-    case wasm::SimdOp::I16x8ExtAddPairwiseI8x16S:
-    case wasm::SimdOp::I16x8ExtAddPairwiseI8x16U:
-    case wasm::SimdOp::I32x4ExtAddPairwiseI16x8S:
-    case wasm::SimdOp::I32x4ExtAddPairwiseI16x8U:
+    case wasm::SimdOp::I32x4TruncSatF32x4S:
+    case wasm::SimdOp::F32x4ConvertI32x4U:
+    case wasm::SimdOp::I16x8ExtaddPairwiseI8x16S:
+    case wasm::SimdOp::I16x8ExtaddPairwiseI8x16U:
+    case wasm::SimdOp::I32x4ExtaddPairwiseI16x8S:
+    case wasm::SimdOp::I32x4ExtaddPairwiseI16x8U:
     case wasm::SimdOp::I32x4RelaxedTruncSSatF32x4:
     case wasm::SimdOp::I32x4RelaxedTruncUSatF32x4:
     case wasm::SimdOp::I32x4RelaxedTruncSatF64x2SZero:
     case wasm::SimdOp::I32x4RelaxedTruncSatF64x2UZero:
-    case wasm::SimdOp::I64x2WidenHighSI32x4:
-    case wasm::SimdOp::I64x2WidenHighUI32x4:
+    case wasm::SimdOp::I64x2ExtendHighI32x4S:
+    case wasm::SimdOp::I64x2ExtendHighI32x4U:
       // Prefer src == dest to avoid an unconditional src->dest move
       // for better performance (e.g. non-PSHUFD use).
       useAtStart = true;
       reuseInput = true;
       break;
-    case wasm::SimdOp::I32x4TruncUSatF32x4:
+    case wasm::SimdOp::I32x4TruncSatF32x4U:
     case wasm::SimdOp::I32x4TruncSatF64x2SZero:
     case wasm::SimdOp::I32x4TruncSatF64x2UZero:
     case wasm::SimdOp::I8x16Popcnt:
@@ -1429,17 +1429,17 @@ void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128* ins) {
       useAtStart = true;
       reuseInput = true;
       break;
-    case wasm::SimdOp::I16x8WidenLowSI8x16:
-    case wasm::SimdOp::I16x8WidenHighSI8x16:
-    case wasm::SimdOp::I16x8WidenLowUI8x16:
-    case wasm::SimdOp::I16x8WidenHighUI8x16:
-    case wasm::SimdOp::I32x4WidenLowSI16x8:
-    case wasm::SimdOp::I32x4WidenHighSI16x8:
-    case wasm::SimdOp::I32x4WidenLowUI16x8:
-    case wasm::SimdOp::I32x4WidenHighUI16x8:
-    case wasm::SimdOp::I64x2WidenLowSI32x4:
-    case wasm::SimdOp::I64x2WidenLowUI32x4:
-    case wasm::SimdOp::F32x4ConvertSI32x4:
+    case wasm::SimdOp::I16x8ExtendLowI8x16S:
+    case wasm::SimdOp::I16x8ExtendHighI8x16S:
+    case wasm::SimdOp::I16x8ExtendLowI8x16U:
+    case wasm::SimdOp::I16x8ExtendHighI8x16U:
+    case wasm::SimdOp::I32x4ExtendLowI16x8S:
+    case wasm::SimdOp::I32x4ExtendHighI16x8S:
+    case wasm::SimdOp::I32x4ExtendLowI16x8U:
+    case wasm::SimdOp::I32x4ExtendHighI16x8U:
+    case wasm::SimdOp::I64x2ExtendLowI32x4S:
+    case wasm::SimdOp::I64x2ExtendLowI32x4U:
+    case wasm::SimdOp::F32x4ConvertI32x4S:
     case wasm::SimdOp::F32x4Ceil:
     case wasm::SimdOp::F32x4Floor:
     case wasm::SimdOp::F32x4Trunc:

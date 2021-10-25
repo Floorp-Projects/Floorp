@@ -1269,22 +1269,22 @@ void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128* ins) {
     case wasm::SimdOp::I16x8Abs:
     case wasm::SimdOp::I32x4Abs:
     case wasm::SimdOp::I64x2Abs:
-    case wasm::SimdOp::I32x4TruncSSatF32x4:
-    case wasm::SimdOp::F32x4ConvertUI32x4:
-    case wasm::SimdOp::I32x4TruncUSatF32x4:
-    case wasm::SimdOp::I16x8WidenLowSI8x16:
-    case wasm::SimdOp::I16x8WidenHighSI8x16:
-    case wasm::SimdOp::I16x8WidenLowUI8x16:
-    case wasm::SimdOp::I16x8WidenHighUI8x16:
-    case wasm::SimdOp::I32x4WidenLowSI16x8:
-    case wasm::SimdOp::I32x4WidenHighSI16x8:
-    case wasm::SimdOp::I32x4WidenLowUI16x8:
-    case wasm::SimdOp::I32x4WidenHighUI16x8:
-    case wasm::SimdOp::I64x2WidenLowSI32x4:
-    case wasm::SimdOp::I64x2WidenHighSI32x4:
-    case wasm::SimdOp::I64x2WidenLowUI32x4:
-    case wasm::SimdOp::I64x2WidenHighUI32x4:
-    case wasm::SimdOp::F32x4ConvertSI32x4:
+    case wasm::SimdOp::I32x4TruncSatF32x4S:
+    case wasm::SimdOp::F32x4ConvertI32x4U:
+    case wasm::SimdOp::I32x4TruncSatF32x4U:
+    case wasm::SimdOp::I16x8ExtendLowI8x16S:
+    case wasm::SimdOp::I16x8ExtendHighI8x16S:
+    case wasm::SimdOp::I16x8ExtendLowI8x16U:
+    case wasm::SimdOp::I16x8ExtendHighI8x16U:
+    case wasm::SimdOp::I32x4ExtendLowI16x8S:
+    case wasm::SimdOp::I32x4ExtendHighI16x8S:
+    case wasm::SimdOp::I32x4ExtendLowI16x8U:
+    case wasm::SimdOp::I32x4ExtendHighI16x8U:
+    case wasm::SimdOp::I64x2ExtendLowI32x4S:
+    case wasm::SimdOp::I64x2ExtendHighI32x4S:
+    case wasm::SimdOp::I64x2ExtendLowI32x4U:
+    case wasm::SimdOp::I64x2ExtendHighI32x4U:
+    case wasm::SimdOp::F32x4ConvertI32x4S:
     case wasm::SimdOp::F32x4Ceil:
     case wasm::SimdOp::F32x4Floor:
     case wasm::SimdOp::F32x4Trunc:
@@ -1297,10 +1297,10 @@ void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128* ins) {
     case wasm::SimdOp::F64x2PromoteLowF32x4:
     case wasm::SimdOp::F64x2ConvertLowI32x4S:
     case wasm::SimdOp::F64x2ConvertLowI32x4U:
-    case wasm::SimdOp::I16x8ExtAddPairwiseI8x16S:
-    case wasm::SimdOp::I16x8ExtAddPairwiseI8x16U:
-    case wasm::SimdOp::I32x4ExtAddPairwiseI16x8S:
-    case wasm::SimdOp::I32x4ExtAddPairwiseI16x8U:
+    case wasm::SimdOp::I16x8ExtaddPairwiseI8x16S:
+    case wasm::SimdOp::I16x8ExtaddPairwiseI8x16U:
+    case wasm::SimdOp::I32x4ExtaddPairwiseI16x8S:
+    case wasm::SimdOp::I32x4ExtaddPairwiseI16x8U:
     case wasm::SimdOp::I8x16Popcnt:
     case wasm::SimdOp::I32x4RelaxedTruncSSatF32x4:
     case wasm::SimdOp::I32x4RelaxedTruncUSatF32x4:

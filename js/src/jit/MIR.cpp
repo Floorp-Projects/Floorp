@@ -4800,7 +4800,7 @@ MDefinition* MWasmTernarySimd128::foldsTo(TempAllocator& alloc) {
 }
 
 MDefinition* MWasmBinarySimd128::foldsTo(TempAllocator& alloc) {
-  if (simdOp() == wasm::SimdOp::V8x16Swizzle && rhs()->isWasmFloatConstant()) {
+  if (simdOp() == wasm::SimdOp::I8x16Swizzle && rhs()->isWasmFloatConstant()) {
     // Specialize swizzle(v, constant) as shuffle(mask, v, zero) to trigger all
     // our shuffle optimizations.  We don't report this rewriting as the report
     // will be overwritten by the subsequent shuffle analysis.
