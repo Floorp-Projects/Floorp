@@ -740,6 +740,9 @@ UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
   // Bug 1198550: the profiler's replacement for dl_iterate_phdr
   policy->AddPath(rdonly, nsPrintfCString("/proc/%d/maps", aPid).get());
 
+  // Bug 1736040: CPU use telemetry
+  policy->AddPath(rdonly, nsPrintfCString("/proc/%d/stat", aPid).get());
+
   // Bug 1198552: memory reporting.
   AddMemoryReporting(policy.get(), aPid);
 

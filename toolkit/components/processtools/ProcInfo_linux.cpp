@@ -126,7 +126,11 @@ class StatReader {
   // Reads the stat file and puts its content in a nsString.
   nsresult ReadFile(nsAutoString& aFileContent) {
     if (mFilepath.IsEmpty()) {
-      mFilepath.AppendPrintf("/proc/%u/stat", mPid);
+      if (mPid == 0) {
+        mFilepath.AssignLiteral("/proc/self/stat");
+      } else {
+        mFilepath.AppendPrintf("/proc/%u/stat", mPid);
+      }
     }
     FILE* fstat = fopen(mFilepath.get(), "r");
     if (!fstat) {
@@ -180,6 +184,18 @@ class ThreadInfoReader final : public StatReader {
  private:
   base::ProcessId mTid;
 };
+
+nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult) {
+  StatReader reader(0);
+  ProcInfo info;
+  nsresult rv = reader.ParseProc(info);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  *aResult = (info.cpuKernel + info.cpuUser) / PR_NSEC_PER_MSEC;
+  return NS_OK;
+}
 
 RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
   auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();

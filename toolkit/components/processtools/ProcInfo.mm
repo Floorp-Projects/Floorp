@@ -21,6 +21,16 @@
 
 namespace mozilla {
 
+nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult) {
+  struct proc_taskinfo pti;
+  if ((unsigned long)proc_pidinfo(getpid(), PROC_PIDTASKINFO, 0, &pti, PROC_PIDTASKINFO_SIZE) <
+      PROC_PIDTASKINFO_SIZE) {
+    return NS_ERROR_FAILURE;
+  }
+  *aResult = (pti.pti_total_user + pti.pti_total_system) / PR_NSEC_PER_MSEC;
+  return NS_OK;
+}
+
 RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
   auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();
   RefPtr<ProcInfoPromise> promise = holder->Ensure(__func__);
