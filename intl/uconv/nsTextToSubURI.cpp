@@ -28,10 +28,8 @@ nsTextToSubURI::ConvertAndEscape(const nsACString& aCharset,
     return NS_ERROR_UCONV_NOCONV;
   }
   nsresult rv;
-  const Encoding* actualEncoding;
   nsAutoCString intermediate;
-  Tie(rv, actualEncoding) = encoding->Encode(aText, intermediate);
-  Unused << actualEncoding;
+  Tie(rv, Ignore) = encoding->Encode(aText, intermediate);
   if (NS_FAILED(rv)) {
     aOut.Truncate();
     return rv;

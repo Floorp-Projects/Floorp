@@ -919,13 +919,11 @@ bool ConvertHTMLtoUCS2(const char* data, int32_t dataLength, nsCString& charset,
     uint32_t result;
     size_t read;
     size_t written;
-    bool hadErrors;
-    Tie(result, read, written, hadErrors) = decoder->DecodeToUTF16(
+    Tie(result, read, written, Ignore) = decoder->DecodeToUTF16(
         AsBytes(dataSpan), Span(*unicodeData, needed.value()), true);
     MOZ_ASSERT(result == kInputEmpty);
     MOZ_ASSERT(read == size_t(dataSpan.Length()));
     MOZ_ASSERT(written <= needed.value());
-    Unused << hadErrors;
     outUnicodeLen = written;
     // null terminate.
     (*unicodeData)[outUnicodeLen] = '\0';

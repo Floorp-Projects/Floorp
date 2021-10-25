@@ -208,7 +208,6 @@ uint32_t nsConverterInputStream::Fill(nsresult* aErrorCode) {
   uint32_t result;
   size_t read;
   size_t written;
-  bool hadErrors;
   // The design of this class is fundamentally bogus in that trailing
   // errors are ignored. Always passing false as the last argument to
   // Decode* calls below.
@@ -216,10 +215,9 @@ uint32_t nsConverterInputStream::Fill(nsresult* aErrorCode) {
     Tie(result, read, written) =
         mConverter->DecodeToUTF16WithoutReplacement(src, dst, false);
   } else {
-    Tie(result, read, written, hadErrors) =
+    Tie(result, read, written, Ignore) =
         mConverter->DecodeToUTF16(src, dst, false);
   }
-  Unused << hadErrors;
   mLeftOverBytes = mByteData.Length() - read;
   mUnicharDataLength = written;
   if (result == kInputEmpty || result == kOutputFull) {

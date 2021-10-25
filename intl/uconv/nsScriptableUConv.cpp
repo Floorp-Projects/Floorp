@@ -94,10 +94,8 @@ nsScriptableUnicodeConverter::Finish(nsACString& _retval) {
   uint32_t result;
   size_t read;
   size_t written;
-  bool hadErrors;
-  Tie(result, read, written, hadErrors) =
+  Tie(result, read, written, Ignore) =
       mEncoder->EncodeFromUTF16(src, dst, true);
-  Unused << hadErrors;
   MOZ_ASSERT(!read);
   MOZ_ASSERT(result == kInputEmpty);
   _retval.SetLength(written);
@@ -129,7 +127,6 @@ nsScriptableUnicodeConverter::ConvertToUnicode(const nsACString& aSrc,
   uint32_t result;
   size_t read;
   size_t written;
-  bool hadErrors;
   // The UTF-8 decoder used to throw regardless of the error behavior.
   // Simulating the old behavior for compatibility with legacy callers.
   // If callers want control over the behavior, they should switch to
@@ -141,13 +138,12 @@ nsScriptableUnicodeConverter::ConvertToUnicode(const nsACString& aSrc,
       return NS_ERROR_UDEC_ILLEGALINPUT;
     }
   } else {
-    Tie(result, read, written, hadErrors) =
+    Tie(result, read, written, Ignore) =
         mDecoder->DecodeToUTF16(src, *dst, false);
   }
   MOZ_ASSERT(result == kInputEmpty);
   MOZ_ASSERT(read == length);
   MOZ_ASSERT(written <= needed.value());
-  Unused << hadErrors;
   if (!_retval.SetLength(written, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

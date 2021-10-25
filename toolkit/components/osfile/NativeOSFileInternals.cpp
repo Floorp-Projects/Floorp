@@ -847,13 +847,11 @@ class DoReadToStringEvent final : public AbstractReadEvent {
     uint32_t result;
     size_t read;
     size_t written;
-    bool hadErrors;
-    Tie(result, read, written, hadErrors) =
+    Tie(result, read, written, Ignore) =
         mDecoder->DecodeToUTF16(src, *resultSpan, false);
     MOZ_ASSERT(result == kInputEmpty);
     MOZ_ASSERT(read == src.Length());
     MOZ_ASSERT(written <= needed.value());
-    Unused << hadErrors;
     bool ok = resultString.SetLength(written, fallible);
     if (!ok) {
       Fail("allocation"_ns, mResult.forget(), OS_ERROR_TOO_LARGE);

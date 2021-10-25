@@ -197,8 +197,7 @@ bool ScriptLoadHandler::TrySetDecoder(nsIIncrementalStreamLoader* aLoader,
 
   // Do BOM detection.
   const Encoding* encoding;
-  size_t bomLength;
-  Tie(encoding, bomLength) = Encoding::ForBOM(Span(aData, aDataLength));
+  Tie(encoding, Ignore) = Encoding::ForBOM(Span(aData, aDataLength));
   if (encoding) {
     mDecoder = encoding->NewDecoderWithBOMRemoval();
     return true;
