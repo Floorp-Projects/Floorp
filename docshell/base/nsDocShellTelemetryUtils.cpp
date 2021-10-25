@@ -155,10 +155,6 @@ static const LoadErrorTelemetryResult sResult[] = {
         ErrorLabel::CONTENT_ENCODING,
     },
     {
-        NS_ERROR_REMOTE_XUL,
-        ErrorLabel::REMOTE_XUL,
-    },
-    {
         NS_ERROR_UNSAFE_CONTENT_TYPE,
         ErrorLabel::UNSAFE_CONTENT,
     },

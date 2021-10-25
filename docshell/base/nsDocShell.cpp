@@ -3662,9 +3662,6 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
         // Bad Content Encoding.
         error = "contentEncodingError";
         break;
-      case NS_ERROR_REMOTE_XUL:
-        error = "remoteXUL";
-        break;
       case NS_ERROR_UNSAFE_CONTENT_TYPE:
         // Channel refused to load from an unrecognized content type.
         error = "unsafeContentType";
@@ -6205,7 +6202,6 @@ nsresult nsDocShell::FilterStatusForErrorPage(
       aStatus == NS_ERROR_MALWARE_URI || aStatus == NS_ERROR_PHISHING_URI ||
       aStatus == NS_ERROR_UNWANTED_URI || aStatus == NS_ERROR_HARMFUL_URI ||
       aStatus == NS_ERROR_UNSAFE_CONTENT_TYPE ||
-      aStatus == NS_ERROR_REMOTE_XUL ||
       aStatus == NS_ERROR_INTERCEPTION_FAILED ||
       aStatus == NS_ERROR_NET_INADEQUATE_SECURITY ||
       aStatus == NS_ERROR_NET_HTTP2_SENT_GOAWAY ||

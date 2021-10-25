@@ -123,12 +123,6 @@ function initPage() {
     showSecuritySection();
   }
 
-  if (err == "remoteXUL") {
-    // Remove the "Try again" button for remote XUL errors given that
-    // it is useless.
-    document.getElementById("errorTryAgain").style.display = "none";
-  }
-
   if (err == "cspBlocked" || err == "xfoBlocked") {
     // Remove the "Try again" button for XFO and CSP violations, since it's
     // almost certainly useless. (Bug 553180)
