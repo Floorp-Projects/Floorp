@@ -924,14 +924,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return loadArgumentFixedSlot_(slotIndex);
   }
 
-  ValOperandId loadStandardCallArgument(uint32_t index, uint32_t argc) {
-    int32_t slotIndex = -int32_t(index + 1);
-    slotIndex += argc;
-    MOZ_ASSERT(slotIndex >= 0);
-    MOZ_ASSERT(slotIndex <= UINT8_MAX);
-    return loadArgumentFixedSlot_(slotIndex);
-  }
-
   ValOperandId loadArgumentDynamicSlot(
       ArgumentKind kind, Int32OperandId argcId,
       CallFlags flags = CallFlags(CallFlags::Standard)) {
