@@ -84,7 +84,6 @@ async function setupStubs() {
   const { AppConstants } = ChromeUtils.import(
     "resource://gre/modules/AppConstants.jsm"
   );
-  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
   const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
   // This depends on the caller to invoke it by name.  We do try to
@@ -117,5 +116,7 @@ async function setupStubs() {
   // directory for the attribution file, needed on both macOS and Windows.  We
   // don't ignore existing paths because we're inside a temporary directory:
   // this should never be invoked twice for the same test.
-  await OS.File.makeDir(applicationFile.path, { from: do_get_tempdir().path });
+  await IOUtils.makeDirectory(applicationFile.path, {
+    from: do_get_tempdir().path,
+  });
 }
