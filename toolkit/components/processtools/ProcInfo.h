@@ -20,6 +20,13 @@ namespace ipc {
 class GeckoChildProcessHost;
 }
 
+/**
+ * Return the number of milliseconds of CPU time used since process start.
+ *
+ * @return NS_OK on success.
+ */
+nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult);
+
 // Process types. When updating this enum, please make sure to update
 // WebIDLProcType, ChromeUtils::RequestProcInfo and ProcTypeToWebIDL to
 // mirror the changes.
