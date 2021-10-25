@@ -53,7 +53,7 @@ class ElementInternals final : public nsIFormControl, public nsWrapperCache {
   mozilla::dom::HTMLFormElement* GetForm() const override { return mForm; }
   void SetForm(mozilla::dom::HTMLFormElement* aForm) override;
   void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) override;
-  NS_IMETHOD Reset() override { return NS_OK; }
+  NS_IMETHOD Reset() override;
   NS_IMETHOD SubmitNamesValues(mozilla::dom::FormData* aFormData) override;
   bool AllowDrop() override { return true; }
 
