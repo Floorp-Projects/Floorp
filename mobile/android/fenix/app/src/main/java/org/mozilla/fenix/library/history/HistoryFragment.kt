@@ -14,7 +14,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
@@ -113,15 +112,6 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
 
         historyProvider = DefaultPagedHistoryProvider(requireComponents.core.historyStorage)
 
-        viewModel = HistoryViewModel(historyProvider)
-
-        viewModel.userHasHistory.observe(
-            this,
-            Observer {
-                historyView.updateEmptyState(it)
-            }
-        )
-
         requireComponents.analytics.metrics.track(Event.HistoryOpened)
 
         setHasOptionsMenu(true)
@@ -148,12 +138,19 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
             historyView.update(it)
         }
 
-        viewModel.history.observe(
-            viewLifecycleOwner,
-            Observer {
-                historyView.historyAdapter.submitList(it)
-            }
-        )
+        // Data may have been updated in below groups.
+        // When returning to this fragment we need to ensure we display the latest data.
+        viewModel = HistoryViewModel(historyProvider).also { model ->
+            model.userHasHistory.observe(
+                viewLifecycleOwner,
+                historyView::updateEmptyState
+            )
+
+            model.history.observe(
+                viewLifecycleOwner,
+                historyView.historyAdapter::submitList
+            )
+        }
     }
 
     override fun onResume() {
