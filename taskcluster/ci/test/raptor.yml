@@ -56,14 +56,7 @@ job-defaults:
                             - linux64-chromium
                 default: []
     python-3: true
-    variants:
-        by-app:
-            chrome: []
-            chromium: []
-            default:
-                by-test-platform:
-                    .*shippable-qr.*: [fission]
-                    default: []
+    variants: [fission]
 
 raptor-youtube-playback-v9-power-firefox:
     description: Raptor V9 YouTube Playback on Firefox with Power Testing
