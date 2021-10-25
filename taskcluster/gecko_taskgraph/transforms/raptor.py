@@ -38,9 +38,7 @@ raptor_description_schema = Schema(
             "variant",
             test_description_schema["run-on-projects"],
         ),
-        Optional("variants"): optionally_keyed_by(
-            "app", "subtest", test_description_schema["variants"]
-        ),
+        Optional("variants"): test_description_schema["variants"],
         Optional("target"): optionally_keyed_by(
             "app", test_description_schema["target"]
         ),
@@ -151,7 +149,6 @@ def split_raptor_subtests(config, tests):
 def handle_keyed_by(config, tests):
     fields = [
         "test-url-param",
-        "variants",
         "limit-platforms",
         "activity",
         "binary-path",
