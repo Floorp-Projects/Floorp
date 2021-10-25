@@ -160,7 +160,7 @@ class Builder {
     PersistentRooted<T> value;
 
     BuiltThing(JSContext* cx, Builder& owner_,
-               T value_ = SafelyInitialized<T>())
+               T value_ = SafelyInitialized<T>::create())
         : owner(owner_), value(cx, value_) {
       owner.assertBuilt(value_);
     }

@@ -23,7 +23,8 @@ namespace detail {
 template <typename T>
 class UnsafeBareWeakHeapPtr : public ReadBarriered<T> {
  public:
-  UnsafeBareWeakHeapPtr() : ReadBarriered<T>(JS::SafelyInitialized<T>()) {}
+  UnsafeBareWeakHeapPtr()
+      : ReadBarriered<T>(JS::SafelyInitialized<T>::create()) {}
   MOZ_IMPLICIT UnsafeBareWeakHeapPtr(const T& v) : ReadBarriered<T>(v) {}
   explicit UnsafeBareWeakHeapPtr(const UnsafeBareWeakHeapPtr& v)
       : ReadBarriered<T>(v) {}
@@ -42,7 +43,7 @@ class UnsafeBareWeakHeapPtr : public ReadBarriered<T> {
 
   const T get() const {
     if (!InternalBarrierMethods<T>::isMarkable(this->value)) {
-      return JS::SafelyInitialized<T>();
+      return JS::SafelyInitialized<T>::create();
     }
     this->read();
     return this->value;
