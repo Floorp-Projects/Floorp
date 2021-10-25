@@ -297,8 +297,9 @@ void js::gc::GCRuntime::traceRuntime(JSTracer* trc, AutoTraceSession& session) {
 void js::gc::GCRuntime::traceRuntimeAtoms(JSTracer* trc,
                                           const AutoAccessAtomsZone& access) {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_RUNTIME_DATA);
-  rt->tracePermanentThingsDuringInit(trc);
+  rt->tracePermanentAtomsDuringInit(trc);
   TraceAtoms(trc, access);
+  TraceWellKnownSymbols(trc);
   jit::JitRuntime::TraceAtomZoneRoots(trc, access);
 }
 

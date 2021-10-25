@@ -885,53 +885,46 @@ void GCRuntime::finish() {
   stats().printTotalProfileTimes();
 }
 
-void GCRuntime::freezePermanentSharedThings() {
-  // This is called just after permanent atoms and well-known symbols have been
-  // created. At this point all existing atoms and symbols are permanent. Move
-  // the arenas containing these things out of atoms zone arena lists until
-  // shutdown. This has two benefits:
-  //
-  //  - since we won't sweep them, we don't need to mark them at the start of
-  //    every GC.
-  //  - shared things are always marked so we don't have to check whether a
-  //    thing is shared when marking
+void GCRuntime::freezePermanentAtoms() {
+  // This is called just after the permanent atoms have been created. At this
+  // point all existing atoms are permanent. Move the arenas containing atoms
+  // out of atoms zone arena lists until shutdown. Since we won't sweep them, we
+  // don't need to mark them at the start of every GC.
 
   MOZ_ASSERT(atomsZone);
   MOZ_ASSERT(zones().empty());
 
   atomsZone->arenas.clearFreeLists();
-  freezeAtomsZoneArenas<JSAtom>(AllocKind::ATOM, permanentAtoms.ref());
-  freezeAtomsZoneArenas<JSAtom>(AllocKind::FAT_INLINE_ATOM,
-                                permanentFatInlineAtoms.ref());
-  freezeAtomsZoneArenas<JS::Symbol>(AllocKind::SYMBOL,
-                                    permanentWellKnownSymbols.ref());
+  freezePermanentAtomsOfKind(AllocKind::ATOM, permanentAtoms.ref());
+  freezePermanentAtomsOfKind(AllocKind::FAT_INLINE_ATOM,
+                             permanentFatInlineAtoms.ref());
 }
 
-template <typename T>
-void GCRuntime::freezeAtomsZoneArenas(AllocKind kind, ArenaList& arenaList) {
-  for (auto thing = atomsZone->cellIterUnsafe<T>(kind); !thing.done();
-       thing.next()) {
-    MOZ_ASSERT(thing->isPermanentAndMayBeShared());
-    thing->asTenured().markBlack();
+void GCRuntime::freezePermanentAtomsOfKind(AllocKind kind,
+                                           ArenaList& arenaList) {
+  for (auto atom = atomsZone->cellIterUnsafe<JSAtom>(kind); !atom.done();
+       atom.next()) {
+    MOZ_ASSERT(atom->isPermanentAtom());
+    atom->asTenured().markBlack();
   }
 
   arenaList = std::move(atomsZone->arenas.arenaList(kind));
 }
 
-void GCRuntime::restorePermanentSharedThings() {
+void GCRuntime::restorePermanentAtoms() {
   // Move the arenas containing permanent atoms that were removed by
-  // freezePermanentSharedThings() back to the atoms zone arena lists so we can
-  // collect them.
+  // freezePermanentAtoms() back to the atoms zone arena lists so we can collect
+  // them.
 
   MOZ_ASSERT(heapState() == JS::HeapState::MajorCollecting);
 
-  restoreAtomsZoneArenas(AllocKind::ATOM, permanentAtoms.ref());
-  restoreAtomsZoneArenas(AllocKind::FAT_INLINE_ATOM,
-                         permanentFatInlineAtoms.ref());
-  restoreAtomsZoneArenas(AllocKind::SYMBOL, permanentWellKnownSymbols.ref());
+  restorePermanentAtomsOfKind(AllocKind::ATOM, permanentAtoms.ref());
+  restorePermanentAtomsOfKind(AllocKind::FAT_INLINE_ATOM,
+                              permanentFatInlineAtoms.ref());
 }
 
-void GCRuntime::restoreAtomsZoneArenas(AllocKind kind, ArenaList& arenaList) {
+void GCRuntime::restorePermanentAtomsOfKind(AllocKind kind,
+                                            ArenaList& arenaList) {
   atomsZone->arenas.arenaList(kind).insertListWithCursorAtEnd(arenaList);
 }
 
@@ -2361,7 +2354,7 @@ bool GCRuntime::beginPreparePhase(JS::GCReason reason, AutoGCSession& session) {
   }
 
   if (reason == JS::GCReason::DESTROY_RUNTIME) {
-    restorePermanentSharedThings();
+    restorePermanentAtoms();
   }
 
   /*

@@ -196,7 +196,6 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
    * with this runtime, but will be ignored during marking.
    */
   if (IsOwnedByOtherRuntime(trc->runtime(), thing)) {
-    MOZ_ASSERT(thing->isMarkedBlack());
     return;
   }
 
@@ -363,12 +362,21 @@ static bool ShouldTraceCrossCompartment(JSTracer* trc, JSObject* src,
          ShouldTraceCrossCompartment(trc, src, val.toGCThing());
 }
 
-static inline void AssertShouldMarkInZone(Cell* thing) {
+static void AssertShouldMarkInZone(Cell* thing) {
+  MOZ_ASSERT(thing->asTenured().zone()->shouldMarkInZone());
+}
+
+static void AssertShouldMarkInZone(JSString* str) {
 #ifdef DEBUG
-  if (!thing->isMarkedBlack()) {
-    Zone* zone = thing->zone();
-    MOZ_ASSERT(zone->isAtomsZone() || zone->shouldMarkInZone());
-  }
+  Zone* zone = str->zone();
+  MOZ_ASSERT(zone->shouldMarkInZone() || zone->isAtomsZone());
+#endif
+}
+
+static void AssertShouldMarkInZone(JS::Symbol* sym) {
+#ifdef DEBUG
+  Zone* zone = sym->asTenured().zone();
+  MOZ_ASSERT(zone->shouldMarkInZone() || zone->isAtomsZone());
 #endif
 }
 
@@ -1018,11 +1026,11 @@ void js::gc::PerformIncrementalBarrierDuringFlattening(JSString* str) {
 
 template <typename T>
 void js::GCMarker::markAndTraverse(T* thing) {
-  if (mark(thing)) {
-    // We only mark permanent things during initialization.
-    MOZ_ASSERT_IF(thing->isPermanentAndMayBeShared(),
-                  !runtime()->permanentAtomsPopulated());
+  if (thing->isPermanentAndMayBeShared()) {
+    return;
+  }
 
+  if (mark(thing)) {
     traverse(thing);
   }
 }
@@ -1165,7 +1173,9 @@ inline void GCMarker::checkTraversedEdge(S source, T* target) {
 template <typename S, typename T>
 void js::GCMarker::markAndTraverseEdge(S source, T* target) {
   checkTraversedEdge(source, target);
-  markAndTraverse(target);
+  if (!target->isPermanentAndMayBeShared()) {
+    markAndTraverse(target);
+  }
 }
 
 template <typename S, typename T>
@@ -1206,10 +1216,11 @@ bool js::GCMarker::mark(T* thing) {
   }
 
   AssertShouldMarkInZone(thing);
+  TenuredCell* cell = &thing->asTenured();
 
   MarkColor color =
       TraceKindCanBeGray<T>::value ? markColor() : MarkColor::Black;
-  bool marked = thing->asTenured().markIfUnmarked(color);
+  bool marked = cell->markIfUnmarked(color);
   if (marked) {
     markCount++;
   }
@@ -2738,7 +2749,6 @@ static inline void CheckIsMarkedThing(T* thing) {
 
   // Allow any thread access to uncollected things.
   if (thing->isPermanentAndMayBeShared()) {
-    MOZ_ASSERT(thing->isMarkedBlack());
     return;
   }
 
@@ -2788,11 +2798,9 @@ bool js::gc::IsMarkedInternal(JSRuntime* rt, T** thingp) {
   MOZ_ASSERT(!CurrentThreadIsGCFinalizing());
 
   T* thing = *thingp;
-  // Permanent things are never marked by non-owning runtimes. Zone state is
-  // unknown in this case.
-#ifdef DEBUG
-  MOZ_ASSERT_IF(IsOwnedByOtherRuntime(rt, thing), thing->isMarkedBlack());
-#endif
+  if (IsOwnedByOtherRuntime(rt, thing)) {
+    return true;
+  }
 
   if (!thing->isTenured()) {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
@@ -2815,13 +2823,12 @@ bool js::gc::IsAboutToBeFinalizedInternal(T** thingp) {
   MOZ_ASSERT(thingp);
   T* thing = *thingp;
   CheckIsMarkedThing(thing);
+  JSRuntime* rt = thing->runtimeFromAnyThread();
 
-  // Permanent things are never finalized by non-owning runtimes. Zone state is
-  // unknown in this case.
-#ifdef DEBUG
-  JSRuntime* rt = TlsContext.get()->runtime();
-  MOZ_ASSERT_IF(IsOwnedByOtherRuntime(rt, thing), thing->isMarkedBlack());
-#endif
+  /* Permanent atoms are never finalized by non-owning runtimes. */
+  if (thing->isPermanentAndMayBeShared() && TlsContext.get()->runtime() != rt) {
+    return false;
+  }
 
   if (!thing->isTenured()) {
     return JS::RuntimeHeapIsMinorCollecting() &&
@@ -2862,10 +2869,11 @@ template <typename T>
 inline T* SweepingTracer::onEdge(T* thing) {
   CheckIsMarkedThing(thing);
 
-  // Permanent things are never finalized by non-owning runtimes. Zone state is
-  // unknown in this case.
-  MOZ_ASSERT_IF(IsOwnedByOtherRuntime(runtime(), thing),
-                thing->isMarkedBlack());
+  JSRuntime* rt = thing->runtimeFromAnyThread();
+
+  if (thing->isPermanentAndMayBeShared() && runtime() != rt) {
+    return thing;
+  }
 
   // It would be nice if we could assert that the zone of the tenured cell is in
   // the Sweeping state, but that isn't always true for:
