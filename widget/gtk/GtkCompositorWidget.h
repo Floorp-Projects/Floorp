@@ -104,6 +104,9 @@ class GtkCompositorWidget : public CompositorWidget,
 #if defined(MOZ_X11)
   bool ConfigureX11Backend(Window aXWindow, bool aShaped);
 #endif
+#ifdef MOZ_LOGGING
+  bool IsPopup();
+#endif
 
  protected:
   RefPtr<nsWindow> mWidget;
@@ -125,7 +128,7 @@ class GtkCompositorWidget : public CompositorWidget,
 #ifdef MOZ_WAYLAND
   RefPtr<mozilla::layers::NativeLayerRootWayland> mNativeLayerRoot;
 #endif
-  bool mIsRenderingSuspended;
+  Atomic<bool> mIsRenderingSuspended;
 };
 
 }  // namespace widget

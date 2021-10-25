@@ -80,6 +80,7 @@ void moz_container_wayland_set_scale_factor(MozContainer* container);
 void moz_container_wayland_set_scale_factor_locked(MozContainer* container);
 void moz_container_wayland_add_initial_draw_callback(
     MozContainer* container, const std::function<void(void)>& initial_draw_cb);
+void moz_container_wayland_clear_initial_draw_callback(MozContainer* container);
 wl_surface* moz_gtk_widget_get_wl_surface(GtkWidget* aWidget);
 void moz_container_wayland_update_opaque_region(MozContainer* container,
                                                 int corner_radius);
