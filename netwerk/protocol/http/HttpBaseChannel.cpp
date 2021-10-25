@@ -2228,15 +2228,14 @@ nsresult HttpBaseChannel::ProcessCrossOriginResourcePolicyHeader() {
   }
 
   // We only apply this for resources.
-  if (mLoadInfo->GetExternalContentPolicyType() ==
-          ExtContentPolicy::TYPE_DOCUMENT ||
-      mLoadInfo->GetExternalContentPolicyType() ==
-          ExtContentPolicy::TYPE_WEBSOCKET) {
+  auto extContentPolicyType = mLoadInfo->GetExternalContentPolicyType();
+  if (extContentPolicyType == ExtContentPolicy::TYPE_DOCUMENT ||
+      extContentPolicyType == ExtContentPolicy::TYPE_WEBSOCKET ||
+      extContentPolicyType == ExtContentPolicy::TYPE_SAVEAS_DOWNLOAD) {
     return NS_OK;
   }
 
-  if (mLoadInfo->GetExternalContentPolicyType() ==
-      ExtContentPolicy::TYPE_SUBDOCUMENT) {
+  if (extContentPolicyType == ExtContentPolicy::TYPE_SUBDOCUMENT) {
     // COEP pref off, skip CORP checking for subdocument.
     if (!StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
       return NS_OK;
