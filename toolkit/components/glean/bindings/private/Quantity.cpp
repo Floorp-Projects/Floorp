@@ -22,17 +22,11 @@ void QuantityMetric::Set(int64_t aValue) const {
   if (scalarId) {
     Telemetry::ScalarSet(scalarId.extract(), static_cast<uint32_t>(aValue));
   }
-#ifndef MOZ_GLEAN_ANDROID
   fog_quantity_set(mId, int(aValue));
-#endif
 }
 
 Result<Maybe<int64_t>, nsCString> QuantityMetric::TestGetValue(
     const nsACString& aPingName) const {
-#ifdef MOZ_GLEAN_ANDROID
-  Unused << mId;
-  return Maybe<int64_t>();
-#else
   nsCString err;
   if (fog_quantity_test_get_error(mId, &aPingName, &err)) {
     return Err(err);
@@ -41,7 +35,6 @@ Result<Maybe<int64_t>, nsCString> QuantityMetric::TestGetValue(
     return Maybe<int64_t>();
   }
   return Some(fog_quantity_test_get_value(mId, &aPingName));
-#endif
 }
 
 }  // namespace impl

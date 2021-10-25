@@ -22,17 +22,11 @@ void NumeratorMetric::AddToNumerator(int32_t aAmount) const {
   if (scalarId) {
     Telemetry::ScalarAdd(scalarId.extract(), u"numerator"_ns, aAmount);
   }
-#ifndef MOZ_GLEAN_ANDROID
   fog_numerator_add_to_numerator(mId, aAmount);
-#endif
 }
 
 Result<Maybe<std::pair<int32_t, int32_t>>, nsCString>
 NumeratorMetric::TestGetValue(const nsACString& aPingName) const {
-#ifdef MOZ_GLEAN_ANDROID
-  Unused << mId;
-  return Maybe<std::pair<int32_t, int32_t>>();
-#else
   nsCString err;
   if (fog_numerator_test_get_error(mId, &aPingName, &err)) {
     return Err(err);
@@ -44,7 +38,6 @@ NumeratorMetric::TestGetValue(const nsACString& aPingName) const {
   int32_t den = 0;
   fog_numerator_test_get_value(mId, &aPingName, &num, &den);
   return Some(std::make_pair(num, den));
-#endif
 }
 
 }  // namespace impl
