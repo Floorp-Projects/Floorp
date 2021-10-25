@@ -1557,6 +1557,9 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::advance(size_t position) {
   Token* cur = const_cast<Token*>(&anyChars.currentToken());
   cur->pos.begin = this->sourceUnits.offset();
   cur->pos.end = cur->pos.begin;
+#ifdef DEBUG
+  cur->type = TokenKind::Limit;
+#endif
   MOZ_MAKE_MEM_UNDEFINED(&cur->type, sizeof(cur->type));
   anyChars.lookahead = 0;
   return true;
