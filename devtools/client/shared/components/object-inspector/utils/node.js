@@ -601,6 +601,10 @@ function makeNodesForProperties(objProps, parent) {
     }, this);
   }
 
+  if (nodeIsPromise(parent)) {
+    nodes.push(...makeNodesForPromiseProperties(objProps, parent));
+  }
+
   if (nodeHasEntries(parent)) {
     nodes.push(makeNodesForEntries(parent));
   }
@@ -823,10 +827,6 @@ function getChildren(options) {
 
   if (nodeIsMapEntry(item)) {
     return addToCache(makeNodesForMapEntry(item));
-  }
-
-  if (nodeIsPromise(item) && hasLoadedProps) {
-    return addToCache(makeNodesForPromiseProperties(loadedProps, item));
   }
 
   if (nodeIsProxy(item) && hasLoadedProps) {
