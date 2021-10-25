@@ -968,7 +968,6 @@ WEBIDL_FILES = [
     "VTTRegion.webidl",
     "WaveShaperNode.webidl",
     "WebAuthentication.webidl",
-    "WebComponents.webidl",
     "WebGL2RenderingContext.webidl",
     "WebGLRenderingContext.webidl",
     "WebGPU.webidl",
