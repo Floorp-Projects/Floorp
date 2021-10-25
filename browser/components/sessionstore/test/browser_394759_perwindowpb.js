@@ -30,7 +30,7 @@ function promiseTestOnWindow(aIsPrivate, aValue) {
       private: aIsPrivate,
     });
     await TabStateFlusher.flushWindow(win);
-    let data = JSON.parse(ss.getClosedWindowData())[0];
+    let data = ss.getClosedWindowData()[0];
     is(
       ss.getClosedWindowCount(),
       1,

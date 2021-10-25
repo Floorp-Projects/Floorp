@@ -89,7 +89,7 @@ var RecentlyClosedTabsAndWindowsMenuUtils = {
     aPrefixRestoreAll = false,
     aRestoreAllLabel = "appmenu-reopen-all-windows"
   ) {
-    let closedWindowData = SessionStore.getClosedWindowData(false);
+    let closedWindowData = SessionStore.getClosedWindowData();
     let doc = aWindow.document;
     let fragment = doc.createDocumentFragment();
     if (closedWindowData.length) {

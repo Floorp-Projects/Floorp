@@ -156,7 +156,7 @@ add_task(async function test_deleteClosedWindow() {
   );
   await setWindowState(newWin, test_state, true);
 
-  let closedWindows = JSON.parse(ss.getClosedWindowData());
+  let closedWindows = ss.getClosedWindowData();
   is(
     closedWindows.length,
     test_state._closedWindows.length,
@@ -189,7 +189,7 @@ add_task(async function test_deleteClosedWindow() {
   ss.forgetClosedWindow(2);
   ss.forgetClosedWindow(null);
 
-  closedWindows = JSON.parse(ss.getClosedWindowData());
+  closedWindows = ss.getClosedWindowData();
   is(
     closedWindows.length,
     remember_count,
