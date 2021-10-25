@@ -16,7 +16,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/intl/LineBreaker.h"
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
 #include "nsCycleCollectionParticipant.h"
@@ -240,8 +239,8 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
     }
 
     // @param aLineBreaker May be nullptr.
-    int32_t FindWrapIndexForContent(
-        uint32_t aWrapColumn, mozilla::intl::LineBreaker* aLineBreaker) const;
+    int32_t FindWrapIndexForContent(uint32_t aWrapColumn,
+                                    bool aUseLineBreaker) const;
 
     // @return Combined width of cite quote level and indentation.
     uint32_t DeterminePrefixWidth() const {
@@ -368,7 +367,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
 
   uint32_t mULCount;
 
-  RefPtr<mozilla::intl::LineBreaker> mLineBreaker;
+  bool mUseLineBreaker = false;
 
   // Conveniance constant. It would be nice to have it as a const static
   // variable, but that causes issues with OpenBSD and module unloading.

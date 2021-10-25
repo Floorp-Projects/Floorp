@@ -97,8 +97,6 @@ void InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
 
   aOutString.Truncate();
 
-  mozilla::intl::LineBreaker* lineBreaker = nsContentUtils::LineBreaker();
-
   // Loop over lines in the input string, rewrapping each one.
   uint32_t posInString = 0;
   uint32_t outStringCol = 0;
@@ -228,8 +226,8 @@ void InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
       int32_t breakPt = 0;
       int32_t nextBreakPt = 0;
       while (true) {
-        nextBreakPt = lineBreaker->Next(tString.get() + posInString,
-                                        length - posInString, breakPt);
+        nextBreakPt = intl::LineBreaker::Next(tString.get() + posInString,
+                                              length - posInString, breakPt);
         if (nextBreakPt == NS_LINEBREAKER_NEED_MORE_TEXT ||
             nextBreakPt > eol - (int32_t)posInString) {
           break;

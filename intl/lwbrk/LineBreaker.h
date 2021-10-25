@@ -38,7 +38,7 @@ class LineBreaker {
   //
   // If aPos is already at the end of aText or beyond, i.e. aPos >= aLen, return
   // NS_LINEBREAKER_NEED_MORE_TEXT.
-  int32_t Next(const char16_t* aText, uint32_t aLen, uint32_t aPos);
+  static int32_t Next(const char16_t* aText, uint32_t aLen, uint32_t aPos);
 
   // Call this on a word with whitespace at either end. We will apply JISx4051
   // rules to find breaks inside the word. aBreakBefore is set to the break-
@@ -46,12 +46,14 @@ class LineBreaker {
   // because we never return a break before the first character.
   // aLength is the length of the aText array and also the length of the
   // aBreakBefore output array.
-  void GetJISx4051Breaks(const char16_t* aText, uint32_t aLength,
-                         WordBreak aWordBreak, Strictness aLevel,
-                         bool aIsChineseOrJapanese, uint8_t* aBreakBefore);
-  void GetJISx4051Breaks(const uint8_t* aText, uint32_t aLength,
-                         WordBreak aWordBreak, Strictness aLevel,
-                         bool aIsChineseOrJapanese, uint8_t* aBreakBefore);
+  static void ComputeBreakPositions(const char16_t* aText, uint32_t aLength,
+                                    WordBreak aWordBreak, Strictness aLevel,
+                                    bool aIsChineseOrJapanese,
+                                    uint8_t* aBreakBefore);
+  static void ComputeBreakPositions(const uint8_t* aText, uint32_t aLength,
+                                    WordBreak aWordBreak, Strictness aLevel,
+                                    bool aIsChineseOrJapanese,
+                                    uint8_t* aBreakBefore);
 
  private:
   ~LineBreaker() = default;
