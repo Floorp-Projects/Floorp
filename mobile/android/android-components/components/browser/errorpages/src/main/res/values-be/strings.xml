@@ -1,20 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Памылка загрузкі старонкі</string>
-
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Паспрабаваць зноў</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Вярнуцца</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Немагчыма скончыць запыт</string>
     <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
-    <string name="mozac_browser_errorpages_generic_message"><![CDATA[¶
- · <p>Дадатковыя звесткі пра гэтую праблему або памылку зараз недаступны.</p>¶
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+ · <p>Дадатковыя звесткі пра гэтую праблему або памылку зараз недаступны.</p>
  ·]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
@@ -30,9 +24,9 @@
     <string name="mozac_browser_errorpages_security_bad_cert_title">Няўдача бяспечнага злучэння</string>
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
-        <li>Гэта можа быць праблемай налад сервера ці, магчыма,¶
+        <li>Гэта можа быць праблемай налад сервера ці, магчыма,
 хтосьці спрабуе прыкінуцца гэтым серверам</li>
-        <li>Калі вы паспяхова злучаліся з гэтым серверам раней, памылка можа¶
+        <li>Калі вы паспяхова злучаліся з гэтым серверам раней, памылка можа
 быць часовай, таму вы можаце паспрабаваць зноў пазней.</li>
       </ul>]]></string>
 

@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Erore cargando pàgina</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Riprova</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Torna indrio</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Inposibiƚe conpletare ƚa dimanda</string>
@@ -36,10 +31,10 @@
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avansate…</string>
 
     <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[¶
-        <label>Poderìa tratarse de on tentativo de sostituirse a’l sito originaƚe. Xe sconsijà proseguire.</label>¶
-        <br><br>¶
-        <label>I siti web i garantise ƚa propria identità traverso certificati. %1$s no considera el sito <b>%2$s</b> atendibiƚe parché l’otorità emittente de’l certificato ƚa xe sconosuda, el certificato el xe autofirmà o el server no el ga invià i certificati intermedi previsti.</label>¶]]></string>
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Poderìa tratarse de on tentativo de sostituirse a’l sito originaƚe. Xe sconsijà proseguire.</label>
+        <br><br>
+        <label>I siti web i garantise ƚa propria identità traverso certificati. %1$s no considera el sito <b>%2$s</b> atendibiƚe parché l’otorità emittente de’l certificato ƚa xe sconosuda, el certificato el xe autofirmà o el server no el ga invià i certificati intermedi previsti.</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Torna indrio (racomandà)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->

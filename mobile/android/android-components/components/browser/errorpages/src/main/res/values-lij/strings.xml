@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Erô caregamento pagina</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Preuva torna</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Vanni inderê</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">No riescio a finî a domanda</string>
@@ -35,10 +30,10 @@ A pagina che ti veu vedde a no peu ese mostrâ perché no l\'é poscibile verifi
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avansæ…</string>
     <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[¶
-        <label>Porieva ese che quardun o preuva a fâ finta d\'ese o scito e sarieiva megio se no ti væ avanti.</label>¶
-        <br><br>¶
-        <label>I sciti web garantiscian a pròpia identitæ con di certificati. %1$s o no considera o scito <b>%2$s</b> fidou perché l\’autoritæ ch\'a l\'à emisso o certificato a l\'é sconosciua, o certificato o l\'é firmato pe conto seu opûre o server o no à mandou i certificati intermedi che servan.</label>¶]]></string>
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Porieva ese che quardun o preuva a fâ finta d\'ese o scito e sarieiva megio se no ti væ avanti.</label>
+        <br><br>
+        <label>I sciti web garantiscian a pròpia identitæ con di certificati. %1$s o no considera o scito <b>%2$s</b> fidou perché l\’autoritæ ch\'a l\'à emisso o certificato a l\'é sconosciua, o certificato o l\'é firmato pe conto seu opûre o server o no à mandou i certificati intermedi che servan.</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Vanni inderê (Racomandou)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->

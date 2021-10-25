@@ -12,7 +12,7 @@
 
     <!-- Autofill: Text shown in popup in third-party app to autofill the password for an account.
     %1$s will be replaced with the login/username of the account. -->
-    <string name="mozac_feature_autofill_popup_password">Parolla d’entrata per %1$s</string>
+    <string name="mozac_feature_autofill_popup_password">Parolla d’intesa per %1$s</string>
 
     <!-- Autofill: Title of a dialog asking the user to confirm before autofilling credentials into
     a third-party app after the authenticity verification failed. -->

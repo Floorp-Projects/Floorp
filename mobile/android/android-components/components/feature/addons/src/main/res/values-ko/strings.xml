@@ -43,7 +43,7 @@
     <!-- Description for downloads_open permission. -->
     <string name="mozac_feature_addons_permissions_downloads_open_description">기기에 다운로드한 파일 열기</string>
     <!-- Description for find permission. -->
-    <string name="mozac_feature_addons_permissions_find_description">열려있는 모든 탭의 텍스트 읽기</string>
+    <string name="mozac_feature_addons_permissions_find_description">모든 열린 탭의 텍스트 읽기</string>
     <!-- Description for geolocation permission. -->
     <string name="mozac_feature_addons_permissions_geolocation_description">사용자 위치에 접근</string>
     <!-- Description for history permission. -->
@@ -65,7 +65,7 @@
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">방문 기록에 접근</string>
     <!-- Description for devtools permission. -->
-    <string name="mozac_feature_addons_permissions_devtools_description">열려있는 탭의 데이터에 접근하도록 개발자 도구를 확장</string>
+    <string name="mozac_feature_addons_permissions_devtools_description">열린 탭에서 데이터에 접근할 수 있도록 개발자 도구를 확장</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">버전</string>
     <!-- The authors of an add-on. -->

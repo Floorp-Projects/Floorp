@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Problemă la încărcarea paginii</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Încearcă din nou</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Înapoi</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Cererea nu poate fi finalizată</string>
@@ -35,7 +30,7 @@
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Avansat…</string>
     <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Cineva ar putea încerca să uzurpe site-ul și ar fi bine să nu mergi mai departe.</label>
-        <br><br>¶
+        <br><br>
         <label>Site-urile web își dovedesc identitatea prin certificate. %1$s nu are încredere în <b>%2$s</b> deoarece emitentul certificatului este necunoscut, certificatul este autosemnat sau serverul nu trimite certificatele intermediare corecte.</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Înapoi (recomandat)</string>

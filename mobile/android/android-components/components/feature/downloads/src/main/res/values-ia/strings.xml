@@ -44,5 +44,5 @@
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">Impossibile aperir %1$s</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
-    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Permisso de accesso de files e medios necessari pro discargar los. Vade a parametros de Android, tocca permissos e tocca permitter.</string>
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Le permission de accesso a files e multimedia es necessari pro discargar files. Vade al parametros de Android, tocca Permissiones e tocca Permitter.</string>
 </resources>

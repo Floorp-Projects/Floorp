@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">ມີບັນຫາໃນການໂຫລດຫນ້າເວັບ</string>
-
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">ລອງ​ອີກ​ຄັ້ງ</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">ກັບ​ຄືນ</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">ບໍ່ສາມາດຕອບສະຫນອງຕາມຄຳຮ້ອງຂໍໄດ້</string>
@@ -42,6 +36,12 @@
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">ຂັ້ນສູງ…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>ມີບາງຄົນອາດຈະກຳລັງປອມແປງເວັບໄຊທ ແລະ ທ່ານບໍ່ຄວນຈະເຂົ້າໄປ.</label>
+        <br><br>
+        <label>ເວັບໄຊທຈະຢັ້ງຢືນຕົວຕົນຜ່ານທາງໃບຮັບຮອງ. %1$s ບໍ່ຫນ້າເຊື່ອຖື <b>%2$s</b> ເພາະວ່າຜູ້ອອກໃບຮັບຮອງຂອງພວກເຂົາແມ່ນບໍເປັນທີ່ຮູ້ຈັກ, ໃບຮັບຮອງແມ່ນສ້າງຂື້ນມາເອງ ຫລື ເຊີເວີບໍ່ໄດ້ສົ່ງໃບຮັບຮອງທີ່ຖືກຕ້ອງມາໃຫ້.</label>
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">ກັບຄືນ (ແນະນຳ)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
@@ -84,14 +84,55 @@
       </ul>
     ]]></string>
 
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">ການຕອບສະຫນອງທີ່ບໍ່ຄາດຄິດຈາກເຊີເວີ</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>ເວັບໄຊທຕອບສະຫນອງຕໍຄຳຮ້ອງຂໍຂອງເນັດເວີກດ້ວຍວິທີທີ່ບໍຖືກຕ້ອງ ແລະ ບຣາວເຊີບໍ່ສາມາດເຂົ້າໄປຕໍໄດ້.</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">ຫນ້າເວັບນີ້ມີການປ່ຽນເສັ້ນທາງທີ່ບໍ່ຖືກຕ້ອງ</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>ບຣາວເຊີໄດ້ຢຸດພະຍາຍາມໃນການຮ້ອງຂໍລາຍການ. ເວັບໄຊທໄດ້ປ່ຽນເສັ້ນທາງຄຳຮ້ອງຂໍໄປໃນທາງທີ່ບໍມີການສີ້ນສຸດ.      <ul>
+        <li>ທ່ານໄດ້ປິດ ຫລື ບັອກຄຸກກີ້ທີ່ຕ້ອງການໂດຍເວັບໄຊທນີ້ບໍ?</li>
+        <li>ຖ້າວ່າການຍອມຮັບຄຸກກີ້ຂອງເວັບໄຊທບໍ່ໄດ້ແກ້ໄຂບັນຫາ ມັນອາດຈະເປັນນຳບັນຫາໃນການຕັ້ງຄ່າເຊີເວີ ແລະ ບໍ່ໄດ້ເປັນນຳຄອມພິວເຕີຂອງທ່ານ.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">ໂໝດອັອບໄລ</string>
 
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>ບຣາວເຊີກຳລັງເຮັດວຽກໃນໂຫມດອັອບລາຍ ແລະ ບໍ່ສາມາດເຊື່ອມຕໍ່ໄປຫາລາຍການທີ່ຮ້ອງຂໍໄດ້.</p>
+      <ul>
+        <li>ຄອມພິວເຕີໄດ້ເຊື່ອມຕໍ່ກັບເນັດເວີກຢູ່ບໍ?</li>
+        <li>ກົດ “ລອງໃຫມ່ອີກຄັ້ງ” ເພື່ອປ່ຽນໄປໂຫມດອອນລາຍ ແລະ ໂຫລດຫນ້າໃຫມ່ອີກຄັ້ງ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">ພອດຖືກຈຳກັດດ້ວຍເຫດຜົນດ້ານຄວາມປອດໄພ</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>ທີ່ຢູ່ນີ້ຮ້ອງຂໍພອດທີ່ລະບຸຊັດເຈນ (ເຊັ່ນ: <q>mozilla.org:80</q> ສຳລັບພອດ 80 ໃນ mozilla.org) ປົກກະຕິແລ້ວໃຊ້ສຳລັບ <em>ອື່ນໆ</em> ຫຼາຍກ່ອນການທ່ອງເວັບ. ບຣາວເຊີໄດ້ຍົກເລີກຄຳຮ້ອງຂໍດັ່ງກ່າວເພື່ອປົກປ້ອງທ່ານ ແລະ ຄວາມປອດໄພ.</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">ການເຊື່ອມຕໍ່ຖືກຕັດ</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>ເນັດເວີກລີ້ງໄດ້ຮັບການຂັດຈັງຫວະໃນຂະນະທີ່ແລກປ່ຽນຂໍ້ມູນການເຊື່ອມຕໍ. ກະລຸນາລອງໃຫມ່ອີກຄັ້ງ.</p>
+      <ul>
+        <li>ເວັບໄຊທອາດຈະບໍ່ສາມາດໃຊ້ງານໄດ້ຊົ່ວຄາວ ຫລື ເຂົ້າບໍ່ໄດ້. ໃຫ້ລອງເຂົ້າໃຫມ່ໃນອີກ 2-3 ນາທີ.</li>
+        <li>ຖ້າຫາກວ່າທ່ານຍັງບໍສາມາດໂຫລດຫນ້າເວັບໄດ້ ໃຫ້ລອງກວດເບິງອິນເຕີເນັດ ຫລື ການເຊື່ອມຕໍ  Wi-Fi ໃນອຸປະກອນຂອງທ່ານ.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">ປະເພດເອກະສານທີ່ບໍ່ປອດໄພ</string>
@@ -102,6 +143,14 @@
 
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">ຂໍ້ຜິດພາດເນື້ອຫາທີ່ເສີຍຫາຍ</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>ຫນ້າເວັບທີ່ທ່ານກຳລັງເຂົ້າໄປເບິງບໍ່ສາມາດສະແດງໄດ້ເພາະວ່າມັນເກີດມີຂໍ້ຜິດພາດໃນການສົ່ງຂໍ້ມູນ.</p>
+      <ul>
+        <li>ກະລຸນາແຈ້ງບັນຫານີ້ໃຫ້ເຈົ້າຂອງເວັບໄຊທຮູ້.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">ເນື້ອຫາຂັດຂ້ອງ</string>
@@ -114,18 +163,49 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">ຂໍ້ຜິດພາດການເຂົ້າລະຫັດເນື້ອຫາ</string>
 
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>ຫນ້າເວັບທີ່ທ່ານກຳລັງເຂົ້າໄປເບິງບໍ່ສາມາດສະແດງໄດ້ເພາະວ່າມັນໃຊ້ຮູບແບບການບີບອັດຂໍ້ມູນທີ່ບໍ່ຖືກຕ້ອງ ຫລື ບໍ່ໄດ້ຮັບການຊັບພອດ.</p>
+      <ul>
+        <li>ກະລຸນາແຈ້ງບັນຫານີ້ໃຫ້ເຈົ້າຂອງເວັບໄຊທຮູ້.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">ບໍ່ພົບທີ່ຢູ່</string>
 
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>ບຣາວເຊີອາດຈະບໍ່ສາມາດຊອກຫາທີ່ຢູ່ຂອງໂຮສທີ່ລະບຸມາ.</p>
+      <ul>
+        <li>ກວດຄືນເບິງວ່າຂຽນຊື່ທີ່ຢູ່ຖືກຕ້ອງແລ້ວບໍເຊັ່ນວ່າ: 
+          <strong>ww</strong>.example.com ແທນທີ່ຈະເປັນ 
+          <strong>www</strong>.example.com.</li>
+        <li>ຖ້າຫາກວ່າທ່ານຍັງບໍສາມາດໂຫລດຫນ້າເວັບໄດ້ ໃຫ້ລອງກວດເບິງອິນເຕີເນັດ ຫລື ການເຊື່ອມຕໍ  Wi-Fi ໃນອຸປະກອນຂອງທ່ານ.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">ບໍ່ມີການເຊື່ອມຕໍ່ກັບອິນເຕີເນັດ</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">ກວດເບິງເນັດເວີກຂອງທ່ານຄືນ ຫລື ລອງໂຫລດຫນ້າເວັບຄືນໃຫມ່ໃນອີກ 2-3 ນາທີ.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">ໂຫລດຄືນໃຫມ່</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">ທີ່ຢູ່ບໍ່ຖືກຕ້ອງ</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>ຮູບແບບຂອງທີ່ຢູ່ທີໃຫ້ມາແມ່ນບໍ່ຖືກຕ້ອງ. ກະລຸນາກວດເບິງທີ່ຢູ່ໃນແຖບທີ່ຕັ້ງເພື່ອຊອກຫາຂໍ້ຜິດພາດ ແລະ ລອງໃຫມ່ອີກຄັ້ງ.</p>
+    ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">ທີ່ຢູ່ບໍ່ຖືກຕ້ອງ</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>ທີ່ຢູ່ຂອງເວັບມັກຈະຂຽນເປັນ <strong>http://www.example.com/</strong></li>
+        <li>ກວດເບິງໃຫ້ຫມັ້ນໃຈວ່າທ່ານໄດ້ໃຊ້ເຄືອງຫມາຍສະແລັດຖືກຕ້ອງແລ້ວ ( <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">ໂປຼໂຕຄໍທີ່ບໍ່ຮູ້ຈັກ</string>

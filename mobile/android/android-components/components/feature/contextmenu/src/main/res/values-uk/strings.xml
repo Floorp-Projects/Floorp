@@ -7,7 +7,7 @@
     <!-- Text for context menu item to open the image in a new tab. -->
     <string name="mozac_feature_contextmenu_open_image_in_new_tab">Відкрити зображення в новій вкладці</string>
     <!-- Text for context menu item to save / download the link. -->
-    <string name="mozac_feature_contextmenu_download_link">Посилання для завантаження</string>
+    <string name="mozac_feature_contextmenu_download_link">Завантажити посилання</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">Поділитись посиланням</string>
     <!-- Text for context menu item to share the image with an other app. -->

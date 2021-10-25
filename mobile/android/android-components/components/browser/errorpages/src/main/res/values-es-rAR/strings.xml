@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Problema al cargar la página</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Probar de nuevo</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Retroceder</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">No se puede completar el pedido</string>
@@ -133,11 +128,11 @@
 
     <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
-	<p>La página que estás intentando ver no puede mostrarse porque se detectó un error en la transmisión de los datos.</p>
-	<ul>
-		<li>Contactate con los propietarios del sitio web para informarles de este problema.</li>
-	</ul>
-	]]></string>
+      <p>La página que estás tratando de ver no puede ser mostrada porque se detectó un error en la transmisión de datos.</p>
+      <ul>
+        <li>Contactá a los dueños del sitio web para informarles sobre este problema.</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">El contenido falló</string>
@@ -224,7 +219,7 @@
 
     <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
       <ul>
-        <li>Puede haber sido eliminado, movido o los permisos pueden evitar el acceso.</li>
+        <li>Puede haber sido eliminado, movido o los permisos del archivo pueden evitar el acceso.</li>
       </ul>
     ]]></string>
 

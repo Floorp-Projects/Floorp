@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">पृष्ठ की लोडिंग में समस्या है</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">पुनः प्रयास करें</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">वापस जाएं</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">अनुरोध पूरा नहीं किया जा सका</string>
@@ -19,30 +14,30 @@
     <string name="mozac_browser_errorpages_security_ssl_title">सुरक्षित संपर्क विफ़ल</string>
 
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[¶
-      <ul>¶
-        <li>जिस पृष्ठ को आप देखने की कोशिश कर रहे हैं  उसे दिखाया नहीं जा सकता क्योंकि प्राप्त डेटा के प्रमाणिकता की सत्यापन नहीं की जा सकी</li>¶
-        <li>कृपया इस समस्या की जानकारी देने के लिए वेबसाइट प्रदाता से संपर्क करें।</li>¶
-      </ul>¶]]></string>
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>जिस पृष्ठ को आप देखने की कोशिश कर रहे हैं  उसे दिखाया नहीं जा सकता क्योंकि प्राप्त डेटा के प्रमाणिकता की सत्यापन नहीं की जा सकी</li>
+        <li>कृपया इस समस्या की जानकारी देने के लिए वेबसाइट प्रदाता से संपर्क करें।</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">सुरक्षित संपर्क विफ़ल</string>
 
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[¶
-      <ul>¶
-        <li>यह सर्वर विन्यास से जुड़ी समस्या हो सकती है, या यह कोई ऐसा हो सकता है जो सर्वर की नकल बनाने की कोशिश कर रहा हो।</li>¶
-        <li>यदि पहले कभी आप इस सर्वर से सफलतापूर्वक जुड़े हों, तो त्रुटी कुछ समय की हो सकती है, और बाद में आप पुनः प्रयास कर सकते हैं।</li>¶
-      </ul>¶]]></string>
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>यह सर्वर विन्यास से जुड़ी समस्या हो सकती है, या यह कोई ऐसा हो सकता है जो सर्वर की नकल बनाने की कोशिश कर रहा हो।</li>
+        <li>यदि पहले कभी आप इस सर्वर से सफलतापूर्वक जुड़े हों, तो त्रुटी कुछ समय की हो सकती है, और बाद में आप पुनः प्रयास कर सकते हैं।</li>
+      </ul>]]></string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">विस्तृत…</string>
 
     <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[¶
-        <label>शायद कोई व्यक्ति साइट की नकल करने की कोशिश कर रहा हो और आपको आगे नहीं बढ़ना चाहिए।</label>¶
-        <br><br>¶
-        <label>वेबसाइट अपनी पहचान प्रमाण-पत्रों द्वारा साबित करते हैं। <b>%2$s</b> पर %1$s विश्वास नहीं करता क्योंकि इसका प्रमाणपत्र प्रदाता अज्ञात है, प्रमाणपत्र स्वतः हस्ताक्षरित है या सर्वर सही मध्यवर्ती प्रमाणपत्र नहीं भेज रहा है।</label>¶]]></string>
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>शायद कोई व्यक्ति साइट की नकल करने की कोशिश कर रहा हो और आपको आगे नहीं बढ़ना चाहिए।</label>
+        <br><br>
+        <label>वेबसाइट अपनी पहचान प्रमाण-पत्रों द्वारा साबित करते हैं। <b>%2$s</b> पर %1$s विश्वास नहीं करता क्योंकि इसका प्रमाणपत्र प्रदाता अज्ञात है, प्रमाणपत्र स्वतः हस्ताक्षरित है या सर्वर सही मध्यवर्ती प्रमाणपत्र नहीं भेज रहा है।</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">पीछे जाएं (सलाह)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
@@ -52,63 +47,63 @@
     <string name="mozac_browser_errorpages_net_interrupt_title">संपर्क में बाधा उत्पन्न हुई</string>
 
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
-    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[¶
-      <p>ब्राउज़र सफलतापूर्वक जुड़ चुका है, पर जानकारी स्थानांतरित करते समय संपर्क में कोई बाधा उत्पन्न हुई। कृपया पुनः प्रयास करें।</p>¶
-      <ul>¶
-        <li>यह साइट अस्थाई रूप से अनुपलब्ध या अत्यंत व्यस्त हो सकता है। कुछ समय बाद पुनः प्रयास करें।</li>¶
-        <li>यदि आप कोई पृष्ठ लोड नहीं कर पा रहे हैं, तो अपने उपकरण की डेटा या वाई-फाई कनेक्शन की जांच करें।</li>¶
-      </ul>¶]]></string>
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>ब्राउज़र सफलतापूर्वक जुड़ चुका है, पर जानकारी स्थानांतरित करते समय संपर्क में कोई बाधा उत्पन्न हुई। कृपया पुनः प्रयास करें।</p>
+      <ul>
+        <li>यह साइट अस्थाई रूप से अनुपलब्ध या अत्यंत व्यस्त हो सकता है। कुछ समय बाद पुनः प्रयास करें।</li>
+        <li>यदि आप कोई पृष्ठ लोड नहीं कर पा रहे हैं, तो अपने उपकरण की डेटा या वाई-फाई कनेक्शन की जांच करें।</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">संपर्क समय समाप्त</string>
 
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[¶
-      <p>अनुरोधित साइट ने संपर्क की अनुरोध का जवाब नहीं दिया और ब्राउज़र ने जवाब की प्रतीक्षा करना बंद कर दिया है।</p>¶
-      <ul>¶
-        <li>हो सकता है कि सर्वर काफी अनुरोध या अस्थाई निलंबन झेल रहा हो? कृपया बाद में पुनः प्रयास करें।</li>¶
-        <li>क्या आप अन्य साइट भी ब्राउज़ नहीं कर पा रहे? कृपया उपकरण के नेटवर्क कनेक्शन की जांच करें।</li>¶
-        <li>क्या आपका उपकरण या नेटवर्क किसी फ़ायरवॉल या प्रॉक्सी द्वारा सुरक्षित है? गलत सेटिंग से वेब ब्राउज़िंग में बाधा आ सकती है।</li>¶
-        <li>अभी भी समस्या हो रही है? सहायता के लिए अपने नेटवर्क व्यवस्थापक या इंटरनेट प्रदाता से संपर्क करें।</li>¶
-      </ul>¶]]></string>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>अनुरोधित साइट ने संपर्क की अनुरोध का जवाब नहीं दिया और ब्राउज़र ने जवाब की प्रतीक्षा करना बंद कर दिया है।</p>
+      <ul>
+        <li>हो सकता है कि सर्वर काफी अनुरोध या अस्थाई निलंबन झेल रहा हो? कृपया बाद में पुनः प्रयास करें।</li>
+        <li>क्या आप अन्य साइट भी ब्राउज़ नहीं कर पा रहे? कृपया उपकरण के नेटवर्क कनेक्शन की जांच करें।</li>
+        <li>क्या आपका उपकरण या नेटवर्क किसी फ़ायरवॉल या प्रॉक्सी द्वारा सुरक्षित है? गलत सेटिंग से वेब ब्राउज़िंग में बाधा आ सकती है।</li>
+        <li>अभी भी समस्या हो रही है? सहायता के लिए अपने नेटवर्क व्यवस्थापक या इंटरनेट प्रदाता से संपर्क करें।</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">संपर्क करने में असमर्थ</string>
     <!-- The error message shown when a website could not be reached. -->
-    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[¶
-      <ul>¶
-        <li>यह साइट अस्थाई रूप से अनुपलब्ध या अत्यंत व्यस्त हो सकता है। कुछ समय बाद पुनः प्रयास करें।</li>¶
-        <li>यदि आप कोई भी पृष्ठ लोड करने में असमर्थ हैं, तो अपने मोबाइल उपकरण के डेटा या वाई-फाई कनेक्शन की जांच करें।</li>¶
-      </ul>¶]]></string>
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>यह साइट अस्थाई रूप से अनुपलब्ध या अत्यंत व्यस्त हो सकता है। कुछ समय बाद पुनः प्रयास करें।</li>
+        <li>यदि आप कोई भी पृष्ठ लोड करने में असमर्थ हैं, तो अपने मोबाइल उपकरण के डेटा या वाई-फाई कनेक्शन की जांच करें।</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">सर्वर द्वारा अप्रत्याशित प्रतिक्रिया प्राप्त हुआ</string>
 
     <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
-    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[¶
-      <p>इस साइट ने नेटवर्क अनुरोध की प्रतिक्रिया एक अप्रत्याशित रूप से दी है, जिस कारण ब्राउज़र आगे नहीं बढ़ सकता।</p>¶]]></string>
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>इस साइट ने नेटवर्क अनुरोध की प्रतिक्रिया एक अप्रत्याशित रूप से दी है, जिस कारण ब्राउज़र आगे नहीं बढ़ सकता।</p>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">यह पृष्ठ सही से पुनर्निर्देशित नहीं हो पा रहा</string>
 
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[¶
-      <p>ब्राउज़र ने अनुरोध की गई चीज़ को पाने का प्रयास बंद कर दिया है। यह साइट अनुरोध को इस प्रकार पुनर्निर्देशित कर रहा है कि वह कभी पूरा नहीं होगा।</p>¶
-      <ul>¶
-        <li>क्या आपने साइट के लिए आवश्यक कूकीज़ को अक्षम या अवरुद्ध किया है?</li>¶
-        <li>यदि साइट की कूकीज़ स्वीकारने से भी यह समस्या ठीक नहीं होती, तो संभवतः यह सर्वर विन्यास की समस्या है ना कि आपके उपकरण की।</li>¶
-      </ul>¶]]></string>
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>ब्राउज़र ने अनुरोध की गई चीज़ को पाने का प्रयास बंद कर दिया है। यह साइट अनुरोध को इस प्रकार पुनर्निर्देशित कर रहा है कि वह कभी पूरा नहीं होगा।</p>
+      <ul>
+        <li>क्या आपने साइट के लिए आवश्यक कूकीज़ को अक्षम या अवरुद्ध किया है?</li>
+        <li>यदि साइट की कूकीज़ स्वीकारने से भी यह समस्या ठीक नहीं होती, तो संभवतः यह सर्वर विन्यास की समस्या है ना कि आपके उपकरण की।</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">ऑफलाइन मोड</string>
 
     <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-    <string name="mozac_browser_errorpages_offline_message"><![CDATA[¶
-      <p>ब्राउज़र अपने ऑफलाइन मोड में चल रहा है और अनुरिधित चीज़ से नहीं जुड़ सकता।</p>¶
-      <ul>¶
-        <li>क्या उपकरण किसी सक्रीय नेटवर्क से जुड़ा हुआ है?</li>¶
-        <li>ऑनलाइन मोड में जाने के लिए “पुनः प्रयास करें” दबाएं या पृष्ठ को पुनः लोड करें।</li>¶
-      </ul>¶]]></string>
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>ब्राउज़र अपने ऑफलाइन मोड में चल रहा है और अनुरिधित चीज़ से नहीं जुड़ सकता।</p>
+      <ul>
+        <li>क्या उपकरण किसी सक्रीय नेटवर्क से जुड़ा हुआ है?</li>
+        <li>ऑनलाइन मोड में जाने के लिए “पुनः प्रयास करें” दबाएं या पृष्ठ को पुनः लोड करें।</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">सुरक्षा कारणों से पोर्ट प्रतिबंधित है</string>

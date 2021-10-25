@@ -229,9 +229,9 @@
 
     <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
       <ul>
-        <li>Pote le elemento haber essite renominate, removite o transferite?</li>
-        <li>Ha il un error de orthographia, majusculas o altere typographic in le adresse?</li>
-        <li>Ha tu sufficiente permissos de accesso al elemento requirite?</li>
+        <li>Poterea le objecto haber essite renominate, removite o displaciate?</li>
+        <li>Ha il un error de orthographia, de majusculas o un altere error typographic in le adresse?</li>
+        <li>Ha tu permissiones de accesso sufficiente pro le objecto requestate?</li>
       </ul>
     ]]></string>
 
@@ -240,7 +240,7 @@
 
     <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
       <ul>
-        <li>Illo pote haber essite removite, movite o le permissos del file pote impedir le accesso.</li>
+        <li>Illo pote haber essite removite o displaciate, o le permissiones del file pote impedir le accesso.</li>
       </ul>
     ]]></string>
 

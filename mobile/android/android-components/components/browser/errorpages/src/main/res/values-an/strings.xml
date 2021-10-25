@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Problema en cargar la pachina</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Tornar a intentar-lo</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Tornar enta zaga</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">No se puede completar la petición</string>
@@ -135,7 +130,7 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">Conteniu blocau</string>
-    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[¶
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
 <p>La pachina que yes intentando veyer no puede amostrar-se perque se detectó una error en a transmisión d’os datos.</p>
       <ul>
         <li>Mete-te en contacto con os propietarios d’o puesto web pa informar-les d’este problema.</li>
