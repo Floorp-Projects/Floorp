@@ -493,22 +493,22 @@ void MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
           } else {
             MOZ_ASSERT(access.isWidenSimd128Load());
             switch (access.widenSimdOp()) {
-              case wasm::SimdOp::I16x8LoadS8x8:
+              case wasm::SimdOp::V128Load8x8S:
                 Sshll(SelectFPReg(outany, out64, 128).V8H(), scratch.V8B(), 0);
                 break;
-              case wasm::SimdOp::I16x8LoadU8x8:
+              case wasm::SimdOp::V128Load8x8U:
                 Ushll(SelectFPReg(outany, out64, 128).V8H(), scratch.V8B(), 0);
                 break;
-              case wasm::SimdOp::I32x4LoadS16x4:
+              case wasm::SimdOp::V128Load16x4S:
                 Sshll(SelectFPReg(outany, out64, 128).V4S(), scratch.V4H(), 0);
                 break;
-              case wasm::SimdOp::I32x4LoadU16x4:
+              case wasm::SimdOp::V128Load16x4U:
                 Ushll(SelectFPReg(outany, out64, 128).V4S(), scratch.V4H(), 0);
                 break;
-              case wasm::SimdOp::I64x2LoadS32x2:
+              case wasm::SimdOp::V128Load32x2S:
                 Sshll(SelectFPReg(outany, out64, 128).V2D(), scratch.V2S(), 0);
                 break;
-              case wasm::SimdOp::I64x2LoadU32x2:
+              case wasm::SimdOp::V128Load32x2U:
                 Ushll(SelectFPReg(outany, out64, 128).V2D(), scratch.V2S(), 0);
                 break;
               default:
