@@ -38,10 +38,10 @@ add_task(async function test_main() {
   const pageUrl = httpURL("helper_test_autoscrolling_in_oop_frame.html");
 
   await BrowserTestUtils.withNewTab(pageUrl, async function(browser) {
-    await flushApzRepaintsInPopup(browser);
+    await promiseApzFlushedRepaintsInPopup(browser);
 
     const iframeContext = browser.browsingContext.children[0];
-    await flushApzRepaintsInPopup(iframeContext);
+    await promiseApzFlushedRepaintsInPopup(iframeContext);
 
     const { screenX, screenY, viewId, presShellId } = await SpecialPowers.spawn(
       iframeContext,
@@ -96,7 +96,7 @@ add_task(async function test_main() {
 
     // Flush APZ repaints and waits for MozAfterPaint to make sure the scroll has
     // been reflected on the main thread.
-    const apzPromise = flushApzRepaintsInPopup(browser);
+    const apzPromise = promiseApzFlushedRepaintsInPopup(browser);
 
     await Promise.all([apzPromise, scrollEventPromise]);
 
