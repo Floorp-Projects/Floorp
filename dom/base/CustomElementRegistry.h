@@ -18,9 +18,7 @@
 #include "mozilla/dom/ElementInternals.h"
 #include "mozilla/RefPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsGenericHTMLElement.h"
 #include "nsWrapperCache.h"
-#include "nsContentUtils.h"
 #include "nsTHashSet.h"
 
 namespace mozilla {
