@@ -215,37 +215,41 @@ JS_PUBLIC_API void HeapScriptWriteBarriers(JSScript** objp, JSScript* prev,
                                            JSScript* next);
 
 /**
- * Create a safely-initialized |T|, suitable for use as a default value in
- * situations requiring a safe but arbitrary |T| value.
+ * SafelyInitialized<T>::create() creates a safely-initialized |T|, suitable for
+ * use as a default value in situations requiring a safe but arbitrary |T|
+ * value. Implemented as a static method of a struct to allow partial
+ * specialization for subclasses via the Enable template parameter.
  */
-template <typename T>
-inline T SafelyInitialized() {
-  // This function wants to presume that |T()| -- which value-initializes a
-  // |T| per C++11 [expr.type.conv]p2 -- will produce a safely-initialized,
-  // safely-usable T that it can return.
+template <typename T, typename Enable = void>
+struct SafelyInitialized {
+  static T create() {
+    // This function wants to presume that |T()| -- which value-initializes a
+    // |T| per C++11 [expr.type.conv]p2 -- will produce a safely-initialized,
+    // safely-usable T that it can return.
 
 #if defined(XP_WIN) || defined(XP_MACOSX) || \
     (defined(XP_UNIX) && !defined(__clang__))
 
-  // That presumption holds for pointers, where value initialization produces
-  // a null pointer.
-  constexpr bool IsPointer = std::is_pointer_v<T>;
+    // That presumption holds for pointers, where value initialization produces
+    // a null pointer.
+    constexpr bool IsPointer = std::is_pointer_v<T>;
 
-  // For classes and unions we *assume* that if |T|'s default constructor is
-  // non-trivial it'll initialize correctly. (This is unideal, but C++
-  // doesn't offer a type trait indicating whether a class's constructor is
-  // user-defined, which better approximates our desired semantics.)
-  constexpr bool IsNonTriviallyDefaultConstructibleClassOrUnion =
-      (std::is_class_v<T> ||
-       std::is_union_v<T>)&&!std::is_trivially_default_constructible_v<T>;
+    // For classes and unions we *assume* that if |T|'s default constructor is
+    // non-trivial it'll initialize correctly. (This is unideal, but C++
+    // doesn't offer a type trait indicating whether a class's constructor is
+    // user-defined, which better approximates our desired semantics.)
+    constexpr bool IsNonTriviallyDefaultConstructibleClassOrUnion =
+        (std::is_class_v<T> ||
+         std::is_union_v<T>)&&!std::is_trivially_default_constructible_v<T>;
 
-  static_assert(IsPointer || IsNonTriviallyDefaultConstructibleClassOrUnion,
-                "T() must evaluate to a safely-initialized T");
+    static_assert(IsPointer || IsNonTriviallyDefaultConstructibleClassOrUnion,
+                  "T() must evaluate to a safely-initialized T");
 
 #endif
 
-  return T();
-}
+    return T();
+  }
+};
 
 #ifdef JS_DEBUG
 /**
@@ -301,13 +305,13 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapOperations<T, Heap<T>> {
  public:
   using ElementType = T;
 
-  Heap() : ptr(SafelyInitialized<T>()) {
+  Heap() : ptr(SafelyInitialized<T>::create()) {
     // No barriers are required for initialization to the default value.
     static_assert(sizeof(T) == sizeof(Heap<T>),
                   "Heap<T> must be binary compatible with T.");
   }
   explicit Heap(const T& p) : ptr(p) {
-    postWriteBarrier(SafelyInitialized<T>(), ptr);
+    postWriteBarrier(SafelyInitialized<T>::create(), ptr);
   }
 
   /*
@@ -317,19 +321,19 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapOperations<T, Heap<T>> {
    * though they are equivalent.
    */
   explicit Heap(const Heap<T>& other) : ptr(other.getWithoutExpose()) {
-    postWriteBarrier(SafelyInitialized<T>(), ptr);
+    postWriteBarrier(SafelyInitialized<T>::create(), ptr);
   }
   Heap(Heap<T>&& other) : ptr(other.getWithoutExpose()) {
-    postWriteBarrier(SafelyInitialized<T>(), ptr);
+    postWriteBarrier(SafelyInitialized<T>::create(), ptr);
   }
 
   Heap& operator=(Heap<T>&& other) {
     set(other.getWithoutExpose());
-    other.set(SafelyInitialized<T>());
+    other.set(SafelyInitialized<T>::create());
     return *this;
   }
 
-  ~Heap() { postWriteBarrier(ptr, SafelyInitialized<T>()); }
+  ~Heap() { postWriteBarrier(ptr, SafelyInitialized<T>::create()); }
 
   DECLARE_POINTER_CONSTREF_OPS(T);
   DECLARE_POINTER_ASSIGN_OPS(Heap, T);
@@ -1146,7 +1150,8 @@ class MOZ_RAII Rooted : public detail::RootedTraits<T>::StackBase,
   template <typename RootingContext,
             typename = std::enable_if_t<std::is_copy_constructible_v<T>,
                                         RootingContext>>
-  explicit Rooted(const RootingContext& cx) : ptr(SafelyInitialized<T>()) {
+  explicit Rooted(const RootingContext& cx)
+      : ptr(SafelyInitialized<T>::create()) {
     registerWithRootLists(rootLists(cx));
   }
 
@@ -1394,13 +1399,13 @@ class PersistentRooted : public detail::RootedTraits<T>::PersistentBase,
  public:
   using ElementType = T;
 
-  PersistentRooted() : ptr(SafelyInitialized<T>()) {}
+  PersistentRooted() : ptr(SafelyInitialized<T>::create()) {}
 
   template <
       typename RootHolder,
       typename = std::enable_if_t<std::is_copy_constructible_v<T>, RootHolder>>
   explicit PersistentRooted(const RootHolder& cx)
-      : ptr(SafelyInitialized<T>()) {
+      : ptr(SafelyInitialized<T>::create()) {
     registerWithRootLists(cx);
   }
 
@@ -1433,7 +1438,7 @@ class PersistentRooted : public detail::RootedTraits<T>::PersistentBase,
 
   bool initialized() const { return this->isInList(); }
 
-  void init(RootingContext* cx) { init(cx, SafelyInitialized<T>()); }
+  void init(RootingContext* cx) { init(cx, SafelyInitialized<T>::create()); }
   void init(JSContext* cx) { init(RootingContext::get(cx)); }
 
   template <typename U>
@@ -1449,7 +1454,7 @@ class PersistentRooted : public detail::RootedTraits<T>::PersistentBase,
 
   void reset() {
     if (initialized()) {
-      set(SafelyInitialized<T>());
+      set(SafelyInitialized<T>::create());
       this->remove();
     }
   }
