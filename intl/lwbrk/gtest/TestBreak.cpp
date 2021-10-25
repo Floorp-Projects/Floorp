@@ -16,6 +16,8 @@
 #include "nsTArray.h"
 #include "nsXPCOM.h"
 
+using mozilla::intl::LineBreaker;
+
 // Turn off clang-format to align the ruler comments to the test strings.
 
 // clang-format off
@@ -115,15 +117,14 @@ bool Check(const char* in, mozilla::Span<const uint32_t> out,
   return ok;
 }
 
-bool TestASCIILB(mozilla::intl::LineBreaker* lb, const char* in,
-                 mozilla::Span<const uint32_t> out) {
+bool TestASCIILB(const char* in, mozilla::Span<const uint32_t> out) {
   NS_ConvertASCIItoUTF16 input(in);
   EXPECT_GT(input.Length(), 0u) << "Expect a non-empty input!";
 
   nsTArray<uint32_t> result;
   int32_t curr = 0;
   while (true) {
-    curr = lb->Next(input.get(), input.Length(), curr);
+    curr = LineBreaker::Next(input.get(), input.Length(), curr);
     if (curr == NS_LINEBREAKER_NEED_MORE_TEXT) {
       break;
     }
@@ -153,14 +154,10 @@ bool TestASCIIWB(mozilla::intl::WordBreaker* wb, const char* in,
 
 TEST(LineBreak, LineBreaker)
 {
-  RefPtr<mozilla::intl::LineBreaker> t = mozilla::intl::LineBreaker::Create();
-
-  ASSERT_TRUE(t);
-
-  ASSERT_TRUE(TestASCIILB(t, teng0, lexp0));
-  ASSERT_TRUE(TestASCIILB(t, teng1, lexp1));
-  ASSERT_TRUE(TestASCIILB(t, teng2, lexp2));
-  ASSERT_TRUE(TestASCIILB(t, teng3, lexp3));
+  ASSERT_TRUE(TestASCIILB(teng0, lexp0));
+  ASSERT_TRUE(TestASCIILB(teng1, lexp1));
+  ASSERT_TRUE(TestASCIILB(teng2, lexp2));
+  ASSERT_TRUE(TestASCIILB(teng3, lexp3));
 }
 
 TEST(WordBreak, WordBreaker)

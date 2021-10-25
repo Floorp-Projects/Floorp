@@ -29,6 +29,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Text.h"
+#include "mozilla/intl/LineBreaker.h"
 #include "mozilla/Span.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_converter.h"
@@ -117,21 +118,20 @@ void nsPlainTextSerializer::CurrentLine::ResetContentAndIndentationHeader() {
 }
 
 int32_t nsPlainTextSerializer::CurrentLine::FindWrapIndexForContent(
-    const uint32_t aWrapColumn,
-    mozilla::intl::LineBreaker* aLineBreaker) const {
+    const uint32_t aWrapColumn, bool aUseLineBreaker) const {
   MOZ_ASSERT(!mContent.IsEmpty());
 
   const uint32_t prefixwidth = DeterminePrefixWidth();
   int32_t goodSpace = 0;
 
-  if (aLineBreaker) {
+  if (aUseLineBreaker) {
     // We advance one line break point at a time from the beginning of the
     // mContent until we find a width less than or equal to wrap column.
     uint32_t width = 0;
     const auto len = mContent.Length();
     while (true) {
       int32_t nextGoodSpace =
-          aLineBreaker->Next(mContent.get(), len, goodSpace);
+          intl::LineBreaker::Next(mContent.get(), len, goodSpace);
       if (nextGoodSpace == NS_LINEBREAKER_NEED_MORE_TEXT) {
         // Line breaker reaches the end of mContent.
         break;
@@ -332,9 +332,7 @@ nsPlainTextSerializer::Init(const uint32_t aFlags, uint32_t aWrapColumn,
   mSettings.Init(aFlags, aWrapColumn);
   mOutputManager.emplace(mSettings.GetFlags(), aOutput);
 
-  if (mSettings.MayWrap() && mSettings.MayBreakLines()) {
-    mLineBreaker = nsContentUtils::LineBreaker();
-  }
+  mUseLineBreaker = mSettings.MayWrap() && mSettings.MayBreakLines();
 
   mLineBreakDue = false;
   mFloatingLines = -1;
@@ -1239,7 +1237,7 @@ void nsPlainTextSerializer::MaybeWrapAndOutputCompleteLines() {
     }
 
     const int32_t goodSpace =
-        mCurrentLine.FindWrapIndexForContent(wrapColumn, mLineBreaker);
+        mCurrentLine.FindWrapIndexForContent(wrapColumn, mUseLineBreaker);
 
     const int32_t contentLength = mCurrentLine.mContent.Length();
     if ((goodSpace < contentLength) && (goodSpace > 0)) {
