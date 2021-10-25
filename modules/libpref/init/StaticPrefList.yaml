@@ -4222,6 +4222,12 @@
   value: false
   mirror: always
 
+# Legacy behavior on filterResponse calls on intercepted sw script requests.
+- name: extensions.filterResponseServiceWorkerScript.disabled
+  type: bool
+  value: false
+  mirror: always
+
 # This pref governs whether we run webextensions in a separate process (true)
 # or the parent/main process (false)
 - name: extensions.webextensions.remote
