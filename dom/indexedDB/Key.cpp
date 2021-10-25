@@ -666,10 +666,12 @@ Result<Ok, nsresult> Key::EncodeLocaleString(const nsAString& aString,
   MOZ_ASSERT(collator);
 
   AutoTArray<uint8_t, 128> keyBuffer;
-  auto getResult = collator->GetSortKey(Span{aString}, keyBuffer);
-  if (getResult.isErr()) {
-    return Err(NS_ERROR_FAILURE);
-  }
+  MOZ_TRY(collator->GetSortKey(Span{aString}, keyBuffer)
+              .mapErr([](intl::ICUError icuError) {
+                return icuError == intl::ICUError::OutOfMemory
+                           ? NS_ERROR_OUT_OF_MEMORY
+                           : NS_ERROR_FAILURE;
+              }));
 
   size_t sortKeyLength = keyBuffer.Length();
   return EncodeString(Span{keyBuffer}.AsConst().First(sortKeyLength),
