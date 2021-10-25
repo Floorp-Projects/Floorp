@@ -443,7 +443,8 @@ var MigrationWizard = {
     if (
       this._source == "safari" &&
       AppConstants.isPlatformAndVersionAtLeast("macosx", "18") &&
-      this._itemsFlags & MigrationUtils.resourceTypes.BOOKMARKS
+      (this._itemsFlags & Ci.nsIBrowserProfileMigrator.BOOKMARKS ||
+        this._itemsFlags == Ci.nsIBrowserProfileMigrator.ALL)
     ) {
       let migrator = this._migrator.wrappedJSObject;
       let havePermissions = this.spinResolve(migrator.hasPermissions());
