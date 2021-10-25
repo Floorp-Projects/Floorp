@@ -6,8 +6,7 @@
 
 const { Services } = SpecialPowers;
 const { NetUtil } = SpecialPowers.Cu.import(
-  "resource://gre/modules/NetUtil.jsm",
-  {}
+  "resource://gre/modules/NetUtil.jsm"
 );
 
 function checkSitePermissions(uuid, expectedPermAction, assertMessage) {

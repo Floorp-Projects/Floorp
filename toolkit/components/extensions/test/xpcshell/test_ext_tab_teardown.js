@@ -3,9 +3,8 @@
 add_task(async function test_extension_page_tabs_create_reload_and_close() {
   let events = [];
   {
-    let { Management } = ChromeUtils.import(
-      "resource://gre/modules/Extension.jsm",
-      null
+    const { Management } = ChromeUtils.import(
+      "resource://gre/modules/Extension.jsm"
     );
     let record = (type, extensionContext) => {
       let eventType = type == "proxy-context-load" ? "load" : "unload";
