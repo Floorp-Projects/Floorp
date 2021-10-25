@@ -227,6 +227,8 @@ ScriptLoader::ScriptLoader(Document* aDocument)
       mParserBlockingBlockerCount(0),
       mBlockerCount(0),
       mNumberOfProcessors(0),
+      mTotalFullParseSize(0),
+      mPhysicalSizeOfMemory(-1),
       mEnabled(true),
       mDeferEnabled(false),
       mSpeculativeOMTParsingEnabled(false),
@@ -2582,13 +2584,24 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
     }
   } else {
     MOZ_ASSERT(aRequest->IsTextSource());
+
+    if (ShouldFullParse(aRequest)) {
+      options.setForceFullParse();
+      mTotalFullParseSize +=
+          aRequest->ScriptTextLength() > 0
+              ? static_cast<uint32_t>(aRequest->ScriptTextLength())
+              : 0;
+
+      LOG(
+          ("ScriptLoadRequest (%p): Full Parsing Enabled for url=%s "
+           "mTotalFullParseSize=%u",
+           aRequest, aRequest->mURI->GetSpecOrDefault().get(),
+           mTotalFullParseSize));
+    }
+
     MaybeSourceText maybeSource;
     nsresult rv = GetScriptSource(cx, aRequest, &maybeSource);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    if (StaticPrefs::dom_script_loader_full_parse()) {
-      options.setForceFullParse();
-    }
 
     aRequest->mOffThreadToken =
         maybeSource.constructed<SourceText<char16_t>>()
@@ -4083,16 +4096,67 @@ void ScriptLoader::ContinueParserAsync(
 }
 
 uint32_t ScriptLoader::NumberOfProcessors() {
-  if (mNumberOfProcessors > 0) return mNumberOfProcessors;
+  if (mNumberOfProcessors > 0) {
+    return mNumberOfProcessors;
+  }
 
   int32_t numProcs = PR_GetNumberOfProcessors();
-  if (numProcs > 0) mNumberOfProcessors = numProcs;
+  if (numProcs > 0) {
+    mNumberOfProcessors = numProcs;
+  }
   return mNumberOfProcessors;
+}
+
+int32_t ScriptLoader::PhysicalSizeOfMemoryInGB() {
+  // 0 is a valid result from PR_GetPhysicalMemorySize() which
+  // means a failure occured.
+  if (mPhysicalSizeOfMemory >= 0) {
+    return mPhysicalSizeOfMemory;
+  }
+
+  // Save the size in GB.
+  mPhysicalSizeOfMemory =
+      static_cast<int32_t>(PR_GetPhysicalMemorySize() >> 30);
+  return mPhysicalSizeOfMemory;
 }
 
 static bool IsInternalURIScheme(nsIURI* uri) {
   return uri->SchemeIs("moz-extension") || uri->SchemeIs("resource") ||
          uri->SchemeIs("chrome");
+}
+
+bool ScriptLoader::ShouldFullParse(ScriptLoadRequest* aRequest) {
+  // Full parse everything if negative.
+  if (StaticPrefs::dom_script_loader_full_parse_max_size() < 0) {
+    return true;
+  }
+
+  // Be conservative on machines with 2GB or less of memory.
+  if (PhysicalSizeOfMemoryInGB() <=
+      StaticPrefs::dom_script_loader_full_parse_min_mem()) {
+    return false;
+  }
+
+  uint32_t max_size = static_cast<uint32_t>(
+      StaticPrefs::dom_script_loader_full_parse_max_size());
+  uint32_t script_size =
+      aRequest->ScriptTextLength() > 0
+          ? static_cast<uint32_t>(aRequest->ScriptTextLength())
+          : 0;
+
+  if (mTotalFullParseSize + script_size < max_size) {
+    return true;
+  }
+
+  if (LOG_ENABLED()) {
+    nsCString url = aRequest->mURI->GetSpecOrDefault();
+    LOG(
+        ("ScriptLoadRequest (%p): Full Parsing Disabled for (%s) with size=%u"
+         " because mTotalFullParseSize=%u would exceed max_size=%u",
+         aRequest, url.get(), script_size, mTotalFullParseSize, max_size));
+  }
+
+  return false;
 }
 
 bool ScriptLoader::ShouldCompileOffThread(ScriptLoadRequest* aRequest) {
