@@ -16546,6 +16546,11 @@ already_AddRefed<mozilla::dom::Promise> Document::HasStorageAccess(
     return promise.forget();
   }
 
+  if (CookieJarSettings()->GetBlockingAllContexts()) {
+    promise->MaybeResolve(false);
+    return promise.forget();
+  }
+
   if (IsTopLevelContentDocument()) {
     promise->MaybeResolve(true);
     return promise.forget();
@@ -16637,6 +16642,13 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
 
   nsCOMPtr<nsPIDOMWindowInner> inner = GetInnerWindow();
   if (!inner) {
+    this->ConsumeTransientUserGestureActivation();
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
+  // Step 0. If the browser forbids any storage access, reject.
+  if (CookieJarSettings()->GetBlockingAllContexts()) {
     this->ConsumeTransientUserGestureActivation();
     promise->MaybeRejectWithUndefined();
     return promise.forget();
@@ -16738,6 +16750,13 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   //         Examples: skip-lists, on-device classification,
   //         user settings, anti-clickjacking heuristics, or prompting the
   //         user for explicit permission. Reject if some rule is not fulfilled.
+
+  if (CookieJarSettings()->GetBlockingAllThirdPartyContexts()) {
+    this->ConsumeTransientUserGestureActivation();
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
   if (CookieJarSettings()->GetRejectThirdPartyContexts()) {
     // Only do something special for third-party tracking content.
     uint32_t antiTrackingRejectedReason = 0;
@@ -16931,6 +16950,13 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
     return nullptr;
   }
 
+  // If the browser forbids any storage access, reject.
+  if (CookieJarSettings()->GetBlockingAllContexts()) {
+    this->ConsumeTransientUserGestureActivation();
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
   // Only enforce third-party checks when there is a reason to enforce them.
   if (!CookieJarSettings()->GetRejectThirdPartyContexts()) {
     // If the the thrid party origin is equal to the window's, resolve.
@@ -16945,6 +16971,13 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
   }
 
   // Check any additional rules that the browser has.
+
+  if (CookieJarSettings()->GetBlockingAllThirdPartyContexts()) {
+    this->ConsumeTransientUserGestureActivation();
+    promise->MaybeRejectWithUndefined();
+    return promise.forget();
+  }
+
   if (CookieJarSettings()->GetRejectThirdPartyContexts()) {
     RefPtr<BrowsingContext> bc = GetBrowsingContext();
     if (!bc) {
