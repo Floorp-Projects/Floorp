@@ -220,10 +220,8 @@ class nsTArrayToBufferAdapter {
    * Ensures the buffer has enough space to accommodate |size| elements.
    */
   [[nodiscard]] bool reserve(size_t size) {
-    mArray.SetCapacity(size);
-    // nsTArray::SetCapacity returns void, return true to keep the API the same
-    // as the other Buffer implementations.
-    return true;
+    // Use faillible behavior here.
+    return mArray.SetCapacity(size, fallible);
   }
 
   /**
