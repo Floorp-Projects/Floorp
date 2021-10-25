@@ -120,6 +120,17 @@ bool TestViewType(JSContext* cx) {
     CHECK(data1 == data2);
     CHECK(shared1 == shared2);
     CHECK(len == ExpectedLength);
+
+    JS::Heap<ViewType> hv(view);
+
+    bool shared3;
+    size_t len3;
+    uint8_t* data3 =
+        reinterpret_cast<uint8_t*>(hv.getLengthAndData(&len3, &shared3, nogc));
+    CHECK(obj == hv.asObject());
+    CHECK(data1 == data3);
+    CHECK(shared1 == shared3);
+    CHECK(len3 == ExpectedLength);
   }
 
   JS::RealmOptions options;
