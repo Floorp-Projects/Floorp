@@ -36,7 +36,8 @@ LOCAL_INCLUDES += [
 
 FINAL_LIBRARY = "xul"
 
-DEFINES["MOZ_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"]
+for var in ("MOZ_APP_NAME", "MOZ_APP_BASENAME"):
+    DEFINES[var] = '"%s"' % CONFIG[var]
 
 JAR_MANIFESTS += ["jar.mn"]
 

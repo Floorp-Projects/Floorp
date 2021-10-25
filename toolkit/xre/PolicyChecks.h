@@ -11,14 +11,16 @@
 
 #  include <windows.h>
 
+#  define POLICY_REGKEY_NAME L"SOFTWARE\\Policies\\Mozilla\\" MOZ_APP_BASENAME
+
 // NB: This code must be able to run apart from XPCOM
 
 namespace mozilla {
 
 inline bool PolicyHasRegValue(HKEY aKey, LPCWSTR aName, DWORD* aValue) {
   DWORD len = sizeof(DWORD);
-  LONG ret = ::RegGetValueW(aKey, L"SOFTWARE\\Policies\\Mozilla\\Firefox",
-                            aName, RRF_RT_DWORD, nullptr, aValue, &len);
+  LONG ret = ::RegGetValueW(aKey, POLICY_REGKEY_NAME, aName, RRF_RT_DWORD,
+                            nullptr, aValue, &len);
   return ret == ERROR_SUCCESS;
 }
 
