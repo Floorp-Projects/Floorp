@@ -55,9 +55,6 @@ class LineBreaker {
 
  private:
   ~LineBreaker() = default;
-
-  int32_t WordMove(const char16_t* aText, uint32_t aLen, uint32_t aPos,
-                   int8_t aDirection);
 };
 
 static inline bool NS_IsSpace(char16_t u) {
