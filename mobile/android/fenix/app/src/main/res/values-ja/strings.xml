@@ -26,7 +26,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">開いているタブ 1 個。タップしてタブを切り替えます。</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">開いているタブ %1$s 個。タップしてタブを切り替えます。</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">開いているタブ %1$s 個。タップしてタブを切り替えます。</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d 個選択</string>
@@ -113,9 +113,18 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">閉じる</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">2 週間以上表示していないタブをここに移動します。</string>
+    <string name="tab_tray_inactive_onboarding_message">2 週間以上表示していないタブをここに移動します。</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">設定でオフにする</string>
+    <string name="tab_tray_inactive_onboarding_button_text">設定でオフにする</string>
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">1 か月後に自動的に閉じますか？</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox は 1 か月以上表示していないタブを閉じることができます。</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">閉じる</string>
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button">タブを自動的に閉じる</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -124,7 +133,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">新しいプライベートタブ</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">よく見るサイト</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">よく見るサイト</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -171,7 +180,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">中止</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">ブックマーク</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">ブックマーク</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">ブックマークを編集</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -387,7 +396,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">テーマ</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">ホーム画面</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">ホーム画面</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">ホームページ</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">ジェスチャー</string>
     <!-- Preference for settings related to visual options -->
@@ -584,7 +595,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Sync を有効化</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">デスクトップ版 Firefox のペアリングコードをスキャン</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">デスクトップ版 Firefox のペアリングコードをスキャン</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">ログイン</string>
 
@@ -708,15 +719,23 @@
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">開いたタブを自動的に閉じる</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">ホーム画面で開始</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">ホーム画面で開始</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">最初の画面</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">4 時間後</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">4 時間後</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">ホームページ</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">常に使用する</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">常に使用する</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">最後のタブ</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">使用しない</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">使用しない</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">操作せずに 4 時間経つとホームページへ戻ります</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">手動で閉じる</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -773,13 +792,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">コレクションに保存</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">選択</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">選択</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">すべてのタブを共有</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">最近閉じたタブ</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">最近閉じたタブ</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">最近閉じたタブ</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">アカウント設定</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -904,10 +923,6 @@
     <string name="history_empty_message">履歴はありません</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">ダウンロード履歴を消去</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">本当にダウンロード履歴を消去しますか？</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">ダウンロード履歴を削除しました</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -948,7 +963,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">ブックマークメニュー</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">ブックマークを編集</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">ブックマークを編集</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">フォルダー選択</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1989,8 +2004,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">よく訪れるサイト</string>
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">よく訪れるサイトを表示</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">よく訪れるサイトを表示</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">よく訪れるサイトを表示</string>
 
@@ -2009,11 +2026,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">休止中のタブをすべて閉じます</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">これらのタブは %sを過ぎると自動的に閉じられます。</string>
+    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">これらのタブは %sを過ぎると自動的に閉じられます。</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 日</string>
+    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 日</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">1 週間</string>
+    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 週間</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
