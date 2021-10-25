@@ -72,7 +72,7 @@ add_task(async function flush_on_windowclose() {
     {
       tabs: [, { storage }],
     },
-  ] = JSON.parse(ss.getClosedWindowData());
+  ] = ss.getClosedWindowData();
   is(
     storage["http://example.com"].test,
     "on-window-close",

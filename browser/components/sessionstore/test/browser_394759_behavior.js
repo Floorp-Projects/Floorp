@@ -33,7 +33,7 @@ function testWindows(windowsToOpen, expectedResults) {
       await BrowserTestUtils.closeWindow(win);
     }
 
-    let closedWindowData = JSON.parse(ss.getClosedWindowData());
+    let closedWindowData = ss.getClosedWindowData();
     let numPopups = closedWindowData.filter(function(el, i, arr) {
       return el.isPopup;
     }).length;

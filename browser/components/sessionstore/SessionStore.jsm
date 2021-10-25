@@ -334,8 +334,8 @@ var SessionStore = {
     return SessionStoreInternal.getClosedWindowCount();
   },
 
-  getClosedWindowData: function ss_getClosedWindowData(aAsString = true) {
-    return SessionStoreInternal.getClosedWindowData(aAsString);
+  getClosedWindowData: function ss_getClosedWindowData() {
+    return SessionStoreInternal.getClosedWindowData();
   },
 
   maybeDontSaveTabs(aWindow) {
@@ -3246,10 +3246,8 @@ var SessionStoreInternal = {
     return this._closedWindows.length;
   },
 
-  getClosedWindowData: function ssi_getClosedWindowData(aAsString = true) {
-    return aAsString
-      ? JSON.stringify(this._closedWindows)
-      : Cu.cloneInto(this._closedWindows, {});
+  getClosedWindowData: function ssi_getClosedWindowData() {
+    return Cu.cloneInto(this._closedWindows, {});
   },
 
   undoCloseWindow: function ssi_undoCloseWindow(aIndex) {
