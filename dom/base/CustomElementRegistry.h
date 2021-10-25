@@ -40,6 +40,7 @@ enum class ElementCallbackType {
   eAdopted,
   eAttributeChanged,
   eFormReset,
+  eFormDisabled,
   eGetCustomInterface
 };
 
@@ -53,6 +54,9 @@ struct LifecycleCallbackArgs {
   // Used by the adopted callback.
   RefPtr<Document> mOldDocument;
   RefPtr<Document> mNewDocument;
+
+  // Used by the form disabled callback.
+  bool mDisabled;
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 };

@@ -170,6 +170,12 @@ UniquePtr<CustomElementCallback> CustomElementCallback::Create(
       }
       break;
 
+    case ElementCallbackType::eFormDisabled:
+      if (aDefinition->mCallbacks->mFormDisabledCallback.WasPassed()) {
+        func = aDefinition->mCallbacks->mFormDisabledCallback.Value();
+      }
+      break;
+
     case ElementCallbackType::eGetCustomInterface:
       MOZ_ASSERT_UNREACHABLE("Don't call GetCustomInterface through callback");
       break;
@@ -206,6 +212,10 @@ void CustomElementCallback::Call() {
     case ElementCallbackType::eFormReset:
       static_cast<LifecycleFormResetCallback*>(mCallback.get())
           ->Call(mThisObject);
+      break;
+    case ElementCallbackType::eFormDisabled:
+      static_cast<LifecycleFormDisabledCallback*>(mCallback.get())
+          ->Call(mThisObject, mArgs.mDisabled);
       break;
     case ElementCallbackType::eGetCustomInterface:
       MOZ_ASSERT_UNREACHABLE("Don't call GetCustomInterface through callback");
@@ -1554,6 +1564,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CustomElementDefinition)
   if (callbacks->mFormResetCallback.WasPassed()) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCallbacks->mFormResetCallback");
     cb.NoteXPCOMChild(callbacks->mFormResetCallback.Value());
+  }
+
+  if (callbacks->mFormDisabledCallback.WasPassed()) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCallbacks->mFormDisabledCallback");
+    cb.NoteXPCOMChild(callbacks->mFormDisabledCallback.Value());
   }
 
   if (callbacks->mGetCustomInterfaceCallback.WasPassed()) {

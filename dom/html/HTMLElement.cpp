@@ -196,6 +196,18 @@ bool HTMLElement::DoesReadOnlyApply() const {
   return IsFormAssociatedElement();
 }
 
+void HTMLElement::UpdateDisabledState(bool aNotify) {
+  bool oldState = IsDisabled();
+  nsGenericHTMLFormElement::UpdateDisabledState(aNotify);
+  if (oldState != IsDisabled()) {
+    MOZ_ASSERT(IsFormAssociatedElement());
+    LifecycleCallbackArgs args;
+    args.mDisabled = !oldState;
+    nsContentUtils::EnqueueLifecycleCallback(ElementCallbackType::eFormDisabled,
+                                             this, args);
+  }
+}
+
 bool HTMLElement::IsFormAssociatedElement() const {
   CustomElementData* data = GetCustomElementData();
   bool isFormAssociatedCustomElement = data && data->IsFormAssociated();
