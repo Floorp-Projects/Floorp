@@ -7,11 +7,12 @@
 // started highlights nodes
 
 const NESTED_FRAME_SRC =
-  "data:text/html;charset=utf-8," + "nested iframe<div>nested div</div>";
+  "data:text/html;charset=utf-8," +
+  "nested iframe<section>nested div</section>";
 
 const OUTER_FRAME_SRC =
   "data:text/html;charset=utf-8," +
-  "little frame<div>little div</div>" +
+  "little frame<main>little div</main>" +
   "<iframe src='" +
   NESTED_FRAME_SRC +
   "' />";
@@ -24,28 +25,51 @@ const TEST_URI =
   '" />';
 
 add_task(async function() {
-  const {
+  const { toolbox, inspector } = await openInspectorForURL(TEST_URI);
+  const outerFrameMainSelector = ["iframe", "main"];
+  const innerFrameSectionSelector = ["iframe", "iframe", "section"];
+
+  const outerFrameMainNodeFront = await getNodeFrontInFrames(
+    outerFrameMainSelector,
+    inspector
+  );
+  const outerFrameHighlighterTestFront = await getHighlighterTestFront(
     toolbox,
-    inspector,
-    highlighterTestFront,
-  } = await openInspectorForURL(TEST_URI);
-  const outerFrameDiv = ["iframe", "div"];
-  const innerFrameDiv = ["iframe", "iframe", "div"];
+    { target: outerFrameMainNodeFront.targetFront }
+  );
+
+  const innerFrameSectionNodeFront = await getNodeFrontInFrames(
+    innerFrameSectionSelector,
+    inspector
+  );
+  const innerFrameHighlighterTestFront = await getHighlighterTestFront(
+    toolbox,
+    { target: innerFrameSectionNodeFront.targetFront }
+  );
 
   info("Waiting for element picker to activate.");
   await startPicker(inspector.toolbox);
 
   info("Moving mouse over outerFrameDiv");
-  await hoverElement(inspector, outerFrameDiv);
+  await hoverElement(inspector, outerFrameMainSelector);
+
   ok(
-    await highlighterTestFront.assertHighlightedNode(outerFrameDiv),
+    await outerFrameHighlighterTestFront.assertHighlightedNode(
+      isEveryFrameTargetEnabled()
+        ? outerFrameMainSelector.at(-1)
+        : outerFrameMainSelector
+    ),
     "outerFrameDiv is highlighted."
   );
 
   info("Moving mouse over innerFrameDiv");
-  await hoverElement(inspector, innerFrameDiv);
+  await hoverElement(inspector, innerFrameSectionSelector);
   ok(
-    await highlighterTestFront.assertHighlightedNode(innerFrameDiv),
+    await innerFrameHighlighterTestFront.assertHighlightedNode(
+      isEveryFrameTargetEnabled()
+        ? innerFrameSectionSelector.at(-1)
+        : innerFrameSectionSelector
+    ),
     "innerFrameDiv is highlighted."
   );
 
@@ -53,7 +77,7 @@ add_task(async function() {
   await selectNode(inspector.walker.rootNode, inspector);
 
   info("Selecting an element from the nested iframe directly");
-  await selectNodeInFrames(["iframe", "iframe", "div"], inspector);
+  await selectNodeInFrames(innerFrameSectionSelector, inspector);
 
   is(
     inspector.breadcrumbs.nodeHierarchy.length,
