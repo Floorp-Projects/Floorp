@@ -274,7 +274,7 @@
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">Caniatáu</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
-    <string name="search_suggestions_onboarding_do_not_allow_button">Peidio caniatáu</string>
+    <string name="search_suggestions_onboarding_do_not_allow_button">Peidio â chaniatáu</string>
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">Caniatáu awgrymiadau chwilio mewn sesiynau preifat?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
