@@ -1,4 +1,4 @@
-; Copyright © 2018, VideoLAN and dav1d authors
+; Copyright © 2018-2021, VideoLAN and dav1d authors
 ; Copyright © 2018, Two Orioles, LLC
 ; All rights reserved.
 ;
@@ -822,9 +822,7 @@ SECTION .text
     pmulhrsw      m8, m10, [pw_2048]
     pmulhrsw      m9, m11, [pw_2048]
     packuswb      m8, m9
-    pand          m8, m1
-    pandn         m9, m1, m7
-    por           m8, m9
+    vpblendvb     m8, m7, m8, m1
 %ifidn %2, v
     mova [tmpq+stride3q], m8                    ; p4
 %else
@@ -850,9 +848,7 @@ SECTION .text
     pmulhrsw      m8, m10, [pw_2048]
     pmulhrsw      m9, m11, [pw_2048]
     packuswb      m8, m9
-    pand          m8, m1
-    pandn         m9, m1, m12
-    por           m8, m9
+    vpblendvb     m8, m12, m8, m1
 %ifidn %2, v
     mova [tmpq+strideq*4], m8                   ; p3
 %else
@@ -878,9 +874,7 @@ SECTION .text
     pmulhrsw      m8, m10, [pw_2048]
     pmulhrsw      m9, m11, [pw_2048]
     packuswb      m8, m9
-    pand          m8, m1
-    pandn         m9, m1, m13
-    por           m8, m9
+    vpblendvb     m8, m13, m8, m1
     mova  [rsp+6*32], m8                        ; don't clobber p2/m13 since we need it in F
 
     ; sub p6/p3, add p0/q4 [-p6,+p0][-p3,+q4|save] E
@@ -910,9 +904,7 @@ SECTION .text
     pmulhrsw      m8, m10, [pw_2048]
     pmulhrsw      m9, m11, [pw_2048]
     packuswb      m8, m9
-    pand          m8, m1
-    pandn         m9, m1, m3
-    por           m8, m9
+    vpblendvb     m8, m3, m8, m1
     mova  [rsp+8*32], m8                        ; don't clobber p1/m3 since we need it in G
 
     ; sub p6/p2, add q0/q5 [-p6,+q0][-p2,+q5|save] F
@@ -940,9 +932,7 @@ SECTION .text
     pmulhrsw      m0, m10, [pw_2048]
     pmulhrsw      m8, m11, [pw_2048]
     packuswb      m0, m8
-    pand          m0, m1
-    pandn         m8, m1, m4
-    por           m0, m8
+    vpblendvb     m0, m4, m0, m1
     mova  [rsp+6*32], m0                        ; don't clobber p0/m4 since we need it in H
 
     ; sub p6/p1, add q1/q6 [reuse -p6,+q1 from B][-p1,+q6|save] G
@@ -966,9 +956,7 @@ SECTION .text
     pmulhrsw      m8, m10, [pw_2048]
     pmulhrsw      m9, m11, [pw_2048]
     packuswb      m8, m9
-    pand          m8, m1
-    pandn         m9, m1, m5
-    por           m8, m9
+    vpblendvb     m8, m5, m8, m1
     mova  [rsp+8*32], m8                        ; don't clobber q0/m5 since we need it in I
 
     ; sub p5/p0, add q2/q6 [reuse -p5,+q2 from C][-p0,+q6] H
@@ -985,9 +973,7 @@ SECTION .text
     pmulhrsw      m2, m10, [pw_2048]
     pmulhrsw      m9, m11, [pw_2048]
     packuswb      m2, m9
-    pand          m2, m1
-    pandn         m9, m1, m6
-    por           m2, m9                        ; don't clobber q1/m6 since we need it in K
+    vpblendvb     m2, m6, m2, m1                ; don't clobber q1/m6 since we need it in K
 
     ; sub p4/q0, add q3/q6 [reuse -p4,+q3 from D][-q0,+q6] I
     ; write +2
@@ -1003,9 +989,7 @@ SECTION .text
     pmulhrsw      m7, m10, [pw_2048]
     pmulhrsw      m9, m11, [pw_2048]
     packuswb      m7, m9
-    pand          m7, m1
-    pandn         m9, m1, m14
-    por           m7, m9                        ; don't clobber q2/m14 since we need it in K
+    vpblendvb     m7, m14, m7, m1               ; don't clobber q2/m14 since we need it in K
 
     ; sub p3/q1, add q4/q6 [reuse -p3,+q4 from E][-q1,+q6] J
     ; write +3
@@ -1021,9 +1005,7 @@ SECTION .text
     pmulhrsw      m8, m10, [pw_2048]
     pmulhrsw      m9, m11, [pw_2048]
     packuswb      m8, m9
-    pand          m8, m1
-    pandn         m9, m1, m15
-    por           m8, m9
+    vpblendvb     m8, m15, m8, m1
 %ifidn %2, v
     mova [tmpq+mstrideq], m8                    ; q3
 %else
@@ -1044,13 +1026,12 @@ SECTION .text
     pmulhrsw      m8, m10, [pw_2048]
     pmulhrsw      m9, m11, [pw_2048]
     packuswb      m8, m9
-    pand          m8, m1
 %ifidn %2, v
-    pandn         m9, m1, [tmpq+strideq*0]
+    mova          m9, [tmpq+strideq*0]
 %else
-    pandn         m9, m1, [rsp+15*32]
+    mova          m9, [rsp+15*32]
 %endif
-    por           m8, m9
+    vpblendvb     m8, m9, m8, m1
 %ifidn %2, v
     mova [tmpq+strideq*0], m8                    ; q4
 %else
@@ -1070,13 +1051,12 @@ SECTION .text
     pmulhrsw     m10, [pw_2048]
     pmulhrsw     m11, [pw_2048]
     packuswb     m10, m11
-    pand         m10, m1
 %ifidn %2, v
-    pandn        m11, m1, [tmpq+strideq*1]
+    mova         m11, [tmpq+strideq*1]
 %else
-    pandn        m11, m1, [rsp+16*32]
+    mova         m11, [rsp+16*32]
 %endif
-    por          m10, m11
+    vpblendvb    m10, m11, m10, m1
 %ifidn %2, v
     mova [tmpq+strideq*1], m10                  ; q5
 %else
@@ -1109,9 +1089,7 @@ SECTION .text
     psrlw         m8, m2, 3
     psrlw        m11, m7, 3
     packuswb      m8, m11
-    pand          m8, m9
-    pandn        m11, m9, m13
-    por          m10, m8, m11                  ; p2
+    vpblendvb    m10, m13, m8, m9              ; p2
 %ifidn %2, v
     mova [tmpq+strideq*1], m10                 ; p2
 %endif
@@ -1129,9 +1107,7 @@ SECTION .text
     psrlw         m8, m2, 3
     psrlw        m11, m7, 3
     packuswb      m8, m11
-    pand          m8, m9
-    pandn        m11, m9, m3
-    por           m8, m11                       ; p1
+    vpblendvb     m8, m3, m8, m9                ; p1
 %ifidn %2, v
     mova [tmpq+strideq*2], m8                   ; p1
 %else
@@ -1151,9 +1127,7 @@ SECTION .text
     psrlw         m8, m2, 3
     psrlw        m11, m7, 3
     packuswb      m8, m11
-    pand          m8, m9
-    pandn        m11, m9, m4
-    por           m8, m11                       ; p0
+    vpblendvb     m8, m4, m8, m9                ; p0
 %ifidn %2, v
     mova [tmpq+stride3q ], m8                   ; p0
 %else
@@ -1175,9 +1149,7 @@ SECTION .text
     psrlw         m8, m2, 3
     psrlw        m11, m7, 3
     packuswb      m8, m11
-    pand          m8, m9
-    pandn        m11, m9, m5
-    por          m11, m8, m11                   ; q0
+    vpblendvb    m11, m5, m8, m9                ; q0
 %ifidn %2, v
     mova [dstq+strideq*0], m11                  ; q0
 %endif
@@ -1195,9 +1167,7 @@ SECTION .text
     psrlw         m8, m2, 3
     psrlw        m13, m7, 3
     packuswb      m8, m13
-    pand          m8, m9
-    pandn        m13, m9, m6
-    por          m13, m8, m13                   ; q1
+    vpblendvb    m13, m6, m8, m9                ; q1
 %ifidn %2, v
     mova [dstq+strideq*1], m13                  ; q1
 %endif
@@ -1217,9 +1187,7 @@ SECTION .text
     psrlw         m2, 3
     psrlw         m7, 3
     packuswb      m2, m7
-    pand          m2, m9
-    pandn         m7, m9, m14
-    por           m2, m7                        ; q2
+    vpblendvb     m2, m14, m2, m9               ; q2
 %ifidn %2, v
     mova [dstq+strideq*2], m2                   ; q2
 %else
@@ -1380,9 +1348,7 @@ SECTION .text
     pmulhrsw      m2, m0, [pw_4096]
     pmulhrsw     m12, m1, [pw_4096]
     packuswb      m2, m12
-    pand          m2, m9
-    pandn        m12, m9, m3
-    por           m2, m12
+    vpblendvb     m2, m3, m2, m9
 %ifidn %2, v
     mova [tmpq+strideq*2], m2                   ; p1
 %endif
@@ -1400,9 +1366,7 @@ SECTION .text
     pmulhrsw     m12, m0, [pw_4096]
     pmulhrsw     m13, m1, [pw_4096]
     packuswb     m12, m13
-    pand         m12, m9
-    pandn        m13, m9, m4
-    por          m12, m13
+    vpblendvb    m12, m4, m12, m9
 %ifidn %2, v
     mova [tmpq+stride3q], m12                   ; p0
 %endif
@@ -1418,9 +1382,7 @@ SECTION .text
     pmulhrsw     m14, m0, [pw_4096]
     pmulhrsw     m13, m1, [pw_4096]
     packuswb     m14, m13
-    pand         m14, m9
-    pandn        m13, m9, m5
-    por          m14, m13
+    vpblendvb    m14, m5, m14, m9
 %ifidn %2, v
     mova [dstq+strideq*0], m14                  ; q0
 %endif
@@ -1436,9 +1398,7 @@ SECTION .text
     pmulhrsw      m0, [pw_4096]
     pmulhrsw      m1, [pw_4096]
     packuswb      m0, m1
-    pand          m0, m9
-    pandn         m9, m6
-    por           m0, m9
+    vpblendvb     m0, m6, m0, m9
 %ifidn %2, v
     mova [dstq+strideq*1], m0                   ; q1
 %else
@@ -1457,7 +1417,7 @@ SECTION .text
 %endmacro
 
 INIT_YMM avx2
-cglobal lpf_v_sb_y, 7, 10, 16, 32 * 11, \
+cglobal lpf_v_sb_y_8bpc, 7, 10, 16, 32 * 11, \
                     dst, stride, mask, l, l_stride, lut, \
                     w, stride3, mstride, tmp
     shl    l_strideq, 2
@@ -1495,7 +1455,7 @@ cglobal lpf_v_sb_y, 7, 10, 16, 32 * 11, \
     RET
 
 INIT_YMM avx2
-cglobal lpf_h_sb_y, 7, 10, 16, 32 * 21, \
+cglobal lpf_h_sb_y_8bpc, 7, 10, 16, 32 * 21, \
                     dst, stride, mask, l, l_stride, lut, \
                     h, stride3, l_stride3, tmp
     shl    l_strideq, 2
@@ -1535,7 +1495,7 @@ cglobal lpf_h_sb_y, 7, 10, 16, 32 * 21, \
     RET
 
 INIT_YMM avx2
-cglobal lpf_v_sb_uv, 7, 10, 16, \
+cglobal lpf_v_sb_uv_8bpc, 7, 10, 16, \
                      dst, stride, mask, l, l_stride, lut, \
                      w, stride3, mstride, tmp
     shl    l_strideq, 2
@@ -1566,7 +1526,7 @@ cglobal lpf_v_sb_uv, 7, 10, 16, \
     RET
 
 INIT_YMM avx2
-cglobal lpf_h_sb_uv, 7, 10, 16, \
+cglobal lpf_h_sb_uv_8bpc, 7, 10, 16, \
                      dst, stride, mask, l, l_stride, lut, \
                      h, stride3, l_stride3, tmp
     shl    l_strideq, 2

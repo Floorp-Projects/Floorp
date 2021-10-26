@@ -29,6 +29,17 @@
 #include <stdint.h>
 
 #include "src/cpu.h"
+#include "src/log.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#elif defined(__linux__)
+#include <sched.h>
+#include <unistd.h>
+#elif defined(__APPLE__)
+#include <sys/sysctl.h>
+#include <sys/types.h>
+#endif
 
 static unsigned flags = 0;
 
@@ -60,4 +71,37 @@ COLD unsigned dav1d_get_cpu_flags(void) {
 
 COLD void dav1d_set_cpu_flags_mask(const unsigned mask) {
     flags_mask = mask;
+}
+
+COLD int dav1d_num_logical_processors(Dav1dContext *const c) {
+#ifdef _WIN32
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+    GROUP_AFFINITY affinity;
+    if (GetThreadGroupAffinity(GetCurrentThread(), &affinity)) {
+        int num_processors = 1;
+        while (affinity.Mask &= affinity.Mask - 1)
+            num_processors++;
+        return num_processors;
+    }
+#else
+    SYSTEM_INFO system_info;
+    GetNativeSystemInfo(&system_info);
+    return system_info.dwNumberOfProcessors;
+#endif
+#elif defined(__linux__)
+#ifdef CPU_COUNT
+    cpu_set_t affinity;
+    if (!sched_getaffinity(0, sizeof(affinity), &affinity))
+        return CPU_COUNT(&affinity);
+#else
+    return (int)sysconf(_SC_NPROCESSORS_ONLN);
+#endif
+#elif defined(__APPLE__)
+    int num_processors;
+    size_t length = sizeof(num_processors);
+    if (!sysctlbyname("hw.logicalcpu", &num_processors, &length, NULL, 0))
+        return num_processors;
+#endif
+    dav1d_log(c, "Unable to detect thread count, defaulting to single-threaded mode\n");
+    return 1;
 }

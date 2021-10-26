@@ -106,23 +106,23 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     unsigned h = djb_xor(ptr, 32);
     unsigned seed = h;
     unsigned probability = h > (RAND_MAX >> 5) ? RAND_MAX >> 5 : h;
-    int n_frame_threads = (h & 0xf) + 1;
-    int n_tile_threads = ((h >> 4) & 0x7) + 1;
-    if (n_frame_threads > 5) n_frame_threads = 1;
-    if (n_tile_threads > 3) n_tile_threads = 1;
+    int max_frame_delay = (h & 0xf) + 1;
+    int n_threads = ((h >> 4) & 0x7) + 1;
+    if (max_frame_delay > 5) max_frame_delay = 1;
+    if (n_threads > 3) n_threads = 1;
 #endif
     ptr += 32; // skip ivf header
 
     dav1d_default_settings(&settings);
 
 #ifdef DAV1D_MT_FUZZING
-    settings.n_frame_threads = settings.n_tile_threads = 2;
+    settings.max_frame_delay = settings.n_threads = 4;
 #elif defined(DAV1D_ALLOC_FAIL)
-    settings.n_frame_threads = n_frame_threads;
-    settings.n_tile_threads = n_tile_threads;
+    settings.max_frame_delay = max_frame_delay;
+    settings.n_threads = n_threads;
     dav1d_setup_alloc_fail(seed, probability);
 #else
-    settings.n_frame_threads = settings.n_tile_threads = 1;
+    settings.max_frame_delay = settings.n_threads = 1;
 #endif
 #if defined(DAV1D_FUZZ_MAX_SIZE)
     settings.frame_size_limit = DAV1D_FUZZ_MAX_SIZE;

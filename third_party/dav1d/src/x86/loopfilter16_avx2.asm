@@ -623,9 +623,7 @@ SECTION .text
     paddw         m8, m5                        ; p6*7+p3+p1+q0
     paddw         m8, m10                       ; p6*7+p5*2+p4*2+p3+p2+p1+p0+q0
     psrlw        m10, m8, 4
-    pand         m10, m1
-    pandn         m9, m1, m2
-    por          m10, m9
+    vpblendvb    m10, m2, m10, m1
 %ifidn %2, v
     mova [tmpq+strideq*2], m10                  ; p5
 %else
@@ -638,9 +636,7 @@ SECTION .text
     paddw         m8, m6
     psubw         m8, m10
     psrlw        m10, m8, 4
-    pand         m10, m1
-    pandn         m9, m1, m7
-    por          m10, m9
+    vpblendvb    m10, m7, m10, m1
 %ifidn %2, v
     mova [tmpq+stride3q], m10                   ; p4
 %else
@@ -653,9 +649,7 @@ SECTION .text
     psubw         m8, m2
     paddw         m8, m10
     psrlw        m10, m8, 4
-    pand         m10, m1
-    pandn         m9, m1, m11
-    por          m10, m9
+    vpblendvb    m10, m11, m10, m1
 %ifidn %2, v
     mova [tmpq+strideq*4], m10                  ; p3
     lea         tmpq, [dstq+strideq*4]
@@ -669,9 +663,7 @@ SECTION .text
     paddw         m8, m15
     psubw         m8, m10
     psrlw        m10, m8, 4
-    pand         m10, m1
-    pandn         m9, m1, m13
-    por          m10, m9
+    vpblendvb    m10, m13, m10, m1
     mova  [rsp+1*32], m10                       ; don't clobber p2/m13
 
     ; sub p6/p3, add p0/q4
@@ -684,9 +676,7 @@ SECTION .text
 %endif
     psubw         m8, m10
     psrlw        m10, m8, 4
-    pand         m10, m1
-    pandn         m9, m1, m3
-    por          m10, m9
+    vpblendvb    m10, m3, m10, m1
     mova  [rsp+2*32], m10                       ; don't clobber p1/m3
 
     ; sub p6/p2, add q0/q5
@@ -699,9 +689,7 @@ SECTION .text
 %endif
     psubw         m8, m10
     psrlw        m10, m8, 4
-    pand         m10, m1
-    pandn         m9, m1, m4
-    por          m10, m9
+    vpblendvb    m10, m4, m10, m1
     mova  [rsp+3*32], m10                       ; don't clobber p0/m4
 
     ; sub p6/p1, add q1/q6
@@ -715,9 +703,7 @@ SECTION .text
     paddw         m8, m0
     psubw         m8, m10
     psrlw        m10, m8, 4
-    pand         m10, m1
-    pandn         m9, m1, m5
-    por          m10, m9
+    vpblendvb    m10, m5, m10, m1
     mova  [rsp+4*32], m10                       ; don't clobber q0/m5
 
     ; sub p5/p0, add q2/q6
@@ -726,9 +712,7 @@ SECTION .text
     paddw         m8, m0
     psubw         m8, m10
     psrlw        m10, m8, 4
-    pand         m10, m1
-    pandn         m9, m1, m6
-    por           m2, m10, m9                   ; don't clobber q1/m6
+    vpblendvb     m2, m6, m10, m1               ; don't clobber q1/m6
 
     ; sub p4/q0, add q3/q6
     paddw         m8, m15
@@ -736,9 +720,7 @@ SECTION .text
     paddw         m8, m0
     psubw         m8, m10
     psrlw        m10, m8, 4
-    pand         m10, m1
-    pandn         m9, m1, m14
-    por           m7, m10, m9                   ; don't clobber q2/m14
+    vpblendvb     m7, m14, m10, m1              ; don't clobber q2/m14
 
     ; sub p3/q1, add q4/q6
 %ifidn %2, v
@@ -750,9 +732,7 @@ SECTION .text
     paddw         m8, m0
     psubw         m8, m10
     psrlw        m10, m8, 4
-    pand         m10, m1
-    pandn         m9, m1, m15
-    por          m10, m9
+    vpblendvb    m10, m15, m10, m1
 %ifidn %2, v
     mova [tmpq+mstrideq], m10                   ; q3
 %else
@@ -769,13 +749,12 @@ SECTION .text
     paddw         m8, m0
     psubw         m8, m10
     psrlw        m10, m8, 4
-    pand         m10, m1
 %ifidn %2, v
-    pandn         m9, m1, [tmpq+strideq*0]
+    mova          m9, [tmpq+strideq*0]
 %else
-    pandn         m9, m1, [rsp+10*32]
+    mova          m9, [rsp+10*32]
 %endif
-    por          m10, m9
+    vpblendvb    m10, m9, m10, m1
 %ifidn %2, v
     mova [tmpq+strideq*0], m10                   ; q4
 %else
@@ -790,11 +769,11 @@ SECTION .text
     psrlw        m10, m8, 4
     pand         m10, m1
 %ifidn %2, v
-    pandn         m9, m1, [tmpq+strideq*1]
+    mova          m9, [tmpq+strideq*1]
 %else
-    pandn         m9, m1, [rsp+11*32]
+    mova          m9, [rsp+11*32]
 %endif
-    por          m10, m9
+    vpblendvb    m10, m9, m10, m1
 %ifidn %2, v
     mova [tmpq+strideq*1], m10                  ; q5
 %else
@@ -859,14 +838,12 @@ SECTION .text
     paddw         m2, m0
     pmulhrsw      m2, [pw_4096]
 
-    REPX {pand x, m9}, m7, m8, m10, m11, m1, m2
-    REPX {pandn x, m9, x}, m13, m3, m4, m5, m6, m14
-    por          m13, m7
-    por           m3, m8
-    por           m4, m10
-    por           m5, m11
-    por           m6, m1
-    por          m14, m2
+    vpblendvb    m13, m13, m7,  m9
+    vpblendvb     m3, m3,  m8,  m9
+    vpblendvb     m4, m4,  m10, m9
+    vpblendvb     m5, m5,  m11, m9
+    vpblendvb     m6, m6,  m1,  m9
+    vpblendvb    m14, m14, m2,  m9
 
 %ifidn %2, v
     mova [tmpq+strideq*1], m13                  ; p2
@@ -984,12 +961,10 @@ SECTION .text
     paddw         m8, m14
     pmulhrsw      m8, [pw_4096]
 
-    REPX {pand x, m9}, m2, m10, m11, m8
-    REPX {pandn x, m9, x}, m3, m4, m5, m6
-    por           m3, m2
-    por           m4, m10
-    por           m5, m11
-    por           m6, m8
+    vpblendvb     m3, m3, m2,  m9
+    vpblendvb     m4, m4, m10, m9
+    vpblendvb     m5, m5, m11, m9
+    vpblendvb     m6, m6, m8,  m9
 
 %ifidn %2, v
     mova [tmpq+strideq*2], m3                   ; p1

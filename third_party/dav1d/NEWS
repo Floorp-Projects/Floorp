@@ -1,3 +1,29 @@
+Changes for 0.9.2 'Golden Eagle':
+---------------------------------
+
+0.9.2 is a small update of dav1d on the 0.9.x branch:
+ - x86: SSE4 optimizations of inverse transforms for 10bit for all sizes
+ - x86: mc.resize optimizations with AVX2/SSSE3 for 10/12b
+ - x86: SSSE3 optimizations for cdef_filter in 10/12b and mc_w_mask_422/444 in 8b
+ - ARM NEON optimizations for FilmGrain Gen_grain functions
+ - Optimizations for splat_mv in SSE2/AVX2 and NEON
+ - x86: SGR improvements for SSSE3 CPUs
+ - x86: AVX2 optimizations for cfl_ac
+
+
+Changes for 0.9.1 'Golden Eagle':
+---------------------------------
+
+0.9.1 is a middle-size revision of dav1d, adding notably 10b acceleration for SSSE3:
+ - 10/12b SSSE3 optimizations for mc (avg, w_avg, mask, w_mask, emu_edge),
+   prep/put_bilin, prep/put_8tap, ipred (dc/h/v, paeth, smooth, pal, filter), wiener,
+   sgr (10b), warp8x8, deblock, film_grain, cfl_ac/pred for 32bit and 64bit x86 processors
+ - Film grain NEON for fguv 10/12b, fgy/fguv 8b and fgy/fguv 10/12 arm32
+ - Fixes for filmgrain on ARM
+ - itx 10bit optimizations for 4x4/x8/x16, 8x4/x8/x16 for SSE4
+ - Misc improvements on SSE2, SSE4
+
+
 Changes for 0.9.0 'Golden Eagle':
 ---------------------------------
 

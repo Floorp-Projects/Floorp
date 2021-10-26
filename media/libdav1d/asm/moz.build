@@ -71,6 +71,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
     SOURCES += [
         '../../../third_party/dav1d/src/x86/cpu.c',
         '../../../third_party/dav1d/src/x86/msac_init.c',
+        '../../../third_party/dav1d/src/x86/refmvs_init.c',
     ]
 
     EXPORTS.dav1d += [
@@ -88,12 +89,10 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
             '../../../third_party/dav1d/src/x86/cdef_avx512.asm',
             '../../../third_party/dav1d/src/x86/film_grain16_avx2.asm',
             '../../../third_party/dav1d/src/x86/film_grain_avx2.asm',
-            '../../../third_party/dav1d/src/x86/ipred16_avx2.asm',
             '../../../third_party/dav1d/src/x86/ipred_avx2.asm',
             '../../../third_party/dav1d/src/x86/itx16_avx2.asm',
             '../../../third_party/dav1d/src/x86/itx_avx2.asm',
             '../../../third_party/dav1d/src/x86/loopfilter16_avx2.asm',
-            '../../../third_party/dav1d/src/x86/loopfilter16_sse.asm',
             '../../../third_party/dav1d/src/x86/loopfilter_avx2.asm',
             '../../../third_party/dav1d/src/x86/looprestoration16_avx2.asm',
             '../../../third_party/dav1d/src/x86/looprestoration_avx2.asm',
@@ -106,16 +105,21 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
         '../../../third_party/dav1d/src/x86/cdef16_sse.asm',
         '../../../third_party/dav1d/src/x86/cdef_sse.asm',
         '../../../third_party/dav1d/src/x86/cpuid.asm',
+        '../../../third_party/dav1d/src/x86/film_grain16_sse.asm',
         '../../../third_party/dav1d/src/x86/film_grain_sse.asm',
+        '../../../third_party/dav1d/src/x86/ipred16_avx2.asm',
+        '../../../third_party/dav1d/src/x86/ipred16_sse.asm',
         '../../../third_party/dav1d/src/x86/ipred_sse.asm',
         '../../../third_party/dav1d/src/x86/itx16_sse.asm',
         '../../../third_party/dav1d/src/x86/itx_sse.asm',
+        '../../../third_party/dav1d/src/x86/loopfilter16_sse.asm',
         '../../../third_party/dav1d/src/x86/loopfilter_sse.asm',
         '../../../third_party/dav1d/src/x86/looprestoration16_sse.asm', # moved from autovendored
         '../../../third_party/dav1d/src/x86/looprestoration_sse.asm',
         '../../../third_party/dav1d/src/x86/mc16_sse.asm',
         '../../../third_party/dav1d/src/x86/mc_sse.asm',
         '../../../third_party/dav1d/src/x86/msac.asm',
+        '../../../third_party/dav1d/src/x86/refmvs.asm',
     ]
 
     # BITDEPTH
@@ -148,6 +152,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
 elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
     SOURCES += [
         '../../../third_party/dav1d/src/arm/cpu.c',
+        '../../../third_party/dav1d/src/arm/refmvs_init.c',
     ]
     EXPORTS += [
         '../../../third_party/dav1d/src/arm/asm-offsets.h',
@@ -203,6 +208,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
             '../../../third_party/dav1d/src/arm/64/mc.S',
             '../../../third_party/dav1d/src/arm/64/mc16.S',
             '../../../third_party/dav1d/src/arm/64/msac.S',
+            '../../../third_party/dav1d/src/arm/64/refmvs.S',
         ]
     elif CONFIG['CPU_ARCH'] == 'arm':
         SOURCES += [
@@ -224,6 +230,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
             '../../../third_party/dav1d/src/arm/32/mc.S',
             '../../../third_party/dav1d/src/arm/32/mc16.S',
             '../../../third_party/dav1d/src/arm/32/msac.S',
+            '../../../third_party/dav1d/src/arm/32/refmvs.S',
         ]
 
 if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):

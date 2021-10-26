@@ -41,8 +41,8 @@
 
 #include "common/attributes.h"
 
-typedef volatile LONG  __declspec(align(32)) atomic_int;
-typedef volatile ULONG __declspec(align(32)) atomic_uint;
+typedef volatile LONG  atomic_int;
+typedef volatile ULONG atomic_uint;
 
 typedef enum {
     memory_order_relaxed,
@@ -52,6 +52,7 @@ typedef enum {
 #define atomic_init(p_a, v)           do { *(p_a) = (v); } while(0)
 #define atomic_store(p_a, v)          InterlockedExchange((LONG*)p_a, v)
 #define atomic_load(p_a)              InterlockedCompareExchange((LONG*)p_a, 0, 0)
+#define atomic_exchange(p_a, v)       InterlockedExchange(p_a, v)
 #define atomic_load_explicit(p_a, mo) atomic_load(p_a)
 
 /*
@@ -60,6 +61,7 @@ typedef enum {
  */
 #define atomic_fetch_add(p_a, inc)    InterlockedExchangeAdd(p_a, inc)
 #define atomic_fetch_sub(p_a, dec)    InterlockedExchangeAdd(p_a, -(dec))
+#define atomic_fetch_or(p_a, v)       InterlockedOr(p_a, v)
 
 #endif /* ! stdatomic.h */
 

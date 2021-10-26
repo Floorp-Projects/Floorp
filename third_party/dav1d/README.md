@@ -36,16 +36,16 @@ The plan is the following:
 7. Make high bit-depth fast on mobile, by writing asm for ARMv8 chips.
 8. Make it fast on older mobile, by writing asm for ARMv7 chips,
 9. Make high bit-depth fast on older mobile, by writing asm for ARMv7 chips,
+10. Make high bit-depth fast on desktop, by writing asm for AVX2 chips,
+11. Make high bit-depth fast on older desktop, by writing asm for SSSE3+ chips,
 
 ### On-going
-10. Improve C code base with [various tweaks](https://code.videolan.org/videolan/dav1d/wikis/task-list),
-11. Accelerate for less common architectures, like PPC, SSE2 or AVX-512.
-12. Make high bit-depth fast on desktop, by writing asm for AVX2 chips,
+12. Improve C code base with [various tweaks](https://code.videolan.org/videolan/dav1d/wikis/task-list),
+13. Accelerate for less common architectures, like PPC, SSE2 or AVX-512.
+14. Improve threading.
 
 ### After
-13. Make high bit-depth fast on older desktop, by writing asm for SSSE3+ chips,
-14. Use more GPU decoding, when possible.
-15. Improve threading.
+15. Use more GPU decoding, when possible.
 
 # Contribute
 
@@ -60,7 +60,7 @@ Our contributions guidelines are quite strict. We want to build a coherent codeb
 
 Notably, the codebase is in pure C and asm.
 
-We are on IRC, on the **#dav1d** channel on [*Libera.chat*](http://libera.chat/). If you do not have an IRC Client at hand, use [KiwiIRC Web Interface](https://kiwiirc.com/nextclient/#ircs://irc.libera.chat/#dav1d).
+We are on IRC, on the **#dav1d** channel on [*Libera.chat*](http://libera.chat/). If you do not have an IRC Client at hand, use [IRC Web Interface](https://web.libera.chat/#dav1d).
 
 See the [contributions document](CONTRIBUTING.md).
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
+ * Copyright © 2018-2021, VideoLAN and dav1d authors
  * Copyright © 2018, Two Orioles, LLC
  * All rights reserved.
  *
@@ -28,19 +28,11 @@
 #include "src/cpu.h"
 #include "src/ipred.h"
 
-#if BITDEPTH == 8
 #define decl_fn(type, name) \
-    decl_##type##_fn(dav1d_##name##_ssse3); \
-    decl_##type##_fn(dav1d_##name##_avx2)
+    decl_##type##_fn(BF(dav1d_##name, ssse3)); \
+    decl_##type##_fn(BF(dav1d_##name, avx2))
 #define init_fn(type0, type1, name, suffix) \
-    c->type0[type1] = dav1d_##name##_##suffix
-#else
-#define decl_fn(type, name) \
-    decl_##type##_fn(dav1d_##name##_16bpc_ssse3); \
-    decl_##type##_fn(dav1d_##name##_16bpc_avx2)
-#define init_fn(type0, type1, name, suffix) \
-    c->type0[type1] = dav1d_##name##_16bpc_##suffix
-#endif
+    c->type0[type1] = BF(dav1d_##name, suffix)
 
 #define init_angular_ipred_fn(type, name, suffix) \
     init_fn(intra_pred, type, name, suffix)
@@ -80,7 +72,6 @@ COLD void bitfn(dav1d_intra_pred_dsp_init_x86)(Dav1dIntraPredDSPContext *const c
 
     if (!(flags & DAV1D_X86_CPU_FLAG_SSSE3)) return;
 
-#if BITDEPTH == 8
     init_angular_ipred_fn(DC_PRED,       ipred_dc,       ssse3);
     init_angular_ipred_fn(DC_128_PRED,   ipred_dc_128,   ssse3);
     init_angular_ipred_fn(TOP_DC_PRED,   ipred_dc_top,   ssse3);
@@ -102,8 +93,7 @@ COLD void bitfn(dav1d_intra_pred_dsp_init_x86)(Dav1dIntraPredDSPContext *const c
     init_cfl_ac_fn(DAV1D_PIXEL_LAYOUT_I422 - 1, ipred_cfl_ac_422, ssse3);
     init_cfl_ac_fn(DAV1D_PIXEL_LAYOUT_I444 - 1, ipred_cfl_ac_444, ssse3);
 
-    c->pal_pred = dav1d_pal_pred_ssse3;
-#endif
+    c->pal_pred = BF(dav1d_pal_pred, ssse3);
 
 #if ARCH_X86_64
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;
@@ -130,12 +120,8 @@ COLD void bitfn(dav1d_intra_pred_dsp_init_x86)(Dav1dIntraPredDSPContext *const c
 
     init_cfl_ac_fn(DAV1D_PIXEL_LAYOUT_I420 - 1, ipred_cfl_ac_420, avx2);
     init_cfl_ac_fn(DAV1D_PIXEL_LAYOUT_I422 - 1, ipred_cfl_ac_422, avx2);
-#if BITDEPTH == 8
     init_cfl_ac_fn(DAV1D_PIXEL_LAYOUT_I444 - 1, ipred_cfl_ac_444, avx2);
 
-    c->pal_pred = dav1d_pal_pred_avx2;
-#else
-    c->pal_pred = dav1d_pal_pred_16bpc_avx2;
-#endif
+    c->pal_pred = BF(dav1d_pal_pred, avx2);
 #endif
 }

@@ -105,32 +105,32 @@ cextern pw_16384
 cextern pw_2896x8
 cextern pd_2048
 
-cextern idct_4x8_internal_avx2.main
-cextern idct_4x16_internal_avx2.main
-cextern idct_8x8_internal_avx2.main
-cextern idct_8x16_internal_avx2.main
-cextern idct_16x4_internal_avx2.main
-cextern idct_16x8_internal_avx2.main
-cextern idct_16x16_internal_avx2.main
-cextern inv_txfm_add_dct_dct_8x32_avx2.main
-cextern inv_txfm_add_dct_dct_8x32_avx2.main_fast
-cextern inv_txfm_add_dct_dct_16x32_avx2.main_oddhalf
-cextern inv_txfm_add_dct_dct_16x32_avx2.main_oddhalf_fast
-cextern inv_txfm_add_dct_dct_16x64_avx2.main_part1
-cextern inv_txfm_add_dct_dct_16x64_avx2.main_part2_internal
+cextern idct_4x8_internal_8bpc_avx2.main
+cextern idct_4x16_internal_8bpc_avx2.main
+cextern idct_8x8_internal_8bpc_avx2.main
+cextern idct_8x16_internal_8bpc_avx2.main
+cextern idct_16x4_internal_8bpc_avx2.main
+cextern idct_16x8_internal_8bpc_avx2.main
+cextern idct_16x16_internal_8bpc_avx2.main
+cextern inv_txfm_add_dct_dct_8x32_8bpc_avx2.main
+cextern inv_txfm_add_dct_dct_8x32_8bpc_avx2.main_fast
+cextern inv_txfm_add_dct_dct_16x32_8bpc_avx2.main_oddhalf
+cextern inv_txfm_add_dct_dct_16x32_8bpc_avx2.main_oddhalf_fast
+cextern inv_txfm_add_dct_dct_16x64_8bpc_avx2.main_part1
+cextern inv_txfm_add_dct_dct_16x64_8bpc_avx2.main_part2_internal
 
-cextern iadst_4x4_internal_avx2.main
-cextern iadst_4x8_internal_avx2.main_pass2
-cextern iadst_4x16_internal_avx2.main2
-cextern iadst_8x4_internal_avx2.main
-cextern iadst_8x8_internal_avx2.main_pass2
-cextern iadst_8x16_internal_avx2.main
-cextern iadst_8x16_internal_avx2.main_pass2_end
-cextern iadst_16x4_internal_avx2.main
-cextern iadst_16x8_internal_avx2.main
-cextern iadst_16x8_internal_avx2.main_pass2_end
-cextern iadst_16x16_internal_avx2.main
-cextern iadst_16x16_internal_avx2.main_pass2_end
+cextern iadst_4x4_internal_8bpc_avx2.main
+cextern iadst_4x8_internal_8bpc_avx2.main_pass2
+cextern iadst_4x16_internal_8bpc_avx2.main2
+cextern iadst_8x4_internal_8bpc_avx2.main
+cextern iadst_8x8_internal_8bpc_avx2.main_pass2
+cextern iadst_8x16_internal_8bpc_avx2.main
+cextern iadst_8x16_internal_8bpc_avx2.main_pass2_end
+cextern iadst_16x4_internal_8bpc_avx2.main
+cextern iadst_16x8_internal_8bpc_avx2.main
+cextern iadst_16x8_internal_8bpc_avx2.main_pass2_end
+cextern iadst_16x16_internal_8bpc_avx2.main
+cextern iadst_16x16_internal_8bpc_avx2.main_pass2_end
 
 SECTION .text
 
@@ -384,7 +384,7 @@ cglobal iadst_4x4_internal_16bpc, 0, 7, 6, dst, stride, c, eob, tx2
 .pass2:
     lea                 rax, [deint_shuf+128]
     vextracti128        xm1, m0, 1
-    call m(iadst_4x4_internal).main
+    call m(iadst_4x4_internal_8bpc).main
 .end:
     vpbroadcastd        xm4, [pw_2048]
     movq                xm2, [dstq+strideq*0]
@@ -457,7 +457,7 @@ cglobal iflipadst_4x4_internal_16bpc, 0, 7, 6, dst, stride, c, eob, tx2
 .pass2:
     lea                 rax, [deint_shuf+128]
     vextracti128        xm1, m0, 1
-    call m(iadst_4x4_internal).main
+    call m(iadst_4x4_internal_8bpc).main
     vpbroadcastd        xm4, [pw_2048]
     movq                xm3, [dstq+strideq*1]
     movhps              xm3, [dstq+strideq*0]
@@ -607,7 +607,7 @@ cglobal idct_4x8_internal_16bpc, 0, 7, 8, dst, stride, c, eob, tx2
     punpckldq            m0, m2     ; 0 1
     vextracti128        xm2, m0, 1  ; 4 5
     vextracti128        xm3, m1, 1  ; 6 7
-    call m(idct_4x8_internal).main
+    call m(idct_4x8_internal_8bpc).main
     vpbroadcastd        xm4, [pw_2048]
     REPX  {pmulhrsw x, xm4}, xm0, xm1, xm2, xm3
     lea                  r3, [strideq*3]
@@ -697,7 +697,7 @@ ALIGN function_align
     vextracti128        xm3, m5, 1      ; 6 7
     pshufd              xm4, xm4, q1032 ; 1 0
     pshufd              xm5, xm5, q1032 ; 3 2
-    jmp m(iadst_4x8_internal).main_pass2
+    jmp m(iadst_4x8_internal_8bpc).main_pass2
 ALIGN function_align
 .main:
     vbroadcasti128       m0, [cq+16*0]
@@ -934,7 +934,7 @@ cglobal idct_4x16_internal_16bpc, 0, 7, 11, dst, stride, c, eob, tx2
     vextracti128        xm3, m1, 1      ; 6 7
     vextracti128        xm6, m4, 1      ; c d
     vextracti128        xm7, m5, 1      ; e f
-    call m(idct_4x16_internal).main
+    call m(idct_4x16_internal_8bpc).main
     vpbroadcastd         m9, [pw_2048]
     vinserti128          m0, m0, xm1, 1 ; 0 1   3 2
     vinserti128          m1, m2, xm3, 1 ; 4 5   7 6
@@ -1054,7 +1054,7 @@ ALIGN function_align
     vinserti128          m0, xm3, 1       ; 0 3   2 1
     vperm2i128           m3, m2, m4, 0x31 ; c f   e d ; ????
     vinserti128          m2, xm4, 1       ; b 8   9 a
-    call m(iadst_4x16_internal).main2
+    call m(iadst_4x16_internal_8bpc).main2
     vpbroadcastd         m5, [pw_2896x8]
     paddsw               m1, m2, m4
     psubsw               m2, m4
@@ -1434,7 +1434,7 @@ ALIGN function_align
     vinserti128          m0, xm2, 1
     pshufb               m0, m4
     pshufb               m1, m4
-    jmp m(iadst_8x4_internal).main
+    jmp m(iadst_8x4_internal_8bpc).main
 ALIGN function_align
 .main:
     vpbroadcastd         m1, [pd_2896]
@@ -1636,7 +1636,7 @@ cglobal idct_8x8_internal_16bpc, 0, 7, 14, dst, stride, c, eob, tx2
     jmp                tx2q
 .pass2:
     call .transpose_8x8_packed
-    call m(idct_8x8_internal).main
+    call m(idct_8x8_internal_8bpc).main
     vpbroadcastd         m12, [pw_2048]
     vpermq                m0, m0, q3120
     vpermq                m1, m1, q2031
@@ -1754,7 +1754,7 @@ cglobal iadst_8x8_internal_16bpc, 0, 7, 14, dst, stride, c, eob, tx2
     call m(idct_8x8_internal_16bpc).transpose_8x8_packed
     pshufd               m4, m0, q1032
     pshufd               m5, m1, q1032
-    call m(iadst_8x8_internal).main_pass2
+    call m(iadst_8x8_internal_8bpc).main_pass2
     vpbroadcastd         m5, [pw_2048]
     vpbroadcastd       xm12, [pw_4096]
     psubw               m12, m5
@@ -1814,7 +1814,7 @@ cglobal iflipadst_8x8_internal_16bpc, 0, 7, 14, dst, stride, c, eob, tx2
     call m(idct_8x8_internal_16bpc).transpose_8x8_packed
     pshufd               m4, m0, q1032
     pshufd               m5, m1, q1032
-    call m(iadst_8x8_internal).main_pass2
+    call m(iadst_8x8_internal_8bpc).main_pass2
     vpbroadcastd        m12, [pw_2048]
     vpbroadcastd        xm5, [pw_4096]
     psubw               m12, m5
@@ -1971,7 +1971,7 @@ cglobal idct_8x16_internal_16bpc, 0, 7, 16, dst, stride, c, eob, tx2
     jmp                tx2q
 .pass2:
     call .transpose
-    call m(idct_8x16_internal).main
+    call m(idct_8x16_internal_8bpc).main
     vpbroadcastd        m12, [pw_2048]
     REPX {vpermq x, x, q3120}, m0, m2, m4, m6
     REPX {vpermq x, x, q2031}, m1, m3, m5, m7
@@ -2167,8 +2167,8 @@ cglobal iadst_8x16_internal_16bpc, 0, 7, 16, dst, stride, c, eob, tx2
     jmp                tx2q
 .pass2:
     call m(idct_8x16_internal_16bpc).transpose
-    call m(iadst_8x16_internal).main
-    call m(iadst_8x16_internal).main_pass2_end
+    call m(iadst_8x16_internal_8bpc).main
+    call m(iadst_8x16_internal_8bpc).main_pass2_end
     vpbroadcastd         m8, [pw_2048]
     vpbroadcastd       xm12, [pw_4096]
     REPX {vpermq x, x, q2031}, m0, m1, m2, m3
@@ -2232,8 +2232,8 @@ cglobal iflipadst_8x16_internal_16bpc, 0, 7, 16, dst, stride, c, eob, tx2
     jmp                tx2q
 .pass2:
     call m(idct_8x16_internal_16bpc).transpose
-    call m(iadst_8x16_internal).main
-    call m(iadst_8x16_internal).main_pass2_end
+    call m(iadst_8x16_internal_8bpc).main
+    call m(iadst_8x16_internal_8bpc).main_pass2_end
     vpbroadcastd        m12, [pw_2048]
     vpbroadcastd       xm13, [pw_4096]
     mova                m11, m0
@@ -2458,7 +2458,7 @@ cglobal idct_16x4_internal_16bpc, 0, 7, 14, dst, stride, c, eob, tx2
 .pass2:
     call .transpose_4x16_packed
     lea                 rax, [deint_shuf+128]
-    call m(idct_16x4_internal).main
+    call m(idct_16x4_internal_8bpc).main
 .end:
     vpbroadcastd         m4, [pw_2048]
     REPX   {pmulhrsw x, m4}, m0, m1, m2, m3
@@ -2517,7 +2517,7 @@ cglobal iadst_16x4_internal_16bpc, 0, 7, 14, dst, stride, c, eob, tx2
 .pass2:
     call m(idct_16x4_internal_16bpc).transpose_4x16_packed
     lea                 rax, [deint_shuf+128]
-    call m(iadst_16x4_internal).main
+    call m(iadst_16x4_internal_8bpc).main
     jmp m(idct_16x4_internal_16bpc).end
 ALIGN function_align
 .main:
@@ -2596,7 +2596,7 @@ cglobal iflipadst_16x4_internal_16bpc, 0, 7, 14, dst, stride, c, eob, tx2
 .pass2:
     call m(idct_16x4_internal_16bpc).transpose_4x16_packed
     lea                 rax, [deint_shuf+128]
-    call m(iadst_16x4_internal).main
+    call m(iadst_16x4_internal_8bpc).main
     vpbroadcastd         m4, [pw_2048]
     pmulhrsw             m5, m3, m4
     pmulhrsw             m6, m2, m4
@@ -2712,7 +2712,7 @@ cglobal idct_16x8_internal_16bpc, 0, 7, 16, 32*8, dst, stride, c, eob, tx2
     jmp                tx2q
 .pass2:
     call .transpose
-    call m(idct_16x8_internal).main
+    call m(idct_16x8_internal_8bpc).main
     vpbroadcastd        m10, [pw_2048]
 .end:
     pmulhrsw             m0, m10
@@ -2827,8 +2827,8 @@ cglobal iadst_16x8_internal_16bpc, 0, 7, 16, 32*8, dst, stride, c, eob, tx2
     jmp                tx2q
 .pass2:
     call m(idct_16x8_internal_16bpc).transpose
-    call m(iadst_16x8_internal).main
-    call m(iadst_16x8_internal).main_pass2_end
+    call m(iadst_16x8_internal_8bpc).main
+    call m(iadst_16x8_internal_8bpc).main_pass2_end
     vpbroadcastd        m10, [pw_2048]
     pxor                m11, m11
     psubw               m11, m10
@@ -3039,8 +3039,8 @@ cglobal iflipadst_16x8_internal_16bpc, 0, 7, 16, 32*8, dst, stride, c, eob, tx2
     jmp m(iadst_16x8_internal_16bpc).pass1_end
 .pass2:
     call m(idct_16x8_internal_16bpc).transpose
-    call m(iadst_16x8_internal).main
-    call m(iadst_16x8_internal).main_pass2_end
+    call m(iadst_16x8_internal_8bpc).main
+    call m(iadst_16x8_internal_8bpc).main_pass2_end
     vpbroadcastd        m10, [pw_2048]
     pxor                m11, m11
     psubw               m11, m10
@@ -3216,7 +3216,7 @@ cglobal idct_16x16_internal_16bpc, 0, 7, 16, 32*24, dst, stride, c, eob, tx2
     call .transpose
     lea                 rax, [pw_5+128]
     mova              [rsp], m15
-    call m(idct_16x16_internal).main
+    call m(idct_16x16_internal_8bpc).main
     mova                 m1, [rsp+32*1]
 .end:
     call .write_16x16
@@ -3450,8 +3450,8 @@ cglobal iadst_16x16_internal_16bpc, 0, 7, 16, 32*24, dst, stride, c, eob, tx2
     call m(idct_16x16_internal_16bpc).transpose
     lea                 rax, [pw_5+128]
     mova              [rsp], m15
-    call m(iadst_16x16_internal).main
-    call m(iadst_16x16_internal).main_pass2_end
+    call m(iadst_16x16_internal_8bpc).main
+    call m(iadst_16x16_internal_8bpc).main_pass2_end
     mova         [rsp+32*0], m8
     mova         [rsp+32*2], m12
     mova         [rsp+32*3], m13
@@ -3582,8 +3582,8 @@ cglobal iflipadst_16x16_internal_16bpc, 0, 7, 16, 32*24, dst, stride, c, eob, tx
     call m(idct_16x16_internal_16bpc).transpose
     lea                 rax, [pw_5+128]
     mova              [rsp], m15
-    call m(iadst_16x16_internal).main
-    call m(iadst_16x16_internal).main_pass2_end
+    call m(iadst_16x16_internal_8bpc).main
+    call m(iadst_16x16_internal_8bpc).main_pass2_end
     mova         [rsp+32*3], m3
     mova         [rsp+32*2], m2
     mova         [rsp+32*0], m0
@@ -3740,7 +3740,7 @@ cglobal inv_txfm_add_dct_dct_8x32_16bpc, 4, 7, 0, dst, stride, c, eob
     vpbroadcastd        m10, [pw_2048]
     lea                 rax, [deint_shuf+128]
     REPX       {mova x, m4}, m5, m6, m7
-    call m(inv_txfm_add_dct_dct_8x32).main_fast
+    call m(inv_txfm_add_dct_dct_8x32_8bpc).main_fast
     jmp .end
 .eob107:
     mova         [rsp+32*3], m3
@@ -3778,7 +3778,7 @@ cglobal inv_txfm_add_dct_dct_8x32_16bpc, 4, 7, 0, dst, stride, c, eob
     lea                 rax, [deint_shuf+128]
     mova                m11, [rsp+32*3]       ; out13 out15
     vpbroadcastd        m10, [pw_2048]
-    call m(inv_txfm_add_dct_dct_8x32).main
+    call m(inv_txfm_add_dct_dct_8x32_8bpc).main
 .end: ; [rsp+0*32] = m12
     vpbroadcastd        m12, [pw_2048]
     mov                  cq, r4
@@ -4294,7 +4294,7 @@ cglobal inv_txfm_add_dct_dct_32x8_16bpc, 4, 7, 0, dst, stride, c, eob
     RET
 ALIGN function_align
 .pass2:
-    call m(idct_16x8_internal).main
+    call m(idct_16x8_internal_8bpc).main
     REPX  {pmulhrsw x, m11}, m0, m1, m2, m3
     call m(idct_16x8_internal_16bpc).write_16x4_start
     pmulhrsw             m0, m11, m4
@@ -4404,7 +4404,7 @@ cglobal inv_txfm_add_dct_dct_16x32_16bpc, 4, 7, 0, dst, stride, c, eob
     mova                 m3, [r4+32*3]
 .fast:
     lea                 rax, [pw_5+128]
-    call m(inv_txfm_add_dct_dct_16x32).main_oddhalf_fast
+    call m(inv_txfm_add_dct_dct_16x32_8bpc).main_oddhalf_fast
     pxor                 m8, m8
     REPX       {mova x, m8}, m9, m10, m11, m12, m13, m14, m15
     jmp .idct16
@@ -4456,7 +4456,7 @@ cglobal inv_txfm_add_dct_dct_16x32_16bpc, 4, 7, 0, dst, stride, c, eob
     mova                 m6, [r4-32*2]
     mova                 m7, [r4-32*1]
     lea                 rax, [pw_5 + 128]
-    call m(inv_txfm_add_dct_dct_16x32).main_oddhalf
+    call m(inv_txfm_add_dct_dct_16x32_8bpc).main_oddhalf
     lea                  r3, [rsp+32*8]
     mova                 m8, [r3+32*0]
     mova                 m9, [r3+32*1]
@@ -4477,7 +4477,7 @@ cglobal inv_txfm_add_dct_dct_16x32_16bpc, 4, 7, 0, dst, stride, c, eob
     mova                 m6, [r3-32*2]
     mova                 m7, [r3-32*1]
     mova              [rsp], m15
-    call m(idct_16x16_internal).main
+    call m(idct_16x16_internal_8bpc).main
     imul                 r2, strideq, 19
     lea                  r3, [strideq*3]
     add                  r2, dstq
@@ -4711,7 +4711,7 @@ cglobal inv_txfm_add_dct_dct_32x16_16bpc, 4, 7, 0, dst, stride, c, eob
     REPX       {mova x, m8}, m9, m10, m11, m12, m13, m14, [rsp]
     lea                 rax, [pw_5+128]
     mov                  r7, dstq
-    call m(idct_16x16_internal).main
+    call m(idct_16x16_internal_8bpc).main
     call .write_16x16
     mova                 m0, [r5+32*3]
     mova                 m1, [r5+32*2]
@@ -4750,7 +4750,7 @@ cglobal inv_txfm_add_dct_dct_32x16_16bpc, 4, 7, 0, dst, stride, c, eob
     call .transpose_16x16
     lea                 rax, [pw_5+128]
     mov                  r7, dstq
-    call m(idct_16x16_internal).main
+    call m(idct_16x16_internal_8bpc).main
     call .write_16x16
     mova                 m0, [r5+32*3]
     mova                 m1, [r5+32*2]
@@ -4764,7 +4764,7 @@ cglobal inv_txfm_add_dct_dct_32x16_16bpc, 4, 7, 0, dst, stride, c, eob
     call .transpose_16x16
 .end:
     lea                dstq, [r7+32]
-    call m(idct_16x16_internal).main
+    call m(idct_16x16_internal_8bpc).main
     call .write_16x16
     RET
 ALIGN function_align
@@ -5124,7 +5124,7 @@ ALIGN function_align
     mova                m13, [r3+32*51] ; 27
     mova                m14, [r3+32*53] ; 29
     mova                m15, [r3+32*55] ; 31
-    jmp m(inv_txfm_add_dct_dct_16x32).main_oddhalf
+    jmp m(inv_txfm_add_dct_dct_16x32_8bpc).main_oddhalf
 ALIGN function_align
 .pass2_evenhalf:
     mova                 m0, [r3+32* 0] ;  0
@@ -5144,7 +5144,7 @@ ALIGN function_align
     mova                m14, [r3+32*52] ; 28
     mova                m15, [r3+32*54] ; 30
     mova      [rsp+gprsize], m15
-    jmp m(idct_16x16_internal).main
+    jmp m(idct_16x16_internal_8bpc).main
 
 cglobal inv_txfm_add_identity_identity_32x32_16bpc, 4, 8, 8, dst, stride, c, eob
     %undef cmp
@@ -5300,7 +5300,7 @@ cglobal inv_txfm_add_dct_dct_16x64_16bpc, 4, 7, 0, dst, stride, c, eob
     pxor                 m8, m8
     REPX       {mova x, m8}, m9, m10, m11, m12, m13, m14
     mova              [rsp], m8
-    call m(idct_16x16_internal).main
+    call m(idct_16x16_internal_8bpc).main
     mova                 m1, [rsp+32*1]
     lea                  r4, [rsp+32*38]
     mova          [r4-32*4], m0
@@ -5330,7 +5330,7 @@ cglobal inv_txfm_add_dct_dct_16x64_16bpc, 4, 7, 0, dst, stride, c, eob
     mova                 m7, [rsp+32*32] ; in30
     lea                  r5, [r4+32*16]
     add                  r4, 32*8
-    call m(inv_txfm_add_dct_dct_16x32).main_oddhalf_fast
+    call m(inv_txfm_add_dct_dct_16x32_8bpc).main_oddhalf_fast
     mova                 m0, [rsp+32* 3] ; in1
     mova                 m1, [rsp+32*33] ; in31
     mova                 m2, [rsp+32*19] ; in17
@@ -5342,7 +5342,7 @@ cglobal inv_txfm_add_dct_dct_16x64_16bpc, 4, 7, 0, dst, stride, c, eob
     lea                 rax, [idct64_mul - 8]
     add                  r4, 32*16
     add                  r5, 32*32
-    call m(inv_txfm_add_dct_dct_16x64).main_part1
+    call m(inv_txfm_add_dct_dct_16x64_8bpc).main_part1
     mova                 m0, [rsp+32* 7] ; in5
     mova                 m1, [rsp+32*29] ; in27
     mova                 m2, [rsp+32*23] ; in21
@@ -5354,7 +5354,7 @@ cglobal inv_txfm_add_dct_dct_16x64_16bpc, 4, 7, 0, dst, stride, c, eob
     add                 rax, 8
     add                  r4, 32*8
     sub                  r5, 32*8
-    call m(inv_txfm_add_dct_dct_16x64).main_part1
+    call m(inv_txfm_add_dct_dct_16x64_8bpc).main_part1
     lea                  r8, [strideq*4]
     lea                  r9, [strideq*5]
     lea                  r3, [r9+strideq*1] ; stride*6
@@ -5449,7 +5449,7 @@ ALIGN function_align
     lea                  r2, [dstq+r7]
 .main_part2_pass2_loop:
     vpbroadcastd        m14, [pw_m2896_2896]
-    call m(inv_txfm_add_dct_dct_16x64).main_part2_internal
+    call m(inv_txfm_add_dct_dct_16x64_8bpc).main_part2_internal
     vpbroadcastd        m14, [pw_2048]
     IDCT64_PART2_END      0,  7,  0,  6,  9, 10, strideq*0, r3*4, r8*8, r7*8
     IDCT64_PART2_END      7,  8,  5,  0,  6,  7, strideq*0, r3*4, r8*8, r7*8
@@ -5648,7 +5648,7 @@ cglobal inv_txfm_add_dct_dct_32x64_16bpc, 4, 7, 0, dst, stride, c, eob
     pxor                 m8, m8
     REPX       {mova x, m8}, m9, m10, m11, m12, m13, m14
     mova              [rsp], m8
-    call m(idct_16x16_internal).main
+    call m(idct_16x16_internal_8bpc).main
     mova                 m1, [rsp+32*1]
     lea                  r4, [rsp+32*70]
     mova          [r4-32*4], m0
@@ -5678,7 +5678,7 @@ cglobal inv_txfm_add_dct_dct_32x64_16bpc, 4, 7, 0, dst, stride, c, eob
     mova                 m7, [r10+32*56] ; in30
     lea                  r5, [r4+32*16]
     add                  r4, 32*8
-    call m(inv_txfm_add_dct_dct_16x32).main_oddhalf_fast
+    call m(inv_txfm_add_dct_dct_16x32_8bpc).main_oddhalf_fast
     mova                 m0, [r10+32* 3] ; in1
     mova                 m1, [r10+32*57] ; in31
     mova                 m2, [r10+32*35] ; in17
@@ -5690,7 +5690,7 @@ cglobal inv_txfm_add_dct_dct_32x64_16bpc, 4, 7, 0, dst, stride, c, eob
     lea                 rax, [idct64_mul - 8]
     add                  r4, 32*16
     add                  r5, 32*32
-    call m(inv_txfm_add_dct_dct_16x64).main_part1
+    call m(inv_txfm_add_dct_dct_16x64_8bpc).main_part1
     mova                 m0, [r10+32* 7] ; in5
     mova                 m1, [r10+32*53] ; in27
     mova                 m2, [r10+32*39] ; in21
@@ -5702,7 +5702,7 @@ cglobal inv_txfm_add_dct_dct_32x64_16bpc, 4, 7, 0, dst, stride, c, eob
     add                 rax, 8
     add                  r4, 32*8
     sub                  r5, 32*8
-    call m(inv_txfm_add_dct_dct_16x64).main_part1
+    call m(inv_txfm_add_dct_dct_16x64_8bpc).main_part1
     call m(inv_txfm_add_dct_dct_16x64_16bpc).main_part2_pass2
     add                 r10, 32*8
     sub                  r4, 32*98 ; rsp+32*16
@@ -5877,7 +5877,7 @@ cglobal inv_txfm_add_dct_dct_64x16_16bpc, 4, 7, 0, dst, stride, c, eob
     mova                m15, [r7+32*3]
     sub                  r7, 32*24
     mova              [rsp], m15
-    call m(idct_16x16_internal).main
+    call m(idct_16x16_internal_8bpc).main
     mova                 m1, [rsp+32*1]
     call m(inv_txfm_add_dct_dct_32x16_16bpc).write_16x16
     add                  r5, 32
@@ -6109,7 +6109,7 @@ cglobal inv_txfm_add_dct_dct_64x32_16bpc, 4, 7, 0, dst, stride, c, eob
     mova                m13, [r7-32* 1]
     mova                m14, [r7+32* 1]
     mova                m15, [r7+32* 3]
-    call m(inv_txfm_add_dct_dct_16x32).main_oddhalf
+    call m(inv_txfm_add_dct_dct_16x32_8bpc).main_oddhalf
     mova                 m0, [r7-32*100]
     mova                 m1, [r7-32*98]
     mova                 m2, [r7-32*96]
@@ -6128,7 +6128,7 @@ cglobal inv_txfm_add_dct_dct_64x32_16bpc, 4, 7, 0, dst, stride, c, eob
     mova                m15, [r7+32* 2]
     add                  r7, 32*8
     mova              [rsp], m15
-    call m(idct_16x16_internal).main
+    call m(idct_16x16_internal_8bpc).main
     call m(inv_txfm_add_dct_dct_16x32_16bpc).pass2_end
     sub                dstq, r3
     lea                  r2, [r2+r3+32]
@@ -6248,7 +6248,7 @@ cglobal inv_txfm_add_dct_dct_64x64_16bpc, 4, 7, 0, dst, stride, c, eob
     pxor                 m8, m8
     REPX       {mova x, m8}, m9, m10, m11, m12, m13, m14
     mova              [rsp], m8
-    call m(idct_16x16_internal).main
+    call m(idct_16x16_internal_8bpc).main
     mova                 m1, [rsp+32*1]
     mova          [r4-32*4], m0
     mova          [r4-32*3], m1
@@ -6277,7 +6277,7 @@ cglobal inv_txfm_add_dct_dct_64x64_16bpc, 4, 7, 0, dst, stride, c, eob
     mova                 m7, [r10+32* 2] ; in30
     lea                  r5, [r4+32*16]
     add                  r4, 32*8
-    call m(inv_txfm_add_dct_dct_16x32).main_oddhalf_fast
+    call m(inv_txfm_add_dct_dct_16x32_8bpc).main_oddhalf_fast
     mova                 m0, [r10-32*99] ; in1
     mova                 m1, [r10+32* 3] ; in31
     mova                 m2, [r10-32*35] ; in17
@@ -6289,7 +6289,7 @@ cglobal inv_txfm_add_dct_dct_64x64_16bpc, 4, 7, 0, dst, stride, c, eob
     lea                 rax, [idct64_mul - 8]
     add                  r4, 32*16
     add                  r5, 32*32
-    call m(inv_txfm_add_dct_dct_16x64).main_part1
+    call m(inv_txfm_add_dct_dct_16x64_8bpc).main_part1
     mova                 m0, [r10-32*95] ; in5
     mova                 m1, [r10-32* 1] ; in27
     mova                 m2, [r10-32*31] ; in21
@@ -6301,7 +6301,7 @@ cglobal inv_txfm_add_dct_dct_64x64_16bpc, 4, 7, 0, dst, stride, c, eob
     add                 rax, 8
     add                  r4, 32*8
     sub                  r5, 32*8
-    call m(inv_txfm_add_dct_dct_16x64).main_part1
+    call m(inv_txfm_add_dct_dct_16x64_8bpc).main_part1
     call m(inv_txfm_add_dct_dct_16x64_16bpc).main_part2_pass2
     add                 r10, 32*8
     sub                dstq, r8

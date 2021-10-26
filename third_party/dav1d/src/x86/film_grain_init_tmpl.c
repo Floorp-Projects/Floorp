@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
+ * Copyright © 2018-2021, VideoLAN and dav1d authors
  * Copyright © 2018, Two Orioles, LLC
  * All rights reserved.
  *
@@ -28,64 +28,48 @@
 #include "src/cpu.h"
 #include "src/film_grain.h"
 
-decl_generate_grain_y_fn(dav1d_generate_grain_y_ssse3);
-decl_generate_grain_uv_fn(dav1d_generate_grain_uv_420_ssse3);
-decl_generate_grain_uv_fn(dav1d_generate_grain_uv_422_ssse3);
-decl_generate_grain_uv_fn(dav1d_generate_grain_uv_444_ssse3);
-decl_fgy_32x32xn_fn(dav1d_fgy_32x32xn_ssse3);
-decl_fguv_32x32xn_fn(dav1d_fguv_32x32xn_i420_ssse3);
-decl_fguv_32x32xn_fn(dav1d_fguv_32x32xn_i422_ssse3);
-decl_fguv_32x32xn_fn(dav1d_fguv_32x32xn_i444_ssse3);
+decl_generate_grain_y_fn(BF(dav1d_generate_grain_y, ssse3));
+decl_generate_grain_uv_fn(BF(dav1d_generate_grain_uv_420, ssse3));
+decl_generate_grain_uv_fn(BF(dav1d_generate_grain_uv_422, ssse3));
+decl_generate_grain_uv_fn(BF(dav1d_generate_grain_uv_444, ssse3));
+decl_fgy_32x32xn_fn(BF(dav1d_fgy_32x32xn, ssse3));
+decl_fguv_32x32xn_fn(BF(dav1d_fguv_32x32xn_i420, ssse3));
+decl_fguv_32x32xn_fn(BF(dav1d_fguv_32x32xn_i422, ssse3));
+decl_fguv_32x32xn_fn(BF(dav1d_fguv_32x32xn_i444, ssse3));
 
-decl_generate_grain_y_fn(dav1d_generate_grain_y_avx2);
-decl_generate_grain_uv_fn(dav1d_generate_grain_uv_420_avx2);
-decl_generate_grain_uv_fn(dav1d_generate_grain_uv_422_avx2);
-decl_generate_grain_uv_fn(dav1d_generate_grain_uv_444_avx2);
-decl_fgy_32x32xn_fn(dav1d_fgy_32x32xn_avx2);
-decl_fguv_32x32xn_fn(dav1d_fguv_32x32xn_i420_avx2);
-decl_fguv_32x32xn_fn(dav1d_fguv_32x32xn_i422_avx2);
-decl_fguv_32x32xn_fn(dav1d_fguv_32x32xn_i444_avx2);
-
-decl_generate_grain_y_fn(dav1d_generate_grain_y_16bpc_avx2);
-decl_generate_grain_uv_fn(dav1d_generate_grain_uv_420_16bpc_avx2);
-decl_fgy_32x32xn_fn(dav1d_fgy_32x32xn_16bpc_avx2);
-decl_fguv_32x32xn_fn(dav1d_fguv_32x32xn_i420_16bpc_avx2);
+decl_generate_grain_y_fn(BF(dav1d_generate_grain_y, avx2));
+decl_generate_grain_uv_fn(BF(dav1d_generate_grain_uv_420, avx2));
+decl_generate_grain_uv_fn(BF(dav1d_generate_grain_uv_422, avx2));
+decl_generate_grain_uv_fn(BF(dav1d_generate_grain_uv_444, avx2));
+decl_fgy_32x32xn_fn(BF(dav1d_fgy_32x32xn, avx2));
+decl_fguv_32x32xn_fn(BF(dav1d_fguv_32x32xn_i420, avx2));
+decl_fguv_32x32xn_fn(BF(dav1d_fguv_32x32xn_i422, avx2));
+decl_fguv_32x32xn_fn(BF(dav1d_fguv_32x32xn_i444, avx2));
 
 COLD void bitfn(dav1d_film_grain_dsp_init_x86)(Dav1dFilmGrainDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
 
     if (!(flags & DAV1D_X86_CPU_FLAG_SSSE3)) return;
 
-#if BITDEPTH == 8
-    c->generate_grain_y = dav1d_generate_grain_y_ssse3;
-    c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I420 - 1] = dav1d_generate_grain_uv_420_ssse3;
-    c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I422 - 1] = dav1d_generate_grain_uv_422_ssse3;
-    c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I444 - 1] = dav1d_generate_grain_uv_444_ssse3;
-    c->fgy_32x32xn = dav1d_fgy_32x32xn_ssse3;
-    c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I420 - 1] = dav1d_fguv_32x32xn_i420_ssse3;
-    c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I422 - 1] = dav1d_fguv_32x32xn_i422_ssse3;
-    c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I444 - 1] = dav1d_fguv_32x32xn_i444_ssse3;
-#endif
+    c->generate_grain_y = BF(dav1d_generate_grain_y, ssse3);
+    c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I420 - 1] = BF(dav1d_generate_grain_uv_420, ssse3);
+    c->fgy_32x32xn = BF(dav1d_fgy_32x32xn, ssse3);
+    c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I420 - 1] = BF(dav1d_fguv_32x32xn_i420, ssse3);
+    c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I422 - 1] = BF(dav1d_generate_grain_uv_422, ssse3);
+    c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I444 - 1] = BF(dav1d_generate_grain_uv_444, ssse3);
+    c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I422 - 1] = BF(dav1d_fguv_32x32xn_i422, ssse3);
+    c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I444 - 1] = BF(dav1d_fguv_32x32xn_i444, ssse3);
 
 #if ARCH_X86_64
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;
 
-#if BITDEPTH == 8
-    c->generate_grain_y = dav1d_generate_grain_y_avx2;
-    c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I420 - 1] = dav1d_generate_grain_uv_420_avx2;
-    c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I422 - 1] = dav1d_generate_grain_uv_422_avx2;
-    c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I444 - 1] = dav1d_generate_grain_uv_444_avx2;
-    c->fgy_32x32xn = dav1d_fgy_32x32xn_avx2;
-    c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I420 - 1] = dav1d_fguv_32x32xn_i420_avx2;
-    c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I422 - 1] = dav1d_fguv_32x32xn_i422_avx2;
-    c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I444 - 1] = dav1d_fguv_32x32xn_i444_avx2;
-#else
-    c->generate_grain_y = dav1d_generate_grain_y_16bpc_avx2;
-    c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I420 - 1] =
-        dav1d_generate_grain_uv_420_16bpc_avx2;
-    c->fgy_32x32xn = dav1d_fgy_32x32xn_16bpc_avx2;
-    c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I420 - 1] =
-        dav1d_fguv_32x32xn_i420_16bpc_avx2;
-#endif
+    c->generate_grain_y = BF(dav1d_generate_grain_y, avx2);
+    c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I420 - 1] = BF(dav1d_generate_grain_uv_420, avx2);
+    c->fgy_32x32xn = BF(dav1d_fgy_32x32xn, avx2);
+    c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I420 - 1] = BF(dav1d_fguv_32x32xn_i420, avx2);
+    c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I422 - 1] = BF(dav1d_generate_grain_uv_422, avx2);
+    c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I444 - 1] = BF(dav1d_generate_grain_uv_444, avx2);
+    c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I422 - 1] = BF(dav1d_fguv_32x32xn_i422, avx2);
+    c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I444 - 1] = BF(dav1d_fguv_32x32xn_i444, avx2);
 #endif
 }

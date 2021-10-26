@@ -113,7 +113,7 @@ cdef_filter_block_c(pixel *dst, const ptrdiff_t dst_stride,
         const int pri_tap = 4 - ((pri_strength >> bitdepth_min_8) & 1);
         const int pri_shift = imax(0, damping - ulog2(pri_strength));
         if (sec_strength) {
-            const int sec_shift = imax(0, damping - ulog2(sec_strength));
+            const int sec_shift = damping - ulog2(sec_strength);
             do {
                 for (int x = 0; x < w; x++) {
                     const int px = dst[x];
@@ -180,7 +180,7 @@ cdef_filter_block_c(pixel *dst, const ptrdiff_t dst_stride,
         }
     } else { // sec_strength only
         assert(sec_strength);
-        const int sec_shift = imax(0, damping - ulog2(sec_strength));
+        const int sec_shift = damping - ulog2(sec_strength);
         do {
             for (int x = 0; x < w; x++) {
                 const int px = dst[x];
