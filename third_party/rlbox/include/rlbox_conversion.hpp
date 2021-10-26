@@ -131,7 +131,7 @@ inline constexpr void convert_type_fundamental_or_array(T_To& to,
                   is_signed_v<T_To_El> == is_signed_v<T_From_El>) {
       // Sanity check - this should definitely be true
       static_assert(sizeof(T_From_C) == sizeof(T_To_C));
-      memcpy(&to, &from, sizeof(T_To_C));
+      std::memcpy(&to, &from, sizeof(T_To_C));
     } else {
       for (size_t i = 0; i < std::extent_v<T_To_C>; i++) {
         convert_type_fundamental_or_array(to[i], from[i]);
