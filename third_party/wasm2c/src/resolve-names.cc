@@ -87,7 +87,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void ResolveFuncTypeVar(Var* var);
   void ResolveTableVar(Var* var);
   void ResolveMemoryVar(Var* var);
-  void ResolveEventVar(Var* var);
+  void ResolveTagVar(Var* var);
   void ResolveDataSegmentVar(Var* var);
   void ResolveElemSegmentVar(Var* var);
   void ResolveLocalVar(Var* var);
@@ -95,7 +95,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void VisitFunc(Func* func);
   void VisitExport(Export* export_);
   void VisitGlobal(Global* global);
-  void VisitEvent(Event* event);
+  void VisitTag(Tag* tag);
   void VisitElemSegment(ElemSegment* segment);
   void VisitDataSegment(DataSegment* segment);
   void VisitScriptModule(ScriptModule* script_module);
@@ -200,8 +200,8 @@ void NameResolver::ResolveMemoryVar(Var* var) {
   ResolveVar(&current_module_->memory_bindings, var, "memory");
 }
 
-void NameResolver::ResolveEventVar(Var* var) {
-  ResolveVar(&current_module_->event_bindings, var, "event");
+void NameResolver::ResolveTagVar(Var* var) {
+  ResolveVar(&current_module_->tag_bindings, var, "tag");
 }
 
 void NameResolver::ResolveDataSegmentVar(Var* var) {
@@ -406,18 +406,24 @@ Result NameResolver::EndTryExpr(TryExpr*) {
 
 Result NameResolver::OnCatchExpr(TryExpr*, Catch* catch_) {
   if (!catch_->IsCatchAll()) {
-    ResolveEventVar(&catch_->var);
+    ResolveTagVar(&catch_->var);
   }
   return Result::Ok;
 }
 
 Result NameResolver::OnDelegateExpr(TryExpr* expr) {
+  // Pop the label here as a try-delegate has no `end` instruction.
+  PopLabel();
+
+  // We resolve *after* popping the label in order to ensure that the
+  // delegate label starts counting after the current try-delegate.
   ResolveLabelVar(&expr->delegate_target);
+
   return Result::Ok;
 }
 
 Result NameResolver::OnThrowExpr(ThrowExpr* expr) {
-  ResolveEventVar(&expr->var);
+  ResolveTagVar(&expr->var);
   return Result::Ok;
 }
 
@@ -463,8 +469,8 @@ void NameResolver::VisitExport(Export* export_) {
       ResolveGlobalVar(&export_->var);
       break;
 
-    case ExternalKind::Event:
-      ResolveEventVar(&export_->var);
+    case ExternalKind::Tag:
+      ResolveTagVar(&export_->var);
       break;
   }
 }
@@ -473,9 +479,9 @@ void NameResolver::VisitGlobal(Global* global) {
   visitor_.VisitExprList(global->init_expr);
 }
 
-void NameResolver::VisitEvent(Event* event) {
-  if (event->decl.has_func_type) {
-    ResolveFuncTypeVar(&event->decl.type_var);
+void NameResolver::VisitTag(Tag* tag) {
+  if (tag->decl.has_func_type) {
+    ResolveFuncTypeVar(&tag->decl.type_var);
   }
 }
 
@@ -502,7 +508,7 @@ Result NameResolver::VisitModule(Module* module) {
   CheckDuplicateBindings(&module->type_bindings, "type");
   CheckDuplicateBindings(&module->table_bindings, "table");
   CheckDuplicateBindings(&module->memory_bindings, "memory");
-  CheckDuplicateBindings(&module->event_bindings, "event");
+  CheckDuplicateBindings(&module->tag_bindings, "tag");
 
   for (Func* func : module->funcs)
     VisitFunc(func);
@@ -510,8 +516,8 @@ Result NameResolver::VisitModule(Module* module) {
     VisitExport(export_);
   for (Global* global : module->globals)
     VisitGlobal(global);
-  for (Event* event : module->events)
-    VisitEvent(event);
+  for (Tag* tag : module->tags)
+    VisitTag(tag);
   for (ElemSegment* elem_segment : module->elem_segments)
     VisitElemSegment(elem_segment);
   for (DataSegment* data_segment : module->data_segments)

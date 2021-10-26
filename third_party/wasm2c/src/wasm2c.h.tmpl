@@ -30,13 +30,20 @@ typedef int64_t s64;
 typedef float f32;
 typedef double f64;
 
-#if defined(_WIN32)
-  #define FUNC_EXPORT __declspec(dllexport)
+#ifndef WASM_DONT_EXPORT_FUNCS
+# if defined(_WIN32)
+#   define FUNC_EXPORT __declspec(dllexport)
+# else
+#   define FUNC_EXPORT
+# endif
 #else
-  #define FUNC_EXPORT
+# define FUNC_EXPORT
 #endif
 
 FUNC_EXPORT wasm2c_sandbox_funcs_t WASM_CURR_ADD_PREFIX(get_wasm2c_sandbox_info)();
+
+struct wasm2c_sandbox_t;
+typedef struct wasm2c_sandbox_t wasm2c_sandbox_t;
 %%bottom
 
 #ifdef __cplusplus

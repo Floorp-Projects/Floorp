@@ -49,7 +49,7 @@ struct Label {
         used(used) {}
 
   bool HasValue() const {
-    return label_type != LabelType::Loop && !sig.empty();
+    return !sig.empty();
   }
 
   LabelType label_type;
@@ -162,6 +162,7 @@ class CWriter {
 
   static char MangleType(Type);
   static std::string MangleTypes(const TypeVector&);
+  static std::string MangleMultivalueTypes(const TypeVector&);
   static std::string MangleName(string_view);
   static std::string MangleFuncName(string_view,
                                     const TypeVector& param_types,
@@ -214,11 +215,13 @@ class CWriter {
   void WriteInitExpr(const ExprList&);
   std::string GenerateHeaderGuard() const;
   void WriteSourceTop();
+  void WriteMultivalueTypes();
   void WriteSandboxStruct();
   void WriteFuncTypes();
   void WriteImports();
+  bool IsFuncStatic(std::string name);
   std::string GetFuncStaticOrExport(std::string);
-  void WriteFuncDeclarations();
+  void WriteFuncDeclarations(bool for_header);
   void WriteFuncDeclaration(const FuncDeclaration&, const std::string&, bool add_storage_class);
   void WriteEntryFuncs();
   void WriteEntryFunc(const FuncDeclaration&, const std::string&, bool add_storage_class);
@@ -237,7 +240,6 @@ class CWriter {
   void WriteDataInitializers();
   void WriteElemInitializers();
   void WriteExportLookup();
-  void WriteFuncIndexLookup();
   void WriteCallbackAddRemove();
   void WriteInit();
   void WriteFuncs();
@@ -336,14 +338,12 @@ void CWriter::PushLabel(LabelType label_type,
                         const std::string& name,
                         const FuncSignature& sig,
                         bool used) {
-  // TODO(binji): Add multi-value support.
-  if ((label_type != LabelType::Func && sig.GetNumParams() != 0) ||
-      sig.GetNumResults() > 1) {
-    UNIMPLEMENTED("multi value support");
-  }
-
-  label_stack_.emplace_back(label_type, name, sig.result_types,
-                            type_stack_.size(), used);
+  if (label_type == LabelType::Loop)
+    label_stack_.emplace_back(label_type, name, sig.param_types,
+                              type_stack_.size(), used);
+  else
+    label_stack_.emplace_back(label_type, name, sig.result_types,
+                              type_stack_.size(), used);
 }
 
 const Label* CWriter::FindLabel(const Var& var) {
@@ -400,6 +400,16 @@ std::string CWriter::MangleTypes(const TypeVector& types) {
     return std::string("v");
 
   std::string result;
+  for (auto type : types) {
+    result += MangleType(type);
+  }
+  return result;
+}
+
+// static
+std::string CWriter::MangleMultivalueTypes(const TypeVector& types) {
+  assert(types.size() >= 2);
+  std::string result = "wasm_multi_";
   for (auto type : types) {
     result += MangleType(type);
   }
@@ -607,11 +617,16 @@ void CWriter::Write(const Var& var) {
 void CWriter::Write(const GotoLabel& goto_label) {
   const Label* label = FindLabel(goto_label.var);
   if (label->HasValue()) {
-    assert(label->sig.size() == 1);
+    size_t amount = label->sig.size();
     assert(type_stack_.size() >= label->type_stack_size);
-    Index dst = type_stack_.size() - label->type_stack_size - 1;
-    if (dst != 0)
-      Write(StackVar(dst, label->sig[0]), " = ", StackVar(0), "; ");
+    assert(type_stack_.size() >= amount);
+    assert(type_stack_.size() - amount >= label->type_stack_size);
+    Index offset = type_stack_.size() - label->type_stack_size - amount;
+    if (offset != 0) {
+      for (Index i = 0; i < amount; ++i) {
+        Write(StackVar(amount - i - 1 + offset, label->sig[i]), " = ", StackVar(amount - i - 1), "; ");
+      }
+    }
   }
 
   if (goto_label.var.is_name()) {
@@ -684,10 +699,12 @@ void CWriter::Write(SignedType type) {
 }
 
 void CWriter::Write(const ResultType& rt) {
-  if (!rt.types.empty()) {
+  if (rt.types.empty()) {
+    Write("void");
+  } else if (rt.types.size() == 1) {
     Write(rt.types[0]);
   } else {
-    Write("void");
+    Write("struct ", MangleMultivalueTypes(rt.types));
   }
 }
 
@@ -792,8 +809,31 @@ void CWriter::WriteSourceTop() {
   Write(s_source_declarations);
 }
 
+void CWriter::WriteMultivalueTypes() {
+  for (TypeEntry* type : module_->types) {
+    FuncType* func_type = cast<FuncType>(type);
+    Index num_results = func_type->GetNumResults();
+    if (num_results <= 1) {
+      continue;
+    }
+    std::string name = MangleMultivalueTypes(func_type->sig.result_types);
+    // these ifndefs are actually to support importing multiple modules
+    // incidentally they also mean we don't have to bother with deduplication
+    Write("#ifndef ", name, Newline());
+    Write("#define ", name, " ", name, Newline());
+    Write("struct ", name, " {", Newline());
+    for (Index i = 0; i < num_results; ++i) {
+      Type type = func_type->GetResultType(i);
+      Write("  ", type);
+      Writef(" %c%d;", MangleType(type), i);
+      Write(Newline());
+    }
+    Write("};", Newline(), "#endif  /* ", name, " */", Newline());
+  }
+}
+
 void CWriter::WriteSandboxStruct() {
-  Write("typedef struct wasm2c_sandbox_t {", Newline());
+  Write("struct wasm2c_sandbox_t {", Newline());
   Indent(2);
 
   Write("wasm_sandbox_wasi_data wasi_data;", Newline());
@@ -813,7 +853,7 @@ void CWriter::WriteSandboxStruct() {
   WriteGlobals();
 
   Dedent(2);
-  Write("} wasm2c_sandbox_t;", Newline(), Newline());
+  Write("};", Newline(), Newline());
 }
 
 void CWriter::WriteFuncTypes() {
@@ -918,7 +958,7 @@ void CWriter::WriteImports() {
   }
 }
 
-void CWriter::WriteFuncDeclarations() {
+void CWriter::WriteFuncDeclarations(bool for_header) {
   if (module_->funcs.size() == module_->num_func_imports)
     return;
 
@@ -926,9 +966,16 @@ void CWriter::WriteFuncDeclarations() {
 
   Index func_index = 0;
   for (const Func* func : module_->funcs) {
+    std::string global_func_name;
+    if (for_header) {
+      global_func_name = DefineGlobalScopeName(func->name);
+    } else {
+      global_func_name = GetGlobalName(func->name);
+    }
     bool is_import = func_index < module_->num_func_imports;
-    if (!is_import) {
-      WriteFuncDeclaration(func->decl, DefineGlobalScopeName(func->name), true /* add_storage_class */);
+    bool static_exclude = for_header && IsFuncStatic(global_func_name);
+    if (!is_import && !static_exclude) {
+      WriteFuncDeclaration(func->decl, global_func_name, true /* add_storage_class */);
       Write(";", Newline());
     }
     ++func_index;
@@ -956,14 +1003,14 @@ void CWriter::WriteEntryFuncs() {
   Write("#endif", Newline());
 }
 
+
+bool CWriter::IsFuncStatic(std::string name) {
+  // static functions starts with prefix __
+  return name.rfind("w2c___", 0) == 0 || name == "w2c_main";
+}
+
 std::string CWriter::GetFuncStaticOrExport(std::string name) {
-  std::string static_export_string = "";
-  if (name.rfind("w2c___", 0) == 0 || name == "w2c_main") {
-    // s starts with prefix __
-    static_export_string = "static ";
-  } else {
-    static_export_string = "FUNC_EXPORT ";
-  }
+  std::string static_export_string = IsFuncStatic(name)? "static " : "FUNC_EXPORT ";
   return static_export_string;
 }
 
@@ -1216,12 +1263,13 @@ void CWriter::WriteDataInitializers() {
     memory = module_->memories[0];
   }
 
-  Write(Newline(), "static void init_memory(wasm2c_sandbox_t* const sbx) ", OpenBrace());
+  Write(Newline(), "static bool init_memory(wasm2c_sandbox_t* const sbx) ", OpenBrace());
   if (memory && module_->num_memory_imports == 0) {
     uint32_t max =
         memory->page_limits.has_max ? memory->page_limits.max : 65536;
-      Write("wasm_rt_allocate_memory(&(sbx->", ExternalRef(memory->name), "), ",
+      Write("bool success = wasm_rt_allocate_memory(&(sbx->", ExternalRef(memory->name), "), ",
             memory->page_limits.initial, ", ", max, ");", Newline());
+      Write("if (!success) { return false; }", Newline());
   }
   data_segment_index = 0;
   for (const DataSegment* data_segment : module_->data_segments) {
@@ -1233,6 +1281,7 @@ void CWriter::WriteDataInitializers() {
   }
 
   Write("sbx->wasi_data.heap_memory = &(sbx->", ExternalRef(memory->name), ");", Newline());
+  Write("return true;", Newline());
   Write(CloseBrace(), Newline());
 
   Write(Newline(), "static void cleanup_memory(wasm2c_sandbox_t* const sbx) ", OpenBrace());
@@ -1298,93 +1347,23 @@ void CWriter::WriteExportLookup() {
   Write(CloseBrace(), Newline());
 }
 
-void CWriter::WriteFuncIndexLookup() {
-  Write(Newline(), "static u32 lookup_wasm2c_func_index(void* sbx_ptr, u32 param_count, u32 result_count, wasm_rt_type_t* types) ", OpenBrace());
-  Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) sbx_ptr;", Newline());
-  Write("return wasm_rt_register_func_type(&sbx->func_type_structs, &sbx->func_type_count, param_count, result_count, types);", Newline());
-  Write(CloseBrace(), Newline());
-}
-
 void CWriter::WriteCallbackAddRemove() {
   const Table* table = module_->tables.empty() ? nullptr : module_->tables[0];
 
-  Write(Newline(), "static u32 add_wasm2c_callback(void* sbx_ptr, u32 func_type_idx, void* func_ptr, wasm_rt_elem_target_class_t func_class) ", OpenBrace());
-  {
-    Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) sbx_ptr;", Newline());
-
-    if (table->elem_limits.max == 0) {
-      Writef("for (u32 i = 1; i != 0; i++) ");
-    } else {
-      Writef("for (u32 i = 1; i < %" PRIu64 "; i++) ", table->elem_limits.max);
-    }
-    Write(OpenBrace());
-    {
-      assert(module_->tables.size() == 1);
-      const Table* table = module_->tables[0];
-      Write("if (i >= sbx->", ExternalRef(table->name), ".size) ", OpenBrace());
-      {
-        Write("wasm_rt_expand_table(&(sbx->", ExternalRef(table->name), "));", Newline());
-      }
-      Write(CloseBrace(), Newline());
-
-      Write("if (sbx->", ExternalRef(table->name), ".data[i].func == 0) ", OpenBrace());
-      {
-        Write("sbx->",ExternalRef(table->name), ".data[i]",
-          " = (wasm_rt_elem_t){ func_class, func_type_idx, ",
-          "(wasm_rt_anyfunc_t) func_ptr };", Newline());
-        Write("return i;", Newline());
-      }
-      Write(CloseBrace(), Newline());
-    }
-    Write(CloseBrace(), Newline());
-    Write("(void) TRAP(CALL_INDIRECT);", Newline());
-  }
-  Write(CloseBrace(), Newline());
-
-  Write(Newline(), "static void remove_wasm2c_callback(void* sbx_ptr, u32 callback_idx) ", OpenBrace());
-  {
-    Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) sbx_ptr;", Newline());
-    Write("sbx->", ExternalRef(table->name), ".data[callback_idx].func = 0;", Newline());
-  }
+  Write(Newline(), "static wasm_rt_table_t* get_wasm2c_callback_table(void* sbx_ptr)", OpenBrace());
+  Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) sbx_ptr;", Newline());
+  Write("return &(sbx->", ExternalRef(table->name), ");", Newline());
   Write(CloseBrace(), Newline());
 }
 
 void CWriter::WriteInit() {
-  Write(Newline(), "static void* create_wasm2c_sandbox(void) ", OpenBrace());
-  Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) calloc(sizeof(wasm2c_sandbox_t), 1);", Newline());
-  Write("init_memory(sbx);", Newline());
-  Write("init_func_types(sbx);", Newline());
-  Write("init_globals(sbx);", Newline());
-  Write("init_table(sbx);", Newline());
-  Write("wasm_rt_init_wasi(&(sbx->wasi_data));", Newline());
+  Write(Newline(), "static void init_module_starts(void) ", OpenBrace());
   for (Var* var : module_->starts) {
     Write(ExternalRef(module_->GetFunc(*var)->name), "();", Newline());
   }
-  Write("return sbx;", Newline());
-  Write(CloseBrace(), Newline(), Newline());
-
-  Write("static void destroy_wasm2c_sandbox(void* aSbx) ", OpenBrace());
-  Write("wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) aSbx;", Newline());
-  Write("cleanup_memory(sbx);", Newline());
-  Write("cleanup_func_types(sbx);", Newline());
-  Write("cleanup_table(sbx);", Newline());
-  Write("wasm_rt_cleanup_wasi(&(sbx->wasi_data));", Newline());
-  Write("free(sbx);", Newline());
-  Write(CloseBrace(), Newline(), Newline());
-
-  Write("FUNC_EXPORT wasm2c_sandbox_funcs_t WASM_CURR_ADD_PREFIX(get_wasm2c_sandbox_info)() ", OpenBrace());
-  {
-    Write("wasm2c_sandbox_funcs_t ret;", Newline());
-    Write("ret.wasm_rt_sys_init = &wasm_rt_sys_init;", Newline());
-    Write("ret.create_wasm2c_sandbox = &create_wasm2c_sandbox;", Newline());
-    Write("ret.destroy_wasm2c_sandbox = &destroy_wasm2c_sandbox;", Newline());
-    Write("ret.lookup_wasm2c_nonfunc_export = &lookup_wasm2c_nonfunc_export;", Newline());
-    Write("ret.lookup_wasm2c_func_index = &lookup_wasm2c_func_index;", Newline());
-    Write("ret.add_wasm2c_callback = &add_wasm2c_callback;", Newline());
-    Write("ret.remove_wasm2c_callback = &remove_wasm2c_callback;", Newline());
-    Write("return ret;", Newline());
-  }
   Write(CloseBrace(), Newline());
+
+  Write(s_source_sandboxapis);
 }
 
 void CWriter::WriteFuncs() {
@@ -1430,9 +1409,20 @@ void CWriter::Write(const Func& func) {
   PushTypes(func.decl.sig.result_types);
   Write("FUNC_EPILOGUE;", Newline());
 
-  if (!func.decl.sig.result_types.empty()) {
-    // Return the top of the stack implicitly.
+  // Return the top of the stack implicitly.
+  Index num_results = func.GetNumResults();
+  if (num_results == 1) {
     Write("return ", StackVar(0), ";", Newline());
+  } else if (num_results >= 2) {
+    Write(OpenBrace());
+    Write(ResultType(func.decl.sig.result_types), " tmp;", Newline());
+    for (Index i = 0; i < num_results; ++i) {
+      Type type = func.GetResultType(i);
+      Writef("tmp.%c%d = ", MangleType(type), i);
+      Write(StackVar(num_results - i - 1), ";", Newline());
+    }
+    Write("return tmp;", Newline());
+    Write(CloseBrace(), Newline());
   }
 
   stream_ = c_stream_;
@@ -1555,8 +1545,10 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::Block: {
         const Block& block = cast<BlockExpr>(&expr)->block;
         std::string label = DefineLocalScopeName(block.label);
+        DropTypes(block.decl.GetNumParams());
         size_t mark = MarkTypeStack();
         PushLabel(LabelType::Block, block.label, block.decl.sig);
+        PushTypes(block.decl.sig.param_types);
         Write(block.exprs, LabelDecl(label));
         ResetTypeStack(mark);
         PopLabel();
@@ -1596,8 +1588,11 @@ void CWriter::Write(const ExprList& exprs) {
         Index num_params = func.GetNumParams();
         Index num_results = func.GetNumResults();
         assert(type_stack_.size() >= num_params);
-        if (num_results > 0) {
-          assert(num_results == 1);
+        if (num_results > 1) {
+          Write(OpenBrace());
+          Write("struct ", MangleMultivalueTypes(func.decl.sig.result_types));
+          Write(" tmp = ");
+        } else if (num_results == 1) {
           Write(StackVar(num_params - 1, func.GetResultType(0)), " = ");
         }
 
@@ -1607,7 +1602,18 @@ void CWriter::Write(const ExprList& exprs) {
         }
         Write(");", Newline());
         DropTypes(num_params);
-        PushTypes(func.decl.sig.result_types);
+        if (num_results > 1) {
+          for (Index i = 0; i < num_results; ++i) {
+            Type type = func.GetResultType(i);
+            PushType(type);
+            Write(StackVar(0));
+            Writef(" = tmp.%c%d;", MangleType(type), i);
+            Write(Newline());
+          }
+          Write(CloseBrace(), Newline());
+        } else {
+          PushTypes(func.decl.sig.result_types);
+        }
         break;
       }
 
@@ -1616,6 +1622,10 @@ void CWriter::Write(const ExprList& exprs) {
         Index num_params = decl.GetNumParams();
         Index num_results = decl.GetNumResults();
         assert(type_stack_.size() > num_params);
+        if (num_results > 1) {
+          Write(OpenBrace());
+          Write("struct ", MangleMultivalueTypes(decl.sig.result_types)," tmp;");
+        }
 
         assert(module_->tables.size() == 1);
         const Table* table = module_->tables[0];
@@ -1625,7 +1635,12 @@ void CWriter::Write(const ExprList& exprs) {
 
         if (num_results > 0) {
           assert(num_results == 1);
-          Write("CALL_INDIRECT_RES(", StackVar(num_params, decl.GetResultType(0)), ", ");
+          Write("CALL_INDIRECT_RES(");
+          if (num_results > 1) {
+            Write("tmp, ");
+          } else {
+            Write(StackVar(num_params, decl.GetResultType(0)), ", ");
+          }
         } else {
           Write("CALL_INDIRECT_VOID(");
         }
@@ -1639,7 +1654,18 @@ void CWriter::Write(const ExprList& exprs) {
         }
         Write(");", Newline());
         DropTypes(num_params + 1);
-        PushTypes(decl.sig.result_types);
+        if (num_results > 1) {
+          for (Index i = 0; i < num_results; ++i) {
+            Type type = decl.GetResultType(i);
+            PushType(type);
+            Write(StackVar(0));
+            Writef(" = tmp.%c%d;", MangleType(type), i);
+            Write(Newline());
+          }
+          Write(CloseBrace(), Newline());
+        } else {
+          PushTypes(decl.sig.result_types);
+        }
         break;
       }
 
@@ -1681,11 +1707,14 @@ void CWriter::Write(const ExprList& exprs) {
         Write("if (", StackVar(0), ") ", OpenBrace());
         DropTypes(1);
         std::string label = DefineLocalScopeName(if_.true_.label);
+        DropTypes(if_.true_.decl.GetNumParams());
         size_t mark = MarkTypeStack();
         PushLabel(LabelType::If, if_.true_.label, if_.true_.decl.sig);
+        PushTypes(if_.true_.decl.sig.param_types);
         Write(if_.true_.exprs, CloseBrace());
         if (!if_.false_.empty()) {
           ResetTypeStack(mark);
+          PushTypes(if_.true_.decl.sig.param_types);
           Write(" else ", OpenBrace(), if_.false_, CloseBrace());
         }
         ResetTypeStack(mark);
@@ -1724,8 +1753,10 @@ void CWriter::Write(const ExprList& exprs) {
         if (!block.exprs.empty()) {
           Write(DefineLocalScopeName(block.label), ": ");
           Indent();
+          DropTypes(block.decl.GetNumParams());
           size_t mark = MarkTypeStack();
           PushLabel(LabelType::Loop, block.label, block.decl.sig);
+          PushTypes(block.decl.sig.param_types);
           Write(Newline(), block.exprs);
           ResetTypeStack(mark);
           PopLabel();
@@ -1847,6 +1878,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::ReturnCallIndirect:
       case ExprType::Throw:
       case ExprType::Try:
+      case ExprType::CallRef:
         UNIMPLEMENTED("...");
         break;
     }
@@ -2147,14 +2179,35 @@ void CWriter::Write(const ConvertExpr& expr) {
       break;
 
     case Opcode::I32TruncSatF32S:
+      WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_SAT_S_F32");
+      break;
+
     case Opcode::I64TruncSatF32S:
+      WriteSimpleUnaryExpr(expr.opcode, "I64_TRUNC_SAT_S_F32");
+      break;
+
     case Opcode::I32TruncSatF64S:
+      WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_SAT_S_F64");
+      break;
+
     case Opcode::I64TruncSatF64S:
+      WriteSimpleUnaryExpr(expr.opcode, "I64_TRUNC_SAT_S_F64");
+      break;
+
     case Opcode::I32TruncSatF32U:
+      WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_SAT_U_F32");
+      break;
+
     case Opcode::I64TruncSatF32U:
+      WriteSimpleUnaryExpr(expr.opcode, "I64_TRUNC_SAT_U_F32");
+      break;
+
     case Opcode::I32TruncSatF64U:
+      WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_SAT_U_F64");
+      break;
+
     case Opcode::I64TruncSatF64U:
-      UNIMPLEMENTED(expr.opcode.GetName());
+      WriteSimpleUnaryExpr(expr.opcode, "I64_TRUNC_SAT_U_F64");
       break;
 
     case Opcode::F32ConvertI32S:
@@ -2361,11 +2414,23 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::I32Extend8S:
+      WriteSimpleUnaryExpr(expr.opcode, "(u32)(s32)(s8)(u8)");
+      break;
+
     case Opcode::I32Extend16S:
+      WriteSimpleUnaryExpr(expr.opcode, "(u32)(s32)(s16)(u16)");
+      break;
+
     case Opcode::I64Extend8S:
+      WriteSimpleUnaryExpr(expr.opcode, "(u64)(s64)(s8)(u8)");
+      break;
+
     case Opcode::I64Extend16S:
+      WriteSimpleUnaryExpr(expr.opcode, "(u64)(s64)(s16)(u16)");
+      break;
+
     case Opcode::I64Extend32S:
-      UNIMPLEMENTED(expr.opcode.GetName());
+      WriteSimpleUnaryExpr(expr.opcode, "(u64)(s64)(s32)(u32)");
       break;
 
     default:
@@ -2467,7 +2532,9 @@ void CWriter::WriteCHeader() {
   Write("#define ", guard, Newline(), Newline());
   Write("#define WASM_CURR_MODULE_PREFIX ", options_.mod_name, Newline());
   Write(s_header_top);
+  WriteMultivalueTypes();
   WriteImports();
+  WriteFuncDeclarations(true /* for_header */);
   Write(s_header_bottom, Newline());
   Write("#endif  /* ", guard, " */", Newline());
 }
@@ -2477,14 +2544,13 @@ void CWriter::WriteCSource() {
   WriteSourceTop();
   WriteSandboxStruct();
   WriteFuncTypes();
-  WriteFuncDeclarations();
+  WriteFuncDeclarations(false /* for_header */);
   WriteEntryFuncs();
   WriteGlobalInitializers();
   WriteFuncs();
   WriteDataInitializers();
   WriteElemInitializers();
   WriteExportLookup();
-  WriteFuncIndexLookup();
   WriteCallbackAddRemove();
   WriteInit();
 }

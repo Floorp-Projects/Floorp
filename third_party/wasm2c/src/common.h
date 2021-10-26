@@ -43,8 +43,10 @@
 #define WABT_USE(x) static_cast<void>(x)
 
 #define WABT_PAGE_SIZE 0x10000 /* 64k */
-#define WABT_MAX_PAGES 0x10000 /* # of pages that fit in 32-bit address space \
-                                */
+#define WABT_MAX_PAGES32 0x10000 /* # of pages that fit in 32-bit address \
+                                    space */
+#define WABT_MAX_PAGES64 0x1000000000000 /* # of pages that fit in 64-bit \
+                                            address space */
 #define WABT_BYTES_TO_PAGES(x) ((x) >> 16)
 #define WABT_ALIGN_UP_TO_PAGE(x) \
   (((x) + WABT_PAGE_SIZE - 1) & ~(WABT_PAGE_SIZE - 1))
@@ -228,10 +230,9 @@ enum class LabelType {
   Else,
   Try,
   Catch,
-  Unwind,
 
   First = Func,
-  Last = Unwind,
+  Last = Catch,
 };
 static const int kLabelTypeCount = WABT_ENUM_COUNT(LabelType);
 
@@ -300,7 +301,7 @@ enum class RelocType {
   GlobalIndexLEB = 7,     // e.g. Immediate of get_global inst
   FunctionOffsetI32 = 8,  // e.g. Code offset in DWARF metadata
   SectionOffsetI32 = 9,   // e.g. Section offset in DWARF metadata
-  EventIndexLEB = 10,     // Used in throw instructions
+  TagIndexLEB = 10,       // Used in throw instructions
   MemoryAddressRelSLEB = 11,  // In PIC code, addr relative to __memory_base
   TableIndexRelSLEB = 12,   // In PIC code, table index relative to __table_base
   GlobalIndexI32 = 13,      // e.g. Global index in data (e.g. DWARF)
@@ -335,12 +336,17 @@ enum class LinkingEntryType {
   SymbolTable = 8,
 };
 
+enum class DylinkEntryType {
+  MemInfo = 1,
+  Needed = 2,
+};
+
 enum class SymbolType {
   Function = 0,
   Data = 1,
   Global = 2,
   Section = 3,
-  Event = 4,
+  Tag = 4,
   Table = 5,
 };
 
@@ -355,7 +361,12 @@ enum class ComdatType {
 #define WABT_SYMBOL_FLAG_EXPORTED 0x20
 #define WABT_SYMBOL_FLAG_EXPLICIT_NAME 0x40
 #define WABT_SYMBOL_FLAG_NO_STRIP 0x80
-#define WABT_SYMBOL_FLAG_MAX 0xff
+#define WABT_SYMBOL_FLAG_TLS 0x100
+#define WABT_SYMBOL_FLAG_MAX 0x1ff
+
+#define WABT_SEGMENT_FLAG_STRINGS 0x1
+#define WABT_SEGMENT_FLAG_TLS 0x2
+#define WABT_SEGMENT_FLAG_MAX 0xff
 
 enum class SymbolVisibility {
   Default = 0,
@@ -374,10 +385,10 @@ enum class ExternalKind {
   Table = 1,
   Memory = 2,
   Global = 3,
-  Event = 4,
+  Tag = 4,
 
   First = Func,
-  Last = Event,
+  Last = Tag,
 };
 static const int kExternalKindCount = WABT_ENUM_COUNT(ExternalKind);
 
@@ -414,7 +425,7 @@ void InitStdio();
 extern const char* g_kind_name[];
 
 static WABT_INLINE const char* GetKindName(ExternalKind kind) {
-  return static_cast<int>(kind) < kExternalKindCount
+  return static_cast<size_t>(kind) < kExternalKindCount
     ? g_kind_name[static_cast<size_t>(kind)]
     : "<error_kind>";
 }
@@ -424,7 +435,7 @@ static WABT_INLINE const char* GetKindName(ExternalKind kind) {
 extern const char* g_reloc_type_name[];
 
 static WABT_INLINE const char* GetRelocTypeName(RelocType reloc) {
-  return static_cast<int>(reloc) < kRelocTypeCount
+  return static_cast<size_t>(reloc) < kRelocTypeCount
     ? g_reloc_type_name[static_cast<size_t>(reloc)]
     : "<error_reloc_type>";
 }
@@ -441,8 +452,8 @@ static WABT_INLINE const char* GetSymbolTypeName(SymbolType type) {
       return "data";
     case SymbolType::Section:
       return "section";
-    case SymbolType::Event:
-      return "event";
+    case SymbolType::Tag:
+      return "tag";
     case SymbolType::Table:
       return "table";
     default:

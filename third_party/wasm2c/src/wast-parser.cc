@@ -120,6 +120,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::ReturnCallIndirect:
     case TokenType::Call:
     case TokenType::CallIndirect:
+    case TokenType::CallRef:
     case TokenType::LocalGet:
     case TokenType::LocalSet:
     case TokenType::LocalTee:
@@ -205,7 +206,7 @@ bool IsModuleField(TokenTypePair pair) {
   switch (pair[1]) {
     case TokenType::Data:
     case TokenType::Elem:
-    case TokenType::Event:
+    case TokenType::Tag:
     case TokenType::Export:
     case TokenType::Func:
     case TokenType::Type:
@@ -417,17 +418,17 @@ Result ResolveFuncTypes(Module* module, Errors* errors) {
     if (auto* func_field = dyn_cast<FuncModuleField>(&field)) {
       func = &func_field->func;
       decl = &func->decl;
-    } else if (auto* event_field = dyn_cast<EventModuleField>(&field)) {
-      decl = &event_field->event.decl;
+    } else if (auto* tag_field = dyn_cast<TagModuleField>(&field)) {
+      decl = &tag_field->tag.decl;
     } else if (auto* import_field = dyn_cast<ImportModuleField>(&field)) {
       if (auto* func_import =
               dyn_cast<FuncImport>(import_field->import.get())) {
         // Only check the declaration, not the function itself, since it is an
         // import.
         decl = &func_import->func.decl;
-      } else if (auto* event_import =
-                     dyn_cast<EventImport>(import_field->import.get())) {
-        decl = &event_import->event.decl;
+      } else if (auto* tag_import =
+                     dyn_cast<TagImport>(import_field->import.get())) {
+        decl = &tag_import->tag.decl;
       } else {
         continue;
       }
@@ -972,9 +973,9 @@ Result WastParser::ParseLimitsIndex(Limits* out_limits) {
 Result WastParser::ParseLimits(Limits* out_limits) {
   WABT_TRACE(ParseLimits);
 
-  CHECK_RESULT(ParseNat(&out_limits->initial));
+  CHECK_RESULT(ParseNat(&out_limits->initial, out_limits->is_64));
   if (PeekMatch(TokenType::Nat)) {
-    CHECK_RESULT(ParseNat(&out_limits->max));
+    CHECK_RESULT(ParseNat(&out_limits->max, out_limits->is_64));
     out_limits->has_max = true;
   } else {
     out_limits->has_max = false;
@@ -987,7 +988,7 @@ Result WastParser::ParseLimits(Limits* out_limits) {
   return Result::Ok;
 }
 
-Result WastParser::ParseNat(uint64_t* out_nat) {
+Result WastParser::ParseNat(uint64_t* out_nat, bool is_64) {
   WABT_TRACE(ParseNat);
   if (!PeekMatch(TokenType::Nat)) {
     return ErrorExpected({"a natural number"}, "123");
@@ -996,7 +997,7 @@ Result WastParser::ParseNat(uint64_t* out_nat) {
   Token token = Consume();
   string_view sv = token.literal().text;
   if (Failed(ParseUint64(sv.begin(), sv.end(), out_nat)) ||
-      *out_nat > 0xffffffffu) {
+      (!is_64 && *out_nat > 0xffffffffu)) {
     Error(token.loc, "invalid int \"" PRIstringview "\"",
           WABT_PRINTF_STRING_VIEW_ARG(sv));
   }
@@ -1078,7 +1079,7 @@ Result WastParser::ParseModuleField(Module* module) {
   switch (Peek(1)) {
     case TokenType::Data:   return ParseDataModuleField(module);
     case TokenType::Elem:   return ParseElemModuleField(module);
-    case TokenType::Event:  return ParseEventModuleField(module);
+    case TokenType::Tag:    return ParseTagModuleField(module);
     case TokenType::Export: return ParseExportModuleField(module);
     case TokenType::Func:   return ParseFuncModuleField(module);
     case TokenType::Type:   return ParseTypeModuleField(module);
@@ -1192,14 +1193,14 @@ Result WastParser::ParseElemModuleField(Module* module) {
   return Result::Ok;
 }
 
-Result WastParser::ParseEventModuleField(Module* module) {
-  WABT_TRACE(ParseEventModuleField);
+Result WastParser::ParseTagModuleField(Module* module) {
+  WABT_TRACE(ParseTagModuleField);
   EXPECT(Lpar);
-  auto field = MakeUnique<EventModuleField>(GetLocation());
-  EXPECT(Event);
-  ParseBindVarOpt(&field->event.name);
-  CHECK_RESULT(ParseTypeUseOpt(&field->event.decl));
-  CHECK_RESULT(ParseUnboundFuncSignature(&field->event.decl.sig));
+  auto field = MakeUnique<TagModuleField>(GetLocation());
+  EXPECT(Tag);
+  ParseBindVarOpt(&field->tag.name);
+  CHECK_RESULT(ParseTypeUseOpt(&field->tag.decl));
+  CHECK_RESULT(ParseUnboundFuncSignature(&field->tag.decl.sig));
   EXPECT(Rpar);
   module->AppendField(std::move(field));
   return Result::Ok;
@@ -1434,12 +1435,12 @@ Result WastParser::ParseImportModuleField(Module* module) {
       break;
     }
 
-    case TokenType::Event: {
+    case TokenType::Tag: {
       Consume();
       ParseBindVarOpt(&name);
-      auto import = MakeUnique<EventImport>(name);
-      CHECK_RESULT(ParseTypeUseOpt(&import->event.decl));
-      CHECK_RESULT(ParseUnboundFuncSignature(&import->event.decl.sig));
+      auto import = MakeUnique<TagImport>(name);
+      CHECK_RESULT(ParseTypeUseOpt(&import->tag.decl));
+      CHECK_RESULT(ParseUnboundFuncSignature(&import->tag.decl.sig));
       EXPECT(Rpar);
       field = MakeUnique<ImportModuleField>(std::move(import), loc);
       break;
@@ -1599,7 +1600,7 @@ Result WastParser::ParseExportDesc(Export* export_) {
     case TokenType::Table:  export_->kind = ExternalKind::Table; break;
     case TokenType::Memory: export_->kind = ExternalKind::Memory; break;
     case TokenType::Global: export_->kind = ExternalKind::Global; break;
-    case TokenType::Event:  export_->kind = ExternalKind::Event; break;
+    case TokenType::Tag:    export_->kind = ExternalKind::Tag; break;
     default:
       return ErrorExpected({"an external kind"});
   }
@@ -1860,6 +1861,12 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       CHECK_RESULT(ParseTypeUseOpt(&expr->decl));
       CHECK_RESULT(ParseUnboundFuncSignature(&expr->decl.sig));
       *out_expr = std::move(expr);
+      break;
+    }
+
+    case TokenType::CallRef: {
+      ErrorUnlessOpcodeEnabled(Consume());
+      out_expr->reset(new CallRefExpr(loc));
       break;
     }
 
@@ -2591,18 +2598,12 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
       if (IsCatch(Peek())) {
         CHECK_RESULT(ParseCatchInstrList(&expr->catches));
         expr->kind = TryKind::Catch;
-      } else if (PeekMatch(TokenType::Unwind)) {
-        Consume();
-        CHECK_RESULT(ParseInstrList(&expr->unwind));
-        expr->kind = TryKind::Unwind;
       } else if (PeekMatch(TokenType::Delegate)) {
         Consume();
         Var var;
         CHECK_RESULT(ParseVar(&var));
         expr->delegate_target = var;
         expr->kind = TryKind::Delegate;
-      } else {
-        return ErrorExpected({"catch", "catch_all", "unwind", "delegate"});
       }
       CHECK_RESULT(ErrorIfLpar({"a valid try clause"}));
       expr->block.end_loc = GetLocation();
@@ -2771,32 +2772,28 @@ Result WastParser::ParseExpr(ExprList* exprs) {
         EXPECT(Do);
         CHECK_RESULT(ParseInstrList(&expr->block.exprs));
         EXPECT(Rpar);
-        EXPECT(Lpar);
-        TokenType type = Peek();
-        switch (type) {
-          case TokenType::Catch:
-          case TokenType::CatchAll:
-            CHECK_RESULT(ParseCatchExprList(&expr->catches));
-            expr->kind = TryKind::Catch;
-            break;
-          case TokenType::Unwind:
-            Consume();
-            CHECK_RESULT(ParseTerminatingInstrList(&expr->unwind));
-            expr->kind = TryKind::Unwind;
-            EXPECT(Rpar);
-            break;
-          case TokenType::Delegate: {
-            Consume();
-            Var var;
-            CHECK_RESULT(ParseVar(&var));
-            expr->delegate_target = var;
-            expr->kind = TryKind::Delegate;
-            EXPECT(Rpar);
-            break;
+        if (PeekMatch(TokenType::Lpar)) {
+          Consume();
+          TokenType type = Peek();
+          switch (type) {
+            case TokenType::Catch:
+            case TokenType::CatchAll:
+              CHECK_RESULT(ParseCatchExprList(&expr->catches));
+              expr->kind = TryKind::Catch;
+              break;
+            case TokenType::Delegate: {
+              Consume();
+              Var var;
+              CHECK_RESULT(ParseVar(&var));
+              expr->delegate_target = var;
+              expr->kind = TryKind::Delegate;
+              EXPECT(Rpar);
+              break;
+            }
+            default:
+              ErrorExpected({"catch", "catch_all", "delegate"});
+              break;
           }
-          default:
-            ErrorExpected({"catch", "catch_all", "unwind", "delegate"});
-            break;
         }
         CHECK_RESULT(ErrorIfLpar({"a valid try clause"}));
         expr->block.end_loc = GetLocation();
@@ -3249,7 +3246,7 @@ void WastParser::CheckImportOrdering(Module* module) {
       module->tables.size() != module->num_table_imports ||
       module->memories.size() != module->num_memory_imports ||
       module->globals.size() != module->num_global_imports ||
-      module->events.size() != module->num_event_imports) {
+      module->tags.size() != module->num_tag_imports) {
     Error(GetLocation(),
           "imports must occur before all non-import definitions");
   }

@@ -93,6 +93,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
+  Result OnCallRefExpr(CallRefExpr*) override;
   Result OnCompareExpr(CompareExpr*) override;
   Result OnConstExpr(ConstExpr*) override;
   Result OnConvertExpr(ConvertExpr*) override;
@@ -135,7 +136,6 @@ class Validator : public ExprVisitor::Delegate {
   Result OnUnreachableExpr(UnreachableExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result OnCatchExpr(TryExpr*, Catch*) override;
-  Result OnUnwindExpr(TryExpr*) override;
   Result OnDelegateExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
@@ -272,6 +272,17 @@ Result Validator::OnCallIndirectExpr(CallIndirectExpr* expr) {
   result_ |= validator_.OnCallIndirect(
       expr->loc, GetFuncTypeIndex(expr->loc, expr->decl), expr->table);
   return Result::Ok;
+}
+
+Result Validator::OnCallRefExpr(CallRefExpr* expr) {
+  Index function_type_index;
+  result_ |= validator_.OnCallRef(expr->loc, &function_type_index);
+  if (Succeeded(result_)) {
+    expr->function_type_index = Var{function_type_index};
+    return Result::Ok;
+  }
+
+  return Result::Error;
 }
 
 Result Validator::OnCompareExpr(CompareExpr* expr) {
@@ -499,11 +510,6 @@ Result Validator::OnCatchExpr(TryExpr*, Catch* catch_) {
   return Result::Ok;
 }
 
-Result Validator::OnUnwindExpr(TryExpr* expr) {
-  result_ |= validator_.OnUnwind(expr->loc);
-  return Result::Ok;
-}
-
 Result Validator::OnDelegateExpr(TryExpr* expr) {
   result_ |= validator_.OnDelegate(expr->loc, expr->delegate_target);
   return Result::Ok;
@@ -684,10 +690,10 @@ Result Validator::CheckModule() {
           break;
         }
 
-        case ExternalKind::Event: {
-          auto&& event = cast<EventImport>(f->import.get())->event;
-          result_ |= validator_.OnEvent(
-              field.loc, GetFuncTypeIndex(field.loc, event.decl));
+        case ExternalKind::Tag: {
+          auto&& tag = cast<TagImport>(f->import.get())->tag;
+          result_ |= validator_.OnTag(field.loc,
+                                      GetFuncTypeIndex(field.loc, tag.decl));
           break;
         }
       }
@@ -758,11 +764,11 @@ Result Validator::CheckModule() {
     }
   }
 
-  // Event section.
+  // Tag section.
   for (const ModuleField& field : module->fields) {
-    if (auto* f = dyn_cast<EventModuleField>(&field)) {
-      result_ |= validator_.OnEvent(field.loc,
-                                    GetFuncTypeIndex(field.loc, f->event.decl));
+    if (auto* f = dyn_cast<TagModuleField>(&field)) {
+      result_ |=
+          validator_.OnTag(field.loc, GetFuncTypeIndex(field.loc, f->tag.decl));
     }
   }
 

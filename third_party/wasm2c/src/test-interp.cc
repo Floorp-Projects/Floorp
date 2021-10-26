@@ -102,7 +102,7 @@ TEST_F(InterpTest, MVP) {
   EXPECT_EQ(1u, module_desc_.tables.size());
   EXPECT_EQ(1u, module_desc_.memories.size());
   EXPECT_EQ(1u, module_desc_.globals.size());
-  EXPECT_EQ(0u, module_desc_.events.size());
+  EXPECT_EQ(0u, module_desc_.tags.size());
   EXPECT_EQ(1u, module_desc_.exports.size());
   EXPECT_EQ(1u, module_desc_.starts.size());
   EXPECT_EQ(1u, module_desc_.elems.size());

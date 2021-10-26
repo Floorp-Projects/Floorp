@@ -83,11 +83,11 @@ class BinaryReaderIR : public BinaryReaderNop {
                         Index global_index,
                         Type type,
                         bool mutable_) override;
-  Result OnImportEvent(Index import_index,
-                       string_view module_name,
-                       string_view field_name,
-                       Index event_index,
-                       Index sig_index) override;
+  Result OnImportTag(Index import_index,
+                     string_view module_name,
+                     string_view field_name,
+                     Index tag_index,
+                     Index sig_index) override;
 
   Result OnFunctionCount(Index count) override;
   Result OnFunction(Index index, Index sig_index) override;
@@ -144,9 +144,10 @@ class BinaryReaderIR : public BinaryReaderNop {
                        Index* target_depths,
                        Index default_target_depth) override;
   Result OnCallExpr(Index func_index) override;
-  Result OnCatchExpr(Index event_index) override;
+  Result OnCatchExpr(Index tag_index) override;
   Result OnCatchAllExpr() override;
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override;
+  Result OnCallRefExpr() override;
   Result OnReturnCallExpr(Index func_index) override;
   Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override;
   Result OnCompareExpr(Opcode opcode) override;
@@ -194,12 +195,11 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnStoreExpr(Opcode opcode,
                      Address alignment_log2,
                      Address offset) override;
-  Result OnThrowExpr(Index event_index) override;
+  Result OnThrowExpr(Index tag_index) override;
   Result OnTryExpr(Type sig_type) override;
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnTernaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
-  Result OnUnwindExpr() override;
   Result EndFunctionBody(Index index) override;
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
   Result OnSimdLoadLaneExpr(Opcode opcode,
@@ -252,10 +252,10 @@ class BinaryReaderIR : public BinaryReaderNop {
                      Index index,
                      string_view name) override;
 
-  Result BeginEventSection(Offset size) override { return Result::Ok; }
-  Result OnEventCount(Index count) override { return Result::Ok; }
-  Result OnEventType(Index index, Index sig_index) override;
-  Result EndEventSection() override { return Result::Ok; }
+  Result BeginTagSection(Offset size) override { return Result::Ok; }
+  Result OnTagCount(Index count) override { return Result::Ok; }
+  Result OnTagType(Index index, Index sig_index) override;
+  Result EndTagSection() override { return Result::Ok; }
 
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
@@ -274,8 +274,10 @@ class BinaryReaderIR : public BinaryReaderNop {
                          Index global_index) override;
   Result OnSectionSymbol(Index index, uint32_t flags,
                           Index section_index) override;
-  Result OnEventSymbol(Index index, uint32_t flags, string_view name,
-                        Index event_index) override;
+  Result OnTagSymbol(Index index,
+                     uint32_t flags,
+                     string_view name,
+                     Index tag_index) override;
   Result OnTableSymbol(Index index, uint32_t flags, string_view name,
                        Index table_index) override;
 
@@ -525,15 +527,15 @@ Result BinaryReaderIR::OnImportGlobal(Index import_index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnImportEvent(Index import_index,
-                                     string_view module_name,
-                                     string_view field_name,
-                                     Index event_index,
-                                     Index sig_index) {
-  auto import = MakeUnique<EventImport>();
+Result BinaryReaderIR::OnImportTag(Index import_index,
+                                   string_view module_name,
+                                   string_view field_name,
+                                   Index tag_index,
+                                   Index sig_index) {
+  auto import = MakeUnique<TagImport>();
   import->module_name = module_name.to_string();
   import->field_name = field_name.to_string();
-  SetFuncDeclaration(&import->event.decl, Var(sig_index, GetLocation()));
+  SetFuncDeclaration(&import->tag.decl, Var(sig_index, GetLocation()));
   module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
   return Result::Ok;
@@ -747,6 +749,10 @@ Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index, Index table_index) {
   return AppendExpr(std::move(expr));
 }
 
+Result BinaryReaderIR::OnCallRefExpr() {
+  return AppendExpr(MakeUnique<CallRefExpr>());
+}
+
 Result BinaryReaderIR::OnReturnCallExpr(Index func_index) {
   return AppendExpr(MakeUnique<ReturnCallExpr>(Var(func_index)));
 }
@@ -811,7 +817,6 @@ Result BinaryReaderIR::OnEndExpr() {
 
     case LabelType::Func:
     case LabelType::Catch:
-    case LabelType::Unwind:
       break;
   }
 
@@ -975,8 +980,8 @@ Result BinaryReaderIR::OnStoreExpr(Opcode opcode,
   return AppendExpr(MakeUnique<StoreExpr>(opcode, 1 << alignment_log2, offset));
 }
 
-Result BinaryReaderIR::OnThrowExpr(Index event_index) {
-  return AppendExpr(MakeUnique<ThrowExpr>(Var(event_index, GetLocation())));
+Result BinaryReaderIR::OnThrowExpr(Index tag_index) {
+  return AppendExpr(MakeUnique<ThrowExpr>(Var(tag_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnLocalTeeExpr(Index local_index) {
@@ -1010,10 +1015,10 @@ Result BinaryReaderIR::AppendCatch(Catch&& catch_) {
     return Result::Error;
   }
 
-  if (try_->kind == TryKind::Invalid) {
+  if (try_->kind == TryKind::Plain) {
     try_->kind = TryKind::Catch;
   } else if (try_->kind != TryKind::Catch) {
-    PrintError("catch not allowed in try-unwind or try-delegate");
+    PrintError("catch not allowed in try-delegate");
     return Result::Error;
   }
 
@@ -1030,28 +1035,6 @@ Result BinaryReaderIR::OnCatchAllExpr() {
   return AppendCatch(Catch(GetLocation()));
 }
 
-Result BinaryReaderIR::OnUnwindExpr() {
-  LabelNode* label = nullptr;
-  CHECK_RESULT(TopLabel(&label));
-
-  if (label->label_type != LabelType::Try) {
-    PrintError("unwind not inside try block");
-    return Result::Error;
-  }
-
-  auto* try_ = cast<TryExpr>(label->context);
-
-  if (try_->kind == TryKind::Invalid) {
-    try_->kind = TryKind::Unwind;
-  } else if (try_->kind != TryKind::Unwind) {
-    PrintError("unwind not allowed in try-catch or try-delegate");
-    return Result::Error;
-  }
-
-  label->exprs = &try_->unwind;
-  return Result::Ok;
-}
-
 Result BinaryReaderIR::OnDelegateExpr(Index depth) {
   LabelNode* label = nullptr;
   CHECK_RESULT(TopLabel(&label));
@@ -1063,10 +1046,10 @@ Result BinaryReaderIR::OnDelegateExpr(Index depth) {
 
   auto* try_ = cast<TryExpr>(label->context);
 
-  if (try_->kind == TryKind::Invalid) {
+  if (try_->kind == TryKind::Plain) {
     try_->kind = TryKind::Delegate;
   } else if (try_->kind != TryKind::Delegate) {
-    PrintError("delegate not allowed in try-catch or try-unwind");
+    PrintError("delegate not allowed in try-catch");
     return Result::Error;
   }
 
@@ -1103,7 +1086,7 @@ Result BinaryReaderIR::OnSimdLoadLaneExpr(Opcode opcode,
                                           Address offset,
                                           uint64_t value) {
   return AppendExpr(
-      MakeUnique<SimdLoadLaneExpr>(opcode, alignment_log2, offset, value));
+      MakeUnique<SimdLoadLaneExpr>(opcode, 1 << alignment_log2, offset, value));
 }
 
 Result BinaryReaderIR::OnSimdStoreLaneExpr(Opcode opcode,
@@ -1111,7 +1094,7 @@ Result BinaryReaderIR::OnSimdStoreLaneExpr(Opcode opcode,
                                           Address offset,
                                           uint64_t value) {
   return AppendExpr(
-      MakeUnique<SimdStoreLaneExpr>(opcode, alignment_log2, offset, value));
+      MakeUnique<SimdStoreLaneExpr>(opcode, 1 << alignment_log2, offset, value));
 }
 
 Result BinaryReaderIR::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
@@ -1482,10 +1465,10 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnEventType(Index index, Index sig_index) {
-  auto field = MakeUnique<EventModuleField>(GetLocation());
-  Event& event = field->event;
-  SetFuncDeclaration(&event.decl, Var(sig_index, GetLocation()));
+Result BinaryReaderIR::OnTagType(Index index, Index sig_index) {
+  auto field = MakeUnique<TagModuleField>(GetLocation());
+  Tag& tag = field->tag;
+  SetFuncDeclaration(&tag.decl, Var(sig_index, GetLocation()));
   module_->AppendField(std::move(field));
   return Result::Ok;
 }
@@ -1548,20 +1531,22 @@ Result BinaryReaderIR::OnSectionSymbol(Index index, uint32_t flags,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnEventSymbol(Index index, uint32_t flags,
-                                     string_view name, Index event_index) {
+Result BinaryReaderIR::OnTagSymbol(Index index,
+                                   uint32_t flags,
+                                   string_view name,
+                                   Index tag_index) {
   if (name.empty()) {
     return Result::Ok;
   }
-  if (event_index >= module_->events.size()) {
-    PrintError("invalid event index: %" PRIindex, event_index);
+  if (tag_index >= module_->tags.size()) {
+    PrintError("invalid tag index: %" PRIindex, tag_index);
     return Result::Error;
   }
-  Event* event = module_->events[event_index];
+  Tag* tag = module_->tags[tag_index];
   std::string dollar_name =
-      GetUniqueName(&module_->event_bindings, MakeDollarName(name));
-  event->name = dollar_name;
-  module_->event_bindings.emplace(dollar_name, Binding(event_index));
+      GetUniqueName(&module_->tag_bindings, MakeDollarName(name));
+  tag->name = dollar_name;
+  module_->tag_bindings.emplace(dollar_name, Binding(tag_index));
   return Result::Ok;
 }
 

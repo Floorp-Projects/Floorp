@@ -318,6 +318,28 @@ POPCOUNT_DEFINE_PORTABLE(I64_POPCNT, u64)
 #define I32_TRUNC_U_F64(x) TRUNC_U(u32, f64, 4294967296.,  x)
 #define I64_TRUNC_U_F64(x) TRUNC_U(u64, f64, (f64)UINT64_MAX, x)
 
+#define TRUNC_SAT_S(ut, st, ft, min, smin, minop, max, smax, x) \
+  ((UNLIKELY((x) != (x)))         ? 0                           \
+   : (UNLIKELY(!((x)minop(min)))) ? smin                        \
+   : (UNLIKELY(!((x) < (max))))   ? smax                        \
+                                  : (ut)(st)(x))
+
+#define I32_TRUNC_SAT_S_F32(x) TRUNC_SAT_S(u32, s32, f32, (f32)INT32_MIN, INT32_MIN, >=, 2147483648.f, INT32_MAX, x)
+#define I64_TRUNC_SAT_S_F32(x) TRUNC_SAT_S(u64, s64, f32, (f32)INT64_MIN, INT64_MIN, >=, (f32)INT64_MAX, INT64_MAX, x)
+#define I32_TRUNC_SAT_S_F64(x) TRUNC_SAT_S(u32, s32, f64, -2147483649., INT32_MIN, >, 2147483648., INT32_MAX, x)
+#define I64_TRUNC_SAT_S_F64(x) TRUNC_SAT_S(u64, s64, f64, (f64)INT64_MIN, INT64_MIN, >=, (f64)INT64_MAX, INT64_MAX, x)
+
+#define TRUNC_SAT_U(ut, ft, max, smax, x) \
+  ((UNLIKELY((x) != (x)))        ? 0      \
+   : (UNLIKELY(!((x) > (ft)-1))) ? 0      \
+   : (UNLIKELY(!((x) < (max))))  ? smax   \
+                                 : (ut)(x))
+
+#define I32_TRUNC_SAT_U_F32(x) TRUNC_SAT_U(u32, f32, 4294967296.f, UINT32_MAX, x)
+#define I64_TRUNC_SAT_U_F32(x) TRUNC_SAT_U(u64, f32, (f32)UINT64_MAX, UINT64_MAX, x)
+#define I32_TRUNC_SAT_U_F64(x) TRUNC_SAT_U(u32, f64, 4294967296., UINT32_MAX,  x)
+#define I64_TRUNC_SAT_U_F64(x) TRUNC_SAT_U(u64, f64, (f64)UINT64_MAX, UINT64_MAX, x)
+
 #define DEFINE_REINTERPRET(name, t1, t2)  \
   static inline t2 name(t1 x) {           \
     t2 result;                            \
@@ -329,4 +351,64 @@ DEFINE_REINTERPRET(f32_reinterpret_i32, u32, f32)
 DEFINE_REINTERPRET(i32_reinterpret_f32, f32, u32)
 DEFINE_REINTERPRET(f64_reinterpret_i64, u64, f64)
 DEFINE_REINTERPRET(i64_reinterpret_f64, f64, u64)
+%%sandboxapis
+//test
 
+static u32 add_wasm2c_callback(void* sbx_ptr, u32 func_type_idx, void* func_ptr, wasm_rt_elem_target_class_t func_class) {
+  wasm_rt_table_t* table = get_wasm2c_callback_table(sbx_ptr);
+  for (u32 i = 1; i < table->max_size; i++) {
+    if (i >= table->size) {
+      wasm_rt_expand_table(table);
+    }
+    if (table->data[i].func == 0) {
+      table->data[i] = (wasm_rt_elem_t){ func_class, func_type_idx, (wasm_rt_anyfunc_t) func_ptr };
+      return i;
+    }
+  }
+  (void) TRAP(CALL_INDIRECT);
+}
+
+static void remove_wasm2c_callback(void* sbx_ptr, u32 callback_idx) {
+  wasm_rt_table_t* table = get_wasm2c_callback_table(sbx_ptr);
+  table->data[callback_idx].func = 0;
+}
+
+static u32 lookup_wasm2c_func_index(void* sbx_ptr, u32 param_count, u32 result_count, wasm_rt_type_t* types) {
+  wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) sbx_ptr;
+  return wasm_rt_register_func_type(&sbx->func_type_structs, &sbx->func_type_count, param_count, result_count, types);
+}
+
+static void* create_wasm2c_sandbox(void) {
+  wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) calloc(sizeof(wasm2c_sandbox_t), 1);
+  if (!init_memory(sbx)) {
+    free(sbx);
+    return 0;
+  }
+  init_func_types(sbx);
+  init_globals(sbx);
+  init_table(sbx);
+  wasm_rt_init_wasi(&(sbx->wasi_data));
+  init_module_starts();
+  return sbx;
+}
+
+static void destroy_wasm2c_sandbox(void* aSbx) {
+  wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) aSbx;
+  cleanup_memory(sbx);
+  cleanup_func_types(sbx);
+  cleanup_table(sbx);
+  wasm_rt_cleanup_wasi(&(sbx->wasi_data));
+  free(sbx);
+}
+
+FUNC_EXPORT wasm2c_sandbox_funcs_t WASM_CURR_ADD_PREFIX(get_wasm2c_sandbox_info)() {
+  wasm2c_sandbox_funcs_t ret;
+  ret.wasm_rt_sys_init = &wasm_rt_sys_init;
+  ret.create_wasm2c_sandbox = &create_wasm2c_sandbox;
+  ret.destroy_wasm2c_sandbox = &destroy_wasm2c_sandbox;
+  ret.lookup_wasm2c_nonfunc_export = &lookup_wasm2c_nonfunc_export;
+  ret.lookup_wasm2c_func_index = &lookup_wasm2c_func_index;
+  ret.add_wasm2c_callback = &add_wasm2c_callback;
+  ret.remove_wasm2c_callback = &remove_wasm2c_callback;
+  return ret;
+}
