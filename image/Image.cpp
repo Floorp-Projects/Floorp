@@ -381,40 +381,16 @@ void ImageResource::CollectSizeOfSurfaces(
       continue;
     }
 
-    // The surface might be wrapping another.
-    bool isMappedSurface = surface->GetType() == gfx::SurfaceType::DATA_MAPPED;
-    const gfx::SourceSurface* actualSurface =
-        isMappedSurface
-            ? static_cast<gfx::SourceSurfaceMappedData*>(surface.get())
-                  ->GetScopedSurface()
-            : surface.get();
-
-    // Check if the surface is already in the report. Ignore if so.
-    bool found = false;
-    for (const auto& counter : aCounters) {
-      if (counter.Surface() == actualSurface) {
-        found = true;
-        break;
-      }
-    }
-    if (found) {
-      continue;
-    }
-
     // The surface isn't in the report, so it isn't stored in SurfaceCache. We
     // need to add our own entry here so that it will be included in the memory
     // report.
     gfx::SourceSurface::SizeOfInfo info;
     surface->SizeOfExcludingThis(aMallocSizeOf, info);
 
-    uint32_t heapBytes = aMallocSizeOf(actualSurface);
-    if (isMappedSurface) {
-      heapBytes += aMallocSizeOf(surface.get());
-    }
-
+    uint32_t heapBytes = aMallocSizeOf(surface);
     SurfaceKey key = ContainerSurfaceKey(surface->GetSize(), entry.mSVGContext,
                                          ToSurfaceFlags(entry.mFlags));
-    SurfaceMemoryCounter counter(key, actualSurface, /* aIsLocked */ false,
+    SurfaceMemoryCounter counter(key, /* aIsLocked */ false,
                                  /* aCannotSubstitute */ false,
                                  /* aIsFactor2 */ false, /* aFinished */ true,
                                  SurfaceMemoryCounterType::CONTAINER);
