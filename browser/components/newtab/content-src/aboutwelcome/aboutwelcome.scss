@@ -382,6 +382,22 @@ body {
         border-radius: 2px;
         color: #FFF;
       }
+
+      @media (prefers-contrast: more) {
+        outline: 2px solid var(--in-content-button-border-color);
+        border-radius: 2px;
+
+        &.selected,
+        &:active {
+          background: var(--in-content-box-background);
+          color: var(--in-content-text-color);
+        }
+
+        &:hover {
+          background: var(--in-content-primary-button-background);
+          color: var(--in-content-primary-button-text-color);
+        }
+      }
     }
 
     .colorway-text,
@@ -664,7 +680,7 @@ body {
       background: var(--grey-subtitle-1);
       border-radius: 5px;
       // using border will show up in Windows High Contrast Mode to improve accessibility.
-      border: 3px solid var(--grey-subtitle-1);
+      border: 3px solid var(--in-content-button-text-color);
       opacity: 0.25;
 
       &.current {
