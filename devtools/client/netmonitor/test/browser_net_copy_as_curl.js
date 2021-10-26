@@ -226,10 +226,10 @@ async function testForPlatform(tab, monitor, testData) {
           return false;
         }
 
-        // Must match each of the params in the middle (headers and --compressed)
+        // Must match each of the params in the middle (headers)
         return (
           expectedResult.length === actual.length &&
-          expectedResult.every(param => actual.includes(param))
+          expectedResult.some(param => actual.includes(param))
         );
       }
     );

@@ -60,9 +60,8 @@ add_task(async function() {
     "accept-language header present in curl output"
   );
   ok(
-    !headerTypeInParams(curlParams, "Accept-Encoding") &&
-      inParams(curlParams, "--compressed"),
-    '"--compressed" param replaced accept-encoding header'
+    exactHeaderInParams(curlParams, "Accept-Encoding: gzip, deflate, br"),
+    "accept-encoding header present in curl output"
   );
   ok(
     exactHeaderInParams(curlParams, "Origin: https://example.com"),
