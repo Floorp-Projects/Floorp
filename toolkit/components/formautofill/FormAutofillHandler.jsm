@@ -1071,13 +1071,18 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
     }
 
     let element = detail.elementWeakRef.get();
+
+    let ccExpMonth = profile["cc-exp-month"];
+    let ccExpYear = profile["cc-exp-year"];
     if (element.tagName != "INPUT" || !element.placeholder) {
+      // Bug 1688576: Change YYYY-MM to MM/YYYY since MM/YYYY is the
+      // preferred presentation format for credit card expiry dates.
+      profile["cc-exp"] =
+        ccExpMonth.toString().padStart(2, "0") + "/" + ccExpYear.toString();
       return;
     }
 
     let result,
-      ccExpMonth = profile["cc-exp-month"],
-      ccExpYear = profile["cc-exp-year"],
       placeholder = element.placeholder;
 
     // Bug 1687681: This is a short term fix to other locales having
@@ -1185,9 +1190,13 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
    * @override
    */
   applyTransformers(profile) {
-    this.matchSelectOptions(profile);
+    // The matchSelectOptions transformer must be placed after the expiry transformers.
+    // This ensures that the expiry value that is cached in the matchSelectOptions
+    // matches the expiry value that is stored in the profile ensuring that autofill works
+    // correctly when dealing with option elements.
     this.creditCardExpDateTransformer(profile);
     this.creditCardExpMonthTransformer(profile);
+    this.matchSelectOptions(profile);
     this.adaptFieldMaxLength(profile);
   }
 
