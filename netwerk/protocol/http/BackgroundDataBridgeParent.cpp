@@ -11,11 +11,15 @@ namespace net {
 
 BackgroundDataBridgeParent::BackgroundDataBridgeParent(uint64_t aChannelID)
     : mChannelID(aChannelID), mBackgroundThread(NS_GetCurrentThread()) {
-  SocketProcessChild::GetSingleton()->AddDataBridgeToMap(aChannelID, this);
+  if (SocketProcessChild* child = SocketProcessChild::GetSingleton()) {
+    child->AddDataBridgeToMap(aChannelID, this);
+  }
 }
 
 void BackgroundDataBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
-  SocketProcessChild::GetSingleton()->RemoveDataBridgeFromMap(mChannelID);
+  if (SocketProcessChild* child = SocketProcessChild::GetSingleton()) {
+    child->RemoveDataBridgeFromMap(mChannelID);
+  }
 }
 
 already_AddRefed<nsIThread> BackgroundDataBridgeParent::GetBackgroundThread() {

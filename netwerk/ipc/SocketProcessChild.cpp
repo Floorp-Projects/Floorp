@@ -12,6 +12,7 @@
 #include "HttpTransactionChild.h"
 #include "HttpConnectionMgrChild.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/ipc/CrashReporterClient.h"
@@ -75,7 +76,7 @@ using namespace ipc;
 
 static bool sInitializedJS = false;
 
-SocketProcessChild* sSocketProcessChild;
+static Atomic<SocketProcessChild*> sSocketProcessChild;
 
 SocketProcessChild::SocketProcessChild() {
   LOG(("CONSTRUCT SocketProcessChild::SocketProcessChild\n"));
