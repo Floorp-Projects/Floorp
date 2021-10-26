@@ -4,6 +4,7 @@ MAINTAINER Tom Ritter <tom@mozilla.com>
 VOLUME /builds/worker/checkouts
 
 COPY    privileged-setup.sh     /setup/privileged-setup.sh
+COPY    updatebot-version.sh    /setup/updatebot-version.sh
 COPY    setup.sh                /builds/worker/setup.sh
 COPY    run.py                  /builds/worker/run.py
 COPY    hgrc                    /etc/mercurial/hgrc.d/updatebot.rc
