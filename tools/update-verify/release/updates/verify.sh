@@ -7,8 +7,9 @@
 . ../common/download_builds.sh
 . ../common/check_updates.sh
 
-clear_cache
-create_cache
+# Cache being handled by new async_download.py
+# clear_cache
+# create_cache
 
 ftp_server_to="http://stage.mozilla.org/pub/mozilla.org"
 ftp_server_from="http://stage.mozilla.org/pub/mozilla.org"

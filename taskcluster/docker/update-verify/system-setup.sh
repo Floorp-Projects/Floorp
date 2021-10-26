@@ -12,6 +12,7 @@ apt_packages+=('curl')
 apt_packages+=('locales')
 apt_packages+=('python2')
 apt_packages+=('python3-pip')
+apt_packages+=('python3-aiohttp')
 apt_packages+=('shellcheck')
 apt_packages+=('sudo')
 
