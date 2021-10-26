@@ -8,14 +8,15 @@ import android.content.Context
 import android.util.AttributeSet
 import android.widget.LinearLayout
 import mozilla.components.concept.base.profiler.Profiler
+import org.mozilla.fenix.HomeActivity
 
 private const val DETAIL_TEXT = "RootLinearLayout"
 
 /**
  * A [LinearLayout] that adds profiler markers for various methods. This is intended to be used on
- * the root view of the view hierarchy to understand global measure/layout events.
+ * the root view of [HomeActivity]'s view hierarchy to understand global measure/layout events.
  */
-class RootLinearLayout(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {
+class HomeActivityRootLinearLayout(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {
 
     var profilerProvider: () -> Profiler? = { null }
 
