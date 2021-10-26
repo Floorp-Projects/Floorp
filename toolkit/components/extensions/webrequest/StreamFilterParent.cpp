@@ -6,9 +6,11 @@
 
 #include "StreamFilterParent.h"
 
+#include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/net/ChannelEventQueue.h"
+#include "mozilla/StaticPrefs_extensions.h"
 #include "nsHttpChannel.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
@@ -122,6 +124,19 @@ auto StreamFilterParent::Create(dom::ContentParent* aContentParent,
   RefPtr<mozilla::net::nsHttpChannel> chan = do_QueryObject(channel);
   if (!chan) {
     return ChildEndpointPromise::CreateAndReject(false, __func__);
+  }
+
+  nsCOMPtr<nsIChannel> genChan(do_QueryInterface(channel));
+  if (!StaticPrefs::extensions_filterResponseServiceWorkerScript_disabled() &&
+      ChannelWrapper::IsServiceWorkerScript(genChan)) {
+    RefPtr<extensions::WebExtensionPolicy> addonPolicy =
+        ExtensionPolicyService::GetSingleton().GetByID(aAddonId);
+
+    if (!addonPolicy ||
+        !addonPolicy->HasPermission(
+            nsGkAtoms::webRequestFilterResponse_serviceWorkerScript)) {
+      return ChildEndpointPromise::CreateAndReject(false, __func__);
+    }
   }
 
   // Disable alt-data for extension stream listeners.
