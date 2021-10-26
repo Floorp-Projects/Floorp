@@ -3288,6 +3288,9 @@ nsresult Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
     MOZ_ASSERT(!mNeedsCleanup, "cleanup stream set unexpectedly");
     mNeedsCleanup = nullptr; /* just in case */
 
+    if (!mInputFrameDataStream) {
+      return NS_ERROR_UNEXPECTED;
+    }
     uint32_t streamID = mInputFrameDataStream->StreamID();
     mSegmentWriter = writer;
     rv = mInputFrameDataStream->WriteSegments(this, count, countWritten);
