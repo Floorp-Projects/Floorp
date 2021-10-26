@@ -134,6 +134,9 @@ var PreferenceRollouts = {
     "pref-webrender-intel-rollout-70-release",
     "bug-1703186-rollout-http3-support-release-88-89",
     "rollout-doh-nightly-rollout-to-all-us-desktop-users-nightly-74-80-bug-1613481",
+    "rollout-doh-beta-rollout-to-all-us-desktop-users-v2-beta-74-80-bug-1613489",
+    "rollout-doh-us-staged-rollout-to-all-us-desktop-users-release-73-77-bug-1586331",
+    "bug-1648229-rollout-comcast-steering-rollout-release-78-80",
   ]),
 
   /**
