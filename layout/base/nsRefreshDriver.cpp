@@ -1130,6 +1130,9 @@ RefreshDriverTimer* nsRefreshDriver::ChooseTimer() {
 }
 
 static nsDocShell* GetDocShell(nsPresContext* aPresContext) {
+  if (!aPresContext) {
+    return nullptr;
+  }
   return static_cast<nsDocShell*>(aPresContext->GetDocShell());
 }
 
@@ -1236,12 +1239,10 @@ void nsRefreshDriver::AddRefreshObserver(nsARefreshObserver* aObserver,
                                          FlushType aFlushType,
                                          const char* aObserverDescription) {
   ObserverArray& array = ArrayFor(aFlushType);
-  array.AppendElement(ObserverData{
-      aObserver, aObserverDescription, TimeStamp::Now(),
-      mPresContext
-          ? MarkerInnerWindowIdFromDocShell(mPresContext->GetDocShell())
-          : MarkerInnerWindowId::NoId(),
-      profiler_capture_backtrace(), aFlushType});
+  array.AppendElement(
+      ObserverData{aObserver, aObserverDescription, TimeStamp::Now(),
+                   MarkerInnerWindowIdFromDocShell(GetDocShell(mPresContext)),
+                   profiler_capture_backtrace(), aFlushType});
   EnsureTimerStarted();
 }
 
