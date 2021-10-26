@@ -121,6 +121,13 @@ TEST(IntlString, NormalizeNFD)
   alreadyNormalized = String::Normalize(NormalizationForm::NFD, u"½"sv, buf);
   ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::Yes);
   ASSERT_EQ(buf.get_string_view(), u"");
+
+  // Test with inline capacity.
+  TestBuffer<char16_t, 2> buf2;
+
+  alreadyNormalized = String::Normalize(NormalizationForm::NFD, u" ç"sv, buf2);
+  ASSERT_EQ(alreadyNormalized.unwrap(), AlreadyNormalized::No);
+  ASSERT_EQ(buf2.get_string_view(), u" c\u0327");
 }
 
 TEST(IntlString, NormalizeNFKC)
