@@ -78,11 +78,11 @@ let { AboutHomeStartupCache } = ChromeUtils.import(
 // eslint-disable-next-line no-unused-vars
 async function simulateRestart(
   browser,
-  { withAutoShutdownWrite, ensureCacheWinsRace, expectTimeout } = {
-    withAutoShutdownWrite: true,
-    ensureCacheWinsRace: true,
-    expectTimeout: false,
-  }
+  {
+    withAutoShutdownWrite = true,
+    ensureCacheWinsRace = true,
+    expectTimeout = false,
+  } = {}
 ) {
   info("Simulating restart of the browser");
   if (browser.remoteType !== E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE) {

@@ -32,7 +32,7 @@ add_task(async function test_same_consumer() {
       </html>`,
       "window.__CACHE_CONSUMED__ = true;"
     );
-    await simulateRestart(browser, false /* withAutoShutdownWrite */);
+    await simulateRestart(browser, { withAutoShutdownWrite: false });
 
     // Attempting to load the script from the cache should fail, and instead load
     // the markup.
