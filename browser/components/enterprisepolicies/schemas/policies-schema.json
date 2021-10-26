@@ -526,10 +526,16 @@
         "TopSites": {
           "type": "boolean"
         },
+        "SponsoredTopSites": {
+          "type": "boolean"
+        },
         "Highlights": {
           "type": "boolean"
         },
         "Pocket": {
+          "type": "boolean"
+        },
+        "SponsoredPocket": {
           "type": "boolean"
         },
         "Snippets": {
