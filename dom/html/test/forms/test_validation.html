@@ -94,8 +94,8 @@ function checkDefaultPseudoClass()
      ":valid should apply");
 
   is(window.getComputedStyle(document.getElementById('o'))
-       .getPropertyValue('background-color'), "rgb(0, 255, 0)",
-     ":valid should apply");
+       .getPropertyValue('background-color'), "rgb(0, 0, 0)",
+     "Nor :valid and :invalid should apply");
 
   is(window.getComputedStyle(document.getElementById('obj'))
        .getPropertyValue('background-color'), "rgb(0, 0, 0)",
@@ -123,7 +123,7 @@ function checkSpecificWillValidate()
   // fieldset, output, object (TODO) and select elements
   ok(!document.getElementById('f').willValidate, "Fielset element should be barred from constraint validation");
   ok(!document.getElementById('obj').willValidate, "Object element should be barred from constraint validation");
-  ok(document.getElementById('o').willValidate, "Output element should not be barred from constraint validation");
+  ok(!document.getElementById('o').willValidate, "Output element should be barred from constraint validation");
   ok(document.getElementById('s').willValidate, "Select element should not be barred from constraint validation");
 
   // input element
@@ -200,16 +200,13 @@ function checkCommonWillValidate(element)
 {
   // Not checking the default value because it has been checked previously.
 
-  // Not checking output elements because they can't be disabled.
-  if (element.tagName != 'OUTPUT') {
-    element.disabled = true;
-    ok(!element.willValidate, "Disabled element should be barred from constraint validation");
+  element.disabled = true;
+  ok(!element.willValidate, "Disabled element should be barred from constraint validation");
 
-    is(window.getComputedStyle(element).getPropertyValue('background-color'),
-       "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
+  is(window.getComputedStyle(element).getPropertyValue('background-color'),
+     "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
 
-    element.removeAttribute('disabled');
-  }
+  element.removeAttribute('disabled');
 
   // TODO: If an element has a datalist element ancestor, it is barred from constraint validation.
 }
@@ -230,12 +227,12 @@ function checkCustomError(element, isBarred)
   if (element.tagName == "FIELDSET") {
     is(window.getComputedStyle(element).getPropertyValue('background-color'),
        isBarred ? "rgb(0, 255, 0)" : "rgb(255, 0, 0)",
-       ":invalid pseudo-classs should apply" + element.tagName);
+       ":invalid pseudo-classs should apply to " + element.tagName);
   }
   else {
     is(window.getComputedStyle(element).getPropertyValue('background-color'),
        isBarred ? "rgb(0, 0, 0)" : "rgb(255, 0, 0)",
-       ":invalid pseudo-classs should apply" + element.tagName);
+       ":invalid pseudo-classs should apply to " + element.tagName);
   }
 
   element.setCustomValidity("");
@@ -312,27 +309,25 @@ checkDefaultPseudoClass();
 
 checkSpecificWillValidate();
 
-// Not checking button, fieldset and object
+// Not checking button, fieldset, output and object
 // because they are always barred from constraint validation.
 checkCommonWillValidate(document.getElementById('i'));
 checkCommonWillValidate(document.getElementById('s'));
 checkCommonWillValidate(document.getElementById('t'));
-checkCommonWillValidate(document.getElementById('o'));
 
 checkCustomError(document.getElementById('i'), false);
 checkCustomError(document.getElementById('s'), false);
 checkCustomError(document.getElementById('t'), false);
-checkCustomError(document.getElementById('o'), false);
+checkCustomError(document.getElementById('o'), true);
 checkCustomError(document.getElementById('b'), false);
 checkCustomError(document.getElementById('f'), true);
 checkCustomError(document.getElementById('obj'), true);
 
-// Not checking button, fieldset and object
+// Not checking button, fieldset, output and object
 // because they are always barred from constraint validation.
 checkCheckValidity(document.getElementById('i'));
 checkCheckValidity(document.getElementById('s'));
 checkCheckValidity(document.getElementById('t'));
-checkCheckValidity(document.getElementById('o'));
 
 checkValidityStateObjectAliveWithoutElement("fieldset");
 checkValidityStateObjectAliveWithoutElement("input");

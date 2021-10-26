@@ -26,8 +26,9 @@ HTMLOutputElement::HTMLOutputElement(
       mIsDoneAddingChildren(!aFromParser) {
   AddMutationObserver(this);
 
-  // We start out valid and ui-valid (since we have no form).
-  AddStatesSilently(NS_EVENT_STATE_VALID | NS_EVENT_STATE_MOZ_UI_VALID);
+  // <output> is always barred from constraint validation since it is not a
+  // submittable element.
+  SetBarredFromConstraintValidation(true);
 }
 
 HTMLOutputElement::~HTMLOutputElement() = default;
@@ -74,20 +75,6 @@ void HTMLOutputElement::DoneAddingChildren(bool aHaveNotified) {
   mIsDoneAddingChildren = true;
   // We should update DefaultValue, after parsing is done.
   DescendantsChanged();
-}
-
-EventStates HTMLOutputElement::IntrinsicState() const {
-  EventStates states = nsGenericHTMLFormControlElement::IntrinsicState();
-
-  // We don't have to call IsCandidateForConstraintValidation()
-  // because <output> can't be barred from constraint validation.
-  if (IsValid()) {
-    states |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_MOZ_UI_VALID;
-  } else {
-    states |= NS_EVENT_STATE_INVALID | NS_EVENT_STATE_MOZ_UI_INVALID;
-  }
-
-  return states;
 }
 
 nsresult HTMLOutputElement::BindToTree(BindContext& aContext,
