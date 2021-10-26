@@ -60,10 +60,7 @@ bool SocketProcessHost::Launch() {
   MOZ_ASSERT(NS_IsMainThread());
 
   std::vector<std::string> extraArgs;
-
-  nsAutoCString parentBuildID(mozilla::PlatformBuildID());
-  extraArgs.push_back("-parentBuildID");
-  extraArgs.push_back(parentBuildID.get());
+  ProcessChild::AddPlatformBuildID(extraArgs);
 
   SharedPreferenceSerializer prefSerializer;
   if (!prefSerializer.SerializeToSharedMemory()) {
