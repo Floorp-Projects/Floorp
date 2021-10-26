@@ -315,6 +315,10 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.HistoryAllItemsRemoved -> EventWrapper<NoExtraKeys>(
             { History.removedAll.record(it) }
         )
+        is Event.HistoryRecentSearchesTapped -> EventWrapper(
+            { History.recentSearchesTapped.record(it) },
+            { History.recentSearchesTappedKeys.valueOf(it) }
+        )
         is Event.CollectionRenamed -> EventWrapper<NoExtraKeys>(
             { Collections.renamed.record(it) }
         )

@@ -248,7 +248,8 @@ class SessionControlAdapter(
             HistoryMetadataGroupViewHolder.LAYOUT_ID -> return HistoryMetadataGroupViewHolder(
                 composeView = ComposeView(parent.context),
                 store = store,
-                interactor = interactor
+                interactor = interactor,
+                metrics = components.analytics.metrics
             )
         }
 

@@ -24,7 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
@@ -62,7 +62,7 @@ private const val VISITS_PER_COLUMN = 3
 fun RecentlyVisited(
     recentVisits: List<HistoryMetadataGroup>,
     menuItems: List<RecentVisitMenuItem>,
-    onRecentVisitClick: (HistoryMetadataGroup) -> Unit = {}
+    onRecentVisitClick: (HistoryMetadataGroup, Int) -> Unit = { _, _ -> }
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -76,7 +76,7 @@ fun RecentlyVisited(
         ) {
             val itemsList = recentVisits.chunked(VISITS_PER_COLUMN)
 
-            items(itemsList) { items ->
+            itemsIndexed(itemsList) { pageIndex, items ->
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -85,7 +85,8 @@ fun RecentlyVisited(
                             recentVisit = recentVisit,
                             menuItems = menuItems,
                             showDividerLine = index < items.size - 1,
-                            onRecentVisitClick = onRecentVisitClick
+                            onRecentVisitClick = onRecentVisitClick,
+                            pageNumber = pageIndex + 1
                         )
                     }
                 }
@@ -100,6 +101,7 @@ fun RecentlyVisited(
  * @param recentVisit The [HistoryMetadataGroup] to display.
  * @param menuItems List of [RecentVisitMenuItem] to display in a recent visit dropdown menu.
  * @param onRecentVisitClick Invoked when the user clicks on a recent visit.
+ * @param pageNumber which page is the item on.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -107,14 +109,15 @@ private fun RecentVisitItem(
     recentVisit: HistoryMetadataGroup,
     menuItems: List<RecentVisitMenuItem>,
     showDividerLine: Boolean,
-    onRecentVisitClick: (HistoryMetadataGroup) -> Unit = {}
+    onRecentVisitClick: (HistoryMetadataGroup, Int) -> Unit = { _, _ -> },
+    pageNumber: Int
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
             .combinedClickable(
-                onClick = { onRecentVisitClick(recentVisit) },
+                onClick = { onRecentVisitClick(recentVisit, pageNumber) },
                 onLongClick = { menuExpanded = true }
             )
             .size(268.dp, 56.dp),

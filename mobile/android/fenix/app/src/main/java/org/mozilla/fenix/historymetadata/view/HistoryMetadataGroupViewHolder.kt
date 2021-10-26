@@ -10,6 +10,8 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.historymetadata.interactor.HistoryMetadataInteractor
 import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -20,13 +22,14 @@ import org.mozilla.fenix.utils.view.ViewHolder
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param store [HomeFragmentStore] containing the list of history metadata groups to be displayed.
- * @property interactor [HistoryMetadataInteractor] which will have delegated to all user
- * interactions.
+ * @property interactor [HistoryMetadataInteractor] which will have delegated to all user interactions.
+ * @property metrics [MetricController] that handles telemetry events.
  */
 class HistoryMetadataGroupViewHolder(
     val composeView: ComposeView,
     private val store: HomeFragmentStore,
-    private val interactor: HistoryMetadataInteractor
+    private val interactor: HistoryMetadataInteractor,
+    private val metrics: MetricController
 ) : ViewHolder(composeView) {
 
     init {
@@ -50,7 +53,10 @@ class HistoryMetadataGroupViewHolder(
                             }
                         )
                     ),
-                    onRecentVisitClick = { interactor.onHistoryMetadataGroupClicked(it) }
+                    onRecentVisitClick = { historyMetadataGroup, pageNumber ->
+                        metrics.track(Event.HistoryRecentSearchesTapped(pageNumber.toString()))
+                        interactor.onHistoryMetadataGroupClicked(historyMetadataGroup)
+                    }
                 )
             }
         }
