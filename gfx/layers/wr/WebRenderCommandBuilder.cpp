@@ -17,7 +17,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/Types.h"
-#include "mozilla/image/WebRenderImageProvider.h"
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/ClipManager.h"
 #include "mozilla/layers/ImageClient.h"
@@ -41,7 +40,6 @@ namespace mozilla {
 namespace layers {
 
 using namespace gfx;
-using namespace image;
 static int sIndent;
 #include <stdarg.h>
 #include <stdio.h>
@@ -2011,22 +2009,24 @@ bool WebRenderCommandBuilder::PushImage(
   return true;
 }
 
-Maybe<wr::ImageKey> WebRenderCommandBuilder::CreateImageProviderKey(
-    nsDisplayItem* aItem, image::WebRenderImageProvider* aProvider,
+Maybe<wr::BlobImageKey> WebRenderCommandBuilder::CreateBlobImageKey(
+    nsDisplayItem* aItem, ImageContainer* aContainer,
     mozilla::wr::IpcResourceUpdateQueue& aResources) {
-  RefPtr<WebRenderImageProviderData> imageData =
-      CreateOrRecycleWebRenderUserData<WebRenderImageProviderData>(aItem);
+  MOZ_ASSERT(!aContainer->IsAsync());
+
+  RefPtr<WebRenderBlobImageData> imageData =
+      CreateOrRecycleWebRenderUserData<WebRenderBlobImageData>(aItem);
   MOZ_ASSERT(imageData);
-  return imageData->UpdateImageKey(aProvider, aResources);
+  return imageData->UpdateImageKey(aContainer, aResources);
 }
 
-bool WebRenderCommandBuilder::PushImageProvider(
-    nsDisplayItem* aItem, image::WebRenderImageProvider* aProvider,
+bool WebRenderCommandBuilder::PushBlobImage(
+    nsDisplayItem* aItem, ImageContainer* aContainer,
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const LayoutDeviceRect& aRect, const LayoutDeviceRect& aClip) {
-  Maybe<wr::ImageKey> key =
-      CreateImageProviderKey(aItem, aProvider, aResources);
+  Maybe<wr::BlobImageKey> key =
+      CreateBlobImageKey(aItem, aContainer, aResources);
   if (!key) {
     return false;
   }
@@ -2034,7 +2034,8 @@ bool WebRenderCommandBuilder::PushImageProvider(
   auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
   auto r = wr::ToLayoutRect(aRect);
   auto c = wr::ToLayoutRect(aClip);
-  aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), rendering, key.value());
+  aBuilder.PushImage(r, c, !aItem->BackfaceIsHidden(), rendering,
+                     wr::AsImageKey(key.value()));
 
   return true;
 }

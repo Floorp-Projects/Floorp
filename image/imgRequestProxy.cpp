@@ -667,15 +667,15 @@ imgRequestProxy::GetImage(imgIContainer** aImage) {
 }
 
 NS_IMETHODIMP
-imgRequestProxy::GetProviderId(uint32_t* aId) {
+imgRequestProxy::GetProducerId(uint32_t* aId) {
   NS_ENSURE_TRUE(aId, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<imgIContainer> image;
   nsresult rv = GetImage(getter_AddRefs(image));
   if (NS_SUCCEEDED(rv)) {
-    *aId = image->GetProviderId();
+    *aId = image->GetProducerId();
   } else {
-    *aId = 0;
+    *aId = layers::kContainerProducerID_Invalid;
   }
 
   return NS_OK;

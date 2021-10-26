@@ -44,6 +44,7 @@ class IpcResourceUpdateQueue;
 namespace layers {
 
 class CompositorManagerChild;
+class ImageContainer;
 class RenderRootStateManager;
 
 class SharedSurfacesChild {
@@ -85,6 +86,23 @@ class SharedSurfacesChild {
                         wr::ImageKey& aKey);
 
   /**
+   * Request that the first surface in the image container's current images be
+   * mapped into the compositor thread's memory space, and a valid ImageKey be
+   * generated for it for use with WebRender. If a different method should be
+   * used to share the image data for this particular container, it will return
+   * NS_ERROR_NOT_IMPLEMENTED. This must be called from the main thread.
+   */
+  static nsresult Share(ImageContainer* aContainer,
+                        RenderRootStateManager* aManager,
+                        wr::IpcResourceUpdateQueue& aResources,
+                        wr::ImageKey& aKey, ContainerProducerID aProducerId);
+
+  static nsresult ShareBlob(ImageContainer* aContainer,
+                            RenderRootStateManager* aManager,
+                            wr::IpcResourceUpdateQueue& aResources,
+                            wr::BlobImageKey& aKey);
+
+  /**
    * Get the external ID, if any, bound to the shared surface. Used for memory
    * reporting purposes.
    */
@@ -97,6 +115,10 @@ class SharedSurfacesChild {
    */
   static gfx::SourceSurfaceSharedData* AsSourceSurfaceSharedData(
       gfx::SourceSurface* aSurface);
+
+  static nsresult UpdateAnimation(ImageContainer* aContainer,
+                                  gfx::SourceSurface* aSurface,
+                                  const gfx::IntRect& aDirtyRect);
 
   class ImageKeyData {
    public:
