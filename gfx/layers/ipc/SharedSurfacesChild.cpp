@@ -8,6 +8,7 @@
 #include "SharedSurfacesParent.h"
 #include "CompositorManagerChild.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/image/SourceSurfaceBlobImage.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
@@ -324,6 +325,90 @@ nsresult SharedSurfacesChild::Share(SourceSurface* aSurface,
 }
 
 /* static */
+nsresult SharedSurfacesChild::Share(ImageContainer* aContainer,
+                                    RenderRootStateManager* aManager,
+                                    wr::IpcResourceUpdateQueue& aResources,
+                                    wr::ImageKey& aKey,
+                                    ContainerProducerID aProducerId) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aContainer);
+  MOZ_ASSERT(aManager);
+
+  if (aContainer->IsAsync()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  AutoTArray<ImageContainer::OwningImage, 4> images;
+  aContainer->GetCurrentImages(&images);
+  if (images.IsEmpty()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (aProducerId != kContainerProducerID_Invalid &&
+      images[0].mProducerID != aProducerId) {
+    // If the producer ID of the surface in the container does not match the
+    // expected producer ID, then we do not want to proceed with sharing. This
+    // is useful for when callers are unsure if given container is for the same
+    // producer / underlying image request.
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<gfx::SourceSurface> surface = images[0].mImage->GetAsSourceSurface();
+  if (!surface) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  auto sharedSurface = AsSourceSurfaceSharedData(surface);
+  if (!sharedSurface) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  SharedSurfacesAnimation* anim = aContainer->GetSharedSurfacesAnimation();
+  if (anim) {
+    return anim->UpdateKey(sharedSurface, aManager, aResources, aKey);
+  }
+
+  return Share(sharedSurface, aManager, aResources, aKey);
+}
+
+/* static */
+nsresult SharedSurfacesChild::ShareBlob(ImageContainer* aContainer,
+                                        RenderRootStateManager* aManager,
+                                        wr::IpcResourceUpdateQueue& aResources,
+                                        wr::BlobImageKey& aKey) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aContainer);
+  MOZ_ASSERT(aManager);
+
+  if (aContainer->IsAsync()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  AutoTArray<ImageContainer::OwningImage, 4> images;
+  aContainer->GetCurrentImages(&images);
+  if (images.IsEmpty()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  RefPtr<gfx::SourceSurface> surface = images[0].mImage->GetAsSourceSurface();
+  if (!surface || surface->GetType() != SurfaceType::BLOB_IMAGE) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  auto* blobSurface =
+      static_cast<image::SourceSurfaceBlobImage*>(surface.get());
+
+  Maybe<wr::BlobImageKey> key =
+      blobSurface->UpdateKey(aManager->LayerManager(), aResources);
+  if (!key) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aKey = key.value();
+  return NS_OK;
+}
+
+/* static */
 nsresult SharedSurfacesChild::Share(SourceSurface* aSurface,
                                     wr::ExternalImageId& aId) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -390,6 +475,28 @@ void SharedSurfacesChild::Unshare(const wr::ExternalImageId& aId,
   }
 
   return Some(data->Id());
+}
+
+/* static */
+nsresult SharedSurfacesChild::UpdateAnimation(ImageContainer* aContainer,
+                                              SourceSurface* aSurface,
+                                              const IntRect& aDirtyRect) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aContainer);
+  MOZ_ASSERT(!aContainer->IsAsync());
+  MOZ_ASSERT(aSurface);
+
+  // If we aren't using shared surfaces, then is nothing to do.
+  auto sharedSurface = SharedSurfacesChild::AsSourceSurfaceSharedData(aSurface);
+  if (!sharedSurface) {
+    MOZ_ASSERT(!aContainer->GetSharedSurfacesAnimation());
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  SharedSurfacesAnimation* anim = aContainer->EnsureSharedSurfacesAnimation();
+  MOZ_ASSERT(anim);
+
+  return anim->SetCurrentFrame(sharedSurface, aDirtyRect);
 }
 
 AnimationImageKeyData::AnimationImageKeyData(RenderRootStateManager* aManager,
