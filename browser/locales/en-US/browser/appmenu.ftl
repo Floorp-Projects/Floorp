@@ -4,12 +4,20 @@
 
 ## App Menu
 
-appmenuitem-update-banner3 =
-    .label-update-downloading = Downloading { -brand-shorter-name } update
-    .label-update-available = Update available — download now
-    .label-update-manual = Update available — download now
-    .label-update-unsupported = Unable to update — system incompatible
-    .label-update-restart = Update available — restart now
+appmenuitem-banner-update-downloading =
+    .label = Downloading { -brand-shorter-name } update
+
+appmenuitem-banner-update-available =
+    .label = Update available — download now
+
+appmenuitem-banner-update-manual =
+    .label = Update available — download now
+
+appmenuitem-banner-update-unsupported =
+    .label = Unable to update — system incompatible
+
+appmenuitem-banner-update-restart =
+    .label = Update available — restart now
 
 appmenuitem-new-tab =
     .label = New tab

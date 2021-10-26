@@ -135,8 +135,8 @@ add_task(async function testSecondaryActionWorkflow() {
     );
     let menuItem = PanelUI.mainView.querySelector(".panel-banner-item");
     is(
-      menuItem.label,
-      menuItem.getAttribute("label-update-manual"),
+      menuItem.getAttribute("data-l10n-id"),
+      "appmenuitem-banner-update-manual",
       "Showing correct label"
     );
     is(menuItem.hidden, false, "update-manual menu item is showing.");
@@ -197,8 +197,8 @@ add_task(async function testDownloadingBadge() {
     );
     let menuItem = PanelUI.mainView.querySelector(".panel-banner-item");
     is(
-      menuItem.label,
-      menuItem.getAttribute("label-update-downloading"),
+      menuItem.getAttribute("data-l10n-id"),
+      "appmenuitem-banner-update-downloading",
       "Showing correct label (downloading)"
     );
     is(menuItem.hidden, false, "update-downloading menu item is showing.");
@@ -301,8 +301,8 @@ add_task(async function testInteractionWithBadges() {
     );
     let menuItem = PanelUI.mainView.querySelector(".panel-banner-item");
     is(
-      menuItem.label,
-      menuItem.getAttribute("label-update-manual"),
+      menuItem.getAttribute("data-l10n-id"),
+      "appmenuitem-banner-update-manual",
       "Showing correct label"
     );
     is(menuItem.hidden, false, "update-manual menu item is showing.");
@@ -552,8 +552,8 @@ add_task(async function testMultipleNonBadges() {
     );
     let menuItem = PanelUI.mainView.querySelector(".panel-banner-item");
     is(
-      menuItem.label,
-      menuItem.getAttribute("label-update-restart"),
+      menuItem.getAttribute("data-l10n-id"),
+      "appmenuitem-banner-update-restart",
       "Showing correct label"
     );
     is(menuItem.hidden, false, "update-restart menu item is showing.");
@@ -582,8 +582,8 @@ add_task(async function testMultipleNonBadges() {
       "update-manual badge is displaying on PanelUI button."
     );
     is(
-      menuItem.label,
-      menuItem.getAttribute("label-update-manual"),
+      menuItem.getAttribute("data-l10n-id"),
+      "appmenuitem-banner-update-manual",
       "Showing correct label"
     );
     is(menuItem.hidden, false, "update-manual menu item is showing.");
