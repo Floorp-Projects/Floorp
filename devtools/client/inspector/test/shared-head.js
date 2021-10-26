@@ -265,6 +265,8 @@ async function getNodeFrontInFrames(selectors, inspector) {
   let walker = inspector.walker;
   let rootNode = walker.rootNode;
 
+  // clone the array since `selectors` could be used from callsite after.
+  selectors = [...selectors];
   // Extract the last selector from the provided array of selectors.
   const nodeSelector = selectors.pop();
 
