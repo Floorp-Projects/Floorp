@@ -814,8 +814,12 @@ bool wasm::DeserializeModule(JSContext* cx, const Bytes& serialized,
 // '[EnforceRange] unsigned long' types are coerced with
 //    ConvertToInt(v, 32, 'unsigned')
 // defined in Web IDL Section 3.2.4.9.
-static bool EnforceRangeU32(JSContext* cx, HandleValue v, const char* kind,
-                            const char* noun, uint32_t* u32) {
+//
+// This just generalizes that to an arbitrary limit that is representable as an
+// integer in double form.
+
+static bool EnforceRange(JSContext* cx, HandleValue v, const char* kind,
+                         const char* noun, uint64_t max, uint64_t* val) {
   // Step 4.
   double x;
   if (!ToNumber(cx, v, &x)) {
@@ -838,122 +842,59 @@ static bool EnforceRangeU32(JSContext* cx, HandleValue v, const char* kind,
   x = JS::ToInteger(x);
 
   // Step 6.3.
-  if (x < 0 || x > double(UINT32_MAX)) {
+  if (x < 0 || x > double(max)) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_UINT32, kind, noun);
     return false;
   }
 
-  *u32 = uint32_t(x);
-  MOZ_ASSERT(double(*u32) == x);
+  *val = uint64_t(x);
+  MOZ_ASSERT(double(*val) == x);
   return true;
+}
+
+static bool EnforceRangeU32(JSContext* cx, HandleValue v, const char* kind,
+                            const char* noun, uint32_t* u32) {
+  uint64_t u64 = 0;
+  if (!EnforceRange(cx, v, kind, noun, uint64_t(UINT32_MAX), &u64)) {
+    return false;
+  }
+  *u32 = uint32_t(u64);
+  return true;
+}
+
+static bool GetLimit(JSContext* cx, HandleObject obj, const char* name,
+                     const char* noun, const char* msg, uint32_t range,
+                     bool* found, uint64_t* value) {
+  JSAtom* atom = Atomize(cx, name, strlen(name));
+  if (!atom) {
+    return false;
+  }
+  RootedId id(cx, AtomToId(atom));
+
+  RootedValue val(cx);
+  if (!GetProperty(cx, obj, obj, id, &val)) {
+    return false;
+  }
+
+  if (val.isUndefined()) {
+    *found = false;
+    return true;
+  }
+  *found = true;
+  // The range can be greater than 53, but then the logic in EnforceRange has to
+  // change to avoid precision loss.
+  MOZ_ASSERT(range < 54);
+  return EnforceRange(cx, val, noun, msg, (uint64_t(1) << range) - 1, value);
 }
 
 static bool GetLimits(JSContext* cx, HandleObject obj, LimitsKind kind,
                       Limits* limits) {
-  JSAtom* initialAtom = Atomize(cx, "initial", strlen("initial"));
-  if (!initialAtom) {
-    return false;
-  }
-  RootedId initialId(cx, AtomToId(initialAtom));
-
-  const char* noun = (kind == LimitsKind::Memory ? "Memory" : "Table");
-
-  RootedValue initialVal(cx);
-  if (!GetProperty(cx, obj, obj, initialId, &initialVal)) {
-    return false;
-  }
-
-  uint32_t initial = 0;
-  if (!initialVal.isUndefined() &&
-      !EnforceRangeU32(cx, initialVal, noun, "initial size", &initial)) {
-    return false;
-  }
-  limits->initial = initial;
-
-#ifdef ENABLE_WASM_TYPE_REFLECTIONS
-  // Get minimum parameter.
-  JSAtom* minimumAtom = Atomize(cx, "minimum", strlen("minimum"));
-  if (!minimumAtom) {
-    return false;
-  }
-  RootedId minimumId(cx, AtomToId(minimumAtom));
-
-  RootedValue minimumVal(cx);
-  if (!GetProperty(cx, obj, obj, minimumId, &minimumVal)) {
-    return false;
-  }
-
-  uint32_t minimum = 0;
-  if (!minimumVal.isUndefined() &&
-      !EnforceRangeU32(cx, minimumVal, noun, "initial size", &minimum)) {
-    return false;
-  }
-  if (!minimumVal.isUndefined()) {
-    limits->initial = minimum;
-  }
-#endif
-
-  // Get maximum parameter.
-  JSAtom* maximumAtom = Atomize(cx, "maximum", strlen("maximum"));
-  if (!maximumAtom) {
-    return false;
-  }
-  RootedId maximumId(cx, AtomToId(maximumAtom));
-
-  RootedValue maxVal(cx);
-  if (!GetProperty(cx, obj, obj, maximumId, &maxVal)) {
-    return false;
-  }
-
-  // maxVal does not have a default value.
-  if (!maxVal.isUndefined()) {
-    uint32_t maximum = 0;
-    if (!EnforceRangeU32(cx, maxVal, noun, "maximum size", &maximum)) {
-      return false;
-    }
-    limits->maximum = Some(maximum);
-  }
-
   limits->indexType = IndexType::I32;
-  limits->shared = Shareable::False;
 
-  // Memory limits may be shared or specify an alternate index type
+  // Memory limits may specify an alternate index type, and we need this to
+  // check the ranges for initial and maximum, so look for the index type first.
   if (kind == LimitsKind::Memory) {
-    // Get the shared field
-    JSAtom* sharedAtom = Atomize(cx, "shared", strlen("shared"));
-    if (!sharedAtom) {
-      return false;
-    }
-    RootedId sharedId(cx, AtomToId(sharedAtom));
-
-    RootedValue sharedVal(cx);
-    if (!GetProperty(cx, obj, obj, sharedId, &sharedVal)) {
-      return false;
-    }
-
-    // shared's default value is false, which is already the value set above.
-    if (!sharedVal.isUndefined()) {
-      limits->shared =
-          ToBoolean(sharedVal) ? Shareable::True : Shareable::False;
-
-      if (limits->shared == Shareable::True) {
-        if (maxVal.isUndefined()) {
-          JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                    JSMSG_WASM_MISSING_MAXIMUM, noun);
-          return false;
-        }
-
-        if (!cx->realm()
-                 ->creationOptions()
-                 .getSharedMemoryAndAtomicsEnabled()) {
-          JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                    JSMSG_WASM_NO_SHMEM_LINK);
-          return false;
-        }
-      }
-    }
-
 #ifdef ENABLE_WASM_MEMORY64
     // Get the index type field
     JSAtom* indexTypeAtom = Atomize(cx, "index", strlen("index"));
@@ -982,20 +923,90 @@ static bool GetLimits(JSContext* cx, HandleObject obj, LimitsKind kind,
 #endif
   }
 
-#ifdef ENABLE_WASM_TYPE_REFLECTIONS
-  // Check both minimum and initial are not supplied.
-  if (minimumVal.isUndefined() == initialVal.isUndefined()) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_SUPPLY_ONLY_ONE, "minimum", "initial");
+  const char* noun = (kind == LimitsKind::Memory ? "Memory" : "Table");
+  // 2^48 is a valid value, so the range goes to 49 bits.  Values above 2^48 are
+  // filtered later, just as values above 2^16 are filtered for mem32.
+  const uint32_t range = limits->indexType == IndexType::I32 ? 32 : 49;
+  uint64_t limit = 0;
+
+  bool haveInitial = false;
+  if (!GetLimit(cx, obj, "initial", noun, "initial size", range, &haveInitial,
+                &limit)) {
     return false;
   }
-#else
-  if (initialVal.isUndefined()) {
+  if (haveInitial) {
+    limits->initial = limit;
+  }
+
+  bool haveMinimum = false;
+#ifdef ENABLE_WASM_TYPE_REFLECTIONS
+  if (!GetLimit(cx, obj, "minimum", noun, "initial size", range, &haveMinimum,
+                &limit)) {
+    return false;
+  }
+  if (haveMinimum) {
+    limits->initial = limit;
+  }
+#endif
+
+  if (!(haveInitial || haveMinimum)) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_MISSING_REQUIRED, "initial");
     return false;
   }
-#endif
+  if (haveInitial && haveMinimum) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_WASM_SUPPLY_ONLY_ONE, "minimum", "initial");
+    return false;
+  }
+
+  bool haveMaximum = false;
+  if (!GetLimit(cx, obj, "maximum", noun, "maximum size", range, &haveMaximum,
+                &limit)) {
+    return false;
+  }
+  if (haveMaximum) {
+    limits->maximum = Some(limit);
+  }
+
+  limits->shared = Shareable::False;
+
+  // Memory limits may be shared.
+  if (kind == LimitsKind::Memory) {
+    // Get the shared field
+    JSAtom* sharedAtom = Atomize(cx, "shared", strlen("shared"));
+    if (!sharedAtom) {
+      return false;
+    }
+    RootedId sharedId(cx, AtomToId(sharedAtom));
+
+    RootedValue sharedVal(cx);
+    if (!GetProperty(cx, obj, obj, sharedId, &sharedVal)) {
+      return false;
+    }
+
+    // shared's default value is false, which is already the value set above.
+    if (!sharedVal.isUndefined()) {
+      limits->shared =
+          ToBoolean(sharedVal) ? Shareable::True : Shareable::False;
+
+      if (limits->shared == Shareable::True) {
+        if (!haveMaximum) {
+          JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                    JSMSG_WASM_MISSING_MAXIMUM, noun);
+          return false;
+        }
+
+        if (!cx->realm()
+                 ->creationOptions()
+                 .getSharedMemoryAndAtomicsEnabled()) {
+          JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                    JSMSG_WASM_NO_SHMEM_LINK);
+          return false;
+        }
+      }
+    }
+  }
 
   return true;
 }
@@ -1147,17 +1158,28 @@ static JSObject* MemoryTypeToObject(JSContext* cx, bool shared,
                                     Maybe<wasm::Pages> maxPages) {
   Rooted<IdValueVector> props(cx, IdValueVector(cx));
   if (maxPages) {
-    uint32_t maxPages32 = mozilla::AssertedCast<uint32_t>(maxPages->value());
+    double maxPagesNum;
+    if (indexType == IndexType::I32) {
+      maxPagesNum = double(mozilla::AssertedCast<uint32_t>(maxPages->value()));
+    } else {
+      // The maximum number of pages is 2^48.
+      maxPagesNum = double(maxPages->value());
+    }
     if (!props.append(IdValuePair(NameToId(cx->names().maximum),
-                                  Int32Value(maxPages32)))) {
+                                  NumberValue(maxPagesNum)))) {
       ReportOutOfMemory(cx);
       return nullptr;
     }
   }
 
-  uint32_t minPages32 = mozilla::AssertedCast<uint32_t>(minPages.value());
-  if (!props.append(
-          IdValuePair(NameToId(cx->names().minimum), Int32Value(minPages32)))) {
+  double minPagesNum;
+  if (indexType == IndexType::I32) {
+    minPagesNum = double(mozilla::AssertedCast<uint32_t>(minPages.value()));
+  } else {
+    minPagesNum = double(minPages.value());
+  }
+  if (!props.append(IdValuePair(NameToId(cx->names().minimum),
+                                NumberValue(minPagesNum)))) {
     ReportOutOfMemory(cx);
     return nullptr;
   }

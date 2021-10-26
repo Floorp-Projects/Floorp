@@ -26,18 +26,14 @@ function validMemoryType(shared, initial, max) {
   wasmEvalText(memoryTypeModuleText(shared, initial, max));
   // TODO: JS-API cannot specify pages above UINT32_MAX
   // https://github.com/WebAssembly/memory64/issues/24
-  if (max <= MaxUint32) {
-    new WebAssembly.Memory(memoryTypeDescriptor(shared, initial, max));
-  }
+  new WebAssembly.Memory(memoryTypeDescriptor(shared, initial, max));
 }
 function invalidMemoryType(shared, initial, max, compileMessage, jsMessage) {
   wasmFailValidateText(memoryTypeModuleText(shared, initial, max), compileMessage);
   assertErrorMessage(() => wasmEvalText(memoryTypeModuleText(shared, initial, max)), WebAssembly.CompileError, compileMessage);
   // TODO: JS-API cannot specify pages above UINT32_MAX
   // https://github.com/WebAssembly/memory64/issues/24
-  if (max === undefined || max <= MaxUint32) {
-    assertErrorMessage(() => new WebAssembly.Memory(memoryTypeDescriptor(shared, initial, max)), Error, jsMessage);
-  }
+  assertErrorMessage(() => new WebAssembly.Memory(memoryTypeDescriptor(shared, initial, max)), Error, jsMessage);
 }
 
 // valid to define a memory with i64
@@ -254,6 +250,7 @@ if (getBuildConfiguration()["pointer-byte-size"] == 8) {
 
 if (WebAssembly.Function) {
     // TODO: "index" is not yet part of the spec
+    // TODO: values outside the u32 range are not yet part of the spec
     // https://github.com/WebAssembly/memory64/issues/24
 
     let m64 = new WebAssembly.Memory({index:"i64", initial:1});
@@ -261,7 +258,15 @@ if (WebAssembly.Function) {
 
     let m32 = new WebAssembly.Memory({initial:1});
     assertEq(m32.type().index, "i32");
+
+    let ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
+(module
+  (memory (export "mem") i64 1 0x100000000))`)));
+    assertEq(ins.exports.mem.type().minimum, 1);
+    assertEq(ins.exports.mem.type().maximum, 0x100000000);
 }
+
+// Instructions
 
 const SMALL = 64;  // < offsetguard everywhere
 const BIG = 131072;  // > offsetguard on 32-bit
