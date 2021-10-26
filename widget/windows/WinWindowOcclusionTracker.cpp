@@ -340,11 +340,13 @@ RefPtr<WinWindowOcclusionTracker> WinWindowOcclusionTracker::Get() {
 }
 
 /* static */
-void WinWindowOcclusionTracker::Start() {
+void WinWindowOcclusionTracker::Ensure() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(!sTracker);
+  LOG(LogLevel::Info, "WinWindowOcclusionTracker::Ensure()");
 
-  LOG(LogLevel::Info, "WinWindowOcclusionTracker::Start()");
+  if (sTracker) {
+    return;
+  }
 
   base::Thread* thread = new base::Thread("WinWindowOcclusionCalc");
 
@@ -414,7 +416,6 @@ void WinWindowOcclusionTracker::Enable(nsBaseWidget* aWindow, HWND aHwnd) {
       aWindow, aHwnd);
 
   auto it = mHwndRootWindowMap.find(aHwnd);
-  MOZ_ASSERT(it == mHwndRootWindowMap.end());
   if (it != mHwndRootWindowMap.end()) {
     return;
   }

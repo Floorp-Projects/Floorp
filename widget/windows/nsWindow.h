@@ -365,6 +365,7 @@ class nsWindow final : public nsWindowBase {
   virtual void LocalesChanged() override;
 
   void NotifyOcclusionState(mozilla::widget::OcclusionState aState) override;
+  void MaybeEnableWindowOcclusion(bool aEnable);
 
  protected:
   virtual ~nsWindow();

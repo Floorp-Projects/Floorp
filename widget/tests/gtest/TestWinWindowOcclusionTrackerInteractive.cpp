@@ -38,7 +38,7 @@ class WinWindowOcclusionTrackerInteractiveTest : public ::testing::Test {
     mOldPrefSessionLock = Preferences::GetBool(PREF_SESSION_LOCK);
     Preferences::SetBool(PREF_SESSION_LOCK, true);
 
-    WinWindowOcclusionTracker::Start();
+    WinWindowOcclusionTracker::Ensure();
     EXPECT_NE(nullptr, WinWindowOcclusionTracker::Get());
   }
 
