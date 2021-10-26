@@ -93,6 +93,11 @@ interface nsIAboutModule : nsISupports
     const unsigned long ALLOW_UNSANITIZED_CONTENT = (1 << 10);
 
     /**
+     * A flag that indicates that this about: URI is a secure chrome UI
+     */
+    const unsigned long IS_SECURE_CHROME_UI = (1 << 11);
+
+    /**
      * A method to get the flags that apply to a given about: URI.  The URI
      * passed in is guaranteed to be one of the URIs that this module
      * registered to deal with.

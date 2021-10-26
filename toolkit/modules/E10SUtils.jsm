@@ -57,19 +57,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIExternalProtocolService"
 );
 
-function getAboutModule(aURL) {
-  // Needs to match NS_GetAboutModuleName
-  let moduleName = aURL.pathQueryRef.replace(/[#?].*/, "").toLowerCase();
-  let contract = "@mozilla.org/network/protocol/about;1?what=" + moduleName;
-  try {
-    return Cc[contract].getService(Ci.nsIAboutModule);
-  } catch (e) {
-    // Either the about module isn't defined or it is broken. In either case
-    // ignore it.
-    return null;
-  }
-}
-
 function getOriginalReaderModeURI(aURI) {
   try {
     let searchParams = new URLSearchParams(aURI.query);
@@ -278,6 +265,23 @@ var E10SUtils = {
   LARGE_ALLOCATION_REMOTE_TYPE,
   FISSION_WEB_REMOTE_TYPE,
 
+  /**
+   * @param aURI The URI of the about page
+   * @return The instance of the nsIAboutModule related to this uri
+   */
+  getAboutModule(aURL) {
+    // Needs to match NS_GetAboutModuleName
+    let moduleName = aURL.pathQueryRef.replace(/[#?].*/, "").toLowerCase();
+    let contract = "@mozilla.org/network/protocol/about;1?what=" + moduleName;
+    try {
+      return Cc[contract].getService(Ci.nsIAboutModule);
+    } catch (e) {
+      // Either the about module isn't defined or it is broken. In either case
+      // ignore it.
+      return null;
+    }
+  },
+
   useCrossOriginOpenerPolicy() {
     return useCrossOriginOpenerPolicy;
   },
@@ -442,7 +446,7 @@ var E10SUtils = {
           : DEFAULT_REMOTE_TYPE;
 
       case "about":
-        let module = getAboutModule(aURI);
+        let module = this.getAboutModule(aURI);
         // If the module doesn't exist then an error page will be loading, that
         // should be ok to load in any process
         if (!module) {
