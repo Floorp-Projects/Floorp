@@ -12,9 +12,12 @@
 #include "mozilla/rlbox/rlbox_config.h"
 
 #ifdef MOZ_WASM_SANDBOXING_HUNSPELL
+// Include the generated header file so that we are able to resolve the symbols
+// in the wasm binary
+#  include "rlbox.wasm.h"
+#  define RLBOX_USE_STATIC_CALLS() rlbox_wasm2c_sandbox_lookup_symbol
 #  include "mozilla/rlbox/rlbox_wasm2c_sandbox.hpp"
 #else
-// Extra configuration for no-op sandbox
 #  define RLBOX_USE_STATIC_CALLS() rlbox_noop_sandbox_lookup_symbol
 #  include "mozilla/rlbox/rlbox_noop_sandbox.hpp"
 #endif
