@@ -1,4 +1,4 @@
-; Copyright © 2018, VideoLAN and dav1d authors
+; Copyright © 2018-2021, VideoLAN and dav1d authors
 ; Copyright © 2018, Two Orioles, LLC
 ; All rights reserved.
 ;
@@ -1977,11 +1977,11 @@ SECTION .text
 
 INIT_XMM ssse3
 %if ARCH_X86_64
-cglobal lpf_v_sb_y, 7, 11, 16, 16 * 15, \
+cglobal lpf_v_sb_y_8bpc, 7, 11, 16, 16 * 15, \
                     dst, stride, mask, l, l_stride, lut, \
                     w, stride3, mstride, tmp, mask_bits
 %else
-cglobal lpf_v_sb_y, 6, 7, 8, -16 * (26 + copy_args), \
+cglobal lpf_v_sb_y_8bpc, 6, 7, 8, -16 * (26 + copy_args), \
                     dst, stride, mask, l, l_stride, lut, mask_bits
     RELOC_ARGS w
     SETUP_PIC
@@ -2075,11 +2075,11 @@ cglobal lpf_v_sb_y, 6, 7, 8, -16 * (26 + copy_args), \
 
 INIT_XMM ssse3
 %if ARCH_X86_64
-cglobal lpf_h_sb_y, 7, 11, 16, 16 * 26, \
+cglobal lpf_h_sb_y_8bpc, 7, 11, 16, 16 * 26, \
                     dst, stride, mask, l, l_stride, lut, \
                     h, stride3, l_stride3, tmp, mask_bits
 %else
-cglobal lpf_h_sb_y, 6, 7, 8, -16 * (39 + copy_args), \
+cglobal lpf_h_sb_y_8bpc, 6, 7, 8, -16 * (39 + copy_args), \
                     dst, stride, mask, l, l_stride, lut, mask_bits
     RELOC_ARGS h
     SETUP_PIC
@@ -2179,11 +2179,11 @@ cglobal lpf_h_sb_y, 6, 7, 8, -16 * (39 + copy_args), \
 
 INIT_XMM ssse3
 %if ARCH_X86_64
-cglobal lpf_v_sb_uv, 7, 11, 16, 3 * 16, \
+cglobal lpf_v_sb_uv_8bpc, 7, 11, 16, 3 * 16, \
                      dst, stride, mask, l, l_stride, lut, \
                      w, stride3, mstride, tmp, mask_bits
 %else
-cglobal lpf_v_sb_uv, 6, 7, 8, -16 * (12 + copy_args), \
+cglobal lpf_v_sb_uv_8bpc, 6, 7, 8, -16 * (12 + copy_args), \
                      dst, stride, mask, l, l_stride, lut, mask_bits
     RELOC_ARGS w
     SETUP_PIC
@@ -2261,11 +2261,11 @@ cglobal lpf_v_sb_uv, 6, 7, 8, -16 * (12 + copy_args), \
 
 INIT_XMM ssse3
 %if ARCH_X86_64
-cglobal lpf_h_sb_uv, 7, 11, 16, 16 * 3, \
+cglobal lpf_h_sb_uv_8bpc, 7, 11, 16, 16 * 3, \
                      dst, stride, mask, l, l_stride, lut, \
                      h, stride3, l_stride3, tmp, mask_bits
 %else
-cglobal lpf_h_sb_uv, 6, 7, 8, -16 * (13 + copy_args), \
+cglobal lpf_h_sb_uv_8bpc, 6, 7, 8, -16 * (13 + copy_args), \
                      dst, stride, mask, l, l_stride, lut, mask_bits
     RELOC_ARGS h
     SETUP_PIC

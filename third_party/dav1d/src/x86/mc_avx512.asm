@@ -146,7 +146,7 @@ cextern mc_subpel_filters
 %endmacro
 
 %macro HV_JMP_TABLE 5-*
-    %xdefine %%prefix mangle(private_prefix %+ _%1_%2_%3)
+    %xdefine %%prefix mangle(private_prefix %+ _%1_%2_8bpc_%3)
     %xdefine %%base %1_%3
     %assign %%types %4
     %if %%types & 1
@@ -177,30 +177,30 @@ cextern mc_subpel_filters
     %endif
 %endmacro
 
-%macro BIDIR_JMP_TABLE 1-*
-    %xdefine %1_table (%%table - 2*%2)
-    %xdefine %%base %1_table
-    %xdefine %%prefix mangle(private_prefix %+ _%1)
+%macro BIDIR_JMP_TABLE 2-*
+    %xdefine %1_%2_table (%%table - 2*%3)
+    %xdefine %%base %1_%2_table
+    %xdefine %%prefix mangle(private_prefix %+ _%1_8bpc_%2)
     %%table:
-    %rep %0 - 1
-        dd %%prefix %+ .w%2 - %%base
+    %rep %0 - 2
+        dd %%prefix %+ .w%3 - %%base
         %rotate 1
     %endrep
 %endmacro
 
-%xdefine prep_avx512icl mangle(private_prefix %+ _prep_bilin_avx512icl.prep)
+%xdefine prep_avx512icl mangle(private_prefix %+ _prep_bilin_8bpc_avx512icl.prep)
 
 %define table_offset(type, fn) type %+ fn %+ SUFFIX %+ _table - type %+ SUFFIX
 
 BASE_JMP_TABLE prep, avx512icl,            4, 8, 16, 32, 64, 128
 HV_JMP_TABLE prep, bilin, avx512icl, 7,    4, 8, 16, 32, 64, 128
 HV_JMP_TABLE prep, 8tap,  avx512icl, 7,    4, 8, 16, 32, 64, 128
-BIDIR_JMP_TABLE avg_avx512icl,             4, 8, 16, 32, 64, 128
-BIDIR_JMP_TABLE w_avg_avx512icl,           4, 8, 16, 32, 64, 128
-BIDIR_JMP_TABLE mask_avx512icl,            4, 8, 16, 32, 64, 128
-BIDIR_JMP_TABLE w_mask_420_avx512icl,      4, 8, 16, 32, 64, 128
-BIDIR_JMP_TABLE w_mask_422_avx512icl,      4, 8, 16, 32, 64, 128
-BIDIR_JMP_TABLE w_mask_444_avx512icl,      4, 8, 16, 32, 64, 128
+BIDIR_JMP_TABLE avg, avx512icl,            4, 8, 16, 32, 64, 128
+BIDIR_JMP_TABLE w_avg, avx512icl,          4, 8, 16, 32, 64, 128
+BIDIR_JMP_TABLE mask, avx512icl,           4, 8, 16, 32, 64, 128
+BIDIR_JMP_TABLE w_mask_420, avx512icl,     4, 8, 16, 32, 64, 128
+BIDIR_JMP_TABLE w_mask_422, avx512icl,     4, 8, 16, 32, 64, 128
+BIDIR_JMP_TABLE w_mask_444, avx512icl,     4, 8, 16, 32, 64, 128
 
 SECTION .text
 
@@ -221,7 +221,7 @@ INIT_ZMM cpuname
 DECLARE_REG_TMP 3, 5, 6
 
 INIT_ZMM avx512icl
-cglobal prep_bilin, 3, 7, 0, tmp, src, stride, w, h, mxy, stride3
+cglobal prep_bilin_8bpc, 3, 7, 0, tmp, src, stride, w, h, mxy, stride3
     movifnidn          mxyd, r5m ; mx
     lea                  t2, [prep_avx512icl]
     tzcnt                wd, wm
@@ -772,7 +772,7 @@ cglobal prep_bilin, 3, 7, 0, tmp, src, stride, w, h, mxy, stride3
 %assign FILTER_SHARP   (2*15 << 16) | 3*15
 
 %macro FN 4 ; fn, type, type_h, type_v
-cglobal %1_%2
+cglobal %1_%2_8bpc
     mov                 t0d, FILTER_%3
 %ifidn %3, %4
     mov                 t1d, t0d
@@ -780,7 +780,7 @@ cglobal %1_%2
     mov                 t1d, FILTER_%4
 %endif
 %ifnidn %2, regular ; skip the jump in the last filter
-    jmp mangle(private_prefix %+ _%1 %+ SUFFIX)
+    jmp mangle(private_prefix %+ _%1_8bpc %+ SUFFIX)
 %endif
 %endmacro
 
@@ -829,7 +829,7 @@ PREP_8TAP_FN smooth_regular, SMOOTH,  REGULAR
 PREP_8TAP_FN regular_smooth, REGULAR, SMOOTH
 PREP_8TAP_FN regular,        REGULAR, REGULAR
 
-cglobal prep_8tap, 3, 8, 0, tmp, src, stride, w, h, mx, my, stride3
+cglobal prep_8tap_8bpc, 3, 8, 0, tmp, src, stride, w, h, mx, my, stride3
     imul                mxd, mxm, 0x010101
     add                 mxd, t0d ; 8tap_h, mx, 4tap_h
     imul                myd, mym, 0x010101
@@ -1753,7 +1753,7 @@ cglobal prep_8tap, 3, 8, 0, tmp, src, stride, w, h, mx, my, stride3
     add               tmp2q, %1*mmsize
 %endmacro
 
-cglobal avg, 4, 7, 3, dst, stride, tmp1, tmp2, w, h, stride3
+cglobal avg_8bpc, 4, 7, 3, dst, stride, tmp1, tmp2, w, h, stride3
 %define base r6-avg_avx512icl_table
     lea                  r6, [avg_avx512icl_table]
     tzcnt                wd, wm
@@ -1783,7 +1783,7 @@ cglobal avg, 4, 7, 3, dst, stride, tmp1, tmp2, w, h, stride3
 
 %define W_AVG_INC_PTR AVG_INC_PTR
 
-cglobal w_avg, 4, 7, 6, dst, stride, tmp1, tmp2, w, h, stride3
+cglobal w_avg_8bpc, 4, 7, 6, dst, stride, tmp1, tmp2, w, h, stride3
 %define base r6-w_avg_avx512icl_table
     lea                  r6, [w_avg_avx512icl_table]
     tzcnt                wd, wm
@@ -1837,7 +1837,7 @@ cglobal w_avg, 4, 7, 6, dst, stride, tmp1, tmp2, w, h, stride3
     add               tmp1q, %1*64
 %endmacro
 
-cglobal mask, 4, 8, 6, dst, stride, tmp1, tmp2, w, h, mask, stride3
+cglobal mask_8bpc, 4, 8, 6, dst, stride, tmp1, tmp2, w, h, mask, stride3
 %define base r7-mask_avx512icl_table
     lea                  r7, [mask_avx512icl_table]
     tzcnt                wd, wm
@@ -1877,7 +1877,7 @@ cglobal mask, 4, 8, 6, dst, stride, tmp1, tmp2, w, h, mask, stride3
     packuswb            m%1, m1
 %endmacro
 
-cglobal w_mask_420, 4, 8, 16, dst, stride, tmp1, tmp2, w, h, mask, stride3
+cglobal w_mask_420_8bpc, 4, 8, 16, dst, stride, tmp1, tmp2, w, h, mask, stride3
 %define base r7-w_mask_420_avx512icl_table
     lea                  r7, [w_mask_420_avx512icl_table]
     tzcnt                wd, wm
@@ -2070,7 +2070,7 @@ cglobal w_mask_420, 4, 8, 16, dst, stride, tmp1, tmp2, w, h, mask, stride3
     jg .w128_loop
     RET
 
-cglobal w_mask_422, 4, 8, 14, dst, stride, tmp1, tmp2, w, h, mask, stride3
+cglobal w_mask_422_8bpc, 4, 8, 14, dst, stride, tmp1, tmp2, w, h, mask, stride3
 %define base r7-w_mask_422_avx512icl_table
     lea                  r7, [w_mask_422_avx512icl_table]
     tzcnt                wd, wm
@@ -2243,7 +2243,7 @@ cglobal w_mask_422, 4, 8, 14, dst, stride, tmp1, tmp2, w, h, mask, stride3
     jg .w128_loop
     RET
 
-cglobal w_mask_444, 4, 8, 12, dst, stride, tmp1, tmp2, w, h, mask, stride3
+cglobal w_mask_444_8bpc, 4, 8, 12, dst, stride, tmp1, tmp2, w, h, mask, stride3
 %define base r7-w_mask_444_avx512icl_table
     lea                  r7, [w_mask_444_avx512icl_table]
     tzcnt                wd, wm

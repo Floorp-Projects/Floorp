@@ -31,8 +31,6 @@
 #include "src/film_grain.h"
 #include "asm-offsets.h"
 
-#if ARCH_AARCH64
-
 CHECK_OFFSET(Dav1dFilmGrainData, seed, FGD_SEED);
 CHECK_OFFSET(Dav1dFilmGrainData, ar_coeff_lag, FGD_AR_COEFF_LAG);
 CHECK_OFFSET(Dav1dFilmGrainData, ar_coeffs_y, FGD_AR_COEFFS_Y);
@@ -60,7 +58,6 @@ void BF(dav1d_generate_grain_uv_ ## suff, neon)(entry buf[][GRAIN_WIDTH], \
 GEN_GRAIN_UV(420);
 GEN_GRAIN_UV(422);
 GEN_GRAIN_UV(444);
-#endif
 
 // Use ptrdiff_t instead of int for the last few parameters, to get the
 // same layout of parameters on the stack across platforms.
@@ -209,12 +206,10 @@ COLD void bitfn(dav1d_film_grain_dsp_init_arm)(Dav1dFilmGrainDSPContext *const c
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;
 
-#if ARCH_AARCH64 && BITDEPTH == 8
     c->generate_grain_y = BF(dav1d_generate_grain_y, neon);
     c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I420 - 1] = BF(dav1d_generate_grain_uv_420, neon);
     c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I422 - 1] = BF(dav1d_generate_grain_uv_422, neon);
     c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I444 - 1] = BF(dav1d_generate_grain_uv_444, neon);
-#endif
 
     c->fgy_32x32xn = fgy_32x32xn_neon;
     c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I420 - 1] = fguv_32x32xn_420_neon;

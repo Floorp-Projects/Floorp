@@ -31,6 +31,7 @@
 #include <stdint.h>
 
 #include "dav1d/headers.h"
+#include "common/attributes.h"
 
 enum ObuMetaType {
     OBU_META_HDR_CLL     = 1,

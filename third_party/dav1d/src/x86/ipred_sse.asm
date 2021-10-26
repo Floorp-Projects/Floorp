@@ -1,4 +1,4 @@
-; Copyright © 2018, VideoLAN and dav1d authors
+; Copyright © 2018-2021, VideoLAN and dav1d authors
 ; Copyright © 2018, Two Orioles, LLC
 ; All rights reserved.
 ;
@@ -74,7 +74,7 @@ pd_32768    : times 1  dd 32768
 
 %macro JMP_TABLE 3-*
     %xdefine %1_%2_table (%%table - 2*4)
-    %xdefine %%base mangle(private_prefix %+ _%1_%2)
+    %xdefine %%base mangle(private_prefix %+ _%1_8bpc_%2)
     %%table:
     %rep %0 - 2
         dd %%base %+ .%3 - (%%table - 2*4)
@@ -156,7 +156,7 @@ SECTION .text
 %endmacro
 
 INIT_XMM ssse3
-cglobal ipred_h, 3, 6, 2, dst, stride, tl, w, h, stride3
+cglobal ipred_h_8bpc, 3, 6, 2, dst, stride, tl, w, h, stride3
     LEA                          r5, ipred_h_ssse3_table
     tzcnt                        wd, wm
     movifnidn                    hd, hm
@@ -179,7 +179,7 @@ cglobal ipred_h, 3, 6, 2, dst, stride, tl, w, h, stride3
 ;int dav1d_ipred_v_ssse3(pixel *dst, const ptrdiff_t stride, const pixel *const topleft,
 ;                                    const int width, const int height, const int a);
 ;---------------------------------------------------------------------------------------
-cglobal ipred_v, 3, 7, 6, dst, stride, tl, w, h, stride3
+cglobal ipred_v_8bpc, 3, 7, 6, dst, stride, tl, w, h, stride3
     LEA                  r5, ipred_dc_splat_ssse3_table
     tzcnt                wd, wm
     movu                 m0, [tlq+ 1]
@@ -196,7 +196,7 @@ cglobal ipred_v, 3, 7, 6, dst, stride, tl, w, h, stride3
 ;int dav1d_ipred_dc_ssse3(pixel *dst, const ptrdiff_t stride, const pixel *const topleft,
 ;                                    const int width, const int height, const int a);
 ;---------------------------------------------------------------------------------------
-cglobal ipred_dc, 3, 7, 6, dst, stride, tl, w, h, stride3
+cglobal ipred_dc_8bpc, 3, 7, 6, dst, stride, tl, w, h, stride3
     movifnidn                    hd, hm
     movifnidn                    wd, wm
     tzcnt                       r6d, hd
@@ -438,7 +438,7 @@ ALIGN function_align
 ;int dav1d_ipred_dc_left_ssse3(pixel *dst, const ptrdiff_t stride, const pixel *const topleft,
 ;                                    const int width, const int height, const int a);
 ;---------------------------------------------------------------------------------------
-cglobal ipred_dc_left, 3, 7, 6, dst, stride, tl, w, h, stride3
+cglobal ipred_dc_left_8bpc, 3, 7, 6, dst, stride, tl, w, h, stride3
     LEA                  r5, ipred_dc_left_ssse3_table
     mov                  hd, hm                ; zero upper half
     tzcnt               r6d, hd
@@ -488,7 +488,7 @@ cglobal ipred_dc_left, 3, 7, 6, dst, stride, tl, w, h, stride3
 ;int dav1d_ipred_dc_128_ssse3(pixel *dst, const ptrdiff_t stride, const pixel *const topleft,
 ;                                    const int width, const int height, const int a);
 ;---------------------------------------------------------------------------------------
-cglobal ipred_dc_128, 2, 7, 6, dst, stride, tl, w, h, stride3
+cglobal ipred_dc_128_8bpc, 2, 7, 6, dst, stride, tl, w, h, stride3
     LEA                  r5, ipred_dc_splat_ssse3_table
     tzcnt                wd, wm
     movifnidn            hd, hm
@@ -505,7 +505,7 @@ cglobal ipred_dc_128, 2, 7, 6, dst, stride, tl, w, h, stride3
 ;int dav1d_ipred_dc_top_ssse3(pixel *dst, const ptrdiff_t stride, const pixel *const topleft,
 ;                                    const int width, const int height, const int a);
 ;---------------------------------------------------------------------------------------
-cglobal ipred_dc_top, 3, 7, 6, dst, stride, tl, w, h
+cglobal ipred_dc_top_8bpc, 3, 7, 6, dst, stride, tl, w, h
     LEA                  r5, ipred_dc_left_ssse3_table
     tzcnt                wd, wm
     inc                 tlq
@@ -540,7 +540,7 @@ cglobal ipred_dc_top, 3, 7, 6, dst, stride, tl, w, h
     packuswb             m6, m0
 %endmacro
 
-cglobal ipred_smooth_v, 3, 7, 7, dst, stride, tl, w, h, weights
+cglobal ipred_smooth_v_8bpc, 3, 7, 7, dst, stride, tl, w, h, weights
 %define base r6-ipred_smooth_v_ssse3_table
     LEA                  r6, ipred_smooth_v_ssse3_table
     tzcnt                wd, wm
@@ -701,7 +701,7 @@ ALIGN function_align
 ;int dav1d_ipred_smooth_h_ssse3(pixel *dst, const ptrdiff_t stride, const pixel *const topleft,
 ;                                    const int width, const int height, const int a);
 ;---------------------------------------------------------------------------------------
-cglobal ipred_smooth_h, 3, 7, 8, dst, stride, tl, w, h
+cglobal ipred_smooth_h_8bpc, 3, 7, 8, dst, stride, tl, w, h
 %define base r6-ipred_smooth_h_ssse3_table
     LEA                  r6, ipred_smooth_h_ssse3_table
     mov                  wd, wm
@@ -958,7 +958,7 @@ ALIGN function_align
     mova                 m5, [rsp+16*%12]                 ; recovery
 %endmacro
 
-cglobal ipred_smooth, 3, 7, 8, -13*16, dst, stride, tl, w, h, v_weights
+cglobal ipred_smooth_8bpc, 3, 7, 8, -13*16, dst, stride, tl, w, h, v_weights
 %define base r6-ipred_smooth_ssse3_table
     mov                  wd, wm
     mov                  hd, hm
@@ -1194,7 +1194,7 @@ ALIGN function_align
 ;int dav1d_pal_pred_ssse3(pixel *dst, const ptrdiff_t stride, const uint16_t *const pal,
 ;                                         const uint8_t *idx, const int w, const int h);
 ;---------------------------------------------------------------------------------------
-cglobal pal_pred, 4, 6, 5, dst, stride, pal, idx, w, h
+cglobal pal_pred_8bpc, 4, 6, 5, dst, stride, pal, idx, w, h
     mova                 m4, [palq]
     LEA                  r2, pal_pred_ssse3_table
     tzcnt                wd, wm
@@ -1295,7 +1295,7 @@ DECLARE_REG_TMP 7
 DECLARE_REG_TMP 5
 %endif
 
-cglobal ipred_cfl, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
+cglobal ipred_cfl_8bpc, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
     movifnidn            wd, wm
     movifnidn            hd, hm
     tzcnt               r6d, hd
@@ -1535,7 +1535,7 @@ ALIGN function_align
 ;void dav1d_ipred_cfl_left_ssse3(pixel *dst, const ptrdiff_t stride, const pixel *const topleft,
 ;                           const int width, const int height, const int16_t *ac, const int alpha);
 ;---------------------------------------------------------------------------------------
-cglobal ipred_cfl_left, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
+cglobal ipred_cfl_left_8bpc, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
     mov                  hd, hm                                 ; zero upper half
     tzcnt               r6d, hd
     sub                 tlq, hq
@@ -1576,7 +1576,7 @@ cglobal ipred_cfl_left, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
 ;void dav1d_ipred_cfl_top_ssse3(pixel *dst, const ptrdiff_t stride, const pixel *const topleft,
 ;                           const int width, const int height, const int16_t *ac, const int alpha);
 ;---------------------------------------------------------------------------------------
-cglobal ipred_cfl_top, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
+cglobal ipred_cfl_top_8bpc, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
     LEA                  t0, ipred_cfl_left_ssse3_table
     tzcnt                wd, wm
     inc                 tlq
@@ -1600,7 +1600,7 @@ cglobal ipred_cfl_top, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
 ;void dav1d_ipred_cfl_128_ssse3(pixel *dst, const ptrdiff_t stride, const pixel *const topleft,
 ;                           const int width, const int height, const int16_t *ac, const int alpha);
 ;---------------------------------------------------------------------------------------
-cglobal ipred_cfl_128, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
+cglobal ipred_cfl_128_8bpc, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
     tzcnt                wd, wm
     movifnidn            hd, hm
     LEA                  r6, ipred_cfl_splat_ssse3_table
@@ -1615,11 +1615,11 @@ cglobal ipred_cfl_128, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
 %endmacro
 
 %if ARCH_X86_64
-cglobal ipred_cfl_ac_420, 4, 8, 7, ac, y, stride, wpad, hpad, w, h, ac_bak
+cglobal ipred_cfl_ac_420_8bpc, 4, 8, 7, ac, y, stride, wpad, hpad, w, h, ac_bak
 DECLARE_REG_TMP 7
     movddup              m2, [pb_2]
 %else
-cglobal ipred_cfl_ac_420, 4, 7, 7, ac, y, stride, wpad, hpad, w, h
+cglobal ipred_cfl_ac_420_8bpc, 4, 7, 7, ac, y, stride, wpad, hpad, w, h
 DECLARE_REG_TMP 4
 %define ac_bakq acmp
     mov                 t0d, 0x02020202
@@ -1855,10 +1855,10 @@ DECLARE_REG_TMP 4
     RET
 
 %if ARCH_X86_64
-cglobal ipred_cfl_ac_422, 4, 8, 7, ac, y, stride, wpad, hpad, w, h, ac_bak
+cglobal ipred_cfl_ac_422_8bpc, 4, 8, 7, ac, y, stride, wpad, hpad, w, h, ac_bak
     movddup              m2, [pb_4]
 %else
-cglobal ipred_cfl_ac_422, 4, 7, 7, ac, y, stride, wpad, hpad, w, h
+cglobal ipred_cfl_ac_422_8bpc, 4, 7, 7, ac, y, stride, wpad, hpad, w, h
     mov                 t0d, 0x04040404
     movd                 m2, t0d
     pshufd               m2, m2, q0000
@@ -2128,10 +2128,10 @@ cglobal ipred_cfl_ac_422, 4, 7, 7, ac, y, stride, wpad, hpad, w, h
     RET
 
 %if ARCH_X86_64
-cglobal ipred_cfl_ac_444, 4, 8, 7, -4*16, ac, y, stride, wpad, hpad, w, h, ac_bak
+cglobal ipred_cfl_ac_444_8bpc, 4, 8, 7, -4*16, ac, y, stride, wpad, hpad, w, h, ac_bak
     movddup              m2, [pb_4]
 %else
-cglobal ipred_cfl_ac_444, 4, 7, 7, -5*16, ac, y, stride, wpad, hpad, w, h
+cglobal ipred_cfl_ac_444_8bpc, 4, 7, 7, -5*16, ac, y, stride, wpad, hpad, w, h
 %define ac_bakq [rsp+16*4]
     mov                 t0d, 0x04040404
     movd                 m2, t0d
@@ -2769,7 +2769,7 @@ cglobal ipred_cfl_ac_444, 4, 7, 7, -5*16, ac, y, stride, wpad, hpad, w, h
     BLEND                m1, m0, m5
 %endmacro
 
-cglobal ipred_paeth, 3, 6, 8, -7*16, dst, stride, tl, w, h
+cglobal ipred_paeth_8bpc, 3, 6, 8, -7*16, dst, stride, tl, w, h
 %define base r5-ipred_paeth_ssse3_table
     tzcnt                wd, wm
     movifnidn            hd, hm
@@ -2937,7 +2937,7 @@ ALIGN function_align
     packuswb             m%1, m%1
 %endmacro
 
-cglobal ipred_filter, 3, 7, 8, dst, stride, tl, w, h, filter
+cglobal ipred_filter_8bpc, 3, 7, 8, dst, stride, tl, w, h, filter
 %define base r6-$$
     LEA                   r6, $$
     tzcnt                 wd, wm

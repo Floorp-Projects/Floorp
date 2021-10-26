@@ -382,11 +382,11 @@ selfguided_filter(coef *dst, const pixel *src, const ptrdiff_t src_stride,
 
             const unsigned p = imax(a * n - b * b, 0);
             const unsigned z = (p * s + (1 << 19)) >> 20;
-            const unsigned x = dav1d_sgr_x_by_x[imin(z, 255)];
+            const unsigned x = dav1d_sgr_x_by_x[umin(z, 255)];
 
             // This is where we invert A and B, so that B is of size coef.
             AA[i] = (x * BB[i] * sgr_one_by_x + (1 << 11)) >> 12;
-            BB[i] = 256 - x;
+            BB[i] = x;
         }
         AA += step * REST_UNIT_STRIDE;
         BB += step * REST_UNIT_STRIDE;
@@ -403,7 +403,7 @@ selfguided_filter(coef *dst, const pixel *src, const ptrdiff_t src_stride,
             for (int i = 0; i < w; i++) {
                 const int a = SIX_NEIGHBORS(B, i);
                 const int b = SIX_NEIGHBORS(A, i);
-                dst[i] = (a * src[i] + b + (1 << 8)) >> 9;
+                dst[i] = (b - a * src[i] + (1 << 8)) >> 9;
             }
             dst += 384 /* Maximum restoration width is 384 (256 * 1.5) */;
             src += REST_UNIT_STRIDE;
@@ -412,7 +412,7 @@ selfguided_filter(coef *dst, const pixel *src, const ptrdiff_t src_stride,
             for (int i = 0; i < w; i++) {
                 const int a = B[i] * 6 + (B[i - 1] + B[i + 1]) * 5;
                 const int b = A[i] * 6 + (A[i - 1] + A[i + 1]) * 5;
-                dst[i] = (a * src[i] + b + (1 << 7)) >> 8;
+                dst[i] = (b - a * src[i] + (1 << 7)) >> 8;
             }
             dst += 384 /* Maximum restoration width is 384 (256 * 1.5) */;
             src += REST_UNIT_STRIDE;
@@ -423,7 +423,7 @@ selfguided_filter(coef *dst, const pixel *src, const ptrdiff_t src_stride,
             for (int i = 0; i < w; i++) {
                 const int a = SIX_NEIGHBORS(B, i);
                 const int b = SIX_NEIGHBORS(A, i);
-                dst[i] = (a * src[i] + b + (1 << 8)) >> 9;
+                dst[i] = (b - a * src[i] + (1 << 8)) >> 9;
             }
         }
 #undef SIX_NEIGHBORS
@@ -436,7 +436,7 @@ selfguided_filter(coef *dst, const pixel *src, const ptrdiff_t src_stride,
             for (int i = 0; i < w; i++) {
                 const int a = EIGHT_NEIGHBORS(B, i);
                 const int b = EIGHT_NEIGHBORS(A, i);
-                dst[i] = (a * src[i] + b + (1 << 8)) >> 9;
+                dst[i] = (b - a * src[i] + (1 << 8)) >> 9;
             }
             dst += 384;
             src += REST_UNIT_STRIDE;
@@ -468,9 +468,8 @@ static void sgr_5x5_c(pixel *p, const ptrdiff_t p_stride,
     const int w0 = params->sgr.w0;
     for (int j = 0; j < h; j++) {
         for (int i = 0; i < w; i++) {
-            const int u = (p[i] << 4);
-            const int v = (u << 7) + w0 * (dst[j * 384 + i] - u);
-            p[i] = iclip_pixel((v + (1 << 10)) >> 11);
+            const int v = w0 * dst[j * 384 + i];
+            p[i] = iclip_pixel(p[i] + ((v + (1 << 10)) >> 11));
         }
         p += PXSTRIDE(p_stride);
     }
@@ -492,9 +491,8 @@ static void sgr_3x3_c(pixel *p, const ptrdiff_t p_stride,
     const int w1 = params->sgr.w1;
     for (int j = 0; j < h; j++) {
         for (int i = 0; i < w; i++) {
-            const int u = (p[i] << 4);
-            const int v = (u << 7) + w1 * (dst[j * 384 + i] - u);
-            p[i] = iclip_pixel((v + (1 << 10)) >> 11);
+            const int v = w1 * dst[j * 384 + i];
+            p[i] = iclip_pixel(p[i] + ((v + (1 << 10)) >> 11));
         }
         p += PXSTRIDE(p_stride);
     }
@@ -520,10 +518,8 @@ static void sgr_mix_c(pixel *p, const ptrdiff_t p_stride,
     const int w1 = params->sgr.w1;
     for (int j = 0; j < h; j++) {
         for (int i = 0; i < w; i++) {
-            const int u = (p[i] << 4);
-            const int v = (u << 7) + w0 * (dst0[j * 384 + i] - u) +
-                                     w1 * (dst1[j * 384 + i] - u);
-            p[i] = iclip_pixel((v + (1 << 10)) >> 11);
+            const int v = w0 * dst0[j * 384 + i] + w1 * dst1[j * 384 + i];
+            p[i] = iclip_pixel(p[i] + ((v + (1 << 10)) >> 11));
         }
         p += PXSTRIDE(p_stride);
     }
