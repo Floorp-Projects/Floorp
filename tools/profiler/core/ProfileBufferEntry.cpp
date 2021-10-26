@@ -1445,7 +1445,9 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
       mozilla::base_profiler_markers_detail::DeserializeAfterKindAndStream(
           aER,
           [&](const ProfilerThreadId& aMarkerThreadId) {
-            return (aMarkerThreadId == aThreadId) ? &aWriter : nullptr;
+            return (!aThreadId.IsSpecified() || aMarkerThreadId == aThreadId)
+                       ? &aWriter
+                       : nullptr;
           },
           [&](ProfileChunkedBuffer& aChunkedBuffer) {
             ProfilerBacktrace backtrace("", &aChunkedBuffer);
