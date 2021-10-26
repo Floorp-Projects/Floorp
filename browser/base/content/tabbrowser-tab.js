@@ -417,14 +417,19 @@
         gBrowser.clearMultiSelectedTabs();
       }
 
-      if (
-        event.target.classList.contains("tab-icon-overlay") &&
-        (this.soundPlaying || this.muted || this.activeMediaBlocked)
-      ) {
-        if (this.multiselected) {
-          gBrowser.toggleMuteAudioOnMultiSelectedTabs(this);
-        } else {
-          this.toggleMuteAudio();
+      if (event.target.classList.contains("tab-icon-overlay")) {
+        if (this.activeMediaBlocked) {
+          if (this.multiselected) {
+            gBrowser.resumeDelayedMediaOnMultiSelectedTabs(this);
+          } else {
+            this.resumeDelayedMedia();
+          }
+        } else if (this.soundPlaying || this.muted) {
+          if (this.multiselected) {
+            gBrowser.toggleMuteAudioOnMultiSelectedTabs(this);
+          } else {
+            this.toggleMuteAudio();
+          }
         }
         return;
       }
@@ -610,39 +615,41 @@
       }
     }
 
+    resumeDelayedMedia() {
+      if (this.activeMediaBlocked) {
+        Services.telemetry
+          .getHistogramById("TAB_AUDIO_INDICATOR_USED")
+          .add(3 /* unblockByClickingIcon */);
+        this.removeAttribute("activemedia-blocked");
+        this.linkedBrowser.resumeMedia();
+        gBrowser._tabAttrModified(this, ["activemedia-blocked"]);
+      }
+    }
+
     toggleMuteAudio(aMuteReason) {
       let browser = this.linkedBrowser;
-      let modifiedAttrs = [];
       let hist = Services.telemetry.getHistogramById(
         "TAB_AUDIO_INDICATOR_USED"
       );
 
-      if (this.activeMediaBlocked) {
-        this.removeAttribute("activemedia-blocked");
-        modifiedAttrs.push("activemedia-blocked");
-
-        browser.resumeMedia();
-        hist.add(3 /* unblockByClickingIcon */);
-      } else {
-        if (browser.audioMuted) {
-          if (this.linkedPanel) {
-            // "Lazy Browser" should not invoke its unmute method
-            browser.unmute();
-          }
-          this.removeAttribute("muted");
-          hist.add(1 /* unmute */);
-        } else {
-          if (this.linkedPanel) {
-            // "Lazy Browser" should not invoke its mute method
-            browser.mute();
-          }
-          this.setAttribute("muted", "true");
-          hist.add(0 /* mute */);
+      if (browser.audioMuted) {
+        if (this.linkedPanel) {
+          // "Lazy Browser" should not invoke its unmute method
+          browser.unmute();
         }
-        this.muteReason = aMuteReason || null;
-        modifiedAttrs.push("muted");
+        this.removeAttribute("muted");
+        hist.add(1 /* unmute */);
+      } else {
+        if (this.linkedPanel) {
+          // "Lazy Browser" should not invoke its mute method
+          browser.mute();
+        }
+        this.setAttribute("muted", "true");
+        hist.add(0 /* mute */);
       }
-      gBrowser._tabAttrModified(this, modifiedAttrs);
+      this.muteReason = aMuteReason || null;
+
+      gBrowser._tabAttrModified(this, ["muted"]);
     }
 
     setUserContextId(aUserContextId) {

@@ -34,6 +34,36 @@ async function addTab(url = "http://mochi.test:8888/", params = {}) {
   return tab;
 }
 
+async function addMediaTab() {
+  const PAGE =
+    "https://example.com/browser/browser/base/content/test/tabs/file_mediaPlayback.html";
+  const tab = BrowserTestUtils.addTab(gBrowser, PAGE, { skipAnimation: true });
+  const browser = gBrowser.getBrowserForTab(tab);
+  await BrowserTestUtils.browserLoaded(browser);
+  return tab;
+}
+
+function muted(tab) {
+  return tab.linkedBrowser.audioMuted;
+}
+
+function activeMediaBlocked(tab) {
+  return tab.activeMediaBlocked;
+}
+
+async function toggleMuteAudio(tab, expectMuted) {
+  let mutedPromise = get_wait_for_mute_promise(tab, expectMuted);
+  tab.toggleMuteAudio();
+  await mutedPromise;
+}
+
+async function pressIcon(icon) {
+  let tooltip = document.getElementById("tabbrowser-tab-tooltip");
+  await hover_icon(icon, tooltip);
+  EventUtils.synthesizeMouseAtCenter(icon, { button: 0 });
+  leave_icon(icon);
+}
+
 async function wait_for_tab_playing_event(tab, expectPlaying) {
   if (tab.soundPlaying == expectPlaying) {
     ok(true, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
