@@ -9,32 +9,44 @@
 
 #include <usp10.h>
 
+#include "mozilla/SandboxSettings.h"
+#include "mozilla/sandboxTarget.h"
+#include "mozilla/WindowsProcessMitigations.h"
 #include "nsUTF8Utils.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "nsXULAppAPI.h"
 
-#if defined(NIGHTLY_BUILD)
-#  include "mozilla/WindowsProcessMitigations.h"
-#  define TH_UNICODE
-#  include "rulebrk.h"
-#endif
+using namespace mozilla;
+
+static bool UseBrokeredLineBreaking() {
+  // If win32k lockdown is enabled we can't use Uniscribe in this process. Also
+  // if the sandbox is above a certain level we can't load the required DLLs
+  // without other intervention. Given that it looks like we are likely to have
+  // win32k lockdown enabled first, using the brokered call for people testing
+  // this case also makes most sense.
+  static bool sUseBrokeredLineBreaking =
+      IsWin32kLockedDown() ||
+      (XRE_IsContentProcess() && GetEffectiveContentSandboxLevel() >= 20);
+
+  return sUseBrokeredLineBreaking;
+}
 
 void NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
                              uint8_t* aBreakBefore) {
   NS_ASSERTION(aText, "aText shouldn't be null");
 
-#if defined(NIGHTLY_BUILD)
-  // If win32k lockdown is enabled we can't use Uniscribe, so fall back to
-  // nsRuleBreaker code. This will lead to some regressions and the change is
-  // only to allow testing of win32k lockdown in content.
-  // Use of Uniscribe will be replaced in bug 1684927.
-  if (mozilla::IsWin32kLockedDown()) {
-    for (uint32_t i = 0; i < aLength; i++)
-      aBreakBefore[i] =
-          (0 == TrbWordBreakPos(aText, i, aText + i, aLength - i));
+  if (UseBrokeredLineBreaking()) {
+    // We can't use Uniscribe, so use a brokered call. Use of Uniscribe will be
+    // replaced in bug 1684927.
+    char16ptr_t text = aText;
+    if (!SandboxTarget::Instance()->GetComplexLineBreaks(text, aLength,
+                                                         aBreakBefore)) {
+      NS_WARNING("Brokered line break failed, breaks might be incorrect.");
+    }
+
     return;
   }
-#endif
 
   int outItems = 0;
   HRESULT result;
