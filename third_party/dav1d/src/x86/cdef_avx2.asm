@@ -472,7 +472,6 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     movd           xm1, secdmpd
     lzcnt      secdmpd, secdmpd
     add        secdmpd, dampingd
-    cmovs      secdmpd, zerod
     mov        [rsp+8], secdmpq                 ; sec_shift
 
  DEFINE_ARGS dst, stride, left, top, pri, secdmp, table, pridmp
@@ -552,7 +551,6 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     movd           xm1, secdmpd
     lzcnt      secdmpd, secdmpd
     add        secdmpd, dampingd
-    cmovs      secdmpd, zerod
     mov        [rsp+8], secdmpq                 ; sec_shift
  DEFINE_ARGS dst, stride, left, top, _, secdmp, table
     lea         tableq, [tap_table]
@@ -1481,7 +1479,6 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     movd           xm1, secdmpd
     lzcnt      secdmpd, secdmpd
     add        secdmpd, dampingd
-    cmovs      secdmpd, zerod
     mov        [rsp+8], secdmpq                 ; sec_shift
 
     DEFINE_ARGS dst, stride, pridmp, table, pri, secdmp, stride3
@@ -1556,7 +1553,6 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     movd           xm1, secdmpd
     lzcnt      secdmpd, secdmpd
     add        secdmpd, dampingd
-    cmovs      secdmpd, zerod
     mov        [rsp+8], secdmpq                 ; sec_shift
  DEFINE_ARGS dst, stride, _, table, _, secdmp, stride3
     lea         tableq, [tap_table]

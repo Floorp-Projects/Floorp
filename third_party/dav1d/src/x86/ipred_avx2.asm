@@ -1,4 +1,4 @@
-; Copyright © 2018, VideoLAN and dav1d authors
+; Copyright © 2018-2021, VideoLAN and dav1d authors
 ; Copyright © 2018, Two Orioles, LLC
 ; All rights reserved.
 ;
@@ -141,7 +141,7 @@ pw_512:   times 2 dw 512
 
 %macro JMP_TABLE 3-*
     %xdefine %1_%2_table (%%table - 2*4)
-    %xdefine %%base mangle(private_prefix %+ _%1_%2)
+    %xdefine %%base mangle(private_prefix %+ _%1_8bpc_%2)
     %%table:
     %rep %0 - 2
         dd %%base %+ .%3 - (%%table - 2*4)
@@ -178,7 +178,7 @@ cextern filter_intra_taps
 SECTION .text
 
 INIT_YMM avx2
-cglobal ipred_dc_top, 3, 7, 6, dst, stride, tl, w, h
+cglobal ipred_dc_top_8bpc, 3, 7, 6, dst, stride, tl, w, h
     lea                  r5, [ipred_dc_left_avx2_table]
     tzcnt                wd, wm
     inc                 tlq
@@ -196,7 +196,7 @@ cglobal ipred_dc_top, 3, 7, 6, dst, stride, tl, w, h
     add                  wq, r5
     jmp                  r6
 
-cglobal ipred_dc_left, 3, 7, 6, dst, stride, tl, w, h, stride3
+cglobal ipred_dc_left_8bpc, 3, 7, 6, dst, stride, tl, w, h, stride3
     mov                  hd, hm ; zero upper half
     tzcnt               r6d, hd
     sub                 tlq, hq
@@ -235,7 +235,7 @@ cglobal ipred_dc_left, 3, 7, 6, dst, stride, tl, w, h, stride3
     mova                 m1, m0
     jmp                  wq
 
-cglobal ipred_dc, 3, 7, 6, dst, stride, tl, w, h, stride3
+cglobal ipred_dc_8bpc, 3, 7, 6, dst, stride, tl, w, h, stride3
     movifnidn            hd, hm
     movifnidn            wd, wm
     tzcnt               r6d, hd
@@ -446,7 +446,7 @@ ALIGN function_align
     jg .s64
     RET
 
-cglobal ipred_dc_128, 2, 7, 6, dst, stride, tl, w, h, stride3
+cglobal ipred_dc_128_8bpc, 2, 7, 6, dst, stride, tl, w, h, stride3
     lea                  r5, [ipred_dc_splat_avx2_table]
     tzcnt                wd, wm
     movifnidn            hd, hm
@@ -457,7 +457,7 @@ cglobal ipred_dc_128, 2, 7, 6, dst, stride, tl, w, h, stride3
     lea            stride3q, [strideq*3]
     jmp                  wq
 
-cglobal ipred_v, 3, 7, 6, dst, stride, tl, w, h, stride3
+cglobal ipred_v_8bpc, 3, 7, 6, dst, stride, tl, w, h, stride3
     lea                  r5, [ipred_dc_splat_avx2_table]
     tzcnt                wd, wm
     movu                 m0, [tlq+ 1]
@@ -486,7 +486,7 @@ ALIGN function_align
 %endmacro
 
 INIT_XMM avx2
-cglobal ipred_h, 3, 6, 4, dst, stride, tl, w, h, stride3
+cglobal ipred_h_8bpc, 3, 6, 4, dst, stride, tl, w, h, stride3
     lea                  r5, [ipred_h_avx2_table]
     tzcnt                wd, wm
     movifnidn            hd, hm
@@ -543,7 +543,7 @@ INIT_YMM avx2
     vpblendvb            m0, m5, m0, m1
 %endmacro
 
-cglobal ipred_paeth, 3, 6, 9, dst, stride, tl, w, h
+cglobal ipred_paeth_8bpc, 3, 6, 9, dst, stride, tl, w, h
 %define base r5-ipred_paeth_avx2_table
     lea                  r5, [ipred_paeth_avx2_table]
     tzcnt                wd, wm
@@ -677,7 +677,7 @@ ALIGN function_align
     packuswb             m0, m1
 %endmacro
 
-cglobal ipred_smooth_v, 3, 7, 0, dst, stride, tl, w, h, weights
+cglobal ipred_smooth_v_8bpc, 3, 7, 0, dst, stride, tl, w, h, weights
 %define base r6-ipred_smooth_v_avx2_table
     lea                  r6, [ipred_smooth_v_avx2_table]
     tzcnt                wd, wm
@@ -835,7 +835,7 @@ ALIGN function_align
     ALLOC_STACK %1, %3
 %endmacro
 
-cglobal ipred_smooth_h, 3, 7, 0, dst, stride, tl, w, h
+cglobal ipred_smooth_h_8bpc, 3, 7, 0, dst, stride, tl, w, h
 %define base r6-ipred_smooth_h_avx2_table
     lea                  r6, [ipred_smooth_h_avx2_table]
     mov                  wd, wm
@@ -1045,7 +1045,7 @@ ALIGN function_align
     packuswb             m0, m1
 %endmacro
 
-cglobal ipred_smooth, 3, 7, 0, dst, stride, tl, w, h, v_weights
+cglobal ipred_smooth_8bpc, 3, 7, 0, dst, stride, tl, w, h, v_weights
 %define base r6-ipred_smooth_avx2_table
     lea                  r6, [ipred_smooth_avx2_table]
     mov                  wd, wm
@@ -1315,7 +1315,7 @@ ALIGN function_align
     sub                  r3, hq
     ret
 
-cglobal ipred_z1, 3, 8, 0, dst, stride, tl, w, h, angle, dx, maxbase
+cglobal ipred_z1_8bpc, 3, 8, 0, dst, stride, tl, w, h, angle, dx, maxbase
     %assign org_stack_offset stack_offset
     lea                  r6, [ipred_z1_avx2_table]
     tzcnt                wd, wm
@@ -2144,7 +2144,7 @@ ALIGN function_align
 .w64_end:
     RET
 
-cglobal ipred_z2, 3, 10, 16, 224, dst, stride, tl, w, h, angle, dx, dy
+cglobal ipred_z2_8bpc, 3, 10, 16, 224, dst, stride, tl, w, h, angle, dx, dy
 %define base r9-z_filter_t0
     lea                  r9, [ipred_z2_avx2_table]
     tzcnt                wd, wm
@@ -3000,7 +3000,7 @@ ALIGN function_align
     movu           [rsp+97], m0
     jmp .w32_filter_above
 
-cglobal ipred_z3, 4, 9, 0, dst, stride, tl, w, h, angle, dy, org_w, maxbase
+cglobal ipred_z3_8bpc, 4, 9, 0, dst, stride, tl, w, h, angle, dy, org_w, maxbase
     %assign org_stack_offset stack_offset
     lea                  r6, [ipred_z3_avx2_table]
     tzcnt                hd, hm
@@ -4211,7 +4211,7 @@ ALIGN function_align
 ; ___ 4 ___ 4 5 ___ 6 8 9 a ___ 6 8 9 a g i j k ___
 ;           5       8           8       i
 
-cglobal ipred_filter, 3, 7, 0, dst, stride, tl, w, h, filter
+cglobal ipred_filter_8bpc, 3, 7, 0, dst, stride, tl, w, h, filter
 %define base r6-ipred_filter_avx2_table
     lea                  r6, [filter_intra_taps]
     tzcnt                wd, wm
@@ -4435,7 +4435,7 @@ DECLARE_REG_TMP 7
     paddw               m%1, m0
 %endmacro
 
-cglobal ipred_cfl_top, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
+cglobal ipred_cfl_top_8bpc, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
     lea                  t0, [ipred_cfl_left_avx2_table]
     tzcnt                wd, wm
     inc                 tlq
@@ -4454,7 +4454,7 @@ cglobal ipred_cfl_top, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
     movifnidn           acq, acmp
     jmp                  r6
 
-cglobal ipred_cfl_left, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
+cglobal ipred_cfl_left_8bpc, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
     mov                  hd, hm ; zero upper half
     tzcnt               r6d, hd
     sub                 tlq, hq
@@ -4488,7 +4488,7 @@ cglobal ipred_cfl_left, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
     vpbroadcastw         m0, xm0
     jmp                  wq
 
-cglobal ipred_cfl, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
+cglobal ipred_cfl_8bpc, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
     movifnidn            hd, hm
     movifnidn            wd, wm
     tzcnt               r6d, hd
@@ -4692,7 +4692,7 @@ ALIGN function_align
     jg .s32_loop
     RET
 
-cglobal ipred_cfl_128, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
+cglobal ipred_cfl_128_8bpc, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
     lea                  t0, [ipred_cfl_splat_avx2_table]
     tzcnt                wd, wm
     movifnidn            hd, hm
@@ -4702,7 +4702,7 @@ cglobal ipred_cfl_128, 3, 7, 6, dst, stride, tl, w, h, ac, alpha
     movifnidn           acq, acmp
     jmp                  wq
 
-cglobal ipred_cfl_ac_420, 4, 9, 5, ac, y, stride, wpad, hpad, w, h, sz, ac_bak
+cglobal ipred_cfl_ac_420_8bpc, 4, 9, 5, ac, y, stride, wpad, hpad, w, h, sz, ac_bak
     movifnidn         hpadd, hpadm
     movifnidn            wd, wm
     mov                  hd, hm
@@ -4883,7 +4883,7 @@ cglobal ipred_cfl_ac_420, 4, 9, 5, ac, y, stride, wpad, hpad, w, h, sz, ac_bak
     jg .sub_loop
     RET
 
-cglobal ipred_cfl_ac_422, 4, 9, 6, ac, y, stride, wpad, hpad, w, h, sz, ac_bak
+cglobal ipred_cfl_ac_422_8bpc, 4, 9, 6, ac, y, stride, wpad, hpad, w, h, sz, ac_bak
     movifnidn         hpadd, hpadm
     movifnidn            wd, wm
     mov                  hd, hm
@@ -5076,7 +5076,7 @@ cglobal ipred_cfl_ac_422, 4, 9, 6, ac, y, stride, wpad, hpad, w, h, sz, ac_bak
     jg .sub_loop
     RET
 
-cglobal ipred_cfl_ac_444, 4, 9, 6, ac, y, stride, wpad, hpad, w, h, sz, ac_bak
+cglobal ipred_cfl_ac_444_8bpc, 4, 9, 6, ac, y, stride, wpad, hpad, w, h, sz, ac_bak
     movifnidn         hpadd, hpadm
     movifnidn            wd, wm
     mov                  hd, hm
@@ -5306,7 +5306,7 @@ cglobal ipred_cfl_ac_444, 4, 9, 6, ac, y, stride, wpad, hpad, w, h, sz, ac_bak
     jg .sub_loop
     RET
 
-cglobal pal_pred, 4, 6, 5, dst, stride, pal, idx, w, h
+cglobal pal_pred_8bpc, 4, 6, 5, dst, stride, pal, idx, w, h
     vbroadcasti128       m4, [palq]
     lea                  r2, [pal_pred_avx2_table]
     tzcnt                wd, wm

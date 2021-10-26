@@ -1,5 +1,5 @@
-; Copyright © 2018-2020, VideoLAN and dav1d authors
-; Copyright © 2018-2020, Two Orioles, LLC
+; Copyright © 2018-2021, VideoLAN and dav1d authors
+; Copyright © 2018-2021, Two Orioles, LLC
 ; All rights reserved.
 ;
 ; Redistribution and use in source and binary forms, with or without
@@ -69,7 +69,6 @@ bdct_lb_dw:     db  0,  0,  0,  0,  4,  4,  4,  4,  8,  8,  8,  8, 12, 12, 12, 1
 wswap:          db  2,  3,  0,  1,  6,  7,  4,  5, 10, 11,  8,  9, 14, 15, 12, 13
 rescale_mul:    dd  0,  1,  2,  3,  4,  5,  6,  7
 resize_shuf:    db  0,  0,  0,  0,  0,  1,  2,  3,  4,  5,  6,  7,  7,  7,  7,  7
-                db  7,  7,  7,  7,  7,  7,  7,  7
 
 wm_420_sign:    dd 0x01020102, 0x01010101
 wm_422_sign:    dd 0x80808080, 0x7f7f7f7f
@@ -110,7 +109,7 @@ cextern resize_filter
 %endmacro
 
 %macro HV_JMP_TABLE 5-*
-    %xdefine %%prefix mangle(private_prefix %+ _%1_%2_%3)
+    %xdefine %%prefix mangle(private_prefix %+ _%1_%2_8bpc_%3)
     %xdefine %%base %1_%3
     %assign %%types %4
     %if %%types & 1
@@ -141,68 +140,68 @@ cextern resize_filter
     %endif
 %endmacro
 
-%macro BIDIR_JMP_TABLE 1-*
-    %xdefine %1_table (%%table - 2*%2)
-    %xdefine %%base %1_table
-    %xdefine %%prefix mangle(private_prefix %+ _%1)
+%macro BIDIR_JMP_TABLE 2-*
+    %xdefine %1_%2_table (%%table - 2*%3)
+    %xdefine %%base %1_%2_table
+    %xdefine %%prefix mangle(private_prefix %+ _%1_8bpc_%2)
     %%table:
-    %rep %0 - 1
-        dd %%prefix %+ .w%2 - %%base
+    %rep %0 - 2
+        dd %%prefix %+ .w%3 - %%base
         %rotate 1
     %endrep
 %endmacro
 
-%macro SCALED_JMP_TABLE 1-*
-    %xdefine %1_table (%%table - %2)
-    %xdefine %%base mangle(private_prefix %+ _%1)
+%macro SCALED_JMP_TABLE 2-*
+    %xdefine %1_%2_table (%%table - %3)
+    %xdefine %%base mangle(private_prefix %+ _%1_8bpc_%2)
 %%table:
-    %rep %0 - 1
-        dw %%base %+ .w%2 - %%base
+    %rep %0 - 2
+        dw %%base %+ .w%3 - %%base
         %rotate 1
     %endrep
-    %rotate 1
+    %rotate 2
 %%dy_1024:
-    %xdefine %1_dy1_table (%%dy_1024 - %2)
-    %rep %0 - 1
-        dw %%base %+ .dy1_w%2 - %%base
+    %xdefine %1_%2_dy1_table (%%dy_1024 - %3)
+    %rep %0 - 2
+        dw %%base %+ .dy1_w%3 - %%base
         %rotate 1
     %endrep
-    %rotate 1
+    %rotate 2
 %%dy_2048:
-    %xdefine %1_dy2_table (%%dy_2048 - %2)
-    %rep %0 - 1
-        dw %%base %+ .dy2_w%2 - %%base
+    %xdefine %1_%2_dy2_table (%%dy_2048 - %3)
+    %rep %0 - 2
+        dw %%base %+ .dy2_w%3 - %%base
         %rotate 1
     %endrep
 %endmacro
 
-%xdefine put_avx2 mangle(private_prefix %+ _put_bilin_avx2.put)
-%xdefine prep_avx2 mangle(private_prefix %+ _prep_bilin_avx2.prep)
+%xdefine put_avx2 mangle(private_prefix %+ _put_bilin_8bpc_avx2.put)
+%xdefine prep_avx2 mangle(private_prefix %+ _prep_bilin_8bpc_avx2.prep)
 
 %define table_offset(type, fn) type %+ fn %+ SUFFIX %+ _table - type %+ SUFFIX
 
-BASE_JMP_TABLE   put,  avx2,           2, 4, 8, 16, 32, 64, 128
-BASE_JMP_TABLE   prep, avx2,              4, 8, 16, 32, 64, 128
-HV_JMP_TABLE     put,  bilin, avx2, 7, 2, 4, 8, 16, 32, 64, 128
-HV_JMP_TABLE     prep, bilin, avx2, 7,    4, 8, 16, 32, 64, 128
-HV_JMP_TABLE     put,  8tap,  avx2, 3, 2, 4, 8, 16, 32, 64, 128
-HV_JMP_TABLE     prep, 8tap,  avx2, 1,    4, 8, 16, 32, 64, 128
-SCALED_JMP_TABLE put_8tap_scaled_avx2, 2, 4, 8, 16, 32, 64, 128
-SCALED_JMP_TABLE prep_8tap_scaled_avx2,   4, 8, 16, 32, 64, 128
-BIDIR_JMP_TABLE  avg_avx2,                4, 8, 16, 32, 64, 128
-BIDIR_JMP_TABLE  w_avg_avx2,              4, 8, 16, 32, 64, 128
-BIDIR_JMP_TABLE  mask_avx2,               4, 8, 16, 32, 64, 128
-BIDIR_JMP_TABLE  w_mask_420_avx2,         4, 8, 16, 32, 64, 128
-BIDIR_JMP_TABLE  w_mask_422_avx2,         4, 8, 16, 32, 64, 128
-BIDIR_JMP_TABLE  w_mask_444_avx2,         4, 8, 16, 32, 64, 128
-BIDIR_JMP_TABLE  blend_avx2,              4, 8, 16, 32
-BIDIR_JMP_TABLE  blend_v_avx2,         2, 4, 8, 16, 32
-BIDIR_JMP_TABLE  blend_h_avx2,         2, 4, 8, 16, 32, 32, 32
+BASE_JMP_TABLE   put,  avx2,            2, 4, 8, 16, 32, 64, 128
+BASE_JMP_TABLE   prep, avx2,               4, 8, 16, 32, 64, 128
+HV_JMP_TABLE     put,  bilin, avx2,  7, 2, 4, 8, 16, 32, 64, 128
+HV_JMP_TABLE     prep, bilin, avx2,  7,    4, 8, 16, 32, 64, 128
+HV_JMP_TABLE     put,  8tap,  avx2,  3, 2, 4, 8, 16, 32, 64, 128
+HV_JMP_TABLE     prep, 8tap,  avx2,  1,    4, 8, 16, 32, 64, 128
+SCALED_JMP_TABLE put_8tap_scaled, avx2, 2, 4, 8, 16, 32, 64, 128
+SCALED_JMP_TABLE prep_8tap_scaled, avx2,   4, 8, 16, 32, 64, 128
+BIDIR_JMP_TABLE  avg, avx2,                4, 8, 16, 32, 64, 128
+BIDIR_JMP_TABLE  w_avg, avx2,              4, 8, 16, 32, 64, 128
+BIDIR_JMP_TABLE  mask, avx2,               4, 8, 16, 32, 64, 128
+BIDIR_JMP_TABLE  w_mask_420, avx2,         4, 8, 16, 32, 64, 128
+BIDIR_JMP_TABLE  w_mask_422, avx2,         4, 8, 16, 32, 64, 128
+BIDIR_JMP_TABLE  w_mask_444, avx2,         4, 8, 16, 32, 64, 128
+BIDIR_JMP_TABLE  blend, avx2,              4, 8, 16, 32
+BIDIR_JMP_TABLE  blend_v, avx2,         2, 4, 8, 16, 32
+BIDIR_JMP_TABLE  blend_h, avx2,         2, 4, 8, 16, 32, 32, 32
 
 SECTION .text
 
 INIT_XMM avx2
-cglobal put_bilin, 4, 8, 0, dst, ds, src, ss, w, h, mxy
+cglobal put_bilin_8bpc, 4, 8, 0, dst, ds, src, ss, w, h, mxy
     movifnidn          mxyd, r6m ; mx
     lea                  r7, [put_avx2]
     tzcnt                wd, wm
@@ -769,7 +768,7 @@ INIT_YMM avx2
 %endif
     RET
 
-cglobal prep_bilin, 3, 7, 0, tmp, src, stride, w, h, mxy, stride3
+cglobal prep_bilin_8bpc, 3, 7, 0, tmp, src, stride, w, h, mxy, stride3
     movifnidn          mxyd, r5m ; mx
     lea                  r6, [prep%+SUFFIX]
     tzcnt                wd, wm
@@ -1439,7 +1438,7 @@ cglobal prep_bilin, 3, 7, 0, tmp, src, stride, w, h, mxy, stride3
 %assign FILTER_SHARP   (2*15 << 16) | 3*15
 
 %macro FN 4 ; fn, type, type_h, type_v
-cglobal %1_%2
+cglobal %1_%2_8bpc
     mov                 t0d, FILTER_%3
 %ifidn %3, %4
     mov                 t1d, t0d
@@ -1447,7 +1446,7 @@ cglobal %1_%2
     mov                 t1d, FILTER_%4
 %endif
 %ifnidn %2, regular ; skip the jump in the last filter
-    jmp mangle(private_prefix %+ _%1 %+ SUFFIX)
+    jmp mangle(private_prefix %+ _%1_8bpc %+ SUFFIX)
 %endif
 %endmacro
 
@@ -1458,7 +1457,6 @@ DECLARE_REG_TMP 7, 8
 %endif
 
 %define PUT_8TAP_FN FN put_8tap,
-
 PUT_8TAP_FN sharp,          SHARP,   SHARP
 PUT_8TAP_FN sharp_smooth,   SHARP,   SMOOTH
 PUT_8TAP_FN smooth_sharp,   SMOOTH,  SHARP
@@ -1469,7 +1467,7 @@ PUT_8TAP_FN smooth_regular, SMOOTH,  REGULAR
 PUT_8TAP_FN regular_smooth, REGULAR, SMOOTH
 PUT_8TAP_FN regular,        REGULAR, REGULAR
 
-cglobal put_8tap, 4, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
+cglobal put_8tap_8bpc, 4, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
     imul                mxd, mxm, 0x010101
     add                 mxd, t0d ; 8tap_h, mx, 4tap_h
     imul                myd, mym, 0x010101
@@ -2124,7 +2122,6 @@ DECLARE_REG_TMP 6, 7
 %endif
 
 %define PREP_8TAP_FN FN prep_8tap,
-
 PREP_8TAP_FN sharp,          SHARP,   SHARP
 PREP_8TAP_FN sharp_smooth,   SHARP,   SMOOTH
 PREP_8TAP_FN smooth_sharp,   SMOOTH,  SHARP
@@ -2135,7 +2132,7 @@ PREP_8TAP_FN smooth_regular, SMOOTH,  REGULAR
 PREP_8TAP_FN regular_smooth, REGULAR, SMOOTH
 PREP_8TAP_FN regular,        REGULAR, REGULAR
 
-cglobal prep_8tap, 3, 8, 0, tmp, src, stride, w, h, mx, my, stride3
+cglobal prep_8tap_8bpc, 3, 8, 0, tmp, src, stride, w, h, mx, my, stride3
     imul                mxd, mxm, 0x010101
     add                 mxd, t0d ; 8tap_h, mx, 4tap_h
     imul                myd, mym, 0x010101
@@ -2725,26 +2722,26 @@ cglobal prep_8tap, 3, 8, 0, tmp, src, stride, w, h, mx, my, stride3
 %ifidn %1, put
  %assign isprep 0
  %if required_stack_alignment <= STACK_ALIGNMENT
-cglobal put_8tap_scaled, 4, 15, 16, 112, dst, ds, src, ss, w, h, mx, my, dx, dy
+cglobal put_8tap_scaled_8bpc, 4, 15, 16, 112, dst, ds, src, ss, w, h, mx, my, dx, dy
  %else
-cglobal put_8tap_scaled, 4, 14, 16, 128, dst, ds, src, ss, w, h, mx, my, dx, dy
+cglobal put_8tap_scaled_8bpc, 4, 14, 16, 128, dst, ds, src, ss, w, h, mx, my, dx, dy
  %endif
  %xdefine base_reg r12
  %define rndshift 10
 %else
  %assign isprep 1
  %if required_stack_alignment <= STACK_ALIGNMENT
-cglobal prep_8tap_scaled, 4, 15, 16, 128, tmp, src, ss, w, h, mx, my, dx, dy
+cglobal prep_8tap_scaled_8bpc, 4, 15, 16, 128, tmp, src, ss, w, h, mx, my, dx, dy
   %xdefine tmp_stridem r14q
  %else
-cglobal prep_8tap_scaled, 4, 14, 16, 128, tmp, src, ss, w, h, mx, my, dx, dy
+cglobal prep_8tap_scaled_8bpc, 4, 14, 16, 128, tmp, src, ss, w, h, mx, my, dx, dy
   %define tmp_stridem qword [rsp+120]
  %endif
  %xdefine base_reg r11
  %define rndshift 6
 %endif
-    lea            base_reg, [%1_8tap_scaled_avx2]
-%define base base_reg-%1_8tap_scaled_avx2
+    lea            base_reg, [%1_8tap_scaled_8bpc_avx2]
+%define base base_reg-%1_8tap_scaled_8bpc_avx2
     tzcnt                wd, wm
     vpbroadcastd         m8, dxm
 %if isprep && UNIX64
@@ -2817,7 +2814,7 @@ cglobal prep_8tap_scaled, 4, 14, 16, 128, tmp, src, ss, w, h, mx, my, dx, dy
     dec                srcq
     movd               xm15, t0d
     punpckldq            m8, m9, m8
-    paddd               m14, m8 ; mx+dx*[0-1]
+    paddd               m14, m8 ; mx+dx*[0,1]
     vpbroadcastd        m11, [base+pd_0x4000]
     vpbroadcastd       xm15, xm15
     pand                 m8, m14, m10
@@ -2868,8 +2865,7 @@ cglobal prep_8tap_scaled, 4, 14, 16, 128, tmp, src, ss, w, h, mx, my, dx, dy
     lea                 r4d, [t1+r4]
     cmovnz              r6q, [base+subpel_filters+r4*8]
     movq               xm11, r6q
-    punpcklbw          xm11, xm11
-    psraw              xm11, 8
+    pmovsxbw           xm11, xm11
     pshufd              xm8, xm11, q0000
     pshufd              xm9, xm11, q1111
     pshufd             xm10, xm11, q2222
@@ -2997,8 +2993,7 @@ cglobal prep_8tap_scaled, 4, 14, 16, 128, tmp, src, ss, w, h, mx, my, dx, dy
     lea                 r4d, [t1+r4]
     cmovnz              r6q, [base+subpel_filters+r4*8]
     movq               xm10, r6q
-    punpcklbw          xm10, xm10
-    psraw              xm10, 8
+    pmovsxbw           xm10, xm10
     pshufd              xm7, xm10, q0000
     pshufd              xm8, xm10, q1111
     pshufd              xm9, xm10, q2222
@@ -3172,9 +3167,8 @@ cglobal prep_8tap_scaled, 4, 14, 16, 128, tmp, src, ss, w, h, mx, my, dx, dy
     lea                 r4d, [t1+r4]
     cmovnz              r6q, [base+subpel_filters+r4*8]
     movq               xm11, r6q
-    punpcklbw          xm11, xm11
-    psraw              xm11, 8
-    vinserti128         m11, xm11, 1
+    punpcklqdq         xm11, xm11
+    pmovsxbw            m11, xm11
     pshufd               m8, m11, q0000
     pshufd               m9, m11, q1111
     pmaddwd              m4, m0, m8
@@ -3320,8 +3314,7 @@ cglobal prep_8tap_scaled, 4, 14, 16, 128, tmp, src, ss, w, h, mx, my, dx, dy
     vpbroadcastq         m2, [srcq+ssq*1]
     add                srcq, ss3q
     movq               xm10, r4q
-    punpcklbw          xm10, xm10
-    psraw              xm10, 8
+    pmovsxbw           xm10, xm10
     vpblendd            m15, m7, 0xaa
     pblendvb            m15, m11, m8
     pshufd              xm8, xm10, q0000
@@ -3417,9 +3410,8 @@ cglobal prep_8tap_scaled, 4, 14, 16, 128, tmp, src, ss, w, h, mx, my, dx, dy
     punpcklqdq          m15, m15
     pblendvb            m15, m11, m8
     movq               xm10, r4q
-    punpcklbw          xm10, xm10
-    psraw              xm10, 8
-    vinserti128         m10, xm10, 1
+    punpcklqdq         xm10, xm10
+    pmovsxbw            m10, xm10
     pshufb               m2, m14
     pshufb               m3, m14
     pshufb               m4, m14
@@ -3526,8 +3518,7 @@ cglobal prep_8tap_scaled, 4, 14, 16, 128, tmp, src, ss, w, h, mx, my, dx, dy
     vpbroadcastd        m15, xm15
     paddd               m14, m8 ; mx+dx*[0-7]
     movq                xm0, r4q
-    punpcklbw           xm0, xm0
-    psraw               xm0, 8
+    pmovsxbw            xm0, xm0
     mova           [rsp+96], xm0
     jmp .dy1_hloop
 .dy1_hloop_prep:
@@ -3695,8 +3686,7 @@ cglobal prep_8tap_scaled, 4, 14, 16, 128, tmp, src, ss, w, h, mx, my, dx, dy
     pmaddubsw            m0, m15
     pmaddubsw            m1, m15
     movq               xm11, r4q
-    punpcklbw          xm11, xm11
-    psraw              xm11, 8
+    pmovsxbw           xm11, xm11
     phaddw               m0, m1
     pmulhrsw             m0, m12            ; 0 2 _ 4  1 3 _ 5
     pshufd              xm8, xm11, q0000
@@ -3792,9 +3782,8 @@ cglobal prep_8tap_scaled, 4, 14, 16, 128, tmp, src, ss, w, h, mx, my, dx, dy
     pmaddubsw           xm1, xm15
     pmaddubsw            m3, m15
     movq               xm11, r4q
-    punpcklbw          xm11, xm11
-    psraw              xm11, 8
-    vinserti128         m11, xm11, 1
+    punpcklqdq         xm11, xm11
+    pmovsxbw            m11, xm11
     phaddw               m0, m2
     phaddw               m1, m3
     pmulhrsw             m0, m12    ; 0 2  _ 4
@@ -3889,8 +3878,7 @@ cglobal prep_8tap_scaled, 4, 14, 16, 128, tmp, src, ss, w, h, mx, my, dx, dy
     vpbroadcastd        m15, xm15
     paddd               m14, m8 ; mx+dx*[0-7]
     movq                xm0, r4q
-    punpcklbw           xm0, xm0
-    psraw               xm0, 8
+    pmovsxbw            xm0, xm0
     mova         [rsp+0x50], xm0
     jmp .dy2_hloop
 .dy2_hloop_prep:
@@ -4025,10 +4013,10 @@ cglobal prep_8tap_scaled, 4, 14, 16, 128, tmp, src, ss, w, h, mx, my, dx, dy
 %endmacro
 
 %macro BILIN_SCALED_FN 1
-cglobal %1_bilin_scaled
+cglobal %1_bilin_scaled_8bpc
     mov                 t0d, (5*15 << 16) | 5*15
     mov                 t1d, t0d
-    jmp mangle(private_prefix %+ _%1_8tap_scaled %+ SUFFIX)
+    jmp mangle(private_prefix %+ _%1_8tap_scaled_8bpc %+ SUFFIX)
 %endmacro
 
 %if WIN64
@@ -4113,11 +4101,11 @@ MC_8TAP_SCALED prep
     paddd               m%1, m0, m%2
 %endmacro
 
-cglobal warp_affine_8x8t, 0, 14, 0, tmp, ts
+cglobal warp_affine_8x8t_8bpc, 0, 14, 0, tmp, ts
 %if WIN64
     sub                 rsp, 0xa0
 %endif
-    call mangle(private_prefix %+ _warp_affine_8x8_avx2).main
+    call mangle(private_prefix %+ _warp_affine_8x8_8bpc_avx2).main
 .loop:
     psrad                m7, 13
     psrad                m0, 13
@@ -4127,13 +4115,13 @@ cglobal warp_affine_8x8t, 0, 14, 0, tmp, ts
     mova         [tmpq+tsq*0], xm7
     vextracti128 [tmpq+tsq*2], m7, 1
     dec                 r4d
-    jz   mangle(private_prefix %+ _warp_affine_8x8_avx2).end
-    call mangle(private_prefix %+ _warp_affine_8x8_avx2).main2
+    jz   mangle(private_prefix %+ _warp_affine_8x8_8bpc_avx2).end
+    call mangle(private_prefix %+ _warp_affine_8x8_8bpc_avx2).main2
     lea                tmpq, [tmpq+tsq*4]
     jmp .loop
 
-cglobal warp_affine_8x8, 0, 14, 0, dst, ds, src, ss, abcd, mx, tmp2, alpha, \
-                                   beta, filter, tmp1, delta, my, gamma
+cglobal warp_affine_8x8_8bpc, 0, 14, 0, dst, ds, src, ss, abcd, mx, tmp2, alpha, \
+                                        beta, filter, tmp1, delta, my, gamma
 %if WIN64
     sub                 rsp, 0xa0
     %assign xmm_regs_used 16
@@ -4389,7 +4377,7 @@ ALIGN function_align
     add               tmp2q, %1*32
 %endmacro
 
-cglobal avg, 4, 7, 3, dst, stride, tmp1, tmp2, w, h, stride3
+cglobal avg_8bpc, 4, 7, 3, dst, stride, tmp1, tmp2, w, h, stride3
 %define base r6-avg %+ SUFFIX %+ _table
     lea                  r6, [avg %+ SUFFIX %+ _table]
     tzcnt                wd, wm
@@ -4419,7 +4407,7 @@ cglobal avg, 4, 7, 3, dst, stride, tmp1, tmp2, w, h, stride3
 
 %define W_AVG_INC_PTR AVG_INC_PTR
 
-cglobal w_avg, 4, 7, 6, dst, stride, tmp1, tmp2, w, h, stride3
+cglobal w_avg_8bpc, 4, 7, 6, dst, stride, tmp1, tmp2, w, h, stride3
 %define base r6-w_avg %+ SUFFIX %+ _table
     lea                  r6, [w_avg %+ SUFFIX %+ _table]
     tzcnt                wd, wm
@@ -4469,7 +4457,7 @@ cglobal w_avg, 4, 7, 6, dst, stride, tmp1, tmp2, w, h, stride3
     add               tmp1q, %1*32
 %endmacro
 
-cglobal mask, 4, 8, 6, dst, stride, tmp1, tmp2, w, h, mask, stride3
+cglobal mask_8bpc, 4, 8, 6, dst, stride, tmp1, tmp2, w, h, mask, stride3
 %define base r7-mask %+ SUFFIX %+ _table
     lea                  r7, [mask %+ SUFFIX %+ _table]
     tzcnt                wd, wm
@@ -4512,7 +4500,7 @@ cglobal mask, 4, 8, 6, dst, stride, tmp1, tmp2, w, h, mask, stride3
     packuswb            m%1, m1
 %endmacro
 
-cglobal blend, 3, 7, 7, dst, ds, tmp, w, h, mask
+cglobal blend_8bpc, 3, 7, 7, dst, ds, tmp, w, h, mask
 %define base r6-blend_avx2_table
     lea                  r6, [blend_avx2_table]
     tzcnt                wd, wm
@@ -4629,7 +4617,7 @@ ALIGN function_align
     jg .w32
     RET
 
-cglobal blend_v, 3, 6, 6, dst, ds, tmp, w, h, mask
+cglobal blend_v_8bpc, 3, 6, 6, dst, ds, tmp, w, h, mask
 %define base r5-blend_v_avx2_table
     lea                  r5, [blend_v_avx2_table]
     tzcnt                wd, wm
@@ -4740,7 +4728,7 @@ ALIGN function_align
     jg .w32_loop
     RET
 
-cglobal blend_h, 4, 7, 6, dst, ds, tmp, w, h, mask
+cglobal blend_h_8bpc, 4, 7, 6, dst, ds, tmp, w, h, mask
 %define base r5-blend_h_avx2_table
     lea                  r5, [blend_h_avx2_table]
     mov                 r6d, wd
@@ -4866,7 +4854,7 @@ ALIGN function_align
     jl .w32_loop0
     RET
 
-cglobal emu_edge, 10, 13, 1, bw, bh, iw, ih, x, y, dst, dstride, src, sstride, \
+cglobal emu_edge_8bpc, 10, 13, 1, bw, bh, iw, ih, x, y, dst, dstride, src, sstride, \
                              bottomext, rightext
     ; we assume that the buffer (stride) is larger than width, so we can
     ; safely overwrite by a few bytes
@@ -5053,8 +5041,8 @@ cglobal emu_edge, 10, 13, 1, bw, bh, iw, ih, x, y, dst, dstride, src, sstride, \
 .end:
     RET
 
-cglobal resize, 6, 14, 16, dst, dst_stride, src, src_stride, \
-                           dst_w, h, src_w, dx, mx0
+cglobal resize_8bpc, 6, 12, 16, dst, dst_stride, src, src_stride, \
+                                dst_w, h, src_w, dx, mx0
     sub          dword mx0m, 4<<14
     sub        dword src_wm, 8
     vpbroadcastd         m5, dxm
@@ -5117,27 +5105,23 @@ cglobal resize, 6, 14, 16, dst, dst_stride, src, src_stride, \
     vptest               m1, m1
     jz .filter
 
-    movd                r8d, xm1
-    pextrd              r9d, xm1, 1
-    pextrd             r10d, xm1, 2
-    pextrd             r11d, xm1, 3
-    movsxd               r8, r8d
-    movsxd               r9, r9d
-    movsxd              r10, r10d
-    movsxd              r11, r11d
+    movq                 r9, xm1
+    pextrq              r11, xm1, 1
+    movsxd               r8, r9d
+    sar                  r9, 32
+    movsxd              r10, r11d
+    sar                 r11, 32
     vextracti128        xm1, m1, 1
     movq               xm14, [base+resize_shuf+4+r8]
     movq                xm0, [base+resize_shuf+4+r10]
     movhps             xm14, [base+resize_shuf+4+r9]
     movhps              xm0, [base+resize_shuf+4+r11]
-    movd                r8d, xm1
-    pextrd              r9d, xm1, 1
-    pextrd             r10d, xm1, 2
-    pextrd             r11d, xm1, 3
-    movsxd               r8, r8d
-    movsxd               r9, r9d
-    movsxd              r10, r10d
-    movsxd              r11, r11d
+    movq                 r9, xm1
+    pextrq              r11, xm1, 1
+    movsxd               r8, r9d
+    sar                  r9, 32
+    movsxd              r10, r11d
+    sar                 r11, 32
     vinserti128         m14, [base+resize_shuf+4+r8], 1
     vinserti128          m0, [base+resize_shuf+4+r10], 1
     vpbroadcastq        m10, [base+resize_shuf+4+r9]
@@ -5191,7 +5175,7 @@ cglobal resize, 6, 14, 16, dst, dst_stride, src, src_stride, \
     jg .loop_y
     RET
 
-cglobal w_mask_420, 4, 8, 14, dst, stride, tmp1, tmp2, w, h, mask, stride3
+cglobal w_mask_420_8bpc, 4, 8, 14, dst, stride, tmp1, tmp2, w, h, mask, stride3
 %define base r7-w_mask_420_avx2_table
     lea                  r7, [w_mask_420_avx2_table]
     tzcnt                wd, wm
@@ -5397,7 +5381,7 @@ cglobal w_mask_420, 4, 8, 14, dst, stride, tmp1, tmp2, w, h, mask, stride3
     jg .w128_loop
     RET
 
-cglobal w_mask_422, 4, 8, 11, dst, stride, tmp1, tmp2, w, h, mask, stride3
+cglobal w_mask_422_8bpc, 4, 8, 11, dst, stride, tmp1, tmp2, w, h, mask, stride3
 %define base r7-w_mask_422_avx2_table
     lea                  r7, [w_mask_422_avx2_table]
     tzcnt                wd, wm
@@ -5570,7 +5554,7 @@ cglobal w_mask_422, 4, 8, 11, dst, stride, tmp1, tmp2, w, h, mask, stride3
     jg .w128_loop
     RET
 
-cglobal w_mask_444, 4, 8, 8, dst, stride, tmp1, tmp2, w, h, mask, stride3
+cglobal w_mask_444_8bpc, 4, 8, 8, dst, stride, tmp1, tmp2, w, h, mask, stride3
 %define base r7-w_mask_444_avx2_table
     lea                  r7, [w_mask_444_avx2_table]
     tzcnt                wd, wm

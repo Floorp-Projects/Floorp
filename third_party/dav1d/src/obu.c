@@ -1547,18 +1547,26 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, const int globa
                 dav1d_data_props_copy(&c->out.m, &in->m);
                 c->event_flags |= dav1d_picture_get_event_flags(&c->refs[c->frame_hdr->existing_frame_idx].p);
             } else {
+                pthread_mutex_lock(&c->task_thread.lock);
                 // need to append this to the frame output queue
                 const unsigned next = c->frame_thread.next++;
                 if (c->frame_thread.next == c->n_fc)
                     c->frame_thread.next = 0;
 
                 Dav1dFrameContext *const f = &c->fc[next];
-                pthread_mutex_lock(&f->frame_thread.td.lock);
                 while (f->n_tile_data > 0)
-                    pthread_cond_wait(&f->frame_thread.td.cond,
-                                      &f->frame_thread.td.lock);
+                    pthread_cond_wait(&f->task_thread.cond,
+                                      &f->task_thread.ttd->lock);
                 Dav1dThreadPicture *const out_delayed =
                     &c->frame_thread.out_delayed[next];
+                if (out_delayed->p.data[0] || atomic_load(&f->task_thread.error)) {
+                    if (atomic_load(&c->task_thread.first) + 1U < c->n_fc)
+                        atomic_fetch_add(&c->task_thread.first, 1U);
+                    else
+                        atomic_store(&c->task_thread.first, 0);
+                    if (c->task_thread.cur < c->n_fc)
+                        c->task_thread.cur--;
+                }
                 if (out_delayed->p.data[0]) {
                     const unsigned progress = atomic_load_explicit(&out_delayed->progress[1],
                                                                    memory_order_relaxed);
@@ -1572,7 +1580,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, const int globa
                                          &c->refs[c->frame_hdr->existing_frame_idx].p);
                 out_delayed->visible = 1;
                 dav1d_data_props_copy(&out_delayed->p.m, &in->m);
-                pthread_mutex_unlock(&f->frame_thread.td.lock);
+                pthread_mutex_unlock(&c->task_thread.lock);
             }
             if (c->refs[c->frame_hdr->existing_frame_idx].p.p.frame_hdr->frame_type == DAV1D_FRAME_TYPE_KEY) {
                 const int r = c->frame_hdr->existing_frame_idx;

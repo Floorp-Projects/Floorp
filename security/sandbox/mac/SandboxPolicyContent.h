@@ -122,6 +122,7 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
     (sysctl-name "hw.activecpu")
     (sysctl-name "hw.byteorder")
     (sysctl-name "hw.pagesize_compat")
+    (sysctl-name "hw.logicalcpu")
     (sysctl-name "hw.logicalcpu_max")
     (sysctl-name "hw.physicalcpu_max")
     (sysctl-name "hw.busfrequency_compat")

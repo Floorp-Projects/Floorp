@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
+ * Copyright © 2018-2021, VideoLAN and dav1d authors
  * Copyright © 2018, Two Orioles, LLC
  * All rights reserved.
  *
@@ -29,48 +29,30 @@
 #include "src/loopfilter.h"
 
 #define decl_loopfilter_sb_fns(ext) \
-decl_loopfilter_sb_fn(dav1d_lpf_h_sb_y_##ext); \
-decl_loopfilter_sb_fn(dav1d_lpf_v_sb_y_##ext); \
-decl_loopfilter_sb_fn(dav1d_lpf_h_sb_uv_##ext); \
-decl_loopfilter_sb_fn(dav1d_lpf_v_sb_uv_##ext)
+decl_loopfilter_sb_fn(BF(dav1d_lpf_h_sb_y, ext)); \
+decl_loopfilter_sb_fn(BF(dav1d_lpf_v_sb_y, ext)); \
+decl_loopfilter_sb_fn(BF(dav1d_lpf_h_sb_uv, ext)); \
+decl_loopfilter_sb_fn(BF(dav1d_lpf_v_sb_uv, ext))
 
 decl_loopfilter_sb_fns(ssse3);
 decl_loopfilter_sb_fns(avx2);
-decl_loopfilter_sb_fns(16bpc_ssse3);
-decl_loopfilter_sb_fns(16bpc_avx2);
 
 COLD void bitfn(dav1d_loop_filter_dsp_init_x86)(Dav1dLoopFilterDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
 
     if (!(flags & DAV1D_X86_CPU_FLAG_SSSE3)) return;
 
-#if BITDEPTH == 8
-    c->loop_filter_sb[0][0] = dav1d_lpf_h_sb_y_ssse3;
-    c->loop_filter_sb[0][1] = dav1d_lpf_v_sb_y_ssse3;
-    c->loop_filter_sb[1][0] = dav1d_lpf_h_sb_uv_ssse3;
-    c->loop_filter_sb[1][1] = dav1d_lpf_v_sb_uv_ssse3;
-#else
-#if ARCH_X86_64
-    c->loop_filter_sb[0][0] = dav1d_lpf_h_sb_y_16bpc_ssse3;
-    c->loop_filter_sb[0][1] = dav1d_lpf_v_sb_y_16bpc_ssse3;
-    c->loop_filter_sb[1][0] = dav1d_lpf_h_sb_uv_16bpc_ssse3;
-    c->loop_filter_sb[1][1] = dav1d_lpf_v_sb_uv_16bpc_ssse3;
-#endif
-#endif
+    c->loop_filter_sb[0][0] = BF(dav1d_lpf_h_sb_y, ssse3);
+    c->loop_filter_sb[0][1] = BF(dav1d_lpf_v_sb_y, ssse3);
+    c->loop_filter_sb[1][0] = BF(dav1d_lpf_h_sb_uv, ssse3);
+    c->loop_filter_sb[1][1] = BF(dav1d_lpf_v_sb_uv, ssse3);
 
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX2)) return;
 
 #if ARCH_X86_64
-#if BITDEPTH == 8
-    c->loop_filter_sb[0][0] = dav1d_lpf_h_sb_y_avx2;
-    c->loop_filter_sb[0][1] = dav1d_lpf_v_sb_y_avx2;
-    c->loop_filter_sb[1][0] = dav1d_lpf_h_sb_uv_avx2;
-    c->loop_filter_sb[1][1] = dav1d_lpf_v_sb_uv_avx2;
-#else
-    c->loop_filter_sb[0][0] = dav1d_lpf_h_sb_y_16bpc_avx2;
-    c->loop_filter_sb[0][1] = dav1d_lpf_v_sb_y_16bpc_avx2;
-    c->loop_filter_sb[1][0] = dav1d_lpf_h_sb_uv_16bpc_avx2;
-    c->loop_filter_sb[1][1] = dav1d_lpf_v_sb_uv_16bpc_avx2;
-#endif
+    c->loop_filter_sb[0][0] = BF(dav1d_lpf_h_sb_y, avx2);
+    c->loop_filter_sb[0][1] = BF(dav1d_lpf_v_sb_y, avx2);
+    c->loop_filter_sb[1][0] = BF(dav1d_lpf_h_sb_uv, avx2);
+    c->loop_filter_sb[1][1] = BF(dav1d_lpf_v_sb_uv, avx2);
 #endif
 }

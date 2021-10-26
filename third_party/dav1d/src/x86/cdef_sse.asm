@@ -566,7 +566,7 @@ cglobal cdef_filter_%1x%2_8bpc, 2, 7, 8, - 7 * 16 - (%2+4)*32, \
     test          secd, secd
     jz .pri_only
     movd           m10, r5m
-    bsr           secd, secd
+    tzcnt         secd, secd
     and           prid, 1
     sub        pridmpd, dampingd
     sub           secd, dampingd
@@ -575,7 +575,6 @@ cglobal cdef_filter_%1x%2_8bpc, 2, 7, 8, - 7 * 16 - (%2+4)*32, \
     neg        pridmpd
     cmovs      pridmpd, dampingd
     neg           secd
-    cmovs         secd, dampingd
     PSHUFB_0        m1, m7
     PSHUFB_0       m10, m7
  %if ARCH_X86_64
@@ -697,7 +696,7 @@ cglobal cdef_filter_%1x%2_8bpc, 2, 7, 8, - 7 * 16 - (%2+4)*32, \
     DEFINE_ARGS dst, stride, sec, damping, dir, tap, zero
 %endif
     movd            m1, r5m
-    bsr           secd, secd
+    tzcnt         secd, secd
     mov           dird, r6m
     xor          zerod, zerod
     sub       dampingd, secd

@@ -1,6 +1,6 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
- * Copyright © 2018, Two Orioles, LLC
+ * Copyright © 2018-2021, VideoLAN and dav1d authors
+ * Copyright © 2018-2021, Two Orioles, LLC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,35 +28,19 @@
 #include "src/cpu.h"
 #include "src/mc.h"
 
-#if BITDEPTH == 8
 #define decl_fn(type, name) \
-    decl_##type##_fn(name##_sse2); \
-    decl_##type##_fn(name##_ssse3); \
-    decl_##type##_fn(name##_avx2); \
-    decl_##type##_fn(name##_avx512icl);
+    decl_##type##_fn(BF(name, sse2)); \
+    decl_##type##_fn(BF(name, ssse3)); \
+    decl_##type##_fn(BF(name, avx2)); \
+    decl_##type##_fn(BF(name, avx512icl));
 #define init_mc_fn(type, name, suffix) \
-    c->mc[type] = dav1d_put_##name##_##suffix
+    c->mc[type] = BF(dav1d_put_##name, suffix)
 #define init_mct_fn(type, name, suffix) \
-    c->mct[type] = dav1d_prep_##name##_##suffix
+    c->mct[type] = BF(dav1d_prep_##name, suffix)
 #define init_mc_scaled_fn(type, name, suffix) \
-    c->mc_scaled[type] = dav1d_put_##name##_##suffix
+    c->mc_scaled[type] = BF(dav1d_put_##name, suffix)
 #define init_mct_scaled_fn(type, name, suffix) \
-    c->mct_scaled[type] = dav1d_prep_##name##_##suffix
-#else
-#define decl_fn(type, name) \
-    decl_##type##_fn(name##_16bpc_sse2); \
-    decl_##type##_fn(name##_16bpc_ssse3); \
-    decl_##type##_fn(name##_16bpc_avx2); \
-    decl_##type##_fn(name##_16bpc_avx512icl);
-#define init_mc_fn(type, name, suffix) \
-    c->mc[type] = dav1d_put_##name##_16bpc_##suffix
-#define init_mct_fn(type, name, suffix) \
-    c->mct[type] = dav1d_prep_##name##_16bpc_##suffix
-#define init_mc_scaled_fn(type, name, suffix) \
-    c->mc_scaled[type] = dav1d_put_##name##_16bpc_##suffix
-#define init_mct_scaled_fn(type, name, suffix) \
-    c->mct_scaled[type] = dav1d_prep_##name##_16bpc_##suffix
-#endif
+    c->mct_scaled[type] = BF(dav1d_prep_##name, suffix)
 
 decl_fn(mc, dav1d_put_8tap_regular);
 decl_fn(mc, dav1d_put_8tap_regular_smooth);
@@ -113,14 +97,13 @@ decl_fn(blend_dir, dav1d_blend_v);
 decl_fn(blend_dir, dav1d_blend_h);
 
 decl_fn(warp8x8, dav1d_warp_affine_8x8);
-decl_warp8x8_fn(dav1d_warp_affine_8x8_sse4);
+decl_warp8x8_fn(BF(dav1d_warp_affine_8x8, sse4));
 decl_fn(warp8x8t, dav1d_warp_affine_8x8t);
-decl_warp8x8t_fn(dav1d_warp_affine_8x8t_sse4);
+decl_warp8x8t_fn(BF(dav1d_warp_affine_8x8t, sse4));
 
 decl_fn(emu_edge, dav1d_emu_edge);
 
-decl_resize_fn(dav1d_resize_avx2);
-decl_resize_fn(dav1d_resize_ssse3);
+decl_fn(resize, dav1d_resize);
 
 COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
     const unsigned flags = dav1d_get_cpu_flags();
@@ -140,8 +123,8 @@ COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
     init_mct_fn(FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_sharp_smooth,   sse2);
     init_mct_fn(FILTER_2D_8TAP_SHARP,          8tap_sharp,          sse2);
 
-    c->warp8x8  = dav1d_warp_affine_8x8_sse2;
-    c->warp8x8t = dav1d_warp_affine_8x8t_sse2;
+    c->warp8x8  = BF(dav1d_warp_affine_8x8, sse2);
+    c->warp8x8t = BF(dav1d_warp_affine_8x8t, sse2);
 #endif
 
     if(!(flags & DAV1D_X86_CPU_FLAG_SSSE3))
@@ -193,40 +176,26 @@ COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
     init_mct_scaled_fn(FILTER_2D_BILINEAR,            bilin_scaled,               ssse3);
 #endif
 
-#if BITDEPTH == 8
-    c->avg = dav1d_avg_ssse3;
-    c->w_avg = dav1d_w_avg_ssse3;
-    c->mask = dav1d_mask_ssse3;
-    c->w_mask[2] = dav1d_w_mask_420_ssse3;
-    c->blend = dav1d_blend_ssse3;
-    c->blend_v = dav1d_blend_v_ssse3;
-    c->blend_h = dav1d_blend_h_ssse3;
-
-    c->warp8x8  = dav1d_warp_affine_8x8_ssse3;
-    c->warp8x8t = dav1d_warp_affine_8x8t_ssse3;
-
-    c->emu_edge = dav1d_emu_edge_ssse3;
-    c->resize = dav1d_resize_ssse3;
-#else
-    c->avg = dav1d_avg_16bpc_ssse3;
-    c->w_avg = dav1d_w_avg_16bpc_ssse3;
-    c->mask = dav1d_mask_16bpc_ssse3;
-    c->w_mask[0] = dav1d_w_mask_444_16bpc_ssse3;
-    c->w_mask[1] = dav1d_w_mask_422_16bpc_ssse3;
-    c->w_mask[2] = dav1d_w_mask_420_16bpc_ssse3;
-    c->blend = dav1d_blend_16bpc_ssse3;
-    c->blend_v = dav1d_blend_v_16bpc_ssse3;
-    c->blend_h = dav1d_blend_h_16bpc_ssse3;
-
-    c->emu_edge = dav1d_emu_edge_16bpc_ssse3;
-#endif
+    c->avg = BF(dav1d_avg, ssse3);
+    c->w_avg = BF(dav1d_w_avg, ssse3);
+    c->mask = BF(dav1d_mask, ssse3);
+    c->w_mask[0] = BF(dav1d_w_mask_444, ssse3);
+    c->w_mask[1] = BF(dav1d_w_mask_422, ssse3);
+    c->w_mask[2] = BF(dav1d_w_mask_420, ssse3);
+    c->blend = BF(dav1d_blend, ssse3);
+    c->blend_v = BF(dav1d_blend_v, ssse3);
+    c->blend_h = BF(dav1d_blend_h, ssse3);
+    c->warp8x8  = BF(dav1d_warp_affine_8x8, ssse3);
+    c->warp8x8t = BF(dav1d_warp_affine_8x8t, ssse3);
+    c->emu_edge = BF(dav1d_emu_edge, ssse3);
+    c->resize = BF(dav1d_resize, ssse3);
 
     if(!(flags & DAV1D_X86_CPU_FLAG_SSE41))
         return;
 
 #if BITDEPTH == 8
-    c->warp8x8  = dav1d_warp_affine_8x8_sse4;
-    c->warp8x8t = dav1d_warp_affine_8x8t_sse4;
+    c->warp8x8  = BF(dav1d_warp_affine_8x8, sse4);
+    c->warp8x8t = BF(dav1d_warp_affine_8x8t, sse4);
 #endif
 
 #if ARCH_X86_64
@@ -255,7 +224,6 @@ COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
     init_mct_fn(FILTER_2D_8TAP_SHARP,          8tap_sharp,          avx2);
     init_mct_fn(FILTER_2D_BILINEAR,            bilin,               avx2);
 
-#if BITDEPTH == 8
     init_mc_scaled_fn(FILTER_2D_8TAP_REGULAR,        8tap_scaled_regular,        avx2);
     init_mc_scaled_fn(FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_scaled_regular_smooth, avx2);
     init_mc_scaled_fn(FILTER_2D_8TAP_REGULAR_SHARP,  8tap_scaled_regular_sharp,  avx2);
@@ -278,35 +246,19 @@ COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
     init_mct_scaled_fn(FILTER_2D_8TAP_SHARP,          8tap_scaled_sharp,          avx2);
     init_mct_scaled_fn(FILTER_2D_BILINEAR,            bilin_scaled,               avx2);
 
-    c->avg = dav1d_avg_avx2;
-    c->w_avg = dav1d_w_avg_avx2;
-    c->mask = dav1d_mask_avx2;
-    c->w_mask[0] = dav1d_w_mask_444_avx2;
-    c->w_mask[1] = dav1d_w_mask_422_avx2;
-    c->w_mask[2] = dav1d_w_mask_420_avx2;
-    c->blend = dav1d_blend_avx2;
-    c->blend_v = dav1d_blend_v_avx2;
-    c->blend_h = dav1d_blend_h_avx2;
-
-    c->warp8x8  = dav1d_warp_affine_8x8_avx2;
-    c->warp8x8t = dav1d_warp_affine_8x8t_avx2;
-
-    c->emu_edge = dav1d_emu_edge_avx2;
-    c->resize = dav1d_resize_avx2;
-#else
-    c->avg = dav1d_avg_16bpc_avx2;
-    c->w_avg = dav1d_w_avg_16bpc_avx2;
-    c->mask = dav1d_mask_16bpc_avx2;
-    c->w_mask[0] = dav1d_w_mask_444_16bpc_avx2;
-    c->w_mask[1] = dav1d_w_mask_422_16bpc_avx2;
-    c->w_mask[2] = dav1d_w_mask_420_16bpc_avx2;
-    c->blend = dav1d_blend_16bpc_avx2;
-    c->blend_v = dav1d_blend_v_16bpc_avx2;
-    c->blend_h = dav1d_blend_h_16bpc_avx2;
-    c->warp8x8  = dav1d_warp_affine_8x8_16bpc_avx2;
-    c->warp8x8t = dav1d_warp_affine_8x8t_16bpc_avx2;
-    c->emu_edge = dav1d_emu_edge_16bpc_avx2;
-#endif
+    c->avg = BF(dav1d_avg, avx2);
+    c->w_avg = BF(dav1d_w_avg, avx2);
+    c->mask = BF(dav1d_mask, avx2);
+    c->w_mask[0] = BF(dav1d_w_mask_444, avx2);
+    c->w_mask[1] = BF(dav1d_w_mask_422, avx2);
+    c->w_mask[2] = BF(dav1d_w_mask_420, avx2);
+    c->blend = BF(dav1d_blend, avx2);
+    c->blend_v = BF(dav1d_blend_v, avx2);
+    c->blend_h = BF(dav1d_blend_h, avx2);
+    c->warp8x8  = BF(dav1d_warp_affine_8x8, avx2);
+    c->warp8x8t = BF(dav1d_warp_affine_8x8t, avx2);
+    c->emu_edge = BF(dav1d_emu_edge, avx2);
+    c->resize = BF(dav1d_resize, avx2);
 
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX512ICL))
         return;
@@ -323,12 +275,12 @@ COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
     init_mct_fn(FILTER_2D_8TAP_SHARP,          8tap_sharp,          avx512icl);
     init_mct_fn(FILTER_2D_BILINEAR,            bilin,               avx512icl);
 
-    c->avg = dav1d_avg_avx512icl;
-    c->w_avg = dav1d_w_avg_avx512icl;
-    c->mask = dav1d_mask_avx512icl;
-    c->w_mask[0] = dav1d_w_mask_444_avx512icl;
-    c->w_mask[1] = dav1d_w_mask_422_avx512icl;
-    c->w_mask[2] = dav1d_w_mask_420_avx512icl;
+    c->avg = BF(dav1d_avg, avx512icl);
+    c->w_avg = BF(dav1d_w_avg, avx512icl);
+    c->mask = BF(dav1d_mask, avx512icl);
+    c->w_mask[0] = BF(dav1d_w_mask_444, avx512icl);
+    c->w_mask[1] = BF(dav1d_w_mask_422, avx512icl);
+    c->w_mask[2] = BF(dav1d_w_mask_420, avx512icl);
 #endif
 #endif
 }

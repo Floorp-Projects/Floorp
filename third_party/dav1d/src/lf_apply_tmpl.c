@@ -170,13 +170,12 @@ static inline void filter_plane_rows_uv(const Dav1dFrameContext *const f,
     }
 }
 
-void bytefn(dav1d_loopfilter_sbrow)(const Dav1dFrameContext *const f,
-                                    pixel *const p[3], Av1Filter *const lflvl,
-                                    int sby, const int start_of_tile_row)
+void bytefn(dav1d_loopfilter_sbrow_cols)(const Dav1dFrameContext *const f,
+                                         pixel *const p[3], Av1Filter *const lflvl,
+                                         int sby, const int start_of_tile_row)
 {
     int x, have_left;
     // Don't filter outside the frame
-    const int have_top = sby > 0;
     const int is_sb64 = !f->seq_hdr->sb128;
     const int starty4 = (sby & is_sb64) << 4;
     const int sbsz = 32 >> is_sb64;
@@ -271,13 +270,6 @@ void bytefn(dav1d_loopfilter_sbrow)(const Dav1dFrameContext *const f,
                             imin(32, f->w4 - x * 32), starty4, endy4);
     }
 
-    level_ptr = f->lf.level + f->b4_stride * sby * sbsz;
-    for (ptr = p[0], x = 0; x < f->sb128w; x++, ptr += 128, level_ptr += 32) {
-        filter_plane_rows_y(f, have_top, level_ptr, f->b4_stride,
-                            lflvl[x].filter_y[1], ptr, f->cur.stride[0],
-                            imin(32, f->w4 - x * 32), starty4, endy4);
-    }
-
     if (!f->frame_hdr->loopfilter.level_u && !f->frame_hdr->loopfilter.level_v)
         return;
 
@@ -292,7 +284,35 @@ void bytefn(dav1d_loopfilter_sbrow)(const Dav1dFrameContext *const f,
                              (imin(32, f->w4 - x * 32) + ss_hor) >> ss_hor,
                              starty4 >> ss_ver, uv_endy4, ss_ver);
     }
+}
 
+void bytefn(dav1d_loopfilter_sbrow_rows)(const Dav1dFrameContext *const f,
+                                         pixel *const p[3], Av1Filter *const lflvl,
+                                         int sby)
+{
+    int x;
+    // Don't filter outside the frame
+    const int have_top = sby > 0;
+    const int is_sb64 = !f->seq_hdr->sb128;
+    const int starty4 = (sby & is_sb64) << 4;
+    const int sbsz = 32 >> is_sb64;
+    const int ss_ver = f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
+    const int ss_hor = f->cur.p.layout != DAV1D_PIXEL_LAYOUT_I444;
+    const unsigned endy4 = starty4 + imin(f->h4 - sby * sbsz, sbsz);
+    const unsigned uv_endy4 = (endy4 + ss_ver) >> ss_ver;
+
+    pixel *ptr;
+    uint8_t (*level_ptr)[4] = f->lf.level + f->b4_stride * sby * sbsz;
+    for (ptr = p[0], x = 0; x < f->sb128w; x++, ptr += 128, level_ptr += 32) {
+        filter_plane_rows_y(f, have_top, level_ptr, f->b4_stride,
+                            lflvl[x].filter_y[1], ptr, f->cur.stride[0],
+                            imin(32, f->w4 - x * 32), starty4, endy4);
+    }
+
+    if (!f->frame_hdr->loopfilter.level_u && !f->frame_hdr->loopfilter.level_v)
+        return;
+
+    ptrdiff_t uv_off;
     level_ptr = f->lf.level + f->b4_stride * (sby * sbsz >> ss_ver);
     for (uv_off = 0, x = 0; x < f->sb128w;
          x++, uv_off += 128 >> ss_hor, level_ptr += 32 >> ss_hor)
