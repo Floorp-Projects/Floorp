@@ -150,6 +150,8 @@ class String final {
     // Copy the already normalized prefix.
     if (spanLength > 0) {
       PodCopy(aBuffer.data(), aString.data(), spanLength);
+
+      aBuffer.written(spanLength);
     }
 
     MOZ_TRY(FillBufferWithICUCall(
