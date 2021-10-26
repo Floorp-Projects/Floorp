@@ -1119,6 +1119,13 @@ var Policies = {
           locked
         );
       }
+      if ("SponsoredTopSites" in param) {
+        setDefaultPref(
+          "browser.newtabpage.activity-stream.showSponsoredTopSites",
+          param.SponsoredTopSites,
+          locked
+        );
+      }
       if ("Highlights" in param) {
         setDefaultPref(
           "browser.newtabpage.activity-stream.feeds.section.highlights",
@@ -1135,6 +1142,13 @@ var Policies = {
         setDefaultPref(
           "browser.newtabpage.activity-stream.feeds.section.topstories",
           param.Pocket,
+          locked
+        );
+      }
+      if ("SponsoredPocket" in param) {
+        setDefaultPref(
+          "browser.newtabpage.activity-stream.showSponsored",
+          param.SponsoredPocket,
           locked
         );
       }
