@@ -1090,7 +1090,7 @@ void LineBreaker::ComputeBreakPositions(const char16_t* aChars,
           aBreakBefore[ci - aChars] = true;
         }
       } else {
-        NS_GetComplexLineBreaks(aChars + cur, end - cur, aBreakBefore + cur);
+        ComplexBreaker::GetBreaks(aChars + cur, end - cur, aBreakBefore + cur);
         // restore breakability at chunk begin, which was always set to false
         // by the complex line breaker
         aBreakBefore[cur] = allowBreak;
