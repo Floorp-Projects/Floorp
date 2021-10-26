@@ -33,7 +33,7 @@ uint64_t RemoteAccessible::NativeState() const {
 }
 
 ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
-  if (mCachedFields) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::Name(aName);
   }
 
@@ -51,7 +51,7 @@ void RemoteAccessible::Help(nsString& aHelp) const {
 }
 
 void RemoteAccessible::Description(nsString& aDesc) const {
-  if (mCachedFields) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     RemoteAccessibleBase<RemoteAccessible>::Description(aDesc);
     return;
   }
@@ -761,7 +761,7 @@ void RemoteAccessible::AtkKeyBinding(nsString& aBinding) {
 }
 
 double RemoteAccessible::CurValue() const {
-  if (mCachedFields) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::CurValue();
   }
 
@@ -777,7 +777,7 @@ bool RemoteAccessible::SetCurValue(double aValue) {
 }
 
 double RemoteAccessible::MinValue() const {
-  if (mCachedFields) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::MinValue();
   }
 
@@ -787,7 +787,7 @@ double RemoteAccessible::MinValue() const {
 }
 
 double RemoteAccessible::MaxValue() const {
-  if (mCachedFields) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::MaxValue();
   }
 
@@ -797,7 +797,7 @@ double RemoteAccessible::MaxValue() const {
 }
 
 double RemoteAccessible::Step() const {
-  if (mCachedFields) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::Step();
   }
 
