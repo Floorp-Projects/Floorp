@@ -388,11 +388,9 @@ def show_taskgraph(options):
         assert diffdir is not None
         assert repo is not None
 
-        # Some transforms use global state for checks, so will fail
-        # when running taskgraph a second time in the same session.
-        # Reload all taskgraph modules to avoid this.
+        # Reload taskgraph modules to pick up changes and clear global state.
         for mod in sys.modules.copy():
-            if mod != __name__ and mod.startswith("taskgraph"):
+            if mod != __name__ and mod.split(".", 1)[0].endswith("taskgraph"):
                 del sys.modules[mod]
 
         if options["diff"] == "default":
