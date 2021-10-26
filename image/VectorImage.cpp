@@ -852,6 +852,17 @@ VectorImage::GetImageContainerAtSize(WindowRenderer* aRenderer,
   return rv;
 }
 
+//******************************************************************************
+NS_IMETHODIMP_(ImgDrawResult)
+VectorImage::GetImageProvider(WindowRenderer* aRenderer,
+                              const gfx::IntSize& aSize,
+                              const Maybe<SVGImageContext>& aSVGContext,
+                              const Maybe<ImageIntRegion>& aRegion,
+                              uint32_t aFlags,
+                              WebRenderImageProvider** aProvider) {
+  return ImgDrawResult::NOT_SUPPORTED;
+}
+
 bool VectorImage::MaybeRestrictSVGContext(
     Maybe<SVGImageContext>& aNewSVGContext,
     const Maybe<SVGImageContext>& aSVGContext, uint32_t aFlags) {
