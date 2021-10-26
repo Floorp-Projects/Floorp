@@ -68,7 +68,7 @@ def get_upstream_deps_for_components(components):
         for line in subprocess.check_output(cmd, universal_newlines=True).splitlines():
             # If we find the start of a new component section, update our tracking variable
             if line.startswith("Project"):
-                current_component = line.split(":")[1]
+                current_component = line.split(":")[1].strip("'")
 
             # If we find a new local dependency, add it.
             if line.startswith("+--- project") or line.startswith(r"\--- project"):
