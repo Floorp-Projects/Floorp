@@ -59,7 +59,7 @@ class PagedHistoryProviderTest {
         val historyEntry1 = HistoryMetadata(
             key = historyMetadataKey1,
             title = "mozilla",
-            createdAt = 5,
+            createdAt = 150000000, // a large amount to fall outside of the history page.
             updatedAt = 10,
             totalViewTime = 10,
             documentType = DocumentType.Regular,

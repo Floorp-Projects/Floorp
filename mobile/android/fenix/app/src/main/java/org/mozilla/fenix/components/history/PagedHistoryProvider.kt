@@ -155,8 +155,10 @@ class DefaultPagedHistoryProvider(
         // items.
         val historyGroupsInOffset = if (history.isNotEmpty()) {
             historyGroups?.filter {
-                history.last().visitedAt <= it.visitedAt - visitedAtBuffer &&
-                    it.visitedAt - visitedAtBuffer <= (history.first().visitedAt + visitedAtBuffer)
+                it.items.any { item ->
+                    history.last().visitedAt <= item.visitedAt - visitedAtBuffer &&
+                        item.visitedAt - visitedAtBuffer <= (history.first().visitedAt + visitedAtBuffer)
+                }
             } ?: emptyList()
         } else {
             emptyList()
