@@ -309,7 +309,7 @@ class gfxFontCacheExpirationTracker
   }
 
  public:
-  enum { FONT_TIMEOUT_SECONDS = 10 };
+  enum { FONT_TIMEOUT_SECONDS = 5 };
 
   explicit gfxFontCacheExpirationTracker(nsIEventTarget* aEventTarget)
       : ExpirationTrackerImpl<gfxFont, 3, Lock, AutoLock>(
@@ -318,7 +318,7 @@ class gfxFontCacheExpirationTracker
 
 class gfxFontCache final : private gfxFontCacheExpirationTracker {
  public:
-  enum { SHAPED_WORD_TIMEOUT_SECONDS = 60 };
+  enum { SHAPED_WORD_TIMEOUT_SECONDS = 10 };
 
   explicit gfxFontCache(nsIEventTarget* aEventTarget);
   ~gfxFontCache();
@@ -361,6 +361,22 @@ class gfxFontCache final : private gfxFontCacheExpirationTracker {
 
   void FlushShapedWordCaches();
   void NotifyGlyphsChanged();
+
+  void RunWordCacheExpirationTimer() {
+    if (mWordCacheExpirationTimer && !mTimerRunning) {
+      mWordCacheExpirationTimer->InitWithNamedFuncCallback(
+          WordCacheExpirationTimerCallback, this,
+          SHAPED_WORD_TIMEOUT_SECONDS * 1000, nsITimer::TYPE_REPEATING_SLACK,
+          "gfxFontCache::WordCacheExpiration");
+      mTimerRunning = true;
+    }
+  }
+  void PauseWordCacheExpirationTimer() {
+    if (mWordCacheExpirationTimer && mTimerRunning) {
+      mWordCacheExpirationTimer->Cancel();
+      mTimerRunning = false;
+    }
+  }
 
   void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                               FontCacheSizes* aSizes) const;
@@ -444,6 +460,7 @@ class gfxFontCache final : private gfxFontCacheExpirationTracker {
 
   static void WordCacheExpirationTimerCallback(nsITimer* aTimer, void* aCache);
   nsCOMPtr<nsITimer> mWordCacheExpirationTimer;
+  bool mTimerRunning = false;
 };
 
 class gfxTextPerfMetrics {
@@ -1841,8 +1858,9 @@ class gfxFont {
   }
 
   // Called by the gfxFontCache timer to increment the age of all the words,
-  // so that they'll expire after a sufficient period of non-use
-  void AgeCachedWords();
+  // so that they'll expire after a sufficient period of non-use.
+  // Returns true if the cache is now empty, otherwise false.
+  bool AgeCachedWords();
 
   // Discard all cached word records; called on memory-pressure notification.
   void ClearCachedWords() {
