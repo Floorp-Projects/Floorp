@@ -776,7 +776,11 @@ class Replay {
     // Using a variable length array here is a GCC & Clang extension. But it
     // allows us to place this on the stack and not alter jemalloc's profiling.
     const size_t num_bins = ::jemalloc_stats_num_bins();
-    jemalloc_bin_stats_t bin_stats[num_bins];
+    const size_t MAX_NUM_BINS = 100;
+    if (num_bins > MAX_NUM_BINS) {
+      die("Exceeded maximum number of jemalloc stats bins");
+    }
+    jemalloc_bin_stats_t bin_stats[MAX_NUM_BINS];
     ::jemalloc_stats_internal(&stats, bin_stats);
 
 #ifdef XP_LINUX
