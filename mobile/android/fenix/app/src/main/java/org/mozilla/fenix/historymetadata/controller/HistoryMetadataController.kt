@@ -13,6 +13,8 @@ import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.HistoryMetadataStorage
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.historymetadata.interactor.HistoryMetadataInteractor
 import org.mozilla.fenix.home.HomeFragmentAction
@@ -49,7 +51,8 @@ class DefaultHistoryMetadataController(
     private val homeStore: HomeFragmentStore,
     private val navController: NavController,
     private val storage: HistoryMetadataStorage,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val metrics: MetricController
 ) : HistoryMetadataController {
 
     override fun handleHistoryShowAllClicked() {
@@ -79,6 +82,7 @@ class DefaultHistoryMetadataController(
         scope.launch {
             storage.deleteHistoryMetadata(searchTerm)
         }
+        metrics.track(Event.RecentSearchesGroupDeleted)
     }
 
     @VisibleForTesting(otherwise = PRIVATE)

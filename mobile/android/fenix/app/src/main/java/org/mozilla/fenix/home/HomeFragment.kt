@@ -361,7 +361,8 @@ class HomeFragment : Fragment() {
                 homeStore = homeFragmentStore,
                 storage = components.core.historyStorage,
                 scope = viewLifecycleOwner.lifecycleScope,
-                store = components.core.store
+                store = components.core.store,
+                metrics = requireComponents.analytics.metrics
             ),
             pocketStoriesController = DefaultPocketStoriesController(
                 homeActivity = activity,

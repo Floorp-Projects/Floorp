@@ -41,6 +41,7 @@ import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks
+import org.mozilla.fenix.GleanMetrics.RecentSearches
 import org.mozilla.fenix.GleanMetrics.RecentTabs
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.SearchWidget
@@ -799,6 +800,10 @@ private val Event.wrapper: EventWrapper<*>?
 
         is Event.ShowAllBookmarks -> EventWrapper<NoExtraKeys>(
             { RecentBookmarks.showAllBookmarks.add() }
+        )
+
+        is Event.RecentSearchesGroupDeleted -> EventWrapper<NoExtraKeys>(
+            { RecentSearches.groupDeleted.record(it) }
         )
 
         is Event.AndroidAutofillRequestWithLogins -> EventWrapper<NoExtraKeys>(

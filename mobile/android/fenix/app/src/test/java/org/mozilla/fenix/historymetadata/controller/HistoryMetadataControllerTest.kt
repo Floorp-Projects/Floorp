@@ -26,6 +26,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentDirections
@@ -40,6 +42,8 @@ class HistoryMetadataControllerTest {
     val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     private val navController = mockk<NavController>(relaxed = true)
+    private val metrics: MetricController = mockk(relaxed = true)
+
     private lateinit var storage: HistoryMetadataStorage
     private lateinit var homeFragmentStore: HomeFragmentStore
     private lateinit var store: BrowserStore
@@ -62,7 +66,8 @@ class HistoryMetadataControllerTest {
                 store = store,
                 navController = navController,
                 scope = scope,
-                storage = storage
+                storage = storage,
+                metrics = metrics
             )
         )
     }
@@ -137,9 +142,8 @@ class HistoryMetadataControllerTest {
         testDispatcher.advanceUntilIdle()
         verify {
             store.dispatch(HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = historyGroup.title))
-        }
-        verify {
             homeFragmentStore.dispatch(HomeFragmentAction.DisbandSearchGroupAction(searchTerm = historyGroup.title))
+            metrics.track(Event.RecentSearchesGroupDeleted)
         }
 
         coVerify {

@@ -5804,6 +5804,25 @@ recent_bookmarks:
       - android-probes@mozilla.com
     expires: "2022-02-01"
 
+recent_searches:
+  group_deleted:
+    type: event
+    description: |
+      A user has deleted a search term group from the
+      "Recent searches" section on the homescreen using
+      the long-press menu "Remove" option. This removes
+      the item from the homescreen, but does not delete
+      the item from history.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22175
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/TBD
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-04-01"
+
 credit_cards:
   saved:
     type: counter

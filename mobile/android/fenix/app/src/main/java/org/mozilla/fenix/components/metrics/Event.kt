@@ -268,6 +268,9 @@ sealed class Event {
     object BookmarkClicked : Event()
     object ShowAllBookmarks : Event()
 
+    // Recently visited/Recent searches
+    object RecentSearchesGroupDeleted : Event()
+
     // Android Autofill
     object AndroidAutofillUnlockSuccessful : Event()
     object AndroidAutofillUnlockCanceled : Event()
