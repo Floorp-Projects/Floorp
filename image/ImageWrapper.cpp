@@ -146,6 +146,11 @@ ImageWrapper::GetProducerId(uint32_t* aId) {
 }
 
 NS_IMETHODIMP
+ImageWrapper::GetProviderId(uint32_t* aId) {
+  return mInnerImage->GetProviderId(aId);
+}
+
+NS_IMETHODIMP
 ImageWrapper::GetAnimated(bool* aAnimated) {
   return mInnerImage->GetAnimated(aAnimated);
 }

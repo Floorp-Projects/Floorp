@@ -682,6 +682,21 @@ imgRequestProxy::GetProducerId(uint32_t* aId) {
 }
 
 NS_IMETHODIMP
+imgRequestProxy::GetProviderId(uint32_t* aId) {
+  NS_ENSURE_TRUE(aId, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<imgIContainer> image;
+  nsresult rv = GetImage(getter_AddRefs(image));
+  if (NS_SUCCEEDED(rv)) {
+    *aId = image->GetProviderId();
+  } else {
+    *aId = 0;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 imgRequestProxy::GetImageStatus(uint32_t* aStatus) {
   if (IsValidating()) {
     // We are currently validating the image, and so our status could revert if
