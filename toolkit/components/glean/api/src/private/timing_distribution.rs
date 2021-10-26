@@ -138,11 +138,20 @@ impl TimingDistribution for TimingDistributionMetric {
                     .write()
                     .expect("Write lock must've been poisoned.");
                 if let Some(start) = map.remove(&id) {
-                    let sample = match start.elapsed().as_nanos().try_into() {
-                        Ok(sample) => sample,
-                        Err(_) => {
+                    let now = Instant::now();
+                    let sample = now
+                        .checked_duration_since(start)
+                        .map(|s| s.as_nanos().try_into());
+                    let sample = match sample {
+                        Some(Ok(sample)) => sample,
+                        Some(Err(_)) => {
                             log::warn!("Elapsed time larger than fits into 64-bytes. Saturating at u64::MAX.");
                             u64::MAX
+                        }
+                        None => {
+                            log::warn!("Time went backwards. Not recording.");
+                            // TODO: report an error (timer id for stop was started, but time went backwards).
+                            return;
                         }
                     };
                     with_ipc_payload(move |payload| {
