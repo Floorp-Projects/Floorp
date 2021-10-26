@@ -32,19 +32,14 @@ var button = document.getElementsByTagName('button')[0];
 var output = document.getElementsByTagName('output')[0];
 
 output.addEventListener("invalid", function() {
-  if (invalidEvent) {
-    ok(false, "invalid event has already been caught");
-  } else {
-    invalidEvent = true;
-    ok(true, "invalid event has been caught");
-    setTimeout(function() {
-      SimpleTest.finish();
-    }, 0);
-  }
+  ok(false, "invalid event should have been send");
 });
 
 form.addEventListener("submit", function() {
-  ok(false, "submit event should not have been send");
+  ok(true, "submit has been caught");
+  setTimeout(function() {
+    SimpleTest.finish();
+  }, 0);
 });
 
 output.setCustomValidity("foo");

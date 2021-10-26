@@ -11,10 +11,10 @@ output.notvalid:valid {
 }
 
 output.valid {
-  color: red;
+  color: green;
 }
 output.valid:valid {
-  color: green;
+  color: red;
 }
 
 output.ref {
