@@ -65,6 +65,12 @@
         <item name="textColorAlertDialogListItem">@color/primaryText</item>
         <item name="colorControlActivated">@color/accentBright</item>
         <item name="colorControlNormal">@color/accentBright</item>
+        <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyle</item>
+        <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyle</item>
+    </style>
+
+    <style name="DialogButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/accentBright</item>
     </style>
 
     <style name="ButtonStyle" parent="Base.Widget.AppCompat.ButtonBar.AlertDialog">
