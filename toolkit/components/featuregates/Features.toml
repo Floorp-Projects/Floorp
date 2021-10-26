@@ -42,17 +42,6 @@ bug-numbers = [1539075]
 is-public = {default = false, nightly = true}
 default-value = false
 
-[web-api-inputmode]
-title = "experimental-features-web-api-inputmode"
-description = "experimental-features-web-api-inputmode-description"
-description-links = {mdn-inputmode = "https://developer.mozilla.org/docs/Web/HTML/Global_attributes/inputmode", whatwg = "https://bugzilla.mozilla.org/show_bug.cgi?id=1509527", bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1205133"}
-restart-required = false
-preference = "dom.forms.inputmode"
-type = "boolean"
-bug-numbers = [1205133]
-is-public = {default = false, nightly = true}
-default-value = {default = false, nightly = true, android = true}
-
 [css-constructable-stylesheets]
 title = "experimental-features-css-constructable-stylesheets"
 description = "experimental-features-css-constructable-stylesheets-description"
