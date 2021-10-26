@@ -2117,7 +2117,6 @@ def default_wasm_sandboxing_libraries(libraries, target, automation):
     non_default_libs = set()
     if target.bitness == 32:
         non_default_libs.add("hunspell")
-        non_default_libs.add("ogg")
 
     if automation:
         return tuple(l for l in libraries if l not in non_default_libs)
