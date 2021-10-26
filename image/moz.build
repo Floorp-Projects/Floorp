@@ -65,13 +65,13 @@ EXPORTS.mozilla.image += [
     "ICOFileHeaders.h",
     "ImageMemoryReporter.h",
     "Resolution.h",
-    "SourceSurfaceBlobImage.h",
     "WebRenderImageProvider.h",
 ]
 
 UNIFIED_SOURCES += [
     "AnimationFrameBuffer.cpp",
     "AnimationSurfaceProvider.cpp",
+    "BlobSurfaceProvider.cpp",
     "ClippedImage.cpp",
     "DecodedSurfaceProvider.cpp",
     "Decoder.cpp",
@@ -99,7 +99,6 @@ UNIFIED_SOURCES += [
     "ScriptedNotificationObserver.cpp",
     "ShutdownTracker.cpp",
     "SourceBuffer.cpp",
-    "SourceSurfaceBlobImage.cpp",
     "SurfaceCache.cpp",
     "SurfaceCacheUtils.cpp",
     "SurfacePipe.cpp",
