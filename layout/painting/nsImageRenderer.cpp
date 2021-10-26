@@ -14,6 +14,7 @@
 #include "gfxDrawable.h"
 #include "ImageOps.h"
 #include "ImageRegion.h"
+#include "mozilla/image/WebRenderImageProvider.h"
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
@@ -621,39 +622,29 @@ ImgDrawResult nsImageRenderer::BuildWebRenderDisplayItems(
               mImageContainer, mForFrame, destRect, clipRect, aSc,
               containerFlags, svgContext, region);
 
-      if (extendMode != ExtendMode::CLAMP) {
-        region = Nothing();
-      }
-
-      RefPtr<layers::ImageContainer> container;
-      drawResult = mImageContainer->GetImageContainerAtSize(
+      RefPtr<image::WebRenderImageProvider> provider;
+      drawResult = mImageContainer->GetImageProvider(
           aManager->LayerManager(), decodeSize, svgContext, region,
-          containerFlags, getter_AddRefs(container));
-      if (!container) {
+          containerFlags, getter_AddRefs(provider));
+      if (!provider) {
         NS_WARNING("Failed to get image container");
         break;
       }
 
-      if (containerFlags & imgIContainer::FLAG_RECORD_BLOB) {
-        MOZ_ASSERT(extendMode == ExtendMode::CLAMP);
-        aManager->CommandBuilder().PushBlobImage(
-            aItem, container, aBuilder, aResources, clipRect, clipRect);
+      Maybe<wr::ImageKey> key =
+          aManager->CommandBuilder().CreateImageProviderKey(aItem, provider,
+                                                            aResources);
+      if (key.isNothing()) {
         break;
       }
 
       auto rendering =
           wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
-      gfx::IntSize size;
-      Maybe<wr::ImageKey> key = aManager->CommandBuilder().CreateImageKey(
-          aItem, container, aBuilder, aResources, rendering, aSc, size,
-          Nothing());
-
-      if (key.isNothing()) {
-        break;
-      }
-
-      wr::LayoutRect dest = wr::ToLayoutRect(destRect);
       wr::LayoutRect clip = wr::ToLayoutRect(clipRect);
+
+      // If we provided a region to the provider, then it already took the
+      // dest rect into account when it did the recording.
+      wr::LayoutRect dest = region ? clip : wr::ToLayoutRect(destRect);
 
       if (extendMode == ExtendMode::CLAMP) {
         // The image is not repeating. Just push as a regular image.
