@@ -151,4 +151,21 @@ constexpr bool has_member_using_can_grant_deny_access_v =
   detail_has_member_using_can_grant_deny_access::
     has_member_using_can_grant_deny_access<T>::value;
 
+namespace detail_has_member_using_needs_internal_lookup_symbol {
+  template<class T, class Enable = void>
+  struct has_member_using_needs_internal_lookup_symbol : std::false_type
+  {};
+
+  template<class T>
+  struct has_member_using_needs_internal_lookup_symbol<
+    T,
+    std::void_t<typename T::needs_internal_lookup_symbol>> : std::true_type
+  {};
+}
+
+template<class T>
+constexpr bool has_member_using_needs_internal_lookup_symbol_v =
+  detail_has_member_using_needs_internal_lookup_symbol::
+    has_member_using_needs_internal_lookup_symbol<T>::value;
+
 }

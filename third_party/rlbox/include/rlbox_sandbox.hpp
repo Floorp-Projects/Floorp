@@ -174,7 +174,7 @@ private:
       constexpr auto unknownCase = !(cond1 || cond2);
       rlbox_detail_static_fail_because(
         unknownCase,
-        "Arguments to a sandbox function call should be primitives  or wrapped "
+        "Arguments to a sandbox function call should be primitives or wrapped "
         "types like tainted, callbacks etc.");
     }
   }
@@ -200,7 +200,10 @@ private:
       tainted<T_NoRef, T_Sbx> ret = param;
       return ret.UNSAFE_sandboxed(*this);
     } else {
-      rlbox_detail_static_fail_because(detail::true_v<T_NoRef>, "Unknown case");
+      rlbox_detail_static_fail_because(detail::true_v<T_NoRef>,
+        "Only tainted types, callbacks or primitive values such as ints can be passed as parameters.\n"
+        "To make a parameter tainted, try moving the allocation into the sandbox.\n"
+        "If the parameter is a callback, try registering the callback via the register_callback API.");
     }
   }
 
@@ -327,11 +330,12 @@ private:
       }
     }
 
-    detail::dynamic_check(
-      false,
-      "Internal error: Could not find the sandbox associated with example "
-      "pointer. Please file a bug.");
     return nullptr;
+  }
+
+  template<typename... T_Args>
+  static auto impl_create_sandbox_helper(rlbox_sandbox<T_Sbx>* this_ptr, T_Args... args) {
+    return this_ptr->impl_create_sandbox(std::forward<T_Args>(args)...);
   }
 
 public:
@@ -362,7 +366,7 @@ public:
    * implementation. For the null sandbox, no arguments are necessary.
    */
   template<typename... T_Args>
-  inline auto create_sandbox(T_Args... args)
+  inline bool create_sandbox(T_Args... args)
   {
 #ifdef RLBOX_MEASURE_TRANSITION_TIMES
     // Warm up the timer. The first call is always slow (at least on the test
@@ -380,15 +384,27 @@ public:
       "create_sandbox called when sandbox already created/is being "
       "created concurrently");
 
-    return detail::return_first_result(
-      [&]() {
-        return this->impl_create_sandbox(std::forward<T_Args>(args)...);
-      },
-      [&]() {
-        sandbox_created.store(Sandbox_Status::CREATED);
-        RLBOX_ACQUIRE_UNIQUE_GUARD(lock, sandbox_list_lock);
-        sandbox_list.push_back(this);
-      });
+    using T_Result = rlbox::detail::polyfill::invoke_result_t<decltype(impl_create_sandbox_helper<T_Args...>), decltype(this), T_Args...>;
+
+    bool created = true;
+    if constexpr (std::is_same_v<T_Result, void>) {
+      this->impl_create_sandbox(std::forward<T_Args>(args)...);
+    } else if constexpr (std::is_same_v<T_Result, bool>) {
+      created = this->impl_create_sandbox(std::forward<T_Args>(args)...);
+    } else {
+      rlbox_detail_static_fail_because(
+        (!std::is_same_v<T_Result, void> && !std::is_same_v<T_Result, bool>),
+        "Expected impl_create_sandbox to return void or a boolean"
+      );
+    }
+
+    if (created) {
+      sandbox_created.store(Sandbox_Status::CREATED);
+      RLBOX_ACQUIRE_UNIQUE_GUARD(lock, sandbox_list_lock);
+      sandbox_list.push_back(this);
+    }
+
+    return created;
   }
 
   /**
@@ -587,7 +603,13 @@ public:
    */
   static inline bool is_in_same_sandbox(const void* p1, const void* p2)
   {
-    return T_Sbx::impl_is_in_same_sandbox(p1, p2);
+    const size_t num_args =
+      detail::func_arg_nums_v<decltype(T_Sbx::impl_is_in_same_sandbox)>;
+    if constexpr (num_args == 2) {
+      return T_Sbx::impl_is_in_same_sandbox(p1, p2);
+    } else {
+      return T_Sbx::impl_is_in_same_sandbox(p1, p2, find_sandbox_from_example);
+    }
   }
 
   /**
@@ -668,6 +690,28 @@ public:
     }
 
     void* func_ptr = this->impl_lookup_symbol(func_name);
+    RLBOX_ACQUIRE_UNIQUE_GUARD(lock, func_ptr_cache_lock);
+    func_ptr_map[func_name] = func_ptr;
+    return func_ptr;
+  }
+
+  void* internal_lookup_symbol(const char* func_name)
+  {
+    {
+      RLBOX_ACQUIRE_SHARED_GUARD(lock, func_ptr_cache_lock);
+
+      auto func_ptr_ref = func_ptr_map.find(func_name);
+      if (func_ptr_ref != func_ptr_map.end()) {
+        return func_ptr_ref->second;
+      }
+    }
+
+    void* func_ptr = 0;
+    if constexpr(rlbox::detail::has_member_using_needs_internal_lookup_symbol_v<T_Sbx>) {
+      func_ptr = this->impl_internal_lookup_symbol(func_name);
+    } else {
+      func_ptr = this->impl_lookup_symbol(func_name);
+    }
     RLBOX_ACQUIRE_UNIQUE_GUARD(lock, func_ptr_cache_lock);
     func_ptr_map[func_name] = func_ptr;
     return func_ptr;
@@ -772,7 +816,7 @@ public:
   {
     rlbox_detail_static_fail_because(
       detail::true_v<T_Ret>,
-      "Modify the callback to change the first parameter to a sandbox."
+      "Modify the callback to change the first parameter to a sandbox. "
       "For instance if a callback has type\n\n"
       "int foo() {...}\n\n"
       "Change this to \n\n"
@@ -805,11 +849,11 @@ public:
     {
       rlbox_detail_static_fail_because(
         cond1,
-        "Modify the callback to change the first parameter to a sandbox."
+        "Modify the callback to change the first parameter to a sandbox. "
         "For instance if a callback has type\n\n"
         "int foo(int a, int b) {...}\n\n"
         "Change this to \n\n"
-        "tainted<int, T_Sbx> foo(rlbox_sandbox<T_Sbx>& sandbox,"
+        "tainted<int, T_Sbx> foo(rlbox_sandbox<T_Sbx>& sandbox, "
         "tainted<int, T_Sbx> a, tainted<int, T_Sbx> b) {...}\n");
     }
     else if_constexpr_named(
@@ -818,11 +862,11 @@ public:
       rlbox_detail_static_fail_because(
         cond2,
         "Change all arguments to the callback have to be tainted or "
-        "tainted_opaque."
+        "tainted_opaque. "
         "For instance if a callback has type\n\n"
         "int foo(int a, int b) {...}\n\n"
         "Change this to \n\n"
-        "tainted<int, T_Sbx> foo(rlbox_sandbox<T_Sbx>& sandbox,"
+        "tainted<int, T_Sbx> foo(rlbox_sandbox<T_Sbx>& sandbox, "
         "tainted<int, T_Sbx> a, tainted<int, T_Sbx> b) {...}\n");
     }
     else if_constexpr_named(
@@ -830,11 +874,11 @@ public:
     {
       rlbox_detail_static_fail_because(
         cond3,
-        "Change all static array arguments to the callback to be pointers."
+        "Change all static array arguments to the callback to be pointers. "
         "For instance if a callback has type\n\n"
         "int foo(int a[4]) {...}\n\n"
         "Change this to \n\n"
-        "tainted<int, T_Sbx> foo(rlbox_sandbox<T_Sbx>& sandbox,"
+        "tainted<int, T_Sbx> foo(rlbox_sandbox<T_Sbx>& sandbox, "
         "tainted<int*, T_Sbx> a) {...}\n");
     }
     else if_constexpr_named(
@@ -844,11 +888,11 @@ public:
       rlbox_detail_static_fail_because(
         cond4,
         "Change the callback return type to be tainted or tainted_opaque if it "
-        "is not void."
+        "is not void. "
         "For instance if a callback has type\n\n"
         "int foo(int a, int b) {...}\n\n"
         "Change this to \n\n"
-        "tainted<int, T_Sbx> foo(rlbox_sandbox<T_Sbx>& sandbox,"
+        "tainted<int, T_Sbx> foo(rlbox_sandbox<T_Sbx>& sandbox, "
         "tainted<int, T_Sbx> a, tainted<int, T_Sbx> b) {...}\n");
     }
     else
@@ -905,7 +949,7 @@ public:
   inline tainted<T*, T_Sbx> INTERNAL_get_sandbox_function_name(
     const char* func_name)
   {
-    return INTERNAL_get_sandbox_function_ptr<T>(lookup_symbol(func_name));
+    return INTERNAL_get_sandbox_function_ptr<T>(internal_lookup_symbol(func_name));
   }
 
   // this is an internal function invoked from macros, so it has be public
