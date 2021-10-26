@@ -722,6 +722,37 @@ void WinWindowOcclusionTracker::MarkNonIconicWindowsOccluded() {
 }
 
 // static
+BOOL WinWindowOcclusionTracker::DumpOccludingWindowsCallback(HWND aHWnd,
+                                                             LPARAM aLParam) {
+  HWND hwnd = reinterpret_cast<HWND>(aLParam);
+
+  LayoutDeviceIntRect windowRect;
+  bool windowIsOccluding = IsWindowVisibleAndFullyOpaque(aHWnd, &windowRect);
+  if (windowIsOccluding) {
+    nsAutoString className;
+    if (WinUtils::GetClassName(aHWnd, className)) {
+      const auto name = NS_ConvertUTF16toUTF8(className);
+      printf_stderr(
+          "DumpOccludingWindowsCallback() aHWnd %p className %s windowRect(%d, "
+          "%d, %d, %d)\n",
+          aHWnd, name.get(), windowRect.x, windowRect.y, windowRect.width,
+          windowRect.height);
+    }
+  }
+
+  if (aHWnd == hwnd) {
+    return false;
+  }
+  return true;
+}
+
+void WinWindowOcclusionTracker::DumpOccludingWindows(HWND aHWnd) {
+  printf_stderr("DumpOccludingWindows() until aHWnd %p visible %d iconic %d\n",
+                aHWnd, ::IsWindowVisible(aHWnd), ::IsIconic(aHWnd));
+  ::EnumWindows(&DumpOccludingWindowsCallback, reinterpret_cast<LPARAM>(aHWnd));
+}
+
+// static
 StaticRefPtr<WinWindowOcclusionTracker::WindowOcclusionCalculator>
     WinWindowOcclusionTracker::WindowOcclusionCalculator::sCalculator;
 
