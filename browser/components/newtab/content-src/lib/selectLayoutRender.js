@@ -57,9 +57,7 @@ export const selectLayoutRender = ({ state = {}, prefs = {}, locale = "" }) => {
     "Navigation",
     "CardGrid",
     "CollectionCardGrid",
-    "Hero",
     "HorizontalRule",
-    "List",
     "PrivacyLink",
   ];
 
