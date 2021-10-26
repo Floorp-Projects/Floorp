@@ -38,19 +38,22 @@ class PagedHistoryProviderTest {
             url = "http://www.mozilla.com",
             title = "mozilla",
             visitTime = 5,
-            visitType = VisitType.LINK
+            visitType = VisitType.LINK,
+            previewImageUrl = null
         )
         val visitInfo2 = VisitInfo(
             url = "http://www.firefox.com",
             title = "firefox",
             visitTime = 2,
-            visitType = VisitType.LINK
+            visitType = VisitType.LINK,
+            previewImageUrl = null
         )
         val visitInfo3 = VisitInfo(
             url = "http://www.wikipedia.com",
             title = "wikipedia",
             visitTime = 1,
-            visitType = VisitType.LINK
+            visitType = VisitType.LINK,
+            previewImageUrl = null
         )
         val historyMetadataKey1 = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
         val historyEntry1 = HistoryMetadata(
