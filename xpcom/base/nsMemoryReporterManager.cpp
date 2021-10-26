@@ -1207,9 +1207,8 @@ class JemallocHeapReporter final : public nsIMemoryReporter {
                             nsISupports* aData, bool aAnonymize) override {
     jemalloc_stats_t stats;
     const size_t num_bins = jemalloc_stats_num_bins();
-    nsTArray<jemalloc_bin_stats_t> bin_stats(num_bins);
-    bin_stats.SetLength(num_bins);
-    jemalloc_stats(&stats, bin_stats.Elements());
+    jemalloc_bin_stats_t bin_stats[num_bins];
+    jemalloc_stats(&stats, bin_stats);
 
     // clang-format off
     MOZ_COLLECT_REPORT(
