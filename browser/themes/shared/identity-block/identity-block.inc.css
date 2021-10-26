@@ -33,7 +33,7 @@
 .identity-box-button:hover:not([open=true]),
 #tracking-protection-icon-container:hover:not([open=true]) {
   background-color: var(--urlbar-box-hover-bgcolor);
-  color: var(--urlbar-box-hover-text-color)
+  color: var(--urlbar-box-hover-text-color);
 }
 
 .identity-box-button:hover:active,
