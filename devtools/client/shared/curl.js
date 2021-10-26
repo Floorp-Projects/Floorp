@@ -149,10 +149,6 @@ const Curl = {
     }
     for (let i = 0; i < headers.length; i++) {
       const header = headers[i];
-      if (header.name.toLowerCase() === "accept-encoding") {
-        addParam("--compressed");
-        continue;
-      }
       if (ignoredHeaders.has(header.name.toLowerCase())) {
         continue;
       }
