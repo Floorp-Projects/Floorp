@@ -811,7 +811,7 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: `noodle yellow-circle`
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-      className: "main-content"
+      className: `main-content ${isLastScreen && autoClose ? "no-steps" : ""}`
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: `brand-logo ${content.hideLogo ? "hide" : ""}`
     }), isLastScreen && content.hasFancyTitle ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
@@ -846,7 +846,7 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
     })), content.secondary_button ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_4__["SecondaryCTA"], {
       content: content,
       handleAction: this.props.handleAction
-    }) : null)), !isWelcomeScreen ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("nav", {
+    }) : null)), !(isWelcomeScreen || autoClose && isLastScreen) ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("nav", {
       className: "steps",
       "data-l10n-id": "onboarding-welcome-steps-indicator",
       "data-l10n-args": JSON.stringify({
