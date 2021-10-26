@@ -14,7 +14,13 @@ add_task(async function test_locale_change() {
 
     Services.obs.notifyObservers(null, "intl:app-locales-changed");
 
-    await simulateRestart(browser, false);
+    // We're testing that switching locales blows away the cache, so we
+    // bypass the automatic writing of the cache on shutdown, and we
+    // also don't need to wait for the cache to be available.
+    await simulateRestart(browser, {
+      withAutoShutdownWrite: false,
+      ensureCacheWinsRace: false,
+    });
     await ensureDynamicAboutHome(
       browser,
       AboutHomeStartupCache.CACHE_RESULT_SCALARS.DOES_NOT_EXIST
