@@ -1330,8 +1330,7 @@ bool nsHttpTransaction::ShouldRestartOn0RttError(nsresult reason) {
        this, mEarlyDataWasAvailable, static_cast<uint32_t>(reason)));
   return StaticPrefs::network_http_early_data_disable_on_error() &&
          mEarlyDataWasAvailable &&
-         (reason ==
-          psm::GetXPCOMFromNSSError(SSL_ERROR_PROTOCOL_VERSION_ALERT));
+         SecurityErrorToBeHandledByTransaction(reason);
 }
 
 void nsHttpTransaction::Close(nsresult reason) {
@@ -2396,25 +2395,18 @@ nsresult nsHttpTransaction::ProcessData(char* buf, uint32_t count,
     if (count && bytesConsumed) memmove(buf, buf + bytesConsumed, count);
 
     // report the completed response header
-    if (mActivityDistributor && mResponseHead && mHaveAllHeaders) {
-      auto reportResponseHeader = [&](uint32_t aSubType) {
-        nsAutoCString completeResponseHeaders;
-        mResponseHead->Flatten(completeResponseHeaders, false);
-        completeResponseHeaders.AppendLiteral("\r\n");
-        rv = mActivityDistributor->ObserveActivityWithArgs(
-            HttpActivityArgs(mChannelId),
-            NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION, aSubType, PR_Now(), 0,
-            completeResponseHeaders);
-        if (NS_FAILED(rv)) {
-          LOG3(("ObserveActivity failed (%08x)", static_cast<uint32_t>(rv)));
-        }
-      };
-
-      if (mConnection->IsProxyConnectInProgress()) {
-        reportResponseHeader(NS_HTTP_ACTIVITY_SUBTYPE_PROXY_RESPONSE_HEADER);
-      } else if (!mReportedResponseHeader) {
-        mReportedResponseHeader = true;
-        reportResponseHeader(NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_HEADER);
+    if (mActivityDistributor && mResponseHead && mHaveAllHeaders &&
+        !mReportedResponseHeader) {
+      mReportedResponseHeader = true;
+      nsAutoCString completeResponseHeaders;
+      mResponseHead->Flatten(completeResponseHeaders, false);
+      completeResponseHeaders.AppendLiteral("\r\n");
+      rv = mActivityDistributor->ObserveActivityWithArgs(
+          HttpActivityArgs(mChannelId), NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
+          NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_HEADER, PR_Now(), 0,
+          completeResponseHeaders);
+      if (NS_FAILED(rv)) {
+        LOG3(("ObserveActivity failed (%08x)", static_cast<uint32_t>(rv)));
       }
     }
   }
