@@ -7,7 +7,6 @@
 #include "ProcessUtils.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/GeckoArgs.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsPrintfCString.h"
@@ -64,14 +63,21 @@ bool SharedPreferenceSerializer::SerializeToSharedMemory() {
 void SharedPreferenceSerializer::AddSharedPrefCmdLineArgs(
     mozilla::ipc::GeckoChildProcessHost& procHost,
     std::vector<std::string>& aExtraOpts) const {
+  // Formats a pointer or pointer-sized-integer as a string suitable for passing
+  // in an arguments list.
+  auto formatPtrArg = [](auto arg) {
+    return nsPrintfCString("%zu", uintptr_t(arg));
+  };
+
 #if defined(XP_WIN)
   // Record the handle as to-be-shared, and pass it via a command flag. This
   // works because Windows handles are system-wide.
   procHost.AddHandleToShare(GetPrefsHandle().get());
   procHost.AddHandleToShare(GetPrefMapHandle().get());
-  geckoargs::sPrefsHandle.Put((uintptr_t)(GetPrefsHandle().get()), aExtraOpts);
-  geckoargs::sPrefMapHandle.Put((uintptr_t)(GetPrefMapHandle().get()),
-                                aExtraOpts);
+  aExtraOpts.push_back("-prefsHandle");
+  aExtraOpts.push_back(formatPtrArg(GetPrefsHandle().get()).get());
+  aExtraOpts.push_back("-prefMapHandle");
+  aExtraOpts.push_back(formatPtrArg(GetPrefMapHandle().get()).get());
 #else
   // In contrast, Unix fds are per-process. So remap the fd to a fixed one that
   // will be used in the child.
@@ -85,8 +91,10 @@ void SharedPreferenceSerializer::AddSharedPrefCmdLineArgs(
 #endif
 
   // Pass the lengths via command line flags.
-  geckoargs::sPrefsLen.Put((uintptr_t)(GetPrefsLength()), aExtraOpts);
-  geckoargs::sPrefMapSize.Put((uintptr_t)(GetPrefMapSize()), aExtraOpts);
+  aExtraOpts.push_back("-prefsLen");
+  aExtraOpts.push_back(formatPtrArg(GetPrefsLength()).get());
+  aExtraOpts.push_back("-prefMapSize");
+  aExtraOpts.push_back(formatPtrArg(GetPrefMapSize()).get());
 }
 
 #ifdef ANDROID
@@ -107,30 +115,47 @@ SharedPreferenceDeserializer::~SharedPreferenceDeserializer() {
 }
 
 bool SharedPreferenceDeserializer::DeserializeFromSharedMemory(
-    uint64_t aPrefsHandle, uint64_t aPrefMapHandle, uint64_t aPrefsLen,
-    uint64_t aPrefMapSize) {
+    char* aPrefsHandleStr, char* aPrefMapHandleStr, char* aPrefsLenStr,
+    char* aPrefMapSizeStr) {
 #ifdef XP_WIN
-  mPrefsHandle = Some(HANDLE((uintptr_t)(aPrefsHandle)));
-  if (!aPrefsHandle) {
+  MOZ_ASSERT(aPrefsHandleStr && aPrefMapHandleStr, "Can't be null");
+#endif
+  MOZ_ASSERT(aPrefsLenStr && aPrefMapSizeStr, "Can't be null");
+
+  // Parses an arg containing a pointer-sized-integer.
+  auto parseUIntPtrArg = [](char*& aArg) {
+    // ContentParent uses %zu to print a word-sized unsigned integer. So
+    // even though strtoull() returns a long long int, it will fit in a
+    // uintptr_t.
+    return uintptr_t(strtoull(aArg, &aArg, 10));
+  };
+
+#ifdef XP_WIN
+  auto parseHandleArg = [&](char*& aArg) {
+    return HANDLE(parseUIntPtrArg(aArg));
+  };
+
+  mPrefsHandle = Some(parseHandleArg(aPrefsHandleStr));
+  if (!aPrefsHandleStr || aPrefsHandleStr[0] != '\0') {
     return false;
   }
 
   FileDescriptor::UniquePlatformHandle handle(
-      HANDLE((uintptr_t)(aPrefMapHandle)));
-  if (!aPrefMapHandle) {
+      parseHandleArg(aPrefMapHandleStr));
+  if (!aPrefMapHandleStr || aPrefMapHandleStr[0] != '\0') {
     return false;
   }
 
   mPrefMapHandle.emplace(std::move(handle));
 #endif
 
-  mPrefsLen = Some((uintptr_t)(aPrefsLen));
-  if (!aPrefsLen) {
+  mPrefsLen = Some(parseUIntPtrArg(aPrefsLenStr));
+  if (!aPrefsLenStr || aPrefsLenStr[0] != '\0') {
     return false;
   }
 
-  mPrefMapSize = Some((uintptr_t)(aPrefMapSize));
-  if (!aPrefMapSize) {
+  mPrefMapSize = Some(parseUIntPtrArg(aPrefMapSizeStr));
+  if (!aPrefMapSizeStr || aPrefMapSizeStr[0] != '\0') {
     return false;
   }
 
@@ -196,6 +221,12 @@ void ExportSharedJSInit(mozilla::ipc::GeckoChildProcessHost& procHost,
   // The code to support Android is added in a follow-up patch.
   return;
 #else
+  // Formats a pointer or pointer-sized-integer as a string suitable for passing
+  // in an arguments list.
+  auto formatPtrArg = [](auto arg) {
+    return nsPrintfCString("%zu", uintptr_t(arg));
+  };
+
   auto& shmem = xpc::SelfHostedShmem::GetSingleton();
   const mozilla::UniqueFileHandle& uniqHandle = shmem.Handle();
   size_t len = shmem.Content().Length();
@@ -207,11 +238,14 @@ void ExportSharedJSInit(mozilla::ipc::GeckoChildProcessHost& procHost,
   }
 
   mozilla::detail::FileHandleType handle = uniqHandle.get();
-  // command line: [-jsInitHandle handle] -jsInitLen length
+
+  // command line: -jsInit [handle] length
+  aExtraOpts.push_back("-jsInit");
+
 #  if defined(XP_WIN)
   // Record the handle as to-be-shared, and pass it via a command flag.
   procHost.AddHandleToShare(HANDLE(handle));
-  geckoargs::sJsInitHandle.Put((uintptr_t)(HANDLE(handle)), aExtraOpts);
+  aExtraOpts.push_back(formatPtrArg(HANDLE(handle)).get());
 #  else
   // In contrast, Unix fds are per-process. So remap the fd to a fixed one that
   // will be used in the child.
@@ -224,32 +258,44 @@ void ExportSharedJSInit(mozilla::ipc::GeckoChildProcessHost& procHost,
 #  endif
 
   // Pass the lengths via command line flags.
-  geckoargs::sJsInitLen.Put((uintptr_t)(len), aExtraOpts);
+  aExtraOpts.push_back(formatPtrArg(len).get());
 #endif
 }
 
-bool ImportSharedJSInit(uint64_t aJsInitHandle, uint64_t aJsInitLen) {
+bool ImportSharedJSInit(char* aJsInitHandleStr, char* aJsInitLenStr) {
   // This is an optimization, and as such we can safely recover if the command
   // line argument are not provided.
-  if (!aJsInitLen) {
+  if (!aJsInitLenStr) {
     return true;
   }
 
 #ifdef XP_WIN
-  if (!aJsInitHandle) {
+  if (!aJsInitHandleStr) {
     return true;
   }
 #endif
 
+  // Parses an arg containing a pointer-sized-integer.
+  auto parseUIntPtrArg = [](char*& aArg) {
+    // ContentParent uses %zu to print a word-sized unsigned integer. So even
+    // though strtoull() returns an unsigned long long int, it will fit in a
+    // uintptr_t.
+    return uintptr_t(strtoull(aArg, &aArg, 10));
+  };
+
 #ifdef XP_WIN
-  base::SharedMemoryHandle handle(HANDLE((uintptr_t)(aJsInitHandle)));
-  if (!aJsInitHandle) {
+  auto parseHandleArg = [&](char*& aArg) {
+    return HANDLE(parseUIntPtrArg(aArg));
+  };
+
+  base::SharedMemoryHandle handle(parseHandleArg(aJsInitHandleStr));
+  if (aJsInitHandleStr[0] != '\0') {
     return false;
   }
 #endif
 
-  size_t len = (uintptr_t)(aJsInitLen);
-  if (!aJsInitLen) {
+  size_t len = parseUIntPtrArg(aJsInitLenStr);
+  if (aJsInitLenStr[0] != '\0') {
     return false;
   }
 
