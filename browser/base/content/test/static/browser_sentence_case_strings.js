@@ -15,6 +15,10 @@ const { CustomizableUITestUtils } = ChromeUtils.import(
   "resource://testing-common/CustomizableUITestUtils.jsm"
 );
 
+const { AppMenuNotifications } = ChromeUtils.import(
+  "resource://gre/modules/AppMenuNotifications.jsm"
+);
+
 // These are brand names, proper names, or other things that we expect to
 // not abide exactly to sentence case. NAMES is for single words, and PHRASES
 // is for words in a specific order.
@@ -23,52 +27,6 @@ const PHRASES = new Set(["Troubleshoot Mode…"]);
 
 let gCUITestUtils = new CustomizableUITestUtils(window);
 let gLocalization = new Localization(["browser/newtab/asrouter.ftl"], true);
-
-/**
- * For certain PanelMultiView subviews, we need to do some special work
- * to pull the strings from the toolbarbuttons. Items in this Object allow
- * us to do that.
- *
- * The schema is like so:
- *
- * const SPECIAL_GETTERS = {
- *   <PanelMultiView subview ID>: {
- *     <toolbarbutton ID>: function
- *   }
- * }
- *
- * The function for each toolbarbutton will receive a single argument
- * (the toolbarbutton), and should return an Array of one or more strings
- * to check for sentence case.
- */
-const SPECIAL_GETTERS = {
-  "appMenu-protonMainView": {
-    "appMenu-proton-update-banner": function(button) {
-      // The update banner toolbarbutton has a number of strings set as
-      // attributes on it that start with "label-". Those attributes are:
-      //
-      // label-update-available
-      // label-update-manual
-      // label-update-unsupported
-      // label-update-restart
-      // label-update-downloading
-      let result = [];
-      for (let attr of button.attributes) {
-        if (attr.name.startsWith("label-")) {
-          result.push(attr.value);
-        }
-      }
-
-      Assert.ok(
-        !!result.length,
-        "Should have found at least 1 label- attribute on " +
-          "appMenu-update-banner to check for sentence case."
-      );
-
-      return result;
-    },
-  },
-};
 
 /**
  * This recursive function will take the current main or subview, find all of
@@ -123,20 +81,12 @@ function checkToolbarButtons(view) {
   info("Checking toolbarbuttons in subview with id " + view.id);
 
   for (let toolbarbutton of toolbarbuttons) {
-    let strings;
-    if (
-      SPECIAL_GETTERS[view.id] &&
-      SPECIAL_GETTERS[view.id][toolbarbutton.id]
-    ) {
-      strings = SPECIAL_GETTERS[view.id][toolbarbutton.id](toolbarbutton);
-    } else {
-      strings = [
-        toolbarbutton.label,
-        toolbarbutton.textContent,
-        toolbarbutton.toolTipText,
-        GetDynamicShortcutTooltipText(toolbarbutton.id),
-      ];
-    }
+    let strings = [
+      toolbarbutton.label,
+      toolbarbutton.textContent,
+      toolbarbutton.toolTipText,
+      GetDynamicShortcutTooltipText(toolbarbutton.id),
+    ];
     info("Checking toolbarbutton " + toolbarbutton.id);
     for (let string of strings) {
       checkSentenceCase(string, toolbarbutton.id);
@@ -150,6 +100,37 @@ function checkSubheaders(view) {
 
   for (let subheader of subheaders) {
     checkSentenceCase(subheader.textContent, subheader.id);
+  }
+}
+
+async function checkUpdateBanner(view) {
+  let banner = view.querySelector("#appMenu-proton-update-banner");
+
+  const notifications = [
+    "update-downloading",
+    "update-available",
+    "update-manual",
+    "update-unsupported",
+    "update-restart",
+  ];
+
+  for (const notification of notifications) {
+    // Forcibly remove the label in order to wait for the new label.
+    banner.removeAttribute("label");
+
+    let labelPromise = BrowserTestUtils.waitForMutationCondition(
+      banner,
+      { attributes: true, attributeFilter: ["label"] },
+      () => !!banner.getAttribute("label")
+    );
+
+    AppMenuNotifications.showNotification(notification);
+
+    await labelPromise;
+
+    checkSentenceCase(banner.label, banner.id);
+
+    AppMenuNotifications.removeNotification(/.*/);
   }
 }
 
@@ -262,4 +243,6 @@ add_task(async function test_sentence_case_appmenu() {
     checkToolbarButtons(view);
     checkSubheaders(view);
   }
+
+  await checkUpdateBanner(PanelUI.mainView);
 });

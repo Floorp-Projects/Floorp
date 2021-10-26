@@ -985,16 +985,25 @@ const PanelUI = {
   // "Banner item" here refers to an item in the hamburger panel menu. They will
   // typically show up as a colored row in the panel.
   _showBannerItem(notification) {
+    const supportedIds = [
+      "update-downloading",
+      "update-available",
+      "update-manual",
+      "update-unsupported",
+      "update-restart",
+    ];
+    if (!supportedIds.includes(notification.id)) {
+      return;
+    }
+
     if (!this._panelBannerItem) {
       this._panelBannerItem = this.mainView.querySelector(".panel-banner-item");
     }
-    let label = this._panelBannerItem.getAttribute("label-" + notification.id);
-    // Ignore items we don't know about.
-    if (!label) {
-      return;
-    }
+
+    let l10nId = "appmenuitem-banner-" + notification.id;
+    document.l10n.setAttributes(this._panelBannerItem, l10nId);
+
     this._panelBannerItem.setAttribute("notificationid", notification.id);
-    this._panelBannerItem.setAttribute("label", label);
     this._panelBannerItem.hidden = false;
     this._panelBannerItem.notification = notification;
   },
