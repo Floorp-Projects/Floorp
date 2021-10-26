@@ -275,6 +275,12 @@ interface ChannelWrapper : EventTarget {
   readonly attribute LoadInfo? loadInfo;
 
   /**
+   * True if this load for a service worker script (either a main script or import scripts).
+   */
+  [Cached, Pure]
+  readonly attribute boolean isServiceWorkerScript;
+
+  /**
    * True if this load was triggered by a system caller. This currently always
    * false if the request has no LoadInfo or is a top-level document load.
    */
