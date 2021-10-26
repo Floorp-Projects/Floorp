@@ -12,19 +12,22 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
-import androidx.appcompat.app.AppCompatDialogFragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatDialogFragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+
+import org.mozilla.focus.GleanMetrics.OpenWith;
 import org.mozilla.focus.R;
 
 public class OpenWithFragment extends AppCompatDialogFragment implements AppAdapter.OnAppSelectedListener {
@@ -137,6 +140,8 @@ public class OpenWithFragment extends AppCompatDialogFragment implements AppAdap
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getArguments().getString(ARGUMENT_URL)));
         intent.setPackage(app.getPackageName());
         startActivity(intent);
+
+        OpenWith.INSTANCE.listItemTapped().record(new OpenWith.ListItemTappedExtra(app.getPackageName().contains("mozilla")));
 
         dismiss();
     }

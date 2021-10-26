@@ -897,3 +897,49 @@ search_engines:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-11-01"
+
+open_with:
+  list_displayed:
+    type: event
+    description: The list of apps has been opened.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5654
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5703
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      list_size:
+        description: The number of apps in the list
+        type: quantity
+  list_item_tapped:
+    type: event
+    description: The uer has opened the url with a app from the list.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5654
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5703
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      package_name:
+        description: The app the user has chosen is a Mozilla product.
+        type: boolean
+  install_firefox:
+    type: event
+    description: The user has clicked install Firefox from store item.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5654
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5703
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"

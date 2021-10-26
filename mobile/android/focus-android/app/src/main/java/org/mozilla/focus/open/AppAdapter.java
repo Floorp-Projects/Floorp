@@ -7,9 +7,10 @@ package org.mozilla.focus.open;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.drawable.Drawable;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,7 +18,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-    /* package */ static class App {
+    static class App {
         private final Context context;
         private final ActivityInfo info;
         private final String label;
@@ -41,7 +42,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    /* package */ interface OnAppSelectedListener {
+    interface OnAppSelectedListener {
         void onAppSelected(App app);
     }
 

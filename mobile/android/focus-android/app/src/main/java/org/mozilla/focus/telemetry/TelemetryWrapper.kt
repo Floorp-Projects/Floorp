@@ -610,16 +610,6 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun installFirefoxEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.INSTALL, Object.APP, Value.FIREFOX).queue()
-    }
-
-    @JvmStatic
-    fun openSelectionEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.SELECTION).queue()
-    }
-
-    @JvmStatic
     fun blockingSwitchEvent(isBlockingEnabled: Boolean) {
         TelemetryEvent.create(
             Category.ACTION,

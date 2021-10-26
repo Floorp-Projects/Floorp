@@ -12,7 +12,8 @@ import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Bundle
 import android.webkit.WebView
-import org.mozilla.focus.telemetry.TelemetryWrapper
+import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.focus.GleanMetrics.OpenWith
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Browsers
 
@@ -84,7 +85,7 @@ class InstallFirefoxActivity : Activity() {
                 context.startActivity(intent)
             }
 
-            TelemetryWrapper.installFirefoxEvent()
+            OpenWith.installFirefox.record(NoExtras())
         }
     }
 }

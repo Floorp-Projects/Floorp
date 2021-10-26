@@ -52,6 +52,7 @@ import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.focus.GleanMetrics.Downloads
+import org.mozilla.focus.GleanMetrics.OpenWith
 import org.mozilla.focus.GleanMetrics.TabCount
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
@@ -833,7 +834,7 @@ class BrowserFragment :
         @Suppress("DEPRECATION")
         fragment.show(requireFragmentManager(), OpenWithFragment.FRAGMENT_TAG)
 
-        TelemetryWrapper.openSelectionEvent()
+        OpenWith.listDisplayed.record(OpenWith.ListDisplayedExtra(apps.size))
     }
 
     internal fun closeCustomTab() {
