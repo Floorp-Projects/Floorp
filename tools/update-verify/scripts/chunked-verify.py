@@ -18,6 +18,8 @@ log = logging.getLogger(__name__)
 from mozrelease.update_verify import UpdateVerifyConfig
 from util.commands import run_cmd
 
+from async_download import download_from_config
+
 UPDATE_VERIFY_COMMAND = ["bash", "verify.sh", "-c"]
 UPDATE_VERIFY_DIR = path.join(path.dirname(__file__), "../release/updates")
 
@@ -55,6 +57,10 @@ if __name__ == "__main__":
         myVerifyConfig.write(fh)
         fh.close()
         run_cmd(["cat", configFile])
+
+        # Before verifying, we want to download and cache all required files
+        download_from_config(myVerifyConfig)
+
         run_cmd(
             UPDATE_VERIFY_COMMAND + [configFile],
             cwd=UPDATE_VERIFY_DIR,
