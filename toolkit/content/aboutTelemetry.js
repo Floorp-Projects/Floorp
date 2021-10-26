@@ -639,14 +639,6 @@ var EnvironmentData = {
     this.createAddonSection(dataDiv, ping);
   },
 
-  renderPersona(addonObj, addonSection, sectionTitle) {
-    let table = document.createElement("table");
-    table.setAttribute("id", sectionTitle);
-    this.appendAddonSubsectionTitle(sectionTitle, table);
-    this.appendRow(table, "persona", addonObj.persona);
-    addonSection.appendChild(table);
-  },
-
   renderAddonsObject(addonObj, addonSection, sectionTitle) {
     let table = document.createElement("table");
     table.setAttribute("id", sectionTitle);
@@ -705,7 +697,6 @@ var EnvironmentData = {
       addonSection,
       "activeGMPlugins"
     );
-    this.renderPersona(addons, addonSection, "persona");
 
     let hasAddonData = !!Object.keys(ping.environment.addons).length;
     let s = GenericSubsection.renderSubsectionHeader(
