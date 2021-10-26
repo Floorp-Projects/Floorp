@@ -10,6 +10,7 @@
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/image/WebRenderImageProvider.h"
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "imgIContainer.h"
@@ -620,10 +621,10 @@ bool SVGImageFrame::CreateWebRenderCommands(
       mImageContainer, this, destRect, clipRect, aSc, flags, svgContext,
       region);
 
-  RefPtr<layers::ImageContainer> container;
-  ImgDrawResult drawResult = mImageContainer->GetImageContainerAtSize(
+  RefPtr<image::WebRenderImageProvider> provider;
+  ImgDrawResult drawResult = mImageContainer->GetImageProvider(
       aManager->LayerManager(), decodeSize, svgContext, region, flags,
-      getter_AddRefs(container));
+      getter_AddRefs(provider));
 
   // While we got a container, it may not contain a fully decoded surface. If
   // that is the case, and we have an image we were previously displaying which
@@ -647,14 +648,9 @@ bool SVGImageFrame::CreateWebRenderCommands(
     // If the image container is empty, we don't want to fallback. Any other
     // failure will be due to resource constraints and fallback is unlikely to
     // help us. Hence we can ignore the return value from PushImage.
-    if (container) {
-      if (flags & imgIContainer::FLAG_RECORD_BLOB) {
-        aManager->CommandBuilder().PushBlobImage(
-            aItem, container, aBuilder, aResources, destRect, clipRect);
-      } else {
-        aManager->CommandBuilder().PushImage(
-            aItem, container, aBuilder, aResources, aSc, destRect, clipRect);
-      }
+    if (provider) {
+      aManager->CommandBuilder().PushImageProvider(
+          aItem, provider, aBuilder, aResources, destRect, clipRect);
     }
 
     nsDisplayItemGenericImageGeometry::UpdateDrawResult(aItem, drawResult);
