@@ -141,11 +141,6 @@ NS_IMETHODIMP
 ImageWrapper::GetType(uint16_t* aType) { return mInnerImage->GetType(aType); }
 
 NS_IMETHODIMP
-ImageWrapper::GetProducerId(uint32_t* aId) {
-  return mInnerImage->GetProducerId(aId);
-}
-
-NS_IMETHODIMP
 ImageWrapper::GetProviderId(uint32_t* aId) {
   return mInnerImage->GetProviderId(aId);
 }
@@ -173,17 +168,6 @@ NS_IMETHODIMP_(bool)
 ImageWrapper::IsImageContainerAvailable(WindowRenderer* aRenderer,
                                         uint32_t aFlags) {
   return mInnerImage->IsImageContainerAvailable(aRenderer, aFlags);
-}
-
-NS_IMETHODIMP_(ImgDrawResult)
-ImageWrapper::GetImageContainerAtSize(WindowRenderer* aRenderer,
-                                      const gfx::IntSize& aSize,
-                                      const Maybe<SVGImageContext>& aSVGContext,
-                                      const Maybe<ImageIntRegion>& aRegion,
-                                      uint32_t aFlags,
-                                      layers::ImageContainer** aOutContainer) {
-  return mInnerImage->GetImageContainerAtSize(aRenderer, aSize, aSVGContext,
-                                              aRegion, aFlags, aOutContainer);
 }
 
 NS_IMETHODIMP_(ImgDrawResult)

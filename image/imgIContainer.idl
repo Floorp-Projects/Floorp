@@ -170,11 +170,6 @@ interface imgIContainer : nsISupports
   readonly attribute boolean animated;
 
   /**
-   * Producer ID for image containers created by this image.
-   */
-  [infallible] readonly attribute unsigned long producerId;
-
-  /**
    * Provider ID for image providers created by this image.
    */
   [infallible] readonly attribute unsigned long providerId;
@@ -329,35 +324,6 @@ interface imgIContainer : nsISupports
    */
   [noscript, notxpcom] boolean isImageContainerAvailable(in WindowRenderer aRenderer,
                                                          in uint32_t aFlags);
-
-  /**
-   * Attempts to create an ImageContainer (and Image) containing the current
-   * frame at the given size. Match the requested size is best effort; it's
-   * not guaranteed that the surface you get will be a perfect match. (Some
-   * reasons you may get a surface of a different size include: if you
-   * requested upscaling, or if downscale-during-decode is disabled.)
-   *
-   * Avoid calling this unless you're actually going to layerize this image.
-   *
-   * @param aRenderer The WindowRenderer which will be used to render the
-   *                  ImageContainer.
-   * @param aSVGContext If specified, SVG-related rendering context, such as
-   *                    overridden attributes on the image document's root <svg>
-   *                    node, and the size of the viewport that the full image
-   *                    would occupy. Ignored for raster images.
-   * @param aFlags Decoding / drawing flags (in other words, FLAG_* flags).
-   *               Currently only FLAG_SYNC_DECODE and FLAG_SYNC_DECODE_IF_FAST
-   *               are supported.
-   * @param aContainer Return value for ImageContainer for the current frame.
-   *                   May be null depending on the draw result.
-   * @return The draw result for the current frame.
-   */
-  [noscript, notxpcom] ImgDrawResult getImageContainerAtSize(in WindowRenderer aRenderer,
-                                                             [const] in nsIntSize aSize,
-                                                             [const] in MaybeSVGImageContext aSVGContext,
-                                                             [const] in MaybeImageIntRegion aRegion,
-                                                             in uint32_t aFlags,
-                                                             out ImageContainer aOutContainer);
 
   /**
    * Attempts to find a WebRenderImageProvider containing the current frame at
