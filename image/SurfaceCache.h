@@ -21,14 +21,13 @@
 #include "gfx2DGlue.h"
 #include "gfxPoint.h"  // for gfxSize
 #include "nsCOMPtr.h"  // for already_AddRefed
-#include "ImageRegion.h"
 #include "PlaybackType.h"
 #include "SurfaceFlags.h"
 
 namespace mozilla {
 namespace image {
 
-class ImageResource;
+class Image;
 class ISurfaceProvider;
 class LookupResult;
 class SurfaceCacheImpl;
@@ -38,7 +37,7 @@ struct SurfaceMemoryCounter;
  * ImageKey contains the information we need to look up all SurfaceCache entries
  * for a particular image.
  */
-using ImageKey = ImageResource*;
+typedef Image* ImageKey;
 
 /*
  * SurfaceKey contains the information we need to look up a specific
@@ -53,42 +52,33 @@ class SurfaceKey {
 
  public:
   bool operator==(const SurfaceKey& aOther) const {
-    return aOther.mSize == mSize && aOther.mRegion == mRegion &&
-           aOther.mSVGContext == mSVGContext && aOther.mPlayback == mPlayback &&
-           aOther.mFlags == mFlags;
+    return aOther.mSize == mSize && aOther.mSVGContext == mSVGContext &&
+           aOther.mPlayback == mPlayback && aOther.mFlags == mFlags;
   }
 
   PLDHashNumber Hash() const {
     PLDHashNumber hash = HashGeneric(mSize.width, mSize.height);
-    hash = AddToHash(hash, mRegion.map(HashIIR).valueOr(0));
     hash = AddToHash(hash, mSVGContext.map(HashSIC).valueOr(0));
     hash = AddToHash(hash, uint8_t(mPlayback), uint32_t(mFlags));
     return hash;
   }
 
   SurfaceKey CloneWithSize(const IntSize& aSize) const {
-    return SurfaceKey(aSize, mRegion, mSVGContext, mPlayback, mFlags);
+    return SurfaceKey(aSize, mSVGContext, mPlayback, mFlags);
   }
 
   const IntSize& Size() const { return mSize; }
-  const Maybe<ImageIntRegion>& Region() const { return mRegion; }
   const Maybe<SVGImageContext>& SVGContext() const { return mSVGContext; }
   PlaybackType Playback() const { return mPlayback; }
   SurfaceFlags Flags() const { return mFlags; }
 
  private:
-  SurfaceKey(const IntSize& aSize, const Maybe<ImageIntRegion>& aRegion,
-             const Maybe<SVGImageContext>& aSVGContext, PlaybackType aPlayback,
-             SurfaceFlags aFlags)
+  SurfaceKey(const IntSize& aSize, const Maybe<SVGImageContext>& aSVGContext,
+             PlaybackType aPlayback, SurfaceFlags aFlags)
       : mSize(aSize),
-        mRegion(aRegion),
         mSVGContext(aSVGContext),
         mPlayback(aPlayback),
         mFlags(aFlags) {}
-
-  static PLDHashNumber HashIIR(const ImageIntRegion& aIIR) {
-    return aIIR.Hash();
-  }
 
   static PLDHashNumber HashSIC(const SVGImageContext& aSIC) {
     return aSIC.Hash();
@@ -98,13 +88,11 @@ class SurfaceKey {
                                      PlaybackType);
   friend SurfaceKey VectorSurfaceKey(const IntSize&,
                                      const Maybe<SVGImageContext>&);
-  friend SurfaceKey VectorSurfaceKey(const IntSize&,
-                                     const Maybe<ImageIntRegion>&,
-                                     const Maybe<SVGImageContext>&,
-                                     SurfaceFlags, PlaybackType);
+  friend SurfaceKey ContainerSurfaceKey(
+      const gfx::IntSize& aSize, const Maybe<SVGImageContext>& aSVGContext,
+      SurfaceFlags aFlags);
 
   IntSize mSize;
-  Maybe<ImageIntRegion> mRegion;
   Maybe<SVGImageContext> mSVGContext;
   PlaybackType mPlayback;
   SurfaceFlags mFlags;
@@ -113,15 +101,7 @@ class SurfaceKey {
 inline SurfaceKey RasterSurfaceKey(const gfx::IntSize& aSize,
                                    SurfaceFlags aFlags,
                                    PlaybackType aPlayback) {
-  return SurfaceKey(aSize, Nothing(), Nothing(), aPlayback, aFlags);
-}
-
-inline SurfaceKey VectorSurfaceKey(const gfx::IntSize& aSize,
-                                   const Maybe<ImageIntRegion>& aRegion,
-                                   const Maybe<SVGImageContext>& aSVGContext,
-                                   SurfaceFlags aFlags,
-                                   PlaybackType aPlayback) {
-  return SurfaceKey(aSize, aRegion, aSVGContext, aPlayback, aFlags);
+  return SurfaceKey(aSize, Nothing(), aPlayback, aFlags);
 }
 
 inline SurfaceKey VectorSurfaceKey(const gfx::IntSize& aSize,
@@ -131,8 +111,14 @@ inline SurfaceKey VectorSurfaceKey(const gfx::IntSize& aSize,
   // *does* affect how a VectorImage renders, we'll have to change this.
   // Similarly, we don't accept a PlaybackType parameter because we don't
   // currently cache frames of animated SVG images.
-  return SurfaceKey(aSize, Nothing(), aSVGContext, PlaybackType::eStatic,
+  return SurfaceKey(aSize, aSVGContext, PlaybackType::eStatic,
                     DefaultSurfaceFlags());
+}
+
+inline SurfaceKey ContainerSurfaceKey(const gfx::IntSize& aSize,
+                                      const Maybe<SVGImageContext>& aSVGContext,
+                                      SurfaceFlags aFlags) {
+  return SurfaceKey(aSize, aSVGContext, PlaybackType::eStatic, aFlags);
 }
 
 /**
@@ -422,17 +408,6 @@ struct SurfaceCache {
    * @param aImageKey  The image whose cache which should be pruned.
    */
   static void PruneImage(const ImageKey aImageKey);
-
-  /**
-   * Removes all rasterized cache entries (including placeholders) associated
-   * with the given image from the cache. Any blob recordings are marked as
-   * dirty and must be regenerated.
-   *
-   * @param aImageKey  The image whose cache which should be regenerated.
-   *
-   * @returns true if any recordings were invalidated, else false.
-   */
-  static bool InvalidateImage(const ImageKey aImageKey);
 
   /**
    * Evicts all evictable entries from the cache.

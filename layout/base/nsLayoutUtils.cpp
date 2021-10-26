@@ -6608,32 +6608,26 @@ IntSize nsLayoutUtils::ComputeImageContainerDrawingParameters(
         imgIContainer::FRAME_CURRENT, samplingFilter, aFlags);
   }
 
-  // We only use the region rect with blob recordings. This is because when we
-  // rasterize an SVG image in process, we always create a complete
-  // rasterization of the whole image which can be given to any caller, while
-  // we support partial rasterization with the blob recordings.
-  if (aFlags & imgIContainer::FLAG_RECORD_BLOB) {
-    // If the dest rect contains the fill rect, then we are only displaying part
-    // of the vector image. We need to calculate the restriction region to avoid
-    // drawing more than we need, and sampling outside the desired bounds.
-    LayerIntRect clipRect = SnapRectForImage(itm, scaleFactors, aFillRect);
-    if (destRect.Contains(clipRect)) {
-      LayerIntRect restrictRect = destRect.Intersect(clipRect);
-      restrictRect.MoveBy(-destRect.TopLeft());
+  // If the dest rect contains the fill rect, then we are only displaying part
+  // of the vector image. We need to calculate the restriction region to avoid
+  // drawing more than we need, and sampling outside the desired bounds.
+  LayerIntRect clipRect = SnapRectForImage(itm, scaleFactors, aFillRect);
+  if (destRect.Contains(clipRect)) {
+    LayerIntRect restrictRect = destRect.Intersect(clipRect);
+    restrictRect.MoveBy(-destRect.TopLeft());
 
-      if (restrictRect.Width() < 1) {
-        restrictRect.SetWidth(1);
-      }
-      if (restrictRect.Height() < 1) {
-        restrictRect.SetHeight(1);
-      }
+    if (restrictRect.Width() < 1) {
+      restrictRect.SetWidth(1);
+    }
+    if (restrictRect.Height() < 1) {
+      restrictRect.SetHeight(1);
+    }
 
-      if (restrictRect.X() != 0 || restrictRect.Y() != 0 ||
-          restrictRect.Size() != destRect.Size()) {
-        IntRect sampleRect = restrictRect.ToUnknownRect();
-        aRegion = Some(ImageIntRegion::CreateWithSamplingRestriction(
-            sampleRect, sampleRect, ExtendMode::CLAMP));
-      }
+    if (restrictRect.X() != 0 || restrictRect.Y() != 0 ||
+        restrictRect.Size() != destRect.Size()) {
+      IntRect sampleRect = restrictRect.ToUnknownRect();
+      aRegion = Some(ImageIntRegion::CreateWithSamplingRestriction(
+          sampleRect, sampleRect, ExtendMode::CLAMP));
     }
   }
 
