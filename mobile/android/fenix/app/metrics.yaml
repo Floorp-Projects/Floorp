@@ -1315,6 +1315,23 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+  inactive_tabs_count:
+    type: quantity
+    lifetime: application
+    description: |
+      How many inactive tabs does the user have.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22155
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22163#issuecomment-957636802
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-02-01"
+    unit: integer
 
 customize_home:
   most_visited_sites:
