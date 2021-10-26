@@ -2530,11 +2530,7 @@
 # Is support for HTMLElement.inputMode enabled?
 - name: dom.forms.inputmode
   type: bool
-#if defined(ANDROID)
   value: true
-#else
-  value: @IS_NOT_RELEASE_OR_BETA@
-#endif
   mirror: always
 
 # Enable Directory API. By default, disabled.
