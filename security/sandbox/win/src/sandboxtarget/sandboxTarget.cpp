@@ -50,5 +50,15 @@ bool SandboxTarget::BrokerDuplicateHandle(HANDLE aSourceHandle,
       aSourceHandle, aTargetProcessId, aTargetHandle, aDesiredAccess, aOptions);
   return (sandbox::SBOX_ALL_OK == result);
 }
+bool SandboxTarget::GetComplexLineBreaks(const WCHAR* text, uint32_t length,
+                                         uint8_t* break_before) {
+  if (!mTargetServices) {
+    return false;
+  }
+
+  sandbox::ResultCode result =
+      mTargetServices->GetComplexLineBreaks(text, length, break_before);
+  return (sandbox::SBOX_ALL_OK == result);
+}
 
 }  // namespace mozilla

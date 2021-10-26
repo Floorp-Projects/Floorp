@@ -306,7 +306,7 @@ bool CrossCallParamsEx::GetParameterPtr(uint32_t index,
   ArgType type;
   void* start = GetRawParameter(index, &size, &type);
 
-  if ((size != expected_size) || (INOUTPTR_TYPE != type))
+  if ((size != expected_size) || (INOUTPTR_TYPE != type && INPTR_TYPE != type))
     return false;
 
   if (!start)

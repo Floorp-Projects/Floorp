@@ -46,6 +46,10 @@
 
 namespace sandbox {
 
+// this is the assumed channel size. This can be overridden in a given
+// IPC implementation.
+const uint32_t kIPCChannelSize = 1024;
+
 // This is the list of all imported symbols from ntdll.dll.
 SANDBOX_INTERCEPT NtExports g_nt;
 
@@ -219,6 +223,11 @@ class ActualCallParams : public CrossCallParams {
       : CrossCallParams(tag, number_params) {
     param_info_[0].offset_ =
         static_cast<uint32_t>(parameters_ - reinterpret_cast<char*>(this));
+  }
+
+  static constexpr size_t MaxParamsSize() {
+    return sizeof(
+        ActualCallParams<NUMBER_PARAMS, kIPCChannelSize>::parameters_);
   }
 
   // Testing-only method. Allows setting the apparent size to a wrong value.

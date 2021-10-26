@@ -27,3 +27,4 @@ remove_extraneous_backslash_introduced_by_clang_tidy.patch
 remove_include_delayimp_h_from_pe_image_cc.patch
 lower_SDK_version_requirement.patch
 add_CET_STRICT_MODE.patch
+broker_complex_line_breaks.patch
