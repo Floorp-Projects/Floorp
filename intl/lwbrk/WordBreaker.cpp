@@ -125,8 +125,8 @@ WordRange WordBreaker::FindWord(const char16_t* aText, uint32_t aLen,
     // shorter answer
     AutoTArray<uint8_t, 256> breakBefore;
     breakBefore.SetLength(range.mEnd - range.mBegin);
-    NS_GetComplexLineBreaks(aText + range.mBegin, range.mEnd - range.mBegin,
-                            breakBefore.Elements());
+    ComplexBreaker::GetBreaks(aText + range.mBegin, range.mEnd - range.mBegin,
+                              breakBefore.Elements());
 
     // Scan forward
     for (uint32_t i = aPos + 1; i < range.mEnd; i++) {
@@ -169,7 +169,7 @@ int32_t WordBreaker::Next(const char16_t* aText, uint32_t aLen, uint32_t aPos) {
     const uint32_t segLen = nextBreakPos - aPos + 1;
     AutoTArray<uint8_t, 256> breakBefore;
     breakBefore.SetLength(segLen);
-    NS_GetComplexLineBreaks(segStart, segLen, breakBefore.Elements());
+    ComplexBreaker::GetBreaks(segStart, segLen, breakBefore.Elements());
 
     for (uint32_t i = aPos + 1; i < nextBreakPos; ++i) {
       if (breakBefore[i - aPos]) {

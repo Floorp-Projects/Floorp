@@ -8,12 +8,17 @@ TEST_DIRS += ["gtest"]
 
 EXPORTS.mozilla.intl += [
     "LineBreaker.h",
+    "nsComplexBreaker.h",
     "WordBreaker.h",
 ]
 
 UNIFIED_SOURCES += [
     "LineBreaker.cpp",
     "WordBreaker.cpp",
+]
+
+SOURCES += [
+    "nsComplexBreaker.cpp",
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
