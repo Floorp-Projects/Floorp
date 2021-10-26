@@ -132,7 +132,7 @@ static void report_error(const char* func_name, const char* error_message, uint3
   );
   fflush(stdout);
   #ifndef WASM_CHECK_SHADOW_MEMORY_NO_ABORT_ON_FAIL
-    abort();
+    wasm_rt_trap(WASM_RT_TRAP_SHADOW_MEM);
   #endif
 }
 
