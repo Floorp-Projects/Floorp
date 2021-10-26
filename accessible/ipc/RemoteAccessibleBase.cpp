@@ -359,9 +359,11 @@ void RemoteAccessibleBase<Derived>::AppendTextTo(nsAString& aText,
                                                  uint32_t aStartOffset,
                                                  uint32_t aLength) {
   if (IsText()) {
-    auto text = mCachedFields->GetAttribute<nsString>(nsGkAtoms::text);
-    if (text) {
-      aText.Append(Substring(*text, aStartOffset, aLength));
+    if (mCachedFields) {
+      if (auto text = mCachedFields->GetAttribute<nsString>(nsGkAtoms::text)) {
+        aText.Append(Substring(*text, aStartOffset, aLength));
+      }
+      VERIFY_CACHE(CacheDomain::Text);
     }
     return;
   }
@@ -385,6 +387,10 @@ void RemoteAccessibleBase<Derived>::AppendTextTo(nsAString& aText,
 template <class Derived>
 uint32_t RemoteAccessibleBase<Derived>::GetCachedTextLength() {
   MOZ_ASSERT(IsText());
+  if (!mCachedFields) {
+    return 0;
+  }
+  VERIFY_CACHE(CacheDomain::Text);
   auto text = mCachedFields->GetAttribute<nsString>(nsGkAtoms::text);
   if (!text) {
     return 0;
@@ -396,6 +402,10 @@ template <class Derived>
 Maybe<const nsTArray<int32_t>&>
 RemoteAccessibleBase<Derived>::GetCachedTextLines() {
   MOZ_ASSERT(IsText());
+  if (!mCachedFields) {
+    return Nothing();
+  }
+  VERIFY_CACHE(CacheDomain::Text);
   return mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::line);
 }
 
