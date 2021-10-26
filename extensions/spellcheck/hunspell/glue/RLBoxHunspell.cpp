@@ -41,11 +41,7 @@ RLBoxHunspell::RLBoxHunspell(const nsAutoCString& affpath,
                              const nsAutoCString& dpath)
     : mHandle(nullptr) {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
-#ifdef MOZ_WASM_SANDBOXING_HUNSPELL
-  mSandbox.create_sandbox(mozilla::ipc::GetSandboxedRLBoxPath().get());
-#else
   mSandbox.create_sandbox();
-#endif
 
   // Add the aff and dict files to allow list
   if (!affpath.IsEmpty()) {

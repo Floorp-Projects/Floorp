@@ -18,6 +18,7 @@ DEFINES["HUNSPELL_STATIC"] = True
 FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
+    "!/security/rlbox",
     "../src",
     "/dom/base",
     "/extensions/spellcheck/src",

@@ -257,6 +257,7 @@ include("/ipc/chromium/chromium-config.mozbuild")
 FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
+    "!/security/rlbox",
     "/dom/base",
     "/dom/media/platforms/apple",
     "/dom/xml",
