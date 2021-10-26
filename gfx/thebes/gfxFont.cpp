@@ -188,11 +188,14 @@ gfxFontCache::gfxFontCache(nsIEventTarget* aEventTarget)
   if (XRE_IsContentProcess() && NS_IsMainThread()) {
     target = aEventTarget;
   }
-  NS_NewTimerWithFuncCallback(getter_AddRefs(mWordCacheExpirationTimer),
-                              WordCacheExpirationTimerCallback, this,
-                              SHAPED_WORD_TIMEOUT_SECONDS * 1000,
-                              nsITimer::TYPE_REPEATING_SLACK,
-                              "gfxFontCache::gfxFontCache", target);
+
+  // Create the timer used to expire shaped-word records from each font's
+  // cache after a short period of non-use. We have a single timer in
+  // gfxFontCache that loops over all fonts known to the cache, to avoid
+  // the overhead of individual timers in each font instance.
+  // The timer will be started any time shaped word records are cached
+  // (and pauses itself when all caches become empty).
+  mWordCacheExpirationTimer = NS_NewTimer(target);
 }
 
 gfxFontCache::~gfxFontCache() {
@@ -291,9 +294,13 @@ void gfxFontCache::DestroyFont(gfxFont* aFont) {
 /*static*/
 void gfxFontCache::WordCacheExpirationTimerCallback(nsITimer* aTimer,
                                                     void* aCache) {
+  bool allEmpty = true;
   gfxFontCache* cache = static_cast<gfxFontCache*>(aCache);
   for (const auto& entry : cache->mFonts) {
-    entry.mFont->AgeCachedWords();
+    allEmpty = entry.mFont->AgeCachedWords() && allEmpty;
+  }
+  if (allEmpty) {
+    cache->PauseWordCacheExpirationTimer();
   }
 }
 
@@ -301,6 +308,7 @@ void gfxFontCache::FlushShapedWordCaches() {
   for (const auto& entry : mFonts) {
     entry.mFont->ClearCachedWords();
   }
+  PauseWordCacheExpirationTimer();
 }
 
 void gfxFontCache::NotifyGlyphsChanged() {
@@ -2706,7 +2714,7 @@ gfxFont::RunMetrics gfxFont::Measure(const gfxTextRun* aTextRun,
   return metrics;
 }
 
-void gfxFont::AgeCachedWords() {
+bool gfxFont::AgeCachedWords() {
   if (mWordCache) {
     for (auto it = mWordCache->Iter(); !it.Done(); it.Next()) {
       CacheHashEntry* entry = it.Get();
@@ -2717,7 +2725,9 @@ void gfxFont::AgeCachedWords() {
         it.Remove();
       }
     }
+    return mWordCache->IsEmpty();
   }
+  return true;
 }
 
 void gfxFont::NotifyGlyphsChanged() {
@@ -2802,6 +2812,8 @@ gfxShapedWord* gfxFont::GetShapedWord(
                                  aLanguage, aVertical, aRounding, sw);
 
   NS_WARNING_ASSERTION(ok, "failed to shape word - expect garbled text");
+
+  gfxFontCache::GetCache()->RunWordCacheExpirationTimer();
 
   return sw;
 }
