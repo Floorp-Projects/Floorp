@@ -14,8 +14,10 @@
 #  include <unistd.h>  // for _exit()
 #endif
 
+#include "nsAppRunner.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/ipc/IOThreadChild.h"
+#include "mozilla/GeckoArgs.h"
 
 namespace mozilla {
 namespace ipc {
@@ -31,6 +33,37 @@ ProcessChild::ProcessChild(ProcessId aParentPid)
   MOZ_ASSERT(mUILoop, "UILoop should be created by now");
   MOZ_ASSERT(!gProcessChild, "should only be one ProcessChild");
   gProcessChild = this;
+}
+
+/* static */
+void ProcessChild::AddPlatformBuildID(std::vector<std::string>& aExtraArgs) {
+  nsCString parentBuildID(mozilla::PlatformBuildID());
+  geckoargs::sParentBuildID.Put(parentBuildID.get(), aExtraArgs);
+}
+
+/* static */
+bool ProcessChild::InitPrefs(int aArgc, char* aArgv[]) {
+  Maybe<uint64_t> prefsHandle = Some(0);
+  Maybe<uint64_t> prefMapHandle = Some(0);
+  Maybe<uint64_t> prefsLen = geckoargs::sPrefsLen.Get(aArgc, aArgv);
+  Maybe<uint64_t> prefMapSize = geckoargs::sPrefMapSize.Get(aArgc, aArgv);
+
+  if (prefsLen.isNothing() || prefMapSize.isNothing()) {
+    return false;
+  }
+
+#ifdef XP_WIN
+  prefsHandle = geckoargs::sPrefsHandle.Get(aArgc, aArgv);
+  prefMapHandle = geckoargs::sPrefMapHandle.Get(aArgc, aArgv);
+
+  if (prefsHandle.isNothing() || prefMapHandle.isNothing()) {
+    return false;
+  }
+#endif
+
+  SharedPreferenceDeserializer deserializer;
+  return deserializer.DeserializeFromSharedMemory(*prefsHandle, *prefMapHandle,
+                                                  *prefsLen, *prefMapSize);
 }
 
 ProcessChild::~ProcessChild() { gProcessChild = nullptr; }
