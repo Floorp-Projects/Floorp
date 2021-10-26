@@ -15,7 +15,6 @@
 
 #include "ContentParent.h"
 #include "mozilla/ipc/ProcessUtils.h"
-#include "mozilla/CmdLineAndEnvUtils.h"
 #include "BrowserParent.h"
 
 #include "chrome/common/process_watcher.h"
@@ -59,7 +58,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/FOGIPC.h"
 #include "mozilla/GlobalStyleSheetCache.h"
-#include "mozilla/GeckoArgs.h"
 #include "mozilla/HangDetails.h"
 #include "mozilla/LoginReputationIPC.h"
 #include "mozilla/LookAndFeel.h"
@@ -2511,9 +2509,11 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   }
 
   std::vector<std::string> extraArgs;
-  geckoargs::sChildID.Put(mChildID, extraArgs);
-  geckoargs::sIsForBrowser.Put(IsForBrowser(), extraArgs);
-  geckoargs::sNotForBrowser.Put(!IsForBrowser(), extraArgs);
+  extraArgs.push_back("-childID");
+  char idStr[21];
+  SprintfLiteral(idStr, "%" PRId64, static_cast<uint64_t>(mChildID));
+  extraArgs.push_back(idStr);
+  extraArgs.push_back(IsForBrowser() ? "-isForBrowser" : "-notForBrowser");
 
   // Prefs information is passed via anonymous shared memory to avoid bloating
   // the command line.
@@ -2540,7 +2540,7 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   Preferences::AddStrongObserver(this, "");
 
   if (gSafeMode) {
-    geckoargs::sSafeMode.Put(extraArgs);
+    extraArgs.push_back("-safeMode");
   }
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
@@ -2551,7 +2551,8 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
 #endif
 
   nsCString parentBuildID(mozilla::PlatformBuildID());
-  geckoargs::sParentBuildID.Put(parentBuildID.get(), extraArgs);
+  extraArgs.push_back("-parentBuildID");
+  extraArgs.push_back(parentBuildID.get());
 
 #ifdef MOZ_WIDGET_GTK
   // This is X11-only pending a solution for WebGL in Wayland mode.

@@ -6,7 +6,6 @@
 #include "RDDProcessImpl.h"
 
 #include "mozilla/ipc/IOThreadChild.h"
-#include "mozilla/GeckoArgs.h"
 
 #if defined(OS_WIN) && defined(MOZ_SANDBOX)
 #  include "mozilla/sandboxTarget.h"
@@ -38,17 +37,50 @@ bool RDDProcessImpl::Init(int aArgc, char* aArgv[]) {
   PR_LoadLibrary("libmozavutil.so");
   StartOpenBSDSandbox(GeckoProcessType_RDD);
 #endif
-  Maybe<const char*> parentBuildID =
-      geckoargs::sParentBuildID.Get(aArgc, aArgv);
-  if (parentBuildID.isNothing()) {
+  char* parentBuildID = nullptr;
+  char* prefsHandle = nullptr;
+  char* prefMapHandle = nullptr;
+  char* prefsLen = nullptr;
+  char* prefMapSize = nullptr;
+  for (int i = 1; i < aArgc; i++) {
+    if (!aArgv[i]) {
+      continue;
+    }
+    if (strcmp(aArgv[i], "-parentBuildID") == 0) {
+      parentBuildID = aArgv[i + 1];
+
+#ifdef XP_WIN
+    } else if (strcmp(aArgv[i], "-prefsHandle") == 0) {
+      if (++i == aArgc) {
+        return false;
+      }
+      prefsHandle = aArgv[i];
+    } else if (strcmp(aArgv[i], "-prefMapHandle") == 0) {
+      if (++i == aArgc) {
+        return false;
+      }
+      prefMapHandle = aArgv[i];
+#endif
+    } else if (strcmp(aArgv[i], "-prefsLen") == 0) {
+      if (++i == aArgc) {
+        return false;
+      }
+      prefsLen = aArgv[i];
+    } else if (strcmp(aArgv[i], "-prefMapSize") == 0) {
+      if (++i == aArgc) {
+        return false;
+      }
+      prefMapSize = aArgv[i];
+    }
+  }
+
+  SharedPreferenceDeserializer deserializer;
+  if (!deserializer.DeserializeFromSharedMemory(prefsHandle, prefMapHandle,
+                                                prefsLen, prefMapSize)) {
     return false;
   }
 
-  if (!ProcessChild::InitPrefs(aArgc, aArgv)) {
-    return false;
-  }
-
-  return mRDD.Init(ParentPid(), *parentBuildID,
+  return mRDD.Init(ParentPid(), parentBuildID,
                    IOThreadChild::TakeInitialPort());
 }
 

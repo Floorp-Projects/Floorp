@@ -36,7 +36,6 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/GeckoArgs.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/RDDProcessHost.h"
 #include "mozilla/Scoped.h"
@@ -985,13 +984,14 @@ AddAppDirToCommandLine(std::vector<std::string>& aCmdLine, nsIFile* aAppDir,
 #if defined(XP_WIN)
     nsString path;
     MOZ_ALWAYS_SUCCEEDS(aAppDir->GetPath(path));
-    aCmdLine.AppendLooseValue(UTF8ToWide(geckoargs::sAppDir.Name()));
+    aCmdLine.AppendLooseValue(UTF8ToWide("-appdir"));
     std::wstring wpath(path.get());
     aCmdLine.AppendLooseValue(wpath);
 #else
     nsAutoCString path;
     MOZ_ALWAYS_SUCCEEDS(aAppDir->GetNativePath(path));
-    geckoargs::sAppDir.Put(path.get(), aCmdLine);
+    aCmdLine.push_back("-appdir");
+    aCmdLine.push_back(path.get());
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
@@ -1005,7 +1005,8 @@ AddAppDirToCommandLine(std::vector<std::string>& aCmdLine, nsIFile* aAppDir,
       mozilla::Unused << aProfileDir->Normalize();
       nsAutoCString path;
       MOZ_ALWAYS_SUCCEEDS(aProfileDir->GetNativePath(path));
-      geckoargs::sProfile.Put(path.get(), aCmdLine);
+      aCmdLine.push_back("-profile");
+      aCmdLine.push_back(path.get());
     }
 #endif
   }
