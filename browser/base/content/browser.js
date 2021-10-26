@@ -4819,6 +4819,18 @@ let gFileMenu = {
     }
   },
 
+  /**
+   * Updates the "Close tab" command to reflect the number of selected tabs,
+   * when applicable.
+   */
+  updateTabCloseCountState() {
+    document.l10n.setAttributes(
+      document.getElementById("menu_close"),
+      "menu-file-close-tab",
+      { tabCount: gBrowser.selectedTabs.length }
+    );
+  },
+
   onPopupShowing(event) {
     // We don't care about submenus:
     if (event.target.id != "menu_FilePopup") {
@@ -4826,6 +4838,7 @@ let gFileMenu = {
     }
     this.updateUserContextUIVisibility();
     this.updateImportCommandEnabledState();
+    this.updateTabCloseCountState();
     if (AppConstants.platform == "macosx") {
       gShareUtils.updateShareURLMenuItem(
         gBrowser.selectedBrowser,
