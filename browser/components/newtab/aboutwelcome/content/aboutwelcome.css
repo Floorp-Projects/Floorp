@@ -101,6 +101,9 @@ body[lwt-newtab-brighttext] {
   transition: var(--transition);
   z-index: 1;
 }
+.onboardingContainer .main-content.no-steps {
+  padding-bottom: 48px;
+}
 .onboardingContainer .main-content .main-content-inner {
   display: flex;
   flex-direction: column;
