@@ -497,8 +497,8 @@ $(WASM_ARCHIVE): $(CWASMOBJS) $(CPPWASMOBJS) $(STATIC_LIBS) $(EXTRA_DEPS) $(GLOB
 	$(RM) $(WASM_ARCHIVE)
 	$(WASM_CXX) -o $@ -Wl,--export-all -Wl,--stack-first -Wl,-z,stack-size=$(if $(MOZ_OPTIMIZE),262144,1048576) -Wl,--no-entry -Wl,--growable-table $(CWASMOBJS) $(CPPWASMOBJS) -lwasi-emulated-process-clocks
 
-$(addsuffix .c,$(WASM_ARCHIVE)): $(WASM_ARCHIVE)
-	$(DIST)/host/bin/wasm2c -o $@ $<
+$(addsuffix .c,$(WASM_ARCHIVE)): $(WASM_ARCHIVE) $(DIST)/host/bin/wasm2c$(HOST_BIN_SUFFIX)
+	$(DIST)/host/bin/wasm2c$(HOST_BIN_SUFFIX) -o $@ $<
 
 ifeq ($(OS_ARCH),WINNT)
 # Import libraries are created by the rules creating shared libraries.
