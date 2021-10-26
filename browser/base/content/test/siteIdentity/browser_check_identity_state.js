@@ -4,6 +4,9 @@
 
 "use strict";
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const DUMMY = "browser/browser/base/content/test/siteIdentity/dummy_page.html";
 const INSECURE_ICON_PREF = "security.insecure_connection_icon.enabled";
 const INSECURE_TEXT_PREF = "security.insecure_connection_text.enabled";
@@ -55,6 +58,82 @@ async function getReaderModeURL() {
 
 // This test is slow on Linux debug e10s
 requestLongerTimeout(2);
+
+add_task(async function chromeUITest() {
+  // needs to be set due to bug in ion.js that occurs when testing
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["toolkit.pioneer.testCachedContent", "[]"],
+      ["toolkit.pioneer.testCachedAddons", "[]"],
+    ],
+  });
+  // Might needs to be extended with new secure chrome pages
+  // about:debugging is a secure chrome UI but is not tested for causing problems.
+  let secureChromePages = [
+    "addons",
+    "cache",
+    "certificate",
+    "compat",
+    "config",
+    "devtools",
+    "downloads",
+    "ion",
+    "license",
+    "logins",
+    "loginsimportreport",
+    "performance",
+    "plugins",
+    "policies",
+    "preferences",
+    "processes",
+    "profiles",
+    "profiling",
+    "protections",
+    "rights",
+    "sessionrestore",
+    "studies",
+    "support",
+    "telemetry",
+    "welcomeback",
+  ];
+
+  // else skip about:crashes, it is only available with plugin
+  if (AppConstants.MOZ_CRASHREPORTER) {
+    secureChromePages.push("crashes");
+  }
+
+  let nonSecureExamplePages = [
+    "about:about",
+    "about:credits",
+    "about:home",
+    "about:logo",
+    "about:memory",
+    "about:mozilla",
+    "about:networking",
+    "about:privatebrowsing",
+    "about:robots",
+    "about:serviceWorkers",
+    "about:sync-log",
+    "about:unloads",
+    "about:url-classifier",
+    "about:webrtc",
+    "about:welcome",
+    "http://example.com/" + DUMMY,
+  ];
+
+  for (let i = 0; i < secureChromePages.length; i++) {
+    await BrowserTestUtils.withNewTab("about:" + secureChromePages[i], () => {
+      is(getIdentityMode(), "chromeUI", "Identity should be chromeUI");
+    });
+  }
+
+  for (let i = 0; i < nonSecureExamplePages.length; i++) {
+    console.log(nonSecureExamplePages[i]);
+    await BrowserTestUtils.withNewTab(nonSecureExamplePages[i], () => {
+      ok(getIdentityMode() != "chromeUI", "Identity should not be chromeUI");
+    });
+  }
+});
 
 async function webpageTest(secureCheck) {
   await SpecialPowers.pushPrefEnv({ set: [[INSECURE_ICON_PREF, secureCheck]] });
