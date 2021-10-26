@@ -26,10 +26,10 @@ add_task(async function() {
   let isVisible = await highlighterTestFront.isHighlighting();
   ok(isVisible, "Inspector is highlighting.");
 
-  await reloadIframe();
+  await reloadIframe(inspector);
   info("Frame reloaded. Reloading again.");
 
-  await reloadIframe();
+  await reloadIframe(inspector);
   info("Frame reloaded twice.");
 
   isVisible = await highlighterTestFront.isHighlighting();
@@ -39,12 +39,23 @@ add_task(async function() {
   await toolbox.nodePicker.stop();
 });
 
-function reloadIframe() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+async function reloadIframe(inspector) {
+  const { resourceCommand } = inspector.commands;
+
+  const { onResource: onNewRoot } = await resourceCommand.waitForNextResource(
+    resourceCommand.TYPES.ROOT_NODE,
+    {
+      ignoreExistingResources: true,
+    }
+  );
+
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
     const iframeEl = content.document.querySelector("iframe");
     await new Promise(resolve => {
       iframeEl.addEventListener("load", () => resolve(), { once: true });
       iframeEl.contentWindow.location.reload();
     });
   });
+
+  await onNewRoot;
 }
