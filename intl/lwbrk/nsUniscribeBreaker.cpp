@@ -17,6 +17,10 @@
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
 
+#if defined(ENABLE_TESTS)
+#  include "mozilla/StaticPrefs_intl.h"
+#endif
+
 using namespace mozilla;
 
 static bool UseBrokeredLineBreaking() {
@@ -88,4 +92,48 @@ void NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
       aBreakBefore[j + startOffset] = sla[j].fSoftBreak;
     }
   }
+
+#if defined(ENABLE_TESTS)
+  // When tests are enabled and pref is set, we compare the line breaks returned
+  // from the Uniscribe breaker in the content process, with the ones returned
+  // from the brokered call to the parent. If they differ we crash so we can
+  // test using a crashtest.
+  if (!StaticPrefs::intl_compare_against_brokered_complex_line_breaks() ||
+      !XRE_IsContentProcess()) {
+    return;
+  }
+
+  nsTArray<uint8_t> brokeredBreaks(aLength);
+  brokeredBreaks.AppendElements(aLength);
+  if (!SandboxTarget::Instance()->GetComplexLineBreaks(
+          text, aLength, brokeredBreaks.Elements())) {
+    MOZ_CRASH("Brokered GetComplexLineBreaks failed.");
+  }
+
+  bool mismatch = false;
+  for (int i = 0; i < aLength; ++i) {
+    if (aBreakBefore[i] != brokeredBreaks[i]) {
+      mismatch = true;
+      break;
+    }
+  }
+
+  if (mismatch) {
+    // The logging here doesn't handle surrogates, but we only have tests using
+    // Thai currently, which is BMP-only.
+    printf_stderr("uniscribe: ");
+    for (int i = 0; i < aLength; ++i) {
+      if (aBreakBefore[i]) printf_stderr("#");
+      printf_stderr("%s", NS_ConvertUTF16toUTF8(aText + i, 1).get());
+    }
+    printf_stderr("\n");
+    printf_stderr("brokered : ");
+    for (int i = 0; i < aLength; ++i) {
+      if (brokeredBreaks[i]) printf_stderr("#");
+      printf_stderr("%s", NS_ConvertUTF16toUTF8(aText + i, 1).get());
+    }
+    printf_stderr("\n");
+    MOZ_CRASH("Brokered breaks did not match.");
+  }
+#endif
 }
