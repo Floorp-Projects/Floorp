@@ -1798,6 +1798,7 @@ dependencies = [
  "env_logger",
  "lazy_static",
  "log",
+ "winapi",
 ]
 
 [[package]]
