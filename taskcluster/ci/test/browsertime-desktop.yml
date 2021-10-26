@@ -84,7 +84,6 @@ browsertime-tp6:
         run-visual-metrics: true
         treeherder-symbol: Btime(tp6)
     raptor-subtests:
-        - [amazon-sec, amzn-sec]
         - buzzfeed
         - ebay
         - espn
