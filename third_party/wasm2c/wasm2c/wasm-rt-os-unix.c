@@ -4,6 +4,7 @@
 #if !defined(_WIN32) && (defined(__unix__) || defined(__unix) || \
                          (defined(__APPLE__) && defined(__MACH__)))
 
+#include "wasm-rt.h"
 #include "wasm-rt-os.h"
 
 #include <errno.h>
@@ -188,13 +189,13 @@ void os_init() {
   #if defined(__APPLE__) && defined(__MACH__)
     // From here: https://stackoverflow.com/questions/5167269/clock-gettime-alternative-in-mac-os-x/21352348#21352348
     if (mach_timebase_info(&g_wasi_mac_clock_info.timebase) != 0) {
-      abort();
+      wasm_rt_trap(WASM_RT_TRAP_WASI);
     }
 
     // microseconds since 1 Jan 1970
     struct timeval micro;
     if (gettimeofday(&micro, NULL) != 0) {
-      abort();
+      wasm_rt_trap(WASM_RT_TRAP_WASI);
     }
 
     g_wasi_mac_clock_info.initclock = mach_absolute_time();
@@ -214,7 +215,7 @@ void os_clock_init(void** clock_data_pointer) {
 
     wasi_mac_clock_info_t* alloc = (wasi_mac_clock_info_t*) malloc(sizeof(wasi_mac_clock_info_t));
     if (!alloc) {
-      abort();
+      wasm_rt_trap(WASM_RT_TRAP_WASI);
     }
     memcpy(alloc, &g_wasi_mac_clock_info, sizeof(wasi_mac_clock_info_t));
     *clock_data_pointer = alloc;

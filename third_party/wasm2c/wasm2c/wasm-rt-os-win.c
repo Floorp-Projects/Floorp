@@ -3,6 +3,7 @@
 // Check for windows (non cygwin) environment
 #if defined(_WIN32)
 
+#include "wasm-rt.h"
 #include "wasm-rt-os.h"
 
 #include <errno.h>
@@ -227,7 +228,7 @@ static int g_os_data_initialized = 0;
 void os_init() {
   // From here: https://stackoverflow.com/questions/5404277/porting-clock-gettime-to-windows/38212960#38212960
   if (QueryPerformanceFrequency(&g_wasi_win_clock_info.counts_per_sec) == 0) {
-    abort();
+    wasm_rt_trap(WASM_RT_TRAP_WASI);
   }
   g_os_data_initialized = 1;
 }
@@ -239,7 +240,7 @@ void os_clock_init(void** clock_data_pointer) {
 
   wasi_win_clock_info_t* alloc = (wasi_win_clock_info_t*) malloc(sizeof(wasi_win_clock_info_t));
   if (!alloc) {
-    abort();
+    wasm_rt_trap(WASM_RT_TRAP_WASI);
   }
   memcpy(alloc, &g_wasi_win_clock_info, sizeof(wasi_win_clock_info_t));
   *clock_data_pointer = alloc;

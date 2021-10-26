@@ -48,7 +48,7 @@
     ((t)table.data[x].func)(__VA_ARGS__);                                                            \
     EXTERNAL_CALLBACK_EPILOGUE_EXEC(table, x);                                                       \
   } else {                                                                                           \
-    (void) TRAP(CALL_INDIRECT);                                                                      \
+    wasm_rt_callback_error_trap(&table, x, func_types[ft]);                                          \
   }
 
 #define CALL_INDIRECT_RES(res, table, t, ft, x, func_types, ...)                                     \
@@ -57,7 +57,7 @@
     res = ((t)table.data[x].func)(__VA_ARGS__);                                                      \
     EXTERNAL_CALLBACK_EPILOGUE_EXEC(table, x);                                                       \
   } else {                                                                                           \
-    (void) TRAP(CALL_INDIRECT);                                                                      \
+    wasm_rt_callback_error_trap(&table, x, func_types[ft]);                                          \
   }
 
 #if defined(WASM_CHECK_SHADOW_MEMORY)
@@ -365,7 +365,7 @@ static u32 add_wasm2c_callback(void* sbx_ptr, u32 func_type_idx, void* func_ptr,
       return i;
     }
   }
-  (void) TRAP(CALL_INDIRECT);
+  (void) TRAP(CALL_INDIRECT_TABLE_EXPANSION);
 }
 
 static void remove_wasm2c_callback(void* sbx_ptr, u32 callback_idx) {
