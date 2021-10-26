@@ -91,6 +91,10 @@ body {
     transition: var(--transition);
     z-index: 1;
 
+    &.no-steps {
+      padding-bottom: 48px;
+    }
+
     .main-content-inner {
       display: flex;
       flex-direction: column;

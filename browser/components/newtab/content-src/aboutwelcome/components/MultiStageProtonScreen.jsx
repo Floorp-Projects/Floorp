@@ -72,7 +72,11 @@ export class MultiStageProtonScreen extends React.PureComponent {
           {isWelcomeScreen ? <div className={`noodle solid-L`} /> : null}
           <div className={`noodle outline-L`} />
           <div className={`noodle yellow-circle`} />
-          <div className="main-content">
+          <div
+            className={`main-content ${
+              isLastScreen && autoClose ? "no-steps" : ""
+            }`}
+          >
             <div className={`brand-logo ${content.hideLogo ? "hide" : ""}`} />
             {isLastScreen && content.hasFancyTitle ? (
               <div className="confetti" />
@@ -135,7 +139,7 @@ export class MultiStageProtonScreen extends React.PureComponent {
                 ) : null}
               </div>
             </div>
-            {!isWelcomeScreen ? (
+            {!(isWelcomeScreen || (autoClose && isLastScreen)) ? (
               <nav
                 className="steps"
                 data-l10n-id={"onboarding-welcome-steps-indicator"}

@@ -85,6 +85,7 @@ const TEST_PROTON_CONTENT = [
   {
     id: "AW_STEP4",
     order: 3,
+    autoClose: true,
     content: {
       title: "Step 4",
       primary_button: {
@@ -231,6 +232,7 @@ add_task(async function test_multistage_aboutwelcome_proton() {
       "main.AW_STEP2",
       "main.AW_STEP1",
       "main.AW_STEP3",
+      "nav.steps",
       "main.dialog-initial",
       "main.AW_STEP4.screen-0",
       "main.AW_STEP4.screen-2",
