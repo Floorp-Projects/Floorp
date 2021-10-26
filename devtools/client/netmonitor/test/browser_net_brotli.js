@@ -44,10 +44,10 @@ add_task(async function() {
     HTTPS_CONTENT_TYPE_SJS + "?fmt=br",
     {
       status: 200,
-      statusText: "Connected",
-      type: "plain",
-      fullMimeType: "text/plain",
-      transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 60),
+      statusText: "OK",
+      type: "json",
+      fullMimeType: "text/json",
+      transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 252),
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 64),
       time: true,
     }
