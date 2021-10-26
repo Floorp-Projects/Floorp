@@ -241,16 +241,16 @@ Result BinaryReaderLogging::OnImportGlobal(Index import_index,
                                  global_index, type, mutable_);
 }
 
-Result BinaryReaderLogging::OnImportEvent(Index import_index,
-                                          string_view module_name,
-                                          string_view field_name,
-                                          Index event_index,
-                                          Index sig_index) {
-  LOGF("OnImportEvent(import_index: %" PRIindex ", event_index: %" PRIindex
+Result BinaryReaderLogging::OnImportTag(Index import_index,
+                                        string_view module_name,
+                                        string_view field_name,
+                                        Index tag_index,
+                                        Index sig_index) {
+  LOGF("OnImportTag(import_index: %" PRIindex ", tag_index: %" PRIindex
        ", sig_index: %" PRIindex ")\n",
-       import_index, event_index, sig_index);
-  return reader_->OnImportEvent(import_index, module_name, field_name,
-                                event_index, sig_index);
+       import_index, tag_index, sig_index);
+  return reader_->OnImportTag(import_index, module_name, field_name, tag_index,
+                              sig_index);
 }
 
 Result BinaryReaderLogging::OnTable(Index index,
@@ -568,13 +568,6 @@ Result BinaryReaderLogging::OnReloc(RelocType type,
   return reader_->OnReloc(type, offset, index, addend);
 }
 
-Result BinaryReaderLogging::OnSymbol(Index symbol_index,
-                                     SymbolType type,
-                                     uint32_t flags) {
-  LOGF("OnSymbol(type: %s flags: 0x%x)\n", GetSymbolTypeName(type), flags);
-  return reader_->OnSymbol(symbol_index, type, flags);
-}
-
 Result BinaryReaderLogging::OnDataSymbol(Index index,
                                          uint32_t flags,
                                          string_view name,
@@ -614,14 +607,14 @@ Result BinaryReaderLogging::OnSectionSymbol(Index index,
   return reader_->OnSectionSymbol(index, flags, section_index);
 }
 
-Result BinaryReaderLogging::OnEventSymbol(Index index,
-                                          uint32_t flags,
-                                          string_view name,
-                                          Index event_index) {
-  LOGF("OnEventSymbol(name: " PRIstringview " flags: 0x%x index: %" PRIindex
-           ")\n",
-       WABT_PRINTF_STRING_VIEW_ARG(name), flags, event_index);
-  return reader_->OnEventSymbol(index, flags, name, event_index);
+Result BinaryReaderLogging::OnTagSymbol(Index index,
+                                        uint32_t flags,
+                                        string_view name,
+                                        Index tag_index) {
+  LOGF("OnTagSymbol(name: " PRIstringview " flags: 0x%x index: %" PRIindex
+       ")\n",
+       WABT_PRINTF_STRING_VIEW_ARG(name), flags, tag_index);
+  return reader_->OnTagSymbol(index, flags, name, tag_index);
 }
 
 Result BinaryReaderLogging::OnTableSymbol(Index index,
@@ -802,7 +795,8 @@ DEFINE_LOAD_STORE_OPCODE(OnAtomicNotifyExpr);
 DEFINE_OPCODE(OnBinaryExpr)
 DEFINE_INDEX_DESC(OnCallExpr, "func_index")
 DEFINE_INDEX_INDEX(OnCallIndirectExpr, "sig_index", "table_index")
-DEFINE_INDEX_DESC(OnCatchExpr, "event_index");
+DEFINE0(OnCallRefExpr)
+DEFINE_INDEX_DESC(OnCatchExpr, "tag_index");
 DEFINE0(OnCatchAllExpr);
 DEFINE_OPCODE(OnCompareExpr)
 DEFINE_OPCODE(OnConvertExpr)
@@ -842,9 +836,8 @@ DEFINE0(OnReturnExpr)
 DEFINE_LOAD_STORE_OPCODE(OnLoadSplatExpr);
 DEFINE_LOAD_STORE_OPCODE(OnLoadZeroExpr);
 DEFINE_LOAD_STORE_OPCODE(OnStoreExpr);
-DEFINE_INDEX_DESC(OnThrowExpr, "event_index")
+DEFINE_INDEX_DESC(OnThrowExpr, "tag_index")
 DEFINE0(OnUnreachableExpr)
-DEFINE0(OnUnwindExpr)
 DEFINE_OPCODE(OnUnaryExpr)
 DEFINE_OPCODE(OnTernaryExpr)
 DEFINE_SIMD_LOAD_STORE_LANE_OPCODE(OnSimdLoadLaneExpr);
@@ -898,10 +891,10 @@ DEFINE_INDEX(OnInitFunctionCount)
 DEFINE_INDEX(OnComdatCount)
 DEFINE_END(EndLinkingSection)
 
-DEFINE_BEGIN(BeginEventSection);
-DEFINE_INDEX(OnEventCount);
-DEFINE_INDEX_INDEX(OnEventType, "index", "sig_index")
-DEFINE_END(EndEventSection);
+DEFINE_BEGIN(BeginTagSection);
+DEFINE_INDEX(OnTagCount);
+DEFINE_INDEX_INDEX(OnTagType, "index", "sig_index")
+DEFINE_END(EndTagSection);
 
 // We don't need to log these (the individual opcodes are logged instead), but
 // we still need to forward the calls.

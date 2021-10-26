@@ -41,6 +41,12 @@ void Features::UpdateDependencies() {
   if (exceptions_enabled_) {
     reference_types_enabled_ = true;
   }
+
+  // Function references require reference types.
+  if (function_references_enabled_) {
+    reference_types_enabled_ = true;
+  }
+
   // Reference types requires bulk memory.
   if (reference_types_enabled_) {
     bulk_memory_enabled_ = true;

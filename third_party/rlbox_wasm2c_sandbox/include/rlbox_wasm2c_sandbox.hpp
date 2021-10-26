@@ -254,7 +254,9 @@ __attribute__((weak))
 #endif
   static std::once_flag wasm2c_runtime_initialized;
   wasm_rt_memory_t* sandbox_memory_info = nullptr;
+#ifndef RLBOX_USE_STATIC_CALLS
   void* library = nullptr;
+#endif
   uintptr_t heap_base;
   void* exec_env = 0;
   void* malloc_index = 0;
@@ -384,6 +386,7 @@ __attribute__((weak))
     }
   }
 
+#ifndef RLBOX_USE_STATIC_CALLS
   inline void* symbol_lookup(std::string prefixed_name) {
     #if defined(_WIN32)
       void* ret = (void*) GetProcAddress((HMODULE) library, prefixed_name.c_str());
@@ -400,18 +403,70 @@ __attribute__((weak))
     }
     return ret;
   }
+#endif
 
 protected:
+
+#ifndef RLBOX_USE_STATIC_CALLS
+  void* impl_lookup_symbol(const char* func_name)
+  {
+    std::string prefixed_name = "w2c_";
+    prefixed_name += func_name;
+    void* ret = symbol_lookup(prefixed_name);
+    return ret;
+  }
+#else
+
+  #define rlbox_wasm2c_sandbox_lookup_symbol(func_name)                            \
+  reinterpret_cast<void*>(&w2c_##func_name) /* NOLINT */
+
+  // adding a template so that we can use static_assert to fire only if this
+  // function is invoked
+  template<typename T = void>
+  void* impl_lookup_symbol(const char* func_name)
+  {
+    constexpr bool fail = std::is_same_v<T, void>;
+    static_assert(
+      !fail,
+      "The wasm2c_sandbox uses static calls and thus developers should add\n\n"
+      "#define RLBOX_USE_STATIC_CALLS() rlbox_wasm2c_sandbox_lookup_symbol\n\n"
+      "to their code, to ensure that static calls are handled correctly.");
+    return nullptr;
+  }
+#endif
+
   #if defined(_WIN32)
   using path_buf = const LPCWSTR;
   #else
   using path_buf = const char*;
   #endif
 
-  inline void impl_create_sandbox(path_buf wasm2c_module_path, const char* wasm_module_name = "")
-  {
-    detail::dynamic_check(sandbox == nullptr, "Sandbox already initialized");
+#define FALLIBLE_DYNAMIC_CHECK(infallible, cond, msg) \
+  if (infallible) {                                   \
+    detail::dynamic_check(cond, msg);                 \
+  } else if(!(cond)) {                                \
+    impl_destroy_sandbox();                           \
+    return false;                                     \
+  }
 
+  /**
+   * @brief creates the Wasm sandbox from the given shared library
+   *
+   * @param wasm2c_module_path path to shared library compiled with wasm2c. This param is not specified if you are creating a statically linked sandbox.
+   * @param infallible if set to true, the sandbox aborts on failure. If false, the sandbox returns creation status as a return value
+   * @param wasm_module_name optional module name used when compiling with wasm2c
+   * @return true when sandbox is successfully created
+   * @return false when infallible if set to false and sandbox was not successfully created. If infallible is set to true, this function will never return false.
+   */
+  inline bool impl_create_sandbox(
+#ifndef RLBOX_USE_STATIC_CALLS
+    path_buf wasm2c_module_path,
+#endif
+    bool infallible = true, const char* wasm_module_name = "")
+  {
+    FALLIBLE_DYNAMIC_CHECK(infallible, sandbox == nullptr, "Sandbox already initialized");
+
+#ifndef RLBOX_USE_STATIC_CALLS
     #if defined(_WIN32)
     library = (void*) LoadLibraryW(wasm2c_module_path);
     #else
@@ -435,13 +490,21 @@ protected:
       #else
         error_msg += dlerror();
       #endif
-      detail::dynamic_check(false, error_msg.c_str());
+      FALLIBLE_DYNAMIC_CHECK(infallible, false, error_msg.c_str());
     }
+#endif
 
+#ifndef RLBOX_USE_STATIC_CALLS
     std::string info_func_name = wasm_module_name;
     info_func_name += "get_wasm2c_sandbox_info";
     auto get_info_func = reinterpret_cast<wasm2c_sandbox_funcs_t(*)()>(symbol_lookup(info_func_name));
-    detail::dynamic_check(get_info_func != nullptr, "wasm2c could not find <MODULE_NAME>get_wasm2c_sandbox_info");
+#else
+    // only permitted if there is no custom module name
+    std::string wasm_module_name_str = wasm_module_name;
+    FALLIBLE_DYNAMIC_CHECK(infallible, wasm_module_name_str.empty(), "Static calls not supported with non empty module names");
+    auto get_info_func = reinterpret_cast<wasm2c_sandbox_funcs_t(*)()>(get_wasm2c_sandbox_info);
+#endif
+    FALLIBLE_DYNAMIC_CHECK(infallible, get_info_func != nullptr, "wasm2c could not find <MODULE_NAME>get_wasm2c_sandbox_info");
     sandbox_info = get_info_func();
 
     std::call_once(wasm2c_runtime_initialized, [&](){
@@ -449,10 +512,10 @@ protected:
     });
 
     sandbox = sandbox_info.create_wasm2c_sandbox();
-    detail::dynamic_check(sandbox != nullptr, "Sandbox could not be created");
+    FALLIBLE_DYNAMIC_CHECK(infallible, sandbox != nullptr, "Sandbox could not be created");
 
     sandbox_memory_info = (wasm_rt_memory_t*) sandbox_info.lookup_wasm2c_nonfunc_export(sandbox, "w2c_memory");
-    detail::dynamic_check(sandbox_memory_info != nullptr, "Could not get wasm2c sandbox memory info");
+    FALLIBLE_DYNAMIC_CHECK(infallible, sandbox_memory_info != nullptr, "Could not get wasm2c sandbox memory info");
 
     heap_base = reinterpret_cast<uintptr_t>(impl_get_memory_location());
 
@@ -462,30 +525,45 @@ protected:
       // impl_get_unsandboxed_pointer_no_ctx and impl_get_sandboxed_pointer_no_ctx
       // below rely on this.
       uintptr_t heap_offset_mask = std::numeric_limits<T_PointerType>::max();
-      detail::dynamic_check((heap_base & heap_offset_mask) == 0,
+      FALLIBLE_DYNAMIC_CHECK(infallible, (heap_base & heap_offset_mask) == 0,
                             "Sandbox heap not aligned to 4GB");
     }
 
     // cache these for performance
     exec_env = sandbox;
+#ifndef RLBOX_USE_STATIC_CALLS
     malloc_index = impl_lookup_symbol("malloc");
     free_index = impl_lookup_symbol("free");
+#else
+    malloc_index = rlbox_wasm2c_sandbox_lookup_symbol(malloc);
+    free_index = rlbox_wasm2c_sandbox_lookup_symbol(free);
+#endif
+    return true;
   }
+
+#undef FALLIBLE_DYNAMIC_CHECK
 
   inline void impl_destroy_sandbox()
   {
     if (return_slot_size) {
       impl_free_in_sandbox(return_slot);
     }
-    sandbox_info.destroy_wasm2c_sandbox(sandbox);
-    sandbox = nullptr;
 
-    #if defined(_WIN32)
-      FreeLibrary((HMODULE) library);
-    #else
-      dlclose(library);
-    #endif
-    library = nullptr;
+    if (sandbox != nullptr) {
+      sandbox_info.destroy_wasm2c_sandbox(sandbox);
+      sandbox = nullptr;
+    }
+
+#ifndef RLBOX_USE_STATIC_CALLS
+    if (library != nullptr) {
+      #if defined(_WIN32)
+        FreeLibrary((HMODULE) library);
+      #else
+        dlclose(library);
+      #endif
+      library = nullptr;
+    }
+#endif
   }
 
   template<typename T>
@@ -615,14 +693,6 @@ protected:
   inline void* impl_get_memory_location() const
   {
     return sandbox_memory_info->data;
-  }
-
-  void* impl_lookup_symbol(const char* func_name)
-  {
-    std::string prefixed_name = "w2c_";
-    prefixed_name += func_name;
-    void* ret = symbol_lookup(prefixed_name);
-    return ret;
   }
 
   template<typename T, typename T_Converted, typename... T_Args>

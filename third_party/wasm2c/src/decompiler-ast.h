@@ -103,6 +103,14 @@ struct AST {
   }
 
   template<ExprType T> void PreDecl(const VarExpr<T>& ve) {
+    // FIXME: this is slow, and would be better to avoid in callers.
+    // See https://github.com/WebAssembly/wabt/issues/1565
+    // And https://github.com/WebAssembly/wabt/issues/1665
+    for (auto& n : predecls) {
+      if (n.u.var->name() == ve.var.name()) {
+        return;
+      }
+    }
     predecls.emplace_back(NodeType::Decl, ExprType::Nop, nullptr, &ve.var);
   }
 

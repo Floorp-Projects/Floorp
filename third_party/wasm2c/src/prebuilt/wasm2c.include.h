@@ -31,13 +31,20 @@ const char SECTION_NAME(top)[] =
 "typedef float f32;\n"
 "typedef double f64;\n"
 "\n"
-"#if defined(_WIN32)\n"
-"  #define FUNC_EXPORT __declspec(dllexport)\n"
+"#ifndef WASM_DONT_EXPORT_FUNCS\n"
+"# if defined(_WIN32)\n"
+"#   define FUNC_EXPORT __declspec(dllexport)\n"
+"# else\n"
+"#   define FUNC_EXPORT\n"
+"# endif\n"
 "#else\n"
-"  #define FUNC_EXPORT\n"
+"# define FUNC_EXPORT\n"
 "#endif\n"
 "\n"
 "FUNC_EXPORT wasm2c_sandbox_funcs_t WASM_CURR_ADD_PREFIX(get_wasm2c_sandbox_info)();\n"
+"\n"
+"struct wasm2c_sandbox_t;\n"
+"typedef struct wasm2c_sandbox_t wasm2c_sandbox_t;\n"
 ;
 
 const char SECTION_NAME(bottom)[] =

@@ -134,6 +134,13 @@ void WriteS32Leb128(Stream* stream, uint32_t value, const char* desc) {
   WriteS32Leb128(stream, Bitcast<int32_t>(value), desc);
 }
 
+void WriteU64Leb128(Stream* stream, uint64_t value, const char* desc) {
+  uint8_t data[MAX_U64_LEB128_BYTES];
+  Offset length = 0;
+  LEB128_LOOP_UNTIL(value == 0);
+  stream->WriteData(data, length, desc);
+}
+
 void WriteS64Leb128(Stream* stream, uint64_t value, const char* desc) {
   WriteS64Leb128(stream, Bitcast<int64_t>(value), desc);
 }

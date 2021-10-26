@@ -42,7 +42,6 @@ class ExprVisitor {
     Loop,
     Try,
     Catch,
-    Unwind,
   };
 
   Result HandleDefaultState(Expr*);
@@ -76,6 +75,7 @@ class ExprVisitor::Delegate {
   virtual Result OnBrTableExpr(BrTableExpr*) = 0;
   virtual Result OnCallExpr(CallExpr*) = 0;
   virtual Result OnCallIndirectExpr(CallIndirectExpr*) = 0;
+  virtual Result OnCallRefExpr(CallRefExpr*) = 0;
   virtual Result OnCompareExpr(CompareExpr*) = 0;
   virtual Result OnConstExpr(ConstExpr*) = 0;
   virtual Result OnConvertExpr(ConvertExpr*) = 0;
@@ -118,7 +118,6 @@ class ExprVisitor::Delegate {
   virtual Result OnUnreachableExpr(UnreachableExpr*) = 0;
   virtual Result BeginTryExpr(TryExpr*) = 0;
   virtual Result OnCatchExpr(TryExpr*, Catch*) = 0;
-  virtual Result OnUnwindExpr(TryExpr*) = 0;
   virtual Result OnDelegateExpr(TryExpr*) = 0;
   virtual Result EndTryExpr(TryExpr*) = 0;
   virtual Result OnThrowExpr(ThrowExpr*) = 0;
@@ -149,6 +148,7 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnBrTableExpr(BrTableExpr*) override { return Result::Ok; }
   Result OnCallExpr(CallExpr*) override { return Result::Ok; }
   Result OnCallIndirectExpr(CallIndirectExpr*) override { return Result::Ok; }
+  Result OnCallRefExpr(CallRefExpr*) override { return Result::Ok; }
   Result OnCompareExpr(CompareExpr*) override { return Result::Ok; }
   Result OnConstExpr(ConstExpr*) override { return Result::Ok; }
   Result OnConvertExpr(ConvertExpr*) override { return Result::Ok; }
@@ -193,7 +193,6 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnUnreachableExpr(UnreachableExpr*) override { return Result::Ok; }
   Result BeginTryExpr(TryExpr*) override { return Result::Ok; }
   Result OnCatchExpr(TryExpr*, Catch*) override { return Result::Ok; }
-  Result OnUnwindExpr(TryExpr*) override { return Result::Ok; }
   Result OnDelegateExpr(TryExpr*) override { return Result::Ok; }
   Result EndTryExpr(TryExpr*) override { return Result::Ok; }
   Result OnThrowExpr(ThrowExpr*) override { return Result::Ok; }

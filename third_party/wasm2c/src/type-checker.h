@@ -77,6 +77,7 @@ class TypeChecker {
   Result OnCall(const TypeVector& param_types, const TypeVector& result_types);
   Result OnCallIndirect(const TypeVector& param_types,
                         const TypeVector& result_types);
+  Result OnFuncRef(Index* out_index);
   Result OnReturnCall(const TypeVector& param_types, const TypeVector& result_types);
   Result OnReturnCallIndirect(const TypeVector& param_types, const TypeVector& result_types);
   Result OnCatch(const TypeVector& sig);
@@ -125,7 +126,6 @@ class TypeChecker {
   Result OnTry(const TypeVector& param_types, const TypeVector& result_types);
   Result OnUnary(Opcode);
   Result OnUnreachable();
-  Result OnUnwind();
   Result EndFunction();
 
   static Result CheckType(Type actual, Type expected);
@@ -169,7 +169,7 @@ class TypeChecker {
                       const Limits* limits1 = nullptr,
                       const Limits* limits2 = nullptr,
                       const Limits* limits3 = nullptr);
-  Result OnEnd(Label* label, TypeVector& check_type, const char* sig_desc, const char* end_desc);
+  Result OnEnd(Label* label, const char* sig_desc, const char* end_desc);
 
   template <typename... Args>
   void PrintStackIfFailed(Result result, const char* desc, Args... args) {

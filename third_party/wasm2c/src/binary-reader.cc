@@ -123,7 +123,7 @@ class BinaryReader {
                    Limits* out_elem_limits) WABT_WARN_UNUSED;
   Result ReadMemory(Limits* out_page_limits) WABT_WARN_UNUSED;
   Result ReadGlobalHeader(Type* out_type, bool* out_mutable) WABT_WARN_UNUSED;
-  Result ReadEventType(Index* out_sig_index) WABT_WARN_UNUSED;
+  Result ReadTagType(Index* out_sig_index) WABT_WARN_UNUSED;
   Result ReadAddress(Address* out_value,
                      Index memory,
                      const char* desc) WABT_WARN_UNUSED;
@@ -131,6 +131,7 @@ class BinaryReader {
   Result ReadNameSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadRelocSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDylinkSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadDylink0Section(Offset section_size) WABT_WARN_UNUSED;
   Result ReadLinkingSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadCustomSection(Index section_index,
                            Offset section_size) WABT_WARN_UNUSED;
@@ -146,7 +147,7 @@ class BinaryReader {
   Result ReadCodeSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDataSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDataCountSection(Offset section_size) WABT_WARN_UNUSED;
-  Result ReadEventSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadTagSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadSections() WABT_WARN_UNUSED;
   Result ReportUnexpectedOpcode(Opcode opcode, const char* message = nullptr);
 
@@ -166,7 +167,7 @@ class BinaryReader {
   Index num_table_imports_ = 0;
   Index num_memory_imports_ = 0;
   Index num_global_imports_ = 0;
-  Index num_event_imports_ = 0;
+  Index num_tag_imports_ = 0;
   Index num_function_signatures_ = 0;
   Index num_function_bodies_ = 0;
   Index data_count_ = kInvalidIndex;
@@ -581,8 +582,8 @@ Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
 
 Result BinaryReader::ReadMemory(Limits* out_page_limits) {
   uint8_t flags;
-  uint32_t initial;
-  uint32_t max = 0;
+  uint64_t initial;
+  uint64_t max = 0;
   CHECK_RESULT(ReadU8(&flags, "memory flags"));
   bool has_max = flags & WABT_BINARY_LIMITS_HAS_MAX_FLAG;
   bool is_shared = flags & WABT_BINARY_LIMITS_IS_SHARED_FLAG;
@@ -593,9 +594,20 @@ Result BinaryReader::ReadMemory(Limits* out_page_limits) {
            "memory may not be shared: threads not allowed");
   ERROR_IF(is_64 && !options_.features.memory64_enabled(),
            "memory64 not allowed");
-  CHECK_RESULT(ReadU32Leb128(&initial, "memory initial page count"));
-  if (has_max) {
-    CHECK_RESULT(ReadU32Leb128(&max, "memory max page count"));
+  if (is_64) {
+    CHECK_RESULT(ReadU64Leb128(&initial, "memory initial page count"));
+    if (has_max) {
+      CHECK_RESULT(ReadU64Leb128(&max, "memory max page count"));
+    }
+  } else {
+    uint32_t initial32;
+    CHECK_RESULT(ReadU32Leb128(&initial32, "memory initial page count"));
+    initial = initial32;
+    if (has_max) {
+      uint32_t max32;
+      CHECK_RESULT(ReadU32Leb128(&max32, "memory max page count"));
+      max = max32;
+    }
   }
 
   out_page_limits->has_max = has_max;
@@ -1412,7 +1424,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::Catch: {
         Index index;
-        CHECK_RESULT(ReadIndex(&index, "event index"));
+        CHECK_RESULT(ReadIndex(&index, "tag index"));
         CALLBACK(OnCatchExpr, index);
         CALLBACK(OnOpcodeIndex, index);
         break;
@@ -1421,12 +1433,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::CatchAll: {
         CALLBACK(OnCatchAllExpr);
         CALLBACK(OnOpcodeBare);
-        break;
-      }
-
-      case Opcode::Unwind: {
-        CALLBACK0(OnUnwindExpr);
-        CALLBACK0(OnOpcodeBare);
         break;
       }
 
@@ -1448,7 +1454,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::Throw: {
         Index index;
-        CHECK_RESULT(ReadIndex(&index, "event index"));
+        CHECK_RESULT(ReadIndex(&index, "tag index"));
         CALLBACK(OnThrowExpr, index);
         CALLBACK(OnOpcodeIndex, index);
         break;
@@ -1740,6 +1746,11 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CALLBACK(OnOpcodeBare);
         break;
 
+      case Opcode::CallRef:
+        CALLBACK(OnCallRefExpr);
+        CALLBACK(OnOpcodeBare);
+        break;
+
       default:
         return ReportUnexpectedOpcode(opcode);
     }
@@ -1929,7 +1940,7 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
       case RelocType::TypeIndexLEB:
       case RelocType::GlobalIndexLEB:
       case RelocType::GlobalIndexI32:
-      case RelocType::EventIndexLEB:
+      case RelocType::TagIndexLEB:
       case RelocType::TableIndexRelSLEB:
       case RelocType::TableNumberLEB:
         break;
@@ -1941,6 +1952,59 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
     CALLBACK(OnReloc, type, offset, index, addend);
   }
   CALLBACK0(EndRelocSection);
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadDylink0Section(Offset section_size) {
+  CALLBACK(BeginDylinkSection, section_size);
+
+  while (state_.offset < read_end_) {
+    uint32_t dylink_type;
+    Offset subsection_size;
+    CHECK_RESULT(ReadU32Leb128(&dylink_type, "type"));
+    CHECK_RESULT(ReadOffset(&subsection_size, "subsection size"));
+    size_t subsection_end = state_.offset + subsection_size;
+    ERROR_UNLESS(subsection_end <= read_end_,
+                 "invalid sub-section size: extends past end");
+    ReadEndRestoreGuard guard(this);
+    read_end_ = subsection_end;
+
+    switch (static_cast<DylinkEntryType>(dylink_type)) {
+      case DylinkEntryType::MemInfo: {
+        uint32_t mem_size;
+        uint32_t mem_align;
+        uint32_t table_size;
+        uint32_t table_align;
+
+        CHECK_RESULT(ReadU32Leb128(&mem_size, "mem_size"));
+        CHECK_RESULT(ReadU32Leb128(&mem_align, "mem_align"));
+        CHECK_RESULT(ReadU32Leb128(&table_size, "table_size"));
+        CHECK_RESULT(ReadU32Leb128(&table_align, "table_align"));
+        CALLBACK(OnDylinkInfo, mem_size, mem_align, table_size, table_align);
+        break;
+      }
+      case DylinkEntryType::Needed: {
+        uint32_t count;
+        CHECK_RESULT(ReadU32Leb128(&count, "needed_dynlibs"));
+        CALLBACK(OnDylinkNeededCount, count);
+        while (count--) {
+          string_view so_name;
+          CHECK_RESULT(ReadStr(&so_name, "dylib so_name"));
+          CALLBACK(OnDylinkNeeded, so_name);
+        }
+        break;
+      }
+      default:
+        // Unknown subsection, skip it.
+        state_.offset = subsection_end;
+        break;
+    }
+    ERROR_UNLESS(state_.offset == subsection_end,
+                 "unfinished sub-section (expected end: 0x%" PRIzx ")",
+                 subsection_end);
+  }
+
+  CALLBACK0(EndDylinkSection);
   return Result::Ok;
 }
 
@@ -1998,11 +2062,10 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
           CHECK_RESULT(ReadU32Leb128(&kind, "sym type"));
           CHECK_RESULT(ReadU32Leb128(&flags, "sym flags"));
           SymbolType sym_type = static_cast<SymbolType>(kind);
-          CALLBACK(OnSymbol, i, sym_type, flags);
           switch (sym_type) {
             case SymbolType::Function:
             case SymbolType::Global:
-            case SymbolType::Event:
+            case SymbolType::Tag:
             case SymbolType::Table: {
               uint32_t index = 0;
               CHECK_RESULT(ReadU32Leb128(&index, "index"));
@@ -2016,8 +2079,8 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
                 case SymbolType::Global:
                   CALLBACK(OnGlobalSymbol, i, flags, name, index);
                   break;
-                case SymbolType::Event:
-                  CALLBACK(OnEventSymbol, i, flags, name, index);
+                case SymbolType::Tag:
+                  CALLBACK(OnTagSymbol, i, flags, name, index);
                   break;
                 case SymbolType::Table:
                   CALLBACK(OnTableSymbol, i, flags, name, index);
@@ -2107,28 +2170,28 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
   return Result::Ok;
 }
 
-Result BinaryReader::ReadEventType(Index* out_sig_index) {
-  uint32_t attribute;
-  CHECK_RESULT(ReadU32Leb128(&attribute, "event attribute"));
-  ERROR_UNLESS(attribute == 0, "event attribute must be 0");
-  CHECK_RESULT(ReadIndex(out_sig_index, "event signature index"));
+Result BinaryReader::ReadTagType(Index* out_sig_index) {
+  uint8_t attribute;
+  CHECK_RESULT(ReadU8(&attribute, "tag attribute"));
+  ERROR_UNLESS(attribute == 0, "tag attribute must be 0");
+  CHECK_RESULT(ReadIndex(out_sig_index, "tag signature index"));
   return Result::Ok;
 }
 
-Result BinaryReader::ReadEventSection(Offset section_size) {
-  CALLBACK(BeginEventSection, section_size);
-  Index num_events;
-  CHECK_RESULT(ReadCount(&num_events, "event count"));
-  CALLBACK(OnEventCount, num_events);
+Result BinaryReader::ReadTagSection(Offset section_size) {
+  CALLBACK(BeginTagSection, section_size);
+  Index num_tags;
+  CHECK_RESULT(ReadCount(&num_tags, "tag count"));
+  CALLBACK(OnTagCount, num_tags);
 
-  for (Index i = 0; i < num_events; ++i) {
-    Index event_index = num_event_imports_ + i;
+  for (Index i = 0; i < num_tags; ++i) {
+    Index tag_index = num_tag_imports_ + i;
     Index sig_index;
-    CHECK_RESULT(ReadEventType(&sig_index));
-    CALLBACK(OnEventType, event_index, sig_index);
+    CHECK_RESULT(ReadTagType(&sig_index));
+    CALLBACK(OnTagType, tag_index, sig_index);
   }
 
-  CALLBACK(EndEventSection);
+  CALLBACK(EndTagSection);
   return Result::Ok;
 }
 
@@ -2143,6 +2206,8 @@ Result BinaryReader::ReadCustomSection(Index section_index,
   if (options_.read_debug_names && section_name == WABT_BINARY_SECTION_NAME) {
     CHECK_RESULT(ReadNameSection(section_size));
     did_read_names_section_ = true;
+  } else if (section_name == WABT_BINARY_SECTION_DYLINK0) {
+    CHECK_RESULT(ReadDylink0Section(section_size));
   } else if (section_name == WABT_BINARY_SECTION_DYLINK) {
     CHECK_RESULT(ReadDylinkSection(section_size));
   } else if (section_name.rfind(WABT_BINARY_SECTION_RELOC, 0) == 0) {
@@ -2303,14 +2368,14 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
         break;
       }
 
-      case ExternalKind::Event: {
+      case ExternalKind::Tag: {
         ERROR_UNLESS(options_.features.exceptions_enabled(),
-                     "invalid import event kind: exceptions not allowed");
+                     "invalid import tag kind: exceptions not allowed");
         Index sig_index;
-        CHECK_RESULT(ReadEventType(&sig_index));
-        CALLBACK(OnImportEvent, i, module_name, field_name, num_event_imports_,
+        CHECK_RESULT(ReadTagType(&sig_index));
+        CALLBACK(OnImportTag, i, module_name, field_name, num_tag_imports_,
                  sig_index);
-        num_event_imports_++;
+        num_tag_imports_++;
         break;
       }
 
@@ -2404,9 +2469,9 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
 
     Index item_index;
     CHECK_RESULT(ReadIndex(&item_index, "export item index"));
-    if (kind == ExternalKind::Event) {
+    if (kind == ExternalKind::Tag) {
       ERROR_UNLESS(options_.features.exceptions_enabled(),
-                   "invalid export event kind: exceptions not allowed");
+                   "invalid export tag kind: exceptions not allowed");
     }
 
     CALLBACK(OnExport, i, static_cast<ExternalKind>(kind), item_index, name);
@@ -2679,11 +2744,11 @@ Result BinaryReader::ReadSections() {
         section_result = ReadDataSection(section_size);
         result |= section_result;
         break;
-      case BinarySection::Event:
+      case BinarySection::Tag:
         ERROR_UNLESS(options_.features.exceptions_enabled(),
                      "invalid section code: %u",
                      static_cast<unsigned int>(section));
-        section_result = ReadEventSection(section_size);
+        section_result = ReadTagSection(section_size);
         result |= section_result;
         break;
       case BinarySection::DataCount:

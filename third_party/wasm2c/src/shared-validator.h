@@ -79,7 +79,7 @@ class SharedValidator {
   Result OnGlobalInitExpr_RefNull(const Location&, Type type);
   Result OnGlobalInitExpr_RefFunc(const Location&, Var func_var);
   Result OnGlobalInitExpr_Other(const Location&);
-  Result OnEvent(const Location&, Var sig_var);
+  Result OnTag(const Location&, Var sig_var);
 
   Result OnExport(const Location&,
                   ExternalKind,
@@ -124,7 +124,8 @@ class SharedValidator {
   Result EndBrTable(const Location&);
   Result OnCall(const Location&, Var func_var);
   Result OnCallIndirect(const Location&, Var sig_var, Var table_var);
-  Result OnCatch(const Location&, Var event_var, bool is_catch_all);
+  Result OnCallRef(const Location&, Index* function_type_index);
+  Result OnCatch(const Location&, Var tag_var, bool is_catch_all);
   Result OnCompare(const Location&, Opcode);
   Result OnConst(const Location&, Type);
   Result OnConvert(const Location&, Opcode);
@@ -171,11 +172,10 @@ class SharedValidator {
   Result OnTableSet(const Location&, Var table_var);
   Result OnTableSize(const Location&, Var table_var);
   Result OnTernary(const Location&, Opcode);
-  Result OnThrow(const Location&, Var event_var);
+  Result OnThrow(const Location&, Var tag_var);
   Result OnTry(const Location&, Type sig_type);
   Result OnUnary(const Location&, Opcode);
   Result OnUnreachable(const Location&);
-  Result OnUnwind(const Location&);
 
  private:
   struct FuncType {
@@ -224,7 +224,7 @@ class SharedValidator {
     bool mutable_ = true;
   };
 
-  struct EventType {
+  struct TagType {
     TypeVector params;
   };
 
@@ -264,7 +264,7 @@ class SharedValidator {
   Result CheckTableIndex(Var table_var, TableType* out = nullptr);
   Result CheckMemoryIndex(Var memory_var, MemoryType* out = nullptr);
   Result CheckGlobalIndex(Var global_var, GlobalType* out = nullptr);
-  Result CheckEventIndex(Var event_var, EventType* out = nullptr);
+  Result CheckTagIndex(Var tag_var, TagType* out = nullptr);
   Result CheckElemSegmentIndex(Var elem_segment_var, ElemType* out = nullptr);
   Result CheckDataSegmentIndex(Var data_segment_var);
 
@@ -294,7 +294,7 @@ class SharedValidator {
   std::vector<TableType> tables_;     // Includes imported and defined.
   std::vector<MemoryType> memories_;  // Includes imported and defined.
   std::vector<GlobalType> globals_;   // Includes imported and defined.
-  std::vector<EventType> events_;     // Includes imported and defined.
+  std::vector<TagType> tags_;         // Includes imported and defined.
   std::vector<ElemType> elems_;
   Index starts_ = 0;
   Index num_imported_globals_ = 0;
