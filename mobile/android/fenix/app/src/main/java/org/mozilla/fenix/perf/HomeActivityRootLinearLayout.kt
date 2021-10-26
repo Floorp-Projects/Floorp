@@ -11,8 +11,7 @@ import android.widget.LinearLayout
 import mozilla.components.concept.base.profiler.Profiler
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.ext.components
-
-private const val MARKER_NAME = "Measure, Layout, Draw"
+import org.mozilla.fenix.perf.ProfilerMarkers.MEASURE_LAYOUT_DRAW_MARKER_NAME
 
 /**
  * A [LinearLayout] that adds profiler markers for various methods. This is intended to be used on
@@ -25,13 +24,13 @@ class HomeActivityRootLinearLayout(context: Context, attrs: AttributeSet) : Line
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val profilerStartTime = profiler?.getProfilerTime()
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        profiler?.addMarker(MARKER_NAME, profilerStartTime, "onMeasure (HomeActivity root)")
+        profiler?.addMarker(MEASURE_LAYOUT_DRAW_MARKER_NAME, profilerStartTime, "onMeasure (HomeActivity root)")
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         val profilerStartTime = profiler?.getProfilerTime()
         super.onLayout(changed, l, t, r, b)
-        profiler?.addMarker(MARKER_NAME, profilerStartTime, "onLayout (HomeActivity root)")
+        profiler?.addMarker(MEASURE_LAYOUT_DRAW_MARKER_NAME, profilerStartTime, "onLayout (HomeActivity root)")
     }
 
     override fun dispatchDraw(canvas: Canvas?) {
@@ -39,6 +38,6 @@ class HomeActivityRootLinearLayout(context: Context, attrs: AttributeSet) : Line
         // i.e. it never calls onDraw or draw.
         val profilerStartTime = profiler?.getProfilerTime()
         super.dispatchDraw(canvas)
-        profiler?.addMarker(MARKER_NAME, profilerStartTime, "dispatchDraw (HomeActivity root)")
+        profiler?.addMarker(MEASURE_LAYOUT_DRAW_MARKER_NAME, profilerStartTime, "dispatchDraw (HomeActivity root)")
     }
 }

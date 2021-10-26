@@ -18,6 +18,8 @@ import mozilla.components.concept.engine.Engine
  */
 object ProfilerMarkers {
 
+    const val MEASURE_LAYOUT_DRAW_MARKER_NAME = "Measure, Layout, Draw"
+
     fun addListenerForOnGlobalLayout(engine: Engine, activity: Activity, rootView: View) {
         // We define the listener in a non-anonymous class to avoid memory leaks with the activity.
         val listener = MarkerGlobalLayoutListener(engine, activity::class.simpleName ?: "null")
