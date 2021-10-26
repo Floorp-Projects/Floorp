@@ -32,7 +32,8 @@ class TargetPolicy {
     SUBSYS_SYNC,             // Creation of named sync objects.
     SUBSYS_HANDLES,          // Duplication of handles to other processes.
     SUBSYS_WIN32K_LOCKDOWN,  // Win32K Lockdown related policy.
-    SUBSYS_SIGNED_BINARY     // Signed binary policy.
+    SUBSYS_SIGNED_BINARY,    // Signed binary policy.
+    SUBSYS_LINE_BREAK        // Complex line break policy.
   };
 
   // Allowable semantics when a rule is matched.
@@ -65,7 +66,8 @@ class TargetPolicy {
     IMPLEMENT_OPM_APIS,     // Implements FAKE_USER_GDI_INIT and also exposes
                             // IPC calls to handle Output Protection Manager
                             // APIs.
-    SIGNED_ALLOW_LOAD       // Allows loading the module when CIG is enabled.
+    SIGNED_ALLOW_LOAD,      // Allows loading the module when CIG is enabled.
+    LINE_BREAK_ALLOW        // Allow complex line break brokering.
   };
 
   // Increments the reference count of this object. The reference count must

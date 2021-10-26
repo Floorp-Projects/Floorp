@@ -14,6 +14,7 @@
 #include "sandbox/win/src/interception.h"
 #include "sandbox/win/src/internal_types.h"
 #include "sandbox/win/src/ipc_tags.h"
+#include "sandbox/win/src/line_break_dispatcher.h"
 #include "sandbox/win/src/named_pipe_dispatcher.h"
 #include "sandbox/win/src/process_mitigations_win32k_dispatcher.h"
 #include "sandbox/win/src/process_thread_dispatcher.h"
@@ -95,6 +96,10 @@ TopLevelDispatcher::TopLevelDispatcher(PolicyBase* policy) : policy_(policy) {
   dispatcher = new SignedDispatcher(policy_);
   ipc_targets_[static_cast<size_t>(IpcTag::NTCREATESECTION)] = dispatcher;
   signed_dispatcher_.reset(dispatcher);
+
+  dispatcher = new LineBreakDispatcher(policy_);
+  ipc_targets_[static_cast<size_t>(IpcTag::GETCOMPLEXLINEBREAKS)] = dispatcher;
+  line_break_dispatcher_.reset(dispatcher);
 }
 
 TopLevelDispatcher::~TopLevelDispatcher() {}

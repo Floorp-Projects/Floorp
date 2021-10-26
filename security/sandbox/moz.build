@@ -49,6 +49,9 @@ elif CONFIG["OS_ARCH"] == "WINNT":
         "chromium-shim/base/win/win_util.cpp",
         "chromium-shim/sandbox/win/permissionsService.cpp",
         "chromium-shim/sandbox/win/sandboxLogging.cpp",
+        "chromium-shim/sandbox/win/src/line_break_dispatcher.cc",
+        "chromium-shim/sandbox/win/src/line_break_interception.cc",
+        "chromium-shim/sandbox/win/src/line_break_policy.cc",
         "chromium/base/at_exit.cc",
         "chromium/base/base_switches.cc",
         "chromium/base/callback_internal.cc",
@@ -203,6 +206,8 @@ elif CONFIG["OS_ARCH"] == "WINNT":
     LOCAL_INCLUDES += ["/security/sandbox/chromium-shim"]
     LOCAL_INCLUDES += ["/security/sandbox/chromium"]
     LOCAL_INCLUDES += ["/nsprpub"]
+
+    OS_LIBS += ["usp10"]
 
     DisableStlWrapping()
 

@@ -50,6 +50,8 @@ class TargetServicesBase : public TargetServices {
                              HANDLE* target_handle,
                              DWORD desired_access,
                              DWORD options) override;
+  ResultCode GetComplexLineBreaks(const WCHAR* text, uint32_t length,
+                                  uint8_t* break_before) final;
 
   // Factory method.
   static TargetServicesBase* GetInstance();

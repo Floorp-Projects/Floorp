@@ -20,6 +20,7 @@ void ReleaseArgs(const IPCParams* ipc_params, void* args[kMaxIpcParams]) {
         args[i] = nullptr;
         break;
       }
+      case INPTR_TYPE:
       case INOUTPTR_TYPE: {
         delete reinterpret_cast<CountedBuffer*>(args[i]);
         args[i] = nullptr;
@@ -74,6 +75,7 @@ bool GetArgs(CrossCallParamsEx* params,
           args[i] = data;
           break;
         }
+        case INPTR_TYPE:
         case INOUTPTR_TYPE: {
           if (!args[i]) {
             ReleaseArgs(ipc_params, args);

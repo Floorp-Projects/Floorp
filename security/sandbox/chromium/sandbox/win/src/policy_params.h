@@ -61,6 +61,10 @@ POLPARAMS_BEGIN(HandleTarget)
   POLPARAM(TARGET)
 POLPARAMS_END(HandleTarget)
 
+// Policy parameters where no parameter based checks are done.
+POLPARAMS_BEGIN(EmptyParams)
+POLPARAMS_END(EmptyParams)
+
 }  // namespace sandbox
 
 #endif  // SANDBOX_SRC_POLICY_PARAMS_H__

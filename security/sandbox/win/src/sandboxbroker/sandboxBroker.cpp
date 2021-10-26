@@ -783,6 +783,13 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
       sandbox::SBOX_ALL_OK == result,
       "With these static arguments AddRule should never fail, what happened?");
 
+  // Allow content processes to use complex line breaking brokering.
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_LINE_BREAK,
+                            sandbox::TargetPolicy::LINE_BREAK_ALLOW, nullptr);
+  MOZ_RELEASE_ASSERT(
+      sandbox::SBOX_ALL_OK == result,
+      "With these static arguments AddRule should never fail, what happened?");
+
   if (aSandboxLevel >= 20) {
     // Content process still needs to be able to read fonts.
     wchar_t* fontsPath;

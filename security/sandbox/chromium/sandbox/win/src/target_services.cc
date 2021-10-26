@@ -14,6 +14,7 @@
 #include "sandbox/win/src/handle_closer_agent.h"
 #include "sandbox/win/src/handle_interception.h"
 #include "sandbox/win/src/heap_helper.h"
+#include "sandbox/win/src/line_break_interception.h"
 #include "sandbox/win/src/ipc_tags.h"
 #include "sandbox/win/src/process_mitigations.h"
 #include "sandbox/win/src/restricted_token_utils.h"
@@ -245,7 +246,6 @@ void ProcessState::SetCsrssConnected(bool csrss_connected) {
   csrss_connected_ = csrss_connected;
 }
 
-
 ResultCode TargetServicesBase::DuplicateHandle(HANDLE source_handle,
                                                DWORD target_process_id,
                                                HANDLE* target_handle,
@@ -253,6 +253,12 @@ ResultCode TargetServicesBase::DuplicateHandle(HANDLE source_handle,
                                                DWORD options) {
   return sandbox::DuplicateHandleProxy(source_handle, target_process_id,
                                        target_handle, desired_access, options);
+}
+
+ResultCode TargetServicesBase::GetComplexLineBreaks(const WCHAR* text,
+                                                    uint32_t length,
+                                                    uint8_t* break_before) {
+  return sandbox::GetComplexLineBreaksProxy(text, length, break_before);
 }
 
 }  // namespace sandbox
