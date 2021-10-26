@@ -10,10 +10,8 @@ import { DSMessage } from "content-src/components/DiscoveryStreamComponents/DSMe
 import { DSPrivacyModal } from "content-src/components/DiscoveryStreamComponents/DSPrivacyModal/DSPrivacyModal";
 import { DSSignup } from "content-src/components/DiscoveryStreamComponents/DSSignup/DSSignup";
 import { DSTextPromo } from "content-src/components/DiscoveryStreamComponents/DSTextPromo/DSTextPromo";
-import { Hero } from "content-src/components/DiscoveryStreamComponents/Hero/Hero";
 import { Highlights } from "content-src/components/DiscoveryStreamComponents/Highlights/Highlights";
 import { HorizontalRule } from "content-src/components/DiscoveryStreamComponents/HorizontalRule/HorizontalRule";
-import { List } from "content-src/components/DiscoveryStreamComponents/List/List";
 import { Navigation } from "content-src/components/DiscoveryStreamComponents/Navigation/Navigation";
 import { PrivacyLink } from "content-src/components/DiscoveryStreamComponents/PrivacyLink/PrivacyLink";
 import React from "react";
@@ -219,35 +217,8 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             display_engagement_labels={ENGAGEMENT_LABEL_ENABLED}
           />
         );
-      case "Hero":
-        return (
-          <Hero
-            subComponentType={embedWidth >= 9 ? `cards` : `list`}
-            feed={component.feed}
-            title={component.header && component.header.title}
-            data={component.data}
-            border={component.properties.border}
-            type={component.type}
-            dispatch={this.props.dispatch}
-            items={component.properties.items}
-          />
-        );
       case "HorizontalRule":
         return <HorizontalRule />;
-      case "List":
-        return (
-          <List
-            data={component.data}
-            feed={component.feed}
-            fullWidth={component.properties.full_width}
-            hasBorders={component.properties.border === "border"}
-            hasImages={component.properties.has_images}
-            hasNumbers={component.properties.has_numbers}
-            items={component.properties.items}
-            type={component.type}
-            header={component.header}
-          />
-        );
       case "PrivacyLink":
         return <PrivacyLink properties={component.properties} />;
       default:
