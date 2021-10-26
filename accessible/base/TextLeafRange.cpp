@@ -222,7 +222,10 @@ class PrevWordBreakClassWalker {
   }
 
   bool IsStartOfGroup() {
-    PrevChar();
+    if (!PrevChar()) {
+      // There are no characters before us.
+      return true;
+    }
     WordBreakClass curClass = GetClass(mText.CharAt(mOffset));
     // We wanted to peek at the previous character, not really move to it.
     ++mOffset;
@@ -234,6 +237,10 @@ class PrevWordBreakClassWalker {
     if (mOffset > 0) {
       --mOffset;
       return true;
+    }
+    if (!mAcc) {
+      // PrevChar was called already and failed.
+      return false;
     }
     mAcc = PrevLeaf(mAcc);
     if (!mAcc) {
