@@ -44,10 +44,6 @@ namespace sandbox {
 
 enum class IpcTag;
 
-// this is the assumed channel size. This can be overridden in a given
-// IPC implementation.
-const uint32_t kIPCChannelSize = 1024;
-
 // The copy helper uses templates to deduce the appropriate copy function to
 // copy the input parameters in the buffer that is going to be send across the
 // IPC. These template facility can be made more sophisticated as need arises.
@@ -209,6 +205,32 @@ class InOutCountedBuffer : public CountedBuffer {
  public:
   InOutCountedBuffer(void* buffer, uint32_t size)
       : CountedBuffer(buffer, size) {}
+};
+
+// This copy helper template specialization catches the cases where the
+// parameter is a an input buffer.
+template <>
+class CopyHelper<CountedBuffer> {
+ public:
+  CopyHelper(const CountedBuffer t) : t_(t) {}
+
+  // Returns the pointer to the start of the string.
+  const void* GetStart() const { return t_.Buffer(); }
+
+  // Update not required so just return true;
+  bool Update(void* buffer) { return true; }
+
+  // Returns the size of the string in bytes. We define a nullptr string to
+  // be of zero length.
+  uint32_t GetSize() const { return t_.Size(); }
+
+  // Returns true if the current type is used as an In or InOut parameter.
+  bool IsInOut() { return false; }
+
+  ArgType GetType() { return INPTR_TYPE; }
+
+ private:
+  const CountedBuffer t_;
 };
 
 // This copy helper template specialization catches the cases where the

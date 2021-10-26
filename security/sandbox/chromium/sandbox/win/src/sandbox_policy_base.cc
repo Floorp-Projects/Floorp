@@ -20,6 +20,7 @@
 #include "sandbox/win/src/handle_policy.h"
 #include "sandbox/win/src/interception.h"
 #include "sandbox/win/src/job.h"
+#include "sandbox/win/src/line_break_policy.h"
 #include "sandbox/win/src/named_pipe_policy.h"
 #include "sandbox/win/src/policy_broker.h"
 #include "sandbox/win/src/policy_engine_processor.h"
@@ -811,6 +812,13 @@ ResultCode PolicyBase::AddRuleInternal(SubSystem subsystem,
           NOTREACHED();
           return SBOX_ERROR_BAD_PARAMS;
         }
+      }
+      break;
+    }
+    case SUBSYS_LINE_BREAK: {
+      if (!LineBreakPolicy::GenerateRules(pattern, semantics, policy_maker_)) {
+        NOTREACHED();
+        return SBOX_ERROR_BAD_PARAMS;
       }
       break;
     }

@@ -62,6 +62,9 @@ class SandboxTarget {
                              HANDLE* aTargetHandle, DWORD aDesiredAccess,
                              DWORD aOptions);
 
+  bool GetComplexLineBreaks(const WCHAR* text, uint32_t length,
+                            uint8_t* break_before);
+
  protected:
   SandboxTarget() : mTargetServices(nullptr) {}
 

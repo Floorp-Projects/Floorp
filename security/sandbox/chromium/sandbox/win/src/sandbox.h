@@ -181,6 +181,9 @@ class TargetServices {
                                      DWORD desired_access,
                                      DWORD options) = 0;
 
+  virtual ResultCode GetComplexLineBreaks(const WCHAR* text, uint32_t length,
+                                          uint8_t* break_before) = 0;
+
  protected:
   ~TargetServices() {}
 };
