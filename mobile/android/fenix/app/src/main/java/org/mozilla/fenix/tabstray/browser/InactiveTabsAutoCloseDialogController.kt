@@ -20,7 +20,7 @@ class InactiveTabsAutoCloseDialogController(
      * Dismiss the auto-close dialog.
      */
     fun close() {
-        settings.hasInactiveTabsAutoCloseDialogBeenDismissed = true
+        markDialogAsShown()
         refeshInactiveTabsSecion()
     }
 
@@ -28,12 +28,19 @@ class InactiveTabsAutoCloseDialogController(
      * Enable the auto-close feature with the after a month setting.
      */
     fun enableAutoClosed() {
-        settings.hasInactiveTabsAutoCloseDialogBeenDismissed = true
+        markDialogAsShown()
         settings.closeTabsAfterOneMonth = true
         settings.closeTabsAfterOneWeek = false
         settings.closeTabsAfterOneDay = false
         settings.manuallyCloseTabs = false
         refeshInactiveTabsSecion()
+    }
+
+    /**
+     * Marks the dialog as shown and to not be displayed again.
+     */
+    private fun markDialogAsShown() {
+        settings.hasInactiveTabsAutoCloseDialogBeenDismissed = true
     }
 
     @VisibleForTesting
