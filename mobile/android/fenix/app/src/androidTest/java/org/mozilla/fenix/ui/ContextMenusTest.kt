@@ -32,7 +32,6 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  *
  */
 
-@Ignore("Test failures: https://github.com/mozilla-mobile/fenix/issues/18421")
 class ContextMenusTest {
     private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     private lateinit var mockWebServer: MockWebServer
@@ -53,6 +52,7 @@ class ContextMenusTest {
         mockWebServer.shutdown()
     }
 
+    @Ignore("Test failures: https://github.com/mozilla-mobile/fenix/issues/18421")
     @Test
     fun verifyContextOpenLinkNewTab() {
         val pageLinks =
@@ -76,6 +76,7 @@ class ContextMenusTest {
         }
     }
 
+    @Ignore("Test failures: https://github.com/mozilla-mobile/fenix/issues/18421")
     @Test
     fun verifyContextOpenLinkPrivateTab() {
         val pageLinks =
@@ -177,7 +178,6 @@ class ContextMenusTest {
     }
 
     @Test
-    @Ignore("Intermittent: https://github.com/mozilla-mobile/fenix/issues/12309")
     fun verifyContextSaveImage() {
         val pageLinks =
             TestAssetHelper.getGenericAsset(mockWebServer, 4)
@@ -202,7 +202,6 @@ class ContextMenusTest {
     }
 
     @Test
-    @Ignore("Intermittent: https://github.com/mozilla-mobile/fenix/issues/12309")
     fun verifyContextMixedVariations() {
         val pageLinks =
             TestAssetHelper.getGenericAsset(mockWebServer, 4)
