@@ -91,7 +91,7 @@ html|input.findbar-textbox:not(:focus):-moz-lwtheme::selection {
 html|input.findbar-textbox[status="notfound"] {
   border-color: transparent;
   outline: 2px solid var(--input-error-border-color, #E22850);
-  outline-offset: -1px; /* Prevents antialising around the corners */
+  outline-offset: -2px;
 }
 
 html|input.findbar-textbox[flash="true"] {
