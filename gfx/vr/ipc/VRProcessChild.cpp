@@ -7,6 +7,7 @@
 #include "VRProcessChild.h"
 
 #include "mozilla/BackgroundHangMonitor.h"
+#include "mozilla/GeckoArgs.h"
 #include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/ipc/ProcessUtils.h"
 
@@ -28,51 +29,19 @@ VRParent* VRProcessChild::GetVRParent() {
 }
 
 bool VRProcessChild::Init(int aArgc, char* aArgv[]) {
-  char* parentBuildID = nullptr;
-  char* prefsHandle = nullptr;
-  char* prefMapHandle = nullptr;
-  char* prefsLen = nullptr;
-  char* prefMapSize = nullptr;
-  for (int i = 1; i < aArgc; i++) {
-    if (!aArgv[i]) {
-      continue;
-    }
-    if (strcmp(aArgv[i], "-parentBuildID") == 0) {
-      parentBuildID = aArgv[i + 1];
-
-#ifdef XP_WIN
-    } else if (strcmp(aArgv[i], "-prefsHandle") == 0) {
-      if (++i == aArgc) {
-        return false;
-      }
-      prefsHandle = aArgv[i];
-    } else if (strcmp(aArgv[i], "-prefMapHandle") == 0) {
-      if (++i == aArgc) {
-        return false;
-      }
-      prefMapHandle = aArgv[i];
-#endif
-    } else if (strcmp(aArgv[i], "-prefsLen") == 0) {
-      if (++i == aArgc) {
-        return false;
-      }
-      prefsLen = aArgv[i];
-    } else if (strcmp(aArgv[i], "-prefMapSize") == 0) {
-      if (++i == aArgc) {
-        return false;
-      }
-      prefMapSize = aArgv[i];
-    }
+  Maybe<const char*> parentBuildID =
+      geckoargs::sParentBuildID.Get(aArgc, aArgv);
+  if (parentBuildID.isNothing()) {
+    return false;
   }
 
-  ipc::SharedPreferenceDeserializer deserializer;
-  if (!deserializer.DeserializeFromSharedMemory(prefsHandle, prefMapHandle,
-                                                prefsLen, prefMapSize)) {
+  if (!ProcessChild::InitPrefs(aArgc, aArgv)) {
     return false;
   }
 
   sVRParent = new VRParent();
-  sVRParent->Init(ParentPid(), parentBuildID, IOThreadChild::TakeInitialPort());
+  sVRParent->Init(ParentPid(), *parentBuildID,
+                  IOThreadChild::TakeInitialPort());
 
   return true;
 }

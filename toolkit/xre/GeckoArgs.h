@@ -101,6 +101,30 @@ inline void CommandLineArg<uint64_t>::Put(uint64_t aValue,
   aArgs.push_back(std::to_string(aValue));
 }
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
+
+static CommandLineArg<const char*> sParentBuildID{"-parentBuildID",
+                                                  "parentbuildid"};
+static CommandLineArg<const char*> sAppDir{"-appDir", "appdir"};
+static CommandLineArg<const char*> sProfile{"-profile", "profile"};
+
+static CommandLineArg<uint64_t> sJsInitHandle{"-jsInitHandle", "jsinithandle"};
+static CommandLineArg<uint64_t> sJsInitLen{"-jsInitLen", "jsinitlen"};
+static CommandLineArg<uint64_t> sPrefsHandle{"-prefsHandle", "prefshandle"};
+static CommandLineArg<uint64_t> sPrefsLen{"-prefsLen", "prefslen"};
+static CommandLineArg<uint64_t> sPrefMapHandle{"-prefMapHandle",
+                                               "prefmaphandle"};
+static CommandLineArg<uint64_t> sPrefMapSize{"-prefMapSize", "prefmapsize"};
+
+static CommandLineArg<uint64_t> sChildID{"-childID", "childid"};
+
+static CommandLineArg<bool> sSafeMode{"-safeMode", "safemode"};
+
+static CommandLineArg<bool> sIsForBrowser{"-isForBrowser", "isforbrowser"};
+static CommandLineArg<bool> sNotForBrowser{"-notForBrowser", "notforbrowser"};
+
 }  // namespace geckoargs
 
 }  // namespace mozilla
