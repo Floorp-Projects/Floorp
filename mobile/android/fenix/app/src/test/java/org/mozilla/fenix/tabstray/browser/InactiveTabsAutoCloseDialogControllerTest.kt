@@ -14,9 +14,13 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabsTray
 import org.junit.Test
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.utils.Settings
 
 class InactiveTabsAutoCloseDialogControllerTest {
+
+    val metrics: MetricController = mockk(relaxed = true)
 
     @Test
     fun `WHEN close THEN update settings and refresh`() {
@@ -24,12 +28,13 @@ class InactiveTabsAutoCloseDialogControllerTest {
         val store = BrowserStore()
         val settings: Settings = mockk(relaxed = true)
         val tray: TabsTray = mockk(relaxed = true)
-        val controller = spyk(InactiveTabsAutoCloseDialogController(store, settings, filter, tray))
+        val controller = spyk(InactiveTabsAutoCloseDialogController(store, settings, filter, tray, metrics))
 
         every { controller.refeshInactiveTabsSecion() } just Runs
 
         controller.close()
 
+        verify { metrics.track(Event.TabsTrayAutoCloseDialogDismissed) }
         verify { settings.hasInactiveTabsAutoCloseDialogBeenDismissed = true }
         verify { controller.refeshInactiveTabsSecion() }
     }
@@ -40,12 +45,13 @@ class InactiveTabsAutoCloseDialogControllerTest {
         val store = BrowserStore()
         val settings: Settings = mockk(relaxed = true)
         val tray: TabsTray = mockk(relaxed = true)
-        val controller = spyk(InactiveTabsAutoCloseDialogController(store, settings, filter, tray))
+        val controller = spyk(InactiveTabsAutoCloseDialogController(store, settings, filter, tray, metrics))
 
         every { controller.refeshInactiveTabsSecion() } just Runs
 
         controller.enableAutoClosed()
 
+        verify { metrics.track(Event.TabsTrayAutoCloseDialogTurnOnClicked) }
         verify { settings.closeTabsAfterOneMonth = true }
         verify { settings.closeTabsAfterOneWeek = false }
         verify { settings.closeTabsAfterOneDay = false }

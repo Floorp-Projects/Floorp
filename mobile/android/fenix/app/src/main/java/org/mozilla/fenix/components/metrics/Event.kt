@@ -197,6 +197,9 @@ sealed class Event {
     object TabsTrayRecentlyClosedPressed : Event()
     object TabsTrayInactiveTabsExpanded : Event()
     object TabsTrayInactiveTabsCollapsed : Event()
+    object TabsTrayAutoCloseDialogSeen : Event()
+    object TabsTrayAutoCloseDialogTurnOnClicked : Event()
+    object TabsTrayAutoCloseDialogDismissed : Event()
     data class TabsTrayHasInactiveTabs(val count: Int) : Event() {
         override val extras = mapOf(TabsTray.hasInactiveTabsKeys.inactiveTabsCount to count.toString())
     }

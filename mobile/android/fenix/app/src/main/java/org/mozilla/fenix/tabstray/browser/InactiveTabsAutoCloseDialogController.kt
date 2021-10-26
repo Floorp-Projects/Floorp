@@ -8,13 +8,16 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabsTray
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.utils.Settings
 
 class InactiveTabsAutoCloseDialogController(
     private val browserStore: BrowserStore,
     private val settings: Settings,
     private val tabFilter: (TabSessionState) -> Boolean,
-    private val tray: TabsTray
+    private val tray: TabsTray,
+    private val metrics: MetricController
 ) {
     /**
      * Dismiss the auto-close dialog.
@@ -22,6 +25,7 @@ class InactiveTabsAutoCloseDialogController(
     fun close() {
         markDialogAsShown()
         refeshInactiveTabsSecion()
+        metrics.track(Event.TabsTrayAutoCloseDialogDismissed)
     }
 
     /**
@@ -34,6 +38,7 @@ class InactiveTabsAutoCloseDialogController(
         settings.closeTabsAfterOneDay = false
         settings.manuallyCloseTabs = false
         refeshInactiveTabsSecion()
+        metrics.track(Event.TabsTrayAutoCloseDialogTurnOnClicked)
     }
 
     /**

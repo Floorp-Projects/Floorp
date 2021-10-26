@@ -2998,6 +2998,45 @@ tabs_tray:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-11-01"
+  auto_close_seen:
+    type: event
+    description: |
+      A user has seen the auto-close dialog for inactive tabs.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22170
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22171
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  auto_close_turn_on_clicked:
+    type: event
+    description: |
+      A user has clicked the turn-on auto-close button for inactive tabs.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22170
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22171
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  auto_close_dimissed:
+    type: event
+    description: |
+      A user has dimissed the auto-close dialog for inactive tabs.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22170
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22171
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
   close_inactive_tab:
     type: counter
     description: |

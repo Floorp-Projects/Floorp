@@ -614,6 +614,15 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.TabsTrayInactiveTabsCollapsed -> EventWrapper<NoExtraKeys>(
             { TabsTray.inactiveTabsCollapsed.record(it) }
         )
+        is Event.TabsTrayAutoCloseDialogDismissed -> EventWrapper<NoExtraKeys>(
+            { TabsTray.autoCloseDimissed }
+        )
+        is Event.TabsTrayAutoCloseDialogSeen -> EventWrapper<NoExtraKeys>(
+            { TabsTray.autoCloseSeen }
+        )
+        is Event.TabsTrayAutoCloseDialogTurnOnClicked -> EventWrapper<NoExtraKeys>(
+            { TabsTray.autoCloseTurnOnClicked }
+        )
         is Event.TabsTrayHasInactiveTabs -> EventWrapper(
             { TabsTray.hasInactiveTabs.record(it) },
             { TabsTray.hasInactiveTabsKeys.valueOf(it) }
