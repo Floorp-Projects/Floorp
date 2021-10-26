@@ -12,6 +12,8 @@
 
 #include "chrome/common/child_process.h"
 
+#include "mozilla/ipc/ProcessUtils.h"
+
 // ProcessChild is the base class for all subprocesses of the main
 // browser process.  Its code runs on the thread that started in
 // main().
@@ -28,6 +30,11 @@ class ProcessChild : public ChildProcess {
   virtual ~ProcessChild();
 
   virtual bool Init(int aArgc, char* aArgv[]) = 0;
+
+  static void AddPlatformBuildID(std::vector<std::string>& aExtraArgs);
+
+  static bool InitPrefs(int aArgc, char* aArgv[]);
+
   virtual void CleanUp() {}
 
   static MessageLoop* message_loop() { return gProcessChild->mUILoop; }
