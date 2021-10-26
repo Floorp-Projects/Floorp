@@ -3355,17 +3355,26 @@ HttpBaseChannel::SetBeConservative(bool aBeConservative) {
   return NS_OK;
 }
 
+bool HttpBaseChannel::BypassProxy() {
+  return StaticPrefs::network_proxy_allow_bypass() && LoadBypassProxy();
+}
+
 NS_IMETHODIMP
 HttpBaseChannel::GetBypassProxy(bool* aBypassProxy) {
   NS_ENSURE_ARG_POINTER(aBypassProxy);
 
-  *aBypassProxy = LoadBypassProxy();
+  *aBypassProxy = BypassProxy();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpBaseChannel::SetBypassProxy(bool aBypassProxy) {
-  StoreBypassProxy(aBypassProxy);
+  if (StaticPrefs::network_proxy_allow_bypass()) {
+    StoreBypassProxy(aBypassProxy);
+  } else {
+    NS_WARNING("bypassProxy set but network.proxy.bypass is disabled");
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
