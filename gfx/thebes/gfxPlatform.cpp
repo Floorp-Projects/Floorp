@@ -82,6 +82,7 @@
 
 #ifdef XP_WIN
 #  include "mozilla/WindowsVersion.h"
+#  include "WinUtils.h"
 #endif
 
 #include "nsGkAtoms.h"
@@ -1274,7 +1275,7 @@ void gfxPlatform::InitLayersIPC() {
   if (XRE_IsParentProcess()) {
 #if defined(XP_WIN)
     if (gfxConfig::IsEnabled(gfx::Feature::WINDOW_OCCLUSION)) {
-      widget::WinWindowOcclusionTracker::Start();
+      widget::WinWindowOcclusionTracker::Ensure();
     }
 #endif
     if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS) && UseWebRender()) {
@@ -2741,6 +2742,31 @@ void gfxPlatform::InitWebGPUConfig() {
   }
 }
 
+#ifdef XP_WIN
+static void WindowOcclusionPrefChangeCallback(const char* aPref, void*) {
+  const char* env = PR_GetEnv("MOZ_WINDOW_OCCLUSION");
+  if (env) {
+    // env has a higher priority than pref.
+    return;
+  }
+
+  FeatureState& feature = gfxConfig::GetFeature(Feature::WINDOW_OCCLUSION);
+  bool enabled =
+      StaticPrefs::widget_windows_window_occlusion_tracking_enabled();
+
+  printf_stderr("Dynamically enable window occlusion %d\n", enabled);
+
+  // Update feature before calling WinUtils::EnableWindowOcclusion()
+  if (enabled) {
+    feature.UserEnable("User enabled by pref");
+  } else {
+    feature.UserDisable("User disabled via pref",
+                        "FEATURE_FAILURE_PREF_DISABLED"_ns);
+  }
+  widget::WinUtils::EnableWindowOcclusion(enabled);
+}
+#endif
+
 void gfxPlatform::InitWindowOcclusionConfig() {
   if (!XRE_IsParentProcess()) {
     return;
@@ -2763,6 +2789,12 @@ void gfxPlatform::InitWindowOcclusionConfig() {
                           "FEATURE_FAILURE_OCCL_ENV"_ns);
     }
   }
+
+  Preferences::RegisterCallback(
+      WindowOcclusionPrefChangeCallback,
+      nsDependentCString(
+          StaticPrefs::
+              GetPrefName_widget_windows_window_occlusion_tracking_enabled()));
 #endif
 }
 

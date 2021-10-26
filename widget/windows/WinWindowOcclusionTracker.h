@@ -51,7 +51,7 @@ class WinWindowOcclusionTracker final
   static RefPtr<WinWindowOcclusionTracker> Get();
 
   /// Can only be called from the main thread.
-  static void Start();
+  static void Ensure();
 
   /// Can only be called from the main thread.
   static void ShutDown();

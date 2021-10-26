@@ -571,6 +571,8 @@ class WinUtils {
 
   static bool GetClassName(HWND aHwnd, nsAString& aName);
 
+  static void EnableWindowOcclusion(const bool aEnable);
+
  private:
   static WhitelistVec BuildWhitelist();
 

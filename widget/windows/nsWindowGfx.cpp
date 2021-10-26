@@ -439,15 +439,35 @@ void nsWindow::NotifyOcclusionState(mozilla::widget::OcclusionState aState) {
   }
 }
 
+void nsWindow::MaybeEnableWindowOcclusion(bool aEnable) {
+  bool enabled = gfxConfig::IsEnabled(gfx::Feature::WINDOW_OCCLUSION);
+
+  if (aEnable) {
+    // Enable window occlusion.
+    if (enabled && NeedsToTrackWindowOcclusionState()) {
+      WinWindowOcclusionTracker::Get()->Enable(this, mWnd);
+    }
+    return;
+  }
+
+  // Disable window occlusion.
+  MOZ_ASSERT(!aEnable);
+
+  if (!NeedsToTrackWindowOcclusionState()) {
+    return;
+  }
+
+  WinWindowOcclusionTracker::Get()->Disable(this, mWnd);
+  NotifyOcclusionState(OcclusionState::VISIBLE);
+}
+
 // This override of CreateCompositor is to add support for sending the IPC
 // call for RequesetFxrOutput as soon as the compositor for this widget is
 // available.
 void nsWindow::CreateCompositor() {
   nsWindowBase::CreateCompositor();
 
-  if (NeedsToTrackWindowOcclusionState()) {
-    WinWindowOcclusionTracker::Get()->Enable(this, mWnd);
-  }
+  MaybeEnableWindowOcclusion(/* aEnable */ true);
 
   if (mRequestFxrOutputPending) {
     GetRemoteRenderer()->SendRequestFxrOutput();
@@ -455,9 +475,7 @@ void nsWindow::CreateCompositor() {
 }
 
 void nsWindow::DestroyCompositor() {
-  if (NeedsToTrackWindowOcclusionState()) {
-    WinWindowOcclusionTracker::Get()->Disable(this, mWnd);
-  }
+  MaybeEnableWindowOcclusion(/* aEnable */ false);
 
   nsWindowBase::DestroyCompositor();
 }
