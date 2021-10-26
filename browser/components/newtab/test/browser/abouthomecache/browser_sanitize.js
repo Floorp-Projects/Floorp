@@ -37,7 +37,14 @@ add_task(async function test_sanitize() {
         });
       });
 
-      await simulateRestart(browser, { withAutoShutdownWrite: false });
+      // For the purposes of the test, we don't want the write-on-shutdown
+      // behaviour here (because we just want to test that the cache doesn't
+      // exist on startup if the history data was cleared). We also therefore
+      // don't need to ensure that the cache wins the race.
+      await simulateRestart(browser, {
+        withAutoShutdownWrite: false,
+        ensureCacheWinsRace: false,
+      });
       await ensureDynamicAboutHome(
         browser,
         AboutHomeStartupCache.CACHE_RESULT_SCALARS.DOES_NOT_EXIST

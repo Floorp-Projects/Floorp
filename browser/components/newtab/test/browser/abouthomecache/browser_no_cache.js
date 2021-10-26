@@ -12,7 +12,13 @@ requestLongerTimeout(2);
 add_task(async function test_no_cache() {
   await BrowserTestUtils.withNewTab("about:home", async browser => {
     await clearCache();
-    await simulateRestart(browser, false /* withAutoShutdownWrite */);
+    // We're testing the no-cache case, so we bypass the automatic writing
+    // of the cache on shutdown, and we also don't need to wait for the
+    // cache to be available.
+    await simulateRestart(browser, {
+      withAutoShutdownWrite: false,
+      ensureCacheWinsRace: false,
+    });
     await ensureDynamicAboutHome(
       browser,
       AboutHomeStartupCache.CACHE_RESULT_SCALARS.DOES_NOT_EXIST

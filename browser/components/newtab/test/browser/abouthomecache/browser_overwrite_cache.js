@@ -28,7 +28,7 @@ add_task(async function test_overwrite_cache() {
       </html>`,
       "window.__FROM_STARTUP_CACHE__ = true;"
     );
-    await simulateRestart(browser, false /* withAutoShutdownWrite */);
+    await simulateRestart(browser, { withAutoShutdownWrite: false });
 
     await SpecialPowers.spawn(browser, [TEST_ID], async testID => {
       let target = content.document.getElementById(testID);
