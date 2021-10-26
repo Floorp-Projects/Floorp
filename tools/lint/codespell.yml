@@ -57,7 +57,7 @@ codespell:
         - tools/tryselect/
         - uriloader/docs/
     exclude:
-        - devtools/docs/tools/storage/
+        - devtools/docs/contributor/tools/storage/
         - tools/lint/cpp/mingw-headers.txt
         - tools/lint/test/test_codespell.py
         - "**/package-lock.json"
