@@ -24,6 +24,8 @@ UNIFIED_SOURCES += [
     "OpusParser.cpp",
 ]
 
+LOCAL_INCLUDES += ["!/security/rlbox"]
+
 FINAL_LIBRARY = "xul"
 
 # Add libFuzzer configuration directives

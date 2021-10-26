@@ -631,11 +631,7 @@ struct gfxFontEntry::GrSandboxData {
       grGetGlyphAdvanceCallback;
 
   GrSandboxData() {
-#ifdef MOZ_WASM_SANDBOXING_GRAPHITE
-    sandbox.create_sandbox(mozilla::ipc::GetSandboxedRLBoxPath().get());
-#else
     sandbox.create_sandbox();
-#endif
     grGetTableCallback = sandbox.register_callback(GrGetTable);
     grReleaseTableCallback = sandbox.register_callback(GrReleaseTable);
     grGetGlyphAdvanceCallback =
