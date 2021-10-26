@@ -53,9 +53,9 @@ class SharedPreferenceDeserializer final {
   SharedPreferenceDeserializer();
   ~SharedPreferenceDeserializer();
 
-  bool DeserializeFromSharedMemory(uint64_t aPrefsHandle,
-                                   uint64_t aPrefMapHandle, uint64_t aPrefsLen,
-                                   uint64_t aPrefMapSize);
+  bool DeserializeFromSharedMemory(char* aPrefsHandleStr,
+                                   char* aPrefMapHandleStr, char* aPrefsLenStr,
+                                   char* aPrefMapSizeStr);
 
   const base::SharedMemoryHandle& GetPrefsHandle() const;
   const FileDescriptor& GetPrefMapHandle() const;
@@ -83,7 +83,7 @@ void ExportSharedJSInit(GeckoChildProcessHost& procHost,
 
 // Initialize the content used by the JS engine during the initialization of a
 // JS::Runtime.
-bool ImportSharedJSInit(uint64_t aJsInitHandle, uint64_t aJsInitLen);
+bool ImportSharedJSInit(char* aJsInitHandleStr, char* aJsInitLenStr);
 
 }  // namespace ipc
 }  // namespace mozilla
