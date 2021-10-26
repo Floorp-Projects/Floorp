@@ -5903,6 +5903,16 @@
     type: bool
     value: @IS_NOT_EARLY_BETA_OR_EARLIER@
     mirror: always
+
+#if defined(ENABLE_TESTS)
+  # If true, NS_GetComplexLineBreaks compares the line breaks produced in the
+  # content process using the Uniscribe line breaker, with those from a
+  # brokered call to the parent.
+-   name: intl.compare_against_brokered_complex_line_breaks
+    type: bool
+    value: false
+    mirror: always
+#endif
 #endif
 
 # If you use legacy Chinese IME which puts an ideographic space to composition

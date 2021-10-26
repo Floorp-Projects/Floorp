@@ -11,6 +11,11 @@
 
 namespace sandbox {
 
+#if defined(ENABLE_TESTS)
+// Set a low max brokered length for testing to exercise the chunking code.
+static const std::ptrdiff_t kMaxBrokeredLen = 50;
+
+#else
 // Parameters are stored aligned to sizeof(int64_t).
 // So to calculate the maximum length we can use when brokering to the parent,
 // we take the max params buffer size, take off 8 for the aligned length and 6
@@ -19,6 +24,7 @@ namespace sandbox {
 // are wchar_t and the break before elements are uint8_t.
 static const std::ptrdiff_t kMaxBrokeredLen =
     (ActualCallParams<3, kIPCChannelSize>::MaxParamsSize() - 8 - 6 - 7) / 3;
+#endif
 
 }  // namespace sandbox
 
