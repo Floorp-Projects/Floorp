@@ -336,6 +336,20 @@ body[lwt-newtab-brighttext] {
   border-radius: 2px;
   color: #FFF;
 }
+@media (prefers-contrast: more) {
+  .onboardingContainer .colorway-variations .variation-button {
+    outline: 2px solid var(--in-content-button-border-color);
+    border-radius: 2px;
+  }
+  .onboardingContainer .colorway-variations .variation-button.selected, .onboardingContainer .colorway-variations .variation-button:active {
+    background: var(--in-content-box-background);
+    color: var(--in-content-text-color);
+  }
+  .onboardingContainer .colorway-variations .variation-button:hover {
+    background: var(--in-content-primary-button-background);
+    color: var(--in-content-primary-button-text-color);
+  }
+}
 .onboardingContainer .colorway-variations .colorway-text,
 .onboardingContainer .colorway-variations .variation-button {
   transition: 0.4s opacity, 0.4s translate;
@@ -564,7 +578,7 @@ body[lwt-newtab-brighttext] {
   margin-inline-start: 4px;
   background: var(--grey-subtitle-1);
   border-radius: 5px;
-  border: 3px solid var(--grey-subtitle-1);
+  border: 3px solid var(--in-content-button-text-color);
   opacity: 0.25;
 }
 .onboardingContainer .steps .indicator.current {
