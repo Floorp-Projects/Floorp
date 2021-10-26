@@ -7,9 +7,11 @@
 
 #include "imgRequest.h"
 #include "Layers.h"  // for LayerManager
+#include "WebRenderImageProvider.h"
 #include "nsIObserverService.h"
 #include "nsRefreshDriver.h"
 #include "nsContentUtils.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/SourceSurfaceRawData.h"
@@ -22,6 +24,15 @@
 
 namespace mozilla {
 namespace image {
+
+WebRenderImageProvider::WebRenderImageProvider(const ImageResource* aImage)
+    : mProviderId(aImage->GetImageProviderId()) {}
+
+/* static */ ImageProviderId WebRenderImageProvider::AllocateProviderId() {
+  // Callable on all threads.
+  static Atomic<ImageProviderId> sProviderId(0u);
+  return ++sProviderId;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Memory Reporting
@@ -421,7 +432,8 @@ ImageResource::ImageResource(nsIURI* aURI)
       mAnimating(false),
       mError(false),
       mImageProducerID(layers::ImageContainer::AllocateProducerID()),
-      mLastFrameID(0) {}
+      mLastFrameID(0),
+      mProviderId(WebRenderImageProvider::AllocateProviderId()) {}
 
 ImageResource::~ImageResource() {
   // Ask our ProgressTracker to drop its weak reference to us.
