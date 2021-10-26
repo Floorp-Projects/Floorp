@@ -182,6 +182,17 @@ ImageWrapper::GetImageContainerAtSize(WindowRenderer* aRenderer,
 }
 
 NS_IMETHODIMP_(ImgDrawResult)
+ImageWrapper::GetImageProvider(WindowRenderer* aRenderer,
+                               const gfx::IntSize& aSize,
+                               const Maybe<SVGImageContext>& aSVGContext,
+                               const Maybe<ImageIntRegion>& aRegion,
+                               uint32_t aFlags,
+                               WebRenderImageProvider** aProvider) {
+  return mInnerImage->GetImageProvider(aRenderer, aSize, aSVGContext, aRegion,
+                                       aFlags, aProvider);
+}
+
+NS_IMETHODIMP_(ImgDrawResult)
 ImageWrapper::Draw(gfxContext* aContext, const nsIntSize& aSize,
                    const ImageRegion& aRegion, uint32_t aWhichFrame,
                    SamplingFilter aSamplingFilter,
