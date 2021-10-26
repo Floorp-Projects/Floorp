@@ -81,11 +81,11 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                         Index global_index,
                         Type type,
                         bool mutable_) override;
-  Result OnImportEvent(Index import_index,
-                       string_view module_name,
-                       string_view field_name,
-                       Index event_index,
-                       Index sig_index) override;
+  Result OnImportTag(Index import_index,
+                     string_view module_name,
+                     string_view field_name,
+                     Index tag_index,
+                     Index sig_index) override;
   Result EndImportSection() override;
 
   Result BeginFunctionSection(Offset size) override;
@@ -166,9 +166,10 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                        Index* target_depths,
                        Index default_target_depth) override;
   Result OnCallExpr(Index func_index) override;
-  Result OnCatchExpr(Index event_index) override;
+  Result OnCatchExpr(Index tag_index) override;
   Result OnCatchAllExpr() override;
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override;
+  Result OnCallRefExpr() override;
   Result OnCompareExpr(Opcode opcode) override;
   Result OnConvertExpr(Opcode opcode) override;
   Result OnDelegateExpr(Index depth) override;
@@ -217,12 +218,11 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnStoreExpr(Opcode opcode,
                      Address alignment_log2,
                      Address offset) override;
-  Result OnThrowExpr(Index event_index) override;
+  Result OnThrowExpr(Index tag_index) override;
   Result OnTryExpr(Type sig_type) override;
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnTernaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
-  Result OnUnwindExpr() override;
   Result OnAtomicWaitExpr(Opcode opcode,
                           Address alignment_log2,
                           Address offset) override;
@@ -328,7 +328,6 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
 
   Result BeginLinkingSection(Offset size) override;
   Result OnSymbolCount(Index count) override;
-  Result OnSymbol(Index sybmol_index, SymbolType type, uint32_t flags) override;
   Result OnDataSymbol(Index index,
                       uint32_t flags,
                       string_view name,
@@ -346,14 +345,14 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnSectionSymbol(Index index,
                          uint32_t flags,
                          Index section_index) override;
-  Result OnEventSymbol(Index index,
-                       uint32_t flags,
-                       string_view name,
-                       Index event_index) override;
+  Result OnTagSymbol(Index index,
+                     uint32_t flags,
+                     string_view name,
+                     Index tag_index) override;
   Result OnTableSymbol(Index index,
                        uint32_t flags,
                        string_view name,
-                       Index event_index) override;
+                       Index tag_index) override;
   Result OnSegmentInfoCount(Index count) override;
   Result OnSegmentInfo(Index index,
                        string_view name,
@@ -366,10 +365,10 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnComdatEntry(ComdatType kind, Index index) override;
   Result EndLinkingSection() override;
 
-  Result BeginEventSection(Offset size) override;
-  Result OnEventCount(Index count) override;
-  Result OnEventType(Index index, Index sig_index) override;
-  Result EndEventSection() override;
+  Result BeginTagSection(Offset size) override;
+  Result OnTagCount(Index count) override;
+  Result OnTagType(Index index, Index sig_index) override;
+  Result EndTagSection() override;
 
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;

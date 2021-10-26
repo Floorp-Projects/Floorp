@@ -102,11 +102,11 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                         bool mutable_) override {
     return Result::Ok;
   }
-  Result OnImportEvent(Index import_index,
-                       string_view module_name,
-                       string_view field_name,
-                       Index event_index,
-                       Index sig_index) override {
+  Result OnImportTag(Index import_index,
+                     string_view module_name,
+                     string_view field_name,
+                     Index tag_index,
+                     Index sig_index) override {
     return Result::Ok;
   }
   Result EndImportSection() override { return Result::Ok; }
@@ -238,7 +238,8 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result OnCallExpr(Index func_index) override { return Result::Ok; }
   Result OnCallIndirectExpr(Index sig_index, Index table_index) override { return Result::Ok; }
-  Result OnCatchExpr(Index event_index) override { return Result::Ok; }
+  Result OnCallRefExpr() override { return Result::Ok; }
+  Result OnCatchExpr(Index tag_index) override { return Result::Ok; }
   Result OnCatchAllExpr() override { return Result::Ok; }
   Result OnCompareExpr(Opcode opcode) override { return Result::Ok; }
   Result OnConvertExpr(Opcode opcode) override { return Result::Ok; }
@@ -303,7 +304,6 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnUnaryExpr(Opcode opcode) override { return Result::Ok; }
   Result OnTernaryExpr(Opcode opcode) override { return Result::Ok; }
   Result OnUnreachableExpr() override { return Result::Ok; }
-  Result OnUnwindExpr() override { return Result::Ok; }
   Result EndFunctionBody(Index index) override { return Result::Ok; }
   Result EndCodeSection() override { return Result::Ok; }
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override {
@@ -449,13 +449,11 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result EndRelocSection() override { return Result::Ok; }
 
-  /* Event section */
-  Result BeginEventSection(Offset size) override { return Result::Ok; }
-  Result OnEventCount(Index count) override { return Result::Ok; }
-  Result OnEventType(Index index, Index sig_index) override {
-    return Result::Ok;
-  }
-  Result EndEventSection() override { return Result::Ok; }
+  /* Tag section */
+  Result BeginTagSection(Offset size) override { return Result::Ok; }
+  Result OnTagCount(Index count) override { return Result::Ok; }
+  Result OnTagType(Index index, Index sig_index) override { return Result::Ok; }
+  Result EndTagSection() override { return Result::Ok; }
 
   /* Dylink section */
   Result BeginDylinkSection(Offset size) override { return Result::Ok; }
@@ -472,11 +470,6 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   /* Linking section */
   Result BeginLinkingSection(Offset size) override { return Result::Ok; }
   Result OnSymbolCount(Index count) override { return Result::Ok; }
-  Result OnSymbol(Index sybmol_index,
-                  SymbolType type,
-                  uint32_t flags) override {
-    return Result::Ok;
-  }
   Result OnDataSymbol(Index index,
                       uint32_t flags,
                       string_view name,
@@ -502,10 +495,10 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                          Index section_index) override {
     return Result::Ok;
   }
-  Result OnEventSymbol(Index index,
-                       uint32_t flags,
-                       string_view name,
-                       Index event_index) override {
+  Result OnTagSymbol(Index index,
+                     uint32_t flags,
+                     string_view name,
+                     Index tag_index) override {
     return Result::Ok;
   }
   Result OnTableSymbol(Index index,

@@ -39,6 +39,7 @@ const char* ExprTypeName[] = {
   "BrTable",
   "Call",
   "CallIndirect",
+  "CallRef",
   "Compare",
   "Const",
   "Convert",
@@ -134,8 +135,8 @@ Index Module::GetFuncTypeIndex(const Var& var) const {
   return type_bindings.FindIndex(var);
 }
 
-Index Module::GetEventIndex(const Var& var) const {
-  return event_bindings.FindIndex(var);
+Index Module::GetTagIndex(const Var& var) const {
+  return tag_bindings.FindIndex(var);
 }
 
 Index Module::GetDataSegmentIndex(const Var& var) const {
@@ -160,8 +161,8 @@ bool Module::IsImport(ExternalKind kind, const Var& var) const {
     case ExternalKind::Table:
       return GetTableIndex(var) < num_table_imports;
 
-    case ExternalKind::Event:
-      return GetEventIndex(var) < num_event_imports;
+    case ExternalKind::Tag:
+      return GetTagIndex(var) < num_tag_imports;
 
     default:
       return false;
@@ -276,12 +277,12 @@ Memory* Module::GetMemory(const Var& var) {
   return memories[index];
 }
 
-Event* Module::GetEvent(const Var& var) const {
-  Index index = GetEventIndex(var);
-  if (index >= events.size()) {
+Tag* Module::GetTag(const Var& var) const {
+  Index index = GetTagIndex(var);
+  if (index >= tags.size()) {
     return nullptr;
   }
-  return events[index];
+  return tags[index];
 }
 
 const DataSegment* Module::GetDataSegment(const Var& var) const {
@@ -359,12 +360,12 @@ void Module::AppendField(std::unique_ptr<ElemSegmentModuleField> field) {
   fields.push_back(std::move(field));
 }
 
-void Module::AppendField(std::unique_ptr<EventModuleField> field) {
-  Event& event = field->event;
-  if (!event.name.empty()) {
-    event_bindings.emplace(event.name, Binding(field->loc, events.size()));
+void Module::AppendField(std::unique_ptr<TagModuleField> field) {
+  Tag& tag = field->tag;
+  if (!tag.name.empty()) {
+    tag_bindings.emplace(tag.name, Binding(field->loc, tags.size()));
   }
-  events.push_back(&event);
+  tags.push_back(&tag);
   fields.push_back(std::move(field));
 }
 
@@ -450,13 +451,13 @@ void Module::AppendField(std::unique_ptr<ImportModuleField> field) {
       break;
     }
 
-    case ExternalKind::Event: {
-      Event& event = cast<EventImport>(import)->event;
-      name = &event.name;
-      bindings = &event_bindings;
-      index = events.size();
-      events.push_back(&event);
-      ++num_event_imports;
+    case ExternalKind::Tag: {
+      Tag& tag = cast<TagImport>(import)->tag;
+      name = &tag.name;
+      bindings = &tag_bindings;
+      index = tags.size();
+      tags.push_back(&tag);
+      ++num_tag_imports;
       break;
     }
   }
@@ -534,8 +535,8 @@ void Module::AppendField(std::unique_ptr<ModuleField> field) {
       AppendField(cast<StartModuleField>(std::move(field)));
       break;
 
-    case ModuleFieldType::Event:
-      AppendField(cast<EventModuleField>(std::move(field)));
+    case ModuleFieldType::Tag:
+      AppendField(cast<TagModuleField>(std::move(field)));
       break;
   }
 }

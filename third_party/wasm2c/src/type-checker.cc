@@ -489,6 +489,27 @@ Result TypeChecker::OnCallIndirect(const TypeVector& param_types,
   return result;
 }
 
+Result TypeChecker::OnFuncRef(Index* out_index) {
+  Type type;
+  Result result = PeekType(0, &type);
+  if (!type.IsIndex()) {
+    TypeVector actual;
+    if (Succeeded(result)) {
+      actual.push_back(type);
+    }
+    std::string message =
+        "type mismatch in call_ref, expected reference but got " +
+        TypesToString(actual);
+    PrintError("%s", message.c_str());
+    result = Result::Error;
+  }
+  if (Succeeded(result)) {
+    *out_index = type.GetIndex();
+  }
+  result |= DropTypes(1);
+  return result;
+}
+
 Result TypeChecker::OnReturnCall(const TypeVector& param_types,
                                  const TypeVector& result_types) {
   Result result = PopAndCheckSignature(param_types, "return_call");
@@ -589,11 +610,10 @@ Result TypeChecker::OnElse() {
 }
 
 Result TypeChecker::OnEnd(Label* label,
-                          TypeVector& check_type,
                           const char* sig_desc,
                           const char* end_desc) {
   Result result = Result::Ok;
-  result |= PopAndCheckSignature(check_type, sig_desc);
+  result |= PopAndCheckSignature(label->result_types, sig_desc);
   result |= CheckTypeStackEnd(end_desc);
   ResetTypeStackToLabel(label);
   PushTypes(label->result_types);
@@ -604,8 +624,7 @@ Result TypeChecker::OnEnd(Label* label,
 Result TypeChecker::OnEnd() {
   Result result = Result::Ok;
   static const char* s_label_type_name[] = {
-      "function", "block", "loop", "if", "if false branch", "try",
-      "try catch", "try unwind"};
+      "function", "block", "loop", "if", "if false branch", "try", "try catch"};
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_label_type_name) == kLabelTypeCount);
   Label* label;
   CHECK_RESULT(TopLabel(&label));
@@ -618,15 +637,7 @@ Result TypeChecker::OnEnd() {
   }
 
   const char* desc = s_label_type_name[static_cast<int>(label->label_type)];
-  if (label->label_type == LabelType::Unwind) {
-    // Unwind is unusual in that it always unwinds the control stack at the end,
-    // and therefore the return type of the unwind expressions are not the same
-    // as the block return type.
-    TypeVector empty;
-    result |= OnEnd(label, empty, desc, desc);
-  } else {
-    result |= OnEnd(label, label->result_types, desc, desc);
-  }
+  result |= OnEnd(label, desc, desc);
   return result;
 }
 
@@ -738,8 +749,12 @@ Result TypeChecker::OnTableFill(Type elem_type) {
   return PopAndCheck3Types(Type::I32, elem_type, Type::I32, "table.fill");
 }
 
-Result TypeChecker::OnRefFuncExpr(Index) {
-  PushType(Type::FuncRef);
+Result TypeChecker::OnRefFuncExpr(Index func_index) {
+  if (features_.function_references_enabled()) {
+    PushType(Type(func_index));
+  } else {
+    PushType(Type::FuncRef);
+  }
   return Result::Ok;
 }
 
@@ -914,25 +929,12 @@ Result TypeChecker::OnUnreachable() {
   return SetUnreachable();
 }
 
-Result TypeChecker::OnUnwind() {
-  Result result = Result::Ok;
-  Label* label;
-  CHECK_RESULT(TopLabel(&label));
-  result |= CheckLabelType(label, LabelType::Try);
-  result |= PopAndCheckSignature(label->result_types, "try block");
-  result |= CheckTypeStackEnd("try block");
-  ResetTypeStackToLabel(label);
-  label->label_type = LabelType::Unwind;
-  label->unreachable = false;
-  return result;
-}
-
 Result TypeChecker::EndFunction() {
   Result result = Result::Ok;
   Label* label;
   CHECK_RESULT(TopLabel(&label));
   result |= CheckLabelType(label, LabelType::Func);
-  result |= OnEnd(label, label->result_types, "implicit return", "function");
+  result |= OnEnd(label, "implicit return", "function");
   return result;
 }
 

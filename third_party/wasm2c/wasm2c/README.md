@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
   /* Make sure there is at least one command-line argument. */
   if (argc < 2) return 1;
 
-  /* Convert the argument from a string to an int. We'll implictly cast the int
+  /* Convert the argument from a string to an int. We'll implicitly cast the int
   to a `u32`, which is what `fac` expects. */
   u32 x = atoi(argv[1]);
 

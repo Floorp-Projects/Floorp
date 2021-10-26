@@ -149,12 +149,13 @@ struct Decompiler {
     auto& right = args[1];
     BracketIfNeeded(left, precedence);
     BracketIfNeeded(right, precedence);
-    auto width = infix.size() + left.width() + right.width();
+    auto width = infix.size() + left.width() + right.width() + 2;
     if (width < target_exp_width && left.v.size() == 1 && right.v.size() == 1) {
-      return Value{{left.v[0] + infix + right.v[0]}, precedence};
+      return Value{{cat(left.v[0], " ", infix, " ", right.v[0])}, precedence};
     } else {
       Value bin { {}, precedence };
       std::move(left.v.begin(), left.v.end(), std::back_inserter(bin.v));
+      bin.v.back().append(" ", 1);
       bin.v.back().append(infix.data(), infix.size());
       if (indent_right) IndentValue(right, indent_amount, {});
       std::move(right.v.begin(), right.v.end(), std::back_inserter(bin.v));
@@ -450,12 +451,12 @@ struct Decompiler {
         } else if (opcs == "<<" || opcs == ">>") {
           prec = Precedence::Shift;
         }
-        return WrapBinary(args, cat(" ", opcs, " "), false, prec);
+        return WrapBinary(args, opcs, false, prec);
       }
       case ExprType::Compare: {
         auto& ce = *cast<CompareExpr>(n.e);
-         return WrapBinary(args, cat(" ", OpcodeToToken(ce.opcode), " "), false,
-                           Precedence::Equal);
+        return WrapBinary(args, OpcodeToToken(ce.opcode), false,
+                          Precedence::Equal);
       }
       case ExprType::Unary: {
         auto& ue = *cast<UnaryExpr>(n.e);
@@ -474,7 +475,7 @@ struct Decompiler {
         auto& se = *cast<StoreExpr>(n.e);
         LoadStore(args[0], n.children[0], se.offset, se.opcode, se.align,
                   se.opcode.GetParamType2());
-        return WrapBinary(args, " = ", true, Precedence::Assign);
+        return WrapBinary(args, "=", true, Precedence::Assign);
       }
       case ExprType::If: {
         auto ife = cast<IfExpr>(n.e);
@@ -744,10 +745,12 @@ struct Decompiler {
 
     // Data.
     for (auto dat : mc.module.data_segments) {
-      s += cat("data ", dat->name, "(offset: ", InitExp(dat->offset), ") = ");
+      s += cat("data ", dat->name, "(offset: ", InitExp(dat->offset), ") =");
       auto ds = BinaryToString(dat->data);
       if (ds.size() > target_exp_width / 2) {
         s += "\n";
+      } else {
+        s += " ";
       }
       s += ds;
       s += ";\n";

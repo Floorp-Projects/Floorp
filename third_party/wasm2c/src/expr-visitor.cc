@@ -107,15 +107,11 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
                 CHECK_RESULT(delegate_->EndTryExpr(try_expr));
               }
               break;
-            case TryKind::Unwind:
-              CHECK_RESULT(delegate_->OnUnwindExpr(try_expr));
-              PushExprlist(State::Unwind, expr, try_expr->unwind);
-              break;
             case TryKind::Delegate:
               CHECK_RESULT(delegate_->OnDelegateExpr(try_expr));
               break;
-            case TryKind::Invalid:
-              // Should not happen.
+            case TryKind::Plain:
+              CHECK_RESULT(delegate_->EndTryExpr(try_expr));
               break;
           }
         }
@@ -138,18 +134,6 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
           } else {
             CHECK_RESULT(delegate_->EndTryExpr(try_expr));
           }
-        }
-        break;
-      }
-
-      case State::Unwind: {
-        auto try_expr = cast<TryExpr>(expr);
-        auto& iter = expr_iter_stack_.back();
-        if (iter != try_expr->unwind.end()) {
-          PushDefault(&*iter++);
-        } else {
-          CHECK_RESULT(delegate_->EndTryExpr(try_expr));
-          PopExprlist();
         }
         break;
       }
@@ -229,6 +213,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
 
     case ExprType::CallIndirect:
       CHECK_RESULT(delegate_->OnCallIndirectExpr(cast<CallIndirectExpr>(expr)));
+      break;
+
+    case ExprType::CallRef:
+      CHECK_RESULT(delegate_->OnCallRefExpr(cast<CallRefExpr>(expr)));
       break;
 
     case ExprType::Compare:
