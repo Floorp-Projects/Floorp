@@ -1,27 +1,4 @@
 const PREF_DELAY_AUTOPLAY = "media.block-autoplay-until-in-foreground";
-const PAGE =
-  "https://example.com/browser/browser/base/content/test/tabs/file_mediaPlayback.html";
-
-function muted(tab) {
-  return tab.linkedBrowser.audioMuted;
-}
-
-function activeMediaBlocked(tab) {
-  return tab.activeMediaBlocked;
-}
-
-async function toggleMuteAudio(tab, expectMuted) {
-  let mutedPromise = get_wait_for_mute_promise(tab, expectMuted);
-  tab.toggleMuteAudio();
-  await mutedPromise;
-}
-
-async function addMediaTab() {
-  const tab = BrowserTestUtils.addTab(gBrowser, PAGE, { skipAnimation: true });
-  const browser = gBrowser.getBrowserForTab(tab);
-  await BrowserTestUtils.browserLoaded(browser);
-  return tab;
-}
 
 add_task(async function setPref() {
   await SpecialPowers.pushPrefEnv({
@@ -151,7 +128,7 @@ add_task(async function unmuteTabs_usingButton() {
   // in the following way:
   //  a) muted tabs (tab3) will become unmuted.
   //  b) unmuted tabs (tab0) will remain unmuted.
-  //  b) media-blocked tabs (tab1, tab2) will get playing. (media not blocked anymore)
+  //  c) media-blocked tabs (tab1, tab2) will remain blocked.
   // However tab4 (muted) which is not multiselected should not be affected.
   let tab3MuteAudioBtn = tab3.overlayIcon;
   await test_mute_tab(tab3, tab3MuteAudioBtn, false);
@@ -159,9 +136,9 @@ add_task(async function unmuteTabs_usingButton() {
   ok(!muted(tab0), "Tab0 is not muted");
   ok(!activeMediaBlocked(tab0), "Tab0 is not activemedia-blocked");
   ok(!muted(tab1), "Tab1 is not muted");
-  ok(!activeMediaBlocked(tab1), "Tab1 is not activemedia-blocked");
+  ok(activeMediaBlocked(tab1), "Tab1 is activemedia-blocked");
   ok(!muted(tab2), "Tab2 is not muted");
-  ok(!activeMediaBlocked(tab2), "Tab2 is not activemedia-blocked");
+  ok(activeMediaBlocked(tab2), "Tab2 is activemedia-blocked");
   ok(!muted(tab3), "Tab3 is not muted");
   ok(!activeMediaBlocked(tab3), "Tab3 is not activemedia-blocked");
   ok(muted(tab4), "Tab4 is muted");
@@ -262,14 +239,14 @@ add_task(async function playTabs_usingButton() {
 
   // play tab2 which is multiselected, thus other multiselected tabs should be affected too
   // in the following way:
-  //  a) muted tabs (tab0) will become unmuted.
+  //  a) muted tabs (tab0) will remain muted.
   //  b) unmuted tabs (tab3) will remain unmuted.
-  //  b) media-blocked tabs (tab1, tab2) will get playing. (media not blocked anymore)
+  //  c) media-blocked tabs (tab1, tab2) will become unblocked.
   // However tab4 (muted) which is not multiselected should not be affected.
   let tab2MuteAudioBtn = tab2.overlayIcon;
   await test_mute_tab(tab2, tab2MuteAudioBtn, false);
 
-  ok(!muted(tab0), "Tab0 is not muted");
+  ok(muted(tab0), "Tab0 is muted");
   ok(!activeMediaBlocked(tab0), "Tab0 is not activemedia-blocked");
   ok(!muted(tab1), "Tab1 is not muted");
   ok(!activeMediaBlocked(tab1), "Tab1 is not activemedia-blocked");
@@ -298,7 +275,7 @@ add_task(async function checkTabContextMenu() {
   );
 
   await play(tab0, false);
-  await toggleMuteAudio(tab0, false);
+  await toggleMuteAudio(tab0, true);
   await play(tab1, false);
   await toggleMuteAudio(tab2, true);
 
@@ -314,13 +291,13 @@ add_task(async function checkTabContextMenu() {
   ok(!tab3.multiselected, "Tab3 is not multiselected");
 
   // Check mute state for tabs
-  ok(!muted(tab0), "Tab0 is not muted");
-  ok(!activeMediaBlocked(tab0), "Tab0 is not activemedia-blocked");
-  ok(activeMediaBlocked(tab1), "Tab1 is media-blocked");
+  ok(muted(tab0), "Tab0 is muted");
+  ok(activeMediaBlocked(tab0), "Tab0 is activemedia-blocked");
+  ok(activeMediaBlocked(tab1), "Tab1 is activemedia-blocked");
   ok(muted(tab2), "Tab2 is muted");
   ok(!muted(tab3, "Tab3 is not muted"));
 
-  let labels = ["Mute Tabs", "Play Tabs", "Unmute Tabs"];
+  let labels = ["Unmute Tabs", "Mute Tabs", "Unmute Tabs"];
 
   for (let i = 0; i <= 2; i++) {
     updateTabContextMenu(tabs[i]);

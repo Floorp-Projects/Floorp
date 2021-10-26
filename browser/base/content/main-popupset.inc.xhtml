@@ -13,6 +13,10 @@
               oncommand="gBrowser.reloadTab(TabContextMenu.contextTab);"/>
     <menuitem id="context_reloadSelectedTabs" data-lazy-l10n-id="reload-tabs" hidden="true"
               oncommand="gBrowser.reloadMultiSelectedTabs();"/>
+    <menuitem id="context_playTab" data-lazy-l10n-id="tab-context-play-tab" hidden="true"
+              oncommand="TabContextMenu.contextTab.resumeDelayedMedia();"/>
+    <menuitem id="context_playSelectedTabs" data-lazy-l10n-id="tab-context-play-tabs" hidden="true"
+              oncommand="gBrowser.resumeDelayedMediaOnMultiSelectedTabs(TabContextMenu.contextTab);"/>
     <menuitem id="context_toggleMuteTab" oncommand="TabContextMenu.contextTab.toggleMuteAudio();"/>
     <menuitem id="context_toggleMuteSelectedTabs" hidden="true"
               oncommand="gBrowser.toggleMuteAudioOnMultiSelectedTabs(TabContextMenu.contextTab);"/>
