@@ -44,8 +44,6 @@ class HTMLOutputElement final : public nsGenericHTMLFormControlElement,
 
   virtual void DoneAddingChildren(bool aHaveNotified) override;
 
-  EventStates IntrinsicState() const override;
-
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
 
   // This function is called when a callback function from nsIMutationObserver

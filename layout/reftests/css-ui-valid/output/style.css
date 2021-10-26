@@ -11,10 +11,10 @@ output.notvalid:-moz-ui-valid {
 }
 
 output.valid {
-  color: red;
+  color: green;
 }
 output.valid:-moz-ui-valid {
-  color: green;
+  color: red;
 }
 
 output.ref {
