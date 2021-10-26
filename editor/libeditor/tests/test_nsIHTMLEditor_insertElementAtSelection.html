@@ -1,0 +1,185 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Testing `nsIHTMLEditor.insertElementAtSelection()`</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function getRangeDescription(range) {
+  function getNodeDescription(node) {
+    if (!node) {
+      return "null";
+    }
+    switch (node.nodeType) {
+      case Node.TEXT_NODE:
+      case Node.COMMENT_NODE:
+      case Node.CDATA_SECTION_NODE:
+        return `${node.nodeName} "${node.data}"`;
+      case Node.ELEMENT_NODE:
+        return `<${node.nodeName.toLowerCase()}${
+          node.hasAttribute("id")
+            ? ` id="${node.getAttribute("id")}"`
+            : ""
+          }${
+          node.hasAttribute("class")
+            ? ` class="${node.getAttribute("class")}"`
+            : ""
+          }${
+          node.hasAttribute("contenteditable")
+            ? ` contenteditable="${node.getAttribute("contenteditable")}"`
+            : ""
+        }>`;
+      default:
+        return `${node.nodeName}`;
+    }
+  }
+  if (range === null) {
+    return "null";
+  }
+  if (range === undefined) {
+    return "undefined";
+  }
+  return range.startContainer == range.endContainer &&
+    range.startOffset == range.endOffset
+    ? `(${getNodeDescription(range.startContainer)}, ${range.startOffset})`
+    : `(${getNodeDescription(range.startContainer)}, ${
+        range.startOffset
+      }) - (${getNodeDescription(range.endContainer)}, ${range.endOffset})`;
+}
+
+function doTest(aEditingHost, aHTMLEditor, aDeleteSelection) {
+  const description = `aDeleteSelection=${aDeleteSelection}:`;
+  (() => {
+    aEditingHost.innerHTML = "abc";
+    aEditingHost.focus();
+    getSelection().collapse(aEditingHost.firstChild, 0);
+    const p = document.createElement("p");
+    p.appendChild(document.createElement("br"));
+    aHTMLEditor.insertElementAtSelection(p, aDeleteSelection);
+    is(
+      aEditingHost.innerHTML,
+      "<p><br></p>abc",
+      `${description} The <p> element should be inserted before the text node when selection is collapsed at start of the text node`
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      '(<div contenteditable="">, 1)',
+      `${description} The selection should be collapsed after the inserted <p> element`
+    );
+  })();
+  (() => {
+    aEditingHost.innerHTML = "abc";
+    aEditingHost.focus();
+    getSelection().collapse(aEditingHost.firstChild, 1);
+    const p = document.createElement("p");
+    p.appendChild(document.createElement("br"));
+    aHTMLEditor.insertElementAtSelection(p, aDeleteSelection);
+    is(
+      aEditingHost.innerHTML,
+      "a<p><br></p>bc",
+      `${description} The <p> element should be inserted middle of the text node when selection is collapsed at middle of the text node`
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      '(<div contenteditable="">, 2)',
+      `${description} The selection should be collapsed after the inserted <p> element (i.e., at right text node)`
+    );
+  })();
+  (() => {
+    aEditingHost.innerHTML = "abc";
+    aEditingHost.focus();
+    getSelection().collapse(aEditingHost.firstChild, 3);
+    const p = document.createElement("p");
+    p.appendChild(document.createElement("br"));
+    aHTMLEditor.insertElementAtSelection(p, aDeleteSelection);
+    is(
+      aEditingHost.innerHTML,
+      "abc<p><br></p>",
+      `${description} The <p> element should be inserted after the text node when selection is collapsed at end of the text node`
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      '(<div contenteditable="">, 2)',
+      `${description} The selection should be collapsed at end of the editing host`
+    );
+  })();
+  (() => {
+    aEditingHost.innerHTML = "abc";
+    aEditingHost.focus();
+    getSelection().setBaseAndExtent(aEditingHost.firstChild, 0, aEditingHost.firstChild, 1);
+    const p = document.createElement("p");
+    p.appendChild(document.createElement("br"));
+    aHTMLEditor.insertElementAtSelection(p, aDeleteSelection);
+    is(
+      aEditingHost.innerHTML,
+      aDeleteSelection ? "<p><br></p>bc" : "a<p><br></p>bc",
+      `${description} The <p> element should be inserted after selected character when selection selects the first character of the text node`
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      `(<div contenteditable="">, ${aDeleteSelection ? "1" : "2"})`,
+      `${description} The selection should be collapsed after the inserted <p> element (when selection selected the first character)`
+    );
+  })();
+  (() => {
+    aEditingHost.innerHTML = "abc";
+    aEditingHost.focus();
+    getSelection().setBaseAndExtent(aEditingHost.firstChild, 1, aEditingHost.firstChild, 2);
+    const p = document.createElement("p");
+    p.appendChild(document.createElement("br"));
+    aHTMLEditor.insertElementAtSelection(p, aDeleteSelection);
+    is(
+      aEditingHost.innerHTML,
+      aDeleteSelection ? "a<p><br></p>c" : "ab<p><br></p>c",
+      `${description} The <p> element should be inserted after selected character when selection selects a middle character of the text node`
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      '(<div contenteditable="">, 2)',
+      `${description} The selection should be collapsed after the inserted <p> element (i.e., at right text node, when selection selected the middle character)`
+    );
+  })();
+  (() => {
+    aEditingHost.innerHTML = "abc";
+    aEditingHost.focus();
+    getSelection().setBaseAndExtent(aEditingHost.firstChild, 2, aEditingHost.firstChild, 3);
+    const p = document.createElement("p");
+    p.appendChild(document.createElement("br"));
+    aHTMLEditor.insertElementAtSelection(p, aDeleteSelection);
+    is(
+      aEditingHost.innerHTML,
+      aDeleteSelection ? "ab<p><br></p>" : "abc<p><br></p>",
+      `${description} The <p> element should be inserted after selected character when selection selects the last character of the text node`
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      '(<div contenteditable="">, 2)',
+      `${description} The selection should be collapsed at end of the editing host (when selection selected the last character)`
+    );
+  })();
+}
+
+async function runTests() {
+  const editingHost = document.createElement("div");
+  editingHost.setAttribute("contenteditable", "");
+  document.body.appendChild(editingHost);
+  const editor =
+    SpecialPowers.
+      wrap(window).
+      docShell.
+      editingSession.
+      getEditorForWindow(window).
+      QueryInterface(SpecialPowers.Ci.nsIHTMLEditor);
+  doTest(editingHost, editor, true);
+  doTest(editingHost, editor, false);
+  SimpleTest.finish();
+}
+</script>
+</body>
+</html>
