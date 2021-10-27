@@ -297,7 +297,6 @@ impl ImplicitLayout<'_> {
 
 #[derive(Debug, Default)]
 struct Identities {
-    surfaces: IdentityManager,
     vulkan: IdentityHub,
     #[cfg(any(target_os = "ios", target_os = "macos"))]
     metal: IdentityHub,
