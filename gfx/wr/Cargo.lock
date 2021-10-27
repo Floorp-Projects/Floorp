@@ -1681,6 +1681,7 @@ dependencies = [
  "dwrote",
  "etagere",
  "euclid",
+ "foreign-types",
  "freetype",
  "fxhash",
  "gleam 0.13.1",
