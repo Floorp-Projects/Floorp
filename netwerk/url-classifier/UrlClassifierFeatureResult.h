@@ -9,8 +9,8 @@
 
 #include "nsIUrlClassifierFeature.h"
 #include "nsString.h"
-
-class nsIURI;
+#include "nsCOMPtr.h"
+#include "nsIURI.h"
 
 namespace mozilla {
 namespace net {

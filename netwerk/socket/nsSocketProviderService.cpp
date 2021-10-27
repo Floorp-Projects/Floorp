@@ -13,6 +13,8 @@
 #include "nsTLSSocketProvider.h"
 #include "nsUDPSocketProvider.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "nsThreadUtils.h"
+#include "nsCRT.h"
 
 mozilla::StaticRefPtr<nsSocketProviderService>
     nsSocketProviderService::gSingleton;

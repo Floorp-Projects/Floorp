@@ -26,7 +26,8 @@
 #include "Cookie.h"
 #include "nsIURI.h"
 
-using mozilla::Unused;
+using namespace mozilla;
+using namespace mozilla::net;
 
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREFSERVICE_CID);

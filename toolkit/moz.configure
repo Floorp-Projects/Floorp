@@ -2112,14 +2112,13 @@ def wasm_sandboxing_libraries():
     )
 
 
-@depends(dependable(wasm_sandboxing_libraries), target, "MOZ_AUTOMATION")
-def default_wasm_sandboxing_libraries(libraries, target, automation):
+@depends(dependable(wasm_sandboxing_libraries), target)
+def default_wasm_sandboxing_libraries(libraries, target):
     non_default_libs = set()
     if target.bitness == 32:
         non_default_libs.add("hunspell")
 
-    if automation:
-        return tuple(l for l in libraries if l not in non_default_libs)
+    return tuple(l for l in libraries if l not in non_default_libs)
 
 
 option(
@@ -2156,14 +2155,20 @@ with only_when(requires_wasm_sandboxing & compile_environment):
     @depends(
         "--with-wasi-sysroot",
         bootstrap_path("sysroot-wasm32-wasi", when=bootstrap_wasi_sysroot),
+        "--with-wasm-sandboxed-libraries",
     )
     @imports("os")
-    def wasi_sysroot(wasi_sysroot, bootstrapped_sysroot):
+    def wasi_sysroot(wasi_sysroot, bootstrapped_sysroot, sandboxed_libs):
         if not wasi_sysroot:
             if not bootstrapped_sysroot:
+                suggest_disable = ""
+                if sandboxed_libs.origin == "default":
+                    suggest_disable = (
+                        " Or build with --without-wasm-sandboxed-libraries."
+                    )
                 die(
                     "Cannot find a wasi sysroot. Please give its location with "
-                    "--with-wasi-sysroot."
+                    "--with-wasi-sysroot." + suggest_disable
                 )
             return bootstrapped_sysroot
 

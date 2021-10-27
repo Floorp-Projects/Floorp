@@ -704,6 +704,12 @@ class BaseMarionetteTestRunner(object):
                     "fission.autostart": True,
                 }
             )
+        else:
+            self.prefs.update(
+                {
+                    "fission.autostart": False,
+                }
+            )
 
         # If no repeat has been set, default to 30 extra runs
         if self.run_until_failure and repeat is None:

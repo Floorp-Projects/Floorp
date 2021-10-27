@@ -612,7 +612,7 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
     }
   };
 
-  struct MapEntryGCPolicy {
+  struct SweepPolicy {
     static bool traceWeak(JSTracer* trc,
                           RefPtr<mozilla::BasePrincipal>* /* unused */,
                           JS::Heap<JSObject*>* value) {
@@ -621,7 +621,7 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   };
 
   typedef JS::GCHashMap<RefPtr<mozilla::BasePrincipal>, JS::Heap<JSObject*>,
-                        Hasher, js::SystemAllocPolicy, MapEntryGCPolicy>
+                        Hasher, js::SystemAllocPolicy, SweepPolicy>
       Principal2JSObjectMap;
 
   mozilla::UniquePtr<JSObject2WrappedJSMap> mWrappedJSMap;
@@ -2644,7 +2644,7 @@ class CompartmentPrivate {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
-  struct MapEntryGCPolicy {
+  struct SweepPolicy {
     static bool traceWeak(JSTracer* trc, const void* /* unused */,
                           JS::Heap<JSObject*>* value) {
       return JS::GCPolicy<JS::Heap<JSObject*>>::traceWeak(trc, value);
@@ -2653,7 +2653,7 @@ class CompartmentPrivate {
 
   typedef JS::GCHashMap<const void*, JS::Heap<JSObject*>,
                         mozilla::PointerHasher<const void*>,
-                        js::SystemAllocPolicy, MapEntryGCPolicy>
+                        js::SystemAllocPolicy, SweepPolicy>
       RemoteProxyMap;
   RemoteProxyMap& GetRemoteProxyMap() { return mRemoteProxies; }
 

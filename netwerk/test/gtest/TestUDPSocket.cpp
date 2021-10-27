@@ -12,6 +12,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/net/DNS.h"
 #include "prerror.h"
+#include "nsComponentManagerUtils.h"
 
 #define REQUEST 0x68656c6f
 #define RESPONSE 0x6f6c6568

@@ -11,6 +11,10 @@
 #include "ChannelClassifierService.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "nsNetUtil.h"
+#include "mozilla/StaticPtr.h"
+#include "nsIWebProgressListener.h"
+#include "nsIHttpChannelInternal.h"
+#include "nsIChannel.h"
 
 namespace mozilla {
 namespace net {

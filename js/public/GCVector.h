@@ -181,6 +181,28 @@ class GCVector {
     shrinkBy(end() - dst);
     return !empty();
   }
+
+  bool needsSweep() {
+    sweep();
+    return this->empty();
+  }
+
+  void sweep() {
+    T* src = begin();
+    T* dst = begin();
+    while (src != end()) {
+      if (!GCPolicy<T>::needsSweep(src)) {
+        if (src != dst) {
+          *dst = std::move(*src);
+        }
+        dst++;
+      }
+      src++;
+    }
+
+    MOZ_ASSERT(dst <= end());
+    shrinkBy(end() - dst);
+  }
 };
 
 // AllocPolicy is optional. It has a default value declared in TypeDecls.h

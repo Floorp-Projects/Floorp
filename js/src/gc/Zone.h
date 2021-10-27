@@ -116,7 +116,7 @@ class WeakRefHeapPtrVector
   using GCVector::GCVector;
 
   // call in compacting, to update the target in each WeakRefObject.
-  void traceWeak(JSTracer* trc, JSObject* target);
+  void sweep(js::HeapPtrObject& target);
 };
 
 // WeakRefMap is a per-zone GCHashMap, which maps from the target of the JS
@@ -128,7 +128,7 @@ class WeakRefMap
   using GCHashMap::GCHashMap;
   using Base = GCHashMap<HeapPtrObject, WeakRefHeapPtrVector,
                          MovableCellHasher<HeapPtrObject>, ZoneAllocPolicy>;
-  void traceWeak(JSTracer* trc, gc::StoreBuffer* sbToLock);
+  void sweep(gc::StoreBuffer* sbToLock);
 };
 
 }  // namespace js
@@ -271,9 +271,9 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // This is used by the GC to trace them all first when compacting, since the
   // TypedObject trace hook may access these objects.
   //
-  // (Although this uses HeapPtrObject, the set contains only tenured objects so no
-  // post-barrier is required, and these are weak references so no pre-barrier
-  // is required.)
+  // (Although this uses HeapPtrObject, the set contains only tenured objects so
+  // no post-barrier is required, and these are weak references so no
+  // pre-barrier is required.)
   using RttValueObjectSet =
       js::GCHashSet<js::HeapPtrObject, js::MovableCellHasher<js::HeapPtrObject>,
                     js::SystemAllocPolicy>;

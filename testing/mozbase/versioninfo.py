@@ -11,7 +11,7 @@ from commit messages.
 
 from __future__ import absolute_import, print_function
 
-from collections import Iterable
+from collections.abc import Iterable
 from distutils.version import StrictVersion
 import argparse
 import os
