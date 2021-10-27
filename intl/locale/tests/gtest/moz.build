@@ -8,7 +8,6 @@ UNIFIED_SOURCES += [
     "TestDateTimeFormat.cpp",
     "TestLocaleService.cpp",
     "TestLocaleServiceNegotiate.cpp",
-    "TestMozLocale.cpp",
     "TestOSPreferences.cpp",
 ]
 
