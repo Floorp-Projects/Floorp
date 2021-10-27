@@ -11,6 +11,7 @@
 from __future__ import absolute_import
 import os
 import sys
+import requests
 
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
@@ -83,10 +84,22 @@ class DoesItCrash(BaseScript):
             config_options=self.config_options,
         )
 
+    def downloadFile(self, url, file_name):
+        req = requests.get(url, stream=True, timeout=30)
+        file_path = os.path.join(os.getcwd(), file_name)
+
+        with open(file_path, "wb") as f:
+            for chunk in req.iter_content(chunk_size=1024):
+                if not chunk:
+                    continue
+                f.write(chunk)
+                f.flush()
+        return file_path
+
     def download(self):
         url = self.config["thing_url"]
         fn = "thing." + url.split(".")[-1]
-        self.download_file(self.config["thing_url"], file_name=fn)
+        self.downloadFile(url=url, file_name=fn)
         if mozinstall.is_installer(fn):
             self.install_dir = mozinstall.install(fn, "thing")
         else:
