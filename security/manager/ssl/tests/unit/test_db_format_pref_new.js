@@ -10,18 +10,14 @@
 function run_test() {
   let profileDir = do_get_profile();
   let certificateDBFile = profileDir.clone();
-  let certificateDBName = AppConstants.NIGHTLY_BUILD
-    ? "gecko-no-share-cert9.db"
-    : "cert9.db";
+  let certificateDBName = "cert9.db";
   certificateDBFile.append(certificateDBName);
   ok(
     !certificateDBFile.exists(),
     `${certificateDBName} should not exist beforehand`
   );
   let keyDBFile = profileDir.clone();
-  let keyDBName = AppConstants.NIGHTLY_BUILD
-    ? "gecko-no-share-key4.db"
-    : "key4.db";
+  let keyDBName = "key4.db";
   keyDBFile.append(keyDBName);
   ok(!keyDBFile.exists(), `${keyDBName} should not exist beforehand`);
   // This should start PSM.
