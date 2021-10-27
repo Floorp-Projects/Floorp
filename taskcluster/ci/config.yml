@@ -588,7 +588,7 @@ workers:
             implementation: generic-worker
             os: windows
             worker-type: 'gecko-{alias}'
-        win10-64-2004(|-gpu|-ssd):
+        win10-64-2004(|-gpu|-ssd|-source):
             provisioner: 'gecko-t'
             implementation: generic-worker
             os: windows
