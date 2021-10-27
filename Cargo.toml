@@ -110,3 +110,7 @@ path = "third_party/rust/mio"
 
 [patch.crates-io.prost-derive]
 path = "third_party/rust/prost-derive"
+
+# Patched to work around https://github.com/rust-lang/rust/issues/88576
+[patch.crates-io.winapi-util]
+path = "third_party/rust/winapi-util"
