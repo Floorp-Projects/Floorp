@@ -835,6 +835,8 @@ void MediaTrackGraphImpl::OpenAudioInputImpl(CubebUtils::AudioDeviceID aID,
         ("%p OpenAudioInput: starting new AudioCallbackDriver(input) %p", this,
          driver));
     SwitchAtNextIteration(driver);
+  } else {
+    ReevaluateInputDevice();
   }
 }
 
