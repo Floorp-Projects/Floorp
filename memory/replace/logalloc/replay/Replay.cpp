@@ -776,7 +776,11 @@ class Replay {
     // Using a variable length array here is a GCC & Clang extension. But it
     // allows us to place this on the stack and not alter jemalloc's profiling.
     const size_t num_bins = ::jemalloc_stats_num_bins();
-    jemalloc_bin_stats_t bin_stats[num_bins];
+    const size_t MAX_NUM_BINS = 100;
+    if (num_bins > MAX_NUM_BINS) {
+      die("Exceeded maximum number of jemalloc stats bins");
+    }
+    jemalloc_bin_stats_t bin_stats[MAX_NUM_BINS] = {{0}};
     ::jemalloc_stats_internal(&stats, bin_stats);
 
 #ifdef XP_LINUX
@@ -791,8 +795,7 @@ class Replay {
     size_t large_used = 0;
     size_t huge_slop = 0;
     size_t huge_used = 0;
-    size_t bin_slop[num_bins];
-    memset(bin_slop, 0, sizeof(size_t) * num_bins);
+    size_t bin_slop[MAX_NUM_BINS] = {0};
 
     for (size_t slot_id = 0; slot_id < mNumUsedSlots; slot_id++) {
       MemSlot& slot = mSlots[slot_id];
@@ -869,7 +872,8 @@ class Replay {
     FdPrintf(mStdErr, "\n%8s %11s %10s %8s %9s %9s %8s\n", "bin-size",
              "unused (c)", "total (c)", "used (c)", "non-full (r)", "total (r)",
              "used (r)");
-    for (auto& bin : bin_stats) {
+    for (unsigned i = 0; i < num_bins; i++) {
+      auto& bin = bin_stats[i];
       MOZ_ASSERT(bin.size);
       FdPrintf(mStdErr, "%8zu %8zuKiB %7zuKiB %7zu%% %12zu %9zu %7zu%%\n",
                bin.size, bin.bytes_unused / 1024, bin.bytes_total / 1024,
