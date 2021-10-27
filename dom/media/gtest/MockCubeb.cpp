@@ -500,9 +500,9 @@ int MockCubeb::StreamInit(cubeb* aContext, cubeb_stream** aStream,
 }
 
 void MockCubeb::StreamDestroy(cubeb_stream* aStream) {
-  mStreamDestroyEvent.Notify();
   RefPtr<SmartMockCubebStream> mockStream =
       dont_AddRef(MockCubebStream::AsMock(aStream)->mSelf);
+  mStreamDestroyEvent.Notify(mockStream);
 }
 
 void MockCubeb::GoFaster() { mFastMode = true; }
@@ -513,7 +513,8 @@ MediaEventSource<RefPtr<SmartMockCubebStream>>& MockCubeb::StreamInitEvent() {
   return mStreamInitEvent;
 }
 
-MediaEventSource<void>& MockCubeb::StreamDestroyEvent() {
+MediaEventSource<RefPtr<SmartMockCubebStream>>&
+MockCubeb::StreamDestroyEvent() {
   return mStreamDestroyEvent;
 }
 

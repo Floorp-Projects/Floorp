@@ -793,9 +793,11 @@ TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelCountChanged)
   // Close the 2-channel AudioTrackSet and wait to a new driver.
   {
     bool destroyed = false;
-    // TODO: Check the destroyed stream is stream above
     MediaEventListener destroyListener = cubeb->StreamDestroyEvent().Connect(
-        AbstractThread::GetCurrent(), [&]() { destroyed = true; });
+        AbstractThread::GetCurrent(),
+        [&](const RefPtr<SmartMockCubebStream>& aDestroyed) {
+          destroyed = aDestroyed.get() == stream.get();
+        });
 
     RefPtr<SmartMockCubebStream> newStream;
     MediaEventListener restartListener = cubeb->StreamInitEvent().Connect(
@@ -820,7 +822,9 @@ TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelCountChanged)
 
   // Clean up
   DispatchFunction([&] { set2.Uninit(); });
-  WaitFor(cubeb->StreamDestroyEvent());
+  RefPtr<SmartMockCubebStream> destroyedStream =
+      WaitFor(cubeb->StreamDestroyEvent());
+  EXPECT_EQ(destroyedStream.get(), stream.get());
 }
 
 void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
