@@ -1692,8 +1692,9 @@ async function getBrowsingContextInFrames(browsingContext, selectors) {
     );
   }
 
-  while (selectors.length) {
-    const selector = selectors.shift();
+  const clonedSelectors = [...selectors];
+  while (clonedSelectors.length) {
+    const selector = clonedSelectors.shift();
     context = await SpecialPowers.spawn(context, [selector], _selector => {
       return content.document.querySelector(_selector).browsingContext;
     });
