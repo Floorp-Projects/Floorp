@@ -115,18 +115,8 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
 
   nscolor color = 0;
   switch (aID) {
-    case ColorID::WindowBackground:
-      color = NS_RGB(0xff, 0xff, 0xff);
-      break;
-    case ColorID::WindowForeground:
-      color = NS_RGB(0x00, 0x00, 0x00);
-      break;
-    case ColorID::WidgetBackground:
     case ColorID::Infobackground:
       color = NS_RGB(0xdd, 0xdd, 0xdd);
-      break;
-    case ColorID::WidgetForeground:
-      color = NS_RGB(0x00, 0x00, 0x00);
       break;
     case ColorID::WidgetSelectBackground:
       color = NS_RGB(0x80, 0x80, 0x80);
@@ -139,12 +129,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       break;
     case ColorID::Widget3DShadow:
       color = NS_RGB(0x40, 0x40, 0x40);
-      break;
-    case ColorID::TextBackground:
-      color = NS_RGB(0xff, 0xff, 0xff);
-      break;
-    case ColorID::TextForeground:
-      color = NS_RGB(0x00, 0x00, 0x00);
       break;
     case ColorID::Highlight:
       color = ProcessSelectionBackground(GetColorFromNSColor(NSColor.selectedTextBackgroundColor),
@@ -215,6 +199,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       color = nsCocoaFeatures::OnMontereyOrLater() ? GetColorFromNSColor(NSColor.controlTextColor)
                                                    : NS_RGB(0xFF, 0xFF, 0xFF);
       break;
+    case ColorID::TextForeground:
     case ColorID::Captiontext:
     case ColorID::Menutext:
     case ColorID::Infotext:
@@ -222,6 +207,8 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       color = GetColorFromNSColor(NSColor.textColor);
       break;
     case ColorID::Windowtext:
+    case ColorID::WindowForeground:
+    case ColorID::WidgetForeground:
       color = GetColorFromNSColor(NSColor.windowFrameTextColor);
       break;
     case ColorID::Activecaption:
@@ -278,11 +265,14 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       color = NS_RGB(0xDA, 0xDA, 0xDA);
       break;
     case ColorID::Menu:
+    case ColorID::TextBackground:
       color = GetColorFromNSColor(NSColor.textBackgroundColor);
       break;
     case ColorID::Windowframe:
       color = GetColorFromNSColor(NSColor.windowFrameColor);
       break;
+    case ColorID::WindowBackground:
+    case ColorID::WidgetBackground:
     case ColorID::Window: {
       if (@available(macOS 10.14, *)) {
         color = GetColorFromNSColor(NSColor.windowBackgroundColor);
