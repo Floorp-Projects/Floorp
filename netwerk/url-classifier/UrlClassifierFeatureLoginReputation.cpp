@@ -7,6 +7,10 @@
 #include "UrlClassifierFeatureLoginReputation.h"
 
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPtr.h"
+#include "UrlClassifierCommon.h"
+#include "nsCOMPtr.h"
+#include "nsIChannel.h"
 
 namespace mozilla {
 namespace net {

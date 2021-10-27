@@ -13,6 +13,9 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsILoadContext.h"
 #include "nsNetUtil.h"
+#include "mozilla/StaticPtr.h"
+#include "nsXULAppAPI.h"
+#include "nsIWebProgressListener.h"
 
 namespace mozilla {
 namespace net {
