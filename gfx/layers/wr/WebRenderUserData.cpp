@@ -6,6 +6,7 @@
 
 #include "WebRenderUserData.h"
 
+#include "mozilla/image/WebRenderImageProvider.h"
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageClient.h"
@@ -18,6 +19,8 @@
 #include "nsDisplayListInvalidation.h"
 #include "nsIFrame.h"
 #include "WebRenderCanvasRenderer.h"
+
+using namespace mozilla::image;
 
 namespace mozilla {
 namespace layers {
@@ -42,8 +45,9 @@ bool WebRenderUserData::SupportsAsyncUpdate(nsIFrame* aFrame) {
 }
 
 /* static */
-bool WebRenderUserData::ProcessInvalidateForImage(
-    nsIFrame* aFrame, DisplayItemType aType, ContainerProducerID aProducerId) {
+bool WebRenderUserData::ProcessInvalidateForImage(nsIFrame* aFrame,
+                                                  DisplayItemType aType,
+                                                  ImageProviderId aProviderId) {
   MOZ_ASSERT(aFrame);
 
   if (!aFrame->HasProperty(WebRenderUserDataProperty::Key())) {
@@ -59,9 +63,9 @@ bool WebRenderUserData::ProcessInvalidateForImage(
     return true;
   }
 
-  RefPtr<WebRenderImageData> image =
-      GetWebRenderUserData<WebRenderImageData>(aFrame, type);
-  if (image && image->UsingSharedSurface(aProducerId)) {
+  RefPtr<WebRenderImageProviderData> image =
+      GetWebRenderUserData<WebRenderImageProviderData>(aFrame, type);
+  if (image && image->Invalidate(aProviderId)) {
     return true;
   }
 
@@ -281,33 +285,43 @@ void WebRenderImageData::CreateImageClientIfNeeded() {
   }
 }
 
-WebRenderBlobImageData::WebRenderBlobImageData(RenderRootStateManager* aManager,
-                                               nsDisplayItem* aItem)
+WebRenderImageProviderData::WebRenderImageProviderData(
+    RenderRootStateManager* aManager, nsDisplayItem* aItem)
     : WebRenderUserData(aManager, aItem) {}
 
-WebRenderBlobImageData::WebRenderBlobImageData(RenderRootStateManager* aManager,
-                                               uint32_t aDisplayItemKey,
-                                               nsIFrame* aFrame)
+WebRenderImageProviderData::WebRenderImageProviderData(
+    RenderRootStateManager* aManager, uint32_t aDisplayItemKey,
+    nsIFrame* aFrame)
     : WebRenderUserData(aManager, aDisplayItemKey, aFrame) {}
 
-Maybe<wr::BlobImageKey> WebRenderBlobImageData::UpdateImageKey(
-    ImageContainer* aContainer, wr::IpcResourceUpdateQueue& aResources) {
-  MOZ_ASSERT(aContainer);
+WebRenderImageProviderData::~WebRenderImageProviderData() = default;
 
-  if (mContainer != aContainer) {
-    mContainer = aContainer;
+Maybe<wr::ImageKey> WebRenderImageProviderData::UpdateImageKey(
+    WebRenderImageProvider* aProvider, wr::IpcResourceUpdateQueue& aResources) {
+  MOZ_ASSERT(aProvider);
+
+  if (mProvider != aProvider) {
+    mProvider = aProvider;
   }
 
-  wr::BlobImageKey key = {};
+  wr::ImageKey key = {};
+  nsresult rv = mProvider->UpdateKey(mManager, aResources, key);
+  if (NS_FAILED(rv)) {
+    return Nothing();
+  }
+
+  return Some(key);
+}
+
+bool WebRenderImageProviderData::Invalidate(ImageProviderId aProviderId) const {
+  if (!aProviderId || mProvider->GetProviderId() != aProviderId) {
+    return false;
+  }
+
+  wr::ImageKey key = {};
   nsresult rv =
-      SharedSurfacesChild::ShareBlob(aContainer, mManager, aResources, key);
-  if (NS_SUCCEEDED(rv)) {
-    mKey = Some(key);
-  } else {
-    mKey.reset();
-  }
-
-  return mKey;
+      mProvider->UpdateKey(mManager, mManager->AsyncResourceUpdates(), key);
+  return NS_SUCCEEDED(rv);
 }
 
 WebRenderFallbackData::WebRenderFallbackData(RenderRootStateManager* aManager,
