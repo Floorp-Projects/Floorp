@@ -25,5 +25,3 @@ FINAL_LIBRARY = "xul-gtest"
 LOCAL_INCLUDES += ["!/xpcom", "/xpcom/components"]
 
 include("/tools/fuzzing/libfuzzer-config.mozbuild")
-
-REQUIRES_UNIFIED_BUILD = True
