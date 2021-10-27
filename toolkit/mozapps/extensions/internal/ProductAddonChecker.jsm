@@ -19,6 +19,10 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ServiceRequest: "resource://gre/modules/ServiceRequest.jsm",
+});
+
 // This exists so that tests can override the XHR behaviour for downloading
 // the addon update XML file.
 var CreateXHR = function() {
@@ -32,9 +36,9 @@ var logger = Log.repository.getLogger("addons.productaddons");
 logger.manageLevelFromPref("extensions.logging.productaddons.level");
 
 /**
- * Number of milliseconds after which we need to cancel `downloadXML`.
+ * Number of milliseconds after which we need to cancel `downloadXMLWithRequest`.
  *
- * Bug 1087674 suggests that the XHR we use in `downloadXML` may
+ * Bug 1087674 suggests that the XHR we use in `downloadXMLWithRequest` may
  * never terminate in presence of network nuisances (e.g. strange
  * antivirus behavior). This timeout is a defensive measure to ensure
  * that we fail cleanly in such case.
@@ -65,6 +69,132 @@ function getRequestStatus(request) {
 }
 
 /**
+ * A wrapper around `ServiceRequest` that behaves like a limited `fetch()`.
+ * This doesn't handle headers like fetch, but can be expanded as callers need.
+ *
+ * Use this in order to leverage the `beConservative` flag, for
+ * example to avoid using HTTP3 to fetch critical data.
+ *
+ * @param input a resource
+ * @returns a Response object
+ */
+async function conservativeFetch(input) {
+  return new Promise(function(resolve, reject) {
+    const request = new ServiceRequest({ mozAnon: true });
+
+    request.onerror = () =>
+      reject(new TypeError("NetworkError: Network request failed"));
+    request.ontimeout = () =>
+      reject(new TypeError("Timeout: Network request failed"));
+    request.onabort = () => reject(new DOMException("Aborted", "AbortError"));
+    request.onload = () => {
+      const responseAttributes = {
+        status: request.status,
+        statusText: request.statusText,
+        url: request.responseURL,
+      };
+      resolve(new Response(request.response, responseAttributes));
+    };
+
+    const method = "GET";
+
+    request.open(method, input, true);
+
+    request.send();
+  });
+}
+
+/**
+ * Verifies the content signature on GMP's update.xml. When we fetch update.xml
+ * balrog should send back content signature headers, which this function
+ * is used to verify.
+ *
+ * @param  data
+ *         The data received from balrog. I.e. the xml contents of update.xml.
+ * @param  contentSignatureHeader
+ *         The contents of the 'content-signature' header received along with
+ *         `data`.
+ * @return A promise that will resolve to nothing if the signature verification
+ *         succeeds, or rejects on failure, with an Error containing a string
+ *         that explains what failed.
+ */
+async function verifyGmpContentSignature(data, contentSignatureHeader) {
+  if (!contentSignatureHeader) {
+    logger.warn(
+      "Unexpected missing content signature header during content signature validation"
+    );
+    throw new Error(
+      "Content signature validation failed: missing content signature header"
+    );
+  }
+  // Split out the header. It should contain a the following fields, separated by a semicolon
+  // - x5u - a URI to the cert chain. See also https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.5
+  // - p384ecdsa - the signature to verify. See also https://github.com/mozilla-services/autograph/blob/main/signer/contentsignaturepki/README.md
+  const headerFields = contentSignatureHeader
+    .split(";") // Split fields...
+    .map(s => s.trim()) // Remove whitespace...
+    .map(s => [
+      // Break each field into it's name and value. This more verbose version is
+      // used instead of `split()` to handle values that contain = characters. This
+      // shouldn't happen for the signature because it's base64_url (no = padding),
+      // but it's not clear if it's possible for the x5u URL (as part of a query).
+      // Guard anyway, better safe than sorry.
+      s.substring(0, s.indexOf("=")), // Get field name...
+      s.substring(s.indexOf("=") + 1), // and field value.
+    ]);
+
+  let x5u;
+  let signature;
+  for (const [fieldName, fieldValue] of headerFields) {
+    if (fieldName == "x5u") {
+      x5u = fieldValue;
+    } else if (fieldName == "p384ecdsa") {
+      // The signature needs to contain 'p384ecdsa', so stich it back together.
+      signature = `p384ecdsa=${fieldValue}`;
+    }
+  }
+
+  if (!x5u) {
+    logger.warn("Unexpected missing x5u during content signature validation");
+    throw new Error("Content signature validation failed: missing x5u");
+  }
+
+  if (!signature) {
+    logger.warn(
+      "Unexpected missing signature during content signature validation"
+    );
+    throw new Error("Content signature validation failed: missing signature");
+  }
+
+  // The x5u field should contain the location of the cert chain, fetch it.
+  // Use `conservativeFetch` so we get conservative behaviour and ensure (more)
+  // reliable fetching.
+  const certChain = await (await conservativeFetch(x5u)).text();
+
+  const verifier = Cc[
+    "@mozilla.org/security/contentsignatureverifier;1"
+  ].createInstance(Ci.nsIContentSignatureVerifier);
+
+  let valid;
+  try {
+    valid = await verifier.asyncVerifyContentSignature(
+      data,
+      signature,
+      certChain,
+      "aus.content-signature.mozilla.org"
+    );
+  } catch (err) {
+    logger.warn(`Unexpected error while validating content signature: ${err}`);
+    throw new Error(`Content signature validation failed: ${err}`);
+  }
+
+  if (!valid) {
+    logger.warn("Unexpected invalid content signature found during validation");
+    throw new Error("Content signature is not valid");
+  }
+}
+
+/**
  * Downloads an XML document from a URL optionally testing the SSL certificate
  * for certain attributes.
  *
@@ -75,10 +205,14 @@ function getRequestStatus(request) {
  * @param  allowedCerts
  *         The list of certificate attributes to match the SSL certificate
  *         against or null to skip checks.
- * @return a promise that resolves to the DOM document downloaded or rejects
+ * @return a promise that resolves to the XHR request on success or rejects
  *         with a JS exception in case of error.
  */
-function downloadXML(url, allowNonBuiltIn = false, allowedCerts = null) {
+function downloadXMLWithRequest(
+  url,
+  allowNonBuiltIn = false,
+  allowedCerts = null
+) {
   return new Promise((resolve, reject) => {
     let request = CreateXHR();
     // This is here to let unit test code override XHR
@@ -137,7 +271,7 @@ function downloadXML(url, allowNonBuiltIn = false, allowedCerts = null) {
         return;
       }
 
-      resolve(request.responseXML);
+      resolve(request);
     };
 
     request.addEventListener("error", fail);
@@ -148,6 +282,43 @@ function downloadXML(url, allowNonBuiltIn = false, allowedCerts = null) {
     logger.info("sending request to: " + url);
     request.send(null);
   });
+}
+
+/**
+ * Downloads an XML document from a URL optionally testing the SSL certificate
+ * for certain attributes, and/or testing the content signature.
+ *
+ * @param  url
+ *         The url to download from.
+ * @param  allowNonBuiltIn
+ *         Whether to trust SSL certificates without a built-in CA issuer.
+ * @param  allowedCerts
+ *         The list of certificate attributes to match the SSL certificate
+ *         against or null to skip checks.
+ * @param  verifyContentSignature
+ *         When true, will verify the content signature information from the
+ *         response header. Failure to verify will result in an error.
+ * @return a promise that resolves to the DOM document downloaded or rejects
+ *         with a JS exception in case of error.
+ */
+async function downloadXML(
+  url,
+  allowNonBuiltIn = false,
+  allowedCerts = null,
+  verifyContentSignature = false
+) {
+  let request = await downloadXMLWithRequest(
+    url,
+    allowNonBuiltIn,
+    allowedCerts
+  );
+  if (verifyContentSignature) {
+    await verifyGmpContentSignature(
+      request.response,
+      request.getResponseHeader("content-signature")
+    );
+  }
+  return request.responseXML;
 }
 
 /**
@@ -359,7 +530,7 @@ var verifyFile = async function(properties, path) {
 const ProductAddonChecker = {
   /**
    * Downloads a list of add-ons from a URL optionally testing the SSL
-   * certificate for certain attributes.
+   * certificate for certain attributes, and/or testing the content signature.
    *
    * @param  url
    *         The url to download from.
@@ -368,12 +539,25 @@ const ProductAddonChecker = {
    * @param  allowedCerts
    *         The list of certificate attributes to match the SSL certificate
    *         against or null to skip checks.
+   * @param  verifyContentSignature
+   *         When true, will verify the content signature information from the
+   *         response header. Failure to verify will result in an error.
    * @return a promise that resolves to an object containing the list of add-ons
    *         and whether the local fallback was used, or rejects with a JS
    *         exception in case of error.
    */
-  getProductAddonList(url, allowNonBuiltIn = false, allowedCerts = null) {
-    return downloadXML(url, allowNonBuiltIn, allowedCerts).then(parseXML);
+  getProductAddonList(
+    url,
+    allowNonBuiltIn = false,
+    allowedCerts = null,
+    verifyContentSignature = false
+  ) {
+    return downloadXML(
+      url,
+      allowNonBuiltIn,
+      allowedCerts,
+      verifyContentSignature
+    ).then(parseXML);
   },
 
   /**
