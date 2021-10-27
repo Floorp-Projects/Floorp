@@ -66,6 +66,7 @@ EXPORTS.mozilla.image += [
     "ImageMemoryReporter.h",
     "Resolution.h",
     "SourceSurfaceBlobImage.h",
+    "WebRenderImageProvider.h",
 ]
 
 UNIFIED_SOURCES += [
