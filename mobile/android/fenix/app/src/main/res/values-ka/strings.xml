@@ -23,7 +23,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 გახსნილი ჩანართი. შეეხეთ ჩანართების გადასართველად.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s გახსნილი ჩანართი. შეეხეთ ჩანართების გადასართველად.</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s გახსნილი ჩანართი. შეეხეთ ჩანართების გადასართველად.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d მონიშნულია</string>
@@ -50,7 +50,11 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_bookmarks">ბოლოს შენახული</string>
+    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">ბოლოს შენახული</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string moz:removedIn="94" name="recently_bookmarked" tools:ignore="UnusedResources">ბოლოს ჩანიშნული</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recent_bookmarks_title">ბოლოს ჩანიშნული</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">ბოლოს ჩანიშნული</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -101,6 +105,23 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">გამოტოვება</string>
 
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">ორი კვირის მოუნახულებელი ჩანართები, აქ გადმოვა.</string>
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">გამორთვა პარამეტრებიდან</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">დაიხუროს ერთ თვეში?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox დახურავს ჩანართებს, რომლებიც არ გინახავთ მთელი თვეში.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">დახურვა</string>
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">თვითდახურვის ჩართვა</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">თვითდახურვის ჩართვა</string>
+
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">ახალი ჩანართი</string>
@@ -108,7 +129,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">ახალი პირადი ჩანართი</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">რჩეული საიტები</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">რჩეული საიტები</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -116,10 +137,31 @@
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">ყველას ჩვენება</string>
 
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description">ყველა ბოლო ჩანართის ღილაკის ჩვენება</string>
+    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
+        The first parameter is the search term that the user used. (for example: your search for "cat")-->
+    <string name="recent_tabs_search_term">მოძიებული „%1$s“</string>
+    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
+        The first parameter is the count for number of sites in the group.  This number will always be more than one. -->
+    <string name="recent_tabs_search_term_count">საიტი: %1$s</string>
+
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header">წარსული ძიებანი</string>
+    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">წარსული ძიებანი</string>
+
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string moz:removedIn="94" name="history_metadata_header_2" tools:ignore="UnusedResources">ბოლოს ნანახი</string>
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_3">ბოლოს მოძიებული</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">მოცილება</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description">წარსულში ყველა მოძიებულის ღილაკის ჩვენება</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -133,7 +175,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">შეჩერება</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">ჩანიშვნა</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">ჩანიშვნა</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">სანიშნის ჩასწორება</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -196,7 +238,9 @@
     <string name="browser_menu_edit">ჩასწორება</string>
 
     <!-- Browser menu button that opens the Customize menu -->
-    <string name="browser_menu_customize_home">მთავარის მორგება</string>
+    <string name="browser_menu_customize_home">საწყისის მორგება</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">საწყისი გვერდის მორგება</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">მთავარი ეკრანი</string>
@@ -241,6 +285,28 @@
     <string name="search_engine_suggestions_title">საძიებოდ %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">მოიძიეთ პირდაპირ მისამართების ველიდან</string>
+
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_title_2">რა სიახლეებითაა Firefox</string>
+    <!-- Onboarding home screen dialog description text. -->
+    <string name="onboarding_home_screen_description_2">მარტივად განაგრძეთ იქიდან, სადაც შეჩერდით.</string>
+    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_section_home_title_2">Firefox-ის მორგებული საწყისი გვერდი</string>
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description_2">გადადით გახსნილ ჩანართებზე, სანიშნებსა და მონახულებულ გვერდებზე.</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">სუფთა, მოწესრიგებული ჩანართები</string>
+
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">აირიდეთ ჩანართების არეულობა, დახვეწილი განლაგებითა და თვითდახურვით.</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_title_2">ბოლოს მოძიებული</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_description_2">კვლავ მოინახულეთ ბოლოს მოძიებულები, საწყისი გვერდიდან და ჩანართებიდან.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Firefox-ის მორგებული საწყისი გვერდით, შეძლებთ მარტივად განაგრძოთ იქიდან, სადაც შეჩერდით. იპოვეთ ბოლოს გახსნილი ჩანართები, სანიშნები და მოძიებული გვერდები.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -322,7 +388,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">თემა</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">მთავარი</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">მთავარი</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">საწყისი გვერდი</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">ჟესტები</string>
     <!-- Preference for settings related to visual options -->
@@ -394,9 +462,17 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">წინაზე გადასვლა</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recently_saved_bookmarks">ბოლოს შენახული</string>
-    <!-- Title for the customize home screen section with recently visited. Recently visited is a section where users see a list of tabs that they have visited in the past few days -->
-    <string name="customize_toggle_recently_visited">ბოლოს ნანახი</string>
+    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">ბოლოს შენახული</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string moz:removedIn="94" name="customize_toggle_recently_bookmarked" tools:ignore="UnusedResources">ბოლოს ჩანიშნული</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">ბოლოს ჩანიშნული</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string moz:removedIn="94" name="customize_toggle_recently_visited" tools:ignore="UnusedResources">ბოლოს ნანახი</string>
+    <!-- Title for the customize home screen settings section for recent searches. Recent searches
+     is a section where users see a list of groups of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recent_searches">ბოლოს მოძიებული</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
@@ -509,7 +585,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">სინქრონიზაციის ჩართვა</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">წააკითხეთ მიერთების კოდი კომპიუტერის Firefox-ში</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">წააკითხეთ მიერთების კოდი კომპიუტერის Firefox-ში</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">შესვლა</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -586,6 +662,13 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">დახურვა</string>
 
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d საიტი</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d საიტი</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">ბოლოს დახურული ჩანართები</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -608,6 +691,10 @@
     <string name="tab_view_list">სია</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">ბადისებრი</string>
+    <!-- Option for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups">ძიების ჯგუფები</string>
+    <!-- Summary text for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups_summary">დაკავშირებული საიტების დაჯგუფება</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">ჩანართების დახურვა</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -620,15 +707,26 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">ერთი თვის შემდეგ</string>
 
-    <!-- Start on Home -->
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">გახსნილი ჩანართების თვითდახურვა</string>
+
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">მთავარით დაწყება</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">მთავარით დაწყება</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">საწყისი ეკრანი</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">4 საათის შემდეგ</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">4 საათის შემდეგ</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">საწყისი გვერდი</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">ყოველთვის</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">ყოველთვის</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">ბოლო ჩანართი</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">არასდროს</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">არასდროს</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">საწყისი გვერდი ოთხი საათის უქმობის შემდეგ</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">ხელით დახურვა</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -637,6 +735,12 @@
     <string name="close_tabs_after_one_week_summary">ერთ კვირაში დახურვა</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">ერთ თვეში დახურვა</string>
+
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">ძველი ჩანართების უქმეებში გადატანა</string>
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">ორი კვირის მოუნახულებელი ჩანართები, გადმოვა უქმეების არეში.</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -678,13 +782,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">კრებულში შენახვა</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">არჩევა</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">არჩევა</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">ყველა ჩანართის გაზიარება</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">ბოლოს დახურული ჩანართები</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">ახლახანს დახურული</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">ახლახანს დახურული</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">ანგარიშის პარამეტრები</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -757,7 +861,10 @@
     <string name="tab_tray_save_to_collection">შენახვა</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title">სხვა</string>
+    <string moz:removedIn="94" name="tab_tray_header_title" tools:ignore="UnusedResources">სხვა</string>
+
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title_1">სხვა ჩანართები</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -772,15 +879,15 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">გასუფთავება</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">ასლი</string>
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">ასლი</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">გაზიარება</string>
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">გაზიარება</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">ახალ ჩანართში გახსნა</string>
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">ახალ ჩანართში გახსნა</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">პირად ჩანართში გახსნა</string>
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">პირად ჩანართში გახსნა</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">წაშლა</string>
+    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">წაშლა</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">შერჩეულია %1$d</string>
@@ -803,10 +910,6 @@
     <string name="history_empty_message">ისტორია არ არის</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">ჩამოტვირთვების წაშლა</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">ნამდვილად გსურთ წაიშალოს ჩამოტვირთვები?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">ჩამოტვირთვები მოცილებულია</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -847,7 +950,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">სანიშნების მენიუ</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">სანიშნის ჩასწორება</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">სანიშნის ჩასწორება</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">საქაღალდის მითითება</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1252,12 +1355,12 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">უკვე გაქვთ ანგარიში?</string>
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">იხილეთ სიახლეები</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">იხილეთ სიახლეები</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">გაინტერესებთ როგორ შეიცვალა %s გარეგნულად? გსურთ გაეცნოთ ცვლილებებს?</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">გაინტერესებთ როგორ შეიცვალა %s გარეგნულად? გსურთ გაეცნოთ ცვლილებებს?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">მიიღეთ პასუხები აქ</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">მიიღეთ პასუხები აქ</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">დაასინქრონეთ Firefox მოწყობილობებს შორის</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1298,14 +1401,14 @@
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">განათავსეთ ხელსაწყოები ხელმისაწვდომ ადგილას. დატოვეთ ქვემოთ ან გადაიტანეთ ზემოთ.</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">პირადული ინტერნეტი</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">პირადული ინტერნეტი</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">პირადი ჩანართის გახსნა ერთჯერადად: შეეხეთ %s ხატულას.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">პირადი ჩანართის გახსნა ერთჯერადად: შეეხეთ %s ხატულას.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">პირადი ჩანართის გახსნა ყოველ ჯერზე: მიუთითეთ პარამეტრებიდან.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">პირადი ჩანართის გახსნა ყოველ ჯერზე: მიუთითეთ პარამეტრებიდან.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">პარამეტრების გახსნა</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">პარამეტრების გახსნა</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">თქვენი პირადულობა</string>
     <!-- text for the privacy notice onboarding card description
@@ -1848,8 +1951,10 @@
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
-    <string name="add_login_hostname_invalid_text_1">მისამართის დასაწყისია ხოლმე „https://“ ან „http://“</string>
+    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">მისამართის დასაწყისია ხოლმე „https://“ ან „http://“</string>
 
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">მისამართის თავსართი უნდა იყოს „https://“ ან „http://“</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
     <string name="add_login_hostname_invalid_text_2">მართებული მისამართი აუცილებელია</string>
 
@@ -1879,8 +1984,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">კარგი, გასაგებია</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">ხშირად მონახულებული რჩეული საიტები</string>
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">ხშირად მონახულებულების ჩვენება</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">ხშირად მონახულებულების ჩვენება</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">ხშირად მონახულებულების ჩვენება</string>
 
@@ -1893,15 +2000,43 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">გაუქმება</string>
 
-    <!-- In-activate tabs in the tabs tray -->
-    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <!-- Inactive tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
     <string name="inactive_tabs_title">უქმი ჩანართები</string>
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">ყველა უქმი ჩანართის დახურვა</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">ჩანართები აქ დარჩება %s. შემდეგ კი თავადვე დაიხურება.</string>
+    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">ჩანართები აქ დარჩება %s. შემდეგ კი თავადვე დაიხურება.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 დღე</string>
+    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 დღე</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">1 კვირა</string>
+    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 კვირა</string>
+
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">დაიხუროს ერთ თვეში?</string>
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox დახურავს ჩანართებს, რომლებიც არ გინახავთ მთელი თვეში.</string>
+    <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">ᲗᲕᲘᲗᲓᲐᲮᲣᲠᲕᲘᲡ ᲩᲐᲠᲗᲕᲐ</string>
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">თვითდახურვა ჩართულია</string>
+
+    <!-- Inactive tabs survey -->
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header" tools:ignore="UnusedResources">გთხოვთ, დაგვეხმარეთ გაუმჯობესებაში</string>
+    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
+    <string name="inactive_tabs_survey_content" tools:ignore="UnusedResources">რატომ გამორთეთ უქმი ჩანართები?</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_not_interested_option" tools:ignore="UnusedResources">არ მჭირდება ეს შესაძლებლობა</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">უმოქმედობის დრო მეტად დიდია</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">უმოქმედობის დრო მეტად მცირეა</string>
+    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
+    <string name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">გაგზავნა</string>
+    <!-- Content description for inactive tabs survey close button -->
+    <string name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">დახურვა</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">მითითება რომ ბმულები ვებსაიტებიდან, ელფოსტიდან და შეტყობინებებიდან, გაიხსნას პირდაპირ Firefox-ში.</string>
@@ -1918,4 +2053,19 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">დახურვა</string>
 
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string moz:removedIn="94" name="pocket_stories_header" tools:ignore="UnusedResources">მეტად დამაფიქრებელი ამბები</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">მეტად დამაფიქრებელი ამბები</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_categories_header">ამბები თემატურად</string>
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">აღმოაჩინეთ მეტი</string>
+    <!-- Title of an app feature. Smaller than a heading.-->
+    <string name="pocket_stories_feature_title">უზრუნველყოფს Pocket.</string>
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">Firefox ოჯახის ნაწილი. %s</string>
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">ვრცლად</string>
 </resources>

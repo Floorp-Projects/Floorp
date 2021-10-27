@@ -121,13 +121,17 @@
     <string name="tab_tray_inactive_onboarding_button_text">설정에서 끄기</string>
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_auto_close_title">한 달 후 자동으로 닫으시겠습니까?</string>
+    <string name="tab_tray_inactive_auto_close_title">한 달 후 자동 닫기를 하시겠습니까?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_body">Firefox는 지난 한 달 동안 보지 않은 탭을 닫을 수 있습니다.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">닫기</string>
     <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_turn_on_auto_close_button">자동 닫기 켜기</string>
+    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">자동 닫기 켜기</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">자동 닫기 켜기</string>
+
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -722,7 +726,7 @@
     <string name="close_tabs_after_one_month">한 달 후</string>
 
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
-    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">열린 탭 자동으로 닫기</string>
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">열린 탭 자동 닫기</string>
 
     <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
@@ -2064,11 +2068,14 @@
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
-    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">한 달 후 닫으시겠습니까?</string>
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">한 달 후 자동 닫기를 하시겠습니까?</string>
     <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
     <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox는 지난 한 달 동안 보지 않은 탭을 닫을 수 있습니다.</string>
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">자동 닫기 켜기</string>
+
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">자동 닫기 사용함</string>
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->

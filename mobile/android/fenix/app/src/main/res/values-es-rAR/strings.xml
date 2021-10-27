@@ -435,7 +435,7 @@
     <!-- Preference title for switch preference to suggest synced tabs when searching -->
     <string name="preferences_search_synced_tabs">Buscar pestañas sincronizadas</string>
     <!-- Preference for account settings -->
-    <string name="preferences_account_settings">Ajustes de la cuenta</string>
+    <string name="preferences_account_settings">Configuración de la cuenta</string>
 
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Autocompletar URLs</string>
