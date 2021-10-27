@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Quotes.h"
+#include "MozLocale.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/intl/Locale.h"
 #include "nsTHashMap.h"
 #include "nsPrintfCString.h"
 
@@ -54,32 +54,29 @@ const Quotes* QuotesForLang(const nsAtom* aLang) {
   // Try parsing lang as a Locale (which will also canonicalize case of the
   // subtags), then see if we can match it with region or script subtags,
   // if present, or just the primary language tag.
-  Locale loc;
-  auto result = LocaleParser::tryParse(langStr, loc);
-  if (result.isErr()) {
+  MozLocale loc(langStr);
+  if (!loc.IsWellFormed()) {
     return nullptr;
   }
-  if (loc.region().present()) {
+  if (!loc.GetRegion().IsEmpty()) {
     nsAutoCString langAndRegion;
-    langAndRegion.Append(loc.language().span());
+    langAndRegion.Append(loc.GetLanguage());
     langAndRegion.Append('-');
-    langAndRegion.Append(loc.region().span());
+    langAndRegion.Append(loc.GetRegion());
     if ((entry = sQuotesForLang->Lookup(langAndRegion).DataPtrOrNull())) {
       return entry;
     }
   }
-  if (loc.script().present()) {
+  if (!loc.GetScript().IsEmpty()) {
     nsAutoCString langAndScript;
-    langAndScript.Append(loc.language().span());
+    langAndScript.Append(loc.GetLanguage());
     langAndScript.Append('-');
-    langAndScript.Append(loc.script().span());
+    langAndScript.Append(loc.GetScript());
     if ((entry = sQuotesForLang->Lookup(langAndScript).DataPtrOrNull())) {
       return entry;
     }
   }
-  Span<const char> langAsSpan = loc.language().span();
-  nsAutoCString lang(langAsSpan.data(), langAsSpan.size());
-  if ((entry = sQuotesForLang->Lookup(lang).DataPtrOrNull())) {
+  if ((entry = sQuotesForLang->Lookup(loc.GetLanguage()).DataPtrOrNull())) {
     return entry;
   }
 

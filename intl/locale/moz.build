@@ -32,6 +32,7 @@ EXPORTS += [
 
 EXPORTS.mozilla.intl += [
     "LocaleService.h",
+    "MozLocale.h",
     "MozLocaleBindings.h",
     "OSPreferences.h",
     "Quotes.h",
@@ -40,6 +41,7 @@ EXPORTS.mozilla.intl += [
 UNIFIED_SOURCES += [
     "DateTimeFormat.cpp",
     "LocaleService.cpp",
+    "MozLocale.cpp",
     "nsLanguageAtomService.cpp",
     "nsUConvPropertySearch.cpp",
     "OSPreferences.cpp",

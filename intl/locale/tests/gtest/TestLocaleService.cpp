@@ -5,8 +5,8 @@
 
 #include "gtest/gtest.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/intl/Locale.h"
 #include "mozilla/intl/LocaleService.h"
+#include "mozilla/intl/MozLocale.h"
 #include "mozilla/intl/Collator.h"
 
 using namespace mozilla::intl;
@@ -138,8 +138,7 @@ TEST(Intl_Locale_LocaleService, GetDefaultLocale)
   LocaleService::GetInstance()->GetDefaultLocale(locStr);
 
   ASSERT_FALSE(locStr.IsEmpty());
-  Locale loc;
-  ASSERT_TRUE(LocaleParser::tryParse(locStr, loc).isOk());
+  ASSERT_TRUE(MozLocale(locStr).IsWellFormed());
 }
 
 TEST(Intl_Locale_LocaleService, IsAppLocaleRTL)
