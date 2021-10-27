@@ -28,3 +28,35 @@ add_task(async function test_tls_conservative() {
     "TLS setting in request channel is not set to conservative for XHR"
   );
 });
+
+add_task(async function test_bypassProxy_default() {
+  const request = new ServiceRequest();
+  request.open("GET", "http://example.com", true);
+  const sr_channel = request.channel.QueryInterface(Ci.nsIHttpChannelInternal);
+
+  ok(!sr_channel.bypassProxy, "bypassProxy is false on SR channel");
+  ok(!request.bypassProxy, "bypassProxy is false for SR");
+});
+
+add_task(async function test_bypassProxy_true() {
+  const request = new ServiceRequest();
+  request.open("GET", "http://example.com", { bypassProxy: true });
+  const sr_channel = request.channel.QueryInterface(Ci.nsIHttpChannelInternal);
+
+  ok(sr_channel.bypassProxy, "bypassProxy is true on SR channel");
+  ok(request.bypassProxy, "bypassProxy is true for SR");
+});
+
+add_task(async function test_bypassProxy_disabled_by_pref() {
+  const request = new ServiceRequest();
+
+  ok(request.bypassProxyEnabled, "bypassProxyEnabled is true");
+  Services.prefs.setBoolPref("network.proxy.allow_bypass", false);
+  ok(!request.bypassProxyEnabled, "bypassProxyEnabled is false");
+
+  request.open("GET", "http://example.com", { bypassProxy: true });
+  const sr_channel = request.channel.QueryInterface(Ci.nsIHttpChannelInternal);
+
+  ok(!sr_channel.bypassProxy, "bypassProxy is false on SR channel");
+  ok(!request.bypassProxy, "bypassProxy is false for SR");
+});
