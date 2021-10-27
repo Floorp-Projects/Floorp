@@ -80,14 +80,6 @@
 #  include "mozilla/WindowsVersion.h"
 #endif
 
-// XXX Workaround for bug 986974 to maintain the existing broken semantics
-template <>
-struct nsIMediaDevice::COMTypeInfo<mozilla::MediaDevice, void> {
-  static const nsIID kIID;
-};
-const nsIID nsIMediaDevice::COMTypeInfo<mozilla::MediaDevice, void>::kIID =
-    NS_IMEDIADEVICE_IID;
-
 // A specialization of nsMainThreadPtrHolder for
 // mozilla::dom::CallbackObjectHolder.  See documentation for
 // nsMainThreadPtrHolder in nsProxyRelease.h.  This specialization lets us avoid
