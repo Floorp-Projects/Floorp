@@ -59,37 +59,6 @@ cargo_build_flags += -Zbuild-std=std,panic_abort
 RUSTFLAGS += -Zsanitizer=thread
 endif
 
-# These flags are passed via `cargo rustc` and only apply to the final rustc
-# invocation (i.e., only the top-level crate, not its dependencies).
-cargo_rustc_flags = $(CARGO_RUSTCFLAGS)
-ifndef DEVELOPER_OPTIONS
-ifndef MOZ_DEBUG_RUST
-# Enable link-time optimization for release builds, but not when linking
-# gkrust_gtest. And not when doing cross-language LTO.
-ifndef MOZ_LTO_RUST_CROSS
-ifeq (,$(findstring gkrust_gtest,$(RUST_LIBRARY_FILE)))
-cargo_rustc_flags += -Clto
-endif
-# We need -Cembed-bitcode=yes for all crates when using -Clto.
-RUSTFLAGS += -Cembed-bitcode=yes
-endif
-endif
-endif
-
-ifdef CARGO_INCREMENTAL
-export CARGO_INCREMENTAL
-endif
-
-rustflags_neon =
-ifeq (neon,$(MOZ_FPU))
-ifneq (,$(filter thumbv7neon-,$(RUST_TARGET)))
-# Enable neon and disable restriction to 16 FPU registers when neon is enabled
-# but we're not using a thumbv7neon target, where it's already the default.
-# (CPUs with neon have 32 FPU registers available)
-rustflags_neon += -C target_feature=+neon,-d16
-endif
-endif
-
 rustflags_sancov =
 ifdef LIBFUZZER
 ifndef MOZ_TSAN
@@ -112,6 +81,40 @@ rustflags_sancov += -Cpasses=sancov-module
 endif
 rustflags_sancov += -Cllvm-args=-sanitizer-coverage-inline-8bit-counters -Cllvm-args=-sanitizer-coverage-level=4 -Cllvm-args=-sanitizer-coverage-trace-compares -Cllvm-args=-sanitizer-coverage-pc-table
 endif
+endif
+endif
+
+# These flags are passed via `cargo rustc` and only apply to the final rustc
+# invocation (i.e., only the top-level crate, not its dependencies).
+cargo_rustc_flags = $(CARGO_RUSTCFLAGS)
+ifndef DEVELOPER_OPTIONS
+ifndef MOZ_DEBUG_RUST
+# Enable link-time optimization for release builds, but not when linking
+# gkrust_gtest. And not when doing cross-language LTO.
+ifndef MOZ_LTO_RUST_CROSS
+# Never enable when sancov is enabled to work around https://github.com/rust-lang/rust/issues/90300.
+ifndef rustflags_sancov
+ifeq (,$(findstring gkrust_gtest,$(RUST_LIBRARY_FILE)))
+cargo_rustc_flags += -Clto
+endif
+# We need -Cembed-bitcode=yes for all crates when using -Clto.
+RUSTFLAGS += -Cembed-bitcode=yes
+endif
+endif
+endif
+endif
+
+ifdef CARGO_INCREMENTAL
+export CARGO_INCREMENTAL
+endif
+
+rustflags_neon =
+ifeq (neon,$(MOZ_FPU))
+ifneq (,$(filter thumbv7neon-,$(RUST_TARGET)))
+# Enable neon and disable restriction to 16 FPU registers when neon is enabled
+# but we're not using a thumbv7neon target, where it's already the default.
+# (CPUs with neon have 32 FPU registers available)
+rustflags_neon += -C target_feature=+neon,-d16
 endif
 endif
 
