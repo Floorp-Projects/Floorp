@@ -4,6 +4,10 @@
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 #include "Helpers.h"
+#include "nsNetCID.h"
+#include "nsServiceManagerUtils.h"
+#include "nsITransport.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 

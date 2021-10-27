@@ -11,6 +11,9 @@
 #include "nsStringStream.h"
 #include "nsIPrivateBrowsingChannel.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsContentUtils.h"
+
+using namespace mozilla;
 
 class FakeListener : public nsIStreamListener, public nsIInterfaceRequestor {
  public:
