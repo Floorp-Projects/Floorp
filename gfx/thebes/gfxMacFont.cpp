@@ -104,7 +104,8 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
     }
 
     mCGFont = UnscaledFontMac::CreateCGFontWithVariations(
-        baseFont, aUnscaledFont->AxesCache(), vars.Length(), vars.Elements());
+        baseFont, aUnscaledFont->CGAxesCache(), aUnscaledFont->CTAxesCache(),
+        vars.Length(), vars.Elements());
     if (!mCGFont) {
       ::CFRetain(baseFont);
       mCGFont = baseFont;
