@@ -304,6 +304,54 @@ function runTests(obj) {
       });
     })
 
+    // maintaining order of transferred ports
+    .then(function() {
+      if (!obj.transferableObjects) {
+        return;
+      }
+
+      // MessagePort
+      return new Promise(function(r, rr) {
+        var mcs = [];
+        const NPORTS = 50;
+        for (let i = 0; i < NPORTS; i++) {
+          mcs.push(new MessageChannel());
+        }
+        obj
+          .send(
+            42,
+            mcs.map(channel => channel.port1)
+          )
+          .then(function(received) {
+            is(
+              received.ports.length,
+              NPORTS,
+              `all ${NPORTS} ports transferred`
+            );
+            const promises = Array(NPORTS)
+              .fill()
+              .map(
+                (_, i) =>
+                  new Promise(function(subr, subrr) {
+                    mcs[i].port2.postMessage(i);
+                    received.ports[i].onmessage = e => subr(e.data == i);
+                  })
+              );
+            return Promise.all(promises);
+          })
+          .then(function(result) {
+            let in_order = 0;
+            for (const correct of result) {
+              if (correct) {
+                in_order++;
+              }
+            }
+            is(in_order, NPORTS, "All transferred ports are in order");
+          })
+          .then(r);
+      });
+    })
+
     // non transfering tests
     .then(function() {
       if (obj.transferableObjects) {
