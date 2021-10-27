@@ -797,6 +797,35 @@ def set_defaults(config, tasks):
 
 
 @transforms.add
+def split_variants(config, tasks):
+    for task in tasks:
+        variants = task.pop("variants", [])
+
+        yield copy.deepcopy(task)
+
+        for name in variants:
+            variant = TEST_VARIANTS[name]
+
+            if "filterfn" in variant and not variant["filterfn"](task):
+                continue
+
+            taskv = copy.deepcopy(task)
+            taskv["attributes"]["unittest_variant"] = name
+            taskv["description"] = variant["description"].format(**taskv)
+
+            suffix = f"-{variant['suffix']}"
+            group, symbol = split_symbol(taskv["treeherder-symbol"])
+            if group != "?":
+                group += suffix
+            else:
+                symbol += suffix
+            taskv["treeherder-symbol"] = join_symbol(group, symbol)
+
+            taskv.update(variant.get("replace", {}))
+            yield merge(taskv, variant.get("merge", {}))
+
+
+@transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
         resolve_keyed_by(
@@ -1077,9 +1106,9 @@ def handle_keyed_by(config, tasks):
                 task,
                 field,
                 item_name=task["test-name"],
-                defer=["variant"],
                 enforce_single_match=False,
                 project=config.params["project"],
+                variant=task["attributes"].get("unittest_variant"),
             )
         yield task
 
@@ -1329,62 +1358,6 @@ def disable_wpt_timeouts_on_autoland(config, tasks):
 
 
 @transforms.add
-def split_variants(config, tasks):
-    for task in tasks:
-        variants = task.pop("variants", [])
-
-        yield copy.deepcopy(task)
-
-        # Ignore variants on non-Firefox apps.
-        # This is only needed temporarily.
-        if task.get("app") not in (None, "firefox"):
-            continue
-
-        for name in variants:
-            variant = TEST_VARIANTS[name]
-
-            if "filterfn" in variant and not variant["filterfn"](task):
-                continue
-
-            taskv = copy.deepcopy(task)
-            taskv["attributes"]["unittest_variant"] = name
-            taskv["description"] = variant["description"].format(**taskv)
-
-            suffix = "-" + variant["suffix"]
-            taskv["test-name"] += suffix
-            taskv["try-name"] += suffix
-
-            group, symbol = split_symbol(taskv["treeherder-symbol"])
-            if group != "?":
-                group += suffix
-            else:
-                symbol += suffix
-            taskv["treeherder-symbol"] = join_symbol(group, symbol)
-
-            taskv.update(variant.get("replace", {}))
-            yield merge(taskv, variant.get("merge", {}))
-
-
-@transforms.add
-def handle_keyed_by_variant(config, tasks):
-    """Resolve fields that can be keyed by platform, etc."""
-    fields = [
-        "run-on-projects",
-        "tier",
-    ]
-    for task in tasks:
-        for field in fields:
-            resolve_keyed_by(
-                task,
-                field,
-                item_name=task["test-name"],
-                enforce_single_match=False,
-                variant=task["attributes"].get("unittest_variant"),
-            )
-        yield task
-
-
-@transforms.add
 def enable_code_coverage(config, tasks):
     """Enable code coverage for the ccov build-platforms"""
     for task in tasks:
@@ -1485,7 +1458,11 @@ def handle_tier(config, tasks):
     for task in tasks:
         if "tier" in task:
             resolve_keyed_by(
-                task, "tier", item_name=task["test-name"], enforce_single_match=False
+                task,
+                "tier",
+                item_name=task["test-name"],
+                variant=task["attributes"].get("unittest_variant"),
+                enforce_single_match=False,
             )
 
         # only override if not set for the test
@@ -1636,14 +1613,11 @@ def split_e10s(config, tasks):
 
         if e10s:
             task_copy = copy.deepcopy(task)
-            task_copy["test-name"] += "-e10s"
             task_copy["e10s"] = True
             task_copy["attributes"]["e10s"] = True
             yield task_copy
 
         if not e10s or e10s == "both":
-            task["test-name"] += "-1proc"
-            task["try-name"] += "-1proc"
             task["e10s"] = False
             task["attributes"]["e10s"] = False
             group, symbol = split_symbol(task["treeherder-symbol"])
@@ -2058,6 +2032,8 @@ def make_job_description(config, tasks):
     gecko_taskgraph.transforms.job)"""
 
     for task in tasks:
+        attributes = task.get("attributes", {})
+
         mobile = get_mobile_project(task)
         if mobile and (mobile not in task["test-name"]):
             label = "{}-{}-{}-{}".format(
@@ -2067,12 +2043,24 @@ def make_job_description(config, tasks):
             label = "{}-{}-{}".format(
                 config.kind, task["test-platform"], task["test-name"]
             )
+
+        try_name = task["try-name"]
+        if attributes.get("unittest_variant"):
+            suffix = TEST_VARIANTS[attributes["unittest_variant"]]["suffix"]
+            label += f"-{suffix}"
+            try_name += f"-{suffix}"
+
+        if task["e10s"]:
+            label += "-e10s"
+        else:
+            label += "-1proc"
+            try_name += "-1proc"
+
         if task["chunks"] > 1:
             label += "-{}".format(task["this-chunk"])
 
         build_label = task["build-label"]
 
-        try_name = task["try-name"]
         if task["suite"] == "talos":
             attr_try_name = "talos_try_name"
         elif task["suite"] == "raptor":
@@ -2081,8 +2069,6 @@ def make_job_description(config, tasks):
             attr_try_name = "unittest_try_name"
 
         attr_build_platform, attr_build_type = task["build-platform"].split("/", 1)
-
-        attributes = task.get("attributes", {})
         attributes.update(
             {
                 "build_platform": attr_build_platform,

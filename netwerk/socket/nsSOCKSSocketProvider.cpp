@@ -11,6 +11,7 @@
 #include "nsError.h"
 
 using mozilla::OriginAttributes;
+using namespace mozilla::net;
 
 //////////////////////////////////////////////////////////////////////////
 

@@ -25,8 +25,10 @@
 #include "nsIChannel.h"
 #include "mozilla/Unused.h"
 #include "nsIURIMutator.h"
+#include "nsITextToSubURI.h"
 
 using mozilla::intl::LocaleService;
+using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsIndexedToHTML, nsIDirIndexListener, nsIStreamConverter,
                   nsIRequestObserver, nsIStreamListener)

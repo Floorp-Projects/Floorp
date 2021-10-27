@@ -9,6 +9,8 @@
 
 #include "nsIChannelClassifierService.h"
 #include "mozilla/net/UrlClassifierCommon.h"
+#include "nsCOMPtr.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace net {

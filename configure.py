@@ -13,12 +13,7 @@ import os
 import sys
 import textwrap
 
-
-try:
-    from collections.abc import Iterable
-except ImportError:
-    from collections import Iterable
-
+from collections.abc import Iterable
 
 base_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(base_dir, "python", "mach"))

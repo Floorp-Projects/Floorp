@@ -91,7 +91,7 @@ def _AddPrefix(element, prefix):
   """Add |prefix| to |element| or each subelement if element is iterable."""
   if element is None:
     return element
-  if (isinstance(element, collections.Iterable) and
+  if (isinstance(element, collections.abc.Iterable) and
       not isinstance(element, basestring)):
     return [prefix + e for e in element]
   else:
@@ -104,7 +104,7 @@ def _DoRemapping(element, map):
   if map is not None and element is not None:
     if not callable(map):
       map = map.get # Assume it's a dict, otherwise a callable to do the remap.
-    if (isinstance(element, collections.Iterable) and
+    if (isinstance(element, collections.abc.Iterable) and
         not isinstance(element, basestring)):
       element = filter(None, [map(elem) for elem in element])
     else:
@@ -117,7 +117,7 @@ def _AppendOrReturn(append, element):
   then add |element| to it, adding each item in |element| if it's a list or
   tuple."""
   if append is not None and element is not None:
-    if (isinstance(element, collections.Iterable) and
+    if (isinstance(element, collections.abc.Iterable) and
         not isinstance(element, basestring)):
       append.extend(element)
     else:

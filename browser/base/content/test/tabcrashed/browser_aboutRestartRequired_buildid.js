@@ -1,7 +1,5 @@
 "use strict";
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 const kTimeout = 60 * 1000;
 
 // On debug builds, crashing tabs results in much thinking, which
@@ -103,17 +101,15 @@ add_task(async function test_browser_restartrequired_event() {
   );
 
   let profD = Services.dirsvc.get("GreD", Ci.nsIFile);
-  let platformIniOrig = await OS.File.read(
-    OS.Path.join(profD.path, "platform.ini"),
-    { encoding: "utf-8" }
+  let platformIniOrig = await IOUtils.readUTF8(
+    PathUtils.join(profD.path, "platform.ini")
   );
   let buildID = Services.appinfo.platformBuildID;
   let platformIniNew = platformIniOrig.replace(buildID, "1234");
 
-  await OS.File.writeAtomic(
-    OS.Path.join(profD.path, "platform.ini"),
-    platformIniNew,
-    { encoding: "utf-8" }
+  await IOUtils.writeUTF8(
+    PathUtils.join(profD.path, "platform.ini"),
+    platformIniNew
   );
 
   try {
@@ -128,10 +124,9 @@ add_task(async function test_browser_restartrequired_event() {
 
     await eventPromise;
   } finally {
-    await OS.File.writeAtomic(
-      OS.Path.join(profD.path, "platform.ini"),
-      platformIniOrig,
-      { encoding: "utf-8" }
+    await IOUtils.writeUTF8(
+      PathUtils.join(profD.path, "platform.ini"),
+      platformIniOrig
     );
 
     unsetBuildidMatchDontSendEnv();
@@ -155,12 +150,11 @@ add_task(async function test_browser_crashed_no_platform_ini_event() {
   );
 
   let profD = Services.dirsvc.get("GreD", Ci.nsIFile);
-  let platformIniOrig = await OS.File.read(
-    OS.Path.join(profD.path, "platform.ini"),
-    { encoding: "utf-8" }
+  let platformIniOrig = await IOUtils.readUTF8(
+    PathUtils.join(profD.path, "platform.ini")
   );
 
-  await OS.File.remove(OS.Path.join(profD.path, "platform.ini"));
+  await IOUtils.remove(PathUtils.join(profD.path, "platform.ini"));
 
   try {
     setBuildidMatchDontSendEnv();
@@ -174,10 +168,9 @@ add_task(async function test_browser_crashed_no_platform_ini_event() {
 
     await eventPromise;
   } finally {
-    await OS.File.writeAtomic(
-      OS.Path.join(profD.path, "platform.ini"),
-      platformIniOrig,
-      { encoding: "utf-8" }
+    await IOUtils.writeUTF8(
+      PathUtils.join(profD.path, "platform.ini"),
+      platformIniOrig
     );
 
     unsetBuildidMatchDontSendEnv();

@@ -1,7 +1,9 @@
 #include "gtest/gtest.h"
 
 #include "mozilla/net/DNSPacket.h"
+#include "mozilla/Preferences.h"
 
+using namespace mozilla;
 using namespace mozilla::net;
 
 void AssertDnsPadding(uint32_t PaddingLength, unsigned int WithPadding,

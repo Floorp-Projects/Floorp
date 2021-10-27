@@ -54,7 +54,6 @@ loader.lazyRequireGetter(
 
 const LOAD_ERROR = "error-load";
 const STYLE_EDITOR_TEMPLATE = "stylesheet";
-const SELECTOR_HIGHLIGHTER_TYPE = "SelectorHighlighter";
 const PREF_MEDIA_SIDEBAR = "devtools.styleeditor.showMediaSidebar";
 const PREF_SIDEBAR_WIDTH = "devtools.styleeditor.mediaSidebarWidth";
 const PREF_NAV_WIDTH = "devtools.styleeditor.navSidebarWidth";
@@ -101,7 +100,6 @@ function StyleEditorUI(toolbox, commands, panelDoc, cssProperties) {
   this._updateContextMenuItems = this._updateContextMenuItems.bind(this);
   this._openLinkNewTab = this._openLinkNewTab.bind(this);
   this._copyUrl = this._copyUrl.bind(this);
-  this._onTargetAvailable = this._onTargetAvailable.bind(this);
   this._onResourceAvailable = this._onResourceAvailable.bind(this);
   this._onResourceUpdated = this._onResourceUpdated.bind(this);
 
@@ -140,11 +138,6 @@ StyleEditorUI.prototype = {
   async initialize() {
     this.createUI();
 
-    await this._commands.targetCommand.watchTargets(
-      [this._commands.targetCommand.TYPES.FRAME],
-      this._onTargetAvailable
-    );
-
     await this._toolbox.resourceCommand.watchResources(
       [this._toolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
       { onAvailable: this._onResourceAvailable }
@@ -159,25 +152,6 @@ StyleEditorUI.prototype = {
       }
     );
     await this._waitForLoadingStyleSheets();
-  },
-
-  async initializeHighlighter(targetFront) {
-    const inspectorFront = await targetFront.getFront("inspector");
-    this._walker = inspectorFront.walker;
-
-    try {
-      this._highlighter = await inspectorFront.getHighlighterByType(
-        SELECTOR_HIGHLIGHTER_TYPE
-      );
-    } catch (e) {
-      // The selectorHighlighter can't always be instantiated, for example
-      // it doesn't work with XUL windows (until bug 1094959 gets fixed);
-      // or the selectorHighlighter doesn't exist on the backend.
-      console.warn(
-        "The selectorHighlighter couldn't be instantiated, " +
-          "elements matching hovered selectors will not be highlighted"
-      );
-    }
   },
 
   /**
@@ -414,8 +388,6 @@ StyleEditorUI.prototype = {
     const editor = new StyleSheetEditor(
       resource,
       this._window,
-      this._walker,
-      this._highlighter,
       this._getNextFriendlyIndex(resource)
     );
 
@@ -431,7 +403,16 @@ StyleEditorUI.prototype = {
 
     this.editors.push(editor);
 
-    await editor.fetchSource();
+    try {
+      await editor.fetchSource();
+    } catch (e) {
+      // if the editor was destroyed while fetching dependencies, we don't want to go further.
+      if (!this.editors.includes(editor)) {
+        return null;
+      }
+      throw e;
+    }
+
     this._sourceLoaded(editor);
 
     if (resource.fileName) {
@@ -780,6 +761,11 @@ StyleEditorUI.prototype = {
    *         to be used.
    */
   _selectEditor: function(editor, line, col) {
+    // Don't go further if the editor was destroyed in the meantime
+    if (!this.editors.includes(editor)) {
+      return null;
+    }
+
     line = line || 0;
     col = col || 0;
 
@@ -789,6 +775,10 @@ StyleEditorUI.prototype = {
     });
 
     const summaryPromise = this.getEditorSummary(editor).then(summary => {
+      // Don't go further if the editor was destroyed in the meantime
+      if (!this.editors.includes(editor)) {
+        throw new Error("Editor was destroyed");
+      }
       this._view.activeSummary = summary;
     });
 
@@ -1249,18 +1239,7 @@ StyleEditorUI.prototype = {
     }
   },
 
-  async _onTargetAvailable({ targetFront }) {
-    if (targetFront.isTopLevel) {
-      await this.initializeHighlighter(targetFront);
-    }
-  },
-
   destroy: function() {
-    this._commands.targetCommand.unwatchTargets(
-      [this._commands.targetCommand.TYPES.FRAME],
-      this._onTargetAvailable
-    );
-
     this._toolbox.resourceCommand.unwatchResources(
       [
         this._toolbox.resourceCommand.TYPES.DOCUMENT_EVENT,
