@@ -20,6 +20,7 @@
 #include "UrlClassifierFeatureTrackingAnnotation.h"
 #include "UrlClassifierFeatureCustomTables.h"
 
+#include "nsIWebProgressListener.h"
 #include "nsAppRunner.h"
 
 namespace mozilla {

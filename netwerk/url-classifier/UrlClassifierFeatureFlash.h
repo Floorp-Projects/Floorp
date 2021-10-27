@@ -8,6 +8,8 @@
 #define mozilla_UrlClassifierFeatureFlash_h
 
 #include "UrlClassifierFeatureBase.h"
+#include "nsIHttpChannel.h"
+#include "nsIChannel.h"
 
 namespace mozilla {
 namespace net {

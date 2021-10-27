@@ -18,6 +18,9 @@
 #include "UrlClassifierFeatureSocialTrackingProtection.h"
 #include "UrlClassifierFeatureTrackingProtection.h"
 
+#include "mozilla/StaticPtr.h"
+#include "nsIChannel.h"
+
 namespace mozilla {
 namespace net {
 
