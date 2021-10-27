@@ -14,11 +14,10 @@ namespace net {
 class NeqoHttp3Conn final {
  public:
   static nsresult Init(const nsACString& aOrigin, const nsACString& aAlpn,
-                       const nsACString& aLocalAddr,
-                       const nsACString& aRemoteAddr, uint32_t aMaxTableSize,
-                       uint16_t aMaxBlockedStreams, uint64_t aMaxData,
-                       uint64_t aMaxStreamData, const nsACString& aQlogDir,
-                       NeqoHttp3Conn** aConn) {
+                       const NetAddr& aLocalAddr, const NetAddr& aRemoteAddr,
+                       uint32_t aMaxTableSize, uint16_t aMaxBlockedStreams,
+                       uint64_t aMaxData, uint64_t aMaxStreamData,
+                       const nsACString& aQlogDir, NeqoHttp3Conn** aConn) {
     return neqo_http3conn_new(&aOrigin, &aAlpn, &aLocalAddr, &aRemoteAddr,
                               aMaxTableSize, aMaxBlockedStreams, aMaxData,
                               aMaxStreamData, &aQlogDir,
@@ -39,9 +38,9 @@ class NeqoHttp3Conn final {
     neqo_http3conn_authenticated(this, aError);
   }
 
-  nsresult ProcessInput(const nsACString* aRemoteAddr,
+  nsresult ProcessInput(const NetAddr& aRemoteAddr,
                         const nsTArray<uint8_t>& aPacket) {
-    return neqo_http3conn_process_input(this, aRemoteAddr, &aPacket);
+    return neqo_http3conn_process_input(this, &aRemoteAddr, &aPacket);
   }
 
   bool ProcessOutput(nsACString* aRemoteAddr, uint16_t* aPort,
