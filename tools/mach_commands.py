@@ -484,6 +484,11 @@ def npm(command_context, args):
     path = os.path.abspath(os.path.dirname(npm_path))
     os.environ["PATH"] = "{}:{}".format(path, os.environ["PATH"])
 
+    # karma-firefox-launcher needs the path to firefox binary.
+    firefox_bin = command_context.get_binary_path(validate_exists=False)
+    if os.path.exists(firefox_bin):
+        os.environ["FIREFOX_BIN"] = firefox_bin
+
     return command_context.run_process(
         [npm_path, "--scripts-prepend-node-path=auto"] + args,
         pass_thru=True,  # Avoid eating npm output/error messages
