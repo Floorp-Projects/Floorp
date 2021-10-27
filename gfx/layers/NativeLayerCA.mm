@@ -135,7 +135,7 @@ NativeLayerRootCA::NativeLayerRootCA(CALayer* aLayer)
     : mMutex("NativeLayerRootCA"),
       mOnscreenRepresentation(aLayer),
       mOffscreenRepresentation(MakeOffscreenRootCALayer()) {
-  NoteMouseMove();
+  mLastMouseMoveTime = TimeStamp::NowLoRes();
 }
 
 NativeLayerRootCA::~NativeLayerRootCA() {
@@ -240,7 +240,7 @@ bool NativeLayerRootCA::CommitToScreen() {
       return false;
     }
 
-    UpdateMouseMovedRecently();
+    UpdateMouseMovedRecently(lock);
     mOnscreenRepresentation.Commit(WhichRepresentation::ONSCREEN, mSublayers, mWindowIsFullscreen,
                                    mMouseMovedRecently);
 
@@ -533,26 +533,26 @@ void NativeLayerRootCA::DumpLayerTreeToFile(const char* aPath) {
 }
 
 void NativeLayerRootCA::SetWindowIsFullscreen(bool aFullscreen) {
+  MutexAutoLock lock(mMutex);
+
   if (mWindowIsFullscreen != aFullscreen) {
     mWindowIsFullscreen = aFullscreen;
 
     for (auto layer : mSublayers) {
       layer->SetRootWindowIsFullscreen(mWindowIsFullscreen);
     }
-
-    // Treat this as a mouse move, for purposes of resetting our timer.
-    NoteMouseMove();
-
-    PrepareForCommit();
-    CommitToScreen();
   }
+
+  // Treat this as a mouse move, for purposes of resetting our timer.
+  mLastMouseMoveTime = TimeStamp::NowLoRes();
 }
 
-void NativeLayerRootCA::NoteMouseMove() { mLastMouseMoveTime = TimeStamp::NowLoRes(); }
+void NativeLayerRootCA::NoteMouseMoveAtTime(const TimeStamp& aTime) {
+  MutexAutoLock lock(mMutex);
+  mLastMouseMoveTime = aTime;
+}
 
-void NativeLayerRootCA::NoteMouseMoveAtTime(const TimeStamp& aTime) { mLastMouseMoveTime = aTime; }
-
-void NativeLayerRootCA::UpdateMouseMovedRecently() {
+void NativeLayerRootCA::UpdateMouseMovedRecently(const MutexAutoLock& aProofOfLock) {
   static const double SECONDS_TO_WAIT = 2.0;
 
   bool newMouseMovedRecently =
