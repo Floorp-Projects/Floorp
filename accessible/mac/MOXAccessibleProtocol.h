@@ -5,7 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "SDKDeclarations.h"
+
 @protocol MOXTextMarkerSupport;
+@protocol mozAccessible;
 
 // This protocol's primary use is for abstracting the NSAccessibility informal
 // protocol into a formal internal API. Conforming classes get to choose a
@@ -418,89 +421,101 @@
 #pragma mark - TextAttributeGetters
 
 // AXStartTextMarker
-- (id _Nullable)moxStartTextMarker;
+- (AXTextMarkerRef _Nullable)moxStartTextMarker;
 
 // AXEndTextMarker
-- (id _Nullable)moxEndTextMarker;
+- (AXTextMarkerRef _Nullable)moxEndTextMarker;
 
 // AXSelectedTextMarkerRange
-- (id _Nullable)moxSelectedTextMarkerRange;
+- (AXTextMarkerRangeRef _Nullable)moxSelectedTextMarkerRange;
 
 #pragma mark - ParameterizedTextAttributeGetters
 
 // AXLengthForTextMarkerRange
-- (NSNumber* _Nullable)moxLengthForTextMarkerRange:(id _Nonnull)textMarkerRange;
+- (NSNumber* _Nullable)moxLengthForTextMarkerRange:
+    (AXTextMarkerRangeRef _Nonnull)textMarkerRange;
 
 // AXStringForTextMarkerRange
-- (NSString* _Nullable)moxStringForTextMarkerRange:(id _Nonnull)textMarkerRange;
+- (NSString* _Nullable)moxStringForTextMarkerRange:
+    (AXTextMarkerRangeRef _Nonnull)textMarkerRange;
 
 // AXTextMarkerRangeForUnorderedTextMarkers
-- (id _Nullable)moxTextMarkerRangeForUnorderedTextMarkers:
+- (AXTextMarkerRangeRef _Nullable)moxTextMarkerRangeForUnorderedTextMarkers:
     (NSArray* _Nonnull)textMarkers;
 
 // AXLeftWordTextMarkerRangeForTextMarker
-- (id _Nullable)moxLeftWordTextMarkerRangeForTextMarker:(id _Nonnull)textMarker;
+- (AXTextMarkerRangeRef _Nullable)moxLeftWordTextMarkerRangeForTextMarker:
+    (AXTextMarkerRef _Nonnull)textMarker;
 
 // AXRightWordTextMarkerRangeForTextMarker
-- (id _Nullable)moxRightWordTextMarkerRangeForTextMarker:
-    (id _Nonnull)textMarker;
+- (AXTextMarkerRangeRef _Nullable)moxRightWordTextMarkerRangeForTextMarker:
+    (AXTextMarkerRef _Nonnull)textMarker;
 
 // AXStartTextMarkerForTextMarkerRange
-- (id _Nullable)moxStartTextMarkerForTextMarkerRange:
-    (id _Nonnull)textMarkerRange;
+- (AXTextMarkerRef _Nullable)moxStartTextMarkerForTextMarkerRange:
+    (AXTextMarkerRangeRef _Nonnull)textMarkerRange;
 
 // AXEndTextMarkerForTextMarkerRange
-- (id _Nullable)moxEndTextMarkerForTextMarkerRange:(id _Nonnull)textMarkerRange;
+- (AXTextMarkerRef _Nullable)moxEndTextMarkerForTextMarkerRange:
+    (AXTextMarkerRangeRef _Nonnull)textMarkerRange;
 
 // AXNextTextMarkerForTextMarker
-- (id _Nullable)moxNextTextMarkerForTextMarker:(id _Nonnull)textMarker;
+- (AXTextMarkerRef _Nullable)moxNextTextMarkerForTextMarker:
+    (AXTextMarkerRef _Nonnull)textMarker;
 
 // AXPreviousTextMarkerForTextMarker
-- (id _Nullable)moxPreviousTextMarkerForTextMarker:(id _Nonnull)textMarker;
+- (AXTextMarkerRef _Nullable)moxPreviousTextMarkerForTextMarker:
+    (AXTextMarkerRef _Nonnull)textMarker;
 
 // AXAttributedStringForTextMarkerRange
 - (NSAttributedString* _Nullable)moxAttributedStringForTextMarkerRange:
-    (id _Nonnull)textMarkerRange;
+    (AXTextMarkerRangeRef _Nonnull)textMarkerRange;
 
 // AXBoundsForTextMarkerRange
-- (NSValue* _Nullable)moxBoundsForTextMarkerRange:(id _Nonnull)textMarkerRange;
+- (NSValue* _Nullable)moxBoundsForTextMarkerRange:
+    (AXTextMarkerRangeRef _Nonnull)textMarkerRange;
 
 // AXIndexForTextMarker
-- (NSNumber* _Nullable)moxIndexForTextMarker:(id _Nonnull)textMarker;
+- (NSNumber* _Nullable)moxIndexForTextMarker:
+    (AXTextMarkerRef _Nonnull)textMarker;
 
 // AXTextMarkerForIndex
-- (id _Nullable)moxTextMarkerForIndex:(NSNumber* _Nonnull)index;
+- (AXTextMarkerRef _Nullable)moxTextMarkerForIndex:(NSNumber* _Nonnull)index;
 
 // AXUIElementForTextMarker
-- (id _Nullable)moxUIElementForTextMarker:(id _Nonnull)textMarker;
+- (id _Nullable)moxUIElementForTextMarker:(AXTextMarkerRef _Nonnull)textMarker;
 
 // AXTextMarkerRangeForUIElement
-- (id _Nullable)moxTextMarkerRangeForUIElement:(id _Nonnull)element;
+- (AXTextMarkerRangeRef _Nullable)moxTextMarkerRangeForUIElement:
+    (id _Nonnull)element;
 
 // AXLineTextMarkerRangeForTextMarker
-- (id _Nullable)moxLineTextMarkerRangeForTextMarker:(id _Nonnull)textMarker;
+- (AXTextMarkerRangeRef _Nullable)moxLineTextMarkerRangeForTextMarker:
+    (AXTextMarkerRef _Nonnull)textMarker;
 
 // AXLeftLineTextMarkerRangeForTextMarker
-- (id _Nullable)moxLeftLineTextMarkerRangeForTextMarker:(id _Nonnull)textMarker;
+- (AXTextMarkerRangeRef _Nullable)moxLeftLineTextMarkerRangeForTextMarker:
+    (AXTextMarkerRef _Nonnull)textMarker;
 
 // AXRightLineTextMarkerRangeForTextMarker
-- (id _Nullable)moxRightLineTextMarkerRangeForTextMarker:
-    (id _Nonnull)textMarker;
+- (AXTextMarkerRangeRef _Nullable)moxRightLineTextMarkerRangeForTextMarker:
+    (AXTextMarkerRef _Nonnull)textMarker;
 
 // AXParagraphTextMarkerRangeForTextMarker
-- (id _Nullable)moxParagraphTextMarkerRangeForTextMarker:
-    (id _Nonnull)textMarker;
+- (AXTextMarkerRangeRef _Nullable)moxParagraphTextMarkerRangeForTextMarker:
+    (AXTextMarkerRef _Nonnull)textMarker;
 
 // AXStyleTextMarkerRangeForTextMarker
-- (id _Nullable)moxStyleTextMarkerRangeForTextMarker:(id _Nonnull)textMarker;
+- (AXTextMarkerRangeRef _Nullable)moxStyleTextMarkerRangeForTextMarker:
+    (AXTextMarkerRef _Nonnull)textMarker;
 
 // AXMozDebugDescriptionForTextMarker
 - (NSString* _Nullable)moxMozDebugDescriptionForTextMarker:
-    (id _Nonnull)textMarker;
+    (AXTextMarkerRef _Nonnull)textMarker;
 
 // AXMozDebugDescriptionForTextMarkerRange
 - (NSString* _Nullable)moxMozDebugDescriptionForTextMarkerRange:
-    (id _Nonnull)textMarkerRange;
+    (AXTextMarkerRangeRef _Nonnull)textMarkerRange;
 
 #pragma mark - TextAttributeSetters
 
