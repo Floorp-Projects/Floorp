@@ -20,6 +20,10 @@
 #include "nsIURI.h"
 #include "nsHttpHeaderArray.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/Tokenizer.h"
+#include "nsComponentManagerUtils.h"
+
+using namespace mozilla;
 
 nsPartChannel::nsPartChannel(nsIChannel* aMultipartChannel, uint32_t aPartID,
                              nsIStreamListener* aListener)

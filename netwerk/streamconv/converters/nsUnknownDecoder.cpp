@@ -22,10 +22,16 @@
 #include "nsStringStream.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsQueryObject.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIPrefService.h"
 
 #include <algorithm>
 
 #define MAX_BUFFER_SIZE 512u
+
+using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsUnknownDecoder::ConvertedStreamListener, nsIStreamListener,
                   nsIRequestObserver)
