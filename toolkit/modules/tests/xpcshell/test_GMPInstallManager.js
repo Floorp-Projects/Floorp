@@ -21,6 +21,9 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 const { UpdateUtils } = ChromeUtils.import(
   "resource://gre/modules/UpdateUtils.jsm"
 );
@@ -37,6 +40,9 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
   Services.prefs.clearUserPref("media.gmp-manager.updateEnabled");
 });
+// Most tests do no handle the machinery for content signatures, so let
+// specific tests that need it turn it on as needed.
+Preferences.set("media.gmp-manager.checkContentSignature", false);
 
 do_get_profile();
 
@@ -506,6 +512,183 @@ add_task(async function test_checkForAddons_updatesWithAddons() {
 });
 
 /**
+ * Tests that checkForAddons() works as expected when content signature
+ * checking is enabled and the signature check passes.
+ */
+add_task(async function test_checkForAddons_contentSignatureSuccess() {
+  // We want the product checker to actually do a check to our test server,
+  // so revert any overrideXHR changes other tests have made prior to this.
+  revertOverrideXHR();
+
+  Preferences.set("media.gmp-manager.checkContentSignature", true);
+
+  // Store the old pref so we can restore it and avoid messing with other tests.
+  let PREF_KEY_URL_OVERRIDE_BACKUP = Preferences.get(
+    GMPScope.GMPPrefs.KEY_URL_OVERRIDE,
+    ""
+  );
+
+  const testServer = new HttpServer();
+  // Start the server so we can grab the identity. We need to know this so the
+  // server can reference itself in the handlers that will be set up.
+  testServer.start();
+  const baseUri =
+    testServer.identity.primaryScheme +
+    "://" +
+    testServer.identity.primaryHost +
+    ":" +
+    testServer.identity.primaryPort;
+
+  let goodXml = readStringFromFile(do_get_file("good.xml"));
+  // This sig is generated using the following command at mozilla-central root
+  // `cat toolkit/mozapps/extensions/test/xpcshell/data/productaddons/good.xml | ./mach python security/manager/ssl/tests/unit/test_content_signing/pysign.py`
+  // If test certificates are regenerated, this signature must also be.
+  const goodXmlContentSignature =
+    "7QYnPqFoOlS02BpDdIRIljzmPr6BFwPs1z1y8KJUBlnU7EVG6FbnXmVVt5Op9wDzgvhXX7th8qFJvpPOZs_B_tHRDNJ8SK0HN95BAN15z3ZW2r95SSHmU-fP2JgoNOR3";
+
+  // Setup endpoint to handle x5u lookups correctly.
+  const validX5uPath = "/valid_x5u";
+  const validCertChain = [
+    readStringFromFile(do_get_file("content_signing_aus_ee.pem")),
+    readStringFromFile(do_get_file("content_signing_int.pem")),
+    readStringFromFile(do_get_file("content_signing_root.pem")),
+  ];
+  testServer.registerPathHandler(validX5uPath, (req, res) => {
+    res.write(validCertChain.join("\n"));
+  });
+  const validX5uUrl = baseUri + validX5uPath;
+
+  // Handler for path that serves valid xml with valid signature.
+  const validContentSignatureHeader = `x5u=${validX5uUrl}; p384ecdsa=${goodXmlContentSignature}`;
+  const updatePath = "/valid_update.xml";
+  testServer.registerPathHandler(updatePath, (req, res) => {
+    res.setHeader("content-signature", validContentSignatureHeader);
+    res.write(goodXml);
+  });
+
+  // Override our root so that test cert chains will be valid.
+  setCertRoot("content_signing_root.pem");
+
+  Preferences.set(GMPScope.GMPPrefs.KEY_URL_OVERRIDE, baseUri + updatePath);
+
+  const xmlFetchResultHistogram = TelemetryTestUtils.getAndClearHistogram(
+    "MEDIA_GMP_UPDATE_XML_FETCH_RESULT"
+  );
+
+  let installManager = new GMPInstallManager();
+  try {
+    let res = await installManager.checkForAddons();
+    Assert.ok(true, "checkForAddons should succeed");
+
+    // Smoke test the results are as expected.
+    // If the checkForAddons fails we'll get a fallback config,
+    // so we'll get incorrect addons and these asserts will fail.
+    Assert.equal(res.usedFallback, false);
+    Assert.equal(res.addons.length, 5);
+    Assert.equal(res.addons[0].id, "test1");
+    Assert.equal(res.addons[1].id, "test2");
+    Assert.equal(res.addons[2].id, "test3");
+    Assert.equal(res.addons[3].id, "test4");
+    Assert.equal(res.addons[4].id, undefined);
+  } catch (e) {
+    Assert.ok(false, "checkForAddons should succeed");
+  }
+
+  // # Ok content sig fetches should be 1, all others should be 0.
+  TelemetryTestUtils.assertHistogram(xmlFetchResultHistogram, 2, 1);
+
+  // Tidy up afterwards.
+  if (PREF_KEY_URL_OVERRIDE_BACKUP) {
+    Preferences.set(
+      GMPScope.GMPPrefs.KEY_URL_OVERRIDE,
+      PREF_KEY_URL_OVERRIDE_BACKUP
+    );
+  } else {
+    Preferences.reset(GMPScope.GMPPrefs.KEY_URL_OVERRIDE);
+  }
+  Preferences.set("media.gmp-manager.checkContentSignature", false);
+});
+
+/**
+ * Tests that checkForAddons() works as expected when content signature
+ * checking is enabled and the signature check fails.
+ */
+add_task(async function test_checkForAddons_contentSignatureFailure() {
+  // We want the product checker to actually do a check to our test server,
+  // so revert any overrideXHR changes other tests have made prior to this.
+  revertOverrideXHR();
+
+  Preferences.set("media.gmp-manager.checkContentSignature", true);
+
+  // Store the old pref so we can restore it and avoid messing with other tests.
+  let PREF_KEY_URL_OVERRIDE_BACKUP = Preferences.get(
+    GMPScope.GMPPrefs.KEY_URL_OVERRIDE,
+    ""
+  );
+
+  const testServer = new HttpServer();
+  // Start the server so we can grab the identity. We need to know this so the
+  // server can reference itself in the handlers that will be set up.
+  testServer.start();
+  const baseUri =
+    testServer.identity.primaryScheme +
+    "://" +
+    testServer.identity.primaryHost +
+    ":" +
+    testServer.identity.primaryPort;
+
+  let goodXml = readStringFromFile(do_get_file("good.xml"));
+
+  const updatePath = "/invalid_update.xml";
+  testServer.registerPathHandler(updatePath, (req, res) => {
+    // Content signature header omitted.
+    res.write(goodXml);
+  });
+
+  Preferences.set(GMPScope.GMPPrefs.KEY_URL_OVERRIDE, baseUri + updatePath);
+
+  const xmlFetchResultHistogram = TelemetryTestUtils.getAndClearHistogram(
+    "MEDIA_GMP_UPDATE_XML_FETCH_RESULT"
+  );
+
+  let installManager = new GMPInstallManager();
+  try {
+    let res = await installManager.checkForAddons();
+    Assert.ok(true, "checkForAddons should succeed");
+
+    // Smoke test the results are as expected.
+    // Check addons will succeed above, but it will have fallen back to local
+    // config. So the results will not be those from the HTTP server.
+    Assert.equal(res.usedFallback, true);
+    // Some platforms don't have fallback config for all GMPs, but we should
+    // always get at least 1.
+    Assert.greaterOrEqual(res.addons.length, 1);
+    if (res.addons.length == 1) {
+      Assert.equal(res.addons[0].id, "gmp-widevinecdm");
+    } else {
+      Assert.equal(res.addons[0].id, "gmp-gmpopenh264");
+      Assert.equal(res.addons[1].id, "gmp-widevinecdm");
+    }
+  } catch (e) {
+    Assert.ok(false, "checkForAddons should succeed");
+  }
+
+  // # Failed content sig fetches should be 1, all others should be 0.
+  TelemetryTestUtils.assertHistogram(xmlFetchResultHistogram, 3, 1);
+
+  // Tidy up afterwards.
+  if (PREF_KEY_URL_OVERRIDE_BACKUP) {
+    Preferences.set(
+      GMPScope.GMPPrefs.KEY_URL_OVERRIDE,
+      PREF_KEY_URL_OVERRIDE_BACKUP
+    );
+  } else {
+    Preferences.reset(GMPScope.GMPPrefs.KEY_URL_OVERRIDE);
+  }
+  Preferences.set("media.gmp-manager.checkContentSignature", false);
+});
+
+/**
  * Tests that installing found addons works as expected
  */
 async function test_checkForAddons_installAddon(
@@ -835,6 +1018,42 @@ function readStringFromFile(file) {
 }
 
 /**
+ * Set the root certificate used by Firefox. Used to allow test certificate
+ * chains to be valid.
+ * @param {string} filename the name of the file containing the root cert.
+ */
+function setCertRoot(filename) {
+  // Commonly certificates are represented as PEM. The format is roughly as
+  // follows:
+  //
+  // -----BEGIN CERTIFICATE-----
+  // [some lines of base64, each typically 64 characters long]
+  // -----END CERTIFICATE-----
+  //
+  // However, nsIX509CertDB.constructX509FromBase64 and related functions do not
+  // handle input of this form. Instead, they require a single string of base64
+  // with no newlines or BEGIN/END headers. This is a helper function to convert
+  // PEM to the format that nsIX509CertDB requires.
+  function pemToBase64(pem) {
+    return pem
+      .replace(/-----BEGIN CERTIFICATE-----/, "")
+      .replace(/-----END CERTIFICATE-----/, "")
+      .replace(/[\r\n]/g, "");
+  }
+
+  let certBytes = readStringFromFile(do_get_file(filename));
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+  // Certs should always be in .pem format, don't bother with .dem handling.
+  let cert = certdb.constructX509FromBase64(pemToBase64(certBytes));
+  Services.prefs.setCharPref(
+    "security.content.signature.root_hash",
+    cert.sha256Fingerprint
+  );
+}
+
+/**
  * Bare bones XMLHttpRequest implementation for testing onprogress, onerror,
  * and onload nsIDomEventListener handleEvent.
  */
@@ -991,6 +1210,17 @@ function overrideXHR(status, response, options) {
     return overrideXHR.myxhr;
   };
   return overrideXHR.myxhr;
+}
+
+/**
+ * Reverts any changes from overrideXHR. This is used to ensure the
+ * ProductAddonChecker performs XHRs. This is useful if a test needs to
+ * actually connect to a test server.
+ */
+function revertOverrideXHR(status, response, options) {
+  ProductAddonCheckerScope.CreateXHR = function() {
+    return new XMLHttpRequest();
+  };
 }
 
 /**
