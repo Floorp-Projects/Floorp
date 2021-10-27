@@ -162,6 +162,7 @@ sealed class Event {
     }
     object FennecToFenixMigrated : Event()
     object AddonsOpenInSettings : Event()
+    object StudiesSettings : Event()
     object VoiceSearchTapped : Event()
     object SearchWidgetInstalled : Event()
     object OnboardingAutoSignIn : Event()

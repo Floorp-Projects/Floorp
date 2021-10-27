@@ -652,6 +652,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         with(Preferences) {
             searchSuggestionsEnabled.set(settings.shouldShowSearchSuggestions)
             remoteDebuggingEnabled.set(settings.isRemoteDebuggingEnabled)
+            studiesEnabled.set(settings.isExperimentationEnabled)
             telemetryEnabled.set(settings.isTelemetryEnabled)
             browsingHistorySuggestion.set(settings.shouldShowHistorySuggestions)
             bookmarksSuggestion.set(settings.shouldShowBookmarkSuggestions)

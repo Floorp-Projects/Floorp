@@ -108,6 +108,7 @@ class FenixApplicationTest {
         every { settings.shouldUseTrackingProtection } returns true
         every { settings.isRemoteDebuggingEnabled } returns true
         every { settings.isTelemetryEnabled } returns true
+        every { settings.isExperimentationEnabled } returns true
         every { settings.shouldShowHistorySuggestions } returns true
         every { settings.shouldShowBookmarkSuggestions } returns true
         every { settings.shouldShowClipboardSuggestions } returns true
@@ -154,6 +155,7 @@ class FenixApplicationTest {
         assertEquals(true, Preferences.searchSuggestionsEnabled.testGetValue())
         assertEquals(true, Preferences.remoteDebuggingEnabled.testGetValue())
         assertEquals(true, Preferences.telemetryEnabled.testGetValue())
+        assertEquals(true, Preferences.studiesEnabled.testGetValue())
         assertEquals(true, Preferences.browsingHistorySuggestion.testGetValue())
         assertEquals(true, Preferences.bookmarksSuggestion.testGetValue())
         assertEquals(true, Preferences.clipboardSuggestionsEnabled.testGetValue())

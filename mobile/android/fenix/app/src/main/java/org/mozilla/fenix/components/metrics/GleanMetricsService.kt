@@ -524,6 +524,9 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.AddonsOpenInSettings -> EventWrapper<NoExtraKeys>(
             { Addons.openAddonsInSettings.record(it) }
         )
+        is Event.StudiesSettings -> EventWrapper<NoExtraKeys>(
+            { Preferences.studiesPreferenceEnabled.record(it) }
+        )
         is Event.AddonsOpenInToolbarMenu -> EventWrapper(
             { Addons.openAddonInToolbarMenu.record(it) },
             { Addons.openAddonInToolbarMenuKeys.valueOf(it) }

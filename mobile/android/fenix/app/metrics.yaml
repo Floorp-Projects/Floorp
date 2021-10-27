@@ -1413,6 +1413,35 @@ customize_home:
     expires: "2022-09-20"
 
 preferences:
+  studies_enabled:
+    type: boolean
+    description: >
+      A metric indicating whether or not the user has studies enabled
+      default: true
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22192
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22193
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  studies_preference_enabled:
+    type: event
+    description: >
+      An event indicating whether or not the user has studies enabled.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22192
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22193
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
   search_suggestions_enabled:
     type: boolean
     description: |

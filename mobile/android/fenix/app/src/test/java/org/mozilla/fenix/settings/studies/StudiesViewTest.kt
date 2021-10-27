@@ -18,6 +18,7 @@ import io.mockk.verify
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.service.nimbus.NimbusApi
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
@@ -26,15 +27,12 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.databinding.SettingsStudiesBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
 class StudiesViewTest {
-    @RelaxedMockK
-    private lateinit var activity: HomeActivity
 
     @RelaxedMockK
     private lateinit var experiments: NimbusApi
@@ -65,8 +63,10 @@ class StudiesViewTest {
                 binding,
                 interactor,
                 settings,
-                experiments
-            ) { true }
+                experiments,
+                isAttached = { true },
+                metrics = mock()
+            )
         )
     }
 
