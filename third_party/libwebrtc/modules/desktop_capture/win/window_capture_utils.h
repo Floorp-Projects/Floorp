@@ -71,6 +71,9 @@ bool IsWindowMaximized(HWND window, bool* result);
 // visible, and that it is not minimized.
 bool IsWindowValidAndVisible(HWND window);
 
+// Checks if a window responds to a message within 50ms.
+bool IsWindowResponding(HWND window);
+
 enum GetWindowListFlags {
   kNone = 0x00,
   kIgnoreUntitled = 1 << 0,
