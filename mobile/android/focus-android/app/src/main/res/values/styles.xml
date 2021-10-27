@@ -25,6 +25,13 @@
         <item name="alertDialogStyle">@style/DialogStyle</item>
         <item name="alertDialogTheme">@style/DialogStyle</item>
         <item name="android:progressBarStyleHorizontal">@style/progressBarStyleHorizontal</item>
+        <item name="android:itemBackground">@color/menuBackground</item>
+        <item name="android:itemTextAppearance">@style/ItemTextAppearance</item>
+    </style>
+
+    <style name="ItemTextAppearance" parent="TextAppearance.AppCompat.Widget.DropDownItem">
+        <item name="android:textColor">@color/primaryText</item>
+        <item name="android:textSize">@dimen/mozac_browser_menu_item_text_size</item>
     </style>
 
     <style name="PreferenceTheme" parent="PreferenceThemeOverlay.v14.Material">
