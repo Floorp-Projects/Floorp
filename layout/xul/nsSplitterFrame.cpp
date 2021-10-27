@@ -244,8 +244,8 @@ void nsSplitterFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   // have a frame at all.  This really needs a better solution.
   if (aParent && aParent->IsXULBoxFrame()) {
     if (!aParent->IsXULHorizontal()) {
-      if (aContent->IsElement() &&
-          !aContent->AsElement()->HasNonEmptyAttr(nsGkAtoms::orient)) {
+      if (!nsContentUtils::HasNonEmptyAttr(aContent, kNameSpaceID_None,
+                                           nsGkAtoms::orient)) {
         aContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                                        u"vertical"_ns, false);
       }

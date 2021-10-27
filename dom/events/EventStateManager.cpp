@@ -1668,8 +1668,9 @@ void EventStateManager::CreateClickHoldTimer(nsPresContext* inPresContext,
 
   // if content clicked on has a popup, don't even start the timer
   // since we'll end up conflicting and both will show.
-  if (mGestureDownContent && mGestureDownContent->IsElement() &&
-      mGestureDownContent->AsElement()->HasNonEmptyAttr(nsGkAtoms::popup)) {
+  if (mGestureDownContent &&
+      nsContentUtils::HasNonEmptyAttr(mGestureDownContent, kNameSpaceID_None,
+                                      nsGkAtoms::popup)) {
     return;
   }
 
@@ -1763,8 +1764,8 @@ void EventStateManager::FireContextClick() {
     } else if (mGestureDownContent->IsXULElement(nsGkAtoms::toolbarbutton)) {
       // a <toolbarbutton> that has the container attribute set
       // will already have its own dropdown.
-      if (mGestureDownContent->AsElement()->HasNonEmptyAttr(
-              nsGkAtoms::container)) {
+      if (nsContentUtils::HasNonEmptyAttr(
+              mGestureDownContent, kNameSpaceID_None, nsGkAtoms::container)) {
         allowedToDispatch = false;
       } else {
         // If the toolbar button has an open menu, don't attempt to open

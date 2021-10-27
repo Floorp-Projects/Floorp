@@ -860,6 +860,13 @@ class nsContentUtils {
   static void UnregisterShutdownObserver(nsIObserver* aObserver);
 
   /**
+   * @return true if aContent has an attribute aName in namespace aNameSpaceID,
+   * and the attribute value is non-empty.
+   */
+  static bool HasNonEmptyAttr(const nsIContent* aContent, int32_t aNameSpaceID,
+                              nsAtom* aName);
+
+  /**
    * Method that gets the primary presContext for the node.
    *
    * @param aContent The content node.
