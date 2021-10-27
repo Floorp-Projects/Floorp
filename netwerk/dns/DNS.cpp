@@ -73,6 +73,33 @@ void PRNetAddrToNetAddr(const PRNetAddr* prAddr, NetAddr* addr) {
 #endif
 }
 
+extern "C" {
+// Rust bindings
+
+uint16_t moz_netaddr_get_family(const NetAddr* addr) {
+  return addr->raw.family;
+}
+
+uint32_t moz_netaddr_get_network_order_ip(const NetAddr* addr) {
+  return addr->inet.ip;
+}
+
+uint8_t const* moz_netaddr_get_ipv6(const NetAddr* addr) {
+  return addr->inet6.ip.u8;
+}
+
+uint16_t moz_netaddr_get_network_order_port(const NetAddr* addr) {
+  if (addr->raw.family == PR_AF_INET) {
+    return addr->inet.port;
+  }
+  if (addr->raw.family == PR_AF_INET6) {
+    return addr->inet6.port;
+  }
+  return 0;
+}
+
+}  // extern "C"
+
 // Copies the contents of a NetAddr to a PRNetAddr.
 // Does not do a ptr safety check!
 void NetAddrToPRNetAddr(const NetAddr* addr, PRNetAddr* prAddr) {
@@ -139,6 +166,16 @@ bool NetAddr::ToStringBuffer(char* buf, uint32_t bufSize) const {
   }
 #endif
   return false;
+}
+
+nsCString NetAddr::ToString() const {
+  nsCString out;
+  out.SetLength(kNetAddrMaxCStrBufSize);
+  if (ToStringBuffer(out.BeginWriting(), kNetAddrMaxCStrBufSize)) {
+    out.SetLength(strlen(out.BeginWriting()));
+    return out;
+  }
+  return ""_ns;
 }
 
 bool NetAddr::IsLoopbackAddr() const {
