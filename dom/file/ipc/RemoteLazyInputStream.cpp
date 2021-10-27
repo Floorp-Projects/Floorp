@@ -281,6 +281,10 @@ NS_IMETHODIMP
 RemoteLazyInputStream::Close() {
   nsCOMPtr<nsIAsyncInputStream> asyncRemoteStream;
   nsCOMPtr<nsIInputStream> remoteStream;
+
+  nsCOMPtr<nsIInputStreamCallback> inputStreamCallback;
+  nsCOMPtr<nsIEventTarget> inputStreamCallbackEventTarget;
+
   {
     MutexAutoLock lock(mMutex);
 
@@ -292,13 +296,20 @@ RemoteLazyInputStream::Close() {
     asyncRemoteStream.swap(mAsyncRemoteStream);
     remoteStream.swap(mRemoteStream);
 
-    mInputStreamCallback = nullptr;
-    mInputStreamCallbackEventTarget = nullptr;
-
+    // TODO(Bug 1737783): Notify to the mFileMetadataCallback that this
+    // lazy input stream has been closed.
     mFileMetadataCallback = nullptr;
     mFileMetadataCallbackEventTarget = nullptr;
 
+    inputStreamCallback = std::move(mInputStreamCallback);
+    inputStreamCallbackEventTarget = std::move(mInputStreamCallbackEventTarget);
+
     mState = eClosed;
+  }
+
+  if (inputStreamCallback) {
+    InputStreamCallbackRunnable::Execute(inputStreamCallback,
+                                         inputStreamCallbackEventTarget, this);
   }
 
   if (asyncRemoteStream) {
