@@ -15,6 +15,8 @@
 #include "mozilla/Base64.h"
 #include "nsEscape.h"
 
+using namespace mozilla;
+
 // In nsStandardURL.cpp
 extern nsresult Test_NormalizeIPv4(const nsACString& host, nsCString& result);
 

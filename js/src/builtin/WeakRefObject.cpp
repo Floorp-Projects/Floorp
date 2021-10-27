@@ -298,27 +298,23 @@ void GCRuntime::traceKeptObjects(JSTracer* trc) {
 
 }  // namespace gc
 
-static WeakRefObject* UnwrapWeakRef(JSObject* obj) {
-  MOZ_ASSERT(!JS_IsDeadWrapper(obj));
-  obj = UncheckedUnwrapWithoutExpose(obj);
-  return &obj->as<WeakRefObject>();
-}
-
-void WeakRefMap::traceWeak(JSTracer* trc, gc::StoreBuffer* sbToLock) {
+void WeakRefMap::sweep(gc::StoreBuffer* sbToLock) {
   mozilla::Maybe<typename Base::Enum> e;
   for (e.emplace(*this); !e->empty(); e->popFront()) {
     // If target is dying, clear the target field of all weakRefs, and remove
     // the entry from the map.
-    auto result =
-        TraceWeakEdge(trc, &e->front().mutableKey(), "WeakRef target");
-    if (result.isDead()) {
+    if (JS::GCPolicy<HeapPtrObject>::needsSweep(&e->front().mutableKey())) {
       for (JSObject* obj : e->front().value()) {
-        UnwrapWeakRef(obj)->clearTarget();
+        MOZ_ASSERT(!JS_IsDeadWrapper(obj));
+        obj = UncheckedUnwrapWithoutExpose(obj);
+
+        WeakRefObject* weakRef = &obj->as<WeakRefObject>();
+        weakRef->clearTarget();
       }
       e->removeFront();
     } else {
       // Update the target field after compacting.
-      e->front().value().traceWeak(trc, result.finalTarget());
+      e->front().value().sweep(e->front().mutableKey());
     }
   }
 
@@ -330,15 +326,20 @@ void WeakRefMap::traceWeak(JSTracer* trc, gc::StoreBuffer* sbToLock) {
 
 // Like GCVector::sweep, but this method will also update the target in every
 // weakRef in this GCVector.
-void WeakRefHeapPtrVector::traceWeak(JSTracer* trc, JSObject* target) {
+void WeakRefHeapPtrVector::sweep(HeapPtrObject& target) {
   HeapPtrObject* src = begin();
   HeapPtrObject* dst = begin();
   while (src != end()) {
-    auto result = TraceWeakEdge(trc, src, "WeakRef");
-    if (result.isDead()) {
-      UnwrapWeakRef(result.initialTarget())->clearTarget();
+    bool needsSweep = JS::GCPolicy<HeapPtrObject>::needsSweep(src);
+    JSObject* obj = UncheckedUnwrapWithoutExpose(*src);
+    MOZ_ASSERT(!JS_IsDeadWrapper(obj));
+
+    WeakRefObject* weakRef = &obj->as<WeakRefObject>();
+
+    if (needsSweep) {
+      weakRef->clearTarget();
     } else {
-      UnwrapWeakRef(result.finalTarget())->setTargetUnbarriered(target);
+      weakRef->setTargetUnbarriered(target.get());
 
       if (src != dst) {
         *dst = std::move(*src);

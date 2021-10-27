@@ -29,5 +29,3 @@ LOCAL_INCLUDES += [
     "/modules/brotli/dec",
     "/netwerk/base",
 ]
-
-REQUIRES_UNIFIED_BUILD = True

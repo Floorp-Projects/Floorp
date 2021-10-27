@@ -48,10 +48,33 @@ const dumpn = msg => {
  * @param {String} actorID
  */
 function getHighlighterCanvasFrameHelper(conn, actorID) {
+  // Retrieve the CustomHighlighterActor by its actorID:
   const actor = conn.getActor(actorID);
-  if (actor && actor._highlighter) {
-    return actor._highlighter.markup;
+  if (!actor) {
+    return null;
   }
+
+  // Retrieve the sub class instance specific to each highlighter type:
+  let highlighter = actor.instance;
+
+  // SelectorHighlighter and TabbingOrderHighlighter can hold multiple highlighters.
+  // For now, only retrieve the first highlighter.
+  if (
+    highlighter._highlighters &&
+    Array.isArray(highlighter._highlighters) &&
+    highlighter._highlighters.length > 0
+  ) {
+    highlighter = highlighter._highlighters[0];
+  }
+
+  // Now, `highlighter` should be a final highlighter class, exposing
+  // `CanvasFrameAnonymousContentHelper` via a `markup` attribute.
+  if (highlighter.markup) {
+    return highlighter.markup;
+  }
+
+  // Here we didn't find any highlighter; it can happen if the actor is a
+  // FontsHighlighter (which does not use a CanvasFrameAnonymousContentHelper).
   return null;
 }
 
@@ -232,10 +255,12 @@ var HighlighterTestActor = protocol.ActorClassWithSpec(highlighterTestSpec, {
    */
   getHighlighterAttribute: function(nodeID, name, actorID) {
     const helper = getHighlighterCanvasFrameHelper(this.conn, actorID);
-    if (helper) {
-      return helper.getAttributeForElement(nodeID, name);
+
+    if (!helper) {
+      throw new Error(`Highlighter not found`);
     }
-    return null;
+
+    return helper.getAttributeForElement(nodeID, name);
   },
 
   /**
@@ -481,17 +506,25 @@ class HighlighterTestFront extends protocol.FrontClassWithSpec(
   /**
    * Is the highlighter currently visible on the page?
    */
-  isHighlighting() {
+  async isHighlighting() {
     // Once the highlighter is hidden, the reference to it is lost.
     // Assume it is not highlighting.
     if (!this.highlighter) {
       return false;
     }
 
-    return this.getHighlighterNodeAttribute(
-      "box-model-elements",
-      "hidden"
-    ).then(value => value === null);
+    try {
+      const hidden = await this.getHighlighterNodeAttribute(
+        "box-model-elements",
+        "hidden"
+      );
+      return hidden === null;
+    } catch (e) {
+      if (e.message.match(/Highlighter not found/)) {
+        return false;
+      }
+      throw e;
+    }
   }
 
   /**
@@ -600,6 +633,10 @@ class HighlighterTestFront extends protocol.FrontClassWithSpec(
       "box-model-" + region,
       "d"
     );
+
+    if (!d) {
+      return null;
+    }
 
     const polygons = d.match(/M[^M]+/g);
     if (!polygons) {

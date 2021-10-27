@@ -5,6 +5,7 @@
 #include "json/json.h"
 #include "json/reader.h"
 #include "mozilla/TextUtils.h"
+#include "nsString.h"
 #include "mozilla/net/MozURL.h"
 #include "nsCOMPtr.h"
 #include "nsDirectoryServiceDefs.h"
@@ -12,6 +13,7 @@
 #include "nsIFile.h"
 #include "nsIURI.h"
 #include "nsStreamUtils.h"
+#include "mozilla/BasePrincipal.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
