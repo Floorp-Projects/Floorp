@@ -20,6 +20,9 @@
 
   --searchbox-no-match-background-color: #ffe5e5;
   --searchbox-no-match-stroke-color: var(--red-60);
+
+  /* Default to light form controls */
+  color-scheme: light;
 }
 
 :root.theme-dark {
@@ -29,6 +32,8 @@
 
   --searchbox-no-match-background-color: #402325;
   --searchbox-no-match-stroke-color: var(--red-50);
+
+  color-scheme: dark;
 }
 
 :root[platform="mac"] {
