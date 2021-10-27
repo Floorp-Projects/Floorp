@@ -19,6 +19,10 @@
 #include "AnimationFrameBuffer.h"
 
 namespace mozilla {
+namespace layers {
+class SharedSurfacesAnimation;
+}
+
 namespace image {
 
 /**
@@ -41,12 +45,6 @@ class AnimationSurfaceProvider final : public ISurfaceProvider,
   //////////////////////////////////////////////////////////////////////////////
 
  public:
-  // We use the ISurfaceProvider constructor of DrawableSurface to indicate that
-  // our surfaces are computed lazily.
-  DrawableSurface Surface() override {
-    return DrawableSurface(WrapNotNull(this));
-  }
-
   bool IsFinished() const override;
   bool IsFullyDecoded() const override;
   size_t LogicalSizeInBytes() const override;
@@ -54,6 +52,8 @@ class AnimationSurfaceProvider final : public ISurfaceProvider,
                               const AddSizeOfCb& aCallback) override;
   void Reset() override;
   void Advance(size_t aFrame) override;
+  bool MayAdvance() const override { return mCompositedFrameRequested; }
+  void MarkMayAdvance() override { mCompositedFrameRequested = true; }
 
  protected:
   DrawableFrameRef DrawableRef(size_t aFrame) override;
@@ -86,6 +86,15 @@ class AnimationSurfaceProvider final : public ISurfaceProvider,
  public:
   RawAccessFrameRef RecycleFrame(gfx::IntRect& aRecycleRect) override;
 
+  //////////////////////////////////////////////////////////////////////////////
+  // IDecoderFrameRecycler implementation.
+  //////////////////////////////////////////////////////////////////////////////
+
+ public:
+  nsresult UpdateKey(layers::RenderRootStateManager* aManager,
+                     wr::IpcResourceUpdateQueue& aResources,
+                     wr::ImageKey& aKey) override;
+
  private:
   virtual ~AnimationSurfaceProvider();
 
@@ -114,6 +123,13 @@ class AnimationSurfaceProvider final : public ISurfaceProvider,
 
   /// The frames of this animation, in order.
   UniquePtr<AnimationFrameBuffer> mFrames;
+
+  /// Whether the current frame was requested for display since the last time we
+  /// advanced the animation.
+  bool mCompositedFrameRequested;
+
+  ///
+  RefPtr<layers::SharedSurfacesAnimation> mSharedAnimation;
 };
 
 }  // namespace image
