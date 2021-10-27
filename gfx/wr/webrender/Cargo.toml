@@ -69,3 +69,4 @@ core-foundation = "0.9"
 core-graphics = "0.22"
 core-text = { version = "19", default-features = false }
 objc = "0.2"
+foreign-types = "0.3.0"
