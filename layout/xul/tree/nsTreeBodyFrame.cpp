@@ -1786,12 +1786,14 @@ void nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex,
     }
 
     // Read special properties from attributes on the column content node
-    if (aCol->mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::insertbefore,
-                                    nsGkAtoms::_true, eCaseMatters))
+    if (aCol->Element()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::insertbefore,
+                                     nsGkAtoms::_true, eCaseMatters)) {
       mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::insertbefore);
-    if (aCol->mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::insertafter,
-                                    nsGkAtoms::_true, eCaseMatters))
+    }
+    if (aCol->Element()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::insertafter,
+                                     nsGkAtoms::_true, eCaseMatters)) {
       mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::insertafter);
+    }
   }
 }
 
