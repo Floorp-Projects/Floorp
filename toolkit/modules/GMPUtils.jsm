@@ -148,7 +148,6 @@ var GMPPrefs = {
   KEY_URL_OVERRIDE: "media.gmp-manager.url.override",
   KEY_CERT_CHECKATTRS: "media.gmp-manager.cert.checkAttributes",
   KEY_CERT_REQUIREBUILTIN: "media.gmp-manager.cert.requireBuiltIn",
-  KEY_CHECK_CONTENT_SIGNATURE: "media.gmp-manager.checkContentSignature",
   KEY_UPDATE_LAST_CHECK: "media.gmp-manager.lastCheck",
   KEY_SECONDS_BETWEEN_CHECKS: "media.gmp-manager.secondsBetweenChecks",
   KEY_UPDATE_ENABLED: "media.gmp-manager.updateEnabled",
