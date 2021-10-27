@@ -52,7 +52,6 @@ import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.AppContentInterceptor
 import org.mozilla.focus.engine.ClientWrapper
 import org.mozilla.focus.engine.SanityCheckMiddleware
-import org.mozilla.focus.engine.TabsFeatureMiddleware
 import org.mozilla.focus.exceptions.ExceptionMigrationMiddleware
 import org.mozilla.focus.experiments.createNimbus
 import org.mozilla.focus.ext.components
@@ -64,6 +63,7 @@ import org.mozilla.focus.search.SearchMigration
 import org.mozilla.focus.state.AppState
 import org.mozilla.focus.state.AppStore
 import org.mozilla.focus.state.Screen
+import org.mozilla.focus.tabs.MergeTabsMiddleware
 import org.mozilla.focus.telemetry.GleanMetricsService
 import org.mozilla.focus.telemetry.TelemetryMiddleware
 import org.mozilla.focus.topsites.DefaultTopSitesStorage
@@ -141,7 +141,7 @@ class Components(
                 PromptMiddleware(),
                 AdsTelemetryMiddleware(adsTelemetry),
                 BlockedTrackersMiddleware(context),
-                TabsFeatureMiddleware()
+                MergeTabsMiddleware(),
             ) + EngineMiddleware.create(engine)
         )
     }
