@@ -167,6 +167,7 @@ const AVAILABLE_SHIMS = [
     bug: "1713698",
     file: "apstag.js",
     matches: ["*://c.amazon-adsystem.com/aax2/apstag.js"],
+    onlyIfBlockedByETP: true,
   },
   {
     id: "BmAuth",
