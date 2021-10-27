@@ -27,7 +27,8 @@ class DefaultBrowserPreference @JvmOverloads constructor(
 ) : Preference(context, attrs, defStyleAttr) {
 
     private var switchView: SwitchMaterial? = null
-    private val browsers = Browsers(context, Browsers.TRADITIONAL_BROWSER_URL)
+    private val browsers
+        get() = Browsers(context, Browsers.TRADITIONAL_BROWSER_URL)
 
     init {
         widgetLayoutResource = R.layout.preference_default_browser
