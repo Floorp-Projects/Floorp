@@ -9,94 +9,17 @@
  * can be set, Telemetry collected, etc. in a central place.
  */
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "ProxyService",
-  "@mozilla.org/network/protocol-proxy-service;1",
-  "nsIProtocolProxyService"
-);
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ExtensionPreferencesManager:
-    "resource://gre/modules/ExtensionPreferencesManager.jsm",
-});
-
 var EXPORTED_SYMBOLS = ["ServiceRequest"];
 
-const PROXY_CONFIG_TYPES = [
-  "direct",
-  "manual",
-  "pac",
-  "unused", // nsIProtocolProxyService.idl skips index 3.
-  "wpad",
-  "system",
-];
-
-function recordEvent(service, source = {}) {
-  try {
-    Services.telemetry.setEventRecordingEnabled("service_request", true);
-    Services.telemetry.recordEvent(
-      "service_request",
-      "bypass",
-      "proxy_info",
-      service,
-      source
-    );
-  } catch (err) {
-    // If the telemetry throws just log the error so it doesn't break any
-    // functionality.
-    Cu.reportError(err);
-  }
-}
-
-// If proxy.settings is used to change the proxy, an extension will
-// be "in control".  This returns the id of that extension.
-async function getControllingExtension() {
-  if (
-    !WebExtensionPolicy.getActiveExtensions().some(p =>
-      p.permissions.includes("proxy")
-    )
-  ) {
-    return undefined;
-  }
-  // Is this proxied by an extension that set proxy prefs?
-  let setting = await ExtensionPreferencesManager.getSetting("proxy.settings");
-  return setting?.id;
-}
-
-async function getProxySource(proxyInfo) {
-  // sourceId is set when using proxy.onRequest
-  if (proxyInfo.sourceId) {
-    return {
-      source: proxyInfo.sourceId,
-      type: "api",
-    };
-  }
-  let type = PROXY_CONFIG_TYPES[ProxyService.proxyConfigType] || "unknown";
-
-  // If we have a policy it will have set the prefs.
-  if (Services.policies.status === Services.policies.ACTIVE) {
-    let policies = Services.policies.getActivePolicies()?.filter(p => p.Proxy);
-    if (policies?.length) {
-      return {
-        source: "policy",
-        type,
-      };
-    }
-  }
-
-  let source = await getControllingExtension();
-  return {
-    source: source || "prefs",
-    type,
-  };
-}
+const logger = Log.repository.getLogger("ServiceRequest");
+logger.level = Log.Level.Debug;
+logger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 
 /**
  * ServiceRequest is intended to be a drop-in replacement for current users
@@ -124,30 +47,7 @@ class ServiceRequest extends XMLHttpRequest {
       // Disable cutting edge features, like TLS 1.3, where middleboxes might brick us
       internal.beConservative = true;
       // Disable use of proxy for this request if necessary.
-      if (options?.bypassProxy && this.bypassProxyEnabled) {
-        internal.bypassProxy = true;
-      }
-    }
-  }
-
-  get bypassProxy() {
-    let { channel } = this;
-    return channel.QueryInterface(Ci.nsIHttpChannelInternal).bypassProxy;
-  }
-
-  get isProxied() {
-    let { channel } = this;
-    return !!(channel instanceof Ci.nsIProxiedChannel && channel.proxyInfo);
-  }
-
-  get bypassProxyEnabled() {
-    return Services.prefs.getBoolPref("network.proxy.allow_bypass", true);
-  }
-
-  static async logProxySource(channel, service) {
-    if (channel.proxyInfo) {
-      let source = await getProxySource(channel.proxyInfo);
-      recordEvent(service, source);
+      internal.bypassProxy = options?.bypassProxy;
     }
   }
 }
