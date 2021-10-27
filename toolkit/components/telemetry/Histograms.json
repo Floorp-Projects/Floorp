@@ -10465,6 +10465,22 @@
     "n_buckets": 100,
     "description": "The time (in milliseconds) that it took to load a source for the user."
   },
+  "MEDIA_GMP_UPDATE_XML_FETCH_RESULT": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["bvandyk@mozilla.com"],
+    "expires_in_version": "100",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "cert_pinning_ok",
+      "cert_pinning_fail",
+      "content_sig_ok",
+      "content_sig_fail"
+    ],
+    "description": "Reports if a Firefox succeeded or failed in fetching the GMP update.xml from balrog, and which method was used to verify the download.",
+    "bug_numbers": [1714621]
+  },
   "MEDIA_MKV_CANPLAY_REQUESTED": {
     "record_in_processes": ["content"],
     "products": ["firefox"],
