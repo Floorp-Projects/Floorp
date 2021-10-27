@@ -399,6 +399,39 @@ class imgMemoryReporter final : public nsIMemoryReporter {
                                     /* aRadix = */ 16);
       }
 
+      if (counter.Key().Region()) {
+        const ImageIntRegion& region = counter.Key().Region().ref();
+        const gfx::IntRect& rect = region.Rect();
+        surfacePathPrefix.AppendLiteral(", region:[ rect=(");
+        surfacePathPrefix.AppendInt(rect.x);
+        surfacePathPrefix.AppendLiteral(",");
+        surfacePathPrefix.AppendInt(rect.y);
+        surfacePathPrefix.AppendLiteral(") ");
+        surfacePathPrefix.AppendInt(rect.width);
+        surfacePathPrefix.AppendLiteral("x");
+        surfacePathPrefix.AppendInt(rect.height);
+        if (region.IsRestricted()) {
+          const gfx::IntRect& restrict = region.Restriction();
+          if (restrict == rect) {
+            surfacePathPrefix.AppendLiteral(", restrict=rect");
+          } else {
+            surfacePathPrefix.AppendLiteral(", restrict=(");
+            surfacePathPrefix.AppendInt(restrict.x);
+            surfacePathPrefix.AppendLiteral(",");
+            surfacePathPrefix.AppendInt(restrict.y);
+            surfacePathPrefix.AppendLiteral(") ");
+            surfacePathPrefix.AppendInt(restrict.width);
+            surfacePathPrefix.AppendLiteral("x");
+            surfacePathPrefix.AppendInt(restrict.height);
+          }
+        }
+        if (region.GetExtendMode() != gfx::ExtendMode::CLAMP) {
+          surfacePathPrefix.AppendLiteral(", extendMode=");
+          surfacePathPrefix.AppendInt(int32_t(region.GetExtendMode()));
+        }
+        surfacePathPrefix.AppendLiteral("]");
+      }
+
       if (counter.Key().SVGContext()) {
         const SVGImageContext& context = counter.Key().SVGContext().ref();
         surfacePathPrefix.AppendLiteral(", svgContext:[ ");
