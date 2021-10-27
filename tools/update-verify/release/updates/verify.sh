@@ -7,7 +7,7 @@
 . ../common/download_builds.sh
 . ../common/check_updates.sh
 
-# Cache being handled by new async_download.py
+# Cache init being handled by new async_download.py
 # clear_cache
 # create_cache
 
@@ -103,10 +103,10 @@ fi
 while read entry
 do
   # initialize all config variables
-  release="" 
-  product="" 
-  platform="" 
-  build_id="" 
+  release=""
+  product=""
+  platform=""
+  build_id=""
   locales=""
   channel=""
   from=""
