@@ -273,14 +273,6 @@ RasterImage::GetType(uint16_t* aType) {
 }
 
 NS_IMETHODIMP
-RasterImage::GetProducerId(uint32_t* aId) {
-  NS_ENSURE_ARG_POINTER(aId);
-
-  *aId = ImageResource::GetImageProducerId();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 RasterImage::GetProviderId(uint32_t* aId) {
   NS_ENSURE_ARG_POINTER(aId);
 
@@ -487,7 +479,6 @@ void RasterImage::OnSurfaceDiscardedInternal(bool aAnimatedFramesDiscarded) {
 
   if (aAnimatedFramesDiscarded && mAnimationState) {
     MOZ_ASSERT(StaticPrefs::image_mem_animated_discardable_AtStartup());
-    ReleaseImageContainer();
 
     IntRect rect = mAnimationState->UpdateState(this, mSize.ToUnknownSize());
 
@@ -554,111 +545,36 @@ RasterImage::GetFrame(uint32_t aWhichFrame, uint32_t aFlags) {
 NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
 RasterImage::GetFrameAtSize(const IntSize& aSize, uint32_t aWhichFrame,
                             uint32_t aFlags) {
+  MOZ_ASSERT(aWhichFrame <= FRAME_MAX_VALUE);
+
   AutoProfilerImagePaintMarker PROFILER_RAII(this);
 #ifdef DEBUG
   NotifyDrawingObservers();
 #endif
 
-  auto result =
-      GetFrameInternal(aSize, Nothing(), Nothing(), aWhichFrame, aFlags);
-  return mozilla::Get<2>(result).forget();
-}
-
-Tuple<ImgDrawResult, IntSize, RefPtr<SourceSurface>>
-RasterImage::GetFrameInternal(const IntSize& aSize,
-                              const Maybe<SVGImageContext>& aSVGContext,
-                              const Maybe<ImageIntRegion>& aRegion,
-                              uint32_t aWhichFrame, uint32_t aFlags) {
-  MOZ_ASSERT(aWhichFrame <= FRAME_MAX_VALUE);
+  if (aSize.IsEmpty() || aWhichFrame > FRAME_MAX_VALUE || mError) {
+    return nullptr;
+  }
 
   auto size = OrientedIntSize::FromUnknownSize(aSize);
-
-  if (aSize.IsEmpty() || aWhichFrame > FRAME_MAX_VALUE) {
-    return MakeTuple(ImgDrawResult::BAD_ARGS, aSize, RefPtr<SourceSurface>());
-  }
-
-  if (mError) {
-    return MakeTuple(ImgDrawResult::BAD_IMAGE, aSize, RefPtr<SourceSurface>());
-  }
 
   // Get the frame. If it's not there, it's probably the caller's fault for
   // not waiting for the data to be loaded from the network or not passing
   // FLAG_SYNC_DECODE.
   LookupResult result = LookupFrame(size, aFlags, ToPlaybackType(aWhichFrame),
                                     /* aMarkUsed = */ true);
-
-  // The surface cache may have suggested we use a different size than the
-  // given size in the future. This may or may not be accompanied by an
-  // actual surface, depending on what it has in its cache.
-  auto suggestedSize = OrientedIntSize::FromUnknownSize(result.SuggestedSize());
-  if (suggestedSize.IsEmpty()) {
-    suggestedSize = size;
-  }
-  MOZ_ASSERT_IF(result.Type() == MatchType::SUBSTITUTE_BECAUSE_BEST,
-                suggestedSize != size);
-
   if (!result) {
     // The OS threw this frame away and we couldn't redecode it.
-    return MakeTuple(ImgDrawResult::TEMPORARY_ERROR,
-                     suggestedSize.ToUnknownSize(), RefPtr<SourceSurface>());
+    return nullptr;
   }
 
-  RefPtr<SourceSurface> surface = result.Surface()->GetSourceSurface();
-  if (!result.Surface()->IsFinished()) {
-    return MakeTuple(ImgDrawResult::INCOMPLETE, suggestedSize.ToUnknownSize(),
-                     std::move(surface));
-  }
-
-  return MakeTuple(ImgDrawResult::SUCCESS, suggestedSize.ToUnknownSize(),
-                   std::move(surface));
-}
-
-Tuple<ImgDrawResult, IntSize> RasterImage::GetImageContainerSize(
-    WindowRenderer* aRenderer, const IntSize& aRequestedSize, uint32_t aFlags) {
-  if (!LoadHasSize()) {
-    return MakeTuple(ImgDrawResult::NOT_READY, IntSize(0, 0));
-  }
-
-  if (aRequestedSize.IsEmpty()) {
-    return MakeTuple(ImgDrawResult::BAD_ARGS, IntSize(0, 0));
-  }
-
-  // We check the minimum size because while we support downscaling, we do not
-  // support upscaling. If aRequestedSize > mSize, we will never give a larger
-  // surface than mSize. If mSize > aRequestedSize, and mSize > maxTextureSize,
-  // we still want to use image containers if aRequestedSize <= maxTextureSize.
-  int32_t maxTextureSize = aRenderer->GetMaxTextureSize();
-  if (min(mSize.width, aRequestedSize.width) > maxTextureSize ||
-      min(mSize.height, aRequestedSize.height) > maxTextureSize) {
-    return MakeTuple(ImgDrawResult::NOT_SUPPORTED, IntSize(0, 0));
-  }
-
-  auto requestedSize = OrientedIntSize::FromUnknownSize(aRequestedSize);
-  if (!CanDownscaleDuringDecode(requestedSize, aFlags)) {
-    return MakeTuple(ImgDrawResult::SUCCESS, mSize.ToUnknownSize());
-  }
-
-  return MakeTuple(ImgDrawResult::SUCCESS, aRequestedSize);
+  return result.Surface()->GetSourceSurface();
 }
 
 NS_IMETHODIMP_(bool)
 RasterImage::IsImageContainerAvailable(WindowRenderer* aRenderer,
                                        uint32_t aFlags) {
   return LoadHasSize();
-}
-
-NS_IMETHODIMP_(ImgDrawResult)
-RasterImage::GetImageContainerAtSize(WindowRenderer* aRenderer,
-                                     const gfx::IntSize& aSize,
-                                     const Maybe<SVGImageContext>& aSVGContext,
-                                     const Maybe<ImageIntRegion>& aRegion,
-                                     uint32_t aFlags,
-                                     layers::ImageContainer** aOutContainer) {
-  // We do not pass in the given SVG context because in theory it could differ
-  // between calls, but actually have no impact on the actual contents of the
-  // image container.
-  return GetImageContainerImpl(aRenderer, aSize, Nothing(), Nothing(), aFlags,
-                               aOutContainer);
 }
 
 NS_IMETHODIMP_(ImgDrawResult)
@@ -722,13 +638,6 @@ size_t RasterImage::SizeOfSourceWithComputedFallback(
     SizeOfState& aState) const {
   return mSourceBuffer->SizeOfIncludingThisWithComputedFallback(
       aState.mMallocSizeOf);
-}
-
-void RasterImage::CollectSizeOfSurfaces(
-    nsTArray<SurfaceMemoryCounter>& aCounters,
-    MallocSizeOf aMallocSizeOf) const {
-  SurfaceCache::CollectSizeOfSurfaces(ImageKey(this), aCounters, aMallocSizeOf);
-  ImageResource::CollectSizeOfSurfaces(aCounters, aMallocSizeOf);
 }
 
 bool RasterImage::SetMetadata(const ImageMetadata& aMetadata,
@@ -1058,8 +967,6 @@ void RasterImage::Discard() {
   SurfaceCache::RemoveImage(ImageKey(this));
 
   if (mAnimationState) {
-    ReleaseImageContainer();
-
     IntRect rect = mAnimationState->UpdateState(this, mSize.ToUnknownSize());
 
     auto dirtyRect = OrientedIntRect::FromUnknownRect(rect);
@@ -1661,13 +1568,6 @@ void RasterImage::NotifyProgress(
       invalidRect.UnionRect(invalidRect,
                             OrientedIntRect::FromUnknownRect(rect));
     }
-  }
-
-  const bool wasDefaultFlags = aSurfaceFlags == DefaultSurfaceFlags();
-
-  if (!invalidRect.IsEmpty() && wasDefaultFlags) {
-    // Update our image container since we're invalidating.
-    UpdateImageContainer(Some(invalidRect.ToUnknownRect()));
   }
 
   // Tell the observers what happened.
