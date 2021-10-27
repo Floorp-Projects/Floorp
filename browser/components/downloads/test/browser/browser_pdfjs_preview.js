@@ -418,7 +418,7 @@ async function addPDFDownload(itemData) {
   let startTimeMs = Date.now();
   info("addPDFDownload with itemData: " + JSON.stringify(itemData, null, 2));
 
-  let downloadPathname = OS.Path.join(gDownloadDir, itemData.targetFilename);
+  let downloadPathname = PathUtils.join(gDownloadDir, itemData.targetFilename);
   delete itemData.targetFilename;
 
   info("Creating saved download file at:" + downloadPathname);

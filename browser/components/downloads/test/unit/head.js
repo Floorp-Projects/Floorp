@@ -34,7 +34,6 @@ ChromeUtils.defineModuleGetter(
 
 async function createDownloadedFile(pathname, contents) {
   info("createDownloadedFile: " + pathname);
-  let encoder = new TextEncoder();
   let file = new FileUtils.File(pathname);
   if (file.exists()) {
     info(`File at ${pathname} already exists`);
@@ -46,7 +45,7 @@ async function createDownloadedFile(pathname, contents) {
     }
   }
   if (contents) {
-    await OS.File.writeAtomic(pathname, encoder.encode(contents));
+    await IOUtils.writeUTF8(pathname, contents);
     ok(file.exists(), `Created ${pathname}`);
   }
   // No post-test cleanup necessary; tmp downloads directory is already removed after each test

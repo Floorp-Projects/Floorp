@@ -174,12 +174,12 @@ add_task(async function test_setUp() {
 
   // create the downloaded files we'll need
   TestFiles.pdf = await createDownloadedFile(
-    OS.Path.join(gDownloadDir, "downloaded.pdf"),
+    PathUtils.join(gDownloadDir, "downloaded.pdf"),
     DATA_PDF
   );
   info("Created downloaded PDF file at:" + TestFiles.pdf.path);
   TestFiles.txt = await createDownloadedFile(
-    OS.Path.join(gDownloadDir, "downloaded.txt"),
+    PathUtils.join(gDownloadDir, "downloaded.txt"),
     "Test file"
   );
   info("Created downloaded text file at:" + TestFiles.txt.path);
