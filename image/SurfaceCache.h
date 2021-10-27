@@ -27,7 +27,7 @@
 namespace mozilla {
 namespace image {
 
-class Image;
+class ImageResource;
 class ISurfaceProvider;
 class LookupResult;
 class SurfaceCacheImpl;
@@ -37,7 +37,7 @@ struct SurfaceMemoryCounter;
  * ImageKey contains the information we need to look up all SurfaceCache entries
  * for a particular image.
  */
-typedef Image* ImageKey;
+using ImageKey = ImageResource*;
 
 /*
  * SurfaceKey contains the information we need to look up a specific
