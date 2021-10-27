@@ -37,7 +37,6 @@
 #include "ISurfaceProvider.h"
 #include "LookupResult.h"
 #include "Orientation.h"
-#include "SourceSurfaceBlobImage.h"
 #include "SVGDocumentWrapper.h"
 #include "SVGDrawingCallback.h"
 #include "SVGDrawingParameters.h"
@@ -46,6 +45,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/image/Resolution.h"
+#include "WindowRenderer.h"
 
 namespace mozilla {
 
@@ -757,17 +757,6 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
   SVGDrawingParameters params(nullptr, decodeSize, aSize, region,
                               SamplingFilter::POINT, aSVGContext, animTime,
                               aFlags, 1.0);
-
-  // Blob recorded vector images just create a simple surface responsible for
-  // generating blob keys and recording bindings. The recording won't happen
-  // until the caller requests the key after GetImageContainerAtSize.
-  if (aFlags & FLAG_RECORD_BLOB) {
-    RefPtr<SourceSurface> surface =
-        new SourceSurfaceBlobImage(mSVGDocumentWrapper, aSVGContext, aRegion,
-                                   decodeSize, whichFrame, aFlags);
-
-    return MakeTuple(ImgDrawResult::SUCCESS, decodeSize, std::move(surface));
-  }
 
   bool didCache;  // Was the surface put into the cache?
   bool contextPaint = aSVGContext && aSVGContext->GetContextPaint();
