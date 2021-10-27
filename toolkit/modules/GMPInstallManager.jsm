@@ -93,7 +93,7 @@ function downloadJSON(uri) {
  * load the sources from local build configuration.
  */
 function downloadLocalConfig() {
-  let log = getScopedLogger("GMPInstallManager.checkForAddons");
+  let log = getScopedLogger("GMPInstallManager.downloadLocalConfig");
   return Promise.all(
     LOCAL_GMP_SOURCES.map(conf => {
       return downloadJSON(conf.src).then(addons => {
@@ -194,9 +194,21 @@ GMPInstallManager.prototype = {
 
     this._deferred = PromiseUtils.defer();
 
+    // Should content signature checking of Balrog replies be used? If so this
+    // will be done instead of the older cert pinning method.
+    let checkContentSignature = GMPPrefs.getBool(
+      GMPPrefs.KEY_CHECK_CONTENT_SIGNATURE,
+      false
+    );
+
     let allowNonBuiltIn = true;
     let certs = null;
-    if (!Services.prefs.prefHasUserValue(GMPPrefs.KEY_URL_OVERRIDE)) {
+    // Only check certificates if we're not using a custom URL, and only if
+    // we're not checking a content signature.
+    if (
+      !Services.prefs.prefHasUserValue(GMPPrefs.KEY_URL_OVERRIDE) &&
+      !checkContentSignature
+    ) {
       allowNonBuiltIn = !GMPPrefs.getString(
         GMPPrefs.KEY_CERT_REQUIREBUILTIN,
         true
@@ -208,10 +220,14 @@ GMPInstallManager.prototype = {
 
     let url = await this._getURL();
 
+    log.info(
+      `Fetching product addon list url=${url}, allowNonBuiltIn=${allowNonBuiltIn}, certs=${certs}, checkContentSignature=${checkContentSignature}`
+    );
     let addonPromise = ProductAddonChecker.getProductAddonList(
       url,
       allowNonBuiltIn,
-      certs
+      certs,
+      checkContentSignature
     ).catch(downloadLocalConfig);
 
     addonPromise.then(
