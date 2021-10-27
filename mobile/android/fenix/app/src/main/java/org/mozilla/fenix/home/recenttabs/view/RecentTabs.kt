@@ -32,12 +32,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -52,6 +52,7 @@ import mozilla.components.support.ktx.kotlin.getRepresentativeSnippet
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
+import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -76,14 +77,7 @@ fun RecentTabs(
             when (tab) {
                 is RecentTab.Tab -> {
                     RecentTabItem(
-                        tabId = tab.state.id,
-                        url = tab.state.content.url,
-                        title = if (tab.state.content.title.isNotEmpty()) {
-                            tab.state.content.title
-                        } else {
-                            tab.state.content.url
-                        },
-                        thumbnail = tab.state.content.thumbnail,
+                        tab = tab,
                         onRecentTabClick = onRecentTabClick
                     )
                 }
@@ -105,27 +99,20 @@ fun RecentTabs(
 /**
  * A recent tab item.
  *
- * @param tabId The id of the tab.
- * @param url The loaded URL of the tab.
- * @param title The title of the tab.
- * @param thumbnail The icon of the tab.
+ * @param tab [RecentTab.Tab] that was recently viewed.
  * @param onRecentTabClick Invoked when the user clicks on a recent tab.
  */
 @Suppress("LongParameterList")
 @Composable
 private fun RecentTabItem(
-    tabId: String,
-    url: String,
-    title: String,
-    icon: Bitmap? = null,
-    thumbnail: Bitmap? = null,
+    tab: RecentTab.Tab,
     onRecentTabClick: (String) -> Unit = {}
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(112.dp)
-            .clickable { onRecentTabClick(tabId) },
+            .clickable { onRecentTabClick(tab.state.id) },
         shape = RoundedCornerShape(8.dp),
         backgroundColor = FirefoxTheme.colors.surface,
         elevation = 6.dp
@@ -134,11 +121,10 @@ private fun RecentTabItem(
             modifier = Modifier.padding(16.dp)
         ) {
             RecentTabImage(
-                url = url,
-                tabId = tabId,
-                modifier = Modifier.size(108.dp, 80.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                thumbnail = thumbnail
+                tab = tab,
+                modifier = Modifier
+                    .size(108.dp, 80.dp)
+                    .clip(RoundedCornerShape(8.dp))
             )
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -147,19 +133,20 @@ private fun RecentTabItem(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                RecentTabTitle(title = title)
+                RecentTabTitle(title = tab.state.content.title.ifEmpty { tab.state.content.url })
 
                 Row {
                     RecentTabIcon(
-                        url = url,
-                        modifier = Modifier.size(18.dp, 18.dp)
+                        url = tab.state.content.url,
+                        modifier = Modifier
+                            .size(18.dp, 18.dp)
                             .clip(RoundedCornerShape(2.dp)),
-                        icon = icon
+                        icon = tab.state.content.icon
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    RecentTabSubtitle(subtitle = url)
+                    RecentTabSubtitle(subtitle = tab.state.content.url)
                 }
             }
         }
@@ -230,25 +217,32 @@ private fun RecentSearchGroupItem(
 /**
  * A recent tab image.
  *
- * @param url The loaded URL of the tab.
+ * @param tab [RecentTab.Tab] that was recently viewed.
  * @param modifier [Modifier] used to draw the image content.
- * @param tabId The id of the tab.
  * @param contentScale [ContentScale] used to draw image content.
  * @param alignment [Alignment] used to draw the image content.
- * @param thumbnail The icon of the tab. Fallback to loading the icon from the [url] if the [thumbnail]
  * is null.
  */
 @Composable
 @Suppress("LongParameterList")
 private fun RecentTabImage(
-    url: String,
+    tab: RecentTab.Tab,
     modifier: Modifier = Modifier,
-    tabId: String? = null,
-    thumbnail: Bitmap? = null,
     contentScale: ContentScale = ContentScale.FillWidth,
     alignment: Alignment = Alignment.TopCenter
 ) {
+    val previewImageUrl = tab.state.content.previewImageUrl
+    val thumbnail = tab.state.content.thumbnail
+
     when {
+        !previewImageUrl.isNullOrEmpty() -> {
+            Image(
+                url = previewImageUrl,
+                modifier = modifier,
+                targetSize = 108.dp,
+                contentScale = ContentScale.Crop
+            )
+        }
         thumbnail != null -> {
             Image(
                 painter = BitmapPainter(thumbnail.asImageBitmap()),
@@ -263,7 +257,7 @@ private fun RecentTabImage(
                 modifier = modifier,
                 backgroundColor = colorResource(id = R.color.photonGrey20)
             ) {
-                components.core.icons.Loader(url) {
+                components.core.icons.Loader(tab.state.content.url) {
                     Placeholder {
                         Box(
                             modifier = Modifier.background(
@@ -283,21 +277,21 @@ private fun RecentTabImage(
                             Image(
                                 painter = icon.painter,
                                 contentDescription = null,
-                                modifier = Modifier.size(36.dp).clip(RoundedCornerShape(8.dp)),
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(8.dp)),
                                 contentScale = ContentScale.Fit
                             )
                         }
                     }
                 }
 
-                if (tabId != null) {
-                    ThumbnailImage(
-                        tabId = tabId,
-                        modifier = modifier,
-                        contentScale = contentScale,
-                        alignment = alignment
-                    )
-                }
+                ThumbnailImage(
+                    tabId = tab.state.id,
+                    modifier = modifier,
+                    contentScale = contentScale,
+                    alignment = alignment
+                )
             }
         }
     }

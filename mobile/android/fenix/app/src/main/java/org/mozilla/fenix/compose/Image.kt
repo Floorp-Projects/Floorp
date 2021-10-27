@@ -7,7 +7,10 @@ package org.mozilla.fenix.compose
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -27,6 +30,10 @@ import org.mozilla.fenix.components.components
  * @param contentDescription Localized text used by accessibility services to describe what this image represents.
  * This should always be provided unless this image is used for decorative purposes, and does not represent
  * a meaningful action that a user can take.
+ * @param alignment Optional alignment parameter used to place the [Painter] in the given
+ * bounds defined by the width and height.
+ * @param contentScale Optional scale parameter used to determine the aspect ratio scaling to be used
+ * if the bounds are a different size from the intrinsic size of the [Painter].
  */
 @Composable
 @Suppress("LongParameterList")
@@ -35,7 +42,9 @@ fun Image(
     modifier: Modifier = Modifier,
     private: Boolean = false,
     targetSize: Dp = 100.dp,
-    contentDescription: String? = null
+    contentDescription: String? = null,
+    alignment: Alignment = Alignment.Center,
+    contentScale: ContentScale = ContentScale.Fit,
 ) {
     ImageLoader(
         url = url,
@@ -48,6 +57,8 @@ fun Image(
                 painter = painter,
                 modifier = modifier,
                 contentDescription = contentDescription,
+                alignment = alignment,
+                contentScale = contentScale
             )
         }
 
