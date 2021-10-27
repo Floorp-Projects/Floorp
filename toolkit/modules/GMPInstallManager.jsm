@@ -168,6 +168,47 @@ GMPInstallManager.prototype = {
     log.info("Using url (with replacement): " + url);
     return url;
   },
+
+  /**
+   * Records telemetry results on if fetching update.xml from Balrog succeeded
+   * and the method that was used to verify the response from Balrog.
+   * @param didGetAddonList
+   *        A boolean indicating if an update.xml containing the addon list was
+   *        successfully fetched (true) or not (false).
+   * @param checkContentSignature
+   *        If the update.xml response was verified using a content signature.
+   *        If this is false, then it's assumed that response was
+   *        verified using cert pinning.
+   */
+  recordUpdateXmlTelemetry(didGetAddonList, checkContentSignature) {
+    let log = getScopedLogger("GMPInstallManager.recordUpdateXmlTelemetry");
+
+    try {
+      let updateResultHistogram = Services.telemetry.getHistogramById(
+        "MEDIA_GMP_UPDATE_XML_FETCH_RESULT"
+      );
+
+      if (didGetAddonList) {
+        if (checkContentSignature) {
+          updateResultHistogram.add("content_sig_ok");
+        } else {
+          updateResultHistogram.add("cert_pinning_ok");
+        }
+      } else if (checkContentSignature) {
+        updateResultHistogram.add("content_sig_fail");
+      } else {
+        updateResultHistogram.add("cert_pinning_fail");
+      }
+    } catch (e) {
+      // We don't expect this path to be hit, but we don't want telemetry
+      // failures to break GMP updates, so catch any issues here and let the
+      // update machinery continue.
+      log.error(
+        `Failed to record telemetry result of getProductAddonList, got error: ${e}`
+      );
+    }
+  },
+
   /**
    * Performs an addon check.
    * @return a promise which will be resolved or rejected.
@@ -228,7 +269,15 @@ GMPInstallManager.prototype = {
       allowNonBuiltIn,
       certs,
       checkContentSignature
-    ).catch(downloadLocalConfig);
+    )
+      .then(res => {
+        this.recordUpdateXmlTelemetry(true, checkContentSignature);
+        return res;
+      })
+      .catch(() => {
+        this.recordUpdateXmlTelemetry(false, checkContentSignature);
+        return downloadLocalConfig();
+      });
 
     addonPromise.then(
       res => {
