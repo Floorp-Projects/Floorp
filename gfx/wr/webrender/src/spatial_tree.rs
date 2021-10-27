@@ -426,7 +426,7 @@ impl SceneSpatialTree {
         );
 
         // Ensure a node with the same uid hasn't been added during this scene build
-        assert!(self.spatial_nodes_set.insert(uid));
+        assert!(self.spatial_nodes_set.insert(uid), "duplicate key {:?}", uid);
 
         let index = match self.spatial_node_map.entry(uid) {
             Entry::Occupied(mut e) => {
