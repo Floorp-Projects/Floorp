@@ -101,4 +101,23 @@ typedef NS_ENUM(NSInteger, NSTitlebarSeparatorStyle) {
 
 #endif
 
+#if !defined(MAC_OS_VERSION_12_0) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_12_0
+
+typedef CFTypeRef AXTextMarkerRef;
+typedef CFTypeRef AXTextMarkerRangeRef;
+
+extern "C" {
+CFTypeID AXTextMarkerGetTypeID();
+AXTextMarkerRef AXTextMarkerCreate(CFAllocatorRef allocator, const UInt8* bytes, CFIndex length);
+const UInt8* AXTextMarkerGetBytePtr(AXTextMarkerRef text_marker);
+CFIndex AXTextMarkerGetLength(AXTextMarkerRef text_marker);
+CFTypeID AXTextMarkerRangeGetTypeID();
+AXTextMarkerRangeRef AXTextMarkerRangeCreate(CFAllocatorRef allocator, AXTextMarkerRef start_marker,
+                                             AXTextMarkerRef end_marker);
+AXTextMarkerRef AXTextMarkerRangeCopyStartMarker(AXTextMarkerRangeRef text_marker_range);
+AXTextMarkerRef AXTextMarkerRangeCopyEndMarker(AXTextMarkerRangeRef text_marker_range);
+}
+
+#endif
+
 #endif  // SDKDefines_h

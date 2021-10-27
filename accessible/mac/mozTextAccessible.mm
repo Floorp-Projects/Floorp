@@ -306,7 +306,8 @@ inline NSString* ToNSString(id aValue) {
     @"AXTextStateChangeType" : @(AXTextStateChangeTypeEdit),
     @"AXTextChangeValues" : @[ @{
       @"AXTextChangeValue" : (change ? change : @""),
-      @"AXTextChangeValueStartMarker" : startMarker.CreateAXTextMarker(),
+      @"AXTextChangeValueStartMarker" :
+          (__bridge id)startMarker.CreateAXTextMarker(),
       @"AXTextEditType" : isInserted ? @(AXTextEditTypeTyping)
                                      : @(AXTextEditTypeDelete)
     } ]

@@ -9,8 +9,12 @@
 #ifndef _GeckoTextMarker_H_
 #define _GeckoTextMarker_H_
 
-typedef CFTypeRef AXTextMarkerRef;
-typedef CFTypeRef AXTextMarkerRangeRef;
+#include <ApplicationServices/ApplicationServices.h>
+#include <Foundation/Foundation.h>
+
+#include "HyperTextAccessibleWrap.h"
+#include "PlatformExtTypes.h"
+#include "SDKDeclarations.h"
 
 namespace mozilla {
 namespace a11y {
@@ -32,7 +36,7 @@ class GeckoTextMarker final {
 
   static GeckoTextMarker MarkerFromIndex(Accessible* aRoot, int32_t aIndex);
 
-  id CreateAXTextMarker();
+  AXTextMarkerRef CreateAXTextMarker();
 
   bool Next();
 
@@ -77,7 +81,7 @@ class GeckoTextMarkerRange final {
 
   explicit GeckoTextMarkerRange(Accessible* aAccessible);
 
-  id CreateAXTextMarkerRange();
+  AXTextMarkerRangeRef CreateAXTextMarkerRange();
 
   bool IsValid() const { return !!mStart.mContainer && !!mEnd.mContainer; };
 

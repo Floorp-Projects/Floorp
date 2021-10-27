@@ -27,6 +27,7 @@ EXPORTS += [
     "nsChangeObserver.h",
     "nsCocoaFeatures.h",
     "nsCocoaUtils.h",
+    "SDKDeclarations.h",
 ]
 
 EXPORTS.mozilla.widget += [
