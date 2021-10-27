@@ -34,8 +34,11 @@ class UnscaledFontMac final : public UnscaledFont {
   }
 
   virtual ~UnscaledFontMac() {
-    if (mAxesCache) {
-      CFRelease(mAxesCache);
+    if (mCTAxesCache) {
+      CFRelease(mCTAxesCache);
+    }
+    if (mCGAxesCache) {
+      CFRelease(mCGAxesCache);
     }
     if (mFontDesc) {
       CFRelease(mFontDesc);
@@ -64,13 +67,15 @@ class UnscaledFontMac final : public UnscaledFont {
       const FontVariation* aVariations, uint32_t aNumVariations) override;
 
   static CGFontRef CreateCGFontWithVariations(CGFontRef aFont,
-                                              CFArrayRef& aAxesCache,
+                                              CFArrayRef& aCGAxesCache,
+                                              CFArrayRef& aCTAxesCache,
                                               uint32_t aVariationCount,
                                               const FontVariation* aVariations);
 
   bool GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton) override;
 
-  CFArrayRef& AxesCache() { return mAxesCache; }
+  CFArrayRef& CGAxesCache() { return mCGAxesCache; }
+  CFArrayRef& CTAxesCache() { return mCTAxesCache; }
 
   static already_AddRefed<UnscaledFont> CreateFromFontDescriptor(
       const uint8_t* aData, uint32_t aDataLength, uint32_t aIndex);
@@ -78,7 +83,8 @@ class UnscaledFontMac final : public UnscaledFont {
  private:
   CTFontDescriptorRef mFontDesc = nullptr;
   CGFontRef mFont = nullptr;
-  CFArrayRef mAxesCache = nullptr;  // Cached array of variation axis details
+  CFArrayRef mCGAxesCache = nullptr;  // Cached arrays of variation axis details
+  CFArrayRef mCTAxesCache = nullptr;
   bool mIsDataFont;
 };
 
