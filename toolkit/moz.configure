@@ -1194,7 +1194,7 @@ def x11_libs(webrtc):
             "xfixes",
             "xi",
         ]
-    return " ".join(libs)
+    return libs
 
 
 pkg_check_modules("MOZ_X11", x11_libs, when=toolkit_gtk)

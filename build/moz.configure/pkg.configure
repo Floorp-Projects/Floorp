@@ -72,9 +72,17 @@ add_old_configure_assignment("PKG_CONFIG_LIBDIR", pkg_config_vars.PKG_CONFIG_LIB
 #   Returns `True` when the package description is fulfilled.
 @template
 def pkg_check_modules(var, package_desc, when=always, allow_missing=False, config=True):
-    if isinstance(package_desc, (tuple, list)):
-        package_desc = " ".join(package_desc)
-    package_desc = dependable(package_desc)
+    @depends(dependable(package_desc), when=when)
+    def package_desc(desc):
+        if isinstance(desc, str):
+            desc = [desc]
+        if not isinstance(desc, (tuple, list)):
+            configure_error(
+                "package_desc must be a string or a tuple or list of strings"
+            )
+
+        return " ".join(desc)
+
     allow_missing = dependable(allow_missing)
 
     @depends(when, "--enable-compile-environment")
