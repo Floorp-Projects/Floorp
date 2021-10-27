@@ -318,6 +318,27 @@ ClippedImage::GetImageContainerAtSize(WindowRenderer* aRenderer,
   return ImgDrawResult::NOT_SUPPORTED;
 }
 
+NS_IMETHODIMP_(ImgDrawResult)
+ClippedImage::GetImageProvider(WindowRenderer* aRenderer,
+                               const gfx::IntSize& aSize,
+                               const Maybe<SVGImageContext>& aSVGContext,
+                               const Maybe<ImageIntRegion>& aRegion,
+                               uint32_t aFlags,
+                               WebRenderImageProvider** aProvider) {
+  // XXX(seth): We currently don't have a way of clipping the result of
+  // GetImageContainer. We work around this by always returning null, but if it
+  // ever turns out that ClippedImage is widely used on codepaths that can
+  // actually benefit from GetImageContainer, it would be a good idea to fix
+  // that method for performance reasons.
+
+  if (!ShouldClip()) {
+    return InnerImage()->GetImageProvider(aRenderer, aSize, aSVGContext,
+                                          aRegion, aFlags, aProvider);
+  }
+
+  return ImgDrawResult::NOT_SUPPORTED;
+}
+
 static bool MustCreateSurface(gfxContext* aContext, const nsIntSize& aSize,
                               const ImageRegion& aRegion,
                               const uint32_t aFlags) {
