@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use libc::{AF_INET, AF_INET6};
 use neqo_common::event::Provider;
 use neqo_common::{self as common, qlog::NeqoQlog, qwarn, Datagram, Header, Role};
 use neqo_crypto::{init, PRErrorCode};
@@ -19,10 +18,8 @@ use qlog::QlogStreamer;
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::convert::TryFrom;
-use std::convert::TryInto;
 use std::fs::OpenOptions;
 use std::net::SocketAddr;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::path::PathBuf;
 use std::ptr;
 use std::rc::Rc;
@@ -39,51 +36,12 @@ pub struct NeqoHttp3Conn {
     refcnt: AtomicRefcnt,
 }
 
-// Opaque interface to mozilla::net::NetAddr defined in DNS.h
-#[repr(C)]
-pub union NetAddr {
-    private: [u8; 0],
-}
-
-extern "C" {
-    pub fn moz_netaddr_get_family(arg: *const NetAddr) -> u16;
-    pub fn moz_netaddr_get_network_order_ip(arg: *const NetAddr) -> u32;
-    pub fn moz_netaddr_get_ipv6(arg: *const NetAddr) -> *const u8;
-    pub fn moz_netaddr_get_network_order_port(arg: *const NetAddr) -> u16;
-}
-
-fn netaddr_to_socket_addr(arg: *const NetAddr) -> Result<SocketAddr, nsresult> {
-    if arg == ptr::null() {
-        return Err(NS_ERROR_INVALID_ARG);
-    }
-
-    unsafe {
-        let family = moz_netaddr_get_family(arg) as i32;
-        if family == AF_INET {
-            let port = u16::from_be(moz_netaddr_get_network_order_port(arg));
-            let ipv4 = Ipv4Addr::from(u32::from_be(moz_netaddr_get_network_order_ip(arg)));
-            return Ok(SocketAddr::new(IpAddr::V4(ipv4), port));
-        }
-
-        if family == AF_INET6 {
-            let port = u16::from_be(moz_netaddr_get_network_order_port(arg));
-            let ipv6_slice: [u8; 16] = slice::from_raw_parts(moz_netaddr_get_ipv6(arg), 16)
-                .try_into()
-                .expect("slice with incorrect length");
-            let ipv6 = Ipv6Addr::from(ipv6_slice);
-            return Ok(SocketAddr::new(IpAddr::V6(ipv6), port));
-        }
-    }
-
-    Err(NS_ERROR_UNEXPECTED)
-}
-
 impl NeqoHttp3Conn {
     fn new(
         origin: &nsACString,
         alpn: &nsACString,
-        local_addr: *const NetAddr,
-        remote_addr: *const NetAddr,
+        local_addr: &nsACString,
+        remote_addr: &nsACString,
         max_table_size: u64,
         max_blocked_streams: u16,
         max_data: u64,
@@ -97,9 +55,21 @@ impl NeqoHttp3Conn {
 
         let alpn_conv = str::from_utf8(alpn).map_err(|_| NS_ERROR_INVALID_ARG)?;
 
-        let local: SocketAddr = netaddr_to_socket_addr(local_addr)?;
+        let local: SocketAddr = match str::from_utf8(local_addr) {
+            Ok(s) => match s.parse() {
+                Ok(addr) => addr,
+                Err(_) => return Err(NS_ERROR_INVALID_ARG),
+            },
+            Err(_) => return Err(NS_ERROR_INVALID_ARG),
+        };
 
-        let remote: SocketAddr = netaddr_to_socket_addr(remote_addr)?;
+        let remote: SocketAddr = match str::from_utf8(remote_addr) {
+            Ok(s) => match s.parse() {
+                Ok(addr) => addr,
+                Err(_) => return Err(NS_ERROR_INVALID_ARG),
+            },
+            Err(_) => return Err(NS_ERROR_INVALID_ARG),
+        };
 
         let http3_settings = Http3Parameters {
             qpack_settings: QpackSettings {
@@ -207,8 +177,8 @@ unsafe impl RefCounted for NeqoHttp3Conn {
 pub extern "C" fn neqo_http3conn_new(
     origin: &nsACString,
     alpn: &nsACString,
-    local_addr: *const NetAddr,
-    remote_addr: *const NetAddr,
+    local_addr: &nsACString,
+    remote_addr: &nsACString,
     max_table_size: u64,
     max_blocked_streams: u16,
     max_data: u64,
@@ -243,12 +213,15 @@ pub extern "C" fn neqo_http3conn_new(
 #[no_mangle]
 pub extern "C" fn neqo_http3conn_process_input(
     conn: &mut NeqoHttp3Conn,
-    remote_addr: *const NetAddr,
+    remote_addr: &nsACString,
     packet: *const ThinVec<u8>,
 ) -> nsresult {
-    let remote = match netaddr_to_socket_addr(remote_addr) {
-        Ok(addr) => addr,
-        Err(result) => return result,
+    let remote = match str::from_utf8(remote_addr) {
+        Ok(s) => match s.parse() {
+            Ok(addr) => addr,
+            Err(_) => return NS_ERROR_INVALID_ARG,
+        },
+        Err(_) => return NS_ERROR_INVALID_ARG,
     };
     conn.conn.process_input(
         Datagram::new(remote, conn.local_addr, unsafe { (*packet).to_vec() }),
