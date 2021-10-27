@@ -752,7 +752,7 @@ TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelCountChanged)
     EXPECT_TRUE(stream->mHasInput);
     Unused << WaitFor(started);
   }
-  // TODO: Check stream's input channel count is 2
+  EXPECT_EQ(stream->InputChannels(), 2U);
 
   // Open a 1-channel AudioTrackSet and make sure we don't create another driver
   // since the max-channel is still 2.
@@ -818,7 +818,7 @@ TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelCountChanged)
     stream = newStream;
   }
 
-  // TODO: Check stream's input channel count is 1
+  EXPECT_EQ(stream->InputChannels(), 1U);
 
   // Clean up
   DispatchFunction([&] { set2.Uninit(); });
