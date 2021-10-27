@@ -229,9 +229,16 @@ class UrlInputFragment :
 
         urlInputLayout.layoutParams.height = (inputHeight + statusBarHeight).toInt()
 
+        val topMargin = (inputHeight + statusBarHeight).toInt()
+
         if (searchViewContainer.layoutParams is ViewGroup.MarginLayoutParams) {
             val marginParams = searchViewContainer.layoutParams as ViewGroup.MarginLayoutParams
-            marginParams.topMargin = (inputHeight + statusBarHeight).toInt()
+            marginParams.topMargin = topMargin
+        }
+
+        if (landingLayout.layoutParams is ViewGroup.MarginLayoutParams) {
+            val marginParams = landingLayout.layoutParams as ViewGroup.MarginLayoutParams
+            marginParams.topMargin = topMargin
         }
     }
 

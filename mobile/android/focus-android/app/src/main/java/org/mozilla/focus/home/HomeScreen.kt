@@ -33,6 +33,8 @@ fun HomeScreen() {
                 Spacer(modifier = Modifier.height(24.dp))
 
                 TopSites(topSites = topSites)
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
