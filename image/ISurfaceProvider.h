@@ -82,6 +82,8 @@ class ISurfaceProvider : public WebRenderImageProvider {
 
   virtual void Reset() {}
   virtual void Advance(size_t aFrame) {}
+  virtual bool MayAdvance() const { return false; }
+  virtual void MarkMayAdvance() {}
 
   /// @return the availability state of this ISurfaceProvider, which indicates
   /// whether DrawableRef() could successfully return a surface. Should only be
@@ -218,6 +220,24 @@ class MOZ_STACK_CLASS DrawableSurface final {
     }
 
     mProvider->Advance(aFrame);
+  }
+
+  bool MayAdvance() const {
+    if (!mProvider) {
+      MOZ_ASSERT_UNREACHABLE("Trying to advance a static DrawableSurface?");
+      return false;
+    }
+
+    return mProvider->MayAdvance();
+  }
+
+  void MarkMayAdvance() {
+    if (!mProvider) {
+      MOZ_ASSERT_UNREACHABLE("Trying to advance a static DrawableSurface?");
+      return;
+    }
+
+    mProvider->MarkMayAdvance();
   }
 
   bool IsFullyDecoded() const {
