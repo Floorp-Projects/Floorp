@@ -324,7 +324,7 @@ class MockCubeb {
   void DontGoFaster();
 
   MediaEventSource<RefPtr<SmartMockCubebStream>>& StreamInitEvent();
-  MediaEventSource<void>& StreamDestroyEvent();
+  MediaEventSource<RefPtr<SmartMockCubebStream>>& StreamDestroyEvent();
 
   // MockCubeb specific API
   void StartStream(MockCubebStream* aStream);
@@ -380,7 +380,7 @@ class MockCubeb {
   std::atomic<bool> mFastMode{false};
 
   MediaEventProducer<RefPtr<SmartMockCubebStream>> mStreamInitEvent;
-  MediaEventProducer<void> mStreamDestroyEvent;
+  MediaEventProducer<RefPtr<SmartMockCubebStream>> mStreamDestroyEvent;
 };
 
 int cubeb_mock_enumerate_devices(cubeb* context, cubeb_device_type type,
