@@ -629,6 +629,15 @@ VectorImage::GetProducerId(uint32_t* aId) {
 
 //******************************************************************************
 NS_IMETHODIMP
+VectorImage::GetProviderId(uint32_t* aId) {
+  NS_ENSURE_ARG_POINTER(aId);
+
+  *aId = ImageResource::GetImageProviderId();
+  return NS_OK;
+}
+
+//******************************************************************************
+NS_IMETHODIMP
 VectorImage::GetAnimated(bool* aAnimated) {
   if (mError || !mIsFullyLoaded) {
     return NS_ERROR_FAILURE;
