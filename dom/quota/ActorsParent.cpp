@@ -2765,6 +2765,13 @@ bool DeallocPQuotaParent(PQuotaParent* aActor) {
 bool RecvShutdownQuotaManager() {
   AssertIsOnBackgroundThread();
 
+  // If we are already in shutdown, don't call ShutdownInstance()
+  // again and return true immediately. We shall see this incident
+  // in Telemetry.
+  // XXX todo: Make QM_TRY stacks thread-aware (Bug 1735124)
+  // XXX todo: Active QM_TRY context for shutdown (Bug 1735170)
+  QM_TRY(OkIf(!gShutdown), true);
+
   QuotaManager::ShutdownInstance();
 
   return true;
@@ -3816,12 +3823,11 @@ void QuotaManager::RecordShutdownStep(const Maybe<Client::Type> aClientType,
 void QuotaManager::Shutdown() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mShutdownStarted);
+  MOZ_DIAGNOSTIC_ASSERT(!gShutdown);
 
   // Setting this flag prevents the service from being recreated and prevents
   // further storagess from being created.
-  if (gShutdown.exchange(true)) {
-    NS_ERROR("Shutdown more than once?!");
-  }
+  gShutdown = true;
 
   StopIdleMaintenance();
 
