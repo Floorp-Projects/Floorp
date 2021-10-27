@@ -32,6 +32,7 @@
         <uap3:Extension Category="windows.fileTypeAssociation">
           <uap3:FileTypeAssociation Name="htm">
             <uap:SupportedFileTypes>
+              <uap:FileType>.avif</uap:FileType>
               <uap:FileType>.htm</uap:FileType>
               <uap:FileType>.html</uap:FileType>
               <uap:FileType>.pdf</uap:FileType>
