@@ -10,6 +10,7 @@
 #include "nsNetCID.h"
 #include "nsThreadUtils.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Logging.h"
 
 namespace mozilla {
 namespace net {

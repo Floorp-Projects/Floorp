@@ -47,5 +47,3 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
 FINAL_LIBRARY = "xul"
 
 CONFIGURE_SUBST_FILES += ["neqo/extra-bindgen-flags"]
-
-REQUIRES_UNIFIED_BUILD = True
