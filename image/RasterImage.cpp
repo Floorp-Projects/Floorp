@@ -280,6 +280,14 @@ RasterImage::GetProducerId(uint32_t* aId) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+RasterImage::GetProviderId(uint32_t* aId) {
+  NS_ENSURE_ARG_POINTER(aId);
+
+  *aId = ImageResource::GetImageProviderId();
+  return NS_OK;
+}
+
 LookupResult RasterImage::LookupFrameInternal(const OrientedIntSize& aSize,
                                               uint32_t aFlags,
                                               PlaybackType aPlaybackType,
