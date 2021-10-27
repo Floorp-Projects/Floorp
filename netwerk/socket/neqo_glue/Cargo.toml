@@ -18,6 +18,7 @@ xpcom = { path = "../../../xpcom/rust/xpcom" }
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 log = "0.4.0"
 qlog = "0.4.0"
+libc = "0.2.0"
 
 [dependencies.neqo-crypto]
 tag = "v0.5.3"
