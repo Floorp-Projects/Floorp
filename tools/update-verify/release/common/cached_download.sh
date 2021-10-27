@@ -8,6 +8,9 @@ popd &>/dev/null
 
 # Deletes all files in the cache directory
 # We don't support folders or .dot(hidden) files
+# By not deleting the cache directory, it allows us to use Docker tmpfs mounts,
+# which are the only workaround to poor mount r/w performance on MacOS
+# Reference: https://forums.docker.com/t/file-access-in-mounted-volumes-extremely-slow-cpu-bound/8076/288
 clear_cache () {
     rm -rf "${cache_dir}/*"
 }
