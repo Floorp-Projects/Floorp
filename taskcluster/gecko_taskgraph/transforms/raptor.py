@@ -87,6 +87,10 @@ def split_apps(config, tests):
             continue
 
         for app in apps:
+            # Ignore variants for non-Firefox applications.
+            if app != "firefox" and test["attributes"].get("unittest_variant"):
+                continue
+
             atest = deepcopy(test)
             suffix = f"-{app}"
             atest["app"] = app
