@@ -159,8 +159,6 @@ pub struct GeckoLogger {
     logger: env_logger::Logger,
 }
 
-pub struct GeckoLoggerInitError(());
-
 impl GeckoLogger {
     pub fn new() -> GeckoLogger {
         let mut builder = env_logger::Builder::new();
@@ -177,24 +175,14 @@ impl GeckoLogger {
         GeckoLogger { logger }
     }
 
-    pub fn init() -> Result<(), GeckoLoggerInitError> {
-        #[cfg(windows)]
-        unsafe {
-            // Work around https://github.com/rust-lang/rust/issues/88576.
-            use winapi::um::processenv::GetStdHandle;
-            use winapi::um::winbase::{STD_ERROR_HANDLE, STD_OUTPUT_HANDLE};
-            if GetStdHandle(STD_OUTPUT_HANDLE).is_null() || GetStdHandle(STD_ERROR_HANDLE).is_null()
-            {
-                return Err(GeckoLoggerInitError(()));
-            }
-        }
+    pub fn init() -> Result<(), log::SetLoggerError> {
         let gecko_logger = Self::new();
 
         // The max level may have already been set by gecko_logger. Don't
         // set it to a lower level.
         let level = cmp::max(log::max_level(), gecko_logger.logger.filter());
         log::set_max_level(level);
-        log::set_boxed_logger(Box::new(gecko_logger)).map_err(|_| GeckoLoggerInitError(()))
+        log::set_boxed_logger(Box::new(gecko_logger))
     }
 
     fn should_log_to_app_services(target: &str) -> bool {
