@@ -122,6 +122,8 @@ var Utils = {
           reject(err);
           return;
         }
+        // TODO: Remove ?. when https://phabricator.services.mozilla.com/D127170 lands
+        ServiceRequest.logProxySource?.(request.channel, "remote-settings");
         resolve(Utils.fetch(input, { ...init, bypassProxy: true }));
       }
 
