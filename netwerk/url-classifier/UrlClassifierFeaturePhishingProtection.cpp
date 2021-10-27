@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "UrlClassifierFeaturePhishingProtection.h"
+#include "mozilla/StaticPrefs_browser.h"
+#include "nsCOMPtr.h"
 
 namespace mozilla {
 namespace net {

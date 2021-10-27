@@ -10,6 +10,8 @@
 #include "nsIXULRuntime.h"
 #include "nsScriptSecurityManager.h"
 #include "nsQueryObject.h"
+#include "UrlClassifierCommon.h"
+#include "nsIParentChannel.h"
 
 namespace mozilla {
 namespace net {

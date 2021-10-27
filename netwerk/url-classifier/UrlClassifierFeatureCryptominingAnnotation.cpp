@@ -10,6 +10,9 @@
 #include "nsIClassifiedChannel.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
+#include "mozilla/StaticPtr.h"
+#include "nsIWebProgressListener.h"
+#include "nsIChannel.h"
 
 namespace mozilla {
 namespace net {
