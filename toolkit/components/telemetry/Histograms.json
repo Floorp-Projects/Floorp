@@ -16420,8 +16420,8 @@
     "record_in_processes": ["content"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
-    "bug_numbers": [1658532, 1583604, 1666981, 1700831],
-    "expires_in_version": "96",
+    "bug_numbers": [1658532, 1583604, 1666981, 1700831, 1736687],
+    "expires_in_version": "105",
     "kind": "categorical",
     "labels": [
       "TYPE_SCRIPT_USED",
