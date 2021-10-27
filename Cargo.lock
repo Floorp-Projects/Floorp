@@ -5573,7 +5573,6 @@ dependencies = [
  "dwrote",
  "etagere",
  "euclid",
- "foreign-types",
  "freetype",
  "fxhash",
  "gleam",
