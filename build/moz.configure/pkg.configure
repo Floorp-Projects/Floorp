@@ -71,7 +71,9 @@ add_old_configure_assignment("PKG_CONFIG_LIBDIR", pkg_config_vars.PKG_CONFIG_LIB
 #   will be returned to the caller.
 #   Returns `True` when the package description is fulfilled.
 @template
-def pkg_check_modules(var, package_desc, when=always, allow_missing=False, config=True):
+def pkg_check_modules(
+    var, package_desc, when=always, allow_missing=False, config=True, cflags_only=False
+):
     @depends(dependable(package_desc), when=when)
     def package_desc(desc):
         if isinstance(desc, str):
@@ -140,19 +142,28 @@ def pkg_check_modules(var, package_desc, when=always, allow_missing=False, confi
         flags = check_cmd_output(pkg_config, "--cflags", package_desc, env=env)
         return tuple(flags.split())
 
-    @depends(pkg_config, pkg_config_env, package_desc, when=package)
-    @checking("%s_LIBS" % var, callback=lambda t: " ".join(t))
-    def pkg_libs(pkg_config, env, package_desc):
-        libs = check_cmd_output(pkg_config, "--libs", package_desc, env=env)
-        # Remove evil flags like -Wl,--export-dynamic
-        return tuple(libs.replace("-Wl,--export-dynamic", "").split())
+    if cflags_only:
 
-    @depends(pkg_cflags, pkg_libs, when=package)
-    def pkg_info(cflags, libs):
-        return namespace(cflags=cflags, libs=libs)
+        @depends(pkg_cflags, when=package)
+        def pkg_info(cflags):
+            return namespace(cflags=cflags)
+
+    else:
+
+        @depends(pkg_config, pkg_config_env, package_desc, when=package)
+        @checking("%s_LIBS" % var, callback=lambda t: " ".join(t))
+        def pkg_libs(pkg_config, env, package_desc):
+            libs = check_cmd_output(pkg_config, "--libs", package_desc, env=env)
+            # Remove evil flags like -Wl,--export-dynamic
+            return tuple(libs.replace("-Wl,--export-dynamic", "").split())
+
+        @depends(pkg_cflags, pkg_libs, when=package)
+        def pkg_info(cflags, libs):
+            return namespace(cflags=cflags, libs=libs)
 
     if config:
         set_config("%s_CFLAGS" % var, pkg_cflags)
-        set_config("%s_LIBS" % var, pkg_libs)
+        if not cflags_only:
+            set_config("%s_LIBS" % var, pkg_libs)
 
     return pkg_info
