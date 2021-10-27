@@ -180,7 +180,8 @@ void HTMLLinkElement::CreateAndDispatchEvent(Document* aDoc,
   static Element::AttrValuesArray strings[] = {nsGkAtoms::_empty,
                                                nsGkAtoms::stylesheet, nullptr};
 
-  if (!HasNonEmptyAttr(nsGkAtoms::rev) &&
+  if (!nsContentUtils::HasNonEmptyAttr(this, kNameSpaceID_None,
+                                       nsGkAtoms::rev) &&
       FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::rel, strings,
                       eIgnoreCase) != ATTR_VALUE_NO_MATCH)
     return;

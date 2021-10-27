@@ -22,7 +22,7 @@ using namespace mozilla::dom;
 
 // Column class that caches all the info about our column.
 nsTreeColumn::nsTreeColumn(nsTreeColumns* aColumns, dom::Element* aElement)
-    : mElement(aElement), mColumns(aColumns), mIndex(0), mPrevious(nullptr) {
+    : mContent(aElement), mColumns(aColumns), mIndex(0), mPrevious(nullptr) {
   NS_ASSERTION(aElement && aElement->NodeInfo()->Equals(nsGkAtoms::treecol,
                                                         kNameSpaceID_XUL),
                "nsTreeColumn's content must be a <xul:treecol>");
@@ -40,14 +40,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsTreeColumn)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsTreeColumn)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mContent)
   if (tmp->mNext) {
     tmp->mNext->SetPrevious(nullptr);
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mNext)
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsTreeColumn)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNext)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsTreeColumn)
@@ -62,7 +62,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTreeColumn)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(nsTreeColumn)
 NS_INTERFACE_MAP_END
 
-nsIFrame* nsTreeColumn::GetFrame() { return mElement->GetPrimaryFrame(); }
+nsIFrame* nsTreeColumn::GetFrame() { return mContent->GetPrimaryFrame(); }
 
 bool nsTreeColumn::IsLastVisible(nsTreeBodyFrame* aBodyFrame) {
   NS_ASSERTION(GetFrame(), "should have checked for this already");
@@ -133,7 +133,7 @@ void nsTreeColumn::Invalidate(ErrorResult& aRv) {
   }
 
   // Fetch the Id.
-  mElement->GetAttr(kNameSpaceID_None, nsGkAtoms::id, mId);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::id, mId);
 
   // If we have an Id, cache the Id as an atom.
   if (!mId.IsEmpty()) {
@@ -141,7 +141,7 @@ void nsTreeColumn::Invalidate(ErrorResult& aRv) {
   }
 
   // Cache our index.
-  nsTreeUtils::GetColumnIndex(mElement, &mIndex);
+  nsTreeUtils::GetColumnIndex(mContent, &mIndex);
 
   const nsStyleVisibility* vis = frame->StyleVisibility();
 
@@ -162,25 +162,25 @@ void nsTreeColumn::Invalidate(ErrorResult& aRv) {
 
   // Figure out if we're the primary column (that has to have indentation
   // and twisties drawn.
-  mIsPrimary = mElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::primary,
+  mIsPrimary = mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::primary,
                                      nsGkAtoms::_true, eCaseMatters);
 
   // Figure out if we're a cycling column (one that doesn't cause a selection
   // to happen).
-  mIsCycler = mElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::cycler,
+  mIsCycler = mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::cycler,
                                     nsGkAtoms::_true, eCaseMatters);
 
-  mIsEditable = mElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::editable,
+  mIsEditable = mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::editable,
                                       nsGkAtoms::_true, eCaseMatters);
 
-  mOverflow = mElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::overflow,
+  mOverflow = mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::overflow,
                                     nsGkAtoms::_true, eCaseMatters);
 
   // Figure out our column type. Default type is text.
   mType = TreeColumn_Binding::TYPE_TEXT;
   static Element::AttrValuesArray typestrings[] = {nsGkAtoms::checkbox,
                                                    nullptr};
-  switch (mElement->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
                                     typestrings, eCaseMatters)) {
     case 0:
       mType = TreeColumn_Binding::TYPE_CHECKBOX;
@@ -191,7 +191,7 @@ void nsTreeColumn::Invalidate(ErrorResult& aRv) {
   mCropStyle = 0;
   static Element::AttrValuesArray cropstrings[] = {
       nsGkAtoms::center, nsGkAtoms::left, nsGkAtoms::start, nullptr};
-  switch (mElement->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::crop,
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::crop,
                                     cropstrings, eCaseMatters)) {
     case 0:
       mCropStyle = 1;
@@ -203,7 +203,7 @@ void nsTreeColumn::Invalidate(ErrorResult& aRv) {
   }
 }
 
-nsIContent* nsTreeColumn::GetParentObject() const { return mElement; }
+nsIContent* nsTreeColumn::GetParentObject() const { return mContent; }
 
 /* virtual */
 JSObject* nsTreeColumn::WrapObject(JSContext* aCx,
@@ -211,7 +211,7 @@ JSObject* nsTreeColumn::WrapObject(JSContext* aCx,
   return dom::TreeColumn_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-Element* nsTreeColumn::Element() { return mElement; }
+Element* nsTreeColumn::Element() { return mContent; }
 
 int32_t nsTreeColumn::GetX(mozilla::ErrorResult& aRv) {
   nsIFrame* frame = GetFrame();
@@ -297,7 +297,8 @@ nsTreeColumn* nsTreeColumns::GetSortedColumn() {
   EnsureColumns();
   for (nsTreeColumn* currCol = mFirstColumn; currCol;
        currCol = currCol->GetNext()) {
-    if (currCol->mElement->HasNonEmptyAttr(nsGkAtoms::sortDirection)) {
+    if (nsContentUtils::HasNonEmptyAttr(currCol->mContent, kNameSpaceID_None,
+                                        nsGkAtoms::sortDirection)) {
       return currCol;
     }
   }
@@ -314,7 +315,7 @@ nsTreeColumn* nsTreeColumns::GetKeyColumn() {
   for (nsTreeColumn* currCol = mFirstColumn; currCol;
        currCol = currCol->GetNext()) {
     // Skip hidden columns.
-    if (currCol->mElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
+    if (currCol->mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
                                        nsGkAtoms::_true, eCaseMatters))
       continue;
 
@@ -323,7 +324,8 @@ nsTreeColumn* nsTreeColumns::GetKeyColumn() {
 
     if (!first) first = currCol;
 
-    if (currCol->mElement->HasNonEmptyAttr(nsGkAtoms::sortDirection)) {
+    if (nsContentUtils::HasNonEmptyAttr(currCol->mContent, kNameSpaceID_None,
+                                        nsGkAtoms::sortDirection)) {
       // Use sorted column as the key.
       sorted = currCol;
       break;
@@ -342,7 +344,7 @@ nsTreeColumn* nsTreeColumns::GetColumnFor(dom::Element* aElement) {
   EnsureColumns();
   for (nsTreeColumn* currCol = mFirstColumn; currCol;
        currCol = currCol->GetNext()) {
-    if (currCol->mElement == aElement) {
+    if (currCol->mContent == aElement) {
       return currCol;
     }
   }
