@@ -373,6 +373,13 @@ clang-10:
         repo: https://github.com/llvm/llvm-project
         revision: d32170dbd5b0d54436537b6b75beaf44324e0c28
 
+clang-12:
+    description: clang 12.0.1 source code
+    fetch:
+        type: git
+        repo: https://github.com/llvm/llvm-project
+        revision: fed41342a82f5a3a9201819a82bf7a48313e296b
+
 clang-13:
     description: clang 13.0.0 source code
     fetch:
@@ -389,22 +396,22 @@ clang-trunk:
         repo: https://github.com/llvm/llvm-project
         branch: main
 
-# This revision currently corresponds to rust nightly-2021-09-05,
-# which is the first nightly with the version 1.57.0,
+# This revision currently corresponds to rust nightly-2021-07-25,
+# which is the first nightly with the version 1.56.0,
 # so it should be as close as possible to the behaviour of
-# stable-1.56.0.
+# stable-1.55.0.
 #
 # We use this to build from source, so the resulting non-official
-# artifacts will report their version as "1.57.0-dev", but will otherwise
+# artifacts will report their version as "1.56.0-dev", but will otherwise
 # behave like a nightly build. This means they will allow you to use
 # unstable features like -Zbuild-std and sanitizers.
-rust-1.57.0-dev:
-    description: Rust 1.57.0-dev source code
+rust-1.56.0-dev:
+    description: Rust 1.56.0-dev source code
     fetch:
         type: git
         include-dot-git: true
         repo: https://github.com/rust-lang/rust/
-        revision: 5d2a410ff78247c418e28b69f7cad02bdd2168d6
+        revision: d9aa28767287670df6cf823b94629122e04442c0
 
 wasi-sdk:
     description: wasi-sdk source code
