@@ -1194,11 +1194,10 @@ def x11_libs(webrtc):
             "xfixes",
             "xi",
         ]
-    return libs
+    return " ".join(libs)
 
 
 pkg_check_modules("MOZ_X11", x11_libs, when=toolkit_gtk)
-pkg_check_modules("MOZ_X11_SM", ["ice", "sm"], cflags_only=True, when=toolkit_gtk)
 
 
 # ASan Reporter Addon
