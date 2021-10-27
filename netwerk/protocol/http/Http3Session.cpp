@@ -68,44 +68,6 @@ Http3Session::Http3Session() {
   mThroughCaptivePortal = gHttpHandler->GetThroughCaptivePortal();
 }
 
-static void AddrToString(nsINetAddr* netAddr, nsACString& addrStr) {
-  nsAutoCString address;
-  netAddr->GetAddress(address);
-  uint16_t family = nsINetAddr::FAMILY_INET;
-  netAddr->GetFamily(&family);
-  uint16_t port = 0;
-  netAddr->GetPort(&port);
-
-  if (family == nsINetAddr::FAMILY_INET6) {
-    // Append '[' and ']'
-    addrStr.Append("[");
-    addrStr.Append(address);
-    addrStr.Append("]:");
-    addrStr.AppendInt(port);
-  } else {
-    addrStr.Append(address);
-    addrStr.Append(":");
-    addrStr.AppendInt(port);
-  }
-}
-
-static void AddrToString(NetAddr& netAddr, nsACString& addrStr) {
-  char buf[kIPv6CStrBufSize];
-  netAddr.ToStringBuffer(buf, kIPv6CStrBufSize);
-
-  if (netAddr.raw.family == AF_INET6) {
-    // Append '[' and ']'
-    addrStr.Append("[");
-    addrStr.Append(buf, strlen(buf));
-    addrStr.Append("]:");
-    addrStr.AppendInt(ntohs(netAddr.inet6.port));
-  } else {
-    addrStr.Append(buf, strlen(buf));
-    addrStr.Append(":");
-    addrStr.AppendInt(ntohs(netAddr.inet.port));
-  }
-}
-
 static nsresult StringAndPortToNetAddr(nsACString& remoteAddrStr,
                                        uint16_t remotePort, NetAddr* netAddr) {
   if (NS_FAILED(netAddr->InitFromString(remoteAddrStr, remotePort))) {
@@ -116,7 +78,7 @@ static nsresult StringAndPortToNetAddr(nsACString& remoteAddrStr,
 }
 
 nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
-                            nsINetAddr* selfAddr, nsINetAddr* peerAddr,
+                            nsINetAddr* aSelfAddr, nsINetAddr* aPeerAddr,
                             HttpConnectionUDP* udpConn, uint32_t controlFlags,
                             nsIInterfaceRequestor* callbacks) {
   LOG3(("Http3Session::Init %p", this));
@@ -125,7 +87,7 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
   MOZ_ASSERT(udpConn);
 
   mConnInfo = aConnInfo->Clone();
-  mNetAddr = peerAddr;
+  mNetAddr = aPeerAddr;
 
   bool httpsProxy =
       aConnInfo->ProxyInfo() ? aConnInfo->ProxyInfo()->IsHTTPS() : false;
@@ -140,22 +102,23 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
   // don't call into PSM while holding mLock!!
   mSocketControl->SetNotificationCallbacks(callbacks);
 
-  nsAutoCString selfAddrStr;
-  AddrToString(selfAddr, selfAddrStr);
-  nsAutoCString peerAddrStr;
-  AddrToString(peerAddr, peerAddrStr);
+  NetAddr selfAddr;
+  MOZ_ALWAYS_SUCCEEDS(aSelfAddr->GetNetAddr(&selfAddr));
+  NetAddr peerAddr;
+  MOZ_ALWAYS_SUCCEEDS(aPeerAddr->GetNetAddr(&peerAddr));
 
   LOG3(
       ("Http3Session::Init origin=%s, alpn=%s, selfAddr=%s, peerAddr=%s,"
        " qpack table size=%u, max blocked streams=%u [this=%p]",
        PromiseFlatCString(mConnInfo->GetOrigin()).get(),
-       PromiseFlatCString(mConnInfo->GetNPNToken()).get(), selfAddrStr.get(),
-       peerAddrStr.get(), gHttpHandler->DefaultQpackTableSize(),
+       PromiseFlatCString(mConnInfo->GetNPNToken()).get(),
+       selfAddr.ToString().get(), peerAddr.ToString().get(),
+       gHttpHandler->DefaultQpackTableSize(),
        gHttpHandler->DefaultHttp3MaxBlockedStreams(), this));
 
   nsresult rv = NeqoHttp3Conn::Init(
-      mConnInfo->GetOrigin(), mConnInfo->GetNPNToken(), selfAddrStr,
-      peerAddrStr, gHttpHandler->DefaultQpackTableSize(),
+      mConnInfo->GetOrigin(), mConnInfo->GetNPNToken(), selfAddr, peerAddr,
+      gHttpHandler->DefaultQpackTableSize(),
       gHttpHandler->DefaultHttp3MaxBlockedStreams(),
       StaticPrefs::network_http_http3_max_data(),
       StaticPrefs::network_http_http3_max_stream_data(),
@@ -322,9 +285,7 @@ void Http3Session::ProcessInput(nsIUDPSocket* socket) {
     if (NS_FAILED(rv) || data.IsEmpty()) {
       break;
     }
-    nsAutoCString remoteAddrStr;
-    AddrToString(addr, remoteAddrStr);
-    rv = mHttp3Connection->ProcessInput(&remoteAddrStr, data);
+    rv = mHttp3Connection->ProcessInput(addr, data);
     MOZ_ALWAYS_SUCCEEDS(rv);
     if (NS_FAILED(rv)) {
       break;

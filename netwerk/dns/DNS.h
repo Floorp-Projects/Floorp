@@ -154,6 +154,7 @@ union NetAddr {
   bool IsIPAddrShared() const;
   nsresult GetPort(uint16_t* aResult) const;
   bool ToStringBuffer(char* buf, uint32_t bufSize) const;
+  nsCString ToString() const;
 };
 
 #define ODOH_VERSION 0x0001
