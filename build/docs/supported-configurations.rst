@@ -51,6 +51,7 @@ cross-compilation where available:
     * Previous release
 * Windows x86_64
     * Windows 10 with MozillaBuild Environment
+    * Windows 11 with MozillaBuild Environment
 
 Tier-2 Hosts and Toolchains
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
