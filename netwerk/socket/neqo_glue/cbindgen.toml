@@ -7,6 +7,7 @@ autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated usi
 namespace mozilla {
 namespace net {
 class NeqoHttp3Conn;
+union NetAddr;
 }  // namespace net
 }  // namespace mozilla
  """
@@ -19,7 +20,7 @@ namespaces = ["mozilla", "net"]
 includes = ["certt.h", "prerror.h"]
 
 [export]
-exclude = ["NeqoHttp3Conn"]
+exclude = ["NeqoHttp3Conn", "NetAddr"]
 item_types = ["globals", "enums", "structs", "unions", "typedefs", "opaque", "functions", "constants"]
 
 [export.rename]
