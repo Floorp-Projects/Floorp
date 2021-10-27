@@ -205,118 +205,121 @@ def lto(
     enabled = None
     rust_lto = False
 
-    if value:
-        if instrumented_build:
-            log.warning("Disabling LTO because --enable-profile-generate is specified")
-            return
+    if not value:
+        return
 
-        enabled = True
-        # `cross` implies `thin`, but with Rust code participating in LTO
-        # as well.  Make that a little more explicit.
-        if len(value) and value[0].lower() == "cross":
-            if c_compiler.type == "gcc":
-                die("Cross-language LTO is not supported with GCC.")
+    # If a value was given to --enable-lto, use that, otherwise, default to
+    # thin with clang/clang-cl and full with gcc.
+    if len(value):
+        value = value[0]
+    elif c_compiler.type == "gcc":
+        value = "full"
+    else:
+        value = "thin"
 
-            rust_lto = True
-            value = ["thin"]
+    if instrumented_build:
+        log.warning("Disabling LTO because --enable-profile-generate is specified")
+        return
 
-        if (
-            target.kernel == "Darwin"
-            and target.os == "OSX"
-            and len(value)
-            and value[0].lower() == "cross"
-            and not ld64_known_good
-        ):
+    if c_compiler.type == "gcc":
+        if value == "cross":
+            die("Cross-language LTO is not supported with GCC.")
+        if value == "thin":
             die(
-                "The Mac linker is known to have a bug that affects cross-language "
-                "LTO.  If you know that your linker is free from this bug, please "
-                "set the environment variable `MOZ_LD64_KNOWN_GOOD=1` and re-run "
-                "configure."
+                "gcc does not support thin LTO. Use `--enable-lto` "
+                "to enable full LTO for gcc."
             )
 
-        if c_compiler.type == "clang":
-            if len(value) and value[0].lower() == "full":
-                cflags.append("-flto")
-                ldflags.append("-flto")
-            else:
-                cflags.append("-flto=thin")
-                ldflags.append("-flto=thin")
-        elif c_compiler.type == "clang-cl":
-            if len(value) and value[0].lower() == "full":
-                cflags.append("-flto")
-            else:
-                cflags.append("-flto=thin")
-            # With clang-cl, -flto can only be used with -c or -fuse-ld=lld.
-            # AC_TRY_LINKs during configure don't have -c, so pass -fuse-ld=lld.
-            cflags.append("-fuse-ld=lld")
+    if (
+        target.kernel == "Darwin"
+        and target.os == "OSX"
+        and value == "cross"
+        and not ld64_known_good
+    ):
+        die(
+            "The Mac linker is known to have a bug that affects cross-language "
+            "LTO.  If you know that your linker is free from this bug, please "
+            "set the environment variable `MOZ_LD64_KNOWN_GOOD=1` and re-run "
+            "configure."
+        )
 
-            # Explicitly set the CPU to optimize for so the linker doesn't
-            # choose a poor default.  Rust compilation by default uses the
-            # pentium4 CPU on x86:
-            #
-            # https://github.com/rust-lang/rust/blob/master/src/librustc_target/spec/i686_pc_windows_msvc.rs#L5
-            #
-            # which specifically supports "long" (multi-byte) nops.  See
-            # https://bugzilla.mozilla.org/show_bug.cgi?id=1568450#c8 for details.
-            #
-            # The pentium4 seems like kind of a weird CPU to optimize for, but
-            # it seems to have worked out OK thus far.  LLVM does not seem to
-            # specifically schedule code for the pentium4's deep pipeline, so
-            # that probably contributes to it being an OK default for our
-            # purposes.
-            if target.cpu == "x86":
-                ldflags.append("-mllvm:-mcpu=pentium4")
-            # This is also the CPU that Rust uses.  The LLVM source code
-            # recommends this as the "generic 64-bit specific x86 processor model":
-            #
-            # https://github.com/llvm/llvm-project/blob/e7694f34ab6a12b8bb480cbfcb396d0a64fe965f/llvm/lib/Target/X86/X86.td#L1165-L1187
-            if target.cpu == "x86_64":
-                ldflags.append("-mllvm:-mcpu=x86-64")
-            # We do not need special flags for arm64.  Hooray for fixed-length
-            # instruction sets.
+    if c_compiler.type == "clang":
+        if value == "full":
+            cflags.append("-flto")
+            ldflags.append("-flto")
         else:
-            num_cores = multiprocessing.cpu_count()
-            if len(value) and value[0].lower() == "thin":
-                die(
-                    "gcc does not support thin LTO. Use `--enable-lto` "
-                    "to enable full LTO for gcc."
-                )
-            else:
-                cflags.append("-flto")
-            cflags.append("-flifetime-dse=1")
+            cflags.append("-flto=thin")
+            ldflags.append("-flto=thin")
+    elif c_compiler.type == "clang-cl":
+        if value == "full":
+            cflags.append("-flto")
+        else:
+            cflags.append("-flto=thin")
+        # With clang-cl, -flto can only be used with -c or -fuse-ld=lld.
+        # AC_TRY_LINKs during configure don't have -c, so pass -fuse-ld=lld.
+        cflags.append("-fuse-ld=lld")
 
-            ldflags.append("-flto=%s" % num_cores)
-            ldflags.append("-flifetime-dse=1")
+        # Explicitly set the CPU to optimize for so the linker doesn't
+        # choose a poor default.  Rust compilation by default uses the
+        # pentium4 CPU on x86:
+        #
+        # https://github.com/rust-lang/rust/blob/master/src/librustc_target/spec/i686_pc_windows_msvc.rs#L5
+        #
+        # which specifically supports "long" (multi-byte) nops.  See
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=1568450#c8 for details.
+        #
+        # The pentium4 seems like kind of a weird CPU to optimize for, but
+        # it seems to have worked out OK thus far.  LLVM does not seem to
+        # specifically schedule code for the pentium4's deep pipeline, so
+        # that probably contributes to it being an OK default for our
+        # purposes.
+        if target.cpu == "x86":
+            ldflags.append("-mllvm:-mcpu=pentium4")
+        # This is also the CPU that Rust uses.  The LLVM source code
+        # recommends this as the "generic 64-bit specific x86 processor model":
+        #
+        # https://github.com/llvm/llvm-project/blob/e7694f34ab6a12b8bb480cbfcb396d0a64fe965f/llvm/lib/Target/X86/X86.td#L1165-L1187
+        if target.cpu == "x86_64":
+            ldflags.append("-mllvm:-mcpu=x86-64")
+        # We do not need special flags for arm64.  Hooray for fixed-length
+        # instruction sets.
+    else:
+        num_cores = multiprocessing.cpu_count()
+        cflags.append("-flto")
+        cflags.append("-flifetime-dse=1")
 
-        # Tell LTO not to inline functions above a certain size, to mitigate
-        # binary size growth while still getting good performance.
-        # (For hot functions, PGO will put a multiplier on this limit.)
+        ldflags.append("-flto=%s" % num_cores)
+        ldflags.append("-flifetime-dse=1")
+
+    # Tell LTO not to inline functions above a certain size, to mitigate
+    # binary size growth while still getting good performance.
+    # (For hot functions, PGO will put a multiplier on this limit.)
+    if target.os == "WINNT":
+        ldflags.append("-mllvm:-import-instr-limit=10")
+    elif target.os == "OSX":
+        ldflags.append("-Wl,-mllvm,-import-instr-limit=10")
+    elif c_compiler.type == "clang":
+        ldflags.append("-Wl,-plugin-opt=-import-instr-limit=10")
+
+    # If we're using the new pass manager, we can also enable the new PM
+    # during LTO. Further we can use the resulting size savings to increase
+    # the import limit in hot functions.
+    if newpm_flags:
         if target.os == "WINNT":
-            ldflags.append("-mllvm:-import-instr-limit=10")
-        elif target.os == "OSX":
-            ldflags.append("-Wl,-mllvm,-import-instr-limit=10")
-        elif c_compiler.type == "clang":
-            ldflags.append("-Wl,-plugin-opt=-import-instr-limit=10")
-
-        # If we're using the new pass manager, we can also enable the new PM
-        # during LTO. Further we can use the resulting size savings to increase
-        # the import limit in hot functions.
-        if newpm_flags:
-            if target.os == "WINNT":
-                # On Windows, this flag requires a change from clang-12, which
-                # is applied as a patch to our automation toolchain.
-                if automation or c_compiler.version >= "12.0.0":
-                    ldflags.append("-opt:ltonewpassmanager")
-                    ldflags.append("-mllvm:-import-hot-multiplier=30")
-            elif select_linker.KIND != "ld64" and c_compiler.type == "clang":
-                ldflags.append("-Wl,-plugin-opt=new-pass-manager")
-                ldflags.append("-Wl,-plugin-opt=-import-hot-multiplier=30")
+            # On Windows, this flag requires a change from clang-12, which
+            # is applied as a patch to our automation toolchain.
+            if automation or c_compiler.version >= "12.0.0":
+                ldflags.append("-opt:ltonewpassmanager")
+                ldflags.append("-mllvm:-import-hot-multiplier=30")
+        elif select_linker.KIND != "ld64" and c_compiler.type == "clang":
+            ldflags.append("-Wl,-plugin-opt=new-pass-manager")
+            ldflags.append("-Wl,-plugin-opt=-import-hot-multiplier=30")
 
     return namespace(
-        enabled=enabled,
+        enabled=True,
         cflags=cflags,
         ldflags=ldflags,
-        rust_lto=rust_lto,
+        rust_lto=(value == "cross"),
     )
 
 
