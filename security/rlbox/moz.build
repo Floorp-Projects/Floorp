@@ -20,6 +20,9 @@ SOURCES += [
     "/third_party/wasm2c/wasm2c/wasm-rt-wasi.c",
 ]
 
+# Configure the wasm runtime to use a custom trap handler that calls MOZ_CRASH
+DEFINES["WASM_RT_CUSTOM_TRAP_HANDLER"] = "moz_wasm2c_trap_handler"
+
 # Configuration that removes the wasm2c functions from shared library exports
 DEFINES["WASM_DONT_EXPORT_FUNCS"] = True
 
