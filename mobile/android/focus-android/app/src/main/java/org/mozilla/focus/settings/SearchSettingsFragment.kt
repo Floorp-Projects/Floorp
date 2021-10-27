@@ -7,6 +7,8 @@ package org.mozilla.focus.settings
 import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.preference.Preference
+import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.focus.GleanMetrics.SearchEngines
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.state.AppAction
@@ -39,7 +41,7 @@ class SearchSettingsFragment :
                 requireComponents.appStore.dispatch(
                     AppAction.OpenSettings(page = Screen.Settings.Page.SearchList)
                 )
-                TelemetryWrapper.openSearchSettingsEvent()
+                SearchEngines.openSettings.record(NoExtras())
             }
             resources.getString(R.string.pref_key_screen_autocomplete) ->
                 requireComponents.appStore.dispatch(

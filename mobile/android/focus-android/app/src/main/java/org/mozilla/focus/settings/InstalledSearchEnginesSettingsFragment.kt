@@ -11,14 +11,16 @@ import android.view.MenuItem
 import androidx.preference.Preference
 import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.state.availableSearchEngines
+import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.search.SearchUseCases
+import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.focus.GleanMetrics.SearchEngines
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.search.RadioSearchEngineListPreference
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import kotlin.collections.forEach as withEach
 
 class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
@@ -55,16 +57,24 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val currentEnginesCount = requireComponents.store.state.search.searchEngines.size
+
         return when (item.itemId) {
+
             R.id.menu_remove_search_engines -> {
                 requireComponents.appStore.dispatch(
                     AppAction.OpenSettings(Screen.Settings.Page.SearchRemove)
                 )
-                TelemetryWrapper.menuRemoveEnginesEvent()
+                SearchEngines.openRemoveScreen.record(
+                    SearchEngines.OpenRemoveScreenExtra(currentEnginesCount)
+                )
                 true
             }
             R.id.menu_restore_default_engines -> {
                 restoreSearchEngines()
+                SearchEngines.restoreDefaultEngines.record(
+                    SearchEngines.RestoreDefaultEnginesExtra(currentEnginesCount)
+                )
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -74,7 +84,6 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
     private fun restoreSearchEngines() {
         restoreSearchDefaults(requireComponents.store, requireComponents.searchUseCases)
         refetchSearchEngines()
-        TelemetryWrapper.menuRestoreEnginesEvent()
         languageChanged = false
     }
 
@@ -84,7 +93,7 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
                 requireComponents.appStore.dispatch(
                     AppAction.OpenSettings(page = Screen.Settings.Page.SearchAdd)
                 )
-                TelemetryWrapper.menuAddSearchEngineEvent()
+                SearchEngines.addEngineTapped.record(NoExtras())
                 return true
             }
             else -> {
@@ -113,6 +122,14 @@ private fun SearchState.hasDefaultSearchEnginesOnly(): Boolean {
 }
 
 private fun restoreSearchDefaults(store: BrowserStore, useCases: SearchUseCases) {
-    store.state.search.customSearchEngines.withEach { searchEngine -> useCases.removeSearchEngine(searchEngine) }
-    store.state.search.hiddenSearchEngines.withEach { searchEngine -> useCases.addSearchEngine(searchEngine) }
+    store.state.search.customSearchEngines.withEach { searchEngine ->
+        useCases.removeSearchEngine(
+            searchEngine
+        )
+    }
+    store.state.search.hiddenSearchEngines.withEach { searchEngine ->
+        useCases.addSearchEngine(
+            searchEngine
+        )
+    }
 }

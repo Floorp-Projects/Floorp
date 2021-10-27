@@ -30,13 +30,14 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Request.Redirect.FOLLOW
 import mozilla.components.feature.search.ext.createSearchEngine
+import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.focus.GleanMetrics.SearchEngines
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.search.ManualAddSearchEnginePreference
 import org.mozilla.focus.state.AppAction
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
@@ -80,7 +81,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
                 SupportUtils.SumoTopic.ADD_SEARCH_ENGINE
             )
             SupportUtils.openUrlInCustomTab(requireActivity(), learnMoreUrl)
-            TelemetryWrapper.addSearchEngineLearnMoreEvent()
+            SearchEngines.learnMoreTapped.record(NoExtras())
         }
 
         val saveSearchEngine = {
@@ -103,7 +104,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
                     validateSearchEngine(engineName, searchQuery, requireComponents.client)
                 }
             } else {
-                TelemetryWrapper.saveCustomSearchEngineEvent(false)
+                SearchEngines.saveEngineTapped.record(SearchEngines.SaveEngineTappedExtra(false))
             }
         }
 
@@ -217,7 +218,6 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
 
     private suspend fun validateSearchEngine(engineName: String, query: String, client: Client) {
         val isValidSearchQuery = isValidSearchQueryURL(client, query)
-        TelemetryWrapper.saveCustomSearchEngineEvent(isValidSearchQuery)
 
         withContext(Dispatchers.Main) {
             if (!isActive) {
@@ -235,12 +235,14 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
 
                 ViewUtils.showBrandedSnackbar(requireView(), R.string.search_add_confirmation, Snackbar.LENGTH_SHORT)
                 requireActivity().settings.setDefaultSearchEngineByName(engineName)
+                SearchEngines.saveEngineTapped.record(SearchEngines.SaveEngineTappedExtra(true))
 
                 requireComponents.appStore.dispatch(
                     AppAction.NavigateUp(requireComponents.store.state.selectedTabId)
                 )
             } else {
                 showServerError()
+                SearchEngines.saveEngineTapped.record(SearchEngines.SaveEngineTappedExtra(false))
             }
 
             setUiIsValidatingAsync(false, menuItemForActiveAsyncTask)

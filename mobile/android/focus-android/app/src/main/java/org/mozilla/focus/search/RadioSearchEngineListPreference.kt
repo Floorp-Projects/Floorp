@@ -10,9 +10,9 @@ import android.widget.CompoundButton
 import android.widget.RadioGroup
 import androidx.preference.PreferenceViewHolder
 import mozilla.components.browser.state.search.SearchEngine
+import org.mozilla.focus.GleanMetrics.SearchEngines
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.telemetry.TelemetryWrapper
 
 private const val ENGINE_TYPE_CUSTOM = "custom"
 private const val ENGINE_TYPE_BUNDLED = "bundled"
@@ -55,6 +55,6 @@ class RadioSearchEngineListPreference : SearchEngineListPreference, RadioGroup.O
         else
             ENGINE_TYPE_BUNDLED
 
-        TelemetryWrapper.setDefaultSearchEngineEvent(source)
+        SearchEngines.setDefault.record(SearchEngines.SetDefaultExtra(source))
     }
 }
