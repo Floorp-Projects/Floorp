@@ -168,6 +168,16 @@ impl HandleRef {
             Some(File::from_raw_handle(handle))
         }))
     }
+
+    /// Return this handle as a standard `File` reference.
+    pub fn as_file(&self) -> &File {
+        (self.0).0.as_ref().unwrap()
+    }
+
+    /// Return this handle as a standard `File` mutable reference.
+    pub fn as_file_mut(&mut self) -> &mut File {
+        (self.0).0.as_mut().unwrap()
+    }
 }
 
 /// Construct borrowed and valid Windows handles from file-like objects.
