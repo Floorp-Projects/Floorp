@@ -156,13 +156,16 @@ MockCubebStream::MockCubebStream(cubeb* aContext, cubeb_devid aInputDevice,
       mUserPtr(aUserPtr),
       mInputDeviceID(aInputDevice),
       mOutputDeviceID(aOutputDevice),
-      mAudioGenerator(NUM_OF_CHANNELS,
+      mAudioGenerator(aInputStreamParams ? aInputStreamParams->channels
+                                         : MAX_INPUT_CHANNELS,
                       aInputStreamParams ? aInputStreamParams->rate
                                          : aOutputStreamParams->rate,
                       100 /* aFrequency */),
       mAudioVerifier(aInputStreamParams ? aInputStreamParams->rate
                                         : aOutputStreamParams->rate,
                      100 /* aFrequency */) {
+  MOZ_ASSERT(mAudioGenerator.ChannelCount() <= MAX_INPUT_CHANNELS,
+             "mInputBuffer has no enough space to hold generated data");
   if (aInputStreamParams) {
     mInputParams = *aInputStreamParams;
   }
@@ -295,7 +298,7 @@ void MockCubebStream::Process10Ms() {
     mRecordedOutput.AppendElements(mOutputBuffer, outframes * OutputChannels());
   }
   mAudioVerifier.AppendDataInterleaved(mOutputBuffer, outframes,
-                                       NUM_OF_CHANNELS);
+                                       MAX_OUTPUT_CHANNELS);
 
   mFramesProcessedEvent.Notify(outframes);
   if (mAudioVerifier.PreSilenceEnded()) {
