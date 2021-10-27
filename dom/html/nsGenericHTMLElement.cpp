@@ -1739,7 +1739,8 @@ void nsGenericHTMLFormElement::UnbindFromTree(bool aNullParent) {
 
     // We have to remove the form id observer if there was one.
     // We will re-add one later if needed (during bind to tree).
-    if (HasNonEmptyAttr(nsGkAtoms::form)) {
+    if (nsContentUtils::HasNonEmptyAttr(this, kNameSpaceID_None,
+                                        nsGkAtoms::form)) {
       RemoveFormIdObserver();
     }
   }
@@ -1786,7 +1787,8 @@ nsresult nsGenericHTMLFormElement::BeforeSetAttr(
     if (aName == nsGkAtoms::form) {
       // If @form isn't set or set to the empty string, there were no observer
       // so we don't have to remove it.
-      if (HasNonEmptyAttr(nsGkAtoms::form)) {
+      if (nsContentUtils::HasNonEmptyAttr(this, kNameSpaceID_None,
+                                          nsGkAtoms::form)) {
         // The current form id observer is no longer needed.
         // A new one may be added in AfterSetAttr.
         RemoveFormIdObserver();
@@ -2469,7 +2471,8 @@ void nsGenericHTMLFormControlElement::UnbindFromTree(bool aNullParent) {
 
 void nsGenericHTMLFormControlElement::GetAutocapitalize(
     nsAString& aValue) const {
-  if (HasNonEmptyAttr(nsGkAtoms::autocapitalize)) {
+  if (nsContentUtils::HasNonEmptyAttr(this, kNameSpaceID_None,
+                                      nsGkAtoms::autocapitalize)) {
     nsGenericHTMLFormElement::GetAutocapitalize(aValue);
     return;
   }
