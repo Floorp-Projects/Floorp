@@ -250,6 +250,17 @@ def lto(
         else:
             cflags.append("-flto=thin")
             ldflags.append("-flto=thin")
+
+        if target.os == "Android" and value == "cross":
+            # Work around https://github.com/rust-lang/rust/issues/90088
+            # by enabling the highest level of SSE the rust targets default
+            # to.
+            # https://github.com/rust-lang/rust/blob/bdfcb88e8b6203ccb46a2fb6649979b773efc8ac/compiler/rustc_target/src/spec/i686_linux_android.rs#L13
+            # https://github.com/rust-lang/rust/blob/8d1083e319841624f64400e1524805a40d725439/compiler/rustc_target/src/spec/x86_64_linux_android.rs#L7
+            if target.cpu == "x86":
+                ldflags.append("-Wl,-plugin-opt=-mattr=+ssse3")
+            elif target.cpu == "x86_64":
+                ldflags.append("-Wl,-plugin-opt=-mattr=+sse4.2")
     elif c_compiler.type == "clang-cl":
         if value == "full":
             cflags.append("-flto")
@@ -263,7 +274,7 @@ def lto(
         # choose a poor default.  Rust compilation by default uses the
         # pentium4 CPU on x86:
         #
-        # https://github.com/rust-lang/rust/blob/master/src/librustc_target/spec/i686_pc_windows_msvc.rs#L5
+        # https://github.com/rust-lang/rust/blob/049a49b91151a88c95fa0d62a53fd0a0ac2c3af9/compiler/rustc_target/src/spec/i686_pc_windows_msvc.rs#L5
         #
         # which specifically supports "long" (multi-byte) nops.  See
         # https://bugzilla.mozilla.org/show_bug.cgi?id=1568450#c8 for details.
