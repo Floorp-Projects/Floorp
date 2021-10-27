@@ -65,6 +65,7 @@ jobs:
         attributes:
             release-type: release
         run-on-tasks-for: [github-pull-request]
+        include-shippable-secrets: true
         run:
             gradle-build-type: release
             gradle-build-name: focusRelease
@@ -77,6 +78,7 @@ jobs:
         attributes:
             release-type: release
         run-on-tasks-for: [github-pull-request]
+        include-shippable-secrets: true
         run:
             gradle-build-type: release
             gradle-build-name: klarRelease
@@ -91,6 +93,7 @@ jobs:
             # inherit this attribute via the multi_dep loader
             nightly-task: true
         run-on-tasks-for: [github-pull-request]
+        include-shippable-secrets: true
         run:
             gradle-build-type: nightly
             gradle-build-name: focusNightly
@@ -103,6 +106,7 @@ jobs:
         attributes:
             release-type: beta
         run-on-tasks-for: [github-pull-request]
+        include-shippable-secrets: true
         run:
             gradle-build-type: beta
             gradle-build-name: focusBeta
