@@ -816,14 +816,25 @@ void WebGLProgram::UniformBlockBinding(GLuint uniformBlockIndex,
 }
 
 bool WebGLProgram::ValidateForLink() {
+  const auto AppendCompileLog = [&](const WebGLShader* const shader) {
+    if (!shader) {
+      mLinkLog += " Missing shader.";
+      return;
+    }
+    mLinkLog += "\nSHADER_INFO_LOG:\n";
+    mLinkLog += shader->CompileLog();
+  };
+
   if (!mVertShader || !mVertShader->IsCompiled()) {
-    mLinkLog = "Must have a compiled vertex shader attached.";
+    mLinkLog = "Must have a compiled vertex shader attached:";
+    AppendCompileLog(mVertShader);
     return false;
   }
   const auto& vertInfo = *mVertShader->CompileResults();
 
   if (!mFragShader || !mFragShader->IsCompiled()) {
-    mLinkLog = "Must have an compiled fragment shader attached.";
+    mLinkLog = "Must have a compiled fragment shader attached:";
+    AppendCompileLog(mFragShader);
     return false;
   }
   const auto& fragInfo = *mFragShader->CompileResults();
