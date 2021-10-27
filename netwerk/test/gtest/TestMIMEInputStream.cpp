@@ -8,6 +8,7 @@
 #include "nsString.h"
 #include "nsStringStream.h"
 #include "nsIMIMEInputStream.h"
+#include "nsISeekableStream.h"
 
 using mozilla::GetCurrentSerialEventTarget;
 using mozilla::SpinEventLoopUntil;
