@@ -94,7 +94,6 @@ static CTFontRef CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont,
   //    CreateCTFontFromCGFontWithVariations in ScaledFontMac.cpp
   //    CreateCTFontFromCGFontWithVariations in cairo-quartz-font.c
   //    ctfont_create_exact_copy in SkFontHost_mac.cpp
-
   CTFontRef ctFont;
   if (nsCocoaFeatures::OnSierraExactly() ||
       (aInstalledFont && nsCocoaFeatures::OnHighSierraOrLater())) {
@@ -476,18 +475,28 @@ ScaledFontMac::InstanceData::InstanceData(
 }
 
 static CFDictionaryRef CreateVariationDictionaryOrNull(
-    CGFontRef aCGFont, CFArrayRef& aAxesCache, uint32_t aVariationCount,
-    const FontVariation* aVariations) {
-  if (!aAxesCache) {
+    CGFontRef aCGFont, CFArrayRef& aCGAxesCache, CFArrayRef& aCTAxesCache,
+    uint32_t aVariationCount, const FontVariation* aVariations) {
+  if (!aCGAxesCache) {
+    aCGAxesCache = CGFontCopyVariationAxes(aCGFont);
+    if (!aCGAxesCache) {
+      return nullptr;
+    }
+  }
+  if (!aCTAxesCache) {
     AutoRelease<CTFontRef> ctFont(
         CTFontCreateWithGraphicsFont(aCGFont, 0, nullptr, nullptr));
-    aAxesCache = CTFontCopyVariationAxes(ctFont);
-    if (!aAxesCache) {
+    aCTAxesCache = CTFontCopyVariationAxes(ctFont);
+    if (!aCTAxesCache) {
       return nullptr;
     }
   }
 
-  CFIndex axisCount = CFArrayGetCount(aAxesCache);
+  CFIndex axisCount = CFArrayGetCount(aCTAxesCache);
+  if (CFArrayGetCount(aCGAxesCache) != axisCount) {
+    return nullptr;
+  }
+
   AutoRelease<CFMutableDictionaryRef> dict(CFDictionaryCreateMutable(
       kCFAllocatorDefault, axisCount, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks));
@@ -499,7 +508,7 @@ static CFDictionaryRef CreateVariationDictionaryOrNull(
   for (CFIndex i = 0; i < axisCount; ++i) {
     // We sanity-check the axis info found in the CTFont, and bail out
     // (returning null) if it doesn't have the expected types.
-    CFTypeRef axisInfo = CFArrayGetValueAtIndex(aAxesCache, i);
+    CFTypeRef axisInfo = CFArrayGetValueAtIndex(aCTAxesCache, i);
     if (CFDictionaryGetTypeID() != CFGetTypeID(axisInfo)) {
       return nullptr;
     }
@@ -516,8 +525,12 @@ static CFDictionaryRef CreateVariationDictionaryOrNull(
       return nullptr;
     }
 
-    CFTypeRef axisName =
-        CFDictionaryGetValue(axis, kCTFontVariationAxisNameKey);
+    axisInfo = CFArrayGetValueAtIndex(aCGAxesCache, i);
+    if (CFDictionaryGetTypeID() != CFGetTypeID(axisInfo)) {
+      return nullptr;
+    }
+    CFTypeRef axisName = CFDictionaryGetValue(
+        static_cast<CFDictionaryRef>(axisInfo), kCGFontVariationAxisName);
     if (!axisName || CFGetTypeID(axisName) != CFStringGetTypeID()) {
       return nullptr;
     }
@@ -656,15 +669,15 @@ static CFDictionaryRef CreateVariationTagDictionaryOrNull(
 
 /* static */
 CGFontRef UnscaledFontMac::CreateCGFontWithVariations(
-    CGFontRef aFont, CFArrayRef& aAxesCache, uint32_t aVariationCount,
-    const FontVariation* aVariations) {
+    CGFontRef aFont, CFArrayRef& aCGAxesCache, CFArrayRef& aCTAxesCache,
+    uint32_t aVariationCount, const FontVariation* aVariations) {
   if (!aVariationCount) {
     return nullptr;
   }
   MOZ_ASSERT(aVariations);
 
   AutoRelease<CFDictionaryRef> varDict(CreateVariationDictionaryOrNull(
-      aFont, aAxesCache, aVariationCount, aVariations));
+      aFont, aCGAxesCache, aCTAxesCache, aVariationCount, aVariations));
   if (!varDict) {
     return nullptr;
   }
@@ -684,7 +697,6 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFont(
   }
   const ScaledFontMac::InstanceData& instanceData =
       *reinterpret_cast<const ScaledFontMac::InstanceData*>(aInstanceData);
-
   RefPtr<ScaledFontMac> scaledFont;
   if (mFontDesc) {
     AutoRelease<CTFontRef> font(
@@ -710,7 +722,7 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFont(
     CGFontRef fontRef = mFont;
     if (aNumVariations > 0) {
       CGFontRef varFont = CreateCGFontWithVariations(
-          mFont, mAxesCache, aNumVariations, aVariations);
+          mFont, mCGAxesCache, mCTAxesCache, aNumVariations, aVariations);
       if (varFont) {
         fontRef = varFont;
       }
