@@ -128,7 +128,7 @@ TEST_F(VideoFrameConverterTest, BasicPacing) {
   mConverter->SetActive(true);
   mConverter->QueueVideoChunk(chunk, false);
   auto frames = WaitForNConverted(1);
-  EXPECT_GT(TimeStamp::Now(), future);
+  EXPECT_GT(TimeStamp::Now() - now, future - now);
   ASSERT_EQ(frames.size(), 1U);
   EXPECT_EQ(frames[0].first.width(), 640);
   EXPECT_EQ(frames[0].first.height(), 480);
