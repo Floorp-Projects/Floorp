@@ -112,26 +112,12 @@ var Utils = {
   async fetch(input, init = {}) {
     return new Promise(function(resolve, reject) {
       const request = new ServiceRequest();
-      function fallbackOrReject(err) {
-        if (
-          // At most one recursive Utils.fetch call (bypassProxy=false to true).
-          bypassProxy ||
-          !request.isProxied ||
-          !request.bypassProxyEnabled
-        ) {
-          reject(err);
-          return;
-        }
-        request.logProxySource(request.channel, "remote-settings");
-        resolve(Utils.fetch(input, { ...init, bypassProxy: true }));
-      }
 
       request.onerror = () =>
-        fallbackOrReject(new TypeError("NetworkError: Network request failed"));
+        reject(new TypeError("NetworkError: Network request failed"));
       request.ontimeout = () =>
-        fallbackOrReject(new TypeError("Timeout: Network request failed"));
-      request.onabort = () =>
-        fallbackOrReject(new DOMException("Aborted", "AbortError"));
+        reject(new TypeError("Timeout: Network request failed"));
+      request.onabort = () => reject(new DOMException("Aborted", "AbortError"));
       request.onload = () => {
         // Parse raw response headers into `Headers` object.
         const headers = new Headers();
@@ -155,9 +141,9 @@ var Utils = {
         resolve(new Response(request.response, responseAttributes));
       };
 
-      const { method = "GET", headers = {}, bypassProxy = false } = init;
+      const { method = "GET", headers = {} } = init;
 
-      request.open(method, input, { bypassProxy });
+      request.open(method, input, true);
       // By default, XMLHttpRequest converts the response based on the
       // Content-Type header, or UTF-8 otherwise. This may mangle binary
       // responses. Avoid that by requesting the raw bytes.
