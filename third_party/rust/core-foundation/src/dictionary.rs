@@ -31,7 +31,7 @@ impl<K, V> Drop for CFDictionary<K, V> {
 }
 
 impl_TCFType!(CFDictionary<K, V>, CFDictionaryRef, CFDictionaryGetTypeID);
-impl_CFTypeDescription!(CFDictionary);
+impl_CFTypeDescription!(CFDictionary<K, V>);
 
 unsafe impl ConcreteCFType for CFDictionary<*const c_void, *const c_void> {}
 
