@@ -124,6 +124,7 @@ impl TileCacheBuilder {
         config: &FrameBuilderConfig,
         iframe_clip: Option<ClipChainId>,
         slice_flags: SliceFlags,
+        prim_instances: &[PrimitiveInstance],
     ) {
         assert!(self.can_add_container_tile_cache());
 
@@ -184,7 +185,7 @@ impl TileCacheBuilder {
         // during initial scene build which are the relevant compositor clips, but for now
         // this is unlikely to be a significant cost.
         for cluster in &prim_list.clusters {
-            for prim_instance in &prim_list.prim_instances[cluster.prim_range()] {
+            for prim_instance in &prim_instances[cluster.prim_range()] {
                 if first {
                     add_clips(
                         scroll_root,
@@ -278,6 +279,7 @@ impl TileCacheBuilder {
         config: &FrameBuilderConfig,
         quality_settings: &QualitySettings,
         iframe_clip: Option<ClipChainId>,
+        prim_instances: &mut Vec<PrimitiveInstance>,
     ) {
         // Check if we want to create a new slice based on the current / next scroll root
         let scroll_root = self.find_scroll_root(spatial_node_index, spatial_tree);
@@ -448,6 +450,7 @@ impl TileCacheBuilder {
                 prim_rect,
                 spatial_node_index,
                 prim_flags,
+                prim_instances,
             );
     }
 

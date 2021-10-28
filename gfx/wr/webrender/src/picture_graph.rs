@@ -4,7 +4,7 @@
 
 use crate::frame_builder::FrameBuildingContext;
 use crate::internal_types::FastHashMap;
-use crate::prim_store::PictureIndex;
+use crate::prim_store::{PictureIndex, PrimitiveInstance};
 use crate::picture::{PicturePrimitive, SurfaceIndex, ROOT_SURFACE_INDEX, SurfaceInfo};
 use crate::picture::{TileCacheInstance, SliceId};
 use crate::render_backend::DataStores;
@@ -121,6 +121,7 @@ impl PictureGraph {
         surfaces: &mut [SurfaceInfo],
         frame_context: &FrameBuildingContext,
         data_stores: &mut DataStores,
+        prim_instances: &mut Vec<PrimitiveInstance>,
     ) {
         for pass in self.update_passes.iter().rev() {
             for pic_index in pass {
@@ -138,6 +139,7 @@ impl PictureGraph {
                     surfaces,
                     frame_context,
                     data_stores,
+                    prim_instances,
                 );
             }
         }

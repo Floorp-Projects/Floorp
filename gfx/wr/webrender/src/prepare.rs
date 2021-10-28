@@ -52,6 +52,7 @@ pub fn prepare_primitives(
     scratch: &mut PrimitiveScratchBuffer,
     tile_cache_log: &mut TileCacheLogger,
     tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
+    prim_instances: &mut Vec<PrimitiveInstance>,
 ) {
     profile_scope!("prepare_primitives");
     for (cluster_index, cluster) in prim_list.clusters.iter_mut().enumerate() {
@@ -66,10 +67,9 @@ pub fn prepare_primitives(
 
         frame_state.surfaces[pic_context.surface_index.0].opaque_rect = PictureRect::zero();
 
-        for (idx, prim_instance) in (&mut prim_list.prim_instances[cluster.prim_range()]).iter_mut().enumerate() {
-            let prim_instance_index = cluster.prim_range.start + idx;
-
+        for prim_instance_index in cluster.prim_range() {
             // First check for coarse visibility (if this primitive was completely off-screen)
+            let prim_instance = &mut prim_instances[prim_instance_index];
             match prim_instance.vis.state {
                 VisibilityState::Unset => {
                     panic!("bug: invalid vis state");
@@ -111,7 +111,7 @@ pub fn prepare_primitives(
 
             if prepare_prim_for_render(
                 store,
-                prim_instance,
+                prim_instance_index,
                 cluster,
                 pic_context,
                 pic_state,
@@ -122,10 +122,11 @@ pub fn prepare_primitives(
                 scratch,
                 tile_cache_log,
                 tile_caches,
+                prim_instances,
             ) {
                 frame_state.num_visible_primitives += 1;
             } else {
-                prim_instance.clear_visibility();
+                prim_instances[prim_instance_index].clear_visibility();
             }
         }
 
@@ -141,7 +142,7 @@ pub fn prepare_primitives(
 
 fn prepare_prim_for_render(
     store: &mut PrimitiveStore,
-    prim_instance: &mut PrimitiveInstance,
+    prim_instance_index: usize,
     cluster: &mut PrimitiveCluster,
     pic_context: &PictureContext,
     pic_state: &mut PictureState,
@@ -152,6 +153,7 @@ fn prepare_prim_for_render(
     scratch: &mut PrimitiveScratchBuffer,
     tile_cache_log: &mut TileCacheLogger,
     tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
+    prim_instances: &mut Vec<PrimitiveInstance>,
 ) -> bool {
     profile_scope!("prepare_prim_for_render");
 
@@ -160,7 +162,7 @@ fn prepare_prim_for_render(
     // For example, scrolling may affect the location of an item in
     // local space, which may force us to render this item on a larger
     // picture target, if being composited.
-    if let PrimitiveInstanceKind::Picture { pic_index, .. } = prim_instance.kind {
+    if let PrimitiveInstanceKind::Picture { pic_index, .. } = prim_instances[prim_instance_index].kind {
         let pic = &mut store.pictures[pic_index.0];
 
         match pic.take_context(
@@ -187,6 +189,7 @@ fn prepare_prim_for_render(
                     scratch,
                     tile_cache_log,
                     tile_caches,
+                    prim_instances,
                 );
 
                 // Restore the dependencies (borrow check dance)
@@ -198,14 +201,12 @@ fn prepare_prim_for_render(
                     );
             }
             None => {
-                if prim_instance.is_chased() {
-                    println!("\tculled for carrying an invisible composite filter");
-                }
-
                 return false;
             }
         }
     }
+
+    let prim_instance = &mut prim_instances[prim_instance_index];
 
     let prim_rect = data_stores.get_local_prim_rect(
         prim_instance,

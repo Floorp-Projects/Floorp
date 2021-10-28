@@ -16,7 +16,7 @@ use crate::gpu_types::{BorderInstance, SvgFilterInstance, BlurDirection, BlurIns
 use crate::gpu_types::{TransformPalette, ZBufferIdGenerator};
 use crate::internal_types::{FastHashMap, TextureSource, CacheTextureId};
 use crate::picture::{SliceId, SurfaceInfo, ResolvedSurfaceTexture, TileCacheInstance};
-use crate::prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
+use crate::prim_store::{PrimitiveInstance, PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
 use crate::prim_store::gradient::{
     FastLinearGradientInstance, LinearGradientInstance, RadialGradientInstance,
     ConicGradientInstance,
@@ -99,6 +99,7 @@ pub trait RenderTarget {
         _transforms: &mut TransformPalette,
         _z_generator: &mut ZBufferIdGenerator,
         _composite_state: &mut CompositeState,
+        _prim_instances: &[PrimitiveInstance],
     ) {
     }
 
@@ -177,6 +178,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
         transforms: &mut TransformPalette,
         z_generator: &mut ZBufferIdGenerator,
         composite_state: &mut CompositeState,
+        prim_instances: &[PrimitiveInstance],
     ) {
         if self.targets.is_empty() {
             return;
@@ -192,6 +194,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
                 transforms,
                 z_generator,
                 composite_state,
+                prim_instances,
             );
         }
     }
@@ -256,6 +259,7 @@ impl RenderTarget for ColorRenderTarget {
         transforms: &mut TransformPalette,
         z_generator: &mut ZBufferIdGenerator,
         composite_state: &mut CompositeState,
+        prim_instances: &[PrimitiveInstance],
     ) {
         profile_scope!("build");
         let mut merged_batches = AlphaBatchContainer::new(None);
@@ -330,6 +334,7 @@ impl RenderTarget for ColorRenderTarget {
                         pic_task.surface_spatial_node_index,
                         z_generator,
                         composite_state,
+                        prim_instances,
                     );
 
                     let alpha_batch_builders = batch_builder.finalize();

@@ -4358,8 +4358,11 @@ impl PrimitiveCluster {
         &self,
         spatial_node_index: SpatialNodeIndex,
         flags: ClusterFlags,
+        instance_index: usize,
     ) -> bool {
-        self.flags == flags && self.spatial_node_index == spatial_node_index
+        self.flags == flags &&
+        self.spatial_node_index == spatial_node_index &&
+        instance_index == self.prim_range.end
     }
 
     pub fn prim_range(&self) -> Range<usize> {
@@ -4386,7 +4389,6 @@ impl PrimitiveCluster {
 pub struct PrimitiveList {
     /// List of primitives grouped into clusters.
     pub clusters: Vec<PrimitiveCluster>,
-    pub prim_instances: Vec<PrimitiveInstance>,
     pub child_pictures: Vec<PictureIndex>,
     /// The number of preferred compositor surfaces that were found when
     /// adding prims to this list.
@@ -4401,7 +4403,6 @@ impl PrimitiveList {
     pub fn empty() -> Self {
         PrimitiveList {
             clusters: Vec::new(),
-            prim_instances: Vec::new(),
             child_pictures: Vec::new(),
             compositor_surface_count: 0,
         }
@@ -4414,6 +4415,7 @@ impl PrimitiveList {
         prim_rect: LayoutRect,
         spatial_node_index: SpatialNodeIndex,
         prim_flags: PrimitiveFlags,
+        prim_instances: &mut Vec<PrimitiveInstance>,
     ) {
         let mut flags = ClusterFlags::empty();
 
@@ -4441,34 +4443,11 @@ impl PrimitiveList {
             .intersection(&prim_rect)
             .unwrap_or_else(LayoutRect::zero);
 
-        // Primitive lengths aren't evenly distributed among primitive lists:
-        // We often have a large amount of single primitive lists, a
-        // few below 20~30 primitives, and even fewer lists (maybe a couple)
-        // in the multiple hundreds with nothing in between.
-        // We can see in profiles that reallocating vectors while pushing
-        // primitives is taking a large amount of the total scene build time,
-        // so we take advantage of what we know about the length distributions
-        // to go for an adapted vector growth pattern that avoids over-allocating
-        // for the many small allocations while avoiding a lot of reallocation by
-        // quickly converging to the common sizes.
-        // Rust's default vector growth strategy (when pushing elements one by one)
-        // is to double the capacity every time.
-        let prims_len = self.prim_instances.len();
-        if prims_len == self.prim_instances.capacity() {
-            let next_alloc = match prims_len {
-                1 ..= 31 => 32 - prims_len,
-                32 ..= 256 => 512 - prims_len,
-                _ => prims_len * 2,
-            };
-
-            self.prim_instances.reserve(next_alloc);
-        }
-
-        let instance_index = prims_len;
-        self.prim_instances.push(prim_instance);
+        let instance_index = prim_instances.len();
+        prim_instances.push(prim_instance);
 
         if let Some(cluster) = self.clusters.last_mut() {
-            if cluster.is_compatible(spatial_node_index, flags) {
+            if cluster.is_compatible(spatial_node_index, flags, instance_index) {
                 cluster.add_instance(&culling_rect, instance_index);
                 return;
             }
@@ -6281,6 +6260,7 @@ impl PicturePrimitive {
         surfaces: &mut [SurfaceInfo],
         frame_context: &FrameBuildingContext,
         data_stores: &mut DataStores,
+        prim_instances: &mut Vec<PrimitiveInstance>,
     ) {
         let surface = &mut surfaces[surface_index.0];
 
@@ -6322,7 +6302,7 @@ impl PicturePrimitive {
                     frame_context.spatial_tree,
                 );
 
-                for prim_instance in &mut self.prim_list.prim_instances[cluster.prim_range()] {
+                for prim_instance in &mut prim_instances[cluster.prim_range()] {
                     match prim_instance.kind {
                         PrimitiveInstanceKind::Backdrop { data_handle, .. } => {
                             // The actual size and clip rect of this primitive are determined by computing the bounding
