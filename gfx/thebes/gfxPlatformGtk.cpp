@@ -862,6 +862,12 @@ class XrandrSoftwareVsyncSource final : public SoftwareVsyncSource {
         Window root = gdk_x11_get_default_root_xwindow();
         XRRScreenResources* res = XRRGetScreenResourcesCurrent(dpy, root);
 
+        // We can't use refresh rates far below the default one (60Hz) because
+        // otherwise random CI tests start to fail. However, many users have
+        // screens just below the default rate, e.g. 59.95Hz. So slightly
+        // decrease the lower bound.
+        highestRefreshRate -= 1.0;
+
         for (int i = 0; i < res->noutput; i++) {
           XRROutputInfo* outputInfo =
               XRRGetOutputInfo(dpy, res, res->outputs[i]);
