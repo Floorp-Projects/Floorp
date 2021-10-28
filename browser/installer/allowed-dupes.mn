@@ -60,7 +60,6 @@ browser/features/formautofill@mozilla.org/chrome/content/autofillEditForms.js
 browser/chrome/browser/res/payments/formautofill/autofillEditForms.js
 
 # Bug 1451050 - Remote settings empty dumps (will be populated with data eventually)
-browser/defaults/settings/pinning/pins.json
 browser/defaults/settings/main/example.json
 browser/defaults/settings/main/password-rules.json
 browser/defaults/settings/main/search-default-override-allowlist.json
