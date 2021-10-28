@@ -3346,15 +3346,35 @@ RunningTimes GetRunningTimesWithTightTimestamp(
   TimeStamp before = TimeStamp::Now();
   aGetCPURunningTimesFunction(runningTimes);
   TimeStamp after = TimeStamp::Now();
-  // In most cases, the above should be quick enough. But if not, repeat:
-  while (MOZ_UNLIKELY(after - before > scMaxRunningTimesReadDuration)) {
+  const TimeDuration duration = after - before;
+
+  // In most cases, the above should be quick enough. But if not (e.g., because
+  // of an OS context switch), repeat once:
+  if (MOZ_UNLIKELY(duration > scMaxRunningTimesReadDuration)) {
     AUTO_PROFILER_STATS(GetRunningTimes_REDO);
-    before = after;
-    aGetCPURunningTimesFunction(runningTimes);
-    after = TimeStamp::Now();
+    RunningTimes runningTimes2;
+    aGetCPURunningTimesFunction(runningTimes2);
+    TimeStamp after2 = TimeStamp::Now();
+    const TimeDuration duration2 = after2 - after;
+    if (duration2 < duration) {
+      // We did it faster, use the new results. (But it could still be slower
+      // than expected, see note below for why it's acceptable.)
+      // This must stay *after* the CPU measurements.
+      runningTimes2.SetPostMeasurementTimeStamp(after2);
+      return runningTimes2;
+    }
+    // Otherwise use the initial results, they were slow, but faster than the
+    // second attempt.
+    // This means that something bad happened twice in a row on the same thread!
+    // So trying more times would be unlikely to get much better, and would be
+    // more expensive than the precision is worth.
+    // At worst, it means that a spike of activity may be reported in the next
+    // time slice. But in the end, the cumulative work is conserved, so it
+    // should still be visible at about the correct time in the graph.
+    AUTO_PROFILER_STATS(GetRunningTimes_RedoWasWorse);
   }
-  // Finally, record the closest timestamp just after the final measurement was
-  // done. This must stay *after* the CPU measurements.
+
+  // This must stay *after* the CPU measurements.
   runningTimes.SetPostMeasurementTimeStamp(after);
 
   return runningTimes;
