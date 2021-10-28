@@ -12,6 +12,7 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -41,6 +42,7 @@ class ContextMenusTest {
 
     @Before
     fun setUp() {
+        activityIntentTestRule.activity.applicationContext.settings().shouldShowJumpBackInCFR = false
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()
@@ -99,7 +101,6 @@ class ContextMenusTest {
         }
     }
 
-    @Ignore("Test failures: https://github.com/mozilla-mobile/fenix/issues/12473")
     @Test
     fun verifyContextCopyLink() {
         val pageLinks =
@@ -157,7 +158,6 @@ class ContextMenusTest {
     }
 
     @Test
-    @Ignore("Disabled – Google Keyboard Clipboard overlay blocks the address bar: https://github.com/mozilla-mobile/fenix/issues/10586")
     fun verifyContextCopyImageLocation() {
         val pageLinks =
             TestAssetHelper.getGenericAsset(mockWebServer, 4)
