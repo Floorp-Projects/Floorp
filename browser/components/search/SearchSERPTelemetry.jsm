@@ -24,6 +24,8 @@ const SEARCH_WITH_ADS_SCALAR_OLD = "browser.search.with_ads";
 const SEARCH_WITH_ADS_SCALAR_BASE = "browser.search.withads.";
 const SEARCH_AD_CLICKS_SCALAR_OLD = "browser.search.ad_clicks";
 const SEARCH_AD_CLICKS_SCALAR_BASE = "browser.search.adclicks.";
+const SEARCH_DATA_TRANSFERRED_SCALAR = "browser.search.data_transferred";
+const SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX = "pb";
 
 const TELEMETRY_SETTINGS_KEY = "search-telemetry";
 
@@ -596,6 +598,8 @@ class ContentHandler {
     Cc["@mozilla.org/network/http-activity-distributor;1"]
       .getService(Ci.nsIHttpActivityDistributor)
       .addObserver(this);
+
+    Services.obs.addObserver(this, "http-on-stop-request");
   }
 
   /**
@@ -605,6 +609,8 @@ class ContentHandler {
     Cc["@mozilla.org/network/http-activity-distributor;1"]
       .getService(Ci.nsIHttpActivityDistributor)
       .removeObserver(this);
+
+    Services.obs.removeObserver(this, "http-on-stop-request");
   }
 
   /**
@@ -615,6 +621,85 @@ class ContentHandler {
    */
   overrideSearchTelemetryForTests(providerInfo) {
     Services.ppmm.sharedData.set("SearchTelemetry:ProviderInfo", providerInfo);
+  }
+
+  /**
+   * Reports bandwidth used by the given channel if it is used by search requests.
+   *
+   * @param {object} aChannel The channel that generated the activity.
+   */
+  _reportChannelBandwidth(aChannel) {
+    if (!(aChannel instanceof Ci.nsIChannel)) {
+      return;
+    }
+    let wrappedChannel = ChannelWrapper.get(aChannel);
+
+    let getTopURL = channel => {
+      // top-level document
+      if (
+        channel.loadInfo &&
+        channel.loadInfo.externalContentPolicyType ==
+          Ci.nsIContentPolicy.TYPE_DOCUMENT
+      ) {
+        return channel.finalURL;
+      }
+
+      // iframe
+      let frameAncestors;
+      try {
+        frameAncestors = channel.frameAncestors;
+      } catch (e) {
+        frameAncestors = null;
+      }
+      if (frameAncestors) {
+        let ancestor = frameAncestors.find(obj => obj.frameId == 0);
+        if (ancestor) {
+          return ancestor.url;
+        }
+      }
+
+      // top-level resource
+      if (channel.loadInfo && channel.loadInfo.loadingPrincipal) {
+        return channel.loadInfo.loadingPrincipal.spec;
+      }
+
+      return null;
+    };
+
+    let topUrl = getTopURL(wrappedChannel);
+    if (!topUrl) {
+      return;
+    }
+
+    let info = this._checkURLForSerpMatch(topUrl);
+    if (!info) {
+      return;
+    }
+
+    let bytesTransferred =
+      wrappedChannel.requestSize + wrappedChannel.responseSize;
+    let { provider } = info;
+
+    let isPrivate =
+      wrappedChannel.loadInfo &&
+      wrappedChannel.loadInfo.originAttributes.privateBrowsingId > 0;
+    if (isPrivate) {
+      provider += `-${SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX}`;
+    }
+
+    Services.telemetry.keyedScalarAdd(
+      SEARCH_DATA_TRANSFERRED_SCALAR,
+      provider,
+      bytesTransferred
+    );
+  }
+
+  observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "http-on-stop-request":
+        this._reportChannelBandwidth(aSubject);
+        break;
+    }
   }
 
   /**
