@@ -91,11 +91,14 @@ BOOL CALLBACK OwnedWindowCollector(HWND hwnd, LPARAM param) {
   return TRUE;
 }
 
-WindowCapturerWinGdi::WindowCapturerWinGdi() {}
+WindowCapturerWinGdi::WindowCapturerWinGdi(
+    bool enumerate_current_process_windows)
+    : enumerate_current_process_windows_(enumerate_current_process_windows) {}
 WindowCapturerWinGdi::~WindowCapturerWinGdi() {}
 
 bool WindowCapturerWinGdi::GetSourceList(SourceList* sources) {
-  if (!window_capture_helper_.EnumerateCapturableWindows(sources))
+  if (!window_capture_helper_.EnumerateCapturableWindows(
+          sources, enumerate_current_process_windows_))
     return false;
 
   std::map<HWND, DesktopSize> new_map;
@@ -333,7 +336,8 @@ WindowCapturerWinGdi::CaptureResults WindowCapturerWinGdi::CaptureFrame(
 
       if (!owned_windows_.empty()) {
         if (!owned_window_capturer_) {
-          owned_window_capturer_ = std::make_unique<WindowCapturerWinGdi>();
+          owned_window_capturer_ = std::make_unique<WindowCapturerWinGdi>(
+              enumerate_current_process_windows_);
         }
 
         // Owned windows are stored in top-down z-order, so this iterates in
@@ -372,7 +376,8 @@ WindowCapturerWinGdi::CaptureResults WindowCapturerWinGdi::CaptureFrame(
 // static
 std::unique_ptr<DesktopCapturer> WindowCapturerWinGdi::CreateRawWindowCapturer(
     const DesktopCaptureOptions& options) {
-  return std::unique_ptr<DesktopCapturer>(new WindowCapturerWinGdi());
+  return std::unique_ptr<DesktopCapturer>(
+      new WindowCapturerWinGdi(options.enumerate_current_process_windows()));
 }
 
 }  // namespace webrtc

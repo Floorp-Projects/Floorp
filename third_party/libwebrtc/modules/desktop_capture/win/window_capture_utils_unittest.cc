@@ -177,4 +177,18 @@ TEST(WindowCaptureUtilsTest, IgnoreUntitledWindows) {
   DestroyTestWindow(info);
 }
 
+TEST(WindowCaptureUtilsTest, IgnoreCurrentProcessWindows) {
+  WindowInfo info = CreateTestWindow(kWindowTitle);
+  DesktopCapturer::SourceList window_list;
+  ASSERT_TRUE(GetWindowList(GetWindowListFlags::kIgnoreCurrentProcessWindows,
+                            &window_list));
+  EXPECT_EQ(std::find_if(window_list.begin(), window_list.end(),
+                         [&info](DesktopCapturer::Source window) {
+                           return reinterpret_cast<HWND>(window.id) ==
+                                  info.hwnd;
+                         }),
+            window_list.end());
+  DestroyTestWindow(info);
+}
+
 }  // namespace webrtc
