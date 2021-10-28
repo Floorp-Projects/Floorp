@@ -16,11 +16,14 @@
 
 namespace webrtc {
 
-WindowCapturerWinWgc::WindowCapturerWinWgc() = default;
+WindowCapturerWinWgc::WindowCapturerWinWgc
+    (bool enumerate_current_process_windows)
+    : enumerate_current_process_windows_(enumerate_current_process_windows) {}
 WindowCapturerWinWgc::~WindowCapturerWinWgc() = default;
 
 bool WindowCapturerWinWgc::GetSourceList(SourceList* sources) {
-  return window_capture_helper_.EnumerateCapturableWindows(sources);
+  return window_capture_helper_.EnumerateCapturableWindows(
+      sources, enumerate_current_process_windows_);
 }
 
 bool WindowCapturerWinWgc::SelectSource(SourceId id) {
@@ -48,7 +51,8 @@ void WindowCapturerWinWgc::CaptureFrame() {
 // static
 std::unique_ptr<DesktopCapturer> WindowCapturerWinWgc::CreateRawWindowCapturer(
     const DesktopCaptureOptions& options) {
-  return std::unique_ptr<DesktopCapturer>(new WindowCapturerWinWgc());
+  return std::unique_ptr<DesktopCapturer>(
+      new WindowCapturerWinWgc(options.enumerate_current_process_windows()));
 }
 
 }  // namespace webrtc

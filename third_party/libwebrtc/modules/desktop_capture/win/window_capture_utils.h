@@ -78,6 +78,7 @@ enum GetWindowListFlags {
   kNone = 0x00,
   kIgnoreUntitled = 1 << 0,
   kIgnoreUnresponsive = 1 << 1,
+  kIgnoreCurrentProcessWindows = 1 << 2,
 };
 
 // Retrieves the list of top-level windows on the screen.
@@ -85,7 +86,8 @@ enum GetWindowListFlags {
 // - Those that are invisible or minimized.
 // - Program Manager & Start menu.
 // - [with kIgnoreUntitled] windows with no title.
-// - [with kIgnoreUnresponsive] windows that unresponsive.
+// - [with kIgnoreUnresponsive] windows that are unresponsive.
+// - [with kIgnoreCurrentProcessWindows] windows owned by the current process.
 // Returns false if native APIs failed.
 bool GetWindowList(int flags, DesktopCapturer::SourceList* windows);
 
@@ -107,7 +109,8 @@ class WindowCaptureHelperWin {
   bool IsWindowOnCurrentDesktop(HWND hwnd);
   bool IsWindowVisibleOnCurrentDesktop(HWND hwnd);
   bool IsWindowCloaked(HWND hwnd);
-  bool EnumerateCapturableWindows(DesktopCapturer::SourceList* results);
+  bool EnumerateCapturableWindows(DesktopCapturer::SourceList* results,
+                                  bool enumerate_current_process_windows);
 
  private:
   HMODULE dwmapi_library_ = nullptr;

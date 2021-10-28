@@ -30,24 +30,19 @@ struct GetWindowListParams {
   GetWindowListParams(int flags, DesktopCapturer::SourceList* result)
       : ignoreUntitled(flags & GetWindowListFlags::kIgnoreUntitled),
         ignoreUnresponsive(flags & GetWindowListFlags::kIgnoreUnresponsive),
+        ignore_current_process_windows(
+            flags & GetWindowListFlags::kIgnoreCurrentProcessWindows),
         result(result) {}
   const bool ignoreUntitled;
   const bool ignoreUnresponsive;
+  const bool ignore_current_process_windows;
   DesktopCapturer::SourceList* const result;
 };
 
-// If a window is owned by the current process and unresponsive, then making a
-// blocking call such as GetWindowText may lead to a deadlock.
-//
-// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowtexta#remarks
-bool CanSafelyMakeBlockingCalls(HWND hwnd) {
+bool IsWindowOwnedByCurrentProcess(HWND hwnd) {
   DWORD process_id;
   GetWindowThreadProcessId(hwnd, &process_id);
-  if (process_id != GetCurrentProcessId() || IsWindowResponding(hwnd)) {
-    return true;
-  }
-
-  return false;
+  return process_id == GetCurrentProcessId();
 }
 
 BOOL CALLBACK GetWindowListHandler(HWND hwnd, LPARAM param) {
@@ -75,11 +70,26 @@ BOOL CALLBACK GetWindowListHandler(HWND hwnd, LPARAM param) {
   window.id = reinterpret_cast<WindowId>(hwnd);
 
   // GetWindowText* are potentially blocking operations if |hwnd| is
-  // owned by the current process, and can lead to a deadlock if the message
-  // pump is waiting on this thread. If we've filtered out unresponsive
-  // windows, this is not a concern, but otherwise we need to check if we can
-  // safely make blocking calls.
-  if (params->ignoreUnresponsive || CanSafelyMakeBlockingCalls(hwnd)) {
+  // owned by the current process. The APIs will send messages to the window's
+  // message loop, and if the message loop is waiting on this operation we will
+  // enter a deadlock.
+  // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowtexta#remarks
+  //
+  // To help consumers avoid this, there is a DesktopCaptureOption to ignore
+  // windows owned by the current process. Consumers should either ensure that
+  // the thread running their message loop never waits on this operation, or use
+  // the option to exclude these windows from the source list.
+  bool owned_by_current_process = IsWindowOwnedByCurrentProcess(hwnd);
+  if (owned_by_current_process && params->ignore_current_process_windows) {
+    return TRUE;
+  }
+
+  // Even if consumers request to enumerate windows owned by the current
+  // process, we should not call GetWindowText* on unresponsive windows owned by
+  // the current process because we will hang. Unfortunately, we could still
+  // hang if the window becomes unresponsive after this check, hence the option
+  // to avoid these completely.
+  if (!owned_by_current_process || IsWindowResponding(hwnd)) {
     const size_t kTitleLength = 500;
     WCHAR window_title[kTitleLength] = L"";
     if (GetWindowTextLength(hwnd) != 0 &&
@@ -432,10 +442,15 @@ bool WindowCaptureHelperWin::IsWindowCloaked(HWND hwnd) {
 }
 
 bool WindowCaptureHelperWin::EnumerateCapturableWindows(
-    DesktopCapturer::SourceList* results) {
-  if (!webrtc::GetWindowList((GetWindowListFlags::kIgnoreUntitled |
-                              GetWindowListFlags::kIgnoreUnresponsive),
-                             results)) {
+    DesktopCapturer::SourceList* results,
+    bool enumerate_current_process_windows) {
+  int flags = (GetWindowListFlags::kIgnoreUntitled |
+               GetWindowListFlags::kIgnoreUnresponsive);
+  if (!enumerate_current_process_windows) {
+    flags |= GetWindowListFlags::kIgnoreCurrentProcessWindows;
+  }
+
+  if (!webrtc::GetWindowList(flags, results)) {
     return false;
   }
 
