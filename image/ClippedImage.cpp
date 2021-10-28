@@ -298,12 +298,12 @@ ClippedImage::IsImageContainerAvailable(WindowRenderer* aRenderer,
 }
 
 NS_IMETHODIMP_(ImgDrawResult)
-ClippedImage::GetImageProvider(WindowRenderer* aRenderer,
-                               const gfx::IntSize& aSize,
-                               const Maybe<SVGImageContext>& aSVGContext,
-                               const Maybe<ImageIntRegion>& aRegion,
-                               uint32_t aFlags,
-                               WebRenderImageProvider** aProvider) {
+ClippedImage::GetImageContainerAtSize(WindowRenderer* aRenderer,
+                                      const gfx::IntSize& aSize,
+                                      const Maybe<SVGImageContext>& aSVGContext,
+                                      const Maybe<ImageIntRegion>& aRegion,
+                                      uint32_t aFlags,
+                                      layers::ImageContainer** aOutContainer) {
   // XXX(seth): We currently don't have a way of clipping the result of
   // GetImageContainer. We work around this by always returning null, but if it
   // ever turns out that ClippedImage is widely used on codepaths that can
@@ -311,8 +311,8 @@ ClippedImage::GetImageProvider(WindowRenderer* aRenderer,
   // that method for performance reasons.
 
   if (!ShouldClip()) {
-    return InnerImage()->GetImageProvider(aRenderer, aSize, aSVGContext,
-                                          aRegion, aFlags, aProvider);
+    return InnerImage()->GetImageContainerAtSize(
+        aRenderer, aSize, aSVGContext, aRegion, aFlags, aOutContainer);
   }
 
   return ImgDrawResult::NOT_SUPPORTED;

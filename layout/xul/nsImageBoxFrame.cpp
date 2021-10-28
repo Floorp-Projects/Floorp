@@ -51,7 +51,6 @@
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/SVGImageContext.h"
 #include "Units.h"
-#include "mozilla/image/WebRenderImageProvider.h"
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/dom/ImageTracker.h"
@@ -429,25 +428,39 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
           imgCon, aItem->Frame(), fillRect, fillRect, aSc, aFlags, svgContext,
           region);
 
-  RefPtr<image::WebRenderImageProvider> provider;
-  result =
-      imgCon->GetImageProvider(aManager->LayerManager(), decodeSize, svgContext,
-                               region, aFlags, getter_AddRefs(provider));
-  if (!provider) {
-    NS_WARNING("Failed to get image provider");
+  RefPtr<layers::ImageContainer> container;
+  result = imgCon->GetImageContainerAtSize(aManager->LayerManager(), decodeSize,
+                                           svgContext, region, aFlags,
+                                           getter_AddRefs(container));
+  if (!container) {
+    NS_WARNING("Failed to get image container");
     return result;
   }
 
   auto rendering = wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
   wr::LayoutRect fill = wr::ToLayoutRect(fillRect);
 
-  Maybe<wr::ImageKey> key = aManager->CommandBuilder().CreateImageProviderKey(
-      aItem, provider, aResources);
+  if (aFlags & imgIContainer::FLAG_RECORD_BLOB) {
+    Maybe<wr::BlobImageKey> key = aManager->CommandBuilder().CreateBlobImageKey(
+        aItem, container, aResources);
+    if (key.isNothing()) {
+      return result;
+    }
+
+    aBuilder.PushImage(fill, fill, !BackfaceIsHidden(), rendering,
+                       wr::AsImageKey(key.value()));
+    return result;
+  }
+
+  gfx::IntSize size;
+  Maybe<wr::ImageKey> key = aManager->CommandBuilder().CreateImageKey(
+      aItem, container, aBuilder, aResources, rendering, aSc, size, Nothing());
   if (key.isNothing()) {
     return result;
   }
 
   aBuilder.PushImage(fill, fill, !BackfaceIsHidden(), rendering, key.value());
+
   return result;
 }
 
@@ -828,8 +841,8 @@ void nsImageBoxFrame::OnFrameUpdate(imgIRequest* aRequest) {
   // Check if WebRender has interacted with this frame. If it has
   // we need to let it know that things have changed.
   const auto type = DisplayItemType::TYPE_XUL_IMAGE;
-  const auto providerId = aRequest->GetProviderId();
-  if (WebRenderUserData::ProcessInvalidateForImage(this, type, providerId)) {
+  const auto producerId = aRequest->GetProducerId();
+  if (WebRenderUserData::ProcessInvalidateForImage(this, type, producerId)) {
     return;
   }
 

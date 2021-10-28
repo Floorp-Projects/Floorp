@@ -123,7 +123,7 @@ DynamicImage::GetType(uint16_t* aType) {
 }
 
 NS_IMETHODIMP
-DynamicImage::GetProviderId(uint32_t* aId) {
+DynamicImage::GetProducerId(uint32_t* aId) {
   *aId = 0;
   return NS_OK;
 }
@@ -170,12 +170,12 @@ DynamicImage::IsImageContainerAvailable(WindowRenderer* aRenderer,
 }
 
 NS_IMETHODIMP_(ImgDrawResult)
-DynamicImage::GetImageProvider(WindowRenderer* aRenderer,
-                               const gfx::IntSize& aSize,
-                               const Maybe<SVGImageContext>& aSVGContext,
-                               const Maybe<ImageIntRegion>& aRegion,
-                               uint32_t aFlags,
-                               WebRenderImageProvider** aProvider) {
+DynamicImage::GetImageContainerAtSize(WindowRenderer* aRenderer,
+                                      const gfx::IntSize& aSize,
+                                      const Maybe<SVGImageContext>& aSVGContext,
+                                      const Maybe<ImageIntRegion>& aRegion,
+                                      uint32_t aFlags,
+                                      layers::ImageContainer** aContainer) {
   return ImgDrawResult::NOT_SUPPORTED;
 }
 

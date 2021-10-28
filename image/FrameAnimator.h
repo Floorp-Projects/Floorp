@@ -35,6 +35,7 @@ class AnimationState {
         mHasRequestedDecode(false),
         mIsCurrentlyDecoded(false),
         mCompositedFrameInvalid(false),
+        mCompositedFrameRequested(false),
         mDiscarded(false) {}
 
   /**
@@ -238,6 +239,10 @@ class AnimationState {
   //! the composited frame can exist and be filled with image data but not
   //! valid to draw to the screen.
   bool mCompositedFrameInvalid;
+
+  //! Whether the composited frame was requested from the animator since the
+  //! last time we advanced the animation.
+  bool mCompositedFrameRequested;
 
   //! Whether this image is currently discarded. Only set to true after the
   //! image has been decoded at least once.

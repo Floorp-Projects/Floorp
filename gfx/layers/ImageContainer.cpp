@@ -28,6 +28,7 @@
 #include "mozilla/layers/LayersMessages.h"
 #include "mozilla/layers/SharedPlanarYCbCrImage.h"
 #include "mozilla/layers/SharedRGBImage.h"
+#include "mozilla/layers/SharedSurfacesChild.h"  // for SharedSurfacesAnimation
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "nsProxyRelease.h"
 #include "nsISupportsUtils.h"  // for NS_IF_ADDREF
@@ -174,6 +175,13 @@ void ImageContainer::EnsureImageClient() {
   }
 }
 
+SharedSurfacesAnimation* ImageContainer::EnsureSharedSurfacesAnimation() {
+  if (!mSharedAnimation) {
+    mSharedAnimation = new SharedSurfacesAnimation();
+  }
+  return mSharedAnimation;
+}
+
 ImageContainer::ImageContainer(Mode flag)
     : mRecursiveMutex("ImageContainer.mRecursiveMutex"),
       mGenerationCounter(++sGenerationCounter),
@@ -211,6 +219,9 @@ ImageContainer::~ImageContainer() {
             ImageBridgeChild::GetSingleton()) {
       imageBridge->ForgetImageContainer(mAsyncContainerHandle);
     }
+  }
+  if (mSharedAnimation) {
+    mSharedAnimation->Destroy();
   }
 }
 
