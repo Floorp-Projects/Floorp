@@ -645,6 +645,8 @@ void nsHtml5TreeOperation::SetFormElement(nsIContent* aNode,
                "The form element doesn't implement HTMLFormElement.");
   nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(aNode));
   if (formControl &&
+      formControl->ControlType() !=
+          FormControlType::FormAssociatedCustomElement &&
       !aNode->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::form)) {
     formControl->SetForm(formElement);
   } else if (HTMLImageElement* domImageElement =
