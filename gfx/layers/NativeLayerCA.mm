@@ -27,8 +27,8 @@
 #include "mozilla/layers/SurfacePoolCA.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/RenderMacIOSurfaceTextureHost.h"
+#include "nsCocoaFeatures.h"
 #include "ScopedGLHelpers.h"
-#include "gfxUtils.h"
 
 @interface CALayer (PrivateSetContentsOpaque)
 - (void)setContentsOpaque:(BOOL)opaque;
@@ -758,7 +758,8 @@ bool NativeLayerCA::IsVideoAndLocked(const MutexAutoLock& aProofOfLock) {
 }
 
 bool NativeLayerCA::ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock) {
-  return StaticPrefs::gfx_core_animation_specialize_video() && mRootWindowIsFullscreen &&
+  return StaticPrefs::gfx_core_animation_specialize_video() &&
+         nsCocoaFeatures::OnHighSierraOrLater() && mRootWindowIsFullscreen &&
          IsVideoAndLocked(aProofOfLock);
 }
 
