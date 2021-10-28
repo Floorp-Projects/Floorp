@@ -177,6 +177,13 @@ function prepareForVisibilityEvents(browser, expectedOrder) {
  * into a different window).
  */
 add_task(async function test_swap_frameloader_pagevisibility_events() {
+  // Disable window occlusion. Bug 1733955
+  if (navigator.platform.indexOf("Win") == 0) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["widget.windows.window_occlusion_tracking.enabled", false]],
+    });
+  }
+
   // Load a new tab that we'll tear out...
   let tab = BrowserTestUtils.addTab(gBrowser, PAGE);
   gBrowser.selectedTab = tab;
