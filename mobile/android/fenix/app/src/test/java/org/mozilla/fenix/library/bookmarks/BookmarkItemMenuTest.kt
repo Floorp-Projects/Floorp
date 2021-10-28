@@ -6,8 +6,6 @@ package org.mozilla.fenix.library.bookmarks
 
 import android.content.Context
 import androidx.appcompat.view.ContextThemeWrapper
-import io.mockk.mockk
-import io.mockk.verify
 import mozilla.components.concept.menu.candidate.TextStyle
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.ktx.android.content.getColorFromAttr
@@ -24,14 +22,15 @@ import org.mozilla.fenix.library.bookmarks.BookmarkItemMenu.Item
 class BookmarkItemMenuTest {
 
     private lateinit var context: Context
-    private lateinit var onItemTapped: (Item) -> Unit
     private lateinit var menu: BookmarkItemMenu
+    private var lastItemTapped: Item? = null
 
     @Before
     fun setup() {
         context = ContextThemeWrapper(testContext, R.style.NormalTheme)
-        onItemTapped = mockk(relaxed = true)
-        menu = BookmarkItemMenu(context, onItemTapped)
+        menu = BookmarkItemMenu(context) {
+            lastItemTapped = it
+        }
     }
 
     @Test
@@ -44,7 +43,8 @@ class BookmarkItemMenuTest {
         )
 
         deleteItem.onClick()
-        verify { onItemTapped(Item.Delete) }
+
+        assertEquals(Item.Delete, lastItemTapped)
     }
 
     @Test
@@ -55,8 +55,8 @@ class BookmarkItemMenuTest {
 
         assertEquals("Edit", edit.text)
         edit.onClick()
-        verify { onItemTapped(Item.Edit) }
 
+        assertEquals(Item.Edit, lastItemTapped)
         assertEquals("Delete", delete.text)
     }
 
@@ -74,22 +74,22 @@ class BookmarkItemMenuTest {
         assertEquals("Delete", delete.text)
 
         edit.onClick()
-        verify { onItemTapped(Item.Edit) }
+        assertEquals(Item.Edit, lastItemTapped)
 
         copy.onClick()
-        verify { onItemTapped(Item.Copy) }
+        assertEquals(Item.Copy, lastItemTapped)
 
         share.onClick()
-        verify { onItemTapped(Item.Share) }
+        assertEquals(Item.Share, lastItemTapped)
 
         openInNewTab.onClick()
-        verify { onItemTapped(Item.OpenInNewTab) }
+        assertEquals(Item.OpenInNewTab, lastItemTapped)
 
         openInPrivateTab.onClick()
-        verify { onItemTapped(Item.OpenInPrivateTab) }
+        assertEquals(Item.OpenInPrivateTab, lastItemTapped)
 
         delete.onClick()
-        verify { onItemTapped(Item.Delete) }
+        assertEquals(Item.Delete, lastItemTapped)
     }
 
     private operator fun <T> List<T>.component6(): T {
