@@ -1000,27 +1000,59 @@ add_task(async function testDisabledDimming() {
 });
 
 add_task(async function testEmptyMessage() {
-  let win = await loadInitialView("extension");
-  let doc = win.document;
-  let enabledSection = getSection(doc, "enabled");
-  let disabledSection = getSection(doc, "disabled");
-  const message = doc.querySelector("#empty-addons-message");
+  let tests = [
+    {
+      type: "extension",
+      message: "Get extensions and themes on ",
+    },
+    {
+      type: "theme",
+      message: "Get extensions and themes on ",
+    },
+    {
+      type: "plugin",
+      message: "Get extensions and themes on ",
+    },
+    {
+      type: "locale",
+      message: "Get language packs on ",
+    },
+    {
+      type: "dictionary",
+      message: "Get dictionaries on ",
+    },
+  ];
 
-  // With 3 enabled addons and 1 disabled, the message is hidden
-  is_element_hidden(message, "Empty addons message hidden");
+  for (let test of tests) {
+    let win = await loadInitialView(test.type);
+    let doc = win.document;
+    let enabledSection = getSection(doc, "enabled");
+    let disabledSection = getSection(doc, "disabled");
+    const message = doc.querySelector("#empty-addons-message");
 
-  // The test runner (Mochitest) relies on add-ons that should not be removed.
-  // Simulate the scenario of zero add-ons by clearing all rendered sections.
-  while (enabledSection.firstChild) {
-    enabledSection.firstChild.remove();
+    // Test if the correct locale has been applied.
+    ok(
+      message.textContent.startsWith(test.message),
+      `View ${test.type} has correct empty list message`
+    );
+
+    // With at least one enabled/disabled add-on (see testSectionHeadingKeys),
+    // the message is hidden.
+    is_element_hidden(message, "Empty addons message hidden");
+
+    // The test runner (Mochitest) relies on add-ons that should not be removed.
+    // Simulate the scenario of zero add-ons by clearing all rendered sections.
+    while (enabledSection.firstChild) {
+      enabledSection.firstChild.remove();
+    }
+
+    while (disabledSection.firstChild) {
+      disabledSection.firstChild.remove();
+    }
+
+    // Message should now be displayed
+    is_element_visible(message, "Empty addons message visible");
+
+    await closeView(win);
   }
-
-  while (disabledSection.firstChild) {
-    disabledSection.firstChild.remove();
-  }
-
-  // Message should now be displayed
-  is_element_visible(message, "Empty addons message visible");
-
-  await closeView(win);
 });
