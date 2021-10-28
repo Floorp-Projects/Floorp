@@ -1214,6 +1214,38 @@ InterceptedHttpChannel::GetAllowStaleCacheContent(
 }
 
 NS_IMETHODIMP
+InterceptedHttpChannel::SetForceValidateCacheContent(
+    bool aForceValidateCacheContent) {
+  // We store aForceValidateCacheContent locally because
+  // mSynthesizedCacheInfo isn't present until a response
+  // is actually synthesized, which is too late for the value
+  // to be forwarded during the redirect to the intercepted
+  // channel.
+  StoreForceValidateCacheContent(aForceValidateCacheContent);
+
+  if (mSynthesizedCacheInfo) {
+    return mSynthesizedCacheInfo->SetForceValidateCacheContent(
+        aForceValidateCacheContent);
+  }
+  return NS_OK;
+}
+NS_IMETHODIMP
+InterceptedHttpChannel::GetForceValidateCacheContent(
+    bool* aForceValidateCacheContent) {
+  *aForceValidateCacheContent = LoadForceValidateCacheContent();
+#ifdef DEBUG
+  if (mSynthesizedCacheInfo) {
+    bool synthesizedForceValidateCacheContent;
+    mSynthesizedCacheInfo->GetForceValidateCacheContent(
+        &synthesizedForceValidateCacheContent);
+    MOZ_ASSERT(*aForceValidateCacheContent ==
+               synthesizedForceValidateCacheContent);
+  }
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 InterceptedHttpChannel::GetPreferCacheLoadOverBypass(
     bool* aPreferCacheLoadOverBypass) {
   if (mSynthesizedCacheInfo) {

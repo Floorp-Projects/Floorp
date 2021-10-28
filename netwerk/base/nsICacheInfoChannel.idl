@@ -119,6 +119,11 @@ interface nsICacheInfoChannel : nsISupports
   };
 
   /**
+   * Tells the channel to be force validated during soft reload.
+   */
+  attribute boolean forceValidateCacheContent;
+
+  /**
    * Calling this method instructs the channel to serve the alternative data
    * if that was previously saved in the cache, otherwise it will serve the
    * real data.

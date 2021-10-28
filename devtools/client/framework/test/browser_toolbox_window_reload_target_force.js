@@ -20,8 +20,10 @@ add_task(async function() {
     toolId: "inspector",
   });
 
-  await testReload("toolbox.reload.key", toolbox, "max-age=0");
-  await testReload("toolbox.reload2.key", toolbox, "max-age=0");
+  // Normal reload doesn't have VALIDATE_ALWAYS flag applied,
+  // thus the expectedHeader is empty.
+  await testReload("toolbox.reload.key", toolbox, "");
+  await testReload("toolbox.reload2.key", toolbox, "");
   await testReload("toolbox.forceReload.key", toolbox, "no-cache");
   await testReload("toolbox.forceReload2.key", toolbox, "no-cache");
 });
