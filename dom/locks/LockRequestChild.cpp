@@ -53,6 +53,10 @@ LockRequestChild::LockRequestChild(
   }
 }
 
+void LockRequestChild::ActorDestroy(ActorDestroyReason aReason) {
+  CastedManager()->NotifyRequestDestroy();
+}
+
 IPCResult LockRequestChild::RecvResolve(const LockMode& aLockMode,
                                         bool aIsAvailable) {
   Unfollow();
@@ -61,9 +65,8 @@ IPCResult LockRequestChild::RecvResolve(const LockMode& aLockMode,
   RefPtr<Promise> promise;
   if (aIsAvailable) {
     IgnoredErrorResult err;
-    lock =
-        new Lock(static_cast<LockManagerChild*>(Manager())->GetParentObject(),
-                 this, mRequest.mName, aLockMode, mRequest.mPromise, err);
+    lock = new Lock(CastedManager()->GetParentObject(), this, mRequest.mName,
+                    aLockMode, mRequest.mPromise, err);
     if (MOZ_UNLIKELY(err.Failed())) {
       mRequest.mPromise->MaybeRejectWithUnknownError(
           "Failed to allocate a lock");
@@ -93,5 +96,9 @@ void LockRequestChild::RunAbortAlgorithm() {
   RecvAbort();
   Send__delete__(this, true);
 }
+
+inline LockManagerChild* LockRequestChild::CastedManager() const {
+  return static_cast<LockManagerChild*>(Manager());
+};
 
 }  // namespace mozilla::dom::locks

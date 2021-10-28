@@ -11210,6 +11210,14 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest,
     }
   }
 
+  if (mLockCount) {
+    MOZ_LOG(
+        gPageCacheLog, mozilla::LogLevel::Verbose,
+        ("Save of %s blocked due to having active lock requests", uri.get()));
+    aBFCacheCombo |= BFCacheStatus::ACTIVE_LOCK;
+    ret = false;
+  }
+
   return ret;
 }
 
