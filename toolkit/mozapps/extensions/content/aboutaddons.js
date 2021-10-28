@@ -3955,19 +3955,28 @@ class AddonList extends HTMLElement {
   }
 
   createEmptyListMessage() {
+    let emptyMessage = "list-empty-get-extensions-message";
+    let linkPref = "extensions.getAddons.link.url";
+
+    if (this.sections && this.sections.length) {
+      if (this.sections[0].headingId == "locale-enabled-heading") {
+        emptyMessage = "list-empty-get-language-packs-message";
+        linkPref = "browser.dictionaries.download.url";
+      } else if (this.sections[0].headingId == "dictionary-enabled-heading") {
+        emptyMessage = "list-empty-get-dictionaries-message";
+        linkPref = "browser.dictionaries.download.url";
+      }
+    }
+
     let messageContainer = document.createElement("p");
     messageContainer.id = "empty-addons-message";
     let a = document.createElement("a");
-    a.href = Services.urlFormatter.formatURLPref(
-      "extensions.getAddons.link.url"
-    );
+    a.href = Services.urlFormatter.formatURLPref(linkPref);
     a.setAttribute("target", "_blank");
     a.setAttribute("data-l10n-name", "get-extensions");
-    document.l10n.setAttributes(
-      messageContainer,
-      "list-empty-get-extensions-message",
-      { domain: a.hostname }
-    );
+    document.l10n.setAttributes(messageContainer, emptyMessage, {
+      domain: a.hostname,
+    });
     messageContainer.appendChild(a);
     return messageContainer;
   }
