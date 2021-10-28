@@ -33,6 +33,7 @@ class DefaultBrowsingModeManagerTest {
     }
 
     @Test
+    @Ignore("Intermittent failing test on JDK11: https://github.com/mockk/mockk/issues/598")
     fun `WHEN mode is updated THEN callback is invoked`() {
         verify(exactly = 0) { callback.invoke(any()) }
 
@@ -49,7 +50,7 @@ class DefaultBrowsingModeManagerTest {
     }
 
     @Test
-    @Ignore("Failure on PR: can't instantiate proxy. See https://github.com/mozilla-mobile/fenix/issues/21362")
+    @Ignore("Intermittent failing test on JDK11: https://github.com/mockk/mockk/issues/598")
     fun `WHEN mode is updated THEN it should be returned from get`() {
         assertEquals(BrowsingMode.Normal, manager.mode)
 
