@@ -20,6 +20,13 @@ static_assert(GTK_STATE_FLAG_DIR_LTR == STATE_FLAG_DIR_LTR &&
                   GTK_STATE_FLAG_DIR_RTL == STATE_FLAG_DIR_RTL,
               "incorrect direction state flags");
 
+enum class CSDStyle {
+  Unknown,
+  Solid,
+  Normal,
+};
+
+static CSDStyle gCSDStyle = CSDStyle::Unknown;
 static GtkWidget* sWidgetStorage[MOZ_GTK_WIDGET_NODE_COUNT];
 static GtkStyleContext* sStyleStorage[MOZ_GTK_WIDGET_NODE_COUNT];
 
@@ -70,6 +77,8 @@ static GtkWidget* CreateMenuBarWidget() {
 
 static GtkWidget* CreateMenuPopupWidget() {
   GtkWidget* widget = gtk_menu_new();
+  GtkStyleContext* style = gtk_widget_get_style_context(widget);
+  gtk_style_context_add_class(style, GTK_STYLE_CLASS_POPUP);
   gtk_menu_attach_to_widget(GTK_MENU(widget), GetWidget(MOZ_GTK_WINDOW),
                             nullptr);
   return widget;
@@ -431,8 +440,7 @@ static GtkWidget* CreateNotebookWidget() {
   return widget;
 }
 
-static void CreateHeaderBarWidget(WidgetNodeType aAppearance,
-                                  bool aIsSolidCSDStyleUsed) {
+static void CreateHeaderBarWidget(WidgetNodeType aAppearance) {
   sWidgetStorage[aAppearance] = gtk_header_bar_new();
 
   GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -452,7 +460,7 @@ static void CreateHeaderBarWidget(WidgetNodeType aAppearance,
   // Headerbar has to be placed to window with csd or solid-csd style
   // to properly draw the decorated.
   gtk_style_context_add_class(style,
-                              aIsSolidCSDStyleUsed ? "solid-csd" : "csd");
+                              IsSolidCSDStyleUsed() ? "solid-csd" : "csd");
 
   GtkWidget* fixed = gtk_fixed_new();
   gtk_container_add(GTK_CONTAINER(window), fixed);
@@ -597,6 +605,22 @@ static bool IsToolbarButtonEnabled(ButtonLayout* aButtonLayout,
   return false;
 }
 
+bool IsSolidCSDStyleUsed() {
+  if (gCSDStyle == CSDStyle::Unknown) {
+    bool solid;
+    {
+      GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+      gtk_window_set_titlebar(GTK_WINDOW(window), gtk_header_bar_new());
+      gtk_widget_realize(window);
+      GtkStyleContext* windowStyle = gtk_widget_get_style_context(window);
+      solid = gtk_style_context_has_class(windowStyle, "solid-csd");
+      gtk_widget_destroy(window);
+    }
+    gCSDStyle = solid ? CSDStyle::Solid : CSDStyle::Normal;
+  }
+  return gCSDStyle == CSDStyle::Solid;
+}
+
 static void CreateHeaderBarButtons() {
   GtkWidget* headerBar = sWidgetStorage[MOZ_GTK_HEADER_BAR];
   MOZ_ASSERT(headerBar != nullptr, "We're missing header bar widget!");
@@ -634,18 +658,8 @@ static void CreateHeaderBarButtons() {
 }
 
 static void CreateHeaderBar() {
-  const bool isSolidCSDStyleUsed = []() {
-    GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_titlebar(GTK_WINDOW(window), gtk_header_bar_new());
-    gtk_widget_realize(window);
-    GtkStyleContext* windowStyle = gtk_widget_get_style_context(window);
-    bool ret = gtk_style_context_has_class(windowStyle, "solid-csd");
-    gtk_widget_destroy(window);
-    return ret;
-  }();
-
-  CreateHeaderBarWidget(MOZ_GTK_HEADER_BAR, isSolidCSDStyleUsed);
-  CreateHeaderBarWidget(MOZ_GTK_HEADER_BAR_MAXIMIZED, isSolidCSDStyleUsed);
+  CreateHeaderBarWidget(MOZ_GTK_HEADER_BAR);
+  CreateHeaderBarWidget(MOZ_GTK_HEADER_BAR_MAXIMIZED);
   CreateHeaderBarButtons();
 }
 
@@ -1152,6 +1166,13 @@ static GtkStyleContext* GetCssNodeStyleInternal(WidgetNodeType aNodeType) {
           false, "MOZ_GTK_HEADER_BAR_BUTTON_RESTORE is used as an icon only!");
       return nullptr;
     }
+    case MOZ_GTK_MENUPOPUP_DECORATION: {
+      GtkStyleContext* parentStyle =
+          CreateSubStyleWithClass(MOZ_GTK_MENUPOPUP, "csd");
+      style = CreateCSSNode("decoration", parentStyle);
+      g_object_unref(parentStyle);
+      break;
+    }
     case MOZ_GTK_WINDOW_DECORATION: {
       GtkStyleContext* parentStyle =
           CreateSubStyleWithClass(MOZ_GTK_WINDOW, "csd");
@@ -1309,11 +1330,13 @@ static GtkStyleContext* GetWidgetStyleInternal(WidgetNodeType aNodeType) {
   return style;
 }
 
-void ResetWidgetCache(void) {
+void ResetWidgetCache() {
   for (int i = 0; i < MOZ_GTK_WIDGET_NODE_COUNT; i++) {
     if (sStyleStorage[i]) g_object_unref(sStyleStorage[i]);
   }
   mozilla::PodArrayZero(sStyleStorage);
+
+  gCSDStyle = CSDStyle::Unknown;
 
   /* This will destroy all of our widgets */
   if (sWidgetStorage[MOZ_GTK_WINDOW]) {
