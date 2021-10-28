@@ -16,6 +16,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInternals.h"
+#include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/RefPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -39,6 +40,7 @@ enum class ElementCallbackType {
   eDisconnected,
   eAdopted,
   eAttributeChanged,
+  eFormAssociated,
   eFormReset,
   eFormDisabled,
   eGetCustomInterface
@@ -54,6 +56,9 @@ struct LifecycleCallbackArgs {
   // Used by the adopted callback.
   RefPtr<Document> mOldDocument;
   RefPtr<Document> mNewDocument;
+
+  // Used by the form associated callback.
+  RefPtr<HTMLFormElement> mForm;
 
   // Used by the form disabled callback.
   bool mDisabled;

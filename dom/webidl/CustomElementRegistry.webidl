@@ -38,6 +38,8 @@ callback LifecycleAttributeChangedCallback = void(DOMString attrName,
                                                   DOMString? newValue,
                                                   DOMString? namespaceURI);
 [MOZ_CAN_RUN_SCRIPT_BOUNDARY]
+callback LifecycleFormAssociatedCallback = void(HTMLFormElement? form);
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback LifecycleFormResetCallback = void();
 [MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback LifecycleFormDisabledCallback = void(boolean disabled);
@@ -50,6 +52,7 @@ dictionary LifecycleCallbacks {
   LifecycleDisconnectedCallback disconnectedCallback;
   LifecycleAdoptedCallback adoptedCallback;
   LifecycleAttributeChangedCallback attributeChangedCallback;
+  LifecycleFormAssociatedCallback formAssociatedCallback;
   LifecycleFormResetCallback formResetCallback;
   LifecycleFormDisabledCallback formDisabledCallback;
   [ChromeOnly] LifecycleGetCustomInterfaceCallback getCustomInterfaceCallback;
