@@ -730,7 +730,7 @@ bool IMEHandler::IsOnScreenKeyboardSupported() {
   // On Windows 10 we require tablet mode, unless the user has set the relevant
   // Windows setting to enable the on-screen keyboard in desktop mode.
   // We might be disabled specifically on Win8(.1), so we check that afterwards.
-  if (IsWin10OrLater()) {
+  if (IsWin10OrLater() && !IsWin11OrLater()) {
     if (!IsInTabletMode() && !AutoInvokeOnScreenKeyboardInDesktopMode()) {
       return false;
     }
