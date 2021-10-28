@@ -17,16 +17,16 @@ body {
 }
 
 body {
-  width: 604px;
-  padding: 12px 30px;
+  padding: 20px 52px;
+  width: 500px;
 }
 
 #dialog-content {
-  min-height: 330px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-around;
+  text-align: center;
 }
 
 .logo {
@@ -39,18 +39,38 @@ body {
 #title {
   font-weight: 500;
   font-size: 26px;
-  line-height: 36px;
-  text-align: center;
   margin-bottom: 5px;
+  white-space: pre-wrap;
 }
 
 #content {
   font-weight: 400;
   font-size: 13px;
-  line-height: 16px;
-  max-width: 372px;
-  text-align: center;
   margin-bottom: 24px;
+}
+
+#learn-more-toggle::after {
+  background: url("chrome://global/skin/icons/arrow-right.svg") center / 12px no-repeat;
+  content: "";
+  -moz-context-properties: fill;
+  fill: currentColor;
+  padding-inline: .5em;
+}
+
+#learn-more-toggle:dir(rtl)::after {
+  background-image: url("chrome://global/skin/icons/arrow-left.svg");
+}
+
+#learn-more-toggle[aria-expanded="true"]::after {
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
+}
+
+#learn-more-toggle[aria-expanded="false"] + .expanded {
+  visibility: hidden;
+}
+
+.expanded {
+  margin-bottom: 0;
 }
 
 #primary {
@@ -60,6 +80,5 @@ body {
 #secondary {
   /* make the font look like the mock */
   font-size: 13px;
-  line-height: 16px;
   padding: 4px;
 }
