@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import mozilla.components.browser.engine.gecko.ext.isExcludedForTrackingProtection
 import mozilla.components.browser.engine.gecko.fetch.toResponse
 import mozilla.components.browser.engine.gecko.mediasession.GeckoMediaSessionDelegate
 import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
@@ -56,6 +57,7 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.WebRequestError
@@ -95,6 +97,8 @@ class GeckoEngineSession(
     internal var lastLoadRequestUri: String? = null
     internal var pageLoadingUrl: String? = null
     internal var scrollY: Int = 0
+    // The Gecko site permissions for the loaded site.
+    internal var geckoPermissions: List<ContentPermission> = emptyList()
 
     internal var job: Job = Job()
     private var canGoBack: Boolean = false
@@ -301,20 +305,11 @@ class GeckoEngineSession(
 
     /**
      * Indicates if this [EngineSession] should be ignored the tracking protection policies.
-     * @param onResult A callback to inform if this [EngineSession] is in
+     * @return if this [EngineSession] is in
      * the exception list, true if it is in, otherwise false.
      */
-    @Suppress("DEPRECATION")
-    // The deprecation will be addressed on
-    // https://github.com/mozilla-mobile/android-components/issues/11101
-    internal fun isIgnoredForTrackingProtection(onResult: (Boolean) -> Unit) {
-        runtime.contentBlockingController.checkException(geckoSession).accept {
-            if (it != null) {
-                onResult(it)
-            } else {
-                onResult(false)
-            }
-        }
+    internal fun isIgnoredForTrackingProtection(): Boolean {
+        return geckoPermissions.any { it.isExcludedForTrackingProtection }
     }
 
     /**
@@ -455,6 +450,7 @@ class GeckoEngineSession(
     @Suppress("ComplexMethod")
     private fun createNavigationDelegate() = object : GeckoSession.NavigationDelegate {
         override fun onLocationChange(session: GeckoSession, url: String?, geckoPermissions: List<ContentPermission>) {
+            this@GeckoEngineSession.geckoPermissions = geckoPermissions
             if (url == null) {
                 return // ¯\_(ツ)_/¯
             }
@@ -470,10 +466,8 @@ class GeckoEngineSession(
             initialLoad = false
             initialLoadRequest = null
 
-            isIgnoredForTrackingProtection { ignored ->
-                notifyObservers {
-                    onExcludedOnTrackingProtectionChange(ignored)
-                }
+            notifyObservers {
+                onExcludedOnTrackingProtectionChange(isIgnoredForTrackingProtection())
             }
             notifyObservers { onLocationChange(url) }
         }

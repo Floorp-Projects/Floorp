@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// The deprecation will be addressed on
-// https://github.com/mozilla-mobile/android-components/issues/11101
-@file:Suppress("DEPRECATION")
 package mozilla.components.browser.engine.gecko
 
 import android.content.Context
@@ -14,6 +11,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.engine.gecko.content.blocking.GeckoTrackingProtectionException
+import mozilla.components.browser.engine.gecko.ext.geckoTrackingProtectionPermission
+import mozilla.components.browser.engine.gecko.ext.isExcludedForTrackingProtection
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
@@ -22,12 +21,11 @@ import mozilla.components.support.ktx.kotlin.getOrigin
 import mozilla.components.support.ktx.kotlin.stripDefaultPort
 import mozilla.components.support.ktx.util.readAndDeserialize
 import org.json.JSONArray
-import org.mozilla.geckoview.ContentBlockingController.ContentBlockingException
+import org.mozilla.geckoview.ContentBlockingController
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY
-import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_TRACKING
 import java.io.File
 
 internal const val STORE_FILE_NAME =
@@ -75,20 +73,31 @@ internal class TrackingProtectionExceptionFileStorage(
     }
 
     private fun List<ContentPermission>?.filterTrackingProtectionExceptions() =
-        this.orEmpty().filter { it.isExcluded }
+        this.orEmpty().filter { it.isExcludedForTrackingProtection }
 
     private fun List<ContentPermission>?.filterTrackingProtectionExceptions(url: String) =
         this.orEmpty()
-            .filter { it.isExcluded && it.uri.getOrigin().orEmpty().stripDefaultPort() == url }
+            .filter { it.isExcludedForTrackingProtection && it.uri.getOrigin().orEmpty().stripDefaultPort() == url }
 
-    private val ContentPermission.isExcluded: Boolean
-        get() = this.permission == PERMISSION_TRACKING && value == VALUE_ALLOW
-
-    override fun add(session: EngineSession) {
+    override fun add(session: EngineSession, persistInPrivateMode: Boolean) {
         val geckoEngineSession = (session as GeckoEngineSession)
-        runtime.contentBlockingController.addException(geckoEngineSession.geckoSession)
+        if (persistInPrivateMode) {
+            addPersistentPrivateException(geckoEngineSession)
+        } else {
+            geckoEngineSession.geckoTrackingProtectionPermission?.let {
+                runtime.storageController.setPermission(it, VALUE_ALLOW)
+            }
+        }
+
         geckoEngineSession.notifyObservers {
             onExcludedOnTrackingProtectionChange(true)
+        }
+    }
+
+    internal fun addPersistentPrivateException(geckoEngineSession: GeckoEngineSession) {
+        val permission = geckoEngineSession.geckoTrackingProtectionPermission
+        permission?.let {
+            runtime.storageController.setPrivateBrowsingPermanentPermission(it, VALUE_ALLOW)
         }
     }
 
@@ -177,6 +186,7 @@ internal class TrackingProtectionExceptionFileStorage(
      * file [STORE_FILE_NAME] into geckoView once, after that we can remove our,
      * file [STORE_FILE_NAME].
      */
+    @Suppress("Deprecation")
     internal fun migrateExceptions() {
         scope.launch {
             synchronized(fileLock) {
@@ -185,7 +195,7 @@ internal class TrackingProtectionExceptionFileStorage(
                         val jsonArray = JSONArray(json)
                         val exceptionList = (0 until jsonArray.length()).map { index ->
                             val jsonObject = jsonArray.getJSONObject(index)
-                            ContentBlockingException.fromJson(jsonObject)
+                            ContentBlockingController.ContentBlockingException.fromJson(jsonObject)
                         }
                         runtime.contentBlockingController.restoreExceptionList(exceptionList)
                     }

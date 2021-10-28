@@ -38,12 +38,14 @@ class TrackingProtectionUseCases(
          * Adds a new tab to the exception list, as a result this tab will not get applied any
          * tracking protection policy.
          * @param tabId The id of the tab that will be added to the exception list.
+         * @param persistInPrivateMode Indicates if the exception should be persistent in private mode
+         * defaults to false.
          */
-        operator fun invoke(tabId: String) {
+        operator fun invoke(tabId: String, persistInPrivateMode: Boolean = false) {
             val engineSession = store.state.findTabOrCustomTabOrSelectedTab(tabId)?.engineState?.engineSession
                 ?: return logger.error("The engine session should not be null")
 
-            engine.trackingProtectionExceptionStore.add(engineSession)
+            engine.trackingProtectionExceptionStore.add(engineSession, persistInPrivateMode)
         }
     }
 

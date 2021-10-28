@@ -24,6 +24,8 @@ permalink: /changelog/
 * **concept-tabstray**
   * ⚠️ **This is a breaking change**: This component will be removed in future release.
      * Instead use the `TabsTray` interface from `browser-tabstray`.
+* **feature-session**
+  * * 🌟️ Adds a new `TrackingProtectionUseCases.addException`: Now allows to persist the exception in private mode using the parameter`persistInPrivateMode`.
 
 * **browser-state**:
   * 🌟️ Adds a new `previewImageUrl` in `ContentState` which provides a preview image of the page (e.g. the hero image), if available.

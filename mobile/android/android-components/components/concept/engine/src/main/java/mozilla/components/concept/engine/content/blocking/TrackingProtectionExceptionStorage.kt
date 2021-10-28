@@ -22,8 +22,10 @@ interface TrackingProtectionExceptionStorage {
     /**
      * Adds a new [session] to the exception list.
      * @param session The [session] that will be added to the exception list.
+     * @param persistInPrivateMode Indicates if the exception should be persistent in private mode
+     * defaults to false.
      */
-    fun add(session: EngineSession)
+    fun add(session: EngineSession, persistInPrivateMode: Boolean = false)
 
     /**
      * Removes a [session] from the exception list.

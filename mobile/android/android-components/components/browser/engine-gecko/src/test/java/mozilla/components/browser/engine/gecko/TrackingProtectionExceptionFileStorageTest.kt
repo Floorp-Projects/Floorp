@@ -1,8 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-// The deprecation will be addressed on
-// https://github.com/mozilla-mobile/android-components/issues/11101
 @file:Suppress("DEPRECATION")
 package mozilla.components.browser.engine.gecko
 
@@ -88,6 +86,7 @@ class TrackingProtectionExceptionFileStorageTest {
     }
 
     @Test
+    @Deprecated("Remove migration code on 96 as GeckoView is going to remove restoreExceptionList on that version")
     fun `WHEN migrating exceptions THEN exceptions on disk will be restored on gecko and removed from disk`() {
         val exceptionsFile = AtomicFile(
             File(context.filesDir, STORE_FILE_NAME)
@@ -115,12 +114,15 @@ class TrackingProtectionExceptionFileStorageTest {
 
     @Test
     fun `GIVEN a new exception WHEN adding THEN the exception is stored on the gecko storage`() {
-        val mockContentBlocking = mock<ContentBlockingController>()
+        val storageController = mock<StorageController>()
         val mockGeckoSession = mock<GeckoSession>()
         val session = spy(GeckoEngineSession(runtime, geckoSessionProvider = { mockGeckoSession }))
 
-        whenever(runtime.contentBlockingController).thenReturn(mockContentBlocking)
+        val geckoPermission = geckoContentPermission(type = PERMISSION_TRACKING, value = VALUE_ALLOW)
+        session.geckoPermissions = listOf(geckoPermission)
+
         whenever(session.geckoSession).thenReturn(mockGeckoSession)
+        whenever(runtime.storageController).thenReturn(storageController)
 
         var excludedOnTrackingProtection = false
 
@@ -132,7 +134,33 @@ class TrackingProtectionExceptionFileStorageTest {
 
         storage.add(session)
 
-        verify(mockContentBlocking).addException(mockGeckoSession)
+        verify(storageController).setPermission(geckoPermission, VALUE_ALLOW)
+        assertTrue(excludedOnTrackingProtection)
+    }
+
+    @Test
+    fun `GIVEN a persistInPrivateMode new exception WHEN adding THEN the exception is stored on the gecko storage`() {
+        val storageController = mock<StorageController>()
+        val mockGeckoSession = mock<GeckoSession>()
+        val session = spy(GeckoEngineSession(runtime, geckoSessionProvider = { mockGeckoSession }))
+
+        val geckoPermission = geckoContentPermission(type = PERMISSION_TRACKING, value = VALUE_ALLOW)
+        session.geckoPermissions = listOf(geckoPermission)
+
+        whenever(session.geckoSession).thenReturn(mockGeckoSession)
+        whenever(runtime.storageController).thenReturn(storageController)
+
+        var excludedOnTrackingProtection = false
+
+        session.register(object : EngineSession.Observer {
+            override fun onExcludedOnTrackingProtectionChange(excluded: Boolean) {
+                excludedOnTrackingProtection = excluded
+            }
+        })
+
+        storage.add(session, persistInPrivateMode = true)
+
+        verify(storageController).setPrivateBrowsingPermanentPermission(geckoPermission, VALUE_ALLOW)
         assertTrue(excludedOnTrackingProtection)
     }
 
