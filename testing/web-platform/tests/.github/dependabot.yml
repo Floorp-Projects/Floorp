@@ -15,6 +15,11 @@ updates:
   schedule:
     interval: weekly
   open-pull-requests-limit: 1000
+- package-ecosystem: pip
+  directory: css/
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 1000
 - package-ecosystem: npm
   directory: css/css-writing-modes/tools/generators/
   schedule:
