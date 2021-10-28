@@ -1328,8 +1328,8 @@ option(
 @imports("os")
 def mozbuild_state_path(path, _):
     if path:
-        return path[0]
-    return os.path.expanduser(os.path.join("~", ".mozbuild"))
+        return normalize_path(path[0])
+    return normalize_path(os.path.expanduser(os.path.join("~", ".mozbuild")))
 
 
 # A template providing a shorthand for setting a variable. The created
