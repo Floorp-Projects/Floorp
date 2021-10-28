@@ -28,35 +28,35 @@ function compare_primitive(actual, input, test_obj) {
     test_obj.done();
 }
 function compare_Array(callback, callback_is_async) {
-  return function(actual, input, test_obj) {
+  return async function(actual, input, test_obj) {
     if (typeof actual === 'string')
       assert_unreached(actual);
     assert_true(actual instanceof Array, 'instanceof Array');
     assert_not_equals(actual, input);
     assert_equals(actual.length, input.length, 'length');
-    callback(actual, input);
+    await callback(actual, input);
     if (test_obj && !callback_is_async)
       test_obj.done();
   }
 }
 
 function compare_Object(callback, callback_is_async) {
-  return function(actual, input, test_obj) {
+  return async function(actual, input, test_obj) {
     if (typeof actual === 'string')
       assert_unreached(actual);
     assert_true(actual instanceof Object, 'instanceof Object');
     assert_false(actual instanceof Array, 'instanceof Array');
     assert_not_equals(actual, input);
-    callback(actual, input);
+    await callback(actual, input);
     if (test_obj && !callback_is_async)
       test_obj.done();
   }
 }
 
 function enumerate_props(compare_func, test_obj) {
-  return function(actual, input) {
+  return async function(actual, input) {
     for (const x in input) {
-      compare_func(actual[x], input[x], test_obj);
+      await compare_func(actual[x], input[x], test_obj);
     }
   };
 }
@@ -348,11 +348,11 @@ check('Object Blob object, Blob paired surrogates (invalid utf-8)', {'x':func_Bl
 check('Object Blob object, Blob empty', {'x':func_Blob_empty()}, compare_Object(enumerate_props(compare_Blob), true));
 check('Object Blob object, Blob NUL', {'x':func_Blob_NUL()}, compare_Object(enumerate_props(compare_Blob), true));
 
-function compare_File(actual, input, test_obj) {
+async function compare_File(actual, input, test_obj) {
   assert_true(actual instanceof File, 'instanceof File');
   assert_equals(actual.name, input.name, 'name');
   assert_equals(actual.lastModified, input.lastModified, 'lastModified');
-  compare_Blob(actual, input, test_obj, true);
+  await compare_Blob(actual, input, test_obj, true);
 }
 function func_File_basic() {
   return new File(['foo'], 'bar', {type:'text/x-bar', lastModified:42});
