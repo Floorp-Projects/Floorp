@@ -99,6 +99,24 @@ impl CFBundle {
         Some(PathBuf::from(url.get_file_system_path(kCFURLPOSIXPathStyle).to_string()))
     }
 
+    /// Bundle's resources location
+    pub fn bundle_resources_url(&self) -> Option<CFURL> {
+        unsafe {
+            let bundle_url = CFBundleCopyResourcesDirectoryURL(self.0);
+            if bundle_url.is_null() {
+                None
+            } else {
+                Some(TCFType::wrap_under_create_rule(bundle_url))
+            }
+        }
+    }
+
+    /// Bundle's resources location
+    pub fn resources_path(&self) -> Option<PathBuf> {
+        let url = self.bundle_resources_url()?;
+        Some(PathBuf::from(url.get_file_system_path(kCFURLPOSIXPathStyle).to_string()))
+    }
+
     pub fn private_frameworks_url(&self) -> Option<CFURL> {
         unsafe {
             let fw_url = CFBundleCopyPrivateFrameworksURL(self.0);
