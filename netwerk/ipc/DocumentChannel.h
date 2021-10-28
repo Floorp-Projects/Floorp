@@ -86,7 +86,6 @@ class DocumentChannel : public nsIIdentChannel {
 
   virtual ~DocumentChannel() = default;
 
-  const TimeStamp mAsyncOpenTime;
   const RefPtr<nsDocShellLoadState> mLoadState;
   const uint32_t mCacheKey;
 
