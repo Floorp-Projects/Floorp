@@ -5107,15 +5107,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
           NotifyThemeChanged(widget::ThemeChangeKind::Style);
           break;
         }
-        if (IsWin10OrLater() && mWindowType == eWindowType_invisible) {
-          if (!wcscmp(lParamString, L"UserInteractionMode")) {
-            nsCOMPtr<nsIWindowsUIUtils> uiUtils(
-                do_GetService("@mozilla.org/windows-ui-utils;1"));
-            if (uiUtils) {
-              uiUtils->UpdateTabletModeState();
-            }
-          }
-        }
 
         // UserInteractionMode, ConvertibleSlateMode, SystemDockMode may cause
         // @media(pointer) queries to change, which layout needs to know about
@@ -5129,6 +5120,14 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
               !wcscmp(lParamString, L"ConvertibleSlateMode") ||
               !wcscmp(lParamString, L"SystemDockMode")) {
             NotifyThemeChanged(widget::ThemeChangeKind::MediaQueriesOnly);
+
+            if (IsWin10OrLater()) {
+              nsCOMPtr<nsIWindowsUIUtils> uiUtils(
+                  do_GetService("@mozilla.org/windows-ui-utils;1"));
+              if (uiUtils) {
+                uiUtils->UpdateTabletModeState();
+              }
+            }
           }
         }
       }
