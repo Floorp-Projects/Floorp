@@ -85,7 +85,6 @@ def _make_artifacts(
     skip_cache=False,
     download_tests=True,
     download_symbols=False,
-    download_host_bins=False,
     download_maven_zip=False,
     no_process=False,
 ):
@@ -108,8 +107,6 @@ def _make_artifacts(
             raise ValueError("--maven-zip requires --no-tests")
         if download_symbols:
             raise ValueError("--maven-zip requires no --symbols")
-        if download_host_bins:
-            raise ValueError("--maven-zip requires no --host-bins")
         if not no_process:
             raise ValueError("--maven-zip requires --no-process")
 
@@ -128,7 +125,6 @@ def _make_artifacts(
         topsrcdir=topsrcdir,
         download_tests=download_tests,
         download_symbols=download_symbols,
-        download_host_bins=download_host_bins,
         download_maven_zip=download_maven_zip,
         no_process=no_process,
         mozbuild=command_context,
@@ -155,7 +151,6 @@ def _make_artifacts(
 )
 @CommandArgument("--no-tests", action="store_true", help="Don't install tests.")
 @CommandArgument("--symbols", nargs="?", action=SymbolsAction, help="Download symbols.")
-@CommandArgument("--host-bins", action="store_true", help="Download host binaries.")
 @CommandArgument("--distdir", help="Where to install artifacts to.")
 @CommandArgument(
     "--no-process",
@@ -174,7 +169,6 @@ def artifact_install(
     verbose=False,
     no_tests=False,
     symbols=False,
-    host_bins=False,
     distdir=None,
     no_process=False,
     maven_zip=False,
@@ -187,7 +181,6 @@ def artifact_install(
         skip_cache=skip_cache,
         download_tests=not no_tests,
         download_symbols=symbols,
-        download_host_bins=host_bins,
         download_maven_zip=maven_zip,
         no_process=no_process,
     )

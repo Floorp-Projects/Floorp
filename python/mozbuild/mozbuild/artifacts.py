@@ -142,7 +142,6 @@ class ArtifactJob(object):
         log=None,
         download_tests=True,
         download_symbols=False,
-        download_host_bins=False,
         download_maven_zip=False,
         substs=None,
         mozbuild=None,
@@ -152,11 +151,6 @@ class ArtifactJob(object):
         if download_tests:
             self._tests_re = re.compile(
                 r"public/build/(en-US/)?target\.common\.tests\.(zip|tar\.gz)"
-            )
-        self._host_bins_re = None
-        if download_host_bins:
-            self._host_bins_re = re.compile(
-                r"public/build/host/bin/(mar|mbsdiff)(.exe)?"
             )
         self._maven_zip_re = None
         if download_maven_zip:
@@ -188,8 +182,6 @@ class ArtifactJob(object):
                 else:
                     continue
             elif self._package_re and self._package_re.match(name):
-                yield name
-            elif self._host_bins_re and self._host_bins_re.match(name):
                 yield name
             elif self._tests_re and self._tests_re.match(name):
                 tests_artifact = name
@@ -225,15 +217,6 @@ class ArtifactJob(object):
             self._symbols_archive_suffix
         ):
             return self.process_symbols_archive(filename, processed_filename)
-        if self._host_bins_re:
-            # Turn 'HASH-mar.exe' into 'mar.exe'.  `filename` is a path on disk
-            # without the full path to the artifact, so we must reconstruct
-            # that path here.
-            orig_basename = os.path.basename(filename).split("-", 1)[1]
-            if self._host_bins_re.match(
-                "public/build/host/bin/{}".format(orig_basename)
-            ):
-                return self.process_host_bin(filename, processed_filename)
         return self.process_package_artifact(filename, processed_filename)
 
     def process_package_artifact(self, filename, processed_filename):
@@ -384,15 +367,6 @@ class ArtifactJob(object):
                     "Adding {destpath} to processed archive",
                 )
                 writer.add(destpath.encode("utf-8"), entry)
-
-    def process_host_bin(self, filename, processed_filename):
-        with JarWriter(file=processed_filename, compress_level=5) as writer:
-            # Turn 'HASH-mar.exe' into 'mar.exe'.  `filename` is a path on disk
-            # without any of the path parts of the artifact, so we must inject
-            # the desired `host/bin` prefix here.
-            orig_basename = os.path.basename(filename).split("-", 1)[1]
-            destpath = mozpath.join("host/bin", orig_basename)
-            writer.add(destpath.encode("utf-8"), open(filename, "rb"))
 
     def iter_artifact_archive(self, filename):
         if filename.endswith(".zip"):
@@ -999,7 +973,6 @@ class Artifacts(object):
         topsrcdir=None,
         download_tests=True,
         download_symbols=False,
-        download_host_bins=False,
         download_maven_zip=False,
         no_process=False,
         mozbuild=None,
@@ -1028,7 +1001,6 @@ class Artifacts(object):
                 log=self._log,
                 download_tests=download_tests,
                 download_symbols=download_symbols,
-                download_host_bins=download_host_bins,
                 download_maven_zip=download_maven_zip,
                 substs=self._substs,
                 mozbuild=mozbuild,
