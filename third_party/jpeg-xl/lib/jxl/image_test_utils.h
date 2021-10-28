@@ -10,10 +10,11 @@
 
 #include <cmath>
 #include <limits>
-#include <random>
 
 #include "gtest/gtest.h"
 #include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/random.h"
+#include "lib/jxl/common.h"
 #include "lib/jxl/image.h"
 
 namespace jxl {
@@ -120,10 +121,11 @@ void VerifyRelativeError(const Plane<T>& expected, const Plane<T>& actual,
   if (any_bad) {
     // Never had a valid relative value, don't print it.
     if (max_relative < 0) {
-      fprintf(stderr, "c=%zu: max +/- %E exceeds +/- %.2E\n", c, max_l1,
+      fprintf(stderr, "c=%" PRIuS ": max +/- %E exceeds +/- %.2E\n", c, max_l1,
               threshold_l1);
     } else {
-      fprintf(stderr, "c=%zu: max +/- %E, x %E exceeds +/- %.2E, x %.2E\n", c,
+      fprintf(stderr,
+              "c=%" PRIuS ": max +/- %E, x %E exceeds +/- %.2E, x %.2E\n", c,
               max_l1, max_relative, threshold_l1, threshold_relative);
     }
     // Dump the expected image and actual image if the region is small enough.
@@ -197,115 +199,67 @@ void VerifyRelativeError(const Image3<T>& expected, const Image3<T>& actual,
   }
 }
 
-// Generator for independent, uniformly distributed integers [0, max].
-template <typename T, typename Random>
-class GeneratorRandom {
- public:
-  GeneratorRandom(Random* rng, const T max) : rng_(*rng), dist_(0, max) {}
-
-  GeneratorRandom(Random* rng, const T min, const T max)
-      : rng_(*rng), dist_(min, max) {}
-
-  T operator()(const size_t x, const size_t y, const int c) const {
-    return dist_(rng_);
-  }
-
- private:
-  Random& rng_;
-  mutable std::uniform_int_distribution<> dist_;
-};
-
-template <typename Random>
-class GeneratorRandom<float, Random> {
- public:
-  GeneratorRandom(Random* rng, const float max)
-      : rng_(*rng), dist_(0.0f, max) {}
-
-  GeneratorRandom(Random* rng, const float min, const float max)
-      : rng_(*rng), dist_(min, max) {}
-
-  float operator()(const size_t x, const size_t y, const int c) const {
-    return dist_(rng_);
-  }
-
- private:
-  Random& rng_;
-  mutable std::uniform_real_distribution<float> dist_;
-};
-
-template <typename Random>
-class GeneratorRandom<double, Random> {
- public:
-  GeneratorRandom(Random* rng, const double max)
-      : rng_(*rng), dist_(0.0, max) {}
-
-  GeneratorRandom(Random* rng, const double min, const double max)
-      : rng_(*rng), dist_(min, max) {}
-
-  double operator()(const size_t x, const size_t y, const int c) const {
-    return dist_(rng_);
-  }
-
- private:
-  Random& rng_;
-  mutable std::uniform_real_distribution<> dist_;
-};
-
-// Assigns generator(x, y, 0) to each pixel (x, y).
-template <class Generator, class Image>
-void GenerateImage(const Generator& generator, Image* image) {
-  using T = typename Image::T;
+template <typename T, typename U = T>
+void GenerateImage(Rng& rng, Plane<T>* image, U begin, U end) {
   for (size_t y = 0; y < image->ysize(); ++y) {
     T* const JXL_RESTRICT row = image->Row(y);
     for (size_t x = 0; x < image->xsize(); ++x) {
-      row[x] = generator(x, y, 0);
-    }
-  }
-}
-
-template <typename T>
-void RandomFillImage(Plane<T>* image,
-                     const T max = std::numeric_limits<T>::max()) {
-  std::mt19937_64 rng(129);
-  const GeneratorRandom<T, std::mt19937_64> generator(&rng, max);
-  GenerateImage(generator, image);
-}
-
-template <typename T>
-void RandomFillImage(Plane<T>* image, const T min, const T max,
-                     const int seed) {
-  std::mt19937_64 rng(seed);
-  const GeneratorRandom<T, std::mt19937_64> generator(&rng, min, max);
-  GenerateImage(generator, image);
-}
-
-// Assigns generator(x, y, c) to each pixel (x, y).
-template <class Generator, typename T>
-void GenerateImage(const Generator& generator, Image3<T>* image) {
-  for (size_t c = 0; c < 3; ++c) {
-    for (size_t y = 0; y < image->ysize(); ++y) {
-      T* JXL_RESTRICT row = image->PlaneRow(c, y);
-      for (size_t x = 0; x < image->xsize(); ++x) {
-        row[x] = generator(x, y, c);
+      if (std::is_same<T, float>::value || std::is_same<T, double>::value) {
+        row[x] = rng.UniformF(begin, end);
+      } else if (std::is_signed<T>::value) {
+        row[x] = rng.UniformI(begin, end);
+      } else {
+        row[x] = rng.UniformU(begin, end);
       }
     }
   }
 }
 
 template <typename T>
-void RandomFillImage(Image3<T>* image,
-                     const T max = std::numeric_limits<T>::max()) {
-  std::mt19937_64 rng(129);
-  const GeneratorRandom<T, std::mt19937_64> generator(&rng, max);
-  GenerateImage(generator, image);
+void RandomFillImage(Plane<T>* image, const T begin, const T end,
+                     const int seed = 129) {
+  Rng rng(seed);
+  GenerateImage(rng, image, begin, end);
 }
 
 template <typename T>
-void RandomFillImage(Image3<T>* image, const T min, const T max,
-                     const int seed) {
-  std::mt19937_64 rng(seed);
-  const GeneratorRandom<T, std::mt19937_64> generator(&rng, min, max);
-  GenerateImage(generator, image);
+typename std::enable_if<std::is_integral<T>::value>::type RandomFillImage(
+    Plane<T>* image) {
+  Rng rng(129);
+  GenerateImage(rng, image, int64_t(0),
+                int64_t(std::numeric_limits<T>::max()) + 1);
+}
+
+void RandomFillImage(Plane<float>* image) {
+  Rng rng(129);
+  GenerateImage(rng, image, 0.0f, std::numeric_limits<float>::max());
+}
+
+template <typename T, typename U>
+void GenerateImage(Rng& rng, Image3<T>* image, U begin, U end) {
+  for (size_t c = 0; c < 3; ++c) {
+    GenerateImage(rng, &image->Plane(c), begin, end);
+  }
+}
+
+template <typename T>
+typename std::enable_if<std::is_integral<T>::value>::type RandomFillImage(
+    Image3<T>* image) {
+  Rng rng(129);
+  GenerateImage(rng, image, int64_t(0),
+                int64_t(std::numeric_limits<T>::max()) + 1);
+}
+
+void RandomFillImage(Image3F* image) {
+  Rng rng(129);
+  GenerateImage(rng, image, 0.0f, std::numeric_limits<float>::max());
+}
+
+template <typename T, typename U>
+void RandomFillImage(Image3<T>* image, const U begin, const U end,
+                     const int seed = 129) {
+  Rng rng(seed);
+  GenerateImage(rng, image, begin, end);
 }
 
 }  // namespace jxl

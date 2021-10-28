@@ -21,8 +21,8 @@ Transform::Transform(TransformId id) {
 
 Status Transform::Inverse(Image &input, const weighted::Header &wp_header,
                           ThreadPool *pool) {
-  JXL_DEBUG_V(6, "Input channels (%zu, %zu meta): ", input.channel.size(),
-              input.nb_meta_channels);
+  JXL_DEBUG_V(6, "Input channels (%" PRIuS ", %" PRIuS " meta): ",
+              input.channel.size(), input.nb_meta_channels);
   switch (id) {
     case TransformId::kRCT:
       return InvRCT(input, begin_c, rct_type, pool);
@@ -38,8 +38,8 @@ Status Transform::Inverse(Image &input, const weighted::Header &wp_header,
 }
 
 Status Transform::MetaApply(Image &input) {
-  JXL_DEBUG_V(6, "Input channels (%zu, %zu meta): ", input.channel.size(),
-              input.nb_meta_channels);
+  JXL_DEBUG_V(6, "Input channels (%" PRIuS ", %" PRIuS " meta): ",
+              input.channel.size(), input.nb_meta_channels);
   switch (id) {
     case TransformId::kRCT:
       JXL_DEBUG_V(2, "Transform: kRCT, rct_type=%" PRIu32, rct_type);
@@ -77,9 +77,9 @@ Status Transform::MetaApply(Image &input) {
 
 Status CheckEqualChannels(const Image &image, uint32_t c1, uint32_t c2) {
   if (c1 > image.channel.size() || c2 >= image.channel.size() || c2 < c1) {
-    return JXL_FAILURE(
-        "Invalid channel range: %u..%u (there are only %zu channels)", c1, c2,
-        image.channel.size());
+    return JXL_FAILURE("Invalid channel range: %u..%u (there are only %" PRIuS
+                       " channels)",
+                       c1, c2, image.channel.size());
   }
   if (c1 < image.nb_meta_channels && c2 >= image.nb_meta_channels) {
     return JXL_FAILURE("Invalid: transforming mix of meta and nonmeta");

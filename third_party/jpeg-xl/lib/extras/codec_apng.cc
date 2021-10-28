@@ -44,6 +44,7 @@
 #include <utility>
 #include <vector>
 
+#include "jxl/encode.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/color_management.h"
@@ -193,8 +194,10 @@ int processing_finish(png_structp png_ptr, png_infop info_ptr) {
 
 }  // namespace
 
-Status DecodeImageAPNG(Span<const uint8_t> bytes, const ColorHints& color_hints,
-                       ThreadPool* pool, CodecInOut* io) {
+Status DecodeImageAPNG(const Span<const uint8_t> bytes,
+                       const ColorHints& color_hints,
+                       const SizeConstraints& constraints,
+                       PackedPixelFile* ppf) {
   Reader r;
   unsigned int id, i, j, w, h, w0, h0, x0, y0;
   unsigned int delay_num, delay_den, dop, bop, rowbytes, imagesize;
@@ -218,14 +221,27 @@ Status DecodeImageAPNG(Span<const uint8_t> bytes, const ColorHints& color_hints,
   }
   id = read_chunk(&r, &chunkIHDR);
 
-  io->frames.clear();
-  io->dec_pixels = 0;
-  io->metadata.m.SetUintSamples(8);
-  io->metadata.m.SetAlphaBits(8);
-  io->metadata.m.color_encoding =
-      ColorEncoding::SRGB();  // todo: get data from png metadata
+  // todo: get data from png metadata
+  JxlColorEncodingSetToSRGB(&ppf->color_encoding, /*is_gray=*/false);
   JXL_RETURN_IF_ERROR(ApplyColorHints(color_hints, /*color_already_set=*/true,
-                                      /*is_gray=*/false, io));
+                                      /*is_gray=*/false, ppf));
+
+  // Only 8-bit supported.
+  ppf->info.bits_per_sample = 8;
+  ppf->info.exponent_bits_per_sample = 0;
+  ppf->info.alpha_bits = 8;
+  ppf->info.alpha_exponent_bits = 0;
+
+  ppf->info.num_color_channels = 3;  // RGBA
+  ppf->info.orientation = JXL_ORIENT_IDENTITY;
+
+  const JxlPixelFormat format{
+      /*num_channels=*/4,
+      /*data_type=*/JXL_TYPE_UINT8,
+      /*endianness=*/JXL_BIG_ENDIAN,
+      /*align=*/0,
+  };
+  ppf->frames.clear();
 
   bool errorstate = true;
   if (id == kId_IHDR && chunkIHDR.size == 25) {
@@ -235,6 +251,10 @@ Status DecodeImageAPNG(Span<const uint8_t> bytes, const ColorHints& color_hints,
     if (w > cMaxPNGSize || h > cMaxPNGSize) {
       return false;
     }
+
+    ppf->info.xsize = w;
+    ppf->info.ysize = h;
+    JXL_RETURN_IF_ERROR(VerifyDimensions(&constraints, w, h));
 
     x0 = 0;
     y0 = 0;
@@ -260,16 +280,20 @@ Status DecodeImageAPNG(Span<const uint8_t> bytes, const ColorHints& color_hints,
         if (id == kId_acTL && !hasInfo && !isAnimated) {
           isAnimated = true;
           skipFirst = true;
-          io->metadata.m.have_animation = true;
-          io->metadata.m.animation.tps_numerator = 1000;
+          ppf->info.have_animation = true;
+          ppf->info.animation.tps_numerator = 1000;
+          ppf->info.animation.tps_denominator = 1;
         } else if (id == kId_IEND ||
                    (id == kId_fcTL && (!hasInfo || isAnimated))) {
           if (hasInfo) {
             if (!processing_finish(png_ptr, info_ptr)) {
-              ImageBundle bundle(&io->metadata.m);
-              bundle.duration = delay_num * 1000 / delay_den;
-              bundle.origin.x0 = x0;
-              bundle.origin.y0 = y0;
+              // Allocates the frame buffer.
+              ppf->frames.emplace_back(w0, h0, format);
+              auto* frame = &ppf->frames.back();
+
+              frame->frame_info.duration = delay_num * 1000 / delay_den;
+              frame->x0 = x0;
+              frame->y0 = y0;
               // TODO(veluca): this could in principle be implemented.
               if (last_base_was_none && !all_dispose_bg &&
                   (x0 != 0 || y0 != 0 || w0 != w || h0 != h || bop != 0)) {
@@ -279,47 +303,25 @@ Status DecodeImageAPNG(Span<const uint8_t> bytes, const ColorHints& color_hints,
               }
               switch (dop) {
                 case 0:
-                  bundle.use_for_next_frame = true;
+                  frame->use_for_next_frame = true;
                   last_base_was_none = false;
                   all_dispose_bg = false;
                   break;
                 case 2:
-                  bundle.use_for_next_frame = false;
+                  frame->use_for_next_frame = false;
                   all_dispose_bg = false;
                   break;
                 default:
-                  bundle.use_for_next_frame = false;
+                  frame->use_for_next_frame = false;
                   last_base_was_none = true;
               }
-              bundle.blend = bop != 0;
-              io->dec_pixels += w0 * h0;
+              frame->blend = bop != 0;
 
-              Image3F sub_frame(w0, h0);
-              ImageF sub_frame_alpha(w0, h0);
               for (size_t y = 0; y < h0; ++y) {
-                float* const JXL_RESTRICT row_r = sub_frame.PlaneRow(0, y);
-                float* const JXL_RESTRICT row_g = sub_frame.PlaneRow(1, y);
-                float* const JXL_RESTRICT row_b = sub_frame.PlaneRow(2, y);
-                float* const JXL_RESTRICT row_alpha = sub_frame_alpha.Row(y);
-                uint8_t* const f = frameRaw.rows[y];
-                for (size_t x = 0; x < w0; ++x) {
-                  if (f[4 * x + 3] == 0) {
-                    row_alpha[x] = 0;
-                    row_r[x] = 0;
-                    row_g[x] = 0;
-                    row_b[x] = 0;
-                    continue;
-                  }
-                  row_r[x] = f[4 * x + 0] * (1.f / 255);
-                  row_g[x] = f[4 * x + 1] * (1.f / 255);
-                  row_b[x] = f[4 * x + 2] * (1.f / 255);
-                  row_alpha[x] = f[4 * x + 3] * (1.f / 255);
-                }
+                memcpy(static_cast<uint8_t*>(frame->color.pixels()) +
+                           frame->color.stride * y,
+                       frameRaw.rows[y], 4 * w0);
               }
-              bundle.SetFromImage(std::move(sub_frame), ColorEncoding::SRGB());
-              bundle.SetAlpha(std::move(sub_frame_alpha),
-                              /*alpha_is_premultiplied=*/false);
-              io->frames.push_back(std::move(bundle));
             } else {
               delete[] chunk.p;
               break;
@@ -359,7 +361,7 @@ Status DecodeImageAPNG(Span<const uint8_t> bytes, const ColorHints& color_hints,
           } else
             skipFirst = false;
 
-          if (io->frames.size() == (skipFirst ? 1 : 0)) {
+          if (ppf->frames.size() == (skipFirst ? 1 : 0)) {
             bop = 0;
             if (dop == 2) dop = 1;
           }
@@ -401,7 +403,6 @@ Status DecodeImageAPNG(Span<const uint8_t> bytes, const ColorHints& color_hints,
   delete[] chunkIHDR.p;
 
   if (errorstate) return false;
-  SetIntensityTarget(io);
   return true;
 }
 

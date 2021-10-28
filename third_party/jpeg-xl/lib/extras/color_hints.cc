@@ -5,16 +5,16 @@
 
 #include "lib/extras/color_hints.h"
 
+#include "jxl/encode.h"
 #include "lib/extras/color_description.h"
 #include "lib/jxl/base/file_io.h"
-#include "lib/jxl/color_encoding_internal.h"
 
 namespace jxl {
 namespace extras {
 
 Status ApplyColorHints(const ColorHints& color_hints,
                        const bool color_already_set, const bool is_gray,
-                       CodecInOut* io) {
+                       PackedPixelFile* ppf) {
   if (color_already_set) {
     return color_hints.Foreach(
         [](const std::string& key, const std::string& /*value*/) {
@@ -26,19 +26,17 @@ Status ApplyColorHints(const ColorHints& color_hints,
   bool got_color_space = false;
 
   JXL_RETURN_IF_ERROR(color_hints.Foreach(
-      [is_gray, io, &got_color_space](const std::string& key,
-                                      const std::string& value) -> Status {
-        ColorEncoding* c_original = &io->metadata.m.color_encoding;
+      [is_gray, ppf, &got_color_space](const std::string& key,
+                                       const std::string& value) -> Status {
         if (key == "color_space") {
           JxlColorEncoding c_original_external;
-          if (!ParseDescription(value, &c_original_external) ||
-              !ConvertExternalToInternalColorEncoding(c_original_external,
-                                                      c_original) ||
-              !c_original->CreateICC()) {
+          if (!ParseDescription(value, &c_original_external)) {
             return JXL_FAILURE("Failed to apply color_space");
           }
+          ppf->color_encoding = c_original_external;
 
-          if (is_gray != io->metadata.m.color_encoding.IsGray()) {
+          if (is_gray !=
+              (ppf->color_encoding.color_space == JXL_COLOR_SPACE_GRAY)) {
             return JXL_FAILURE("mismatch between file and color_space hint");
           }
 
@@ -46,7 +44,7 @@ Status ApplyColorHints(const ColorHints& color_hints,
         } else if (key == "icc_pathname") {
           PaddedBytes icc;
           JXL_RETURN_IF_ERROR(ReadFile(value, &icc));
-          JXL_RETURN_IF_ERROR(c_original->SetICC(std::move(icc)));
+          ppf->icc = std::vector<uint8_t>{icc.data(), icc.data() + icc.size()};
           got_color_space = true;
         } else {
           JXL_WARNING("Ignoring %s hint", key.c_str());
@@ -56,8 +54,7 @@ Status ApplyColorHints(const ColorHints& color_hints,
 
   if (!got_color_space) {
     JXL_WARNING("No color_space/icc_pathname given, assuming sRGB");
-    JXL_RETURN_IF_ERROR(io->metadata.m.color_encoding.SetSRGB(
-        is_gray ? ColorSpace::kGray : ColorSpace::kRGB));
+    JxlColorEncodingSetToSRGB(&ppf->color_encoding, is_gray);
   }
 
   return true;

@@ -52,8 +52,9 @@ void AuxOut::Print(size_t num_inputs) const {
   size_t total_positions = 0;
   if (total_blocks != 0 && total_positions != 0) {
     printf("\n\t\t  Blocks\t\tPositions\t\t\tBlocks/Position\n");
-    printf(" Total:\t\t    %7zu\t\t     %7zu \t\t\t%10f%%\n\n", total_blocks,
-           total_positions, 100.0 * total_blocks / total_positions);
+    printf(" Total:\t\t    %7" PRIuS "\t\t     %7" PRIuS " \t\t\t%10f%%\n\n",
+           total_blocks, total_positions,
+           100.0 * total_blocks / total_positions);
   }
 }
 
@@ -81,7 +82,7 @@ void ReclaimAndCharge(BitWriter* JXL_RESTRICT writer,
   allotment->PrivateReclaim(writer, &used_bits, &unused_bits);
 
 #if 0
-  printf("Layer %s bits: max %zu used %zu unused %zu\n", LayerName(layer),
+  printf("Layer %s bits: max %" PRIuS " used %" PRIuS " unused %" PRIuS "\n", LayerName(layer),
          allotment->MaxBits(), used_bits, unused_bits);
 #endif
 

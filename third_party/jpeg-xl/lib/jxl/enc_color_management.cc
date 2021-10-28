@@ -310,7 +310,7 @@ Status CreateProfileXYZ(const cmsContext context,
 // IMPORTANT: icc must outlive profile.
 Status DecodeProfile(const PaddedBytes& icc, skcms_ICCProfile* const profile) {
   if (!skcms_Parse(icc.data(), icc.size(), profile)) {
-    return JXL_FAILURE("Failed to parse ICC profile with %zu bytes",
+    return JXL_FAILURE("Failed to parse ICC profile with %" PRIuS " bytes",
                        icc.size());
   }
   return true;
@@ -845,7 +845,8 @@ Status ColorSpaceTransform::Init(const ColorEncoding& c_src,
   const size_t channels_dst = c_dst.Channels();
   JXL_CHECK(channels_src == channels_dst);
 #if JXL_CMS_VERBOSE
-  printf("Channels: %zu; Threads: %zu\n", channels_src, num_threads);
+  printf("Channels: %" PRIuS "; Threads: %" PRIuS "\n", channels_src,
+         num_threads);
 #endif
 
 #if !JPEGXL_ENABLE_SKCMS

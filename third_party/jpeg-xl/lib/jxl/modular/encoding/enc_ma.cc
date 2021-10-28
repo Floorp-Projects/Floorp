@@ -9,7 +9,6 @@
 #include <limits>
 #include <numeric>
 #include <queue>
-#include <random>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -20,30 +19,7 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
-#ifndef LIB_JXL_ENC_MODULAR_ENCODING_MA_
-#define LIB_JXL_ENC_MODULAR_ENCODING_MA_
-namespace {
-struct Rng {
-  uint64_t s[2];
-  explicit Rng(size_t seed)
-      : s{0x94D049BB133111EBull, 0xBF58476D1CE4E5B9ull + seed} {}
-  // Xorshift128+ adapted from xorshift128+-inl.h
-  uint64_t operator()() {
-    uint64_t s1 = s[0];
-    const uint64_t s0 = s[1];
-    const uint64_t bits = s1 + s0;  // b, c
-    s[0] = s0;
-    s1 ^= s1 << 23;
-    s1 ^= s0 ^ (s1 >> 18) ^ (s0 >> 5);
-    s[1] = s1;
-    return bits;
-  }
-  static constexpr uint64_t max() { return ~0ULL; }
-  static constexpr uint64_t min() { return 0; }
-};
-}  // namespace
-#endif
-
+#include "lib/jxl/base/random.h"
 #include "lib/jxl/enc_ans.h"
 #include "lib/jxl/fast_math-inl.h"
 #include "lib/jxl/modular/encoding/context_predict.h"
@@ -142,8 +118,7 @@ void SplitTreeSamples(TreeSamples &tree_samples, size_t begin, size_t pos,
   Rng rng(0);
   while (end > begin + 1) {
     {
-      JXL_ASSERT(end > begin);  // silence clang-tidy.
-      size_t pivot = rng() % (end - begin) + begin;
+      size_t pivot = rng.UniformU(begin, end);
       tree_samples.Swap(begin, pivot);
     }
     size_t pivot_begin = begin;
@@ -953,12 +928,7 @@ void CollectPixelSamples(const Image &image, const ModularOptions &options,
   Rng rng(group_id);
   // Sample 10% of the final number of samples for property quantization.
   float fraction = std::min(options.nb_repeats * 0.1, 0.99);
-  float inv_log_1mf = 1.0 / FastLog2f(1 - fraction);
-  auto geom_sample = [&]() {
-    float f = (rng() >> 1) * (1.0f / (1ULL << 63));
-    float log = FastLog2f(1 - f) * inv_log_1mf;
-    return static_cast<uint32_t>(log);
-  };
+  Rng::GeometricDistribution dist(fraction);
   size_t total_pixels = 0;
   std::vector<size_t> channel_ids;
   for (size_t i = 0; i < image.channel.size(); i++) {
@@ -997,8 +967,8 @@ void CollectPixelSamples(const Image &image, const ModularOptions &options,
       }
     }
   };
-  advance(geom_sample());
-  for (; i < channel_ids.size(); advance(geom_sample() + 1)) {
+  advance(rng.Geometric(dist));
+  for (; i < channel_ids.size(); advance(rng.Geometric(dist) + 1)) {
     const pixel_type *row = image.channel[channel_ids[i]].Row(y);
     pixel_samples.push_back(row[x]);
     size_t xp = x == 0 ? 1 : x - 1;

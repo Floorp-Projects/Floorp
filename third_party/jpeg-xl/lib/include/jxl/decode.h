@@ -344,7 +344,8 @@ JxlDecoderSetParallelRunner(JxlDecoder* dec, JxlParallelRunner parallel_runner,
  * need to make JxlDecoderGetBasicInfo available after the next
  * JxlDecoderProcessInput call. This is a suggested large enough value for
  * the amount of bytes to provide in the next JxlDecoderSetInput call, but it is
- * not guaranteed to be an upper bound nor a lower bound.
+ * not guaranteed to be an upper bound nor a lower bound. This number does not
+ * include bytes that have already been released from the input.
  * Can be used before the first JxlDecoderProcessInput call, and is correct
  * the first time in most cases. If not, JxlDecoderSizeHintBasicInfo can be
  * called again to get an updated hint.
@@ -973,6 +974,9 @@ JXL_EXPORT size_t JxlDecoderReleaseJPEGBuffer(JxlDecoder* dec);
  * JxlDecoderReleaseBoxBuffer, bytes that the decoder has already output should
  * not be included, only the remaining bytes output must be set.
  *
+ * The JxlDecoderReleaseBoxBuffer must be used at the next JXL_DEC_BOX event
+ * or final JXL_DEC_SUCCESS event to compute the size of the output box bytes.
+ *
  * @param dec decoder object
  * @param data pointer to next bytes to write to
  * @param size amount of bytes available starting from data
@@ -1037,7 +1041,7 @@ JXL_EXPORT JxlDecoderStatus JxlDecoderSetDecompressBoxes(JxlDecoder* dec,
  *    example the JXL file does not use the container format.
  */
 JXL_EXPORT JxlDecoderStatus JxlDecoderGetBoxType(JxlDecoder* dec,
-                                                 JxlBoxType* type,
+                                                 JxlBoxType type,
                                                  JXL_BOOL decompressed);
 
 /**

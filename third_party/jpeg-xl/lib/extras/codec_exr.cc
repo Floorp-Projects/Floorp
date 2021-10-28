@@ -15,6 +15,7 @@
 #include "lib/jxl/alpha.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/color_management.h"
+#include "lib/jxl/enc_image_bundle.h"
 
 namespace jxl {
 namespace extras {
@@ -33,21 +34,20 @@ using ExrInt64 = decltype(std::declval<OpenEXR::IStream>().tellg());
 constexpr int kExrBitsPerSample = 16;
 constexpr int kExrAlphaBits = 16;
 
-float GetIntensityTarget(const CodecInOut& io,
-                         const OpenEXR::Header& exr_header) {
+float GetIntensityTarget(float target_nits, const OpenEXR::Header& exr_header) {
   if (OpenEXR::hasWhiteLuminance(exr_header)) {
     const float exr_luminance = OpenEXR::whiteLuminance(exr_header);
-    if (io.target_nits != 0) {
+    if (target_nits != 0) {
       JXL_WARNING(
           "overriding OpenEXR whiteLuminance of %g with user-specified value "
           "of %g",
-          exr_luminance, io.target_nits);
-      return io.target_nits;
+          exr_luminance, target_nits);
+      return target_nits;
     }
     return exr_luminance;
   }
-  if (io.target_nits != 0) {
-    return io.target_nits;
+  if (target_nits != 0) {
+    return target_nits;
   }
   JXL_WARNING(
       "no OpenEXR whiteLuminance tag found and no intensity_target specified, "
@@ -129,7 +129,8 @@ class InMemoryOStream : public OpenEXR::OStream {
 }  // namespace
 
 Status DecodeImageEXR(Span<const uint8_t> bytes, const ColorHints& color_hints,
-                      ThreadPool* pool, CodecInOut* io) {
+                      const SizeConstraints& constraints, float target_nits,
+                      ThreadPool* pool, PackedPixelFile* ppf) {
   // Get the number of threads we should be using for OpenEXR.
   // OpenEXR creates its own set of threads, independent from ours. `pool` is
   // only used for converting from a buffer of OpenEXR::Rgba to Image3F.
@@ -158,19 +159,30 @@ Status DecodeImageEXR(Span<const uint8_t> bytes, const ColorHints& color_hints,
   const bool has_alpha = (input.channels() & OpenEXR::RgbaChannels::WRITE_A) ==
                          OpenEXR::RgbaChannels::WRITE_A;
 
-  const float intensity_target = GetIntensityTarget(*io, input.header());
+  const float intensity_target =
+      GetIntensityTarget(target_nits, input.header());
 
   auto image_size = input.displayWindow().size();
   // Size is computed as max - min, but both bounds are inclusive.
   ++image_size.x;
   ++image_size.y;
-  Image3F image(image_size.x, image_size.y);
-  ZeroFillImage(&image);
-  ImageF alpha;
-  if (has_alpha) {
-    alpha = ImageF(image_size.x, image_size.y);
-    FillImage(1.f, &alpha);
-  }
+
+  ppf->info.xsize = image_size.x;
+  ppf->info.ysize = image_size.y;
+  ppf->info.num_color_channels = 3;
+
+  const JxlDataType data_type =
+      kExrBitsPerSample == 16 ? JXL_TYPE_FLOAT16 : JXL_TYPE_FLOAT;
+  const JxlPixelFormat format{
+      /*num_channels=*/3u + (has_alpha ? 1u : 0u),
+      /*data_type=*/data_type,
+      /*endianness=*/JXL_NATIVE_ENDIAN,
+      /*align=*/0,
+  };
+  ppf->frames.clear();
+  // Allocates the frame buffer.
+  ppf->frames.emplace_back(image_size.x, image_size.y, format);
+  const auto& frame = ppf->frames.back();
 
   const int row_size = input.dataWindow().size().x + 1;
   // Number of rows to read at a time.
@@ -197,64 +209,50 @@ Status DecodeImageEXR(Span<const uint8_t> bytes, const ColorHints& color_hints,
           const int image_y = exr_y - input.displayWindow().min.y;
           const OpenEXR::Rgba* const JXL_RESTRICT input_row =
               &input_rows[(exr_y - start_y) * row_size];
-          float* const JXL_RESTRICT rows[] = {
-              image.PlaneRow(0, image_y),
-              image.PlaneRow(1, image_y),
-              image.PlaneRow(2, image_y),
-          };
-          float* const JXL_RESTRICT alpha_row =
-              has_alpha ? alpha.Row(image_y) : nullptr;
+          uint8_t* row = static_cast<uint8_t*>(frame.color.pixels()) +
+                         frame.color.stride * image_y;
+          const uint32_t pixel_size =
+              (3 + (has_alpha ? 1 : 0)) * kExrBitsPerSample / 8;
           for (int exr_x = std::max(input.dataWindow().min.x,
                                     input.displayWindow().min.x);
                exr_x <=
                std::min(input.dataWindow().max.x, input.displayWindow().max.x);
                ++exr_x) {
             const int image_x = exr_x - input.displayWindow().min.x;
-            const OpenEXR::Rgba& pixel =
-                input_row[exr_x - input.dataWindow().min.x];
-            rows[0][image_x] = pixel.r;
-            rows[1][image_x] = pixel.g;
-            rows[2][image_x] = pixel.b;
-            if (has_alpha) {
-              alpha_row[image_x] = pixel.a;
-            }
+            memcpy(row + image_x * pixel_size,
+                   input_row + (exr_x - input.dataWindow().min.x), pixel_size);
           }
         },
         "DecodeImageEXR");
   }
 
-  ColorEncoding color_encoding;
-  color_encoding.tf.SetTransferFunction(TransferFunction::kLinear);
-  color_encoding.SetColorSpace(ColorSpace::kRGB);
-  PrimariesCIExy primaries = ColorEncoding::SRGB().GetPrimaries();
-  CIExy white_point = ColorEncoding::SRGB().GetWhitePoint();
+  ppf->color_encoding.transfer_function = JXL_TRANSFER_FUNCTION_LINEAR;
+  ppf->color_encoding.color_space = JXL_COLOR_SPACE_RGB;
+  ppf->color_encoding.primaries = JXL_PRIMARIES_SRGB;
+  ppf->color_encoding.white_point = JXL_WHITE_POINT_D65;
   if (OpenEXR::hasChromaticities(input.header())) {
+    ppf->color_encoding.primaries = JXL_PRIMARIES_CUSTOM;
+    ppf->color_encoding.white_point = JXL_WHITE_POINT_CUSTOM;
     const auto& chromaticities = OpenEXR::chromaticities(input.header());
-    primaries.r.x = chromaticities.red.x;
-    primaries.r.y = chromaticities.red.y;
-    primaries.g.x = chromaticities.green.x;
-    primaries.g.y = chromaticities.green.y;
-    primaries.b.x = chromaticities.blue.x;
-    primaries.b.y = chromaticities.blue.y;
-    white_point.x = chromaticities.white.x;
-    white_point.y = chromaticities.white.y;
+    ppf->color_encoding.primaries_red_xy[0] = chromaticities.red.x;
+    ppf->color_encoding.primaries_red_xy[1] = chromaticities.red.y;
+    ppf->color_encoding.primaries_green_xy[0] = chromaticities.green.x;
+    ppf->color_encoding.primaries_green_xy[1] = chromaticities.green.y;
+    ppf->color_encoding.primaries_blue_xy[0] = chromaticities.blue.x;
+    ppf->color_encoding.primaries_blue_xy[1] = chromaticities.blue.y;
+    ppf->color_encoding.white_point_xy[0] = chromaticities.white.x;
+    ppf->color_encoding.white_point_xy[1] = chromaticities.white.y;
   }
-  JXL_RETURN_IF_ERROR(color_encoding.SetPrimaries(primaries));
-  JXL_RETURN_IF_ERROR(color_encoding.SetWhitePoint(white_point));
-  JXL_RETURN_IF_ERROR(color_encoding.CreateICC());
 
-  io->metadata.m.bit_depth.bits_per_sample = kExrBitsPerSample;
   // EXR uses binary16 or binary32 floating point format.
-  io->metadata.m.bit_depth.exponent_bits_per_sample =
-      kExrBitsPerSample == 16 ? 5 : 8;
-  io->metadata.m.bit_depth.floating_point_sample = true;
-  io->SetFromImage(std::move(image), color_encoding);
-  io->metadata.m.color_encoding = color_encoding;
-  io->metadata.m.SetIntensityTarget(intensity_target);
+  ppf->info.bits_per_sample = kExrBitsPerSample;
+  ppf->info.exponent_bits_per_sample = kExrBitsPerSample == 16 ? 5 : 8;
   if (has_alpha) {
-    io->metadata.m.SetAlphaBits(kExrAlphaBits, /*alpha_is_premultiplied=*/true);
-    io->Main().SetAlpha(std::move(alpha), /*alpha_is_premultiplied=*/true);
+    ppf->info.alpha_bits = kExrAlphaBits;
+    ppf->info.alpha_exponent_bits = ppf->info.exponent_bits_per_sample;
+    ppf->info.alpha_premultiplied = true;
   }
+  ppf->info.intensity_target = intensity_target;
   return true;
 }
 

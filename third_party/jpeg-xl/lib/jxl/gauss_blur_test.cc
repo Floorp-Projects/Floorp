@@ -11,7 +11,6 @@
 
 #include "gtest/gtest.h"
 #include "lib/extras/time.h"
-#include "lib/jxl/base/robust_statistics.h"
 #include "lib/jxl/convolve.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/image_test_utils.h"
@@ -186,7 +185,8 @@ TEST(GaussBlurTest, DISABLED_SlowTestDirac1D) {
 
 void TestRandom(size_t xsize, size_t ysize, float min, float max, double sigma,
                 double max_l1, double max_rel) {
-  printf("%4zu x %4zu %4.1f %4.1f sigma %.1f\n", xsize, ysize, min, max, sigma);
+  printf("%4" PRIuS " x %4" PRIuS " %4.1f %4.1f sigma %.1f\n", xsize, ysize,
+         min, max, sigma);
   ImageF in(xsize, ysize);
   RandomFillImage(&in, min, max, 65537 + xsize * 129 + ysize);
   // FastGaussian/Convolve handle borders differently, so keep those pixels 0.
@@ -207,7 +207,7 @@ void TestRandom(size_t xsize, size_t ysize, float min, float max, double sigma,
 }
 
 void TestRandomForSizes(float min, float max, double sigma) {
-  double max_l1 = 5E-3;
+  double max_l1 = 6E-3;
   double max_rel = 3E-3;
   TestRandom(128, 1, min, max, sigma, max_l1, max_rel);
   TestRandom(1, 128, min, max, sigma, max_l1, max_rel);
@@ -440,171 +440,12 @@ TEST(GaussBlurTest, TestSign) {
   {
     const std::vector<float> kernel =
         GaussianKernel(static_cast<int>(4 * sigma), static_cast<float>(sigma));
-    printf("old kernel size %zu\n", kernel.size());
+    printf("old kernel size %" PRIuS "\n", kernel.size());
     out_old = Convolve(in, kernel);
   }
 
   printf("rg %.4f old %.4f\n", out_rg.Row(ytest)[xtest],
          out_old.Row(ytest)[xtest]);
-}
-
-// Returns megapixels/sec. "div" is a divisor for the number of repetitions,
-// used to reduce benchmark duration. Func returns elapsed time.
-template <class Func>
-double Measure(const size_t xsize, const size_t ysize, int div,
-               const Func& func) {
-#if defined(ADDRESS_SANITIZER) || defined(MEMORY_SANITIZER) || \
-    defined(THREAD_SANITIZER)
-  int reps = 10 / div;
-#else
-  int reps = 2000 / div;
-#endif
-  if (reps < 2) reps = 2;
-  std::vector<double> elapsed;
-  for (int i = 0; i < reps; ++i) {
-    elapsed.push_back(func(xsize, ysize));
-  }
-
-  double mean_elapsed;
-  // Potential loss of precision, and also enough samples for mode.
-  if (reps > 50) {
-    std::sort(elapsed.begin(), elapsed.end());
-    mean_elapsed = jxl::HalfSampleMode()(elapsed.data(), elapsed.size());
-  } else {
-    // Skip first(noisier)
-    mean_elapsed = Geomean(elapsed.data() + 1, elapsed.size() - 1);
-  }
-  return (xsize * ysize * 1E-6) / mean_elapsed;
-}
-
-void Benchmark1D() {
-  // Uncomment to disable SIMD and force and scalar implementation
-  // hwy::DisableTargets(~HWY_SCALAR);
-
-  const size_t length = 16384;  // (same value used for running IPOL benchmark)
-  const double sigma = 7.0;     // (from Butteraugli application)
-  // NOTE: MSVC and clang disagree on the required captures, so use =.
-  const double mps_rg1 =
-      Measure(length, 1, 1, [=](size_t /*xsize*/, size_t /*ysize*/) {
-        ImageF in(length, 1);
-        const float expected = length;
-        FillImage(expected, &in);
-
-        ImageF temp(length, 1);
-        ImageF out(length, 1);
-        const auto rg = CreateRecursiveGaussian(sigma);
-        const double t0 = Now();
-        FastGaussian1D(rg, in.Row(0), length, out.Row(0));
-        const double t1 = Now();
-        // Prevent optimizing out
-        const float actual = out.ConstRow(0)[length / 2];
-        const float rel_err = std::abs(actual - expected) / expected;
-        EXPECT_LT(rel_err, 9E-5);
-        return t1 - t0;
-      });
-  // Report milliseconds for comparison with IPOL benchmark
-  const double milliseconds = (1E-6 * length) / mps_rg1 * 1E3;
-  printf("%5zu @%.1f: rg 1D %e\n", length, sigma, milliseconds);
-}
-
-void Benchmark(size_t xsize, size_t ysize, double sigma) {
-  // Uncomment to run AVX2
-  // hwy::DisableTargets(HWY_AVX3);
-
-  const double mps_rg =
-      Measure(xsize, ysize, 1, [sigma](size_t xsize, size_t ysize) {
-        ImageF in(xsize, ysize);
-        const float expected = xsize + ysize;
-        FillImage(expected, &in);
-
-        ImageF temp(xsize, ysize);
-        ImageF out(xsize, ysize);
-        const auto rg = CreateRecursiveGaussian(sigma);
-        ThreadPool* null_pool = nullptr;
-        const double t0 = Now();
-        FastGaussian(rg, in, null_pool, &temp, &out);
-        const double t1 = Now();
-        // Prevent optimizing out
-        const float actual = out.ConstRow(ysize / 2)[xsize / 2];
-        const float rel_err = std::abs(actual - expected) / expected;
-        EXPECT_LT(rel_err, 9E-5);
-        return t1 - t0;
-      });
-
-  const double mps_fir =
-      Measure(xsize, ysize, 100, [sigma](size_t xsize, size_t ysize) {
-        ImageF in(xsize, ysize);
-        const float expected = xsize + ysize;
-        FillImage(expected, &in);
-        const std::vector<float> kernel = GaussianKernel(
-            static_cast<int>(4 * sigma), static_cast<float>(sigma));
-        const double t0 = Now();
-        const ImageF out = Convolve(in, kernel);
-        const double t1 = Now();
-
-        // Prevent optimizing out
-        const float actual = out.ConstRow(ysize / 2)[xsize / 2];
-        const float rel_err = std::abs(actual - expected) / expected;
-        EXPECT_LT(rel_err, 5E-6);
-        return t1 - t0;
-      });
-
-  const double mps_simd7 =
-      Measure(xsize, ysize, 10, [](size_t xsize, size_t ysize) {
-        ImageF in(xsize, ysize);
-        const float expected = xsize + ysize;
-        FillImage(expected, &in);
-        ImageF out(xsize, ysize);
-        // Gaussian with sigma 1
-        const WeightsSeparable7 weights = {
-            {HWY_REP4(0.383103f), HWY_REP4(0.241843f), HWY_REP4(0.060626f),
-             HWY_REP4(0.00598f)},
-            {HWY_REP4(0.383103f), HWY_REP4(0.241843f), HWY_REP4(0.060626f),
-             HWY_REP4(0.00598f)}};
-        ThreadPool* null_pool = nullptr;
-        const double t0 = Now();
-        Separable7(in, Rect(in), weights, null_pool, &out);
-        const double t1 = Now();
-
-        // Prevent optimizing out
-        const float actual = out.ConstRow(ysize / 2)[xsize / 2];
-        const float rel_err = std::abs(actual - expected) / expected;
-        EXPECT_LT(rel_err, 5E-6);
-        return t1 - t0;
-      });
-
-  printf("%zu,%zu,%.1f,%.1f,%.1f\n", xsize, ysize, mps_fir, mps_simd7, mps_rg);
-}
-
-TEST(GaussBlurTest, BenchmarkTest) {
-  Benchmark1D();
-  Benchmark(77, 177, 7);
-}
-
-TEST(GaussBlurTest, DISABLED_SlowBenchmark) {
-  Benchmark1D();
-
-  // Euler's gamma as a nothing-up-my-sleeve number, so sizes are unlikely to
-  // interact with cache properties
-  const float g = 0.57721566;
-  const size_t d0 = 128;
-  const size_t d1 = static_cast<size_t>(d0 / g);
-  const size_t d2 = static_cast<size_t>(d1 / g);
-  const size_t d3 = static_cast<size_t>(d2 / g);
-  Benchmark(d0, d0, 7);
-  Benchmark(d0, d1, 7);
-  Benchmark(d1, d0, 7);
-  Benchmark(d1, d1, 7);
-  Benchmark(d1, d2, 7);
-  Benchmark(d2, d1, 7);
-  Benchmark(d2, d2, 7);
-  Benchmark(d2, d3, 7);
-  Benchmark(d3, d2, 7);
-  Benchmark(d3, d3, 7);
-
-  Benchmark(1920, 1080, 7);
-
-  PROFILER_PRINT_RESULTS();
 }
 
 }  // namespace jxl

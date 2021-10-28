@@ -14,6 +14,7 @@
 #include "lib/jxl/base/profiler.h"
 #include "lib/jxl/color_management.h"
 #include "lib/jxl/enc_gamma_correct.h"
+#include "lib/jxl/enc_image_bundle.h"
 
 namespace jxl {
 namespace {

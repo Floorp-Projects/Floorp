@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 #include "lib/jxl/jpeg/enc_jpeg_data_reader.h"
+#include "lib/jxl/sanitizers.h"
 
 namespace jxl {
 namespace jpeg {
@@ -261,9 +262,12 @@ Status EncodeJPEGData(JPEGData& jpeg_data, PaddedBytes* bytes) {
     const uint8_t* in = data.data();
     uint8_t* out = &(*bytes)[initial_size + enc_size];
     do {
+      uint8_t* out_before = out;
+      msan::MemoryIsInitialized(in, available_in);
       JXL_CHECK(BrotliEncoderCompressStream(
           brotli_enc, last ? BROTLI_OPERATION_FINISH : BROTLI_OPERATION_PROCESS,
           &available_in, &in, &brotli_capacity, &out, &enc_size));
+      msan::UnpoisonMemory(out_before, out - out_before);
     } while (BrotliEncoderHasMoreOutput(brotli_enc) || available_in > 0);
   };
 

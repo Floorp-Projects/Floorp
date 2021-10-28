@@ -34,12 +34,13 @@ static const size_t kBrunsliMaxNumBlocks = 1ull << 24;
 
 // Macros for commonly used error conditions.
 
-#define JXL_JPEG_VERIFY_LEN(n)                                               \
-  if (*pos + (n) > len) {                                                    \
-    JXL_JPEG_DEBUG("Unexpected end of input: pos=%zu need=%d len=%zu", *pos, \
-                   static_cast<int>(n), len);                                \
-    jpg->error = JPEGReadError::UNEXPECTED_EOF;                              \
-    return false;                                                            \
+#define JXL_JPEG_VERIFY_LEN(n)                            \
+  if (*pos + (n) > len) {                                 \
+    JXL_JPEG_DEBUG("Unexpected end of input: pos=%" PRIuS \
+                   " need=%d len=%" PRIuS,                \
+                   *pos, static_cast<int>(n), len);       \
+    jpg->error = JPEGReadError::UNEXPECTED_EOF;           \
+    return false;                                         \
   }
 
 #define JXL_JPEG_VERIFY_INPUT(var, low, high, code)                \
@@ -49,21 +50,22 @@ static const size_t kBrunsliMaxNumBlocks = 1ull << 24;
     return false;                                                  \
   }
 
-#define JXL_JPEG_VERIFY_MARKER_END()                                 \
-  if (start_pos + marker_len != *pos) {                              \
-    JXL_JPEG_DEBUG("Invalid marker length: declared=%zu actual=%zu", \
-                   marker_len, (*pos - start_pos));                  \
-    jpg->error = JPEGReadError::WRONG_MARKER_SIZE;                   \
-    return false;                                                    \
+#define JXL_JPEG_VERIFY_MARKER_END()                         \
+  if (start_pos + marker_len != *pos) {                      \
+    JXL_JPEG_DEBUG("Invalid marker length: declared=%" PRIuS \
+                   " actual=%" PRIuS,                        \
+                   marker_len, (*pos - start_pos));          \
+    jpg->error = JPEGReadError::WRONG_MARKER_SIZE;           \
+    return false;                                            \
   }
 
-#define JXL_JPEG_EXPECT_MARKER()                                      \
-  if (pos + 2 > len || data[pos] != 0xff) {                           \
-    JXL_JPEG_DEBUG(                                                   \
-        "Marker byte (0xff) expected, found: 0x%.2x pos=%zu len=%zu", \
-        (pos < len ? data[pos] : 0), pos, len);                       \
-    jpg->error = JPEGReadError::MARKER_BYTE_NOT_FOUND;                \
-    return false;                                                     \
+#define JXL_JPEG_EXPECT_MARKER()                                            \
+  if (pos + 2 > len || data[pos] != 0xff) {                                 \
+    JXL_JPEG_DEBUG("Marker byte (0xff) expected, found: 0x%.2x pos=%" PRIuS \
+                   " len=%" PRIuS,                                          \
+                   (pos < len ? data[pos] : 0), pos, len);                  \
+    jpg->error = JPEGReadError::MARKER_BYTE_NOT_FOUND;                      \
+    return false;                                                           \
   }
 
 inline int ReadUint8(const uint8_t* data, size_t* pos) {
@@ -947,8 +949,9 @@ bool ProcessScan(const uint8_t* data, const size_t len,
     return false;
   }
   if (*pos > len) {
-    JXL_JPEG_DEBUG("Unexpected end of file during scan. pos=%zu len=%zu", *pos,
-                   len);
+    JXL_JPEG_DEBUG("Unexpected end of file during scan. pos=%" PRIuS
+                   " len=%" PRIuS,
+                   *pos, len);
     jpg->error = JPEGReadError::UNEXPECTED_EOF;
     return false;
   }
@@ -1092,8 +1095,8 @@ bool ReadJpeg(const uint8_t* data, const size_t len, JpegReadMode mode,
         }
         break;
       default:
-        JXL_JPEG_DEBUG("Unsupported marker: %d pos=%zu len=%zu", marker, pos,
-                       len);
+        JXL_JPEG_DEBUG("Unsupported marker: %d pos=%" PRIuS " len=%" PRIuS,
+                       marker, pos, len);
         jpg->error = JPEGReadError::UNSUPPORTED_MARKER;
         ok = false;
         break;

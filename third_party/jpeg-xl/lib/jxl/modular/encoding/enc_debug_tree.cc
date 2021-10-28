@@ -106,14 +106,14 @@ void PrintTree(const Tree &tree, const std::string &path) {
   fprintf(f, "graph{\n");
   for (size_t cur = 0; cur < tree.size(); cur++) {
     if (tree[cur].property < 0) {
-      fprintf(f, "n%05zu [label=\"%s%+" PRId64 " (x%u)\"];\n", cur,
+      fprintf(f, "n%05" PRIuS " [label=\"%s%+" PRId64 " (x%u)\"];\n", cur,
               PredictorName(tree[cur].predictor), tree[cur].predictor_offset,
               tree[cur].multiplier);
     } else {
-      fprintf(f, "n%05zu [label=\"%s>%d\"];\n", cur,
+      fprintf(f, "n%05" PRIuS " [label=\"%s>%d\"];\n", cur,
               PropertyName(tree[cur].property).c_str(), tree[cur].splitval);
-      fprintf(f, "n%05zu -- n%05d;\n", cur, tree[cur].lchild);
-      fprintf(f, "n%05zu -- n%05d;\n", cur, tree[cur].rchild);
+      fprintf(f, "n%05" PRIuS " -- n%05d;\n", cur, tree[cur].lchild);
+      fprintf(f, "n%05" PRIuS " -- n%05d;\n", cur, tree[cur].rchild);
     }
   }
   fprintf(f, "}\n");

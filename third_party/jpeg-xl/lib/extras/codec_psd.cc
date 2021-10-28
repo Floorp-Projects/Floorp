@@ -79,7 +79,7 @@ Status decode_layer(const uint8_t*& pos, const uint8_t* maxpos,
   for (int c = 0; c < nb_channels; c++) {
     // skip nop byte padding
     while (pos < maxpos && *pos == 128) pos++;
-    JXL_DEBUG_V(PSD_VERBOSITY, "Channel %i (pos %zu)", c, (size_t)pos);
+    JXL_DEBUG_V(PSD_VERBOSITY, "Channel %i (pos %" PRIuS ")", c, (size_t)pos);
     // Merged image stores all channels together (same compression method)
     // Layers store channel per channel
     if (is_layer || c == 0) {
@@ -189,7 +189,7 @@ Status decode_layer(const uint8_t*& pos, const uint8_t* maxpos,
 }  // namespace
 
 Status DecodeImagePSD(const Span<const uint8_t> bytes,
-                      const ColorHints& color_hints, ThreadPool* pool,
+                      const ColorHints& /*color_hints*/, ThreadPool* pool,
                       CodecInOut* io) {
   const uint8_t* pos = bytes.data();
   const uint8_t* maxpos = bytes.data() + bytes.size();
@@ -246,7 +246,7 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes,
     pos += namelength;
     if (!(namelength & 1)) pos++;  // padding to even length
     size_t blocklength = get_be_int(4, pos, maxpos);
-    // JXL_DEBUG_V(PSD_VERBOSITY, "block id: %i | block length: %zu",id,
+    // JXL_DEBUG_V(PSD_VERBOSITY, "block id: %i | block length: %" PRIuS,id,
     // blocklength);
     if (pos > maxpos) return JXL_FAILURE("PSD: Unexpected end of file");
     if (id == 1039) {  // ICC profile
@@ -275,8 +275,8 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes,
             "PSD: expected DisplayInfo version 1, got version %i", version);
       }
       int spotcolorcount = nb_channels - colormodel;
-      JXL_DEBUG_V(PSD_VERBOSITY, "Reading %i spot colors. %zu", spotcolorcount,
-                  blocklength);
+      JXL_DEBUG_V(PSD_VERBOSITY, "Reading %i spot colors. %" PRIuS,
+                  spotcolorcount, blocklength);
       for (int k = 0; k < spotcolorcount; k++) {
         int colorspace = get_be_int(2, pos, maxpos);
         if ((colormodel == 3 && colorspace != 0) ||
@@ -314,15 +314,17 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes,
     if (blocklength & 1) pos++;  // padding again
   }
 
-  JXL_RETURN_IF_ERROR(ApplyColorHints(color_hints, color_already_set,
-                                      /*is_gray=*/false, io));
+  // TODO(deymo): Apply color hints when PSD is converted to PackedPixelFile.
+  (void)color_already_set;
+  // JXL_RETURN_IF_ERROR(ApplyColorHints(color_hints, color_already_set,
+  //                                     /*is_gray=*/false, io));
 
   size_t layerlength = get_be_int(4 * version, pos, maxpos);
   const uint8_t* after_layers_pos = pos + layerlength;
   if (after_layers_pos < pos) return JXL_FAILURE("PSD: invalid layer length");
   if (layerlength) {
     pos += 4 * version;  // don't care about layerinfolength
-    JXL_DEBUG_V(PSD_VERBOSITY, "Layer section length: %zu", layerlength);
+    JXL_DEBUG_V(PSD_VERBOSITY, "Layer section length: %" PRIuS, layerlength);
     int layercount = static_cast<int16_t>(get_be_int(2, pos, maxpos));
     JXL_DEBUG_V(PSD_VERBOSITY, "Layer count: %i", layercount);
     io->frames.clear();
@@ -340,7 +342,7 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes,
         const uint8_t* tpos = pos;
         pos += 4;
         size_t blocklength = get_be_int(4 * version, pos, maxpos);
-        JXL_DEBUG_V(PSD_VERBOSITY, "Length=%zu", blocklength);
+        JXL_DEBUG_V(PSD_VERBOSITY, "Length=%" PRIuS, blocklength);
         if (blocklength > 0) {
           if (pos >= maxpos) return JXL_FAILURE("PSD: Unexpected end of file");
           size_t delta = maxpos - pos;
@@ -431,7 +433,8 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes,
       layer.origin.x0 = get_be_int(4, pos, maxpos);
       size_t height = get_be_int(4, pos, maxpos) - layer.origin.y0;
       size_t width = get_be_int(4, pos, maxpos) - layer.origin.x0;
-      JXL_DEBUG_V(PSD_VERBOSITY, "Layer %i: %zu x %zu at origin (%i, %i)", l,
+      JXL_DEBUG_V(PSD_VERBOSITY,
+                  "Layer %i: %" PRIuS " x %" PRIuS " at origin (%i, %i)", l,
                   width, height, layer.origin.x0, layer.origin.y0);
       int nb_chs = get_be_int(2, pos, maxpos);
       JXL_DEBUG_V(PSD_VERBOSITY, "  channels: %i", nb_chs);
@@ -478,7 +481,7 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes,
         }
       }
       size_t extradata = get_be_int(4, pos, maxpos);
-      JXL_DEBUG_V(PSD_VERBOSITY, "  extradata: %zu bytes", extradata);
+      JXL_DEBUG_V(PSD_VERBOSITY, "  extradata: %" PRIuS " bytes", extradata);
       const uint8_t* after_extra = pos + extradata;
       // TODO: deal with non-empty layer masks
       pos += get_be_int(4, pos, maxpos);  // skip layer mask data
@@ -530,7 +533,7 @@ Status DecodeImagePSD(const Span<const uint8_t> bytes,
       if (!is_real_layer[l]) continue;
       pos = bpos + layer_offsets[l];
       if (pos < bpos) return JXL_FAILURE("PSD: invalid layer offset");
-      JXL_DEBUG_V(PSD_VERBOSITY, "At position %i (%zu)",
+      JXL_DEBUG_V(PSD_VERBOSITY, "At position %i (%" PRIuS ")",
                   (int)(pos - bytes.data()), (size_t)pos);
       ImageBundle& layer = io->frames[il++];
       std::vector<int>& chan_id = layer_chan_id[l];

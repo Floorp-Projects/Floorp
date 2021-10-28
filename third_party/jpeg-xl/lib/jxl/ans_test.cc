@@ -6,12 +6,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <random>
 #include <vector>
 
 #include "gtest/gtest.h"
 #include "lib/jxl/ans_params.h"
 #include "lib/jxl/aux_out_fwd.h"
+#include "lib/jxl/base/random.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/dec_bit_reader.h"
@@ -95,12 +95,12 @@ constexpr size_t kReps = 100;
 void RoundtripRandomStream(int alphabet_size, size_t reps = kReps,
                            size_t num = 1 << 18) {
   constexpr int kNumHistograms = 3;
-  std::mt19937_64 rng;
+  Rng rng(0);
   for (size_t i = 0; i < reps; i++) {
     std::vector<Token> symbols;
     for (size_t j = 0; j < num; j++) {
-      int context = std::uniform_int_distribution<>(0, kNumHistograms - 1)(rng);
-      int value = std::uniform_int_distribution<>(0, alphabet_size - 1)(rng);
+      int context = rng.UniformI(0, kNumHistograms);
+      int value = rng.UniformU(0, alphabet_size);
       symbols.emplace_back(context, value);
     }
     RoundtripTestcase(kNumHistograms, alphabet_size, symbols);
@@ -110,7 +110,7 @@ void RoundtripRandomStream(int alphabet_size, size_t reps = kReps,
 void RoundtripRandomUnbalancedStream(int alphabet_size) {
   constexpr int kNumHistograms = 3;
   constexpr int kPrecision = 1 << 10;
-  std::mt19937_64 rng;
+  Rng rng(0);
   for (size_t i = 0; i < kReps; i++) {
     std::vector<int> distributions[kNumHistograms];
     for (int j = 0; j < kNumHistograms; j++) {
@@ -124,8 +124,7 @@ void RoundtripRandomUnbalancedStream(int alphabet_size) {
           // will create a nonuniform distribution and won't have too few
           // symbols usually. Also we want different distributions we get to be
           // sufficiently dissimilar.
-          remaining =
-              std::uniform_int_distribution<>(0, (kPrecision - k) / 1)(rng);
+          remaining = rng.UniformU(0, kPrecision - k + 1);
         }
         distributions[j][k] = symbol;
         remaining--;
@@ -133,9 +132,8 @@ void RoundtripRandomUnbalancedStream(int alphabet_size) {
     }
     std::vector<Token> symbols;
     for (int j = 0; j < 1 << 18; j++) {
-      int context = std::uniform_int_distribution<>(0, kNumHistograms - 1)(rng);
-      int value = distributions[context][std::uniform_int_distribution<>(
-          0, kPrecision - 1)(rng)];
+      int context = rng.UniformI(0, kNumHistograms);
+      int value = rng.UniformU(0, kPrecision);
       symbols.emplace_back(context, value);
     }
     RoundtripTestcase(kNumHistograms + 1, alphabet_size, symbols);

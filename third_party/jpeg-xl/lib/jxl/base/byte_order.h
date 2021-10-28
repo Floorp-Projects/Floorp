@@ -56,20 +56,6 @@ static JXL_INLINE uint32_t LoadLE16(const uint8_t* p) {
   return (byte1 << 8) | byte0;
 }
 
-static JXL_INLINE uint32_t LoadBE24(const uint8_t* p) {
-  const uint32_t byte2 = p[0];
-  const uint32_t byte1 = p[1];
-  const uint32_t byte0 = p[2];
-  return (byte2 << 16) | (byte1 << 8) | byte0;
-}
-
-static JXL_INLINE uint32_t LoadLE24(const uint8_t* p) {
-  const uint32_t byte0 = p[0];
-  const uint32_t byte1 = p[1];
-  const uint32_t byte2 = p[2];
-  return (byte2 << 16) | (byte1 << 8) | byte0;
-}
-
 static JXL_INLINE uint32_t LoadBE32(const uint8_t* p) {
 #if JXL_BYTE_ORDER_LITTLE
   uint32_t big;
@@ -151,18 +137,6 @@ static JXL_INLINE void StoreLE16(const uint32_t native, uint8_t* p) {
   p[0] = native & 0xFF;
 }
 
-static JXL_INLINE void StoreBE24(const uint32_t native, uint8_t* p) {
-  p[0] = (native >> 16) & 0xFF;
-  p[1] = (native >> 8) & 0xFF;
-  p[2] = native & 0xFF;
-}
-
-static JXL_INLINE void StoreLE24(const uint32_t native, uint8_t* p) {
-  p[2] = (native >> 24) & 0xFF;
-  p[1] = (native >> 8) & 0xFF;
-  p[0] = native & 0xFF;
-}
-
 static JXL_INLINE void StoreBE32(const uint32_t native, uint8_t* p) {
 #if JXL_BYTE_ORDER_LITTLE
   const uint32_t big = JXL_BSWAP32(native);
@@ -238,15 +212,6 @@ static JXL_INLINE void Store16(OrderLE /*tag*/, const uint32_t native,
   return StoreLE16(native, p);
 }
 
-static JXL_INLINE void Store24(OrderBE /*tag*/, const uint32_t native,
-                               uint8_t* p) {
-  return StoreBE24(native, p);
-}
-
-static JXL_INLINE void Store24(OrderLE /*tag*/, const uint32_t native,
-                               uint8_t* p) {
-  return StoreLE24(native, p);
-}
 static JXL_INLINE void Store32(OrderBE /*tag*/, const uint32_t native,
                                uint8_t* p) {
   return StoreBE32(native, p);
@@ -265,13 +230,6 @@ static JXL_INLINE uint32_t Load16(OrderLE /*tag*/, const uint8_t* p) {
   return LoadLE16(p);
 }
 
-static JXL_INLINE uint32_t Load24(OrderBE /*tag*/, const uint8_t* p) {
-  return LoadBE24(p);
-}
-
-static JXL_INLINE uint32_t Load24(OrderLE /*tag*/, const uint8_t* p) {
-  return LoadLE24(p);
-}
 static JXL_INLINE uint32_t Load32(OrderBE /*tag*/, const uint8_t* p) {
   return LoadBE32(p);
 }

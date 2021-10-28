@@ -26,6 +26,7 @@
 #include "lib/jxl/common.h"
 #include "lib/jxl/dec_external_image.h"
 #include "lib/jxl/enc_external_image.h"
+#include "lib/jxl/enc_image_bundle.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/luminance.h"
@@ -39,14 +40,14 @@ namespace {
 // Retrieves XMP and EXIF/IPTC from itext and text.
 class BlobsReaderPNG {
  public:
-  static Status Decode(const LodePNGInfo& info, Blobs* blobs) {
+  static Status Decode(const LodePNGInfo& info, PackedMetadata* metadata) {
     for (unsigned idx_itext = 0; idx_itext < info.itext_num; ++idx_itext) {
       // We trust these are properly null-terminated by LodePNG.
       const char* key = info.itext_keys[idx_itext];
       const char* value = info.itext_strings[idx_itext];
       if (strstr(key, "XML:com.adobe.xmp")) {
-        blobs->xmp.resize(strlen(value));  // safe, see above
-        memcpy(blobs->xmp.data(), value, blobs->xmp.size());
+        metadata->xmp.resize(strlen(value));  // safe, see above
+        memcpy(metadata->xmp.data(), value, metadata->xmp.size());
       }
     }
 
@@ -55,7 +56,7 @@ class BlobsReaderPNG {
       const char* key = info.text_keys[idx_text];
       const char* value = info.text_strings[idx_text];
       std::string type;
-      PaddedBytes bytes;
+      std::vector<uint8_t> bytes;
 
       // Handle text chunks annotated with key "Raw profile type ####", with
       // #### a type, which may contain metadata.
@@ -67,25 +68,27 @@ class BlobsReaderPNG {
         continue;
       }
       if (type == "exif") {
-        if (!blobs->exif.empty()) {
-          JXL_WARNING("overwriting EXIF (%zu bytes) with base16 (%zu bytes)",
-                      blobs->exif.size(), bytes.size());
+        if (!metadata->exif.empty()) {
+          JXL_WARNING("overwriting EXIF (%" PRIuS " bytes) with base16 (%" PRIuS
+                      " bytes)",
+                      metadata->exif.size(), bytes.size());
         }
-        blobs->exif = std::move(bytes);
+        metadata->exif = std::move(bytes);
       } else if (type == "iptc") {
         // TODO (jon): Deal with IPTC in some way
       } else if (type == "8bim") {
         // TODO (jon): Deal with 8bim in some way
       } else if (type == "xmp") {
-        if (!blobs->xmp.empty()) {
-          JXL_WARNING("overwriting XMP (%zu bytes) with base16 (%zu bytes)",
-                      blobs->xmp.size(), bytes.size());
+        if (!metadata->xmp.empty()) {
+          JXL_WARNING("overwriting XMP (%" PRIuS " bytes) with base16 (%" PRIuS
+                      " bytes)",
+                      metadata->xmp.size(), bytes.size());
         }
-        blobs->xmp = std::move(bytes);
+        metadata->xmp = std::move(bytes);
       } else {
-        JXL_WARNING(
-            "Unknown type in 'Raw format type' text chunk: %s: %zu bytes",
-            type.c_str(), bytes.size());
+        JXL_WARNING("Unknown type in 'Raw format type' text chunk: %s: %" PRIuS
+                    " bytes",
+                    type.c_str(), bytes.size());
       }
     }
 
@@ -114,7 +117,8 @@ class BlobsReaderPNG {
   // We trust key and encoded are null-terminated because they come from
   // LodePNG.
   static Status MaybeDecodeBase16(const char* key, const char* encoded,
-                                  std::string* type, PaddedBytes* bytes) {
+                                  std::string* type,
+                                  std::vector<uint8_t>* bytes) {
     const char* encoded_end = encoded + strlen(encoded);
 
     const char* kKey = "Raw profile type ";
@@ -232,7 +236,8 @@ class BlobsWriterPNG {
     snprintf(key, sizeof(key), "Raw profile type %s", type.c_str());
 
     char header[30];
-    snprintf(header, sizeof(header), "\n%s\n%8zu", type.c_str(), bytes.size());
+    snprintf(header, sizeof(header), "\n%s\n%8" PRIuS, type.c_str(),
+             bytes.size());
 
     const std::string& encoded = std::string(header) + base16;
     if (lodepng_add_text(info, key, encoded.c_str()) != 0) {
@@ -248,72 +253,58 @@ class ColorEncodingReaderPNG {
  public:
   // Fills original->color_encoding or returns false.
   Status operator()(const Span<const uint8_t> bytes, const bool is_gray,
-                    CodecInOut* io) {
-    ColorEncoding* c_original = &io->metadata.m.color_encoding;
-    JXL_RETURN_IF_ERROR(Decode(bytes, &io->blobs));
+                    PackedPixelFile* ppf) {
+    JXL_RETURN_IF_ERROR(Decode(bytes, &ppf->metadata, &ppf->color_encoding));
 
-    const ColorSpace color_space =
-        is_gray ? ColorSpace::kGray : ColorSpace::kRGB;
+    const JxlColorSpace color_space =
+        is_gray ? JXL_COLOR_SPACE_GRAY : JXL_COLOR_SPACE_RGB;
+    ppf->color_encoding.color_space = color_space;
 
     if (have_pq_) {
-      c_original->SetColorSpace(color_space);
-      c_original->white_point = WhitePoint::kD65;
-      c_original->primaries = Primaries::k2100;
-      c_original->tf.SetTransferFunction(TransferFunction::kPQ);
-      c_original->rendering_intent = RenderingIntent::kRelative;
-      if (c_original->CreateICC()) return true;
-      JXL_WARNING("Failed to synthesize BT.2100 PQ");
-      // Else: try the actual ICC profile.
+      // Synthesize the ICC with these parameters instead.
+      ppf->color_encoding.white_point = JXL_WHITE_POINT_D65;
+      ppf->color_encoding.primaries = JXL_PRIMARIES_2100;
+      ppf->color_encoding.transfer_function = JXL_TRANSFER_FUNCTION_PQ;
+      ppf->color_encoding.rendering_intent = JXL_RENDERING_INTENT_RELATIVE;
+      return true;
     }
 
     // ICC overrides anything else if present.
-    if (c_original->SetICC(std::move(icc_))) {
-      if (have_srgb_) {
-        JXL_WARNING("Invalid PNG with both sRGB and ICC; ignoring sRGB");
-      }
-      if (is_gray != c_original->IsGray()) {
-        return JXL_FAILURE("Mismatch between ICC and PNG header grayscale");
-      }
-      return true;  // it's fine to ignore gAMA/cHRM.
-    }
+    ppf->icc = std::move(icc_);
 
     // PNG requires that sRGB override gAMA/cHRM.
     if (have_srgb_) {
-      return c_original->SetSRGB(color_space, rendering_intent_);
+      ppf->icc.clear();
+      ppf->color_encoding.white_point = JXL_WHITE_POINT_D65;
+      ppf->color_encoding.primaries = JXL_PRIMARIES_SRGB;
+      ppf->color_encoding.transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
+      ppf->color_encoding.rendering_intent = JXL_RENDERING_INTENT_PERCEPTUAL;
+      return true;
     }
 
     // Try to create a custom profile:
-
-    c_original->SetColorSpace(color_space);
 
     // Attempt to set whitepoint and primaries if there is a cHRM chunk, or else
     // use default sRGB (the PNG then is device-dependent).
     // In case of grayscale, do not attempt to set the primaries and ignore the
     // ones the PNG image has (but still set the white point).
-    if (!have_chrm_ || !c_original->SetWhitePoint(white_point_) ||
-        (!is_gray && !c_original->SetPrimaries(primaries_))) {
+    if (!have_chrm_) {
 #if JXL_PNG_VERBOSE >= 1
-      JXL_WARNING("No (valid) cHRM, assuming sRGB");
+      JXL_WARNING("No cHRM, assuming sRGB");
 #endif
-      c_original->white_point = WhitePoint::kD65;
-      c_original->primaries = Primaries::kSRGB;
+      ppf->color_encoding.white_point = JXL_WHITE_POINT_D65;
+      ppf->color_encoding.primaries = JXL_PRIMARIES_SRGB;
     }
 
-    if (!have_gama_ || !c_original->tf.SetGamma(gamma_)) {
+    if (!have_gama_) {
 #if JXL_PNG_VERBOSE >= 1
-      JXL_WARNING("No (valid) gAMA nor sRGB, assuming sRGB");
+      JXL_WARNING("No gAMA nor sRGB, assuming sRGB");
 #endif
-      c_original->tf.SetTransferFunction(TransferFunction::kSRGB);
+      ppf->color_encoding.transfer_function = JXL_TRANSFER_FUNCTION_SRGB;
     }
 
-    c_original->rendering_intent = RenderingIntent::kRelative;
-    if (c_original->CreateICC()) return true;
-
-    JXL_WARNING(
-        "DATA LOSS: unable to create an ICC profile for PNG gAMA/cHRM.\n"
-        "Image pixels will be interpreted as sRGB. Please add an ICC \n"
-        "profile to the input image");
-    return c_original->SetSRGB(color_space);
+    ppf->color_encoding.rendering_intent = JXL_RENDERING_INTENT_RELATIVE;
+    return true;
   }
 
   // Whether the image has any color profile information (ICC chunk, sRGB
@@ -369,46 +360,57 @@ class ColorEncodingReaderPNG {
     return static_cast<int32_t>(x) * 1E-5;
   }
 
-  Status DecodeSRGB(const unsigned char* payload, const size_t payload_size) {
+  Status DecodeSRGB(const unsigned char* payload, const size_t payload_size,
+                    JxlColorEncoding* color_encoding) {
     if (payload_size != 1) return JXL_FAILURE("Wrong sRGB size");
     // (PNG uses the same values as ICC.)
     if (payload[0] >= 4) return JXL_FAILURE("Invalid Rendering Intent");
-    rendering_intent_ = static_cast<RenderingIntent>(payload[0]);
+    color_encoding->rendering_intent =
+        static_cast<JxlRenderingIntent>(payload[0]);
     have_srgb_ = true;
     return true;
   }
 
-  Status DecodeGAMA(const unsigned char* payload, const size_t payload_size) {
+  Status DecodeGAMA(const unsigned char* payload, const size_t payload_size,
+                    JxlColorEncoding* color_encoding) {
     if (payload_size != 4) return JXL_FAILURE("Wrong gAMA size");
-    gamma_ = F64FromU32(LoadBE32(payload));
+    color_encoding->transfer_function = JXL_TRANSFER_FUNCTION_GAMMA;
+    color_encoding->gamma = F64FromU32(LoadBE32(payload));
     have_gama_ = true;
     return true;
   }
 
-  Status DecodeCHRM(const unsigned char* payload, const size_t payload_size) {
+  Status DecodeCHRM(const unsigned char* payload, const size_t payload_size,
+                    JxlColorEncoding* color_encoding) {
     if (payload_size != 32) return JXL_FAILURE("Wrong cHRM size");
-    white_point_.x = F64FromU32(LoadBE32(payload + 0));
-    white_point_.y = F64FromU32(LoadBE32(payload + 4));
-    primaries_.r.x = F64FromU32(LoadBE32(payload + 8));
-    primaries_.r.y = F64FromU32(LoadBE32(payload + 12));
-    primaries_.g.x = F64FromU32(LoadBE32(payload + 16));
-    primaries_.g.y = F64FromU32(LoadBE32(payload + 20));
-    primaries_.b.x = F64FromU32(LoadBE32(payload + 24));
-    primaries_.b.y = F64FromU32(LoadBE32(payload + 28));
+
+    color_encoding->white_point = JXL_WHITE_POINT_CUSTOM;
+    color_encoding->white_point_xy[0] = F64FromU32(LoadBE32(payload + 0));
+    color_encoding->white_point_xy[1] = F64FromU32(LoadBE32(payload + 4));
+
+    color_encoding->primaries = JXL_PRIMARIES_CUSTOM;
+    color_encoding->primaries_red_xy[0] = F64FromU32(LoadBE32(payload + 8));
+    color_encoding->primaries_red_xy[1] = F64FromU32(LoadBE32(payload + 12));
+    color_encoding->primaries_green_xy[0] = F64FromU32(LoadBE32(payload + 16));
+    color_encoding->primaries_green_xy[1] = F64FromU32(LoadBE32(payload + 20));
+    color_encoding->primaries_blue_xy[0] = F64FromU32(LoadBE32(payload + 24));
+    color_encoding->primaries_blue_xy[1] = F64FromU32(LoadBE32(payload + 28));
+
     have_chrm_ = true;
     return true;
   }
 
   Status DecodeEXIF(const unsigned char* payload, const size_t payload_size,
-                    Blobs* blobs) {
+                    PackedMetadata* metadata) {
     // If we already have EXIF, keep the larger one.
-    if (blobs->exif.size() > payload_size) return true;
-    blobs->exif.resize(payload_size);
-    memcpy(blobs->exif.data(), payload, payload_size);
+    if (metadata->exif.size() > payload_size) return true;
+    metadata->exif.resize(payload_size);
+    memcpy(metadata->exif.data(), payload, payload_size);
     return true;
   }
 
-  Status Decode(const Span<const uint8_t> bytes, Blobs* blobs) {
+  Status Decode(const Span<const uint8_t> bytes, PackedMetadata* metadata,
+                JxlColorEncoding* color_encoding) {
     // Look for colorimetry and text chunks in the PNG image. The PNG chunks
     // begin after the PNG magic header of 8 bytes.
     const unsigned char* chunk = bytes.data() + 8;
@@ -451,15 +453,18 @@ class ColorEncodingReaderPNG {
         }
 
         if (type == "eXIf") {
-          JXL_RETURN_IF_ERROR(DecodeEXIF(payload, payload_size, blobs));
+          JXL_RETURN_IF_ERROR(DecodeEXIF(payload, payload_size, metadata));
         } else if (type == "iCCP") {
           JXL_RETURN_IF_ERROR(DecodeICC(payload, payload_size));
         } else if (type == "sRGB") {
-          JXL_RETURN_IF_ERROR(DecodeSRGB(payload, payload_size));
+          JXL_RETURN_IF_ERROR(
+              DecodeSRGB(payload, payload_size, color_encoding));
         } else if (type == "gAMA") {
-          JXL_RETURN_IF_ERROR(DecodeGAMA(payload, payload_size));
+          JXL_RETURN_IF_ERROR(
+              DecodeGAMA(payload, payload_size, color_encoding));
         } else if (type == "cHRM") {
-          JXL_RETURN_IF_ERROR(DecodeCHRM(payload, payload_size));
+          JXL_RETURN_IF_ERROR(
+              DecodeCHRM(payload, payload_size, color_encoding));
         }
       }
 
@@ -468,23 +473,13 @@ class ColorEncodingReaderPNG {
     return true;
   }
 
-  PaddedBytes icc_;
+  std::vector<uint8_t> icc_;
 
   bool have_pq_ = false;
   bool have_srgb_ = false;
   bool have_gama_ = false;
   bool have_chrm_ = false;
   bool have_icc_ = false;
-
-  // Only valid if have_srgb_:
-  RenderingIntent rendering_intent_;
-
-  // Only valid if have_gama_:
-  double gamma_;
-
-  // Only valid if have_chrm_:
-  CIExy white_point_;
-  PrimariesCIExy primaries_;
 };
 
 // Stores ColorEncoding into PNG chunks.
@@ -718,15 +713,16 @@ Status InspectChunkType(const Span<const uint8_t> bytes,
 }  // namespace
 
 Status DecodeImagePNG(const Span<const uint8_t> bytes,
-                      const ColorHints& color_hints, ThreadPool* pool,
-                      CodecInOut* io) {
+                      const ColorHints& color_hints,
+                      const SizeConstraints& constraints,
+                      PackedPixelFile* ppf) {
   unsigned w, h;
   PNGState state;
   if (lodepng_inspect(&w, &h, &state.s, bytes.data(), bytes.size()) != 0) {
     return false;  // not an error - just wrong format
   }
-  JXL_RETURN_IF_ERROR(VerifyDimensions(&io->constraints, w, h));
-  io->SetSize(w, h);
+  JXL_RETURN_IF_ERROR(VerifyDimensions(&constraints, w, h));
+
   // Palette RGB values
   if (!InspectChunkType(bytes, "PLTE", &state.s)) {
     return false;
@@ -750,9 +746,6 @@ Status DecodeImagePNG(const Span<const uint8_t> bytes,
   if (bits_per_sample != 8 && bits_per_sample != 16) {
     return JXL_FAILURE("Unexpected PNG bit depth");
   }
-  io->metadata.m.SetUintSamples(static_cast<uint32_t>(bits_per_sample));
-  io->metadata.m.SetAlphaBits(
-      has_alpha ? io->metadata.m.bit_depth.bits_per_sample : 0);
 
   // Always decode to 8/16-bit RGB/RGBA, not LCT_PALETTE.
   state.s.info_raw.bitdepth = static_cast<unsigned>(bits_per_sample);
@@ -766,32 +759,38 @@ Status DecodeImagePNG(const Span<const uint8_t> bytes,
     return JXL_FAILURE("PNG decode failed: %s", lodepng_error_text(err));
   }
 
-  if (!BlobsReaderPNG::Decode(state.s.info_png, &io->blobs)) {
+  if (!BlobsReaderPNG::Decode(state.s.info_png, &ppf->metadata)) {
     JXL_WARNING("PNG metadata may be incomplete");
   }
   ColorEncodingReaderPNG reader;
-  JXL_RETURN_IF_ERROR(reader(bytes, is_gray, io));
-#if JXL_PNG_VERBOSE >= 1
-  printf("PNG read %s\n", Description(io->metadata.m.color_encoding).c_str());
-#endif
+  JXL_RETURN_IF_ERROR(reader(bytes, is_gray, ppf));
 
-  const size_t num_channels = (is_gray ? 1 : 3) + has_alpha;
-  const size_t out_size = w * h * num_channels * bits_per_sample / kBitsPerByte;
+  const uint32_t num_channels = (is_gray ? 1 : 3) + has_alpha;
 
-  const JxlEndianness endianness = JXL_BIG_ENDIAN;  // PNG requirement
-  const Span<const uint8_t> span(out, out_size);
-  const bool ok = ConvertFromExternal(
-      span, w, h, io->metadata.m.color_encoding, has_alpha,
-      /*alpha_is_premultiplied=*/false,
-      io->metadata.m.bit_depth.bits_per_sample, endianness,
-      /*flipped_y=*/false, pool, &io->Main(), /*float_in=*/false);
-  JXL_RETURN_IF_ERROR(ok);
-  io->dec_pixels = w * h;
-  io->metadata.m.bit_depth.bits_per_sample = io->Main().DetectRealBitdepth();
-  io->metadata.m.xyb_encoded = false;
-  SetIntensityTarget(io);
+  ppf->info.xsize = w;
+  ppf->info.ysize = h;
+  // Original data is uint, so exponent_bits_per_sample = 0.
+  ppf->info.bits_per_sample = bits_per_sample;
+  ppf->info.exponent_bits_per_sample = 0;
+  ppf->info.uses_original_profile = true;
+  ppf->info.have_preview = false;
+  ppf->info.have_animation = false;
+
+  ppf->info.alpha_bits = has_alpha ? bits_per_sample : 0;
+  ppf->info.num_color_channels = is_gray ? 1 : 3;
+
+  const JxlPixelFormat format{
+      /*num_channels=*/num_channels,
+      /*data_type=*/bits_per_sample == 16 ? JXL_TYPE_UINT16 : JXL_TYPE_UINT8,
+      /*endianness=*/JXL_BIG_ENDIAN,  // PNG requirement
+      /*align=*/0,
+  };
+  const size_t out_size = static_cast<size_t>(w) * h * num_channels *
+                          bits_per_sample / kBitsPerByte;
+  ppf->frames.emplace_back(w, h, format, out_ptr.release(), out_size);
+
   JXL_RETURN_IF_ERROR(
-      ApplyColorHints(color_hints, reader.HaveColorProfile(), is_gray, io));
+      ApplyColorHints(color_hints, reader.HaveColorProfile(), is_gray, ppf));
   return true;
 }
 

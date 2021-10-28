@@ -154,7 +154,7 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
     }
   }
 
-  JXL_DEBUG_V(3, "Decoded MA tree with %zu nodes", tree.size());
+  JXL_DEBUG_V(3, "Decoded MA tree with %" PRIuS " nodes", tree.size());
 
   // MAANS decode
   const auto make_pixel = [](uint64_t v, pixel_type multiplier,
@@ -387,7 +387,7 @@ Status ModularDecode(BitReader *br, Image &image, GroupHeader &header,
 
   // decode transforms
   JXL_RETURN_IF_ERROR(Bundle::Read(br, &header));
-  JXL_DEBUG_V(3, "Image data underwent %zu transformations: ",
+  JXL_DEBUG_V(3, "Image data underwent %" PRIuS " transformations: ",
               header.transforms.size());
   image.transform = header.transforms;
   for (Transform &transform : image.transform) {
@@ -509,7 +509,9 @@ Status ModularGenericDecompress(BitReader *br, Image &image,
   if (undo_transforms) image.undo_transforms(header->wp_header);
   if (image.error) return JXL_FAILURE("Corrupt file. Aborting.");
   size_t bit_pos = br->TotalBitsConsumed();
-  JXL_DEBUG_V(4, "Modular-decoded a %zux%zu nbchans=%zu image from %zu bytes",
+  JXL_DEBUG_V(4,
+              "Modular-decoded a %" PRIuS "x%" PRIuS " nbchans=%" PRIuS
+              " image from %" PRIuS " bytes",
               image.w, image.h, image.channel.size(),
               (br->TotalBitsConsumed() - bit_pos) / 8);
   (void)bit_pos;

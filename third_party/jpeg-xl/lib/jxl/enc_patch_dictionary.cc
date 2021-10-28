@@ -10,7 +10,6 @@
 #include <sys/types.h>
 
 #include <algorithm>
-#include <random>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -19,6 +18,7 @@
 #include "lib/jxl/ans_params.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/override.h"
+#include "lib/jxl/base/random.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/color_management.h"
@@ -371,8 +371,7 @@ std::vector<PatchInfo> FindTextLikePatches(
   queue.clear();
 
   ImageF ccs;
-  std::mt19937 rng;
-  std::uniform_real_distribution<float> dist(0.5, 1.0);
+  Rng rng(0);
   bool paint_ccs = false;
   if (WantDebugOutput(aux_out)) {
     aux_out->DumpPlaneNormalized("is_background", is_background);
@@ -506,7 +505,7 @@ std::vector<PatchInfo> FindTextLikePatches(
         continue;
       }
       if (paint_ccs) {
-        float cc_color = dist(rng);
+        float cc_color = rng.UniformF(0.5, 1.0);
         for (std::pair<uint32_t, uint32_t> p : cc) {
           ccs.Row(p.second)[p.first] = cc_color;
         }

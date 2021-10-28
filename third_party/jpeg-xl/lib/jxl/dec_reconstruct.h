@@ -59,6 +59,9 @@ Status FinalizeImageRect(
 void EnsurePaddingInPlace(Image3F* img, const Rect& rect,
                           const Rect& image_rect, size_t image_xsize,
                           size_t image_ysize, size_t xpadding, size_t ypadding);
+void EnsurePaddingInPlace(ImageF* img, const Rect& rect, const Rect& image_rect,
+                          size_t image_xsize, size_t image_ysize,
+                          size_t xpadding, size_t ypadding);
 
 // For DC in the API.
 void UndoXYB(const Image3F& src, Image3F* dst,

@@ -99,13 +99,6 @@ struct BitWriter {
     Allotment* parent_;
   };
 
-  // WARNING: think twice before using this. Concatenating two BitWriters that
-  // pad to bytes is NOT the same as one contiguous BitWriter.
-  BitWriter& operator+=(const BitWriter& other);
-
-  // TODO(janwas): remove once all callers use BitWriter
-  BitWriter& operator+=(const PaddedBytes& other);
-
   // Writes bits into bytes in increasing addresses, and within a byte
   // least-significant-bit first.
   //
@@ -114,23 +107,13 @@ struct BitWriter {
 
   // This should only rarely be used - e.g. when the current location will be
   // referenced via byte offset (TOCs point to groups), or byte-aligned reading
-  // is required for speed. WARNING: this interacts badly with operator+=,
-  // see above.
+  // is required for speed.
   void ZeroPadToByte() {
     const size_t remainder_bits =
         RoundUpBitsToByteMultiple(bits_written_) - bits_written_;
     if (remainder_bits == 0) return;
     Write(remainder_bits, 0);
     JXL_ASSERT(bits_written_ % kBitsPerByte == 0);
-  }
-
-  // TODO(janwas): remove? only called from ANS
-  void RewindStorage(const size_t pos0) {
-    JXL_ASSERT(pos0 <= bits_written_);
-    bits_written_ = pos0;
-    static const uint8_t kRewindMasks[8] = {0x0, 0x1,  0x3,  0x7,
-                                            0xf, 0x1f, 0x3f, 0x7f};
-    storage_[pos0 >> 3] &= kRewindMasks[pos0 & 7];
   }
 
  private:

@@ -107,7 +107,6 @@ void ConvolutionWithTranspose(const ImageF& in,
 
   // middle
   switch (len) {
-#if 1  // speed-optimized version
     case 7: {
       PROFILER_ZONE("conv7");
       const float sk0 = scaled_kernel[0];
@@ -163,30 +162,6 @@ void ConvolutionWithTranspose(const ImageF& in,
       }
       break;
     }
-    case 25: {
-      PROFILER_ZONE("conv25");
-      for (size_t y = 0; y < in.ysize(); ++y) {
-        const float* BUTTERAUGLI_RESTRICT row_in = in.Row(y) + border1 - offset;
-        for (size_t x = border1; x < border2; ++x, ++row_in) {
-          float sum0 = (row_in[0] + row_in[24]) * scaled_kernel[0];
-          float sum1 = (row_in[1] + row_in[23]) * scaled_kernel[1];
-          float sum2 = (row_in[2] + row_in[22]) * scaled_kernel[2];
-          float sum3 = (row_in[3] + row_in[21]) * scaled_kernel[3];
-          sum0 += (row_in[4] + row_in[20]) * scaled_kernel[4];
-          sum1 += (row_in[5] + row_in[19]) * scaled_kernel[5];
-          sum2 += (row_in[6] + row_in[18]) * scaled_kernel[6];
-          sum3 += (row_in[7] + row_in[17]) * scaled_kernel[7];
-          sum0 += (row_in[8] + row_in[16]) * scaled_kernel[8];
-          sum1 += (row_in[9] + row_in[15]) * scaled_kernel[9];
-          sum2 += (row_in[10] + row_in[14]) * scaled_kernel[10];
-          sum3 += (row_in[11] + row_in[13]) * scaled_kernel[11];
-          const float sum = (row_in[12]) * scaled_kernel[12];
-          float* BUTTERAUGLI_RESTRICT row_out = out->Row(x);
-          row_out[y] = sum + sum0 + sum1 + sum2 + sum3;
-        }
-      }
-      break;
-    }
     case 33: {
       PROFILER_ZONE("conv33");
       for (size_t y = 0; y < in.ysize(); ++y) {
@@ -215,41 +190,8 @@ void ConvolutionWithTranspose(const ImageF& in,
       }
       break;
     }
-    case 37: {
-      PROFILER_ZONE("conv37");
-      for (size_t y = 0; y < in.ysize(); ++y) {
-        const float* BUTTERAUGLI_RESTRICT row_in = in.Row(y) + border1 - offset;
-        for (size_t x = border1; x < border2; ++x, ++row_in) {
-          float sum0 = (row_in[0] + row_in[36]) * scaled_kernel[0];
-          float sum1 = (row_in[1] + row_in[35]) * scaled_kernel[1];
-          float sum2 = (row_in[2] + row_in[34]) * scaled_kernel[2];
-          float sum3 = (row_in[3] + row_in[33]) * scaled_kernel[3];
-          sum0 += (row_in[4] + row_in[32]) * scaled_kernel[4];
-          sum0 += (row_in[5] + row_in[31]) * scaled_kernel[5];
-          sum0 += (row_in[6] + row_in[30]) * scaled_kernel[6];
-          sum0 += (row_in[7] + row_in[29]) * scaled_kernel[7];
-          sum0 += (row_in[8] + row_in[28]) * scaled_kernel[8];
-          sum1 += (row_in[9] + row_in[27]) * scaled_kernel[9];
-          sum2 += (row_in[10] + row_in[26]) * scaled_kernel[10];
-          sum3 += (row_in[11] + row_in[25]) * scaled_kernel[11];
-          sum0 += (row_in[12] + row_in[24]) * scaled_kernel[12];
-          sum1 += (row_in[13] + row_in[23]) * scaled_kernel[13];
-          sum2 += (row_in[14] + row_in[22]) * scaled_kernel[14];
-          sum3 += (row_in[15] + row_in[21]) * scaled_kernel[15];
-          sum0 += (row_in[16] + row_in[20]) * scaled_kernel[16];
-          sum1 += (row_in[17] + row_in[19]) * scaled_kernel[17];
-          const float sum = (row_in[18]) * scaled_kernel[18];
-          float* BUTTERAUGLI_RESTRICT row_out = out->Row(x);
-          row_out[y] = sum + sum0 + sum1 + sum2 + sum3;
-        }
-      }
-      break;
-    }
     default:
-      printf("Warning: Unexpected kernel size! %zu\n", len);
-#else
-    default:
-#endif
+      printf("Warning: Unexpected kernel size! %" PRIuS "\n", len);
       for (size_t y = 0; y < in.ysize(); ++y) {
         const float* BUTTERAUGLI_RESTRICT row_in = in.Row(y);
         for (size_t x = border1; x < border2; ++x) {
@@ -275,66 +217,6 @@ void ConvolutionWithTranspose(const ImageF& in,
   // right border
   for (size_t x = border2; x < in.xsize(); ++x) {
     ConvolveBorderColumn(in, kernel, x, out->Row(x));
-  }
-}
-
-// Separate horizontal and vertical (next function) convolution passes.
-void BlurHorizontalConv(const ImageF& in, const intptr_t xbegin,
-                        const intptr_t xend, const intptr_t ybegin,
-                        const intptr_t yend, const std::vector<float>& kernel,
-                        ImageF* out) {
-  if (xbegin >= xend || ybegin >= yend) return;
-  const intptr_t xsize = in.xsize();
-  const intptr_t ysize = in.ysize();
-  JXL_ASSERT(0 <= xbegin && xend <= xsize);
-  JXL_ASSERT(0 <= ybegin && yend <= ysize);
-  (void)xsize;
-  (void)ysize;
-  const intptr_t radius = kernel.size() / 2;
-
-  for (intptr_t y = ybegin; y < yend; ++y) {
-    float* JXL_RESTRICT row_out = out->Row(y);
-    for (intptr_t x = xbegin; x < xend; ++x) {
-      float sum = 0.0f;
-      float sum_weights = 0.0f;
-      const float* JXL_RESTRICT row_in = in.Row(y);
-      for (intptr_t ix = -radius; ix <= radius; ++ix) {
-        const intptr_t in_x = x + ix;
-        if (in_x < 0 || in_x >= xsize) continue;
-        const float weight_x = kernel[ix + radius];
-        sum += row_in[in_x] * weight_x;
-        sum_weights += weight_x;
-      }
-      row_out[x] = sum / sum_weights;
-    }
-  }
-}
-
-void BlurVerticalConv(const ImageF& in, const intptr_t xbegin,
-                      const intptr_t xend, const intptr_t ybegin,
-                      const intptr_t yend, const std::vector<float>& kernel,
-                      ImageF* out) {
-  if (xbegin >= xend || ybegin >= yend) return;
-  const intptr_t xsize = in.xsize();
-  const intptr_t ysize = in.ysize();
-  JXL_ASSERT(0 <= xbegin && xend <= xsize);
-  JXL_ASSERT(0 <= ybegin && yend <= ysize);
-  (void)xsize;
-  const intptr_t radius = kernel.size() / 2;
-  for (intptr_t y = ybegin; y < yend; ++y) {
-    float* JXL_RESTRICT row_out = out->Row(y);
-    for (intptr_t x = xbegin; x < xend; ++x) {
-      float sum = 0.0f;
-      float sum_weights = 0.0f;
-      for (intptr_t iy = -radius; iy <= radius; ++iy) {
-        const intptr_t in_y = y + iy;
-        if (in_y < 0 || in_y >= ysize) continue;
-        const float weight_y = kernel[iy + radius];
-        sum += in.ConstRow(in_y)[x] * weight_y;
-        sum_weights += weight_y;
-      }
-      row_out[x] = sum / sum_weights;
-    }
   }
 }
 
@@ -370,56 +252,9 @@ void Blur(const ImageF& in, float sigma, const ButteraugliParams& params,
     return;
   }
 
-  const bool fast_gauss = params.approximate_border;
-  const bool kBorderFixup = fast_gauss && false;
-  // Fast+fixup is actually slower for small images that are all border.
-  const bool too_small_for_fast_gauss =
-      kBorderFixup &&
-      in.xsize() * in.ysize() < 9 * kernel.size() * kernel.size();
-  // If fast gaussian is disabled, use previous transposed convolution.
-  if (!fast_gauss || too_small_for_fast_gauss) {
-    ImageF* JXL_RESTRICT temp_t = temp->GetTransposed(in);
-    ConvolutionWithTranspose(in, kernel, temp_t);
-    ConvolutionWithTranspose(*temp_t, kernel, out);
-    return;
-  }
-  auto rg = CreateRecursiveGaussian(sigma);
-  ImageF* JXL_RESTRICT temp_ = temp->Get(in);
-  ThreadPool* null_pool = nullptr;
-  FastGaussian(rg, in, null_pool, temp_, out);
-
-  if (kBorderFixup) {
-    // Produce rg_radius extra pixels around each border
-    const intptr_t rg_radius = rg->radius;
-    const intptr_t radius = kernel.size() / 2;
-    const intptr_t xsize = in.xsize();
-    const intptr_t ysize = in.ysize();
-    const intptr_t yend_top = std::min(rg_radius + radius, ysize);
-    const intptr_t ybegin_bottom =
-        std::max(intptr_t(0), ysize - rg_radius - radius);
-    // Top (requires radius extra for the vertical pass)
-    BlurHorizontalConv(in, 0, xsize, 0, yend_top, kernel, temp_);
-    // Bottom
-    BlurHorizontalConv(in, 0, xsize, ybegin_bottom, ysize, kernel, temp_);
-    // Left/right columns between top and bottom
-    const intptr_t xbegin_right = std::max(intptr_t(0), xsize - rg_radius);
-    const intptr_t xend_left = std::min(rg_radius, xsize);
-    BlurHorizontalConv(in, 0, xend_left, yend_top, ybegin_bottom, kernel,
-                       temp_);
-    BlurHorizontalConv(in, xbegin_right, xsize, yend_top, ybegin_bottom, kernel,
-                       temp_);
-
-    // Entire left/right columns
-    BlurVerticalConv(*temp_, 0, xend_left, 0, ysize, kernel, out);
-    BlurVerticalConv(*temp_, xbegin_right, xsize, 0, ysize, kernel, out);
-    // Top/bottom between left/right
-    const intptr_t ybegin_bottom2 = std::max(intptr_t(0), ysize - rg_radius);
-    const intptr_t yend_top2 = std::min(rg_radius, ysize);
-    BlurVerticalConv(*temp_, xend_left, xbegin_right, 0, yend_top2, kernel,
-                     out);
-    BlurVerticalConv(*temp_, xend_left, xbegin_right, ybegin_bottom2, ysize,
-                     kernel, out);
-  }
+  ImageF* JXL_RESTRICT temp_t = temp->GetTransposed(in);
+  ConvolutionWithTranspose(in, kernel, temp_t);
+  ConvolutionWithTranspose(*temp_t, kernel, out);
 }
 
 // Allows PaddedMaltaUnit to call either function via overloading.
@@ -1113,34 +948,18 @@ static void MaltaDiffMapT(const Tag tag, const ImageF& lum0, const ImageF& lum1,
       if (row0[x] < 0) {
         if (row1[x] > -too_small) {
           double impact = scaler2 * (row1[x] + too_small);
-          if (diff < 0) {
-            row_diffs[x] -= impact;
-          } else {
-            row_diffs[x] += impact;
-          }
+          row_diffs[x] -= impact;
         } else if (row1[x] < -too_big) {
           double impact = scaler2 * (-row1[x] - too_big);
-          if (diff < 0) {
-            row_diffs[x] -= impact;
-          } else {
-            row_diffs[x] += impact;
-          }
+          row_diffs[x] += impact;
         }
       } else {
         if (row1[x] < too_small) {
           double impact = scaler2 * (too_small - row1[x]);
-          if (diff < 0) {
-            row_diffs[x] -= impact;
-          } else {
-            row_diffs[x] += impact;
-          }
+          row_diffs[x] += impact;
         } else if (row1[x] > too_big) {
           double impact = scaler2 * (row1[x] - too_big);
-          if (diff < 0) {
-            row_diffs[x] -= impact;
-          } else {
-            row_diffs[x] += impact;
-          }
+          row_diffs[x] -= impact;
         }
       }
     }
@@ -1680,8 +1499,9 @@ static inline void CheckImage(const ImageF& image, const char* name) {
     const float* BUTTERAUGLI_RESTRICT row = image.Row(y);
     for (size_t x = 0; x < image.xsize(); ++x) {
       if (IsNan(row[x])) {
-        printf("NAN: Image %s @ %zu,%zu (of %zu,%zu)\n", name, x, y,
-               image.xsize(), image.ysize());
+        printf("NAN: Image %s @ %" PRIuS ",%" PRIuS " (of %" PRIuS ",%" PRIuS
+               ")\n",
+               name, x, y, image.xsize(), image.ysize());
         exit(1);
       }
     }
@@ -1931,17 +1751,10 @@ void ButteraugliComparator::DiffmapPsychoImage(const PsychoImage& pi1,
 double ButteraugliScoreFromDiffmap(const ImageF& diffmap,
                                    const ButteraugliParams* params) {
   PROFILER_FUNC;
-  // In approximate-border mode, skip pixels on the border likely to be affected
-  // by FastGauss' zero-valued-boundary behavior. The border is about half of
-  // the largest-diameter kernel (37x37 pixels), but only if the image is big.
-  size_t border = (params != nullptr && params->approximate_border) ? 8 : 0;
-  if (diffmap.xsize() <= 2 * border || diffmap.ysize() <= 2 * border) {
-    border = 0;
-  }
   float retval = 0.0f;
-  for (size_t y = border; y < diffmap.ysize() - border; ++y) {
+  for (size_t y = 0; y < diffmap.ysize(); ++y) {
     const float* BUTTERAUGLI_RESTRICT row = diffmap.ConstRow(y);
-    for (size_t x = border; x < diffmap.xsize() - border; ++x) {
+    for (size_t x = 0; x < diffmap.xsize(); ++x) {
       retval = std::max(retval, row[x]);
     }
   }

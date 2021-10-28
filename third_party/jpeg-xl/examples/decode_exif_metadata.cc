@@ -27,9 +27,12 @@ bool DecodeJpegXlExif(const uint8_t* jxl, size_t size,
     fprintf(stderr, "JxlDecoderSubscribeEvents failed\n");
     return false;
   }
+  bool support_decompression = true;
   if (JXL_DEC_SUCCESS != JxlDecoderSetDecompressBoxes(dec.get(), JXL_TRUE)) {
-    fprintf(stderr, "JxlDecoderSetDecompressBoxes failed\n");
-    return false;
+    fprintf(stderr,
+            "NOTE: decompressing brob boxes not supported with the currently "
+            "used jxl library.\n");
+    support_decompression = false;
   }
 
   JxlDecoderSetInput(dec.get(), jxl, size);
@@ -39,7 +42,6 @@ bool DecodeJpegXlExif(const uint8_t* jxl, size_t size,
 
   for (;;) {
     JxlDecoderStatus status = JxlDecoderProcessInput(dec.get());
-
     if (status == JXL_DEC_ERROR) {
       fprintf(stderr, "Decoder error\n");
       return false;
@@ -54,8 +56,10 @@ bool DecodeJpegXlExif(const uint8_t* jxl, size_t size,
         return true;
       }
       JxlBoxType type;
-      if (!JxlDecoderGetBoxType(dec.get(), &type, JXL_TRUE)) {
+      if (JXL_DEC_SUCCESS !=
+          JxlDecoderGetBoxType(dec.get(), type, support_decompression)) {
         fprintf(stderr, "Error, failed to get box type\n");
+        return false;
       }
       if (!memcmp(type, "Exif", 4)) {
         exif->resize(kChunkSize);
@@ -155,6 +159,9 @@ int main(int argc, char* argv[]) {
   if (exif.empty()) {
     printf("No exif data present in this image\n");
   } else {
+    // TODO(lode): the exif box data contains the 4-byte TIFF header at the
+    // beginning, check whether this is desired to be part of the output, or
+    // should be removed.
     if (!WriteFile(exif_filename, exif.data(), exif.size())) {
       fprintf(stderr, "Error while writing the exif file\n");
       return 1;

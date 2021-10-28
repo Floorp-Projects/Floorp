@@ -27,7 +27,7 @@ extern "C" {
  *
  * @param opaque custom memory manager handle provided by the caller.
  * @param size in bytes of the requested memory region.
- * @returns @c 0 if the memory can not be allocated,
+ * @returns @c NULL if the memory can not be allocated,
  * @returns pointer to the memory otherwise.
  */
 typedef void* (*jpegxl_alloc_func)(void* opaque, size_t size);
@@ -35,10 +35,11 @@ typedef void* (*jpegxl_alloc_func)(void* opaque, size_t size);
 /**
  * Deallocating function pointer type.
  *
- * This function @b MUST do nothing if @p address is @c 0.
+ * This function @b MUST do nothing if @p address is @c NULL.
  *
  * @param opaque custom memory manager handle provided by the caller.
- * @param address memory region pointer returned by ::jpegxl_alloc_func, or @c 0
+ * @param address memory region pointer returned by ::jpegxl_alloc_func, or @c
+ * NULL.
  */
 typedef void (*jpegxl_free_func)(void* opaque, void* address);
 

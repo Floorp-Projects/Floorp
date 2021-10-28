@@ -41,7 +41,7 @@ void ImageBundle::VerifyMetadata() const {
   JXL_CHECK(metadata_->color_encoding.IsGray() == IsGray());
 
   if (metadata_->HasAlpha() && alpha().xsize() == 0) {
-    JXL_ABORT("MD alpha_bits %u IB alpha %zu x %zu\n",
+    JXL_ABORT("MD alpha_bits %u IB alpha %" PRIuS " x %" PRIuS "\n",
               metadata_->GetAlphaBits(), alpha().xsize(), alpha().ysize());
   }
   const uint32_t alpha_bits = metadata_->GetAlphaBits();
