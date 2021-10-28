@@ -951,34 +951,13 @@ bool GLContext::InitImpl() {
   fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
   MOZ_GL_ASSERT(this, IsCurrent());
 
-  [&]() {
-    bool enable = StaticPrefs::gl_khr_debug();
-    enable |= ShouldSpew();
-    enable &= IsExtensionSupported(KHR_debug);
-    if (!enable) return;
+  if (ShouldSpew() && IsExtensionSupported(KHR_debug)) {
     fEnable(LOCAL_GL_DEBUG_OUTPUT);
+    fDisable(LOCAL_GL_DEBUG_OUTPUT_SYNCHRONOUS);
     fDebugMessageCallback(&StaticDebugCallback, (void*)this);
-
-    if (!StaticPrefs::gl_khr_debug_sync()) {
-      fDisable(LOCAL_GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    }
-
-    fDebugMessageControl(LOCAL_GL_DEBUG_SEVERITY_HIGH, LOCAL_GL_DONT_CARE,
+    fDebugMessageControl(LOCAL_GL_DONT_CARE, LOCAL_GL_DONT_CARE,
                          LOCAL_GL_DONT_CARE, 0, nullptr, true);
-
-    if (StaticPrefs::gl_khr_debug_all()) {
-      fDebugMessageControl(LOCAL_GL_DONT_CARE, LOCAL_GL_DONT_CARE,
-                           LOCAL_GL_DONT_CARE, 0, nullptr, true);
-    }
-    if (StaticPrefs::gl_khr_debug_low()) {
-      fDebugMessageControl(LOCAL_GL_DEBUG_SEVERITY_LOW, LOCAL_GL_DONT_CARE,
-                           LOCAL_GL_DONT_CARE, 0, nullptr, true);
-    }
-    if (StaticPrefs::gl_khr_debug_medium()) {
-      fDebugMessageControl(LOCAL_GL_DEBUG_SEVERITY_MEDIUM, LOCAL_GL_DONT_CARE,
-                           LOCAL_GL_DONT_CARE, 0, nullptr, true);
-    }
-  }();
+  }
 
   return true;
 }
