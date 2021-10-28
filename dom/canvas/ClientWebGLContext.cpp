@@ -5335,7 +5335,7 @@ void ClientWebGLContext::AttachShader(WebGLProgramJS& prog,
 void ClientWebGLContext::BindAttribLocation(WebGLProgramJS& prog,
                                             const GLuint location,
                                             const nsAString& name) const {
-  const FuncScope funcScope(*this, "detachShader");
+  const FuncScope funcScope(*this, "bindAttribLocation");
   if (IsContextLost()) return;
   if (!prog.ValidateUsable(*this, "program")) return;
 
@@ -5356,9 +5356,10 @@ void ClientWebGLContext::DetachShader(WebGLProgramJS& prog,
     EnqueueError(LOCAL_GL_INVALID_OPERATION, "`shader` is not attached.");
     return;
   }
-  slot = {};
 
   Run<RPROC(DetachShader)>(prog.mId, shader.mId);
+
+  slot = {};
 }
 
 void ClientWebGLContext::GetAttachedShaders(
