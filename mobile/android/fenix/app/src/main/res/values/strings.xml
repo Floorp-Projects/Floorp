@@ -1966,7 +1966,10 @@
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string name="inactive_tabs_survey_header">Help improve Firefox</string>
+    <string name="inactive_tabs_survey_header" moz:removedIn="95" tools:ignore="UnusedResources">Help improve Firefox</string>
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header_1">Help improve Firefox</string>
+
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
     <string name="inactive_tabs_survey_content">Why did you disable inactive tabs?</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
@@ -1974,9 +1977,13 @@
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_do_it_myself">I like to clear out old tabs myself</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_long_option">The two-week time period is too long</string>
+    <string name="inactive_tabs_survey_time_too_long_option" moz:removedIn="95" tools:ignore="UnusedResources">The two-week time period is too long</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_short_option">The two-week time period is too short</string>
+    <string name="inactive_tabs_survey_time_too_long_option_1">The two-week time period is too long</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option" moz:removedIn="95" tools:ignore="UnusedResources">The two-week time period is too short</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option_1">The two-week time period is too short</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
     <string name="inactive_tabs_survey_send_button">Send</string>
     <!-- Content description for inactive tabs survey close button -->

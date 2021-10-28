@@ -17,7 +17,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="18dp"
         android:layout_marginEnd="16dp"
-        android:text="@string/inactive_tabs_survey_header"
+        android:text="@string/inactive_tabs_survey_header_1"
         android:textAppearance="@style/Body12TextStyle"
         android:textColor="#592ACB"
         android:textSize="16sp"

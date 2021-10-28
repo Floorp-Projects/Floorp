@@ -132,8 +132,8 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
         val radioButtonsMap: Map<Int, Int> = mapOf(
             R.id.rb_do_not_understand to R.string.inactive_tabs_survey_do_not_understand,
             R.id.rb_do_it_myself to R.string.inactive_tabs_survey_do_it_myself,
-            R.id.rb_time_too_long to R.string.inactive_tabs_survey_time_too_long_option,
-            R.id.rb_time_too_short to R.string.inactive_tabs_survey_time_too_short_option,
+            R.id.rb_time_too_long to R.string.inactive_tabs_survey_time_too_long_option_1,
+            R.id.rb_time_too_short to R.string.inactive_tabs_survey_time_too_short_option_1,
         )
 
         // Sets the Radio buttons' text
