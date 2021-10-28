@@ -167,6 +167,7 @@ const AVAILABLE_SHIMS = [
     bug: "1713698",
     file: "apstag.js",
     matches: ["*://c.amazon-adsystem.com/aax2/apstag.js"],
+    onlyIfBlockedByETP: true,
   },
   {
     id: "BmAuth",
@@ -483,6 +484,47 @@ const AVAILABLE_SHIMS = [
       "*://videos.vidible.tv/prod/*.webm*",
       "*://videos.vidible.tv/prod/*.ts*",
     ],
+  },
+  {
+    id: "Hamropatro",
+    platform: "desktop",
+    name: "Hamropatro",
+    bug: "1660446",
+    contentScripts: [
+      {
+        js: "hamropatro.js",
+        matches: ["*://we.hamropatro.com/login*"],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
+    id: "Kinja",
+    platform: "desktop",
+    name: "Kinja",
+    bug: "1656171",
+    contentScripts: [
+      {
+        js: "kinja.js",
+        matches: [
+          "*://www.avclub.com/*",
+          "*://deadspin.com/*",
+          "*://gizmodo.com/*",
+          "*://jalopnik.com/*",
+          "*://jezebel.com/*",
+          "*://kotaku.com/*",
+          "*://lifehacker.com/*",
+          "*://www.theonion.com/*",
+          "*://www.theroot.com/*",
+          "*://thetakeout.com/*",
+          "*://theinventory.com/*",
+        ],
+        runAt: "document_start",
+        allFrames: true,
+      },
+    ],
+    onlyIfDFPIActive: true,
   },
 ];
 

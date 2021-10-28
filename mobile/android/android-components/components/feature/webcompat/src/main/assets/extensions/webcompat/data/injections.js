@@ -534,6 +534,53 @@ const AVAILABLE_INJECTIONS = [
       ],
     },
   },
+  {
+    id: "bug1727100",
+    platform: "desktop",
+    domain: "slack.com",
+    bug: "1727100",
+    contentScripts: {
+      matches: ["*://app.slack.com/*"],
+      js: [
+        {
+          file: "lib/ua_helpers.js",
+        },
+        {
+          file: "injections/js/bug1727100-slack.com-ua-override.js",
+        },
+      ],
+      allFrames: true,
+    },
+  },
+  {
+    id: "bug1738313",
+    platform: "desktop",
+    domain: "curriculum.gov.bc.ca",
+    bug: "1738313",
+    contentScripts: {
+      matches: ["*://curriculum.gov.bc.ca/*"],
+      css: [
+        {
+          file:
+            "injections/css/bug1738313-curriculum.gov.bc.ca-bootstrap-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1738316",
+    platform: "android",
+    domain: "vuoriclothing.com",
+    bug: "1738316",
+    contentScripts: {
+      matches: ["*://vuoriclothing.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1738316-vuoriclothing.com-flexbox-fix.css",
+        },
+      ],
+    },
+  },
 ];
 
 module.exports = AVAILABLE_INJECTIONS;
