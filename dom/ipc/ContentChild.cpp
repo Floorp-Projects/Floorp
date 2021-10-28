@@ -710,7 +710,7 @@ class nsGtkNativeInitRunnable : public Runnable {
   }
 };
 
-bool ContentChild::Init(base::ProcessId aParentPid, const char* aParentBuildID,
+void ContentChild::Init(base::ProcessId aParentPid, const char* aParentBuildID,
                         mozilla::ipc::ScopedPort aPort, uint64_t aChildID,
                         bool aIsForBrowser) {
 #ifdef MOZ_WIDGET_GTK
@@ -755,18 +755,18 @@ bool ContentChild::Init(base::ProcessId aParentPid, const char* aParentBuildID,
   }
 #endif
 
-  NS_ASSERTION(!sSingleton, "only one ContentChild per child");
+  MOZ_ASSERT(!sSingleton, "only one ContentChild per child");
 
   // Once we start sending IPC messages, we need the thread manager to be
   // initialized so we can deal with the responses. Do that here before we
   // try to construct the crash reporter.
   nsresult rv = nsThreadManager::get().Init();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
+    MOZ_CRASH("Failed to initialize the thread manager in ContentChild::Init");
   }
 
   if (!Open(std::move(aPort), aParentPid)) {
-    return false;
+    MOZ_CRASH("Open failed in ContentChild::Init");
   }
   sSingleton = this;
 
@@ -825,8 +825,6 @@ bool ContentChild::Init(base::ProcessId aParentPid, const char* aParentBuildID,
             PendingInputEventHangAnnotator::sSingleton);
       }));
 #endif
-
-  return true;
 }
 
 void ContentChild::SetProcessName(const nsACString& aName,
