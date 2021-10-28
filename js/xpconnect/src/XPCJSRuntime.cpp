@@ -924,7 +924,7 @@ void XPCJSRuntime::FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status,
 }
 
 /* static */
-void XPCJSRuntime::WeakPointerZonesCallback(JSTracer* trc, void* data) {
+void XPCJSRuntime::WeakPointerZonesCallback(JSContext* cx, void* data) {
   // Called before each sweeping slice -- after processing any final marking
   // triggered by barriers -- to clear out any references to things that are
   // about to be finalized and update any pointers to moved GC things.
@@ -938,26 +938,26 @@ void XPCJSRuntime::WeakPointerZonesCallback(JSTracer* trc, void* data) {
   AutoRestore<bool> restoreState(self->mGCIsRunning);
   self->mGCIsRunning = true;
 
-  self->mWrappedJSMap->UpdateWeakPointersAfterGC(trc);
-  self->mUAWidgetScopeMap.traceWeak(trc);
+  self->mWrappedJSMap->UpdateWeakPointersAfterGC();
+  self->mUAWidgetScopeMap.sweep();
 }
 
 /* static */
-void XPCJSRuntime::WeakPointerCompartmentCallback(JSTracer* trc,
+void XPCJSRuntime::WeakPointerCompartmentCallback(JSContext* cx,
                                                   JS::Compartment* comp,
                                                   void* data) {
   // Called immediately after the ZoneGroup weak pointer callback, but only
   // once for each compartment that is being swept.
   CompartmentPrivate* xpcComp = CompartmentPrivate::Get(comp);
   if (xpcComp) {
-    xpcComp->UpdateWeakPointersAfterGC(trc);
+    xpcComp->UpdateWeakPointersAfterGC();
   }
 }
 
-void CompartmentPrivate::UpdateWeakPointersAfterGC(JSTracer* trc) {
-  mRemoteProxies.traceWeak(trc);
-  mWrappedJSMap->UpdateWeakPointersAfterGC(trc);
-  mScope->UpdateWeakPointersAfterGC(trc);
+void CompartmentPrivate::UpdateWeakPointersAfterGC() {
+  mRemoteProxies.sweep();
+  mWrappedJSMap->UpdateWeakPointersAfterGC();
+  mScope->UpdateWeakPointersAfterGC();
 }
 
 void XPCJSRuntime::CustomOutOfMemoryCallback() {
