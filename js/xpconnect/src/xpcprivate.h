@@ -547,8 +547,8 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   static void DoCycleCollectionCallback(JSContext* cx);
   static void FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status,
                                void* data);
-  static void WeakPointerZonesCallback(JSTracer* trc, void* data);
-  static void WeakPointerCompartmentCallback(JSTracer* trc,
+  static void WeakPointerZonesCallback(JSContext* cx, void* data);
+  static void WeakPointerCompartmentCallback(JSContext* cx,
                                              JS::Compartment* comp, void* data);
 
   inline void AddVariantRoot(XPCTraceableVariant* variant);
@@ -613,10 +613,9 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   };
 
   struct SweepPolicy {
-    static bool traceWeak(JSTracer* trc,
-                          RefPtr<mozilla::BasePrincipal>* /* unused */,
-                          JS::Heap<JSObject*>* value) {
-      return JS::GCPolicy<JS::Heap<JSObject*>>::traceWeak(trc, value);
+    static bool needsSweep(RefPtr<mozilla::BasePrincipal>* /* unused */,
+                           JS::Heap<JSObject*>* value) {
+      return JS::GCPolicy<JS::Heap<JSObject*>>::needsSweep(value);
     }
   };
 
@@ -851,7 +850,7 @@ class XPCWrappedNativeScope final
 
   static void SweepAllWrappedNativeTearOffs();
 
-  void UpdateWeakPointersAfterGC(JSTracer* trc);
+  void UpdateWeakPointersAfterGC();
 
   static void DebugDumpAllScopes(int16_t depth);
 
@@ -2638,16 +2637,16 @@ class CompartmentPrivate {
   bool wasShutdown;
 
   JSObject2WrappedJSMap* GetWrappedJSMap() const { return mWrappedJSMap.get(); }
-  void UpdateWeakPointersAfterGC(JSTracer* trc);
+  void UpdateWeakPointersAfterGC();
 
   void SystemIsBeingShutDown();
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
   struct SweepPolicy {
-    static bool traceWeak(JSTracer* trc, const void* /* unused */,
-                          JS::Heap<JSObject*>* value) {
-      return JS::GCPolicy<JS::Heap<JSObject*>>::traceWeak(trc, value);
+    static bool needsSweep(const void* /* unused */,
+                           JS::Heap<JSObject*>* value) {
+      return JS::GCPolicy<JS::Heap<JSObject*>>::needsSweep(value);
     }
   };
 
