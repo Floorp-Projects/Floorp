@@ -156,6 +156,7 @@ NS_EVENT_MESSAGE(eXULPopupHiding)
 NS_EVENT_MESSAGE(eXULPopupHidden)
 NS_EVENT_MESSAGE(eXULBroadcast)
 NS_EVENT_MESSAGE(eXULCommandUpdate)
+NS_EVENT_MESSAGE(eXULSystemStatusBarClick)
 
 // Legacy mouse scroll (wheel) events
 NS_EVENT_MESSAGE(eLegacyMouseLineOrPageScroll)
