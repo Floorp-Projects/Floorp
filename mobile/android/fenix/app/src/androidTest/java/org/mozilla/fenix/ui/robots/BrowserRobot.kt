@@ -37,7 +37,6 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.mediasession.MediaSession
 import org.hamcrest.CoreMatchers.allOf
-import org.hamcrest.CoreMatchers.containsString
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.mozilla.fenix.R
@@ -103,8 +102,13 @@ class BrowserRobot {
     }
 
     fun verifyTabCounter(expectedText: String) {
-        onView(withId(R.id.counter_text))
-            .check((matches(withText(containsString(expectedText)))))
+        val counter =
+            mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/counter_text")
+                    .text(expectedText)
+            )
+        assertTrue(counter.waitForExists(waitingTime))
     }
 
     fun verifySnackBarText(expectedText: String) {
@@ -546,7 +550,10 @@ class BrowserRobot {
         }
 
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
-            mDevice.waitNotNull(Until.findObject(By.desc("Tabs")))
+            mDevice.findObject(
+                UiSelector().descriptionContains("open tab. Tap to switch tabs.")
+            ).waitForExists(waitingTime)
+
             tabsCounter().click()
             mDevice.waitNotNull(Until.findObject(By.res("$packageName:id/tab_layout")))
 
@@ -644,7 +651,7 @@ private fun assertMenuButton() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun tabsCounter() = mDevice.findObject(By.desc("Tabs"))
+private fun tabsCounter() = mDevice.findObject(By.res("$packageName:id/counter_root"))
 
 private fun mediaPlayerPlayButton() =
     mDevice.findObject(

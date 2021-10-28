@@ -16,7 +16,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import androidx.browser.customtabs.CustomTabsIntent
-import androidx.preference.PreferenceManager
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
@@ -33,6 +32,7 @@ import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import java.io.File
 import kotlinx.coroutines.runBlocking
 import mozilla.components.support.ktx.android.content.appName
 import org.hamcrest.CoreMatchers
@@ -43,7 +43,6 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.idlingresource.NetworkConnectionIdlingResource
 import org.mozilla.fenix.ui.robots.mDevice
-import java.io.File
 
 object TestHelper {
 
@@ -69,13 +68,6 @@ object TestHelper {
                 withText(url.toString())
             )
         ).perform(longClick())
-    }
-
-    fun setPreference(context: Context, pref: String, value: Int) {
-        val preferences = PreferenceManager.getDefaultSharedPreferences(context)
-        val editor = preferences.edit()
-        editor.putInt(pref, value)
-        editor.apply()
     }
 
     fun restartApp(activity: HomeActivityIntentTestRule) {

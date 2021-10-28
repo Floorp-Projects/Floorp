@@ -26,6 +26,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.Constants.PackageName.YOUTUBE_APP
+import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -85,6 +86,8 @@ class SmokeTest {
 
     private lateinit var browserStore: BrowserStore
 
+    private val featureSettingsHelper = FeatureSettingsHelper()
+
     @get:Rule
     val activityTestRule = AndroidComposeTestRule(
         HomeActivityIntentTestRule(),
@@ -108,7 +111,9 @@ class SmokeTest {
         // So we are initializing this here instead of in all related tests.
         browserStore = activityTestRule.activity.components.core.store
 
-        activityTestRule.activity.applicationContext.settings().shouldShowJumpBackInCFR = false
+        // disabling the new homepage pop-up that interferes with the tests.
+        featureSettingsHelper.setJumpBackCFREnabled(false)
+
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()
@@ -144,6 +149,9 @@ class SmokeTest {
         if (localeListIdlingResource != null) {
             IdlingRegistry.getInstance().unregister(localeListIdlingResource)
         }
+
+        // resetting modified features enabled setting to default
+        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     // Verifies the first run onboarding screen
@@ -311,9 +319,6 @@ class SmokeTest {
     @Test
     // Verifies the Add to top sites option in a tab's 3 dot menu
     fun openMainMenuAddTopSiteTest() {
-        val settings = activityTestRule.activity.applicationContext.settings()
-        settings.shouldShowJumpBackInCFR = false
-
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -820,8 +825,6 @@ class SmokeTest {
     @Test
     @Ignore("https://github.com/mozilla-mobile/fenix/issues/21397")
     fun createFirstCollectionTest() {
-        val settings = activityTestRule.activity.applicationContext.settings()
-        settings.shouldShowJumpBackInCFR = false
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
 
@@ -854,8 +857,6 @@ class SmokeTest {
     @Test
     @Ignore("https://github.com/mozilla-mobile/fenix/issues/21397")
     fun verifyExpandedCollectionItemsTest() {
-        val settings = activityTestRule.activity.applicationContext.settings()
-        settings.shouldShowJumpBackInCFR = false
         val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -908,9 +909,6 @@ class SmokeTest {
 
     @Test
     fun shareCollectionTest() {
-        val settings = activityTestRule.activity.applicationContext.settings()
-        settings.shouldShowJumpBackInCFR = false
-
         val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -934,8 +932,6 @@ class SmokeTest {
     // Test running on beta/release builds in CI:
     // caution when making changes to it, so they don't block the builds
     fun deleteCollectionTest() {
-        val settings = activityTestRule.activity.applicationContext.settings()
-        settings.shouldShowJumpBackInCFR = false
         val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -1353,8 +1349,6 @@ class SmokeTest {
 
     @Test
     fun goToHomeScreenBottomToolbarTest() {
-        val settings = activityTestRule.activity.applicationContext.settings()
-        settings.shouldShowJumpBackInCFR = false
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -1367,9 +1361,6 @@ class SmokeTest {
 
     @Test
     fun goToHomeScreenTopToolbarTest() {
-        val settings = activityTestRule.activity.applicationContext.settings()
-        settings.shouldShowJumpBackInCFR = false
-
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         homeScreen {
@@ -1437,8 +1428,6 @@ class SmokeTest {
 
     @Test
     fun startOnHomepageTest() {
-        val settings = activityTestRule.activity.applicationContext.settings()
-        settings.shouldShowJumpBackInCFR = false
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {

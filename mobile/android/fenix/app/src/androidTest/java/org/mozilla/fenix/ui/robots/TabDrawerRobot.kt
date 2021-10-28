@@ -39,8 +39,8 @@ import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.Matcher
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.clickAtLocationInView
@@ -101,7 +101,12 @@ class TabDrawerRobot {
 
     fun swipeTabRight(title: String) {
         var retries = 0 // number of retries before failing, will stop at 2
-        while (mDevice.findObject(UiSelector().text(title)).exists() && retries < 3) {
+        while (!mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/mozac_browser_tabstray_title")
+                    .text(title)
+            ).waitUntilGone(waitingTimeShort) && retries < 2
+        ) {
             tab(title).perform(ViewActions.swipeRight())
             retries++
         }
@@ -109,24 +114,35 @@ class TabDrawerRobot {
 
     fun swipeTabLeft(title: String) {
         var retries = 0 // number of retries before failing, will stop at 2
-        while (mDevice.findObject(UiSelector().text(title)).exists() && retries < 3) {
+        while (!mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/mozac_browser_tabstray_title")
+                    .text(title)
+            ).waitUntilGone(waitingTimeShort) && retries < 2
+        ) {
             tab(title).perform(ViewActions.swipeLeft())
             retries++
         }
     }
 
     fun verifySnackBarText(expectedText: String) {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mDevice.waitNotNull(findObject(By.text(expectedText)), TestAssetHelper.waitingTime)
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().text(expectedText)
+            ).waitForExists(waitingTime)
+        )
     }
 
     fun snackBarButtonClick(expectedText: String) {
-        mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/snackbar_btn")
-        ).waitForExists(waitingTime)
-        onView(allOf(withId(R.id.snackbar_btn), withText(expectedText))).check(
-            matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))
-        ).perform(click())
+        val snackBarButton =
+            mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/snackbar_btn")
+                    .text(expectedText)
+            )
+
+        snackBarButton.waitForExists(waitingTime)
+        snackBarButton.click()
     }
 
     fun verifyTabMediaControlButtonState(action: String) {
