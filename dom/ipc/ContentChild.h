@@ -119,7 +119,7 @@ class ContentChild final : public PContentChild,
       nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
       BrowsingContext** aReturn);
 
-  bool Init(base::ProcessId aParentPid, const char* aParentBuildID,
+  void Init(base::ProcessId aParentPid, const char* aParentBuildID,
             mozilla::ipc::ScopedPort aPort, uint64_t aChildID,
             bool aIsForBrowser);
 
