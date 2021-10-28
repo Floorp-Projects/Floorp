@@ -543,6 +543,8 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
 }
 
 nsresult nsLookAndFeel::NativeGetFloat(FloatID aID, float& aResult) {
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+
   nsresult res = NS_OK;
 
   switch (aID) {
@@ -552,12 +554,21 @@ nsresult nsLookAndFeel::NativeGetFloat(FloatID aID, float& aResult) {
     case FloatID::SpellCheckerUnderlineRelativeSize:
       aResult = 2.0f;
       break;
+    case FloatID::CursorScale: {
+      id uaDefaults = [[NSUserDefaults alloc] initWithSuiteName:@"com.apple.universalaccess"];
+      float f = [uaDefaults floatForKey:@"mouseDriverCursorSize"];
+      [uaDefaults release];
+      aResult = f > 0.0 ? f : 1.0;  // default to 1.0 if value not available
+      break;
+    }
     default:
       aResult = -1.0;
       res = NS_ERROR_FAILURE;
   }
 
   return res;
+
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 bool nsLookAndFeel::SystemWantsDarkTheme() {
