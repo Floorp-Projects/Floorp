@@ -251,6 +251,56 @@ const MESSAGES = () => [
     },
     frequency: { lifetime: 3 },
   },
+  {
+    id: "TCP_SPOTLIGHT_MESSAGE_95",
+    template: "spotlight",
+    content: {
+      template: "logo-and-content",
+      logo: {
+        imageURL: "chrome://branding/content/about-logo@2x.png",
+        size: "64px",
+      },
+      body: {
+        title: {
+          label: {
+            string_id: "spotlight-total-cookie-protection-header",
+          },
+          size: "24px",
+        },
+        text: {
+          label: {
+            string_id: "spotlight-total-cookie-protection-body",
+          },
+          size: "20px",
+        },
+        primary: {
+          label: {
+            string_id: "spotlight-total-cookie-protection-primary-button",
+          },
+          action: {
+            type: "ENABLE_TOTAL_COOKIE_PROTECTION",
+          },
+        },
+        secondary: {
+          label: {
+            string_id: "spotlight-total-cookie-protection-secondary-button",
+          },
+          action: {
+            type: "CANCEL",
+          },
+        },
+      },
+      extra: {
+        expanded: {
+          label: {
+            string_id: "spotlight-total-cookie-protection-expanded",
+          },
+          size: "13px",
+        },
+      },
+    },
+    frequency: { lifetime: 3 },
+  },
 ];
 
 const PanelTestProvider = {

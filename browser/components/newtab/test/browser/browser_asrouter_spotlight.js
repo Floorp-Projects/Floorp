@@ -182,6 +182,7 @@ add_task(async function test_remoteL10n_content() {
   let browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
 
   await showAndWaitForDialog({ message, browser, dispatchStub }, async win => {
+    await win.document.mozSubdialogReady;
     let primaryBtn = win.document.getElementById("primary");
     let secondaryBtn = win.document.getElementById("secondary");
     Assert.ok(
@@ -206,5 +207,30 @@ add_task(async function test_remoteL10n_content() {
 
     // Dismiss
     win.document.getElementById("secondary").click();
+  });
+});
+
+add_task(async function test_contentExpanded() {
+  let message = (await PanelTestProvider.getMessages()).find(
+    m => m.id === "TCP_SPOTLIGHT_MESSAGE_95"
+  );
+
+  let dispatchStub = sinon.stub();
+  let browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+
+  await showAndWaitForDialog({ message, browser, dispatchStub }, async win => {
+    const toggle = win.document.getElementById("learn-more-toggle");
+    Assert.equal(
+      toggle.getAttribute("aria-expanded"),
+      "false",
+      "Toggle initially collapsed"
+    );
+    toggle.click();
+    Assert.equal(
+      toggle.getAttribute("aria-expanded"),
+      "true",
+      "Toggle switched to expanded"
+    );
+    win.close();
   });
 });

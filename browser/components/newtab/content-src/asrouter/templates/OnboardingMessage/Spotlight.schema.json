@@ -1,13 +1,21 @@
 {
   "title": "Spotlight",
   "description": "A template with an image, title, content and two buttons.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "object",
   "properties": {
     "template": {
       "type": "string",
       "description": "Specify the layout template for the Spotlight",
       "enum": ["logo-and-content"]
+    },
+    "logo": {
+      "properties": {
+        "imageURL": {
+          "type": "string",
+          "description": "URL for image to use with the content"
+        }
+      }
     },
     "logoImageURL": {
       "type": "string",
@@ -132,6 +140,36 @@
       },
       "additionalProperties": false,
       "required": ["title", "text", "primary", "secondary"]
+    },
+    "extra": {
+      "properties": {
+        "expanded": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "description": "The label for the secondary button",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "description": "Message shown in the button element"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "string_id": {
+                      "type": "string",
+                      "description": "Id of localized string for the button element"
+                    }
+                  },
+                  "required": ["string_id"]
+                }
+              ]
+            }
+          },
+          "required": ["label"]
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,
