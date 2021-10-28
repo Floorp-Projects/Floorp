@@ -638,6 +638,8 @@ def puppeteer_test(
 
     if enable_fission:
         prefs.update({"fission.autostart": True})
+    else:
+        prefs.update({"fission.autostart": False})
 
     if verbosity == 1:
         prefs["remote.log.level"] = "Debug"
